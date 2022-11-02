@@ -1,0 +1,14 @@
+# IDE and OS
+.idea
+.vscode
+.DS_Store
+
+# output
+bin
+log
+*.log
+*.out
+*.out.*
+*.test
+build
+.env

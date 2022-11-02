@@ -1,0 +1,5 @@
+local:
+  dialect: postgres
+  datasource: host=localhost port=25432 user=postgres password=postgres dbname=fortress_local sslmode=disable
+  dir: migrations/schemas
+  table: migrations

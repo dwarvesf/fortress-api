@@ -1,0 +1,27 @@
+version: "3"
+services:
+  postgres:
+    image: postgres:13
+    restart: always
+    environment:
+      POSTGRES_DB: fortress_local
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    container_name: fortress_local
+    ports:
+      - 25432:5432
+    expose:
+      - 25432
+
+  postgres_test:
+    image: postgres:13
+    restart: always
+    environment:
+      POSTGRES_DB: fortress_local_test
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    container_name: fortress_local_test
+    ports:
+      - 35432:5432
+    expose:
+      - 35432
