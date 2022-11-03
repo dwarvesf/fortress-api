@@ -1,6 +1,7 @@
 APP_NAME=fortress-api
 DEFAULT_PORT=8200
 POSTGRES_TEST_CONTAINER?=fortress_local_test
+POSTGRES_CONTAINER?=fortress_local
 
 .PHONY: setup init build dev test migrate-up migrate-down
 
@@ -24,7 +25,13 @@ init: setup
 	done
 	make migrate-up
 	make migrate-test
-	make seed-db
+	make seed
+
+seed:
+	@docker exec -t $(POSTGRES_CONTAINER) sh -c "mkdir -p /seed"
+	@docker exec -t $(POSTGRES_CONTAINER) sh -c "rm -rf /seed/*"
+	@docker cp migrations/seed $(POSTGRES_CONTAINER):/
+	@docker exec -t $(POSTGRES_CONTAINER) sh -c "PGPASSWORD=postgres psql -U postgres -d $(POSTGRES_CONTAINER) -f /seed/seed.sql"
 
 remove-infras:
 	docker-compose down --remove-orphans
@@ -34,9 +41,6 @@ build:
 
 dev:
 	go run ./cmd/server/main.go
-
-air:
-	air -c .air.toml
 
 test:
 	@PROJECT_PATH=$(shell pwd) go test -cover ./...

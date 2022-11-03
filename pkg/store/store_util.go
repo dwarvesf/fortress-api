@@ -28,7 +28,7 @@ func connDb(cfg *config.Config) *gorm.DB {
 		postgres.Config{Conn: conn}),
 		&gorm.Config{
 			NamingStrategy: schema.NamingStrategy{
-				SingularTable: true,
+				SingularTable: false,
 			},
 		})
 	if err != nil {

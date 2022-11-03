@@ -1,4 +1,70 @@
 basePath: /api/v1
+definitions:
+  view.ApiError:
+    description: validation error details
+    properties:
+      enums:
+        description: available options incase of field's payload is enums
+        items:
+          type: string
+        type: array
+      field:
+        description: the field cause the error
+        type: string
+      msg:
+        description: error message
+        type: string
+    type: object
+  view.EmployeeListData:
+    properties:
+      address:
+        type: string
+      avatar:
+        type: string
+      birthday:
+        type: string
+      created_at:
+        type: string
+      deleted_at:
+        type: string
+      display_name:
+        type: string
+      full_name:
+        description: basic info
+        type: string
+      gender:
+        type: string
+      horoscope:
+        type: string
+      id:
+        type: string
+      joined_date:
+        type: string
+      left_date:
+        type: string
+      mbti:
+        type: string
+      personal_email:
+        type: string
+      phone_number:
+        type: string
+      status:
+        description: working info
+        type: string
+      team_email:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  view.ErrorResponse:
+    properties:
+      error:
+        type: string
+      errors:
+        items:
+          $ref: '#/definitions/view.ApiError'
+        type: array
+    type: object
 info:
   contact:
     email: support@swagger.io
@@ -11,7 +77,40 @@ info:
   termsOfService: http://swagger.io/terms/
   title: Swagger Example API
   version: "1.0"
-paths: {}
+paths:
+  /employee/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get employee by id
+      parameters:
+      - description: Employee ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.EmployeeListData'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get employee by id
+      tags:
+      - Employee
 securityDefinitions:
   BasicAuth:
     type: basic

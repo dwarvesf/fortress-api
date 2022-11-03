@@ -7,8 +7,7 @@ import (
 	"os"
 	"os/signal"
 
-	// swagger embed files
-	// gin-swagger middleware
+	_ "github.com/lib/pq"
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
@@ -42,7 +41,7 @@ func main() {
 	service := service.New(cfg)
 	store := store.New(cfg)
 
-	router := routes.NewRoutes(cfg, service, store)
+	router := routes.NewRoutes(cfg, service, store, log)
 	request.RegisCustomValidators(router)
 
 	srv := &http.Server{
