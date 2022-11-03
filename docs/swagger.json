@@ -16,7 +16,156 @@
         "version": "1.0"
     },
     "basePath": "/api/v1",
-    "paths": {},
+    "paths": {
+        "/employee/{id}": {
+            "get": {
+                "description": "Get employee by id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Employee"
+                ],
+                "summary": "Get employee by id",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Employee ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.EmployeeListData"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "view.ApiError": {
+            "description": "validation error details",
+            "type": "object",
+            "properties": {
+                "enums": {
+                    "description": "available options incase of field's payload is enums",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "field": {
+                    "description": "the field cause the error",
+                    "type": "string"
+                },
+                "msg": {
+                    "description": "error message",
+                    "type": "string"
+                }
+            }
+        },
+        "view.EmployeeListData": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "avatar": {
+                    "type": "string"
+                },
+                "birthday": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "deleted_at": {
+                    "type": "string"
+                },
+                "display_name": {
+                    "type": "string"
+                },
+                "full_name": {
+                    "description": "basic info",
+                    "type": "string"
+                },
+                "gender": {
+                    "type": "string"
+                },
+                "horoscope": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "joined_date": {
+                    "type": "string"
+                },
+                "left_date": {
+                    "type": "string"
+                },
+                "mbti": {
+                    "type": "string"
+                },
+                "personal_email": {
+                    "type": "string"
+                },
+                "phone_number": {
+                    "type": "string"
+                },
+                "status": {
+                    "description": "working info",
+                    "type": "string"
+                },
+                "team_email": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "view.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "errors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.ApiError"
+                    }
+                }
+            }
+        }
+    },
     "securityDefinitions": {
         "BasicAuth": {
             "type": "basic"

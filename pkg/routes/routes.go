@@ -34,7 +34,7 @@ func setupCORS(r *gin.Engine, cfg *config.Config) {
 	})
 }
 
-func NewRoutes(cfg *config.Config, svc *service.Service, store *store.Store) *gin.Engine {
+func NewRoutes(cfg *config.Config, svc *service.Service, store *store.Store, logger logger.Logger) *gin.Engine {
 	// programmatically set swagger info
 	docs.SwaggerInfo.Title = "Swagger API"
 	docs.SwaggerInfo.Description = "This is a swagger for API."
@@ -43,9 +43,9 @@ func NewRoutes(cfg *config.Config, svc *service.Service, store *store.Store) *gi
 	r := gin.New()
 	pprof.Register(r)
 
-	h, err := handler.New(store, svc)
+	h, err := handler.New(store, svc, logger)
 	if err != nil {
-		logger.L.Fatalf(err, "Can't init handlers")
+		logger.Fatalf(err, "Can't init handlers")
 	}
 
 	r.Use(

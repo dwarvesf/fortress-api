@@ -8,5 +8,9 @@ import (
 )
 
 func loadV1Routes(r *gin.Engine, h *handler.Handler, cfg *config.Config) {
-	r.Group("/api/v1")
+	v1 := r.Group("/api/v1")
+
+	// employees
+	v1.GET("/employees", h.Employee.List)
+	v1.GET("/employees/:id", h.Employee.One)
 }

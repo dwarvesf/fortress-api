@@ -1,0 +1,52 @@
+package routes
+
+import (
+	"fmt"
+	"testing"
+
+	"github.com/gin-gonic/gin"
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/stretchr/testify/require"
+
+	"github.com/dwarvesf/fortress-api/pkg/config"
+	"github.com/dwarvesf/fortress-api/pkg/handler"
+	"github.com/dwarvesf/fortress-api/pkg/logger"
+)
+
+// Test_loadV1Routes simply test we load route and handler correctly
+func Test_loadV1Routes(t *testing.T) {
+	expectedRoutes := map[string]gin.RouteInfo{
+		"/api/v1/employees": {
+			Method:  "GET",
+			Handler: "github.com/dwarvesf/fortress-api/pkg/handler/employee.IHandler.List-fm",
+		},
+		"/api/v1/employees/:id": {
+			Method:  "GET",
+			Handler: "github.com/dwarvesf/fortress-api/pkg/handler/employee.IHandler.One-fm",
+		},
+	}
+
+	l := logger.NewLogrusLogger()
+	h, err := handler.New(nil, nil, l)
+	require.NoError(t, err)
+
+	cfg := config.LoadConfig(config.DefaultConfigLoaders())
+
+	router := gin.New()
+	loadV1Routes(router, h, cfg)
+
+	routeInfo := router.Routes()
+
+	for _, r := range routeInfo {
+		require.NotNil(t, r.HandlerFunc)
+		expected, ok := expectedRoutes[r.Path]
+		require.True(t, ok, fmt.Sprintf("unexpected path: %s", r.Path))
+		ignoreFields := cmpopts.IgnoreFields(gin.RouteInfo{}, "HandlerFunc", "Path")
+		if !cmp.Equal(expected, r, ignoreFields) {
+			t.Errorf("route mismatched. \n route path: %v \n diff: %+v", r.Path,
+				cmp.Diff(expected, r, ignoreFields))
+			t.FailNow()
+		}
+	}
+}
