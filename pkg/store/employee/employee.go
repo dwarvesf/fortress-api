@@ -21,3 +21,8 @@ func (s *store) One(id string) (*model.Employee, error) {
 	var employee *model.Employee
 	return employee, s.db.Where("id = ?", id).First(&employee).Error
 }
+
+func (s *store) All() ([]*model.Employee, error) {
+	var employees []*model.Employee
+	return employees, s.db.Find(&employees).Error
+}

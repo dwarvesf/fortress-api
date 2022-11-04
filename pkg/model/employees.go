@@ -2,13 +2,13 @@ package model
 
 import "time"
 
-type EmploymentStatus string
+type WorkingStatus string
 
 const (
-	EmploymentStatusPartTime  EmploymentStatus = "Part-time"
-	EmploymentStatusLeft      EmploymentStatus = "Left"
-	EmploymentStatusProbation EmploymentStatus = "Probation"
-	EmploymentStatusFullTime  EmploymentStatus = "Full-time"
+	WorkingStatusPartTime  WorkingStatus = "Part-time"
+	WorkingStatusLeft      WorkingStatus = "Left"
+	WorkingStatusProbation WorkingStatus = "Probation"
+	WorkingStatusFullTime  WorkingStatus = "Full-time"
 )
 
 type Employee struct {
@@ -32,9 +32,9 @@ type Employee struct {
 	DateOfBirth             *time.Time
 
 	// working info
-	EmploymentStatus EmploymentStatus
-	JoinedDate       *time.Time
-	LeftDate         *time.Time
+	WorkingStatus WorkingStatus
+	JoinedDate    *time.Time
+	LeftDate      *time.Time
 
 	// social services
 	BasecampID             string
