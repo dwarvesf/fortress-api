@@ -111,6 +111,31 @@ paths:
       summary: Get employee by id
       tags:
       - Employee
+  /metadata/working-status:
+    get:
+      consumes:
+      - application/json
+      description: Get list values for working status
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              type: string
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get list values for working status
+      tags:
+      - Metadata
 securityDefinitions:
   BasicAuth:
     type: basic

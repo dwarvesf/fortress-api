@@ -13,4 +13,7 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, cfg *config.Config) {
 	// employees
 	v1.GET("/employees", h.Employee.List)
 	v1.GET("/employees/:id", h.Employee.One)
+
+	// metadata
+	v1.GET("/metadata/working-status", h.Metadata.WorkingStatus)
 }

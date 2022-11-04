@@ -24,9 +24,9 @@ type EmployeeListData struct {
 	DateOfBirth   *time.Time `json:"birthday"`
 
 	// working info
-	EmploymentStatus model.EmploymentStatus `json:"status"`
-	JoinedDate       *time.Time             `json:"joined_date"`
-	LeftDate         *time.Time             `json:"left_date"`
+	WorkingStatus model.WorkingStatus `json:"status"`
+	JoinedDate    *time.Time          `json:"joined_date"`
+	LeftDate      *time.Time          `json:"left_date"`
 }
 
 func ToEmployeeListData(employee *model.Employee) *EmployeeListData {
@@ -36,16 +36,16 @@ func ToEmployeeListData(employee *model.Employee) *EmployeeListData {
 			CreatedAt: employee.CreatedAt,
 			UpdatedAt: employee.UpdatedAt,
 		},
-		FullName:         employee.FullName,
-		DisplayName:      employee.DisplayName,
-		TeamEmail:        employee.TeamEmail,
-		PersonalEmail:    employee.PersonalEmail,
-		Avatar:           employee.Avatar,
-		PhoneNumber:      employee.PhoneNumber,
-		Address:          employee.Address,
-		MBTI:             employee.MBTI,
-		EmploymentStatus: employee.EmploymentStatus,
-		JoinedDate:       employee.JoinedDate,
-		LeftDate:         employee.LeftDate,
+		FullName:      employee.FullName,
+		DisplayName:   employee.DisplayName,
+		TeamEmail:     employee.TeamEmail,
+		PersonalEmail: employee.PersonalEmail,
+		Avatar:        employee.Avatar,
+		PhoneNumber:   employee.PhoneNumber,
+		Address:       employee.Address,
+		MBTI:          employee.MBTI,
+		WorkingStatus: employee.WorkingStatus,
+		JoinedDate:    employee.JoinedDate,
+		LeftDate:      employee.LeftDate,
 	}
 }
