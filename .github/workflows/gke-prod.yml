@@ -9,7 +9,7 @@ on:
 env:
   REGISTRY_HOSTNAME: gcr.io
   GKE_PROJECT: df-infrastructure
-  IMAGE: dwarvesf/fortress-api
+  IMAGE: fortress/api
   K8S_ENVIRONMENT: prod
 
 jobs:
