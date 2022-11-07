@@ -94,7 +94,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "type": "string"
+                                "$ref": "#/definitions/view.WorkingStatusData"
                             }
                         }
                     },
@@ -208,6 +208,17 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/view.ApiError"
                     }
+                }
+            }
+        },
+        "view.WorkingStatusData": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
                 }
             }
         }

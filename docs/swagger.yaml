@@ -65,6 +65,13 @@ definitions:
           $ref: '#/definitions/view.ApiError'
         type: array
     type: object
+  view.WorkingStatusData:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+    type: object
 info:
   contact:
     email: support@swagger.io
@@ -123,7 +130,7 @@ paths:
           description: OK
           schema:
             items:
-              type: string
+              $ref: '#/definitions/view.WorkingStatusData'
             type: array
         "400":
           description: Bad Request

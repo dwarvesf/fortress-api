@@ -86,7 +86,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "type": "string"
+                                "$ref": "#/definitions/view.WorkingStatusData"
                             }
                         }
                     },
@@ -200,6 +200,17 @@
                     "items": {
                         "$ref": "#/definitions/view.ApiError"
                     }
+                }
+            }
+        },
+        "view.WorkingStatusData": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
                 }
             }
         }

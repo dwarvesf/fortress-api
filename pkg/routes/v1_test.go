@@ -32,8 +32,7 @@ func Test_loadV1Routes(t *testing.T) {
 	}
 
 	l := logger.NewLogrusLogger()
-	h, err := handler.New(nil, nil, l)
-	require.NoError(t, err)
+	h := handler.New(nil, nil, l)
 
 	cfg := config.LoadConfig(config.DefaultConfigLoaders())
 
