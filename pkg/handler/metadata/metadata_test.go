@@ -1,4 +1,4 @@
-package metadata_handler
+package metadata
 
 import (
 	"io/ioutil"

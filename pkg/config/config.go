@@ -16,6 +16,7 @@ type Config struct {
 
 	// server
 	ApiServer ApiServer
+	Google    Google
 
 	Debug bool
 }
@@ -63,6 +64,12 @@ type Kafka struct {
 	ConsumerGroup string
 }
 
+type Google struct {
+	ClientSecret string
+	ClientID     string
+	AppName      string
+}
+
 func generateConfigFromViper(v *viper.Viper) *Config {
 	return &Config{
 		Debug: v.GetBool("DEBUG"),
@@ -87,6 +94,12 @@ func generateConfigFromViper(v *viper.Viper) *Config {
 			Name:    v.GetString("DB_NAME"),
 			Pass:    v.GetString("DB_PASS"),
 			SSLMode: v.GetString("DB_SSL_MODE"),
+		},
+
+		Google: Google{
+			ClientSecret: v.GetString("GOOGLE_API_CLIENT_SECRET"),
+			ClientID:     v.GetString("GOOGLE_API_CLIENT_ID"),
+			AppName:      v.GetString("GOOGLE_API_APP_NAME"),
 		},
 	}
 }

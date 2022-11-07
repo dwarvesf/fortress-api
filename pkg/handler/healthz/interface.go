@@ -1,4 +1,4 @@
-package healthz_handler
+package healthz
 
 import "github.com/gin-gonic/gin"
 
