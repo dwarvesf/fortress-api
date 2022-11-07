@@ -15,10 +15,10 @@ type Handler struct {
 	Metadata    metadata_handler.IHandler
 }
 
-func New(store *store.Store, service *service.Service, logger logger.Logger) (*Handler, error) {
+func New(store *store.Store, service *service.Service, logger logger.Logger) *Handler {
 	return &Handler{
 		Healthcheck: healthz_handler.New(),
 		Employee:    employee_handler.New(store, service, logger),
 		Metadata:    metadata_handler.New(store, service, logger),
-	}, nil
+	}
 }

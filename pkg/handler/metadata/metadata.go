@@ -31,11 +31,31 @@ func New(store *store.Store, service *service.Service, logger logger.Logger) IHa
 // @Tags Metadata
 // @Accept  json
 // @Produce  json
-// @Success 200 {object} []string
+// @Success 200 {object} []view.WorkingStatusData
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 500 {object} view.ErrorResponse
 // @Router /metadata/working-status [get]
 func (h *handler) WorkingStatus(c *gin.Context) {
 	// return list values for working status
-	c.JSON(http.StatusOK, view.CreateResponse[any]([]string{"left", "probation", "full-time", "contractor"}, nil, nil, nil))
+	// hardcode for now since we dont need db storage for this
+	res := []view.WorkingStatusData{
+		{
+			ID:   "left",
+			Name: "Left",
+		},
+		{
+			ID:   "probation",
+			Name: "Probation",
+		},
+		{
+			ID:   "full-time",
+			Name: "Full-time",
+		},
+		{
+			ID:   "contractor",
+			Name: "Contractor",
+		},
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](res, nil, nil, nil))
 }

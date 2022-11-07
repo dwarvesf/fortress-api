@@ -43,10 +43,7 @@ func NewRoutes(cfg *config.Config, svc *service.Service, store *store.Store, log
 	r := gin.New()
 	pprof.Register(r)
 
-	h, err := handler.New(store, svc, logger)
-	if err != nil {
-		logger.Fatalf(err, "Can't init handlers")
-	}
+	h := handler.New(store, svc, logger)
 
 	r.Use(
 		gin.LoggerWithWriter(gin.DefaultWriter, "/healthz"),

@@ -1,0 +1,20 @@
+{
+  "data": [
+    {
+      "id": "left",
+      "name": "Left"
+    },
+    {
+      "id": "probation",
+      "name": "Probation"
+    },
+    {
+      "id": "full-time",
+      "name": "Full-time"
+    },
+    {
+      "id": "contractor",
+      "name": "Contractor"
+    }
+  ]
+}
