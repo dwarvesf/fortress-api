@@ -49,6 +49,28 @@ definitions:
       updatedAt:
         type: string
     type: object
+  model.Role:
+    properties:
+      code:
+        type: string
+      createdAt:
+        type: string
+      deletedAt:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  view.AccountRoleResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/model.Role'
+        type: array
+    type: object
   view.AccountStatusResponse:
     properties:
       data:
@@ -242,6 +264,29 @@ paths:
       summary: Get employee by id
       tags:
       - Employee
+  /metadata/account-roles:
+    get:
+      consumes:
+      - application/json
+      description: Get list values for account roles
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.AccountRoleResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get list values for account roles
+      tags:
+      - Metadata
   /metadata/account-statuses:
     get:
       consumes:

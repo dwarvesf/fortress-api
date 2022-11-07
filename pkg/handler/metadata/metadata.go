@@ -61,6 +61,36 @@ func (h *handler) WorkingStatus(c *gin.Context) {
 	c.JSON(http.StatusOK, view.CreateResponse[any](res, nil, nil, nil))
 }
 
+// Roles godoc
+// @Summary Get list values for account roles
+// @Description Get list values for account roles
+// @Tags Metadata
+// @Accept  json
+// @Produce  json
+// @Success 200 {object} view.AccountRoleResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /metadata/account-roles [get]
+func (h *handler) AccountRoles(c *gin.Context) {
+	// 1 prepare the logger
+	// TODO: can we move this to middleware ?
+	l := h.logger.Fields(logger.Fields{
+		"handler": "AccountRoles",
+		"method":  "All",
+	})
+
+	// 2 query roles from db
+	roles, err := h.store.Role.All()
+	if err != nil {
+		l.Error(err, "error query roles from db")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil))
+		return
+	}
+
+	// 3 return array of roles
+	c.JSON(http.StatusOK, view.CreateResponse[any](roles, nil, nil, nil))
+}
+
 // AccountStatuses godoc
 // @Summary Get list values for account statuses
 // @Description Get list values for account statuses

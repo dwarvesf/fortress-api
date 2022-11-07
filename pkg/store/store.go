@@ -7,6 +7,7 @@ import (
 	employee_store "github.com/dwarvesf/fortress-api/pkg/store/employee"
 	"github.com/dwarvesf/fortress-api/pkg/store/permission"
 	position_store "github.com/dwarvesf/fortress-api/pkg/store/position"
+	"github.com/dwarvesf/fortress-api/pkg/store/role"
 )
 
 type Store struct {
@@ -15,6 +16,7 @@ type Store struct {
 	Position      position_store.IStore
 	Permission    permission.IStore
 	Country       country.IStore
+	Role          role.IStore
 }
 
 func New(cfg *config.Config) *Store {
@@ -25,5 +27,6 @@ func New(cfg *config.Config) *Store {
 		Position:      position_store.New(db),
 		Permission:    permission.New(db),
 		Country:       country.New(db),
+		Role:          role.New(db),
 	}
 }
