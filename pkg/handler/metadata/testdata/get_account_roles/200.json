@@ -1,0 +1,18 @@
+{
+  "data": [
+    {
+      "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
+      "createdAt": "2022-11-07T09:50:25.714604Z",
+      "updatedAt": "2022-11-07T09:50:25.714604Z",
+      "name": "Admin",
+      "code": "admin"
+    },
+    {
+      "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
+      "createdAt": "2022-11-07T09:50:25.714604Z",
+      "updatedAt": "2022-11-07T09:50:25.714604Z",
+      "name": "Member",
+      "code": "member"
+    }
+  ]
+}
