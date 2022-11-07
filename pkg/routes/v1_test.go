@@ -29,6 +29,10 @@ func Test_loadV1Routes(t *testing.T) {
 			Method:  "GET",
 			Handler: "github.com/dwarvesf/fortress-api/pkg/handler/metadata.IHandler.WorkingStatus-fm",
 		},
+		"/api/v1/auth": {
+			Method:  "POST",
+			Handler: "github.com/dwarvesf/fortress-api/pkg/handler/auth.IHandler.Auth-fm",
+		},
 	}
 
 	l := logger.NewLogrusLogger()

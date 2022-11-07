@@ -1,8 +1,7 @@
-package employee
+package auth
 
 import "github.com/gin-gonic/gin"
 
 type IHandler interface {
-	List(c *gin.Context)
-	One(c *gin.Context)
+	Auth(c *gin.Context)
 }

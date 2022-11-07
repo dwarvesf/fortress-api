@@ -24,7 +24,6 @@ init: setup
 		sleep 1; \
 	done
 	make migrate-up
-	make migrate-test
 	make seed
 
 seed:

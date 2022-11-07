@@ -1,4 +1,4 @@
-package employee_handler
+package employee
 
 import (
 	"net/http"

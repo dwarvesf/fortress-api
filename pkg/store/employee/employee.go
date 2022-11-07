@@ -22,6 +22,12 @@ func (s *store) One(id string) (*model.Employee, error) {
 	return employee, s.db.Where("id = ?", id).First(&employee).Error
 }
 
+// OneByTeamEmail get 1 employee by team email
+func (s *store) OneByTeamEmail(teamEmail string) (*model.Employee, error) {
+	var employee *model.Employee
+	return employee, s.db.Where("team_email = ?", teamEmail).First(&employee).Error
+}
+
 func (s *store) All() ([]*model.Employee, error) {
 	var employees []*model.Employee
 	return employees, s.db.Find(&employees).Error

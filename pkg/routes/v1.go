@@ -15,6 +15,9 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, cfg *config.Config) {
 	v1.GET("/employees", mw.WithAuth, mw.WithPerm(cfg, "employees.read"), h.Employee.List)
 	v1.GET("/employees/:id", h.Employee.One)
 
+	// auth
+	v1.POST("/auth", h.Auth.Auth)
+
 	// metadata
 	v1.GET("/metadata/working-status", h.Metadata.WorkingStatus)
 }
