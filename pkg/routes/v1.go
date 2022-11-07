@@ -5,13 +5,14 @@ import (
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/handler"
+	"github.com/dwarvesf/fortress-api/pkg/mw"
 )
 
 func loadV1Routes(r *gin.Engine, h *handler.Handler, cfg *config.Config) {
 	v1 := r.Group("/api/v1")
 
 	// employees
-	v1.GET("/employees", h.Employee.List)
+	v1.GET("/employees", mw.WithAuth, mw.WithPerm(cfg, "employees.read"), h.Employee.List)
 	v1.GET("/employees/:id", h.Employee.One)
 
 	// metadata
