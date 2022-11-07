@@ -4,12 +4,13 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/gin-gonic/gin"
-
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/view"
+
+	"github.com/gin-gonic/gin"
+	_ "github.com/lib/pq"
 )
 
 type handler struct {
@@ -59,6 +60,36 @@ func (h *handler) WorkingStatus(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](res, nil, nil, nil))
+}
+
+// Seniorities godoc
+// @Summary Get list values for sentitorities
+// @Description Get list values for sentitorities
+// @Tags Metadata
+// @Accept  json
+// @Produce  json
+// @Success 200 {object} view.SeniorityResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /metadata/seniorities [get]
+func (h *handler) Seniorities(c *gin.Context) {
+	// 1 prepare the logger
+	// TODO: can we move this to middleware ?
+	l := h.logger.Fields(logger.Fields{
+		"handler": "Seniorities",
+		"method":  "All",
+	})
+
+	// 2 query seniorities from db
+	seniorities, err := h.store.Seniority.All()
+	if err != nil {
+		l.Error(err, "error query seniorities from db")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil))
+		return
+	}
+
+	// 3 return array of seniorities
+	c.JSON(http.StatusOK, view.CreateResponse[any](seniorities, nil, nil, nil))
 }
 
 // Chapters godoc

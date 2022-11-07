@@ -79,6 +79,21 @@ definitions:
       updatedAt:
         type: string
     type: object
+  model.Seniority:
+    properties:
+      code:
+        type: string
+      createdAt:
+        type: string
+      deletedAt:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      updatedAt:
+        type: string
+    type: object
   view.AccountRoleResponse:
     properties:
       data:
@@ -191,6 +206,13 @@ definitions:
       data:
         items:
           $ref: '#/definitions/model.Position'
+        type: array
+    type: object
+  view.SeniorityResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/model.Seniority'
         type: array
     type: object
   view.WorkingStatusData:
@@ -422,6 +444,29 @@ paths:
           schema:
             $ref: '#/definitions/view.ErrorResponse'
       summary: Get list values for positions
+      tags:
+      - Metadata
+  /metadata/seniorities:
+    get:
+      consumes:
+      - application/json
+      description: Get list values for sentitorities
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.SeniorityResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get list values for sentitorities
       tags:
       - Metadata
   /metadata/working-status:
