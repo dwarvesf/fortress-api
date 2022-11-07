@@ -7,6 +7,10 @@ type WorkingStatusData struct {
 	Name string `json:"name"`
 }
 
+type AccountStatusResponse struct {
+	Data []model.AccountStatus `json:"data"`
+}
+
 type PositionResponse struct {
 	Data []model.Position `json:"data"`
 }

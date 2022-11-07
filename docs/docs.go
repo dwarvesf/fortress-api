@@ -136,6 +136,41 @@ const docTemplate = `{
                 }
             }
         },
+        "/metadata/account-statuses": {
+            "get": {
+                "description": "Get list values for account statuses",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Metadata"
+                ],
+                "summary": "Get list values for account statuses",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.AccountStatusResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/metadata/countries": {
             "get": {
                 "description": "Get all countries",
@@ -281,6 +316,29 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "model.AccountStatus": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "deletedAt": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
         "model.Country": {
             "type": "object",
             "properties": {
@@ -330,6 +388,17 @@ const docTemplate = `{
                 },
                 "updatedAt": {
                     "type": "string"
+                }
+            }
+        },
+        "view.AccountStatusResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.AccountStatus"
+                    }
                 }
             }
         },

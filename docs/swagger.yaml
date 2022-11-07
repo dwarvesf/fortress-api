@@ -1,5 +1,20 @@
 basePath: /api/v1
 definitions:
+  model.AccountStatus:
+    properties:
+      code:
+        type: string
+      createdAt:
+        type: string
+      deletedAt:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      updatedAt:
+        type: string
+    type: object
   model.Country:
     properties:
       cities:
@@ -33,6 +48,13 @@ definitions:
         type: string
       updatedAt:
         type: string
+    type: object
+  view.AccountStatusResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/model.AccountStatus'
+        type: array
     type: object
   view.ApiError:
     description: validation error details
@@ -220,6 +242,29 @@ paths:
       summary: Get employee by id
       tags:
       - Employee
+  /metadata/account-statuses:
+    get:
+      consumes:
+      - application/json
+      description: Get list values for account statuses
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.AccountStatusResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get list values for account statuses
+      tags:
+      - Metadata
   /metadata/countries:
     get:
       consumes:

@@ -1,0 +1,32 @@
+{
+  "data": [
+    {
+      "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
+      "createdAt": "2022-11-07T09:50:25.714604Z",
+      "updatedAt": "2022-11-07T09:50:25.714604Z",
+      "name": "Onboarding",
+      "code": "onboarding"
+    },
+    {
+      "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
+      "createdAt": "2022-11-07T09:50:25.714604Z",
+      "updatedAt": "2022-11-07T09:50:25.714604Z",
+      "name": "Probation",
+      "code": "probation"
+    },
+    {
+      "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
+      "createdAt": "2022-11-07T09:50:25.714604Z",
+      "updatedAt": "2022-11-07T09:50:25.714604Z",
+      "name": "Active",
+      "code": "active"
+    },
+    {
+      "id": "01fb6322-d727-47e3-a242-5039ea4732fc",
+      "createdAt": "2022-11-07T09:50:25.714604Z",
+      "updatedAt": "2022-11-07T09:50:25.714604Z",
+      "name": "On Leave",
+      "code": "on-leave"
+    }
+  ]
+}
