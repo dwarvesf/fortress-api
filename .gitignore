@@ -12,3 +12,6 @@ log
 *.test
 build
 .env
+
+# dependencies
+vendor
