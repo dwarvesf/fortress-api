@@ -61,6 +61,36 @@ func (h *handler) WorkingStatus(c *gin.Context) {
 	c.JSON(http.StatusOK, view.CreateResponse[any](res, nil, nil, nil))
 }
 
+// AccountStatuses godoc
+// @Summary Get list values for account statuses
+// @Description Get list values for account statuses
+// @Tags Metadata
+// @Accept  json
+// @Produce  json
+// @Success 200 {object} view.AccountStatusResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /metadata/account-statuses [get]
+func (h *handler) AccountStatuses(c *gin.Context) {
+	// 1 prepare the logger
+	// TODO: can we move this to middleware ?
+	l := h.logger.Fields(logger.Fields{
+		"handler": "AccountStatuses",
+		"method":  "All",
+	})
+
+	// 2 query accountStatuses from db
+	accountStatuses, err := h.store.AccountStatus.All()
+	if err != nil {
+		l.Error(err, "error query accountStatuses from db")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil))
+		return
+	}
+
+	// 3 return array of account statuses
+	c.JSON(http.StatusOK, view.CreateResponse[any](accountStatuses, nil, nil, nil))
+}
+
 // Positions godoc
 // @Summary Get list values for positions
 // @Description Get list values for positions
