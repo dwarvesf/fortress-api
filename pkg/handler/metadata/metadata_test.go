@@ -1,17 +1,19 @@
 package metadata
 
 import (
+	"fmt"
 	"io/ioutil"
 	"net/http/httptest"
 	"testing"
-
-	"github.com/gin-gonic/gin"
-	"github.com/stretchr/testify/require"
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/store"
+
+	"github.com/gin-gonic/gin"
+	_ "github.com/lib/pq"
+	"github.com/stretchr/testify/require"
 )
 
 func TestHandler_GetWorkingStatus(t *testing.T) {
@@ -49,6 +51,45 @@ func TestHandler_GetWorkingStatus(t *testing.T) {
 			require.NoError(t, err)
 
 			require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.GetWorkingStatus] response mismatched")
+		})
+	}
+}
+
+func TestHandler_GetPositions(t *testing.T) {
+	// load env and test data
+	cfg := config.LoadTestConfig()
+	loggerMock := logger.NewLogrusLogger()
+	serviceMock := service.New(&cfg)
+	storeMock := store.New(&cfg)
+
+	tests := []struct {
+		name             string
+		wantCode         int
+		wantErr          error
+		wantResponsePath string
+	}{
+		{
+			name:             "ok_get_positions",
+			wantCode:         200,
+			wantErr:          nil,
+			wantResponsePath: "testdata/get_positions/200.json",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			w := httptest.NewRecorder()
+
+			ctx, _ := gin.CreateTestContext(w)
+			ctx.Request = httptest.NewRequest("GET", fmt.Sprintf("/api/v1/metadata/positions"), nil)
+			metadataHandler := New(storeMock, serviceMock, loggerMock)
+
+			metadataHandler.Positions(ctx)
+
+			require.Equal(t, tt.wantCode, w.Code)
+			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+			require.NoError(t, err)
+
+			require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Positions] response mismatched")
 		})
 	}
 }

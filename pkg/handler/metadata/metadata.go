@@ -59,3 +59,33 @@ func (h *handler) WorkingStatus(c *gin.Context) {
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](res, nil, nil, nil))
 }
+
+// WorkingStatus godoc
+// @Summary Get list values for positions
+// @Description Get list values for positions
+// @Tags Metadata
+// @Accept  json
+// @Produce  json
+// @Success 200 {object} view.PositionResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /metadata/positions [get]
+func (h *handler) Positions(c *gin.Context) {
+	// 1 prepare the logger
+	// TODO: can we move this to middleware ?
+	l := h.logger.Fields(logger.Fields{
+		"handler": "Positions",
+		"method":  "All",
+	})
+
+	// 2 query positions from db
+	positions, err := h.store.Position.All()
+	if err != nil {
+		l.Error(err, "error query positions from db")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil))
+		return
+	}
+
+	// 3 return array of positions
+	c.JSON(http.StatusOK, view.CreateResponse[any](positions, nil, nil, nil))
+}

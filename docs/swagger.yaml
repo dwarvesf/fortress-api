@@ -1,5 +1,20 @@
 basePath: /api/v1
 definitions:
+  model.Position:
+    properties:
+      code:
+        type: string
+      created_at:
+        type: string
+      deleted_at:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      updated_at:
+        type: string
+    type: object
   view.ApiError:
     description: validation error details
     properties:
@@ -65,6 +80,13 @@ definitions:
           $ref: '#/definitions/view.ApiError'
         type: array
     type: object
+  view.PositionResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/model.Position'
+        type: array
+    type: object
   view.WorkingStatusData:
     properties:
       id:
@@ -118,6 +140,29 @@ paths:
       summary: Get employee by id
       tags:
       - Employee
+  /metadata/positions:
+    get:
+      consumes:
+      - application/json
+      description: Get list values for positions
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.PositionResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get list values for positions
+      tags:
+      - Metadata
   /metadata/working-status:
     get:
       consumes:

@@ -67,6 +67,41 @@
                 }
             }
         },
+        "/metadata/positions": {
+            "get": {
+                "description": "Get list values for positions",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Metadata"
+                ],
+                "summary": "Get list values for positions",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.PositionResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/metadata/working-status": {
             "get": {
                 "description": "Get list values for working status",
@@ -107,6 +142,29 @@
         }
     },
     "definitions": {
+        "model.Position": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "deleted_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
         "view.ApiError": {
             "description": "validation error details",
             "type": "object",
@@ -199,6 +257,17 @@
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/view.ApiError"
+                    }
+                }
+            }
+        },
+        "view.PositionResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Position"
                     }
                 }
             }
