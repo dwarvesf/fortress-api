@@ -1,4 +1,4 @@
-package position_store
+package position
 
 import (
 	"gorm.io/gorm"

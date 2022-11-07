@@ -7,6 +7,10 @@ type WorkingStatusData struct {
 	Name string `json:"name"`
 }
 
+type SeniorityResponse struct {
+	Data []model.Seniority `json:"data"`
+}
+
 type ChapterResponse struct {
 	Data []model.Chapter `json:"data"`
 }

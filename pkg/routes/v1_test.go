@@ -29,6 +29,10 @@ func Test_loadV1Routes(t *testing.T) {
 			Method:  "GET",
 			Handler: "github.com/dwarvesf/fortress-api/pkg/handler/metadata.IHandler.WorkingStatus-fm",
 		},
+		"/api/v1/metadata/seniorities": {
+			Method:  "GET",
+			Handler: "github.com/dwarvesf/fortress-api/pkg/handler/metadata.IHandler.Seniorities-fm",
+		},
 		"/api/v1/metadata/chapters": {
 			Method:  "GET",
 			Handler: "github.com/dwarvesf/fortress-api/pkg/handler/metadata.IHandler.Chapters-fm",
