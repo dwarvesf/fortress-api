@@ -5,4 +5,6 @@ import "github.com/gin-gonic/gin"
 type IHandler interface {
 	WorkingStatus(c *gin.Context)
 	Positions(c *gin.Context)
+	GetCountries(c *gin.Context)
+	GetCities(c *gin.Context)
 }

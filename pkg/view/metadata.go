@@ -10,3 +10,11 @@ type WorkingStatusData struct {
 type PositionResponse struct {
 	Data []model.Position `json:"data"`
 }
+
+type CountriesResponse struct {
+	Data []model.Country `json:"data"`
+}
+
+type CitiesResponse struct {
+	Data []string `json:"data"`
+}

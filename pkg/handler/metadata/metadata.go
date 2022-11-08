@@ -1,6 +1,7 @@
 package metadata
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -88,4 +89,61 @@ func (h *handler) Positions(c *gin.Context) {
 
 	// 3 return array of positions
 	c.JSON(http.StatusOK, view.CreateResponse[any](positions, nil, nil, nil))
+}
+
+// GetCountries godoc
+// @Summary Get all countries
+// @Description Get all countries
+// @Tags Metadata
+// @Accept  json
+// @Produce  json
+// @Success 200 {object} view.CountriesResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /metadata/countries [get]
+func (h *handler) GetCountries(c *gin.Context) {
+	countries, err := h.store.Country.All()
+	if err != nil {
+		h.logger.Fields(logger.Fields{
+			"handler": "metadata",
+			"method":  "GetCountries",
+		}).Error(err, "failed to get all countries")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil))
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse(countries, nil, nil, nil))
+}
+
+// GetCountries godoc
+// @Summary Get list cities by country
+// @Description Get list cities by country
+// @Tags Metadata
+// @Accept  json
+// @Produce  json
+// @Success 200 {object} view.CitiesResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /metadata/countries/:country_id/cities [get]
+func (h *handler) GetCities(c *gin.Context) {
+	l := h.logger.Fields(logger.Fields{
+		"handler": "metadata",
+		"method":  "GetCities",
+	})
+
+	countryID := c.Param("country_id")
+	if countryID == "" {
+		l.Info("country_id is empty")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errors.New("country_id is empty"), nil))
+		return
+	}
+
+	country, err := h.store.Country.One(countryID)
+	if err != nil {
+		l.AddField("countryID", countryID).Error(err, "failed to get cities")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil))
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse(country.Cities, nil, nil, nil))
 }

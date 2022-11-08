@@ -37,6 +37,14 @@ func Test_loadV1Routes(t *testing.T) {
 			Method:  "POST",
 			Handler: "github.com/dwarvesf/fortress-api/pkg/handler/auth.IHandler.Auth-fm",
 		},
+		"/api/v1/metadata/countries": {
+			Method:  "GET",
+			Handler: "github.com/dwarvesf/fortress-api/pkg/handler/metadata.IHandler.GetCountries-fm",
+		},
+		"/api/v1/metadata/countries/:country_id/cities": {
+			Method:  "GET",
+			Handler: "github.com/dwarvesf/fortress-api/pkg/handler/metadata.IHandler.GetCities-fm",
+		},
 	}
 
 	l := logger.NewLogrusLogger()

@@ -1,5 +1,24 @@
 basePath: /api/v1
 definitions:
+  model.Country:
+    properties:
+      cities:
+        items:
+          type: string
+        type: array
+      code:
+        type: string
+      createdAt:
+        type: string
+      deletedAt:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      updatedAt:
+        type: string
+    type: object
   model.Position:
     properties:
       code:
@@ -36,6 +55,20 @@ definitions:
         type: string
       employee:
         $ref: '#/definitions/view.EmployeeListData'
+    type: object
+  view.CitiesResponse:
+    properties:
+      data:
+        items:
+          type: string
+        type: array
+    type: object
+  view.CountriesResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/model.Country'
+        type: array
     type: object
   view.EmployeeListData:
     properties:
@@ -187,6 +220,52 @@ paths:
       summary: Get employee by id
       tags:
       - Employee
+  /metadata/countries:
+    get:
+      consumes:
+      - application/json
+      description: Get all countries
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.CountriesResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get all countries
+      tags:
+      - Metadata
+  /metadata/countries/:country_id/cities:
+    get:
+      consumes:
+      - application/json
+      description: Get list cities by country
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.CitiesResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get list cities by country
+      tags:
+      - Metadata
   /metadata/positions:
     get:
       consumes:
