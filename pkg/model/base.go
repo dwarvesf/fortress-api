@@ -10,9 +10,9 @@ import (
 // BaseModel base model for domain type
 type BaseModel struct {
 	ID        UUID       `sql:",type:uuid" json:"id"`
-	CreatedAt time.Time  `sql:"default:now()" json:"created_at"`
-	UpdatedAt *time.Time `sql:"default:now()" json:"updated_at"`
-	DeletedAt *time.Time `json:"deleted_at,omitempty"`
+	CreatedAt time.Time  `sql:"default:now()" json:"createdAt"`
+	UpdatedAt *time.Time `sql:"default:now()" json:"updatedAt"`
+	DeletedAt *time.Time `json:"deletedAt,omitempty"`
 }
 
 // BeforeCreate prepare data before create data
@@ -23,7 +23,7 @@ func (m *BaseModel) BeforeCreate(tx *gorm.DB) error {
 	return nil
 }
 
-// BeforeCreate prepare data before create data
+// BeforeUpdate prepare data before create data
 func (m *BaseModel) BeforeUpdate(tx *gorm.DB) error {
 	tx.Model(m).Update("updated_at", time.Now())
 	return nil
