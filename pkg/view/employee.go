@@ -11,12 +11,12 @@ type EmployeeListData struct {
 	model.BaseModel
 
 	// basic info
-	FullName      string     `json:"full_name"`
-	DisplayName   string     `json:"display_name"`
-	TeamEmail     string     `json:"team_email"`
-	PersonalEmail string     `json:"personal_email"`
+	FullName      string     `json:"fullName"`
+	DisplayName   string     `json:"displayName"`
+	TeamEmail     string     `json:"teamEmail"`
+	PersonalEmail string     `json:"personalEmail"`
 	Avatar        string     `json:"avatar"`
-	PhoneNumber   string     `json:"phone_number"`
+	PhoneNumber   string     `json:"phoneNumber"`
 	Address       string     `json:"address"`
 	MBTI          string     `json:"mbti"`
 	Gender        string     `json:"gender"`
@@ -25,8 +25,8 @@ type EmployeeListData struct {
 
 	// working info
 	WorkingStatus model.WorkingStatus `json:"status"`
-	JoinedDate    *time.Time          `json:"joined_date"`
-	LeftDate      *time.Time          `json:"left_date"`
+	JoinedDate    *time.Time          `json:"joinedDate"`
+	LeftDate      *time.Time          `json:"leftDate"`
 }
 
 func ToEmployeeListData(employee *model.Employee) *EmployeeListData {
