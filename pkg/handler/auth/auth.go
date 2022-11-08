@@ -10,7 +10,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/store"
-	"github.com/dwarvesf/fortress-api/pkg/util"
+	"github.com/dwarvesf/fortress-api/pkg/utils"
 	"github.com/dwarvesf/fortress-api/pkg/view"
 )
 
@@ -28,24 +28,24 @@ func New(store *store.Store, service *service.Service, logger logger.Logger) IHa
 	}
 }
 
-// One godoc
+// Auth godoc
 // @Summary Authorise user when login
 // @Description Authorise user when login
 // @Tags Auth
 // @Accept  json
 // @Produce  json
 // @Param code body string true "Google login code"
-// @Param redirect_url body string true "Google redirect url"
+// @Param redirectUrl body string true "Google redirect url"
 // @Success 200 {object} view.AuthData
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 404 {object} view.ErrorResponse
 // @Failure 500 {object} view.ErrorResponse
 // @Router /auth [post]
 func (h *handler) Auth(c *gin.Context) {
-	// 1. parse code, redirectURL from body
+	// 1. parse code, redirectUrl from body
 	var req struct {
 		Code        string `json:"code" binding:"required"`
-		RedirectURL string `json:"redirect_url" binding:"required"`
+		RedirectURL string `json:"redirectUrl" binding:"required"`
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -102,7 +102,7 @@ func (h *handler) Auth(c *gin.Context) {
 		Avatar: employee.Avatar,
 		Email:  primaryEmail,
 	}
-	jwt, err := util.GenerateJWTToken(&authenticationInfo, time.Now().Add(24*365*time.Hour).Unix(), "JWTSecretKey")
+	jwt, err := utils.GenerateJWTToken(&authenticationInfo, time.Now().Add(24*365*time.Hour).Unix(), "JWTSecretKey")
 	if err != nil {
 		l.Error(err, "error query employee from db")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req))

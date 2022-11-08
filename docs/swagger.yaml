@@ -4,15 +4,15 @@ definitions:
     properties:
       code:
         type: string
-      created_at:
+      createdAt:
         type: string
-      deleted_at:
+      deletedAt:
         type: string
       id:
         type: string
       name:
         type: string
-      updated_at:
+      updatedAt:
         type: string
     type: object
   view.ApiError:
@@ -30,6 +30,13 @@ definitions:
         description: error message
         type: string
     type: object
+  view.AuthData:
+    properties:
+      accessToken:
+        type: string
+      employee:
+        $ref: '#/definitions/view.EmployeeListData'
+    type: object
   view.EmployeeListData:
     properties:
       address:
@@ -38,13 +45,13 @@ definitions:
         type: string
       birthday:
         type: string
-      created_at:
+      createdAt:
         type: string
-      deleted_at:
+      deletedAt:
         type: string
-      display_name:
+      displayName:
         type: string
-      full_name:
+      fullName:
         description: basic info
         type: string
       gender:
@@ -53,22 +60,22 @@ definitions:
         type: string
       id:
         type: string
-      joined_date:
+      joinedDate:
         type: string
-      left_date:
+      leftDate:
         type: string
       mbti:
         type: string
-      personal_email:
+      personalEmail:
         type: string
-      phone_number:
+      phoneNumber:
         type: string
       status:
         description: working info
         type: string
-      team_email:
+      teamEmail:
         type: string
-      updated_at:
+      updatedAt:
         type: string
     type: object
   view.ErrorResponse:
@@ -107,6 +114,46 @@ info:
   title: Swagger Example API
   version: "1.0"
 paths:
+  /auth:
+    post:
+      consumes:
+      - application/json
+      description: Authorise user when login
+      parameters:
+      - description: Google login code
+        in: body
+        name: code
+        required: true
+        schema:
+          type: string
+      - description: Google redirect url
+        in: body
+        name: redirectUrl
+        required: true
+        schema:
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.AuthData'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Authorise user when login
+      tags:
+      - Auth
   /employee/{id}:
     get:
       consumes:

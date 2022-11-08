@@ -60,7 +60,7 @@ func (h *handler) WorkingStatus(c *gin.Context) {
 	c.JSON(http.StatusOK, view.CreateResponse[any](res, nil, nil, nil))
 }
 
-// WorkingStatus godoc
+// Positions godoc
 // @Summary Get list values for positions
 // @Description Get list values for positions
 // @Tags Metadata

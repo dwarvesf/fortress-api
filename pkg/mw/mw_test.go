@@ -24,7 +24,7 @@ func TestWithAuth(t *testing.T) {
 			testURL:          "/sample-routes",
 			expectedHTTPCode: http.StatusOK,
 			testTokenType:    "Bearer",
-			testAccessToken:  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MzA4OTAyNjIsIlVzZXJJRCI6IjI2NTU4MzJlLWYwMDktNGI3My1hNTM1LTY0YzNhMjJlNTU4ZiIsImF2YXRhciI6Imh0dHBzOi8vczMtYXAtc291dGhlYXN0LTEuYW1hem9uYXdzLmNvbS9mb3J0cmVzcy1pbWFnZXMvNTE1MzU3NDY5NTY2Mzk1NTk0NC5wbmciLCJlbWFpbCI6InRoYW5oQGQuZm91bmRhdGlvbiIsInBlcm1pc3Npb25zIjpbImVtcGxveWVlcy5yZWFkIl0sInVzZXJfaW5mbyI6bnVsbH0.MDHMPBJC8BPY4ZJNg5j0xn2jUvVDg-05M6AKqrTwdSM",
+			testAccessToken:  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2OTkzMjExNDIsImlkIjoiMjY1NTgzMmUtZjAwOS00YjczLWE1MzUtNjRjM2EyMmU1NThmIiwiYXZhdGFyIjoiaHR0cHM6Ly9zMy1hcC1zb3V0aGVhc3QtMS5hbWF6b25hd3MuY29tL2ZvcnRyZXNzLWltYWdlcy81MTUzNTc0Njk1NjYzOTU1OTQ0LnBuZyIsImVtYWlsIjoidGhhbmhAZC5mb3VuZGF0aW9uIiwicGVybWlzc2lvbnMiOlsiZW1wbG95ZWVzLnJlYWQiXSwidXNlcl9pbmZvIjpudWxsfQ.GENGPEucSUrILN6tHDKxLMtj0M0REVMUPC7-XhDMpGM",
 		},
 		"authorization header invalid": {
 			testURL:          "/sample-routes",

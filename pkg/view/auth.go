@@ -4,7 +4,7 @@ import "github.com/dwarvesf/fortress-api/pkg/model"
 
 type AuthData struct {
 	Employee    EmployeeListData `json:"employee"`
-	AccessToken string           `json:"access_token"`
+	AccessToken string           `json:"accessToken"`
 }
 
 func ToAuthData(accessToken string, employee *model.Employee) *AuthData {

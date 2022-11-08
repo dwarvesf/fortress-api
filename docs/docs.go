@@ -25,6 +25,67 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/auth": {
+            "post": {
+                "description": "Authorise user when login",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Authorise user when login",
+                "parameters": [
+                    {
+                        "description": "Google login code",
+                        "name": "code",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Google redirect url",
+                        "name": "redirectUrl",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.AuthData"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/employee/{id}": {
             "get": {
                 "description": "Get employee by id",
@@ -156,10 +217,10 @@ const docTemplate = `{
                 "code": {
                     "type": "string"
                 },
-                "created_at": {
+                "createdAt": {
                     "type": "string"
                 },
-                "deleted_at": {
+                "deletedAt": {
                     "type": "string"
                 },
                 "id": {
@@ -168,7 +229,7 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
-                "updated_at": {
+                "updatedAt": {
                     "type": "string"
                 }
             }
@@ -194,6 +255,17 @@ const docTemplate = `{
                 }
             }
         },
+        "view.AuthData": {
+            "type": "object",
+            "properties": {
+                "accessToken": {
+                    "type": "string"
+                },
+                "employee": {
+                    "$ref": "#/definitions/view.EmployeeListData"
+                }
+            }
+        },
         "view.EmployeeListData": {
             "type": "object",
             "properties": {
@@ -206,16 +278,16 @@ const docTemplate = `{
                 "birthday": {
                     "type": "string"
                 },
-                "created_at": {
+                "createdAt": {
                     "type": "string"
                 },
-                "deleted_at": {
+                "deletedAt": {
                     "type": "string"
                 },
-                "display_name": {
+                "displayName": {
                     "type": "string"
                 },
-                "full_name": {
+                "fullName": {
                     "description": "basic info",
                     "type": "string"
                 },
@@ -228,29 +300,29 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
-                "joined_date": {
+                "joinedDate": {
                     "type": "string"
                 },
-                "left_date": {
+                "leftDate": {
                     "type": "string"
                 },
                 "mbti": {
                     "type": "string"
                 },
-                "personal_email": {
+                "personalEmail": {
                     "type": "string"
                 },
-                "phone_number": {
+                "phoneNumber": {
                     "type": "string"
                 },
                 "status": {
                     "description": "working info",
                     "type": "string"
                 },
-                "team_email": {
+                "teamEmail": {
                     "type": "string"
                 },
-                "updated_at": {
+                "updatedAt": {
                     "type": "string"
                 }
             }
