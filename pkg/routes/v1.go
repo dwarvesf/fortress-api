@@ -20,6 +20,7 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, cfg *config.Config) {
 
 	// metadata
 	v1.GET("/metadata/working-status", h.Metadata.WorkingStatus)
+	v1.GET("/metadata/chapters", h.Metadata.Chapters)
 	v1.GET("/metadata/account-roles", h.Metadata.AccountRoles)
 	v1.GET("/metadata/account-statuses", h.Metadata.AccountStatuses)
 	v1.GET("/metadata/positions", h.Metadata.Positions)

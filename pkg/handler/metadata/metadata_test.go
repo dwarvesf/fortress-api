@@ -55,6 +55,45 @@ func TestHandler_GetWorkingStatus(t *testing.T) {
 	}
 }
 
+func TestHandler_GetChapters(t *testing.T) {
+	// load env and test data
+	cfg := config.LoadTestConfig()
+	loggerMock := logger.NewLogrusLogger()
+	serviceMock := service.New(&cfg)
+	storeMock := store.New(&cfg)
+
+	tests := []struct {
+		name             string
+		wantCode         int
+		wantErr          error
+		wantResponsePath string
+	}{
+		{
+			name:             "ok_get_chapters",
+			wantCode:         200,
+			wantErr:          nil,
+			wantResponsePath: "testdata/get_chapters/200.json",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			w := httptest.NewRecorder()
+
+			ctx, _ := gin.CreateTestContext(w)
+			ctx.Request = httptest.NewRequest("GET", fmt.Sprintf("/api/v1/metadata/chapters"), nil)
+			metadataHandler := New(storeMock, serviceMock, loggerMock)
+
+			metadataHandler.Chapters(ctx)
+
+			require.Equal(t, tt.wantCode, w.Code)
+			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+			require.NoError(t, err)
+
+			require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Chapters] response mismatched")
+		})
+	}
+}
+
 func TestHandler_GetAccountRoles(t *testing.T) {
 	// load env and test data
 	cfg := config.LoadTestConfig()
