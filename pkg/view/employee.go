@@ -28,6 +28,9 @@ type EmployeeListData struct {
 	JoinedDate    *time.Time          `json:"joinedDate"`
 	LeftDate      *time.Time          `json:"leftDate"`
 }
+type UpdataEmployeeStatusResponse struct {
+	Data EmployeeListData `json:"data"`
+}
 
 type ProfileData struct {
 	ID            model.UUID `json:"id"`
@@ -62,6 +65,9 @@ func ToEmployeeListData(employee *model.Employee) *EmployeeListData {
 		PhoneNumber:   employee.PhoneNumber,
 		Address:       employee.Address,
 		MBTI:          employee.MBTI,
+		Gender:        employee.Gender,
+		Horoscope:     employee.Horoscope,
+		DateOfBirth:   employee.DateOfBirth,
 		WorkingStatus: employee.WorkingStatus,
 		JoinedDate:    employee.JoinedDate,
 		LeftDate:      employee.LeftDate,

@@ -186,6 +186,72 @@ const docTemplate = `{
                 }
             }
         },
+        "/employee/{id}/employee-status": {
+            "post": {
+                "description": "Update account status by employee id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Employee"
+                ],
+                "summary": "Update account status by employee id",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Employee ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Employee Status",
+                        "name": "employeeStatus",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.UpdataEmployeeStatusResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/metadata/account-roles": {
             "get": {
                 "description": "Get list values for account roles",
@@ -238,7 +304,10 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/view.AccountStatusResponse"
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/view.MetaData"
+                            }
                         }
                     },
                     "400": {
@@ -450,7 +519,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/view.WorkingStatusData"
+                                "$ref": "#/definitions/view.MetaData"
                             }
                         }
                     },
@@ -471,29 +540,6 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "model.AccountStatus": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "string"
-                },
-                "createdAt": {
-                    "type": "string"
-                },
-                "deletedAt": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "updatedAt": {
-                    "type": "string"
-                }
-            }
-        },
         "model.Chapter": {
             "type": "object",
             "properties": {
@@ -622,17 +668,6 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/model.Role"
-                    }
-                }
-            }
-        },
-        "view.AccountStatusResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.AccountStatus"
                     }
                 }
             }
@@ -777,6 +812,17 @@ const docTemplate = `{
                 }
             }
         },
+        "view.MetaData": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "view.PositionResponse": {
             "type": "object",
             "properties": {
@@ -845,14 +891,11 @@ const docTemplate = `{
                 }
             }
         },
-        "view.WorkingStatusData": {
+        "view.UpdataEmployeeStatusResponse": {
             "type": "object",
             "properties": {
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
+                "data": {
+                    "$ref": "#/definitions/view.EmployeeListData"
                 }
             }
         }

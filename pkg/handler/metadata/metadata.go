@@ -33,28 +33,28 @@ func New(store *store.Store, service *service.Service, logger logger.Logger) IHa
 // @Tags Metadata
 // @Accept  json
 // @Produce  json
-// @Success 200 {object} []view.WorkingStatusData
+// @Success 200 {object} []view.MetaData
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 500 {object} view.ErrorResponse
 // @Router /metadata/working-status [get]
 func (h *handler) WorkingStatus(c *gin.Context) {
 	// return list values for working status
 	// hardcode for now since we dont need db storage for this
-	res := []view.WorkingStatusData{
+	res := []view.MetaData{
 		{
-			ID:   "left",
+			Code: "left",
 			Name: "Left",
 		},
 		{
-			ID:   "probation",
+			Code: "probation",
 			Name: "Probation",
 		},
 		{
-			ID:   "full-time",
+			Code: "full-time",
 			Name: "Full-time",
 		},
 		{
-			ID:   "contractor",
+			Code: "contractor",
 			Name: "Contractor",
 		},
 	}
@@ -76,8 +76,8 @@ func (h *handler) Seniorities(c *gin.Context) {
 	// 1 prepare the logger
 	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
-		"handler": "Seniorities",
-		"method":  "All",
+		"handler": "metadata",
+		"method":  "Seniorities",
 	})
 
 	// 2 query seniorities from db
@@ -106,8 +106,8 @@ func (h *handler) Chapters(c *gin.Context) {
 	// 1 prepare the logger
 	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
-		"handler": "Chapters",
-		"method":  "All",
+		"handler": "metadata",
+		"method":  "Chapters",
 	})
 
 	// 2 query chapters from db
@@ -136,8 +136,8 @@ func (h *handler) AccountRoles(c *gin.Context) {
 	// 1 prepare the logger
 	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
-		"handler": "AccountRoles",
-		"method":  "All",
+		"handler": "metadata",
+		"method":  "AccountRoles",
 	})
 
 	// 2 query roles from db
@@ -158,28 +158,33 @@ func (h *handler) AccountRoles(c *gin.Context) {
 // @Tags Metadata
 // @Accept  json
 // @Produce  json
-// @Success 200 {object} view.AccountStatusResponse
+// @Success 200 {object} []view.MetaData
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 500 {object} view.ErrorResponse
 // @Router /metadata/account-statuses [get]
 func (h *handler) AccountStatuses(c *gin.Context) {
-	// 1 prepare the logger
-	// TODO: can we move this to middleware ?
-	l := h.logger.Fields(logger.Fields{
-		"handler": "AccountStatuses",
-		"method":  "All",
-	})
-
-	// 2 query accountStatuses from db
-	accountStatuses, err := h.store.AccountStatus.All()
-	if err != nil {
-		l.Error(err, "error query accountStatuses from db")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil))
-		return
+	// return list values for account status
+	// hardcode for now since we dont need db storage for this
+	res := []view.MetaData{
+		{
+			Code: "onboarding",
+			Name: "Onboarding",
+		},
+		{
+			Code: "probation",
+			Name: "Probation",
+		},
+		{
+			Code: "active",
+			Name: "Active",
+		},
+		{
+			Code: "on-leave",
+			Name: "On Leave",
+		},
 	}
 
-	// 3 return array of account statuses
-	c.JSON(http.StatusOK, view.CreateResponse[any](accountStatuses, nil, nil, nil))
+	c.JSON(http.StatusOK, view.CreateResponse[any](res, nil, nil, nil))
 }
 
 // Positions godoc
@@ -196,8 +201,8 @@ func (h *handler) Positions(c *gin.Context) {
 	// 1 prepare the logger
 	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
-		"handler": "Positions",
-		"method":  "All",
+		"handler": "metadata",
+		"method":  "Positions",
 	})
 
 	// 2 query positions from db
