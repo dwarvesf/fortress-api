@@ -11,6 +11,15 @@ const (
 	WorkingStatusFullTime  WorkingStatus = "Full-time"
 )
 
+type AccountStatus string
+
+const (
+	AccountStatusOnBoarding AccountStatus = "onboarding"
+	AccountStatusActive     AccountStatus = "active"
+	AccountStatusProbation  AccountStatus = "probation"
+	AccountStatusOnLeave    AccountStatus = "on-leave"
+)
+
 type Employee struct {
 	BaseModel
 
@@ -35,6 +44,7 @@ type Employee struct {
 	WorkingStatus WorkingStatus
 	JoinedDate    *time.Time
 	LeftDate      *time.Time
+	AccountStatus AccountStatus
 
 	// social services
 	BasecampID             string
@@ -55,4 +65,16 @@ type Employee struct {
 	LocalBankCurrency      string
 	LocalBankName          string
 	LocalBankRecipientName string
+}
+
+func (e AccountStatus) Valid() bool {
+	switch e {
+	case
+		AccountStatusOnBoarding,
+		AccountStatusActive,
+		AccountStatusProbation,
+		AccountStatusOnLeave:
+		return true
+	}
+	return false
 }

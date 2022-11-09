@@ -7,6 +7,7 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/dwarvesf/fortress-api/pkg/logger"
+	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/utils"
@@ -80,6 +81,70 @@ func (h *handler) One(c *gin.Context) {
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToEmployeeListData(employee), nil, nil, nil))
 }
 
+// UpdateEmployeeStatus godoc
+// @Summary Update account status by employee id
+// @Description Update account status by employee id
+// @Tags Employee
+// @Accept  json
+// @Produce  json
+// @Param id path string true "Employee ID"
+// @Param employeeStatus body model.AccountStatus true "Employee Status"
+// @Param Authorization header string true "jwt token"
+// @Success 200 {object} view.UpdataEmployeeStatusResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /employee/{id}/employee-status [post]
+func (h *handler) UpdateEmployeeStatus(c *gin.Context) {
+	// 1. parse id from uri, validate id
+	var params struct {
+		ID string `uri:"id" binding:"required"`
+	}
+
+	if err := c.ShouldBindUri(&params); err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, params))
+		return
+	}
+
+	type updateAccountStatusBody struct {
+		EmployeeStatus model.AccountStatus `json:"employeeStatus"`
+	}
+
+	// 1.1 get body request
+	var body updateAccountStatusBody
+	if err := c.ShouldBindJSON(&body); err != nil {
+		if err != nil {
+			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, body))
+			return
+		}
+	}
+
+	// 1.2 prepare the logger
+	// TODO: can we move this to middleware ?
+	l := h.logger.Fields(logger.Fields{
+		"handler": "employee",
+		"method":  "UpdateEmployeeStatus",
+		"params":  params,
+	})
+
+	if !body.EmployeeStatus.Valid() {
+		l.Error(ErrInvalidEmployeeStatus, "invalid value for EmployeeStatus")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, ErrInvalidEmployeeStatus, body))
+		return
+	}
+
+	// 2. get update account status for employee
+	employee, err := h.store.Employee.UpdateEmployeeStatus(params.ID, body.EmployeeStatus)
+	if err != nil {
+		l.Error(err, "error query update account status employee to db")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, params))
+		return
+	}
+
+	// 3. return status reonse
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToEmployeeListData(employee), nil, nil, nil))
+}
+
 // GetProfile godoc
 // @Summary Get profile information of employee
 // @Description Get profile information of employee
@@ -101,7 +166,7 @@ func (h *handler) GetProfile(c *gin.Context) {
 
 	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
-		"handler": "GetProfile",
+		"handler": "employee",
 		"method":  "GetProfile",
 	})
 

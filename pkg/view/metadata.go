@@ -2,8 +2,8 @@ package view
 
 import "github.com/dwarvesf/fortress-api/pkg/model"
 
-type WorkingStatusData struct {
-	ID   string `json:"id"`
+type MetaData struct {
+	Code string `json:"code"`
 	Name string `json:"name"`
 }
 
@@ -17,10 +17,6 @@ type ChapterResponse struct {
 
 type AccountRoleResponse struct {
 	Data []model.Role `json:"data"`
-}
-
-type AccountStatusResponse struct {
-	Data []model.AccountStatus `json:"data"`
 }
 
 type PositionResponse struct {

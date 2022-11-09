@@ -1,19 +1,19 @@
 {
   "data": [
     {
-      "id": "left",
+      "code": "left",
       "name": "Left"
     },
     {
-      "id": "probation",
+      "code": "probation",
       "name": "Probation"
     },
     {
-      "id": "full-time",
+      "code": "full-time",
       "name": "Full-time"
     },
     {
-      "id": "contractor",
+      "code": "contractor",
       "name": "Contractor"
     }
   ]

@@ -32,3 +32,8 @@ func (s *store) All() ([]*model.Employee, error) {
 	var employees []*model.Employee
 	return employees, s.db.Find(&employees).Error
 }
+
+func (s *store) UpdateEmployeeStatus(employeeID string, accountStatus model.AccountStatus) (*model.Employee, error) {
+	employee := &model.Employee{}
+	return employee, s.db.Model(&employee).Where("id = ?", employeeID).Update("account_status", string(accountStatus)).Find(&employee).Error
+}
