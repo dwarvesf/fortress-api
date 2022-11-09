@@ -15,6 +15,21 @@ definitions:
       updatedAt:
         type: string
     type: object
+  model.Chapter:
+    properties:
+      code:
+        type: string
+      createdAt:
+        type: string
+      deletedAt:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      updatedAt:
+        type: string
+    type: object
   model.Country:
     properties:
       cities:
@@ -99,6 +114,13 @@ definitions:
         type: string
       employee:
         $ref: '#/definitions/view.EmployeeListData'
+    type: object
+  view.ChapterResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/model.Chapter'
+        type: array
     type: object
   view.CitiesResponse:
     properties:
@@ -308,6 +330,29 @@ paths:
           schema:
             $ref: '#/definitions/view.ErrorResponse'
       summary: Get list values for account statuses
+      tags:
+      - Metadata
+  /metadata/chapters:
+    get:
+      consumes:
+      - application/json
+      description: Get list values for chapters
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.ChapterResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get list values for chapters
       tags:
       - Metadata
   /metadata/countries:

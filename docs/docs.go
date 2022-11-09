@@ -206,6 +206,41 @@ const docTemplate = `{
                 }
             }
         },
+        "/metadata/chapters": {
+            "get": {
+                "description": "Get list values for chapters",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Metadata"
+                ],
+                "summary": "Get list values for chapters",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.ChapterResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/metadata/countries": {
             "get": {
                 "description": "Get all countries",
@@ -374,6 +409,29 @@ const docTemplate = `{
                 }
             }
         },
+        "model.Chapter": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "deletedAt": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
         "model.Country": {
             "type": "object",
             "properties": {
@@ -500,6 +558,17 @@ const docTemplate = `{
                 },
                 "employee": {
                     "$ref": "#/definitions/view.EmployeeListData"
+                }
+            }
+        },
+        "view.ChapterResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Chapter"
+                    }
                 }
             }
         },

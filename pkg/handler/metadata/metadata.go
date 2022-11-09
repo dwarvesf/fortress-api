@@ -61,6 +61,36 @@ func (h *handler) WorkingStatus(c *gin.Context) {
 	c.JSON(http.StatusOK, view.CreateResponse[any](res, nil, nil, nil))
 }
 
+// Chapters godoc
+// @Summary Get list values for chapters
+// @Description Get list values for chapters
+// @Tags Metadata
+// @Accept  json
+// @Produce  json
+// @Success 200 {object} view.ChapterResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /metadata/chapters [get]
+func (h *handler) Chapters(c *gin.Context) {
+	// 1 prepare the logger
+	// TODO: can we move this to middleware ?
+	l := h.logger.Fields(logger.Fields{
+		"handler": "Chapters",
+		"method":  "All",
+	})
+
+	// 2 query chapters from db
+	chapters, err := h.store.Chapter.All()
+	if err != nil {
+		l.Error(err, "error query chapters from db")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil))
+		return
+	}
+
+	// 3 return array of chapters
+	c.JSON(http.StatusOK, view.CreateResponse[any](chapters, nil, nil, nil))
+}
+
 // Roles godoc
 // @Summary Get list values for account roles
 // @Description Get list values for account roles
