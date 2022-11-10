@@ -162,7 +162,78 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/view.EmployeeListData"
+                            "$ref": "#/definitions/view.EmployeeData"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/employees": {
+            "get": {
+                "description": "Get the list of employees with pagination and workingStatus",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Employee"
+                ],
+                "summary": "Get the list of employees",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Working Status",
+                        "name": "workingStatus",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Page",
+                        "name": "page",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Size",
+                        "name": "size",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.EmployeeListDataResponse"
                         }
                     },
                     "400": {
@@ -774,7 +845,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "employee": {
-                    "$ref": "#/definitions/view.EmployeeListData"
+                    "$ref": "#/definitions/view.EmployeeData"
                 }
             }
         },
@@ -811,7 +882,7 @@ const docTemplate = `{
                 }
             }
         },
-        "view.EmployeeListData": {
+        "view.EmployeeData": {
             "type": "object",
             "properties": {
                 "address": {
@@ -869,6 +940,17 @@ const docTemplate = `{
                 },
                 "updatedAt": {
                     "type": "string"
+                }
+            }
+        },
+        "view.EmployeeListDataResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.EmployeeData"
+                    }
                 }
             }
         },

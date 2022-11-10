@@ -106,7 +106,7 @@ definitions:
       accessToken:
         type: string
       employee:
-        $ref: '#/definitions/view.EmployeeListData'
+        $ref: '#/definitions/view.EmployeeData'
     type: object
   view.ChapterResponse:
     properties:
@@ -129,7 +129,7 @@ definitions:
           $ref: '#/definitions/model.Country'
         type: array
     type: object
-  view.EmployeeListData:
+  view.EmployeeData:
     properties:
       address:
         type: string
@@ -169,6 +169,13 @@ definitions:
         type: string
       updatedAt:
         type: string
+    type: object
+  view.EmployeeListDataResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/view.EmployeeData'
+        type: array
     type: object
   view.ErrorResponse:
     properties:
@@ -367,7 +374,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/view.EmployeeListData'
+            $ref: '#/definitions/view.EmployeeData'
         "400":
           description: Bad Request
           schema:
@@ -458,6 +465,54 @@ paths:
           schema:
             $ref: '#/definitions/view.ErrorResponse'
       summary: Get profile information of employee
+      tags:
+      - Employee
+  /employees:
+    get:
+      consumes:
+      - application/json
+      description: Get the list of employees with pagination and workingStatus
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Working Status
+        in: query
+        name: workingStatus
+        required: true
+        type: string
+      - description: Page
+        in: query
+        name: page
+        required: true
+        type: string
+      - description: Size
+        in: query
+        name: size
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.EmployeeListDataResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get the list of employees
       tags:
       - Employee
   /metadata/account-roles:

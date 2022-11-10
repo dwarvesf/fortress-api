@@ -28,9 +28,24 @@ func (s *store) OneByTeamEmail(teamEmail string) (*model.Employee, error) {
 	return employee, s.db.Where("team_email = ?", teamEmail).First(&employee).Error
 }
 
-func (s *store) All() ([]*model.Employee, error) {
+// Search get employees by filter and pagination
+func (s *store) Search(filter SearchFilter, pagination model.Pagination) ([]*model.Employee, int64, error) {
+	db := s.db.Table("employees")
+	var total int64
+
+	if filter.WorkingStatus != "" {
+		db = db.Where("working_status = ?", filter.WorkingStatus)
+	}
+	db = db.Count(&total)
+
+	if pagination.Page > 1 {
+		db = db.Offset(int((pagination.Page - 1) * pagination.Size))
+	}
+	db = db.Limit(int(pagination.Size))
+	db = db.Order(pagination.Sort)
+
 	var employees []*model.Employee
-	return employees, s.db.Find(&employees).Error
+	return employees, total, db.Find(&employees).Error
 }
 
 func (s *store) UpdateEmployeeStatus(employeeID string, accountStatus model.AccountStatus) (*model.Employee, error) {

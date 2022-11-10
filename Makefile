@@ -17,20 +17,28 @@ init: setup
 	make remove-infras
 	docker-compose up -d
 	@echo "Waiting for database connection..."
-	@while ! docker exec fortress_local pg_isready > /dev/null; do \
+	@while ! docker exec ${POSTGRES_CONTAINER} pg_isready > /dev/null; do \
 		sleep 1; \
 	done
 	@while ! docker exec $(POSTGRES_TEST_CONTAINER) pg_isready > /dev/null; do \
 		sleep 1; \
 	done
 	make migrate-up
+	make migrate-test
 	make seed
+	make seed-test
 
 seed:
 	@docker exec -t $(POSTGRES_CONTAINER) sh -c "mkdir -p /seed"
 	@docker exec -t $(POSTGRES_CONTAINER) sh -c "rm -rf /seed/*"
 	@docker cp migrations/seed $(POSTGRES_CONTAINER):/
 	@docker exec -t $(POSTGRES_CONTAINER) sh -c "PGPASSWORD=postgres psql -U postgres -d $(POSTGRES_CONTAINER) -f /seed/seed.sql"
+
+seed-test:
+	@docker exec -t $(POSTGRES_TEST_CONTAINER) sh -c "mkdir -p /seed"
+	@docker exec -t $(POSTGRES_TEST_CONTAINER) sh -c "rm -rf /seed/*"
+	@docker cp migrations/test_seed $(POSTGRES_TEST_CONTAINER):/
+	@docker exec -t $(POSTGRES_TEST_CONTAINER) sh -c "PGPASSWORD=postgres psql -U postgres -d $(POSTGRES_TEST_CONTAINER) -f /test_seed/seed.sql"
 
 remove-infras:
 	docker-compose down --remove-orphans
@@ -42,7 +50,7 @@ dev:
 	go run ./cmd/server/main.go
 
 test:
-	@PROJECT_PATH=$(shell pwd) go test -cover ./...
+	@PROJECT_PATH=$(shell pwd) go test -cover ./... -count=1
 
 migrate-test:
 	sql-migrate up -env=test

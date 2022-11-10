@@ -140,10 +140,10 @@ func LoadTestConfig() Config {
 		},
 		Postgres: DBConnection{
 			Host:    "127.0.0.1",
-			Port:    "25432",
+			Port:    "35432",
 			User:    "postgres",
 			Pass:    "postgres",
-			Name:    "fortress_local",
+			Name:    "fortress_local_test",
 			SSLMode: "disable",
 		},
 		Clickhouse: DBConnection{

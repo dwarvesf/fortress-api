@@ -29,7 +29,7 @@ func TestToAuthData(t *testing.T) {
 				},
 			},
 			want: &AuthData{
-				Employee: EmployeeListData{
+				Employee: EmployeeData{
 					BaseModel: model.BaseModel{
 						ID: id,
 					},
