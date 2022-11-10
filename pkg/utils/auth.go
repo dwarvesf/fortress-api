@@ -42,6 +42,15 @@ func GetUserIDFromToken(tokenString string) (string, error) {
 	return claims.UserID, nil
 }
 
+func GetUserIDFromContext(c *gin.Context) (string, error) {
+	accessToken, err := GetTokenFromRequest(c)
+	if err != nil {
+		return "", err
+	}
+
+	return GetUserIDFromToken(accessToken)
+}
+
 func GetTokenFromRequest(c *gin.Context) (string, error) {
 	headers := strings.Split(c.Request.Header.Get("Authorization"), " ")
 	if len(headers) != 2 {

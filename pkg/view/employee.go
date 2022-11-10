@@ -29,6 +29,24 @@ type EmployeeListData struct {
 	LeftDate      *time.Time          `json:"leftDate"`
 }
 
+type ProfileData struct {
+	ID            model.UUID `json:"id"`
+	FullName      string     `json:"fullName"`
+	DisplayName   string     `json:"displayName"`
+	Avatar        string     `json:"avatar"`
+	Gender        string     `json:"gender"`
+	DateOfBirth   *time.Time `json:"birthday"`
+	TeamEmail     string     `json:"teamEmail"`
+	PersonalEmail string     `json:"personalEmail"`
+	PhoneNumber   string     `json:"phoneNumber"`
+	DiscordID     string     `json:"discordId"`
+	GithubID      string     `json:"githubId"`
+}
+
+type ProfileDataResponse struct {
+	Data ProfileData `json:"data"`
+}
+
 func ToEmployeeListData(employee *model.Employee) *EmployeeListData {
 	return &EmployeeListData{
 		BaseModel: model.BaseModel{
@@ -47,5 +65,21 @@ func ToEmployeeListData(employee *model.Employee) *EmployeeListData {
 		WorkingStatus: employee.WorkingStatus,
 		JoinedDate:    employee.JoinedDate,
 		LeftDate:      employee.LeftDate,
+	}
+}
+
+func ToProfileData(employee *model.Employee) *ProfileData {
+	return &ProfileData{
+		ID:            employee.ID,
+		FullName:      employee.FullName,
+		DisplayName:   employee.DisplayName,
+		Avatar:        employee.Avatar,
+		Gender:        employee.Gender,
+		DateOfBirth:   employee.DateOfBirth,
+		TeamEmail:     employee.TeamEmail,
+		PersonalEmail: employee.PersonalEmail,
+		PhoneNumber:   employee.PhoneNumber,
+		DiscordID:     employee.DiscordID,
+		GithubID:      employee.GithubID,
 	}
 }

@@ -9,6 +9,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/store"
+	"github.com/dwarvesf/fortress-api/pkg/utils"
 	"github.com/dwarvesf/fortress-api/pkg/view"
 )
 
@@ -18,6 +19,7 @@ type handler struct {
 	logger  logger.Logger
 }
 
+// New returns a handler
 func New(store *store.Store, service *service.Service, logger logger.Logger) IHandler {
 	return &handler{
 		store:   store,
@@ -76,4 +78,44 @@ func (h *handler) One(c *gin.Context) {
 
 	// 3. return employee
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToEmployeeListData(employee), nil, nil, nil))
+}
+
+// GetProfile godoc
+// @Summary Get profile information of employee
+// @Description Get profile information of employee
+// @Tags Employee
+// @Accept  json
+// @Produce  json
+// @Param Authorization header string true "jwt token"
+// @Success 200 {object} view.ProfileDataResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /employee/profile [get]
+func (h *handler) GetProfile(c *gin.Context) {
+	userID, err := utils.GetUserIDFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil))
+		return
+	}
+
+	// TODO: can we move this to middleware ?
+	l := h.logger.Fields(logger.Fields{
+		"handler": "GetProfile",
+		"method":  "GetProfile",
+	})
+
+	employee, err := h.store.Employee.One(userID)
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			l.Info("employee not found")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, err, nil))
+			return
+		}
+		l.Error(err, "error query employee from db")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil))
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToProfileData(employee), nil, nil, nil))
 }
