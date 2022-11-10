@@ -7,7 +7,7 @@ import (
 )
 
 // EmployeeListData view for listing data
-type EmployeeListData struct {
+type EmployeeData struct {
 	model.BaseModel
 
 	// basic info
@@ -29,7 +29,11 @@ type EmployeeListData struct {
 	LeftDate      *time.Time          `json:"leftDate"`
 }
 type UpdataEmployeeStatusResponse struct {
-	Data EmployeeListData `json:"data"`
+	Data EmployeeData `json:"data"`
+}
+
+type EmployeeListDataResponse struct {
+	Data []EmployeeData `json:"data"`
 }
 
 type ProfileData struct {
@@ -50,8 +54,8 @@ type ProfileDataResponse struct {
 	Data ProfileData `json:"data"`
 }
 
-func ToEmployeeListData(employee *model.Employee) *EmployeeListData {
-	return &EmployeeListData{
+func ToEmployeeData(employee *model.Employee) *EmployeeData {
+	return &EmployeeData{
 		BaseModel: model.BaseModel{
 			ID:        employee.ID,
 			CreatedAt: employee.CreatedAt,
@@ -72,6 +76,15 @@ func ToEmployeeListData(employee *model.Employee) *EmployeeListData {
 		JoinedDate:    employee.JoinedDate,
 		LeftDate:      employee.LeftDate,
 	}
+}
+
+func ToEmployeeListData(employees []*model.Employee) []EmployeeData {
+	employeeResponses := []EmployeeData{}
+	for _, emp := range employees {
+		empRes := ToEmployeeData(emp)
+		employeeResponses = append(employeeResponses, *empRes)
+	}
+	return employeeResponses
 }
 
 func ToProfileData(employee *model.Employee) *ProfileData {

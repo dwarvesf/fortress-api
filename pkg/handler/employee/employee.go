@@ -10,6 +10,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/store"
+	employee_store "github.com/dwarvesf/fortress-api/pkg/store/employee"
 	"github.com/dwarvesf/fortress-api/pkg/utils"
 	"github.com/dwarvesf/fortress-api/pkg/view"
 )
@@ -29,8 +30,46 @@ func New(store *store.Store, service *service.Service, logger logger.Logger) IHa
 	}
 }
 
+// List godoc
+// @Summary Get the list of employees
+// @Description Get the list of employees with pagination and workingStatus
+// @Tags Employee
+// @Accept  json
+// @Produce  json
+// @Param Authorization header string true "jwt token"
+// @Param       workingStatus   query  string true  "Working Status"
+// @Param       page   query  string true  "Page"
+// @Param       size   query  string true  "Size"
+// @Success 200 {object} view.EmployeeListDataResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /employees [get]
 func (h *handler) List(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"data": "employee list"})
+	query := GetListEmployeeQuery{}
+	if err := c.ShouldBindQuery(&query); err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, query))
+		return
+	}
+	query.Standardize()
+
+	l := h.logger.Fields(logger.Fields{
+		"handler": "employee",
+		"method":  "List",
+		"params":  query,
+	})
+
+	employees, total, err := h.store.Employee.Search(employee_store.SearchFilter{
+		WorkingStatus: query.WorkingStatus,
+	}, query.Pagination)
+	if err != nil {
+		l.Error(err, "error query employee from db")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, query))
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse(view.ToEmployeeListData(employees),
+		&view.PaginationResponse{Pagination: query.Pagination, Total: total}, nil, nil))
 }
 
 // One godoc
@@ -40,7 +79,7 @@ func (h *handler) List(c *gin.Context) {
 // @Accept  json
 // @Produce  json
 // @Param id path string true "Employee ID"
-// @Success 200 {object} view.EmployeeListData
+// @Success 200 {object} view.EmployeeData
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 404 {object} view.ErrorResponse
 // @Failure 500 {object} view.ErrorResponse
@@ -78,7 +117,7 @@ func (h *handler) One(c *gin.Context) {
 	}
 
 	// 3. return employee
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToEmployeeListData(employee), nil, nil, nil))
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToEmployeeData(employee), nil, nil, nil))
 }
 
 // UpdateEmployeeStatus godoc
@@ -142,7 +181,7 @@ func (h *handler) UpdateEmployeeStatus(c *gin.Context) {
 	}
 
 	// 3. return status reonse
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToEmployeeListData(employee), nil, nil, nil))
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToEmployeeData(employee), nil, nil, nil))
 }
 
 // GetProfile godoc
