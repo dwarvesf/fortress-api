@@ -8,7 +8,7 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-// APIError
+// ApiError is a struct for error response
 // @Description validation error details
 type ApiError struct {
 	Field string   `json:"field"`           // the field cause the error
