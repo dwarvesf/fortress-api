@@ -29,6 +29,7 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, cfg *config.Config) {
 	v1.GET("/metadata/positions", h.Metadata.Positions)
 	v1.GET("/metadata/countries", h.Metadata.GetCountries)
 	v1.GET("/metadata/countries/:country_id/cities", h.Metadata.GetCities)
+	v1.GET("/metadata/project-statuses", h.Metadata.ProjectStatuses)
 
 	// projects
 	v1.GET("/projects", h.Project.List)

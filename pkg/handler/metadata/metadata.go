@@ -187,6 +187,41 @@ func (h *handler) AccountStatuses(c *gin.Context) {
 	c.JSON(http.StatusOK, view.CreateResponse[any](res, nil, nil, nil))
 }
 
+// ProjectStatuses godoc
+// @Summary Get list values for project statuses
+// @Description Get list values for project statuses
+// @Tags Metadata
+// @Accept  json
+// @Produce  json
+// @Success 200 {object} []view.MetaData
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /metadata/project-statuses [get]
+func (h *handler) ProjectStatuses(c *gin.Context) {
+	// return list values for project statuses
+	// hardcode for now since we dont need db storage for this
+	res := []view.MetaData{
+		{
+			Code: "on-boarding",
+			Name: "On Boarding",
+		},
+		{
+			Code: "paused",
+			Name: "Paused",
+		},
+		{
+			Code: "active",
+			Name: "Active",
+		},
+		{
+			Code: "closed",
+			Name: "Closed",
+		},
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](res, nil, nil, nil))
+}
+
 // Positions godoc
 // @Summary Get list values for positions
 // @Description Get list values for positions
