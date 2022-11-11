@@ -16,7 +16,7 @@ func New(db *gorm.DB) IStore {
 	}
 }
 
-// One get all chapters
+// All get all chapters
 func (s *store) All() ([]*model.Chapter, error) {
 	var chapters []*model.Chapter
 	return chapters, s.db.Find(&chapters).Error

@@ -4,7 +4,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/store/chapter"
 	"github.com/dwarvesf/fortress-api/pkg/store/country"
-	employee_store "github.com/dwarvesf/fortress-api/pkg/store/employee"
+	"github.com/dwarvesf/fortress-api/pkg/store/employee"
 	"github.com/dwarvesf/fortress-api/pkg/store/permission"
 	"github.com/dwarvesf/fortress-api/pkg/store/position"
 	"github.com/dwarvesf/fortress-api/pkg/store/project"
@@ -13,7 +13,7 @@ import (
 )
 
 type Store struct {
-	Employee   employee_store.IStore
+	Employee   employee.IStore
 	Seniority  seniority.IStore
 	Chapter    chapter.IStore
 	Position   position.IStore
@@ -26,7 +26,7 @@ type Store struct {
 func New(cfg *config.Config) *Store {
 	db := connDb(cfg)
 	return &Store{
-		Employee:   employee_store.New(db),
+		Employee:   employee.New(db),
 		Seniority:  seniority.New(db),
 		Chapter:    chapter.New(db),
 		Position:   position.New(db),

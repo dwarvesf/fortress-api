@@ -241,7 +241,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/view.UpdataEmployeeStatusResponse"
+                            "$ref": "#/definitions/view.UpdateEmployeeStatusResponse"
                         }
                     },
                     "400": {
@@ -1172,7 +1172,7 @@
                 }
             }
         },
-        "view.UpdataEmployeeStatusResponse": {
+        "view.UpdateEmployeeStatusResponse": {
             "type": "object",
             "properties": {
                 "data": {

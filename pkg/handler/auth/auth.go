@@ -83,7 +83,7 @@ func (h *handler) Auth(c *gin.Context) {
 		return
 	}
 
-	// 2.4 check user is actived
+	// 2.4 check user is active
 	employee, err := h.store.Employee.OneByTeamEmail(primaryEmail)
 	if err != nil {
 		l.Error(err, "error query employee from db")

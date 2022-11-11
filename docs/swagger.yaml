@@ -299,7 +299,7 @@ definitions:
           $ref: '#/definitions/model.Seniority'
         type: array
     type: object
-  view.UpdataEmployeeStatusResponse:
+  view.UpdateEmployeeStatusResponse:
     properties:
       data:
         $ref: '#/definitions/view.EmployeeData'
@@ -466,7 +466,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/view.UpdataEmployeeStatusResponse'
+            $ref: '#/definitions/view.UpdateEmployeeStatusResponse'
         "400":
           description: Bad Request
           schema:

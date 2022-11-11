@@ -10,7 +10,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/store"
-	employee_store "github.com/dwarvesf/fortress-api/pkg/store/employee"
+	"github.com/dwarvesf/fortress-api/pkg/store/employee"
 	"github.com/dwarvesf/fortress-api/pkg/utils"
 	"github.com/dwarvesf/fortress-api/pkg/view"
 )
@@ -59,7 +59,7 @@ func (h *handler) List(c *gin.Context) {
 		"params":  query,
 	})
 
-	employees, total, err := h.store.Employee.Search(employee_store.SearchFilter{
+	employees, total, err := h.store.Employee.Search(employee.SearchFilter{
 		WorkingStatus: query.WorkingStatus,
 	}, query.Pagination)
 	if err != nil {
@@ -104,7 +104,7 @@ func (h *handler) One(c *gin.Context) {
 	})
 
 	// 2. get employee from store
-	employee, err := h.store.Employee.One(params.ID)
+	rs, err := h.store.Employee.One(params.ID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			l.Info("employee not found")
@@ -117,7 +117,7 @@ func (h *handler) One(c *gin.Context) {
 	}
 
 	// 3. return employee
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToEmployeeData(employee), nil, nil, nil))
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToEmployeeData(rs), nil, nil, nil))
 }
 
 // UpdateEmployeeStatus godoc
@@ -129,7 +129,7 @@ func (h *handler) One(c *gin.Context) {
 // @Param id path string true "Employee ID"
 // @Param employeeStatus body model.AccountStatus true "Employee Status"
 // @Param Authorization header string true "jwt token"
-// @Success 200 {object} view.UpdataEmployeeStatusResponse
+// @Success 200 {object} view.UpdateEmployeeStatusResponse
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 404 {object} view.ErrorResponse
 // @Failure 500 {object} view.ErrorResponse

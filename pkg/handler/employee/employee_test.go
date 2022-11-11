@@ -62,10 +62,10 @@ func TestHandler_UpdateEmployeeStatus(t *testing.T) {
 			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
 			require.NoError(t, err)
 
-			var actualData view.UpdataEmployeeStatusResponse
-			var expectedData view.UpdataEmployeeStatusResponse
-			err = json.Unmarshal(w.Body.Bytes(), actualData)
-			err = json.Unmarshal(expRespRaw, expectedData)
+			var actualData view.UpdateEmployeeStatusResponse
+			var expectedData view.UpdateEmployeeStatusResponse
+			err = json.Unmarshal(w.Body.Bytes(), &actualData)
+			err = json.Unmarshal(expRespRaw, &expectedData)
 
 			actualData.Data.UpdatedAt = nil
 			expectedData.Data.UpdatedAt = nil
@@ -117,7 +117,7 @@ func TestHandler_GetProfile(t *testing.T) {
 	}
 }
 
-func Test_handler_List(t *testing.T) {
+func TestHandler_List(t *testing.T) {
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg)
