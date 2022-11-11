@@ -302,7 +302,7 @@ definitions:
   view.UpdataEmployeeStatusResponse:
     properties:
       data:
-        $ref: '#/definitions/view.EmployeeListData'
+        $ref: '#/definitions/view.EmployeeData'
     type: object
 info:
   contact:
@@ -357,116 +357,6 @@ paths:
       summary: Authorise user when login
       tags:
       - Auth
-  /employee/{id}:
-    get:
-      consumes:
-      - application/json
-      description: Get employee by id
-      parameters:
-      - description: Employee ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/view.EmployeeData'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/view.ErrorResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/view.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/view.ErrorResponse'
-      summary: Get employee by id
-      tags:
-      - Employee
-  /employee/{id}/employee-status:
-    post:
-      consumes:
-      - application/json
-      description: Update account status by employee id
-      parameters:
-      - description: Employee ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: Employee Status
-        in: body
-        name: employeeStatus
-        required: true
-        schema:
-          type: string
-      - description: jwt token
-        in: header
-        name: Authorization
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/view.UpdataEmployeeStatusResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/view.ErrorResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/view.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/view.ErrorResponse'
-      summary: Update account status by employee id
-      tags:
-      - Employee
-  /employee/profile:
-    get:
-      consumes:
-      - application/json
-      description: Get profile information of employee
-      parameters:
-      - description: jwt token
-        in: header
-        name: Authorization
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/view.ProfileDataResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/view.ErrorResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/view.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/view.ErrorResponse'
-      summary: Get profile information of employee
-      tags:
-      - Employee
   /employees:
     get:
       consumes:
@@ -513,6 +403,83 @@ paths:
           schema:
             $ref: '#/definitions/view.ErrorResponse'
       summary: Get the list of employees
+      tags:
+      - Employee
+  /employees/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get employee by id
+      parameters:
+      - description: Employee ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.EmployeeData'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get employee by id
+      tags:
+      - Employee
+  /employees/{id}/employee-status:
+    post:
+      consumes:
+      - application/json
+      description: Update account status by employee id
+      parameters:
+      - description: Employee ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Employee Status
+        in: body
+        name: employeeStatus
+        required: true
+        schema:
+          type: string
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.UpdataEmployeeStatusResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Update account status by employee id
       tags:
       - Employee
   /metadata/account-roles:
@@ -728,6 +695,39 @@ paths:
       summary: Get list values for working status
       tags:
       - Metadata
+  /profile:
+    get:
+      consumes:
+      - application/json
+      description: Get profile information of employee
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.ProfileDataResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get profile information of employee
+      tags:
+      - Employee
   /projects:
     get:
       consumes:

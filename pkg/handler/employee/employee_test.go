@@ -52,7 +52,7 @@ func TestHandler_UpdateEmployeeStatus(t *testing.T) {
 			}
 			`)
 			ctx.Params = gin.Params{gin.Param{Key: "id", Value: "2655832e-f009-4b73-a535-64c3a22e558f"}}
-			ctx.Request = httptest.NewRequest("POST", fmt.Sprintf("%s", "/api/v1/employee/2655832e-f009-4b73-a535-64c3a22e558f/employee-status"), bodyReader)
+			ctx.Request = httptest.NewRequest("POST", fmt.Sprintf("%s", "/api/v1/employees/2655832e-f009-4b73-a535-64c3a22e558f/employee-status"), bodyReader)
 			ctx.Request.Header.Set("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2OTkzMjExNDIsImlkIjoiMjY1NTgzMmUtZjAwOS00YjczLWE1MzUtNjRjM2EyMmU1NThmIiwiYXZhdGFyIjoiaHR0cHM6Ly9zMy1hcC1zb3V0aGVhc3QtMS5hbWF6b25hd3MuY29tL2ZvcnRyZXNzLWltYWdlcy81MTUzNTc0Njk1NjYzOTU1OTQ0LnBuZyIsImVtYWlsIjoidGhhbmhAZC5mb3VuZGF0aW9uIiwicGVybWlzc2lvbnMiOlsiZW1wbG95ZWVzLnJlYWQiXSwidXNlcl9pbmZvIjpudWxsfQ.GENGPEucSUrILN6tHDKxLMtj0M0REVMUPC7-XhDMpGM")
 			metadataHandler := New(storeMock, serviceMock, loggerMock)
 
@@ -102,7 +102,7 @@ func TestHandler_GetProfile(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			ctx, _ := gin.CreateTestContext(w)
-			ctx.Request = httptest.NewRequest("POST", fmt.Sprintf("%s", "/api/v1/employee/2655832e-f009-4b73-a535-64c3a22e558f/employee-status"), nil)
+			ctx.Request = httptest.NewRequest("POST", fmt.Sprintf("%s", "/api/v1/profile"), nil)
 			ctx.Request.Header.Set("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2OTkzMjExNDIsImlkIjoiMjY1NTgzMmUtZjAwOS00YjczLWE1MzUtNjRjM2EyMmU1NThmIiwiYXZhdGFyIjoiaHR0cHM6Ly9zMy1hcC1zb3V0aGVhc3QtMS5hbWF6b25hd3MuY29tL2ZvcnRyZXNzLWltYWdlcy81MTUzNTc0Njk1NjYzOTU1OTQ0LnBuZyIsImVtYWlsIjoidGhhbmhAZC5mb3VuZGF0aW9uIiwicGVybWlzc2lvbnMiOlsiZW1wbG95ZWVzLnJlYWQiXSwidXNlcl9pbmZvIjpudWxsfQ.GENGPEucSUrILN6tHDKxLMtj0M0REVMUPC7-XhDMpGM")
 			metadataHandler := New(storeMock, serviceMock, loggerMock)
 

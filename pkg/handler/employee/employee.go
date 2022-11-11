@@ -83,7 +83,7 @@ func (h *handler) List(c *gin.Context) {
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 404 {object} view.ErrorResponse
 // @Failure 500 {object} view.ErrorResponse
-// @Router /employee/{id} [get]
+// @Router /employees/{id} [get]
 func (h *handler) One(c *gin.Context) {
 	// 1. parse id from uri, validate id
 	var params struct {
@@ -133,7 +133,7 @@ func (h *handler) One(c *gin.Context) {
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 404 {object} view.ErrorResponse
 // @Failure 500 {object} view.ErrorResponse
-// @Router /employee/{id}/employee-status [post]
+// @Router /employees/{id}/employee-status [post]
 func (h *handler) UpdateEmployeeStatus(c *gin.Context) {
 	// 1. parse id from uri, validate id
 	var params struct {
@@ -195,7 +195,7 @@ func (h *handler) UpdateEmployeeStatus(c *gin.Context) {
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 404 {object} view.ErrorResponse
 // @Failure 500 {object} view.ErrorResponse
-// @Router /employee/profile [get]
+// @Router /profile [get]
 func (h *handler) GetProfile(c *gin.Context) {
 	userID, err := utils.GetUserIDFromContext(c)
 	if err != nil {
