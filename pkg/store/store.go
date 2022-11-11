@@ -7,6 +7,7 @@ import (
 	employee_store "github.com/dwarvesf/fortress-api/pkg/store/employee"
 	"github.com/dwarvesf/fortress-api/pkg/store/permission"
 	"github.com/dwarvesf/fortress-api/pkg/store/position"
+	"github.com/dwarvesf/fortress-api/pkg/store/project"
 	"github.com/dwarvesf/fortress-api/pkg/store/role"
 	"github.com/dwarvesf/fortress-api/pkg/store/seniority"
 )
@@ -19,6 +20,7 @@ type Store struct {
 	Permission permission.IStore
 	Country    country.IStore
 	Role       role.IStore
+	Project    project.IStore
 }
 
 func New(cfg *config.Config) *Store {
@@ -31,5 +33,6 @@ func New(cfg *config.Config) *Store {
 		Permission: permission.New(db),
 		Country:    country.New(db),
 		Role:       role.New(db),
+		Project:    project.New(db),
 	}
 }

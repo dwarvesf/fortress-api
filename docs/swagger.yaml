@@ -223,6 +223,68 @@ definitions:
       data:
         $ref: '#/definitions/view.ProfileData'
     type: object
+  view.ProjectData:
+    properties:
+      createdAt:
+        type: string
+      deletedAt:
+        type: string
+      endDate:
+        type: string
+      heads:
+        items:
+          $ref: '#/definitions/view.ProjectHead'
+        type: array
+      id:
+        type: string
+      members:
+        items:
+          $ref: '#/definitions/view.ProjectMember'
+        type: array
+      name:
+        type: string
+      startDate:
+        type: string
+      status:
+        type: string
+      type:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  view.ProjectHead:
+    properties:
+      avatar:
+        type: string
+      displayName:
+        type: string
+      employeeID:
+        type: string
+      fullName:
+        type: string
+      position:
+        type: string
+    type: object
+  view.ProjectListDataResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/view.ProjectData'
+        type: array
+    type: object
+  view.ProjectMember:
+    properties:
+      avatar:
+        type: string
+      displayName:
+        type: string
+      employeeID:
+        type: string
+      fullName:
+        type: string
+      isLead:
+        type: boolean
+    type: object
   view.SeniorityResponse:
     properties:
       data:
@@ -586,6 +648,55 @@ paths:
       summary: Get list values for working status
       tags:
       - Metadata
+  /projects:
+    get:
+      consumes:
+      - application/json
+      description: Get list of project
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Project status
+        in: query
+        name: status
+        type: string
+      - description: Project name
+        in: query
+        name: name
+        type: string
+      - description: Project type
+        in: query
+        name: type
+        type: string
+      - description: Page
+        in: query
+        name: page
+        type: string
+      - description: Size
+        in: query
+        name: size
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.ProjectListDataResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get list of project
+      tags:
+      - Project
 securityDefinitions:
   BasicAuth:
     type: basic
