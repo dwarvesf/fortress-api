@@ -14,7 +14,7 @@ const (
 type AccountStatus string
 
 const (
-	AccountStatusOnBoarding AccountStatus = "onboarding"
+	AccountStatusOnBoarding AccountStatus = "on-boarding"
 	AccountStatusActive     AccountStatus = "active"
 	AccountStatusProbation  AccountStatus = "probation"
 	AccountStatusOnLeave    AccountStatus = "on-leave"

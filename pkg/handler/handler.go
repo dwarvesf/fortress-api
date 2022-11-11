@@ -1,30 +1,30 @@
 package handler
 
 import (
-	auth_handler "github.com/dwarvesf/fortress-api/pkg/handler/auth"
-	employee_handler "github.com/dwarvesf/fortress-api/pkg/handler/employee"
-	healthz_handler "github.com/dwarvesf/fortress-api/pkg/handler/healthz"
-	metadata_handler "github.com/dwarvesf/fortress-api/pkg/handler/metadata"
-	project_handler "github.com/dwarvesf/fortress-api/pkg/handler/project"
+	"github.com/dwarvesf/fortress-api/pkg/handler/auth"
+	"github.com/dwarvesf/fortress-api/pkg/handler/employee"
+	"github.com/dwarvesf/fortress-api/pkg/handler/healthz"
+	"github.com/dwarvesf/fortress-api/pkg/handler/metadata"
+	"github.com/dwarvesf/fortress-api/pkg/handler/project"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 )
 
 type Handler struct {
-	Healthcheck healthz_handler.IHandler
-	Employee    employee_handler.IHandler
-	Metadata    metadata_handler.IHandler
-	Auth        auth_handler.IHandler
-	Project     project_handler.IHandler
+	Healthcheck healthz.IHandler
+	Employee    employee.IHandler
+	Metadata    metadata.IHandler
+	Auth        auth.IHandler
+	Project     project.IHandler
 }
 
 func New(store *store.Store, service *service.Service, logger logger.Logger) *Handler {
 	return &Handler{
-		Healthcheck: healthz_handler.New(),
-		Employee:    employee_handler.New(store, service, logger),
-		Metadata:    metadata_handler.New(store, service, logger),
-		Auth:        auth_handler.New(store, service, logger),
-		Project:     project_handler.New(store, service, logger),
+		Healthcheck: healthz.New(),
+		Employee:    employee.New(store, service, logger),
+		Metadata:    metadata.New(store, service, logger),
+		Auth:        auth.New(store, service, logger),
+		Project:     project.New(store, service, logger),
 	}
 }

@@ -249,7 +249,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/view.UpdataEmployeeStatusResponse"
+                            "$ref": "#/definitions/view.UpdateEmployeeStatusResponse"
                         }
                     },
                     "400": {
@@ -1180,7 +1180,7 @@ const docTemplate = `{
                 }
             }
         },
-        "view.UpdataEmployeeStatusResponse": {
+        "view.UpdateEmployeeStatusResponse": {
             "type": "object",
             "properties": {
                 "data": {

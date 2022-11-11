@@ -28,7 +28,7 @@ type EmployeeData struct {
 	JoinedDate    *time.Time          `json:"joinedDate"`
 	LeftDate      *time.Time          `json:"leftDate"`
 }
-type UpdataEmployeeStatusResponse struct {
+type UpdateEmployeeStatusResponse struct {
 	Data EmployeeData `json:"data"`
 }
 
@@ -79,12 +79,12 @@ func ToEmployeeData(employee *model.Employee) *EmployeeData {
 }
 
 func ToEmployeeListData(employees []*model.Employee) []EmployeeData {
-	employeeResponses := []EmployeeData{}
+	rs := make([]EmployeeData, 0, len(employees))
 	for _, emp := range employees {
 		empRes := ToEmployeeData(emp)
-		employeeResponses = append(employeeResponses, *empRes)
+		rs = append(rs, *empRes)
 	}
-	return employeeResponses
+	return rs
 }
 
 func ToProfileData(employee *model.Employee) *ProfileData {

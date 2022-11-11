@@ -23,6 +23,7 @@ type ProjectMember struct {
 	FullName    string `json:"fullName"`
 	DisplayName string `json:"displayName"`
 	Avatar      string `json:"avatar"`
+	Position    string `json:"position"`
 	IsLead      bool   `json:"isLead"`
 }
 
@@ -64,6 +65,7 @@ func ToProjectData(projects []*model.Project) []ProjectData {
 				FullName:    m.Employee.FullName,
 				DisplayName: m.Employee.DisplayName,
 				Avatar:      m.Employee.Avatar,
+				Position:    m.Position,
 				IsLead:      isLead,
 			})
 		}

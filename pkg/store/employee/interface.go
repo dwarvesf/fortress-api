@@ -1,4 +1,4 @@
-package employee_store
+package employee
 
 import (
 	"github.com/dwarvesf/fortress-api/pkg/model"

@@ -164,7 +164,7 @@ func (h *handler) AccountRoles(c *gin.Context) {
 // @Router /metadata/account-statuses [get]
 func (h *handler) AccountStatuses(c *gin.Context) {
 	// return list values for account status
-	// hardcode for now since we dont need db storage for this
+	// hardcode for now since we don't need db storage for this
 	res := []view.MetaData{
 		{
 			Code: "on-boarding",
@@ -199,7 +199,7 @@ func (h *handler) AccountStatuses(c *gin.Context) {
 // @Router /metadata/project-statuses [get]
 func (h *handler) ProjectStatuses(c *gin.Context) {
 	// return list values for project statuses
-	// hardcode for now since we dont need db storage for this
+	// hardcode for now since we don't need db storage for this
 	res := []view.MetaData{
 		{
 			Code: "on-boarding",

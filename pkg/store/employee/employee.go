@@ -1,4 +1,4 @@
-package employee_store
+package employee
 
 import (
 	"gorm.io/gorm"
