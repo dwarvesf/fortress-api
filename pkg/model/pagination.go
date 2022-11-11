@@ -36,6 +36,16 @@ func (p *Pagination) Standardize() {
 	p.Standardized = true
 }
 
+func (p *Pagination) ToLimitOffset() (limit int, offset int) {
+	limit = int(p.Size)
+	offset = limit * (int(p.Page) - 1)
+	if offset < 0 {
+		offset = 0
+	}
+
+	return limit, offset
+}
+
 func standardizeSortQuery(sortQ string) string {
 	if sortQ == "" {
 		return sortQ

@@ -167,8 +167,8 @@ func (h *handler) AccountStatuses(c *gin.Context) {
 	// hardcode for now since we dont need db storage for this
 	res := []view.MetaData{
 		{
-			Code: "onboarding",
-			Name: "Onboarding",
+			Code: "on-boarding",
+			Name: "On Boarding",
 		},
 		{
 			Code: "probation",
@@ -241,7 +241,7 @@ func (h *handler) GetCountries(c *gin.Context) {
 	c.JSON(http.StatusOK, view.CreateResponse(countries, nil, nil, nil))
 }
 
-// GetCountries godoc
+// GetCities godoc
 // @Summary Get list cities by country
 // @Description Get list cities by country
 // @Tags Metadata
