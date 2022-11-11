@@ -1,0 +1,20 @@
+{
+    "data": [
+      {
+        "code": "on-boarding",
+        "name": "On Boarding"
+      },
+      {
+        "code": "paused",
+        "name": "Paused"
+      },
+      {
+        "code": "active",
+        "name": "Active"
+      },
+      {
+        "code": "closed",
+        "name": "Closed"
+      }
+    ]
+}
