@@ -1077,20 +1077,20 @@ const docTemplate = `{
         "view.ProjectData": {
             "type": "object",
             "properties": {
+                "accountManager": {
+                    "$ref": "#/definitions/view.ProjectHead"
+                },
                 "createdAt": {
                     "type": "string"
                 },
                 "deletedAt": {
                     "type": "string"
                 },
+                "deliveryManager": {
+                    "$ref": "#/definitions/view.ProjectHead"
+                },
                 "endDate": {
                     "type": "string"
-                },
-                "heads": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/view.ProjectHead"
-                    }
                 },
                 "id": {
                     "type": "string"
@@ -1104,11 +1104,20 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
+                "salePerson": {
+                    "$ref": "#/definitions/view.ProjectHead"
+                },
                 "startDate": {
                     "type": "string"
                 },
                 "status": {
                     "type": "string"
+                },
+                "technicalLeads": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.ProjectHead"
+                    }
                 },
                 "type": {
                     "type": "string"
@@ -1131,9 +1140,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "fullName": {
-                    "type": "string"
-                },
-                "position": {
                     "type": "string"
                 }
             }
@@ -1166,6 +1172,12 @@ const docTemplate = `{
                 },
                 "isLead": {
                     "type": "boolean"
+                },
+                "position": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
                 }
             }
         },

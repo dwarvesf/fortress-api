@@ -9,13 +9,16 @@ import (
 type ProjectData struct {
 	model.BaseModel
 
-	Name      string          `json:"name"`
-	Type      string          `json:"type"`
-	Status    string          `json:"status"`
-	StartDate *time.Time      `json:"startDate"`
-	EndDate   *time.Time      `json:"endDate"`
-	Members   []ProjectMember `json:"members"`
-	Heads     []ProjectHead   `json:"heads"`
+	Name            string          `json:"name"`
+	Type            string          `json:"type"`
+	Status          string          `json:"status"`
+	StartDate       *time.Time      `json:"startDate"`
+	EndDate         *time.Time      `json:"endDate"`
+	Members         []ProjectMember `json:"members"`
+	TechnicalLead   []ProjectHead   `json:"technicalLeads"`
+	AccountManager  *ProjectHead    `json:"accountManager"`
+	SalePerson      *ProjectHead    `json:"salePerson"`
+	DeliveryManager *ProjectHead    `json:"deliveryManager"`
 }
 
 type ProjectMember struct {
@@ -24,6 +27,7 @@ type ProjectMember struct {
 	DisplayName string `json:"displayName"`
 	Avatar      string `json:"avatar"`
 	Position    string `json:"position"`
+	Status      string `json:"status"`
 	IsLead      bool   `json:"isLead"`
 }
 
@@ -32,7 +36,6 @@ type ProjectHead struct {
 	FullName    string `json:"fullName"`
 	DisplayName string `json:"displayName"`
 	Avatar      string `json:"avatar"`
-	Position    string `json:"position"`
 }
 
 func ToProjectData(projects []*model.Project) []ProjectData {
@@ -40,20 +43,35 @@ func ToProjectData(projects []*model.Project) []ProjectData {
 
 	for _, p := range projects {
 		leads := map[string]string{}
-		var heads = make([]ProjectHead, 0, len(p.Heads))
-
+		var technicalLeads = make([]ProjectHead, 0, len(p.Heads))
+		var accountManager, salePerson, deliveryManager *ProjectHead
 		for _, h := range p.Heads {
-			if h.IsLead() {
-				leads[h.EmployeeID.String()] = h.Position.String()
-			}
-
-			heads = append(heads, ProjectHead{
+			head := ProjectHead{
 				EmployeeID:  h.EmployeeID.String(),
 				FullName:    h.Employee.FullName,
 				DisplayName: h.Employee.DisplayName,
 				Avatar:      h.Employee.Avatar,
-				Position:    h.Position.String(),
-			})
+			}
+
+			if h.IsLead() {
+				leads[h.EmployeeID.String()] = h.Position.String()
+				technicalLeads = append(technicalLeads, head)
+				continue
+			}
+
+			if h.IsAccountManager() {
+				accountManager = &head
+				continue
+			}
+
+			if h.IsSalePerson() {
+				salePerson = &head
+				continue
+			}
+
+			if h.IsDeliveryManager() {
+				deliveryManager = &head
+			}
 		}
 
 		var members = make([]ProjectMember, 0, len(p.Members))
@@ -66,20 +84,25 @@ func ToProjectData(projects []*model.Project) []ProjectData {
 				DisplayName: m.Employee.DisplayName,
 				Avatar:      m.Employee.Avatar,
 				Position:    m.Position,
+				Status:      m.Status.String(),
 				IsLead:      isLead,
 			})
 		}
 
 		d := ProjectData{
-			BaseModel: p.BaseModel,
-			Name:      p.Name,
-			Type:      p.Type.String(),
-			Status:    p.Status.String(),
-			StartDate: p.StartDate,
-			EndDate:   p.EndDate,
-			Members:   members,
-			Heads:     heads,
+			BaseModel:       p.BaseModel,
+			Name:            p.Name,
+			Type:            p.Type.String(),
+			Status:          p.Status.String(),
+			StartDate:       p.StartDate,
+			EndDate:         p.EndDate,
+			Members:         members,
+			TechnicalLead:   technicalLeads,
+			DeliveryManager: deliveryManager,
+			SalePerson:      salePerson,
+			AccountManager:  accountManager,
 		}
+
 		results = append(results, d)
 	}
 
