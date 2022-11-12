@@ -29,7 +29,7 @@ type ProjectStatus string
 
 const (
 	ProjectStatusOnBoarding ProjectStatus = "on-boarding"
-	ProjectStatusOnActive   ProjectStatus = "active"
+	ProjectStatusActive     ProjectStatus = "active"
 	ProjectStatusPaused     ProjectStatus = "paused"
 	ProjectStatusClosed     ProjectStatus = "closed"
 )
@@ -38,13 +38,14 @@ func (e ProjectStatus) IsValid() bool {
 	switch e {
 	case
 		ProjectStatusOnBoarding,
-		ProjectStatusOnActive,
+		ProjectStatusActive,
 		ProjectStatusPaused,
 		ProjectStatusClosed:
 		return true
 	}
 	return false
 }
+
 func (e ProjectStatus) String() string {
 	return string(e)
 }
@@ -78,6 +79,35 @@ func (e MemberDeploymentType) IsValid() bool {
 	return false
 }
 
+func (e MemberDeploymentType) String() string {
+	return string(e)
+}
+
+type ProjectMemberStatus string
+
+const (
+	ProjectMemberStatusPending    ProjectMemberStatus = "pending"
+	ProjectMemberStatusOnBoarding ProjectMemberStatus = "on-boarding"
+	ProjectMemberStatusActive     ProjectMemberStatus = "active"
+	ProjectMemberStatusInactive   ProjectMemberStatus = "inactive"
+)
+
+func (e ProjectMemberStatus) IsValid() bool {
+	switch e {
+	case
+		ProjectMemberStatusOnBoarding,
+		ProjectMemberStatusActive,
+		ProjectMemberStatusInactive,
+		ProjectMemberStatusPending:
+		return true
+	}
+	return false
+}
+
+func (e ProjectMemberStatus) String() string {
+	return string(e)
+}
+
 type ProjectMember struct {
 	BaseModel
 
@@ -86,6 +116,7 @@ type ProjectMember struct {
 	JoinedDate     time.Time
 	LeftDate       time.Time
 	Position       string
+	Status         ProjectMemberStatus
 	DeploymentType MemberDeploymentType
 	UpsellPersonID UUID
 	Employee       Employee
@@ -97,7 +128,7 @@ const (
 	HeadPositionTechnicalLead   HeadPosition = "technical-lead"
 	HeadPositionDeliveryManager HeadPosition = "delivery-manager"
 	HeadPositionAccountManager  HeadPosition = "account-manager"
-	HeadPositionSellPerson      HeadPosition = "sell-person"
+	HeadPositionSalePerson      HeadPosition = "sale-person"
 )
 
 func (e HeadPosition) IsValid() bool {
@@ -106,7 +137,7 @@ func (e HeadPosition) IsValid() bool {
 		HeadPositionTechnicalLead,
 		HeadPositionDeliveryManager,
 		HeadPositionAccountManager,
-		HeadPositionSellPerson:
+		HeadPositionSalePerson:
 		return true
 	}
 	return false
@@ -128,6 +159,18 @@ type ProjectHead struct {
 
 func (p ProjectHead) IsLead() bool {
 	return p.Position == HeadPositionTechnicalLead
+}
+
+func (p ProjectHead) IsAccountManager() bool {
+	return p.Position == HeadPositionAccountManager
+}
+
+func (p ProjectHead) IsSalePerson() bool {
+	return p.Position == HeadPositionSalePerson
+}
+
+func (p ProjectHead) IsDeliveryManager() bool {
+	return p.Position == HeadPositionDeliveryManager
 }
 
 type ProjectStack struct {

@@ -232,16 +232,16 @@ definitions:
     type: object
   view.ProjectData:
     properties:
+      accountManager:
+        $ref: '#/definitions/view.ProjectHead'
       createdAt:
         type: string
       deletedAt:
         type: string
+      deliveryManager:
+        $ref: '#/definitions/view.ProjectHead'
       endDate:
         type: string
-      heads:
-        items:
-          $ref: '#/definitions/view.ProjectHead'
-        type: array
       id:
         type: string
       members:
@@ -250,10 +250,16 @@ definitions:
         type: array
       name:
         type: string
+      salePerson:
+        $ref: '#/definitions/view.ProjectHead'
       startDate:
         type: string
       status:
         type: string
+      technicalLeads:
+        items:
+          $ref: '#/definitions/view.ProjectHead'
+        type: array
       type:
         type: string
       updatedAt:
@@ -268,8 +274,6 @@ definitions:
       employeeID:
         type: string
       fullName:
-        type: string
-      position:
         type: string
     type: object
   view.ProjectListDataResponse:
@@ -291,6 +295,10 @@ definitions:
         type: string
       isLead:
         type: boolean
+      position:
+        type: string
+      status:
+        type: string
     type: object
   view.SeniorityResponse:
     properties:
