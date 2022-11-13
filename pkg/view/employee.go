@@ -6,7 +6,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/model"
 )
 
-// EmployeeListData view for listing data
+// EmployeeData view for listing data
 type EmployeeData struct {
 	model.BaseModel
 
@@ -36,6 +36,7 @@ type EmployeeData struct {
 	Chapter       *model.Chapter        `json:"chapter"`
 	LineManager   *BasisEmployeeInfo    `json:"lineManager"`
 	Positions     []model.Position      `json:"positions"`
+	Roles         []model.Role          `json:"roles"`
 	Projects      []EmployeeProjectData `json:"projects"`
 }
 
@@ -50,6 +51,10 @@ type UpdateEmployeeStatusResponse struct {
 
 type EmployeeListDataResponse struct {
 	Data []EmployeeData `json:"data"`
+}
+
+type UpdataEmployeeStatusResponse struct {
+	Data EmployeeData `json:"data"`
 }
 
 type ProfileData struct {
@@ -80,11 +85,6 @@ func ToEmployeeData(employee *model.Employee) *EmployeeData {
 		projects = append(projects, ToEmployeeProjectData(&v.Project))
 	}
 
-	positions := make([]model.Position, 0, len(employee.EmployeePositions))
-	for _, v := range employee.EmployeePositions {
-		positions = append(positions, v.Position)
-	}
-
 	rs := &EmployeeData{
 		BaseModel: model.BaseModel{
 			ID:        employee.ID,
@@ -106,11 +106,14 @@ func ToEmployeeData(employee *model.Employee) *EmployeeData {
 		DiscordID:     employee.DiscordID,
 		NotionID:      employee.NotionID,
 		WorkingStatus: employee.WorkingStatus,
+		Chapter:       employee.Chapter,
+		Seniority:     employee.Seniority,
 		JoinedDate:    employee.JoinedDate,
 		LeftDate:      employee.LeftDate,
 		AccountStatus: employee.AccountStatus,
 		Projects:      projects,
-		Positions:     positions,
+		Positions:     employee.Positions,
+		Roles:         employee.Roles,
 	}
 
 	if employee.Seniority != nil {

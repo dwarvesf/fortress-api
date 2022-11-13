@@ -30,6 +30,7 @@
             "chapter": null,
             "lineManager": null,
             "positions": [],
+            "roles": [],
             "projects": []
         },
         {
@@ -73,6 +74,7 @@
                     "code": "backend"
                 }
             ],
+            "roles": [],
             "projects": []
         }
     ]

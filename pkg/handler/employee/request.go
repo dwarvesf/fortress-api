@@ -17,3 +17,15 @@ type EditGeneralInfo struct {
 	GithubID      string `form:"githubID" json:"githubID"`
 	NotionID      string `form:"notionID" json:"notionID"`
 }
+
+// CreateEmployee view for create new employee
+type CreateEmployee struct {
+	FullName      string     `json:"fullName" binding:"required,max=100"`
+	DisplayName   string     `json:"displayName" binding:"required"`
+	TeamEmail     string     `json:"teamEmail" binding:"required,email"`
+	PersonalEmail string     `json:"personalEmail" binding:"required,email"`
+	PositionID    model.UUID `json:"PositionID" binding:"required"`
+	Salary        int        `json:"salary" binding:"required"`
+	SeniorityID   model.UUID `json:"seniorityID" binding:"required"`
+	RoleID        model.UUID `json:"roleID" binding:"required"`
+}

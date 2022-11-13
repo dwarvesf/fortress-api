@@ -110,10 +110,7 @@ func NewUUIDFromString(s string) (*UUID, error) {
 
 func IsUUIDFromString(s string) bool {
 	_, err := uuid.FromString(s)
-	if err != nil {
-		return false
-	}
-	return true
+	return err == nil
 }
 
 // MustGetUUIDFromString get uuid from string if failed throw panic,
