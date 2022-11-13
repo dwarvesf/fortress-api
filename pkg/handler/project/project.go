@@ -2,11 +2,13 @@ package project
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/shopspring/decimal"
 
 	"github.com/dwarvesf/fortress-api/pkg/logger"
-	_ "github.com/dwarvesf/fortress-api/pkg/model"
+	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/store/project"
@@ -131,4 +133,92 @@ func (h *handler) UpdateProjectStatus(c *gin.Context) {
 
 	// 3. return project data
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToUpdateProjectStatusResponse(rs), nil, nil, nil))
+}
+
+// Create godoc
+// @Summary	Create new project
+// @Description	Create new project
+// @Tags Project
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "jwt token"
+// @Param Body body CreateProjectInput true "body"
+// @Success 200 {object} view.CreateProjectData
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /projects [post]
+func (h *handler) Create(c *gin.Context) {
+	body := CreateProjectInput{}
+	if err := c.ShouldBind(&body); err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, body))
+		return
+	}
+
+	// TODO: can we move this to middleware ?
+	l := h.logger.Fields(logger.Fields{
+		"handler": "project",
+		"method":  "Create",
+		"body":    body,
+	})
+
+	if err := body.Validate(); err != nil {
+		l.Error(err, "validate failed")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, body))
+		return
+	}
+
+	country, err := h.store.Country.One(body.CountryID)
+	if err != nil {
+		l.Error(err, "failed to get country")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body))
+		return
+	}
+
+	project := &model.Project{
+		Name:      body.Name,
+		Country:   country.Name,
+		Type:      model.ProjectType(body.Type),
+		Status:    model.ProjectStatus(body.Status),
+		StartDate: body.GetStartDate(),
+	}
+
+	if err := h.store.Project.Create(project); err != nil {
+		l.Error(err, "failed to create project")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil))
+		return
+	}
+
+	// create project account manager
+	accountManager := &model.ProjectHead{
+		ProjectID:      project.ID,
+		EmployeeID:     body.AccountManagerID,
+		JoinedDate:     time.Now(),
+		CommissionRate: decimal.Zero,
+		Position:       model.HeadPositionAccountManager,
+	}
+
+	if err := h.store.ProjectHead.Create(accountManager); err != nil {
+		l.Error(err, "failed to create account manager")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body))
+		return
+	}
+
+	// create project delivery manager
+	deliveryManager := &model.ProjectHead{
+		ProjectID:      project.ID,
+		EmployeeID:     body.DeliveryManagerID,
+		JoinedDate:     time.Now(),
+		CommissionRate: decimal.Zero,
+		Position:       model.HeadPositionDeliveryManager,
+	}
+
+	if err := h.store.ProjectHead.Create(deliveryManager); err != nil {
+		l.Error(err, "failed to create delivery manager")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body))
+		return
+	}
+
+	project.Heads = append(project.Heads, *accountManager, *deliveryManager)
+
+	c.JSON(http.StatusOK, view.CreateResponse(view.ToCreateProjectDataResponse(project), nil, nil, nil))
 }

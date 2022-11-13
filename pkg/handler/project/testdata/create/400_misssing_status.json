@@ -1,0 +1,10 @@
+{
+    "data": null,
+    "error": "Key: 'CreateProjectInput.Status' Error:Field validation for 'Status' failed on the 'required' tag",
+    "errors": [
+        {
+            "field": "Status",
+            "msg": "Field validation for 'Status' failed on the 'required' tag"
+        }
+    ]
+}

@@ -167,7 +167,6 @@ func TestHandler_List(t *testing.T) {
 
 			h := New(storeMock, serviceMock, loggerMock)
 			h.List(ctx)
-			tt.wantCode = http.StatusOK
 			require.Equal(t, tt.wantCode, w.Code)
 			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
 			require.NoError(t, err)

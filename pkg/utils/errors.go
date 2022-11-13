@@ -10,4 +10,5 @@ var (
 	ErrBadToken                        = errors.New("bad token")
 	ErrAuthenticationTypeHeaderInvalid = errors.New("authentication type header is invalid")
 	ErrUnexpectedAuthorizationHeader   = errors.New("unexpected authorization headers")
+	ErrInvalidUUID                     = errors.New("invalid UUID")
 )

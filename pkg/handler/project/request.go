@@ -1,6 +1,8 @@
 package project
 
 import (
+	"time"
+
 	"github.com/dwarvesf/fortress-api/pkg/model"
 )
 
@@ -25,4 +27,40 @@ func (i *GetListProjectInput) Validate() error {
 		return ErrInvalidProjectStatus
 	}
 	return nil
+}
+
+type CreateProjectInput struct {
+	Name              string     `form:"name" json:"name" binding:"required"`
+	Status            string     `form:"status" json:"status" binding:"required"`
+	Type              string     `form:"type" json:"type" binding:"required"`
+	AccountManagerID  model.UUID `form:"accountManagerID" json:"accountManagerID" binding:"required"`
+	DeliveryManagerID model.UUID `form:"deliveryManagerID" json:"deliveryManagerID"`
+	CountryID         string     `form:"countryID" json:"countryID" binding:"required"`
+	StartDate         string     `form:"startDate" json:"startDate"`
+}
+
+func (i *CreateProjectInput) Validate() error {
+	if !model.ProjectType(i.Type).IsValid() {
+		return ErrInvalidProjectType
+	}
+
+	if !model.ProjectStatus(i.Status).IsValid() {
+		return ErrInvalidProjectStatus
+	}
+
+	_, err := time.Parse("2006-01-02", i.StartDate)
+	if i.StartDate != "" && err != nil {
+		return ErrInvalidStartDate
+	}
+
+	return nil
+}
+
+func (i CreateProjectInput) GetStartDate() *time.Time {
+	startDate, err := time.Parse("2006-01-02", i.StartDate)
+	if i.StartDate == "" || err != nil {
+		return nil
+	}
+
+	return &startDate
 }

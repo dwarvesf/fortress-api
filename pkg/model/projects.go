@@ -58,6 +58,7 @@ type Project struct {
 	BaseModel
 
 	Name      string
+	Country   string
 	Type      ProjectType
 	StartDate *time.Time
 	EndDate   *time.Time
@@ -130,7 +131,7 @@ type ProjectMember struct {
 	ProjectID      UUID
 	EmployeeID     UUID
 	JoinedDate     time.Time
-	LeftDate       time.Time
+	LeftDate       *time.Time
 	Position       string
 	Status         ProjectMemberStatus
 	Rate           decimal.Decimal
@@ -173,7 +174,9 @@ type ProjectHead struct {
 
 	ProjectID      UUID
 	EmployeeID     UUID
-	CommissionRate float64
+	JoinedDate     time.Time
+	LeftDate       *time.Time
+	CommissionRate decimal.Decimal
 	Position       HeadPosition
 	Employee       Employee
 }

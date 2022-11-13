@@ -552,7 +552,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/pkg_handler_employee.EditSkillsInput"
+                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.EditSkillsInput"
                         }
                     },
                     {
@@ -1072,6 +1072,57 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "post": {
+                "description": "Create new project",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Project"
+                ],
+                "summary": "Create new project",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "body",
+                        "name": "Body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.CreateProjectInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.CreateProjectData"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
             }
         },
         "/projects/{id}/status": {
@@ -1167,6 +1218,39 @@ const docTemplate = `{
                     "items": {
                         "type": "string"
                     }
+                }
+            }
+        },
+        "github.com_dwarvesf_fortress-api_pkg_handler_project.CreateProjectInput": {
+            "type": "object",
+            "required": [
+                "accountManagerID",
+                "countryID",
+                "name",
+                "status",
+                "type"
+            ],
+            "properties": {
+                "accountManagerID": {
+                    "type": "string"
+                },
+                "countryID": {
+                    "type": "string"
+                },
+                "deliveryManagerID": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "startDate": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
                 }
             }
         },
@@ -1291,29 +1375,6 @@ const docTemplate = `{
                 }
             }
         },
-        "model.Stack": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "string"
-                },
-                "createdAt": {
-                    "type": "string"
-                },
-                "deletedAt": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "updatedAt": {
-                    "type": "string"
-                }
-            }
-        },
         "pkg_handler_employee.EditSkillsInput": {
             "type": "object",
             "required": [
@@ -1339,6 +1400,39 @@ const docTemplate = `{
                     "items": {
                         "type": "string"
                     }
+                }
+            }
+        },
+        "pkg_handler_project.CreateProjectInput": {
+            "type": "object",
+            "required": [
+                "accountManagerID",
+                "countryID",
+                "name",
+                "status",
+                "type"
+            ],
+            "properties": {
+                "accountManagerID": {
+                    "type": "string"
+                },
+                "countryID": {
+                    "type": "string"
+                },
+                "deliveryManagerID": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "startDate": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
                 }
             }
         },
@@ -1429,6 +1523,41 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/model.Country"
                     }
+                }
+            }
+        },
+        "view.CreateProjectData": {
+            "type": "object",
+            "properties": {
+                "accountManager": {
+                    "$ref": "#/definitions/view.ProjectHead"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "deletedAt": {
+                    "type": "string"
+                },
+                "deliveryManager": {
+                    "$ref": "#/definitions/view.ProjectHead"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "startDate": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
                 }
             }
         },
@@ -1527,12 +1656,6 @@ const docTemplate = `{
                 },
                 "seniority": {
                     "$ref": "#/definitions/model.Seniority"
-                },
-                "stacks": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.Stack"
-                    }
                 },
                 "status": {
                     "description": "working info",

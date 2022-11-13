@@ -1,8 +1,10 @@
 package project
 
 import (
+	"bytes"
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
@@ -14,10 +16,13 @@ import (
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
+	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/utils"
 )
+
+const tokenTest = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2OTkzMjExNDIsImlkIjoiMjY1NTgzMmUtZjAwOS00YjczLWE1MzUtNjRjM2EyMmU1NThmIiwiYXZhdGFyIjoiaHR0cHM6Ly9zMy1hcC1zb3V0aGVhc3QtMS5hbWF6b25hd3MuY29tL2ZvcnRyZXNzLWltYWdlcy81MTUzNTc0Njk1NjYzOTU1OTQ0LnBuZyIsImVtYWlsIjoidGhhbmhAZC5mb3VuZGF0aW9uIiwicGVybWlzc2lvbnMiOlsiZW1wbG95ZWVzLnJlYWQiXSwidXNlcl9pbmZvIjpudWxsfQ.GENGPEucSUrILN6tHDKxLMtj0M0REVMUPC7-XhDMpGM"
 
 func TestHandler_UpdateProjectStatus(t *testing.T) {
 	// load env and test data
@@ -92,6 +97,105 @@ func TestHandler_UpdateProjectStatus(t *testing.T) {
 			} else {
 				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.UpdateProjectStatus] response mismatched")
 			}
+		})
+	}
+}
+
+func TestHandler_Create(t *testing.T) {
+	cfg := config.LoadTestConfig()
+	loggerMock := logger.NewLogrusLogger()
+	serviceMock := service.New(&cfg)
+	storeMock := store.New(&cfg)
+
+	tests := []struct {
+		name             string
+		args             CreateProjectInput
+		wantCode         int
+		wantErr          error
+		wantResponsePath string
+	}{
+		{
+			name: "happy_case",
+			args: CreateProjectInput{
+				Name:              "project1",
+				Status:            string(model.ProjectStatusOnBoarding),
+				Type:              string(model.ProjectTypeDwarves),
+				StartDate:         "2022-11-14",
+				AccountManagerID:  model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
+				DeliveryManagerID: model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
+				CountryID:         "4ef64490-c906-4192-a7f9-d2221dadfe4c",
+			},
+			wantCode:         http.StatusOK,
+			wantResponsePath: "testdata/create/200.json",
+		},
+		{
+			name: "invalid_status",
+			args: CreateProjectInput{
+				Name:              "project1",
+				Status:            "something",
+				Type:              string(model.ProjectTypeDwarves),
+				StartDate:         "2022-11-14",
+				AccountManagerID:  model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
+				DeliveryManagerID: model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
+				CountryID:         "4ef64490-c906-4192-a7f9-d2221dadfe4c",
+			},
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/create/400_invalid_status.json",
+		},
+		{
+			name: "invalid_type",
+			args: CreateProjectInput{
+				Name:              "project1",
+				Status:            string(model.ProjectStatusOnBoarding),
+				Type:              "something",
+				StartDate:         "2022-11-14",
+				AccountManagerID:  model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
+				DeliveryManagerID: model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
+				CountryID:         "4ef64490-c906-4192-a7f9-d2221dadfe4c",
+			},
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/create/400_invalid_type.json",
+		},
+		{
+			name: "missing_status",
+			args: CreateProjectInput{
+				Name:              "project1",
+				Type:              string(model.ProjectTypeDwarves),
+				StartDate:         "2022-11-14",
+				AccountManagerID:  model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
+				DeliveryManagerID: model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
+				CountryID:         "4ef64490-c906-4192-a7f9-d2221dadfe4c",
+			},
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/create/400_misssing_status.json",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			body, err := json.Marshal(tt.args)
+			if err != nil {
+				t.Error(err)
+				return
+			}
+
+			w := httptest.NewRecorder()
+			ctx, _ := gin.CreateTestContext(w)
+			ctx.Request = httptest.NewRequest(http.MethodPost, "/api/v1/projects", bytes.NewBuffer(body))
+			ctx.Request.Header.Set("Authorization", tokenTest)
+			ctx.Request.Header.Set("Content-Type", gin.MIMEJSON)
+
+			h := New(storeMock, serviceMock, loggerMock)
+			h.Create(ctx)
+			require.Equal(t, tt.wantCode, w.Code)
+			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+			require.NoError(t, err)
+
+			res := w.Body.Bytes()
+			res, _ = utils.RemoveFieldInResponse(res, "id")
+			res, _ = utils.RemoveFieldInResponse(res, "createdAt")
+			res, _ = utils.RemoveFieldInResponse(res, "updatedAt")
+
+			require.JSONEq(t, string(expRespRaw), string(res), "[Handler.Project.Create] response mismatched")
 		})
 	}
 }
