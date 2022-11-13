@@ -64,3 +64,16 @@ func (i *CreateProjectInput) GetStartDate() *time.Time {
 
 	return &startDate
 }
+
+type GetListStaffInput struct {
+	model.Pagination
+
+	Status string `form:"status" json:"status"`
+}
+
+func (i *GetListStaffInput) Validate() error {
+	if i.Status != "" && !model.ProjectMemberStatus(i.Status).IsValid() {
+		return ErrInvalidProjectMemberStatus
+	}
+	return nil
+}

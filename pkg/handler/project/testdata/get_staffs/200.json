@@ -1,0 +1,56 @@
+{
+    "page": 0,
+    "size": 50,
+    "sort": "",
+    "total": 2,
+    "data": [
+        {
+            "projectSlotID": "f32d08ca-8863-4ab3-8c84-a11849451eb7",
+            "employeeID": "2655832e-f009-4b73-a535-64c3a22e558f",
+            "fullName": "Phạm Đức Thành",
+            "displayName": "Thanh Pham",
+            "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
+            "position": "",
+            "seniority": "mid",
+            "status": "active",
+            "isLead": false,
+            "deploymentType": "official",
+            "joinedDate": "2022-11-01T00:00:00Z",
+            "leftDate": null,
+            "positions": [
+                {
+                    "code": "frontend",
+                    "name": "Frontend"
+                },
+                {
+                    "code": "backend",
+                    "name": "Backend"
+                }
+            ]
+        },
+        {
+            "projectSlotID": "bdc64b18-4c5f-4025-827a-f5b91d599dc7",
+            "employeeID": "ecea9d15-05ba-4a4e-9787-54210e3b98ce",
+            "fullName": "Nguyễn Hoàng Huy",
+            "displayName": "Huy Nguyen",
+            "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/2830497479497502617.png",
+            "position": "",
+            "seniority": "mid",
+            "status": "active",
+            "isLead": false,
+            "deploymentType": "shadow",
+            "joinedDate": "2022-11-01T00:00:00Z",
+            "leftDate": null,
+            "positions": [
+                {
+                    "code": "devops",
+                    "name": "Devops"
+                },
+                {
+                    "code": "blockchain",
+                    "name": "Blockchain"
+                }
+            ]
+        }
+    ]
+}

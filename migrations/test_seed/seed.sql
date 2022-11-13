@@ -44,11 +44,22 @@ INSERT INTO "public"."employees" ("id", "deleted_at", "created_at", "updated_at"
 ('ecea9d15-05ba-4a4e-9787-54210e3b98ce', NULL, '2022-11-02 09:50:55.320669', '2022-11-02 09:50:55.320669', 'Nguyễn Hoàng Huy', 'Huy Nguyen', 'Male', 'huy123@d.foundation', 'hoanghuy123@gmail.com', 'https://s3-ap-southeast-1.amazonaws.com/fortress-images/2830497479497502617.png', '0123456789', 'chung cư Sunview Town, Gò Dưa, Thủ Đức', 'Defender', 'Virgo', '1990-01-02', 'probation', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '39735742-829b-47f3-8f9d-daf0983914e5', '11ccffea-2cc9-4e98-9bef-3464dfe4dec8', 'active', 'ecea9d15-05ba-4a4e-9787-54210e3b98ce');
 
 INSERT INTO public.employee_positions (id, deleted_at, created_at, updated_at, employee_id, position_id) VALUES
-('010237db-619a-4aea-93df-d858b4b3c9d5', null, '2022-11-13 16:02:09.294210', '2022-11-13 16:02:09.294210', '2655832e-f009-4b73-a535-64c3a22e558f', '11ccffea-2cc9-4e98-9bef-3464dfe4dec8'),
-('010237db-619a-4aea-93df-d858b4b3c9d6', null, '2022-11-13 16:02:09.294210', '2022-11-13 16:02:09.294210', '2655832e-f009-4b73-a535-64c3a22e558f', 'd796884d-a8c4-4525-81e7-54a3b6099eac');
+('e61bf924-1eff-426f-8f71-ab49446134fb',NULL,'2022-11-16 02:45:17.982659','2022-11-16 02:45:17.982659','2655832e-f009-4b73-a535-64c3a22e558f','11ccffea-2cc9-4e98-9bef-3464dfe4dec8'),
+('d7b49b9e-4b51-4e3a-a7be-b94143215f7a',NULL,'2022-11-16 02:45:17.995921','2022-11-16 02:45:17.995921','2655832e-f009-4b73-a535-64c3a22e558f','d796884d-a8c4-4525-81e7-54a3b6099eac'),
+('4bb1ea40-c002-4fd9-8f60-82b3aa9459d7',NULL,'2022-11-16 02:45:17.997153','2022-11-16 02:45:17.997153','ecea9d15-05ba-4a4e-9787-54210e3b98ce','dac16ce6-9e5a-4ff3-9ea2-fdea4853925e'),
+('8fb91cd7-f461-49fb-8b7b-9ef9b524789d',NULL,'2022-11-16 02:45:17.998377','2022-11-16 02:45:17.998377','ecea9d15-05ba-4a4e-9787-54210e3b98ce','01fb6322-d727-47e3-a242-5039ea4732fc');
 
 INSERT INTO public.employee_stacks (id,deleted_at,created_at,updated_at,employee_id,stack_id) VALUES
 ('a9921fe8-3b77-46ad-a76d-172cb85e10a5',NULL,'2022-11-16 11:28:01.048359','2022-11-16 11:28:01.048359','ecea9d15-05ba-4a4e-9787-54210e3b98ce','0ecf47c8-cca4-4c30-94bb-054b1124c44f'),
 ('94de566e-9d1c-4ce7-a16a-0deaf3a45f9a',NULL,'2022-11-16 11:28:01.051869','2022-11-16 11:28:01.051869','ecea9d15-05ba-4a4e-9787-54210e3b98ce','fa0f4e46-7eab-4e5c-9d31-30489e69fe2e'),
 ('8eb2ffa5-68aa-4b0c-b113-e8b37297031e',NULL,'2022-11-16 11:28:01.053014','2022-11-16 11:28:01.053014','2655832e-f009-4b73-a535-64c3a22e558f','0ecf47c8-cca4-4c30-94bb-054b1124c44f'),
 ('e2c3d67b-47e3-4020-8684-2971b3e12b9b',NULL,'2022-11-16 11:28:01.054087','2022-11-16 11:28:01.054087','2655832e-f009-4b73-a535-64c3a22e558f','b403ef95-4269-4830-bbb6-8e56e5ec0af4');
+
+
+INSERT INTO public.project_slots (id, deleted_at, created_at, updated_at, project_id, seniority_id, upsell_person_id, position, deployment_type, rate, discount, status) VALUES
+('f32d08ca-8863-4ab3-8c84-a11849451eb7', null, '2022-11-11 18:19:56.156172', '2022-11-11 18:19:56.156172', '8dc3be2e-19a4-4942-8a79-56db391a0b15', 'dac16ce6-9e5a-4ff3-9ea2-fdea4853925e', null,'frontend', 'official', 5000, 0, 'active'),
+('bdc64b18-4c5f-4025-827a-f5b91d599dc7', null, '2022-11-11 18:19:56.156172', '2022-11-11 18:19:56.156172', '8dc3be2e-19a4-4942-8a79-56db391a0b15', 'dac16ce6-9e5a-4ff3-9ea2-fdea4853925e', null,'backend', 'shadow', 4000, 0, 'active');
+
+INSERT INTO public.project_members (id, deleted_at, created_at, updated_at, project_id, project_slot_id ,employee_id, seniority_id, joined_date, left_date, position, rate, discount, status,deployment_type, upsell_person_id) VALUES
+('cb889a9c-b20c-47ee-83b8-44b6d1721aca', null, '2022-11-11 18:19:56.156172', '2022-11-11 18:19:56.156172', '8dc3be2e-19a4-4942-8a79-56db391a0b15', 'f32d08ca-8863-4ab3-8c84-a11849451eb7', '2655832e-f009-4b73-a535-64c3a22e558f', 'dac16ce6-9e5a-4ff3-9ea2-fdea4853925e' ,'2022-11-01', null, 'frontend', 5000, 0, 'active', 'official', '2655832e-f009-4b73-a535-64c3a22e558f'),
+('7310b51a-3855-498b-99ab-41aa82934269', null, '2022-11-11 18:19:56.156172', '2022-11-11 18:19:56.156172', '8dc3be2e-19a4-4942-8a79-56db391a0b15', 'bdc64b18-4c5f-4025-827a-f5b91d599dc7', 'ecea9d15-05ba-4a4e-9787-54210e3b98ce', 'dac16ce6-9e5a-4ff3-9ea2-fdea4853925e' ,'2022-11-01', null, 'backend', 4000, 0, 'active', 'shadow', 'ecea9d15-05ba-4a4e-9787-54210e3b98ce');

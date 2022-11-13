@@ -32,13 +32,20 @@ type UpdatedProject struct {
 }
 
 type ProjectMember struct {
-	EmployeeID  string `json:"employeeID"`
-	FullName    string `json:"fullName"`
-	DisplayName string `json:"displayName"`
-	Avatar      string `json:"avatar"`
-	Position    string `json:"position"`
-	Status      string `json:"status"`
-	IsLead      bool   `json:"isLead"`
+	ProjectSlotID  string     `json:"projectSlotID"`
+	EmployeeID     string     `json:"employeeID"`
+	FullName       string     `json:"fullName"`
+	DisplayName    string     `json:"displayName"`
+	Avatar         string     `json:"avatar"`
+	Position       string     `json:"position"`
+	Seniority      string     `json:"seniority"`
+	Status         string     `json:"status"`
+	IsLead         bool       `json:"isLead"`
+	DeploymentType string     `json:"deploymentType"`
+	JoinedDate     *time.Time `json:"joinedDate"`
+	LeftDate       *time.Time `json:"leftDate"`
+
+	Positions []Position `json:"positions"`
 }
 
 type ProjectHead struct {
@@ -192,4 +199,39 @@ func ToCreateProjectDataResponse(project *model.Project) CreateProjectData {
 	}
 
 	return result
+}
+
+func ToProjectMemberListData(slots []*model.ProjectSlot, projectHeads []*model.ProjectHead) []ProjectMember {
+	var results = make([]ProjectMember, 0, len(slots))
+
+	leadMap := map[string]bool{}
+	for _, v := range projectHeads {
+		if v.IsLead() {
+			leadMap[v.EmployeeID.String()] = true
+		}
+	}
+
+	for _, slot := range slots {
+		m := slot.ProjectMember
+		results = append(results, ProjectMember{
+			ProjectSlotID:  slot.ID.String(),
+			EmployeeID:     m.EmployeeID.String(),
+			FullName:       m.Employee.FullName,
+			DisplayName:    m.Employee.DisplayName,
+			Avatar:         m.Employee.Avatar,
+			Status:         slot.Status.String(),
+			JoinedDate:     m.JoinedDate,
+			LeftDate:       m.LeftDate,
+			IsLead:         leadMap[m.EmployeeID.String()],
+			Seniority:      m.Seniority.Code,
+			DeploymentType: slot.DeploymentType.String(),
+			Positions:      ToPositions(m.Employee.EmployeePositions),
+		})
+	}
+
+	return results
+}
+
+type ProjectMemberListResponse struct {
+	Data []ProjectMember `json:"data"`
 }

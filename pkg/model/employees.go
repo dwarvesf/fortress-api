@@ -44,6 +44,10 @@ func (e AccountStatus) IsValid() bool {
 	return false
 }
 
+func (p AccountStatus) String() string {
+	return string(p)
+}
+
 type AccountRole string
 
 const (

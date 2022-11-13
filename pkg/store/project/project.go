@@ -69,8 +69,12 @@ func (s *store) Create(db *gorm.DB, project *model.Project) error {
 	return db.Create(&project).Error
 }
 
-type GetListProjectInput struct {
-	Status string `json:"status"`
-	Name   string `json:"name"`
-	Type   string `json:"type"`
+// Exists return true/false if project exist or not
+func (s *store) Exists(db *gorm.DB, id string) (bool, error) {
+	var record struct {
+		Result bool
+	}
+
+	query := db.Raw("SELECT EXISTS (SELECT * FROM projects WHERE id = ?) as result", id)
+	return record.Result, query.Scan(&record).Error
 }

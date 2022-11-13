@@ -610,6 +610,8 @@ definitions:
     properties:
       avatar:
         type: string
+      deploymentType:
+        type: string
       displayName:
         type: string
       employeeID:
@@ -618,10 +620,29 @@ definitions:
         type: string
       isLead:
         type: boolean
+      joinedDate:
+        type: string
+      leftDate:
+        type: string
       position:
+        type: string
+      positions:
+        items:
+          $ref: '#/definitions/view.Position'
+        type: array
+      projectSlotID:
+        type: string
+      seniority:
         type: string
       status:
         type: string
+    type: object
+  view.ProjectMemberListResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/view.ProjectMember'
+        type: array
     type: object
   view.Role:
     properties:
@@ -1468,6 +1489,59 @@ paths:
           schema:
             $ref: '#/definitions/view.ErrorResponse'
       summary: Create new project
+      tags:
+      - Project
+  /projects/:id/staffs:
+    get:
+      consumes:
+      - application/json
+      description: Get list staffs of project
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Project ID
+        in: path
+        name: id
+        type: string
+      - description: Status
+        in: query
+        name: status
+        type: string
+      - description: Page
+        in: query
+        name: page
+        type: string
+      - description: Size
+        in: query
+        name: size
+        type: string
+      - description: Sort
+        in: query
+        name: sort
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.ProjectMemberListResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get list staffs of project
       tags:
       - Project
   /projects/{id}/status:
