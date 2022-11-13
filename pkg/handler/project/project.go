@@ -1,6 +1,7 @@
 package project
 
 import (
+	"errors"
 	"net/http"
 	"time"
 
@@ -12,6 +13,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/store/project"
+	"github.com/dwarvesf/fortress-api/pkg/store/projectslot"
 	"github.com/dwarvesf/fortress-api/pkg/view"
 )
 
@@ -225,4 +227,83 @@ func (h *handler) Create(c *gin.Context) {
 	p.Heads = append(p.Heads, *accountManager, *deliveryManager)
 
 	c.JSON(http.StatusOK, view.CreateResponse(view.ToCreateProjectDataResponse(p), nil, done(nil), nil))
+}
+
+// GetStaffs godoc
+// @Summary Get list staffs of project
+// @Description Get list staffs of project
+// @Tags Project
+// @Accept  json
+// @Produce  json
+// @Param Authorization header string true "jwt token"
+// @Param id path string false "Project ID"
+// @Param status query string false "Status"
+// @Param page query string false "Page"
+// @Param size query string false "Size"
+// @Param sort query string false "Sort"
+// @Success 200 {object} view.ProjectMemberListResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /projects/:id/staffs [get]
+func (h *handler) GetStaffs(c *gin.Context) {
+	query := GetListStaffInput{}
+	if err := c.ShouldBindQuery(&query); err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, query))
+		return
+	}
+	query.Standardize()
+
+	projectID := c.Param("id")
+	if projectID == "" {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errors.New("invalid project_id"), nil))
+		return
+	}
+
+	// TODO: can we move this to middleware ?
+	l := h.logger.Fields(logger.Fields{
+		"handler":   "project",
+		"method":    "GetStaffs",
+		"projectID": projectID,
+		"query":     query,
+	})
+
+	if err := query.Validate(); err != nil {
+		l.Error(err, "validate failed")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, query))
+		return
+	}
+
+	exists, err := h.store.Project.Exists(h.repo.DB(), projectID)
+	if err != nil {
+		l.Error(err, "failed to check project existence")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, query))
+		return
+	}
+
+	if !exists {
+		l.Error(ErrProjectNotFound, "cannot find project by id")
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrProjectNotFound, nil))
+		return
+	}
+
+	members, total, err := h.store.ProjectSlot.All(h.repo.DB(), projectslot.GetListProjectSlotInput{
+		ProjectID: projectID,
+		Status:    query.Status,
+	}, query.Pagination)
+	if err != nil {
+		l.Error(err, "error query project members from db")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, query))
+		return
+	}
+
+	heads, err := h.store.ProjectHead.GetByProjectID(h.repo.DB(), projectID)
+	if err != nil {
+		l.Error(err, "error query project heads from db")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, query))
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse(view.ToProjectMemberListData(members, heads),
+		&view.PaginationResponse{Pagination: query.Pagination, Total: total}, nil, nil))
 }

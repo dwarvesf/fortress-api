@@ -44,4 +44,5 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 	v1.POST("/projects", mw.WithAuth, h.Project.Create)
 	v1.GET("/projects", mw.WithAuth, h.Project.List)
 	v1.PUT("/projects/:id/status", mw.WithAuth, h.Project.UpdateProjectStatus)
+	v1.GET("/projects/:id/staffs", mw.WithAuth, h.Project.GetStaffs)
 }

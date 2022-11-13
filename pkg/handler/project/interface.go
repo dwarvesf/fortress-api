@@ -6,4 +6,5 @@ type IHandler interface {
 	Create(c *gin.Context)
 	List(c *gin.Context)
 	UpdateProjectStatus(c *gin.Context)
+	GetStaffs(c *gin.Context)
 }

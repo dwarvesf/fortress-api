@@ -8,4 +8,5 @@ import (
 
 type IStore interface {
 	Create(db *gorm.DB, projectHead *model.ProjectHead) error
+	GetByProjectID(db *gorm.DB, projectID string) (projectHeads []*model.ProjectHead, err error)
 }

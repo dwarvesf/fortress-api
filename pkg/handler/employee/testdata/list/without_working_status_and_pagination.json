@@ -29,9 +29,23 @@
             "seniority": null,
             "chapter": null,
             "lineManager": null,
-            "positions": [],
+            "positions": [
+                {
+                    "name": "Devops",
+                    "code": "devops"
+                },
+                {
+                    "name": "Blockchain",
+                    "code": "blockchain"
+                }
+            ],
             "roles": [],
-            "projects": [],
+            "projects": [
+                {
+                    "id": "8dc3be2e-19a4-4942-8a79-56db391a0b15",
+                    "name": "Fortress" 
+                }
+            ],
             "stacks": [
                 {
                     "name": "Golang",
@@ -79,7 +93,12 @@
                 }
             ],
             "roles": [],
-            "projects": [],
+            "projects": [
+                {
+                    "id": "8dc3be2e-19a4-4942-8a79-56db391a0b15",
+                    "name": "Fortress" 
+                }
+            ],
             "stacks": [
                 {
                     "name": "Golang",
