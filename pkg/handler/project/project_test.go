@@ -68,7 +68,6 @@ func TestHandler_UpdateProjectStatus(t *testing.T) {
 
 	for _, tt := range tests {
 		byteReq, err := json.Marshal(tt.request)
-		fmt.Println(err)
 		require.Nil(t, err)
 
 		t.Run(tt.name, func(t *testing.T) {

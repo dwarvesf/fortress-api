@@ -196,6 +196,10 @@ definitions:
         items:
           $ref: '#/definitions/view.EmployeeProjectData'
         type: array
+      roles:
+        items:
+          $ref: '#/definitions/model.Role'
+        type: array
       seniority:
         $ref: '#/definitions/model.Seniority'
       status:
@@ -441,6 +445,88 @@ paths:
       summary: Authorise user when login
       tags:
       - Auth
+  /employee:
+    post:
+      consumes:
+      - application/json
+      description: Create new employee
+      parameters:
+      - description: fullName
+        in: body
+        maxLength: 99
+        name: fullName
+        required: true
+        schema:
+          type: string
+      - description: displayName
+        in: body
+        name: displayName
+        required: true
+        schema:
+          type: string
+      - description: teamEmail
+        in: body
+        name: teamEmail
+        required: true
+        schema:
+          type: string
+      - description: personalEmail
+        in: body
+        name: personalEmail
+        required: true
+        schema:
+          type: string
+      - description: positionID
+        in: body
+        name: positionID
+        required: true
+        schema:
+          type: string
+      - description: roleID
+        in: body
+        name: roleID
+        required: true
+        schema:
+          type: string
+      - description: salary
+        in: body
+        name: salary
+        required: true
+        schema:
+          type: integer
+      - description: seniorityID
+        in: body
+        name: seniorityID
+        required: true
+        schema:
+          type: string
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.EmployeeData'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Create new employee
+      tags:
+      - Employee
   /employees:
     get:
       consumes:

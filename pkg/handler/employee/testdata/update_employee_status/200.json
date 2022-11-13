@@ -21,7 +21,8 @@
         "seniority": null,
         "chapter": null,
         "lineManager": null,
-        "positions": [],
+        "positions": null,
+        "roles": null,
         "projects": []
     }
 }

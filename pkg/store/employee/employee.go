@@ -19,7 +19,12 @@ func New(db *gorm.DB) IStore {
 // One get 1 employee by id
 func (s *store) One(id string) (*model.Employee, error) {
 	var employee *model.Employee
-	return employee, s.db.Where("id = ?", id).First(&employee).Error
+	return employee, s.db.Where("id = ?", id).
+		Preload("Roles").
+		Preload("Chapter").
+		Preload("Seniority").
+		First(&employee).
+		Error
 }
 
 // OneByTeamEmail get 1 employee by team email
@@ -49,8 +54,8 @@ func (s *store) Search(filter SearchFilter, pagination model.Pagination) ([]*mod
 	query = query.Preload("ProjectMembers", "deleted_at IS NULL").
 		Preload("ProjectMembers.Project").
 		Preload("ProjectMembers.Project.Heads").
-		Preload("EmployeePositions", "deleted_at IS NULL").
-		Preload("EmployeePositions.Position").
+		Preload("Positions", "deleted_at IS NULL").
+		Preload("Roles", "deleted_at IS NULL").
 		Offset(offset)
 
 	return employees, total, query.Find(&employees).Error
@@ -77,6 +82,14 @@ func (s *store) UpdateGeneralInfo(body EditGeneralInfo, id string) (*model.Emplo
 
 	// 1.3 save to DB
 	return employee, s.db.Table("employees").Where("id = ?", id).Updates(&employee).
-		Preload("Chapter").Preload("Seniority").Preload("LineManager").Preload("EmployeePositions").
-		Preload("EmployeePositions.Position").First(&employee).Error
+		Preload("Chapter").
+		Preload("Seniority").
+		Preload("LineManager").
+		Preload("Positions", "deleted_at IS NULL").
+		Preload("Roles", "deleted_at IS NULL").
+		First(&employee).Error
+}
+
+func (s *store) Create(e *model.Employee) (employee *model.Employee, err error) {
+	return e, s.db.Create(e).Error
 }

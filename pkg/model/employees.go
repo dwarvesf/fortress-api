@@ -5,11 +5,23 @@ import "time"
 type WorkingStatus string
 
 const (
-	WorkingStatusPartTime  WorkingStatus = "Part-time"
-	WorkingStatusLeft      WorkingStatus = "Left"
-	WorkingStatusProbation WorkingStatus = "Probation"
-	WorkingStatusFullTime  WorkingStatus = "Full-time"
+	WorkingStatusPartTime  WorkingStatus = "part-time"
+	WorkingStatusLeft      WorkingStatus = "left"
+	WorkingStatusProbation WorkingStatus = "probation"
+	WorkingStatusFullTime  WorkingStatus = "full-time"
 )
+
+func (e WorkingStatus) IsValid() bool {
+	switch e {
+	case
+		WorkingStatusPartTime,
+		WorkingStatusLeft,
+		WorkingStatusProbation,
+		WorkingStatusFullTime:
+		return true
+	}
+	return false
+}
 
 type AccountStatus string
 
@@ -19,6 +31,35 @@ const (
 	AccountStatusProbation  AccountStatus = "probation"
 	AccountStatusOnLeave    AccountStatus = "on-leave"
 )
+
+func (e AccountStatus) IsValid() bool {
+	switch e {
+	case
+		AccountStatusOnBoarding,
+		AccountStatusActive,
+		AccountStatusProbation,
+		AccountStatusOnLeave:
+		return true
+	}
+	return false
+}
+
+type AccountRole string
+
+const (
+	AccountRoleAdmin  AccountRole = "admin"
+	AccountRoleMember AccountRole = "member"
+)
+
+func (e AccountRole) IsValid() bool {
+	switch e {
+	case
+		AccountRoleAdmin,
+		AccountRoleMember:
+		return true
+	}
+	return false
+}
 
 type Employee struct {
 	BaseModel
@@ -70,11 +111,12 @@ type Employee struct {
 	LocalBranchName        string
 	LocalBankRecipientName string
 
-	Chapter           *Chapter
-	Seniority         *Seniority
-	LineManager       *Employee
-	EmployeePositions []EmployeePosition
-	ProjectMembers    []ProjectMember
+	Chapter        *Chapter
+	Seniority      *Seniority
+	LineManager    *Employee
+	ProjectMembers []ProjectMember
+	Roles          []Role     `gorm:"many2many:employee_roles;"`
+	Positions      []Position `gorm:"many2many:employee_positions;"`
 }
 
 func (e AccountStatus) Valid() bool {

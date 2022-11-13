@@ -1,7 +1,9 @@
 package employee
 
 import (
+	"errors"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -106,7 +108,7 @@ func (h *handler) One(c *gin.Context) {
 	// 2. get employee from store
 	rs, err := h.store.Employee.One(params.ID)
 	if err != nil {
-		if err == gorm.ErrRecordNotFound {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Info("employee not found")
 			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, err, params))
 			return
@@ -211,7 +213,7 @@ func (h *handler) GetProfile(c *gin.Context) {
 
 	employee, err := h.store.Employee.One(userID)
 	if err != nil {
-		if err == gorm.ErrRecordNotFound {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Info("employee not found")
 			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, err, nil))
 			return
@@ -288,5 +290,113 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body))
 		return
 	}
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToEmployeeData(employee), nil, nil, nil))
+}
+
+// Create godoc
+// @Summary Create new employee
+// @Description Create new employee
+// @Tags Employee
+// @Accept  json
+// @Produce  json
+// @Param fullName body string true "fullName" maxlength(99)
+// @Param displayName body string true "displayName"
+// @Param teamEmail body string true "teamEmail"
+// @Param personalEmail body string true "personalEmail"
+// @Param positionID body string true "positionID"
+// @Param roleID body string true "roleID"
+// @Param salary body int true "salary"
+// @Param seniorityID body string true "seniorityID"
+// @Param Authorization header string true "jwt token"
+// @Success 200 {object} view.EmployeeData
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /employee [post]
+func (h *handler) Create(c *gin.Context) {
+	// 1. parse employee data from body
+	var req CreateEmployee
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, req))
+		return
+	}
+
+	// 1.1 prepare the logger
+	l := h.logger.Fields(logger.Fields{
+		"handler": "employee",
+		"method":  "One",
+		"params":  req,
+	})
+
+	// 1.2 prepare employee data
+	now := time.Now()
+	pos, err := h.store.Position.One(req.PositionID)
+	if err != nil {
+		l.Error(err, "error invalid position")
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrPositionNotfound, req))
+			return
+		}
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req))
+		return
+	}
+	sen, err := h.store.Seniority.One(req.SeniorityID)
+	if err != nil {
+		l.Error(err, "error invalid seniority")
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrSeniorityNotfound, req))
+			return
+		}
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req))
+		return
+	}
+	role, err := h.store.Role.One(req.RoleID)
+	if err != nil {
+		l.Error(err, "error invalid role")
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrRoleNotfound, req))
+			return
+		}
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req))
+		return
+	}
+	employee := &model.Employee{
+		BaseModel: model.BaseModel{
+			ID: model.NewUUID(),
+		},
+		FullName:      req.FullName,
+		DisplayName:   req.DisplayName,
+		TeamEmail:     req.TeamEmail,
+		PersonalEmail: req.PersonalEmail,
+		WorkingStatus: model.WorkingStatusProbation,
+		JoinedDate:    &now,
+		AccountStatus: model.AccountStatusOnBoarding,
+		SeniorityID:   sen.ID,
+		Positions:     []model.Position{*pos},
+		Roles:         []model.Role{*role},
+	}
+
+	// 2.1 check employee exists -> raise error
+	_, err = h.store.Employee.OneByTeamEmail(employee.TeamEmail)
+	if err != gorm.ErrRecordNotFound {
+		if err == nil {
+			l.Error(err, "error employee exists")
+			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, ErrEmployeeExisted, req))
+			return
+		}
+		l.Error(err, "error store new employee")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req))
+		return
+	}
+	// 2.2 store employee
+	employee, err = h.store.Employee.Create(employee)
+	if err != nil {
+		l.Error(err, "error store new employee")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req))
+		return
+	}
+
+	// 3. return employee
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToEmployeeData(employee), nil, nil, nil))
 }
