@@ -34,6 +34,10 @@ INSERT INTO public.chapters (id, deleted_at, created_at, updated_at, name, code)
     ('01fb6322-d727-47e3-a242-5039ea4732fe', null, '2022-11-07 09:50:25.714604', '2022-11-07 09:50:25.714604', 'QA', 'qa'),
     ('39735742-829b-47f3-8f9d-daf0983914e5', null, '2022-11-07 09:50:25.714604', '2022-11-07 09:50:25.714604', 'PM', 'pm');
 
+INSERT INTO public.projects (id, deleted_at, created_at, updated_at, name, type, start_date, end_date, status) VALUES
+('8dc3be2e-19a4-4942-8a79-56db391a0b15', null, '2022-11-11 18:06:56.362902', '2022-11-11 18:06:56.362902', 'Fortress', 'dwarves', '2022-11-01', null, 'active'),
+('dfa182fc-1d2d-49f6-a877-c01da9ce4207', null, '2022-11-11 18:06:56.362902', '2022-11-11 18:06:56.362902', 'Lorem ipsum', 'time-material', '2022-07-06', null, 'active');
+
 INSERT INTO public.stacks (id, deleted_at, created_at, updated_at, name, code, avatar) VALUES
 ('0ecf47c8-cca4-4c30-94bb-054b1124c44f', null, '2022-11-11 18:38:46.266725', '2022-11-11 18:38:46.266725', 'Golang', 'golang', null),
 ('fa0f4e46-7eab-4e5c-9d31-30489e69fe2e', null, '2022-11-11 18:38:46.266725', '2022-11-11 18:38:46.266725', 'React', 'react', null),

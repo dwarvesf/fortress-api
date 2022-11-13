@@ -12,6 +12,10 @@ type GetListProjectInput struct {
 	Type   string `form:"type" json:"type"`
 }
 
+type updateAccountStatusBody struct {
+	ProjectStatus model.ProjectStatus `json:"status"`
+}
+
 func (i *GetListProjectInput) Validate() error {
 	if i.Type != "" && !model.ProjectType(i.Type).IsValid() {
 		return ErrInvalidProjectType

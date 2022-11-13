@@ -61,6 +61,11 @@ func (s *store) All(input GetListProjectInput, pagination model.Pagination) ([]*
 	return projects, total, query.Find(&projects).Error
 }
 
+func (s *store) UpdateStatus(projectID string, projectStatus model.ProjectStatus) (*model.Project, error) {
+	project := &model.Project{}
+	return project, s.db.Model(&project).Where("id = ?", projectID).Update("status", string(projectStatus)).First(&project).Error
+}
+
 type GetListProjectInput struct {
 	Status string `json:"status"`
 	Name   string `json:"name"`

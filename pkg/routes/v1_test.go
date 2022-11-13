@@ -81,6 +81,10 @@ func Test_loadV1Routes(t *testing.T) {
 			Method:  "GET",
 			Handler: "github.com/dwarvesf/fortress-api/pkg/handler/project.IHandler.List-fm",
 		},
+		"/api/v1/projects/:id/status": {
+			Method:  "PUT",
+			Handler: "github.com/dwarvesf/fortress-api/pkg/handler/project.IHandler.UpdateProjectStatus-fm",
+		},
 	}
 
 	l := logger.NewLogrusLogger()

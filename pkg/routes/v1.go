@@ -38,4 +38,5 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, cfg *config.Config) {
 
 	// projects
 	v1.GET("/projects", h.Project.List)
+	v1.PUT("/projects/:id/status", h.Project.UpdateProjectStatus)
 }
