@@ -21,6 +21,16 @@ type ProjectData struct {
 	DeliveryManager *ProjectHead    `json:"deliveryManager"`
 }
 
+type UpdatedProject struct {
+	model.BaseModel
+
+	Name      string     `json:"name"`
+	Type      string     `json:"type"`
+	Status    string     `json:"status"`
+	StartDate *time.Time `json:"startDate"`
+	EndDate   *time.Time `json:"endDate"`
+}
+
 type ProjectMember struct {
 	EmployeeID  string `json:"employeeID"`
 	FullName    string `json:"fullName"`
@@ -36,6 +46,21 @@ type ProjectHead struct {
 	FullName    string `json:"fullName"`
 	DisplayName string `json:"displayName"`
 	Avatar      string `json:"avatar"`
+}
+
+type UpdateProjectStatusResponse struct {
+	Data UpdatedProject `json:"data"`
+}
+
+func ToUpdateProjectStatusResponse(p *model.Project) UpdatedProject {
+	return UpdatedProject{
+		BaseModel: p.BaseModel,
+		Name:      p.Name,
+		Type:      p.Type.String(),
+		Status:    p.Status.String(),
+		StartDate: p.StartDate,
+		EndDate:   p.EndDate,
+	}
 }
 
 func ToProjectData(projects []*model.Project) []ProjectData {

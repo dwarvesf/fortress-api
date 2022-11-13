@@ -1,0 +1,12 @@
+{
+    "data": {
+        "id": "8dc3be2e-19a4-4942-8a79-56db391a0b15",
+        "createdAt": "2022-11-11T18:06:56.362902Z",
+        "updatedAt": "",
+        "name": "Fortress",
+        "type": "dwarves",
+        "status": "active",
+        "startDate": "2022-11-01T00:00:00Z",
+        "endDate": null
+    }
+}

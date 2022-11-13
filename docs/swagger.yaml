@@ -340,6 +340,32 @@ definitions:
       data:
         $ref: '#/definitions/view.EmployeeData'
     type: object
+  view.UpdateProjectStatusResponse:
+    properties:
+      data:
+        $ref: '#/definitions/view.UpdatedProject'
+    type: object
+  view.UpdatedProject:
+    properties:
+      createdAt:
+        type: string
+      deletedAt:
+        type: string
+      endDate:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      startDate:
+        type: string
+      status:
+        type: string
+      type:
+        type: string
+      updatedAt:
+        type: string
+    type: object
 info:
   contact:
     email: support@swagger.io
@@ -834,6 +860,50 @@ paths:
           schema:
             $ref: '#/definitions/view.ErrorResponse'
       summary: Get list of project
+      tags:
+      - Project
+  /projects/{id}/status:
+    put:
+      consumes:
+      - application/json
+      description: Update status for project by id
+      parameters:
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Project Status
+        in: body
+        name: status
+        required: true
+        schema:
+          type: string
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.UpdateProjectStatusResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Update status for project by id
       tags:
       - Project
 securityDefinitions:
