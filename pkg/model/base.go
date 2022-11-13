@@ -9,7 +9,7 @@ import (
 
 // BaseModel base model for domain type
 type BaseModel struct {
-	ID        UUID       `sql:",type:uuid" json:"id"`
+	ID        UUID       `sql:",type:uuid" json:"id" gorm:"default:uuid()"`
 	CreatedAt time.Time  `sql:"default:now()" json:"createdAt"`
 	UpdatedAt *time.Time `sql:"default:now()" json:"updatedAt"`
 	DeletedAt *time.Time `json:"deletedAt,omitempty"`

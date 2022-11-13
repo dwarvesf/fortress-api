@@ -48,6 +48,15 @@ type ProjectHead struct {
 	Avatar      string `json:"avatar"`
 }
 
+func ToProjectHead(head *model.ProjectHead) *ProjectHead {
+	return &ProjectHead{
+		EmployeeID:  head.EmployeeID.String(),
+		FullName:    head.Employee.FullName,
+		DisplayName: head.Employee.DisplayName,
+		Avatar:      head.Employee.Avatar,
+	}
+}
+
 type UpdateProjectStatusResponse struct {
 	Data UpdatedProject `json:"data"`
 }
@@ -148,4 +157,39 @@ func ToEmployeeProjectData(project *model.Project) EmployeeProjectData {
 		ID:   project.ID.String(),
 		Name: project.Name,
 	}
+}
+
+type CreateProjectData struct {
+	model.BaseModel
+
+	Name            string       `json:"name"`
+	Type            string       `json:"type"`
+	Status          string       `json:"status"`
+	StartDate       string       `json:"startDate"`
+	AccountManager  *ProjectHead `json:"accountManager"`
+	DeliveryManager *ProjectHead `json:"deliveryManager"`
+}
+
+func ToCreateProjectDataResponse(project *model.Project) CreateProjectData {
+	result := CreateProjectData{
+		BaseModel: project.BaseModel,
+		Name:      project.Name,
+		Type:      project.Type.String(),
+		Status:    project.Status.String(),
+	}
+
+	if project.StartDate != nil {
+		result.StartDate = project.StartDate.Format("2006-01-02")
+	}
+
+	for _, head := range project.Heads {
+		switch head.Position {
+		case model.HeadPositionAccountManager:
+			result.AccountManager = ToProjectHead(&head)
+		case model.HeadPositionDeliveryManager:
+			result.DeliveryManager = ToProjectHead(&head)
+		}
+	}
+
+	return result
 }

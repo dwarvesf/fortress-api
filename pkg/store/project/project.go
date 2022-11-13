@@ -66,6 +66,11 @@ func (s *store) UpdateStatus(projectID string, projectStatus model.ProjectStatus
 	return project, s.db.Model(&project).Where("id = ?", projectID).Update("status", string(projectStatus)).First(&project).Error
 }
 
+// Create create new project
+func (s *store) Create(project *model.Project) error {
+	return s.db.Create(&project).Error
+}
+
 type GetListProjectInput struct {
 	Status string `json:"status"`
 	Name   string `json:"name"`

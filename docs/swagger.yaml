@@ -19,6 +19,29 @@ definitions:
     - seniority
     - stacks
     type: object
+  github.com_dwarvesf_fortress-api_pkg_handler_project.CreateProjectInput:
+    properties:
+      accountManagerID:
+        type: string
+      countryID:
+        type: string
+      deliveryManagerID:
+        type: string
+      name:
+        type: string
+      startDate:
+        type: string
+      status:
+        type: string
+      type:
+        type: string
+    required:
+    - accountManagerID
+    - countryID
+    - name
+    - status
+    - type
+    type: object
   model.Chapter:
     properties:
       code:
@@ -98,21 +121,6 @@ definitions:
       updatedAt:
         type: string
     type: object
-  model.Stack:
-    properties:
-      code:
-        type: string
-      createdAt:
-        type: string
-      deletedAt:
-        type: string
-      id:
-        type: string
-      name:
-        type: string
-      updatedAt:
-        type: string
-    type: object
   pkg_handler_employee.EditSkillsInput:
     properties:
       chapter:
@@ -131,6 +139,29 @@ definitions:
     - positions
     - seniority
     - stacks
+    type: object
+  pkg_handler_project.CreateProjectInput:
+    properties:
+      accountManagerID:
+        type: string
+      countryID:
+        type: string
+      deliveryManagerID:
+        type: string
+      name:
+        type: string
+      startDate:
+        type: string
+      status:
+        type: string
+      type:
+        type: string
+    required:
+    - accountManagerID
+    - countryID
+    - name
+    - status
+    - type
     type: object
   view.AccountRoleResponse:
     properties:
@@ -190,6 +221,29 @@ definitions:
         items:
           $ref: '#/definitions/model.Country'
         type: array
+    type: object
+  view.CreateProjectData:
+    properties:
+      accountManager:
+        $ref: '#/definitions/view.ProjectHead'
+      createdAt:
+        type: string
+      deletedAt:
+        type: string
+      deliveryManager:
+        $ref: '#/definitions/view.ProjectHead'
+      id:
+        type: string
+      name:
+        type: string
+      startDate:
+        type: string
+      status:
+        type: string
+      type:
+        type: string
+      updatedAt:
+        type: string
     type: object
   view.EditEmployeeResponse:
     properties:
@@ -255,10 +309,6 @@ definitions:
         type: array
       seniority:
         $ref: '#/definitions/model.Seniority'
-      stacks:
-        items:
-          $ref: '#/definitions/model.Stack'
-        type: array
       status:
         description: working info
         type: string
@@ -812,7 +862,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/pkg_handler_employee.EditSkillsInput'
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.EditSkillsInput'
       - description: jwt token
         in: header
         name: Authorization
@@ -1156,6 +1206,40 @@ paths:
           schema:
             $ref: '#/definitions/view.ErrorResponse'
       summary: Get list of project
+      tags:
+      - Project
+    post:
+      consumes:
+      - application/json
+      description: Create new project
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: body
+        in: body
+        name: Body
+        required: true
+        schema:
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.CreateProjectInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.CreateProjectData'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Create new project
       tags:
       - Project
   /projects/{id}/status:
