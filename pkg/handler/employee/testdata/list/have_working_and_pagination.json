@@ -1,6 +1,6 @@
 {
-    "page": 0,
-    "size": 50,
+    "page": 1,
+    "size": 5,
     "sort": "",
     "total": 1,
     "data": [
@@ -21,7 +21,9 @@
             "birthday": "1990-01-02T00:00:00Z",
             "status": "contractor",
             "joinedDate": null,
-            "leftDate": null
+            "leftDate": null,
+            "positions": [],
+            "projects": []
         }
     ]
 }

@@ -140,6 +140,7 @@ type ProjectMember struct {
 	SeniorityID    UUID
 
 	Employee Employee
+	Project  Project
 }
 
 type HeadPosition string

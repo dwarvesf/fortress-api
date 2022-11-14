@@ -5,4 +5,6 @@ type EmployeePosition struct {
 
 	EmployeeID string
 	PositionID string
+
+	Position Position
 }
