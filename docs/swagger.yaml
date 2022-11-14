@@ -649,6 +649,74 @@ paths:
       summary: Edit general info of the employee by id
       tags:
       - Employee
+  /employees/{id}/personal-info:
+    put:
+      consumes:
+      - application/json
+      description: Edit personal info of the employee by id
+      parameters:
+      - description: Employee ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: dob
+        in: body
+        name: DoB
+        required: true
+        schema:
+          type: string
+      - description: gender
+        in: body
+        name: gender
+        required: true
+        schema:
+          type: string
+      - description: address
+        in: body
+        maxLength: 200
+        name: address
+        required: true
+        schema:
+          type: string
+      - description: personalEmail
+        in: body
+        name: personalEmail
+        required: true
+        schema:
+          type: string
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.EditEmployeeResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Edit personal info of the employee by id
+      tags:
+      - Employee
   /metadata/account-roles:
     get:
       consumes:

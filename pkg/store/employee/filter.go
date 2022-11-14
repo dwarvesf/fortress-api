@@ -1,5 +1,7 @@
 package employee
 
+import "time"
+
 type SearchFilter struct {
 	WorkingStatus string
 }
@@ -12,4 +14,11 @@ type EditGeneralInfo struct {
 	DiscordID     string
 	GithubID      string
 	NotionID      string
+}
+
+type EditPersonalInfo struct {
+	DoB           *time.Time
+	Gender        string
+	Address       string
+	PersonalEmail string
 }

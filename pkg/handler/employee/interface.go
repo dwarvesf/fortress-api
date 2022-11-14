@@ -8,4 +8,5 @@ type IHandler interface {
 	UpdateEmployeeStatus(c *gin.Context)
 	GetProfile(c *gin.Context)
 	UpdateGeneralInfo(c *gin.Context)
+	UpdatePersonalInfo(c *gin.Context)
 }

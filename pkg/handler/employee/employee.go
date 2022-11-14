@@ -290,3 +290,56 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToEmployeeData(employee), nil, nil, nil))
 }
+
+// UpdatePersonalInfo godoc
+// @Summary Edit personal info of the employee by id
+// @Description Edit personal info of the employee by id
+// @Tags Employee
+// @Accept  json
+// @Produce  json
+// @Param id path string true "Employee ID"
+// @Param DoB body *time.Time true "dob"
+// @Param gender body string true "gender"
+// @Param address body string true "address" maxlength(200)
+// @Param personalEmail body string true "personalEmail"
+// @Param Authorization header string true "jwt token"
+// @Param Authorization header string true "jwt token"
+// @Success 200 {object} view.EditEmployeeResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /employees/{id}/personal-info [put]
+func (h *handler) UpdatePersonalInfo(c *gin.Context) {
+	employeeID := c.Param("id")
+
+	var body EditPersonalInfo
+	if err := c.ShouldBindJSON(&body); err != nil {
+		if err != nil {
+			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, employeeID))
+			return
+		}
+	}
+
+	// TODO: can we move this to middleware ?
+	l := h.logger.Fields(logger.Fields{
+		"handler": "employee",
+		"method":  "UpdatePersonalInfo",
+		"request": body,
+	})
+
+	// 3. update informations and rerurn
+	employee, err := h.store.Employee.UpdatePersonalInfo(employee.EditPersonalInfo{
+		DoB:           body.DoB,
+		Gender:        body.Gender,
+		Address:       body.Address,
+		PersonalEmail: body.PersonalEmail,
+	}, employeeID)
+
+	if err != nil {
+		l.Error(err, "error update employee's personal info to db")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body))
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToEmployeeData(employee), nil, nil, nil))
+}

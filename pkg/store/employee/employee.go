@@ -80,3 +80,18 @@ func (s *store) UpdateGeneralInfo(body EditGeneralInfo, id string) (*model.Emplo
 		Preload("Chapter").Preload("Seniority").Preload("LineManager").Preload("EmployeePositions").
 		Preload("EmployeePositions.Position").First(&employee).Error
 }
+
+func (s *store) UpdatePersonalInfo(body EditPersonalInfo, id string) (*model.Employee, error) {
+	employee := &model.Employee{}
+
+	// 1.2 update infor
+	employee.DateOfBirth = body.DoB
+	employee.Gender = body.Gender
+	employee.Address = body.Address
+	employee.PersonalEmail = body.PersonalEmail
+
+	// 1.3 save to DB
+	return employee, s.db.Table("employees").Where("id = ?", id).Updates(&employee).
+		Preload("Chapter").Preload("Seniority").Preload("LineManager").Preload("EmployeePositions").
+		Preload("EmployeePositions.Position").First(&employee).Error
+}
