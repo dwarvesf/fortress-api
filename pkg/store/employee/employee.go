@@ -30,22 +30,30 @@ func (s *store) OneByTeamEmail(teamEmail string) (*model.Employee, error) {
 
 // Search get employees by filter and pagination
 func (s *store) Search(filter SearchFilter, pagination model.Pagination) ([]*model.Employee, int64, error) {
-	db := s.db.Table("employees")
 	var total int64
+	var employees []*model.Employee
+
+	query := s.db.Table("employees")
 
 	if filter.WorkingStatus != "" {
-		db = db.Where("working_status = ?", filter.WorkingStatus)
+		query = query.Where("working_status = ?", filter.WorkingStatus)
 	}
-	db = db.Count(&total)
+	query = query.Count(&total)
 
-	if pagination.Page > 1 {
-		db = db.Offset(int((pagination.Page - 1) * pagination.Size))
+	query = query.Order(pagination.Sort)
+	limit, offset := pagination.ToLimitOffset()
+	if pagination.Page > 0 {
+		query = query.Limit(limit)
 	}
-	db = db.Limit(int(pagination.Size))
-	db = db.Order(pagination.Sort)
 
-	var employees []*model.Employee
-	return employees, total, db.Find(&employees).Error
+	query = query.Preload("ProjectMembers", "deleted_at IS NULL").
+		Preload("ProjectMembers.Project").
+		Preload("ProjectMembers.Project.Heads").
+		Preload("EmployeePositions", "deleted_at IS NULL").
+		Preload("EmployeePositions.Position").
+		Offset(offset)
+
+	return employees, total, query.Find(&employees).Error
 }
 
 func (s *store) UpdateEmployeeStatus(employeeID string, accountStatus model.AccountStatus) (*model.Employee, error) {

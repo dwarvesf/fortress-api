@@ -973,6 +973,9 @@ const docTemplate = `{
                 "deletedAt": {
                     "type": "string"
                 },
+                "discordID": {
+                    "type": "string"
+                },
                 "displayName": {
                     "type": "string"
                 },
@@ -981,6 +984,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "gender": {
+                    "type": "string"
+                },
+                "githubID": {
                     "type": "string"
                 },
                 "horoscope": {
@@ -998,11 +1004,26 @@ const docTemplate = `{
                 "mbti": {
                     "type": "string"
                 },
+                "notionID": {
+                    "type": "string"
+                },
                 "personalEmail": {
                     "type": "string"
                 },
                 "phoneNumber": {
                     "type": "string"
+                },
+                "positions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Position"
+                    }
+                },
+                "projects": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.EmployeeProjectData"
+                    }
                 },
                 "status": {
                     "description": "working info",
@@ -1024,6 +1045,17 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/view.EmployeeData"
                     }
+                }
+            }
+        },
+        "view.EmployeeProjectData": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
                 }
             }
         },
@@ -1072,7 +1104,7 @@ const docTemplate = `{
                 "birthday": {
                     "type": "string"
                 },
-                "discordId": {
+                "discordID": {
                     "type": "string"
                 },
                 "displayName": {
@@ -1084,7 +1116,7 @@ const docTemplate = `{
                 "gender": {
                     "type": "string"
                 },
-                "githubId": {
+                "githubID": {
                     "type": "string"
                 },
                 "id": {

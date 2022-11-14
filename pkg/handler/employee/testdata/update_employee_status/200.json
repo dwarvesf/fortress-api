@@ -16,6 +16,8 @@
         "birthday": "1990-01-02T00:00:00Z",
         "status": "contractor",
         "joinedDate": null,
-        "leftDate": null
+        "leftDate": null,
+        "positions": [],
+        "projects": []
     }
 }

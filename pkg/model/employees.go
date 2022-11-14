@@ -52,6 +52,7 @@ type Employee struct {
 	GitlabID               string
 	GithubID               string
 	DiscordID              string
+	NotionID               string
 
 	// payroll info
 	WiseRecipientEmail string
@@ -65,6 +66,10 @@ type Employee struct {
 	LocalBankCurrency      string
 	LocalBankName          string
 	LocalBankRecipientName string
+
+	// relationship
+	EmployeePositions []EmployeePosition
+	ProjectMembers    []ProjectMember
 }
 
 func (e AccountStatus) Valid() bool {

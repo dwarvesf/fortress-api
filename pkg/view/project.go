@@ -112,3 +112,15 @@ func ToProjectData(projects []*model.Project) []ProjectData {
 type ProjectListDataResponse struct {
 	Data []ProjectData `json:"data"`
 }
+
+type EmployeeProjectData struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
+func ToEmployeeProjectData(project *model.Project) EmployeeProjectData {
+	return EmployeeProjectData{
+		ID:   project.ID.String(),
+		Name: project.Name,
+	}
+}

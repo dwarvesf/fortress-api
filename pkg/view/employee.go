@@ -22,11 +22,17 @@ type EmployeeData struct {
 	Gender        string     `json:"gender"`
 	Horoscope     string     `json:"horoscope"`
 	DateOfBirth   *time.Time `json:"birthday"`
+	DiscordID     string     `json:"discordID,omitempty"`
+	GithubID      string     `json:"githubID,omitempty"`
+	NotionID      string     `json:"notionID,omitempty"`
 
 	// working info
 	WorkingStatus model.WorkingStatus `json:"status"`
 	JoinedDate    *time.Time          `json:"joinedDate"`
 	LeftDate      *time.Time          `json:"leftDate"`
+
+	Positions []model.Position      `json:"positions"`
+	Projects  []EmployeeProjectData `json:"projects"`
 }
 type UpdateEmployeeStatusResponse struct {
 	Data EmployeeData `json:"data"`
@@ -46,8 +52,8 @@ type ProfileData struct {
 	TeamEmail     string     `json:"teamEmail"`
 	PersonalEmail string     `json:"personalEmail"`
 	PhoneNumber   string     `json:"phoneNumber"`
-	DiscordID     string     `json:"discordId"`
-	GithubID      string     `json:"githubId"`
+	DiscordID     string     `json:"discordID"`
+	GithubID      string     `json:"githubID"`
 }
 
 type ProfileDataResponse struct {
@@ -55,6 +61,16 @@ type ProfileDataResponse struct {
 }
 
 func ToEmployeeData(employee *model.Employee) *EmployeeData {
+	projects := make([]EmployeeProjectData, 0, len(employee.ProjectMembers))
+	for _, v := range employee.ProjectMembers {
+		projects = append(projects, ToEmployeeProjectData(&v.Project))
+	}
+
+	positions := make([]model.Position, 0, len(employee.EmployeePositions))
+	for _, v := range employee.EmployeePositions {
+		positions = append(positions, v.Position)
+	}
+
 	return &EmployeeData{
 		BaseModel: model.BaseModel{
 			ID:        employee.ID,
@@ -72,9 +88,14 @@ func ToEmployeeData(employee *model.Employee) *EmployeeData {
 		Gender:        employee.Gender,
 		Horoscope:     employee.Horoscope,
 		DateOfBirth:   employee.DateOfBirth,
+		GithubID:      employee.GithubID,
+		DiscordID:     employee.DiscordID,
+		NotionID:      employee.NotionID,
 		WorkingStatus: employee.WorkingStatus,
 		JoinedDate:    employee.JoinedDate,
 		LeftDate:      employee.LeftDate,
+		Projects:      projects,
+		Positions:     positions,
 	}
 }
 

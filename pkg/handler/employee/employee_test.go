@@ -133,25 +133,25 @@ func TestHandler_List(t *testing.T) {
 		{
 			name:             "without_working_status_and_pagination",
 			wantCode:         http.StatusOK,
-			wantResponsePath: "testdata/employee/list/without_working_status_and_pagination.json",
+			wantResponsePath: "testdata/list/without_working_status_and_pagination.json",
 		},
 		{
 			name:             "have_workingStatus_and_no_pagination",
 			query:            "workingStatus=contractor",
 			wantCode:         http.StatusOK,
-			wantResponsePath: "testdata/employee/list/have_working_and_no_pagination.json",
+			wantResponsePath: "testdata/list/have_working_and_no_pagination.json",
 		},
 		{
 			name:             "have_workingStatus_and_pagination",
 			query:            "workingStatus=contractor&page=1&size=5",
 			wantCode:         http.StatusOK,
-			wantResponsePath: "testdata/employee/list/have_working_and_pagination.json",
+			wantResponsePath: "testdata/list/have_working_and_pagination.json",
 		},
 		{
 			name:             "out_of_content",
 			query:            "workingStatus=contractor&page=5&size=5",
 			wantCode:         http.StatusOK,
-			wantResponsePath: "testdata/employee/list/out_of_content.json",
+			wantResponsePath: "testdata/list/out_of_content.json",
 		},
 	}
 	for _, tt := range tests {

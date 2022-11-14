@@ -141,12 +141,16 @@ definitions:
         type: string
       deletedAt:
         type: string
+      discordID:
+        type: string
       displayName:
         type: string
       fullName:
         description: basic info
         type: string
       gender:
+        type: string
+      githubID:
         type: string
       horoscope:
         type: string
@@ -158,10 +162,20 @@ definitions:
         type: string
       mbti:
         type: string
+      notionID:
+        type: string
       personalEmail:
         type: string
       phoneNumber:
         type: string
+      positions:
+        items:
+          $ref: '#/definitions/model.Position'
+        type: array
+      projects:
+        items:
+          $ref: '#/definitions/view.EmployeeProjectData'
+        type: array
       status:
         description: working info
         type: string
@@ -176,6 +190,13 @@ definitions:
         items:
           $ref: '#/definitions/view.EmployeeData'
         type: array
+    type: object
+  view.EmployeeProjectData:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
     type: object
   view.ErrorResponse:
     properties:
@@ -206,7 +227,7 @@ definitions:
         type: string
       birthday:
         type: string
-      discordId:
+      discordID:
         type: string
       displayName:
         type: string
@@ -214,7 +235,7 @@ definitions:
         type: string
       gender:
         type: string
-      githubId:
+      githubID:
         type: string
       id:
         type: string
