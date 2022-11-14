@@ -265,6 +265,129 @@
                 }
             }
         },
+        "/employees/{id}/general-info": {
+            "put": {
+                "description": "Edit general info of the employee by id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Employee"
+                ],
+                "summary": "Edit general info of the employee by id",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Employee ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "maxLength": 99,
+                        "description": "fullName",
+                        "name": "fullName",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "email",
+                        "name": "email",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "maxLength": 12,
+                        "minLength": 10,
+                        "description": "phone",
+                        "name": "phone",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "lineManager",
+                        "name": "lineManagerID",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "discordID",
+                        "name": "discordID",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "githubID",
+                        "name": "githubID",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "notionID",
+                        "name": "notionID",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.EditEmployeeResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/metadata/account-roles": {
             "get": {
                 "description": "Get list values for account roles",
@@ -980,6 +1103,20 @@
                 }
             }
         },
+        "view.BasisEmployeeInfo": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string"
+                },
+                "fullName": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                }
+            }
+        },
         "view.ChapterResponse": {
             "type": "object",
             "properties": {
@@ -1013,9 +1150,20 @@
                 }
             }
         },
+        "view.EditEmployeeResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/view.EmployeeData"
+                }
+            }
+        },
         "view.EmployeeData": {
             "type": "object",
             "properties": {
+                "accountStatus": {
+                    "type": "string"
+                },
                 "address": {
                     "type": "string"
                 },
@@ -1024,6 +1172,9 @@
                 },
                 "birthday": {
                     "type": "string"
+                },
+                "chapter": {
+                    "$ref": "#/definitions/model.Chapter"
                 },
                 "createdAt": {
                     "type": "string"
@@ -1059,6 +1210,9 @@
                 "leftDate": {
                     "type": "string"
                 },
+                "lineManager": {
+                    "$ref": "#/definitions/view.BasisEmployeeInfo"
+                },
                 "mbti": {
                     "type": "string"
                 },
@@ -1082,6 +1236,9 @@
                     "items": {
                         "$ref": "#/definitions/view.EmployeeProjectData"
                     }
+                },
+                "seniority": {
+                    "$ref": "#/definitions/model.Seniority"
                 },
                 "status": {
                     "description": "working info",

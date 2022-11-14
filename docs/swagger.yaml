@@ -108,6 +108,15 @@ definitions:
       employee:
         $ref: '#/definitions/view.EmployeeData'
     type: object
+  view.BasisEmployeeInfo:
+    properties:
+      avatar:
+        type: string
+      fullName:
+        type: string
+      id:
+        type: string
+    type: object
   view.ChapterResponse:
     properties:
       data:
@@ -129,14 +138,23 @@ definitions:
           $ref: '#/definitions/model.Country'
         type: array
     type: object
+  view.EditEmployeeResponse:
+    properties:
+      data:
+        $ref: '#/definitions/view.EmployeeData'
+    type: object
   view.EmployeeData:
     properties:
+      accountStatus:
+        type: string
       address:
         type: string
       avatar:
         type: string
       birthday:
         type: string
+      chapter:
+        $ref: '#/definitions/model.Chapter'
       createdAt:
         type: string
       deletedAt:
@@ -160,6 +178,8 @@ definitions:
         type: string
       leftDate:
         type: string
+      lineManager:
+        $ref: '#/definitions/view.BasisEmployeeInfo'
       mbti:
         type: string
       notionID:
@@ -176,6 +196,8 @@ definitions:
         items:
           $ref: '#/definitions/view.EmployeeProjectData'
         type: array
+      seniority:
+        $ref: '#/definitions/model.Seniority'
       status:
         description: working info
         type: string
@@ -542,6 +564,89 @@ paths:
           schema:
             $ref: '#/definitions/view.ErrorResponse'
       summary: Update account status by employee id
+      tags:
+      - Employee
+  /employees/{id}/general-info:
+    put:
+      consumes:
+      - application/json
+      description: Edit general info of the employee by id
+      parameters:
+      - description: Employee ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: fullName
+        in: body
+        maxLength: 99
+        name: fullName
+        required: true
+        schema:
+          type: string
+      - description: email
+        in: body
+        name: email
+        required: true
+        schema:
+          type: string
+      - description: phone
+        in: body
+        maxLength: 12
+        minLength: 10
+        name: phone
+        required: true
+        schema:
+          type: string
+      - description: lineManager
+        in: body
+        name: lineManagerID
+        required: true
+        schema:
+          type: string
+      - description: discordID
+        in: body
+        name: discordID
+        required: true
+        schema:
+          type: string
+      - description: githubID
+        in: body
+        name: githubID
+        required: true
+        schema:
+          type: string
+      - description: notionID
+        in: body
+        name: notionID
+        required: true
+        schema:
+          type: string
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.EditEmployeeResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Edit general info of the employee by id
       tags:
       - Employee
   /metadata/account-roles:

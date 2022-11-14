@@ -25,6 +25,10 @@ func Test_loadV1Routes(t *testing.T) {
 			Method:  "GET",
 			Handler: "github.com/dwarvesf/fortress-api/pkg/handler/employee.IHandler.One-fm",
 		},
+		"/api/v1/employees/:id/general-info": {
+			Method:  "PUT",
+			Handler: "github.com/dwarvesf/fortress-api/pkg/handler/employee.IHandler.UpdateGeneralInfo-fm",
+		},
 		"/api/v1/metadata/working-status": {
 			Method:  "GET",
 			Handler: "github.com/dwarvesf/fortress-api/pkg/handler/metadata.IHandler.WorkingStatus-fm",
@@ -70,7 +74,7 @@ func Test_loadV1Routes(t *testing.T) {
 			Handler: "github.com/dwarvesf/fortress-api/pkg/handler/metadata.IHandler.GetCities-fm",
 		},
 		"/api/v1/employees/:id/employee-status": {
-			Method:  "POST",
+			Method:  "PUT",
 			Handler: "github.com/dwarvesf/fortress-api/pkg/handler/employee.IHandler.UpdateEmployeeStatus-fm",
 		},
 		"/api/v1/profile": {

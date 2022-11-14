@@ -2,7 +2,7 @@
     "data": {
         "id": "2655832e-f009-4b73-a535-64c3a22e558f",
         "createdAt": "2022-11-02T09:52:34.586566Z",
-        "updatedAt": null,
+        "updatedAt": "2022-11-14T22:30:55.893834Z",
         "fullName": "Phạm Đức Thành",
         "displayName": "Thanh Pham",
         "teamEmail": "thanh@d.foundation",
@@ -17,6 +17,10 @@
         "status": "contractor",
         "joinedDate": null,
         "leftDate": null,
+        "accountStatus": "active",
+        "seniority": null,
+        "chapter": null,
+        "lineManager": null,
         "positions": [],
         "projects": []
     }
