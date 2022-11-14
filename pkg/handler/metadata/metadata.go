@@ -308,3 +308,32 @@ func (h *handler) GetCities(c *gin.Context) {
 
 	c.JSON(http.StatusOK, view.CreateResponse(country.Cities, nil, nil, nil))
 }
+
+// Stacks godoc
+// @Summary Get list values for stacks
+// @Description Get list values for stacks
+// @Tags Metadata
+// @Accept  json
+// @Produce  json
+// @Success 200 {object} view.StackResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /metadata/stacks [get]
+func (h *handler) Stacks(c *gin.Context) {
+	// TODO: can we move this to middleware ?
+	l := h.logger.Fields(logger.Fields{
+		"handler": "metadata",
+		"method":  "Stacks",
+	})
+
+	// 1 query stacks from db
+	stacks, err := h.store.Stack.All()
+	if err != nil {
+		l.Error(err, "error query Stacks from db")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil))
+		return
+	}
+
+	// 2 return array of account statuses
+	c.JSON(http.StatusOK, view.CreateResponse[any](stacks, nil, nil, nil))
+}

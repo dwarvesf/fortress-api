@@ -559,6 +559,41 @@ const docTemplate = `{
                 }
             }
         },
+        "/metadata/stacks": {
+            "get": {
+                "description": "Get list values for stacks",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Metadata"
+                ],
+                "summary": "Get list values for stacks",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.StackResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/metadata/working-status": {
             "get": {
                 "description": "Get list values for working status",
@@ -1188,6 +1223,17 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/model.Seniority"
+                    }
+                }
+            }
+        },
+        "view.StackResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Chapter"
                     }
                 }
             }
