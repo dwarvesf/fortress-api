@@ -124,8 +124,8 @@ func ToProjectData(projects []*model.Project) []ProjectData {
 				FullName:    m.Employee.FullName,
 				DisplayName: m.Employee.DisplayName,
 				Avatar:      m.Employee.Avatar,
-				Position:    m.Position,
 				Status:      m.Status.String(),
+				Positions:   ToPositions(m.Employee.EmployeePositions),
 				IsLead:      isLead,
 			})
 		}
@@ -163,6 +163,36 @@ func ToEmployeeProjectData(project *model.Project) EmployeeProjectData {
 	return EmployeeProjectData{
 		ID:   project.ID.String(),
 		Name: project.Name,
+	}
+}
+
+type CreateMemberData struct {
+	ID             string     `json:"id"`
+	EmployeeID     string     `json:"employeeID"`
+	FullName       string     `json:"fullName"`
+	DisplayName    string     `json:"displayName"`
+	Avatar         string     `json:"avatar"`
+	Positions      []Position `json:"positions"`
+	DeploymentType string     `json:"deploymentType"`
+	Status         string     `json:"status"`
+	IsLead         bool       `json:"isLead"`
+}
+
+type CreateMemberDataResponse struct {
+	Data CreateMemberData `json:"data"`
+}
+
+func ToCreateMemberData(slot *model.ProjectSlot, isLead bool) CreateMemberData {
+	return CreateMemberData{
+		ID:             slot.ID.String(),
+		EmployeeID:     slot.ProjectMember.EmployeeID.String(),
+		FullName:       slot.ProjectMember.Employee.FullName,
+		DisplayName:    slot.ProjectMember.Employee.DisplayName,
+		Avatar:         slot.ProjectMember.Employee.Avatar,
+		DeploymentType: slot.DeploymentType.String(),
+		Status:         slot.Status.String(),
+		Positions:      ToPositionsFromProjectSlotPositions(slot.ProjectSlotPositions),
+		IsLead:         isLead,
 	}
 }
 

@@ -112,6 +112,40 @@ definitions:
     - status
     - type
     type: object
+  github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateMemberInput:
+    properties:
+      deploymentType:
+        type: string
+      discount:
+        type: number
+      employeeID:
+        type: string
+      isLead:
+        type: boolean
+      joinedDate:
+        type: string
+      leftDate:
+        type: string
+      positions:
+        items:
+          type: string
+        type: array
+      projectSlotID:
+        type: string
+      rate:
+        type: number
+      seniorityID:
+        type: string
+      status:
+        type: string
+    required:
+    - deploymentType
+    - positions
+    - projectSlotID
+    - rate
+    - seniorityID
+    - status
+    type: object
   gorm.DeletedAt:
     properties:
       time:
@@ -326,6 +360,40 @@ definitions:
     - status
     - type
     type: object
+  pkg_handler_project.UpdateMemberInput:
+    properties:
+      deploymentType:
+        type: string
+      discount:
+        type: number
+      employeeID:
+        type: string
+      isLead:
+        type: boolean
+      joinedDate:
+        type: string
+      leftDate:
+        type: string
+      positions:
+        items:
+          type: string
+        type: array
+      projectSlotID:
+        type: string
+      rate:
+        type: number
+      seniorityID:
+        type: string
+      status:
+        type: string
+    required:
+    - deploymentType
+    - positions
+    - projectSlotID
+    - rate
+    - seniorityID
+    - status
+    type: object
   view.AccountRoleResponse:
     properties:
       data:
@@ -384,6 +452,34 @@ definitions:
         items:
           $ref: '#/definitions/model.Country'
         type: array
+    type: object
+  view.CreateMemberData:
+    properties:
+      avatar:
+        type: string
+      deploymentType:
+        type: string
+      displayName:
+        type: string
+      employeeID:
+        type: string
+      fullName:
+        type: string
+      id:
+        type: string
+      isLead:
+        type: boolean
+      positions:
+        items:
+          $ref: '#/definitions/view.Position'
+        type: array
+      status:
+        type: string
+    type: object
+  view.CreateMemberDataResponse:
+    properties:
+      data:
+        $ref: '#/definitions/view.CreateMemberData'
     type: object
   view.CreateProjectData:
     properties:
@@ -1476,7 +1572,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.CreateProjectInput'
+          $ref: '#/definitions/pkg_handler_project.CreateProjectInput'
       produces:
       - application/json
       responses:
@@ -1495,11 +1591,11 @@ paths:
       summary: Create new project
       tags:
       - Project
-  /projects/:id/staffs:
+  /projects/:id/members:
     get:
       consumes:
       - application/json
-      description: Get list staffs of project
+      description: Get list members of project
       parameters:
       - description: jwt token
         in: header
@@ -1545,7 +1641,51 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/view.ErrorResponse'
-      summary: Get list staffs of project
+      summary: Get list members of project
+      tags:
+      - Project
+  /projects/{id}/members:
+    put:
+      consumes:
+      - application/json
+      description: Update member in an existing project
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Body
+        in: body
+        name: Body
+        required: true
+        schema:
+          $ref: '#/definitions/pkg_handler_project.UpdateMemberInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.CreateMemberDataResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Update member in an existing project
       tags:
       - Project
   /projects/{id}/status:

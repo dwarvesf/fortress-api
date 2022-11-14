@@ -125,8 +125,9 @@ type ProjectSlot struct {
 	SeniorityID    UUID
 	Status         ProjectMemberStatus
 
-	Project       Project
-	ProjectMember ProjectMember
+	Project              Project
+	ProjectMember        ProjectMember
+	ProjectSlotPositions []ProjectSlotPosition
 }
 
 type ProjectMember struct {
@@ -137,7 +138,6 @@ type ProjectMember struct {
 	ProjectSlotID  UUID
 	JoinedDate     *time.Time
 	LeftDate       *time.Time
-	Position       string
 	Status         ProjectMemberStatus
 	Rate           decimal.Decimal
 	Discount       decimal.Decimal
@@ -145,9 +145,10 @@ type ProjectMember struct {
 	UpsellPersonID UUID
 	SeniorityID    UUID
 
-	Employee  Employee
-	Project   Project
-	Seniority Seniority
+	Employee               Employee
+	Project                Project
+	Seniority              Seniority
+	ProjectMemberPositions []ProjectMemberPosition
 }
 
 type HeadPosition string

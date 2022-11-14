@@ -12,6 +12,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/goccy/go-json"
 	_ "github.com/lib/pq"
+	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/require"
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
@@ -197,7 +198,7 @@ func TestHandler_Create(t *testing.T) {
 	}
 }
 
-func TestHandler_GetStaffs(t *testing.T) {
+func TestHandler_GetMembers(t *testing.T) {
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg)
@@ -217,20 +218,20 @@ func TestHandler_GetStaffs(t *testing.T) {
 			id:               "8dc3be2e-19a4-4942-8a79-56db391a0b15",
 			query:            "status=active",
 			wantCode:         http.StatusOK,
-			wantResponsePath: "testdata/get_staffs/200.json",
+			wantResponsePath: "testdata/get_members/200.json",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			w := httptest.NewRecorder()
 			ctx, _ := gin.CreateTestContext(w)
-			ctx.Request = httptest.NewRequest(http.MethodPost, fmt.Sprintf("/api/v1/projects/%v/staffs", tt.id), nil)
+			ctx.Request = httptest.NewRequest(http.MethodPost, fmt.Sprintf("/api/v1/projects/%v/members", tt.id), nil)
 			ctx.Request.Header.Set("Authorization", tokenTest)
 			ctx.Request.URL.RawQuery = tt.query
 			ctx.AddParam("id", tt.id)
 
 			h := New(storeMock, testRepoMock, serviceMock, loggerMock)
-			h.GetStaffs(ctx)
+			h.GetMembers(ctx)
 			require.Equal(t, tt.wantCode, w.Code)
 			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
 			require.NoError(t, err)
@@ -240,7 +241,118 @@ func TestHandler_GetStaffs(t *testing.T) {
 			res, _ = utils.RemoveFieldInResponse(res, "createdAt")
 			res, _ = utils.RemoveFieldInResponse(res, "updatedAt")
 
-			require.JSONEq(t, string(expRespRaw), string(res), "[Handler.Project.GetStaffs] response mismatched")
+			require.JSONEq(t, string(expRespRaw), string(res), "[Handler.Project.GetMembers] response mismatched")
+		})
+	}
+}
+
+func TestHandler_UpdateMember(t *testing.T) {
+	cfg := config.LoadTestConfig()
+	loggerMock := logger.NewLogrusLogger()
+	serviceMock := service.New(&cfg)
+	storeMock := store.New()
+	repoMock := store.NewPostgresStore(&cfg)
+
+	tests := []struct {
+		name             string
+		id               string
+		args             UpdateMemberInput
+		wantCode         int
+		wantErr          error
+		wantResponsePath string
+	}{
+		{
+			name: "happy_case",
+			id:   "8dc3be2e-19a4-4942-8a79-56db391a0b15",
+			args: UpdateMemberInput{
+				ProjectSlotID: model.MustGetUUIDFromString("f32d08ca-8863-4ab3-8c84-a11849451eb7"),
+				EmployeeID:    model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
+				SeniorityID:   model.MustGetUUIDFromString("01fb6322-d727-47e3-a242-5039ea4732fc"),
+				Positions: []model.UUID{
+					model.MustGetUUIDFromString("11ccffea-2cc9-4e98-9bef-3464dfe4dec8"),
+					model.MustGetUUIDFromString("d796884d-a8c4-4525-81e7-54a3b6099eac"),
+				},
+				DeploymentType: model.MemberDeploymentTypeOfficial.String(),
+				Status:         model.ProjectMemberStatusPending.String(),
+				JoinedDate:     "2022-11-15",
+				LeftDate:       "2023-11-15",
+				Rate:           decimal.NewFromInt(10),
+				Discount:       decimal.NewFromInt(1),
+				IsLead:         true,
+			},
+			wantCode:         http.StatusOK,
+			wantResponsePath: "testdata/add_member_to_project/200_success.json",
+		},
+		{
+			name: "invalid_joined_date",
+			id:   "8dc3be2e-19a4-4942-8a79-56db391a0b15",
+			args: UpdateMemberInput{
+				ProjectSlotID: model.MustGetUUIDFromString("f32d08ca-8863-4ab3-8c84-a11849451eb7"),
+				EmployeeID:    model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
+				SeniorityID:   model.MustGetUUIDFromString("01fb6322-d727-47e3-a242-5039ea4732fc"),
+				Positions: []model.UUID{
+					model.MustGetUUIDFromString("11ccffea-2cc9-4e98-9bef-3464dfe4dec8"),
+					model.MustGetUUIDFromString("d796884d-a8c4-4525-81e7-54a3b6099eac"),
+				},
+				DeploymentType: model.MemberDeploymentTypeOfficial.String(),
+				Status:         model.ProjectMemberStatusPending.String(),
+				JoinedDate:     "2022-13-01",
+				LeftDate:       "2023-11-15",
+				Rate:           decimal.NewFromInt(10),
+				Discount:       decimal.NewFromInt(1),
+				IsLead:         true,
+			},
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/add_member_to_project/400_invalid_joined_date.json",
+		},
+		{
+			name: "project_not_found",
+			id:   "8dc3be2e-19a4-4942-8a79-56db391a0b16",
+			args: UpdateMemberInput{
+				ProjectSlotID: model.MustGetUUIDFromString("f32d08ca-8863-4ab3-8c84-a11849451eb7"),
+				EmployeeID:    model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
+				SeniorityID:   model.MustGetUUIDFromString("01fb6322-d727-47e3-a242-5039ea4732fc"),
+				Positions: []model.UUID{
+					model.MustGetUUIDFromString("11ccffea-2cc9-4e98-9bef-3464dfe4dec8"),
+					model.MustGetUUIDFromString("d796884d-a8c4-4525-81e7-54a3b6099eac"),
+				},
+				DeploymentType: model.MemberDeploymentTypeOfficial.String(),
+				Status:         model.ProjectMemberStatusPending.String(),
+				JoinedDate:     "2022-11-15",
+				LeftDate:       "2023-11-15",
+				Rate:           decimal.NewFromInt(10),
+				Discount:       decimal.NewFromInt(1),
+				IsLead:         true,
+			},
+			wantCode:         http.StatusNotFound,
+			wantResponsePath: "testdata/add_member_to_project/404_project_not_found.json",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			body, err := json.Marshal(tt.args)
+			if err != nil {
+				t.Error(err)
+				return
+			}
+
+			w := httptest.NewRecorder()
+			ctx, _ := gin.CreateTestContext(w)
+			ctx.Request = httptest.NewRequest(http.MethodPut, fmt.Sprintf("/api/v1/projects/%v/members", tt.id), bytes.NewBuffer(body))
+			ctx.Request.Header.Set("Authorization", tokenTest)
+			ctx.Request.Header.Set("Content-Type", gin.MIMEJSON)
+			ctx.AddParam("id", tt.id)
+
+			h := New(storeMock, repoMock, serviceMock, loggerMock)
+			h.UpdateMember(ctx)
+			require.Equal(t, tt.wantCode, w.Code)
+			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+			require.NoError(t, err)
+
+			res := w.Body.Bytes()
+			res, _ = utils.RemoveFieldInResponse(res, "id")
+
+			require.JSONEq(t, string(expRespRaw), string(res), "[Handler.Project.UpdateMember] response mismatched")
 		})
 	}
 }

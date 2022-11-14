@@ -15,11 +15,11 @@ type BaseModel struct {
 }
 
 // BeforeCreate prepare data before create data
-func (m *BaseModel) BeforeCreate(tx *gorm.DB) (err error) {
-	m.ID = NewUUID()
-	m.CreatedAt = time.Now()
-	return
-}
+// func (m *BaseModel) BeforeCreate(tx *gorm.DB) (err error) {
+// 	m.ID = NewUUID()
+// 	m.CreatedAt = time.Now()
+// 	return
+// }
 
 // BeforeUpdate prepare data before create data
 func (m *BaseModel) BeforeUpdate(tx *gorm.DB) (err error) {

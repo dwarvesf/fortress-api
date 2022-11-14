@@ -53,3 +53,14 @@ func (s *store) All(db *gorm.DB, input GetListProjectSlotInput, pagination model
 	var slots []*model.ProjectSlot
 	return slots, total, query.Find(&slots).Error
 }
+
+// One get 1 one by id
+func (s *store) One(db *gorm.DB, id string) (*model.ProjectSlot, error) {
+	var slot *model.ProjectSlot
+	return slot, db.Where("id = ?", id).First(&slot).Error
+}
+
+// Update update existing slot
+func (s *store) Update(db *gorm.DB, id string, slot *model.ProjectSlot) (*model.ProjectSlot, error) {
+	return slot, db.Table("project_slots").Where("id = ?", id).Updates(slot).Error
+}

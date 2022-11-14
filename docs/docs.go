@@ -1044,7 +1044,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.CreateProjectInput"
+                            "$ref": "#/definitions/pkg_handler_project.CreateProjectInput"
                         }
                     }
                 ],
@@ -1070,9 +1070,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/projects/:id/staffs": {
+        "/projects/:id/members": {
             "get": {
-                "description": "Get list staffs of project",
+                "description": "Get list members of project",
                 "consumes": [
                     "application/json"
                 ],
@@ -1082,7 +1082,7 @@ const docTemplate = `{
                 "tags": [
                     "Project"
                 ],
-                "summary": "Get list staffs of project",
+                "summary": "Get list members of project",
                 "parameters": [
                     {
                         "type": "string",
@@ -1127,6 +1127,72 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/view.ProjectMemberListResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/projects/{id}/members": {
+            "put": {
+                "description": "Update member in an existing project",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Project"
+                ],
+                "summary": "Update member in an existing project",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Project ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Body",
+                        "name": "Body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/pkg_handler_project.UpdateMemberInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.CreateMemberDataResponse"
                         }
                     },
                     "400": {
@@ -1373,6 +1439,55 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateMemberInput": {
+            "type": "object",
+            "required": [
+                "deploymentType",
+                "positions",
+                "projectSlotID",
+                "rate",
+                "seniorityID",
+                "status"
+            ],
+            "properties": {
+                "deploymentType": {
+                    "type": "string"
+                },
+                "discount": {
+                    "type": "number"
+                },
+                "employeeID": {
+                    "type": "string"
+                },
+                "isLead": {
+                    "type": "boolean"
+                },
+                "joinedDate": {
+                    "type": "string"
+                },
+                "leftDate": {
+                    "type": "string"
+                },
+                "positions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "projectSlotID": {
+                    "type": "string"
+                },
+                "rate": {
+                    "type": "number"
+                },
+                "seniorityID": {
+                    "type": "string"
+                },
+                "status": {
                     "type": "string"
                 }
             }
@@ -1692,6 +1807,55 @@ const docTemplate = `{
                 }
             }
         },
+        "pkg_handler_project.UpdateMemberInput": {
+            "type": "object",
+            "required": [
+                "deploymentType",
+                "positions",
+                "projectSlotID",
+                "rate",
+                "seniorityID",
+                "status"
+            ],
+            "properties": {
+                "deploymentType": {
+                    "type": "string"
+                },
+                "discount": {
+                    "type": "number"
+                },
+                "employeeID": {
+                    "type": "string"
+                },
+                "isLead": {
+                    "type": "boolean"
+                },
+                "joinedDate": {
+                    "type": "string"
+                },
+                "leftDate": {
+                    "type": "string"
+                },
+                "positions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "projectSlotID": {
+                    "type": "string"
+                },
+                "rate": {
+                    "type": "number"
+                },
+                "seniorityID": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
         "view.AccountRoleResponse": {
             "type": "object",
             "properties": {
@@ -1779,6 +1943,49 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/model.Country"
                     }
+                }
+            }
+        },
+        "view.CreateMemberData": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string"
+                },
+                "deploymentType": {
+                    "type": "string"
+                },
+                "displayName": {
+                    "type": "string"
+                },
+                "employeeID": {
+                    "type": "string"
+                },
+                "fullName": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "isLead": {
+                    "type": "boolean"
+                },
+                "positions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.Position"
+                    }
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "view.CreateMemberDataResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/view.CreateMemberData"
                 }
             }
         },
