@@ -60,3 +60,23 @@ func (s *store) UpdateEmployeeStatus(employeeID string, accountStatus model.Acco
 	employee := &model.Employee{}
 	return employee, s.db.Model(&employee).Where("id = ?", employeeID).Update("account_status", string(accountStatus)).Find(&employee).Error
 }
+
+func (s *store) UpdateGeneralInfo(body EditGeneralInfo, id string) (*model.Employee, error) {
+	employee := &model.Employee{}
+
+	// 1.2 update infor
+	employee.FullName = body.Fullname
+	employee.TeamEmail = body.Email
+	employee.PhoneNumber = body.Phone
+	employee.DiscordID = body.DiscordID
+	employee.GithubID = body.GithubID
+
+	if body.LineManagerID != "" {
+		employee.LineManagerID = model.MustGetUUIDFromString(body.LineManagerID)
+	}
+
+	// 1.3 save to DB
+	return employee, s.db.Table("employees").Where("id = ?", id).Updates(&employee).
+		Preload("Chapter").Preload("Seniority").Preload("LineManager").Preload("EmployeePositions").
+		Preload("EmployeePositions.Position").First(&employee).Error
+}

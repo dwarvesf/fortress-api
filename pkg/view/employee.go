@@ -31,8 +31,18 @@ type EmployeeData struct {
 	JoinedDate    *time.Time          `json:"joinedDate"`
 	LeftDate      *time.Time          `json:"leftDate"`
 
-	Positions []model.Position      `json:"positions"`
-	Projects  []EmployeeProjectData `json:"projects"`
+	AccountStatus model.AccountStatus   `json:"accountStatus"`
+	Seniority     *model.Seniority      `json:"seniority"`
+	Chapter       *model.Chapter        `json:"chapter"`
+	LineManager   *BasisEmployeeInfo    `json:"lineManager"`
+	Positions     []model.Position      `json:"positions"`
+	Projects      []EmployeeProjectData `json:"projects"`
+}
+
+type BasisEmployeeInfo struct {
+	ID       string `json:"id"`
+	FullName string `json:"fullName"`
+	Avatar   string `json:"avatar"`
 }
 type UpdateEmployeeStatusResponse struct {
 	Data EmployeeData `json:"data"`
@@ -60,6 +70,10 @@ type ProfileDataResponse struct {
 	Data ProfileData `json:"data"`
 }
 
+type EditEmployeeResponse struct {
+	Data EmployeeData `json:"data"`
+}
+
 func ToEmployeeData(employee *model.Employee) *EmployeeData {
 	projects := make([]EmployeeProjectData, 0, len(employee.ProjectMembers))
 	for _, v := range employee.ProjectMembers {
@@ -71,7 +85,7 @@ func ToEmployeeData(employee *model.Employee) *EmployeeData {
 		positions = append(positions, v.Position)
 	}
 
-	return &EmployeeData{
+	rs := &EmployeeData{
 		BaseModel: model.BaseModel{
 			ID:        employee.ID,
 			CreatedAt: employee.CreatedAt,
@@ -94,9 +108,28 @@ func ToEmployeeData(employee *model.Employee) *EmployeeData {
 		WorkingStatus: employee.WorkingStatus,
 		JoinedDate:    employee.JoinedDate,
 		LeftDate:      employee.LeftDate,
+		AccountStatus: employee.AccountStatus,
 		Projects:      projects,
 		Positions:     positions,
 	}
+
+	if employee.Seniority != nil {
+		rs.Seniority = employee.Seniority
+	}
+
+	if employee.Chapter != nil {
+		rs.Chapter = employee.Chapter
+	}
+
+	if employee.LineManager != nil {
+		rs.LineManager = &BasisEmployeeInfo{
+			ID:       employee.LineManager.ID.String(),
+			FullName: employee.LineManager.FullName,
+			Avatar:   employee.LineManager.Avatar,
+		}
+	}
+
+	return rs
 }
 
 func ToEmployeeListData(employees []*model.Employee) []EmployeeData {

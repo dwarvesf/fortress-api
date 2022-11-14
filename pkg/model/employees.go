@@ -24,31 +24,34 @@ type Employee struct {
 	BaseModel
 
 	// basic info
-	FullName                string
-	DisplayName             string
-	TeamEmail               string
-	PersonalEmail           string
-	Avatar                  string
-	PhoneNumber             string
-	Address                 string
-	MBTI                    string
-	Gender                  string
-	Horoscope               string
-	PassportPhotoFront      string
-	PassportPhotoBehind     string
-	IdentityCardPhotoFront  string
-	IdentityCardPhotoBehind string
-	DateOfBirth             *time.Time
+	FullName               string
+	DisplayName            string
+	TeamEmail              string
+	PersonalEmail          string
+	Avatar                 string
+	PhoneNumber            string
+	Address                string
+	MBTI                   string
+	Gender                 string
+	Horoscope              string
+	PassportPhotoFront     string
+	PassportPhotoBack      string
+	IdentityCardPhotoFront string
+	IdentityCardPhotoBack  string
+	DateOfBirth            *time.Time
 
 	// working info
 	WorkingStatus WorkingStatus
 	JoinedDate    *time.Time
 	LeftDate      *time.Time
+	ChapterID     UUID
+	SeniorityID   UUID
+	LineManagerID UUID
 	AccountStatus AccountStatus
 
 	// social services
 	BasecampID             string
-	BasecampAttachableSGID string
+	BasecampAttachableSGID string `gorm:"column:basecamp_attachable_sgid"`
 	GitlabID               string
 	GithubID               string
 	DiscordID              string
@@ -64,10 +67,12 @@ type Employee struct {
 	LocalBankBranch        string
 	LocalBankNumber        string
 	LocalBankCurrency      string
-	LocalBankName          string
+	LocalBranchName        string
 	LocalBankRecipientName string
 
-	// relationship
+	Chapter           *Chapter
+	Seniority         *Seniority
+	LineManager       *Employee
 	EmployeePositions []EmployeePosition
 	ProjectMembers    []ProjectMember
 }

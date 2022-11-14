@@ -18,9 +18,10 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, cfg *config.Config) {
 	v1.GET("/profile", mw.WithAuth, h.Employee.GetProfile)
 
 	// employees
-	v1.GET("/employees", mw.WithAuth, mw.WithPerm(cfg, "employees.read"), h.Employee.List)
+	v1.GET("/employees", mw.WithAuth, h.Employee.List)
 	v1.GET("/employees/:id", h.Employee.One)
-	v1.POST("/employees/:id/employee-status", mw.WithAuth, h.Employee.UpdateEmployeeStatus)
+	v1.PUT("/employees/:id/general-info", mw.WithAuth, h.Employee.UpdateGeneralInfo)
+	v1.PUT("/employees/:id/employee-status", mw.WithAuth, h.Employee.UpdateEmployeeStatus)
 
 	// auth
 

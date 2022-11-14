@@ -6,5 +6,5 @@ type EmployeePosition struct {
 	EmployeeID string
 	PositionID string
 
-	Position Position
+	Position Position `gorm:"foreignkey:position_id"`
 }
