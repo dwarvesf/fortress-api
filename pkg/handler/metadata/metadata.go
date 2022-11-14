@@ -62,6 +62,35 @@ func (h *handler) WorkingStatus(c *gin.Context) {
 	c.JSON(http.StatusOK, view.CreateResponse[any](res, nil, nil, nil))
 }
 
+// TechStacks godoc
+// @Summary Get list values for tech stacks
+// @Description Get list values for tech stacks
+// @Tags Metadata
+// @Accept  json
+// @Produce  json
+// @Success 200 {object} view.TechStackResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /metadata/tech-stacks [get]
+func (h *handler) TechStacks(c *gin.Context) {
+	// TODO: can we move this to middleware ?
+	l := h.logger.Fields(logger.Fields{
+		"handler": "TechStacks",
+		"method":  "All",
+	})
+
+	// 1 query techStacks from db
+	techStacks, err := h.store.TechStack.All()
+	if err != nil {
+		l.Error(err, "error query techStacks from db")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil))
+		return
+	}
+
+	// 2 return array of account statuses
+	c.JSON(http.StatusOK, view.CreateResponse[any](techStacks, nil, nil, nil))
+}
+
 // Seniorities godoc
 // @Summary Get list values for sentitorities
 // @Description Get list values for sentitorities

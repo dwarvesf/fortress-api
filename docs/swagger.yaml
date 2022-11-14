@@ -79,6 +79,21 @@ definitions:
       updatedAt:
         type: string
     type: object
+  model.TechStack:
+    properties:
+      code:
+        type: string
+      createdAt:
+        type: string
+      deletedAt:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      updatedAt:
+        type: string
+    type: object
   view.AccountRoleResponse:
     properties:
       data:
@@ -129,13 +144,22 @@ definitions:
           $ref: '#/definitions/model.Country'
         type: array
     type: object
+  view.EditEmployeeResponse:
+    properties:
+      data:
+        $ref: '#/definitions/view.EmployeeData'
+    type: object
   view.EmployeeData:
     properties:
+      accountStatus:
+        type: string
       address:
         type: string
       avatar:
         type: string
       birthday:
+        type: string
+      chapter:
         type: string
       createdAt:
         type: string
@@ -156,11 +180,19 @@ definitions:
         type: string
       leftDate:
         type: string
+      lineManager:
+        type: string
       mbti:
         type: string
       personalEmail:
         type: string
       phoneNumber:
+        type: string
+      position:
+        type: string
+      role:
+        type: string
+      seniority:
         type: string
       status:
         description: working info
@@ -307,6 +339,13 @@ definitions:
           $ref: '#/definitions/model.Seniority'
         type: array
     type: object
+  view.TechStackResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/model.TechStack'
+        type: array
+    type: object
   view.UpdateEmployeeStatusResponse:
     properties:
       data:
@@ -365,6 +404,39 @@ paths:
       summary: Authorise user when login
       tags:
       - Auth
+  /employee/profile:
+    get:
+      consumes:
+      - application/json
+      description: Get profile information of employee
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.ProfileDataResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get profile information of employee
+      tags:
+      - Employee
   /employees:
     get:
       consumes:
@@ -444,6 +516,134 @@ paths:
           schema:
             $ref: '#/definitions/view.ErrorResponse'
       summary: Get employee by id
+      tags:
+      - Employee
+  /employees/{id}/edit:
+    post:
+      consumes:
+      - application/json
+      description: Edit employee by id
+      parameters:
+      - description: Employee ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: fullName
+        in: body
+        maxLength: 99
+        name: fullName
+        required: true
+        schema:
+          type: string
+      - description: email
+        in: body
+        name: email
+        required: true
+        schema:
+          type: string
+      - description: phone
+        in: body
+        maxLength: 12
+        minLength: 10
+        name: phone
+        required: true
+        schema:
+          type: string
+      - description: lineManager
+        in: body
+        name: lineManager
+        required: true
+        schema:
+          type: string
+      - description: discordID
+        in: body
+        name: discordID
+        required: true
+        schema:
+          type: string
+      - description: githubID
+        in: body
+        name: githubID
+        required: true
+        schema:
+          type: string
+      - description: role
+        in: body
+        name: role
+        required: true
+        schema:
+          type: string
+      - description: chapter
+        in: body
+        name: chapter
+        required: true
+        schema:
+          type: string
+      - description: seniority
+        in: body
+        name: seniority
+        required: true
+        schema:
+          type: string
+      - description: stack
+        in: body
+        name: stack
+        required: true
+        schema:
+          items:
+            type: string
+          type: array
+      - description: DoB
+        in: body
+        name: DoB
+        required: true
+        schema:
+          type: string
+      - description: gender
+        in: body
+        name: gender
+        required: true
+        schema:
+          type: string
+      - description: address
+        in: body
+        maxLength: 200
+        name: address
+        required: true
+        schema:
+          type: string
+      - description: personalEmail
+        in: body
+        name: personalEmail
+        required: true
+        schema:
+          type: string
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.EditEmployeeResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Edit employee by id
       tags:
       - Employee
   /employees/{id}/employee-status:
@@ -678,6 +878,29 @@ paths:
       summary: Get list values for sentitorities
       tags:
       - Metadata
+  /metadata/tech-stacks:
+    get:
+      consumes:
+      - application/json
+      description: Get list values for tech stacks
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.TechStackResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get list values for tech stacks
+      tags:
+      - Metadata
   /metadata/working-status:
     get:
       consumes:
@@ -703,39 +926,6 @@ paths:
       summary: Get list values for working status
       tags:
       - Metadata
-  /profile:
-    get:
-      consumes:
-      - application/json
-      description: Get profile information of employee
-      parameters:
-      - description: jwt token
-        in: header
-        name: Authorization
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/view.ProfileDataResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/view.ErrorResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/view.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/view.ErrorResponse'
-      summary: Get profile information of employee
-      tags:
-      - Employee
   /projects:
     get:
       consumes:

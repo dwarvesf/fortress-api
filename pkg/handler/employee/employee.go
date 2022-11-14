@@ -120,6 +120,46 @@ func (h *handler) One(c *gin.Context) {
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToEmployeeData(rs), nil, nil, nil))
 }
 
+// GetProfile godoc
+// @Summary Get profile information of employee
+// @Description Get profile information of employee
+// @Tags Employee
+// @Accept  json
+// @Produce  json
+// @Param Authorization header string true "jwt token"
+// @Success 200 {object} view.ProfileDataResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /employee/profile [get]
+func (h *handler) GetProfile(c *gin.Context) {
+	userID, err := utils.GetUserIDFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil))
+		return
+	}
+
+	// TODO: can we move this to middleware ?
+	l := h.logger.Fields(logger.Fields{
+		"handler": "employee",
+		"method":  "GetProfile",
+	})
+
+	employee, err := h.store.Employee.One(userID)
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			l.Info("employee not found")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, err, nil))
+			return
+		}
+		l.Error(err, "error query employee from db")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil))
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToProfileData(employee), nil, nil, nil))
+}
+
 // UpdateEmployeeStatus godoc
 // @Summary Update account status by employee id
 // @Description Update account status by employee id
@@ -184,42 +224,137 @@ func (h *handler) UpdateEmployeeStatus(c *gin.Context) {
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToEmployeeData(employee), nil, nil, nil))
 }
 
-// GetProfile godoc
-// @Summary Get profile information of employee
-// @Description Get profile information of employee
+// Update godoc
+// @Summary Edit employee by id
+// @Description Edit employee by id
 // @Tags Employee
 // @Accept  json
 // @Produce  json
+// @Param id path string true "Employee ID"
+// @Param fullName body string true "fullName" maxlength(99)
+// @Param email body string true "email"
+// @Param phone body string true "phone" minlength(10)  maxlength(12)
+// @Param lineManager body model.UUID true "lineManager"
+// @Param discordID body string true "discordID"
+// @Param githubID body string true "githubID"
+// @Param role body model.UUID true "role"
+// @Param chapter body model.UUID true "chapter"
+// @Param seniority body model.UUID  true "seniority"
+// @Param stack body []model.UUID true "stack"
+// @Param DoB body time.Time true "DoB"
+// @Param gender body string true "gender"
+// @Param address body string true "address" maxlength(200)
+// @Param personalEmail body string true "personalEmail"
 // @Param Authorization header string true "jwt token"
-// @Success 200 {object} view.ProfileDataResponse
+// @Success 200 {object} view.EditEmployeeResponse
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 404 {object} view.ErrorResponse
 // @Failure 500 {object} view.ErrorResponse
-// @Router /profile [get]
-func (h *handler) GetProfile(c *gin.Context) {
-	userID, err := utils.GetUserIDFromContext(c)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil))
-		return
-	}
+// @Router /employees/{id}/edit [post]
+func (h *handler) Update(c *gin.Context) {
+	// 1. parse id from uri, validate id
+	employeeID := c.Param("id")
+	requestType := c.Param("type")
 
-	// TODO: can we move this to middleware ?
-	l := h.logger.Fields(logger.Fields{
-		"handler": "employee",
-		"method":  "GetProfile",
-	})
+	// 2. parse json body from request
+	switch requestType {
+	case "edit-general-info":
+		var body EditGeneralInfo
+		if err := c.ShouldBindJSON(&body); err != nil {
+			if err != nil {
+				c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, requestType))
+				return
+			}
+		}
 
-	employee, err := h.store.Employee.One(userID)
-	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			l.Info("employee not found")
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, err, nil))
+		// TODO: can we move this to middleware ?
+		l := h.logger.Fields(logger.Fields{
+			"handler": "employee",
+			"method":  "Update",
+			"request": body,
+		})
+
+		// 3. update informations and rerurn
+		employee, err := h.store.Employee.UpdateGeneralInfo(employee.EditGeneralInfo{
+			Fullname:    body.Fullname,
+			Email:       body.Email,
+			Phone:       body.Phone,
+			LineManager: body.LineManager,
+			DiscordID:   body.DiscordID,
+			GithubID:    body.GithubID,
+		}, employeeID)
+
+		if err != nil {
+			l.Error(err, "error update employee to db")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body))
 			return
 		}
-		l.Error(err, "error query employee from db")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil))
+		c.JSON(http.StatusOK, view.CreateResponse[any](view.ToEmployeeData(employee), nil, nil, nil))
+
+	case "edit-skills":
+		var body EditSkills
+		if err := c.ShouldBindJSON(&body); err != nil {
+			if err != nil {
+				c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, requestType))
+				return
+			}
+		}
+
+		// TODO: can we move this to middleware ?
+		l := h.logger.Fields(logger.Fields{
+			"handler": "employee",
+			"method":  "Update",
+			"request": body,
+		})
+
+		// 3. update informations and rerurn
+		employee, err := h.store.Employee.UpdateSkills(employee.EditSkills{
+			Role:      body.Role,
+			Chapter:   body.Chapter,
+			Seniority: body.Seniority,
+			Stack:     body.Stack,
+		}, employeeID)
+
+		if err != nil {
+			l.Error(err, "error update employee to db")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body))
+			return
+		}
+
+		c.JSON(http.StatusOK, view.CreateResponse[any](view.ToEmployeeData(employee), nil, nil, nil))
+	case "edit-personal-info":
+		var body EditPersonalInfo
+		if err := c.ShouldBindJSON(&body); err != nil {
+			if err != nil {
+				c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, requestType))
+				return
+			}
+		}
+
+		// TODO: can we move this to middleware ?
+		l := h.logger.Fields(logger.Fields{
+			"handler": "employee",
+			"method":  "Update",
+			"request": body,
+		})
+
+		// 3. update informations and rerurn
+		employee, err := h.store.Employee.UpdatePersonalInfo(employee.EditPersonalInfo{
+			DoB:           body.DoB,
+			Gender:        body.Gender,
+			Address:       body.Address,
+			PersonalEmail: body.PersonalEmail,
+		}, employeeID)
+
+		if err != nil {
+			l.Error(err, "error update employee to db")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body))
+			return
+		}
+
+		c.JSON(http.StatusOK, view.CreateResponse[any](view.ToEmployeeData(employee), nil, nil, nil))
+	default:
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, ErrInvalidEditType, requestType))
 		return
 	}
-
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToProfileData(employee), nil, nil, nil))
 }

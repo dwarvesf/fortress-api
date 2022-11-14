@@ -288,3 +288,42 @@ func TestHandler_GetPositions(t *testing.T) {
 		})
 	}
 }
+
+func TestHandler_GetTechStacks(t *testing.T) {
+	// load env and test data
+	cfg := config.LoadTestConfig()
+	loggerMock := logger.NewLogrusLogger()
+	serviceMock := service.New(&cfg)
+	storeMock := store.New(&cfg)
+
+	tests := []struct {
+		name             string
+		wantCode         int
+		wantErr          error
+		wantResponsePath string
+	}{
+		{
+			name:             "ok_get_tech_stacks",
+			wantCode:         200,
+			wantErr:          nil,
+			wantResponsePath: "testdata/get_tech_stacks/200.json",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			w := httptest.NewRecorder()
+
+			ctx, _ := gin.CreateTestContext(w)
+			ctx.Request = httptest.NewRequest("GET", fmt.Sprintf("/api/v1/metadata/tech-stacks"), nil)
+			metadataHandler := New(storeMock, serviceMock, loggerMock)
+
+			metadataHandler.TechStacks(ctx)
+
+			require.Equal(t, tt.wantCode, w.Code)
+			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+			require.NoError(t, err)
+
+			require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.TechStacks] response mismatched")
+		})
+	}
+}

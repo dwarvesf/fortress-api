@@ -102,7 +102,6 @@ func ensurePerm(cfg *config.Config, accessToken string, requiredPerm string) err
 	if !ok || !token.Valid {
 		return ErrUnauthorized
 	}
-
 	userID, ok := claims["id"].(string)
 	if !ok {
 		return ErrInvalidUserID

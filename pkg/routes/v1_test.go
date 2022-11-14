@@ -25,9 +25,17 @@ func Test_loadV1Routes(t *testing.T) {
 			Method:  "GET",
 			Handler: "github.com/dwarvesf/fortress-api/pkg/handler/employee.IHandler.One-fm",
 		},
+		"/api/v1/employees/:id/:type": {
+			Method:  "POST",
+			Handler: "github.com/dwarvesf/fortress-api/pkg/handler/employee.IHandler.Update-fm",
+		},
 		"/api/v1/metadata/working-status": {
 			Method:  "GET",
 			Handler: "github.com/dwarvesf/fortress-api/pkg/handler/metadata.IHandler.WorkingStatus-fm",
+		},
+		"/api/v1/metadata/tech-stacks": {
+			Method:  "GET",
+			Handler: "github.com/dwarvesf/fortress-api/pkg/handler/metadata.IHandler.TechStacks-fm",
 		},
 		"/api/v1/metadata/seniorities": {
 			Method:  "GET",

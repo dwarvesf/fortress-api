@@ -6,7 +6,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/model"
 )
 
-// EmployeeListData view for listing data
+// EmployeeData view for listing data
 type EmployeeData struct {
 	model.BaseModel
 
@@ -27,6 +27,13 @@ type EmployeeData struct {
 	WorkingStatus model.WorkingStatus `json:"status"`
 	JoinedDate    *time.Time          `json:"joinedDate"`
 	LeftDate      *time.Time          `json:"leftDate"`
+
+	AccountStatus model.AccountStatus `json:"accountStatus"`
+	Position      string              `json:"position"`
+	Seniority     string              `json:"seniority"`
+	Chapter       string              `json:"chapter"`
+	LineManager   string              `json:"lineManager"`
+	Role          string              `json:"role"`
 }
 type UpdateEmployeeStatusResponse struct {
 	Data EmployeeData `json:"data"`
@@ -54,8 +61,12 @@ type ProfileDataResponse struct {
 	Data ProfileData `json:"data"`
 }
 
+type EditEmployeeResponse struct {
+	Data EmployeeData `json:"data"`
+}
+
 func ToEmployeeData(employee *model.Employee) *EmployeeData {
-	return &EmployeeData{
+	res := &EmployeeData{
 		BaseModel: model.BaseModel{
 			ID:        employee.ID,
 			CreatedAt: employee.CreatedAt,
@@ -75,7 +86,26 @@ func ToEmployeeData(employee *model.Employee) *EmployeeData {
 		WorkingStatus: employee.WorkingStatus,
 		JoinedDate:    employee.JoinedDate,
 		LeftDate:      employee.LeftDate,
+		AccountStatus: employee.AccountStatus,
 	}
+
+	if employee.Position != nil {
+		res.Position = employee.Position.Name
+	}
+	if employee.Seniority != nil {
+		res.Seniority = employee.Seniority.Name
+	}
+	if employee.Chapter != nil {
+		res.Chapter = employee.Chapter.Name
+	}
+	if employee.LineManager != nil {
+		res.LineManager = employee.LineManager.FullName
+	}
+	if employee.EmployeeRoles != nil && employee.EmployeeRoles.Role != nil {
+		res.Role = employee.EmployeeRoles.Role.Name
+	}
+
+	return res
 }
 
 func ToEmployeeListData(employees []*model.Employee) []EmployeeData {

@@ -7,6 +7,10 @@ type MetaData struct {
 	Name string `json:"name"`
 }
 
+type TechStackResponse struct {
+	Data []model.TechStack `json:"data"`
+}
+
 type SeniorityResponse struct {
 	Data []model.Seniority `json:"data"`
 }

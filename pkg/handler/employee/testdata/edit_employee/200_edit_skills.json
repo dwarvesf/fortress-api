@@ -2,7 +2,7 @@
     "data": {
         "id": "2655832e-f009-4b73-a535-64c3a22e558f",
         "createdAt": "2022-11-02T09:52:34.586566Z",
-        "updatedAt": "2022-11-13T01:31:09.148679Z",
+        "updatedAt": "2022-11-13T23:02:54.373333Z",
         "fullName": "Phạm Đức Thành",
         "displayName": "Thanh Pham",
         "teamEmail": "thanh@d.foundation",
@@ -17,6 +17,11 @@
         "status": "",
         "joinedDate": null,
         "leftDate": null,
-        "accountStatus": "active"
+        "accountStatus": "active",
+        "position": "Frontend",
+        "seniority": "Principal",
+        "chapter": "Web",
+        "lineManager": "Nguyễn Hoàng Huy",
+        "role": "Admin"
     }
 }

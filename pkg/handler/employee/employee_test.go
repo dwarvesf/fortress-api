@@ -102,7 +102,7 @@ func TestHandler_GetProfile(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			ctx, _ := gin.CreateTestContext(w)
-			ctx.Request = httptest.NewRequest("POST", fmt.Sprintf("%s", "/api/v1/profile"), nil)
+			ctx.Request = httptest.NewRequest("POST", fmt.Sprintf("%s", "/api/profile"), nil)
 			ctx.Request.Header.Set("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2OTkzMjExNDIsImlkIjoiMjY1NTgzMmUtZjAwOS00YjczLWE1MzUtNjRjM2EyMmU1NThmIiwiYXZhdGFyIjoiaHR0cHM6Ly9zMy1hcC1zb3V0aGVhc3QtMS5hbWF6b25hd3MuY29tL2ZvcnRyZXNzLWltYWdlcy81MTUzNTc0Njk1NjYzOTU1OTQ0LnBuZyIsImVtYWlsIjoidGhhbmhAZC5mb3VuZGF0aW9uIiwicGVybWlzc2lvbnMiOlsiZW1wbG95ZWVzLnJlYWQiXSwidXNlcl9pbmZvIjpudWxsfQ.GENGPEucSUrILN6tHDKxLMtj0M0REVMUPC7-XhDMpGM")
 			metadataHandler := New(storeMock, serviceMock, loggerMock)
 
@@ -175,6 +175,96 @@ func TestHandler_List(t *testing.T) {
 			}
 
 			require.JSONEq(t, string(expRespRaw), string(res), "[Handler.Employee.List] response mismatched")
+		})
+	}
+}
+
+func Test_Update(t *testing.T) {
+	// load env and test data
+	cfg := config.LoadTestConfig()
+	loggerMock := logger.NewLogrusLogger()
+	serviceMock := service.New(&cfg)
+	storeMock := store.New(&cfg)
+
+	tests := []struct {
+		name             string
+		wantCode         int
+		wantErr          error
+		wantResponsePath string
+		body             string
+		queryType        string
+	}{
+		{
+			name:             "ok_edit_general_info",
+			wantCode:         200,
+			wantErr:          nil,
+			wantResponsePath: "testdata/edit_employee/200_edit_general_info.json",
+			body: `{
+				"fullName":"Phạm Đức Thành",
+				"email":"thanh@d.foundation",
+				"phone":"0123456788"
+			}`,
+			queryType: "edit-general-info",
+		},
+		{
+			name:             "ok_edit_skills",
+			wantCode:         200,
+			wantErr:          nil,
+			wantResponsePath: "testdata/edit_employee/200_edit_skills.json",
+			body: `{
+				"role":"11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
+				"chapter":"11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
+				"seniority":"39735742-829b-47f3-8f9d-daf0983914e5",
+				"stack":[
+					"01fb6322-d727-47e3-a242-5039ea4732fc",
+					"01fb6322-d727-47e3-a242-5039ea4732fa",
+					"01fb6322-d727-47e3-a242-5039ea4732fb"
+				]
+			}`,
+			queryType: "edit-skills",
+		},
+		{
+			name:             "ok_edit_personal_info",
+			wantCode:         200,
+			wantErr:          nil,
+			wantResponsePath: "testdata/edit_employee/200_edit_personal_info.json",
+			body: `{
+				"dob":"1990-01-02T00:00:00Z",
+				"gender":"Male",
+				"address":"Somewhere his belong, Tan Binh District, Ho Chi Minh, Vietnam",
+				"personalEmail":"thanhpham123@gmail.com"
+			}`,
+			queryType: "edit-personal-info",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			w := httptest.NewRecorder()
+
+			ctx, _ := gin.CreateTestContext(w)
+			bodyReader := strings.NewReader(tt.body)
+			ctx.Params = gin.Params{gin.Param{Key: "id", Value: "2655832e-f009-4b73-a535-64c3a22e558f"}, gin.Param{Key: "type", Value: tt.queryType}}
+			// ctx.Params = gin.Params{gin.Param{Key: "type", Value: tt.queryType}}
+			ctx.Request = httptest.NewRequest("POST", fmt.Sprintf("%s", "/api/v1/employees/2655832e-f009-4b73-a535-64c3a22e558f/"+tt.queryType), bodyReader)
+			ctx.Request.Header.Set("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2OTkzMjExNDIsImlkIjoiMjY1NTgzMmUtZjAwOS00YjczLWE1MzUtNjRjM2EyMmU1NThmIiwiYXZhdGFyIjoiaHR0cHM6Ly9zMy1hcC1zb3V0aGVhc3QtMS5hbWF6b25hd3MuY29tL2ZvcnRyZXNzLWltYWdlcy81MTUzNTc0Njk1NjYzOTU1OTQ0LnBuZyIsImVtYWlsIjoidGhhbmhAZC5mb3VuZGF0aW9uIiwicGVybWlzc2lvbnMiOlsiZW1wbG95ZWVzLnJlYWQiXSwidXNlcl9pbmZvIjpudWxsfQ.GENGPEucSUrILN6tHDKxLMtj0M0REVMUPC7-XhDMpGM")
+			metadataHandler := New(storeMock, serviceMock, loggerMock)
+
+			metadataHandler.Update(ctx)
+
+			// require.Equal(t, tt.wantCode, w.Code)
+			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+			require.NoError(t, err)
+
+			var actualData view.UpdateEmployeeStatusResponse
+			var expectedData view.UpdateEmployeeStatusResponse
+			err = json.Unmarshal(w.Body.Bytes(), &actualData)
+			err = json.Unmarshal(expRespRaw, &expectedData)
+
+			actualData.Data.UpdatedAt = nil
+			expectedData.Data.UpdatedAt = nil
+
+			require.Equal(t, expectedData, actualData)
 		})
 	}
 }
