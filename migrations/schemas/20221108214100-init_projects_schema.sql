@@ -49,7 +49,10 @@ CREATE TABLE IF NOT EXISTS project_slots (
     created_at       TIMESTAMP(6)     DEFAULT (NOW()),
     updated_at       TIMESTAMP(6)     DEFAULT (NOW()),
     project_id       uuid NOT NULL,
+    seniority_id     uuid NOT NULL,
+    upsell_person_id uuid             DEFAULT NULL,
     position         TEXT,
+    deployment_type  deployment_types,
     rate             DECIMAL,
     discount         DECIMAL,
     status           TEXT
@@ -63,6 +66,7 @@ CREATE TABLE IF NOT EXISTS project_members (
     project_id       uuid NOT NULL,
     project_slot_id  uuid NOT NULL,
     employee_id      uuid NOT NULL,
+    seniority_id     uuid NOT NULL,
     joined_date      DATE NOT NULL,
     left_date        DATE             DEFAULT NULL,
     position         TEXT,
@@ -108,6 +112,12 @@ CREATE TABLE IF NOT EXISTS stacks (
 ALTER TABLE project_slots
     ADD CONSTRAINT project_slots_project_id_fkey FOREIGN KEY (project_id) REFERENCES projects (id);
 
+ALTER TABLE project_slots
+    ADD CONSTRAINT project_slots_seniority_id_fkey FOREIGN KEY (seniority_id) REFERENCES seniorities (id);
+
+ALTER TABLE project_slots
+    ADD CONSTRAINT project_slots_upsell_person_id_fkey FOREIGN KEY (upsell_person_id) REFERENCES employees (id);
+
 ALTER TABLE project_members
     ADD CONSTRAINT project_members_project_id_fkey FOREIGN KEY (project_id) REFERENCES projects (id);
 
@@ -119,6 +129,9 @@ ALTER TABLE project_members
 
 ALTER TABLE project_members
     ADD CONSTRAINT project_members_upsell_person_id_fkey FOREIGN KEY (upsell_person_id) REFERENCES employees (id);
+
+ALTER TABLE project_members
+    ADD CONSTRAINT project_members_seniority_id_fkey FOREIGN KEY (seniority_id) REFERENCES seniorities (id);
 
 ALTER TABLE project_heads
     ADD CONSTRAINT project_heads_project_id_fkey FOREIGN KEY (project_id) REFERENCES projects (id);
@@ -137,7 +150,10 @@ ALTER TABLE project_members DROP CONSTRAINT project_members_project_id_fkey;
 ALTER TABLE project_members DROP CONSTRAINT project_members_employee_id_fkey;
 ALTER TABLE project_members DROP CONSTRAINT project_members_upsell_person_id_fkey;
 ALTER TABLE project_members DROP CONSTRAINT project_members_project_slot_id_fkey;
+ALTER TABLE project_members DROP CONSTRAINT project_members_seniority_id_fkey;
 ALTER TABLE project_slots DROP CONSTRAINT project_slots_project_id_fkey;
+ALTER TABLE project_slots DROP CONSTRAINT project_slots_seniority_id_fkey;
+-- ALTER TABLE project_slots DROP CONSTRAINT project_slots_upsell_person_id_fkey;
 ALTER TABLE project_heads DROP CONSTRAINT project_heads_project_id_fkey;
 ALTER TABLE project_heads DROP CONSTRAINT project_heads_employee_id_fkey;
 ALTER TABLE project_stacks DROP CONSTRAINT project_stacks_project_id_fkey;

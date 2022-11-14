@@ -1,6 +1,10 @@
 package model
 
-import "time"
+import (
+	"time"
+
+	"github.com/shopspring/decimal"
+)
 
 type ProjectType string
 
@@ -62,14 +66,14 @@ type Project struct {
 	Heads     []ProjectHead
 }
 
-type MemberDeploymentType string
+type DeploymentType string
 
 const (
-	MemberDeploymentTypeOfficial MemberDeploymentType = "official"
-	MemberDeploymentTypeShadow   MemberDeploymentType = "shadow"
+	MemberDeploymentTypeOfficial DeploymentType = "official"
+	MemberDeploymentTypeShadow   DeploymentType = "shadow"
 )
 
-func (e MemberDeploymentType) IsValid() bool {
+func (e DeploymentType) IsValid() bool {
 	switch e {
 	case
 		MemberDeploymentTypeOfficial,
@@ -79,7 +83,7 @@ func (e MemberDeploymentType) IsValid() bool {
 	return false
 }
 
-func (e MemberDeploymentType) String() string {
+func (e DeploymentType) String() string {
 	return string(e)
 }
 
@@ -108,6 +112,18 @@ func (e ProjectMemberStatus) String() string {
 	return string(e)
 }
 
+type ProjectSlot struct {
+	BaseModel
+
+	ProjectID      UUID
+	Position       string
+	DeploymentType DeploymentType
+	Rate           decimal.Decimal
+	Discount       decimal.Decimal
+	UpsellPersonID UUID
+	SeniorityID    UUID
+}
+
 type ProjectMember struct {
 	BaseModel
 
@@ -117,9 +133,13 @@ type ProjectMember struct {
 	LeftDate       time.Time
 	Position       string
 	Status         ProjectMemberStatus
-	DeploymentType MemberDeploymentType
+	Rate           decimal.Decimal
+	Discount       decimal.Decimal
+	DeploymentType DeploymentType
 	UpsellPersonID UUID
-	Employee       Employee
+	SeniorityID    UUID
+
+	Employee Employee
 }
 
 type HeadPosition string
