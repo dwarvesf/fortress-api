@@ -33,3 +33,8 @@ INSERT INTO public.chapters (id, deleted_at, created_at, updated_at, name, code)
     ('01fb6322-d727-47e3-a242-5039ea4732fd', null, '2022-11-07 09:50:25.714604', '2022-11-07 09:50:25.714604', 'Mobile', 'mobile'),
     ('01fb6322-d727-47e3-a242-5039ea4732fe', null, '2022-11-07 09:50:25.714604', '2022-11-07 09:50:25.714604', 'QA', 'qa'),
     ('39735742-829b-47f3-8f9d-daf0983914e5', null, '2022-11-07 09:50:25.714604', '2022-11-07 09:50:25.714604', 'PM', 'pm');
+
+INSERT INTO public.stacks (id, deleted_at, created_at, updated_at, name, code, avatar) VALUES
+('0ecf47c8-cca4-4c30-94bb-054b1124c44f', null, '2022-11-11 18:38:46.266725', '2022-11-11 18:38:46.266725', 'Golang', 'golang', null),
+('fa0f4e46-7eab-4e5c-9d31-30489e69fe2e', null, '2022-11-11 18:38:46.266725', '2022-11-11 18:38:46.266725', 'React', 'react', null),
+('b403ef95-4269-4830-bbb6-8e56e5ec0af4', null, '2022-11-11 18:38:46.266725', '2022-11-11 18:38:46.266725', 'Google Cloud', 'gcloud', null);

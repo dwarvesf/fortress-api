@@ -15,6 +15,10 @@ type ChapterResponse struct {
 	Data []model.Chapter `json:"data"`
 }
 
+type StackResponse struct {
+	Data []model.Chapter `json:"data"`
+}
+
 type AccountRoleResponse struct {
 	Data []model.Role `json:"data"`
 }

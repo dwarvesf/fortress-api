@@ -10,6 +10,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/store/project"
 	"github.com/dwarvesf/fortress-api/pkg/store/role"
 	"github.com/dwarvesf/fortress-api/pkg/store/seniority"
+	"github.com/dwarvesf/fortress-api/pkg/store/stack"
 )
 
 type Store struct {
@@ -21,6 +22,7 @@ type Store struct {
 	Country    country.IStore
 	Role       role.IStore
 	Project    project.IStore
+	Stack      stack.IStore
 }
 
 func New(cfg *config.Config) *Store {
@@ -34,5 +36,6 @@ func New(cfg *config.Config) *Store {
 		Country:    country.New(db),
 		Role:       role.New(db),
 		Project:    project.New(db),
+		Stack:      stack.New(db),
 	}
 }

@@ -1,8 +1,8 @@
 package model
 
-type Stacks struct {
+type Stack struct {
 	BaseModel
 
-	Name string
-	Code string
+	Name string `json:"name"`
+	Code string `json:"code"`
 }

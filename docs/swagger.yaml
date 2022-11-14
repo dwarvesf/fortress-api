@@ -307,6 +307,13 @@ definitions:
           $ref: '#/definitions/model.Seniority'
         type: array
     type: object
+  view.StackResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/model.Chapter'
+        type: array
+    type: object
   view.UpdateEmployeeStatusResponse:
     properties:
       data:
@@ -676,6 +683,29 @@ paths:
           schema:
             $ref: '#/definitions/view.ErrorResponse'
       summary: Get list values for sentitorities
+      tags:
+      - Metadata
+  /metadata/stacks:
+    get:
+      consumes:
+      - application/json
+      description: Get list values for stacks
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.StackResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get list values for stacks
       tags:
       - Metadata
   /metadata/working-status:

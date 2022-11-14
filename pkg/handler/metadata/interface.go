@@ -12,4 +12,5 @@ type IHandler interface {
 	GetCountries(c *gin.Context)
 	GetCities(c *gin.Context)
 	ProjectStatuses(c *gin.Context)
+	Stacks(c *gin.Context)
 }
