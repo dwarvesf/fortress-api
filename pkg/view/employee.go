@@ -134,6 +134,7 @@ func ToUpdateSkillEmployeeData(employee *model.Employee) *UpdateSkillEmployeeDat
 		Chapter:   employee.Chapter,
 		Seniority: employee.Seniority,
 		Positions: positions,
+		Stacks:    stacks,
 	}
 }
 

@@ -19,3 +19,16 @@ func ToPositions(pos []model.EmployeePosition) []Position {
 
 	return rs
 }
+
+func ToPositionsFromProjectSlotPositions(pos []model.ProjectSlotPosition) []Position {
+	rs := make([]Position, 0, len(pos))
+	for _, v := range pos {
+		r := Position{
+			Code: v.Position.Code,
+			Name: v.Position.Name,
+		}
+		rs = append(rs, r)
+	}
+
+	return rs
+}

@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/dwarvesf/fortress-api/pkg/model"
+	"github.com/shopspring/decimal"
 )
 
 type GetListProjectInput struct {
@@ -76,4 +77,58 @@ func (i *GetListStaffInput) Validate() error {
 		return ErrInvalidProjectMemberStatus
 	}
 	return nil
+}
+
+type UpdateMemberInput struct {
+	ProjectSlotID  model.UUID      `from:"projectSlotID" json:"projectSlotID" binding:"required"`
+	EmployeeID     model.UUID      `form:"employeeID" json:"employeeID"`
+	SeniorityID    model.UUID      `form:"seniorityID" json:"seniorityID" binding:"required"`
+	Positions      []model.UUID    `form:"positions" json:"positions" binding:"required"`
+	DeploymentType string          `form:"deploymentType" json:"deploymentType" binding:"required"`
+	Status         string          `form:"status" json:"status" binding:"required"`
+	JoinedDate     string          `form:"joinedDate" json:"joinedDate"`
+	LeftDate       string          `form:"leftDate" json:"leftDate"`
+	Rate           decimal.Decimal `form:"rate" json:"rate" binding:"required"`
+	Discount       decimal.Decimal `form:"discount" json:"discount"`
+	IsLead         bool            `form:"isLead" json:"isLead"`
+}
+
+func (i *UpdateMemberInput) Validate() error {
+	if i.DeploymentType != "" && !model.DeploymentType(i.DeploymentType).IsValid() {
+		return ErrInvalidDeploymentType
+	}
+
+	if i.Status != "" && !model.ProjectMemberStatus(i.Status).IsValid() {
+		return ErrInvalidProjectMemberStatus
+	}
+
+	_, err := time.Parse("2006-01-02", i.JoinedDate)
+	if i.JoinedDate != "" && err != nil {
+		return ErrInvalidJoinedDate
+	}
+
+	_, err = time.Parse("2006-01-02", i.LeftDate)
+	if i.LeftDate != "" && err != nil {
+		return ErrInvalidLeftDate
+	}
+
+	return nil
+}
+
+func (i *UpdateMemberInput) GetJoinedDate() *time.Time {
+	date, err := time.Parse("2006-01-02", i.JoinedDate)
+	if i.JoinedDate == "" || err != nil {
+		return nil
+	}
+
+	return &date
+}
+
+func (i *UpdateMemberInput) GetLeftDate() *time.Time {
+	date, err := time.Parse("2006-01-02", i.LeftDate)
+	if i.LeftDate == "" || err != nil {
+		return nil
+	}
+
+	return &date
 }
