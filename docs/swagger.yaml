@@ -455,7 +455,6 @@ paths:
       - description: Working Status
         in: query
         name: workingStatus
-        required: true
         type: string
       - description: Page
         in: query

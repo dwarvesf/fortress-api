@@ -111,8 +111,7 @@ const docTemplate = `{
                         "type": "string",
                         "description": "Working Status",
                         "name": "workingStatus",
-                        "in": "query",
-                        "required": true
+                        "in": "query"
                     },
                     {
                         "type": "string",
