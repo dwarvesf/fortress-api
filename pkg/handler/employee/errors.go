@@ -11,4 +11,6 @@ var (
 	ErrPositionNotfound      = errors.New("position not found")
 	ErrSeniorityNotfound     = errors.New("seniority not found")
 	ErrRoleNotfound          = errors.New("role not found")
+	ErrLineManagerNotFound   = errors.New("line manager not found")
+	ErrEmployeeNotFound      = errors.New("employee not found")
 )

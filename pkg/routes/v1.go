@@ -22,6 +22,7 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, cfg *config.Config) {
 	v1.POST("/employees", h.Employee.Create)
 	v1.GET("/employees/:id", mw.WithAuth, h.Employee.One)
 	v1.PUT("/employees/:id/general-info", mw.WithAuth, h.Employee.UpdateGeneralInfo)
+	v1.PUT("/employees/:id/skills", mw.WithAuth, h.Employee.UpdateSkills)
 	v1.PUT("/employees/:id/employee-status", mw.WithAuth, h.Employee.UpdateEmployeeStatus)
 
 	// auth

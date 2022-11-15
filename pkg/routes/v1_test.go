@@ -39,6 +39,12 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/employee.IHandler.UpdateGeneralInfo-fm",
 			},
 		},
+		"/api/v1/employees/:id/skills": {
+			"PUT": {
+				Method:  "PUT",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/employee.IHandler.UpdateSkills-fm",
+			},
+		},
 		"/api/v1/metadata/working-status": {
 			"GET": {
 				Method:  "GET",

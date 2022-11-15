@@ -1,10 +1,12 @@
 package employee
 
+import "github.com/dwarvesf/fortress-api/pkg/model"
+
 type SearchFilter struct {
 	WorkingStatus string
 }
 
-type EditGeneralInfo struct {
+type EditGeneralInfoInput struct {
 	Fullname      string
 	Email         string
 	Phone         string
@@ -12,4 +14,11 @@ type EditGeneralInfo struct {
 	DiscordID     string
 	GithubID      string
 	NotionID      string
+}
+
+type EditSkillsInput struct {
+	Positions []model.UUID
+	Chapter   model.UUID
+	Seniority model.UUID
+	Stacks    []model.UUID
 }

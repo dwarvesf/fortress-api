@@ -8,7 +8,7 @@ type GetListEmployeeQuery struct {
 	WorkingStatus string `json:"workingStatus" form:"workingStatus"`
 }
 
-type EditGeneralInfo struct {
+type EditGeneralInfoInput struct {
 	Fullname      string `form:"fullName" json:"fullName" binding:"required,max=99"`
 	Email         string `form:"email" json:"email" binding:"required,email"`
 	Phone         string `form:"phone" json:"phone" binding:"required,max=12,min=10"`
@@ -28,4 +28,11 @@ type CreateEmployee struct {
 	Salary        int        `json:"salary" binding:"required"`
 	SeniorityID   model.UUID `json:"seniorityID" binding:"required"`
 	RoleID        model.UUID `json:"roleID" binding:"required"`
+}
+
+type EditSkillsInput struct {
+	Positions []model.UUID `form:"positions" json:"positions" binding:"required"`
+	Chapter   model.UUID   `form:"chapter" json:"chapter"`
+	Seniority model.UUID   `form:"seniority" json:"seniority" binding:"required"`
+	Stacks    []model.UUID `form:"stacks" json:"stacks" binding:"required"`
 }

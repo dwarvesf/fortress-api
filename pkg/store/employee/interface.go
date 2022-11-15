@@ -10,5 +10,6 @@ type IStore interface {
 	Create(e *model.Employee) (employee *model.Employee, err error)
 	OneByTeamEmail(teamEmail string) (employee *model.Employee, err error)
 	UpdateEmployeeStatus(employeeID string, accountStatusID model.AccountStatus) (employee *model.Employee, err error)
-	UpdateGeneralInfo(body EditGeneralInfo, id string) (*model.Employee, error)
+	UpdateGeneralInfo(body EditGeneralInfoInput, id string) (employee *model.Employee, err error)
+	UpdateSkills(body EditSkillsInput, id string) (employee *model.Employee, err error)
 }

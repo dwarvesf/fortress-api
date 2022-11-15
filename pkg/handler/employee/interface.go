@@ -9,4 +9,5 @@ type IHandler interface {
 	GetProfile(c *gin.Context)
 	UpdateGeneralInfo(c *gin.Context)
 	Create(c *gin.Context)
+	UpdateSkills(c *gin.Context)
 }

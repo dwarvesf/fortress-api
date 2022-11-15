@@ -3,8 +3,8 @@ package model
 type EmployeePosition struct {
 	BaseModel
 
-	EmployeeID string
-	PositionID string
+	EmployeeID UUID
+	PositionID UUID
 
-	Position Position `gorm:"foreignkey:position_id"`
+	Position Position
 }
