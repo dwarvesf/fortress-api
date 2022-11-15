@@ -7,19 +7,16 @@ import (
 )
 
 type store struct {
-	db *gorm.DB
 }
 
-func New(db *gorm.DB) IStore {
-	return &store{
-		db: db,
-	}
+func New() IStore {
+	return &store{}
 }
 
 // GetByEmployeeID get list of permissions by employee id
-func (s *store) GetByEmployeeID(employeeID string) ([]*model.Permission, error) {
+func (s *store) GetByEmployeeID(db *gorm.DB, employeeID string) ([]*model.Permission, error) {
 	var permissions []*model.Permission
-	return permissions, s.db.
+	return permissions, db.
 		Joins("JOIN role_permissions rp ON permissions.id = rp.permission_id").
 		Joins("JOIN employee_roles er ON er.role_id = rp.role_id").
 		Where("er.employee_id = ?", employeeID).Find(&permissions).Error

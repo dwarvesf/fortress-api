@@ -1,12 +1,12 @@
 package mw
 
 import (
+	"gorm.io/gorm"
 	"strings"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 
-	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/utils"
 )
@@ -69,9 +69,20 @@ func validateToken(accessToken string) error {
 
 	return claims.Valid()
 }
+func NewPermissionMiddleware(s *store.Store, r store.DBRepo) *permMiddleware {
+	return &permMiddleware{
+		store: s,
+		repo:  r,
+	}
+}
+
+type permMiddleware struct {
+	store *store.Store
+	repo  store.DBRepo
+}
 
 // WithPerm a middleware to check the permission
-func WithPerm(cfg *config.Config, perm string) func(c *gin.Context) {
+func (m permMiddleware) WithPerm(perm string) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		accessToken, err := utils.GetTokenFromRequest(c)
 		if err != nil {
@@ -79,7 +90,7 @@ func WithPerm(cfg *config.Config, perm string) func(c *gin.Context) {
 			return
 		}
 
-		err = ensurePerm(cfg, accessToken, perm)
+		err = ensurePerm(m.store, m.repo.DB(), accessToken, perm)
 		if err != nil {
 			c.AbortWithStatusJSON(401, map[string]string{"message": err.Error()})
 			return
@@ -89,7 +100,7 @@ func WithPerm(cfg *config.Config, perm string) func(c *gin.Context) {
 	}
 }
 
-func ensurePerm(cfg *config.Config, accessToken string, requiredPerm string) error {
+func ensurePerm(storeDB *store.Store, db *gorm.DB, accessToken string, requiredPerm string) error {
 	claims := jwt.MapClaims{}
 	token, err := jwt.Parse(accessToken, func(token *jwt.Token) (interface{}, error) {
 		return []byte("JWTSecretKey"), nil
@@ -108,8 +119,7 @@ func ensurePerm(cfg *config.Config, accessToken string, requiredPerm string) err
 		return ErrInvalidUserID
 	}
 
-	storeDB := store.New(cfg)
-	perms, err := storeDB.Permission.GetByEmployeeID(userID)
+	perms, err := storeDB.Permission.GetByEmployeeID(db, userID)
 	if err != nil {
 		return err
 	}

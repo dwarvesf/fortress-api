@@ -19,11 +19,13 @@ type handler struct {
 	store   *store.Store
 	service *service.Service
 	logger  logger.Logger
+	repo    store.DBRepo
 }
 
-func New(store *store.Store, service *service.Service, logger logger.Logger) IHandler {
+func New(store *store.Store, repo store.DBRepo, service *service.Service, logger logger.Logger) IHandler {
 	return &handler{
 		store:   store,
+		repo:    repo,
 		service: service,
 		logger:  logger,
 	}
@@ -67,7 +69,7 @@ func (h *handler) List(c *gin.Context) {
 		return
 	}
 
-	projects, total, err := h.store.Project.All(project.GetListProjectInput{
+	projects, total, err := h.store.Project.All(h.repo.DB(), project.GetListProjectInput{
 		Status: query.Status,
 		Name:   query.Name,
 		Type:   query.Type,
@@ -124,7 +126,7 @@ func (h *handler) UpdateProjectStatus(c *gin.Context) {
 	}
 
 	// 2. get update status for project
-	rs, err := h.store.Project.UpdateStatus(projectID, body.ProjectStatus)
+	rs, err := h.store.Project.UpdateStatus(h.repo.DB(), projectID, body.ProjectStatus)
 	if err != nil {
 		l.Error(err, "error query update status for project to db")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body))
@@ -167,14 +169,14 @@ func (h *handler) Create(c *gin.Context) {
 		return
 	}
 
-	country, err := h.store.Country.One(body.CountryID)
+	country, err := h.store.Country.One(h.repo.DB(), body.CountryID)
 	if err != nil {
 		l.Error(err, "failed to get country")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body))
 		return
 	}
 
-	project := &model.Project{
+	p := &model.Project{
 		Name:      body.Name,
 		Country:   country.Name,
 		Type:      model.ProjectType(body.Type),
@@ -182,43 +184,45 @@ func (h *handler) Create(c *gin.Context) {
 		StartDate: body.GetStartDate(),
 	}
 
-	if err := h.store.Project.Create(project); err != nil {
+	tx, done := h.repo.NewTransaction()
+
+	if err := h.store.Project.Create(tx.DB(), p); err != nil {
 		l.Error(err, "failed to create project")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil))
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), nil))
 		return
 	}
 
 	// create project account manager
 	accountManager := &model.ProjectHead{
-		ProjectID:      project.ID,
+		ProjectID:      p.ID,
 		EmployeeID:     body.AccountManagerID,
 		JoinedDate:     time.Now(),
 		CommissionRate: decimal.Zero,
 		Position:       model.HeadPositionAccountManager,
 	}
 
-	if err := h.store.ProjectHead.Create(accountManager); err != nil {
+	if err := h.store.ProjectHead.Create(tx.DB(), accountManager); err != nil {
 		l.Error(err, "failed to create account manager")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body))
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body))
 		return
 	}
 
 	// create project delivery manager
 	deliveryManager := &model.ProjectHead{
-		ProjectID:      project.ID,
+		ProjectID:      p.ID,
 		EmployeeID:     body.DeliveryManagerID,
 		JoinedDate:     time.Now(),
 		CommissionRate: decimal.Zero,
 		Position:       model.HeadPositionDeliveryManager,
 	}
 
-	if err := h.store.ProjectHead.Create(deliveryManager); err != nil {
+	if err := h.store.ProjectHead.Create(tx.DB(), deliveryManager); err != nil {
 		l.Error(err, "failed to create delivery manager")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body))
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body))
 		return
 	}
 
-	project.Heads = append(project.Heads, *accountManager, *deliveryManager)
+	p.Heads = append(p.Heads, *accountManager, *deliveryManager)
 
-	c.JSON(http.StatusOK, view.CreateResponse(view.ToCreateProjectDataResponse(project), nil, nil, nil))
+	c.JSON(http.StatusOK, view.CreateResponse(view.ToCreateProjectDataResponse(p), nil, done(nil), nil))
 }

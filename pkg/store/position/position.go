@@ -7,23 +7,20 @@ import (
 )
 
 type store struct {
-	db *gorm.DB
 }
 
-func New(db *gorm.DB) IStore {
-	return &store{
-		db: db,
-	}
+func New() IStore {
+	return &store{}
 }
 
 // All get all positions
-func (s *store) All() ([]*model.Position, error) {
+func (s *store) All(db *gorm.DB) ([]*model.Position, error) {
 	var positions []*model.Position
-	return positions, s.db.Find(&positions).Error
+	return positions, db.Find(&positions).Error
 }
 
 // One get 1 one by id
-func (s *store) One(id model.UUID) (*model.Position, error) {
+func (s *store) One(db *gorm.DB, id model.UUID) (*model.Position, error) {
 	var pos *model.Position
-	return pos, s.db.Where("id = ?", id).First(&pos).Error
+	return pos, db.Where("id = ?", id).First(&pos).Error
 }

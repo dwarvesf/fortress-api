@@ -1,7 +1,11 @@
 package chapter
 
-import "github.com/dwarvesf/fortress-api/pkg/model"
+import (
+	"gorm.io/gorm"
+
+	"github.com/dwarvesf/fortress-api/pkg/model"
+)
 
 type IStore interface {
-	All() (chapters []*model.Chapter, err error)
+	All(db *gorm.DB) (chapters []*model.Chapter, err error)
 }

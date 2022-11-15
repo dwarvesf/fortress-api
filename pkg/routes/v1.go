@@ -1,14 +1,16 @@
 package routes
 
 import (
+	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/gin-gonic/gin"
 
-	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/handler"
 	"github.com/dwarvesf/fortress-api/pkg/mw"
 )
 
-func loadV1Routes(r *gin.Engine, h *handler.Handler, cfg *config.Config) {
+func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store.Store) {
+	pmw := mw.NewPermissionMiddleware(s, repo)
+
 	v1 := r.Group("/api/v1")
 
 	// auth
@@ -18,7 +20,7 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, cfg *config.Config) {
 	v1.GET("/profile", mw.WithAuth, h.Employee.GetProfile)
 
 	// employees
-	v1.GET("/employees", h.Employee.List)
+	v1.GET("/employees", pmw.WithPerm("employees.read"), h.Employee.List)
 	v1.POST("/employees", h.Employee.Create)
 	v1.GET("/employees/:id", mw.WithAuth, h.Employee.One)
 	v1.PUT("/employees/:id/general-info", mw.WithAuth, h.Employee.UpdateGeneralInfo)

@@ -7,7 +7,7 @@ type SearchFilter struct {
 }
 
 type EditGeneralInfoInput struct {
-	Fullname      string
+	FullName      string
 	Email         string
 	Phone         string
 	LineManagerID string

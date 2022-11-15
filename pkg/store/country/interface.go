@@ -1,8 +1,12 @@
 package country
 
-import "github.com/dwarvesf/fortress-api/pkg/model"
+import (
+	"gorm.io/gorm"
+	
+	"github.com/dwarvesf/fortress-api/pkg/model"
+)
 
 type IStore interface {
-	All() (countries []*model.Country, err error)
-	One(id string) (countries *model.Country, err error)
+	All(db *gorm.DB) (countries []*model.Country, err error)
+	One(db *gorm.DB, id string) (countries *model.Country, err error)
 }

@@ -7,23 +7,20 @@ import (
 )
 
 type store struct {
-	db *gorm.DB
 }
 
-func New(db *gorm.DB) IStore {
-	return &store{
-		db: db,
-	}
+func New() IStore {
+	return &store{}
 }
 
 // All get all countries
-func (s *store) All() ([]*model.Country, error) {
+func (s *store) All(db *gorm.DB) ([]*model.Country, error) {
 	var countries []*model.Country
-	return countries, s.db.Find(&countries).Error
+	return countries, db.Find(&countries).Error
 }
 
 // One get 1 country by id
-func (s *store) One(id string) (*model.Country, error) {
+func (s *store) One(db *gorm.DB, id string) (*model.Country, error) {
 	var country *model.Country
-	return country, s.db.Where("id = ?", id).First(&country).Error
+	return country, db.Where("id = ?", id).First(&country).Error
 }

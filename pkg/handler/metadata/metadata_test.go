@@ -21,8 +21,8 @@ func TestHandler_GetWorkingStatus(t *testing.T) {
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg)
-
 	storeMock := &store.Store{}
+	testRepoMock := store.NewPostgresStore(&cfg)
 
 	tests := []struct {
 		name             string
@@ -43,7 +43,7 @@ func TestHandler_GetWorkingStatus(t *testing.T) {
 
 			ctx, _ := gin.CreateTestContext(w)
 			ctx.Request = httptest.NewRequest("GET", "/api/v1/metadata/working-status?%s", nil)
-			metadataHandler := New(storeMock, serviceMock, loggerMock)
+			metadataHandler := New(storeMock, testRepoMock, serviceMock, loggerMock)
 
 			metadataHandler.WorkingStatus(ctx)
 			require.Equal(t, tt.wantCode, w.Code)
@@ -60,7 +60,8 @@ func TestHandler_GetSeniority(t *testing.T) {
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg)
-	storeMock := store.New(&cfg)
+	storeMock := store.New()
+	testRepoMock := store.NewPostgresStore(&cfg)
 
 	tests := []struct {
 		name             string
@@ -81,7 +82,7 @@ func TestHandler_GetSeniority(t *testing.T) {
 
 			ctx, _ := gin.CreateTestContext(w)
 			ctx.Request = httptest.NewRequest("GET", fmt.Sprintf("/api/v1/metadata/seniorities"), nil)
-			metadataHandler := New(storeMock, serviceMock, loggerMock)
+			metadataHandler := New(storeMock, testRepoMock, serviceMock, loggerMock)
 
 			metadataHandler.Seniorities(ctx)
 
@@ -99,7 +100,8 @@ func TestHandler_GetChapters(t *testing.T) {
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg)
-	storeMock := store.New(&cfg)
+	storeMock := store.New()
+	testRepoMock := store.NewPostgresStore(&cfg)
 
 	tests := []struct {
 		name             string
@@ -120,7 +122,7 @@ func TestHandler_GetChapters(t *testing.T) {
 
 			ctx, _ := gin.CreateTestContext(w)
 			ctx.Request = httptest.NewRequest("GET", fmt.Sprintf("/api/v1/metadata/chapters"), nil)
-			metadataHandler := New(storeMock, serviceMock, loggerMock)
+			metadataHandler := New(storeMock, testRepoMock, serviceMock, loggerMock)
 
 			metadataHandler.Chapters(ctx)
 
@@ -138,7 +140,8 @@ func TestHandler_GetAccountRoles(t *testing.T) {
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg)
-	storeMock := store.New(&cfg)
+	storeMock := store.New()
+	testRepoMock := store.NewPostgresStore(&cfg)
 
 	tests := []struct {
 		name             string
@@ -159,7 +162,7 @@ func TestHandler_GetAccountRoles(t *testing.T) {
 
 			ctx, _ := gin.CreateTestContext(w)
 			ctx.Request = httptest.NewRequest("GET", fmt.Sprintf("/api/v1/metadata/account-roles"), nil)
-			metadataHandler := New(storeMock, serviceMock, loggerMock)
+			metadataHandler := New(storeMock, testRepoMock, serviceMock, loggerMock)
 
 			metadataHandler.AccountRoles(ctx)
 
@@ -177,7 +180,8 @@ func TestHandler_GetAccountStatus(t *testing.T) {
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg)
-	storeMock := store.New(&cfg)
+	storeMock := store.New()
+	testRepoMock := store.NewPostgresStore(&cfg)
 
 	tests := []struct {
 		name             string
@@ -198,7 +202,7 @@ func TestHandler_GetAccountStatus(t *testing.T) {
 
 			ctx, _ := gin.CreateTestContext(w)
 			ctx.Request = httptest.NewRequest("GET", fmt.Sprintf("/api/v1/metadata/account-statuses"), nil)
-			metadataHandler := New(storeMock, serviceMock, loggerMock)
+			metadataHandler := New(storeMock, testRepoMock, serviceMock, loggerMock)
 
 			metadataHandler.AccountStatuses(ctx)
 
@@ -216,7 +220,8 @@ func TestHandler_GetProjectStatuses(t *testing.T) {
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg)
-	storeMock := store.New(&cfg)
+	storeMock := store.New()
+	testRepoMock := store.NewPostgresStore(&cfg)
 
 	tests := []struct {
 		name             string
@@ -237,7 +242,7 @@ func TestHandler_GetProjectStatuses(t *testing.T) {
 
 			ctx, _ := gin.CreateTestContext(w)
 			ctx.Request = httptest.NewRequest("GET", fmt.Sprintf("/api/v1/metadata/project-statuses"), nil)
-			metadataHandler := New(storeMock, serviceMock, loggerMock)
+			metadataHandler := New(storeMock, testRepoMock, serviceMock, loggerMock)
 
 			metadataHandler.ProjectStatuses(ctx)
 
@@ -255,7 +260,8 @@ func TestHandler_GetPositions(t *testing.T) {
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg)
-	storeMock := store.New(&cfg)
+	storeMock := store.New()
+	testRepoMock := store.NewPostgresStore(&cfg)
 
 	tests := []struct {
 		name             string
@@ -276,7 +282,7 @@ func TestHandler_GetPositions(t *testing.T) {
 
 			ctx, _ := gin.CreateTestContext(w)
 			ctx.Request = httptest.NewRequest("GET", fmt.Sprintf("/api/v1/metadata/positions"), nil)
-			metadataHandler := New(storeMock, serviceMock, loggerMock)
+			metadataHandler := New(storeMock, testRepoMock, serviceMock, loggerMock)
 
 			metadataHandler.Positions(ctx)
 
@@ -294,7 +300,8 @@ func TestHandler_GetTechStacks(t *testing.T) {
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg)
-	storeMock := store.New(&cfg)
+	storeMock := store.New()
+	testRepoMock := store.NewPostgresStore(&cfg)
 
 	tests := []struct {
 		name             string
@@ -315,7 +322,7 @@ func TestHandler_GetTechStacks(t *testing.T) {
 
 			ctx, _ := gin.CreateTestContext(w)
 			ctx.Request = httptest.NewRequest("GET", fmt.Sprintf("/api/v1/metadata/stacks"), nil)
-			metadataHandler := New(storeMock, serviceMock, loggerMock)
+			metadataHandler := New(storeMock, testRepoMock, serviceMock, loggerMock)
 
 			metadataHandler.Stacks(ctx)
 

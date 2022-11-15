@@ -1,27 +1,23 @@
 package employee
 
 import (
-	"time"
-
 	"gorm.io/gorm"
+	"time"
 
 	"github.com/dwarvesf/fortress-api/pkg/model"
 )
 
 type store struct {
-	db *gorm.DB
 }
 
-func New(db *gorm.DB) IStore {
-	return &store{
-		db: db,
-	}
+func New() IStore {
+	return &store{}
 }
 
 // One get 1 employee by id
-func (s *store) One(id string) (*model.Employee, error) {
+func (s *store) One(db *gorm.DB, id string) (*model.Employee, error) {
 	var employee *model.Employee
-	return employee, s.db.Where("id = ?", id).
+	return employee, db.Where("id = ?", id).
 		Preload("Roles").
 		Preload("Chapter").
 		Preload("Seniority").
@@ -30,17 +26,17 @@ func (s *store) One(id string) (*model.Employee, error) {
 }
 
 // OneByTeamEmail get 1 employee by team email
-func (s *store) OneByTeamEmail(teamEmail string) (*model.Employee, error) {
+func (s *store) OneByTeamEmail(db *gorm.DB, teamEmail string) (*model.Employee, error) {
 	var employee *model.Employee
-	return employee, s.db.Where("team_email = ?", teamEmail).First(&employee).Error
+	return employee, db.Where("team_email = ?", teamEmail).First(&employee).Error
 }
 
 // Search get employees by filter and pagination
-func (s *store) Search(filter SearchFilter, pagination model.Pagination) ([]*model.Employee, int64, error) {
+func (s *store) Search(db *gorm.DB, filter SearchFilter, pagination model.Pagination) ([]*model.Employee, int64, error) {
 	var total int64
 	var employees []*model.Employee
 
-	query := s.db.Table("employees")
+	query := db.Table("employees")
 
 	if filter.WorkingStatus != "" {
 		query = query.Where("working_status = ?", filter.WorkingStatus)
@@ -64,16 +60,16 @@ func (s *store) Search(filter SearchFilter, pagination model.Pagination) ([]*mod
 	return employees, total, query.Find(&employees).Error
 }
 
-func (s *store) UpdateEmployeeStatus(employeeID string, accountStatus model.AccountStatus) (*model.Employee, error) {
+func (s *store) UpdateEmployeeStatus(db *gorm.DB, employeeID string, accountStatus model.AccountStatus) (*model.Employee, error) {
 	employee := &model.Employee{}
-	return employee, s.db.Model(&employee).Where("id = ?", employeeID).Update("account_status", string(accountStatus)).Find(&employee).Error
+	return employee, db.Model(&employee).Where("id = ?", employeeID).Update("account_status", string(accountStatus)).Find(&employee).Error
 }
 
-func (s *store) UpdateGeneralInfo(body EditGeneralInfoInput, id string) (*model.Employee, error) {
+func (s *store) UpdateGeneralInfo(db *gorm.DB, body EditGeneralInfoInput, id string) (*model.Employee, error) {
 	employee := &model.Employee{}
 
-	// 1.2 update infor
-	employee.FullName = body.Fullname
+	// 1.2 update info
+	employee.FullName = body.FullName
 	employee.TeamEmail = body.Email
 	employee.PhoneNumber = body.Phone
 	employee.DiscordID = body.DiscordID
@@ -84,7 +80,7 @@ func (s *store) UpdateGeneralInfo(body EditGeneralInfoInput, id string) (*model.
 	}
 
 	// 1.3 save to DB
-	return employee, s.db.Table("employees").Where("id = ?", id).Updates(&employee).
+	return employee, db.Table("employees").Where("id = ?", id).Updates(&employee).
 		Preload("Chapter").
 		Preload("Seniority").
 		Preload("LineManager").
@@ -94,16 +90,16 @@ func (s *store) UpdateGeneralInfo(body EditGeneralInfoInput, id string) (*model.
 		First(&employee).Error
 }
 
-func (s *store) Create(e *model.Employee) (employee *model.Employee, err error) {
-	return e, s.db.Create(e).Error
+func (s *store) Create(db *gorm.DB, e *model.Employee) (employee *model.Employee, err error) {
+	return e, db.Create(e).Error
 }
 
-func (s *store) UpdateSkills(body EditSkillsInput, id string) (*model.Employee, error) {
+func (s *store) UpdateSkills(db *gorm.DB, body EditSkillsInput, id string) (*model.Employee, error) {
 
 	var employee *model.Employee
 
 	// get employee by employee id
-	err := s.db.Where("id = ?", id).First(&employee).Error
+	err := db.Where("id = ?", id).First(&employee).Error
 	if err != nil {
 		return nil, err
 	}
@@ -111,7 +107,7 @@ func (s *store) UpdateSkills(body EditSkillsInput, id string) (*model.Employee, 
 	// 1.1 delete all roles of the employee
 	now := time.Now()
 	employeePosition := model.EmployeePosition{}
-	s.db.Table("employee_positions").Where("employee_id = ?", id).Update("deleted_at", now)
+	db.Table("employee_positions").Where("employee_id = ?", id).Update("deleted_at", now)
 
 	// 1.2 create role for employee
 	for _, positionID := range body.Positions {
@@ -119,7 +115,7 @@ func (s *store) UpdateSkills(body EditSkillsInput, id string) (*model.Employee, 
 		employeePosition.EmployeeID = model.MustGetUUIDFromString(id)
 		employeePosition.PositionID = positionID
 
-		err = s.db.Table("employee_positions").Create(&employeePosition).Error
+		err = db.Table("employee_positions").Create(&employeePosition).Error
 		if err != nil {
 			return nil, err
 		}
@@ -129,7 +125,7 @@ func (s *store) UpdateSkills(body EditSkillsInput, id string) (*model.Employee, 
 
 	// 2.1 delete all employee_stacks for employee id
 	employeeStack := model.EmployeeStack{}
-	err = s.db.Table("employee_stacks").Where("employee_id = ?", id).Update("deleted_at", now).Error
+	err = db.Table("employee_stacks").Where("employee_id = ?", id).Update("deleted_at", now).Error
 	if err != nil {
 		return nil, err
 	}
@@ -140,7 +136,7 @@ func (s *store) UpdateSkills(body EditSkillsInput, id string) (*model.Employee, 
 		employeeStack.EmployeeID = model.MustGetUUIDFromString(id)
 		employeeStack.StackID = stackID
 
-		err = s.db.Table("employee_stacks").Create(&employeeStack).Error
+		err = db.Table("employee_stacks").Create(&employeeStack).Error
 		if err != nil {
 			return nil, err
 		}
@@ -153,7 +149,7 @@ func (s *store) UpdateSkills(body EditSkillsInput, id string) (*model.Employee, 
 	employee.SeniorityID = body.Seniority
 
 	// 3.3 save to DB
-	return employee, s.db.Table("employees").Where("id = ?", id).Updates(&employee).
+	return employee, db.Table("employees").Where("id = ?", id).Updates(&employee).
 		Preload("Chapter").
 		Preload("Seniority").
 		Preload("LineManager").

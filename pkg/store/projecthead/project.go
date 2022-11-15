@@ -7,16 +7,13 @@ import (
 )
 
 type store struct {
-	db *gorm.DB
 }
 
-func New(db *gorm.DB) IStore {
-	return &store{
-		db: db,
-	}
+func New() IStore {
+	return &store{}
 }
 
-// Create create new project
-func (s *store) Create(projectHead *model.ProjectHead) error {
-	return s.db.Create(projectHead).Preload("Employee").First(projectHead).Error
+// Create using for insert new data to project head
+func (s *store) Create(db *gorm.DB, projectHead *model.ProjectHead) error {
+	return db.Create(projectHead).Preload("Employee").First(projectHead).Error
 }

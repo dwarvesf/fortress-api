@@ -7,17 +7,14 @@ import (
 )
 
 type store struct {
-	db *gorm.DB
 }
 
-func New(db *gorm.DB) IStore {
-	return &store{
-		db: db,
-	}
+func New() IStore {
+	return &store{}
 }
 
 // All get all chapters
-func (s *store) All() ([]*model.Chapter, error) {
+func (s *store) All(db *gorm.DB) ([]*model.Chapter, error) {
 	var chapters []*model.Chapter
-	return chapters, s.db.Find(&chapters).Error
+	return chapters, db.Find(&chapters).Error
 }

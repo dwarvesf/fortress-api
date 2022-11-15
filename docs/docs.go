@@ -552,7 +552,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.EditSkillsInput"
+                            "$ref": "#/definitions/pkg_handler_employee.EditSkillsInput"
                         }
                     },
                     {

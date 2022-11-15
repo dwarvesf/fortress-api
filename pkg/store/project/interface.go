@@ -1,9 +1,13 @@
 package project
 
-import "github.com/dwarvesf/fortress-api/pkg/model"
+import (
+	"gorm.io/gorm"
+
+	"github.com/dwarvesf/fortress-api/pkg/model"
+)
 
 type IStore interface {
-	All(input GetListProjectInput, pagination model.Pagination) ([]*model.Project, int64, error)
-	UpdateStatus(projectID string, projectStatus model.ProjectStatus) (*model.Project, error)
-	Create(project *model.Project) error
+	All(db *gorm.DB, input GetListProjectInput, pagination model.Pagination) ([]*model.Project, int64, error)
+	UpdateStatus(db *gorm.DB, projectID string, projectStatus model.ProjectStatus) (*model.Project, error)
+	Create(db *gorm.DB, project *model.Project) error
 }

@@ -56,7 +56,7 @@ func (i *CreateProjectInput) Validate() error {
 	return nil
 }
 
-func (i CreateProjectInput) GetStartDate() *time.Time {
+func (i *CreateProjectInput) GetStartDate() *time.Time {
 	startDate, err := time.Parse("2006-01-02", i.StartDate)
 	if i.StartDate == "" || err != nil {
 		return nil
