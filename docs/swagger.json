@@ -164,6 +164,13 @@
                 "parameters": [
                     {
                         "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
                         "description": "Employee ID",
                         "name": "id",
                         "in": "path",
@@ -214,6 +221,13 @@
                 "parameters": [
                     {
                         "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
                         "description": "Employee ID",
                         "name": "id",
                         "in": "path",
@@ -227,13 +241,6 @@
                         "schema": {
                             "type": "string"
                         }
-                    },
-                    {
-                        "type": "string",
-                        "description": "jwt token",
-                        "name": "Authorization",
-                        "in": "header",
-                        "required": true
                     }
                 ],
                 "responses": {
@@ -278,6 +285,13 @@
                 ],
                 "summary": "Edit general info of the employee by id",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "type": "string",
                         "description": "Employee ID",
@@ -350,13 +364,6 @@
                         "schema": {
                             "type": "string"
                         }
-                    },
-                    {
-                        "type": "string",
-                        "description": "jwt token",
-                        "name": "Authorization",
-                        "in": "header",
-                        "required": true
                     }
                 ],
                 "responses": {
@@ -886,6 +893,13 @@
                 "parameters": [
                     {
                         "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
                         "description": "Project ID",
                         "name": "id",
                         "in": "path",
@@ -899,13 +913,6 @@
                         "schema": {
                             "type": "string"
                         }
-                    },
-                    {
-                        "type": "string",
-                        "description": "jwt token",
-                        "name": "Authorization",
-                        "in": "header",
-                        "required": true
                     }
                 ],
                 "responses": {
