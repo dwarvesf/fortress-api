@@ -2,6 +2,7 @@ package employee
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -193,7 +194,7 @@ func Test_UpdateGeneralInfo(t *testing.T) {
 		wantCode         int
 		wantErr          bool
 		wantResponsePath string
-		body             EditGeneralInfo
+		body             EditGeneralInfoInput
 		id               string
 	}{
 		{
@@ -201,7 +202,7 @@ func Test_UpdateGeneralInfo(t *testing.T) {
 			wantCode:         200,
 			wantErr:          false,
 			wantResponsePath: "testdata/update_general_info/200.json",
-			body: EditGeneralInfo{
+			body: EditGeneralInfoInput{
 				Fullname: "Phạm Đức Thành",
 				Email:    "thanh@d.foundation",
 				Phone:    "0123456788",
@@ -209,11 +210,11 @@ func Test_UpdateGeneralInfo(t *testing.T) {
 			id: "2655832e-f009-4b73-a535-64c3a22e558f",
 		},
 		{
-			name:             "fail_wrong_address",
+			name:             "fail_wrong_employee_id",
 			wantCode:         500,
 			wantErr:          true,
 			wantResponsePath: "testdata/update_general_info/500.json",
-			body: EditGeneralInfo{
+			body: EditGeneralInfoInput{
 				Fullname: "Phạm Đức Thành",
 				Email:    "thanh@d.foundation",
 				Phone:    "0123456788",
@@ -248,6 +249,93 @@ func Test_UpdateGeneralInfo(t *testing.T) {
 				require.JSONEq(t, string(expRespRaw), string(res), "[Handler.UpdateProjectStatus] response mismatched")
 			} else {
 				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.UpdateProjectStatus] response mismatched")
+			}
+		})
+	}
+}
+
+func Test_UpdateSkill(t *testing.T) {
+	// load env and test data
+	cfg := config.LoadTestConfig()
+	loggerMock := logger.NewLogrusLogger()
+	serviceMock := service.New(&cfg)
+	storeMock := store.New(&cfg)
+
+	tests := []struct {
+		name             string
+		wantCode         int
+		wantErr          bool
+		wantResponsePath string
+		body             EditSkillsInput
+		id               string
+	}{
+		{
+			name:             "ok_edit_skill",
+			wantCode:         200,
+			wantErr:          false,
+			wantResponsePath: "testdata/update_skills/200.json",
+			body: EditSkillsInput{
+				Positions: []model.UUID{
+					model.MustGetUUIDFromString("11ccffea-2cc9-4e98-9bef-3464dfe4dec8"),
+					model.MustGetUUIDFromString("d796884d-a8c4-4525-81e7-54a3b6099eac"),
+				},
+				Chapter:   model.MustGetUUIDFromString("11ccffea-2cc9-4e98-9bef-3464dfe4dec8"),
+				Seniority: model.MustGetUUIDFromString("39735742-829b-47f3-8f9d-daf0983914e5"),
+				Stacks: []model.UUID{
+					model.MustGetUUIDFromString("0ecf47c8-cca4-4c30-94bb-054b1124c44f"),
+					model.MustGetUUIDFromString("fa0f4e46-7eab-4e5c-9d31-30489e69fe2e"),
+				},
+			},
+			id: "2655832e-f009-4b73-a535-64c3a22e558f",
+		},
+		{
+			name:             "failed_invalid_employee_id",
+			wantCode:         404,
+			wantErr:          true,
+			wantResponsePath: "testdata/update_skills/404.json",
+			body: EditSkillsInput{
+				Positions: []model.UUID{
+					model.MustGetUUIDFromString("11ccffea-2cc9-4e98-9bef-3464dfe4dec8"),
+					model.MustGetUUIDFromString("d796884d-a8c4-4525-81e7-54a3b6099eac"),
+				},
+				Chapter:   model.MustGetUUIDFromString("11ccffea-2cc9-4e98-9bef-3464dfe4dec8"),
+				Seniority: model.MustGetUUIDFromString("39735742-829b-47f3-8f9d-daf0983914e5"),
+				Stacks: []model.UUID{
+					model.MustGetUUIDFromString("0ecf47c8-cca4-4c30-94bb-054b1124c44f"),
+					model.MustGetUUIDFromString("fa0f4e46-7eab-4e5c-9d31-30489e69fe2e"),
+				},
+			},
+			id: "2655832e-f009-4b73-a535-64c3a22e558a",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			byteReq, err := json.Marshal(tt.body)
+			fmt.Println(err)
+			require.Nil(t, err)
+			w := httptest.NewRecorder()
+
+			ctx, _ := gin.CreateTestContext(w)
+			bodyReader := strings.NewReader(string(byteReq))
+			ctx.Params = gin.Params{gin.Param{Key: "id", Value: tt.id}}
+			ctx.Request = httptest.NewRequest("PUT", fmt.Sprintf("%s", "/api/v1/employees/"+tt.id+"/skills"), bodyReader)
+			ctx.Request.Header.Set("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2OTkzMjExNDIsImlkIjoiMjY1NTgzMmUtZjAwOS00YjczLWE1MzUtNjRjM2EyMmU1NThmIiwiYXZhdGFyIjoiaHR0cHM6Ly9zMy1hcC1zb3V0aGVhc3QtMS5hbWF6b25hd3MuY29tL2ZvcnRyZXNzLWltYWdlcy81MTUzNTc0Njk1NjYzOTU1OTQ0LnBuZyIsImVtYWlsIjoidGhhbmhAZC5mb3VuZGF0aW9uIiwicGVybWlzc2lvbnMiOlsiZW1wbG95ZWVzLnJlYWQiXSwidXNlcl9pbmZvIjpudWxsfQ.GENGPEucSUrILN6tHDKxLMtj0M0REVMUPC7-XhDMpGM")
+			metadataHandler := New(storeMock, serviceMock, loggerMock)
+
+			metadataHandler.UpdateSkills(ctx)
+
+			require.Equal(t, tt.wantCode, w.Code)
+			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+			require.NoError(t, err)
+
+			if !tt.wantErr {
+				res, err := utils.RemoveFieldInResponse(w.Body.Bytes(), "updatedAt")
+				require.Nil(t, err)
+
+				require.JSONEq(t, string(expRespRaw), string(res), "[Handler.UpdateSkills] response mismatched")
+			} else {
+				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.UpdateSkills] response mismatched")
 			}
 		})
 	}

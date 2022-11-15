@@ -136,7 +136,7 @@ func (h *handler) One(c *gin.Context) {
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 404 {object} view.ErrorResponse
 // @Failure 500 {object} view.ErrorResponse
-// @Router /employees/{id}/employee-status [post]
+// @Router /employees/{id}/employee-status [put]
 func (h *handler) UpdateEmployeeStatus(c *gin.Context) {
 	// 1. parse id from uri, validate id
 	var params struct {
@@ -250,7 +250,7 @@ func (h *handler) GetProfile(c *gin.Context) {
 func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 	employeeID := c.Param("id")
 
-	var body EditGeneralInfo
+	var body EditGeneralInfoInput
 	if err := c.ShouldBindJSON(&body); err != nil {
 		if err != nil {
 			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, employeeID))
@@ -269,14 +269,19 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 	if body.LineManagerID != "" {
 		_, err := h.store.Employee.One(body.LineManagerID)
 		if err != nil {
-			l.Error(ErrCantFindLineManager, "error when finding line manager")
-			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, ErrCantFindLineManager, body))
+			if err == gorm.ErrRecordNotFound {
+				l.Error(ErrLineManagerNotFound, "error line manager not found")
+				c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrLineManagerNotFound, body))
+				return
+			}
+			l.Error(err, "error when finding line manager")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body))
 			return
 		}
 	}
 
 	// 3. update informations and rerurn
-	rs, err := h.store.Employee.UpdateGeneralInfo(employee.EditGeneralInfo{
+	rs, err := h.store.Employee.UpdateGeneralInfo(employee.EditGeneralInfoInput{
 		Fullname:      body.Fullname,
 		Email:         body.Email,
 		Phone:         body.Phone,
@@ -291,7 +296,7 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body))
 		return
 	}
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToEmployeeData(rs), nil, nil, nil))
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToEditEmployeeData(rs), nil, nil, nil))
 }
 
 // Create godoc
@@ -400,4 +405,62 @@ func (h *handler) Create(c *gin.Context) {
 
 	// 3. return employee
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToEmployeeData(employee), nil, nil, nil))
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToEditEmployeeData(employee), nil, nil, nil))
+}
+
+// UpdateSkills godoc
+// @Summary Update Skill for employee by id
+// @Description Update Skill for employee by id
+// @Tags Employee
+// @Accept  json
+// @Produce  json
+// @Param id path string true "Employee ID"
+// @Param Body body EditSkillsInput true "Body"
+// @Param Authorization header string true "jwt token"
+// @Success 200 {object} view.EditEmployeeResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /employees/{id}/skills [put]
+func (h *handler) UpdateSkills(c *gin.Context) {
+	// 1. parse id from uri, validate id
+	employeeID := c.Param("id")
+
+	// 2. parse json body from request
+	var body EditSkillsInput
+	if err := c.ShouldBindJSON(&body); err != nil {
+		if err != nil {
+			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, employeeID))
+			return
+		}
+	}
+
+	// TODO: can we move this to middleware ?
+	l := h.logger.Fields(logger.Fields{
+		"handler": "employee",
+		"method":  "UpdateSkills",
+		"request": body,
+	})
+
+	// 3. update informations and rerurn
+	employee, err := h.store.Employee.UpdateSkills(employee.EditSkillsInput{
+		Positions: body.Positions,
+		Chapter:   body.Chapter,
+		Seniority: body.Seniority,
+		Stacks:    body.Stacks,
+	}, employeeID)
+
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			l.Error(ErrEmployeeNotFound, "error employee not found")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrEmployeeNotFound, body))
+			return
+		}
+
+		l.Error(err, "error update employee to db")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body))
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToEditEmployeeData(employee), nil, nil, nil))
 }

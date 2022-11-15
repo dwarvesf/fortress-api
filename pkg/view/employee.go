@@ -40,6 +40,39 @@ type EmployeeData struct {
 	Projects      []EmployeeProjectData `json:"projects"`
 }
 
+type EditEmployeeData struct {
+	model.BaseModel
+
+	// basic info
+	FullName      string     `json:"fullName"`
+	DisplayName   string     `json:"displayName"`
+	TeamEmail     string     `json:"teamEmail"`
+	PersonalEmail string     `json:"personalEmail"`
+	Avatar        string     `json:"avatar"`
+	PhoneNumber   string     `json:"phoneNumber"`
+	Address       string     `json:"address"`
+	MBTI          string     `json:"mbti"`
+	Gender        string     `json:"gender"`
+	Horoscope     string     `json:"horoscope"`
+	DateOfBirth   *time.Time `json:"birthday"`
+	DiscordID     string     `json:"discordID"`
+	GithubID      string     `json:"githubID"`
+	NotionID      string     `json:"notionID"`
+
+	// working info
+	WorkingStatus model.WorkingStatus `json:"status"`
+	JoinedDate    *time.Time          `json:"joinedDate"`
+	LeftDate      *time.Time          `json:"leftDate"`
+
+	AccountStatus model.AccountStatus   `json:"accountStatus"`
+	Seniority     *model.Seniority      `json:"seniority"`
+	Chapter       *model.Chapter        `json:"chapter"`
+	LineManager   *BasisEmployeeInfo    `json:"lineManager"`
+	Positions     []model.Position      `json:"positions"`
+	Projects      []EmployeeProjectData `json:"projects"`
+	Stacks        []model.Stack         `json:"stacks"`
+}
+
 type BasisEmployeeInfo struct {
 	ID       string `json:"id"`
 	FullName string `json:"fullName"`
@@ -85,6 +118,11 @@ func ToEmployeeData(employee *model.Employee) *EmployeeData {
 		projects = append(projects, ToEmployeeProjectData(&v.Project))
 	}
 
+	positions := make([]model.Position, 0, len(employee.EmployeePositions))
+	for _, v := range employee.EmployeePositions {
+		positions = append(positions, v.Position)
+	}
+
 	rs := &EmployeeData{
 		BaseModel: model.BaseModel{
 			ID:        employee.ID,
@@ -112,8 +150,72 @@ func ToEmployeeData(employee *model.Employee) *EmployeeData {
 		LeftDate:      employee.LeftDate,
 		AccountStatus: employee.AccountStatus,
 		Projects:      projects,
-		Positions:     employee.Positions,
 		Roles:         employee.Roles,
+		Positions:     positions,
+	}
+
+	if employee.Seniority != nil {
+		rs.Seniority = employee.Seniority
+	}
+
+	if employee.Chapter != nil {
+		rs.Chapter = employee.Chapter
+	}
+
+	if employee.LineManager != nil {
+		rs.LineManager = &BasisEmployeeInfo{
+			ID:       employee.LineManager.ID.String(),
+			FullName: employee.LineManager.FullName,
+			Avatar:   employee.LineManager.Avatar,
+		}
+	}
+
+	return rs
+}
+
+func ToEditEmployeeData(employee *model.Employee) *EditEmployeeData {
+	projects := make([]EmployeeProjectData, 0, len(employee.ProjectMembers))
+	for _, v := range employee.ProjectMembers {
+		projects = append(projects, ToEmployeeProjectData(&v.Project))
+	}
+
+	positions := make([]model.Position, 0, len(employee.EmployeePositions))
+	for _, v := range employee.EmployeePositions {
+		positions = append(positions, v.Position)
+	}
+
+	stacks := make([]model.Stack, 0, len(employee.EmployeeStacks))
+	for _, v := range employee.EmployeeStacks {
+		stacks = append(stacks, v.Stack)
+	}
+
+	rs := &EditEmployeeData{
+		BaseModel: model.BaseModel{
+			ID:        employee.ID,
+			CreatedAt: employee.CreatedAt,
+			UpdatedAt: employee.UpdatedAt,
+		},
+		FullName:      employee.FullName,
+		DisplayName:   employee.DisplayName,
+		TeamEmail:     employee.TeamEmail,
+		PersonalEmail: employee.PersonalEmail,
+		Avatar:        employee.Avatar,
+		PhoneNumber:   employee.PhoneNumber,
+		Address:       employee.Address,
+		MBTI:          employee.MBTI,
+		Gender:        employee.Gender,
+		Horoscope:     employee.Horoscope,
+		DateOfBirth:   employee.DateOfBirth,
+		GithubID:      employee.GithubID,
+		DiscordID:     employee.DiscordID,
+		NotionID:      employee.NotionID,
+		WorkingStatus: employee.WorkingStatus,
+		JoinedDate:    employee.JoinedDate,
+		LeftDate:      employee.LeftDate,
+		AccountStatus: employee.AccountStatus,
+		Projects:      projects,
+		Positions:     positions,
+		Stacks:        stacks,
 	}
 
 	if employee.Seniority != nil {

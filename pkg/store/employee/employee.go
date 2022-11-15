@@ -1,6 +1,8 @@
 package employee
 
 import (
+	"time"
+
 	"gorm.io/gorm"
 
 	"github.com/dwarvesf/fortress-api/pkg/model"
@@ -54,7 +56,8 @@ func (s *store) Search(filter SearchFilter, pagination model.Pagination) ([]*mod
 	query = query.Preload("ProjectMembers", "deleted_at IS NULL").
 		Preload("ProjectMembers.Project").
 		Preload("ProjectMembers.Project.Heads").
-		Preload("Positions", "deleted_at IS NULL").
+		Preload("EmployeePositions", "deleted_at IS NULL").
+		Preload("EmployeePositions.Position").
 		Preload("Roles", "deleted_at IS NULL").
 		Offset(offset)
 
@@ -66,7 +69,7 @@ func (s *store) UpdateEmployeeStatus(employeeID string, accountStatus model.Acco
 	return employee, s.db.Model(&employee).Where("id = ?", employeeID).Update("account_status", string(accountStatus)).Find(&employee).Error
 }
 
-func (s *store) UpdateGeneralInfo(body EditGeneralInfo, id string) (*model.Employee, error) {
+func (s *store) UpdateGeneralInfo(body EditGeneralInfoInput, id string) (*model.Employee, error) {
 	employee := &model.Employee{}
 
 	// 1.2 update infor
@@ -85,11 +88,77 @@ func (s *store) UpdateGeneralInfo(body EditGeneralInfo, id string) (*model.Emplo
 		Preload("Chapter").
 		Preload("Seniority").
 		Preload("LineManager").
-		Preload("Positions", "deleted_at IS NULL").
+		Preload("EmployeePositions", "deleted_at IS NULL").
+		Preload("EmployeePositions.Position").
 		Preload("Roles", "deleted_at IS NULL").
 		First(&employee).Error
 }
 
 func (s *store) Create(e *model.Employee) (employee *model.Employee, err error) {
 	return e, s.db.Create(e).Error
+}
+
+func (s *store) UpdateSkills(body EditSkillsInput, id string) (*model.Employee, error) {
+
+	var employee *model.Employee
+
+	// get employee by employee id
+	err := s.db.Where("id = ?", id).First(&employee).Error
+	if err != nil {
+		return nil, err
+	}
+
+	// 1.1 delete all roles of the employee
+	now := time.Now()
+	employeePosition := model.EmployeePosition{}
+	s.db.Table("employee_positions").Where("employee_id = ?", id).Update("deleted_at", now)
+
+	// 1.2 create role for employee
+	for _, positionID := range body.Positions {
+		employeePosition.ID = model.NewUUID()
+		employeePosition.EmployeeID = model.MustGetUUIDFromString(id)
+		employeePosition.PositionID = positionID
+
+		err = s.db.Table("employee_positions").Create(&employeePosition).Error
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// 2 update tech stacks for employee
+
+	// 2.1 delete all employee_stacks for employee id
+	employeeStack := model.EmployeeStack{}
+	err = s.db.Table("employee_stacks").Where("employee_id = ?", id).Update("deleted_at", now).Error
+	if err != nil {
+		return nil, err
+	}
+
+	// 2.2 create stacks for employee
+	for _, stackID := range body.Stacks {
+		employeeStack.ID = model.NewUUID()
+		employeeStack.EmployeeID = model.MustGetUUIDFromString(id)
+		employeeStack.StackID = stackID
+
+		err = s.db.Table("employee_stacks").Create(&employeeStack).Error
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// 3 update employee table
+
+	// 3.2 update infor
+	employee.ChapterID = body.Chapter
+	employee.SeniorityID = body.Seniority
+
+	// 3.3 save to DB
+	return employee, s.db.Table("employees").Where("id = ?", id).Updates(&employee).
+		Preload("Chapter").
+		Preload("Seniority").
+		Preload("LineManager").
+		Preload("EmployeePositions", "deleted_at IS NULL").
+		Preload("EmployeePositions.Position").
+		Preload("EmployeeStacks", "deleted_at IS NULL").
+		Preload("EmployeeStacks.Stack").First(&employee).Error
 }

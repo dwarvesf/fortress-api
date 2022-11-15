@@ -111,12 +111,14 @@ type Employee struct {
 	LocalBranchName        string
 	LocalBankRecipientName string
 
-	Chapter        *Chapter
-	Seniority      *Seniority
-	LineManager    *Employee
-	ProjectMembers []ProjectMember
-	Roles          []Role     `gorm:"many2many:employee_roles;"`
-	Positions      []Position `gorm:"many2many:employee_positions;"`
+	Chapter           *Chapter
+	Seniority         *Seniority
+	LineManager       *Employee
+	ProjectMembers    []ProjectMember
+	Roles             []Role     `gorm:"many2many:employee_roles;"`
+	Positions         []Position `gorm:"many2many:employee_positions;"`
+	EmployeePositions []EmployeePosition
+	EmployeeStacks    []EmployeeStack
 }
 
 func (e AccountStatus) Valid() bool {

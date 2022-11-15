@@ -1,5 +1,24 @@
 basePath: /api/v1
 definitions:
+  github.com_dwarvesf_fortress-api_pkg_handler_employee.EditSkillsInput:
+    properties:
+      chapter:
+        type: string
+      positions:
+        items:
+          type: string
+        type: array
+      seniority:
+        type: string
+      stacks:
+        items:
+          type: string
+        type: array
+    required:
+    - positions
+    - seniority
+    - stacks
+    type: object
   model.Chapter:
     properties:
       code:
@@ -78,6 +97,40 @@ definitions:
         type: string
       updatedAt:
         type: string
+    type: object
+  model.Stack:
+    properties:
+      code:
+        type: string
+      createdAt:
+        type: string
+      deletedAt:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  pkg_handler_employee.EditSkillsInput:
+    properties:
+      chapter:
+        type: string
+      positions:
+        items:
+          type: string
+        type: array
+      seniority:
+        type: string
+      stacks:
+        items:
+          type: string
+        type: array
+    required:
+    - positions
+    - seniority
+    - stacks
     type: object
   view.AccountRoleResponse:
     properties:
@@ -202,6 +255,10 @@ definitions:
         type: array
       seniority:
         $ref: '#/definitions/model.Seniority'
+      stacks:
+        items:
+          $ref: '#/definitions/model.Stack'
+        type: array
       status:
         description: working info
         type: string
@@ -613,7 +670,7 @@ paths:
       tags:
       - Employee
   /employees/{id}/employee-status:
-    post:
+    put:
       consumes:
       - application/json
       description: Update account status by employee id
@@ -737,6 +794,50 @@ paths:
           schema:
             $ref: '#/definitions/view.ErrorResponse'
       summary: Edit general info of the employee by id
+      tags:
+      - Employee
+  /employees/{id}/skills:
+    put:
+      consumes:
+      - application/json
+      description: Update Skill for employee by id
+      parameters:
+      - description: Employee ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Body
+        in: body
+        name: Body
+        required: true
+        schema:
+          $ref: '#/definitions/pkg_handler_employee.EditSkillsInput'
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.EditEmployeeResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Update Skill for employee by id
       tags:
       - Employee
   /metadata/account-roles:

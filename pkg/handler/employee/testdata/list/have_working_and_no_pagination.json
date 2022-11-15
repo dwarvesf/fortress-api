@@ -19,15 +19,15 @@
             "gender": "Male",
             "horoscope": "Libra",
             "birthday": "1990-01-02T00:00:00Z",
+            "discordID": "",
+            "githubID": "",
+            "notionID": "",
             "status": "contractor",
             "joinedDate": null,
             "leftDate": null,
             "accountStatus": "active",
             "seniority": null,
             "chapter": null,
-            "githubID": "",
-            "notionID": "",
-            "discordID": "",
             "lineManager": null,
             "positions": [
                 {
