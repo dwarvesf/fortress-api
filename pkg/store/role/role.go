@@ -16,7 +16,7 @@ func New(db *gorm.DB) IStore {
 	}
 }
 
-// One get all positions
+// All get all positions
 func (s *store) All() ([]*model.Role, error) {
 	var roles []*model.Role
 	return roles, s.db.Find(&roles).Error
