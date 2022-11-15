@@ -26,6 +26,9 @@
             "seniority": null,
             "chapter": null,
             "lineManager": null,
+            "githubID": "",
+            "notionID": "",
+            "discordID": "",
             "positions": [
                 {
                     "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",

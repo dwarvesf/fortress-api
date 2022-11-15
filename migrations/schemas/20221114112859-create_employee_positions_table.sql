@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS employee_positions (
 ALTER TABLE employees DROP COLUMN IF EXISTS possiton_id;
 
 ALTER TABLE employee_positions
-    ADD CONSTRAINT mployee_positions_position_id_fkey FOREIGN KEY (position_id) REFERENCES positions(id);
+    ADD CONSTRAINT employee_positions_position_id_fkey FOREIGN KEY (position_id) REFERENCES positions(id);
 
 ALTER TABLE employee_positions
     ADD CONSTRAINT employee_positions_employee_id_fkey FOREIGN KEY (employee_id) REFERENCES employees(id);
