@@ -37,7 +37,7 @@ func New(store *store.Store, service *service.Service, logger logger.Logger) IHa
 // @Accept  json
 // @Produce  json
 // @Param Authorization header string true "jwt token"
-// @Param       workingStatus   query  string true  "Working Status"
+// @Param       workingStatus   query  string false  "Working Status"
 // @Param       page   query  string true  "Page"
 // @Param       size   query  string true  "Size"
 // @Success 200 {object} view.EmployeeListDataResponse
