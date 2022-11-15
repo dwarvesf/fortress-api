@@ -4,7 +4,6 @@ CREATE TABLE IF NOT EXISTS contents (
     deleted_at  TIMESTAMP(6),
     created_at  TIMESTAMP(6)     DEFAULT (now()),
     updated_at  TIMESTAMP(6)     DEFAULT (now()),
-
     type        TEXT,
     extension   TEXT,
     path        TEXT,

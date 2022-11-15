@@ -20,6 +20,7 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 	// user profile
 	v1.GET("/profile", amw.WithAuth, h.Profile.GetProfile)
 	v1.PUT("/profile", amw.WithAuth, h.Profile.UpdateInfo)
+	v1.POST("/profile/upload-avatar", amw.WithAuth, h.Profile.UploadAvatar)
 
 	// employees
 	v1.GET("/employees", amw.WithAuth, pmw.WithPerm("employees.read"), h.Employee.List)

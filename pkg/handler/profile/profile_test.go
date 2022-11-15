@@ -46,7 +46,7 @@ func TestHandler_GetProfile(t *testing.T) {
 			ctx, _ := gin.CreateTestContext(w)
 			ctx.Request = httptest.NewRequest("GET", "/api/v1/profile", nil)
 			ctx.Request.Header.Set("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2OTkzMjExNDIsImlkIjoiMjY1NTgzMmUtZjAwOS00YjczLWE1MzUtNjRjM2EyMmU1NThmIiwiYXZhdGFyIjoiaHR0cHM6Ly9zMy1hcC1zb3V0aGVhc3QtMS5hbWF6b25hd3MuY29tL2ZvcnRyZXNzLWltYWdlcy81MTUzNTc0Njk1NjYzOTU1OTQ0LnBuZyIsImVtYWlsIjoidGhhbmhAZC5mb3VuZGF0aW9uIiwicGVybWlzc2lvbnMiOlsiZW1wbG95ZWVzLnJlYWQiXSwidXNlcl9pbmZvIjpudWxsfQ.GENGPEucSUrILN6tHDKxLMtj0M0REVMUPC7-XhDMpGM")
-			metadataHandler := New(storeMock, testRepoMock, serviceMock, loggerMock)
+			metadataHandler := New(storeMock, testRepoMock, serviceMock, loggerMock, &cfg)
 
 			metadataHandler.GetProfile(ctx)
 
@@ -108,7 +108,7 @@ func TestHandler_UpdateProfileInfo(t *testing.T) {
 			bodyReader := strings.NewReader(string(byteReq))
 			ctx.Request = httptest.NewRequest("PUT", "/api/v1/profile", bodyReader)
 			ctx.Request.Header.Set("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2OTkzMjExNDIsImlkIjoiMjY1NTgzMmUtZjAwOS00YjczLWE1MzUtNjRjM2EyMmU1NThmIiwiYXZhdGFyIjoiaHR0cHM6Ly9zMy1hcC1zb3V0aGVhc3QtMS5hbWF6b25hd3MuY29tL2ZvcnRyZXNzLWltYWdlcy81MTUzNTc0Njk1NjYzOTU1OTQ0LnBuZyIsImVtYWlsIjoidGhhbmhAZC5mb3VuZGF0aW9uIiwicGVybWlzc2lvbnMiOlsiZW1wbG95ZWVzLnJlYWQiXSwidXNlcl9pbmZvIjpudWxsfQ.GENGPEucSUrILN6tHDKxLMtj0M0REVMUPC7-XhDMpGM")
-			metadataHandler := New(storeMock, testRepoMock, serviceMock, loggerMock)
+			metadataHandler := New(storeMock, testRepoMock, serviceMock, loggerMock, &cfg)
 
 			metadataHandler.UpdateInfo(ctx)
 
