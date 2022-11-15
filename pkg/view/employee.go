@@ -22,9 +22,9 @@ type EmployeeData struct {
 	Gender        string     `json:"gender"`
 	Horoscope     string     `json:"horoscope"`
 	DateOfBirth   *time.Time `json:"birthday"`
-	DiscordID     string     `json:"discordID,omitempty"`
-	GithubID      string     `json:"githubID,omitempty"`
-	NotionID      string     `json:"notionID,omitempty"`
+	DiscordID     string     `json:"discordID"`
+	GithubID      string     `json:"githubID"`
+	NotionID      string     `json:"notionID"`
 
 	// working info
 	WorkingStatus model.WorkingStatus `json:"status"`
