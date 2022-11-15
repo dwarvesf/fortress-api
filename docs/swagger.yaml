@@ -494,6 +494,11 @@ paths:
       - application/json
       description: Get employee by id
       parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
       - description: Employee ID
         in: path
         name: id
@@ -527,6 +532,11 @@ paths:
       - application/json
       description: Update account status by employee id
       parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
       - description: Employee ID
         in: path
         name: id
@@ -538,11 +548,6 @@ paths:
         required: true
         schema:
           type: string
-      - description: jwt token
-        in: header
-        name: Authorization
-        required: true
-        type: string
       produces:
       - application/json
       responses:
@@ -571,6 +576,11 @@ paths:
       - application/json
       description: Edit general info of the employee by id
       parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
       - description: Employee ID
         in: path
         name: id
@@ -621,11 +631,6 @@ paths:
         required: true
         schema:
           type: string
-      - description: jwt token
-        in: header
-        name: Authorization
-        required: true
-        type: string
       produces:
       - application/json
       responses:
@@ -972,6 +977,11 @@ paths:
       - application/json
       description: Update status for project by id
       parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
       - description: Project ID
         in: path
         name: id
@@ -983,11 +993,6 @@ paths:
         required: true
         schema:
           type: string
-      - description: jwt token
-        in: header
-        name: Authorization
-        required: true
-        type: string
       produces:
       - application/json
       responses:

@@ -86,9 +86,9 @@ func (h *handler) List(c *gin.Context) {
 // @Tags Project
 // @Accept  json
 // @Produce  json
+// @Param Authorization header string true "jwt token"
 // @Param id path string true "Project ID"
 // @Param status body model.ProjectStatus true "Project Status"
-// @Param Authorization header string true "jwt token"
 // @Success 200 {object} view.UpdateProjectStatusResponse
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 404 {object} view.ErrorResponse
@@ -122,7 +122,7 @@ func (h *handler) UpdateProjectStatus(c *gin.Context) {
 	}
 
 	// 2. get update status for project
-	project, err := h.store.Project.UpdateStatus(projectID, body.ProjectStatus)
+	rs, err := h.store.Project.UpdateStatus(projectID, body.ProjectStatus)
 	if err != nil {
 		l.Error(err, "error query update status for project to db")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body))
@@ -130,5 +130,5 @@ func (h *handler) UpdateProjectStatus(c *gin.Context) {
 	}
 
 	// 3. return project data
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToUpdateProjectStatusResponse(project), nil, nil, nil))
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToUpdateProjectStatusResponse(rs), nil, nil, nil))
 }

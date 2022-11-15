@@ -78,6 +78,7 @@ func (h *handler) List(c *gin.Context) {
 // @Tags Employee
 // @Accept  json
 // @Produce  json
+// @Param Authorization header string true "jwt token"
 // @Param id path string true "Employee ID"
 // @Success 200 {object} view.EmployeeData
 // @Failure 400 {object} view.ErrorResponse
@@ -126,9 +127,9 @@ func (h *handler) One(c *gin.Context) {
 // @Tags Employee
 // @Accept  json
 // @Produce  json
+// @Param Authorization header string true "jwt token"
 // @Param id path string true "Employee ID"
 // @Param employeeStatus body model.AccountStatus true "Employee Status"
-// @Param Authorization header string true "jwt token"
 // @Success 200 {object} view.UpdateEmployeeStatusResponse
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 404 {object} view.ErrorResponse
@@ -173,7 +174,7 @@ func (h *handler) UpdateEmployeeStatus(c *gin.Context) {
 	}
 
 	// 2. get update account status for employee
-	employee, err := h.store.Employee.UpdateEmployeeStatus(params.ID, body.EmployeeStatus)
+	rs, err := h.store.Employee.UpdateEmployeeStatus(params.ID, body.EmployeeStatus)
 	if err != nil {
 		l.Error(err, "error query update account status employee to db")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, params))
@@ -181,7 +182,7 @@ func (h *handler) UpdateEmployeeStatus(c *gin.Context) {
 	}
 
 	// 3. return status reonse
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToEmployeeData(employee), nil, nil, nil))
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToEmployeeData(rs), nil, nil, nil))
 }
 
 // GetProfile godoc
@@ -209,7 +210,7 @@ func (h *handler) GetProfile(c *gin.Context) {
 		"method":  "GetProfile",
 	})
 
-	employee, err := h.store.Employee.One(userID)
+	rs, err := h.store.Employee.One(userID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			l.Info("employee not found")
@@ -221,7 +222,7 @@ func (h *handler) GetProfile(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToProfileData(employee), nil, nil, nil))
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToProfileData(rs), nil, nil, nil))
 }
 
 // UpdateGeneralInfo godoc
@@ -230,6 +231,7 @@ func (h *handler) GetProfile(c *gin.Context) {
 // @Tags Employee
 // @Accept  json
 // @Produce  json
+// @Param Authorization header string true "jwt token"
 // @Param id path string true "Employee ID"
 // @Param fullName body string true "fullName" maxlength(99)
 // @Param email body string true "email"
@@ -238,7 +240,6 @@ func (h *handler) GetProfile(c *gin.Context) {
 // @Param discordID body string true "discordID"
 // @Param githubID body string true "githubID"
 // @Param notionID body string true "notionID"
-// @Param Authorization header string true "jwt token"
 // @Success 200 {object} view.EditEmployeeResponse
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 404 {object} view.ErrorResponse
@@ -273,7 +274,7 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 	}
 
 	// 3. update informations and rerurn
-	employee, err := h.store.Employee.UpdateGeneralInfo(employee.EditGeneralInfo{
+	rs, err := h.store.Employee.UpdateGeneralInfo(employee.EditGeneralInfo{
 		Fullname:      body.Fullname,
 		Email:         body.Email,
 		Phone:         body.Phone,
@@ -288,5 +289,5 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body))
 		return
 	}
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToEmployeeData(employee), nil, nil, nil))
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToEmployeeData(rs), nil, nil, nil))
 }
