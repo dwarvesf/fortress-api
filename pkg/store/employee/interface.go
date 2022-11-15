@@ -12,6 +12,7 @@ type IStore interface {
 	Create(db *gorm.DB, e *model.Employee) (employee *model.Employee, err error)
 	OneByTeamEmail(db *gorm.DB, teamEmail string) (employee *model.Employee, err error)
 	UpdateEmployeeStatus(db *gorm.DB, employeeID string, accountStatusID model.AccountStatus) (employee *model.Employee, err error)
-	UpdateGeneralInfo(db *gorm.DB, body EditGeneralInfoInput, id string) (employee *model.Employee, err error)
-	UpdateSkills(db *gorm.DB, body EditSkillsInput, id string) (employee *model.Employee, err error)
+	UpdateGeneralInfo(db *gorm.DB, body UpdateGeneralInfoInput, id string) (employee *model.Employee, err error)
+	UpdateSkills(db *gorm.DB, body UpdateSkillsInput, id string) (employee *model.Employee, err error)
+	UpdatePersonalInfo(db *gorm.DB, body UpdatePersonalInfoInput, id string) (employee *model.Employee, err error)
 }

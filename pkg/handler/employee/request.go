@@ -1,6 +1,10 @@
 package employee
 
-import "github.com/dwarvesf/fortress-api/pkg/model"
+import (
+	"time"
+
+	"github.com/dwarvesf/fortress-api/pkg/model"
+)
 
 type GetListEmployeeQuery struct {
 	model.Pagination
@@ -8,7 +12,7 @@ type GetListEmployeeQuery struct {
 	WorkingStatus string `json:"workingStatus" form:"workingStatus"`
 }
 
-type EditGeneralInfoInput struct {
+type UpdateGeneralInfoInput struct {
 	Fullname      string `form:"fullName" json:"fullName" binding:"required,max=99"`
 	Email         string `form:"email" json:"email" binding:"required,email"`
 	Phone         string `form:"phone" json:"phone" binding:"required,max=12,min=10"`
@@ -30,9 +34,16 @@ type CreateEmployee struct {
 	RoleID        model.UUID `json:"roleID" binding:"required"`
 }
 
-type EditSkillsInput struct {
+type UpdateSkillsInput struct {
 	Positions []model.UUID `form:"positions" json:"positions" binding:"required"`
 	Chapter   model.UUID   `form:"chapter" json:"chapter"`
 	Seniority model.UUID   `form:"seniority" json:"seniority" binding:"required"`
 	Stacks    []model.UUID `form:"stacks" json:"stacks" binding:"required"`
+}
+
+type UpdatePersonalInfoInput struct {
+	DoB           *time.Time `form:"dob" json:"dob" binding:"required"`
+	Gender        string     `form:"gender" json:"gender" binding:"required"`
+	Address       string     `form:"address" json:"address" binding:"required,max=200"`
+	PersonalEmail string     `form:"personalEmail" json:"personalEmail" binding:"required,email"`
 }

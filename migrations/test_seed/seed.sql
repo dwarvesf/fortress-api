@@ -46,3 +46,7 @@ INSERT INTO "public"."employees" ("id", "deleted_at", "created_at", "updated_at"
 INSERT INTO public.employee_positions (id, deleted_at, created_at, updated_at, employee_id, position_id) VALUES
 ('010237db-619a-4aea-93df-d858b4b3c9d5', null, '2022-11-13 16:02:09.294210', '2022-11-13 16:02:09.294210', '2655832e-f009-4b73-a535-64c3a22e558f', '11ccffea-2cc9-4e98-9bef-3464dfe4dec8'),
 ('010237db-619a-4aea-93df-d858b4b3c9d6', null, '2022-11-13 16:02:09.294210', '2022-11-13 16:02:09.294210', '2655832e-f009-4b73-a535-64c3a22e558f', 'd796884d-a8c4-4525-81e7-54a3b6099eac');
+
+INSERT INTO public.employee_stacks (id, deleted_at, created_at, updated_at, employee_id, stack_id) VALUES
+('c5cee91f-fe98-4438-889c-aa8211008004', null, '2022-11-13 16:02:09.294210', '2022-11-13 16:02:09.294210', '2655832e-f009-4b73-a535-64c3a22e558f', '0ecf47c8-cca4-4c30-94bb-054b1124c44f'),
+('1a0efa15-83f0-4aa4-a5d3-c8d07b5a9306', null, '2022-11-13 16:02:09.294210', '2022-11-13 16:02:09.294210', '2655832e-f009-4b73-a535-64c3a22e558f', 'fa0f4e46-7eab-4e5c-9d31-30489e69fe2e');

@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq"
@@ -197,15 +198,15 @@ func Test_UpdateGeneralInfo(t *testing.T) {
 		wantCode         int
 		wantErr          bool
 		wantResponsePath string
-		body             EditGeneralInfoInput
+		body             UpdateGeneralInfoInput
 		id               string
 	}{
 		{
-			name:             "ok_edit_general_info",
+			name:             "ok_update_general_info",
 			wantCode:         200,
 			wantErr:          false,
 			wantResponsePath: "testdata/update_general_info/200.json",
-			body: EditGeneralInfoInput{
+			body: UpdateGeneralInfoInput{
 				Fullname: "Phạm Đức Thành",
 				Email:    "thanh@d.foundation",
 				Phone:    "0123456788",
@@ -214,10 +215,10 @@ func Test_UpdateGeneralInfo(t *testing.T) {
 		},
 		{
 			name:             "fail_wrong_employee_id",
-			wantCode:         500,
+			wantCode:         404,
 			wantErr:          true,
-			wantResponsePath: "testdata/update_general_info/500.json",
-			body: EditGeneralInfoInput{
+			wantResponsePath: "testdata/update_general_info/404.json",
+			body: UpdateGeneralInfoInput{
 				Fullname: "Phạm Đức Thành",
 				Email:    "thanh@d.foundation",
 				Phone:    "0123456788",
@@ -270,15 +271,15 @@ func Test_UpdateSkill(t *testing.T) {
 		wantCode         int
 		wantErr          bool
 		wantResponsePath string
-		body             EditSkillsInput
+		body             UpdateSkillsInput
 		id               string
 	}{
 		{
-			name:             "ok_edit_skill",
+			name:             "ok_update_skill",
 			wantCode:         200,
 			wantErr:          false,
 			wantResponsePath: "testdata/update_skills/200.json",
-			body: EditSkillsInput{
+			body: UpdateSkillsInput{
 				Positions: []model.UUID{
 					model.MustGetUUIDFromString("11ccffea-2cc9-4e98-9bef-3464dfe4dec8"),
 					model.MustGetUUIDFromString("d796884d-a8c4-4525-81e7-54a3b6099eac"),
@@ -297,7 +298,7 @@ func Test_UpdateSkill(t *testing.T) {
 			wantCode:         404,
 			wantErr:          true,
 			wantResponsePath: "testdata/update_skills/404.json",
-			body: EditSkillsInput{
+			body: UpdateSkillsInput{
 				Positions: []model.UUID{
 					model.MustGetUUIDFromString("11ccffea-2cc9-4e98-9bef-3464dfe4dec8"),
 					model.MustGetUUIDFromString("d796884d-a8c4-4525-81e7-54a3b6099eac"),
@@ -440,6 +441,83 @@ func Test_Create(t *testing.T) {
 				require.JSONEq(t, string(expRespRaw), string(res), "[employee.Handler.Create] response mismatched")
 			} else {
 				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[employee.Handler.Create] response mismatched")
+			}
+		})
+	}
+}
+
+func Test_UpdatePersonalInfo(t *testing.T) {
+	// load env and test data
+	cfg := config.LoadTestConfig()
+	loggerMock := logger.NewLogrusLogger()
+	serviceMock := service.New(&cfg)
+	storeMock := store.New()
+	testRepoMock := store.NewPostgresStore(&cfg)
+
+	dob, err := time.Parse("2006-01-02", "1990-01-02")
+	require.Nil(t, err)
+	tests := []struct {
+		name             string
+		wantCode         int
+		wantErr          bool
+		wantResponsePath string
+		body             UpdatePersonalInfoInput
+		id               string
+	}{
+		{
+			name:             "ok_update_personal_info",
+			wantCode:         200,
+			wantErr:          false,
+			wantResponsePath: "testdata/update_personal_info/200.json",
+			body: UpdatePersonalInfoInput{
+				DoB:           &dob,
+				Gender:        "Male",
+				Address:       "Phan Huy Ich, Tan Binh District, Ho Chi Minh, Vietnam",
+				PersonalEmail: "thanhpham123@gmail.com",
+			},
+			id: "2655832e-f009-4b73-a535-64c3a22e558f",
+		},
+		{
+			name:             "fail_wrong_employee_id",
+			wantCode:         404,
+			wantErr:          true,
+			wantResponsePath: "testdata/update_personal_info/404.json",
+			body: UpdatePersonalInfoInput{
+				DoB:           &dob,
+				Gender:        "Male",
+				Address:       "Phan Huy Ich, Tan Binh District, Ho Chi Minh, Vietnam",
+				PersonalEmail: "thanhpham123@gmail.com",
+			},
+			id: "2655832e-f009-4b73-a535-64c3a22e558a",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			byteReq, err := json.Marshal(tt.body)
+			require.Nil(t, err)
+			w := httptest.NewRecorder()
+
+			ctx, _ := gin.CreateTestContext(w)
+			bodyReader := strings.NewReader(string(byteReq))
+			ctx.Params = gin.Params{gin.Param{Key: "id", Value: tt.id}}
+			ctx.Request = httptest.NewRequest("PUT", "/api/v1/employees/"+tt.id+"/personal-info", bodyReader)
+			ctx.Request.Header.Set("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2OTkzMjExNDIsImlkIjoiMjY1NTgzMmUtZjAwOS00YjczLWE1MzUtNjRjM2EyMmU1NThmIiwiYXZhdGFyIjoiaHR0cHM6Ly9zMy1hcC1zb3V0aGVhc3QtMS5hbWF6b25hd3MuY29tL2ZvcnRyZXNzLWltYWdlcy81MTUzNTc0Njk1NjYzOTU1OTQ0LnBuZyIsImVtYWlsIjoidGhhbmhAZC5mb3VuZGF0aW9uIiwicGVybWlzc2lvbnMiOlsiZW1wbG95ZWVzLnJlYWQiXSwidXNlcl9pbmZvIjpudWxsfQ.GENGPEucSUrILN6tHDKxLMtj0M0REVMUPC7-XhDMpGM")
+			metadataHandler := New(storeMock, testRepoMock, serviceMock, loggerMock)
+
+			metadataHandler.UpdatePersonalInfo(ctx)
+
+			require.Equal(t, tt.wantCode, w.Code)
+			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+			require.NoError(t, err)
+
+			if !tt.wantErr {
+				res, err := utils.RemoveFieldInResponse(w.Body.Bytes(), "updatedAt")
+				require.Nil(t, err)
+
+				require.JSONEq(t, string(expRespRaw), string(res), "[Handler.UpdatePersonalInfo] response mismatched")
+			} else {
+				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.UpdatePersonalInfo] response mismatched")
 			}
 		})
 	}
