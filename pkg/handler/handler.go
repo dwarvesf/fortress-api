@@ -29,6 +29,6 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 		Metadata:    metadata.New(store, repo, service, logger),
 		Auth:        auth.New(store, repo, service, logger),
 		Project:     project.New(store, repo, service, logger),
-		Profile:     profile.New(store, repo, service, logger),
+		Profile:     profile.New(store, repo, service, logger, cfg),
 	}
 }

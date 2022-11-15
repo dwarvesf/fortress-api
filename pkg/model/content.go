@@ -49,6 +49,15 @@ func (e ContentExtension) Valid() bool {
 	}
 	return false
 }
+func (e ContentExtension) ImageValid() bool {
+	switch e {
+	case
+		ContentExtensionJpg,
+		ContentExtensionPng:
+		return true
+	}
+	return false
+}
 
 func (e ContentExtension) String() string {
 	return string(e)

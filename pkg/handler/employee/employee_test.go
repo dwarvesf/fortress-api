@@ -83,7 +83,6 @@ func TestHandler_List(t *testing.T) {
 	serviceMock := service.New(&cfg)
 	storeMock := store.New()
 	testRepoMock := store.NewPostgresStore(&cfg)
-
 	tests := []struct {
 		name             string
 		query            string
@@ -313,7 +312,6 @@ func Test_UpdateSkill(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			byteReq, err := json.Marshal(tt.body)
-			fmt.Println(err)
 			require.Nil(t, err)
 			w := httptest.NewRecorder()
 

@@ -1906,6 +1906,44 @@ paths:
       summary: Update profile info by id
       tags:
       - Profile
+  /profile/upload-avatar:
+    post:
+      consumes:
+      - application/json
+      description: Upload avatar  by id
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: content upload
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.UpdateProfileInfoResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Upload avatar  by id
+      tags:
+      - Profile
   /project/:id/members/:memberID:
     delete:
       consumes:
