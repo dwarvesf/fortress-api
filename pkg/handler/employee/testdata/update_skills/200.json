@@ -3,24 +3,6 @@
         "id": "2655832e-f009-4b73-a535-64c3a22e558f",
         "createdAt": "2022-11-02T09:52:34.586566Z",
         "updatedAt": "",
-        "fullName": "Phạm Đức Thành",
-        "displayName": "Thanh Pham",
-        "teamEmail": "thanh@d.foundation",
-        "personalEmail": "thanhpham123@gmail.com",
-        "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
-        "phoneNumber": "0123456788",
-        "address": "Phan Huy Ich, Tan Binh District, Ho Chi Minh, Vietnam",
-        "mbti": "INTJ-A",
-        "gender": "Male",
-        "horoscope": "Libra",
-        "birthday": "1990-01-02T00:00:00Z",
-        "discordID": "",
-        "githubID": "",
-        "notionID": "",
-        "status": "contractor",
-        "joinedDate": null,
-        "leftDate": null,
-        "accountStatus": "active",
         "seniority": {
             "id": "39735742-829b-47f3-8f9d-daf0983914e5",
             "createdAt": "2022-11-07T09:50:25.714604Z",
@@ -34,11 +16,6 @@
             "updatedAt": "2022-11-07T09:50:25.714604Z",
             "name": "Web",
             "code": "web"
-        },
-        "lineManager": {
-            "id": "ecea9d15-05ba-4a4e-9787-54210e3b98ce",
-            "fullName": "Nguyễn Hoàng Huy",
-            "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/2830497479497502617.png"
         },
         "positions": [
             {
@@ -56,7 +33,6 @@
                 "code": "backend"
             }
         ],
-        "projects": [],
         "stacks": [
             {
                 "id": "0ecf47c8-cca4-4c30-94bb-054b1124c44f",

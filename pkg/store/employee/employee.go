@@ -1,8 +1,9 @@
 package employee
 
 import (
-	"gorm.io/gorm"
 	"time"
+
+	"gorm.io/gorm"
 
 	"github.com/dwarvesf/fortress-api/pkg/model"
 )
@@ -65,7 +66,7 @@ func (s *store) UpdateEmployeeStatus(db *gorm.DB, employeeID string, accountStat
 	return employee, db.Model(&employee).Where("id = ?", employeeID).Update("account_status", string(accountStatus)).Find(&employee).Error
 }
 
-func (s *store) UpdateGeneralInfo(db *gorm.DB, body EditGeneralInfoInput, id string) (*model.Employee, error) {
+func (s *store) UpdateGeneralInfo(db *gorm.DB, body UpdateGeneralInfoInput, id string) (*model.Employee, error) {
 	employee := &model.Employee{}
 
 	// 1.2 update info
@@ -81,12 +82,7 @@ func (s *store) UpdateGeneralInfo(db *gorm.DB, body EditGeneralInfoInput, id str
 
 	// 1.3 save to DB
 	return employee, db.Table("employees").Where("id = ?", id).Updates(&employee).
-		Preload("Chapter").
-		Preload("Seniority").
 		Preload("LineManager").
-		Preload("EmployeePositions", "deleted_at IS NULL").
-		Preload("EmployeePositions.Position").
-		Preload("Roles", "deleted_at IS NULL").
 		First(&employee).Error
 }
 
@@ -94,7 +90,7 @@ func (s *store) Create(db *gorm.DB, e *model.Employee) (employee *model.Employee
 	return e, db.Create(e).Error
 }
 
-func (s *store) UpdateSkills(db *gorm.DB, body EditSkillsInput, id string) (*model.Employee, error) {
+func (s *store) UpdateSkills(db *gorm.DB, body UpdateSkillsInput, id string) (*model.Employee, error) {
 
 	var employee *model.Employee
 
@@ -156,5 +152,19 @@ func (s *store) UpdateSkills(db *gorm.DB, body EditSkillsInput, id string) (*mod
 		Preload("EmployeePositions", "deleted_at IS NULL").
 		Preload("EmployeePositions.Position").
 		Preload("EmployeeStacks", "deleted_at IS NULL").
-		Preload("EmployeeStacks.Stack").First(&employee).Error
+		Preload("EmployeeStacks.Stack").
+		First(&employee).Error
+}
+
+func (s *store) UpdatePersonalInfo(db *gorm.DB, body UpdatePersonalInfoInput, id string) (*model.Employee, error) {
+	employee := &model.Employee{}
+
+	// 1.2 update infor
+	employee.DateOfBirth = body.DoB
+	employee.Gender = body.Gender
+	employee.Address = body.Address
+	employee.PersonalEmail = body.PersonalEmail
+
+	// 1.3 save to DB
+	return employee, db.Table("employees").Where("id = ?", id).Updates(&employee).First(&employee).Error
 }

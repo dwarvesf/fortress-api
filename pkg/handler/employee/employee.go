@@ -134,7 +134,7 @@ func (h *handler) One(c *gin.Context) {
 // @Param Authorization header string true "jwt token"
 // @Param id path string true "Employee ID"
 // @Param employeeStatus body model.AccountStatus true "Employee Status"
-// @Success 200 {object} view.UpdateEmployeeStatusResponse
+// @Success 200 {object} view.UpdataEmployeeStatusResponse
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 404 {object} view.ErrorResponse
 // @Failure 500 {object} view.ErrorResponse
@@ -230,21 +230,15 @@ func (h *handler) GetProfile(c *gin.Context) {
 }
 
 // UpdateGeneralInfo godoc
-// @Summary Edit general info of the employee by id
-// @Description Edit general info of the employee by id
+// @Summary Update general info of the employee by id
+// @Description Update general info of the employee by id
 // @Tags Employee
 // @Accept  json
 // @Produce  json
 // @Param Authorization header string true "jwt token"
 // @Param id path string true "Employee ID"
-// @Param fullName body string true "fullName" maxlength(99)
-// @Param email body string true "email"
-// @Param phone body string true "phone" minlength(10)  maxlength(12)
-// @Param lineManagerID body string true "lineManager"
-// @Param discordID body string true "discordID"
-// @Param githubID body string true "githubID"
-// @Param notionID body string true "notionID"
-// @Success 200 {object} view.EditEmployeeResponse
+// @Param Body body UpdateGeneralInfoInput true "Body"
+// @Success 200 {object} view.UpdateGeneralEmployeeResponse
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 404 {object} view.ErrorResponse
 // @Failure 500 {object} view.ErrorResponse
@@ -252,7 +246,7 @@ func (h *handler) GetProfile(c *gin.Context) {
 func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 	employeeID := c.Param("id")
 
-	var body EditGeneralInfoInput
+	var body UpdateGeneralInfoInput
 	if err := c.ShouldBindJSON(&body); err != nil {
 		if err != nil {
 			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, employeeID))
@@ -271,7 +265,7 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 	if body.LineManagerID != "" {
 		_, err := h.store.Employee.One(h.repo.DB(), body.LineManagerID)
 		if err != nil {
-			if err == gorm.ErrRecordNotFound {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
 				l.Error(ErrLineManagerNotFound, "error line manager not found")
 				c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrLineManagerNotFound, body))
 				return
@@ -283,7 +277,7 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 	}
 
 	// 3. update information and return
-	rs, err := h.store.Employee.UpdateGeneralInfo(h.repo.DB(), employee.EditGeneralInfoInput{
+	rs, err := h.store.Employee.UpdateGeneralInfo(h.repo.DB(), employee.UpdateGeneralInfoInput{
 		FullName:      body.Fullname,
 		Email:         body.Email,
 		Phone:         body.Phone,
@@ -294,11 +288,18 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 	}, employeeID)
 
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			l.Error(ErrEmployeeNotFound, "error employee not found")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrEmployeeNotFound, body))
+			return
+		}
+
 		l.Error(err, "error update employee to db")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body))
 		return
 	}
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToEditEmployeeData(rs), nil, nil, nil))
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToUpdateGeneralInfoEmployeeData(rs), nil, nil, nil))
 }
 
 // Create godoc
@@ -307,14 +308,7 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 // @Tags Employee
 // @Accept  json
 // @Produce  json
-// @Param fullName body string true "fullName" maxlength(99)
-// @Param displayName body string true "displayName"
-// @Param teamEmail body string true "teamEmail"
-// @Param personalEmail body string true "personalEmail"
-// @Param positionID body string true "positionID"
-// @Param roleID body string true "roleID"
-// @Param salary body int true "salary"
-// @Param seniorityID body string true "seniorityID"
+// @Param Body body CreateEmployee true "Body"
 // @Param Authorization header string true "jwt token"
 // @Success 200 {object} view.EmployeeData
 // @Failure 400 {object} view.ErrorResponse
@@ -410,7 +404,7 @@ func (h *handler) Create(c *gin.Context) {
 		return
 	}
 
-	// 3. return eml
+	// 3. return employee
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToEmployeeData(eml), nil, nil, nil))
 }
 
@@ -421,9 +415,9 @@ func (h *handler) Create(c *gin.Context) {
 // @Accept  json
 // @Produce  json
 // @Param id path string true "Employee ID"
-// @Param Body body EditSkillsInput true "Body"
+// @Param Body body UpdateSkillsInput true "Body"
 // @Param Authorization header string true "jwt token"
-// @Success 200 {object} view.EditEmployeeResponse
+// @Success 200 {object} view.UpdateSkillsEmployeeResponse
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 404 {object} view.ErrorResponse
 // @Failure 500 {object} view.ErrorResponse
@@ -433,7 +427,7 @@ func (h *handler) UpdateSkills(c *gin.Context) {
 	employeeID := c.Param("id")
 
 	// 2. parse json body from request
-	var body EditSkillsInput
+	var body UpdateSkillsInput
 	if err := c.ShouldBindJSON(&body); err != nil {
 		if err != nil {
 			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, employeeID))
@@ -449,7 +443,7 @@ func (h *handler) UpdateSkills(c *gin.Context) {
 	})
 
 	// 3. update info and return
-	rs, err := h.store.Employee.UpdateSkills(h.repo.DB(), employee.EditSkillsInput{
+	rs, err := h.store.Employee.UpdateSkills(h.repo.DB(), employee.UpdateSkillsInput{
 		Positions: body.Positions,
 		Chapter:   body.Chapter,
 		Seniority: body.Seniority,
@@ -457,16 +451,71 @@ func (h *handler) UpdateSkills(c *gin.Context) {
 	}, employeeID)
 
 	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			l.Error(ErrEmployeeNotFound, "error rs not found")
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			l.Error(ErrEmployeeNotFound, "error employee not found")
 			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrEmployeeNotFound, body))
 			return
 		}
 
-		l.Error(err, "error update rs to db")
+		l.Error(err, "error update employee to db")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body))
 		return
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToEditEmployeeData(rs), nil, nil, nil))
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToUpdateSkillEmployeeData(rs), nil, nil, nil))
+}
+
+// UpdatePersonalInfo godoc
+// @Summary Update personal info of the employee by id
+// @Description Update personal info of the employee by id
+// @Tags Employee
+// @Accept  json
+// @Produce  json
+// @Param Authorization header string true "jwt token"
+// @Param id path string true "Employee ID"
+// @Param Body body UpdatePersonalInfoInput true "Body"
+// @Success 200 {object} view.UpdatePersonalEmployeeResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /employees/{id}/personal-info [put]
+func (h *handler) UpdatePersonalInfo(c *gin.Context) {
+	employeeID := c.Param("id")
+
+	var body UpdatePersonalInfoInput
+	if err := c.ShouldBindJSON(&body); err != nil {
+		if err != nil {
+			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, employeeID))
+			return
+		}
+	}
+
+	// TODO: can we move this to middleware ?
+	l := h.logger.Fields(logger.Fields{
+		"handler": "employee",
+		"method":  "UpdateGeneralInfo",
+		"request": body,
+	})
+
+	// 3. update informations and rerurn
+	rs, err := h.store.Employee.UpdatePersonalInfo(h.repo.DB(), employee.UpdatePersonalInfoInput{
+		DoB:           body.DoB,
+		Gender:        body.Gender,
+		Address:       body.Address,
+		PersonalEmail: body.PersonalEmail,
+	}, employeeID)
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			l.Error(ErrEmployeeNotFound, "error employee not found")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrEmployeeNotFound, body))
+			return
+		}
+
+		l.Error(err, "error update employee to db")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body))
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToUpdatePersonalEmployeeData(rs), nil, nil, nil))
 }

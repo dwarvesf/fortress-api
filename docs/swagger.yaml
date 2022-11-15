@@ -1,6 +1,76 @@
 basePath: /api/v1
 definitions:
-  github.com_dwarvesf_fortress-api_pkg_handler_employee.EditSkillsInput:
+  github.com_dwarvesf_fortress-api_pkg_handler_employee.CreateEmployee:
+    properties:
+      displayName:
+        type: string
+      fullName:
+        maxLength: 100
+        type: string
+      personalEmail:
+        type: string
+      positionID:
+        type: string
+      roleID:
+        type: string
+      salary:
+        type: integer
+      seniorityID:
+        type: string
+      teamEmail:
+        type: string
+    required:
+    - displayName
+    - fullName
+    - personalEmail
+    - positionID
+    - roleID
+    - salary
+    - seniorityID
+    - teamEmail
+    type: object
+  github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateGeneralInfoInput:
+    properties:
+      discordID:
+        type: string
+      email:
+        type: string
+      fullName:
+        maxLength: 99
+        type: string
+      githubID:
+        type: string
+      lineManagerID:
+        type: string
+      notionID:
+        type: string
+      phone:
+        maxLength: 12
+        minLength: 10
+        type: string
+    required:
+    - email
+    - fullName
+    - phone
+    type: object
+  github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdatePersonalInfoInput:
+    properties:
+      address:
+        maxLength: 200
+        type: string
+      dob:
+        type: string
+      gender:
+        type: string
+      personalEmail:
+        type: string
+    required:
+    - address
+    - dob
+    - gender
+    - personalEmail
+    type: object
+  github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateSkillsInput:
     properties:
       chapter:
         type: string
@@ -121,7 +191,92 @@ definitions:
       updatedAt:
         type: string
     type: object
-  pkg_handler_employee.EditSkillsInput:
+  model.Stack:
+    properties:
+      code:
+        type: string
+      createdAt:
+        type: string
+      deletedAt:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  pkg_handler_employee.CreateEmployee:
+    properties:
+      displayName:
+        type: string
+      fullName:
+        maxLength: 100
+        type: string
+      personalEmail:
+        type: string
+      positionID:
+        type: string
+      roleID:
+        type: string
+      salary:
+        type: integer
+      seniorityID:
+        type: string
+      teamEmail:
+        type: string
+    required:
+    - displayName
+    - fullName
+    - personalEmail
+    - positionID
+    - roleID
+    - salary
+    - seniorityID
+    - teamEmail
+    type: object
+  pkg_handler_employee.UpdateGeneralInfoInput:
+    properties:
+      discordID:
+        type: string
+      email:
+        type: string
+      fullName:
+        maxLength: 99
+        type: string
+      githubID:
+        type: string
+      lineManagerID:
+        type: string
+      notionID:
+        type: string
+      phone:
+        maxLength: 12
+        minLength: 10
+        type: string
+    required:
+    - email
+    - fullName
+    - phone
+    type: object
+  pkg_handler_employee.UpdatePersonalInfoInput:
+    properties:
+      address:
+        maxLength: 200
+        type: string
+      dob:
+        type: string
+      gender:
+        type: string
+      personalEmail:
+        type: string
+    required:
+    - address
+    - dob
+    - gender
+    - personalEmail
+    type: object
+  pkg_handler_employee.UpdateSkillsInput:
     properties:
       chapter:
         type: string
@@ -244,11 +399,6 @@ definitions:
         type: string
       updatedAt:
         type: string
-    type: object
-  view.EditEmployeeResponse:
-    properties:
-      data:
-        $ref: '#/definitions/view.EmployeeData'
     type: object
   view.EmployeeData:
     properties:
@@ -468,15 +618,98 @@ definitions:
           $ref: '#/definitions/model.Chapter'
         type: array
     type: object
-  view.UpdateEmployeeStatusResponse:
+  view.UpdataEmployeeStatusResponse:
     properties:
       data:
         $ref: '#/definitions/view.EmployeeData'
+    type: object
+  view.UpdateGeneralEmployeeResponse:
+    properties:
+      data:
+        $ref: '#/definitions/view.UpdateGeneralInfoEmployeeData'
+    type: object
+  view.UpdateGeneralInfoEmployeeData:
+    properties:
+      createdAt:
+        type: string
+      deletedAt:
+        type: string
+      discordID:
+        type: string
+      fullName:
+        description: basic info
+        type: string
+      githubID:
+        type: string
+      id:
+        type: string
+      lineManager:
+        $ref: '#/definitions/view.BasisEmployeeInfo'
+      notionID:
+        type: string
+      phoneNumber:
+        type: string
+      teamEmail:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  view.UpdatePersonalEmployeeData:
+    properties:
+      address:
+        type: string
+      birthday:
+        type: string
+      createdAt:
+        type: string
+      deletedAt:
+        type: string
+      gender:
+        type: string
+      id:
+        type: string
+      personalEmail:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  view.UpdatePersonalEmployeeResponse:
+    properties:
+      data:
+        $ref: '#/definitions/view.UpdatePersonalEmployeeData'
     type: object
   view.UpdateProjectStatusResponse:
     properties:
       data:
         $ref: '#/definitions/view.UpdatedProject'
+    type: object
+  view.UpdateSkillEmployeeData:
+    properties:
+      chapter:
+        $ref: '#/definitions/model.Chapter'
+      createdAt:
+        type: string
+      deletedAt:
+        type: string
+      id:
+        type: string
+      positions:
+        items:
+          $ref: '#/definitions/model.Position'
+        type: array
+      seniority:
+        $ref: '#/definitions/model.Seniority'
+      stacks:
+        items:
+          $ref: '#/definitions/model.Stack'
+        type: array
+      updatedAt:
+        type: string
+    type: object
+  view.UpdateSkillsEmployeeResponse:
+    properties:
+      data:
+        $ref: '#/definitions/view.UpdateSkillEmployeeData'
     type: object
   view.UpdatedProject:
     properties:
@@ -558,55 +791,12 @@ paths:
       - application/json
       description: Create new employee
       parameters:
-      - description: fullName
+      - description: Body
         in: body
-        maxLength: 99
-        name: fullName
+        name: Body
         required: true
         schema:
-          type: string
-      - description: displayName
-        in: body
-        name: displayName
-        required: true
-        schema:
-          type: string
-      - description: teamEmail
-        in: body
-        name: teamEmail
-        required: true
-        schema:
-          type: string
-      - description: personalEmail
-        in: body
-        name: personalEmail
-        required: true
-        schema:
-          type: string
-      - description: positionID
-        in: body
-        name: positionID
-        required: true
-        schema:
-          type: string
-      - description: roleID
-        in: body
-        name: roleID
-        required: true
-        schema:
-          type: string
-      - description: salary
-        in: body
-        name: salary
-        required: true
-        schema:
-          type: integer
-      - description: seniorityID
-        in: body
-        name: seniorityID
-        required: true
-        schema:
-          type: string
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.CreateEmployee'
       - description: jwt token
         in: header
         name: Authorization
@@ -747,7 +937,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/view.UpdateEmployeeStatusResponse'
+            $ref: '#/definitions/view.UpdataEmployeeStatusResponse'
         "400":
           description: Bad Request
           schema:
@@ -767,7 +957,7 @@ paths:
     put:
       consumes:
       - application/json
-      description: Edit general info of the employee by id
+      description: Update general info of the employee by id
       parameters:
       - description: jwt token
         in: header
@@ -779,58 +969,19 @@ paths:
         name: id
         required: true
         type: string
-      - description: fullName
+      - description: Body
         in: body
-        maxLength: 99
-        name: fullName
+        name: Body
         required: true
         schema:
-          type: string
-      - description: email
-        in: body
-        name: email
-        required: true
-        schema:
-          type: string
-      - description: phone
-        in: body
-        maxLength: 12
-        minLength: 10
-        name: phone
-        required: true
-        schema:
-          type: string
-      - description: lineManager
-        in: body
-        name: lineManagerID
-        required: true
-        schema:
-          type: string
-      - description: discordID
-        in: body
-        name: discordID
-        required: true
-        schema:
-          type: string
-      - description: githubID
-        in: body
-        name: githubID
-        required: true
-        schema:
-          type: string
-      - description: notionID
-        in: body
-        name: notionID
-        required: true
-        schema:
-          type: string
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateGeneralInfoInput'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/view.EditEmployeeResponse'
+            $ref: '#/definitions/view.UpdateGeneralEmployeeResponse'
         "400":
           description: Bad Request
           schema:
@@ -843,7 +994,51 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/view.ErrorResponse'
-      summary: Edit general info of the employee by id
+      summary: Update general info of the employee by id
+      tags:
+      - Employee
+  /employees/{id}/personal-info:
+    put:
+      consumes:
+      - application/json
+      description: Update personal info of the employee by id
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Employee ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Body
+        in: body
+        name: Body
+        required: true
+        schema:
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdatePersonalInfoInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.UpdatePersonalEmployeeResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Update personal info of the employee by id
       tags:
       - Employee
   /employees/{id}/skills:
@@ -862,7 +1057,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/pkg_handler_employee.EditSkillsInput'
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateSkillsInput'
       - description: jwt token
         in: header
         name: Authorization
@@ -874,7 +1069,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/view.EditEmployeeResponse'
+            $ref: '#/definitions/view.UpdateSkillsEmployeeResponse'
         "400":
           description: Bad Request
           schema:
@@ -1223,7 +1418,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.CreateProjectInput'
+          $ref: '#/definitions/pkg_handler_project.CreateProjectInput'
       produces:
       - application/json
       responses:

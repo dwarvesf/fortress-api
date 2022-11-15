@@ -1,12 +1,16 @@
 package employee
 
-import "github.com/dwarvesf/fortress-api/pkg/model"
+import (
+	"time"
+
+	"github.com/dwarvesf/fortress-api/pkg/model"
+)
 
 type SearchFilter struct {
 	WorkingStatus string
 }
 
-type EditGeneralInfoInput struct {
+type UpdateGeneralInfoInput struct {
 	FullName      string
 	Email         string
 	Phone         string
@@ -16,9 +20,16 @@ type EditGeneralInfoInput struct {
 	NotionID      string
 }
 
-type EditSkillsInput struct {
+type UpdateSkillsInput struct {
 	Positions []model.UUID
 	Chapter   model.UUID
 	Seniority model.UUID
 	Stacks    []model.UUID
+}
+
+type UpdatePersonalInfoInput struct {
+	DoB           *time.Time
+	Gender        string
+	Address       string
+	PersonalEmail string
 }
