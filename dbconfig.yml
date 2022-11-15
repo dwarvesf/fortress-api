@@ -9,3 +9,15 @@ test:
   datasource: host=localhost port=35432 user=postgres password=postgres dbname=fortress_local_test sslmode=disable
   dir: migrations/schemas
   table: migrations
+
+dev:
+  dialect: postgres
+  datasource: host=${DB_HOST} port=${DB_PORT} user=${DB_USER} password=${DB_PASS} dbname=${DB_NAME} sslmode=${DB_SSL_MODE}
+  dir: migrations/schemas
+  table: migrations
+
+prod:
+  dialect: postgres
+  datasource: host=${DB_HOST} port=${DB_PORT} user=${DB_USER} password=${DB_PASS} dbname=${DB_NAME} sslmode=${DB_SSL_MODE}
+  dir: migrations/schemas
+  table: migrations
