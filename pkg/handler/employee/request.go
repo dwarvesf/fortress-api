@@ -24,7 +24,7 @@ type CreateEmployee struct {
 	DisplayName   string     `json:"displayName" binding:"required"`
 	TeamEmail     string     `json:"teamEmail" binding:"required,email"`
 	PersonalEmail string     `json:"personalEmail" binding:"required,email"`
-	PositionID    model.UUID `json:"PositionID" binding:"required"`
+	PositionID    model.UUID `json:"positionID" binding:"required"`
 	Salary        int        `json:"salary" binding:"required"`
 	SeniorityID   model.UUID `json:"seniorityID" binding:"required"`
 	RoleID        model.UUID `json:"roleID" binding:"required"`
