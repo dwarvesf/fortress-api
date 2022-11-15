@@ -25,6 +25,9 @@
             "accountStatus": "active",
             "seniority": null,
             "chapter": null,
+            "githubID": "",
+            "notionID": "",
+            "discordID": "",
             "lineManager": null,
             "positions": [
                 {
