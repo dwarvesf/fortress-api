@@ -9,20 +9,17 @@ import (
 )
 
 type store struct {
-	db *gorm.DB
 }
 
-func New(db *gorm.DB) IStore {
-	return &store{
-		db: db,
-	}
+func New() IStore {
+	return &store{}
 }
 
 // All get all projects with filter and pagination
-func (s *store) All(input GetListProjectInput, pagination model.Pagination) ([]*model.Project, int64, error) {
+func (s *store) All(db *gorm.DB, input GetListProjectInput, pagination model.Pagination) ([]*model.Project, int64, error) {
 	var projects []*model.Project
 
-	query := s.db.Debug().Table("projects").
+	query := db.Table("projects").
 		Where("deleted_at IS NULL")
 
 	var total int64
@@ -61,14 +58,15 @@ func (s *store) All(input GetListProjectInput, pagination model.Pagination) ([]*
 	return projects, total, query.Find(&projects).Error
 }
 
-func (s *store) UpdateStatus(projectID string, projectStatus model.ProjectStatus) (*model.Project, error) {
+// UpdateStatus use to update project to database
+func (s *store) UpdateStatus(db *gorm.DB, projectID string, projectStatus model.ProjectStatus) (*model.Project, error) {
 	project := &model.Project{}
-	return project, s.db.Model(&project).Where("id = ?", projectID).Update("status", string(projectStatus)).First(&project).Error
+	return project, db.Model(&project).Where("id = ?", projectID).Update("status", string(projectStatus)).First(&project).Error
 }
 
-// Create create new project
-func (s *store) Create(project *model.Project) error {
-	return s.db.Create(&project).Error
+// Create use to create new project to database
+func (s *store) Create(db *gorm.DB, project *model.Project) error {
+	return db.Create(&project).Error
 }
 
 type GetListProjectInput struct {

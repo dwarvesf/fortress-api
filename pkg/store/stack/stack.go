@@ -7,17 +7,14 @@ import (
 )
 
 type store struct {
-	db *gorm.DB
 }
 
-func New(db *gorm.DB) IStore {
-	return &store{
-		db: db,
-	}
+func New() IStore {
+	return &store{}
 }
 
-// One get all Senitorities
-func (s *store) All() ([]*model.Stack, error) {
+// All get all Senitorities
+func (s *store) All(db *gorm.DB) ([]*model.Stack, error) {
 	var stacks []*model.Stack
-	return stacks, s.db.Find(&stacks).Error
+	return stacks, db.Find(&stacks).Error
 }

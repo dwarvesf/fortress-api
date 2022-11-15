@@ -1,8 +1,12 @@
 package position
 
-import "github.com/dwarvesf/fortress-api/pkg/model"
+import (
+	"gorm.io/gorm"
+	
+	"github.com/dwarvesf/fortress-api/pkg/model"
+)
 
 type IStore interface {
-	All() (positions []*model.Position, err error)
-	One(id model.UUID) (position *model.Position, err error)
+	All(db *gorm.DB) (positions []*model.Position, err error)
+	One(db *gorm.DB, id model.UUID) (position *model.Position, err error)
 }

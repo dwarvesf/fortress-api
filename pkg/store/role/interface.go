@@ -1,8 +1,12 @@
 package role
 
-import "github.com/dwarvesf/fortress-api/pkg/model"
+import (
+	"gorm.io/gorm"
+
+	"github.com/dwarvesf/fortress-api/pkg/model"
+)
 
 type IStore interface {
-	All() (roles []*model.Role, err error)
-	One(id model.UUID) (role *model.Role, err error)
+	All(db *gorm.DB) (roles []*model.Role, err error)
+	One(db *gorm.DB, id model.UUID) (role *model.Role, err error)
 }

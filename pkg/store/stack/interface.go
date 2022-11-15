@@ -1,7 +1,11 @@
 package stack
 
-import "github.com/dwarvesf/fortress-api/pkg/model"
+import (
+	"gorm.io/gorm"
+
+	"github.com/dwarvesf/fortress-api/pkg/model"
+)
 
 type IStore interface {
-	All() ([]*model.Stack, error)
+	All(db *gorm.DB) ([]*model.Stack, error)
 }

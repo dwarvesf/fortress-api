@@ -4,24 +4,26 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/gin-gonic/gin"
+	_ "github.com/lib/pq"
+
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/view"
-
-	"github.com/gin-gonic/gin"
-	_ "github.com/lib/pq"
 )
 
 type handler struct {
 	store   *store.Store
 	service *service.Service
 	logger  logger.Logger
+	repo    store.DBRepo
 }
 
-func New(store *store.Store, service *service.Service, logger logger.Logger) IHandler {
+func New(store *store.Store, repo store.DBRepo, service *service.Service, logger logger.Logger) IHandler {
 	return &handler{
 		store:   store,
+		repo:    repo,
 		service: service,
 		logger:  logger,
 	}
@@ -81,7 +83,7 @@ func (h *handler) Seniorities(c *gin.Context) {
 	})
 
 	// 2 query seniorities from db
-	seniorities, err := h.store.Seniority.All()
+	seniorities, err := h.store.Seniority.All(h.repo.DB())
 	if err != nil {
 		l.Error(err, "error query seniorities from db")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil))
@@ -111,7 +113,7 @@ func (h *handler) Chapters(c *gin.Context) {
 	})
 
 	// 2 query chapters from db
-	chapters, err := h.store.Chapter.All()
+	chapters, err := h.store.Chapter.All(h.repo.DB())
 	if err != nil {
 		l.Error(err, "error query chapters from db")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil))
@@ -141,7 +143,7 @@ func (h *handler) AccountRoles(c *gin.Context) {
 	})
 
 	// 2 query roles from db
-	roles, err := h.store.Role.All()
+	roles, err := h.store.Role.All(h.repo.DB())
 	if err != nil {
 		l.Error(err, "error query roles from db")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil))
@@ -241,7 +243,7 @@ func (h *handler) Positions(c *gin.Context) {
 	})
 
 	// 2 query positions from db
-	positions, err := h.store.Position.All()
+	positions, err := h.store.Position.All(h.repo.DB())
 	if err != nil {
 		l.Error(err, "error query positions from db")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil))
@@ -263,7 +265,7 @@ func (h *handler) Positions(c *gin.Context) {
 // @Failure 500 {object} view.ErrorResponse
 // @Router /metadata/countries [get]
 func (h *handler) GetCountries(c *gin.Context) {
-	countries, err := h.store.Country.All()
+	countries, err := h.store.Country.All(h.repo.DB())
 	if err != nil {
 		h.logger.Fields(logger.Fields{
 			"handler": "metadata",
@@ -299,7 +301,7 @@ func (h *handler) GetCities(c *gin.Context) {
 		return
 	}
 
-	country, err := h.store.Country.One(countryID)
+	country, err := h.store.Country.One(h.repo.DB(), countryID)
 	if err != nil {
 		l.AddField("countryID", countryID).Error(err, "failed to get cities")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil))
@@ -327,7 +329,7 @@ func (h *handler) Stacks(c *gin.Context) {
 	})
 
 	// 1 query stacks from db
-	stacks, err := h.store.Stack.All()
+	stacks, err := h.store.Stack.All(h.repo.DB())
 	if err != nil {
 		l.Error(err, "error query Stacks from db")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil))

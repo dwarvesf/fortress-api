@@ -27,7 +27,8 @@ func TestHandler_UpdateEmployeeStatus(t *testing.T) {
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg)
-	storeMock := store.New(&cfg)
+	storeMock := store.New()
+	testRepoMock := store.NewPostgresStore(&cfg)
 
 	tests := []struct {
 		name             string
@@ -55,7 +56,7 @@ func TestHandler_UpdateEmployeeStatus(t *testing.T) {
 			ctx.Params = gin.Params{gin.Param{Key: "id", Value: "2655832e-f009-4b73-a535-64c3a22e558f"}}
 			ctx.Request = httptest.NewRequest("PUT", "/api/v1/employees/2655832e-f009-4b73-a535-64c3a22e558f/employee-status", bodyReader)
 			ctx.Request.Header.Set("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2OTkzMjExNDIsImlkIjoiMjY1NTgzMmUtZjAwOS00YjczLWE1MzUtNjRjM2EyMmU1NThmIiwiYXZhdGFyIjoiaHR0cHM6Ly9zMy1hcC1zb3V0aGVhc3QtMS5hbWF6b25hd3MuY29tL2ZvcnRyZXNzLWltYWdlcy81MTUzNTc0Njk1NjYzOTU1OTQ0LnBuZyIsImVtYWlsIjoidGhhbmhAZC5mb3VuZGF0aW9uIiwicGVybWlzc2lvbnMiOlsiZW1wbG95ZWVzLnJlYWQiXSwidXNlcl9pbmZvIjpudWxsfQ.GENGPEucSUrILN6tHDKxLMtj0M0REVMUPC7-XhDMpGM")
-			metadataHandler := New(storeMock, serviceMock, loggerMock)
+			metadataHandler := New(storeMock, testRepoMock, serviceMock, loggerMock)
 
 			metadataHandler.UpdateEmployeeStatus(ctx)
 
@@ -85,7 +86,8 @@ func TestHandler_GetProfile(t *testing.T) {
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg)
-	storeMock := store.New(&cfg)
+	storeMock := store.New()
+	testRepoMock := store.NewPostgresStore(&cfg)
 
 	tests := []struct {
 		name             string
@@ -107,7 +109,7 @@ func TestHandler_GetProfile(t *testing.T) {
 			ctx, _ := gin.CreateTestContext(w)
 			ctx.Request = httptest.NewRequest("GET", "/api/v1/profile", nil)
 			ctx.Request.Header.Set("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2OTkzMjExNDIsImlkIjoiMjY1NTgzMmUtZjAwOS00YjczLWE1MzUtNjRjM2EyMmU1NThmIiwiYXZhdGFyIjoiaHR0cHM6Ly9zMy1hcC1zb3V0aGVhc3QtMS5hbWF6b25hd3MuY29tL2ZvcnRyZXNzLWltYWdlcy81MTUzNTc0Njk1NjYzOTU1OTQ0LnBuZyIsImVtYWlsIjoidGhhbmhAZC5mb3VuZGF0aW9uIiwicGVybWlzc2lvbnMiOlsiZW1wbG95ZWVzLnJlYWQiXSwidXNlcl9pbmZvIjpudWxsfQ.GENGPEucSUrILN6tHDKxLMtj0M0REVMUPC7-XhDMpGM")
-			metadataHandler := New(storeMock, serviceMock, loggerMock)
+			metadataHandler := New(storeMock, testRepoMock, serviceMock, loggerMock)
 
 			metadataHandler.GetProfile(ctx)
 
@@ -124,7 +126,8 @@ func TestHandler_List(t *testing.T) {
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg)
-	storeMock := store.New(&cfg)
+	storeMock := store.New()
+	testRepoMock := store.NewPostgresStore(&cfg)
 
 	tests := []struct {
 		name             string
@@ -165,7 +168,7 @@ func TestHandler_List(t *testing.T) {
 			ctx.Request.Header.Set("Authorization", tokenTest)
 			ctx.Request.URL.RawQuery = tt.query
 
-			h := New(storeMock, serviceMock, loggerMock)
+			h := New(storeMock, testRepoMock, serviceMock, loggerMock)
 			h.List(ctx)
 			require.Equal(t, tt.wantCode, w.Code)
 			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
@@ -186,7 +189,8 @@ func Test_UpdateGeneralInfo(t *testing.T) {
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg)
-	storeMock := store.New(&cfg)
+	storeMock := store.New()
+	testRepoMock := store.NewPostgresStore(&cfg)
 
 	tests := []struct {
 		name             string
@@ -233,7 +237,7 @@ func Test_UpdateGeneralInfo(t *testing.T) {
 			ctx.Params = gin.Params{gin.Param{Key: "id", Value: tt.id}}
 			ctx.Request = httptest.NewRequest("PUT", "/api/v1/employees/"+tt.id+"/general-info", bodyReader)
 			ctx.Request.Header.Set("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2OTkzMjExNDIsImlkIjoiMjY1NTgzMmUtZjAwOS00YjczLWE1MzUtNjRjM2EyMmU1NThmIiwiYXZhdGFyIjoiaHR0cHM6Ly9zMy1hcC1zb3V0aGVhc3QtMS5hbWF6b25hd3MuY29tL2ZvcnRyZXNzLWltYWdlcy81MTUzNTc0Njk1NjYzOTU1OTQ0LnBuZyIsImVtYWlsIjoidGhhbmhAZC5mb3VuZGF0aW9uIiwicGVybWlzc2lvbnMiOlsiZW1wbG95ZWVzLnJlYWQiXSwidXNlcl9pbmZvIjpudWxsfQ.GENGPEucSUrILN6tHDKxLMtj0M0REVMUPC7-XhDMpGM")
-			metadataHandler := New(storeMock, serviceMock, loggerMock)
+			metadataHandler := New(storeMock, testRepoMock, serviceMock, loggerMock)
 
 			metadataHandler.UpdateGeneralInfo(ctx)
 
@@ -258,7 +262,8 @@ func Test_UpdateSkill(t *testing.T) {
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg)
-	storeMock := store.New(&cfg)
+	storeMock := store.New()
+	testRepoMock := store.NewPostgresStore(&cfg)
 
 	tests := []struct {
 		name             string
@@ -320,7 +325,7 @@ func Test_UpdateSkill(t *testing.T) {
 			ctx.Params = gin.Params{gin.Param{Key: "id", Value: tt.id}}
 			ctx.Request = httptest.NewRequest("PUT", fmt.Sprintf("%s", "/api/v1/employees/"+tt.id+"/skills"), bodyReader)
 			ctx.Request.Header.Set("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2OTkzMjExNDIsImlkIjoiMjY1NTgzMmUtZjAwOS00YjczLWE1MzUtNjRjM2EyMmU1NThmIiwiYXZhdGFyIjoiaHR0cHM6Ly9zMy1hcC1zb3V0aGVhc3QtMS5hbWF6b25hd3MuY29tL2ZvcnRyZXNzLWltYWdlcy81MTUzNTc0Njk1NjYzOTU1OTQ0LnBuZyIsImVtYWlsIjoidGhhbmhAZC5mb3VuZGF0aW9uIiwicGVybWlzc2lvbnMiOlsiZW1wbG95ZWVzLnJlYWQiXSwidXNlcl9pbmZvIjpudWxsfQ.GENGPEucSUrILN6tHDKxLMtj0M0REVMUPC7-XhDMpGM")
-			metadataHandler := New(storeMock, serviceMock, loggerMock)
+			metadataHandler := New(storeMock, testRepoMock, serviceMock, loggerMock)
 
 			metadataHandler.UpdateSkills(ctx)
 
@@ -345,7 +350,8 @@ func Test_Create(t *testing.T) {
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg)
-	storeMock := store.New(&cfg)
+	storeMock := store.New()
+	testRepoMock := store.NewPostgresStore(&cfg)
 
 	tests := []struct {
 		name             string
@@ -419,7 +425,7 @@ func Test_Create(t *testing.T) {
 			ctx.Params = gin.Params{gin.Param{Key: "id", Value: tt.id}}
 			ctx.Request = httptest.NewRequest("POST", "/api/v1/employees/", bodyReader)
 			ctx.Request.Header.Set("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2OTkzMjExNDIsImlkIjoiMjY1NTgzMmUtZjAwOS00YjczLWE1MzUtNjRjM2EyMmU1NThmIiwiYXZhdGFyIjoiaHR0cHM6Ly9zMy1hcC1zb3V0aGVhc3QtMS5hbWF6b25hd3MuY29tL2ZvcnRyZXNzLWltYWdlcy81MTUzNTc0Njk1NjYzOTU1OTQ0LnBuZyIsImVtYWlsIjoidGhhbmhAZC5mb3VuZGF0aW9uIiwicGVybWlzc2lvbnMiOlsiZW1wbG95ZWVzLnJlYWQiXSwidXNlcl9pbmZvIjpudWxsfQ.GENGPEucSUrILN6tHDKxLMtj0M0REVMUPC7-XhDMpGM")
-			metadataHandler := New(storeMock, serviceMock, loggerMock)
+			metadataHandler := New(storeMock, testRepoMock, serviceMock, loggerMock)
 
 			metadataHandler.Create(ctx)
 

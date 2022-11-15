@@ -21,12 +21,14 @@ type handler struct {
 	store   *store.Store
 	service *service.Service
 	logger  logger.Logger
+	repo    store.DBRepo
 }
 
 // New returns a handler
-func New(store *store.Store, service *service.Service, logger logger.Logger) IHandler {
+func New(store *store.Store, repo store.DBRepo, service *service.Service, logger logger.Logger) IHandler {
 	return &handler{
 		store:   store,
+		repo:    repo,
 		service: service,
 		logger:  logger,
 	}
@@ -61,7 +63,7 @@ func (h *handler) List(c *gin.Context) {
 		"params":  query,
 	})
 
-	employees, total, err := h.store.Employee.Search(employee.SearchFilter{
+	employees, total, err := h.store.Employee.Search(h.repo.DB(), employee.SearchFilter{
 		WorkingStatus: query.WorkingStatus,
 	}, query.Pagination)
 	if err != nil {
@@ -107,7 +109,7 @@ func (h *handler) One(c *gin.Context) {
 	})
 
 	// 2. get employee from store
-	rs, err := h.store.Employee.One(params.ID)
+	rs, err := h.store.Employee.One(h.repo.DB(), params.ID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Info("employee not found")
@@ -176,7 +178,7 @@ func (h *handler) UpdateEmployeeStatus(c *gin.Context) {
 	}
 
 	// 2. get update account status for employee
-	rs, err := h.store.Employee.UpdateEmployeeStatus(params.ID, body.EmployeeStatus)
+	rs, err := h.store.Employee.UpdateEmployeeStatus(h.repo.DB(), params.ID, body.EmployeeStatus)
 	if err != nil {
 		l.Error(err, "error query update account status employee to db")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, params))
@@ -212,7 +214,7 @@ func (h *handler) GetProfile(c *gin.Context) {
 		"method":  "GetProfile",
 	})
 
-	rs, err := h.store.Employee.One(userID)
+	rs, err := h.store.Employee.One(h.repo.DB(), userID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Info("employee not found")
@@ -267,7 +269,7 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 
 	// check line manager existence
 	if body.LineManagerID != "" {
-		_, err := h.store.Employee.One(body.LineManagerID)
+		_, err := h.store.Employee.One(h.repo.DB(), body.LineManagerID)
 		if err != nil {
 			if err == gorm.ErrRecordNotFound {
 				l.Error(ErrLineManagerNotFound, "error line manager not found")
@@ -280,9 +282,9 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 		}
 	}
 
-	// 3. update informations and rerurn
-	rs, err := h.store.Employee.UpdateGeneralInfo(employee.EditGeneralInfoInput{
-		Fullname:      body.Fullname,
+	// 3. update information and return
+	rs, err := h.store.Employee.UpdateGeneralInfo(h.repo.DB(), employee.EditGeneralInfoInput{
+		FullName:      body.Fullname,
 		Email:         body.Email,
 		Phone:         body.Phone,
 		LineManagerID: body.LineManagerID,
@@ -320,7 +322,7 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 // @Failure 500 {object} view.ErrorResponse
 // @Router /employee [post]
 func (h *handler) Create(c *gin.Context) {
-	// 1. parse employee data from body
+	// 1. parse eml data from body
 	var req CreateEmployee
 
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -335,9 +337,10 @@ func (h *handler) Create(c *gin.Context) {
 		"params":  req,
 	})
 
-	// 1.2 prepare employee data
+	// 1.2 prepare eml data
 	now := time.Now()
-	pos, err := h.store.Position.One(req.PositionID)
+
+	pos, err := h.store.Position.One(h.repo.DB(), req.PositionID)
 	if err != nil {
 		l.Error(err, "error invalid position")
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -347,7 +350,8 @@ func (h *handler) Create(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req))
 		return
 	}
-	sen, err := h.store.Seniority.One(req.SeniorityID)
+
+	sen, err := h.store.Seniority.One(h.repo.DB(), req.SeniorityID)
 	if err != nil {
 		l.Error(err, "error invalid seniority")
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -357,7 +361,8 @@ func (h *handler) Create(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req))
 		return
 	}
-	role, err := h.store.Role.One(req.RoleID)
+
+	role, err := h.store.Role.One(h.repo.DB(), req.RoleID)
 	if err != nil {
 		l.Error(err, "error invalid role")
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -367,7 +372,8 @@ func (h *handler) Create(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req))
 		return
 	}
-	employee := &model.Employee{
+
+	eml := &model.Employee{
 		BaseModel: model.BaseModel{
 			ID: model.NewUUID(),
 		},
@@ -384,28 +390,28 @@ func (h *handler) Create(c *gin.Context) {
 	}
 
 	// 2.1 check employee exists -> raise error
-	_, err = h.store.Employee.OneByTeamEmail(employee.TeamEmail)
+	_, err = h.store.Employee.OneByTeamEmail(h.repo.DB(), eml.TeamEmail)
 	if err != gorm.ErrRecordNotFound {
 		if err == nil {
-			l.Error(err, "error employee exists")
+			l.Error(err, "error eml exists")
 			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, ErrEmployeeExisted, req))
 			return
 		}
-		l.Error(err, "error store new employee")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req))
-		return
-	}
-	// 2.2 store employee
-	employee, err = h.store.Employee.Create(employee)
-	if err != nil {
-		l.Error(err, "error store new employee")
+		l.Error(err, "error store new eml")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req))
 		return
 	}
 
-	// 3. return employee
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToEmployeeData(employee), nil, nil, nil))
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToEditEmployeeData(employee), nil, nil, nil))
+	// 2.2 store employee
+	eml, err = h.store.Employee.Create(h.repo.DB(), eml)
+	if err != nil {
+		l.Error(err, "error store new eml")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req))
+		return
+	}
+
+	// 3. return eml
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToEmployeeData(eml), nil, nil, nil))
 }
 
 // UpdateSkills godoc
@@ -442,8 +448,8 @@ func (h *handler) UpdateSkills(c *gin.Context) {
 		"request": body,
 	})
 
-	// 3. update informations and rerurn
-	employee, err := h.store.Employee.UpdateSkills(employee.EditSkillsInput{
+	// 3. update info and return
+	rs, err := h.store.Employee.UpdateSkills(h.repo.DB(), employee.EditSkillsInput{
 		Positions: body.Positions,
 		Chapter:   body.Chapter,
 		Seniority: body.Seniority,
@@ -452,15 +458,15 @@ func (h *handler) UpdateSkills(c *gin.Context) {
 
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			l.Error(ErrEmployeeNotFound, "error employee not found")
+			l.Error(ErrEmployeeNotFound, "error rs not found")
 			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrEmployeeNotFound, body))
 			return
 		}
 
-		l.Error(err, "error update employee to db")
+		l.Error(err, "error update rs to db")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body))
 		return
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToEditEmployeeData(employee), nil, nil, nil))
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToEditEmployeeData(rs), nil, nil, nil))
 }

@@ -19,12 +19,12 @@ type Handler struct {
 	Project     project.IHandler
 }
 
-func New(store *store.Store, service *service.Service, logger logger.Logger) *Handler {
+func New(store *store.Store, repo store.DBRepo, service *service.Service, logger logger.Logger) *Handler {
 	return &Handler{
 		Healthcheck: healthz.New(),
-		Employee:    employee.New(store, service, logger),
-		Metadata:    metadata.New(store, service, logger),
-		Auth:        auth.New(store, service, logger),
-		Project:     project.New(store, service, logger),
+		Employee:    employee.New(store, repo, service, logger),
+		Metadata:    metadata.New(store, repo, service, logger),
+		Auth:        auth.New(store, repo, service, logger),
+		Project:     project.New(store, repo, service, logger),
 	}
 }

@@ -18,11 +18,13 @@ type handler struct {
 	store   *store.Store
 	service *service.Service
 	logger  logger.Logger
+	repo    store.DBRepo
 }
 
-func New(store *store.Store, service *service.Service, logger logger.Logger) IHandler {
+func New(store *store.Store, repo store.DBRepo, service *service.Service, logger logger.Logger) IHandler {
 	return &handler{
 		store:   store,
+		repo:    repo,
 		service: service,
 		logger:  logger,
 	}
@@ -84,7 +86,7 @@ func (h *handler) Auth(c *gin.Context) {
 	}
 
 	// 2.4 check user is active
-	employee, err := h.store.Employee.OneByTeamEmail(primaryEmail)
+	employee, err := h.store.Employee.OneByTeamEmail(h.repo.DB(), primaryEmail)
 	if err != nil {
 		l.Error(err, "error query employee from db")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req))

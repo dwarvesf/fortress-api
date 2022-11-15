@@ -38,10 +38,10 @@ func main() {
 
 	log.Infof("Server starting")
 
-	service := service.New(cfg)
-	store := store.New(cfg)
+	svc := service.New(cfg)
+	s := store.New()
 
-	router := routes.NewRoutes(cfg, service, store, log)
+	router := routes.NewRoutes(cfg, svc, s, log)
 	request.RegisCustomValidators(router)
 
 	srv := &http.Server{

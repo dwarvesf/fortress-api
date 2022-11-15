@@ -34,7 +34,7 @@ func setupCORS(r *gin.Engine, cfg *config.Config) {
 	})
 }
 
-func NewRoutes(cfg *config.Config, svc *service.Service, store *store.Store, logger logger.Logger) *gin.Engine {
+func NewRoutes(cfg *config.Config, svc *service.Service, s *store.Store, logger logger.Logger) *gin.Engine {
 	// programmatically set swagger info
 	docs.SwaggerInfo.Title = "Swagger API"
 	docs.SwaggerInfo.Description = "This is a swagger for API."
@@ -42,8 +42,9 @@ func NewRoutes(cfg *config.Config, svc *service.Service, store *store.Store, log
 	docs.SwaggerInfo.Schemes = []string{"https", "http"}
 	r := gin.New()
 	pprof.Register(r)
+	repo := store.NewPostgresStore(cfg)
 
-	h := handler.New(store, svc, logger)
+	h := handler.New(s, repo, svc, logger)
 
 	r.Use(
 		gin.LoggerWithWriter(gin.DefaultWriter, "/healthz"),
@@ -57,7 +58,7 @@ func NewRoutes(cfg *config.Config, svc *service.Service, store *store.Store, log
 	// use ginSwagger middleware to serve the API docs
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	// load API here
-	loadV1Routes(r, h, cfg)
+	loadV1Routes(r, h, repo, s)
 
 	return r
 }

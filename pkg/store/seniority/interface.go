@@ -1,8 +1,12 @@
 package seniority
 
-import "github.com/dwarvesf/fortress-api/pkg/model"
+import (
+	"gorm.io/gorm"
+
+	"github.com/dwarvesf/fortress-api/pkg/model"
+)
 
 type IStore interface {
-	All() ([]*model.Seniority, error)
-	One(id model.UUID) (seniorities *model.Seniority, err error)
+	All(db *gorm.DB) ([]*model.Seniority, error)
+	One(db *gorm.DB, id model.UUID) (seniorities *model.Seniority, err error)
 }

@@ -1,7 +1,6 @@
 package store
 
 import (
-	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/store/chapter"
 	"github.com/dwarvesf/fortress-api/pkg/store/country"
 	"github.com/dwarvesf/fortress-api/pkg/store/employee"
@@ -27,18 +26,17 @@ type Store struct {
 	Stack       stack.IStore
 }
 
-func New(cfg *config.Config) *Store {
-	db := connDb(cfg)
+func New() *Store {
 	return &Store{
-		Employee:    employee.New(db),
-		Seniority:   seniority.New(db),
-		Chapter:     chapter.New(db),
-		Position:    position.New(db),
-		Permission:  permission.New(db),
-		Country:     country.New(db),
-		Role:        role.New(db),
-		Project:     project.New(db),
-		ProjectHead: projecthead.New(db),
-		Stack:       stack.New(db),
+		Employee:    employee.New(),
+		Seniority:   seniority.New(),
+		Chapter:     chapter.New(),
+		Position:    position.New(),
+		Permission:  permission.New(),
+		Country:     country.New(),
+		Role:        role.New(),
+		Project:     project.New(),
+		ProjectHead: projecthead.New(),
+		Stack:       stack.New(),
 	}
 }
