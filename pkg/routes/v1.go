@@ -9,8 +9,6 @@ import (
 )
 
 func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store.Store) {
-	pmw := mw.NewPermissionMiddleware(s, repo)
-
 	v1 := r.Group("/api/v1")
 
 	// auth
@@ -20,8 +18,8 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 	v1.GET("/profile", mw.WithAuth, h.Employee.GetProfile)
 
 	// employees
-	v1.GET("/employees", pmw.WithPerm("employees.read"), h.Employee.List)
-	v1.POST("/employees", h.Employee.Create)
+	v1.GET("/employees", mw.WithAuth, h.Employee.List)
+	v1.POST("/employees", mw.WithAuth, h.Employee.Create)
 	v1.GET("/employees/:id", mw.WithAuth, h.Employee.One)
 	v1.PUT("/employees/:id/general-info", mw.WithAuth, h.Employee.UpdateGeneralInfo)
 	v1.PUT("/employees/:id/personal-info", mw.WithAuth, h.Employee.UpdatePersonalInfo)
@@ -43,7 +41,7 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 	v1.GET("/metadata/project-statuses", h.Metadata.ProjectStatuses)
 
 	// projects
-	v1.POST("/projects", h.Project.Create)
-	v1.GET("/projects", h.Project.List)
-	v1.PUT("/projects/:id/status", h.Project.UpdateProjectStatus)
+	v1.POST("/projects", mw.WithAuth, h.Project.Create)
+	v1.GET("/projects", mw.WithAuth, h.Project.List)
+	v1.PUT("/projects/:id/status", mw.WithAuth, h.Project.UpdateProjectStatus)
 }

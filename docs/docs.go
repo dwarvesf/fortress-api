@@ -1795,7 +1795,7 @@ const docTemplate = `{
                 "positions": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/model.Position"
+                        "$ref": "#/definitions/view.Position"
                     }
                 },
                 "projects": {
@@ -1807,11 +1807,17 @@ const docTemplate = `{
                 "roles": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/model.Role"
+                        "$ref": "#/definitions/view.Role"
                     }
                 },
                 "seniority": {
                     "$ref": "#/definitions/model.Seniority"
+                },
+                "stacks": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.Stack"
+                    }
                 },
                 "status": {
                     "description": "working info",
@@ -1862,6 +1868,17 @@ const docTemplate = `{
             }
         },
         "view.MetaData": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "view.Position": {
             "type": "object",
             "properties": {
                 "code": {
@@ -2036,6 +2053,17 @@ const docTemplate = `{
                 }
             }
         },
+        "view.Role": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "view.SeniorityResponse": {
             "type": "object",
             "properties": {
@@ -2044,6 +2072,17 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/model.Seniority"
                     }
+                }
+            }
+        },
+        "view.Stack": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
                 }
             }
         },

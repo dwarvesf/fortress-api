@@ -1787,7 +1787,7 @@
                 "positions": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/model.Position"
+                        "$ref": "#/definitions/view.Position"
                     }
                 },
                 "projects": {
@@ -1799,11 +1799,17 @@
                 "roles": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/model.Role"
+                        "$ref": "#/definitions/view.Role"
                     }
                 },
                 "seniority": {
                     "$ref": "#/definitions/model.Seniority"
+                },
+                "stacks": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.Stack"
+                    }
                 },
                 "status": {
                     "description": "working info",
@@ -1854,6 +1860,17 @@
             }
         },
         "view.MetaData": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "view.Position": {
             "type": "object",
             "properties": {
                 "code": {
@@ -2028,6 +2045,17 @@
                 }
             }
         },
+        "view.Role": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "view.SeniorityResponse": {
             "type": "object",
             "properties": {
@@ -2036,6 +2064,17 @@
                     "items": {
                         "$ref": "#/definitions/model.Seniority"
                     }
+                }
+            }
+        },
+        "view.Stack": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
                 }
             }
         },

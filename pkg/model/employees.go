@@ -117,6 +117,7 @@ type Employee struct {
 	ProjectMembers    []ProjectMember
 	Roles             []Role     `gorm:"many2many:employee_roles;"`
 	Positions         []Position `gorm:"many2many:employee_positions;"`
+	EmployeeRoles     []EmployeeRole
 	EmployeePositions []EmployeePosition
 	EmployeeStacks    []EmployeeStack
 }

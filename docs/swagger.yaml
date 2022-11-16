@@ -447,7 +447,7 @@ definitions:
         type: string
       positions:
         items:
-          $ref: '#/definitions/model.Position'
+          $ref: '#/definitions/view.Position'
         type: array
       projects:
         items:
@@ -455,10 +455,14 @@ definitions:
         type: array
       roles:
         items:
-          $ref: '#/definitions/model.Role'
+          $ref: '#/definitions/view.Role'
         type: array
       seniority:
         $ref: '#/definitions/model.Seniority'
+      stacks:
+        items:
+          $ref: '#/definitions/view.Stack'
+        type: array
       status:
         description: working info
         type: string
@@ -491,6 +495,13 @@ definitions:
         type: array
     type: object
   view.MetaData:
+    properties:
+      code:
+        type: string
+      name:
+        type: string
+    type: object
+  view.Position:
     properties:
       code:
         type: string
@@ -604,12 +615,26 @@ definitions:
       status:
         type: string
     type: object
+  view.Role:
+    properties:
+      code:
+        type: string
+      name:
+        type: string
+    type: object
   view.SeniorityResponse:
     properties:
       data:
         items:
           $ref: '#/definitions/model.Seniority'
         type: array
+    type: object
+  view.Stack:
+    properties:
+      code:
+        type: string
+      name:
+        type: string
     type: object
   view.StackResponse:
     properties:
