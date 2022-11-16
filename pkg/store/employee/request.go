@@ -14,7 +14,7 @@ type UpdateGeneralInfoInput struct {
 	FullName      string
 	Email         string
 	Phone         string
-	LineManagerID string
+	LineManagerID model.UUID
 	DiscordID     string
 	GithubID      string
 	NotionID      string

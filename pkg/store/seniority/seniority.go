@@ -24,3 +24,15 @@ func (s *store) One(db *gorm.DB, id model.UUID) (*model.Seniority, error) {
 	var sen *model.Seniority
 	return sen, db.Where("id = ?", id).First(&sen).Error
 }
+
+// Exists check existence of a seniority
+func (s *store) Exists(db *gorm.DB, id string) (bool, error) {
+	type res struct {
+		Result bool
+	}
+
+	result := res{}
+	query := db.Raw("SELECT EXISTS (SELECT * FROM seniorities WHERE id = ?) as result", id)
+
+	return result.Result, query.Scan(&result).Error
+}
