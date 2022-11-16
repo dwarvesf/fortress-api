@@ -13,13 +13,13 @@ type GetListEmployeeQuery struct {
 }
 
 type UpdateGeneralInfoInput struct {
-	Fullname      string `form:"fullName" json:"fullName" binding:"required,max=99"`
-	Email         string `form:"email" json:"email" binding:"required,email"`
-	Phone         string `form:"phone" json:"phone" binding:"required,max=12,min=10"`
-	LineManagerID string `form:"lineManagerID" json:"lineManagerID"`
-	DiscordID     string `form:"discordID" json:"discordID"`
-	GithubID      string `form:"githubID" json:"githubID"`
-	NotionID      string `form:"notionID" json:"notionID"`
+	Fullname      string     `form:"fullName" json:"fullName" binding:"required,max=99"`
+	Email         string     `form:"email" json:"email" binding:"required,email"`
+	Phone         string     `form:"phone" json:"phone" binding:"required,max=12,min=10"`
+	LineManagerID model.UUID `form:"lineManagerID" json:"lineManagerID"`
+	DiscordID     string     `form:"discordID" json:"discordID"`
+	GithubID      string     `form:"githubID" json:"githubID"`
+	NotionID      string     `form:"notionID" json:"notionID"`
 }
 
 // CreateEmployee view for create new employee

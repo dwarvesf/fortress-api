@@ -112,6 +112,14 @@ definitions:
     - status
     - type
     type: object
+  gorm.DeletedAt:
+    properties:
+      time:
+        type: string
+      valid:
+        description: Valid is true if Time is not NULL
+        type: boolean
+    type: object
   model.Chapter:
     properties:
       code:
@@ -119,7 +127,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       id:
         type: string
       name:
@@ -138,7 +146,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       id:
         type: string
       name:
@@ -153,7 +161,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       id:
         type: string
       name:
@@ -168,7 +176,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       id:
         type: string
       name:
@@ -183,7 +191,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       id:
         type: string
       name:
@@ -198,7 +206,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       id:
         type: string
       name:
@@ -384,7 +392,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       deliveryManager:
         $ref: '#/definitions/view.ProjectHead'
       id:
@@ -415,7 +423,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       discordID:
         type: string
       displayName:
@@ -552,7 +560,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       deliveryManager:
         $ref: '#/definitions/view.ProjectHead'
       endDate:
@@ -658,7 +666,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       discordID:
         type: string
       fullName:
@@ -688,7 +696,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       gender:
         type: string
       id:
@@ -715,7 +723,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       id:
         type: string
       positions:
@@ -741,7 +749,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       endDate:
         type: string
       id:
@@ -821,7 +829,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.CreateEmployee'
+          $ref: '#/definitions/pkg_handler_employee.CreateEmployee'
       - description: jwt token
         in: header
         name: Authorization
@@ -999,7 +1007,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateGeneralInfoInput'
+          $ref: '#/definitions/pkg_handler_employee.UpdateGeneralInfoInput'
       produces:
       - application/json
       responses:
@@ -1043,7 +1051,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdatePersonalInfoInput'
+          $ref: '#/definitions/pkg_handler_employee.UpdatePersonalInfoInput'
       produces:
       - application/json
       responses:
@@ -1082,7 +1090,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateSkillsInput'
+          $ref: '#/definitions/pkg_handler_employee.UpdateSkillsInput'
       - description: jwt token
         in: header
         name: Authorization
@@ -1443,7 +1451,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/pkg_handler_project.CreateProjectInput'
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.CreateProjectInput'
       produces:
       - application/json
       responses:

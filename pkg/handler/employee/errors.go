@@ -2,6 +2,7 @@ package employee
 
 import (
 	"errors"
+	"fmt"
 )
 
 var (
@@ -13,4 +14,18 @@ var (
 	ErrRoleNotfound          = errors.New("role not found")
 	ErrLineManagerNotFound   = errors.New("line manager not found")
 	ErrEmployeeNotFound      = errors.New("employee not found")
+	ErrStackNotFound         = errors.New("stack not found")
+	ErrPositionNotFound      = errors.New("position not found")
+	ErrChapterNotFound       = errors.New("chapter not found")
+	ErrSeniorityNotFound     = errors.New("seniority not found")
 )
+
+// errStackNotFound returns unauthorized custom error
+func errStackNotFound(id string) error {
+	return fmt.Errorf("stack not found: %v", id)
+}
+
+// errPositionNotFound returns unauthorized custom error
+func errPositionNotFound(id string) error {
+	return fmt.Errorf("position not found: %v", id)
+}

@@ -1,8 +1,6 @@
 package employee
 
 import (
-	"time"
-
 	"gorm.io/gorm"
 
 	"github.com/dwarvesf/fortress-api/pkg/model"
@@ -72,18 +70,13 @@ func (s *store) UpdateEmployeeStatus(db *gorm.DB, employeeID string, accountStat
 func (s *store) UpdateGeneralInfo(db *gorm.DB, body UpdateGeneralInfoInput, id string) (*model.Employee, error) {
 	employee := &model.Employee{}
 
-	// 1.2 update info
 	employee.FullName = body.FullName
 	employee.TeamEmail = body.Email
 	employee.PhoneNumber = body.Phone
 	employee.DiscordID = body.DiscordID
 	employee.GithubID = body.GithubID
+	employee.LineManagerID = body.LineManagerID
 
-	if body.LineManagerID != "" {
-		employee.LineManagerID = model.MustGetUUIDFromString(body.LineManagerID)
-	}
-
-	// 1.3 save to DB
 	return employee, db.Table("employees").Where("id = ?", id).Updates(&employee).
 		Preload("LineManager").
 		First(&employee).Error
@@ -93,61 +86,18 @@ func (s *store) Create(db *gorm.DB, e *model.Employee) (employee *model.Employee
 	return e, db.Create(e).Error
 }
 
-func (s *store) UpdateSkills(db *gorm.DB, body UpdateSkillsInput, id string) (*model.Employee, error) {
+func (s *store) UpdatePersonalInfo(db *gorm.DB, body UpdatePersonalInfoInput, id string) (*model.Employee, error) {
+	employee := &model.Employee{}
 
-	var employee *model.Employee
+	employee.DateOfBirth = body.DoB
+	employee.Gender = body.Gender
+	employee.Address = body.Address
+	employee.PersonalEmail = body.PersonalEmail
 
-	// get employee by employee id
-	err := db.Where("id = ?", id).First(&employee).Error
-	if err != nil {
-		return nil, err
-	}
+	return employee, db.Table("employees").Where("id = ?", id).Updates(&employee).First(&employee).Error
+}
 
-	// 1.1 delete all roles of the employee
-	now := time.Now()
-	employeePosition := model.EmployeePosition{}
-	db.Table("employee_positions").Where("employee_id = ?", id).Update("deleted_at", now)
-
-	// 1.2 create role for employee
-	for _, positionID := range body.Positions {
-		employeePosition.ID = model.NewUUID()
-		employeePosition.EmployeeID = model.MustGetUUIDFromString(id)
-		employeePosition.PositionID = positionID
-
-		err = db.Table("employee_positions").Create(&employeePosition).Error
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	// 2 update tech stacks for employee
-
-	// 2.1 delete all employee_stacks for employee id
-	employeeStack := model.EmployeeStack{}
-	err = db.Table("employee_stacks").Where("employee_id = ?", id).Update("deleted_at", now).Error
-	if err != nil {
-		return nil, err
-	}
-
-	// 2.2 create stacks for employee
-	for _, stackID := range body.Stacks {
-		employeeStack.ID = model.NewUUID()
-		employeeStack.EmployeeID = model.MustGetUUIDFromString(id)
-		employeeStack.StackID = stackID
-
-		err = db.Table("employee_stacks").Create(&employeeStack).Error
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	// 3 update employee table
-
-	// 3.2 update infor
-	employee.ChapterID = body.Chapter
-	employee.SeniorityID = body.Seniority
-
-	// 3.3 save to DB
+func (s *store) Update(db *gorm.DB, id string, employee *model.Employee) (*model.Employee, error) {
 	return employee, db.Table("employees").Where("id = ?", id).Updates(&employee).
 		Preload("Chapter").
 		Preload("Seniority").
@@ -159,15 +109,14 @@ func (s *store) UpdateSkills(db *gorm.DB, body UpdateSkillsInput, id string) (*m
 		First(&employee).Error
 }
 
-func (s *store) UpdatePersonalInfo(db *gorm.DB, body UpdatePersonalInfoInput, id string) (*model.Employee, error) {
-	employee := &model.Employee{}
+// Exists check the existence of employee
+func (s *store) Exists(db *gorm.DB, id string) (bool, error) {
+	type res struct {
+		Result bool
+	}
 
-	// 1.2 update infor
-	employee.DateOfBirth = body.DoB
-	employee.Gender = body.Gender
-	employee.Address = body.Address
-	employee.PersonalEmail = body.PersonalEmail
+	result := res{}
+	query := db.Raw("SELECT EXISTS (SELECT * FROM employees WHERE id = ?) as result", id)
 
-	// 1.3 save to DB
-	return employee, db.Table("employees").Where("id = ?", id).Updates(&employee).First(&employee).Error
+	return result.Result, query.Scan(&result).Error
 }
