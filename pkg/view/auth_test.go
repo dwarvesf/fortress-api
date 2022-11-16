@@ -34,7 +34,7 @@ func TestToAuthData(t *testing.T) {
 						ID: id,
 					},
 					Projects:  []EmployeeProjectData{},
-					Positions: []model.Position{},
+					Positions: []Position{},
 				},
 				AccessToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjQ4MjM0MDc0NzYsImlkIjoiMjY1NTgzMmUtZjAwOS00YjczLWE1MzUtNjRjM2EyMmU1NThmIiwiYXZhdGFyIjoiIiwiZW1haWwiOiIifQ.RJhl4O1PDMzIFO3pR13vyO07Z4gd90ewq5PKOao1MtY",
 			},

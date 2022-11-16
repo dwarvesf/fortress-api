@@ -35,8 +35,9 @@ type EmployeeData struct {
 	Seniority     *model.Seniority      `json:"seniority"`
 	Chapter       *model.Chapter        `json:"chapter"`
 	LineManager   *BasisEmployeeInfo    `json:"lineManager"`
-	Positions     []model.Position      `json:"positions"`
-	Roles         []model.Role          `json:"roles"`
+	Positions     []Position            `json:"positions"`
+	Stacks        []Stack               `json:"stacks"`
+	Roles         []Role                `json:"roles"`
 	Projects      []EmployeeProjectData `json:"projects"`
 }
 
@@ -151,7 +152,6 @@ func ToUpdateSkillEmployeeData(employee *model.Employee) *UpdateSkillEmployeeDat
 		Chapter:   employee.Chapter,
 		Seniority: employee.Seniority,
 		Positions: positions,
-		Stacks:    stacks,
 	}
 }
 
@@ -187,11 +187,6 @@ func ToEmployeeData(employee *model.Employee) *EmployeeData {
 		projects = append(projects, ToEmployeeProjectData(&v.Project))
 	}
 
-	positions := make([]model.Position, 0, len(employee.EmployeePositions))
-	for _, v := range employee.EmployeePositions {
-		positions = append(positions, v.Position)
-	}
-
 	rs := &EmployeeData{
 		BaseModel: model.BaseModel{
 			ID:        employee.ID,
@@ -219,8 +214,9 @@ func ToEmployeeData(employee *model.Employee) *EmployeeData {
 		LeftDate:      employee.LeftDate,
 		AccountStatus: employee.AccountStatus,
 		Projects:      projects,
-		Roles:         employee.Roles,
-		Positions:     positions,
+		Roles:         ToRoles(employee.EmployeeRoles),
+		Positions:     ToPositions(employee.EmployeePositions),
+		Stacks:        ToStacks(employee.EmployeeStacks),
 	}
 
 	if employee.Seniority != nil {

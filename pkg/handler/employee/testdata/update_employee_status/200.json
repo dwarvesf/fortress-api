@@ -25,7 +25,8 @@
         "chapter": null,
         "lineManager": null,
         "positions": [],
-        "roles": null,
-        "projects": []
+        "roles": [],
+        "projects": [],
+        "stacks": []
     }
 }

@@ -51,11 +51,14 @@ func (s *store) Search(db *gorm.DB, filter SearchFilter, pagination model.Pagina
 	}
 
 	query = query.Preload("ProjectMembers", "deleted_at IS NULL").
-		Preload("ProjectMembers.Project").
-		Preload("ProjectMembers.Project.Heads").
+		Preload("ProjectMembers.Project", "deleted_at IS NULL").
+		Preload("ProjectMembers.Project.Heads", "deleted_at IS NULL").
 		Preload("EmployeePositions", "deleted_at IS NULL").
-		Preload("EmployeePositions.Position").
-		Preload("Roles", "deleted_at IS NULL").
+		Preload("EmployeePositions.Position", "deleted_at IS NULL").
+		Preload("EmployeeRoles", "deleted_at IS NULL").
+		Preload("EmployeeRoles.Role", "deleted_at IS NULL").
+		Preload("EmployeeStacks", "deleted_at IS NULL").
+		Preload("EmployeeStacks.Stack", "deleted_at IS NULL").
 		Offset(offset)
 
 	return employees, total, query.Find(&employees).Error
