@@ -89,6 +89,24 @@ definitions:
     - seniority
     - stacks
     type: object
+  github.com_dwarvesf_fortress-api_pkg_handler_profile.UpdateInforInput:
+    properties:
+      discordID:
+        type: string
+      email:
+        type: string
+      githubID:
+        type: string
+      notionID:
+        type: string
+      phone:
+        maxLength: 12
+        minLength: 10
+        type: string
+    required:
+    - email
+    - phone
+    type: object
   github.com_dwarvesf_fortress-api_pkg_handler_project.CreateProjectInput:
     properties:
       accountManagerID:
@@ -303,6 +321,24 @@ definitions:
     - seniority
     - stacks
     type: object
+  pkg_handler_profile.UpdateInforInput:
+    properties:
+      discordID:
+        type: string
+      email:
+        type: string
+      githubID:
+        type: string
+      notionID:
+        type: string
+      phone:
+        maxLength: 12
+        minLength: 10
+        type: string
+    required:
+    - email
+    - phone
+    type: object
   pkg_handler_project.CreateProjectInput:
     properties:
       accountManagerID:
@@ -447,10 +483,6 @@ definitions:
         $ref: '#/definitions/view.BasisEmployeeInfo'
       mbti:
         type: string
-      mentees:
-        items:
-          $ref: '#/definitions/view.EmployeeData'
-        type: array
       notionID:
         type: string
       personalEmail:
@@ -735,6 +767,33 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/view.UpdatePersonalEmployeeData'
+    type: object
+  view.UpdateProfileInfoData:
+    properties:
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      discordID:
+        type: string
+      githubID:
+        type: string
+      id:
+        type: string
+      notionID:
+        type: string
+      phoneNumber:
+        type: string
+      teamEmail:
+        description: basic info
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  view.UpdateProfileInfoResponse:
+    properties:
+      data:
+        $ref: '#/definitions/view.UpdateProfileInfoData'
     type: object
   view.UpdateProjectStatusResponse:
     properties:
@@ -1411,7 +1470,51 @@ paths:
             $ref: '#/definitions/view.ErrorResponse'
       summary: Get profile information of employee
       tags:
-      - Employee
+      - Profile
+  /profile/info:
+    put:
+      consumes:
+      - application/json
+      description: Update profile info by id
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Employee ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Body
+        in: body
+        name: Body
+        required: true
+        schema:
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_profile.UpdateInforInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.UpdateProfileInfoResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Update profile info by id
+      tags:
+      - Profile
   /projects:
     get:
       consumes:
@@ -1476,7 +1579,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.CreateProjectInput'
+          $ref: '#/definitions/pkg_handler_project.CreateProjectInput'
       produces:
       - application/json
       responses:

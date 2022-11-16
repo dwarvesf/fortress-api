@@ -45,9 +45,9 @@ func CreateResponse[T any](data T, paging *PaginationResponse, err error, payloa
 	if err != nil {
 		resp.Error = err.Error()
 	}
-
 	if err != nil && errors.As(err, &ve) {
 		errs := make([]ApiError, len(ve))
+
 		for i, fe := range ve {
 			var msg string
 			var enums []string

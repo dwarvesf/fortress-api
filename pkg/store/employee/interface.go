@@ -16,4 +16,5 @@ type IStore interface {
 	UpdatePersonalInfo(db *gorm.DB, body UpdatePersonalInfoInput, id string) (employee *model.Employee, err error)
 	Update(db *gorm.DB, id string, employee *model.Employee) (*model.Employee, error)
 	Exists(db *gorm.DB, id string) (bool, error)
+	UpdateProfileInfo(db *gorm.DB, body UpdateProfileInforInput, id string) (*model.Employee, error)
 }

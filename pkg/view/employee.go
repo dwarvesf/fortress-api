@@ -84,22 +84,8 @@ type EmployeeListDataResponse struct {
 	Data []EmployeeData `json:"data"`
 }
 
-type ProfileData struct {
-	ID            model.UUID `json:"id"`
-	FullName      string     `json:"fullName"`
-	DisplayName   string     `json:"displayName"`
-	Avatar        string     `json:"avatar"`
-	Gender        string     `json:"gender"`
-	DateOfBirth   *time.Time `json:"birthday"`
-	TeamEmail     string     `json:"teamEmail"`
-	PersonalEmail string     `json:"personalEmail"`
-	PhoneNumber   string     `json:"phoneNumber"`
-	DiscordID     string     `json:"discordID"`
-	GithubID      string     `json:"githubID"`
-}
-
-type ProfileDataResponse struct {
-	Data ProfileData `json:"data"`
+type UpdataEmployeeStatusResponse struct {
+	Data EmployeeData `json:"data"`
 }
 
 type UpdateSkillsEmployeeResponse struct {
@@ -241,20 +227,4 @@ func ToEmployeeListData(employees []*model.Employee) []EmployeeData {
 		rs = append(rs, *empRes)
 	}
 	return rs
-}
-
-func ToProfileData(employee *model.Employee) *ProfileData {
-	return &ProfileData{
-		ID:            employee.ID,
-		FullName:      employee.FullName,
-		DisplayName:   employee.DisplayName,
-		Avatar:        employee.Avatar,
-		Gender:        employee.Gender,
-		DateOfBirth:   employee.DateOfBirth,
-		TeamEmail:     employee.TeamEmail,
-		PersonalEmail: employee.PersonalEmail,
-		PhoneNumber:   employee.PhoneNumber,
-		DiscordID:     employee.DiscordID,
-		GithubID:      employee.GithubID,
-	}
 }

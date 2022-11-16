@@ -13,7 +13,6 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/store/employee"
-	"github.com/dwarvesf/fortress-api/pkg/utils"
 	"github.com/dwarvesf/fortress-api/pkg/view"
 )
 
@@ -189,46 +188,6 @@ func (h *handler) UpdateEmployeeStatus(c *gin.Context) {
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToEmployeeData(rs), nil, nil, nil))
 }
 
-// GetProfile godoc
-// @Summary Get profile information of employee
-// @Description Get profile information of employee
-// @Tags Employee
-// @Accept  json
-// @Produce  json
-// @Param Authorization header string true "jwt token"
-// @Success 200 {object} view.ProfileDataResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
-// @Router /profile [get]
-func (h *handler) GetProfile(c *gin.Context) {
-	userID, err := utils.GetUserIDFromContext(c)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil))
-		return
-	}
-
-	// TODO: can we move this to middleware ?
-	l := h.logger.Fields(logger.Fields{
-		"handler": "employee",
-		"method":  "GetProfile",
-	})
-
-	rs, err := h.store.Employee.One(h.repo.DB(), userID)
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			l.Info("employee not found")
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, err, nil))
-			return
-		}
-		l.Error(err, "error query employee from db")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil))
-		return
-	}
-
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToProfileData(rs), nil, nil, nil))
-}
-
 // UpdateGeneralInfo godoc
 // @Summary Update general info of the employee by id
 // @Description Update general info of the employee by id
@@ -249,7 +208,7 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 	var body UpdateGeneralInfoInput
 	if err := c.ShouldBindJSON(&body); err != nil {
 		if err != nil {
-			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, employeeID))
+			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, body))
 			return
 		}
 	}
@@ -431,7 +390,7 @@ func (h *handler) UpdateSkills(c *gin.Context) {
 	var body UpdateSkillsInput
 	if err := c.ShouldBindJSON(&body); err != nil {
 		if err != nil {
-			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, employeeID))
+			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, body))
 			return
 		}
 	}
@@ -605,7 +564,7 @@ func (h *handler) UpdatePersonalInfo(c *gin.Context) {
 	var body UpdatePersonalInfoInput
 	if err := c.ShouldBindJSON(&body); err != nil {
 		if err != nil {
-			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, employeeID))
+			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, body))
 			return
 		}
 	}
