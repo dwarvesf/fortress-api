@@ -34,3 +34,11 @@ type UpdatePersonalInfoInput struct {
 	Address       string
 	PersonalEmail string
 }
+
+type UpdateProfileInforInput struct {
+	TeamEmail   string
+	PhoneNumber string
+	DiscordID   string
+	GithubID    string
+	NotionID    string
+}

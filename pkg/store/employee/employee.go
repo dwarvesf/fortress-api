@@ -83,11 +83,24 @@ func (s *store) UpdateGeneralInfo(db *gorm.DB, body UpdateGeneralInfoInput, id s
 	employee.PhoneNumber = body.Phone
 	employee.DiscordID = body.DiscordID
 	employee.GithubID = body.GithubID
+	employee.NotionID = body.NotionID
 	employee.LineManagerID = body.LineManagerID
 
 	return employee, db.Table("employees").Where("id = ?", id).Updates(&employee).
 		Preload("LineManager").
 		First(&employee).Error
+}
+
+func (s *store) UpdateProfileInfo(db *gorm.DB, body UpdateProfileInforInput, id string) (*model.Employee, error) {
+	employee := &model.Employee{}
+
+	employee.TeamEmail = body.TeamEmail
+	employee.PhoneNumber = body.PhoneNumber
+	employee.DiscordID = body.DiscordID
+	employee.GithubID = body.GithubID
+	employee.NotionID = body.NotionID
+
+	return employee, db.Table("employees").Where("id = ?", id).Updates(&employee).First(&employee).Error
 }
 
 func (s *store) Create(db *gorm.DB, e *model.Employee) (employee *model.Employee, err error) {

@@ -15,7 +15,8 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 	v1.POST("/auth", h.Auth.Auth)
 
 	// user profile
-	v1.GET("/profile", mw.WithAuth, h.Employee.GetProfile)
+	v1.GET("/profile", mw.WithAuth, h.Profile.GetProfile)
+	v1.PUT("/profile", mw.WithAuth, h.Profile.UpdateInfo)
 
 	// employees
 	v1.GET("/employees", mw.WithAuth, h.Employee.List)

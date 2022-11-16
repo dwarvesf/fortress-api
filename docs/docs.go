@@ -903,7 +903,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Employee"
+                    "Profile"
                 ],
                 "summary": "Get profile information of employee",
                 "parameters": [
@@ -920,6 +920,72 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/view.ProfileDataResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/profile/info": {
+            "put": {
+                "description": "Update profile info by id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Profile"
+                ],
+                "summary": "Update profile info by id",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Employee ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Body",
+                        "name": "Body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_profile.UpdateInforInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.UpdateProfileInfoResponse"
                         }
                     },
                     "400": {
@@ -1042,7 +1108,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.CreateProjectInput"
+                            "$ref": "#/definitions/pkg_handler_project.CreateProjectInput"
                         }
                     }
                 ],
@@ -1345,6 +1411,32 @@ const docTemplate = `{
                     "items": {
                         "type": "string"
                     }
+                }
+            }
+        },
+        "github.com_dwarvesf_fortress-api_pkg_handler_profile.UpdateInforInput": {
+            "type": "object",
+            "required": [
+                "email",
+                "phone"
+            ],
+            "properties": {
+                "discordID": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "githubID": {
+                    "type": "string"
+                },
+                "notionID": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string",
+                    "maxLength": 12,
+                    "minLength": 10
                 }
             }
         },
@@ -1666,6 +1758,32 @@ const docTemplate = `{
                     "items": {
                         "type": "string"
                     }
+                }
+            }
+        },
+        "pkg_handler_profile.UpdateInforInput": {
+            "type": "object",
+            "required": [
+                "email",
+                "phone"
+            ],
+            "properties": {
+                "discordID": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "githubID": {
+                    "type": "string"
+                },
+                "notionID": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string",
+                    "maxLength": 12,
+                    "minLength": 10
                 }
             }
         },
@@ -2320,6 +2438,47 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/view.UpdatePersonalEmployeeData"
+                }
+            }
+        },
+        "view.UpdateProfileInfoData": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "deletedAt": {
+                    "$ref": "#/definitions/gorm.DeletedAt"
+                },
+                "discordID": {
+                    "type": "string"
+                },
+                "githubID": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "notionID": {
+                    "type": "string"
+                },
+                "phoneNumber": {
+                    "type": "string"
+                },
+                "teamEmail": {
+                    "description": "basic info",
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "view.UpdateProfileInfoResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/view.UpdateProfileInfoData"
                 }
             }
         },
