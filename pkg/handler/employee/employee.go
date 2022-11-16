@@ -134,7 +134,7 @@ func (h *handler) One(c *gin.Context) {
 // @Param Authorization header string true "jwt token"
 // @Param id path string true "Employee ID"
 // @Param employeeStatus body model.AccountStatus true "Employee Status"
-// @Success 200 {object} view.UpdataEmployeeStatusResponse
+// @Success 200 {object} view.UpdateEmployeeStatusResponse
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 404 {object} view.ErrorResponse
 // @Failure 500 {object} view.ErrorResponse
@@ -171,7 +171,7 @@ func (h *handler) UpdateEmployeeStatus(c *gin.Context) {
 		"params":  params,
 	})
 
-	if !body.EmployeeStatus.Valid() {
+	if !body.EmployeeStatus.IsValid() {
 		l.Error(ErrInvalidEmployeeStatus, "invalid value for EmployeeStatus")
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, ErrInvalidEmployeeStatus, body))
 		return

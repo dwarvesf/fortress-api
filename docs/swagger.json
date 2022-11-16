@@ -98,7 +98,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/pkg_handler_employee.CreateEmployee"
+                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.CreateEmployee"
                         }
                     },
                     {
@@ -306,7 +306,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/view.UpdataEmployeeStatusResponse"
+                            "$ref": "#/definitions/view.UpdateEmployeeStatusResponse"
                         }
                     },
                     "400": {
@@ -364,7 +364,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/pkg_handler_employee.UpdateGeneralInfoInput"
+                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateGeneralInfoInput"
                         }
                     }
                 ],
@@ -430,7 +430,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/pkg_handler_employee.UpdatePersonalInfoInput"
+                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdatePersonalInfoInput"
                         }
                     }
                 ],
@@ -489,7 +489,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/pkg_handler_employee.UpdateSkillsInput"
+                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateSkillsInput"
                         }
                     },
                     {
@@ -1867,6 +1867,12 @@
                 "mbti": {
                     "type": "string"
                 },
+                "mentees": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.EmployeeData"
+                    }
+                },
                 "notionID": {
                     "type": "string"
                 },
@@ -2213,7 +2219,7 @@
                 }
             }
         },
-        "view.UpdataEmployeeStatusResponse": {
+        "view.UpdateEmployeeStatusResponse": {
             "type": "object",
             "properties": {
                 "data": {
