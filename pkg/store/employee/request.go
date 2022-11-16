@@ -7,6 +7,7 @@ import (
 )
 
 type SearchFilter struct {
+	EmployeeID    string
 	WorkingStatus string
 }
 

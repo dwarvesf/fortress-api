@@ -44,8 +44,8 @@ func (e AccountStatus) IsValid() bool {
 	return false
 }
 
-func (p AccountStatus) String() string {
-	return string(p)
+func (e AccountStatus) String() string {
+	return string(e)
 }
 
 type AccountRole string
@@ -124,16 +124,4 @@ type Employee struct {
 	EmployeeRoles     []EmployeeRole
 	EmployeePositions []EmployeePosition
 	EmployeeStacks    []EmployeeStack
-}
-
-func (e AccountStatus) Valid() bool {
-	switch e {
-	case
-		AccountStatusOnBoarding,
-		AccountStatusActive,
-		AccountStatusProbation,
-		AccountStatusOnLeave:
-		return true
-	}
-	return false
 }

@@ -17,9 +17,17 @@ func New() IStore {
 func (s *store) One(db *gorm.DB, id string) (*model.Employee, error) {
 	var employee *model.Employee
 	return employee, db.Where("id = ?", id).
-		Preload("Roles").
-		Preload("Chapter").
+		Preload("ProjectMembers", "deleted_at IS NULL").
+		Preload("ProjectMembers.Project", "deleted_at IS NULL").
+		Preload("EmployeePositions", "deleted_at IS NULL").
+		Preload("EmployeePositions.Position", "deleted_at IS NULL").
+		Preload("EmployeeStacks", "deleted_at IS NULL").
+		Preload("EmployeeStacks.Stack", "deleted_at IS NULL").
+		Preload("EmployeeRoles", "deleted_at IS NULL").
+		Preload("EmployeeRoles.Role", "deleted_at IS NULL").
 		Preload("Seniority").
+		Preload("Chapter").
+		Preload("LineManager").
 		First(&employee).
 		Error
 }

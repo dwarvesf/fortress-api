@@ -106,7 +106,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/pkg_handler_employee.CreateEmployee"
+                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.CreateEmployee"
                         }
                     },
                     {
@@ -314,7 +314,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/view.UpdataEmployeeStatusResponse"
+                            "$ref": "#/definitions/view.UpdateEmployeeStatusResponse"
                         }
                     },
                     "400": {
@@ -372,7 +372,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/pkg_handler_employee.UpdateGeneralInfoInput"
+                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateGeneralInfoInput"
                         }
                     }
                 ],
@@ -438,7 +438,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/pkg_handler_employee.UpdatePersonalInfoInput"
+                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdatePersonalInfoInput"
                         }
                     }
                 ],
@@ -497,7 +497,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/pkg_handler_employee.UpdateSkillsInput"
+                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateSkillsInput"
                         }
                     },
                     {
@@ -1875,6 +1875,12 @@ const docTemplate = `{
                 "mbti": {
                     "type": "string"
                 },
+                "mentees": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.EmployeeData"
+                    }
+                },
                 "notionID": {
                     "type": "string"
                 },
@@ -2221,7 +2227,7 @@ const docTemplate = `{
                 }
             }
         },
-        "view.UpdataEmployeeStatusResponse": {
+        "view.UpdateEmployeeStatusResponse": {
             "type": "object",
             "properties": {
                 "data": {

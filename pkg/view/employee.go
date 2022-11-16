@@ -84,10 +84,6 @@ type EmployeeListDataResponse struct {
 	Data []EmployeeData `json:"data"`
 }
 
-type UpdataEmployeeStatusResponse struct {
-	Data EmployeeData `json:"data"`
-}
-
 type ProfileData struct {
 	ID            model.UUID `json:"id"`
 	FullName      string     `json:"fullName"`
