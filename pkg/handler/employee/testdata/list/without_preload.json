@@ -1,0 +1,63 @@
+{
+    "page": 0,
+    "size": 50,
+    "sort": "",
+    "total": 1,
+    "data": [
+        {
+            "id": "ecea9d15-05ba-4a4e-9787-54210e3b98ce",
+            "createdAt": "2022-11-02T09:50:55.320669Z",
+            "updatedAt": "",
+            "fullName": "Nguyễn Hoàng Huy",
+            "displayName": "Huy Nguyen",
+            "teamEmail": "huy123@d.foundation",
+            "personalEmail": "hoanghuy123@gmail.com",
+            "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/2830497479497502617.png",
+            "phoneNumber": "0123456789",
+            "address": "chung cư Sunview Town, Gò Dưa, Thủ Đức",
+            "mbti": "Defender",
+            "gender": "Male",
+            "horoscope": "Virgo",
+            "birthday": "1990-01-02T00:00:00Z",
+            "discordID": "",
+            "githubID": "",
+            "notionID": "",
+            "status": "probation",
+            "joinedDate": null,
+            "leftDate": null,
+            "accountStatus": "active",
+            "seniority": null,
+            "chapter": null,
+            "lineManager": null,
+            "positions": [
+                {
+                    "code": "devops",
+                    "name": "Devops"
+                },
+                {
+                    "code": "blockchain",
+                    "name": "Blockchain"
+                }
+            ],
+            "stacks": [
+                {
+                    "name": "Golang",
+                    "code": "golang"
+                },
+                {
+                    "name": "React",
+                    "code": "react"
+                }
+            ],
+            "roles": [],
+            "projects": [
+                {
+                    "id": "7310b51a-3855-498b-99ab-41aa82934269",
+                    "name": "Fortress",
+                    "deploymentType": "shadow",
+                    "positions": []
+                }
+            ]
+        }
+    ]
+}

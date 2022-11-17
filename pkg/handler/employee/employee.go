@@ -40,9 +40,10 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 // @Accept  json
 // @Produce  json
 // @Param Authorization header string true "jwt token"
-// @Param       workingStatus   query  string false  "Working Status"
-// @Param       page   query  string true  "Page"
-// @Param       size   query  string true  "Size"
+// @Param workingStatus query  string false  "Working Status"
+// @Param preload query bool false "Preload"
+// @Param page query string true "Page"
+// @Param size query string true "Size"
 // @Success 200 {object} view.EmployeeListDataResponse
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 404 {object} view.ErrorResponse
@@ -64,6 +65,7 @@ func (h *handler) List(c *gin.Context) {
 
 	employees, total, err := h.store.Employee.Search(h.repo.DB(), employee.SearchFilter{
 		WorkingStatus: query.WorkingStatus,
+		Preload:       query.Preload,
 	}, query.Pagination)
 	if err != nil {
 		l.Error(err, "error query employee from db")

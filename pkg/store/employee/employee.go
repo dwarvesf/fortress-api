@@ -50,6 +50,7 @@ func (s *store) Search(db *gorm.DB, filter SearchFilter, pagination model.Pagina
 	if filter.WorkingStatus != "" {
 		query = query.Where("working_status = ?", filter.WorkingStatus)
 	}
+
 	query = query.Count(&total)
 
 	query = query.Order(pagination.Sort)
@@ -58,16 +59,19 @@ func (s *store) Search(db *gorm.DB, filter SearchFilter, pagination model.Pagina
 		query = query.Limit(limit)
 	}
 
-	query = query.Preload("ProjectMembers", "deleted_at IS NULL").
-		Preload("ProjectMembers.Project", "deleted_at IS NULL").
-		Preload("ProjectMembers.Project.Heads", "deleted_at IS NULL").
-		Preload("EmployeePositions", "deleted_at IS NULL").
-		Preload("EmployeePositions.Position", "deleted_at IS NULL").
-		Preload("EmployeeRoles", "deleted_at IS NULL").
-		Preload("EmployeeRoles.Role", "deleted_at IS NULL").
-		Preload("EmployeeStacks", "deleted_at IS NULL").
-		Preload("EmployeeStacks.Stack", "deleted_at IS NULL").
-		Offset(offset)
+	query = query.Offset(offset)
+
+	if filter.Preload {
+		query = query.Preload("ProjectMembers", "deleted_at IS NULL").
+			Preload("ProjectMembers.Project", "deleted_at IS NULL").
+			Preload("ProjectMembers.Project.Heads", "deleted_at IS NULL").
+			Preload("EmployeePositions", "deleted_at IS NULL").
+			Preload("EmployeePositions.Position", "deleted_at IS NULL").
+			Preload("EmployeeRoles", "deleted_at IS NULL").
+			Preload("EmployeeRoles.Role", "deleted_at IS NULL").
+			Preload("EmployeeStacks", "deleted_at IS NULL").
+			Preload("EmployeeStacks.Stack", "deleted_at IS NULL")
+	}
 
 	return employees, total, query.Find(&employees).Error
 }

@@ -119,6 +119,18 @@ func TestHandler_List(t *testing.T) {
 			wantCode:         http.StatusOK,
 			wantResponsePath: "testdata/list/out_of_content.json",
 		},
+		{
+			name:             "with_preload_false",
+			query:            "workingStatus=probation&preload=false",
+			wantCode:         http.StatusOK,
+			wantResponsePath: "testdata/list/with_preload_false.json",
+		},
+		{
+			name:             "without_preload",
+			query:            "workingStatus=probation",
+			wantCode:         http.StatusOK,
+			wantResponsePath: "testdata/list/without_preload.json",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
