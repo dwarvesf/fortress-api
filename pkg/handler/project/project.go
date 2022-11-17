@@ -272,6 +272,7 @@ func (h *handler) GetMembers(c *gin.Context) {
 	query.Standardize()
 
 	projectID := c.Param("id")
+
 	if projectID == "" {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errors.New("invalid project_id"), nil, ""))
 		return
@@ -323,6 +324,100 @@ func (h *handler) GetMembers(c *gin.Context) {
 
 	c.JSON(http.StatusOK, view.CreateResponse(view.ToProjectMemberListData(members, heads),
 		&view.PaginationResponse{Pagination: query.Pagination, Total: total}, nil, nil, ""))
+}
+
+// DeleteMember godoc
+// @Summary Delete member in a project
+// @Description Delete member in a project
+// @Tags Project
+// @Accept  json
+// @Produce  json
+// @Param Authorization header string true "jwt token"
+// @Param id path string true "project ID"
+// @Param memberID path string true "employee ID"
+// @Success 200 {object} view.MessageResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /project/:id/members/:memberID [delete]
+func (h *handler) DeleteMember(c *gin.Context) {
+	input := DeleteMemberInput{
+		ProjectID: c.Param("id"),
+		MemberID:  c.Param("memberID"),
+	}
+
+	if err := input.Validate(); err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	// TODO: can we move this to middleware ?
+	l := h.logger.Fields(logger.Fields{
+		"handler": "project",
+		"method":  "DeleteMember",
+		"body":    input.MemberID,
+	})
+
+	// get member info
+	projectMember, err := h.store.ProjectMember.One(h.repo.DB(), input.ProjectID, input.MemberID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			l.Error(err, "project member not found")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrProjectMemberNotFound, input.MemberID, ""))
+			return
+		}
+		l.Error(err, "error query member from db")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input.MemberID, ""))
+		return
+	}
+
+	if projectMember.Status == model.ProjectMemberStatusInactive {
+		l.Error(ErrCouldNotDeleteInactiveMember, "error can not change information of inactive member")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, ErrCouldNotDeleteInactiveMember, input.MemberID, ""))
+		return
+	}
+
+	// Begin transaction
+	tx, done := h.repo.NewTransaction()
+
+	slotID := projectMember.ProjectSlotID.String()
+
+	err = h.store.ProjectMemberPosition.HardDeleteByProjectMemberID(tx.DB(), projectMember.ID.String())
+	if err != nil {
+		l.Error(err, "error delete project member position")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input.MemberID, ""))
+		return
+	}
+
+	err = h.store.ProjectMember.HardDelete(tx.DB(), projectMember.ID.String())
+	if err != nil {
+		l.Error(err, "error delete project member")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input.MemberID, ""))
+		return
+	}
+
+	err = h.store.ProjectSlotPosition.HardDeleteByProjectSlotID(tx.DB(), slotID)
+	if err != nil {
+		l.Error(err, "error delete project slot position")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input.MemberID, ""))
+		return
+	}
+
+	err = h.store.ProjectSlot.HardDelete(tx.DB(), slotID)
+	if err != nil {
+		l.Error(err, "error delete project member")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input.MemberID, ""))
+		return
+	}
+
+	err = h.store.ProjectHead.HardDeleteByPosition(tx.DB(), projectMember.ProjectID.String(), projectMember.EmployeeID.String(), model.HeadPositionTechnicalLead.String())
+	if err != nil {
+		l.Error(err, "error delete project head")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input.MemberID, ""))
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, done(nil), nil, "ok"))
 }
 
 // UpdateMember godoc
@@ -435,7 +530,7 @@ func (h *handler) UpdateMember(c *gin.Context) {
 
 	if !body.EmployeeID.IsZero() {
 		// check project member status
-		member, err := h.store.ProjectMember.GetByProjectIDAndEmployeeID(tx.DB(), projectID, body.EmployeeID.String())
+		member, err := h.store.ProjectMember.One(tx.DB(), projectID, body.EmployeeID.String())
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Error(err, "failed to get project member")
 			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
@@ -479,7 +574,7 @@ func (h *handler) UpdateMember(c *gin.Context) {
 		slot.ProjectMember = *member
 
 		// create project member positions
-		if err := h.store.ProjectMemberPosition.DeleteByProjectMemberID(tx.DB(), member.ID.String()); err != nil {
+		if err := h.store.ProjectMemberPosition.HardDeleteByProjectMemberID(tx.DB(), member.ID.String()); err != nil {
 			l.Error(err, "failed to delete project member positions")
 			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), nil, ""))
 			return
@@ -545,7 +640,7 @@ func (h *handler) UpdateMember(c *gin.Context) {
 	}
 
 	// update project slot positions
-	if err := h.store.ProjectSlotPosition.DeleteByProjectSlotID(tx.DB(), slot.ID.String()); err != nil {
+	if err := h.store.ProjectSlotPosition.HardDeleteByProjectSlotID(tx.DB(), slot.ID.String()); err != nil {
 		l.Error(err, "failed to delete project member positions")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), nil, ""))
 		return

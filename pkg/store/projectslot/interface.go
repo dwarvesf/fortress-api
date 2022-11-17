@@ -11,4 +11,5 @@ type IStore interface {
 	One(db *gorm.DB, id string) (*model.ProjectSlot, error)
 	Update(db *gorm.DB, id string, slot *model.ProjectSlot) (*model.ProjectSlot, error)
 	Create(db *gorm.DB, slot *model.ProjectSlot) error
+	HardDelete(db *gorm.DB, id string) (err error)
 }

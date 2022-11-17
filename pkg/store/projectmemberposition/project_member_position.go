@@ -17,6 +17,6 @@ func (s *store) Create(db *gorm.DB, pos *model.ProjectMemberPosition) error {
 	return db.Create(&pos).Preload("Position").First(&pos).Error
 }
 
-func (s *store) DeleteByProjectMemberID(db *gorm.DB, memberID string) error {
+func (s *store) HardDeleteByProjectMemberID(db *gorm.DB, memberID string) error {
 	return db.Unscoped().Where("project_member_id = ?", memberID).Delete(&model.ProjectMemberPosition{}).Error
 }

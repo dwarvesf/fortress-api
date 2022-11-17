@@ -13,8 +13,23 @@ func New() IStore {
 	return &store{}
 }
 
-// GetByProjectIDAndEmployeeID return a project member by projectID and employeeID
-func (s *store) GetByProjectIDAndEmployeeID(db *gorm.DB, projectID string, employeeID string) (*model.ProjectMember, error) {
+// HardDelete hard delete one by id
+func (s *store) HardDelete(db *gorm.DB, id string) error {
+	return db.Table("project_members").Unscoped().Where("id = ?", id).Delete(&model.ProjectMember{}).Error
+}
+
+// Exists return true/false if member exist or not
+func (s *store) Exists(db *gorm.DB, id string) (bool, error) {
+	var record struct {
+		Result bool
+	}
+
+	query := db.Raw("SELECT EXISTS (SELECT * FROM project_members WHERE id = ?) as result", id)
+	return record.Result, query.Scan(&record).Error
+}
+
+// One return a project member by projectID and employeeID
+func (s *store) One(db *gorm.DB, projectID string, employeeID string) (*model.ProjectMember, error) {
 	var member *model.ProjectMember
 	return member, db.Where("project_id = ? AND employee_id = ?", projectID, employeeID).Preload("Employee").First(&member).Error
 }

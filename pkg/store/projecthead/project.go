@@ -53,3 +53,7 @@ func (s *store) Upsert(db *gorm.DB, head *model.ProjectHead) error {
 func (s *store) DeleteByProjectIDAndPosition(db *gorm.DB, projectID string, pos string) error {
 	return db.Where("project_id = ? AND position = ?", projectID, pos).Delete(&model.ProjectHead{}).Error
 }
+
+func (s *store) HardDeleteByPosition(db *gorm.DB, projectID string, employeeID string, position string) error {
+	return db.Unscoped().Where("project_id = ? AND employee_id = ? AND position = ?", projectID, employeeID, position).Delete(&model.ProjectHead{}).Error
+}
