@@ -1,11 +1,7 @@
 {
     "data": null,
-    "error": "Key: 'CreateEmployee.DisplayName' Error:Field validation for 'DisplayName' failed on the 'required' tag\nKey: 'CreateEmployee.PersonalEmail' Error:Field validation for 'PersonalEmail' failed on the 'email' tag",
+    "error": "Key: 'CreateEmployeeInput.PersonalEmail' Error:Field validation for 'PersonalEmail' failed on the 'email' tag",
     "errors": [
-        {
-            "field": "DisplayName",
-            "msg": "Field validation for 'DisplayName' failed on the 'required' tag"
-        },
         {
             "field": "PersonalEmail",
             "msg": "Field validation for 'PersonalEmail' failed on the 'email' tag"

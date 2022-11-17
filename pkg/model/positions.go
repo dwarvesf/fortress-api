@@ -8,10 +8,10 @@ type Position struct {
 }
 
 // ToPositionMap create map from position
-func ToPositionMap(positions []*Position) map[UUID]string {
-	rs := map[UUID]string{}
+func ToPositionMap(positions []*Position) map[UUID]Position {
+	rs := map[UUID]Position{}
 	for _, s := range positions {
-		rs[s.ID] = s.Name
+		rs[s.ID] = *s
 	}
 
 	return rs

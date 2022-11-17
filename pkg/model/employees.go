@@ -5,22 +5,28 @@ import "time"
 type WorkingStatus string
 
 const (
-	WorkingStatusPartTime  WorkingStatus = "part-time"
-	WorkingStatusLeft      WorkingStatus = "left"
-	WorkingStatusProbation WorkingStatus = "probation"
-	WorkingStatusFullTime  WorkingStatus = "full-time"
+	WorkingStatusOnBoarding WorkingStatus = "on-boarding"
+	WorkingStatusLeft       WorkingStatus = "left"
+	WorkingStatusProbation  WorkingStatus = "probation"
+	WorkingStatusFullTime   WorkingStatus = "full-time"
+	WorkingStatusContractor WorkingStatus = "contractor"
 )
 
 func (e WorkingStatus) IsValid() bool {
 	switch e {
 	case
-		WorkingStatusPartTime,
+		WorkingStatusOnBoarding,
+		WorkingStatusContractor,
 		WorkingStatusLeft,
 		WorkingStatusProbation,
 		WorkingStatusFullTime:
 		return true
 	}
 	return false
+}
+
+func (e WorkingStatus) String() string {
+	return string(e)
 }
 
 type AccountStatus string

@@ -207,7 +207,7 @@ func Test_UpdateGeneralInfo(t *testing.T) {
 			wantErr:          false,
 			wantResponsePath: "testdata/update_general_info/200.json",
 			body: UpdateGeneralInfoInput{
-				Fullname: "Phạm Đức Thành",
+				FullName: "Phạm Đức Thành",
 				Email:    "thanh@d.foundation",
 				Phone:    "0123456788",
 			},
@@ -219,7 +219,7 @@ func Test_UpdateGeneralInfo(t *testing.T) {
 			wantErr:          true,
 			wantResponsePath: "testdata/update_general_info/404.json",
 			body: UpdateGeneralInfoInput{
-				Fullname: "Phạm Đức Thành",
+				FullName: "Phạm Đức Thành",
 				Email:    "thanh@d.foundation",
 				Phone:    "0123456788",
 			},
@@ -359,7 +359,7 @@ func Test_Create(t *testing.T) {
 		wantCode         int
 		wantErr          bool
 		wantResponsePath string
-		body             CreateEmployee
+		body             CreateEmployeeInput
 		id               string
 	}{
 		{
@@ -367,15 +367,16 @@ func Test_Create(t *testing.T) {
 			wantCode:         400,
 			wantErr:          true,
 			wantResponsePath: "testdata/create/existed_user.json",
-			body: CreateEmployee{
+			body: CreateEmployeeInput{
 				FullName:      "Lê Nguyễn Minh Khôi",
 				DisplayName:   "Khoi Le",
 				TeamEmail:     "thanh@d.foundation",
 				PersonalEmail: "khoi@gmail.com",
-				PositionID:    model.MustGetUUIDFromString("d796884d-a8c4-4525-81e7-54a3b6099eac"),
+				Positions:     []model.UUID{model.MustGetUUIDFromString("d796884d-a8c4-4525-81e7-54a3b6099eac")},
 				Salary:        300,
 				SeniorityID:   model.MustGetUUIDFromString("11ccffea-2cc9-4e98-9bef-3464dfe4dec8"),
 				RoleID:        model.MustGetUUIDFromString("d796884d-a8c4-4525-81e7-54a3b6099eac"),
+				Status:        model.WorkingStatusOnBoarding.String(),
 			},
 			id: "2655832e-f009-4b73-a535-64c3a22e558f",
 		},
@@ -384,15 +385,16 @@ func Test_Create(t *testing.T) {
 			wantCode:         400,
 			wantErr:          true,
 			wantResponsePath: "testdata/create/validation_err.json",
-			body: CreateEmployee{
+			body: CreateEmployeeInput{
 				FullName:      "Lê Nguyễn Minh Khôi",
 				DisplayName:   "",
 				TeamEmail:     "thanh@d.foundation",
 				PersonalEmail: "khoigmail.com",
-				PositionID:    model.MustGetUUIDFromString("d796884d-a8c4-4525-81e7-54a3b6099eac"),
+				Positions:     []model.UUID{model.MustGetUUIDFromString("d796884d-a8c4-4525-81e7-54a3b6099eac")},
 				Salary:        300,
 				SeniorityID:   model.MustGetUUIDFromString("11ccffea-2cc9-4e98-9bef-3464dfe4dec8"),
 				RoleID:        model.MustGetUUIDFromString("d796884d-a8c4-4525-81e7-54a3b6099eac"),
+				Status:        model.WorkingStatusOnBoarding.String(),
 			},
 			id: "2655832e-f009-4b73-a535-64c3a22e558f",
 		},
@@ -401,15 +403,16 @@ func Test_Create(t *testing.T) {
 			wantCode:         404,
 			wantErr:          true,
 			wantResponsePath: "testdata/create/invalid_uuid.json",
-			body: CreateEmployee{
+			body: CreateEmployeeInput{
 				FullName:      "Lê Nguyễn Minh Khôi",
 				DisplayName:   "Khoi Le",
 				TeamEmail:     "thanh@d.foundation",
 				PersonalEmail: "khoi@gmail.com",
-				PositionID:    model.MustGetUUIDFromString("c44c987c-ad34-4745-be2b-942e8670d32a"),
+				Positions:     []model.UUID{model.MustGetUUIDFromString("c44c987c-ad34-4745-be2b-942e8670d32a")},
 				Salary:        300,
 				SeniorityID:   model.MustGetUUIDFromString("11ccffea-2cc9-4e98-9bef-3464dfe4dec8"),
 				RoleID:        model.MustGetUUIDFromString("d796884d-a8c4-4525-81e7-54a3b6099eac"),
+				Status:        model.WorkingStatusOnBoarding.String(),
 			},
 			id: "2655832e-f009-4b73-a535-64c3a22e558f",
 		},
