@@ -167,44 +167,52 @@ func ToEmployeeProjectData(project *model.Project) EmployeeProjectData {
 }
 
 type CreateMemberData struct {
-	ID             string     `json:"id"`
-	EmployeeID     string     `json:"employeeID"`
-	FullName       string     `json:"fullName"`
-	DisplayName    string     `json:"displayName"`
-	Avatar         string     `json:"avatar"`
-	Positions      []Position `json:"positions"`
-	DeploymentType string     `json:"deploymentType"`
-	Status         string     `json:"status"`
-	IsLead         bool       `json:"isLead"`
+	ProjectSlotID   string     `json:"projectSlotID"`
+	ProjectMemberID string     `json:"projectMemberID"`
+	EmployeeID      string     `json:"employeeID"`
+	FullName        string     `json:"fullName"`
+	DisplayName     string     `json:"displayName"`
+	Avatar          string     `json:"avatar"`
+	Positions       []Position `json:"positions"`
+	DeploymentType  string     `json:"deploymentType"`
+	Status          string     `json:"status"`
+	IsLead          bool       `json:"isLead"`
 }
 
 type CreateMemberDataResponse struct {
 	Data CreateMemberData `json:"data"`
 }
 
-func ToCreateMemberData(slot *model.ProjectSlot, isLead bool) CreateMemberData {
-	return CreateMemberData{
-		ID:             slot.ID.String(),
-		EmployeeID:     slot.ProjectMember.EmployeeID.String(),
+func ToCreateMemberData(slot *model.ProjectSlot) CreateMemberData {
+	rs := CreateMemberData{
+		ProjectSlotID:  slot.ID.String(),
 		FullName:       slot.ProjectMember.Employee.FullName,
 		DisplayName:    slot.ProjectMember.Employee.DisplayName,
 		Avatar:         slot.ProjectMember.Employee.Avatar,
 		DeploymentType: slot.DeploymentType.String(),
 		Status:         slot.Status.String(),
 		Positions:      ToPositionsFromProjectSlotPositions(slot.ProjectSlotPositions),
-		IsLead:         isLead,
+		IsLead:         slot.IsLead,
 	}
+
+	if !slot.ProjectMember.ID.IsZero() {
+		rs.ProjectMemberID = slot.ProjectMember.ID.String()
+		rs.EmployeeID = slot.ProjectMember.EmployeeID.String()
+	}
+
+	return rs
 }
 
 type CreateProjectData struct {
 	model.BaseModel
 
-	Name            string       `json:"name"`
-	Type            string       `json:"type"`
-	Status          string       `json:"status"`
-	StartDate       string       `json:"startDate"`
-	AccountManager  *ProjectHead `json:"accountManager"`
-	DeliveryManager *ProjectHead `json:"deliveryManager"`
+	Name            string             `json:"name"`
+	Type            string             `json:"type"`
+	Status          string             `json:"status"`
+	StartDate       string             `json:"startDate"`
+	AccountManager  *ProjectHead       `json:"accountManager"`
+	DeliveryManager *ProjectHead       `json:"deliveryManager"`
+	Members         []CreateMemberData `json:"members"`
 }
 
 func ToCreateProjectDataResponse(project *model.Project) CreateProjectData {
@@ -226,6 +234,11 @@ func ToCreateProjectDataResponse(project *model.Project) CreateProjectData {
 		case model.HeadPositionDeliveryManager:
 			result.DeliveryManager = ToProjectHead(&head)
 		}
+	}
+
+	result.Members = make([]CreateMemberData, 0, len(project.Slots))
+	for _, slot := range project.Slots {
+		result.Members = append(result.Members, ToCreateMemberData(&slot))
 	}
 
 	return result

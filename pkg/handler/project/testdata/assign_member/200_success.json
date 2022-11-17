@@ -1,6 +1,7 @@
 {
     "data": {
-        "id": "",
+        "projectSlotID": "",
+        "projectMemberID": "",
         "employeeID": "2655832e-f009-4b73-a535-64c3a22e558f",
         "fullName": "Phạm Đức Thành",
         "displayName": "Thanh Pham",
@@ -17,6 +18,6 @@
         ],
         "status": "pending",
         "deploymentType": "official",
-        "isLead": true
+        "isLead": false
     }
 }

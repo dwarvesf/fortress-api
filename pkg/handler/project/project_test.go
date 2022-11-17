@@ -117,11 +117,10 @@ func TestHandler_Create(t *testing.T) {
 			args: CreateProjectInput{
 				Name:              "project1",
 				Status:            string(model.ProjectStatusOnBoarding),
-				Type:              string(model.ProjectTypeDwarves),
 				StartDate:         "2022-11-14",
 				AccountManagerID:  model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
 				DeliveryManagerID: model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
-				CountryID:         "4ef64490-c906-4192-a7f9-d2221dadfe4c",
+				CountryID:         model.MustGetUUIDFromString("4ef64490-c906-4192-a7f9-d2221dadfe4c"),
 			},
 			wantCode:         http.StatusOK,
 			wantResponsePath: "testdata/create/200.json",
@@ -131,38 +130,22 @@ func TestHandler_Create(t *testing.T) {
 			args: CreateProjectInput{
 				Name:              "project1",
 				Status:            "something",
-				Type:              string(model.ProjectTypeDwarves),
 				StartDate:         "2022-11-14",
 				AccountManagerID:  model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
 				DeliveryManagerID: model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
-				CountryID:         "4ef64490-c906-4192-a7f9-d2221dadfe4c",
+				CountryID:         model.MustGetUUIDFromString("4ef64490-c906-4192-a7f9-d2221dadfe4c"),
 			},
 			wantCode:         http.StatusBadRequest,
 			wantResponsePath: "testdata/create/400_invalid_status.json",
 		},
 		{
-			name: "invalid_type",
-			args: CreateProjectInput{
-				Name:              "project1",
-				Status:            string(model.ProjectStatusOnBoarding),
-				Type:              "something",
-				StartDate:         "2022-11-14",
-				AccountManagerID:  model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
-				DeliveryManagerID: model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
-				CountryID:         "4ef64490-c906-4192-a7f9-d2221dadfe4c",
-			},
-			wantCode:         http.StatusBadRequest,
-			wantResponsePath: "testdata/create/400_invalid_type.json",
-		},
-		{
 			name: "missing_status",
 			args: CreateProjectInput{
 				Name:              "project1",
-				Type:              string(model.ProjectTypeDwarves),
 				StartDate:         "2022-11-14",
 				AccountManagerID:  model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
 				DeliveryManagerID: model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
-				CountryID:         "4ef64490-c906-4192-a7f9-d2221dadfe4c",
+				CountryID:         model.MustGetUUIDFromString("4ef64490-c906-4192-a7f9-d2221dadfe4c"),
 			},
 			wantCode:         http.StatusBadRequest,
 			wantResponsePath: "testdata/create/400_misssing_status.json",
@@ -281,7 +264,7 @@ func TestHandler_UpdateMember(t *testing.T) {
 				IsLead:         true,
 			},
 			wantCode:         http.StatusOK,
-			wantResponsePath: "testdata/add_member_to_project/200_success.json",
+			wantResponsePath: "testdata/update_member/200_success.json",
 		},
 		{
 			name: "invalid_joined_date",
@@ -303,7 +286,7 @@ func TestHandler_UpdateMember(t *testing.T) {
 				IsLead:         true,
 			},
 			wantCode:         http.StatusBadRequest,
-			wantResponsePath: "testdata/add_member_to_project/400_invalid_joined_date.json",
+			wantResponsePath: "testdata/update_member/400_invalid_joined_date.json",
 		},
 		{
 			name: "project_not_found",
@@ -325,7 +308,7 @@ func TestHandler_UpdateMember(t *testing.T) {
 				IsLead:         true,
 			},
 			wantCode:         http.StatusNotFound,
-			wantResponsePath: "testdata/add_member_to_project/404_project_not_found.json",
+			wantResponsePath: "testdata/update_member/404_project_not_found.json",
 		},
 	}
 	for _, tt := range tests {
@@ -350,9 +333,77 @@ func TestHandler_UpdateMember(t *testing.T) {
 			require.NoError(t, err)
 
 			res := w.Body.Bytes()
-			res, _ = utils.RemoveFieldInResponse(res, "id")
+			res, _ = utils.RemoveFieldInResponse(res, "projectSlotID")
+			res, _ = utils.RemoveFieldInResponse(res, "projectMemberID")
 
 			require.JSONEq(t, string(expRespRaw), string(res), "[Handler.Project.UpdateMember] response mismatched")
+		})
+	}
+}
+
+func TestHandler_AssignMember(t *testing.T) {
+	cfg := config.LoadTestConfig()
+	loggerMock := logger.NewLogrusLogger()
+	serviceMock := service.New(&cfg)
+	storeMock := store.New()
+	repoMock := store.NewPostgresStore(&cfg)
+
+	tests := []struct {
+		name             string
+		id               string
+		args             AssignMemberInput
+		wantCode         int
+		wantErr          error
+		wantResponsePath string
+	}{
+		{
+			name: "happy_case",
+			id:   "8dc3be2e-19a4-4942-8a79-56db391a0b15",
+			args: AssignMemberInput{
+				EmployeeID:  model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
+				SeniorityID: model.MustGetUUIDFromString("01fb6322-d727-47e3-a242-5039ea4732fc"),
+				Positions: []model.UUID{
+					model.MustGetUUIDFromString("11ccffea-2cc9-4e98-9bef-3464dfe4dec8"),
+					model.MustGetUUIDFromString("d796884d-a8c4-4525-81e7-54a3b6099eac"),
+				},
+				DeploymentType: model.MemberDeploymentTypeOfficial.String(),
+				Status:         model.ProjectMemberStatusPending.String(),
+				JoinedDate:     "2022-11-15",
+				LeftDate:       "2023-11-15",
+				Rate:           decimal.NewFromInt(10),
+				Discount:       decimal.NewFromInt(1),
+				IsLead:         false,
+			},
+			wantCode:         http.StatusOK,
+			wantResponsePath: "testdata/assign_member/200_success.json",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			body, err := json.Marshal(tt.args)
+			if err != nil {
+				t.Error(err)
+				return
+			}
+
+			w := httptest.NewRecorder()
+			ctx, _ := gin.CreateTestContext(w)
+			ctx.Request = httptest.NewRequest(http.MethodPost, fmt.Sprintf("/api/v1/projects/%v/members", tt.id), bytes.NewBuffer(body))
+			ctx.Request.Header.Set("Authorization", tokenTest)
+			ctx.Request.Header.Set("Content-Type", gin.MIMEJSON)
+			ctx.AddParam("id", tt.id)
+
+			h := New(storeMock, repoMock, serviceMock, loggerMock)
+			h.AssignMember(ctx)
+			require.Equal(t, tt.wantCode, w.Code)
+			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+			require.NoError(t, err)
+
+			res := w.Body.Bytes()
+			res, _ = utils.RemoveFieldInResponse(res, "projectSlotID")
+			res, _ = utils.RemoveFieldInResponse(res, "projectMemberID")
+
+			require.JSONEq(t, string(expRespRaw), string(res), "[Handler.Project.AssignMember] response mismatched")
 		})
 	}
 }

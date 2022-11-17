@@ -93,23 +93,54 @@ definitions:
     - seniority
     - stacks
     type: object
-  github.com_dwarvesf_fortress-api_pkg_handler_profile.UpdateInforInput:
+  github.com_dwarvesf_fortress-api_pkg_handler_profile.UpdateInfoInput:
     properties:
       discordID:
-        type: string
-      email:
         type: string
       githubID:
         type: string
       notionID:
         type: string
-      phone:
+      phoneNumber:
         maxLength: 12
         minLength: 10
         type: string
+      teamEmail:
+        type: string
     required:
-    - email
-    - phone
+    - phoneNumber
+    - teamEmail
+    type: object
+  github.com_dwarvesf_fortress-api_pkg_handler_project.AssignMemberInput:
+    properties:
+      deploymentType:
+        type: string
+      discount:
+        type: number
+      employeeID:
+        type: string
+      isLead:
+        type: boolean
+      joinedDate:
+        type: string
+      leftDate:
+        type: string
+      positions:
+        items:
+          type: string
+        type: array
+      rate:
+        type: number
+      seniorityID:
+        type: string
+      status:
+        type: string
+    required:
+    - deploymentType
+    - positions
+    - rate
+    - seniorityID
+    - status
     type: object
   github.com_dwarvesf_fortress-api_pkg_handler_project.CreateProjectInput:
     properties:
@@ -363,23 +394,54 @@ definitions:
     - seniority
     - stacks
     type: object
-  pkg_handler_profile.UpdateInforInput:
+  pkg_handler_profile.UpdateInfoInput:
     properties:
       discordID:
-        type: string
-      email:
         type: string
       githubID:
         type: string
       notionID:
         type: string
-      phone:
+      phoneNumber:
         maxLength: 12
         minLength: 10
         type: string
+      teamEmail:
+        type: string
     required:
-    - email
-    - phone
+    - phoneNumber
+    - teamEmail
+    type: object
+  pkg_handler_project.AssignMemberInput:
+    properties:
+      deploymentType:
+        type: string
+      discount:
+        type: number
+      employeeID:
+        type: string
+      isLead:
+        type: boolean
+      joinedDate:
+        type: string
+      leftDate:
+        type: string
+      positions:
+        items:
+          type: string
+        type: array
+      rate:
+        type: number
+      seniorityID:
+        type: string
+      status:
+        type: string
+    required:
+    - deploymentType
+    - positions
+    - rate
+    - seniorityID
+    - status
     type: object
   pkg_handler_project.CreateProjectInput:
     properties:
@@ -509,14 +571,16 @@ definitions:
         type: string
       fullName:
         type: string
-      id:
-        type: string
       isLead:
         type: boolean
       positions:
         items:
           $ref: '#/definitions/view.Position'
         type: array
+      projectMemberID:
+        type: string
+      projectSlotID:
+        type: string
       status:
         type: string
     type: object
@@ -1574,7 +1638,6 @@ paths:
       summary: Get profile information of employee
       tags:
       - Profile
-  /profile/info:
     put:
       consumes:
       - application/json
@@ -1595,7 +1658,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_profile.UpdateInforInput'
+          $ref: '#/definitions/pkg_handler_profile.UpdateInfoInput'
       produces:
       - application/json
       responses:
@@ -1682,7 +1745,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/pkg_handler_project.CreateProjectInput'
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.CreateProjectInput'
       produces:
       - application/json
       responses:
@@ -1755,6 +1818,49 @@ paths:
       tags:
       - Project
   /projects/{id}/members:
+    post:
+      consumes:
+      - application/json
+      description: Assign member in an existing project
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Body
+        in: body
+        name: Body
+        required: true
+        schema:
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.AssignMemberInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.CreateMemberDataResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Assign member into an existing project
+      tags:
+      - Project
     put:
       consumes:
       - application/json
@@ -1775,7 +1881,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/pkg_handler_project.UpdateMemberInput'
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateMemberInput'
       produces:
       - application/json
       responses:

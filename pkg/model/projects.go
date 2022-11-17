@@ -63,6 +63,7 @@ type Project struct {
 	StartDate *time.Time
 	EndDate   *time.Time
 	Status    ProjectStatus
+	Slots     []ProjectSlot
 	Members   []ProjectMember
 	Heads     []ProjectHead
 }
@@ -124,6 +125,8 @@ type ProjectSlot struct {
 	UpsellPersonID UUID
 	SeniorityID    UUID
 	Status         ProjectMemberStatus
+
+	IsLead bool `gorm:"-"`
 
 	Project              Project
 	ProjectMember        ProjectMember
