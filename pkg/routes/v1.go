@@ -27,8 +27,6 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 	v1.PUT("/employees/:id/skills", mw.WithAuth, h.Employee.UpdateSkills)
 	v1.PUT("/employees/:id/employee-status", mw.WithAuth, h.Employee.UpdateEmployeeStatus)
 
-	// auth
-
 	// metadata
 	v1.GET("/metadata/working-status", h.Metadata.WorkingStatus)
 	v1.GET("/metadata/stacks", h.Metadata.Stacks)
@@ -45,6 +43,7 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 	v1.POST("/projects", mw.WithAuth, h.Project.Create)
 	v1.GET("/projects", mw.WithAuth, h.Project.List)
 	v1.PUT("/projects/:id/status", mw.WithAuth, h.Project.UpdateProjectStatus)
+	v1.POST("/projects/:id/members", mw.WithAuth, h.Project.AssignMember)
 	v1.GET("/projects/:id/members", mw.WithAuth, h.Project.GetMembers)
 	v1.PUT("/projects/:id/members", mw.WithAuth, h.Project.UpdateMember)
 }

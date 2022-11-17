@@ -153,6 +153,10 @@ func Test_loadV1Routes(t *testing.T) {
 			},
 		},
 		"/api/v1/projects/:id/members": {
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/project.IHandler.AssignMember-fm",
+			},
 			"GET": {
 				Method:  "GET",
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/project.IHandler.GetMembers-fm",

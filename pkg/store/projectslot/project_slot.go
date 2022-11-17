@@ -64,3 +64,8 @@ func (s *store) One(db *gorm.DB, id string) (*model.ProjectSlot, error) {
 func (s *store) Update(db *gorm.DB, id string, slot *model.ProjectSlot) (*model.ProjectSlot, error) {
 	return slot, db.Table("project_slots").Where("id = ?", id).Updates(slot).Error
 }
+
+// Create create new project slot
+func (s *store) Create(db *gorm.DB, slot *model.ProjectSlot) error {
+	return db.Create(&slot).Error
+}

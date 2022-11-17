@@ -8,4 +8,5 @@ type IHandler interface {
 	UpdateProjectStatus(c *gin.Context)
 	GetMembers(c *gin.Context)
 	UpdateMember(c *gin.Context)
+	AssignMember(c *gin.Context)
 }

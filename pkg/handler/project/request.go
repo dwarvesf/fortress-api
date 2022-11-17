@@ -31,16 +31,21 @@ func (i *GetListProjectInput) Validate() error {
 }
 
 type CreateProjectInput struct {
-	Name              string     `form:"name" json:"name" binding:"required"`
-	Status            string     `form:"status" json:"status" binding:"required"`
-	Type              string     `form:"type" json:"type" binding:"required"`
-	AccountManagerID  model.UUID `form:"accountManagerID" json:"accountManagerID" binding:"required"`
-	DeliveryManagerID model.UUID `form:"deliveryManagerID" json:"deliveryManagerID"`
-	CountryID         string     `form:"countryID" json:"countryID" binding:"required"`
-	StartDate         string     `form:"startDate" json:"startDate"`
+	Name              string              `form:"name" json:"name" binding:"required"`
+	Status            string              `form:"status" json:"status" binding:"required"`
+	Type              string              `form:"type" json:"type"`
+	AccountManagerID  model.UUID          `form:"accountManagerID" json:"accountManagerID" binding:"required"`
+	DeliveryManagerID model.UUID          `form:"deliveryManagerID" json:"deliveryManagerID"`
+	CountryID         model.UUID          `form:"countryID" json:"countryID" binding:"required"`
+	StartDate         string              `form:"startDate" json:"startDate"`
+	Members           []AssignMemberInput `form:"members" json:"members"`
 }
 
 func (i *CreateProjectInput) Validate() error {
+	if i.Type == "" {
+		i.Type = model.ProjectTypeDwarves.String()
+	}
+
 	if !model.ProjectType(i.Type).IsValid() {
 		return ErrInvalidProjectType
 	}
@@ -125,6 +130,66 @@ func (i *UpdateMemberInput) GetJoinedDate() *time.Time {
 }
 
 func (i *UpdateMemberInput) GetLeftDate() *time.Time {
+	date, err := time.Parse("2006-01-02", i.LeftDate)
+	if i.LeftDate == "" || err != nil {
+		return nil
+	}
+
+	return &date
+}
+
+type AssignMemberInput struct {
+	EmployeeID     model.UUID      `form:"employeeID" json:"employeeID"`
+	SeniorityID    model.UUID      `form:"seniorityID" json:"seniorityID" binding:"required"`
+	Positions      []model.UUID    `form:"positions" json:"positions" binding:"required"`
+	DeploymentType string          `form:"deploymentType" json:"deploymentType" binding:"required"`
+	Status         string          `form:"status" json:"status" binding:"required"`
+	JoinedDate     string          `form:"joinedDate" json:"joinedDate"`
+	LeftDate       string          `form:"leftDate" json:"leftDate"`
+	Rate           decimal.Decimal `form:"rate" json:"rate" binding:"required"`
+	Discount       decimal.Decimal `form:"discount" json:"discount"`
+	IsLead         bool            `form:"isLead" json:"isLead"`
+}
+
+func (i *AssignMemberInput) Validate() error {
+	if i.DeploymentType == "" || !model.DeploymentType(i.DeploymentType).IsValid() {
+		return ErrInvalidDeploymentType
+	}
+
+	if i.Status == "" ||
+		!model.ProjectMemberStatus(i.Status).IsValid() ||
+		i.Status == model.ProjectMemberStatusInactive.String() {
+
+		return ErrInvalidProjectMemberStatus
+	}
+
+	if len(i.Positions) == 0 {
+		return ErrPositionsIsEmpty
+	}
+
+	_, err := time.Parse("2006-01-02", i.JoinedDate)
+	if i.JoinedDate != "" && err != nil {
+		return ErrInvalidJoinedDate
+	}
+
+	_, err = time.Parse("2006-01-02", i.LeftDate)
+	if i.LeftDate != "" && err != nil {
+		return ErrInvalidLeftDate
+	}
+
+	return nil
+}
+
+func (i *AssignMemberInput) GetJoinedDate() *time.Time {
+	date, err := time.Parse("2006-01-02", i.JoinedDate)
+	if i.JoinedDate == "" || err != nil {
+		return nil
+	}
+
+	return &date
+}
+
+func (i *AssignMemberInput) GetLeftDate() *time.Time {
 	date, err := time.Parse("2006-01-02", i.LeftDate)
 	if i.LeftDate == "" || err != nil {
 		return nil

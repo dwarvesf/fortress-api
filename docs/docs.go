@@ -941,9 +941,7 @@ const docTemplate = `{
                         }
                     }
                 }
-            }
-        },
-        "/profile/info": {
+            },
             "put": {
                 "description": "Update profile info by id",
                 "consumes": [
@@ -977,7 +975,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_profile.UpdateInforInput"
+                            "$ref": "#/definitions/pkg_handler_profile.UpdateInfoInput"
                         }
                     }
                 ],
@@ -1108,7 +1106,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/pkg_handler_project.CreateProjectInput"
+                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.CreateProjectInput"
                         }
                     }
                 ],
@@ -1248,7 +1246,71 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/pkg_handler_project.UpdateMemberInput"
+                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateMemberInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.CreateMemberDataResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Assign member in an existing project",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Project"
+                ],
+                "summary": "Assign member into an existing project",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Project ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Body",
+                        "name": "Body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.AssignMemberInput"
                         }
                     }
                 ],
@@ -1480,17 +1542,14 @@ const docTemplate = `{
                 }
             }
         },
-        "github.com_dwarvesf_fortress-api_pkg_handler_profile.UpdateInforInput": {
+        "github.com_dwarvesf_fortress-api_pkg_handler_profile.UpdateInfoInput": {
             "type": "object",
             "required": [
-                "email",
-                "phone"
+                "phoneNumber",
+                "teamEmail"
             ],
             "properties": {
                 "discordID": {
-                    "type": "string"
-                },
-                "email": {
                     "type": "string"
                 },
                 "githubID": {
@@ -1499,10 +1558,58 @@ const docTemplate = `{
                 "notionID": {
                     "type": "string"
                 },
-                "phone": {
+                "phoneNumber": {
                     "type": "string",
                     "maxLength": 12,
                     "minLength": 10
+                },
+                "teamEmail": {
+                    "type": "string"
+                }
+            }
+        },
+        "github.com_dwarvesf_fortress-api_pkg_handler_project.AssignMemberInput": {
+            "type": "object",
+            "required": [
+                "deploymentType",
+                "positions",
+                "rate",
+                "seniorityID",
+                "status"
+            ],
+            "properties": {
+                "deploymentType": {
+                    "type": "string"
+                },
+                "discount": {
+                    "type": "number"
+                },
+                "employeeID": {
+                    "type": "string"
+                },
+                "isLead": {
+                    "type": "boolean"
+                },
+                "joinedDate": {
+                    "type": "string"
+                },
+                "leftDate": {
+                    "type": "string"
+                },
+                "positions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "rate": {
+                    "type": "number"
+                },
+                "seniorityID": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
                 }
             }
         },
@@ -1876,17 +1983,14 @@ const docTemplate = `{
                 }
             }
         },
-        "pkg_handler_profile.UpdateInforInput": {
+        "pkg_handler_profile.UpdateInfoInput": {
             "type": "object",
             "required": [
-                "email",
-                "phone"
+                "phoneNumber",
+                "teamEmail"
             ],
             "properties": {
                 "discordID": {
-                    "type": "string"
-                },
-                "email": {
                     "type": "string"
                 },
                 "githubID": {
@@ -1895,10 +1999,58 @@ const docTemplate = `{
                 "notionID": {
                     "type": "string"
                 },
-                "phone": {
+                "phoneNumber": {
                     "type": "string",
                     "maxLength": 12,
                     "minLength": 10
+                },
+                "teamEmail": {
+                    "type": "string"
+                }
+            }
+        },
+        "pkg_handler_project.AssignMemberInput": {
+            "type": "object",
+            "required": [
+                "deploymentType",
+                "positions",
+                "rate",
+                "seniorityID",
+                "status"
+            ],
+            "properties": {
+                "deploymentType": {
+                    "type": "string"
+                },
+                "discount": {
+                    "type": "number"
+                },
+                "employeeID": {
+                    "type": "string"
+                },
+                "isLead": {
+                    "type": "boolean"
+                },
+                "joinedDate": {
+                    "type": "string"
+                },
+                "leftDate": {
+                    "type": "string"
+                },
+                "positions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "rate": {
+                    "type": "number"
+                },
+                "seniorityID": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
                 }
             }
         },
@@ -2092,9 +2244,6 @@ const docTemplate = `{
                 "fullName": {
                     "type": "string"
                 },
-                "id": {
-                    "type": "string"
-                },
                 "isLead": {
                     "type": "boolean"
                 },
@@ -2103,6 +2252,12 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/view.Position"
                     }
+                },
+                "projectMemberID": {
+                    "type": "string"
+                },
+                "projectSlotID": {
+                    "type": "string"
                 },
                 "status": {
                     "type": "string"

@@ -1,6 +1,9 @@
 package project
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+)
 
 var (
 	ErrInvalidProjectID           = errors.New("invalid project ID")
@@ -13,8 +16,16 @@ var (
 	ErrInvalidLeftDate            = errors.New("invalid left date")
 	ErrInvalidMemberID            = errors.New("invalid member ID")
 	ErrProjectNotFound            = errors.New("project not found")
+	ErrEmployeeNotFound           = errors.New("employee not found")
+	ErrSeniorityNotFound          = errors.New("seniority not found")
 	ErrProjectSlotNotFound        = errors.New("project slot not found")
 	ErrMemberIsInactive           = errors.New("member is inactive")
 	ErrSlotIsInactive             = errors.New("slot is inactive")
 	ErrEmployeeIDCannotBeChanged  = errors.New("employeeID cannot be changed")
+	ErrPositionsIsEmpty           = errors.New("positions is empty")
 )
+
+// errPositionNotFound returns unauthorized custom error
+func errPositionNotFound(id string) error {
+	return fmt.Errorf("position not found: %v", id)
+}
