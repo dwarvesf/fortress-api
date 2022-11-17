@@ -10,6 +10,7 @@ type GetListEmployeeQuery struct {
 	model.Pagination
 
 	WorkingStatus string `json:"workingStatus" form:"workingStatus"`
+	Preload       bool   `json:"preload" form:"preload,default=true"`
 }
 
 type UpdateGeneralInfoInput struct {

@@ -1106,6 +1106,10 @@ paths:
         in: query
         name: workingStatus
         type: string
+      - description: Preload
+        in: query
+        name: preload
+        type: boolean
       - description: Page
         in: query
         name: page

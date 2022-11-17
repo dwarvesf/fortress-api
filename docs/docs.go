@@ -114,6 +114,12 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
+                        "type": "boolean",
+                        "description": "Preload",
+                        "name": "preload",
+                        "in": "query"
+                    },
+                    {
                         "type": "string",
                         "description": "Page",
                         "name": "page",

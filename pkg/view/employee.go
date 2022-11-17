@@ -53,6 +53,7 @@ type UpdateGeneralInfoEmployeeData struct {
 	NotionID    string             `json:"notionID"`
 	LineManager *BasisEmployeeInfo `json:"lineManager"`
 }
+
 type UpdateSkillEmployeeData struct {
 	model.BaseModel
 

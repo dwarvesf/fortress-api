@@ -2,8 +2,10 @@ package model
 
 import "time"
 
+// WorkingStatus working_status type for employee table
 type WorkingStatus string
 
+// values for working_status
 const (
 	WorkingStatusOnBoarding WorkingStatus = "on-boarding"
 	WorkingStatusLeft       WorkingStatus = "left"
@@ -12,6 +14,7 @@ const (
 	WorkingStatusContractor WorkingStatus = "contractor"
 )
 
+// IsValid validation for WorkingStatus
 func (e WorkingStatus) IsValid() bool {
 	switch e {
 	case
@@ -25,12 +28,15 @@ func (e WorkingStatus) IsValid() bool {
 	return false
 }
 
+// String returns the string type from the WorkingStatus type
 func (e WorkingStatus) String() string {
 	return string(e)
 }
 
+// AccountStatus account_status type for employee table
 type AccountStatus string
 
+// values for account_status
 const (
 	AccountStatusOnBoarding AccountStatus = "on-boarding"
 	AccountStatusActive     AccountStatus = "active"
@@ -38,6 +44,7 @@ const (
 	AccountStatusOnLeave    AccountStatus = "on-leave"
 )
 
+// IsValid validation for AccountStatus
 func (e AccountStatus) IsValid() bool {
 	switch e {
 	case
@@ -50,17 +57,21 @@ func (e AccountStatus) IsValid() bool {
 	return false
 }
 
+// String returns the string type from the AccountStatus type
 func (e AccountStatus) String() string {
 	return string(e)
 }
 
+// AccountRole account_role type for employee table
 type AccountRole string
 
+// values for account_role
 const (
 	AccountRoleAdmin  AccountRole = "admin"
 	AccountRoleMember AccountRole = "member"
 )
 
+// IsValid validation for AccountRole
 func (e AccountRole) IsValid() bool {
 	switch e {
 	case
@@ -71,6 +82,7 @@ func (e AccountRole) IsValid() bool {
 	return false
 }
 
+// Employee define the model for table employees
 type Employee struct {
 	BaseModel
 

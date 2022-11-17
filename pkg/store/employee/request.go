@@ -9,6 +9,7 @@ import (
 type SearchFilter struct {
 	EmployeeID    string
 	WorkingStatus string
+	Preload       bool
 }
 
 type UpdateGeneralInfoInput struct {
