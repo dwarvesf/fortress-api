@@ -1,6 +1,6 @@
 basePath: /api/v1
 definitions:
-  github.com_dwarvesf_fortress-api_pkg_handler_employee.CreateEmployee:
+  github.com_dwarvesf_fortress-api_pkg_handler_employee.CreateEmployeeInput:
     properties:
       displayName:
         type: string
@@ -9,24 +9,28 @@ definitions:
         type: string
       personalEmail:
         type: string
-      positionID:
-        type: string
+      positions:
+        items:
+          type: string
+        type: array
       roleID:
         type: string
       salary:
         type: integer
       seniorityID:
         type: string
+      status:
+        type: string
       teamEmail:
         type: string
     required:
-    - displayName
     - fullName
     - personalEmail
-    - positionID
+    - positions
     - roleID
     - salary
     - seniorityID
+    - status
     - teamEmail
     type: object
   github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateGeneralInfoInput:
@@ -214,7 +218,7 @@ definitions:
       updatedAt:
         type: string
     type: object
-  pkg_handler_employee.CreateEmployee:
+  pkg_handler_employee.CreateEmployeeInput:
     properties:
       displayName:
         type: string
@@ -223,24 +227,28 @@ definitions:
         type: string
       personalEmail:
         type: string
-      positionID:
-        type: string
+      positions:
+        items:
+          type: string
+        type: array
       roleID:
         type: string
       salary:
         type: integer
       seniorityID:
         type: string
+      status:
+        type: string
       teamEmail:
         type: string
     required:
-    - displayName
     - fullName
     - personalEmail
-    - positionID
+    - positions
     - roleID
     - salary
     - seniorityID
+    - status
     - teamEmail
     type: object
   pkg_handler_employee.UpdateGeneralInfoInput:
@@ -447,10 +455,6 @@ definitions:
         $ref: '#/definitions/view.BasisEmployeeInfo'
       mbti:
         type: string
-      mentees:
-        items:
-          $ref: '#/definitions/view.EmployeeData'
-        type: array
       notionID:
         type: string
       personalEmail:
@@ -843,45 +847,6 @@ paths:
       summary: Authorise user when login
       tags:
       - Auth
-  /employee:
-    post:
-      consumes:
-      - application/json
-      description: Create new employee
-      parameters:
-      - description: Body
-        in: body
-        name: Body
-        required: true
-        schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.CreateEmployee'
-      - description: jwt token
-        in: header
-        name: Authorization
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/view.EmployeeData'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/view.ErrorResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/view.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/view.ErrorResponse'
-      summary: Create new employee
-      tags:
-      - Employee
   /employees:
     get:
       consumes:
@@ -927,6 +892,44 @@ paths:
           schema:
             $ref: '#/definitions/view.ErrorResponse'
       summary: Get the list of employees
+      tags:
+      - Employee
+    post:
+      consumes:
+      - application/json
+      description: Create new employee
+      parameters:
+      - description: Body
+        in: body
+        name: Body
+        required: true
+        schema:
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.CreateEmployeeInput'
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.EmployeeData'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Create new employee
       tags:
       - Employee
   /employees/{id}:

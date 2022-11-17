@@ -86,65 +86,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/employee": {
-            "post": {
-                "description": "Create new employee",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Employee"
-                ],
-                "summary": "Create new employee",
-                "parameters": [
-                    {
-                        "description": "Body",
-                        "name": "Body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.CreateEmployee"
-                        }
-                    },
-                    {
-                        "type": "string",
-                        "description": "jwt token",
-                        "name": "Authorization",
-                        "in": "header",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/view.EmployeeData"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/view.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/view.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/view.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/employees": {
             "get": {
                 "description": "Get the list of employees with pagination and workingStatus",
@@ -192,6 +133,63 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/view.EmployeeListDataResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Create new employee",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Employee"
+                ],
+                "summary": "Create new employee",
+                "parameters": [
+                    {
+                        "description": "Body",
+                        "name": "Body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.CreateEmployeeInput"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.EmployeeData"
                         }
                     },
                     "400": {
@@ -1218,16 +1216,16 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "github.com_dwarvesf_fortress-api_pkg_handler_employee.CreateEmployee": {
+        "github.com_dwarvesf_fortress-api_pkg_handler_employee.CreateEmployeeInput": {
             "type": "object",
             "required": [
-                "displayName",
                 "fullName",
                 "personalEmail",
-                "positionID",
+                "positions",
                 "roleID",
                 "salary",
                 "seniorityID",
+                "status",
                 "teamEmail"
             ],
             "properties": {
@@ -1241,8 +1239,11 @@ const docTemplate = `{
                 "personalEmail": {
                     "type": "string"
                 },
-                "positionID": {
-                    "type": "string"
+                "positions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "roleID": {
                     "type": "string"
@@ -1251,6 +1252,9 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "seniorityID": {
+                    "type": "string"
+                },
+                "status": {
                     "type": "string"
                 },
                 "teamEmail": {
@@ -1533,16 +1537,16 @@ const docTemplate = `{
                 }
             }
         },
-        "pkg_handler_employee.CreateEmployee": {
+        "pkg_handler_employee.CreateEmployeeInput": {
             "type": "object",
             "required": [
-                "displayName",
                 "fullName",
                 "personalEmail",
-                "positionID",
+                "positions",
                 "roleID",
                 "salary",
                 "seniorityID",
+                "status",
                 "teamEmail"
             ],
             "properties": {
@@ -1556,8 +1560,11 @@ const docTemplate = `{
                 "personalEmail": {
                     "type": "string"
                 },
-                "positionID": {
-                    "type": "string"
+                "positions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "roleID": {
                     "type": "string"
@@ -1566,6 +1573,9 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "seniorityID": {
+                    "type": "string"
+                },
+                "status": {
                     "type": "string"
                 },
                 "teamEmail": {
@@ -1874,12 +1884,6 @@ const docTemplate = `{
                 },
                 "mbti": {
                     "type": "string"
-                },
-                "mentees": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/view.EmployeeData"
-                    }
                 },
                 "notionID": {
                     "type": "string"

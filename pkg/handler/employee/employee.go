@@ -185,7 +185,7 @@ func (h *handler) UpdateEmployeeStatus(c *gin.Context) {
 		return
 	}
 
-	// 3. return status reonse
+	// 3. return status response
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToEmployeeData(rs), nil, nil, nil))
 }
 
@@ -281,7 +281,7 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 
 	// 3. update information and return
 	rs, err := h.store.Employee.UpdateGeneralInfo(h.repo.DB(), employee.UpdateGeneralInfoInput{
-		FullName:      body.Fullname,
+		FullName:      body.FullName,
 		Email:         body.Email,
 		Phone:         body.Phone,
 		LineManagerID: body.LineManagerID,
@@ -311,19 +311,24 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 // @Tags Employee
 // @Accept  json
 // @Produce  json
-// @Param Body body CreateEmployee true "Body"
+// @Param Body body CreateEmployeeInput true "Body"
 // @Param Authorization header string true "jwt token"
 // @Success 200 {object} view.EmployeeData
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 404 {object} view.ErrorResponse
 // @Failure 500 {object} view.ErrorResponse
-// @Router /employee [post]
+// @Router /employees [post]
 func (h *handler) Create(c *gin.Context) {
 	// 1. parse eml data from body
-	var req CreateEmployee
+	var req CreateEmployeeInput
 
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, req))
+		return
+	}
+
+	if !model.WorkingStatus(req.Status).IsValid() {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, ErrInvalidEmployeeStatus, req))
 		return
 	}
 
@@ -334,18 +339,28 @@ func (h *handler) Create(c *gin.Context) {
 		"params":  req,
 	})
 
-	// 1.2 prepare eml data
+	// 1.2 prepare employee data
 	now := time.Now()
 
-	pos, err := h.store.Position.One(h.repo.DB(), req.PositionID)
+	// Check position existence
+	positions, err := h.store.Position.All(h.repo.DB())
 	if err != nil {
-		l.Error(err, "error invalid position")
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrPositionNotfound, req))
-			return
-		}
+		l.Error(err, "error when finding position")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req))
 		return
+	}
+
+	positionsReq := make([]model.Position, 0)
+	positionMap := model.ToPositionMap(positions)
+	for _, pID := range req.Positions {
+		_, ok := positionMap[pID]
+		if !ok {
+			l.Error(errPositionNotFound(pID.String()), "error position not found")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errPositionNotFound(pID.String()), req))
+			return
+		}
+
+		positionsReq = append(positionsReq, positionMap[pID])
 	}
 
 	sen, err := h.store.Seniority.One(h.repo.DB(), req.SeniorityID)
@@ -378,11 +393,11 @@ func (h *handler) Create(c *gin.Context) {
 		DisplayName:   req.DisplayName,
 		TeamEmail:     req.TeamEmail,
 		PersonalEmail: req.PersonalEmail,
-		WorkingStatus: model.WorkingStatusProbation,
+		WorkingStatus: model.WorkingStatus(req.Status),
+		AccountStatus: model.AccountStatusActive,
 		JoinedDate:    &now,
-		AccountStatus: model.AccountStatusOnBoarding,
 		SeniorityID:   sen.ID,
-		Positions:     []model.Position{*pos},
+		Positions:     positionsReq,
 		Roles:         []model.Role{*role},
 	}
 

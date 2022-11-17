@@ -124,7 +124,7 @@ func (h *handler) Chapters(c *gin.Context) {
 	c.JSON(http.StatusOK, view.CreateResponse[any](chapters, nil, nil, nil))
 }
 
-// Roles godoc
+// AccountRoles godoc
 // @Summary Get list values for account roles
 // @Description Get list values for account roles
 // @Tags Metadata
