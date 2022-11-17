@@ -407,3 +407,52 @@ func TestHandler_AssignMember(t *testing.T) {
 		})
 	}
 }
+
+func TestHandler_DeleteProjectMember(t *testing.T) {
+	// load env and test data
+	cfg := config.LoadTestConfig()
+	loggerMock := logger.NewLogrusLogger()
+	serviceMock := service.New(&cfg)
+	storeMock := store.New()
+	testRepoMock := store.NewPostgresStore(&cfg)
+
+	tests := []struct {
+		name             string
+		wantCode         int
+		wantResponsePath string
+		id               string
+		memberID         string
+	}{
+		{
+			name:             "ok_update_project_status",
+			wantCode:         200,
+			wantResponsePath: "testdata/delete_member/200.json",
+			id:               "8dc3be2e-19a4-4942-8a79-56db391a0b15",
+			memberID:         "2655832e-f009-4b73-a535-64c3a22e558f",
+		},
+		{
+			name:             "failed_invalid_member_id",
+			wantCode:         404,
+			wantResponsePath: "testdata/delete_member/404.json",
+			id:               "8dc3be2e-19a4-4942-8a79-56db391a0b15",
+			memberID:         "cb889a9c-b20c-47ee-83b8-44b6d1721acb",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			w := httptest.NewRecorder()
+			ctx, _ := gin.CreateTestContext(w)
+			ctx.Params = gin.Params{gin.Param{Key: "id", Value: tt.id}, gin.Param{Key: "memberID", Value: tt.memberID}}
+			ctx.Request = httptest.NewRequest("DELETE", fmt.Sprintf("/api/v1/projects/%s/members/%s", tt.id, tt.memberID), nil)
+			ctx.Request.Header.Set("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2OTkzMjExNDIsImlkIjoiMjY1NTgzMmUtZjAwOS00YjczLWE1MzUtNjRjM2EyMmU1NThmIiwiYXZhdGFyIjoiaHR0cHM6Ly9zMy1hcC1zb3V0aGVhc3QtMS5hbWF6b25hd3MuY29tL2ZvcnRyZXNzLWltYWdlcy81MTUzNTc0Njk1NjYzOTU1OTQ0LnBuZyIsImVtYWlsIjoidGhhbmhAZC5mb3VuZGF0aW9uIiwicGVybWlzc2lvbnMiOlsiZW1wbG95ZWVzLnJlYWQiXSwidXNlcl9pbmZvIjpudWxsfQ.GENGPEucSUrILN6tHDKxLMtj0M0REVMUPC7-XhDMpGM")
+			metadataHandler := New(storeMock, testRepoMock, serviceMock, loggerMock)
+
+			metadataHandler.DeleteMember(ctx)
+			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+			require.NoError(t, err)
+
+			require.JSONEq(t, string(expRespRaw), string(w.Body.Bytes()), "[Handler.UpdateProjectStatus] response mismatched")
+		})
+	}
+}

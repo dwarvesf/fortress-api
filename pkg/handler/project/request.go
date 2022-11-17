@@ -197,3 +197,20 @@ func (i *AssignMemberInput) GetLeftDate() *time.Time {
 
 	return &date
 }
+
+type DeleteMemberInput struct {
+	ProjectID string
+	MemberID  string
+}
+
+func (input DeleteMemberInput) Validate() error {
+	if input.ProjectID == "" {
+		return ErrInvalidProjectID
+	}
+
+	if input.MemberID == "" {
+		return ErrInvalidMemberID
+	}
+
+	return nil
+}

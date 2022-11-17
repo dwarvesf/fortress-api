@@ -22,6 +22,6 @@ func (s *store) Create(db *gorm.DB, pos *model.ProjectSlotPosition) error {
 	return db.Create(&pos).Preload("Position").First(&pos).Error
 }
 
-func (s *store) DeleteByProjectSlotID(db *gorm.DB, slotID string) error {
+func (s *store) HardDeleteByProjectSlotID(db *gorm.DB, slotID string) error {
 	return db.Unscoped().Where("project_slot_id = ?", slotID).Delete(&model.ProjectSlotPosition{}).Error
 }
