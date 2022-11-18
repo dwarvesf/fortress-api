@@ -155,14 +155,18 @@ type ProjectListDataResponse struct {
 }
 
 type EmployeeProjectData struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+	ID             string     `json:"id"`
+	Name           string     `json:"name"`
+	DeploymentType string     `json:"deploymentType"`
+	Positions      []Position `json:"positions"`
 }
 
-func ToEmployeeProjectData(project *model.Project) EmployeeProjectData {
+func ToEmployeeProjectData(pm *model.ProjectMember) EmployeeProjectData {
 	return EmployeeProjectData{
-		ID:   project.ID.String(),
-		Name: project.Name,
+		ID:             pm.ID.String(),
+		Name:           pm.Project.Name,
+		DeploymentType: pm.DeploymentType.String(),
+		Positions:      ToProjectMemberPositions(pm.ProjectMemberPositions),
 	}
 }
 
@@ -191,7 +195,7 @@ func ToCreateMemberData(slot *model.ProjectSlot) CreateMemberData {
 		Avatar:         slot.ProjectMember.Employee.Avatar,
 		DeploymentType: slot.DeploymentType.String(),
 		Status:         slot.Status.String(),
-		Positions:      ToPositionsFromProjectSlotPositions(slot.ProjectSlotPositions),
+		Positions:      ToProjectSlotPositions(slot.ProjectSlotPositions),
 		IsLead:         slot.IsLead,
 	}
 

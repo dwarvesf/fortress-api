@@ -165,9 +165,9 @@ func ToUpdateGeneralInfoEmployeeData(employee *model.Employee) *UpdateGeneralInf
 }
 
 func ToEmployeeData(employee *model.Employee) *EmployeeData {
-	projects := make([]EmployeeProjectData, 0, len(employee.ProjectMembers))
+	employeeProjects := make([]EmployeeProjectData, 0, len(employee.ProjectMembers))
 	for _, v := range employee.ProjectMembers {
-		projects = append(projects, ToEmployeeProjectData(&v.Project))
+		employeeProjects = append(employeeProjects, ToEmployeeProjectData(&v))
 	}
 
 	rs := &EmployeeData{
@@ -196,7 +196,7 @@ func ToEmployeeData(employee *model.Employee) *EmployeeData {
 		JoinedDate:    employee.JoinedDate,
 		LeftDate:      employee.LeftDate,
 		AccountStatus: employee.AccountStatus,
-		Projects:      projects,
+		Projects:      employeeProjects,
 		Roles:         ToRoles(employee.EmployeeRoles),
 		Positions:     ToPositions(employee.EmployeePositions),
 		Stacks:        ToStacks(employee.EmployeeStacks),
