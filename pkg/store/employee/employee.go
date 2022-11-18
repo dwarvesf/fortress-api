@@ -19,6 +19,8 @@ func (s *store) One(db *gorm.DB, id string) (*model.Employee, error) {
 	return employee, db.Where("id = ?", id).
 		Preload("ProjectMembers", "deleted_at IS NULL").
 		Preload("ProjectMembers.Project", "deleted_at IS NULL").
+		Preload("ProjectMembers.ProjectMemberPositions", "deleted_at IS NULL").
+		Preload("ProjectMembers.ProjectMemberPositions.Position", "deleted_at IS NULL").
 		Preload("EmployeePositions", "deleted_at IS NULL").
 		Preload("EmployeePositions.Position", "deleted_at IS NULL").
 		Preload("EmployeeStacks", "deleted_at IS NULL").

@@ -42,8 +42,10 @@
             "roles": [],
             "projects": [
                 {
-                    "id": "8dc3be2e-19a4-4942-8a79-56db391a0b15",
-                    "name": "Fortress" 
+                    "id": "7310b51a-3855-498b-99ab-41aa82934269",
+                    "name": "Fortress",
+                    "deploymentType": "shadow",
+                    "positions": []
                 }
             ],
             "stacks": [
@@ -95,8 +97,10 @@
             "roles": [],
             "projects": [
                 {
-                    "id": "8dc3be2e-19a4-4942-8a79-56db391a0b15",
-                    "name": "Fortress" 
+                    "id": "cb889a9c-b20c-47ee-83b8-44b6d1721aca",
+                    "name": "Fortress",
+                    "deploymentType": "official",
+                    "positions": []
                 }
             ],
             "stacks": [
