@@ -51,7 +51,7 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 func (h *handler) List(c *gin.Context) {
 	query := GetListEmployeeQuery{}
 	if err := c.ShouldBindQuery(&query); err != nil {
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, query))
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, query, ""))
 		return
 	}
 	query.Standardize()
@@ -67,12 +67,12 @@ func (h *handler) List(c *gin.Context) {
 	}, query.Pagination)
 	if err != nil {
 		l.Error(err, "error query employee from db")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, query))
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, query, ""))
 		return
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse(view.ToEmployeeListData(employees),
-		&view.PaginationResponse{Pagination: query.Pagination, Total: total}, nil, nil))
+		&view.PaginationResponse{Pagination: query.Pagination, Total: total}, nil, nil, ""))
 }
 
 // One godoc
@@ -95,7 +95,7 @@ func (h *handler) One(c *gin.Context) {
 	}
 
 	if err := c.ShouldBindUri(&params); err != nil {
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, params))
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, params, ""))
 		return
 	}
 
@@ -112,16 +112,16 @@ func (h *handler) One(c *gin.Context) {
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Info("employee not found")
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, err, params))
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, err, params, ""))
 			return
 		}
 		l.Error(err, "error query employee from db")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, params))
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, params, ""))
 		return
 	}
 
 	// 3. return employee
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToEmployeeData(rs), nil, nil, nil))
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToEmployeeData(rs), nil, nil, nil, ""))
 }
 
 // UpdateEmployeeStatus godoc
@@ -145,7 +145,7 @@ func (h *handler) UpdateEmployeeStatus(c *gin.Context) {
 	}
 
 	if err := c.ShouldBindUri(&params); err != nil {
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, params))
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, params, ""))
 		return
 	}
 
@@ -157,7 +157,7 @@ func (h *handler) UpdateEmployeeStatus(c *gin.Context) {
 	var body updateAccountStatusBody
 	if err := c.ShouldBindJSON(&body); err != nil {
 		if err != nil {
-			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, body))
+			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, body, ""))
 			return
 		}
 	}
@@ -172,7 +172,7 @@ func (h *handler) UpdateEmployeeStatus(c *gin.Context) {
 
 	if !body.EmployeeStatus.IsValid() {
 		l.Error(ErrInvalidEmployeeStatus, "invalid value for EmployeeStatus")
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, ErrInvalidEmployeeStatus, body))
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, ErrInvalidEmployeeStatus, body, ""))
 		return
 	}
 
@@ -180,12 +180,12 @@ func (h *handler) UpdateEmployeeStatus(c *gin.Context) {
 	rs, err := h.store.Employee.UpdateEmployeeStatus(h.repo.DB(), params.ID, body.EmployeeStatus)
 	if err != nil {
 		l.Error(err, "error query update account status employee to db")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, params))
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, params, ""))
 		return
 	}
 
 	// 3. return status response
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToEmployeeData(rs), nil, nil, nil))
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToEmployeeData(rs), nil, nil, nil, ""))
 }
 
 // UpdateGeneralInfo godoc
@@ -208,7 +208,7 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 	var body UpdateGeneralInfoInput
 	if err := c.ShouldBindJSON(&body); err != nil {
 		if err != nil {
-			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, body))
+			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, body, ""))
 			return
 		}
 	}
@@ -226,13 +226,13 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 
 		if err != nil {
 			l.Error(err, "error when finding line manager")
-			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body))
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
 			return
 		}
 
 		if !exist {
 			l.Error(ErrLineManagerNotFound, "error line manager not found")
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrLineManagerNotFound, body))
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrLineManagerNotFound, body, ""))
 			return
 		}
 
@@ -252,16 +252,16 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Error(ErrEmployeeNotFound, "error employee not found")
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrEmployeeNotFound, body))
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrEmployeeNotFound, body, ""))
 			return
 		}
 
 		l.Error(err, "error update employee to db")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body))
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
 		return
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToUpdateGeneralInfoEmployeeData(rs), nil, nil, nil))
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToUpdateGeneralInfoEmployeeData(rs), nil, nil, nil, ""))
 }
 
 // Create godoc
@@ -282,12 +282,12 @@ func (h *handler) Create(c *gin.Context) {
 	var req CreateEmployeeInput
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, req))
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, req, ""))
 		return
 	}
 
 	if !model.WorkingStatus(req.Status).IsValid() {
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, ErrInvalidEmployeeStatus, req))
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, ErrInvalidEmployeeStatus, req, ""))
 		return
 	}
 
@@ -305,7 +305,7 @@ func (h *handler) Create(c *gin.Context) {
 	positions, err := h.store.Position.All(h.repo.DB())
 	if err != nil {
 		l.Error(err, "error when finding position")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req))
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req, ""))
 		return
 	}
 
@@ -315,7 +315,7 @@ func (h *handler) Create(c *gin.Context) {
 		_, ok := positionMap[pID]
 		if !ok {
 			l.Error(errPositionNotFound(pID.String()), "error position not found")
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errPositionNotFound(pID.String()), req))
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errPositionNotFound(pID.String()), req, ""))
 			return
 		}
 
@@ -326,10 +326,10 @@ func (h *handler) Create(c *gin.Context) {
 	if err != nil {
 		l.Error(err, "error invalid seniority")
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrSeniorityNotfound, req))
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrSeniorityNotfound, req, ""))
 			return
 		}
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req))
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req, ""))
 		return
 	}
 
@@ -337,10 +337,10 @@ func (h *handler) Create(c *gin.Context) {
 	if err != nil {
 		l.Error(err, "error invalid role")
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrRoleNotfound, req))
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrRoleNotfound, req, ""))
 			return
 		}
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req))
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req, ""))
 		return
 	}
 
@@ -365,11 +365,11 @@ func (h *handler) Create(c *gin.Context) {
 	if err != gorm.ErrRecordNotFound {
 		if err == nil {
 			l.Error(err, "error eml exists")
-			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, ErrEmployeeExisted, req))
+			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, ErrEmployeeExisted, req, ""))
 			return
 		}
 		l.Error(err, "error store new eml")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req))
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req, ""))
 		return
 	}
 
@@ -377,12 +377,12 @@ func (h *handler) Create(c *gin.Context) {
 	eml, err = h.store.Employee.Create(h.repo.DB(), eml)
 	if err != nil {
 		l.Error(err, "error store new eml")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req))
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req, ""))
 		return
 	}
 
 	// 3. return employee
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToEmployeeData(eml), nil, nil, nil))
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToEmployeeData(eml), nil, nil, nil, ""))
 }
 
 // UpdateSkills godoc
@@ -405,7 +405,7 @@ func (h *handler) UpdateSkills(c *gin.Context) {
 	var body UpdateSkillsInput
 	if err := c.ShouldBindJSON(&body); err != nil {
 		if err != nil {
-			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, body))
+			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, body, ""))
 			return
 		}
 	}
@@ -421,13 +421,13 @@ func (h *handler) UpdateSkills(c *gin.Context) {
 	exist, err := h.store.Employee.Exists(h.repo.DB(), employeeID)
 	if err != nil {
 		l.Error(err, "error when checking employee existence")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body))
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
 		return
 	}
 
 	if !exist {
 		l.Error(ErrEmployeeNotFound, "error employee not found")
-		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrEmployeeNotFound, body))
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrEmployeeNotFound, body, ""))
 		return
 	}
 
@@ -435,13 +435,13 @@ func (h *handler) UpdateSkills(c *gin.Context) {
 	exist, err = h.store.Chapter.Exists(h.repo.DB(), body.Chapter.String())
 	if err != nil {
 		l.Error(err, "error when checking chapter existence")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body))
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
 		return
 	}
 
 	if !exist {
 		l.Error(ErrChapterNotFound, "error chapter not found")
-		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrChapterNotFound, body))
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrChapterNotFound, body, ""))
 		return
 	}
 
@@ -449,13 +449,13 @@ func (h *handler) UpdateSkills(c *gin.Context) {
 	exist, err = h.store.Seniority.Exists(h.repo.DB(), body.Seniority.String())
 	if err != nil {
 		l.Error(err, "error when checking seniority existence")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body))
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
 		return
 	}
 
 	if !exist {
 		l.Error(ErrSeniorityNotFound, "error seniority not found")
-		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrSeniorityNotFound, body))
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrSeniorityNotFound, body, ""))
 		return
 	}
 
@@ -463,7 +463,7 @@ func (h *handler) UpdateSkills(c *gin.Context) {
 	stacks, err := h.store.Stack.All(h.repo.DB())
 	if err != nil {
 		l.Error(err, "error when finding stacks")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body))
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
 		return
 	}
 
@@ -472,7 +472,7 @@ func (h *handler) UpdateSkills(c *gin.Context) {
 		_, ok := stackMap[sID]
 		if !ok {
 			l.Error(errPositionNotFound(sID.String()), "error stack not found")
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errPositionNotFound(sID.String()), body))
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errPositionNotFound(sID.String()), body, ""))
 			return
 		}
 	}
@@ -481,7 +481,7 @@ func (h *handler) UpdateSkills(c *gin.Context) {
 	positions, err := h.store.Position.All(h.repo.DB())
 	if err != nil {
 		l.Error(err, "error when finding position")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body))
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
 		return
 	}
 
@@ -491,7 +491,7 @@ func (h *handler) UpdateSkills(c *gin.Context) {
 
 		if !ok {
 			l.Error(errPositionNotFound(pID.String()), "error position not found")
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errPositionNotFound(pID.String()), body))
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errPositionNotFound(pID.String()), body, ""))
 			return
 		}
 	}
@@ -502,7 +502,7 @@ func (h *handler) UpdateSkills(c *gin.Context) {
 	// Delete all exist employee positions
 	if err := h.store.EmployeePosition.HardDelete(tx.DB(), employeeID); err != nil {
 		l.Error(err, "failed to delete employee position")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body))
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
 		return
 	}
 
@@ -516,7 +516,7 @@ func (h *handler) UpdateSkills(c *gin.Context) {
 		employeePosition, err := h.store.EmployeePosition.Create(tx.DB(), employeePosition)
 		if err != nil {
 			l.Error(err, "failed to create employee position")
-			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body))
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
 			return
 		}
 	}
@@ -524,7 +524,7 @@ func (h *handler) UpdateSkills(c *gin.Context) {
 	// Delete all exist employee stack
 	if err := h.store.EmployeeStack.HardDelete(tx.DB(), employeeID); err != nil {
 		l.Error(err, "failed to delete employee stack in database")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body))
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
 		return
 	}
 
@@ -538,7 +538,7 @@ func (h *handler) UpdateSkills(c *gin.Context) {
 		employeeStack, err := h.store.EmployeeStack.Create(tx.DB(), employeeStack)
 		if err != nil {
 			l.Error(err, "failed to create employee stack")
-			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body))
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
 			return
 		}
 	}
@@ -552,11 +552,11 @@ func (h *handler) UpdateSkills(c *gin.Context) {
 	rs, err := h.store.Employee.Update(tx.DB(), employeeID, employeeIn)
 	if err != nil {
 		l.Error(err, "error update employee to db")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body))
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
 		return
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToUpdateSkillEmployeeData(rs), nil, done(nil), nil))
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToUpdateSkillEmployeeData(rs), nil, done(nil), nil, ""))
 }
 
 // UpdatePersonalInfo godoc
@@ -579,7 +579,7 @@ func (h *handler) UpdatePersonalInfo(c *gin.Context) {
 	var body UpdatePersonalInfoInput
 	if err := c.ShouldBindJSON(&body); err != nil {
 		if err != nil {
-			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, body))
+			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, body, ""))
 			return
 		}
 	}
@@ -602,14 +602,14 @@ func (h *handler) UpdatePersonalInfo(c *gin.Context) {
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Error(ErrEmployeeNotFound, "error employee not found")
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrEmployeeNotFound, body))
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrEmployeeNotFound, body, ""))
 			return
 		}
 
 		l.Error(err, "error update employee to db")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body))
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
 		return
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToUpdatePersonalEmployeeData(rs), nil, nil, nil))
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToUpdatePersonalEmployeeData(rs), nil, nil, nil, ""))
 }

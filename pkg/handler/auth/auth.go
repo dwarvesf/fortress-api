@@ -51,7 +51,7 @@ func (h *handler) Auth(c *gin.Context) {
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, req))
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, req, ""))
 		return
 	}
 
@@ -66,7 +66,7 @@ func (h *handler) Auth(c *gin.Context) {
 	accessToken, err := h.service.Google.GetAccessToken(req.Code, req.RedirectURL)
 	if err != nil {
 		l.Error(err, "error getting access token from google")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req))
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req, ""))
 		return
 	}
 
@@ -74,14 +74,14 @@ func (h *handler) Auth(c *gin.Context) {
 	primaryEmail, err := h.service.Google.GetGoogleEmail(accessToken)
 	if err != nil {
 		l.Error(err, "error getting email from google")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req))
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req, ""))
 		return
 	}
 
 	// 2.3 double check empty primary email
 	if primaryEmail == "" {
 		l.Error(err, "error nil email from google")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req))
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req, ""))
 		return
 	}
 
@@ -89,12 +89,12 @@ func (h *handler) Auth(c *gin.Context) {
 	employee, err := h.store.Employee.OneByTeamEmail(h.repo.DB(), primaryEmail)
 	if err != nil {
 		l.Error(err, "error query employee from db")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req))
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req, ""))
 		return
 	}
 	if employee == nil {
 		l.Error(err, "error employee is not activated")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req))
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req, ""))
 		return
 	}
 
@@ -107,10 +107,10 @@ func (h *handler) Auth(c *gin.Context) {
 	jwt, err := utils.GenerateJWTToken(&authenticationInfo, time.Now().Add(24*365*time.Hour).Unix(), "JWTSecretKey")
 	if err != nil {
 		l.Error(err, "error query employee from db")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req))
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req, ""))
 		return
 	}
 
 	// 3. return auth data
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToAuthData(jwt, employee), nil, nil, nil))
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToAuthData(jwt, employee), nil, nil, nil, ""))
 }

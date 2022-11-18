@@ -47,7 +47,7 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 func (h *handler) GetProfile(c *gin.Context) {
 	userID, err := utils.GetUserIDFromContext(c)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil))
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
 	}
 
@@ -61,15 +61,15 @@ func (h *handler) GetProfile(c *gin.Context) {
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Info("employee not found")
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, err, nil))
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, err, nil, ""))
 			return
 		}
 		l.Error(err, "error query employee from db")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil))
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToProfileData(rs), nil, nil, nil))
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToProfileData(rs), nil, nil, nil, ""))
 }
 
 // UpdateInfo godoc
@@ -90,14 +90,14 @@ func (h *handler) UpdateInfo(c *gin.Context) {
 	employeeID, err := utils.GetUserIDFromContext(c)
 
 	if err != nil {
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil))
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
 	}
 
 	input := UpdateInfoInput{}
 
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, input))
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, input, ""))
 		return
 	}
 
@@ -120,14 +120,14 @@ func (h *handler) UpdateInfo(c *gin.Context) {
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Error(ErrEmployeeNotFound, "error employee not found")
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrEmployeeNotFound, input))
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrEmployeeNotFound, input, ""))
 			return
 		}
 
 		l.Error(err, "error update employee to db")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input))
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input, ""))
 		return
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToUpdateProfileInfoData(rs), nil, nil, nil))
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToUpdateProfileInfoData(rs), nil, nil, nil, ""))
 }
