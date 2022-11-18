@@ -61,7 +61,7 @@ func (h *handler) WorkingStatus(c *gin.Context) {
 		},
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse[any](res, nil, nil, nil))
+	c.JSON(http.StatusOK, view.CreateResponse[any](res, nil, nil, nil, ""))
 }
 
 // Seniorities godoc
@@ -86,12 +86,12 @@ func (h *handler) Seniorities(c *gin.Context) {
 	seniorities, err := h.store.Seniority.All(h.repo.DB())
 	if err != nil {
 		l.Error(err, "error query seniorities from db")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil))
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
 	}
 
 	// 3 return array of seniorities
-	c.JSON(http.StatusOK, view.CreateResponse[any](seniorities, nil, nil, nil))
+	c.JSON(http.StatusOK, view.CreateResponse[any](seniorities, nil, nil, nil, ""))
 }
 
 // Chapters godoc
@@ -116,12 +116,12 @@ func (h *handler) Chapters(c *gin.Context) {
 	chapters, err := h.store.Chapter.All(h.repo.DB())
 	if err != nil {
 		l.Error(err, "error query chapters from db")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil))
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
 	}
 
 	// 3 return array of chapters
-	c.JSON(http.StatusOK, view.CreateResponse[any](chapters, nil, nil, nil))
+	c.JSON(http.StatusOK, view.CreateResponse[any](chapters, nil, nil, nil, ""))
 }
 
 // AccountRoles godoc
@@ -146,12 +146,12 @@ func (h *handler) AccountRoles(c *gin.Context) {
 	roles, err := h.store.Role.All(h.repo.DB())
 	if err != nil {
 		l.Error(err, "error query roles from db")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil))
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
 	}
 
 	// 3 return array of roles
-	c.JSON(http.StatusOK, view.CreateResponse[any](roles, nil, nil, nil))
+	c.JSON(http.StatusOK, view.CreateResponse[any](roles, nil, nil, nil, ""))
 }
 
 // AccountStatuses godoc
@@ -186,7 +186,7 @@ func (h *handler) AccountStatuses(c *gin.Context) {
 		},
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse[any](res, nil, nil, nil))
+	c.JSON(http.StatusOK, view.CreateResponse[any](res, nil, nil, nil, ""))
 }
 
 // ProjectStatuses godoc
@@ -221,7 +221,7 @@ func (h *handler) ProjectStatuses(c *gin.Context) {
 		},
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse[any](res, nil, nil, nil))
+	c.JSON(http.StatusOK, view.CreateResponse[any](res, nil, nil, nil, ""))
 }
 
 // Positions godoc
@@ -246,12 +246,12 @@ func (h *handler) Positions(c *gin.Context) {
 	positions, err := h.store.Position.All(h.repo.DB())
 	if err != nil {
 		l.Error(err, "error query positions from db")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil))
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
 	}
 
 	// 3 return array of positions
-	c.JSON(http.StatusOK, view.CreateResponse[any](positions, nil, nil, nil))
+	c.JSON(http.StatusOK, view.CreateResponse[any](positions, nil, nil, nil, ""))
 }
 
 // GetCountries godoc
@@ -271,11 +271,11 @@ func (h *handler) GetCountries(c *gin.Context) {
 			"handler": "metadata",
 			"method":  "GetCountries",
 		}).Error(err, "failed to get all countries")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil))
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse(countries, nil, nil, nil))
+	c.JSON(http.StatusOK, view.CreateResponse(countries, nil, nil, nil, ""))
 }
 
 // GetCities godoc
@@ -297,18 +297,18 @@ func (h *handler) GetCities(c *gin.Context) {
 	countryID := c.Param("country_id")
 	if countryID == "" {
 		l.Info("country_id is empty")
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errors.New("country_id is empty"), nil))
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errors.New("country_id is empty"), nil, ""))
 		return
 	}
 
 	country, err := h.store.Country.One(h.repo.DB(), countryID)
 	if err != nil {
 		l.AddField("countryID", countryID).Error(err, "failed to get cities")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil))
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse(country.Cities, nil, nil, nil))
+	c.JSON(http.StatusOK, view.CreateResponse(country.Cities, nil, nil, nil, ""))
 }
 
 // Stacks godoc
@@ -332,10 +332,10 @@ func (h *handler) Stacks(c *gin.Context) {
 	stacks, err := h.store.Stack.All(h.repo.DB())
 	if err != nil {
 		l.Error(err, "error query Stacks from db")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil))
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
 	}
 
 	// 2 return array of account statuses
-	c.JSON(http.StatusOK, view.CreateResponse[any](stacks, nil, nil, nil))
+	c.JSON(http.StatusOK, view.CreateResponse[any](stacks, nil, nil, nil, ""))
 }
