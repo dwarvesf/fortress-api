@@ -150,6 +150,10 @@ definitions:
         type: string
       deliveryManagerID:
         type: string
+      members:
+        items:
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.AssignMemberInput'
+        type: array
       name:
         type: string
       startDate:
@@ -163,7 +167,6 @@ definitions:
     - countryID
     - name
     - status
-    - type
     type: object
   github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateMemberInput:
     properties:
@@ -451,6 +454,10 @@ definitions:
         type: string
       deliveryManagerID:
         type: string
+      members:
+        items:
+          $ref: '#/definitions/pkg_handler_project.AssignMemberInput'
+        type: array
       name:
         type: string
       startDate:
@@ -464,7 +471,6 @@ definitions:
     - countryID
     - name
     - status
-    - type
     type: object
   pkg_handler_project.UpdateMemberInput:
     properties:
@@ -601,6 +607,10 @@ definitions:
         $ref: '#/definitions/view.ProjectHead'
       id:
         type: string
+      members:
+        items:
+          $ref: '#/definitions/view.CreateMemberData'
+        type: array
       name:
         type: string
       startDate:
@@ -692,10 +702,16 @@ definitions:
     type: object
   view.EmployeeProjectData:
     properties:
+      deploymentType:
+        type: string
       id:
         type: string
       name:
         type: string
+      positions:
+        items:
+          $ref: '#/definitions/view.Position'
+        type: array
     type: object
   view.ErrorResponse:
     properties:
@@ -1127,7 +1143,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.CreateEmployeeInput'
+          $ref: '#/definitions/pkg_handler_employee.CreateEmployeeInput'
       - description: jwt token
         in: header
         name: Authorization
@@ -1258,7 +1274,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateGeneralInfoInput'
+          $ref: '#/definitions/pkg_handler_employee.UpdateGeneralInfoInput'
       produces:
       - application/json
       responses:
@@ -1302,7 +1318,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdatePersonalInfoInput'
+          $ref: '#/definitions/pkg_handler_employee.UpdatePersonalInfoInput'
       produces:
       - application/json
       responses:
@@ -1341,7 +1357,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateSkillsInput'
+          $ref: '#/definitions/pkg_handler_employee.UpdateSkillsInput'
       - description: jwt token
         in: header
         name: Authorization
@@ -1658,7 +1674,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/pkg_handler_profile.UpdateInfoInput'
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_profile.UpdateInfoInput'
       produces:
       - application/json
       responses:
@@ -1745,7 +1761,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.CreateProjectInput'
+          $ref: '#/definitions/pkg_handler_project.CreateProjectInput'
       produces:
       - application/json
       responses:
@@ -1838,7 +1854,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.AssignMemberInput'
+          $ref: '#/definitions/pkg_handler_project.AssignMemberInput'
       produces:
       - application/json
       responses:
@@ -1881,7 +1897,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateMemberInput'
+          $ref: '#/definitions/pkg_handler_project.UpdateMemberInput'
       produces:
       - application/json
       responses:
