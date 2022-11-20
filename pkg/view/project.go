@@ -12,6 +12,10 @@ type ProjectData struct {
 	Name            string          `json:"name"`
 	Type            string          `json:"type"`
 	Status          string          `json:"status"`
+	ProjectEmail    string          `json:"projectEmail"`
+	ClientEmail     string          `json:"clientEmail"`
+	Industry        string          `json:"industry"`
+	Country         string          `json:"country"`
 	StartDate       *time.Time      `json:"startDate"`
 	EndDate         *time.Time      `json:"endDate"`
 	Members         []ProjectMember `json:"members"`
@@ -19,6 +23,7 @@ type ProjectData struct {
 	AccountManager  *ProjectHead    `json:"accountManager"`
 	SalePerson      *ProjectHead    `json:"salePerson"`
 	DeliveryManager *ProjectHead    `json:"deliveryManager"`
+	Stacks          []Stack         `json:"stacks"`
 }
 
 type UpdatedProject struct {
@@ -79,72 +84,77 @@ func ToUpdateProjectStatusResponse(p *model.Project) UpdatedProject {
 	}
 }
 
-func ToProjectData(projects []*model.Project) []ProjectData {
+func ToProjectData(project *model.Project) ProjectData {
+	leads := map[string]string{}
+	var technicalLeads = make([]ProjectHead, 0, len(project.Heads))
+	var accountManager, salePerson, deliveryManager *ProjectHead
+	for _, h := range project.Heads {
+		head := ProjectHead{
+			EmployeeID:  h.EmployeeID.String(),
+			FullName:    h.Employee.FullName,
+			DisplayName: h.Employee.DisplayName,
+			Avatar:      h.Employee.Avatar,
+		}
+
+		if h.IsLead() {
+			leads[h.EmployeeID.String()] = h.Position.String()
+			technicalLeads = append(technicalLeads, head)
+			continue
+		}
+
+		if h.IsAccountManager() {
+			accountManager = &head
+			continue
+		}
+
+		if h.IsSalePerson() {
+			salePerson = &head
+			continue
+		}
+
+		if h.IsDeliveryManager() {
+			deliveryManager = &head
+		}
+	}
+
+	var members = make([]ProjectMember, 0, len(project.Members))
+	for _, m := range project.Members {
+		_, isLead := leads[m.Employee.ID.String()]
+
+		members = append(members, ProjectMember{
+			EmployeeID:  m.ID.String(),
+			FullName:    m.Employee.FullName,
+			DisplayName: m.Employee.DisplayName,
+			Avatar:      m.Employee.Avatar,
+			Status:      m.Status.String(),
+			Positions:   ToPositions(m.Employee.EmployeePositions),
+			IsLead:      isLead,
+		})
+	}
+
+	d := ProjectData{
+		BaseModel:       project.BaseModel,
+		Name:            project.Name,
+		Type:            project.Type.String(),
+		Status:          project.Status.String(),
+		Stacks:          ToProjectStacks(project.ProjectStacks),
+		StartDate:       project.StartDate,
+		EndDate:         project.EndDate,
+		Members:         members,
+		TechnicalLead:   technicalLeads,
+		DeliveryManager: deliveryManager,
+		SalePerson:      salePerson,
+		AccountManager:  accountManager,
+	}
+
+	return d
+}
+
+func ToProjectsData(projects []*model.Project) []ProjectData {
 	var results = make([]ProjectData, 0, len(projects))
 
 	for _, p := range projects {
-		leads := map[string]string{}
-		var technicalLeads = make([]ProjectHead, 0, len(p.Heads))
-		var accountManager, salePerson, deliveryManager *ProjectHead
-		for _, h := range p.Heads {
-			head := ProjectHead{
-				EmployeeID:  h.EmployeeID.String(),
-				FullName:    h.Employee.FullName,
-				DisplayName: h.Employee.DisplayName,
-				Avatar:      h.Employee.Avatar,
-			}
-
-			if h.IsLead() {
-				leads[h.EmployeeID.String()] = h.Position.String()
-				technicalLeads = append(technicalLeads, head)
-				continue
-			}
-
-			if h.IsAccountManager() {
-				accountManager = &head
-				continue
-			}
-
-			if h.IsSalePerson() {
-				salePerson = &head
-				continue
-			}
-
-			if h.IsDeliveryManager() {
-				deliveryManager = &head
-			}
-		}
-
-		var members = make([]ProjectMember, 0, len(p.Members))
-		for _, m := range p.Members {
-			_, isLead := leads[m.Employee.ID.String()]
-
-			members = append(members, ProjectMember{
-				EmployeeID:  m.ID.String(),
-				FullName:    m.Employee.FullName,
-				DisplayName: m.Employee.DisplayName,
-				Avatar:      m.Employee.Avatar,
-				Status:      m.Status.String(),
-				Positions:   ToPositions(m.Employee.EmployeePositions),
-				IsLead:      isLead,
-			})
-		}
-
-		d := ProjectData{
-			BaseModel:       p.BaseModel,
-			Name:            p.Name,
-			Type:            p.Type.String(),
-			Status:          p.Status.String(),
-			StartDate:       p.StartDate,
-			EndDate:         p.EndDate,
-			Members:         members,
-			TechnicalLead:   technicalLeads,
-			DeliveryManager: deliveryManager,
-			SalePerson:      salePerson,
-			AccountManager:  accountManager,
-		}
-
-		results = append(results, d)
+		results = append(results, ToProjectData(p))
 	}
 
 	return results

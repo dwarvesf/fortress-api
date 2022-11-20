@@ -200,7 +200,7 @@ func ToEmployeeData(employee *model.Employee) *EmployeeData {
 		Projects:      employeeProjects,
 		Roles:         ToRoles(employee.EmployeeRoles),
 		Positions:     ToPositions(employee.EmployeePositions),
-		Stacks:        ToStacks(employee.EmployeeStacks),
+		Stacks:        ToEmployeeStacks(employee.EmployeeStacks),
 	}
 
 	if employee.Seniority != nil {
