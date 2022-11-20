@@ -7,7 +7,20 @@ type Stack struct {
 	Code string `json:"code"`
 }
 
-func ToStacks(stacks []model.EmployeeStack) []Stack {
+func ToEmployeeStacks(stacks []model.EmployeeStack) []Stack {
+	rs := make([]Stack, 0, len(stacks))
+	for _, v := range stacks {
+		r := Stack{
+			Code: v.Stack.Code,
+			Name: v.Stack.Name,
+		}
+		rs = append(rs, r)
+	}
+
+	return rs
+}
+
+func ToProjectStacks(stacks []model.ProjectStack) []Stack {
 	rs := make([]Stack, 0, len(stacks))
 	for _, v := range stacks {
 		r := Stack{

@@ -10,4 +10,5 @@ type IHandler interface {
 	UpdateMember(c *gin.Context)
 	AssignMember(c *gin.Context)
 	DeleteMember(c *gin.Context)
+	Details(c *gin.Context)
 }

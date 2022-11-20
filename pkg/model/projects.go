@@ -57,15 +57,16 @@ func (e ProjectStatus) String() string {
 type Project struct {
 	BaseModel
 
-	Name      string
-	Country   string
-	Type      ProjectType
-	StartDate *time.Time
-	EndDate   *time.Time
-	Status    ProjectStatus
-	Slots     []ProjectSlot
-	Members   []ProjectMember
-	Heads     []ProjectHead
+	Name          string
+	Country       string
+	Type          ProjectType
+	StartDate     *time.Time
+	EndDate       *time.Time
+	Status        ProjectStatus
+	Slots         []ProjectSlot
+	Members       []ProjectMember
+	Heads         []ProjectHead
+	ProjectStacks []ProjectStack
 }
 
 type DeploymentType string
@@ -212,4 +213,6 @@ type ProjectStack struct {
 
 	ProjectID UUID
 	StackID   UUID
+
+	Stack Stack
 }

@@ -83,7 +83,7 @@ func (h *handler) List(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse(view.ToProjectData(projects),
+	c.JSON(http.StatusOK, view.CreateResponse(view.ToProjectsData(projects),
 		&view.PaginationResponse{Pagination: query.Pagination, Total: total}, nil, nil, ""))
 }
 
@@ -860,4 +860,46 @@ func (h *handler) assignMemberToProject(db *gorm.DB, projectID string, req Assig
 	}
 
 	return slot, http.StatusOK, nil
+}
+
+// Details godoc
+// @Summary Get details of a project
+// @Description Get details of a project
+// @Tags Project
+// @Accept  json
+// @Produce  json
+// @Param Authorization header string true "jwt token"
+// @Param id path string true "Project ID"
+// @Success 200 {object} view.ProjectListDataResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /projects/{id} [get]
+func (h *handler) Details(c *gin.Context) {
+	projectID := c.Param("id")
+	if projectID == "" || !model.IsUUIDFromString(projectID) {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, ErrInvalidProjectID, nil, ""))
+		return
+	}
+
+	// TODO: can we move this to middleware ?
+	l := h.logger.Fields(logger.Fields{
+		"handler": "project",
+		"method":  "Details",
+		"id":      projectID,
+	})
+
+	project, err := h.store.Project.One(h.repo.DB(), projectID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			l.Info("project not found")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrProjectNotFound, nil, ""))
+			return
+		}
+		l.Error(err, "error query project from db")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse(view.ToProjectData(project), nil, nil, nil, ""))
 }

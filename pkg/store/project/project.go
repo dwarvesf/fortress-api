@@ -78,3 +78,18 @@ func (s *store) Exists(db *gorm.DB, id string) (bool, error) {
 	query := db.Raw("SELECT EXISTS (SELECT * FROM projects WHERE id = ?) as result", id)
 	return record.Result, query.Scan(&record).Error
 }
+
+// One get 1 project by id
+func (s *store) One(db *gorm.DB, id string) (*model.Project, error) {
+	var project *model.Project
+	return project, db.Where("id = ?", id).
+		Preload("Members", "deleted_at IS NULL and left_date IS NULL AND status IN ?",
+			[]model.AccountStatus{model.AccountStatusActive, model.AccountStatusOnBoarding}).
+		Preload("Members.Employee").
+		Preload("Heads", "deleted_at IS NULL and left_date IS NULL").
+		Preload("Heads.Employee").
+		Preload("ProjectStacks", "deleted_at IS NULL").
+		Preload("ProjectStacks.Stack", "deleted_at IS NULL").
+		First(&project).
+		Error
+}

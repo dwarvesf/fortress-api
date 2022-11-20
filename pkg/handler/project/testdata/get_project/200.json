@@ -1,0 +1,43 @@
+{
+	"data": {
+		"id": "8dc3be2e-19a4-4942-8a79-56db391a0b15",
+		"createdAt": "",
+		"updatedAt": "",
+		"name": "Fortress",
+		"type": "dwarves",
+		"status": "active",
+		"startDate": "2022-11-01T00:00:00Z",
+		"endDate": null,
+		"projectEmail": "",
+		"clientEmail": "",
+		"industry": "",
+		"country": "",
+		"members": [
+			{
+				"projectSlotID": "",
+				"employeeID": "7310b51a-3855-498b-99ab-41aa82934269",
+				"fullName": "Nguyễn Hoàng Huy",
+				"displayName": "Huy Nguyen",
+				"avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/2830497479497502617.png",
+				"position": "",
+				"seniority": "",
+				"status": "active",
+				"isLead": false,
+				"deploymentType": "",
+				"joinedDate": null,
+				"leftDate": null,
+				"positions": []
+			}
+		],
+		"technicalLeads": [],
+		"stacks": [
+			{
+				"name": "Golang",
+				"code": "golang"
+			}
+		],
+		"accountManager": null,
+		"salePerson": null,
+		"deliveryManager": null
+	}
+}

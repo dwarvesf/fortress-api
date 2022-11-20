@@ -438,7 +438,6 @@ func TestHandler_DeleteProjectMember(t *testing.T) {
 			memberID:         "cb889a9c-b20c-47ee-83b8-44b6d1721acb",
 		},
 	}
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			w := httptest.NewRecorder()
@@ -453,6 +452,58 @@ func TestHandler_DeleteProjectMember(t *testing.T) {
 			require.NoError(t, err)
 
 			require.JSONEq(t, string(expRespRaw), string(w.Body.Bytes()), "[Handler.UpdateProjectStatus] response mismatched")
+		})
+	}
+}
+func TestHandler_Details(t *testing.T) {
+	cfg := config.LoadTestConfig()
+	loggerMock := logger.NewLogrusLogger()
+	serviceMock := service.New(&cfg)
+	storeMock := store.New()
+	testRepoMock := store.NewPostgresStore(&cfg)
+
+	tests := []struct {
+		name string
+
+		id               string
+		query            string
+		wantCode         int
+		wantErr          error
+		wantResponsePath string
+	}{
+		{
+			name:             "happy_case",
+			id:               "8dc3be2e-19a4-4942-8a79-56db391a0b15",
+			wantCode:         http.StatusOK,
+			wantResponsePath: "testdata/get_project/200.json",
+		},
+		{
+			name:             "not_found",
+			id:               "8dc3be2e-19a4-4942-8a79-56db391a0b11",
+			wantCode:         http.StatusNotFound,
+			wantResponsePath: "testdata/get_project/404.json",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			w := httptest.NewRecorder()
+			ctx, _ := gin.CreateTestContext(w)
+			ctx.Request = httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/projects/%v", tt.id), nil)
+			ctx.Request.Header.Set("Authorization", tokenTest)
+			ctx.Request.URL.RawQuery = tt.query
+			ctx.AddParam("id", tt.id)
+
+			h := New(storeMock, testRepoMock, serviceMock, loggerMock)
+			h.Details(ctx)
+			require.Equal(t, tt.wantCode, w.Code)
+			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+			require.NoError(t, err)
+
+			res := w.Body.Bytes()
+			res, _ = utils.RemoveFieldInResponse(res, "createdAt")
+			res, _ = utils.RemoveFieldInResponse(res, "updatedAt")
+
+			require.JSONEq(t, string(expRespRaw), string(res), "[Handler.Project.Details] response mismatched")
 		})
 	}
 }

@@ -146,6 +146,12 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/project.IHandler.Create-fm",
 			},
 		},
+		"/api/v1/projects/:id": {
+			"GET": {
+				Method:  "GET",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/project.IHandler.Details-fm",
+			},
+		},
 		"/api/v1/projects/:id/status": {
 			"PUT": {
 				Method:  "PUT",

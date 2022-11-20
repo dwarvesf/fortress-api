@@ -11,4 +11,5 @@ type IStore interface {
 	UpdateStatus(db *gorm.DB, projectID string, projectStatus model.ProjectStatus) (*model.Project, error)
 	Create(db *gorm.DB, project *model.Project) error
 	Exists(db *gorm.DB, id string) (bool, error)
+	One(db *gorm.DB, id string) (*model.Project, error)
 }
