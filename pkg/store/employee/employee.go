@@ -76,9 +76,9 @@ func (s *store) Search(db *gorm.DB, filter SearchFilter, pagination model.Pagina
 	return employees, total, query.Find(&employees).Error
 }
 
-func (s *store) UpdateEmployeeStatus(db *gorm.DB, employeeID string, accountStatus model.AccountStatus) (*model.Employee, error) {
+func (s *store) UpdateEmployeeStatus(db *gorm.DB, employeeID string, status model.WorkingStatus) (*model.Employee, error) {
 	employee := &model.Employee{}
-	return employee, db.Model(&employee).Where("id = ?", employeeID).Update("account_status", string(accountStatus)).Find(&employee).Error
+	return employee, db.Model(&employee).Where("id = ?", employeeID).Update("working_status", string(status)).Find(&employee).Error
 }
 
 func (s *store) UpdateGeneralInfo(db *gorm.DB, body UpdateGeneralInfoInput, id string) (*model.Employee, error) {
