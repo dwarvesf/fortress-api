@@ -11,12 +11,12 @@ type Loader interface {
 
 type Config struct {
 	// db
-	Postgres   DBConnection
-	Clickhouse DBConnection
+	Postgres DBConnection
 
 	// server
 	ApiServer ApiServer
 	Google    Google
+	Vault     Vault
 
 	Debug bool
 }
@@ -36,38 +36,16 @@ type ApiServer struct {
 	AllowedOrigins string
 }
 
-type GrpcServer struct {
-	Port string
-	Host string
-}
-
-type ChainExplorerApiKey struct {
-	Eth      string
-	Ftm      string
-	Bsc      string
-	Optimism string
-}
-type RpcUrl struct {
-	Eth      string
-	Ftm      string
-	Optimism string
-}
-
-type MarketplaceApiKey struct {
-	Opensea  string
-	Quixotic string
-}
-
-type Kafka struct {
-	Servers       string
-	IndexerTopic  string
-	ConsumerGroup string
-}
-
 type Google struct {
 	ClientSecret string
 	ClientID     string
 	AppName      string
+}
+
+type Vault struct {
+	Address string
+	Token   string
+	Path    string
 }
 
 func generateConfigFromViper(v *viper.Viper) *Config {
@@ -77,14 +55,6 @@ func generateConfigFromViper(v *viper.Viper) *Config {
 		ApiServer: ApiServer{
 			Port:           v.GetString("PORT"),
 			AllowedOrigins: v.GetString("ALLOWED_ORIGINS"),
-		},
-
-		Clickhouse: DBConnection{
-			Host: v.GetString("CLICKHOUSE_HOST"),
-			Port: v.GetString("CLICKHOUSE_PORT"),
-			User: v.GetString("CLICKHOUSE_USER"),
-			Name: v.GetString("CLICKHOUSE_NAME"),
-			Pass: v.GetString("CLICKHOUSE_PASS"),
 		},
 
 		Postgres: DBConnection{
@@ -100,6 +70,12 @@ func generateConfigFromViper(v *viper.Viper) *Config {
 			ClientSecret: v.GetString("GOOGLE_API_CLIENT_SECRET"),
 			ClientID:     v.GetString("GOOGLE_API_CLIENT_ID"),
 			AppName:      v.GetString("GOOGLE_API_APP_NAME"),
+		},
+
+		Vault: Vault{
+			Address: v.GetString("VAULT_ADDR"),
+			Token:   v.GetString("VAULT_TOKEN"),
+			Path:    v.GetString("VAULT_PATH"),
 		},
 	}
 }
@@ -145,13 +121,6 @@ func LoadTestConfig() Config {
 			Pass:    "postgres",
 			Name:    "fortress_local_test",
 			SSLMode: "disable",
-		},
-		Clickhouse: DBConnection{
-			Host: "clickhouse_host",
-			Port: "clickhouse_port",
-			User: "clickhouse_user",
-			Pass: "clickhouse_pass",
-			Name: "clickhouse_name",
 		},
 	}
 }
