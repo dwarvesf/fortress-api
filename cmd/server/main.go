@@ -14,6 +14,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/request"
 	"github.com/dwarvesf/fortress-api/pkg/routes"
 	"github.com/dwarvesf/fortress-api/pkg/service"
+	"github.com/dwarvesf/fortress-api/pkg/service/vault"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 )
 
@@ -37,6 +38,15 @@ func main() {
 	log := logger.NewLogrusLogger()
 
 	log.Infof("Server starting")
+
+	vault, err := vault.New(cfg)
+	if err != nil {
+		log.Error(err, "failed to init vault")
+	}
+
+	if vault != nil {
+		cfg = vault.LoadConfig()
+	}
 
 	svc := service.New(cfg)
 	s := store.New()

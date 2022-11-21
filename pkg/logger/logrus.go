@@ -22,7 +22,7 @@ func NewLogrusLogger() Logger {
 		hostname = "unknown"
 	}
 	defaultFields := Fields{
-		"service":  "indexer",
+		"service":  "fortress-api",
 		"hostname": hostname,
 	}
 
