@@ -979,7 +979,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_profile.UpdateInfoInput"
+                            "$ref": "#/definitions/pkg_handler_profile.UpdateInfoInput"
                         }
                     }
                 ],
@@ -1174,7 +1174,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/pkg_handler_project.CreateProjectInput"
+                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.CreateProjectInput"
                         }
                     }
                 ],
@@ -1314,7 +1314,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/pkg_handler_project.UpdateMemberInput"
+                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateMemberInput"
                         }
                     }
                 ],
@@ -1378,7 +1378,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/pkg_handler_project.AssignMemberInput"
+                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.AssignMemberInput"
                         }
                     }
                 ],
@@ -1613,6 +1613,7 @@ const docTemplate = `{
         "github.com_dwarvesf_fortress-api_pkg_handler_profile.UpdateInfoInput": {
             "type": "object",
             "required": [
+                "personalEmail",
                 "phoneNumber",
                 "teamEmail"
             ],
@@ -1624,6 +1625,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "notionID": {
+                    "type": "string"
+                },
+                "personalEmail": {
                     "type": "string"
                 },
                 "phoneNumber": {
@@ -2059,6 +2063,7 @@ const docTemplate = `{
         "pkg_handler_profile.UpdateInfoInput": {
             "type": "object",
             "required": [
+                "personalEmail",
                 "phoneNumber",
                 "teamEmail"
             ],
@@ -2070,6 +2075,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "notionID": {
+                    "type": "string"
+                },
+                "personalEmail": {
                     "type": "string"
                 },
                 "phoneNumber": {
@@ -2608,6 +2616,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
+                    "type": "string"
+                },
+                "notionID": {
                     "type": "string"
                 },
                 "personalEmail": {

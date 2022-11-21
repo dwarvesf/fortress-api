@@ -101,6 +101,8 @@ definitions:
         type: string
       notionID:
         type: string
+      personalEmail:
+        type: string
       phoneNumber:
         maxLength: 12
         minLength: 10
@@ -108,6 +110,7 @@ definitions:
       teamEmail:
         type: string
     required:
+    - personalEmail
     - phoneNumber
     - teamEmail
     type: object
@@ -405,6 +408,8 @@ definitions:
         type: string
       notionID:
         type: string
+      personalEmail:
+        type: string
       phoneNumber:
         maxLength: 12
         minLength: 10
@@ -412,6 +417,7 @@ definitions:
       teamEmail:
         type: string
     required:
+    - personalEmail
     - phoneNumber
     - teamEmail
     type: object
@@ -765,6 +771,8 @@ definitions:
       githubID:
         type: string
       id:
+        type: string
+      notionID:
         type: string
       personalEmail:
         type: string
@@ -1681,7 +1689,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_profile.UpdateInfoInput'
+          $ref: '#/definitions/pkg_handler_profile.UpdateInfoInput'
       produces:
       - application/json
       responses:
@@ -1811,7 +1819,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/pkg_handler_project.CreateProjectInput'
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.CreateProjectInput'
       produces:
       - application/json
       responses:
@@ -1904,7 +1912,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/pkg_handler_project.AssignMemberInput'
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.AssignMemberInput'
       produces:
       - application/json
       responses:
@@ -1947,7 +1955,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/pkg_handler_project.UpdateMemberInput'
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateMemberInput'
       produces:
       - application/json
       responses:

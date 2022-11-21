@@ -37,9 +37,10 @@ type UpdatePersonalInfoInput struct {
 }
 
 type UpdateProfileInforInput struct {
-	TeamEmail   string
-	PhoneNumber string
-	DiscordID   string
-	GithubID    string
-	NotionID    string
+	PersonalEmail string
+	TeamEmail     string
+	PhoneNumber   string
+	DiscordID     string
+	GithubID      string
+	NotionID      string
 }
