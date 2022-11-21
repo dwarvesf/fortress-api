@@ -51,7 +51,7 @@ func TestHandler_UpdateEmployeeStatus(t *testing.T) {
 			ctx, _ := gin.CreateTestContext(w)
 			bodyReader := strings.NewReader(`
 			{
-				"employeeStatus":"active"
+				"employeeStatus": "contractor"
 			}
 			`)
 			ctx.Params = gin.Params{gin.Param{Key: "id", Value: "2655832e-f009-4b73-a535-64c3a22e558f"}}

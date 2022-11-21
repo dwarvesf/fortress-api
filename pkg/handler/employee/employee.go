@@ -152,7 +152,7 @@ func (h *handler) UpdateEmployeeStatus(c *gin.Context) {
 	}
 
 	type updateAccountStatusBody struct {
-		EmployeeStatus model.AccountStatus `json:"employeeStatus"`
+		EmployeeStatus model.WorkingStatus `json:"employeeStatus"`
 	}
 
 	// 1.1 get body request
