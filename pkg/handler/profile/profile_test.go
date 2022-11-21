@@ -80,8 +80,9 @@ func TestHandler_UpdateProfileInfo(t *testing.T) {
 			wantErr:          false,
 			wantResponsePath: "testdata/update_info/200.json",
 			input: UpdateInfoInput{
-				TeamEmail:   "thanh@d.foundation",
-				PhoneNumber: "0123456788",
+				TeamEmail:     "thanh@d.foundation",
+				PersonalEmail: "thanhpham123@gmail.com",
+				PhoneNumber:   "0123456788",
 			},
 		},
 		{
@@ -90,8 +91,9 @@ func TestHandler_UpdateProfileInfo(t *testing.T) {
 			wantErr:          true,
 			wantResponsePath: "testdata/update_info/400.json",
 			input: UpdateInfoInput{
-				TeamEmail:   "thanh@d.foundation",
-				PhoneNumber: "123456788",
+				TeamEmail:     "thanh@d.foundation",
+				PersonalEmail: "thanhpham123@gmail.com",
+				PhoneNumber:   "123456788",
 			},
 		},
 	}

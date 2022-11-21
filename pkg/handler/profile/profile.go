@@ -110,11 +110,12 @@ func (h *handler) UpdateInfo(c *gin.Context) {
 
 	// 3. update information and return
 	rs, err := h.store.Employee.UpdateProfileInfo(h.repo.DB(), employee.UpdateProfileInforInput{
-		TeamEmail:   input.TeamEmail,
-		PhoneNumber: input.PhoneNumber,
-		DiscordID:   input.DiscordID,
-		GithubID:    input.GithubID,
-		NotionID:    input.NotionID,
+		TeamEmail:     input.TeamEmail,
+		PersonalEmail: input.PersonalEmail,
+		PhoneNumber:   input.PhoneNumber,
+		DiscordID:     input.DiscordID,
+		GithubID:      input.GithubID,
+		NotionID:      input.NotionID,
 	}, employeeID)
 
 	if err != nil {

@@ -99,14 +99,16 @@ func (s *store) UpdateGeneralInfo(db *gorm.DB, body UpdateGeneralInfoInput, id s
 
 func (s *store) UpdateProfileInfo(db *gorm.DB, body UpdateProfileInforInput, id string) (*model.Employee, error) {
 	employee := &model.Employee{}
+	updateInfo := map[string]interface{}{}
 
-	employee.TeamEmail = body.TeamEmail
-	employee.PhoneNumber = body.PhoneNumber
-	employee.DiscordID = body.DiscordID
-	employee.GithubID = body.GithubID
-	employee.NotionID = body.NotionID
+	updateInfo["team_email"] = body.TeamEmail
+	updateInfo["personal_email"] = body.PersonalEmail
+	updateInfo["phone_number"] = body.PhoneNumber
+	updateInfo["discord_id"] = body.DiscordID
+	updateInfo["github_id"] = body.GithubID
+	updateInfo["notion_id"] = body.NotionID
 
-	return employee, db.Table("employees").Where("id = ?", id).Updates(&employee).First(&employee).Error
+	return employee, db.Model(&employee).Where("id = ?", id).Updates(updateInfo).First(&employee).Error
 }
 
 func (s *store) Create(db *gorm.DB, e *model.Employee) (employee *model.Employee, err error) {
