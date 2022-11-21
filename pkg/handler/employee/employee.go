@@ -42,8 +42,8 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 // @Param Authorization header string true "jwt token"
 // @Param workingStatus query  string false  "Working Status"
 // @Param preload query bool false "Preload"
-// @Param page query string true "Page"
-// @Param size query string true "Size"
+// @Param page query string false "Page"
+// @Param size query string false "Size"
 // @Success 200 {object} view.EmployeeListDataResponse
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 404 {object} view.ErrorResponse
