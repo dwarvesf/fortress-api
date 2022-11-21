@@ -1113,12 +1113,10 @@ paths:
       - description: Page
         in: query
         name: page
-        required: true
         type: string
       - description: Size
         in: query
         name: size
-        required: true
         type: string
       produces:
       - application/json
@@ -1683,7 +1681,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/pkg_handler_profile.UpdateInfoInput'
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_profile.UpdateInfoInput'
       produces:
       - application/json
       responses:
@@ -1813,7 +1811,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.CreateProjectInput'
+          $ref: '#/definitions/pkg_handler_project.CreateProjectInput'
       produces:
       - application/json
       responses:
@@ -1906,7 +1904,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.AssignMemberInput'
+          $ref: '#/definitions/pkg_handler_project.AssignMemberInput'
       produces:
       - application/json
       responses:
@@ -1949,7 +1947,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateMemberInput'
+          $ref: '#/definitions/pkg_handler_project.UpdateMemberInput'
       produces:
       - application/json
       responses:

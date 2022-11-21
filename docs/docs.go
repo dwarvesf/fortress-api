@@ -123,15 +123,13 @@ const docTemplate = `{
                         "type": "string",
                         "description": "Page",
                         "name": "page",
-                        "in": "query",
-                        "required": true
+                        "in": "query"
                     },
                     {
                         "type": "string",
                         "description": "Size",
                         "name": "size",
-                        "in": "query",
-                        "required": true
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -981,7 +979,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/pkg_handler_profile.UpdateInfoInput"
+                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_profile.UpdateInfoInput"
                         }
                     }
                 ],
@@ -1176,7 +1174,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.CreateProjectInput"
+                            "$ref": "#/definitions/pkg_handler_project.CreateProjectInput"
                         }
                     }
                 ],
@@ -1316,7 +1314,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateMemberInput"
+                            "$ref": "#/definitions/pkg_handler_project.UpdateMemberInput"
                         }
                     }
                 ],
@@ -1380,7 +1378,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.AssignMemberInput"
+                            "$ref": "#/definitions/pkg_handler_project.AssignMemberInput"
                         }
                     }
                 ],

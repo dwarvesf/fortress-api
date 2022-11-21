@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-var maxPageSize int64 = 50
+var maxPageSize int64 = 999
 
 type Pagination struct {
 	Page         int64  `json:"page" form:"page,default=0"`            // page index
