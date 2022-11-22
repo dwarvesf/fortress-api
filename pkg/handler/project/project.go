@@ -604,17 +604,9 @@ func (h *handler) UpdateMember(c *gin.Context) {
 		// create project head
 		slot.IsLead = body.IsLead
 		if body.IsLead {
-			head := &model.ProjectHead{
-				ProjectID:      model.MustGetUUIDFromString(projectID),
-				EmployeeID:     body.EmployeeID,
-				CommissionRate: decimal.Zero,
-				Position:       model.HeadPositionTechnicalLead,
-				JoinedDate:     time.Now(),
-			}
-
-			if err := h.store.ProjectHead.Upsert(tx.DB(), head); err != nil {
-				l.Error(err, "failed to upsert project head")
-				c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), head, ""))
+			if err := h.updateProjectHead(tx, projectID, body.EmployeeID, model.HeadPositionTechnicalLead); err != nil {
+				l.Error(err, "failed to update technicalLeads")
+				c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
 				return
 			}
 		} else {
@@ -923,6 +915,10 @@ func (h *handler) Details(c *gin.Context) {
 // @Router /projects/{id}/general-info [put]
 func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 	projectID := c.Param("id")
+	if projectID == "" || !model.IsUUIDFromString(projectID) {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, ErrInvalidProjectID, nil, ""))
+		return
+	}
 
 	var body UpdateGeneralInfoInput
 	if err := c.ShouldBindJSON(&body); err != nil {
@@ -1029,4 +1025,151 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToUpdateProjectGeneralInfo(rs), nil, done(nil), nil, ""))
+}
+
+// UpdateContactInfo godoc
+// @Summary Update contact info of the project by id
+// @Description Update contact info of the project by id
+// @Tags Project
+// @Accept  json
+// @Produce  json
+// @Param Authorization header string true "jwt token"
+// @Param id path string true "Project ID"
+// @Param Body body UpdateContactInfoInput true "Body"
+// @Success 200 {object} view.UpdateProjectContactInfoResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /projects/{id}/contact-info [put]
+func (h *handler) UpdateContactInfo(c *gin.Context) {
+	projectID := c.Param("id")
+	if projectID == "" || !model.IsUUIDFromString(projectID) {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, ErrInvalidProjectID, nil, ""))
+		return
+	}
+
+	var body UpdateContactInfoInput
+	if err := c.ShouldBindJSON(&body); err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, body, ""))
+		return
+	}
+
+	// TODO: can we move this to middleware ?
+	l := h.logger.Fields(logger.Fields{
+		"handler": "project",
+		"method":  "UpdateContactInfo",
+		"id":      projectID,
+		"request": body,
+	})
+
+	// Check project exists
+	exists, err := h.store.Project.Exists(h.repo.DB(), projectID)
+	if err != nil {
+		l.Error(err, "error when check existence of project")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
+		return
+	}
+
+	if !exists {
+		l.Error(err, "project not found")
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrProjectNotFound, body, ""))
+		return
+	}
+
+	// Check account manager exists
+	exists, err = h.store.Employee.Exists(h.repo.DB(), body.AccountManagerID.String())
+
+	if err != nil {
+		l.Error(err, "error when finding account manager")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
+		return
+	}
+
+	if !exists {
+		l.Error(ErrAccountManagerNotFound, "account manager not found")
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrAccountManagerNotFound, body, ""))
+		return
+	}
+
+	// Check delivery manager exists
+	exists, err = h.store.Employee.Exists(h.repo.DB(), body.DeliveryManagerID.String())
+
+	if err != nil {
+		l.Error(err, "error when finding delivery manager")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
+		return
+	}
+
+	if !exists {
+		l.Error(ErrDeliveryManagerNotFound, "delivery manager not found")
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrDeliveryManagerNotFound, body, ""))
+		return
+	}
+
+	// Begin transaction
+	tx, done := h.repo.NewTransaction()
+
+	// Update Account Manager
+	if err := h.updateProjectHead(tx, projectID, body.AccountManagerID, model.HeadPositionAccountManager); err != nil {
+		l.Error(err, "failed to update account manager")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
+		return
+	}
+
+	// Update Delivery Manager
+	if err := h.updateProjectHead(tx, projectID, body.DeliveryManagerID, model.HeadPositionDeliveryManager); err != nil {
+		l.Error(err, "failed to update delivery manager")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
+		return
+	}
+
+	// Update email info
+	rs, err := h.store.Project.UpdateContactInfo(tx.DB(), project.UpdateContactInfoInput{
+		ClientEmail:  body.ClientEmail,
+		ProjectEmail: body.ProjectEmail,
+	}, projectID)
+
+	if err != nil {
+		l.Error(err, "failed to update project information to db")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToUpdateProjectContactInfo(rs), nil, done(nil), nil, ""))
+}
+
+func (h *handler) updateProjectHead(tx store.DBRepo, projectID string, memberID model.UUID, position model.HeadPosition) error {
+	timeNow := time.Now()
+	needCreate := false
+	newProjectHead := model.ProjectHead{
+		ProjectID:  model.MustGetUUIDFromString(projectID),
+		EmployeeID: memberID,
+		JoinedDate: timeNow,
+		Position:   position,
+	}
+
+	oldHead, err := h.store.ProjectHead.One(tx.DB(), projectID, position)
+
+	if err != nil {
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return ErrFailToFindProjectHead
+		}
+
+		needCreate = true
+	} else if oldHead.EmployeeID != memberID {
+		if err := h.store.ProjectHead.UpdateLeftDate(tx.DB(), projectID, oldHead.EmployeeID.String(), position.String(), timeNow); err != nil {
+			return ErrFailToUpdateLeftDate
+		}
+
+		needCreate = true
+	}
+
+	if needCreate {
+		err = h.store.ProjectHead.Create(tx.DB(), &newProjectHead)
+		if err != nil {
+			return ErrFailToCreateProjectHead
+		}
+	}
+
+	return nil
 }

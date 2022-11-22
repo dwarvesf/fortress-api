@@ -26,6 +26,11 @@ var (
 	ErrPositionsIsEmpty             = errors.New("positions is empty")
 	ErrProjectMemberNotFound        = errors.New("project member not found")
 	ErrCouldNotDeleteInactiveMember = errors.New("could not delete inactive member")
+	ErrAccountManagerNotFound       = errors.New("account manager not found")
+	ErrDeliveryManagerNotFound      = errors.New("delivery manager not found")
+	ErrFailToCreateProjectHead      = errors.New("fail to create project head")
+	ErrFailToFindProjectHead        = errors.New("fail to find project head")
+	ErrFailToUpdateLeftDate         = errors.New("fail to update left date for project head")
 )
 
 // errPositionNotFound returns unauthorized custom error

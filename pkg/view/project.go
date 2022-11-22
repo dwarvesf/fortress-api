@@ -365,3 +365,40 @@ func ToUpdateProjectGeneralInfo(project *model.Project) UpdateProjectGeneralInfo
 
 	return rs
 }
+
+type BasicProjectHeadInfo struct {
+	EmployeeID  string             `json:"employeeID"`
+	FullName    string             `json:"fullName"`
+	DisplayName string             `json:"displayName"`
+	Avatar      string             `json:"avatar"`
+	Position    model.HeadPosition `json:"position"`
+}
+
+type UpdateProjectContactInfo struct {
+	ClientEmail  string                 `json:"clientEmail"`
+	ProjectEmail string                 `json:"projectEmail"`
+	ProjectHead  []BasicProjectHeadInfo `json:"projectHead"`
+}
+
+type UpdateProjectContactInfoResponse struct {
+	Data UpdateProjectContactInfo `json:"data"`
+}
+
+func ToUpdateProjectContactInfo(project *model.Project) UpdateProjectContactInfo {
+	projectHeads := make([]BasicProjectHeadInfo, 0, len(project.Heads))
+	for _, v := range project.Heads {
+		projectHeads = append(projectHeads, BasicProjectHeadInfo{
+			EmployeeID:  v.Employee.ID.String(),
+			FullName:    v.Employee.FullName,
+			Avatar:      v.Employee.Avatar,
+			DisplayName: v.Employee.DisplayName,
+			Position:    v.Position,
+		})
+	}
+
+	return UpdateProjectContactInfo{
+		ClientEmail:  project.ProjectEmail,
+		ProjectEmail: project.ProjectEmail,
+		ProjectHead:  projectHeads,
+	}
+}

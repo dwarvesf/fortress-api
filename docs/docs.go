@@ -178,7 +178,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/pkg_handler_employee.CreateEmployeeInput"
+                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.CreateEmployeeInput"
                         }
                     },
                     {
@@ -308,7 +308,8 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/pkg_handler_employee.UpdateWorkingStatusInput"
+                            "description": "working info",
+                            "type": "string"
                         }
                     }
                 ],
@@ -374,7 +375,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/pkg_handler_employee.UpdateGeneralInfoInput"
+                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateGeneralInfoInput"
                         }
                     }
                 ],
@@ -440,7 +441,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/pkg_handler_employee.UpdatePersonalInfoInput"
+                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdatePersonalInfoInput"
                         }
                     }
                 ],
@@ -499,7 +500,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/pkg_handler_employee.UpdateSkillsInput"
+                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateSkillsInput"
                         }
                     },
                     {
@@ -941,7 +942,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_profile.UpdateInfoInput"
+                            "$ref": "#/definitions/pkg_handler_profile.UpdateInfoInput"
                         }
                     }
                 ],
@@ -1276,6 +1277,72 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/view.ProjectListDataResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/projects/{id}/contact-info": {
+            "put": {
+                "description": "Update contact info of the project by id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Project"
+                ],
+                "summary": "Update contact info of the project by id",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Project ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Body",
+                        "name": "Body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateContactInfoInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.UpdateProjectContactInfoResponse"
                         }
                     },
                     "400": {
@@ -1695,15 +1762,6 @@ const docTemplate = `{
                 }
             }
         },
-        "github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateWorkingStatusInput": {
-            "type": "object",
-            "properties": {
-                "employeeStatus": {
-                    "description": "working info",
-                    "type": "string"
-                }
-            }
-        },
         "github.com_dwarvesf_fortress-api_pkg_handler_profile.UpdateInfoInput": {
             "type": "object",
             "required": [
@@ -1819,6 +1877,26 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateContactInfoInput": {
+            "type": "object",
+            "required": [
+                "accountManagerID"
+            ],
+            "properties": {
+                "accountManagerID": {
+                    "type": "string"
+                },
+                "clientEmail": {
+                    "type": "string"
+                },
+                "deliveryManagerID": {
+                    "type": "string"
+                },
+                "projectEmail": {
                     "type": "string"
                 }
             }
@@ -2184,15 +2262,6 @@ const docTemplate = `{
                 }
             }
         },
-        "pkg_handler_employee.UpdateWorkingStatusInput": {
-            "type": "object",
-            "properties": {
-                "employeeStatus": {
-                    "description": "working info",
-                    "type": "string"
-                }
-            }
-        },
         "pkg_handler_profile.UpdateInfoInput": {
             "type": "object",
             "required": [
@@ -2308,6 +2377,26 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "pkg_handler_project.UpdateContactInfoInput": {
+            "type": "object",
+            "required": [
+                "accountManagerID"
+            ],
+            "properties": {
+                "accountManagerID": {
+                    "type": "string"
+                },
+                "clientEmail": {
+                    "type": "string"
+                },
+                "deliveryManagerID": {
+                    "type": "string"
+                },
+                "projectEmail": {
                     "type": "string"
                 }
             }
@@ -2438,6 +2527,26 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "view.BasicProjectHeadInfo": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string"
+                },
+                "displayName": {
+                    "type": "string"
+                },
+                "employeeID": {
+                    "type": "string"
+                },
+                "fullName": {
+                    "type": "string"
+                },
+                "position": {
                     "type": "string"
                 }
             }
@@ -3175,6 +3284,31 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/view.UpdateProfileInfoData"
+                }
+            }
+        },
+        "view.UpdateProjectContactInfo": {
+            "type": "object",
+            "properties": {
+                "clientEmail": {
+                    "type": "string"
+                },
+                "projectEmail": {
+                    "type": "string"
+                },
+                "projectHead": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.BasicProjectHeadInfo"
+                    }
+                }
+            }
+        },
+        "view.UpdateProjectContactInfoResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/view.UpdateProjectContactInfo"
                 }
             }
         },

@@ -134,7 +134,7 @@ func (h *handler) One(c *gin.Context) {
 // @Produce  json
 // @Param Authorization header string true "jwt token"
 // @Param id path string true "Employee ID"
-// @Param employeeStatus body UpdateWorkingStatusInput true "Employee Status"
+// @Param employeeStatus body model.WorkingStatus true "Employee Status"
 // @Success 200 {object} view.UpdateEmployeeStatusResponse
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 404 {object} view.ErrorResponse
