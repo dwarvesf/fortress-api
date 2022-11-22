@@ -93,12 +93,6 @@ definitions:
     - seniority
     - stacks
     type: object
-  github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateWorkingStatusInput:
-    properties:
-      employeeStatus:
-        description: working info
-        type: string
-    type: object
   github.com_dwarvesf_fortress-api_pkg_handler_profile.UpdateInfoInput:
     properties:
       discordID:
@@ -180,6 +174,19 @@ definitions:
     - countryID
     - name
     - status
+    type: object
+  github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateContactInfoInput:
+    properties:
+      accountManagerID:
+        type: string
+      clientEmail:
+        type: string
+      deliveryManagerID:
+        type: string
+      projectEmail:
+        type: string
+    required:
+    - accountManagerID
     type: object
   github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateGeneralInfoInput:
     properties:
@@ -426,12 +433,6 @@ definitions:
     - seniority
     - stacks
     type: object
-  pkg_handler_employee.UpdateWorkingStatusInput:
-    properties:
-      employeeStatus:
-        description: working info
-        type: string
-    type: object
   pkg_handler_profile.UpdateInfoInput:
     properties:
       discordID:
@@ -513,6 +514,19 @@ definitions:
     - countryID
     - name
     - status
+    type: object
+  pkg_handler_project.UpdateContactInfoInput:
+    properties:
+      accountManagerID:
+        type: string
+      clientEmail:
+        type: string
+      deliveryManagerID:
+        type: string
+      projectEmail:
+        type: string
+    required:
+    - accountManagerID
     type: object
   pkg_handler_project.UpdateGeneralInfoInput:
     properties:
@@ -600,6 +614,19 @@ definitions:
       id:
         type: string
       name:
+        type: string
+    type: object
+  view.BasicProjectHeadInfo:
+    properties:
+      avatar:
+        type: string
+      displayName:
+        type: string
+      employeeID:
+        type: string
+      fullName:
+        type: string
+      position:
         type: string
     type: object
   view.BasisEmployeeInfo:
@@ -1083,6 +1110,22 @@ definitions:
       data:
         $ref: '#/definitions/view.UpdateProfileInfoData'
     type: object
+  view.UpdateProjectContactInfo:
+    properties:
+      clientEmail:
+        type: string
+      projectEmail:
+        type: string
+      projectHead:
+        items:
+          $ref: '#/definitions/view.BasicProjectHeadInfo'
+        type: array
+    type: object
+  view.UpdateProjectContactInfoResponse:
+    properties:
+      data:
+        $ref: '#/definitions/view.UpdateProjectContactInfo'
+    type: object
   view.UpdateProjectGeneralInfo:
     properties:
       country:
@@ -1267,7 +1310,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/pkg_handler_employee.CreateEmployeeInput'
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.CreateEmployeeInput'
       - description: jwt token
         in: header
         name: Authorization
@@ -1354,7 +1397,8 @@ paths:
         name: employeeStatus
         required: true
         schema:
-          $ref: '#/definitions/pkg_handler_employee.UpdateWorkingStatusInput'
+          description: working info
+          type: string
       produces:
       - application/json
       responses:
@@ -1398,7 +1442,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/pkg_handler_employee.UpdateGeneralInfoInput'
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateGeneralInfoInput'
       produces:
       - application/json
       responses:
@@ -1442,7 +1486,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/pkg_handler_employee.UpdatePersonalInfoInput'
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdatePersonalInfoInput'
       produces:
       - application/json
       responses:
@@ -1481,7 +1525,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/pkg_handler_employee.UpdateSkillsInput'
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateSkillsInput'
       - description: jwt token
         in: header
         name: Authorization
@@ -1773,7 +1817,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_profile.UpdateInfoInput'
+          $ref: '#/definitions/pkg_handler_profile.UpdateInfoInput'
       produces:
       - application/json
       responses:
@@ -2011,6 +2055,50 @@ paths:
           schema:
             $ref: '#/definitions/view.ErrorResponse'
       summary: Get details of a project
+      tags:
+      - Project
+  /projects/{id}/contact-info:
+    put:
+      consumes:
+      - application/json
+      description: Update contact info of the project by id
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Body
+        in: body
+        name: Body
+        required: true
+        schema:
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateContactInfoInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.UpdateProjectContactInfoResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Update contact info of the project by id
       tags:
       - Project
   /projects/{id}/general-info:

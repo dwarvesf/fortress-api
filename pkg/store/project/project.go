@@ -100,13 +100,18 @@ func (s *store) One(db *gorm.DB, id string) (*model.Project, error) {
 func (s *store) UpdateGeneralInfo(db *gorm.DB, body UpdateGeneralInfoInput, id string) (*model.Project, error) {
 	project := &model.Project{}
 
-	project.Name = body.Name
-	project.StartDate = body.StartDate
-	project.CountryID = body.CountryID
-
-	return project, db.Table("projects").Where("id = ?", id).Updates(&project).
+	return project, db.Model(project).Where("id = ?", id).Updates(map[string]interface{}{"name": body.Name, "start_date": body.StartDate, "country_id": body.CountryID}).
 		Preload("ProjectStacks", "deleted_at IS NULL").
 		Preload("ProjectStacks.Stack", "deleted_at IS NULL").
 		Preload("Country").
+		First(&project).Error
+}
+
+func (s *store) UpdateContactInfo(db *gorm.DB, body UpdateContactInfoInput, id string) (*model.Project, error) {
+	project := &model.Project{}
+
+	return project, db.Model(project).Where("id = ?", id).Updates(map[string]interface{}{"client_email": body.ClientEmail, "project_email": body.ProjectEmail}).
+		Preload("Heads", "deleted_at IS NULL and left_date IS NULL").
+		Preload("Heads.Employee").
 		First(&project).Error
 }

@@ -18,3 +18,8 @@ type UpdateGeneralInfoInput struct {
 	CountryID model.UUID
 	Stacks    []*model.UUID
 }
+
+type UpdateContactInfoInput struct {
+	ClientEmail  string
+	ProjectEmail string
+}

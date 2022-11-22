@@ -19,7 +19,7 @@ type UpdateGeneralInfoInput struct {
 	Name      string       `form:"name" json:"name" binding:"required"`
 	StartDate string       `form:"startDate" json:"startDate"`
 	CountryID model.UUID   `form:"countryID" json:"countryID" binding:"required"`
-	Stacks    []model.UUID `form: "stacks" json:"stacks"`
+	Stacks    []model.UUID `form:"stacks" json:"stacks"`
 }
 
 func (i UpdateGeneralInfoInput) GetStartDate() *time.Time {
@@ -231,4 +231,11 @@ func (input DeleteMemberInput) Validate() error {
 	}
 
 	return nil
+}
+
+type UpdateContactInfoInput struct {
+	ClientEmail       string     `form:"clientEmail" json:"clientEmail" binding:"email"`
+	ProjectEmail      string     `form:"projectEmail" json:"projectEmail" binding:"email"`
+	AccountManagerID  model.UUID `form:"accountManagerID" json:"accountManagerID" binding:"required"`
+	DeliveryManagerID model.UUID `form:"deliveryManagerID" json:"deliveryManagerID"`
 }

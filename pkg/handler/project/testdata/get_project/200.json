@@ -6,10 +6,14 @@
         "name": "Fortress",
         "type": "dwarves",
         "status": "active",
-        "projectEmail": "",
-        "clientEmail": "",
+        "projectEmail": "fortress@d.foundation",
+        "clientEmail": "fortress@gmai.com",
         "industry": "",
-        "country": null,
+        "country": {
+            "id": "4ef64490-c906-4192-a7f9-d2221dadfe4c",
+            "name": "Vietnam",
+            "code": "+84"
+        },
         "startDate": "2022-11-01T00:00:00Z",
         "endDate": null,
         "members": [
@@ -21,15 +25,15 @@
                 "displayName": "Huy Nguyen",
                 "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/2830497479497502617.png",
                 "position": "",
-                "seniority": null,
                 "status": "active",
                 "isLead": false,
                 "deploymentType": "",
                 "joinedDate": null,
                 "leftDate": null,
-                "positions": [],
-				"discount": "0",
-				"rate": "0"
+                "rate": "0",
+                "discount": "0",
+                "seniority": null,
+                "positions": []
             }
         ],
         "technicalLeads": [],

@@ -12,4 +12,5 @@ type IHandler interface {
 	DeleteMember(c *gin.Context)
 	Details(c *gin.Context)
 	UpdateGeneralInfo(c *gin.Context)
+	UpdateContactInfo(c *gin.Context)
 }

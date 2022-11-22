@@ -19,7 +19,7 @@ func (s *store) HardDelete(db *gorm.DB, id string) error {
 
 // All get all projects with filter and pagination
 func (s *store) All(db *gorm.DB, input GetListProjectSlotInput, pagination model.Pagination) ([]*model.ProjectSlot, int64, error) {
-	query := db.Debug().Table("project_slots").Where("project_slots.deleted_at IS NULL")
+	query := db.Table("project_slots").Where("project_slots.deleted_at IS NULL")
 	var total int64
 
 	query = query.Where("project_slots.project_id = ?", input.ProjectID).

@@ -13,4 +13,5 @@ type IStore interface {
 	Exists(db *gorm.DB, id string) (bool, error)
 	One(db *gorm.DB, id string) (*model.Project, error)
 	UpdateGeneralInfo(db *gorm.DB, body UpdateGeneralInfoInput, id string) (*model.Project, error)
+	UpdateContactInfo(db *gorm.DB, body UpdateContactInfoInput, id string) (*model.Project, error)
 }
