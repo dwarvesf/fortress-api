@@ -86,7 +86,7 @@ func (s *store) One(db *gorm.DB, id string) (*model.Project, error) {
 	var project *model.Project
 	return project, db.Where("id = ?", id).
 		Preload("Members", "deleted_at IS NULL and left_date IS NULL AND status IN ?",
-			[]model.AccountStatus{model.AccountStatusActive, model.AccountStatusOnBoarding}).
+			[]model.ProjectMemberStatus{model.ProjectMemberStatusActive, model.ProjectMemberStatusOnBoarding}).
 		Preload("Members.Employee").
 		Preload("Heads", "deleted_at IS NULL and left_date IS NULL").
 		Preload("Heads.Employee").

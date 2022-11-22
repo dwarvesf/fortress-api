@@ -33,35 +33,6 @@ func (e WorkingStatus) String() string {
 	return string(e)
 }
 
-// AccountStatus account_status type for employee table
-type AccountStatus string
-
-// values for account_status
-const (
-	AccountStatusOnBoarding AccountStatus = "on-boarding"
-	AccountStatusActive     AccountStatus = "active"
-	AccountStatusProbation  AccountStatus = "probation"
-	AccountStatusOnLeave    AccountStatus = "on-leave"
-)
-
-// IsValid validation for AccountStatus
-func (e AccountStatus) IsValid() bool {
-	switch e {
-	case
-		AccountStatusOnBoarding,
-		AccountStatusActive,
-		AccountStatusProbation,
-		AccountStatusOnLeave:
-		return true
-	}
-	return false
-}
-
-// String returns the string type from the AccountStatus type
-func (e AccountStatus) String() string {
-	return string(e)
-}
-
 // AccountRole account_role type for employee table
 type AccountRole string
 
