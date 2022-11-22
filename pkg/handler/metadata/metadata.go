@@ -2,6 +2,7 @@ package metadata
 
 import (
 	"errors"
+	"github.com/dwarvesf/fortress-api/pkg/model"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -29,7 +30,7 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 	}
 }
 
-// WorkingStatus godoc
+// WorkingStatuses godoc
 // @Summary Get list values for working status
 // @Description Get list values for working status
 // @Tags Metadata
@@ -39,24 +40,28 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 500 {object} view.ErrorResponse
 // @Router /metadata/working-status [get]
-func (h *handler) WorkingStatus(c *gin.Context) {
+func (h *handler) WorkingStatuses(c *gin.Context) {
 	// return list values for working status
 	// hardcode for now since we dont need db storage for this
 	res := []view.MetaData{
 		{
-			Code: "left",
+			Code: model.WorkingStatusLeft.String(),
 			Name: "Left",
 		},
 		{
-			Code: "probation",
+			Code: model.WorkingStatusOnBoarding.String(),
+			Name: "On Boarding",
+		},
+		{
+			Code: model.WorkingStatusProbation.String(),
 			Name: "Probation",
 		},
 		{
-			Code: "full-time",
+			Code: model.WorkingStatusFullTime.String(),
 			Name: "Full-time",
 		},
 		{
-			Code: "contractor",
+			Code: model.WorkingStatusContractor.String(),
 			Name: "Contractor",
 		},
 	}
@@ -152,41 +157,6 @@ func (h *handler) AccountRoles(c *gin.Context) {
 
 	// 3 return array of roles
 	c.JSON(http.StatusOK, view.CreateResponse[any](roles, nil, nil, nil, ""))
-}
-
-// AccountStatuses godoc
-// @Summary Get list values for account statuses
-// @Description Get list values for account statuses
-// @Tags Metadata
-// @Accept  json
-// @Produce  json
-// @Success 200 {object} []view.MetaData
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
-// @Router /metadata/account-statuses [get]
-func (h *handler) AccountStatuses(c *gin.Context) {
-	// return list values for account status
-	// hardcode for now since we don't need db storage for this
-	res := []view.MetaData{
-		{
-			Code: "on-boarding",
-			Name: "On Boarding",
-		},
-		{
-			Code: "probation",
-			Name: "Probation",
-		},
-		{
-			Code: "active",
-			Name: "Active",
-		},
-		{
-			Code: "on-leave",
-			Name: "On Leave",
-		},
-	}
-
-	c.JSON(http.StatusOK, view.CreateResponse[any](res, nil, nil, nil, ""))
 }
 
 // ProjectStatuses godoc

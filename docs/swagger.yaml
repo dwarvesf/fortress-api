@@ -630,8 +630,6 @@ definitions:
     type: object
   view.EmployeeData:
     properties:
-      accountStatus:
-        type: string
       address:
         type: string
       avatar:
@@ -737,12 +735,16 @@ definitions:
     properties:
       code:
         type: string
+      id:
+        type: string
       name:
         type: string
     type: object
   view.Position:
     properties:
       code:
+        type: string
+      id:
         type: string
       name:
         type: string
@@ -790,6 +792,10 @@ definitions:
     properties:
       accountManager:
         $ref: '#/definitions/view.ProjectHead'
+      clientEmail:
+        type: string
+      country:
+        type: string
       createdAt:
         type: string
       deletedAt:
@@ -800,14 +806,22 @@ definitions:
         type: string
       id:
         type: string
+      industry:
+        type: string
       members:
         items:
           $ref: '#/definitions/view.ProjectMember'
         type: array
       name:
         type: string
+      projectEmail:
+        type: string
       salePerson:
         $ref: '#/definitions/view.ProjectHead'
+      stacks:
+        items:
+          $ref: '#/definitions/view.Stack'
+        type: array
       startDate:
         type: string
       status:
@@ -881,6 +895,8 @@ definitions:
     properties:
       code:
         type: string
+      id:
+        type: string
       name:
         type: string
     type: object
@@ -894,6 +910,8 @@ definitions:
   view.Stack:
     properties:
       code:
+        type: string
+      id:
         type: string
       name:
         type: string
@@ -1158,7 +1176,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.CreateEmployeeInput'
+          $ref: '#/definitions/pkg_handler_employee.CreateEmployeeInput'
       - description: jwt token
         in: header
         name: Authorization
@@ -1289,7 +1307,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateGeneralInfoInput'
+          $ref: '#/definitions/pkg_handler_employee.UpdateGeneralInfoInput'
       produces:
       - application/json
       responses:
@@ -1333,7 +1351,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdatePersonalInfoInput'
+          $ref: '#/definitions/pkg_handler_employee.UpdatePersonalInfoInput'
       produces:
       - application/json
       responses:
@@ -1372,7 +1390,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateSkillsInput'
+          $ref: '#/definitions/pkg_handler_employee.UpdateSkillsInput'
       - description: jwt token
         in: header
         name: Authorization
@@ -1421,31 +1439,6 @@ paths:
           schema:
             $ref: '#/definitions/view.ErrorResponse'
       summary: Get list values for account roles
-      tags:
-      - Metadata
-  /metadata/account-statuses:
-    get:
-      consumes:
-      - application/json
-      description: Get list values for account statuses
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              $ref: '#/definitions/view.MetaData'
-            type: array
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/view.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/view.ErrorResponse'
-      summary: Get list values for account statuses
       tags:
       - Metadata
   /metadata/chapters:
@@ -1889,6 +1882,44 @@ paths:
           schema:
             $ref: '#/definitions/view.ErrorResponse'
       summary: Get list members of project
+      tags:
+      - Project
+  /projects/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get details of a project
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.ProjectListDataResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get details of a project
       tags:
       - Project
   /projects/{id}/members:

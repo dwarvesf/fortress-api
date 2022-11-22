@@ -32,6 +32,7 @@
 		"technicalLeads": [],
 		"stacks": [
 			{
+				"id": "0ecf47c8-cca4-4c30-94bb-054b1124c44f",
 				"name": "Golang",
 				"code": "golang"
 			}

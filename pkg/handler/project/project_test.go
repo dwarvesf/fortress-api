@@ -455,6 +455,7 @@ func TestHandler_DeleteProjectMember(t *testing.T) {
 		})
 	}
 }
+
 func TestHandler_Details(t *testing.T) {
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()

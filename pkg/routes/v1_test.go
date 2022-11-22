@@ -53,7 +53,7 @@ func Test_loadV1Routes(t *testing.T) {
 		"/api/v1/metadata/working-status": {
 			"GET": {
 				Method:  "GET",
-				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/metadata.IHandler.WorkingStatus-fm",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/metadata.IHandler.WorkingStatuses-fm",
 			},
 		},
 		"/api/v1/metadata/seniorities": {
@@ -72,12 +72,6 @@ func Test_loadV1Routes(t *testing.T) {
 			"GET": {
 				Method:  "GET",
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/metadata.IHandler.AccountRoles-fm",
-			},
-		},
-		"/api/v1/metadata/account-statuses": {
-			"GET": {
-				Method:  "GET",
-				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/metadata.IHandler.AccountStatuses-fm",
 			},
 		},
 		"/api/v1/metadata/positions": {
