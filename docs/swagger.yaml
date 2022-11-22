@@ -790,6 +790,10 @@ definitions:
     properties:
       accountManager:
         $ref: '#/definitions/view.ProjectHead'
+      clientEmail:
+        type: string
+      country:
+        type: string
       createdAt:
         type: string
       deletedAt:
@@ -800,14 +804,22 @@ definitions:
         type: string
       id:
         type: string
+      industry:
+        type: string
       members:
         items:
           $ref: '#/definitions/view.ProjectMember'
         type: array
       name:
         type: string
+      projectEmail:
+        type: string
       salePerson:
         $ref: '#/definitions/view.ProjectHead'
+      stacks:
+        items:
+          $ref: '#/definitions/view.Stack'
+        type: array
       startDate:
         type: string
       status:
@@ -1889,6 +1901,44 @@ paths:
           schema:
             $ref: '#/definitions/view.ErrorResponse'
       summary: Get list members of project
+      tags:
+      - Project
+  /projects/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get details of a project
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.ProjectListDataResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get details of a project
       tags:
       - Project
   /projects/{id}/members:
