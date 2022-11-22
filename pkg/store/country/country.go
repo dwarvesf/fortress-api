@@ -24,3 +24,15 @@ func (s *store) One(db *gorm.DB, id string) (*model.Country, error) {
 	var country *model.Country
 	return country, db.Where("id = ?", id).First(&country).Error
 }
+
+// Exists check the existence of country by id
+func (s *store) Exists(db *gorm.DB, id string) (bool, error) {
+	type res struct {
+		Result bool
+	}
+
+	result := res{}
+	query := db.Raw("SELECT EXISTS (SELECT * FROM countries WHERE id = ?) as result", id)
+
+	return result.Result, query.Scan(&result).Error
+}

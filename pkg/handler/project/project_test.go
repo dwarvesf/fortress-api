@@ -121,6 +121,8 @@ func TestHandler_Create(t *testing.T) {
 				AccountManagerID:  model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
 				DeliveryManagerID: model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
 				CountryID:         model.MustGetUUIDFromString("4ef64490-c906-4192-a7f9-d2221dadfe4c"),
+				ProjectEmail:      "a@gmail.com",
+				ClientEmail:       "b@gmail.com",
 			},
 			wantCode:         http.StatusOK,
 			wantResponsePath: "testdata/create/200.json",
@@ -134,6 +136,8 @@ func TestHandler_Create(t *testing.T) {
 				AccountManagerID:  model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
 				DeliveryManagerID: model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
 				CountryID:         model.MustGetUUIDFromString("4ef64490-c906-4192-a7f9-d2221dadfe4c"),
+				ProjectEmail:      "a@gmail.com",
+				ClientEmail:       "b@gmail.com",
 			},
 			wantCode:         http.StatusBadRequest,
 			wantResponsePath: "testdata/create/400_invalid_status.json",
@@ -146,6 +150,8 @@ func TestHandler_Create(t *testing.T) {
 				AccountManagerID:  model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
 				DeliveryManagerID: model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
 				CountryID:         model.MustGetUUIDFromString("4ef64490-c906-4192-a7f9-d2221dadfe4c"),
+				ProjectEmail:      "a@gmail.com",
+				ClientEmail:       "b@gmail.com",
 			},
 			wantCode:         http.StatusBadRequest,
 			wantResponsePath: "testdata/create/400_misssing_status.json",
@@ -456,7 +462,7 @@ func TestHandler_DeleteProjectMember(t *testing.T) {
 	}
 }
 
-func TestHandler_Details(t *testing.T) {
+func TestHandler_Detail(t *testing.T) {
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg)
@@ -505,6 +511,75 @@ func TestHandler_Details(t *testing.T) {
 			res, _ = utils.RemoveFieldInResponse(res, "updatedAt")
 
 			require.JSONEq(t, string(expRespRaw), string(res), "[Handler.Project.Details] response mismatched")
+		})
+	}
+}
+
+func TestHandler_UpdateGeneralInfo(t *testing.T) {
+	// load env and test data
+	cfg := config.LoadTestConfig()
+	loggerMock := logger.NewLogrusLogger()
+	serviceMock := service.New(&cfg)
+	storeMock := store.New()
+	testRepoMock := store.NewPostgresStore(&cfg)
+
+	tests := []struct {
+		name             string
+		wantCode         int
+		wantResponsePath string
+		id               string
+		input            UpdateGeneralInfoInput
+	}{
+		{
+			name:             "ok_update_project_general_infomation",
+			wantCode:         200,
+			wantResponsePath: "testdata/update_general_info/200.json",
+			id:               "8dc3be2e-19a4-4942-8a79-56db391a0b15",
+			input: UpdateGeneralInfoInput{
+				Name:      "Fortress",
+				StartDate: "1990-01-02",
+				CountryID: model.MustGetUUIDFromString("4ef64490-c906-4192-a7f9-d2221dadfe4c"),
+				Stacks: []model.UUID{
+					model.MustGetUUIDFromString("fa0f4e46-7eab-4e5c-9d31-30489e69fe2e"),
+					model.MustGetUUIDFromString("b403ef95-4269-4830-bbb6-8e56e5ec0af4"),
+				},
+			},
+		},
+		{
+			name:             "failed_invalid_project_id",
+			wantCode:         404,
+			wantResponsePath: "testdata/update_general_info/404.json",
+			id:               "d100efd1-bfce-4cd6-885c-1e4ac3d30715",
+			input: UpdateGeneralInfoInput{
+				Name:      "Fortress",
+				StartDate: "1990-01-02",
+				CountryID: model.MustGetUUIDFromString("4ef64490-c906-4192-a7f9-d2221dadfe4c"),
+				Stacks: []model.UUID{
+					model.MustGetUUIDFromString("fa0f4e46-7eab-4e5c-9d31-30489e69fe2e"),
+					model.MustGetUUIDFromString("b403ef95-4269-4830-bbb6-8e56e5ec0af4"),
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			byteReq, err := json.Marshal(tt.input)
+			require.Nil(t, err)
+
+			bodyReader := strings.NewReader(string(byteReq))
+
+			w := httptest.NewRecorder()
+			ctx, _ := gin.CreateTestContext(w)
+			ctx.Params = gin.Params{gin.Param{Key: "id", Value: tt.id}}
+			ctx.Request = httptest.NewRequest("PUT", fmt.Sprintf("/api/v1/projects/%s/general-info", tt.id), bodyReader)
+			ctx.Request.Header.Set("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2OTkzMjExNDIsImlkIjoiMjY1NTgzMmUtZjAwOS00YjczLWE1MzUtNjRjM2EyMmU1NThmIiwiYXZhdGFyIjoiaHR0cHM6Ly9zMy1hcC1zb3V0aGVhc3QtMS5hbWF6b25hd3MuY29tL2ZvcnRyZXNzLWltYWdlcy81MTUzNTc0Njk1NjYzOTU1OTQ0LnBuZyIsImVtYWlsIjoidGhhbmhAZC5mb3VuZGF0aW9uIiwicGVybWlzc2lvbnMiOlsiZW1wbG95ZWVzLnJlYWQiXSwidXNlcl9pbmZvIjpudWxsfQ.GENGPEucSUrILN6tHDKxLMtj0M0REVMUPC7-XhDMpGM")
+			metadataHandler := New(storeMock, testRepoMock, serviceMock, loggerMock)
+
+			metadataHandler.UpdateGeneralInfo(ctx)
+			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+			require.NoError(t, err)
+
+			require.JSONEq(t, string(expRespRaw), string(w.Body.Bytes()), "[Handler.UpdateProjectGeneralInfo] response mismatched")
 		})
 	}
 }

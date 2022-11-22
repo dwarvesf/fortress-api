@@ -15,6 +15,22 @@ type GetListProjectInput struct {
 	Type   string `form:"type" json:"type"`
 }
 
+type UpdateGeneralInfoInput struct {
+	Name      string       `form:"name" json:"name" binding:"required"`
+	StartDate string       `form:"startDate" json:"startDate"`
+	CountryID model.UUID   `form:"countryID" json:"countryID" binding:"required"`
+	Stacks    []model.UUID `form: "stacks" json:"stacks"`
+}
+
+func (i UpdateGeneralInfoInput) GetStartDate() *time.Time {
+	startDate, err := time.Parse("2006-01-02", i.StartDate)
+	if i.StartDate == "" || err != nil {
+		return nil
+	}
+
+	return &startDate
+}
+
 type updateAccountStatusBody struct {
 	ProjectStatus model.ProjectStatus `json:"status"`
 }
@@ -39,6 +55,8 @@ type CreateProjectInput struct {
 	CountryID         model.UUID          `form:"countryID" json:"countryID" binding:"required"`
 	StartDate         string              `form:"startDate" json:"startDate"`
 	Members           []AssignMemberInput `form:"members" json:"members"`
+	ClientEmail       string              `form:"clientEmail" json:"clientEmail" binding:"email"`
+	ProjectEmail      string              `form:"projectEmail" json:"projectEmail" binding:"email"`
 }
 
 func (i *CreateProjectInput) Validate() error {

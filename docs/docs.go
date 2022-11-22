@@ -178,7 +178,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/pkg_handler_employee.CreateEmployeeInput"
+                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.CreateEmployeeInput"
                         }
                     },
                     {
@@ -374,7 +374,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/pkg_handler_employee.UpdateGeneralInfoInput"
+                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateGeneralInfoInput"
                         }
                     }
                 ],
@@ -440,7 +440,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/pkg_handler_employee.UpdatePersonalInfoInput"
+                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdatePersonalInfoInput"
                         }
                     }
                 ],
@@ -499,7 +499,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/pkg_handler_employee.UpdateSkillsInput"
+                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateSkillsInput"
                         }
                     },
                     {
@@ -1136,7 +1136,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.CreateProjectInput"
+                            "$ref": "#/definitions/pkg_handler_project.CreateProjectInput"
                         }
                     }
                 ],
@@ -1299,6 +1299,72 @@ const docTemplate = `{
                 }
             }
         },
+        "/projects/{id}/general-info": {
+            "put": {
+                "description": "Update general info of the project by id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Project"
+                ],
+                "summary": "Update general info of the project by id",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Project ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Body",
+                        "name": "Body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/pkg_handler_project.UpdateGeneralInfoInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.UpdateProjectGeneralInfoResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/projects/{id}/members": {
             "put": {
                 "description": "Update member in an existing project",
@@ -1333,7 +1399,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateMemberInput"
+                            "$ref": "#/definitions/pkg_handler_project.UpdateMemberInput"
                         }
                     }
                 ],
@@ -1397,7 +1463,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.AssignMemberInput"
+                            "$ref": "#/definitions/pkg_handler_project.AssignMemberInput"
                         }
                     }
                 ],
@@ -1716,6 +1782,9 @@ const docTemplate = `{
                 "accountManagerID": {
                     "type": "string"
                 },
+                "clientEmail": {
+                    "type": "string"
+                },
                 "countryID": {
                     "type": "string"
                 },
@@ -1731,6 +1800,9 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
+                "projectEmail": {
+                    "type": "string"
+                },
                 "startDate": {
                     "type": "string"
                 },
@@ -1738,6 +1810,30 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateGeneralInfoInput": {
+            "type": "object",
+            "required": [
+                "countryID",
+                "name"
+            ],
+            "properties": {
+                "countryID": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "stacks": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "startDate": {
                     "type": "string"
                 }
             }
@@ -2166,6 +2262,9 @@ const docTemplate = `{
                 "accountManagerID": {
                     "type": "string"
                 },
+                "clientEmail": {
+                    "type": "string"
+                },
                 "countryID": {
                     "type": "string"
                 },
@@ -2181,6 +2280,9 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
+                "projectEmail": {
+                    "type": "string"
+                },
                 "startDate": {
                     "type": "string"
                 },
@@ -2188,6 +2290,30 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "pkg_handler_project.UpdateGeneralInfoInput": {
+            "type": "object",
+            "required": [
+                "countryID",
+                "name"
+            ],
+            "properties": {
+                "countryID": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "stacks": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "startDate": {
                     "type": "string"
                 }
             }
@@ -2281,6 +2407,20 @@ const docTemplate = `{
                 },
                 "employee": {
                     "$ref": "#/definitions/view.EmployeeData"
+                }
+            }
+        },
+        "view.BasicCountryInfo": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
                 }
             }
         },
@@ -2383,6 +2523,12 @@ const docTemplate = `{
                 "accountManager": {
                     "$ref": "#/definitions/view.ProjectHead"
                 },
+                "clientEmail": {
+                    "type": "string"
+                },
+                "country": {
+                    "$ref": "#/definitions/view.BasicCountryInfo"
+                },
                 "createdAt": {
                     "type": "string"
                 },
@@ -2402,6 +2548,9 @@ const docTemplate = `{
                     }
                 },
                 "name": {
+                    "type": "string"
+                },
+                "projectEmail": {
                     "type": "string"
                 },
                 "startDate": {
@@ -2672,7 +2821,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "country": {
-                    "type": "string"
+                    "$ref": "#/definitions/view.BasicCountryInfo"
                 },
                 "createdAt": {
                     "type": "string"
@@ -2999,6 +3148,34 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/view.UpdateProfileInfoData"
+                }
+            }
+        },
+        "view.UpdateProjectGeneralInfo": {
+            "type": "object",
+            "properties": {
+                "country": {
+                    "$ref": "#/definitions/view.BasicCountryInfo"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "stacks": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Stack"
+                    }
+                },
+                "startDate": {
+                    "type": "string"
+                }
+            }
+        },
+        "view.UpdateProjectGeneralInfoResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/view.UpdateProjectGeneralInfo"
                 }
             }
         },

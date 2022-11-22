@@ -9,21 +9,21 @@ import (
 type ProjectData struct {
 	model.BaseModel
 
-	Name            string          `json:"name"`
-	Type            string          `json:"type"`
-	Status          string          `json:"status"`
-	ProjectEmail    string          `json:"projectEmail"`
-	ClientEmail     string          `json:"clientEmail"`
-	Industry        string          `json:"industry"`
-	Country         string          `json:"country"`
-	StartDate       *time.Time      `json:"startDate"`
-	EndDate         *time.Time      `json:"endDate"`
-	Members         []ProjectMember `json:"members"`
-	TechnicalLead   []ProjectHead   `json:"technicalLeads"`
-	AccountManager  *ProjectHead    `json:"accountManager"`
-	SalePerson      *ProjectHead    `json:"salePerson"`
-	DeliveryManager *ProjectHead    `json:"deliveryManager"`
-	Stacks          []Stack         `json:"stacks"`
+	Name            string            `json:"name"`
+	Type            string            `json:"type"`
+	Status          string            `json:"status"`
+	ProjectEmail    string            `json:"projectEmail"`
+	ClientEmail     string            `json:"clientEmail"`
+	Industry        string            `json:"industry"`
+	Country         *BasicCountryInfo `json:"country"`
+	StartDate       *time.Time        `json:"startDate"`
+	EndDate         *time.Time        `json:"endDate"`
+	Members         []ProjectMember   `json:"members"`
+	TechnicalLead   []ProjectHead     `json:"technicalLeads"`
+	AccountManager  *ProjectHead      `json:"accountManager"`
+	SalePerson      *ProjectHead      `json:"salePerson"`
+	DeliveryManager *ProjectHead      `json:"deliveryManager"`
+	Stacks          []Stack           `json:"stacks"`
 }
 
 type UpdatedProject struct {
@@ -145,6 +145,16 @@ func ToProjectData(project *model.Project) ProjectData {
 		DeliveryManager: deliveryManager,
 		SalePerson:      salePerson,
 		AccountManager:  accountManager,
+		ProjectEmail:    project.ProjectEmail,
+		ClientEmail:     project.ClientEmail,
+	}
+
+	if project.Country != nil {
+		d.Country = &BasicCountryInfo{
+			ID:   project.Country.ID,
+			Name: project.Country.Name,
+			Code: project.Country.Code,
+		}
 	}
 
 	return d
@@ -227,14 +237,28 @@ type CreateProjectData struct {
 	AccountManager  *ProjectHead       `json:"accountManager"`
 	DeliveryManager *ProjectHead       `json:"deliveryManager"`
 	Members         []CreateMemberData `json:"members"`
+	ClientEmail     string             `json:"clientEmail"`
+	ProjectEmail    string             `json:"projectEmail"`
+	Country         *BasicCountryInfo  `json:"country"`
 }
 
 func ToCreateProjectDataResponse(project *model.Project) CreateProjectData {
+
 	result := CreateProjectData{
-		BaseModel: project.BaseModel,
-		Name:      project.Name,
-		Type:      project.Type.String(),
-		Status:    project.Status.String(),
+		BaseModel:    project.BaseModel,
+		Name:         project.Name,
+		Type:         project.Type.String(),
+		Status:       project.Status.String(),
+		ClientEmail:  project.ClientEmail,
+		ProjectEmail: project.ProjectEmail,
+	}
+
+	if project.Country != nil {
+		result.Country = &BasicCountryInfo{
+			ID:   project.Country.ID,
+			Name: project.Country.Name,
+			Code: project.Country.Code,
+		}
 	}
 
 	if project.StartDate != nil {
@@ -291,4 +315,44 @@ func ToProjectMemberListData(slots []*model.ProjectSlot, projectHeads []*model.P
 
 type ProjectMemberListResponse struct {
 	Data []ProjectMember `json:"data"`
+}
+
+type BasicCountryInfo struct {
+	ID   model.UUID `json:"id"`
+	Name string     `json:"name"`
+	Code string     `json:"code"`
+}
+
+type UpdateProjectGeneralInfo struct {
+	Name      string            `json:"name"`
+	StartDate *time.Time        `json:"startDate"`
+	Country   *BasicCountryInfo `json:"country"`
+	Stacks    []model.Stack     `json:"stacks"`
+}
+
+type UpdateProjectGeneralInfoResponse struct {
+	Data UpdateProjectGeneralInfo `json:"data"`
+}
+
+func ToUpdateProjectGeneralInfo(project *model.Project) UpdateProjectGeneralInfo {
+	stacks := make([]model.Stack, 0, len(project.ProjectStacks))
+	for _, v := range project.ProjectStacks {
+		stacks = append(stacks, v.Stack)
+	}
+
+	rs := UpdateProjectGeneralInfo{
+		Name:      project.Name,
+		StartDate: project.StartDate,
+		Stacks:    stacks,
+	}
+
+	if project.Country != nil {
+		rs.Country = &BasicCountryInfo{
+			ID:   project.Country.ID,
+			Name: project.Country.Name,
+			Code: project.Country.Code,
+		}
+	}
+
+	return rs
 }

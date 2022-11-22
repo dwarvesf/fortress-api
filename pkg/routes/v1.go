@@ -47,4 +47,5 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 	v1.GET("/projects/:id/members", mw.WithAuth, h.Project.GetMembers)
 	v1.PUT("/projects/:id/members", mw.WithAuth, h.Project.UpdateMember)
 	v1.DELETE("/projects/:id/members/:memberID", mw.WithAuth, h.Project.DeleteMember)
+	v1.PUT("/projects/:id/general-info", mw.WithAuth, h.Project.UpdateGeneralInfo)
 }

@@ -16,6 +16,7 @@ var (
 	ErrInvalidLeftDate              = errors.New("invalid left date")
 	ErrInvalidMemberID              = errors.New("invalid member ID")
 	ErrProjectNotFound              = errors.New("project not found")
+	ErrCountryNotFound              = errors.New("country not found")
 	ErrEmployeeNotFound             = errors.New("employee not found")
 	ErrSeniorityNotFound            = errors.New("seniority not found")
 	ErrProjectSlotNotFound          = errors.New("project slot not found")
@@ -30,4 +31,8 @@ var (
 // errPositionNotFound returns unauthorized custom error
 func errPositionNotFound(id string) error {
 	return fmt.Errorf("position not found: %v", id)
+}
+
+func errStackNotFound(id string) error {
+	return fmt.Errorf("stack not found: %v", id)
 }
