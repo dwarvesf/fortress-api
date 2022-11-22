@@ -1,20 +1,24 @@
 {
-    "data": [
-      {
-        "code": "on-boarding",
-        "name": "On Boarding"
-      },
-      {
-        "code": "paused",
-        "name": "Paused"
-      },
-      {
-        "code": "active",
-        "name": "Active"
-      },
-      {
-        "code": "closed",
-        "name": "Closed"
-      }
-    ]
+  "data": [
+    {
+      "id": "",
+      "code": "on-boarding",
+      "name": "On Boarding"
+    },
+    {
+      "id": "",
+      "code": "paused",
+      "name": "Paused"
+    },
+    {
+      "id": "",
+      "code": "active",
+      "name": "Active"
+    },
+    {
+      "id": "",
+      "code": "closed",
+      "name": "Closed"
+    }
+  ]
 }

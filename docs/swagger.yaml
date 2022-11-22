@@ -630,8 +630,6 @@ definitions:
     type: object
   view.EmployeeData:
     properties:
-      accountStatus:
-        type: string
       address:
         type: string
       avatar:
@@ -737,12 +735,16 @@ definitions:
     properties:
       code:
         type: string
+      id:
+        type: string
       name:
         type: string
     type: object
   view.Position:
     properties:
       code:
+        type: string
+      id:
         type: string
       name:
         type: string
@@ -893,6 +895,8 @@ definitions:
     properties:
       code:
         type: string
+      id:
+        type: string
       name:
         type: string
     type: object
@@ -906,6 +910,8 @@ definitions:
   view.Stack:
     properties:
       code:
+        type: string
+      id:
         type: string
       name:
         type: string
@@ -1170,7 +1176,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.CreateEmployeeInput'
+          $ref: '#/definitions/pkg_handler_employee.CreateEmployeeInput'
       - description: jwt token
         in: header
         name: Authorization
@@ -1301,7 +1307,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateGeneralInfoInput'
+          $ref: '#/definitions/pkg_handler_employee.UpdateGeneralInfoInput'
       produces:
       - application/json
       responses:
@@ -1345,7 +1351,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdatePersonalInfoInput'
+          $ref: '#/definitions/pkg_handler_employee.UpdatePersonalInfoInput'
       produces:
       - application/json
       responses:
@@ -1384,7 +1390,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateSkillsInput'
+          $ref: '#/definitions/pkg_handler_employee.UpdateSkillsInput'
       - description: jwt token
         in: header
         name: Authorization
@@ -1433,31 +1439,6 @@ paths:
           schema:
             $ref: '#/definitions/view.ErrorResponse'
       summary: Get list values for account roles
-      tags:
-      - Metadata
-  /metadata/account-statuses:
-    get:
-      consumes:
-      - application/json
-      description: Get list values for account statuses
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              $ref: '#/definitions/view.MetaData'
-            type: array
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/view.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/view.ErrorResponse'
-      summary: Get list values for account statuses
       tags:
       - Metadata
   /metadata/chapters:

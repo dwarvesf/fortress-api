@@ -31,14 +31,13 @@ type EmployeeData struct {
 	JoinedDate    *time.Time          `json:"joinedDate"`
 	LeftDate      *time.Time          `json:"leftDate"`
 
-	AccountStatus model.AccountStatus   `json:"accountStatus"`
-	Seniority     *model.Seniority      `json:"seniority"`
-	Chapter       *model.Chapter        `json:"chapter"`
-	LineManager   *BasisEmployeeInfo    `json:"lineManager"`
-	Positions     []Position            `json:"positions"`
-	Stacks        []Stack               `json:"stacks"`
-	Roles         []Role                `json:"roles"`
-	Projects      []EmployeeProjectData `json:"projects"`
+	Seniority   *model.Seniority      `json:"seniority"`
+	Chapter     *model.Chapter        `json:"chapter"`
+	LineManager *BasisEmployeeInfo    `json:"lineManager"`
+	Positions   []Position            `json:"positions"`
+	Stacks      []Stack               `json:"stacks"`
+	Roles       []Role                `json:"roles"`
+	Projects    []EmployeeProjectData `json:"projects"`
 }
 
 type UpdateGeneralInfoEmployeeData struct {
@@ -196,7 +195,6 @@ func ToEmployeeData(employee *model.Employee) *EmployeeData {
 		Seniority:     employee.Seniority,
 		JoinedDate:    employee.JoinedDate,
 		LeftDate:      employee.LeftDate,
-		AccountStatus: employee.AccountStatus,
 		Projects:      employeeProjects,
 		Roles:         ToRoles(employee.EmployeeRoles),
 		Positions:     ToPositions(employee.EmployeePositions),

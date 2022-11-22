@@ -25,26 +25,29 @@
             "status": "probation",
             "joinedDate": null,
             "leftDate": null,
-            "accountStatus": "active",
             "seniority": null,
             "chapter": null,
             "lineManager": null,
             "positions": [
                 {
+                    "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
                     "code": "devops",
                     "name": "Devops"
                 },
                 {
+                    "id": "01fb6322-d727-47e3-a242-5039ea4732fc",
                     "code": "blockchain",
                     "name": "Blockchain"
                 }
             ],
             "stacks": [
                 {
+                    "id": "0ecf47c8-cca4-4c30-94bb-054b1124c44f",
                     "name": "Golang",
                     "code": "golang"
                 },
                 {
+                    "id": "fa0f4e46-7eab-4e5c-9d31-30489e69fe2e",
                     "name": "React",
                     "code": "react"
                 }

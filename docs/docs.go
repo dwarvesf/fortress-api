@@ -178,7 +178,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.CreateEmployeeInput"
+                            "$ref": "#/definitions/pkg_handler_employee.CreateEmployeeInput"
                         }
                     },
                     {
@@ -374,7 +374,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateGeneralInfoInput"
+                            "$ref": "#/definitions/pkg_handler_employee.UpdateGeneralInfoInput"
                         }
                     }
                 ],
@@ -440,7 +440,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdatePersonalInfoInput"
+                            "$ref": "#/definitions/pkg_handler_employee.UpdatePersonalInfoInput"
                         }
                     }
                 ],
@@ -499,7 +499,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateSkillsInput"
+                            "$ref": "#/definitions/pkg_handler_employee.UpdateSkillsInput"
                         }
                     },
                     {
@@ -556,44 +556,6 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/view.AccountRoleResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/view.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/view.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/metadata/account-statuses": {
-            "get": {
-                "description": "Get list values for account statuses",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Metadata"
-                ],
-                "summary": "Get list values for account statuses",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/view.MetaData"
-                            }
                         }
                     },
                     "400": {
@@ -2459,9 +2421,6 @@ const docTemplate = `{
         "view.EmployeeData": {
             "type": "object",
             "properties": {
-                "accountStatus": {
-                    "type": "string"
-                },
                 "address": {
                     "type": "string"
                 },
@@ -2621,6 +2580,9 @@ const docTemplate = `{
                 "code": {
                     "type": "string"
                 },
+                "id": {
+                    "type": "string"
+                },
                 "name": {
                     "type": "string"
                 }
@@ -2630,6 +2592,9 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "code": {
+                    "type": "string"
+                },
+                "id": {
                     "type": "string"
                 },
                 "name": {
@@ -2860,6 +2825,9 @@ const docTemplate = `{
                 "code": {
                     "type": "string"
                 },
+                "id": {
+                    "type": "string"
+                },
                 "name": {
                     "type": "string"
                 }
@@ -2880,6 +2848,9 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "code": {
+                    "type": "string"
+                },
+                "id": {
                     "type": "string"
                 },
                 "name": {

@@ -1,18 +1,27 @@
 {
   "data": [
     {
+      "id": "",
       "code": "left",
       "name": "Left"
     },
     {
+      "id": "",
+      "code": "on-boarding",
+      "name": "On Boarding"
+    },
+    {
+      "id": "",
       "code": "probation",
       "name": "Probation"
     },
     {
+      "id": "",
       "code": "full-time",
       "name": "Full-time"
     },
     {
+      "id": "",
       "code": "contractor",
       "name": "Contractor"
     }

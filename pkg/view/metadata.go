@@ -3,6 +3,7 @@ package view
 import "github.com/dwarvesf/fortress-api/pkg/model"
 
 type MetaData struct {
+	ID   string `json:"id"`
 	Code string `json:"code"`
 	Name string `json:"name"`
 }
