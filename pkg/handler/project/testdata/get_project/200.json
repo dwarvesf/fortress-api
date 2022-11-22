@@ -20,13 +20,15 @@
                 "displayName": "Huy Nguyen",
                 "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/2830497479497502617.png",
                 "position": "",
-                "seniority": "",
+                "seniority": null,
                 "status": "active",
                 "isLead": false,
                 "deploymentType": "",
                 "joinedDate": null,
                 "leftDate": null,
-                "positions": []
+                "positions": [],
+				"discount": "0",
+				"rate": "0"
             }
         ],
         "technicalLeads": [],
