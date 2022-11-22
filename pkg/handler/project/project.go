@@ -180,11 +180,14 @@ func (h *handler) Create(c *gin.Context) {
 	}
 
 	p := &model.Project{
-		Name:      body.Name,
-		Country:   country.Name,
-		Type:      model.ProjectType(body.Type),
-		Status:    model.ProjectStatus(body.Status),
-		StartDate: body.GetStartDate(),
+		Name:         body.Name,
+		CountryID:    body.CountryID,
+		Type:         model.ProjectType(body.Type),
+		Status:       model.ProjectStatus(body.Status),
+		StartDate:    body.GetStartDate(),
+		ProjectEmail: body.ProjectEmail,
+		ClientEmail:  body.ClientEmail,
+		Country:      country,
 	}
 
 	tx, done := h.repo.NewTransaction()
@@ -902,4 +905,128 @@ func (h *handler) Details(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse(view.ToProjectData(project), nil, nil, nil, ""))
+}
+
+// UpdateGeneralInfo godoc
+// @Summary Update general info of the project by id
+// @Description Update general info of the project by id
+// @Tags Project
+// @Accept  json
+// @Produce  json
+// @Param Authorization header string true "jwt token"
+// @Param id path string true "Project ID"
+// @Param Body body UpdateGeneralInfoInput true "Body"
+// @Success 200 {object} view.UpdateProjectGeneralInfoResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /projects/{id}/general-info [put]
+func (h *handler) UpdateGeneralInfo(c *gin.Context) {
+	projectID := c.Param("id")
+
+	var body UpdateGeneralInfoInput
+	if err := c.ShouldBindJSON(&body); err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, body, ""))
+		return
+	}
+
+	// TODO: can we move this to middleware ?
+	l := h.logger.Fields(logger.Fields{
+		"handler": "project",
+		"method":  "UpdateGeneralInfo",
+		"id":      projectID,
+		"request": body,
+	})
+
+	// Check project exists
+	exists, err := h.store.Project.Exists(h.repo.DB(), projectID)
+	if err != nil {
+		l.Error(err, "error check existence of project")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
+		return
+	}
+
+	if !exists {
+		l.Error(err, "project not found")
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrProjectNotFound, body, ""))
+		return
+	}
+
+	// Check country exists
+	exists, err = h.store.Country.Exists(h.repo.DB(), body.CountryID.String())
+	if err != nil {
+		l.Error(err, "error check existence of country")
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, err, body, ""))
+		return
+	}
+
+	if !exists {
+		l.Error(err, "country not found")
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrCountryNotFound, body, ""))
+		return
+	}
+
+	// Check valid stack id
+	stacks, err := h.store.Stack.All(h.repo.DB())
+	if err != nil {
+		l.Error(err, "error when finding stacks")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
+		return
+	}
+
+	stackMap := model.ToStackMap(stacks)
+	for _, sID := range body.Stacks {
+		_, ok := stackMap[sID]
+		if !ok {
+			l.Error(errStackNotFound(sID.String()), "stack not found")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errStackNotFound(sID.String()), body, ""))
+			return
+		}
+	}
+
+	_, err = time.Parse("2006-01-02", body.StartDate)
+	if body.StartDate != "" && err != nil {
+		l.Error(ErrInvalidStartDate, "invalid start date")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, ErrInvalidStartDate, body, ""))
+		return
+	}
+
+	// Begin transaction
+	tx, done := h.repo.NewTransaction()
+
+	// Delete all exist employee stack
+	if err := h.store.ProjectStack.HardDelete(tx.DB(), projectID); err != nil {
+		l.Error(err, "failed to delete project stacks in database")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
+		return
+	}
+
+	// Create new employee stack
+	for _, stackID := range body.Stacks {
+		projectStack := &model.ProjectStack{
+			ProjectID: model.MustGetUUIDFromString(projectID),
+			StackID:   stackID,
+		}
+
+		projectStack, err := h.store.ProjectStack.Create(tx.DB(), projectStack)
+		if err != nil {
+			l.Error(err, "failed to create project stack")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
+			return
+		}
+	}
+
+	rs, err := h.store.Project.UpdateGeneralInfo(tx.DB(), project.UpdateGeneralInfoInput{
+		Name:      body.Name,
+		StartDate: body.GetStartDate(),
+		CountryID: body.CountryID,
+	}, projectID)
+
+	if err != nil {
+		l.Error(err, "failed to update project information to db")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToUpdateProjectGeneralInfo(rs), nil, done(nil), nil, ""))
 }

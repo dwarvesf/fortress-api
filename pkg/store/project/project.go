@@ -66,17 +66,19 @@ func (s *store) UpdateStatus(db *gorm.DB, projectID string, projectStatus model.
 
 // Create use to create new project to database
 func (s *store) Create(db *gorm.DB, project *model.Project) error {
-	return db.Create(&project).Error
+	return db.Create(&project).Preload("Country").Error
 }
 
 // Exists return true/false if project exist or not
 func (s *store) Exists(db *gorm.DB, id string) (bool, error) {
-	var record struct {
+	type res struct {
 		Result bool
 	}
 
+	result := res{}
 	query := db.Raw("SELECT EXISTS (SELECT * FROM projects WHERE id = ?) as result", id)
-	return record.Result, query.Scan(&record).Error
+
+	return result.Result, query.Scan(&result).Error
 }
 
 // One get 1 project by id
@@ -90,6 +92,21 @@ func (s *store) One(db *gorm.DB, id string) (*model.Project, error) {
 		Preload("Heads.Employee").
 		Preload("ProjectStacks", "deleted_at IS NULL").
 		Preload("ProjectStacks.Stack", "deleted_at IS NULL").
+		Preload("Country").
 		First(&project).
 		Error
+}
+
+func (s *store) UpdateGeneralInfo(db *gorm.DB, body UpdateGeneralInfoInput, id string) (*model.Project, error) {
+	project := &model.Project{}
+
+	project.Name = body.Name
+	project.StartDate = body.StartDate
+	project.CountryID = body.CountryID
+
+	return project, db.Table("projects").Where("id = ?", id).Updates(&project).
+		Preload("ProjectStacks", "deleted_at IS NULL").
+		Preload("ProjectStacks.Stack", "deleted_at IS NULL").
+		Preload("Country").
+		First(&project).Error
 }

@@ -149,6 +149,8 @@ definitions:
     properties:
       accountManagerID:
         type: string
+      clientEmail:
+        type: string
       countryID:
         type: string
       deliveryManagerID:
@@ -158,6 +160,8 @@ definitions:
           $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.AssignMemberInput'
         type: array
       name:
+        type: string
+      projectEmail:
         type: string
       startDate:
         type: string
@@ -170,6 +174,22 @@ definitions:
     - countryID
     - name
     - status
+    type: object
+  github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateGeneralInfoInput:
+    properties:
+      countryID:
+        type: string
+      name:
+        type: string
+      stacks:
+        items:
+          type: string
+        type: array
+      startDate:
+        type: string
+    required:
+    - countryID
+    - name
     type: object
   github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateMemberInput:
     properties:
@@ -456,6 +476,8 @@ definitions:
     properties:
       accountManagerID:
         type: string
+      clientEmail:
+        type: string
       countryID:
         type: string
       deliveryManagerID:
@@ -465,6 +487,8 @@ definitions:
           $ref: '#/definitions/pkg_handler_project.AssignMemberInput'
         type: array
       name:
+        type: string
+      projectEmail:
         type: string
       startDate:
         type: string
@@ -477,6 +501,22 @@ definitions:
     - countryID
     - name
     - status
+    type: object
+  pkg_handler_project.UpdateGeneralInfoInput:
+    properties:
+      countryID:
+        type: string
+      name:
+        type: string
+      stacks:
+        items:
+          type: string
+        type: array
+      startDate:
+        type: string
+    required:
+    - countryID
+    - name
     type: object
   pkg_handler_project.UpdateMemberInput:
     properties:
@@ -540,6 +580,15 @@ definitions:
         type: string
       employee:
         $ref: '#/definitions/view.EmployeeData'
+    type: object
+  view.BasicCountryInfo:
+    properties:
+      code:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
     type: object
   view.BasisEmployeeInfo:
     properties:
@@ -605,6 +654,10 @@ definitions:
     properties:
       accountManager:
         $ref: '#/definitions/view.ProjectHead'
+      clientEmail:
+        type: string
+      country:
+        $ref: '#/definitions/view.BasicCountryInfo'
       createdAt:
         type: string
       deletedAt:
@@ -618,6 +671,8 @@ definitions:
           $ref: '#/definitions/view.CreateMemberData'
         type: array
       name:
+        type: string
+      projectEmail:
         type: string
       startDate:
         type: string
@@ -795,7 +850,7 @@ definitions:
       clientEmail:
         type: string
       country:
-        type: string
+        $ref: '#/definitions/view.BasicCountryInfo'
       createdAt:
         type: string
       deletedAt:
@@ -1010,6 +1065,24 @@ definitions:
       data:
         $ref: '#/definitions/view.UpdateProfileInfoData'
     type: object
+  view.UpdateProjectGeneralInfo:
+    properties:
+      country:
+        $ref: '#/definitions/view.BasicCountryInfo'
+      name:
+        type: string
+      stacks:
+        items:
+          $ref: '#/definitions/model.Stack'
+        type: array
+      startDate:
+        type: string
+    type: object
+  view.UpdateProjectGeneralInfoResponse:
+    properties:
+      data:
+        $ref: '#/definitions/view.UpdateProjectGeneralInfo'
+    type: object
   view.UpdateProjectStatusResponse:
     properties:
       data:
@@ -1176,7 +1249,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/pkg_handler_employee.CreateEmployeeInput'
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.CreateEmployeeInput'
       - description: jwt token
         in: header
         name: Authorization
@@ -1307,7 +1380,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/pkg_handler_employee.UpdateGeneralInfoInput'
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateGeneralInfoInput'
       produces:
       - application/json
       responses:
@@ -1351,7 +1424,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/pkg_handler_employee.UpdatePersonalInfoInput'
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdatePersonalInfoInput'
       produces:
       - application/json
       responses:
@@ -1390,7 +1463,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/pkg_handler_employee.UpdateSkillsInput'
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateSkillsInput'
       - description: jwt token
         in: header
         name: Authorization
@@ -1812,7 +1885,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.CreateProjectInput'
+          $ref: '#/definitions/pkg_handler_project.CreateProjectInput'
       produces:
       - application/json
       responses:
@@ -1922,6 +1995,50 @@ paths:
       summary: Get details of a project
       tags:
       - Project
+  /projects/{id}/general-info:
+    put:
+      consumes:
+      - application/json
+      description: Update general info of the project by id
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Body
+        in: body
+        name: Body
+        required: true
+        schema:
+          $ref: '#/definitions/pkg_handler_project.UpdateGeneralInfoInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.UpdateProjectGeneralInfoResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Update general info of the project by id
+      tags:
+      - Project
   /projects/{id}/members:
     post:
       consumes:
@@ -1943,7 +2060,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.AssignMemberInput'
+          $ref: '#/definitions/pkg_handler_project.AssignMemberInput'
       produces:
       - application/json
       responses:
@@ -1986,7 +2103,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateMemberInput'
+          $ref: '#/definitions/pkg_handler_project.UpdateMemberInput'
       produces:
       - application/json
       responses:

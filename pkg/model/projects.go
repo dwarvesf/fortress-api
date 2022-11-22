@@ -58,7 +58,7 @@ type Project struct {
 	BaseModel
 
 	Name          string
-	Country       string
+	CountryID     UUID
 	Type          ProjectType
 	StartDate     *time.Time
 	EndDate       *time.Time
@@ -67,6 +67,10 @@ type Project struct {
 	Members       []ProjectMember
 	Heads         []ProjectHead
 	ProjectStacks []ProjectStack
+	ProjectEmail  string
+	ClientEmail   string
+
+	Country *Country
 }
 
 type DeploymentType string
