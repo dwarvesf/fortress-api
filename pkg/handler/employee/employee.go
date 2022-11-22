@@ -355,7 +355,6 @@ func (h *handler) Create(c *gin.Context) {
 		TeamEmail:     req.TeamEmail,
 		PersonalEmail: req.PersonalEmail,
 		WorkingStatus: model.WorkingStatus(req.Status),
-		AccountStatus: model.AccountStatusActive,
 		JoinedDate:    &now,
 		SeniorityID:   sen.ID,
 		Positions:     positionsReq,

@@ -635,7 +635,7 @@ func (h *handler) UpdateMember(c *gin.Context) {
 	slot.Rate = body.Rate
 	slot.Discount = body.Discount
 
-	_, err = h.store.ProjectSlot.Update(tx.DB(), body.ProjectSlotID.String(), slot)
+	err = h.store.ProjectSlot.Update(tx.DB(), body.ProjectSlotID.String(), slot)
 	if err != nil {
 		l.Error(err, "failed to create project slot")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))

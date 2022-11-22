@@ -66,8 +66,18 @@ func (s *store) One(db *gorm.DB, id string) (*model.ProjectSlot, error) {
 }
 
 // Update update existing slot
-func (s *store) Update(db *gorm.DB, id string, slot *model.ProjectSlot) (*model.ProjectSlot, error) {
-	return slot, db.Table("project_slots").Where("id = ?", id).Updates(slot).Error
+func (s *store) Update(db *gorm.DB, id string, input *model.ProjectSlot) error {
+	slot := model.ProjectSlot{
+		ProjectID:      input.ProjectID,
+		DeploymentType: input.DeploymentType,
+		Rate:           input.Rate,
+		Discount:       input.Discount,
+		UpsellPersonID: input.UpsellPersonID,
+		SeniorityID:    input.SeniorityID,
+		Status:         input.Status,
+	}
+
+	return db.Table("project_slots").Where("id = ?", id).Updates(&slot).Error
 }
 
 // Create create new project slot

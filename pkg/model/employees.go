@@ -110,7 +110,6 @@ type Employee struct {
 	ChapterID     UUID
 	SeniorityID   UUID
 	LineManagerID UUID
-	AccountStatus AccountStatus
 
 	// social services
 	BasecampID             string
