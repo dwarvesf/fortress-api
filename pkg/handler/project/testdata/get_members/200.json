@@ -11,7 +11,13 @@
             "displayName": "Thanh Pham",
             "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
             "position": "",
-            "seniority": "mid",
+            "seniority": {
+                "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
+                "createdAt": "2022-11-07T09:50:25.714604Z",
+                "updatedAt": "2022-11-07T09:50:25.714604Z",
+                "name": "Mid",
+                "code": "mid"
+            },
             "status": "active",
             "isLead": false,
             "deploymentType": "official",
@@ -28,7 +34,9 @@
                     "code": "backend",
                     "name": "Backend"
                 }
-            ]
+            ],
+            "discount": "0",
+            "rate": "5000"
         },
         {
             "projectSlotID": "bdc64b18-4c5f-4025-827a-f5b91d599dc7",
@@ -37,7 +45,13 @@
             "displayName": "Huy Nguyen",
             "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/2830497479497502617.png",
             "position": "",
-            "seniority": "mid",
+            "seniority": {
+                "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
+                "createdAt": "2022-11-07T09:50:25.714604Z",
+                "updatedAt": "2022-11-07T09:50:25.714604Z",
+                "name": "Mid",
+                "code": "mid"
+            },
             "status": "active",
             "isLead": false,
             "deploymentType": "shadow",
@@ -54,7 +68,9 @@
                     "code": "blockchain",
                     "name": "Blockchain"
                 }
-            ]
+            ],
+            "discount": "0",
+            "rate": "4000"
         }
     ]
 }

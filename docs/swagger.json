@@ -1128,7 +1128,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/pkg_handler_project.CreateProjectInput"
+                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.CreateProjectInput"
                         }
                     }
                 ],
@@ -1325,7 +1325,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/pkg_handler_project.UpdateGeneralInfoInput"
+                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateGeneralInfoInput"
                         }
                     }
                 ],
@@ -1391,7 +1391,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/pkg_handler_project.UpdateMemberInput"
+                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateMemberInput"
                         }
                     }
                 ],
@@ -1455,7 +1455,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/pkg_handler_project.AssignMemberInput"
+                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.AssignMemberInput"
                         }
                     }
                 ],
@@ -2911,6 +2911,9 @@
                 "deploymentType": {
                     "type": "string"
                 },
+                "discount": {
+                    "type": "number"
+                },
                 "displayName": {
                     "type": "string"
                 },
@@ -2941,8 +2944,11 @@
                 "projectSlotID": {
                     "type": "string"
                 },
+                "rate": {
+                    "type": "number"
+                },
                 "seniority": {
-                    "type": "string"
+                    "$ref": "#/definitions/model.Seniority"
                 },
                 "status": {
                     "type": "string"

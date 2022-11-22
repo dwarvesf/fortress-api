@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/dwarvesf/fortress-api/pkg/model"
+	"github.com/shopspring/decimal"
 )
 
 type ProjectData struct {
@@ -37,20 +38,22 @@ type UpdatedProject struct {
 }
 
 type ProjectMember struct {
-	ProjectSlotID  string     `json:"projectSlotID"`
-	EmployeeID     string     `json:"employeeID"`
-	FullName       string     `json:"fullName"`
-	DisplayName    string     `json:"displayName"`
-	Avatar         string     `json:"avatar"`
-	Position       string     `json:"position"`
-	Seniority      string     `json:"seniority"`
-	Status         string     `json:"status"`
-	IsLead         bool       `json:"isLead"`
-	DeploymentType string     `json:"deploymentType"`
-	JoinedDate     *time.Time `json:"joinedDate"`
-	LeftDate       *time.Time `json:"leftDate"`
+	ProjectSlotID  string          `json:"projectSlotID"`
+	EmployeeID     string          `json:"employeeID"`
+	FullName       string          `json:"fullName"`
+	DisplayName    string          `json:"displayName"`
+	Avatar         string          `json:"avatar"`
+	Position       string          `json:"position"`
+	Status         string          `json:"status"`
+	IsLead         bool            `json:"isLead"`
+	DeploymentType string          `json:"deploymentType"`
+	JoinedDate     *time.Time      `json:"joinedDate"`
+	LeftDate       *time.Time      `json:"leftDate"`
+	Rate           decimal.Decimal `json:"rate"`
+	Discount       decimal.Decimal `json:"discount"`
 
-	Positions []Position `json:"positions"`
+	Seniority *model.Seniority `json:"seniority"`
+	Positions []Position       `json:"positions"`
 }
 
 type ProjectHead struct {
@@ -304,9 +307,11 @@ func ToProjectMemberListData(slots []*model.ProjectSlot, projectHeads []*model.P
 			JoinedDate:     m.JoinedDate,
 			LeftDate:       m.LeftDate,
 			IsLead:         leadMap[m.EmployeeID.String()],
-			Seniority:      m.Seniority.Code,
+			Seniority:      &m.Seniority,
 			DeploymentType: slot.DeploymentType.String(),
 			Positions:      ToPositions(m.Employee.EmployeePositions),
+			Rate:           m.Rate,
+			Discount:       m.Discount,
 		})
 	}
 
