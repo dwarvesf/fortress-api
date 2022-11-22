@@ -1280,6 +1280,63 @@ const docTemplate = `{
                 }
             }
         },
+        "/projects/{id}": {
+            "get": {
+                "description": "Get details of a project",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Project"
+                ],
+                "summary": "Get details of a project",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Project ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.ProjectListDataResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/projects/{id}/members": {
             "put": {
                 "description": "Update member in an existing project",
@@ -2646,6 +2703,12 @@ const docTemplate = `{
                 "accountManager": {
                     "$ref": "#/definitions/view.ProjectHead"
                 },
+                "clientEmail": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
                 "createdAt": {
                     "type": "string"
                 },
@@ -2661,6 +2724,9 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
+                "industry": {
+                    "type": "string"
+                },
                 "members": {
                     "type": "array",
                     "items": {
@@ -2670,8 +2736,17 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
+                "projectEmail": {
+                    "type": "string"
+                },
                 "salePerson": {
                     "$ref": "#/definitions/view.ProjectHead"
+                },
+                "stacks": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.Stack"
+                    }
                 },
                 "startDate": {
                     "type": "string"
