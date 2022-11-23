@@ -4,6 +4,7 @@ go 1.18
 
 require (
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
+	github.com/dstotijn/go-notion v0.9.0
 	github.com/gin-contrib/cors v1.4.0
 	github.com/gin-contrib/pprof v1.4.0
 	github.com/gin-gonic/gin v1.8.1
@@ -13,7 +14,6 @@ require (
 	github.com/google/go-cmp v0.5.8
 	github.com/hashicorp/vault/api v1.8.2
 	github.com/joho/godotenv v1.4.0
-	github.com/k0kubun/pp/v3 v3.2.0
 	github.com/lib/pq v1.10.6
 	github.com/satori/go.uuid v1.2.0
 	github.com/shopspring/decimal v1.3.1

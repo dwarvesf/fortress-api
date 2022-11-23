@@ -62,6 +62,10 @@ func (v *Vault) LoadConfig() *config.Config {
 			ClientID:     v.GetString("GOOGLE_API_CLIENT_ID"),
 			AppName:      v.GetString("GOOGLE_API_APP_NAME"),
 		},
+
+		Notion: config.Notion{
+			Secret: v.GetString("NOTION_SECRET"),
+		},
 	}
 }
 

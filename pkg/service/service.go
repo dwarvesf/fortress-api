@@ -3,10 +3,12 @@ package service
 import (
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/service/google"
+	"github.com/dwarvesf/fortress-api/pkg/service/notion"
 )
 
 type Service struct {
 	Google google.GoogleService
+	Notion notion.NotionService
 }
 
 func New(cfg *config.Config) *Service {
@@ -16,6 +18,9 @@ func New(cfg *config.Config) *Service {
 			cfg.Google.ClientSecret,
 			cfg.Google.AppName,
 			[]string{"email", "profile"},
+		),
+		Notion: notion.New(
+			cfg.Notion.Secret,
 		),
 	}
 }
