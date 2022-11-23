@@ -59,6 +59,8 @@ func GetTokenFromRequest(c *gin.Context) (string, error) {
 	switch headers[0] {
 	case "Bearer":
 		return headers[1], nil
+	case "ApiKey":
+		return "ApiKey", nil
 	default:
 		return "", ErrAuthenticationTypeHeaderInvalid
 	}

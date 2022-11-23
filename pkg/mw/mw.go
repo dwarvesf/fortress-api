@@ -1,12 +1,17 @@
 package mw
 
 import (
-	"gorm.io/gorm"
+	"crypto/ed25519"
+	"encoding/base32"
+	"errors"
 	"strings"
+
+	"gorm.io/gorm"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 
+	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/utils"
 )
@@ -16,14 +21,24 @@ var noAuthPath = []string{
 	"/auth",
 }
 
+type authMiddleware struct {
+	cfg *config.Config
+}
+
+func NewAuthMiddleware(cfg *config.Config) *authMiddleware {
+	return &authMiddleware{
+		cfg: cfg,
+	}
+}
+
 // WithAuth a middleware to check the access token
-func WithAuth(c *gin.Context) {
+func (amw *authMiddleware) WithAuth(c *gin.Context) {
 	if !authRequired(c) {
 		c.Next()
 		return
 	}
 
-	err := authenticate(c)
+	err := amw.authenticate(c)
 	if err != nil {
 		c.AbortWithStatusJSON(401, map[string]string{"message": err.Error()})
 		return
@@ -43,7 +58,7 @@ func authRequired(c *gin.Context) bool {
 	return true
 }
 
-func authenticate(c *gin.Context) error {
+func (mw *authMiddleware) authenticate(c *gin.Context) error {
 	headers := strings.Split(c.Request.Header.Get("Authorization"), " ")
 	if len(headers) != 2 {
 		return ErrUnexpectedAuthorizationHeader
@@ -51,6 +66,8 @@ func authenticate(c *gin.Context) error {
 	switch headers[0] {
 	case "Bearer":
 		return validateToken(headers[1])
+	case "ApiKey":
+		return validateApiKey(headers[1], mw.cfg.APIKey)
 	default:
 		return ErrAuthenticationTypeHeaderInvalid
 	}
@@ -74,6 +91,26 @@ func NewPermissionMiddleware(s *store.Store, r store.DBRepo) *permMiddleware {
 		store: s,
 		repo:  r,
 	}
+}
+
+func validateApiKey(privK string, pubK string) error {
+	pubKey, err := base32.StdEncoding.WithPadding(base32.StdPadding).DecodeString(pubK)
+	if err != nil {
+		return errors.New("invalid public key")
+	}
+
+	privKey, err := base32.StdEncoding.WithPadding(base32.StdPadding).DecodeString(privK)
+	if err != nil {
+		return errors.New("invalid private key")
+	}
+
+	signature := ed25519.Sign(privKey, nil)
+
+	ok := ed25519.Verify(pubKey, nil, signature)
+	if !ok {
+		return errors.New("invalid key")
+	}
+	return nil
 }
 
 type permMiddleware struct {
@@ -101,7 +138,10 @@ func (m permMiddleware) WithPerm(perm string) func(c *gin.Context) {
 }
 
 func ensurePerm(storeDB *store.Store, db *gorm.DB, accessToken string, requiredPerm string) error {
-	claims := jwt.MapClaims{}
+	if accessToken == "ApiKey" {
+		return nil
+	}
+
 	token, err := jwt.Parse(accessToken, func(token *jwt.Token) (interface{}, error) {
 		return []byte("JWTSecretKey"), nil
 	})

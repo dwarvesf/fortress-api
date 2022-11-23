@@ -89,8 +89,10 @@ func TestWithAuth(t *testing.T) {
 }
 
 func prepareTestDefaultRoutes() *gin.Engine {
+	amw := NewAuthMiddleware(nil)
+
 	r := gin.Default()
-	r.GET("/sample-routes", WithAuth)
+	r.GET("/sample-routes", amw.WithAuth)
 
 	return r
 }

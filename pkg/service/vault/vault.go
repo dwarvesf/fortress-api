@@ -40,7 +40,8 @@ func New(cfg *config.Config) (VaultService, error) {
 
 func (v *Vault) LoadConfig() *config.Config {
 	return &config.Config{
-		Debug: v.GetBool("DEBUG"),
+		Debug:  v.GetBool("DEBUG"),
+		APIKey: v.GetString("API_KEY"),
 
 		ApiServer: config.ApiServer{
 			Port:           v.GetString("PORT"),
