@@ -6,8 +6,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/model"
 )
 
-type store struct {
-}
+type store struct{}
 
 func New() IStore {
 	return &store{}
@@ -25,8 +24,8 @@ func (s *store) One(db *gorm.DB, id string) (*model.Country, error) {
 	return country, db.Where("id = ?", id).First(&country).Error
 }
 
-// Exists check the existence of country by id
-func (s *store) Exists(db *gorm.DB, id string) (bool, error) {
+// IsExist check country existence
+func (s *store) IsExist(db *gorm.DB, id string) (bool, error) {
 	type res struct {
 		Result bool
 	}

@@ -6,10 +6,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/model"
 )
 
-// TODO: rename filename
-
-type store struct {
-}
+type store struct{}
 
 func New() IStore {
 	return &store{}
@@ -20,7 +17,7 @@ func (s *store) Create(db *gorm.DB, projectStack *model.ProjectStack) (*model.Pr
 	return projectStack, db.Create(&projectStack).Error
 }
 
-// HardDelete hard delete all by project id
-func (s *store) HardDelete(db *gorm.DB, projectID string) error {
-	return db.Table("project_stacks").Unscoped().Where("project_id = ?", projectID).Delete(&model.EmployeeStack{}).Error
+// DeleteByProjectID delete many ProjectStacks by projectID
+func (s *store) DeleteByProjectID(db *gorm.DB, projectID string) error {
+	return db.Unscoped().Where("project_id = ?", projectID).Delete(&model.ProjectStack{}).Error
 }

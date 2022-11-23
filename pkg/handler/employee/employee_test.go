@@ -314,7 +314,7 @@ func Test_UpdateSkill(t *testing.T) {
 			ctx, _ := gin.CreateTestContext(w)
 			bodyReader := strings.NewReader(string(byteReq))
 			ctx.Params = gin.Params{gin.Param{Key: "id", Value: tt.id}}
-			ctx.Request = httptest.NewRequest("PUT", fmt.Sprintf("%s", "/api/v1/employees/"+tt.id+"/skills"), bodyReader)
+			ctx.Request = httptest.NewRequest("PUT", fmt.Sprintf("/api/v1/employees/%s/skills", tt.id), bodyReader)
 			ctx.Request.Header.Set("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2OTkzMjExNDIsImlkIjoiMjY1NTgzMmUtZjAwOS00YjczLWE1MzUtNjRjM2EyMmU1NThmIiwiYXZhdGFyIjoiaHR0cHM6Ly9zMy1hcC1zb3V0aGVhc3QtMS5hbWF6b25hd3MuY29tL2ZvcnRyZXNzLWltYWdlcy81MTUzNTc0Njk1NjYzOTU1OTQ0LnBuZyIsImVtYWlsIjoidGhhbmhAZC5mb3VuZGF0aW9uIiwicGVybWlzc2lvbnMiOlsiZW1wbG95ZWVzLnJlYWQiXSwidXNlcl9pbmZvIjpudWxsfQ.GENGPEucSUrILN6tHDKxLMtj0M0REVMUPC7-XhDMpGM")
 			metadataHandler := New(storeMock, testRepoMock, serviceMock, loggerMock)
 
@@ -324,14 +324,10 @@ func Test_UpdateSkill(t *testing.T) {
 			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
 			require.NoError(t, err)
 
-			if !tt.wantErr {
-				res, err := utils.RemoveFieldInResponse(w.Body.Bytes(), "updatedAt")
-				require.Nil(t, err)
+			res, err := utils.RemoveFieldInResponse(w.Body.Bytes(), "updatedAt")
+			require.Nil(t, err)
 
-				require.JSONEq(t, string(expRespRaw), string(res), "[Handler.UpdateSkills] response mismatched")
-			} else {
-				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.UpdateSkills] response mismatched")
-			}
+			require.JSONEq(t, string(expRespRaw), string(res), "[Handler.UpdateSkills] response mismatched")
 		})
 	}
 }

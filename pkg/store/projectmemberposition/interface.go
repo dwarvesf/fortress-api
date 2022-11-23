@@ -7,5 +7,5 @@ import (
 
 type IStore interface {
 	Create(db *gorm.DB, pos *model.ProjectMemberPosition) error
-	HardDeleteByProjectMemberID(db *gorm.DB, id string) error
+	DeleteByProjectMemberID(db *gorm.DB, memberID string) error
 }

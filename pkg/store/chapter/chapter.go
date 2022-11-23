@@ -6,8 +6,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/model"
 )
 
-type store struct {
-}
+type store struct{}
 
 func New() IStore {
 	return &store{}
@@ -19,8 +18,8 @@ func (s *store) All(db *gorm.DB) ([]*model.Chapter, error) {
 	return chapters, db.Find(&chapters).Error
 }
 
-// Exist check existence of a chapter
-func (s *store) Exists(db *gorm.DB, id string) (bool, error) {
+// IsExist check existence of a chapter
+func (s *store) IsExist(db *gorm.DB, id string) (bool, error) {
 	type res struct {
 		Result bool
 	}

@@ -12,12 +12,12 @@ func New() IStore {
 	return &store{}
 }
 
-// HardDelete hard delete one by id
-func (s *store) HardDelete(db *gorm.DB, id string) error {
-	return db.Table("project_slots").Unscoped().Where("id = ?", id).Delete(&model.ProjectSlot{}).Error
+// Delete delete ProjectSlot by id
+func (s *store) Delete(db *gorm.DB, id string) error {
+	return db.Unscoped().Where("id = ?", id).Delete(&model.ProjectSlot{}).Error
 }
 
-// All get all projects with filter and pagination
+// All get all projects by query and pagination
 func (s *store) All(db *gorm.DB, input GetListProjectSlotInput, pagination model.Pagination) ([]*model.ProjectSlot, int64, error) {
 	query := db.Table("project_slots").Where("project_slots.deleted_at IS NULL")
 	var total int64

@@ -6,9 +6,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/model"
 )
 
-// TODO: sao file này đặt tên là request.go còn project lại là project/filter.go
-type SearchFilter struct {
-	EmployeeID    string
+type GetAllInput struct {
 	WorkingStatus string
 	Preload       bool
 	PositionID    string

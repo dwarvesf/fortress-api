@@ -8,14 +8,13 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/model"
 )
 
-type store struct {
-}
+type store struct{}
 
 func New() IStore {
 	return &store{}
 }
 
-// All get all projects with filter and pagination
+// All get all projects by query and pagination
 func (s *store) All(db *gorm.DB, input GetListProjectInput, pagination model.Pagination) ([]*model.Project, int64, error) {
 	var projects []*model.Project
 
@@ -69,8 +68,8 @@ func (s *store) Create(db *gorm.DB, project *model.Project) error {
 	return db.Create(&project).Preload("Country").Error
 }
 
-// Exists return true/false if project exist or not
-func (s *store) Exists(db *gorm.DB, id string) (bool, error) {
+// IsExist check project existence
+func (s *store) IsExist(db *gorm.DB, id string) (bool, error) {
 	type res struct {
 		Result bool
 	}

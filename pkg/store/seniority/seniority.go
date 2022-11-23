@@ -6,8 +6,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/model"
 )
 
-type store struct {
-}
+type store struct{}
 
 func New() IStore {
 	return &store{}
@@ -25,8 +24,8 @@ func (s *store) One(db *gorm.DB, id model.UUID) (*model.Seniority, error) {
 	return sen, db.Where("id = ?", id).First(&sen).Error
 }
 
-// Exists check existence of a seniority
-func (s *store) Exists(db *gorm.DB, id string) (bool, error) {
+// IsExist check existence of a seniority
+func (s *store) IsExist(db *gorm.DB, id string) (bool, error) {
 	type res struct {
 		Result bool
 	}

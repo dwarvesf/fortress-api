@@ -6,8 +6,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/model"
 )
 
-type store struct {
-}
+type store struct{}
 
 func New() IStore {
 	return &store{}
