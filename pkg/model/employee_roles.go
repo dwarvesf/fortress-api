@@ -3,8 +3,8 @@ package model
 type EmployeeRole struct {
 	BaseModel
 
-	EmployeeID string
-	RoleID     string
+	EmployeeID UUID
+	RoleID     UUID
 
 	Role Role
 }

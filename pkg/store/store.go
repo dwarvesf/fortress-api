@@ -5,6 +5,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/store/country"
 	"github.com/dwarvesf/fortress-api/pkg/store/employee"
 	"github.com/dwarvesf/fortress-api/pkg/store/employeeposition"
+	"github.com/dwarvesf/fortress-api/pkg/store/employeerole"
 	"github.com/dwarvesf/fortress-api/pkg/store/employeestack"
 	"github.com/dwarvesf/fortress-api/pkg/store/permission"
 	"github.com/dwarvesf/fortress-api/pkg/store/position"
@@ -36,6 +37,7 @@ type Store struct {
 	ProjectSlotPosition   projectslotposition.IStore
 	Stack                 stack.IStore
 	EmployeePosition      employeeposition.IStore
+	EmployeeRole          employeerole.IStore
 	EmployeeStack         employeestack.IStore
 	ProjectStack          projectstack.IStore
 }
@@ -57,6 +59,7 @@ func New() *Store {
 		ProjectSlotPosition:   projectslotposition.New(),
 		Stack:                 stack.New(),
 		EmployeePosition:      employeeposition.New(),
+		EmployeeRole:          employeerole.New(),
 		EmployeeStack:         employeestack.New(),
 		ProjectStack:          projectstack.New(),
 	}

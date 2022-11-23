@@ -114,10 +114,6 @@ INSERT INTO public.projects (id, deleted_at, created_at, updated_at, name, type,
 ('dfa182fc-1d2d-49f6-a877-c01da9ce4207', null, '2022-11-11 18:06:56.362902', '2022-11-11 18:06:56.362902', 'Lorem ipsum', 'time-material', '2022-07-06', null, 'active', null, null, null),
 ('8dc3be2e-19a4-4942-8a79-56db391a0b15', null, '2022-11-11 18:06:56.362902', '2022-11-11 18:06:56.362902', 'Fortress', 'dwarves', '2022-11-01', null, 'active', '4ef64490-c906-4192-a7f9-d2221dadfe4c', 'team@d.foundation', 'fortress@d.foundation');
 
-INSERT INTO public.projects (id, deleted_at, created_at, updated_at, name, type, start_date, end_date, status) VALUES
-('8dc3be2e-19a4-4942-8a79-56db391a0b15', NULL, '2022-11-11 18:06:56.362902', '2022-11-11 18:06:56.362902', 'Fortress', 'dwarves', '2022-11-01', NULL, 'active'),
-('dfa182fc-1d2d-49f6-a877-c01da9ce4207', NULL, '2022-11-11 18:06:56.362902', '2022-11-11 18:06:56.362902', 'Lorem ipsum', 'time-material', '2022-07-06', NULL, 'active');
-
 INSERT INTO public.project_slots (id, deleted_at, created_at, updated_at, project_id, seniority_id, upsell_person_id, position, deployment_type, rate, discount, status) VALUES
 ('f32d08ca-8863-4ab3-8c84-a11849451eb7', NULL, '2022-11-11 18:19:56.156172', '2022-11-11 18:19:56.156172', '8dc3be2e-19a4-4942-8a79-56db391a0b15', 'dac16ce6-9e5a-4ff3-9ea2-fdea4853925e', NULL,'frontend', 'official', 5000, 0, 'active'),
 ('bdc64b18-4c5f-4025-827a-f5b91d599dc7', NULL, '2022-11-11 18:19:56.156172', '2022-11-11 18:19:56.156172', '8dc3be2e-19a4-4942-8a79-56db391a0b15', 'dac16ce6-9e5a-4ff3-9ea2-fdea4853925e', NULL,'backend', 'shadow', 4000, 0, 'active'),

@@ -343,8 +343,6 @@ func (h *handler) Create(c *gin.Context) {
 		WorkingStatus: model.WorkingStatus(req.Status),
 		JoinedDate:    &now,
 		SeniorityID:   sen.ID,
-		Positions:     positionsReq,
-		Roles:         []model.Role{*role},
 	}
 
 	// 2.1 check employee exists -> raise error
@@ -359,17 +357,41 @@ func (h *handler) Create(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req, ""))
 		return
 	}
-
+	tx, done := h.repo.NewTransaction()
 	// 2.2 store employee
-	eml, err = h.store.Employee.Create(h.repo.DB(), eml)
+	eml, err = h.store.Employee.Create(tx.DB(), eml)
 	if err != nil {
-		l.Error(err, "error store new eml")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req, ""))
+		l.Error(err, "failed to create new employee")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), req, ""))
+		return
+	}
+
+	// 2.3 create employee position
+	for _, p := range positionsReq {
+		_, err = h.store.EmployeePosition.Create(tx.DB(), &model.EmployeePosition{
+			EmployeeID: eml.ID,
+			PositionID: p.ID,
+		})
+		if err != nil {
+			l.Error(err, "failed to create new employee position")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), req, ""))
+			return
+		}
+	}
+
+	// 2.4 create employee role
+	_, err = h.store.EmployeeRole.Create(tx.DB(), &model.EmployeeRole{
+		EmployeeID: eml.ID,
+		RoleID:     role.ID,
+	})
+	if err != nil {
+		l.Error(err, "failed to create new employee position")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), req, ""))
 		return
 	}
 
 	// 3. return employee
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToEmployeeData(eml), nil, nil, nil, ""))
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToEmployeeData(eml), nil, done(nil), nil, ""))
 }
 
 // UpdateSkills godoc
