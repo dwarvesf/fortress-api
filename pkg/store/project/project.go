@@ -49,8 +49,8 @@ func (s *store) All(db *gorm.DB, input GetListProjectInput, pagination model.Pag
 		query = query.Limit(limit)
 	}
 
-	query = query.Preload("Members", "deleted_at IS NULL and left_date IS NULL AND status = ?", model.ProjectMemberStatusActive).
-		Preload("Members.Employee").
+	query = query.Preload("ProjectMembers", "deleted_at IS NULL and left_date IS NULL AND status = ?", model.ProjectMemberStatusActive).
+		Preload("ProjectMembers.Employee").
 		Preload("Heads", "deleted_at IS NULL and left_date IS NULL").
 		Preload("Heads.Employee").
 		Offset(offset)
@@ -85,9 +85,12 @@ func (s *store) Exists(db *gorm.DB, id string) (bool, error) {
 func (s *store) One(db *gorm.DB, id string) (*model.Project, error) {
 	var project *model.Project
 	return project, db.Where("id = ?", id).
-		Preload("Members", "deleted_at IS NULL and left_date IS NULL AND status IN ?",
+		Preload("ProjectMembers", "deleted_at IS NULL and left_date IS NULL AND status IN ?",
 			[]model.ProjectMemberStatus{model.ProjectMemberStatusActive, model.ProjectMemberStatusOnBoarding}).
-		Preload("Members.Employee").
+		Preload("ProjectMembers.Employee").
+		Preload("ProjectMembers.ProjectMemberPositions", "deleted_at IS NULL").
+		Preload("ProjectMembers.ProjectMemberPositions.Position").
+		Preload("ProjectMembers.Seniority", "deleted_at IS NULL").
 		Preload("Heads", "deleted_at IS NULL and left_date IS NULL").
 		Preload("Heads.Employee").
 		Preload("ProjectStacks", "deleted_at IS NULL").
