@@ -93,6 +93,12 @@ definitions:
     - seniority
     - stacks
     type: object
+  github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateWorkingStatusInput:
+    properties:
+      employeeStatus:
+        description: working info
+        type: string
+    type: object
   github.com_dwarvesf_fortress-api_pkg_handler_profile.UpdateInfoInput:
     properties:
       discordID:
@@ -419,6 +425,12 @@ definitions:
     - positions
     - seniority
     - stacks
+    type: object
+  pkg_handler_employee.UpdateWorkingStatusInput:
+    properties:
+      employeeStatus:
+        description: working info
+        type: string
     type: object
   pkg_handler_profile.UpdateInfoInput:
     properties:
@@ -934,6 +946,8 @@ definitions:
         items:
           $ref: '#/definitions/view.Position'
         type: array
+      projectMemberID:
+        type: string
       projectSlotID:
         type: string
       rate:
@@ -1253,7 +1267,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.CreateEmployeeInput'
+          $ref: '#/definitions/pkg_handler_employee.CreateEmployeeInput'
       - description: jwt token
         in: header
         name: Authorization
@@ -1340,7 +1354,7 @@ paths:
         name: employeeStatus
         required: true
         schema:
-          type: string
+          $ref: '#/definitions/pkg_handler_employee.UpdateWorkingStatusInput'
       produces:
       - application/json
       responses:
@@ -1384,7 +1398,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateGeneralInfoInput'
+          $ref: '#/definitions/pkg_handler_employee.UpdateGeneralInfoInput'
       produces:
       - application/json
       responses:
@@ -1428,7 +1442,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdatePersonalInfoInput'
+          $ref: '#/definitions/pkg_handler_employee.UpdatePersonalInfoInput'
       produces:
       - application/json
       responses:
@@ -1467,7 +1481,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateSkillsInput'
+          $ref: '#/definitions/pkg_handler_employee.UpdateSkillsInput'
       - description: jwt token
         in: header
         name: Authorization
@@ -1759,7 +1773,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/pkg_handler_profile.UpdateInfoInput'
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_profile.UpdateInfoInput'
       produces:
       - application/json
       responses:
