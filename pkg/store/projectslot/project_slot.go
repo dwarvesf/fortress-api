@@ -51,8 +51,8 @@ func (s *store) All(db *gorm.DB, input GetListProjectSlotInput, pagination model
 	query = query.Preload("ProjectMember", "deleted_at IS NULL").
 		Preload("ProjectMember.Seniority", "deleted_at IS NULL").
 		Preload("ProjectMember.Employee", "deleted_at IS NULL").
-		Preload("ProjectMember.Employee.EmployeePositions", "deleted_at IS NULL").
-		Preload("ProjectMember.Employee.EmployeePositions.Position", "deleted_at IS NULL").
+		Preload("ProjectMember.ProjectMemberPositions", "deleted_at IS NULL").
+		Preload("ProjectMember.ProjectMemberPositions.Position", "deleted_at IS NULL").
 		Offset(offset)
 
 	var slots []*model.ProjectSlot
