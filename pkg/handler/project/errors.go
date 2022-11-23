@@ -31,6 +31,7 @@ var (
 	ErrFailToCreateProjectHead      = errors.New("fail to create project head")
 	ErrFailToFindProjectHead        = errors.New("fail to find project head")
 	ErrFailToUpdateLeftDate         = errors.New("fail to update left date for project head")
+	ErrProjectMemberExists          = errors.New("project member already exists")
 )
 
 // errPositionNotFound returns unauthorized custom error

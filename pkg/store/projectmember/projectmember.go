@@ -29,12 +29,12 @@ func (s *store) Exists(db *gorm.DB, id string) (bool, error) {
 }
 
 // One return a project member by projectID and employeeID
-func (s *store) One(db *gorm.DB, projectID string, employeeID string) (*model.ProjectMember, error) {
+func (s *store) One(db *gorm.DB, projectID string, employeeID string, status string) (*model.ProjectMember, error) {
 	var member *model.ProjectMember
-	return member, db.Where("project_id = ? AND employee_id = ?", projectID, employeeID).Preload("Employee").First(&member).Error
+	return member, db.Where("project_id = ? AND employee_id = ? AND status = ?", projectID, employeeID, status).Preload("Employee").First(&member).Error
 }
 
-// Create create new member
+// Create using for create new member
 func (s *store) Create(db *gorm.DB, member *model.ProjectMember) error {
 	return db.Create(&member).Preload("Employee").First(&member).Error
 }

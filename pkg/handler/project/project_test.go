@@ -434,7 +434,7 @@ func TestHandler_DeleteProjectMember(t *testing.T) {
 			wantCode:         200,
 			wantResponsePath: "testdata/delete_member/200.json",
 			id:               "8dc3be2e-19a4-4942-8a79-56db391a0b15",
-			memberID:         "2655832e-f009-4b73-a535-64c3a22e558f",
+			memberID:         "ecea9d15-05ba-4a4e-9787-54210e3b98ce",
 		},
 		{
 			name:             "failed_invalid_member_id",
