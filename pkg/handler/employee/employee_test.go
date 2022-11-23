@@ -20,8 +20,9 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/utils"
-	"github.com/dwarvesf/fortress-api/pkg/view"
 )
+
+const tokenTest = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2OTkzMjExNDIsImlkIjoiMjY1NTgzMmUtZjAwOS00YjczLWE1MzUtNjRjM2EyMmU1NThmIiwiYXZhdGFyIjoiaHR0cHM6Ly9zMy1hcC1zb3V0aGVhc3QtMS5hbWF6b25hd3MuY29tL2ZvcnRyZXNzLWltYWdlcy81MTUzNTc0Njk1NjYzOTU1OTQ0LnBuZyIsImVtYWlsIjoidGhhbmhAZC5mb3VuZGF0aW9uIiwicGVybWlzc2lvbnMiOlsiZW1wbG95ZWVzLnJlYWQiXSwidXNlcl9pbmZvIjpudWxsfQ.GENGPEucSUrILN6tHDKxLMtj0M0REVMUPC7-XhDMpGM"
 
 func TestHandler_UpdateEmployeeStatus(t *testing.T) {
 	// load env and test data
@@ -34,53 +35,47 @@ func TestHandler_UpdateEmployeeStatus(t *testing.T) {
 	tests := []struct {
 		name             string
 		wantCode         int
-		wantErr          error
+		id               string
+		body             UpdateWorkingStatusInput
 		wantResponsePath string
 	}{
 		{
-			name:             "ok_update_employee_status",
-			wantCode:         200,
-			wantErr:          nil,
+			name:     "ok_update_employee_status",
+			wantCode: http.StatusOK,
+			id:       "2655832e-f009-4b73-a535-64c3a22e558f",
+			body: UpdateWorkingStatusInput{
+				EmployeeStatus: "contractor",
+			},
 			wantResponsePath: "testdata/update_employee_status/200.json",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			byteReq, err := json.Marshal(tt.body)
+			require.Nil(t, err)
 			w := httptest.NewRecorder()
-			ctx, _ := gin.CreateTestContext(w)
-			bodyReader := strings.NewReader(`
-			{
-				"employeeStatus": "contractor"
-			}
-			`)
-			ctx.Params = gin.Params{gin.Param{Key: "id", Value: "2655832e-f009-4b73-a535-64c3a22e558f"}}
-			ctx.Request = httptest.NewRequest("PUT", "/api/v1/employees/2655832e-f009-4b73-a535-64c3a22e558f/employee-status", bodyReader)
-			ctx.Request.Header.Set("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2OTkzMjExNDIsImlkIjoiMjY1NTgzMmUtZjAwOS00YjczLWE1MzUtNjRjM2EyMmU1NThmIiwiYXZhdGFyIjoiaHR0cHM6Ly9zMy1hcC1zb3V0aGVhc3QtMS5hbWF6b25hd3MuY29tL2ZvcnRyZXNzLWltYWdlcy81MTUzNTc0Njk1NjYzOTU1OTQ0LnBuZyIsImVtYWlsIjoidGhhbmhAZC5mb3VuZGF0aW9uIiwicGVybWlzc2lvbnMiOlsiZW1wbG95ZWVzLnJlYWQiXSwidXNlcl9pbmZvIjpudWxsfQ.GENGPEucSUrILN6tHDKxLMtj0M0REVMUPC7-XhDMpGM")
-			metadataHandler := New(storeMock, testRepoMock, serviceMock, loggerMock)
 
-			metadataHandler.UpdateEmployeeStatus(ctx)
+			ctx, _ := gin.CreateTestContext(w)
+			bodyReader := strings.NewReader(string(byteReq))
+			ctx.Request = httptest.NewRequest(http.MethodPut, fmt.Sprintf("/api/v1/employees/%s/employee-status", tt.id), bodyReader)
+			ctx.Request.Header.Set("Authorization", tokenTest)
+			ctx.AddParam("id", tt.id)
+
+			h := New(storeMock, testRepoMock, serviceMock, loggerMock)
+			h.UpdateEmployeeStatus(ctx)
 
 			require.Equal(t, tt.wantCode, w.Code)
 			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
 			require.NoError(t, err)
 
-			var actualData view.UpdateEmployeeStatusResponse
-			var expectedData view.UpdateEmployeeStatusResponse
-			err = json.Unmarshal(w.Body.Bytes(), &actualData)
-			require.NoError(t, err)
-			err = json.Unmarshal(expRespRaw, &expectedData)
-			require.NoError(t, err)
+			res, err := utils.RemoveFieldInResponse(w.Body.Bytes(), "updatedAt")
+			require.Nil(t, err)
 
-			actualData.Data.UpdatedAt = nil
-			expectedData.Data.UpdatedAt = nil
-
-			require.Equal(t, expectedData, actualData)
+			require.JSONEq(t, string(expRespRaw), string(res), "[Handler.UpdateEmployeeStatus] response mismatched")
 		})
 	}
 }
-
-const tokenTest = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2OTkzMjExNDIsImlkIjoiMjY1NTgzMmUtZjAwOS00YjczLWE1MzUtNjRjM2EyMmU1NThmIiwiYXZhdGFyIjoiaHR0cHM6Ly9zMy1hcC1zb3V0aGVhc3QtMS5hbWF6b25hd3MuY29tL2ZvcnRyZXNzLWltYWdlcy81MTUzNTc0Njk1NjYzOTU1OTQ0LnBuZyIsImVtYWlsIjoidGhhbmhAZC5mb3VuZGF0aW9uIiwicGVybWlzc2lvbnMiOlsiZW1wbG95ZWVzLnJlYWQiXSwidXNlcl9pbmZvIjpudWxsfQ.GENGPEucSUrILN6tHDKxLMtj0M0REVMUPC7-XhDMpGM"
 
 func TestHandler_List(t *testing.T) {
 	cfg := config.LoadTestConfig()

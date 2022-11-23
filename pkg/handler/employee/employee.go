@@ -134,59 +134,45 @@ func (h *handler) One(c *gin.Context) {
 // @Produce  json
 // @Param Authorization header string true "jwt token"
 // @Param id path string true "Employee ID"
-// @Param employeeStatus body model.AccountStatus true "Employee Status"
+// @Param employeeStatus body UpdateWorkingStatusInput true "Employee Status"
 // @Success 200 {object} view.UpdateEmployeeStatusResponse
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 404 {object} view.ErrorResponse
 // @Failure 500 {object} view.ErrorResponse
 // @Router /employees/{id}/employee-status [put]
 func (h *handler) UpdateEmployeeStatus(c *gin.Context) {
-	// 1. parse id from uri, validate id
-	var params struct {
-		ID string `uri:"id" binding:"required"`
-	}
-
-	if err := c.ShouldBindUri(&params); err != nil {
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, params, ""))
+	employeeID := c.Param("id")
+	if employeeID == "" || !model.IsUUIDFromString(employeeID) {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, ErrInvalidEmployeeID, nil, ""))
 		return
 	}
 
-	type updateAccountStatusBody struct {
-		EmployeeStatus model.WorkingStatus `json:"employeeStatus"`
-	}
-
-	// 1.1 get body request
-	var body updateAccountStatusBody
+	var body UpdateWorkingStatusInput
 	if err := c.ShouldBindJSON(&body); err != nil {
-		if err != nil {
-			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, body, ""))
-			return
-		}
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, body, ""))
+		return
 	}
 
-	// 1.2 prepare the logger
 	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler": "employee",
 		"method":  "UpdateEmployeeStatus",
-		"params":  params,
+		"id":      employeeID,
 	})
 
-	if !body.EmployeeStatus.IsValid() {
-		l.Error(ErrInvalidEmployeeStatus, "invalid value for EmployeeStatus")
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, ErrInvalidEmployeeStatus, body, ""))
+	if err := body.Validate(); err != nil {
+		l.Error(err, "validate failed")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, body, ""))
 		return
 	}
 
-	// 2. get update account status for employee
-	rs, err := h.store.Employee.UpdateEmployeeStatus(h.repo.DB(), params.ID, body.EmployeeStatus)
+	rs, err := h.store.Employee.UpdateEmployeeStatus(h.repo.DB(), employeeID, body.EmployeeStatus)
 	if err != nil {
-		l.Error(err, "error query update account status employee to db")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, params, ""))
+		l.Error(err, "failed to update employee status")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
 		return
 	}
 
-	// 3. return status response
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToEmployeeData(rs), nil, nil, nil, ""))
 }
 

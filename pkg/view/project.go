@@ -38,19 +38,20 @@ type UpdatedProject struct {
 }
 
 type ProjectMember struct {
-	ProjectSlotID  string          `json:"projectSlotID"`
-	EmployeeID     string          `json:"employeeID"`
-	FullName       string          `json:"fullName"`
-	DisplayName    string          `json:"displayName"`
-	Avatar         string          `json:"avatar"`
-	Position       string          `json:"position"`
-	Status         string          `json:"status"`
-	IsLead         bool            `json:"isLead"`
-	DeploymentType string          `json:"deploymentType"`
-	JoinedDate     *time.Time      `json:"joinedDate"`
-	LeftDate       *time.Time      `json:"leftDate"`
-	Rate           decimal.Decimal `json:"rate"`
-	Discount       decimal.Decimal `json:"discount"`
+	ProjectMemberID string          `json:"projectMemberID"`
+	ProjectSlotID   string          `json:"projectSlotID"`
+	EmployeeID      string          `json:"employeeID"`
+	FullName        string          `json:"fullName"`
+	DisplayName     string          `json:"displayName"`
+	Avatar          string          `json:"avatar"`
+	Position        string          `json:"position"`
+	Status          string          `json:"status"`
+	IsLead          bool            `json:"isLead"`
+	DeploymentType  string          `json:"deploymentType"`
+	JoinedDate      *time.Time      `json:"joinedDate"`
+	LeftDate        *time.Time      `json:"leftDate"`
+	Rate            decimal.Decimal `json:"rate"`
+	Discount        decimal.Decimal `json:"discount"`
 
 	Seniority *model.Seniority `json:"seniority"`
 	Positions []Position       `json:"positions"`
@@ -125,13 +126,15 @@ func ToProjectData(project *model.Project) ProjectData {
 		_, isLead := leads[m.Employee.ID.String()]
 
 		members = append(members, ProjectMember{
-			EmployeeID:  m.ID.String(),
-			FullName:    m.Employee.FullName,
-			DisplayName: m.Employee.DisplayName,
-			Avatar:      m.Employee.Avatar,
-			Status:      m.Status.String(),
-			Positions:   ToPositions(m.Employee.EmployeePositions),
-			IsLead:      isLead,
+			ProjectMemberID: m.ID.String(),
+			ProjectSlotID:   m.ProjectSlotID.String(),
+			EmployeeID:      m.ID.String(),
+			FullName:        m.Employee.FullName,
+			DisplayName:     m.Employee.DisplayName,
+			Avatar:          m.Employee.Avatar,
+			Status:          m.Status.String(),
+			Positions:       ToPositions(m.Employee.EmployeePositions),
+			IsLead:          isLead,
 		})
 	}
 
@@ -298,20 +301,21 @@ func ToProjectMemberListData(slots []*model.ProjectSlot, projectHeads []*model.P
 	for _, slot := range slots {
 		m := slot.ProjectMember
 		results = append(results, ProjectMember{
-			ProjectSlotID:  slot.ID.String(),
-			EmployeeID:     m.EmployeeID.String(),
-			FullName:       m.Employee.FullName,
-			DisplayName:    m.Employee.DisplayName,
-			Avatar:         m.Employee.Avatar,
-			Status:         slot.Status.String(),
-			JoinedDate:     m.JoinedDate,
-			LeftDate:       m.LeftDate,
-			IsLead:         leadMap[m.EmployeeID.String()],
-			Seniority:      &m.Seniority,
-			DeploymentType: slot.DeploymentType.String(),
-			Positions:      ToProjectMemberPositions(m.ProjectMemberPositions),
-			Rate:           m.Rate,
-			Discount:       m.Discount,
+			ProjectMemberID: m.ID.String(),
+			ProjectSlotID:   slot.ID.String(),
+			EmployeeID:      m.EmployeeID.String(),
+			FullName:        m.Employee.FullName,
+			DisplayName:     m.Employee.DisplayName,
+			Avatar:          m.Employee.Avatar,
+			Status:          slot.Status.String(),
+			JoinedDate:      m.JoinedDate,
+			LeftDate:        m.LeftDate,
+			IsLead:          leadMap[m.EmployeeID.String()],
+			Seniority:       &m.Seniority,
+			DeploymentType:  slot.DeploymentType.String(),
+			Positions:       ToProjectMemberPositions(m.ProjectMemberPositions),
+			Rate:            m.Rate,
+			Discount:        m.Discount,
 		})
 	}
 

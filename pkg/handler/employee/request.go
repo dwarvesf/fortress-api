@@ -49,3 +49,15 @@ type UpdatePersonalInfoInput struct {
 	Address       string     `form:"address" json:"address" binding:"required,max=200"`
 	PersonalEmail string     `form:"personalEmail" json:"personalEmail" binding:"required,email"`
 }
+
+type UpdateWorkingStatusInput struct {
+	EmployeeStatus model.WorkingStatus `json:"employeeStatus"`
+}
+
+func (i *UpdateWorkingStatusInput) Validate() error {
+	if !model.WorkingStatus(i.EmployeeStatus).IsValid() {
+		return ErrInvalidEmployeeStatus
+	}
+
+	return nil
+}

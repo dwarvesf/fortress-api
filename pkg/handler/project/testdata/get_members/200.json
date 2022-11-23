@@ -5,6 +5,7 @@
     "total": 2,
     "data": [
         {
+            "projectMemberID": "cb889a9c-b20c-47ee-83b8-44b6d1721aca",
             "projectSlotID": "f32d08ca-8863-4ab3-8c84-a11849451eb7",
             "employeeID": "2655832e-f009-4b73-a535-64c3a22e558f",
             "fullName": "Phạm Đức Thành",
@@ -28,6 +29,7 @@
             "rate": "5000"
         },
         {
+            "projectMemberID": "7310b51a-3855-498b-99ab-41aa82934269",
             "projectSlotID": "bdc64b18-4c5f-4025-827a-f5b91d599dc7",
             "employeeID": "ecea9d15-05ba-4a4e-9787-54210e3b98ce",
             "fullName": "Nguyễn Hoàng Huy",

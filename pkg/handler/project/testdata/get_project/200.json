@@ -14,7 +14,8 @@
         "endDate": null,
         "members": [
             {
-                "projectSlotID": "",
+                "projectMemberID": "7310b51a-3855-498b-99ab-41aa82934269",
+                "projectSlotID": "bdc64b18-4c5f-4025-827a-f5b91d599dc7",
                 "employeeID": "7310b51a-3855-498b-99ab-41aa82934269",
                 "fullName": "Nguyễn Hoàng Huy",
                 "displayName": "Huy Nguyen",

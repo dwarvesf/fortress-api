@@ -178,7 +178,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.CreateEmployeeInput"
+                            "$ref": "#/definitions/pkg_handler_employee.CreateEmployeeInput"
                         }
                     },
                     {
@@ -308,7 +308,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/pkg_handler_employee.UpdateWorkingStatusInput"
                         }
                     }
                 ],
@@ -374,7 +374,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateGeneralInfoInput"
+                            "$ref": "#/definitions/pkg_handler_employee.UpdateGeneralInfoInput"
                         }
                     }
                 ],
@@ -440,7 +440,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdatePersonalInfoInput"
+                            "$ref": "#/definitions/pkg_handler_employee.UpdatePersonalInfoInput"
                         }
                     }
                 ],
@@ -499,7 +499,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateSkillsInput"
+                            "$ref": "#/definitions/pkg_handler_employee.UpdateSkillsInput"
                         }
                     },
                     {
@@ -941,7 +941,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/pkg_handler_profile.UpdateInfoInput"
+                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_profile.UpdateInfoInput"
                         }
                     }
                 ],
@@ -1695,6 +1695,15 @@ const docTemplate = `{
                 }
             }
         },
+        "github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateWorkingStatusInput": {
+            "type": "object",
+            "properties": {
+                "employeeStatus": {
+                    "description": "working info",
+                    "type": "string"
+                }
+            }
+        },
         "github.com_dwarvesf_fortress-api_pkg_handler_profile.UpdateInfoInput": {
             "type": "object",
             "required": [
@@ -2172,6 +2181,15 @@ const docTemplate = `{
                     "items": {
                         "type": "string"
                     }
+                }
+            }
+        },
+        "pkg_handler_employee.UpdateWorkingStatusInput": {
+            "type": "object",
+            "properties": {
+                "employeeStatus": {
+                    "description": "working info",
+                    "type": "string"
                 }
             }
         },
@@ -2948,6 +2966,9 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/view.Position"
                     }
+                },
+                "projectMemberID": {
+                    "type": "string"
                 },
                 "projectSlotID": {
                     "type": "string"
