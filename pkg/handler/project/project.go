@@ -295,7 +295,7 @@ func (h *handler) GetMembers(c *gin.Context) {
 		return
 	}
 
-	exists, err := h.store.Project.Exists(h.repo.DB(), projectID)
+	exists, err := h.store.Project.IsExist(h.repo.DB(), projectID)
 	if err != nil {
 		l.Error(err, "failed to check project existence")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, query, ""))
@@ -313,14 +313,14 @@ func (h *handler) GetMembers(c *gin.Context) {
 		Status:    query.Status,
 	}, query.Pagination)
 	if err != nil {
-		l.Error(err, "error query project members from db")
+		l.Error(err, "failed to get project members")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, query, ""))
 		return
 	}
 
 	heads, err := h.store.ProjectHead.GetByProjectID(h.repo.DB(), projectID)
 	if err != nil {
-		l.Error(err, "error query project heads from db")
+		l.Error(err, "failed to get project heads")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, query, ""))
 		return
 	}
@@ -369,8 +369,14 @@ func (h *handler) DeleteMember(c *gin.Context) {
 			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrProjectMemberNotFound, input.MemberID, ""))
 			return
 		}
-		l.Error(err, "error query member from db")
+		l.Error(err, "failed to get project member")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input.MemberID, ""))
+		return
+	}
+
+	if projectMember.Status == model.ProjectMemberStatusInactive {
+		l.Error(ErrCouldNotDeleteInactiveMember, "can not change information of inactive member")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, ErrCouldNotDeleteInactiveMember, input.MemberID, ""))
 		return
 	}
 
@@ -379,35 +385,35 @@ func (h *handler) DeleteMember(c *gin.Context) {
 
 	slotID := projectMember.ProjectSlotID.String()
 
-	err = h.store.ProjectMemberPosition.HardDeleteByProjectMemberID(tx.DB(), projectMember.ID.String())
+	err = h.store.ProjectMemberPosition.DeleteByProjectMemberID(tx.DB(), projectMember.ID.String())
 	if err != nil {
-		l.Error(err, "error delete project member position")
+		l.Error(err, "failed to delete project member position")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input.MemberID, ""))
 		return
 	}
 
-	err = h.store.ProjectMember.HardDelete(tx.DB(), projectMember.ID.String())
+	err = h.store.ProjectMember.Delete(tx.DB(), projectMember.ID.String())
 	if err != nil {
 		l.Error(err, "error delete project member")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input.MemberID, ""))
 		return
 	}
 
-	err = h.store.ProjectSlotPosition.HardDeleteByProjectSlotID(tx.DB(), slotID)
+	err = h.store.ProjectSlotPosition.DeleteByProjectSlotID(tx.DB(), slotID)
 	if err != nil {
 		l.Error(err, "error delete project slot position")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input.MemberID, ""))
 		return
 	}
 
-	err = h.store.ProjectSlot.HardDelete(tx.DB(), slotID)
+	err = h.store.ProjectSlot.Delete(tx.DB(), slotID)
 	if err != nil {
 		l.Error(err, "error delete project member")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input.MemberID, ""))
 		return
 	}
 
-	err = h.store.ProjectHead.HardDeleteByPosition(tx.DB(), projectMember.ProjectID.String(), projectMember.EmployeeID.String(), model.HeadPositionTechnicalLead.String())
+	err = h.store.ProjectHead.DeleteByPositionInProject(tx.DB(), projectMember.ProjectID.String(), projectMember.EmployeeID.String(), model.HeadPositionTechnicalLead.String())
 	if err != nil {
 		l.Error(err, "error delete project head")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input.MemberID, ""))
@@ -459,8 +465,8 @@ func (h *handler) UpdateMember(c *gin.Context) {
 		return
 	}
 
-	// check project exists
-	exists, err := h.store.Project.Exists(h.repo.DB(), projectID)
+	// check project existence
+	exists, err := h.store.Project.IsExist(h.repo.DB(), projectID)
 	if err != nil {
 		l.Error(err, "failed to check project existence")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
@@ -473,8 +479,8 @@ func (h *handler) UpdateMember(c *gin.Context) {
 		return
 	}
 
-	// check seniority exists
-	exists, err = h.store.Seniority.Exists(h.repo.DB(), body.SeniorityID.String())
+	// check seniority existence
+	exists, err = h.store.Seniority.IsExist(h.repo.DB(), body.SeniorityID.String())
 	if err != nil {
 		l.Error(err, "failed to check seniority existence")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
@@ -490,7 +496,7 @@ func (h *handler) UpdateMember(c *gin.Context) {
 	// check position existence
 	positions, err := h.store.Position.All(h.repo.DB())
 	if err != nil {
-		l.Error(err, "error when finding position")
+		l.Error(err, "failed to get all positions")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
 		return
 	}
@@ -498,7 +504,7 @@ func (h *handler) UpdateMember(c *gin.Context) {
 	positionMap := model.ToPositionMap(positions)
 	for _, pID := range body.Positions {
 		if _, ok := positionMap[pID]; !ok {
-			l.Error(errPositionNotFound(pID.String()), "error position not found")
+			l.Error(errPositionNotFound(pID.String()), "position not found")
 			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errPositionNotFound(pID.String()), body, ""))
 			return
 		}
@@ -570,8 +576,8 @@ func (h *handler) UpdateMember(c *gin.Context) {
 
 		slot.ProjectMember = *member
 
-		// create project member positions
-		if err := h.store.ProjectMemberPosition.HardDeleteByProjectMemberID(tx.DB(), member.ID.String()); err != nil {
+		// delete project member positions
+		if err := h.store.ProjectMemberPosition.DeleteByProjectMemberID(tx.DB(), member.ID.String()); err != nil {
 			l.Error(err, "failed to delete project member positions")
 			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), nil, ""))
 			return
@@ -629,7 +635,7 @@ func (h *handler) UpdateMember(c *gin.Context) {
 	}
 
 	// update project slot positions
-	if err := h.store.ProjectSlotPosition.HardDeleteByProjectSlotID(tx.DB(), slot.ID.String()); err != nil {
+	if err := h.store.ProjectSlotPosition.DeleteByProjectSlotID(tx.DB(), slot.ID.String()); err != nil {
 		l.Error(err, "failed to delete project member positions")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), nil, ""))
 		return
@@ -712,8 +718,8 @@ func (h *handler) AssignMember(c *gin.Context) {
 		return
 	}
 
-	// check project exists
-	exists, err := h.store.Project.Exists(h.repo.DB(), projectID)
+	// check project existence
+	exists, err := h.store.Project.IsExist(h.repo.DB(), projectID)
 	if err != nil {
 		l.Error(err, "failed to check project existence")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
@@ -741,7 +747,7 @@ func (h *handler) assignMemberToProject(db *gorm.DB, projectID string, req Assig
 	l := h.logger
 
 	// check seniority existence
-	exists, err := h.store.Seniority.Exists(db, req.SeniorityID.String())
+	exists, err := h.store.Seniority.IsExist(db, req.SeniorityID.String())
 	if err != nil {
 		l.Error(err, "failed to check seniority existence")
 		return nil, http.StatusInternalServerError, err
@@ -802,7 +808,7 @@ func (h *handler) assignMemberToProject(db *gorm.DB, projectID string, req Assig
 
 	if !req.EmployeeID.IsZero() {
 		// check employee existence
-		exists, err = h.store.Employee.Exists(db, req.EmployeeID.String())
+		exists, err = h.store.Employee.IsExist(db, req.EmployeeID.String())
 		if err != nil {
 			l.Error(err, "failed to check employee existence")
 			return nil, http.StatusInternalServerError, err
@@ -941,29 +947,29 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 		"request": body,
 	})
 
-	// Check project exists
-	exists, err := h.store.Project.Exists(h.repo.DB(), projectID)
+	// Check project existence
+	exist, err := h.store.Project.IsExist(h.repo.DB(), projectID)
 	if err != nil {
 		l.Error(err, "error check existence of project")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
 		return
 	}
 
-	if !exists {
+	if !exist {
 		l.Error(err, "project not found")
 		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrProjectNotFound, body, ""))
 		return
 	}
 
-	// Check country exists
-	exists, err = h.store.Country.Exists(h.repo.DB(), body.CountryID.String())
+	// Check country existence
+	exist, err = h.store.Country.IsExist(h.repo.DB(), body.CountryID.String())
 	if err != nil {
 		l.Error(err, "error check existence of country")
 		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, err, body, ""))
 		return
 	}
 
-	if !exists {
+	if !exist {
 		l.Error(err, "country not found")
 		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrCountryNotFound, body, ""))
 		return
@@ -998,7 +1004,7 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 	tx, done := h.repo.NewTransaction()
 
 	// Delete all exist employee stack
-	if err := h.store.ProjectStack.HardDelete(tx.DB(), projectID); err != nil {
+	if err := h.store.ProjectStack.DeleteByProjectID(tx.DB(), projectID); err != nil {
 		l.Error(err, "failed to delete project stacks in database")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
 		return
@@ -1006,12 +1012,10 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 
 	// Create new employee stack
 	for _, stackID := range body.Stacks {
-		projectStack := &model.ProjectStack{
+		_, err := h.store.ProjectStack.Create(tx.DB(), &model.ProjectStack{
 			ProjectID: model.MustGetUUIDFromString(projectID),
 			StackID:   stackID,
-		}
-
-		projectStack, err := h.store.ProjectStack.Create(tx.DB(), projectStack)
+		})
 		if err != nil {
 			l.Error(err, "failed to create project stack")
 			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
@@ -1026,7 +1030,7 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 	}, projectID)
 
 	if err != nil {
-		l.Error(err, "failed to update project information to db")
+		l.Error(err, "failed to update project")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
 		return
 	}
@@ -1069,8 +1073,8 @@ func (h *handler) UpdateContactInfo(c *gin.Context) {
 		"request": body,
 	})
 
-	// Check project exists
-	exists, err := h.store.Project.Exists(h.repo.DB(), projectID)
+	// Check project existence
+	exists, err := h.store.Project.IsExist(h.repo.DB(), projectID)
 	if err != nil {
 		l.Error(err, "error when check existence of project")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
@@ -1084,8 +1088,7 @@ func (h *handler) UpdateContactInfo(c *gin.Context) {
 	}
 
 	// Check account manager exists
-	exists, err = h.store.Employee.Exists(h.repo.DB(), body.AccountManagerID.String())
-
+	exists, err = h.store.Employee.IsExist(h.repo.DB(), body.AccountManagerID.String())
 	if err != nil {
 		l.Error(err, "error when finding account manager")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
@@ -1099,8 +1102,7 @@ func (h *handler) UpdateContactInfo(c *gin.Context) {
 	}
 
 	// Check delivery manager exists
-	exists, err = h.store.Employee.Exists(h.repo.DB(), body.DeliveryManagerID.String())
-
+	exists, err = h.store.Employee.IsExist(h.repo.DB(), body.DeliveryManagerID.String())
 	if err != nil {
 		l.Error(err, "error when finding delivery manager")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))

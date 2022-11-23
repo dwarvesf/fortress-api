@@ -9,10 +9,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/model"
 )
 
-// TODO: sao file name này lại là project.go ?
-
-type store struct {
-}
+type store struct{}
 
 func New() IStore {
 	return &store{}
@@ -58,7 +55,7 @@ func (s *store) DeleteByProjectIDAndPosition(db *gorm.DB, projectID string, pos 
 	return db.Where("project_id = ? AND position = ?", projectID, pos).Delete(&model.ProjectHead{}).Error
 }
 
-func (s *store) HardDeleteByPosition(db *gorm.DB, projectID string, employeeID string, position string) error {
+func (s *store) DeleteByPositionInProject(db *gorm.DB, projectID string, employeeID string, position string) error {
 	return db.Unscoped().Where("project_id = ? AND employee_id = ? AND position = ?", projectID, employeeID, position).Delete(&model.ProjectHead{}).Error
 }
 

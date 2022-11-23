@@ -9,6 +9,6 @@ type IStore interface {
 	One(db *gorm.DB, projectID string, employeeID string, status string) (*model.ProjectMember, error)
 	Create(db *gorm.DB, member *model.ProjectMember) error
 	Upsert(db *gorm.DB, member *model.ProjectMember) error
-	HardDelete(db *gorm.DB, id string) (err error)
-	Exists(db *gorm.DB, id string) (bool, error)
+	Delete(db *gorm.DB, id string) (err error)
+	IsExist(db *gorm.DB, id string) (bool, error)
 }

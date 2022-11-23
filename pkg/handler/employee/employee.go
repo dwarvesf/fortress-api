@@ -69,17 +69,14 @@ func (h *handler) List(c *gin.Context) {
 		"params":  query,
 	})
 
-	searchFilter := employee.SearchFilter{
+	employees, total, err := h.store.Employee.All(h.repo.DB(), employee.GetAllInput{
 		WorkingStatus: query.WorkingStatus,
 		Preload:       query.Preload,
 		Keyword:       query.Keyword,
 		PositionID:    query.PositionID,
 		StackID:       query.StackID,
 		ProjectID:     query.ProjectID,
-	}
-
-	employees, total, err := h.store.Employee.Search(h.repo.DB(), searchFilter, query.Pagination)
-
+	}, query.Pagination)
 	if err != nil {
 		l.Error(err, "error query employee from db")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, query, ""))
@@ -205,6 +202,10 @@ func (h *handler) UpdateEmployeeStatus(c *gin.Context) {
 // @Router /employees/{id}/general-info [put]
 func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 	employeeID := c.Param("id")
+	if employeeID == "" || !model.IsUUIDFromString(employeeID) {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, ErrInvalidEmployeeID, nil, ""))
+		return
+	}
 
 	var body UpdateGeneralInfoInput
 	if err := c.ShouldBindJSON(&body); err != nil {
@@ -223,8 +224,7 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 
 	// check line manager existence
 	if !body.LineManagerID.IsZero() {
-		exist, err := h.store.Employee.Exists(h.repo.DB(), body.LineManagerID.String())
-
+		exist, err := h.store.Employee.IsExist(h.repo.DB(), body.LineManagerID.String())
 		if err != nil {
 			l.Error(err, "error when finding line manager")
 			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
@@ -236,7 +236,6 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrLineManagerNotFound, body, ""))
 			return
 		}
-
 	}
 
 	// 3. update information and return
@@ -423,6 +422,10 @@ func (h *handler) Create(c *gin.Context) {
 // @Router /employees/{id}/skills [put]
 func (h *handler) UpdateSkills(c *gin.Context) {
 	employeeID := c.Param("id")
+	if employeeID == "" || !model.IsUUIDFromString(employeeID) {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, ErrInvalidEmployeeID, nil, ""))
+		return
+	}
 
 	var body UpdateSkillsInput
 	if err := c.ShouldBindJSON(&body); err != nil {
@@ -440,43 +443,43 @@ func (h *handler) UpdateSkills(c *gin.Context) {
 	})
 
 	// Check employee existence
-	exist, err := h.store.Employee.Exists(h.repo.DB(), employeeID)
+	exist, err := h.store.Employee.IsExist(h.repo.DB(), employeeID)
 	if err != nil {
-		l.Error(err, "error when checking employee existence")
+		l.Error(err, "failed to check employee existence")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
 		return
 	}
 
 	if !exist {
-		l.Error(ErrEmployeeNotFound, "error employee not found")
+		l.Error(ErrEmployeeNotFound, "employee not found")
 		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrEmployeeNotFound, body, ""))
 		return
 	}
 
 	// Check chapter existence
-	exist, err = h.store.Chapter.Exists(h.repo.DB(), body.Chapter.String())
+	exist, err = h.store.Chapter.IsExist(h.repo.DB(), body.Chapter.String())
 	if err != nil {
-		l.Error(err, "error when checking chapter existence")
+		l.Error(err, "failed to check chapter existence")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
 		return
 	}
 
 	if !exist {
-		l.Error(ErrChapterNotFound, "error chapter not found")
+		l.Error(ErrChapterNotFound, "chapter not found")
 		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrChapterNotFound, body, ""))
 		return
 	}
 
 	// Check seniority existence
-	exist, err = h.store.Seniority.Exists(h.repo.DB(), body.Seniority.String())
+	exist, err = h.store.Seniority.IsExist(h.repo.DB(), body.Seniority.String())
 	if err != nil {
-		l.Error(err, "error when checking seniority existence")
+		l.Error(err, "failed to check seniority existence")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
 		return
 	}
 
 	if !exist {
-		l.Error(ErrSeniorityNotFound, "error seniority not found")
+		l.Error(ErrSeniorityNotFound, "seniority not found")
 		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrSeniorityNotFound, body, ""))
 		return
 	}
@@ -484,7 +487,7 @@ func (h *handler) UpdateSkills(c *gin.Context) {
 	// Check stack existence
 	stacks, err := h.store.Stack.All(h.repo.DB())
 	if err != nil {
-		l.Error(err, "error when finding stacks")
+		l.Error(err, "failed to get all stacks")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
 		return
 	}
@@ -493,7 +496,7 @@ func (h *handler) UpdateSkills(c *gin.Context) {
 	for _, sID := range body.Stacks {
 		_, ok := stackMap[sID]
 		if !ok {
-			l.Error(errPositionNotFound(sID.String()), "error stack not found")
+			l.Error(errPositionNotFound(sID.String()), "stack not found")
 			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errPositionNotFound(sID.String()), body, ""))
 			return
 		}
@@ -502,7 +505,7 @@ func (h *handler) UpdateSkills(c *gin.Context) {
 	// Check position existence
 	positions, err := h.store.Position.All(h.repo.DB())
 	if err != nil {
-		l.Error(err, "error when finding position")
+		l.Error(err, "failed to get all positions")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
 		return
 	}
@@ -512,7 +515,7 @@ func (h *handler) UpdateSkills(c *gin.Context) {
 		_, ok := positionMap[pID]
 
 		if !ok {
-			l.Error(errPositionNotFound(pID.String()), "error position not found")
+			l.Error(errPositionNotFound(pID.String()), "position not found")
 			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errPositionNotFound(pID.String()), body, ""))
 			return
 		}
@@ -522,7 +525,7 @@ func (h *handler) UpdateSkills(c *gin.Context) {
 	tx, done := h.repo.NewTransaction()
 
 	// Delete all exist employee positions
-	if err := h.store.EmployeePosition.HardDelete(tx.DB(), employeeID); err != nil {
+	if err := h.store.EmployeePosition.DeleteByEmployeeID(tx.DB(), employeeID); err != nil {
 		l.Error(err, "failed to delete employee position")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
 		return
@@ -530,12 +533,10 @@ func (h *handler) UpdateSkills(c *gin.Context) {
 
 	// Create new employee position
 	for _, positionID := range body.Positions {
-		employeePosition := &model.EmployeePosition{
+		_, err := h.store.EmployeePosition.Create(tx.DB(), &model.EmployeePosition{
 			EmployeeID: model.MustGetUUIDFromString(employeeID),
 			PositionID: positionID,
-		}
-
-		employeePosition, err := h.store.EmployeePosition.Create(tx.DB(), employeePosition)
+		})
 		if err != nil {
 			l.Error(err, "failed to create employee position")
 			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
@@ -544,7 +545,7 @@ func (h *handler) UpdateSkills(c *gin.Context) {
 	}
 
 	// Delete all exist employee stack
-	if err := h.store.EmployeeStack.HardDelete(tx.DB(), employeeID); err != nil {
+	if err := h.store.EmployeeStack.DeleteByEmployeeID(tx.DB(), employeeID); err != nil {
 		l.Error(err, "failed to delete employee stack in database")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
 		return
@@ -552,12 +553,10 @@ func (h *handler) UpdateSkills(c *gin.Context) {
 
 	// Create new employee stack
 	for _, stackID := range body.Stacks {
-		employeeStack := &model.EmployeeStack{
+		_, err := h.store.EmployeeStack.Create(tx.DB(), &model.EmployeeStack{
 			EmployeeID: model.MustGetUUIDFromString(employeeID),
 			StackID:    stackID,
-		}
-
-		employeeStack, err := h.store.EmployeeStack.Create(tx.DB(), employeeStack)
+		})
 		if err != nil {
 			l.Error(err, "failed to create employee stack")
 			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
@@ -573,7 +572,7 @@ func (h *handler) UpdateSkills(c *gin.Context) {
 
 	rs, err := h.store.Employee.Update(tx.DB(), employeeID, employeeIn)
 	if err != nil {
-		l.Error(err, "error update employee to db")
+		l.Error(err, "failed to update employee")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
 		return
 	}
@@ -597,6 +596,10 @@ func (h *handler) UpdateSkills(c *gin.Context) {
 // @Router /employees/{id}/personal-info [put]
 func (h *handler) UpdatePersonalInfo(c *gin.Context) {
 	employeeID := c.Param("id")
+	if employeeID == "" || !model.IsUUIDFromString(employeeID) {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, ErrInvalidEmployeeID, nil, ""))
+		return
+	}
 
 	var body UpdatePersonalInfoInput
 	if err := c.ShouldBindJSON(&body); err != nil {
@@ -613,7 +616,6 @@ func (h *handler) UpdatePersonalInfo(c *gin.Context) {
 		"request": body,
 	})
 
-	// 3. update informations and rerurn
 	rs, err := h.store.Employee.UpdatePersonalInfo(h.repo.DB(), employee.UpdatePersonalInfoInput{
 		DoB:           body.DoB,
 		Gender:        body.Gender,
@@ -623,12 +625,12 @@ func (h *handler) UpdatePersonalInfo(c *gin.Context) {
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			l.Error(ErrEmployeeNotFound, "error employee not found")
+			l.Error(ErrEmployeeNotFound, "employee not found")
 			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrEmployeeNotFound, body, ""))
 			return
 		}
 
-		l.Error(err, "error update employee to db")
+		l.Error(err, "failed to update employee")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
 		return
 	}

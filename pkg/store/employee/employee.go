@@ -8,8 +8,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/model"
 )
 
-type store struct {
-}
+type store struct{}
 
 func New() IStore {
 	return &store{}
@@ -42,15 +41,15 @@ func (s *store) OneByTeamEmail(db *gorm.DB, teamEmail string) (*model.Employee, 
 	return employee, db.Where("team_email = ?", teamEmail).First(&employee).Error
 }
 
-// Search get employees by filter and pagination
-func (s *store) Search(db *gorm.DB, filter SearchFilter, pagination model.Pagination) ([]*model.Employee, int64, error) {
+// All get employees by query and pagination
+func (s *store) All(db *gorm.DB, input GetAllInput, pagination model.Pagination) ([]*model.Employee, int64, error) {
 	var total int64
 	var employees []*model.Employee
 
 	query := db.Table("employees")
 
-	if filter.WorkingStatus != "" {
-		query = query.Where("working_status = ?", filter.WorkingStatus)
+	if input.WorkingStatus != "" {
+		query = query.Where("working_status = ?", input.WorkingStatus)
 	}
 
 	if filter.PositionID != "" {
@@ -88,7 +87,7 @@ func (s *store) Search(db *gorm.DB, filter SearchFilter, pagination model.Pagina
 
 	query = query.Offset(offset)
 
-	if filter.Preload {
+	if input.Preload {
 		query = query.Preload("ProjectMembers", "deleted_at IS NULL").
 			Preload("ProjectMembers.Project", "deleted_at IS NULL").
 			Preload("ProjectMembers.Project.Heads", "deleted_at IS NULL").
@@ -165,8 +164,8 @@ func (s *store) Update(db *gorm.DB, id string, employee *model.Employee) (*model
 		First(&employee).Error
 }
 
-// Exists check the existence of employee
-func (s *store) Exists(db *gorm.DB, id string) (bool, error) {
+// IsExist check the existence of employee
+func (s *store) IsExist(db *gorm.DB, id string) (bool, error) {
 	type res struct {
 		Result bool
 	}

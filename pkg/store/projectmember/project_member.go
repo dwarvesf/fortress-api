@@ -6,22 +6,19 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-// TODO: rename filename
-
-type store struct {
-}
+type store struct{}
 
 func New() IStore {
 	return &store{}
 }
 
-// HardDelete hard delete one by id
-func (s *store) HardDelete(db *gorm.DB, id string) error {
-	return db.Table("project_members").Unscoped().Where("id = ?", id).Delete(&model.ProjectMember{}).Error
+// Delete delete ProjectMember by id
+func (s *store) Delete(db *gorm.DB, id string) error {
+	return db.Unscoped().Where("id = ?", id).Delete(&model.ProjectMember{}).Error
 }
 
-// Exists return true/false if member exist or not
-func (s *store) Exists(db *gorm.DB, id string) (bool, error) {
+// IsExist check ProjectMember existance
+func (s *store) IsExist(db *gorm.DB, id string) (bool, error) {
 	var record struct {
 		Result bool
 	}
