@@ -2,6 +2,7 @@ package vault
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	vault "github.com/hashicorp/vault/api"
@@ -69,6 +70,7 @@ func (v *Vault) GetString(key string) string {
 }
 
 func (v *Vault) GetBool(key string) bool {
-	value, _ := v.data[key].(bool)
+	data, _ := v.data[key].(string)
+	value, _ := strconv.ParseBool(data)
 	return value
 }
