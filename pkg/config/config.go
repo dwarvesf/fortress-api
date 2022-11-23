@@ -18,7 +18,8 @@ type Config struct {
 	Google    Google
 	Vault     Vault
 
-	Debug bool
+	APIKey string
+	Debug  bool
 }
 
 type DBConnection struct {
@@ -50,7 +51,8 @@ type Vault struct {
 
 func generateConfigFromViper(v *viper.Viper) *Config {
 	return &Config{
-		Debug: v.GetBool("DEBUG"),
+		Debug:  v.GetBool("DEBUG"),
+		APIKey: v.GetString("API_KEY"),
 
 		ApiServer: ApiServer{
 			Port:           v.GetString("PORT"),
