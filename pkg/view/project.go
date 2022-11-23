@@ -309,7 +309,7 @@ func ToProjectMemberListData(slots []*model.ProjectSlot, projectHeads []*model.P
 			IsLead:         leadMap[m.EmployeeID.String()],
 			Seniority:      &m.Seniority,
 			DeploymentType: slot.DeploymentType.String(),
-			Positions:      ToPositions(m.Employee.EmployeePositions),
+			Positions:      ToProjectMemberPositions(m.ProjectMemberPositions),
 			Rate:           m.Rate,
 			Discount:       m.Discount,
 		})
