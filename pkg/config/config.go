@@ -17,6 +17,7 @@ type Config struct {
 	ApiServer ApiServer
 	Google    Google
 	Vault     Vault
+	Notion    Notion
 
 	APIKey string
 	Debug  bool
@@ -49,6 +50,10 @@ type Vault struct {
 	Path    string
 }
 
+type Notion struct {
+	Secret string
+}
+
 func generateConfigFromViper(v *viper.Viper) *Config {
 	return &Config{
 		Debug:  v.GetBool("DEBUG"),
@@ -78,6 +83,10 @@ func generateConfigFromViper(v *viper.Viper) *Config {
 			Address: v.GetString("VAULT_ADDR"),
 			Token:   v.GetString("VAULT_TOKEN"),
 			Path:    v.GetString("VAULT_PATH"),
+		},
+
+		Notion: Notion{
+			Secret: v.GetString("NOTION_SECRET"),
 		},
 	}
 }
