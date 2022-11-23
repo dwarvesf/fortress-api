@@ -362,7 +362,7 @@ func (h *handler) DeleteMember(c *gin.Context) {
 	})
 
 	// get member info
-	projectMember, err := h.store.ProjectMember.One(h.repo.DB(), input.ProjectID, input.MemberID)
+	projectMember, err := h.store.ProjectMember.One(h.repo.DB(), input.ProjectID, input.MemberID, model.ProjectMemberStatusActive.String())
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Error(err, "project member not found")
@@ -371,12 +371,6 @@ func (h *handler) DeleteMember(c *gin.Context) {
 		}
 		l.Error(err, "error query member from db")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input.MemberID, ""))
-		return
-	}
-
-	if projectMember.Status == model.ProjectMemberStatusInactive {
-		l.Error(ErrCouldNotDeleteInactiveMember, "error can not change information of inactive member")
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, ErrCouldNotDeleteInactiveMember, input.MemberID, ""))
 		return
 	}
 
@@ -533,7 +527,7 @@ func (h *handler) UpdateMember(c *gin.Context) {
 
 	if !body.EmployeeID.IsZero() {
 		// check project member status
-		member, err := h.store.ProjectMember.One(tx.DB(), projectID, body.EmployeeID.String())
+		member, err := h.store.ProjectMember.One(tx.DB(), projectID, body.EmployeeID.String(), model.ProjectMemberStatusActive.String())
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Error(err, "failed to get project member")
 			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
@@ -702,6 +696,19 @@ func (h *handler) AssignMember(c *gin.Context) {
 	if err := body.Validate(); err != nil {
 		l.Error(err, "validate failed")
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, body, ""))
+		return
+	}
+
+	// get active project member info
+	_, err := h.store.ProjectMember.One(h.repo.DB(), projectID, body.EmployeeID.String(), model.ProjectMemberStatusActive.String())
+	if err != gorm.ErrRecordNotFound {
+		if err == nil {
+			l.Error(err, "project member exists")
+			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, ErrProjectMemberExists, projectID, ""))
+			return
+		}
+		l.Error(err, "failed to query project member")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, projectID, ""))
 		return
 	}
 
