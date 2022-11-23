@@ -121,19 +121,20 @@ func ToProjectData(project *model.Project) ProjectData {
 		}
 	}
 
-	var members = make([]ProjectMember, 0, len(project.Members))
-	for _, m := range project.Members {
+	var members = make([]ProjectMember, 0, len(project.ProjectMembers))
+	for _, m := range project.ProjectMembers {
 		_, isLead := leads[m.Employee.ID.String()]
-
 		members = append(members, ProjectMember{
 			ProjectMemberID: m.ID.String(),
 			ProjectSlotID:   m.ProjectSlotID.String(),
-			EmployeeID:      m.ID.String(),
+			EmployeeID:      m.EmployeeID.String(),
 			FullName:        m.Employee.FullName,
 			DisplayName:     m.Employee.DisplayName,
 			Avatar:          m.Employee.Avatar,
 			Status:          m.Status.String(),
-			Positions:       ToPositions(m.Employee.EmployeePositions),
+			Positions:       ToProjectMemberPositions(m.ProjectMemberPositions),
+			DeploymentType:  m.DeploymentType.String(),
+			Seniority:       m.Seniority,
 			IsLead:          isLead,
 		})
 	}
@@ -311,7 +312,7 @@ func ToProjectMemberListData(slots []*model.ProjectSlot, projectHeads []*model.P
 			JoinedDate:      m.JoinedDate,
 			LeftDate:        m.LeftDate,
 			IsLead:          leadMap[m.EmployeeID.String()],
-			Seniority:       &m.Seniority,
+			Seniority:       m.Seniority,
 			DeploymentType:  slot.DeploymentType.String(),
 			Positions:       ToProjectMemberPositions(m.ProjectMemberPositions),
 			Rate:            m.Rate,
