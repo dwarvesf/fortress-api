@@ -6,6 +6,8 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/model"
 )
 
+// TODO: rename filename
+
 type store struct {
 }
 

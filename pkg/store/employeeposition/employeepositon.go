@@ -1,5 +1,7 @@
 package employeeposition
 
+// TODO: format FILENAME thanh employee_position.go
+
 import (
 	"gorm.io/gorm"
 
