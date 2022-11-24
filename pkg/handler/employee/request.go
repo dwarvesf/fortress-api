@@ -9,12 +9,12 @@ import (
 type GetListEmployeeQuery struct {
 	model.Pagination
 
-	WorkingStatus string `json:"workingStatus" form:"workingStatus"`
-	Preload       bool   `json:"preload" form:"preload,default=true"`
-	PositionID    string `json:"positionID" form:"positionID"`
-	StackID       string `json:"stackID" form:"stackID"`
-	ProjectID     string `json:"projectID" form:"projectID"`
-	Keyword       string `json:"keyword" form:"keyword"`
+	WorkingStatuses []string `json:"workingStatuses" form:"workingStatuses"`
+	Preload         bool     `json:"preload" form:"preload,default=true"`
+	PositionID      string   `json:"positionID" form:"positionID"`
+	StackID         string   `json:"stackID" form:"stackID"`
+	ProjectID       string   `json:"projectID" form:"projectID"`
+	Keyword         string   `json:"keyword" form:"keyword"`
 }
 
 type UpdateGeneralInfoInput struct {

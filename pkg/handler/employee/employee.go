@@ -75,12 +75,12 @@ func (h *handler) List(c *gin.Context) {
 	})
 
 	employees, total, err := h.store.Employee.All(h.repo.DB(), employee.GetAllInput{
-		WorkingStatus: query.WorkingStatus,
-		Preload:       query.Preload,
-		Keyword:       query.Keyword,
-		PositionID:    query.PositionID,
-		StackID:       query.StackID,
-		ProjectID:     query.ProjectID,
+		WorkingStatuses: query.WorkingStatuses,
+		Preload:         query.Preload,
+		Keyword:         query.Keyword,
+		PositionID:      query.PositionID,
+		StackID:         query.StackID,
+		ProjectID:       query.ProjectID,
 	}, query.Pagination)
 	if err != nil {
 		l.Error(err, "error query employee from db")
