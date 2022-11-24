@@ -49,7 +49,6 @@ build:
 dev:
 	go run ./cmd/server/main.go
 
-test: export GOOGLE_APPLICATION_CREDENTIALS =$(shell pwd)/key_test.json
 test:
 	sql-migrate down -env=test -limit=0
 	sql-migrate up -env=test
