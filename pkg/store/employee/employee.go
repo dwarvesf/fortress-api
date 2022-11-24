@@ -48,8 +48,8 @@ func (s *store) All(db *gorm.DB, input GetAllInput, pagination model.Pagination)
 
 	query := db.Table("employees")
 
-	if input.WorkingStatus != "" {
-		query = query.Where("working_status = ?", input.WorkingStatus)
+	if len(input.WorkingStatuses) > 0 {
+		query = query.Where("working_status IN ?", input.WorkingStatuses)
 	}
 
 	if input.PositionID != "" {

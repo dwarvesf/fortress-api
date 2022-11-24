@@ -98,31 +98,31 @@ func TestHandler_List(t *testing.T) {
 		},
 		{
 			name:             "have_workingStatus_and_no_pagination",
-			query:            "workingStatus=contractor",
+			query:            "workingStatuses=contractor",
 			wantCode:         http.StatusOK,
 			wantResponsePath: "testdata/list/have_working_and_no_pagination.json",
 		},
 		{
-			name:             "have_workingStatus_and_pagination",
-			query:            "workingStatus=contractor&page=1&size=5",
+			name:             "have_workingStatuses_and_pagination",
+			query:            "workingStatuses=contractor&page=1&size=5",
 			wantCode:         http.StatusOK,
 			wantResponsePath: "testdata/list/have_working_and_pagination.json",
 		},
 		{
 			name:             "out_of_content",
-			query:            "workingStatus=contractor&page=5&size=5",
+			query:            "workingStatuses=contractor&page=5&size=5",
 			wantCode:         http.StatusOK,
 			wantResponsePath: "testdata/list/out_of_content.json",
 		},
 		{
 			name:             "with_preload_false",
-			query:            "workingStatus=probation&preload=false",
+			query:            "workingStatuses=probation&preload=false",
 			wantCode:         http.StatusOK,
 			wantResponsePath: "testdata/list/with_preload_false.json",
 		},
 		{
 			name:             "without_preload",
-			query:            "workingStatus=probation",
+			query:            "workingStatuses=probation",
 			wantCode:         http.StatusOK,
 			wantResponsePath: "testdata/list/without_preload.json",
 		},
@@ -149,6 +149,12 @@ func TestHandler_List(t *testing.T) {
 			query:            "preload=false&projectID=8dc3be2e-19a4-4942-8a79-56db391a0b15&positionID=01fb6322-d727-47e3-a242-5039ea4732fc",
 			wantCode:         http.StatusOK,
 			wantResponsePath: "testdata/list/with_projectid_and_positionid.json",
+		},
+		{
+			name:             "with_list_working_status",
+			query:            "preload=false&workingStatuses=contractor&workingStatuses=probation",
+			wantCode:         http.StatusOK,
+			wantResponsePath: "testdata/list/with_list_working_status.json",
 		},
 	}
 	for _, tt := range tests {
