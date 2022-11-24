@@ -10,4 +10,5 @@ type IHandler interface {
 	Create(c *gin.Context)
 	UpdateSkills(c *gin.Context)
 	UpdatePersonalInfo(c *gin.Context)
+	UploadContent(c *gin.Context)
 }

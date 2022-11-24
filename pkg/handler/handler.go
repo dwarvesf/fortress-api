@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/handler/auth"
 	"github.com/dwarvesf/fortress-api/pkg/handler/employee"
 	"github.com/dwarvesf/fortress-api/pkg/handler/healthz"
@@ -21,10 +22,10 @@ type Handler struct {
 	Profile     profile.IHandler
 }
 
-func New(store *store.Store, repo store.DBRepo, service *service.Service, logger logger.Logger) *Handler {
+func New(store *store.Store, repo store.DBRepo, service *service.Service, logger logger.Logger, cfg *config.Config) *Handler {
 	return &Handler{
 		Healthcheck: healthz.New(),
-		Employee:    employee.New(store, repo, service, logger),
+		Employee:    employee.New(store, repo, service, logger, cfg),
 		Metadata:    metadata.New(store, repo, service, logger),
 		Auth:        auth.New(store, repo, service, logger),
 		Project:     project.New(store, repo, service, logger),

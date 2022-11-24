@@ -722,6 +722,16 @@ definitions:
       updatedAt:
         type: string
     type: object
+  view.EmployeeContentData:
+    properties:
+      url:
+        type: string
+    type: object
+  view.EmployeeContentDataResponse:
+    properties:
+      data:
+        $ref: '#/definitions/view.EmployeeContentData'
+    type: object
   view.EmployeeData:
     properties:
       address:
@@ -1551,6 +1561,44 @@ paths:
           schema:
             $ref: '#/definitions/view.ErrorResponse'
       summary: Update Skill for employee by id
+      tags:
+      - Employee
+  /employees/{id}/upload-content:
+    post:
+      consumes:
+      - application/json
+      description: Upload content of employee by id
+      parameters:
+      - description: Employee ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.EmployeeContentDataResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Upload content of employee by id
       tags:
       - Employee
   /metadata/account-roles:

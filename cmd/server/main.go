@@ -36,7 +36,6 @@ import (
 func main() {
 	cfg := config.LoadConfig(config.DefaultConfigLoaders())
 	log := logger.NewLogrusLogger()
-
 	log.Infof("Server starting")
 
 	vault, err := vault.New(cfg)

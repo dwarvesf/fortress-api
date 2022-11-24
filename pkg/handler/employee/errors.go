@@ -22,6 +22,9 @@ var (
 	ErrInvalidPositionID     = errors.New("invalid position ID")
 	ErrInvalidStackID        = errors.New("invalid stack ID")
 	ErrInvalidProjectID      = errors.New("invalid project ID")
+	ErrInvalidFileExtension  = errors.New("invalid file extension")
+	ErrInvalidFileSize       = errors.New("invalid file size")
+	ErrFileAlreadyExisted    = errors.New("file already existed")
 )
 
 // errPositionNotFound returns unauthorized custom error
