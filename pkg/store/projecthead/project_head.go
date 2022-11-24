@@ -1,8 +1,6 @@
 package projecthead
 
 import (
-	"time"
-
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
@@ -59,9 +57,9 @@ func (s *store) DeleteByPositionInProject(db *gorm.DB, projectID string, employe
 	return db.Unscoped().Where("project_id = ? AND employee_id = ? AND position = ?", projectID, employeeID, position).Delete(&model.ProjectHead{}).Error
 }
 
-func (s *store) UpdateLeftDate(db *gorm.DB, projectID string, employeeID string, position string, timeNow time.Time) error {
-	return db.Model(&model.ProjectHead{}).
-		Where("project_id = ? AND employee_id = ? AND position = ?", projectID, employeeID, position).Update("left_date", timeNow).Error
+func (s *store) UpdateSelectedFieldsByID(db *gorm.DB, id string, updateModel model.ProjectHead, updatedFields ...string) (*model.ProjectHead, error) {
+	head := model.ProjectHead{}
+	return &head, db.Model(&head).Where("id = ?", id).Select(updatedFields).Updates(&updateModel).Error
 }
 
 // One Get one head by project id and position

@@ -65,22 +65,13 @@ func (s *store) One(db *gorm.DB, id string) (*model.ProjectSlot, error) {
 	return slot, db.Where("id = ?", id).First(&slot).Error
 }
 
-// Update update existing slot
-func (s *store) Update(db *gorm.DB, id string, input *model.ProjectSlot) error {
-	slot := model.ProjectSlot{
-		ProjectID:      input.ProjectID,
-		DeploymentType: input.DeploymentType,
-		Rate:           input.Rate,
-		Discount:       input.Discount,
-		UpsellPersonID: input.UpsellPersonID,
-		SeniorityID:    input.SeniorityID,
-		Status:         input.Status,
-	}
-
-	return db.Table("project_slots").Where("id = ?", id).Updates(&slot).Error
-}
-
 // Create create new project slot
 func (s *store) Create(db *gorm.DB, slot *model.ProjectSlot) error {
 	return db.Create(&slot).Error
+}
+
+// UpdateSelectedFieldsByID just update selected fields by id
+func (s *store) UpdateSelectedFieldsByID(db *gorm.DB, id string, updateModel model.ProjectSlot, updatedFields ...string) (*model.ProjectSlot, error) {
+	slot := model.ProjectSlot{}
+	return &slot, db.Model(&slot).Where("id = ?", id).Select(updatedFields).Updates(&updateModel).Error
 }

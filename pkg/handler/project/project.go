@@ -102,10 +102,12 @@ func (h *handler) List(c *gin.Context) {
 // @Failure 500 {object} view.ErrorResponse
 // @Router /projects/{id}/status [put]
 func (h *handler) UpdateProjectStatus(c *gin.Context) {
-	// 1. parse id from uri, validate id
 	projectID := c.Param("id")
+	if projectID == "" || !model.IsUUIDFromString(projectID) {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, ErrInvalidProjectID, nil, ""))
+		return
+	}
 
-	// 1.1 get body request
 	var body updateAccountStatusBody
 	if err := c.ShouldBindJSON(&body); err != nil {
 		if err != nil {
@@ -114,7 +116,6 @@ func (h *handler) UpdateProjectStatus(c *gin.Context) {
 		}
 	}
 
-	// 1.2 prepare the logger
 	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler": "project",
@@ -128,16 +129,28 @@ func (h *handler) UpdateProjectStatus(c *gin.Context) {
 		return
 	}
 
-	// 2. get update status for project
-	rs, err := h.store.Project.UpdateStatus(h.repo.DB(), projectID, body.ProjectStatus)
+	project, err := h.store.Project.One(h.repo.DB(), projectID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			l.Error(err, "project not found")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrProjectNotFound, projectID, ""))
+			return
+		}
+
+		l.Error(err, "failed to get project")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, projectID, ""))
+		return
+	}
+
+	project.Status = body.ProjectStatus
+	_, err = h.store.Project.UpdateSelectedFieldsByID(h.repo.DB(), projectID, *project, "status")
 	if err != nil {
 		l.Error(err, "error query update status for project to db")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
 		return
 	}
 
-	// 3. return project data
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToUpdateProjectStatusResponse(rs), nil, nil, nil, ""))
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToUpdateProjectStatusResponse(project), nil, nil, nil, ""))
 }
 
 // Create godoc
@@ -275,9 +288,8 @@ func (h *handler) GetMembers(c *gin.Context) {
 	query.Standardize()
 
 	projectID := c.Param("id")
-
-	if projectID == "" {
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errors.New("invalid project_id"), nil, ""))
+	if projectID == "" || !model.IsUUIDFromString(projectID) {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, ErrInvalidProjectID, nil, ""))
 		return
 	}
 
@@ -604,7 +616,7 @@ func (h *handler) UpdateMember(c *gin.Context) {
 		// create project head
 		slot.IsLead = body.IsLead
 		if body.IsLead {
-			if err := h.updateProjectHead(tx, projectID, body.EmployeeID, model.HeadPositionTechnicalLead); err != nil {
+			if _, err := h.updateProjectHead(tx, projectID, body.EmployeeID, model.HeadPositionTechnicalLead); err != nil {
 				l.Error(err, "failed to update technicalLeads")
 				c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
 				return
@@ -619,17 +631,20 @@ func (h *handler) UpdateMember(c *gin.Context) {
 	}
 
 	// update project slot
-	slot.ID = body.ProjectSlotID
 	slot.SeniorityID = body.SeniorityID
-	slot.ProjectID = model.MustGetUUIDFromString(projectID)
 	slot.DeploymentType = model.DeploymentType(body.DeploymentType)
 	slot.Status = model.ProjectMemberStatus(body.Status)
 	slot.Rate = body.Rate
 	slot.Discount = body.Discount
 
-	err = h.store.ProjectSlot.Update(tx.DB(), body.ProjectSlotID.String(), slot)
+	_, err = h.store.ProjectSlot.UpdateSelectedFieldsByID(tx.DB(), body.ProjectSlotID.String(), *slot,
+		"seniority_id",
+		"deployment_type",
+		"status",
+		"rate",
+		"discount")
 	if err != nil {
-		l.Error(err, "failed to create project slot")
+		l.Error(err, "failed to update project slot")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
 		return
 	}
@@ -948,21 +963,21 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 	})
 
 	// Check project existence
-	exist, err := h.store.Project.IsExist(h.repo.DB(), projectID)
+	project, err := h.store.Project.One(h.repo.DB(), projectID)
 	if err != nil {
-		l.Error(err, "error check existence of project")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
-		return
-	}
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			l.Error(err, "project not found")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrProjectNotFound, projectID, ""))
+			return
+		}
 
-	if !exist {
-		l.Error(err, "project not found")
-		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrProjectNotFound, body, ""))
+		l.Error(err, "failed to get project")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, projectID, ""))
 		return
 	}
 
 	// Check country existence
-	exist, err = h.store.Country.IsExist(h.repo.DB(), body.CountryID.String())
+	exist, err := h.store.Country.IsExist(h.repo.DB(), body.CountryID.String())
 	if err != nil {
 		l.Error(err, "error check existence of country")
 		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, err, body, ""))
@@ -1023,11 +1038,14 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 		}
 	}
 
-	rs, err := h.store.Project.UpdateGeneralInfo(tx.DB(), project.UpdateGeneralInfoInput{
-		Name:      body.Name,
-		StartDate: body.GetStartDate(),
-		CountryID: body.CountryID,
-	}, projectID)
+	project.Name = body.Name
+	project.StartDate = body.GetStartDate()
+	project.CountryID = body.CountryID
+
+	_, err = h.store.Project.UpdateSelectedFieldsByID(tx.DB(), projectID, *project,
+		"name",
+		"start_date",
+		"country_id")
 
 	if err != nil {
 		l.Error(err, "failed to update project")
@@ -1035,7 +1053,7 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToUpdateProjectGeneralInfo(rs), nil, done(nil), nil, ""))
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToUpdateProjectGeneralInfo(project), nil, done(nil), nil, ""))
 }
 
 // UpdateContactInfo godoc
@@ -1074,42 +1092,42 @@ func (h *handler) UpdateContactInfo(c *gin.Context) {
 	})
 
 	// Check project existence
-	exists, err := h.store.Project.IsExist(h.repo.DB(), projectID)
+	project, err := h.store.Project.One(h.repo.DB(), projectID)
 	if err != nil {
-		l.Error(err, "error when check existence of project")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
-		return
-	}
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			l.Error(err, "project not found")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrProjectNotFound, projectID, ""))
+			return
+		}
 
-	if !exists {
-		l.Error(err, "project not found")
-		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrProjectNotFound, body, ""))
+		l.Error(err, "failed to get project")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, projectID, ""))
 		return
 	}
 
 	// Check account manager exists
-	exists, err = h.store.Employee.IsExist(h.repo.DB(), body.AccountManagerID.String())
+	exist, err := h.store.Employee.IsExist(h.repo.DB(), body.AccountManagerID.String())
 	if err != nil {
 		l.Error(err, "error when finding account manager")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
 		return
 	}
 
-	if !exists {
+	if !exist {
 		l.Error(ErrAccountManagerNotFound, "account manager not found")
 		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrAccountManagerNotFound, body, ""))
 		return
 	}
 
 	// Check delivery manager exists
-	exists, err = h.store.Employee.IsExist(h.repo.DB(), body.DeliveryManagerID.String())
+	exist, err = h.store.Employee.IsExist(h.repo.DB(), body.DeliveryManagerID.String())
 	if err != nil {
 		l.Error(err, "error when finding delivery manager")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
 		return
 	}
 
-	if !exists {
+	if !exist {
 		l.Error(ErrDeliveryManagerNotFound, "delivery manager not found")
 		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrDeliveryManagerNotFound, body, ""))
 		return
@@ -1119,66 +1137,70 @@ func (h *handler) UpdateContactInfo(c *gin.Context) {
 	tx, done := h.repo.NewTransaction()
 
 	// Update Account Manager
-	if err := h.updateProjectHead(tx, projectID, body.AccountManagerID, model.HeadPositionAccountManager); err != nil {
+	accountManager, err := h.updateProjectHead(tx, projectID, body.AccountManagerID, model.HeadPositionAccountManager)
+	if err != nil {
 		l.Error(err, "failed to update account manager")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
 		return
 	}
 
 	// Update Delivery Manager
-	if err := h.updateProjectHead(tx, projectID, body.DeliveryManagerID, model.HeadPositionDeliveryManager); err != nil {
+	deliveryManger, err := h.updateProjectHead(tx, projectID, body.DeliveryManagerID, model.HeadPositionDeliveryManager)
+	if err != nil {
 		l.Error(err, "failed to update delivery manager")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
 		return
 	}
 
 	// Update email info
-	rs, err := h.store.Project.UpdateContactInfo(tx.DB(), project.UpdateContactInfoInput{
-		ClientEmail:  body.ClientEmail,
-		ProjectEmail: body.ProjectEmail,
-	}, projectID)
+	project.ClientEmail = body.ClientEmail
+	project.ProjectEmail = body.ProjectEmail
 
+	_, err = h.store.Project.UpdateSelectedFieldsByID(tx.DB(), projectID, *project, "client_email", "project_email")
 	if err != nil {
 		l.Error(err, "failed to update project information to db")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
 		return
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToUpdateProjectContactInfo(rs), nil, done(nil), nil, ""))
+	project.Heads = append(project.Heads, *accountManager, *deliveryManger)
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToUpdateProjectContactInfo(project), nil, done(nil), nil, ""))
 }
 
-func (h *handler) updateProjectHead(tx store.DBRepo, projectID string, memberID model.UUID, position model.HeadPosition) error {
+func (h *handler) updateProjectHead(tx store.DBRepo, projectID string, memberID model.UUID, position model.HeadPosition) (*model.ProjectHead, error) {
 	timeNow := time.Now()
 	needCreate := false
-	newProjectHead := model.ProjectHead{
-		ProjectID:  model.MustGetUUIDFromString(projectID),
-		EmployeeID: memberID,
-		JoinedDate: timeNow,
-		Position:   position,
-	}
 
-	oldHead, err := h.store.ProjectHead.One(tx.DB(), projectID, position)
-
+	head, err := h.store.ProjectHead.One(tx.DB(), projectID, position)
 	if err != nil {
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
-			return ErrFailToFindProjectHead
+			return nil, ErrFailToFindProjectHead
 		}
 
 		needCreate = true
-	} else if oldHead.EmployeeID != memberID {
-		if err := h.store.ProjectHead.UpdateLeftDate(tx.DB(), projectID, oldHead.EmployeeID.String(), position.String(), timeNow); err != nil {
-			return ErrFailToUpdateLeftDate
+	} else if head.EmployeeID != memberID {
+		head.LeftDate = &timeNow
+		_, err := h.store.ProjectHead.UpdateSelectedFieldsByID(tx.DB(), head.ID.String(), *head, "left_date")
+		if err != nil {
+			return nil, ErrFailToUpdateLeftDate
 		}
 
 		needCreate = true
 	}
 
 	if needCreate {
-		err = h.store.ProjectHead.Create(tx.DB(), &newProjectHead)
+		head = &model.ProjectHead{
+			ProjectID:  model.MustGetUUIDFromString(projectID),
+			EmployeeID: memberID,
+			JoinedDate: timeNow,
+			Position:   position,
+		}
+		err = h.store.ProjectHead.Create(tx.DB(), head)
 		if err != nil {
-			return ErrFailToCreateProjectHead
+			return nil, ErrFailToCreateProjectHead
 		}
 	}
 
-	return nil
+	return head, nil
 }

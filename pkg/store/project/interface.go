@@ -12,8 +12,6 @@ type IStore interface {
 	IsExist(db *gorm.DB, id string) (bool, error)
 	One(db *gorm.DB, id string) (*model.Project, error)
 
-	// TODO: dùng chung 1 interface
-	UpdateStatus(db *gorm.DB, projectID string, projectStatus model.ProjectStatus) (*model.Project, error)
-	UpdateGeneralInfo(db *gorm.DB, body UpdateGeneralInfoInput, id string) (*model.Project, error)
-	UpdateContactInfo(db *gorm.DB, body UpdateContactInfoInput, id string) (*model.Project, error)
+	Update(db *gorm.DB, project *model.Project) (*model.Project, error)
+	UpdateSelectedFieldsByID(db *gorm.DB, id string, updateModel model.Project, updatedFields ...string) (*model.Project, error)
 }
