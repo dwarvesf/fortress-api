@@ -942,7 +942,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/pkg_handler_profile.UpdateInfoInput"
+                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_profile.UpdateInfoInput"
                         }
                     }
                 ],
@@ -1137,7 +1137,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.CreateProjectInput"
+                            "$ref": "#/definitions/pkg_handler_project.CreateProjectInput"
                         }
                     }
                 ],
@@ -1334,7 +1334,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateContactInfoInput"
+                            "$ref": "#/definitions/pkg_handler_project.UpdateContactInfoInput"
                         }
                     }
                 ],
@@ -1400,7 +1400,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateGeneralInfoInput"
+                            "$ref": "#/definitions/pkg_handler_project.UpdateGeneralInfoInput"
                         }
                     }
                 ],
@@ -1466,7 +1466,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateMemberInput"
+                            "$ref": "#/definitions/pkg_handler_project.UpdateMemberInput"
                         }
                     }
                 ],
@@ -1530,7 +1530,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.AssignMemberInput"
+                            "$ref": "#/definitions/pkg_handler_project.AssignMemberInput"
                         }
                     }
                 ],

@@ -11,6 +11,10 @@ type GetListEmployeeQuery struct {
 
 	WorkingStatus string `json:"workingStatus" form:"workingStatus"`
 	Preload       bool   `json:"preload" form:"preload,default=true"`
+	PositionID    string `json:"positionID" form:"positionID"`
+	StackID       string `json:"stackID" form:"stackID"`
+	ProjectID     string `json:"projectID" form:"projectID"`
+	Keyword       string `json:"keyword" form:"keyword"`
 }
 
 type UpdateGeneralInfoInput struct {
@@ -57,6 +61,22 @@ type UpdateWorkingStatusInput struct {
 func (i *UpdateWorkingStatusInput) Validate() error {
 	if !model.WorkingStatus(i.EmployeeStatus).IsValid() {
 		return ErrInvalidEmployeeStatus
+	}
+
+	return nil
+}
+
+func (input *GetListEmployeeQuery) Validate() error {
+	if input.PositionID != "" && !model.IsUUIDFromString(input.PositionID) {
+		return ErrInvalidPositionID
+	}
+
+	if input.StackID != "" && !model.IsUUIDFromString(input.StackID) {
+		return ErrInvalidStackID
+	}
+
+	if input.ProjectID != "" && !model.IsUUIDFromString(input.ProjectID) {
+		return ErrInvalidProjectID
 	}
 
 	return nil

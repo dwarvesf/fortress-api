@@ -1817,7 +1817,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/pkg_handler_profile.UpdateInfoInput'
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_profile.UpdateInfoInput'
       produces:
       - application/json
       responses:
@@ -1947,7 +1947,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.CreateProjectInput'
+          $ref: '#/definitions/pkg_handler_project.CreateProjectInput'
       produces:
       - application/json
       responses:
@@ -2078,7 +2078,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateContactInfoInput'
+          $ref: '#/definitions/pkg_handler_project.UpdateContactInfoInput'
       produces:
       - application/json
       responses:
@@ -2122,7 +2122,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateGeneralInfoInput'
+          $ref: '#/definitions/pkg_handler_project.UpdateGeneralInfoInput'
       produces:
       - application/json
       responses:
@@ -2166,7 +2166,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.AssignMemberInput'
+          $ref: '#/definitions/pkg_handler_project.AssignMemberInput'
       produces:
       - application/json
       responses:
@@ -2209,7 +2209,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateMemberInput'
+          $ref: '#/definitions/pkg_handler_project.UpdateMemberInput'
       produces:
       - application/json
       responses:

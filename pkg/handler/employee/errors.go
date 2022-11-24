@@ -19,6 +19,9 @@ var (
 	ErrChapterNotFound       = errors.New("chapter not found")
 	ErrSeniorityNotFound     = errors.New("seniority not found")
 	ErrInvalidEmployeeID     = errors.New("invalid employee ID")
+	ErrInvalidPositionID     = errors.New("invalid position ID")
+	ErrInvalidStackID        = errors.New("invalid stack ID")
+	ErrInvalidProjectID      = errors.New("invalid project ID")
 )
 
 // errStackNotFound returns unauthorized custom error
