@@ -39,11 +39,12 @@ type ApiServer struct {
 }
 
 type Google struct {
-	ClientSecret  string
-	ClientID      string
-	AppName       string
-	GCSBucketName string
-	GCSProjectID  string
+	ClientSecret   string
+	ClientID       string
+	AppName        string
+	GCSBucketName  string
+	GCSProjectID   string
+	GCSCredentials string
 }
 
 type Vault struct {
@@ -76,11 +77,12 @@ func generateConfigFromViper(v *viper.Viper) *Config {
 		},
 
 		Google: Google{
-			ClientSecret:  v.GetString("GOOGLE_API_CLIENT_SECRET"),
-			ClientID:      v.GetString("GOOGLE_API_CLIENT_ID"),
-			AppName:       v.GetString("GOOGLE_API_APP_NAME"),
-			GCSBucketName: v.GetString("GCS_BUCKET_NAME"),
-			GCSProjectID:  v.GetString("GCS_PROJECT_ID"),
+			ClientSecret:   v.GetString("GOOGLE_API_CLIENT_SECRET"),
+			ClientID:       v.GetString("GOOGLE_API_CLIENT_ID"),
+			AppName:        v.GetString("GOOGLE_API_APP_NAME"),
+			GCSBucketName:  v.GetString("GCS_BUCKET_NAME"),
+			GCSProjectID:   v.GetString("GCS_PROJECT_ID"),
+			GCSCredentials: v.GetString("GCS_CREDENTIALS"),
 		},
 
 		Vault: Vault{
@@ -97,7 +99,7 @@ func generateConfigFromViper(v *viper.Viper) *Config {
 
 func DefaultConfigLoaders() []Loader {
 	loaders := []Loader{}
-	fileLoader := NewFileLoader(".env.sample", ".")
+	fileLoader := NewFileLoader(".env", ".")
 	loaders = append(loaders, fileLoader)
 	loaders = append(loaders, NewENVLoader())
 

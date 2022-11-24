@@ -2,11 +2,11 @@ package google
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"mime/multipart"
 	"net/http"
 	"strings"
@@ -15,6 +15,7 @@ import (
 	"cloud.google.com/go/storage"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
+	"google.golang.org/api/option"
 )
 
 const (
@@ -33,7 +34,7 @@ type Google struct {
 }
 
 // New function return Google service
-func New(ClientID, ClientSecret, AppName string, Scopes []string, BucketName string, GCSProjectID string) *Google {
+func New(ClientID, ClientSecret, AppName string, Scopes []string, BucketName string, GCSProjectID string, GCSCredentials string) (*Google, error) {
 	Config := &oauth2.Config{
 		ClientID:     ClientID,
 		ClientSecret: ClientSecret,
@@ -41,9 +42,14 @@ func New(ClientID, ClientSecret, AppName string, Scopes []string, BucketName str
 		Scopes:       Scopes,
 	}
 
-	client, err := storage.NewClient(context.Background())
+	decoded, err := base64.StdEncoding.DecodeString(GCSCredentials)
 	if err != nil {
-		log.Fatalf("Failed to create client: %v", err)
+		return nil, fmt.Errorf("failed to decode gcs credentials: %v", err)
+	}
+
+	client, err := storage.NewClient(context.Background(), option.WithCredentialsJSON(decoded))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create client: %v", err)
 	}
 
 	return &Google{
@@ -53,7 +59,7 @@ func New(ClientID, ClientSecret, AppName string, Scopes []string, BucketName str
 			projectID:  GCSProjectID,
 			bucketName: BucketName,
 		},
-	}
+	}, nil
 }
 
 // GetLoginURL return url for user loggin to google account
