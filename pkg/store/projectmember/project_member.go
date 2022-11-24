@@ -29,8 +29,14 @@ func (s *store) IsExist(db *gorm.DB, id string) (bool, error) {
 
 // One return a project member by projectID and employeeID
 func (s *store) One(db *gorm.DB, projectID string, employeeID string, status string) (*model.ProjectMember, error) {
+	query := db.Where("project_id = ? AND employee_id = ?", projectID, employeeID)
+
+	if status != "" {
+		query = query.Where("status = ?", status)
+	}
+
 	var member *model.ProjectMember
-	return member, db.Where("project_id = ? AND employee_id = ? AND status = ?", projectID, employeeID, status).Preload("Employee").First(&member).Error
+	return member, query.Preload("Employee").First(&member).Error
 }
 
 // Create using for create new member
@@ -56,4 +62,10 @@ func (s *store) Upsert(db *gorm.DB, member *model.ProjectMember) error {
 		Create(&member).
 		Preload("Employee").
 		First(&member).Error
+}
+
+// UpdateSelectedFieldsByID just update selected fields by id
+func (s *store) UpdateSelectedFieldsByID(db *gorm.DB, id string, updateModel model.ProjectMember, updatedFields ...string) (*model.ProjectMember, error) {
+	member := model.ProjectMember{}
+	return &member, db.Model(&member).Where("id = ?", id).Select(updatedFields).Updates(&updateModel).Error
 }

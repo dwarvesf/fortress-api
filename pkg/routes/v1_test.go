@@ -174,6 +174,10 @@ func Test_loadV1Routes(t *testing.T) {
 			},
 		},
 		"/api/v1/projects/:id/members/:memberID": {
+			"PUT": {
+				Method:  "PUT",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/project.IHandler.UnassignMember-fm",
+			},
 			"DELETE": {
 				Method:  "DELETE",
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/project.IHandler.DeleteMember-fm",
