@@ -18,6 +18,8 @@ func New(cfg *config.Config) *Service {
 			cfg.Google.ClientSecret,
 			cfg.Google.AppName,
 			[]string{"email", "profile"},
+			cfg.Google.GCSBucketName,
+			cfg.Google.GCSProjectID,
 		),
 		Notion: notion.New(
 			cfg.Notion.Secret,

@@ -2,6 +2,7 @@ package store
 
 import (
 	"github.com/dwarvesf/fortress-api/pkg/store/chapter"
+	"github.com/dwarvesf/fortress-api/pkg/store/content"
 	"github.com/dwarvesf/fortress-api/pkg/store/country"
 	"github.com/dwarvesf/fortress-api/pkg/store/employee"
 	"github.com/dwarvesf/fortress-api/pkg/store/employeeposition"
@@ -40,6 +41,7 @@ type Store struct {
 	EmployeeRole          employeerole.IStore
 	EmployeeStack         employeestack.IStore
 	ProjectStack          projectstack.IStore
+	Content               content.IStore
 }
 
 func New() *Store {
@@ -62,5 +64,6 @@ func New() *Store {
 		EmployeeRole:          employeerole.New(),
 		EmployeeStack:         employeestack.New(),
 		ProjectStack:          projectstack.New(),
+		Content:               content.New(),
 	}
 }

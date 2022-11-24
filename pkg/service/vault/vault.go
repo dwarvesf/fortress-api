@@ -58,9 +58,11 @@ func (v *Vault) LoadConfig() *config.Config {
 		},
 
 		Google: config.Google{
-			ClientSecret: v.GetString("GOOGLE_API_CLIENT_SECRET"),
-			ClientID:     v.GetString("GOOGLE_API_CLIENT_ID"),
-			AppName:      v.GetString("GOOGLE_API_APP_NAME"),
+			ClientSecret:  v.GetString("GOOGLE_API_CLIENT_SECRET"),
+			ClientID:      v.GetString("GOOGLE_API_CLIENT_ID"),
+			AppName:       v.GetString("GOOGLE_API_APP_NAME"),
+			GCSBucketName: v.GetString("GCS_BUCKET_NAME"),
+			GCSProjectID:  v.GetString("GCS_PROJECT_ID"),
 		},
 
 		Notion: config.Notion{

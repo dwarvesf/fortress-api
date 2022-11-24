@@ -228,3 +228,17 @@ func ToEmployeeListData(employees []*model.Employee) []EmployeeData {
 	}
 	return rs
 }
+
+type EmployeeContentData struct {
+	Url string `json:"url"`
+}
+
+type EmployeeContentDataResponse struct {
+	Data *EmployeeContentData `json:"data"`
+}
+
+func ToContentData(url string) *EmployeeContentData {
+	return &EmployeeContentData{
+		Url: url,
+	}
+}

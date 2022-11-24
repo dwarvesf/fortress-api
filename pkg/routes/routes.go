@@ -44,7 +44,7 @@ func NewRoutes(cfg *config.Config, svc *service.Service, s *store.Store, logger 
 	pprof.Register(r)
 	repo := store.NewPostgresStore(cfg)
 
-	h := handler.New(s, repo, svc, logger)
+	h := handler.New(s, repo, svc, logger, cfg)
 
 	r.Use(
 		gin.LoggerWithWriter(gin.DefaultWriter, "/healthz"),

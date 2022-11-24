@@ -3,10 +3,16 @@ package google
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+	"io"
 	"io/ioutil"
+	"log"
+	"mime/multipart"
 	"net/http"
 	"strings"
+	"time"
 
+	"cloud.google.com/go/storage"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 )
@@ -16,12 +22,18 @@ const (
 	getGoogleUserInfoAPIEndpoint = "https://www.googleapis.com/plus/v1/people/me"
 )
 
+type ClientUploader struct {
+	cl         *storage.Client
+	projectID  string
+	bucketName string
+}
 type Google struct {
-	Config *oauth2.Config
+	Config   *oauth2.Config
+	Uploader *ClientUploader
 }
 
 // New function return Google service
-func New(ClientID, ClientSecret, AppName string, Scopes []string) *Google {
+func New(ClientID, ClientSecret, AppName string, Scopes []string, BucketName string, GCSProjectID string) *Google {
 	Config := &oauth2.Config{
 		ClientID:     ClientID,
 		ClientSecret: ClientSecret,
@@ -29,8 +41,18 @@ func New(ClientID, ClientSecret, AppName string, Scopes []string) *Google {
 		Scopes:       Scopes,
 	}
 
+	client, err := storage.NewClient(context.Background())
+	if err != nil {
+		log.Fatalf("Failed to create client: %v", err)
+	}
+
 	return &Google{
 		Config: Config,
+		Uploader: &ClientUploader{
+			cl:         client,
+			projectID:  GCSProjectID,
+			bucketName: BucketName,
+		},
 	}
 }
 
@@ -82,4 +104,22 @@ func (g *Google) GetGoogleEmail(accessToken string) (email string, err error) {
 		}
 	}
 	return primaryEmail, nil
+}
+
+func (g *Google) UploadContentGCS(file multipart.File, filePath string) error {
+	ctx := context.Background()
+
+	ctx, cancel := context.WithTimeout(ctx, time.Second*50)
+	defer cancel()
+
+	// Upload an object with storage.Writer.
+	wc := g.Uploader.cl.Bucket(g.Uploader.bucketName).Object(filePath).NewWriter(ctx)
+	if _, err := io.Copy(wc, file); err != nil {
+		return fmt.Errorf("io.Copy: %v", err)
+	}
+	if err := wc.Close(); err != nil {
+		return fmt.Errorf("Writer.Close: %v", err)
+	}
+
+	return nil
 }

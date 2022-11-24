@@ -9,6 +9,7 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/stretchr/testify/require"
 
+	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/handler"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 )
@@ -48,6 +49,12 @@ func Test_loadV1Routes(t *testing.T) {
 			"PUT": {
 				Method:  "PUT",
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/employee.IHandler.UpdateSkills-fm",
+			},
+		},
+		"/api/v1/employees/:id/upload-content": {
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/employee.IHandler.UploadContent-fm",
 			},
 		},
 		"/api/v1/metadata/working-status": {
@@ -187,7 +194,9 @@ func Test_loadV1Routes(t *testing.T) {
 	}
 
 	l := logger.NewLogrusLogger()
-	h := handler.New(nil, nil, nil, l)
+	cfg := config.LoadConfig(config.DefaultConfigLoaders())
+
+	h := handler.New(nil, nil, nil, l, cfg)
 
 	router := gin.New()
 	loadV1Routes(router, h, nil, nil, nil)
