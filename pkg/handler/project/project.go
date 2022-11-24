@@ -435,6 +435,93 @@ func (h *handler) DeleteMember(c *gin.Context) {
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, done(nil), nil, "ok"))
 }
 
+// UnassignMember godoc
+// @Summary Unassign member in a project
+// @Description Unassign member in a project
+// @Tags Project
+// @Accept  json
+// @Produce  json
+// @Param Authorization header string true "jwt token"
+// @Param id path string true "Project ID"
+// @Param memberID path string true "Employee ID"
+// @Success 200 {object} view.MessageResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /project/:id/members/:memberID [put]
+func (h *handler) UnassignMember(c *gin.Context) {
+	// TODO: add test
+	input := UnassignMemberInput{
+		ProjectID: c.Param("id"),
+		MemberID:  c.Param("memberID"),
+	}
+
+	if err := input.Validate(); err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	// TODO: can we move this to middleware ?
+	l := h.logger.Fields(logger.Fields{
+		"handler": "project",
+		"method":  "UnassignMember",
+		"body":    input,
+	})
+
+	// get member info
+	projectMember, err := h.store.ProjectMember.One(h.repo.DB(), input.ProjectID, input.MemberID, "")
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			l.Error(err, "project member not found")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrProjectMemberNotFound, input.MemberID, ""))
+			return
+		}
+		l.Error(err, "failed to get project member")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input.MemberID, ""))
+		return
+	}
+
+	if projectMember.Status == model.ProjectMemberStatusInactive {
+		l.Error(ErrCouldNotDeleteInactiveMember, "can not change information of inactive member")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, ErrCouldNotDeleteInactiveMember, input.MemberID, ""))
+		return
+	}
+
+	// Begin transaction
+	tx, done := h.repo.NewTransaction()
+
+	// remove member out of project
+	if projectMember.Status != model.ProjectMemberStatusInactive {
+		timeNow := time.Now()
+		projectMember.LeftDate = &timeNow
+		projectMember.Status = model.ProjectMemberStatusInactive
+
+		_, err := h.store.ProjectMember.UpdateSelectedFieldsByID(tx.DB(),
+			projectMember.ID.String(),
+			*projectMember,
+			"left_date",
+			"status")
+		if err != nil {
+			l.Error(err, "failed to update project member")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
+			return
+		}
+
+		// update slot status -> pending
+		slot := model.ProjectSlot{
+			Status: model.ProjectMemberStatusPending,
+		}
+		_, err = h.store.ProjectSlot.UpdateSelectedFieldsByID(tx.DB(), projectMember.ProjectSlotID.String(), slot, "status")
+		if err != nil {
+			l.Error(err, "failed to update project member")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
+			return
+		}
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, done(nil), nil, "ok"))
+}
+
 // UpdateMember godoc
 // @Summary Update member in an existing project
 // @Description Update member in an existing project

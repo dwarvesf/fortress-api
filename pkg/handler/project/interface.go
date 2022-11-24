@@ -9,6 +9,7 @@ type IHandler interface {
 	GetMembers(c *gin.Context)
 	UpdateMember(c *gin.Context)
 	AssignMember(c *gin.Context)
+	UnassignMember(c *gin.Context)
 	DeleteMember(c *gin.Context)
 	Details(c *gin.Context)
 	UpdateGeneralInfo(c *gin.Context)

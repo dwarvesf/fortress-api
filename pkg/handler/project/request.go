@@ -239,3 +239,20 @@ type UpdateContactInfoInput struct {
 	AccountManagerID  model.UUID `form:"accountManagerID" json:"accountManagerID" binding:"required"`
 	DeliveryManagerID model.UUID `form:"deliveryManagerID" json:"deliveryManagerID"`
 }
+
+type UnassignMemberInput struct {
+	ProjectID string
+	MemberID  string
+}
+
+func (input UnassignMemberInput) Validate() error {
+	if input.ProjectID == "" || !model.IsUUIDFromString(input.ProjectID) {
+		return ErrInvalidProjectID
+	}
+
+	if input.MemberID == "" || !model.IsUUIDFromString(input.MemberID) {
+		return ErrInvalidMemberID
+	}
+
+	return nil
+}

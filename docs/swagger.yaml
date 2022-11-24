@@ -1310,7 +1310,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.CreateEmployeeInput'
+          $ref: '#/definitions/pkg_handler_employee.CreateEmployeeInput'
       - description: jwt token
         in: header
         name: Authorization
@@ -1442,7 +1442,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateGeneralInfoInput'
+          $ref: '#/definitions/pkg_handler_employee.UpdateGeneralInfoInput'
       produces:
       - application/json
       responses:
@@ -1486,7 +1486,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdatePersonalInfoInput'
+          $ref: '#/definitions/pkg_handler_employee.UpdatePersonalInfoInput'
       produces:
       - application/json
       responses:
@@ -1525,7 +1525,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateSkillsInput'
+          $ref: '#/definitions/pkg_handler_employee.UpdateSkillsInput'
       - description: jwt token
         in: header
         name: Authorization
@@ -1881,6 +1881,48 @@ paths:
           schema:
             $ref: '#/definitions/view.ErrorResponse'
       summary: Delete member in a project
+      tags:
+      - Project
+    put:
+      consumes:
+      - application/json
+      description: Unassign member in a project
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Employee ID
+        in: path
+        name: memberID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Unassign member in a project
       tags:
       - Project
   /projects:
