@@ -24,11 +24,6 @@ var (
 	ErrInvalidProjectID      = errors.New("invalid project ID")
 )
 
-// errStackNotFound returns unauthorized custom error
-func errStackNotFound(id string) error {
-	return fmt.Errorf("stack not found: %v", id)
-}
-
 // errPositionNotFound returns unauthorized custom error
 func errPositionNotFound(id string) error {
 	return fmt.Errorf("position not found: %v", id)

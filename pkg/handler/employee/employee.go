@@ -124,7 +124,7 @@ func (h *handler) One(c *gin.Context) {
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Info("employee not found")
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, err, params, ""))
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrEmployeeNotFound, params, ""))
 			return
 		}
 		l.Error(err, "error query employee from db")
@@ -176,14 +176,27 @@ func (h *handler) UpdateEmployeeStatus(c *gin.Context) {
 		return
 	}
 
-	rs, err := h.store.Employee.UpdateEmployeeStatus(h.repo.DB(), employeeID, body.EmployeeStatus)
+	employee, err := h.store.Employee.One(h.repo.DB(), employeeID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			l.Info("employee not found")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrEmployeeNotFound, nil, ""))
+			return
+		}
+		l.Error(err, "failed to get employee")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	employee.WorkingStatus = body.EmployeeStatus
+	_, err = h.store.Employee.UpdateSelectedFieldsByID(h.repo.DB(), employeeID, *employee, "working_status")
 	if err != nil {
 		l.Error(err, "failed to update employee status")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
 		return
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToEmployeeData(rs), nil, nil, nil, ""))
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToEmployeeData(employee), nil, nil, nil, ""))
 }
 
 // UpdateGeneralInfo godoc
@@ -238,30 +251,42 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 		}
 	}
 
-	// 3. update information and return
-	rs, err := h.store.Employee.UpdateGeneralInfo(h.repo.DB(), employee.UpdateGeneralInfoInput{
-		FullName:      body.FullName,
-		Email:         body.Email,
-		Phone:         body.Phone,
-		LineManagerID: body.LineManagerID,
-		DiscordID:     body.DiscordID,
-		GithubID:      body.GithubID,
-		NotionID:      body.NotionID,
-	}, employeeID)
-
+	employee, err := h.store.Employee.One(h.repo.DB(), employeeID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			l.Error(ErrEmployeeNotFound, "error employee not found")
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrEmployeeNotFound, body, ""))
+			l.Info("employee not found")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrEmployeeNotFound, nil, ""))
 			return
 		}
+		l.Error(err, "failed to get employee")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
 
-		l.Error(err, "error update employee to db")
+	// 3. update information and return
+	employee.FullName = body.FullName
+	employee.PersonalEmail = body.Email
+	employee.PhoneNumber = body.Phone
+	employee.LineManagerID = body.LineManagerID
+	employee.DiscordID = body.DiscordID
+	employee.GithubID = body.GithubID
+	employee.NotionID = body.NotionID
+
+	_, err = h.store.Employee.UpdateSelectedFieldsByID(h.repo.DB(), employeeID, *employee,
+		"full_name",
+		"personal_email",
+		"phone_number",
+		"line_manager_id",
+		"discord_id",
+		"github_id",
+		"notion_id")
+	if err != nil {
+		l.Error(err, "failed to update employee")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
 		return
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToUpdateGeneralInfoEmployeeData(rs), nil, nil, nil, ""))
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToUpdateGeneralInfoEmployeeData(employee), nil, nil, nil, ""))
 }
 
 // Create godoc
@@ -442,22 +467,20 @@ func (h *handler) UpdateSkills(c *gin.Context) {
 		"request": body,
 	})
 
-	// Check employee existence
-	exist, err := h.store.Employee.IsExist(h.repo.DB(), employeeID)
+	employee, err := h.store.Employee.One(h.repo.DB(), employeeID)
 	if err != nil {
-		l.Error(err, "failed to check employee existence")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
-		return
-	}
-
-	if !exist {
-		l.Error(ErrEmployeeNotFound, "employee not found")
-		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrEmployeeNotFound, body, ""))
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			l.Info("employee not found")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrEmployeeNotFound, nil, ""))
+			return
+		}
+		l.Error(err, "failed to get employee")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
 	}
 
 	// Check chapter existence
-	exist, err = h.store.Chapter.IsExist(h.repo.DB(), body.Chapter.String())
+	exist, err := h.store.Chapter.IsExist(h.repo.DB(), body.Chapter.String())
 	if err != nil {
 		l.Error(err, "failed to check chapter existence")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
@@ -565,19 +588,17 @@ func (h *handler) UpdateSkills(c *gin.Context) {
 	}
 
 	// Update employee information
-	employeeIn := &model.Employee{
-		ChapterID:   body.Chapter,
-		SeniorityID: body.Seniority,
-	}
+	employee.ChapterID = body.Chapter
+	employee.SeniorityID = body.Seniority
 
-	rs, err := h.store.Employee.Update(tx.DB(), employeeID, employeeIn)
+	_, err = h.store.Employee.UpdateSelectedFieldsByID(tx.DB(), employeeID, *employee, "chapter_id", "seniority_id")
 	if err != nil {
 		l.Error(err, "failed to update employee")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
 		return
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToUpdateSkillEmployeeData(rs), nil, done(nil), nil, ""))
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToUpdateSkillEmployeeData(employee), nil, done(nil), nil, ""))
 }
 
 // UpdatePersonalInfo godoc
@@ -616,24 +637,33 @@ func (h *handler) UpdatePersonalInfo(c *gin.Context) {
 		"request": body,
 	})
 
-	rs, err := h.store.Employee.UpdatePersonalInfo(h.repo.DB(), employee.UpdatePersonalInfoInput{
-		DoB:           body.DoB,
-		Gender:        body.Gender,
-		Address:       body.Address,
-		PersonalEmail: body.PersonalEmail,
-	}, employeeID)
-
+	employee, err := h.store.Employee.One(h.repo.DB(), employeeID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			l.Error(ErrEmployeeNotFound, "employee not found")
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrEmployeeNotFound, body, ""))
+			l.Info("employee not found")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrEmployeeNotFound, nil, ""))
 			return
 		}
+		l.Error(err, "failed to get employee")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
 
+	employee.DateOfBirth = body.DoB
+	employee.Gender = body.Gender
+	employee.Address = body.Address
+	employee.PersonalEmail = body.PersonalEmail
+
+	_, err = h.store.Employee.UpdateSelectedFieldsByID(h.repo.DB(), employeeID, *employee,
+		"date_of_birth",
+		"gender",
+		"address",
+		"personal_email")
+	if err != nil {
 		l.Error(err, "failed to update employee")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
 		return
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToUpdatePersonalEmployeeData(rs), nil, nil, nil, ""))
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToUpdatePersonalEmployeeData(employee), nil, nil, nil, ""))
 }

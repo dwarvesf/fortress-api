@@ -52,23 +52,23 @@ func (s *store) All(db *gorm.DB, input GetAllInput, pagination model.Pagination)
 		query = query.Where("working_status = ?", input.WorkingStatus)
 	}
 
-	if filter.PositionID != "" {
+	if input.PositionID != "" {
 		query = query.Joins("JOIN employee_positions ON employees.id = employee_positions.employee_id AND employee_positions.position_id = ?",
-			filter.PositionID)
+			input.PositionID)
 	}
 
-	if filter.StackID != "" {
+	if input.StackID != "" {
 		query = query.Joins("JOIN employee_stacks ON employees.id = employee_stacks.employee_id AND employee_stacks.stack_id = ?",
-			filter.StackID)
+			input.StackID)
 	}
 
-	if filter.ProjectID != "" {
+	if input.ProjectID != "" {
 		query = query.Joins("JOIN project_members ON employees.id = project_members.employee_id AND project_members.project_id = ?",
-			filter.ProjectID)
+			input.ProjectID)
 	}
 
-	if filter.Keyword != "" {
-		keywork := fmt.Sprintf("%%%s%%", filter.Keyword)
+	if input.Keyword != "" {
+		keywork := fmt.Sprintf("%%%s%%", input.Keyword)
 
 		query = query.Where("github_id like ?", keywork).
 			Or("discord_id like ?", keywork).
@@ -102,66 +102,8 @@ func (s *store) All(db *gorm.DB, input GetAllInput, pagination model.Pagination)
 	return employees, total, query.Find(&employees).Error
 }
 
-func (s *store) UpdateEmployeeStatus(db *gorm.DB, employeeID string, status model.WorkingStatus) (*model.Employee, error) {
-	employee := &model.Employee{}
-	return employee, db.Model(&employee).Where("id = ?", employeeID).Update("working_status", string(status)).Find(&employee).Error
-}
-
-func (s *store) UpdateGeneralInfo(db *gorm.DB, body UpdateGeneralInfoInput, id string) (*model.Employee, error) {
-	employee := &model.Employee{}
-
-	employee.FullName = body.FullName
-	employee.TeamEmail = body.Email
-	employee.PhoneNumber = body.Phone
-	employee.DiscordID = body.DiscordID
-	employee.GithubID = body.GithubID
-	employee.NotionID = body.NotionID
-	employee.LineManagerID = body.LineManagerID
-
-	return employee, db.Table("employees").Where("id = ?", id).Updates(&employee).
-		Preload("LineManager").
-		First(&employee).Error
-}
-
-func (s *store) UpdateProfileInfo(db *gorm.DB, body UpdateProfileInforInput, id string) (*model.Employee, error) {
-	employee := &model.Employee{}
-	updateInfo := map[string]interface{}{}
-
-	updateInfo["team_email"] = body.TeamEmail
-	updateInfo["personal_email"] = body.PersonalEmail
-	updateInfo["phone_number"] = body.PhoneNumber
-	updateInfo["discord_id"] = body.DiscordID
-	updateInfo["github_id"] = body.GithubID
-	updateInfo["notion_id"] = body.NotionID
-
-	return employee, db.Model(&employee).Where("id = ?", id).Updates(updateInfo).First(&employee).Error
-}
-
 func (s *store) Create(db *gorm.DB, e *model.Employee) (employee *model.Employee, err error) {
 	return e, db.Create(e).Error
-}
-
-func (s *store) UpdatePersonalInfo(db *gorm.DB, body UpdatePersonalInfoInput, id string) (*model.Employee, error) {
-	employee := &model.Employee{}
-
-	employee.DateOfBirth = body.DoB
-	employee.Gender = body.Gender
-	employee.Address = body.Address
-	employee.PersonalEmail = body.PersonalEmail
-
-	return employee, db.Table("employees").Where("id = ?", id).Updates(&employee).First(&employee).Error
-}
-
-func (s *store) Update(db *gorm.DB, id string, employee *model.Employee) (*model.Employee, error) {
-	return employee, db.Table("employees").Where("id = ?", id).Updates(&employee).
-		Preload("Chapter").
-		Preload("Seniority").
-		Preload("LineManager").
-		Preload("EmployeePositions", "deleted_at IS NULL").
-		Preload("EmployeePositions.Position").
-		Preload("EmployeeStacks", "deleted_at IS NULL").
-		Preload("EmployeeStacks.Stack").
-		First(&employee).Error
 }
 
 // IsExist check the existence of employee
@@ -174,4 +116,15 @@ func (s *store) IsExist(db *gorm.DB, id string) (bool, error) {
 	query := db.Raw("SELECT EXISTS (SELECT * FROM employees WHERE id = ?) as result", id)
 
 	return result.Result, query.Scan(&result).Error
+}
+
+// Update update all value (including nested model)
+func (s *store) Update(db *gorm.DB, employee *model.Employee) (*model.Employee, error) {
+	return employee, db.Model(&employee).Where("id = ?", employee.ID).Updates(&employee).Error
+}
+
+// UpdateSelectedFieldsByID just update selected fields by id
+func (s *store) UpdateSelectedFieldsByID(db *gorm.DB, id string, updateModel model.Employee, updatedFields ...string) (*model.Employee, error) {
+	employee := model.Employee{}
+	return &employee, db.Model(&employee).Where("id = ?", id).Select(updatedFields).Updates(updateModel).Error
 }

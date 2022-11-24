@@ -57,12 +57,6 @@ func (s *store) All(db *gorm.DB, input GetListProjectInput, pagination model.Pag
 	return projects, total, query.Find(&projects).Error
 }
 
-// UpdateStatus use to update project to database
-func (s *store) UpdateStatus(db *gorm.DB, projectID string, projectStatus model.ProjectStatus) (*model.Project, error) {
-	project := &model.Project{}
-	return project, db.Model(&project).Where("id = ?", projectID).Update("status", string(projectStatus)).First(&project).Error
-}
-
 // Create use to create new project to database
 func (s *store) Create(db *gorm.DB, project *model.Project) error {
 	return db.Create(&project).Preload("Country").Error
@@ -99,21 +93,13 @@ func (s *store) One(db *gorm.DB, id string) (*model.Project, error) {
 		Error
 }
 
-func (s *store) UpdateGeneralInfo(db *gorm.DB, body UpdateGeneralInfoInput, id string) (*model.Project, error) {
-	project := &model.Project{}
-
-	return project, db.Model(project).Where("id = ?", id).Updates(map[string]interface{}{"name": body.Name, "start_date": body.StartDate, "country_id": body.CountryID}).
-		Preload("ProjectStacks", "deleted_at IS NULL").
-		Preload("ProjectStacks.Stack", "deleted_at IS NULL").
-		Preload("Country").
-		First(&project).Error
+// Update update all value (including nested model)
+func (s *store) Update(db *gorm.DB, project *model.Project) (*model.Project, error) {
+	return project, db.Model(&project).Where("id = ?", project.ID).Updates(&project).Error
 }
 
-func (s *store) UpdateContactInfo(db *gorm.DB, body UpdateContactInfoInput, id string) (*model.Project, error) {
-	project := &model.Project{}
-
-	return project, db.Model(project).Where("id = ?", id).Updates(map[string]interface{}{"client_email": body.ClientEmail, "project_email": body.ProjectEmail}).
-		Preload("Heads", "deleted_at IS NULL and left_date IS NULL").
-		Preload("Heads.Employee").
-		First(&project).Error
+// UpdateSelectedFieldsByID just update selected fields by id
+func (s *store) UpdateSelectedFieldsByID(db *gorm.DB, id string, updateModel model.Project, updatedFields ...string) (*model.Project, error) {
+	project := model.Project{}
+	return &project, db.Model(&project).Where("id = ?", id).Select(updatedFields).Updates(&updateModel).Error
 }

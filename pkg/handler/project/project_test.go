@@ -53,9 +53,9 @@ func TestHandler_UpdateProjectStatus(t *testing.T) {
 		},
 		{
 			name:             "failed_invalid_project_id",
-			wantCode:         500,
+			wantCode:         404,
 			wantErr:          true,
-			wantResponsePath: "testdata/update_project_status/500.json",
+			wantResponsePath: "testdata/update_project_status/404.json",
 			request: updateAccountStatusBody{
 				ProjectStatus: "active",
 			},

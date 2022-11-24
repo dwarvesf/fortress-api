@@ -10,7 +10,6 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/store"
-	"github.com/dwarvesf/fortress-api/pkg/store/employee"
 	"github.com/dwarvesf/fortress-api/pkg/utils"
 	"github.com/dwarvesf/fortress-api/pkg/view"
 )
@@ -88,14 +87,12 @@ func (h *handler) GetProfile(c *gin.Context) {
 // @Router /profile [put]
 func (h *handler) UpdateInfo(c *gin.Context) {
 	employeeID, err := utils.GetUserIDFromContext(c)
-
 	if err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
 	}
 
 	input := UpdateInfoInput{}
-
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, input, ""))
 		return
@@ -108,27 +105,37 @@ func (h *handler) UpdateInfo(c *gin.Context) {
 		"request": input,
 	})
 
-	// 3. update information and return
-	rs, err := h.store.Employee.UpdateProfileInfo(h.repo.DB(), employee.UpdateProfileInforInput{
-		TeamEmail:     input.TeamEmail,
-		PersonalEmail: input.PersonalEmail,
-		PhoneNumber:   input.PhoneNumber,
-		DiscordID:     input.DiscordID,
-		GithubID:      input.GithubID,
-		NotionID:      input.NotionID,
-	}, employeeID)
-
+	employee, err := h.store.Employee.One(h.repo.DB(), employeeID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			l.Error(ErrEmployeeNotFound, "error employee not found")
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrEmployeeNotFound, input, ""))
+			l.Info("employee not found")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, err, nil, ""))
 			return
 		}
+		l.Error(err, "failed to get employee")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
 
-		l.Error(err, "error update employee to db")
+	employee.TeamEmail = input.TeamEmail
+	employee.PersonalEmail = input.PersonalEmail
+	employee.PhoneNumber = input.PhoneNumber
+	employee.DiscordID = input.DiscordID
+	employee.GithubID = input.GithubID
+	employee.NotionID = input.NotionID
+
+	_, err = h.store.Employee.UpdateSelectedFieldsByID(h.repo.DB(), employeeID, *employee,
+		"team_email",
+		"personal_email",
+		"phone_number",
+		"discord_id",
+		"github_id",
+		"notion_id")
+	if err != nil {
+		l.Error(err, "failed to update employee")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input, ""))
 		return
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToUpdateProfileInfoData(rs), nil, nil, nil, ""))
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToUpdateProfileInfoData(employee), nil, nil, nil, ""))
 }
