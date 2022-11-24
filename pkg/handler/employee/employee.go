@@ -55,6 +55,12 @@ func (h *handler) List(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, query, ""))
 		return
 	}
+
+	if err := query.Validate(); err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, query, ""))
+		return
+	}
+
 	query.Standardize()
 
 	l := h.logger.Fields(logger.Fields{
@@ -63,10 +69,17 @@ func (h *handler) List(c *gin.Context) {
 		"params":  query,
 	})
 
-	employees, total, err := h.store.Employee.Search(h.repo.DB(), employee.SearchFilter{
+	searchFilter := employee.SearchFilter{
 		WorkingStatus: query.WorkingStatus,
 		Preload:       query.Preload,
-	}, query.Pagination)
+		Keyword:       query.Keyword,
+		PositionID:    query.PositionID,
+		StackID:       query.StackID,
+		ProjectID:     query.ProjectID,
+	}
+
+	employees, total, err := h.store.Employee.Search(h.repo.DB(), searchFilter, query.Pagination)
+
 	if err != nil {
 		l.Error(err, "error query employee from db")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, query, ""))

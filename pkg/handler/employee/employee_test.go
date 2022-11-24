@@ -126,6 +126,30 @@ func TestHandler_List(t *testing.T) {
 			wantCode:         http.StatusOK,
 			wantResponsePath: "testdata/list/without_preload.json",
 		},
+		{
+			name:             "with_keyword",
+			query:            "preload=false&keyword=thanh",
+			wantCode:         http.StatusOK,
+			wantResponsePath: "testdata/list/with_keyword.json",
+		},
+		{
+			name:             "with_stackid",
+			query:            "preload=false&stackID=0ecf47c8-cca4-4c30-94bb-054b1124c44f",
+			wantCode:         http.StatusOK,
+			wantResponsePath: "testdata/list/with_stackid.json",
+		},
+		{
+			name:             "with_projectid",
+			query:            "preload=false&projectID=8dc3be2e-19a4-4942-8a79-56db391a0b15",
+			wantCode:         http.StatusOK,
+			wantResponsePath: "testdata/list/with_projectid.json",
+		},
+		{
+			name:             "with_projectid_and_positionid",
+			query:            "preload=false&projectID=8dc3be2e-19a4-4942-8a79-56db391a0b15&positionID=01fb6322-d727-47e3-a242-5039ea4732fc",
+			wantCode:         http.StatusOK,
+			wantResponsePath: "testdata/list/with_projectid_and_positionid.json",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

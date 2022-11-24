@@ -1,6 +1,8 @@
 package employee
 
 import (
+	"fmt"
+
 	"gorm.io/gorm"
 
 	"github.com/dwarvesf/fortress-api/pkg/model"
@@ -49,6 +51,31 @@ func (s *store) Search(db *gorm.DB, filter SearchFilter, pagination model.Pagina
 
 	if filter.WorkingStatus != "" {
 		query = query.Where("working_status = ?", filter.WorkingStatus)
+	}
+
+	if filter.PositionID != "" {
+		query = query.Joins("JOIN employee_positions ON employees.id = employee_positions.employee_id AND employee_positions.position_id = ?",
+			filter.PositionID)
+	}
+
+	if filter.StackID != "" {
+		query = query.Joins("JOIN employee_stacks ON employees.id = employee_stacks.employee_id AND employee_stacks.stack_id = ?",
+			filter.StackID)
+	}
+
+	if filter.ProjectID != "" {
+		query = query.Joins("JOIN project_members ON employees.id = project_members.employee_id AND project_members.project_id = ?",
+			filter.ProjectID)
+	}
+
+	if filter.Keyword != "" {
+		keywork := fmt.Sprintf("%%%s%%", filter.Keyword)
+
+		query = query.Where("github_id like ?", keywork).
+			Or("discord_id like ?", keywork).
+			Or("notion_id like ?", keywork).
+			Or("full_name like ?", keywork).
+			Or("team_email like ?", keywork)
 	}
 
 	query = query.Count(&total)

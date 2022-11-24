@@ -10,6 +10,10 @@ type SearchFilter struct {
 	EmployeeID    string
 	WorkingStatus string
 	Preload       bool
+	PositionID    string
+	StackID       string
+	ProjectID     string
+	Keyword       string
 }
 
 type UpdateGeneralInfoInput struct {
