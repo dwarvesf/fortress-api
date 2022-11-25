@@ -45,7 +45,11 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 // @Accept  json
 // @Produce  json
 // @Param Authorization header string true "jwt token"
-// @Param workingStatus query  string false  "Working Status"
+// @Param workingStatus query  []string false  "Working Status"
+// @Param positionID query  string false  "Position ID"
+// @Param stackID query  string false  "Stack ID"
+// @Param projectID query  string false  "Project ID"
+// @Param keyword query  string false  "keyword for searching"
 // @Param preload query bool false "Preload"
 // @Param page query string false "Page"
 // @Param size query string false "Size"
