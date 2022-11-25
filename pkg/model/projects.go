@@ -123,16 +123,15 @@ type ProjectSlot struct {
 	BaseModel
 
 	ProjectID      UUID
-	Position       string
+	SeniorityID    UUID
+	UpsellPersonID UUID
 	DeploymentType DeploymentType
+	Status         ProjectMemberStatus
 	Rate           decimal.Decimal
 	Discount       decimal.Decimal
-	UpsellPersonID UUID
-	SeniorityID    UUID
-	Status         ProjectMemberStatus
+	IsLead         bool `gorm:"-"`
 
-	IsLead bool `gorm:"-"`
-
+	Seniority            Seniority
 	Project              Project
 	ProjectMember        ProjectMember
 	ProjectSlotPositions []ProjectSlotPosition

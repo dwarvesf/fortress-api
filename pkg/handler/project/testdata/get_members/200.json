@@ -11,7 +11,6 @@
             "fullName": "Phạm Đức Thành",
             "displayName": "Thanh Pham",
             "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
-            "position": "",
             "seniority": {
                 "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
                 "createdAt": "2022-11-07T09:50:25.714604Z",
@@ -35,7 +34,6 @@
             "fullName": "Nguyễn Hoàng Huy",
             "displayName": "Huy Nguyen",
             "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/2830497479497502617.png",
-            "position": "",
             "seniority": {
                 "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
                 "createdAt": "2022-11-07T09:50:25.714604Z",
