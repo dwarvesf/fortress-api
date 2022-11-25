@@ -762,15 +762,14 @@ func (h *handler) assignMemberToProject(db *gorm.DB, projectID string, req Assig
 	l := h.logger
 
 	// check seniority existence
-	exists, err := h.store.Seniority.IsExist(db, req.SeniorityID.String())
+	seniority, err := h.store.Seniority.One(db, req.SeniorityID)
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			l.Error(ErrSeniorityNotFound, "cannot find seniority by id")
+			return nil, http.StatusNotFound, ErrSeniorityNotFound
+		}
 		l.Error(err, "failed to check seniority existence")
 		return nil, http.StatusInternalServerError, err
-	}
-
-	if !exists {
-		l.Error(ErrSeniorityNotFound, "cannot find seniority by id")
-		return nil, http.StatusNotFound, ErrSeniorityNotFound
 	}
 
 	// check position existence
@@ -802,6 +801,7 @@ func (h *handler) assignMemberToProject(db *gorm.DB, projectID string, req Assig
 		l.Error(err, "failed to create project slot")
 		return nil, http.StatusInternalServerError, err
 	}
+	slot.Seniority = *seniority
 
 	// create project slot position
 	slotPos := make([]model.ProjectSlotPosition, 0, len(req.Positions))
@@ -823,7 +823,7 @@ func (h *handler) assignMemberToProject(db *gorm.DB, projectID string, req Assig
 
 	if !req.EmployeeID.IsZero() {
 		// check employee existence
-		exists, err = h.store.Employee.IsExist(db, req.EmployeeID.String())
+		exists, err := h.store.Employee.IsExist(db, req.EmployeeID.String())
 		if err != nil {
 			l.Error(err, "failed to check employee existence")
 			return nil, http.StatusInternalServerError, err

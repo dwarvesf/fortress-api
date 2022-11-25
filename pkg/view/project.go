@@ -44,7 +44,6 @@ type ProjectMember struct {
 	FullName        string          `json:"fullName"`
 	DisplayName     string          `json:"displayName"`
 	Avatar          string          `json:"avatar"`
-	Position        string          `json:"position"`
 	Status          string          `json:"status"`
 	IsLead          bool            `json:"isLead"`
 	DeploymentType  string          `json:"deploymentType"`
@@ -198,16 +197,17 @@ func ToEmployeeProjectData(pm *model.ProjectMember) EmployeeProjectData {
 }
 
 type CreateMemberData struct {
-	ProjectSlotID   string     `json:"projectSlotID"`
-	ProjectMemberID string     `json:"projectMemberID"`
-	EmployeeID      string     `json:"employeeID"`
-	FullName        string     `json:"fullName"`
-	DisplayName     string     `json:"displayName"`
-	Avatar          string     `json:"avatar"`
-	Positions       []Position `json:"positions"`
-	DeploymentType  string     `json:"deploymentType"`
-	Status          string     `json:"status"`
-	IsLead          bool       `json:"isLead"`
+	ProjectSlotID   string          `json:"projectSlotID"`
+	ProjectMemberID string          `json:"projectMemberID"`
+	EmployeeID      string          `json:"employeeID"`
+	FullName        string          `json:"fullName"`
+	DisplayName     string          `json:"displayName"`
+	Avatar          string          `json:"avatar"`
+	Positions       []Position      `json:"positions"`
+	DeploymentType  string          `json:"deploymentType"`
+	Status          string          `json:"status"`
+	IsLead          bool            `json:"isLead"`
+	Seniority       model.Seniority `json:"seniority"`
 }
 
 type CreateMemberDataResponse struct {
@@ -224,6 +224,7 @@ func ToCreateMemberData(slot *model.ProjectSlot) CreateMemberData {
 		Status:         slot.Status.String(),
 		Positions:      ToProjectSlotPositions(slot.ProjectSlotPositions),
 		IsLead:         slot.IsLead,
+		Seniority:      slot.Seniority,
 	}
 
 	if !slot.ProjectMember.ID.IsZero() {
@@ -301,23 +302,30 @@ func ToProjectMemberListData(slots []*model.ProjectSlot, projectHeads []*model.P
 
 	for _, slot := range slots {
 		m := slot.ProjectMember
-		results = append(results, ProjectMember{
-			ProjectMemberID: m.ID.String(),
-			ProjectSlotID:   slot.ID.String(),
-			EmployeeID:      m.EmployeeID.String(),
-			FullName:        m.Employee.FullName,
-			DisplayName:     m.Employee.DisplayName,
-			Avatar:          m.Employee.Avatar,
-			Status:          slot.Status.String(),
-			JoinedDate:      m.JoinedDate,
-			LeftDate:        m.LeftDate,
-			IsLead:          leadMap[m.EmployeeID.String()],
-			Seniority:       m.Seniority,
-			DeploymentType:  slot.DeploymentType.String(),
-			Positions:       ToProjectMemberPositions(m.ProjectMemberPositions),
-			Rate:            m.Rate,
-			Discount:        m.Discount,
-		})
+		member := ProjectMember{
+			ProjectSlotID:  slot.ID.String(),
+			Status:         slot.Status.String(),
+			Seniority:      &slot.Seniority,
+			DeploymentType: slot.DeploymentType.String(),
+			Rate:           slot.Rate,
+			Positions:      ToProjectSlotPositions(slot.ProjectSlotPositions),
+		}
+
+		if !m.ID.IsZero() {
+			member.ProjectMemberID = m.ID.String()
+			member.EmployeeID = m.EmployeeID.String()
+			member.FullName = m.Employee.FullName
+			member.DisplayName = m.Employee.DisplayName
+			member.Avatar = m.Employee.Avatar
+			member.JoinedDate = m.JoinedDate
+			member.LeftDate = m.LeftDate
+			member.IsLead = leadMap[m.EmployeeID.String()]
+			member.Rate = m.Rate
+			member.Discount = m.Discount
+			member.Positions = ToProjectMemberPositions(m.ProjectMemberPositions)
+		}
+
+		results = append(results, member)
 	}
 
 	return results

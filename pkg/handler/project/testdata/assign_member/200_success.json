@@ -18,8 +18,15 @@
                 "name": "Backend"
             }
         ],
-        "status": "pending",
+        "status": "active",
         "deploymentType": "official",
-        "isLead": false
+        "isLead": false,
+        "seniority": {
+            "id": "01fb6322-d727-47e3-a242-5039ea4732fc",
+            "createdAt": "2022-11-07T09:50:25.714604Z",
+            "updatedAt": "2022-11-07T09:50:25.714604Z",
+            "code": "senior",
+            "name": "Senior"
+        }
     }
 }

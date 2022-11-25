@@ -48,7 +48,8 @@ func (s *store) All(db *gorm.DB, input GetListProjectSlotInput, pagination model
 		query = query.Limit(limit)
 	}
 
-	query = query.Preload("ProjectMember", "deleted_at IS NULL").
+	query = query.Preload("Seniority", "deleted_at IS NULL").
+		Preload("ProjectMember", "deleted_at IS NULL").
 		Preload("ProjectMember.Seniority", "deleted_at IS NULL").
 		Preload("ProjectMember.Employee", "deleted_at IS NULL").
 		Preload("ProjectMember.ProjectMemberPositions", "deleted_at IS NULL").
@@ -62,7 +63,7 @@ func (s *store) All(db *gorm.DB, input GetListProjectSlotInput, pagination model
 // One get 1 one by id
 func (s *store) One(db *gorm.DB, id string) (*model.ProjectSlot, error) {
 	var slot *model.ProjectSlot
-	return slot, db.Where("id = ?", id).First(&slot).Error
+	return slot, db.Where("id = ?", id).Preload("Seniority", "deleted_at IS NULL").First(&slot).Error
 }
 
 // Create create new project slot

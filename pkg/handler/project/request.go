@@ -77,6 +77,12 @@ func (i *CreateProjectInput) Validate() error {
 		return ErrInvalidStartDate
 	}
 
+	for _, member := range i.Members {
+		if err := member.Validate(); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -193,6 +199,10 @@ func (i *AssignMemberInput) Validate() error {
 	_, err = time.Parse("2006-01-02", i.LeftDate)
 	if i.LeftDate != "" && err != nil {
 		return ErrInvalidLeftDate
+	}
+
+	if i.Status == model.ProjectMemberStatusPending.String() && !i.EmployeeID.IsZero() {
+		i.Status = model.ProjectStatusActive.String()
 	}
 
 	return nil
