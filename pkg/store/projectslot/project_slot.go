@@ -25,14 +25,8 @@ func (s *store) All(db *gorm.DB, input GetListProjectSlotInput, pagination model
 	query = query.Where("project_slots.project_id = ?", input.ProjectID).
 		Joins("LEFT JOIN project_members pm ON pm.project_slot_id = project_slots.id AND pm.project_id = ?", input.ProjectID)
 
-	switch input.Status {
-	case model.ProjectMemberStatusPending.String():
-		query = query.Where("project_slots.status = ? AND pm.id IS NULL", input.Status)
-
-	case model.ProjectMemberStatusActive.String(),
-		model.ProjectMemberStatusOnBoarding.String(),
-		model.ProjectMemberStatusInactive.String():
-		query = query.Where("project_slots.status = ? AND pm.id IS NOT NULL", input.Status)
+	if input.Status != "" {
+		query = query.Where("project_slots.status = ?", input.Status)
 	}
 
 	query = query.Count(&total)
