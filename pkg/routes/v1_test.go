@@ -206,6 +206,10 @@ func Test_loadV1Routes(t *testing.T) {
 				Method:  "GET",
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/project.IHandler.GetWorkUnits-fm",
 			},
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/project.IHandler.CreateWorkUnit-fm",
+			},
 		},
 	}
 

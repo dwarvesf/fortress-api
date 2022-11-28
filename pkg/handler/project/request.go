@@ -266,3 +266,40 @@ func (input UnassignMemberInput) Validate() error {
 
 	return nil
 }
+
+type CreateWorkUnitInput struct {
+	ProjectID string
+	Body      CreateWorkUnitBody
+}
+
+type CreateWorkUnitBody struct {
+	Name    string   `json:"name" form:"name" binding:"required"`
+	Type    string   `json:"type" form:"type" binding:"required"`
+	Status  string   `json:"status" form:"status" binding:"required"`
+	Members []string `json:"members" form:"members"`
+	Stacks  []string `json:"stacks" form:"stacks" binding:"required"`
+	URL     string   `json:"url" form:"url"`
+}
+
+func (i *CreateWorkUnitInput) Validate() error {
+	if i.ProjectID == "" || !model.IsUUIDFromString(i.ProjectID) {
+		return ErrInvalidProjectID
+	}
+
+	return i.Body.Validate()
+}
+
+func (i *CreateWorkUnitBody) Validate() error {
+	if i.Type == "" {
+		return ErrInvalidWorkUnitType
+	}
+	if i.Status == "" {
+		return ErrInvalidWorkUnitStatus
+	}
+
+	if len(i.Stacks) == 0 {
+		return ErrInvalidWorkUnitStacks
+	}
+
+	return nil
+}

@@ -1354,3 +1354,79 @@ func (h *handler) GetWorkUnits(c *gin.Context) {
 
 	c.JSON(http.StatusOK, view.CreateResponse(workUnits, nil, nil, nil, ""))
 }
+
+// CreateWorkUnit godoc
+// @Summary Create work unit of a project
+// @Description Get work unit of a project
+// @Tags Project
+// @Accept  json
+// @Produce  json
+// @Param Authorization header string true "jwt token"
+// @Param id path string true "Project ID"
+// @Param body body CreateWorkUnitBody true "Body"
+// @Success 200 {object} view.WorkUnitResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /projects/{id}/work-units [post]
+func (h *handler) CreateWorkUnit(c *gin.Context) {
+	input := CreateWorkUnitInput{
+		ProjectID: c.Param("id"),
+	}
+	if err := c.ShouldBindJSON(&input.Body); err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	// TODO: can we move this to middleware ?
+	l := h.logger.Fields(logger.Fields{
+		"handler": "project",
+		"method":  "CreateWorkUnits",
+		"input":   input,
+	})
+
+	if err := input.Validate(); err != nil {
+		l.Error(err, "validate failed")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	res := view.WorkUnit{
+		ID:   "f32d08ca-8863-4ab3-8c84-a11849451eb7",
+		Name: "Fortress API",
+		URL:  "https://github.com/dwarvesf/fortress-api",
+		Members: []view.BasicMember{
+			{
+				ProjectMemberID: "f32d08ca-8863-4ab3-8c84-a11849451eb7",
+				ProjectSlotID:   "f32d08ca-8863-4ab3-8c84-a11849451eb7",
+				EmployeeID:      "f32d08ca-8863-4ab3-8c84-a11849451eb7",
+				Name:            "Nguyễn Hải Nam",
+				Avatar:          "https://s3-ap-southeast-1.amazonaws.com/fortress-images/2870969541970972723.png",
+			},
+			{
+				ProjectMemberID: "f32d08ca-8863-4ab3-8c84-a11849451eb8",
+				ProjectSlotID:   "f32d08ca-8863-4ab3-8c84-a11849451eb7",
+				EmployeeID:      "f32d08ca-8863-4ab3-8c84-a11849451eb8",
+				Name:            "Nguyễn Ngô Lập",
+				Avatar:          "https://s3-ap-southeast-1.amazonaws.com/fortress-images/2870969541970972723.png",
+			},
+		},
+		Stacks: []view.MetaData{
+			{
+				ID:   "f32d08ca-8863-4ab3-8c84-a11849451eb7",
+				Code: "golang",
+				Name: "Golang",
+			},
+			{
+				ID:   "f32d08ca-8863-4ab3-8c84-a11849451eb8",
+				Code: "gcloud",
+				Name: "Google Cloud",
+			},
+		},
+		Type:      "Repository",
+		Status:    "Active",
+		ProjectID: "f32d08ca-8863-4ab3-8c84-a11849451eb7",
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse(res, nil, nil, nil, ""))
+}

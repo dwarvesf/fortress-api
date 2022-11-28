@@ -32,6 +32,9 @@ var (
 	ErrFailToFindProjectHead        = errors.New("fail to find project head")
 	ErrFailToUpdateLeftDate         = errors.New("fail to update left date for project head")
 	ErrProjectMemberExists          = errors.New("project member already exists")
+	ErrInvalidWorkUnitType          = errors.New("invalid work unit type")
+	ErrInvalidWorkUnitStatus        = errors.New("invalid work unit status")
+	ErrInvalidWorkUnitStacks        = errors.New("invalid work unit stacks")
 )
 
 // errPositionNotFound returns unauthorized custom error

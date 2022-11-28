@@ -175,6 +175,30 @@ definitions:
     - name
     - status
     type: object
+  github.com_dwarvesf_fortress-api_pkg_handler_project.CreateWorkUnitBody:
+    properties:
+      members:
+        items:
+          type: string
+        type: array
+      name:
+        type: string
+      stacks:
+        items:
+          type: string
+        type: array
+      status:
+        type: string
+      type:
+        type: string
+      url:
+        type: string
+    required:
+    - name
+    - stacks
+    - status
+    - type
+    type: object
   github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateContactInfoInput:
     properties:
       accountManagerID:
@@ -514,6 +538,30 @@ definitions:
     - countryID
     - name
     - status
+    type: object
+  pkg_handler_project.CreateWorkUnitBody:
+    properties:
+      members:
+        items:
+          type: string
+        type: array
+      name:
+        type: string
+      stacks:
+        items:
+          type: string
+        type: array
+      status:
+        type: string
+      type:
+        type: string
+      url:
+        type: string
+    required:
+    - name
+    - stacks
+    - status
+    - type
     type: object
   pkg_handler_project.UpdateContactInfoInput:
     properties:
@@ -1251,6 +1299,11 @@ definitions:
       url:
         type: string
     type: object
+  view.WorkUnitResponse:
+    properties:
+      data:
+        $ref: '#/definitions/view.WorkUnit'
+    type: object
 info:
   contact:
     email: support@swagger.io
@@ -1381,7 +1434,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.CreateEmployeeInput'
+          $ref: '#/definitions/pkg_handler_employee.CreateEmployeeInput'
       - description: jwt token
         in: header
         name: Authorization
@@ -1513,7 +1566,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateGeneralInfoInput'
+          $ref: '#/definitions/pkg_handler_employee.UpdateGeneralInfoInput'
       produces:
       - application/json
       responses:
@@ -1557,7 +1610,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdatePersonalInfoInput'
+          $ref: '#/definitions/pkg_handler_employee.UpdatePersonalInfoInput'
       produces:
       - application/json
       responses:
@@ -1596,7 +1649,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateSkillsInput'
+          $ref: '#/definitions/pkg_handler_employee.UpdateSkillsInput'
       - description: jwt token
         in: header
         name: Authorization
@@ -1926,7 +1979,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_profile.UpdateInfoInput'
+          $ref: '#/definitions/pkg_handler_profile.UpdateInfoInput'
       produces:
       - application/json
       responses:
@@ -2136,7 +2189,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/pkg_handler_project.CreateProjectInput'
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.CreateProjectInput'
       produces:
       - application/json
       responses:
@@ -2267,7 +2320,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/pkg_handler_project.UpdateContactInfoInput'
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateContactInfoInput'
       produces:
       - application/json
       responses:
@@ -2311,7 +2364,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/pkg_handler_project.UpdateGeneralInfoInput'
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateGeneralInfoInput'
       produces:
       - application/json
       responses:
@@ -2355,7 +2408,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/pkg_handler_project.AssignMemberInput'
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.AssignMemberInput'
       produces:
       - application/json
       responses:
@@ -2398,7 +2451,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/pkg_handler_project.UpdateMemberInput'
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateMemberInput'
       produces:
       - application/json
       responses:
@@ -2506,6 +2559,49 @@ paths:
           schema:
             $ref: '#/definitions/view.ErrorResponse'
       summary: Get list work units of a project
+      tags:
+      - Project
+    post:
+      consumes:
+      - application/json
+      description: Get work unit of a project
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.CreateWorkUnitBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.WorkUnitResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Create work unit of a project
       tags:
       - Project
 securityDefinitions:
