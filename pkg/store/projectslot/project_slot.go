@@ -42,13 +42,20 @@ func (s *store) All(db *gorm.DB, input GetListProjectSlotInput, pagination model
 		query = query.Limit(limit)
 	}
 
-	query = query.Preload("Seniority", "deleted_at IS NULL").
+	if input.Status == "active" {
+		input.Preload = true
+	}
+
+	query = query.Offset(offset).
 		Preload("ProjectMember", "deleted_at IS NULL").
-		Preload("ProjectMember.Seniority", "deleted_at IS NULL").
-		Preload("ProjectMember.Employee", "deleted_at IS NULL").
-		Preload("ProjectMember.ProjectMemberPositions", "deleted_at IS NULL").
-		Preload("ProjectMember.ProjectMemberPositions.Position", "deleted_at IS NULL").
-		Offset(offset)
+		Preload("ProjectMember.Employee", "deleted_at IS NULL")
+
+	if input.Preload {
+		query = query.Preload("Seniority", "deleted_at IS NULL").
+			Preload("ProjectMember.Seniority", "deleted_at IS NULL").
+			Preload("ProjectMember.ProjectMemberPositions", "deleted_at IS NULL").
+			Preload("ProjectMember.ProjectMemberPositions.Position", "deleted_at IS NULL")
+	}
 
 	var slots []*model.ProjectSlot
 	return slots, total, query.Find(&slots).Error

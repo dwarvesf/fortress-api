@@ -323,6 +323,7 @@ func (h *handler) GetMembers(c *gin.Context) {
 	members, total, err := h.store.ProjectSlot.All(h.repo.DB(), projectslot.GetListProjectSlotInput{
 		ProjectID: projectID,
 		Status:    query.Status,
+		Preload:   query.Preload,
 	}, query.Pagination)
 	if err != nil {
 		l.Error(err, "failed to get project members")
