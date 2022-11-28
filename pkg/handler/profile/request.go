@@ -1,5 +1,7 @@
 package profile
 
+import "github.com/dwarvesf/fortress-api/pkg/model"
+
 // UpdateInfoInput input model for update profile
 type UpdateInfoInput struct {
 	TeamEmail     string `form:"teamEmail" json:"teamEmail" binding:"required,email"`
@@ -8,4 +10,20 @@ type UpdateInfoInput struct {
 	DiscordID     string `form:"discordID" json:"discordID"`
 	GithubID      string `form:"githubID" json:"githubID"`
 	NotionID      string `form:"notionID" json:"notionID"`
+}
+
+func (i UpdateInfoInput) PutValueToEmployee(employee *model.Employee) {
+	employee.TeamEmail = i.TeamEmail
+	employee.PersonalEmail = i.PersonalEmail
+	employee.PhoneNumber = i.PhoneNumber
+
+	if i.DiscordID != "" {
+		employee.DiscordID = i.DiscordID
+	}
+	if i.GithubID != "" {
+		employee.GithubID = i.GithubID
+	}
+	if i.NotionID != "" {
+		employee.NotionID = i.NotionID
+	}
 }

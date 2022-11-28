@@ -24,6 +24,107 @@ import (
 
 const tokenTest = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2OTkzMjExNDIsImlkIjoiMjY1NTgzMmUtZjAwOS00YjczLWE1MzUtNjRjM2EyMmU1NThmIiwiYXZhdGFyIjoiaHR0cHM6Ly9zMy1hcC1zb3V0aGVhc3QtMS5hbWF6b25hd3MuY29tL2ZvcnRyZXNzLWltYWdlcy81MTUzNTc0Njk1NjYzOTU1OTQ0LnBuZyIsImVtYWlsIjoidGhhbmhAZC5mb3VuZGF0aW9uIiwicGVybWlzc2lvbnMiOlsiZW1wbG95ZWVzLnJlYWQiXSwidXNlcl9pbmZvIjpudWxsfQ.GENGPEucSUrILN6tHDKxLMtj0M0REVMUPC7-XhDMpGM"
 
+// func TestHandler_List(t *testing.T) {
+// 	cfg := config.LoadTestConfig()
+// 	loggerMock := logger.NewLogrusLogger()
+// 	serviceMock := service.New(&cfg)
+// 	storeMock := store.New()
+// 	testRepoMock := store.NewPostgresStore(&cfg)
+// 	tests := []struct {
+// 		name             string
+// 		query            string
+// 		wantCode         int
+// 		wantErr          error
+// 		wantResponsePath string
+// 	}{
+// 		{
+// 			name:             "without_working_status_and_pagination",
+// 			wantCode:         http.StatusOK,
+// 			wantResponsePath: "testdata/list/without_working_status_and_pagination.json",
+// 		},
+// 		{
+// 			name:             "have_workingStatus_and_no_pagination",
+// 			query:            "workingStatuses=contractor",
+// 			wantCode:         http.StatusOK,
+// 			wantResponsePath: "testdata/list/have_working_and_no_pagination.json",
+// 		},
+// 		{
+// 			name:             "have_workingStatuses_and_pagination",
+// 			query:            "workingStatuses=contractor&page=1&size=5",
+// 			wantCode:         http.StatusOK,
+// 			wantResponsePath: "testdata/list/have_working_and_pagination.json",
+// 		},
+// 		{
+// 			name:             "out_of_content",
+// 			query:            "workingStatuses=contractor&page=5&size=5",
+// 			wantCode:         http.StatusOK,
+// 			wantResponsePath: "testdata/list/out_of_content.json",
+// 		},
+// 		{
+// 			name:             "with_preload_false",
+// 			query:            "workingStatuses=probation&preload=false",
+// 			wantCode:         http.StatusOK,
+// 			wantResponsePath: "testdata/list/with_preload_false.json",
+// 		},
+// 		{
+// 			name:             "without_preload",
+// 			query:            "workingStatuses=probation",
+// 			wantCode:         http.StatusOK,
+// 			wantResponsePath: "testdata/list/without_preload.json",
+// 		},
+// 		{
+// 			name:             "with_keyword",
+// 			query:            "preload=false&keyword=thanh",
+// 			wantCode:         http.StatusOK,
+// 			wantResponsePath: "testdata/list/with_keyword.json",
+// 		},
+// 		{
+// 			name:             "with_stackid",
+// 			query:            "preload=false&stackID=0ecf47c8-cca4-4c30-94bb-054b1124c44f",
+// 			wantCode:         http.StatusOK,
+// 			wantResponsePath: "testdata/list/with_stackid.json",
+// 		},
+// 		{
+// 			name:             "with_projectid",
+// 			query:            "preload=false&projectID=8dc3be2e-19a4-4942-8a79-56db391a0b15",
+// 			wantCode:         http.StatusOK,
+// 			wantResponsePath: "testdata/list/with_projectid.json",
+// 		},
+// 		{
+// 			name:             "with_projectid_and_positionid",
+// 			query:            "preload=false&projectID=8dc3be2e-19a4-4942-8a79-56db391a0b15&positionID=01fb6322-d727-47e3-a242-5039ea4732fc",
+// 			wantCode:         http.StatusOK,
+// 			wantResponsePath: "testdata/list/with_projectid_and_positionid.json",
+// 		},
+// 		{
+// 			name:             "with_list_working_status",
+// 			query:            "preload=false&workingStatuses=contractor&workingStatuses=probation",
+// 			wantCode:         http.StatusOK,
+// 			wantResponsePath: "testdata/list/with_list_working_status.json",
+// 		},
+// 	}
+// 	for _, tt := range tests {
+// 		t.Run(tt.name, func(t *testing.T) {
+// 			w := httptest.NewRecorder()
+// 			ctx, _ := gin.CreateTestContext(w)
+// 			ctx.Request = httptest.NewRequest(http.MethodGet, "/api/v1/employees", nil)
+// 			ctx.Request.Header.Set("Authorization", tokenTest)
+// 			ctx.Request.URL.RawQuery = tt.query
+
+// 			h := New(storeMock, testRepoMock, serviceMock, loggerMock, &cfg)
+// 			h.List(ctx)
+// 			require.Equal(t, tt.wantCode, w.Code)
+// 			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+// 			require.NoError(t, err)
+
+// 			res, err := utils.RemoveFieldInSliceResponse(w.Body.Bytes(), "updatedAt")
+// 			require.NoError(t, err)
+
+// 			require.JSONEq(t, string(expRespRaw), string(res), "[Handler.Employee.List] response mismatched")
+// 		})
+// 	}
+// }
+
 func TestHandler_UpdateEmployeeStatus(t *testing.T) {
 	// load env and test data
 	cfg := config.LoadTestConfig()
@@ -77,111 +178,7 @@ func TestHandler_UpdateEmployeeStatus(t *testing.T) {
 	}
 }
 
-func TestHandler_List(t *testing.T) {
-	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg)
-	storeMock := store.New()
-	testRepoMock := store.NewPostgresStore(&cfg)
-	tests := []struct {
-		name             string
-		query            string
-		wantCode         int
-		wantErr          error
-		wantResponsePath string
-	}{
-		{
-			name:             "without_working_status_and_pagination",
-			wantCode:         http.StatusOK,
-			wantResponsePath: "testdata/list/without_working_status_and_pagination.json",
-		},
-		{
-			name:             "have_workingStatus_and_no_pagination",
-			query:            "workingStatuses=contractor",
-			wantCode:         http.StatusOK,
-			wantResponsePath: "testdata/list/have_working_and_no_pagination.json",
-		},
-		{
-			name:             "have_workingStatuses_and_pagination",
-			query:            "workingStatuses=contractor&page=1&size=5",
-			wantCode:         http.StatusOK,
-			wantResponsePath: "testdata/list/have_working_and_pagination.json",
-		},
-		{
-			name:             "out_of_content",
-			query:            "workingStatuses=contractor&page=5&size=5",
-			wantCode:         http.StatusOK,
-			wantResponsePath: "testdata/list/out_of_content.json",
-		},
-		{
-			name:             "with_preload_false",
-			query:            "workingStatuses=probation&preload=false",
-			wantCode:         http.StatusOK,
-			wantResponsePath: "testdata/list/with_preload_false.json",
-		},
-		{
-			name:             "without_preload",
-			query:            "workingStatuses=probation",
-			wantCode:         http.StatusOK,
-			wantResponsePath: "testdata/list/without_preload.json",
-		},
-		{
-			name:             "with_keyword",
-			query:            "preload=false&keyword=thanh",
-			wantCode:         http.StatusOK,
-			wantResponsePath: "testdata/list/with_keyword.json",
-		},
-		{
-			name:             "with_stackid",
-			query:            "preload=false&stackID=0ecf47c8-cca4-4c30-94bb-054b1124c44f",
-			wantCode:         http.StatusOK,
-			wantResponsePath: "testdata/list/with_stackid.json",
-		},
-		{
-			name:             "with_projectid",
-			query:            "preload=false&projectID=8dc3be2e-19a4-4942-8a79-56db391a0b15",
-			wantCode:         http.StatusOK,
-			wantResponsePath: "testdata/list/with_projectid.json",
-		},
-		{
-			name:             "with_projectid_and_positionid",
-			query:            "preload=false&projectID=8dc3be2e-19a4-4942-8a79-56db391a0b15&positionID=01fb6322-d727-47e3-a242-5039ea4732fc",
-			wantCode:         http.StatusOK,
-			wantResponsePath: "testdata/list/with_projectid_and_positionid.json",
-		},
-		{
-			name:             "with_list_working_status",
-			query:            "preload=false&workingStatuses=contractor&workingStatuses=probation",
-			wantCode:         http.StatusOK,
-			wantResponsePath: "testdata/list/with_list_working_status.json",
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			w := httptest.NewRecorder()
-			ctx, _ := gin.CreateTestContext(w)
-			ctx.Request = httptest.NewRequest(http.MethodGet, "/api/v1/employees", nil)
-			ctx.Request.Header.Set("Authorization", tokenTest)
-			ctx.Request.URL.RawQuery = tt.query
-
-			h := New(storeMock, testRepoMock, serviceMock, loggerMock, &cfg)
-			h.List(ctx)
-			require.Equal(t, tt.wantCode, w.Code)
-			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
-			require.NoError(t, err)
-
-			res, err := utils.RemoveFieldInSliceResponse(w.Body.Bytes(), "updatedAt")
-			if err != nil {
-				t.Errorf("failed to remove updatedAt: %v", err)
-			}
-
-			require.JSONEq(t, string(expRespRaw), string(res), "[Handler.Employee.List] response mismatched")
-		})
-	}
-}
-
 func Test_UpdateGeneralInfo(t *testing.T) {
-	// load env and test data
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg)
@@ -232,7 +229,7 @@ func Test_UpdateGeneralInfo(t *testing.T) {
 			bodyReader := strings.NewReader(string(byteReq))
 			ctx.Params = gin.Params{gin.Param{Key: "id", Value: tt.id}}
 			ctx.Request = httptest.NewRequest("PUT", "/api/v1/employees/"+tt.id+"/general-info", bodyReader)
-			ctx.Request.Header.Set("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2OTkzMjExNDIsImlkIjoiMjY1NTgzMmUtZjAwOS00YjczLWE1MzUtNjRjM2EyMmU1NThmIiwiYXZhdGFyIjoiaHR0cHM6Ly9zMy1hcC1zb3V0aGVhc3QtMS5hbWF6b25hd3MuY29tL2ZvcnRyZXNzLWltYWdlcy81MTUzNTc0Njk1NjYzOTU1OTQ0LnBuZyIsImVtYWlsIjoidGhhbmhAZC5mb3VuZGF0aW9uIiwicGVybWlzc2lvbnMiOlsiZW1wbG95ZWVzLnJlYWQiXSwidXNlcl9pbmZvIjpudWxsfQ.GENGPEucSUrILN6tHDKxLMtj0M0REVMUPC7-XhDMpGM")
+			ctx.Request.Header.Set("Authorization", tokenTest)
 			metadataHandler := New(storeMock, testRepoMock, serviceMock, loggerMock, &cfg)
 
 			metadataHandler.UpdateGeneralInfo(ctx)
@@ -241,20 +238,15 @@ func Test_UpdateGeneralInfo(t *testing.T) {
 			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
 			require.NoError(t, err)
 
-			if !tt.wantErr {
-				res, err := utils.RemoveFieldInResponse(w.Body.Bytes(), "updatedAt")
-				require.Nil(t, err)
+			res, err := utils.RemoveFieldInResponse(w.Body.Bytes(), "updatedAt")
+			require.Nil(t, err)
 
-				require.JSONEq(t, string(expRespRaw), string(res), "[Handler.UpdateProjectStatus] response mismatched")
-			} else {
-				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.UpdateProjectStatus] response mismatched")
-			}
+			require.JSONEq(t, string(expRespRaw), string(res), "[Handler.UpdateGeneralInfo] response mismatched")
 		})
 	}
 }
 
 func Test_UpdateSkill(t *testing.T) {
-	// load env and test data
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg)
@@ -337,7 +329,6 @@ func Test_UpdateSkill(t *testing.T) {
 }
 
 func Test_Create(t *testing.T) {
-	// load env and test data
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg)
@@ -440,7 +431,6 @@ func Test_Create(t *testing.T) {
 }
 
 func Test_UpdatePersonalInfo(t *testing.T) {
-	// load env and test data
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg)
@@ -495,7 +485,7 @@ func Test_UpdatePersonalInfo(t *testing.T) {
 			bodyReader := strings.NewReader(string(byteReq))
 			ctx.Params = gin.Params{gin.Param{Key: "id", Value: tt.id}}
 			ctx.Request = httptest.NewRequest("PUT", "/api/v1/employees/"+tt.id+"/personal-info", bodyReader)
-			ctx.Request.Header.Set("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2OTkzMjExNDIsImlkIjoiMjY1NTgzMmUtZjAwOS00YjczLWE1MzUtNjRjM2EyMmU1NThmIiwiYXZhdGFyIjoiaHR0cHM6Ly9zMy1hcC1zb3V0aGVhc3QtMS5hbWF6b25hd3MuY29tL2ZvcnRyZXNzLWltYWdlcy81MTUzNTc0Njk1NjYzOTU1OTQ0LnBuZyIsImVtYWlsIjoidGhhbmhAZC5mb3VuZGF0aW9uIiwicGVybWlzc2lvbnMiOlsiZW1wbG95ZWVzLnJlYWQiXSwidXNlcl9pbmZvIjpudWxsfQ.GENGPEucSUrILN6tHDKxLMtj0M0REVMUPC7-XhDMpGM")
+			ctx.Request.Header.Set("Authorization", tokenTest)
 			metadataHandler := New(storeMock, testRepoMock, serviceMock, loggerMock, &cfg)
 
 			metadataHandler.UpdatePersonalInfo(ctx)
@@ -504,14 +494,10 @@ func Test_UpdatePersonalInfo(t *testing.T) {
 			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
 			require.NoError(t, err)
 
-			if !tt.wantErr {
-				res, err := utils.RemoveFieldInResponse(w.Body.Bytes(), "updatedAt")
-				require.Nil(t, err)
+			res, err := utils.RemoveFieldInResponse(w.Body.Bytes(), "updatedAt")
+			require.Nil(t, err)
 
-				require.JSONEq(t, string(expRespRaw), string(res), "[Handler.UpdatePersonalInfo] response mismatched")
-			} else {
-				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.UpdatePersonalInfo] response mismatched")
-			}
+			require.JSONEq(t, string(expRespRaw), string(res), "[Handler.UpdatePersonalInfo] response mismatched")
 		})
 	}
 }

@@ -2,7 +2,7 @@
     "page": 0,
     "size": 999,
     "sort": "",
-    "total": 2,
+    "total": 5,
     "data": [
         {
             "projectMemberID": "cb889a9c-b20c-47ee-83b8-44b6d1721aca",
@@ -11,6 +11,13 @@
             "fullName": "Phạm Đức Thành",
             "displayName": "Thanh Pham",
             "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
+            "status": "active",
+            "isLead": false,
+            "deploymentType": "official",
+            "joinedDate": "2022-11-01T00:00:00Z",
+            "leftDate": null,
+            "rate": "5000",
+            "discount": "0",
             "seniority": {
                 "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
                 "createdAt": "2022-11-07T09:50:25.714604Z",
@@ -18,14 +25,13 @@
                 "name": "Mid",
                 "code": "mid"
             },
-            "status": "active",
-            "isLead": false,
-            "deploymentType": "official",
-            "joinedDate": "2022-11-01T00:00:00Z",
-            "leftDate": null,
-            "positions": [],
-            "discount": "0",
-            "rate": "5000"
+            "positions": [
+                {
+                    "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
+                    "code": "frontend",
+                    "name": "Frontend"
+                }
+            ]
         },
         {
             "projectMemberID": "7310b51a-3855-498b-99ab-41aa82934269",
@@ -34,6 +40,13 @@
             "fullName": "Nguyễn Hoàng Huy",
             "displayName": "Huy Nguyen",
             "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/2830497479497502617.png",
+            "status": "active",
+            "isLead": true,
+            "deploymentType": "shadow",
+            "joinedDate": "2022-11-01T00:00:00Z",
+            "leftDate": null,
+            "rate": "4000",
+            "discount": "0",
             "seniority": {
                 "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
                 "createdAt": "2022-11-07T09:50:25.714604Z",
@@ -41,14 +54,100 @@
                 "name": "Mid",
                 "code": "mid"
             },
+            "positions": [
+                {
+                    "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
+                    "code": "frontend",
+                    "name": "Frontend"
+                }
+            ]
+        },
+        {
+            "projectMemberID": "35149aab-0506-4eb3-9300-c706ccbf2bde",
+            "projectSlotID": "1406fcce-6f90-4e0f-bea1-c373e2b2b5b1",
+            "employeeID": "8d7c99c0-3253-4286-93a9-e7554cb327ef",
+            "fullName": "Nguyễn Hải Nam",
+            "displayName": "Nam Nguyen",
+            "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/8399103964540935617.png",
+            "status": "active",
+            "isLead": true,
+            "deploymentType": "official",
+            "joinedDate": "2022-11-01T00:00:00Z",
+            "leftDate": null,
+            "rate": "3000",
+            "discount": "3",
+            "seniority": {
+                "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
+                "createdAt": "2022-11-07T09:50:25.714604Z",
+                "updatedAt": "2022-11-07T09:50:25.714604Z",
+                "name": "Mid",
+                "code": "mid"
+            },
+            "positions": [
+                {
+                    "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
+                    "code": "frontend",
+                    "name": "Frontend"
+                }
+            ]
+        },
+        {
+            "projectMemberID": "5a9a07aa-e8f3-4b62-b9ad-0f057866dc6c",
+            "projectSlotID": "b25bd3fa-eb6d-49d5-b278-7aacf4594f79",
+            "employeeID": "eeae589a-94e3-49ac-a94c-fcfb084152b2",
+            "fullName": "Nguyễn Ngô Lập",
+            "displayName": "Lap Nguyen",
+            "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/2870969541970972723.png",
+            "status": "active",
+            "isLead": false,
+            "deploymentType": "official",
+            "joinedDate": "2022-11-01T00:00:00Z",
+            "leftDate": null,
+            "rate": "3000",
+            "discount": "3",
+            "seniority": {
+                "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
+                "createdAt": "2022-11-07T09:50:25.714604Z",
+                "updatedAt": "2022-11-07T09:50:25.714604Z",
+                "name": "Mid",
+                "code": "mid"
+            },
+            "positions": [
+                {
+                    "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
+                    "code": "backend",
+                    "name": "Backend"
+                }
+            ]
+        },
+        {
+            "projectMemberID": "fcd5c16f-40fd-48b6-9649-410691373eea",
+            "projectSlotID": "ce379dc0-95be-471a-9227-8e045a5630af",
+            "employeeID": "608ea227-45a5-4c8a-af43-6c7280d96340",
+            "fullName": "Tiêu Quang Huy",
+            "displayName": "Huy Tieu",
+            "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/3c420751-bb9a-4878-896e-2f10f3a633d6_avatar2535921977139052349.png",
             "status": "active",
             "isLead": false,
             "deploymentType": "shadow",
             "joinedDate": "2022-11-01T00:00:00Z",
             "leftDate": null,
-            "positions": [],
+            "rate": "4000",
             "discount": "0",
-            "rate": "4000"
+            "seniority": {
+                "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
+                "createdAt": "2022-11-07T09:50:25.714604Z",
+                "updatedAt": "2022-11-07T09:50:25.714604Z",
+                "name": "Mid",
+                "code": "mid"
+            },
+            "positions": [
+                {
+                    "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
+                    "code": "backend",
+                    "name": "Backend"
+                }
+            ]
         }
     ]
 }
