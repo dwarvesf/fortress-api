@@ -123,12 +123,7 @@ func (h *handler) UpdateInfo(c *gin.Context) {
 		return
 	}
 
-	employee.TeamEmail = input.TeamEmail
-	employee.PersonalEmail = input.PersonalEmail
-	employee.PhoneNumber = input.PhoneNumber
-	employee.DiscordID = input.DiscordID
-	employee.GithubID = input.GithubID
-	employee.NotionID = input.NotionID
+	input.PutValueToEmployee(employee)
 
 	_, err = h.store.Employee.UpdateSelectedFieldsByID(h.repo.DB(), employeeID, *employee,
 		"team_email",

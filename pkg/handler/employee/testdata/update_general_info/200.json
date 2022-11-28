@@ -9,10 +9,6 @@
         "discordID": "",
         "githubID": "",
         "notionID": "",
-        "lineManager": {
-            "id": "ecea9d15-05ba-4a4e-9787-54210e3b98ce",
-            "fullName": "Nguyễn Hoàng Huy",
-            "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/2830497479497502617.png"
-        }
+        "lineManager": null
     }
 }
