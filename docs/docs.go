@@ -205,7 +205,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/pkg_handler_employee.CreateEmployeeInput"
+                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.CreateEmployeeInput"
                         }
                     },
                     {
@@ -402,7 +402,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/pkg_handler_employee.UpdateGeneralInfoInput"
+                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateGeneralInfoInput"
                         }
                     }
                 ],
@@ -468,7 +468,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/pkg_handler_employee.UpdatePersonalInfoInput"
+                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdatePersonalInfoInput"
                         }
                     }
                 ],
@@ -527,7 +527,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/pkg_handler_employee.UpdateSkillsInput"
+                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateSkillsInput"
                         }
                     },
                     {
@@ -1026,7 +1026,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/pkg_handler_profile.UpdateInfoInput"
+                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_profile.UpdateInfoInput"
                         }
                     }
                 ],
@@ -1091,7 +1091,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/view.UpdateProfileInfoResponse"
+                            "$ref": "#/definitions/view.EmployeeContentDataResponse"
                         }
                     },
                     "400": {
@@ -1340,7 +1340,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.CreateProjectInput"
+                            "$ref": "#/definitions/pkg_handler_project.CreateProjectInput"
                         }
                     }
                 ],
@@ -1537,7 +1537,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateContactInfoInput"
+                            "$ref": "#/definitions/pkg_handler_project.UpdateContactInfoInput"
                         }
                     }
                 ],
@@ -1603,7 +1603,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateGeneralInfoInput"
+                            "$ref": "#/definitions/pkg_handler_project.UpdateGeneralInfoInput"
                         }
                     }
                 ],
@@ -1669,7 +1669,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateMemberInput"
+                            "$ref": "#/definitions/pkg_handler_project.UpdateMemberInput"
                         }
                     }
                 ],
@@ -1733,7 +1733,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.AssignMemberInput"
+                            "$ref": "#/definitions/pkg_handler_project.AssignMemberInput"
                         }
                     }
                 ],
@@ -1808,6 +1808,70 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/view.UpdateProjectStatusResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/projects/{id}/work-units": {
+            "get": {
+                "description": "Get list work units of a project",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Project"
+                ],
+                "summary": "Get list work units of a project",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Project ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "status",
+                        "name": "status",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.ListWorkUnitResponse"
                         }
                     },
                     "400": {
@@ -2734,6 +2798,26 @@ const docTemplate = `{
                 }
             }
         },
+        "view.BasicMember": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string"
+                },
+                "employeeID": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "projectMemberID": {
+                    "type": "string"
+                },
+                "projectSlotID": {
+                    "type": "string"
+                }
+            }
+        },
         "view.BasicProjectHeadInfo": {
             "type": "object",
             "properties": {
@@ -2833,6 +2917,9 @@ const docTemplate = `{
                 },
                 "projectSlotID": {
                     "type": "string"
+                },
+                "seniority": {
+                    "$ref": "#/definitions/model.Seniority"
                 },
                 "status": {
                     "type": "string"
@@ -3061,6 +3148,17 @@ const docTemplate = `{
                 }
             }
         },
+        "view.ListWorkUnitResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.WorkUnit"
+                    }
+                }
+            }
+        },
         "view.MessageResponse": {
             "type": "object",
             "properties": {
@@ -3284,9 +3382,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "leftDate": {
-                    "type": "string"
-                },
-                "position": {
                     "type": "string"
                 },
                 "positions": {
@@ -3638,6 +3733,41 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "view.WorkUnit": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "members": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.BasicMember"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                },
+                "projectID": {
+                    "type": "string"
+                },
+                "stacks": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.MetaData"
+                    }
+                },
+                "status": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "url": {
                     "type": "string"
                 }
             }
