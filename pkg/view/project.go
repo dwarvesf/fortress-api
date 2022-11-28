@@ -308,21 +308,25 @@ func ToProjectMemberListData(slots []*model.ProjectSlot, projectHeads []*model.P
 			Seniority:      &slot.Seniority,
 			DeploymentType: slot.DeploymentType.String(),
 			Rate:           slot.Rate,
+			Discount:       slot.Discount,
 			Positions:      ToProjectSlotPositions(slot.ProjectSlotPositions),
 		}
 
-		if !m.ID.IsZero() {
+		if slot.Status != model.ProjectMemberStatusPending && !m.ID.IsZero() {
 			member.ProjectMemberID = m.ID.String()
 			member.EmployeeID = m.EmployeeID.String()
 			member.FullName = m.Employee.FullName
 			member.DisplayName = m.Employee.DisplayName
 			member.Avatar = m.Employee.Avatar
 			member.JoinedDate = m.JoinedDate
-			member.LeftDate = m.LeftDate
 			member.IsLead = leadMap[m.EmployeeID.String()]
 			member.Rate = m.Rate
 			member.Discount = m.Discount
 			member.Positions = ToProjectMemberPositions(m.ProjectMemberPositions)
+		}
+
+		if m.Status == model.ProjectMemberStatusInactive {
+			member.LeftDate = m.LeftDate
 		}
 
 		results = append(results, member)
