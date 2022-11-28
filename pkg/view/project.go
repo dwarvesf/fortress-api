@@ -305,11 +305,14 @@ func ToProjectMemberListData(slots []*model.ProjectSlot, projectHeads []*model.P
 		member := ProjectMember{
 			ProjectSlotID:  slot.ID.String(),
 			Status:         slot.Status.String(),
-			Seniority:      &slot.Seniority,
 			DeploymentType: slot.DeploymentType.String(),
 			Rate:           slot.Rate,
 			Discount:       slot.Discount,
 			Positions:      ToProjectSlotPositions(slot.ProjectSlotPositions),
+		}
+
+		if !slot.Seniority.ID.IsZero() {
+			member.Seniority = &slot.Seniority
 		}
 
 		if slot.Status != model.ProjectMemberStatusPending && !m.ID.IsZero() {

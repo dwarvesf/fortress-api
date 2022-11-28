@@ -98,7 +98,8 @@ func (i *CreateProjectInput) GetStartDate() *time.Time {
 type GetListStaffInput struct {
 	model.Pagination
 
-	Status string `form:"status" json:"status"`
+	Status  string `form:"status" json:"status"`
+	Preload bool   `json:"preload" form:"preload,default=true"`
 }
 
 func (i *GetListStaffInput) Validate() error {
