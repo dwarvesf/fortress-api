@@ -433,3 +433,7 @@ type WorkUnit struct {
 type ListWorkUnitResponse struct {
 	Data []WorkUnit `json:"data"`
 }
+
+type WorkUnitResponse struct {
+	Data WorkUnit `json:"data"`
+}

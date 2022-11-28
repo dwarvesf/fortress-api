@@ -197,7 +197,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.CreateEmployeeInput"
+                            "$ref": "#/definitions/pkg_handler_employee.CreateEmployeeInput"
                         }
                     },
                     {
@@ -394,7 +394,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateGeneralInfoInput"
+                            "$ref": "#/definitions/pkg_handler_employee.UpdateGeneralInfoInput"
                         }
                     }
                 ],
@@ -460,7 +460,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdatePersonalInfoInput"
+                            "$ref": "#/definitions/pkg_handler_employee.UpdatePersonalInfoInput"
                         }
                     }
                 ],
@@ -519,7 +519,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateSkillsInput"
+                            "$ref": "#/definitions/pkg_handler_employee.UpdateSkillsInput"
                         }
                     },
                     {
@@ -1018,7 +1018,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_profile.UpdateInfoInput"
+                            "$ref": "#/definitions/pkg_handler_profile.UpdateInfoInput"
                         }
                     }
                 ],
@@ -1332,7 +1332,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/pkg_handler_project.CreateProjectInput"
+                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.CreateProjectInput"
                         }
                     }
                 ],
@@ -1529,7 +1529,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/pkg_handler_project.UpdateContactInfoInput"
+                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateContactInfoInput"
                         }
                     }
                 ],
@@ -1595,7 +1595,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/pkg_handler_project.UpdateGeneralInfoInput"
+                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateGeneralInfoInput"
                         }
                     }
                 ],
@@ -1661,7 +1661,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/pkg_handler_project.UpdateMemberInput"
+                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateMemberInput"
                         }
                     }
                 ],
@@ -1725,7 +1725,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/pkg_handler_project.AssignMemberInput"
+                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.AssignMemberInput"
                         }
                     }
                 ],
@@ -1864,6 +1864,70 @@
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/view.ListWorkUnitResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Get work unit of a project",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Project"
+                ],
+                "summary": "Create work unit of a project",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Project ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.CreateWorkUnitBody"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.WorkUnitResponse"
                         }
                     },
                     "400": {
@@ -2136,6 +2200,41 @@
                     "type": "string"
                 },
                 "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "github.com_dwarvesf_fortress-api_pkg_handler_project.CreateWorkUnitBody": {
+            "type": "object",
+            "required": [
+                "name",
+                "stacks",
+                "status",
+                "type"
+            ],
+            "properties": {
+                "members": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                },
+                "stacks": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "status": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "url": {
                     "type": "string"
                 }
             }
@@ -2636,6 +2735,41 @@
                     "type": "string"
                 },
                 "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "pkg_handler_project.CreateWorkUnitBody": {
+            "type": "object",
+            "required": [
+                "name",
+                "stacks",
+                "status",
+                "type"
+            ],
+            "properties": {
+                "members": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                },
+                "stacks": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "status": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "url": {
                     "type": "string"
                 }
             }
@@ -3761,6 +3895,14 @@
                 },
                 "url": {
                     "type": "string"
+                }
+            }
+        },
+        "view.WorkUnitResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/view.WorkUnit"
                 }
             }
         }
