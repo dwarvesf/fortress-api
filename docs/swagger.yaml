@@ -616,6 +616,19 @@ definitions:
       name:
         type: string
     type: object
+  view.BasicMember:
+    properties:
+      avatar:
+        type: string
+      employeeID:
+        type: string
+      name:
+        type: string
+      projectMemberID:
+        type: string
+      projectSlotID:
+        type: string
+    type: object
   view.BasicProjectHeadInfo:
     properties:
       avatar:
@@ -681,6 +694,8 @@ definitions:
         type: string
       projectSlotID:
         type: string
+      seniority:
+        $ref: '#/definitions/model.Seniority'
       status:
         type: string
     type: object
@@ -830,6 +845,13 @@ definitions:
           $ref: '#/definitions/view.ApiError'
         type: array
     type: object
+  view.ListWorkUnitResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/view.WorkUnit'
+        type: array
+    type: object
   view.MessageResponse:
     properties:
       message:
@@ -976,8 +998,6 @@ definitions:
       joinedDate:
         type: string
       leftDate:
-        type: string
-      position:
         type: string
       positions:
         items:
@@ -1208,6 +1228,29 @@ definitions:
       updatedAt:
         type: string
     type: object
+  view.WorkUnit:
+    properties:
+      id:
+        type: string
+      members:
+        items:
+          $ref: '#/definitions/view.BasicMember'
+        type: array
+      name:
+        type: string
+      projectID:
+        type: string
+      stacks:
+        items:
+          $ref: '#/definitions/view.MetaData'
+        type: array
+      status:
+        type: string
+      type:
+        type: string
+      url:
+        type: string
+    type: object
 info:
   contact:
     email: support@swagger.io
@@ -1338,7 +1381,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/pkg_handler_employee.CreateEmployeeInput'
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.CreateEmployeeInput'
       - description: jwt token
         in: header
         name: Authorization
@@ -1470,7 +1513,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/pkg_handler_employee.UpdateGeneralInfoInput'
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateGeneralInfoInput'
       produces:
       - application/json
       responses:
@@ -1514,7 +1557,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/pkg_handler_employee.UpdatePersonalInfoInput'
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdatePersonalInfoInput'
       produces:
       - application/json
       responses:
@@ -1553,7 +1596,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/pkg_handler_employee.UpdateSkillsInput'
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateSkillsInput'
       - description: jwt token
         in: header
         name: Authorization
@@ -1883,7 +1926,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/pkg_handler_profile.UpdateInfoInput'
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_profile.UpdateInfoInput'
       produces:
       - application/json
       responses:
@@ -1928,7 +1971,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/view.UpdateProfileInfoResponse'
+            $ref: '#/definitions/view.EmployeeContentDataResponse'
         "400":
           description: Bad Request
           schema:
@@ -2051,7 +2094,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.CreateProjectInput'
+          $ref: '#/definitions/pkg_handler_project.CreateProjectInput'
       produces:
       - application/json
       responses:
@@ -2182,7 +2225,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateContactInfoInput'
+          $ref: '#/definitions/pkg_handler_project.UpdateContactInfoInput'
       produces:
       - application/json
       responses:
@@ -2226,7 +2269,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateGeneralInfoInput'
+          $ref: '#/definitions/pkg_handler_project.UpdateGeneralInfoInput'
       produces:
       - application/json
       responses:
@@ -2270,7 +2313,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.AssignMemberInput'
+          $ref: '#/definitions/pkg_handler_project.AssignMemberInput'
       produces:
       - application/json
       responses:
@@ -2313,7 +2356,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateMemberInput'
+          $ref: '#/definitions/pkg_handler_project.UpdateMemberInput'
       produces:
       - application/json
       responses:
@@ -2378,6 +2421,49 @@ paths:
           schema:
             $ref: '#/definitions/view.ErrorResponse'
       summary: Update status for project by id
+      tags:
+      - Project
+  /projects/{id}/work-units:
+    get:
+      consumes:
+      - application/json
+      description: Get list work units of a project
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: status
+        in: query
+        name: status
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.ListWorkUnitResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get list work units of a project
       tags:
       - Project
 securityDefinitions:

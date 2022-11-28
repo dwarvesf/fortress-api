@@ -197,6 +197,12 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/profile.IHandler.UploadAvatar-fm",
 			},
 		},
+		"/api/v1/projects/:id/work-units": {
+			"GET": {
+				Method:  "GET",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/project.IHandler.GetWorkUnits-fm",
+			},
+		},
 	}
 
 	l := logger.NewLogrusLogger()

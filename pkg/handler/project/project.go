@@ -1204,3 +1204,66 @@ func (h *handler) updateProjectHead(tx store.DBRepo, projectID string, memberID 
 
 	return head, nil
 }
+
+// GetWorkUnits godoc
+// @Summary Get list work units of a project
+// @Description Get list work units of a project
+// @Tags Project
+// @Accept  json
+// @Produce  json
+// @Param Authorization header string true "jwt token"
+// @Param id path string true "Project ID"
+// @Param status query  string true  "status"
+// @Success 200 {object} view.ListWorkUnitResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /projects/{id}/work-units [get]
+func (h *handler) GetWorkUnits(c *gin.Context) {
+	projectID := c.Param("id")
+	if projectID == "" || !model.IsUUIDFromString(projectID) {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, ErrInvalidProjectID, nil, ""))
+		return
+	}
+
+	workUnits := []view.WorkUnit{
+		{
+			ID:   "f32d08ca-8863-4ab3-8c84-a11849451eb7",
+			Name: "Fortress API",
+			URL:  "https://github.com/dwarvesf/fortress-api",
+			Members: []view.BasicMember{
+				{
+					ProjectMemberID: "f32d08ca-8863-4ab3-8c84-a11849451eb7",
+					ProjectSlotID:   "f32d08ca-8863-4ab3-8c84-a11849451eb7",
+					EmployeeID:      "f32d08ca-8863-4ab3-8c84-a11849451eb7",
+					Name:            "Nguyễn Hải Nam",
+					Avatar:          "https://s3-ap-southeast-1.amazonaws.com/fortress-images/2870969541970972723.png",
+				},
+				{
+					ProjectMemberID: "f32d08ca-8863-4ab3-8c84-a11849451eb8",
+					ProjectSlotID:   "f32d08ca-8863-4ab3-8c84-a11849451eb7",
+					EmployeeID:      "f32d08ca-8863-4ab3-8c84-a11849451eb8",
+					Name:            "Nguyễn Ngô Lập",
+					Avatar:          "https://s3-ap-southeast-1.amazonaws.com/fortress-images/2870969541970972723.png",
+				},
+			},
+			Stacks: []view.MetaData{
+				{
+					ID:   "f32d08ca-8863-4ab3-8c84-a11849451eb7",
+					Code: "golang",
+					Name: "Golang",
+				},
+				{
+					ID:   "f32d08ca-8863-4ab3-8c84-a11849451eb8",
+					Code: "gcloud",
+					Name: "Google Cloud",
+				},
+			},
+			Type:      "Repository",
+			Status:    "Active",
+			ProjectID: "f32d08ca-8863-4ab3-8c84-a11849451eb7",
+		},
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse(workUnits, nil, nil, nil, ""))
+}
