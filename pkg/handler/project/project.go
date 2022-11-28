@@ -1430,3 +1430,45 @@ func (h *handler) CreateWorkUnit(c *gin.Context) {
 
 	c.JSON(http.StatusOK, view.CreateResponse(res, nil, nil, nil, ""))
 }
+
+// UpdateWorkUnit godoc
+// @Summary Update work unit info
+// @Description Update work unit info
+// @Tags Project
+// @Accept  json
+// @Produce  json
+// @Param Authorization header string true "jwt token"
+// @Param id path string true "Project ID"
+// @Param workUnitID path string true "Work Unit ID"
+// @Param Body body UpdateWorkUnitInput true "Body"
+// @Success 200 {object} view.MessageResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /projects/{id}/work-units/{workUnitID} [put]
+func (h *handler) UpdateWorkUnit(c *gin.Context) {
+	input := UpdateWorkUnitInput{
+		ProjectID:  c.Param("id"),
+		WorkUnitID: c.Param("workUnitID"),
+	}
+
+	if err := c.ShouldBindJSON(&input.Body); err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, input.Body, ""))
+		return
+	}
+
+	// TODO: can we move this to middleware ?
+	l := h.logger.Fields(logger.Fields{
+		"handler": "project",
+		"method":  "UpdateWorkUnit",
+		"input":   input,
+	})
+
+	if err := input.Validate(); err != nil {
+		l.Error(err, "validate failed")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))
+}

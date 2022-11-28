@@ -16,4 +16,5 @@ type IHandler interface {
 	UpdateContactInfo(c *gin.Context)
 	GetWorkUnits(c *gin.Context)
 	CreateWorkUnit(c *gin.Context)
+	UpdateWorkUnit(c *gin.Context)
 }

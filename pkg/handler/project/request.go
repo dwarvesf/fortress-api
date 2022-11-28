@@ -303,3 +303,41 @@ func (i *CreateWorkUnitBody) Validate() error {
 
 	return nil
 }
+
+type UpdateWorkUnitInput struct {
+	ProjectID  string
+	WorkUnitID string
+	Body       UpdateWorkUnitBody
+}
+
+type UpdateWorkUnitBody struct {
+	Name    string       `form:"name" json:"name" binding:"required,max=100"`
+	Type    string       `form:"type" json:"type" binding:"required"`
+	Members []model.UUID `form:"members" json:"members"`
+	Stacks  []model.UUID `form:"stacks" json:"stacks" binding:"required"`
+	URL     string       `form:"url" json:"url"`
+}
+
+func (i *UpdateWorkUnitInput) Validate() error {
+	if i.ProjectID == "" || !model.IsUUIDFromString(i.ProjectID) {
+		return ErrInvalidProjectID
+	}
+
+	if i.WorkUnitID == "" || !model.IsUUIDFromString(i.WorkUnitID) {
+		return ErrInvalidworkUnitID
+	}
+
+	return i.Body.Validate()
+}
+
+func (i *UpdateWorkUnitBody) Validate() error {
+	if i.Type == "" {
+		return ErrInvalidWorkUnitType
+	}
+
+	if len(i.Stacks) == 0 {
+		return ErrInvalidWorkUnitStacks
+	}
+
+	return nil
+}
