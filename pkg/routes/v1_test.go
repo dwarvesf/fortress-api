@@ -211,6 +211,12 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/project.IHandler.CreateWorkUnit-fm",
 			},
 		},
+		"/api/v1/projects/:id/work-units/:workUnitID": {
+			"PUT": {
+				Method:  "PUT",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/project.IHandler.UpdateWorkUnit-fm",
+			},
+		},
 	}
 
 	l := logger.NewLogrusLogger()

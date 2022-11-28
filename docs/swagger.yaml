@@ -262,6 +262,37 @@ definitions:
     - seniorityID
     - status
     type: object
+  github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateWorkUnitBody:
+    properties:
+      members:
+        items:
+          type: string
+        type: array
+      name:
+        maxLength: 100
+        type: string
+      stacks:
+        items:
+          type: string
+        type: array
+      type:
+        type: string
+      url:
+        type: string
+    required:
+    - name
+    - stacks
+    - type
+    type: object
+  github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateWorkUnitInput:
+    properties:
+      body:
+        $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateWorkUnitBody'
+      projectID:
+        type: string
+      workUnitID:
+        type: string
+    type: object
   gorm.DeletedAt:
     properties:
       time:
@@ -625,6 +656,37 @@ definitions:
     - rate
     - seniorityID
     - status
+    type: object
+  pkg_handler_project.UpdateWorkUnitBody:
+    properties:
+      members:
+        items:
+          type: string
+        type: array
+      name:
+        maxLength: 100
+        type: string
+      stacks:
+        items:
+          type: string
+        type: array
+      type:
+        type: string
+      url:
+        type: string
+    required:
+    - name
+    - stacks
+    - type
+    type: object
+  pkg_handler_project.UpdateWorkUnitInput:
+    properties:
+      body:
+        $ref: '#/definitions/pkg_handler_project.UpdateWorkUnitBody'
+      projectID:
+        type: string
+      workUnitID:
+        type: string
     type: object
   view.AccountRoleResponse:
     properties:
@@ -1979,7 +2041,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/pkg_handler_profile.UpdateInfoInput'
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_profile.UpdateInfoInput'
       produces:
       - application/json
       responses:
@@ -2189,7 +2251,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.CreateProjectInput'
+          $ref: '#/definitions/pkg_handler_project.CreateProjectInput'
       produces:
       - application/json
       responses:
@@ -2320,7 +2382,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateContactInfoInput'
+          $ref: '#/definitions/pkg_handler_project.UpdateContactInfoInput'
       produces:
       - application/json
       responses:
@@ -2364,7 +2426,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateGeneralInfoInput'
+          $ref: '#/definitions/pkg_handler_project.UpdateGeneralInfoInput'
       produces:
       - application/json
       responses:
@@ -2408,7 +2470,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.AssignMemberInput'
+          $ref: '#/definitions/pkg_handler_project.AssignMemberInput'
       produces:
       - application/json
       responses:
@@ -2451,7 +2513,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateMemberInput'
+          $ref: '#/definitions/pkg_handler_project.UpdateMemberInput'
       produces:
       - application/json
       responses:
@@ -2581,7 +2643,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.CreateWorkUnitBody'
+          $ref: '#/definitions/pkg_handler_project.CreateWorkUnitBody'
       produces:
       - application/json
       responses:
@@ -2602,6 +2664,55 @@ paths:
           schema:
             $ref: '#/definitions/view.ErrorResponse'
       summary: Create work unit of a project
+      tags:
+      - Project
+  /projects/{id}/work-units/{workUnitID}:
+    put:
+      consumes:
+      - application/json
+      description: Update work unit info
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Work Unit ID
+        in: path
+        name: workUnitID
+        required: true
+        type: string
+      - description: Body
+        in: body
+        name: Body
+        required: true
+        schema:
+          $ref: '#/definitions/pkg_handler_project.UpdateWorkUnitInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Update work unit info
       tags:
       - Project
 securityDefinitions:

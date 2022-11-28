@@ -7,6 +7,7 @@ import (
 
 var (
 	ErrInvalidProjectID             = errors.New("invalid project ID")
+	ErrInvalidworkUnitID            = errors.New("invalid work unit ID")
 	ErrInvalidProjectType           = errors.New("invalid project type")
 	ErrInvalidProjectStatus         = errors.New("invalid project status")
 	ErrInvalidProjectMemberStatus   = errors.New("invalid project member status")
