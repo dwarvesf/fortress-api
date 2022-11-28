@@ -12,7 +12,7 @@ type UpdateInfoInput struct {
 	NotionID      string `form:"notionID" json:"notionID"`
 }
 
-func (i UpdateInfoInput) PutValueToEmployee(employee *model.Employee) {
+func (i UpdateInfoInput) MapEmployeeInput(employee *model.Employee) {
 	employee.TeamEmail = i.TeamEmail
 	employee.PersonalEmail = i.PersonalEmail
 	employee.PhoneNumber = i.PhoneNumber
