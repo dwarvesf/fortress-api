@@ -123,7 +123,7 @@ func (h *handler) UpdateInfo(c *gin.Context) {
 		return
 	}
 
-	input.PutValueToEmployee(employee)
+	input.MapEmployeeInput(employee)
 
 	_, err = h.store.Employee.UpdateSelectedFieldsByID(h.repo.DB(), employeeID, *employee,
 		"team_email",

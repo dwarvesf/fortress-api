@@ -53,7 +53,7 @@ test:
 	sql-migrate down -env=test -limit=0
 	sql-migrate up -env=test
 	make seed-test
-	@PROJECT_PATH=$(shell pwd) go test -cover ./... -count=1
+	@PROJECT_PATH=$(shell pwd) go test -cover ./... -count=1 -p=1 
 
 migrate-test:
 	sql-migrate up -env=test
