@@ -415,29 +415,3 @@ func ToUpdateProjectContactInfo(project *model.Project) UpdateProjectContactInfo
 		ProjectHead:  projectHeads,
 	}
 }
-
-type BasicMember struct {
-	ProjectMemberID string `json:"projectMemberID"`
-	ProjectSlotID   string `json:"projectSlotID"`
-	EmployeeID      string `json:"employeeID"`
-	Name            string `json:"name"`
-	Avatar          string `json:"avatar"`
-}
-type WorkUnit struct {
-	ID        string        `json:"id"`
-	Name      string        `json:"name"`
-	URL       string        `json:"url"`
-	Members   []BasicMember `json:"members"`
-	Stacks    []MetaData    `json:"stacks"`
-	Type      string        `json:"type"`
-	Status    string        `json:"status"`
-	ProjectID string        `json:"projectID"`
-}
-
-type ListWorkUnitResponse struct {
-	Data []WorkUnit `json:"data"`
-}
-
-type WorkUnitResponse struct {
-	Data WorkUnit `json:"data"`
-}

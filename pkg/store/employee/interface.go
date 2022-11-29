@@ -12,6 +12,7 @@ type IStore interface {
 
 	One(db *gorm.DB, id string) (employee *model.Employee, err error)
 	OneByTeamEmail(db *gorm.DB, teamEmail string) (employee *model.Employee, err error)
+	GetByIDs(db *gorm.DB, ids []string) (employees []*model.Employee, err error)
 
 	IsExist(db *gorm.DB, id string) (bool, error)
 

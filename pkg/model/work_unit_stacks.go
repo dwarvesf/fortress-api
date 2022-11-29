@@ -5,4 +5,6 @@ type WorkUnitStack struct {
 
 	StackID    UUID
 	WorkUnitID UUID
+
+	Stack Stack
 }

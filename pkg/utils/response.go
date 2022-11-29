@@ -13,6 +13,7 @@ func RemoveFieldInResponse(data []byte, field string) ([]byte, error) {
 
 	if res["data"] != nil {
 		if data, ok := res["data"].(map[string]interface{}); ok {
+
 			data[field] = ""
 			res["data"] = data
 		}

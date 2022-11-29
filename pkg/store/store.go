@@ -20,6 +20,9 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/store/role"
 	"github.com/dwarvesf/fortress-api/pkg/store/seniority"
 	"github.com/dwarvesf/fortress-api/pkg/store/stack"
+	"github.com/dwarvesf/fortress-api/pkg/store/workunit"
+	"github.com/dwarvesf/fortress-api/pkg/store/workunitmember"
+	"github.com/dwarvesf/fortress-api/pkg/store/workunitstack"
 )
 
 type Store struct {
@@ -42,6 +45,9 @@ type Store struct {
 	EmployeeStack         employeestack.IStore
 	ProjectStack          projectstack.IStore
 	Content               content.IStore
+	WorkUnit              workunit.IStore
+	WorkUnitMember        workunitmember.IStore
+	WorkUnitStack         workunitstack.IStore
 }
 
 func New() *Store {
@@ -65,5 +71,8 @@ func New() *Store {
 		EmployeeStack:         employeestack.New(),
 		ProjectStack:          projectstack.New(),
 		Content:               content.New(),
+		WorkUnit:              workunit.New(),
+		WorkUnitMember:        workunitmember.New(),
+		WorkUnitStack:         workunitstack.New(),
 	}
 }

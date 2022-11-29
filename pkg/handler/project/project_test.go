@@ -465,8 +465,7 @@ func TestHandler_Detail(t *testing.T) {
 	testRepoMock := store.NewPostgresStore(&cfg)
 
 	tests := []struct {
-		name string
-
+		name             string
 		id               string
 		query            string
 		wantCode         int
@@ -638,6 +637,95 @@ func TestHandler_UpdateContactInfo(t *testing.T) {
 			require.NoError(t, err)
 
 			require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.UpdateProjectContactInfo] response mismatched")
+		})
+	}
+}
+
+func TestHandler_CreateWorkUnit(t *testing.T) {
+	cfg := config.LoadTestConfig()
+	loggerMock := logger.NewLogrusLogger()
+	serviceMock := service.New(&cfg)
+	storeMock := store.New()
+	testRepoMock := store.NewPostgresStore(&cfg)
+
+	tests := []struct {
+		name             string
+		input            CreateWorkUnitInput
+		wantCode         int
+		wantResponsePath string
+	}{
+		{
+			name: "happy_case",
+			input: CreateWorkUnitInput{
+				ProjectID: "8dc3be2e-19a4-4942-8a79-56db391a0b15",
+				Body: CreateWorkUnitBody{
+					Name:   "workunit1",
+					Type:   model.WorkUnitTypeDevelopment.String(),
+					Status: model.WorkUnitStatusArchived.String(),
+					URL:    "https://github.com/dwarvesf/fortress-api",
+					Members: []string{
+						"2655832e-f009-4b73-a535-64c3a22e558f",
+						"ecea9d15-05ba-4a4e-9787-54210e3b98ce",
+					},
+					Stacks: []string{
+						"0ecf47c8-cca4-4c30-94bb-054b1124c44f",
+						"fa0f4e46-7eab-4e5c-9d31-30489e69fe2e",
+					},
+				},
+			},
+			wantCode:         http.StatusOK,
+			wantResponsePath: "testdata/create_work_unit/200_success.json",
+		},
+		{
+			name: "project_not_found",
+			input: CreateWorkUnitInput{
+				ProjectID: "8dc3be2e-19a4-4942-8a79-56db391a0b16",
+				Body: CreateWorkUnitBody{
+					Name:   "workunit1",
+					Type:   model.WorkUnitTypeDevelopment.String(),
+					Status: model.WorkUnitStatusArchived.String(),
+					URL:    "https://github.com/dwarvesf/fortress-api",
+					Members: []string{
+						"2655832e-f009-4b73-a535-64c3a22e558f",
+						"ecea9d15-05ba-4a4e-9787-54210e3b98ce",
+					},
+					Stacks: []string{
+						"0ecf47c8-cca4-4c30-94bb-054b1124c44f",
+						"fa0f4e46-7eab-4e5c-9d31-30489e69fe2e",
+					},
+				},
+			},
+			wantCode:         http.StatusNotFound,
+			wantResponsePath: "testdata/create_work_unit/404_project_not_found.json",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			body, err := json.Marshal(tt.input.Body)
+			if err != nil {
+				t.Error(err)
+				return
+			}
+
+			w := httptest.NewRecorder()
+			ctx, _ := gin.CreateTestContext(w)
+			ctx.Request = httptest.NewRequest(http.MethodPost,
+				fmt.Sprintf("/api/v1/projects/%s/work-units", tt.input.ProjectID),
+				bytes.NewBuffer(body))
+			ctx.Request.Header.Set("Authorization", testToken)
+			ctx.Request.Header.Set("Content-Type", gin.MIMEJSON)
+			ctx.AddParam("id", tt.input.ProjectID)
+
+			h := New(storeMock, testRepoMock, serviceMock, loggerMock)
+			h.CreateWorkUnit(ctx)
+			require.Equal(t, tt.wantCode, w.Code)
+			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+			require.NoError(t, err)
+
+			res := w.Body.Bytes()
+			res, _ = utils.RemoveFieldInResponse(res, "id")
+
+			require.JSONEq(t, string(expRespRaw), string(res), "[Handler.Project.CreateWorkUnit] response mismatched")
 		})
 	}
 }
