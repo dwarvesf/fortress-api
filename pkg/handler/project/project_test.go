@@ -648,6 +648,63 @@ func TestHandler_UpdateContactInfo(t *testing.T) {
 	}
 }
 
+func TestHandler_GetListWorkUnit(t *testing.T) {
+	// load env and test data
+	cfg := config.LoadTestConfig()
+	loggerMock := logger.NewLogrusLogger()
+	serviceMock := service.New(&cfg)
+	storeMock := store.New()
+	testRepoMock := store.NewPostgresStore(&cfg)
+
+	tests := []struct {
+		name             string
+		wantCode         int
+		wantResponsePath string
+		id               string
+		query            string
+	}{
+		{
+			name:             "ok_get_list_work_unit",
+			wantCode:         200,
+			wantResponsePath: "testdata/get_list_work_unit/200.json",
+			id:               "8dc3be2e-19a4-4942-8a79-56db391a0b15",
+			query:            "status=active",
+		},
+		{
+			name:             "err_invalid_status",
+			wantCode:         400,
+			wantResponsePath: "testdata/get_list_work_unit/400.json",
+			id:               "8dc3be2e-19a4-4942-8a79-56db391a0b15",
+			query:            "status=activ",
+		},
+		{
+			name:             "err_project_not_found",
+			wantCode:         404,
+			wantResponsePath: "testdata/get_list_work_unit/404.json",
+			id:               "8dc3be2e-19a4-4942-8a79-56db391a0b14",
+			query:            "status=active",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			w := httptest.NewRecorder()
+			ctx, _ := gin.CreateTestContext(w)
+			ctx.AddParam("id", tt.id)
+			ctx.Request = httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/projects/%s/work-units?%s", tt.id, tt.query), nil)
+			ctx.Request.Header.Set("Authorization", testToken)
+			ctx.Request.URL.RawQuery = tt.query
+
+			h := New(storeMock, testRepoMock, serviceMock, loggerMock)
+			h.GetWorkUnits(ctx)
+			require.Equal(t, tt.wantCode, w.Code)
+			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+			require.NoError(t, err)
+
+			require.JSONEq(t, string(expRespRaw), string(w.Body.Bytes()), "[Handler.Project.GetListWorkUnit] response mismatched")
+		})
+	}
+}
+
 func TestHandler_CreateWorkUnit(t *testing.T) {
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()

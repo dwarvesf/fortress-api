@@ -65,3 +65,39 @@ type ListWorkUnitResponse struct {
 type WorkUnitResponse struct {
 	Data WorkUnit `json:"data"`
 }
+
+func ToWorkUnitList(workUnits []*model.WorkUnit, projectID string) []*WorkUnit {
+	var rs []*WorkUnit
+
+	for _, wu := range workUnits {
+		newWorkUnit := &WorkUnit{
+			ID:        wu.ID.String(),
+			Name:      wu.Name,
+			URL:       wu.SourceURL,
+			Type:      wu.Type.String(),
+			Status:    wu.Status.String(),
+			ProjectID: projectID,
+		}
+
+		for _, member := range wu.WorkUnitMembers {
+			newWorkUnit.Members = append(newWorkUnit.Members, BasicMember{
+				EmployeeID:  member.EmployeeID.String(),
+				FullName:    member.Employee.FullName,
+				DisplayName: member.Employee.DisplayName,
+				Avatar:      member.Employee.Avatar,
+			})
+		}
+
+		for _, wStack := range wu.WorkUnitStacks {
+			newWorkUnit.Stacks = append(newWorkUnit.Stacks, MetaData{
+				ID:   wStack.ID.String(),
+				Name: wStack.Stack.Name,
+				Code: wStack.Stack.Code,
+			})
+		}
+
+		rs = append(rs, newWorkUnit)
+	}
+
+	return rs
+}

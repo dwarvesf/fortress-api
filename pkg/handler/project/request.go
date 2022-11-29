@@ -372,3 +372,28 @@ func (i *ArchiveWorkUnitInput) Validate() error {
 
 	return nil
 }
+
+type GetListWorkUnitInput struct {
+	ProjectID string
+	Query     GetListWorkUnitQuery
+}
+
+type GetListWorkUnitQuery struct {
+	Status model.WorkUnitStatus `form:"status" json:"status"`
+}
+
+func (i GetListWorkUnitInput) Validate() error {
+	if i.ProjectID == "" || !model.IsUUIDFromString(i.ProjectID) {
+		return ErrInvalidProjectID
+	}
+
+	return i.Query.Validate()
+}
+
+func (i GetListWorkUnitQuery) Validate() error {
+	if !i.Status.IsValid() {
+		return ErrInvalidWorkUnitStatus
+	}
+
+	return nil
+}
