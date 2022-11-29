@@ -4,14 +4,15 @@ import (
 	"time"
 )
 
-type ProjectUnitMember struct {
+type WorkUnitMember struct {
 	BaseModel
 
-	Name       string
 	Status     string
+	JoinedDate time.Time
 	LeftDate   *time.Time
-	JoinedDate *time.Time
 	EmployeeID UUID
 	WorkUnitID UUID
 	ProjectID  UUID
+
+	Employee Employee
 }

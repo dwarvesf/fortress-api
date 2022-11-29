@@ -1321,18 +1321,14 @@ func (h *handler) GetWorkUnits(c *gin.Context) {
 			URL:  "https://github.com/dwarvesf/fortress-api",
 			Members: []view.BasicMember{
 				{
-					ProjectMemberID: "f32d08ca-8863-4ab3-8c84-a11849451eb7",
-					ProjectSlotID:   "f32d08ca-8863-4ab3-8c84-a11849451eb7",
-					EmployeeID:      "f32d08ca-8863-4ab3-8c84-a11849451eb7",
-					Name:            "Nguyễn Hải Nam",
-					Avatar:          "https://s3-ap-southeast-1.amazonaws.com/fortress-images/2870969541970972723.png",
+					EmployeeID: "f32d08ca-8863-4ab3-8c84-a11849451eb7",
+					FullName:   "Nguyễn Hải Nam",
+					Avatar:     "https://s3-ap-southeast-1.amazonaws.com/fortress-images/2870969541970972723.png",
 				},
 				{
-					ProjectMemberID: "f32d08ca-8863-4ab3-8c84-a11849451eb8",
-					ProjectSlotID:   "f32d08ca-8863-4ab3-8c84-a11849451eb7",
-					EmployeeID:      "f32d08ca-8863-4ab3-8c84-a11849451eb8",
-					Name:            "Nguyễn Ngô Lập",
-					Avatar:          "https://s3-ap-southeast-1.amazonaws.com/fortress-images/2870969541970972723.png",
+					EmployeeID: "f32d08ca-8863-4ab3-8c84-a11849451eb8",
+					FullName:   "Nguyễn Ngô Lập",
+					Avatar:     "https://s3-ap-southeast-1.amazonaws.com/fortress-images/2870969541970972723.png",
 				},
 			},
 			Stacks: []view.MetaData{
@@ -1382,7 +1378,7 @@ func (h *handler) CreateWorkUnit(c *gin.Context) {
 	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler": "project",
-		"method":  "CreateWorkUnits",
+		"method":  "CreateWorkUnit",
 		"input":   input,
 	})
 
@@ -1392,44 +1388,92 @@ func (h *handler) CreateWorkUnit(c *gin.Context) {
 		return
 	}
 
-	res := view.WorkUnit{
-		ID:   "f32d08ca-8863-4ab3-8c84-a11849451eb7",
-		Name: "Fortress API",
-		URL:  "https://github.com/dwarvesf/fortress-api",
-		Members: []view.BasicMember{
-			{
-				ProjectMemberID: "f32d08ca-8863-4ab3-8c84-a11849451eb7",
-				ProjectSlotID:   "f32d08ca-8863-4ab3-8c84-a11849451eb7",
-				EmployeeID:      "f32d08ca-8863-4ab3-8c84-a11849451eb7",
-				Name:            "Nguyễn Hải Nam",
-				Avatar:          "https://s3-ap-southeast-1.amazonaws.com/fortress-images/2870969541970972723.png",
-			},
-			{
-				ProjectMemberID: "f32d08ca-8863-4ab3-8c84-a11849451eb8",
-				ProjectSlotID:   "f32d08ca-8863-4ab3-8c84-a11849451eb7",
-				EmployeeID:      "f32d08ca-8863-4ab3-8c84-a11849451eb8",
-				Name:            "Nguyễn Ngô Lập",
-				Avatar:          "https://s3-ap-southeast-1.amazonaws.com/fortress-images/2870969541970972723.png",
-			},
-		},
-		Stacks: []view.MetaData{
-			{
-				ID:   "f32d08ca-8863-4ab3-8c84-a11849451eb7",
-				Code: "golang",
-				Name: "Golang",
-			},
-			{
-				ID:   "f32d08ca-8863-4ab3-8c84-a11849451eb8",
-				Code: "gcloud",
-				Name: "Google Cloud",
-			},
-		},
-		Type:      "Repository",
-		Status:    "Active",
-		ProjectID: "f32d08ca-8863-4ab3-8c84-a11849451eb7",
+	exists, err := h.store.Project.IsExist(h.repo.DB(), input.ProjectID)
+	if err != nil {
+		l.Error(err, "failed to check project existence")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input, ""))
+		return
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse(res, nil, nil, nil, ""))
+	if !exists {
+		l.Error(ErrProjectNotFound, "project not found")
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrProjectNotFound, nil, ""))
+		return
+	}
+
+	tx, done := h.repo.NewTransaction()
+
+	workUnit := &model.WorkUnit{
+		Name:      input.Body.Name,
+		Type:      model.WorkUnitType(input.Body.Type),
+		Status:    model.WorkUnitStatus(input.Body.Status),
+		SourceURL: input.Body.URL,
+		ProjectID: model.MustGetUUIDFromString(input.ProjectID),
+	}
+
+	if err := h.store.WorkUnit.Create(tx.DB(), workUnit); err != nil {
+		l.Error(err, "failed to create new work unit")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
+		return
+	}
+
+	stacks, err := h.store.Stack.GetByIDs(tx.DB(), input.Body.Stacks)
+	if err != nil {
+		l.Error(err, "failed to get stacks")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
+		return
+	}
+
+	// create work unit stack
+	for _, stack := range stacks {
+		wuStack := model.WorkUnitStack{
+			StackID:    stack.ID,
+			WorkUnitID: workUnit.ID,
+		}
+		if err := h.store.WorkUnitStack.Create(tx.DB(), &wuStack); err != nil {
+			l.Error(err, "failed to create new work unit stack")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
+			return
+		}
+
+		wuStack.Stack = *stack
+		workUnit.WorkUnitStacks = append(workUnit.WorkUnitStacks, wuStack)
+	}
+
+	employees, err := h.store.Employee.GetByIDs(tx.DB(), input.Body.Members)
+	if err != nil {
+		l.Error(err, "failed to get employees")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
+		return
+	}
+
+	// create work unit member
+	for _, employee := range employees {
+		_, err = h.store.ProjectMember.One(tx.DB(), input.ProjectID, employee.ID.String(), model.ProjectMemberStatusActive.String())
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			l.Error(ErrMemberIsNotActiveInProject, "member is not active in project")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(ErrMemberIsNotActiveInProject), input, ""))
+			return
+		}
+
+		wuMember := model.WorkUnitMember{
+			Status:     model.ProjectMemberStatusActive.String(),
+			WorkUnitID: workUnit.ID,
+			EmployeeID: employee.ID,
+			ProjectID:  model.MustGetUUIDFromString(input.ProjectID),
+			JoinedDate: time.Now(),
+		}
+		if err := h.store.WorkUnitMember.Create(tx.DB(), &wuMember); err != nil {
+			l.Error(err, "failed to create new work unit member")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
+			return
+		}
+
+		wuMember.Employee = *employee
+		workUnit.WorkUnitMembers = append(workUnit.WorkUnitMembers, wuMember)
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse(view.ToWorkUnit(workUnit), nil, done(nil), nil, ""))
 }
 
 // UpdateWorkUnit godoc

@@ -8,11 +8,14 @@ type WorkUnit struct {
 	BaseModel
 
 	Name           string
-	Status         string
-	Type           string
+	Status         WorkUnitStatus
+	Type           WorkUnitType
 	SourceURL      string
 	SourceMetadata datatypes.JSON
-	EmployeeID     UUID
+	ProjectID      UUID
+
+	WorkUnitStacks  []WorkUnitStack
+	WorkUnitMembers []WorkUnitMember
 }
 
 type WorkUnitType string
@@ -24,7 +27,7 @@ const (
 	WorkUnitTypeLearning    WorkUnitType = "learning"
 )
 
-func (e WorkUnitType) Valid() bool {
+func (e WorkUnitType) IsValid() bool {
 	switch e {
 	case
 		WorkUnitTypeDevelopment,
@@ -37,5 +40,26 @@ func (e WorkUnitType) Valid() bool {
 }
 
 func (e WorkUnitType) String() string {
+	return string(e)
+}
+
+type WorkUnitStatus string
+
+const (
+	WorkUnitStatusActive   WorkUnitStatus = "active"
+	WorkUnitStatusArchived WorkUnitStatus = "archived"
+)
+
+func (e WorkUnitStatus) IsValid() bool {
+	switch e {
+	case
+		WorkUnitStatusActive,
+		WorkUnitStatusArchived:
+		return true
+	}
+	return false
+}
+
+func (e WorkUnitStatus) String() string {
 	return string(e)
 }

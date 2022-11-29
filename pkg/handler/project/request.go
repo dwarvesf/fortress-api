@@ -291,15 +291,28 @@ func (i *CreateWorkUnitInput) Validate() error {
 }
 
 func (i *CreateWorkUnitBody) Validate() error {
-	if i.Type == "" {
+	if i.Type == "" || !model.WorkUnitType(i.Type).IsValid() {
 		return ErrInvalidWorkUnitType
 	}
-	if i.Status == "" {
+
+	if i.Status == "" || !model.WorkUnitStatus(i.Status).IsValid() {
 		return ErrInvalidWorkUnitStatus
 	}
 
 	if len(i.Stacks) == 0 {
 		return ErrInvalidWorkUnitStacks
+	}
+
+	for _, id := range i.Stacks {
+		if !model.IsUUIDFromString(id) {
+			return ErrInvalidStackID
+		}
+	}
+
+	for _, id := range i.Members {
+		if !model.IsUUIDFromString(id) {
+			return ErrInvalidMemberID
+		}
 	}
 
 	return nil

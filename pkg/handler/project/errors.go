@@ -16,11 +16,13 @@ var (
 	ErrInvalidLeftDate              = errors.New("invalid left date")
 	ErrInvalidMemberID              = errors.New("invalid member ID")
 	ErrInvalidWorkUnitID            = errors.New("invalid work unit ID")
+	ErrInvalidStackID               = errors.New("invalid stack ID")
 	ErrProjectNotFound              = errors.New("project not found")
 	ErrCountryNotFound              = errors.New("country not found")
 	ErrEmployeeNotFound             = errors.New("employee not found")
 	ErrSeniorityNotFound            = errors.New("seniority not found")
 	ErrProjectSlotNotFound          = errors.New("project slot not found")
+	ErrStackNotFound                = errors.New("stack not found")
 	ErrMemberIsInactive             = errors.New("member is inactive")
 	ErrSlotIsInactive               = errors.New("slot is inactive")
 	ErrEmployeeIDCannotBeChanged    = errors.New("employeeID cannot be changed")
@@ -36,6 +38,7 @@ var (
 	ErrInvalidWorkUnitType          = errors.New("invalid work unit type")
 	ErrInvalidWorkUnitStatus        = errors.New("invalid work unit status")
 	ErrInvalidWorkUnitStacks        = errors.New("invalid work unit stacks")
+	ErrMemberIsNotActiveInProject   = errors.New("member is not active in project")
 )
 
 // errPositionNotFound returns unauthorized custom error
