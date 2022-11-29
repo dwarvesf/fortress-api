@@ -58,4 +58,6 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 	v1.GET("/projects/:id/work-units", amw.WithAuth, h.Project.GetWorkUnits)
 	v1.POST("/projects/:id/work-units", amw.WithAuth, h.Project.CreateWorkUnit)
 	v1.PUT("/projects/:id/work-units/:workUnitID", amw.WithAuth, h.Project.UpdateWorkUnit)
+	v1.PUT("/projects/:id/work-units/:workUnitID/archive", amw.WithAuth, h.Project.ArchiveWorkUnit)
+	v1.PUT("/projects/:id/work-units/:workUnitID/unarchive", amw.WithAuth, h.Project.UnarchiveWorkUnit)
 }

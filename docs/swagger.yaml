@@ -2251,7 +2251,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/pkg_handler_project.CreateProjectInput'
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.CreateProjectInput'
       produces:
       - application/json
       responses:
@@ -2382,7 +2382,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/pkg_handler_project.UpdateContactInfoInput'
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateContactInfoInput'
       produces:
       - application/json
       responses:
@@ -2426,7 +2426,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/pkg_handler_project.UpdateGeneralInfoInput'
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateGeneralInfoInput'
       produces:
       - application/json
       responses:
@@ -2470,7 +2470,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/pkg_handler_project.AssignMemberInput'
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.AssignMemberInput'
       produces:
       - application/json
       responses:
@@ -2513,7 +2513,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/pkg_handler_project.UpdateMemberInput'
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateMemberInput'
       produces:
       - application/json
       responses:
@@ -2643,7 +2643,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/pkg_handler_project.CreateWorkUnitBody'
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.CreateWorkUnitBody'
       produces:
       - application/json
       responses:
@@ -2664,6 +2664,92 @@ paths:
           schema:
             $ref: '#/definitions/view.ErrorResponse'
       summary: Create work unit of a project
+      tags:
+      - Project
+  /projects/{id}/work-units/:workUnitID/archive:
+    put:
+      consumes:
+      - application/json
+      description: Archive an active work unit of a project
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Work Unit ID
+        in: path
+        name: workUnitID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Archive an active work unit of a project
+      tags:
+      - Project
+  /projects/{id}/work-units/:workUnitID/unarchive:
+    put:
+      consumes:
+      - application/json
+      description: Unarchive an archive work unit of a project
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Work Unit ID
+        in: path
+        name: workUnitID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Unarchive an archive work unit of a project
       tags:
       - Project
   /projects/{id}/work-units/{workUnitID}:
@@ -2692,7 +2778,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/pkg_handler_project.UpdateWorkUnitInput'
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateWorkUnitInput'
       produces:
       - application/json
       responses:

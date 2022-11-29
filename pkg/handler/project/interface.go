@@ -17,4 +17,6 @@ type IHandler interface {
 	GetWorkUnits(c *gin.Context)
 	CreateWorkUnit(c *gin.Context)
 	UpdateWorkUnit(c *gin.Context)
+	ArchiveWorkUnit(c *gin.Context)
+	UnarchiveWorkUnit(c *gin.Context)
 }
