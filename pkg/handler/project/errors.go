@@ -7,7 +7,6 @@ import (
 
 var (
 	ErrInvalidProjectID             = errors.New("invalid project ID")
-	ErrInvalidworkUnitID            = errors.New("invalid work unit ID")
 	ErrInvalidProjectType           = errors.New("invalid project type")
 	ErrInvalidProjectStatus         = errors.New("invalid project status")
 	ErrInvalidProjectMemberStatus   = errors.New("invalid project member status")
@@ -16,6 +15,7 @@ var (
 	ErrInvalidJoinedDate            = errors.New("invalid joined date")
 	ErrInvalidLeftDate              = errors.New("invalid left date")
 	ErrInvalidMemberID              = errors.New("invalid member ID")
+	ErrInvalidWorkUnitID            = errors.New("invalid work unit ID")
 	ErrProjectNotFound              = errors.New("project not found")
 	ErrCountryNotFound              = errors.New("country not found")
 	ErrEmployeeNotFound             = errors.New("employee not found")

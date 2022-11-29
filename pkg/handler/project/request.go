@@ -324,7 +324,7 @@ func (i *UpdateWorkUnitInput) Validate() error {
 	}
 
 	if i.WorkUnitID == "" || !model.IsUUIDFromString(i.WorkUnitID) {
-		return ErrInvalidworkUnitID
+		return ErrInvalidWorkUnitID
 	}
 
 	return i.Body.Validate()
@@ -337,6 +337,23 @@ func (i *UpdateWorkUnitBody) Validate() error {
 
 	if len(i.Stacks) == 0 {
 		return ErrInvalidWorkUnitStacks
+	}
+
+	return nil
+}
+
+type ArchiveWorkUnitInput struct {
+	ProjectID  string
+	WorkUnitID string
+}
+
+func (i *ArchiveWorkUnitInput) Validate() error {
+	if i.ProjectID == "" || !model.IsUUIDFromString(i.ProjectID) {
+		return ErrInvalidProjectID
+	}
+
+	if i.WorkUnitID == "" || !model.IsUUIDFromString(i.WorkUnitID) {
+		return ErrInvalidWorkUnitID
 	}
 
 	return nil

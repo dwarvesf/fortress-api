@@ -1472,3 +1472,75 @@ func (h *handler) UpdateWorkUnit(c *gin.Context) {
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))
 }
+
+// ArchiveWorkUnit godoc
+// @Summary Archive an active work unit of a project
+// @Description Archive an active work unit of a project
+// @Tags Project
+// @Accept  json
+// @Produce  json
+// @Param Authorization header string true "jwt token"
+// @Param id path string true "Project ID"
+// @Param workUnitID path string true  "Work Unit ID"
+// @Success 200 {object} view.MessageResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /projects/{id}/work-units/:workUnitID/archive [put]
+func (h *handler) ArchiveWorkUnit(c *gin.Context) {
+	input := ArchiveWorkUnitInput{
+		ProjectID:  c.Param("id"),
+		WorkUnitID: c.Param("workUnitID"),
+	}
+
+	// TODO: can we move this to middleware ?
+	l := h.logger.Fields(logger.Fields{
+		"handler": "project",
+		"method":  "ArchiveWorkUnit",
+		"input":   input,
+	})
+
+	if err := input.Validate(); err != nil {
+		l.Error(err, "validate failed")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))
+}
+
+// UnarchiveWorkUnit godoc
+// @Summary Unarchive an archive work unit of a project
+// @Description Unarchive an archive work unit of a project
+// @Tags Project
+// @Accept  json
+// @Produce  json
+// @Param Authorization header string true "jwt token"
+// @Param id path string true "Project ID"
+// @Param workUnitID path string true  "Work Unit ID"
+// @Success 200 {object} view.MessageResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /projects/{id}/work-units/:workUnitID/unarchive [put]
+func (h *handler) UnarchiveWorkUnit(c *gin.Context) {
+	input := ArchiveWorkUnitInput{
+		ProjectID:  c.Param("id"),
+		WorkUnitID: c.Param("workUnitID"),
+	}
+
+	// TODO: can we move this to middleware ?
+	l := h.logger.Fields(logger.Fields{
+		"handler": "project",
+		"method":  "UnarchiveWorkUnit",
+		"input":   input,
+	})
+
+	if err := input.Validate(); err != nil {
+		l.Error(err, "validate failed")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))
+}
