@@ -1308,48 +1308,50 @@ func (h *handler) updateProjectHead(tx store.DBRepo, projectID string, memberID 
 // @Failure 500 {object} view.ErrorResponse
 // @Router /projects/{id}/work-units [get]
 func (h *handler) GetWorkUnits(c *gin.Context) {
-	projectID := c.Param("id")
-	if projectID == "" || !model.IsUUIDFromString(projectID) {
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, ErrInvalidProjectID, nil, ""))
+	input := GetListWorkUnitInput{
+		ProjectID: c.Param("id"),
+	}
+
+	if err := c.ShouldBindQuery(&input.Query); err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, input.Query, ""))
 		return
 	}
 
-	workUnits := []view.WorkUnit{
-		{
-			ID:   "f32d08ca-8863-4ab3-8c84-a11849451eb7",
-			Name: "Fortress API",
-			URL:  "https://github.com/dwarvesf/fortress-api",
-			Members: []view.BasicMember{
-				{
-					EmployeeID: "f32d08ca-8863-4ab3-8c84-a11849451eb7",
-					FullName:   "Nguyễn Hải Nam",
-					Avatar:     "https://s3-ap-southeast-1.amazonaws.com/fortress-images/2870969541970972723.png",
-				},
-				{
-					EmployeeID: "f32d08ca-8863-4ab3-8c84-a11849451eb8",
-					FullName:   "Nguyễn Ngô Lập",
-					Avatar:     "https://s3-ap-southeast-1.amazonaws.com/fortress-images/2870969541970972723.png",
-				},
-			},
-			Stacks: []view.MetaData{
-				{
-					ID:   "f32d08ca-8863-4ab3-8c84-a11849451eb7",
-					Code: "golang",
-					Name: "Golang",
-				},
-				{
-					ID:   "f32d08ca-8863-4ab3-8c84-a11849451eb8",
-					Code: "gcloud",
-					Name: "Google Cloud",
-				},
-			},
-			Type:      "Repository",
-			Status:    "Active",
-			ProjectID: "f32d08ca-8863-4ab3-8c84-a11849451eb7",
-		},
+	// TODO: can we move this to middleware ?
+	l := h.logger.Fields(logger.Fields{
+		"handler":   "project",
+		"method":    "UpdateContactInfo",
+		"projectID": input.ProjectID,
+		"query":     input.Query,
+	})
+
+	if err := input.Validate(); err != nil {
+		l.Error(err, "validate failed")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse(workUnits, nil, nil, nil, ""))
+	isExits, err := h.store.Project.IsExist(h.repo.DB(), input.ProjectID)
+	if err != nil {
+		l.Info("failed to check if project exists")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input, ""))
+		return
+	}
+
+	if !isExits {
+		l.Info("project not found")
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrProjectNotFound, input, ""))
+		return
+	}
+
+	workUnits, err := h.store.WorkUnit.GetAllByProjectID(h.repo.DB(), input.ProjectID, input.Query.Status)
+	if err != nil {
+		l.Error(err, "failed to get work units")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input.ProjectID, ""))
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse(view.ToWorkUnitList(workUnits, input.ProjectID), nil, nil, nil, ""))
 }
 
 // CreateWorkUnit godoc
@@ -1437,7 +1439,7 @@ func (h *handler) CreateWorkUnit(c *gin.Context) {
 		}
 
 		wuStack.Stack = *stack
-		workUnit.WorkUnitStacks = append(workUnit.WorkUnitStacks, wuStack)
+		workUnit.WorkUnitStacks = append(workUnit.WorkUnitStacks, &wuStack)
 	}
 
 	employees, err := h.store.Employee.GetByIDs(tx.DB(), input.Body.Members)
@@ -1470,7 +1472,7 @@ func (h *handler) CreateWorkUnit(c *gin.Context) {
 		}
 
 		wuMember.Employee = *employee
-		workUnit.WorkUnitMembers = append(workUnit.WorkUnitMembers, wuMember)
+		workUnit.WorkUnitMembers = append(workUnit.WorkUnitMembers, &wuMember)
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse(view.ToWorkUnit(workUnit), nil, done(nil), nil, ""))

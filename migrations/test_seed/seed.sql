@@ -243,3 +243,21 @@ INSERT INTO public.currencies (id, deleted_at, created_at, updated_at, name, sym
 ('7037bdb6-584e-4e35-996d-ef28a243f48a', NULL, '2019-02-11 06:14:51.305496+00', '2019-02-11 06:14:51.305496+00', 'VND', 'đ', 'vi-vn', 'fiat'),
 ('bf256e69-28b0-4d9f-bf48-3662854157a9', NULL, '2019-10-28 14:14:52.302051+00', '2019-10-28 14:14:52.302051+00', 'SGD', 's$', 'en-sg', 'fiat'),
 ('f00498e4-7a4c-4f61-b126-b84b5faeee06', NULL, '2019-02-11 06:14:51.305496+00', '2019-02-11 06:14:51.305496+00', 'USD', '$', 'en-us', 'fiat');
+
+INSERT INTO public.work_units (id, deleted_at, created_at, updated_at, name, status, type, source_url, project_id, source_metadata) VALUES 
+('4797347d-21e0-4dac-a6c7-c98bf2d6b27c', null, '2022-11-29 14:52:31.000000', '2022-11-29 14:52:32.000000', 'Fortress API', 'active', 'development', 'https://github.com/dwarvesf/fortress-api', '8dc3be2e-19a4-4942-8a79-56db391a0b15', '[]'),
+('69b32f7e-0433-4566-a801-72909172940e', null, '2022-11-29 08:03:33.233262', '2022-11-29 08:03:33.233262', 'Fortress Web', 'archived', 'management', 'https://github.com/dwarvesf/fortress-web', 'dfa182fc-1d2d-49f6-a877-c01da9ce4207', '[]');
+
+INSERT INTO public.work_unit_stacks (id, deleted_at, created_at, updated_at, stack_id, work_unit_id) VALUES 
+('95851b98-c8d0-46f6-b6b0-8dd2037f44d6', null, '2022-11-29 08:19:49.579955', '2022-11-29 08:19:49.579955', '0ecf47c8-cca4-4c30-94bb-054b1124c44f', '4797347d-21e0-4dac-a6c7-c98bf2d6b27c'),
+('f1ddeeb2-ad44-4c97-a934-86ad8f24ca57', null, '2022-11-29 08:20:10.277351', '2022-11-29 08:20:10.277351', 'fa0f4e46-7eab-4e5c-9d31-30489e69fe2e', '4797347d-21e0-4dac-a6c7-c98bf2d6b27c'),
+('9b7c9d01-75a3-4386-93a7-4ff099887847', null, '2022-11-29 08:20:51.766820', '2022-11-29 08:20:51.766820', 'b403ef95-4269-4830-bbb6-8e56e5ec0af4', '69b32f7e-0433-4566-a801-72909172940e'),
+('b851f3bc-a758-4e28-834b-0d2c0a04bf71', null, '2022-11-29 08:20:51.766820', '2022-11-29 08:20:51.766820', 'fa0f4e46-7eab-4e5c-9d31-30489e69fe2e', '69b32f7e-0433-4566-a801-72909172940e');
+
+INSERT INTO public.work_unit_members (id, deleted_at, created_at, updated_at, joined_date, left_date, status, project_id, employee_id, work_unit_id) VALUES 
+('303fd2e5-0b4d-401c-b5fa-74820991e6c0', null, '2022-11-29 08:12:21.514308', '2022-11-29 08:12:21.514308', '2022-11-29', null, 'active', '8dc3be2e-19a4-4942-8a79-56db391a0b15', '2655832e-f009-4b73-a535-64c3a22e558f', '4797347d-21e0-4dac-a6c7-c98bf2d6b27c'),
+('f79ae054-4ab4-41cd-aa5f-c871887cc35c', null, '2022-11-29 08:16:02.300701', '2022-11-29 08:16:02.300701', '2022-11-29', null, 'active', '8dc3be2e-19a4-4942-8a79-56db391a0b15', 'ecea9d15-05ba-4a4e-9787-54210e3b98ce', '69b32f7e-0433-4566-a801-72909172940e'),
+('7e4da4ac-241f-4af8-b0a0-f59e5a64065b', null, '2022-11-29 08:13:02.352046', '2022-11-29 08:13:02.352046', '2022-11-29', null, 'active', '8dc3be2e-19a4-4942-8a79-56db391a0b15', '8d7c99c0-3253-4286-93a9-e7554cb327ef', '69b32f7e-0433-4566-a801-72909172940e'),
+('93954bcd-d5e9-4c4c-ad30-7de5fd332a80', null, '2022-11-29 08:13:37.347407', '2022-11-29 08:13:37.347407', '2022-11-29', null, 'inactive', '8dc3be2e-19a4-4942-8a79-56db391a0b15', 'eeae589a-94e3-49ac-a94c-fcfb084152b2', '69b32f7e-0433-4566-a801-72909172940e'),
+('e14f68f8-7ed5-4a59-9df8-275573537861', null, '2022-11-29 08:10:20.916758', '2022-11-29 08:10:20.916758', '2022-11-29', null, 'inactive', '8dc3be2e-19a4-4942-8a79-56db391a0b15', '608ea227-45a5-4c8a-af43-6c7280d96340', '4797347d-21e0-4dac-a6c7-c98bf2d6b27c'),
+('799708d7-855b-4a42-b169-7c9891f0b218', null, '2022-11-29 08:11:02.996000', '2022-11-29 08:11:02.996000', '2022-11-29', null, 'inactive', '8dc3be2e-19a4-4942-8a79-56db391a0b15', 'ecea9d15-05ba-4a4e-9787-54210e3b98ce', '4797347d-21e0-4dac-a6c7-c98bf2d6b27c');

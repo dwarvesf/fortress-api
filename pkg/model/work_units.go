@@ -14,8 +14,29 @@ type WorkUnit struct {
 	SourceMetadata datatypes.JSON
 	ProjectID      UUID
 
-	WorkUnitStacks  []WorkUnitStack
-	WorkUnitMembers []WorkUnitMember
+	WorkUnitMembers []*WorkUnitMember
+	WorkUnitStacks  []*WorkUnitStack
+}
+
+type WorkUnitStatus string
+
+const (
+	WorkUnitStatusActive   WorkUnitStatus = "active"
+	WorkUnitStatusArchived WorkUnitStatus = "archived"
+)
+
+func (e WorkUnitStatus) IsValid() bool {
+	switch e {
+	case
+		WorkUnitStatusActive,
+		WorkUnitStatusArchived:
+		return true
+	}
+	return false
+}
+
+func (e WorkUnitStatus) String() string {
+	return string(e)
 }
 
 type WorkUnitType string
@@ -40,26 +61,5 @@ func (e WorkUnitType) IsValid() bool {
 }
 
 func (e WorkUnitType) String() string {
-	return string(e)
-}
-
-type WorkUnitStatus string
-
-const (
-	WorkUnitStatusActive   WorkUnitStatus = "active"
-	WorkUnitStatusArchived WorkUnitStatus = "archived"
-)
-
-func (e WorkUnitStatus) IsValid() bool {
-	switch e {
-	case
-		WorkUnitStatusActive,
-		WorkUnitStatusArchived:
-		return true
-	}
-	return false
-}
-
-func (e WorkUnitStatus) String() string {
 	return string(e)
 }
