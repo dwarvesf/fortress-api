@@ -119,8 +119,8 @@ INSERT INTO public.employee_roles (id, deleted_at, created_at, updated_at, emplo
 ('f7a25073-6832-4ba0-a69e-b0a9c87c61b4', NULL, '2022-11-17 11:53:14.690017', '2022-11-17 11:53:14.690017', '38a00d4a-bc45-41de-965a-adc674ab82c9', 'd796884d-a8c4-4525-81e7-54a3b6099eac');
 
 INSERT INTO public.projects (id, deleted_at, created_at, updated_at, name, type, start_date, end_date, status, country_id, client_email, project_email) VALUES
-('dfa182fc-1d2d-49f6-a877-c01da9ce4207', null, '2022-11-11 18:06:56.362902', '2022-11-11 18:06:56.362902', 'Lorem ipsum', 'time-material', '2022-07-06', null, 'active', null, null, null),
-('8dc3be2e-19a4-4942-8a79-56db391a0b15', null, '2022-11-11 18:06:56.362902', '2022-11-11 18:06:56.362902', 'Fortress', 'dwarves', '2022-11-01', null, 'active', '4ef64490-c906-4192-a7f9-d2221dadfe4c', 'team@d.foundation', 'fortress@d.foundation');
+('dfa182fc-1d2d-49f6-a877-c01da9ce4207', NULL, '2022-11-11 18:06:56.362902', '2022-11-11 18:06:56.362902', 'Lorem ipsum', 'time-material', '2022-07-06', NULL, 'active', NULL, NULL, NULL),
+('8dc3be2e-19a4-4942-8a79-56db391a0b15', NULL, '2022-11-11 18:06:56.362902', '2022-11-11 18:06:56.362902', 'Fortress', 'dwarves', '2022-11-01', NULL, 'active', '4ef64490-c906-4192-a7f9-d2221dadfe4c', 'team@d.foundation', 'fortress@d.foundation');
 
 INSERT INTO public.project_slots (id, deleted_at, created_at, updated_at, project_id, seniority_id, upsell_person_id, position, deployment_type, rate, discount, status) VALUES
 ('f32d08ca-8863-4ab3-8c84-a11849451eb7', NULL, '2022-11-11 18:19:56.156172', '2022-11-11 18:19:56.156172', '8dc3be2e-19a4-4942-8a79-56db391a0b15', 'dac16ce6-9e5a-4ff3-9ea2-fdea4853925e', NULL,'frontend', 'official', 5000, 0, 'active'),
@@ -243,3 +243,21 @@ INSERT INTO public.currencies (id, deleted_at, created_at, updated_at, name, sym
 ('7037bdb6-584e-4e35-996d-ef28a243f48a', NULL, '2019-02-11 06:14:51.305496+00', '2019-02-11 06:14:51.305496+00', 'VND', 'đ', 'vi-vn', 'fiat'),
 ('bf256e69-28b0-4d9f-bf48-3662854157a9', NULL, '2019-10-28 14:14:52.302051+00', '2019-10-28 14:14:52.302051+00', 'SGD', 's$', 'en-sg', 'fiat'),
 ('f00498e4-7a4c-4f61-b126-b84b5faeee06', NULL, '2019-02-11 06:14:51.305496+00', '2019-02-11 06:14:51.305496+00', 'USD', '$', 'en-us', 'fiat');
+
+INSERT INTO public.work_units (id, deleted_at, created_at, updated_at, name, status, type, source_url, project_id, source_metadata) VALUES 
+('4797347d-21e0-4dac-a6c7-c98bf2d6b27c', NULL, '2022-11-29 08:03:33.233262', '2022-11-29 08:03:33.233262', 'Fortress API', 'active', 'development', 'https://github.com/dwarvesf/fortress-api', '8dc3be2e-19a4-4942-8a79-56db391a0b15', '[]'),
+('69b32f7e-0433-4566-a801-72909172940e', NULL, '2022-11-29 08:03:33.233262', '2022-11-29 08:03:33.233262', 'Fortress Web', 'archived', 'management', 'https://github.com/dwarvesf/fortress-web', 'dfa182fc-1d2d-49f6-a877-c01da9ce4207', '[]');
+
+INSERT INTO public.work_unit_stacks (id, deleted_at, created_at, updated_at, stack_id, work_unit_id) VALUES 
+('95851b98-c8d0-46f6-b6b0-8dd2037f44d6', NULL, '2022-11-29 08:03:33.233262', '2022-11-29 08:03:33.233262', '0ecf47c8-cca4-4c30-94bb-054b1124c44f', '4797347d-21e0-4dac-a6c7-c98bf2d6b27c'),
+('f1ddeeb2-ad44-4c97-a934-86ad8f24ca57', NULL, '2022-11-29 08:03:33.233262', '2022-11-29 08:03:33.233262', 'fa0f4e46-7eab-4e5c-9d31-30489e69fe2e', '4797347d-21e0-4dac-a6c7-c98bf2d6b27c'),
+('9b7c9d01-75a3-4386-93a7-4ff099887847', NULL, '2022-11-29 08:03:33.233262', '2022-11-29 08:03:33.233262', 'b403ef95-4269-4830-bbb6-8e56e5ec0af4', '69b32f7e-0433-4566-a801-72909172940e'),
+('b851f3bc-a758-4e28-834b-0d2c0a04bf71', NULL, '2022-11-29 08:03:33.233262', '2022-11-29 08:03:33.233262', 'fa0f4e46-7eab-4e5c-9d31-30489e69fe2e', '69b32f7e-0433-4566-a801-72909172940e');
+
+INSERT INTO public.work_unit_members (id, deleted_at, created_at, updated_at, joined_date, left_date, status, project_id, employee_id, work_unit_id) VALUES 
+('303fd2e5-0b4d-401c-b5fa-74820991e6c0', NULL, '2022-11-29 08:03:33.233262', '2022-11-29 08:03:33.233262', '2022-11-29', NULL, 'active', '8dc3be2e-19a4-4942-8a79-56db391a0b15', '2655832e-f009-4b73-a535-64c3a22e558f', '4797347d-21e0-4dac-a6c7-c98bf2d6b27c'),
+('f79ae054-4ab4-41cd-aa5f-c871887cc35c', NULL, '2022-11-29 08:03:33.233262', '2022-11-29 08:03:33.233262', '2022-11-29', NULL, 'active', '8dc3be2e-19a4-4942-8a79-56db391a0b15', 'ecea9d15-05ba-4a4e-9787-54210e3b98ce', '69b32f7e-0433-4566-a801-72909172940e'),
+('7e4da4ac-241f-4af8-b0a0-f59e5a64065b', NULL, '2022-11-29 08:03:33.233262', '2022-11-29 08:03:33.233262', '2022-11-29', NULL, 'active', '8dc3be2e-19a4-4942-8a79-56db391a0b15', '8d7c99c0-3253-4286-93a9-e7554cb327ef', '69b32f7e-0433-4566-a801-72909172940e'),
+('93954bcd-d5e9-4c4c-ad30-7de5fd332a80', NULL, '2022-11-29 08:03:33.233262', '2022-11-29 08:03:33.233262', '2022-11-29', NULL, 'inactive', '8dc3be2e-19a4-4942-8a79-56db391a0b15', 'eeae589a-94e3-49ac-a94c-fcfb084152b2', '69b32f7e-0433-4566-a801-72909172940e'),
+('e14f68f8-7ed5-4a59-9df8-275573537861', NULL, '2022-11-29 08:03:33.233262', '2022-11-29 08:03:33.233262', '2022-11-29', NULL, 'inactive', '8dc3be2e-19a4-4942-8a79-56db391a0b15', '608ea227-45a5-4c8a-af43-6c7280d96340', '4797347d-21e0-4dac-a6c7-c98bf2d6b27c'),
+('799708d7-855b-4a42-b169-7c9891f0b218', NULL, '2022-11-29 08:03:33.233262', '2022-11-29 08:03:33.233262', '2022-11-29', NULL, 'inactive', '8dc3be2e-19a4-4942-8a79-56db391a0b15', 'ecea9d15-05ba-4a4e-9787-54210e3b98ce', '4797347d-21e0-4dac-a6c7-c98bf2d6b27c');
