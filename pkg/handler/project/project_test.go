@@ -793,3 +793,113 @@ func TestHandler_CreateWorkUnit(t *testing.T) {
 		})
 	}
 }
+
+func TestHandler_ArchiveWorkUnit(t *testing.T) {
+	cfg := config.LoadTestConfig()
+	loggerMock := logger.NewLogrusLogger()
+	serviceMock := service.New(&cfg)
+	storeMock := store.New()
+	repoMock := store.NewPostgresStore(&cfg)
+
+	tests := []struct {
+		name             string
+		wantCode         int
+		wantResponsePath string
+		input            ArchiveWorkUnitInput
+	}{
+		{
+			name:             "happy_case",
+			wantCode:         http.StatusOK,
+			wantResponsePath: "testdata/archive_work_unit/200_ok.json",
+			input: ArchiveWorkUnitInput{
+				ProjectID:  "8dc3be2e-19a4-4942-8a79-56db391a0b15",
+				WorkUnitID: "4797347d-21e0-4dac-a6c7-c98bf2d6b27c",
+			},
+		},
+		{
+			name:             "invalid_project_id",
+			wantCode:         http.StatusNotFound,
+			wantResponsePath: "testdata/archive_work_unit/404_project_not_found.json",
+			input: ArchiveWorkUnitInput{
+				ProjectID:  "8dc3be2e-19a4-4942-8a79-56db391a0b16",
+				WorkUnitID: "4797347d-21e0-4dac-a6c7-c98bf2d6b27c",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			w := httptest.NewRecorder()
+			ctx, _ := gin.CreateTestContext(w)
+			ctx.Request = httptest.NewRequest(http.MethodPut,
+				fmt.Sprintf("/api/v1/projects/%s/work-units/%s/archive", tt.input.ProjectID, tt.input.WorkUnitID),
+				nil)
+
+			ctx.Request.Header.Set("Authorization", testToken)
+			ctx.AddParam("id", tt.input.ProjectID)
+			ctx.AddParam("workUnitID", tt.input.WorkUnitID)
+
+			h := New(storeMock, repoMock, serviceMock, loggerMock)
+			h.ArchiveWorkUnit(ctx)
+			require.Equal(t, tt.wantCode, w.Code)
+			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+			require.NoError(t, err)
+
+			require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.ArchiveWorkUnit] response mismatched")
+		})
+	}
+}
+
+func TestHandler_UnarchiveWorkUnit(t *testing.T) {
+	cfg := config.LoadTestConfig()
+	loggerMock := logger.NewLogrusLogger()
+	serviceMock := service.New(&cfg)
+	storeMock := store.New()
+	repoMock := store.NewPostgresStore(&cfg)
+
+	tests := []struct {
+		name             string
+		wantCode         int
+		wantResponsePath string
+		input            ArchiveWorkUnitInput
+	}{
+		{
+			name:             "happy_case",
+			wantCode:         http.StatusOK,
+			wantResponsePath: "testdata/unarchive_work_unit/200_ok.json",
+			input: ArchiveWorkUnitInput{
+				ProjectID:  "8dc3be2e-19a4-4942-8a79-56db391a0b15",
+				WorkUnitID: "4797347d-21e0-4dac-a6c7-c98bf2d6b27c",
+			},
+		},
+		{
+			name:             "invalid_project_id",
+			wantCode:         http.StatusNotFound,
+			wantResponsePath: "testdata/unarchive_work_unit/404_project_not_found.json",
+			input: ArchiveWorkUnitInput{
+				ProjectID:  "8dc3be2e-19a4-4942-8a79-56db391a0b16",
+				WorkUnitID: "4797347d-21e0-4dac-a6c7-c98bf2d6b27c",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			w := httptest.NewRecorder()
+			ctx, _ := gin.CreateTestContext(w)
+			ctx.Request = httptest.NewRequest(http.MethodPut,
+				fmt.Sprintf("/api/v1/projects/%s/work-units/%s/unarchive", tt.input.ProjectID, tt.input.WorkUnitID),
+				nil)
+
+			ctx.Request.Header.Set("Authorization", testToken)
+			ctx.AddParam("id", tt.input.ProjectID)
+			ctx.AddParam("workUnitID", tt.input.WorkUnitID)
+
+			h := New(storeMock, repoMock, serviceMock, loggerMock)
+			h.UnarchiveWorkUnit(ctx)
+			require.Equal(t, tt.wantCode, w.Code)
+			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+			require.NoError(t, err)
+
+			require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.UnarchiveWorkUnit] response mismatched")
+		})
+	}
+}

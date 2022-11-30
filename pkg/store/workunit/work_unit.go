@@ -28,3 +28,15 @@ func (s *store) GetAllByProjectID(db *gorm.DB, projectID string, status model.Wo
 func (s *store) Create(db *gorm.DB, workUnit *model.WorkUnit) error {
 	return db.Create(&workUnit).Error
 }
+
+// One get 1 WorkUnit by ID
+func (s *store) One(db *gorm.DB, id string) (*model.WorkUnit, error) {
+	var workUnit *model.WorkUnit
+	return workUnit, db.Where("id = ?", id).First(&workUnit).Error
+}
+
+// UpdateSelectedFieldsByID just update selected fields by id
+func (s *store) UpdateSelectedFieldsByID(db *gorm.DB, id string, updateModel model.WorkUnit, updatedFields ...string) (*model.WorkUnit, error) {
+	workUnit := model.WorkUnit{}
+	return &workUnit, db.Model(&workUnit).Where("id = ?", id).Select(updatedFields).Updates(updateModel).Error
+}

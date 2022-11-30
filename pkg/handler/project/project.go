@@ -1553,7 +1553,65 @@ func (h *handler) ArchiveWorkUnit(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))
+	exists, err := h.store.Project.IsExist(h.repo.DB(), input.ProjectID)
+	if err != nil {
+		l.Error(err, "failed to check project existence")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input, ""))
+		return
+	}
+
+	if !exists {
+		l.Error(ErrProjectNotFound, "project not found")
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrProjectNotFound, nil, ""))
+		return
+	}
+
+	workUnit, err := h.store.WorkUnit.One(h.repo.DB(), input.WorkUnitID)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		l.Error(err, "work unit not found")
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrWorkUnitNotFound, nil, ""))
+		return
+	}
+	if err != nil {
+		l.Error(err, "failed to get one work unit")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	tx, done := h.repo.NewTransaction()
+
+	workUnit.Status = model.WorkUnitStatusArchived
+
+	// update work unit status -> 'archived'
+	_, err = h.store.WorkUnit.UpdateSelectedFieldsByID(tx.DB(), input.WorkUnitID, *workUnit, "status")
+	if err != nil {
+		l.Error(err, "failed to update work unit")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), nil, ""))
+		return
+	}
+
+	wuMembers, err := h.store.WorkUnitMember.GetByWorkUnitID(tx.DB(), input.WorkUnitID)
+	if err != nil {
+		l.Error(err, "failed to get work unit members")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), nil, ""))
+		return
+	}
+
+	// update work unit member: left_date = now() and status = 'inactive'
+	timeNow := time.Now()
+	for _, member := range wuMembers {
+		member.LeftDate = &timeNow
+		member.Status = model.ProjectMemberStatusInactive.String()
+
+		_, err := h.store.WorkUnitMember.UpdateSelectedFieldsByID(tx.DB(), member.ID.String(), member, "left_date", "status")
+		if err != nil {
+			l.Error(err, "failed to get work unit members")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), nil, ""))
+			return
+		}
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, done(nil), nil, "ok"))
 }
 
 // UnarchiveWorkUnit godoc
@@ -1589,5 +1647,78 @@ func (h *handler) UnarchiveWorkUnit(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))
+	exists, err := h.store.Project.IsExist(h.repo.DB(), input.ProjectID)
+	if err != nil {
+		l.Error(err, "failed to check project existence")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input, ""))
+		return
+	}
+
+	if !exists {
+		l.Error(ErrProjectNotFound, "project not found")
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrProjectNotFound, nil, ""))
+		return
+	}
+
+	workUnit, err := h.store.WorkUnit.One(h.repo.DB(), input.WorkUnitID)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		l.Error(err, "work unit not found")
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrWorkUnitNotFound, nil, ""))
+		return
+	}
+	if err != nil {
+		l.Error(err, "failed to get one work unit")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	tx, done := h.repo.NewTransaction()
+
+	workUnit.Status = model.WorkUnitStatusActive
+
+	// update work unit status -> 'active'
+	_, err = h.store.WorkUnit.UpdateSelectedFieldsByID(tx.DB(), input.WorkUnitID, *workUnit, "status")
+	if err != nil {
+		l.Error(err, "failed to update work unit")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), nil, ""))
+		return
+	}
+
+	wuMembers, err := h.store.WorkUnitMember.GetByWorkUnitID(tx.DB(), input.WorkUnitID)
+	if err != nil {
+		l.Error(err, "failed to get work unit members")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), nil, ""))
+		return
+	}
+
+	// check member status in project and update work unit member
+	for _, member := range wuMembers {
+		_, err := h.store.ProjectMember.One(tx.DB(),
+			input.ProjectID,
+			member.EmployeeID.String(),
+			model.ProjectMemberStatusActive.String())
+
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			l.Error(err, "member is not active in project")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, done(ErrMemberIsInactive), nil, ""))
+			return
+		}
+		if err != nil {
+			l.Error(err, "failed to get one project member")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), nil, ""))
+			return
+		}
+
+		member.LeftDate = nil
+		member.Status = model.ProjectMemberStatusActive.String()
+
+		_, err = h.store.WorkUnitMember.UpdateSelectedFieldsByID(tx.DB(), member.ID.String(), member, "left_date", "status")
+		if err != nil {
+			l.Error(err, "failed to get work unit members")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), nil, ""))
+			return
+		}
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, done(nil), nil, "ok"))
 }

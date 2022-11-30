@@ -8,9 +8,9 @@ type WorkUnit struct {
 	BaseModel
 
 	Name           string
+	SourceURL      string
 	Status         WorkUnitStatus
 	Type           WorkUnitType
-	SourceURL      string
 	SourceMetadata datatypes.JSON
 	ProjectID      UUID
 
