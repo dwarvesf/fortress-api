@@ -177,7 +177,7 @@ func (h *handler) UploadAvatar(c *gin.Context) {
 	fileName := file.Filename
 	fileExtension := model.ContentExtension(filepath.Ext(fileName))
 	fileSize := file.Size
-	filePrePath := "employees/" + employeeID + "/image/"
+	filePrePath := "employees/" + employeeID + "/images"
 	fileType := "image"
 
 	// 2.1 validate
