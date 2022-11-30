@@ -1,34 +1,97 @@
 linters-settings:
-  misspell:
-    locale: US
-  lll:
-    line-length: 140
+  # misspell:
+  #   locale: US
+  # lll:
+  #   line-length: 140
+  revive:
+    ignore-generated-header: true
+    severity: warning
+    confidence: 0.8
+    errorCode: 0
+    warningCode: 0
+    rules:
+      - name: argument-limit
+        arguments: [4]
+      - name: atomic
+      - name: bare-return
+      - name: blank-imports
+      - name: bool-literal-in-expr
+      - name: call-to-gc
+      - name: cognitive-complexity
+        arguments: [10]
+      - name: confusing-naming
+      - name: confusing-results
+      - name: constant-logical-expr
+      - name: context-as-argument
+      - name: context-keys-type
+      - name: cyclomatic
+        arguments: [10]
+      - name: deep-exit
+      - name: dot-imports
+      - name: duplicated-imports
+      - name: empty-block
+      - name: empty-lines
+      - name: error-naming
+      - name: error-return
+      - name: error-strings
+      - name: errorf
+      - name: exported
+      - name: flag-parameter
+      - name: function-result-limit
+        arguments: [3]
+      - name: get-return
+      - name: if-return
+      - name: import-shadowing
+      - name: imports-blacklist
+      - name: increment-decrement
+      - name: indent-error-flow
+      - name: modifies-parameter
+      - name: modifies-value-receiver
+      - name: package-comments
+      - name: range
+      - name: range-val-address
+      - name: range-val-in-closure
+      - name: receiver-naming
+      - name: redefines-builtin-id
+      - name: string-of-int
+      - name: struct-tag
+      - name: superfluous-else
+      - name: time-naming
+      - name: unexported-return
+      - name: unhandled-error
+      - name: unnecessary-stmt
+      - name: unreachable-code
+      - name: unused-parameter
+      - name: unused-receiver
+      - name: var-declaration
+      - name: var-naming
+      - name: waitgroup-by-value
 
 # https://golangci-lint.run/usage/linters/
 linters:
   disable-all: true
   enable:
   # default
-    - errcheck # Errcheck is a program for checking for unchecked errors in go programs. These unchecked errors can be critical bugs in some cases
-    - gosimple # Linter for Go source code that specializes in simplifying code
-    - govet # Vet examines Go source code and reports suspicious constructs, such as Printf calls whose arguments do not align with the format string
-    - ineffassign # Detects when assignments to existing variables are not used
-    - staticcheck # It's a set of rules from staticcheck. It's not the same thing as the staticcheck binary. The author of staticcheck doesn't support or approve the use of staticcheck as a library inside golangci-lint.
-    - typecheck # Like the front-end of a Go compiler, parses and type-checks Go code
-    - unused # Checks Go code for unused constants, variables, functions and types
+    # - errcheck # Errcheck is a program for checking for unchecked errors in go programs. These unchecked errors can be critical bugs in some cases
+    # - gosimple # Linter for Go source code that specializes in simplifying code
+    # - govet # Vet examines Go source code and reports suspicious constructs, such as Printf calls whose arguments do not align with the format string
+    # - ineffassign # Detects when assignments to existing variables are not used
+    # - staticcheck # It's a set of rules from staticcheck. It's not the same thing as the staticcheck binary. The author of staticcheck doesn't support or approve the use of staticcheck as a library inside golangci-lint.
+    # - typecheck # Like the front-end of a Go compiler, parses and type-checks Go code
+    # - unused # Checks Go code for unused constants, variables, functions and types
 
   # customize
-    - execinquery # execinquery is a linter about query string checker in Query function which reads your Go src files and warning it finds
-    - errorlint # errorlint is a linter for that can be used to find code that will cause problems with the error wrapping scheme introduced in Go 1.13.
-    - bodyclose # checks whether HTTP response body is closed successfully
-    - errname # Checks that sentinel errors are prefixed with the Err and error types are suffixed with the Error.
+    # - execinquery # execinquery is a linter about query string checker in Query function which reads your Go src files and warning it finds
+    # - errorlint # errorlint is a linter for that can be used to find code that will cause problems with the error wrapping scheme introduced in Go 1.13.
+    # - bodyclose # checks whether HTTP response body is closed successfully
+    # - errname # Checks that sentinel errors are prefixed with the Err and error types are suffixed with the Error.
     # - gofumpt # Gofumpt checks whether code was gofumpt-ed.
     # - lll # Reports long lines
     # - misspell # Finds commonly misspelled English words in comments
-    - unconvert # Remove unnecessary type conversions
+    # - unconvert # Remove unnecessary type conversions
     # - usestdlibvars # A linter that detect the possibility to use variables/constants from the Go standard library.
-    - whitespace # Tool for detection of leading and trailing whitespace
-    # - revive
+    # - whitespace # Tool for detection of leading and trailing whitespace
+    - revive
 
 run:
   timeout: 5m
