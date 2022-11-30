@@ -274,12 +274,12 @@ type CreateWorkUnitInput struct {
 }
 
 type CreateWorkUnitBody struct {
-	Name    string   `json:"name" form:"name" binding:"required"`
-	Type    string   `json:"type" form:"type" binding:"required"`
-	Status  string   `json:"status" form:"status" binding:"required"`
-	Members []string `json:"members" form:"members"`
-	Stacks  []string `json:"stacks" form:"stacks" binding:"required"`
-	URL     string   `json:"url" form:"url"`
+	Name    string       `json:"name" form:"name" binding:"required"`
+	Type    string       `json:"type" form:"type" binding:"required"`
+	Status  string       `json:"status" form:"status" binding:"required"`
+	Members []model.UUID `json:"members" form:"members"`
+	Stacks  []model.UUID `json:"stacks" form:"stacks" binding:"required"`
+	URL     string       `json:"url" form:"url"`
 }
 
 func (i *CreateWorkUnitInput) Validate() error {
@@ -303,18 +303,6 @@ func (i *CreateWorkUnitBody) Validate() error {
 		return ErrInvalidWorkUnitStacks
 	}
 
-	for _, id := range i.Stacks {
-		if !model.IsUUIDFromString(id) {
-			return ErrInvalidStackID
-		}
-	}
-
-	for _, id := range i.Members {
-		if !model.IsUUIDFromString(id) {
-			return ErrInvalidMemberID
-		}
-	}
-
 	return nil
 }
 
@@ -325,11 +313,11 @@ type UpdateWorkUnitInput struct {
 }
 
 type UpdateWorkUnitBody struct {
-	Name    string       `form:"name" json:"name" binding:"required,max=100"`
-	Type    string       `form:"type" json:"type" binding:"required"`
-	Members []model.UUID `form:"members" json:"members"`
-	Stacks  []model.UUID `form:"stacks" json:"stacks" binding:"required"`
-	URL     string       `form:"url" json:"url"`
+	Name    string             `form:"name" json:"name" binding:"required,max=100"`
+	Type    model.WorkUnitType `form:"type" json:"type" binding:"required"`
+	Members []model.UUID       `form:"members" json:"members"`
+	Stacks  []model.UUID       `form:"stacks" json:"stacks" binding:"required"`
+	URL     string             `form:"url" json:"url"`
 }
 
 func (i *UpdateWorkUnitInput) Validate() error {
@@ -345,7 +333,7 @@ func (i *UpdateWorkUnitInput) Validate() error {
 }
 
 func (i *UpdateWorkUnitBody) Validate() error {
-	if i.Type == "" {
+	if !i.Type.IsValid() {
 		return ErrInvalidWorkUnitType
 	}
 

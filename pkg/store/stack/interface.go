@@ -9,5 +9,5 @@ import (
 type IStore interface {
 	All(db *gorm.DB) ([]*model.Stack, error)
 	One(db *gorm.DB, id string) (*model.Stack, error)
-	GetByIDs(db *gorm.DB, ids []string) (stacks []*model.Stack, err error)
+	GetByIDs(db *gorm.DB, ids []model.UUID) (stacks []*model.Stack, err error)
 }

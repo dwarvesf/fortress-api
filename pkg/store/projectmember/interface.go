@@ -11,6 +11,6 @@ type IStore interface {
 	Upsert(db *gorm.DB, member *model.ProjectMember) error
 	Delete(db *gorm.DB, id string) (err error)
 	IsExist(db *gorm.DB, id string) (bool, error)
-
+	IsExistsByEmployeeID(db *gorm.DB, projectID string, employeeID string) (bool, error)
 	UpdateSelectedFieldsByID(db *gorm.DB, id string, updateModel model.ProjectMember, updatedFields ...string) (*model.ProjectMember, error)
 }

@@ -25,7 +25,7 @@ func (s *store) One(db *gorm.DB, id string) (*model.Stack, error) {
 }
 
 // GetByIDs return list stack by IDs
-func (s *store) GetByIDs(db *gorm.DB, ids []string) ([]*model.Stack, error) {
+func (s *store) GetByIDs(db *gorm.DB, ids []model.UUID) ([]*model.Stack, error) {
 	var stacks []*model.Stack
 	return stacks, db.Where("id IN ?", ids).Find(&stacks).Error
 }
