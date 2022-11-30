@@ -5,8 +5,7 @@ import (
 )
 
 // ENVReader load config from env
-type ENVReader struct {
-}
+type ENVReader struct{}
 
 // NewENVLoader create new env loader
 func NewENVLoader() Loader {

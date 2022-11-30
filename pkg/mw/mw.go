@@ -86,6 +86,7 @@ func validateToken(accessToken string) error {
 
 	return claims.Valid()
 }
+
 func NewPermissionMiddleware(s *store.Store, r store.DBRepo) *permMiddleware {
 	return &permMiddleware{
 		store: s,

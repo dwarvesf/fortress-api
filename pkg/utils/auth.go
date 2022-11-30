@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"errors"
 	"strings"
 	"time"
 
@@ -31,7 +32,7 @@ func GetUserIDFromToken(tokenString string) (string, error) {
 		return "", ErrInvalidToken
 	}
 	if err != nil {
-		if err == jwt.ErrSignatureInvalid {
+		if errors.Is(err, jwt.ErrSignatureInvalid) {
 			return "", ErrInvalidSignature
 		}
 		return "", ErrBadToken

@@ -810,7 +810,7 @@ func (h *handler) AssignMember(c *gin.Context) {
 
 	// get active project member info
 	_, err := h.store.ProjectMember.One(h.repo.DB(), projectID, body.EmployeeID.String(), model.ProjectMemberStatusActive.String())
-	if err != gorm.ErrRecordNotFound {
+	if !errors.Is(err, gorm.ErrRecordNotFound) {
 		if err == nil {
 			l.Error(err, "project member exists")
 			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, ErrProjectMemberExists, projectID, ""))

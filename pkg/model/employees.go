@@ -45,8 +45,7 @@ const (
 // IsValid validation for AccountRole
 func (e AccountRole) IsValid() bool {
 	switch e {
-	case
-		AccountRoleAdmin,
+	case AccountRoleAdmin,
 		AccountRoleMember:
 		return true
 	}

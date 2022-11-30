@@ -18,7 +18,6 @@ func (j JSONArrayString) Value() (driver.Value, error) {
 
 func (j *JSONArrayString) Scan(value interface{}) error {
 	if value == nil {
-		j = nil
 		return nil
 	}
 
@@ -42,7 +41,6 @@ func (j JSON) Value() (driver.Value, error) {
 
 func (j *JSON) Scan(value interface{}) error {
 	if value == nil {
-		j = nil
 		return nil
 	}
 
@@ -75,7 +73,6 @@ func (j JSON) MarshalJSON() ([]byte, error) {
 
 func (j *JSON) UnmarshalJSON(raw []byte) error {
 	if string(raw) == "null" {
-		j = nil
 		return nil
 	}
 

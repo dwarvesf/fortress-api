@@ -197,7 +197,7 @@ func (h *handler) UploadAvatar(c *gin.Context) {
 
 	// 2.2 check file name exist
 	_, err = h.store.Content.GetByPath(tx.DB(), filePrePath+"/"+fileName)
-	if err != nil && err != gorm.ErrRecordNotFound {
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		l.Error(err, "error query content from db")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), nil, ""))
 		return

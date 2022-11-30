@@ -59,7 +59,7 @@ type UpdateWorkingStatusInput struct {
 }
 
 func (i *UpdateWorkingStatusInput) Validate() error {
-	if !model.WorkingStatus(i.EmployeeStatus).IsValid() {
+	if !i.EmployeeStatus.IsValid() {
 		return ErrInvalidEmployeeStatus
 	}
 

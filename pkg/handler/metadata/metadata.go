@@ -2,13 +2,13 @@ package metadata
 
 import (
 	"errors"
-	"github.com/dwarvesf/fortress-api/pkg/model"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq"
 
 	"github.com/dwarvesf/fortress-api/pkg/logger"
+	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/view"

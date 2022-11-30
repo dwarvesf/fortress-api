@@ -251,7 +251,6 @@ type CreateProjectData struct {
 }
 
 func ToCreateProjectDataResponse(project *model.Project) CreateProjectData {
-
 	result := CreateProjectData{
 		BaseModel:    project.BaseModel,
 		Name:         project.Name,

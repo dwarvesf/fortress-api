@@ -87,9 +87,7 @@ func (u *UUID) Scan(b interface{}) error {
 		return err
 	}
 
-	for i, c := range id {
-		u[i] = c
-	}
+	copy(u[:], id[:])
 
 	return nil
 }
@@ -101,9 +99,7 @@ func NewUUIDFromString(s string) (*UUID, error) {
 	}
 
 	id := &UUID{}
-	for i, c := range uuid {
-		id[i] = c
-	}
+	copy(id[:], uuid[:])
 
 	return id, nil
 }

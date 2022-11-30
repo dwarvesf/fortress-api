@@ -18,14 +18,14 @@ func New(cfg *config.Config) (VaultService, error) {
 
 	client, err := vault.NewClient(config)
 	if err != nil {
-		return nil, fmt.Errorf("unable to initialize Vault client: %v", err)
+		return nil, fmt.Errorf("unable to initialize Vault client: %w", err)
 	}
 
 	client.SetToken(cfg.Vault.Token)
 
 	secret, err := client.Logical().Read(cfg.Vault.Path)
 	if err != nil {
-		return nil, fmt.Errorf("unable to read secret: %v", err)
+		return nil, fmt.Errorf("unable to read secret: %w", err)
 	}
 
 	data, ok := secret.Data["data"].(map[string]interface{})

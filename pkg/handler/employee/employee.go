@@ -393,7 +393,7 @@ func (h *handler) Create(c *gin.Context) {
 
 	// 2.1 check employee exists -> raise error
 	_, err = h.store.Employee.OneByTeamEmail(h.repo.DB(), eml.TeamEmail)
-	if err != gorm.ErrRecordNotFound {
+	if !errors.Is(err, gorm.ErrRecordNotFound) {
 		if err == nil {
 			l.Error(err, "error eml exists")
 			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, ErrEmployeeExisted, req, ""))
@@ -751,31 +751,27 @@ func (h *handler) UploadContent(c *gin.Context) {
 
 	// 2.2 check file name exist
 	_, err = h.store.Content.GetByPath(tx.DB(), filePrePath+"/"+fileName)
-	if err != nil && err != gorm.ErrRecordNotFound {
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		l.Error(err, "error query content from db")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
-		done(err)
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), nil, ""))
 		return
 	}
 	if err == nil {
 		l.Info("file already existed")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, ErrFileAlreadyExisted, nil, ""))
-		done(ErrFileAlreadyExisted)
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(ErrFileAlreadyExisted), nil, ""))
 		return
 	}
 
 	// 2.3 check employee existed
 	employee, err := h.store.Employee.One(tx.DB(), params.ID)
 	if err != nil {
-		if err == gorm.ErrRecordNotFound {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Info("employee not found")
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, err, nil, ""))
-			done(err)
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, done(err), nil, ""))
 			return
 		}
 		l.Error(err, "error query employee from db")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
-		done(err)
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), nil, ""))
 		return
 	}
 
@@ -788,16 +784,14 @@ func (h *handler) UploadContent(c *gin.Context) {
 	})
 	if err != nil {
 		l.Error(err, "error query employee from db")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
-		done(err)
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), nil, ""))
 		return
 	}
 
 	multipart, err := file.Open()
 	if err != nil {
 		l.Error(err, "error in open file")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
-		done(err)
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), nil, ""))
 		return
 	}
 
@@ -805,11 +799,9 @@ func (h *handler) UploadContent(c *gin.Context) {
 	err = h.service.Google.UploadContentGCS(multipart, content.Path)
 	if err != nil {
 		l.Error(err, "error in upload file")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
-		done(err)
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), nil, ""))
 		return
 	}
-	done(nil)
 
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToContentData(fmt.Sprintf("https://storage.googleapis.com/%s/%s", h.config.Google.GCSBucketName, content.Path)), nil, nil, nil, ""))
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToContentData(fmt.Sprintf("https://storage.googleapis.com/%s/%s", h.config.Google.GCSBucketName, content.Path)), nil, done(nil), nil, ""))
 }

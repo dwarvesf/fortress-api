@@ -61,10 +61,10 @@ func (n *notionService) GetProjectsInDB(pageIDs []string, projectPageID string) 
 	return pages, nil
 }
 
-func (n *notionService) FindClientPageForChangelog(clientId string) (nt.Page, error) {
+func (n *notionService) FindClientPageForChangelog(clientID string) (nt.Page, error) {
 	ctx := context.Background()
 
-	res, err := n.notionClient.FindPageByID(ctx, clientId)
+	res, err := n.notionClient.FindPageByID(ctx, clientID)
 	if err != nil {
 		return nt.Page{}, err
 	}

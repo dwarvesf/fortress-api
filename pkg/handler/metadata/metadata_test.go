@@ -1,7 +1,6 @@
 package metadata
 
 import (
-	"fmt"
 	"io/ioutil"
 	"net/http/httptest"
 	"testing"
@@ -81,7 +80,7 @@ func TestHandler_GetSeniority(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			ctx, _ := gin.CreateTestContext(w)
-			ctx.Request = httptest.NewRequest("GET", fmt.Sprintf("/api/v1/metadata/seniorities"), nil)
+			ctx.Request = httptest.NewRequest("GET", "/api/v1/metadata/seniorities", nil)
 			metadataHandler := New(storeMock, testRepoMock, serviceMock, loggerMock)
 
 			metadataHandler.Seniorities(ctx)
@@ -121,7 +120,7 @@ func TestHandler_GetChapters(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			ctx, _ := gin.CreateTestContext(w)
-			ctx.Request = httptest.NewRequest("GET", fmt.Sprintf("/api/v1/metadata/chapters"), nil)
+			ctx.Request = httptest.NewRequest("GET", "/api/v1/metadata/chapters", nil)
 			metadataHandler := New(storeMock, testRepoMock, serviceMock, loggerMock)
 
 			metadataHandler.Chapters(ctx)
@@ -161,7 +160,7 @@ func TestHandler_GetAccountRoles(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			ctx, _ := gin.CreateTestContext(w)
-			ctx.Request = httptest.NewRequest("GET", fmt.Sprintf("/api/v1/metadata/account-roles"), nil)
+			ctx.Request = httptest.NewRequest("GET", "/api/v1/metadata/account-roles", nil)
 			metadataHandler := New(storeMock, testRepoMock, serviceMock, loggerMock)
 
 			metadataHandler.AccountRoles(ctx)
@@ -201,7 +200,7 @@ func TestHandler_GetProjectStatuses(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			ctx, _ := gin.CreateTestContext(w)
-			ctx.Request = httptest.NewRequest("GET", fmt.Sprintf("/api/v1/metadata/project-statuses"), nil)
+			ctx.Request = httptest.NewRequest("GET", "/api/v1/metadata/project-statuses", nil)
 			metadataHandler := New(storeMock, testRepoMock, serviceMock, loggerMock)
 
 			metadataHandler.ProjectStatuses(ctx)
@@ -241,7 +240,7 @@ func TestHandler_GetPositions(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			ctx, _ := gin.CreateTestContext(w)
-			ctx.Request = httptest.NewRequest("GET", fmt.Sprintf("/api/v1/metadata/positions"), nil)
+			ctx.Request = httptest.NewRequest("GET", "/api/v1/metadata/positions", nil)
 			metadataHandler := New(storeMock, testRepoMock, serviceMock, loggerMock)
 
 			metadataHandler.Positions(ctx)
@@ -281,7 +280,7 @@ func TestHandler_GetTechStacks(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			ctx, _ := gin.CreateTestContext(w)
-			ctx.Request = httptest.NewRequest("GET", fmt.Sprintf("/api/v1/metadata/stacks"), nil)
+			ctx.Request = httptest.NewRequest("GET", "/api/v1/metadata/stacks", nil)
 			metadataHandler := New(storeMock, testRepoMock, serviceMock, loggerMock)
 
 			metadataHandler.Stacks(ctx)

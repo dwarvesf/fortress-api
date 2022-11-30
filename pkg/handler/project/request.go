@@ -184,7 +184,6 @@ func (i *AssignMemberInput) Validate() error {
 	if i.Status == "" ||
 		!model.ProjectMemberStatus(i.Status).IsValid() ||
 		i.Status == model.ProjectMemberStatusInactive.String() {
-
 		return ErrInvalidProjectMemberStatus
 	}
 

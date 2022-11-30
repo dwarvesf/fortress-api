@@ -44,12 +44,12 @@ func New(ClientID, ClientSecret, AppName string, Scopes []string, BucketName str
 
 	decoded, err := base64.StdEncoding.DecodeString(GCSCredentials)
 	if err != nil {
-		return nil, fmt.Errorf("failed to decode gcs credentials: %v", err)
+		return nil, fmt.Errorf("failed to decode gcs credentials: %w", err)
 	}
 
 	client, err := storage.NewClient(context.Background(), option.WithCredentialsJSON(decoded))
 	if err != nil {
-		return nil, fmt.Errorf("failed to create client: %v", err)
+		return nil, fmt.Errorf("failed to create client: %w", err)
 	}
 
 	return &Google{
@@ -93,12 +93,13 @@ func (g *Google) GetGoogleEmail(accessToken string) (email string, err error) {
 	if err != nil {
 		return "", err
 	}
+	defer response.Body.Close()
 
 	body, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		return "", err
 	}
-	if err = json.Unmarshal([]byte(body), &gu); err != nil {
+	if err = json.Unmarshal(body, &gu); err != nil {
 		return "", err
 	}
 
@@ -121,10 +122,10 @@ func (g *Google) UploadContentGCS(file multipart.File, filePath string) error {
 	// Upload an object with storage.Writer.
 	wc := g.Uploader.cl.Bucket(g.Uploader.bucketName).Object(filePath).NewWriter(ctx)
 	if _, err := io.Copy(wc, file); err != nil {
-		return fmt.Errorf("io.Copy: %v", err)
+		return fmt.Errorf("io.Copy: %w", err)
 	}
 	if err := wc.Close(); err != nil {
-		return fmt.Errorf("Writer.Close: %v", err)
+		return fmt.Errorf("Writer.Close: %w", err)
 	}
 
 	return nil
