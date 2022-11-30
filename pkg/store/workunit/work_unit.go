@@ -40,3 +40,15 @@ func (s *store) UpdateSelectedFieldsByID(db *gorm.DB, id string, updateModel mod
 	workUnit := model.WorkUnit{}
 	return &workUnit, db.Model(&workUnit).Where("id = ?", id).Select(updatedFields).Updates(updateModel).Error
 }
+
+// IsExists check work unit existence
+func (s *store) IsExists(db *gorm.DB, id string) (bool, error) {
+	type res struct {
+		Result bool
+	}
+
+	result := res{}
+	query := db.Raw("SELECT EXISTS (SELECT * FROM work_units WHERE id = ?) as result", id)
+
+	return result.Result, query.Scan(&result).Error
+}

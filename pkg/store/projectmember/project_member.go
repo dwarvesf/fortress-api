@@ -69,3 +69,13 @@ func (s *store) UpdateSelectedFieldsByID(db *gorm.DB, id string, updateModel mod
 	member := model.ProjectMember{}
 	return &member, db.Model(&member).Where("id = ?", id).Select(updatedFields).Updates(&updateModel).Error
 }
+
+// IsExistsByEmployeeID check ProjectMember existance by project id and employee id
+func (s *store) IsExistsByEmployeeID(db *gorm.DB, projectID string, employeeID string) (bool, error) {
+	var record struct {
+		Result bool
+	}
+
+	query := db.Raw("SELECT EXISTS (SELECT * FROM project_members WHERE project_id  = ? and employee_id = ?) as result", projectID, employeeID)
+	return record.Result, query.Scan(&record).Error
+}

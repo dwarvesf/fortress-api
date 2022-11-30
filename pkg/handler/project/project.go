@@ -271,6 +271,7 @@ func (h *handler) Create(c *gin.Context) {
 // @Param Authorization header string true "jwt token"
 // @Param id path string false "Project ID"
 // @Param status query string false "Status"
+// @Param preload query bool false "Preload data with default value is true"
 // @Param page query string false "Page"
 // @Param size query string false "Size"
 // @Param sort query string false "Sort"
@@ -1517,7 +1518,210 @@ func (h *handler) UpdateWorkUnit(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))
+	// Check Exitsences of elements in input
+	status, err := h.checkExitsInUpdateWorkUnitInput(h.repo.DB(), input)
+
+	if err != nil {
+		l.Error(err, "err when checking the existence of elements in the input")
+		c.JSON(status, view.CreateResponse[any](nil, nil, err, input.Body, ""))
+		return
+	}
+
+	tx, done := h.repo.NewTransaction()
+
+	workUnit := &model.WorkUnit{
+		Name:      input.Body.Name,
+		Type:      input.Body.Type,
+		SourceURL: input.Body.URL,
+		ProjectID: model.MustGetUUIDFromString(input.ProjectID),
+	}
+
+	workUnit, err = h.store.WorkUnit.UpdateSelectedFieldsByID(tx.DB(), input.WorkUnitID, *workUnit, "name", "type", "source_url", "project_id")
+	if err != nil {
+		l.Error(err, "failed to update work unit")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
+		return
+	}
+
+	// Update work unit stack
+	if err := h.UpdateWorkUnitStack(tx.DB(), input.WorkUnitID, input.Body.Stacks); err != nil {
+		l.Error(err, "failed to update work unit stack")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
+		return
+	}
+
+	// Get all active members of work unit
+	members, err := h.store.WorkUnitMember.All(tx.DB(), input.WorkUnitID)
+	if err != nil {
+		l.Error(err, "failed to get all work unit members in database")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
+		return
+	}
+
+	var curMemberIDs []model.UUID
+
+	for _, v := range members {
+		curMemberIDs = append(curMemberIDs, v.EmployeeID)
+	}
+
+	// Get map for employee in work unit member
+	inputMemberIDs := map[model.UUID]string{}
+	for _, member := range input.Body.Members {
+		inputMemberIDs[member] = member.String()
+	}
+
+	// Get delete member id list
+	var deleteMemberIDs []string
+
+	for _, v := range curMemberIDs {
+		_, ok := inputMemberIDs[v]
+		if !ok {
+			deleteMemberIDs = append(deleteMemberIDs, v.String())
+		} else {
+			delete(inputMemberIDs, v)
+		}
+	}
+
+	// Get create member id list
+	var createMemberIDs []model.UUID
+
+	for id, _ := range inputMemberIDs {
+		createMemberIDs = append(createMemberIDs, id)
+	}
+
+	// Delete work unit members
+	if status, err = h.deleteWorkUnit(tx.DB(), input.WorkUnitID, deleteMemberIDs); err != nil {
+		l.Error(err, "failed to remove work unit member in database")
+		c.JSON(status, view.CreateResponse[any](nil, nil, done(err), input, ""))
+		return
+	}
+
+	// Create new work unit member
+	if status, err := h.createWorkUnit(tx.DB(), input.ProjectID, input.WorkUnitID, createMemberIDs); err != nil {
+		l.Error(err, "failed to create new work unit member")
+		c.JSON(status, view.CreateResponse[any](nil, nil, done(err), input, ""))
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, done(nil), nil, "ok"))
+}
+
+func (h *handler) checkExitsInUpdateWorkUnitInput(db *gorm.DB, input UpdateWorkUnitInput) (int, error) {
+	// Check project existence
+	exists, err := h.store.Project.IsExist(db, input.ProjectID)
+	if err != nil {
+		return http.StatusInternalServerError, ErrFailToCheckInputExistence
+	}
+
+	if !exists {
+		return http.StatusNotFound, ErrProjectNotFound
+	}
+
+	// Check work unit existence
+	exists, err = h.store.WorkUnit.IsExists(h.repo.DB(), input.WorkUnitID)
+	if err != nil {
+		return http.StatusInternalServerError, ErrFailToCheckInputExistence
+	}
+
+	if !exists {
+		return http.StatusNotFound, ErrProjectNotFound
+	}
+
+	// Check stack existence
+	stacks, err := h.store.Stack.All(h.repo.DB())
+	if err != nil {
+		return http.StatusInternalServerError, ErrFailToCheckInputExistence
+	}
+
+	stackMap := model.ToStackMap(stacks)
+	for _, sID := range input.Body.Stacks {
+		_, ok := stackMap[sID]
+		if !ok {
+			return http.StatusNotFound, errPositionNotFound(sID.String())
+		}
+	}
+
+	return 0, nil
+}
+
+func (h *handler) UpdateWorkUnitStack(db *gorm.DB, workUnitID string, stackIDs []model.UUID) error {
+	// Delete all exist work unit stack
+	if err := h.store.WorkUnitStack.DeleteByWorkUnitID(db, workUnitID); err != nil {
+		return ErrFailToDeleteWorkUnitStack
+	}
+
+	// Create new work unit stack
+	for _, stackID := range stackIDs {
+		err := h.store.WorkUnitStack.Create(db, &model.WorkUnitStack{
+			WorkUnitID: model.MustGetUUIDFromString(workUnitID),
+			StackID:    stackID,
+		})
+		if err != nil {
+			return ErrFailedToCreateWorkUnitStack
+		}
+	}
+
+	return nil
+}
+
+func (h *handler) deleteWorkUnit(db *gorm.DB, workUnitID string, deleteMemberIDList []string) (int, error) {
+	now := time.Now()
+	for _, deleteMemberID := range deleteMemberIDList {
+		workUnitMember, err := h.store.WorkUnitMember.One(db,
+			workUnitID,
+			deleteMemberID,
+			model.WorkUnitMemberStatusActive.String())
+
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return http.StatusNotFound, ErrInvalidInActiveMember
+		}
+		if err != nil {
+			return http.StatusInternalServerError, ErrFailedToGetWorkUnitMember
+		}
+
+		deleteMember := &model.WorkUnitMember{
+			Status:   model.WorkUnitMemberStatusInactive.String(),
+			LeftDate: &now,
+		}
+
+		if deleteMember, err = h.store.WorkUnitMember.UpdateSelectedFieldsByID(db, workUnitMember.ID.String(), *deleteMember, "status", "left_date"); err != nil {
+			return http.StatusInternalServerError, ErrFailedToUpdateWorkUnitMember
+		}
+
+		if err = h.store.WorkUnitMember.SoftDeleteByWorkUnitID(db, workUnitMember.ID.String(), deleteMemberID); err != nil {
+			return http.StatusInternalServerError, ErrFailedToSoftDeleteWorkUnitMember
+		}
+	}
+
+	return 0, nil
+}
+
+func (h *handler) createWorkUnit(db *gorm.DB, projectID string, workUnitID string, createMemberIDList []model.UUID) (int, error) {
+	for _, createMemberID := range createMemberIDList {
+		_, err := h.store.ProjectMember.One(db, projectID, createMemberID.String(), model.ProjectMemberStatusActive.String())
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return http.StatusBadRequest, ErrMemberIsInactive
+		}
+
+		if err != nil {
+			return http.StatusInternalServerError, ErrFailedToGetProjectMember
+		}
+
+		now := time.Now()
+		wuMember := model.WorkUnitMember{
+			Status:     model.ProjectMemberStatusActive.String(),
+			WorkUnitID: model.MustGetUUIDFromString(workUnitID),
+			EmployeeID: createMemberID,
+			ProjectID:  model.MustGetUUIDFromString(projectID),
+			JoinedDate: now,
+		}
+
+		if err := h.store.WorkUnitMember.Create(db, &wuMember); err != nil {
+			return http.StatusInternalServerError, ErrFailedToCreateWorkUnitMember
+		}
+	}
+
+	return 0, nil
 }
 
 // ArchiveWorkUnit godoc

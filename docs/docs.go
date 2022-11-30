@@ -1400,6 +1400,12 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
+                        "type": "boolean",
+                        "description": "Preload data with default value is true",
+                        "name": "preload",
+                        "in": "query"
+                    },
+                    {
                         "type": "string",
                         "description": "Page",
                         "name": "page",

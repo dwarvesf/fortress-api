@@ -705,6 +705,115 @@ func TestHandler_GetListWorkUnit(t *testing.T) {
 	}
 }
 
+func TestHandler_UpdateWorkUnit(t *testing.T) {
+	cfg := config.LoadTestConfig()
+	loggerMock := logger.NewLogrusLogger()
+	serviceMock := service.New(&cfg)
+	storeMock := store.New()
+	testRepoMock := store.NewPostgresStore(&cfg)
+
+	tests := []struct {
+		name             string
+		input            UpdateWorkUnitInput
+		wantCode         int
+		wantResponsePath string
+	}{
+		{
+			name: "happy_case",
+			input: UpdateWorkUnitInput{
+				ProjectID:  "8dc3be2e-19a4-4942-8a79-56db391a0b15",
+				WorkUnitID: "69b32f7e-0433-4566-a801-72909172940e",
+				Body: UpdateWorkUnitBody{
+					Name: "New Fortress Web",
+					Type: model.WorkUnitTypeManagement,
+					URL:  "https://github.com/dwarvesf/fortress-web",
+					Members: []model.UUID{
+						model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
+						model.MustGetUUIDFromString("608ea227-45a5-4c8a-af43-6c7280d96340"),
+					},
+					Stacks: []model.UUID{
+						model.MustGetUUIDFromString("fa0f4e46-7eab-4e5c-9d31-30489e69fe2e"),
+						model.MustGetUUIDFromString("0ecf47c8-cca4-4c30-94bb-054b1124c44f"),
+					},
+				},
+			},
+			wantCode:         http.StatusOK,
+			wantResponsePath: "testdata/update_work_unit/200.json",
+		},
+		{
+			name: "not_found_project",
+			input: UpdateWorkUnitInput{
+				ProjectID:  "8dc3be2e-19a4-4942-8a79-56db391a0b16",
+				WorkUnitID: "69b32f7e-0433-4566-a801-72909172940e",
+				Body: UpdateWorkUnitBody{
+					Name: "New Fortress Web",
+					Type: model.WorkUnitTypeManagement,
+					URL:  "https://github.com/dwarvesf/fortress-web",
+					Members: []model.UUID{
+						model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
+						model.MustGetUUIDFromString("608ea227-45a5-4c8a-af43-6c7280d96340"),
+					},
+					Stacks: []model.UUID{
+						model.MustGetUUIDFromString("fa0f4e46-7eab-4e5c-9d31-30489e69fe2e"),
+						model.MustGetUUIDFromString("0ecf47c8-cca4-4c30-94bb-054b1124c44f"),
+					},
+				},
+			},
+			wantCode:         http.StatusNotFound,
+			wantResponsePath: "testdata/update_work_unit/404.json",
+		},
+		{
+			name: "invalid_type",
+			input: UpdateWorkUnitInput{
+				ProjectID:  "8dc3be2e-19a4-4942-8a79-56db391a0b15",
+				WorkUnitID: "69b32f7e-0433-4566-a801-72909172940e",
+				Body: UpdateWorkUnitBody{
+					Name: "New Fortress Web",
+					Type: "type",
+					URL:  "https://github.com/dwarvesf/fortress-web",
+					Members: []model.UUID{
+						model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
+						model.MustGetUUIDFromString("608ea227-45a5-4c8a-af43-6c7280d96340"),
+					},
+					Stacks: []model.UUID{
+						model.MustGetUUIDFromString("fa0f4e46-7eab-4e5c-9d31-30489e69fe2e"),
+						model.MustGetUUIDFromString("0ecf47c8-cca4-4c30-94bb-054b1124c44f"),
+					},
+				},
+			},
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/update_work_unit/400.json",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			body, err := json.Marshal(tt.input.Body)
+			if err != nil {
+				t.Error(err)
+				return
+			}
+
+			w := httptest.NewRecorder()
+			ctx, _ := gin.CreateTestContext(w)
+			ctx.Request = httptest.NewRequest(http.MethodPost,
+				fmt.Sprintf("/api/v1/projects/%s/work-units/%s", tt.input.ProjectID, tt.input.WorkUnitID),
+				bytes.NewBuffer(body))
+			ctx.Request.Header.Set("Authorization", testToken)
+			ctx.Request.Header.Set("Content-Type", gin.MIMEJSON)
+			ctx.AddParam("id", tt.input.ProjectID)
+			ctx.AddParam("workUnitID", tt.input.WorkUnitID)
+
+			h := New(storeMock, testRepoMock, serviceMock, loggerMock)
+			h.UpdateWorkUnit(ctx)
+			require.Equal(t, tt.wantCode, w.Code)
+			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+			require.NoError(t, err)
+
+			require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Project.UpdateWorkUnit] response mismatched")
+		})
+	}
+}
+
 func TestHandler_CreateWorkUnit(t *testing.T) {
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
@@ -727,13 +836,13 @@ func TestHandler_CreateWorkUnit(t *testing.T) {
 					Type:   model.WorkUnitTypeDevelopment.String(),
 					Status: model.WorkUnitStatusArchived.String(),
 					URL:    "https://github.com/dwarvesf/fortress-api",
-					Members: []string{
-						"2655832e-f009-4b73-a535-64c3a22e558f",
-						"ecea9d15-05ba-4a4e-9787-54210e3b98ce",
+					Members: []model.UUID{
+						model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
+						model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
 					},
-					Stacks: []string{
-						"0ecf47c8-cca4-4c30-94bb-054b1124c44f",
-						"fa0f4e46-7eab-4e5c-9d31-30489e69fe2e",
+					Stacks: []model.UUID{
+						model.MustGetUUIDFromString("0ecf47c8-cca4-4c30-94bb-054b1124c44f"),
+						model.MustGetUUIDFromString("fa0f4e46-7eab-4e5c-9d31-30489e69fe2e"),
 					},
 				},
 			},
@@ -749,13 +858,13 @@ func TestHandler_CreateWorkUnit(t *testing.T) {
 					Type:   model.WorkUnitTypeDevelopment.String(),
 					Status: model.WorkUnitStatusArchived.String(),
 					URL:    "https://github.com/dwarvesf/fortress-api",
-					Members: []string{
-						"2655832e-f009-4b73-a535-64c3a22e558f",
-						"ecea9d15-05ba-4a4e-9787-54210e3b98ce",
+					Members: []model.UUID{
+						model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
+						model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
 					},
-					Stacks: []string{
-						"0ecf47c8-cca4-4c30-94bb-054b1124c44f",
-						"fa0f4e46-7eab-4e5c-9d31-30489e69fe2e",
+					Stacks: []model.UUID{
+						model.MustGetUUIDFromString("0ecf47c8-cca4-4c30-94bb-054b1124c44f"),
+						model.MustGetUUIDFromString("fa0f4e46-7eab-4e5c-9d31-30489e69fe2e"),
 					},
 				},
 			},

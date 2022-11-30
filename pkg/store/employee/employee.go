@@ -130,7 +130,7 @@ func (s *store) UpdateSelectedFieldsByID(db *gorm.DB, id string, updateModel mod
 }
 
 // GetByIDs return list employee by IDs
-func (s *store) GetByIDs(db *gorm.DB, ids []string) ([]*model.Employee, error) {
+func (s *store) GetByIDs(db *gorm.DB, ids []model.UUID) ([]*model.Employee, error) {
 	var employees []*model.Employee
 	return employees, db.Where("id IN ?", ids).Find(&employees).Error
 }
