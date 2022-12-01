@@ -21,6 +21,17 @@
                 "relationship": "line-manager"
             },
             {
+                "eventReviewerID": "bc9a5715-9723-4a2f-ad42-0d0f19a80b4d",
+                "reviewer": {
+                    "id": "2655832e-f009-4b73-a535-64c3a22e558f",
+                    "fullName": "Phạm Đức Thành",
+                    "displayName": "Thanh Pham",
+                    "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png"
+                },
+                "status": "sent",
+                "relationship": "peer"
+            },
+            {
                 "eventReviewerID": "c994db17-384a-4331-8944-b8ac0070ac3f",
                 "reviewer": {
                     "id": "d389d35e-c548-42cf-9f29-2a599969a8f2",
@@ -153,6 +164,17 @@
                 "relationship": "peer"
             },
             {
+                "eventReviewerID": "68867dea-f8af-47e0-9bd7-620c0404f707",
+                "reviewer": {
+                    "id": "061820c0-bf6c-4b4a-9753-875f75d71a2c",
+                    "fullName": "Vong Tieu Hung",
+                    "displayName": "Hung Vong",
+                    "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5762098830282049280.png"
+                },
+                "status": "draft",
+                "relationship": "peer"
+            },
+            {
                 "eventReviewerID": "eae233c5-4930-4185-bfc7-7852f7b29fd0",
                 "reviewer": {
                     "id": "d675dfc5-acbe-4566-acde-f7cb132c0206",
@@ -214,28 +236,6 @@
                     "fullName": "Đoàn Tấn Đạt",
                     "displayName": "Dat Doan",
                     "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/1105085008506574007.png"
-                },
-                "status": "sent",
-                "relationship": "peer"
-            },
-            {
-                "eventReviewerID": "bc9a5715-9723-4a2f-ad42-0d0f19a80b4d",
-                "reviewer": {
-                    "id": "2655832e-f009-4b73-a535-64c3a22e558f",
-                    "fullName": "Phạm Đức Thành",
-                    "displayName": "Thanh Pham",
-                    "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png"
-                },
-                "status": "sent",
-                "relationship": "peer"
-            },
-            {
-                "eventReviewerID": "68867dea-f8af-47e0-9bd7-620c0404f707",
-                "reviewer": {
-                    "id": "061820c0-bf6c-4b4a-9753-875f75d71a2c",
-                    "fullName": "Vong Tieu Hung",
-                    "displayName": "Hung Vong",
-                    "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5762098830282049280.png"
                 },
                 "status": "sent",
                 "relationship": "peer"

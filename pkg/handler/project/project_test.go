@@ -3,22 +3,24 @@ package project
 import (
 	"bytes"
 	"fmt"
-	"github.com/dwarvesf/fortress-api/pkg/handler/project/request"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
+	"github.com/dwarvesf/fortress-api/pkg/handler/project/request"
+	"github.com/dwarvesf/fortress-api/pkg/model"
+	"github.com/dwarvesf/fortress-api/pkg/utils/testhelper"
+	"github.com/shopspring/decimal"
+
 	"github.com/gin-gonic/gin"
 	"github.com/goccy/go-json"
 	_ "github.com/lib/pq"
-	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/require"
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
-	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/utils"
@@ -32,7 +34,6 @@ func TestHandler_UpdateProjectStatus(t *testing.T) {
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg)
 	storeMock := store.New()
-	testRepoMock := store.NewPostgresStore(&cfg)
 
 	tests := []struct {
 		name             string
@@ -75,26 +76,28 @@ func TestHandler_UpdateProjectStatus(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		byteReq, err := json.Marshal(tt.request)
-		require.Nil(t, err)
-
-		t.Run(tt.name, func(t *testing.T) {
-			w := httptest.NewRecorder()
-			ctx, _ := gin.CreateTestContext(w)
-			bodyReader := strings.NewReader(string(byteReq))
-			ctx.Params = gin.Params{gin.Param{Key: "id", Value: tt.id}}
-			ctx.Request = httptest.NewRequest("POST", fmt.Sprintf("/api/v1/projects/%s/status", tt.id), bodyReader)
-			ctx.Request.Header.Set("Authorization", testToken)
-			metadataHandler := New(storeMock, testRepoMock, serviceMock, loggerMock)
-
-			metadataHandler.UpdateProjectStatus(ctx)
-			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
-			require.NoError(t, err)
-
-			require.Equal(t, tt.wantCode, w.Code)
-			res, err := utils.RemoveFieldInResponse(w.Body.Bytes(), "updatedAt")
+		testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+			byteReq, err := json.Marshal(tt.request)
 			require.Nil(t, err)
-			require.JSONEq(t, string(expRespRaw), string(res), "[Handler.UpdateProjectStatus] response mismatched")
+
+			t.Run(tt.name, func(t *testing.T) {
+				w := httptest.NewRecorder()
+				ctx, _ := gin.CreateTestContext(w)
+				bodyReader := strings.NewReader(string(byteReq))
+				ctx.Params = gin.Params{gin.Param{Key: "id", Value: tt.id}}
+				ctx.Request = httptest.NewRequest("POST", fmt.Sprintf("/api/v1/projects/%s/status", tt.id), bodyReader)
+				ctx.Request.Header.Set("Authorization", testToken)
+				metadataHandler := New(storeMock, txRepo, serviceMock, loggerMock)
+
+				metadataHandler.UpdateProjectStatus(ctx)
+				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				require.NoError(t, err)
+
+				require.Equal(t, tt.wantCode, w.Code)
+				res, err := utils.RemoveFieldInResponse(w.Body.Bytes(), "updatedAt")
+				require.Nil(t, err)
+				require.JSONEq(t, string(expRespRaw), string(res), "[Handler.UpdateProjectStatus] response mismatched")
+			})
 		})
 	}
 }
@@ -104,7 +107,6 @@ func TestHandler_Create(t *testing.T) {
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg)
 	storeMock := store.New()
-	testRepoMock := store.NewPostgresStore(&cfg)
 
 	tests := []struct {
 		name             string
@@ -160,30 +162,32 @@ func TestHandler_Create(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			body, err := json.Marshal(tt.args)
-			if err != nil {
-				t.Error(err)
-				return
-			}
+			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				body, err := json.Marshal(tt.args)
+				if err != nil {
+					t.Error(err)
+					return
+				}
 
-			w := httptest.NewRecorder()
-			ctx, _ := gin.CreateTestContext(w)
-			ctx.Request = httptest.NewRequest(http.MethodPost, "/api/v1/projects", bytes.NewBuffer(body))
-			ctx.Request.Header.Set("Authorization", testToken)
-			ctx.Request.Header.Set("Content-Type", gin.MIMEJSON)
+				w := httptest.NewRecorder()
+				ctx, _ := gin.CreateTestContext(w)
+				ctx.Request = httptest.NewRequest(http.MethodPost, "/api/v1/projects", bytes.NewBuffer(body))
+				ctx.Request.Header.Set("Authorization", testToken)
+				ctx.Request.Header.Set("Content-Type", gin.MIMEJSON)
 
-			h := New(storeMock, testRepoMock, serviceMock, loggerMock)
-			h.Create(ctx)
-			require.Equal(t, tt.wantCode, w.Code)
-			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
-			require.NoError(t, err)
+				h := New(storeMock, txRepo, serviceMock, loggerMock)
+				h.Create(ctx)
+				require.Equal(t, tt.wantCode, w.Code)
+				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				require.NoError(t, err)
 
-			res := w.Body.Bytes()
-			res, _ = utils.RemoveFieldInResponse(res, "id")
-			res, _ = utils.RemoveFieldInResponse(res, "createdAt")
-			res, _ = utils.RemoveFieldInResponse(res, "updatedAt")
+				res := w.Body.Bytes()
+				res, _ = utils.RemoveFieldInResponse(res, "id")
+				res, _ = utils.RemoveFieldInResponse(res, "createdAt")
+				res, _ = utils.RemoveFieldInResponse(res, "updatedAt")
 
-			require.JSONEq(t, string(expRespRaw), string(res), "[Handler.Project.Create] response mismatched")
+				require.JSONEq(t, string(expRespRaw), string(res), "[Handler.Project.Create] response mismatched")
+			})
 		})
 	}
 }
@@ -193,7 +197,6 @@ func TestHandler_GetMembers(t *testing.T) {
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg)
 	storeMock := store.New()
-	testRepoMock := store.NewPostgresStore(&cfg)
 
 	tests := []struct {
 		name             string
@@ -219,26 +222,28 @@ func TestHandler_GetMembers(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			w := httptest.NewRecorder()
-			ctx, _ := gin.CreateTestContext(w)
-			ctx.Request = httptest.NewRequest(http.MethodPost, fmt.Sprintf("/api/v1/projects/%v/members", tt.id), nil)
-			ctx.Request.Header.Set("Authorization", testToken)
-			ctx.Request.URL.RawQuery = tt.query
-			ctx.AddParam("id", tt.id)
+		testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+			t.Run(tt.name, func(t *testing.T) {
+				w := httptest.NewRecorder()
+				ctx, _ := gin.CreateTestContext(w)
+				ctx.Request = httptest.NewRequest(http.MethodPost, fmt.Sprintf("/api/v1/projects/%v/members", tt.id), nil)
+				ctx.Request.Header.Set("Authorization", testToken)
+				ctx.Request.URL.RawQuery = tt.query
+				ctx.AddParam("id", tt.id)
 
-			h := New(storeMock, testRepoMock, serviceMock, loggerMock)
-			h.GetMembers(ctx)
-			require.Equal(t, tt.wantCode, w.Code)
-			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
-			require.NoError(t, err)
+				h := New(storeMock, txRepo, serviceMock, loggerMock)
+				h.GetMembers(ctx)
+				require.Equal(t, tt.wantCode, w.Code)
+				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				require.NoError(t, err)
 
-			res := w.Body.Bytes()
-			res, _ = utils.RemoveFieldInResponse(res, "id")
-			res, _ = utils.RemoveFieldInResponse(res, "createdAt")
-			res, _ = utils.RemoveFieldInResponse(res, "updatedAt")
+				res := w.Body.Bytes()
+				res, _ = utils.RemoveFieldInResponse(res, "id")
+				res, _ = utils.RemoveFieldInResponse(res, "createdAt")
+				res, _ = utils.RemoveFieldInResponse(res, "updatedAt")
 
-			require.JSONEq(t, string(expRespRaw), string(res), "[Handler.Project.GetMembers] response mismatched")
+				require.JSONEq(t, string(expRespRaw), string(res), "[Handler.Project.GetMembers] response mismatched")
+			})
 		})
 	}
 }
@@ -248,7 +253,6 @@ func TestHandler_UpdateMember(t *testing.T) {
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg)
 	storeMock := store.New()
-	repoMock := store.NewPostgresStore(&cfg)
 
 	tests := []struct {
 		name             string
@@ -324,30 +328,32 @@ func TestHandler_UpdateMember(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			body, err := json.Marshal(tt.args)
-			if err != nil {
-				t.Error(err)
-				return
-			}
+			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				body, err := json.Marshal(tt.args)
+				if err != nil {
+					t.Error(err)
+					return
+				}
 
-			w := httptest.NewRecorder()
-			ctx, _ := gin.CreateTestContext(w)
-			ctx.Request = httptest.NewRequest(http.MethodPut, fmt.Sprintf("/api/v1/projects/%v/members", tt.id), bytes.NewBuffer(body))
-			ctx.Request.Header.Set("Authorization", testToken)
-			ctx.Request.Header.Set("Content-Type", gin.MIMEJSON)
-			ctx.AddParam("id", tt.id)
+				w := httptest.NewRecorder()
+				ctx, _ := gin.CreateTestContext(w)
+				ctx.Request = httptest.NewRequest(http.MethodPut, fmt.Sprintf("/api/v1/projects/%v/members", tt.id), bytes.NewBuffer(body))
+				ctx.Request.Header.Set("Authorization", testToken)
+				ctx.Request.Header.Set("Content-Type", gin.MIMEJSON)
+				ctx.AddParam("id", tt.id)
 
-			h := New(storeMock, repoMock, serviceMock, loggerMock)
-			h.UpdateMember(ctx)
-			require.Equal(t, tt.wantCode, w.Code)
-			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
-			require.NoError(t, err)
+				h := New(storeMock, txRepo, serviceMock, loggerMock)
+				h.UpdateMember(ctx)
+				require.Equal(t, tt.wantCode, w.Code)
+				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				require.NoError(t, err)
 
-			res := w.Body.Bytes()
-			res, _ = utils.RemoveFieldInResponse(res, "projectSlotID")
-			res, _ = utils.RemoveFieldInResponse(res, "projectMemberID")
+				res := w.Body.Bytes()
+				res, _ = utils.RemoveFieldInResponse(res, "projectSlotID")
+				res, _ = utils.RemoveFieldInResponse(res, "projectMemberID")
 
-			require.JSONEq(t, string(expRespRaw), string(res), "[Handler.Project.UpdateMember] response mismatched")
+				require.JSONEq(t, string(expRespRaw), string(res), "[Handler.Project.UpdateMember] response mismatched")
+			})
 		})
 	}
 }
@@ -357,7 +363,6 @@ func TestHandler_AssignMember(t *testing.T) {
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg)
 	storeMock := store.New()
-	repoMock := store.NewPostgresStore(&cfg)
 
 	tests := []struct {
 		name             string
@@ -390,30 +395,32 @@ func TestHandler_AssignMember(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			body, err := json.Marshal(tt.args)
-			if err != nil {
-				t.Error(err)
-				return
-			}
+			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				body, err := json.Marshal(tt.args)
+				if err != nil {
+					t.Error(err)
+					return
+				}
 
-			w := httptest.NewRecorder()
-			ctx, _ := gin.CreateTestContext(w)
-			ctx.Request = httptest.NewRequest(http.MethodPost, fmt.Sprintf("/api/v1/projects/%v/members", tt.id), bytes.NewBuffer(body))
-			ctx.Request.Header.Set("Authorization", testToken)
-			ctx.Request.Header.Set("Content-Type", gin.MIMEJSON)
-			ctx.AddParam("id", tt.id)
+				w := httptest.NewRecorder()
+				ctx, _ := gin.CreateTestContext(w)
+				ctx.Request = httptest.NewRequest(http.MethodPost, fmt.Sprintf("/api/v1/projects/%v/members", tt.id), bytes.NewBuffer(body))
+				ctx.Request.Header.Set("Authorization", testToken)
+				ctx.Request.Header.Set("Content-Type", gin.MIMEJSON)
+				ctx.AddParam("id", tt.id)
 
-			h := New(storeMock, repoMock, serviceMock, loggerMock)
-			h.AssignMember(ctx)
-			require.Equal(t, tt.wantCode, w.Code)
-			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
-			require.NoError(t, err)
+				h := New(storeMock, txRepo, serviceMock, loggerMock)
+				h.AssignMember(ctx)
+				require.Equal(t, tt.wantCode, w.Code)
+				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				require.NoError(t, err)
 
-			res := w.Body.Bytes()
-			res, _ = utils.RemoveFieldInResponse(res, "projectSlotID")
-			res, _ = utils.RemoveFieldInResponse(res, "projectMemberID")
+				res := w.Body.Bytes()
+				res, _ = utils.RemoveFieldInResponse(res, "projectSlotID")
+				res, _ = utils.RemoveFieldInResponse(res, "projectMemberID")
 
-			require.JSONEq(t, string(expRespRaw), string(res), "[Handler.Project.AssignMember] response mismatched")
+				require.JSONEq(t, string(expRespRaw), string(res), "[Handler.Project.AssignMember] response mismatched")
+			})
 		})
 	}
 }
@@ -423,7 +430,6 @@ func TestHandler_DeleteProjectMember(t *testing.T) {
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg)
 	storeMock := store.New()
-	testRepoMock := store.NewPostgresStore(&cfg)
 
 	tests := []struct {
 		name             string
@@ -437,7 +443,7 @@ func TestHandler_DeleteProjectMember(t *testing.T) {
 			wantCode:         200,
 			wantResponsePath: "testdata/delete_member/200.json",
 			id:               "8dc3be2e-19a4-4942-8a79-56db391a0b15",
-			memberID:         "fae443f8-e8ff-4eec-b86c-98216d7662d8",
+			memberID:         "2655832e-f009-4b73-a535-64c3a22e558f",
 		},
 		{
 			name:             "failed_invalid_member_id",
@@ -449,18 +455,20 @@ func TestHandler_DeleteProjectMember(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			w := httptest.NewRecorder()
-			ctx, _ := gin.CreateTestContext(w)
-			ctx.Params = gin.Params{gin.Param{Key: "id", Value: tt.id}, gin.Param{Key: "memberID", Value: tt.memberID}}
-			ctx.Request = httptest.NewRequest("DELETE", fmt.Sprintf("/api/v1/projects/%s/members/%s", tt.id, tt.memberID), nil)
-			ctx.Request.Header.Set("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2OTkzMjExNDIsImlkIjoiMjY1NTgzMmUtZjAwOS00YjczLWE1MzUtNjRjM2EyMmU1NThmIiwiYXZhdGFyIjoiaHR0cHM6Ly9zMy1hcC1zb3V0aGVhc3QtMS5hbWF6b25hd3MuY29tL2ZvcnRyZXNzLWltYWdlcy81MTUzNTc0Njk1NjYzOTU1OTQ0LnBuZyIsImVtYWlsIjoidGhhbmhAZC5mb3VuZGF0aW9uIiwicGVybWlzc2lvbnMiOlsiZW1wbG95ZWVzLnJlYWQiXSwidXNlcl9pbmZvIjpudWxsfQ.GENGPEucSUrILN6tHDKxLMtj0M0REVMUPC7-XhDMpGM")
-			metadataHandler := New(storeMock, testRepoMock, serviceMock, loggerMock)
+			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				w := httptest.NewRecorder()
+				ctx, _ := gin.CreateTestContext(w)
+				ctx.Params = gin.Params{gin.Param{Key: "id", Value: tt.id}, gin.Param{Key: "memberID", Value: tt.memberID}}
+				ctx.Request = httptest.NewRequest("DELETE", fmt.Sprintf("/api/v1/projects/%s/members/%s", tt.id, tt.memberID), nil)
+				ctx.Request.Header.Set("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2OTkzMjExNDIsImlkIjoiMjY1NTgzMmUtZjAwOS00YjczLWE1MzUtNjRjM2EyMmU1NThmIiwiYXZhdGFyIjoiaHR0cHM6Ly9zMy1hcC1zb3V0aGVhc3QtMS5hbWF6b25hd3MuY29tL2ZvcnRyZXNzLWltYWdlcy81MTUzNTc0Njk1NjYzOTU1OTQ0LnBuZyIsImVtYWlsIjoidGhhbmhAZC5mb3VuZGF0aW9uIiwicGVybWlzc2lvbnMiOlsiZW1wbG95ZWVzLnJlYWQiXSwidXNlcl9pbmZvIjpudWxsfQ.GENGPEucSUrILN6tHDKxLMtj0M0REVMUPC7-XhDMpGM")
+				metadataHandler := New(storeMock, txRepo, serviceMock, loggerMock)
 
-			metadataHandler.DeleteMember(ctx)
-			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
-			require.NoError(t, err)
+				metadataHandler.DeleteMember(ctx)
+				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				require.NoError(t, err)
 
-			require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.UpdateProjectStatus] response mismatched")
+				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.UpdateProjectStatus] response mismatched")
+			})
 		})
 	}
 }
@@ -523,7 +531,6 @@ func TestHandler_UpdateGeneralInfo(t *testing.T) {
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg)
 	storeMock := store.New()
-	testRepoMock := store.NewPostgresStore(&cfg)
 
 	tests := []struct {
 		name             string
@@ -565,23 +572,25 @@ func TestHandler_UpdateGeneralInfo(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			byteReq, err := json.Marshal(tt.input)
-			require.Nil(t, err)
+			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				byteReq, err := json.Marshal(tt.input)
+				require.Nil(t, err)
 
-			bodyReader := strings.NewReader(string(byteReq))
+				bodyReader := strings.NewReader(string(byteReq))
 
-			w := httptest.NewRecorder()
-			ctx, _ := gin.CreateTestContext(w)
-			ctx.Params = gin.Params{gin.Param{Key: "id", Value: tt.id}}
-			ctx.Request = httptest.NewRequest("PUT", fmt.Sprintf("/api/v1/projects/%s/general-info", tt.id), bodyReader)
-			ctx.Request.Header.Set("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2OTkzMjExNDIsImlkIjoiMjY1NTgzMmUtZjAwOS00YjczLWE1MzUtNjRjM2EyMmU1NThmIiwiYXZhdGFyIjoiaHR0cHM6Ly9zMy1hcC1zb3V0aGVhc3QtMS5hbWF6b25hd3MuY29tL2ZvcnRyZXNzLWltYWdlcy81MTUzNTc0Njk1NjYzOTU1OTQ0LnBuZyIsImVtYWlsIjoidGhhbmhAZC5mb3VuZGF0aW9uIiwicGVybWlzc2lvbnMiOlsiZW1wbG95ZWVzLnJlYWQiXSwidXNlcl9pbmZvIjpudWxsfQ.GENGPEucSUrILN6tHDKxLMtj0M0REVMUPC7-XhDMpGM")
-			metadataHandler := New(storeMock, testRepoMock, serviceMock, loggerMock)
+				w := httptest.NewRecorder()
+				ctx, _ := gin.CreateTestContext(w)
+				ctx.Params = gin.Params{gin.Param{Key: "id", Value: tt.id}}
+				ctx.Request = httptest.NewRequest("PUT", fmt.Sprintf("/api/v1/projects/%s/general-info", tt.id), bodyReader)
+				ctx.Request.Header.Set("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2OTkzMjExNDIsImlkIjoiMjY1NTgzMmUtZjAwOS00YjczLWE1MzUtNjRjM2EyMmU1NThmIiwiYXZhdGFyIjoiaHR0cHM6Ly9zMy1hcC1zb3V0aGVhc3QtMS5hbWF6b25hd3MuY29tL2ZvcnRyZXNzLWltYWdlcy81MTUzNTc0Njk1NjYzOTU1OTQ0LnBuZyIsImVtYWlsIjoidGhhbmhAZC5mb3VuZGF0aW9uIiwicGVybWlzc2lvbnMiOlsiZW1wbG95ZWVzLnJlYWQiXSwidXNlcl9pbmZvIjpudWxsfQ.GENGPEucSUrILN6tHDKxLMtj0M0REVMUPC7-XhDMpGM")
+				metadataHandler := New(storeMock, txRepo, serviceMock, loggerMock)
 
-			metadataHandler.UpdateGeneralInfo(ctx)
-			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
-			require.NoError(t, err)
+				metadataHandler.UpdateGeneralInfo(ctx)
+				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				require.NoError(t, err)
 
-			require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.UpdateProjectGeneralInfo] response mismatched")
+				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.UpdateProjectGeneralInfo] response mismatched")
+			})
 		})
 	}
 }
@@ -592,7 +601,6 @@ func TestHandler_UpdateContactInfo(t *testing.T) {
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg)
 	storeMock := store.New()
-	testRepoMock := store.NewPostgresStore(&cfg)
 
 	tests := []struct {
 		name             string
@@ -628,23 +636,25 @@ func TestHandler_UpdateContactInfo(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			byteReq, err := json.Marshal(tt.input)
-			require.Nil(t, err)
+			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				byteReq, err := json.Marshal(tt.input)
+				require.Nil(t, err)
 
-			bodyReader := strings.NewReader(string(byteReq))
+				bodyReader := strings.NewReader(string(byteReq))
 
-			w := httptest.NewRecorder()
-			ctx, _ := gin.CreateTestContext(w)
-			ctx.Params = gin.Params{gin.Param{Key: "id", Value: tt.id}}
-			ctx.Request = httptest.NewRequest("PUT", fmt.Sprintf("/api/v1/projects/%s/contact-info", tt.id), bodyReader)
-			ctx.Request.Header.Set("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2OTkzMjExNDIsImlkIjoiMjY1NTgzMmUtZjAwOS00YjczLWE1MzUtNjRjM2EyMmU1NThmIiwiYXZhdGFyIjoiaHR0cHM6Ly9zMy1hcC1zb3V0aGVhc3QtMS5hbWF6b25hd3MuY29tL2ZvcnRyZXNzLWltYWdlcy81MTUzNTc0Njk1NjYzOTU1OTQ0LnBuZyIsImVtYWlsIjoidGhhbmhAZC5mb3VuZGF0aW9uIiwicGVybWlzc2lvbnMiOlsiZW1wbG95ZWVzLnJlYWQiXSwidXNlcl9pbmZvIjpudWxsfQ.GENGPEucSUrILN6tHDKxLMtj0M0REVMUPC7-XhDMpGM")
-			metadataHandler := New(storeMock, testRepoMock, serviceMock, loggerMock)
+				w := httptest.NewRecorder()
+				ctx, _ := gin.CreateTestContext(w)
+				ctx.Params = gin.Params{gin.Param{Key: "id", Value: tt.id}}
+				ctx.Request = httptest.NewRequest("PUT", fmt.Sprintf("/api/v1/projects/%s/contact-info", tt.id), bodyReader)
+				ctx.Request.Header.Set("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2OTkzMjExNDIsImlkIjoiMjY1NTgzMmUtZjAwOS00YjczLWE1MzUtNjRjM2EyMmU1NThmIiwiYXZhdGFyIjoiaHR0cHM6Ly9zMy1hcC1zb3V0aGVhc3QtMS5hbWF6b25hd3MuY29tL2ZvcnRyZXNzLWltYWdlcy81MTUzNTc0Njk1NjYzOTU1OTQ0LnBuZyIsImVtYWlsIjoidGhhbmhAZC5mb3VuZGF0aW9uIiwicGVybWlzc2lvbnMiOlsiZW1wbG95ZWVzLnJlYWQiXSwidXNlcl9pbmZvIjpudWxsfQ.GENGPEucSUrILN6tHDKxLMtj0M0REVMUPC7-XhDMpGM")
+				metadataHandler := New(storeMock, txRepo, serviceMock, loggerMock)
 
-			metadataHandler.UpdateContactInfo(ctx)
-			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
-			require.NoError(t, err)
+				metadataHandler.UpdateContactInfo(ctx)
+				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				require.NoError(t, err)
 
-			require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.UpdateProjectContactInfo] response mismatched")
+				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.UpdateProjectContactInfo] response mismatched")
+			})
 		})
 	}
 }
@@ -655,7 +665,6 @@ func TestHandler_GetListWorkUnit(t *testing.T) {
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg)
 	storeMock := store.New()
-	testRepoMock := store.NewPostgresStore(&cfg)
 
 	tests := []struct {
 		name             string
@@ -688,20 +697,22 @@ func TestHandler_GetListWorkUnit(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			w := httptest.NewRecorder()
-			ctx, _ := gin.CreateTestContext(w)
-			ctx.AddParam("id", tt.id)
-			ctx.Request = httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/projects/%s/work-units?%s", tt.id, tt.query), nil)
-			ctx.Request.Header.Set("Authorization", testToken)
-			ctx.Request.URL.RawQuery = tt.query
+			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				w := httptest.NewRecorder()
+				ctx, _ := gin.CreateTestContext(w)
+				ctx.AddParam("id", tt.id)
+				ctx.Request = httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/projects/%s/work-units?%s", tt.id, tt.query), nil)
+				ctx.Request.Header.Set("Authorization", testToken)
+				ctx.Request.URL.RawQuery = tt.query
 
-			h := New(storeMock, testRepoMock, serviceMock, loggerMock)
-			h.GetWorkUnits(ctx)
-			require.Equal(t, tt.wantCode, w.Code)
-			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
-			require.NoError(t, err)
+				h := New(storeMock, txRepo, serviceMock, loggerMock)
+				h.GetWorkUnits(ctx)
+				require.Equal(t, tt.wantCode, w.Code)
+				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				require.NoError(t, err)
 
-			require.JSONEq(t, string(expRespRaw), string(w.Body.Bytes()), "[Handler.Project.GetListWorkUnit] response mismatched")
+				require.JSONEq(t, string(expRespRaw), string(w.Body.Bytes()), "[Handler.Project.GetListWorkUnit] response mismatched")
+			})
 		})
 	}
 }
@@ -711,7 +722,6 @@ func TestHandler_UpdateWorkUnit(t *testing.T) {
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg)
 	storeMock := store.New()
-	testRepoMock := store.NewPostgresStore(&cfg)
 
 	tests := []struct {
 		name             string
@@ -788,29 +798,31 @@ func TestHandler_UpdateWorkUnit(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			body, err := json.Marshal(tt.input.Body)
-			if err != nil {
-				t.Error(err)
-				return
-			}
+			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				body, err := json.Marshal(tt.input.Body)
+				if err != nil {
+					t.Error(err)
+					return
+				}
 
-			w := httptest.NewRecorder()
-			ctx, _ := gin.CreateTestContext(w)
-			ctx.Request = httptest.NewRequest(http.MethodPost,
-				fmt.Sprintf("/api/v1/projects/%s/work-units/%s", tt.input.ProjectID, tt.input.WorkUnitID),
-				bytes.NewBuffer(body))
-			ctx.Request.Header.Set("Authorization", testToken)
-			ctx.Request.Header.Set("Content-Type", gin.MIMEJSON)
-			ctx.AddParam("id", tt.input.ProjectID)
-			ctx.AddParam("workUnitID", tt.input.WorkUnitID)
+				w := httptest.NewRecorder()
+				ctx, _ := gin.CreateTestContext(w)
+				ctx.Request = httptest.NewRequest(http.MethodPost,
+					fmt.Sprintf("/api/v1/projects/%s/work-units/%s", tt.input.ProjectID, tt.input.WorkUnitID),
+					bytes.NewBuffer(body))
+				ctx.Request.Header.Set("Authorization", testToken)
+				ctx.Request.Header.Set("Content-Type", gin.MIMEJSON)
+				ctx.AddParam("id", tt.input.ProjectID)
+				ctx.AddParam("workUnitID", tt.input.WorkUnitID)
 
-			h := New(storeMock, testRepoMock, serviceMock, loggerMock)
-			h.UpdateWorkUnit(ctx)
-			require.Equal(t, tt.wantCode, w.Code)
-			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
-			require.NoError(t, err)
+				h := New(storeMock, txRepo, serviceMock, loggerMock)
+				h.UpdateWorkUnit(ctx)
+				require.Equal(t, tt.wantCode, w.Code)
+				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				require.NoError(t, err)
 
-			require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Project.UpdateWorkUnit] response mismatched")
+				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Project.UpdateWorkUnit] response mismatched")
+			})
 		})
 	}
 }
@@ -820,7 +832,6 @@ func TestHandler_CreateWorkUnit(t *testing.T) {
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg)
 	storeMock := store.New()
-	testRepoMock := store.NewPostgresStore(&cfg)
 
 	tests := []struct {
 		name             string
@@ -875,31 +886,33 @@ func TestHandler_CreateWorkUnit(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			body, err := json.Marshal(tt.input.Body)
-			if err != nil {
-				t.Error(err)
-				return
-			}
+			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				body, err := json.Marshal(tt.input.Body)
+				if err != nil {
+					t.Error(err)
+					return
+				}
 
-			w := httptest.NewRecorder()
-			ctx, _ := gin.CreateTestContext(w)
-			ctx.Request = httptest.NewRequest(http.MethodPost,
-				fmt.Sprintf("/api/v1/projects/%s/work-units", tt.input.ProjectID),
-				bytes.NewBuffer(body))
-			ctx.Request.Header.Set("Authorization", testToken)
-			ctx.Request.Header.Set("Content-Type", gin.MIMEJSON)
-			ctx.AddParam("id", tt.input.ProjectID)
+				w := httptest.NewRecorder()
+				ctx, _ := gin.CreateTestContext(w)
+				ctx.Request = httptest.NewRequest(http.MethodPost,
+					fmt.Sprintf("/api/v1/projects/%s/work-units", tt.input.ProjectID),
+					bytes.NewBuffer(body))
+				ctx.Request.Header.Set("Authorization", testToken)
+				ctx.Request.Header.Set("Content-Type", gin.MIMEJSON)
+				ctx.AddParam("id", tt.input.ProjectID)
 
-			h := New(storeMock, testRepoMock, serviceMock, loggerMock)
-			h.CreateWorkUnit(ctx)
-			require.Equal(t, tt.wantCode, w.Code)
-			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
-			require.NoError(t, err)
+				h := New(storeMock, txRepo, serviceMock, loggerMock)
+				h.CreateWorkUnit(ctx)
+				require.Equal(t, tt.wantCode, w.Code)
+				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				require.NoError(t, err)
 
-			res := w.Body.Bytes()
-			res, _ = utils.RemoveFieldInResponse(res, "id")
+				res := w.Body.Bytes()
+				res, _ = utils.RemoveFieldInResponse(res, "id")
 
-			require.JSONEq(t, string(expRespRaw), string(res), "[Handler.Project.CreateWorkUnit] response mismatched")
+				require.JSONEq(t, string(expRespRaw), string(res), "[Handler.Project.CreateWorkUnit] response mismatched")
+			})
 		})
 	}
 }
@@ -909,7 +922,6 @@ func TestHandler_ArchiveWorkUnit(t *testing.T) {
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg)
 	storeMock := store.New()
-	repoMock := store.NewPostgresStore(&cfg)
 
 	tests := []struct {
 		name             string
@@ -938,23 +950,25 @@ func TestHandler_ArchiveWorkUnit(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			w := httptest.NewRecorder()
-			ctx, _ := gin.CreateTestContext(w)
-			ctx.Request = httptest.NewRequest(http.MethodPut,
-				fmt.Sprintf("/api/v1/projects/%s/work-units/%s/archive", tt.input.ProjectID, tt.input.WorkUnitID),
-				nil)
+			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				w := httptest.NewRecorder()
+				ctx, _ := gin.CreateTestContext(w)
+				ctx.Request = httptest.NewRequest(http.MethodPut,
+					fmt.Sprintf("/api/v1/projects/%s/work-units/%s/archive", tt.input.ProjectID, tt.input.WorkUnitID),
+					nil)
 
-			ctx.Request.Header.Set("Authorization", testToken)
-			ctx.AddParam("id", tt.input.ProjectID)
-			ctx.AddParam("workUnitID", tt.input.WorkUnitID)
+				ctx.Request.Header.Set("Authorization", testToken)
+				ctx.AddParam("id", tt.input.ProjectID)
+				ctx.AddParam("workUnitID", tt.input.WorkUnitID)
 
-			h := New(storeMock, repoMock, serviceMock, loggerMock)
-			h.ArchiveWorkUnit(ctx)
-			require.Equal(t, tt.wantCode, w.Code)
-			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
-			require.NoError(t, err)
+				h := New(storeMock, txRepo, serviceMock, loggerMock)
+				h.ArchiveWorkUnit(ctx)
+				require.Equal(t, tt.wantCode, w.Code)
+				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				require.NoError(t, err)
 
-			require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.ArchiveWorkUnit] response mismatched")
+				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.ArchiveWorkUnit] response mismatched")
+			})
 		})
 	}
 }
@@ -964,7 +978,6 @@ func TestHandler_UnarchiveWorkUnit(t *testing.T) {
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg)
 	storeMock := store.New()
-	repoMock := store.NewPostgresStore(&cfg)
 
 	tests := []struct {
 		name             string
@@ -993,23 +1006,25 @@ func TestHandler_UnarchiveWorkUnit(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			w := httptest.NewRecorder()
-			ctx, _ := gin.CreateTestContext(w)
-			ctx.Request = httptest.NewRequest(http.MethodPut,
-				fmt.Sprintf("/api/v1/projects/%s/work-units/%s/unarchive", tt.input.ProjectID, tt.input.WorkUnitID),
-				nil)
+			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				w := httptest.NewRecorder()
+				ctx, _ := gin.CreateTestContext(w)
+				ctx.Request = httptest.NewRequest(http.MethodPut,
+					fmt.Sprintf("/api/v1/projects/%s/work-units/%s/unarchive", tt.input.ProjectID, tt.input.WorkUnitID),
+					nil)
 
-			ctx.Request.Header.Set("Authorization", testToken)
-			ctx.AddParam("id", tt.input.ProjectID)
-			ctx.AddParam("workUnitID", tt.input.WorkUnitID)
+				ctx.Request.Header.Set("Authorization", testToken)
+				ctx.AddParam("id", tt.input.ProjectID)
+				ctx.AddParam("workUnitID", tt.input.WorkUnitID)
 
-			h := New(storeMock, repoMock, serviceMock, loggerMock)
-			h.UnarchiveWorkUnit(ctx)
-			require.Equal(t, tt.wantCode, w.Code)
-			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
-			require.NoError(t, err)
+				h := New(storeMock, txRepo, serviceMock, loggerMock)
+				h.UnarchiveWorkUnit(ctx)
+				require.Equal(t, tt.wantCode, w.Code)
+				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				require.NoError(t, err)
 
-			require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.UnarchiveWorkUnit] response mismatched")
+				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.UnarchiveWorkUnit] response mismatched")
+			})
 		})
 	}
 }

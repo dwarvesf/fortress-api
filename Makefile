@@ -26,7 +26,6 @@ init: setup
 	make migrate-up
 	make migrate-test
 	make seed
-	make seed-test
 
 seed:
 	@docker exec -t $(POSTGRES_CONTAINER) sh -c "mkdir -p /seed"

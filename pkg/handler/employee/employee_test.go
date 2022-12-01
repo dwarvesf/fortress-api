@@ -3,7 +3,6 @@ package employee
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/dwarvesf/fortress-api/pkg/handler/employee/request"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -16,11 +15,13 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
+	"github.com/dwarvesf/fortress-api/pkg/handler/employee/request"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/utils"
+	"github.com/dwarvesf/fortress-api/pkg/utils/testhelper"
 )
 
 const testToken = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2OTkzMjExNDIsImlkIjoiMjY1NTgzMmUtZjAwOS00YjczLWE1MzUtNjRjM2EyMmU1NThmIiwiYXZhdGFyIjoiaHR0cHM6Ly9zMy1hcC1zb3V0aGVhc3QtMS5hbWF6b25hd3MuY29tL2ZvcnRyZXNzLWltYWdlcy81MTUzNTc0Njk1NjYzOTU1OTQ0LnBuZyIsImVtYWlsIjoidGhhbmhAZC5mb3VuZGF0aW9uIiwicGVybWlzc2lvbnMiOlsiZW1wbG95ZWVzLnJlYWQiXSwidXNlcl9pbmZvIjpudWxsfQ.GENGPEucSUrILN6tHDKxLMtj0M0REVMUPC7-XhDMpGM"
@@ -132,7 +133,6 @@ func TestHandler_UpdateEmployeeStatus(t *testing.T) {
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg)
 	storeMock := store.New()
-	testRepoMock := store.NewPostgresStore(&cfg)
 
 	tests := []struct {
 		name             string
@@ -154,27 +154,29 @@ func TestHandler_UpdateEmployeeStatus(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			byteReq, err := json.Marshal(tt.body)
-			require.Nil(t, err)
-			w := httptest.NewRecorder()
+			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				byteReq, err := json.Marshal(tt.body)
+				require.Nil(t, err)
+				w := httptest.NewRecorder()
 
-			ctx, _ := gin.CreateTestContext(w)
-			bodyReader := strings.NewReader(string(byteReq))
-			ctx.Request = httptest.NewRequest(http.MethodPut, fmt.Sprintf("/api/v1/employees/%s/employee-status", tt.id), bodyReader)
-			ctx.Request.Header.Set("Authorization", testToken)
-			ctx.AddParam("id", tt.id)
+				ctx, _ := gin.CreateTestContext(w)
+				bodyReader := strings.NewReader(string(byteReq))
+				ctx.Request = httptest.NewRequest(http.MethodPut, fmt.Sprintf("/api/v1/employees/%s/employee-status", tt.id), bodyReader)
+				ctx.Request.Header.Set("Authorization", testToken)
+				ctx.AddParam("id", tt.id)
 
-			h := New(storeMock, testRepoMock, serviceMock, loggerMock, &cfg)
-			h.UpdateEmployeeStatus(ctx)
+				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+				h.UpdateEmployeeStatus(ctx)
 
-			require.Equal(t, tt.wantCode, w.Code)
-			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
-			require.NoError(t, err)
+				require.Equal(t, tt.wantCode, w.Code)
+				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				require.NoError(t, err)
 
-			res, err := utils.RemoveFieldInResponse(w.Body.Bytes(), "updatedAt")
-			require.Nil(t, err)
+				res, err := utils.RemoveFieldInResponse(w.Body.Bytes(), "updatedAt")
+				require.Nil(t, err)
 
-			require.JSONEq(t, string(expRespRaw), string(res), "[Handler.UpdateEmployeeStatus] response mismatched")
+				require.JSONEq(t, string(expRespRaw), string(res), "[Handler.UpdateEmployeeStatus] response mismatched")
+			})
 		})
 	}
 }
@@ -184,7 +186,6 @@ func Test_UpdateGeneralInfo(t *testing.T) {
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg)
 	storeMock := store.New()
-	testRepoMock := store.NewPostgresStore(&cfg)
 
 	tests := []struct {
 		name             string
@@ -222,27 +223,29 @@ func Test_UpdateGeneralInfo(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			byteReq, err := json.Marshal(tt.body)
-			require.Nil(t, err)
-			w := httptest.NewRecorder()
+			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				byteReq, err := json.Marshal(tt.body)
+				require.Nil(t, err)
+				w := httptest.NewRecorder()
 
-			ctx, _ := gin.CreateTestContext(w)
-			bodyReader := strings.NewReader(string(byteReq))
-			ctx.Params = gin.Params{gin.Param{Key: "id", Value: tt.id}}
-			ctx.Request = httptest.NewRequest("PUT", "/api/v1/employees/"+tt.id+"/general-info", bodyReader)
-			ctx.Request.Header.Set("Authorization", testToken)
-			metadataHandler := New(storeMock, testRepoMock, serviceMock, loggerMock, &cfg)
+				ctx, _ := gin.CreateTestContext(w)
+				bodyReader := strings.NewReader(string(byteReq))
+				ctx.Params = gin.Params{gin.Param{Key: "id", Value: tt.id}}
+				ctx.Request = httptest.NewRequest("PUT", "/api/v1/employees/"+tt.id+"/general-info", bodyReader)
+				ctx.Request.Header.Set("Authorization", testToken)
+				metadataHandler := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 
-			metadataHandler.UpdateGeneralInfo(ctx)
+				metadataHandler.UpdateGeneralInfo(ctx)
 
-			require.Equal(t, tt.wantCode, w.Code)
-			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
-			require.NoError(t, err)
+				require.Equal(t, tt.wantCode, w.Code)
+				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				require.NoError(t, err)
 
-			res, err := utils.RemoveFieldInResponse(w.Body.Bytes(), "updatedAt")
-			require.Nil(t, err)
+				res, err := utils.RemoveFieldInResponse(w.Body.Bytes(), "updatedAt")
+				require.Nil(t, err)
 
-			require.JSONEq(t, string(expRespRaw), string(res), "[Handler.UpdateGeneralInfo] response mismatched")
+				require.JSONEq(t, string(expRespRaw), string(res), "[Handler.UpdateGeneralInfo] response mismatched")
+			})
 		})
 	}
 }
@@ -252,7 +255,7 @@ func Test_UpdateSkill(t *testing.T) {
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg)
 	storeMock := store.New()
-	testRepoMock := store.NewPostgresStore(&cfg)
+	// testRepoMock := store.NewPostgresStore(&cfg)
 
 	tests := []struct {
 		name             string
@@ -310,27 +313,30 @@ func Test_UpdateSkill(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			byteReq, err := json.Marshal(tt.body)
-			require.Nil(t, err)
-			w := httptest.NewRecorder()
+			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
 
-			ctx, _ := gin.CreateTestContext(w)
-			bodyReader := strings.NewReader(string(byteReq))
-			ctx.Params = gin.Params{gin.Param{Key: "id", Value: tt.id}}
-			ctx.Request = httptest.NewRequest("PUT", fmt.Sprintf("/api/v1/employees/%s/skills", tt.id), bodyReader)
-			ctx.Request.Header.Set("Authorization", testToken)
-			metadataHandler := New(storeMock, testRepoMock, serviceMock, loggerMock, &cfg)
+				byteReq, err := json.Marshal(tt.body)
+				require.Nil(t, err)
+				w := httptest.NewRecorder()
 
-			metadataHandler.UpdateSkills(ctx)
+				ctx, _ := gin.CreateTestContext(w)
+				bodyReader := strings.NewReader(string(byteReq))
+				ctx.Params = gin.Params{gin.Param{Key: "id", Value: tt.id}}
+				ctx.Request = httptest.NewRequest("PUT", fmt.Sprintf("/api/v1/employees/%s/skills", tt.id), bodyReader)
+				ctx.Request.Header.Set("Authorization", testToken)
+				metadataHandler := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 
-			require.Equal(t, tt.wantCode, w.Code)
-			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
-			require.NoError(t, err)
+				metadataHandler.UpdateSkills(ctx)
 
-			res, err := utils.RemoveFieldInResponse(w.Body.Bytes(), "updatedAt")
-			require.Nil(t, err)
+				require.Equal(t, tt.wantCode, w.Code)
+				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				require.NoError(t, err)
 
-			require.JSONEq(t, string(expRespRaw), string(res), "[Handler.UpdateSkills] response mismatched")
+				res, err := utils.RemoveFieldInResponse(w.Body.Bytes(), "updatedAt")
+				require.Nil(t, err)
+
+				require.JSONEq(t, string(expRespRaw), string(res), "[Handler.UpdateSkills] response mismatched")
+			})
 		})
 	}
 }
@@ -340,7 +346,6 @@ func Test_Create(t *testing.T) {
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg)
 	storeMock := store.New()
-	testRepoMock := store.NewPostgresStore(&cfg)
 
 	tests := []struct {
 		name             string
@@ -408,32 +413,35 @@ func Test_Create(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			byteReq, err := json.Marshal(tt.body)
-			require.Nil(t, err)
-			w := httptest.NewRecorder()
-
-			ctx, _ := gin.CreateTestContext(w)
-			bodyReader := strings.NewReader(string(byteReq))
-			ctx.Params = gin.Params{gin.Param{Key: "id", Value: tt.id}}
-			ctx.Request = httptest.NewRequest("POST", "/api/v1/employees/", bodyReader)
-			ctx.Request.Header.Set("Authorization", testToken)
-			metadataHandler := New(storeMock, testRepoMock, serviceMock, loggerMock, &cfg)
-
-			metadataHandler.Create(ctx)
-
-			require.Equal(t, tt.wantCode, w.Code)
-			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
-			require.NoError(t, err)
-
-			if !tt.wantErr {
-				res, err := utils.RemoveFieldInResponse(w.Body.Bytes(), "updatedAt")
+			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				byteReq, err := json.Marshal(tt.body)
 				require.Nil(t, err)
+				w := httptest.NewRecorder()
 
-				require.JSONEq(t, string(expRespRaw), string(res), "[employee.Handler.Create] response mismatched")
-			} else {
-				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[employee.Handler.Create] response mismatched")
-			}
+				ctx, _ := gin.CreateTestContext(w)
+				bodyReader := strings.NewReader(string(byteReq))
+				ctx.Params = gin.Params{gin.Param{Key: "id", Value: tt.id}}
+				ctx.Request = httptest.NewRequest("POST", "/api/v1/employees/", bodyReader)
+				ctx.Request.Header.Set("Authorization", testToken)
+				metadataHandler := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+
+				metadataHandler.Create(ctx)
+
+				require.Equal(t, tt.wantCode, w.Code)
+				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				require.NoError(t, err)
+
+				if !tt.wantErr {
+					res, err := utils.RemoveFieldInResponse(w.Body.Bytes(), "updatedAt")
+					require.Nil(t, err)
+
+					require.JSONEq(t, string(expRespRaw), string(res), "[employee.Handler.Create] response mismatched")
+				} else {
+					require.JSONEq(t, string(expRespRaw), w.Body.String(), "[employee.Handler.Create] response mismatched")
+				}
+			})
 		})
+
 	}
 }
 
@@ -442,7 +450,6 @@ func Test_UpdatePersonalInfo(t *testing.T) {
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg)
 	storeMock := store.New()
-	testRepoMock := store.NewPostgresStore(&cfg)
 
 	dob, err := time.Parse("2006-01-02", "1990-01-02")
 	require.Nil(t, err)
@@ -463,7 +470,7 @@ func Test_UpdatePersonalInfo(t *testing.T) {
 				DoB:           &dob,
 				Gender:        "Male",
 				Address:       "Phan Huy Ich, Tan Binh District, Ho Chi Minh, Vietnam",
-				PersonalEmail: "thanhpham123@gmail.com",
+				PersonalEmail: "thanhpham124@gmail.com",
 			},
 			id: "2655832e-f009-4b73-a535-64c3a22e558f",
 		},
@@ -484,27 +491,29 @@ func Test_UpdatePersonalInfo(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			byteReq, err := json.Marshal(tt.body)
-			require.Nil(t, err)
-			w := httptest.NewRecorder()
+			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				byteReq, err := json.Marshal(tt.body)
+				require.Nil(t, err)
+				w := httptest.NewRecorder()
 
-			ctx, _ := gin.CreateTestContext(w)
-			bodyReader := strings.NewReader(string(byteReq))
-			ctx.Params = gin.Params{gin.Param{Key: "id", Value: tt.id}}
-			ctx.Request = httptest.NewRequest("PUT", "/api/v1/employees/"+tt.id+"/personal-info", bodyReader)
-			ctx.Request.Header.Set("Authorization", testToken)
-			metadataHandler := New(storeMock, testRepoMock, serviceMock, loggerMock, &cfg)
+				ctx, _ := gin.CreateTestContext(w)
+				bodyReader := strings.NewReader(string(byteReq))
+				ctx.Params = gin.Params{gin.Param{Key: "id", Value: tt.id}}
+				ctx.Request = httptest.NewRequest("PUT", "/api/v1/employees/"+tt.id+"/personal-info", bodyReader)
+				ctx.Request.Header.Set("Authorization", testToken)
+				metadataHandler := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 
-			metadataHandler.UpdatePersonalInfo(ctx)
+				metadataHandler.UpdatePersonalInfo(ctx)
 
-			require.Equal(t, tt.wantCode, w.Code)
-			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
-			require.NoError(t, err)
+				require.Equal(t, tt.wantCode, w.Code)
+				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				require.NoError(t, err)
 
-			res, err := utils.RemoveFieldInResponse(w.Body.Bytes(), "updatedAt")
-			require.Nil(t, err)
+				res, err := utils.RemoveFieldInResponse(w.Body.Bytes(), "updatedAt")
+				require.Nil(t, err)
 
-			require.JSONEq(t, string(expRespRaw), string(res), "[Handler.UpdatePersonalInfo] response mismatched")
+				require.JSONEq(t, string(expRespRaw), string(res), "[Handler.UpdatePersonalInfo] response mismatched")
+			})
 		})
 	}
 }

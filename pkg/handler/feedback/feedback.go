@@ -993,7 +993,6 @@ func (h *handler) DeleteSurveyTopic(c *gin.Context) {
 	})
 
 	tx, done := h.repo.NewTransaction()
-
 	// check feedback event existence
 	exists, err := h.store.FeedbackEvent.IsExist(tx.DB(), eventID)
 	if err != nil {
