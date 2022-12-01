@@ -21,6 +21,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/utils"
+	"github.com/dwarvesf/fortress-api/pkg/utils/testhelper"
 )
 
 const testToken = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2OTkzMjExNDIsImlkIjoiMjY1NTgzMmUtZjAwOS00YjczLWE1MzUtNjRjM2EyMmU1NThmIiwiYXZhdGFyIjoiaHR0cHM6Ly9zMy1hcC1zb3V0aGVhc3QtMS5hbWF6b25hd3MuY29tL2ZvcnRyZXNzLWltYWdlcy81MTUzNTc0Njk1NjYzOTU1OTQ0LnBuZyIsImVtYWlsIjoidGhhbmhAZC5mb3VuZGF0aW9uIiwicGVybWlzc2lvbnMiOlsiZW1wbG95ZWVzLnJlYWQiXSwidXNlcl9pbmZvIjpudWxsfQ.GENGPEucSUrILN6tHDKxLMtj0M0REVMUPC7-XhDMpGM"
@@ -213,7 +214,6 @@ func TestHandler_Submit(t *testing.T) {
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg)
 	storeMock := store.New()
-	testRepoMock := store.NewPostgresStore(&cfg)
 	tests := []struct {
 		name             string
 		body             request.SubmitBody
@@ -345,25 +345,28 @@ func TestHandler_Submit(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			w := httptest.NewRecorder()
-			ctx, _ := gin.CreateTestContext(w)
-			byteReq, _ := json.Marshal(tt.body)
-			bodyReader := strings.NewReader(string(byteReq))
-			ctx.Params = gin.Params{gin.Param{Key: "id", Value: tt.eventID}, gin.Param{Key: "topicID", Value: tt.topicID}}
+			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
 
-			ctx.Request = httptest.NewRequest(http.MethodPut, fmt.Sprintf("/api/v1/feedbacks/%s/topics/%s/submit", tt.eventID, tt.topicID), bodyReader)
-			ctx.Request.Header.Set("Authorization", testToken)
+				w := httptest.NewRecorder()
+				ctx, _ := gin.CreateTestContext(w)
+				byteReq, _ := json.Marshal(tt.body)
+				bodyReader := strings.NewReader(string(byteReq))
+				ctx.Params = gin.Params{gin.Param{Key: "id", Value: tt.eventID}, gin.Param{Key: "topicID", Value: tt.topicID}}
 
-			h := New(storeMock, testRepoMock, serviceMock, loggerMock, &cfg)
-			h.Submit(ctx)
-			require.Equal(t, tt.wantCode, w.Code)
-			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
-			require.NoError(t, err)
+				ctx.Request = httptest.NewRequest(http.MethodPut, fmt.Sprintf("/api/v1/feedbacks/%s/topics/%s/submit", tt.eventID, tt.topicID), bodyReader)
+				ctx.Request.Header.Set("Authorization", testToken)
 
-			res, err := utils.RemoveFieldInSliceResponse(w.Body.Bytes(), "lastUpdated")
-			require.NoError(t, err)
+				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+				h.Submit(ctx)
+				require.Equal(t, tt.wantCode, w.Code)
+				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				require.NoError(t, err)
 
-			require.JSONEq(t, string(expRespRaw), string(res), "[Handler.Feedback.Draft] response mismatched")
+				res, err := utils.RemoveFieldInSliceResponse(w.Body.Bytes(), "lastUpdated")
+				require.NoError(t, err)
+
+				require.JSONEq(t, string(expRespRaw), string(res), "[Handler.Feedback.Draft] response mismatched")
+			})
 		})
 	}
 }
@@ -373,7 +376,6 @@ func TestHandler_SendPerformanceReview(t *testing.T) {
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg)
 	storeMock := store.New()
-	testRepoMock := store.NewPostgresStore(&cfg)
 
 	tests := []struct {
 		name             string
@@ -417,21 +419,23 @@ func TestHandler_SendPerformanceReview(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			w := httptest.NewRecorder()
-			ctx, _ := gin.CreateTestContext(w)
-			byteReq, _ := json.Marshal(tt.body)
-			bodyReader := strings.NewReader(string(byteReq))
-			ctx.Request = httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/surveys/%s/send", tt.id), bodyReader)
-			ctx.Request.Header.Set("Authorization", testToken)
-			ctx.AddParam("id", tt.id)
+			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				w := httptest.NewRecorder()
+				ctx, _ := gin.CreateTestContext(w)
+				byteReq, _ := json.Marshal(tt.body)
+				bodyReader := strings.NewReader(string(byteReq))
+				ctx.Request = httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/surveys/%s/send", tt.id), bodyReader)
+				ctx.Request.Header.Set("Authorization", testToken)
+				ctx.AddParam("id", tt.id)
 
-			h := New(storeMock, testRepoMock, serviceMock, loggerMock, &cfg)
-			h.SendPerformanceReview(ctx)
-			require.Equal(t, tt.wantCode, w.Code)
-			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
-			require.NoError(t, err)
+				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+				h.SendPerformanceReview(ctx)
+				require.Equal(t, tt.wantCode, w.Code)
+				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				require.NoError(t, err)
 
-			require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Feedback.SendPerformanceReview] response mismatched")
+				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Feedback.SendPerformanceReview] response mismatched")
+			})
 		})
 	}
 }
@@ -441,7 +445,6 @@ func TestHandler_DeleteSurvey(t *testing.T) {
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg)
 	storeMock := store.New()
-	testRepoMock := store.NewPostgresStore(&cfg)
 
 	tests := []struct {
 		name             string
@@ -464,19 +467,21 @@ func TestHandler_DeleteSurvey(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			w := httptest.NewRecorder()
-			ctx, _ := gin.CreateTestContext(w)
-			ctx.Request = httptest.NewRequest(http.MethodDelete, fmt.Sprintf("/api/v1/surveys/%s", tt.id), nil)
-			ctx.Request.Header.Set("Authorization", testToken)
-			ctx.AddParam("id", tt.id)
+			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				w := httptest.NewRecorder()
+				ctx, _ := gin.CreateTestContext(w)
+				ctx.Request = httptest.NewRequest(http.MethodDelete, fmt.Sprintf("/api/v1/surveys/%s", tt.id), nil)
+				ctx.Request.Header.Set("Authorization", testToken)
+				ctx.AddParam("id", tt.id)
 
-			h := New(storeMock, testRepoMock, serviceMock, loggerMock, &cfg)
-			h.DeleteSurvey(ctx)
-			require.Equal(t, tt.wantCode, w.Code)
-			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
-			require.NoError(t, err)
+				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+				h.DeleteSurvey(ctx)
+				require.Equal(t, tt.wantCode, w.Code)
+				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				require.NoError(t, err)
 
-			require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Feedback.DeleteSurvey] response mismatched")
+				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Feedback.DeleteSurvey] response mismatched")
+			})
 		})
 	}
 }
@@ -486,7 +491,6 @@ func TestHandler_GetPeerReviewDetail(t *testing.T) {
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg)
 	storeMock := store.New()
-	testRepoMock := store.NewPostgresStore(&cfg)
 	tests := []struct {
 		name             string
 		wantCode         int
@@ -511,19 +515,21 @@ func TestHandler_GetPeerReviewDetail(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			w := httptest.NewRecorder()
-			ctx, _ := gin.CreateTestContext(w)
-			ctx.Params = gin.Params{gin.Param{Key: "id", Value: tt.feedbackID}, gin.Param{Key: "topicID", Value: tt.topicID}}
-			ctx.Request = httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/surveys/%s/topics/%s", tt.feedbackID, tt.topicID), nil)
-			ctx.Request.Header.Set("Authorization", testToken)
+			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				w := httptest.NewRecorder()
+				ctx, _ := gin.CreateTestContext(w)
+				ctx.Params = gin.Params{gin.Param{Key: "id", Value: tt.feedbackID}, gin.Param{Key: "topicID", Value: tt.topicID}}
+				ctx.Request = httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/surveys/%s/topics/%s", tt.feedbackID, tt.topicID), nil)
+				ctx.Request.Header.Set("Authorization", testToken)
 
-			h := New(storeMock, testRepoMock, serviceMock, loggerMock, &cfg)
-			h.GetPeerReviewDetail(ctx)
-			require.Equal(t, tt.wantCode, w.Code)
-			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
-			require.NoError(t, err)
+				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+				h.GetPeerReviewDetail(ctx)
+				require.Equal(t, tt.wantCode, w.Code)
+				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				require.NoError(t, err)
 
-			require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Feedback.GetPeerReviewDetail] response mismatched")
+				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Feedback.GetPeerReviewDetail] response mismatched")
+			})
 		})
 	}
 }
@@ -533,7 +539,6 @@ func TestHandler_UpdateTopicReviewers(t *testing.T) {
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg)
 	storeMock := store.New()
-	testRepoMock := store.NewPostgresStore(&cfg)
 
 	tests := []struct {
 		name             string
@@ -583,25 +588,27 @@ func TestHandler_UpdateTopicReviewers(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			body, err := json.Marshal(tt.input.Body)
-			require.NoError(t, err)
+			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				body, err := json.Marshal(tt.input.Body)
+				require.NoError(t, err)
 
-			w := httptest.NewRecorder()
-			ctx, _ := gin.CreateTestContext(w)
-			ctx.Request = httptest.NewRequest(http.MethodPut,
-				fmt.Sprintf("/api/v1/surveys/%s/topics/%s/employees", tt.input.EventID, tt.input.TopicID),
-				bytes.NewBuffer(body))
-			ctx.Request.Header.Set("Authorization", testToken)
-			ctx.AddParam("id", tt.input.EventID)
-			ctx.AddParam("topicID", tt.input.TopicID)
+				w := httptest.NewRecorder()
+				ctx, _ := gin.CreateTestContext(w)
+				ctx.Request = httptest.NewRequest(http.MethodPut,
+					fmt.Sprintf("/api/v1/surveys/%s/topics/%s/employees", tt.input.EventID, tt.input.TopicID),
+					bytes.NewBuffer(body))
+				ctx.Request.Header.Set("Authorization", testToken)
+				ctx.AddParam("id", tt.input.EventID)
+				ctx.AddParam("topicID", tt.input.TopicID)
 
-			h := New(storeMock, testRepoMock, serviceMock, loggerMock, &cfg)
-			h.UpdateTopicReviewers(ctx)
-			require.Equal(t, tt.wantCode, w.Code)
-			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
-			require.NoError(t, err)
+				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+				h.UpdateTopicReviewers(ctx)
+				require.Equal(t, tt.wantCode, w.Code)
+				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				require.NoError(t, err)
 
-			require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Feedback.UpdateTopicReviewers] response mismatched")
+				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Feedback.UpdateTopicReviewers] response mismatched")
+			})
 		})
 	}
 }
@@ -611,7 +618,6 @@ func TestHandler_MarkDone(t *testing.T) {
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg)
 	storeMock := store.New()
-	testRepoMock := store.NewPostgresStore(&cfg)
 
 	tests := []struct {
 		name             string
@@ -640,19 +646,21 @@ func TestHandler_MarkDone(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			w := httptest.NewRecorder()
-			ctx, _ := gin.CreateTestContext(w)
-			ctx.Request = httptest.NewRequest(http.MethodPut, fmt.Sprintf("/api/v1/surveys/%s/done", tt.eventID), nil)
-			ctx.Request.Header.Set("Authorization", testToken)
-			ctx.AddParam("id", tt.eventID)
+			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				w := httptest.NewRecorder()
+				ctx, _ := gin.CreateTestContext(w)
+				ctx.Request = httptest.NewRequest(http.MethodPut, fmt.Sprintf("/api/v1/surveys/%s/done", tt.eventID), nil)
+				ctx.Request.Header.Set("Authorization", testToken)
+				ctx.AddParam("id", tt.eventID)
 
-			h := New(storeMock, testRepoMock, serviceMock, loggerMock, &cfg)
-			h.MarkDone(ctx)
-			require.Equal(t, tt.wantCode, w.Code)
-			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
-			require.NoError(t, err)
+				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+				h.MarkDone(ctx)
+				require.Equal(t, tt.wantCode, w.Code)
+				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				require.NoError(t, err)
 
-			require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Feedback.MarkDone] response mismatched")
+				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Feedback.MarkDone] response mismatched")
+			})
 		})
 	}
 }
@@ -662,7 +670,6 @@ func TestHandler_DeleteTopicReviewers(t *testing.T) {
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg)
 	storeMock := store.New()
-	testRepoMock := store.NewPostgresStore(&cfg)
 
 	tests := []struct {
 		name             string
@@ -701,26 +708,81 @@ func TestHandler_DeleteTopicReviewers(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			body, err := json.Marshal(tt.input.Body)
-			require.NoError(t, err)
+			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				body, err := json.Marshal(tt.input.Body)
+				require.NoError(t, err)
 
-			w := httptest.NewRecorder()
-			ctx, _ := gin.CreateTestContext(w)
-			ctx.Request = httptest.NewRequest(http.MethodPut,
-				fmt.Sprintf("/api/v1/surveys/%s/topics/%s/employees", tt.input.EventID, tt.input.TopicID),
-				bytes.NewBuffer(body))
-			ctx.Request.Header.Set("Authorization", testToken)
-			ctx.AddParam("id", tt.input.EventID)
-			ctx.AddParam("topicID", tt.input.TopicID)
+				w := httptest.NewRecorder()
+				ctx, _ := gin.CreateTestContext(w)
+				ctx.Request = httptest.NewRequest(http.MethodPut,
+					fmt.Sprintf("/api/v1/surveys/%s/topics/%s/employees", tt.input.EventID, tt.input.TopicID),
+					bytes.NewBuffer(body))
+				ctx.Request.Header.Set("Authorization", testToken)
+				ctx.AddParam("id", tt.input.EventID)
+				ctx.AddParam("topicID", tt.input.TopicID)
 
-			h := New(storeMock, testRepoMock, serviceMock, loggerMock, &cfg)
-			h.DeleteTopicReviewers(ctx)
+				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+				h.DeleteTopicReviewers(ctx)
 
-			require.Equal(t, tt.wantCode, w.Code)
-			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
-			require.NoError(t, err)
+				require.Equal(t, tt.wantCode, w.Code)
+				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				require.NoError(t, err)
 
-			require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Feedback.DeleteTopicReviewers] response mismatched")
+				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Feedback.DeleteTopicReviewers] response mismatched")
+			})
 		})
+	}
+}
+
+func TestHandler_DeleteSurveyTopic(t *testing.T) {
+	cfg := config.LoadTestConfig()
+	loggerMock := logger.NewLogrusLogger()
+	serviceMock := service.New(&cfg)
+	storeMock := store.New()
+
+	tests := []struct {
+		name             string
+		eventID          string
+		topicID          string
+		wantCode         int
+		wantResponsePath string
+	}{
+		{
+			name:             "valid_id",
+			eventID:          "8a5bfedb-6e11-4f5c-82d9-2635cfcce3e1",
+			topicID:          "e4a33adc-2495-43cf-b816-32feb8d5250e",
+			wantCode:         http.StatusOK,
+			wantResponsePath: "testdata/delete_survey/200_valid_id.json",
+		},
+		{
+			name:             "event_not_found",
+			eventID:          "163fdda2-2dce-4618-9849-7c8475dcc999",
+			topicID:          "e4a33adc-2495-43cf-b816-32feb8d52999",
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/delete_survey/404_event_not_found.json",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				testhelper.LoadTestSQLFile(t, txRepo, "./testdata/delete_survey/delete_survey_topic.sql")
+				w := httptest.NewRecorder()
+				ctx, _ := gin.CreateTestContext(w)
+				ctx.Request = httptest.NewRequest(http.MethodDelete, fmt.Sprintf("/api/v1/surveys/%s/topics/%s", tt.eventID, tt.topicID), nil)
+				ctx.Request.Header.Set("Authorization", testToken)
+				ctx.AddParam("id", tt.eventID)
+				ctx.AddParam("topicID", tt.topicID)
+
+				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+				h.DeleteSurveyTopic(ctx)
+
+				require.Equal(t, tt.wantCode, w.Code)
+				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				require.NoError(t, err)
+
+				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Feedback.DeleteSurveyTopic] response mismatched")
+			})
+		})
+
 	}
 }

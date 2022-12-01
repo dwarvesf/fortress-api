@@ -13,6 +13,7 @@ type FinallyFunc = func(error) error
 type DBRepo interface {
 	DB() *gorm.DB
 	NewTransaction() (DBRepo, FinallyFunc)
+	SetNewDB(*gorm.DB)
 }
 
 // repo is implementation of repository
@@ -23,6 +24,10 @@ type repo struct {
 // DB database connection
 func (s *repo) DB() *gorm.DB {
 	return s.Database
+}
+
+func NewRepo(db *gorm.DB) DBRepo {
+	return &repo{Database: db}
 }
 
 // NewTransaction for database connection
@@ -46,4 +51,8 @@ func (s *repo) NewTransaction() (newRepo DBRepo, finallyFn FinallyFunc) {
 	}
 
 	return &repo{Database: newDB}, finallyFn
+}
+
+func (s *repo) SetNewDB(db *gorm.DB) {
+	s.Database = db
 }
