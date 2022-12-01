@@ -18,9 +18,12 @@ type Config struct {
 	Google    Google
 	Vault     Vault
 	Notion    Notion
+	Wise      Wise
+	Basecamp  Basecamp
 
 	APIKey string
 	Debug  bool
+	Env    string
 }
 
 type DBConnection struct {
@@ -45,6 +48,14 @@ type Google struct {
 	GCSBucketName  string
 	GCSProjectID   string
 	GCSCredentials string
+
+	// gmail
+	MailApiKey           string
+	TeamEmailToken       string
+	TeamEmailID          string
+	AccountingEmailToken string
+	AccountingEmailID    string
+	TemplatePath         string
 }
 
 type Vault struct {
@@ -57,10 +68,24 @@ type Notion struct {
 	Secret string
 }
 
+type Wise struct {
+	ApiKey  string
+	Profile string
+}
+
+type Basecamp struct {
+	ClientID     string
+	ClientSecret string
+	RedirectURI  string
+	RefreshToken string
+	BotKey       string
+}
+
 func generateConfigFromViper(v *viper.Viper) *Config {
 	return &Config{
 		Debug:  v.GetBool("DEBUG"),
 		APIKey: v.GetString("API_KEY"),
+		Env:    v.GetString("ENV"),
 
 		ApiServer: ApiServer{
 			Port:           v.GetString("PORT"),
@@ -83,6 +108,13 @@ func generateConfigFromViper(v *viper.Viper) *Config {
 			GCSBucketName:  v.GetString("GCS_BUCKET_NAME"),
 			GCSProjectID:   v.GetString("GCS_PROJECT_ID"),
 			GCSCredentials: v.GetString("GCS_CREDENTIALS"),
+
+			MailApiKey:           v.GetString("GOOGLE_MAIL_API_KEY"),
+			TeamEmailToken:       v.GetString("GOOGLE_TEAM_EMAIL_TOKEN"),
+			TeamEmailID:          v.GetString("GOOGLE_TEAM_EMAIL_ID"),
+			AccountingEmailToken: v.GetString("GOOGLE_ACCOUNTING_EMAIL_TOKEN"),
+			AccountingEmailID:    v.GetString("GOOGLE_ACCOUNTING_EMAIL_ID"),
+			TemplatePath:         v.GetString("GOOGLE_MAIL_TEMPLATE_PATH"),
 		},
 
 		Vault: Vault{
@@ -93,6 +125,18 @@ func generateConfigFromViper(v *viper.Viper) *Config {
 
 		Notion: Notion{
 			Secret: v.GetString("NOTION_SECRET"),
+		},
+
+		Wise: Wise{
+			ApiKey:  v.GetString("WISE_APIKEY"),
+			Profile: v.GetString("WISE_PROFILE"),
+		},
+
+		Basecamp: Basecamp{
+			ClientID:     v.GetString("BASECAMP_CLIENT_ID"),
+			ClientSecret: v.GetString("BASECAMP_CLIENT_SECRET"),
+			RefreshToken: v.GetString("BASECAMP_REFRESH_TOKEN"),
+			BotKey:       v.GetString("BASECAMP_BOT_KEY"),
 		},
 	}
 }
@@ -128,6 +172,7 @@ func LoadConfig(loaders []Loader) *Config {
 func LoadTestConfig() Config {
 	return Config{
 		Debug: true,
+		Env:   "test",
 		ApiServer: ApiServer{
 			Port: "8080",
 		},

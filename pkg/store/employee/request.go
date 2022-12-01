@@ -1,5 +1,7 @@
 package employee
 
+import "time"
+
 type GetAllInput struct {
 	WorkingStatuses []string
 	Preload         bool
@@ -7,4 +9,5 @@ type GetAllInput struct {
 	StackID         string
 	ProjectID       string
 	Keyword         string
+	StartOfBatch    *time.Time
 }

@@ -46,7 +46,7 @@ type Invoice struct {
 	Tax              int64
 	Discount         int64
 	Total            int64
-	ConversionAmount int64
+	ConversionAmount VietnamDong
 	InvoiceFileURL   string
 	ErrorInvoiceID   *UUID
 	LineItems        JSON
@@ -64,10 +64,11 @@ type Invoice struct {
 	ProjectID UUID
 	Project   *Project
 
-	InvoiceFileContent []byte `gorm:"-"` // we not store this in db
-	MessageID          string `gorm:"-"`
-	References         string `gorm:"-"`
-	TodoAttachment     string `gorm:"-"`
+	InvoiceFileContent []byte   `gorm:"-"` // we not store this in db
+	MessageID          string   `gorm:"-"`
+	References         string   `gorm:"-"`
+	TodoAttachment     string   `gorm:"-"`
+	CCs                []string `gorm:"-"`
 }
 
 func (i *Invoice) Validate() error {
@@ -94,26 +95,4 @@ func GatherAddresses(CCs JSON) (string, error) {
 		}
 	}
 	return strings.Join(ccList, ", "), nil
-}
-
-type InvoiceItem struct {
-	Quantity    float64 `json:"quantity"`
-	UnitCost    int64   `json:"unitCost"`
-	Discount    int64   `json:"discount"`
-	Cost        int64   `json:"cost"`
-	Description string  `json:"description"`
-	IsExternal  bool    `json:"isExternal"`
-}
-
-func GetInfoItems(lineItems JSON) ([]InvoiceItem, error) {
-	items := []InvoiceItem{}
-
-	if len(lineItems) == 0 || string(lineItems) == "null" {
-		return items, nil
-	}
-
-	if err := json.Unmarshal(lineItems, &items); err != nil {
-		return nil, err
-	}
-	return items, nil
 }

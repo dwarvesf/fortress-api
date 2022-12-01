@@ -42,6 +42,7 @@ func (v *Vault) LoadConfig() *config.Config {
 	return &config.Config{
 		Debug:  v.GetBool("DEBUG"),
 		APIKey: v.GetString("API_KEY"),
+		Env:    v.GetString("ENV"),
 
 		ApiServer: config.ApiServer{
 			Port:           v.GetString("PORT"),
@@ -64,10 +65,29 @@ func (v *Vault) LoadConfig() *config.Config {
 			GCSBucketName:  v.GetString("GCS_BUCKET_NAME"),
 			GCSProjectID:   v.GetString("GCS_PROJECT_ID"),
 			GCSCredentials: v.GetString("GCS_CREDENTIALS"),
+
+			MailApiKey:           v.GetString("GOOGLE_MAIL_API_KEY"),
+			TeamEmailToken:       v.GetString("GOOGLE_TEAM_EMAIL_TOKEN"),
+			TeamEmailID:          v.GetString("GOOGLE_TEAM_EMAIL_ID"),
+			AccountingEmailToken: v.GetString("GOOGLE_ACCOUNTING_EMAIL_TOKEN"),
+			AccountingEmailID:    v.GetString("GOOGLE_ACCOUNTING_EMAIL_ID"),
+			TemplatePath:         v.GetString("GOOGLE_MAIL_TEMPLATE_PATH"),
 		},
 
 		Notion: config.Notion{
 			Secret: v.GetString("NOTION_SECRET"),
+		},
+
+		Wise: config.Wise{
+			ApiKey:  v.GetString("WISE_APIKEY"),
+			Profile: v.GetString("WISE_PROFILE"),
+		},
+
+		Basecamp: config.Basecamp{
+			ClientID:     v.GetString("BASECAMP_CLIENT_ID"),
+			ClientSecret: v.GetString("BASECAMP_CLIENT_SECRET"),
+			RefreshToken: v.GetString("BASECAMP_REFRESH_TOKEN"),
+			BotKey:       v.GetString("BASECAMP_BOT_KEY"),
 		},
 	}
 }

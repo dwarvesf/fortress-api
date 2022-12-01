@@ -1,0 +1,195 @@
+<html>
+
+<head>
+    <meta name=”x-apple-disable-message-reformatting”>
+    <style type="text/css">
+        /* Some resets and issue fixes */
+        body {
+            width: 100% !important;
+            size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        a {
+            color: black;
+        }
+
+        div {
+            margin: 15px 0 15px 0;
+            line-height: 16px;
+        }
+
+        @media only screen and (max-width: 428px) {
+            td {
+                font-family: arial, helvetica, sans-serif !important;
+                font-size: 15px !important;
+                font-style: normal;
+                font-weight: 400;
+                line-height: 18px !important;
+                color: #222222;
+                max-width: 640px !important;
+            }
+
+            div {
+                font-size: 15px;
+                line-height: 18px;
+            }
+
+            li {
+                font-size: 15px !important;
+                line-height: 18px !important;
+            }
+        }
+
+        h2 {
+            font-family: Helvetica;
+            font-size: 24px;
+            font-weight: 700;
+            line-height: 30px;
+            color: #222222;
+        }
+
+        h3 {
+            font-family: Helvetica;
+            font-size: 18px;
+            font-weight: 700;
+            line-height: 23px;
+            color: #222222;
+        }
+
+        .img {
+            margin: 20px 0 20px 0;
+            object-fit: cover;
+            width: 100%;
+            max-width: 640px;
+        }
+
+
+        p {
+            margin: 0px;
+        }
+
+        td {
+            font-family: arial, helvetica, sans-serif !important;
+            font-size: 12px !important;
+            font-style: normal;
+            font-weight: 400;
+            line-height: 16px !important;
+            color: #222222;
+            max-width: 640px !important;
+        }
+
+        .page-title {
+            margin: 0 !important;
+            font-family: Helvetica;
+            font-weight: 700;
+            font-size: 24px;
+            line-height: 30px;
+            color: #222222;
+        }
+
+        .copyright {
+            font-family: arial, helvetica, sans-serif;
+            font-style: italic;
+            font-weight: 400;
+            font-size: 11px;
+            line-height: 14px;
+            color: #222222;
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+
+        .address {
+            font-family: Helvetica;
+            font-style: normal;
+            font-weight: 400;
+            font-size: 11px;
+            line-height: 14px;
+            color: #222222;
+        }
+
+        .address-title {
+            font-family: Helvetica;
+            font-style: normal;
+            font-weight: 700;
+            font-size: 11px;
+            line-height: 14px;
+            color: #222222;
+        }
+
+        .footer {
+            font-family: arial, helvetica, sans-serif;
+            font-style: normal;
+            font-weight: 400;
+            font-size: 11px;
+            line-height: 14px;
+            margin-top: 10px;
+            margin-bottom: 10px;
+            color: #222222;
+        }
+
+        li {
+            line-height: 16px;
+        }
+
+        .container {
+            /* margin: auto !important; */
+            padding: 20px 20px !important;
+        }
+
+        .bulleted-list {}
+
+        table td {
+            border-collapse: collapse;
+        }
+
+        mark {
+            background-color: white;
+        }
+    </style>
+    <title></title>
+</head>
+
+<body>
+    <table bgcolor="#FFFFFF" class="container">
+        <tr>
+            <td align="left">{{.Content}}</td>
+        </tr>
+        {{ template "reaction" .}}
+        <!-- <tr>
+            <td>
+                <p>
+                    --
+                </p>
+                <p>
+                    // Khai Le
+                </p>
+                <p>
+                    // Delivery Manager
+                </p>
+            </td>
+        </tr> -->
+        <tr>
+            <td>
+                <hr style="margin: 8px 0 0 0; width: 10%">
+                <p class="footer">View full archive at <a href="{{.ArchiveURL}}">{{.ArchiveURL}}</a>.</p>
+                <p class="copyright">Copyright © 2021 Dwarves,
+                    LLC, All rights reserved.</p>
+                <p class="footer">You're receiving this because we
+                    would love to have you as a part of the journey. If
+                    you don't want to be on the list, you can
+                    unsubscribe.</p>
+                <p class="address-title">My mailing address is:</p>
+                <p class="address">Hado Centrosa Garden</p>
+                <p class="address">200 3/2 street</p>
+                <p class="address">District 10</p>
+                <p class="address">Ho Chi Minh City</p>
+                <p class="address">Vietnam</p>
+            </td>
+        </tr>
+    </table>
+</body>
+
+</html>
