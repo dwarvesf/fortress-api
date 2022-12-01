@@ -1,6 +1,9 @@
 package model
 
-import "time"
+import (
+	"strings"
+	"time"
+)
 
 // WorkingStatus working_status type for employee table
 type WorkingStatus string
@@ -103,13 +106,22 @@ type Employee struct {
 	LocalBranchName        string
 	LocalBankRecipientName string
 
-	Chapter           *Chapter
-	Seniority         *Seniority
-	LineManager       *Employee
-	ProjectMembers    []ProjectMember
-	Roles             []Role     `gorm:"many2many:employee_roles;"`
-	Positions         []Position `gorm:"many2many:employee_positions;"`
-	EmployeeRoles     []EmployeeRole
-	EmployeePositions []EmployeePosition
-	EmployeeStacks    []EmployeeStack
+	Chapter            *Chapter
+	Seniority          *Seniority
+	LineManager        *Employee
+	ProjectMembers     []ProjectMember
+	Roles              []Role     `gorm:"many2many:employee_roles;"`
+	Positions          []Position `gorm:"many2many:employee_positions;"`
+	EmployeeRoles      []EmployeeRole
+	EmployeePositions  []EmployeePosition
+	EmployeeStacks     []EmployeeStack
+	EmployeeBaseSalary EmployeeBaseSalary
+}
+
+func getFirstNameFromFullName(fullName string) string {
+	if fullName == "" {
+		return ""
+	}
+	s := strings.Split(fullName, " ")
+	return s[len(s)-1]
 }

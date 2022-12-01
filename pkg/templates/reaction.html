@@ -1,0 +1,14 @@
+{{define "reaction"}}
+<tr>
+    <td>
+        <p style="font-weight: 700;">How is the team's delivery quality recently?</p>
+        <div style="font-size: 17;">
+            <a style="text-decoration: none;" href="{{.URL}}/emails/reaction?action=1&token={{.Token}}">&#128077;</a>
+            ·
+            <a style="text-decoration: none;" href="{{.URL}}/emails/reaction?action=2&token={{.Token}}">&#128076;</a>
+            ·
+            <a style="text-decoration: none;" href="{{.URL}}/emails/reaction?action=3&token={{.Token}}">&#128078;</a>
+        </div>
+    </td>
+</tr>
+{{end}}

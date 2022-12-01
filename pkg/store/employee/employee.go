@@ -52,6 +52,10 @@ func (s *store) All(db *gorm.DB, input GetAllInput, pagination model.Pagination)
 		query = query.Where("working_status IN ?", input.WorkingStatuses)
 	}
 
+	if input.StartOfBatch != nil {
+		query = query.Where("working_status <> ? OR left_date > ?", model.WorkingStatusLeft, &input.StartOfBatch)
+	}
+
 	if input.PositionID != "" {
 		query = query.Joins("JOIN employee_positions ON employees.id = employee_positions.employee_id AND employee_positions.position_id = ?",
 			input.PositionID)
@@ -97,6 +101,8 @@ func (s *store) All(db *gorm.DB, input GetAllInput, pagination model.Pagination)
 			Preload("EmployeeRoles.Role", "deleted_at IS NULL").
 			Preload("EmployeeStacks", "deleted_at IS NULL").
 			Preload("EmployeeStacks.Stack", "deleted_at IS NULL")
+		// Preload("EmployeeBaseSalary", "deleted_at IS NULL AND is_active IS TRUE").
+		// Preload("EmployeeBaseSalary.Currency", "deleted_at IS NULL")
 	}
 
 	return employees, total, query.Find(&employees).Error

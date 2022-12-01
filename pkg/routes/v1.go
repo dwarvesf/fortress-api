@@ -60,4 +60,8 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 	v1.PUT("/projects/:id/work-units/:workUnitID", amw.WithAuth, pmw.WithPerm("projectWorkUnits.edit"), h.Project.UpdateWorkUnit)
 	v1.PUT("/projects/:id/work-units/:workUnitID/archive", amw.WithAuth, pmw.WithPerm("projectWorkUnits.edit"), h.Project.ArchiveWorkUnit)
 	v1.PUT("/projects/:id/work-units/:workUnitID/unarchive", amw.WithAuth, pmw.WithPerm("projectWorkUnits.edit"), h.Project.UnarchiveWorkUnit)
+
+	// payrolls
+	v1.GET("/payrolls", h.Payroll.ListPayrollsMonthly)
+	v1.POST("/payrolls", h.Payroll.CommitPayroll)
 }

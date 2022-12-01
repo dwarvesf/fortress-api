@@ -2,12 +2,15 @@ package store
 
 import (
 	"github.com/dwarvesf/fortress-api/pkg/store/chapter"
+	"github.com/dwarvesf/fortress-api/pkg/store/commission"
 	"github.com/dwarvesf/fortress-api/pkg/store/content"
 	"github.com/dwarvesf/fortress-api/pkg/store/country"
 	"github.com/dwarvesf/fortress-api/pkg/store/employee"
+	"github.com/dwarvesf/fortress-api/pkg/store/employeebonus"
 	"github.com/dwarvesf/fortress-api/pkg/store/employeeposition"
 	"github.com/dwarvesf/fortress-api/pkg/store/employeerole"
 	"github.com/dwarvesf/fortress-api/pkg/store/employeestack"
+	"github.com/dwarvesf/fortress-api/pkg/store/payroll"
 	"github.com/dwarvesf/fortress-api/pkg/store/permission"
 	"github.com/dwarvesf/fortress-api/pkg/store/position"
 	"github.com/dwarvesf/fortress-api/pkg/store/project"
@@ -43,11 +46,14 @@ type Store struct {
 	EmployeePosition      employeeposition.IStore
 	EmployeeRole          employeerole.IStore
 	EmployeeStack         employeestack.IStore
+	EmployeeBonus         employeebonus.IStore
 	ProjectStack          projectstack.IStore
 	Content               content.IStore
 	WorkUnit              workunit.IStore
 	WorkUnitMember        workunitmember.IStore
 	WorkUnitStack         workunitstack.IStore
+	Payroll               payroll.IStore
+	Commission            commission.IStore
 }
 
 func New() *Store {
@@ -69,10 +75,13 @@ func New() *Store {
 		EmployeePosition:      employeeposition.New(),
 		EmployeeRole:          employeerole.New(),
 		EmployeeStack:         employeestack.New(),
+		EmployeeBonus:         employeebonus.New(),
 		ProjectStack:          projectstack.New(),
 		Content:               content.New(),
 		WorkUnit:              workunit.New(),
 		WorkUnitMember:        workunitmember.New(),
 		WorkUnitStack:         workunitstack.New(),
+		Payroll:               payroll.New(),
+		Commission:            commission.New(),
 	}
 }
