@@ -360,28 +360,28 @@ func TestHandler_AssignMember(t *testing.T) {
 
 	tests := []struct {
 		name             string
-		id               string
 		args             AssignMemberInput
 		wantCode         int
-		wantErr          error
 		wantResponsePath string
 	}{
 		{
 			name: "happy_case",
-			id:   "8dc3be2e-19a4-4942-8a79-56db391a0b15",
 			args: AssignMemberInput{
-				EmployeeID:  model.MustGetUUIDFromString("fae443f8-e8ff-4eec-b86c-98216d7662d8"),
-				SeniorityID: model.MustGetUUIDFromString("01fb6322-d727-47e3-a242-5039ea4732fc"),
-				Positions: []model.UUID{
-					model.MustGetUUIDFromString("11ccffea-2cc9-4e98-9bef-3464dfe4dec8"),
-					model.MustGetUUIDFromString("d796884d-a8c4-4525-81e7-54a3b6099eac"),
+				ProjectID: "8dc3be2e-19a4-4942-8a79-56db391a0b15",
+				Body: AssignMemberBody{
+					EmployeeID:  model.MustGetUUIDFromString("fae443f8-e8ff-4eec-b86c-98216d7662d8"),
+					SeniorityID: model.MustGetUUIDFromString("01fb6322-d727-47e3-a242-5039ea4732fc"),
+					Positions: []model.UUID{
+						model.MustGetUUIDFromString("11ccffea-2cc9-4e98-9bef-3464dfe4dec8"),
+						model.MustGetUUIDFromString("d796884d-a8c4-4525-81e7-54a3b6099eac"),
+					},
+					DeploymentType: model.MemberDeploymentTypeOfficial.String(),
+					Status:         model.ProjectMemberStatusActive.String(),
+					JoinedDate:     "2022-11-15",
+					Rate:           decimal.NewFromInt(10),
+					Discount:       decimal.NewFromInt(1),
+					IsLead:         false,
 				},
-				DeploymentType: model.MemberDeploymentTypeOfficial.String(),
-				Status:         model.ProjectMemberStatusActive.String(),
-				JoinedDate:     "2022-11-15",
-				Rate:           decimal.NewFromInt(10),
-				Discount:       decimal.NewFromInt(1),
-				IsLead:         false,
 			},
 			wantCode:         http.StatusOK,
 			wantResponsePath: "testdata/assign_member/200_success.json",
@@ -390,17 +390,17 @@ func TestHandler_AssignMember(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			body, err := json.Marshal(tt.args)
-			if err != nil {
-				t.Error(err)
-				return
-			}
+			require.NoError(t, err)
 
 			w := httptest.NewRecorder()
 			ctx, _ := gin.CreateTestContext(w)
-			ctx.Request = httptest.NewRequest(http.MethodPost, fmt.Sprintf("/api/v1/projects/%v/members", tt.id), bytes.NewBuffer(body))
+			ctx.Request = httptest.NewRequest(http.MethodPost,
+				fmt.Sprintf("/api/v1/projects/%v/members", tt.args.ProjectID),
+				bytes.NewBuffer(body))
+
 			ctx.Request.Header.Set("Authorization", testToken)
 			ctx.Request.Header.Set("Content-Type", gin.MIMEJSON)
-			ctx.AddParam("id", tt.id)
+			ctx.AddParam("id", tt.args.ProjectID)
 
 			h := New(storeMock, repoMock, serviceMock, loggerMock)
 			h.AssignMember(ctx)
@@ -700,7 +700,7 @@ func TestHandler_GetListWorkUnit(t *testing.T) {
 			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
 			require.NoError(t, err)
 
-			require.JSONEq(t, string(expRespRaw), string(w.Body.Bytes()), "[Handler.Project.GetListWorkUnit] response mismatched")
+			require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Project.GetListWorkUnit] response mismatched")
 		})
 	}
 }

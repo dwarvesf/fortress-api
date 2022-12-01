@@ -765,9 +765,9 @@ func (h *handler) UpdateMember(c *gin.Context) {
 	c.JSON(http.StatusOK, view.CreateResponse(view.ToCreateMemberData(slot), nil, done(nil), nil, ""))
 }
 
-// AssignMember godoc
-// @Summary Assign member into an existing project
-// @Description Assign member in an existing project
+// CreateSlot godoc
+// @Summary Create member slot in an existing project
+// @Description Create member slot in an existing project
 // @Tags Project
 // @Accept json
 // @Produce json
@@ -779,74 +779,67 @@ func (h *handler) UpdateMember(c *gin.Context) {
 // @Failure 404 {object} view.ErrorResponse
 // @Failure 500 {object} view.ErrorResponse
 // @Router /projects/{id}/members [post]
-func (h *handler) AssignMember(c *gin.Context) {
-	var body AssignMemberInput
-	if err := c.ShouldBindJSON(&body); err != nil {
+func (h *handler) CreateSlot(c *gin.Context) {
+	var input CreateMemberInput
+	if err := c.ShouldBindJSON(&input.Body); err != nil {
 		if err != nil {
-			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, body, ""))
+			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, input, ""))
 			return
 		}
-	}
-
-	projectID := c.Param("id")
-	if projectID == "" || !model.IsUUIDFromString(projectID) {
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, ErrInvalidProjectID, nil, ""))
-		return
 	}
 
 	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
-		"handler": "project",
+		"handler": "Project",
 		"method":  "AssignMember",
-		"body":    body,
-		"id":      projectID,
+		"input":   input,
 	})
 
-	if err := body.Validate(); err != nil {
+	if err := input.Validate(); err != nil {
 		l.Error(err, "validate failed")
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, body, ""))
-		return
-	}
-
-	// get active project member info
-	_, err := h.store.ProjectMember.One(h.repo.DB(), projectID, body.EmployeeID.String(), model.ProjectMemberStatusActive.String())
-	if err != gorm.ErrRecordNotFound {
-		if err == nil {
-			l.Error(err, "project member exists")
-			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, ErrProjectMemberExists, projectID, ""))
-			return
-		}
-		l.Error(err, "failed to query project member")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, projectID, ""))
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, input, ""))
 		return
 	}
 
 	// check project existence
-	exists, err := h.store.Project.IsExist(h.repo.DB(), projectID)
+	exists, err := h.store.Project.IsExist(h.repo.DB(), input.ProjectID)
 	if err != nil {
 		l.Error(err, "failed to check project existence")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input, ""))
 		return
 	}
 
 	if !exists {
 		l.Error(ErrProjectNotFound, "cannot find project by id")
-		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrProjectNotFound, body, ""))
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrProjectNotFound, input, ""))
+		return
+	}
+
+	// get active project member info
+	_, err = h.store.ProjectMember.One(h.repo.DB(), input.ProjectID, input.Body.EmployeeID.String(), model.ProjectMemberStatusActive.String())
+	if err == nil {
+		l.Error(err, "project member exists")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, ErrProjectMemberExists, input, ""))
+		return
+	}
+	if !errors.Is(err, gorm.ErrRecordNotFound) {
+		l.Error(err, "failed to query project member")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input, ""))
 		return
 	}
 
 	tx, done := h.repo.NewTransaction()
 
-	slot, code, err := h.assignMemberToProject(tx.DB(), projectID, body)
+	slot, code, err := h.createProjectSlot(tx.DB(), input.ProjectID, input.Body)
 	if err != nil {
 		l.Error(err, "failed to assign member to project")
-		c.JSON(code, view.CreateResponse[any](nil, nil, done(err), body, ""))
+		c.JSON(code, view.CreateResponse[any](nil, nil, done(err), input, ""))
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse(view.ToCreateMemberData(slot), nil, done(nil), nil, ""))
 }
 
-func (h *handler) assignMemberToProject(db *gorm.DB, projectID string, req AssignMemberInput) (*model.ProjectSlot, int, error) {
+func (h *handler) createProjectSlot(db *gorm.DB, projectID string, req CreateMemberBody) (*model.ProjectSlot, int, error) {
 	l := h.logger
 
 	// check seniority existence
@@ -863,14 +856,215 @@ func (h *handler) assignMemberToProject(db *gorm.DB, projectID string, req Assig
 	// check position existence
 	positions, err := h.store.Position.All(db)
 	if err != nil {
-		l.Error(err, "error when finding position")
+		l.Error(err, "failed to get all position")
 		return nil, http.StatusInternalServerError, err
 	}
 
 	positionMap := model.ToPositionMap(positions)
 	for _, pID := range req.Positions {
 		if _, ok := positionMap[pID]; !ok {
-			l.Error(errPositionNotFound(pID.String()), "error position not found")
+			l.Error(errPositionNotFound(pID.String()), "position not found")
+			return nil, http.StatusNotFound, errPositionNotFound(pID.String())
+		}
+	}
+
+	// create project slot
+	slot := &model.ProjectSlot{
+		ProjectID:      model.MustGetUUIDFromString(projectID),
+		DeploymentType: model.DeploymentType(req.DeploymentType),
+		Status:         model.ProjectMemberStatus(req.Status),
+		Rate:           req.Rate,
+		Discount:       req.Discount,
+		SeniorityID:    req.SeniorityID,
+	}
+
+	if err := h.store.ProjectSlot.Create(db, slot); err != nil {
+		l.Error(err, "failed to create project slot")
+		return nil, http.StatusInternalServerError, err
+	}
+	slot.Seniority = *seniority
+
+	// create project slot position
+	slotPos := make([]model.ProjectSlotPosition, 0, len(req.Positions))
+
+	for _, v := range req.Positions {
+		pos := model.ProjectSlotPosition{
+			ProjectSlotID: slot.ID,
+			PositionID:    v,
+		}
+
+		if err := h.store.ProjectSlotPosition.Create(db, &pos); err != nil {
+			l.Error(err, "failed to create project member positions")
+			return nil, http.StatusInternalServerError, err
+		}
+
+		slotPos = append(slotPos, pos)
+	}
+	slot.ProjectSlotPositions = slotPos
+
+	if !req.EmployeeID.IsZero() {
+		// check employee existence
+		exists, err := h.store.Employee.IsExist(db, req.EmployeeID.String())
+		if err != nil {
+			l.Error(err, "failed to check employee existence")
+			return nil, http.StatusInternalServerError, err
+		}
+
+		if !exists {
+			l.Error(ErrEmployeeNotFound, "cannot find employee by id")
+			return nil, http.StatusNotFound, ErrEmployeeNotFound
+		}
+
+		// create project member
+		member := &model.ProjectMember{
+			ProjectID:      model.MustGetUUIDFromString(projectID),
+			EmployeeID:     req.EmployeeID,
+			SeniorityID:    req.SeniorityID,
+			ProjectSlotID:  slot.ID,
+			DeploymentType: model.DeploymentType(req.DeploymentType),
+			Status:         model.ProjectMemberStatus(req.Status),
+			JoinedDate:     req.GetJoinedDate(),
+			LeftDate:       req.GetLeftDate(),
+			Rate:           req.Rate,
+			Discount:       req.Discount,
+		}
+
+		if err = h.store.ProjectMember.Create(db, member); err != nil {
+			l.Error(err, "failed to create project member")
+			return nil, http.StatusInternalServerError, err
+		}
+
+		slot.ProjectMember = *member
+
+		// create project member positions
+		for _, v := range req.Positions {
+			if err := h.store.ProjectMemberPosition.Create(db, &model.ProjectMemberPosition{
+				ProjectMemberID: member.ID,
+				PositionID:      v,
+			}); err != nil {
+				l.Error(err, "failed to create project member positions")
+				return nil, http.StatusInternalServerError, err
+			}
+		}
+
+		// create project head
+		slot.IsLead = req.IsLead
+		if req.IsLead {
+			if err := h.store.ProjectHead.Create(db, &model.ProjectHead{
+				ProjectID:      model.MustGetUUIDFromString(projectID),
+				EmployeeID:     req.EmployeeID,
+				CommissionRate: decimal.Zero,
+				Position:       model.HeadPositionTechnicalLead,
+				JoinedDate:     time.Now(),
+			}); err != nil {
+				l.Error(err, "failed to create project head")
+				return nil, http.StatusInternalServerError, err
+			}
+		}
+	}
+
+	return slot, http.StatusOK, nil
+}
+
+// AssignMember godoc
+// @Summary Assign member into an existing project
+// @Description Assign member in an existing project
+// @Tags Project
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "jwt token"
+// @Param id path string true "Project ID"
+// @Param Body body AssignMemberInput true "Body"
+// @Success 200 {object} view.CreateMemberDataResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /projects/{id}/members [post]
+func (h *handler) AssignMember(c *gin.Context) {
+	var input AssignMemberInput
+	if err := c.ShouldBindJSON(&input.Body); err != nil {
+		if err != nil {
+			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, input, ""))
+			return
+		}
+	}
+
+	// TODO: can we move this to middleware ?
+	l := h.logger.Fields(logger.Fields{
+		"handler": "Project",
+		"method":  "AssignMember",
+		"input":   input,
+	})
+
+	if err := input.Validate(); err != nil {
+		l.Error(err, "validate failed")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, input, ""))
+		return
+	}
+
+	// check project existence
+	exists, err := h.store.Project.IsExist(h.repo.DB(), input.ProjectID)
+	if err != nil {
+		l.Error(err, "failed to check project existence")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input, ""))
+		return
+	}
+
+	if !exists {
+		l.Error(ErrProjectNotFound, "cannot find project by id")
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrProjectNotFound, input, ""))
+		return
+	}
+
+	// get active project member info
+	_, err = h.store.ProjectMember.One(h.repo.DB(), input.ProjectID, input.Body.EmployeeID.String(), model.ProjectMemberStatusActive.String())
+	if err == nil {
+		l.Error(err, "project member exists")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, ErrProjectMemberExists, input, ""))
+		return
+	}
+	if !errors.Is(err, gorm.ErrRecordNotFound) {
+		l.Error(err, "failed to query project member")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input, ""))
+		return
+	}
+
+	tx, done := h.repo.NewTransaction()
+
+	slot, code, err := h.assignMemberToProject(tx.DB(), input.ProjectID, input.Body)
+	if err != nil {
+		l.Error(err, "failed to assign member to project")
+		c.JSON(code, view.CreateResponse[any](nil, nil, done(err), input, ""))
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse(view.ToCreateMemberData(slot), nil, done(nil), nil, ""))
+}
+
+func (h *handler) assignMemberToProject(db *gorm.DB, projectID string, req AssignMemberBody) (*model.ProjectSlot, int, error) {
+	l := h.logger
+
+	// check seniority existence
+	seniority, err := h.store.Seniority.One(db, req.SeniorityID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			l.Error(ErrSeniorityNotFound, "cannot find seniority by id")
+			return nil, http.StatusNotFound, ErrSeniorityNotFound
+		}
+		l.Error(err, "failed to check seniority existence")
+		return nil, http.StatusInternalServerError, err
+	}
+
+	// check position existence
+	positions, err := h.store.Position.All(db)
+	if err != nil {
+		l.Error(err, "failed to get all position")
+		return nil, http.StatusInternalServerError, err
+	}
+
+	positionMap := model.ToPositionMap(positions)
+	for _, pID := range req.Positions {
+		if _, ok := positionMap[pID]; !ok {
+			l.Error(errPositionNotFound(pID.String()), "position not found")
 			return nil, http.StatusNotFound, errPositionNotFound(pID.String())
 		}
 	}
