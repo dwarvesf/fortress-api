@@ -32,12 +32,12 @@ type EmployeeData struct {
 	LeftDate      *time.Time          `json:"leftDate"`
 
 	Seniority   *model.Seniority      `json:"seniority"`
-	Chapter     *model.Chapter        `json:"chapter"`
 	LineManager *BasisEmployeeInfo    `json:"lineManager"`
 	Positions   []Position            `json:"positions"`
 	Stacks      []Stack               `json:"stacks"`
 	Roles       []Role                `json:"roles"`
 	Projects    []EmployeeProjectData `json:"projects"`
+	Chapters    []Chapter             `json:"chapters"`
 }
 
 type UpdateGeneralInfoEmployeeData struct {
@@ -57,9 +57,9 @@ type UpdateSkillEmployeeData struct {
 	model.BaseModel
 
 	Seniority *model.Seniority `json:"seniority"`
-	Chapter   *model.Chapter   `json:"chapter"`
 	Positions []model.Position `json:"positions"`
 	Stacks    []model.Stack    `json:"stacks"`
+	Chapters  []model.Chapter  `json:"chapters"`
 }
 
 type UpdatePersonalEmployeeData struct {
@@ -125,16 +125,21 @@ func ToUpdateSkillEmployeeData(employee *model.Employee) *UpdateSkillEmployeeDat
 		stacks = append(stacks, v.Stack)
 	}
 
+	chapters := make([]model.Chapter, 0, len(employee.EmployeeChapters))
+	for _, v := range employee.EmployeeChapters {
+		chapters = append(chapters, v.Chapter)
+	}
+
 	return &UpdateSkillEmployeeData{
 		BaseModel: model.BaseModel{
 			ID:        employee.ID,
 			CreatedAt: employee.CreatedAt,
 			UpdatedAt: employee.UpdatedAt,
 		},
-		Chapter:   employee.Chapter,
 		Seniority: employee.Seniority,
 		Positions: positions,
 		Stacks:    stacks,
+		Chapters:  chapters,
 	}
 }
 
@@ -170,6 +175,11 @@ func ToEmployeeData(employee *model.Employee) *EmployeeData {
 		employeeProjects = append(employeeProjects, ToEmployeeProjectData(&v))
 	}
 
+	chapters := make([]model.Chapter, 0, len(employee.EmployeeChapters))
+	for _, v := range employee.EmployeeChapters {
+		chapters = append(chapters, v.Chapter)
+	}
+
 	rs := &EmployeeData{
 		BaseModel: model.BaseModel{
 			ID:        employee.ID,
@@ -191,7 +201,6 @@ func ToEmployeeData(employee *model.Employee) *EmployeeData {
 		DiscordID:     employee.DiscordID,
 		NotionID:      employee.NotionID,
 		WorkingStatus: employee.WorkingStatus,
-		Chapter:       employee.Chapter,
 		Seniority:     employee.Seniority,
 		JoinedDate:    employee.JoinedDate,
 		LeftDate:      employee.LeftDate,
@@ -199,14 +208,11 @@ func ToEmployeeData(employee *model.Employee) *EmployeeData {
 		Roles:         ToRoles(employee.EmployeeRoles),
 		Positions:     ToPositions(employee.EmployeePositions),
 		Stacks:        ToEmployeeStacks(employee.EmployeeStacks),
+		Chapters:      ToChapters(employee.EmployeeChapters),
 	}
 
 	if employee.Seniority != nil {
 		rs.Seniority = employee.Seniority
-	}
-
-	if employee.Chapter != nil {
-		rs.Chapter = employee.Chapter
 	}
 
 	if employee.LineManager != nil {

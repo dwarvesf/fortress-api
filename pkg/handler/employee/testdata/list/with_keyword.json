@@ -26,12 +26,12 @@
             "joinedDate": "2018-09-01T00:00:00Z",
             "leftDate": null,
             "seniority": null,
-            "chapter": null,
             "lineManager": null,
             "positions": [],
             "stacks": [],
             "roles": [],
-            "projects": []
+            "projects": [],
+            "chapters": []
         }
     ]
 }

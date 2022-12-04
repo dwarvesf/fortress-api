@@ -26,7 +26,6 @@
             "joinedDate": "2018-09-01T00:00:00Z",
             "leftDate": null,
             "seniority": null,
-            "chapter": null,
             "lineManager": null,
             "positions": [
                 {
@@ -76,7 +75,8 @@
                     "deploymentType": "official",
                     "positions": []
                 }
-            ]
+            ],
+            "chapters": []
         },
         {
             "id": "608ea227-45a5-4c8a-af43-6c7280d96340",
@@ -100,7 +100,6 @@
             "joinedDate": "2018-09-01T00:00:00Z",
             "leftDate": null,
             "seniority": null,
-            "chapter": null,
             "lineManager": null,
             "positions": [
                 {
@@ -145,7 +144,8 @@
                     "deploymentType": "shadow",
                     "positions": []
                 }
-            ]
+            ],
+            "chapters": []
         }
     ]
 }

@@ -29,3 +29,13 @@ func (s *store) IsExist(db *gorm.DB, id string) (bool, error) {
 
 	return result.Result, query.Scan(&result).Error
 }
+
+func (s *store) UpdateChapterLead(db *gorm.DB, id string, lead string) error {
+	return db.Model(&model.Chapter{}).Where("id = ?", id).Update("lead_id", lead).Error
+}
+
+// GetAllByLeadID get all chapters by lead_id
+func (s *store) GetAllByLeadID(db *gorm.DB, leadID string) ([]*model.Chapter, error) {
+	var chapters []*model.Chapter
+	return chapters, db.Where("lead_id = ?", leadID).Find(&chapters).Error
+}

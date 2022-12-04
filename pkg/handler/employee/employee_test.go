@@ -271,11 +271,14 @@ func Test_UpdateSkill(t *testing.T) {
 					model.MustGetUUIDFromString("11ccffea-2cc9-4e98-9bef-3464dfe4dec8"),
 					model.MustGetUUIDFromString("d796884d-a8c4-4525-81e7-54a3b6099eac"),
 				},
-				Chapter:   model.MustGetUUIDFromString("11ccffea-2cc9-4e98-9bef-3464dfe4dec8"),
+				Chapters:  []model.UUID{model.MustGetUUIDFromString("11ccffea-2cc9-4e98-9bef-3464dfe4dec8")},
 				Seniority: model.MustGetUUIDFromString("39735742-829b-47f3-8f9d-daf0983914e5"),
 				Stacks: []model.UUID{
 					model.MustGetUUIDFromString("0ecf47c8-cca4-4c30-94bb-054b1124c44f"),
 					model.MustGetUUIDFromString("fa0f4e46-7eab-4e5c-9d31-30489e69fe2e"),
+				},
+				LeadingChapters: []model.UUID{
+					model.MustGetUUIDFromString("11ccffea-2cc9-4e98-9bef-3464dfe4dec8"),
 				},
 			},
 			id: "2655832e-f009-4b73-a535-64c3a22e558f",
@@ -290,11 +293,14 @@ func Test_UpdateSkill(t *testing.T) {
 					model.MustGetUUIDFromString("11ccffea-2cc9-4e98-9bef-3464dfe4dec8"),
 					model.MustGetUUIDFromString("d796884d-a8c4-4525-81e7-54a3b6099eac"),
 				},
-				Chapter:   model.MustGetUUIDFromString("11ccffea-2cc9-4e98-9bef-3464dfe4dec8"),
+				Chapters:  []model.UUID{model.MustGetUUIDFromString("11ccffea-2cc9-4e98-9bef-3464dfe4dec8")},
 				Seniority: model.MustGetUUIDFromString("39735742-829b-47f3-8f9d-daf0983914e5"),
 				Stacks: []model.UUID{
 					model.MustGetUUIDFromString("0ecf47c8-cca4-4c30-94bb-054b1124c44f"),
 					model.MustGetUUIDFromString("fa0f4e46-7eab-4e5c-9d31-30489e69fe2e"),
+				},
+				LeadingChapters: []model.UUID{
+					model.MustGetUUIDFromString("11ccffea-2cc9-4e98-9bef-3464dfe4dec8"),
 				},
 			},
 			id: "2655832e-f009-4b73-a535-64c3a22e558a",

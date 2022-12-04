@@ -489,21 +489,25 @@ func (h *handler) UpdateSkills(c *gin.Context) {
 	}
 
 	// Check chapter existence
-	exist, err := h.store.Chapter.IsExist(h.repo.DB(), body.Chapter.String())
+	chapters, err := h.store.Chapter.All(h.repo.DB())
 	if err != nil {
-		l.Error(err, "failed to check chapter existence")
+		l.Error(err, "failed to get all chapters")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
 		return
 	}
 
-	if !exist {
-		l.Error(ErrChapterNotFound, "chapter not found")
-		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrChapterNotFound, body, ""))
-		return
+	chapterMap := model.ToChapterMap(chapters)
+	for _, sID := range body.Chapters {
+		_, ok := chapterMap[sID]
+		if !ok {
+			l.Error(errChapterNotFound(sID.String()), "chapter not found")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errChapterNotFound(sID.String()), body, ""))
+			return
+		}
 	}
 
 	// Check seniority existence
-	exist, err = h.store.Seniority.IsExist(h.repo.DB(), body.Seniority.String())
+	exist, err := h.store.Seniority.IsExist(h.repo.DB(), body.Seniority.String())
 	if err != nil {
 		l.Error(err, "failed to check seniority existence")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
@@ -528,8 +532,8 @@ func (h *handler) UpdateSkills(c *gin.Context) {
 	for _, sID := range body.Stacks {
 		_, ok := stackMap[sID]
 		if !ok {
-			l.Error(errPositionNotFound(sID.String()), "stack not found")
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errPositionNotFound(sID.String()), body, ""))
+			l.Error(errStackNotFound(sID.String()), "stack not found")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errStackNotFound(sID.String()), body, ""))
 			return
 		}
 	}
@@ -596,8 +600,43 @@ func (h *handler) UpdateSkills(c *gin.Context) {
 		}
 	}
 
+	// Delete all exist employee stack
+	if err := h.store.EmployeeChapter.DeleteByEmployeeID(tx.DB(), employeeID); err != nil {
+		l.Error(err, "failed to delete employee chapter in database")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
+		return
+	}
+
+	// Create new employee stack
+	for _, chapterID := range body.Chapters {
+		_, err := h.store.EmployeeChapter.Create(tx.DB(), &model.EmployeeChapter{
+			EmployeeID: model.MustGetUUIDFromString(employeeID),
+			ChapterID:  chapterID,
+		})
+		if err != nil {
+			l.Error(err, "failed to create employee chapter")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
+			return
+		}
+	}
+
+	// Remove all chapter lead by employee
+	leadingChapters, err := h.store.Chapter.GetAllByLeadID(tx.DB(), employeeID)
+	if err != nil {
+		l.Error(err, "failed to get list chapter lead by the employee")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
+		return
+	}
+
+	for _, lChapter := range leadingChapters {
+		if err := h.store.Chapter.UpdateChapterLead(tx.DB(), lChapter.ID.String(), ""); err != nil {
+			l.Error(err, "failed to remove chapter lead")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
+			return
+		}
+	}
+
 	// Update employee information
-	employee.ChapterID = body.Chapter
 	employee.SeniorityID = body.Seniority
 
 	_, err = h.store.Employee.UpdateSelectedFieldsByID(tx.DB(), employeeID, *employee, "chapter_id", "seniority_id")

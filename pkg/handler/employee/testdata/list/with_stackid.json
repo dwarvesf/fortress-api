@@ -26,12 +26,12 @@
             "joinedDate": "2021-05-17T00:00:00Z",
             "leftDate": null,
             "seniority": null,
-            "chapter": null,
             "lineManager": null,
             "positions": [],
             "stacks": [],
             "roles": [],
-            "projects": []
+            "projects": [],
+            "chapters": []
         },
         {
             "id": "ecea9d15-05ba-4a4e-9787-54210e3b98ce",
@@ -55,12 +55,12 @@
             "joinedDate": "2018-09-01T00:00:00Z",
             "leftDate": null,
             "seniority": null,
-            "chapter": null,
             "lineManager": null,
             "positions": [],
             "stacks": [],
             "roles": [],
-            "projects": []
+            "projects": [],
+            "chapters": []
         },
         {
             "id": "2655832e-f009-4b73-a535-64c3a22e558f",
@@ -84,12 +84,12 @@
             "joinedDate": "2018-09-01T00:00:00Z",
             "leftDate": null,
             "seniority": null,
-            "chapter": null,
             "lineManager": null,
             "positions": [],
             "stacks": [],
             "roles": [],
-            "projects": []
+            "projects": [],
+            "chapters": []
         },
         {
             "id": "3f705527-0455-4e67-a585-6c1f23726fff",
@@ -113,12 +113,12 @@
             "joinedDate": "2018-09-01T00:00:00Z",
             "leftDate": null,
             "seniority": null,
-            "chapter": null,
             "lineManager": null,
             "positions": [],
             "stacks": [],
             "roles": [],
-            "projects": []
+            "projects": [],
+            "chapters": []
         },
         {
             "id": "37e00d47-de69-4ac8-991b-cf3e39565c00",
@@ -142,12 +142,12 @@
             "joinedDate": "2021-05-17T00:00:00Z",
             "leftDate": null,
             "seniority": null,
-            "chapter": null,
             "lineManager": null,
             "positions": [],
             "stacks": [],
             "roles": [],
-            "projects": []
+            "projects": [],
+            "chapters": []
         },
         {
             "id": "fae443f8-e8ff-4eec-b86c-98216d7662d8",
@@ -171,12 +171,12 @@
             "joinedDate": "2022-05-25T00:00:00Z",
             "leftDate": "2022-04-12T00:00:00Z",
             "seniority": null,
-            "chapter": null,
             "lineManager": null,
             "positions": [],
             "stacks": [],
             "roles": [],
-            "projects": []
+            "projects": [],
+            "chapters": []
         },
         {
             "id": "ac318f73-0c8e-43ed-b00e-d230670dc400",
@@ -200,12 +200,12 @@
             "joinedDate": "2022-05-25T00:00:00Z",
             "leftDate": "2022-04-12T00:00:00Z",
             "seniority": null,
-            "chapter": null,
             "lineManager": null,
             "positions": [],
             "stacks": [],
             "roles": [],
-            "projects": []
+            "projects": [],
+            "chapters": []
         },
         {
             "id": "d389d35e-c548-42cf-9f29-2a599969a8f2",
@@ -229,12 +229,12 @@
             "joinedDate": "2021-05-17T00:00:00Z",
             "leftDate": null,
             "seniority": null,
-            "chapter": null,
             "lineManager": null,
             "positions": [],
             "stacks": [],
             "roles": [],
-            "projects": []
+            "projects": [],
+            "chapters": []
         },
         {
             "id": "a1f25e3e-cf40-4d97-a4d5-c27ee566b8c5",
@@ -258,12 +258,12 @@
             "joinedDate": "2021-05-17T00:00:00Z",
             "leftDate": null,
             "seniority": null,
-            "chapter": null,
             "lineManager": null,
             "positions": [],
             "stacks": [],
             "roles": [],
-            "projects": []
+            "projects": [],
+            "chapters": []
         },
         {
             "id": "498d5805-dd64-4643-902d-95067d6e5ab5",
@@ -287,12 +287,12 @@
             "joinedDate": "2021-05-17T00:00:00Z",
             "leftDate": null,
             "seniority": null,
-            "chapter": null,
             "lineManager": null,
             "positions": [],
             "stacks": [],
             "roles": [],
-            "projects": []
+            "projects": [],
+            "chapters": []
         },
         {
             "id": "eeae589a-94e3-49ac-a94c-fcfb084152b2",
@@ -316,12 +316,12 @@
             "joinedDate": "2018-09-01T00:00:00Z",
             "leftDate": null,
             "seniority": null,
-            "chapter": null,
             "lineManager": null,
             "positions": [],
             "stacks": [],
             "roles": [],
-            "projects": []
+            "projects": [],
+            "chapters": []
         },
         {
             "id": "d1b1dcbe-f4ed-49cc-a16b-56c9a3145c14",
@@ -345,12 +345,12 @@
             "joinedDate": "2021-05-17T00:00:00Z",
             "leftDate": null,
             "seniority": null,
-            "chapter": null,
             "lineManager": null,
             "positions": [],
             "stacks": [],
             "roles": [],
-            "projects": []
+            "projects": [],
+            "chapters": []
         },
         {
             "id": "7bcf4b45-0279-4da2-84e4-eec5d9d05ba3",
@@ -374,12 +374,12 @@
             "joinedDate": "2021-05-17T00:00:00Z",
             "leftDate": null,
             "seniority": null,
-            "chapter": null,
             "lineManager": null,
             "positions": [],
             "stacks": [],
             "roles": [],
-            "projects": []
+            "projects": [],
+            "chapters": []
         }
     ]
 }
