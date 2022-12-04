@@ -26,10 +26,11 @@ func (s *store) One(db *gorm.DB, id string) (*model.Employee, error) {
 		Preload("EmployeePositions.Position", "deleted_at IS NULL").
 		Preload("EmployeeStacks", "deleted_at IS NULL").
 		Preload("EmployeeStacks.Stack", "deleted_at IS NULL").
+		Preload("EmployeeChapters", "deleted_at IS NULL").
+		Preload("EmployeeChapters.Chapter", "deleted_at IS NULL").
 		Preload("EmployeeRoles", "deleted_at IS NULL").
 		Preload("EmployeeRoles.Role", "deleted_at IS NULL").
 		Preload("Seniority").
-		Preload("Chapter").
 		Preload("LineManager").
 		First(&employee).
 		Error

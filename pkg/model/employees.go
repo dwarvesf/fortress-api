@@ -78,7 +78,6 @@ type Employee struct {
 	WorkingStatus WorkingStatus
 	JoinedDate    *time.Time
 	LeftDate      *time.Time
-	ChapterID     UUID
 	SeniorityID   UUID
 	LineManagerID UUID
 
@@ -103,7 +102,6 @@ type Employee struct {
 	LocalBranchName        string
 	LocalBankRecipientName string
 
-	Chapter           *Chapter
 	Seniority         *Seniority
 	LineManager       *Employee
 	ProjectMembers    []ProjectMember
@@ -112,4 +110,5 @@ type Employee struct {
 	EmployeeRoles     []EmployeeRole
 	EmployeePositions []EmployeePosition
 	EmployeeStacks    []EmployeeStack
+	EmployeeChapters  []EmployeeChapter
 }

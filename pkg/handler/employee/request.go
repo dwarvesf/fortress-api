@@ -41,10 +41,11 @@ type CreateEmployeeInput struct {
 }
 
 type UpdateSkillsInput struct {
-	Positions []model.UUID `form:"positions" json:"positions" binding:"required"`
-	Chapter   model.UUID   `form:"chapter" json:"chapter"`
-	Seniority model.UUID   `form:"seniority" json:"seniority" binding:"required"`
-	Stacks    []model.UUID `form:"stacks" json:"stacks" binding:"required"`
+	Positions       []model.UUID `form:"positions" json:"positions" binding:"required"`
+	LeadingChapters []model.UUID `form:"leadingChapters" json:"leadingChapters"`
+	Chapters        []model.UUID `form:"chapters" json:"chapters" binding:"required"`
+	Seniority       model.UUID   `form:"seniority" json:"seniority" binding:"required"`
+	Stacks          []model.UUID `form:"stacks" json:"stacks" binding:"required"`
 }
 
 type UpdatePersonalInfoInput struct {

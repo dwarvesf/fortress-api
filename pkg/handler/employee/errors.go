@@ -27,7 +27,17 @@ var (
 	ErrFileAlreadyExisted    = errors.New("file already existed")
 )
 
-// errPositionNotFound returns unauthorized custom error
+// errPositionNotFound returns bad request custom error
 func errPositionNotFound(id string) error {
 	return fmt.Errorf("position not found: %v", id)
+}
+
+// errChapterNotFound returns bad request custom error
+func errChapterNotFound(id string) error {
+	return fmt.Errorf("chapter not found: %v", id)
+}
+
+// errStackNotFound returns bad request custom error
+func errStackNotFound(id string) error {
+	return fmt.Errorf("stack not found: %v", id)
 }
