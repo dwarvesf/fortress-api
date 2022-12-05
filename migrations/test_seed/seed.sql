@@ -261,3 +261,30 @@ INSERT INTO public.work_unit_members (id, deleted_at, created_at, updated_at, jo
 ('93954bcd-d5e9-4c4c-ad30-7de5fd332a80', NULL, '2022-11-29 08:03:33.233262', '2022-11-29 08:03:33.233262', '2022-11-29', NULL, 'inactive', '8dc3be2e-19a4-4942-8a79-56db391a0b15', 'eeae589a-94e3-49ac-a94c-fcfb084152b2', '69b32f7e-0433-4566-a801-72909172940e'),
 ('e14f68f8-7ed5-4a59-9df8-275573537861', NULL, '2022-11-29 08:03:33.233262', '2022-11-29 08:03:33.233262', '2022-11-29', NULL, 'inactive', '8dc3be2e-19a4-4942-8a79-56db391a0b15', '608ea227-45a5-4c8a-af43-6c7280d96340', '4797347d-21e0-4dac-a6c7-c98bf2d6b27c'),
 ('799708d7-855b-4a42-b169-7c9891f0b218', NULL, '2022-11-29 08:03:33.233262', '2022-11-29 08:03:33.233262', '2022-11-29', NULL, 'inactive', '8dc3be2e-19a4-4942-8a79-56db391a0b15', 'ecea9d15-05ba-4a4e-9787-54210e3b98ce', '4797347d-21e0-4dac-a6c7-c98bf2d6b27c');
+
+INSERT INTO public.feedback_events (id, deleted_at, created_at, updated_at, type, subtype, status, created_by, start_date, end_date) VALUES 
+('9b3480be-86a2-4ff9-84d8-545a4146122b', NULL, '2022-11-29 08:03:33.233262', '2022-11-29 08:03:33.233262', 'feedback', 'comment', NULL, '2655832e-f009-4b73-a535-64c3a22e558f', NULL, NULL),
+('8a5bfedb-6e11-4f5c-82d9-2635cfcce3e2', NULL, '2022-11-29 08:03:33.233262', '2022-11-29 08:03:33.233262', 'survey', 'peer-review', NULL, '2655832e-f009-4b73-a535-64c3a22e558f', '2022-11-29 08:03:33.233262', '2023-05-29 08:03:33.233262'),
+('d97ee823-f7d5-418b-b281-711cb1d8e947', NULL, '2022-11-29 08:03:33.233262', '2022-11-29 08:03:33.233262', 'survey', 'work', NULL, '2655832e-f009-4b73-a535-64c3a22e558f', NULL, NULL),
+('53546ea4-1d9d-4216-96b2-75f84ec6d750', NULL, '2022-11-29 08:03:33.233262', '2022-11-29 08:03:33.233262', 'survey', 'engagement', NULL, 'ecea9d15-05ba-4a4e-9787-54210e3b98ce', NULL, NULL),
+('163fdda2-2dce-4618-9849-7c8475dcc9c1', NULL, '2022-11-29 08:03:33.233262', '2022-11-29 08:03:33.233262', 'feedback', 'appreciation', NULL, 'ecea9d15-05ba-4a4e-9787-54210e3b98ce', NULL, NULL);
+
+
+INSERT INTO public.employee_event_topics (id, deleted_at, created_at, updated_at, title, event_id, employee_id, project_id) VALUES
+('e4a33adc-2495-43cf-b816-32feb8d5250d', NULL, '2022-11-29 08:03:33.233262', '2022-11-29 08:03:33.233262', 'Review Nguyen', '8a5bfedb-6e11-4f5c-82d9-2635cfcce3e2', '38a00d4a-bc45-41de-965a-adc674ab82c9', NULL),
+('9cf93fc1-5a38-4e2a-87de-41634b65fc87', NULL, '2022-11-29 08:03:33.233262', '2022-11-29 08:03:33.233262', 'Self review Fortress by Thanh', 'd97ee823-f7d5-418b-b281-711cb1d8e947', '2655832e-f009-4b73-a535-64c3a22e558f', '8dc3be2e-19a4-4942-8a79-56db391a0b15'),
+('11121775-118f-4896-8246-d88023b22c7a', NULL, '2022-11-29 08:03:33.233262', '2022-11-29 08:03:33.233262', 'Engagement Review by Huy', '53546ea4-1d9d-4216-96b2-75f84ec6d750', 'ecea9d15-05ba-4a4e-9787-54210e3b98ce', NULL),
+('a3b2cd0b-b327-4118-83f2-29350e678379', NULL, '2022-11-29 08:03:33.233262', '2022-11-29 08:03:33.233262', 'Huy want to give Nguyen shoutout', '163fdda2-2dce-4618-9849-7c8475dcc9c1', '38a00d4a-bc45-41de-965a-adc674ab82c9', NULL);
+
+INSERT INTO public.employee_event_reviewers (id, deleted_at, created_at, updated_at, employee_event_topic_id, reviewer_id, status, relationship, is_shared, is_read) VALUES 
+('bc9a5715-9723-4a2f-ad42-0d0f19a80b4d', null, '2022-12-05 16:26:15.411511', '2022-12-05 16:26:15.411511', 'e4a33adc-2495-43cf-b816-32feb8d5250d', '2655832e-f009-4b73-a535-64c3a22e558f', 'done', 'peer', false, false),
+('e96999f5-b3f9-420c-9d9f-aa64e3e889bf', null, '2022-12-05 16:26:15.411511', '2022-12-05 16:26:15.411511', 'e4a33adc-2495-43cf-b816-32feb8d5250d', 'ecea9d15-05ba-4a4e-9787-54210e3b98ce', 'draft', 'line-manager', false, false),
+('c994db17-384a-4331-8944-b8ac0070ac3f', null, '2022-12-05 16:26:15.411511', '2022-12-05 16:26:15.411511', 'e4a33adc-2495-43cf-b816-32feb8d5250d', '37e00d47-de69-4ac8-991b-cf3e39565c00', 'draft', 'peer', false, false),
+('789f1163-f157-4df3-9764-8100277cacba', null, '2022-12-05 16:26:15.411511', '2022-12-05 16:26:15.411511', '9cf93fc1-5a38-4e2a-87de-41634b65fc87', '2655832e-f009-4b73-a535-64c3a22e558f', 'draft', 'self', false, false),
+('41f6a7fb-baa2-4e61-8035-e36d752dc611', null, '2022-12-05 16:26:15.411511', '2022-12-05 16:26:15.411511', '11121775-118f-4896-8246-d88023b22c7a', 'ecea9d15-05ba-4a4e-9787-54210e3b98ce', 'draft', 'self', true, true),
+('1a5eebbb-f3f7-40a7-9c95-2240df3aecef', null, '2022-12-05 16:26:15.411511', '2022-12-05 16:26:15.411511', 'a3b2cd0b-b327-4118-83f2-29350e678379', 'ecea9d15-05ba-4a4e-9787-54210e3b98ce', 'draft', 'peer', false, false);
+
+INSERT INTO public.employee_event_questions (id, deleted_at, created_at, updated_at, employee_event_reviewer_id, content, answers, note) VALUES 
+('4adf1a24-f89e-4286-aeab-090bf5e9a030', null, '2022-12-05 16:33:28.085352', '2022-12-05 16:33:28.085352', 'bc9a5715-9723-4a2f-ad42-0d0f19a80b4d', 'Does this employee effectively communicate with othes?', 'good', null),
+('805b3bdb-bb90-44eb-a1ed-1ddf8bda8bd9', null, '2022-12-05 16:33:28.085352', '2022-12-05 16:33:28.085352', 'bc9a5715-9723-4a2f-ad42-0d0f19a80b4d', 'How effective ò a leader is this person, either through direct management or influence?', 'good', null),
+('99862c14-a9eb-40d1-8e09-0d02ee8d0b67', null, '2022-12-05 16:33:28.085352', '2022-12-05 16:33:28.085352', 'bc9a5715-9723-4a2f-ad42-0d0f19a80b4d', 'Does this person find creative solutions, and own the solution to problems? Are they proactive or reactive?', 'good', null);
