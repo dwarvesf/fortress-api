@@ -78,17 +78,22 @@ func (s *store) IsExist(db *gorm.DB, id string) (bool, error) {
 func (s *store) One(db *gorm.DB, id string) (*model.Project, error) {
 	var project *model.Project
 	return project, db.Where("id = ?", id).
-		Preload("ProjectMembers", "deleted_at IS NULL and left_date IS NULL AND status IN ?",
-			[]model.ProjectMemberStatus{model.ProjectMemberStatusActive, model.ProjectMemberStatusOnBoarding}).
-		Preload("ProjectMembers.Employee").
-		Preload("ProjectMembers.ProjectMemberPositions", "deleted_at IS NULL").
-		Preload("ProjectMembers.ProjectMemberPositions.Position").
-		Preload("ProjectMembers.Seniority", "deleted_at IS NULL").
 		Preload("Heads", "deleted_at IS NULL and left_date IS NULL").
 		Preload("Heads.Employee").
 		Preload("ProjectStacks", "deleted_at IS NULL").
 		Preload("ProjectStacks.Stack", "deleted_at IS NULL").
 		Preload("Country").
+		Preload("Slots", "deleted_at IS NULL").
+		Preload("Slots.ProjectMember", "deleted_at IS NULL AND status IN ?",
+			[]model.ProjectMemberStatus{model.ProjectMemberStatusActive, model.ProjectMemberStatusOnBoarding}).
+		Preload("Slots.ProjectMember.Employee", "deleted_at IS NULL").
+		Preload("Slots.ProjectMember.ProjectMemberPositions", "deleted_at IS NULL").
+		Preload("Slots.ProjectMember.ProjectMemberPositions.Position", "deleted_at IS NULL").
+		Preload("Slots.ProjectMember.Seniority", "deleted_at IS NULL").
+		Preload("Slots.ProjectSlotPositions", "deleted_at IS NULL").
+		Preload("Slots.ProjectSlotPositions.Position", "deleted_at IS NULL").
+		Preload("Slots.ProjectSlotPositions.Position", "deleted_at IS NULL").
+		Preload("Slots.Seniority", "deleted_at IS NULL").
 		First(&project).
 		Error
 }

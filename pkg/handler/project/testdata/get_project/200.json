@@ -25,11 +25,11 @@
                 "displayName": "Huy Nguyen",
                 "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/2830497479497502617.png",
                 "status": "active",
-                "isLead": true,
+                "isLead": false,
                 "deploymentType": "shadow",
-                "joinedDate": null,
+                "joinedDate": "2022-11-01T00:00:00Z",
                 "leftDate": null,
-                "rate": "0",
+                "rate": "4000",
                 "discount": "0",
                 "seniority": {
                     "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
@@ -56,10 +56,10 @@
                 "status": "active",
                 "isLead": false,
                 "deploymentType": "official",
-                "joinedDate": null,
+                "joinedDate": "2022-11-01T00:00:00Z",
                 "leftDate": null,
-                "rate": "0",
-                "discount": "0",
+                "rate": "3000",
+                "discount": "3",
                 "seniority": {
                     "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
                     "createdAt": "2022-11-07T09:50:25.714604Z",
@@ -85,10 +85,10 @@
                 "status": "active",
                 "isLead": false,
                 "deploymentType": "official",
-                "joinedDate": null,
+                "joinedDate": "2022-11-01T00:00:00Z",
                 "leftDate": null,
-                "rate": "0",
-                "discount": "0",
+                "rate": "3000",
+                "discount": "3",
                 "seniority": {
                     "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
                     "createdAt": "2022-11-07T09:50:25.714604Z",
@@ -114,9 +114,9 @@
                 "status": "active",
                 "isLead": false,
                 "deploymentType": "shadow",
-                "joinedDate": null,
+                "joinedDate": "2022-11-01T00:00:00Z",
                 "leftDate": null,
-                "rate": "0",
+                "rate": "4000",
                 "discount": "0",
                 "seniority": {
                     "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
@@ -143,10 +143,10 @@
                 "status": "active",
                 "isLead": true,
                 "deploymentType": "official",
-                "joinedDate": null,
+                "joinedDate": "2022-11-15T00:00:00Z",
                 "leftDate": null,
-                "rate": "0",
-                "discount": "0",
+                "rate": "10",
+                "discount": "1",
                 "seniority": {
                     "id": "01fb6322-d727-47e3-a242-5039ea4732fc",
                     "createdAt": "2022-11-07T09:50:25.714604Z",
@@ -169,12 +169,6 @@
             }
         ],
         "technicalLeads": [
-            {
-                "employeeID": "ecea9d15-05ba-4a4e-9787-54210e3b98ce",
-                "fullName": "Nguyễn Hoàng Huy",
-                "displayName": "Huy Nguyen",
-                "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/2830497479497502617.png"
-            },
             {
                 "employeeID": "2655832e-f009-4b73-a535-64c3a22e558f",
                 "fullName": "Phạm Đức Thành",

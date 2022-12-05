@@ -88,7 +88,7 @@ func ToUpdateProjectStatusResponse(p *model.Project) UpdatedProject {
 }
 
 func ToProjectData(project *model.Project) ProjectData {
-	leads := map[string]string{}
+	leadMap := map[string]bool{}
 	var technicalLeads = make([]ProjectHead, 0, len(project.Heads))
 	var accountManager, salePerson, deliveryManager *ProjectHead
 	for _, h := range project.Heads {
@@ -100,7 +100,7 @@ func ToProjectData(project *model.Project) ProjectData {
 		}
 
 		if h.IsLead() {
-			leads[h.EmployeeID.String()] = h.Position.String()
+			leadMap[h.EmployeeID.String()] = true
 			technicalLeads = append(technicalLeads, head)
 			continue
 		}
@@ -120,22 +120,43 @@ func ToProjectData(project *model.Project) ProjectData {
 		}
 	}
 
-	var members = make([]ProjectMember, 0, len(project.ProjectMembers))
-	for _, m := range project.ProjectMembers {
-		_, isLead := leads[m.Employee.ID.String()]
-		members = append(members, ProjectMember{
-			ProjectMemberID: m.ID.String(),
-			ProjectSlotID:   m.ProjectSlotID.String(),
-			EmployeeID:      m.EmployeeID.String(),
-			FullName:        m.Employee.FullName,
-			DisplayName:     m.Employee.DisplayName,
-			Avatar:          m.Employee.Avatar,
-			Status:          m.Status.String(),
-			Positions:       ToProjectMemberPositions(m.ProjectMemberPositions),
-			DeploymentType:  m.DeploymentType.String(),
-			Seniority:       m.Seniority,
-			IsLead:          isLead,
-		})
+	var members = make([]ProjectMember, 0, len(project.Slots))
+	for _, slot := range project.Slots {
+		m := slot.ProjectMember
+		member := ProjectMember{
+			ProjectSlotID:  slot.ID.String(),
+			Status:         slot.Status.String(),
+			DeploymentType: slot.DeploymentType.String(),
+			Rate:           slot.Rate,
+			Discount:       slot.Discount,
+			Positions:      ToProjectSlotPositions(slot.ProjectSlotPositions),
+		}
+
+		if !slot.Seniority.ID.IsZero() {
+			member.Seniority = &slot.Seniority
+		}
+
+		if slot.Status != model.ProjectMemberStatusPending && !m.ID.IsZero() {
+			member.ProjectMemberID = m.ID.String()
+			member.Status = m.Status.String()
+			member.DeploymentType = m.DeploymentType.String()
+			member.EmployeeID = m.EmployeeID.String()
+			member.FullName = m.Employee.FullName
+			member.DisplayName = m.Employee.DisplayName
+			member.Avatar = m.Employee.Avatar
+			member.JoinedDate = m.JoinedDate
+			member.Rate = m.Rate
+			member.Discount = m.Discount
+			member.Seniority = m.Seniority
+			member.IsLead = leadMap[m.EmployeeID.String()]
+			member.Positions = ToProjectMemberPositions(m.ProjectMemberPositions)
+		}
+
+		if m.Status == model.ProjectMemberStatusInactive {
+			member.LeftDate = m.LeftDate
+		}
+
+		members = append(members, member)
 	}
 
 	d := ProjectData{

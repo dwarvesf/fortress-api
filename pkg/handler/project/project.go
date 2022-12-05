@@ -705,14 +705,18 @@ func (h *handler) UpdateMember(c *gin.Context) {
 		// create project head
 		slot.IsLead = body.IsLead
 		if body.IsLead {
-			if _, err := h.updateProjectHead(tx, projectID, body.EmployeeID, model.HeadPositionTechnicalLead); err != nil {
+			if _, err := h.updateProjectHead(tx.DB(), projectID, body.EmployeeID, model.HeadPositionTechnicalLead); err != nil {
 				l.Error(err, "failed to update technicalLeads")
 				c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
 				return
 			}
 		} else {
-			if err := h.store.ProjectHead.DeleteByProjectIDAndPosition(tx.DB(), projectID, model.HeadPositionTechnicalLead.String()); err != nil {
-				l.Error(err, "failed to upsert project head")
+			_, err := h.store.ProjectHead.UpdateLeftDateOfEmployee(tx.DB(),
+				body.EmployeeID.String(),
+				projectID,
+				model.HeadPositionTechnicalLead.String())
+			if err != nil {
+				l.Error(err, "failed to update left_date of project head")
 				c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), nil, ""))
 				return
 			}
@@ -1226,7 +1230,7 @@ func (h *handler) UpdateContactInfo(c *gin.Context) {
 	tx, done := h.repo.NewTransaction()
 
 	// Update Account Manager
-	accountManager, err := h.updateProjectHead(tx, projectID, body.AccountManagerID, model.HeadPositionAccountManager)
+	accountManager, err := h.updateProjectHead(tx.DB(), projectID, body.AccountManagerID, model.HeadPositionAccountManager)
 	if err != nil {
 		l.Error(err, "failed to update account manager")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
@@ -1234,7 +1238,7 @@ func (h *handler) UpdateContactInfo(c *gin.Context) {
 	}
 
 	// Update Delivery Manager
-	deliveryManger, err := h.updateProjectHead(tx, projectID, body.DeliveryManagerID, model.HeadPositionDeliveryManager)
+	deliveryManger, err := h.updateProjectHead(tx.DB(), projectID, body.DeliveryManagerID, model.HeadPositionDeliveryManager)
 	if err != nil {
 		l.Error(err, "failed to update delivery manager")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
@@ -1257,38 +1261,42 @@ func (h *handler) UpdateContactInfo(c *gin.Context) {
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToUpdateProjectContactInfo(project), nil, done(nil), nil, ""))
 }
 
-func (h *handler) updateProjectHead(tx store.DBRepo, projectID string, memberID model.UUID, position model.HeadPosition) (*model.ProjectHead, error) {
+func (h *handler) updateProjectHead(db *gorm.DB, projectID string, employeeID model.UUID, position model.HeadPosition) (*model.ProjectHead, error) {
 	timeNow := time.Now()
-	needCreate := false
 
-	head, err := h.store.ProjectHead.One(tx.DB(), projectID, position)
-	if err != nil {
-		if !errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, ErrFailToFindProjectHead
-		}
-
-		needCreate = true
-	} else if head.EmployeeID != memberID {
-		head.LeftDate = &timeNow
-		_, err := h.store.ProjectHead.UpdateSelectedFieldsByID(tx.DB(), head.ID.String(), *head, "left_date")
-		if err != nil {
-			return nil, ErrFailToUpdateLeftDate
-		}
-
-		needCreate = true
+	head, err := h.store.ProjectHead.One(db, projectID, position)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		h.logger.Fields(logger.Fields{
+			"projectID": projectID,
+			"position":  position,
+		}).Error(err, "failed to get one project head")
+		return nil, err
 	}
 
-	if needCreate {
-		head = &model.ProjectHead{
-			ProjectID:  model.MustGetUUIDFromString(projectID),
-			EmployeeID: memberID,
-			JoinedDate: timeNow,
-			Position:   position,
+	// if employee is the head, do nothing;
+	// else update left_date of old head and create new head
+	if err == nil {
+		if head.EmployeeID == employeeID {
+			return head, nil
 		}
-		err = h.store.ProjectHead.Create(tx.DB(), head)
+
+		head.LeftDate = &timeNow
+		_, err := h.store.ProjectHead.UpdateSelectedFieldsByID(db, head.ID.String(), *head, "left_date")
 		if err != nil {
-			return nil, ErrFailToCreateProjectHead
+			h.logger.Fields(logger.Fields{"head": *head}).Error(err, "failed to update project head")
+			return nil, err
 		}
+	}
+
+	head = &model.ProjectHead{
+		ProjectID:  model.MustGetUUIDFromString(projectID),
+		EmployeeID: employeeID,
+		JoinedDate: timeNow,
+		Position:   position,
+	}
+	if err := h.store.ProjectHead.Create(db, head); err != nil {
+		h.logger.Fields(logger.Fields{"head": head}).Error(err, "failed to create project head")
+		return nil, err
 	}
 
 	return head, nil
