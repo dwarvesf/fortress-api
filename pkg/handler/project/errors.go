@@ -28,6 +28,7 @@ var (
 	ErrSeniorityNotFound       = errors.New("seniority not found")
 	ErrProjectSlotNotFound     = errors.New("project slot not found")
 	ErrProjectMemberNotFound   = errors.New("project member not found")
+	ErrProjectHeadNotFound     = errors.New("project head not found")
 	ErrAccountManagerNotFound  = errors.New("account manager not found")
 	ErrDeliveryManagerNotFound = errors.New("delivery manager not found")
 	ErrStackNotFound           = errors.New("stack not found")
