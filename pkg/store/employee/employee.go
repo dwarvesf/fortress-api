@@ -96,6 +96,8 @@ func (s *store) All(db *gorm.DB, input GetAllInput, pagination model.Pagination)
 			Preload("EmployeePositions.Position", "deleted_at IS NULL").
 			Preload("EmployeeRoles", "deleted_at IS NULL").
 			Preload("EmployeeRoles.Role", "deleted_at IS NULL").
+			Preload("EmployeeChapters", "deleted_at IS NULL").
+			Preload("EmployeeChapters.Chapter", "deleted_at IS NULL").
 			Preload("EmployeeStacks", "deleted_at IS NULL").
 			Preload("EmployeeStacks.Stack", "deleted_at IS NULL")
 	}
