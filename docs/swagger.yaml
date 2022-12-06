@@ -76,8 +76,14 @@ definitions:
     type: object
   github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateSkillsInput:
     properties:
-      chapter:
-        type: string
+      chapters:
+        items:
+          type: string
+        type: array
+      leadingChapters:
+        items:
+          type: string
+        type: array
       positions:
         items:
           type: string
@@ -89,6 +95,7 @@ definitions:
           type: string
         type: array
     required:
+    - chapters
     - positions
     - seniority
     - stacks
@@ -311,6 +318,8 @@ definitions:
         $ref: '#/definitions/gorm.DeletedAt'
       id:
         type: string
+      lead_id:
+        type: string
       name:
         type: string
       updatedAt:
@@ -471,8 +480,14 @@ definitions:
     type: object
   pkg_handler_employee.UpdateSkillsInput:
     properties:
-      chapter:
-        type: string
+      chapters:
+        items:
+          type: string
+        type: array
+      leadingChapters:
+        items:
+          type: string
+        type: array
       positions:
         items:
           type: string
@@ -484,6 +499,7 @@ definitions:
           type: string
         type: array
     required:
+    - chapters
     - positions
     - seniority
     - stacks
@@ -759,6 +775,17 @@ definitions:
       id:
         type: string
     type: object
+  view.Chapter:
+    properties:
+      LeadID:
+        type: string
+      code:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+    type: object
   view.ChapterResponse:
     properties:
       data:
@@ -863,8 +890,10 @@ definitions:
         type: string
       birthday:
         type: string
-      chapter:
-        $ref: '#/definitions/model.Chapter'
+      chapters:
+        items:
+          $ref: '#/definitions/view.Chapter'
+        type: array
       createdAt:
         type: string
       deletedAt:
@@ -1289,8 +1318,10 @@ definitions:
     type: object
   view.UpdateSkillEmployeeData:
     properties:
-      chapter:
-        $ref: '#/definitions/model.Chapter'
+      chapters:
+        items:
+          $ref: '#/definitions/model.Chapter'
+        type: array
       createdAt:
         type: string
       deletedAt:
@@ -1494,7 +1525,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.CreateEmployeeInput'
+          $ref: '#/definitions/pkg_handler_employee.CreateEmployeeInput'
       - description: jwt token
         in: header
         name: Authorization
@@ -1626,7 +1657,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateGeneralInfoInput'
+          $ref: '#/definitions/pkg_handler_employee.UpdateGeneralInfoInput'
       produces:
       - application/json
       responses:
@@ -1670,7 +1701,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdatePersonalInfoInput'
+          $ref: '#/definitions/pkg_handler_employee.UpdatePersonalInfoInput'
       produces:
       - application/json
       responses:
@@ -1709,7 +1740,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateSkillsInput'
+          $ref: '#/definitions/pkg_handler_employee.UpdateSkillsInput'
       - description: jwt token
         in: header
         name: Authorization
@@ -2039,7 +2070,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/pkg_handler_profile.UpdateInfoInput'
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_profile.UpdateInfoInput'
       produces:
       - application/json
       responses:

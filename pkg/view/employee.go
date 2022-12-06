@@ -169,6 +169,7 @@ func ToUpdateGeneralInfoEmployeeData(employee *model.Employee) *UpdateGeneralInf
 	return rs
 }
 
+// ToEmployeeData parse employee date to response data
 func ToEmployeeData(employee *model.Employee) *EmployeeData {
 	employeeProjects := make([]EmployeeProjectData, 0, len(employee.ProjectMembers))
 	for _, v := range employee.ProjectMembers {

@@ -197,7 +197,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.CreateEmployeeInput"
+                            "$ref": "#/definitions/pkg_handler_employee.CreateEmployeeInput"
                         }
                     },
                     {
@@ -394,7 +394,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateGeneralInfoInput"
+                            "$ref": "#/definitions/pkg_handler_employee.UpdateGeneralInfoInput"
                         }
                     }
                 ],
@@ -460,7 +460,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdatePersonalInfoInput"
+                            "$ref": "#/definitions/pkg_handler_employee.UpdatePersonalInfoInput"
                         }
                     }
                 ],
@@ -519,7 +519,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateSkillsInput"
+                            "$ref": "#/definitions/pkg_handler_employee.UpdateSkillsInput"
                         }
                     },
                     {
@@ -1018,7 +1018,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/pkg_handler_profile.UpdateInfoInput"
+                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_profile.UpdateInfoInput"
                         }
                     }
                 ],
@@ -2267,13 +2267,23 @@
         "github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateSkillsInput": {
             "type": "object",
             "required": [
+                "chapters",
                 "positions",
                 "seniority",
                 "stacks"
             ],
             "properties": {
-                "chapter": {
-                    "type": "string"
+                "chapters": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "leadingChapters": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "positions": {
                     "type": "array",
@@ -2612,6 +2622,9 @@
                 "id": {
                     "type": "string"
                 },
+                "lead_id": {
+                    "type": "string"
+                },
                 "name": {
                     "type": "string"
                 },
@@ -2848,13 +2861,23 @@
         "pkg_handler_employee.UpdateSkillsInput": {
             "type": "object",
             "required": [
+                "chapters",
                 "positions",
                 "seniority",
                 "stacks"
             ],
             "properties": {
-                "chapter": {
-                    "type": "string"
+                "chapters": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "leadingChapters": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "positions": {
                     "type": "array",
@@ -3274,6 +3297,23 @@
                 }
             }
         },
+        "view.Chapter": {
+            "type": "object",
+            "properties": {
+                "LeadID": {
+                    "type": "string"
+                },
+                "code": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "view.ChapterResponse": {
             "type": "object",
             "properties": {
@@ -3434,8 +3474,11 @@
                 "birthday": {
                     "type": "string"
                 },
-                "chapter": {
-                    "$ref": "#/definitions/model.Chapter"
+                "chapters": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.Chapter"
+                    }
                 },
                 "createdAt": {
                     "type": "string"
@@ -4087,8 +4130,11 @@
         "view.UpdateSkillEmployeeData": {
             "type": "object",
             "properties": {
-                "chapter": {
-                    "$ref": "#/definitions/model.Chapter"
+                "chapters": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Chapter"
+                    }
                 },
                 "createdAt": {
                     "type": "string"

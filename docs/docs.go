@@ -205,7 +205,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.CreateEmployeeInput"
+                            "$ref": "#/definitions/pkg_handler_employee.CreateEmployeeInput"
                         }
                     },
                     {
@@ -402,7 +402,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateGeneralInfoInput"
+                            "$ref": "#/definitions/pkg_handler_employee.UpdateGeneralInfoInput"
                         }
                     }
                 ],
@@ -468,7 +468,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdatePersonalInfoInput"
+                            "$ref": "#/definitions/pkg_handler_employee.UpdatePersonalInfoInput"
                         }
                     }
                 ],
@@ -527,7 +527,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateSkillsInput"
+                            "$ref": "#/definitions/pkg_handler_employee.UpdateSkillsInput"
                         }
                     },
                     {
@@ -1026,7 +1026,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/pkg_handler_profile.UpdateInfoInput"
+                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_profile.UpdateInfoInput"
                         }
                     }
                 ],
@@ -2275,13 +2275,23 @@ const docTemplate = `{
         "github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateSkillsInput": {
             "type": "object",
             "required": [
+                "chapters",
                 "positions",
                 "seniority",
                 "stacks"
             ],
             "properties": {
-                "chapter": {
-                    "type": "string"
+                "chapters": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "leadingChapters": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "positions": {
                     "type": "array",
@@ -2620,6 +2630,9 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
+                "lead_id": {
+                    "type": "string"
+                },
                 "name": {
                     "type": "string"
                 },
@@ -2856,13 +2869,23 @@ const docTemplate = `{
         "pkg_handler_employee.UpdateSkillsInput": {
             "type": "object",
             "required": [
+                "chapters",
                 "positions",
                 "seniority",
                 "stacks"
             ],
             "properties": {
-                "chapter": {
-                    "type": "string"
+                "chapters": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "leadingChapters": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "positions": {
                     "type": "array",
@@ -3282,6 +3305,23 @@ const docTemplate = `{
                 }
             }
         },
+        "view.Chapter": {
+            "type": "object",
+            "properties": {
+                "LeadID": {
+                    "type": "string"
+                },
+                "code": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "view.ChapterResponse": {
             "type": "object",
             "properties": {
@@ -3442,8 +3482,11 @@ const docTemplate = `{
                 "birthday": {
                     "type": "string"
                 },
-                "chapter": {
-                    "$ref": "#/definitions/model.Chapter"
+                "chapters": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.Chapter"
+                    }
                 },
                 "createdAt": {
                     "type": "string"
@@ -4095,8 +4138,11 @@ const docTemplate = `{
         "view.UpdateSkillEmployeeData": {
             "type": "object",
             "properties": {
-                "chapter": {
-                    "$ref": "#/definitions/model.Chapter"
+                "chapters": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Chapter"
+                    }
                 },
                 "createdAt": {
                     "type": "string"
