@@ -13,8 +13,8 @@ func New() IStore {
 }
 
 // Create create new project member position
-func (s *store) Create(db *gorm.DB, pos *model.ProjectMemberPosition) error {
-	return db.Create(&pos).Preload("Position").First(&pos).Error
+func (s *store) Create(db *gorm.DB, pos ...model.ProjectMemberPosition) error {
+	return db.Create(&pos).Error
 }
 
 // DeleteByProjectMemberID delete project_member_positions by project_member_id

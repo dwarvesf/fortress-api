@@ -28,12 +28,19 @@ func (s *store) IsExist(db *gorm.DB, id string) (bool, error) {
 }
 
 // One return a project member by projectID and employeeID
-func (s *store) One(db *gorm.DB, projectID string, employeeID string, status string) (*model.ProjectMember, error) {
-	query := db.Where("project_id = ? AND employee_id = ?", projectID, employeeID)
+func (s *store) One(db *gorm.DB, projectID string, employeeID string) (*model.ProjectMember, error) {
+	query := db.Where("project_id = ? AND employee_id = ? AND status = ?",
+		projectID,
+		employeeID,
+		model.ProjectMemberStatusActive)
 
-	if status != "" {
-		query = query.Where("status = ?", status)
-	}
+	var member *model.ProjectMember
+	return member, query.Preload("Employee").First(&member).Error
+}
+
+// GetOneBySlotID return a project member by slotID
+func (s *store) GetOneBySlotID(db *gorm.DB, slotID string) (*model.ProjectMember, error) {
+	query := db.Where("project_slot_id = ? AND left_date IS NULL", slotID)
 
 	var member *model.ProjectMember
 	return member, query.Preload("Employee").First(&member).Error
