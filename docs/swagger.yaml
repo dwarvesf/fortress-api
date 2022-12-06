@@ -770,6 +770,8 @@ definitions:
     properties:
       avatar:
         type: string
+      displayName:
+        type: string
       fullName:
         type: string
       id:
@@ -980,6 +982,38 @@ definitions:
       errors:
         items:
           $ref: '#/definitions/view.ApiError'
+        type: array
+    type: object
+  view.Feedback:
+    properties:
+      author:
+        $ref: '#/definitions/view.BasisEmployeeInfo'
+      employeeID:
+        type: string
+      eventID:
+        type: string
+      lastUpdated:
+        type: string
+      projectID:
+        type: string
+      reviewerID:
+        type: string
+      status:
+        type: string
+      subtype:
+        type: string
+      title:
+        type: string
+      topicID:
+        type: string
+      type:
+        type: string
+    type: object
+  view.ListFeedbackResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/view.Feedback'
         type: array
     type: object
   view.ListWorkUnitResponse:
@@ -1806,6 +1840,39 @@ paths:
       summary: Upload content of employee by id
       tags:
       - Employee
+  /feedbacks:
+    get:
+      consumes:
+      - application/json
+      description: Get list feedbacks
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Status
+        in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.ListFeedbackResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get list feedbacks
+      tags:
+      - Feedback
   /metadata/account-roles:
     get:
       consumes:

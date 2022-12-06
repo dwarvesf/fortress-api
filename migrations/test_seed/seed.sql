@@ -17,7 +17,11 @@ INSERT INTO public.permissions (id, deleted_at, created_at, updated_at, name, co
 ('819adaec-f4a2-4438-937d-fcd9cc15d76b', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Work Unit Create', 'projectWorkUnits.create'),
 ('7c2d5fef-3096-4b68-bd76-f26cb2a3baea', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Work Unit Read', 'projectWorkUnits.read'),
 ('cb90c56a-60a8-4345-8001-bb7ab172b302', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Work Unit Edit', 'projectWorkUnits.edit'),
-('6eb3bf29-87dc-490b-85b4-e591d416ac8f', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Work Unit Delete', 'projectWorkUnits.delete');
+('6eb3bf29-87dc-490b-85b4-e591d416ac8f', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Work Unit Delete', 'projectWorkUnits.delete'),
+('615cf3a6-89cb-4200-81b4-47542ae8b145', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Feedback Create', 'feedbacks.create'),
+('cc88051f-7eea-468e-a9ac-91757dde2581', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Feedback Read', 'feedbacks.read'),
+('3b542878-f597-421f-b4ac-5f71b0e22ddb', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Feedback Edit', 'feedbacks.edit'),
+('2969fd2a-ae44-414a-85ac-7a930c6de987', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Feedback Delete', 'feedbacks.delete');
 
 INSERT INTO public.role_permissions (id, deleted_at, created_at, updated_at, role_id, permission_id) VALUES
 ('75012959-344d-449f-a7ec-00023d68b32b', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', 'd796884d-a8c4-4525-81e7-54a3b6099eac', '01ed1076-4028-4fdf-9a92-cb57a8e041af'),
@@ -35,7 +39,11 @@ INSERT INTO public.role_permissions (id, deleted_at, created_at, updated_at, rol
 ('e242544a-24da-4820-8d28-8aa67001033d', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '11ccffea-2cc9-4e98-9bef-3464dfe4dec8', '819adaec-f4a2-4438-937d-fcd9cc15d76b'),
 ('1aef6c68-cc6c-4db3-b78f-c40b714ca4aa', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '11ccffea-2cc9-4e98-9bef-3464dfe4dec8', '7c2d5fef-3096-4b68-bd76-f26cb2a3baea'),
 ('62256fae-d6af-4246-807f-83cd580b1ad3', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '11ccffea-2cc9-4e98-9bef-3464dfe4dec8', 'cb90c56a-60a8-4345-8001-bb7ab172b302'),
-('05043830-fb1a-4558-9b5c-be9bea090cad', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '11ccffea-2cc9-4e98-9bef-3464dfe4dec8', '6eb3bf29-87dc-490b-85b4-e591d416ac8f');
+('05043830-fb1a-4558-9b5c-be9bea090cad', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '11ccffea-2cc9-4e98-9bef-3464dfe4dec8', '6eb3bf29-87dc-490b-85b4-e591d416ac8f'),
+('8419b6c4-c09a-4dc9-ad0a-73dad343b1f0', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '11ccffea-2cc9-4e98-9bef-3464dfe4dec8', '615cf3a6-89cb-4200-81b4-47542ae8b145'),
+('659369d5-577a-444f-b4c9-fc9c3b3bae2d', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '11ccffea-2cc9-4e98-9bef-3464dfe4dec8', 'cc88051f-7eea-468e-a9ac-91757dde2581'),
+('24783453-3676-4419-b46c-bbfff792bfda', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '11ccffea-2cc9-4e98-9bef-3464dfe4dec8', '3b542878-f597-421f-b4ac-5f71b0e22ddb'),
+('71dffa83-cc11-4dad-a63e-4ef750941e8a', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '11ccffea-2cc9-4e98-9bef-3464dfe4dec8', '2969fd2a-ae44-414a-85ac-7a930c6de987');
 
 INSERT INTO public.positions (id, deleted_at, created_at, updated_at, name, code) VALUES
 ('11ccffea-2cc9-4e98-9bef-3464dfe4dec8', NULL, '2022-11-07 09:50:25.714604', '2022-11-07 09:50:25.714604', 'Frontend', 'frontend'),
@@ -268,7 +276,6 @@ INSERT INTO public.feedback_events (id, deleted_at, created_at, updated_at, type
 ('d97ee823-f7d5-418b-b281-711cb1d8e947', NULL, '2022-11-29 08:03:33.233262', '2022-11-29 08:03:33.233262', 'survey', 'work', NULL, '2655832e-f009-4b73-a535-64c3a22e558f', NULL, NULL),
 ('53546ea4-1d9d-4216-96b2-75f84ec6d750', NULL, '2022-11-29 08:03:33.233262', '2022-11-29 08:03:33.233262', 'survey', 'engagement', NULL, 'ecea9d15-05ba-4a4e-9787-54210e3b98ce', NULL, NULL),
 ('163fdda2-2dce-4618-9849-7c8475dcc9c1', NULL, '2022-11-29 08:03:33.233262', '2022-11-29 08:03:33.233262', 'feedback', 'appreciation', NULL, 'ecea9d15-05ba-4a4e-9787-54210e3b98ce', NULL, NULL);
-
 
 INSERT INTO public.employee_event_topics (id, deleted_at, created_at, updated_at, title, event_id, employee_id, project_id) VALUES
 ('e4a33adc-2495-43cf-b816-32feb8d5250d', NULL, '2022-11-29 08:03:33.233262', '2022-11-29 08:03:33.233262', 'Review Nguyen', '8a5bfedb-6e11-4f5c-82d9-2635cfcce3e2', '38a00d4a-bc45-41de-965a-adc674ab82c9', NULL),

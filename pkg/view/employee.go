@@ -72,10 +72,12 @@ type UpdatePersonalEmployeeData struct {
 }
 
 type BasisEmployeeInfo struct {
-	ID       string `json:"id"`
-	FullName string `json:"fullName"`
-	Avatar   string `json:"avatar"`
+	ID          string `json:"id"`
+	FullName    string `json:"fullName"`
+	DisplayName string `json:"displayName"`
+	Avatar      string `json:"avatar"`
 }
+
 type UpdateEmployeeStatusResponse struct {
 	Data EmployeeData `json:"data"`
 }
@@ -247,5 +249,14 @@ type EmployeeContentDataResponse struct {
 func ToContentData(url string) *EmployeeContentData {
 	return &EmployeeContentData{
 		Url: url,
+	}
+}
+
+func ToBasisEmployeeInfo(employee model.Employee) *BasisEmployeeInfo {
+	return &BasisEmployeeInfo{
+		ID:          employee.ID.String(),
+		FullName:    employee.FullName,
+		DisplayName: employee.DisplayName,
+		Avatar:      employee.Avatar,
 	}
 }
