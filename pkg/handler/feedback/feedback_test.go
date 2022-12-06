@@ -1,10 +1,12 @@
 package feedback
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/gin-gonic/gin"
@@ -13,6 +15,7 @@ import (
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
+	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/utils"
@@ -199,6 +202,118 @@ func TestHandler_GetSurveyDetail(t *testing.T) {
 			require.NoError(t, err)
 
 			require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Feedback.GetSurveyDetail] response mismatched")
+		})
+	}
+}
+
+func TestHandler_Submit(t *testing.T) {
+	cfg := config.LoadTestConfig()
+	loggerMock := logger.NewLogrusLogger()
+	serviceMock := service.New(&cfg)
+	storeMock := store.New()
+	testRepoMock := store.NewPostgresStore(&cfg)
+	tests := []struct {
+		name             string
+		body             SubmitBody
+		wantCode         int
+		wantResponsePath string
+		topicID          string
+		eventID          string
+	}{
+		{
+			name:             "failed_unanswer_question",
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/submit/400_unanswer_question.json",
+			body: SubmitBody{
+				Answers: []BasicEventQuestionInput{
+					{
+						EventQuestionID: model.MustGetUUIDFromString("4adf1a24-f89e-4286-aeab-090bf5e9a030"),
+						Answer:          "ok",
+					},
+					{
+						EventQuestionID: model.MustGetUUIDFromString("805b3bdb-bb90-44eb-a1ed-1ddf8bda8bd9"),
+						Answer:          "ok",
+					},
+					{
+						EventQuestionID: model.MustGetUUIDFromString("99862c14-a9eb-40d1-8e09-0d02ee8d0b67"),
+						Answer:          "",
+					},
+				},
+				Status: model.EventReviewerStatusDone,
+			},
+			topicID: "e4a33adc-2495-43cf-b816-32feb8d5250d",
+			eventID: "8a5bfedb-6e11-4f5c-82d9-2635cfcce3e2",
+		},
+		{
+			name:             "ok_draft",
+			wantCode:         http.StatusOK,
+			wantResponsePath: "testdata/submit/200.json",
+			body: SubmitBody{
+				Answers: []BasicEventQuestionInput{
+					{
+						EventQuestionID: model.MustGetUUIDFromString("4adf1a24-f89e-4286-aeab-090bf5e9a030"),
+						Answer:          "ok",
+					},
+					{
+						EventQuestionID: model.MustGetUUIDFromString("805b3bdb-bb90-44eb-a1ed-1ddf8bda8bd9"),
+						Answer:          "ok",
+					},
+					{
+						EventQuestionID: model.MustGetUUIDFromString("99862c14-a9eb-40d1-8e09-0d02ee8d0b67"),
+						Answer:          "ok",
+					},
+				},
+				Status: model.EventReviewerStatusDraft,
+			},
+			topicID: "e4a33adc-2495-43cf-b816-32feb8d5250d",
+			eventID: "8a5bfedb-6e11-4f5c-82d9-2635cfcce3e2",
+		},
+		{
+			name:             "draft_not_found_topicID",
+			wantCode:         http.StatusNotFound,
+			wantResponsePath: "testdata/submit/404.json",
+			body: SubmitBody{
+				Answers: []BasicEventQuestionInput{
+					{
+						EventQuestionID: model.MustGetUUIDFromString("4adf1a24-f89e-4286-aeab-090bf5e9a030"),
+						Answer:          "ok",
+					},
+					{
+						EventQuestionID: model.MustGetUUIDFromString("805b3bdb-bb90-44eb-a1ed-1ddf8bda8bd9"),
+						Answer:          "ok",
+					},
+					{
+						EventQuestionID: model.MustGetUUIDFromString("99862c14-a9eb-40d1-8e09-0d02ee8d0b67"),
+						Answer:          "ok",
+					},
+				},
+				Status: model.EventReviewerStatusDraft,
+			},
+			topicID: "e4a33adc-2495-43cf-b816-32feb8d5250e",
+			eventID: "8a5bfedb-6e11-4f5c-82d9-2635cfcce3e2",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			w := httptest.NewRecorder()
+			ctx, _ := gin.CreateTestContext(w)
+			byteReq, err := json.Marshal(tt.body)
+			bodyReader := strings.NewReader(string(byteReq))
+			ctx.Params = gin.Params{gin.Param{Key: "id", Value: tt.eventID}, gin.Param{Key: "topicID", Value: tt.topicID}}
+
+			ctx.Request = httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/feedbacks/%s/topics/%s/answers", tt.eventID, tt.topicID), bodyReader)
+			ctx.Request.Header.Set("Authorization", testToken)
+
+			h := New(storeMock, testRepoMock, serviceMock, loggerMock, &cfg)
+			h.Submit(ctx)
+			require.Equal(t, tt.wantCode, w.Code)
+			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+			require.NoError(t, err)
+
+			res, err := utils.RemoveFieldInSliceResponse(w.Body.Bytes(), "lastUpdated")
+			require.NoError(t, err)
+
+			require.JSONEq(t, string(expRespRaw), string(res), "[Handler.Feedback.Draft] response mismatched")
 		})
 	}
 }

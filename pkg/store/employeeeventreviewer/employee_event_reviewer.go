@@ -17,3 +17,9 @@ func (s *store) One(db *gorm.DB, reviewerID string, topicID string) (*model.Empl
 	var employeeeventreviewer *model.EmployeeEventReviewer
 	return employeeeventreviewer, db.Where("reviewer_id = ? AND employee_event_topic_id = ? ", reviewerID, topicID).First(&employeeeventreviewer).Error
 }
+
+// UpdateSelectedFieldsByID just update selected fields by id
+func (s *store) UpdateSelectedFieldsByID(db *gorm.DB, id string, updateModel model.EmployeeEventReviewer, updatedFields ...string) (*model.EmployeeEventReviewer, error) {
+	eventReviewer := model.EmployeeEventReviewer{}
+	return &eventReviewer, db.Model(&eventReviewer).Where("id = ?", id).Select(updatedFields).Updates(updateModel).Error
+}

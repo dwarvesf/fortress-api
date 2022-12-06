@@ -22,6 +22,7 @@ INSERT INTO public.permissions (id, deleted_at, created_at, updated_at, name, co
 ('cc88051f-7eea-468e-a9ac-91757dde2581', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Feedback Read', 'feedbacks.read'),
 ('3b542878-f597-421f-b4ac-5f71b0e22ddb', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Feedback Edit', 'feedbacks.edit'),
 ('2969fd2a-ae44-414a-85ac-7a930c6de987', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Feedback Delete', 'feedbacks.delete'),
+('bfd6144d-0161-41f2-9cf5-3467d2a505fd', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Employee Event Question Edit', 'employeeEventQuestions.edit'),
 ('d5c1142a-86a6-4347-bdef-2ad41492b738', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Survey Create', 'surveys.create'),
 ('ef32d604-42ec-40f8-9c34-08431d2c20d8', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Survey Read', 'surveys.read'),
 ('f5906795-60d1-4e5f-88f2-e15f2fae2327', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Survey Edit', 'surveys.edit'),
@@ -49,6 +50,7 @@ INSERT INTO public.role_permissions (id, deleted_at, created_at, updated_at, rol
 ('659369d5-577a-444f-b4c9-fc9c3b3bae2d', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '11ccffea-2cc9-4e98-9bef-3464dfe4dec8', 'cc88051f-7eea-468e-a9ac-91757dde2581'),
 ('24783453-3676-4419-b46c-bbfff792bfda', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '11ccffea-2cc9-4e98-9bef-3464dfe4dec8', '3b542878-f597-421f-b4ac-5f71b0e22ddb'),
 ('71dffa83-cc11-4dad-a63e-4ef750941e8a', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '11ccffea-2cc9-4e98-9bef-3464dfe4dec8', '2969fd2a-ae44-414a-85ac-7a930c6de987'),
+('57b6a898-1e39-4bf5-b2ea-132d10455202', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '11ccffea-2cc9-4e98-9bef-3464dfe4dec8', 'bfd6144d-0161-41f2-9cf5-3467d2a505fd'),
 ('b10b076f-c7bc-4c1a-a591-50baf56e125b', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '11ccffea-2cc9-4e98-9bef-3464dfe4dec8', '37219e6a-34f1-4d68-8727-db90ddd6f97e'),
 ('3f8e359e-610f-430a-be64-355ae8c15161', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '11ccffea-2cc9-4e98-9bef-3464dfe4dec8', 'd5c1142a-86a6-4347-bdef-2ad41492b738'),
 ('f949284f-5c23-40c9-bdc9-5987e5301c50', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '11ccffea-2cc9-4e98-9bef-3464dfe4dec8', 'ef32d604-42ec-40f8-9c34-08431d2c20d8'),
@@ -294,7 +296,7 @@ INSERT INTO public.employee_event_topics (id, deleted_at, created_at, updated_at
 ('a3b2cd0b-b327-4118-83f2-29350e678379', NULL, '2022-11-29 08:03:33.233262', '2022-11-29 08:03:33.233262', 'Huy want to give Nguyen shoutout', '163fdda2-2dce-4618-9849-7c8475dcc9c1', '38a00d4a-bc45-41de-965a-adc674ab82c9', NULL);
 
 INSERT INTO public.employee_event_reviewers (id, deleted_at, created_at, updated_at, employee_event_topic_id, reviewer_id, status, relationship, is_shared, is_read, event_id) VALUES 
-('bc9a5715-9723-4a2f-ad42-0d0f19a80b4d', NULL, '2022-12-05 16:26:15.411511', '2022-12-05 16:26:15.411511', 'e4a33adc-2495-43cf-b816-32feb8d5250d', '2655832e-f009-4b73-a535-64c3a22e558f', 'done', 'peer', false, false, '8a5bfedb-6e11-4f5c-82d9-2635cfcce3e2'),
+('bc9a5715-9723-4a2f-ad42-0d0f19a80b4d', NULL, '2022-12-05 16:26:15.411511', '2022-12-05 16:26:15.411511', 'e4a33adc-2495-43cf-b816-32feb8d5250d', '2655832e-f009-4b73-a535-64c3a22e558f', 'draft', 'peer', false, false, '8a5bfedb-6e11-4f5c-82d9-2635cfcce3e2'),
 ('e96999f5-b3f9-420c-9d9f-aa64e3e889bf', NULL, '2022-12-05 16:26:15.411511', '2022-12-05 16:26:15.411511', 'e4a33adc-2495-43cf-b816-32feb8d5250d', 'ecea9d15-05ba-4a4e-9787-54210e3b98ce', 'draft', 'line-manager', false, false, '8a5bfedb-6e11-4f5c-82d9-2635cfcce3e2'),
 ('c994db17-384a-4331-8944-b8ac0070ac3f', NULL, '2022-12-05 16:26:15.411511', '2022-12-05 16:26:15.411511', 'e4a33adc-2495-43cf-b816-32feb8d5250d', '37e00d47-de69-4ac8-991b-cf3e39565c00', 'draft', 'peer', false, false, '8a5bfedb-6e11-4f5c-82d9-2635cfcce3e2'),
 ('789f1163-f157-4df3-9764-8100277cacba', NULL, '2022-12-05 16:26:15.411511', '2022-12-05 16:26:15.411511', '9cf93fc1-5a38-4e2a-87de-41634b65fc87', '2655832e-f009-4b73-a535-64c3a22e558f', 'draft', 'self', false, false, 'd97ee823-f7d5-418b-b281-711cb1d8e947'),

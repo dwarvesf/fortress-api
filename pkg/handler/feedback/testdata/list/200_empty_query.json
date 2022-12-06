@@ -13,7 +13,7 @@
             "eventReviewerID": "2655832e-f009-4b73-a535-64c3a22e558f",
             "type": "survey",
             "subtype": "peer-review",
-            "status": "done",
+            "status": "draft",
             "isRead": false,
             "lastUpdated": "",
             "author": {

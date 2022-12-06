@@ -61,3 +61,40 @@ func (i *GetSurveyDetailInput) Validate() error {
 
 	return nil
 }
+
+type BasicEventQuestionInput struct {
+	EventQuestionID model.UUID `json:"eventQuestionID" form:"eventQuestionID" binding:"required"`
+	Answer          string     `json:"answer" form:"answer"`
+	Note            string     `json:"note" form:"note"`
+}
+
+type SubmitBody struct {
+	Answers []BasicEventQuestionInput `json:"answers" form:"answers" binding:"required"`
+	Status  model.EventReviewerStatus `json:"status" form:"status" binding:"required"`
+}
+
+func (i *SubmitBody) Validate() error {
+	if !i.Status.IsValid() {
+		return ErrInvalidReviewerStatus
+	}
+
+	return nil
+}
+
+type SubmitInput struct {
+	Body    SubmitBody
+	EventID string
+	TopicID string
+}
+
+func (i *SubmitInput) Validate() error {
+	if i.EventID == "" || !model.IsUUIDFromString(i.EventID) {
+		return ErrInvalidEventID
+	}
+
+	if i.TopicID == "" || !model.IsUUIDFromString(i.TopicID) {
+		return ErrInvalidTopicID
+	}
+
+	return i.Body.Validate()
+}

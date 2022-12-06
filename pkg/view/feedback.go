@@ -116,6 +116,42 @@ func ToListFeedbackDetails(questions []*model.EmployeeEventQuestion, detailInfo 
 	return rs
 }
 
+type SubmitFeedback struct {
+	Answers    []*QuestionAnswer `json:"answers"`
+	Status     string            `json:"status"`
+	EmployeeID string            `json:"employeeID"`
+	ReviewerID string            `json:"reviewerID"`
+	TopicID    string            `json:"topicID"`
+	EventID    string            `json:"eventID"`
+}
+
+type SubmitFeedbackResponse struct {
+	Data SubmitFeedback `json:"data"`
+}
+
+func ToListSubmitFeedback(questions []*model.EmployeeEventQuestion, detailInfo FeedbackDetailInfo) SubmitFeedback {
+	var rs SubmitFeedback
+
+	for _, q := range questions {
+		rs.Answers = append(rs.Answers, &QuestionAnswer{
+			EventQuestionID: q.ID.String(),
+			Content:         q.Content,
+			Answer:          q.Answer,
+			Note:            q.Note,
+			Type:            q.Type,
+			Order:           q.Order,
+		})
+	}
+
+	rs.Status = detailInfo.Status.String()
+	rs.EmployeeID = detailInfo.EmployeeID
+	rs.ReviewerID = detailInfo.ReviewerID
+	rs.TopicID = detailInfo.TopicID
+	rs.EventID = detailInfo.EventID
+
+	return rs
+}
+
 type Survey struct {
 	ID        string        `json:"id"`
 	Title     string        `json:"title"`

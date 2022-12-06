@@ -66,6 +66,7 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 	{
 		feedbackGroup.GET("", pmw.WithPerm("feedbacks.read"), h.Feedback.List)
 		feedbackGroup.GET("/:id/topics/:topicID", amw.WithAuth, pmw.WithPerm("employeeEventQuestions.read"), h.Feedback.Detail)
+		feedbackGroup.PUT("/:id/topics/:topicID/answers", amw.WithAuth, pmw.WithPerm("employeeEventQuestions.edit"), h.Feedback.Submit)
 	}
 
 	surveyGroup := v1.Group("/surveys")
