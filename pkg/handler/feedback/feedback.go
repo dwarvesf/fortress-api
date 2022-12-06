@@ -9,8 +9,10 @@ import (
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
+	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/store"
+	"github.com/dwarvesf/fortress-api/pkg/store/employeeeventquestion"
 	"github.com/dwarvesf/fortress-api/pkg/store/employeeeventtopic"
 	"github.com/dwarvesf/fortress-api/pkg/utils"
 	"github.com/dwarvesf/fortress-api/pkg/view"
@@ -277,4 +279,154 @@ func (h *handler) GetSurveyDetail(c *gin.Context) {
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToListSurveyDetail(topics),
 		&view.PaginationResponse{Pagination: input.Pagination, Total: total}, nil, nil, ""))
+}
+
+// Submit godoc
+// @Summary Submit the draft or done answers
+// @Description Submit the draft or done answers
+// @Tags Feedback
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "jwt token"
+// @Param id path string true "Feedback Event ID"
+// @Param topicID path string true "Employee Event Topic ID"
+// @Param Body body SubmitBody true "Body"
+// @Success 200 {object} view.SubmitFeedbackResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /feedbacks/{id}/topics/{topicID}/answers [put]
+func (h *handler) Submit(c *gin.Context) {
+	userID, err := utils.GetUserIDFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	input := SubmitInput{
+		EventID: c.Param("id"),
+		TopicID: c.Param("topicID"),
+	}
+
+	if err := c.ShouldBindJSON(&input.Body); err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, input, ""))
+		return
+	}
+
+	if err := input.Validate(); err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, input, ""))
+		return
+	}
+
+	l := h.logger.Fields(logger.Fields{
+		"handler": "feedback",
+		"method":  "Submit",
+		"userID":  userID,
+		"input":   input,
+	})
+
+	// Begin transaction
+	tx, done := h.repo.NewTransaction()
+
+	// Check topic existence and validate eventID
+	topic, err := h.store.EmployeeEventTopic.One(tx.DB(), input.TopicID, input.EventID)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		l.Error(ErrTopicNotFound, "topic not found")
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, done(ErrTopicNotFound), input, ""))
+		return
+	}
+
+	if err != nil {
+		l.Error(err, "failed when getting topic")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
+		return
+	}
+
+	eventReviewer, err := h.store.EmployeeEventReviewer.One(tx.DB(), userID, input.TopicID)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		l.Error(ErrEventReviewerNotFound, "employee event reviewer not found")
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, done(ErrEventReviewerNotFound), input, ""))
+		return
+	}
+
+	if err != nil {
+		l.Error(err, "failed to get employee event reviewer record")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), nil, ""))
+		return
+	}
+
+	if eventReviewer.Status == model.EventReviewerStatusDone {
+		l.Error(ErrCouldNotEditDoneFeedback, "could not edit the feedback marked as done")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(ErrCouldNotEditDoneFeedback), nil, ""))
+		return
+	}
+
+	// check questionID existence
+	eventQuestions, err := h.store.EmployeeEventQuestion.GetByEventReviewerID(tx.DB(), eventReviewer.ID.String())
+	if err != nil {
+		l.Error(err, "failed to validate questionID")
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, done(err), input, ""))
+		return
+	}
+
+	questionMap := model.ToQuestionMap(eventQuestions)
+	for _, e := range input.Body.Answers {
+		_, ok := questionMap[e.EventQuestionID]
+		if !ok {
+			l.Error(errEventQuestionNotFound(e.EventQuestionID.String()), "employee event question not found")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, done(errEventQuestionNotFound(e.EventQuestionID.String())), input, ""))
+			return
+		}
+	}
+
+	// Update answers in employee_event_questions table
+	for _, e := range input.Body.Answers {
+		data := employeeeventquestion.BasicEventQuestion{
+			EventQuestionID: e.EventQuestionID.String(),
+			Answer:          e.Answer,
+			Note:            e.Note,
+		}
+
+		if err := h.store.EmployeeEventQuestion.UpdateAnswers(tx.DB(), data); err != nil {
+			l.Error(err, "failed to update employee event question")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), nil, ""))
+			return
+		}
+	}
+
+	// Update status in employee_event_reviewers table
+	eventReviewer.Status = input.Body.Status
+	_, err = h.store.EmployeeEventReviewer.UpdateSelectedFieldsByID(tx.DB(), eventReviewer.ID.String(), *eventReviewer, "status")
+	if err != nil {
+		l.Error(err, "failed to update employee event question")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), nil, ""))
+		return
+	}
+
+	eventQuestions, err = h.store.EmployeeEventQuestion.GetByEventReviewerID(tx.DB(), eventReviewer.ID.String())
+	if err != nil {
+		l.Error(err, "failed to get all empoyee event questions by event reviewer")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
+		return
+	}
+
+	if input.Body.Status == model.EventReviewerStatusDone {
+		for _, e := range eventQuestions {
+			if e.Answer == "" {
+				l.Error(ErrUnansweredquestions, "there are some unanswered questions")
+				c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, done(ErrUnansweredquestions), input, ""))
+				return
+			}
+		}
+	}
+
+	detailInfo := view.FeedbackDetailInfo{
+		Status:     eventReviewer.Status,
+		EmployeeID: topic.EmployeeID.String(),
+		ReviewerID: userID,
+		TopicID:    input.TopicID,
+		EventID:    input.EventID,
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToListSubmitFeedback(eventQuestions, detailInfo), nil, nil, done(nil), ""))
 }

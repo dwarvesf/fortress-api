@@ -4,7 +4,7 @@
             {
                 "eventQuestionID": "4adf1a24-f89e-4286-aeab-090bf5e9a030",
                 "content": "Does this employee effectively communicate with othes?",
-                "answer": "good",
+                "answer": "ok",
                 "note": "",
                 "type": "general",
                 "order": 1
@@ -12,7 +12,7 @@
             {
                 "eventQuestionID": "805b3bdb-bb90-44eb-a1ed-1ddf8bda8bd9",
                 "content": "How effective of a leader is this person, either through direct management or influence?",
-                "answer": "good",
+                "answer": "ok",
                 "note": "",
                 "type": "general",
                 "order": 2
@@ -20,7 +20,7 @@
             {
                 "eventQuestionID": "99862c14-a9eb-40d1-8e09-0d02ee8d0b67",
                 "content": "Does this person find creative solutions, and own the solution to problems? Are they proactive or reactive?",
-                "answer": "good",
+                "answer": "ok",
                 "note": "",
                 "type": "general",
                 "order": 3
