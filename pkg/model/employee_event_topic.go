@@ -32,4 +32,9 @@ type EmployeeEventTopic struct {
 	EventID    UUID
 	EmployeeID UUID
 	ProjectID  UUID
+
+	Event                  FeedbackEvent
+	Employee               *Employee
+	Project                *Project
+	EmployeeEventReviewers []EmployeeEventReviewer
 }

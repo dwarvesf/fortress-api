@@ -1329,7 +1329,7 @@ func (h *handler) GetWorkUnits(c *gin.Context) {
 	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler":   "project",
-		"method":    "UpdateContactInfo",
+		"method":    "GetWorkUnits",
 		"projectID": input.ProjectID,
 		"query":     input.Query,
 	})

@@ -6,6 +6,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/store/country"
 	"github.com/dwarvesf/fortress-api/pkg/store/employee"
 	"github.com/dwarvesf/fortress-api/pkg/store/employeechapter"
+	"github.com/dwarvesf/fortress-api/pkg/store/employeeeventtopic"
 	"github.com/dwarvesf/fortress-api/pkg/store/employeeposition"
 	"github.com/dwarvesf/fortress-api/pkg/store/employeerole"
 	"github.com/dwarvesf/fortress-api/pkg/store/employeestack"
@@ -50,6 +51,7 @@ type Store struct {
 	WorkUnit              workunit.IStore
 	WorkUnitMember        workunitmember.IStore
 	WorkUnitStack         workunitstack.IStore
+	EmployeeEventTopic    employeeeventtopic.IStore
 }
 
 func New() *Store {
@@ -77,5 +79,6 @@ func New() *Store {
 		WorkUnit:              workunit.New(),
 		WorkUnitMember:        workunitmember.New(),
 		WorkUnitStack:         workunitstack.New(),
+		EmployeeEventTopic:    employeeeventtopic.New(),
 	}
 }

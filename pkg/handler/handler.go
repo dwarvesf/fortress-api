@@ -4,6 +4,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/handler/auth"
 	"github.com/dwarvesf/fortress-api/pkg/handler/employee"
+	"github.com/dwarvesf/fortress-api/pkg/handler/feedback"
 	"github.com/dwarvesf/fortress-api/pkg/handler/healthz"
 	"github.com/dwarvesf/fortress-api/pkg/handler/metadata"
 	"github.com/dwarvesf/fortress-api/pkg/handler/profile"
@@ -20,6 +21,7 @@ type Handler struct {
 	Auth        auth.IHandler
 	Project     project.IHandler
 	Profile     profile.IHandler
+	Feedback    feedback.IHandler
 }
 
 func New(store *store.Store, repo store.DBRepo, service *service.Service, logger logger.Logger, cfg *config.Config) *Handler {
@@ -30,5 +32,6 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 		Auth:        auth.New(store, repo, service, logger),
 		Project:     project.New(store, repo, service, logger),
 		Profile:     profile.New(store, repo, service, logger, cfg),
+		Feedback:    feedback.New(store, repo, service, logger, cfg),
 	}
 }

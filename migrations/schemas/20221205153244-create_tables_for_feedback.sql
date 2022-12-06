@@ -20,68 +20,68 @@ CREATE TYPE "relationships" AS ENUM (
 );
 
 CREATE TABLE IF NOT EXISTS "feedback_events" (
-    "id" uuid PRIMARY KEY DEFAULT uuid(),
-    "deleted_at" TIMESTAMP(6),
-    "created_at" TIMESTAMP(6) DEFAULT NOW(),
-    "updated_at" TIMESTAMP(6) DEFAULT NOW(),
+  "id" uuid PRIMARY KEY DEFAULT uuid(),
+  "deleted_at" TIMESTAMP(6),
+  "created_at" TIMESTAMP(6) DEFAULT NOW(),
+  "updated_at" TIMESTAMP(6) DEFAULT NOW(),
 
-    "title" TEXT,
-    "type" event_types,
-    "subtype" event_subtypes,
-    "status" TEXT,
-    "created_by" uuid NOT NULL,
-    "start_date" TIMESTAMP(6),
-    "end_date" TIMESTAMP(6)
-    );
+  "title" TEXT,
+  "type" event_types,
+  "subtype" event_subtypes,
+  "status" TEXT,
+  "created_by" uuid NOT NULL,
+  "start_date" TIMESTAMP(6),
+  "end_date" TIMESTAMP(6)
+);
 
 CREATE TABLE IF NOT EXISTS "employee_event_topics" (
-    "id" uuid PRIMARY KEY DEFAULT uuid(),
-    "deleted_at" TIMESTAMP(6),
-    "created_at" TIMESTAMP(6) DEFAULT NOW(),
-    "updated_at" TIMESTAMP(6) DEFAULT NOW(),
+  "id" uuid PRIMARY KEY DEFAULT uuid(),
+  "deleted_at" TIMESTAMP(6),
+  "created_at" TIMESTAMP(6) DEFAULT NOW(),
+  "updated_at" TIMESTAMP(6) DEFAULT NOW(),
 
-    "title" TEXT,
-    "event_id" uuid NOT NULL,
-    "employee_id" uuid NOT NULL,
-    "project_id" uuid NULL
-    );
+  "title" TEXT,
+  "event_id" uuid NOT NULL,
+  "employee_id" uuid NOT NULL,
+  "project_id" uuid NULL
+);
 
 CREATE TABLE IF NOT EXISTS "employee_event_reviewers" (
-    "id" uuid PRIMARY KEY DEFAULT uuid(),
-    "deleted_at" TIMESTAMP(6),
-    "created_at" TIMESTAMP(6) DEFAULT NOW(),
-    "updated_at" TIMESTAMP(6) DEFAULT NOW(),
+  "id" uuid PRIMARY KEY DEFAULT uuid(),
+  "deleted_at" TIMESTAMP(6),
+  "created_at" TIMESTAMP(6) DEFAULT NOW(),
+  "updated_at" TIMESTAMP(6) DEFAULT NOW(),
 
-    "employee_event_topic_id" uuid NOT NULL,
-    "reviewer_id" uuid NOT NULL,
-    "status" TEXT,
-    "relationship" relationships,
-    "is_shared" BOOL DEFAULT FALSE,
-    "is_read" BOOL DEFAULT FALSE
-    );
+  "employee_event_topic_id" uuid NOT NULL,
+  "reviewer_id" uuid NOT NULL,
+  "status" TEXT,
+  "relationship" relationships,
+  "is_shared" BOOL DEFAULT FALSE,
+  "is_read" BOOL DEFAULT FALSE
+);
 
 CREATE TABLE IF NOT EXISTS "employee_event_questions" (
-    "id" uuid PRIMARY KEY DEFAULT uuid(),
-    "deleted_at" TIMESTAMP(6),
-    "created_at" TIMESTAMP(6) DEFAULT NOW(),
-    "updated_at" TIMESTAMP(6) DEFAULT NOW(),
+  "id" uuid PRIMARY KEY DEFAULT uuid(),
+  "deleted_at" TIMESTAMP(6),
+  "created_at" TIMESTAMP(6) DEFAULT NOW(),
+  "updated_at" TIMESTAMP(6) DEFAULT NOW(),
 
-    "employee_event_reviewer_id" uuid NOT NULL,
-    "content" TEXT,
-    "answers" TEXT,
-    "note" TEXT
-    );
+  "employee_event_reviewer_id" uuid NOT NULL,
+  "content" TEXT,
+  "answers" TEXT,
+  "note" TEXT
+);
 
 CREATE TABLE IF NOT EXISTS "questions" (
-    "id" uuid PRIMARY KEY DEFAULT uuid(),
-    "deleted_at" TIMESTAMP(6),
-    "created_at" TIMESTAMP(6) DEFAULT NOW(),
-    "updated_at" TIMESTAMP(6) DEFAULT NOW(),
+  "id" uuid PRIMARY KEY DEFAULT uuid(),
+  "deleted_at" TIMESTAMP(6),
+  "created_at" TIMESTAMP(6) DEFAULT NOW(),
+  "updated_at" TIMESTAMP(6) DEFAULT NOW(),
 
-    "type" TEXT,
-    "subtype" TEXT,
-    "content" TEXT
-    );
+  "type" TEXT,
+  "subtype" TEXT,
+  "content" TEXT
+);
 
 ALTER TABLE "employee_event_topics" ADD CONSTRAINT employee_event_topics_event_id_fkey  FOREIGN KEY ("event_id") REFERENCES "feedback_events" ("id");
 

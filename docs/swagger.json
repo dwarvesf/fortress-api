@@ -615,6 +615,56 @@
                 }
             }
         },
+        "/feedbacks": {
+            "get": {
+                "description": "Get list feedbacks",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Feedback"
+                ],
+                "summary": "Get list feedbacks",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Status",
+                        "name": "status",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.ListFeedbackResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/metadata/account-roles": {
             "get": {
                 "description": "Get list values for account roles",
@@ -3282,6 +3332,9 @@
                 "avatar": {
                     "type": "string"
                 },
+                "displayName": {
+                    "type": "string"
+                },
                 "fullName": {
                     "type": "string"
                 },
@@ -3602,6 +3655,55 @@
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/view.ApiError"
+                    }
+                }
+            }
+        },
+        "view.Feedback": {
+            "type": "object",
+            "properties": {
+                "author": {
+                    "$ref": "#/definitions/view.BasisEmployeeInfo"
+                },
+                "employeeID": {
+                    "type": "string"
+                },
+                "eventID": {
+                    "type": "string"
+                },
+                "lastUpdated": {
+                    "type": "string"
+                },
+                "projectID": {
+                    "type": "string"
+                },
+                "reviewerID": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "subtype": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "topicID": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "view.ListFeedbackResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.Feedback"
                     }
                 }
             }

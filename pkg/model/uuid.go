@@ -35,6 +35,9 @@ func (u *UUID) IsZero() bool {
 }
 
 func (u UUID) String() string {
+	if u.IsZero() {
+		return ""
+	}
 	return uuid.UUID(u).String()
 }
 

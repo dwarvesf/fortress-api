@@ -5,6 +5,7 @@ type EmployeeEventQuestion struct {
 	BaseModel
 
 	EmployeeEventReviewerID UUID
+	QuestionID              UUID
 	Content                 string
 	Answer                  string
 	Note                    string
