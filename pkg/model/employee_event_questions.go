@@ -9,4 +9,6 @@ type EmployeeEventQuestion struct {
 	Content                 string
 	Answer                  string
 	Note                    string
+	Type                    string
+	Order                   int64
 }

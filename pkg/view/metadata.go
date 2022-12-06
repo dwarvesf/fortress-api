@@ -35,3 +35,34 @@ type CountriesResponse struct {
 type CitiesResponse struct {
 	Data []string `json:"data"`
 }
+
+// Question model question for get list question api
+type Question struct {
+	ID          string `json:"id"`
+	Type        string `json:"type"`
+	Category    string `json:"category"`
+	Subcategory string `json:"subcategory"`
+	Content     string `json:"content"`
+	Order       int64  `json:"order"`
+}
+
+// GetQuestionResponse response for get question api
+type GetQuestionResponse struct {
+	Data []Question `json:"data"`
+}
+
+func ToListQuestion(questions []*model.Question) []*Question {
+	var rs []*Question
+	for _, q := range questions {
+		rs = append(rs, &Question{
+			ID:          q.ID.String(),
+			Category:    q.Category.String(),
+			Subcategory: q.Subcategory.String(),
+			Content:     q.Content,
+			Type:        q.Type.String(),
+			Order:       q.Order,
+		})
+	}
+
+	return rs
+}
