@@ -2,8 +2,9 @@ package metadata
 
 import (
 	"errors"
-	"github.com/dwarvesf/fortress-api/pkg/model"
 	"net/http"
+
+	"github.com/dwarvesf/fortress-api/pkg/model"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq"
@@ -308,4 +309,46 @@ func (h *handler) Stacks(c *gin.Context) {
 
 	// 2 return array of account statuses
 	c.JSON(http.StatusOK, view.CreateResponse[any](stacks, nil, nil, nil, ""))
+}
+
+// GetQuestions godoc
+// @Summary Get list question by category and subcategory
+// @Description Get list question by category and subcategory
+// @Tags Metadata
+// @Accept  json
+// @Produce  json
+// @Param category query model.EventType true "Category"
+// @Param subcategory query model.EventSubtype true "Subcategory"
+// @Success 200 {object} view.GetQuestionResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /metadata/questions [get]
+func (h *handler) GetQuestions(c *gin.Context) {
+	var input GetQuestionsInput
+
+	if err := c.ShouldBindQuery(&input); err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, input, ""))
+		return
+	}
+
+	if err := input.Validate(); err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, input, ""))
+		return
+	}
+
+	// TODO: can we move this to middleware ?
+	l := h.logger.Fields(logger.Fields{
+		"handler": "metadata",
+		"method":  "GetQuestions",
+		"input":   input,
+	})
+
+	rs, err := h.store.Question.AllByCategory(h.repo.DB(), input.Category, input.Subcategory)
+	if err != nil {
+		l.Error(err, "failed to get question from db")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToListQuestion(rs), nil, nil, nil, ""))
 }

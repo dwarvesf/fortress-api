@@ -294,3 +294,50 @@ func TestHandler_GetTechStacks(t *testing.T) {
 		})
 	}
 }
+
+func TestHandler_GetQuestion(t *testing.T) {
+	// load env and test data
+	cfg := config.LoadTestConfig()
+	loggerMock := logger.NewLogrusLogger()
+	serviceMock := service.New(&cfg)
+	storeMock := store.New()
+	testRepoMock := store.NewPostgresStore(&cfg)
+
+	tests := []struct {
+		name             string
+		wantCode         int
+		wantResponsePath string
+		query            string
+	}{
+		{
+			name:             "ok_get_questions",
+			wantCode:         200,
+			wantResponsePath: "testdata/get_questions/200.json",
+			query:            "category=feedback&subcategory=peer-review",
+		},
+		{
+			name:             "invalid_subtype",
+			wantCode:         400,
+			wantResponsePath: "testdata/get_questions/400.json",
+			query:            "category=feedback&subcategory=peer-revie",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			w := httptest.NewRecorder()
+
+			ctx, _ := gin.CreateTestContext(w)
+			ctx.Request = httptest.NewRequest("GET", "/api/v1/metadata/questions", nil)
+			ctx.Request.URL.RawQuery = tt.query
+			h := New(storeMock, testRepoMock, serviceMock, loggerMock)
+
+			h.GetQuestions(ctx)
+
+			require.Equal(t, tt.wantCode, w.Code)
+			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+			require.NoError(t, err)
+
+			require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.GetQuestions] response mismatched")
+		})
+	}
+}

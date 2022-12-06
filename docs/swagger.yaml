@@ -992,6 +992,8 @@ definitions:
         type: string
       eventID:
         type: string
+      isRead:
+        type: boolean
       lastUpdated:
         type: string
       projectID:
@@ -1008,6 +1010,13 @@ definitions:
         type: string
       type:
         type: string
+    type: object
+  view.GetQuestionResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/view.Question'
+        type: array
     type: object
   view.ListFeedbackResponse:
     properties:
@@ -1191,6 +1200,21 @@ definitions:
         items:
           $ref: '#/definitions/view.ProjectMember'
         type: array
+    type: object
+  view.Question:
+    properties:
+      category:
+        type: string
+      content:
+        type: string
+      id:
+        type: string
+      order:
+        type: integer
+      subcategory:
+        type: string
+      type:
+        type: string
     type: object
   view.Role:
     properties:
@@ -1559,7 +1583,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/pkg_handler_employee.CreateEmployeeInput'
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.CreateEmployeeInput'
       - description: jwt token
         in: header
         name: Authorization
@@ -1691,7 +1715,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/pkg_handler_employee.UpdateGeneralInfoInput'
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateGeneralInfoInput'
       produces:
       - application/json
       responses:
@@ -1735,7 +1759,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/pkg_handler_employee.UpdatePersonalInfoInput'
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdatePersonalInfoInput'
       produces:
       - application/json
       responses:
@@ -1774,7 +1798,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/pkg_handler_employee.UpdateSkillsInput'
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateSkillsInput'
       - description: jwt token
         in: header
         name: Authorization
@@ -2011,6 +2035,29 @@ paths:
           schema:
             $ref: '#/definitions/view.ErrorResponse'
       summary: Get list values for project statuses
+      tags:
+      - Metadata
+  /metadata/questions:
+    get:
+      consumes:
+      - application/json
+      description: Get list question by category and subcategory
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.GetQuestionResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get list question by category and subcategory
       tags:
       - Metadata
   /metadata/seniorities:

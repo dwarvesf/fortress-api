@@ -42,6 +42,7 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 	v1.GET("/metadata/countries", h.Metadata.GetCountries)
 	v1.GET("/metadata/countries/:country_id/cities", h.Metadata.GetCities)
 	v1.GET("/metadata/project-statuses", h.Metadata.ProjectStatuses)
+	v1.GET("/metadata/questions", h.Metadata.GetQuestions)
 
 	// projects
 	v1.POST("/projects", amw.WithAuth, pmw.WithPerm("projects.create"), h.Project.Create)

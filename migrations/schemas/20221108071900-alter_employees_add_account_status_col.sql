@@ -7,5 +7,3 @@ ALTER TABLE employees ADD IF NOT EXISTS account_status account_status;
 ALTER TABLE employees DROP COLUMN IF EXISTS account_status;
 
 DROP TYPE IF EXISTS account_status;
-
-

@@ -19,6 +19,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/store/projectslot"
 	"github.com/dwarvesf/fortress-api/pkg/store/projectslotposition"
 	"github.com/dwarvesf/fortress-api/pkg/store/projectstack"
+	"github.com/dwarvesf/fortress-api/pkg/store/question"
 	"github.com/dwarvesf/fortress-api/pkg/store/role"
 	"github.com/dwarvesf/fortress-api/pkg/store/seniority"
 	"github.com/dwarvesf/fortress-api/pkg/store/stack"
@@ -52,6 +53,7 @@ type Store struct {
 	WorkUnitMember        workunitmember.IStore
 	WorkUnitStack         workunitstack.IStore
 	EmployeeEventTopic    employeeeventtopic.IStore
+	Question              question.IStore
 }
 
 func New() *Store {
@@ -80,5 +82,6 @@ func New() *Store {
 		WorkUnitMember:        workunitmember.New(),
 		WorkUnitStack:         workunitstack.New(),
 		EmployeeEventTopic:    employeeeventtopic.New(),
+		Question:              question.New(),
 	}
 }
