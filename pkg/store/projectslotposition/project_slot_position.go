@@ -17,8 +17,8 @@ func (s *store) GetByProjectSlotID(db *gorm.DB, memberID string) ([]*model.Proje
 	return pos, db.Where("project_slot_id = ?", memberID).Preload("Position").Find(&pos).Error
 }
 
-func (s *store) Create(db *gorm.DB, pos *model.ProjectSlotPosition) error {
-	return db.Create(&pos).Preload("Position").First(&pos).Error
+func (s *store) Create(db *gorm.DB, pos ...model.ProjectSlotPosition) error {
+	return db.Create(&pos).Error
 }
 
 func (s *store) DeleteByProjectSlotID(db *gorm.DB, slotID string) error {

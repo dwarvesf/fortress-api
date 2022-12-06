@@ -129,7 +129,6 @@ type ProjectSlot struct {
 	Status         ProjectMemberStatus
 	Rate           decimal.Decimal
 	Discount       decimal.Decimal
-	IsLead         bool `gorm:"-"`
 
 	Seniority            Seniority
 	Project              Project
@@ -151,6 +150,8 @@ type ProjectMember struct {
 	DeploymentType DeploymentType
 	UpsellPersonID UUID
 	SeniorityID    UUID
+
+	IsLead bool `gorm:"-"`
 
 	Employee               Employee
 	Project                Project

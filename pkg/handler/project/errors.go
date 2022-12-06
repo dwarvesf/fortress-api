@@ -37,6 +37,7 @@ var (
 	ErrMemberIsInactive                 = errors.New("member is inactive")
 	ErrSlotIsInactive                   = errors.New("slot is inactive")
 	ErrEmployeeIDCannotBeChanged        = errors.New("employeeID cannot be changed")
+	ErrSlotIDCannotBeChanged            = errors.New("slotID cannot be changed")
 	ErrPositionsIsEmpty                 = errors.New("positions is empty")
 	ErrCouldNotDeleteInactiveMember     = errors.New("could not delete inactive member")
 	ErrFailToCreateProjectHead          = errors.New("fail to create project head")
@@ -52,6 +53,7 @@ var (
 	ErrFailedToSoftDeleteWorkUnitMember = errors.New("failed to soft delete work unit member")
 	ErrFailedToGetProjectMember         = errors.New("failed to get project member in database")
 	ErrFailedToCreateWorkUnitMember     = errors.New("failed to create work unit member")
+	ErrSlotAlreadyContainsAnotherMember = errors.New("slot already contains another member")
 )
 
 // errPositionNotFound returns unauthorized custom error

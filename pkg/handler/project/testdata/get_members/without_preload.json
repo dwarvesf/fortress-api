@@ -29,7 +29,7 @@
             "displayName": "Huy Nguyen",
             "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/2830497479497502617.png",
             "status": "active",
-            "isLead": true,
+            "isLead": false,
             "deploymentType": "shadow",
             "joinedDate": "2022-11-01T00:00:00Z",
             "leftDate": null,

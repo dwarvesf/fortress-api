@@ -244,7 +244,7 @@ func ToCreateMemberData(slot *model.ProjectSlot) CreateMemberData {
 		DeploymentType: slot.DeploymentType.String(),
 		Status:         slot.Status.String(),
 		Positions:      ToProjectSlotPositions(slot.ProjectSlotPositions),
-		IsLead:         slot.IsLead,
+		IsLead:         slot.ProjectMember.IsLead,
 		Seniority:      slot.Seniority,
 	}
 
