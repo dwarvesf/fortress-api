@@ -2,18 +2,15 @@ APP_NAME=fortress-api
 DEFAULT_PORT=8200
 POSTGRES_TEST_CONTAINER?=fortress_local_test
 POSTGRES_CONTAINER?=fortress_local
+TOOLS_IMAGE=fortress-tools
+APP_ENVIRONMENT=docker run --rm -v ${PWD}:/${APP_NAME} -w /${APP_NAME} --net=host ${TOOLS_IMAGE}
 
 .PHONY: setup init build dev test migrate-up migrate-down
 
 setup:
-	go install github.com/rubenv/sql-migrate/...@latest
-	go install github.com/golang/mock/mockgen@v1.6.0
-	go install github.com/vektra/mockery/v2@latest
-	go install github.com/swaggo/swag/cmd/swag@v1.8.3
-	go install github.com/cosmtrek/air@latest
+	docker build -f ./Dockerfile.tools -t ${TOOLS_IMAGE} .
 
 init: setup
-	go install github.com/rubenv/sql-migrate/...@latest
 	make remove-infras
 	docker-compose up -d
 	@echo "Waiting for database connection..."
@@ -26,6 +23,7 @@ init: setup
 	make migrate-up
 	make migrate-test
 	make seed
+	make seed-test
 
 seed:
 	@docker exec -t $(POSTGRES_CONTAINER) sh -c "mkdir -p /seed"
@@ -49,22 +47,19 @@ dev:
 	go run ./cmd/server/main.go
 
 test:
-	sql-migrate down -env=test -limit=0
-	sql-migrate up -env=test
-	make seed-test
 	@PROJECT_PATH=$(shell pwd) go test -cover ./... -count=1 -p=1 
 
 migrate-test:
-	sql-migrate up -env=test
+	${APP_ENVIRONMENT} sql-migrate up -env=test
 
 migrate-new:
-	sql-migrate new -env=local ${name}
+	${APP_ENVIRONMENT} sql-migrate new -env=local ${name}
 
 migrate-up:
-	sql-migrate up -env=local
+	${APP_ENVIRONMENT} sql-migrate up -env=local
 
 migrate-down:
-	sql-migrate down -env=local
+	${APP_ENVIRONMENT} sql-migrate down -env=local
 
 docker-build:
 	docker build \
@@ -81,5 +76,4 @@ gen-mock:
 	echo "add later"
 
 gen-swagger:
-	swag init  --parseDependency -g ./cmd/server/main.go
-
+	${APP_ENVIRONMENT} swag init --parseDependency -g ./cmd/server/main.go
