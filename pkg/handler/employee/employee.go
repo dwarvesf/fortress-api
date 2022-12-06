@@ -629,7 +629,17 @@ func (h *handler) UpdateSkills(c *gin.Context) {
 	}
 
 	for _, lChapter := range leadingChapters {
-		if err := h.store.Chapter.UpdateChapterLead(tx.DB(), lChapter.ID.String(), ""); err != nil {
+		if err := h.store.Chapter.UpdateChapterLead(tx.DB(), lChapter.ID.String(), nil); err != nil {
+			l.Error(err, "failed to remove chapter lead")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
+			return
+		}
+	}
+
+	// Create new chapter
+	leader := model.MustGetUUIDFromString(employeeID)
+	for _, lChapter := range body.LeadingChapters {
+		if err := h.store.Chapter.UpdateChapterLead(tx.DB(), lChapter.String(), &leader); err != nil {
 			l.Error(err, "failed to remove chapter lead")
 			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
 			return

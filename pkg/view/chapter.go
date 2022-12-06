@@ -8,7 +8,7 @@ type Chapter struct {
 	ID     string `json:"id"`
 	Code   string `json:"code"`
 	Name   string `json:"name"`
-	LeadID string `json:"LeadID"`
+	LeadID string `json:"leadID"`
 }
 
 func ToChapters(employeeChapters []model.EmployeeChapter) []Chapter {

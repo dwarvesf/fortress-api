@@ -30,8 +30,8 @@ func (s *store) IsExist(db *gorm.DB, id string) (bool, error) {
 	return result.Result, query.Scan(&result).Error
 }
 
-func (s *store) UpdateChapterLead(db *gorm.DB, id string, lead string) error {
-	return db.Model(&model.Chapter{}).Where("id = ?", id).Update("lead_id", lead).Error
+func (s *store) UpdateChapterLead(db *gorm.DB, id string, lead *model.UUID) error {
+	return db.Table("chapters").Where("id = ?", id).Update("lead_id", lead).Error
 }
 
 // GetAllByLeadID get all chapters by lead_id
