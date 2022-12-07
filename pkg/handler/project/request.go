@@ -379,7 +379,7 @@ func (i GetListWorkUnitInput) Validate() error {
 }
 
 func (i GetListWorkUnitQuery) Validate() error {
-	if !i.Status.IsValid() {
+	if i.Status != "" && !i.Status.IsValid() {
 		return ErrInvalidWorkUnitStatus
 	}
 
