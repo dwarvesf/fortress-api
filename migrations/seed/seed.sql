@@ -22,6 +22,10 @@ INSERT INTO public.permissions (id, deleted_at, created_at, updated_at, name, co
 ('cc88051f-7eea-468e-a9ac-91757dde2581', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Feedback Read', 'feedbacks.read'),
 ('3b542878-f597-421f-b4ac-5f71b0e22ddb', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Feedback Edit', 'feedbacks.edit'),
 ('2969fd2a-ae44-414a-85ac-7a930c6de987', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Feedback Delete', 'feedbacks.delete'),
+('d5c1142a-86a6-4347-bdef-2ad41492b738', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Survey Create', 'surveys.create'),
+('ef32d604-42ec-40f8-9c34-08431d2c20d8', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Survey Read', 'surveys.read'),
+('f5906795-60d1-4e5f-88f2-e15f2fae2327', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Survey Edit', 'surveys.edit'),
+('dfc32d81-abfa-49ce-a8f6-cdc83c8da78b', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Survey Delete', 'surveys.delete'),
 ('37219e6a-34f1-4d68-8727-db90ddd6f97e', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Employee Event Question Read', 'employeeEventQuestions.read');
 
 INSERT INTO public.role_permissions (id, deleted_at, created_at, updated_at, role_id, permission_id) VALUES
@@ -44,7 +48,11 @@ INSERT INTO public.role_permissions (id, deleted_at, created_at, updated_at, rol
 ('8419b6c4-c09a-4dc9-ad0a-73dad343b1f0', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '11ccffea-2cc9-4e98-9bef-3464dfe4dec8', '615cf3a6-89cb-4200-81b4-47542ae8b145'),
 ('659369d5-577a-444f-b4c9-fc9c3b3bae2d', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '11ccffea-2cc9-4e98-9bef-3464dfe4dec8', 'cc88051f-7eea-468e-a9ac-91757dde2581'),
 ('24783453-3676-4419-b46c-bbfff792bfda', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '11ccffea-2cc9-4e98-9bef-3464dfe4dec8', '3b542878-f597-421f-b4ac-5f71b0e22ddb'),
-('71dffa83-cc11-4dad-a63e-4ef750941e8a', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '11ccffea-2cc9-4e98-9bef-3464dfe4dec8', '2969fd2a-ae44-414a-85ac-7a930c6de987');
+('71dffa83-cc11-4dad-a63e-4ef750941e8a', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '11ccffea-2cc9-4e98-9bef-3464dfe4dec8', '2969fd2a-ae44-414a-85ac-7a930c6de987'),
+('3f8e359e-610f-430a-be64-355ae8c15161', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '11ccffea-2cc9-4e98-9bef-3464dfe4dec8', 'd5c1142a-86a6-4347-bdef-2ad41492b738'),
+('f949284f-5c23-40c9-bdc9-5987e5301c50', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '11ccffea-2cc9-4e98-9bef-3464dfe4dec8', 'ef32d604-42ec-40f8-9c34-08431d2c20d8'),
+('263e57fc-f171-4a6f-a285-2b7d538ecec6', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '11ccffea-2cc9-4e98-9bef-3464dfe4dec8', 'f5906795-60d1-4e5f-88f2-e15f2fae2327'),
+('d1b42bd7-32f1-4f14-8dcc-009375ae196f', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '11ccffea-2cc9-4e98-9bef-3464dfe4dec8', 'dfc32d81-abfa-49ce-a8f6-cdc83c8da78b');
 ('b10b076f-c7bc-4c1a-a591-50baf56e125b', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '11ccffea-2cc9-4e98-9bef-3464dfe4dec8', '37219e6a-34f1-4d68-8727-db90ddd6f97e');
 
 INSERT INTO public.positions (id, deleted_at, created_at, updated_at, name, code) VALUES
@@ -65,7 +73,6 @@ INSERT INTO public.seniorities (id, deleted_at, created_at, updated_at, name, co
 ('01fb6322-d727-47e3-a242-5039ea4732fc', NULL, '2022-11-07 09:50:25.714604', '2022-11-07 09:50:25.714604', 'Senior', 'senior'),
 ('01fb6322-d727-47e3-a242-5039ea4732fd', NULL, '2022-11-07 09:50:25.714604', '2022-11-07 09:50:25.714604', 'Staff', 'staff'),
 ('39735742-829b-47f3-8f9d-daf0983914e5', NULL, '2022-11-07 09:50:25.714604', '2022-11-07 09:50:25.714604', 'Principal', 'principal');
-
 
 INSERT INTO public.employees (id,deleted_at,created_at,updated_at,full_name,display_name,gender,team_email,personal_email,avatar,phone_number,address,mbti,horoscope,passport_photo_front,passport_photo_back,identity_card_photo_front,identity_card_photo_back,date_of_birth,"working_status",joined_date,left_date,basecamp_id,basecamp_attachable_sgid,gitlab_id,github_id,discord_id,wise_recipient_email,wise_recipient_name,wise_recipient_id,wise_account_number,wise_currency,local_bank_branch,local_bank_number,local_bank_currency,local_branch_name,local_bank_recipient_name,position_id,seniority_id,notion_id,line_manager_id) VALUES
 ('f7c6016b-85b5-47f7-8027-23c2db482197', NULL, '2022-11-17 11:06:03.275039', '2022-11-17 11:06:03.275039', 'Nguyen Van Duc','Duc Nguyen','Male','ducnv@dwarvesv.com','nguyenduc123@gmail.com','https://s3-ap-southeast-1.amazonaws.com/fortress-images/7227222220023148542.png','0123456789','Hoa Khanh Bac - Da Nang - Viet Nam','INFP-A','Libra',NULL,NULL,NULL,NULL,'2000-02-02','probation','2022-05-25',NULL,NULL,NULL,'ducnv','ducnv','236885900779454465',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'d796884d-a8c4-4525-81e7-54a3b6099eac','26581472','2655832e-f009-4b73-a535-64c3a22e558f'),
@@ -273,12 +280,12 @@ INSERT INTO public.work_unit_members (id, deleted_at, created_at, updated_at, jo
 ('e14f68f8-7ed5-4a59-9df8-275573537861', NULL, '2022-11-29 08:03:33.233262', '2022-11-29 08:03:33.233262', '2022-11-29', NULL, 'inactive', '8dc3be2e-19a4-4942-8a79-56db391a0b15', '608ea227-45a5-4c8a-af43-6c7280d96340', '4797347d-21e0-4dac-a6c7-c98bf2d6b27c'),
 ('799708d7-855b-4a42-b169-7c9891f0b218', NULL, '2022-11-29 08:03:33.233262', '2022-11-29 08:03:33.233262', '2022-11-29', NULL, 'inactive', '8dc3be2e-19a4-4942-8a79-56db391a0b15', 'ecea9d15-05ba-4a4e-9787-54210e3b98ce', '4797347d-21e0-4dac-a6c7-c98bf2d6b27c');
 
-INSERT INTO public.feedback_events (id, deleted_at, created_at, updated_at, type, subtype, status, created_by, start_date, end_date) VALUES 
-('9b3480be-86a2-4ff9-84d8-545a4146122b', NULL, '2022-11-29 08:03:33.233262', '2022-11-29 08:03:33.233262', 'feedback', 'comment', NULL, '2655832e-f009-4b73-a535-64c3a22e558f', NULL, NULL),
-('8a5bfedb-6e11-4f5c-82d9-2635cfcce3e2', NULL, '2022-11-29 08:03:33.233262', '2022-11-29 08:03:33.233262', 'survey', 'peer-review', NULL, '2655832e-f009-4b73-a535-64c3a22e558f', '2022-11-29 08:03:33.233262', '2023-05-29 08:03:33.233262'),
-('d97ee823-f7d5-418b-b281-711cb1d8e947', NULL, '2022-11-29 08:03:33.233262', '2022-11-29 08:03:33.233262', 'survey', 'work', NULL, '2655832e-f009-4b73-a535-64c3a22e558f', NULL, NULL),
-('53546ea4-1d9d-4216-96b2-75f84ec6d750', NULL, '2022-11-29 08:03:33.233262', '2022-11-29 08:03:33.233262', 'survey', 'engagement', NULL, 'ecea9d15-05ba-4a4e-9787-54210e3b98ce', NULL, NULL),
-('163fdda2-2dce-4618-9849-7c8475dcc9c1', NULL, '2022-11-29 08:03:33.233262', '2022-11-29 08:03:33.233262', 'feedback', 'appreciation', NULL, 'ecea9d15-05ba-4a4e-9787-54210e3b98ce', NULL, NULL);
+INSERT INTO public.feedback_events (id, deleted_at, created_at, updated_at, title, type, subtype, status, created_by, start_date, end_date) VALUES 
+('9b3480be-86a2-4ff9-84d8-545a4146122b', NULL, '2022-11-29 08:03:33.233262', '2022-11-29 08:03:33.233262', 'Should be quicker in code review', 'feedback', 'comment', 'in-progress', '2655832e-f009-4b73-a535-64c3a22e558f', NULL, NULL),
+('8a5bfedb-6e11-4f5c-82d9-2635cfcce3e2', NULL, '2022-11-29 08:03:33.233262', '2022-11-29 08:03:33.233262', 'Q3/Q4, 2022', 'survey', 'peer-review', 'in-progress', '2655832e-f009-4b73-a535-64c3a22e558f', '2022-11-29 08:03:33.233262', '2023-05-29 08:03:33.233262'),
+('d97ee823-f7d5-418b-b281-711cb1d8e947', NULL, '2022-11-29 08:03:33.233262', '2022-11-29 08:03:33.233262', '[SP Group] [week#12 2022] How was your week?', 'survey', 'work', 'in-progress', '2655832e-f009-4b73-a535-64c3a22e558f', NULL, NULL),
+('53546ea4-1d9d-4216-96b2-75f84ec6d750', NULL, '2022-11-29 08:03:33.233262', '2022-11-29 08:03:33.233262', 'Q1 2022', 'survey', 'engagement', 'in-progress', 'ecea9d15-05ba-4a4e-9787-54210e3b98ce', NULL, NULL),
+('163fdda2-2dce-4618-9849-7c8475dcc9c1', NULL, '2022-11-29 08:03:33.233262', '2022-11-29 08:03:33.233262', 'Setel on-call support', 'feedback', 'appreciation', 'in-progress', 'ecea9d15-05ba-4a4e-9787-54210e3b98ce', NULL, NULL);
 
 INSERT INTO public.employee_event_topics (id, deleted_at, created_at, updated_at, title, event_id, employee_id, project_id) VALUES
 ('e4a33adc-2495-43cf-b816-32feb8d5250d', NULL, '2022-11-29 08:03:33.233262', '2022-11-29 08:03:33.233262', 'Review Nguyen', '8a5bfedb-6e11-4f5c-82d9-2635cfcce3e2', '38a00d4a-bc45-41de-965a-adc674ab82c9', NULL),

@@ -1,0 +1,22 @@
+{
+    "page": 0,
+    "size": 999,
+    "sort": "",
+    "total": 1,
+    "data": [
+        {
+            "id": "8a5bfedb-6e11-4f5c-82d9-2635cfcce3e2",
+            "title": "Q3/Q4, 2022",
+            "type": "survey",
+            "subtype": "peer-review",
+            "status": "in-progress",
+            "startDate": "2022-11-29T08:03:33.233262Z",
+            "endDate": "2023-05-29T08:03:33.233262Z",
+            "count": {
+                "total": 3,
+                "sent": 3,
+                "done": 1
+            }
+        }
+    ]
+}

@@ -10,7 +10,7 @@
             "eventID": "d97ee823-f7d5-418b-b281-711cb1d8e947",
             "employeeID": "2655832e-f009-4b73-a535-64c3a22e558f",
             "projectID": "8dc3be2e-19a4-4942-8a79-56db391a0b15",
-            "reviewerID": "2655832e-f009-4b73-a535-64c3a22e558f",
+            "eventReviewerID": "2655832e-f009-4b73-a535-64c3a22e558f",
             "type": "survey",
             "subtype": "work",
             "status": "draft",

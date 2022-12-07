@@ -43,6 +43,8 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 // @Produce json
 // @Param Authorization header string true "jwt token"
 // @Param status query string false "Status"
+// @Param page query string false "Page"
+// @Param size query string false "Size"
 // @Success 200 {object} view.ListFeedbackResponse
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 500 {object} view.ErrorResponse
@@ -168,4 +170,111 @@ func (h *handler) Detail(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToListFeedbackDetails(questions, detailInfo), nil, nil, nil, ""))
+}
+
+// ListSurvey godoc
+// @Summary Get list event
+// @Description Get list event
+// @Tags Feedback
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "jwt token"
+// @Param subtype query string true "Event Subtype"
+// @Param page query string false "Page"
+// @Param size query string false "Size"
+// @Success 200 {object} view.ListSurveyResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /surveys [get]
+func (h *handler) ListSurvey(c *gin.Context) {
+	input := GetListSurveyInput{}
+	if err := c.ShouldBindQuery(&input); err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, input, ""))
+		return
+	}
+
+	if err := input.Validate(); err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, input, ""))
+		return
+	}
+
+	input.Standardize()
+
+	l := h.logger.Fields(logger.Fields{
+		"handler": "feedback",
+		"method":  "ListSurvey",
+		"input":   input,
+	})
+
+	events, total, err := h.store.FeedbackEvent.
+		GetBySubtypeWithPagination(h.repo.DB(), input.Subtype, input.Pagination)
+	if err != nil {
+		l.Error(err, "failed to get feedback events by subtype")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToListSurvey(events),
+		&view.PaginationResponse{Pagination: input.Pagination, Total: total}, nil, nil, ""))
+}
+
+// GetSurveyDetail godoc
+// @Summary Get survey detail
+// @Description Get survey detail
+// @Tags Feedback
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "jwt token"
+// @Param page query string false "Page"
+// @Param size query string false "Size"
+// @Success 200 {object} view.ListSurveyDetailResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /surveys/{id} [get]
+func (h *handler) GetSurveyDetail(c *gin.Context) {
+	input := GetSurveyDetailInput{
+		EventID: c.Param("id"),
+	}
+	if err := c.ShouldBindQuery(&input.Pagination); err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, input, ""))
+		return
+	}
+
+	if err := input.Validate(); err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, input, ""))
+		return
+	}
+
+	input.Pagination.Standardize()
+
+	l := h.logger.Fields(logger.Fields{
+		"handler": "feedback",
+		"method":  "GetSurveyDetail",
+		"input":   input,
+	})
+
+	// check feedback event existence
+	exists, err := h.store.FeedbackEvent.IsExist(h.repo.DB(), input.EventID)
+	if err != nil {
+		l.Error(err, "failed to check feedback event existence")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input, ""))
+		return
+	}
+
+	if !exists {
+		l.Error(ErrEventNotFound, "event not found")
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrEventNotFound, input, ""))
+		return
+	}
+
+	topics, total, err := h.store.EmployeeEventTopic.GetByEventIDWithPagination(h.repo.DB(), input.EventID, input.Pagination)
+	if err != nil {
+		l.Error(err, "failed to get employee event topic by eventID")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToListSurveyDetail(topics),
+		&view.PaginationResponse{Pagination: input.Pagination, Total: total}, nil, nil, ""))
 }
