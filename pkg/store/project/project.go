@@ -48,8 +48,9 @@ func (s *store) All(db *gorm.DB, input GetListProjectInput, pagination model.Pag
 		query = query.Limit(limit)
 	}
 
-	query = query.Preload("ProjectMembers", "deleted_at IS NULL and left_date IS NULL AND status = ?", model.ProjectMemberStatusActive).
-		Preload("ProjectMembers.Employee").
+	query = query.Preload("Slots", "deleted_at IS NULL").
+		Preload("Slots.ProjectMember", "deleted_at IS NULL and left_date IS NULL AND status = ?", model.ProjectMemberStatusActive).
+		Preload("Slots.ProjectMember.Employee").
 		Preload("Heads", "deleted_at IS NULL and left_date IS NULL").
 		Preload("Heads.Employee").
 		Offset(offset)
