@@ -1310,7 +1310,7 @@ func (h *handler) updateProjectHead(db *gorm.DB, projectID string, employeeID mo
 // @Produce  json
 // @Param Authorization header string true "jwt token"
 // @Param id path string true "Project ID"
-// @Param status query  string true  "status"
+// @Param status query  model.WorkUnitStatus false "status"
 // @Success 200 {object} view.ListWorkUnitResponse
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 404 {object} view.ErrorResponse

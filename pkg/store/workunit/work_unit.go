@@ -15,10 +15,19 @@ func New() IStore {
 // GetManyByProjectID get all work units of a project and having the status as required
 func (s *store) GetAllByProjectID(db *gorm.DB, projectID string, status model.WorkUnitStatus) ([]*model.WorkUnit, error) {
 	var workUnits []*model.WorkUnit
+	query := db.Where("project_id = ?", projectID)
 
-	return workUnits, db.Where("project_id = ? and status = ?", projectID, status).
-		Preload("WorkUnitMembers", "deleted_at IS NULL and status = 'active'").
-		Preload("WorkUnitMembers.Employee", "deleted_at IS NULL").
+	if status != "" {
+		query = query.Where("status = ?", status)
+	}
+
+	if status == model.WorkUnitStatusActive {
+		query = query.Preload("WorkUnitMembers", "deleted_at IS NULL and status = 'active'")
+	} else {
+		query = query.Preload("WorkUnitMembers", "deleted_at IS NULL")
+	}
+
+	return workUnits, query.Preload("WorkUnitMembers.Employee", "deleted_at IS NULL").
 		Preload("WorkUnitStacks", "deleted_at IS NULL").
 		Preload("WorkUnitStacks.Stack", "deleted_at IS NULL").
 		Find(&workUnits).Error
