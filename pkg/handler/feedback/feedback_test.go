@@ -26,6 +26,7 @@ func TestHandler_List(t *testing.T) {
 	serviceMock := service.New(&cfg)
 	storeMock := store.New()
 	testRepoMock := store.NewPostgresStore(&cfg)
+
 	tests := []struct {
 		name             string
 		query            string
@@ -109,6 +110,95 @@ func TestHandler_Detail(t *testing.T) {
 			require.NoError(t, err)
 
 			require.JSONEq(t, string(expRespRaw), string(w.Body.Bytes()), "[Handler.Feedback.Detail] response mismatched")
+		})
+	}
+}
+
+func TestHandler_ListSurvey(t *testing.T) {
+	cfg := config.LoadTestConfig()
+	loggerMock := logger.NewLogrusLogger()
+	serviceMock := service.New(&cfg)
+	storeMock := store.New()
+	testRepoMock := store.NewPostgresStore(&cfg)
+
+	tests := []struct {
+		name             string
+		query            string
+		wantCode         int
+		wantResponsePath string
+	}{
+		{
+			name:             "empty_query",
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/list_survey/400_empty_query.json",
+		},
+		{
+			name:             "get_peer_review",
+			query:            "subtype=peer-review",
+			wantCode:         http.StatusOK,
+			wantResponsePath: "testdata/list_survey/200_get_peer_review.json",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			w := httptest.NewRecorder()
+			ctx, _ := gin.CreateTestContext(w)
+			ctx.Request = httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/surveys?%s", tt.query), nil)
+			ctx.Request.Header.Set("Authorization", testToken)
+			ctx.Request.URL.RawQuery = tt.query
+
+			h := New(storeMock, testRepoMock, serviceMock, loggerMock, &cfg)
+			h.ListSurvey(ctx)
+			require.Equal(t, tt.wantCode, w.Code)
+			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+			require.NoError(t, err)
+
+			require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Feedback.ListSurvey] response mismatched")
+		})
+	}
+}
+
+func TestHandler_GetSurveyDetail(t *testing.T) {
+	cfg := config.LoadTestConfig()
+	loggerMock := logger.NewLogrusLogger()
+	serviceMock := service.New(&cfg)
+	storeMock := store.New()
+	testRepoMock := store.NewPostgresStore(&cfg)
+
+	tests := []struct {
+		name             string
+		id               string
+		wantCode         int
+		wantResponsePath string
+	}{
+		{
+			name:             "happy_case",
+			id:               "8a5bfedb-6e11-4f5c-82d9-2635cfcce3e2",
+			wantCode:         http.StatusOK,
+			wantResponsePath: "testdata/get_survey_detail/200_happy_case.json",
+		},
+		{
+			name:             "event_id_not_found",
+			id:               "8a5bfedb-6e11-4f5c-82d9-2635cfcce123",
+			wantCode:         http.StatusNotFound,
+			wantResponsePath: "testdata/get_survey_detail/404_event_id_not_found.json",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			w := httptest.NewRecorder()
+			ctx, _ := gin.CreateTestContext(w)
+			ctx.Request = httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/surveys/%s", tt.id), nil)
+			ctx.Request.Header.Set("Authorization", testToken)
+			ctx.AddParam("id", tt.id)
+
+			h := New(storeMock, testRepoMock, serviceMock, loggerMock, &cfg)
+			h.GetSurveyDetail(ctx)
+			require.Equal(t, tt.wantCode, w.Code)
+			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+			require.NoError(t, err)
+
+			require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Feedback.GetSurveyDetail] response mismatched")
 		})
 	}
 }

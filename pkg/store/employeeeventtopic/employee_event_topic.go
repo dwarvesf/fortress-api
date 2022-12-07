@@ -53,3 +53,29 @@ func (s *store) GetByEmployeeIDWithPagination(db *gorm.DB, employeeID string, in
 		Preload("EmployeeEventReviewers.Reviewer", "deleted_at IS NULL").
 		Find(&eTopics).Error
 }
+
+// GetByEventIDWithPagination return list of EmployeeEventTopic by eventID and pagination
+func (s *store) GetByEventIDWithPagination(db *gorm.DB, eventID string, pagination model.Pagination) ([]*model.EmployeeEventTopic, int64, error) {
+	var topics []*model.EmployeeEventTopic
+	var total int64
+
+	query := db.
+		Table("employee_event_topics").
+		Where("event_id = ?", eventID).
+		Count(&total).
+		Order(pagination.Sort)
+
+	limit, offset := pagination.ToLimitOffset()
+	if pagination.Page > 0 {
+		query = query.Limit(limit)
+	}
+
+	query = query.Offset(offset)
+
+	return topics, total, query.
+		Preload("Event", "deleted_at IS NULL").
+		Preload("Employee", "deleted_at IS NULL").
+		Preload("EmployeeEventReviewers", "deleted_at IS NULL").
+		Preload("EmployeeEventReviewers.Reviewer", "deleted_at IS NULL").
+		Find(&topics).Error
+}

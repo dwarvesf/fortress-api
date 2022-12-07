@@ -247,6 +247,18 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/feedback.IHandler.Detail-fm",
 			},
 		},
+		"/api/v1/surveys": {
+			"GET": {
+				Method:  "GET",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/feedback.IHandler.ListSurvey-fm",
+			},
+		},
+		"/api/v1/surveys/:id": {
+			"GET": {
+				Method:  "GET",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/feedback.IHandler.GetSurveyDetail-fm",
+			},
+		},
 	}
 
 	l := logger.NewLogrusLogger()

@@ -53,6 +53,18 @@ func (e EventSubtype) IsValid() bool {
 	return false
 }
 
+// IsSurveyValid validation for subtype of survey
+func (e EventSubtype) IsSurveyValid() bool {
+	switch e {
+	case
+		EventSubtypePeerReview,
+		EventSubtypeEngagement,
+		EventSubtypeWork:
+		return true
+	}
+	return false
+}
+
 // String returns the string type from the EventSubtype type
 func (e EventSubtype) String() string {
 	return string(e)
@@ -70,5 +82,6 @@ type FeedbackEvent struct {
 	StartDate *time.Time
 	EndDate   *time.Time
 
-	Employee Employee `gorm:"foreignKey:CreatedBy"`
+	Employee Employee              `gorm:"foreignKey:CreatedBy"`
+	Topics   []*EmployeeEventTopic `gorm:"foreignKey:EventID"`
 }

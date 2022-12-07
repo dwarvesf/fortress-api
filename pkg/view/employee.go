@@ -178,11 +178,6 @@ func ToEmployeeData(employee *model.Employee) *EmployeeData {
 		employeeProjects = append(employeeProjects, ToEmployeeProjectData(&v))
 	}
 
-	chapters := make([]model.Chapter, 0, len(employee.EmployeeChapters))
-	for _, v := range employee.EmployeeChapters {
-		chapters = append(chapters, v.Chapter)
-	}
-
 	rs := &EmployeeData{
 		BaseModel: model.BaseModel{
 			ID:        employee.ID,
