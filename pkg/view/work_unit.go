@@ -90,7 +90,7 @@ func ToWorkUnitList(workUnits []*model.WorkUnit, projectID string) []*WorkUnit {
 
 		for _, wStack := range wu.WorkUnitStacks {
 			newWorkUnit.Stacks = append(newWorkUnit.Stacks, MetaData{
-				ID:   wStack.ID.String(),
+				ID:   wStack.Stack.ID.String(),
 				Name: wStack.Stack.Name,
 				Code: wStack.Stack.Code,
 			})
