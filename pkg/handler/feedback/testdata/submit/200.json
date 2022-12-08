@@ -2,32 +2,64 @@
     "data": {
         "answers": [
             {
-                "eventQuestionID": "4adf1a24-f89e-4286-aeab-090bf5e9a030",
-                "content": "Does this employee effectively communicate with othes?",
+                "eventQuestionID": "7a94c0f4-81cf-4736-8628-710e25cfc4e7",
+                "content": "Does this employee effectively communicate with others?",
                 "answer": "ok",
                 "note": "",
                 "type": "general",
                 "order": 1
             },
             {
-                "eventQuestionID": "805b3bdb-bb90-44eb-a1ed-1ddf8bda8bd9",
-                "content": "How effective of a leader is this person, either through direct management or influence?",
+                "eventQuestionID": "795219e6-67d8-4611-a5cb-38fb1057e4ee",
+                "content": "How effective of a leader is this person",
                 "answer": "ok",
                 "note": "",
                 "type": "general",
                 "order": 2
             },
             {
-                "eventQuestionID": "99862c14-a9eb-40d1-8e09-0d02ee8d0b67",
-                "content": "Does this person find creative solutions, and own the solution to problems? Are they proactive or reactive?",
+                "eventQuestionID": "40177889-8098-4cb7-931e-9cfe857e56f7",
+                "content": "Does this person find creative solutions",
                 "answer": "ok",
                 "note": "",
                 "type": "general",
                 "order": 3
+            },
+            {
+                "eventQuestionID": "7886c936-fb48-4fc0-beb6-7a8c5d723b78",
+                "content": "How would you rate the quality of the employee's work?",
+                "answer": "ok",
+                "note": "",
+                "type": "general",
+                "order": 4
+            },
+            {
+                "eventQuestionID": "272a2524-efe3-4386-b463-a79143ef661e",
+                "content": "How well does this person set and meet deadlines?",
+                "answer": "ok",
+                "note": "",
+                "type": "general",
+                "order": 5
+            },
+            {
+                "eventQuestionID": "86aac74b-4dc4-422b-ac70-735fe247eedf",
+                "content": "How well does this person embody our culture?",
+                "answer": "ok",
+                "note": "",
+                "type": "general",
+                "order": 6
+            },
+            {
+                "eventQuestionID": "faab80cf-9b4c-4deb-96b6-3d7a46cc5e7d",
+                "content": "If you could give this person one piece of constructive advice to make them more effective in their role",
+                "answer": "ok",
+                "note": "",
+                "type": "general",
+                "order": 7
             }
         ],
         "status": "draft",
-        "employeeID": "38a00d4a-bc45-41de-965a-adc674ab82c9",
+        "employeeID": "37e00d47-de69-4ac8-991b-cf3e39565c00",
         "reviewerID": "2655832e-f009-4b73-a535-64c3a22e558f",
         "topicID": "e4a33adc-2495-43cf-b816-32feb8d5250d",
         "eventID": "8a5bfedb-6e11-4f5c-82d9-2635cfcce3e2"

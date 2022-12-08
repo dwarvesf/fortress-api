@@ -112,7 +112,7 @@ func TestHandler_Detail(t *testing.T) {
 			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
 			require.NoError(t, err)
 
-			require.JSONEq(t, string(expRespRaw), string(w.Body.Bytes()), "[Handler.Feedback.Detail] response mismatched")
+			require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Feedback.Detail] response mismatched")
 		})
 	}
 }
@@ -227,16 +227,32 @@ func TestHandler_Submit(t *testing.T) {
 			body: SubmitBody{
 				Answers: []BasicEventQuestionInput{
 					{
-						EventQuestionID: model.MustGetUUIDFromString("4adf1a24-f89e-4286-aeab-090bf5e9a030"),
+						EventQuestionID: model.MustGetUUIDFromString("7a94c0f4-81cf-4736-8628-710e25cfc4e7"),
 						Answer:          "ok",
 					},
 					{
-						EventQuestionID: model.MustGetUUIDFromString("805b3bdb-bb90-44eb-a1ed-1ddf8bda8bd9"),
+						EventQuestionID: model.MustGetUUIDFromString("795219e6-67d8-4611-a5cb-38fb1057e4ee"),
 						Answer:          "ok",
 					},
 					{
-						EventQuestionID: model.MustGetUUIDFromString("99862c14-a9eb-40d1-8e09-0d02ee8d0b67"),
+						EventQuestionID: model.MustGetUUIDFromString("40177889-8098-4cb7-931e-9cfe857e56f7"),
 						Answer:          "",
+					},
+					{
+						EventQuestionID: model.MustGetUUIDFromString("7886c936-fb48-4fc0-beb6-7a8c5d723b78"),
+						Answer:          "ok",
+					},
+					{
+						EventQuestionID: model.MustGetUUIDFromString("272a2524-efe3-4386-b463-a79143ef661e"),
+						Answer:          "ok",
+					},
+					{
+						EventQuestionID: model.MustGetUUIDFromString("86aac74b-4dc4-422b-ac70-735fe247eedf"),
+						Answer:          "ok",
+					},
+					{
+						EventQuestionID: model.MustGetUUIDFromString("faab80cf-9b4c-4deb-96b6-3d7a46cc5e7d"),
+						Answer:          "ok",
 					},
 				},
 				Status: model.EventReviewerStatusDone,
@@ -251,15 +267,31 @@ func TestHandler_Submit(t *testing.T) {
 			body: SubmitBody{
 				Answers: []BasicEventQuestionInput{
 					{
-						EventQuestionID: model.MustGetUUIDFromString("4adf1a24-f89e-4286-aeab-090bf5e9a030"),
+						EventQuestionID: model.MustGetUUIDFromString("7a94c0f4-81cf-4736-8628-710e25cfc4e7"),
 						Answer:          "ok",
 					},
 					{
-						EventQuestionID: model.MustGetUUIDFromString("805b3bdb-bb90-44eb-a1ed-1ddf8bda8bd9"),
+						EventQuestionID: model.MustGetUUIDFromString("795219e6-67d8-4611-a5cb-38fb1057e4ee"),
 						Answer:          "ok",
 					},
 					{
-						EventQuestionID: model.MustGetUUIDFromString("99862c14-a9eb-40d1-8e09-0d02ee8d0b67"),
+						EventQuestionID: model.MustGetUUIDFromString("40177889-8098-4cb7-931e-9cfe857e56f7"),
+						Answer:          "ok",
+					},
+					{
+						EventQuestionID: model.MustGetUUIDFromString("7886c936-fb48-4fc0-beb6-7a8c5d723b78"),
+						Answer:          "ok",
+					},
+					{
+						EventQuestionID: model.MustGetUUIDFromString("272a2524-efe3-4386-b463-a79143ef661e"),
+						Answer:          "ok",
+					},
+					{
+						EventQuestionID: model.MustGetUUIDFromString("86aac74b-4dc4-422b-ac70-735fe247eedf"),
+						Answer:          "ok",
+					},
+					{
+						EventQuestionID: model.MustGetUUIDFromString("faab80cf-9b4c-4deb-96b6-3d7a46cc5e7d"),
 						Answer:          "ok",
 					},
 				},
@@ -275,15 +307,31 @@ func TestHandler_Submit(t *testing.T) {
 			body: SubmitBody{
 				Answers: []BasicEventQuestionInput{
 					{
-						EventQuestionID: model.MustGetUUIDFromString("4adf1a24-f89e-4286-aeab-090bf5e9a030"),
+						EventQuestionID: model.MustGetUUIDFromString("7a94c0f4-81cf-4736-8628-710e25cfc4e7"),
 						Answer:          "ok",
 					},
 					{
-						EventQuestionID: model.MustGetUUIDFromString("805b3bdb-bb90-44eb-a1ed-1ddf8bda8bd9"),
+						EventQuestionID: model.MustGetUUIDFromString("795219e6-67d8-4611-a5cb-38fb1057e4ee"),
 						Answer:          "ok",
 					},
 					{
-						EventQuestionID: model.MustGetUUIDFromString("99862c14-a9eb-40d1-8e09-0d02ee8d0b67"),
+						EventQuestionID: model.MustGetUUIDFromString("40177889-8098-4cb7-931e-9cfe857e56f7"),
+						Answer:          "",
+					},
+					{
+						EventQuestionID: model.MustGetUUIDFromString("7886c936-fb48-4fc0-beb6-7a8c5d723b78"),
+						Answer:          "ok",
+					},
+					{
+						EventQuestionID: model.MustGetUUIDFromString("272a2524-efe3-4386-b463-a79143ef661e"),
+						Answer:          "ok",
+					},
+					{
+						EventQuestionID: model.MustGetUUIDFromString("86aac74b-4dc4-422b-ac70-735fe247eedf"),
+						Answer:          "ok",
+					},
+					{
+						EventQuestionID: model.MustGetUUIDFromString("faab80cf-9b4c-4deb-96b6-3d7a46cc5e7d"),
 						Answer:          "ok",
 					},
 				},
@@ -297,11 +345,11 @@ func TestHandler_Submit(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			w := httptest.NewRecorder()
 			ctx, _ := gin.CreateTestContext(w)
-			byteReq, err := json.Marshal(tt.body)
+			byteReq, _ := json.Marshal(tt.body)
 			bodyReader := strings.NewReader(string(byteReq))
 			ctx.Params = gin.Params{gin.Param{Key: "id", Value: tt.eventID}, gin.Param{Key: "topicID", Value: tt.topicID}}
 
-			ctx.Request = httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/feedbacks/%s/topics/%s/answers", tt.eventID, tt.topicID), bodyReader)
+			ctx.Request = httptest.NewRequest(http.MethodPut, fmt.Sprintf("/api/v1/feedbacks/%s/topics/%s/answers", tt.eventID, tt.topicID), bodyReader)
 			ctx.Request.Header.Set("Authorization", testToken)
 
 			h := New(storeMock, testRepoMock, serviceMock, loggerMock, &cfg)

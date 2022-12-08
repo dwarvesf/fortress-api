@@ -19,10 +19,10 @@ INSERT INTO public.permissions (id, deleted_at, created_at, updated_at, name, co
 ('3b542878-f597-421f-b4ac-5f71b0e22ddb', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Feedback Edit', 'feedbacks.edit'),
 ('2969fd2a-ae44-414a-85ac-7a930c6de987', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Feedback Delete', 'feedbacks.delete'),
 ('37219e6a-34f1-4d68-8727-db90ddd6f97e', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Employee Event Question Create', 'employeeEventQuestions.create'),
+('bfd6144d-0161-41f2-9cf5-3467d2a505fd', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Employee Event Question Edit', 'employeeEventQuestions.edit'),
 ('be88150b-3ad5-4cef-8716-90873d194207', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Employee Event Question Read', 'employeeEventQuestions.read'),
 ('23fe9fa0-d848-491f-8b6d-04ada45b9c51', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Employee Event Question Delete', 'employeeEventQuestions.delete'),
 ('d5c1142a-86a6-4347-bdef-2ad41492b738', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Survey Create', 'surveys.create'),
 ('ef32d604-42ec-40f8-9c34-08431d2c20d8', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Survey Read', 'surveys.read'),
 ('f5906795-60d1-4e5f-88f2-e15f2fae2327', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Survey Edit', 'surveys.edit'),
-('bfd6144d-0161-41f2-9cf5-3467d2a505fd', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Employee Event Question Edit', 'employeeEventQuestions.edit'),
 ('dfc32d81-abfa-49ce-a8f6-cdc83c8da78b', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Survey Delete', 'surveys.delete');
