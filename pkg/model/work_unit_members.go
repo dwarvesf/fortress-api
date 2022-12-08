@@ -17,6 +17,11 @@ type WorkUnitMember struct {
 	Employee Employee
 }
 
+type WorkUnitPeer struct {
+	EmployeeID UUID
+	ReviewerID UUID
+}
+
 type WorkUnitMemberStatus string
 
 const (

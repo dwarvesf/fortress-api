@@ -2,7 +2,10 @@ package feedback
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
+	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -429,4 +432,234 @@ func (h *handler) Submit(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToListSubmitFeedback(eventQuestions, detailInfo), nil, nil, done(nil), ""))
+}
+
+// CreateSurvey godoc
+// @Summary Create new survey
+// @Description Create new survey
+// @Tags Feedback
+// @Accept  json
+// @Produce  json
+// @Param Body body CreateSurveyFeedbackInput true "Body"
+// @Param Authorization header string true "jwt token"
+// @Success 200 {object} view.MessageResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /surveys [post]
+func (h *handler) CreateSurvey(c *gin.Context) {
+	// 1. parse request
+	userID, err := utils.GetUserIDFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	var req CreateSurveyFeedbackInput
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, req, ""))
+		return
+	}
+
+	l := h.logger.Fields(logger.Fields{
+		"handler": "feedback",
+		"method":  "CreateSurvey",
+		"input":   req,
+	})
+
+	if !model.EventSubtype(req.Type).IsValidSurvey() {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, ErrInvalidEventSubType, req, ""))
+		return
+	}
+
+	tx, done := h.repo.NewTransaction()
+
+	if model.EventSubtype(req.Type) == model.EventSubtypePeerReview {
+		status, err := h.createPeerReview(tx.DB(), req, userID)
+		if err != nil {
+			l.Error(err, "failed to create new survet")
+			c.JSON(status, view.CreateResponse[any](nil, nil, done(err), nil, ""))
+			return
+		}
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, done(nil), nil, "success"))
+
+}
+
+func (h *handler) createPeerReview(db *gorm.DB, req CreateSurveyFeedbackInput, userID string) (int, error) {
+	//1. convert data
+	var startTime, endTime time.Time
+	var title string
+
+	switch strings.ToLower(strings.ReplaceAll(req.Quarter, " ", "")) {
+	case "q1,q2":
+		startTime = time.Date(req.Year, 1, 1, 0, 0, 0, 0, time.UTC)
+		endTime = time.Date(req.Year, 6, 30, 23, 59, 59, 59, time.UTC)
+		title = fmt.Sprintf("Q1/Q2, %d", req.Year)
+	case "q3,q4":
+		startTime = time.Date(req.Year, 7, 1, 0, 0, 0, 0, time.UTC)
+		endTime = time.Date(req.Year, 12, 31, 23, 59, 59, 59, time.UTC)
+		title = fmt.Sprintf("Q3/Q4, %d", req.Year)
+	default:
+		return 400, ErrInvalidQuarter
+	}
+
+	//1.2 check employee existed
+	createdBy, err := h.store.Employee.One(db, userID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return 404, ErrEmployeeNotFound
+		}
+		return 500, err
+	}
+
+	//2. Create FeedbackEvent
+	event, err := h.store.FeedbackEvent.Create(db, &model.FeedbackEvent{
+		BaseModel: model.BaseModel{
+			ID: model.NewUUID(),
+		},
+		Title:     title,
+		Type:      model.EventTypeSurvey,
+		Subtype:   model.EventSubtype(req.Type),
+		Status:    model.EventStatusDraft.String(),
+		CreatedBy: createdBy.ID,
+		StartDate: &startTime,
+		EndDate:   &endTime,
+	})
+	if err != nil {
+		return 500, err
+	}
+
+	//3. create EmployeeEventTopic
+	employees, err := h.store.Employee.GetByWorkingStatus(db, model.WorkingStatusFullTime)
+	if err != nil {
+		return 500, err
+	}
+
+	eets := make([]model.EmployeeEventTopic, 0)
+	for _, e := range employees {
+		eets = append(eets, model.EmployeeEventTopic{
+			BaseModel: model.BaseModel{
+				ID: model.NewUUID(),
+			},
+			Title:      title,
+			EventID:    event.ID,
+			EmployeeID: e.ID,
+		})
+	}
+
+	i := 0
+	for i < len(eets) {
+		to := i + 100
+		if to > len(eets) {
+			to = len(eets)
+		}
+		_, err = h.store.EmployeeEventTopic.BatchCreate(db, eets[i:to])
+		if err != nil {
+			return 500, err
+		}
+		i = to
+	}
+
+	//4. create EmployeeEventReviewer
+	employeeEventMapper := make(map[model.UUID]model.UUID)
+	for _, e := range eets {
+		employeeEventMapper[e.EmployeeID] = e.ID
+	}
+
+	reviewers := make([]model.EmployeeEventReviewer, 0)
+
+	for i, e := range eets {
+		if !employees[i].LineManagerID.IsZero() {
+			reviewers = append(reviewers, model.EmployeeEventReviewer{
+				BaseModel: model.BaseModel{
+					ID: model.NewUUID(),
+				},
+				EventID:              event.ID,
+				EmployeeEventTopicID: e.ID,
+				ReviewerID:           employees[i].LineManagerID,
+				Relationship:         model.RelationshipLineManager,
+				Status:               model.EventReviewerStatusDraft,
+				IsShared:             false,
+				IsRead:               false,
+			})
+		}
+	}
+
+	peers, err := h.store.WorkUnitMember.GetPeerReviewerInTimeRange(db, &startTime, &endTime)
+	if err != nil {
+		return 500, err
+	}
+	fmt.Println(len(peers))
+
+	for _, p := range peers {
+		if !p.ReviewerID.IsZero() {
+			reviewers = append(reviewers, model.EmployeeEventReviewer{
+				BaseModel: model.BaseModel{
+					ID: model.NewUUID(),
+				},
+				EventID:              event.ID,
+				EmployeeEventTopicID: employeeEventMapper[p.EmployeeID],
+				ReviewerID:           p.ReviewerID,
+				Relationship:         model.RelationshipPeer,
+				Status:               model.EventReviewerStatusDraft,
+				IsShared:             false,
+				IsRead:               false,
+			})
+		}
+	}
+
+	i = 0
+	for i < len(reviewers) {
+		to := i + 100
+		if to > len(reviewers) {
+			to = len(reviewers)
+		}
+		_, err = h.store.EmployeeEventReviewer.BatchCreate(db, reviewers[i:to])
+		if err != nil {
+			return 500, err
+		}
+		i = to
+	}
+
+	//4. create EmployeeEventQuestion
+	questions, err := h.store.Question.AllByCategory(db, model.EventTypeSurvey, model.EventSubtypePeerReview)
+	if err != nil {
+		return 500, err
+	}
+
+	eventQuestions := make([]model.EmployeeEventQuestion, 0)
+
+	for _, r := range reviewers {
+		for _, q := range questions {
+			eventQuestions = append(eventQuestions, model.EmployeeEventQuestion{
+				BaseModel: model.BaseModel{
+					ID: model.NewUUID(),
+				},
+				EmployeeEventReviewerID: r.ID,
+				QuestionID:              q.ID,
+				EventID:                 r.EventID,
+				Content:                 q.Content,
+				Type:                    q.Type.String(),
+				Order:                   q.Order,
+			})
+		}
+	}
+
+	i = 0
+	for i < len(eventQuestions) {
+		to := i + 100
+		if to > len(eventQuestions) {
+			to = len(eventQuestions)
+		}
+		_, err = h.store.EmployeeEventQuestion.BatchCreate(db, eventQuestions[i:to])
+		if err != nil {
+			return 500, err
+		}
+		i = to
+	}
+
+	return 200, nil
 }

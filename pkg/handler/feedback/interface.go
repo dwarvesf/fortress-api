@@ -8,4 +8,5 @@ type IHandler interface {
 	ListSurvey(c *gin.Context)
 	GetSurveyDetail(c *gin.Context)
 	Submit(c *gin.Context)
+	CreateSurvey(c *gin.Context)
 }

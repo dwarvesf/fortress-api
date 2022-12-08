@@ -248,6 +248,10 @@ func Test_loadV1Routes(t *testing.T) {
 			},
 		},
 		"/api/v1/surveys": {
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/feedback.IHandler.CreateSurvey-fm",
+			},
 			"GET": {
 				Method:  "GET",
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/feedback.IHandler.ListSurvey-fm",

@@ -1,14 +1,22 @@
 package model
 
-import "time"
+import (
+	"time"
+)
 
 // EventType event_type for table feedback events
 type EventType string
+type EventStatus string
 
 // values for EventType
 const (
 	EventTypeFeedback EventType = "feedback"
 	EventTypeSurvey   EventType = "survey"
+)
+
+const (
+	EventStatusDraft EventStatus = "draft"
+	EventStatusDone  EventStatus = "done"
 )
 
 // IsValid validation for EventType
@@ -20,6 +28,11 @@ func (e EventType) IsValid() bool {
 		return true
 	}
 	return false
+}
+
+// String returns the string type from the EventStatus type
+func (e EventStatus) String() string {
+	return string(e)
 }
 
 // String returns the string type from the EventType type
@@ -68,6 +81,18 @@ func (e EventSubtype) IsSurveyValid() bool {
 // String returns the string type from the EventSubtype type
 func (e EventSubtype) String() string {
 	return string(e)
+}
+
+// IsValid validation for EventSubType
+func (e EventSubtype) IsValidSurvey() bool {
+	switch e {
+	case
+		EventSubtypePeerReview,
+		EventSubtypeEngagement,
+		EventSubtypeWork:
+		return true
+	}
+	return false
 }
 
 // FeedbackEvent model for feedback_events table

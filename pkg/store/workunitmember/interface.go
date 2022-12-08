@@ -1,6 +1,8 @@
 package workunitmember
 
 import (
+	"time"
+
 	"gorm.io/gorm"
 
 	"github.com/dwarvesf/fortress-api/pkg/model"
@@ -14,4 +16,5 @@ type IStore interface {
 	All(db *gorm.DB, workUnitID string) (members []*model.WorkUnitMember, err error)
 	One(db *gorm.DB, workUnitID string, employeeID string, status string) (workUnitMember *model.WorkUnitMember, err error)
 	SoftDeleteByWorkUnitID(db *gorm.DB, workUnitID string, employeeID string) (err error)
+	GetPeerReviewerInTimeRange(db *gorm.DB, from *time.Time, to *time.Time) ([]model.WorkUnitPeer, error)
 }
