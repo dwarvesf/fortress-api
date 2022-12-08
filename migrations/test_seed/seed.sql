@@ -310,12 +310,12 @@ INSERT INTO public.employee_event_questions (id, deleted_at, created_at, updated
 
 INSERT INTO public.questions (id, deleted_at, created_at, updated_at, category, subcategory, content, type, "order") VALUES 
 ('da5dbdd5-8e1e-4ae7-8bb8-ab007f2580aa', NULL, '2022-12-06 03:02:39.049420', '2022-12-06 03:02:39.049420', 'feedback', 'peer-review', 'Does this employee effectively communicate with others?', 'general', 1),
-('7d95e035-81d6-49d7-bed4-3a83bf2e34d6', NULL, '2022-12-06 03:02:39.049420', '2022-12-06 03:02:39.049420', 'feedback', 'peer-review', 'How effective of a leader is this person', 'general', 2),
-('d36e84c5-d7a4-4d5f-ada1-f6b9ddb58f51', NULL, '2022-12-06 03:02:39.049420', '2022-12-06 03:02:39.049420', 'feedback', 'peer-review', 'Does this person find creative solutions', 'general', 3),
+('7d95e035-81d6-49d7-bed4-3a83bf2e34d6', NULL, '2022-12-06 03:02:39.049420', '2022-12-06 03:02:39.049420', 'feedback', 'peer-review', 'How effective of a leader is this person?', 'general', 2),
+('d36e84c5-d7a4-4d5f-ada1-f6b9ddb58f51', NULL, '2022-12-06 03:02:39.049420', '2022-12-06 03:02:39.049420', 'feedback', 'peer-review', 'Does this person find creative solutions?', 'general', 3),
 ('f03432ba-c024-467e-8059-a5bb2b7f783d', NULL, '2022-12-06 03:02:39.049420', '2022-12-06 03:02:39.049420', 'feedback', 'peer-review', 'How would you rate the quality of the employee''s work?', 'general', 4),
 ('d2bb48c1-e8d6-4946-a372-8499907b7328', NULL, '2022-12-06 03:02:39.049420', '2022-12-06 03:02:39.049420', 'feedback', 'peer-review', 'How well does this person set and meet deadlines?', 'general', 5),
 ('be86ce52-803b-403f-b059-1a69492fe3d4', NULL, '2022-12-06 03:02:39.049420', '2022-12-06 03:02:39.049420', 'feedback', 'peer-review', 'How well does this person embody our culture?', 'general', 6),
-('51eab8c7-61ba-4c56-be39-b72eb6b89a52', NULL, '2022-12-06 03:02:39.049420', '2022-12-06 03:02:39.049420', 'feedback', 'peer-review', 'If you could give this person one piece of constructive advice to make them more effective in their role', 'general', 7),
+('51eab8c7-61ba-4c56-be39-b72eb6b89a52', NULL, '2022-12-06 03:02:39.049420', '2022-12-06 03:02:39.049420', 'feedback', 'peer-review', 'If you could give this person one piece of constructive advice to make them more effective in their role?', 'general', 7),
 ('4e71821e-e8d7-4fc9-9f02-7b4de4efa7f8', NULL, '2022-12-06 03:02:39.049420', '2022-12-06 03:02:39.049420', 'survey', 'engagement', 'I know what is expected of me at work.', 'likert-scale', 1),
 ('ba00c397-f8ad-4cbd-ba63-02ac903d0886', NULL, '2022-12-06 03:07:13.021661', '2022-12-06 03:07:13.021661', 'survey', 'engagement', 'I have the materials and equipment I need to do my work right.', 'likert-scale', 2),
 ('8c25c7c1-5148-4b85-92b2-5db919b0a118', NULL, '2022-12-06 03:07:13.021661', '2022-12-06 03:07:13.021661', 'survey', 'engagement', 'At work, I have the opportunity to do what I do best every day.', 'likert-scale', 3),
