@@ -1,0 +1,35 @@
+{
+    "data": {
+        "answers": [
+            {
+                "eventQuestionID": "4adf1a24-f89e-4286-aeab-090bf5e9a030",
+                "content": "Does this employee effectively communicate with othes?",
+                "answer": "good",
+                "note": "",
+                "type": "general",
+                "order": 1
+            },
+            {
+                "eventQuestionID": "805b3bdb-bb90-44eb-a1ed-1ddf8bda8bd9",
+                "content": "How effective of a leader is this person, either through direct management or influence?",
+                "answer": "good",
+                "note": "",
+                "type": "general",
+                "order": 2
+            },
+            {
+                "eventQuestionID": "99862c14-a9eb-40d1-8e09-0d02ee8d0b67",
+                "content": "Does this person find creative solutions, and own the solution to problems? Are they proactive or reactive?",
+                "answer": "good",
+                "note": "",
+                "type": "general",
+                "order": 3
+            }
+        ],
+        "status": "done",
+        "employeeID": "38a00d4a-bc45-41de-965a-adc674ab82c9",
+        "reviewerID": "2655832e-f009-4b73-a535-64c3a22e558f",
+        "topicID": "e4a33adc-2495-43cf-b816-32feb8d5250d",
+        "eventID": "8a5bfedb-6e11-4f5c-82d9-2635cfcce3e2"
+    }
+}

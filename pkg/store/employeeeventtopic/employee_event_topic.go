@@ -12,6 +12,12 @@ func New() IStore {
 	return &store{}
 }
 
+// One get topic by id
+func (s *store) One(db *gorm.DB, id string, eventID string) (*model.EmployeeEventTopic, error) {
+	var topic *model.EmployeeEventTopic
+	return topic, db.Where("id = ? AND event_id = ?", id, eventID).First(&topic).Error
+}
+
 // GetByEmployeeIDWithPagination return list of EmployeeEventTopic by employeeID and pagination
 func (s *store) GetByEmployeeIDWithPagination(db *gorm.DB, employeeID string, input GetByEmployeeIDInput, pagination model.Pagination) ([]*model.EmployeeEventTopic, int64, error) {
 	var eTopics []*model.EmployeeEventTopic

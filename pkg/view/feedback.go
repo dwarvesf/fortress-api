@@ -62,3 +62,56 @@ func ToListFeedback(eTopics []*model.EmployeeEventTopic) []Feedback {
 type ListFeedbackResponse struct {
 	Data []Feedback `json:"data"`
 }
+
+type QuestionAnswer struct {
+	EventQuestionID string `json:"eventQuestionID"`
+	Content         string `json:"content"`
+	Answer          string `json:"answer"`
+	Note            string `json:"note"`
+	Type            string `json:"type"`
+	Order           int64  `json:"order"`
+}
+
+type FeedbackDetail struct {
+	Answers    []*QuestionAnswer `json:"answers"`
+	Status     string            `json:"status"`
+	EmployeeID string            `json:"employeeID"`
+	ReviewerID string            `json:"reviewerID"`
+	TopicID    string            `json:"topicID"`
+	EventID    string            `json:"eventID"`
+}
+
+type FeedbackDetailResponse struct {
+	Data FeedbackDetail `json:"data"`
+}
+
+type FeedbackDetailInfo struct {
+	Status     model.EventReviewerStatus
+	EmployeeID string
+	ReviewerID string
+	TopicID    string
+	EventID    string
+}
+
+func ToListFeedbackDetails(questions []*model.EmployeeEventQuestion, detailInfo FeedbackDetailInfo) FeedbackDetail {
+	var rs FeedbackDetail
+
+	for _, q := range questions {
+		rs.Answers = append(rs.Answers, &QuestionAnswer{
+			EventQuestionID: q.ID.String(),
+			Content:         q.Content,
+			Answer:          q.Answer,
+			Note:            q.Note,
+			Type:            q.Type,
+			Order:           q.Order,
+		})
+	}
+
+	rs.Status = detailInfo.Status.String()
+	rs.EmployeeID = detailInfo.EmployeeID
+	rs.ReviewerID = detailInfo.ReviewerID
+	rs.TopicID = detailInfo.TopicID
+	rs.EventID = detailInfo.EventID
+
+	return rs
+}

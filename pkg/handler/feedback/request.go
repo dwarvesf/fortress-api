@@ -15,3 +15,20 @@ func (i *GetListFeedbackInput) Validate() error {
 
 	return nil
 }
+
+type DetailInput struct {
+	EventID string
+	TopicID string
+}
+
+func (i *DetailInput) Validate() error {
+	if i.EventID == "" || !model.IsUUIDFromString(i.EventID) {
+		return ErrInvalidFeedbackID
+	}
+
+	if i.TopicID == "" || !model.IsUUIDFromString(i.TopicID) {
+		return ErrInvalidTopicID
+	}
+
+	return nil
+}
