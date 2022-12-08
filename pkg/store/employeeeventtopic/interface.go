@@ -7,5 +7,6 @@ import (
 )
 
 type IStore interface {
+	One(db *gorm.DB, id string, eventID string) (topic *model.EmployeeEventTopic, err error)
 	GetByEmployeeIDWithPagination(db *gorm.DB, employeeID string, input GetByEmployeeIDInput, pagination model.Pagination) (eTopics []*model.EmployeeEventTopic, total int64, err error)
 }

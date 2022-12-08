@@ -34,4 +34,5 @@ type Question struct {
 	Subcategory EventSubtype
 	Content     string
 	Order       int64
+	EventID     UUID
 }

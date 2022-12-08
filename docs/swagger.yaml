@@ -1011,6 +1011,28 @@ definitions:
       type:
         type: string
     type: object
+  view.FeedbackDetail:
+    properties:
+      answers:
+        items:
+          $ref: '#/definitions/view.QuestionAnswer'
+        type: array
+      employeeID:
+        type: string
+      eventID:
+        type: string
+      reviewerID:
+        type: string
+      status:
+        type: string
+      topicID:
+        type: string
+    type: object
+  view.FeedbackDetailResponse:
+    properties:
+      data:
+        $ref: '#/definitions/view.FeedbackDetail'
+    type: object
   view.GetQuestionResponse:
     properties:
       data:
@@ -1213,6 +1235,21 @@ definitions:
         type: integer
       subcategory:
         type: string
+      type:
+        type: string
+    type: object
+  view.QuestionAnswer:
+    properties:
+      answer:
+        type: string
+      content:
+        type: string
+      eventQuestionID:
+        type: string
+      note:
+        type: string
+      order:
+        type: integer
       type:
         type: string
     type: object
@@ -1583,7 +1620,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.CreateEmployeeInput'
+          $ref: '#/definitions/pkg_handler_employee.CreateEmployeeInput'
       - description: jwt token
         in: header
         name: Authorization
@@ -1715,7 +1752,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateGeneralInfoInput'
+          $ref: '#/definitions/pkg_handler_employee.UpdateGeneralInfoInput'
       produces:
       - application/json
       responses:
@@ -1759,7 +1796,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdatePersonalInfoInput'
+          $ref: '#/definitions/pkg_handler_employee.UpdatePersonalInfoInput'
       produces:
       - application/json
       responses:
@@ -1798,7 +1835,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateSkillsInput'
+          $ref: '#/definitions/pkg_handler_employee.UpdateSkillsInput'
       - description: jwt token
         in: header
         name: Authorization
@@ -1895,6 +1932,49 @@ paths:
           schema:
             $ref: '#/definitions/view.ErrorResponse'
       summary: Get list feedbacks
+      tags:
+      - Feedback
+  /feedbacks/:id/topics/:topicID:
+    get:
+      consumes:
+      - application/json
+      description: Get feedback detail for logged-in users
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Feedback Event ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Employee Event Topic ID
+        in: path
+        name: topicID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.FeedbackDetailResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get feedback detail for logged-in users
       tags:
       - Feedback
   /metadata/account-roles:
@@ -2394,7 +2474,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.CreateProjectInput'
+          $ref: '#/definitions/pkg_handler_project.CreateProjectInput'
       produces:
       - application/json
       responses:
@@ -2529,7 +2609,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateContactInfoInput'
+          $ref: '#/definitions/pkg_handler_project.UpdateContactInfoInput'
       produces:
       - application/json
       responses:
@@ -2573,7 +2653,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateGeneralInfoInput'
+          $ref: '#/definitions/pkg_handler_project.UpdateGeneralInfoInput'
       produces:
       - application/json
       responses:
@@ -2617,7 +2697,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.AssignMemberInput'
+          $ref: '#/definitions/pkg_handler_project.AssignMemberInput'
       produces:
       - application/json
       responses:
@@ -2660,7 +2740,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateMemberInput'
+          $ref: '#/definitions/pkg_handler_project.UpdateMemberInput'
       produces:
       - application/json
       responses:
@@ -2785,7 +2865,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.CreateWorkUnitBody'
+          $ref: '#/definitions/pkg_handler_project.CreateWorkUnitBody'
       produces:
       - application/json
       responses:
@@ -2920,7 +3000,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateWorkUnitInput'
+          $ref: '#/definitions/pkg_handler_project.UpdateWorkUnitInput'
       produces:
       - application/json
       responses:
