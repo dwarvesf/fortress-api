@@ -1,0 +1,5 @@
+INSERT INTO public.employee_event_topics (id, deleted_at, created_at, updated_at, title, event_id, employee_id, project_id) VALUES
+('e4a33adc-2495-43cf-b816-32feb8d5250d', NULL, '2022-11-29 08:03:33.233262', '2022-11-29 08:03:33.233262', 'Review Nguyen', '8a5bfedb-6e11-4f5c-82d9-2635cfcce3e2', '38a00d4a-bc45-41de-965a-adc674ab82c9', NULL),
+('9cf93fc1-5a38-4e2a-87de-41634b65fc87', NULL, '2022-11-29 08:03:33.233262', '2022-11-29 08:03:33.233262', 'Self review Fortress by Thanh', 'd97ee823-f7d5-418b-b281-711cb1d8e947', '2655832e-f009-4b73-a535-64c3a22e558f', '8dc3be2e-19a4-4942-8a79-56db391a0b15'),
+('11121775-118f-4896-8246-d88023b22c7a', NULL, '2022-11-29 08:03:33.233262', '2022-11-29 08:03:33.233262', 'Engagement Review by Huy', '53546ea4-1d9d-4216-96b2-75f84ec6d750', 'ecea9d15-05ba-4a4e-9787-54210e3b98ce', NULL),
+('a3b2cd0b-b327-4118-83f2-29350e678379', NULL, '2022-11-29 08:03:33.233262', '2022-11-29 08:03:33.233262', 'Huy want to give Nguyen shoutout', '163fdda2-2dce-4618-9849-7c8475dcc9c1', '38a00d4a-bc45-41de-965a-adc674ab82c9', NULL);
