@@ -62,7 +62,7 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 	v1.PUT("/projects/:id/work-units/:workUnitID/archive", amw.WithAuth, pmw.WithPerm("projectWorkUnits.edit"), h.Project.ArchiveWorkUnit)
 	v1.PUT("/projects/:id/work-units/:workUnitID/unarchive", amw.WithAuth, pmw.WithPerm("projectWorkUnits.edit"), h.Project.UnarchiveWorkUnit)
 
-	feedbackGroup := v1.Group("/feedbacks", amw.WithAuth)
+	feedbackGroup := v1.Group("/feedbacks")
 	{
 		feedbackGroup.GET("", pmw.WithPerm("feedbacks.read"), h.Feedback.List)
 		feedbackGroup.GET("/:id/topics/:topicID", amw.WithAuth, pmw.WithPerm("employeeEventQuestions.read"), h.Feedback.Detail)
@@ -71,7 +71,9 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 
 	surveyGroup := v1.Group("/surveys")
 	{
+		surveyGroup.POST("", amw.WithAuth, pmw.WithPerm("surveys.create"), h.Feedback.CreateSurvey)
 		surveyGroup.GET("", pmw.WithPerm("surveys.read"), h.Feedback.ListSurvey)
 		surveyGroup.GET("/:id", pmw.WithPerm("surveys.read"), h.Feedback.GetSurveyDetail)
 	}
+
 }

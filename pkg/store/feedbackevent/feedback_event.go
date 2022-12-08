@@ -47,3 +47,8 @@ func (s *store) GetBySubtypeWithPagination(db *gorm.DB, subtype string, paginati
 		Preload("Topics.EmployeeEventReviewers", "deleted_at IS NULL").
 		Find(&events).Error
 }
+
+// Create create new one
+func (s *store) Create(db *gorm.DB, feedbackEvent *model.FeedbackEvent) (*model.FeedbackEvent, error) {
+	return feedbackEvent, db.Create(&feedbackEvent).Error
+}

@@ -23,3 +23,8 @@ func (s *store) UpdateSelectedFieldsByID(db *gorm.DB, id string, updateModel mod
 	eventReviewer := model.EmployeeEventReviewer{}
 	return &eventReviewer, db.Model(&eventReviewer).Where("id = ?", id).Select(updatedFields).Updates(updateModel).Error
 }
+
+// Create create new one
+func (s *store) BatchCreate(db *gorm.DB, employeeEventReviewers []model.EmployeeEventReviewer) ([]model.EmployeeEventReviewer, error) {
+	return employeeEventReviewers, db.Create(&employeeEventReviewers).Error
+}

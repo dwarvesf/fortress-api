@@ -58,8 +58,8 @@ type Store struct {
 	EmployeeEventTopic    employeeeventtopic.IStore
 	Question              question.IStore
 	EmployeeEventQuestion employeeeventquestion.IStore
-	EmployeeEventReviewer employeeeventreviewer.IStore
 	FeedbackEvent         feedbackevent.IStore
+	EmployeeEventReviewer employeeeventreviewer.IStore
 }
 
 func New() *Store {
@@ -90,7 +90,7 @@ func New() *Store {
 		EmployeeEventTopic:    employeeeventtopic.New(),
 		Question:              question.New(),
 		EmployeeEventQuestion: employeeeventquestion.New(),
-		EmployeeEventReviewer: employeeeventreviewer.New(),
 		FeedbackEvent:         feedbackevent.New(),
+		EmployeeEventReviewer: employeeeventreviewer.New(),
 	}
 }

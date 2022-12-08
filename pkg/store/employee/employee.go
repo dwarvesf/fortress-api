@@ -137,3 +137,9 @@ func (s *store) GetByIDs(db *gorm.DB, ids []model.UUID) ([]*model.Employee, erro
 	var employees []*model.Employee
 	return employees, db.Where("id IN ?", ids).Find(&employees).Error
 }
+
+// GetByWorkingStatus return list employee by working status
+func (s *store) GetByWorkingStatus(db *gorm.DB, workingStatus model.WorkingStatus) ([]*model.Employee, error) {
+	var employees []*model.Employee
+	return employees, db.Where("working_status = ?", workingStatus).Find(&employees).Error
+}

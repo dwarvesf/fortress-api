@@ -15,12 +15,15 @@ var (
 	ErrEventReviewerNotFound         = errors.New("employee event reviewer not found")
 
 	ErrInvalidAnswers        = errors.New("invalid answers data")
-	ErrInvalidTopicID        = errors.New("invalid topic id")
 	ErrInvalidEventID        = errors.New("invalid event id")
 	ErrInvalidReviewerStatus = errors.New("invalid reviewer status")
 
 	ErrUnansweredquestions      = errors.New("must answer all questions")
 	ErrCouldNotEditDoneFeedback = errors.New("could not edit the feedback marked as done")
+	ErrInvalidTopicID           = errors.New("invalid topic id")
+	ErrInvalidEventSubType      = errors.New("invalid event subtype")
+	ErrInvalidQuarter           = errors.New("invalid quarter")
+	ErrEmployeeNotFound         = errors.New("employee not found")
 )
 
 func errEventQuestionNotFound(id string) error {

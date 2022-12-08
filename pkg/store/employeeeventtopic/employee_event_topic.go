@@ -79,3 +79,8 @@ func (s *store) GetByEventIDWithPagination(db *gorm.DB, eventID string, paginati
 		Preload("EmployeeEventReviewers.Reviewer", "deleted_at IS NULL").
 		Find(&topics).Error
 }
+
+// Create create new one
+func (s *store) BatchCreate(db *gorm.DB, employeeEventTopics []model.EmployeeEventTopic) ([]model.EmployeeEventTopic, error) {
+	return employeeEventTopics, db.Create(&employeeEventTopics).Error
+}

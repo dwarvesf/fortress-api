@@ -6,6 +6,7 @@ type EmployeeEventQuestion struct {
 
 	EmployeeEventReviewerID UUID
 	QuestionID              UUID
+	EventID                 UUID
 	Content                 string
 	Answer                  string
 	Note                    string

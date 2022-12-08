@@ -98,3 +98,10 @@ func (i *SubmitInput) Validate() error {
 
 	return i.Body.Validate()
 }
+
+// CreateSurveyFeedbackInput view for create survey feedback
+type CreateSurveyFeedbackInput struct {
+	Quarter string `json:"quarter" binding:"required"`
+	Year    int    `json:"year" binding:"required"`
+	Type    string `json:"type" binding:"required"`
+}

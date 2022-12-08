@@ -22,3 +22,8 @@ func (s *store) UpdateAnswers(db *gorm.DB, data BasicEventQuestion) error {
 		Where("id = ?", data.EventQuestionID).
 		Updates(map[string]interface{}{"answer": data.Answer, "note": data.Note}).Error
 }
+
+// Create create new one
+func (s *store) BatchCreate(db *gorm.DB, employeeEventQuestions []model.EmployeeEventQuestion) ([]model.EmployeeEventQuestion, error) {
+	return employeeEventQuestions, db.Create(&employeeEventQuestions).Error
+}
