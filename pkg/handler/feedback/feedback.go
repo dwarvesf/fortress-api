@@ -414,7 +414,10 @@ func (h *handler) Submit(c *gin.Context) {
 
 	// Update status in employee_event_reviewers table
 	eventReviewer.ReviewerStatus = input.Body.Status
-	_, err = h.store.EmployeeEventReviewer.UpdateSelectedFieldsByID(tx.DB(), eventReviewer.ID.String(), *eventReviewer, "reviewer_status")
+	if input.Body.Status == model.EventReviewerStatusDone {
+		eventReviewer.AuthorStatus = model.EventAuthorStatusDone
+	}
+	_, err = h.store.EmployeeEventReviewer.UpdateSelectedFieldsByID(tx.DB(), eventReviewer.ID.String(), *eventReviewer, "reviewer_status", "author_status")
 	if err != nil {
 		l.Error(err, "failed to update employee event question")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), nil, ""))
@@ -552,7 +555,7 @@ func (h *handler) createPeerReview(db *gorm.DB, req CreateSurveyFeedbackInput, u
 		Title:     title,
 		Type:      model.EventTypeSurvey,
 		Subtype:   model.EventSubtype(req.Type),
-		Status:    model.EventStatusDraft.String(),
+		Status:    model.EventStatusDraft,
 		CreatedBy: createdBy.ID,
 		StartDate: &startTime,
 		EndDate:   &endTime,
@@ -622,7 +625,6 @@ func (h *handler) createPeerReview(db *gorm.DB, req CreateSurveyFeedbackInput, u
 	if err != nil {
 		return 500, err
 	}
-	fmt.Println(len(peers))
 
 	for _, p := range peers {
 		if !p.ReviewerID.IsZero() {
@@ -693,4 +695,110 @@ func (h *handler) createPeerReview(db *gorm.DB, req CreateSurveyFeedbackInput, u
 	}
 
 	return 200, nil
+}
+
+// SendPerformmentReview godoc
+// @Summary Send the performance review
+// @Description Send the performance review
+// @Tags Feedback
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "jwt token"
+// @Param id path string true "Feedback Event ID"
+// @Param Body body PerformanceReviewListInput true "Body"
+// @Success 200 {object} view.MessageResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /surveys/{id}/send [post]
+func (h *handler) SendPerformmentReview(c *gin.Context) {
+	eventID := c.Param("id")
+	if eventID == "" || !model.IsUUIDFromString(eventID) {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, ErrInvalidEventID, nil, ""))
+		return
+	}
+
+	var input PerformanceReviewListInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, input, ""))
+		return
+	}
+
+	l := h.logger.Fields(logger.Fields{
+		"handler": "feedback",
+		"method":  "SendPerformmentReview",
+		"eventID": eventID,
+		"input":   input,
+	})
+
+	// Begin transaction
+	tx, done := h.repo.NewTransaction()
+
+	for _, data := range input.ReviewList {
+		errCode, err := h.updateEventReviewer(tx.DB(), l, data, eventID)
+		if err != nil {
+			l.Error(err, "error when update event reviewer")
+			c.JSON(errCode, view.CreateResponse[any](nil, nil, done(err), input, ""))
+			return
+		}
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, done(nil), "ok"))
+}
+
+func (h *handler) updateEventReviewer(db *gorm.DB, l logger.Logger, data PerformanceReviewInput, eventID string) (int, error) {
+	// Validate EventID and TopicID
+	_, err := h.store.EmployeeEventTopic.One(db, data.TopicID.String(), eventID)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		l.Error(ErrTopicNotFound, "topic not found")
+		return http.StatusNotFound, ErrTopicNotFound
+	}
+	if err != nil {
+		l.Error(err, "fail to get employee event topic")
+		return http.StatusInternalServerError, err
+	}
+
+	// Update Event status to inprogress
+	event, err := h.store.FeedbackEvent.One(db, eventID)
+	if err != nil {
+		l.Error(err, "fail to get feedback event")
+		return http.StatusInternalServerError, err
+	}
+
+	if event.Status == model.EventStatusDraft {
+		event.Status = model.EventStatusInProgress
+
+		event, err = h.store.FeedbackEvent.UpdateSelectedFieldsByID(db, eventID, *event, "status")
+		if err != nil {
+			l.Error(err, "fail to update status of feedback event")
+			return http.StatusInternalServerError, err
+		}
+	}
+
+	// Update status for employee reviewers
+	for _, participant := range data.Participants {
+		eventReviewer, err := h.store.EmployeeEventReviewer.One(db, participant.String(), data.TopicID.String())
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			l.Errorf(err, "not found employee reviewer with reviewer id = ", participant.String())
+			return http.StatusNotFound, err
+		}
+
+		if err != nil {
+			l.Errorf(err, "fail to get employee reviewer for reviewer ", participant.String())
+			return http.StatusInternalServerError, err
+		}
+
+		if eventReviewer.ReviewerStatus == model.EventReviewerStatusNone {
+			eventReviewer.ReviewerStatus = model.EventReviewerStatusNew
+			eventReviewer.AuthorStatus = model.EventAuthorStatusSent
+
+			eventReviewer, err = h.store.EmployeeEventReviewer.UpdateSelectedFieldsByID(db, eventReviewer.ID.String(), *eventReviewer, "reviewer_status", "author_status")
+			if err != nil {
+				l.Errorf(err, "fail to update employee reviewer for reviewer ", participant.String())
+				return http.StatusInternalServerError, err
+			}
+		}
+	}
+
+	return http.StatusOK, nil
 }

@@ -76,7 +76,7 @@ type FeedbackDetail struct {
 	Answers    []*QuestionAnswer `json:"answers"`
 	Status     string            `json:"status"`
 	EmployeeID string            `json:"employeeID"`
-	Reviewer   BasisEmployeeInfo `json:"reviewer"`
+	Reviewer   BasicEmployeeInfo `json:"reviewer"`
 	TopicID    string            `json:"topicID"`
 	EventID    string            `json:"eventID"`
 	Title      string            `json:"title"`
@@ -109,7 +109,7 @@ func ToListFeedbackDetails(questions []*model.EmployeeEventQuestion, detailInfo 
 		})
 	}
 
-	rs.Reviewer = BasisEmployeeInfo{
+	rs.Reviewer = BasicEmployeeInfo{
 		ID:          detailInfo.Reviewer.ID.String(),
 		FullName:    detailInfo.Reviewer.FullName,
 		DisplayName: detailInfo.Reviewer.DisplayName,
@@ -129,7 +129,7 @@ type SubmitFeedback struct {
 	Answers    []*QuestionAnswer `json:"answers"`
 	Status     string            `json:"status"`
 	EmployeeID string            `json:"employeeID"`
-	Reviewer   BasisEmployeeInfo `json:"reviewer"`
+	Reviewer   BasicEmployeeInfo `json:"reviewer"`
 	TopicID    string            `json:"topicID"`
 	EventID    string            `json:"eventID"`
 	Title      string            `json:"title"`
@@ -153,7 +153,7 @@ func ToListSubmitFeedback(questions []*model.EmployeeEventQuestion, detailInfo F
 		})
 	}
 
-	rs.Reviewer = BasisEmployeeInfo{
+	rs.Reviewer = BasicEmployeeInfo{
 		ID:          detailInfo.Reviewer.ID.String(),
 		FullName:    detailInfo.Reviewer.FullName,
 		DisplayName: detailInfo.Reviewer.DisplayName,
@@ -206,7 +206,7 @@ func ToListSurvey(events []*model.FeedbackEvent) []Survey {
 			Title:     e.Title,
 			Type:      e.Type.String(),
 			Subtype:   e.Subtype.String(),
-			Status:    e.Status,
+			Status:    e.Status.String(),
 			StartDate: e.StartDate,
 			EndDate:   e.EndDate,
 			Count: FeedbackCount{
@@ -253,7 +253,7 @@ func ToListSurveyDetail(event *model.FeedbackEvent) SurveyDetail {
 		Title:     event.Title,
 		Type:      event.Type.String(),
 		Subtype:   event.Subtype.String(),
-		Status:    event.Status,
+		Status:    event.Status.String(),
 		StartDate: event.StartDate,
 		EndDate:   event.EndDate,
 		Author:    ToBasicEmployeeInfo(event.Employee),

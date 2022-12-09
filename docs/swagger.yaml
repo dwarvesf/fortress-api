@@ -124,6 +124,27 @@ definitions:
     - type
     - year
     type: object
+  github.com_dwarvesf_fortress-api_pkg_handler_feedback.PerformanceReviewInput:
+    properties:
+      participants:
+        items:
+          type: string
+        type: array
+      topicID:
+        type: string
+    required:
+    - participants
+    - topicID
+    type: object
+  github.com_dwarvesf_fortress-api_pkg_handler_feedback.PerformanceReviewListInput:
+    properties:
+      reviewList:
+        items:
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_feedback.PerformanceReviewInput'
+        type: array
+    required:
+    - reviewList
+    type: object
   github.com_dwarvesf_fortress-api_pkg_handler_feedback.SubmitBody:
     properties:
       answers:
@@ -564,6 +585,27 @@ definitions:
     - type
     - year
     type: object
+  pkg_handler_feedback.PerformanceReviewInput:
+    properties:
+      participants:
+        items:
+          type: string
+        type: array
+      topicID:
+        type: string
+    required:
+    - participants
+    - topicID
+    type: object
+  pkg_handler_feedback.PerformanceReviewListInput:
+    properties:
+      reviewList:
+        items:
+          $ref: '#/definitions/pkg_handler_feedback.PerformanceReviewInput'
+        type: array
+    required:
+    - reviewList
+    type: object
   pkg_handler_feedback.SubmitBody:
     properties:
       answers:
@@ -814,6 +856,17 @@ definitions:
       name:
         type: string
     type: object
+  view.BasicEmployeeInfo:
+    properties:
+      avatar:
+        type: string
+      displayName:
+        type: string
+      fullName:
+        type: string
+      id:
+        type: string
+    type: object
   view.BasicMember:
     properties:
       avatar:
@@ -836,17 +889,6 @@ definitions:
       fullName:
         type: string
       position:
-        type: string
-    type: object
-  view.BasicEmployeeInfo:
-    properties:
-      avatar:
-        type: string
-      displayName:
-        type: string
-      fullName:
-        type: string
-      id:
         type: string
     type: object
   view.Chapter:
@@ -1103,7 +1145,7 @@ definitions:
       eventID:
         type: string
       reviewer:
-        $ref: '#/definitions/view.BasisEmployeeInfo'
+        $ref: '#/definitions/view.BasicEmployeeInfo'
       status:
         type: string
       title:
@@ -1393,7 +1435,7 @@ definitions:
       eventID:
         type: string
       reviewer:
-        $ref: '#/definitions/view.BasisEmployeeInfo'
+        $ref: '#/definitions/view.BasicEmployeeInfo'
       status:
         type: string
       title:
@@ -1427,11 +1469,36 @@ definitions:
     type: object
   view.SurveyDetail:
     properties:
+      author:
+        $ref: '#/definitions/view.BasicEmployeeInfo'
+      endDate:
+        type: string
+      eventID:
+        type: string
+      startDate:
+        type: string
+      status:
+        type: string
+      subtype:
+        type: string
+      title:
+        type: string
+      topics:
+        items:
+          $ref: '#/definitions/view.Topic'
+        type: array
+      type:
+        type: string
+    type: object
+  view.Topic:
+    properties:
       count:
         $ref: '#/definitions/view.FeedbackCount'
       employee:
         $ref: '#/definitions/view.BasicEmployeeInfo'
       eventID:
+        type: string
+      id:
         type: string
       participants:
         items:
@@ -1440,8 +1507,6 @@ definitions:
       subtype:
         type: string
       title:
-        type: string
-      topicID:
         type: string
       type:
         type: string
@@ -1781,7 +1846,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.CreateEmployeeInput'
+          $ref: '#/definitions/pkg_handler_employee.CreateEmployeeInput'
       - description: jwt token
         in: header
         name: Authorization
@@ -1913,7 +1978,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateGeneralInfoInput'
+          $ref: '#/definitions/pkg_handler_employee.UpdateGeneralInfoInput'
       produces:
       - application/json
       responses:
@@ -1957,7 +2022,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdatePersonalInfoInput'
+          $ref: '#/definitions/pkg_handler_employee.UpdatePersonalInfoInput'
       produces:
       - application/json
       responses:
@@ -1996,7 +2061,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateSkillsInput'
+          $ref: '#/definitions/pkg_handler_employee.UpdateSkillsInput'
       - description: jwt token
         in: header
         name: Authorization
@@ -3360,6 +3425,50 @@ paths:
           schema:
             $ref: '#/definitions/view.ErrorResponse'
       summary: Get survey detail
+      tags:
+      - Feedback
+  /surveys/{id}/send:
+    post:
+      consumes:
+      - application/json
+      description: Send the performance review
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Feedback Event ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Body
+        in: body
+        name: Body
+        required: true
+        schema:
+          $ref: '#/definitions/pkg_handler_feedback.PerformanceReviewListInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Send the performance review
       tags:
       - Feedback
 securityDefinitions:

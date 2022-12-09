@@ -15,9 +15,22 @@ const (
 )
 
 const (
-	EventStatusDraft EventStatus = "draft"
-	EventStatusDone  EventStatus = "done"
+	EventStatusDraft      EventStatus = "draft"
+	EventStatusDone       EventStatus = "done"
+	EventStatusInProgress EventStatus = "in-progress"
 )
+
+// IsValid validation for EventStatus
+func (e EventStatus) IsValid() bool {
+	switch e {
+	case
+		EventStatusDraft,
+		EventStatusDone,
+		EventStatusInProgress:
+		return true
+	}
+	return false
+}
 
 // IsValid validation for EventType
 func (e EventType) IsValid() bool {
@@ -102,7 +115,7 @@ type FeedbackEvent struct {
 	Title     string
 	Type      EventType
 	Subtype   EventSubtype
-	Status    string
+	Status    EventStatus
 	CreatedBy UUID
 	StartDate *time.Time
 	EndDate   *time.Time
