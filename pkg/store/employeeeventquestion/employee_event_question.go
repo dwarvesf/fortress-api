@@ -27,3 +27,8 @@ func (s *store) UpdateAnswers(db *gorm.DB, data BasicEventQuestion) error {
 func (s *store) BatchCreate(db *gorm.DB, employeeEventQuestions []model.EmployeeEventQuestion) ([]model.EmployeeEventQuestion, error) {
 	return employeeEventQuestions, db.Create(&employeeEventQuestions).Error
 }
+
+// Create a employee event question
+func (s *store) Create(tx *gorm.DB, eventQuestion *model.EmployeeEventQuestion) (*model.EmployeeEventQuestion, error) {
+	return eventQuestion, tx.Create(&eventQuestion).Error
+}

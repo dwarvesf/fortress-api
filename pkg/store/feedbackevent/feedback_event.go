@@ -60,3 +60,9 @@ func (s *store) One(db *gorm.DB, id string) (*model.FeedbackEvent, error) {
 		Preload("Employee", "deleted_at IS NULL").
 		First(&event).Error
 }
+
+// UpdateSelectedFieldsByID just update selected fields by id
+func (s *store) UpdateSelectedFieldsByID(db *gorm.DB, id string, updateModel model.FeedbackEvent, updatedFields ...string) (*model.FeedbackEvent, error) {
+	feedbackEvent := model.FeedbackEvent{}
+	return &feedbackEvent, db.Model(&feedbackEvent).Where("id = ?", id).Select(updatedFields).Updates(updateModel).Error
+}

@@ -206,7 +206,7 @@ func ToListSurvey(events []*model.FeedbackEvent) []Survey {
 			Title:     e.Title,
 			Type:      e.Type.String(),
 			Subtype:   e.Subtype.String(),
-			Status:    e.Status,
+			Status:    e.Status.String(),
 			StartDate: e.StartDate,
 			EndDate:   e.EndDate,
 			Count: FeedbackCount{
@@ -253,7 +253,7 @@ func ToListSurveyDetail(event *model.FeedbackEvent) SurveyDetail {
 		Title:     event.Title,
 		Type:      event.Type.String(),
 		Subtype:   event.Subtype.String(),
-		Status:    event.Status,
+		Status:    event.Status.String(),
 		StartDate: event.StartDate,
 		EndDate:   event.EndDate,
 		Author:    ToBasicEmployeeInfo(event.Employee),

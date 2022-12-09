@@ -313,7 +313,7 @@ func TestHandler_GetQuestion(t *testing.T) {
 			name:             "ok_get_questions",
 			wantCode:         200,
 			wantResponsePath: "testdata/get_questions/200.json",
-			query:            "category=feedback&subcategory=peer-review",
+			query:            "category=survey&subcategory=peer-review",
 		},
 		{
 			name:             "invalid_subtype",
