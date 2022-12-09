@@ -11,7 +11,7 @@
             },
             {
                 "eventQuestionID": "795219e6-67d8-4611-a5cb-38fb1057e4ee",
-                "content": "How effective of a leader is this person",
+                "content": "How effective of a leader is this person?",
                 "answer": "ok",
                 "note": "",
                 "type": "general",
@@ -19,7 +19,7 @@
             },
             {
                 "eventQuestionID": "40177889-8098-4cb7-931e-9cfe857e56f7",
-                "content": "Does this person find creative solutions",
+                "content": "Does this person find creative solutions?",
                 "answer": "ok",
                 "note": "",
                 "type": "general",
@@ -51,7 +51,7 @@
             },
             {
                 "eventQuestionID": "faab80cf-9b4c-4deb-96b6-3d7a46cc5e7d",
-                "content": "If you could give this person one piece of constructive advice to make them more effective in their role",
+                "content": "If you could give this person one piece of constructive advice to make them more effective in their role?",
                 "answer": "ok",
                 "note": "",
                 "type": "general",
