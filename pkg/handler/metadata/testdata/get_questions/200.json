@@ -13,7 +13,7 @@
             "type": "general",
             "category": "feedback",
             "subcategory": "peer-review",
-            "content": "How effective of a leader is this person",
+            "content": "How effective of a leader is this person?",
             "order": 2
         },
         {
@@ -21,7 +21,7 @@
             "type": "general",
             "category": "feedback",
             "subcategory": "peer-review",
-            "content": "Does this person find creative solutions",
+            "content": "Does this person find creative solutions?",
             "order": 3
         },
         {
@@ -53,7 +53,7 @@
             "type": "general",
             "category": "feedback",
             "subcategory": "peer-review",
-            "content": "If you could give this person one piece of constructive advice to make them more effective in their role",
+            "content": "If you could give this person one piece of constructive advice to make them more effective in their role?",
             "order": 7
         }
     ]
