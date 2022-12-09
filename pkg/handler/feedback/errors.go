@@ -25,6 +25,8 @@ var (
 	ErrInvalidEventSubType      = errors.New("invalid event subtype")
 	ErrInvalidQuarter           = errors.New("invalid quarter")
 	ErrEmployeeNotFound         = errors.New("employee not found")
+
+	ErrAlreadySent = errors.New("surveys already sent to all participants")
 )
 
 func errEventQuestionNotFound(id string) error {

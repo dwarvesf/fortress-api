@@ -28,3 +28,8 @@ func (s *store) UpdateSelectedFieldsByID(db *gorm.DB, id string, updateModel mod
 func (s *store) BatchCreate(db *gorm.DB, employeeEventReviewers []model.EmployeeEventReviewer) ([]model.EmployeeEventReviewer, error) {
 	return employeeEventReviewers, db.Create(&employeeEventReviewers).Error
 }
+
+// Create a employee event reviewer
+func (s *store) Create(tx *gorm.DB, eventReviewer *model.EmployeeEventReviewer) (*model.EmployeeEventReviewer, error) {
+	return eventReviewer, tx.Create(&eventReviewer).Error
+}

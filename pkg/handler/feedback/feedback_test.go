@@ -365,3 +365,71 @@ func TestHandler_Submit(t *testing.T) {
 		})
 	}
 }
+
+func TestHandler_SendPerformanceReview(t *testing.T) {
+	cfg := config.LoadTestConfig()
+	loggerMock := logger.NewLogrusLogger()
+	serviceMock := service.New(&cfg)
+	storeMock := store.New()
+	testRepoMock := store.NewPostgresStore(&cfg)
+
+	tests := []struct {
+		name             string
+		id               string
+		wantCode         int
+		wantResponsePath string
+		body             PerformanceReviewListInput
+	}{
+		{
+			name:             "happy_case",
+			id:               "8a5bfedb-6e11-4f5c-82d9-2635cfcce3e2",
+			wantCode:         http.StatusOK,
+			wantResponsePath: "testdata/send_performance_review/200.json",
+			body: PerformanceReviewListInput{
+				[]PerformanceReviewInput{
+					{
+						TopicID: model.MustGetUUIDFromString("e4a33adc-2495-43cf-b816-32feb8d5250d"),
+						Participants: []model.UUID{
+							model.MustGetUUIDFromString("061820c0-bf6c-4b4a-9753-875f75d71a2c"),
+						},
+					},
+				},
+			},
+		},
+		{
+			name:             "not_found_case",
+			id:               "8a5bfedb-6e11-4f5c-82d9-2635cfcce3e1",
+			wantCode:         http.StatusNotFound,
+			wantResponsePath: "testdata/send_performance_review/404.json",
+			body: PerformanceReviewListInput{
+				[]PerformanceReviewInput{
+					{
+						TopicID: model.MustGetUUIDFromString("e4a33adc-2495-43cf-b816-32feb8d5250d"),
+						Participants: []model.UUID{
+							model.MustGetUUIDFromString("061820c0-bf6c-4b4a-9753-875f75d71a2c"),
+						},
+					},
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			w := httptest.NewRecorder()
+			ctx, _ := gin.CreateTestContext(w)
+			byteReq, _ := json.Marshal(tt.body)
+			bodyReader := strings.NewReader(string(byteReq))
+			ctx.Request = httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/surveys/%s", tt.id), bodyReader)
+			ctx.Request.Header.Set("Authorization", testToken)
+			ctx.AddParam("id", tt.id)
+
+			h := New(storeMock, testRepoMock, serviceMock, loggerMock, &cfg)
+			h.SendPerformmentReview(ctx)
+			require.Equal(t, tt.wantCode, w.Code)
+			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+			require.NoError(t, err)
+
+			require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Feedback.SendPerformmentReview] response mismatched")
+		})
+	}
+}

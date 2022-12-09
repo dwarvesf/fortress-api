@@ -32,9 +32,9 @@ func (e EventReviewerStatus) IsValid() bool {
 	switch e {
 	case
 		EventReviewerStatusNone,
-		EventReviewerStatusNew,
 		EventReviewerStatusDraft,
-		EventReviewerStatusDone:
+		EventReviewerStatusDone,
+		EventReviewerStatusNew:
 		return true
 	}
 	return false

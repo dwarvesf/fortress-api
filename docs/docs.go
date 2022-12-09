@@ -1260,7 +1260,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/pkg_handler_profile.UpdateInfoInput"
+                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_profile.UpdateInfoInput"
                         }
                     }
                 ],
@@ -2573,6 +2573,70 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "post": {
+                "description": "Send the performance review",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Feedback"
+                ],
+                "summary": "Send the performance review",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Feedback Event ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Body",
+                        "name": "Body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/pkg_handler_feedback.PerformanceReviewListInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.MessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
             }
         }
     },
@@ -2752,6 +2816,38 @@ const docTemplate = `{
                 },
                 "year": {
                     "type": "integer"
+                }
+            }
+        },
+        "github.com_dwarvesf_fortress-api_pkg_handler_feedback.PerformanceReviewInput": {
+            "type": "object",
+            "required": [
+                "participants",
+                "topicID"
+            ],
+            "properties": {
+                "participants": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "topicID": {
+                    "type": "string"
+                }
+            }
+        },
+        "github.com_dwarvesf_fortress-api_pkg_handler_feedback.PerformanceReviewListInput": {
+            "type": "object",
+            "required": [
+                "reviewList"
+            ],
+            "properties": {
+                "reviewList": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_feedback.PerformanceReviewInput"
+                    }
                 }
             }
         },
@@ -3403,6 +3499,38 @@ const docTemplate = `{
                 }
             }
         },
+        "pkg_handler_feedback.PerformanceReviewInput": {
+            "type": "object",
+            "required": [
+                "participants",
+                "topicID"
+            ],
+            "properties": {
+                "participants": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "topicID": {
+                    "type": "string"
+                }
+            }
+        },
+        "pkg_handler_feedback.PerformanceReviewListInput": {
+            "type": "object",
+            "required": [
+                "reviewList"
+            ],
+            "properties": {
+                "reviewList": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/pkg_handler_feedback.PerformanceReviewInput"
+                    }
+                }
+            }
+        },
         "pkg_handler_feedback.SubmitBody": {
             "type": "object",
             "required": [
@@ -3771,6 +3899,23 @@ const docTemplate = `{
                 }
             }
         },
+        "view.BasicEmployeeInfo": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string"
+                },
+                "displayName": {
+                    "type": "string"
+                },
+                "fullName": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                }
+            }
+        },
         "view.BasicMember": {
             "type": "object",
             "properties": {
@@ -3804,23 +3949,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "position": {
-                    "type": "string"
-                }
-            }
-        },
-        "view.BasicEmployeeInfo": {
-            "type": "object",
-            "properties": {
-                "avatar": {
-                    "type": "string"
-                },
-                "displayName": {
-                    "type": "string"
-                },
-                "fullName": {
-                    "type": "string"
-                },
-                "id": {
                     "type": "string"
                 }
             }
@@ -4212,7 +4340,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "reviewer": {
-                    "$ref": "#/definitions/view.BasisEmployeeInfo"
+                    "$ref": "#/definitions/view.BasicEmployeeInfo"
                 },
                 "status": {
                     "type": "string"
@@ -4659,7 +4787,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "reviewer": {
-                    "$ref": "#/definitions/view.BasisEmployeeInfo"
+                    "$ref": "#/definitions/view.BasicEmployeeInfo"
                 },
                 "status": {
                     "type": "string"
@@ -4712,6 +4840,41 @@ const docTemplate = `{
         "view.SurveyDetail": {
             "type": "object",
             "properties": {
+                "author": {
+                    "$ref": "#/definitions/view.BasicEmployeeInfo"
+                },
+                "endDate": {
+                    "type": "string"
+                },
+                "eventID": {
+                    "type": "string"
+                },
+                "startDate": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "subtype": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "topics": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.Topic"
+                    }
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "view.Topic": {
+            "type": "object",
+            "properties": {
                 "count": {
                     "$ref": "#/definitions/view.FeedbackCount"
                 },
@@ -4719,6 +4882,9 @@ const docTemplate = `{
                     "$ref": "#/definitions/view.BasicEmployeeInfo"
                 },
                 "eventID": {
+                    "type": "string"
+                },
+                "id": {
                     "type": "string"
                 },
                 "participants": {
@@ -4731,9 +4897,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "title": {
-                    "type": "string"
-                },
-                "topicID": {
                     "type": "string"
                 },
                 "type": {
