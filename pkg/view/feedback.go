@@ -76,9 +76,10 @@ type FeedbackDetail struct {
 	Answers    []*QuestionAnswer `json:"answers"`
 	Status     string            `json:"status"`
 	EmployeeID string            `json:"employeeID"`
-	ReviewerID string            `json:"reviewerID"`
+	Reviewer   BasisEmployeeInfo `json:"reviewer"`
 	TopicID    string            `json:"topicID"`
 	EventID    string            `json:"eventID"`
+	Title      string            `json:"title"`
 }
 
 type FeedbackDetailResponse struct {
@@ -88,9 +89,10 @@ type FeedbackDetailResponse struct {
 type FeedbackDetailInfo struct {
 	Status     model.EventReviewerStatus
 	EmployeeID string
-	ReviewerID string
+	Reviewer   *model.Employee
 	TopicID    string
 	EventID    string
+	Title      string
 }
 
 func ToListFeedbackDetails(questions []*model.EmployeeEventQuestion, detailInfo FeedbackDetailInfo) FeedbackDetail {
@@ -107,11 +109,18 @@ func ToListFeedbackDetails(questions []*model.EmployeeEventQuestion, detailInfo 
 		})
 	}
 
+	rs.Reviewer = BasisEmployeeInfo{
+		ID:          detailInfo.Reviewer.ID.String(),
+		FullName:    detailInfo.Reviewer.FullName,
+		DisplayName: detailInfo.Reviewer.DisplayName,
+		Avatar:      detailInfo.Reviewer.Avatar,
+	}
+
 	rs.Status = detailInfo.Status.String()
 	rs.EmployeeID = detailInfo.EmployeeID
-	rs.ReviewerID = detailInfo.ReviewerID
 	rs.TopicID = detailInfo.TopicID
 	rs.EventID = detailInfo.EventID
+	rs.Title = detailInfo.Title
 
 	return rs
 }
@@ -120,9 +129,10 @@ type SubmitFeedback struct {
 	Answers    []*QuestionAnswer `json:"answers"`
 	Status     string            `json:"status"`
 	EmployeeID string            `json:"employeeID"`
-	ReviewerID string            `json:"reviewerID"`
+	Reviewer   BasisEmployeeInfo `json:"reviewer"`
 	TopicID    string            `json:"topicID"`
 	EventID    string            `json:"eventID"`
+	Title      string            `json:"title"`
 }
 
 type SubmitFeedbackResponse struct {
@@ -143,11 +153,18 @@ func ToListSubmitFeedback(questions []*model.EmployeeEventQuestion, detailInfo F
 		})
 	}
 
+	rs.Reviewer = BasisEmployeeInfo{
+		ID:          detailInfo.Reviewer.ID.String(),
+		FullName:    detailInfo.Reviewer.FullName,
+		DisplayName: detailInfo.Reviewer.DisplayName,
+		Avatar:      detailInfo.Reviewer.Avatar,
+	}
+
 	rs.Status = detailInfo.Status.String()
 	rs.EmployeeID = detailInfo.EmployeeID
-	rs.ReviewerID = detailInfo.ReviewerID
 	rs.TopicID = detailInfo.TopicID
 	rs.EventID = detailInfo.EventID
+	rs.Title = detailInfo.Title
 
 	return rs
 }

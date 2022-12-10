@@ -166,12 +166,26 @@ func (h *handler) Detail(c *gin.Context) {
 		return
 	}
 
+	reviewer, err := h.store.Employee.One(h.repo.DB(), userID)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		l.Error(ErrReviewerNotFound, "reviewer not found")
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrReviewerNotFound, nil, ""))
+		return
+	}
+
+	if err != nil {
+		l.Error(err, "failed to get reviewer")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
 	detailInfo := view.FeedbackDetailInfo{
 		Status:     eventReviewer.ReviewerStatus,
 		EmployeeID: topic.EmployeeID.String(),
-		ReviewerID: userID,
+		Reviewer:   reviewer,
 		TopicID:    input.TopicID,
 		EventID:    input.EventID,
+		Title:      topic.Title,
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToListFeedbackDetails(questions, detailInfo), nil, nil, nil, ""))
@@ -423,12 +437,26 @@ func (h *handler) Submit(c *gin.Context) {
 		}
 	}
 
+	reviewer, err := h.store.Employee.One(h.repo.DB(), userID)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		l.Error(ErrReviewerNotFound, "reviewer not found")
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrReviewerNotFound, nil, ""))
+		return
+	}
+
+	if err != nil {
+		l.Error(err, "failed to get reviewer")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
 	detailInfo := view.FeedbackDetailInfo{
 		Status:     eventReviewer.ReviewerStatus,
 		EmployeeID: topic.EmployeeID.String(),
-		ReviewerID: userID,
+		Reviewer:   reviewer,
 		TopicID:    input.TopicID,
 		EventID:    input.EventID,
+		Title:      topic.Title,
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToListSubmitFeedback(eventQuestions, detailInfo), nil, nil, done(nil), ""))
