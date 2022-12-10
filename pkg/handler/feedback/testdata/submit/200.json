@@ -60,8 +60,14 @@
         ],
         "status": "draft",
         "employeeID": "37e00d47-de69-4ac8-991b-cf3e39565c00",
-        "reviewerID": "2655832e-f009-4b73-a535-64c3a22e558f",
+        "reviewer": {
+            "id": "2655832e-f009-4b73-a535-64c3a22e558f",
+            "fullName": "Phạm Đức Thành",
+            "displayName": "Thanh Pham",
+            "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png"
+        },
         "topicID": "e4a33adc-2495-43cf-b816-32feb8d5250d",
-        "eventID": "8a5bfedb-6e11-4f5c-82d9-2635cfcce3e2"
+        "eventID": "8a5bfedb-6e11-4f5c-82d9-2635cfcce3e2",
+        "title": "Review Thuong Phung"
     }
 }

@@ -1,6 +1,6 @@
 basePath: /api/v1
 definitions:
-  employee.CreateEmployeeInput:
+  github.com_dwarvesf_fortress-api_pkg_handler_employee.CreateEmployeeInput:
     properties:
       displayName:
         type: string
@@ -33,7 +33,7 @@ definitions:
     - status
     - teamEmail
     type: object
-  employee.UpdateGeneralInfoInput:
+  github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateGeneralInfoInput:
     properties:
       discordID:
         type: string
@@ -57,7 +57,7 @@ definitions:
     - fullName
     - phone
     type: object
-  employee.UpdatePersonalInfoInput:
+  github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdatePersonalInfoInput:
     properties:
       address:
         maxLength: 200
@@ -74,7 +74,7 @@ definitions:
     - gender
     - personalEmail
     type: object
-  employee.UpdateSkillsInput:
+  github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateSkillsInput:
     properties:
       chapters:
         items:
@@ -100,7 +100,7 @@ definitions:
     - seniority
     - stacks
     type: object
-  feedback.BasicEventQuestionInput:
+  github.com_dwarvesf_fortress-api_pkg_handler_feedback.BasicEventQuestionInput:
     properties:
       answer:
         type: string
@@ -111,7 +111,7 @@ definitions:
     required:
     - eventQuestionID
     type: object
-  feedback.CreateSurveyFeedbackInput:
+  github.com_dwarvesf_fortress-api_pkg_handler_feedback.CreateSurveyFeedbackInput:
     properties:
       quarter:
         type: string
@@ -124,173 +124,19 @@ definitions:
     - type
     - year
     type: object
-  feedback.SubmitBody:
+  github.com_dwarvesf_fortress-api_pkg_handler_feedback.SubmitBody:
     properties:
       answers:
         items:
-          $ref: '#/definitions/feedback.BasicEventQuestionInput'
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_feedback.BasicEventQuestionInput'
         type: array
       status:
-        $ref: '#/definitions/model.EventReviewerStatus'
+        type: string
     required:
     - answers
     - status
     type: object
-  model.Chapter:
-    properties:
-      code:
-        type: string
-      createdAt:
-        type: string
-      deletedAt:
-        type: string
-      id:
-        type: string
-      lead_id:
-        type: string
-      name:
-        type: string
-      updatedAt:
-        type: string
-    type: object
-  model.Country:
-    properties:
-      cities:
-        items:
-          type: string
-        type: array
-      code:
-        type: string
-      createdAt:
-        type: string
-      deletedAt:
-        type: string
-      id:
-        type: string
-      name:
-        type: string
-      updatedAt:
-        type: string
-    type: object
-  model.EventReviewerStatus:
-    enum:
-    - draft
-    - done
-    type: string
-    x-enum-varnames:
-    - EventReviewerStatusDraft
-    - EventReviewerStatusDone
-  model.HeadPosition:
-    enum:
-    - technical-lead
-    - delivery-manager
-    - account-manager
-    - sale-person
-    type: string
-    x-enum-varnames:
-    - HeadPositionTechnicalLead
-    - HeadPositionDeliveryManager
-    - HeadPositionAccountManager
-    - HeadPositionSalePerson
-  model.Position:
-    properties:
-      code:
-        type: string
-      createdAt:
-        type: string
-      deletedAt:
-        type: string
-      id:
-        type: string
-      name:
-        type: string
-      updatedAt:
-        type: string
-    type: object
-  model.ProjectStatus:
-    enum:
-    - on-boarding
-    - active
-    - paused
-    - closed
-    type: string
-    x-enum-varnames:
-    - ProjectStatusOnBoarding
-    - ProjectStatusActive
-    - ProjectStatusPaused
-    - ProjectStatusClosed
-  model.Role:
-    properties:
-      code:
-        type: string
-      createdAt:
-        type: string
-      deletedAt:
-        type: string
-      id:
-        type: string
-      name:
-        type: string
-      updatedAt:
-        type: string
-    type: object
-  model.Seniority:
-    properties:
-      code:
-        type: string
-      createdAt:
-        type: string
-      deletedAt:
-        type: string
-      id:
-        type: string
-      name:
-        type: string
-      updatedAt:
-        type: string
-    type: object
-  model.Stack:
-    properties:
-      code:
-        type: string
-      createdAt:
-        type: string
-      deletedAt:
-        type: string
-      id:
-        type: string
-      name:
-        type: string
-      updatedAt:
-        type: string
-    type: object
-  model.WorkUnitType:
-    enum:
-    - development
-    - management
-    - training
-    - learning
-    type: string
-    x-enum-varnames:
-    - WorkUnitTypeDevelopment
-    - WorkUnitTypeManagement
-    - WorkUnitTypeTraining
-    - WorkUnitTypeLearning
-  model.WorkingStatus:
-    enum:
-    - on-boarding
-    - left
-    - probation
-    - full-time
-    - contractor
-    type: string
-    x-enum-varnames:
-    - WorkingStatusOnBoarding
-    - WorkingStatusLeft
-    - WorkingStatusProbation
-    - WorkingStatusFullTime
-    - WorkingStatusContractor
-  profile.UpdateInfoInput:
+  github.com_dwarvesf_fortress-api_pkg_handler_profile.UpdateInfoInput:
     properties:
       discordID:
         type: string
@@ -311,7 +157,7 @@ definitions:
     - phoneNumber
     - teamEmail
     type: object
-  project.AssignMemberInput:
+  github.com_dwarvesf_fortress-api_pkg_handler_project.AssignMemberInput:
     properties:
       deploymentType:
         type: string
@@ -342,7 +188,7 @@ definitions:
     - seniorityID
     - status
     type: object
-  project.CreateProjectInput:
+  github.com_dwarvesf_fortress-api_pkg_handler_project.CreateProjectInput:
     properties:
       accountManagerID:
         type: string
@@ -354,7 +200,7 @@ definitions:
         type: string
       members:
         items:
-          $ref: '#/definitions/project.AssignMemberInput'
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.AssignMemberInput'
         type: array
       name:
         type: string
@@ -372,7 +218,7 @@ definitions:
     - name
     - status
     type: object
-  project.CreateWorkUnitBody:
+  github.com_dwarvesf_fortress-api_pkg_handler_project.CreateWorkUnitBody:
     properties:
       members:
         items:
@@ -396,7 +242,7 @@ definitions:
     - status
     - type
     type: object
-  project.UpdateContactInfoInput:
+  github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateContactInfoInput:
     properties:
       accountManagerID:
         type: string
@@ -409,7 +255,7 @@ definitions:
     required:
     - accountManagerID
     type: object
-  project.UpdateGeneralInfoInput:
+  github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateGeneralInfoInput:
     properties:
       countryID:
         type: string
@@ -425,7 +271,7 @@ definitions:
     - countryID
     - name
     type: object
-  project.UpdateMemberInput:
+  github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateMemberInput:
     properties:
       deploymentType:
         type: string
@@ -459,7 +305,7 @@ definitions:
     - seniorityID
     - status
     type: object
-  project.UpdateWorkUnitBody:
+  github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateWorkUnitBody:
     properties:
       members:
         items:
@@ -473,7 +319,7 @@ definitions:
           type: string
         type: array
       type:
-        $ref: '#/definitions/model.WorkUnitType'
+        type: string
       url:
         type: string
     required:
@@ -481,10 +327,450 @@ definitions:
     - stacks
     - type
     type: object
-  project.UpdateWorkUnitInput:
+  github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateWorkUnitInput:
     properties:
       body:
-        $ref: '#/definitions/project.UpdateWorkUnitBody'
+        $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateWorkUnitBody'
+      projectID:
+        type: string
+      workUnitID:
+        type: string
+    type: object
+  gorm.DeletedAt:
+    properties:
+      time:
+        type: string
+      valid:
+        description: Valid is true if Time is not NULL
+        type: boolean
+    type: object
+  model.Chapter:
+    properties:
+      code:
+        type: string
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      id:
+        type: string
+      lead_id:
+        type: string
+      name:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  model.Country:
+    properties:
+      cities:
+        items:
+          type: string
+        type: array
+      code:
+        type: string
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      id:
+        type: string
+      name:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  model.Position:
+    properties:
+      code:
+        type: string
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      id:
+        type: string
+      name:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  model.Role:
+    properties:
+      code:
+        type: string
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      id:
+        type: string
+      name:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  model.Seniority:
+    properties:
+      code:
+        type: string
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      id:
+        type: string
+      name:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  model.Stack:
+    properties:
+      code:
+        type: string
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      id:
+        type: string
+      name:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  pkg_handler_employee.CreateEmployeeInput:
+    properties:
+      displayName:
+        type: string
+      fullName:
+        maxLength: 100
+        type: string
+      personalEmail:
+        type: string
+      positions:
+        items:
+          type: string
+        type: array
+      roleID:
+        type: string
+      salary:
+        type: integer
+      seniorityID:
+        type: string
+      status:
+        type: string
+      teamEmail:
+        type: string
+    required:
+    - fullName
+    - personalEmail
+    - positions
+    - roleID
+    - salary
+    - seniorityID
+    - status
+    - teamEmail
+    type: object
+  pkg_handler_employee.UpdateGeneralInfoInput:
+    properties:
+      discordID:
+        type: string
+      email:
+        type: string
+      fullName:
+        maxLength: 99
+        type: string
+      githubID:
+        type: string
+      lineManagerID:
+        type: string
+      notionID:
+        type: string
+      phone:
+        maxLength: 12
+        minLength: 10
+        type: string
+    required:
+    - email
+    - fullName
+    - phone
+    type: object
+  pkg_handler_employee.UpdatePersonalInfoInput:
+    properties:
+      address:
+        maxLength: 200
+        type: string
+      dob:
+        type: string
+      gender:
+        type: string
+      personalEmail:
+        type: string
+    required:
+    - address
+    - dob
+    - gender
+    - personalEmail
+    type: object
+  pkg_handler_employee.UpdateSkillsInput:
+    properties:
+      chapters:
+        items:
+          type: string
+        type: array
+      leadingChapters:
+        items:
+          type: string
+        type: array
+      positions:
+        items:
+          type: string
+        type: array
+      seniority:
+        type: string
+      stacks:
+        items:
+          type: string
+        type: array
+    required:
+    - chapters
+    - positions
+    - seniority
+    - stacks
+    type: object
+  pkg_handler_feedback.BasicEventQuestionInput:
+    properties:
+      answer:
+        type: string
+      eventQuestionID:
+        type: string
+      note:
+        type: string
+    required:
+    - eventQuestionID
+    type: object
+  pkg_handler_feedback.CreateSurveyFeedbackInput:
+    properties:
+      quarter:
+        type: string
+      type:
+        type: string
+      year:
+        type: integer
+    required:
+    - quarter
+    - type
+    - year
+    type: object
+  pkg_handler_feedback.SubmitBody:
+    properties:
+      answers:
+        items:
+          $ref: '#/definitions/pkg_handler_feedback.BasicEventQuestionInput'
+        type: array
+      status:
+        type: string
+    required:
+    - answers
+    - status
+    type: object
+  pkg_handler_profile.UpdateInfoInput:
+    properties:
+      discordID:
+        type: string
+      githubID:
+        type: string
+      notionID:
+        type: string
+      personalEmail:
+        type: string
+      phoneNumber:
+        maxLength: 12
+        minLength: 10
+        type: string
+      teamEmail:
+        type: string
+    required:
+    - personalEmail
+    - phoneNumber
+    - teamEmail
+    type: object
+  pkg_handler_project.AssignMemberInput:
+    properties:
+      deploymentType:
+        type: string
+      discount:
+        type: number
+      employeeID:
+        type: string
+      isLead:
+        type: boolean
+      joinedDate:
+        type: string
+      leftDate:
+        type: string
+      positions:
+        items:
+          type: string
+        type: array
+      rate:
+        type: number
+      seniorityID:
+        type: string
+      status:
+        type: string
+    required:
+    - deploymentType
+    - positions
+    - rate
+    - seniorityID
+    - status
+    type: object
+  pkg_handler_project.CreateProjectInput:
+    properties:
+      accountManagerID:
+        type: string
+      clientEmail:
+        type: string
+      countryID:
+        type: string
+      deliveryManagerID:
+        type: string
+      members:
+        items:
+          $ref: '#/definitions/pkg_handler_project.AssignMemberInput'
+        type: array
+      name:
+        type: string
+      projectEmail:
+        type: string
+      startDate:
+        type: string
+      status:
+        type: string
+      type:
+        type: string
+    required:
+    - accountManagerID
+    - countryID
+    - name
+    - status
+    type: object
+  pkg_handler_project.CreateWorkUnitBody:
+    properties:
+      members:
+        items:
+          type: string
+        type: array
+      name:
+        type: string
+      stacks:
+        items:
+          type: string
+        type: array
+      status:
+        type: string
+      type:
+        type: string
+      url:
+        type: string
+    required:
+    - name
+    - stacks
+    - status
+    - type
+    type: object
+  pkg_handler_project.UpdateContactInfoInput:
+    properties:
+      accountManagerID:
+        type: string
+      clientEmail:
+        type: string
+      deliveryManagerID:
+        type: string
+      projectEmail:
+        type: string
+    required:
+    - accountManagerID
+    type: object
+  pkg_handler_project.UpdateGeneralInfoInput:
+    properties:
+      countryID:
+        type: string
+      name:
+        type: string
+      stacks:
+        items:
+          type: string
+        type: array
+      startDate:
+        type: string
+    required:
+    - countryID
+    - name
+    type: object
+  pkg_handler_project.UpdateMemberInput:
+    properties:
+      deploymentType:
+        type: string
+      discount:
+        type: number
+      employeeID:
+        type: string
+      isLead:
+        type: boolean
+      joinedDate:
+        type: string
+      leftDate:
+        type: string
+      positions:
+        items:
+          type: string
+        type: array
+      projectSlotID:
+        type: string
+      rate:
+        type: number
+      seniorityID:
+        type: string
+      status:
+        type: string
+    required:
+    - deploymentType
+    - positions
+    - projectSlotID
+    - rate
+    - seniorityID
+    - status
+    type: object
+  pkg_handler_project.UpdateWorkUnitBody:
+    properties:
+      members:
+        items:
+          type: string
+        type: array
+      name:
+        maxLength: 100
+        type: string
+      stacks:
+        items:
+          type: string
+        type: array
+      type:
+        type: string
+      url:
+        type: string
+    required:
+    - name
+    - stacks
+    - type
+    type: object
+  pkg_handler_project.UpdateWorkUnitInput:
+    properties:
+      body:
+        $ref: '#/definitions/pkg_handler_project.UpdateWorkUnitBody'
       projectID:
         type: string
       workUnitID:
@@ -550,7 +836,7 @@ definitions:
       fullName:
         type: string
       position:
-        $ref: '#/definitions/model.HeadPosition'
+        type: string
     type: object
   view.BasicEmployeeInfo:
     properties:
@@ -638,7 +924,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       deliveryManager:
         $ref: '#/definitions/view.ProjectHead'
       id:
@@ -685,7 +971,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       discordID:
         type: string
       displayName:
@@ -734,9 +1020,8 @@ definitions:
           $ref: '#/definitions/view.Stack'
         type: array
       status:
-        allOf:
-        - $ref: '#/definitions/model.WorkingStatus'
         description: working info
+        type: string
       teamEmail:
         type: string
       updatedAt:
@@ -817,9 +1102,11 @@ definitions:
         type: string
       eventID:
         type: string
-      reviewerID:
-        type: string
+      reviewer:
+        $ref: '#/definitions/view.BasisEmployeeInfo'
       status:
+        type: string
+      title:
         type: string
       topicID:
         type: string
@@ -937,7 +1224,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       deliveryManager:
         $ref: '#/definitions/view.ProjectHead'
       endDate:
@@ -1105,9 +1392,11 @@ definitions:
         type: string
       eventID:
         type: string
-      reviewerID:
-        type: string
+      reviewer:
+        $ref: '#/definitions/view.BasisEmployeeInfo'
       status:
+        type: string
+      title:
         type: string
       topicID:
         type: string
@@ -1172,7 +1461,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       discordID:
         type: string
       fullName:
@@ -1202,7 +1491,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       gender:
         type: string
       id:
@@ -1222,7 +1511,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       discordID:
         type: string
       githubID:
@@ -1292,7 +1581,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       id:
         type: string
       positions:
@@ -1318,7 +1607,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       endDate:
         type: string
       id:
@@ -1492,7 +1781,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/employee.CreateEmployeeInput'
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.CreateEmployeeInput'
       - description: jwt token
         in: header
         name: Authorization
@@ -1579,7 +1868,8 @@ paths:
         name: employeeStatus
         required: true
         schema:
-          $ref: '#/definitions/model.WorkingStatus'
+          description: working info
+          type: string
       produces:
       - application/json
       responses:
@@ -1623,7 +1913,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/employee.UpdateGeneralInfoInput'
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateGeneralInfoInput'
       produces:
       - application/json
       responses:
@@ -1667,7 +1957,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/employee.UpdatePersonalInfoInput'
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdatePersonalInfoInput'
       produces:
       - application/json
       responses:
@@ -1706,7 +1996,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/employee.UpdateSkillsInput'
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateSkillsInput'
       - description: jwt token
         in: header
         name: Authorization
@@ -1882,7 +2172,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/feedback.SubmitBody'
+          $ref: '#/definitions/pkg_handler_feedback.SubmitBody'
       produces:
       - application/json
       responses:
@@ -2192,7 +2482,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/profile.UpdateInfoInput'
+          $ref: '#/definitions/pkg_handler_profile.UpdateInfoInput'
       produces:
       - application/json
       responses:
@@ -2402,7 +2692,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/project.CreateProjectInput'
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.CreateProjectInput'
       produces:
       - application/json
       responses:
@@ -2537,7 +2827,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/project.UpdateContactInfoInput'
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateContactInfoInput'
       produces:
       - application/json
       responses:
@@ -2581,7 +2871,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/project.UpdateGeneralInfoInput'
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateGeneralInfoInput'
       produces:
       - application/json
       responses:
@@ -2625,7 +2915,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/project.AssignMemberInput'
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.AssignMemberInput'
       produces:
       - application/json
       responses:
@@ -2668,7 +2958,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/project.UpdateMemberInput'
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateMemberInput'
       produces:
       - application/json
       responses:
@@ -2712,7 +3002,7 @@ paths:
         name: status
         required: true
         schema:
-          $ref: '#/definitions/model.ProjectStatus'
+          type: string
       produces:
       - application/json
       responses:
@@ -2793,7 +3083,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/project.CreateWorkUnitBody'
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.CreateWorkUnitBody'
       produces:
       - application/json
       responses:
@@ -2928,7 +3218,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/project.UpdateWorkUnitInput'
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateWorkUnitInput'
       produces:
       - application/json
       responses:
@@ -3003,7 +3293,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/feedback.CreateSurveyFeedbackInput'
+          $ref: '#/definitions/pkg_handler_feedback.CreateSurveyFeedbackInput'
       - description: jwt token
         in: header
         name: Authorization

@@ -7,6 +7,7 @@ import (
 
 var (
 	ErrEventNotFound                 = errors.New("event not found")
+	ErrReviewerNotFound              = errors.New("reviewer not found")
 	ErrEmployeeEventReviewerNotFound = errors.New("employee event reviewer not found")
 	ErrInvalidEventType              = errors.New("invalid event type")
 	ErrInvalidReviewerID             = errors.New("invalid reviewer id")
