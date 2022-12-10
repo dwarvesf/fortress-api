@@ -72,6 +72,14 @@ type QuestionAnswer struct {
 	Order           int64  `json:"order"`
 }
 
+type FeedBackReviewDetail struct {
+	Questions    []QuestionAnswer  `json:"questions"`
+	TopicName    string            `json:"topicName"`
+	Relationship string            `json:"relationship"`
+	Employee     BasicEmployeeInfo `json:"employee"`
+	Reviewer     BasicEmployeeInfo `json:"reviewer"`
+}
+
 type FeedbackDetail struct {
 	Answers    []*QuestionAnswer `json:"answers"`
 	Status     string            `json:"status"`
@@ -167,6 +175,43 @@ func ToListSubmitFeedback(questions []*model.EmployeeEventQuestion, detailInfo F
 	rs.Title = detailInfo.Title
 
 	return rs
+}
+
+type FeedbackReviewDetailResponse struct {
+	Data *FeedBackReviewDetail `json:"data"`
+}
+
+func ToFeedbackReviewDetail(questions []*model.EmployeeEventQuestion, topic *model.EmployeeEventTopic, reviewer *model.EmployeeEventReviewer) FeedBackReviewDetail {
+	var qs []QuestionAnswer
+
+	for _, q := range questions {
+		qs = append(qs, QuestionAnswer{
+			EventQuestionID: q.ID.String(),
+			Content:         q.Content,
+			Answer:          q.Answer,
+			Note:            q.Note,
+			Type:            q.Type,
+			Order:           q.Order,
+		})
+	}
+
+	return FeedBackReviewDetail{
+		Questions:    qs,
+		TopicName:    topic.Title,
+		Relationship: reviewer.Relationship.String(),
+		Employee: BasicEmployeeInfo{
+			ID:          topic.EmployeeID.String(),
+			FullName:    topic.Employee.FullName,
+			DisplayName: topic.Employee.DisplayName,
+			Avatar:      topic.Employee.Avatar,
+		},
+		Reviewer: BasicEmployeeInfo{
+			ID:          reviewer.ReviewerID.String(),
+			FullName:    reviewer.Reviewer.FullName,
+			DisplayName: reviewer.Reviewer.DisplayName,
+			Avatar:      reviewer.Reviewer.Avatar,
+		},
+	}
 }
 
 type Survey struct {

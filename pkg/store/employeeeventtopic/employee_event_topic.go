@@ -16,6 +16,7 @@ func New() IStore {
 func (s *store) One(db *gorm.DB, id string, eventID string) (*model.EmployeeEventTopic, error) {
 	var topic *model.EmployeeEventTopic
 	return topic, db.Where("id = ? AND event_id = ?", id, eventID).
+		Preload("Employee", "deleted_at IS NULL").
 		Preload("Event", "deleted_at IS NULL").First(&topic).Error
 }
 
