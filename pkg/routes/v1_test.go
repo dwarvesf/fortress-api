@@ -268,6 +268,10 @@ func Test_loadV1Routes(t *testing.T) {
 				Method:  "GET",
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/feedback.IHandler.GetSurveyDetail-fm",
 			},
+			"DELETE": {
+				Method:  "DELETE",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/feedback.IHandler.DeleteSurvey-fm",
+			},
 		},
 		"/api/v1/feedbacks/:id/topics/:topicID/submit": {
 			"POST": {
