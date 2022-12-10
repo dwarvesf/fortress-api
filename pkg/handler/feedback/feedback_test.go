@@ -433,3 +433,48 @@ func TestHandler_SendPerformanceReview(t *testing.T) {
 		})
 	}
 }
+
+func TestHandler_DeleteSurvey(t *testing.T) {
+	cfg := config.LoadTestConfig()
+	loggerMock := logger.NewLogrusLogger()
+	serviceMock := service.New(&cfg)
+	storeMock := store.New()
+	testRepoMock := store.NewPostgresStore(&cfg)
+
+	tests := []struct {
+		name             string
+		id               string
+		wantCode         int
+		wantResponsePath string
+	}{
+		{
+			name:             "valid_id",
+			id:               "163fdda2-2dce-4618-9849-7c8475dcc9c1",
+			wantCode:         http.StatusOK,
+			wantResponsePath: "testdata/delete_survey/200_valid_id.json",
+		},
+		{
+			name:             "event_not_found",
+			id:               "163fdda2-2dce-4618-9849-7c8475dcc123",
+			wantCode:         http.StatusNotFound,
+			wantResponsePath: "testdata/delete_survey/404_event_not_found.json",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			w := httptest.NewRecorder()
+			ctx, _ := gin.CreateTestContext(w)
+			ctx.Request = httptest.NewRequest(http.MethodDelete, fmt.Sprintf("/api/v1/surveys/%s", tt.id), nil)
+			ctx.Request.Header.Set("Authorization", testToken)
+			ctx.AddParam("id", tt.id)
+
+			h := New(storeMock, testRepoMock, serviceMock, loggerMock, &cfg)
+			h.DeleteSurvey(ctx)
+			require.Equal(t, tt.wantCode, w.Code)
+			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+			require.NoError(t, err)
+
+			require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Feedback.DeleteSurvey] response mismatched")
+		})
+	}
+}

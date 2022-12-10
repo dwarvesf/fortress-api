@@ -66,3 +66,8 @@ func (s *store) UpdateSelectedFieldsByID(db *gorm.DB, id string, updateModel mod
 	feedbackEvent := model.FeedbackEvent{}
 	return &feedbackEvent, db.Model(&feedbackEvent).Where("id = ?", id).Select(updatedFields).Updates(updateModel).Error
 }
+
+// DeleteByID delete FeedbackEvent by id
+func (s *store) DeleteByID(db *gorm.DB, id string) error {
+	return db.Where("id = ?", id).Delete(&model.FeedbackEvent{}).Error
+}

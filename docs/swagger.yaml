@@ -1846,7 +1846,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/pkg_handler_employee.CreateEmployeeInput'
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.CreateEmployeeInput'
       - description: jwt token
         in: header
         name: Authorization
@@ -1978,7 +1978,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/pkg_handler_employee.UpdateGeneralInfoInput'
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateGeneralInfoInput'
       produces:
       - application/json
       responses:
@@ -2022,7 +2022,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/pkg_handler_employee.UpdatePersonalInfoInput'
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdatePersonalInfoInput'
       produces:
       - application/json
       responses:
@@ -2061,7 +2061,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/pkg_handler_employee.UpdateSkillsInput'
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateSkillsInput'
       - description: jwt token
         in: header
         name: Authorization
@@ -3386,6 +3386,44 @@ paths:
       summary: Create new survey
       tags:
       - Feedback
+  /surveys/:id:
+    delete:
+      consumes:
+      - application/json
+      description: Delete survey by id
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Feedback Event ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Delete survey by id
+      tags:
+      - Feedback
   /surveys/{id}:
     get:
       consumes:
@@ -3395,6 +3433,11 @@ paths:
       - description: jwt token
         in: header
         name: Authorization
+        required: true
+        type: string
+      - description: Feedback Event ID
+        in: path
+        name: id
         required: true
         type: string
       - description: Page

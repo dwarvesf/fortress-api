@@ -10,4 +10,5 @@ type IHandler interface {
 	SendPerformmentReview(c *gin.Context)
 	Submit(c *gin.Context)
 	CreateSurvey(c *gin.Context)
+	DeleteSurvey(c *gin.Context)
 }

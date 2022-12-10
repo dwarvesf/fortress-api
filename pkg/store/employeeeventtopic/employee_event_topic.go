@@ -98,3 +98,8 @@ func (s *store) GetByEventIDWithPagination(db *gorm.DB, eventID string, paginati
 func (s *store) BatchCreate(db *gorm.DB, employeeEventTopics []model.EmployeeEventTopic) ([]model.EmployeeEventTopic, error) {
 	return employeeEventTopics, db.Create(&employeeEventTopics).Error
 }
+
+// Create create new one
+func (s *store) DeleteByEventID(db *gorm.DB, eventID string) error {
+	return db.Where("event_id = ?", eventID).Delete(&model.EmployeeEventTopic{}).Error
+}
