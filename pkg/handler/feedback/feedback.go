@@ -146,7 +146,7 @@ func (h *handler) Detail(c *gin.Context) {
 		return
 	}
 
-	eventReviewer, err := h.store.EmployeeEventReviewer.One(h.repo.DB(), userID, input.TopicID)
+	eventReviewer, err := h.store.EmployeeEventReviewer.GetByReviewerID(h.repo.DB(), userID, input.TopicID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		l.Error(ErrEmployeeEventReviewerNotFound, "employee event reviewer not found")
 		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrEmployeeEventReviewerNotFound, nil, ""))
@@ -361,7 +361,7 @@ func (h *handler) Submit(c *gin.Context) {
 		return
 	}
 
-	eventReviewer, err := h.store.EmployeeEventReviewer.One(tx.DB(), userID, input.TopicID)
+	eventReviewer, err := h.store.EmployeeEventReviewer.GetByReviewerID(tx.DB(), userID, input.TopicID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		l.Error(ErrEventReviewerNotFound, "employee event reviewer not found")
 		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, done(ErrEventReviewerNotFound), input, ""))
@@ -778,7 +778,7 @@ func (h *handler) updateEventReviewer(db *gorm.DB, l logger.Logger, data Perform
 
 	// Update status for employee reviewers
 	for _, participant := range data.Participants {
-		eventReviewer, err := h.store.EmployeeEventReviewer.One(db, participant.String(), data.TopicID.String())
+		eventReviewer, err := h.store.EmployeeEventReviewer.GetByReviewerID(db, participant.String(), data.TopicID.String())
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Errorf(err, "not found employee reviewer with reviewer id = ", participant.String())
 			return http.StatusNotFound, err
@@ -880,4 +880,80 @@ func (h *handler) deleteSurvey(db *gorm.DB, eventID string) (int, error) {
 	}
 
 	return http.StatusOK, nil
+}
+
+// GetSurveyReviewDetail godoc
+// @Summary Get survey review detail
+// @Description Get survey review detail
+// @Tags Feedback
+// @Accept  json
+// @Produce  json
+// @Param Authorization header string true "jwt token"
+// @Success 200 {object} view.FeedbackReviewDetailResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /surveys/{id}/topics/{topicID}/reviews/{reviewID} [post]
+func (h *handler) GetSurveyReviewDetail(c *gin.Context) {
+	eventID := c.Param("id")
+	if eventID == "" || !model.IsUUIDFromString(eventID) {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, ErrInvalidEventID, nil, ""))
+		return
+	}
+
+	topicID := c.Param("topicID")
+	if topicID == "" || !model.IsUUIDFromString(eventID) {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, ErrInvalidTopicID, nil, ""))
+		return
+	}
+
+	reviewID := c.Param("reviewID")
+	if reviewID == "" || !model.IsUUIDFromString(eventID) {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, ErrInvalidReviewerID, nil, ""))
+		return
+	}
+
+	l := h.logger.Fields(logger.Fields{
+		"handler": "feedback",
+		"method":  "GetSurveyReviewDetail",
+	})
+
+	topic, err := h.store.EmployeeEventTopic.One(h.repo.DB(), topicID, eventID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			l.Info("topic not found")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrTopicNotFound, nil, ""))
+			return
+		}
+		l.Error(err, "failed when getting topic")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	review, err := h.store.EmployeeEventReviewer.One(h.repo.DB(), reviewID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			l.Info("review not found")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrEventReviewerNotFound, nil, ""))
+			return
+		}
+		l.Error(err, "failed when getting review")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	if review.EmployeeEventTopicID != topic.ID {
+		l.Info("review not belong topic")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, ErrEventReviewerNotFound, nil, ""))
+		return
+	}
+
+	questions, err := h.store.EmployeeEventQuestion.GetByEventReviewerID(h.repo.DB(), review.ID.String())
+	if err != nil {
+		l.Error(err, "failed when getting questions")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToFeedbackReviewDetail(questions, topic, review), nil, nil, nil, ""))
 }

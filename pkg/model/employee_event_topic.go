@@ -24,6 +24,11 @@ func (e Relationship) IsValid() bool {
 	return false
 }
 
+// IsValid validation for Relationship
+func (e Relationship) String() string {
+	return string(e)
+}
+
 // EmployeeEventTopic model for table employee_event_topics
 type EmployeeEventTopic struct {
 	BaseModel
