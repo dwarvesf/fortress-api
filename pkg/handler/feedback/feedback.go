@@ -313,7 +313,7 @@ func (h *handler) GetSurveyDetail(c *gin.Context) {
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 404 {object} view.ErrorResponse
 // @Failure 500 {object} view.ErrorResponse
-// @Router /feedbacks/{id}/topics/{topicID}/answers [put]
+// @Router /feedbacks/{id}/topics/{topicID}/submit [post]
 func (h *handler) Submit(c *gin.Context) {
 	userID, err := utils.GetUserIDFromContext(c)
 	if err != nil {

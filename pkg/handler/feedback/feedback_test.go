@@ -349,7 +349,7 @@ func TestHandler_Submit(t *testing.T) {
 			bodyReader := strings.NewReader(string(byteReq))
 			ctx.Params = gin.Params{gin.Param{Key: "id", Value: tt.eventID}, gin.Param{Key: "topicID", Value: tt.topicID}}
 
-			ctx.Request = httptest.NewRequest(http.MethodPut, fmt.Sprintf("/api/v1/feedbacks/%s/topics/%s/answers", tt.eventID, tt.topicID), bodyReader)
+			ctx.Request = httptest.NewRequest(http.MethodPut, fmt.Sprintf("/api/v1/feedbacks/%s/topics/%s/submit", tt.eventID, tt.topicID), bodyReader)
 			ctx.Request.Header.Set("Authorization", testToken)
 
 			h := New(storeMock, testRepoMock, serviceMock, loggerMock, &cfg)
