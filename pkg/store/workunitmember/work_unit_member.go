@@ -36,7 +36,7 @@ func (s *store) GetByWorkUnitID(db *gorm.DB, wuID string) (wuMembers []model.Wor
 // UpdateSelectedFieldsByID just update selected fields by id
 func (s *store) UpdateSelectedFieldsByID(db *gorm.DB, id string, updateModel model.WorkUnitMember, updatedFields ...string) (*model.WorkUnitMember, error) {
 	member := model.WorkUnitMember{}
-	return &member, db.Debug().Model(&member).Where("id = ?", id).Select(updatedFields).Updates(updateModel).Error
+	return &member, db.Model(&member).Where("id = ?", id).Select(updatedFields).Updates(updateModel).Error
 }
 
 // DeleteByWorkUnitID delete many workUnitMember by workUnitID
