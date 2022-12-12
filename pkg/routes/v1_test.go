@@ -285,6 +285,12 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/feedback.IHandler.Submit-fm",
 			},
 		},
+		"/api/v1/surveys/:id/topics/:topicID": {
+			"DELETE": {
+				Method:  "DELETE",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/feedback.IHandler.DeleteSurveyTopic-fm",
+			},
+		},
 	}
 
 	l := logger.NewLogrusLogger()
