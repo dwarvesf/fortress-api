@@ -14,16 +14,16 @@ func New() IStore {
 
 // One get one record by ID
 func (s *store) One(db *gorm.DB, id string) (*model.EmployeeEventReviewer, error) {
-	var employeeeventreviewer *model.EmployeeEventReviewer
-	return employeeeventreviewer, db.Where("id = ?", id).
+	var eer *model.EmployeeEventReviewer
+	return eer, db.Where("id = ?", id).
 		Preload("Reviewer", "deleted_at IS NULL").
-		First(&employeeeventreviewer).Error
+		First(&eer).Error
 }
 
-// One get one record by reviewerID and topicID
+// GetByReviewerID get one record by reviewerID and topicID
 func (s *store) GetByReviewerID(db *gorm.DB, reviewerID string, topicID string) (*model.EmployeeEventReviewer, error) {
-	var employeeeventreviewer *model.EmployeeEventReviewer
-	return employeeeventreviewer, db.Where("reviewer_id = ? AND employee_event_topic_id = ? ", reviewerID, topicID).First(&employeeeventreviewer).Error
+	var eer *model.EmployeeEventReviewer
+	return eer, db.Where("reviewer_id = ? AND employee_event_topic_id = ? ", reviewerID, topicID).First(&eer).Error
 }
 
 // UpdateSelectedFieldsByID just update selected fields by id
@@ -32,14 +32,14 @@ func (s *store) UpdateSelectedFieldsByID(db *gorm.DB, id string, updateModel mod
 	return &eventReviewer, db.Model(&eventReviewer).Where("id = ?", id).Select(updatedFields).Updates(updateModel).Error
 }
 
-// Create create new one
-func (s *store) BatchCreate(db *gorm.DB, employeeEventReviewers []model.EmployeeEventReviewer) ([]model.EmployeeEventReviewer, error) {
-	return employeeEventReviewers, db.Create(&employeeEventReviewers).Error
+// BatchCreate create a list of event reviewer
+func (s *store) BatchCreate(db *gorm.DB, eers []model.EmployeeEventReviewer) ([]model.EmployeeEventReviewer, error) {
+	return eers, db.Create(&eers).Error
 }
 
 // Create a employee event reviewer
-func (s *store) Create(tx *gorm.DB, eventReviewer *model.EmployeeEventReviewer) (*model.EmployeeEventReviewer, error) {
-	return eventReviewer, tx.Create(&eventReviewer).Error
+func (s *store) Create(tx *gorm.DB, eer *model.EmployeeEventReviewer) (*model.EmployeeEventReviewer, error) {
+	return eer, tx.Create(&eer).Error
 }
 
 // DeleteByEventID delete EmployeeEventReviewer by eventID

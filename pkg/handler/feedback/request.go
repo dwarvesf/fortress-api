@@ -99,13 +99,13 @@ func (i *SubmitInput) Validate() error {
 	return i.Body.Validate()
 }
 
-type PerformanceReviewInput struct {
+type PerformanceReviewTopic struct {
 	TopicID      model.UUID   `json:"topicID" form:"topicID" binding:"required"`
 	Participants []model.UUID `json:"participants" form:"participants" binding:"required"`
 }
 
-type PerformanceReviewListInput struct {
-	ReviewList []PerformanceReviewInput `json:"reviewList" form:"reviewList" binding:"required"`
+type SendPerformanceReviewInput struct {
+	Topics []PerformanceReviewTopic `json:"topics" form:"topics" binding:"required"`
 }
 
 // CreateSurveyFeedbackInput view for create survey feedback

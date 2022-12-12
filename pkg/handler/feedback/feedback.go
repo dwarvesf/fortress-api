@@ -698,7 +698,7 @@ func (h *handler) createPeerReview(db *gorm.DB, req CreateSurveyFeedbackInput, u
 	return 200, nil
 }
 
-// SendPerformmentReview godoc
+// SendPerformanceReview godoc
 // @Summary Send the performance review
 // @Description Send the performance review
 // @Tags Feedback
@@ -706,20 +706,20 @@ func (h *handler) createPeerReview(db *gorm.DB, req CreateSurveyFeedbackInput, u
 // @Produce json
 // @Param Authorization header string true "jwt token"
 // @Param id path string true "Feedback Event ID"
-// @Param Body body PerformanceReviewListInput true "Body"
+// @Param Body body SendPerformanceReviewInput true "Body"
 // @Success 200 {object} view.MessageResponse
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 404 {object} view.ErrorResponse
 // @Failure 500 {object} view.ErrorResponse
 // @Router /surveys/{id}/send [post]
-func (h *handler) SendPerformmentReview(c *gin.Context) {
+func (h *handler) SendPerformanceReview(c *gin.Context) {
 	eventID := c.Param("id")
 	if eventID == "" || !model.IsUUIDFromString(eventID) {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, ErrInvalidEventID, nil, ""))
 		return
 	}
 
-	var input PerformanceReviewListInput
+	var input SendPerformanceReviewInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, input, ""))
 		return
@@ -727,7 +727,7 @@ func (h *handler) SendPerformmentReview(c *gin.Context) {
 
 	l := h.logger.Fields(logger.Fields{
 		"handler": "feedback",
-		"method":  "SendPerformmentReview",
+		"method":  "SendPerformanceReview",
 		"eventID": eventID,
 		"input":   input,
 	})
@@ -735,7 +735,7 @@ func (h *handler) SendPerformmentReview(c *gin.Context) {
 	// Begin transaction
 	tx, done := h.repo.NewTransaction()
 
-	for _, data := range input.ReviewList {
+	for _, data := range input.Topics {
 		errCode, err := h.updateEventReviewer(tx.DB(), l, data, eventID)
 		if err != nil {
 			l.Error(err, "error when running function updateEventReviewer")
@@ -747,7 +747,7 @@ func (h *handler) SendPerformmentReview(c *gin.Context) {
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, done(nil), "ok"))
 }
 
-func (h *handler) updateEventReviewer(db *gorm.DB, l logger.Logger, data PerformanceReviewInput, eventID string) (int, error) {
+func (h *handler) updateEventReviewer(db *gorm.DB, l logger.Logger, data PerformanceReviewTopic, eventID string) (int, error) {
 	// Validate EventID and TopicID
 	_, err := h.store.EmployeeEventTopic.One(db, data.TopicID.String(), eventID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
