@@ -419,7 +419,7 @@ func TestHandler_SendPerformanceReview(t *testing.T) {
 			ctx, _ := gin.CreateTestContext(w)
 			byteReq, _ := json.Marshal(tt.body)
 			bodyReader := strings.NewReader(string(byteReq))
-			ctx.Request = httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/surveys/%s", tt.id), bodyReader)
+			ctx.Request = httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/surveys/%s/send", tt.id), bodyReader)
 			ctx.Request.Header.Set("Authorization", testToken)
 			ctx.AddParam("id", tt.id)
 

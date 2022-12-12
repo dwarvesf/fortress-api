@@ -710,7 +710,7 @@ func (h *handler) createPeerReview(db *gorm.DB, req CreateSurveyFeedbackInput, u
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 404 {object} view.ErrorResponse
 // @Failure 500 {object} view.ErrorResponse
-// @Router /surveys/{id} [post]
+// @Router /surveys/{id}/send [post]
 func (h *handler) SendPerformmentReview(c *gin.Context) {
 	eventID := c.Param("id")
 	if eventID == "" || !model.IsUUIDFromString(eventID) {
@@ -737,6 +737,7 @@ func (h *handler) SendPerformmentReview(c *gin.Context) {
 	for _, data := range input.ReviewList {
 		errCode, err := h.updateEventReviewer(tx.DB(), l, data, eventID)
 		if err != nil {
+			l.Error(err, "error when running function updateEventReviewer")
 			c.JSON(errCode, view.CreateResponse[any](nil, nil, done(err), input, ""))
 			return
 		}
