@@ -57,3 +57,8 @@ func (s *store) DeleteByEventID(db *gorm.DB, eventID string) error {
 func (s *store) DeleteByTopicID(db *gorm.DB, topicID string) error {
 	return db.Where("employee_event_topic_id = ?", topicID).Delete(&model.EmployeeEventReviewer{}).Error
 }
+
+// DeleteByID delete EmployeeEventReviewer by id
+func (s *store) DeleteByID(db *gorm.DB, id string) error {
+	return db.Where("id = ?", id).Delete(&model.EmployeeEventReviewer{}).Error
+}

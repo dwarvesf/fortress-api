@@ -430,6 +430,13 @@ definitions:
     - seniority
     - stacks
     type: object
+  request.UpdateTopicReviewersBody:
+    properties:
+      reviewerIDs:
+        items:
+          type: string
+        type: array
+    type: object
   request.UpdateWorkUnitBody:
     properties:
       members:
@@ -1858,7 +1865,7 @@ paths:
       summary: Get list feedbacks
       tags:
       - Feedback
-  /feedbacks/:id/topics/:topicID:
+  /feedbacks/{id}/topics/{topicID}:
     get:
       consumes:
       - application/json
@@ -2019,7 +2026,7 @@ paths:
       summary: Get all countries
       tags:
       - Metadata
-  /metadata/countries/:country_id/cities:
+  /metadata/countries/{country_id}/cities:
     get:
       consumes:
       - application/json
@@ -2298,7 +2305,7 @@ paths:
       summary: Upload avatar  by id
       tags:
       - Profile
-  /project/:id/members/:memberID:
+  /project/{id}/members/{memberID}:
     delete:
       consumes:
       - application/json
@@ -2466,63 +2473,6 @@ paths:
       summary: Create new project
       tags:
       - Project
-  /projects/:id/members:
-    get:
-      consumes:
-      - application/json
-      description: Get list members of project
-      parameters:
-      - description: jwt token
-        in: header
-        name: Authorization
-        required: true
-        type: string
-      - description: Project ID
-        in: path
-        name: id
-        type: string
-      - description: Status
-        in: query
-        name: status
-        type: string
-      - description: Preload data with default value is true
-        in: query
-        name: preload
-        type: boolean
-      - description: Page
-        in: query
-        name: page
-        type: string
-      - description: Size
-        in: query
-        name: size
-        type: string
-      - description: Sort
-        in: query
-        name: sort
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/view.ProjectMemberListResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/view.ErrorResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/view.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/view.ErrorResponse'
-      summary: Get list members of project
-      tags:
-      - Project
   /projects/{id}:
     get:
       consumes:
@@ -2650,6 +2600,62 @@ paths:
       tags:
       - Project
   /projects/{id}/members:
+    get:
+      consumes:
+      - application/json
+      description: Get list members of project
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Project ID
+        in: path
+        name: id
+        type: string
+      - description: Status
+        in: query
+        name: status
+        type: string
+      - description: Preload data with default value is true
+        in: query
+        name: preload
+        type: boolean
+      - description: Page
+        in: query
+        name: page
+        type: string
+      - description: Size
+        in: query
+        name: size
+        type: string
+      - description: Sort
+        in: query
+        name: sort
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.ProjectMemberListResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get list members of project
+      tags:
+      - Project
     post:
       consumes:
       - application/json
@@ -3076,7 +3082,7 @@ paths:
       summary: Create new survey
       tags:
       - Feedback
-  /surveys/:id:
+  /surveys/{id}:
     delete:
       consumes:
       - application/json
@@ -3114,50 +3120,6 @@ paths:
       summary: Delete survey by id
       tags:
       - Feedback
-  /surveys/:id/topics/:topicID:
-    get:
-      consumes:
-      - application/json
-      description: Get detail for peer review
-      parameters:
-      - description: jwt token
-        in: header
-        name: Authorization
-        required: true
-        type: string
-      - description: Feedback Event ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: Employee Event Topic ID
-        in: path
-        name: topicID
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/view.PeerReviewDetailResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/view.ErrorResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/view.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/view.ErrorResponse'
-      summary: Get detail for peer review
-      tags:
-      - Feedback
-  /surveys/{id}:
     get:
       consumes:
       - application/json
@@ -3278,6 +3240,87 @@ paths:
           schema:
             $ref: '#/definitions/view.ErrorResponse'
       summary: delete survey topic
+      tags:
+      - Feedback
+    get:
+      consumes:
+      - application/json
+      description: Get detail for peer review
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Feedback Event ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Employee Event Topic ID
+        in: path
+        name: topicID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.PeerReviewDetailResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get detail for peer review
+      tags:
+      - Feedback
+  /surveys/{id}/topics/{topicID}/employees:
+    put:
+      consumes:
+      - application/json
+      description: Update reviewers in a topic
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Body
+        in: body
+        name: Body
+        required: true
+        schema:
+          $ref: '#/definitions/request.UpdateTopicReviewersBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Update reviewers in a topic
       tags:
       - Feedback
   /surveys/{id}/topics/{topicID}/reviews/{reviewID}:

@@ -258,7 +258,7 @@ func (h *handler) GetCountries(c *gin.Context) {
 // @Success 200 {object} view.CitiesResponse
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 500 {object} view.ErrorResponse
-// @Router /metadata/countries/:country_id/cities [get]
+// @Router /metadata/countries/{country_id}/cities [get]
 func (h *handler) GetCities(c *gin.Context) {
 	l := h.logger.Fields(logger.Fields{
 		"handler": "metadata",

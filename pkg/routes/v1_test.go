@@ -247,6 +247,12 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/feedback.IHandler.Detail-fm",
 			},
 		},
+		"/api/v1/feedbacks/:id/topics/:topicID/submit": {
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/feedback.IHandler.Submit-fm",
+			},
+		},
 		"/api/v1/surveys": {
 			"POST": {
 				Method:  "POST",
@@ -279,10 +285,10 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/feedback.IHandler.GetSurveyReviewDetail-fm",
 			},
 		},
-		"/api/v1/feedbacks/:id/topics/:topicID/submit": {
-			"POST": {
-				Method:  "POST",
-				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/feedback.IHandler.Submit-fm",
+		"/api/v1/surveys/:id/topics/:topicID/employees": {
+			"PUT": {
+				Method:  "PUT",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/feedback.IHandler.UpdateTopicReviewers-fm",
 			},
 		},
 		"/api/v1/surveys/:id/topics/:topicID": {

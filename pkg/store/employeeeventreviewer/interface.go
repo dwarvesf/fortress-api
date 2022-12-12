@@ -15,4 +15,5 @@ type IStore interface {
 	Create(tx *gorm.DB, eventReviewer *model.EmployeeEventReviewer) (employeeEventReviewer *model.EmployeeEventReviewer, err error)
 	DeleteByEventID(db *gorm.DB, eventID string) error
 	DeleteByTopicID(db *gorm.DB, topicID string) error
+	DeleteByID(db *gorm.DB, id string) error
 }

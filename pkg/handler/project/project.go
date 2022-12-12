@@ -281,7 +281,7 @@ func (h *handler) Create(c *gin.Context) {
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 404 {object} view.ErrorResponse
 // @Failure 500 {object} view.ErrorResponse
-// @Router /projects/:id/members [get]
+// @Router /projects/{id}/members [get]
 func (h *handler) GetMembers(c *gin.Context) {
 	query := request.GetListStaffInput{}
 	if err := c.ShouldBindQuery(&query); err != nil {
@@ -358,7 +358,7 @@ func (h *handler) GetMembers(c *gin.Context) {
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 404 {object} view.ErrorResponse
 // @Failure 500 {object} view.ErrorResponse
-// @Router /project/:id/members/:memberID [delete]
+// @Router /project/{id}/members/{memberID} [delete]
 func (h *handler) DeleteMember(c *gin.Context) {
 	input := request.DeleteMemberInput{
 		ProjectID: c.Param("id"),
@@ -452,7 +452,7 @@ func (h *handler) DeleteMember(c *gin.Context) {
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 404 {object} view.ErrorResponse
 // @Failure 500 {object} view.ErrorResponse
-// @Router /project/:id/members/:memberID [put]
+// @Router /project/{id}/members/{memberID} [put]
 func (h *handler) UnassignMember(c *gin.Context) {
 	// TODO: add test
 	input := request.UnassignMemberInput{

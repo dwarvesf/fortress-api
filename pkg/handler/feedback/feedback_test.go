@@ -1,9 +1,9 @@
 package feedback
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/dwarvesf/fortress-api/pkg/handler/feedback/request"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -15,6 +15,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
+	"github.com/dwarvesf/fortress-api/pkg/handler/feedback/request"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service"
@@ -387,7 +388,7 @@ func TestHandler_SendPerformanceReview(t *testing.T) {
 			wantCode:         http.StatusOK,
 			wantResponsePath: "testdata/send_performance_review/200.json",
 			body: request.SendPerformanceReviewInput{
-				[]request.PerformanceReviewTopic{
+				Topics: []request.PerformanceReviewTopic{
 					{
 						TopicID: model.MustGetUUIDFromString("e4a33adc-2495-43cf-b816-32feb8d5250d"),
 						Participants: []model.UUID{
@@ -403,7 +404,7 @@ func TestHandler_SendPerformanceReview(t *testing.T) {
 			wantCode:         http.StatusNotFound,
 			wantResponsePath: "testdata/send_performance_review/404.json",
 			body: request.SendPerformanceReviewInput{
-				[]request.PerformanceReviewTopic{
+				Topics: []request.PerformanceReviewTopic{
 					{
 						TopicID: model.MustGetUUIDFromString("e4a33adc-2495-43cf-b816-32feb8d5250d"),
 						Participants: []model.UUID{
@@ -523,6 +524,84 @@ func TestHandler_GetPeerReviewDetail(t *testing.T) {
 			require.NoError(t, err)
 
 			require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Feedback.GetPeerReviewDetail] response mismatched")
+		})
+	}
+}
+
+func TestHandler_UpdateTopicReviewers(t *testing.T) {
+	cfg := config.LoadTestConfig()
+	loggerMock := logger.NewLogrusLogger()
+	serviceMock := service.New(&cfg)
+	storeMock := store.New()
+	testRepoMock := store.NewPostgresStore(&cfg)
+
+	tests := []struct {
+		name             string
+		input            request.UpdateTopicReviewersInput
+		wantCode         int
+		wantResponsePath string
+	}{
+		{
+			name: "happy_case",
+			input: request.UpdateTopicReviewersInput{
+				EventID: "8a5bfedb-6e11-4f5c-82d9-2635cfcce3e2",
+				TopicID: "e4a33adc-2495-43cf-b816-32feb8d5250d",
+				Body: request.UpdateTopicReviewersBody{
+					ReviewerIDs: []model.UUID{
+						model.MustGetUUIDFromString("d42a6fca-d3b8-4a48-80f7-a95772abda56"),
+						model.MustGetUUIDFromString("dcfee24b-306d-4609-9c24-a4021639a11b"),
+						model.MustGetUUIDFromString("3f705527-0455-4e67-a585-6c1f23726fff"),
+						model.MustGetUUIDFromString("a1f25e3e-cf40-4d97-a4d5-c27ee566b8c5"),
+						model.MustGetUUIDFromString("498d5805-dd64-4643-902d-95067d6e5ab5"),
+						model.MustGetUUIDFromString("f6ce0d0f-5794-463b-ad0b-8240ab9c49be"),
+						model.MustGetUUIDFromString("7bcf4b45-0279-4da2-84e4-eec5d9d05ba3"),
+					},
+				},
+			},
+			wantCode:         http.StatusOK,
+			wantResponsePath: "testdata/update_topic_participants/200_happy_case.json",
+		},
+		{
+			name: "participant_not_ready",
+			input: request.UpdateTopicReviewersInput{
+				EventID: "8a5bfedb-6e11-4f5c-82d9-2635cfcce3e2",
+				TopicID: "e4a33adc-2495-43cf-b816-32feb8d5250d",
+				Body: request.UpdateTopicReviewersBody{
+					ReviewerIDs: []model.UUID{
+						model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
+						model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
+						model.MustGetUUIDFromString("d389d35e-c548-42cf-9f29-2a599969a8f2"),
+						model.MustGetUUIDFromString("f7c6016b-85b5-47f7-8027-23c2db482197"),
+						model.MustGetUUIDFromString("d42a6fca-d3b8-4a48-80f7-a95772abda56"),
+						model.MustGetUUIDFromString("dcfee24b-306d-4609-9c24-a4021639a11b"),
+					},
+				},
+			},
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/update_topic_participants/400_participant_not_ready.json",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			body, err := json.Marshal(tt.input.Body)
+			require.NoError(t, err)
+
+			w := httptest.NewRecorder()
+			ctx, _ := gin.CreateTestContext(w)
+			ctx.Request = httptest.NewRequest(http.MethodPut,
+				fmt.Sprintf("/api/v1/surveys/%s/topics/%s/employees", tt.input.EventID, tt.input.TopicID),
+				bytes.NewBuffer(body))
+			ctx.Request.Header.Set("Authorization", testToken)
+			ctx.AddParam("id", tt.input.EventID)
+			ctx.AddParam("topicID", tt.input.TopicID)
+
+			h := New(storeMock, testRepoMock, serviceMock, loggerMock, &cfg)
+			h.UpdateTopicReviewers(ctx)
+			require.Equal(t, tt.wantCode, w.Code)
+			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+			require.NoError(t, err)
+
+			require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Feedback.UpdateTopicReviewers] response mismatched")
 		})
 	}
 }
