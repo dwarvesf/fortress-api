@@ -205,7 +205,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/employee.CreateEmployeeInput"
+                            "$ref": "#/definitions/pkg_handler_employee.CreateEmployeeInput"
                         }
                     },
                     {
@@ -335,7 +335,8 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.WorkingStatus"
+                            "description": "working info",
+                            "type": "string"
                         }
                     }
                 ],
@@ -401,7 +402,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/employee.UpdateGeneralInfoInput"
+                            "$ref": "#/definitions/pkg_handler_employee.UpdateGeneralInfoInput"
                         }
                     }
                 ],
@@ -467,7 +468,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/employee.UpdatePersonalInfoInput"
+                            "$ref": "#/definitions/pkg_handler_employee.UpdatePersonalInfoInput"
                         }
                     }
                 ],
@@ -526,7 +527,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/employee.UpdateSkillsInput"
+                            "$ref": "#/definitions/pkg_handler_employee.UpdateSkillsInput"
                         }
                     },
                     {
@@ -789,7 +790,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/feedback.SubmitBody"
+                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_feedback.SubmitBody"
                         }
                     }
                 ],
@@ -1259,7 +1260,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/profile.UpdateInfoInput"
+                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_profile.UpdateInfoInput"
                         }
                     }
                 ],
@@ -1573,7 +1574,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/project.CreateProjectInput"
+                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.CreateProjectInput"
                         }
                     }
                 ],
@@ -1776,7 +1777,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/project.UpdateContactInfoInput"
+                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateContactInfoInput"
                         }
                     }
                 ],
@@ -1842,7 +1843,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/project.UpdateGeneralInfoInput"
+                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateGeneralInfoInput"
                         }
                     }
                 ],
@@ -1908,7 +1909,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/project.UpdateMemberInput"
+                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateMemberInput"
                         }
                     }
                 ],
@@ -1972,7 +1973,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/project.AssignMemberInput"
+                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.AssignMemberInput"
                         }
                     }
                 ],
@@ -2038,7 +2039,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.ProjectStatus"
+                            "type": "string"
                         }
                     }
                 ],
@@ -2159,7 +2160,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/project.CreateWorkUnitBody"
+                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.CreateWorkUnitBody"
                         }
                     }
                 ],
@@ -2360,7 +2361,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/project.UpdateWorkUnitInput"
+                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateWorkUnitInput"
                         }
                     }
                 ],
@@ -2473,7 +2474,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/feedback.CreateSurveyFeedbackInput"
+                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_feedback.CreateSurveyFeedbackInput"
                         }
                     },
                     {
@@ -2672,7 +2673,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/feedback.PerformanceReviewListInput"
+                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_feedback.SendPerformanceReviewInput"
                         }
                     }
                 ],
@@ -2756,7 +2757,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "employee.CreateEmployeeInput": {
+        "github.com_dwarvesf_fortress-api_pkg_handler_employee.CreateEmployeeInput": {
             "type": "object",
             "required": [
                 "fullName",
@@ -2802,7 +2803,7 @@ const docTemplate = `{
                 }
             }
         },
-        "employee.UpdateGeneralInfoInput": {
+        "github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateGeneralInfoInput": {
             "type": "object",
             "required": [
                 "email",
@@ -2836,7 +2837,7 @@ const docTemplate = `{
                 }
             }
         },
-        "employee.UpdatePersonalInfoInput": {
+        "github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdatePersonalInfoInput": {
             "type": "object",
             "required": [
                 "address",
@@ -2860,7 +2861,7 @@ const docTemplate = `{
                 }
             }
         },
-        "employee.UpdateSkillsInput": {
+        "github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateSkillsInput": {
             "type": "object",
             "required": [
                 "chapters",
@@ -2898,7 +2899,7 @@ const docTemplate = `{
                 }
             }
         },
-        "feedback.BasicEventQuestionInput": {
+        "github.com_dwarvesf_fortress-api_pkg_handler_feedback.BasicEventQuestionInput": {
             "type": "object",
             "required": [
                 "eventQuestionID"
@@ -2915,7 +2916,7 @@ const docTemplate = `{
                 }
             }
         },
-        "feedback.CreateSurveyFeedbackInput": {
+        "github.com_dwarvesf_fortress-api_pkg_handler_feedback.CreateSurveyFeedbackInput": {
             "type": "object",
             "required": [
                 "quarter",
@@ -2934,7 +2935,7 @@ const docTemplate = `{
                 }
             }
         },
-        "feedback.PerformanceReviewInput": {
+        "github.com_dwarvesf_fortress-api_pkg_handler_feedback.PerformanceReviewTopic": {
             "type": "object",
             "required": [
                 "participants",
@@ -2952,21 +2953,21 @@ const docTemplate = `{
                 }
             }
         },
-        "feedback.PerformanceReviewListInput": {
+        "github.com_dwarvesf_fortress-api_pkg_handler_feedback.SendPerformanceReviewInput": {
             "type": "object",
             "required": [
-                "reviewList"
+                "topics"
             ],
             "properties": {
-                "reviewList": {
+                "topics": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/feedback.PerformanceReviewInput"
+                        "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_feedback.PerformanceReviewTopic"
                     }
                 }
             }
         },
-        "feedback.SubmitBody": {
+        "github.com_dwarvesf_fortress-api_pkg_handler_feedback.SubmitBody": {
             "type": "object",
             "required": [
                 "answers",
@@ -2976,239 +2977,15 @@ const docTemplate = `{
                 "answers": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/feedback.BasicEventQuestionInput"
+                        "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_feedback.BasicEventQuestionInput"
                     }
                 },
                 "status": {
-                    "$ref": "#/definitions/model.EventReviewerStatus"
-                }
-            }
-        },
-        "model.Chapter": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "string"
-                },
-                "createdAt": {
-                    "type": "string"
-                },
-                "deletedAt": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "lead_id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "updatedAt": {
                     "type": "string"
                 }
             }
         },
-        "model.Country": {
-            "type": "object",
-            "properties": {
-                "cities": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "code": {
-                    "type": "string"
-                },
-                "createdAt": {
-                    "type": "string"
-                },
-                "deletedAt": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "updatedAt": {
-                    "type": "string"
-                }
-            }
-        },
-        "model.EventReviewerStatus": {
-            "type": "string",
-            "enum": [
-                "none",
-                "new",
-                "draft",
-                "done"
-            ],
-            "x-enum-varnames": [
-                "EventReviewerStatusNone",
-                "EventReviewerStatusNew",
-                "EventReviewerStatusDraft",
-                "EventReviewerStatusDone"
-            ]
-        },
-        "model.HeadPosition": {
-            "type": "string",
-            "enum": [
-                "technical-lead",
-                "delivery-manager",
-                "account-manager",
-                "sale-person"
-            ],
-            "x-enum-varnames": [
-                "HeadPositionTechnicalLead",
-                "HeadPositionDeliveryManager",
-                "HeadPositionAccountManager",
-                "HeadPositionSalePerson"
-            ]
-        },
-        "model.Position": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "string"
-                },
-                "createdAt": {
-                    "type": "string"
-                },
-                "deletedAt": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "updatedAt": {
-                    "type": "string"
-                }
-            }
-        },
-        "model.ProjectStatus": {
-            "type": "string",
-            "enum": [
-                "on-boarding",
-                "active",
-                "paused",
-                "closed"
-            ],
-            "x-enum-varnames": [
-                "ProjectStatusOnBoarding",
-                "ProjectStatusActive",
-                "ProjectStatusPaused",
-                "ProjectStatusClosed"
-            ]
-        },
-        "model.Role": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "string"
-                },
-                "createdAt": {
-                    "type": "string"
-                },
-                "deletedAt": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "updatedAt": {
-                    "type": "string"
-                }
-            }
-        },
-        "model.Seniority": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "string"
-                },
-                "createdAt": {
-                    "type": "string"
-                },
-                "deletedAt": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "updatedAt": {
-                    "type": "string"
-                }
-            }
-        },
-        "model.Stack": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "string"
-                },
-                "createdAt": {
-                    "type": "string"
-                },
-                "deletedAt": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "updatedAt": {
-                    "type": "string"
-                }
-            }
-        },
-        "model.WorkUnitType": {
-            "type": "string",
-            "enum": [
-                "development",
-                "management",
-                "training",
-                "learning"
-            ],
-            "x-enum-varnames": [
-                "WorkUnitTypeDevelopment",
-                "WorkUnitTypeManagement",
-                "WorkUnitTypeTraining",
-                "WorkUnitTypeLearning"
-            ]
-        },
-        "model.WorkingStatus": {
-            "type": "string",
-            "enum": [
-                "on-boarding",
-                "left",
-                "probation",
-                "full-time",
-                "contractor"
-            ],
-            "x-enum-varnames": [
-                "WorkingStatusOnBoarding",
-                "WorkingStatusLeft",
-                "WorkingStatusProbation",
-                "WorkingStatusFullTime",
-                "WorkingStatusContractor"
-            ]
-        },
-        "profile.UpdateInfoInput": {
+        "github.com_dwarvesf_fortress-api_pkg_handler_profile.UpdateInfoInput": {
             "type": "object",
             "required": [
                 "personalEmail",
@@ -3238,7 +3015,7 @@ const docTemplate = `{
                 }
             }
         },
-        "project.AssignMemberInput": {
+        "github.com_dwarvesf_fortress-api_pkg_handler_project.AssignMemberInput": {
             "type": "object",
             "required": [
                 "deploymentType",
@@ -3283,7 +3060,7 @@ const docTemplate = `{
                 }
             }
         },
-        "project.CreateProjectInput": {
+        "github.com_dwarvesf_fortress-api_pkg_handler_project.CreateProjectInput": {
             "type": "object",
             "required": [
                 "accountManagerID",
@@ -3307,7 +3084,7 @@ const docTemplate = `{
                 "members": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/project.AssignMemberInput"
+                        "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.AssignMemberInput"
                     }
                 },
                 "name": {
@@ -3327,7 +3104,7 @@ const docTemplate = `{
                 }
             }
         },
-        "project.CreateWorkUnitBody": {
+        "github.com_dwarvesf_fortress-api_pkg_handler_project.CreateWorkUnitBody": {
             "type": "object",
             "required": [
                 "name",
@@ -3362,7 +3139,7 @@ const docTemplate = `{
                 }
             }
         },
-        "project.UpdateContactInfoInput": {
+        "github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateContactInfoInput": {
             "type": "object",
             "required": [
                 "accountManagerID"
@@ -3382,7 +3159,7 @@ const docTemplate = `{
                 }
             }
         },
-        "project.UpdateGeneralInfoInput": {
+        "github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateGeneralInfoInput": {
             "type": "object",
             "required": [
                 "countryID",
@@ -3406,7 +3183,7 @@ const docTemplate = `{
                 }
             }
         },
-        "project.UpdateMemberInput": {
+        "github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateMemberInput": {
             "type": "object",
             "required": [
                 "deploymentType",
@@ -3455,7 +3232,7 @@ const docTemplate = `{
                 }
             }
         },
-        "project.UpdateWorkUnitBody": {
+        "github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateWorkUnitBody": {
             "type": "object",
             "required": [
                 "name",
@@ -3480,18 +3257,698 @@ const docTemplate = `{
                     }
                 },
                 "type": {
-                    "$ref": "#/definitions/model.WorkUnitType"
+                    "type": "string"
                 },
                 "url": {
                     "type": "string"
                 }
             }
         },
-        "project.UpdateWorkUnitInput": {
+        "github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateWorkUnitInput": {
             "type": "object",
             "properties": {
                 "body": {
-                    "$ref": "#/definitions/project.UpdateWorkUnitBody"
+                    "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateWorkUnitBody"
+                },
+                "projectID": {
+                    "type": "string"
+                },
+                "workUnitID": {
+                    "type": "string"
+                }
+            }
+        },
+        "gorm.DeletedAt": {
+            "type": "object",
+            "properties": {
+                "time": {
+                    "type": "string"
+                },
+                "valid": {
+                    "description": "Valid is true if Time is not NULL",
+                    "type": "boolean"
+                }
+            }
+        },
+        "model.Chapter": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "deletedAt": {
+                    "$ref": "#/definitions/gorm.DeletedAt"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "lead_id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.Country": {
+            "type": "object",
+            "properties": {
+                "cities": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "code": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "deletedAt": {
+                    "$ref": "#/definitions/gorm.DeletedAt"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.Position": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "deletedAt": {
+                    "$ref": "#/definitions/gorm.DeletedAt"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.Role": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "deletedAt": {
+                    "$ref": "#/definitions/gorm.DeletedAt"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.Seniority": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "deletedAt": {
+                    "$ref": "#/definitions/gorm.DeletedAt"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.Stack": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "deletedAt": {
+                    "$ref": "#/definitions/gorm.DeletedAt"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "pkg_handler_employee.CreateEmployeeInput": {
+            "type": "object",
+            "required": [
+                "fullName",
+                "personalEmail",
+                "positions",
+                "roleID",
+                "salary",
+                "seniorityID",
+                "status",
+                "teamEmail"
+            ],
+            "properties": {
+                "displayName": {
+                    "type": "string"
+                },
+                "fullName": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "personalEmail": {
+                    "type": "string"
+                },
+                "positions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "roleID": {
+                    "type": "string"
+                },
+                "salary": {
+                    "type": "integer"
+                },
+                "seniorityID": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "teamEmail": {
+                    "type": "string"
+                }
+            }
+        },
+        "pkg_handler_employee.UpdateGeneralInfoInput": {
+            "type": "object",
+            "required": [
+                "email",
+                "fullName",
+                "phone"
+            ],
+            "properties": {
+                "discordID": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "fullName": {
+                    "type": "string",
+                    "maxLength": 99
+                },
+                "githubID": {
+                    "type": "string"
+                },
+                "lineManagerID": {
+                    "type": "string"
+                },
+                "notionID": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string",
+                    "maxLength": 12,
+                    "minLength": 10
+                }
+            }
+        },
+        "pkg_handler_employee.UpdatePersonalInfoInput": {
+            "type": "object",
+            "required": [
+                "address",
+                "dob",
+                "gender",
+                "personalEmail"
+            ],
+            "properties": {
+                "address": {
+                    "type": "string",
+                    "maxLength": 200
+                },
+                "dob": {
+                    "type": "string"
+                },
+                "gender": {
+                    "type": "string"
+                },
+                "personalEmail": {
+                    "type": "string"
+                }
+            }
+        },
+        "pkg_handler_employee.UpdateSkillsInput": {
+            "type": "object",
+            "required": [
+                "chapters",
+                "positions",
+                "seniority",
+                "stacks"
+            ],
+            "properties": {
+                "chapters": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "leadingChapters": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "positions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "seniority": {
+                    "type": "string"
+                },
+                "stacks": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "pkg_handler_feedback.BasicEventQuestionInput": {
+            "type": "object",
+            "required": [
+                "eventQuestionID"
+            ],
+            "properties": {
+                "answer": {
+                    "type": "string"
+                },
+                "eventQuestionID": {
+                    "type": "string"
+                },
+                "note": {
+                    "type": "string"
+                }
+            }
+        },
+        "pkg_handler_feedback.CreateSurveyFeedbackInput": {
+            "type": "object",
+            "required": [
+                "quarter",
+                "type",
+                "year"
+            ],
+            "properties": {
+                "quarter": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "year": {
+                    "type": "integer"
+                }
+            }
+        },
+        "pkg_handler_feedback.PerformanceReviewTopic": {
+            "type": "object",
+            "required": [
+                "participants",
+                "topicID"
+            ],
+            "properties": {
+                "participants": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "topicID": {
+                    "type": "string"
+                }
+            }
+        },
+        "pkg_handler_feedback.SendPerformanceReviewInput": {
+            "type": "object",
+            "required": [
+                "topics"
+            ],
+            "properties": {
+                "topics": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/pkg_handler_feedback.PerformanceReviewTopic"
+                    }
+                }
+            }
+        },
+        "pkg_handler_feedback.SubmitBody": {
+            "type": "object",
+            "required": [
+                "answers",
+                "status"
+            ],
+            "properties": {
+                "answers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/pkg_handler_feedback.BasicEventQuestionInput"
+                    }
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "pkg_handler_profile.UpdateInfoInput": {
+            "type": "object",
+            "required": [
+                "personalEmail",
+                "phoneNumber",
+                "teamEmail"
+            ],
+            "properties": {
+                "discordID": {
+                    "type": "string"
+                },
+                "githubID": {
+                    "type": "string"
+                },
+                "notionID": {
+                    "type": "string"
+                },
+                "personalEmail": {
+                    "type": "string"
+                },
+                "phoneNumber": {
+                    "type": "string",
+                    "maxLength": 12,
+                    "minLength": 10
+                },
+                "teamEmail": {
+                    "type": "string"
+                }
+            }
+        },
+        "pkg_handler_project.AssignMemberInput": {
+            "type": "object",
+            "required": [
+                "deploymentType",
+                "positions",
+                "rate",
+                "seniorityID",
+                "status"
+            ],
+            "properties": {
+                "deploymentType": {
+                    "type": "string"
+                },
+                "discount": {
+                    "type": "number"
+                },
+                "employeeID": {
+                    "type": "string"
+                },
+                "isLead": {
+                    "type": "boolean"
+                },
+                "joinedDate": {
+                    "type": "string"
+                },
+                "leftDate": {
+                    "type": "string"
+                },
+                "positions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "rate": {
+                    "type": "number"
+                },
+                "seniorityID": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "pkg_handler_project.CreateProjectInput": {
+            "type": "object",
+            "required": [
+                "accountManagerID",
+                "countryID",
+                "name",
+                "status"
+            ],
+            "properties": {
+                "accountManagerID": {
+                    "type": "string"
+                },
+                "clientEmail": {
+                    "type": "string"
+                },
+                "countryID": {
+                    "type": "string"
+                },
+                "deliveryManagerID": {
+                    "type": "string"
+                },
+                "members": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/pkg_handler_project.AssignMemberInput"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                },
+                "projectEmail": {
+                    "type": "string"
+                },
+                "startDate": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "pkg_handler_project.CreateWorkUnitBody": {
+            "type": "object",
+            "required": [
+                "name",
+                "stacks",
+                "status",
+                "type"
+            ],
+            "properties": {
+                "members": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                },
+                "stacks": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "status": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "pkg_handler_project.UpdateContactInfoInput": {
+            "type": "object",
+            "required": [
+                "accountManagerID"
+            ],
+            "properties": {
+                "accountManagerID": {
+                    "type": "string"
+                },
+                "clientEmail": {
+                    "type": "string"
+                },
+                "deliveryManagerID": {
+                    "type": "string"
+                },
+                "projectEmail": {
+                    "type": "string"
+                }
+            }
+        },
+        "pkg_handler_project.UpdateGeneralInfoInput": {
+            "type": "object",
+            "required": [
+                "countryID",
+                "name"
+            ],
+            "properties": {
+                "countryID": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "stacks": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "startDate": {
+                    "type": "string"
+                }
+            }
+        },
+        "pkg_handler_project.UpdateMemberInput": {
+            "type": "object",
+            "required": [
+                "deploymentType",
+                "positions",
+                "projectSlotID",
+                "rate",
+                "seniorityID",
+                "status"
+            ],
+            "properties": {
+                "deploymentType": {
+                    "type": "string"
+                },
+                "discount": {
+                    "type": "number"
+                },
+                "employeeID": {
+                    "type": "string"
+                },
+                "isLead": {
+                    "type": "boolean"
+                },
+                "joinedDate": {
+                    "type": "string"
+                },
+                "leftDate": {
+                    "type": "string"
+                },
+                "positions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "projectSlotID": {
+                    "type": "string"
+                },
+                "rate": {
+                    "type": "number"
+                },
+                "seniorityID": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "pkg_handler_project.UpdateWorkUnitBody": {
+            "type": "object",
+            "required": [
+                "name",
+                "stacks",
+                "type"
+            ],
+            "properties": {
+                "members": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "stacks": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "type": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "pkg_handler_project.UpdateWorkUnitInput": {
+            "type": "object",
+            "properties": {
+                "body": {
+                    "$ref": "#/definitions/pkg_handler_project.UpdateWorkUnitBody"
                 },
                 "projectID": {
                     "type": "string"
@@ -3608,7 +4065,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "position": {
-                    "$ref": "#/definitions/model.HeadPosition"
+                    "type": "string"
                 }
             }
         },
@@ -3727,7 +4184,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "deliveryManager": {
                     "$ref": "#/definitions/view.ProjectHead"
@@ -3799,7 +4256,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "discordID": {
                     "type": "string"
@@ -3873,11 +4330,7 @@ const docTemplate = `{
                 },
                 "status": {
                     "description": "working info",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/model.WorkingStatus"
-                        }
-                    ]
+                    "type": "string"
                 },
                 "teamEmail": {
                     "type": "string"
@@ -4222,7 +4675,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "deliveryManager": {
                     "$ref": "#/definitions/view.ProjectHead"
@@ -4621,7 +5074,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "discordID": {
                     "type": "string"
@@ -4666,7 +5119,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "gender": {
                     "type": "string"
@@ -4697,7 +5150,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "discordID": {
                     "type": "string"
@@ -4805,7 +5258,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "id": {
                     "type": "string"
@@ -4845,7 +5298,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "endDate": {
                     "type": "string"

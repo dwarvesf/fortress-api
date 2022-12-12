@@ -378,15 +378,15 @@ func TestHandler_SendPerformanceReview(t *testing.T) {
 		id               string
 		wantCode         int
 		wantResponsePath string
-		body             PerformanceReviewListInput
+		body             SendPerformanceReviewInput
 	}{
 		{
 			name:             "happy_case",
 			id:               "8a5bfedb-6e11-4f5c-82d9-2635cfcce3e2",
 			wantCode:         http.StatusOK,
 			wantResponsePath: "testdata/send_performance_review/200.json",
-			body: PerformanceReviewListInput{
-				[]PerformanceReviewInput{
+			body: SendPerformanceReviewInput{
+				[]PerformanceReviewTopic{
 					{
 						TopicID: model.MustGetUUIDFromString("e4a33adc-2495-43cf-b816-32feb8d5250d"),
 						Participants: []model.UUID{
@@ -401,8 +401,8 @@ func TestHandler_SendPerformanceReview(t *testing.T) {
 			id:               "8a5bfedb-6e11-4f5c-82d9-2635cfcce3e1",
 			wantCode:         http.StatusNotFound,
 			wantResponsePath: "testdata/send_performance_review/404.json",
-			body: PerformanceReviewListInput{
-				[]PerformanceReviewInput{
+			body: SendPerformanceReviewInput{
+				[]PerformanceReviewTopic{
 					{
 						TopicID: model.MustGetUUIDFromString("e4a33adc-2495-43cf-b816-32feb8d5250d"),
 						Participants: []model.UUID{
@@ -424,12 +424,12 @@ func TestHandler_SendPerformanceReview(t *testing.T) {
 			ctx.AddParam("id", tt.id)
 
 			h := New(storeMock, testRepoMock, serviceMock, loggerMock, &cfg)
-			h.SendPerformmentReview(ctx)
+			h.SendPerformanceReview(ctx)
 			require.Equal(t, tt.wantCode, w.Code)
 			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
 			require.NoError(t, err)
 
-			require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Feedback.SendPerformmentReview] response mismatched")
+			require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Feedback.SendPerformanceReview] response mismatched")
 		})
 	}
 }
