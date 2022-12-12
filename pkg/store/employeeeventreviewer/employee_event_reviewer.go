@@ -26,6 +26,12 @@ func (s *store) GetByReviewerID(db *gorm.DB, reviewerID string, topicID string) 
 	return eer, db.Where("reviewer_id = ? AND employee_event_topic_id = ? ", reviewerID, topicID).First(&eer).Error
 }
 
+// GetByTopicID get record by topicID
+func (s *store) GetByTopicID(db *gorm.DB, topicID string) ([]*model.EmployeeEventReviewer, error) {
+	var employeeeventreviewer []*model.EmployeeEventReviewer
+	return employeeeventreviewer, db.Where("employee_event_topic_id = ? ", topicID).Find(&employeeeventreviewer).Error
+}
+
 // UpdateSelectedFieldsByID just update selected fields by id
 func (s *store) UpdateSelectedFieldsByID(db *gorm.DB, id string, updateModel model.EmployeeEventReviewer, updatedFields ...string) (*model.EmployeeEventReviewer, error) {
 	eventReviewer := model.EmployeeEventReviewer{}
@@ -45,4 +51,9 @@ func (s *store) Create(tx *gorm.DB, eer *model.EmployeeEventReviewer) (*model.Em
 // DeleteByEventID delete EmployeeEventReviewer by eventID
 func (s *store) DeleteByEventID(db *gorm.DB, eventID string) error {
 	return db.Where("event_id = ?", eventID).Delete(&model.EmployeeEventReviewer{}).Error
+}
+
+// DeleteByTopicID delete EmployeeEventReviewer by topicID
+func (s *store) DeleteByTopicID(db *gorm.DB, topicID string) error {
+	return db.Where("employee_event_topic_id = ?", topicID).Delete(&model.EmployeeEventReviewer{}).Error
 }

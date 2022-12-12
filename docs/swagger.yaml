@@ -1,13 +1,5 @@
 basePath: /api/v1
 definitions:
-  gorm.DeletedAt:
-    properties:
-      time:
-        type: string
-      valid:
-        description: Valid is true if Time is not NULL
-        type: boolean
-    type: object
   model.Chapter:
     properties:
       code:
@@ -15,7 +7,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       id:
         type: string
       lead_id:
@@ -36,7 +28,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       id:
         type: string
       name:
@@ -51,7 +43,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       id:
         type: string
       name:
@@ -66,7 +58,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       id:
         type: string
       name:
@@ -81,7 +73,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       id:
         type: string
       name:
@@ -96,7 +88,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       id:
         type: string
       name:
@@ -609,7 +601,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       deliveryManager:
         $ref: '#/definitions/view.ProjectHead'
       id:
@@ -656,7 +648,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       discordID:
         type: string
       displayName:
@@ -927,7 +919,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       deliveryManager:
         $ref: '#/definitions/view.ProjectHead'
       endDate:
@@ -1187,7 +1179,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       discordID:
         type: string
       fullName:
@@ -1217,7 +1209,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       gender:
         type: string
       id:
@@ -1237,7 +1229,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       discordID:
         type: string
       githubID:
@@ -1307,7 +1299,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       id:
         type: string
       positions:
@@ -1333,7 +1325,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       endDate:
         type: string
       id:
@@ -3173,6 +3165,39 @@ paths:
           schema:
             $ref: '#/definitions/view.ErrorResponse'
       summary: Send the performance review
+      tags:
+      - Feedback
+  /surveys/{id}/topics/{topicID}:
+    delete:
+      consumes:
+      - application/json
+      description: delete survey topic
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: delete survey topic
       tags:
       - Feedback
   /surveys/{id}/topics/{topicID}/reviews/{reviewID}:

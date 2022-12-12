@@ -11,4 +11,5 @@ type IStore interface {
 	BatchCreate(db *gorm.DB, employeeEventQuestions []model.EmployeeEventQuestion) ([]model.EmployeeEventQuestion, error)
 	Create(tx *gorm.DB, eventQuestion *model.EmployeeEventQuestion) (employeeEventQuestion *model.EmployeeEventQuestion, err error)
 	DeleteByEventID(db *gorm.DB, eventID string) error
+	DeleteByEventReviewerIDList(db *gorm.DB, reviewerIDList []string) error
 }

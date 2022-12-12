@@ -104,3 +104,8 @@ func (s *store) BatchCreate(db *gorm.DB, employeeEventTopics []model.EmployeeEve
 func (s *store) DeleteByEventID(db *gorm.DB, eventID string) error {
 	return db.Where("event_id = ?", eventID).Delete(&model.EmployeeEventTopic{}).Error
 }
+
+// DeleteByID
+func (s *store) DeleteByID(db *gorm.DB, ID string) error {
+	return db.Where("id = ?", ID).Delete(&model.EmployeeEventTopic{}).Error
+}
