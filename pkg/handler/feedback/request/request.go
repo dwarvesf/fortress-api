@@ -115,3 +115,20 @@ type CreateSurveyFeedbackInput struct {
 	Year    int    `json:"year" binding:"required"`
 	Type    string `json:"type" binding:"required"`
 }
+
+type PeerReviewDetailInput struct {
+	EventID string
+	TopicID string
+}
+
+func (i *PeerReviewDetailInput) Validate() error {
+	if i.EventID == "" || !model.IsUUIDFromString(i.EventID) {
+		return errs.ErrInvalidFeedbackID
+	}
+
+	if i.TopicID == "" || !model.IsUUIDFromString(i.TopicID) {
+		return errs.ErrInvalidTopicID
+	}
+
+	return nil
+}

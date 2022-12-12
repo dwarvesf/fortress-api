@@ -1,5 +1,13 @@
 basePath: /api/v1
 definitions:
+  gorm.DeletedAt:
+    properties:
+      time:
+        type: string
+      valid:
+        description: Valid is true if Time is not NULL
+        type: boolean
+    type: object
   model.Chapter:
     properties:
       code:
@@ -7,7 +15,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       id:
         type: string
       lead_id:
@@ -28,7 +36,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       id:
         type: string
       name:
@@ -43,7 +51,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       id:
         type: string
       name:
@@ -58,7 +66,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       id:
         type: string
       name:
@@ -73,7 +81,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       id:
         type: string
       name:
@@ -88,7 +96,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       id:
         type: string
       name:
@@ -601,7 +609,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       deliveryManager:
         $ref: '#/definitions/view.ProjectHead'
       id:
@@ -648,7 +656,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       discordID:
         type: string
       displayName:
@@ -860,6 +868,35 @@ definitions:
       name:
         type: string
     type: object
+  view.PeerReviewDetail:
+    properties:
+      employee:
+        $ref: '#/definitions/view.BasicEmployeeInfo'
+      participants:
+        items:
+          $ref: '#/definitions/view.PeerReviewer'
+        type: array
+      title:
+        type: string
+      topicID:
+        type: string
+    type: object
+  view.PeerReviewDetailResponse:
+    properties:
+      data:
+        $ref: '#/definitions/view.PeerReviewDetail'
+    type: object
+  view.PeerReviewer:
+    properties:
+      eventReviewerID:
+        type: string
+      relationship:
+        type: string
+      reviewer:
+        $ref: '#/definitions/view.BasicEmployeeInfo'
+      status:
+        type: string
+    type: object
   view.Position:
     properties:
       code:
@@ -919,7 +956,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       deliveryManager:
         $ref: '#/definitions/view.ProjectHead'
       endDate:
@@ -1179,7 +1216,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       discordID:
         type: string
       fullName:
@@ -1209,7 +1246,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       gender:
         type: string
       id:
@@ -1229,7 +1266,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       discordID:
         type: string
       githubID:
@@ -1299,7 +1336,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       id:
         type: string
       positions:
@@ -1325,7 +1362,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       endDate:
         type: string
       id:
@@ -3075,6 +3112,49 @@ paths:
           schema:
             $ref: '#/definitions/view.ErrorResponse'
       summary: Delete survey by id
+      tags:
+      - Feedback
+  /surveys/:id/topics/:topicID:
+    get:
+      consumes:
+      - application/json
+      description: Get detail for peer review
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Feedback Event ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Employee Event Topic ID
+        in: path
+        name: topicID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.PeerReviewDetailResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get detail for peer review
       tags:
       - Feedback
   /surveys/{id}:

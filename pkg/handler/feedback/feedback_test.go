@@ -479,3 +479,50 @@ func TestHandler_DeleteSurvey(t *testing.T) {
 		})
 	}
 }
+
+func TestHandler_GetPeerReviewDetail(t *testing.T) {
+	cfg := config.LoadTestConfig()
+	loggerMock := logger.NewLogrusLogger()
+	serviceMock := service.New(&cfg)
+	storeMock := store.New()
+	testRepoMock := store.NewPostgresStore(&cfg)
+	tests := []struct {
+		name             string
+		wantCode         int
+		wantResponsePath string
+		feedbackID       string
+		topicID          string
+	}{
+		{
+			name:             "happy_case",
+			wantCode:         http.StatusOK,
+			wantResponsePath: "testdata/get_peer_review_detail/200.json",
+			feedbackID:       "8a5bfedb-6e11-4f5c-82d9-2635cfcce3e2",
+			topicID:          "e4a33adc-2495-43cf-b816-32feb8d5250d",
+		},
+		{
+			name:             "failed_topic_not_found",
+			wantCode:         http.StatusNotFound,
+			wantResponsePath: "testdata/get_peer_review_detail/404.json",
+			feedbackID:       "8a5bfedb-6e11-4f5c-82d9-2635cfcce3e2",
+			topicID:          "e4a33adc-2495-43cf-b816-32feb8d5250e",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			w := httptest.NewRecorder()
+			ctx, _ := gin.CreateTestContext(w)
+			ctx.Params = gin.Params{gin.Param{Key: "id", Value: tt.feedbackID}, gin.Param{Key: "topicID", Value: tt.topicID}}
+			ctx.Request = httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/surveys/%s/topics/%s", tt.feedbackID, tt.topicID), nil)
+			ctx.Request.Header.Set("Authorization", testToken)
+
+			h := New(storeMock, testRepoMock, serviceMock, loggerMock, &cfg)
+			h.GetPeerReviewDetail(ctx)
+			require.Equal(t, tt.wantCode, w.Code)
+			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+			require.NoError(t, err)
+
+			require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Feedback.GetPeerReviewDetail] response mismatched")
+		})
+	}
+}
