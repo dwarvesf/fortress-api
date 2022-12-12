@@ -167,7 +167,7 @@ func (h *handler) Detail(c *gin.Context) {
 	}
 
 	detailInfo := view.FeedbackDetailInfo{
-		Status:     eventReviewer.Status,
+		Status:     eventReviewer.ReviewerStatus,
 		EmployeeID: topic.EmployeeID.String(),
 		ReviewerID: userID,
 		TopicID:    input.TopicID,
@@ -358,7 +358,7 @@ func (h *handler) Submit(c *gin.Context) {
 		return
 	}
 
-	if eventReviewer.Status == model.EventReviewerStatusDone {
+	if eventReviewer.ReviewerStatus == model.EventReviewerStatusDone {
 		l.Error(ErrCouldNotEditDoneFeedback, "could not edit the feedback marked as done")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(ErrCouldNotEditDoneFeedback), nil, ""))
 		return
@@ -398,8 +398,8 @@ func (h *handler) Submit(c *gin.Context) {
 	}
 
 	// Update status in employee_event_reviewers table
-	eventReviewer.Status = input.Body.Status
-	_, err = h.store.EmployeeEventReviewer.UpdateSelectedFieldsByID(tx.DB(), eventReviewer.ID.String(), *eventReviewer, "status")
+	eventReviewer.ReviewerStatus = input.Body.Status
+	_, err = h.store.EmployeeEventReviewer.UpdateSelectedFieldsByID(tx.DB(), eventReviewer.ID.String(), *eventReviewer, "reviewer_status")
 	if err != nil {
 		l.Error(err, "failed to update employee event question")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), nil, ""))
@@ -424,7 +424,7 @@ func (h *handler) Submit(c *gin.Context) {
 	}
 
 	detailInfo := view.FeedbackDetailInfo{
-		Status:     eventReviewer.Status,
+		Status:     eventReviewer.ReviewerStatus,
 		EmployeeID: topic.EmployeeID.String(),
 		ReviewerID: userID,
 		TopicID:    input.TopicID,
@@ -581,7 +581,8 @@ func (h *handler) createPeerReview(db *gorm.DB, req CreateSurveyFeedbackInput, u
 				EmployeeEventTopicID: e.ID,
 				ReviewerID:           employees[i].LineManagerID,
 				Relationship:         model.RelationshipLineManager,
-				Status:               model.EventReviewerStatusDraft,
+				AuthorStatus:         model.EventAuthorStatusDraft,
+				ReviewerStatus:       model.EventReviewerStatusNone,
 				IsShared:             false,
 				IsRead:               false,
 			})
@@ -604,7 +605,8 @@ func (h *handler) createPeerReview(db *gorm.DB, req CreateSurveyFeedbackInput, u
 				EmployeeEventTopicID: employeeEventMapper[p.EmployeeID],
 				ReviewerID:           p.ReviewerID,
 				Relationship:         model.RelationshipPeer,
-				Status:               model.EventReviewerStatusDraft,
+				AuthorStatus:         model.EventAuthorStatusDraft,
+				ReviewerStatus:       model.EventReviewerStatusNone,
 				IsShared:             false,
 				IsRead:               false,
 			})

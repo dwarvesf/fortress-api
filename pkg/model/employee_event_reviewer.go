@@ -6,7 +6,8 @@ type EmployeeEventReviewer struct {
 
 	EmployeeEventTopicID UUID
 	ReviewerID           UUID
-	Status               EventReviewerStatus
+	ReviewerStatus       EventReviewerStatus
+	AuthorStatus         EventAuthorStatus
 	Relationship         Relationship
 	IsShared             bool
 	IsRead               bool
@@ -20,6 +21,8 @@ type EventReviewerStatus string
 
 // EventReviewerStatus values
 const (
+	EventReviewerStatusNone  EventReviewerStatus = "none"
+	EventReviewerStatusNew   EventReviewerStatus = "new"
 	EventReviewerStatusDraft EventReviewerStatus = "draft"
 	EventReviewerStatusDone  EventReviewerStatus = "done"
 )
@@ -28,6 +31,8 @@ const (
 func (e EventReviewerStatus) IsValid() bool {
 	switch e {
 	case
+		EventReviewerStatusNone,
+		EventReviewerStatusNew,
 		EventReviewerStatusDraft,
 		EventReviewerStatusDone:
 		return true
@@ -37,5 +42,32 @@ func (e EventReviewerStatus) IsValid() bool {
 
 // String returns the string type from the EventReviewerStatus type
 func (e EventReviewerStatus) String() string {
+	return string(e)
+}
+
+// EventAuthorStatus event_reviewer_status for table employee event reviewer
+type EventAuthorStatus string
+
+// EventAuthorStatus values
+const (
+	EventAuthorStatusDraft EventAuthorStatus = "draft"
+	EventAuthorStatusSent  EventAuthorStatus = "sent"
+	EventAuthorStatusDone  EventAuthorStatus = "done"
+)
+
+// IsValid validation for EventAuthorStatus
+func (e EventAuthorStatus) IsValid() bool {
+	switch e {
+	case
+		EventAuthorStatusDraft,
+		EventAuthorStatusSent,
+		EventAuthorStatusDone:
+		return true
+	}
+	return false
+}
+
+// String returns the string type from the EventReviewerStatus type
+func (e EventAuthorStatus) String() string {
 	return string(e)
 }

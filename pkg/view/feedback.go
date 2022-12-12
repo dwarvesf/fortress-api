@@ -42,7 +42,7 @@ func ToListFeedback(eTopics []*model.EmployeeEventTopic) []Feedback {
 			ProjectID:       topic.ProjectID.String(),
 			Type:            topic.Event.Type.String(),
 			Subtype:         topic.Event.Subtype.String(),
-			Status:          topic.EmployeeEventReviewers[0].Status.String(),
+			Status:          topic.EmployeeEventReviewers[0].ReviewerStatus.String(),
 			IsRead:          topic.EmployeeEventReviewers[0].IsRead,
 			EventReviewerID: topic.EmployeeEventReviewers[0].ReviewerID.String(),
 			LastUpdated:     topic.EmployeeEventReviewers[0].UpdatedAt,
@@ -178,7 +178,7 @@ func ToListSurvey(events []*model.FeedbackEvent) []Survey {
 		for _, topic := range e.Topics {
 			total += int64(len(topic.EmployeeEventReviewers))
 			for _, reviewer := range topic.EmployeeEventReviewers {
-				if reviewer.Status == model.EventReviewerStatusDone {
+				if reviewer.AuthorStatus == model.EventAuthorStatusDone {
 					done++
 				}
 			}
@@ -226,7 +226,7 @@ func ToListSurveyDetail(topics []*model.EmployeeEventTopic) []SurveyDetail {
 		var done int64
 
 		for _, reviewer := range topic.EmployeeEventReviewers {
-			if reviewer.Status == model.EventReviewerStatusDone {
+			if reviewer.AuthorStatus == model.EventAuthorStatusSent {
 				done++
 			}
 		}

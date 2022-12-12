@@ -83,7 +83,7 @@ func (e EventSubtype) String() string {
 	return string(e)
 }
 
-// IsValid validation for EventSubType
+// IsValidSurvey validation for EventSubType
 func (e EventSubtype) IsValidSurvey() bool {
 	switch e {
 	case
