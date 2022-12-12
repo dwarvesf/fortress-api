@@ -814,6 +814,17 @@ definitions:
       name:
         type: string
     type: object
+  view.BasicEmployeeInfo:
+    properties:
+      avatar:
+        type: string
+      displayName:
+        type: string
+      fullName:
+        type: string
+      id:
+        type: string
+    type: object
   view.BasicMember:
     properties:
       avatar:
@@ -836,17 +847,6 @@ definitions:
       fullName:
         type: string
       position:
-        type: string
-    type: object
-  view.BasicEmployeeInfo:
-    properties:
-      avatar:
-        type: string
-      displayName:
-        type: string
-      fullName:
-        type: string
-      id:
         type: string
     type: object
   view.Chapter:
@@ -1103,7 +1103,7 @@ definitions:
       eventID:
         type: string
       reviewer:
-        $ref: '#/definitions/view.BasisEmployeeInfo'
+        $ref: '#/definitions/view.BasicEmployeeInfo'
       status:
         type: string
       title:
@@ -1393,7 +1393,7 @@ definitions:
       eventID:
         type: string
       reviewer:
-        $ref: '#/definitions/view.BasisEmployeeInfo'
+        $ref: '#/definitions/view.BasicEmployeeInfo'
       status:
         type: string
       title:
@@ -1427,11 +1427,36 @@ definitions:
     type: object
   view.SurveyDetail:
     properties:
+      author:
+        $ref: '#/definitions/view.BasicEmployeeInfo'
+      endDate:
+        type: string
+      eventID:
+        type: string
+      startDate:
+        type: string
+      status:
+        type: string
+      subtype:
+        type: string
+      title:
+        type: string
+      topics:
+        items:
+          $ref: '#/definitions/view.Topic'
+        type: array
+      type:
+        type: string
+    type: object
+  view.Topic:
+    properties:
       count:
         $ref: '#/definitions/view.FeedbackCount'
       employee:
         $ref: '#/definitions/view.BasicEmployeeInfo'
       eventID:
+        type: string
+      id:
         type: string
       participants:
         items:
@@ -1440,8 +1465,6 @@ definitions:
       subtype:
         type: string
       title:
-        type: string
-      topicID:
         type: string
       type:
         type: string
@@ -2172,7 +2195,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/pkg_handler_feedback.SubmitBody'
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_feedback.SubmitBody'
       produces:
       - application/json
       responses:
@@ -2692,7 +2715,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.CreateProjectInput'
+          $ref: '#/definitions/pkg_handler_project.CreateProjectInput'
       produces:
       - application/json
       responses:
@@ -2827,7 +2850,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateContactInfoInput'
+          $ref: '#/definitions/pkg_handler_project.UpdateContactInfoInput'
       produces:
       - application/json
       responses:
@@ -2871,7 +2894,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateGeneralInfoInput'
+          $ref: '#/definitions/pkg_handler_project.UpdateGeneralInfoInput'
       produces:
       - application/json
       responses:
@@ -2915,7 +2938,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.AssignMemberInput'
+          $ref: '#/definitions/pkg_handler_project.AssignMemberInput'
       produces:
       - application/json
       responses:
@@ -2958,7 +2981,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateMemberInput'
+          $ref: '#/definitions/pkg_handler_project.UpdateMemberInput'
       produces:
       - application/json
       responses:
@@ -3083,7 +3106,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.CreateWorkUnitBody'
+          $ref: '#/definitions/pkg_handler_project.CreateWorkUnitBody'
       produces:
       - application/json
       responses:
@@ -3218,7 +3241,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateWorkUnitInput'
+          $ref: '#/definitions/pkg_handler_project.UpdateWorkUnitInput'
       produces:
       - application/json
       responses:
@@ -3293,7 +3316,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/pkg_handler_feedback.CreateSurveyFeedbackInput'
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_feedback.CreateSurveyFeedbackInput'
       - description: jwt token
         in: header
         name: Authorization

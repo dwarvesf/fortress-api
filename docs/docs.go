@@ -790,7 +790,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/pkg_handler_feedback.SubmitBody"
+                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_feedback.SubmitBody"
                         }
                     }
                 ],
@@ -1574,7 +1574,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.CreateProjectInput"
+                            "$ref": "#/definitions/pkg_handler_project.CreateProjectInput"
                         }
                     }
                 ],
@@ -1777,7 +1777,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateContactInfoInput"
+                            "$ref": "#/definitions/pkg_handler_project.UpdateContactInfoInput"
                         }
                     }
                 ],
@@ -1843,7 +1843,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateGeneralInfoInput"
+                            "$ref": "#/definitions/pkg_handler_project.UpdateGeneralInfoInput"
                         }
                     }
                 ],
@@ -1909,7 +1909,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateMemberInput"
+                            "$ref": "#/definitions/pkg_handler_project.UpdateMemberInput"
                         }
                     }
                 ],
@@ -1973,7 +1973,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.AssignMemberInput"
+                            "$ref": "#/definitions/pkg_handler_project.AssignMemberInput"
                         }
                     }
                 ],
@@ -2160,7 +2160,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.CreateWorkUnitBody"
+                            "$ref": "#/definitions/pkg_handler_project.CreateWorkUnitBody"
                         }
                     }
                 ],
@@ -2361,7 +2361,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateWorkUnitInput"
+                            "$ref": "#/definitions/pkg_handler_project.UpdateWorkUnitInput"
                         }
                     }
                 ],
@@ -2474,7 +2474,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/pkg_handler_feedback.CreateSurveyFeedbackInput"
+                            "$ref": "#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_feedback.CreateSurveyFeedbackInput"
                         }
                     },
                     {
@@ -3771,6 +3771,23 @@ const docTemplate = `{
                 }
             }
         },
+        "view.BasicEmployeeInfo": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string"
+                },
+                "displayName": {
+                    "type": "string"
+                },
+                "fullName": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                }
+            }
+        },
         "view.BasicMember": {
             "type": "object",
             "properties": {
@@ -3804,23 +3821,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "position": {
-                    "type": "string"
-                }
-            }
-        },
-        "view.BasicEmployeeInfo": {
-            "type": "object",
-            "properties": {
-                "avatar": {
-                    "type": "string"
-                },
-                "displayName": {
-                    "type": "string"
-                },
-                "fullName": {
-                    "type": "string"
-                },
-                "id": {
                     "type": "string"
                 }
             }
@@ -4212,7 +4212,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "reviewer": {
-                    "$ref": "#/definitions/view.BasisEmployeeInfo"
+                    "$ref": "#/definitions/view.BasicEmployeeInfo"
                 },
                 "status": {
                     "type": "string"
@@ -4659,7 +4659,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "reviewer": {
-                    "$ref": "#/definitions/view.BasisEmployeeInfo"
+                    "$ref": "#/definitions/view.BasicEmployeeInfo"
                 },
                 "status": {
                     "type": "string"
@@ -4712,6 +4712,41 @@ const docTemplate = `{
         "view.SurveyDetail": {
             "type": "object",
             "properties": {
+                "author": {
+                    "$ref": "#/definitions/view.BasicEmployeeInfo"
+                },
+                "endDate": {
+                    "type": "string"
+                },
+                "eventID": {
+                    "type": "string"
+                },
+                "startDate": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "subtype": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "topics": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.Topic"
+                    }
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "view.Topic": {
+            "type": "object",
+            "properties": {
                 "count": {
                     "$ref": "#/definitions/view.FeedbackCount"
                 },
@@ -4719,6 +4754,9 @@ const docTemplate = `{
                     "$ref": "#/definitions/view.BasicEmployeeInfo"
                 },
                 "eventID": {
+                    "type": "string"
+                },
+                "id": {
                     "type": "string"
                 },
                 "participants": {
@@ -4731,9 +4769,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "title": {
-                    "type": "string"
-                },
-                "topicID": {
                     "type": "string"
                 },
                 "type": {

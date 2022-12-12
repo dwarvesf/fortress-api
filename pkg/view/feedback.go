@@ -76,7 +76,7 @@ type FeedbackDetail struct {
 	Answers    []*QuestionAnswer `json:"answers"`
 	Status     string            `json:"status"`
 	EmployeeID string            `json:"employeeID"`
-	Reviewer   BasisEmployeeInfo `json:"reviewer"`
+	Reviewer   BasicEmployeeInfo `json:"reviewer"`
 	TopicID    string            `json:"topicID"`
 	EventID    string            `json:"eventID"`
 	Title      string            `json:"title"`
@@ -109,7 +109,7 @@ func ToListFeedbackDetails(questions []*model.EmployeeEventQuestion, detailInfo 
 		})
 	}
 
-	rs.Reviewer = BasisEmployeeInfo{
+	rs.Reviewer = BasicEmployeeInfo{
 		ID:          detailInfo.Reviewer.ID.String(),
 		FullName:    detailInfo.Reviewer.FullName,
 		DisplayName: detailInfo.Reviewer.DisplayName,
@@ -129,7 +129,7 @@ type SubmitFeedback struct {
 	Answers    []*QuestionAnswer `json:"answers"`
 	Status     string            `json:"status"`
 	EmployeeID string            `json:"employeeID"`
-	Reviewer   BasisEmployeeInfo `json:"reviewer"`
+	Reviewer   BasicEmployeeInfo `json:"reviewer"`
 	TopicID    string            `json:"topicID"`
 	EventID    string            `json:"eventID"`
 	Title      string            `json:"title"`
@@ -153,7 +153,7 @@ func ToListSubmitFeedback(questions []*model.EmployeeEventQuestion, detailInfo F
 		})
 	}
 
-	rs.Reviewer = BasisEmployeeInfo{
+	rs.Reviewer = BasicEmployeeInfo{
 		ID:          detailInfo.Reviewer.ID.String(),
 		FullName:    detailInfo.Reviewer.FullName,
 		DisplayName: detailInfo.Reviewer.DisplayName,
