@@ -12,4 +12,5 @@ type IHandler interface {
 	Submit(c *gin.Context)
 	CreateSurvey(c *gin.Context)
 	DeleteSurvey(c *gin.Context)
+	DeleteSurveyTopic(c *gin.Context)
 }

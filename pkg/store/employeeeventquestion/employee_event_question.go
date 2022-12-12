@@ -37,3 +37,8 @@ func (s *store) Create(tx *gorm.DB, eventQuestion *model.EmployeeEventQuestion) 
 func (s *store) DeleteByEventID(db *gorm.DB, eventID string) error {
 	return db.Where("event_id = ?", eventID).Delete(&model.EmployeeEventQuestion{}).Error
 }
+
+// DeleteByEventReviewerIDList delete EmployeeEventQuestion by reviewerID list
+func (s *store) DeleteByEventReviewerIDList(db *gorm.DB, reviewerIDList []string) error {
+	return db.Where("employee_event_reviewer_id IN ?", reviewerIDList).Delete(&model.EmployeeEventQuestion{}).Error
+}

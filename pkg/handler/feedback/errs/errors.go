@@ -18,6 +18,7 @@ var (
 	ErrInvalidAnswers        = errors.New("invalid answers data")
 	ErrInvalidEventID        = errors.New("invalid event id")
 	ErrInvalidReviewerStatus = errors.New("invalid reviewer status")
+	ErrReviewAlreadySent     = errors.New("review already sent")
 
 	ErrUnansweredquestions      = errors.New("must answer all questions")
 	ErrCouldNotEditDoneFeedback = errors.New("could not edit the feedback marked as done")

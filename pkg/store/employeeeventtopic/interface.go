@@ -12,4 +12,5 @@ type IStore interface {
 	GetByEventIDWithPagination(db *gorm.DB, eventID string, pagination model.Pagination) (eTopics []*model.EmployeeEventTopic, total int64, err error)
 	BatchCreate(db *gorm.DB, employeeEventTopics []model.EmployeeEventTopic) ([]model.EmployeeEventTopic, error)
 	DeleteByEventID(db *gorm.DB, eventID string) error
+	DeleteByID(db *gorm.DB, ID string) error
 }

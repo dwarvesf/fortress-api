@@ -959,3 +959,97 @@ func (h *handler) GetSurveyReviewDetail(c *gin.Context) {
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToFeedbackReviewDetail(questions, topic, review), nil, nil, nil, ""))
 }
+
+// DeleteSurveyTopic godoc
+// @Summary delete survey topic
+// @Description delete survey topic
+// @Tags Feedback
+// @Accept  json
+// @Produce  json
+// @Param Authorization header string true "jwt token"
+// @Success 200 {object} view.MessageResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /surveys/{id}/topics/{topicID} [delete]
+func (h *handler) DeleteSurveyTopic(c *gin.Context) {
+	eventID := c.Param("id")
+	if eventID == "" || !model.IsUUIDFromString(eventID) {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, ErrInvalidEventID, nil, ""))
+		return
+	}
+
+	topicID := c.Param("topicID")
+	if topicID == "" || !model.IsUUIDFromString(eventID) {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, ErrInvalidTopicID, nil, ""))
+		return
+	}
+
+	l := h.logger.Fields(logger.Fields{
+		"handler": "feedback",
+		"method":  "DeleteSurveyTopic",
+	})
+
+	tx, done := h.repo.NewTransaction()
+
+	// check feedback event existence
+	exists, err := h.store.FeedbackEvent.IsExist(tx.DB(), eventID)
+	if err != nil {
+		l.Error(err, "failed to check feedback event existence")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, done(err), nil, ""))
+		return
+	}
+	if !exists {
+		l.Error(err, "feedback event not found")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, done(ErrEventNotFound), nil, ""))
+		return
+	}
+
+	_, err = h.store.EmployeeEventTopic.One(tx.DB(), topicID, eventID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			l.Info("topic not found")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, done(ErrTopicNotFound), nil, ""))
+			return
+		}
+		l.Error(err, "failed when getting topic")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), nil, ""))
+		return
+	}
+
+	reviews, err := h.store.EmployeeEventReviewer.GetByTopicID(tx.DB(), topicID)
+	if err != nil {
+		l.Error(err, "failed when getting reviews")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), nil, ""))
+		return
+	}
+
+	reviewIDList := make([]string, 0)
+	for _, r := range reviews {
+		if r.AuthorStatus != model.EventAuthorStatusDraft {
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(ErrReviewAlreadySent), nil, ""))
+			return
+		}
+		reviewIDList = append(reviewIDList, r.ID.String())
+	}
+
+	if err := h.store.EmployeeEventQuestion.DeleteByEventReviewerIDList(tx.DB(), reviewIDList); err != nil {
+		l.Error(err, "failed to delete feedback events")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), nil, ""))
+		return
+	}
+
+	if err := h.store.EmployeeEventReviewer.DeleteByTopicID(tx.DB(), topicID); err != nil {
+		l.Error(err, "failed to delete event reviewers")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), nil, ""))
+		return
+	}
+
+	if err := h.store.EmployeeEventTopic.DeleteByID(tx.DB(), eventID); err != nil {
+		l.Error(err, "failed to delete event topics")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), nil, ""))
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, done(nil), nil, "ok"))
+}
