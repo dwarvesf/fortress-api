@@ -552,7 +552,7 @@ definitions:
       position:
         $ref: '#/definitions/model.HeadPosition'
     type: object
-  view.BasisEmployeeInfo:
+  view.BasicEmployeeInfo:
     properties:
       avatar:
         type: string
@@ -706,7 +706,7 @@ definitions:
       leftDate:
         type: string
       lineManager:
-        $ref: '#/definitions/view.BasisEmployeeInfo'
+        $ref: '#/definitions/view.BasicEmployeeInfo'
       mbti:
         type: string
       notionID:
@@ -774,7 +774,7 @@ definitions:
   view.Feedback:
     properties:
       author:
-        $ref: '#/definitions/view.BasisEmployeeInfo'
+        $ref: '#/definitions/view.BasicEmployeeInfo'
       employeeID:
         type: string
       eventID:
@@ -1141,12 +1141,12 @@ definitions:
       count:
         $ref: '#/definitions/view.FeedbackCount'
       employee:
-        $ref: '#/definitions/view.BasisEmployeeInfo'
+        $ref: '#/definitions/view.BasicEmployeeInfo'
       eventID:
         type: string
       participants:
         items:
-          $ref: '#/definitions/view.BasisEmployeeInfo'
+          $ref: '#/definitions/view.BasicEmployeeInfo'
         type: array
       subtype:
         type: string
@@ -1183,7 +1183,7 @@ definitions:
       id:
         type: string
       lineManager:
-        $ref: '#/definitions/view.BasisEmployeeInfo'
+        $ref: '#/definitions/view.BasicEmployeeInfo'
       notionID:
         type: string
       phoneNumber:

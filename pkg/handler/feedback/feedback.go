@@ -260,16 +260,15 @@ func (h *handler) GetSurveyDetail(c *gin.Context) {
 	})
 
 	// check feedback event existence
-	exists, err := h.store.FeedbackEvent.IsExist(h.repo.DB(), input.EventID)
-	if err != nil {
-		l.Error(err, "failed to check feedback event existence")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input, ""))
+	event, err := h.store.FeedbackEvent.One(h.repo.DB(), input.EventID)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		l.Error(err, "event not found")
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrEventNotFound, input, ""))
 		return
 	}
-
-	if !exists {
-		l.Error(ErrEventNotFound, "event not found")
-		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrEventNotFound, input, ""))
+	if err != nil {
+		l.Error(err, "failed to get feedback event")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input, ""))
 		return
 	}
 
@@ -280,7 +279,9 @@ func (h *handler) GetSurveyDetail(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToListSurveyDetail(topics),
+	event.Topics = topics
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToListSurveyDetail(event),
 		&view.PaginationResponse{Pagination: input.Pagination, Total: total}, nil, nil, ""))
 }
 

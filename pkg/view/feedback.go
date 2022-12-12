@@ -6,7 +6,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/model"
 )
 
-var DwarvesAuthor = BasisEmployeeInfo{
+var DwarvesAuthor = BasicEmployeeInfo{
 	FullName:    "Dwarves' team",
 	DisplayName: "Dwarves' team",
 }
@@ -23,7 +23,7 @@ type Feedback struct {
 	Status          string             `json:"status"`
 	IsRead          bool               `json:"isRead"`
 	LastUpdated     *time.Time         `json:"lastUpdated"`
-	Author          *BasisEmployeeInfo `json:"author"`
+	Author          *BasicEmployeeInfo `json:"author"`
 }
 
 func ToListFeedback(eTopics []*model.EmployeeEventTopic) []Feedback {
@@ -46,7 +46,7 @@ func ToListFeedback(eTopics []*model.EmployeeEventTopic) []Feedback {
 			IsRead:          topic.EmployeeEventReviewers[0].IsRead,
 			EventReviewerID: topic.EmployeeEventReviewers[0].ReviewerID.String(),
 			LastUpdated:     topic.EmployeeEventReviewers[0].UpdatedAt,
-			Author:          ToBasisEmployeeInfo(topic.Event.Employee),
+			Author:          ToBasicEmployeeInfo(topic.Event.Employee),
 		}
 
 		if topic.Event.Type == model.EventTypeSurvey {
@@ -208,52 +208,78 @@ type ListSurveyResponse struct {
 }
 
 type SurveyDetail struct {
-	TopicID      string              `json:"topicID"`
+	EventID   string             `json:"eventID"`
+	Title     string             `json:"title"`
+	Type      string             `json:"type"`
+	Subtype   string             `json:"subtype"`
+	Status    string             `json:"status"`
+	StartDate *time.Time         `json:"startDate"`
+	EndDate   *time.Time         `json:"endDate"`
+	Author    *BasicEmployeeInfo `json:"author"`
+	Topics    []Topic            `json:"topics"`
+}
+
+type Topic struct {
+	ID           string              `json:"id"`
 	EventID      string              `json:"eventID"`
 	Title        string              `json:"title"`
 	Type         string              `json:"type"`
 	Subtype      string              `json:"subtype"`
-	Employee     BasisEmployeeInfo   `json:"employee"`
-	Participants []BasisEmployeeInfo `json:"participants"`
+	Employee     BasicEmployeeInfo   `json:"employee"`
+	Participants []BasicEmployeeInfo `json:"participants"`
 	Count        FeedbackCount       `json:"count"`
 }
 
-func ToListSurveyDetail(topics []*model.EmployeeEventTopic) []SurveyDetail {
-	var results = make([]SurveyDetail, 0, len(topics))
+func ToListSurveyDetail(event *model.FeedbackEvent) SurveyDetail {
+	result := SurveyDetail{
+		EventID:   event.ID.String(),
+		Title:     event.Title,
+		Type:      event.Type.String(),
+		Subtype:   event.Subtype.String(),
+		Status:    event.Status,
+		StartDate: event.StartDate,
+		EndDate:   event.EndDate,
+		Author:    ToBasicEmployeeInfo(event.Employee),
+	}
 
-	for _, topic := range topics {
+	var topics = make([]Topic, 0, len(event.Topics))
+
+	for _, topic := range event.Topics {
 		total := int64(len(topic.EmployeeEventReviewers))
-		var done int64
+		var sent, done int64
 
 		for _, reviewer := range topic.EmployeeEventReviewers {
-			if reviewer.AuthorStatus == model.EventAuthorStatusSent {
+			switch reviewer.AuthorStatus {
+			case model.EventAuthorStatusSent:
+				sent++
+			case model.EventAuthorStatusDone:
 				done++
 			}
 		}
 
-		participants := make([]BasisEmployeeInfo, 0, len(topic.EmployeeEventReviewers))
+		participants := make([]BasicEmployeeInfo, 0, len(topic.EmployeeEventReviewers))
 		for _, reviewer := range topic.EmployeeEventReviewers {
-			employee := ToBasisEmployeeInfo(*reviewer.Reviewer)
+			employee := ToBasicEmployeeInfo(*reviewer.Reviewer)
 			participants = append(participants, *employee)
 		}
 
-		results = append(results, SurveyDetail{
-			TopicID:  topic.ID.String(),
-			EventID:  topic.EventID.String(),
+		topics = append(topics, Topic{
+			ID:       topic.ID.String(),
 			Title:    topic.Title,
 			Type:     topic.Event.Type.String(),
 			Subtype:  topic.Event.Subtype.String(),
-			Employee: *ToBasisEmployeeInfo(*topic.Employee),
+			Employee: *ToBasicEmployeeInfo(*topic.Employee),
 			Count: FeedbackCount{
 				Total: total,
-				Sent:  total,
+				Sent:  sent,
 				Done:  done,
 			},
 			Participants: participants,
 		})
 	}
 
-	return results
+	result.Topics = topics
+	return result
 }
 
 type ListSurveyDetailResponse struct {

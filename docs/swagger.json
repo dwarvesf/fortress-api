@@ -3371,7 +3371,7 @@
                 }
             }
         },
-        "view.BasisEmployeeInfo": {
+        "view.BasicEmployeeInfo": {
             "type": "object",
             "properties": {
                 "avatar": {
@@ -3606,7 +3606,7 @@
                     "type": "string"
                 },
                 "lineManager": {
-                    "$ref": "#/definitions/view.BasisEmployeeInfo"
+                    "$ref": "#/definitions/view.BasicEmployeeInfo"
                 },
                 "mbti": {
                     "type": "string"
@@ -3712,7 +3712,7 @@
             "type": "object",
             "properties": {
                 "author": {
-                    "$ref": "#/definitions/view.BasisEmployeeInfo"
+                    "$ref": "#/definitions/view.BasicEmployeeInfo"
                 },
                 "employeeID": {
                     "type": "string"
@@ -4277,7 +4277,7 @@
                     "$ref": "#/definitions/view.FeedbackCount"
                 },
                 "employee": {
-                    "$ref": "#/definitions/view.BasisEmployeeInfo"
+                    "$ref": "#/definitions/view.BasicEmployeeInfo"
                 },
                 "eventID": {
                     "type": "string"
@@ -4285,7 +4285,7 @@
                 "participants": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/view.BasisEmployeeInfo"
+                        "$ref": "#/definitions/view.BasicEmployeeInfo"
                     }
                 },
                 "subtype": {
@@ -4341,7 +4341,7 @@
                     "type": "string"
                 },
                 "lineManager": {
-                    "$ref": "#/definitions/view.BasisEmployeeInfo"
+                    "$ref": "#/definitions/view.BasicEmployeeInfo"
                 },
                 "notionID": {
                     "type": "string"

@@ -52,3 +52,11 @@ func (s *store) GetBySubtypeWithPagination(db *gorm.DB, subtype string, paginati
 func (s *store) Create(db *gorm.DB, feedbackEvent *model.FeedbackEvent) (*model.FeedbackEvent, error) {
 	return feedbackEvent, db.Create(&feedbackEvent).Error
 }
+
+// One get 1 by id
+func (s *store) One(db *gorm.DB, id string) (*model.FeedbackEvent, error) {
+	var event *model.FeedbackEvent
+	return event, db.Where("id = ?", id).
+		Preload("Employee", "deleted_at IS NULL").
+		First(&event).Error
+}
