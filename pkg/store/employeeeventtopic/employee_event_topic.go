@@ -15,9 +15,15 @@ func New() IStore {
 // One get topic by id
 func (s *store) One(db *gorm.DB, id string, eventID string) (*model.EmployeeEventTopic, error) {
 	var topic *model.EmployeeEventTopic
+
+	// TODO: check Preload
+
 	return topic, db.Where("id = ? AND event_id = ?", id, eventID).
 		Preload("Employee", "deleted_at IS NULL").
-		Preload("Event", "deleted_at IS NULL").First(&topic).Error
+		Preload("Event", "deleted_at IS NULL").
+		Preload("EmployeeEventReviewers", "deleted_at IS NULL").
+		Preload("EmployeeEventReviewers.Reviewer", "deleted_at IS NULL").
+		First(&topic).Error
 }
 
 // GetByEmployeeIDWithPagination return list of EmployeeEventTopic by employeeID and pagination

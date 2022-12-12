@@ -13,4 +13,5 @@ type IHandler interface {
 	CreateSurvey(c *gin.Context)
 	DeleteSurvey(c *gin.Context)
 	DeleteSurveyTopic(c *gin.Context)
+	GetPeerReviewDetail(c *gin.Context)
 }

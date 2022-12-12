@@ -1053,3 +1053,51 @@ func (h *handler) DeleteSurveyTopic(c *gin.Context) {
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, done(nil), nil, "ok"))
 }
+
+// GetPeerReviewDetail godoc
+// @Summary Get detail for peer review
+// @Description Get detail for peer review
+// @Tags Feedback
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "jwt token"
+// @Param id path string true "Feedback Event ID"
+// @Param topicID path string true "Employee Event Topic ID"
+// @Success 200 {object} view.PeerReviewDetailResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /surveys/:id/topics/:topicID [get]
+func (h *handler) GetPeerReviewDetail(c *gin.Context) {
+	input := request.PeerReviewDetailInput{
+		EventID: c.Param("id"),
+		TopicID: c.Param("topicID"),
+	}
+
+	if err := input.Validate(); err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, input, ""))
+		return
+	}
+
+	l := h.logger.Fields(logger.Fields{
+		"handler": "feedback",
+		"method":  "GetPeerReviewDetail",
+		"input":   input,
+	})
+
+	// Check topic and feedback existence
+	topic, err := h.store.EmployeeEventTopic.One(h.repo.DB(), input.TopicID, input.EventID)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		l.Error(errs.ErrTopicNotFound, "topic not found")
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrTopicNotFound, input, ""))
+		return
+	}
+
+	if err != nil {
+		l.Error(err, "failed when getting topic")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input, ""))
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToPeerReviewDetail(topic), nil, nil, nil, ""))
+}

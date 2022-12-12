@@ -133,6 +133,49 @@ func ToListFeedbackDetails(questions []*model.EmployeeEventQuestion, detailInfo 
 	return rs
 }
 
+type PeerReviewer struct {
+	EventReviewerID string                    `json:"eventReviewerID"`
+	Reviewer        *BasicEmployeeInfo        `json:"reviewer"`
+	Status          model.EventReviewerStatus `json:"status"`
+	Relationship    model.Relationship        `json:"relationship"`
+}
+
+type PeerReviewDetail struct {
+	TopicID      string             `json:"topicID"`
+	Title        string             `json:"title"`
+	Employee     *BasicEmployeeInfo `json:"employee"`
+	Participants []PeerReviewer     `json:"participants"`
+}
+
+type PeerReviewDetailResponse struct {
+	Data PeerReviewDetail `json:"data"`
+}
+
+func ToPeerReviewDetail(topic *model.EmployeeEventTopic) PeerReviewDetail {
+	rs := PeerReviewDetail{
+		TopicID:  topic.ID.String(),
+		Employee: ToBasicEmployeeInfo(*topic.Employee),
+		Title:    topic.Title,
+	}
+
+	for _, eventReviewer := range topic.EmployeeEventReviewers {
+		participant := PeerReviewer{
+			EventReviewerID: eventReviewer.ID.String(),
+			Status:          model.EventReviewerStatus(eventReviewer.AuthorStatus),
+			Relationship:    eventReviewer.Relationship,
+		}
+
+		if eventReviewer.Reviewer != nil {
+			participant.Reviewer = ToBasicEmployeeInfo(*eventReviewer.Reviewer)
+		}
+
+		rs.Participants = append(rs.Participants, participant)
+
+	}
+
+	return rs
+}
+
 type SubmitFeedback struct {
 	Answers    []*QuestionAnswer `json:"answers"`
 	Status     string            `json:"status"`
