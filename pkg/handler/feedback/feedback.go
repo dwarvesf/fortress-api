@@ -110,7 +110,7 @@ func (h *handler) List(c *gin.Context) {
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 404 {object} view.ErrorResponse
 // @Failure 500 {object} view.ErrorResponse
-// @Router /feedbacks/:id/topics/:topicID [get]
+// @Router /feedbacks/{id}/topics/{topicID} [get]
 func (h *handler) Detail(c *gin.Context) {
 	userID, err := utils.GetUserIDFromContext(c)
 	if err != nil {
@@ -818,7 +818,7 @@ func (h *handler) updateEventReviewer(db *gorm.DB, l logger.Logger, data request
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 404 {object} view.ErrorResponse
 // @Failure 500 {object} view.ErrorResponse
-// @Router /surveys/:id [delete]
+// @Router /surveys/{id} [delete]
 func (h *handler) DeleteSurvey(c *gin.Context) {
 	eventID := c.Param("id")
 	if eventID == "" || !model.IsUUIDFromString(eventID) {
@@ -1067,7 +1067,7 @@ func (h *handler) DeleteSurveyTopic(c *gin.Context) {
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 404 {object} view.ErrorResponse
 // @Failure 500 {object} view.ErrorResponse
-// @Router /surveys/:id/topics/:topicID [get]
+// @Router /surveys/{id}/topics/{topicID} [get]
 func (h *handler) GetPeerReviewDetail(c *gin.Context) {
 	input := request.PeerReviewDetailInput{
 		EventID: c.Param("id"),
@@ -1100,4 +1100,206 @@ func (h *handler) GetPeerReviewDetail(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToPeerReviewDetail(topic), nil, nil, nil, ""))
+}
+
+// UpdateTopicReviewers godoc
+// @Summary Update reviewers in a topic
+// @Description Update reviewers in a topic
+// @Tags Feedback
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "jwt token"
+// @Param Body body request.UpdateTopicReviewersBody true "Body"
+// @Success 200 {object} view.MessageResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /surveys/{id}/topics/{topicID}/employees [put]
+func (h *handler) UpdateTopicReviewers(c *gin.Context) {
+	input := request.UpdateTopicReviewersInput{
+		EventID: c.Param("id"),
+		TopicID: c.Param("topicID"),
+	}
+	if err := c.ShouldBindJSON(&input.Body); err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, input, ""))
+		return
+	}
+
+	l := h.logger.Fields(logger.Fields{
+		"handler": "feedback",
+		"method":  "UpdateTopicReviewers",
+		"input":   input,
+	})
+
+	if err := input.Validate(); err != nil {
+		l.Error(err, "validate failed")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, input, ""))
+		return
+	}
+
+	// check feedback event existence
+	exists, err := h.store.FeedbackEvent.IsExist(h.repo.DB(), input.EventID)
+	if err != nil {
+		l.Error(err, "failed to check feedback event existence")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input, ""))
+		return
+	}
+	if !exists {
+		l.Error(errs.ErrEventNotFound, "feedback event not found")
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrEventNotFound, input, ""))
+		return
+	}
+
+	tx, done := h.repo.NewTransaction()
+
+	if code, err := h.updateTopicReviewer(tx.DB(), input.EventID, input.TopicID, input.Body); err != nil {
+		l.Error(err, "failed to update topic reviewers")
+		c.JSON(code, view.CreateResponse[any](nil, nil, done(err), input, ""))
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, done(nil), nil, "ok"))
+}
+
+func (h *handler) updateTopicReviewer(db *gorm.DB, eventID string, topicID string, body request.UpdateTopicReviewersBody) (int, error) {
+	l := h.logger.Fields(logger.Fields{
+		"handler": "feedback",
+		"method":  "updateTopicReviewer",
+		"eventID": eventID,
+		"topicID": topicID,
+		"body":    body,
+	})
+
+	employees, err := h.store.Employee.GetByWorkingStatus(db, model.WorkingStatusFullTime)
+	if err != nil {
+		l.Error(err, "failed to get employees by working status")
+		return http.StatusInternalServerError, err
+	}
+
+	eventReviewers, err := h.store.EmployeeEventReviewer.GetByTopicID(db, topicID)
+	if err != nil {
+		l.Error(err, "failed to get event reviewers")
+		return http.StatusInternalServerError, err
+	}
+
+	// check reviewer existence
+	employeeMap := model.ToEmployeeMap(employees)
+	mustCreateReviewerIDMap := map[model.UUID]bool{}
+	for _, reviewerID := range body.ReviewerIDs {
+		if _, ok := employeeMap[reviewerID]; !ok {
+			l.Errorf(errs.ErrEmployeeNotReady, "employee %v not ready", reviewerID)
+			return http.StatusBadRequest, errs.ErrEmployeeNotReady
+		}
+
+		mustCreateReviewerIDMap[reviewerID] = true
+	}
+
+	// delete event question and event topic if reviewerID is not exists in request
+	for _, eventReviewer := range eventReviewers {
+		if isExists, _ := mustCreateReviewerIDMap[eventReviewer.ReviewerID]; isExists {
+			mustCreateReviewerIDMap[eventReviewer.ReviewerID] = false
+			continue
+		}
+
+		if err := h.store.EmployeeEventQuestion.DeleteByEventReviewerID(db, eventReviewer.ID.String()); err != nil {
+			l.Error(err, "failed to delete event questions")
+			return http.StatusInternalServerError, err
+		}
+
+		if err := h.store.EmployeeEventReviewer.DeleteByID(db, eventReviewer.ID.String()); err != nil {
+			l.Error(err, "failed to delete event reviewer")
+			return http.StatusInternalServerError, err
+		}
+	}
+
+	eventTopic, err := h.store.EmployeeEventTopic.One(db, topicID, eventID)
+	if err != nil {
+		l.Error(err, "failed to get event topic")
+		return http.StatusInternalServerError, err
+	}
+
+	// create event reviewer and event question if reviewerID not exist in database
+	newEventReviewers := []model.EmployeeEventReviewer{}
+	for reviewerID, mustCreate := range mustCreateReviewerIDMap {
+		if mustCreate {
+			relationship := model.RelationshipPeer
+			if employeeMap[eventTopic.EmployeeID].LineManagerID == reviewerID ||
+				employeeMap[reviewerID].LineManagerID == eventTopic.EmployeeID {
+				relationship = model.RelationshipLineManager
+			}
+
+			newEventReviewers = append(newEventReviewers, model.EmployeeEventReviewer{
+				EmployeeEventTopicID: model.MustGetUUIDFromString(topicID),
+				ReviewerID:           reviewerID,
+				AuthorStatus:         model.EventAuthorStatusDraft,
+				ReviewerStatus:       model.EventReviewerStatusNone,
+				Relationship:         relationship,
+				EventID:              model.MustGetUUIDFromString(eventID),
+			})
+		}
+	}
+
+	if len(newEventReviewers) > 0 {
+		newEventReviewers, err = h.store.EmployeeEventReviewer.BatchCreate(db, newEventReviewers)
+		if err != nil {
+			l.Error(err, "failed to batch create event reviews")
+			return http.StatusInternalServerError, err
+		}
+	}
+
+	if err := h.createEventQuestions(db, model.EventTypeSurvey, model.EventSubtypePeerReview, newEventReviewers); err != nil {
+		l.Error(err, "failed to create event questions")
+		return http.StatusInternalServerError, err
+	}
+
+	return http.StatusOK, nil
+}
+
+func (h *handler) createEventQuestions(db *gorm.DB, eventType model.EventType, eventSubtype model.EventSubtype, reviewers []model.EmployeeEventReviewer) error {
+	l := h.logger.Fields(logger.Fields{
+		"handler":      "feedback",
+		"method":       "createEventQuestions",
+		"eventType":    eventType,
+		"eventSubtype": eventSubtype,
+	})
+
+	questions, err := h.store.Question.AllByCategory(db, eventType, eventSubtype)
+	if err != nil {
+		l.Error(err, "failed to get all questions by category")
+		return err
+	}
+
+	eventQuestions := make([]model.EmployeeEventQuestion, 0)
+
+	for _, r := range reviewers {
+		for _, q := range questions {
+			eventQuestions = append(eventQuestions, model.EmployeeEventQuestion{
+				BaseModel: model.BaseModel{
+					ID: model.NewUUID(),
+				},
+				EmployeeEventReviewerID: r.ID,
+				QuestionID:              q.ID,
+				EventID:                 r.EventID,
+				Content:                 q.Content,
+				Type:                    q.Type.String(),
+				Order:                   q.Order,
+			})
+		}
+	}
+
+	i := 0
+	for i < len(eventQuestions) {
+		to := i + 100
+		if to > len(eventQuestions) {
+			to = len(eventQuestions)
+		}
+		_, err = h.store.EmployeeEventQuestion.BatchCreate(db, eventQuestions[i:to])
+		if err != nil {
+			l.Error(err, "failed to batch create event questions")
+			return err
+		}
+		i = to
+	}
+
+	return nil
 }

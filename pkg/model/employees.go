@@ -112,3 +112,13 @@ type Employee struct {
 	EmployeeStacks    []EmployeeStack
 	EmployeeChapters  []EmployeeChapter
 }
+
+// ToEmployeeMap create map from employees
+func ToEmployeeMap(employees []*Employee) map[UUID]Employee {
+	rs := map[UUID]Employee{}
+	for _, e := range employees {
+		rs[e.ID] = *e
+	}
+
+	return rs
+}

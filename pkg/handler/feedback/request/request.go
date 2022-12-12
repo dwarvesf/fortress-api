@@ -132,3 +132,27 @@ func (i *PeerReviewDetailInput) Validate() error {
 
 	return nil
 }
+
+// UpdateTopicReviewersBody view for update topic reviewers
+type UpdateTopicReviewersBody struct {
+	ReviewerIDs []model.UUID `json:"reviewerIDs"`
+}
+
+// UpdateTopicReviewersInput input of update topic reviewers request
+type UpdateTopicReviewersInput struct {
+	EventID string
+	TopicID string
+	Body    UpdateTopicReviewersBody
+}
+
+func (i *UpdateTopicReviewersInput) Validate() error {
+	if i.EventID == "" || !model.IsUUIDFromString(i.EventID) {
+		return errs.ErrInvalidEventID
+	}
+
+	if i.TopicID == "" || !model.IsUUIDFromString(i.TopicID) {
+		return errs.ErrInvalidTopicID
+	}
+
+	return nil
+}
