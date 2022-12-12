@@ -32,7 +32,7 @@ type EmployeeData struct {
 	LeftDate      *time.Time          `json:"leftDate"`
 
 	Seniority   *model.Seniority      `json:"seniority"`
-	LineManager *BasisEmployeeInfo    `json:"lineManager"`
+	LineManager *BasicEmployeeInfo    `json:"lineManager"`
 	Positions   []Position            `json:"positions"`
 	Stacks      []Stack               `json:"stacks"`
 	Roles       []Role                `json:"roles"`
@@ -50,7 +50,7 @@ type UpdateGeneralInfoEmployeeData struct {
 	DiscordID   string             `json:"discordID"`
 	GithubID    string             `json:"githubID"`
 	NotionID    string             `json:"notionID"`
-	LineManager *BasisEmployeeInfo `json:"lineManager"`
+	LineManager *BasicEmployeeInfo `json:"lineManager"`
 }
 
 type UpdateSkillEmployeeData struct {
@@ -71,7 +71,7 @@ type UpdatePersonalEmployeeData struct {
 	DateOfBirth   *time.Time `json:"birthday"`
 }
 
-type BasisEmployeeInfo struct {
+type BasicEmployeeInfo struct {
 	ID          string `json:"id"`
 	FullName    string `json:"fullName"`
 	DisplayName string `json:"displayName"`
@@ -161,7 +161,7 @@ func ToUpdateGeneralInfoEmployeeData(employee *model.Employee) *UpdateGeneralInf
 	}
 
 	if employee.LineManager != nil {
-		rs.LineManager = &BasisEmployeeInfo{
+		rs.LineManager = &BasicEmployeeInfo{
 			ID:       employee.LineManager.ID.String(),
 			FullName: employee.LineManager.FullName,
 			Avatar:   employee.LineManager.Avatar,
@@ -214,7 +214,7 @@ func ToEmployeeData(employee *model.Employee) *EmployeeData {
 	}
 
 	if employee.LineManager != nil {
-		rs.LineManager = &BasisEmployeeInfo{
+		rs.LineManager = &BasicEmployeeInfo{
 			ID:       employee.LineManager.ID.String(),
 			FullName: employee.LineManager.FullName,
 			Avatar:   employee.LineManager.Avatar,
@@ -247,8 +247,8 @@ func ToContentData(url string) *EmployeeContentData {
 	}
 }
 
-func ToBasisEmployeeInfo(employee model.Employee) *BasisEmployeeInfo {
-	return &BasisEmployeeInfo{
+func ToBasicEmployeeInfo(employee model.Employee) *BasicEmployeeInfo {
+	return &BasicEmployeeInfo{
 		ID:          employee.ID.String(),
 		FullName:    employee.FullName,
 		DisplayName: employee.DisplayName,

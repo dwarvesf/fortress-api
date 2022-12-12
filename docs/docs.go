@@ -3379,7 +3379,7 @@ const docTemplate = `{
                 }
             }
         },
-        "view.BasisEmployeeInfo": {
+        "view.BasicEmployeeInfo": {
             "type": "object",
             "properties": {
                 "avatar": {
@@ -3614,7 +3614,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "lineManager": {
-                    "$ref": "#/definitions/view.BasisEmployeeInfo"
+                    "$ref": "#/definitions/view.BasicEmployeeInfo"
                 },
                 "mbti": {
                     "type": "string"
@@ -3720,7 +3720,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "author": {
-                    "$ref": "#/definitions/view.BasisEmployeeInfo"
+                    "$ref": "#/definitions/view.BasicEmployeeInfo"
                 },
                 "employeeID": {
                     "type": "string"
@@ -4285,7 +4285,7 @@ const docTemplate = `{
                     "$ref": "#/definitions/view.FeedbackCount"
                 },
                 "employee": {
-                    "$ref": "#/definitions/view.BasisEmployeeInfo"
+                    "$ref": "#/definitions/view.BasicEmployeeInfo"
                 },
                 "eventID": {
                     "type": "string"
@@ -4293,7 +4293,7 @@ const docTemplate = `{
                 "participants": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/view.BasisEmployeeInfo"
+                        "$ref": "#/definitions/view.BasicEmployeeInfo"
                     }
                 },
                 "subtype": {
@@ -4349,7 +4349,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "lineManager": {
-                    "$ref": "#/definitions/view.BasisEmployeeInfo"
+                    "$ref": "#/definitions/view.BasicEmployeeInfo"
                 },
                 "notionID": {
                     "type": "string"
