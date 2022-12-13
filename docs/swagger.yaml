@@ -246,6 +246,13 @@ definitions:
     - status
     - type
     type: object
+  request.DeleteTopicReviewersBody:
+    properties:
+      reviewerIDs:
+        items:
+          type: string
+        type: array
+    type: object
   request.PerformanceReviewTopic:
     properties:
       participants:
@@ -3325,6 +3332,54 @@ paths:
       tags:
       - Feedback
   /surveys/{id}/topics/{topicID}/employees:
+    delete:
+      consumes:
+      - application/json
+      description: Delete reviewers in a topic
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Feedback Event ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Employee Event Topic ID
+        in: path
+        name: topicID
+        required: true
+        type: string
+      - description: Body
+        in: body
+        name: Body
+        required: true
+        schema:
+          $ref: '#/definitions/request.DeleteTopicReviewersBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Delete reviewers in a topic
+      tags:
+      - Feedback
     put:
       consumes:
       - application/json
