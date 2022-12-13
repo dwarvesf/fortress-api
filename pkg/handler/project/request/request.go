@@ -1,8 +1,9 @@
-package project
+package request
 
 import (
 	"time"
 
+	"github.com/dwarvesf/fortress-api/pkg/handler/project/errs"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/shopspring/decimal"
 )
@@ -15,14 +16,14 @@ type GetListProjectInput struct {
 	Type   string `form:"type" json:"type"`
 }
 
-type UpdateGeneralInfoInput struct {
+type UpdateProjectGeneralInfoInput struct {
 	Name      string       `form:"name" json:"name" binding:"required"`
 	StartDate string       `form:"startDate" json:"startDate"`
 	CountryID model.UUID   `form:"countryID" json:"countryID" binding:"required"`
 	Stacks    []model.UUID `form:"stacks" json:"stacks"`
 }
 
-func (i UpdateGeneralInfoInput) GetStartDate() *time.Time {
+func (i UpdateProjectGeneralInfoInput) GetStartDate() *time.Time {
 	startDate, err := time.Parse("2006-01-02", i.StartDate)
 	if i.StartDate == "" || err != nil {
 		return nil
@@ -31,17 +32,17 @@ func (i UpdateGeneralInfoInput) GetStartDate() *time.Time {
 	return &startDate
 }
 
-type updateAccountStatusBody struct {
+type UpdateAccountStatusBody struct {
 	ProjectStatus model.ProjectStatus `json:"status"`
 }
 
 func (i *GetListProjectInput) Validate() error {
 	if i.Type != "" && !model.ProjectType(i.Type).IsValid() {
-		return ErrInvalidProjectType
+		return errs.ErrInvalidProjectType
 	}
 
 	if i.Status != "" && !model.ProjectStatus(i.Status).IsValid() {
-		return ErrInvalidProjectStatus
+		return errs.ErrInvalidProjectStatus
 	}
 	return nil
 }
@@ -65,16 +66,16 @@ func (i *CreateProjectInput) Validate() error {
 	}
 
 	if !model.ProjectType(i.Type).IsValid() {
-		return ErrInvalidProjectType
+		return errs.ErrInvalidProjectType
 	}
 
 	if !model.ProjectStatus(i.Status).IsValid() {
-		return ErrInvalidProjectStatus
+		return errs.ErrInvalidProjectStatus
 	}
 
 	_, err := time.Parse("2006-01-02", i.StartDate)
 	if i.StartDate != "" && err != nil {
-		return ErrInvalidStartDate
+		return errs.ErrInvalidStartDate
 	}
 
 	for _, member := range i.Members {
@@ -104,7 +105,7 @@ type GetListStaffInput struct {
 
 func (i *GetListStaffInput) Validate() error {
 	if i.Status != "" && !model.ProjectMemberStatus(i.Status).IsValid() {
-		return ErrInvalidProjectMemberStatus
+		return errs.ErrInvalidProjectMemberStatus
 	}
 	return nil
 }
@@ -125,21 +126,21 @@ type UpdateMemberInput struct {
 
 func (i *UpdateMemberInput) Validate() error {
 	if i.DeploymentType != "" && !model.DeploymentType(i.DeploymentType).IsValid() {
-		return ErrInvalidDeploymentType
+		return errs.ErrInvalidDeploymentType
 	}
 
 	if i.Status != "" && !model.ProjectMemberStatus(i.Status).IsValid() {
-		return ErrInvalidProjectMemberStatus
+		return errs.ErrInvalidProjectMemberStatus
 	}
 
 	_, err := time.Parse("2006-01-02", i.JoinedDate)
 	if i.JoinedDate != "" && err != nil {
-		return ErrInvalidJoinedDate
+		return errs.ErrInvalidJoinedDate
 	}
 
 	_, err = time.Parse("2006-01-02", i.LeftDate)
 	if i.LeftDate != "" && err != nil {
-		return ErrInvalidLeftDate
+		return errs.ErrInvalidLeftDate
 	}
 
 	return nil
@@ -178,28 +179,28 @@ type AssignMemberInput struct {
 
 func (i *AssignMemberInput) Validate() error {
 	if i.DeploymentType == "" || !model.DeploymentType(i.DeploymentType).IsValid() {
-		return ErrInvalidDeploymentType
+		return errs.ErrInvalidDeploymentType
 	}
 
 	if i.Status == "" ||
 		!model.ProjectMemberStatus(i.Status).IsValid() ||
 		i.Status == model.ProjectMemberStatusInactive.String() {
 
-		return ErrInvalidProjectMemberStatus
+		return errs.ErrInvalidProjectMemberStatus
 	}
 
 	if len(i.Positions) == 0 {
-		return ErrPositionsIsEmpty
+		return errs.ErrPositionsIsEmpty
 	}
 
 	_, err := time.Parse("2006-01-02", i.JoinedDate)
 	if i.JoinedDate != "" && err != nil {
-		return ErrInvalidJoinedDate
+		return errs.ErrInvalidJoinedDate
 	}
 
 	_, err = time.Parse("2006-01-02", i.LeftDate)
 	if i.LeftDate != "" && err != nil {
-		return ErrInvalidLeftDate
+		return errs.ErrInvalidLeftDate
 	}
 
 	if i.Status == model.ProjectMemberStatusPending.String() && !i.EmployeeID.IsZero() {
@@ -234,11 +235,11 @@ type DeleteMemberInput struct {
 
 func (input DeleteMemberInput) Validate() error {
 	if input.ProjectID == "" {
-		return ErrInvalidProjectID
+		return errs.ErrInvalidProjectID
 	}
 
 	if input.MemberID == "" {
-		return ErrInvalidMemberID
+		return errs.ErrInvalidMemberID
 	}
 
 	return nil
@@ -258,11 +259,11 @@ type UnassignMemberInput struct {
 
 func (input UnassignMemberInput) Validate() error {
 	if input.ProjectID == "" || !model.IsUUIDFromString(input.ProjectID) {
-		return ErrInvalidProjectID
+		return errs.ErrInvalidProjectID
 	}
 
 	if input.MemberID == "" || !model.IsUUIDFromString(input.MemberID) {
-		return ErrInvalidMemberID
+		return errs.ErrInvalidMemberID
 	}
 
 	return nil
@@ -284,7 +285,7 @@ type CreateWorkUnitBody struct {
 
 func (i *CreateWorkUnitInput) Validate() error {
 	if i.ProjectID == "" || !model.IsUUIDFromString(i.ProjectID) {
-		return ErrInvalidProjectID
+		return errs.ErrInvalidProjectID
 	}
 
 	return i.Body.Validate()
@@ -292,15 +293,15 @@ func (i *CreateWorkUnitInput) Validate() error {
 
 func (i *CreateWorkUnitBody) Validate() error {
 	if i.Type == "" || !model.WorkUnitType(i.Type).IsValid() {
-		return ErrInvalidWorkUnitType
+		return errs.ErrInvalidWorkUnitType
 	}
 
 	if i.Status == "" || !model.WorkUnitStatus(i.Status).IsValid() {
-		return ErrInvalidWorkUnitStatus
+		return errs.ErrInvalidWorkUnitStatus
 	}
 
 	if len(i.Stacks) == 0 {
-		return ErrInvalidWorkUnitStacks
+		return errs.ErrInvalidWorkUnitStacks
 	}
 
 	return nil
@@ -322,11 +323,11 @@ type UpdateWorkUnitBody struct {
 
 func (i *UpdateWorkUnitInput) Validate() error {
 	if i.ProjectID == "" || !model.IsUUIDFromString(i.ProjectID) {
-		return ErrInvalidProjectID
+		return errs.ErrInvalidProjectID
 	}
 
 	if i.WorkUnitID == "" || !model.IsUUIDFromString(i.WorkUnitID) {
-		return ErrInvalidWorkUnitID
+		return errs.ErrInvalidWorkUnitID
 	}
 
 	return i.Body.Validate()
@@ -334,11 +335,11 @@ func (i *UpdateWorkUnitInput) Validate() error {
 
 func (i *UpdateWorkUnitBody) Validate() error {
 	if !i.Type.IsValid() {
-		return ErrInvalidWorkUnitType
+		return errs.ErrInvalidWorkUnitType
 	}
 
 	if len(i.Stacks) == 0 {
-		return ErrInvalidWorkUnitStacks
+		return errs.ErrInvalidWorkUnitStacks
 	}
 
 	return nil
@@ -351,11 +352,11 @@ type ArchiveWorkUnitInput struct {
 
 func (i *ArchiveWorkUnitInput) Validate() error {
 	if i.ProjectID == "" || !model.IsUUIDFromString(i.ProjectID) {
-		return ErrInvalidProjectID
+		return errs.ErrInvalidProjectID
 	}
 
 	if i.WorkUnitID == "" || !model.IsUUIDFromString(i.WorkUnitID) {
-		return ErrInvalidWorkUnitID
+		return errs.ErrInvalidWorkUnitID
 	}
 
 	return nil
@@ -372,7 +373,7 @@ type GetListWorkUnitQuery struct {
 
 func (i GetListWorkUnitInput) Validate() error {
 	if i.ProjectID == "" || !model.IsUUIDFromString(i.ProjectID) {
-		return ErrInvalidProjectID
+		return errs.ErrInvalidProjectID
 	}
 
 	return i.Query.Validate()
@@ -380,7 +381,7 @@ func (i GetListWorkUnitInput) Validate() error {
 
 func (i GetListWorkUnitQuery) Validate() error {
 	if i.Status != "" && !i.Status.IsValid() {
-		return ErrInvalidWorkUnitStatus
+		return errs.ErrInvalidWorkUnitStatus
 	}
 
 	return nil

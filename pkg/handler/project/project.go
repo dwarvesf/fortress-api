@@ -9,6 +9,8 @@ import (
 	"github.com/shopspring/decimal"
 	"gorm.io/gorm"
 
+	"github.com/dwarvesf/fortress-api/pkg/handler/project/errs"
+	"github.com/dwarvesf/fortress-api/pkg/handler/project/request"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service"
@@ -51,7 +53,7 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 // @Failure 500 {object} view.ErrorResponse
 // @Router /projects [get]
 func (h *handler) List(c *gin.Context) {
-	query := GetListProjectInput{}
+	query := request.GetListProjectInput{}
 	if err := c.ShouldBindQuery(&query); err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, query, ""))
 		return
@@ -104,11 +106,11 @@ func (h *handler) List(c *gin.Context) {
 func (h *handler) UpdateProjectStatus(c *gin.Context) {
 	projectID := c.Param("id")
 	if projectID == "" || !model.IsUUIDFromString(projectID) {
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, ErrInvalidProjectID, nil, ""))
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidProjectID, nil, ""))
 		return
 	}
 
-	var body updateAccountStatusBody
+	var body request.UpdateAccountStatusBody
 	if err := c.ShouldBindJSON(&body); err != nil {
 		if err != nil {
 			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, body, ""))
@@ -124,8 +126,8 @@ func (h *handler) UpdateProjectStatus(c *gin.Context) {
 	})
 
 	if !body.ProjectStatus.IsValid() {
-		l.Error(ErrInvalidProjectStatus, "invalid value for ProjectStatus")
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, ErrInvalidProjectStatus, body, ""))
+		l.Error(errs.ErrInvalidProjectStatus, "invalid value for ProjectStatus")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidProjectStatus, body, ""))
 		return
 	}
 
@@ -133,7 +135,7 @@ func (h *handler) UpdateProjectStatus(c *gin.Context) {
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Error(err, "project not found")
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrProjectNotFound, projectID, ""))
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, projectID, ""))
 			return
 		}
 
@@ -160,13 +162,13 @@ func (h *handler) UpdateProjectStatus(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param Authorization header string true "jwt token"
-// @Param Body body CreateProjectInput true "body"
+// @Param Body body request.CreateProjectInput true "body"
 // @Success 200 {object} view.CreateProjectData
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 500 {object} view.ErrorResponse
 // @Router /projects [post]
 func (h *handler) Create(c *gin.Context) {
-	body := CreateProjectInput{}
+	body := request.CreateProjectInput{}
 	if err := c.ShouldBindJSON(&body); err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, body, ""))
 		return
@@ -281,7 +283,7 @@ func (h *handler) Create(c *gin.Context) {
 // @Failure 500 {object} view.ErrorResponse
 // @Router /projects/:id/members [get]
 func (h *handler) GetMembers(c *gin.Context) {
-	query := GetListStaffInput{}
+	query := request.GetListStaffInput{}
 	if err := c.ShouldBindQuery(&query); err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, query, ""))
 		return
@@ -290,7 +292,7 @@ func (h *handler) GetMembers(c *gin.Context) {
 
 	projectID := c.Param("id")
 	if projectID == "" || !model.IsUUIDFromString(projectID) {
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, ErrInvalidProjectID, nil, ""))
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidProjectID, nil, ""))
 		return
 	}
 
@@ -316,8 +318,8 @@ func (h *handler) GetMembers(c *gin.Context) {
 	}
 
 	if !exists {
-		l.Error(ErrProjectNotFound, "cannot find project by id")
-		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrProjectNotFound, nil, ""))
+		l.Error(errs.ErrProjectNotFound, "cannot find project by id")
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, nil, ""))
 		return
 	}
 
@@ -358,7 +360,7 @@ func (h *handler) GetMembers(c *gin.Context) {
 // @Failure 500 {object} view.ErrorResponse
 // @Router /project/:id/members/:memberID [delete]
 func (h *handler) DeleteMember(c *gin.Context) {
-	input := DeleteMemberInput{
+	input := request.DeleteMemberInput{
 		ProjectID: c.Param("id"),
 		MemberID:  c.Param("memberID"),
 	}
@@ -380,7 +382,7 @@ func (h *handler) DeleteMember(c *gin.Context) {
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Error(err, "project member not found")
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrProjectMemberNotFound, input.MemberID, ""))
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectMemberNotFound, input.MemberID, ""))
 			return
 		}
 		l.Error(err, "failed to get project member")
@@ -389,8 +391,8 @@ func (h *handler) DeleteMember(c *gin.Context) {
 	}
 
 	if projectMember.Status == model.ProjectMemberStatusInactive {
-		l.Error(ErrCouldNotDeleteInactiveMember, "can not change information of inactive member")
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, ErrCouldNotDeleteInactiveMember, input.MemberID, ""))
+		l.Error(errs.ErrCouldNotDeleteInactiveMember, "can not change information of inactive member")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrCouldNotDeleteInactiveMember, input.MemberID, ""))
 		return
 	}
 
@@ -453,7 +455,7 @@ func (h *handler) DeleteMember(c *gin.Context) {
 // @Router /project/:id/members/:memberID [put]
 func (h *handler) UnassignMember(c *gin.Context) {
 	// TODO: add test
-	input := UnassignMemberInput{
+	input := request.UnassignMemberInput{
 		ProjectID: c.Param("id"),
 		MemberID:  c.Param("memberID"),
 	}
@@ -475,7 +477,7 @@ func (h *handler) UnassignMember(c *gin.Context) {
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Error(err, "project member not found")
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrProjectMemberNotFound, input.MemberID, ""))
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectMemberNotFound, input.MemberID, ""))
 			return
 		}
 		l.Error(err, "failed to get project member")
@@ -484,8 +486,8 @@ func (h *handler) UnassignMember(c *gin.Context) {
 	}
 
 	if projectMember.Status == model.ProjectMemberStatusInactive {
-		l.Error(ErrCouldNotDeleteInactiveMember, "can not change information of inactive member")
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, ErrCouldNotDeleteInactiveMember, input.MemberID, ""))
+		l.Error(errs.ErrCouldNotDeleteInactiveMember, "can not change information of inactive member")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrCouldNotDeleteInactiveMember, input.MemberID, ""))
 		return
 	}
 
@@ -532,14 +534,14 @@ func (h *handler) UnassignMember(c *gin.Context) {
 // @Produce json
 // @Param Authorization header string true "jwt token"
 // @Param id path string true "Project ID"
-// @Param Body body UpdateMemberInput true "Body"
+// @Param Body body request.UpdateMemberInput true "Body"
 // @Success 200 {object} view.CreateMemberDataResponse
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 404 {object} view.ErrorResponse
 // @Failure 500 {object} view.ErrorResponse
 // @Router /projects/{id}/members [put]
 func (h *handler) UpdateMember(c *gin.Context) {
-	var body UpdateMemberInput
+	var body request.UpdateMemberInput
 	if err := c.ShouldBindJSON(&body); err != nil {
 		if err != nil {
 			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, body, ""))
@@ -549,7 +551,7 @@ func (h *handler) UpdateMember(c *gin.Context) {
 
 	projectID := c.Param("id")
 	if projectID == "" || !model.IsUUIDFromString(projectID) {
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, ErrInvalidProjectID, nil, ""))
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidProjectID, nil, ""))
 		return
 	}
 
@@ -575,8 +577,8 @@ func (h *handler) UpdateMember(c *gin.Context) {
 	}
 
 	if !exists {
-		l.Error(ErrProjectNotFound, "cannot find project by id")
-		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrProjectNotFound, body, ""))
+		l.Error(errs.ErrProjectNotFound, "cannot find project by id")
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, body, ""))
 		return
 	}
 
@@ -589,8 +591,8 @@ func (h *handler) UpdateMember(c *gin.Context) {
 	}
 
 	if !exists {
-		l.Error(ErrSeniorityNotFound, "cannot find seniority by id")
-		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrSeniorityNotFound, body, ""))
+		l.Error(errs.ErrSeniorityNotFound, "cannot find seniority by id")
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrSeniorityNotFound, body, ""))
 		return
 	}
 
@@ -605,8 +607,8 @@ func (h *handler) UpdateMember(c *gin.Context) {
 	positionMap := model.ToPositionMap(positions)
 	for _, pID := range body.Positions {
 		if _, ok := positionMap[pID]; !ok {
-			l.Error(errPositionNotFound(pID.String()), "position not found")
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errPositionNotFound(pID.String()), body, ""))
+			l.Error(errs.ErrPositionNotFoundWithID(pID.String()), "position not found")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrPositionNotFoundWithID(pID.String()), body, ""))
 			return
 		}
 	}
@@ -615,8 +617,8 @@ func (h *handler) UpdateMember(c *gin.Context) {
 	slot, err := h.store.ProjectSlot.One(h.repo.DB(), body.ProjectSlotID.String())
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			l.Error(ErrProjectSlotNotFound, "cannot find project slot by id")
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrProjectSlotNotFound, body, ""))
+			l.Error(errs.ErrProjectSlotNotFound, "cannot find project slot by id")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectSlotNotFound, body, ""))
 			return
 		}
 		l.Error(err, "failed to get project slot by id")
@@ -626,7 +628,7 @@ func (h *handler) UpdateMember(c *gin.Context) {
 
 	if slot.Status == model.ProjectMemberStatusInactive {
 		l.Info("slot is inactive")
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, ErrSlotIsInactive, body, ""))
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrSlotIsInactive, body, ""))
 		return
 	}
 
@@ -695,7 +697,7 @@ func (h *handler) UpdateMember(c *gin.Context) {
 	c.JSON(http.StatusOK, view.CreateResponse(view.ToCreateMemberData(slot), nil, done(nil), nil, ""))
 }
 
-func (h *handler) assignMemberToProject(db *gorm.DB, slotID string, projectID string, input UpdateMemberInput) (*model.ProjectMember, error) {
+func (h *handler) assignMemberToProject(db *gorm.DB, slotID string, projectID string, input request.UpdateMemberInput) (*model.ProjectMember, error) {
 	// check is slot contains any member?
 	member, err := h.store.ProjectMember.GetOneBySlotID(db, slotID)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
@@ -704,14 +706,14 @@ func (h *handler) assignMemberToProject(db *gorm.DB, slotID string, projectID st
 	}
 
 	if member.Status == model.ProjectMemberStatusInactive {
-		h.logger.Fields(logger.Fields{"member": member}).Error(ErrSlotIsInactive, "slot is inactive")
-		return nil, ErrSlotIsInactive
+		h.logger.Fields(logger.Fields{"member": member}).Error(errs.ErrSlotIsInactive, "slot is inactive")
+		return nil, errs.ErrSlotIsInactive
 	}
 	if member.EmployeeID != input.EmployeeID {
 		h.logger.
 			Fields(logger.Fields{"member": member}).
-			Error(ErrSlotAlreadyContainsAnotherMember, "slot already contains another member")
-		return nil, ErrSlotAlreadyContainsAnotherMember
+			Error(errs.ErrSlotAlreadyContainsAnotherMember, "slot already contains another member")
+		return nil, errs.ErrSlotAlreadyContainsAnotherMember
 	}
 
 	// check is member active in project?
@@ -750,12 +752,12 @@ func (h *handler) assignMemberToProject(db *gorm.DB, slotID string, projectID st
 				"member.ProjectSlotID": member.ProjectSlotID,
 				"slotID":               slotID,
 			}).Info("slotID cannot be changed")
-			return nil, ErrSlotIDCannotBeChanged
+			return nil, errs.ErrSlotIDCannotBeChanged
 		}
 
 		if member.Status == model.ProjectMemberStatusInactive {
 			h.logger.Fields(logger.Fields{"status": member.Status}).Info("member is inactive")
-			return nil, ErrMemberIsInactive
+			return nil, errs.ErrMemberIsInactive
 		}
 
 		member.SeniorityID = input.SeniorityID
@@ -834,14 +836,14 @@ func (h *handler) assignMemberToProject(db *gorm.DB, slotID string, projectID st
 // @Produce json
 // @Param Authorization header string true "jwt token"
 // @Param id path string true "Project ID"
-// @Param Body body AssignMemberInput true "Body"
+// @Param Body body request.AssignMemberInput true "Body"
 // @Success 200 {object} view.CreateMemberDataResponse
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 404 {object} view.ErrorResponse
 // @Failure 500 {object} view.ErrorResponse
 // @Router /projects/{id}/members [post]
 func (h *handler) AssignMember(c *gin.Context) {
-	var body AssignMemberInput
+	var body request.AssignMemberInput
 	if err := c.ShouldBindJSON(&body); err != nil {
 		if err != nil {
 			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, body, ""))
@@ -851,7 +853,7 @@ func (h *handler) AssignMember(c *gin.Context) {
 
 	projectID := c.Param("id")
 	if projectID == "" || !model.IsUUIDFromString(projectID) {
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, ErrInvalidProjectID, nil, ""))
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidProjectID, nil, ""))
 		return
 	}
 
@@ -874,7 +876,7 @@ func (h *handler) AssignMember(c *gin.Context) {
 	if err != gorm.ErrRecordNotFound {
 		if err == nil {
 			l.Error(err, "project member exists")
-			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, ErrProjectMemberExists, projectID, ""))
+			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrProjectMemberExists, projectID, ""))
 			return
 		}
 		l.Error(err, "failed to query project member")
@@ -891,8 +893,8 @@ func (h *handler) AssignMember(c *gin.Context) {
 	}
 
 	if !exists {
-		l.Error(ErrProjectNotFound, "cannot find project by id")
-		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrProjectNotFound, body, ""))
+		l.Error(errs.ErrProjectNotFound, "cannot find project by id")
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, body, ""))
 		return
 	}
 
@@ -907,15 +909,15 @@ func (h *handler) AssignMember(c *gin.Context) {
 	c.JSON(http.StatusOK, view.CreateResponse(view.ToCreateMemberData(slot), nil, done(nil), nil, ""))
 }
 
-func (h *handler) createSlotInProject(db *gorm.DB, projectID string, req AssignMemberInput) (*model.ProjectSlot, int, error) {
+func (h *handler) createSlotInProject(db *gorm.DB, projectID string, req request.AssignMemberInput) (*model.ProjectSlot, int, error) {
 	l := h.logger
 
 	// check seniority existence
 	seniority, err := h.store.Seniority.One(db, req.SeniorityID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			l.Error(ErrSeniorityNotFound, "cannot find seniority by id")
-			return nil, http.StatusNotFound, ErrSeniorityNotFound
+			l.Error(errs.ErrSeniorityNotFound, "cannot find seniority by id")
+			return nil, http.StatusNotFound, errs.ErrSeniorityNotFound
 		}
 		l.Error(err, "failed to check seniority existence")
 		return nil, http.StatusInternalServerError, err
@@ -931,8 +933,8 @@ func (h *handler) createSlotInProject(db *gorm.DB, projectID string, req AssignM
 	positionMap := model.ToPositionMap(positions)
 	for _, pID := range req.Positions {
 		if _, ok := positionMap[pID]; !ok {
-			l.Error(errPositionNotFound(pID.String()), "error position not found")
-			return nil, http.StatusNotFound, errPositionNotFound(pID.String())
+			l.Error(errs.ErrPositionNotFoundWithID(pID.String()), "error position not found")
+			return nil, http.StatusNotFound, errs.ErrPositionNotFoundWithID(pID.String())
 		}
 	}
 
@@ -982,8 +984,8 @@ func (h *handler) createSlotInProject(db *gorm.DB, projectID string, req AssignM
 		}
 
 		if !exists {
-			l.Error(ErrEmployeeNotFound, "cannot find employee by id")
-			return nil, http.StatusNotFound, ErrEmployeeNotFound
+			l.Error(errs.ErrEmployeeNotFound, "cannot find employee by id")
+			return nil, http.StatusNotFound, errs.ErrEmployeeNotFound
 		}
 
 		// create project member
@@ -1053,7 +1055,7 @@ func (h *handler) createSlotInProject(db *gorm.DB, projectID string, req AssignM
 func (h *handler) Details(c *gin.Context) {
 	projectID := c.Param("id")
 	if projectID == "" || !model.IsUUIDFromString(projectID) {
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, ErrInvalidProjectID, nil, ""))
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidProjectID, nil, ""))
 		return
 	}
 
@@ -1068,7 +1070,7 @@ func (h *handler) Details(c *gin.Context) {
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Info("project not found")
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrProjectNotFound, nil, ""))
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, nil, ""))
 			return
 		}
 		l.Error(err, "error query project from db")
@@ -1087,7 +1089,7 @@ func (h *handler) Details(c *gin.Context) {
 // @Produce  json
 // @Param Authorization header string true "jwt token"
 // @Param id path string true "Project ID"
-// @Param Body body UpdateGeneralInfoInput true "Body"
+// @Param Body body request.UpdateProjectGeneralInfoInput true "Body"
 // @Success 200 {object} view.UpdateProjectGeneralInfoResponse
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 404 {object} view.ErrorResponse
@@ -1096,11 +1098,11 @@ func (h *handler) Details(c *gin.Context) {
 func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 	projectID := c.Param("id")
 	if projectID == "" || !model.IsUUIDFromString(projectID) {
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, ErrInvalidProjectID, nil, ""))
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidProjectID, nil, ""))
 		return
 	}
 
-	var body UpdateGeneralInfoInput
+	var body request.UpdateProjectGeneralInfoInput
 	if err := c.ShouldBindJSON(&body); err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, body, ""))
 		return
@@ -1119,7 +1121,7 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Error(err, "project not found")
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrProjectNotFound, projectID, ""))
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, projectID, ""))
 			return
 		}
 
@@ -1138,7 +1140,7 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 
 	if !exist {
 		l.Error(err, "country not found")
-		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrCountryNotFound, body, ""))
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrCountryNotFound, body, ""))
 		return
 	}
 
@@ -1154,16 +1156,16 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 	for _, sID := range body.Stacks {
 		_, ok := stackMap[sID]
 		if !ok {
-			l.Error(errStackNotFound(sID.String()), "stack not found")
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errStackNotFound(sID.String()), body, ""))
+			l.Error(errs.ErrStackNotFoundWithID(sID.String()), "stack not found")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrStackNotFoundWithID(sID.String()), body, ""))
 			return
 		}
 	}
 
 	_, err = time.Parse("2006-01-02", body.StartDate)
 	if body.StartDate != "" && err != nil {
-		l.Error(ErrInvalidStartDate, "invalid start date")
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, ErrInvalidStartDate, body, ""))
+		l.Error(errs.ErrInvalidStartDate, "invalid start date")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidStartDate, body, ""))
 		return
 	}
 
@@ -1216,7 +1218,7 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 // @Produce  json
 // @Param Authorization header string true "jwt token"
 // @Param id path string true "Project ID"
-// @Param Body body UpdateContactInfoInput true "Body"
+// @Param Body body request.UpdateContactInfoInput true "Body"
 // @Success 200 {object} view.UpdateProjectContactInfoResponse
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 404 {object} view.ErrorResponse
@@ -1225,11 +1227,11 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 func (h *handler) UpdateContactInfo(c *gin.Context) {
 	projectID := c.Param("id")
 	if projectID == "" || !model.IsUUIDFromString(projectID) {
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, ErrInvalidProjectID, nil, ""))
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidProjectID, nil, ""))
 		return
 	}
 
-	var body UpdateContactInfoInput
+	var body request.UpdateContactInfoInput
 	if err := c.ShouldBindJSON(&body); err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, body, ""))
 		return
@@ -1248,7 +1250,7 @@ func (h *handler) UpdateContactInfo(c *gin.Context) {
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Error(err, "project not found")
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrProjectNotFound, projectID, ""))
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, projectID, ""))
 			return
 		}
 
@@ -1266,8 +1268,8 @@ func (h *handler) UpdateContactInfo(c *gin.Context) {
 	}
 
 	if !exist {
-		l.Error(ErrAccountManagerNotFound, "account manager not found")
-		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrAccountManagerNotFound, body, ""))
+		l.Error(errs.ErrAccountManagerNotFound, "account manager not found")
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrAccountManagerNotFound, body, ""))
 		return
 	}
 
@@ -1280,8 +1282,8 @@ func (h *handler) UpdateContactInfo(c *gin.Context) {
 	}
 
 	if !exist {
-		l.Error(ErrDeliveryManagerNotFound, "delivery manager not found")
-		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrDeliveryManagerNotFound, body, ""))
+		l.Error(errs.ErrDeliveryManagerNotFound, "delivery manager not found")
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrDeliveryManagerNotFound, body, ""))
 		return
 	}
 
@@ -1376,7 +1378,7 @@ func (h *handler) updateProjectHead(db *gorm.DB, projectID string, employeeID mo
 // @Failure 500 {object} view.ErrorResponse
 // @Router /projects/{id}/work-units [get]
 func (h *handler) GetWorkUnits(c *gin.Context) {
-	input := GetListWorkUnitInput{
+	input := request.GetListWorkUnitInput{
 		ProjectID: c.Param("id"),
 	}
 
@@ -1408,7 +1410,7 @@ func (h *handler) GetWorkUnits(c *gin.Context) {
 
 	if !isExits {
 		l.Info("project not found")
-		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrProjectNotFound, input, ""))
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, input, ""))
 		return
 	}
 
@@ -1430,14 +1432,14 @@ func (h *handler) GetWorkUnits(c *gin.Context) {
 // @Produce  json
 // @Param Authorization header string true "jwt token"
 // @Param id path string true "Project ID"
-// @Param body body CreateWorkUnitBody true "Body"
+// @Param body body request.CreateWorkUnitBody true "Body"
 // @Success 200 {object} view.WorkUnitResponse
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 404 {object} view.ErrorResponse
 // @Failure 500 {object} view.ErrorResponse
 // @Router /projects/{id}/work-units [post]
 func (h *handler) CreateWorkUnit(c *gin.Context) {
-	input := CreateWorkUnitInput{
+	input := request.CreateWorkUnitInput{
 		ProjectID: c.Param("id"),
 	}
 	if err := c.ShouldBindJSON(&input.Body); err != nil {
@@ -1466,8 +1468,8 @@ func (h *handler) CreateWorkUnit(c *gin.Context) {
 	}
 
 	if !exists {
-		l.Error(ErrProjectNotFound, "project not found")
-		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrProjectNotFound, nil, ""))
+		l.Error(errs.ErrProjectNotFound, "project not found")
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, nil, ""))
 		return
 	}
 
@@ -1521,8 +1523,8 @@ func (h *handler) CreateWorkUnit(c *gin.Context) {
 	for _, employee := range employees {
 		_, err = h.store.ProjectMember.One(tx.DB(), input.ProjectID, employee.ID.String())
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			l.Error(ErrMemberIsNotActiveInProject, "member is not active in project")
-			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(ErrMemberIsNotActiveInProject), input, ""))
+			l.Error(errs.ErrMemberIsNotActiveInProject, "member is not active in project")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(errs.ErrMemberIsNotActiveInProject), input, ""))
 			return
 		}
 
@@ -1555,14 +1557,14 @@ func (h *handler) CreateWorkUnit(c *gin.Context) {
 // @Param Authorization header string true "jwt token"
 // @Param id path string true "Project ID"
 // @Param workUnitID path string true "Work Unit ID"
-// @Param Body body UpdateWorkUnitInput true "Body"
+// @Param Body body request.UpdateWorkUnitInput true "Body"
 // @Success 200 {object} view.MessageResponse
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 404 {object} view.ErrorResponse
 // @Failure 500 {object} view.ErrorResponse
 // @Router /projects/{id}/work-units/{workUnitID} [put]
 func (h *handler) UpdateWorkUnit(c *gin.Context) {
-	input := UpdateWorkUnitInput{
+	input := request.UpdateWorkUnitInput{
 		ProjectID:  c.Param("id"),
 		WorkUnitID: c.Param("workUnitID"),
 	}
@@ -1673,38 +1675,38 @@ func (h *handler) UpdateWorkUnit(c *gin.Context) {
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, done(nil), nil, "ok"))
 }
 
-func (h *handler) checkExitsInUpdateWorkUnitInput(db *gorm.DB, input UpdateWorkUnitInput) (int, error) {
+func (h *handler) checkExitsInUpdateWorkUnitInput(db *gorm.DB, input request.UpdateWorkUnitInput) (int, error) {
 	// Check project existence
 	exists, err := h.store.Project.IsExist(db, input.ProjectID)
 	if err != nil {
-		return http.StatusInternalServerError, ErrFailToCheckInputExistence
+		return http.StatusInternalServerError, errs.ErrFailToCheckInputExistence
 	}
 
 	if !exists {
-		return http.StatusNotFound, ErrProjectNotFound
+		return http.StatusNotFound, errs.ErrProjectNotFound
 	}
 
 	// Check work unit existence
 	exists, err = h.store.WorkUnit.IsExists(h.repo.DB(), input.WorkUnitID)
 	if err != nil {
-		return http.StatusInternalServerError, ErrFailToCheckInputExistence
+		return http.StatusInternalServerError, errs.ErrFailToCheckInputExistence
 	}
 
 	if !exists {
-		return http.StatusNotFound, ErrProjectNotFound
+		return http.StatusNotFound, errs.ErrProjectNotFound
 	}
 
 	// Check stack existence
 	stacks, err := h.store.Stack.All(h.repo.DB())
 	if err != nil {
-		return http.StatusInternalServerError, ErrFailToCheckInputExistence
+		return http.StatusInternalServerError, errs.ErrFailToCheckInputExistence
 	}
 
 	stackMap := model.ToStackMap(stacks)
 	for _, sID := range input.Body.Stacks {
 		_, ok := stackMap[sID]
 		if !ok {
-			return http.StatusNotFound, errPositionNotFound(sID.String())
+			return http.StatusNotFound, errs.ErrPositionNotFoundWithID(sID.String())
 		}
 	}
 
@@ -1714,7 +1716,7 @@ func (h *handler) checkExitsInUpdateWorkUnitInput(db *gorm.DB, input UpdateWorkU
 func (h *handler) UpdateWorkUnitStack(db *gorm.DB, workUnitID string, stackIDs []model.UUID) error {
 	// Delete all exist work unit stack
 	if err := h.store.WorkUnitStack.DeleteByWorkUnitID(db, workUnitID); err != nil {
-		return ErrFailToDeleteWorkUnitStack
+		return errs.ErrFailToDeleteWorkUnitStack
 	}
 
 	// Create new work unit stack
@@ -1724,7 +1726,7 @@ func (h *handler) UpdateWorkUnitStack(db *gorm.DB, workUnitID string, stackIDs [
 			StackID:    stackID,
 		})
 		if err != nil {
-			return ErrFailedToCreateWorkUnitStack
+			return errs.ErrFailedToCreateWorkUnitStack
 		}
 	}
 
@@ -1740,10 +1742,10 @@ func (h *handler) deleteWorkUnit(db *gorm.DB, workUnitID string, deleteMemberIDL
 			model.WorkUnitMemberStatusActive.String())
 
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return http.StatusNotFound, ErrInvalidInActiveMember
+			return http.StatusNotFound, errs.ErrInvalidInActiveMember
 		}
 		if err != nil {
-			return http.StatusInternalServerError, ErrFailedToGetWorkUnitMember
+			return http.StatusInternalServerError, errs.ErrFailedToGetWorkUnitMember
 		}
 
 		deleteMember := &model.WorkUnitMember{
@@ -1752,11 +1754,11 @@ func (h *handler) deleteWorkUnit(db *gorm.DB, workUnitID string, deleteMemberIDL
 		}
 
 		if _, err = h.store.WorkUnitMember.UpdateSelectedFieldsByID(db, workUnitMember.ID.String(), *deleteMember, "status", "left_date"); err != nil {
-			return http.StatusInternalServerError, ErrFailedToUpdateWorkUnitMember
+			return http.StatusInternalServerError, errs.ErrFailedToUpdateWorkUnitMember
 		}
 
 		if err = h.store.WorkUnitMember.SoftDeleteByWorkUnitID(db, workUnitMember.ID.String(), deleteMemberID); err != nil {
-			return http.StatusInternalServerError, ErrFailedToSoftDeleteWorkUnitMember
+			return http.StatusInternalServerError, errs.ErrFailedToSoftDeleteWorkUnitMember
 		}
 	}
 
@@ -1767,11 +1769,11 @@ func (h *handler) createWorkUnit(db *gorm.DB, projectID string, workUnitID strin
 	for _, createMemberID := range createMemberIDList {
 		_, err := h.store.ProjectMember.One(db, projectID, createMemberID.String())
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return http.StatusBadRequest, ErrMemberIsInactive
+			return http.StatusBadRequest, errs.ErrMemberIsInactive
 		}
 
 		if err != nil {
-			return http.StatusInternalServerError, ErrFailedToGetProjectMember
+			return http.StatusInternalServerError, errs.ErrFailedToGetProjectMember
 		}
 
 		now := time.Now()
@@ -1784,7 +1786,7 @@ func (h *handler) createWorkUnit(db *gorm.DB, projectID string, workUnitID strin
 		}
 
 		if err := h.store.WorkUnitMember.Create(db, &wuMember); err != nil {
-			return http.StatusInternalServerError, ErrFailedToCreateWorkUnitMember
+			return http.StatusInternalServerError, errs.ErrFailedToCreateWorkUnitMember
 		}
 	}
 
@@ -1804,9 +1806,9 @@ func (h *handler) createWorkUnit(db *gorm.DB, projectID string, workUnitID strin
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 404 {object} view.ErrorResponse
 // @Failure 500 {object} view.ErrorResponse
-// @Router /projects/{id}/work-units/:workUnitID/archive [put]
+// @Router /projects/{id}/work-units/{workUnitID}/archive [put]
 func (h *handler) ArchiveWorkUnit(c *gin.Context) {
-	input := ArchiveWorkUnitInput{
+	input := request.ArchiveWorkUnitInput{
 		ProjectID:  c.Param("id"),
 		WorkUnitID: c.Param("workUnitID"),
 	}
@@ -1832,15 +1834,15 @@ func (h *handler) ArchiveWorkUnit(c *gin.Context) {
 	}
 
 	if !exists {
-		l.Error(ErrProjectNotFound, "project not found")
-		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrProjectNotFound, nil, ""))
+		l.Error(errs.ErrProjectNotFound, "project not found")
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, nil, ""))
 		return
 	}
 
 	workUnit, err := h.store.WorkUnit.One(h.repo.DB(), input.WorkUnitID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		l.Error(err, "work unit not found")
-		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrWorkUnitNotFound, nil, ""))
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrWorkUnitNotFound, nil, ""))
 		return
 	}
 	if err != nil {
@@ -1898,9 +1900,9 @@ func (h *handler) ArchiveWorkUnit(c *gin.Context) {
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 404 {object} view.ErrorResponse
 // @Failure 500 {object} view.ErrorResponse
-// @Router /projects/{id}/work-units/:workUnitID/unarchive [put]
+// @Router /projects/{id}/work-units/{workUnitID}/unarchive [put]
 func (h *handler) UnarchiveWorkUnit(c *gin.Context) {
-	input := ArchiveWorkUnitInput{
+	input := request.ArchiveWorkUnitInput{
 		ProjectID:  c.Param("id"),
 		WorkUnitID: c.Param("workUnitID"),
 	}
@@ -1926,15 +1928,15 @@ func (h *handler) UnarchiveWorkUnit(c *gin.Context) {
 	}
 
 	if !exists {
-		l.Error(ErrProjectNotFound, "project not found")
-		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrProjectNotFound, nil, ""))
+		l.Error(errs.ErrProjectNotFound, "project not found")
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, nil, ""))
 		return
 	}
 
 	workUnit, err := h.store.WorkUnit.One(h.repo.DB(), input.WorkUnitID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		l.Error(err, "work unit not found")
-		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrWorkUnitNotFound, nil, ""))
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrWorkUnitNotFound, nil, ""))
 		return
 	}
 	if err != nil {
@@ -1968,7 +1970,7 @@ func (h *handler) UnarchiveWorkUnit(c *gin.Context) {
 
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Error(err, "member is not active in project")
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, done(ErrMemberIsInactive), nil, ""))
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, done(errs.ErrMemberIsInactive), nil, ""))
 			return
 		}
 		if err != nil {

@@ -10,6 +10,8 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
+	"github.com/dwarvesf/fortress-api/pkg/handler/profile/errs"
+	"github.com/dwarvesf/fortress-api/pkg/handler/profile/request"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service"
@@ -85,7 +87,7 @@ func (h *handler) GetProfile(c *gin.Context) {
 // @Produce  json
 // @Param Authorization header string true "jwt token"
 // @Param id path string true "Employee ID"
-// @Param Body body UpdateInfoInput true "Body"
+// @Param Body body request.UpdateInfoInput true "Body"
 // @Success 200 {object} view.UpdateProfileInfoResponse
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 404 {object} view.ErrorResponse
@@ -98,7 +100,7 @@ func (h *handler) UpdateInfo(c *gin.Context) {
 		return
 	}
 
-	input := UpdateInfoInput{}
+	input := request.UpdateInfoInput{}
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, input, ""))
 		return
@@ -183,13 +185,13 @@ func (h *handler) UploadAvatar(c *gin.Context) {
 	// 2.1 validate
 	if !fileExtension.ImageValid() {
 		l.Info("invalid file extension")
-		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrInvalidFileExtension, nil, ""))
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrInvalidFileExtension, nil, ""))
 		return
 	}
 
 	if fileSize > model.MaxFileSizeImage {
 		l.Info("invalid file size")
-		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrInvalidFileSize, nil, ""))
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrInvalidFileSize, nil, ""))
 		return
 	}
 
@@ -204,7 +206,7 @@ func (h *handler) UploadAvatar(c *gin.Context) {
 	}
 	if err == nil {
 		l.Info("file already existed")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(ErrFileAlreadyExisted), nil, ""))
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(errs.ErrFileAlreadyExisted), nil, ""))
 		return
 	}
 

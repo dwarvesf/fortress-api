@@ -3,6 +3,7 @@ package project
 import (
 	"bytes"
 	"fmt"
+	"github.com/dwarvesf/fortress-api/pkg/handler/project/request"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -38,7 +39,7 @@ func TestHandler_UpdateProjectStatus(t *testing.T) {
 		wantCode         int
 		wantErr          bool
 		wantResponsePath string
-		request          updateAccountStatusBody
+		request          request.UpdateAccountStatusBody
 		id               string
 	}{
 		{
@@ -46,7 +47,7 @@ func TestHandler_UpdateProjectStatus(t *testing.T) {
 			wantCode:         200,
 			wantErr:          false,
 			wantResponsePath: "testdata/update_project_status/200.json",
-			request: updateAccountStatusBody{
+			request: request.UpdateAccountStatusBody{
 				ProjectStatus: "active",
 			},
 			id: "8dc3be2e-19a4-4942-8a79-56db391a0b15",
@@ -56,7 +57,7 @@ func TestHandler_UpdateProjectStatus(t *testing.T) {
 			wantCode:         404,
 			wantErr:          true,
 			wantResponsePath: "testdata/update_project_status/404.json",
-			request: updateAccountStatusBody{
+			request: request.UpdateAccountStatusBody{
 				ProjectStatus: "active",
 			},
 			id: "8dc3be2e-19a4-4942-8a79-56db391a0b11",
@@ -66,7 +67,7 @@ func TestHandler_UpdateProjectStatus(t *testing.T) {
 			wantCode:         400,
 			wantErr:          true,
 			wantResponsePath: "testdata/update_project_status/400.json",
-			request: updateAccountStatusBody{
+			request: request.UpdateAccountStatusBody{
 				ProjectStatus: "activee",
 			},
 			id: "8dc3be2e-19a4-4942-8a79-56db391a0b15",
@@ -107,14 +108,14 @@ func TestHandler_Create(t *testing.T) {
 
 	tests := []struct {
 		name             string
-		args             CreateProjectInput
+		args             request.CreateProjectInput
 		wantCode         int
 		wantErr          error
 		wantResponsePath string
 	}{
 		{
 			name: "happy_case",
-			args: CreateProjectInput{
+			args: request.CreateProjectInput{
 				Name:              "project1",
 				Status:            string(model.ProjectStatusOnBoarding),
 				StartDate:         "2022-11-14",
@@ -129,7 +130,7 @@ func TestHandler_Create(t *testing.T) {
 		},
 		{
 			name: "invalid_status",
-			args: CreateProjectInput{
+			args: request.CreateProjectInput{
 				Name:              "project1",
 				Status:            "something",
 				StartDate:         "2022-11-14",
@@ -144,7 +145,7 @@ func TestHandler_Create(t *testing.T) {
 		},
 		{
 			name: "missing_status",
-			args: CreateProjectInput{
+			args: request.CreateProjectInput{
 				Name:              "project1",
 				StartDate:         "2022-11-14",
 				AccountManagerID:  model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
@@ -252,7 +253,7 @@ func TestHandler_UpdateMember(t *testing.T) {
 	tests := []struct {
 		name             string
 		id               string
-		args             UpdateMemberInput
+		args             request.UpdateMemberInput
 		wantCode         int
 		wantErr          error
 		wantResponsePath string
@@ -260,7 +261,7 @@ func TestHandler_UpdateMember(t *testing.T) {
 		{
 			name: "happy_case",
 			id:   "8dc3be2e-19a4-4942-8a79-56db391a0b15",
-			args: UpdateMemberInput{
+			args: request.UpdateMemberInput{
 				ProjectSlotID: model.MustGetUUIDFromString("f32d08ca-8863-4ab3-8c84-a11849451eb7"),
 				EmployeeID:    model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
 				SeniorityID:   model.MustGetUUIDFromString("01fb6322-d727-47e3-a242-5039ea4732fc"),
@@ -281,7 +282,7 @@ func TestHandler_UpdateMember(t *testing.T) {
 		{
 			name: "invalid_joined_date",
 			id:   "8dc3be2e-19a4-4942-8a79-56db391a0b15",
-			args: UpdateMemberInput{
+			args: request.UpdateMemberInput{
 				ProjectSlotID: model.MustGetUUIDFromString("f32d08ca-8863-4ab3-8c84-a11849451eb7"),
 				EmployeeID:    model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
 				SeniorityID:   model.MustGetUUIDFromString("01fb6322-d727-47e3-a242-5039ea4732fc"),
@@ -302,7 +303,7 @@ func TestHandler_UpdateMember(t *testing.T) {
 		{
 			name: "project_not_found",
 			id:   "8dc3be2e-19a4-4942-8a79-56db391a0b16",
-			args: UpdateMemberInput{
+			args: request.UpdateMemberInput{
 				ProjectSlotID: model.MustGetUUIDFromString("f32d08ca-8863-4ab3-8c84-a11849451eb7"),
 				EmployeeID:    model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
 				SeniorityID:   model.MustGetUUIDFromString("01fb6322-d727-47e3-a242-5039ea4732fc"),
@@ -361,7 +362,7 @@ func TestHandler_AssignMember(t *testing.T) {
 	tests := []struct {
 		name             string
 		id               string
-		args             AssignMemberInput
+		args             request.AssignMemberInput
 		wantCode         int
 		wantErr          error
 		wantResponsePath string
@@ -369,7 +370,7 @@ func TestHandler_AssignMember(t *testing.T) {
 		{
 			name: "happy_case",
 			id:   "8dc3be2e-19a4-4942-8a79-56db391a0b15",
-			args: AssignMemberInput{
+			args: request.AssignMemberInput{
 				EmployeeID:  model.MustGetUUIDFromString("fae443f8-e8ff-4eec-b86c-98216d7662d8"),
 				SeniorityID: model.MustGetUUIDFromString("01fb6322-d727-47e3-a242-5039ea4732fc"),
 				Positions: []model.UUID{
@@ -529,14 +530,14 @@ func TestHandler_UpdateGeneralInfo(t *testing.T) {
 		wantCode         int
 		wantResponsePath string
 		id               string
-		input            UpdateGeneralInfoInput
+		input            request.UpdateProjectGeneralInfoInput
 	}{
 		{
 			name:             "ok_update_project_general_infomation",
 			wantCode:         200,
 			wantResponsePath: "testdata/update_general_info/200.json",
 			id:               "8dc3be2e-19a4-4942-8a79-56db391a0b15",
-			input: UpdateGeneralInfoInput{
+			input: request.UpdateProjectGeneralInfoInput{
 				Name:      "Fortress",
 				StartDate: "1990-01-02",
 				CountryID: model.MustGetUUIDFromString("4ef64490-c906-4192-a7f9-d2221dadfe4c"),
@@ -551,7 +552,7 @@ func TestHandler_UpdateGeneralInfo(t *testing.T) {
 			wantCode:         404,
 			wantResponsePath: "testdata/update_general_info/404.json",
 			id:               "d100efd1-bfce-4cd6-885c-1e4ac3d30715",
-			input: UpdateGeneralInfoInput{
+			input: request.UpdateProjectGeneralInfoInput{
 				Name:      "Fortress",
 				StartDate: "1990-01-02",
 				CountryID: model.MustGetUUIDFromString("4ef64490-c906-4192-a7f9-d2221dadfe4c"),
@@ -598,14 +599,14 @@ func TestHandler_UpdateContactInfo(t *testing.T) {
 		wantCode         int
 		wantResponsePath string
 		id               string
-		input            UpdateContactInfoInput
+		input            request.UpdateContactInfoInput
 	}{
 		{
 			name:             "ok_update_project_contact_infomation",
 			wantCode:         200,
 			wantResponsePath: "testdata/update_contact_info/200.json",
 			id:               "8dc3be2e-19a4-4942-8a79-56db391a0b15",
-			input: UpdateContactInfoInput{
+			input: request.UpdateContactInfoInput{
 				ClientEmail:       "fortress@gmai.com",
 				ProjectEmail:      "fortress@d.foundation",
 				AccountManagerID:  model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
@@ -617,7 +618,7 @@ func TestHandler_UpdateContactInfo(t *testing.T) {
 			wantCode:         404,
 			wantResponsePath: "testdata/update_contact_info/404.json",
 			id:               "d100efd1-bfce-4cd6-885c-1e4ac3d30714",
-			input: UpdateContactInfoInput{
+			input: request.UpdateContactInfoInput{
 				ClientEmail:       "fortress@gmai.com",
 				ProjectEmail:      "fortress@d.foundation",
 				AccountManagerID:  model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
@@ -714,16 +715,16 @@ func TestHandler_UpdateWorkUnit(t *testing.T) {
 
 	tests := []struct {
 		name             string
-		input            UpdateWorkUnitInput
+		input            request.UpdateWorkUnitInput
 		wantCode         int
 		wantResponsePath string
 	}{
 		{
 			name: "happy_case",
-			input: UpdateWorkUnitInput{
+			input: request.UpdateWorkUnitInput{
 				ProjectID:  "8dc3be2e-19a4-4942-8a79-56db391a0b15",
 				WorkUnitID: "69b32f7e-0433-4566-a801-72909172940e",
-				Body: UpdateWorkUnitBody{
+				Body: request.UpdateWorkUnitBody{
 					Name: "New Fortress Web",
 					Type: model.WorkUnitTypeManagement,
 					URL:  "https://github.com/dwarvesf/fortress-web",
@@ -742,10 +743,10 @@ func TestHandler_UpdateWorkUnit(t *testing.T) {
 		},
 		{
 			name: "not_found_project",
-			input: UpdateWorkUnitInput{
+			input: request.UpdateWorkUnitInput{
 				ProjectID:  "8dc3be2e-19a4-4942-8a79-56db391a0b16",
 				WorkUnitID: "69b32f7e-0433-4566-a801-72909172940e",
-				Body: UpdateWorkUnitBody{
+				Body: request.UpdateWorkUnitBody{
 					Name: "New Fortress Web",
 					Type: model.WorkUnitTypeManagement,
 					URL:  "https://github.com/dwarvesf/fortress-web",
@@ -764,10 +765,10 @@ func TestHandler_UpdateWorkUnit(t *testing.T) {
 		},
 		{
 			name: "invalid_type",
-			input: UpdateWorkUnitInput{
+			input: request.UpdateWorkUnitInput{
 				ProjectID:  "8dc3be2e-19a4-4942-8a79-56db391a0b15",
 				WorkUnitID: "69b32f7e-0433-4566-a801-72909172940e",
-				Body: UpdateWorkUnitBody{
+				Body: request.UpdateWorkUnitBody{
 					Name: "New Fortress Web",
 					Type: "type",
 					URL:  "https://github.com/dwarvesf/fortress-web",
@@ -823,15 +824,15 @@ func TestHandler_CreateWorkUnit(t *testing.T) {
 
 	tests := []struct {
 		name             string
-		input            CreateWorkUnitInput
+		input            request.CreateWorkUnitInput
 		wantCode         int
 		wantResponsePath string
 	}{
 		{
 			name: "happy_case",
-			input: CreateWorkUnitInput{
+			input: request.CreateWorkUnitInput{
 				ProjectID: "8dc3be2e-19a4-4942-8a79-56db391a0b15",
-				Body: CreateWorkUnitBody{
+				Body: request.CreateWorkUnitBody{
 					Name:   "workunit1",
 					Type:   model.WorkUnitTypeDevelopment.String(),
 					Status: model.WorkUnitStatusArchived.String(),
@@ -851,9 +852,9 @@ func TestHandler_CreateWorkUnit(t *testing.T) {
 		},
 		{
 			name: "project_not_found",
-			input: CreateWorkUnitInput{
+			input: request.CreateWorkUnitInput{
 				ProjectID: "8dc3be2e-19a4-4942-8a79-56db391a0b16",
-				Body: CreateWorkUnitBody{
+				Body: request.CreateWorkUnitBody{
 					Name:   "workunit1",
 					Type:   model.WorkUnitTypeDevelopment.String(),
 					Status: model.WorkUnitStatusArchived.String(),
@@ -914,13 +915,13 @@ func TestHandler_ArchiveWorkUnit(t *testing.T) {
 		name             string
 		wantCode         int
 		wantResponsePath string
-		input            ArchiveWorkUnitInput
+		input            request.ArchiveWorkUnitInput
 	}{
 		{
 			name:             "happy_case",
 			wantCode:         http.StatusOK,
 			wantResponsePath: "testdata/archive_work_unit/200_ok.json",
-			input: ArchiveWorkUnitInput{
+			input: request.ArchiveWorkUnitInput{
 				ProjectID:  "8dc3be2e-19a4-4942-8a79-56db391a0b15",
 				WorkUnitID: "4797347d-21e0-4dac-a6c7-c98bf2d6b27c",
 			},
@@ -929,7 +930,7 @@ func TestHandler_ArchiveWorkUnit(t *testing.T) {
 			name:             "invalid_project_id",
 			wantCode:         http.StatusNotFound,
 			wantResponsePath: "testdata/archive_work_unit/404_project_not_found.json",
-			input: ArchiveWorkUnitInput{
+			input: request.ArchiveWorkUnitInput{
 				ProjectID:  "8dc3be2e-19a4-4942-8a79-56db391a0b16",
 				WorkUnitID: "4797347d-21e0-4dac-a6c7-c98bf2d6b27c",
 			},
@@ -969,13 +970,13 @@ func TestHandler_UnarchiveWorkUnit(t *testing.T) {
 		name             string
 		wantCode         int
 		wantResponsePath string
-		input            ArchiveWorkUnitInput
+		input            request.ArchiveWorkUnitInput
 	}{
 		{
 			name:             "happy_case",
 			wantCode:         http.StatusOK,
 			wantResponsePath: "testdata/unarchive_work_unit/200_ok.json",
-			input: ArchiveWorkUnitInput{
+			input: request.ArchiveWorkUnitInput{
 				ProjectID:  "8dc3be2e-19a4-4942-8a79-56db391a0b15",
 				WorkUnitID: "4797347d-21e0-4dac-a6c7-c98bf2d6b27c",
 			},
@@ -984,7 +985,7 @@ func TestHandler_UnarchiveWorkUnit(t *testing.T) {
 			name:             "invalid_project_id",
 			wantCode:         http.StatusNotFound,
 			wantResponsePath: "testdata/unarchive_work_unit/404_project_not_found.json",
-			input: ArchiveWorkUnitInput{
+			input: request.ArchiveWorkUnitInput{
 				ProjectID:  "8dc3be2e-19a4-4942-8a79-56db391a0b16",
 				WorkUnitID: "4797347d-21e0-4dac-a6c7-c98bf2d6b27c",
 			},

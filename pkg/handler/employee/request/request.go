@@ -1,8 +1,9 @@
-package employee
+package request
 
 import (
 	"time"
 
+	"github.com/dwarvesf/fortress-api/pkg/handler/employee/errs"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 )
 
@@ -17,7 +18,7 @@ type GetListEmployeeQuery struct {
 	Keyword         string   `json:"keyword" form:"keyword"`
 }
 
-type UpdateGeneralInfoInput struct {
+type UpdateEmployeeGeneralInfoInput struct {
 	FullName      string     `form:"fullName" json:"fullName" binding:"required,max=99"`
 	Email         string     `form:"email" json:"email" binding:"required,email"`
 	Phone         string     `form:"phone" json:"phone" binding:"required,max=12,min=10"`
@@ -60,8 +61,8 @@ type UpdateWorkingStatusInput struct {
 }
 
 func (i *UpdateWorkingStatusInput) Validate() error {
-	if !model.WorkingStatus(i.EmployeeStatus).IsValid() {
-		return ErrInvalidEmployeeStatus
+	if !i.EmployeeStatus.IsValid() {
+		return errs.ErrInvalidEmployeeStatus
 	}
 
 	return nil
@@ -69,15 +70,15 @@ func (i *UpdateWorkingStatusInput) Validate() error {
 
 func (input *GetListEmployeeQuery) Validate() error {
 	if input.PositionID != "" && !model.IsUUIDFromString(input.PositionID) {
-		return ErrInvalidPositionID
+		return errs.ErrInvalidPositionID
 	}
 
 	if input.StackID != "" && !model.IsUUIDFromString(input.StackID) {
-		return ErrInvalidStackID
+		return errs.ErrInvalidStackID
 	}
 
 	if input.ProjectID != "" && !model.IsUUIDFromString(input.ProjectID) {
-		return ErrInvalidProjectID
+		return errs.ErrInvalidProjectID
 	}
 
 	return nil

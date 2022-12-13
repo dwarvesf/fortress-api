@@ -1,362 +1,5 @@
 basePath: /api/v1
 definitions:
-  github.com_dwarvesf_fortress-api_pkg_handler_employee.CreateEmployeeInput:
-    properties:
-      displayName:
-        type: string
-      fullName:
-        maxLength: 100
-        type: string
-      personalEmail:
-        type: string
-      positions:
-        items:
-          type: string
-        type: array
-      roleID:
-        type: string
-      salary:
-        type: integer
-      seniorityID:
-        type: string
-      status:
-        type: string
-      teamEmail:
-        type: string
-    required:
-    - fullName
-    - personalEmail
-    - positions
-    - roleID
-    - salary
-    - seniorityID
-    - status
-    - teamEmail
-    type: object
-  github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateGeneralInfoInput:
-    properties:
-      discordID:
-        type: string
-      email:
-        type: string
-      fullName:
-        maxLength: 99
-        type: string
-      githubID:
-        type: string
-      lineManagerID:
-        type: string
-      notionID:
-        type: string
-      phone:
-        maxLength: 12
-        minLength: 10
-        type: string
-    required:
-    - email
-    - fullName
-    - phone
-    type: object
-  github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdatePersonalInfoInput:
-    properties:
-      address:
-        maxLength: 200
-        type: string
-      dob:
-        type: string
-      gender:
-        type: string
-      personalEmail:
-        type: string
-    required:
-    - address
-    - dob
-    - gender
-    - personalEmail
-    type: object
-  github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateSkillsInput:
-    properties:
-      chapters:
-        items:
-          type: string
-        type: array
-      leadingChapters:
-        items:
-          type: string
-        type: array
-      positions:
-        items:
-          type: string
-        type: array
-      seniority:
-        type: string
-      stacks:
-        items:
-          type: string
-        type: array
-    required:
-    - chapters
-    - positions
-    - seniority
-    - stacks
-    type: object
-  github.com_dwarvesf_fortress-api_pkg_handler_feedback.BasicEventQuestionInput:
-    properties:
-      answer:
-        type: string
-      eventQuestionID:
-        type: string
-      note:
-        type: string
-    required:
-    - eventQuestionID
-    type: object
-  github.com_dwarvesf_fortress-api_pkg_handler_feedback.CreateSurveyFeedbackInput:
-    properties:
-      quarter:
-        type: string
-      type:
-        type: string
-      year:
-        type: integer
-    required:
-    - quarter
-    - type
-    - year
-    type: object
-  github.com_dwarvesf_fortress-api_pkg_handler_feedback.PerformanceReviewTopic:
-    properties:
-      participants:
-        items:
-          type: string
-        type: array
-      topicID:
-        type: string
-    required:
-    - participants
-    - topicID
-    type: object
-  github.com_dwarvesf_fortress-api_pkg_handler_feedback.SendPerformanceReviewInput:
-    properties:
-      topics:
-        items:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_feedback.PerformanceReviewTopic'
-        type: array
-    required:
-    - topics
-    type: object
-  github.com_dwarvesf_fortress-api_pkg_handler_feedback.SubmitBody:
-    properties:
-      answers:
-        items:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_feedback.BasicEventQuestionInput'
-        type: array
-      status:
-        type: string
-    required:
-    - answers
-    - status
-    type: object
-  github.com_dwarvesf_fortress-api_pkg_handler_profile.UpdateInfoInput:
-    properties:
-      discordID:
-        type: string
-      githubID:
-        type: string
-      notionID:
-        type: string
-      personalEmail:
-        type: string
-      phoneNumber:
-        maxLength: 12
-        minLength: 10
-        type: string
-      teamEmail:
-        type: string
-    required:
-    - personalEmail
-    - phoneNumber
-    - teamEmail
-    type: object
-  github.com_dwarvesf_fortress-api_pkg_handler_project.AssignMemberInput:
-    properties:
-      deploymentType:
-        type: string
-      discount:
-        type: number
-      employeeID:
-        type: string
-      isLead:
-        type: boolean
-      joinedDate:
-        type: string
-      leftDate:
-        type: string
-      positions:
-        items:
-          type: string
-        type: array
-      rate:
-        type: number
-      seniorityID:
-        type: string
-      status:
-        type: string
-    required:
-    - deploymentType
-    - positions
-    - rate
-    - seniorityID
-    - status
-    type: object
-  github.com_dwarvesf_fortress-api_pkg_handler_project.CreateProjectInput:
-    properties:
-      accountManagerID:
-        type: string
-      clientEmail:
-        type: string
-      countryID:
-        type: string
-      deliveryManagerID:
-        type: string
-      members:
-        items:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.AssignMemberInput'
-        type: array
-      name:
-        type: string
-      projectEmail:
-        type: string
-      startDate:
-        type: string
-      status:
-        type: string
-      type:
-        type: string
-    required:
-    - accountManagerID
-    - countryID
-    - name
-    - status
-    type: object
-  github.com_dwarvesf_fortress-api_pkg_handler_project.CreateWorkUnitBody:
-    properties:
-      members:
-        items:
-          type: string
-        type: array
-      name:
-        type: string
-      stacks:
-        items:
-          type: string
-        type: array
-      status:
-        type: string
-      type:
-        type: string
-      url:
-        type: string
-    required:
-    - name
-    - stacks
-    - status
-    - type
-    type: object
-  github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateContactInfoInput:
-    properties:
-      accountManagerID:
-        type: string
-      clientEmail:
-        type: string
-      deliveryManagerID:
-        type: string
-      projectEmail:
-        type: string
-    required:
-    - accountManagerID
-    type: object
-  github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateGeneralInfoInput:
-    properties:
-      countryID:
-        type: string
-      name:
-        type: string
-      stacks:
-        items:
-          type: string
-        type: array
-      startDate:
-        type: string
-    required:
-    - countryID
-    - name
-    type: object
-  github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateMemberInput:
-    properties:
-      deploymentType:
-        type: string
-      discount:
-        type: number
-      employeeID:
-        type: string
-      isLead:
-        type: boolean
-      joinedDate:
-        type: string
-      leftDate:
-        type: string
-      positions:
-        items:
-          type: string
-        type: array
-      projectSlotID:
-        type: string
-      rate:
-        type: number
-      seniorityID:
-        type: string
-      status:
-        type: string
-    required:
-    - deploymentType
-    - positions
-    - projectSlotID
-    - rate
-    - seniorityID
-    - status
-    type: object
-  github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateWorkUnitBody:
-    properties:
-      members:
-        items:
-          type: string
-        type: array
-      name:
-        maxLength: 100
-        type: string
-      stacks:
-        items:
-          type: string
-        type: array
-      type:
-        type: string
-      url:
-        type: string
-    required:
-    - name
-    - stacks
-    - type
-    type: object
-  github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateWorkUnitInput:
-    properties:
-      body:
-        $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateWorkUnitBody'
-      projectID:
-        type: string
-      workUnitID:
-        type: string
-    type: object
   gorm.DeletedAt:
     properties:
       time:
@@ -461,7 +104,49 @@ definitions:
       updatedAt:
         type: string
     type: object
-  pkg_handler_employee.CreateEmployeeInput:
+  request.AssignMemberInput:
+    properties:
+      deploymentType:
+        type: string
+      discount:
+        type: number
+      employeeID:
+        type: string
+      isLead:
+        type: boolean
+      joinedDate:
+        type: string
+      leftDate:
+        type: string
+      positions:
+        items:
+          type: string
+        type: array
+      rate:
+        type: number
+      seniorityID:
+        type: string
+      status:
+        type: string
+    required:
+    - deploymentType
+    - positions
+    - rate
+    - seniorityID
+    - status
+    type: object
+  request.BasicEventQuestionInput:
+    properties:
+      answer:
+        type: string
+      eventQuestionID:
+        type: string
+      note:
+        type: string
+    required:
+    - eventQuestionID
+    type: object
+  request.CreateEmployeeInput:
     properties:
       displayName:
         type: string
@@ -494,183 +179,7 @@ definitions:
     - status
     - teamEmail
     type: object
-  pkg_handler_employee.UpdateGeneralInfoInput:
-    properties:
-      discordID:
-        type: string
-      email:
-        type: string
-      fullName:
-        maxLength: 99
-        type: string
-      githubID:
-        type: string
-      lineManagerID:
-        type: string
-      notionID:
-        type: string
-      phone:
-        maxLength: 12
-        minLength: 10
-        type: string
-    required:
-    - email
-    - fullName
-    - phone
-    type: object
-  pkg_handler_employee.UpdatePersonalInfoInput:
-    properties:
-      address:
-        maxLength: 200
-        type: string
-      dob:
-        type: string
-      gender:
-        type: string
-      personalEmail:
-        type: string
-    required:
-    - address
-    - dob
-    - gender
-    - personalEmail
-    type: object
-  pkg_handler_employee.UpdateSkillsInput:
-    properties:
-      chapters:
-        items:
-          type: string
-        type: array
-      leadingChapters:
-        items:
-          type: string
-        type: array
-      positions:
-        items:
-          type: string
-        type: array
-      seniority:
-        type: string
-      stacks:
-        items:
-          type: string
-        type: array
-    required:
-    - chapters
-    - positions
-    - seniority
-    - stacks
-    type: object
-  pkg_handler_feedback.BasicEventQuestionInput:
-    properties:
-      answer:
-        type: string
-      eventQuestionID:
-        type: string
-      note:
-        type: string
-    required:
-    - eventQuestionID
-    type: object
-  pkg_handler_feedback.CreateSurveyFeedbackInput:
-    properties:
-      quarter:
-        type: string
-      type:
-        type: string
-      year:
-        type: integer
-    required:
-    - quarter
-    - type
-    - year
-    type: object
-  pkg_handler_feedback.PerformanceReviewTopic:
-    properties:
-      participants:
-        items:
-          type: string
-        type: array
-      topicID:
-        type: string
-    required:
-    - participants
-    - topicID
-    type: object
-  pkg_handler_feedback.SendPerformanceReviewInput:
-    properties:
-      topics:
-        items:
-          $ref: '#/definitions/pkg_handler_feedback.PerformanceReviewTopic'
-        type: array
-    required:
-    - topics
-    type: object
-  pkg_handler_feedback.SubmitBody:
-    properties:
-      answers:
-        items:
-          $ref: '#/definitions/pkg_handler_feedback.BasicEventQuestionInput'
-        type: array
-      status:
-        type: string
-    required:
-    - answers
-    - status
-    type: object
-  pkg_handler_profile.UpdateInfoInput:
-    properties:
-      discordID:
-        type: string
-      githubID:
-        type: string
-      notionID:
-        type: string
-      personalEmail:
-        type: string
-      phoneNumber:
-        maxLength: 12
-        minLength: 10
-        type: string
-      teamEmail:
-        type: string
-    required:
-    - personalEmail
-    - phoneNumber
-    - teamEmail
-    type: object
-  pkg_handler_project.AssignMemberInput:
-    properties:
-      deploymentType:
-        type: string
-      discount:
-        type: number
-      employeeID:
-        type: string
-      isLead:
-        type: boolean
-      joinedDate:
-        type: string
-      leftDate:
-        type: string
-      positions:
-        items:
-          type: string
-        type: array
-      rate:
-        type: number
-      seniorityID:
-        type: string
-      status:
-        type: string
-    required:
-    - deploymentType
-    - positions
-    - rate
-    - seniorityID
-    - status
-    type: object
-  pkg_handler_project.CreateProjectInput:
+  request.CreateProjectInput:
     properties:
       accountManagerID:
         type: string
@@ -682,7 +191,7 @@ definitions:
         type: string
       members:
         items:
-          $ref: '#/definitions/pkg_handler_project.AssignMemberInput'
+          $ref: '#/definitions/request.AssignMemberInput'
         type: array
       name:
         type: string
@@ -700,7 +209,20 @@ definitions:
     - name
     - status
     type: object
-  pkg_handler_project.CreateWorkUnitBody:
+  request.CreateSurveyFeedbackInput:
+    properties:
+      quarter:
+        type: string
+      type:
+        type: string
+      year:
+        type: integer
+    required:
+    - quarter
+    - type
+    - year
+    type: object
+  request.CreateWorkUnitBody:
     properties:
       members:
         items:
@@ -724,7 +246,40 @@ definitions:
     - status
     - type
     type: object
-  pkg_handler_project.UpdateContactInfoInput:
+  request.PerformanceReviewTopic:
+    properties:
+      participants:
+        items:
+          type: string
+        type: array
+      topicID:
+        type: string
+    required:
+    - participants
+    - topicID
+    type: object
+  request.SendPerformanceReviewInput:
+    properties:
+      topics:
+        items:
+          $ref: '#/definitions/request.PerformanceReviewTopic'
+        type: array
+    required:
+    - topics
+    type: object
+  request.SubmitBody:
+    properties:
+      answers:
+        items:
+          $ref: '#/definitions/request.BasicEventQuestionInput'
+        type: array
+      status:
+        type: string
+    required:
+    - answers
+    - status
+    type: object
+  request.UpdateContactInfoInput:
     properties:
       accountManagerID:
         type: string
@@ -737,23 +292,52 @@ definitions:
     required:
     - accountManagerID
     type: object
-  pkg_handler_project.UpdateGeneralInfoInput:
+  request.UpdateEmployeeGeneralInfoInput:
     properties:
-      countryID:
+      discordID:
         type: string
-      name:
+      email:
         type: string
-      stacks:
-        items:
-          type: string
-        type: array
-      startDate:
+      fullName:
+        maxLength: 99
+        type: string
+      githubID:
+        type: string
+      lineManagerID:
+        type: string
+      notionID:
+        type: string
+      phone:
+        maxLength: 12
+        minLength: 10
         type: string
     required:
-    - countryID
-    - name
+    - email
+    - fullName
+    - phone
     type: object
-  pkg_handler_project.UpdateMemberInput:
+  request.UpdateInfoInput:
+    properties:
+      discordID:
+        type: string
+      githubID:
+        type: string
+      notionID:
+        type: string
+      personalEmail:
+        type: string
+      phoneNumber:
+        maxLength: 12
+        minLength: 10
+        type: string
+      teamEmail:
+        type: string
+    required:
+    - personalEmail
+    - phoneNumber
+    - teamEmail
+    type: object
+  request.UpdateMemberInput:
     properties:
       deploymentType:
         type: string
@@ -787,7 +371,66 @@ definitions:
     - seniorityID
     - status
     type: object
-  pkg_handler_project.UpdateWorkUnitBody:
+  request.UpdatePersonalInfoInput:
+    properties:
+      address:
+        maxLength: 200
+        type: string
+      dob:
+        type: string
+      gender:
+        type: string
+      personalEmail:
+        type: string
+    required:
+    - address
+    - dob
+    - gender
+    - personalEmail
+    type: object
+  request.UpdateProjectGeneralInfoInput:
+    properties:
+      countryID:
+        type: string
+      name:
+        type: string
+      stacks:
+        items:
+          type: string
+        type: array
+      startDate:
+        type: string
+    required:
+    - countryID
+    - name
+    type: object
+  request.UpdateSkillsInput:
+    properties:
+      chapters:
+        items:
+          type: string
+        type: array
+      leadingChapters:
+        items:
+          type: string
+        type: array
+      positions:
+        items:
+          type: string
+        type: array
+      seniority:
+        type: string
+      stacks:
+        items:
+          type: string
+        type: array
+    required:
+    - chapters
+    - positions
+    - seniority
+    - stacks
+    type: object
+  request.UpdateWorkUnitBody:
     properties:
       members:
         items:
@@ -809,10 +452,10 @@ definitions:
     - stacks
     - type
     type: object
-  pkg_handler_project.UpdateWorkUnitInput:
+  request.UpdateWorkUnitInput:
     properties:
       body:
-        $ref: '#/definitions/pkg_handler_project.UpdateWorkUnitBody'
+        $ref: '#/definitions/request.UpdateWorkUnitBody'
       projectID:
         type: string
       workUnitID:
@@ -1864,7 +1507,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.CreateEmployeeInput'
+          $ref: '#/definitions/request.CreateEmployeeInput'
       - description: jwt token
         in: header
         name: Authorization
@@ -1996,7 +1639,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateGeneralInfoInput'
+          $ref: '#/definitions/request.UpdateEmployeeGeneralInfoInput'
       produces:
       - application/json
       responses:
@@ -2040,7 +1683,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdatePersonalInfoInput'
+          $ref: '#/definitions/request.UpdatePersonalInfoInput'
       produces:
       - application/json
       responses:
@@ -2079,7 +1722,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateSkillsInput'
+          $ref: '#/definitions/request.UpdateSkillsInput'
       - description: jwt token
         in: header
         name: Authorization
@@ -2255,7 +1898,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_feedback.SubmitBody'
+          $ref: '#/definitions/request.SubmitBody'
       produces:
       - application/json
       responses:
@@ -2565,7 +2208,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_profile.UpdateInfoInput'
+          $ref: '#/definitions/request.UpdateInfoInput'
       produces:
       - application/json
       responses:
@@ -2775,7 +2418,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.CreateProjectInput'
+          $ref: '#/definitions/request.CreateProjectInput'
       produces:
       - application/json
       responses:
@@ -2910,7 +2553,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateContactInfoInput'
+          $ref: '#/definitions/request.UpdateContactInfoInput'
       produces:
       - application/json
       responses:
@@ -2954,7 +2597,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateGeneralInfoInput'
+          $ref: '#/definitions/request.UpdateProjectGeneralInfoInput'
       produces:
       - application/json
       responses:
@@ -2998,7 +2641,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.AssignMemberInput'
+          $ref: '#/definitions/request.AssignMemberInput'
       produces:
       - application/json
       responses:
@@ -3041,7 +2684,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateMemberInput'
+          $ref: '#/definitions/request.UpdateMemberInput'
       produces:
       - application/json
       responses:
@@ -3166,7 +2809,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.CreateWorkUnitBody'
+          $ref: '#/definitions/request.CreateWorkUnitBody'
       produces:
       - application/json
       responses:
@@ -3189,7 +2832,56 @@ paths:
       summary: Create work unit of a project
       tags:
       - Project
-  /projects/{id}/work-units/:workUnitID/archive:
+  /projects/{id}/work-units/{workUnitID}:
+    put:
+      consumes:
+      - application/json
+      description: Update work unit info
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Work Unit ID
+        in: path
+        name: workUnitID
+        required: true
+        type: string
+      - description: Body
+        in: body
+        name: Body
+        required: true
+        schema:
+          $ref: '#/definitions/request.UpdateWorkUnitInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Update work unit info
+      tags:
+      - Project
+  /projects/{id}/work-units/{workUnitID}/archive:
     put:
       consumes:
       - application/json
@@ -3232,7 +2924,7 @@ paths:
       summary: Archive an active work unit of a project
       tags:
       - Project
-  /projects/{id}/work-units/:workUnitID/unarchive:
+  /projects/{id}/work-units/{workUnitID}/unarchive:
     put:
       consumes:
       - application/json
@@ -3273,55 +2965,6 @@ paths:
           schema:
             $ref: '#/definitions/view.ErrorResponse'
       summary: Unarchive an archive work unit of a project
-      tags:
-      - Project
-  /projects/{id}/work-units/{workUnitID}:
-    put:
-      consumes:
-      - application/json
-      description: Update work unit info
-      parameters:
-      - description: jwt token
-        in: header
-        name: Authorization
-        required: true
-        type: string
-      - description: Project ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: Work Unit ID
-        in: path
-        name: workUnitID
-        required: true
-        type: string
-      - description: Body
-        in: body
-        name: Body
-        required: true
-        schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_project.UpdateWorkUnitInput'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/view.MessageResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/view.ErrorResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/view.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/view.ErrorResponse'
-      summary: Update work unit info
       tags:
       - Project
   /surveys:
@@ -3376,7 +3019,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_feedback.CreateSurveyFeedbackInput'
+          $ref: '#/definitions/request.CreateSurveyFeedbackInput'
       - description: jwt token
         in: header
         name: Authorization
@@ -3509,7 +3152,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_feedback.SendPerformanceReviewInput'
+          $ref: '#/definitions/request.SendPerformanceReviewInput'
       produces:
       - application/json
       responses:

@@ -1,6 +1,7 @@
-package feedback
+package request
 
 import (
+	"github.com/dwarvesf/fortress-api/pkg/handler/feedback/errs"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 )
 
@@ -12,7 +13,7 @@ type GetListFeedbackInput struct {
 
 func (i *GetListFeedbackInput) Validate() error {
 	if i.Status != "" && !model.EventReviewerStatus(i.Status).IsValid() {
-		return ErrInvalidReviewerStatus
+		return errs.ErrInvalidReviewerStatus
 	}
 
 	return nil
@@ -25,11 +26,11 @@ type DetailInput struct {
 
 func (i *DetailInput) Validate() error {
 	if i.EventID == "" || !model.IsUUIDFromString(i.EventID) {
-		return ErrInvalidFeedbackID
+		return errs.ErrInvalidFeedbackID
 	}
 
 	if i.TopicID == "" || !model.IsUUIDFromString(i.TopicID) {
-		return ErrInvalidTopicID
+		return errs.ErrInvalidTopicID
 	}
 
 	return nil
@@ -43,7 +44,7 @@ type GetListSurveyInput struct {
 
 func (i *GetListSurveyInput) Validate() error {
 	if i.Subtype == "" || !model.EventSubtype(i.Subtype).IsSurveyValid() {
-		return ErrInvalidEventType
+		return errs.ErrInvalidEventType
 	}
 
 	return nil
@@ -56,7 +57,7 @@ type GetSurveyDetailInput struct {
 
 func (i *GetSurveyDetailInput) Validate() error {
 	if i.EventID == "" || !model.IsUUIDFromString(i.EventID) {
-		return ErrInvalidEventID
+		return errs.ErrInvalidEventID
 	}
 
 	return nil
@@ -75,7 +76,7 @@ type SubmitBody struct {
 
 func (i *SubmitBody) Validate() error {
 	if !i.Status.IsValid() {
-		return ErrInvalidReviewerStatus
+		return errs.ErrInvalidReviewerStatus
 	}
 
 	return nil
@@ -89,11 +90,11 @@ type SubmitInput struct {
 
 func (i *SubmitInput) Validate() error {
 	if i.EventID == "" || !model.IsUUIDFromString(i.EventID) {
-		return ErrInvalidEventID
+		return errs.ErrInvalidEventID
 	}
 
 	if i.TopicID == "" || !model.IsUUIDFromString(i.TopicID) {
-		return ErrInvalidTopicID
+		return errs.ErrInvalidTopicID
 	}
 
 	return i.Body.Validate()

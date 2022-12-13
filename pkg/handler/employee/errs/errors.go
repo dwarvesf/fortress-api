@@ -1,4 +1,4 @@
-package employee
+package errs
 
 import (
 	"errors"
@@ -27,17 +27,17 @@ var (
 	ErrFileAlreadyExisted    = errors.New("file already existed")
 )
 
-// errPositionNotFound returns bad request custom error
-func errPositionNotFound(id string) error {
+// ErrPositionNotFoundWithID returns bad request custom error
+func ErrPositionNotFoundWithID(id string) error {
 	return fmt.Errorf("position not found: %v", id)
 }
 
-// errChapterNotFound returns bad request custom error
-func errChapterNotFound(id string) error {
+// ErrChapterNotFoundWithID returns bad request custom error
+func ErrChapterNotFoundWithID(id string) error {
 	return fmt.Errorf("chapter not found: %v", id)
 }
 
-// errStackNotFound returns bad request custom error
-func errStackNotFound(id string) error {
+// ErrStackNotFoundWithID returns bad request custom error
+func ErrStackNotFoundWithID(id string) error {
 	return fmt.Errorf("stack not found: %v", id)
 }

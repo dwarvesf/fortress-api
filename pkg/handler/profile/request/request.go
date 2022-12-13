@@ -1,4 +1,4 @@
-package profile
+package request
 
 import "github.com/dwarvesf/fortress-api/pkg/model"
 

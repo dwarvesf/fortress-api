@@ -11,6 +11,8 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
+	"github.com/dwarvesf/fortress-api/pkg/handler/feedback/errs"
+	"github.com/dwarvesf/fortress-api/pkg/handler/feedback/request"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service"
@@ -61,7 +63,7 @@ func (h *handler) List(c *gin.Context) {
 		return
 	}
 
-	input := GetListFeedbackInput{}
+	input := request.GetListFeedbackInput{}
 	if err := c.ShouldBindQuery(&input); err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, input, ""))
 		return
@@ -116,7 +118,7 @@ func (h *handler) Detail(c *gin.Context) {
 		return
 	}
 
-	input := DetailInput{
+	input := request.DetailInput{
 		EventID: c.Param("id"),
 		TopicID: c.Param("topicID"),
 	}
@@ -135,8 +137,8 @@ func (h *handler) Detail(c *gin.Context) {
 	// Check topic and feedback existence
 	topic, err := h.store.EmployeeEventTopic.One(h.repo.DB(), input.TopicID, input.EventID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		l.Error(ErrTopicNotFound, "topic not found")
-		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrTopicNotFound, input, ""))
+		l.Error(errs.ErrTopicNotFound, "topic not found")
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrTopicNotFound, input, ""))
 		return
 	}
 
@@ -148,8 +150,8 @@ func (h *handler) Detail(c *gin.Context) {
 
 	eventReviewer, err := h.store.EmployeeEventReviewer.GetByReviewerID(h.repo.DB(), userID, input.TopicID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		l.Error(ErrEmployeeEventReviewerNotFound, "employee event reviewer not found")
-		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrEmployeeEventReviewerNotFound, nil, ""))
+		l.Error(errs.ErrEmployeeEventReviewerNotFound, "employee event reviewer not found")
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrEmployeeEventReviewerNotFound, nil, ""))
 		return
 	}
 
@@ -168,8 +170,8 @@ func (h *handler) Detail(c *gin.Context) {
 
 	reviewer, err := h.store.Employee.One(h.repo.DB(), userID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		l.Error(ErrReviewerNotFound, "reviewer not found")
-		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrReviewerNotFound, nil, ""))
+		l.Error(errs.ErrReviewerNotFound, "reviewer not found")
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrReviewerNotFound, nil, ""))
 		return
 	}
 
@@ -206,7 +208,7 @@ func (h *handler) Detail(c *gin.Context) {
 // @Failure 500 {object} view.ErrorResponse
 // @Router /surveys [get]
 func (h *handler) ListSurvey(c *gin.Context) {
-	input := GetListSurveyInput{}
+	input := request.GetListSurveyInput{}
 	if err := c.ShouldBindQuery(&input); err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, input, ""))
 		return
@@ -253,7 +255,7 @@ func (h *handler) ListSurvey(c *gin.Context) {
 // @Failure 500 {object} view.ErrorResponse
 // @Router /surveys/{id} [get]
 func (h *handler) GetSurveyDetail(c *gin.Context) {
-	input := GetSurveyDetailInput{
+	input := request.GetSurveyDetailInput{
 		EventID: c.Param("id"),
 	}
 	if err := c.ShouldBindQuery(&input.Pagination); err != nil {
@@ -278,7 +280,7 @@ func (h *handler) GetSurveyDetail(c *gin.Context) {
 	event, err := h.store.FeedbackEvent.One(h.repo.DB(), input.EventID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		l.Error(err, "event not found")
-		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrEventNotFound, input, ""))
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrEventNotFound, input, ""))
 		return
 	}
 	if err != nil {
@@ -309,7 +311,7 @@ func (h *handler) GetSurveyDetail(c *gin.Context) {
 // @Param Authorization header string true "jwt token"
 // @Param id path string true "Feedback Event ID"
 // @Param topicID path string true "Employee Event Topic ID"
-// @Param Body body SubmitBody true "Body"
+// @Param Body body request.SubmitBody true "Body"
 // @Success 200 {object} view.SubmitFeedbackResponse
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 404 {object} view.ErrorResponse
@@ -322,7 +324,7 @@ func (h *handler) Submit(c *gin.Context) {
 		return
 	}
 
-	input := SubmitInput{
+	input := request.SubmitInput{
 		EventID: c.Param("id"),
 		TopicID: c.Param("topicID"),
 	}
@@ -350,8 +352,8 @@ func (h *handler) Submit(c *gin.Context) {
 	// Check topic existence and validate eventID
 	topic, err := h.store.EmployeeEventTopic.One(tx.DB(), input.TopicID, input.EventID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		l.Error(ErrTopicNotFound, "topic not found")
-		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, done(ErrTopicNotFound), input, ""))
+		l.Error(errs.ErrTopicNotFound, "topic not found")
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, done(errs.ErrTopicNotFound), input, ""))
 		return
 	}
 
@@ -363,8 +365,8 @@ func (h *handler) Submit(c *gin.Context) {
 
 	eventReviewer, err := h.store.EmployeeEventReviewer.GetByReviewerID(tx.DB(), userID, input.TopicID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		l.Error(ErrEventReviewerNotFound, "employee event reviewer not found")
-		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, done(ErrEventReviewerNotFound), input, ""))
+		l.Error(errs.ErrEventReviewerNotFound, "employee event reviewer not found")
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, done(errs.ErrEventReviewerNotFound), input, ""))
 		return
 	}
 
@@ -375,8 +377,8 @@ func (h *handler) Submit(c *gin.Context) {
 	}
 
 	if eventReviewer.ReviewerStatus == model.EventReviewerStatusDone {
-		l.Error(ErrCouldNotEditDoneFeedback, "could not edit the feedback marked as done")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(ErrCouldNotEditDoneFeedback), nil, ""))
+		l.Error(errs.ErrCouldNotEditDoneFeedback, "could not edit the feedback marked as done")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(errs.ErrCouldNotEditDoneFeedback), nil, ""))
 		return
 	}
 
@@ -392,8 +394,8 @@ func (h *handler) Submit(c *gin.Context) {
 	for _, e := range input.Body.Answers {
 		_, ok := questionMap[e.EventQuestionID]
 		if !ok {
-			l.Error(errEventQuestionNotFound(e.EventQuestionID.String()), "employee event question not found")
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, done(errEventQuestionNotFound(e.EventQuestionID.String())), input, ""))
+			l.Error(errs.ErrEventQuestionNotFound(e.EventQuestionID.String()), "employee event question not found")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, done(errs.ErrEventQuestionNotFound(e.EventQuestionID.String())), input, ""))
 			return
 		}
 	}
@@ -435,8 +437,8 @@ func (h *handler) Submit(c *gin.Context) {
 	if input.Body.Status == model.EventReviewerStatusDone {
 		for _, e := range eventQuestions {
 			if e.Answer == "" {
-				l.Error(ErrUnansweredquestions, "there are some unanswered questions")
-				c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, done(ErrUnansweredquestions), input, ""))
+				l.Error(errs.ErrUnansweredquestions, "there are some unanswered questions")
+				c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, done(errs.ErrUnansweredquestions), input, ""))
 				return
 			}
 		}
@@ -444,8 +446,8 @@ func (h *handler) Submit(c *gin.Context) {
 
 	reviewer, err := h.store.Employee.One(h.repo.DB(), userID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		l.Error(ErrReviewerNotFound, "reviewer not found")
-		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrReviewerNotFound, nil, ""))
+		l.Error(errs.ErrReviewerNotFound, "reviewer not found")
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrReviewerNotFound, nil, ""))
 		return
 	}
 
@@ -473,7 +475,7 @@ func (h *handler) Submit(c *gin.Context) {
 // @Tags Feedback
 // @Accept  json
 // @Produce  json
-// @Param Body body CreateSurveyFeedbackInput true "Body"
+// @Param Body body request.CreateSurveyFeedbackInput true "Body"
 // @Param Authorization header string true "jwt token"
 // @Success 200 {object} view.MessageResponse
 // @Failure 400 {object} view.ErrorResponse
@@ -488,7 +490,7 @@ func (h *handler) CreateSurvey(c *gin.Context) {
 		return
 	}
 
-	var req CreateSurveyFeedbackInput
+	var req request.CreateSurveyFeedbackInput
 
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, req, ""))
@@ -502,7 +504,7 @@ func (h *handler) CreateSurvey(c *gin.Context) {
 	})
 
 	if !model.EventSubtype(req.Type).IsValidSurvey() {
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, ErrInvalidEventSubType, req, ""))
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidEventSubType, req, ""))
 		return
 	}
 
@@ -521,7 +523,7 @@ func (h *handler) CreateSurvey(c *gin.Context) {
 
 }
 
-func (h *handler) createPeerReview(db *gorm.DB, req CreateSurveyFeedbackInput, userID string) (int, error) {
+func (h *handler) createPeerReview(db *gorm.DB, req request.CreateSurveyFeedbackInput, userID string) (int, error) {
 	//1. convert data
 	var startTime, endTime time.Time
 	var title string
@@ -536,14 +538,14 @@ func (h *handler) createPeerReview(db *gorm.DB, req CreateSurveyFeedbackInput, u
 		endTime = time.Date(req.Year, 12, 31, 23, 59, 59, 59, time.UTC)
 		title = fmt.Sprintf("Q3/Q4, %d", req.Year)
 	default:
-		return 400, ErrInvalidQuarter
+		return 400, errs.ErrInvalidQuarter
 	}
 
 	//1.2 check employee existed
 	createdBy, err := h.store.Employee.One(db, userID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return 404, ErrEmployeeNotFound
+			return 404, errs.ErrEmployeeNotFound
 		}
 		return 500, err
 	}
@@ -706,7 +708,7 @@ func (h *handler) createPeerReview(db *gorm.DB, req CreateSurveyFeedbackInput, u
 // @Produce json
 // @Param Authorization header string true "jwt token"
 // @Param id path string true "Feedback Event ID"
-// @Param Body body SendPerformanceReviewInput true "Body"
+// @Param Body body request.SendPerformanceReviewInput true "Body"
 // @Success 200 {object} view.MessageResponse
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 404 {object} view.ErrorResponse
@@ -715,11 +717,11 @@ func (h *handler) createPeerReview(db *gorm.DB, req CreateSurveyFeedbackInput, u
 func (h *handler) SendPerformanceReview(c *gin.Context) {
 	eventID := c.Param("id")
 	if eventID == "" || !model.IsUUIDFromString(eventID) {
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, ErrInvalidEventID, nil, ""))
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidEventID, nil, ""))
 		return
 	}
 
-	var input SendPerformanceReviewInput
+	var input request.SendPerformanceReviewInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, input, ""))
 		return
@@ -747,12 +749,12 @@ func (h *handler) SendPerformanceReview(c *gin.Context) {
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, done(nil), "ok"))
 }
 
-func (h *handler) updateEventReviewer(db *gorm.DB, l logger.Logger, data PerformanceReviewTopic, eventID string) (int, error) {
+func (h *handler) updateEventReviewer(db *gorm.DB, l logger.Logger, data request.PerformanceReviewTopic, eventID string) (int, error) {
 	// Validate EventID and TopicID
 	_, err := h.store.EmployeeEventTopic.One(db, data.TopicID.String(), eventID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		l.Error(ErrTopicNotFound, "topic not found")
-		return http.StatusNotFound, ErrTopicNotFound
+		l.Error(errs.ErrTopicNotFound, "topic not found")
+		return http.StatusNotFound, errs.ErrTopicNotFound
 	}
 	if err != nil {
 		l.Error(err, "fail to get employee event topic")
@@ -820,7 +822,7 @@ func (h *handler) updateEventReviewer(db *gorm.DB, l logger.Logger, data Perform
 func (h *handler) DeleteSurvey(c *gin.Context) {
 	eventID := c.Param("id")
 	if eventID == "" || !model.IsUUIDFromString(eventID) {
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, ErrInvalidEventID, eventID, ""))
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidEventID, eventID, ""))
 		return
 	}
 
@@ -856,7 +858,7 @@ func (h *handler) deleteSurvey(db *gorm.DB, eventID string) (int, error) {
 	}
 	if !exists {
 		l.Error(err, "feedback event not found")
-		return http.StatusNotFound, ErrEventNotFound
+		return http.StatusNotFound, errs.ErrEventNotFound
 	}
 
 	if err := h.store.EmployeeEventQuestion.DeleteByEventID(db, eventID); err != nil {
@@ -897,19 +899,19 @@ func (h *handler) deleteSurvey(db *gorm.DB, eventID string) (int, error) {
 func (h *handler) GetSurveyReviewDetail(c *gin.Context) {
 	eventID := c.Param("id")
 	if eventID == "" || !model.IsUUIDFromString(eventID) {
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, ErrInvalidEventID, nil, ""))
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidEventID, nil, ""))
 		return
 	}
 
 	topicID := c.Param("topicID")
 	if topicID == "" || !model.IsUUIDFromString(eventID) {
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, ErrInvalidTopicID, nil, ""))
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidTopicID, nil, ""))
 		return
 	}
 
 	reviewID := c.Param("reviewID")
 	if reviewID == "" || !model.IsUUIDFromString(eventID) {
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, ErrInvalidReviewerID, nil, ""))
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidReviewerID, nil, ""))
 		return
 	}
 
@@ -922,7 +924,7 @@ func (h *handler) GetSurveyReviewDetail(c *gin.Context) {
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Info("topic not found")
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrTopicNotFound, nil, ""))
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrTopicNotFound, nil, ""))
 			return
 		}
 		l.Error(err, "failed when getting topic")
@@ -934,7 +936,7 @@ func (h *handler) GetSurveyReviewDetail(c *gin.Context) {
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Info("review not found")
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrEventReviewerNotFound, nil, ""))
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrEventReviewerNotFound, nil, ""))
 			return
 		}
 		l.Error(err, "failed when getting review")
@@ -944,7 +946,7 @@ func (h *handler) GetSurveyReviewDetail(c *gin.Context) {
 
 	if review.EmployeeEventTopicID != topic.ID {
 		l.Info("review not belong topic")
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, ErrEventReviewerNotFound, nil, ""))
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrEventReviewerNotFound, nil, ""))
 		return
 	}
 
