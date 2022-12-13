@@ -373,6 +373,7 @@ func ToListSurveyDetail(event *model.FeedbackEvent) SurveyDetail {
 
 		topics = append(topics, Topic{
 			ID:       topic.ID.String(),
+			EventID:  topic.EventID.String(),
 			Title:    topic.Title,
 			Type:     topic.Event.Type.String(),
 			Subtype:  topic.Event.Subtype.String(),
