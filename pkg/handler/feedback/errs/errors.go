@@ -28,6 +28,7 @@ var (
 	ErrEmployeeNotFound         = errors.New("employee not found")
 	ErrEmployeeNotReady         = errors.New("employee not ready")
 	ErrAlreadySent              = errors.New("surveys already sent to all participants")
+	ErrUnfinishedReviewer       = errors.New("all reviewers have to finish before marked done")
 )
 
 func ErrEventQuestionNotFound(id string) error {

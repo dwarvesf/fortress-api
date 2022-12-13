@@ -3167,6 +3167,44 @@ paths:
       summary: Get survey detail
       tags:
       - Feedback
+  /surveys/{id}/done:
+    put:
+      consumes:
+      - application/json
+      description: Mark done feedback event
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Feedback Event ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Mark done feedback event
+      tags:
+      - Feedback
   /surveys/{id}/send:
     post:
       consumes:
