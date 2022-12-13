@@ -1195,9 +1195,7 @@ definitions:
   view.ListSurveyDetailResponse:
     properties:
       data:
-        items:
-          $ref: '#/definitions/view.SurveyDetail'
-        type: array
+        $ref: '#/definitions/view.SurveyDetail'
     type: object
   view.ListSurveyResponse:
     properties:
@@ -1866,7 +1864,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/pkg_handler_employee.CreateEmployeeInput'
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.CreateEmployeeInput'
       - description: jwt token
         in: header
         name: Authorization
@@ -1998,7 +1996,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/pkg_handler_employee.UpdateGeneralInfoInput'
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateGeneralInfoInput'
       produces:
       - application/json
       responses:
@@ -2042,7 +2040,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/pkg_handler_employee.UpdatePersonalInfoInput'
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdatePersonalInfoInput'
       produces:
       - application/json
       responses:
@@ -2081,7 +2079,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/pkg_handler_employee.UpdateSkillsInput'
+          $ref: '#/definitions/github.com_dwarvesf_fortress-api_pkg_handler_employee.UpdateSkillsInput'
       - description: jwt token
         in: header
         name: Authorization

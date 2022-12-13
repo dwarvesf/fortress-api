@@ -345,5 +345,5 @@ func ToListSurveyDetail(event *model.FeedbackEvent) SurveyDetail {
 }
 
 type ListSurveyDetailResponse struct {
-	Data []SurveyDetail `json:"data"`
+	Data SurveyDetail `json:"data"`
 }
