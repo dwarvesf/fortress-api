@@ -1,4 +1,4 @@
-package feedback
+package errs
 
 import (
 	"errors"
@@ -29,6 +29,6 @@ var (
 	ErrAlreadySent = errors.New("surveys already sent to all participants")
 )
 
-func errEventQuestionNotFound(id string) error {
+func ErrEventQuestionNotFound(id string) error {
 	return fmt.Errorf("employee event question not found: %v", id)
 }

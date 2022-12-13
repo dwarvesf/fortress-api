@@ -3,6 +3,7 @@ package feedback
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/dwarvesf/fortress-api/pkg/handler/feedback/request"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -214,7 +215,7 @@ func TestHandler_Submit(t *testing.T) {
 	testRepoMock := store.NewPostgresStore(&cfg)
 	tests := []struct {
 		name             string
-		body             SubmitBody
+		body             request.SubmitBody
 		wantCode         int
 		wantResponsePath string
 		topicID          string
@@ -224,8 +225,8 @@ func TestHandler_Submit(t *testing.T) {
 			name:             "failed_unanswer_question",
 			wantCode:         http.StatusBadRequest,
 			wantResponsePath: "testdata/submit/400_unanswer_question.json",
-			body: SubmitBody{
-				Answers: []BasicEventQuestionInput{
+			body: request.SubmitBody{
+				Answers: []request.BasicEventQuestionInput{
 					{
 						EventQuestionID: model.MustGetUUIDFromString("7a94c0f4-81cf-4736-8628-710e25cfc4e7"),
 						Answer:          "ok",
@@ -264,8 +265,8 @@ func TestHandler_Submit(t *testing.T) {
 			name:             "ok_draft",
 			wantCode:         http.StatusOK,
 			wantResponsePath: "testdata/submit/200.json",
-			body: SubmitBody{
-				Answers: []BasicEventQuestionInput{
+			body: request.SubmitBody{
+				Answers: []request.BasicEventQuestionInput{
 					{
 						EventQuestionID: model.MustGetUUIDFromString("7a94c0f4-81cf-4736-8628-710e25cfc4e7"),
 						Answer:          "ok",
@@ -304,8 +305,8 @@ func TestHandler_Submit(t *testing.T) {
 			name:             "draft_not_found_topicID",
 			wantCode:         http.StatusNotFound,
 			wantResponsePath: "testdata/submit/404.json",
-			body: SubmitBody{
-				Answers: []BasicEventQuestionInput{
+			body: request.SubmitBody{
+				Answers: []request.BasicEventQuestionInput{
 					{
 						EventQuestionID: model.MustGetUUIDFromString("7a94c0f4-81cf-4736-8628-710e25cfc4e7"),
 						Answer:          "ok",
@@ -378,15 +379,15 @@ func TestHandler_SendPerformanceReview(t *testing.T) {
 		id               string
 		wantCode         int
 		wantResponsePath string
-		body             SendPerformanceReviewInput
+		body             request.SendPerformanceReviewInput
 	}{
 		{
 			name:             "happy_case",
 			id:               "8a5bfedb-6e11-4f5c-82d9-2635cfcce3e2",
 			wantCode:         http.StatusOK,
 			wantResponsePath: "testdata/send_performance_review/200.json",
-			body: SendPerformanceReviewInput{
-				[]PerformanceReviewTopic{
+			body: request.SendPerformanceReviewInput{
+				[]request.PerformanceReviewTopic{
 					{
 						TopicID: model.MustGetUUIDFromString("e4a33adc-2495-43cf-b816-32feb8d5250d"),
 						Participants: []model.UUID{
@@ -401,8 +402,8 @@ func TestHandler_SendPerformanceReview(t *testing.T) {
 			id:               "8a5bfedb-6e11-4f5c-82d9-2635cfcce3e1",
 			wantCode:         http.StatusNotFound,
 			wantResponsePath: "testdata/send_performance_review/404.json",
-			body: SendPerformanceReviewInput{
-				[]PerformanceReviewTopic{
+			body: request.SendPerformanceReviewInput{
+				[]request.PerformanceReviewTopic{
 					{
 						TopicID: model.MustGetUUIDFromString("e4a33adc-2495-43cf-b816-32feb8d5250d"),
 						Participants: []model.UUID{

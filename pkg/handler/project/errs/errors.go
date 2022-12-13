@@ -1,4 +1,4 @@
-package project
+package errs
 
 import (
 	"errors"
@@ -56,11 +56,11 @@ var (
 	ErrSlotAlreadyContainsAnotherMember = errors.New("slot already contains another member")
 )
 
-// errPositionNotFound returns unauthorized custom error
-func errPositionNotFound(id string) error {
+// ErrPositionNotFoundWithID returns unauthorized custom error
+func ErrPositionNotFoundWithID(id string) error {
 	return fmt.Errorf("position not found: %v", id)
 }
 
-func errStackNotFound(id string) error {
+func ErrStackNotFoundWithID(id string) error {
 	return fmt.Errorf("stack not found: %v", id)
 }

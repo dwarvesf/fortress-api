@@ -11,7 +11,7 @@ type GetQuestionsInput struct {
 // Validate check valid for values in input params
 func (i GetQuestionsInput) Validate() error {
 	if i.Category == "" || !i.Category.IsValid() {
-		return ErrInvalidcategory
+		return ErrInvalidCategory
 	}
 
 	if i.Subcategory == "" || !i.Subcategory.IsValid() {

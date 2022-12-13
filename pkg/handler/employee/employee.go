@@ -3,6 +3,8 @@ package employee
 import (
 	"errors"
 	"fmt"
+	errs "github.com/dwarvesf/fortress-api/pkg/handler/employee/errs"
+	"github.com/dwarvesf/fortress-api/pkg/handler/employee/request"
 	"net/http"
 	"path/filepath"
 	"time"
@@ -59,7 +61,7 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 // @Failure 500 {object} view.ErrorResponse
 // @Router /employees [get]
 func (h *handler) List(c *gin.Context) {
-	query := GetListEmployeeQuery{}
+	query := request.GetListEmployeeQuery{}
 	if err := c.ShouldBindQuery(&query); err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, query, ""))
 		return
@@ -133,7 +135,7 @@ func (h *handler) One(c *gin.Context) {
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Info("employee not found")
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrEmployeeNotFound, params, ""))
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrEmployeeNotFound, params, ""))
 			return
 		}
 		l.Error(err, "error query employee from db")
@@ -162,11 +164,11 @@ func (h *handler) One(c *gin.Context) {
 func (h *handler) UpdateEmployeeStatus(c *gin.Context) {
 	employeeID := c.Param("id")
 	if employeeID == "" || !model.IsUUIDFromString(employeeID) {
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, ErrInvalidEmployeeID, nil, ""))
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidEmployeeID, nil, ""))
 		return
 	}
 
-	var body UpdateWorkingStatusInput
+	var body request.UpdateWorkingStatusInput
 	if err := c.ShouldBindJSON(&body); err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, body, ""))
 		return
@@ -189,7 +191,7 @@ func (h *handler) UpdateEmployeeStatus(c *gin.Context) {
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Info("employee not found")
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrEmployeeNotFound, nil, ""))
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrEmployeeNotFound, nil, ""))
 			return
 		}
 		l.Error(err, "failed to get employee")
@@ -216,7 +218,7 @@ func (h *handler) UpdateEmployeeStatus(c *gin.Context) {
 // @Produce  json
 // @Param Authorization header string true "jwt token"
 // @Param id path string true "Employee ID"
-// @Param Body body UpdateGeneralInfoInput true "Body"
+// @Param Body body request.UpdateEmployeeGeneralInfoInput true "Body"
 // @Success 200 {object} view.UpdateGeneralEmployeeResponse
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 404 {object} view.ErrorResponse
@@ -225,11 +227,11 @@ func (h *handler) UpdateEmployeeStatus(c *gin.Context) {
 func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 	employeeID := c.Param("id")
 	if employeeID == "" || !model.IsUUIDFromString(employeeID) {
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, ErrInvalidEmployeeID, nil, ""))
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidEmployeeID, nil, ""))
 		return
 	}
 
-	var body UpdateGeneralInfoInput
+	var body request.UpdateEmployeeGeneralInfoInput
 	if err := c.ShouldBindJSON(&body); err != nil {
 		if err != nil {
 			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, body, ""))
@@ -254,8 +256,8 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 		}
 
 		if !exist {
-			l.Error(ErrLineManagerNotFound, "error line manager not found")
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrLineManagerNotFound, body, ""))
+			l.Error(errs.ErrLineManagerNotFound, "error line manager not found")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrLineManagerNotFound, body, ""))
 			return
 		}
 	}
@@ -264,7 +266,7 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Info("employee not found")
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrEmployeeNotFound, nil, ""))
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrEmployeeNotFound, nil, ""))
 			return
 		}
 		l.Error(err, "failed to get employee")
@@ -304,7 +306,7 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 // @Tags Employee
 // @Accept  json
 // @Produce  json
-// @Param Body body CreateEmployeeInput true "Body"
+// @Param Body body request.CreateEmployeeInput true "Body"
 // @Param Authorization header string true "jwt token"
 // @Success 200 {object} view.EmployeeData
 // @Failure 400 {object} view.ErrorResponse
@@ -313,7 +315,7 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 // @Router /employees [post]
 func (h *handler) Create(c *gin.Context) {
 	// 1. parse eml data from body
-	var req CreateEmployeeInput
+	var req request.CreateEmployeeInput
 
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, req, ""))
@@ -321,7 +323,7 @@ func (h *handler) Create(c *gin.Context) {
 	}
 
 	if !model.WorkingStatus(req.Status).IsValid() {
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, ErrInvalidEmployeeStatus, req, ""))
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidEmployeeStatus, req, ""))
 		return
 	}
 
@@ -348,8 +350,8 @@ func (h *handler) Create(c *gin.Context) {
 	for _, pID := range req.Positions {
 		_, ok := positionMap[pID]
 		if !ok {
-			l.Error(errPositionNotFound(pID.String()), "error position not found")
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errPositionNotFound(pID.String()), req, ""))
+			l.Error(errs.ErrPositionNotFoundWithID(pID.String()), "error position not found")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrPositionNotFoundWithID(pID.String()), req, ""))
 			return
 		}
 
@@ -360,7 +362,7 @@ func (h *handler) Create(c *gin.Context) {
 	if err != nil {
 		l.Error(err, "error invalid seniority")
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrSeniorityNotfound, req, ""))
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrSeniorityNotfound, req, ""))
 			return
 		}
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req, ""))
@@ -371,7 +373,7 @@ func (h *handler) Create(c *gin.Context) {
 	if err != nil {
 		l.Error(err, "error invalid role")
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrRoleNotfound, req, ""))
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrRoleNotfound, req, ""))
 			return
 		}
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req, ""))
@@ -396,7 +398,7 @@ func (h *handler) Create(c *gin.Context) {
 	if err != gorm.ErrRecordNotFound {
 		if err == nil {
 			l.Error(err, "error eml exists")
-			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, ErrEmployeeExisted, req, ""))
+			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrEmployeeExisted, req, ""))
 			return
 		}
 		l.Error(err, "error store new eml")
@@ -447,7 +449,7 @@ func (h *handler) Create(c *gin.Context) {
 // @Accept  json
 // @Produce  json
 // @Param id path string true "Employee ID"
-// @Param Body body UpdateSkillsInput true "Body"
+// @Param Body body request.UpdateSkillsInput true "Body"
 // @Param Authorization header string true "jwt token"
 // @Success 200 {object} view.UpdateSkillsEmployeeResponse
 // @Failure 400 {object} view.ErrorResponse
@@ -457,11 +459,11 @@ func (h *handler) Create(c *gin.Context) {
 func (h *handler) UpdateSkills(c *gin.Context) {
 	employeeID := c.Param("id")
 	if employeeID == "" || !model.IsUUIDFromString(employeeID) {
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, ErrInvalidEmployeeID, nil, ""))
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidEmployeeID, nil, ""))
 		return
 	}
 
-	var body UpdateSkillsInput
+	var body request.UpdateSkillsInput
 	if err := c.ShouldBindJSON(&body); err != nil {
 		if err != nil {
 			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, body, ""))
@@ -480,7 +482,7 @@ func (h *handler) UpdateSkills(c *gin.Context) {
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Info("employee not found")
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrEmployeeNotFound, nil, ""))
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrEmployeeNotFound, nil, ""))
 			return
 		}
 		l.Error(err, "failed to get employee")
@@ -500,8 +502,8 @@ func (h *handler) UpdateSkills(c *gin.Context) {
 	for _, sID := range body.Chapters {
 		_, ok := chapterMap[sID]
 		if !ok {
-			l.Error(errChapterNotFound(sID.String()), "chapter not found")
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errChapterNotFound(sID.String()), body, ""))
+			l.Error(errs.ErrChapterNotFoundWithID(sID.String()), "chapter not found")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrChapterNotFoundWithID(sID.String()), body, ""))
 			return
 		}
 	}
@@ -515,8 +517,8 @@ func (h *handler) UpdateSkills(c *gin.Context) {
 	}
 
 	if !exist {
-		l.Error(ErrSeniorityNotFound, "seniority not found")
-		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrSeniorityNotFound, body, ""))
+		l.Error(errs.ErrSeniorityNotFound, "seniority not found")
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrSeniorityNotFound, body, ""))
 		return
 	}
 
@@ -532,8 +534,8 @@ func (h *handler) UpdateSkills(c *gin.Context) {
 	for _, sID := range body.Stacks {
 		_, ok := stackMap[sID]
 		if !ok {
-			l.Error(errStackNotFound(sID.String()), "stack not found")
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errStackNotFound(sID.String()), body, ""))
+			l.Error(errs.ErrStackNotFoundWithID(sID.String()), "stack not found")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrStackNotFoundWithID(sID.String()), body, ""))
 			return
 		}
 	}
@@ -551,8 +553,8 @@ func (h *handler) UpdateSkills(c *gin.Context) {
 		_, ok := positionMap[pID]
 
 		if !ok {
-			l.Error(errPositionNotFound(pID.String()), "position not found")
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errPositionNotFound(pID.String()), body, ""))
+			l.Error(errs.ErrPositionNotFoundWithID(pID.String()), "position not found")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrPositionNotFoundWithID(pID.String()), body, ""))
 			return
 		}
 	}
@@ -667,7 +669,7 @@ func (h *handler) UpdateSkills(c *gin.Context) {
 // @Produce  json
 // @Param Authorization header string true "jwt token"
 // @Param id path string true "Employee ID"
-// @Param Body body UpdatePersonalInfoInput true "Body"
+// @Param Body body request.UpdatePersonalInfoInput true "Body"
 // @Success 200 {object} view.UpdatePersonalEmployeeResponse
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 404 {object} view.ErrorResponse
@@ -676,11 +678,11 @@ func (h *handler) UpdateSkills(c *gin.Context) {
 func (h *handler) UpdatePersonalInfo(c *gin.Context) {
 	employeeID := c.Param("id")
 	if employeeID == "" || !model.IsUUIDFromString(employeeID) {
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, ErrInvalidEmployeeID, nil, ""))
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidEmployeeID, nil, ""))
 		return
 	}
 
-	var body UpdatePersonalInfoInput
+	var body request.UpdatePersonalInfoInput
 	if err := c.ShouldBindJSON(&body); err != nil {
 		if err != nil {
 			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, body, ""))
@@ -699,7 +701,7 @@ func (h *handler) UpdatePersonalInfo(c *gin.Context) {
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Info("employee not found")
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrEmployeeNotFound, nil, ""))
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrEmployeeNotFound, nil, ""))
 			return
 		}
 		l.Error(err, "failed to get employee")
@@ -774,13 +776,13 @@ func (h *handler) UploadContent(c *gin.Context) {
 	// 2.1 validate
 	if !fileExtension.Valid() {
 		l.Info("invalid file extension")
-		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrInvalidFileExtension, nil, ""))
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrInvalidFileExtension, nil, ""))
 		return
 	}
 	if fileExtension == model.ContentExtensionJpg || fileExtension == model.ContentExtensionPng {
 		if fileSize > model.MaxFileSizeImage {
 			l.Info("invalid file size")
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrInvalidFileSize, nil, ""))
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrInvalidFileSize, nil, ""))
 			return
 		}
 		filePrePath = filePrePath + "/images"
@@ -789,7 +791,7 @@ func (h *handler) UploadContent(c *gin.Context) {
 	if fileExtension == model.ContentExtensionPdf {
 		if fileSize > model.MaxFileSizePdf {
 			l.Info("invalid file size")
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, ErrInvalidFileSize, nil, ""))
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrInvalidFileSize, nil, ""))
 			return
 		}
 		filePrePath = filePrePath + "/docs"
@@ -808,8 +810,8 @@ func (h *handler) UploadContent(c *gin.Context) {
 	}
 	if err == nil {
 		l.Info("file already existed")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, ErrFileAlreadyExisted, nil, ""))
-		done(ErrFileAlreadyExisted)
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, errs.ErrFileAlreadyExisted, nil, ""))
+		done(errs.ErrFileAlreadyExisted)
 		return
 	}
 

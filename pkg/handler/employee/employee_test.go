@@ -3,6 +3,7 @@ package employee
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/dwarvesf/fortress-api/pkg/handler/employee/request"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -137,14 +138,14 @@ func TestHandler_UpdateEmployeeStatus(t *testing.T) {
 		name             string
 		wantCode         int
 		id               string
-		body             UpdateWorkingStatusInput
+		body             request.UpdateWorkingStatusInput
 		wantResponsePath string
 	}{
 		{
 			name:     "ok_update_employee_status",
 			wantCode: http.StatusOK,
 			id:       "2655832e-f009-4b73-a535-64c3a22e558f",
-			body: UpdateWorkingStatusInput{
+			body: request.UpdateWorkingStatusInput{
 				EmployeeStatus: "contractor",
 			},
 			wantResponsePath: "testdata/update_employee_status/200.json",
@@ -190,7 +191,7 @@ func Test_UpdateGeneralInfo(t *testing.T) {
 		wantCode         int
 		wantErr          bool
 		wantResponsePath string
-		body             UpdateGeneralInfoInput
+		body             request.UpdateEmployeeGeneralInfoInput
 		id               string
 	}{
 		{
@@ -198,7 +199,7 @@ func Test_UpdateGeneralInfo(t *testing.T) {
 			wantCode:         200,
 			wantErr:          false,
 			wantResponsePath: "testdata/update_general_info/200.json",
-			body: UpdateGeneralInfoInput{
+			body: request.UpdateEmployeeGeneralInfoInput{
 				FullName: "Phạm Đức Thành",
 				Email:    "thanh@d.foundation",
 				Phone:    "0123456788",
@@ -210,7 +211,7 @@ func Test_UpdateGeneralInfo(t *testing.T) {
 			wantCode:         404,
 			wantErr:          true,
 			wantResponsePath: "testdata/update_general_info/404.json",
-			body: UpdateGeneralInfoInput{
+			body: request.UpdateEmployeeGeneralInfoInput{
 				FullName: "Phạm Đức Thành",
 				Email:    "thanh@d.foundation",
 				Phone:    "0123456788",
@@ -258,7 +259,7 @@ func Test_UpdateSkill(t *testing.T) {
 		wantCode         int
 		wantErr          bool
 		wantResponsePath string
-		body             UpdateSkillsInput
+		body             request.UpdateSkillsInput
 		id               string
 	}{
 		{
@@ -266,7 +267,7 @@ func Test_UpdateSkill(t *testing.T) {
 			wantCode:         200,
 			wantErr:          false,
 			wantResponsePath: "testdata/update_skills/200.json",
-			body: UpdateSkillsInput{
+			body: request.UpdateSkillsInput{
 				Positions: []model.UUID{
 					model.MustGetUUIDFromString("11ccffea-2cc9-4e98-9bef-3464dfe4dec8"),
 					model.MustGetUUIDFromString("d796884d-a8c4-4525-81e7-54a3b6099eac"),
@@ -288,7 +289,7 @@ func Test_UpdateSkill(t *testing.T) {
 			wantCode:         404,
 			wantErr:          true,
 			wantResponsePath: "testdata/update_skills/404.json",
-			body: UpdateSkillsInput{
+			body: request.UpdateSkillsInput{
 				Positions: []model.UUID{
 					model.MustGetUUIDFromString("11ccffea-2cc9-4e98-9bef-3464dfe4dec8"),
 					model.MustGetUUIDFromString("d796884d-a8c4-4525-81e7-54a3b6099eac"),
@@ -346,7 +347,7 @@ func Test_Create(t *testing.T) {
 		wantCode         int
 		wantErr          bool
 		wantResponsePath string
-		body             CreateEmployeeInput
+		body             request.CreateEmployeeInput
 		id               string
 	}{
 		{
@@ -354,7 +355,7 @@ func Test_Create(t *testing.T) {
 			wantCode:         400,
 			wantErr:          true,
 			wantResponsePath: "testdata/create/existed_user.json",
-			body: CreateEmployeeInput{
+			body: request.CreateEmployeeInput{
 				FullName:      "Lê Nguyễn Minh Khôi",
 				DisplayName:   "Khoi Le",
 				TeamEmail:     "thanh@d.foundation",
@@ -372,7 +373,7 @@ func Test_Create(t *testing.T) {
 			wantCode:         400,
 			wantErr:          true,
 			wantResponsePath: "testdata/create/validation_err.json",
-			body: CreateEmployeeInput{
+			body: request.CreateEmployeeInput{
 				FullName:      "Lê Nguyễn Minh Khôi",
 				DisplayName:   "",
 				TeamEmail:     "thanh@d.foundation",
@@ -390,7 +391,7 @@ func Test_Create(t *testing.T) {
 			wantCode:         404,
 			wantErr:          true,
 			wantResponsePath: "testdata/create/invalid_uuid.json",
-			body: CreateEmployeeInput{
+			body: request.CreateEmployeeInput{
 				FullName:      "Lê Nguyễn Minh Khôi",
 				DisplayName:   "Khoi Le",
 				TeamEmail:     "thanh@d.foundation",
@@ -450,7 +451,7 @@ func Test_UpdatePersonalInfo(t *testing.T) {
 		wantCode         int
 		wantErr          bool
 		wantResponsePath string
-		body             UpdatePersonalInfoInput
+		body             request.UpdatePersonalInfoInput
 		id               string
 	}{
 		{
@@ -458,7 +459,7 @@ func Test_UpdatePersonalInfo(t *testing.T) {
 			wantCode:         200,
 			wantErr:          false,
 			wantResponsePath: "testdata/update_personal_info/200.json",
-			body: UpdatePersonalInfoInput{
+			body: request.UpdatePersonalInfoInput{
 				DoB:           &dob,
 				Gender:        "Male",
 				Address:       "Phan Huy Ich, Tan Binh District, Ho Chi Minh, Vietnam",
@@ -471,7 +472,7 @@ func Test_UpdatePersonalInfo(t *testing.T) {
 			wantCode:         404,
 			wantErr:          true,
 			wantResponsePath: "testdata/update_personal_info/404.json",
-			body: UpdatePersonalInfoInput{
+			body: request.UpdatePersonalInfoInput{
 				DoB:           &dob,
 				Gender:        "Male",
 				Address:       "Phan Huy Ich, Tan Binh District, Ho Chi Minh, Vietnam",

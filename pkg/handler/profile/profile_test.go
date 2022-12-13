@@ -2,6 +2,7 @@ package profile
 
 import (
 	"encoding/json"
+	"github.com/dwarvesf/fortress-api/pkg/handler/profile/request"
 	"io/ioutil"
 	"net/http/httptest"
 	"strings"
@@ -74,14 +75,14 @@ func TestHandler_UpdateProfileInfo(t *testing.T) {
 		wantCode         int
 		wantErr          bool
 		wantResponsePath string
-		input            UpdateInfoInput
+		input            request.UpdateInfoInput
 	}{
 		{
 			name:             "ok_get_profile",
 			wantCode:         200,
 			wantErr:          false,
 			wantResponsePath: "testdata/update_info/200.json",
-			input: UpdateInfoInput{
+			input: request.UpdateInfoInput{
 				TeamEmail:     "thanh@d.foundation",
 				PersonalEmail: "thanhpham123@gmail.com",
 				PhoneNumber:   "0123456788",
@@ -92,7 +93,7 @@ func TestHandler_UpdateProfileInfo(t *testing.T) {
 			wantCode:         400,
 			wantErr:          true,
 			wantResponsePath: "testdata/update_info/400.json",
-			input: UpdateInfoInput{
+			input: request.UpdateInfoInput{
 				TeamEmail:     "thanh@d.foundation",
 				PersonalEmail: "thanhpham123@gmail.com",
 				PhoneNumber:   "123456788",
