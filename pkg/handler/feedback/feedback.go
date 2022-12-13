@@ -1406,3 +1406,101 @@ func (h *handler) checkDoneTopic(db *gorm.DB, l logger.Logger, eventID string, t
 
 	return http.StatusOK, nil
 }
+
+// DeleteTopicReviewers godoc
+// @Summary Delete reviewers in a topic
+// @Description Delete reviewers in a topic
+// @Tags Feedback
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "jwt token"
+// @Param id path string true "Feedback Event ID"
+// @Param topicID path string true "Employee Event Topic ID"
+// @Param Body body request.DeleteTopicReviewersBody true "Body"
+// @Success 200 {object} view.MessageResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /surveys/{id}/topics/{topicID}/employees [delete]
+func (h *handler) DeleteTopicReviewers(c *gin.Context) {
+	input := request.DeleteTopicReviewersInput{
+		EventID: c.Param("id"),
+		TopicID: c.Param("topicID"),
+	}
+	if err := c.ShouldBindJSON(&input.Body); err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, input, ""))
+		return
+	}
+
+	l := h.logger.Fields(logger.Fields{
+		"handler": "feedback",
+		"method":  "DeleteTopicReviewers",
+		"input":   input,
+	})
+
+	if err := input.Validate(); err != nil {
+		l.Error(err, "validate failed")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, input, ""))
+		return
+	}
+
+	// Check topic and feedback existence
+	_, err := h.store.EmployeeEventTopic.One(h.repo.DB(), input.TopicID, input.EventID)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		l.Error(errs.ErrTopicNotFound, "topic not found")
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrTopicNotFound, input, ""))
+		return
+	}
+
+	if err != nil {
+		l.Error(err, "failed when getting topic")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input, ""))
+		return
+	}
+
+	tx, done := h.repo.NewTransaction()
+
+	if code, err := h.deleteTopicReviewer(tx.DB(), input.EventID, input.TopicID, input.Body.ReviewerIDs); err != nil {
+		l.Error(err, "failed to delete topic reviewers")
+		c.JSON(code, view.CreateResponse[any](nil, nil, done(err), input, ""))
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, done(nil), nil, "ok"))
+}
+
+func (h *handler) deleteTopicReviewer(db *gorm.DB, eventID string, topicID string, reviewerIDs []model.UUID) (int, error) {
+	l := h.logger.Fields(logger.Fields{
+		"handler":     "feedback",
+		"method":      "deleteTopicReviewer",
+		"eventID":     eventID,
+		"topicID":     topicID,
+		"reviewerIDs": reviewerIDs,
+	})
+
+	for _, reviewer := range reviewerIDs {
+		eventReviewer, err := h.store.EmployeeEventReviewer.GetByReviewerID(db, reviewer.String(), topicID)
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			l.Errorf(errs.ErrEventReviewerNotFound, "reviewer not found with reviewerID ", reviewer)
+			return http.StatusNotFound, errs.ErrEventReviewerNotFound
+		}
+		if err != nil {
+			l.Errorf(err, "failed when get employee event reviewer with reviewerID ", reviewer)
+			return http.StatusNotFound, errs.ErrEventReviewerNotFound
+		}
+
+		// Delete employee question
+		if err := h.store.EmployeeEventQuestion.DeleteByEventReviewerID(db, eventReviewer.ID.String()); err != nil {
+			l.Error(err, "failed to delete employee event question")
+			return http.StatusInternalServerError, err
+		}
+
+		// Delete employee reviewer
+		if err := h.store.EmployeeEventReviewer.DeleteByID(db, eventReviewer.ID.String()); err != nil {
+			l.Error(err, "failed to delete employee event reviewer")
+			return http.StatusInternalServerError, err
+		}
+	}
+
+	return http.StatusOK, nil
+}

@@ -81,5 +81,6 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 		surveyGroup.GET("/:id/topics/:topicID", pmw.WithPerm("surveys.read"), h.Feedback.GetPeerReviewDetail)
 		surveyGroup.PUT("/:id/topics/:topicID/employees", pmw.WithPerm("surveys.edit"), h.Feedback.UpdateTopicReviewers)
 		surveyGroup.PUT("/:id/done", pmw.WithPerm("surveys.edit"), h.Feedback.MarkDone)
+		surveyGroup.DELETE("/:id/topics/:topicID/employees", pmw.WithPerm("surveys.edit"), h.Feedback.DeleteTopicReviewers)
 	}
 }

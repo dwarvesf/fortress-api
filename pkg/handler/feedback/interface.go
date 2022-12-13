@@ -16,4 +16,5 @@ type IHandler interface {
 	GetPeerReviewDetail(c *gin.Context)
 	UpdateTopicReviewers(c *gin.Context)
 	MarkDone(c *gin.Context)
+	DeleteTopicReviewers(c *gin.Context)
 }

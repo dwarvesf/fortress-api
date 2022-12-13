@@ -156,3 +156,27 @@ func (i *UpdateTopicReviewersInput) Validate() error {
 
 	return nil
 }
+
+// DeleteTopicReviewersBody view for update topic reviewers
+type DeleteTopicReviewersBody struct {
+	ReviewerIDs []model.UUID `json:"reviewerIDs"`
+}
+
+// DeleteTopicReviewersInput input of update topic reviewers request
+type DeleteTopicReviewersInput struct {
+	EventID string
+	TopicID string
+	Body    DeleteTopicReviewersBody
+}
+
+func (i *DeleteTopicReviewersInput) Validate() error {
+	if i.EventID == "" || !model.IsUUIDFromString(i.EventID) {
+		return errs.ErrInvalidEventID
+	}
+
+	if i.TopicID == "" || !model.IsUUIDFromString(i.TopicID) {
+		return errs.ErrInvalidTopicID
+	}
+
+	return nil
+}

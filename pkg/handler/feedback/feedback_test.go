@@ -656,3 +656,71 @@ func TestHandler_MarkDone(t *testing.T) {
 		})
 	}
 }
+
+func TestHandler_DeleteTopicReviewers(t *testing.T) {
+	cfg := config.LoadTestConfig()
+	loggerMock := logger.NewLogrusLogger()
+	serviceMock := service.New(&cfg)
+	storeMock := store.New()
+	testRepoMock := store.NewPostgresStore(&cfg)
+
+	tests := []struct {
+		name             string
+		input            request.DeleteTopicReviewersInput
+		wantCode         int
+		wantResponsePath string
+	}{
+		{
+			name: "happy_case",
+			input: request.DeleteTopicReviewersInput{
+				EventID: "53546ea4-1d9d-4216-96b2-75f84ec6d750",
+				TopicID: "11121775-118f-4896-8246-d88023b22c7a",
+				Body: request.DeleteTopicReviewersBody{
+					ReviewerIDs: []model.UUID{
+						model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
+					},
+				},
+			},
+			wantCode:         http.StatusOK,
+			wantResponsePath: "testdata/delete_topic_participants/200.json",
+		},
+		{
+			name: "not_found_employee",
+			input: request.DeleteTopicReviewersInput{
+				EventID: "53546ea4-1d9d-4216-96b2-75f84ec6d750",
+				TopicID: "11121775-118f-4896-8246-d88023b22c7a",
+				Body: request.DeleteTopicReviewersBody{
+					ReviewerIDs: []model.UUID{
+						model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98cd"),
+					},
+				},
+			},
+			wantCode:         http.StatusNotFound,
+			wantResponsePath: "testdata/delete_topic_participants/404.json",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			body, err := json.Marshal(tt.input.Body)
+			require.NoError(t, err)
+
+			w := httptest.NewRecorder()
+			ctx, _ := gin.CreateTestContext(w)
+			ctx.Request = httptest.NewRequest(http.MethodPut,
+				fmt.Sprintf("/api/v1/surveys/%s/topics/%s/employees", tt.input.EventID, tt.input.TopicID),
+				bytes.NewBuffer(body))
+			ctx.Request.Header.Set("Authorization", testToken)
+			ctx.AddParam("id", tt.input.EventID)
+			ctx.AddParam("topicID", tt.input.TopicID)
+
+			h := New(storeMock, testRepoMock, serviceMock, loggerMock, &cfg)
+			h.DeleteTopicReviewers(ctx)
+
+			require.Equal(t, tt.wantCode, w.Code)
+			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+			require.NoError(t, err)
+
+			require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Feedback.DeleteTopicReviewers] response mismatched")
+		})
+	}
+}

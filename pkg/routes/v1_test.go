@@ -290,6 +290,10 @@ func Test_loadV1Routes(t *testing.T) {
 				Method:  "PUT",
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/feedback.IHandler.UpdateTopicReviewers-fm",
 			},
+			"DELETE": {
+				Method:  "DELETE",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/feedback.IHandler.DeleteTopicReviewers-fm",
+			},
 		},
 		"/api/v1/surveys/:id/done": {
 			"PUT": {
