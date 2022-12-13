@@ -182,12 +182,13 @@ func (h *handler) Detail(c *gin.Context) {
 	}
 
 	detailInfo := view.FeedbackDetailInfo{
-		Status:     eventReviewer.ReviewerStatus,
-		EmployeeID: topic.EmployeeID.String(),
-		Reviewer:   reviewer,
-		TopicID:    input.TopicID,
-		EventID:    input.EventID,
-		Title:      topic.Title,
+		Status:       eventReviewer.ReviewerStatus,
+		EmployeeID:   topic.EmployeeID.String(),
+		Reviewer:     reviewer,
+		TopicID:      input.TopicID,
+		EventID:      input.EventID,
+		Title:        topic.Title,
+		Relationship: eventReviewer.Relationship,
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToListFeedbackDetails(questions, detailInfo), nil, nil, nil, ""))
