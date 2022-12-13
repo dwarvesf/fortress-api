@@ -1304,3 +1304,105 @@ func (h *handler) createEventQuestions(db *gorm.DB, eventType model.EventType, e
 
 	return nil
 }
+
+// MarkDone godoc
+// @Summary Mark done feedback event
+// @Description Mark done feedback event
+// @Tags Feedback
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "jwt token"
+// @Param id path string true "Feedback Event ID"
+// @Success 200 {object} view.MessageResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /surveys/{id}/done [put]
+func (h *handler) MarkDone(c *gin.Context) {
+	eventID := c.Param("id")
+
+	if eventID == "" || !model.IsUUIDFromString(eventID) {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidEventID, nil, ""))
+		return
+	}
+
+	l := h.logger.Fields(logger.Fields{
+		"handler": "feedback",
+		"method":  "MarkDone",
+		"eventID": eventID,
+	})
+
+	// check feedback event existence
+	exists, err := h.store.FeedbackEvent.IsExist(h.repo.DB(), eventID)
+	if err != nil {
+		l.Error(err, "failed to check feedback event existence")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, eventID, ""))
+		return
+	}
+	if !exists {
+		l.Error(errs.ErrEventNotFound, "feedback event not found")
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrEventNotFound, eventID, ""))
+		return
+	}
+
+	tx, done := h.repo.NewTransaction()
+
+	// Update event status
+	event, err := h.store.FeedbackEvent.One(tx.DB(), eventID)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		l.Error(errs.ErrEventNotFound, "feedback event not found")
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrEventNotFound, eventID, ""))
+		return
+	}
+
+	if err != nil {
+		l.Error(err, "fail to get feedback event")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, eventID, ""))
+	}
+
+	event.Status = model.EventStatusDone
+
+	event, err = h.store.FeedbackEvent.UpdateSelectedFieldsByID(tx.DB(), eventID, *event, "status")
+	if err != nil {
+		l.Error(err, "fail to update status of feedback event")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, eventID, ""))
+	}
+
+	// Get all topics
+	topics, err := h.store.EmployeeEventTopic.All(tx.DB(), eventID)
+	if err != nil {
+		l.Error(err, "failed to get all topics")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), eventID, ""))
+		return
+	}
+
+	// Check done for each topic: all user have to done
+	for _, topic := range topics {
+		if code, err := h.checkDoneTopic(tx.DB(), l, eventID, topic.ID.String()); err != nil {
+			l.Errorf(err, "failed to check done topic with ID %s", topic.ID.String())
+			c.JSON(code, view.CreateResponse[any](nil, nil, done(err), eventID, ""))
+			return
+		}
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, done(nil), nil, "ok"))
+}
+
+func (h *handler) checkDoneTopic(db *gorm.DB, l logger.Logger, eventID string, topicID string) (int, error) {
+	// Get all reviewers
+	reviewers, err := h.store.EmployeeEventReviewer.GetByTopicID(db, topicID)
+	if err != nil {
+		l.Errorf(err, "failed to get all reviewers with topic ID %s", topicID)
+		return http.StatusInternalServerError, err
+	}
+
+	// Check done of employee event reviewer
+	for _, reviewer := range reviewers {
+		if reviewer.ReviewerStatus != model.EventReviewerStatusDone {
+			l.Errorf(errs.ErrUnfinishedReviewer, "the evaluation performed by the reviewer with ID %s has not been finished", topicID, reviewer.ID.String())
+			return http.StatusBadRequest, errs.ErrUnfinishedReviewer
+		}
+	}
+
+	return http.StatusOK, nil
+}

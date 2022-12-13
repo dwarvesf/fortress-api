@@ -605,3 +605,54 @@ func TestHandler_UpdateTopicReviewers(t *testing.T) {
 		})
 	}
 }
+
+func TestHandler_MarkDone(t *testing.T) {
+	cfg := config.LoadTestConfig()
+	loggerMock := logger.NewLogrusLogger()
+	serviceMock := service.New(&cfg)
+	storeMock := store.New()
+	testRepoMock := store.NewPostgresStore(&cfg)
+
+	tests := []struct {
+		name             string
+		wantCode         int
+		wantResponsePath string
+		eventID          string
+	}{
+		{
+			name:             "happy_case",
+			eventID:          "9b3480be-86a2-4ff9-84d8-545a4146122b",
+			wantCode:         http.StatusOK,
+			wantResponsePath: "testdata/mark_done/200.json",
+		},
+		{
+			name:             "not_done_all",
+			eventID:          "53546ea4-1d9d-4216-96b2-75f84ec6d750",
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/mark_done/400.json",
+		},
+		{
+			name:             "not_found",
+			eventID:          "9b3480be-86a2-4ff9-84d8-545a4146122a",
+			wantCode:         http.StatusNotFound,
+			wantResponsePath: "testdata/mark_done/404.json",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			w := httptest.NewRecorder()
+			ctx, _ := gin.CreateTestContext(w)
+			ctx.Request = httptest.NewRequest(http.MethodPut, fmt.Sprintf("/api/v1/surveys/%s/done", tt.eventID), nil)
+			ctx.Request.Header.Set("Authorization", testToken)
+			ctx.AddParam("id", tt.eventID)
+
+			h := New(storeMock, testRepoMock, serviceMock, loggerMock, &cfg)
+			h.MarkDone(ctx)
+			require.Equal(t, tt.wantCode, w.Code)
+			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+			require.NoError(t, err)
+
+			require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Feedback.MarkDone] response mismatched")
+		})
+	}
+}
