@@ -975,13 +975,13 @@ func (h *handler) GetSurveyReviewDetail(c *gin.Context) {
 func (h *handler) DeleteSurveyTopic(c *gin.Context) {
 	eventID := c.Param("id")
 	if eventID == "" || !model.IsUUIDFromString(eventID) {
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, ErrInvalidEventID, nil, ""))
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidEventID, nil, ""))
 		return
 	}
 
 	topicID := c.Param("topicID")
 	if topicID == "" || !model.IsUUIDFromString(eventID) {
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, ErrInvalidTopicID, nil, ""))
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidTopicID, nil, ""))
 		return
 	}
 
@@ -1001,7 +1001,7 @@ func (h *handler) DeleteSurveyTopic(c *gin.Context) {
 	}
 	if !exists {
 		l.Error(err, "feedback event not found")
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, done(ErrEventNotFound), nil, ""))
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, done(errs.ErrEventNotFound), nil, ""))
 		return
 	}
 
@@ -1009,7 +1009,7 @@ func (h *handler) DeleteSurveyTopic(c *gin.Context) {
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Info("topic not found")
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, done(ErrTopicNotFound), nil, ""))
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, done(errs.ErrTopicNotFound), nil, ""))
 			return
 		}
 		l.Error(err, "failed when getting topic")
@@ -1027,7 +1027,7 @@ func (h *handler) DeleteSurveyTopic(c *gin.Context) {
 	reviewIDList := make([]string, 0)
 	for _, r := range reviews {
 		if r.AuthorStatus != model.EventAuthorStatusDraft {
-			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(ErrReviewAlreadySent), nil, ""))
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(errs.ErrReviewAlreadySent), nil, ""))
 			return
 		}
 		reviewIDList = append(reviewIDList, r.ID.String())
