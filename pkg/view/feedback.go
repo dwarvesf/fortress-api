@@ -81,13 +81,14 @@ type FeedBackReviewDetail struct {
 }
 
 type FeedbackDetail struct {
-	Answers    []*QuestionAnswer `json:"answers"`
-	Status     string            `json:"status"`
-	EmployeeID string            `json:"employeeID"`
-	Reviewer   BasicEmployeeInfo `json:"reviewer"`
-	TopicID    string            `json:"topicID"`
-	EventID    string            `json:"eventID"`
-	Title      string            `json:"title"`
+	Answers      []*QuestionAnswer `json:"answers"`
+	Status       string            `json:"status"`
+	EmployeeID   string            `json:"employeeID"`
+	Reviewer     BasicEmployeeInfo `json:"reviewer"`
+	TopicID      string            `json:"topicID"`
+	EventID      string            `json:"eventID"`
+	Title        string            `json:"title"`
+	Relationship string            `json:"relationship"`
 }
 
 type FeedbackDetailResponse struct {
@@ -95,12 +96,13 @@ type FeedbackDetailResponse struct {
 }
 
 type FeedbackDetailInfo struct {
-	Status     model.EventReviewerStatus
-	EmployeeID string
-	Reviewer   *model.Employee
-	TopicID    string
-	EventID    string
-	Title      string
+	Status       model.EventReviewerStatus
+	EmployeeID   string
+	Reviewer     *model.Employee
+	TopicID      string
+	EventID      string
+	Title        string
+	Relationship model.Relationship
 }
 
 func ToListFeedbackDetails(questions []*model.EmployeeEventQuestion, detailInfo FeedbackDetailInfo) FeedbackDetail {
@@ -129,6 +131,7 @@ func ToListFeedbackDetails(questions []*model.EmployeeEventQuestion, detailInfo 
 	rs.TopicID = detailInfo.TopicID
 	rs.EventID = detailInfo.EventID
 	rs.Title = detailInfo.Title
+	rs.Relationship = detailInfo.Relationship.String()
 
 	return rs
 }

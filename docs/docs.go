@@ -4135,6 +4135,9 @@ const docTemplate = `{
                 "eventID": {
                     "type": "string"
                 },
+                "relationship": {
+                    "type": "string"
+                },
                 "reviewer": {
                     "$ref": "#/definitions/view.BasicEmployeeInfo"
                 },
