@@ -575,11 +575,12 @@ func (h *handler) createPeerReview(db *gorm.DB, req request.CreateSurveyFeedback
 
 	eets := make([]model.EmployeeEventTopic, 0)
 	for _, e := range employees {
+		topicTitle := fmt.Sprintf("Peer Performance Review: %s - %s", e.DisplayName, title)
 		eets = append(eets, model.EmployeeEventTopic{
 			BaseModel: model.BaseModel{
 				ID: model.NewUUID(),
 			},
-			Title:      title,
+			Title:      topicTitle,
 			EventID:    event.ID,
 			EmployeeID: e.ID,
 		})
