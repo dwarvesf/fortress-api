@@ -14,6 +14,7 @@ var (
 	ErrInvalidFeedbackID             = errors.New("invalid feedback id")
 	ErrTopicNotFound                 = errors.New("topic not found")
 	ErrEventReviewerNotFound         = errors.New("employee event reviewer not found")
+	ErrEventAlreadyExisted           = errors.New("event already existed")
 
 	ErrInvalidAnswers        = errors.New("invalid answers data")
 	ErrInvalidEventID        = errors.New("invalid event id")

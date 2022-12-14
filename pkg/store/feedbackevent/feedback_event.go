@@ -1,6 +1,8 @@
 package feedbackevent
 
 import (
+	"time"
+
 	"gorm.io/gorm"
 
 	"github.com/dwarvesf/fortress-api/pkg/model"
@@ -58,6 +60,15 @@ func (s *store) One(db *gorm.DB, id string) (*model.FeedbackEvent, error) {
 	var event *model.FeedbackEvent
 	return event, db.Where("id = ?", id).
 		Preload("Employee", "deleted_at IS NULL").
+		First(&event).Error
+}
+
+// One get 1 by id
+func (s *store) GetByTypeInTimeRange(db *gorm.DB, eventType model.EventType, eventSubtype model.EventSubtype, from, to *time.Time) (*model.FeedbackEvent, error) {
+	var event *model.FeedbackEvent
+	return event, db.Where("type = ?", eventType).
+		Where("subtype = ?", eventSubtype).
+		Where("start_date = ? AND end_date = ?", from, to).
 		First(&event).Error
 }
 
