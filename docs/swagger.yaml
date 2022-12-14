@@ -3052,7 +3052,7 @@ paths:
             $ref: '#/definitions/view.ErrorResponse'
       summary: Get list event
       tags:
-      - Feedback
+      - Survey
     post:
       consumes:
       - application/json
@@ -3090,7 +3090,7 @@ paths:
             $ref: '#/definitions/view.ErrorResponse'
       summary: Create new survey
       tags:
-      - Feedback
+      - Survey
   /surveys/{id}:
     delete:
       consumes:
@@ -3128,7 +3128,7 @@ paths:
             $ref: '#/definitions/view.ErrorResponse'
       summary: Delete survey by id
       tags:
-      - Feedback
+      - Survey
     get:
       consumes:
       - application/json
@@ -3173,7 +3173,7 @@ paths:
             $ref: '#/definitions/view.ErrorResponse'
       summary: Get survey detail
       tags:
-      - Feedback
+      - Survey
   /surveys/{id}/done:
     put:
       consumes:
@@ -3211,7 +3211,7 @@ paths:
             $ref: '#/definitions/view.ErrorResponse'
       summary: Mark done feedback event
       tags:
-      - Feedback
+      - Survey
   /surveys/{id}/send:
     post:
       consumes:
@@ -3255,7 +3255,7 @@ paths:
             $ref: '#/definitions/view.ErrorResponse'
       summary: Send the performance review
       tags:
-      - Feedback
+      - Survey
   /surveys/{id}/topics/{topicID}:
     delete:
       consumes:
@@ -3288,7 +3288,7 @@ paths:
             $ref: '#/definitions/view.ErrorResponse'
       summary: delete survey topic
       tags:
-      - Feedback
+      - Survey
     get:
       consumes:
       - application/json
@@ -3330,7 +3330,7 @@ paths:
             $ref: '#/definitions/view.ErrorResponse'
       summary: Get detail for peer review
       tags:
-      - Feedback
+      - Survey
   /surveys/{id}/topics/{topicID}/employees:
     delete:
       consumes:
@@ -3379,7 +3379,7 @@ paths:
             $ref: '#/definitions/view.ErrorResponse'
       summary: Delete reviewers in a topic
       tags:
-      - Feedback
+      - Survey
     put:
       consumes:
       - application/json
@@ -3417,7 +3417,7 @@ paths:
             $ref: '#/definitions/view.ErrorResponse'
       summary: Update reviewers in a topic
       tags:
-      - Feedback
+      - Survey
   /surveys/{id}/topics/{topicID}/reviews/{reviewID}:
     post:
       consumes:
@@ -3450,7 +3450,7 @@ paths:
             $ref: '#/definitions/view.ErrorResponse'
       summary: Get survey review detail
       tags:
-      - Feedback
+      - Survey
 securityDefinitions:
   BasicAuth:
     type: basic

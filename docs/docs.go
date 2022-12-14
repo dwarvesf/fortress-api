@@ -2401,7 +2401,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Feedback"
+                    "Survey"
                 ],
                 "summary": "Get list event",
                 "parameters": [
@@ -2462,7 +2462,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Feedback"
+                    "Survey"
                 ],
                 "summary": "Create new survey",
                 "parameters": [
@@ -2521,7 +2521,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Feedback"
+                    "Survey"
                 ],
                 "summary": "Get survey detail",
                 "parameters": [
@@ -2588,7 +2588,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Feedback"
+                    "Survey"
                 ],
                 "summary": "Delete survey by id",
                 "parameters": [
@@ -2645,7 +2645,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Feedback"
+                    "Survey"
                 ],
                 "summary": "Mark done feedback event",
                 "parameters": [
@@ -2702,7 +2702,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Feedback"
+                    "Survey"
                 ],
                 "summary": "Send the performance review",
                 "parameters": [
@@ -2768,7 +2768,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Feedback"
+                    "Survey"
                 ],
                 "summary": "Get detail for peer review",
                 "parameters": [
@@ -2830,7 +2830,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Feedback"
+                    "Survey"
                 ],
                 "summary": "delete survey topic",
                 "parameters": [
@@ -2880,7 +2880,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Feedback"
+                    "Survey"
                 ],
                 "summary": "Update reviewers in a topic",
                 "parameters": [
@@ -2937,7 +2937,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Feedback"
+                    "Survey"
                 ],
                 "summary": "Delete reviewers in a topic",
                 "parameters": [
@@ -3010,7 +3010,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Feedback"
+                    "Survey"
                 ],
                 "summary": "Get survey review detail",
                 "parameters": [
