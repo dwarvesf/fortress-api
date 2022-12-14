@@ -272,23 +272,35 @@ type Survey struct {
 }
 
 type FeedbackCount struct {
-	Total int64 `json:"total"`
-	Sent  int64 `json:"sent"`
-	Done  int64 `json:"done"`
+	Total int `json:"total"`
+	Sent  int `json:"sent"`
+	Done  int `json:"done"`
 }
 
 func ToListSurvey(events []*model.FeedbackEvent) []Survey {
 	var results = make([]Survey, 0, len(events))
 
 	for _, e := range events {
-		var done, total int64
+		var sent, done int
 
 		for _, topic := range e.Topics {
-			total += int64(len(topic.EmployeeEventReviewers))
+			var topicSent, topicDone int
+
 			for _, reviewer := range topic.EmployeeEventReviewers {
-				if reviewer.AuthorStatus == model.EventAuthorStatusDone {
-					done++
+				if reviewer.AuthorStatus != model.EventAuthorStatusDraft {
+					topicSent++
 				}
+				if reviewer.AuthorStatus == model.EventAuthorStatusDone {
+					topicDone++
+				}
+			}
+
+			if topicSent == len(topic.EmployeeEventReviewers) {
+				sent++
+			}
+
+			if topicDone == len(topic.EmployeeEventReviewers) {
+				done++
 			}
 		}
 
@@ -301,8 +313,8 @@ func ToListSurvey(events []*model.FeedbackEvent) []Survey {
 			StartDate: e.StartDate,
 			EndDate:   e.EndDate,
 			Count: FeedbackCount{
-				Total: total,
-				Sent:  total,
+				Total: len(e.Topics),
+				Sent:  sent,
 				Done:  done,
 			},
 		})
@@ -353,14 +365,13 @@ func ToListSurveyDetail(event *model.FeedbackEvent) SurveyDetail {
 	var topics = make([]Topic, 0, len(event.Topics))
 
 	for _, topic := range event.Topics {
-		total := int64(len(topic.EmployeeEventReviewers))
-		var sent, done int64
+		var sent, done int
 
 		for _, reviewer := range topic.EmployeeEventReviewers {
-			switch reviewer.AuthorStatus {
-			case model.EventAuthorStatusSent:
+			if reviewer.AuthorStatus != model.EventAuthorStatusDraft {
 				sent++
-			case model.EventAuthorStatusDone:
+			}
+			if reviewer.AuthorStatus == model.EventAuthorStatusDone {
 				done++
 			}
 		}
@@ -379,7 +390,7 @@ func ToListSurveyDetail(event *model.FeedbackEvent) SurveyDetail {
 			Subtype:  topic.Event.Subtype.String(),
 			Employee: *ToBasicEmployeeInfo(*topic.Employee),
 			Count: FeedbackCount{
-				Total: total,
+				Total: len(topic.EmployeeEventReviewers),
 				Sent:  sent,
 				Done:  done,
 			},
