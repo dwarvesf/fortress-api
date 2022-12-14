@@ -88,7 +88,7 @@ func (s *store) GetByEventIDWithPagination(db *gorm.DB, eventID string, paginati
 
 	query := db.
 		Table("employee_event_topics").
-		Where("event_id = ?", eventID).
+		Where("event_id = ? AND deleted_at IS NULL", eventID).
 		Count(&total).
 		Order(pagination.Sort)
 
@@ -118,6 +118,6 @@ func (s *store) DeleteByEventID(db *gorm.DB, eventID string) error {
 }
 
 // DeleteByID
-func (s *store) DeleteByID(db *gorm.DB, ID string) error {
-	return db.Where("id = ?", ID).Delete(&model.EmployeeEventTopic{}).Error
+func (s *store) DeleteByID(db *gorm.DB, id string) error {
+	return db.Where("id = ?", id).Delete(&model.EmployeeEventTopic{}).Error
 }

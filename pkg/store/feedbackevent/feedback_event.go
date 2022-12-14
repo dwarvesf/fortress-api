@@ -32,7 +32,7 @@ func (s *store) GetBySubtypeWithPagination(db *gorm.DB, subtype string, paginati
 	var total int64
 
 	query := db.Table("feedback_events").
-		Where("subtype = ?", subtype).
+		Where("subtype = ? AND deleted_at IS NULL", subtype).
 		Count(&total).
 		Order(pagination.Sort)
 
