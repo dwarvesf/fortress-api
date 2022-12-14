@@ -2393,7 +2393,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "Feedback"
+                    "Survey"
                 ],
                 "summary": "Get list event",
                 "parameters": [
@@ -2454,7 +2454,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "Feedback"
+                    "Survey"
                 ],
                 "summary": "Create new survey",
                 "parameters": [
@@ -2513,7 +2513,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "Feedback"
+                    "Survey"
                 ],
                 "summary": "Get survey detail",
                 "parameters": [
@@ -2580,7 +2580,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "Feedback"
+                    "Survey"
                 ],
                 "summary": "Delete survey by id",
                 "parameters": [
@@ -2637,7 +2637,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "Feedback"
+                    "Survey"
                 ],
                 "summary": "Mark done feedback event",
                 "parameters": [
@@ -2694,7 +2694,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "Feedback"
+                    "Survey"
                 ],
                 "summary": "Send the performance review",
                 "parameters": [
@@ -2760,7 +2760,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "Feedback"
+                    "Survey"
                 ],
                 "summary": "Get detail for peer review",
                 "parameters": [
@@ -2822,7 +2822,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "Feedback"
+                    "Survey"
                 ],
                 "summary": "delete survey topic",
                 "parameters": [
@@ -2872,7 +2872,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "Feedback"
+                    "Survey"
                 ],
                 "summary": "Update reviewers in a topic",
                 "parameters": [
@@ -2929,7 +2929,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "Feedback"
+                    "Survey"
                 ],
                 "summary": "Delete reviewers in a topic",
                 "parameters": [
@@ -3002,7 +3002,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "Feedback"
+                    "Survey"
                 ],
                 "summary": "Get survey review detail",
                 "parameters": [

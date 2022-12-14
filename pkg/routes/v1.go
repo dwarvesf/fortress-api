@@ -71,16 +71,16 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 
 	surveyGroup := v1.Group("/surveys")
 	{
-		surveyGroup.POST("", amw.WithAuth, pmw.WithPerm("surveys.create"), h.Feedback.CreateSurvey)
-		surveyGroup.GET("", pmw.WithPerm("surveys.read"), h.Feedback.ListSurvey)
-		surveyGroup.GET("/:id", pmw.WithPerm("surveys.read"), h.Feedback.GetSurveyDetail)
-		surveyGroup.DELETE("/:id", pmw.WithPerm("surveys.delete"), h.Feedback.DeleteSurvey)
-		surveyGroup.POST("/:id/send", pmw.WithPerm("surveys.create"), h.Feedback.SendPerformanceReview)
-		surveyGroup.GET("/:id/topics/:topicID/reviews/:reviewID", amw.WithAuth, pmw.WithPerm("employeeEventQuestions.read"), h.Feedback.GetSurveyReviewDetail)
-		surveyGroup.DELETE("/:id/topics/:topicID", amw.WithAuth, pmw.WithPerm("surveys.delete"), h.Feedback.DeleteSurveyTopic)
-		surveyGroup.GET("/:id/topics/:topicID", pmw.WithPerm("surveys.read"), h.Feedback.GetPeerReviewDetail)
-		surveyGroup.PUT("/:id/topics/:topicID/employees", pmw.WithPerm("surveys.edit"), h.Feedback.UpdateTopicReviewers)
-		surveyGroup.PUT("/:id/done", pmw.WithPerm("surveys.edit"), h.Feedback.MarkDone)
-		surveyGroup.DELETE("/:id/topics/:topicID/employees", pmw.WithPerm("surveys.edit"), h.Feedback.DeleteTopicReviewers)
+		surveyGroup.POST("", amw.WithAuth, pmw.WithPerm("surveys.create"), h.Survey.CreateSurvey)
+		surveyGroup.GET("", pmw.WithPerm("surveys.read"), h.Survey.ListSurvey)
+		surveyGroup.GET("/:id", pmw.WithPerm("surveys.read"), h.Survey.GetSurveyDetail)
+		surveyGroup.DELETE("/:id", pmw.WithPerm("surveys.delete"), h.Survey.DeleteSurvey)
+		surveyGroup.POST("/:id/send", pmw.WithPerm("surveys.create"), h.Survey.SendPerformanceReview)
+		surveyGroup.GET("/:id/topics/:topicID/reviews/:reviewID", amw.WithAuth, pmw.WithPerm("employeeEventQuestions.read"), h.Survey.GetSurveyReviewDetail)
+		surveyGroup.DELETE("/:id/topics/:topicID", amw.WithAuth, pmw.WithPerm("surveys.delete"), h.Survey.DeleteSurveyTopic)
+		surveyGroup.GET("/:id/topics/:topicID", pmw.WithPerm("surveys.read"), h.Survey.GetPeerReviewDetail)
+		surveyGroup.PUT("/:id/topics/:topicID/employees", pmw.WithPerm("surveys.edit"), h.Survey.UpdateTopicReviewers)
+		surveyGroup.PUT("/:id/done", pmw.WithPerm("surveys.edit"), h.Survey.MarkDone)
+		surveyGroup.DELETE("/:id/topics/:topicID/employees", pmw.WithPerm("surveys.edit"), h.Survey.DeleteTopicReviewers)
 	}
 }

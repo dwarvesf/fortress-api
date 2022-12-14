@@ -256,59 +256,59 @@ func Test_loadV1Routes(t *testing.T) {
 		"/api/v1/surveys": {
 			"POST": {
 				Method:  "POST",
-				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/feedback.IHandler.CreateSurvey-fm",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/survey.IHandler.CreateSurvey-fm",
 			},
 			"GET": {
 				Method:  "GET",
-				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/feedback.IHandler.ListSurvey-fm",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/survey.IHandler.ListSurvey-fm",
 			},
 		},
 		"/api/v1/surveys/:id/send": {
 			"POST": {
 				Method:  "POST",
-				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/feedback.IHandler.SendPerformanceReview-fm",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/survey.IHandler.SendPerformanceReview-fm",
 			},
 		},
 		"/api/v1/surveys/:id": {
 			"GET": {
 				Method:  "GET",
-				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/feedback.IHandler.GetSurveyDetail-fm",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/survey.IHandler.GetSurveyDetail-fm",
 			},
 			"DELETE": {
 				Method:  "DELETE",
-				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/feedback.IHandler.DeleteSurvey-fm",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/survey.IHandler.DeleteSurvey-fm",
 			},
 		},
 		"/api/v1/surveys/:id/topics/:topicID/reviews/:reviewID": {
 			"GET": {
 				Method:  "GET",
-				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/feedback.IHandler.GetSurveyReviewDetail-fm",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/survey.IHandler.GetSurveyReviewDetail-fm",
 			},
 		},
 		"/api/v1/surveys/:id/topics/:topicID/employees": {
 			"PUT": {
 				Method:  "PUT",
-				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/feedback.IHandler.UpdateTopicReviewers-fm",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/survey.IHandler.UpdateTopicReviewers-fm",
 			},
 			"DELETE": {
 				Method:  "DELETE",
-				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/feedback.IHandler.DeleteTopicReviewers-fm",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/survey.IHandler.DeleteTopicReviewers-fm",
 			},
 		},
 		"/api/v1/surveys/:id/done": {
 			"PUT": {
 				Method:  "PUT",
-				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/feedback.IHandler.MarkDone-fm",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/survey.IHandler.MarkDone-fm",
 			},
 		},
 		"/api/v1/surveys/:id/topics/:topicID": {
 			"DELETE": {
 				Method:  "DELETE",
-				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/feedback.IHandler.DeleteSurveyTopic-fm",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/survey.IHandler.DeleteSurveyTopic-fm",
 			},
 			"GET": {
 				Method:  "GET",
-				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/feedback.IHandler.GetPeerReviewDetail-fm",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/survey.IHandler.GetPeerReviewDetail-fm",
 			},
 		},
 	}
