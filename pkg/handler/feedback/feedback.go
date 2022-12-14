@@ -542,7 +542,17 @@ func (h *handler) createPeerReview(db *gorm.DB, req request.CreateSurveyFeedback
 		return 400, errs.ErrInvalidQuarter
 	}
 
-	//1.2 check employee existed
+	//1.2 check event existed
+	_, err := h.store.FeedbackEvent.GetByTypeInTimeRange(db, model.EventTypeSurvey, model.EventSubtypePeerReview, &startTime, &endTime)
+	if err == nil {
+		return 400, errs.ErrEventAlreadyExisted
+	} else {
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return 500, err
+		}
+	}
+
+	//1.3 check employee existed
 	createdBy, err := h.store.Employee.One(db, userID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
