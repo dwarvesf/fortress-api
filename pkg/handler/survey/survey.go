@@ -915,7 +915,7 @@ func (h *handler) DeleteSurveyTopic(c *gin.Context) {
 		return
 	}
 
-	if err := h.store.EmployeeEventTopic.DeleteByID(tx.DB(), eventID); err != nil {
+	if err := h.store.EmployeeEventTopic.DeleteByID(tx.DB(), topicID); err != nil {
 		l.Error(err, "failed to delete event topics")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), nil, ""))
 		return

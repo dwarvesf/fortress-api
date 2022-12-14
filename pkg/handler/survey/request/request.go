@@ -1,7 +1,7 @@
 package request
 
 import (
-	"github.com/dwarvesf/fortress-api/pkg/handler/feedback/errs"
+	"github.com/dwarvesf/fortress-api/pkg/handler/survey/errs"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 )
 
