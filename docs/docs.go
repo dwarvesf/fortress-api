@@ -4881,6 +4881,12 @@ const docTemplate = `{
                         "$ref": "#/definitions/view.BasicEmployeeInfo"
                     }
                 },
+                "reviewID": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
                 "subtype": {
                     "type": "string"
                 },

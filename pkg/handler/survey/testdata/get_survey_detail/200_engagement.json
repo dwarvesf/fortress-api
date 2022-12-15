@@ -21,9 +21,11 @@
             {
                 "id": "11121775-118f-4896-8246-d88023b22c7a",
                 "eventID": "53546ea4-1d9d-4216-96b2-75f84ec6d750",
+                "reviewID": "41f6a7fb-baa2-4e61-8035-e36d752dc611",
                 "title": "Engagement Review by Huy",
                 "type": "survey",
                 "subtype": "engagement",
+                "status": "sent",
                 "employee": {
                     "id": "ecea9d15-05ba-4a4e-9787-54210e3b98ce",
                     "fullName": "Nguyễn Hoàng Huy",
@@ -36,9 +38,11 @@
             {
                 "id": "ebf376a6-3d11-4cea-b464-593103258838",
                 "eventID": "53546ea4-1d9d-4216-96b2-75f84ec6d750",
+                "reviewID": "6501fa7d-36f2-4cce-a223-6e15886c44c6",
                 "title": "Engagement Survey for Thanh - Q4, 2022",
                 "type": "survey",
                 "subtype": "engagement",
+                "status": "sent",
                 "employee": {
                     "id": "2655832e-f009-4b73-a535-64c3a22e558f",
                     "fullName": "Phạm Đức Thành",
