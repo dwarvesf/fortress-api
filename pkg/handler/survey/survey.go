@@ -469,7 +469,7 @@ func (h *handler) createEngagement(db *gorm.DB, req request.CreateSurveyFeedback
 
 	eets := make([]model.EmployeeEventTopic, 0)
 	for _, e := range employees {
-		topicTitle := fmt.Sprintf("Engagement Survey for %s, %s", e.DisplayName, title)
+		topicTitle := fmt.Sprintf("Engagement Survey for %s - %s", e.DisplayName, title)
 		eets = append(eets, model.EmployeeEventTopic{
 			BaseModel: model.BaseModel{
 				ID: model.NewUUID(),

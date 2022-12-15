@@ -46,7 +46,7 @@ build:
 dev:
 	go run ./cmd/server/main.go
 
-test:
+test: reset-test-db
 	@PROJECT_PATH=$(shell pwd) go test -cover ./... -count=1 -p=1 
 
 migrate-test:
@@ -66,11 +66,15 @@ docker-build:
 	--build-arg DEFAULT_PORT="${DEFAULT_PORT}" \
 	-t ${APP_NAME}:latest .
 
-seed-db:
-	@docker exec -t fortress-postgres sh -c "mkdir -p /seed"
-	@docker exec -t fortress-postgres sh -c "rm -rf /seed/*"
-	@docker cp migrations/seed fortress-postgres:/
-	@docker exec -t fortress-postgres sh -c "PGPASSWORD=postgres psql -U postgres -d fortress_local -f /seed/seed.sql"
+reset-db:
+	${APP_ENVIRONMENT} sql-migrate down -env=local -limit=0
+	${APP_ENVIRONMENT} sql-migrate up -env=local
+	make seed
+
+reset-test-db:
+	${APP_ENVIRONMENT} sql-migrate down -env=test -limit=0
+	${APP_ENVIRONMENT} sql-migrate up -env=test
+	make seed-test
 
 gen-mock:
 	echo "add later"
