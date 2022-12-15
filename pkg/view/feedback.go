@@ -347,10 +347,10 @@ type Topic struct {
 	Subtype      string              `json:"subtype"`
 	Employee     BasicEmployeeInfo   `json:"employee"`
 	Participants []BasicEmployeeInfo `json:"participants"`
-	Count        FeedbackCount       `json:"count"`
+	Count        *FeedbackCount      `json:"count"`
 }
 
-func ToListSurveyDetail(event *model.FeedbackEvent) SurveyDetail {
+func ToSurveyDetail(event *model.FeedbackEvent) SurveyDetail {
 	result := SurveyDetail{
 		EventID:   event.ID.String(),
 		Title:     event.Title,
@@ -376,26 +376,33 @@ func ToListSurveyDetail(event *model.FeedbackEvent) SurveyDetail {
 			}
 		}
 
-		participants := make([]BasicEmployeeInfo, 0, len(topic.EmployeeEventReviewers))
-		for _, reviewer := range topic.EmployeeEventReviewers {
-			employee := ToBasicEmployeeInfo(*reviewer.Reviewer)
-			participants = append(participants, *employee)
-		}
-
-		topics = append(topics, Topic{
+		newTopic := Topic{
 			ID:       topic.ID.String(),
 			EventID:  topic.EventID.String(),
 			Title:    topic.Title,
 			Type:     topic.Event.Type.String(),
 			Subtype:  topic.Event.Subtype.String(),
 			Employee: *ToBasicEmployeeInfo(*topic.Employee),
-			Count: FeedbackCount{
+		}
+
+		if topic.Event.Subtype == model.EventSubtypePeerReview {
+			participants := make([]BasicEmployeeInfo, 0, len(topic.EmployeeEventReviewers))
+			for _, reviewer := range topic.EmployeeEventReviewers {
+				employee := ToBasicEmployeeInfo(*reviewer.Reviewer)
+				participants = append(participants, *employee)
+			}
+
+			count := &FeedbackCount{
 				Total: len(topic.EmployeeEventReviewers),
 				Sent:  sent,
 				Done:  done,
-			},
-			Participants: participants,
-		})
+			}
+
+			newTopic.Participants = participants
+			newTopic.Count = count
+		}
+
+		topics = append(topics, newTopic)
 	}
 
 	result.Topics = topics

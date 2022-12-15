@@ -74,7 +74,6 @@ func TestHandler_GetSurveyDetail(t *testing.T) {
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg)
 	storeMock := store.New()
-	testRepoMock := store.NewPostgresStore(&cfg)
 
 	tests := []struct {
 		name             string
@@ -89,6 +88,12 @@ func TestHandler_GetSurveyDetail(t *testing.T) {
 			wantResponsePath: "testdata/get_survey_detail/200_happy_case.json",
 		},
 		{
+			name:             "ok_engagement",
+			id:               "53546ea4-1d9d-4216-96b2-75f84ec6d750",
+			wantCode:         http.StatusOK,
+			wantResponsePath: "testdata/get_survey_detail/200_engagement.json",
+		},
+		{
 			name:             "event_id_not_found",
 			id:               "8a5bfedb-6e11-4f5c-82d9-2635cfcce123",
 			wantCode:         http.StatusNotFound,
@@ -97,19 +102,22 @@ func TestHandler_GetSurveyDetail(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			w := httptest.NewRecorder()
-			ctx, _ := gin.CreateTestContext(w)
-			ctx.Request = httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/surveys/%s", tt.id), nil)
-			ctx.Request.Header.Set("Authorization", testToken)
-			ctx.AddParam("id", tt.id)
+			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				testhelper.LoadTestSQLFile(t, txRepo, "./testdata/get_survey_detail/get_survey_detail.sql")
+				w := httptest.NewRecorder()
+				ctx, _ := gin.CreateTestContext(w)
+				ctx.Request = httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/surveys/%s", tt.id), nil)
+				ctx.Request.Header.Set("Authorization", testToken)
+				ctx.AddParam("id", tt.id)
 
-			h := New(storeMock, testRepoMock, serviceMock, loggerMock, &cfg)
-			h.GetSurveyDetail(ctx)
-			require.Equal(t, tt.wantCode, w.Code)
-			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
-			require.NoError(t, err)
+				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+				h.GetSurveyDetail(ctx)
+				require.Equal(t, tt.wantCode, w.Code)
+				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				require.NoError(t, err)
 
-			require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Survey.GetSurveyDetail] response mismatched")
+				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Survey.GetSurveyDetail] response mismatched")
+			})
 		})
 	}
 }

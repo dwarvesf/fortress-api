@@ -145,7 +145,7 @@ func (h *handler) GetSurveyDetail(c *gin.Context) {
 
 	event.Topics = topics
 
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToListSurveyDetail(event),
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToSurveyDetail(event),
 		&view.PaginationResponse{Pagination: input.Pagination, Total: total}, nil, nil, ""))
 }
 
