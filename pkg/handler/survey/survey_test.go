@@ -125,15 +125,15 @@ func TestHandler_SendPerformanceReview(t *testing.T) {
 		id               string
 		wantCode         int
 		wantResponsePath string
-		body             request.SendPerformanceReviewInput
+		body             request.SendSurveyInput
 	}{
 		{
 			name:             "happy_case",
 			id:               "8a5bfedb-6e11-4f5c-82d9-2635cfcce3e2",
 			wantCode:         http.StatusOK,
-			wantResponsePath: "testdata/send_performance_review/200.json",
-			body: request.SendPerformanceReviewInput{
-				Topics: []request.PerformanceReviewTopic{
+			wantResponsePath: "testdata/send_survey/200_perfomance_review.json",
+			body: request.SendSurveyInput{
+				Topics: []request.Survey{
 					{
 						TopicID: model.MustGetUUIDFromString("e4a33adc-2495-43cf-b816-32feb8d5250d"),
 						Participants: []model.UUID{
@@ -144,12 +144,28 @@ func TestHandler_SendPerformanceReview(t *testing.T) {
 			},
 		},
 		{
+			name:             "ok_send_engagement",
+			id:               "53546ea4-1d9d-4216-96b2-75f84ec6d750",
+			wantCode:         http.StatusOK,
+			wantResponsePath: "testdata/send_survey/200_send_engagement.json",
+			body: request.SendSurveyInput{
+				Topics: []request.Survey{
+					{
+						TopicID: model.MustGetUUIDFromString("ebf376a6-3d11-4cea-b464-593103258838"),
+						Participants: []model.UUID{
+							model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
+						},
+					},
+				},
+			},
+		},
+		{
 			name:             "not_found_case",
 			id:               "8a5bfedb-6e11-4f5c-82d9-2635cfcce3e1",
 			wantCode:         http.StatusNotFound,
-			wantResponsePath: "testdata/send_performance_review/404.json",
-			body: request.SendPerformanceReviewInput{
-				Topics: []request.PerformanceReviewTopic{
+			wantResponsePath: "testdata/send_survey/404.json",
+			body: request.SendSurveyInput{
+				Topics: []request.Survey{
 					{
 						TopicID: model.MustGetUUIDFromString("e4a33adc-2495-43cf-b816-32feb8d5250d"),
 						Participants: []model.UUID{
@@ -163,6 +179,7 @@ func TestHandler_SendPerformanceReview(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				testhelper.LoadTestSQLFile(t, txRepo, "./testdata/send_survey/send_survey.sql")
 				w := httptest.NewRecorder()
 				ctx, _ := gin.CreateTestContext(w)
 				byteReq, _ := json.Marshal(tt.body)
@@ -172,12 +189,12 @@ func TestHandler_SendPerformanceReview(t *testing.T) {
 				ctx.AddParam("id", tt.id)
 
 				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
-				h.SendPerformanceReview(ctx)
+				h.SendSurvey(ctx)
 				require.Equal(t, tt.wantCode, w.Code)
 				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
 				require.NoError(t, err)
 
-				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Survey.SendPerformanceReview] response mismatched")
+				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Survey.SendSurvey] response mismatched")
 			})
 		})
 	}

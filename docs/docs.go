@@ -2694,7 +2694,7 @@ const docTemplate = `{
         },
         "/surveys/{id}/send": {
             "post": {
-                "description": "Send the performance review",
+                "description": "Send the survey",
                 "consumes": [
                     "application/json"
                 ],
@@ -2704,7 +2704,7 @@ const docTemplate = `{
                 "tags": [
                     "Survey"
                 ],
-                "summary": "Send the performance review",
+                "summary": "Send the survey",
                 "parameters": [
                     {
                         "type": "string",
@@ -2726,7 +2726,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/request.SendPerformanceReviewInput"
+                            "$ref": "#/definitions/request.SendSurveyInput"
                         }
                     }
                 ],
@@ -3052,6 +3052,18 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "gorm.DeletedAt": {
+            "type": "object",
+            "properties": {
+                "time": {
+                    "type": "string"
+                },
+                "valid": {
+                    "description": "Valid is true if Time is not NULL",
+                    "type": "boolean"
+                }
+            }
+        },
         "model.Chapter": {
             "type": "object",
             "properties": {
@@ -3062,7 +3074,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "id": {
                     "type": "string"
@@ -3094,7 +3106,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "id": {
                     "type": "string"
@@ -3117,7 +3129,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "id": {
                     "type": "string"
@@ -3140,7 +3152,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "id": {
                     "type": "string"
@@ -3163,7 +3175,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "id": {
                     "type": "string"
@@ -3186,7 +3198,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "id": {
                     "type": "string"
@@ -3416,25 +3428,7 @@ const docTemplate = `{
                 }
             }
         },
-        "request.PerformanceReviewTopic": {
-            "type": "object",
-            "required": [
-                "participants",
-                "topicID"
-            ],
-            "properties": {
-                "participants": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "topicID": {
-                    "type": "string"
-                }
-            }
-        },
-        "request.SendPerformanceReviewInput": {
+        "request.SendSurveyInput": {
             "type": "object",
             "required": [
                 "topics"
@@ -3443,7 +3437,7 @@ const docTemplate = `{
                 "topics": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/request.PerformanceReviewTopic"
+                        "$ref": "#/definitions/request.Survey"
                     }
                 }
             }
@@ -3462,6 +3456,24 @@ const docTemplate = `{
                     }
                 },
                 "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "request.Survey": {
+            "type": "object",
+            "required": [
+                "participants",
+                "topicID"
+            ],
+            "properties": {
+                "participants": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "topicID": {
                     "type": "string"
                 }
             }
@@ -3968,7 +3980,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "deliveryManager": {
                     "$ref": "#/definitions/view.ProjectHead"
@@ -4040,7 +4052,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "discordID": {
                     "type": "string"
@@ -4504,7 +4516,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "deliveryManager": {
                     "$ref": "#/definitions/view.ProjectHead"
@@ -4903,7 +4915,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "discordID": {
                     "type": "string"
@@ -4948,7 +4960,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "gender": {
                     "type": "string"
@@ -4979,7 +4991,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "discordID": {
                     "type": "string"
@@ -5087,7 +5099,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "id": {
                     "type": "string"
@@ -5127,7 +5139,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "endDate": {
                     "type": "string"

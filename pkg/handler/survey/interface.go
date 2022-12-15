@@ -6,7 +6,7 @@ type IHandler interface {
 	ListSurvey(c *gin.Context)
 	GetSurveyDetail(c *gin.Context)
 	GetSurveyReviewDetail(c *gin.Context)
-	SendPerformanceReview(c *gin.Context)
+	SendSurvey(c *gin.Context)
 	CreateSurvey(c *gin.Context)
 	DeleteSurvey(c *gin.Context)
 	DeleteSurveyTopic(c *gin.Context)

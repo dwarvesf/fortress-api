@@ -266,7 +266,7 @@ func Test_loadV1Routes(t *testing.T) {
 		"/api/v1/surveys/:id/send": {
 			"POST": {
 				Method:  "POST",
-				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/survey.IHandler.SendPerformanceReview-fm",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/survey.IHandler.SendSurvey-fm",
 			},
 		},
 		"/api/v1/surveys/:id": {
