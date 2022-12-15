@@ -247,7 +247,7 @@ func ToContentData(url string) *EmployeeContentData {
 	}
 }
 
-func ToBasicEmployeeInfo(employee model.Employee) *BasicEmployeeInfo {
+func toBasicEmployeeInfo(employee model.Employee) *BasicEmployeeInfo {
 	return &BasicEmployeeInfo{
 		ID:          employee.ID.String(),
 		FullName:    employee.FullName,

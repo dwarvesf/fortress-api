@@ -46,7 +46,7 @@ func ToListFeedback(eTopics []*model.EmployeeEventTopic) []Feedback {
 			IsRead:          topic.EmployeeEventReviewers[0].IsRead,
 			EventReviewerID: topic.EmployeeEventReviewers[0].ReviewerID.String(),
 			LastUpdated:     topic.EmployeeEventReviewers[0].UpdatedAt,
-			Author:          ToBasicEmployeeInfo(topic.Event.Employee),
+			Author:          toBasicEmployeeInfo(topic.Event.Employee),
 		}
 
 		if topic.Event.Type == model.EventTypeSurvey {
@@ -157,7 +157,7 @@ type SurveyTopicDetailResponse struct {
 func ToPeerReviewDetail(topic *model.EmployeeEventTopic) SurveyTopicDetail {
 	rs := SurveyTopicDetail{
 		TopicID:  topic.ID.String(),
-		Employee: ToBasicEmployeeInfo(*topic.Employee),
+		Employee: toBasicEmployeeInfo(*topic.Employee),
 		Title:    topic.Title,
 	}
 
@@ -169,7 +169,7 @@ func ToPeerReviewDetail(topic *model.EmployeeEventTopic) SurveyTopicDetail {
 		}
 
 		if eventReviewer.Reviewer != nil {
-			participant.Reviewer = ToBasicEmployeeInfo(*eventReviewer.Reviewer)
+			participant.Reviewer = toBasicEmployeeInfo(*eventReviewer.Reviewer)
 		}
 
 		rs.Participants = append(rs.Participants, participant)
@@ -207,11 +207,8 @@ func ToListSubmitFeedback(questions []*model.EmployeeEventQuestion, detailInfo F
 		})
 	}
 
-	rs.Reviewer = BasicEmployeeInfo{
-		ID:          detailInfo.Reviewer.ID.String(),
-		FullName:    detailInfo.Reviewer.FullName,
-		DisplayName: detailInfo.Reviewer.DisplayName,
-		Avatar:      detailInfo.Reviewer.Avatar,
+	if detailInfo.Reviewer != nil {
+		rs.Reviewer = *toBasicEmployeeInfo(*detailInfo.Reviewer)
 	}
 
 	rs.Status = detailInfo.Status.String()
@@ -241,23 +238,21 @@ func ToFeedbackReviewDetail(questions []*model.EmployeeEventQuestion, topic *mod
 		})
 	}
 
-	return FeedBackReviewDetail{
+	rs := FeedBackReviewDetail{
 		Questions:    qs,
 		TopicName:    topic.Title,
 		Relationship: reviewer.Relationship.String(),
-		Employee: BasicEmployeeInfo{
-			ID:          topic.EmployeeID.String(),
-			FullName:    topic.Employee.FullName,
-			DisplayName: topic.Employee.DisplayName,
-			Avatar:      topic.Employee.Avatar,
-		},
-		Reviewer: BasicEmployeeInfo{
-			ID:          reviewer.ReviewerID.String(),
-			FullName:    reviewer.Reviewer.FullName,
-			DisplayName: reviewer.Reviewer.DisplayName,
-			Avatar:      reviewer.Reviewer.Avatar,
-		},
 	}
+
+	if topic.Employee != nil {
+		rs.Employee = *toBasicEmployeeInfo(*topic.Employee)
+	}
+
+	if reviewer.Reviewer != nil {
+		rs.Reviewer = *toBasicEmployeeInfo(*reviewer.Reviewer)
+	}
+
+	return rs
 }
 
 type Survey struct {
@@ -361,7 +356,7 @@ func ToSurveyDetail(event *model.FeedbackEvent) SurveyDetail {
 		Status:    event.Status.String(),
 		StartDate: event.StartDate,
 		EndDate:   event.EndDate,
-		Author:    ToBasicEmployeeInfo(event.Employee),
+		Author:    toBasicEmployeeInfo(event.Employee),
 	}
 
 	var topics = make([]Topic, 0, len(event.Topics))
@@ -373,14 +368,14 @@ func ToSurveyDetail(event *model.FeedbackEvent) SurveyDetail {
 			Title:    topic.Title,
 			Type:     topic.Event.Type.String(),
 			Subtype:  topic.Event.Subtype.String(),
-			Employee: *ToBasicEmployeeInfo(*topic.Employee),
+			Employee: *toBasicEmployeeInfo(*topic.Employee),
 		}
 
 		// just use for peer-review survey
 		if topic.Event.Subtype == model.EventSubtypePeerReview {
 			participants := make([]BasicEmployeeInfo, 0, len(topic.EmployeeEventReviewers))
 			for _, reviewer := range topic.EmployeeEventReviewers {
-				employee := ToBasicEmployeeInfo(*reviewer.Reviewer)
+				employee := toBasicEmployeeInfo(*reviewer.Reviewer)
 				participants = append(participants, *employee)
 			}
 
