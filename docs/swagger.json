@@ -2686,7 +2686,7 @@
         },
         "/surveys/{id}/send": {
             "post": {
-                "description": "Send the performance review",
+                "description": "Send the survey",
                 "consumes": [
                     "application/json"
                 ],
@@ -2696,7 +2696,7 @@
                 "tags": [
                     "Survey"
                 ],
-                "summary": "Send the performance review",
+                "summary": "Send the survey",
                 "parameters": [
                     {
                         "type": "string",
@@ -2718,7 +2718,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/request.SendPerformanceReviewInput"
+                            "$ref": "#/definitions/request.SendSurveyInput"
                         }
                     }
                 ],
@@ -3420,25 +3420,7 @@
                 }
             }
         },
-        "request.PerformanceReviewTopic": {
-            "type": "object",
-            "required": [
-                "participants",
-                "topicID"
-            ],
-            "properties": {
-                "participants": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "topicID": {
-                    "type": "string"
-                }
-            }
-        },
-        "request.SendPerformanceReviewInput": {
+        "request.SendSurveyInput": {
             "type": "object",
             "required": [
                 "topics"
@@ -3447,7 +3429,7 @@
                 "topics": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/request.PerformanceReviewTopic"
+                        "$ref": "#/definitions/request.Survey"
                     }
                 }
             }
@@ -3466,6 +3448,24 @@
                     }
                 },
                 "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "request.Survey": {
+            "type": "object",
+            "required": [
+                "participants",
+                "topicID"
+            ],
+            "properties": {
+                "participants": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "topicID": {
                     "type": "string"
                 }
             }

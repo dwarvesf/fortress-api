@@ -2694,7 +2694,7 @@ const docTemplate = `{
         },
         "/surveys/{id}/send": {
             "post": {
-                "description": "Send the performance review",
+                "description": "Send the survey",
                 "consumes": [
                     "application/json"
                 ],
@@ -2704,7 +2704,7 @@ const docTemplate = `{
                 "tags": [
                     "Survey"
                 ],
-                "summary": "Send the performance review",
+                "summary": "Send the survey",
                 "parameters": [
                     {
                         "type": "string",
@@ -2726,7 +2726,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/request.SendPerformanceReviewInput"
+                            "$ref": "#/definitions/request.SendSurveyInput"
                         }
                     }
                 ],
@@ -3428,25 +3428,7 @@ const docTemplate = `{
                 }
             }
         },
-        "request.PerformanceReviewTopic": {
-            "type": "object",
-            "required": [
-                "participants",
-                "topicID"
-            ],
-            "properties": {
-                "participants": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "topicID": {
-                    "type": "string"
-                }
-            }
-        },
-        "request.SendPerformanceReviewInput": {
+        "request.SendSurveyInput": {
             "type": "object",
             "required": [
                 "topics"
@@ -3455,7 +3437,7 @@ const docTemplate = `{
                 "topics": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/request.PerformanceReviewTopic"
+                        "$ref": "#/definitions/request.Survey"
                     }
                 }
             }
@@ -3474,6 +3456,24 @@ const docTemplate = `{
                     }
                 },
                 "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "request.Survey": {
+            "type": "object",
+            "required": [
+                "participants",
+                "topicID"
+            ],
+            "properties": {
+                "participants": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "topicID": {
                     "type": "string"
                 }
             }

@@ -570,28 +570,28 @@ func (h *handler) createEngagement(db *gorm.DB, req request.CreateSurveyFeedback
 	return 200, nil
 }
 
-// SendPerformanceReview godoc
-// @Summary Send the performance review
-// @Description Send the performance review
+// SendSurvey godoc
+// @Summary Send the survey
+// @Description Send the survey
 // @Tags Survey
 // @Accept json
 // @Produce json
 // @Param Authorization header string true "jwt token"
 // @Param id path string true "Feedback Event ID"
-// @Param Body body request.SendPerformanceReviewInput true "Body"
+// @Param Body body request.SendSurveyInput true "Body"
 // @Success 200 {object} view.MessageResponse
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 404 {object} view.ErrorResponse
 // @Failure 500 {object} view.ErrorResponse
 // @Router /surveys/{id}/send [post]
-func (h *handler) SendPerformanceReview(c *gin.Context) {
+func (h *handler) SendSurvey(c *gin.Context) {
 	eventID := c.Param("id")
 	if eventID == "" || !model.IsUUIDFromString(eventID) {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidEventID, nil, ""))
 		return
 	}
 
-	var input request.SendPerformanceReviewInput
+	var input request.SendSurveyInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, input, ""))
 		return
@@ -599,7 +599,7 @@ func (h *handler) SendPerformanceReview(c *gin.Context) {
 
 	l := h.logger.Fields(logger.Fields{
 		"handler": "survey",
-		"method":  "SendPerformanceReview",
+		"method":  "SendSurvey",
 		"eventID": eventID,
 		"input":   input,
 	})
@@ -619,7 +619,7 @@ func (h *handler) SendPerformanceReview(c *gin.Context) {
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, done(nil), "ok"))
 }
 
-func (h *handler) updateEventReviewer(db *gorm.DB, l logger.Logger, data request.PerformanceReviewTopic, eventID string) (int, error) {
+func (h *handler) updateEventReviewer(db *gorm.DB, l logger.Logger, data request.Survey, eventID string) (int, error) {
 	// Validate EventID and TopicID
 	_, err := h.store.EmployeeEventTopic.One(db, data.TopicID.String(), eventID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {

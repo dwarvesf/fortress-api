@@ -75,7 +75,7 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 		surveyGroup.GET("", pmw.WithPerm("surveys.read"), h.Survey.ListSurvey)
 		surveyGroup.GET("/:id", pmw.WithPerm("surveys.read"), h.Survey.GetSurveyDetail)
 		surveyGroup.DELETE("/:id", pmw.WithPerm("surveys.delete"), h.Survey.DeleteSurvey)
-		surveyGroup.POST("/:id/send", pmw.WithPerm("surveys.create"), h.Survey.SendPerformanceReview)
+		surveyGroup.POST("/:id/send", pmw.WithPerm("surveys.create"), h.Survey.SendSurvey)
 		surveyGroup.GET("/:id/topics/:topicID/reviews/:reviewID", amw.WithAuth, pmw.WithPerm("employeeEventQuestions.read"), h.Survey.GetSurveyReviewDetail)
 		surveyGroup.DELETE("/:id/topics/:topicID", amw.WithAuth, pmw.WithPerm("surveys.delete"), h.Survey.DeleteSurveyTopic)
 		surveyGroup.GET("/:id/topics/:topicID", pmw.WithPerm("surveys.read"), h.Survey.GetSurveyTopicDetail)
