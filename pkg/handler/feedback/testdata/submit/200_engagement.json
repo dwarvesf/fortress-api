@@ -1,0 +1,113 @@
+{
+    "data": {
+        "answers": [
+            {
+                "eventQuestionID": "a9b63a36-0134-4aa3-9a9a-edb5a1d52645",
+                "content": "I know what is expected of me at work.",
+                "answer": "1",
+                "note": "ok",
+                "type": "likert-scale",
+                "order": 1
+            },
+            {
+                "eventQuestionID": "ebf8ab8b-8827-49fe-a61a-40b140eba903",
+                "content": "I have the materials and equipment I need to do my work right.",
+                "answer": "1",
+                "note": "ok",
+                "type": "likert-scale",
+                "order": 2
+            },
+            {
+                "eventQuestionID": "fae6d117-38c9-4634-8e20-9c012fe0f222",
+                "content": "At work, I have the opportunity to do what I do best every day.",
+                "answer": "1",
+                "note": "ok",
+                "type": "likert-scale",
+                "order": 3
+            },
+            {
+                "eventQuestionID": "eb8e2a6a-0f86-40fb-b447-972bd8a53d15",
+                "content": "In the last seven days, I have received recognition or praise for doing good work.",
+                "answer": "1",
+                "note": "ok",
+                "type": "likert-scale",
+                "order": 4
+            },
+            {
+                "eventQuestionID": "c2c3e368-27b0-4154-b2ff-10d1a9f29ba1",
+                "content": "My supervisor, or someone at work, seems to care about me as a person.",
+                "answer": "1",
+                "note": "ok",
+                "type": "likert-scale",
+                "order": 5
+            },
+            {
+                "eventQuestionID": "ba0c090c-eefc-4e1a-b29d-a024e68c57fe",
+                "content": "There is someone at work who encourages my development.",
+                "answer": "1",
+                "note": "ok",
+                "type": "likert-scale",
+                "order": 6
+            },
+            {
+                "eventQuestionID": "f508b883-2294-4f50-84e7-f43a0be89bad",
+                "content": "At work, my opinions seem to count.",
+                "answer": "1",
+                "note": "ok",
+                "type": "likert-scale",
+                "order": 7
+            },
+            {
+                "eventQuestionID": "57e4bb72-3c10-4652-b2b6-0f26be8ba936",
+                "content": "The mission or purpose of my company makes me feel my job is important.",
+                "answer": "1",
+                "note": "ok",
+                "type": "likert-scale",
+                "order": 8
+            },
+            {
+                "eventQuestionID": "c6fde31e-59c3-4161-9180-490a4a591a17",
+                "content": "My associates or fellow employees are committed to doing quality work.",
+                "answer": "1",
+                "note": "ok",
+                "type": "likert-scale",
+                "order": 9
+            },
+            {
+                "eventQuestionID": "06c7451f-e155-409b-aebd-5082f897040a",
+                "content": "I have a best friend at work.",
+                "answer": "1",
+                "note": "ok",
+                "type": "likert-scale",
+                "order": 10
+            },
+            {
+                "eventQuestionID": "16c1285b-bb45-4093-bcec-5daa8e3eaac6",
+                "content": "In the last six months, someone at work has talked to me about my progress.",
+                "answer": "1",
+                "note": "ok",
+                "type": "likert-scale",
+                "order": 11
+            },
+            {
+                "eventQuestionID": "c9722d74-1683-4c1f-8378-75584cd25753",
+                "content": "This last year, I have had opportunities at work to learn and grow.",
+                "answer": "1",
+                "note": "ok",
+                "type": "likert-scale",
+                "order": 12
+            }
+        ],
+        "status": "draft",
+        "employeeID": "2655832e-f009-4b73-a535-64c3a22e558f",
+        "reviewer": {
+            "id": "2655832e-f009-4b73-a535-64c3a22e558f",
+            "fullName": "Phạm Đức Thành",
+            "displayName": "Thanh Pham",
+            "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png"
+        },
+        "topicID": "ebf376a6-3d11-4cea-b464-593103258838",
+        "eventID": "53546ea4-1d9d-4216-96b2-75f84ec6d750",
+        "title": "Engagement Survey for Thanh - Q4, 2022"
+    }
+}
