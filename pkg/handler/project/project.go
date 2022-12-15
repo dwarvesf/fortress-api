@@ -1613,7 +1613,7 @@ func (h *handler) UpdateWorkUnit(c *gin.Context) {
 	}
 
 	// Update work unit stack
-	if err := h.UpdateWorkUnitStack(tx.DB(), input.WorkUnitID, input.Body.Stacks); err != nil {
+	if err := h.updateWorkUnitStack(tx.DB(), input.WorkUnitID, input.Body.Stacks); err != nil {
 		l.Error(err, "failed to update work unit stack")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
 		return
@@ -1713,7 +1713,7 @@ func (h *handler) checkExitsInUpdateWorkUnitInput(db *gorm.DB, input request.Upd
 	return 0, nil
 }
 
-func (h *handler) UpdateWorkUnitStack(db *gorm.DB, workUnitID string, stackIDs []model.UUID) error {
+func (h *handler) updateWorkUnitStack(db *gorm.DB, workUnitID string, stackIDs []model.UUID) error {
 	// Delete all exist work unit stack
 	if err := h.store.WorkUnitStack.DeleteByWorkUnitID(db, workUnitID); err != nil {
 		return errs.ErrFailToDeleteWorkUnitStack

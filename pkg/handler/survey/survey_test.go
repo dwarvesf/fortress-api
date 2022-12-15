@@ -266,12 +266,12 @@ func TestHandler_GetPeerReviewDetail(t *testing.T) {
 				ctx.Request.Header.Set("Authorization", testToken)
 
 				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
-				h.GetPeerReviewDetail(ctx)
+				h.GetSurveyTopicDetail(ctx)
 				require.Equal(t, tt.wantCode, w.Code)
 				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
 				require.NoError(t, err)
 
-				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Survey.GetPeerReviewDetail] response mismatched")
+				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Survey.GetSurveyTopicDetail] response mismatched")
 			})
 		})
 	}

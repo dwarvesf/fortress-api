@@ -704,16 +704,16 @@ func (h *handler) DeleteSurvey(c *gin.Context) {
 
 	tx, done := h.repo.NewTransaction()
 
-	if code, err := h.deleteSurvey(tx.DB(), eventID); err != nil {
+	if statusCode, err := h.doSurveyDelete(tx.DB(), eventID); err != nil {
 		l.Error(err, "failed to delete survey")
-		c.JSON(code, view.CreateResponse[any](nil, nil, done(err), eventID, ""))
+		c.JSON(statusCode, view.CreateResponse[any](nil, nil, done(err), eventID, ""))
 		return
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, done(nil), nil, "ok"))
 }
 
-func (h *handler) deleteSurvey(db *gorm.DB, eventID string) (int, error) {
+func (h *handler) doSurveyDelete(db *gorm.DB, eventID string) (int, error) {
 	l := h.logger.Fields(logger.Fields{
 		"handler": "survey",
 		"method":  "deleteSurvey",
@@ -924,7 +924,7 @@ func (h *handler) DeleteSurveyTopic(c *gin.Context) {
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, done(nil), nil, "ok"))
 }
 
-// GetPeerReviewDetail godoc
+// GetSurveyTopicDetail godoc
 // @Summary Get detail for peer review
 // @Description Get detail for peer review
 // @Tags Survey
@@ -933,12 +933,12 @@ func (h *handler) DeleteSurveyTopic(c *gin.Context) {
 // @Param Authorization header string true "jwt token"
 // @Param id path string true "Feedback Event ID"
 // @Param topicID path string true "Employee Event Topic ID"
-// @Success 200 {object} view.PeerReviewDetailResponse
+// @Success 200 {object} view.SurveyTopicDetailResponse
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 404 {object} view.ErrorResponse
 // @Failure 500 {object} view.ErrorResponse
 // @Router /surveys/{id}/topics/{topicID} [get]
-func (h *handler) GetPeerReviewDetail(c *gin.Context) {
+func (h *handler) GetSurveyTopicDetail(c *gin.Context) {
 	input := request.PeerReviewDetailInput{
 		EventID: c.Param("id"),
 		TopicID: c.Param("topicID"),
@@ -951,7 +951,7 @@ func (h *handler) GetPeerReviewDetail(c *gin.Context) {
 
 	l := h.logger.Fields(logger.Fields{
 		"handler": "survey",
-		"method":  "GetPeerReviewDetail",
+		"method":  "GetSurveyTopicDetail",
 		"input":   input,
 	})
 

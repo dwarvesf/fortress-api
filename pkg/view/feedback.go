@@ -143,19 +143,19 @@ type PeerReviewer struct {
 	Relationship    model.Relationship        `json:"relationship"`
 }
 
-type PeerReviewDetail struct {
+type SurveyTopicDetail struct {
 	TopicID      string             `json:"topicID"`
 	Title        string             `json:"title"`
 	Employee     *BasicEmployeeInfo `json:"employee"`
 	Participants []PeerReviewer     `json:"participants"`
 }
 
-type PeerReviewDetailResponse struct {
-	Data PeerReviewDetail `json:"data"`
+type SurveyTopicDetailResponse struct {
+	Data SurveyTopicDetail `json:"data"`
 }
 
-func ToPeerReviewDetail(topic *model.EmployeeEventTopic) PeerReviewDetail {
-	rs := PeerReviewDetail{
+func ToPeerReviewDetail(topic *model.EmployeeEventTopic) SurveyTopicDetail {
+	rs := SurveyTopicDetail{
 		TopicID:  topic.ID.String(),
 		Employee: ToBasicEmployeeInfo(*topic.Employee),
 		Title:    topic.Title,
@@ -180,13 +180,13 @@ func ToPeerReviewDetail(topic *model.EmployeeEventTopic) PeerReviewDetail {
 }
 
 type SubmitFeedback struct {
-	Answers    []*QuestionAnswer `json:"answers"`
-	Status     string            `json:"status"`
-	EmployeeID string            `json:"employeeID"`
-	Reviewer   BasicEmployeeInfo `json:"reviewer"`
-	TopicID    string            `json:"topicID"`
 	EventID    string            `json:"eventID"`
+	TopicID    string            `json:"topicID"`
+	EmployeeID string            `json:"employeeID"`
 	Title      string            `json:"title"`
+	Status     string            `json:"status"`
+	Reviewer   BasicEmployeeInfo `json:"reviewer"`
+	Answers    []*QuestionAnswer `json:"answers"`
 }
 
 type SubmitFeedbackResponse struct {
