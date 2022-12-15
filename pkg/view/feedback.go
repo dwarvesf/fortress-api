@@ -342,9 +342,11 @@ type SurveyDetail struct {
 type Topic struct {
 	ID           string              `json:"id"`
 	EventID      string              `json:"eventID"`
+	ReviewID     string              `json:"reviewID,omitempty"`
 	Title        string              `json:"title"`
 	Type         string              `json:"type"`
 	Subtype      string              `json:"subtype"`
+	Status       string              `json:"status,omitempty"`
 	Employee     BasicEmployeeInfo   `json:"employee"`
 	Participants []BasicEmployeeInfo `json:"participants"`
 	Count        *FeedbackCount      `json:"count"`
@@ -365,17 +367,6 @@ func ToSurveyDetail(event *model.FeedbackEvent) SurveyDetail {
 	var topics = make([]Topic, 0, len(event.Topics))
 
 	for _, topic := range event.Topics {
-		var sent, done int
-
-		for _, reviewer := range topic.EmployeeEventReviewers {
-			if reviewer.AuthorStatus != model.EventAuthorStatusDraft {
-				sent++
-			}
-			if reviewer.AuthorStatus == model.EventAuthorStatusDone {
-				done++
-			}
-		}
-
 		newTopic := Topic{
 			ID:       topic.ID.String(),
 			EventID:  topic.EventID.String(),
@@ -385,6 +376,7 @@ func ToSurveyDetail(event *model.FeedbackEvent) SurveyDetail {
 			Employee: *ToBasicEmployeeInfo(*topic.Employee),
 		}
 
+		// just use for peer-review survey
 		if topic.Event.Subtype == model.EventSubtypePeerReview {
 			participants := make([]BasicEmployeeInfo, 0, len(topic.EmployeeEventReviewers))
 			for _, reviewer := range topic.EmployeeEventReviewers {
@@ -392,14 +384,28 @@ func ToSurveyDetail(event *model.FeedbackEvent) SurveyDetail {
 				participants = append(participants, *employee)
 			}
 
-			count := &FeedbackCount{
+			var sent, done int
+			for _, reviewer := range topic.EmployeeEventReviewers {
+				if reviewer.AuthorStatus != model.EventAuthorStatusDraft {
+					sent++
+				}
+				if reviewer.AuthorStatus == model.EventAuthorStatusDone {
+					done++
+				}
+			}
+
+			newTopic.Participants = participants
+			newTopic.Count = &FeedbackCount{
 				Total: len(topic.EmployeeEventReviewers),
 				Sent:  sent,
 				Done:  done,
 			}
+		}
 
-			newTopic.Participants = participants
-			newTopic.Count = count
+		// just use for engagement survey
+		if event.Subtype == model.EventSubtypeEngagement && len(topic.EmployeeEventReviewers) > 0 {
+			newTopic.ReviewID = topic.EmployeeEventReviewers[0].ID.String()
+			newTopic.Status = topic.EmployeeEventReviewers[0].AuthorStatus.String()
 		}
 
 		topics = append(topics, newTopic)

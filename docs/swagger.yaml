@@ -1210,6 +1210,10 @@ definitions:
         items:
           $ref: '#/definitions/view.BasicEmployeeInfo'
         type: array
+      reviewID:
+        type: string
+      status:
+        type: string
       subtype:
         type: string
       title:
