@@ -2790,7 +2790,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/view.PeerReviewDetailResponse"
+                            "$ref": "#/definitions/view.SurveyTopicDetailResponse"
                         }
                     },
                     "400": {
@@ -3044,6 +3044,18 @@
         }
     },
     "definitions": {
+        "gorm.DeletedAt": {
+            "type": "object",
+            "properties": {
+                "time": {
+                    "type": "string"
+                },
+                "valid": {
+                    "description": "Valid is true if Time is not NULL",
+                    "type": "boolean"
+                }
+            }
+        },
         "model.Chapter": {
             "type": "object",
             "properties": {
@@ -3054,7 +3066,7 @@
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "id": {
                     "type": "string"
@@ -3086,7 +3098,7 @@
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "id": {
                     "type": "string"
@@ -3109,7 +3121,7 @@
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "id": {
                     "type": "string"
@@ -3132,7 +3144,7 @@
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "id": {
                     "type": "string"
@@ -3155,7 +3167,7 @@
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "id": {
                     "type": "string"
@@ -3178,7 +3190,7 @@
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "id": {
                     "type": "string"
@@ -3960,7 +3972,7 @@
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "deliveryManager": {
                     "$ref": "#/definitions/view.ProjectHead"
@@ -4032,7 +4044,7 @@
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "discordID": {
                     "type": "string"
@@ -4361,34 +4373,6 @@
                 }
             }
         },
-        "view.PeerReviewDetail": {
-            "type": "object",
-            "properties": {
-                "employee": {
-                    "$ref": "#/definitions/view.BasicEmployeeInfo"
-                },
-                "participants": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/view.PeerReviewer"
-                    }
-                },
-                "title": {
-                    "type": "string"
-                },
-                "topicID": {
-                    "type": "string"
-                }
-            }
-        },
-        "view.PeerReviewDetailResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/view.PeerReviewDetail"
-                }
-            }
-        },
         "view.PeerReviewer": {
             "type": "object",
             "properties": {
@@ -4496,7 +4480,7 @@
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "deliveryManager": {
                     "$ref": "#/definitions/view.ProjectHead"
@@ -4840,6 +4824,34 @@
                 }
             }
         },
+        "view.SurveyTopicDetail": {
+            "type": "object",
+            "properties": {
+                "employee": {
+                    "$ref": "#/definitions/view.BasicEmployeeInfo"
+                },
+                "participants": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.PeerReviewer"
+                    }
+                },
+                "title": {
+                    "type": "string"
+                },
+                "topicID": {
+                    "type": "string"
+                }
+            }
+        },
+        "view.SurveyTopicDetailResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/view.SurveyTopicDetail"
+                }
+            }
+        },
         "view.Topic": {
             "type": "object",
             "properties": {
@@ -4895,7 +4907,7 @@
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "discordID": {
                     "type": "string"
@@ -4940,7 +4952,7 @@
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "gender": {
                     "type": "string"
@@ -4971,7 +4983,7 @@
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "discordID": {
                     "type": "string"
@@ -5079,7 +5091,7 @@
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "id": {
                     "type": "string"
@@ -5119,7 +5131,7 @@
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "endDate": {
                     "type": "string"

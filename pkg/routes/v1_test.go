@@ -308,7 +308,7 @@ func Test_loadV1Routes(t *testing.T) {
 			},
 			"GET": {
 				Method:  "GET",
-				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/survey.IHandler.GetPeerReviewDetail-fm",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/survey.IHandler.GetSurveyTopicDetail-fm",
 			},
 		},
 	}

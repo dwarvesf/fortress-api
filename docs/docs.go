@@ -2798,7 +2798,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/view.PeerReviewDetailResponse"
+                            "$ref": "#/definitions/view.SurveyTopicDetailResponse"
                         }
                     },
                     "400": {
@@ -3052,6 +3052,18 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "gorm.DeletedAt": {
+            "type": "object",
+            "properties": {
+                "time": {
+                    "type": "string"
+                },
+                "valid": {
+                    "description": "Valid is true if Time is not NULL",
+                    "type": "boolean"
+                }
+            }
+        },
         "model.Chapter": {
             "type": "object",
             "properties": {
@@ -3062,7 +3074,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "id": {
                     "type": "string"
@@ -3094,7 +3106,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "id": {
                     "type": "string"
@@ -3117,7 +3129,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "id": {
                     "type": "string"
@@ -3140,7 +3152,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "id": {
                     "type": "string"
@@ -3163,7 +3175,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "id": {
                     "type": "string"
@@ -3186,7 +3198,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "id": {
                     "type": "string"
@@ -3968,7 +3980,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "deliveryManager": {
                     "$ref": "#/definitions/view.ProjectHead"
@@ -4040,7 +4052,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "discordID": {
                     "type": "string"
@@ -4369,34 +4381,6 @@ const docTemplate = `{
                 }
             }
         },
-        "view.PeerReviewDetail": {
-            "type": "object",
-            "properties": {
-                "employee": {
-                    "$ref": "#/definitions/view.BasicEmployeeInfo"
-                },
-                "participants": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/view.PeerReviewer"
-                    }
-                },
-                "title": {
-                    "type": "string"
-                },
-                "topicID": {
-                    "type": "string"
-                }
-            }
-        },
-        "view.PeerReviewDetailResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/view.PeerReviewDetail"
-                }
-            }
-        },
         "view.PeerReviewer": {
             "type": "object",
             "properties": {
@@ -4504,7 +4488,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "deliveryManager": {
                     "$ref": "#/definitions/view.ProjectHead"
@@ -4848,6 +4832,34 @@ const docTemplate = `{
                 }
             }
         },
+        "view.SurveyTopicDetail": {
+            "type": "object",
+            "properties": {
+                "employee": {
+                    "$ref": "#/definitions/view.BasicEmployeeInfo"
+                },
+                "participants": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.PeerReviewer"
+                    }
+                },
+                "title": {
+                    "type": "string"
+                },
+                "topicID": {
+                    "type": "string"
+                }
+            }
+        },
+        "view.SurveyTopicDetailResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/view.SurveyTopicDetail"
+                }
+            }
+        },
         "view.Topic": {
             "type": "object",
             "properties": {
@@ -4903,7 +4915,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "discordID": {
                     "type": "string"
@@ -4948,7 +4960,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "gender": {
                     "type": "string"
@@ -4979,7 +4991,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "discordID": {
                     "type": "string"
@@ -5087,7 +5099,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "id": {
                     "type": "string"
@@ -5127,7 +5139,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "endDate": {
                     "type": "string"
