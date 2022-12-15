@@ -36,6 +36,10 @@ func (s *store) GetBySubtypeWithPagination(db *gorm.DB, subtype string, paginati
 		Count(&total).
 		Order(pagination.Sort)
 
+	if pagination.Sort == "" {
+		query = query.Order("created_at DESC")
+	}
+
 	limit, offset := pagination.ToLimitOffset()
 	if pagination.Page > 0 {
 		query = query.Limit(limit)
