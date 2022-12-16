@@ -13,4 +13,5 @@ type IStore interface {
 	IsExist(db *gorm.DB, id string) (bool, error)
 	IsExistsByEmployeeID(db *gorm.DB, projectID string, employeeID string) (bool, error)
 	UpdateSelectedFieldsByID(db *gorm.DB, id string, updateModel model.ProjectMember, updatedFields ...string) (*model.ProjectMember, error)
+	GetByProjectIDs(db *gorm.DB, projectIDs []string) ([]*model.ProjectMember, error)
 }

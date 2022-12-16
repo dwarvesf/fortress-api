@@ -69,3 +69,9 @@ func (s *store) IsExistsByEmployeeID(db *gorm.DB, projectID string, employeeID s
 	query := db.Raw("SELECT EXISTS (SELECT * FROM project_members WHERE project_id  = ? and employee_id = ?) as result", projectID, employeeID)
 	return record.Result, query.Scan(&record).Error
 }
+
+// GetByProjectIDList get project member by porjectID list
+func (s *store) GetByProjectIDs(db *gorm.DB, projectIDs []string) ([]*model.ProjectMember, error) {
+	members := []*model.ProjectMember{}
+	return members, db.Where("left_date IS NULL AND status = 'active' AND project_id IN ?", projectIDs).Preload("Employee").Find(&members).Error
+}

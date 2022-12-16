@@ -211,6 +211,12 @@ definitions:
     type: object
   request.CreateSurveyFeedbackInput:
     properties:
+      date:
+        type: string
+      projectIDs:
+        items:
+          type: string
+        type: array
       quarter:
         type: string
       type:
@@ -218,9 +224,7 @@ definitions:
       year:
         type: integer
     required:
-    - quarter
     - type
-    - year
     type: object
   request.CreateWorkUnitBody:
     properties:

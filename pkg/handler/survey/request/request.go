@@ -48,9 +48,11 @@ type SendSurveyInput struct {
 
 // CreateSurveyFeedbackInput view for create survey feedback
 type CreateSurveyFeedbackInput struct {
-	Quarter string `json:"quarter" binding:"required"`
-	Year    int    `json:"year" binding:"required"`
-	Type    string `json:"type" binding:"required"`
+	Quarter    string   `json:"quarter"`
+	Year       int      `json:"year"`
+	Type       string   `json:"type" binding:"required"`
+	ProjectIDs []string `json:"projectIDs"`
+	Date       string   `json:"date"`
 }
 
 type PeerReviewDetailInput struct {

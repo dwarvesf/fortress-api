@@ -3366,11 +3366,18 @@ const docTemplate = `{
         "request.CreateSurveyFeedbackInput": {
             "type": "object",
             "required": [
-                "quarter",
-                "type",
-                "year"
+                "type"
             ],
             "properties": {
+                "date": {
+                    "type": "string"
+                },
+                "projectIDs": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "quarter": {
                     "type": "string"
                 },

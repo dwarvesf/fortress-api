@@ -213,6 +213,13 @@ func (h *handler) CreateSurvey(c *gin.Context) {
 			c.JSON(status, view.CreateResponse[any](nil, nil, done(err), nil, ""))
 			return
 		}
+	case model.EventSubtypeWork:
+		status, err := h.createWorkEvent(tx.DB(), req, userID)
+		if err != nil {
+			l.Error(err, "failed to create new survey work")
+			c.JSON(status, view.CreateResponse[any](nil, nil, done(err), nil, ""))
+			return
+		}
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, done(nil), nil, "success"))
@@ -223,6 +230,10 @@ func (h *handler) createPeerReview(db *gorm.DB, req request.CreateSurveyFeedback
 	//1. convert data
 	var startTime, endTime time.Time
 	var title string
+
+	if req.Year < time.Now().Year()-1 {
+		return http.StatusBadRequest, errs.ErrInvalidYear
+	}
 
 	switch strings.ToLower(strings.ReplaceAll(req.Quarter, " ", "")) {
 	case "q1,q2":
@@ -412,6 +423,10 @@ func (h *handler) createEngagement(db *gorm.DB, req request.CreateSurveyFeedback
 	var startTime, endTime time.Time
 	var title string
 
+	if req.Year < time.Now().Year()-1 {
+		return http.StatusBadRequest, errs.ErrInvalidYear
+	}
+
 	switch strings.ToLower(strings.ReplaceAll(req.Quarter, " ", "")) {
 	case "q1":
 		startTime = time.Date(req.Year, 1, 1, 0, 0, 0, 0, time.UTC)
@@ -576,6 +591,159 @@ func (h *handler) createEngagement(db *gorm.DB, req request.CreateSurveyFeedback
 	}
 
 	return 200, nil
+}
+
+func (h *handler) createWorkEvent(db *gorm.DB, req request.CreateSurveyFeedbackInput, userID string) (int, error) {
+	//1. convert data
+	date, err := time.Parse("2006-01-02", req.Date)
+	if err != nil {
+		return http.StatusBadRequest, errs.ErrInvalidDate
+	}
+	title := date.Format("Jan 11, 2006")
+
+	//1.2 check event existed
+	_, err = h.store.FeedbackEvent.GetByTypeInTimeRange(db, model.EventTypeSurvey, model.EventSubtypeWork, &date, &date)
+	if err == nil {
+		return http.StatusBadRequest, errs.ErrEventAlreadyExisted
+	} else {
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return http.StatusInternalServerError, err
+		}
+	}
+
+	//1.3 check employee existed
+	createdBy, err := h.store.Employee.One(db, userID, false)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return http.StatusNotFound, errs.ErrEmployeeNotFound
+		}
+		return http.StatusInternalServerError, err
+	}
+
+	//2. Create FeedbackEvent
+	event, err := h.store.FeedbackEvent.Create(db, &model.FeedbackEvent{
+		BaseModel: model.BaseModel{
+			ID: model.NewUUID(),
+		},
+		Title:     title,
+		Type:      model.EventTypeSurvey,
+		Subtype:   model.EventSubtype(req.Type),
+		Status:    model.EventStatusDraft,
+		CreatedBy: createdBy.ID,
+		StartDate: &date,
+		EndDate:   &date,
+	})
+	if err != nil {
+		return http.StatusInternalServerError, err
+	}
+
+	//3. create EmployeeEventTopic
+	employees, err := h.store.ProjectMember.GetByProjectIDs(db, req.ProjectIDs)
+	if err != nil {
+		return http.StatusInternalServerError, err
+	}
+
+	eets := make([]model.EmployeeEventTopic, 0)
+	for _, e := range employees {
+		eets = append(eets, model.EmployeeEventTopic{
+			BaseModel: model.BaseModel{
+				ID: model.NewUUID(),
+			},
+			Title:      title,
+			EventID:    event.ID,
+			EmployeeID: e.EmployeeID,
+			ProjectID:  e.ProjectID,
+		})
+	}
+
+	i := 0
+	for i < len(eets) {
+		to := i + 100
+		if to > len(eets) {
+			to = len(eets)
+		}
+		_, err = h.store.EmployeeEventTopic.BatchCreate(db, eets[i:to])
+		if err != nil {
+			return http.StatusInternalServerError, err
+		}
+		i = to
+	}
+
+	//4. create EmployeeEventReviewer
+	employeeEventMapper := make(map[model.UUID]model.UUID)
+	for _, e := range eets {
+		employeeEventMapper[e.EmployeeID] = e.ID
+	}
+
+	reviewers := make([]model.EmployeeEventReviewer, 0)
+
+	for _, e := range eets {
+		reviewers = append(reviewers, model.EmployeeEventReviewer{
+			BaseModel: model.BaseModel{
+				ID: model.NewUUID(),
+			},
+			EventID:              event.ID,
+			EmployeeEventTopicID: e.ID,
+			ReviewerID:           e.EmployeeID,
+			Relationship:         model.RelationshipSelf,
+			AuthorStatus:         model.EventAuthorStatusSent,
+			ReviewerStatus:       model.EventReviewerStatusNew,
+			IsShared:             false,
+			IsRead:               false,
+		})
+	}
+
+	i = 0
+	for i < len(reviewers) {
+		to := i + 100
+		if to > len(reviewers) {
+			to = len(reviewers)
+		}
+		_, err = h.store.EmployeeEventReviewer.BatchCreate(db, reviewers[i:to])
+		if err != nil {
+			return http.StatusInternalServerError, err
+		}
+		i = to
+	}
+
+	//5. create EmployeeEventQuestion
+	questions, err := h.store.Question.AllByCategory(db, model.EventTypeSurvey, model.EventSubtypeWork)
+	if err != nil {
+		return http.StatusInternalServerError, err
+	}
+
+	eventQuestions := make([]model.EmployeeEventQuestion, 0)
+
+	for _, r := range reviewers {
+		for _, q := range questions {
+			eventQuestions = append(eventQuestions, model.EmployeeEventQuestion{
+				BaseModel: model.BaseModel{
+					ID: model.NewUUID(),
+				},
+				EmployeeEventReviewerID: r.ID,
+				QuestionID:              q.ID,
+				EventID:                 r.EventID,
+				Content:                 q.Content,
+				Type:                    q.Type.String(),
+				Order:                   q.Order,
+			})
+		}
+	}
+
+	i = 0
+	for i < len(eventQuestions) {
+		to := i + 100
+		if to > len(eventQuestions) {
+			to = len(eventQuestions)
+		}
+		_, err = h.store.EmployeeEventQuestion.BatchCreate(db, eventQuestions[i:to])
+		if err != nil {
+			return http.StatusInternalServerError, err
+		}
+		i = to
+	}
+
+	return http.StatusOK, nil
 }
 
 // SendSurvey godoc
