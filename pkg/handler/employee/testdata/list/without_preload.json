@@ -87,85 +87,6 @@
             "chapters": []
         },
         {
-            "id": "ecea9d15-05ba-4a4e-9787-54210e3b98ce",
-            "createdAt": "2022-11-02T09:50:55.320669Z",
-            "updatedAt": "",
-            "fullName": "Nguyễn Hoàng Huy",
-            "displayName": "Huy Nguyen",
-            "teamEmail": "huynh@d.foundation",
-            "personalEmail": "hoanghuy123@gmail.com",
-            "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/2830497479497502617.png",
-            "phoneNumber": "0123456789",
-            "address": "Thu Duc City, Ho Chi Minh City",
-            "mbti": "ENFJ-A",
-            "gender": "Male",
-            "horoscope": "Aquaman",
-            "birthday": "1990-01-02T00:00:00Z",
-            "discordID": "646649040771219476",
-            "githubID": "huynguyen",
-            "notionID": "39523061",
-            "status": "probation",
-            "joinedDate": "2018-09-01T00:00:00Z",
-            "leftDate": null,
-            "seniority": null,
-            "lineManager": null,
-            "positions": [
-                {
-                    "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
-                    "code": "devops",
-                    "name": "Devops"
-                },
-                {
-                    "id": "01fb6322-d727-47e3-a242-5039ea4732fc",
-                    "code": "blockchain",
-                    "name": "Blockchain"
-                },
-                {
-                    "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
-                    "code": "frontend",
-                    "name": "Frontend"
-                },
-                {
-                    "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
-                    "code": "backend",
-                    "name": "Backend"
-                }
-            ],
-            "stacks": [
-                {
-                    "id": "0ecf47c8-cca4-4c30-94bb-054b1124c44f",
-                    "name": "Golang",
-                    "code": "golang"
-                },
-                {
-                    "id": "fa0f4e46-7eab-4e5c-9d31-30489e69fe2e",
-                    "name": "React",
-                    "code": "react"
-                },
-                {
-                    "id": "b403ef95-4269-4830-bbb6-8e56e5ec0af4",
-                    "name": "Google Cloud",
-                    "code": "gcloud"
-                }
-            ],
-            "roles": [
-                {
-                    "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
-                    "code": "admin",
-                    "name": "Admin"
-                }
-            ],
-            "projects": [
-                {
-                    "id": "7310b51a-3855-498b-99ab-41aa82934269",
-                    "name": "Fortress",
-                    "deploymentType": "shadow",
-                    "positions": []
-                }
-            ],
-            "chapters": []
-        },
-        {
             "id": "061820c0-bf6c-4b4a-9753-875f75d71a2c",
             "createdAt": "2022-11-17T11:06:03.278004Z",
             "updatedAt": "",
@@ -235,6 +156,58 @@
                     "id": "fa0f4e46-7eab-4e5c-9d31-30489e69fe2e",
                     "name": "React",
                     "code": "react"
+                }
+            ],
+            "roles": [
+                {
+                    "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
+                    "code": "member",
+                    "name": "Member"
+                }
+            ],
+            "projects": [],
+            "chapters": []
+        },
+        {
+            "id": "d1b1dcbe-f4ed-49cc-a16b-56c9a3145c14",
+            "createdAt": "2022-11-17T11:06:03.255694Z",
+            "updatedAt": "",
+            "fullName": "Nghiêm Minh Đức",
+            "displayName": "Duc Nghiem",
+            "teamEmail": "duc@dwarvesv.com",
+            "personalEmail": "ducnghiem123@gmail.com",
+            "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/3851063061598282120.png",
+            "phoneNumber": "0123456789",
+            "address": "Tan Binh District, Ho Chi Minh, Vietnam",
+            "mbti": "INTJ-S",
+            "gender": "Male",
+            "horoscope": "Scorpio",
+            "birthday": "1991-11-11T00:00:00Z",
+            "discordID": "435844136025849876",
+            "githubID": "duc",
+            "notionID": "29088916",
+            "status": "probation",
+            "joinedDate": "2021-05-17T00:00:00Z",
+            "leftDate": null,
+            "seniority": null,
+            "lineManager": null,
+            "positions": [
+                {
+                    "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
+                    "code": "devops",
+                    "name": "Devops"
+                }
+            ],
+            "stacks": [
+                {
+                    "id": "0ecf47c8-cca4-4c30-94bb-054b1124c44f",
+                    "name": "Golang",
+                    "code": "golang"
+                },
+                {
+                    "id": "b403ef95-4269-4830-bbb6-8e56e5ec0af4",
+                    "name": "Google Cloud",
+                    "code": "gcloud"
                 }
             ],
             "roles": [
@@ -322,6 +295,85 @@
             "chapters": []
         },
         {
+            "id": "ecea9d15-05ba-4a4e-9787-54210e3b98ce",
+            "createdAt": "2022-11-02T09:50:55.320669Z",
+            "updatedAt": "",
+            "fullName": "Nguyễn Hoàng Huy",
+            "displayName": "Huy Nguyen",
+            "teamEmail": "huynh@d.foundation",
+            "personalEmail": "hoanghuy123@gmail.com",
+            "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/2830497479497502617.png",
+            "phoneNumber": "0123456789",
+            "address": "Thu Duc City, Ho Chi Minh City",
+            "mbti": "ENFJ-A",
+            "gender": "Male",
+            "horoscope": "Aquaman",
+            "birthday": "1990-01-02T00:00:00Z",
+            "discordID": "646649040771219476",
+            "githubID": "huynguyen",
+            "notionID": "39523061",
+            "status": "probation",
+            "joinedDate": "2018-09-01T00:00:00Z",
+            "leftDate": null,
+            "seniority": null,
+            "lineManager": null,
+            "positions": [
+                {
+                    "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
+                    "code": "devops",
+                    "name": "Devops"
+                },
+                {
+                    "id": "01fb6322-d727-47e3-a242-5039ea4732fc",
+                    "code": "blockchain",
+                    "name": "Blockchain"
+                },
+                {
+                    "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
+                    "code": "frontend",
+                    "name": "Frontend"
+                },
+                {
+                    "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
+                    "code": "backend",
+                    "name": "Backend"
+                }
+            ],
+            "stacks": [
+                {
+                    "id": "0ecf47c8-cca4-4c30-94bb-054b1124c44f",
+                    "name": "Golang",
+                    "code": "golang"
+                },
+                {
+                    "id": "fa0f4e46-7eab-4e5c-9d31-30489e69fe2e",
+                    "name": "React",
+                    "code": "react"
+                },
+                {
+                    "id": "b403ef95-4269-4830-bbb6-8e56e5ec0af4",
+                    "name": "Google Cloud",
+                    "code": "gcloud"
+                }
+            ],
+            "roles": [
+                {
+                    "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
+                    "code": "admin",
+                    "name": "Admin"
+                }
+            ],
+            "projects": [
+                {
+                    "id": "7310b51a-3855-498b-99ab-41aa82934269",
+                    "name": "Fortress",
+                    "deploymentType": "shadow",
+                    "positions": []
+                }
+            ],
+            "chapters": []
+        },
+        {
             "id": "eeae589a-94e3-49ac-a94c-fcfb084152b2",
             "createdAt": "2022-11-02T09:50:55.320669Z",
             "updatedAt": "",
@@ -388,58 +440,6 @@
                     "positions": []
                 }
             ],
-            "chapters": []
-        },
-        {
-            "id": "d1b1dcbe-f4ed-49cc-a16b-56c9a3145c14",
-            "createdAt": "2022-11-17T11:06:03.255694Z",
-            "updatedAt": "",
-            "fullName": "Nghiêm Minh Đức",
-            "displayName": "Duc Nghiem",
-            "teamEmail": "duc@dwarvesv.com",
-            "personalEmail": "ducnghiem123@gmail.com",
-            "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/3851063061598282120.png",
-            "phoneNumber": "0123456789",
-            "address": "Tan Binh District, Ho Chi Minh, Vietnam",
-            "mbti": "INTJ-S",
-            "gender": "Male",
-            "horoscope": "Scorpio",
-            "birthday": "1991-11-11T00:00:00Z",
-            "discordID": "435844136025849876",
-            "githubID": "duc",
-            "notionID": "29088916",
-            "status": "probation",
-            "joinedDate": "2021-05-17T00:00:00Z",
-            "leftDate": null,
-            "seniority": null,
-            "lineManager": null,
-            "positions": [
-                {
-                    "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
-                    "code": "devops",
-                    "name": "Devops"
-                }
-            ],
-            "stacks": [
-                {
-                    "id": "0ecf47c8-cca4-4c30-94bb-054b1124c44f",
-                    "name": "Golang",
-                    "code": "golang"
-                },
-                {
-                    "id": "b403ef95-4269-4830-bbb6-8e56e5ec0af4",
-                    "name": "Google Cloud",
-                    "code": "gcloud"
-                }
-            ],
-            "roles": [
-                {
-                    "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
-                    "code": "member",
-                    "name": "Member"
-                }
-            ],
-            "projects": [],
             "chapters": []
         }
     ]
