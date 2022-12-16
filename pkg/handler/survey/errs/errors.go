@@ -23,6 +23,8 @@ var (
 	ErrInvalidTopicID        = errors.New("invalid topic id")
 	ErrInvalidEventSubType   = errors.New("invalid event subtype")
 	ErrInvalidQuarter        = errors.New("invalid quarter")
+	ErrInvalidYear           = errors.New("invalid year")
+	ErrInvalidDate           = errors.New("invalid date")
 
 	// other errors
 	ErrEventAlreadyExisted      = errors.New("event already existed")
