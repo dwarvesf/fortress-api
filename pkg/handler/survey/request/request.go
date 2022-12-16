@@ -19,9 +19,14 @@ func (i *GetListSurveyInput) Validate() error {
 	return nil
 }
 
+type GetSurveyDetailQuery struct {
+	model.Pagination
+	Keyword string `json:"keyword" form:"keyword"`
+}
+
 type GetSurveyDetailInput struct {
-	EventID    string
-	Pagination model.Pagination
+	EventID string
+	Query   GetSurveyDetailQuery
 }
 
 func (i *GetSurveyDetailInput) Validate() error {

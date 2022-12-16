@@ -80,7 +80,7 @@ func (h *handler) List(c *gin.Context) {
 		"input":   input,
 	})
 
-	rs, total, err := h.store.EmployeeEventTopic.GetByEmployeeIDWithPagination(h.repo.DB(),
+	rs, total, err := h.store.EmployeeEventTopic.GetByEmployeeID(h.repo.DB(),
 		userID,
 		employeeeventtopic.GetByEmployeeIDInput{Status: input.Status},
 		input.Pagination)

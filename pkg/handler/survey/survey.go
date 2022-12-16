@@ -17,6 +17,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/store"
+	"github.com/dwarvesf/fortress-api/pkg/store/employeeeventtopic"
 	"github.com/dwarvesf/fortress-api/pkg/utils"
 	"github.com/dwarvesf/fortress-api/pkg/view"
 )
@@ -105,7 +106,7 @@ func (h *handler) GetSurveyDetail(c *gin.Context) {
 	input := request.GetSurveyDetailInput{
 		EventID: c.Param("id"),
 	}
-	if err := c.ShouldBindQuery(&input.Pagination); err != nil {
+	if err := c.ShouldBindQuery(&input.Query); err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, input, ""))
 		return
 	}
@@ -115,7 +116,7 @@ func (h *handler) GetSurveyDetail(c *gin.Context) {
 		return
 	}
 
-	input.Pagination.Standardize()
+	input.Query.Standardize()
 
 	l := h.logger.Fields(logger.Fields{
 		"handler": "survey",
@@ -136,7 +137,14 @@ func (h *handler) GetSurveyDetail(c *gin.Context) {
 		return
 	}
 
-	topics, total, err := h.store.EmployeeEventTopic.GetByEventIDWithPagination(h.repo.DB(), input.EventID, input.Pagination)
+	topics, total, err := h.store.EmployeeEventTopic.All(h.repo.DB(),
+		employeeeventtopic.GetByEventIDInput{
+			EventID: input.EventID,
+			Keyword: input.Query.Keyword,
+			Preload: true,
+			Paging:  true,
+		},
+		&input.Query.Pagination)
 	if err != nil {
 		l.Error(err, "failed to get employee event topic by eventID")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
@@ -146,7 +154,7 @@ func (h *handler) GetSurveyDetail(c *gin.Context) {
 	event.Topics = topics
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToSurveyDetail(event),
-		&view.PaginationResponse{Pagination: input.Pagination, Total: total}, nil, nil, ""))
+		&view.PaginationResponse{Pagination: input.Query.Pagination, Total: total}, nil, nil, ""))
 }
 
 // CreateSurvey godoc
@@ -1244,7 +1252,7 @@ func (h *handler) MarkDone(c *gin.Context) {
 	}
 
 	// Get all topics
-	topics, err := h.store.EmployeeEventTopic.All(tx.DB(), eventID)
+	topics, _, err := h.store.EmployeeEventTopic.All(tx.DB(), employeeeventtopic.GetByEventIDInput{EventID: eventID}, nil)
 	if err != nil {
 		l.Error(err, "failed to get all topics")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), eventID, ""))
