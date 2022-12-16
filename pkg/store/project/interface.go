@@ -10,7 +10,7 @@ type IStore interface {
 	All(db *gorm.DB, input GetListProjectInput, pagination model.Pagination) ([]*model.Project, int64, error)
 	Create(db *gorm.DB, project *model.Project) error
 	IsExist(db *gorm.DB, id string) (bool, error)
-	One(db *gorm.DB, id string) (*model.Project, error)
+	One(db *gorm.DB, id string, preload bool) (*model.Project, error)
 
 	Update(db *gorm.DB, project *model.Project) (*model.Project, error)
 	UpdateSelectedFieldsByID(db *gorm.DB, id string, updateModel model.Project, updatedFields ...string) (*model.Project, error)

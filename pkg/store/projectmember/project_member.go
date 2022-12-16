@@ -3,7 +3,6 @@ package projectmember
 import (
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 )
 
 type store struct{}
@@ -28,14 +27,18 @@ func (s *store) IsExist(db *gorm.DB, id string) (bool, error) {
 }
 
 // One return a project member by projectID and employeeID
-func (s *store) One(db *gorm.DB, projectID string, employeeID string) (*model.ProjectMember, error) {
+func (s *store) One(db *gorm.DB, projectID string, employeeID string, preload bool) (*model.ProjectMember, error) {
 	query := db.Where("project_id = ? AND employee_id = ? AND status = ?",
 		projectID,
 		employeeID,
 		model.ProjectMemberStatusActive)
 
+	if preload {
+		query = query.Preload("Employee")
+	}
+
 	var member *model.ProjectMember
-	return member, query.Preload("Employee").First(&member).Error
+	return member, query.First(&member).Error
 }
 
 // GetOneBySlotID return a project member by slotID
@@ -49,26 +52,6 @@ func (s *store) GetOneBySlotID(db *gorm.DB, slotID string) (*model.ProjectMember
 // Create using for create new member
 func (s *store) Create(db *gorm.DB, member *model.ProjectMember) error {
 	return db.Create(&member).Preload("Employee").First(&member).Error
-}
-
-// Upsert create new member or update existing member
-func (s *store) Upsert(db *gorm.DB, member *model.ProjectMember) error {
-	return db.Clauses(clause.OnConflict{
-		Columns: []clause.Column{{Name: "project_slot_id"}},
-		DoUpdates: clause.AssignmentColumns([]string{
-			"employee_id",
-			"seniority_id",
-			"deployment_type",
-			"status",
-			"joined_date",
-			"left_date",
-			"rate",
-			"discount",
-		}),
-	}).
-		Create(&member).
-		Preload("Employee").
-		First(&member).Error
 }
 
 // UpdateSelectedFieldsByID just update selected fields by id

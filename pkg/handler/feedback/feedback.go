@@ -132,7 +132,7 @@ func (h *handler) Detail(c *gin.Context) {
 	})
 
 	// Check topic and feedback existence
-	topic, err := h.store.EmployeeEventTopic.One(h.repo.DB(), input.TopicID, input.EventID)
+	topic, err := h.store.EmployeeEventTopic.One(h.repo.DB(), input.TopicID, input.EventID, false)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		l.Error(errs.ErrTopicNotFound, "topic not found")
 		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrTopicNotFound, input, ""))
@@ -165,7 +165,7 @@ func (h *handler) Detail(c *gin.Context) {
 		return
 	}
 
-	reviewer, err := h.store.Employee.One(h.repo.DB(), userID)
+	reviewer, err := h.store.Employee.One(h.repo.DB(), userID, false)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		l.Error(errs.ErrReviewerNotFound, "reviewer not found")
 		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrReviewerNotFound, nil, ""))
@@ -239,7 +239,7 @@ func (h *handler) Submit(c *gin.Context) {
 	tx, done := h.repo.NewTransaction()
 
 	// Check topic existence and validate eventID
-	topic, err := h.store.EmployeeEventTopic.One(tx.DB(), input.TopicID, input.EventID)
+	topic, err := h.store.EmployeeEventTopic.One(tx.DB(), input.TopicID, input.EventID, false)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		l.Error(errs.ErrTopicNotFound, "topic not found")
 		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, done(errs.ErrTopicNotFound), input, ""))
@@ -333,7 +333,7 @@ func (h *handler) Submit(c *gin.Context) {
 		}
 	}
 
-	reviewer, err := h.store.Employee.One(h.repo.DB(), userID)
+	reviewer, err := h.store.Employee.One(h.repo.DB(), userID, false)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		l.Error(errs.ErrReviewerNotFound, "reviewer not found")
 		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrReviewerNotFound, nil, ""))

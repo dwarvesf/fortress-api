@@ -131,7 +131,7 @@ func (h *handler) UpdateProjectStatus(c *gin.Context) {
 		return
 	}
 
-	project, err := h.store.Project.One(h.repo.DB(), projectID)
+	project, err := h.store.Project.One(h.repo.DB(), projectID, false)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Error(err, "project not found")
@@ -378,7 +378,7 @@ func (h *handler) DeleteMember(c *gin.Context) {
 	})
 
 	// get member info
-	projectMember, err := h.store.ProjectMember.One(h.repo.DB(), input.ProjectID, input.MemberID)
+	projectMember, err := h.store.ProjectMember.One(h.repo.DB(), input.ProjectID, input.MemberID, false)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Error(err, "project member not found")
@@ -429,7 +429,10 @@ func (h *handler) DeleteMember(c *gin.Context) {
 		return
 	}
 
-	err = h.store.ProjectHead.DeleteByPositionInProject(tx.DB(), projectMember.ProjectID.String(), projectMember.EmployeeID.String(), model.HeadPositionTechnicalLead.String())
+	err = h.store.ProjectHead.DeleteByPositionInProject(tx.DB(),
+		projectMember.ProjectID.String(),
+		projectMember.EmployeeID.String(),
+		model.HeadPositionTechnicalLead.String())
 	if err != nil {
 		l.Error(err, "error delete project head")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input.MemberID, ""))
@@ -473,7 +476,7 @@ func (h *handler) UnassignMember(c *gin.Context) {
 	})
 
 	// get member info
-	projectMember, err := h.store.ProjectMember.One(h.repo.DB(), input.ProjectID, input.MemberID)
+	projectMember, err := h.store.ProjectMember.One(h.repo.DB(), input.ProjectID, input.MemberID, false)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Error(err, "project member not found")
@@ -717,7 +720,7 @@ func (h *handler) assignMemberToProject(db *gorm.DB, slotID string, projectID st
 	}
 
 	// check is member active in project?
-	member, err = h.store.ProjectMember.One(db, projectID, input.EmployeeID.String())
+	member, err = h.store.ProjectMember.One(db, projectID, input.EmployeeID.String(), true)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		h.logger.Fields(logger.Fields{
 			"projectID":  projectID,
@@ -872,7 +875,7 @@ func (h *handler) AssignMember(c *gin.Context) {
 	}
 
 	// get active project member info
-	_, err := h.store.ProjectMember.One(h.repo.DB(), projectID, body.EmployeeID.String())
+	_, err := h.store.ProjectMember.One(h.repo.DB(), projectID, body.EmployeeID.String(), false)
 	if err != gorm.ErrRecordNotFound {
 		if err == nil {
 			l.Error(err, "project member exists")
@@ -1066,7 +1069,7 @@ func (h *handler) Details(c *gin.Context) {
 		"id":      projectID,
 	})
 
-	project, err := h.store.Project.One(h.repo.DB(), projectID)
+	project, err := h.store.Project.One(h.repo.DB(), projectID, true)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Info("project not found")
@@ -1117,7 +1120,7 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 	})
 
 	// Check project existence
-	project, err := h.store.Project.One(h.repo.DB(), projectID)
+	project, err := h.store.Project.One(h.repo.DB(), projectID, true)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Error(err, "project not found")
@@ -1246,7 +1249,7 @@ func (h *handler) UpdateContactInfo(c *gin.Context) {
 	})
 
 	// Check project existence
-	project, err := h.store.Project.One(h.repo.DB(), projectID)
+	project, err := h.store.Project.One(h.repo.DB(), projectID, true)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Error(err, "project not found")
@@ -1521,7 +1524,7 @@ func (h *handler) CreateWorkUnit(c *gin.Context) {
 
 	// create work unit member
 	for _, employee := range employees {
-		_, err = h.store.ProjectMember.One(tx.DB(), input.ProjectID, employee.ID.String())
+		_, err = h.store.ProjectMember.One(tx.DB(), input.ProjectID, employee.ID.String(), false)
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Error(errs.ErrMemberIsNotActiveInProject, "member is not active in project")
 			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(errs.ErrMemberIsNotActiveInProject), input, ""))
@@ -1767,7 +1770,7 @@ func (h *handler) deleteWorkUnit(db *gorm.DB, workUnitID string, deleteMemberIDL
 
 func (h *handler) createWorkUnit(db *gorm.DB, projectID string, workUnitID string, createMemberIDList []model.UUID) (int, error) {
 	for _, createMemberID := range createMemberIDList {
-		_, err := h.store.ProjectMember.One(db, projectID, createMemberID.String())
+		_, err := h.store.ProjectMember.One(db, projectID, createMemberID.String(), false)
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return http.StatusBadRequest, errs.ErrMemberIsInactive
 		}
@@ -1966,7 +1969,7 @@ func (h *handler) UnarchiveWorkUnit(c *gin.Context) {
 
 	// check member status in project and update work unit member
 	for _, member := range wuMembers {
-		_, err := h.store.ProjectMember.One(tx.DB(), input.ProjectID, member.EmployeeID.String())
+		_, err := h.store.ProjectMember.One(tx.DB(), input.ProjectID, member.EmployeeID.String(), false)
 
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Error(err, "member is not active in project")

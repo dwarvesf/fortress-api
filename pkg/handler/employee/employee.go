@@ -3,8 +3,6 @@ package employee
 import (
 	"errors"
 	"fmt"
-	errs "github.com/dwarvesf/fortress-api/pkg/handler/employee/errs"
-	"github.com/dwarvesf/fortress-api/pkg/handler/employee/request"
 	"net/http"
 	"path/filepath"
 	"time"
@@ -13,6 +11,8 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
+	"github.com/dwarvesf/fortress-api/pkg/handler/employee/errs"
+	"github.com/dwarvesf/fortress-api/pkg/handler/employee/request"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service"
@@ -131,7 +131,7 @@ func (h *handler) One(c *gin.Context) {
 	})
 
 	// 2. get employee from store
-	rs, err := h.store.Employee.One(h.repo.DB(), params.ID)
+	rs, err := h.store.Employee.One(h.repo.DB(), params.ID, true)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Info("employee not found")
@@ -187,7 +187,7 @@ func (h *handler) UpdateEmployeeStatus(c *gin.Context) {
 		return
 	}
 
-	employee, err := h.store.Employee.One(h.repo.DB(), employeeID)
+	employee, err := h.store.Employee.One(h.repo.DB(), employeeID, true)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Info("employee not found")
@@ -262,7 +262,7 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 		}
 	}
 
-	employee, err := h.store.Employee.One(h.repo.DB(), employeeID)
+	employee, err := h.store.Employee.One(h.repo.DB(), employeeID, true)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Info("employee not found")
@@ -478,7 +478,7 @@ func (h *handler) UpdateSkills(c *gin.Context) {
 		"request": body,
 	})
 
-	employee, err := h.store.Employee.One(h.repo.DB(), employeeID)
+	employee, err := h.store.Employee.One(h.repo.DB(), employeeID, true)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Info("employee not found")
@@ -697,7 +697,7 @@ func (h *handler) UpdatePersonalInfo(c *gin.Context) {
 		"request": body,
 	})
 
-	employee, err := h.store.Employee.One(h.repo.DB(), employeeID)
+	employee, err := h.store.Employee.One(h.repo.DB(), employeeID, true)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Info("employee not found")
@@ -816,7 +816,7 @@ func (h *handler) UploadContent(c *gin.Context) {
 	}
 
 	// 2.3 check employee existed
-	employee, err := h.store.Employee.One(tx.DB(), params.ID)
+	employee, err := h.store.Employee.One(tx.DB(), params.ID, false)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			l.Info("employee not found")
