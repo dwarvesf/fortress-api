@@ -1,3 +1,4 @@
 INSERT INTO public.work_units (id, deleted_at, created_at, updated_at, name, status, type, source_url, project_id, source_metadata) VALUES 
 ('4797347d-21e0-4dac-a6c7-c98bf2d6b27c', NULL, '2022-11-29 08:03:33.233262', '2022-11-29 08:03:33.233262', 'Fortress API', 'active', 'development', 'https://github.com/dwarvesf/fortress-api', '8dc3be2e-19a4-4942-8a79-56db391a0b15', '[]'),
-('69b32f7e-0433-4566-a801-72909172940e', NULL, '2022-11-29 08:03:33.233262', '2022-11-29 08:03:33.233262', 'Fortress Web', 'archived', 'management', 'https://github.com/dwarvesf/fortress-web', 'dfa182fc-1d2d-49f6-a877-c01da9ce4207', '[]');
+('4a68d3ae-fe4c-4bab-8b73-c8e9f9533fba', NULL, '2022-11-29 08:03:33.233262', '2022-11-29 08:03:33.233262', 'Fortress Web', 'active', 'development', 'https://github.com/dwarvesf/fortress-web', '8dc3be2e-19a4-4942-8a79-56db391a0b15', '[]'),
+('69b32f7e-0433-4566-a801-72909172940e', NULL, '2022-11-29 08:03:33.233262', '2022-11-29 08:03:33.233262', 'Lorem Web', 'archived', 'management', 'https://github.com/dwarvesf/lorem', 'dfa182fc-1d2d-49f6-a877-c01da9ce4207', '[]');

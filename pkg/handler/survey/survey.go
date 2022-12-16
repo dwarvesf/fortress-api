@@ -1095,7 +1095,7 @@ func (h *handler) updateTopicReviewer(db *gorm.DB, eventID string, topicID strin
 	}
 
 	// create event reviewer and event question if reviewerID not exist in database
-	newEventReviewers := []model.EmployeeEventReviewer{}
+	newEventReviewers := make([]model.EmployeeEventReviewer, 0)
 	for reviewerID, mustCreate := range mustCreateReviewerIDMap {
 		if mustCreate {
 			relationship := model.RelationshipPeer
@@ -1253,7 +1253,7 @@ func (h *handler) MarkDone(c *gin.Context) {
 
 	// Check done for each topic: all user have to done
 	for _, topic := range topics {
-		if code, err := h.checkDoneTopic(tx.DB(), l, eventID, topic.ID.String()); err != nil {
+		if code, err := h.checkDoneTopic(tx.DB(), l, topic.ID.String()); err != nil {
 			l.Errorf(err, "failed to check done topic with ID %s", topic.ID.String())
 			c.JSON(code, view.CreateResponse[any](nil, nil, done(err), eventID, ""))
 			return
@@ -1263,7 +1263,7 @@ func (h *handler) MarkDone(c *gin.Context) {
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, done(nil), nil, "ok"))
 }
 
-func (h *handler) checkDoneTopic(db *gorm.DB, l logger.Logger, eventID string, topicID string) (int, error) {
+func (h *handler) checkDoneTopic(db *gorm.DB, l logger.Logger, topicID string) (int, error) {
 	// Get all reviewers
 	reviewers, err := h.store.EmployeeEventReviewer.GetByTopicID(db, topicID)
 	if err != nil {
