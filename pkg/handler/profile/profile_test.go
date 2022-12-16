@@ -28,7 +28,6 @@ func TestHandler_GetProfile(t *testing.T) {
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg)
 	storeMock := store.New()
-	testRepoMock := store.NewPostgresStore(&cfg)
 
 	tests := []struct {
 		name             string
@@ -45,20 +44,23 @@ func TestHandler_GetProfile(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			w := httptest.NewRecorder()
+			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				testhelper.LoadTestSQLFile(t, txRepo, "./testdata/get_profile/get_profile.sql")
+				w := httptest.NewRecorder()
 
-			ctx, _ := gin.CreateTestContext(w)
-			ctx.Request = httptest.NewRequest("GET", "/api/v1/profile", nil)
-			ctx.Request.Header.Set("Authorization", testToken)
-			metadataHandler := New(storeMock, testRepoMock, serviceMock, loggerMock, &cfg)
+				ctx, _ := gin.CreateTestContext(w)
+				ctx.Request = httptest.NewRequest("GET", "/api/v1/profile", nil)
+				ctx.Request.Header.Set("Authorization", testToken)
+				metadataHandler := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 
-			metadataHandler.GetProfile(ctx)
+				metadataHandler.GetProfile(ctx)
 
-			require.Equal(t, tt.wantCode, w.Code)
-			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
-			require.NoError(t, err)
+				require.Equal(t, tt.wantCode, w.Code)
+				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				require.NoError(t, err)
 
-			require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.GetProfile] response mismatched")
+				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.GetProfile] response mismatched")
+			})
 		})
 	}
 }
@@ -104,6 +106,7 @@ func TestHandler_UpdateProfileInfo(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				testhelper.LoadTestSQLFile(t, txRepo, "./testdata/update_info/update_info.sql")
 				byteReq, err := json.Marshal(tt.input)
 				require.Nil(t, err)
 				w := httptest.NewRecorder()

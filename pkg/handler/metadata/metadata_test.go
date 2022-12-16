@@ -10,6 +10,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/store"
+	"github.com/dwarvesf/fortress-api/pkg/utils/testhelper"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq"
@@ -22,7 +23,6 @@ func TestHandler_GetWorkingStatus(t *testing.T) {
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg)
 	storeMock := &store.Store{}
-	testRepoMock := store.NewPostgresStore(&cfg)
 
 	tests := []struct {
 		name             string
@@ -39,18 +39,20 @@ func TestHandler_GetWorkingStatus(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			w := httptest.NewRecorder()
+			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				w := httptest.NewRecorder()
 
-			ctx, _ := gin.CreateTestContext(w)
-			ctx.Request = httptest.NewRequest("GET", "/api/v1/metadata/working-status?%s", nil)
-			metadataHandler := New(storeMock, testRepoMock, serviceMock, loggerMock)
+				ctx, _ := gin.CreateTestContext(w)
+				ctx.Request = httptest.NewRequest("GET", "/api/v1/metadata/working-status?%s", nil)
+				metadataHandler := New(storeMock, txRepo, serviceMock, loggerMock)
 
-			metadataHandler.WorkingStatuses(ctx)
-			require.Equal(t, tt.wantCode, w.Code)
-			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
-			require.NoError(t, err)
+				metadataHandler.WorkingStatuses(ctx)
+				require.Equal(t, tt.wantCode, w.Code)
+				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				require.NoError(t, err)
 
-			require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.GetWorkingStatus] response mismatched")
+				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.GetWorkingStatus] response mismatched")
+			})
 		})
 	}
 }
@@ -61,7 +63,6 @@ func TestHandler_GetSeniority(t *testing.T) {
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg)
 	storeMock := store.New()
-	testRepoMock := store.NewPostgresStore(&cfg)
 
 	tests := []struct {
 		name             string
@@ -78,19 +79,21 @@ func TestHandler_GetSeniority(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			w := httptest.NewRecorder()
+			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				w := httptest.NewRecorder()
 
-			ctx, _ := gin.CreateTestContext(w)
-			ctx.Request = httptest.NewRequest("GET", fmt.Sprintf("/api/v1/metadata/seniorities"), nil)
-			metadataHandler := New(storeMock, testRepoMock, serviceMock, loggerMock)
+				ctx, _ := gin.CreateTestContext(w)
+				ctx.Request = httptest.NewRequest("GET", fmt.Sprintf("/api/v1/metadata/seniorities"), nil)
+				metadataHandler := New(storeMock, txRepo, serviceMock, loggerMock)
 
-			metadataHandler.Seniorities(ctx)
+				metadataHandler.Seniorities(ctx)
 
-			require.Equal(t, tt.wantCode, w.Code)
-			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
-			require.NoError(t, err)
+				require.Equal(t, tt.wantCode, w.Code)
+				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				require.NoError(t, err)
 
-			require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.seniorities] response mismatched")
+				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.seniorities] response mismatched")
+			})
 		})
 	}
 }
@@ -101,7 +104,6 @@ func TestHandler_GetChapters(t *testing.T) {
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg)
 	storeMock := store.New()
-	testRepoMock := store.NewPostgresStore(&cfg)
 
 	tests := []struct {
 		name             string
@@ -118,19 +120,21 @@ func TestHandler_GetChapters(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			w := httptest.NewRecorder()
+			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				w := httptest.NewRecorder()
 
-			ctx, _ := gin.CreateTestContext(w)
-			ctx.Request = httptest.NewRequest("GET", fmt.Sprintf("/api/v1/metadata/chapters"), nil)
-			metadataHandler := New(storeMock, testRepoMock, serviceMock, loggerMock)
+				ctx, _ := gin.CreateTestContext(w)
+				ctx.Request = httptest.NewRequest("GET", fmt.Sprintf("/api/v1/metadata/chapters"), nil)
+				metadataHandler := New(storeMock, txRepo, serviceMock, loggerMock)
 
-			metadataHandler.Chapters(ctx)
+				metadataHandler.Chapters(ctx)
 
-			require.Equal(t, tt.wantCode, w.Code)
-			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
-			require.NoError(t, err)
+				require.Equal(t, tt.wantCode, w.Code)
+				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				require.NoError(t, err)
 
-			require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Chapters] response mismatched")
+				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Chapters] response mismatched")
+			})
 		})
 	}
 }
@@ -141,7 +145,6 @@ func TestHandler_GetAccountRoles(t *testing.T) {
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg)
 	storeMock := store.New()
-	testRepoMock := store.NewPostgresStore(&cfg)
 
 	tests := []struct {
 		name             string
@@ -158,19 +161,21 @@ func TestHandler_GetAccountRoles(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			w := httptest.NewRecorder()
+			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				w := httptest.NewRecorder()
 
-			ctx, _ := gin.CreateTestContext(w)
-			ctx.Request = httptest.NewRequest("GET", fmt.Sprintf("/api/v1/metadata/account-roles"), nil)
-			metadataHandler := New(storeMock, testRepoMock, serviceMock, loggerMock)
+				ctx, _ := gin.CreateTestContext(w)
+				ctx.Request = httptest.NewRequest("GET", fmt.Sprintf("/api/v1/metadata/account-roles"), nil)
+				metadataHandler := New(storeMock, txRepo, serviceMock, loggerMock)
 
-			metadataHandler.AccountRoles(ctx)
+				metadataHandler.AccountRoles(ctx)
 
-			require.Equal(t, tt.wantCode, w.Code)
-			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
-			require.NoError(t, err)
+				require.Equal(t, tt.wantCode, w.Code)
+				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				require.NoError(t, err)
 
-			require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.AccountRoles] response mismatched")
+				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.AccountRoles] response mismatched")
+			})
 		})
 	}
 }
@@ -181,7 +186,6 @@ func TestHandler_GetProjectStatuses(t *testing.T) {
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg)
 	storeMock := store.New()
-	testRepoMock := store.NewPostgresStore(&cfg)
 
 	tests := []struct {
 		name             string
@@ -198,19 +202,21 @@ func TestHandler_GetProjectStatuses(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			w := httptest.NewRecorder()
+			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				w := httptest.NewRecorder()
 
-			ctx, _ := gin.CreateTestContext(w)
-			ctx.Request = httptest.NewRequest("GET", fmt.Sprintf("/api/v1/metadata/project-statuses"), nil)
-			metadataHandler := New(storeMock, testRepoMock, serviceMock, loggerMock)
+				ctx, _ := gin.CreateTestContext(w)
+				ctx.Request = httptest.NewRequest("GET", fmt.Sprintf("/api/v1/metadata/project-statuses"), nil)
+				metadataHandler := New(storeMock, txRepo, serviceMock, loggerMock)
 
-			metadataHandler.ProjectStatuses(ctx)
+				metadataHandler.ProjectStatuses(ctx)
 
-			require.Equal(t, tt.wantCode, w.Code)
-			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
-			require.NoError(t, err)
+				require.Equal(t, tt.wantCode, w.Code)
+				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				require.NoError(t, err)
 
-			require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.ProjectStatuses] response mismatched")
+				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.ProjectStatuses] response mismatched")
+			})
 		})
 	}
 }
@@ -221,7 +227,6 @@ func TestHandler_GetPositions(t *testing.T) {
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg)
 	storeMock := store.New()
-	testRepoMock := store.NewPostgresStore(&cfg)
 
 	tests := []struct {
 		name             string
@@ -238,19 +243,21 @@ func TestHandler_GetPositions(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			w := httptest.NewRecorder()
+			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				w := httptest.NewRecorder()
 
-			ctx, _ := gin.CreateTestContext(w)
-			ctx.Request = httptest.NewRequest("GET", fmt.Sprintf("/api/v1/metadata/positions"), nil)
-			metadataHandler := New(storeMock, testRepoMock, serviceMock, loggerMock)
+				ctx, _ := gin.CreateTestContext(w)
+				ctx.Request = httptest.NewRequest("GET", fmt.Sprintf("/api/v1/metadata/positions"), nil)
+				metadataHandler := New(storeMock, txRepo, serviceMock, loggerMock)
 
-			metadataHandler.Positions(ctx)
+				metadataHandler.Positions(ctx)
 
-			require.Equal(t, tt.wantCode, w.Code)
-			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
-			require.NoError(t, err)
+				require.Equal(t, tt.wantCode, w.Code)
+				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				require.NoError(t, err)
 
-			require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Positions] response mismatched")
+				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Positions] response mismatched")
+			})
 		})
 	}
 }
@@ -261,7 +268,6 @@ func TestHandler_GetTechStacks(t *testing.T) {
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg)
 	storeMock := store.New()
-	testRepoMock := store.NewPostgresStore(&cfg)
 
 	tests := []struct {
 		name             string
@@ -278,19 +284,21 @@ func TestHandler_GetTechStacks(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			w := httptest.NewRecorder()
+			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				w := httptest.NewRecorder()
 
-			ctx, _ := gin.CreateTestContext(w)
-			ctx.Request = httptest.NewRequest("GET", fmt.Sprintf("/api/v1/metadata/stacks"), nil)
-			metadataHandler := New(storeMock, testRepoMock, serviceMock, loggerMock)
+				ctx, _ := gin.CreateTestContext(w)
+				ctx.Request = httptest.NewRequest("GET", fmt.Sprintf("/api/v1/metadata/stacks"), nil)
+				metadataHandler := New(storeMock, txRepo, serviceMock, loggerMock)
 
-			metadataHandler.Stacks(ctx)
+				metadataHandler.Stacks(ctx)
 
-			require.Equal(t, tt.wantCode, w.Code)
-			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
-			require.NoError(t, err)
+				require.Equal(t, tt.wantCode, w.Code)
+				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				require.NoError(t, err)
 
-			require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Stacks] response mismatched")
+				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Stacks] response mismatched")
+			})
 		})
 	}
 }
@@ -301,7 +309,6 @@ func TestHandler_GetQuestion(t *testing.T) {
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg)
 	storeMock := store.New()
-	testRepoMock := store.NewPostgresStore(&cfg)
 
 	tests := []struct {
 		name             string
@@ -324,20 +331,22 @@ func TestHandler_GetQuestion(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			w := httptest.NewRecorder()
+			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				w := httptest.NewRecorder()
 
-			ctx, _ := gin.CreateTestContext(w)
-			ctx.Request = httptest.NewRequest("GET", "/api/v1/metadata/questions", nil)
-			ctx.Request.URL.RawQuery = tt.query
-			h := New(storeMock, testRepoMock, serviceMock, loggerMock)
+				ctx, _ := gin.CreateTestContext(w)
+				ctx.Request = httptest.NewRequest("GET", "/api/v1/metadata/questions", nil)
+				ctx.Request.URL.RawQuery = tt.query
+				h := New(storeMock, txRepo, serviceMock, loggerMock)
 
-			h.GetQuestions(ctx)
+				h.GetQuestions(ctx)
 
-			require.Equal(t, tt.wantCode, w.Code)
-			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
-			require.NoError(t, err)
+				require.Equal(t, tt.wantCode, w.Code)
+				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				require.NoError(t, err)
 
-			require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.GetQuestions] response mismatched")
+				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.GetQuestions] response mismatched")
+			})
 		})
 	}
 }

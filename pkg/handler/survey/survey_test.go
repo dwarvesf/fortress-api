@@ -30,7 +30,6 @@ func TestHandler_ListSurvey(t *testing.T) {
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg)
 	storeMock := store.New()
-	testRepoMock := store.NewPostgresStore(&cfg)
 
 	tests := []struct {
 		name             string
@@ -52,19 +51,22 @@ func TestHandler_ListSurvey(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			w := httptest.NewRecorder()
-			ctx, _ := gin.CreateTestContext(w)
-			ctx.Request = httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/surveys?%s", tt.query), nil)
-			ctx.Request.Header.Set("Authorization", testToken)
-			ctx.Request.URL.RawQuery = tt.query
+			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				testhelper.LoadTestSQLFile(t, txRepo, "./testdata/list_survey/list_survey.sql")
+				w := httptest.NewRecorder()
+				ctx, _ := gin.CreateTestContext(w)
+				ctx.Request = httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/surveys?%s", tt.query), nil)
+				ctx.Request.Header.Set("Authorization", testToken)
+				ctx.Request.URL.RawQuery = tt.query
 
-			h := New(storeMock, testRepoMock, serviceMock, loggerMock, &cfg)
-			h.ListSurvey(ctx)
-			require.Equal(t, tt.wantCode, w.Code)
-			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
-			require.NoError(t, err)
+				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+				h.ListSurvey(ctx)
+				require.Equal(t, tt.wantCode, w.Code)
+				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				require.NoError(t, err)
 
-			require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Survey.ListSurvey] response mismatched")
+				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Survey.ListSurvey] response mismatched")
+			})
 		})
 	}
 }
@@ -236,6 +238,7 @@ func TestHandler_DeleteSurvey(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				testhelper.LoadTestSQLFile(t, txRepo, "./testdata/delete_survey/delete_survey.sql")
 				w := httptest.NewRecorder()
 				ctx, _ := gin.CreateTestContext(w)
 				ctx.Request = httptest.NewRequest(http.MethodDelete, fmt.Sprintf("/api/v1/surveys/%s", tt.id), nil)
@@ -284,6 +287,7 @@ func TestHandler_GetPeerReviewDetail(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				testhelper.LoadTestSQLFile(t, txRepo, "./testdata/get_peer_review_detail/get_peer_review_detail.sql")
 				w := httptest.NewRecorder()
 				ctx, _ := gin.CreateTestContext(w)
 				ctx.Params = gin.Params{gin.Param{Key: "id", Value: tt.feedbackID}, gin.Param{Key: "topicID", Value: tt.topicID}}
@@ -357,6 +361,7 @@ func TestHandler_UpdateTopicReviewers(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				testhelper.LoadTestSQLFile(t, txRepo, "./testdata/update_topic_participants/update_topic_participants.sql")
 				body, err := json.Marshal(tt.input.Body)
 				require.NoError(t, err)
 
@@ -415,6 +420,7 @@ func TestHandler_MarkDone(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				testhelper.LoadTestSQLFile(t, txRepo, "./testdata/mark_done/mark_done.sql")
 				w := httptest.NewRecorder()
 				ctx, _ := gin.CreateTestContext(w)
 				ctx.Request = httptest.NewRequest(http.MethodPut, fmt.Sprintf("/api/v1/surveys/%s/done", tt.eventID), nil)
@@ -477,6 +483,7 @@ func TestHandler_DeleteTopicReviewers(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				testhelper.LoadTestSQLFile(t, txRepo, "./testdata/delete_topic_participants/delete_topic_participants.sql")
 				body, err := json.Marshal(tt.input.Body)
 				require.NoError(t, err)
 
@@ -533,7 +540,7 @@ func TestHandler_DeleteSurveyTopic(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
-				testhelper.LoadTestSQLFile(t, txRepo, "./testdata/delete_survey/delete_survey_topic.sql")
+				testhelper.LoadTestSQLFile(t, txRepo, "./testdata/delete_survey/delete_survey.sql")
 				w := httptest.NewRecorder()
 				ctx, _ := gin.CreateTestContext(w)
 				ctx.Request = httptest.NewRequest(http.MethodDelete, fmt.Sprintf("/api/v1/surveys/%s/topics/%s", tt.eventID, tt.topicID), nil)
