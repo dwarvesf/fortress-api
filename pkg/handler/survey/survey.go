@@ -1008,15 +1008,21 @@ func (h *handler) UpdateTopicReviewers(c *gin.Context) {
 	}
 
 	// check feedback event existence
-	exists, err := h.store.FeedbackEvent.IsExist(h.repo.DB(), input.EventID)
+	event, err := h.store.FeedbackEvent.One(h.repo.DB(), input.EventID)
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			l.Error(errs.ErrEventNotFound, "feedback event not found")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrEventNotFound, input, ""))
+			return
+		}
 		l.Error(err, "failed to check feedback event existence")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input, ""))
 		return
 	}
-	if !exists {
-		l.Error(errs.ErrEventNotFound, "feedback event not found")
-		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrEventNotFound, input, ""))
+
+	if event.Subtype != model.EventSubtypePeerReview {
+		l.Error(errs.ErrCanNotUpdateParticipants, "event does not allow updating participants")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrCanNotUpdateParticipants, input, ""))
 		return
 	}
 
