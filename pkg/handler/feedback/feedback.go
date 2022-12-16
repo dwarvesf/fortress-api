@@ -178,6 +178,15 @@ func (h *handler) Detail(c *gin.Context) {
 		return
 	}
 
+	if !eventReviewer.IsRead {
+		eventReviewer.IsRead = true
+		if _, err := h.store.EmployeeEventReviewer.UpdateSelectedFieldsByID(h.repo.DB(), eventReviewer.ID.String(), *eventReviewer, "is_read"); err != nil {
+			l.Error(err, "failed to update employee event reviewer")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+			return
+		}
+	}
+
 	detailInfo := view.FeedbackDetailInfo{
 		Status:       eventReviewer.ReviewerStatus,
 		EmployeeID:   topic.EmployeeID.String(),
