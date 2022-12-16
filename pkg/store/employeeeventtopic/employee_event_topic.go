@@ -1,6 +1,8 @@
 package employeeeventtopic
 
 import (
+	"fmt"
+
 	"gorm.io/gorm"
 
 	"github.com/dwarvesf/fortress-api/pkg/model"
@@ -28,15 +30,8 @@ func (s *store) One(db *gorm.DB, id string, eventID string, preload bool) (*mode
 	return topic, query.First(&topic).Error
 }
 
-// All get topic by id
-func (s *store) All(db *gorm.DB, eventID string) ([]*model.EmployeeEventTopic, error) {
-	var topics []*model.EmployeeEventTopic
-
-	return topics, db.Where("event_id = ?", eventID).Find(&topics).Error
-}
-
-// GetByEmployeeIDWithPagination return list of EmployeeEventTopic by employeeID and pagination
-func (s *store) GetByEmployeeIDWithPagination(db *gorm.DB, employeeID string, input GetByEmployeeIDInput, pagination model.Pagination) ([]*model.EmployeeEventTopic, int64, error) {
+// GetByEmployeeID return list of EmployeeEventTopic by employeeID and pagination
+func (s *store) GetByEmployeeID(db *gorm.DB, employeeID string, input GetByEmployeeIDInput, pagination model.Pagination) ([]*model.EmployeeEventTopic, int64, error) {
 	var eTopics []*model.EmployeeEventTopic
 	var total int64
 
@@ -84,30 +79,36 @@ func (s *store) GetByEmployeeIDWithPagination(db *gorm.DB, employeeID string, in
 		Find(&eTopics).Error
 }
 
-// GetByEventIDWithPagination return list of EmployeeEventTopic by eventID and pagination
-func (s *store) GetByEventIDWithPagination(db *gorm.DB, eventID string, pagination model.Pagination) ([]*model.EmployeeEventTopic, int64, error) {
+// All return list of EmployeeEventTopic by input and pagination
+func (s *store) All(db *gorm.DB, input GetByEventIDInput, pagination *model.Pagination) ([]*model.EmployeeEventTopic, int64, error) {
 	var topics []*model.EmployeeEventTopic
 	var total int64
 
-	query := db.
-		Table("employee_event_topics").
-		Where("event_id = ? AND deleted_at IS NULL", eventID).
-		Count(&total).
-		Order(pagination.Sort)
-
-	limit, offset := pagination.ToLimitOffset()
-	if pagination.Page > 0 {
-		query = query.Limit(limit)
+	query := db.Table("employee_event_topics")
+	if input.Keyword != "" {
+		query = query.Where("title ILIKE ?", fmt.Sprintf("%%%s%%", input.Keyword))
 	}
 
-	query = query.Offset(offset)
+	query = query.Where("event_id = ? AND deleted_at IS NULL", input.EventID).Count(&total)
 
-	return topics, total, query.
-		Preload("Event", "deleted_at IS NULL").
-		Preload("Employee", "deleted_at IS NULL").
-		Preload("EmployeeEventReviewers", "deleted_at IS NULL").
-		Preload("EmployeeEventReviewers.Reviewer", "deleted_at IS NULL").
-		Find(&topics).Error
+	if input.Paging {
+		limit, offset := pagination.ToLimitOffset()
+		if pagination.Page > 0 {
+			query = query.Limit(limit)
+		}
+
+		query = query.Offset(offset).Order(pagination.Sort)
+	}
+
+	if input.Preload {
+		query = query.
+			Preload("Event", "deleted_at IS NULL").
+			Preload("Employee", "deleted_at IS NULL").
+			Preload("EmployeeEventReviewers", "deleted_at IS NULL").
+			Preload("EmployeeEventReviewers.Reviewer", "deleted_at IS NULL")
+	}
+
+	return topics, total, query.Find(&topics).Error
 }
 
 // BatchCreate create new one
