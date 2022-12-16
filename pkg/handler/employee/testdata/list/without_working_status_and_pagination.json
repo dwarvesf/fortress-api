@@ -87,58 +87,6 @@
             "chapters": []
         },
         {
-            "id": "dcfee24b-306d-4609-9c24-a4021639a11b",
-            "createdAt": "2022-11-17T11:06:03.264371Z",
-            "updatedAt": "",
-            "fullName": "Lê Việt Quỳnh",
-            "displayName": "Quynh Le",
-            "teamEmail": "quynhlv@dwarvesv.com",
-            "personalEmail": "lequynh123@gmail.com",
-            "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/4916620003720295041.png",
-            "phoneNumber": "0123456789",
-            "address": "Binh Tan District",
-            "mbti": "INTJ-S",
-            "gender": "Female",
-            "horoscope": "Virgo",
-            "birthday": "1998-12-10T00:00:00Z",
-            "discordID": "435844136025849876",
-            "githubID": "quynhle",
-            "notionID": "29088916",
-            "status": "full-time",
-            "joinedDate": "2021-05-17T00:00:00Z",
-            "leftDate": null,
-            "seniority": null,
-            "lineManager": null,
-            "positions": [
-                {
-                    "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
-                    "code": "devops",
-                    "name": "Devops"
-                }
-            ],
-            "stacks": [
-                {
-                    "id": "0ecf47c8-cca4-4c30-94bb-054b1124c44f",
-                    "name": "Golang",
-                    "code": "golang"
-                },
-                {
-                    "id": "b403ef95-4269-4830-bbb6-8e56e5ec0af4",
-                    "name": "Google Cloud",
-                    "code": "gcloud"
-                }
-            ],
-            "roles": [
-                {
-                    "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
-                    "code": "member",
-                    "name": "Member"
-                }
-            ],
-            "projects": [],
-            "chapters": []
-        },
-        {
             "id": "38a00d4a-bc45-41de-965a-adc674ab82c9",
             "createdAt": "2022-11-17T11:15:40.397372Z",
             "updatedAt": "",
@@ -167,347 +115,6 @@
                     "id": "fa0f4e46-7eab-4e5c-9d31-30489e69fe2e",
                     "name": "React",
                     "code": "react"
-                }
-            ],
-            "roles": [
-                {
-                    "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
-                    "code": "member",
-                    "name": "Member"
-                }
-            ],
-            "projects": [],
-            "chapters": []
-        },
-        {
-            "id": "ecea9d15-05ba-4a4e-9787-54210e3b98ce",
-            "createdAt": "2022-11-02T09:50:55.320669Z",
-            "updatedAt": "",
-            "fullName": "Nguyễn Hoàng Huy",
-            "displayName": "Huy Nguyen",
-            "teamEmail": "huynh@d.foundation",
-            "personalEmail": "hoanghuy123@gmail.com",
-            "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/2830497479497502617.png",
-            "phoneNumber": "0123456789",
-            "address": "Thu Duc City, Ho Chi Minh City",
-            "mbti": "ENFJ-A",
-            "gender": "Male",
-            "horoscope": "Aquaman",
-            "birthday": "1990-01-02T00:00:00Z",
-            "discordID": "646649040771219476",
-            "githubID": "huynguyen",
-            "notionID": "39523061",
-            "status": "probation",
-            "joinedDate": "2018-09-01T00:00:00Z",
-            "leftDate": null,
-            "seniority": null,
-            "lineManager": null,
-            "positions": [
-                {
-                    "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
-                    "code": "devops",
-                    "name": "Devops"
-                },
-                {
-                    "id": "01fb6322-d727-47e3-a242-5039ea4732fc",
-                    "code": "blockchain",
-                    "name": "Blockchain"
-                },
-                {
-                    "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
-                    "code": "frontend",
-                    "name": "Frontend"
-                },
-                {
-                    "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
-                    "code": "backend",
-                    "name": "Backend"
-                }
-            ],
-            "stacks": [
-                {
-                    "id": "0ecf47c8-cca4-4c30-94bb-054b1124c44f",
-                    "name": "Golang",
-                    "code": "golang"
-                },
-                {
-                    "id": "fa0f4e46-7eab-4e5c-9d31-30489e69fe2e",
-                    "name": "React",
-                    "code": "react"
-                },
-                {
-                    "id": "b403ef95-4269-4830-bbb6-8e56e5ec0af4",
-                    "name": "Google Cloud",
-                    "code": "gcloud"
-                }
-            ],
-            "roles": [
-                {
-                    "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
-                    "code": "admin",
-                    "name": "Admin"
-                }
-            ],
-            "projects": [
-                {
-                    "id": "7310b51a-3855-498b-99ab-41aa82934269",
-                    "name": "Fortress",
-                    "deploymentType": "shadow",
-                    "positions": []
-                }
-            ],
-            "chapters": []
-        },
-        {
-            "id": "2655832e-f009-4b73-a535-64c3a22e558f",
-            "createdAt": "2022-11-02T09:52:34.586566Z",
-            "updatedAt": "",
-            "fullName": "Phạm Đức Thành",
-            "displayName": "Thanh Pham",
-            "teamEmail": "thanh@d.foundation",
-            "personalEmail": "thanhpham123@gmail.com",
-            "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
-            "phoneNumber": "0123456788",
-            "address": "Tan Binh District, Ho Chi Minh, Vietnam",
-            "mbti": "ISFJ-A",
-            "gender": "Male",
-            "horoscope": "Aquaman",
-            "birthday": "1990-01-02T00:00:00Z",
-            "discordID": "646649040771219476",
-            "githubID": "thanhpham",
-            "notionID": "39523061",
-            "status": "contractor",
-            "joinedDate": "2018-09-01T00:00:00Z",
-            "leftDate": null,
-            "seniority": null,
-            "lineManager": null,
-            "positions": [
-                {
-                    "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
-                    "code": "frontend",
-                    "name": "Frontend"
-                },
-                {
-                    "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
-                    "code": "backend",
-                    "name": "Backend"
-                },
-                {
-                    "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
-                    "code": "devops",
-                    "name": "Devops"
-                },
-                {
-                    "id": "01fb6322-d727-47e3-a242-5039ea4732fc",
-                    "code": "blockchain",
-                    "name": "Blockchain"
-                }
-            ],
-            "stacks": [
-                {
-                    "id": "0ecf47c8-cca4-4c30-94bb-054b1124c44f",
-                    "name": "Golang",
-                    "code": "golang"
-                },
-                {
-                    "id": "b403ef95-4269-4830-bbb6-8e56e5ec0af4",
-                    "name": "Google Cloud",
-                    "code": "gcloud"
-                }
-            ],
-            "roles": [
-                {
-                    "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
-                    "code": "admin",
-                    "name": "Admin"
-                }
-            ],
-            "projects": [
-                {
-                    "id": "cb889a9c-b20c-47ee-83b8-44b6d1721aca",
-                    "name": "Fortress",
-                    "deploymentType": "official",
-                    "positions": []
-                }
-            ],
-            "chapters": []
-        },
-        {
-            "id": "608ea227-45a5-4c8a-af43-6c7280d96340",
-            "createdAt": "2022-11-02T09:50:55.320669Z",
-            "updatedAt": "",
-            "fullName": "Tiêu Quang Huy",
-            "displayName": "Huy Tieu",
-            "teamEmail": "huytq@d.foundation",
-            "personalEmail": "huytq123@gmail.com",
-            "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/3c420751-bb9a-4878-896e-2f10f3a633d6_avatar2535921977139052349.png",
-            "phoneNumber": "0123456789",
-            "address": "Binh Thanh, Ho Chi Minh City",
-            "mbti": "INFP-A",
-            "gender": "Male",
-            "horoscope": "Libra",
-            "birthday": "1990-01-02T00:00:00Z",
-            "discordID": "435844136025849876",
-            "githubID": "huytq",
-            "notionID": "39523061",
-            "status": "contractor",
-            "joinedDate": "2018-09-01T00:00:00Z",
-            "leftDate": null,
-            "seniority": null,
-            "lineManager": null,
-            "positions": [
-                {
-                    "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
-                    "code": "frontend",
-                    "name": "Frontend"
-                },
-                {
-                    "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
-                    "code": "backend",
-                    "name": "Backend"
-                },
-                {
-                    "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
-                    "code": "devops",
-                    "name": "Devops"
-                },
-                {
-                    "id": "01fb6322-d727-47e3-a242-5039ea4732fc",
-                    "code": "blockchain",
-                    "name": "Blockchain"
-                }
-            ],
-            "stacks": [
-                {
-                    "id": "b403ef95-4269-4830-bbb6-8e56e5ec0af4",
-                    "name": "Google Cloud",
-                    "code": "gcloud"
-                }
-            ],
-            "roles": [
-                {
-                    "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
-                    "code": "member",
-                    "name": "Member"
-                }
-            ],
-            "projects": [
-                {
-                    "id": "fcd5c16f-40fd-48b6-9649-410691373eea",
-                    "name": "Fortress",
-                    "deploymentType": "shadow",
-                    "positions": []
-                }
-            ],
-            "chapters": []
-        },
-        {
-            "id": "3f705527-0455-4e67-a585-6c1f23726fff",
-            "createdAt": "2022-11-17T11:06:03.245183Z",
-            "updatedAt": "",
-            "fullName": "Giang Ngọc Huy",
-            "displayName": "Huy Giang",
-            "teamEmail": "huy@dwarvesv.com",
-            "personalEmail": "gnhuy123@gmail.com",
-            "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/261887286241984054.png",
-            "phoneNumber": "0123456789",
-            "address": "Binh Tan District, Ho Chi Minh, Vietnam",
-            "mbti": "ISFJ-A",
-            "gender": "Male",
-            "horoscope": "Libra",
-            "birthday": "1991-11-11T00:00:00Z",
-            "discordID": "435844136025849876",
-            "githubID": "huygn",
-            "notionID": "29088916",
-            "status": "full-time",
-            "joinedDate": "2018-09-01T00:00:00Z",
-            "leftDate": null,
-            "seniority": null,
-            "lineManager": null,
-            "positions": [
-                {
-                    "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
-                    "code": "frontend",
-                    "name": "Frontend"
-                },
-                {
-                    "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
-                    "code": "backend",
-                    "name": "Backend"
-                },
-                {
-                    "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
-                    "code": "devops",
-                    "name": "Devops"
-                },
-                {
-                    "id": "01fb6322-d727-47e3-a242-5039ea4732fc",
-                    "code": "blockchain",
-                    "name": "Blockchain"
-                }
-            ],
-            "stacks": [
-                {
-                    "id": "0ecf47c8-cca4-4c30-94bb-054b1124c44f",
-                    "name": "Golang",
-                    "code": "golang"
-                },
-                {
-                    "id": "b403ef95-4269-4830-bbb6-8e56e5ec0af4",
-                    "name": "Google Cloud",
-                    "code": "gcloud"
-                }
-            ],
-            "roles": [
-                {
-                    "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
-                    "code": "member",
-                    "name": "Member"
-                }
-            ],
-            "projects": [],
-            "chapters": []
-        },
-        {
-            "id": "37e00d47-de69-4ac8-991b-cf3e39565c00",
-            "createdAt": "2022-11-17T11:06:03.262847Z",
-            "updatedAt": "",
-            "fullName": "Phùng Thị Thương Thương",
-            "displayName": "Thuong Phung",
-            "teamEmail": "thuongptt@dwarvesv.com",
-            "personalEmail": "thuongphung123@gmail.com",
-            "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/7186955696154477566.png",
-            "phoneNumber": "0123456789",
-            "address": "District 10, Ho Chi Minh, Vietnam",
-            "mbti": "INFP-A",
-            "gender": "Female",
-            "horoscope": "Scorpio",
-            "birthday": "1991-11-11T00:00:00Z",
-            "discordID": "435844136025849876",
-            "githubID": "thuongphuong",
-            "notionID": "29088916",
-            "status": "full-time",
-            "joinedDate": "2021-05-17T00:00:00Z",
-            "leftDate": null,
-            "seniority": null,
-            "lineManager": null,
-            "positions": [
-                {
-                    "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
-                    "code": "devops",
-                    "name": "Devops"
-                }
-            ],
-            "stacks": [
-                {
-                    "id": "0ecf47c8-cca4-4c30-94bb-054b1124c44f",
-                    "name": "Golang",
-                    "code": "golang"
-                },
-                {
-                    "id": "b403ef95-4269-4830-bbb6-8e56e5ec0af4",
-                    "name": "Google Cloud",
-                    "code": "gcloud"
                 }
             ],
             "roles": [
@@ -602,6 +209,228 @@
                     "id": "0ecf47c8-cca4-4c30-94bb-054b1124c44f",
                     "name": "Golang",
                     "code": "golang"
+                }
+            ],
+            "roles": [
+                {
+                    "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
+                    "code": "member",
+                    "name": "Member"
+                }
+            ],
+            "projects": [],
+            "chapters": []
+        },
+        {
+            "id": "f6ce0d0f-5794-463b-ad0b-8240ab9c49be",
+            "createdAt": "2022-11-17T11:06:03.276614Z",
+            "updatedAt": "",
+            "fullName": "Nguyễn Hoàng Anh",
+            "displayName": "Anh Nguyen",
+            "teamEmail": "anhnh@dwarvesv.com",
+            "personalEmail": "nguyenanh123@gmail.com",
+            "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/3274097965772922906.png",
+            "phoneNumber": "0123456789",
+            "address": "Q.Tân Bình, TP.HCM",
+            "mbti": "INFP-A",
+            "gender": "Male",
+            "horoscope": "Aries",
+            "birthday": "2000-02-02T00:00:00Z",
+            "discordID": "236885900779454465",
+            "githubID": "anhnh",
+            "notionID": "26581472",
+            "status": "full-time",
+            "joinedDate": "2022-05-25T00:00:00Z",
+            "leftDate": null,
+            "seniority": null,
+            "lineManager": null,
+            "positions": [],
+            "stacks": [
+                {
+                    "id": "fa0f4e46-7eab-4e5c-9d31-30489e69fe2e",
+                    "name": "React",
+                    "code": "react"
+                }
+            ],
+            "roles": [
+                {
+                    "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
+                    "code": "member",
+                    "name": "Member"
+                }
+            ],
+            "projects": [],
+            "chapters": []
+        },
+        {
+            "id": "061820c0-bf6c-4b4a-9753-875f75d71a2c",
+            "createdAt": "2022-11-17T11:06:03.278004Z",
+            "updatedAt": "",
+            "fullName": "Vong Tieu Hung",
+            "displayName": "Hung Vong",
+            "teamEmail": "hungvt@dwarvesv.com",
+            "personalEmail": "tieuhung123@gmail.com",
+            "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5762098830282049280.png",
+            "phoneNumber": "0123456789",
+            "address": "Thu Duc",
+            "mbti": "INFP-A",
+            "gender": "Male",
+            "horoscope": "Aries",
+            "birthday": "1995-04-05T00:00:00Z",
+            "discordID": "205167514731151360",
+            "githubID": "hungvong",
+            "notionID": "26581472",
+            "status": "probation",
+            "joinedDate": "2022-05-25T00:00:00Z",
+            "leftDate": null,
+            "seniority": null,
+            "lineManager": null,
+            "positions": [],
+            "stacks": [
+                {
+                    "id": "fa0f4e46-7eab-4e5c-9d31-30489e69fe2e",
+                    "name": "React",
+                    "code": "react"
+                }
+            ],
+            "roles": [
+                {
+                    "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
+                    "code": "member",
+                    "name": "Member"
+                }
+            ],
+            "projects": [],
+            "chapters": []
+        },
+        {
+            "id": "d675dfc5-acbe-4566-acde-f7cb132c0206",
+            "createdAt": "2022-11-17T11:06:03.281048Z",
+            "updatedAt": "",
+            "fullName": "Le Nguyen An Khang",
+            "displayName": "Khang Le",
+            "teamEmail": "khanglna@dwarvesv.com",
+            "personalEmail": "khangle123@gmail.com",
+            "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/4368900905892223171.png",
+            "phoneNumber": "0123456789",
+            "address": "Binh Thanh District",
+            "mbti": "ENFJ-A",
+            "gender": "Male",
+            "horoscope": "Libra",
+            "birthday": "1995-04-05T00:00:00Z",
+            "discordID": "205167514731151360",
+            "githubID": "khangle",
+            "notionID": "26581472",
+            "status": "probation",
+            "joinedDate": "2022-05-25T00:00:00Z",
+            "leftDate": null,
+            "seniority": null,
+            "lineManager": null,
+            "positions": [],
+            "stacks": [
+                {
+                    "id": "fa0f4e46-7eab-4e5c-9d31-30489e69fe2e",
+                    "name": "React",
+                    "code": "react"
+                }
+            ],
+            "roles": [
+                {
+                    "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
+                    "code": "member",
+                    "name": "Member"
+                }
+            ],
+            "projects": [],
+            "chapters": []
+        },
+        {
+            "id": "7fbfb59b-e00e-46b2-85cd-64f9f9942daa",
+            "createdAt": "2022-11-17T11:06:03.27344Z",
+            "updatedAt": "",
+            "fullName": "Đoàn Tấn Đạt",
+            "displayName": "Dat Doan",
+            "teamEmail": "datdt@dwarvesv.com",
+            "personalEmail": "doandat123@gmail.com",
+            "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/1105085008506574007.png",
+            "phoneNumber": "0123456789",
+            "address": "Binh Tan District, Ho Chi Minh, Vietnam",
+            "mbti": "INFP-A",
+            "gender": "Male",
+            "horoscope": "Aries",
+            "birthday": "2000-02-02T00:00:00Z",
+            "discordID": "236885900779454465",
+            "githubID": "datdt",
+            "notionID": "26581472",
+            "status": "left",
+            "joinedDate": "2022-05-25T00:00:00Z",
+            "leftDate": "2022-04-12T00:00:00Z",
+            "seniority": null,
+            "lineManager": null,
+            "positions": [
+                {
+                    "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
+                    "code": "devops",
+                    "name": "Devops"
+                }
+            ],
+            "stacks": [
+                {
+                    "id": "fa0f4e46-7eab-4e5c-9d31-30489e69fe2e",
+                    "name": "React",
+                    "code": "react"
+                }
+            ],
+            "roles": [
+                {
+                    "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
+                    "code": "member",
+                    "name": "Member"
+                }
+            ],
+            "projects": [],
+            "chapters": []
+        },
+        {
+            "id": "37e00d47-de69-4ac8-991b-cf3e39565c00",
+            "createdAt": "2022-11-17T11:06:03.262847Z",
+            "updatedAt": "",
+            "fullName": "Phùng Thị Thương Thương",
+            "displayName": "Thuong Phung",
+            "teamEmail": "thuongptt@dwarvesv.com",
+            "personalEmail": "thuongphung123@gmail.com",
+            "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/7186955696154477566.png",
+            "phoneNumber": "0123456789",
+            "address": "District 10, Ho Chi Minh, Vietnam",
+            "mbti": "INFP-A",
+            "gender": "Female",
+            "horoscope": "Scorpio",
+            "birthday": "1991-11-11T00:00:00Z",
+            "discordID": "435844136025849876",
+            "githubID": "thuongphuong",
+            "notionID": "29088916",
+            "status": "full-time",
+            "joinedDate": "2021-05-17T00:00:00Z",
+            "leftDate": null,
+            "seniority": null,
+            "lineManager": null,
+            "positions": [
+                {
+                    "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
+                    "code": "devops",
+                    "name": "Devops"
+                }
+            ],
+            "stacks": [
+                {
+                    "id": "0ecf47c8-cca4-4c30-94bb-054b1124c44f",
+                    "name": "Golang",
+                    "code": "golang"
+                },
+                {
+                    "id": "b403ef95-4269-4830-bbb6-8e56e5ec0af4",
+                    "name": "Google Cloud",
+                    "code": "gcloud"
                 }
             ],
             "roles": [
@@ -771,178 +600,40 @@
             "chapters": []
         },
         {
-            "id": "f6ce0d0f-5794-463b-ad0b-8240ab9c49be",
-            "createdAt": "2022-11-17T11:06:03.276614Z",
+            "id": "dcfee24b-306d-4609-9c24-a4021639a11b",
+            "createdAt": "2022-11-17T11:06:03.264371Z",
             "updatedAt": "",
-            "fullName": "Nguyễn Hoàng Anh",
-            "displayName": "Anh Nguyen",
-            "teamEmail": "anhnh@dwarvesv.com",
-            "personalEmail": "nguyenanh123@gmail.com",
-            "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/3274097965772922906.png",
+            "fullName": "Lê Việt Quỳnh",
+            "displayName": "Quynh Le",
+            "teamEmail": "quynhlv@dwarvesv.com",
+            "personalEmail": "lequynh123@gmail.com",
+            "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/4916620003720295041.png",
             "phoneNumber": "0123456789",
-            "address": "Q.Tân Bình, TP.HCM",
-            "mbti": "INFP-A",
-            "gender": "Male",
-            "horoscope": "Aries",
-            "birthday": "2000-02-02T00:00:00Z",
-            "discordID": "236885900779454465",
-            "githubID": "anhnh",
-            "notionID": "26581472",
+            "address": "Binh Tan District",
+            "mbti": "INTJ-S",
+            "gender": "Female",
+            "horoscope": "Virgo",
+            "birthday": "1998-12-10T00:00:00Z",
+            "discordID": "435844136025849876",
+            "githubID": "quynhle",
+            "notionID": "29088916",
             "status": "full-time",
-            "joinedDate": "2022-05-25T00:00:00Z",
-            "leftDate": null,
-            "seniority": null,
-            "lineManager": null,
-            "positions": [],
-            "stacks": [
-                {
-                    "id": "fa0f4e46-7eab-4e5c-9d31-30489e69fe2e",
-                    "name": "React",
-                    "code": "react"
-                }
-            ],
-            "roles": [
-                {
-                    "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
-                    "code": "member",
-                    "name": "Member"
-                }
-            ],
-            "projects": [],
-            "chapters": []
-        },
-        {
-            "id": "061820c0-bf6c-4b4a-9753-875f75d71a2c",
-            "createdAt": "2022-11-17T11:06:03.278004Z",
-            "updatedAt": "",
-            "fullName": "Vong Tieu Hung",
-            "displayName": "Hung Vong",
-            "teamEmail": "hungvt@dwarvesv.com",
-            "personalEmail": "tieuhung123@gmail.com",
-            "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5762098830282049280.png",
-            "phoneNumber": "0123456789",
-            "address": "Thu Duc",
-            "mbti": "INFP-A",
-            "gender": "Male",
-            "horoscope": "Aries",
-            "birthday": "1995-04-05T00:00:00Z",
-            "discordID": "205167514731151360",
-            "githubID": "hungvong",
-            "notionID": "26581472",
-            "status": "probation",
-            "joinedDate": "2022-05-25T00:00:00Z",
-            "leftDate": null,
-            "seniority": null,
-            "lineManager": null,
-            "positions": [],
-            "stacks": [
-                {
-                    "id": "fa0f4e46-7eab-4e5c-9d31-30489e69fe2e",
-                    "name": "React",
-                    "code": "react"
-                }
-            ],
-            "roles": [
-                {
-                    "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
-                    "code": "member",
-                    "name": "Member"
-                }
-            ],
-            "projects": [],
-            "chapters": []
-        },
-        {
-            "id": "d675dfc5-acbe-4566-acde-f7cb132c0206",
-            "createdAt": "2022-11-17T11:06:03.281048Z",
-            "updatedAt": "",
-            "fullName": "Le Nguyen An Khang",
-            "displayName": "Khang Le",
-            "teamEmail": "khanglna@dwarvesv.com",
-            "personalEmail": "khangle123@gmail.com",
-            "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/4368900905892223171.png",
-            "phoneNumber": "0123456789",
-            "address": "Binh Thanh District",
-            "mbti": "ENFJ-A",
-            "gender": "Male",
-            "horoscope": "Libra",
-            "birthday": "1995-04-05T00:00:00Z",
-            "discordID": "205167514731151360",
-            "githubID": "khangle",
-            "notionID": "26581472",
-            "status": "probation",
-            "joinedDate": "2022-05-25T00:00:00Z",
-            "leftDate": null,
-            "seniority": null,
-            "lineManager": null,
-            "positions": [],
-            "stacks": [
-                {
-                    "id": "fa0f4e46-7eab-4e5c-9d31-30489e69fe2e",
-                    "name": "React",
-                    "code": "react"
-                }
-            ],
-            "roles": [
-                {
-                    "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
-                    "code": "member",
-                    "name": "Member"
-                }
-            ],
-            "projects": [],
-            "chapters": []
-        },
-        {
-            "id": "8d7c99c0-3253-4286-93a9-e7554cb327ef",
-            "createdAt": "2022-11-02T09:50:55.320669Z",
-            "updatedAt": "",
-            "fullName": "Nguyễn Hải Nam",
-            "displayName": "Nam Nguyen",
-            "teamEmail": "benjamin@d.foundation",
-            "personalEmail": "nam123@gmail.com",
-            "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/8399103964540935617.png",
-            "phoneNumber": "0123456789",
-            "address": "District 7, Ho Chi Minh City",
-            "mbti": "ENFJ-A",
-            "gender": "Male",
-            "horoscope": "Libra",
-            "birthday": "1990-01-02T00:00:00Z",
-            "discordID": "646649040771219476",
-            "githubID": "namnh",
-            "notionID": "39523061",
-            "status": "probation",
-            "joinedDate": "2018-09-01T00:00:00Z",
+            "joinedDate": "2021-05-17T00:00:00Z",
             "leftDate": null,
             "seniority": null,
             "lineManager": null,
             "positions": [
                 {
-                    "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
-                    "code": "frontend",
-                    "name": "Frontend"
-                },
-                {
-                    "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
-                    "code": "backend",
-                    "name": "Backend"
-                },
-                {
                     "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
                     "code": "devops",
                     "name": "Devops"
-                },
-                {
-                    "id": "01fb6322-d727-47e3-a242-5039ea4732fc",
-                    "code": "blockchain",
-                    "name": "Blockchain"
                 }
             ],
             "stacks": [
                 {
-                    "id": "fa0f4e46-7eab-4e5c-9d31-30489e69fe2e",
-                    "name": "React",
-                    "code": "react"
+                    "id": "0ecf47c8-cca4-4c30-94bb-054b1124c44f",
+                    "name": "Golang",
+                    "code": "golang"
                 },
                 {
                     "id": "b403ef95-4269-4830-bbb6-8e56e5ec0af4",
@@ -952,88 +643,12 @@
             ],
             "roles": [
                 {
-                    "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
-                    "code": "admin",
-                    "name": "Admin"
-                }
-            ],
-            "projects": [
-                {
-                    "id": "35149aab-0506-4eb3-9300-c706ccbf2bde",
-                    "name": "Fortress",
-                    "deploymentType": "official",
-                    "positions": []
-                }
-            ],
-            "chapters": []
-        },
-        {
-            "id": "eeae589a-94e3-49ac-a94c-fcfb084152b2",
-            "createdAt": "2022-11-02T09:50:55.320669Z",
-            "updatedAt": "",
-            "fullName": "Nguyễn Ngô Lập",
-            "displayName": "Lap Nguyen",
-            "teamEmail": "alan@d.foundation",
-            "personalEmail": "lap123@gmail.com",
-            "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/2870969541970972723.png",
-            "phoneNumber": "0123456789",
-            "address": "Binh chanh, Ho Chi Minh City",
-            "mbti": "ENFJ-A",
-            "gender": "Male",
-            "horoscope": "Libra",
-            "birthday": "1990-01-02T00:00:00Z",
-            "discordID": "646649040771219476",
-            "githubID": "lapnn",
-            "notionID": "39523061",
-            "status": "probation",
-            "joinedDate": "2018-09-01T00:00:00Z",
-            "leftDate": null,
-            "seniority": null,
-            "lineManager": null,
-            "positions": [
-                {
-                    "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
-                    "code": "frontend",
-                    "name": "Frontend"
-                },
-                {
                     "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
-                    "code": "backend",
-                    "name": "Backend"
-                },
-                {
-                    "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
-                    "code": "devops",
-                    "name": "Devops"
-                },
-                {
-                    "id": "01fb6322-d727-47e3-a242-5039ea4732fc",
-                    "code": "blockchain",
-                    "name": "Blockchain"
+                    "code": "member",
+                    "name": "Member"
                 }
             ],
-            "stacks": [
-                {
-                    "id": "0ecf47c8-cca4-4c30-94bb-054b1124c44f",
-                    "name": "Golang",
-                    "code": "golang"
-                }
-            ],
-            "roles": [
-                {
-                    "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
-                    "code": "admin",
-                    "name": "Admin"
-                }
-            ],
-            "projects": [
-                {
-                    "id": "5a9a07aa-e8f3-4b62-b9ad-0f057866dc6c",
-                    "name": "Fortress",
-                    "deploymentType": "official",
-                    "positions": []
-                }
-            ],
+            "projects": [],
             "chapters": []
         },
         {
@@ -1141,33 +756,48 @@
             "chapters": []
         },
         {
-            "id": "7fbfb59b-e00e-46b2-85cd-64f9f9942daa",
-            "createdAt": "2022-11-17T11:06:03.27344Z",
+            "id": "8d7c99c0-3253-4286-93a9-e7554cb327ef",
+            "createdAt": "2022-11-02T09:50:55.320669Z",
             "updatedAt": "",
-            "fullName": "Đoàn Tấn Đạt",
-            "displayName": "Dat Doan",
-            "teamEmail": "datdt@dwarvesv.com",
-            "personalEmail": "doandat123@gmail.com",
-            "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/1105085008506574007.png",
+            "fullName": "Nguyễn Hải Nam",
+            "displayName": "Nam Nguyen",
+            "teamEmail": "benjamin@d.foundation",
+            "personalEmail": "nam123@gmail.com",
+            "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/8399103964540935617.png",
             "phoneNumber": "0123456789",
-            "address": "Binh Tan District, Ho Chi Minh, Vietnam",
-            "mbti": "INFP-A",
+            "address": "District 7, Ho Chi Minh City",
+            "mbti": "ENFJ-A",
             "gender": "Male",
-            "horoscope": "Aries",
-            "birthday": "2000-02-02T00:00:00Z",
-            "discordID": "236885900779454465",
-            "githubID": "datdt",
-            "notionID": "26581472",
-            "status": "left",
-            "joinedDate": "2022-05-25T00:00:00Z",
-            "leftDate": "2022-04-12T00:00:00Z",
+            "horoscope": "Libra",
+            "birthday": "1990-01-02T00:00:00Z",
+            "discordID": "646649040771219476",
+            "githubID": "namnh",
+            "notionID": "39523061",
+            "status": "probation",
+            "joinedDate": "2018-09-01T00:00:00Z",
+            "leftDate": null,
             "seniority": null,
             "lineManager": null,
             "positions": [
                 {
+                    "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
+                    "code": "frontend",
+                    "name": "Frontend"
+                },
+                {
+                    "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
+                    "code": "backend",
+                    "name": "Backend"
+                },
+                {
                     "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
                     "code": "devops",
                     "name": "Devops"
+                },
+                {
+                    "id": "01fb6322-d727-47e3-a242-5039ea4732fc",
+                    "code": "blockchain",
+                    "name": "Blockchain"
                 }
             ],
             "stacks": [
@@ -1175,6 +805,85 @@
                     "id": "fa0f4e46-7eab-4e5c-9d31-30489e69fe2e",
                     "name": "React",
                     "code": "react"
+                },
+                {
+                    "id": "b403ef95-4269-4830-bbb6-8e56e5ec0af4",
+                    "name": "Google Cloud",
+                    "code": "gcloud"
+                }
+            ],
+            "roles": [
+                {
+                    "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
+                    "code": "admin",
+                    "name": "Admin"
+                }
+            ],
+            "projects": [
+                {
+                    "id": "35149aab-0506-4eb3-9300-c706ccbf2bde",
+                    "name": "Fortress",
+                    "deploymentType": "official",
+                    "positions": []
+                }
+            ],
+            "chapters": []
+        },
+        {
+            "id": "3f705527-0455-4e67-a585-6c1f23726fff",
+            "createdAt": "2022-11-17T11:06:03.245183Z",
+            "updatedAt": "",
+            "fullName": "Giang Ngọc Huy",
+            "displayName": "Huy Giang",
+            "teamEmail": "huy@dwarvesv.com",
+            "personalEmail": "gnhuy123@gmail.com",
+            "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/261887286241984054.png",
+            "phoneNumber": "0123456789",
+            "address": "Binh Tan District, Ho Chi Minh, Vietnam",
+            "mbti": "ISFJ-A",
+            "gender": "Male",
+            "horoscope": "Libra",
+            "birthday": "1991-11-11T00:00:00Z",
+            "discordID": "435844136025849876",
+            "githubID": "huygn",
+            "notionID": "29088916",
+            "status": "full-time",
+            "joinedDate": "2018-09-01T00:00:00Z",
+            "leftDate": null,
+            "seniority": null,
+            "lineManager": null,
+            "positions": [
+                {
+                    "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
+                    "code": "frontend",
+                    "name": "Frontend"
+                },
+                {
+                    "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
+                    "code": "backend",
+                    "name": "Backend"
+                },
+                {
+                    "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
+                    "code": "devops",
+                    "name": "Devops"
+                },
+                {
+                    "id": "01fb6322-d727-47e3-a242-5039ea4732fc",
+                    "code": "blockchain",
+                    "name": "Blockchain"
+                }
+            ],
+            "stacks": [
+                {
+                    "id": "0ecf47c8-cca4-4c30-94bb-054b1124c44f",
+                    "name": "Golang",
+                    "code": "golang"
+                },
+                {
+                    "id": "b403ef95-4269-4830-bbb6-8e56e5ec0af4",
+                    "name": "Google Cloud",
+                    "code": "gcloud"
                 }
             ],
             "roles": [
@@ -1185,6 +894,297 @@
                 }
             ],
             "projects": [],
+            "chapters": []
+        },
+        {
+            "id": "ecea9d15-05ba-4a4e-9787-54210e3b98ce",
+            "createdAt": "2022-11-02T09:50:55.320669Z",
+            "updatedAt": "",
+            "fullName": "Nguyễn Hoàng Huy",
+            "displayName": "Huy Nguyen",
+            "teamEmail": "huynh@d.foundation",
+            "personalEmail": "hoanghuy123@gmail.com",
+            "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/2830497479497502617.png",
+            "phoneNumber": "0123456789",
+            "address": "Thu Duc City, Ho Chi Minh City",
+            "mbti": "ENFJ-A",
+            "gender": "Male",
+            "horoscope": "Aquaman",
+            "birthday": "1990-01-02T00:00:00Z",
+            "discordID": "646649040771219476",
+            "githubID": "huynguyen",
+            "notionID": "39523061",
+            "status": "probation",
+            "joinedDate": "2018-09-01T00:00:00Z",
+            "leftDate": null,
+            "seniority": null,
+            "lineManager": null,
+            "positions": [
+                {
+                    "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
+                    "code": "devops",
+                    "name": "Devops"
+                },
+                {
+                    "id": "01fb6322-d727-47e3-a242-5039ea4732fc",
+                    "code": "blockchain",
+                    "name": "Blockchain"
+                },
+                {
+                    "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
+                    "code": "frontend",
+                    "name": "Frontend"
+                },
+                {
+                    "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
+                    "code": "backend",
+                    "name": "Backend"
+                }
+            ],
+            "stacks": [
+                {
+                    "id": "0ecf47c8-cca4-4c30-94bb-054b1124c44f",
+                    "name": "Golang",
+                    "code": "golang"
+                },
+                {
+                    "id": "fa0f4e46-7eab-4e5c-9d31-30489e69fe2e",
+                    "name": "React",
+                    "code": "react"
+                },
+                {
+                    "id": "b403ef95-4269-4830-bbb6-8e56e5ec0af4",
+                    "name": "Google Cloud",
+                    "code": "gcloud"
+                }
+            ],
+            "roles": [
+                {
+                    "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
+                    "code": "admin",
+                    "name": "Admin"
+                }
+            ],
+            "projects": [
+                {
+                    "id": "7310b51a-3855-498b-99ab-41aa82934269",
+                    "name": "Fortress",
+                    "deploymentType": "shadow",
+                    "positions": []
+                }
+            ],
+            "chapters": []
+        },
+        {
+            "id": "2655832e-f009-4b73-a535-64c3a22e558f",
+            "createdAt": "2022-11-02T09:52:34.586566Z",
+            "updatedAt": "",
+            "fullName": "Phạm Đức Thành",
+            "displayName": "Thanh Pham",
+            "teamEmail": "thanh@d.foundation",
+            "personalEmail": "thanhpham123@gmail.com",
+            "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
+            "phoneNumber": "0123456788",
+            "address": "Tan Binh District, Ho Chi Minh, Vietnam",
+            "mbti": "ISFJ-A",
+            "gender": "Male",
+            "horoscope": "Aquaman",
+            "birthday": "1990-01-02T00:00:00Z",
+            "discordID": "646649040771219476",
+            "githubID": "thanhpham",
+            "notionID": "39523061",
+            "status": "contractor",
+            "joinedDate": "2018-09-01T00:00:00Z",
+            "leftDate": null,
+            "seniority": null,
+            "lineManager": null,
+            "positions": [
+                {
+                    "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
+                    "code": "frontend",
+                    "name": "Frontend"
+                },
+                {
+                    "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
+                    "code": "backend",
+                    "name": "Backend"
+                },
+                {
+                    "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
+                    "code": "devops",
+                    "name": "Devops"
+                },
+                {
+                    "id": "01fb6322-d727-47e3-a242-5039ea4732fc",
+                    "code": "blockchain",
+                    "name": "Blockchain"
+                }
+            ],
+            "stacks": [
+                {
+                    "id": "0ecf47c8-cca4-4c30-94bb-054b1124c44f",
+                    "name": "Golang",
+                    "code": "golang"
+                },
+                {
+                    "id": "b403ef95-4269-4830-bbb6-8e56e5ec0af4",
+                    "name": "Google Cloud",
+                    "code": "gcloud"
+                }
+            ],
+            "roles": [
+                {
+                    "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
+                    "code": "admin",
+                    "name": "Admin"
+                }
+            ],
+            "projects": [
+                {
+                    "id": "cb889a9c-b20c-47ee-83b8-44b6d1721aca",
+                    "name": "Fortress",
+                    "deploymentType": "official",
+                    "positions": []
+                }
+            ],
+            "chapters": []
+        },
+        {
+            "id": "eeae589a-94e3-49ac-a94c-fcfb084152b2",
+            "createdAt": "2022-11-02T09:50:55.320669Z",
+            "updatedAt": "",
+            "fullName": "Nguyễn Ngô Lập",
+            "displayName": "Lap Nguyen",
+            "teamEmail": "alan@d.foundation",
+            "personalEmail": "lap123@gmail.com",
+            "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/2870969541970972723.png",
+            "phoneNumber": "0123456789",
+            "address": "Binh chanh, Ho Chi Minh City",
+            "mbti": "ENFJ-A",
+            "gender": "Male",
+            "horoscope": "Libra",
+            "birthday": "1990-01-02T00:00:00Z",
+            "discordID": "646649040771219476",
+            "githubID": "lapnn",
+            "notionID": "39523061",
+            "status": "probation",
+            "joinedDate": "2018-09-01T00:00:00Z",
+            "leftDate": null,
+            "seniority": null,
+            "lineManager": null,
+            "positions": [
+                {
+                    "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
+                    "code": "frontend",
+                    "name": "Frontend"
+                },
+                {
+                    "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
+                    "code": "backend",
+                    "name": "Backend"
+                },
+                {
+                    "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
+                    "code": "devops",
+                    "name": "Devops"
+                },
+                {
+                    "id": "01fb6322-d727-47e3-a242-5039ea4732fc",
+                    "code": "blockchain",
+                    "name": "Blockchain"
+                }
+            ],
+            "stacks": [
+                {
+                    "id": "0ecf47c8-cca4-4c30-94bb-054b1124c44f",
+                    "name": "Golang",
+                    "code": "golang"
+                }
+            ],
+            "roles": [
+                {
+                    "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
+                    "code": "admin",
+                    "name": "Admin"
+                }
+            ],
+            "projects": [
+                {
+                    "id": "5a9a07aa-e8f3-4b62-b9ad-0f057866dc6c",
+                    "name": "Fortress",
+                    "deploymentType": "official",
+                    "positions": []
+                }
+            ],
+            "chapters": []
+        },
+        {
+            "id": "608ea227-45a5-4c8a-af43-6c7280d96340",
+            "createdAt": "2022-11-02T09:50:55.320669Z",
+            "updatedAt": "",
+            "fullName": "Tiêu Quang Huy",
+            "displayName": "Huy Tieu",
+            "teamEmail": "huytq@d.foundation",
+            "personalEmail": "huytq123@gmail.com",
+            "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/3c420751-bb9a-4878-896e-2f10f3a633d6_avatar2535921977139052349.png",
+            "phoneNumber": "0123456789",
+            "address": "Binh Thanh, Ho Chi Minh City",
+            "mbti": "INFP-A",
+            "gender": "Male",
+            "horoscope": "Libra",
+            "birthday": "1990-01-02T00:00:00Z",
+            "discordID": "435844136025849876",
+            "githubID": "huytq",
+            "notionID": "39523061",
+            "status": "contractor",
+            "joinedDate": "2018-09-01T00:00:00Z",
+            "leftDate": null,
+            "seniority": null,
+            "lineManager": null,
+            "positions": [
+                {
+                    "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
+                    "code": "frontend",
+                    "name": "Frontend"
+                },
+                {
+                    "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
+                    "code": "backend",
+                    "name": "Backend"
+                },
+                {
+                    "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
+                    "code": "devops",
+                    "name": "Devops"
+                },
+                {
+                    "id": "01fb6322-d727-47e3-a242-5039ea4732fc",
+                    "code": "blockchain",
+                    "name": "Blockchain"
+                }
+            ],
+            "stacks": [
+                {
+                    "id": "b403ef95-4269-4830-bbb6-8e56e5ec0af4",
+                    "name": "Google Cloud",
+                    "code": "gcloud"
+                }
+            ],
+            "roles": [
+                {
+                    "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
+                    "code": "member",
+                    "name": "Member"
+                }
+            ],
+            "projects": [
+                {
+                    "id": "fcd5c16f-40fd-48b6-9649-410691373eea",
+                    "name": "Fortress",
+                    "deploymentType": "shadow",
+                    "positions": []
+                }
+            ],
             "chapters": []
         }
     ]

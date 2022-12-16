@@ -84,7 +84,12 @@ func (s *store) All(db *gorm.DB, input GetAllInput, pagination model.Pagination)
 
 	query = query.Count(&total)
 
-	query = query.Order(pagination.Sort)
+	if pagination.Sort != "" {
+		query = query.Order(pagination.Sort)
+	} else {
+		query = query.Order("joined_date DESC")
+	}
+
 	limit, offset := pagination.ToLimitOffset()
 	if pagination.Page > 0 {
 		query = query.Limit(limit)
