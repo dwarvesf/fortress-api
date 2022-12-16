@@ -77,6 +77,7 @@ func TestHandler_UpdateProjectStatus(t *testing.T) {
 
 	for _, tt := range tests {
 		testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+			testhelper.LoadTestSQLFile(t, txRepo, "./testdata/update_project_status/update_project_status.sql")
 			byteReq, err := json.Marshal(tt.request)
 			require.Nil(t, err)
 
@@ -163,6 +164,7 @@ func TestHandler_Create(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				testhelper.LoadTestSQLFile(t, txRepo, "./testdata/create/create.sql")
 				body, err := json.Marshal(tt.args)
 				if err != nil {
 					t.Error(err)
@@ -222,8 +224,9 @@ func TestHandler_GetMembers(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
-			t.Run(tt.name, func(t *testing.T) {
+		t.Run(tt.name, func(t *testing.T) {
+			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				testhelper.LoadTestSQLFile(t, txRepo, "./testdata/get_members/get_members.sql")
 				w := httptest.NewRecorder()
 				ctx, _ := gin.CreateTestContext(w)
 				ctx.Request = httptest.NewRequest(http.MethodPost, fmt.Sprintf("/api/v1/projects/%v/members", tt.id), nil)
@@ -329,6 +332,7 @@ func TestHandler_UpdateMember(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				testhelper.LoadTestSQLFile(t, txRepo, "./testdata/update_member/update_member.sql")
 				body, err := json.Marshal(tt.args)
 				if err != nil {
 					t.Error(err)
@@ -396,6 +400,7 @@ func TestHandler_AssignMember(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				testhelper.LoadTestSQLFile(t, txRepo, "./testdata/assign_member/assign_member.sql")
 				body, err := json.Marshal(tt.args)
 				if err != nil {
 					t.Error(err)
@@ -456,6 +461,7 @@ func TestHandler_DeleteProjectMember(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				testhelper.LoadTestSQLFile(t, txRepo, "./testdata/delete_member/delete_member.sql")
 				w := httptest.NewRecorder()
 				ctx, _ := gin.CreateTestContext(w)
 				ctx.Params = gin.Params{gin.Param{Key: "id", Value: tt.id}, gin.Param{Key: "memberID", Value: tt.memberID}}
@@ -478,7 +484,6 @@ func TestHandler_Detail(t *testing.T) {
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg)
 	storeMock := store.New()
-	testRepoMock := store.NewPostgresStore(&cfg)
 
 	tests := []struct {
 		name             string
@@ -503,24 +508,27 @@ func TestHandler_Detail(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			w := httptest.NewRecorder()
-			ctx, _ := gin.CreateTestContext(w)
-			ctx.Request = httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/projects/%v", tt.id), nil)
-			ctx.Request.Header.Set("Authorization", testToken)
-			ctx.Request.URL.RawQuery = tt.query
-			ctx.AddParam("id", tt.id)
+			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				testhelper.LoadTestSQLFile(t, txRepo, "./testdata/get_project/get_project.sql")
+				w := httptest.NewRecorder()
+				ctx, _ := gin.CreateTestContext(w)
+				ctx.Request = httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/projects/%v", tt.id), nil)
+				ctx.Request.Header.Set("Authorization", testToken)
+				ctx.Request.URL.RawQuery = tt.query
+				ctx.AddParam("id", tt.id)
 
-			h := New(storeMock, testRepoMock, serviceMock, loggerMock)
-			h.Details(ctx)
-			require.Equal(t, tt.wantCode, w.Code)
-			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
-			require.NoError(t, err)
+				h := New(storeMock, txRepo, serviceMock, loggerMock)
+				h.Details(ctx)
+				require.Equal(t, tt.wantCode, w.Code)
+				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				require.NoError(t, err)
 
-			res := w.Body.Bytes()
-			res, _ = utils.RemoveFieldInResponse(res, "createdAt")
-			res, _ = utils.RemoveFieldInResponse(res, "updatedAt")
+				res := w.Body.Bytes()
+				res, _ = utils.RemoveFieldInResponse(res, "createdAt")
+				res, _ = utils.RemoveFieldInResponse(res, "updatedAt")
 
-			require.JSONEq(t, string(expRespRaw), string(res), "[Handler.Project.Details] response mismatched")
+				require.JSONEq(t, string(expRespRaw), string(res), "[Handler.Project.Details] response mismatched")
+			})
 		})
 	}
 }
@@ -573,6 +581,7 @@ func TestHandler_UpdateGeneralInfo(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				testhelper.LoadTestSQLFile(t, txRepo, "./testdata/update_general_info/update_general_info.sql")
 				byteReq, err := json.Marshal(tt.input)
 				require.Nil(t, err)
 
@@ -637,6 +646,7 @@ func TestHandler_UpdateContactInfo(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				testhelper.LoadTestSQLFile(t, txRepo, "./testdata/update_contact_info/update_contact_info.sql")
 				byteReq, err := json.Marshal(tt.input)
 				require.Nil(t, err)
 
@@ -698,6 +708,7 @@ func TestHandler_GetListWorkUnit(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				testhelper.LoadTestSQLFile(t, txRepo, "./testdata/get_list_work_unit/get_list_work_unit.sql")
 				w := httptest.NewRecorder()
 				ctx, _ := gin.CreateTestContext(w)
 				ctx.AddParam("id", tt.id)
@@ -799,6 +810,7 @@ func TestHandler_UpdateWorkUnit(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				testhelper.LoadTestSQLFile(t, txRepo, "./testdata/update_work_unit/update_work_unit.sql")
 				body, err := json.Marshal(tt.input.Body)
 				if err != nil {
 					t.Error(err)
@@ -887,6 +899,7 @@ func TestHandler_CreateWorkUnit(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				testhelper.LoadTestSQLFile(t, txRepo, "./testdata/create_work_unit/create_work_unit.sql")
 				body, err := json.Marshal(tt.input.Body)
 				if err != nil {
 					t.Error(err)
@@ -951,6 +964,7 @@ func TestHandler_ArchiveWorkUnit(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				testhelper.LoadTestSQLFile(t, txRepo, "./testdata/archive_work_unit/archive_work_unit.sql")
 				w := httptest.NewRecorder()
 				ctx, _ := gin.CreateTestContext(w)
 				ctx.Request = httptest.NewRequest(http.MethodPut,
@@ -1007,6 +1021,7 @@ func TestHandler_UnarchiveWorkUnit(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				testhelper.LoadTestSQLFile(t, txRepo, "./testdata/unarchive_work_unit/unarchive_work_unit.sql")
 				w := httptest.NewRecorder()
 				ctx, _ := gin.CreateTestContext(w)
 				ctx.Request = httptest.NewRequest(http.MethodPut,

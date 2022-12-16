@@ -31,7 +31,7 @@ func TestHandler_List(t *testing.T) {
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg)
 	storeMock := store.New()
-	testRepoMock := store.NewPostgresStore(&cfg)
+
 	tests := []struct {
 		name             string
 		query            string
@@ -107,22 +107,25 @@ func TestHandler_List(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			w := httptest.NewRecorder()
-			ctx, _ := gin.CreateTestContext(w)
-			ctx.Request = httptest.NewRequest(http.MethodGet, "/api/v1/employees", nil)
-			ctx.Request.Header.Set("Authorization", testToken)
-			ctx.Request.URL.RawQuery = tt.query
+			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				testhelper.LoadTestSQLFile(t, txRepo, "./testdata/list/list.sql")
+				w := httptest.NewRecorder()
+				ctx, _ := gin.CreateTestContext(w)
+				ctx.Request = httptest.NewRequest(http.MethodGet, "/api/v1/employees", nil)
+				ctx.Request.Header.Set("Authorization", testToken)
+				ctx.Request.URL.RawQuery = tt.query
 
-			h := New(storeMock, testRepoMock, serviceMock, loggerMock, &cfg)
-			h.List(ctx)
-			require.Equal(t, tt.wantCode, w.Code)
-			expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
-			require.NoError(t, err)
+				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+				h.List(ctx)
+				require.Equal(t, tt.wantCode, w.Code)
+				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				require.NoError(t, err)
 
-			res, err := utils.RemoveFieldInSliceResponse(w.Body.Bytes(), "updatedAt")
-			require.NoError(t, err)
+				res, err := utils.RemoveFieldInSliceResponse(w.Body.Bytes(), "updatedAt")
+				require.NoError(t, err)
 
-			require.JSONEq(t, string(expRespRaw), string(res), "[Handler.Employee.List] response mismatched")
+				require.JSONEq(t, string(expRespRaw), string(res), "[Handler.Employee.List] response mismatched")
+			})
 		})
 	}
 }
@@ -155,6 +158,7 @@ func TestHandler_UpdateEmployeeStatus(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				testhelper.LoadTestSQLFile(t, txRepo, "./testdata/update_employee_status/update_employee_status.sql")
 				byteReq, err := json.Marshal(tt.body)
 				require.Nil(t, err)
 				w := httptest.NewRecorder()
@@ -224,6 +228,7 @@ func Test_UpdateGeneralInfo(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				testhelper.LoadTestSQLFile(t, txRepo, "./testdata/update_general_info/update_general_info.sql")
 				byteReq, err := json.Marshal(tt.body)
 				require.Nil(t, err)
 				w := httptest.NewRecorder()
@@ -314,7 +319,7 @@ func Test_UpdateSkill(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
-
+				testhelper.LoadTestSQLFile(t, txRepo, "./testdata/update_skills/update_skills.sql")
 				byteReq, err := json.Marshal(tt.body)
 				require.Nil(t, err)
 				w := httptest.NewRecorder()
@@ -414,6 +419,7 @@ func Test_Create(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				testhelper.LoadTestSQLFile(t, txRepo, "./testdata/create/create.sql")
 				byteReq, err := json.Marshal(tt.body)
 				require.Nil(t, err)
 				w := httptest.NewRecorder()
@@ -492,6 +498,7 @@ func Test_UpdatePersonalInfo(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				testhelper.LoadTestSQLFile(t, txRepo, "./testdata/update_personal_info/update_personal_info.sql")
 				byteReq, err := json.Marshal(tt.body)
 				require.Nil(t, err)
 				w := httptest.NewRecorder()
