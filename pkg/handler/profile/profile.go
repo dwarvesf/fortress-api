@@ -64,7 +64,7 @@ func (h *handler) GetProfile(c *gin.Context) {
 		"method":  "GetProfile",
 	})
 
-	rs, err := h.store.Employee.One(h.repo.DB(), userID)
+	rs, err := h.store.Employee.One(h.repo.DB(), userID, false)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Info("employee not found")
@@ -113,7 +113,7 @@ func (h *handler) UpdateInfo(c *gin.Context) {
 		"request": input,
 	})
 
-	employee, err := h.store.Employee.One(h.repo.DB(), employeeID)
+	employee, err := h.store.Employee.One(h.repo.DB(), employeeID, false)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Info("employee not found")
@@ -211,7 +211,7 @@ func (h *handler) UploadAvatar(c *gin.Context) {
 	}
 
 	// 2.3 check employee existed
-	existedEmployee, err := h.store.Employee.One(tx.DB(), employeeID)
+	existedEmployee, err := h.store.Employee.One(tx.DB(), employeeID, false)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Info("employee not found")

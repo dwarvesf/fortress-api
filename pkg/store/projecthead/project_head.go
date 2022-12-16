@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 
 	"github.com/dwarvesf/fortress-api/pkg/model"
 )
@@ -24,31 +23,6 @@ func (s *store) Create(db *gorm.DB, projectHead *model.ProjectHead) error {
 func (s *store) GetActiveLeadsByProjectID(db *gorm.DB, projectID string) ([]*model.ProjectHead, error) {
 	var projectHeads []*model.ProjectHead
 	return projectHeads, db.Where("project_id = ? AND left_date IS NULL AND deleted_at IS NULL", projectID).Find(&projectHeads).Error
-}
-
-// Upsert create new member or update existing head
-func (s *store) Upsert(db *gorm.DB, head *model.ProjectHead) error {
-	return db.Clauses(clause.OnConflict{
-		Columns: []clause.Column{
-			{
-				Name: "project_id",
-			},
-			{
-				Name: "employee_id",
-			},
-			{
-				Name: "position",
-			},
-		},
-		DoUpdates: clause.AssignmentColumns([]string{
-			"commission_rate",
-			"position",
-			"joined_date",
-		}),
-	}).
-		Create(&head).
-		Preload("Employee").
-		First(&head).Error
 }
 
 func (s *store) DeleteByPositionInProject(db *gorm.DB, projectID string, employeeID string, position string) error {

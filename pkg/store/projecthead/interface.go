@@ -8,7 +8,6 @@ import (
 
 type IStore interface {
 	Create(db *gorm.DB, head *model.ProjectHead) error
-	Upsert(db *gorm.DB, head *model.ProjectHead) error
 	GetActiveLeadsByProjectID(db *gorm.DB, projectID string) (projectHeads []*model.ProjectHead, err error)
 	DeleteByPositionInProject(db *gorm.DB, projectID string, employeeID string, position string) (err error)
 	One(db *gorm.DB, projectID string, position model.HeadPosition) (projectHead *model.ProjectHead, err error)

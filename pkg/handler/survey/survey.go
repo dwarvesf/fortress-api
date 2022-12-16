@@ -240,7 +240,7 @@ func (h *handler) createPeerReview(db *gorm.DB, req request.CreateSurveyFeedback
 	}
 
 	//1.3 check employee existed
-	createdBy, err := h.store.Employee.One(db, userID)
+	createdBy, err := h.store.Employee.One(db, userID, false)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return http.StatusNotFound, errs.ErrEmployeeNotFound
@@ -436,7 +436,7 @@ func (h *handler) createEngagement(db *gorm.DB, req request.CreateSurveyFeedback
 	}
 
 	//1.3 check employee existed
-	createdBy, err := h.store.Employee.One(db, userID)
+	createdBy, err := h.store.Employee.One(db, userID, false)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return http.StatusNotFound, errs.ErrEmployeeNotFound
@@ -621,7 +621,7 @@ func (h *handler) SendSurvey(c *gin.Context) {
 
 func (h *handler) updateEventReviewer(db *gorm.DB, l logger.Logger, data request.Survey, eventID string) (int, error) {
 	// Validate EventID and TopicID
-	_, err := h.store.EmployeeEventTopic.One(db, data.TopicID.String(), eventID)
+	_, err := h.store.EmployeeEventTopic.One(db, data.TopicID.String(), eventID, false)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		l.Error(errs.ErrTopicNotFound, "topic not found")
 		return http.StatusNotFound, errs.ErrTopicNotFound
@@ -641,7 +641,7 @@ func (h *handler) updateEventReviewer(db *gorm.DB, l logger.Logger, data request
 	if event.Status == model.EventStatusDraft {
 		event.Status = model.EventStatusInProgress
 
-		event, err = h.store.FeedbackEvent.UpdateSelectedFieldsByID(db, eventID, *event, "status")
+		_, err = h.store.FeedbackEvent.UpdateSelectedFieldsByID(db, eventID, *event, "status")
 		if err != nil {
 			l.Error(err, "fail to update status of feedback event")
 			return http.StatusInternalServerError, err
@@ -665,7 +665,7 @@ func (h *handler) updateEventReviewer(db *gorm.DB, l logger.Logger, data request
 			eventReviewer.ReviewerStatus = model.EventReviewerStatusNew
 			eventReviewer.AuthorStatus = model.EventAuthorStatusSent
 
-			eventReviewer, err = h.store.EmployeeEventReviewer.UpdateSelectedFieldsByID(db, eventReviewer.ID.String(), *eventReviewer, "reviewer_status", "author_status")
+			_, err = h.store.EmployeeEventReviewer.UpdateSelectedFieldsByID(db, eventReviewer.ID.String(), *eventReviewer, "reviewer_status", "author_status")
 			if err != nil {
 				l.Errorf(err, "fail to update employee reviewer for reviewer ", participant.String())
 				return http.StatusInternalServerError, err
@@ -790,7 +790,7 @@ func (h *handler) GetSurveyReviewDetail(c *gin.Context) {
 		"method":  "GetSurveyReviewDetail",
 	})
 
-	topic, err := h.store.EmployeeEventTopic.One(h.repo.DB(), topicID, eventID)
+	topic, err := h.store.EmployeeEventTopic.One(h.repo.DB(), topicID, eventID, true)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Info("topic not found")
@@ -875,7 +875,7 @@ func (h *handler) DeleteSurveyTopic(c *gin.Context) {
 		return
 	}
 
-	_, err = h.store.EmployeeEventTopic.One(tx.DB(), topicID, eventID)
+	_, err = h.store.EmployeeEventTopic.One(tx.DB(), topicID, eventID, false)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Info("topic not found")
@@ -956,7 +956,7 @@ func (h *handler) GetSurveyTopicDetail(c *gin.Context) {
 	})
 
 	// Check topic and feedback existence
-	topic, err := h.store.EmployeeEventTopic.One(h.repo.DB(), input.TopicID, input.EventID)
+	topic, err := h.store.EmployeeEventTopic.One(h.repo.DB(), input.TopicID, input.EventID, true)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		l.Error(errs.ErrTopicNotFound, "topic not found")
 		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrTopicNotFound, input, ""))
@@ -1072,7 +1072,7 @@ func (h *handler) updateTopicReviewer(db *gorm.DB, eventID string, topicID strin
 
 	// delete event question and event topic if reviewerID is not exists in request
 	for _, eventReviewer := range eventReviewers {
-		if isExists, _ := mustCreateReviewerIDMap[eventReviewer.ReviewerID]; isExists {
+		if isExists := mustCreateReviewerIDMap[eventReviewer.ReviewerID]; isExists {
 			mustCreateReviewerIDMap[eventReviewer.ReviewerID] = false
 			continue
 		}
@@ -1088,7 +1088,7 @@ func (h *handler) updateTopicReviewer(db *gorm.DB, eventID string, topicID strin
 		}
 	}
 
-	eventTopic, err := h.store.EmployeeEventTopic.One(db, topicID, eventID)
+	eventTopic, err := h.store.EmployeeEventTopic.One(db, topicID, eventID, false)
 	if err != nil {
 		l.Error(err, "failed to get event topic")
 		return http.StatusInternalServerError, err
@@ -1237,7 +1237,7 @@ func (h *handler) MarkDone(c *gin.Context) {
 
 	event.Status = model.EventStatusDone
 
-	event, err = h.store.FeedbackEvent.UpdateSelectedFieldsByID(tx.DB(), eventID, *event, "status")
+	_, err = h.store.FeedbackEvent.UpdateSelectedFieldsByID(tx.DB(), eventID, *event, "status")
 	if err != nil {
 		l.Error(err, "fail to update status of feedback event")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, eventID, ""))
@@ -1320,7 +1320,7 @@ func (h *handler) DeleteTopicReviewers(c *gin.Context) {
 	}
 
 	// Check topic and feedback existence
-	_, err := h.store.EmployeeEventTopic.One(h.repo.DB(), input.TopicID, input.EventID)
+	_, err := h.store.EmployeeEventTopic.One(h.repo.DB(), input.TopicID, input.EventID, false)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		l.Error(errs.ErrTopicNotFound, "topic not found")
 		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrTopicNotFound, input, ""))

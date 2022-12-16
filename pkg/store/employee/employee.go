@@ -15,25 +15,29 @@ func New() IStore {
 }
 
 // One get 1 employee by id
-func (s *store) One(db *gorm.DB, id string) (*model.Employee, error) {
+func (s *store) One(db *gorm.DB, id string, preload bool) (*model.Employee, error) {
+	query := db.Where("id = ?", id)
+
+	if preload {
+		query = query.
+			Preload("ProjectMembers", "deleted_at IS NULL").
+			Preload("ProjectMembers.Project", "deleted_at IS NULL").
+			Preload("ProjectMembers.ProjectMemberPositions", "deleted_at IS NULL").
+			Preload("ProjectMembers.ProjectMemberPositions.Position", "deleted_at IS NULL").
+			Preload("EmployeePositions", "deleted_at IS NULL").
+			Preload("EmployeePositions.Position", "deleted_at IS NULL").
+			Preload("EmployeeStacks", "deleted_at IS NULL").
+			Preload("EmployeeStacks.Stack", "deleted_at IS NULL").
+			Preload("EmployeeChapters", "deleted_at IS NULL").
+			Preload("EmployeeChapters.Chapter", "deleted_at IS NULL").
+			Preload("EmployeeRoles", "deleted_at IS NULL").
+			Preload("EmployeeRoles.Role", "deleted_at IS NULL").
+			Preload("Seniority").
+			Preload("LineManager")
+	}
+
 	var employee *model.Employee
-	return employee, db.Where("id = ?", id).
-		Preload("ProjectMembers", "deleted_at IS NULL").
-		Preload("ProjectMembers.Project", "deleted_at IS NULL").
-		Preload("ProjectMembers.ProjectMemberPositions", "deleted_at IS NULL").
-		Preload("ProjectMembers.ProjectMemberPositions.Position", "deleted_at IS NULL").
-		Preload("EmployeePositions", "deleted_at IS NULL").
-		Preload("EmployeePositions.Position", "deleted_at IS NULL").
-		Preload("EmployeeStacks", "deleted_at IS NULL").
-		Preload("EmployeeStacks.Stack", "deleted_at IS NULL").
-		Preload("EmployeeChapters", "deleted_at IS NULL").
-		Preload("EmployeeChapters.Chapter", "deleted_at IS NULL").
-		Preload("EmployeeRoles", "deleted_at IS NULL").
-		Preload("EmployeeRoles.Role", "deleted_at IS NULL").
-		Preload("Seniority").
-		Preload("LineManager").
-		First(&employee).
-		Error
+	return employee, query.First(&employee).Error
 }
 
 // OneByTeamEmail get 1 employee by team email
