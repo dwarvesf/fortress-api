@@ -101,6 +101,13 @@ func TestHandler_Detail(t *testing.T) {
 			topicID:          "ebf376a6-3d11-4cea-b464-593103258838",
 		},
 		{
+			name:             "ok_work",
+			wantCode:         http.StatusOK,
+			wantResponsePath: "testdata/detail/200_work.json",
+			feedbackID:       "d97ee823-f7d5-418b-b281-711cb1d8e947",
+			topicID:          "9cf93fc1-5a38-4e2a-87de-41634b65fc87",
+		},
+		{
 			name:             "failed_topic_not_found",
 			wantCode:         http.StatusNotFound,
 			wantResponsePath: "testdata/detail/404.json",

@@ -188,11 +188,8 @@ func ToSurveyDetail(event *model.FeedbackEvent) SurveyDetail {
 
 			newTopic.Comments = totalComment
 			newTopic.Result = newResult
-			newTopic.Project = &BasicProjectInfo{
-				ID:     topic.Project.ID.String(),
-				Type:   topic.Project.Type.String(),
-				Name:   topic.Project.Name,
-				Status: topic.Project.Status.String(),
+			if topic.Project != nil {
+				newTopic.Project = toBasicProjectInfo(*topic.Project)
 			}
 		} else if event.Subtype == model.EventSubtypeEngagement && len(topic.EmployeeEventReviewers) > 0 {
 			newTopic.ReviewID = topic.EmployeeEventReviewers[0].ID.String()
