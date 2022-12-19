@@ -278,52 +278,52 @@ func TestHandler_Submit(t *testing.T) {
 				Answers: []request.BasicEventQuestionInput{
 					{
 						EventQuestionID: model.MustGetUUIDFromString("a9b63a36-0134-4aa3-9a9a-edb5a1d52645"),
-						Answer:          "1",
+						Answer:          "agree",
 						Note:            "ok",
 					},
 					{
 						EventQuestionID: model.MustGetUUIDFromString("ebf8ab8b-8827-49fe-a61a-40b140eba903"),
-						Answer:          "1",
+						Answer:          "agree",
 						Note:            "ok",
 					}, {
 						EventQuestionID: model.MustGetUUIDFromString("fae6d117-38c9-4634-8e20-9c012fe0f222"),
-						Answer:          "1",
+						Answer:          "agree",
 						Note:            "ok",
 					}, {
 						EventQuestionID: model.MustGetUUIDFromString("eb8e2a6a-0f86-40fb-b447-972bd8a53d15"),
-						Answer:          "1",
+						Answer:          "agree",
 						Note:            "ok",
 					}, {
 						EventQuestionID: model.MustGetUUIDFromString("c2c3e368-27b0-4154-b2ff-10d1a9f29ba1"),
-						Answer:          "1",
+						Answer:          "agree",
 						Note:            "ok",
 					}, {
 						EventQuestionID: model.MustGetUUIDFromString("ba0c090c-eefc-4e1a-b29d-a024e68c57fe"),
-						Answer:          "1",
+						Answer:          "agree",
 						Note:            "ok",
 					}, {
 						EventQuestionID: model.MustGetUUIDFromString("f508b883-2294-4f50-84e7-f43a0be89bad"),
-						Answer:          "1",
+						Answer:          "agree",
 						Note:            "ok",
 					}, {
 						EventQuestionID: model.MustGetUUIDFromString("57e4bb72-3c10-4652-b2b6-0f26be8ba936"),
-						Answer:          "1",
+						Answer:          "agree",
 						Note:            "ok",
 					}, {
 						EventQuestionID: model.MustGetUUIDFromString("c6fde31e-59c3-4161-9180-490a4a591a17"),
-						Answer:          "1",
+						Answer:          "agree",
 						Note:            "ok",
 					}, {
 						EventQuestionID: model.MustGetUUIDFromString("06c7451f-e155-409b-aebd-5082f897040a"),
-						Answer:          "1",
+						Answer:          "agree",
 						Note:            "ok",
 					}, {
 						EventQuestionID: model.MustGetUUIDFromString("16c1285b-bb45-4093-bcec-5daa8e3eaac6"),
-						Answer:          "1",
+						Answer:          "agree",
 						Note:            "ok",
 					}, {
 						EventQuestionID: model.MustGetUUIDFromString("c9722d74-1683-4c1f-8378-75584cd25753"),
-						Answer:          "1",
+						Answer:          "agree",
 						Note:            "ok",
 					},
 				},
@@ -331,6 +331,32 @@ func TestHandler_Submit(t *testing.T) {
 			},
 			topicID: "ebf376a6-3d11-4cea-b464-593103258838",
 			eventID: "53546ea4-1d9d-4216-96b2-75f84ec6d750",
+		},
+		{
+			name:             "ok_work",
+			wantCode:         http.StatusOK,
+			wantResponsePath: "testdata/submit/200_work.json",
+			body: request.SubmitBody{
+				Answers: []request.BasicEventQuestionInput{
+					{
+						EventQuestionID: model.MustGetUUIDFromString("3784e437-c7d6-4142-9007-82a7f18f7d50"),
+						Answer:          "agree",
+						Note:            "nothing",
+					},
+					{
+						EventQuestionID: model.MustGetUUIDFromString("25ae4b9c-4d44-4946-8034-29ccec02a005"),
+						Answer:          "disagree",
+					},
+					{
+						EventQuestionID: model.MustGetUUIDFromString("5c49dbcd-df16-4f04-bb98-a2dbb339e4d6"),
+						Answer:          "mixed",
+						Note:            "ok",
+					},
+				},
+				Status: model.EventReviewerStatusDraft,
+			},
+			topicID: "9cf93fc1-5a38-4e2a-87de-41634b65fc87",
+			eventID: "d97ee823-f7d5-418b-b281-711cb1d8e947",
 		},
 	}
 	for _, tt := range tests {

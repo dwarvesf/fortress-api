@@ -17,10 +17,11 @@ var (
 	ErrEventReviewerNotFound         = errors.New("employee event reviewer not found")
 	ErrEventAlreadyExisted           = errors.New("event already existed")
 
-	ErrInvalidAnswers        = errors.New("invalid answers data")
-	ErrInvalidEventID        = errors.New("invalid event id")
-	ErrInvalidReviewerStatus = errors.New("invalid reviewer status")
-	ErrReviewAlreadySent     = errors.New("review already sent")
+	ErrInvalidAnswers              = errors.New("invalid answers data")
+	ErrInvalidAnswerForLikertScale = errors.New("invalid answer for likert-scale question")
+	ErrInvalidEventID              = errors.New("invalid event id")
+	ErrInvalidReviewerStatus       = errors.New("invalid reviewer status")
+	ErrReviewAlreadySent           = errors.New("review already sent")
 
 	ErrUnansweredquestions      = errors.New("must answer all questions")
 	ErrCouldNotEditDoneFeedback = errors.New("could not edit the feedback marked as done")

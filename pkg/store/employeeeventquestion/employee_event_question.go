@@ -103,11 +103,11 @@ func (s *store) CountLikertScaleByEventIDAndProjectIDs(db *gorm.DB, eventID stri
 		FROM q1, q2, q3, q4, q5
 	`
 	args = append(args,
-		model.LikertScaleAnswersSDisagree,
-		model.LikertScaleAnswersDisagree,
-		model.LikertScaleAnswersMixed,
-		model.LikertScaleAnswersAgree,
-		model.LikertScaleAnswersSAgree,
+		model.LikertScaleAnswerStronglyDisagree,
+		model.LikertScaleAnswerDisagree,
+		model.LikertScaleAnswerMixed,
+		model.LikertScaleAnswerAgree,
+		model.LikertScaleAnswerStronglyAgree,
 	)
 
 	return count, db.Raw(query, args...).Scan(&count).Error

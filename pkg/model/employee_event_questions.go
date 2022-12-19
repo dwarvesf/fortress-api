@@ -24,6 +24,16 @@ func ToQuestionMap(questionList []*EmployeeEventQuestion) map[UUID]string {
 	return rs
 }
 
+// ToQuestionMapType create map from Question to type
+func ToQuestionMapType(questionList []*EmployeeEventQuestion) map[UUID]string {
+	rs := map[UUID]string{}
+	for _, q := range questionList {
+		rs[q.ID] = q.Type
+	}
+
+	return rs
+}
+
 type LikertScaleCount struct {
 	StronglyDisagree int `json:"strongly-disagree"`
 	Disagree         int `json:"disagree"`

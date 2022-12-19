@@ -305,12 +305,18 @@ func (h *handler) Submit(c *gin.Context) {
 		return
 	}
 
-	questionMap := model.ToQuestionMap(eventQuestions)
+	questionMap := model.ToQuestionMapType(eventQuestions)
 	for _, e := range input.Body.Answers {
 		_, ok := questionMap[e.EventQuestionID]
 		if !ok {
 			l.Error(errs.ErrEventQuestionNotFound(e.EventQuestionID.String()), "employee event question not found")
 			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, done(errs.ErrEventQuestionNotFound(e.EventQuestionID.String())), input, ""))
+			return
+		}
+
+		if questionMap[e.EventQuestionID] == model.QuestionTypeScale.String() && !model.LikertScaleAnswer(e.Answer).IsValid() {
+			l.Error(errs.ErrInvalidAnswerForLikertScale, "invalid answer for likert-scale question")
+			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, done(errs.ErrInvalidAnswerForLikertScale), input, ""))
 			return
 		}
 	}
