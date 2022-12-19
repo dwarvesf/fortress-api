@@ -3865,6 +3865,23 @@ const docTemplate = `{
                 }
             }
         },
+        "view.BasicProjectInfo": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
         "view.Chapter": {
             "type": "object",
             "properties": {
@@ -4832,6 +4849,26 @@ const docTemplate = `{
                 }
             }
         },
+        "view.SurveyResult": {
+            "type": "object",
+            "properties": {
+                "agree": {
+                    "type": "integer"
+                },
+                "disagree": {
+                    "type": "integer"
+                },
+                "mixed": {
+                    "type": "integer"
+                },
+                "stronglyAgree": {
+                    "type": "integer"
+                },
+                "stronglyDisagree": {
+                    "type": "integer"
+                }
+            }
+        },
         "view.SurveyTopicDetail": {
             "type": "object",
             "properties": {
@@ -4863,6 +4900,9 @@ const docTemplate = `{
         "view.Topic": {
             "type": "object",
             "properties": {
+                "comments": {
+                    "type": "integer"
+                },
                 "count": {
                     "$ref": "#/definitions/view.FeedbackCount"
                 },
@@ -4880,6 +4920,12 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/view.BasicEmployeeInfo"
                     }
+                },
+                "project": {
+                    "$ref": "#/definitions/view.BasicProjectInfo"
+                },
+                "result": {
+                    "$ref": "#/definitions/view.SurveyResult"
                 },
                 "reviewID": {
                     "type": "string"

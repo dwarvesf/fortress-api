@@ -162,7 +162,10 @@
                     "total": 21,
                     "sent": 20,
                     "done": 0
-                }
+                },
+                "result": null,
+                "comments": 0,
+                "project": null
             }
         ]
     }

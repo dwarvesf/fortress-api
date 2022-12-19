@@ -548,6 +548,17 @@ definitions:
       position:
         type: string
     type: object
+  view.BasicProjectInfo:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      status:
+        type: string
+      type:
+        type: string
+    type: object
   view.Chapter:
     properties:
       code:
@@ -1178,6 +1189,19 @@ definitions:
       type:
         type: string
     type: object
+  view.SurveyResult:
+    properties:
+      agree:
+        type: integer
+      disagree:
+        type: integer
+      mixed:
+        type: integer
+      stronglyAgree:
+        type: integer
+      stronglyDisagree:
+        type: integer
+    type: object
   view.SurveyTopicDetail:
     properties:
       employee:
@@ -1198,6 +1222,8 @@ definitions:
     type: object
   view.Topic:
     properties:
+      comments:
+        type: integer
       count:
         $ref: '#/definitions/view.FeedbackCount'
       employee:
@@ -1210,6 +1236,10 @@ definitions:
         items:
           $ref: '#/definitions/view.BasicEmployeeInfo'
         type: array
+      project:
+        $ref: '#/definitions/view.BasicProjectInfo'
+      result:
+        $ref: '#/definitions/view.SurveyResult'
       reviewID:
         type: string
       status:
