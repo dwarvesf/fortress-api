@@ -177,6 +177,15 @@ func ToEmployeeData(employee *model.Employee) *EmployeeData {
 	for _, v := range employee.ProjectMembers {
 		employeeProjects = append(employeeProjects, ToEmployeeProjectData(&v))
 	}
+	var lineManager *BasicEmployeeInfo
+	if employee.LineManager != nil {
+		lineManager = &BasicEmployeeInfo{
+			ID:          employee.LineManager.BaseModel.ID.String(),
+			FullName:    employee.LineManager.FullName,
+			DisplayName: employee.LineManager.DisplayName,
+			Avatar:      employee.LineManager.Avatar,
+		}
+	}
 
 	rs := &EmployeeData{
 		BaseModel: model.BaseModel{
@@ -203,16 +212,11 @@ func ToEmployeeData(employee *model.Employee) *EmployeeData {
 		JoinedDate:    employee.JoinedDate,
 		LeftDate:      employee.LeftDate,
 		Projects:      employeeProjects,
-		LineManager: &BasicEmployeeInfo{
-			ID:          employee.LineManager.ID.String(),
-			FullName:    employee.LineManager.FullName,
-			DisplayName: employee.LineManager.DisplayName,
-			Avatar:      employee.LineManager.Avatar,
-		},
-		Roles:     ToRoles(employee.EmployeeRoles),
-		Positions: ToPositions(employee.EmployeePositions),
-		Stacks:    ToEmployeeStacks(employee.EmployeeStacks),
-		Chapters:  ToChapters(employee.EmployeeChapters),
+		LineManager:   lineManager,
+		Roles:         ToRoles(employee.EmployeeRoles),
+		Positions:     ToPositions(employee.EmployeePositions),
+		Stacks:        ToEmployeeStacks(employee.EmployeeStacks),
+		Chapters:      ToChapters(employee.EmployeeChapters),
 	}
 
 	if employee.Seniority != nil {
