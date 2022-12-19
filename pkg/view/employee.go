@@ -203,10 +203,16 @@ func ToEmployeeData(employee *model.Employee) *EmployeeData {
 		JoinedDate:    employee.JoinedDate,
 		LeftDate:      employee.LeftDate,
 		Projects:      employeeProjects,
-		Roles:         ToRoles(employee.EmployeeRoles),
-		Positions:     ToPositions(employee.EmployeePositions),
-		Stacks:        ToEmployeeStacks(employee.EmployeeStacks),
-		Chapters:      ToChapters(employee.EmployeeChapters),
+		LineManager: &BasicEmployeeInfo{
+			ID:          employee.LineManager.ID.String(),
+			FullName:    employee.LineManager.FullName,
+			DisplayName: employee.LineManager.DisplayName,
+			Avatar:      employee.LineManager.Avatar,
+		},
+		Roles:     ToRoles(employee.EmployeeRoles),
+		Positions: ToPositions(employee.EmployeePositions),
+		Stacks:    ToEmployeeStacks(employee.EmployeeStacks),
+		Chapters:  ToChapters(employee.EmployeeChapters),
 	}
 
 	if employee.Seniority != nil {
