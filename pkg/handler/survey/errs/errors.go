@@ -21,6 +21,7 @@ var (
 	ErrInvalidReviewerID     = errors.New("invalid reviewer id")
 	ErrInvalidFeedbackID     = errors.New("invalid feedback id")
 	ErrInvalidTopicID        = errors.New("invalid topic id")
+	ErrInvalidProjectID      = errors.New("invalid project id")
 	ErrInvalidEventSubType   = errors.New("invalid event subtype")
 	ErrInvalidQuarter        = errors.New("invalid quarter")
 

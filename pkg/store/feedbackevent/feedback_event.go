@@ -26,16 +26,24 @@ func (s *store) IsExist(db *gorm.DB, id string) (bool, error) {
 	return result.Result, query.Scan(&result).Error
 }
 
-// GetBySubtypeWithPagination return list of FeedbackEvent by subtype and pagination
-func (s *store) GetBySubtypeWithPagination(db *gorm.DB, subtype string, pagination model.Pagination) ([]*model.FeedbackEvent, int64, error) {
+// GetBySubtypeAndProjectIDs return list of FeedbackEvent by subtype and projectIDs
+func (s *store) GetBySubtypeAndProjectIDs(db *gorm.DB, subtype string, projectIDs []string, pagination model.Pagination) ([]*model.FeedbackEvent, int64, error) {
 	var events []*model.FeedbackEvent
 	var total int64
 
-	query := db.Table("feedback_events").
-		Where("subtype = ? AND deleted_at IS NULL", subtype).
-		Count(&total).
-		Order(pagination.Sort)
+	// query for total
+	query := db.Table("feedback_events").Where("subtype = ? AND deleted_at IS NULL", subtype)
+	if len(projectIDs) > 0 {
+		query = query.Where(`id IN (
+				SELECT DISTINCT(eet.event_id)
+				FROM employee_event_topics eet
+				WHERE eet.project_id IN ?
+			)`, projectIDs)
+	}
 
+	query = query.Count(&total).Order(pagination.Sort)
+
+	// add pagination
 	if pagination.Sort == "" {
 		query = query.Order("created_at DESC")
 	}
@@ -47,9 +55,15 @@ func (s *store) GetBySubtypeWithPagination(db *gorm.DB, subtype string, paginati
 
 	query = query.Offset(offset)
 
+	// add preload
+	if len(projectIDs) > 0 {
+		query = query.Preload("Topics", "project_id IN ? AND deleted_at IS NULL", projectIDs)
+	} else {
+		query = query.Preload("Topics", "deleted_at IS NULL")
+	}
+
 	return events, total, query.
 		Preload("Employee", "deleted_at IS NULL").
-		Preload("Topics", "deleted_at IS NULL").
 		Preload("Topics.EmployeeEventReviewers", "deleted_at IS NULL").
 		Find(&events).Error
 }

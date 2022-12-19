@@ -8,12 +8,19 @@ import (
 type GetListSurveyInput struct {
 	model.Pagination
 
-	Subtype string `json:"subtype" form:"subtype" binding:"required"`
+	Subtype    string   `json:"subtype" form:"subtype" binding:"required"`
+	ProjectIDs []string `json:"projectIDs" form:"projectIDs"`
 }
 
 func (i *GetListSurveyInput) Validate() error {
 	if i.Subtype == "" || !model.EventSubtype(i.Subtype).IsSurveyValid() {
 		return errs.ErrInvalidEventType
+	}
+
+	for _, projectID := range i.ProjectIDs {
+		if projectID != "" && !model.IsUUIDFromString(projectID) {
+			return errs.ErrInvalidProjectID
+		}
 	}
 
 	return nil

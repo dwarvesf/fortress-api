@@ -7,14 +7,16 @@ import (
 )
 
 type Survey struct {
-	ID        string        `json:"id"`
-	Title     string        `json:"title"`
-	Type      string        `json:"type"`
-	Subtype   string        `json:"subtype"`
-	Status    string        `json:"status"`
-	StartDate *time.Time    `json:"startDate"`
-	EndDate   *time.Time    `json:"endDate"`
-	Count     FeedbackCount `json:"count"`
+	ID          string                  `json:"id"`
+	Title       string                  `json:"title"`
+	Type        string                  `json:"type"`
+	Subtype     string                  `json:"subtype"`
+	Status      string                  `json:"status"`
+	StartDate   *time.Time              `json:"startDate"`
+	EndDate     *time.Time              `json:"endDate"`
+	Count       FeedbackCount           `json:"count"`
+	AnswerCount *model.LikertScaleCount `json:"answerCount"`
+	Average     int                     `json:"average"`
 }
 
 type FeedbackCount struct {
@@ -50,6 +52,25 @@ func ToListSurvey(events []*model.FeedbackEvent) []Survey {
 			}
 		}
 
+		// calculate average
+		// average = (count1 * weight1 + count2 * weight2 + ...) / (count1 + count2 + ...)
+		var average int
+		if e.Subtype == model.EventSubtypeWork && e.Count != nil {
+			total := e.Count.StronglyDisagree +
+				e.Count.Disagree +
+				e.Count.Mixed +
+				e.Count.Agree +
+				e.Count.StronglyAgree
+
+			if total > 0 {
+				average = (e.Count.StronglyDisagree +
+					e.Count.Disagree*2 +
+					e.Count.Mixed*3 +
+					e.Count.Agree*4 +
+					e.Count.StronglyAgree*5) / total
+			}
+		}
+
 		results = append(results, Survey{
 			ID:        e.ID.String(),
 			Title:     e.Title,
@@ -63,6 +84,8 @@ func ToListSurvey(events []*model.FeedbackEvent) []Survey {
 				Sent:  sent,
 				Done:  done,
 			},
+			AnswerCount: e.Count,
+			Average:     average,
 		})
 	}
 
