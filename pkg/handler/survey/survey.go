@@ -773,7 +773,7 @@ func (h *handler) doSurveyDelete(db *gorm.DB, eventID string) (int, error) {
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 404 {object} view.ErrorResponse
 // @Failure 500 {object} view.ErrorResponse
-// @Router /surveys/{id}/topics/{topicID}/reviews/{reviewID} [post]
+// @Router /surveys/{id}/topics/{topicID}/reviews/{reviewID} [get]
 func (h *handler) GetSurveyReviewDetail(c *gin.Context) {
 	eventID := c.Param("id")
 	if eventID == "" || !model.IsUUIDFromString(eventID) {
@@ -835,7 +835,23 @@ func (h *handler) GetSurveyReviewDetail(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToFeedbackReviewDetail(questions, topic, review), nil, nil, nil, ""))
+	var project *model.Project
+	if !topic.ProjectID.IsZero() {
+		project, err = h.store.Project.One(h.repo.DB(), topic.ProjectID.String(), false)
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			l.Error(errs.ErrProjectNotFound, "project not found")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, nil, ""))
+			return
+		}
+
+		if err != nil {
+			l.Error(err, "failed to get project")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+			return
+		}
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToFeedbackReviewDetail(questions, topic, review, project), nil, nil, nil, ""))
 }
 
 // DeleteSurveyTopic godoc

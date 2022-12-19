@@ -770,6 +770,8 @@ definitions:
     properties:
       employee:
         $ref: '#/definitions/view.BasicEmployeeInfo'
+      project:
+        $ref: '#/definitions/view.BasicProjectInfo'
       questions:
         items:
           $ref: '#/definitions/view.QuestionAnswer'
@@ -3453,7 +3455,7 @@ paths:
       tags:
       - Survey
   /surveys/{id}/topics/{topicID}/reviews/{reviewID}:
-    post:
+    get:
       consumes:
       - application/json
       description: Get survey review detail

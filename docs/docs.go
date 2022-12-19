@@ -3001,7 +3001,7 @@ const docTemplate = `{
             }
         },
         "/surveys/{id}/topics/{topicID}/reviews/{reviewID}": {
-            "post": {
+            "get": {
                 "description": "Get survey review detail",
                 "consumes": [
                     "application/json"
@@ -4203,6 +4203,9 @@ const docTemplate = `{
             "properties": {
                 "employee": {
                     "$ref": "#/definitions/view.BasicEmployeeInfo"
+                },
+                "project": {
+                    "$ref": "#/definitions/view.BasicProjectInfo"
                 },
                 "questions": {
                     "type": "array",
