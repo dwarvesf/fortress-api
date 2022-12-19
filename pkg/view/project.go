@@ -446,3 +446,12 @@ type BasicProjectInfo struct {
 	Type   string `json:"type"`
 	Status string `json:"status"`
 }
+
+func toBasicProjectInfo(project model.Project) *BasicProjectInfo {
+	return &BasicProjectInfo{
+		ID:     project.ID.String(),
+		Type:   project.Type.String(),
+		Name:   project.Name,
+		Status: project.Status.String(),
+	}
+}

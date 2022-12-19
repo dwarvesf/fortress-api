@@ -78,6 +78,7 @@ type FeedBackReviewDetail struct {
 	Relationship string            `json:"relationship"`
 	Employee     BasicEmployeeInfo `json:"employee"`
 	Reviewer     BasicEmployeeInfo `json:"reviewer"`
+	Project      *BasicProjectInfo `json:"project"`
 }
 
 type FeedbackDetail struct {
@@ -181,7 +182,7 @@ type FeedbackReviewDetailResponse struct {
 	Data *FeedBackReviewDetail `json:"data"`
 }
 
-func ToFeedbackReviewDetail(questions []*model.EmployeeEventQuestion, topic *model.EmployeeEventTopic, reviewer *model.EmployeeEventReviewer) FeedBackReviewDetail {
+func ToFeedbackReviewDetail(questions []*model.EmployeeEventQuestion, topic *model.EmployeeEventTopic, reviewer *model.EmployeeEventReviewer, project *model.Project) FeedBackReviewDetail {
 	var qs []QuestionAnswer
 
 	for _, q := range questions {
@@ -207,6 +208,10 @@ func ToFeedbackReviewDetail(questions []*model.EmployeeEventQuestion, topic *mod
 
 	if reviewer.Reviewer != nil {
 		rs.Reviewer = *toBasicEmployeeInfo(*reviewer.Reviewer)
+	}
+
+	if project != nil {
+		rs.Project = toBasicProjectInfo(*project)
 	}
 
 	return rs

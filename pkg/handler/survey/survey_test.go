@@ -561,3 +561,68 @@ func TestHandler_DeleteSurveyTopic(t *testing.T) {
 
 	}
 }
+
+func TestHandler_GetSurveyReviewDetail(t *testing.T) {
+	cfg := config.LoadTestConfig()
+	loggerMock := logger.NewLogrusLogger()
+	serviceMock := service.New(&cfg)
+	storeMock := store.New()
+
+	tests := []struct {
+		name             string
+		eventID          string
+		topicID          string
+		reviewerID       string
+		wantCode         int
+		wantResponsePath string
+	}{
+		{
+			name:             "valid_id",
+			eventID:          "8a5bfedb-6e11-4f5c-82d9-2635cfcce3e1",
+			topicID:          "e4a33adc-2495-43cf-b816-32feb8d5250e",
+			reviewerID:       "bc9a5715-9723-4a2f-ad42-0d0f19a80b4d",
+			wantCode:         http.StatusNotFound,
+			wantResponsePath: "testdata/get_survey_review_detail/404_not_found.json",
+		},
+		{
+			name:             "happy_case",
+			eventID:          "8a5bfedb-6e11-4f5c-82d9-2635cfcce3e2",
+			topicID:          "e4a33adc-2495-43cf-b816-32feb8d5250d",
+			reviewerID:       "bc9a5715-9723-4a2f-ad42-0d0f19a80b4d",
+			wantCode:         http.StatusOK,
+			wantResponsePath: "testdata/get_survey_review_detail/200_happy_case.json",
+		},
+		{
+			name:             "ok_work",
+			eventID:          "d97ee823-f7d5-418b-b281-711cb1d8e947",
+			topicID:          "9cf93fc1-5a38-4e2a-87de-41634b65fc87",
+			reviewerID:       "789f1163-f157-4df3-9764-8100277cacba",
+			wantCode:         http.StatusOK,
+			wantResponsePath: "testdata/get_survey_review_detail/200_work.json",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				testhelper.LoadTestSQLFile(t, txRepo, "./testdata/get_survey_review_detail/get_survey_review_detail.sql")
+				w := httptest.NewRecorder()
+				ctx, _ := gin.CreateTestContext(w)
+				ctx.Request = httptest.NewRequest(http.MethodDelete, fmt.Sprintf("/api/v1/surveys/%s/topics/%s/reviews/%s", tt.eventID, tt.topicID, tt.reviewerID), nil)
+				ctx.Request.Header.Set("Authorization", testToken)
+				ctx.AddParam("id", tt.eventID)
+				ctx.AddParam("topicID", tt.topicID)
+				ctx.AddParam("reviewID", tt.reviewerID)
+
+				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+				h.GetSurveyReviewDetail(ctx)
+
+				require.Equal(t, tt.wantCode, w.Code)
+				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				require.NoError(t, err)
+
+				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Survey.GetSurveyReviewDetail] response mismatched")
+			})
+		})
+
+	}
+}

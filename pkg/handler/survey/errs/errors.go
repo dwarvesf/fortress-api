@@ -8,6 +8,7 @@ import (
 var (
 	// record not found errors
 	ErrEventNotFound         = errors.New("event not found")
+	ErrProjectNotFound       = errors.New("project not found")
 	ErrReviewerNotFound      = errors.New("reviewer not found")
 	ErrTopicNotFound         = errors.New("topic not found")
 	ErrEmployeeNotFound      = errors.New("employee not found")
