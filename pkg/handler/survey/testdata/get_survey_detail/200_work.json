@@ -1,0 +1,52 @@
+{
+    "page": 0,
+    "size": 999,
+    "sort": "",
+    "total": 1,
+    "data": {
+        "eventID": "d97ee823-f7d5-418b-b281-711cb1d8e947",
+        "title": "[SP Group] [week#12 2022] How was your week?",
+        "type": "survey",
+        "subtype": "work",
+        "status": "in-progress",
+        "startDate": null,
+        "endDate": null,
+        "author": {
+            "id": "2655832e-f009-4b73-a535-64c3a22e558f",
+            "fullName": "Phạm Đức Thành",
+            "displayName": "Thanh Pham",
+            "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png"
+        },
+        "topics": [
+            {
+                "id": "9cf93fc1-5a38-4e2a-87de-41634b65fc87",
+                "eventID": "d97ee823-f7d5-418b-b281-711cb1d8e947",
+                "title": "Self review Fortress by Thanh",
+                "type": "survey",
+                "subtype": "work",
+                "employee": {
+                    "id": "2655832e-f009-4b73-a535-64c3a22e558f",
+                    "fullName": "Phạm Đức Thành",
+                    "displayName": "Thanh Pham",
+                    "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png"
+                },
+                "participants": null,
+                "count": null,
+                "result": {
+                    "stronglyDisagree": 0,
+                    "disagree": 1,
+                    "mixed": 1,
+                    "agree": 1,
+                    "stronglyAgree": 0
+                },
+                "comments": 1,
+                "project": {
+                    "id": "8dc3be2e-19a4-4942-8a79-56db391a0b15",
+                    "name": "Fortress",
+                    "type": "dwarves",
+                    "status": "active"
+                }
+            }
+        ]
+    }
+}

@@ -33,7 +33,10 @@
                     "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/2830497479497502617.png"
                 },
                 "participants": null,
-                "count": null
+                "count": null,
+                "result": null,
+                "comments": 0,
+                "project": null
             },
             {
                 "id": "ebf376a6-3d11-4cea-b464-593103258838",
@@ -50,7 +53,10 @@
                     "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png"
                 },
                 "participants": null,
-                "count": null
+                "count": null,
+                "result": null,
+                "comments": 0,
+                "project": null
             }
         ]
     }

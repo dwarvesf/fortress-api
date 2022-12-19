@@ -439,3 +439,10 @@ func ToUpdateProjectContactInfo(project *model.Project) UpdateProjectContactInfo
 		ProjectHead:  projectHeads,
 	}
 }
+
+type BasicProjectInfo struct {
+	ID     string `json:"id"`
+	Name   string `json:"name"`
+	Type   string `json:"type"`
+	Status string `json:"status"`
+}

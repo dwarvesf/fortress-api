@@ -96,6 +96,17 @@ type Topic struct {
 	Employee     BasicEmployeeInfo   `json:"employee"`
 	Participants []BasicEmployeeInfo `json:"participants"`
 	Count        *FeedbackCount      `json:"count"`
+	Result       *SurveyResult       `json:"result"`
+	Comments     int                 `json:"comments"`
+	Project      *BasicProjectInfo   `json:"project"`
+}
+
+type SurveyResult struct {
+	StronglyDisagree int `json:"stronglyDisagree"`
+	Disagree         int `json:"disagree"`
+	Mixed            int `json:"mixed"`
+	Agree            int `json:"agree"`
+	StronglyAgree    int `json:"stronglyAgree"`
 }
 
 func ToSurveyDetail(event *model.FeedbackEvent) SurveyDetail {
@@ -146,10 +157,44 @@ func ToSurveyDetail(event *model.FeedbackEvent) SurveyDetail {
 				Sent:  sent,
 				Done:  done,
 			}
-		}
+		} else if topic.Event.Subtype == model.EventSubtypeWork {
+			totalComment := 0
+			newResult := &SurveyResult{
+				StronglyDisagree: 0,
+				Disagree:         0,
+				Mixed:            0,
+				Agree:            0,
+				StronglyAgree:    0,
+			}
 
-		// just use for engagement survey
-		if event.Subtype == model.EventSubtypeEngagement && len(topic.EmployeeEventReviewers) > 0 {
+			for _, question := range topic.EmployeeEventReviewers[0].EmployeeEventQuestions {
+				if question.Note != "" {
+					totalComment++
+				}
+
+				switch question.Answer {
+				case model.LikertScaleAnswersSDisagree.String():
+					newResult.StronglyDisagree++
+				case model.LikertScaleAnswersDisagree.String():
+					newResult.Disagree++
+				case model.LikertScaleAnswersMixed.String():
+					newResult.Mixed++
+				case model.LikertScaleAnswersAgree.String():
+					newResult.Agree++
+				case model.LikertScaleAnswersSAgree.String():
+					newResult.StronglyAgree++
+				}
+			}
+
+			newTopic.Comments = totalComment
+			newTopic.Result = newResult
+			newTopic.Project = &BasicProjectInfo{
+				ID:     topic.Project.ID.String(),
+				Type:   topic.Project.Type.String(),
+				Name:   topic.Project.Name,
+				Status: topic.Project.Status.String(),
+			}
+		} else if event.Subtype == model.EventSubtypeEngagement && len(topic.EmployeeEventReviewers) > 0 {
 			newTopic.ReviewID = topic.EmployeeEventReviewers[0].ID.String()
 			newTopic.Status = topic.EmployeeEventReviewers[0].AuthorStatus.String()
 		}

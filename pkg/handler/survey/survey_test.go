@@ -96,6 +96,12 @@ func TestHandler_GetSurveyDetail(t *testing.T) {
 			wantResponsePath: "testdata/get_survey_detail/200_engagement.json",
 		},
 		{
+			name:             "ok_work",
+			id:               "d97ee823-f7d5-418b-b281-711cb1d8e947",
+			wantCode:         http.StatusOK,
+			wantResponsePath: "testdata/get_survey_detail/200_work.json",
+		},
+		{
 			name:             "event_id_not_found",
 			id:               "8a5bfedb-6e11-4f5c-82d9-2635cfcce123",
 			wantCode:         http.StatusNotFound,

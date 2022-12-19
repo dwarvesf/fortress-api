@@ -13,7 +13,8 @@ type EmployeeEventReviewer struct {
 	IsRead               bool
 	EventID              UUID
 
-	Reviewer *Employee
+	Reviewer               *Employee
+	EmployeeEventQuestions []EmployeeEventQuestion
 }
 
 // EventReviewerStatus event_reviewer_status for table employee event reviewer
