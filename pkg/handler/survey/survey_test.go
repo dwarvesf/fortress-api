@@ -405,12 +405,6 @@ func TestHandler_MarkDone(t *testing.T) {
 			wantResponsePath: "testdata/mark_done/200.json",
 		},
 		{
-			name:             "not_done_all",
-			eventID:          "53546ea4-1d9d-4216-96b2-75f84ec6d750",
-			wantCode:         http.StatusBadRequest,
-			wantResponsePath: "testdata/mark_done/400.json",
-		},
-		{
 			name:             "not_found",
 			eventID:          "9b3480be-86a2-4ff9-84d8-545a4146122a",
 			wantCode:         http.StatusNotFound,

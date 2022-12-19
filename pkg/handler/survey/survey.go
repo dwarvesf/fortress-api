@@ -635,14 +635,14 @@ func (h *handler) updateEventReviewer(db *gorm.DB, l logger.Logger, data request
 		return http.StatusNotFound, errs.ErrTopicNotFound
 	}
 	if err != nil {
-		l.Error(err, "fail to get employee event topic")
+		l.Error(err, "failed to get employee event topic")
 		return http.StatusInternalServerError, err
 	}
 
 	// Update Event status to inprogress
 	event, err := h.store.FeedbackEvent.One(db, eventID)
 	if err != nil {
-		l.Error(err, "fail to get feedback event")
+		l.Error(err, "failed to get feedback event")
 		return http.StatusInternalServerError, err
 	}
 
@@ -651,7 +651,7 @@ func (h *handler) updateEventReviewer(db *gorm.DB, l logger.Logger, data request
 
 		_, err = h.store.FeedbackEvent.UpdateSelectedFieldsByID(db, eventID, *event, "status")
 		if err != nil {
-			l.Error(err, "fail to update status of feedback event")
+			l.Error(err, "failed to update status of feedback event")
 			return http.StatusInternalServerError, err
 		}
 	}
@@ -665,7 +665,7 @@ func (h *handler) updateEventReviewer(db *gorm.DB, l logger.Logger, data request
 		}
 
 		if err != nil {
-			l.Errorf(err, "fail to get employee reviewer for reviewer ", participant.String())
+			l.Errorf(err, "failed to get employee reviewer for reviewer ", participant.String())
 			return http.StatusInternalServerError, err
 		}
 
@@ -675,7 +675,7 @@ func (h *handler) updateEventReviewer(db *gorm.DB, l logger.Logger, data request
 
 			_, err = h.store.EmployeeEventReviewer.UpdateSelectedFieldsByID(db, eventReviewer.ID.String(), *eventReviewer, "reviewer_status", "author_status")
 			if err != nil {
-				l.Errorf(err, "fail to update employee reviewer for reviewer ", participant.String())
+				l.Errorf(err, "failed to update employee reviewer for reviewer ", participant.String())
 				return http.StatusInternalServerError, err
 			}
 		}
@@ -1239,16 +1239,24 @@ func (h *handler) MarkDone(c *gin.Context) {
 	}
 
 	if err != nil {
-		l.Error(err, "fail to get feedback event")
+		l.Error(err, "failed to get feedback event")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, eventID, ""))
+		return
+	}
+
+	if event.Status == model.EventStatusDone {
+		l.Error(errs.ErrEventHasBeenDone, "event has been done")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrEventHasBeenDone, eventID, ""))
+		return
 	}
 
 	event.Status = model.EventStatusDone
 
 	_, err = h.store.FeedbackEvent.UpdateSelectedFieldsByID(tx.DB(), eventID, *event, "status")
 	if err != nil {
-		l.Error(err, "fail to update status of feedback event")
+		l.Error(err, "failed to update feedback event")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, eventID, ""))
+		return
 	}
 
 	// Get all topics
@@ -1261,8 +1269,8 @@ func (h *handler) MarkDone(c *gin.Context) {
 
 	// Check done for each topic: all user have to done
 	for _, topic := range topics {
-		if code, err := h.checkDoneTopic(tx.DB(), l, topic.ID.String()); err != nil {
-			l.Errorf(err, "failed to check done topic with ID %s", topic.ID.String())
+		if code, err := h.forceEventReviewersToDone(tx.DB(), l, topic.ID.String()); err != nil {
+			l.Errorf(err, "failed to force event reviewers of topic %s to done", topic.ID.String())
 			c.JSON(code, view.CreateResponse[any](nil, nil, done(err), eventID, ""))
 			return
 		}
@@ -1271,7 +1279,7 @@ func (h *handler) MarkDone(c *gin.Context) {
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, done(nil), nil, "ok"))
 }
 
-func (h *handler) checkDoneTopic(db *gorm.DB, l logger.Logger, topicID string) (int, error) {
+func (h *handler) forceEventReviewersToDone(db *gorm.DB, l logger.Logger, topicID string) (int, error) {
 	// Get all reviewers
 	reviewers, err := h.store.EmployeeEventReviewer.GetByTopicID(db, topicID)
 	if err != nil {
@@ -1279,11 +1287,21 @@ func (h *handler) checkDoneTopic(db *gorm.DB, l logger.Logger, topicID string) (
 		return http.StatusInternalServerError, err
 	}
 
-	// Check done of employee event reviewer
 	for _, reviewer := range reviewers {
-		if reviewer.ReviewerStatus != model.EventReviewerStatusDone {
-			l.Errorf(errs.ErrUnfinishedReviewer, "the evaluation performed by the reviewer with ID %s has not been finished", topicID, reviewer.ID.String())
-			return http.StatusBadRequest, errs.ErrUnfinishedReviewer
+		if reviewer.AuthorStatus != model.EventAuthorStatusDone ||
+			reviewer.ReviewerStatus != model.EventReviewerStatusDone {
+			reviewer.AuthorStatus = model.EventAuthorStatusDone
+			reviewer.ReviewerStatus = model.EventReviewerStatusDone
+			reviewer.IsForcedDone = true
+		}
+
+		_, err := h.store.EmployeeEventReviewer.UpdateSelectedFieldsByID(db, reviewer.ID.String(), *reviewer,
+			"author_status",
+			"reviewer_status",
+			"is_forced_done")
+		if err != nil {
+			l.AddField("eventReviewerID", reviewer.ID).Error(err, "failed to update event reviewer status")
+			return http.StatusInternalServerError, err
 		}
 	}
 
