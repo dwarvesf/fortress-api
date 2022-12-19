@@ -11,6 +11,7 @@ type EmployeeEventReviewer struct {
 	Relationship         Relationship
 	IsShared             bool
 	IsRead               bool
+	IsForcedDone         bool
 	EventID              UUID
 
 	Reviewer               *Employee

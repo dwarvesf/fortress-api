@@ -33,6 +33,7 @@ var (
 	ErrAlreadySent              = errors.New("surveys already sent to all participants")
 	ErrUnfinishedReviewer       = errors.New("all reviewers have to finish before marked done")
 	ErrCanNotUpdateParticipants = errors.New("can not update participants")
+	ErrEventHasBeenDone         = errors.New("event has been done")
 )
 
 func ErrEventQuestionNotFound(id string) error {
