@@ -76,11 +76,26 @@ func (h *handler) ListSurvey(c *gin.Context) {
 	})
 
 	events, total, err := h.store.FeedbackEvent.
-		GetBySubtypeWithPagination(h.repo.DB(), input.Subtype, input.Pagination)
+		GetBySubtypeAndProjectIDs(h.repo.DB(), input.Subtype, input.ProjectIDs, input.Pagination)
 	if err != nil {
 		l.Error(err, "failed to get feedback events by subtype")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
+	}
+
+	// count likert-scale question by event and projects
+	if input.Subtype == model.EventSubtypeWork.String() {
+		for i := range events {
+			count, err := h.store.EmployeeEventQuestion.
+				CountLikertScaleByEventIDAndProjectIDs(h.repo.DB(), events[i].ID.String(), input.ProjectIDs)
+			if err != nil {
+				l.AddField("eventID", events[i].ID).Error(err, "failed to count likert-scale by eventID and projectIDs")
+				c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+				return
+			}
+
+			events[i].Count = count
+		}
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToListSurvey(events),

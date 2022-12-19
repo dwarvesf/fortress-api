@@ -13,4 +13,5 @@ type IStore interface {
 	DeleteByEventID(db *gorm.DB, eventID string) error
 	DeleteByEventReviewerIDList(db *gorm.DB, reviewerIDList []string) error
 	DeleteByEventReviewerID(db *gorm.DB, eventReviewerID string) error
+	CountLikertScaleByEventIDAndProjectIDs(db *gorm.DB, eventID string, projectIDs []string) (*model.LikertScaleCount, error)
 }

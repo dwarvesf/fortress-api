@@ -10,7 +10,7 @@ import (
 
 type IStore interface {
 	IsExist(db *gorm.DB, id string) (bool, error)
-	GetBySubtypeWithPagination(db *gorm.DB, subtype string, pagination model.Pagination) (events []*model.FeedbackEvent, total int64, err error)
+	GetBySubtypeAndProjectIDs(db *gorm.DB, subtype string, projectIDs []string, pagination model.Pagination) (events []*model.FeedbackEvent, total int64, err error)
 	GetByTypeInTimeRange(db *gorm.DB, eventType model.EventType, eventSubtype model.EventSubtype, from, to *time.Time) (*model.FeedbackEvent, error)
 	Create(db *gorm.DB, feedbackEvent *model.FeedbackEvent) (*model.FeedbackEvent, error)
 	UpdateSelectedFieldsByID(db *gorm.DB, id string, updateModel model.FeedbackEvent, updatedFields ...string) (event *model.FeedbackEvent, err error)

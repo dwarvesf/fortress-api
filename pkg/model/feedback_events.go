@@ -122,4 +122,5 @@ type FeedbackEvent struct {
 
 	Employee Employee              `gorm:"foreignKey:CreatedBy"`
 	Topics   []*EmployeeEventTopic `gorm:"foreignKey:EventID"`
+	Count    *LikertScaleCount     `gorm:"-"`
 }
