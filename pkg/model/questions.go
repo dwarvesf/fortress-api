@@ -37,33 +37,33 @@ type Question struct {
 	EventID     UUID
 }
 
-// LikertScaleAnswers type of question
-type LikertScaleAnswers string
+// LikertScaleAnswer type of question
+type LikertScaleAnswer string
 
-// valid values for LikertScaleAnswers
+// valid values for LikertScaleAnswer
 const (
-	LikertScaleAnswersSDisagree LikertScaleAnswers = "strongly-disagree"
-	LikertScaleAnswersDisagree  LikertScaleAnswers = "disagree"
-	LikertScaleAnswersMixed     LikertScaleAnswers = "mixed"
-	LikertScaleAnswersAgree     LikertScaleAnswers = "agree"
-	LikertScaleAnswersSAgree    LikertScaleAnswers = "strongly-agree"
+	LikertScaleAnswerStronglyDisagree LikertScaleAnswer = "strongly-disagree"
+	LikertScaleAnswerDisagree         LikertScaleAnswer = "disagree"
+	LikertScaleAnswerMixed            LikertScaleAnswer = "mixed"
+	LikertScaleAnswerAgree            LikertScaleAnswer = "agree"
+	LikertScaleAnswerStronglyAgree    LikertScaleAnswer = "strongly-agree"
 )
 
-// IsValid validation for LikertScaleAnswers
-func (e LikertScaleAnswers) IsValid() bool {
+// IsValid validation for LikertScaleAnswer
+func (e LikertScaleAnswer) IsValid() bool {
 	switch e {
 	case
-		LikertScaleAnswersSDisagree,
-		LikertScaleAnswersDisagree,
-		LikertScaleAnswersMixed,
-		LikertScaleAnswersAgree,
-		LikertScaleAnswersSAgree:
+		LikertScaleAnswerStronglyDisagree,
+		LikertScaleAnswerDisagree,
+		LikertScaleAnswerMixed,
+		LikertScaleAnswerAgree,
+		LikertScaleAnswerStronglyAgree:
 		return true
 	}
 	return false
 }
 
-// String returns a string representation of LikertScaleAnswers
-func (e LikertScaleAnswers) String() string {
+// String returns a string representation of LikertScaleAnswer
+func (e LikertScaleAnswer) String() string {
 	return string(e)
 }

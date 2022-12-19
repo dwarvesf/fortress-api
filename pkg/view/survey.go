@@ -196,15 +196,15 @@ func ToSurveyDetail(event *model.FeedbackEvent) SurveyDetail {
 				}
 
 				switch question.Answer {
-				case model.LikertScaleAnswersSDisagree.String():
+				case model.LikertScaleAnswerStronglyDisagree.String():
 					newResult.StronglyDisagree++
-				case model.LikertScaleAnswersDisagree.String():
+				case model.LikertScaleAnswerDisagree.String():
 					newResult.Disagree++
-				case model.LikertScaleAnswersMixed.String():
+				case model.LikertScaleAnswerMixed.String():
 					newResult.Mixed++
-				case model.LikertScaleAnswersAgree.String():
+				case model.LikertScaleAnswerAgree.String():
 					newResult.Agree++
-				case model.LikertScaleAnswersSAgree.String():
+				case model.LikertScaleAnswerStronglyAgree.String():
 					newResult.StronglyAgree++
 				}
 			}

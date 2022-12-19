@@ -1,0 +1,41 @@
+{
+    "data": {
+        "eventID": "d97ee823-f7d5-418b-b281-711cb1d8e947",
+        "topicID": "9cf93fc1-5a38-4e2a-87de-41634b65fc87",
+        "employeeID": "2655832e-f009-4b73-a535-64c3a22e558f",
+        "title": "Self review Fortress by Thanh",
+        "status": "draft",
+        "reviewer": {
+            "id": "2655832e-f009-4b73-a535-64c3a22e558f",
+            "fullName": "Phạm Đức Thành",
+            "displayName": "Thanh Pham",
+            "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png"
+        },
+        "answers": [
+            {
+                "eventQuestionID": "3784e437-c7d6-4142-9007-82a7f18f7d50",
+                "content": "How do you feel about your workload?",
+                "answer": "agree",
+                "note": "nothing",
+                "type": "likert-scale",
+                "order": 1
+            },
+            {
+                "eventQuestionID": "25ae4b9c-4d44-4946-8034-29ccec02a005",
+                "content": "Do you think the team can make the deadline?",
+                "answer": "disagree",
+                "note": "",
+                "type": "likert-scale",
+                "order": 2
+            },
+            {
+                "eventQuestionID": "5c49dbcd-df16-4f04-bb98-a2dbb339e4d6",
+                "content": "How much that you learn about your work and your team this week?",
+                "answer": "mixed",
+                "note": "ok",
+                "type": "likert-scale",
+                "order": 3
+            }
+        ]
+    }
+}
