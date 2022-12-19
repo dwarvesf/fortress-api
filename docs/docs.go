@@ -4301,6 +4301,9 @@ const docTemplate = `{
                 "eventID": {
                     "type": "string"
                 },
+                "project": {
+                    "$ref": "#/definitions/view.BasicProjectInfo"
+                },
                 "relationship": {
                     "type": "string"
                 },

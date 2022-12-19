@@ -90,6 +90,7 @@ type FeedbackDetail struct {
 	EventID      string            `json:"eventID"`
 	Title        string            `json:"title"`
 	Relationship string            `json:"relationship"`
+	Project      *BasicProjectInfo `json:"project"`
 }
 
 type FeedbackDetailResponse struct {
@@ -104,6 +105,7 @@ type FeedbackDetailInfo struct {
 	EventID      string
 	Title        string
 	Relationship model.Relationship
+	Project      *model.Project
 }
 
 func ToListFeedbackDetails(questions []*model.EmployeeEventQuestion, detailInfo FeedbackDetailInfo) FeedbackDetail {
@@ -125,6 +127,10 @@ func ToListFeedbackDetails(questions []*model.EmployeeEventQuestion, detailInfo 
 		FullName:    detailInfo.Reviewer.FullName,
 		DisplayName: detailInfo.Reviewer.DisplayName,
 		Avatar:      detailInfo.Reviewer.Avatar,
+	}
+
+	if detailInfo.Project != nil {
+		rs.Project = toBasicProjectInfo(*detailInfo.Project)
 	}
 
 	rs.Status = detailInfo.Status.String()

@@ -187,6 +187,22 @@ func (h *handler) Detail(c *gin.Context) {
 		}
 	}
 
+	var project *model.Project
+	if !topic.ProjectID.IsZero() {
+		project, err = h.store.Project.One(h.repo.DB(), topic.ProjectID.String(), false)
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			l.Error(errs.ErrProjectNotFound, "project not found")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, nil, ""))
+			return
+		}
+
+		if err != nil {
+			l.Error(err, "failed to get project")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+			return
+		}
+	}
+
 	detailInfo := view.FeedbackDetailInfo{
 		Status:       eventReviewer.ReviewerStatus,
 		EmployeeID:   topic.EmployeeID.String(),
@@ -195,6 +211,7 @@ func (h *handler) Detail(c *gin.Context) {
 		EventID:      input.EventID,
 		Title:        topic.Title,
 		Relationship: eventReviewer.Relationship,
+		Project:      project,
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToListFeedbackDetails(questions, detailInfo), nil, nil, nil, ""))
