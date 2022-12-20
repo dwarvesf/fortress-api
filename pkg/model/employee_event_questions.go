@@ -12,6 +12,7 @@ type EmployeeEventQuestion struct {
 	Note                    string
 	Type                    string
 	Order                   int64
+	Domain                  QuestionDomain
 }
 
 // ToQuestionMap create map from EmployeeEventQuestion
@@ -32,12 +33,4 @@ func ToQuestionMapType(questionList []*EmployeeEventQuestion) map[UUID]string {
 	}
 
 	return rs
-}
-
-type LikertScaleCount struct {
-	StronglyDisagree int `json:"strongly-disagree"`
-	Disagree         int `json:"disagree"`
-	Mixed            int `json:"mixed"`
-	Agree            int `json:"agree"`
-	StronglyAgree    int `json:"strongly-agree"`
 }

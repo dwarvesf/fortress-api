@@ -120,7 +120,7 @@ type FeedbackEvent struct {
 	StartDate *time.Time
 	EndDate   *time.Time
 
-	Employee Employee              `gorm:"foreignKey:CreatedBy"`
-	Topics   []*EmployeeEventTopic `gorm:"foreignKey:EventID"`
-	Count    *LikertScaleCount     `gorm:"-"`
+	Employee             Employee              `gorm:"foreignKey:CreatedBy"`
+	Topics               []*EmployeeEventTopic `gorm:"foreignKey:EventID"`
+	QuestionDomainCounts []QuestionDomainCount `gorm:"-"`
 }
