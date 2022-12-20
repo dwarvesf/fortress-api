@@ -2484,15 +2484,6 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "description": "ProjectIDs",
-                        "name": "projectIDs",
-                        "in": "query"
-                    },
-                    {
                         "type": "string",
                         "description": "Page",
                         "name": "page",
@@ -4134,6 +4125,20 @@ const docTemplate = `{
                 }
             }
         },
+        "view.Domain": {
+            "type": "object",
+            "properties": {
+                "average": {
+                    "type": "number"
+                },
+                "count": {
+                    "$ref": "#/definitions/model.LikertScaleCount"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "view.EmployeeContentData": {
             "type": "object",
             "properties": {
@@ -4900,14 +4905,14 @@ const docTemplate = `{
         "view.Survey": {
             "type": "object",
             "properties": {
-                "answerCount": {
-                    "$ref": "#/definitions/model.LikertScaleCount"
-                },
-                "average": {
-                    "type": "integer"
-                },
                 "count": {
                     "$ref": "#/definitions/view.FeedbackCount"
+                },
+                "domains": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.Domain"
+                    }
                 },
                 "endDate": {
                     "type": "string"

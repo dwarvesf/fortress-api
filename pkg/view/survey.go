@@ -7,16 +7,15 @@ import (
 )
 
 type Survey struct {
-	ID          string                  `json:"id"`
-	Title       string                  `json:"title"`
-	Type        string                  `json:"type"`
-	Subtype     string                  `json:"subtype"`
-	Status      string                  `json:"status"`
-	StartDate   *time.Time              `json:"startDate"`
-	EndDate     *time.Time              `json:"endDate"`
-	Count       FeedbackCount           `json:"count"`
-	AnswerCount *model.LikertScaleCount `json:"answerCount"`
-	Average     int                     `json:"average"`
+	ID        string        `json:"id"`
+	Title     string        `json:"title"`
+	Type      string        `json:"type"`
+	Subtype   string        `json:"subtype"`
+	Status    string        `json:"status"`
+	StartDate *time.Time    `json:"startDate"`
+	EndDate   *time.Time    `json:"endDate"`
+	Count     FeedbackCount `json:"count"`
+	Domains   []Domain      `json:"domains"`
 }
 
 type FeedbackCount struct {
@@ -25,12 +24,19 @@ type FeedbackCount struct {
 	Done  int `json:"done"`
 }
 
+type Domain struct {
+	Name    string                 `json:"name"`
+	Average float32                `json:"average"`
+	Count   model.LikertScaleCount `json:"count"`
+}
+
 func ToListSurvey(events []*model.FeedbackEvent) []Survey {
 	var results = make([]Survey, 0, len(events))
 
 	for _, e := range events {
 		var sent, done int
 
+		// calculate feedback count
 		for _, topic := range e.Topics {
 			var topicSent, topicDone int
 
@@ -52,22 +58,32 @@ func ToListSurvey(events []*model.FeedbackEvent) []Survey {
 			}
 		}
 
-		// calculate average
+		// calculate domain value
 		// average = (count1 * weight1 + count2 * weight2 + ...) / (count1 + count2 + ...)
-		var average int
-		if e.Subtype == model.EventSubtypeWork && e.Count != nil {
-			total := e.Count.StronglyDisagree +
-				e.Count.Disagree +
-				e.Count.Mixed +
-				e.Count.Agree +
-				e.Count.StronglyAgree
+		var domains []Domain
+		if e.Subtype == model.EventSubtypeWork && len(e.QuestionDomainCounts) > 0 {
+			domains = make([]Domain, 0)
+			for _, count := range e.QuestionDomainCounts {
+				var average float32
+				total := count.StronglyDisagree +
+					count.Disagree +
+					count.Mixed +
+					count.Agree +
+					count.StronglyAgree
 
-			if total > 0 {
-				average = (e.Count.StronglyDisagree +
-					e.Count.Disagree*2 +
-					e.Count.Mixed*3 +
-					e.Count.Agree*4 +
-					e.Count.StronglyAgree*5) / total
+				if total > 0 {
+					average = float32(count.StronglyDisagree+
+						count.Disagree*2+
+						count.Mixed*3+
+						count.Agree*4+
+						count.StronglyAgree*5) / float32(total)
+				}
+
+				domains = append(domains, Domain{
+					Name:    count.Domain.String(),
+					Average: average,
+					Count:   count.LikertScaleCount,
+				})
 			}
 		}
 
@@ -84,8 +100,7 @@ func ToListSurvey(events []*model.FeedbackEvent) []Survey {
 				Sent:  sent,
 				Done:  done,
 			},
-			AnswerCount: e.Count,
-			Average:     average,
+			Domains: domains,
 		})
 	}
 

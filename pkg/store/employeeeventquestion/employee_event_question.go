@@ -48,32 +48,16 @@ func (s *store) DeleteByEventReviewerID(db *gorm.DB, eventReviewerID string) err
 	return db.Where("employee_event_reviewer_id = ?", eventReviewerID).Delete(&model.EmployeeEventQuestion{}).Error
 }
 
-// CountLikertScaleByEventIDAndProjectIDs return LikertScaleCount by eventID and projectIDs
-func (s *store) CountLikertScaleByEventIDAndProjectIDs(db *gorm.DB, eventID string, projectIDs []string) (*model.LikertScaleCount, error) {
+// CountLikertScaleByEventIDAndDomain return LikertScaleCount by eventID and domain
+func (s *store) CountLikertScaleByEventIDAndDomain(db *gorm.DB, eventID string, domain string) (*model.LikertScaleCount, error) {
 	var count *model.LikertScaleCount
-	var args []interface{}
 
-	query := `
+	query := db.Raw(`
 	WITH q0 AS (
-		SELECT *
-		FROM employee_event_questions eeq
-		WHERE eeq.event_id = ? AND deleted_at IS NULL
-	),`
-	args = append(args, eventID)
-
-	if len(projectIDs) > 0 {
-		query = `
-		WITH q0 AS (
-			SELECT eeq.*
-			FROM employee_event_questions eeq 
-				JOIN employee_event_reviewers eer ON eeq.employee_event_reviewer_id = eer.id 
-				JOIN employee_event_topics eet ON eer.employee_event_topic_id = eet.id
-			WHERE eet.event_id = ? AND eet.project_id IN ? AND eeq.deleted_at IS NULL
-		),`
-		args = append(args, projectIDs)
-	}
-
-	query = query + `
+			SELECT *
+			FROM employee_event_questions
+			WHERE event_id = ? AND domain = ? AND deleted_at IS NULL
+		),
 		q1 AS (
 			SELECT COUNT(*) AS "strongly-disagree"
 			FROM q0
@@ -101,14 +85,14 @@ func (s *store) CountLikertScaleByEventIDAndProjectIDs(db *gorm.DB, eventID stri
 		)
 		SELECT *
 		FROM q1, q2, q3, q4, q5
-	`
-	args = append(args,
+	`,
+		eventID,
+		domain,
 		model.LikertScaleAnswerStronglyDisagree,
 		model.LikertScaleAnswerDisagree,
 		model.LikertScaleAnswerMixed,
 		model.LikertScaleAnswerAgree,
-		model.LikertScaleAnswerStronglyAgree,
-	)
+		model.LikertScaleAnswerStronglyAgree)
 
-	return count, db.Raw(query, args...).Scan(&count).Error
+	return count, query.Scan(&count).Error
 }

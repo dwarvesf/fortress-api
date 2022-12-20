@@ -49,7 +49,6 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 // @Produce json
 // @Param Authorization header string true "jwt token"
 // @Param subtype query string true "Event Subtype"
-// @Param projectIDs query []string false "ProjectIDs"
 // @Param page query string false "Page"
 // @Param size query string false "Size"
 // @Success 200 {object} view.ListSurveyResponse
@@ -76,8 +75,7 @@ func (h *handler) ListSurvey(c *gin.Context) {
 		"input":   input,
 	})
 
-	events, total, err := h.store.FeedbackEvent.
-		GetBySubtypeAndProjectIDs(h.repo.DB(), input.Subtype, input.ProjectIDs, input.Pagination)
+	events, total, err := h.store.FeedbackEvent.GetBySubtype(h.repo.DB(), input.Subtype, input.Pagination)
 	if err != nil {
 		l.Error(err, "failed to get feedback events by subtype")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
@@ -87,20 +85,66 @@ func (h *handler) ListSurvey(c *gin.Context) {
 	// count likert-scale question by event and projects
 	if input.Subtype == model.EventSubtypeWork.String() {
 		for i := range events {
-			count, err := h.store.EmployeeEventQuestion.
-				CountLikertScaleByEventIDAndProjectIDs(h.repo.DB(), events[i].ID.String(), input.ProjectIDs)
+			counts, err := h.getQuestionDomainCountsByEvent(h.repo.DB(), events[i].ID.String())
 			if err != nil {
-				l.AddField("eventID", events[i].ID).Error(err, "failed to count likert-scale by eventID and projectIDs")
+				l.AddField("eventID", events[i].ID).Error(err, "failed to get QuestionDomainCounts by event")
 				c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 				return
 			}
 
-			events[i].Count = count
+			events[i].QuestionDomainCounts = counts
 		}
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToListSurvey(events),
 		&view.PaginationResponse{Pagination: input.Pagination, Total: total}, nil, nil, ""))
+}
+
+func (h *handler) getQuestionDomainCountsByEvent(db *gorm.DB, eventID string) ([]model.QuestionDomainCount, error) {
+	l := h.logger.Fields(logger.Fields{
+		"handler": "survey",
+		"method":  "GetQuestionDomainCountByEvent",
+		"eventID": eventID,
+	})
+
+	// count likert-scale questions
+	wlCount, err := h.store.EmployeeEventQuestion.
+		CountLikertScaleByEventIDAndDomain(h.repo.DB(), eventID, model.QuestionDomainWorkload.String())
+	if err != nil {
+		l.Error(err, "failed to count workload questions by eventID and domain")
+		return nil, err
+	}
+
+	dlCount, err := h.store.EmployeeEventQuestion.
+		CountLikertScaleByEventIDAndDomain(h.repo.DB(), eventID, model.QuestionDomainDeadline.String())
+	if err != nil {
+		l.Error(err, "failed to count deadline questions by eventID and domain")
+		return nil, err
+	}
+
+	lnCount, err := h.store.EmployeeEventQuestion.
+		CountLikertScaleByEventIDAndDomain(h.repo.DB(), eventID, model.QuestionDomainLearning.String())
+	if err != nil {
+		l.Error(err, "failed to count learning questions by eventID and domain")
+		return nil, err
+	}
+
+	counts := []model.QuestionDomainCount{
+		{
+			Domain:           model.QuestionDomainWorkload,
+			LikertScaleCount: *wlCount,
+		},
+		{
+			Domain:           model.QuestionDomainDeadline,
+			LikertScaleCount: *dlCount,
+		},
+		{
+			Domain:           model.QuestionDomainLearning,
+			LikertScaleCount: *lnCount,
+		},
+	}
+
+	return counts, nil
 }
 
 // GetSurveyDetail godoc
@@ -414,6 +458,7 @@ func (h *handler) createPeerReview(db *gorm.DB, req request.CreateSurveyFeedback
 				Content:                 q.Content,
 				Type:                    q.Type.String(),
 				Order:                   q.Order,
+				Domain:                  q.Domain,
 			})
 		}
 	}
@@ -589,6 +634,7 @@ func (h *handler) createEngagement(db *gorm.DB, req request.CreateSurveyFeedback
 				Content:                 q.Content,
 				Type:                    q.Type.String(),
 				Order:                   q.Order,
+				Domain:                  q.Domain,
 			})
 		}
 	}
@@ -750,6 +796,7 @@ func (h *handler) createWorkEvent(db *gorm.DB, req request.CreateSurveyFeedbackI
 				Content:                 q.Content,
 				Type:                    q.Type.String(),
 				Order:                   q.Order,
+				Domain:                  q.Domain,
 			})
 		}
 	}

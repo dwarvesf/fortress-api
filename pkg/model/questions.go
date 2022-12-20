@@ -34,6 +34,7 @@ type Question struct {
 	Subcategory EventSubtype
 	Content     string
 	Order       int64
+	Domain      QuestionDomain
 	EventID     UUID
 }
 
@@ -66,4 +67,45 @@ func (e LikertScaleAnswer) IsValid() bool {
 // String returns a string representation of LikertScaleAnswer
 func (e LikertScaleAnswer) String() string {
 	return string(e)
+}
+
+// QuestionDomain type for domain of questions table
+type QuestionDomain string
+
+// QuestionDomain values
+const (
+	QuestionDomainWorkload QuestionDomain = "workload"
+	QuestionDomainDeadline QuestionDomain = "deadline"
+	QuestionDomainLearning QuestionDomain = "learning"
+)
+
+// IsValid validation for QuestionDomain
+func (e QuestionDomain) IsValid() bool {
+	switch e {
+	case
+		QuestionDomainWorkload,
+		QuestionDomainDeadline,
+		QuestionDomainLearning:
+		return true
+	}
+	return false
+}
+
+// String returns the string type from the QuestionDomain type
+func (e QuestionDomain) String() string {
+	return string(e)
+}
+
+// LikertScaleCount represent for counted likert-scale answer model
+type LikertScaleCount struct {
+	StronglyDisagree int `json:"strongly-disagree"`
+	Disagree         int `json:"disagree"`
+	Mixed            int `json:"mixed"`
+	Agree            int `json:"agree"`
+	StronglyAgree    int `json:"strongly-agree"`
+}
+
+type QuestionDomainCount struct {
+	Domain QuestionDomain
+	LikertScaleCount
 }

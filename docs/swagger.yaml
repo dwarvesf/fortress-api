@@ -675,6 +675,15 @@ definitions:
       updatedAt:
         type: string
     type: object
+  view.Domain:
+    properties:
+      average:
+        type: number
+      count:
+        $ref: '#/definitions/model.LikertScaleCount'
+      name:
+        type: string
+    type: object
   view.EmployeeContentData:
     properties:
       url:
@@ -1174,12 +1183,12 @@ definitions:
     type: object
   view.Survey:
     properties:
-      answerCount:
-        $ref: '#/definitions/model.LikertScaleCount'
-      average:
-        type: integer
       count:
         $ref: '#/definitions/view.FeedbackCount'
+      domains:
+        items:
+          $ref: '#/definitions/view.Domain'
+        type: array
       endDate:
         type: string
       id:
@@ -3133,12 +3142,6 @@ paths:
         name: subtype
         required: true
         type: string
-      - description: ProjectIDs
-        in: query
-        items:
-          type: string
-        name: projectIDs
-        type: array
       - description: Page
         in: query
         name: page
