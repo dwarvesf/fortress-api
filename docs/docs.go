@@ -2420,6 +2420,15 @@ const docTemplate = `{
                         "required": true
                     },
                     {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "description": "ProjectIDs",
+                        "name": "projectIDs",
+                        "in": "query"
+                    },
+                    {
                         "type": "string",
                         "description": "Page",
                         "name": "page",
@@ -3116,6 +3125,26 @@ const docTemplate = `{
                 },
                 "updatedAt": {
                     "type": "string"
+                }
+            }
+        },
+        "model.LikertScaleCount": {
+            "type": "object",
+            "properties": {
+                "agree": {
+                    "type": "integer"
+                },
+                "disagree": {
+                    "type": "integer"
+                },
+                "mixed": {
+                    "type": "integer"
+                },
+                "strongly-agree": {
+                    "type": "integer"
+                },
+                "strongly-disagree": {
+                    "type": "integer"
                 }
             }
         },
@@ -4801,6 +4830,12 @@ const docTemplate = `{
         "view.Survey": {
             "type": "object",
             "properties": {
+                "answerCount": {
+                    "$ref": "#/definitions/model.LikertScaleCount"
+                },
+                "average": {
+                    "type": "integer"
+                },
                 "count": {
                     "$ref": "#/definitions/view.FeedbackCount"
                 },

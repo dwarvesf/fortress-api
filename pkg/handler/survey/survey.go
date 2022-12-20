@@ -49,6 +49,7 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 // @Produce json
 // @Param Authorization header string true "jwt token"
 // @Param subtype query string true "Event Subtype"
+// @Param projectIDs query []string false "ProjectIDs"
 // @Param page query string false "Page"
 // @Param size query string false "Size"
 // @Success 200 {object} view.ListSurveyResponse
