@@ -3390,7 +3390,7 @@
                 "type"
             ],
             "properties": {
-                "date": {
+                "fromDate": {
                     "type": "string"
                 },
                 "projectIDs": {
@@ -3400,6 +3400,9 @@
                     }
                 },
                 "quarter": {
+                    "type": "string"
+                },
+                "toDate": {
                     "type": "string"
                 },
                 "type": {

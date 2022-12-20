@@ -224,13 +224,15 @@ definitions:
     type: object
   request.CreateSurveyFeedbackInput:
     properties:
-      date:
+      fromDate:
         type: string
       projectIDs:
         items:
           type: string
         type: array
       quarter:
+        type: string
+      toDate:
         type: string
       type:
         type: string

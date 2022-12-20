@@ -86,7 +86,7 @@ func (s *store) GetByTypeInTimeRange(db *gorm.DB, eventType model.EventType, eve
 	var event *model.FeedbackEvent
 	return event, db.Where("type = ?", eventType).
 		Where("subtype = ?", eventSubtype).
-		Where("start_date = ? AND end_date = ?", from, to).
+		Where("start_date <= ? AND end_date >= ?", to, from).
 		First(&event).Error
 }
 

@@ -59,7 +59,8 @@ type CreateSurveyFeedbackInput struct {
 	Year       int      `json:"year"`
 	Type       string   `json:"type" binding:"required"`
 	ProjectIDs []string `json:"projectIDs"`
-	Date       string   `json:"date"`
+	FromDate   string   `json:"fromDate"`
+	ToDate     string   `json:"toDate"`
 }
 
 type PeerReviewDetailInput struct {

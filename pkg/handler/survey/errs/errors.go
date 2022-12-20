@@ -27,6 +27,7 @@ var (
 	ErrInvalidQuarter        = errors.New("invalid quarter")
 	ErrInvalidYear           = errors.New("invalid year")
 	ErrInvalidDate           = errors.New("invalid date")
+	ErrInvalidDateRange      = errors.New("invalid date range")
 
 	// other errors
 	ErrEventAlreadyExisted      = errors.New("event already existed")
