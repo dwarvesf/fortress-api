@@ -17,10 +17,26 @@ INSERT INTO public.positions (id, deleted_at, created_at, updated_at, name, code
 ('d796884d-a8c4-4525-81e7-54a3b6099eac', NULL, '2022-11-07 09:50:25.714604', '2022-11-07 09:50:25.714604', 'Backend', 'backend'),
 ('dac16ce6-9e5a-4ff3-9ea2-fdea4853925e', NULL, '2022-11-07 09:50:25.714604', '2022-11-07 09:50:25.714604', 'Devops', 'devops'),
 ('01fb6322-d727-47e3-a242-5039ea4732fc', NULL, '2022-11-07 09:50:25.714604', '2022-11-07 09:50:25.714604', 'Blockchain', 'blockchain'),
-('39735742-829b-47f3-8f9d-daf0983914e5', NULL, '2022-11-07 09:50:25.714604', '2022-11-07 09:50:25.714604', 'Project-Management', 'project-management');
+('39735742-829b-47f3-8f9d-daf0983914e5', NULL, '2022-11-07 09:50:25.714604', '2022-11-07 09:50:25.714604', 'Project Manager', 'project-manager'),
+('50595285-5ed6-4196-b0e2-bd31ed639e9f', NULL, '2022-11-07 09:50:25.714604', '2022-11-07 09:50:25.714604', 'Devops', 'devops'),
+('65c67b84-fbec-406f-bcae-a947a6f7f12a', NULL, '2022-11-07 09:50:25.714604', '2022-11-07 09:50:25.714604', 'Data Engineer', 'data-engineer'),
+('0590d7f2-22ba-4f53-bc51-16e5aa775beb', NULL, '2022-11-07 09:50:25.714604', '2022-11-07 09:50:25.714604', 'Data Analyst', 'data-analyst'),
+('ce2b8c4d-2ab6-4a32-82c2-e114d428fb1e', NULL, '2022-11-07 09:50:25.714604', '2022-11-07 09:50:25.714604', 'Quality Assurance', 'quality-assurance'),
+('86d9d3df-a329-4013-b85a-452e4c9a3182', NULL, '2022-11-07 09:50:25.714604', '2022-11-07 09:50:25.714604', 'Product Owner', 'product-owner'),
+('0b3fb4c7-75e8-4a2f-a20c-2423c7c80131', NULL, '2022-11-07 09:50:25.714604', '2022-11-07 09:50:25.714604', 'Scrum Master', 'scrum-master'),
+('f5d0163a-f94b-4118-a49f-04076e7a0f8b', NULL, '2022-11-07 09:50:25.714604', '2022-11-07 09:50:25.714604', 'Business Analyst', 'business-analyst'),
+('7214530a-1b41-4dc6-ad02-4b6588e403df', NULL, '2022-11-07 09:50:25.714604', '2022-11-07 09:50:25.714604', 'Mobile', 'mobile'),
+('d92cef88-4277-4542-985f-5aa9ed5f39b9', NULL, '2022-11-07 09:50:25.714604', '2022-11-07 09:50:25.714604', 'UX Design', 'ux-design'),
+('002abc17-de77-4636-b80d-6f6acd3de679', NULL, '2022-11-07 09:50:25.714604', '2022-11-07 09:50:25.714604', 'UI Design', 'ui-design'),
+('742f8d40-6078-4173-bc8a-fecf2a463feb', NULL, '2022-11-07 09:50:25.714604', '2022-11-07 09:50:25.714604', 'Product-Design', 'product-design'),
+('095248c4-b271-4186-95ef-f398a6a6e430', NULL, '2022-11-07 09:50:25.714604', '2022-11-07 09:50:25.714604', 'Lead', 'lead'),
+('a786c042-ac58-447d-ba43-eee887526367', NULL, '2022-11-07 09:50:25.714604', '2022-11-07 09:50:25.714604', 'Engineering Lead', 'engineering-lead'),
+('396f07b1-419f-474a-bbf4-b91c11666137', NULL, '2022-11-07 09:50:25.714604', '2022-11-07 09:50:25.714604', 'Engineering Manager', 'engineering-manager'),
+('100de34f-df16-4f60-9951-d3f581022cff', NULL, '2022-11-07 09:50:25.714604', '2022-11-07 09:50:25.714604', 'Head Of Engineering', 'head-of-engineering'),
+('0d8ea8e0-392a-46d0-a53c-4d84d6f47366', NULL, '2022-11-07 09:50:25.714604', '2022-11-07 09:50:25.714604', 'Product Manager', 'product-manager'),
+('309a3a1e-8eb5-4777-849e-d4d9924797a0', NULL, '2022-11-07 09:50:25.714604', '2022-11-07 09:50:25.714604', 'Fullstack', 'fullstack');
 
 INSERT INTO public.seniorities (id, deleted_at, created_at, updated_at, name, code) VALUES
-('11ccffea-2cc9-4e98-9bef-3464dfe4dec8', NULL, '2022-11-07 09:50:25.714604', '2022-11-07 09:50:25.714604', 'Fresher', 'fresher'),
 ('d796884d-a8c4-4525-81e7-54a3b6099eac', NULL, '2022-11-07 09:50:25.714604', '2022-11-07 09:50:25.714604', 'Junior', 'junior'),
 ('dac16ce6-9e5a-4ff3-9ea2-fdea4853925e', NULL, '2022-11-07 09:50:25.714604', '2022-11-07 09:50:25.714604', 'Mid', 'mid'),
 ('01fb6322-d727-47e3-a242-5039ea4732fc', NULL, '2022-11-07 09:50:25.714604', '2022-11-07 09:50:25.714604', 'Senior', 'senior'),
@@ -30,7 +46,19 @@ INSERT INTO public.seniorities (id, deleted_at, created_at, updated_at, name, co
 INSERT INTO public.stacks (id, deleted_at, created_at, updated_at, name, code, avatar) VALUES
 ('0ecf47c8-cca4-4c30-94bb-054b1124c44f', NULL, '2022-11-11 18:38:46.266725', '2022-11-11 18:38:46.266725', 'Golang', 'golang', NULL),
 ('fa0f4e46-7eab-4e5c-9d31-30489e69fe2e', NULL, '2022-11-11 18:38:46.266725', '2022-11-11 18:38:46.266725', 'React', 'react', NULL),
-('b403ef95-4269-4830-bbb6-8e56e5ec0af4', NULL, '2022-11-11 18:38:46.266725', '2022-11-11 18:38:46.266725', 'Google Cloud', 'gcloud', NULL);
+('b403ef95-4269-4830-bbb6-8e56e5ec0af4', NULL, '2022-11-11 18:38:46.266725', '2022-11-11 18:38:46.266725', 'Elixir', 'elixir', NULL),
+('4e6d4c88-7e2e-478e-811c-17b32b32ec94', NULL, '2022-11-11 18:38:46.266725', '2022-11-11 18:38:46.266725', 'AWS', 'aws', NULL),
+('426fa044-465e-453c-8c0d-b1d34843e108', NULL, '2022-11-11 18:38:46.266725', '2022-11-11 18:38:46.266725', 'GCP', 'gcp', NULL),
+('44bb9de8-d0dc-4126-a8ab-36247108ab95', NULL, '2022-11-11 18:38:46.266725', '2022-11-11 18:38:46.266725', 'Java', 'java', NULL),
+('00cd96a6-a7f3-402e-af94-256c1f23ab75', NULL, '2022-11-11 18:38:46.266725', '2022-11-11 18:38:46.266725', 'TypeScript', 'typescript', NULL),
+('588b36ea-3695-4384-83d7-77462474ebcf', NULL, '2022-11-11 18:38:46.266725', '2022-11-11 18:38:46.266725', 'Swift', 'swift', NULL),
+('eef98cf6-9d58-4d00-aebc-2b8a4bb439a1', NULL, '2022-11-11 18:38:46.266725', '2022-11-11 18:38:46.266725', 'Android', 'android', NULL),
+('54a3ac80-3ba0-4aeb-8852-904e2a1d7263', NULL, '2022-11-11 18:38:46.266725', '2022-11-11 18:38:46.266725', 'Flutter', 'flutter', NULL),
+('d7a4f73e-35f4-425b-b380-6fa19199fc3e', NULL, '2022-11-11 18:38:46.266725', '2022-11-11 18:38:46.266725', 'React Native', 'react-native', NULL),
+('569e50b4-0aa9-4406-aa99-fc9472ce5723', NULL, '2022-11-11 18:38:46.266725', '2022-11-11 18:38:46.266725', 'Angular', 'angular', NULL),
+('8944def6-6455-4e90-bbc9-3ab7a61f2ab3', NULL, '2022-11-11 18:38:46.266725', '2022-11-11 18:38:46.266725', 'Vue', 'vue', NULL);
+
+
 
 INSERT INTO public.questions (id, deleted_at, created_at, updated_at, category, subcategory, content, type, "order") VALUES 
 ('da5dbdd5-8e1e-4ae7-8bb8-ab007f2580aa', NULL, '2022-12-06 03:02:39.049420', '2022-12-06 03:02:39.049420', 'survey', 'peer-review', 'Does this employee effectively communicate with others?', 'general', 1),
