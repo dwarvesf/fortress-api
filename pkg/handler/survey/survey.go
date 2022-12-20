@@ -611,14 +611,22 @@ func (h *handler) createEngagement(db *gorm.DB, req request.CreateSurveyFeedback
 
 func (h *handler) createWorkEvent(db *gorm.DB, req request.CreateSurveyFeedbackInput, userID string) (int, error) {
 	//1. convert data
-	date, err := time.Parse("2006-01-02", req.Date)
+	fromDate, err := time.Parse("2006-01-02", req.FromDate)
 	if err != nil {
 		return http.StatusBadRequest, errs.ErrInvalidDate
 	}
-	title := date.Format("Jan 11, 2006")
+	toDate, err := time.Parse("2006-01-02", req.ToDate)
+	if err != nil {
+		return http.StatusBadRequest, errs.ErrInvalidDate
+	}
+	if fromDate.Add(time.Hour * 24 * 14).After(toDate) {
+		return http.StatusBadRequest, errs.ErrInvalidDateRange
+	}
+
+	title := fromDate.Format("Jan 11, 2006")
 
 	//1.2 check event existed
-	_, err = h.store.FeedbackEvent.GetByTypeInTimeRange(db, model.EventTypeSurvey, model.EventSubtypeWork, &date, &date)
+	_, err = h.store.FeedbackEvent.GetByTypeInTimeRange(db, model.EventTypeSurvey, model.EventSubtypeWork, &fromDate, &toDate)
 	if err == nil {
 		return http.StatusBadRequest, errs.ErrEventAlreadyExisted
 	} else {
@@ -646,8 +654,8 @@ func (h *handler) createWorkEvent(db *gorm.DB, req request.CreateSurveyFeedbackI
 		Subtype:   model.EventSubtype(req.Type),
 		Status:    model.EventStatusDraft,
 		CreatedBy: createdBy.ID,
-		StartDate: &date,
-		EndDate:   &date,
+		StartDate: &fromDate,
+		EndDate:   &toDate,
 	})
 	if err != nil {
 		return http.StatusInternalServerError, err

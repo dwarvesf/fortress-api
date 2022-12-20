@@ -3398,7 +3398,7 @@ const docTemplate = `{
                 "type"
             ],
             "properties": {
-                "date": {
+                "fromDate": {
                     "type": "string"
                 },
                 "projectIDs": {
@@ -3408,6 +3408,9 @@ const docTemplate = `{
                     }
                 },
                 "quarter": {
+                    "type": "string"
+                },
+                "toDate": {
                     "type": "string"
                 },
                 "type": {
