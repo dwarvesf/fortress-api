@@ -1898,7 +1898,7 @@ func (h *handler) ArchiveWorkUnit(c *gin.Context) {
 // @Produce  json
 // @Param Authorization header string true "jwt token"
 // @Param id path string true "Project ID"
-// @Param workUnitID path string true  "Work Unit ID"
+// @Param workUnitID path string true "Work Unit ID"
 // @Success 200 {object} view.MessageResponse
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 404 {object} view.ErrorResponse
@@ -1994,4 +1994,62 @@ func (h *handler) UnarchiveWorkUnit(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, done(nil), nil, "ok"))
+}
+
+// UpdateSendingSurveyState godoc
+// @Summary Update allows sending survey for project by id
+// @Description Update allows sending survey for project by id
+// @Tags Project
+// @Accept  json
+// @Produce  json
+// @Param Authorization header string true "jwt token"
+// @Param id path string true "Project ID"
+// @Param allowsSendingSurvey query bool true "Allows sending survey"
+// @Success 200 {object} view.MessageResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /projects/{id}/sending-survey-state [put]
+func (h *handler) UpdateSendingSurveyState(c *gin.Context) {
+	projectID := c.Param("id")
+	if projectID == "" || !model.IsUUIDFromString(projectID) {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidProjectID, nil, ""))
+		return
+	}
+
+	query := request.UpdateSendingSurveyInput{}
+	if err := c.ShouldBindQuery(&query); err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, query, ""))
+		return
+	}
+
+	// TODO: can we move this to middleware ?
+	l := h.logger.Fields(logger.Fields{
+		"handler": "project",
+		"method":  "UpdateSendingSurveyState",
+		"query":   query,
+	})
+
+	project, err := h.store.Project.One(h.repo.DB(), projectID, false)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			l.Error(err, "project not found")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, projectID, ""))
+			return
+		}
+
+		l.Error(err, "failed to get project")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, projectID, ""))
+		return
+	}
+
+	project.AllowsSendingSurvey = query.AllowsSendingSurvey
+	_, err = h.store.Project.UpdateSelectedFieldsByID(h.repo.DB(), projectID, *project, "allows_sending_survey")
+	if err != nil {
+		l.Error(err, "failed to update project")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, query, ""))
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))
 }

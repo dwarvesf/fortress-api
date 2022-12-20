@@ -981,6 +981,8 @@ definitions:
     properties:
       accountManager:
         $ref: '#/definitions/view.ProjectHead'
+      allowsSendingSurvey:
+        type: boolean
       clientEmail:
         type: string
       country:
@@ -2810,6 +2812,49 @@ paths:
           schema:
             $ref: '#/definitions/view.ErrorResponse'
       summary: Update member in an existing project
+      tags:
+      - Project
+  /projects/{id}/sending-survey-state:
+    put:
+      consumes:
+      - application/json
+      description: Update allows sending survey for project by id
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Allows sending survey
+        in: query
+        name: allowsSendingSurvey
+        required: true
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Update allows sending survey for project by id
       tags:
       - Project
   /projects/{id}/status:

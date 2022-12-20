@@ -2003,6 +2003,70 @@ const docTemplate = `{
                 }
             }
         },
+        "/projects/{id}/sending-survey-state": {
+            "put": {
+                "description": "Update allows sending survey for project by id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Project"
+                ],
+                "summary": "Update allows sending survey for project by id",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Project ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Allows sending survey",
+                        "name": "allowsSendingSurvey",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.MessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/projects/{id}/status": {
             "put": {
                 "description": "Update status for project by id",
@@ -4539,6 +4603,9 @@ const docTemplate = `{
             "properties": {
                 "accountManager": {
                     "$ref": "#/definitions/view.ProjectHead"
+                },
+                "allowsSendingSurvey": {
+                    "type": "boolean"
                 },
                 "clientEmail": {
                     "type": "string"
