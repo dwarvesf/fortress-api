@@ -44,6 +44,19 @@ definitions:
       updatedAt:
         type: string
     type: object
+  model.LikertScaleCount:
+    properties:
+      agree:
+        type: integer
+      disagree:
+        type: integer
+      mixed:
+        type: integer
+      strongly-agree:
+        type: integer
+      strongly-disagree:
+        type: integer
+    type: object
   model.Position:
     properties:
       code:
@@ -1157,6 +1170,10 @@ definitions:
     type: object
   view.Survey:
     properties:
+      answerCount:
+        $ref: '#/definitions/model.LikertScaleCount'
+      average:
+        type: integer
       count:
         $ref: '#/definitions/view.FeedbackCount'
       endDate:
@@ -3069,6 +3086,12 @@ paths:
         name: subtype
         required: true
         type: string
+      - description: ProjectIDs
+        in: query
+        items:
+          type: string
+        name: projectIDs
+        type: array
       - description: Page
         in: query
         name: page
