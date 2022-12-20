@@ -619,7 +619,7 @@ func (h *handler) createWorkEvent(db *gorm.DB, req request.CreateSurveyFeedbackI
 	if err != nil {
 		return http.StatusBadRequest, errs.ErrInvalidDate
 	}
-	if fromDate.Add(time.Hour * 24 * 14).After(toDate) {
+	if fromDate.Add(time.Hour * 24 * 14).Before(toDate) {
 		return http.StatusBadRequest, errs.ErrInvalidDateRange
 	}
 
