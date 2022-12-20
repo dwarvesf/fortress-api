@@ -665,7 +665,7 @@ func (h *handler) createWorkEvent(db *gorm.DB, req request.CreateSurveyFeedbackI
 			BaseModel: model.BaseModel{
 				ID: model.NewUUID(),
 			},
-			Title:      title,
+			Title:      fmt.Sprintf("Work and Team Survey: %s - %s", title, e.Employee.DisplayName),
 			EventID:    event.ID,
 			EmployeeID: e.EmployeeID,
 			ProjectID:  e.ProjectID,
