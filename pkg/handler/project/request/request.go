@@ -386,3 +386,7 @@ func (i GetListWorkUnitQuery) Validate() error {
 
 	return nil
 }
+
+type UpdateSendingSurveyInput struct {
+	AllowsSendingSurvey bool `form:"allows_survey" json:"allows_survey"`
+}

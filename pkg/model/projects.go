@@ -57,18 +57,19 @@ func (e ProjectStatus) String() string {
 type Project struct {
 	BaseModel
 
-	Name           string
-	CountryID      UUID
-	Type           ProjectType
-	StartDate      *time.Time
-	EndDate        *time.Time
-	Status         ProjectStatus
-	Slots          []ProjectSlot
-	Heads          []ProjectHead
-	ProjectMembers []ProjectMember
-	ProjectStacks  []ProjectStack
-	ProjectEmail   string
-	ClientEmail    string
+	Name                string
+	CountryID           UUID
+	Type                ProjectType
+	StartDate           *time.Time
+	EndDate             *time.Time
+	Status              ProjectStatus
+	Slots               []ProjectSlot
+	Heads               []ProjectHead
+	ProjectMembers      []ProjectMember
+	ProjectStacks       []ProjectStack
+	ProjectEmail        string
+	ClientEmail         string
+	AllowsSendingSurvey bool
 
 	Country *Country
 }

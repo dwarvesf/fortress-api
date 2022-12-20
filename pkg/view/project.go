@@ -10,21 +10,22 @@ import (
 type ProjectData struct {
 	model.BaseModel
 
-	Name            string            `json:"name"`
-	Type            string            `json:"type"`
-	Status          string            `json:"status"`
-	ProjectEmail    string            `json:"projectEmail"`
-	ClientEmail     string            `json:"clientEmail"`
-	Industry        string            `json:"industry"`
-	Country         *BasicCountryInfo `json:"country"`
-	StartDate       *time.Time        `json:"startDate"`
-	EndDate         *time.Time        `json:"endDate"`
-	Members         []ProjectMember   `json:"members"`
-	TechnicalLead   []ProjectHead     `json:"technicalLeads"`
-	AccountManager  *ProjectHead      `json:"accountManager"`
-	SalePerson      *ProjectHead      `json:"salePerson"`
-	DeliveryManager *ProjectHead      `json:"deliveryManager"`
-	Stacks          []Stack           `json:"stacks"`
+	Name                string            `json:"name"`
+	Type                string            `json:"type"`
+	Status              string            `json:"status"`
+	ProjectEmail        string            `json:"projectEmail"`
+	ClientEmail         string            `json:"clientEmail"`
+	Industry            string            `json:"industry"`
+	AllowsSendingSurvey bool              `json:"allowsSendingSurvey"`
+	Country             *BasicCountryInfo `json:"country"`
+	StartDate           *time.Time        `json:"startDate"`
+	EndDate             *time.Time        `json:"endDate"`
+	Members             []ProjectMember   `json:"members"`
+	TechnicalLead       []ProjectHead     `json:"technicalLeads"`
+	AccountManager      *ProjectHead      `json:"accountManager"`
+	SalePerson          *ProjectHead      `json:"salePerson"`
+	DeliveryManager     *ProjectHead      `json:"deliveryManager"`
+	Stacks              []Stack           `json:"stacks"`
 }
 
 type UpdatedProject struct {
@@ -160,20 +161,21 @@ func ToProjectData(project *model.Project) ProjectData {
 	}
 
 	d := ProjectData{
-		BaseModel:       project.BaseModel,
-		Name:            project.Name,
-		Type:            project.Type.String(),
-		Status:          project.Status.String(),
-		Stacks:          ToProjectStacks(project.ProjectStacks),
-		StartDate:       project.StartDate,
-		EndDate:         project.EndDate,
-		Members:         members,
-		TechnicalLead:   technicalLeads,
-		DeliveryManager: deliveryManager,
-		SalePerson:      salePerson,
-		AccountManager:  accountManager,
-		ProjectEmail:    project.ProjectEmail,
-		ClientEmail:     project.ClientEmail,
+		BaseModel:           project.BaseModel,
+		Name:                project.Name,
+		Type:                project.Type.String(),
+		Status:              project.Status.String(),
+		Stacks:              ToProjectStacks(project.ProjectStacks),
+		StartDate:           project.StartDate,
+		EndDate:             project.EndDate,
+		Members:             members,
+		TechnicalLead:       technicalLeads,
+		DeliveryManager:     deliveryManager,
+		SalePerson:          salePerson,
+		AccountManager:      accountManager,
+		ProjectEmail:        project.ProjectEmail,
+		ClientEmail:         project.ClientEmail,
+		AllowsSendingSurvey: project.AllowsSendingSurvey,
 	}
 
 	if project.Country != nil {

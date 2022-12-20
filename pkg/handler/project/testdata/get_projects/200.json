@@ -6,6 +6,7 @@
       "updatedAt": "2022-11-07T09:50:25.714604Z",
       "name": "Fortress",
       "status": "active",
+      "allowsSendingSurvey":false,
       "lead": {
         "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec1",
         "name": "John Doe",

@@ -8,6 +8,7 @@
         "status": "active",
         "projectEmail": "fortress@d.foundation",
         "clientEmail": "team@d.foundation",
+        "allowsSendingSurvey":false,
         "industry": "",
         "country": {
             "id": "4ef64490-c906-4192-a7f9-d2221dadfe4c",

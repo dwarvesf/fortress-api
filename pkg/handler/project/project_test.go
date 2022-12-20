@@ -1043,3 +1043,60 @@ func TestHandler_UnarchiveWorkUnit(t *testing.T) {
 		})
 	}
 }
+
+func TestHandler_UpdateSendingSurveyState(t *testing.T) {
+	// load env and test data
+	cfg := config.LoadTestConfig()
+	loggerMock := logger.NewLogrusLogger()
+	serviceMock := service.New(&cfg)
+	storeMock := store.New()
+
+	tests := []struct {
+		name             string
+		wantCode         int
+		wantErr          bool
+		wantResponsePath string
+		query            string
+		id               string
+	}{
+		{
+			name:             "ok_update_sending_survey",
+			wantCode:         200,
+			wantErr:          false,
+			wantResponsePath: "testdata/update_sending_survey/200.json",
+			query:            "allowsSendingSurvey=true",
+			id:               "8dc3be2e-19a4-4942-8a79-56db391a0b15",
+		},
+		{
+			name:             "failed_invalid_project_id",
+			wantCode:         404,
+			wantErr:          true,
+			wantResponsePath: "testdata/update_sending_survey/404.json",
+			query:            "allowsSendingSurvey=true",
+			id:               "8dc3be2e-19a4-4942-8a79-56db391a0b11",
+		},
+	}
+
+	for _, tt := range tests {
+		testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+			testhelper.LoadTestSQLFile(t, txRepo, "./testdata/update_sending_survey/update_sending_survey.sql")
+
+			t.Run(tt.name, func(t *testing.T) {
+				w := httptest.NewRecorder()
+				ctx, _ := gin.CreateTestContext(w)
+				ctx.Params = gin.Params{gin.Param{Key: "id", Value: tt.id}}
+				ctx.Request = httptest.NewRequest("PUT", fmt.Sprintf("/api/v1/projects/%s/sending-survey-state?%s", tt.id, tt.query), nil)
+				ctx.Request.Header.Set("Authorization", testToken)
+				ctx.Request.URL.RawQuery = tt.query
+				metadataHandler := New(storeMock, txRepo, serviceMock, loggerMock)
+
+				metadataHandler.UpdateSendingSurveyState(ctx)
+				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				require.NoError(t, err)
+
+				require.Equal(t, tt.wantCode, w.Code)
+				require.JSONEq(t, string(expRespRaw), string(w.Body.Bytes()), "[Handler.UpdateSendingSurveyState] response mismatched")
+			})
+		})
+	}
+}

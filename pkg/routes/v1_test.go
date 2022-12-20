@@ -153,6 +153,12 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/project.IHandler.Details-fm",
 			},
 		},
+		"/api/v1/projects/:id/sending-survey-state": {
+			"PUT": {
+				Method:  "PUT",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/project.IHandler.UpdateSendingSurveyState-fm",
+			},
+		},
 		"/api/v1/projects/:id/status": {
 			"PUT": {
 				Method:  "PUT",

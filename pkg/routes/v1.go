@@ -48,6 +48,7 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 	v1.POST("/projects", amw.WithAuth, pmw.WithPerm("projects.create"), h.Project.Create)
 	v1.GET("/projects", amw.WithAuth, pmw.WithPerm("projects.read"), h.Project.List)
 	v1.GET("/projects/:id", amw.WithAuth, pmw.WithPerm("projects.read"), h.Project.Details)
+	v1.PUT("/projects/:id/sending-survey-state", amw.WithAuth, pmw.WithPerm("projects.edit"), h.Project.UpdateSendingSurveyState)
 	v1.PUT("/projects/:id/status", amw.WithAuth, pmw.WithPerm("projects.read"), h.Project.UpdateProjectStatus)
 	v1.POST("/projects/:id/members", amw.WithAuth, pmw.WithPerm("projectMembers.create"), h.Project.AssignMember)
 	v1.GET("/projects/:id/members", amw.WithAuth, pmw.WithPerm("projectMembers.read"), h.Project.GetMembers)
