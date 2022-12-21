@@ -64,12 +64,13 @@ type ListFeedbackResponse struct {
 }
 
 type QuestionAnswer struct {
-	EventQuestionID string `json:"eventQuestionID"`
-	Content         string `json:"content"`
-	Answer          string `json:"answer"`
-	Note            string `json:"note"`
-	Type            string `json:"type"`
-	Order           int64  `json:"order"`
+	EventQuestionID string               `json:"eventQuestionID"`
+	Content         string               `json:"content"`
+	Answer          string               `json:"answer"`
+	Note            string               `json:"note"`
+	Type            string               `json:"type"`
+	Order           int64                `json:"order"`
+	Domain          model.QuestionDomain `json:"domain"`
 }
 
 type FeedBackReviewDetail struct {
@@ -112,6 +113,10 @@ func ToListFeedbackDetails(questions []*model.EmployeeEventQuestion, detailInfo 
 	var rs FeedbackDetail
 
 	for _, q := range questions {
+		if q.Type == model.QuestionTypeScale.String() {
+			q.Answer = model.AgreementLevelValueMap[q.Domain][q.Answer].String()
+		}
+
 		rs.Answers = append(rs.Answers, &QuestionAnswer{
 			EventQuestionID: q.ID.String(),
 			Content:         q.Content,
@@ -119,6 +124,7 @@ func ToListFeedbackDetails(questions []*model.EmployeeEventQuestion, detailInfo 
 			Note:            q.Note,
 			Type:            q.Type,
 			Order:           q.Order,
+			Domain:          q.Domain,
 		})
 	}
 
@@ -161,6 +167,10 @@ func ToListSubmitFeedback(questions []*model.EmployeeEventQuestion, detailInfo F
 	var rs SubmitFeedback
 
 	for _, q := range questions {
+		if q.Type == model.QuestionTypeScale.String() {
+			q.Answer = model.AgreementLevelValueMap[q.Domain][q.Answer].String()
+		}
+
 		rs.Answers = append(rs.Answers, &QuestionAnswer{
 			EventQuestionID: q.ID.String(),
 			Content:         q.Content,
@@ -168,6 +178,7 @@ func ToListSubmitFeedback(questions []*model.EmployeeEventQuestion, detailInfo F
 			Note:            q.Note,
 			Type:            q.Type,
 			Order:           q.Order,
+			Domain:          q.Domain,
 		})
 	}
 
@@ -192,6 +203,10 @@ func ToFeedbackReviewDetail(questions []*model.EmployeeEventQuestion, topic *mod
 	var qs []QuestionAnswer
 
 	for _, q := range questions {
+		if q.Type == model.QuestionTypeScale.String() {
+			q.Answer = model.AgreementLevelValueMap[q.Domain][q.Answer].String()
+		}
+
 		qs = append(qs, QuestionAnswer{
 			EventQuestionID: q.ID.String(),
 			Content:         q.Content,
@@ -199,6 +214,7 @@ func ToFeedbackReviewDetail(questions []*model.EmployeeEventQuestion, topic *mod
 			Note:            q.Note,
 			Type:            q.Type,
 			Order:           q.Order,
+			Domain:          q.Domain,
 		})
 	}
 

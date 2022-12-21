@@ -4801,6 +4801,9 @@ const docTemplate = `{
                 "content": {
                     "type": "string"
                 },
+                "domain": {
+                    "type": "string"
+                },
                 "eventQuestionID": {
                     "type": "string"
                 },

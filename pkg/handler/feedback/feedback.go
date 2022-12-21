@@ -306,7 +306,7 @@ func (h *handler) Submit(c *gin.Context) {
 	}
 
 	questionMap := model.ToQuestionMapType(eventQuestions)
-	for _, e := range input.Body.Answers {
+	for i, e := range input.Body.Answers {
 		_, ok := questionMap[e.EventQuestionID]
 		if !ok {
 			l.Error(errs.ErrEventQuestionNotFound(e.EventQuestionID.String()), "employee event question not found")
@@ -314,10 +314,14 @@ func (h *handler) Submit(c *gin.Context) {
 			return
 		}
 
-		if questionMap[e.EventQuestionID] == model.QuestionTypeScale.String() && !model.LikertScaleAnswer(e.Answer).IsValid() {
-			l.Error(errs.ErrInvalidAnswerForLikertScale, "invalid answer for likert-scale question")
-			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, done(errs.ErrInvalidAnswerForLikertScale), input, ""))
-			return
+		if questionMap[e.EventQuestionID] == model.QuestionTypeScale.String() {
+			if !model.AgreementLevel(e.Answer).IsValid() {
+				l.Error(errs.ErrInvalidAnswerForLikertScale, "invalid answer for likert-scale question")
+				c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, done(errs.ErrInvalidAnswerForLikertScale), input, ""))
+				return
+			}
+
+			input.Body.Answers[i].Answer = model.AgreementLevelMap[model.AgreementLevel(e.Answer)]
 		}
 	}
 

@@ -7,7 +7,8 @@
                 "answer": "good",
                 "note": "nothing",
                 "type": "general",
-                "order": 1
+                "order": 1,
+                "domain": ""
             },
             {
                 "eventQuestionID": "795219e6-67d8-4611-a5cb-38fb1057e4ee",
@@ -15,7 +16,8 @@
                 "answer": "good",
                 "note": "nothing",
                 "type": "general",
-                "order": 2
+                "order": 2,
+                "domain": ""
             },
             {
                 "eventQuestionID": "40177889-8098-4cb7-931e-9cfe857e56f7",
@@ -23,7 +25,8 @@
                 "answer": "good",
                 "note": "nothing",
                 "type": "general",
-                "order": 3
+                "order": 3,
+                "domain": ""
             },
             {
                 "eventQuestionID": "7886c936-fb48-4fc0-beb6-7a8c5d723b78",
@@ -31,7 +34,8 @@
                 "answer": "good",
                 "note": "nothing",
                 "type": "general",
-                "order": 4
+                "order": 4,
+                "domain": ""
             },
             {
                 "eventQuestionID": "272a2524-efe3-4386-b463-a79143ef661e",
@@ -39,7 +43,8 @@
                 "answer": "good",
                 "note": "nothing",
                 "type": "general",
-                "order": 5
+                "order": 5,
+                "domain": ""
             },
             {
                 "eventQuestionID": "86aac74b-4dc4-422b-ac70-735fe247eedf",
@@ -47,7 +52,8 @@
                 "answer": "good",
                 "note": "nothing",
                 "type": "general",
-                "order": 6
+                "order": 6,
+                "domain": ""
             },
             {
                 "eventQuestionID": "faab80cf-9b4c-4deb-96b6-3d7a46cc5e7d",
@@ -55,7 +61,8 @@
                 "answer": "good",
                 "note": "nothing",
                 "type": "general",
-                "order": 7
+                "order": 7,
+                "domain": ""
             }
         ],
         "topicName": "Review Thuong Phung",
