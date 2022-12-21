@@ -1,8 +1,6 @@
 package employee
 
 import (
-	"fmt"
-
 	"gorm.io/gorm"
 
 	"github.com/dwarvesf/fortress-api/pkg/model"
@@ -51,57 +49,18 @@ func (s *store) OneByTeamEmail(db *gorm.DB, teamEmail string) (*model.Employee, 
 }
 
 // All get employees by query and pagination
-func (s *store) All(db *gorm.DB, input GetAllInput, pagination model.Pagination) ([]*model.Employee, int64, error) {
+func (s store) All(db *gorm.DB, filter EmployeeFilter, pagination model.Pagination) ([]*model.Employee, int64, error) {
 	var total int64
 	var employees []*model.Employee
 
 	query := db.Table("employees")
 
-	if len(input.WorkingStatuses) > 0 {
-		query = query.Where("working_status IN ?", input.WorkingStatuses)
-	}
-
-	if input.PositionID != "" {
-		query = query.Joins("JOIN employee_positions ON employees.id = employee_positions.employee_id AND employee_positions.position_id = ?",
-			input.PositionID)
-	}
-
-	if input.StackID != "" {
-		query = query.Joins("JOIN employee_stacks ON employees.id = employee_stacks.employee_id AND employee_stacks.stack_id = ?",
-			input.StackID)
-	}
-
-	if input.ProjectID != "" {
-		query = query.Joins("JOIN project_members ON employees.id = project_members.employee_id AND project_members.project_id = ?",
-			input.ProjectID)
-	}
-
-	if input.Keyword != "" {
-		keywork := fmt.Sprintf("%%%s%%", input.Keyword)
-
-		query = query.Where("github_id like ?", keywork).
-			Or("discord_id like ?", keywork).
-			Or("notion_id like ?", keywork).
-			Or("full_name like ?", keywork).
-			Or("team_email like ?", keywork)
-	}
+	query = getByWhereConditions(query, filter)
+	query = getByFieldSort(query, "employees.joined_date", model.SortOrderDESC)
 
 	query = query.Count(&total)
 
-	if pagination.Sort != "" {
-		query = query.Order(pagination.Sort)
-	} else {
-		query = query.Order("joined_date DESC")
-	}
-
-	limit, offset := pagination.ToLimitOffset()
-	if pagination.Page > 0 {
-		query = query.Limit(limit)
-	}
-
-	query = query.Offset(offset)
-
-	if input.Preload {
+	if filter.Preload {
 		query = query.Preload("ProjectMembers", "deleted_at IS NULL").
 			Preload("LineManager", "deleted_at IS NULL").
 			Preload("Seniority", "deleted_at IS NULL").
@@ -117,7 +76,15 @@ func (s *store) All(db *gorm.DB, input GetAllInput, pagination model.Pagination)
 			Preload("EmployeeStacks.Stack", "deleted_at IS NULL")
 	}
 
-	return employees, total, query.Find(&employees).Error
+	limit, offset := pagination.ToLimitOffset()
+	if pagination.Page > 0 {
+		query = query.Limit(limit)
+	}
+
+	return employees, total, query.
+		Limit(limit).
+		Offset(offset).
+		Find(&employees).Error
 }
 
 func (s *store) Create(db *gorm.DB, e *model.Employee) (employee *model.Employee, err error) {

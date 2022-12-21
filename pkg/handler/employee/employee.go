@@ -81,13 +81,14 @@ func (h *handler) List(c *gin.Context) {
 		"params":  query,
 	})
 
-	employees, total, err := h.store.Employee.All(h.repo.DB(), employee.GetAllInput{
+	employees, total, err := h.store.Employee.All(h.repo.DB(), employee.EmployeeFilter{
 		WorkingStatuses: query.WorkingStatuses,
 		Preload:         query.Preload,
 		Keyword:         query.Keyword,
 		PositionID:      query.PositionID,
 		StackID:         query.StackID,
 		ProjectID:       query.ProjectID,
+		JoinedDateSort:  model.SortOrderDESC.String(),
 	}, query.Pagination)
 	if err != nil {
 		l.Error(err, "error query employee from db")

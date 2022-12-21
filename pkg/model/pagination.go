@@ -8,11 +8,22 @@ import (
 
 var maxPageSize int64 = 999
 
+type SortOrder string
+
 type Pagination struct {
 	Page         int64  `json:"page" form:"page,default=0"`            // page index
 	Size         int64  `json:"size" form:"size"`                      // page size
 	Sort         string `json:"sort" form:"sort" swaggerignore:"true"` // sort by field
 	Standardized bool   `json:"-" form:"-" swaggerignore:"true"`
+}
+
+const (
+	SortOrderASC  SortOrder = "asc"
+	SortOrderDESC SortOrder = "desc"
+)
+
+func (e SortOrder) String() string {
+	return string(e)
 }
 
 func (p *Pagination) Standardize() {
