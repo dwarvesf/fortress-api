@@ -673,7 +673,7 @@ func (h *handler) createWorkEvent(db *gorm.DB, req request.CreateSurveyFeedbackI
 		return http.StatusBadRequest, errs.ErrEmptyProjectIDs
 	}
 
-	title := fromDate.Format("Jan 11, 2006")
+	title := fromDate.Format("Jan 02, 2006")
 
 	//1.2 check event existed
 	_, err = h.store.FeedbackEvent.GetByTypeInTimeRange(db, model.EventTypeSurvey, model.EventSubtypeWork, &fromDate, &toDate)
