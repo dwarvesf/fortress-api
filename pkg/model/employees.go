@@ -86,8 +86,9 @@ type Employee struct {
 	BasecampAttachableSGID string `gorm:"column:basecamp_attachable_sgid"`
 	GitlabID               string
 	GithubID               string
-	DiscordID              string
 	NotionID               string
+	DiscordID              string
+	DiscordName            string
 
 	// payroll info
 	WiseRecipientEmail string

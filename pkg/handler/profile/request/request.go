@@ -7,9 +7,10 @@ type UpdateInfoInput struct {
 	TeamEmail     string `form:"teamEmail" json:"teamEmail" binding:"required,email"`
 	PersonalEmail string `form:"personalEmail" json:"personalEmail" binding:"required,email"`
 	PhoneNumber   string `form:"phoneNumber" json:"phoneNumber" binding:"required,max=12,min=10"`
-	DiscordID     string `form:"discordID" json:"discordID"`
 	GithubID      string `form:"githubID" json:"githubID"`
 	NotionID      string `form:"notionID" json:"notionID"`
+	DiscordID     string `form:"discordID" json:"discordID"`
+	DiscordName   string `form:"discordName" json:"discordName"`
 }
 
 func (i UpdateInfoInput) MapEmployeeInput(employee *model.Employee) {
@@ -19,6 +20,9 @@ func (i UpdateInfoInput) MapEmployeeInput(employee *model.Employee) {
 
 	if i.DiscordID != "" {
 		employee.DiscordID = i.DiscordID
+	}
+	if i.DiscordName != "" {
+		employee.DiscordName = i.DiscordName
 	}
 	if i.GithubID != "" {
 		employee.GithubID = i.GithubID

@@ -22,9 +22,10 @@ type EmployeeData struct {
 	Gender        string     `json:"gender"`
 	Horoscope     string     `json:"horoscope"`
 	DateOfBirth   *time.Time `json:"birthday"`
-	DiscordID     string     `json:"discordID"`
 	GithubID      string     `json:"githubID"`
 	NotionID      string     `json:"notionID"`
+	DiscordID     string     `json:"discordID"`
+	DiscordName   string     `json:"discordName"`
 
 	// working info
 	WorkingStatus model.WorkingStatus `json:"status"`
@@ -47,9 +48,10 @@ type UpdateGeneralInfoEmployeeData struct {
 	FullName    string             `json:"fullName"`
 	TeamEmail   string             `json:"teamEmail"`
 	PhoneNumber string             `json:"phoneNumber"`
-	DiscordID   string             `json:"discordID"`
 	GithubID    string             `json:"githubID"`
 	NotionID    string             `json:"notionID"`
+	DiscordID   string             `json:"discordID"`
+	DiscordName string             `json:"discordName"`
 	LineManager *BasicEmployeeInfo `json:"lineManager"`
 }
 
@@ -155,9 +157,10 @@ func ToUpdateGeneralInfoEmployeeData(employee *model.Employee) *UpdateGeneralInf
 		FullName:    employee.FullName,
 		TeamEmail:   employee.TeamEmail,
 		PhoneNumber: employee.PhoneNumber,
-		DiscordID:   employee.DiscordID,
 		GithubID:    employee.GithubID,
 		NotionID:    employee.NotionID,
+		DiscordID:   employee.DiscordID,
+		DiscordName: employee.DiscordName,
 	}
 
 	if employee.LineManager != nil {
@@ -205,8 +208,9 @@ func ToEmployeeData(employee *model.Employee) *EmployeeData {
 		Horoscope:     employee.Horoscope,
 		DateOfBirth:   employee.DateOfBirth,
 		GithubID:      employee.GithubID,
-		DiscordID:     employee.DiscordID,
 		NotionID:      employee.NotionID,
+		DiscordID:     employee.DiscordID,
+		DiscordName:   employee.DiscordName,
 		WorkingStatus: employee.WorkingStatus,
 		Seniority:     employee.Seniority,
 		JoinedDate:    employee.JoinedDate,

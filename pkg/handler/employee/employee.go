@@ -279,9 +279,10 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 	employee.PersonalEmail = body.Email
 	employee.PhoneNumber = body.Phone
 	employee.LineManagerID = body.LineManagerID
-	employee.DiscordID = body.DiscordID
 	employee.GithubID = body.GithubID
 	employee.NotionID = body.NotionID
+	employee.DiscordID = body.DiscordID
+	employee.DiscordName = body.DiscordName
 
 	_, err = h.store.Employee.UpdateSelectedFieldsByID(h.repo.DB(), employeeID, *employee,
 		"full_name",

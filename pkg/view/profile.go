@@ -16,9 +16,10 @@ type ProfileData struct {
 	TeamEmail     string     `json:"teamEmail"`
 	PersonalEmail string     `json:"personalEmail"`
 	PhoneNumber   string     `json:"phoneNumber"`
-	DiscordID     string     `json:"discordID"`
 	GithubID      string     `json:"githubID"`
 	NotionID      string     `json:"notionID"`
+	DiscordID     string     `json:"discordID"`
+	DiscordName   string     `json:"discordName"`
 }
 
 type UpdateProfileInfoData struct {
@@ -27,9 +28,10 @@ type UpdateProfileInfoData struct {
 	// basic info
 	TeamEmail   string `json:"teamEmail"`
 	PhoneNumber string `json:"phoneNumber"`
-	DiscordID   string `json:"discordID"`
 	GithubID    string `json:"githubID"`
 	NotionID    string `json:"notionID"`
+	DiscordID   string `json:"discordID"`
+	DiscordName string `json:"discordName"`
 }
 
 type ProfileDataResponse struct {
@@ -49,9 +51,10 @@ func ToUpdateProfileInfoData(employee *model.Employee) *UpdateProfileInfoData {
 		},
 		TeamEmail:   employee.TeamEmail,
 		PhoneNumber: employee.PhoneNumber,
-		DiscordID:   employee.DiscordID,
 		GithubID:    employee.GithubID,
 		NotionID:    employee.NotionID,
+		DiscordID:   employee.DiscordID,
+		DiscordName: employee.DiscordName,
 	}
 
 	return rs
@@ -68,8 +71,9 @@ func ToProfileData(employee *model.Employee) *ProfileData {
 		TeamEmail:     employee.TeamEmail,
 		PersonalEmail: employee.PersonalEmail,
 		PhoneNumber:   employee.PhoneNumber,
-		DiscordID:     employee.DiscordID,
 		GithubID:      employee.GithubID,
 		NotionID:      employee.NotionID,
+		DiscordID:     employee.DiscordID,
+		DiscordName:   employee.DiscordName,
 	}
 }
