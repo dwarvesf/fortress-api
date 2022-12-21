@@ -56,7 +56,7 @@ func (s store) All(db *gorm.DB, filter EmployeeFilter, pagination model.Paginati
 	query := db.Table("employees")
 
 	query = getByWhereConditions(query, filter)
-	query = getByFieldSort(query, "employees.joined_date", model.SortOrderDESC)
+	query = getByFieldSort(query, "employees.joined_date", filter.JoinedDateSort)
 
 	query = query.Count(&total)
 

@@ -1,5 +1,7 @@
 package employee
 
+import "github.com/dwarvesf/fortress-api/pkg/model"
+
 type EmployeeFilter struct {
 	WorkingStatuses []string
 	Preload         bool
@@ -8,5 +10,5 @@ type EmployeeFilter struct {
 	ProjectID       string
 	Keyword         string
 	//field sort
-	JoinedDateSort string
+	JoinedDateSort model.SortOrder
 }

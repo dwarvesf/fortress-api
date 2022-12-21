@@ -36,7 +36,7 @@ BEGIN
               array_agg(DISTINCT substring(lexeme FOR len))
             FROM
               unnest(to_tsvector(LOWER(c."full_name" || ' ' || c."team_email" || ' ' || c."discord_id" || ' ' || c."notion_id" || ' ' || c."github_id" ))),
-              generate_series(1, length(lexeme)) len));
+              generate_series(1, length(lexeme)) len)) WHERE c.id = NEW.id;
       RETURN new;
 END;
 $BODY$
