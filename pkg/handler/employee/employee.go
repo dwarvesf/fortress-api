@@ -88,7 +88,7 @@ func (h *handler) List(c *gin.Context) {
 		PositionID:      query.PositionID,
 		StackID:         query.StackID,
 		ProjectID:       query.ProjectID,
-		JoinedDateSort:  model.SortOrderDESC.String(),
+		JoinedDateSort:  model.SortOrderDESC,
 	}, query.Pagination)
 	if err != nil {
 		l.Error(err, "error query employee from db")
