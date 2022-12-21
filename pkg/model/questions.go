@@ -74,9 +74,10 @@ type QuestionDomain string
 
 // QuestionDomain values
 const (
-	QuestionDomainWorkload QuestionDomain = "workload"
-	QuestionDomainDeadline QuestionDomain = "deadline"
-	QuestionDomainLearning QuestionDomain = "learning"
+	QuestionDomainEngagement QuestionDomain = "engagement"
+	QuestionDomainWorkload   QuestionDomain = "workload"
+	QuestionDomainDeadline   QuestionDomain = "deadline"
+	QuestionDomainLearning   QuestionDomain = "learning"
 )
 
 // IsValid validation for QuestionDomain
@@ -178,7 +179,7 @@ func (e AgreementLevel) String() string {
 	return string(e)
 }
 
-var ArgreementLevelMap = map[AgreementLevel]string{
+var AgreementLevelMap = map[AgreementLevel]string{
 	// engagement
 	AgreementLevelStronglyDisagree: "1",
 	AgreementLevelDisagree:         "2",
@@ -208,29 +209,29 @@ var ArgreementLevelMap = map[AgreementLevel]string{
 	AgreementLevelExtremely:  "5",
 }
 
-var ArgreementLevelValueMap = map[string]map[string]AgreementLevel{
-	EventSubtypeEngagement.String(): {
+var AgreementLevelValueMap = map[QuestionDomain]map[string]AgreementLevel{
+	QuestionDomainEngagement: {
 		"1": AgreementLevelStronglyDisagree,
 		"2": AgreementLevelDisagree,
 		"3": AgreementLevelMixed,
 		"4": AgreementLevelAgree,
 		"5": AgreementLevelStronglyAgree,
 	},
-	QuestionDomainWorkload.String(): {
+	QuestionDomainWorkload: {
 		"1": AgreementLevelBreeze,
 		"2": AgreementLevelCouldHandleMore,
 		"3": AgreementLevelManageable,
 		"4": AgreementLevelOverwhelming,
 		"5": AgreementLevelCantKeepUp,
 	},
-	QuestionDomainDeadline.String(): {
+	QuestionDomainDeadline: {
 		"1": AgreementLevelVeryUncertain,
 		"2": AgreementLevelSomewhatUncertain,
 		"3": AgreementLevelNeutral,
 		"4": AgreementLevelSomewhatConfident,
 		"5": AgreementLevelVeryConfident,
 	},
-	QuestionDomainLearning.String(): {
+	QuestionDomainLearning: {
 		"1": AgreementLevelVeryLittle,
 		"2": AgreementLevelSomewhat,
 		"3": AgreementLevelModerate,

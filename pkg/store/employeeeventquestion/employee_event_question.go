@@ -88,11 +88,11 @@ func (s *store) CountLikertScaleByEventIDAndDomain(db *gorm.DB, eventID string, 
 	`,
 		eventID,
 		domain,
-		model.LikertScaleAnswerStronglyDisagree,
-		model.LikertScaleAnswerDisagree,
-		model.LikertScaleAnswerMixed,
-		model.LikertScaleAnswerAgree,
-		model.LikertScaleAnswerStronglyAgree)
+		model.AgreementLevelMap[model.AgreementLevelStronglyDisagree],
+		model.AgreementLevelMap[model.AgreementLevelDisagree],
+		model.AgreementLevelMap[model.AgreementLevelMixed],
+		model.AgreementLevelMap[model.AgreementLevelAgree],
+		model.AgreementLevelMap[model.AgreementLevelStronglyAgree])
 
 	return count, query.Scan(&count).Error
 }
