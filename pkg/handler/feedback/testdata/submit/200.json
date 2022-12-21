@@ -1,5 +1,16 @@
 {
     "data": {
+        "eventID": "8a5bfedb-6e11-4f5c-82d9-2635cfcce3e2",
+        "topicID": "e4a33adc-2495-43cf-b816-32feb8d5250d",
+        "employeeID": "37e00d47-de69-4ac8-991b-cf3e39565c00",
+        "title": "Review Thuong Phung",
+        "status": "draft",
+        "reviewer": {
+            "id": "2655832e-f009-4b73-a535-64c3a22e558f",
+            "fullName": "Phạm Đức Thành",
+            "displayName": "Thanh Pham",
+            "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png"
+        },
         "answers": [
             {
                 "eventQuestionID": "7a94c0f4-81cf-4736-8628-710e25cfc4e7",
@@ -7,7 +18,8 @@
                 "answer": "ok",
                 "note": "",
                 "type": "general",
-                "order": 1
+                "order": 1,
+                "domain": ""
             },
             {
                 "eventQuestionID": "795219e6-67d8-4611-a5cb-38fb1057e4ee",
@@ -15,7 +27,8 @@
                 "answer": "ok",
                 "note": "",
                 "type": "general",
-                "order": 2
+                "order": 2,
+                "domain": ""
             },
             {
                 "eventQuestionID": "40177889-8098-4cb7-931e-9cfe857e56f7",
@@ -23,7 +36,8 @@
                 "answer": "ok",
                 "note": "",
                 "type": "general",
-                "order": 3
+                "order": 3,
+                "domain": ""
             },
             {
                 "eventQuestionID": "7886c936-fb48-4fc0-beb6-7a8c5d723b78",
@@ -31,7 +45,8 @@
                 "answer": "ok",
                 "note": "",
                 "type": "general",
-                "order": 4
+                "order": 4,
+                "domain": ""
             },
             {
                 "eventQuestionID": "272a2524-efe3-4386-b463-a79143ef661e",
@@ -39,7 +54,8 @@
                 "answer": "ok",
                 "note": "",
                 "type": "general",
-                "order": 5
+                "order": 5,
+                "domain": ""
             },
             {
                 "eventQuestionID": "86aac74b-4dc4-422b-ac70-735fe247eedf",
@@ -47,7 +63,8 @@
                 "answer": "ok",
                 "note": "",
                 "type": "general",
-                "order": 6
+                "order": 6,
+                "domain": ""
             },
             {
                 "eventQuestionID": "faab80cf-9b4c-4deb-96b6-3d7a46cc5e7d",
@@ -55,19 +72,9 @@
                 "answer": "ok",
                 "note": "",
                 "type": "general",
-                "order": 7
+                "order": 7,
+                "domain": ""
             }
-        ],
-        "status": "draft",
-        "employeeID": "37e00d47-de69-4ac8-991b-cf3e39565c00",
-        "reviewer": {
-            "id": "2655832e-f009-4b73-a535-64c3a22e558f",
-            "fullName": "Phạm Đức Thành",
-            "displayName": "Thanh Pham",
-            "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png"
-        },
-        "topicID": "e4a33adc-2495-43cf-b816-32feb8d5250d",
-        "eventID": "8a5bfedb-6e11-4f5c-82d9-2635cfcce3e2",
-        "title": "Review Thuong Phung"
+        ]
     }
 }

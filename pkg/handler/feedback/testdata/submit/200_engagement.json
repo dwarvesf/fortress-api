@@ -7,7 +7,8 @@
                 "answer": "agree",
                 "note": "ok",
                 "type": "likert-scale",
-                "order": 1
+                "order": 1,
+                "domain": "engagement"
             },
             {
                 "eventQuestionID": "ebf8ab8b-8827-49fe-a61a-40b140eba903",
@@ -15,7 +16,8 @@
                 "answer": "agree",
                 "note": "ok",
                 "type": "likert-scale",
-                "order": 2
+                "order": 2,
+                "domain": "engagement"
             },
             {
                 "eventQuestionID": "fae6d117-38c9-4634-8e20-9c012fe0f222",
@@ -23,7 +25,8 @@
                 "answer": "agree",
                 "note": "ok",
                 "type": "likert-scale",
-                "order": 3
+                "order": 3,
+                "domain": "engagement"
             },
             {
                 "eventQuestionID": "eb8e2a6a-0f86-40fb-b447-972bd8a53d15",
@@ -31,7 +34,8 @@
                 "answer": "agree",
                 "note": "ok",
                 "type": "likert-scale",
-                "order": 4
+                "order": 4,
+                "domain": "engagement"
             },
             {
                 "eventQuestionID": "c2c3e368-27b0-4154-b2ff-10d1a9f29ba1",
@@ -39,7 +43,8 @@
                 "answer": "agree",
                 "note": "ok",
                 "type": "likert-scale",
-                "order": 5
+                "order": 5,
+                "domain": "engagement"
             },
             {
                 "eventQuestionID": "ba0c090c-eefc-4e1a-b29d-a024e68c57fe",
@@ -47,7 +52,8 @@
                 "answer": "agree",
                 "note": "ok",
                 "type": "likert-scale",
-                "order": 6
+                "order": 6,
+                "domain": "engagement"
             },
             {
                 "eventQuestionID": "f508b883-2294-4f50-84e7-f43a0be89bad",
@@ -55,7 +61,8 @@
                 "answer": "agree",
                 "note": "ok",
                 "type": "likert-scale",
-                "order": 7
+                "order": 7,
+                "domain": "engagement"
             },
             {
                 "eventQuestionID": "57e4bb72-3c10-4652-b2b6-0f26be8ba936",
@@ -63,7 +70,8 @@
                 "answer": "agree",
                 "note": "ok",
                 "type": "likert-scale",
-                "order": 8
+                "order": 8,
+                "domain": "engagement"
             },
             {
                 "eventQuestionID": "c6fde31e-59c3-4161-9180-490a4a591a17",
@@ -71,7 +79,8 @@
                 "answer": "agree",
                 "note": "ok",
                 "type": "likert-scale",
-                "order": 9
+                "order": 9,
+                "domain": "engagement"
             },
             {
                 "eventQuestionID": "06c7451f-e155-409b-aebd-5082f897040a",
@@ -79,7 +88,8 @@
                 "answer": "agree",
                 "note": "ok",
                 "type": "likert-scale",
-                "order": 10
+                "order": 10,
+                "domain": "engagement"
             },
             {
                 "eventQuestionID": "16c1285b-bb45-4093-bcec-5daa8e3eaac6",
@@ -87,7 +97,8 @@
                 "answer": "agree",
                 "note": "ok",
                 "type": "likert-scale",
-                "order": 11
+                "order": 11,
+                "domain": "engagement"
             },
             {
                 "eventQuestionID": "c9722d74-1683-4c1f-8378-75584cd25753",
@@ -95,7 +106,8 @@
                 "answer": "agree",
                 "note": "ok",
                 "type": "likert-scale",
-                "order": 12
+                "order": 12,
+                "domain": "engagement"
             }
         ],
         "status": "draft",
