@@ -23,9 +23,10 @@ type UpdateEmployeeGeneralInfoInput struct {
 	Email         string     `form:"email" json:"email" binding:"required,email"`
 	Phone         string     `form:"phone" json:"phone" binding:"required,max=12,min=10"`
 	LineManagerID model.UUID `form:"lineManagerID" json:"lineManagerID"`
-	DiscordID     string     `form:"discordID" json:"discordID"`
 	GithubID      string     `form:"githubID" json:"githubID"`
 	NotionID      string     `form:"notionID" json:"notionID"`
+	DiscordID     string     `form:"discordID" json:"discordID"`
+	DiscordName   string     `form:"discordName" json:"discordName"`
 }
 
 // CreateEmployeeInput view for create new employee
