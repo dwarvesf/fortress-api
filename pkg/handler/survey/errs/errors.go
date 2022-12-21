@@ -28,6 +28,7 @@ var (
 	ErrInvalidYear           = errors.New("invalid year")
 	ErrInvalidDate           = errors.New("invalid date")
 	ErrInvalidDateRange      = errors.New("invalid date range")
+	ErrEmptyProjectIDs       = errors.New("project IDs is empty")
 
 	// other errors
 	ErrEventAlreadyExisted      = errors.New("event already existed")
