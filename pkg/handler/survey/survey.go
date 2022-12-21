@@ -669,6 +669,10 @@ func (h *handler) createWorkEvent(db *gorm.DB, req request.CreateSurveyFeedbackI
 		return http.StatusBadRequest, errs.ErrInvalidDateRange
 	}
 
+	if len(req.ProjectIDs) <= 0 {
+		return http.StatusBadRequest, errs.ErrEmptyProjectIDs
+	}
+
 	title := fromDate.Format("Jan 11, 2006")
 
 	//1.2 check event existed
