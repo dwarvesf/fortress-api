@@ -7,7 +7,7 @@ import (
 )
 
 type IStore interface {
-	All(db *gorm.DB, input GetAllInput, pagination model.Pagination) (employees []*model.Employee, total int64, err error)
+	All(db *gorm.DB, input EmployeeFilter, pagination model.Pagination) (employees []*model.Employee, total int64, err error)
 	Create(db *gorm.DB, e *model.Employee) (employee *model.Employee, err error)
 
 	One(db *gorm.DB, id string, preload bool) (employee *model.Employee, err error)
