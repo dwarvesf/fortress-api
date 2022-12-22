@@ -87,6 +87,7 @@ type Employee struct {
 	GitlabID               string
 	GithubID               string
 	NotionID               string
+	NotionName             string
 	DiscordID              string
 	DiscordName            string
 

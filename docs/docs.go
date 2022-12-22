@@ -3603,6 +3603,9 @@ const docTemplate = `{
                 "discordID": {
                     "type": "string"
                 },
+                "discordName": {
+                    "type": "string"
+                },
                 "email": {
                     "type": "string"
                 },
@@ -3617,6 +3620,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "notionID": {
+                    "type": "string"
+                },
+                "notionName": {
                     "type": "string"
                 },
                 "phone": {
@@ -3637,10 +3643,16 @@ const docTemplate = `{
                 "discordID": {
                     "type": "string"
                 },
+                "discordName": {
+                    "type": "string"
+                },
                 "githubID": {
                     "type": "string"
                 },
                 "notionID": {
+                    "type": "string"
+                },
+                "notionName": {
                     "type": "string"
                 },
                 "personalEmail": {
@@ -4182,6 +4194,9 @@ const docTemplate = `{
                 "discordID": {
                     "type": "string"
                 },
+                "discordName": {
+                    "type": "string"
+                },
                 "displayName": {
                     "type": "string"
                 },
@@ -4214,6 +4229,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "notionID": {
+                    "type": "string"
+                },
+                "notionName": {
                     "type": "string"
                 },
                 "personalEmail": {
@@ -4566,6 +4584,9 @@ const docTemplate = `{
                 "discordID": {
                     "type": "string"
                 },
+                "discordName": {
+                    "type": "string"
+                },
                 "displayName": {
                     "type": "string"
                 },
@@ -4582,6 +4603,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "notionID": {
+                    "type": "string"
+                },
+                "notionName": {
                     "type": "string"
                 },
                 "personalEmail": {
@@ -5098,6 +5122,9 @@ const docTemplate = `{
                 "discordID": {
                     "type": "string"
                 },
+                "discordName": {
+                    "type": "string"
+                },
                 "fullName": {
                     "description": "basic info",
                     "type": "string"
@@ -5112,6 +5139,9 @@ const docTemplate = `{
                     "$ref": "#/definitions/view.BasicEmployeeInfo"
                 },
                 "notionID": {
+                    "type": "string"
+                },
+                "notionName": {
                     "type": "string"
                 },
                 "phoneNumber": {
@@ -5174,6 +5204,9 @@ const docTemplate = `{
                 "discordID": {
                     "type": "string"
                 },
+                "discordName": {
+                    "type": "string"
+                },
                 "githubID": {
                     "type": "string"
                 },
@@ -5181,6 +5214,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "notionID": {
+                    "type": "string"
+                },
+                "notionName": {
                     "type": "string"
                 },
                 "phoneNumber": {

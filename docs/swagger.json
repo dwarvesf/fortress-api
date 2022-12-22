@@ -3595,6 +3595,9 @@
                 "discordID": {
                     "type": "string"
                 },
+                "discordName": {
+                    "type": "string"
+                },
                 "email": {
                     "type": "string"
                 },
@@ -3609,6 +3612,9 @@
                     "type": "string"
                 },
                 "notionID": {
+                    "type": "string"
+                },
+                "notionName": {
                     "type": "string"
                 },
                 "phone": {
@@ -3629,10 +3635,16 @@
                 "discordID": {
                     "type": "string"
                 },
+                "discordName": {
+                    "type": "string"
+                },
                 "githubID": {
                     "type": "string"
                 },
                 "notionID": {
+                    "type": "string"
+                },
+                "notionName": {
                     "type": "string"
                 },
                 "personalEmail": {
@@ -4174,6 +4186,9 @@
                 "discordID": {
                     "type": "string"
                 },
+                "discordName": {
+                    "type": "string"
+                },
                 "displayName": {
                     "type": "string"
                 },
@@ -4206,6 +4221,9 @@
                     "type": "string"
                 },
                 "notionID": {
+                    "type": "string"
+                },
+                "notionName": {
                     "type": "string"
                 },
                 "personalEmail": {
@@ -4558,6 +4576,9 @@
                 "discordID": {
                     "type": "string"
                 },
+                "discordName": {
+                    "type": "string"
+                },
                 "displayName": {
                     "type": "string"
                 },
@@ -4574,6 +4595,9 @@
                     "type": "string"
                 },
                 "notionID": {
+                    "type": "string"
+                },
+                "notionName": {
                     "type": "string"
                 },
                 "personalEmail": {
@@ -5090,6 +5114,9 @@
                 "discordID": {
                     "type": "string"
                 },
+                "discordName": {
+                    "type": "string"
+                },
                 "fullName": {
                     "description": "basic info",
                     "type": "string"
@@ -5104,6 +5131,9 @@
                     "$ref": "#/definitions/view.BasicEmployeeInfo"
                 },
                 "notionID": {
+                    "type": "string"
+                },
+                "notionName": {
                     "type": "string"
                 },
                 "phoneNumber": {
@@ -5166,6 +5196,9 @@
                 "discordID": {
                     "type": "string"
                 },
+                "discordName": {
+                    "type": "string"
+                },
                 "githubID": {
                     "type": "string"
                 },
@@ -5173,6 +5206,9 @@
                     "type": "string"
                 },
                 "notionID": {
+                    "type": "string"
+                },
+                "notionName": {
                     "type": "string"
                 },
                 "phoneNumber": {

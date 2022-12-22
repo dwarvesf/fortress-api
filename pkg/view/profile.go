@@ -18,6 +18,7 @@ type ProfileData struct {
 	PhoneNumber   string     `json:"phoneNumber"`
 	GithubID      string     `json:"githubID"`
 	NotionID      string     `json:"notionID"`
+	NotionName    string     `json:"notionName"`
 	DiscordID     string     `json:"discordID"`
 	DiscordName   string     `json:"discordName"`
 }
@@ -30,6 +31,7 @@ type UpdateProfileInfoData struct {
 	PhoneNumber string `json:"phoneNumber"`
 	GithubID    string `json:"githubID"`
 	NotionID    string `json:"notionID"`
+	NotionName  string `json:"notionName"`
 	DiscordID   string `json:"discordID"`
 	DiscordName string `json:"discordName"`
 }
@@ -53,6 +55,7 @@ func ToUpdateProfileInfoData(employee *model.Employee) *UpdateProfileInfoData {
 		PhoneNumber: employee.PhoneNumber,
 		GithubID:    employee.GithubID,
 		NotionID:    employee.NotionID,
+		NotionName:  employee.NotionName,
 		DiscordID:   employee.DiscordID,
 		DiscordName: employee.DiscordName,
 	}
@@ -73,6 +76,7 @@ func ToProfileData(employee *model.Employee) *ProfileData {
 		PhoneNumber:   employee.PhoneNumber,
 		GithubID:      employee.GithubID,
 		NotionID:      employee.NotionID,
+		NotionName:    employee.NotionName,
 		DiscordID:     employee.DiscordID,
 		DiscordName:   employee.DiscordName,
 	}

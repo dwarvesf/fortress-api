@@ -322,6 +322,8 @@ definitions:
     properties:
       discordID:
         type: string
+      discordName:
+        type: string
       email:
         type: string
       fullName:
@@ -332,6 +334,8 @@ definitions:
       lineManagerID:
         type: string
       notionID:
+        type: string
+      notionName:
         type: string
       phone:
         maxLength: 12
@@ -346,9 +350,13 @@ definitions:
     properties:
       discordID:
         type: string
+      discordName:
+        type: string
       githubID:
         type: string
       notionID:
+        type: string
+      notionName:
         type: string
       personalEmail:
         type: string
@@ -712,6 +720,8 @@ definitions:
         $ref: '#/definitions/gorm.DeletedAt'
       discordID:
         type: string
+      discordName:
+        type: string
       displayName:
         type: string
       fullName:
@@ -734,6 +744,8 @@ definitions:
       mbti:
         type: string
       notionID:
+        type: string
+      notionName:
         type: string
       personalEmail:
         type: string
@@ -962,6 +974,8 @@ definitions:
         type: string
       discordID:
         type: string
+      discordName:
+        type: string
       displayName:
         type: string
       fullName:
@@ -973,6 +987,8 @@ definitions:
       id:
         type: string
       notionID:
+        type: string
+      notionName:
         type: string
       personalEmail:
         type: string
@@ -1309,6 +1325,8 @@ definitions:
         $ref: '#/definitions/gorm.DeletedAt'
       discordID:
         type: string
+      discordName:
+        type: string
       fullName:
         description: basic info
         type: string
@@ -1319,6 +1337,8 @@ definitions:
       lineManager:
         $ref: '#/definitions/view.BasicEmployeeInfo'
       notionID:
+        type: string
+      notionName:
         type: string
       phoneNumber:
         type: string
@@ -1359,11 +1379,15 @@ definitions:
         $ref: '#/definitions/gorm.DeletedAt'
       discordID:
         type: string
+      discordName:
+        type: string
       githubID:
         type: string
       id:
         type: string
       notionID:
+        type: string
+      notionName:
         type: string
       phoneNumber:
         type: string
