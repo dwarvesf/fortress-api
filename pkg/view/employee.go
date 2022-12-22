@@ -231,14 +231,6 @@ func ToEmployeeData(employee *model.Employee) *EmployeeData {
 		rs.Seniority = employee.Seniority
 	}
 
-	if employee.LineManager != nil {
-		rs.LineManager = &BasicEmployeeInfo{
-			ID:       employee.LineManager.ID.String(),
-			FullName: employee.LineManager.FullName,
-			Avatar:   employee.LineManager.Avatar,
-		}
-	}
-
 	return rs
 }
 
