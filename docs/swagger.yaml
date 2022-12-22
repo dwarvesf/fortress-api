@@ -1952,6 +1952,49 @@ paths:
       summary: Update Skill for employee by id
       tags:
       - Employee
+  /employees/{id}/upload-avatar:
+    post:
+      consumes:
+      - application/json
+      description: Upload avatar of employee by id
+      parameters:
+      - description: Employee ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: avatar upload
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.EmployeeContentDataResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Upload avatar of employee by id
+      tags:
+      - Employee
   /employees/{id}/upload-content:
     post:
       consumes:
