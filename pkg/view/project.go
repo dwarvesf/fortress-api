@@ -125,11 +125,8 @@ func ToProjectData(project *model.Project) ProjectData {
 	for _, slot := range project.Slots {
 		m := slot.ProjectMember
 		member := ProjectMember{
-			ProjectSlotID:  slot.ID.String(),
 			Status:         slot.Status.String(),
 			DeploymentType: slot.DeploymentType.String(),
-			Rate:           slot.Rate,
-			Discount:       slot.Discount,
 			Positions:      ToProjectSlotPositions(slot.ProjectSlotPositions),
 		}
 
@@ -138,16 +135,12 @@ func ToProjectData(project *model.Project) ProjectData {
 		}
 
 		if slot.Status != model.ProjectMemberStatusPending && !m.ID.IsZero() {
-			member.ProjectMemberID = m.ID.String()
 			member.Status = m.Status.String()
 			member.DeploymentType = m.DeploymentType.String()
 			member.EmployeeID = m.EmployeeID.String()
 			member.FullName = m.Employee.FullName
 			member.DisplayName = m.Employee.DisplayName
 			member.Avatar = m.Employee.Avatar
-			member.JoinedDate = m.JoinedDate
-			member.Rate = m.Rate
-			member.Discount = m.Discount
 			member.Seniority = m.Seniority
 			member.IsLead = leadMap[m.EmployeeID.String()]
 			member.Positions = ToProjectMemberPositions(m.ProjectMemberPositions)

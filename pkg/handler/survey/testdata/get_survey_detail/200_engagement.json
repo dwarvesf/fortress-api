@@ -26,6 +26,7 @@
                 "type": "survey",
                 "subtype": "engagement",
                 "status": "sent",
+                "isForcedDone": false,
                 "employee": {
                     "id": "ecea9d15-05ba-4a4e-9787-54210e3b98ce",
                     "fullName": "Nguyễn Hoàng Huy",
@@ -46,6 +47,7 @@
                 "type": "survey",
                 "subtype": "engagement",
                 "status": "sent",
+                "isForcedDone": false,
                 "employee": {
                     "id": "2655832e-f009-4b73-a535-64c3a22e558f",
                     "fullName": "Phạm Đức Thành",

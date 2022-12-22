@@ -52,9 +52,9 @@ definitions:
         type: integer
       mixed:
         type: integer
-      strongly-agree:
+      stronglyAgree:
         type: integer
-      strongly-disagree:
+      stronglyDisagree:
         type: integer
     type: object
   model.Position:
@@ -969,6 +969,8 @@ definitions:
     properties:
       eventReviewerID:
         type: string
+      isForcedDone:
+        type: boolean
       relationship:
         type: string
       reviewer:
@@ -1271,19 +1273,6 @@ definitions:
       type:
         type: string
     type: object
-  view.SurveyResult:
-    properties:
-      agree:
-        type: integer
-      disagree:
-        type: integer
-      mixed:
-        type: integer
-      stronglyAgree:
-        type: integer
-      stronglyDisagree:
-        type: integer
-    type: object
   view.SurveyTopicDetail:
     properties:
       employee:
@@ -1308,20 +1297,24 @@ definitions:
         type: integer
       count:
         $ref: '#/definitions/view.FeedbackCount'
+      domains:
+        items:
+          $ref: '#/definitions/view.Domain'
+        type: array
       employee:
         $ref: '#/definitions/view.BasicEmployeeInfo'
       eventID:
         type: string
       id:
         type: string
+      isForcedDone:
+        type: boolean
       participants:
         items:
           $ref: '#/definitions/view.BasicEmployeeInfo'
         type: array
       project:
         $ref: '#/definitions/view.BasicProjectInfo'
-      result:
-        $ref: '#/definitions/view.SurveyResult'
       reviewID:
         type: string
       status:

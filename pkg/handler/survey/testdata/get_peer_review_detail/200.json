@@ -18,7 +18,8 @@
                     "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/2830497479497502617.png"
                 },
                 "status": "sent",
-                "relationship": "line-manager"
+                "relationship": "line-manager",
+                "isForcedDone": false
             },
             {
                 "eventReviewerID": "bc9a5715-9723-4a2f-ad42-0d0f19a80b4d",
@@ -29,7 +30,8 @@
                     "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png"
                 },
                 "status": "sent",
-                "relationship": "peer"
+                "relationship": "peer",
+                "isForcedDone": false
             },
             {
                 "eventReviewerID": "c994db17-384a-4331-8944-b8ac0070ac3f",
@@ -40,7 +42,8 @@
                     "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5348640939694049226.png"
                 },
                 "status": "sent",
-                "relationship": "peer"
+                "relationship": "peer",
+                "isForcedDone": false
             },
             {
                 "eventReviewerID": "a7f4bcc2-1953-4b86-8aff-8a96f741feca",
@@ -51,7 +54,8 @@
                     "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/7227222220023148542.png"
                 },
                 "status": "sent",
-                "relationship": "peer"
+                "relationship": "peer",
+                "isForcedDone": false
             },
             {
                 "eventReviewerID": "16e87fe4-aff8-4c00-9cda-0b0efea94ad1",
@@ -62,7 +66,8 @@
                     "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/8690187460973853786.png"
                 },
                 "status": "sent",
-                "relationship": "peer"
+                "relationship": "peer",
+                "isForcedDone": false
             },
             {
                 "eventReviewerID": "cf850c59-24a2-45c5-98dc-bdf1818d36bd",
@@ -73,7 +78,8 @@
                     "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/4916620003720295041.png"
                 },
                 "status": "sent",
-                "relationship": "peer"
+                "relationship": "peer",
+                "isForcedDone": false
             },
             {
                 "eventReviewerID": "f754ae24-8a82-4a8b-b93f-90bb38afa4d2",
@@ -84,7 +90,8 @@
                     "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/2137109913829673789.png"
                 },
                 "status": "sent",
-                "relationship": "peer"
+                "relationship": "peer",
+                "isForcedDone": false
             },
             {
                 "eventReviewerID": "61a668bf-ba36-48e3-adc8-ce93c8aec29b",
@@ -95,7 +102,8 @@
                     "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/3c420751-bb9a-4878-896e-2f10f3a633d6_avatar2535921977139052349.png"
                 },
                 "status": "sent",
-                "relationship": "peer"
+                "relationship": "peer",
+                "isForcedDone": false
             },
             {
                 "eventReviewerID": "c4b2c917-1912-40ee-8de2-e2dc1302a610",
@@ -106,7 +114,8 @@
                     "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/261887286241984054.png"
                 },
                 "status": "sent",
-                "relationship": "peer"
+                "relationship": "peer",
+                "isForcedDone": false
             },
             {
                 "eventReviewerID": "77f64b43-93ed-48db-b20b-a3b2f030388f",
@@ -117,7 +126,8 @@
                     "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/6674226719566030792.png"
                 },
                 "status": "sent",
-                "relationship": "peer"
+                "relationship": "peer",
+                "isForcedDone": false
             },
             {
                 "eventReviewerID": "4f5ac428-9c23-4c5c-828f-bd9c77e5b565",
@@ -128,7 +138,8 @@
                     "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/8900807301346129018.png"
                 },
                 "status": "sent",
-                "relationship": "peer"
+                "relationship": "peer",
+                "isForcedDone": false
             },
             {
                 "eventReviewerID": "4d9b9f10-faee-42d6-ace3-99d0e96a0be8",
@@ -139,7 +150,8 @@
                     "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/8465254073957996724.png"
                 },
                 "status": "sent",
-                "relationship": "peer"
+                "relationship": "peer",
+                "isForcedDone": false
             },
             {
                 "eventReviewerID": "6a7a936f-9ac8-4629-be67-0cf4c14f910d",
@@ -150,7 +162,8 @@
                     "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/4114345912835654270.png"
                 },
                 "status": "sent",
-                "relationship": "peer"
+                "relationship": "peer",
+                "isForcedDone": false
             },
             {
                 "eventReviewerID": "00e6a708-287c-4fc6-ae8d-83fed9d42633",
@@ -161,7 +174,8 @@
                     "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/3274097965772922906.png"
                 },
                 "status": "sent",
-                "relationship": "peer"
+                "relationship": "peer",
+                "isForcedDone": false
             },
             {
                 "eventReviewerID": "68867dea-f8af-47e0-9bd7-620c0404f707",
@@ -172,7 +186,8 @@
                     "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5762098830282049280.png"
                 },
                 "status": "draft",
-                "relationship": "peer"
+                "relationship": "peer",
+                "isForcedDone": false
             },
             {
                 "eventReviewerID": "eae233c5-4930-4185-bfc7-7852f7b29fd0",
@@ -183,7 +198,8 @@
                     "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/4368900905892223171.png"
                 },
                 "status": "sent",
-                "relationship": "peer"
+                "relationship": "peer",
+                "isForcedDone": false
             },
             {
                 "eventReviewerID": "4eecf200-4cd2-4df5-ae61-d4184613c0b2",
@@ -194,7 +210,8 @@
                     "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/8399103964540935617.png"
                 },
                 "status": "sent",
-                "relationship": "peer"
+                "relationship": "peer",
+                "isForcedDone": false
             },
             {
                 "eventReviewerID": "fcdb0411-c790-4925-88ce-6b75c87d4648",
@@ -205,7 +222,8 @@
                     "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/2870969541970972723.png"
                 },
                 "status": "sent",
-                "relationship": "peer"
+                "relationship": "peer",
+                "isForcedDone": false
             },
             {
                 "eventReviewerID": "922e6243-c1e7-4055-9fe6-148ea39cfc8d",
@@ -216,7 +234,8 @@
                     "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/3851063061598282120.png"
                 },
                 "status": "sent",
-                "relationship": "peer"
+                "relationship": "peer",
+                "isForcedDone": false
             },
             {
                 "eventReviewerID": "359a2804-40a8-4a6d-86fb-c0247f66c281",
@@ -227,7 +246,8 @@
                     "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/7186955696154477566.png"
                 },
                 "status": "sent",
-                "relationship": "peer"
+                "relationship": "peer",
+                "isForcedDone": false
             },
             {
                 "eventReviewerID": "d896ce40-dd8c-48be-951e-7691aa27a734",
@@ -238,7 +258,8 @@
                     "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/1105085008506574007.png"
                 },
                 "status": "sent",
-                "relationship": "peer"
+                "relationship": "peer",
+                "isForcedDone": false
             }
         ]
     }
