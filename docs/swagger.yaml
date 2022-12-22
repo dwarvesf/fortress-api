@@ -1030,6 +1030,16 @@ definitions:
       data:
         $ref: '#/definitions/view.ProfileData'
     type: object
+  view.ProjectContentData:
+    properties:
+      url:
+        type: string
+    type: object
+  view.ProjectContentDataResponse:
+    properties:
+      data:
+        $ref: '#/definitions/view.ProjectContentData'
+    type: object
   view.ProjectData:
     properties:
       accountManager:
@@ -3034,6 +3044,49 @@ paths:
           schema:
             $ref: '#/definitions/view.ErrorResponse'
       summary: Update status for project by id
+      tags:
+      - Project
+  /projects/{id}/upload-avatar:
+    post:
+      consumes:
+      - application/json
+      description: Upload avatar of project by id
+      parameters:
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: avatar upload
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.ProjectContentDataResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Upload avatar of project by id
       tags:
       - Project
   /projects/{id}/work-units:

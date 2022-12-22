@@ -88,7 +88,7 @@ func TestHandler_UpdateProjectStatus(t *testing.T) {
 				ctx.Params = gin.Params{gin.Param{Key: "id", Value: tt.id}}
 				ctx.Request = httptest.NewRequest("POST", fmt.Sprintf("/api/v1/projects/%s/status", tt.id), bodyReader)
 				ctx.Request.Header.Set("Authorization", testToken)
-				metadataHandler := New(storeMock, txRepo, serviceMock, loggerMock)
+				metadataHandler := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 
 				metadataHandler.UpdateProjectStatus(ctx)
 				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
@@ -177,7 +177,7 @@ func TestHandler_Create(t *testing.T) {
 				ctx.Request.Header.Set("Authorization", testToken)
 				ctx.Request.Header.Set("Content-Type", gin.MIMEJSON)
 
-				h := New(storeMock, txRepo, serviceMock, loggerMock)
+				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 				h.Create(ctx)
 				require.Equal(t, tt.wantCode, w.Code)
 				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
@@ -234,7 +234,7 @@ func TestHandler_GetMembers(t *testing.T) {
 				ctx.Request.URL.RawQuery = tt.query
 				ctx.AddParam("id", tt.id)
 
-				h := New(storeMock, txRepo, serviceMock, loggerMock)
+				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 				h.GetMembers(ctx)
 				require.Equal(t, tt.wantCode, w.Code)
 				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
@@ -346,7 +346,7 @@ func TestHandler_UpdateMember(t *testing.T) {
 				ctx.Request.Header.Set("Content-Type", gin.MIMEJSON)
 				ctx.AddParam("id", tt.id)
 
-				h := New(storeMock, txRepo, serviceMock, loggerMock)
+				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 				h.UpdateMember(ctx)
 				require.Equal(t, tt.wantCode, w.Code)
 				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
@@ -414,7 +414,7 @@ func TestHandler_AssignMember(t *testing.T) {
 				ctx.Request.Header.Set("Content-Type", gin.MIMEJSON)
 				ctx.AddParam("id", tt.id)
 
-				h := New(storeMock, txRepo, serviceMock, loggerMock)
+				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 				h.AssignMember(ctx)
 				require.Equal(t, tt.wantCode, w.Code)
 				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
@@ -467,7 +467,7 @@ func TestHandler_DeleteProjectMember(t *testing.T) {
 				ctx.Params = gin.Params{gin.Param{Key: "id", Value: tt.id}, gin.Param{Key: "memberID", Value: tt.memberID}}
 				ctx.Request = httptest.NewRequest("DELETE", fmt.Sprintf("/api/v1/projects/%s/members/%s", tt.id, tt.memberID), nil)
 				ctx.Request.Header.Set("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2OTkzMjExNDIsImlkIjoiMjY1NTgzMmUtZjAwOS00YjczLWE1MzUtNjRjM2EyMmU1NThmIiwiYXZhdGFyIjoiaHR0cHM6Ly9zMy1hcC1zb3V0aGVhc3QtMS5hbWF6b25hd3MuY29tL2ZvcnRyZXNzLWltYWdlcy81MTUzNTc0Njk1NjYzOTU1OTQ0LnBuZyIsImVtYWlsIjoidGhhbmhAZC5mb3VuZGF0aW9uIiwicGVybWlzc2lvbnMiOlsiZW1wbG95ZWVzLnJlYWQiXSwidXNlcl9pbmZvIjpudWxsfQ.GENGPEucSUrILN6tHDKxLMtj0M0REVMUPC7-XhDMpGM")
-				metadataHandler := New(storeMock, txRepo, serviceMock, loggerMock)
+				metadataHandler := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 
 				metadataHandler.DeleteMember(ctx)
 				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
@@ -517,7 +517,7 @@ func TestHandler_Detail(t *testing.T) {
 				ctx.Request.URL.RawQuery = tt.query
 				ctx.AddParam("id", tt.id)
 
-				h := New(storeMock, txRepo, serviceMock, loggerMock)
+				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 				h.Details(ctx)
 				require.Equal(t, tt.wantCode, w.Code)
 				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
@@ -592,7 +592,7 @@ func TestHandler_UpdateGeneralInfo(t *testing.T) {
 				ctx.Params = gin.Params{gin.Param{Key: "id", Value: tt.id}}
 				ctx.Request = httptest.NewRequest("PUT", fmt.Sprintf("/api/v1/projects/%s/general-info", tt.id), bodyReader)
 				ctx.Request.Header.Set("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2OTkzMjExNDIsImlkIjoiMjY1NTgzMmUtZjAwOS00YjczLWE1MzUtNjRjM2EyMmU1NThmIiwiYXZhdGFyIjoiaHR0cHM6Ly9zMy1hcC1zb3V0aGVhc3QtMS5hbWF6b25hd3MuY29tL2ZvcnRyZXNzLWltYWdlcy81MTUzNTc0Njk1NjYzOTU1OTQ0LnBuZyIsImVtYWlsIjoidGhhbmhAZC5mb3VuZGF0aW9uIiwicGVybWlzc2lvbnMiOlsiZW1wbG95ZWVzLnJlYWQiXSwidXNlcl9pbmZvIjpudWxsfQ.GENGPEucSUrILN6tHDKxLMtj0M0REVMUPC7-XhDMpGM")
-				metadataHandler := New(storeMock, txRepo, serviceMock, loggerMock)
+				metadataHandler := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 
 				metadataHandler.UpdateGeneralInfo(ctx)
 				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
@@ -657,7 +657,7 @@ func TestHandler_UpdateContactInfo(t *testing.T) {
 				ctx.Params = gin.Params{gin.Param{Key: "id", Value: tt.id}}
 				ctx.Request = httptest.NewRequest("PUT", fmt.Sprintf("/api/v1/projects/%s/contact-info", tt.id), bodyReader)
 				ctx.Request.Header.Set("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2OTkzMjExNDIsImlkIjoiMjY1NTgzMmUtZjAwOS00YjczLWE1MzUtNjRjM2EyMmU1NThmIiwiYXZhdGFyIjoiaHR0cHM6Ly9zMy1hcC1zb3V0aGVhc3QtMS5hbWF6b25hd3MuY29tL2ZvcnRyZXNzLWltYWdlcy81MTUzNTc0Njk1NjYzOTU1OTQ0LnBuZyIsImVtYWlsIjoidGhhbmhAZC5mb3VuZGF0aW9uIiwicGVybWlzc2lvbnMiOlsiZW1wbG95ZWVzLnJlYWQiXSwidXNlcl9pbmZvIjpudWxsfQ.GENGPEucSUrILN6tHDKxLMtj0M0REVMUPC7-XhDMpGM")
-				metadataHandler := New(storeMock, txRepo, serviceMock, loggerMock)
+				metadataHandler := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 
 				metadataHandler.UpdateContactInfo(ctx)
 				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
@@ -716,7 +716,7 @@ func TestHandler_GetListWorkUnit(t *testing.T) {
 				ctx.Request.Header.Set("Authorization", testToken)
 				ctx.Request.URL.RawQuery = tt.query
 
-				h := New(storeMock, txRepo, serviceMock, loggerMock)
+				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 				h.GetWorkUnits(ctx)
 				require.Equal(t, tt.wantCode, w.Code)
 				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
@@ -827,7 +827,7 @@ func TestHandler_UpdateWorkUnit(t *testing.T) {
 				ctx.AddParam("id", tt.input.ProjectID)
 				ctx.AddParam("workUnitID", tt.input.WorkUnitID)
 
-				h := New(storeMock, txRepo, serviceMock, loggerMock)
+				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 				h.UpdateWorkUnit(ctx)
 				require.Equal(t, tt.wantCode, w.Code)
 				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
@@ -915,7 +915,7 @@ func TestHandler_CreateWorkUnit(t *testing.T) {
 				ctx.Request.Header.Set("Content-Type", gin.MIMEJSON)
 				ctx.AddParam("id", tt.input.ProjectID)
 
-				h := New(storeMock, txRepo, serviceMock, loggerMock)
+				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 				h.CreateWorkUnit(ctx)
 				require.Equal(t, tt.wantCode, w.Code)
 				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
@@ -975,7 +975,7 @@ func TestHandler_ArchiveWorkUnit(t *testing.T) {
 				ctx.AddParam("id", tt.input.ProjectID)
 				ctx.AddParam("workUnitID", tt.input.WorkUnitID)
 
-				h := New(storeMock, txRepo, serviceMock, loggerMock)
+				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 				h.ArchiveWorkUnit(ctx)
 				require.Equal(t, tt.wantCode, w.Code)
 				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
@@ -1032,7 +1032,7 @@ func TestHandler_UnarchiveWorkUnit(t *testing.T) {
 				ctx.AddParam("id", tt.input.ProjectID)
 				ctx.AddParam("workUnitID", tt.input.WorkUnitID)
 
-				h := New(storeMock, txRepo, serviceMock, loggerMock)
+				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 				h.UnarchiveWorkUnit(ctx)
 				require.Equal(t, tt.wantCode, w.Code)
 				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
@@ -1088,7 +1088,7 @@ func TestHandler_UpdateSendingSurveyState(t *testing.T) {
 				ctx.Request = httptest.NewRequest("PUT", fmt.Sprintf("/api/v1/projects/%s/sending-survey-state?%s", tt.id, tt.query), nil)
 				ctx.Request.Header.Set("Authorization", testToken)
 				ctx.Request.URL.RawQuery = tt.query
-				metadataHandler := New(storeMock, txRepo, serviceMock, loggerMock)
+				metadataHandler := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 
 				metadataHandler.UpdateSendingSurveyState(ctx)
 				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)

@@ -69,6 +69,7 @@ type Project struct {
 	ProjectStacks       []ProjectStack
 	ProjectEmail        string
 	ClientEmail         string
+	Avatar              string
 	AllowsSendingSurvey bool
 
 	Country *Country

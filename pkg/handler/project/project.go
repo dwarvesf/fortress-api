@@ -2,13 +2,16 @@ package project
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
+	"path/filepath"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/shopspring/decimal"
 	"gorm.io/gorm"
 
+	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/handler/project/errs"
 	"github.com/dwarvesf/fortress-api/pkg/handler/project/request"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
@@ -25,14 +28,16 @@ type handler struct {
 	service *service.Service
 	logger  logger.Logger
 	repo    store.DBRepo
+	config  *config.Config
 }
 
-func New(store *store.Store, repo store.DBRepo, service *service.Service, logger logger.Logger) IHandler {
+func New(store *store.Store, repo store.DBRepo, service *service.Service, logger logger.Logger, cfg *config.Config) IHandler {
 	return &handler{
 		store:   store,
 		repo:    repo,
 		service: service,
 		logger:  logger,
+		config:  cfg,
 	}
 }
 
@@ -2059,4 +2064,113 @@ func (h *handler) UpdateSendingSurveyState(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))
+}
+
+// UploadAvatar godoc
+// @Summary Upload avatar of project by id
+// @Description Upload avatar of project by id
+// @Tags Project
+// @Accept  json
+// @Produce  json
+// @Param id path string true "Project ID"
+// @Param Authorization header string true "jwt token"
+// @Param file formData file true "avatar upload"
+// @Success 200 {object} view.ProjectContentDataResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /projects/{id}/upload-avatar [post]
+func (h *handler) UploadAvatar(c *gin.Context) {
+	// 1.1 parse id from uri, validate id
+	var params struct {
+		ID string `uri:"id" binding:"required"`
+	}
+
+	if err := c.ShouldBindUri(&params); err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, params, ""))
+		return
+	}
+
+	// 1.2 get upload file
+	file, err := c.FormFile("file")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, file, ""))
+		return
+	}
+
+	// 1.3 prepare the logger
+	l := h.logger.Fields(logger.Fields{
+		"handler": "project",
+		"method":  "UploadAvatar",
+		"params":  params,
+		// "body":    body,
+	})
+
+	fileName := file.Filename
+	fileExtension := model.ContentExtension(filepath.Ext(fileName))
+	fileSize := file.Size
+	filePath := "projects/" + params.ID + "/images/" + fileName
+
+	// 2.1 validate
+	if !fileExtension.ImageValid() {
+		l.Info("invalid file extension")
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrInvalidFileExtension, nil, ""))
+		return
+	}
+	if fileExtension == model.ContentExtensionJpg || fileExtension == model.ContentExtensionPng {
+		if fileSize > model.MaxFileSizeImage {
+			l.Info("invalid file size")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrInvalidFileSize, nil, ""))
+			return
+		}
+	}
+
+	tx, done := h.repo.NewTransaction()
+
+	// 2.2 check project existed
+	existed, err := h.store.Project.IsExist(tx.DB(), params.ID)
+	if err != nil {
+		l.Error(err, "error query project from db")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		done(err)
+		return
+	}
+	if !existed {
+		l.Info("project not existed")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, errs.ErrProjectNotExisted, nil, ""))
+		done(err)
+		return
+	}
+
+	// 2.3 upload to GCS
+	multipart, err := file.Open()
+	if err != nil {
+		l.Error(err, "error in open file")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		done(err)
+		return
+	}
+
+	err = h.service.Google.UploadContentGCS(multipart, filePath)
+	if err != nil {
+		l.Error(err, "error in upload file")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		done(err)
+		return
+	}
+
+	// 3. update avatar field
+	_, err = h.store.Project.UpdateSelectedFieldsByID(tx.DB(), params.ID, model.Project{
+		Avatar: filePath,
+	}, "Avatar")
+	if err != nil {
+		l.Error(err, "error in update avatar")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		done(err)
+		return
+	}
+
+	done(nil)
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToProjectContentData(fmt.Sprintf("https://storage.googleapis.com/%s/%s", h.config.Google.GCSBucketName, filePath)), nil, nil, nil, ""))
 }
