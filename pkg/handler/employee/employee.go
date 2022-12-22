@@ -737,6 +737,7 @@ func (h *handler) UpdatePersonalInfo(c *gin.Context) {
 // @Produce  json
 // @Param id path string true "Employee ID"
 // @Param Authorization header string true "jwt token"
+// @Param file formData file true "content upload"
 // @Success 200 {object} view.EmployeeContentDataResponse
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 404 {object} view.ErrorResponse

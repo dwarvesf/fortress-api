@@ -585,6 +585,13 @@
                         "name": "Authorization",
                         "in": "header",
                         "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "content upload",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -3595,6 +3602,9 @@
                 "discordID": {
                     "type": "string"
                 },
+                "discordName": {
+                    "type": "string"
+                },
                 "email": {
                     "type": "string"
                 },
@@ -3627,6 +3637,9 @@
             ],
             "properties": {
                 "discordID": {
+                    "type": "string"
+                },
+                "discordName": {
                     "type": "string"
                 },
                 "githubID": {
@@ -4174,6 +4187,9 @@
                 "discordID": {
                     "type": "string"
                 },
+                "discordName": {
+                    "type": "string"
+                },
                 "displayName": {
                     "type": "string"
                 },
@@ -4556,6 +4572,9 @@
                     "type": "string"
                 },
                 "discordID": {
+                    "type": "string"
+                },
+                "discordName": {
                     "type": "string"
                 },
                 "displayName": {
@@ -5090,6 +5109,9 @@
                 "discordID": {
                     "type": "string"
                 },
+                "discordName": {
+                    "type": "string"
+                },
                 "fullName": {
                     "description": "basic info",
                     "type": "string"
@@ -5164,6 +5186,9 @@
                     "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "discordID": {
+                    "type": "string"
+                },
+                "discordName": {
                     "type": "string"
                 },
                 "githubID": {

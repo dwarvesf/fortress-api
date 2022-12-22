@@ -593,6 +593,13 @@ const docTemplate = `{
                         "name": "Authorization",
                         "in": "header",
                         "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "content upload",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -3603,6 +3610,9 @@ const docTemplate = `{
                 "discordID": {
                     "type": "string"
                 },
+                "discordName": {
+                    "type": "string"
+                },
                 "email": {
                     "type": "string"
                 },
@@ -3635,6 +3645,9 @@ const docTemplate = `{
             ],
             "properties": {
                 "discordID": {
+                    "type": "string"
+                },
+                "discordName": {
                     "type": "string"
                 },
                 "githubID": {
@@ -4182,6 +4195,9 @@ const docTemplate = `{
                 "discordID": {
                     "type": "string"
                 },
+                "discordName": {
+                    "type": "string"
+                },
                 "displayName": {
                     "type": "string"
                 },
@@ -4564,6 +4580,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "discordID": {
+                    "type": "string"
+                },
+                "discordName": {
                     "type": "string"
                 },
                 "displayName": {
@@ -5098,6 +5117,9 @@ const docTemplate = `{
                 "discordID": {
                     "type": "string"
                 },
+                "discordName": {
+                    "type": "string"
+                },
                 "fullName": {
                     "description": "basic info",
                     "type": "string"
@@ -5172,6 +5194,9 @@ const docTemplate = `{
                     "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "discordID": {
+                    "type": "string"
+                },
+                "discordName": {
                     "type": "string"
                 },
                 "githubID": {

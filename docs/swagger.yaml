@@ -322,6 +322,8 @@ definitions:
     properties:
       discordID:
         type: string
+      discordName:
+        type: string
       email:
         type: string
       fullName:
@@ -345,6 +347,8 @@ definitions:
   request.UpdateInfoInput:
     properties:
       discordID:
+        type: string
+      discordName:
         type: string
       githubID:
         type: string
@@ -712,6 +716,8 @@ definitions:
         $ref: '#/definitions/gorm.DeletedAt'
       discordID:
         type: string
+      discordName:
+        type: string
       displayName:
         type: string
       fullName:
@@ -961,6 +967,8 @@ definitions:
       birthday:
         type: string
       discordID:
+        type: string
+      discordName:
         type: string
       displayName:
         type: string
@@ -1309,6 +1317,8 @@ definitions:
         $ref: '#/definitions/gorm.DeletedAt'
       discordID:
         type: string
+      discordName:
+        type: string
       fullName:
         description: basic info
         type: string
@@ -1358,6 +1368,8 @@ definitions:
       deletedAt:
         $ref: '#/definitions/gorm.DeletedAt'
       discordID:
+        type: string
+      discordName:
         type: string
       githubID:
         type: string
@@ -1885,6 +1897,11 @@ paths:
         name: Authorization
         required: true
         type: string
+      - description: content upload
+        in: formData
+        name: file
+        required: true
+        type: file
       produces:
       - application/json
       responses:
