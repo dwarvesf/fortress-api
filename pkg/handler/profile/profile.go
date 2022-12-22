@@ -133,7 +133,9 @@ func (h *handler) UpdateInfo(c *gin.Context) {
 		"phone_number",
 		"discord_id",
 		"github_id",
-		"notion_id")
+		"notion_id",
+		"discord_name",
+		"notion_name")
 	if err != nil {
 		l.Error(err, "failed to update employee")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input, ""))

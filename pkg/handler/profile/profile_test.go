@@ -88,6 +88,8 @@ func TestHandler_UpdateProfileInfo(t *testing.T) {
 				TeamEmail:     "thanh@d.foundation",
 				PersonalEmail: "thanhpham123@gmail.com",
 				PhoneNumber:   "0123456788",
+				DiscordName:   "discordName",
+				NotionName:    "notionName",
 			},
 		},
 		{

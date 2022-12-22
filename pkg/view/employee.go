@@ -24,6 +24,7 @@ type EmployeeData struct {
 	DateOfBirth   *time.Time `json:"birthday"`
 	GithubID      string     `json:"githubID"`
 	NotionID      string     `json:"notionID"`
+	NotionName    string     `json:"notionName"`
 	DiscordID     string     `json:"discordID"`
 	DiscordName   string     `json:"discordName"`
 
@@ -50,6 +51,7 @@ type UpdateGeneralInfoEmployeeData struct {
 	PhoneNumber string             `json:"phoneNumber"`
 	GithubID    string             `json:"githubID"`
 	NotionID    string             `json:"notionID"`
+	NotionName  string             `json:"notionName"`
 	DiscordID   string             `json:"discordID"`
 	DiscordName string             `json:"discordName"`
 	LineManager *BasicEmployeeInfo `json:"lineManager"`
@@ -159,6 +161,7 @@ func ToUpdateGeneralInfoEmployeeData(employee *model.Employee) *UpdateGeneralInf
 		PhoneNumber: employee.PhoneNumber,
 		GithubID:    employee.GithubID,
 		NotionID:    employee.NotionID,
+		NotionName:  employee.NotionName,
 		DiscordID:   employee.DiscordID,
 		DiscordName: employee.DiscordName,
 	}
@@ -209,6 +212,7 @@ func ToEmployeeData(employee *model.Employee) *EmployeeData {
 		DateOfBirth:   employee.DateOfBirth,
 		GithubID:      employee.GithubID,
 		NotionID:      employee.NotionID,
+		NotionName:    employee.NotionName,
 		DiscordID:     employee.DiscordID,
 		DiscordName:   employee.DiscordName,
 		WorkingStatus: employee.WorkingStatus,

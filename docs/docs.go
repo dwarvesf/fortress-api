@@ -3629,6 +3629,9 @@ const docTemplate = `{
                 "notionID": {
                     "type": "string"
                 },
+                "notionName": {
+                    "type": "string"
+                },
                 "phone": {
                     "type": "string",
                     "maxLength": 12,
@@ -3654,6 +3657,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "notionID": {
+                    "type": "string"
+                },
+                "notionName": {
                     "type": "string"
                 },
                 "personalEmail": {
@@ -4232,6 +4238,9 @@ const docTemplate = `{
                 "notionID": {
                     "type": "string"
                 },
+                "notionName": {
+                    "type": "string"
+                },
                 "personalEmail": {
                     "type": "string"
                 },
@@ -4601,6 +4610,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "notionID": {
+                    "type": "string"
+                },
+                "notionName": {
                     "type": "string"
                 },
                 "personalEmail": {
@@ -5136,6 +5148,9 @@ const docTemplate = `{
                 "notionID": {
                     "type": "string"
                 },
+                "notionName": {
+                    "type": "string"
+                },
                 "phoneNumber": {
                     "type": "string"
                 },
@@ -5206,6 +5221,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "notionID": {
+                    "type": "string"
+                },
+                "notionName": {
                     "type": "string"
                 },
                 "phoneNumber": {

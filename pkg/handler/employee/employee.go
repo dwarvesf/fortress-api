@@ -281,6 +281,7 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 	employee.LineManagerID = body.LineManagerID
 	employee.GithubID = body.GithubID
 	employee.NotionID = body.NotionID
+	employee.NotionName = body.NotionName
 	employee.DiscordID = body.DiscordID
 	employee.DiscordName = body.DiscordName
 

@@ -25,6 +25,7 @@ type UpdateEmployeeGeneralInfoInput struct {
 	LineManagerID model.UUID `form:"lineManagerID" json:"lineManagerID"`
 	GithubID      string     `form:"githubID" json:"githubID"`
 	NotionID      string     `form:"notionID" json:"notionID"`
+	NotionName    string     `form:"notionName" json:"notionName"`
 	DiscordID     string     `form:"discordID" json:"discordID"`
 	DiscordName   string     `form:"discordName" json:"discordName"`
 }
