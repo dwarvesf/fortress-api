@@ -33,6 +33,7 @@ var (
 	ErrDeliveryManagerNotFound = errors.New("delivery manager not found")
 	ErrStackNotFound           = errors.New("stack not found")
 	ErrWorkUnitNotFound        = errors.New("work unit not found")
+	ErrProjectNotExisted       = errors.New("project not existed")
 
 	ErrMemberIsInactive                 = errors.New("member is inactive")
 	ErrSlotIsInactive                   = errors.New("slot is inactive")
@@ -54,6 +55,9 @@ var (
 	ErrFailedToGetProjectMember         = errors.New("failed to get project member in database")
 	ErrFailedToCreateWorkUnitMember     = errors.New("failed to create work unit member")
 	ErrSlotAlreadyContainsAnotherMember = errors.New("slot already contains another member")
+
+	ErrInvalidFileExtension = errors.New("invalid file extension")
+	ErrInvalidFileSize      = errors.New("invalid file size")
 )
 
 // ErrPositionNotFoundWithID returns unauthorized custom error

@@ -20,4 +20,5 @@ type IHandler interface {
 	ArchiveWorkUnit(c *gin.Context)
 	UnarchiveWorkUnit(c *gin.Context)
 	UpdateSendingSurveyState(c *gin.Context)
+	UploadAvatar(c *gin.Context)
 }

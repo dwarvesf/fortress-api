@@ -32,7 +32,7 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 		Employee:    employee.New(store, repo, service, logger, cfg),
 		Metadata:    metadata.New(store, repo, service, logger),
 		Auth:        auth.New(store, repo, service, logger),
-		Project:     project.New(store, repo, service, logger),
+		Project:     project.New(store, repo, service, logger, cfg),
 		Profile:     profile.New(store, repo, service, logger, cfg),
 		Feedback:    feedback.New(store, repo, service, logger, cfg),
 		Survey:      survey.New(store, repo, service, logger, cfg),

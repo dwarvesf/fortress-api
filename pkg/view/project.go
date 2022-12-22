@@ -11,6 +11,7 @@ type ProjectData struct {
 	model.BaseModel
 
 	Name                string            `json:"name"`
+	Avatar              string            `json:"avatar"`
 	Type                string            `json:"type"`
 	Status              string            `json:"status"`
 	ProjectEmail        string            `json:"projectEmail"`
@@ -155,6 +156,7 @@ func ToProjectData(project *model.Project) ProjectData {
 
 	d := ProjectData{
 		BaseModel:           project.BaseModel,
+		Avatar:              project.Avatar,
 		Name:                project.Name,
 		Type:                project.Type.String(),
 		Status:              project.Status.String(),
@@ -448,5 +450,19 @@ func toBasicProjectInfo(project model.Project) *BasicProjectInfo {
 		Type:   project.Type.String(),
 		Name:   project.Name,
 		Status: project.Status.String(),
+	}
+}
+
+type ProjectContentData struct {
+	Url string `json:"url"`
+}
+
+type ProjectContentDataResponse struct {
+	Data *ProjectContentData `json:"data"`
+}
+
+func ToProjectContentData(url string) *ProjectContentData {
+	return &ProjectContentData{
+		Url: url,
 	}
 }
