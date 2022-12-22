@@ -1,4 +1,5 @@
 INSERT INTO public.permissions (id, deleted_at, created_at, updated_at, name, code) VALUES
+('495c96ae-60f9-4c57-bc96-9504d0fedde6', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Auth Read', 'auth.read'),
 ('01ed1076-4028-4fdf-9a92-cb57a8e041af', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Employee Read', 'employees.read'),
 ('a7549f30-987c-47d1-9266-452f3cfc68b7', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Employee Create', 'employees.create'),
 ('e4e68398-da67-438f-9fb0-07a779b504a0', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Employee Edit', 'employees.edit'),

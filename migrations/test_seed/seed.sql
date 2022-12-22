@@ -1,6 +1,6 @@
-INSERT INTO public.roles (id, deleted_at, created_at, updated_at, name, code) VALUES
-('11ccffea-2cc9-4e98-9bef-3464dfe4dec8', NULL, '2022-11-07 09:50:25.714604', '2022-11-07 09:50:25.714604', 'Admin', 'admin'),
-('d796884d-a8c4-4525-81e7-54a3b6099eac', NULL, '2022-11-07 09:50:25.714604', '2022-11-07 09:50:25.714604', 'Member', 'member');
+INSERT INTO public.roles (id, deleted_at, created_at, updated_at, name, code, level) VALUES
+('11ccffea-2cc9-4e98-9bef-3464dfe4dec8', NULL, '2022-11-07 09:50:25.714604', '2022-11-07 09:50:25.714604', 'Admin', 'admin', 1),
+('d796884d-a8c4-4525-81e7-54a3b6099eac', NULL, '2022-11-07 09:50:25.714604', '2022-11-07 09:50:25.714604', 'Member', 'member', 2);
 
 INSERT INTO public.permissions (id, deleted_at, created_at, updated_at, name, code) VALUES
 ('01ed1076-4028-4fdf-9a92-cb57a8e041af', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Employee Read', 'employees.read'),

@@ -1,6 +1,8 @@
 package auth
 
 import (
+	"errors"
+	"gorm.io/gorm"
 	"net/http"
 	"time"
 
@@ -113,4 +115,50 @@ func (h *handler) Auth(c *gin.Context) {
 
 	// 3. return auth data
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToAuthData(jwt, employee), nil, nil, nil, ""))
+}
+
+// Me godoc
+// @Summary Get logged-in user data
+// @Description Get logged-in user data
+// @Tags Auth
+// @Accept  json
+// @Produce  json
+// @Param Authorization header string true "jwt token"
+// @Success 200 {object} view.AuthUserResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /auth/me [get]
+func (h *handler) Me(c *gin.Context) {
+	userID, err := utils.GetUserIDFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	// TODO: can we move this to middleware ?
+	l := h.logger.Fields(logger.Fields{
+		"handler": "auth",
+		"method":  "Me",
+	})
+
+	rs, err := h.store.Employee.One(h.repo.DB(), userID, false)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			l.Info("user not found")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, err, nil, ""))
+			return
+		}
+		l.Error(err, "error query employee from db")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	perms, err := h.store.Permission.GetByEmployeeID(h.repo.DB(), userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToAuthorizedUserData(rs, perms), nil, nil, nil, ""))
 }

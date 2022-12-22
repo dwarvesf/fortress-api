@@ -82,6 +82,8 @@ definitions:
         $ref: '#/definitions/gorm.DeletedAt'
       id:
         type: string
+      level:
+        type: integer
       name:
         type: string
       updatedAt:
@@ -531,6 +533,11 @@ definitions:
       employee:
         $ref: '#/definitions/view.EmployeeData'
     type: object
+  view.AuthUserResponse:
+    properties:
+      data:
+        $ref: '#/definitions/view.LoggedInUserData'
+    type: object
   view.BasicCountryInfo:
     properties:
       code:
@@ -924,6 +931,25 @@ definitions:
         items:
           $ref: '#/definitions/view.WorkUnit'
         type: array
+    type: object
+  view.LoggedInUserData:
+    properties:
+      avatar:
+        type: string
+      displayName:
+        type: string
+      fullName:
+        type: string
+      id:
+        type: string
+      permissions:
+        items:
+          type: string
+        type: array
+      role:
+        type: string
+      teamEmail:
+        type: string
     type: object
   view.MessageResponse:
     properties:
@@ -1571,6 +1597,39 @@ paths:
           schema:
             $ref: '#/definitions/view.ErrorResponse'
       summary: Authorise user when login
+      tags:
+      - Auth
+  /auth/me:
+    get:
+      consumes:
+      - application/json
+      description: Get logged-in user data
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.AuthUserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get logged-in user data
       tags:
       - Auth
   /employees:

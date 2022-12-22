@@ -16,7 +16,13 @@ func New() IStore {
 
 // One get 1 employee by id
 func (s *store) One(db *gorm.DB, id string, preload bool) (*model.Employee, error) {
-	query := db.Where("id = ?", id)
+	query := db.Where("id = ?", id).
+		Preload("EmployeeRoles", func(db *gorm.DB) *gorm.DB {
+		return db.Joins("employee_roles JOIN roles ON roles.id = employee_roles.role_id").
+			Where("employee_roles.deleted_at IS NULL").
+			Order("roles.level")
+	}).
+		Preload("EmployeeRoles.Role", "deleted_at IS NULL")
 
 	if preload {
 		query = query.
@@ -30,8 +36,6 @@ func (s *store) One(db *gorm.DB, id string, preload bool) (*model.Employee, erro
 			Preload("EmployeeStacks.Stack", "deleted_at IS NULL").
 			Preload("EmployeeChapters", "deleted_at IS NULL").
 			Preload("EmployeeChapters.Chapter", "deleted_at IS NULL").
-			Preload("EmployeeRoles", "deleted_at IS NULL").
-			Preload("EmployeeRoles.Role", "deleted_at IS NULL").
 			Preload("Seniority").
 			Preload("LineManager")
 	}

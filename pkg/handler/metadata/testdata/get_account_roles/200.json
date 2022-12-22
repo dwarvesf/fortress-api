@@ -5,14 +5,16 @@
       "createdAt": "2022-11-07T09:50:25.714604Z",
       "updatedAt": "2022-11-07T09:50:25.714604Z",
       "name": "Admin",
-      "code": "admin"
+      "code": "admin",
+      "level": 1
     },
     {
       "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
       "createdAt": "2022-11-07T09:50:25.714604Z",
       "updatedAt": "2022-11-07T09:50:25.714604Z",
       "name": "Member",
-      "code": "member"
+      "code": "member",
+      "level": 2
     }
   ]
 }

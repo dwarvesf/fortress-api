@@ -16,6 +16,7 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 
 	// auth
 	v1.POST("/auth", h.Auth.Auth)
+	v1.GET("/auth/me", amw.WithAuth, pmw.WithPerm("auth.read"), h.Auth.Me)
 
 	// user profile
 	v1.GET("/profile", amw.WithAuth, h.Profile.GetProfile)
@@ -66,8 +67,8 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 	feedbackGroup := v1.Group("/feedbacks")
 	{
 		feedbackGroup.GET("", pmw.WithPerm("feedbacks.read"), h.Feedback.List)
-		feedbackGroup.GET("/:id/topics/:topicID", amw.WithAuth, pmw.WithPerm("employeeEventQuestions.read"), h.Feedback.Detail)
-		feedbackGroup.POST("/:id/topics/:topicID/submit", amw.WithAuth, pmw.WithPerm("employeeEventQuestions.create"), h.Feedback.Submit)
+		feedbackGroup.GET("/:id/topics/:topicID", amw.WithAuth, pmw.WithPerm("feedbacks.read"), h.Feedback.Detail)
+		feedbackGroup.POST("/:id/topics/:topicID/submit", amw.WithAuth, pmw.WithPerm("feedbacks.create"), h.Feedback.Submit)
 	}
 
 	surveyGroup := v1.Group("/surveys")
