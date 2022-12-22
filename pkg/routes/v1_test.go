@@ -93,6 +93,12 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/auth.IHandler.Auth-fm",
 			},
 		},
+		"/api/v1/auth/me": {
+			"GET": {
+				Method:  "GET",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/auth.IHandler.Me-fm",
+			},
+		},
 		"/api/v1/metadata/countries": {
 			"GET": {
 				Method:  "GET",

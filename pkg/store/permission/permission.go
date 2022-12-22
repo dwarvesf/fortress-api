@@ -16,7 +16,10 @@ func New() IStore {
 func (s *store) GetByEmployeeID(db *gorm.DB, employeeID string) ([]*model.Permission, error) {
 	var permissions []*model.Permission
 	return permissions, db.
+		Select("DISTINCT permissions.*").
 		Joins("JOIN role_permissions rp ON permissions.id = rp.permission_id").
 		Joins("JOIN employee_roles er ON er.role_id = rp.role_id").
-		Where("er.employee_id = ?", employeeID).Find(&permissions).Error
+		Where("er.employee_id = ?", employeeID).
+		Order("permissions.code").
+		Find(&permissions).Error
 }

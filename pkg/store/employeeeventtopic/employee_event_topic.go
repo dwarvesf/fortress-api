@@ -101,7 +101,7 @@ func (s *store) All(db *gorm.DB, input GetByEventIDInput, pagination *model.Pagi
 	}
 
 	if input.Preload {
-		query = query.Debug().
+		query = query.
 			Preload("Event", "deleted_at IS NULL").
 			Preload("Employee", "deleted_at IS NULL").
 			Preload("Project", "deleted_at IS NULL").
