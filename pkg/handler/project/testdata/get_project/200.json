@@ -8,8 +8,8 @@
         "status": "active",
         "projectEmail": "fortress@d.foundation",
         "clientEmail": "team@d.foundation",
-        "allowsSendingSurvey":false,
         "industry": "",
+        "allowsSendingSurvey": false,
         "country": {
             "id": "4ef64490-c906-4192-a7f9-d2221dadfe4c",
             "name": "Vietnam",
@@ -19,8 +19,8 @@
         "endDate": null,
         "members": [
             {
-                "projectMemberID": "cb889a9c-b20c-47ee-83b8-44b6d1721aca",
-                "projectSlotID": "f32d08ca-8863-4ab3-8c84-a11849451eb7",
+                "projectMemberID": "",
+                "projectSlotID": "",
                 "employeeID": "2655832e-f009-4b73-a535-64c3a22e558f",
                 "fullName": "Phạm Đức Thành",
                 "displayName": "Thanh Pham",
@@ -28,9 +28,9 @@
                 "status": "active",
                 "isLead": false,
                 "deploymentType": "official",
-                "joinedDate": "2022-11-01T00:00:00Z",
+                "joinedDate": null,
                 "leftDate": null,
-                "rate": "5000",
+                "rate": "0",
                 "discount": "0",
                 "seniority": {
                     "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
@@ -48,8 +48,8 @@
                 ]
             },
             {
-                "projectMemberID": "7310b51a-3855-498b-99ab-41aa82934269",
-                "projectSlotID": "bdc64b18-4c5f-4025-827a-f5b91d599dc7",
+                "projectMemberID": "",
+                "projectSlotID": "",
                 "employeeID": "ecea9d15-05ba-4a4e-9787-54210e3b98ce",
                 "fullName": "Nguyễn Hoàng Huy",
                 "displayName": "Huy Nguyen",
@@ -57,9 +57,9 @@
                 "status": "active",
                 "isLead": false,
                 "deploymentType": "shadow",
-                "joinedDate": "2022-11-01T00:00:00Z",
+                "joinedDate": null,
                 "leftDate": null,
-                "rate": "4000",
+                "rate": "0",
                 "discount": "0",
                 "seniority": {
                     "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
@@ -77,8 +77,8 @@
                 ]
             },
             {
-                "projectMemberID": "35149aab-0506-4eb3-9300-c706ccbf2bde",
-                "projectSlotID": "1406fcce-6f90-4e0f-bea1-c373e2b2b5b1",
+                "projectMemberID": "",
+                "projectSlotID": "",
                 "employeeID": "8d7c99c0-3253-4286-93a9-e7554cb327ef",
                 "fullName": "Nguyễn Hải Nam",
                 "displayName": "Nam Nguyen",
@@ -86,10 +86,10 @@
                 "status": "active",
                 "isLead": true,
                 "deploymentType": "official",
-                "joinedDate": "2022-11-01T00:00:00Z",
+                "joinedDate": null,
                 "leftDate": null,
-                "rate": "3000",
-                "discount": "3",
+                "rate": "0",
+                "discount": "0",
                 "seniority": {
                     "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
                     "createdAt": "2022-11-07T09:50:25.714604Z",
@@ -106,8 +106,8 @@
                 ]
             },
             {
-                "projectMemberID": "5a9a07aa-e8f3-4b62-b9ad-0f057866dc6c",
-                "projectSlotID": "b25bd3fa-eb6d-49d5-b278-7aacf4594f79",
+                "projectMemberID": "",
+                "projectSlotID": "",
                 "employeeID": "eeae589a-94e3-49ac-a94c-fcfb084152b2",
                 "fullName": "Nguyễn Ngô Lập",
                 "displayName": "Lap Nguyen",
@@ -115,10 +115,10 @@
                 "status": "active",
                 "isLead": false,
                 "deploymentType": "official",
-                "joinedDate": "2022-11-01T00:00:00Z",
+                "joinedDate": null,
                 "leftDate": null,
-                "rate": "3000",
-                "discount": "3",
+                "rate": "0",
+                "discount": "0",
                 "seniority": {
                     "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
                     "createdAt": "2022-11-07T09:50:25.714604Z",
@@ -135,8 +135,8 @@
                 ]
             },
             {
-                "projectMemberID": "fcd5c16f-40fd-48b6-9649-410691373eea",
-                "projectSlotID": "ce379dc0-95be-471a-9227-8e045a5630af",
+                "projectMemberID": "",
+                "projectSlotID": "",
                 "employeeID": "608ea227-45a5-4c8a-af43-6c7280d96340",
                 "fullName": "Tiêu Quang Huy",
                 "displayName": "Huy Tieu",
@@ -144,9 +144,9 @@
                 "status": "active",
                 "isLead": false,
                 "deploymentType": "shadow",
-                "joinedDate": "2022-11-01T00:00:00Z",
+                "joinedDate": null,
                 "leftDate": null,
-                "rate": "4000",
+                "rate": "0",
                 "discount": "0",
                 "seniority": {
                     "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",

@@ -3252,10 +3252,10 @@ const docTemplate = `{
                 "mixed": {
                     "type": "integer"
                 },
-                "strongly-agree": {
+                "stronglyAgree": {
                     "type": "integer"
                 },
-                "strongly-disagree": {
+                "stronglyDisagree": {
                     "type": "integer"
                 }
             }
@@ -4633,6 +4633,9 @@ const docTemplate = `{
                 "eventReviewerID": {
                     "type": "string"
                 },
+                "isForcedDone": {
+                    "type": "boolean"
+                },
                 "relationship": {
                     "type": "string"
                 },
@@ -5096,26 +5099,6 @@ const docTemplate = `{
                 }
             }
         },
-        "view.SurveyResult": {
-            "type": "object",
-            "properties": {
-                "agree": {
-                    "type": "integer"
-                },
-                "disagree": {
-                    "type": "integer"
-                },
-                "mixed": {
-                    "type": "integer"
-                },
-                "stronglyAgree": {
-                    "type": "integer"
-                },
-                "stronglyDisagree": {
-                    "type": "integer"
-                }
-            }
-        },
         "view.SurveyTopicDetail": {
             "type": "object",
             "properties": {
@@ -5153,6 +5136,12 @@ const docTemplate = `{
                 "count": {
                     "$ref": "#/definitions/view.FeedbackCount"
                 },
+                "domains": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.Domain"
+                    }
+                },
                 "employee": {
                     "$ref": "#/definitions/view.BasicEmployeeInfo"
                 },
@@ -5162,6 +5151,9 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
+                "isForcedDone": {
+                    "type": "boolean"
+                },
                 "participants": {
                     "type": "array",
                     "items": {
@@ -5170,9 +5162,6 @@ const docTemplate = `{
                 },
                 "project": {
                     "$ref": "#/definitions/view.BasicProjectInfo"
-                },
-                "result": {
-                    "$ref": "#/definitions/view.SurveyResult"
                 },
                 "reviewID": {
                     "type": "string"

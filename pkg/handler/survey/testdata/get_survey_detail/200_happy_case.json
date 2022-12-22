@@ -24,6 +24,7 @@
                 "title": "Review Thuong Phung",
                 "type": "survey",
                 "subtype": "peer-review",
+                "isForcedDone": false,
                 "employee": {
                     "id": "37e00d47-de69-4ac8-991b-cf3e39565c00",
                     "fullName": "Phùng Thị Thương Thương",

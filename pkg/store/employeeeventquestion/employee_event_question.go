@@ -59,7 +59,7 @@ func (s *store) CountLikertScaleByEventIDAndDomain(db *gorm.DB, eventID string, 
 			WHERE event_id = ? AND domain = ? AND deleted_at IS NULL
 		),
 		q1 AS (
-			SELECT COUNT(*) AS "strongly-disagree"
+			SELECT COUNT(*) AS "strongly_disagree"
 			FROM q0
 			WHERE q0.answer = ?
 		), 
@@ -79,7 +79,7 @@ func (s *store) CountLikertScaleByEventIDAndDomain(db *gorm.DB, eventID string, 
 			WHERE q0.answer = ?
 		), 
 		q5 AS (
-			SELECT COUNT(*) AS "strongly-agree"
+			SELECT COUNT(*) AS "strongly_agree"
 			FROM q0
 			WHERE q0.answer = ?
 		)

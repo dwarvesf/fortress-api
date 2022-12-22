@@ -99,11 +99,11 @@ func (e QuestionDomain) String() string {
 
 // LikertScaleCount represent for counted likert-scale answer model
 type LikertScaleCount struct {
-	StronglyDisagree int `json:"strongly-disagree"`
-	Disagree         int `json:"disagree"`
-	Mixed            int `json:"mixed"`
-	Agree            int `json:"agree"`
-	StronglyAgree    int `json:"strongly-agree"`
+	StronglyDisagree int `json:"stronglyDisagree" gorm:"column:strongly_disagree"`
+	Disagree         int `json:"disagree" gorm:"column:disagree"`
+	Mixed            int `json:"mixed" gorm:"column:mixed"`
+	Agree            int `json:"agree" gorm:"column:agree"`
+	StronglyAgree    int `json:"stronglyAgree" gorm:"column:strongly_agree"`
 }
 
 type QuestionDomainCount struct {

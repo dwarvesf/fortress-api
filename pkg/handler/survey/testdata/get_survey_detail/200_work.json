@@ -24,6 +24,7 @@
                 "title": "Self review Fortress by Thanh",
                 "type": "survey",
                 "subtype": "work",
+                "isForcedDone": false,
                 "employee": {
                     "id": "2655832e-f009-4b73-a535-64c3a22e558f",
                     "fullName": "Phạm Đức Thành",
@@ -34,9 +35,9 @@
                 "count": null,
                 "result": {
                     "stronglyDisagree": 0,
-                    "disagree": 1,
-                    "mixed": 1,
-                    "agree": 1,
+                    "disagree": 0,
+                    "mixed": 0,
+                    "agree": 0,
                     "stronglyAgree": 0
                 },
                 "comments": 1,

@@ -131,6 +131,7 @@ type Topic struct {
 	Type         string              `json:"type"`
 	Subtype      string              `json:"subtype"`
 	Status       string              `json:"status,omitempty"`
+	IsForcedDone bool                `json:"isForcedDone"`
 	Employee     BasicEmployeeInfo   `json:"employee"`
 	Participants []BasicEmployeeInfo `json:"participants"`
 	Count        *FeedbackCount      `json:"count"`
@@ -171,67 +172,66 @@ func ToSurveyDetail(event *model.FeedbackEvent) SurveyDetail {
 			Employee: *toBasicEmployeeInfo(*topic.Employee),
 		}
 
-		// just use for peer-review survey
-		if topic.Event.Subtype == model.EventSubtypePeerReview {
-			participants := make([]BasicEmployeeInfo, 0, len(topic.EmployeeEventReviewers))
-			for _, reviewer := range topic.EmployeeEventReviewers {
-				employee := toBasicEmployeeInfo(*reviewer.Reviewer)
-				participants = append(participants, *employee)
-			}
-
-			var sent, done int
-			for _, reviewer := range topic.EmployeeEventReviewers {
-				if reviewer.AuthorStatus != model.EventAuthorStatusDraft {
-					sent++
-				}
-				if reviewer.AuthorStatus == model.EventAuthorStatusDone {
-					done++
-				}
-			}
-
-			newTopic.Participants = participants
-			newTopic.Count = &FeedbackCount{
-				Total: len(topic.EmployeeEventReviewers),
-				Sent:  sent,
-				Done:  done,
-			}
-		} else if topic.Event.Subtype == model.EventSubtypeWork {
-			totalComment := 0
-			newResult := &SurveyResult{
-				StronglyDisagree: 0,
-				Disagree:         0,
-				Mixed:            0,
-				Agree:            0,
-				StronglyAgree:    0,
-			}
-
-			for _, question := range topic.EmployeeEventReviewers[0].EmployeeEventQuestions {
-				if question.Note != "" {
-					totalComment++
+		switch topic.Event.Subtype {
+		case model.EventSubtypePeerReview:
+			{
+				participants := make([]BasicEmployeeInfo, 0, len(topic.EmployeeEventReviewers))
+				for _, reviewer := range topic.EmployeeEventReviewers {
+					employee := toBasicEmployeeInfo(*reviewer.Reviewer)
+					participants = append(participants, *employee)
 				}
 
-				switch question.Answer {
-				case model.LikertScaleAnswerStronglyDisagree.String():
-					newResult.StronglyDisagree++
-				case model.LikertScaleAnswerDisagree.String():
-					newResult.Disagree++
-				case model.LikertScaleAnswerMixed.String():
-					newResult.Mixed++
-				case model.LikertScaleAnswerAgree.String():
-					newResult.Agree++
-				case model.LikertScaleAnswerStronglyAgree.String():
-					newResult.StronglyAgree++
+				var sent, done int
+				for _, reviewer := range topic.EmployeeEventReviewers {
+					if reviewer.AuthorStatus != model.EventAuthorStatusDraft {
+						sent++
+					}
+					if reviewer.AuthorStatus == model.EventAuthorStatusDone {
+						done++
+					}
+				}
+
+				newTopic.Participants = participants
+				newTopic.Count = &FeedbackCount{
+					Total: len(topic.EmployeeEventReviewers),
+					Sent:  sent,
+					Done:  done,
 				}
 			}
+		case model.EventSubtypeWork:
+			{
+				if topic.Project != nil {
+					newTopic.Project = toBasicProjectInfo(*topic.Project)
+				}
 
-			newTopic.Comments = totalComment
-			newTopic.Result = newResult
-			if topic.Project != nil {
-				newTopic.Project = toBasicProjectInfo(*topic.Project)
+				totalComment := 0
+				answerMap := make(map[string]int)
+
+				for _, question := range topic.EmployeeEventReviewers[0].EmployeeEventQuestions {
+					if question.Note != "" {
+						totalComment++
+					}
+
+					answerMap[question.Answer]++
+				}
+
+				newTopic.Comments = totalComment
+				newTopic.Result = &SurveyResult{
+					StronglyDisagree: answerMap[model.AgreementLevelMap[model.AgreementLevelStronglyDisagree]],
+					Disagree:         answerMap[model.AgreementLevelMap[model.AgreementLevelDisagree]],
+					Mixed:            answerMap[model.AgreementLevelMap[model.AgreementLevelMixed]],
+					Agree:            answerMap[model.AgreementLevelMap[model.AgreementLevelAgree]],
+					StronglyAgree:    answerMap[model.AgreementLevelMap[model.AgreementLevelStronglyAgree]],
+				}
 			}
-		} else if event.Subtype == model.EventSubtypeEngagement && len(topic.EmployeeEventReviewers) > 0 {
-			newTopic.ReviewID = topic.EmployeeEventReviewers[0].ID.String()
-			newTopic.Status = topic.EmployeeEventReviewers[0].AuthorStatus.String()
+		case model.EventSubtypeEngagement:
+			{
+				if len(topic.EmployeeEventReviewers) > 0 {
+					newTopic.ReviewID = topic.EmployeeEventReviewers[0].ID.String()
+					newTopic.Status = topic.EmployeeEventReviewers[0].AuthorStatus.String()
+					newTopic.IsForcedDone = topic.EmployeeEventReviewers[0].IsForcedDone
+				}
+			}
 		}
 
 		topics = append(topics, newTopic)
@@ -246,6 +246,7 @@ type PeerReviewer struct {
 	Reviewer        *BasicEmployeeInfo        `json:"reviewer"`
 	Status          model.EventReviewerStatus `json:"status"`
 	Relationship    model.Relationship        `json:"relationship"`
+	IsForcedDone    bool                      `json:"isForcedDone"`
 }
 
 type SurveyTopicDetail struct {
@@ -271,6 +272,7 @@ func ToPeerReviewDetail(topic *model.EmployeeEventTopic) SurveyTopicDetail {
 			EventReviewerID: eventReviewer.ID.String(),
 			Status:          model.EventReviewerStatus(eventReviewer.AuthorStatus),
 			Relationship:    eventReviewer.Relationship,
+			IsForcedDone:    eventReviewer.IsForcedDone,
 		}
 
 		if eventReviewer.Reviewer != nil {
