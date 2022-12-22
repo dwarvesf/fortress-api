@@ -33,6 +33,12 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/employee.IHandler.One-fm",
 			},
 		},
+		"/api/v1/employees/:id/upload-avatar": {
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/employee.IHandler.UploadAvatar-fm",
+			},
+		},
 		"/api/v1/employees/:id/general-info": {
 			"PUT": {
 				Method:  "PUT",

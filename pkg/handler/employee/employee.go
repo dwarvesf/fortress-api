@@ -18,6 +18,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/store/employee"
+	"github.com/dwarvesf/fortress-api/pkg/utils"
 	"github.com/dwarvesf/fortress-api/pkg/view"
 )
 
@@ -866,4 +867,151 @@ func (h *handler) UploadContent(c *gin.Context) {
 	done(nil)
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToContentData(fmt.Sprintf("https://storage.googleapis.com/%s/%s", h.config.Google.GCSBucketName, content.Path)), nil, nil, nil, ""))
+}
+
+// UploadAvatar godoc
+// @Summary Upload avatar of employee by id
+// @Description Upload avatar of employee by id
+// @Tags Employee
+// @Accept  json
+// @Produce  json
+// @Param id path string true "Employee ID"
+// @Param Authorization header string true "jwt token"
+// @Param file formData file true "avatar upload"
+// @Success 200 {object} view.EmployeeContentDataResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /employees/{id}/upload-avatar [post]
+func (h *handler) UploadAvatar(c *gin.Context) {
+	// 1.1 get userID
+	userID, err := utils.GetUserIDFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	uuidUserID, err := model.UUIDFromString(userID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	// 1.2 parse id from uri, validate id
+	var params struct {
+		ID string `uri:"id" binding:"required"`
+	}
+
+	if err := c.ShouldBindUri(&params); err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, params, ""))
+		return
+	}
+
+	// 1.3 get upload file
+	file, err := c.FormFile("file")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, file, ""))
+		return
+	}
+
+	// 1.4 prepare the logger
+	l := h.logger.Fields(logger.Fields{
+		"handler": "employee",
+		"method":  "UploadAvatar",
+		"params":  params,
+		// "body":    body,
+	})
+
+	fileName := file.Filename
+	fileExtension := model.ContentExtension(filepath.Ext(fileName))
+	fileSize := file.Size
+	filePath := "employees/" + params.ID + "/images/" + fileName
+	fileType := "image"
+
+	// 2.1 validate
+	if !fileExtension.ImageValid() {
+		l.Info("invalid file extension")
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrInvalidFileExtension, nil, ""))
+		return
+	}
+	if fileExtension == model.ContentExtensionJpg || fileExtension == model.ContentExtensionPng {
+		if fileSize > model.MaxFileSizeImage {
+			l.Info("invalid file size")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrInvalidFileSize, nil, ""))
+			return
+		}
+	}
+
+	tx, done := h.repo.NewTransaction()
+
+	// 2.2 check employee existed
+	employee, err := h.store.Employee.One(tx.DB(), params.ID, false)
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			l.Info("employee not found")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, err, nil, ""))
+			done(err)
+			return
+		}
+		l.Error(err, "error query employee from db")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		done(err)
+		return
+	}
+
+	// 2.3 check file name exist
+	_, err = h.store.Content.GetByPath(tx.DB(), filePath)
+	if err != nil && err != gorm.ErrRecordNotFound {
+		l.Error(err, "error query content from db")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		done(err)
+		return
+	}
+	if err != nil && err == gorm.ErrRecordNotFound {
+		// not found => create and upload content to GCS
+		content, err := h.store.Content.Create(tx.DB(), model.Content{
+			Type:       fileType,
+			Extension:  fileExtension.String(),
+			Path:       filePath,
+			EmployeeID: employee.ID,
+			UploadBy:   uuidUserID,
+		})
+		if err != nil {
+			l.Error(err, "error query employee from db")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+			done(err)
+			return
+		}
+
+		multipart, err := file.Open()
+		if err != nil {
+			l.Error(err, "error in open file")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+			done(err)
+			return
+		}
+
+		err = h.service.Google.UploadContentGCS(multipart, content.Path)
+		if err != nil {
+			l.Error(err, "error in upload file")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+			done(err)
+			return
+		}
+	}
+
+	// 3. update avatar field
+	_, err = h.store.Employee.UpdateSelectedFieldsByID(tx.DB(), employee.ID.String(), model.Employee{
+		Avatar: filePath,
+	}, "Avatar")
+	if err != nil {
+		l.Error(err, "error in update avatar")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		done(err)
+		return
+	}
+
+	done(nil)
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToContentData(fmt.Sprintf("https://storage.googleapis.com/%s/%s", h.config.Google.GCSBucketName, filePath)), nil, nil, nil, ""))
 }
