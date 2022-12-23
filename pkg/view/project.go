@@ -292,9 +292,9 @@ func ToCreateProjectDataResponse(project *model.Project) CreateProjectData {
 	for _, head := range project.Heads {
 		switch head.Position {
 		case model.HeadPositionAccountManager:
-			result.AccountManager = ToProjectHead(&head)
+			result.AccountManager = ToProjectHead(head)
 		case model.HeadPositionDeliveryManager:
-			result.DeliveryManager = ToProjectHead(&head)
+			result.DeliveryManager = ToProjectHead(head)
 		}
 	}
 

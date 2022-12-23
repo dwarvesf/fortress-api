@@ -64,7 +64,7 @@ type Project struct {
 	EndDate             *time.Time
 	Status              ProjectStatus
 	Slots               []ProjectSlot
-	Heads               []ProjectHead
+	Heads               []*ProjectHead
 	ProjectMembers      []ProjectMember
 	ProjectStacks       []ProjectStack
 	ProjectEmail        string

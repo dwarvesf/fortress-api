@@ -22,7 +22,9 @@ func (s *store) Create(db *gorm.DB, projectHead *model.ProjectHead) error {
 // GetActiveLeadsByProjectID get active project heads by projectID
 func (s *store) GetActiveLeadsByProjectID(db *gorm.DB, projectID string) ([]*model.ProjectHead, error) {
 	var projectHeads []*model.ProjectHead
-	return projectHeads, db.Where("project_id = ? AND left_date IS NULL AND deleted_at IS NULL", projectID).Find(&projectHeads).Error
+	return projectHeads, db.Where("project_id = ? AND (left_date IS NULL OR left_date > now()) AND deleted_at IS NULL", projectID).
+		Preload("Employee").
+		Find(&projectHeads).Error
 }
 
 func (s *store) DeleteByPositionInProject(db *gorm.DB, projectID string, employeeID string, position string) error {

@@ -228,7 +228,7 @@ func (h *handler) Create(c *gin.Context) {
 		return
 	}
 
-	p.Heads = append(p.Heads, accountManager)
+	p.Heads = append(p.Heads, &accountManager)
 
 	// create project delivery manager
 	if !body.DeliveryManagerID.IsZero() {
@@ -246,7 +246,7 @@ func (h *handler) Create(c *gin.Context) {
 			return
 		}
 
-		p.Heads = append(p.Heads, deliveryManager)
+		p.Heads = append(p.Heads, &deliveryManager)
 	}
 
 	// assign members to project
@@ -1265,7 +1265,7 @@ func (h *handler) UpdateContactInfo(c *gin.Context) {
 	// Check account manager exists
 	exist, err := h.store.Employee.IsExist(h.repo.DB(), body.AccountManagerID.String())
 	if err != nil {
-		l.Error(err, "error when finding account manager")
+		l.Error(err, "failed to find account manager")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
 		return
 	}
@@ -1294,7 +1294,7 @@ func (h *handler) UpdateContactInfo(c *gin.Context) {
 	tx, done := h.repo.NewTransaction()
 
 	// Update Account Manager
-	accountManager, err := h.updateProjectHead(tx.DB(), projectID, body.AccountManagerID, model.HeadPositionAccountManager)
+	_, err = h.updateProjectHead(tx.DB(), projectID, body.AccountManagerID, model.HeadPositionAccountManager)
 	if err != nil {
 		l.Error(err, "failed to update account manager")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
@@ -1302,7 +1302,7 @@ func (h *handler) UpdateContactInfo(c *gin.Context) {
 	}
 
 	// Update Delivery Manager
-	deliveryManger, err := h.updateProjectHead(tx.DB(), projectID, body.DeliveryManagerID, model.HeadPositionDeliveryManager)
+	_, err = h.updateProjectHead(tx.DB(), projectID, body.DeliveryManagerID, model.HeadPositionDeliveryManager)
 	if err != nil {
 		l.Error(err, "failed to update delivery manager")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
@@ -1320,7 +1320,14 @@ func (h *handler) UpdateContactInfo(c *gin.Context) {
 		return
 	}
 
-	project.Heads = append(project.Heads, *accountManager, *deliveryManger)
+	heads, err := h.store.ProjectHead.GetActiveLeadsByProjectID(tx.DB(), projectID)
+	if err != nil {
+		l.Error(err, "failed to get project heads")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
+		return
+	}
+
+	project.Heads = heads
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToUpdateProjectContactInfo(project), nil, done(nil), nil, ""))
 }
