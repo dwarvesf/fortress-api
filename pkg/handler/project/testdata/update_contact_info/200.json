@@ -4,18 +4,18 @@
         "projectEmail": "fortress@d.foundation",
         "projectHead": [
             {
-                "employeeID": "8d7c99c0-3253-4286-93a9-e7554cb327ef",
-                "fullName": "Nguyễn Hải Nam",
-                "displayName": "Nam Nguyen",
-                "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/8399103964540935617.png",
-                "position": "technical-lead"
-            },
-            {
                 "employeeID": "2655832e-f009-4b73-a535-64c3a22e558f",
                 "fullName": "Phạm Đức Thành",
                 "displayName": "Thanh Pham",
                 "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
                 "position": "account-manager"
+            },
+            {
+                "employeeID": "8d7c99c0-3253-4286-93a9-e7554cb327ef",
+                "fullName": "Nguyễn Hải Nam",
+                "displayName": "Nam Nguyen",
+                "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/8399103964540935617.png",
+                "position": "technical-lead"
             },
             {
                 "employeeID": "608ea227-45a5-4c8a-af43-6c7280d96340",

@@ -87,12 +87,6 @@ func TestHandler_List(t *testing.T) {
 			wantResponsePath: "testdata/list/with_stackid.json",
 		},
 		{
-			name:             "with_projectid",
-			query:            "preload=false&projectID=8dc3be2e-19a4-4942-8a79-56db391a0b15",
-			wantCode:         http.StatusOK,
-			wantResponsePath: "testdata/list/with_projectid.json",
-		},
-		{
 			name:             "with_projectid_and_positionid",
 			query:            "preload=false&projectID=8dc3be2e-19a4-4942-8a79-56db391a0b15&positionID=01fb6322-d727-47e3-a242-5039ea4732fc",
 			wantCode:         http.StatusOK,
