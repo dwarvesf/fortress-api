@@ -203,6 +203,8 @@ func ToSurveyDetail(event *model.FeedbackEvent) SurveyDetail {
 				// only 1 reviewer for each topic
 				if len(topic.EmployeeEventReviewers) > 0 {
 					newTopic.ReviewID = topic.EmployeeEventReviewers[0].ID.String()
+					newTopic.Status = topic.EmployeeEventReviewers[0].AuthorStatus.String()
+					newTopic.IsForcedDone = topic.EmployeeEventReviewers[0].IsForcedDone
 
 					if topic.Project != nil {
 						newTopic.Project = toBasicProjectInfo(*topic.Project)
