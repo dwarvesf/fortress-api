@@ -34,13 +34,41 @@
                 },
                 "participants": null,
                 "count": null,
-                "result": {
-                    "stronglyDisagree": 0,
-                    "disagree": 0,
-                    "mixed": 0,
-                    "agree": 0,
-                    "stronglyAgree": 0
-                },
+                "domains": [
+                    {
+                        "name": "workload",
+                        "average": 0,
+                        "count": {
+                            "stronglyDisagree": 0,
+                            "disagree": 0,
+                            "mixed": 0,
+                            "agree": 0,
+                            "stronglyAgree": 0
+                        }
+                    },
+                    {
+                        "name": "deadline",
+                        "average": 0,
+                        "count": {
+                            "stronglyDisagree": 0,
+                            "disagree": 0,
+                            "mixed": 0,
+                            "agree": 0,
+                            "stronglyAgree": 0
+                        }
+                    },
+                    {
+                        "name": "learning",
+                        "average": 0,
+                        "count": {
+                            "stronglyDisagree": 0,
+                            "disagree": 0,
+                            "mixed": 0,
+                            "agree": 0,
+                            "stronglyAgree": 0
+                        }
+                    }
+                ],
                 "comments": 1,
                 "project": {
                     "id": "8dc3be2e-19a4-4942-8a79-56db391a0b15",
