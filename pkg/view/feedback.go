@@ -114,7 +114,7 @@ func ToListFeedbackDetails(questions []*model.EmployeeEventQuestion, detailInfo 
 
 	for _, q := range questions {
 		if q.Type == model.QuestionTypeScale.String() {
-			q.Answer = model.AgreementLevelValueMap[q.Domain][q.Answer].String()
+			q.Answer = model.AgreementLevelValueMap[q.Answer].String()
 		}
 
 		rs.Answers = append(rs.Answers, &QuestionAnswer{
@@ -168,7 +168,7 @@ func ToListSubmitFeedback(questions []*model.EmployeeEventQuestion, detailInfo F
 
 	for _, q := range questions {
 		if q.Type == model.QuestionTypeScale.String() {
-			q.Answer = model.AgreementLevelValueMap[q.Domain][q.Answer].String()
+			q.Answer = model.AgreementLevelValueMap[q.Answer].String()
 		}
 
 		rs.Answers = append(rs.Answers, &QuestionAnswer{
@@ -204,7 +204,7 @@ func ToFeedbackReviewDetail(questions []*model.EmployeeEventQuestion, topic *mod
 
 	for _, q := range questions {
 		if q.Type == model.QuestionTypeScale.String() {
-			q.Answer = model.AgreementLevelValueMap[q.Domain][q.Answer].String()
+			q.Answer = model.AgreementLevelValueMap[q.Answer].String()
 		}
 
 		qs = append(qs, QuestionAnswer{

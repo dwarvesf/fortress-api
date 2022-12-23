@@ -15,7 +15,7 @@
             {
                 "eventQuestionID": "3784e437-c7d6-4142-9007-82a7f18f7d50",
                 "content": "How do you feel about your workload?",
-                "answer": "manageable",
+                "answer": "mixed",
                 "note": "nothing",
                 "type": "likert-scale",
                 "order": 1,
@@ -24,7 +24,7 @@
             {
                 "eventQuestionID": "25ae4b9c-4d44-4946-8034-29ccec02a005",
                 "content": "Do you think the team can make the deadline?",
-                "answer": "neutral",
+                "answer": "mixed",
                 "note": "",
                 "type": "likert-scale",
                 "order": 2,
@@ -33,7 +33,7 @@
             {
                 "eventQuestionID": "5c49dbcd-df16-4f04-bb98-a2dbb339e4d6",
                 "content": "How much that you learn about your work and your team this week?",
-                "answer": "moderate",
+                "answer": "mixed",
                 "note": "ok",
                 "type": "likert-scale",
                 "order": 3,

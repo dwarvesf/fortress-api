@@ -223,9 +223,15 @@ func ToSurveyDetail(event *model.FeedbackEvent) SurveyDetail {
 					Agree:            answerMap[model.AgreementLevelMap[model.AgreementLevelAgree]],
 					StronglyAgree:    answerMap[model.AgreementLevelMap[model.AgreementLevelStronglyAgree]],
 				}
+
+				// only 1 reviewer for each topic
+				if len(topic.EmployeeEventReviewers) > 0 {
+					newTopic.ReviewID = topic.EmployeeEventReviewers[0].ID.String()
+				}
 			}
 		case model.EventSubtypeEngagement:
 			{
+				// only 1 reviewer for each topic
 				if len(topic.EmployeeEventReviewers) > 0 {
 					newTopic.ReviewID = topic.EmployeeEventReviewers[0].ID.String()
 					newTopic.Status = topic.EmployeeEventReviewers[0].AuthorStatus.String()

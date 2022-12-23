@@ -5163,6 +5163,26 @@ const docTemplate = `{
                 }
             }
         },
+        "view.SurveyResult": {
+            "type": "object",
+            "properties": {
+                "agree": {
+                    "type": "integer"
+                },
+                "disagree": {
+                    "type": "integer"
+                },
+                "mixed": {
+                    "type": "integer"
+                },
+                "stronglyAgree": {
+                    "type": "integer"
+                },
+                "stronglyDisagree": {
+                    "type": "integer"
+                }
+            }
+        },
         "view.SurveyTopicDetail": {
             "type": "object",
             "properties": {
@@ -5200,12 +5220,6 @@ const docTemplate = `{
                 "count": {
                     "$ref": "#/definitions/view.FeedbackCount"
                 },
-                "domains": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/view.Domain"
-                    }
-                },
                 "employee": {
                     "$ref": "#/definitions/view.BasicEmployeeInfo"
                 },
@@ -5226,6 +5240,9 @@ const docTemplate = `{
                 },
                 "project": {
                     "$ref": "#/definitions/view.BasicProjectInfo"
+                },
+                "result": {
+                    "$ref": "#/definitions/view.SurveyResult"
                 },
                 "reviewID": {
                     "type": "string"
