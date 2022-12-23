@@ -1273,19 +1273,6 @@ definitions:
       type:
         type: string
     type: object
-  view.SurveyResult:
-    properties:
-      agree:
-        type: integer
-      disagree:
-        type: integer
-      mixed:
-        type: integer
-      stronglyAgree:
-        type: integer
-      stronglyDisagree:
-        type: integer
-    type: object
   view.SurveyTopicDetail:
     properties:
       employee:
@@ -1310,6 +1297,10 @@ definitions:
         type: integer
       count:
         $ref: '#/definitions/view.FeedbackCount'
+      domains:
+        items:
+          $ref: '#/definitions/view.Domain'
+        type: array
       employee:
         $ref: '#/definitions/view.BasicEmployeeInfo'
       eventID:
@@ -1324,8 +1315,6 @@ definitions:
         type: array
       project:
         $ref: '#/definitions/view.BasicProjectInfo'
-      result:
-        $ref: '#/definitions/view.SurveyResult'
       reviewID:
         type: string
       status:

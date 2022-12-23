@@ -135,7 +135,7 @@ type Topic struct {
 	Employee     BasicEmployeeInfo   `json:"employee"`
 	Participants []BasicEmployeeInfo `json:"participants"`
 	Count        *FeedbackCount      `json:"count"`
-	Result       *SurveyResult       `json:"result"`
+	Domains      []Domain            `json:"domains"`
 	Comments     int                 `json:"comments"`
 	Project      *BasicProjectInfo   `json:"project"`
 }
@@ -200,33 +200,27 @@ func ToSurveyDetail(event *model.FeedbackEvent) SurveyDetail {
 			}
 		case model.EventSubtypeWork:
 			{
-				if topic.Project != nil {
-					newTopic.Project = toBasicProjectInfo(*topic.Project)
-				}
-
-				totalComment := 0
-				answerMap := make(map[string]int)
-
-				for _, question := range topic.EmployeeEventReviewers[0].EmployeeEventQuestions {
-					if question.Note != "" {
-						totalComment++
-					}
-
-					answerMap[question.Answer]++
-				}
-
-				newTopic.Comments = totalComment
-				newTopic.Result = &SurveyResult{
-					StronglyDisagree: answerMap[model.AgreementLevelMap[model.AgreementLevelStronglyDisagree]],
-					Disagree:         answerMap[model.AgreementLevelMap[model.AgreementLevelDisagree]],
-					Mixed:            answerMap[model.AgreementLevelMap[model.AgreementLevelMixed]],
-					Agree:            answerMap[model.AgreementLevelMap[model.AgreementLevelAgree]],
-					StronglyAgree:    answerMap[model.AgreementLevelMap[model.AgreementLevelStronglyAgree]],
-				}
-
 				// only 1 reviewer for each topic
 				if len(topic.EmployeeEventReviewers) > 0 {
 					newTopic.ReviewID = topic.EmployeeEventReviewers[0].ID.String()
+
+					if topic.Project != nil {
+						newTopic.Project = toBasicProjectInfo(*topic.Project)
+					}
+
+					totalComment := 0
+					answerMap := make(map[string]int)
+
+					for _, question := range topic.EmployeeEventReviewers[0].EmployeeEventQuestions {
+						if question.Note != "" {
+							totalComment++
+						}
+
+						answerMap[question.Answer]++
+					}
+
+					newTopic.Comments = totalComment
+					newTopic.Domains = toDomains(topic.EmployeeEventReviewers[0].EmployeeEventQuestions)
 				}
 			}
 		case model.EventSubtypeEngagement:
@@ -294,4 +288,74 @@ func ToPeerReviewDetail(topic *model.EmployeeEventTopic) SurveyTopicDetail {
 
 type ListSurveyDetailResponse struct {
 	Data SurveyDetail `json:"data"`
+}
+
+func toDomains(questions []model.EmployeeEventQuestion) []Domain {
+	domainMap := make(map[string]map[string]int)
+	domainMap[""] = make(map[string]int)
+	domainMap[model.QuestionDomainWorkload.String()] = make(map[string]int)
+	domainMap[model.QuestionDomainDeadline.String()] = make(map[string]int)
+	domainMap[model.QuestionDomainLearning.String()] = make(map[string]int)
+
+	for _, q := range questions {
+		domainMap[q.Domain.String()][model.AgreementLevelValueMap[q.Answer].String()]++
+	}
+
+	wlCount := model.LikertScaleCount{
+		StronglyDisagree: domainMap[model.QuestionDomainWorkload.String()][model.AgreementLevelStronglyDisagree.String()],
+		Disagree:         domainMap[model.QuestionDomainWorkload.String()][model.AgreementLevelDisagree.String()],
+		Mixed:            domainMap[model.QuestionDomainWorkload.String()][model.AgreementLevelMixed.String()],
+		Agree:            domainMap[model.QuestionDomainWorkload.String()][model.AgreementLevelAgree.String()],
+		StronglyAgree:    domainMap[model.QuestionDomainWorkload.String()][model.AgreementLevelStronglyAgree.String()],
+	}
+	dlCount := model.LikertScaleCount{
+		StronglyDisagree: domainMap[model.QuestionDomainDeadline.String()][model.AgreementLevelStronglyDisagree.String()],
+		Disagree:         domainMap[model.QuestionDomainDeadline.String()][model.AgreementLevelDisagree.String()],
+		Mixed:            domainMap[model.QuestionDomainDeadline.String()][model.AgreementLevelMixed.String()],
+		Agree:            domainMap[model.QuestionDomainDeadline.String()][model.AgreementLevelAgree.String()],
+		StronglyAgree:    domainMap[model.QuestionDomainDeadline.String()][model.AgreementLevelStronglyAgree.String()],
+	}
+	lnCount := model.LikertScaleCount{
+		StronglyDisagree: domainMap[model.QuestionDomainLearning.String()][model.AgreementLevelStronglyDisagree.String()],
+		Disagree:         domainMap[model.QuestionDomainLearning.String()][model.AgreementLevelDisagree.String()],
+		Mixed:            domainMap[model.QuestionDomainLearning.String()][model.AgreementLevelMixed.String()],
+		Agree:            domainMap[model.QuestionDomainLearning.String()][model.AgreementLevelAgree.String()],
+		StronglyAgree:    domainMap[model.QuestionDomainLearning.String()][model.AgreementLevelStronglyAgree.String()],
+	}
+
+	wlDomain := Domain{
+		Name:    model.QuestionDomainWorkload.String(),
+		Average: countLikertScaleAverage(wlCount),
+		Count:   wlCount,
+	}
+	dlDomain := Domain{
+		Name:    model.QuestionDomainDeadline.String(),
+		Average: countLikertScaleAverage(dlCount),
+		Count:   dlCount,
+	}
+	lnDomain := Domain{
+		Name:    model.QuestionDomainLearning.String(),
+		Average: countLikertScaleAverage(lnCount),
+		Count:   lnCount,
+	}
+
+	return []Domain{wlDomain, dlDomain, lnDomain}
+}
+
+func countLikertScaleAverage(count model.LikertScaleCount) float32 {
+	var average float32
+	total := count.StronglyDisagree +
+		count.Disagree +
+		count.Mixed +
+		count.Agree +
+		count.StronglyAgree
+
+	if total > 0 {
+		average = float32(count.StronglyDisagree+
+			count.Disagree*2+
+			count.Mixed*3+
+			count.Agree*4+
+			count.StronglyAgree*5) / float32(total)
+	}
+	return average
 }
