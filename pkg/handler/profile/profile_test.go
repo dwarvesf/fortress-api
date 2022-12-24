@@ -80,7 +80,7 @@ func TestHandler_UpdateProfileInfo(t *testing.T) {
 		input            request.UpdateInfoInput
 	}{
 		{
-			name:             "ok_get_profile",
+			name:             "ok_update_profile",
 			wantCode:         200,
 			wantErr:          false,
 			wantResponsePath: "testdata/update_info/200.json",

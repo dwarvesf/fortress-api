@@ -4400,6 +4400,9 @@
                 },
                 "updatedAt": {
                     "type": "string"
+                },
+                "username": {
+                    "type": "string"
                 }
             }
         },
@@ -4771,6 +4774,9 @@
                     "type": "string"
                 },
                 "teamEmail": {
+                    "type": "string"
+                },
+                "username": {
                     "type": "string"
                 }
             }
@@ -5369,6 +5375,9 @@
                     "type": "string"
                 },
                 "updatedAt": {
+                    "type": "string"
+                },
+                "username": {
                     "type": "string"
                 }
             }

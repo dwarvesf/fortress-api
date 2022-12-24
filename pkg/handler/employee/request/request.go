@@ -1,6 +1,7 @@
 package request
 
 import (
+	"regexp"
 	"time"
 
 	"github.com/dwarvesf/fortress-api/pkg/handler/employee/errs"
@@ -81,6 +82,19 @@ func (input *GetListEmployeeQuery) Validate() error {
 
 	if input.ProjectID != "" && !model.IsUUIDFromString(input.ProjectID) {
 		return errs.ErrInvalidProjectID
+	}
+
+	return nil
+}
+
+func (input CreateEmployeeInput) Validate() error {
+	regex, _ := regexp.Compile(".+@((dwarvesv\\.com)|(d\\.foundation))")
+	if !regex.MatchString(input.TeamEmail) {
+		return errs.ErrInvalidEmailDomain
+	}
+
+	if !model.WorkingStatus(input.Status).IsValid() {
+		return errs.ErrInvalidEmployeeStatus
 	}
 
 	return nil

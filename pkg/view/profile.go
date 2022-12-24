@@ -21,6 +21,7 @@ type ProfileData struct {
 	NotionName    string     `json:"notionName"`
 	DiscordID     string     `json:"discordID"`
 	DiscordName   string     `json:"discordName"`
+	Username      string     `json:"username"`
 }
 
 type UpdateProfileInfoData struct {
@@ -34,6 +35,7 @@ type UpdateProfileInfoData struct {
 	NotionName  string `json:"notionName"`
 	DiscordID   string `json:"discordID"`
 	DiscordName string `json:"discordName"`
+	Username    string `json:"username"`
 }
 
 type ProfileDataResponse struct {
@@ -58,6 +60,7 @@ func ToUpdateProfileInfoData(employee *model.Employee) *UpdateProfileInfoData {
 		NotionName:  employee.NotionName,
 		DiscordID:   employee.DiscordID,
 		DiscordName: employee.DiscordName,
+		Username:    employee.Username,
 	}
 
 	return rs
@@ -79,5 +82,6 @@ func ToProfileData(employee *model.Employee) *ProfileData {
 		NotionName:    employee.NotionName,
 		DiscordID:     employee.DiscordID,
 		DiscordName:   employee.DiscordName,
+		Username:      employee.Username,
 	}
 }
