@@ -16,10 +16,10 @@ func New() IStore {
 func (s *store) One(db *gorm.DB, id string, preload bool) (*model.Employee, error) {
 	query := db.Where("id = ?", id).
 		Preload("EmployeeRoles", func(db *gorm.DB) *gorm.DB {
-		return db.Joins("employee_roles JOIN roles ON roles.id = employee_roles.role_id").
-			Where("employee_roles.deleted_at IS NULL").
-			Order("roles.level")
-	}).
+			return db.Joins("employee_roles JOIN roles ON roles.id = employee_roles.role_id").
+				Where("employee_roles.deleted_at IS NULL").
+				Order("roles.level")
+		}).
 		Preload("EmployeeRoles.Role", "deleted_at IS NULL")
 
 	if preload {
@@ -34,6 +34,32 @@ func (s *store) One(db *gorm.DB, id string, preload bool) (*model.Employee, erro
 			Preload("EmployeeStacks.Stack", "deleted_at IS NULL").
 			Preload("EmployeeChapters", "deleted_at IS NULL").
 			Preload("EmployeeChapters.Chapter", "deleted_at IS NULL").
+			Preload("Seniority").
+			Preload("LineManager")
+	}
+
+	var employee *model.Employee
+	return employee, query.First(&employee).Error
+}
+
+// OneByUsername get 1 employee by username
+func (s *store) OneByUsername(db *gorm.DB, username string, preload bool) (*model.Employee, error) {
+	query := db.Where("username = ?", username)
+
+	if preload {
+		query = query.
+			Preload("ProjectMembers", "deleted_at IS NULL").
+			Preload("ProjectMembers.Project", "deleted_at IS NULL").
+			Preload("ProjectMembers.ProjectMemberPositions", "deleted_at IS NULL").
+			Preload("ProjectMembers.ProjectMemberPositions.Position", "deleted_at IS NULL").
+			Preload("EmployeePositions", "deleted_at IS NULL").
+			Preload("EmployeePositions.Position", "deleted_at IS NULL").
+			Preload("EmployeeStacks", "deleted_at IS NULL").
+			Preload("EmployeeStacks.Stack", "deleted_at IS NULL").
+			Preload("EmployeeChapters", "deleted_at IS NULL").
+			Preload("EmployeeChapters.Chapter", "deleted_at IS NULL").
+			Preload("EmployeeRoles", "deleted_at IS NULL").
+			Preload("EmployeeRoles.Role", "deleted_at IS NULL").
 			Preload("Seniority").
 			Preload("LineManager")
 	}

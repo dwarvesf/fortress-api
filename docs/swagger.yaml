@@ -783,6 +783,8 @@ definitions:
         type: string
       updatedAt:
         type: string
+      username:
+        type: string
     type: object
   view.EmployeeListDataResponse:
     properties:
@@ -1023,6 +1025,8 @@ definitions:
       phoneNumber:
         type: string
       teamEmail:
+        type: string
+      username:
         type: string
     type: object
   view.ProfileDataResponse:
@@ -1424,6 +1428,8 @@ definitions:
         description: basic info
         type: string
       updatedAt:
+        type: string
+      username:
         type: string
     type: object
   view.UpdateProfileInfoResponse:

@@ -27,6 +27,7 @@ type EmployeeData struct {
 	NotionName    string     `json:"notionName"`
 	DiscordID     string     `json:"discordID"`
 	DiscordName   string     `json:"discordName"`
+	Username      string     `json:"username"`
 
 	// working info
 	WorkingStatus model.WorkingStatus `json:"status"`
@@ -215,6 +216,7 @@ func ToEmployeeData(employee *model.Employee) *EmployeeData {
 		NotionName:    employee.NotionName,
 		DiscordID:     employee.DiscordID,
 		DiscordName:   employee.DiscordName,
+		Username:      employee.Username,
 		WorkingStatus: employee.WorkingStatus,
 		Seniority:     employee.Seniority,
 		JoinedDate:    employee.JoinedDate,

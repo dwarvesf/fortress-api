@@ -90,6 +90,7 @@ type Employee struct {
 	NotionName             string
 	DiscordID              string
 	DiscordName            string
+	Username               string
 
 	// payroll info
 	WiseRecipientEmail string
