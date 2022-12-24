@@ -719,11 +719,19 @@ func (h *handler) createWorkEvent(db *gorm.DB, req request.CreateSurveyFeedbackI
 
 	eets := make([]model.EmployeeEventTopic, 0)
 	for _, e := range employees {
+		p, err := h.store.Project.One(db, e.ProjectID.String(), false)
+		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return http.StatusNotFound, errs.ErrProjectNotFound
+			}
+			return http.StatusInternalServerError, err
+		}
+
 		eets = append(eets, model.EmployeeEventTopic{
 			BaseModel: model.BaseModel{
 				ID: model.NewUUID(),
 			},
-			Title:      fmt.Sprintf("Work and Team Survey: %s - %s", title, e.Employee.DisplayName),
+			Title:      fmt.Sprintf("%s Survey: %s - %s", p.Name, title, e.Employee.DisplayName),
 			EventID:    event.ID,
 			EmployeeID: e.EmployeeID,
 			ProjectID:  e.ProjectID,
