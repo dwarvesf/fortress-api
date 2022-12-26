@@ -48,7 +48,7 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 // @Accept  json
 // @Produce  json
 // @Param Authorization header string true "jwt token"
-// @Param status query  string false  "Project status"
+// @Param status query  []string false  "Project status"
 // @Param name   query  string false  "Project name"
 // @Param type   query  string false  "Project type"
 // @Param page   query  string false  "Page"
@@ -80,9 +80,9 @@ func (h *handler) List(c *gin.Context) {
 	}
 
 	projects, total, err := h.store.Project.All(h.repo.DB(), project.GetListProjectInput{
-		Status: query.Status,
-		Name:   query.Name,
-		Type:   query.Type,
+		Statuses: query.Status,
+		Name:     query.Name,
+		Type:     query.Type,
 	}, query.Pagination)
 	if err != nil {
 		l.Error(err, "error query project from db")

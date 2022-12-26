@@ -11,9 +11,9 @@ import (
 type GetListProjectInput struct {
 	model.Pagination
 
-	Name   string `form:"name" json:"name"`
-	Status string `form:"status" json:"status"`
-	Type   string `form:"type" json:"type"`
+	Name   string   `form:"name" json:"name"`
+	Status []string `form:"status" json:"status"`
+	Type   string   `form:"type" json:"type"`
 }
 
 type UpdateProjectGeneralInfoInput struct {
@@ -41,9 +41,14 @@ func (i *GetListProjectInput) Validate() error {
 		return errs.ErrInvalidProjectType
 	}
 
-	if i.Status != "" && !model.ProjectStatus(i.Status).IsValid() {
-		return errs.ErrInvalidProjectStatus
+	if len(i.Status) > 0 {
+		for _, status := range i.Status {
+			if !model.ProjectStatus(status).IsValid() {
+				return errs.ErrInvalidProjectStatus
+			}
+		}
 	}
+
 	return nil
 }
 
