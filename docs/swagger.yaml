@@ -1050,6 +1050,8 @@ definitions:
         $ref: '#/definitions/view.ProjectHead'
       allowsSendingSurvey:
         type: boolean
+      avatar:
+        type: string
       clientEmail:
         type: string
       country:
@@ -2626,8 +2628,10 @@ paths:
         type: string
       - description: Project status
         in: query
+        items:
+          type: string
         name: status
-        type: string
+        type: array
       - description: Project name
         in: query
         name: name

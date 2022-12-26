@@ -1618,7 +1618,10 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "type": "string",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
                         "description": "Project status",
                         "name": "status",
                         "in": "query"
@@ -4885,6 +4888,9 @@ const docTemplate = `{
                 },
                 "allowsSendingSurvey": {
                     "type": "boolean"
+                },
+                "avatar": {
+                    "type": "string"
                 },
                 "clientEmail": {
                     "type": "string"

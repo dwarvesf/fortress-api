@@ -27,8 +27,8 @@ func (s *store) All(db *gorm.DB, input GetListProjectInput, pagination model.Pag
 		query = query.Where("name ILIKE ?", fmt.Sprintf("%%%s%%", input.Name))
 	}
 
-	if input.Status != "" {
-		query = query.Where("status = ?", input.Status)
+	if len(input.Statuses) > 0 {
+		query = query.Where("status IN ?", input.Statuses)
 	}
 
 	if input.Type != "" {
