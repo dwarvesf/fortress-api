@@ -1,4 +1,4 @@
 {
     "data": null,
-    "error": "must answer all questions"
+    "message": "must answer all questions"
 }

@@ -1,6 +1,6 @@
 {
     "data": null,
-    "error": "Key: 'UpdateInfoInput.PhoneNumber' Error:Field validation for 'PhoneNumber' failed on the 'min' tag",
+    "message": "Key: 'UpdateInfoInput.PhoneNumber' Error:Field validation for 'PhoneNumber' failed on the 'min' tag",
     "errors": [
         {
             "field": "PhoneNumber",

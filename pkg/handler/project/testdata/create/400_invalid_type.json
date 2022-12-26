@@ -1,4 +1,4 @@
 {
     "data": null,
-    "error": "invalid project type"
+    "message": "invalid project type"
 }

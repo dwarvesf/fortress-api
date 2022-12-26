@@ -1,6 +1,6 @@
 {
     "data": null,
-    "error": "Key: 'GetListSurveyInput.Subtype' Error:Field validation for 'Subtype' failed on the 'required' tag",
+    "message": "Key: 'GetListSurveyInput.Subtype' Error:Field validation for 'Subtype' failed on the 'required' tag",
     "errors": [
         {
             "field": "Subtype",

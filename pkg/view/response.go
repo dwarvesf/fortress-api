@@ -25,7 +25,7 @@ type Response[T any] struct {
 }
 
 type ErrorResponse struct {
-	Error        string     `json:"error"`
+	Message      string     `json:"message"`
 	ErrorDetails []ApiError `json:"errors"`
 }
 
@@ -52,7 +52,7 @@ func CreateResponse[T any](data T, paging *PaginationResponse, err error, payloa
 
 	var ve validator.ValidationErrors
 	if err != nil {
-		resp.Error = err.Error()
+		resp.Message = err.Error()
 	}
 	if err != nil && errors.As(err, &ve) {
 		errs := make([]ApiError, len(ve))

@@ -823,12 +823,12 @@ definitions:
     type: object
   view.ErrorResponse:
     properties:
-      error:
-        type: string
       errors:
         items:
           $ref: '#/definitions/view.ApiError'
         type: array
+      message:
+        type: string
     type: object
   view.FeedBackReviewDetail:
     properties:

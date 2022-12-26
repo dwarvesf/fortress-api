@@ -1,4 +1,4 @@
 {
     "data": null,
-    "error": "project code is duplicated"
+    "message": "project code is duplicated"
 }

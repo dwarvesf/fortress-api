@@ -4537,14 +4537,14 @@ const docTemplate = `{
         "view.ErrorResponse": {
             "type": "object",
             "properties": {
-                "error": {
-                    "type": "string"
-                },
                 "errors": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/view.ApiError"
                     }
+                },
+                "message": {
+                    "type": "string"
                 }
             }
         },

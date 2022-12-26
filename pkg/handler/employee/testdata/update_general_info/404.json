@@ -1,4 +1,4 @@
 {
     "data": null,
-    "error": "employee not found"
+    "message": "employee not found"
 }

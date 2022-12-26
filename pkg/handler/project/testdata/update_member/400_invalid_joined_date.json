@@ -1,4 +1,4 @@
 {
     "data": null,
-    "error": "invalid joined date"
+    "message": "invalid joined date"
 }

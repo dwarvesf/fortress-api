@@ -1,4 +1,4 @@
 {
     "data": null,
-    "error": "invalid work unit type"
+    "message": "invalid work unit type"
 }
