@@ -7,7 +7,7 @@ import (
 
 var (
 	ErrInvalidEmployeeStatus = errors.New("invalid value for employee status")
-	ErrInvalidEmailDomain    = errors.New("invalid value for employee domain address")
+	ErrInvalidEmailDomain    = errors.New("invalid email domain")
 	ErrCantFindLineManager   = errors.New("can't find line manager with the input id")
 	ErrEmployeeExisted       = errors.New("can't create existed employee")
 	ErrPositionNotfound      = errors.New("position not found")

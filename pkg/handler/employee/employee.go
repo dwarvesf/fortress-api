@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"path/filepath"
-	"regexp"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -387,9 +387,6 @@ func (h *handler) Create(c *gin.Context) {
 	}
 
 	// get the username
-	regex, _ := regexp.Compile(".+@((dwarvesv\\.com)|(d\\.foundation))")
-	str := regex.FindString(input.TeamEmail)
-
 	eml := &model.Employee{
 		BaseModel: model.BaseModel{
 			ID: model.NewUUID(),
@@ -401,7 +398,7 @@ func (h *handler) Create(c *gin.Context) {
 		WorkingStatus: model.WorkingStatus(input.Status),
 		JoinedDate:    &now,
 		SeniorityID:   sen.ID,
-		Username:      str[:len(str)-1],
+		Username:      strings.Split(input.TeamEmail, "@")[0],
 	}
 
 	// 2.1 check employee exists -> raise error
