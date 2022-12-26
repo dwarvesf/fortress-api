@@ -4130,6 +4130,9 @@ const docTemplate = `{
                 },
                 "id": {
                     "type": "string"
+                },
+                "username": {
+                    "type": "string"
                 }
             }
         },
@@ -4146,6 +4149,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "fullName": {
+                    "type": "string"
+                },
+                "username": {
                     "type": "string"
                 }
             }
@@ -4166,6 +4172,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "position": {
+                    "type": "string"
+                },
+                "username": {
                     "type": "string"
                 }
             }
@@ -4274,6 +4283,9 @@ const docTemplate = `{
                     "$ref": "#/definitions/model.Seniority"
                 },
                 "status": {
+                    "type": "string"
+                },
+                "username": {
                     "type": "string"
                 }
             }
@@ -4971,6 +4983,9 @@ const docTemplate = `{
                 },
                 "fullName": {
                     "type": "string"
+                },
+                "username": {
+                    "type": "string"
                 }
             }
         },
@@ -5034,6 +5049,9 @@ const docTemplate = `{
                     "$ref": "#/definitions/model.Seniority"
                 },
                 "status": {
+                    "type": "string"
+                },
+                "username": {
                     "type": "string"
                 }
             }

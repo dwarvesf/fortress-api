@@ -71,13 +71,15 @@
             "id": "37e00d47-de69-4ac8-991b-cf3e39565c00",
             "fullName": "Phùng Thị Thương Thương",
             "displayName": "Thuong Phung",
-            "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/7186955696154477566.png"
+            "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/7186955696154477566.png",
+            "username": "thuongptt"
         },
         "reviewer": {
             "id": "2655832e-f009-4b73-a535-64c3a22e558f",
             "fullName": "Phạm Đức Thành",
             "displayName": "Thanh Pham",
-            "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png"
+            "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
+            "username": "thanh"
         },
         "project": null
     }
