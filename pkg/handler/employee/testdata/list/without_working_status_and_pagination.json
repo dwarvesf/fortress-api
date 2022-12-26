@@ -46,7 +46,8 @@
         {
           "id": "fa0f4e46-7eab-4e5c-9d31-30489e69fe2e",
           "name": "React",
-          "code": "react"
+          "code": "react",
+          "avatar": ""
         }
       ],
       "roles": [
@@ -101,7 +102,8 @@
         {
           "id": "fa0f4e46-7eab-4e5c-9d31-30489e69fe2e",
           "name": "React",
-          "code": "react"
+          "code": "react",
+          "avatar": ""
         }
       ],
       "roles": [
@@ -156,7 +158,8 @@
         {
           "id": "fa0f4e46-7eab-4e5c-9d31-30489e69fe2e",
           "name": "React",
-          "code": "react"
+          "code": "react",
+          "avatar": ""
         }
       ],
       "roles": [
@@ -217,7 +220,8 @@
         {
           "id": "0ecf47c8-cca4-4c30-94bb-054b1124c44f",
           "name": "Golang",
-          "code": "golang"
+          "code": "golang",
+          "avatar": ""
         }
       ],
       "roles": [
@@ -278,7 +282,8 @@
         {
           "id": "0ecf47c8-cca4-4c30-94bb-054b1124c44f",
           "name": "Golang",
-          "code": "golang"
+          "code": "golang",
+          "avatar": ""
         }
       ],
       "roles": [
@@ -333,7 +338,8 @@
         {
           "id": "fa0f4e46-7eab-4e5c-9d31-30489e69fe2e",
           "name": "React",
-          "code": "react"
+          "code": "react",
+          "avatar": ""
         }
       ],
       "roles": [
@@ -388,7 +394,8 @@
         {
           "id": "fa0f4e46-7eab-4e5c-9d31-30489e69fe2e",
           "name": "React",
-          "code": "react"
+          "code": "react",
+          "avatar": ""
         }
       ],
       "roles": [
@@ -443,7 +450,8 @@
         {
           "id": "fa0f4e46-7eab-4e5c-9d31-30489e69fe2e",
           "name": "React",
-          "code": "react"
+          "code": "react",
+          "avatar": ""
         }
       ],
       "roles": [
@@ -504,7 +512,8 @@
         {
           "id": "fa0f4e46-7eab-4e5c-9d31-30489e69fe2e",
           "name": "React",
-          "code": "react"
+          "code": "react",
+          "avatar": ""
         }
       ],
       "roles": [
@@ -565,12 +574,14 @@
         {
           "id": "0ecf47c8-cca4-4c30-94bb-054b1124c44f",
           "name": "Golang",
-          "code": "golang"
+          "code": "golang",
+          "avatar": ""
         },
         {
           "id": "b403ef95-4269-4830-bbb6-8e56e5ec0af4",
           "name": "Google Cloud",
-          "code": "gcloud"
+          "code": "gcloud",
+          "avatar": ""
         }
       ],
       "roles": [
@@ -631,12 +642,14 @@
         {
           "id": "0ecf47c8-cca4-4c30-94bb-054b1124c44f",
           "name": "Golang",
-          "code": "golang"
+          "code": "golang",
+          "avatar": ""
         },
         {
           "id": "b403ef95-4269-4830-bbb6-8e56e5ec0af4",
           "name": "Google Cloud",
-          "code": "gcloud"
+          "code": "gcloud",
+          "avatar": ""
         }
       ],
       "roles": [
@@ -697,12 +710,14 @@
         {
           "id": "0ecf47c8-cca4-4c30-94bb-054b1124c44f",
           "name": "Golang",
-          "code": "golang"
+          "code": "golang",
+          "avatar": ""
         },
         {
           "id": "b403ef95-4269-4830-bbb6-8e56e5ec0af4",
           "name": "Google Cloud",
-          "code": "gcloud"
+          "code": "gcloud",
+          "avatar": ""
         }
       ],
       "roles": [
@@ -763,12 +778,14 @@
         {
           "id": "0ecf47c8-cca4-4c30-94bb-054b1124c44f",
           "name": "Golang",
-          "code": "golang"
+          "code": "golang",
+          "avatar": ""
         },
         {
           "id": "b403ef95-4269-4830-bbb6-8e56e5ec0af4",
           "name": "Google Cloud",
-          "code": "gcloud"
+          "code": "gcloud",
+          "avatar": ""
         }
       ],
       "roles": [
@@ -829,12 +846,14 @@
         {
           "id": "0ecf47c8-cca4-4c30-94bb-054b1124c44f",
           "name": "Golang",
-          "code": "golang"
+          "code": "golang",
+          "avatar": ""
         },
         {
           "id": "b403ef95-4269-4830-bbb6-8e56e5ec0af4",
           "name": "Google Cloud",
-          "code": "gcloud"
+          "code": "gcloud",
+          "avatar": ""
         }
       ],
       "roles": [
@@ -895,12 +914,14 @@
         {
           "id": "0ecf47c8-cca4-4c30-94bb-054b1124c44f",
           "name": "Golang",
-          "code": "golang"
+          "code": "golang",
+          "avatar": ""
         },
         {
           "id": "b403ef95-4269-4830-bbb6-8e56e5ec0af4",
           "name": "Google Cloud",
-          "code": "gcloud"
+          "code": "gcloud",
+          "avatar": ""
         }
       ],
       "roles": [
@@ -961,12 +982,14 @@
         {
           "id": "0ecf47c8-cca4-4c30-94bb-054b1124c44f",
           "name": "Golang",
-          "code": "golang"
+          "code": "golang",
+          "avatar": ""
         },
         {
           "id": "b403ef95-4269-4830-bbb6-8e56e5ec0af4",
           "name": "Google Cloud",
-          "code": "gcloud"
+          "code": "gcloud",
+          "avatar": ""
         }
       ],
       "roles": [
@@ -1042,12 +1065,14 @@
         {
           "id": "fa0f4e46-7eab-4e5c-9d31-30489e69fe2e",
           "name": "React",
-          "code": "react"
+          "code": "react",
+          "avatar": ""
         },
         {
           "id": "b403ef95-4269-4830-bbb6-8e56e5ec0af4",
           "name": "Google Cloud",
-          "code": "gcloud"
+          "code": "gcloud",
+          "avatar": ""
         }
       ],
       "roles": [
@@ -1130,12 +1155,14 @@
         {
           "id": "0ecf47c8-cca4-4c30-94bb-054b1124c44f",
           "name": "Golang",
-          "code": "golang"
+          "code": "golang",
+          "avatar": ""
         },
         {
           "id": "b403ef95-4269-4830-bbb6-8e56e5ec0af4",
           "name": "Google Cloud",
-          "code": "gcloud"
+          "code": "gcloud",
+          "avatar": ""
         }
       ],
       "roles": [
@@ -1211,17 +1238,20 @@
         {
           "id": "0ecf47c8-cca4-4c30-94bb-054b1124c44f",
           "name": "Golang",
-          "code": "golang"
+          "code": "golang",
+          "avatar": ""
         },
         {
           "id": "fa0f4e46-7eab-4e5c-9d31-30489e69fe2e",
           "name": "React",
-          "code": "react"
+          "code": "react",
+          "avatar": ""
         },
         {
           "id": "b403ef95-4269-4830-bbb6-8e56e5ec0af4",
           "name": "Google Cloud",
-          "code": "gcloud"
+          "code": "gcloud",
+          "avatar": ""
         }
       ],
       "roles": [
@@ -1299,12 +1329,14 @@
         {
           "id": "0ecf47c8-cca4-4c30-94bb-054b1124c44f",
           "name": "Golang",
-          "code": "golang"
+          "code": "golang",
+          "avatar": ""
         },
         {
           "id": "b403ef95-4269-4830-bbb6-8e56e5ec0af4",
           "name": "Google Cloud",
-          "code": "gcloud"
+          "code": "gcloud",
+          "avatar": ""
         }
       ],
       "roles": [
@@ -1387,7 +1419,8 @@
         {
           "id": "0ecf47c8-cca4-4c30-94bb-054b1124c44f",
           "name": "Golang",
-          "code": "golang"
+          "code": "golang",
+          "avatar": ""
         }
       ],
       "roles": [
@@ -1470,7 +1503,8 @@
         {
           "id": "b403ef95-4269-4830-bbb6-8e56e5ec0af4",
           "name": "Google Cloud",
-          "code": "gcloud"
+          "code": "gcloud",
+          "avatar": ""
         }
       ],
       "roles": [

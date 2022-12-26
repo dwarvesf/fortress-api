@@ -3463,6 +3463,9 @@ const docTemplate = `{
         "model.Stack": {
             "type": "object",
             "properties": {
+                "avatar": {
+                    "type": "string"
+                },
                 "code": {
                     "type": "string"
                 },
@@ -4886,6 +4889,9 @@ const docTemplate = `{
                 "allowsSendingSurvey": {
                     "type": "boolean"
                 },
+                "avatar": {
+                    "type": "string"
+                },
                 "clientEmail": {
                     "type": "string"
                 },
@@ -5120,6 +5126,9 @@ const docTemplate = `{
         "view.Stack": {
             "type": "object",
             "properties": {
+                "avatar": {
+                    "type": "string"
+                },
                 "code": {
                     "type": "string"
                 },
@@ -5137,7 +5146,7 @@ const docTemplate = `{
                 "data": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/model.Chapter"
+                        "$ref": "#/definitions/model.Stack"
                     }
                 }
             }
@@ -5638,7 +5647,7 @@ const docTemplate = `{
                 "stacks": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/view.MetaData"
+                        "$ref": "#/definitions/view.Stack"
                     }
                 },
                 "status": {

@@ -16,7 +16,7 @@ type WorkUnit struct {
 	Name      string        `json:"name"`
 	URL       string        `json:"url"`
 	Members   []BasicMember `json:"members"`
-	Stacks    []MetaData    `json:"stacks"`
+	Stacks    []Stack       `json:"stacks"`
 	Type      string        `json:"type"`
 	Status    string        `json:"status"`
 	ProjectID string        `json:"projectID"`
@@ -44,12 +44,13 @@ func ToWorkUnit(workUnit *model.WorkUnit) WorkUnit {
 	}
 	rs.Members = members
 
-	stacks := make([]MetaData, 0, len(workUnit.WorkUnitStacks))
+	stacks := make([]Stack, 0, len(workUnit.WorkUnitStacks))
 	for _, v := range workUnit.WorkUnitStacks {
-		stack := MetaData{
-			ID:   v.Stack.ID.String(),
-			Code: v.Stack.Code,
-			Name: v.Stack.Name,
+		stack := Stack{
+			ID:     v.Stack.ID.String(),
+			Code:   v.Stack.Code,
+			Name:   v.Stack.Name,
+			Avatar: v.Stack.Avatar,
 		}
 		stacks = append(stacks, stack)
 	}
@@ -89,10 +90,11 @@ func ToWorkUnitList(workUnits []*model.WorkUnit, projectID string) []*WorkUnit {
 		}
 
 		for _, wStack := range wu.WorkUnitStacks {
-			newWorkUnit.Stacks = append(newWorkUnit.Stacks, MetaData{
-				ID:   wStack.Stack.ID.String(),
-				Name: wStack.Stack.Name,
-				Code: wStack.Stack.Code,
+			newWorkUnit.Stacks = append(newWorkUnit.Stacks, Stack{
+				ID:     wStack.Stack.ID.String(),
+				Name:   wStack.Stack.Name,
+				Code:   wStack.Stack.Code,
+				Avatar: wStack.Stack.Avatar,
 			})
 		}
 

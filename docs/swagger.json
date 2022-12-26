@@ -3455,6 +3455,9 @@
         "model.Stack": {
             "type": "object",
             "properties": {
+                "avatar": {
+                    "type": "string"
+                },
                 "code": {
                     "type": "string"
                 },
@@ -4878,6 +4881,9 @@
                 "allowsSendingSurvey": {
                     "type": "boolean"
                 },
+                "avatar": {
+                    "type": "string"
+                },
                 "clientEmail": {
                     "type": "string"
                 },
@@ -5112,6 +5118,9 @@
         "view.Stack": {
             "type": "object",
             "properties": {
+                "avatar": {
+                    "type": "string"
+                },
                 "code": {
                     "type": "string"
                 },
@@ -5129,7 +5138,7 @@
                 "data": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/model.Chapter"
+                        "$ref": "#/definitions/model.Stack"
                     }
                 }
             }
@@ -5630,7 +5639,7 @@
                 "stacks": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/view.MetaData"
+                        "$ref": "#/definitions/view.Stack"
                     }
                 },
                 "status": {
