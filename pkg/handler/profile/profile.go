@@ -181,7 +181,7 @@ func (h *handler) UploadAvatar(c *gin.Context) {
 	fileName := file.Filename
 	fileExtension := model.ContentExtension(filepath.Ext(fileName))
 	fileSize := file.Size
-	filePrePath := "employees/" + employeeID + "/images"
+	filePath := fmt.Sprintf("https://storage.googleapis.com/%s/employees/%s/images/%s", h.config.Google.GCSBucketName, employeeID, fileName)
 	fileType := "image"
 
 	// 2.1 validate
@@ -200,7 +200,7 @@ func (h *handler) UploadAvatar(c *gin.Context) {
 	tx, done := h.repo.NewTransaction()
 
 	// 2.2 check file name exist
-	_, err = h.store.Content.GetByPath(tx.DB(), filePrePath+"/"+fileName)
+	_, err = h.store.Content.GetByPath(tx.DB(), filePath)
 	if err != nil && err != gorm.ErrRecordNotFound {
 		l.Error(err, "error query content from db")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), nil, ""))
@@ -228,7 +228,7 @@ func (h *handler) UploadAvatar(c *gin.Context) {
 	content, err := h.store.Content.Create(tx.DB(), model.Content{
 		Type:       fileType,
 		Extension:  fileExtension.String(),
-		Path:       filePrePath + "/" + fileName,
+		Path:       filePath,
 		EmployeeID: existedEmployee.ID,
 		UploadBy:   existedEmployee.ID,
 	})
@@ -240,8 +240,8 @@ func (h *handler) UploadAvatar(c *gin.Context) {
 
 	// 3.1 update avatar link
 	_, err = h.store.Employee.UpdateSelectedFieldsByID(tx.DB(), employeeID, model.Employee{
-		Avatar: fmt.Sprintf("https://storage.googleapis.com/%s/%s", h.config.Google.GCSBucketName, content.Path),
-	}, "Avatar")
+		Avatar: filePath,
+	}, "avatar")
 	if err != nil {
 		l.Error(err, "error update avatar from db")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), nil, ""))
@@ -263,5 +263,5 @@ func (h *handler) UploadAvatar(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToContentData(fmt.Sprintf("https://storage.googleapis.com/%s/%s", h.config.Google.GCSBucketName, content.Path)), nil, done(nil), nil, ""))
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToContentData(filePath), nil, done(nil), nil, ""))
 }
