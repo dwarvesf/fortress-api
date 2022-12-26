@@ -792,7 +792,8 @@ func (h *handler) UploadContent(c *gin.Context) {
 	fileName := file.Filename
 	fileExtension := model.ContentExtension(filepath.Ext(fileName))
 	fileSize := file.Size
-	filePrePath := "employees/" + params.ID
+	gcsPath := "employees/" + params.ID
+	filePath := fmt.Sprintf("https://storage.googleapis.com/%s/employees/%s", h.config.Google.GCSBucketName, params.ID)
 	fileType := ""
 
 	// 2.1 validate
@@ -807,7 +808,7 @@ func (h *handler) UploadContent(c *gin.Context) {
 			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrInvalidFileSize, nil, ""))
 			return
 		}
-		filePrePath = filePrePath + "/images"
+		filePath = filePath + "/images"
 		fileType = "image"
 	}
 	if fileExtension == model.ContentExtensionPdf {
@@ -816,14 +817,15 @@ func (h *handler) UploadContent(c *gin.Context) {
 			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrInvalidFileSize, nil, ""))
 			return
 		}
-		filePrePath = filePrePath + "/docs"
+		filePath = filePath + "/docs"
 		fileType = "document"
 	}
+	filePath = filePath + "/" + fileName
 
 	tx, done := h.repo.NewTransaction()
 
 	// 2.2 check file name exist
-	_, err = h.store.Content.GetByPath(tx.DB(), filePrePath+"/"+fileName)
+	_, err = h.store.Content.GetByPath(tx.DB(), filePath)
 	if err != nil && err != gorm.ErrRecordNotFound {
 		l.Error(err, "error query content from db")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
@@ -855,7 +857,7 @@ func (h *handler) UploadContent(c *gin.Context) {
 	content, err := h.store.Content.Create(tx.DB(), model.Content{
 		Type:       fileType,
 		Extension:  fileExtension.String(),
-		Path:       filePrePath + "/" + fileName,
+		Path:       filePath,
 		EmployeeID: employee.ID,
 		UploadBy:   employee.ID,
 	})
@@ -875,7 +877,7 @@ func (h *handler) UploadContent(c *gin.Context) {
 	}
 
 	// 3. Upload to GCS
-	err = h.service.Google.UploadContentGCS(multipart, content.Path)
+	err = h.service.Google.UploadContentGCS(multipart, gcsPath)
 	if err != nil {
 		l.Error(err, "error in upload file")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
@@ -884,7 +886,7 @@ func (h *handler) UploadContent(c *gin.Context) {
 	}
 	done(nil)
 
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToContentData(fmt.Sprintf("https://storage.googleapis.com/%s/%s", h.config.Google.GCSBucketName, content.Path)), nil, nil, nil, ""))
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToContentData(content.Path), nil, nil, nil, ""))
 }
 
 // UploadAvatar godoc
@@ -943,9 +945,8 @@ func (h *handler) UploadAvatar(c *gin.Context) {
 	fileName := file.Filename
 	fileExtension := model.ContentExtension(filepath.Ext(fileName))
 	fileSize := file.Size
-	filePath := "employees/" + params.ID + "/images/" + fileName
 	fileType := "image"
-
+	filePath := fmt.Sprintf("https://storage.googleapis.com/%s/employees/%s/images/%s", h.config.Google.GCSBucketName, params.ID, fileName)
 	// 2.1 validate
 	if !fileExtension.ImageValid() {
 		l.Info("invalid file extension")
@@ -987,7 +988,7 @@ func (h *handler) UploadAvatar(c *gin.Context) {
 	}
 	if err != nil && err == gorm.ErrRecordNotFound {
 		// not found => create and upload content to GCS
-		content, err := h.store.Content.Create(tx.DB(), model.Content{
+		_, err = h.store.Content.Create(tx.DB(), model.Content{
 			Type:       fileType,
 			Extension:  fileExtension.String(),
 			Path:       filePath,
@@ -1009,7 +1010,7 @@ func (h *handler) UploadAvatar(c *gin.Context) {
 			return
 		}
 
-		err = h.service.Google.UploadContentGCS(multipart, content.Path)
+		err = h.service.Google.UploadContentGCS(multipart, "employees/"+params.ID+"/images")
 		if err != nil {
 			l.Error(err, "error in upload file")
 			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
@@ -1021,7 +1022,7 @@ func (h *handler) UploadAvatar(c *gin.Context) {
 	// 3. update avatar field
 	_, err = h.store.Employee.UpdateSelectedFieldsByID(tx.DB(), employee.ID.String(), model.Employee{
 		Avatar: filePath,
-	}, "Avatar")
+	}, "avatar")
 	if err != nil {
 		l.Error(err, "error in update avatar")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
@@ -1031,5 +1032,5 @@ func (h *handler) UploadAvatar(c *gin.Context) {
 
 	done(nil)
 
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToContentData(fmt.Sprintf("https://storage.googleapis.com/%s/%s", h.config.Google.GCSBucketName, filePath)), nil, nil, nil, ""))
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToContentData(filePath), nil, nil, nil, ""))
 }
