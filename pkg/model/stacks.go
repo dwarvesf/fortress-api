@@ -3,8 +3,9 @@ package model
 type Stack struct {
 	BaseModel
 
-	Name string `json:"name"`
-	Code string `json:"code"`
+	Name   string `json:"name"`
+	Code   string `json:"code"`
+	Avatar string `json:"avatar"`
 }
 
 // ToStackMap create map from stacks

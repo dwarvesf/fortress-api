@@ -17,7 +17,7 @@ type ChapterResponse struct {
 }
 
 type StackResponse struct {
-	Data []model.Chapter `json:"data"`
+	Data []model.Stack `json:"data"`
 }
 
 type AccountRoleResponse struct {

@@ -13,21 +13,24 @@
                 "createdAt": "2022-11-11T18:38:46.266725Z",
                 "updatedAt": "2022-11-11T18:38:46.266725Z",
                 "name": "Golang",
-                "code": "golang"
+                "code": "golang",
+                "avatar": ""
             },
             {
                 "id": "fa0f4e46-7eab-4e5c-9d31-30489e69fe2e",
                 "createdAt": "2022-11-11T18:38:46.266725Z",
                 "updatedAt": "2022-11-11T18:38:46.266725Z",
                 "name": "React",
-                "code": "react"
+                "code": "react",
+                "avatar": ""
             },
             {
                 "id": "b403ef95-4269-4830-bbb6-8e56e5ec0af4",
                 "createdAt": "2022-11-11T18:38:46.266725Z",
                 "updatedAt": "2022-11-11T18:38:46.266725Z",
                 "name": "Google Cloud",
-                "code": "gcloud"
+                "code": "gcloud",
+                "avatar": ""
             }
         ]
     }
