@@ -128,12 +128,7 @@ func ToListFeedbackDetails(questions []*model.EmployeeEventQuestion, detailInfo 
 		})
 	}
 
-	rs.Reviewer = BasicEmployeeInfo{
-		ID:          detailInfo.Reviewer.ID.String(),
-		FullName:    detailInfo.Reviewer.FullName,
-		DisplayName: detailInfo.Reviewer.DisplayName,
-		Avatar:      detailInfo.Reviewer.Avatar,
-	}
+	rs.Reviewer = *toBasicEmployeeInfo(*detailInfo.Reviewer)
 
 	if detailInfo.Project != nil {
 		rs.Project = toBasicProjectInfo(*detailInfo.Project)

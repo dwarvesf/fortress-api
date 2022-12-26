@@ -4122,6 +4122,9 @@
                 },
                 "id": {
                     "type": "string"
+                },
+                "username": {
+                    "type": "string"
                 }
             }
         },
@@ -4138,6 +4141,9 @@
                     "type": "string"
                 },
                 "fullName": {
+                    "type": "string"
+                },
+                "username": {
                     "type": "string"
                 }
             }
@@ -4158,6 +4164,9 @@
                     "type": "string"
                 },
                 "position": {
+                    "type": "string"
+                },
+                "username": {
                     "type": "string"
                 }
             }
@@ -4266,6 +4275,9 @@
                     "$ref": "#/definitions/model.Seniority"
                 },
                 "status": {
+                    "type": "string"
+                },
+                "username": {
                     "type": "string"
                 }
             }
@@ -4963,6 +4975,9 @@
                 },
                 "fullName": {
                     "type": "string"
+                },
+                "username": {
+                    "type": "string"
                 }
             }
         },
@@ -5026,6 +5041,9 @@
                     "$ref": "#/definitions/model.Seniority"
                 },
                 "status": {
+                    "type": "string"
+                },
+                "username": {
                     "type": "string"
                 }
             }

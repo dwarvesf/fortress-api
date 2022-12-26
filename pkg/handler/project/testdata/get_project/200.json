@@ -26,6 +26,7 @@
                 "fullName": "Phạm Đức Thành",
                 "displayName": "Thanh Pham",
                 "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
+                "username": "thanh",
                 "status": "active",
                 "isLead": false,
                 "deploymentType": "official",
@@ -55,6 +56,7 @@
                 "fullName": "Nguyễn Hoàng Huy",
                 "displayName": "Huy Nguyen",
                 "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/2830497479497502617.png",
+                "username": "huynh",
                 "status": "active",
                 "isLead": false,
                 "deploymentType": "shadow",
@@ -84,6 +86,7 @@
                 "fullName": "Nguyễn Hải Nam",
                 "displayName": "Nam Nguyen",
                 "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/8399103964540935617.png",
+                "username": "benjamin",
                 "status": "active",
                 "isLead": true,
                 "deploymentType": "official",
@@ -113,6 +116,7 @@
                 "fullName": "Nguyễn Ngô Lập",
                 "displayName": "Lap Nguyen",
                 "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/2870969541970972723.png",
+                "username": "alan",
                 "status": "active",
                 "isLead": false,
                 "deploymentType": "official",
@@ -142,6 +146,7 @@
                 "fullName": "Tiêu Quang Huy",
                 "displayName": "Huy Tieu",
                 "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/3c420751-bb9a-4878-896e-2f10f3a633d6_avatar2535921977139052349.png",
+                "username": "huytq",
                 "status": "active",
                 "isLead": false,
                 "deploymentType": "shadow",
@@ -170,26 +175,30 @@
                 "employeeID": "8d7c99c0-3253-4286-93a9-e7554cb327ef",
                 "fullName": "Nguyễn Hải Nam",
                 "displayName": "Nam Nguyen",
-                "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/8399103964540935617.png"
+                "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/8399103964540935617.png",
+                "username": "benjamin"
             }
         ],
         "accountManager": {
             "employeeID": "2655832e-f009-4b73-a535-64c3a22e558f",
             "fullName": "Phạm Đức Thành",
             "displayName": "Thanh Pham",
-            "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png"
+            "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
+            "username": "thanh"
         },
         "salePerson": {
             "employeeID": "608ea227-45a5-4c8a-af43-6c7280d96340",
             "fullName": "Tiêu Quang Huy",
             "displayName": "Huy Tieu",
-            "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/3c420751-bb9a-4878-896e-2f10f3a633d6_avatar2535921977139052349.png"
+            "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/3c420751-bb9a-4878-896e-2f10f3a633d6_avatar2535921977139052349.png",
+            "username": "huytq"
         },
         "deliveryManager": {
             "employeeID": "2655832e-f009-4b73-a535-64c3a22e558f",
             "fullName": "Phạm Đức Thành",
             "displayName": "Thanh Pham",
-            "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png"
+            "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
+            "username": "thanh"
         },
         "stacks": [
             {

@@ -81,6 +81,7 @@ type BasicEmployeeInfo struct {
 	FullName    string `json:"fullName"`
 	DisplayName string `json:"displayName"`
 	Avatar      string `json:"avatar"`
+	Username    string `json:"username"`
 }
 
 type UpdateEmployeeStatusResponse struct {
@@ -168,11 +169,7 @@ func ToUpdateGeneralInfoEmployeeData(employee *model.Employee) *UpdateGeneralInf
 	}
 
 	if employee.LineManager != nil {
-		rs.LineManager = &BasicEmployeeInfo{
-			ID:       employee.LineManager.ID.String(),
-			FullName: employee.LineManager.FullName,
-			Avatar:   employee.LineManager.Avatar,
-		}
+		rs.LineManager = toBasicEmployeeInfo(*employee.LineManager)
 	}
 
 	return rs
@@ -186,12 +183,7 @@ func ToEmployeeData(employee *model.Employee) *EmployeeData {
 	}
 	var lineManager *BasicEmployeeInfo
 	if employee.LineManager != nil {
-		lineManager = &BasicEmployeeInfo{
-			ID:          employee.LineManager.BaseModel.ID.String(),
-			FullName:    employee.LineManager.FullName,
-			DisplayName: employee.LineManager.DisplayName,
-			Avatar:      employee.LineManager.Avatar,
-		}
+		lineManager = toBasicEmployeeInfo(*employee.LineManager)
 	}
 
 	rs := &EmployeeData{
@@ -265,5 +257,6 @@ func toBasicEmployeeInfo(employee model.Employee) *BasicEmployeeInfo {
 		FullName:    employee.FullName,
 		DisplayName: employee.DisplayName,
 		Avatar:      employee.Avatar,
+		Username:    employee.Username,
 	}
 }

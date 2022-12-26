@@ -9,6 +9,17 @@ type BasicMember struct {
 	FullName    string `json:"fullName"`
 	DisplayName string `json:"displayName"`
 	Avatar      string `json:"avatar"`
+	Userame     string `json:"username"`
+}
+
+func toBasicMember(employee model.Employee) *BasicMember {
+	return &BasicMember{
+		EmployeeID:  employee.ID.String(),
+		FullName:    employee.FullName,
+		DisplayName: employee.DisplayName,
+		Avatar:      employee.Avatar,
+		Userame:     employee.Username,
+	}
 }
 
 type WorkUnit struct {
@@ -34,13 +45,7 @@ func ToWorkUnit(workUnit *model.WorkUnit) WorkUnit {
 
 	members := make([]BasicMember, 0, len(workUnit.WorkUnitMembers))
 	for _, v := range workUnit.WorkUnitMembers {
-		member := BasicMember{
-			EmployeeID:  v.EmployeeID.String(),
-			FullName:    v.Employee.FullName,
-			DisplayName: v.Employee.DisplayName,
-			Avatar:      v.Employee.Avatar,
-		}
-		members = append(members, member)
+		members = append(members, *toBasicMember(v.Employee))
 	}
 	rs.Members = members
 
@@ -80,12 +85,7 @@ func ToWorkUnitList(workUnits []*model.WorkUnit, projectID string) []*WorkUnit {
 		}
 
 		for _, member := range wu.WorkUnitMembers {
-			newWorkUnit.Members = append(newWorkUnit.Members, BasicMember{
-				EmployeeID:  member.EmployeeID.String(),
-				FullName:    member.Employee.FullName,
-				DisplayName: member.Employee.DisplayName,
-				Avatar:      member.Employee.Avatar,
-			})
+			newWorkUnit.Members = append(newWorkUnit.Members, *toBasicMember(member.Employee))
 		}
 
 		for _, wStack := range wu.WorkUnitStacks {

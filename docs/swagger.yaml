@@ -557,6 +557,8 @@ definitions:
         type: string
       id:
         type: string
+      username:
+        type: string
     type: object
   view.BasicMember:
     properties:
@@ -567,6 +569,8 @@ definitions:
       employeeID:
         type: string
       fullName:
+        type: string
+      username:
         type: string
     type: object
   view.BasicProjectHeadInfo:
@@ -580,6 +584,8 @@ definitions:
       fullName:
         type: string
       position:
+        type: string
+      username:
         type: string
     type: object
   view.BasicProjectInfo:
@@ -650,6 +656,8 @@ definitions:
       seniority:
         $ref: '#/definitions/model.Seniority'
       status:
+        type: string
+      username:
         type: string
     type: object
   view.CreateMemberDataResponse:
@@ -1105,6 +1113,8 @@ definitions:
         type: string
       fullName:
         type: string
+      username:
+        type: string
     type: object
   view.ProjectListDataResponse:
     properties:
@@ -1146,6 +1156,8 @@ definitions:
       seniority:
         $ref: '#/definitions/model.Seniority'
       status:
+        type: string
+      username:
         type: string
     type: object
   view.ProjectMemberListResponse:

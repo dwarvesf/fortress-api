@@ -8,29 +8,33 @@
                 "fullName": "Phạm Đức Thành",
                 "displayName": "Thanh Pham",
                 "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
-                "position": "account-manager"
+                "position": "account-manager",
+                "username": "thanh"
             },
             {
                 "employeeID": "8d7c99c0-3253-4286-93a9-e7554cb327ef",
                 "fullName": "Nguyễn Hải Nam",
                 "displayName": "Nam Nguyen",
                 "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/8399103964540935617.png",
-                "position": "technical-lead"
+                "position": "technical-lead",
+                "username": "benjamin"
             },
             {
                 "employeeID": "608ea227-45a5-4c8a-af43-6c7280d96340",
                 "fullName": "Tiêu Quang Huy",
                 "displayName": "Huy Tieu",
                 "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/3c420751-bb9a-4878-896e-2f10f3a633d6_avatar2535921977139052349.png",
-                "position": "sale-person"
+                "position": "sale-person",
+                "username": "huytq"
             },
             {
                 "employeeID": "ecea9d15-05ba-4a4e-9787-54210e3b98ce",
                 "fullName": "Nguyễn Hoàng Huy",
                 "displayName": "Huy Nguyen",
                 "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/2830497479497502617.png",
-                "position": "delivery-manager"
-            }
+                "position": "delivery-manager",
+                "username": "huynh"
+        }
         ]
     }
 }

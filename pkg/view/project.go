@@ -46,6 +46,7 @@ type ProjectMember struct {
 	FullName        string          `json:"fullName"`
 	DisplayName     string          `json:"displayName"`
 	Avatar          string          `json:"avatar"`
+	Username        string          `json:"username"`
 	Status          string          `json:"status"`
 	IsLead          bool            `json:"isLead"`
 	DeploymentType  string          `json:"deploymentType"`
@@ -63,6 +64,7 @@ type ProjectHead struct {
 	FullName    string `json:"fullName"`
 	DisplayName string `json:"displayName"`
 	Avatar      string `json:"avatar"`
+	Username    string `json:"username"`
 }
 
 func ToProjectHead(head *model.ProjectHead) *ProjectHead {
@@ -71,6 +73,7 @@ func ToProjectHead(head *model.ProjectHead) *ProjectHead {
 		FullName:    head.Employee.FullName,
 		DisplayName: head.Employee.DisplayName,
 		Avatar:      head.Employee.Avatar,
+		Username:    head.Employee.Username,
 	}
 }
 
@@ -94,31 +97,26 @@ func ToProjectData(project *model.Project) ProjectData {
 	var technicalLeads = make([]ProjectHead, 0, len(project.Heads))
 	var accountManager, salePerson, deliveryManager *ProjectHead
 	for _, h := range project.Heads {
-		head := ProjectHead{
-			EmployeeID:  h.EmployeeID.String(),
-			FullName:    h.Employee.FullName,
-			DisplayName: h.Employee.DisplayName,
-			Avatar:      h.Employee.Avatar,
-		}
+		head := ToProjectHead(h)
 
 		if h.IsLead() {
 			leadMap[h.EmployeeID.String()] = true
-			technicalLeads = append(technicalLeads, head)
+			technicalLeads = append(technicalLeads, *head)
 			continue
 		}
 
 		if h.IsAccountManager() {
-			accountManager = &head
+			accountManager = head
 			continue
 		}
 
 		if h.IsSalePerson() {
-			salePerson = &head
+			salePerson = head
 			continue
 		}
 
 		if h.IsDeliveryManager() {
-			deliveryManager = &head
+			deliveryManager = head
 		}
 	}
 
@@ -142,6 +140,7 @@ func ToProjectData(project *model.Project) ProjectData {
 			member.FullName = m.Employee.FullName
 			member.DisplayName = m.Employee.DisplayName
 			member.Avatar = m.Employee.Avatar
+			member.Username = m.Employee.Username
 			member.Seniority = m.Seniority
 			member.IsLead = leadMap[m.EmployeeID.String()]
 			member.Positions = ToProjectMemberPositions(m.ProjectMemberPositions)
@@ -226,6 +225,7 @@ type CreateMemberData struct {
 	Status          string          `json:"status"`
 	IsLead          bool            `json:"isLead"`
 	Seniority       model.Seniority `json:"seniority"`
+	Username        string          `json:"username"`
 }
 
 type CreateMemberDataResponse struct {
@@ -238,6 +238,7 @@ func ToCreateMemberData(slot *model.ProjectSlot) CreateMemberData {
 		FullName:       slot.ProjectMember.Employee.FullName,
 		DisplayName:    slot.ProjectMember.Employee.DisplayName,
 		Avatar:         slot.ProjectMember.Employee.Avatar,
+		Username:       slot.ProjectMember.Employee.Username,
 		DeploymentType: slot.DeploymentType.String(),
 		Status:         slot.Status.String(),
 		Positions:      ToProjectSlotPositions(slot.ProjectSlotPositions),
@@ -339,6 +340,7 @@ func ToProjectMemberListData(slots []*model.ProjectSlot, projectHeads []*model.P
 			member.FullName = m.Employee.FullName
 			member.DisplayName = m.Employee.DisplayName
 			member.Avatar = m.Employee.Avatar
+			member.Username = m.Employee.Username
 			member.JoinedDate = m.JoinedDate
 			member.IsLead = leadMap[m.EmployeeID.String()]
 			member.Rate = m.Rate
@@ -406,6 +408,7 @@ type BasicProjectHeadInfo struct {
 	DisplayName string             `json:"displayName"`
 	Avatar      string             `json:"avatar"`
 	Position    model.HeadPosition `json:"position"`
+	Username    string             `json:"username"`
 }
 
 type UpdateProjectContactInfo struct {
@@ -427,6 +430,7 @@ func ToUpdateProjectContactInfo(project *model.Project) UpdateProjectContactInfo
 			Avatar:      v.Employee.Avatar,
 			DisplayName: v.Employee.DisplayName,
 			Position:    v.Position,
+			Username:    v.Employee.Username,
 		})
 	}
 
