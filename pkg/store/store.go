@@ -4,6 +4,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/store/chapter"
 	"github.com/dwarvesf/fortress-api/pkg/store/content"
 	"github.com/dwarvesf/fortress-api/pkg/store/country"
+	"github.com/dwarvesf/fortress-api/pkg/store/dashboard"
 	"github.com/dwarvesf/fortress-api/pkg/store/employee"
 	"github.com/dwarvesf/fortress-api/pkg/store/employeechapter"
 	"github.com/dwarvesf/fortress-api/pkg/store/employeeeventquestion"
@@ -62,6 +63,7 @@ type Store struct {
 	FeedbackEvent         feedbackevent.IStore
 	EmployeeEventReviewer employeeeventreviewer.IStore
 	EmployeeMentee        employeementee.IStore
+	Dashboard             dashboard.IStore
 }
 
 func New() *Store {
@@ -95,5 +97,6 @@ func New() *Store {
 		FeedbackEvent:         feedbackevent.New(),
 		EmployeeEventReviewer: employeeeventreviewer.New(),
 		EmployeeMentee:        employeementee.New(),
+		Dashboard:             dashboard.New(),
 	}
 }
