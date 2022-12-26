@@ -2109,7 +2109,7 @@ func (h *handler) UploadAvatar(c *gin.Context) {
 	fileName := file.Filename
 	fileExtension := model.ContentExtension(filepath.Ext(fileName))
 	fileSize := file.Size
-	filePath := "projects/" + params.ID + "/images/" + fileName
+	filePath := fmt.Sprintf("https://storage.googleapis.com/%s/projects/%s/images/%s", h.config.Google.GCSBucketName, params.ID, fileName)
 
 	// 2.1 validate
 	if !fileExtension.ImageValid() {
@@ -2162,7 +2162,7 @@ func (h *handler) UploadAvatar(c *gin.Context) {
 	// 3. update avatar field
 	_, err = h.store.Project.UpdateSelectedFieldsByID(tx.DB(), params.ID, model.Project{
 		Avatar: filePath,
-	}, "Avatar")
+	}, "avatar")
 	if err != nil {
 		l.Error(err, "error in update avatar")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
@@ -2172,5 +2172,5 @@ func (h *handler) UploadAvatar(c *gin.Context) {
 
 	done(nil)
 
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToProjectContentData(fmt.Sprintf("https://storage.googleapis.com/%s/%s", h.config.Google.GCSBucketName, filePath)), nil, nil, nil, ""))
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToProjectContentData(filePath), nil, nil, nil, ""))
 }
