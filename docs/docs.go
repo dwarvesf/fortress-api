@@ -3800,8 +3800,8 @@ const docTemplate = `{
                 },
                 "phone": {
                     "type": "string",
-                    "maxLength": 12,
-                    "minLength": 10
+                    "maxLength": 18,
+                    "minLength": 9
                 }
             }
         },

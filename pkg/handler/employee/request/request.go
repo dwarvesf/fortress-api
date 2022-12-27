@@ -22,7 +22,7 @@ type GetListEmployeeQuery struct {
 type UpdateEmployeeGeneralInfoInput struct {
 	FullName      string     `form:"fullName" json:"fullName" binding:"required,max=99"`
 	Email         string     `form:"email" json:"email" binding:"required,email"`
-	Phone         string     `form:"phone" json:"phone" binding:"required,max=12,min=10"`
+	Phone         string     `form:"phone" json:"phone" binding:"required,max=18,min=9"`
 	LineManagerID model.UUID `form:"lineManagerID" json:"lineManagerID"`
 	GithubID      string     `form:"githubID" json:"githubID"`
 	NotionID      string     `form:"notionID" json:"notionID"`
