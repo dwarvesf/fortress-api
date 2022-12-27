@@ -1,6 +1,7 @@
 package request
 
 import (
+	"github.com/dwarvesf/fortress-api/pkg/utils"
 	"time"
 
 	"github.com/dwarvesf/fortress-api/pkg/handler/project/errs"
@@ -36,14 +37,19 @@ type UpdateAccountStatusBody struct {
 	ProjectStatus model.ProjectStatus `json:"status"`
 }
 
+func (i *GetListProjectInput) StandardizeInput(){
+	statuses := utils.RemoveEmptyString(i.Status)
+	i.Pagination.Standardize()
+	i.Status = statuses
+}
+
 func (i *GetListProjectInput) Validate() error {
 	if i.Type != "" && !model.ProjectType(i.Type).IsValid() {
 		return errs.ErrInvalidProjectType
 	}
-
 	if len(i.Status) > 0 {
 		for _, status := range i.Status {
-			if !model.ProjectStatus(status).IsValid() {
+			if utils.RemoveAllSpace(status) != "" && !model.ProjectStatus(status).IsValid() {
 				return errs.ErrInvalidProjectStatus
 			}
 		}
