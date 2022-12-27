@@ -1349,18 +1349,24 @@ func (h *handler) updateProjectHead(db *gorm.DB, projectID string, employeeID mo
 		return nil, err
 	}
 
-	// if employee is the head, do nothing;
-	// else update left_date of old head and create new head
+	// - For delivery-manager & account-manager:
+	// 		if employee is the head, do nothing;
+	// 		else update left_date of old head and create new head
+	// - For technical-lead:
+	//		if employee is the head, do nothing;
+	//		else create new head
 	if err == nil {
 		if head.EmployeeID == employeeID {
 			return head, nil
 		}
 
-		head.LeftDate = &timeNow
-		_, err := h.store.ProjectHead.UpdateSelectedFieldsByID(db, head.ID.String(), *head, "left_date")
-		if err != nil {
-			h.logger.Fields(logger.Fields{"head": *head}).Error(err, "failed to update project head")
-			return nil, err
+		if position == model.HeadPositionAccountManager || position == model.HeadPositionDeliveryManager {
+			head.LeftDate = &timeNow
+			_, err := h.store.ProjectHead.UpdateSelectedFieldsByID(db, head.ID.String(), *head, "left_date")
+			if err != nil {
+				h.logger.Fields(logger.Fields{"head": *head}).Error(err, "failed to update project head")
+				return nil, err
+			}
 		}
 	}
 
