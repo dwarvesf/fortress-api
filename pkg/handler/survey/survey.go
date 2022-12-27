@@ -878,9 +878,16 @@ func (h *handler) SendSurvey(c *gin.Context) {
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, done(nil), "ok"))
 }
 
-func (h *handler) updateEventReviewer(db *gorm.DB, l logger.Logger, data request.Survey, eventID string) (int, error) {
+func (h *handler) updateEventReviewer(db *gorm.DB, l logger.Logger, topicID model.UUID, eventID string) (int, error) {
+	// Get all reviewers by topicID
+	reviewers, err := h.store.EmployeeEventReviewer.GetByTopicID(db, topicID.String())
+	if err != nil {
+		l.Error(err, "failed to get employee event reviewers")
+		return http.StatusInternalServerError, err
+	}
+
 	// Validate EventID and TopicID
-	_, err := h.store.EmployeeEventTopic.One(db, data.TopicID.String(), eventID, false)
+	_, err = h.store.EmployeeEventTopic.One(db, topicID.String(), eventID, false)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		l.Error(errs.ErrTopicNotFound, "topic not found")
 		return http.StatusNotFound, errs.ErrTopicNotFound
@@ -908,25 +915,14 @@ func (h *handler) updateEventReviewer(db *gorm.DB, l logger.Logger, data request
 	}
 
 	// Update status for employee reviewers
-	for _, participant := range data.Participants {
-		eventReviewer, err := h.store.EmployeeEventReviewer.GetByReviewerID(db, participant.String(), data.TopicID.String())
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			l.Errorf(err, "not found employee reviewer with reviewer id = ", participant.String())
-			return http.StatusNotFound, err
-		}
-
-		if err != nil {
-			l.Errorf(err, "failed to get employee reviewer for reviewer ", participant.String())
-			return http.StatusInternalServerError, err
-		}
-
+	for _, eventReviewer := range reviewers {
 		if eventReviewer.ReviewerStatus == model.EventReviewerStatusNone {
 			eventReviewer.ReviewerStatus = model.EventReviewerStatusNew
 			eventReviewer.AuthorStatus = model.EventAuthorStatusSent
 
 			_, err = h.store.EmployeeEventReviewer.UpdateSelectedFieldsByID(db, eventReviewer.ID.String(), *eventReviewer, "reviewer_status", "author_status")
 			if err != nil {
-				l.Errorf(err, "failed to update employee reviewer for reviewer ", participant.String())
+				l.Errorf(err, "failed to update employee reviewer for reviewer ", eventReviewer.ID.String())
 				return http.StatusInternalServerError, err
 			}
 		}
