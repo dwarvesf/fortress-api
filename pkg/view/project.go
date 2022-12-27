@@ -206,7 +206,7 @@ type EmployeeProjectData struct {
 
 func ToEmployeeProjectData(pm *model.ProjectMember) EmployeeProjectData {
 	return EmployeeProjectData{
-		ID:             pm.ID.String(),
+		ID:             pm.ProjectID.String(),
 		Name:           pm.Project.Name,
 		DeploymentType: pm.DeploymentType.String(),
 		Positions:      ToProjectMemberPositions(pm.ProjectMemberPositions),
