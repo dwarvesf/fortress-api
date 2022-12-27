@@ -3725,7 +3725,7 @@ const docTemplate = `{
                 "topics": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/request.Survey"
+                        "type": "string"
                     }
                 }
             }
@@ -3744,24 +3744,6 @@ const docTemplate = `{
                     }
                 },
                 "status": {
-                    "type": "string"
-                }
-            }
-        },
-        "request.Survey": {
-            "type": "object",
-            "required": [
-                "participants",
-                "topicID"
-            ],
-            "properties": {
-                "participants": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "topicID": {
                     "type": "string"
                 }
             }

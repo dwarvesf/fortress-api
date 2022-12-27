@@ -37,13 +37,8 @@ func (i *GetSurveyDetailInput) Validate() error {
 	return nil
 }
 
-type Survey struct {
-	TopicID      model.UUID   `json:"topicID" form:"topicID" binding:"required"`
-	Participants []model.UUID `json:"participants" form:"participants" binding:"required"`
-}
-
 type SendSurveyInput struct {
-	Topics []Survey `json:"topics" form:"topics" binding:"required"`
+	Topics []model.UUID `json:"topics" form:"topics" binding:"required"`
 }
 
 // CreateSurveyFeedbackInput view for create survey feedback

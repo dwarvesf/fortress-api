@@ -280,7 +280,7 @@ definitions:
     properties:
       topics:
         items:
-          $ref: '#/definitions/request.Survey'
+          type: string
         type: array
     required:
     - topics
@@ -296,18 +296,6 @@ definitions:
     required:
     - answers
     - status
-    type: object
-  request.Survey:
-    properties:
-      participants:
-        items:
-          type: string
-        type: array
-      topicID:
-        type: string
-    required:
-    - participants
-    - topicID
     type: object
   request.UpdateContactInfoInput:
     properties:

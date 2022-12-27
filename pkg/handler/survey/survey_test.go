@@ -149,13 +149,8 @@ func TestHandler_SendPerformanceReview(t *testing.T) {
 			wantCode:         http.StatusOK,
 			wantResponsePath: "testdata/send_survey/200_perfomance_review.json",
 			body: request.SendSurveyInput{
-				Topics: []request.Survey{
-					{
-						TopicID: model.MustGetUUIDFromString("e4a33adc-2495-43cf-b816-32feb8d5250d"),
-						Participants: []model.UUID{
-							model.MustGetUUIDFromString("061820c0-bf6c-4b4a-9753-875f75d71a2c"),
-						},
-					},
+				Topics: []model.UUID{
+					model.MustGetUUIDFromString("e4a33adc-2495-43cf-b816-32feb8d5250d"),
 				},
 			},
 		},
@@ -165,13 +160,8 @@ func TestHandler_SendPerformanceReview(t *testing.T) {
 			wantCode:         http.StatusOK,
 			wantResponsePath: "testdata/send_survey/200_send_engagement.json",
 			body: request.SendSurveyInput{
-				Topics: []request.Survey{
-					{
-						TopicID: model.MustGetUUIDFromString("ebf376a6-3d11-4cea-b464-593103258838"),
-						Participants: []model.UUID{
-							model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
-						},
-					},
+				Topics: []model.UUID{
+					model.MustGetUUIDFromString("ebf376a6-3d11-4cea-b464-593103258838"),
 				},
 			},
 		},
@@ -181,13 +171,8 @@ func TestHandler_SendPerformanceReview(t *testing.T) {
 			wantCode:         http.StatusNotFound,
 			wantResponsePath: "testdata/send_survey/404.json",
 			body: request.SendSurveyInput{
-				Topics: []request.Survey{
-					{
-						TopicID: model.MustGetUUIDFromString("e4a33adc-2495-43cf-b816-32feb8d5250d"),
-						Participants: []model.UUID{
-							model.MustGetUUIDFromString("061820c0-bf6c-4b4a-9753-875f75d71a2c"),
-						},
-					},
+				Topics: []model.UUID{
+					model.MustGetUUIDFromString("e4a33adc-2495-43cf-b816-32feb8d5250d"),
 				},
 			},
 		},
