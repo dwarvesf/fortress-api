@@ -232,10 +232,6 @@ definitions:
     properties:
       fromDate:
         type: string
-      projectIDs:
-        items:
-          type: string
-        type: array
       quarter:
         type: string
       toDate:

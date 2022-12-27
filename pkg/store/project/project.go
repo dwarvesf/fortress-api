@@ -35,6 +35,10 @@ func (s *store) All(db *gorm.DB, input GetListProjectInput, pagination model.Pag
 		query = query.Where("type = ?", input.Type)
 	}
 
+	if input.AllowsSendingSurvey {
+		query = query.Where("allows_sending_survey = ?", input.AllowsSendingSurvey)
+	}
+
 	if pagination.Sort != "" {
 		query = query.Order(pagination.Sort)
 	} else {

@@ -18,6 +18,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/store/employeeeventtopic"
+	"github.com/dwarvesf/fortress-api/pkg/store/project"
 	"github.com/dwarvesf/fortress-api/pkg/utils"
 	"github.com/dwarvesf/fortress-api/pkg/view"
 )
@@ -669,10 +670,6 @@ func (h *handler) createWorkEvent(db *gorm.DB, req request.CreateSurveyFeedbackI
 		return http.StatusBadRequest, errs.ErrInvalidDateRange
 	}
 
-	if len(req.ProjectIDs) <= 0 {
-		return http.StatusBadRequest, errs.ErrEmptyProjectIDs
-	}
-
 	title := fromDate.Format("Jan 02, 2006")
 
 	//1.2 check event existed
@@ -711,8 +708,25 @@ func (h *handler) createWorkEvent(db *gorm.DB, req request.CreateSurveyFeedbackI
 		return http.StatusInternalServerError, err
 	}
 
+	projects, _, err := h.store.Project.All(db, project.GetListProjectInput{
+		Statuses: []string{model.ProjectStatusActive.String()},
+		AllowsSendingSurvey: true,
+	}, model.Pagination{})
+	if err != nil {
+		return http.StatusInternalServerError, err
+	}
+
+	if len(projects) < 1 {
+		return http.StatusNotFound, errs.ErrNoValidProjectForEvent
+	}
+
+	projectIDs := make([]string, 0)
+	for _, p := range projects {
+		projectIDs = append(projectIDs, p.ID.String())
+	}
+
 	//3. create EmployeeEventTopic
-	employees, err := h.store.ProjectMember.GetByProjectIDs(db, req.ProjectIDs)
+	employees, err := h.store.ProjectMember.GetByProjectIDs(db, projectIDs)
 	if err != nil {
 		return http.StatusInternalServerError, err
 	}
