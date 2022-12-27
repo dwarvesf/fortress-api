@@ -31,9 +31,10 @@ type WorkUnit struct {
 	Type      string        `json:"type"`
 	Status    string        `json:"status"`
 	ProjectID string        `json:"projectID"`
+	Code      string        `json:"code"`
 }
 
-func ToWorkUnit(workUnit *model.WorkUnit) WorkUnit {
+func ToWorkUnit(workUnit *model.WorkUnit, projectCode string) WorkUnit {
 	rs := WorkUnit{
 		ID:        workUnit.ID.String(),
 		Name:      workUnit.Name,
@@ -41,6 +42,7 @@ func ToWorkUnit(workUnit *model.WorkUnit) WorkUnit {
 		Status:    workUnit.Status.String(),
 		URL:       workUnit.SourceURL,
 		ProjectID: workUnit.ProjectID.String(),
+		Code:      projectCode,
 	}
 
 	members := make([]BasicMember, 0, len(workUnit.WorkUnitMembers))
@@ -72,7 +74,7 @@ type WorkUnitResponse struct {
 	Data WorkUnit `json:"data"`
 }
 
-func ToWorkUnitList(workUnits []*model.WorkUnit, projectID string) []*WorkUnit {
+func ToWorkUnitList(workUnits []*model.WorkUnit, projectID string, projectCode string) []*WorkUnit {
 	var rs []*WorkUnit
 
 	for _, wu := range workUnits {
@@ -83,6 +85,7 @@ func ToWorkUnitList(workUnits []*model.WorkUnit, projectID string) []*WorkUnit {
 			Type:      wu.Type.String(),
 			Status:    wu.Status.String(),
 			ProjectID: projectID,
+			Code:      projectCode,
 		}
 
 		for _, member := range wu.WorkUnitMembers {

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -199,6 +200,23 @@ func (h *handler) Create(c *gin.Context) {
 		return
 	}
 
+	if body.Code == "" {
+		body.Code = strings.ReplaceAll(strings.ToLower(body.Name), " ", "-")
+	}
+
+	exists, err := h.store.Project.IsExistByCode(h.repo.DB(), body.Code)
+	if err != nil {
+		l.Error(err, "failed to check existence by code")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
+		return
+	}
+
+	if exists {
+		l.Error(errs.ErrDuplicateProjectCode, "failed to create project")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrDuplicateProjectCode, body, ""))
+		return
+	}
+
 	p := &model.Project{
 		Name:         body.Name,
 		CountryID:    body.CountryID,
@@ -208,6 +226,7 @@ func (h *handler) Create(c *gin.Context) {
 		ProjectEmail: body.ProjectEmail,
 		ClientEmail:  body.ClientEmail,
 		Country:      country,
+		Code:         body.Code,
 	}
 
 	tx, done := h.repo.NewTransaction()
@@ -1062,7 +1081,7 @@ func (h *handler) createSlotInProject(db *gorm.DB, projectID string, req request
 // @Router /projects/{id} [get]
 func (h *handler) Details(c *gin.Context) {
 	projectID := c.Param("id")
-	if projectID == "" || !model.IsUUIDFromString(projectID) {
+	if projectID == "" {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidProjectID, nil, ""))
 		return
 	}
@@ -1074,7 +1093,14 @@ func (h *handler) Details(c *gin.Context) {
 		"id":      projectID,
 	})
 
-	project, err := h.store.Project.One(h.repo.DB(), projectID, true)
+	var project *model.Project
+	var err error
+	if !model.IsUUIDFromString(projectID) {
+		project, err = h.store.Project.OneByCode(h.repo.DB(), projectID, true)
+	} else {
+		project, err = h.store.Project.One(h.repo.DB(), projectID, true)
+	}
+
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Info("project not found")
@@ -1416,16 +1442,16 @@ func (h *handler) GetWorkUnits(c *gin.Context) {
 		return
 	}
 
-	isExits, err := h.store.Project.IsExist(h.repo.DB(), input.ProjectID)
+	project, err := h.store.Project.One(h.repo.DB(), input.ProjectID, false)
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			l.Info("project not found")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, input, ""))
+			return
+		}
+
 		l.Info("failed to check if project exists")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input, ""))
-		return
-	}
-
-	if !isExits {
-		l.Info("project not found")
-		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, input, ""))
 		return
 	}
 
@@ -1436,7 +1462,7 @@ func (h *handler) GetWorkUnits(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse(view.ToWorkUnitList(workUnits, input.ProjectID), nil, nil, nil, ""))
+	c.JSON(http.StatusOK, view.CreateResponse(view.ToWorkUnitList(workUnits, input.ProjectID, project.Code), nil, nil, nil, ""))
 }
 
 // CreateWorkUnit godoc
@@ -1475,16 +1501,16 @@ func (h *handler) CreateWorkUnit(c *gin.Context) {
 		return
 	}
 
-	exists, err := h.store.Project.IsExist(h.repo.DB(), input.ProjectID)
+	project, err := h.store.Project.One(h.repo.DB(), input.ProjectID, false)
 	if err != nil {
-		l.Error(err, "failed to check project existence")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input, ""))
-		return
-	}
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			l.Error(errs.ErrProjectNotFound, "project not found")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, nil, ""))
+			return
+		}
 
-	if !exists {
-		l.Error(errs.ErrProjectNotFound, "project not found")
-		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, nil, ""))
+		l.Error(err, "failed to get project")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input, ""))
 		return
 	}
 
@@ -1560,7 +1586,7 @@ func (h *handler) CreateWorkUnit(c *gin.Context) {
 		workUnit.WorkUnitMembers = append(workUnit.WorkUnitMembers, &wuMember)
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse(view.ToWorkUnit(workUnit), nil, done(nil), nil, ""))
+	c.JSON(http.StatusOK, view.CreateResponse(view.ToWorkUnit(workUnit, project.Code), nil, done(nil), nil, ""))
 }
 
 // UpdateWorkUnit godoc

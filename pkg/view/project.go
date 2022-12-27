@@ -27,6 +27,7 @@ type ProjectData struct {
 	SalePerson          *ProjectHead      `json:"salePerson"`
 	DeliveryManager     *ProjectHead      `json:"deliveryManager"`
 	Stacks              []Stack           `json:"stacks"`
+	Code                string            `json:"code"`
 }
 
 type UpdatedProject struct {
@@ -170,6 +171,7 @@ func ToProjectData(project *model.Project) ProjectData {
 		ProjectEmail:        project.ProjectEmail,
 		ClientEmail:         project.ClientEmail,
 		AllowsSendingSurvey: project.AllowsSendingSurvey,
+		Code:                project.Code,
 	}
 
 	if project.Country != nil {
@@ -267,6 +269,7 @@ type CreateProjectData struct {
 	ClientEmail     string             `json:"clientEmail"`
 	ProjectEmail    string             `json:"projectEmail"`
 	Country         *BasicCountryInfo  `json:"country"`
+	Code            string             `json:"code"`
 }
 
 func ToCreateProjectDataResponse(project *model.Project) CreateProjectData {
@@ -278,6 +281,7 @@ func ToCreateProjectDataResponse(project *model.Project) CreateProjectData {
 		Status:       project.Status.String(),
 		ClientEmail:  project.ClientEmail,
 		ProjectEmail: project.ProjectEmail,
+		Code:         project.Code,
 	}
 
 	if project.Country != nil {
@@ -446,6 +450,7 @@ type BasicProjectInfo struct {
 	Name   string `json:"name"`
 	Type   string `json:"type"`
 	Status string `json:"status"`
+	Code   string `json:"code"`
 }
 
 func toBasicProjectInfo(project model.Project) *BasicProjectInfo {
@@ -454,6 +459,7 @@ func toBasicProjectInfo(project model.Project) *BasicProjectInfo {
 		Type:   project.Type.String(),
 		Name:   project.Name,
 		Status: project.Status.String(),
+		Code:   project.Code,
 	}
 }
 

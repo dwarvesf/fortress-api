@@ -3612,6 +3612,9 @@ const docTemplate = `{
                 "clientEmail": {
                     "type": "string"
                 },
+                "code": {
+                    "type": "string"
+                },
                 "countryID": {
                     "type": "string"
                 },
@@ -4185,6 +4188,9 @@ const docTemplate = `{
         "view.BasicProjectInfo": {
             "type": "object",
             "properties": {
+                "code": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "string"
                 },
@@ -4308,6 +4314,9 @@ const docTemplate = `{
                     "$ref": "#/definitions/view.ProjectHead"
                 },
                 "clientEmail": {
+                    "type": "string"
+                },
+                "code": {
                     "type": "string"
                 },
                 "country": {
@@ -4908,6 +4917,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "clientEmail": {
+                    "type": "string"
+                },
+                "code": {
                     "type": "string"
                 },
                 "country": {
@@ -5650,6 +5662,9 @@ const docTemplate = `{
         "view.WorkUnit": {
             "type": "object",
             "properties": {
+                "code": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "string"
                 },

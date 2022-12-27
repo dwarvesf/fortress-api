@@ -77,7 +77,8 @@
                     "id": "8dc3be2e-19a4-4942-8a79-56db391a0b15",
                     "name": "Fortress",
                     "type": "dwarves",
-                    "status": "active"
+                    "status": "active",
+                    "code": "fortress"
                 }
             }
         ]
