@@ -1010,7 +1010,7 @@ func (h *handler) UploadAvatar(c *gin.Context) {
 			return
 		}
 
-		err = h.service.Google.UploadContentGCS(multipart, "employees/"+params.ID+"/images")
+		err = h.service.Google.UploadContentGCS(multipart, "employees/"+params.ID+"/images/"+fileName)
 		if err != nil {
 			l.Error(err, "error in upload file")
 			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
