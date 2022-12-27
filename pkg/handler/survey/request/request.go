@@ -51,7 +51,6 @@ type CreateSurveyFeedbackInput struct {
 	Quarter    string   `json:"quarter"`
 	Year       int      `json:"year"`
 	Type       string   `json:"type" binding:"required"`
-	ProjectIDs []string `json:"projectIDs"`
 	FromDate   string   `json:"fromDate"`
 	ToDate     string   `json:"toDate"`
 }

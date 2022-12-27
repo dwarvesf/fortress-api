@@ -3650,12 +3650,6 @@ const docTemplate = `{
                 "fromDate": {
                     "type": "string"
                 },
-                "projectIDs": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
                 "quarter": {
                     "type": "string"
                 },
