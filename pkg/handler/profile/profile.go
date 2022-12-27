@@ -182,6 +182,7 @@ func (h *handler) UploadAvatar(c *gin.Context) {
 	fileExtension := model.ContentExtension(filepath.Ext(fileName))
 	fileSize := file.Size
 	filePath := fmt.Sprintf("https://storage.googleapis.com/%s/employees/%s/images/%s", h.config.Google.GCSBucketName, employeeID, fileName)
+	gcsPath := fmt.Sprintf("employees/%s/images/%s", employeeID, fileName)
 	fileType := "image"
 
 	// 2.1 validate
@@ -256,7 +257,7 @@ func (h *handler) UploadAvatar(c *gin.Context) {
 	}
 
 	// 3.2 Upload to GCS
-	err = h.service.Google.UploadContentGCS(multipart, "employees/"+employeeID+"/images/"+fileName)
+	err = h.service.Google.UploadContentGCS(multipart, gcsPath)
 	if err != nil {
 		l.Error(err, "error in upload file")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), nil, ""))
