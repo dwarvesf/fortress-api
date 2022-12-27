@@ -866,7 +866,7 @@ func (h *handler) SendSurvey(c *gin.Context) {
 	// Begin transaction
 	tx, done := h.repo.NewTransaction()
 
-	for _, data := range input.Topics {
+	for _, data := range input.TopicIDs {
 		errCode, err := h.updateEventReviewer(tx.DB(), l, data, eventID)
 		if err != nil {
 			l.Error(err, "error when running function updateEventReviewer")
