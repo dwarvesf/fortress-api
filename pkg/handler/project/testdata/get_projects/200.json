@@ -1,30 +1,171 @@
 {
+  "page": 0,
+  "size": 999,
+  "sort": "",
+  "total": 2,
   "data": [
-    {
-      "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
-      "createdAt": "2022-11-07T09:50:25.714604Z",
-      "updatedAt": "2022-11-07T09:50:25.714604Z",
-      "name": "Fortress",
-      "status": "active",
-      "allowsSendingSurvey": false,
-      "avatar": "",
-      "lead": {
-        "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec1",
-        "name": "John Doe",
-        "avatar": "https://example.com/avatar.png"
+      {
+          "id": "dfa182fc-1d2d-49f6-a877-c01da9ce4207",
+          "createdAt": "2022-11-11T18:06:56.362902Z",
+          "updatedAt": "2022-11-11T18:06:56.362902Z",
+          "name": "Lorem ipsum",
+          "avatar": "",
+          "type": "time-material",
+          "status": "active",
+          "projectEmail": "",
+          "clientEmail": "",
+          "industry": "",
+          "allowsSendingSurvey": false,
+          "country": null,
+          "startDate": "2022-07-06T00:00:00Z",
+          "endDate": null,
+          "members": [],
+          "technicalLeads": [],
+          "accountManager": null,
+          "salePerson": null,
+          "deliveryManager": null,
+          "stacks": [],
+          "code": "lorem-ipsum"
       },
-      "members": [
-        {
-          "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec1",
-          "name": "John Doe",
-          "avatar": "https://example.com/avatar.png"
-        },
-        {
-          "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec1",
-          "name": "John Doe",
-          "avatar": "https://example.com/avatar.png"
-        }
-      ]
-    }
+      {
+          "id": "8dc3be2e-19a4-4942-8a79-56db391a0b15",
+          "createdAt": "2022-11-11T18:06:56.362902Z",
+          "updatedAt": "2022-11-11T18:06:56.362902Z",
+          "name": "Fortress",
+          "avatar": "",
+          "type": "dwarves",
+          "status": "active",
+          "projectEmail": "fortress@d.foundation",
+          "clientEmail": "team@d.foundation",
+          "industry": "",
+          "allowsSendingSurvey": false,
+          "country": null,
+          "startDate": "2022-11-01T00:00:00Z",
+          "endDate": null,
+          "members": [
+              {
+                  "projectMemberID": "",
+                  "projectSlotID": "",
+                  "employeeID": "2655832e-f009-4b73-a535-64c3a22e558f",
+                  "fullName": "Phạm Đức Thành",
+                  "displayName": "Thanh Pham",
+                  "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
+                  "username": "thanh",
+                  "status": "active",
+                  "isLead": false,
+                  "deploymentType": "official",
+                  "joinedDate": null,
+                  "leftDate": null,
+                  "rate": "0",
+                  "discount": "0",
+                  "seniority": null,
+                  "positions": []
+              },
+              {
+                  "projectMemberID": "",
+                  "projectSlotID": "",
+                  "employeeID": "ecea9d15-05ba-4a4e-9787-54210e3b98ce",
+                  "fullName": "Nguyễn Hoàng Huy",
+                  "displayName": "Huy Nguyen",
+                  "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/2830497479497502617.png",
+                  "username": "huynh",
+                  "status": "active",
+                  "isLead": false,
+                  "deploymentType": "shadow",
+                  "joinedDate": null,
+                  "leftDate": null,
+                  "rate": "0",
+                  "discount": "0",
+                  "seniority": null,
+                  "positions": []
+              },
+              {
+                  "projectMemberID": "",
+                  "projectSlotID": "",
+                  "employeeID": "8d7c99c0-3253-4286-93a9-e7554cb327ef",
+                  "fullName": "Nguyễn Hải Nam",
+                  "displayName": "Nam Nguyen",
+                  "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/8399103964540935617.png",
+                  "username": "benjamin",
+                  "status": "active",
+                  "isLead": true,
+                  "deploymentType": "official",
+                  "joinedDate": null,
+                  "leftDate": null,
+                  "rate": "0",
+                  "discount": "0",
+                  "seniority": null,
+                  "positions": []
+              },
+              {
+                  "projectMemberID": "",
+                  "projectSlotID": "",
+                  "employeeID": "eeae589a-94e3-49ac-a94c-fcfb084152b2",
+                  "fullName": "Nguyễn Ngô Lập",
+                  "displayName": "Lap Nguyen",
+                  "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/2870969541970972723.png",
+                  "username": "alan",
+                  "status": "active",
+                  "isLead": false,
+                  "deploymentType": "official",
+                  "joinedDate": null,
+                  "leftDate": null,
+                  "rate": "0",
+                  "discount": "0",
+                  "seniority": null,
+                  "positions": []
+              },
+              {
+                  "projectMemberID": "",
+                  "projectSlotID": "",
+                  "employeeID": "608ea227-45a5-4c8a-af43-6c7280d96340",
+                  "fullName": "Tiêu Quang Huy",
+                  "displayName": "Huy Tieu",
+                  "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/3c420751-bb9a-4878-896e-2f10f3a633d6_avatar2535921977139052349.png",
+                  "username": "huytq",
+                  "status": "active",
+                  "isLead": false,
+                  "deploymentType": "shadow",
+                  "joinedDate": null,
+                  "leftDate": null,
+                  "rate": "0",
+                  "discount": "0",
+                  "seniority": null,
+                  "positions": []
+              }
+          ],
+          "technicalLeads": [
+              {
+                  "employeeID": "8d7c99c0-3253-4286-93a9-e7554cb327ef",
+                  "fullName": "Nguyễn Hải Nam",
+                  "displayName": "Nam Nguyen",
+                  "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/8399103964540935617.png",
+                  "username": "benjamin"
+              }
+          ],
+          "accountManager": {
+              "employeeID": "2655832e-f009-4b73-a535-64c3a22e558f",
+              "fullName": "Phạm Đức Thành",
+              "displayName": "Thanh Pham",
+              "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
+              "username": "thanh"
+          },
+          "salePerson": {
+              "employeeID": "608ea227-45a5-4c8a-af43-6c7280d96340",
+              "fullName": "Tiêu Quang Huy",
+              "displayName": "Huy Tieu",
+              "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/3c420751-bb9a-4878-896e-2f10f3a633d6_avatar2535921977139052349.png",
+              "username": "huytq"
+          },
+          "deliveryManager": {
+              "employeeID": "2655832e-f009-4b73-a535-64c3a22e558f",
+              "fullName": "Phạm Đức Thành",
+              "displayName": "Thanh Pham",
+              "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
+              "username": "thanh"
+          },
+          "stacks": [],
+          "code": "fortress"
+      }
   ]
 }

@@ -202,6 +202,8 @@ definitions:
         type: string
       clientEmail:
         type: string
+      code:
+        type: string
       countryID:
         type: string
       deliveryManagerID:
@@ -593,6 +595,8 @@ definitions:
     type: object
   view.BasicProjectInfo:
     properties:
+      code:
+        type: string
       id:
         type: string
       name:
@@ -673,6 +677,8 @@ definitions:
       accountManager:
         $ref: '#/definitions/view.ProjectHead'
       clientEmail:
+        type: string
+      code:
         type: string
       country:
         $ref: '#/definitions/view.BasicCountryInfo'
@@ -1076,6 +1082,8 @@ definitions:
       avatar:
         type: string
       clientEmail:
+        type: string
+      code:
         type: string
       country:
         $ref: '#/definitions/view.BasicCountryInfo'
@@ -1572,6 +1580,8 @@ definitions:
     type: object
   view.WorkUnit:
     properties:
+      code:
+        type: string
       id:
         type: string
       members:

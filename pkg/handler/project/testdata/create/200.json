@@ -3,7 +3,7 @@
         "id": "",
         "createdAt": "",
         "updatedAt": "",
-        "name": "project1",
+        "name": "Project1",
         "type": "dwarves",
         "status": "on-boarding",
         "startDate": "2022-11-14",
@@ -28,6 +28,7 @@
             "id": "4ef64490-c906-4192-a7f9-d2221dadfe4c",
             "name": "Vietnam",
             "code": "+84"
-        }
+        },
+        "code": "project1"
     }
 }

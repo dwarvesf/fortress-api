@@ -3604,6 +3604,9 @@
                 "clientEmail": {
                     "type": "string"
                 },
+                "code": {
+                    "type": "string"
+                },
                 "countryID": {
                     "type": "string"
                 },
@@ -4178,6 +4181,9 @@
         "view.BasicProjectInfo": {
             "type": "object",
             "properties": {
+                "code": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "string"
                 },
@@ -4301,6 +4307,9 @@
                     "$ref": "#/definitions/view.ProjectHead"
                 },
                 "clientEmail": {
+                    "type": "string"
+                },
+                "code": {
                     "type": "string"
                 },
                 "country": {
@@ -4919,6 +4928,9 @@
                     "type": "string"
                 },
                 "clientEmail": {
+                    "type": "string"
+                },
+                "code": {
                     "type": "string"
                 },
                 "country": {
@@ -5679,6 +5691,9 @@
         "view.WorkUnit": {
             "type": "object",
             "properties": {
+                "code": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "string"
                 },

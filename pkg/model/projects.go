@@ -71,6 +71,7 @@ type Project struct {
 	ClientEmail         string
 	Avatar              string
 	AllowsSendingSurvey bool
+	Code                string
 
 	Country *Country
 }

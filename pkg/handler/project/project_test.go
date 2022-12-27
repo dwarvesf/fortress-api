@@ -119,7 +119,7 @@ func TestHandler_Create(t *testing.T) {
 		{
 			name: "happy_case",
 			args: request.CreateProjectInput{
-				Name:              "project1",
+				Name:              "Project1",
 				Status:            string(model.ProjectStatusOnBoarding),
 				StartDate:         "2022-11-14",
 				AccountManagerID:  model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
@@ -130,6 +130,22 @@ func TestHandler_Create(t *testing.T) {
 			},
 			wantCode:         http.StatusOK,
 			wantResponsePath: "testdata/create/200.json",
+		},
+		{
+			name: "duplicate_slug",
+			args: request.CreateProjectInput{
+				Name:              "Lorem Ipsum",
+				Status:            string(model.ProjectStatusOnBoarding),
+				StartDate:         "2022-11-14",
+				AccountManagerID:  model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
+				DeliveryManagerID: model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
+				CountryID:         model.MustGetUUIDFromString("4ef64490-c906-4192-a7f9-d2221dadfe4c"),
+				ProjectEmail:      "a@gmail.com",
+				ClientEmail:       "b@gmail.com",
+				Code:              "lorem-ipsum",
+			},
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/create/400_duplicate_slug.json",
 		},
 		{
 			name: "invalid_status",
@@ -505,6 +521,12 @@ func TestHandler_Detail(t *testing.T) {
 			wantCode:         http.StatusNotFound,
 			wantResponsePath: "testdata/get_project/404.json",
 		},
+		{
+			name:             "happy_case_slug",
+			id:               "fortress",
+			wantCode:         http.StatusOK,
+			wantResponsePath: "testdata/get_project/200.json",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -519,6 +541,49 @@ func TestHandler_Detail(t *testing.T) {
 
 				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 				h.Details(ctx)
+				require.Equal(t, tt.wantCode, w.Code)
+				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				require.NoError(t, err)
+
+				res := w.Body.Bytes()
+				res, _ = utils.RemoveFieldInResponse(res, "createdAt")
+				res, _ = utils.RemoveFieldInResponse(res, "updatedAt")
+
+				require.JSONEq(t, string(expRespRaw), string(res), "[Handler.Project.Details] response mismatched")
+			})
+		})
+	}
+}
+
+func TestHandler_List(t *testing.T) {
+	cfg := config.LoadTestConfig()
+	loggerMock := logger.NewLogrusLogger()
+	serviceMock := service.New(&cfg)
+	storeMock := store.New()
+
+	tests := []struct {
+		name             string
+		wantCode         int
+		wantErr          error
+		wantResponsePath string
+	}{
+		{
+			name:             "happy_case",
+			wantCode:         http.StatusOK,
+			wantResponsePath: "testdata/get_projects/200.json",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				testhelper.LoadTestSQLFile(t, txRepo, "./testdata/get_projects/get_projects.sql")
+				w := httptest.NewRecorder()
+				ctx, _ := gin.CreateTestContext(w)
+				ctx.Request = httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/projects"), nil)
+				ctx.Request.Header.Set("Authorization", testToken)
+
+				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+				h.List(ctx)
 				require.Equal(t, tt.wantCode, w.Code)
 				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
 				require.NoError(t, err)

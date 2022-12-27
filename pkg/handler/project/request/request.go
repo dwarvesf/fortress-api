@@ -69,6 +69,7 @@ type CreateProjectInput struct {
 	Members           []AssignMemberInput `form:"members" json:"members"`
 	ClientEmail       string              `form:"clientEmail" json:"clientEmail" binding:"email"`
 	ProjectEmail      string              `form:"projectEmail" json:"projectEmail" binding:"email"`
+	Code              string              `form:"code" json:"code"`
 }
 
 func (i *CreateProjectInput) Validate() error {

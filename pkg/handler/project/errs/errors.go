@@ -55,6 +55,7 @@ var (
 	ErrFailedToGetProjectMember         = errors.New("failed to get project member in database")
 	ErrFailedToCreateWorkUnitMember     = errors.New("failed to create work unit member")
 	ErrSlotAlreadyContainsAnotherMember = errors.New("slot already contains another member")
+	ErrDuplicateProjectCode             = errors.New("project code is duplicated")
 
 	ErrInvalidFileExtension = errors.New("invalid file extension")
 	ErrInvalidFileSize      = errors.New("invalid file size")
