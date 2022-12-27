@@ -7,35 +7,47 @@ import (
 )
 
 type ProfileData struct {
-	ID            model.UUID `json:"id"`
-	FullName      string     `json:"fullName"`
-	DisplayName   string     `json:"displayName"`
-	Avatar        string     `json:"avatar"`
-	Gender        string     `json:"gender"`
-	DateOfBirth   *time.Time `json:"birthday"`
-	TeamEmail     string     `json:"teamEmail"`
-	PersonalEmail string     `json:"personalEmail"`
-	PhoneNumber   string     `json:"phoneNumber"`
-	GithubID      string     `json:"githubID"`
-	NotionID      string     `json:"notionID"`
-	NotionName    string     `json:"notionName"`
-	DiscordID     string     `json:"discordID"`
-	DiscordName   string     `json:"discordName"`
-	Username      string     `json:"username"`
+	ID               model.UUID `json:"id"`
+	FullName         string     `json:"fullName"`
+	DisplayName      string     `json:"displayName"`
+	Avatar           string     `json:"avatar"`
+	Gender           string     `json:"gender"`
+	DateOfBirth      *time.Time `json:"birthday"`
+	TeamEmail        string     `json:"teamEmail"`
+	PersonalEmail    string     `json:"personalEmail"`
+	PhoneNumber      string     `json:"phoneNumber"`
+	GithubID         string     `json:"githubID"`
+	NotionID         string     `json:"notionID"`
+	NotionName       string     `json:"notionName"`
+	NotionEmail      string     `json:"notionEmail"`
+	DiscordID        string     `json:"discordID"`
+	DiscordName      string     `json:"discordName"`
+	Username         string     `json:"username"`
+	ShelterAddress   string     `json:"shelterAddress"`
+	PermanentAddress string     `json:"permanentAddress"`
+	Country          string     `json:"country"`
+	City             string     `json:"city"`
+	LinkedInName     string     `json:"linkedInName"`
 }
 
 type UpdateProfileInfoData struct {
 	model.BaseModel
 
 	// basic info
-	TeamEmail   string `json:"teamEmail"`
-	PhoneNumber string `json:"phoneNumber"`
-	GithubID    string `json:"githubID"`
-	NotionID    string `json:"notionID"`
-	NotionName  string `json:"notionName"`
-	DiscordID   string `json:"discordID"`
-	DiscordName string `json:"discordName"`
-	Username    string `json:"username"`
+	TeamEmail        string `json:"teamEmail"`
+	PhoneNumber      string `json:"phoneNumber"`
+	GithubID         string `json:"githubID"`
+	NotionID         string `json:"notionID"`
+	NotionName       string `json:"notionName"`
+	NotionEmail      string `json:"notionEmail"`
+	DiscordID        string `json:"discordID"`
+	DiscordName      string `json:"discordName"`
+	Username         string `json:"username"`
+	ShelterAddress   string `json:"shelterAddress"`
+	PermanentAddress string `json:"permanentAddress"`
+	Country          string `json:"country"`
+	City             string `json:"city"`
+	LinkedInName     string `json:"linkedInName"`
 }
 
 type ProfileDataResponse struct {
@@ -53,14 +65,20 @@ func ToUpdateProfileInfoData(employee *model.Employee) *UpdateProfileInfoData {
 			CreatedAt: employee.CreatedAt,
 			UpdatedAt: employee.UpdatedAt,
 		},
-		TeamEmail:   employee.TeamEmail,
-		PhoneNumber: employee.PhoneNumber,
-		GithubID:    employee.GithubID,
-		NotionID:    employee.NotionID,
-		NotionName:  employee.NotionName,
-		DiscordID:   employee.DiscordID,
-		DiscordName: employee.DiscordName,
-		Username:    employee.Username,
+		TeamEmail:        employee.TeamEmail,
+		PhoneNumber:      employee.PhoneNumber,
+		GithubID:         employee.GithubID,
+		NotionID:         employee.NotionID,
+		NotionName:       employee.NotionName,
+		NotionEmail:      employee.NotionEmail,
+		DiscordID:        employee.DiscordID,
+		DiscordName:      employee.DiscordName,
+		Username:         employee.Username,
+		ShelterAddress:   employee.ShelterAddress,
+		PermanentAddress: employee.PermanentAddress,
+		Country:          employee.Country,
+		City:             employee.City,
+		LinkedInName:     employee.LinkedInName,
 	}
 
 	return rs
@@ -68,20 +86,26 @@ func ToUpdateProfileInfoData(employee *model.Employee) *UpdateProfileInfoData {
 
 func ToProfileData(employee *model.Employee) *ProfileData {
 	return &ProfileData{
-		ID:            employee.ID,
-		FullName:      employee.FullName,
-		DisplayName:   employee.DisplayName,
-		Avatar:        employee.Avatar,
-		Gender:        employee.Gender,
-		DateOfBirth:   employee.DateOfBirth,
-		TeamEmail:     employee.TeamEmail,
-		PersonalEmail: employee.PersonalEmail,
-		PhoneNumber:   employee.PhoneNumber,
-		GithubID:      employee.GithubID,
-		NotionID:      employee.NotionID,
-		NotionName:    employee.NotionName,
-		DiscordID:     employee.DiscordID,
-		DiscordName:   employee.DiscordName,
-		Username:      employee.Username,
+		ID:               employee.ID,
+		FullName:         employee.FullName,
+		DisplayName:      employee.DisplayName,
+		Avatar:           employee.Avatar,
+		Gender:           employee.Gender,
+		DateOfBirth:      employee.DateOfBirth,
+		TeamEmail:        employee.TeamEmail,
+		PersonalEmail:    employee.PersonalEmail,
+		PhoneNumber:      employee.PhoneNumber,
+		GithubID:         employee.GithubID,
+		NotionID:         employee.NotionID,
+		NotionName:       employee.NotionName,
+		NotionEmail:      employee.NotionEmail,
+		DiscordID:        employee.DiscordID,
+		DiscordName:      employee.DiscordName,
+		Username:         employee.Username,
+		ShelterAddress:   employee.ShelterAddress,
+		PermanentAddress: employee.PermanentAddress,
+		Country:          employee.Country,
+		City:             employee.City,
+		LinkedInName:     employee.LinkedInName,
 	}
 }

@@ -60,11 +60,14 @@ type Employee struct {
 	// basic info
 	FullName               string
 	DisplayName            string
+	Username               string
 	TeamEmail              string
 	PersonalEmail          string
 	Avatar                 string
 	PhoneNumber            string
 	Address                string
+	ShelterAddress         string
+	PermanentAddress       string
 	MBTI                   string
 	Gender                 string
 	Horoscope              string
@@ -73,6 +76,8 @@ type Employee struct {
 	IdentityCardPhotoFront string
 	IdentityCardPhotoBack  string
 	DateOfBirth            *time.Time
+	Country                string
+	City                   string
 
 	// working info
 	WorkingStatus WorkingStatus
@@ -88,9 +93,10 @@ type Employee struct {
 	GithubID               string
 	NotionID               string
 	NotionName             string
+	NotionEmail            string
 	DiscordID              string
 	DiscordName            string
-	Username               string
+	LinkedInName           string `gorm:"column:linkedin_name"`
 
 	// payroll info
 	WiseRecipientEmail string

@@ -3831,9 +3831,16 @@ const docTemplate = `{
             "required": [
                 "personalEmail",
                 "phoneNumber",
+                "shelterAddress",
                 "teamEmail"
             ],
             "properties": {
+                "city": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
                 "discordID": {
                     "type": "string"
                 },
@@ -3843,10 +3850,19 @@ const docTemplate = `{
                 "githubID": {
                     "type": "string"
                 },
+                "linkedInName": {
+                    "type": "string"
+                },
+                "notionEmail": {
+                    "type": "string"
+                },
                 "notionID": {
                     "type": "string"
                 },
                 "notionName": {
+                    "type": "string"
+                },
+                "permanentAddress": {
                     "type": "string"
                 },
                 "personalEmail": {
@@ -3856,6 +3872,9 @@ const docTemplate = `{
                     "type": "string",
                     "maxLength": 12,
                     "minLength": 10
+                },
+                "shelterAddress": {
+                    "type": "string"
                 },
                 "teamEmail": {
                     "type": "string"
@@ -4830,6 +4849,12 @@ const docTemplate = `{
                 "birthday": {
                     "type": "string"
                 },
+                "city": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
                 "discordID": {
                     "type": "string"
                 },
@@ -4851,16 +4876,28 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
+                "linkedInName": {
+                    "type": "string"
+                },
+                "notionEmail": {
+                    "type": "string"
+                },
                 "notionID": {
                     "type": "string"
                 },
                 "notionName": {
                     "type": "string"
                 },
+                "permanentAddress": {
+                    "type": "string"
+                },
                 "personalEmail": {
                     "type": "string"
                 },
                 "phoneNumber": {
+                    "type": "string"
+                },
+                "shelterAddress": {
                     "type": "string"
                 },
                 "teamEmail": {
@@ -5461,6 +5498,12 @@ const docTemplate = `{
         "view.UpdateProfileInfoData": {
             "type": "object",
             "properties": {
+                "city": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
                 "createdAt": {
                     "type": "string"
                 },
@@ -5479,13 +5522,25 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
+                "linkedInName": {
+                    "type": "string"
+                },
+                "notionEmail": {
+                    "type": "string"
+                },
                 "notionID": {
                     "type": "string"
                 },
                 "notionName": {
                     "type": "string"
                 },
+                "permanentAddress": {
+                    "type": "string"
+                },
                 "phoneNumber": {
+                    "type": "string"
+                },
+                "shelterAddress": {
                     "type": "string"
                 },
                 "teamEmail": {

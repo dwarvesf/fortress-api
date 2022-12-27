@@ -352,15 +352,25 @@ definitions:
     type: object
   request.UpdateInfoInput:
     properties:
+      city:
+        type: string
+      country:
+        type: string
       discordID:
         type: string
       discordName:
         type: string
       githubID:
         type: string
+      linkedInName:
+        type: string
+      notionEmail:
+        type: string
       notionID:
         type: string
       notionName:
+        type: string
+      permanentAddress:
         type: string
       personalEmail:
         type: string
@@ -368,11 +378,14 @@ definitions:
         maxLength: 12
         minLength: 10
         type: string
+      shelterAddress:
+        type: string
       teamEmail:
         type: string
     required:
     - personalEmail
     - phoneNumber
+    - shelterAddress
     - teamEmail
     type: object
   request.UpdateMemberInput:
@@ -1012,6 +1025,10 @@ definitions:
         type: string
       birthday:
         type: string
+      city:
+        type: string
+      country:
+        type: string
       discordID:
         type: string
       discordName:
@@ -1026,13 +1043,21 @@ definitions:
         type: string
       id:
         type: string
+      linkedInName:
+        type: string
+      notionEmail:
+        type: string
       notionID:
         type: string
       notionName:
         type: string
+      permanentAddress:
+        type: string
       personalEmail:
         type: string
       phoneNumber:
+        type: string
+      shelterAddress:
         type: string
       teamEmail:
         type: string
@@ -1424,6 +1449,10 @@ definitions:
     type: object
   view.UpdateProfileInfoData:
     properties:
+      city:
+        type: string
+      country:
+        type: string
       createdAt:
         type: string
       deletedAt:
@@ -1436,11 +1465,19 @@ definitions:
         type: string
       id:
         type: string
+      linkedInName:
+        type: string
+      notionEmail:
+        type: string
       notionID:
         type: string
       notionName:
         type: string
+      permanentAddress:
+        type: string
       phoneNumber:
+        type: string
+      shelterAddress:
         type: string
       teamEmail:
         description: basic info
