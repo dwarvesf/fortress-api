@@ -64,7 +64,7 @@ func (h *handler) List(c *gin.Context) {
 		return
 	}
 
-	query.Standardize()
+	query.StandardizeInput()
 
 	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
