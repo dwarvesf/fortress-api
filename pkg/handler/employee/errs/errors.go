@@ -26,6 +26,11 @@ var (
 	ErrInvalidFileExtension  = errors.New("invalid file extension")
 	ErrInvalidFileSize       = errors.New("invalid file size")
 	ErrFileAlreadyExisted    = errors.New("file already existed")
+	ErrInvalidPositionCode   = errors.New("invalid position code")
+	ErrInvalidStackCode      = errors.New("invalid stack code")
+	ErrInvalidProjectCode    = errors.New("invalid project code")
+	ErrInvalidChapterCode    = errors.New("invalid chapter code")
+	ErrInvalidSeniorityCode  = errors.New("invalid seniority code")
 )
 
 // ErrPositionNotFoundWithID returns bad request custom error

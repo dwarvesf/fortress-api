@@ -49,56 +49,53 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 // @Accept  json
 // @Produce  json
 // @Param Authorization header string true "jwt token"
-// @Param workingStatus query  []string false  "Working Status"
-// @Param positionID query  string false  "Position ID"
-// @Param stackID query  string false  "Stack ID"
-// @Param projectID query  string false  "Project ID"
-// @Param keyword query  string false  "keyword for searching"
-// @Param preload query bool false "Preload"
-// @Param page query string false "Page"
-// @Param size query string false "Size"
+// @Param Body body request.GetListEmployeeInput true "Body"
 // @Success 200 {object} view.EmployeeListDataResponse
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 404 {object} view.ErrorResponse
 // @Failure 500 {object} view.ErrorResponse
-// @Router /employees [get]
+// @Router /employees [post]
 func (h *handler) List(c *gin.Context) {
-	query := request.GetListEmployeeQuery{}
-	if err := c.ShouldBindQuery(&query); err != nil {
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, query, ""))
+	var body request.GetListEmployeeInput
+	if err := c.ShouldBindJSON(&body); err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, body, ""))
 		return
 	}
 
-	if err := query.Validate(); err != nil {
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, query, ""))
+	if err := body.Validate(); err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, body, ""))
 		return
 	}
 
-	query.Standardize()
+	body.Standardize()
+
+	fmt.Printf("%+v\n", body)
 
 	l := h.logger.Fields(logger.Fields{
 		"handler": "employee",
 		"method":  "List",
-		"params":  query,
+		"params":  body,
 	})
 
 	employees, total, err := h.store.Employee.All(h.repo.DB(), employee.EmployeeFilter{
-		WorkingStatuses: query.WorkingStatuses,
-		Preload:         query.Preload,
-		Keyword:         query.Keyword,
-		PositionID:      query.PositionID,
-		StackID:         query.StackID,
-		ProjectID:       query.ProjectID,
+		WorkingStatuses: body.WorkingStatuses,
+		Preload:         body.Preload,
+		Keyword:         body.Keyword,
+		Positions:       body.Positions,
+		Stacks:          body.Stacks,
+		Projects:        body.Projects,
+		Chapters:        body.Chapters,
+		Seniorities:     body.Seniorities,
 		JoinedDateSort:  model.SortOrderDESC,
-	}, query.Pagination)
+	}, body.Pagination)
 	if err != nil {
 		l.Error(err, "error query employee from db")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, query, ""))
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
 		return
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse(view.ToEmployeeListData(employees),
-		&view.PaginationResponse{Pagination: query.Pagination, Total: total}, nil, nil, ""))
+		&view.PaginationResponse{Pagination: body.Pagination, Total: total}, nil, nil, ""))
 }
 
 // One godoc

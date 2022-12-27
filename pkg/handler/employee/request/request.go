@@ -8,14 +8,16 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/model"
 )
 
-type GetListEmployeeQuery struct {
-	model.Pagination
+type GetListEmployeeInput struct {
+	model.Pagination `json:"pagination" form:"pagination"`
 
 	WorkingStatuses []string `json:"workingStatuses" form:"workingStatuses"`
 	Preload         bool     `json:"preload" form:"preload,default=true"`
-	PositionID      string   `json:"positionID" form:"positionID"`
-	StackID         string   `json:"stackID" form:"stackID"`
-	ProjectID       string   `json:"projectID" form:"projectID"`
+	Positions       []string `json:"positions" form:"positions"`
+	Stacks          []string `json:"stacks" form:"stacks"`
+	Projects        []string `json:"projects" form:"projects"`
+	Chapters        []string `json:"chapters" form:"chapters"`
+	Seniorities     []string `json:"seniorities" form:"seniorities"`
 	Keyword         string   `json:"keyword" form:"keyword"`
 }
 
@@ -71,17 +73,41 @@ func (i *UpdateWorkingStatusInput) Validate() error {
 	return nil
 }
 
-func (input *GetListEmployeeQuery) Validate() error {
-	if input.PositionID != "" && !model.IsUUIDFromString(input.PositionID) {
-		return errs.ErrInvalidPositionID
+func (input *GetListEmployeeInput) Validate() error {
+	if len(input.Positions) > 0 {
+		for _, p := range input.Positions {
+			if p == "" {
+				return errs.ErrInvalidPositionCode
+			}
+		}
 	}
-
-	if input.StackID != "" && !model.IsUUIDFromString(input.StackID) {
-		return errs.ErrInvalidStackID
+	if len(input.Stacks) > 0 {
+		for _, s := range input.Stacks {
+			if s == "" {
+				return errs.ErrInvalidStackCode
+			}
+		}
 	}
-
-	if input.ProjectID != "" && !model.IsUUIDFromString(input.ProjectID) {
-		return errs.ErrInvalidProjectID
+	if len(input.Projects) > 0 {
+		for _, p := range input.Projects {
+			if p == "" {
+				return errs.ErrInvalidProjectCode
+			}
+		}
+	}
+	if len(input.Chapters) > 0 {
+		for _, c := range input.Chapters {
+			if c == "" {
+				return errs.ErrInvalidChapterCode
+			}
+		}
+	}
+	if len(input.Seniorities) > 0 {
+		for _, s := range input.Seniorities {
+			if s == "" {
+				return errs.ErrInvalidSeniorityCode
+			}
+		}
 	}
 
 	return nil

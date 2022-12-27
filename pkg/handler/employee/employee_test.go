@@ -34,7 +34,7 @@ func TestHandler_List(t *testing.T) {
 
 	tests := []struct {
 		name             string
-		query            string
+		body             request.GetListEmployeeInput
 		wantCode         int
 		wantErr          error
 		wantResponsePath string
@@ -45,56 +45,89 @@ func TestHandler_List(t *testing.T) {
 			wantResponsePath: "testdata/list/without_working_status_and_pagination.json",
 		},
 		{
-			name:             "have_workingStatus_and_no_pagination",
-			query:            "workingStatuses=contractor",
+			name: "have_workingStatus_and_no_pagination",
+			body: request.GetListEmployeeInput{
+				WorkingStatuses: []string{"contractor"},
+			},
 			wantCode:         http.StatusOK,
 			wantResponsePath: "testdata/list/have_working_and_no_pagination.json",
 		},
 		{
-			name:             "have_workingStatuses_and_pagination",
-			query:            "workingStatuses=contractor&page=1&size=5",
+			name: "have_workingStatuses_and_pagination",
+			body: request.GetListEmployeeInput{
+				Pagination: model.Pagination{
+					Page: 1,
+					Size: 5,
+				},
+				WorkingStatuses: []string{"contractor"},
+			},
 			wantCode:         http.StatusOK,
 			wantResponsePath: "testdata/list/have_working_and_pagination.json",
 		},
 		{
-			name:             "out_of_content",
-			query:            "workingStatuses=contractor&page=5&size=5",
+			name: "out_of_content",
+			body: request.GetListEmployeeInput{
+				Pagination: model.Pagination{
+					Page: 5,
+					Size: 5,
+				},
+				WorkingStatuses: []string{"contractor"},
+			},
 			wantCode:         http.StatusOK,
 			wantResponsePath: "testdata/list/out_of_content.json",
 		},
 		{
-			name:             "with_preload_false",
-			query:            "workingStatuses=probation&preload=false",
+			name: "with_preload_false",
+			body: request.GetListEmployeeInput{
+				Preload:         false,
+				WorkingStatuses: []string{"probation"},
+			},
 			wantCode:         http.StatusOK,
 			wantResponsePath: "testdata/list/with_preload_false.json",
 		},
 		{
-			name:             "without_preload",
-			query:            "workingStatuses=probation",
+			name: "without_preload",
+			body: request.GetListEmployeeInput{
+				Preload:         false,
+				WorkingStatuses: []string{"probation"},
+			},
 			wantCode:         http.StatusOK,
 			wantResponsePath: "testdata/list/without_preload.json",
 		},
 		{
-			name:             "with_keyword",
-			query:            "preload=false&keyword=thanh",
+			name: "with_keyword",
+			body: request.GetListEmployeeInput{
+				Preload: false,
+				Keyword: "thanh",
+			},
 			wantCode:         http.StatusOK,
 			wantResponsePath: "testdata/list/with_keyword.json",
 		},
 		{
-			name:             "with_stackid",
-			query:            "preload=false&stackID=0ecf47c8-cca4-4c30-94bb-054b1124c44f",
+			name: "with_stack_code",
+			body: request.GetListEmployeeInput{
+				Preload: false,
+				Stacks:  []string{"golang"},
+			},
 			wantCode:         http.StatusOK,
-			wantResponsePath: "testdata/list/with_stackid.json",
+			wantResponsePath: "testdata/list/with_stack_code.json",
 		},
 		{
-			name:             "with_projectid_and_positionid",
-			query:            "preload=false&projectID=8dc3be2e-19a4-4942-8a79-56db391a0b15&positionID=01fb6322-d727-47e3-a242-5039ea4732fc",
+			name: "with_project_code_and_position_code",
+			body: request.GetListEmployeeInput{
+				Preload:   false,
+				Projects:  []string{"fortress"},
+				Positions: []string{"blockchain"},
+			},
 			wantCode:         http.StatusOK,
-			wantResponsePath: "testdata/list/with_projectid_and_positionid.json",
+			wantResponsePath: "testdata/list/with_project_code_and_position_code.json",
 		},
 		{
-			name:             "with_list_working_status",
-			query:            "preload=false&workingStatuses=contractor&workingStatuses=probation",
+			name: "with_list_working_status",
+			body: request.GetListEmployeeInput{
+				Preload:         false,
+				WorkingStatuses: []string{"contractor", "probation"},
+			},
 			wantCode:         http.StatusOK,
 			wantResponsePath: "testdata/list/with_list_working_status.json",
 		},
@@ -104,10 +137,13 @@ func TestHandler_List(t *testing.T) {
 			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
 				testhelper.LoadTestSQLFile(t, txRepo, "./testdata/list/list.sql")
 				w := httptest.NewRecorder()
+				byteReq, err := json.Marshal(tt.body)
+				require.Nil(t, err)
+
 				ctx, _ := gin.CreateTestContext(w)
-				ctx.Request = httptest.NewRequest(http.MethodGet, "/api/v1/employees", nil)
+				bodyReader := strings.NewReader(string(byteReq))
+				ctx.Request = httptest.NewRequest(http.MethodPost, "/api/v1/employees/search", bodyReader)
 				ctx.Request.Header.Set("Authorization", testToken)
-				ctx.Request.URL.RawQuery = tt.query
 
 				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 				h.List(ctx)
