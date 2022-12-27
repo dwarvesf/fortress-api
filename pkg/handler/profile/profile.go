@@ -225,7 +225,7 @@ func (h *handler) UploadAvatar(c *gin.Context) {
 		return
 	}
 
-	content, err := h.store.Content.Create(tx.DB(), model.Content{
+	_, err = h.store.Content.Create(tx.DB(), model.Content{
 		Type:       fileType,
 		Extension:  fileExtension.String(),
 		Path:       filePath,
@@ -256,7 +256,7 @@ func (h *handler) UploadAvatar(c *gin.Context) {
 	}
 
 	// 3.2 Upload to GCS
-	err = h.service.Google.UploadContentGCS(multipart, content.Path)
+	err = h.service.Google.UploadContentGCS(multipart, "employees/"+employeeID+"/images/"+fileName)
 	if err != nil {
 		l.Error(err, "error in upload file")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), nil, ""))
