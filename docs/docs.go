@@ -3722,10 +3722,10 @@ const docTemplate = `{
         "request.SendSurveyInput": {
             "type": "object",
             "required": [
-                "topics"
+                "topicIDs"
             ],
             "properties": {
-                "topics": {
+                "topicIDs": {
                     "type": "array",
                     "items": {
                         "type": "string"

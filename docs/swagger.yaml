@@ -280,12 +280,12 @@ definitions:
     type: object
   request.SendSurveyInput:
     properties:
-      topics:
+      topicIDs:
         items:
           type: string
         type: array
     required:
-    - topics
+    - topicIDs
     type: object
   request.SubmitBody:
     properties:
