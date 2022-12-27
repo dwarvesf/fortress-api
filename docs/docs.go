@@ -137,105 +137,6 @@ const docTemplate = `{
             }
         },
         "/employees": {
-            "get": {
-                "description": "Get the list of employees with pagination and workingStatus",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Employee"
-                ],
-                "summary": "Get the list of employees",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "jwt token",
-                        "name": "Authorization",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "description": "Working Status",
-                        "name": "workingStatus",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Position ID",
-                        "name": "positionID",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Stack ID",
-                        "name": "stackID",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Project ID",
-                        "name": "projectID",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "keyword for searching",
-                        "name": "keyword",
-                        "in": "query"
-                    },
-                    {
-                        "type": "boolean",
-                        "description": "Preload",
-                        "name": "preload",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Page",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Size",
-                        "name": "size",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/view.EmployeeListDataResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/view.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/view.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/view.ErrorResponse"
-                        }
-                    }
-                }
-            },
             "post": {
                 "description": "Create new employee",
                 "consumes": [
@@ -3304,18 +3205,6 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "gorm.DeletedAt": {
-            "type": "object",
-            "properties": {
-                "time": {
-                    "type": "string"
-                },
-                "valid": {
-                    "description": "Valid is true if Time is not NULL",
-                    "type": "boolean"
-                }
-            }
-        },
         "model.Chapter": {
             "type": "object",
             "properties": {
@@ -3326,7 +3215,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
+                    "type": "string"
                 },
                 "id": {
                     "type": "string"
@@ -3358,7 +3247,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
+                    "type": "string"
                 },
                 "id": {
                     "type": "string"
@@ -3401,7 +3290,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
+                    "type": "string"
                 },
                 "id": {
                     "type": "string"
@@ -3424,7 +3313,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
+                    "type": "string"
                 },
                 "id": {
                     "type": "string"
@@ -3450,7 +3339,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
+                    "type": "string"
                 },
                 "id": {
                     "type": "string"
@@ -3476,7 +3365,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
+                    "type": "string"
                 },
                 "id": {
                     "type": "string"
@@ -3706,6 +3595,61 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "reviewerIDs": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "request.GetListEmployeeInput": {
+            "type": "object",
+            "properties": {
+                "chapters": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "keyword": {
+                    "type": "string"
+                },
+                "page": {
+                    "description": "page index",
+                    "type": "integer"
+                },
+                "positions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "preload": {
+                    "type": "boolean"
+                },
+                "projects": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "seniorities": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "size": {
+                    "description": "page size",
+                    "type": "integer"
+                },
+                "stacks": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "workingStatuses": {
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -4324,7 +4268,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
+                    "type": "string"
                 },
                 "deliveryManager": {
                     "$ref": "#/definitions/view.ProjectHead"
@@ -4410,7 +4354,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
+                    "type": "string"
                 },
                 "discordID": {
                     "type": "string"
@@ -4945,7 +4889,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
+                    "type": "string"
                 },
                 "deliveryManager": {
                     "$ref": "#/definitions/view.ProjectHead"
@@ -5411,7 +5355,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
+                    "type": "string"
                 },
                 "discordID": {
                     "type": "string"
@@ -5462,7 +5406,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
+                    "type": "string"
                 },
                 "gender": {
                     "type": "string"
@@ -5499,7 +5443,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
+                    "type": "string"
                 },
                 "discordID": {
                     "type": "string"
@@ -5628,7 +5572,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
+                    "type": "string"
                 },
                 "id": {
                     "type": "string"
@@ -5668,7 +5612,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
+                    "type": "string"
                 },
                 "endDate": {
                     "type": "string"

@@ -18,13 +18,15 @@ import (
 func Test_loadV1Routes(t *testing.T) {
 	expectedRoutes := map[string]map[string]gin.RouteInfo{
 		"/api/v1/employees": {
-			"GET": {
-				Method:  "GET",
-				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/employee.IHandler.List-fm",
-			},
 			"POST": {
 				Method:  "POST",
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/employee.IHandler.Create-fm",
+			},
+		},
+		"/api/v1/employees/search": {
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/employee.IHandler.List-fm",
 			},
 		},
 		"/api/v1/employees/:id": {

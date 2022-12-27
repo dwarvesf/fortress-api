@@ -1,13 +1,5 @@
 basePath: /api/v1
 definitions:
-  gorm.DeletedAt:
-    properties:
-      time:
-        type: string
-      valid:
-        description: Valid is true if Time is not NULL
-        type: boolean
-    type: object
   model.Chapter:
     properties:
       code:
@@ -15,7 +7,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       id:
         type: string
       lead_id:
@@ -36,7 +28,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       id:
         type: string
       name:
@@ -64,7 +56,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       id:
         type: string
       name:
@@ -79,7 +71,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       id:
         type: string
       level:
@@ -96,7 +88,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       id:
         type: string
       name:
@@ -113,7 +105,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       id:
         type: string
       name:
@@ -270,6 +262,43 @@ definitions:
   request.DeleteTopicReviewersBody:
     properties:
       reviewerIDs:
+        items:
+          type: string
+        type: array
+    type: object
+  request.GetListEmployeeInput:
+    properties:
+      chapters:
+        items:
+          type: string
+        type: array
+      keyword:
+        type: string
+      page:
+        description: page index
+        type: integer
+      positions:
+        items:
+          type: string
+        type: array
+      preload:
+        type: boolean
+      projects:
+        items:
+          type: string
+        type: array
+      seniorities:
+        items:
+          type: string
+        type: array
+      size:
+        description: page size
+        type: integer
+      stacks:
+        items:
+          type: string
+        type: array
+      workingStatuses:
         items:
           type: string
         type: array
@@ -683,7 +712,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       deliveryManager:
         $ref: '#/definitions/view.ProjectHead'
       id:
@@ -739,7 +768,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       discordID:
         type: string
       discordName:
@@ -1088,7 +1117,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       deliveryManager:
         $ref: '#/definitions/view.ProjectHead'
       endDate:
@@ -1392,7 +1421,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       discordID:
         type: string
       discordName:
@@ -1426,7 +1455,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       gender:
         type: string
       id:
@@ -1450,7 +1479,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       discordID:
         type: string
       discordName:
@@ -1534,7 +1563,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       id:
         type: string
       positions:
@@ -1560,7 +1589,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       endDate:
         type: string
       id:
@@ -1693,72 +1722,6 @@ paths:
       tags:
       - Auth
   /employees:
-    get:
-      consumes:
-      - application/json
-      description: Get the list of employees with pagination and workingStatus
-      parameters:
-      - description: jwt token
-        in: header
-        name: Authorization
-        required: true
-        type: string
-      - description: Working Status
-        in: query
-        items:
-          type: string
-        name: workingStatus
-        type: array
-      - description: Position ID
-        in: query
-        name: positionID
-        type: string
-      - description: Stack ID
-        in: query
-        name: stackID
-        type: string
-      - description: Project ID
-        in: query
-        name: projectID
-        type: string
-      - description: keyword for searching
-        in: query
-        name: keyword
-        type: string
-      - description: Preload
-        in: query
-        name: preload
-        type: boolean
-      - description: Page
-        in: query
-        name: page
-        type: string
-      - description: Size
-        in: query
-        name: size
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/view.EmployeeListDataResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/view.ErrorResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/view.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/view.ErrorResponse'
-      summary: Get the list of employees
-      tags:
-      - Employee
     post:
       consumes:
       - application/json

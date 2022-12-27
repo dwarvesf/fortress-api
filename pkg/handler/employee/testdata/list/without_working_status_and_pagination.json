@@ -11,7 +11,6 @@
       "fullName": "Nguyen Van Duc",
       "displayName": "Duc Nguyen",
       "teamEmail": "ducnv@dwarvesv.com",
-      "username": "ducnv",
       "personalEmail": "nguyenduc123@gmail.com",
       "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/7227222220023148542.png",
       "phoneNumber": "0123456789",
@@ -25,39 +24,15 @@
       "notionName": "notionName",
       "discordID": "236885900779454465",
       "discordName": "discordName",
+      "username": "ducnv",
       "status": "probation",
       "joinedDate": "2022-05-25T00:00:00Z",
       "leftDate": null,
-      "seniority": {
-        "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
-        "createdAt": "2022-11-07T09:50:25.714604Z",
-        "updatedAt": "2022-11-07T09:50:25.714604Z",
-        "name": "Junior",
-        "code": "junior"
-      },
-      "lineManager": {
-        "id": "2655832e-f009-4b73-a535-64c3a22e558f",
-        "fullName": "Phạm Đức Thành",
-        "displayName": "Thanh Pham",
-        "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
-        "username": "thanh"
-      },
+      "seniority": null,
+      "lineManager": null,
       "positions": [],
-      "stacks": [
-        {
-          "id": "fa0f4e46-7eab-4e5c-9d31-30489e69fe2e",
-          "name": "React",
-          "code": "react",
-          "avatar": ""
-        }
-      ],
-      "roles": [
-        {
-          "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
-          "code": "member",
-          "name": "Member"
-        }
-      ],
+      "stacks": [],
+      "roles": [],
       "projects": [],
       "chapters": []
     },
@@ -68,7 +43,6 @@
       "fullName": "Nguyễn Xuân Trường",
       "displayName": "Truong Nguyen",
       "teamEmail": "truongnx@dwarvesv.com",
-      "username": "truongnx",
       "personalEmail": "nguyentruong123@gmail.com",
       "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/8690187460973853786.png",
       "phoneNumber": "0123456789",
@@ -82,39 +56,15 @@
       "notionName": "notionName",
       "discordID": "205167514731151360",
       "discordName": "discordName",
+      "username": "truongnx",
       "status": "full-time",
       "joinedDate": "2022-05-25T00:00:00Z",
       "leftDate": null,
-      "seniority": {
-        "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
-        "createdAt": "2022-11-07T09:50:25.714604Z",
-        "updatedAt": "2022-11-07T09:50:25.714604Z",
-        "name": "Fresher",
-        "code": "fresher"
-      },
-      "lineManager": {
-        "id": "2655832e-f009-4b73-a535-64c3a22e558f",
-        "fullName": "Phạm Đức Thành",
-        "displayName": "Thanh Pham",
-        "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
-        "username": "thanh"
-      },
+      "seniority": null,
+      "lineManager": null,
       "positions": [],
-      "stacks": [
-        {
-          "id": "fa0f4e46-7eab-4e5c-9d31-30489e69fe2e",
-          "name": "React",
-          "code": "react",
-          "avatar": ""
-        }
-      ],
-      "roles": [
-        {
-          "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
-          "code": "member",
-          "name": "Member"
-        }
-      ],
+      "stacks": [],
+      "roles": [],
       "projects": [],
       "chapters": []
     },
@@ -125,7 +75,6 @@
       "fullName": "Nguyễn Hữu Nguyên",
       "displayName": "Nguyen Nguyen",
       "teamEmail": "nguyennh@dwarvesv.com",
-      "username": "nguyennh",
       "personalEmail": "nguyennh123@gmail.com",
       "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/2137109913829673789.png",
       "phoneNumber": "0123456789",
@@ -139,39 +88,15 @@
       "notionName": "notionName",
       "discordID": "205167514731151360",
       "discordName": "discordName",
+      "username": "nguyennh",
       "status": "probation",
       "joinedDate": "2022-05-25T00:00:00Z",
       "leftDate": null,
-      "seniority": {
-        "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
-        "createdAt": "2022-11-07T09:50:25.714604Z",
-        "updatedAt": "2022-11-07T09:50:25.714604Z",
-        "name": "Fresher",
-        "code": "fresher"
-      },
-      "lineManager": {
-        "id": "2655832e-f009-4b73-a535-64c3a22e558f",
-        "fullName": "Phạm Đức Thành",
-        "displayName": "Thanh Pham",
-        "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
-        "username": "thanh"
-      },
+      "seniority": null,
+      "lineManager": null,
       "positions": [],
-      "stacks": [
-        {
-          "id": "fa0f4e46-7eab-4e5c-9d31-30489e69fe2e",
-          "name": "React",
-          "code": "react",
-          "avatar": ""
-        }
-      ],
-      "roles": [
-        {
-          "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
-          "code": "member",
-          "name": "Member"
-        }
-      ],
+      "stacks": [],
+      "roles": [],
       "projects": [],
       "chapters": []
     },
@@ -182,7 +107,6 @@
       "fullName": "Ho Quang Toan",
       "displayName": "Toan Ho",
       "teamEmail": "toanhq@dwarvesv.com",
-      "username": "toanhq",
       "personalEmail": "toanbku123@gmail.com",
       "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/6674226719566030792.png",
       "phoneNumber": "0123456789",
@@ -196,45 +120,15 @@
       "notionName": "notionName",
       "discordID": "236885900779454465",
       "discordName": "discordName",
+      "username": "toanhq",
       "status": "left",
       "joinedDate": "2022-05-25T00:00:00Z",
       "leftDate": "2022-04-12T00:00:00Z",
-      "seniority": {
-        "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
-        "createdAt": "2022-11-07T09:50:25.714604Z",
-        "updatedAt": "2022-11-07T09:50:25.714604Z",
-        "name": "Mid",
-        "code": "mid"
-      },
-      "lineManager": {
-        "id": "2655832e-f009-4b73-a535-64c3a22e558f",
-        "fullName": "Phạm Đức Thành",
-        "displayName": "Thanh Pham",
-        "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
-        "username": "thanh"
-      },
-      "positions": [
-        {
-          "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
-          "code": "devops",
-          "name": "Devops"
-        }
-      ],
-      "stacks": [
-        {
-          "id": "0ecf47c8-cca4-4c30-94bb-054b1124c44f",
-          "name": "Golang",
-          "code": "golang",
-          "avatar": ""
-        }
-      ],
-      "roles": [
-        {
-          "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
-          "code": "member",
-          "name": "Member"
-        }
-      ],
+      "seniority": null,
+      "lineManager": null,
+      "positions": [],
+      "stacks": [],
+      "roles": [],
       "projects": [],
       "chapters": []
     },
@@ -245,7 +139,6 @@
       "fullName": "Trần Diễm Quỳnh",
       "displayName": "Quynh Tran",
       "teamEmail": "quynhtd@dwarvesv.com",
-      "username": "quynhtd",
       "personalEmail": "quynhtd123@gmail.com",
       "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/8900807301346129018.png",
       "phoneNumber": "0123456789",
@@ -259,45 +152,15 @@
       "notionName": "notionName",
       "discordID": "236885900779454465",
       "discordName": "discordName",
+      "username": "quynhtd",
       "status": "left",
       "joinedDate": "2022-05-25T00:00:00Z",
       "leftDate": "2022-04-12T00:00:00Z",
-      "seniority": {
-        "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
-        "createdAt": "2022-11-07T09:50:25.714604Z",
-        "updatedAt": "2022-11-07T09:50:25.714604Z",
-        "name": "Mid",
-        "code": "mid"
-      },
-      "lineManager": {
-        "id": "2655832e-f009-4b73-a535-64c3a22e558f",
-        "fullName": "Phạm Đức Thành",
-        "displayName": "Thanh Pham",
-        "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
-        "username": "thanh"
-      },
-      "positions": [
-        {
-          "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
-          "code": "devops",
-          "name": "Devops"
-        }
-      ],
-      "stacks": [
-        {
-          "id": "0ecf47c8-cca4-4c30-94bb-054b1124c44f",
-          "name": "Golang",
-          "code": "golang",
-          "avatar": ""
-        }
-      ],
-      "roles": [
-        {
-          "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
-          "code": "member",
-          "name": "Member"
-        }
-      ],
+      "seniority": null,
+      "lineManager": null,
+      "positions": [],
+      "stacks": [],
+      "roles": [],
       "projects": [],
       "chapters": []
     },
@@ -308,7 +171,6 @@
       "fullName": "Nguyễn Hoàng Anh",
       "displayName": "Anh Nguyen",
       "teamEmail": "anhnh@dwarvesv.com",
-      "username": "anhnh",
       "personalEmail": "nguyenanh123@gmail.com",
       "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/3274097965772922906.png",
       "phoneNumber": "0123456789",
@@ -322,39 +184,15 @@
       "notionName": "notionName",
       "discordID": "236885900779454465",
       "discordName": "discordName",
+      "username": "anhnh",
       "status": "full-time",
       "joinedDate": "2022-05-25T00:00:00Z",
       "leftDate": null,
-      "seniority": {
-        "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
-        "createdAt": "2022-11-07T09:50:25.714604Z",
-        "updatedAt": "2022-11-07T09:50:25.714604Z",
-        "name": "Junior",
-        "code": "junior"
-      },
-      "lineManager": {
-        "id": "2655832e-f009-4b73-a535-64c3a22e558f",
-        "fullName": "Phạm Đức Thành",
-        "displayName": "Thanh Pham",
-        "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
-        "username": "thanh"
-      },
+      "seniority": null,
+      "lineManager": null,
       "positions": [],
-      "stacks": [
-        {
-          "id": "fa0f4e46-7eab-4e5c-9d31-30489e69fe2e",
-          "name": "React",
-          "code": "react",
-          "avatar": ""
-        }
-      ],
-      "roles": [
-        {
-          "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
-          "code": "member",
-          "name": "Member"
-        }
-      ],
+      "stacks": [],
+      "roles": [],
       "projects": [],
       "chapters": []
     },
@@ -365,7 +203,6 @@
       "fullName": "Vong Tieu Hung",
       "displayName": "Hung Vong",
       "teamEmail": "hungvt@dwarvesv.com",
-      "username": "hungvt",
       "personalEmail": "tieuhung123@gmail.com",
       "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5762098830282049280.png",
       "phoneNumber": "0123456789",
@@ -379,39 +216,15 @@
       "notionName": "notionName",
       "discordID": "205167514731151360",
       "discordName": "discordName",
+      "username": "hungvt",
       "status": "probation",
       "joinedDate": "2022-05-25T00:00:00Z",
       "leftDate": null,
-      "seniority": {
-        "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
-        "createdAt": "2022-11-07T09:50:25.714604Z",
-        "updatedAt": "2022-11-07T09:50:25.714604Z",
-        "name": "Junior",
-        "code": "junior"
-      },
-      "lineManager": {
-        "id": "2655832e-f009-4b73-a535-64c3a22e558f",
-        "fullName": "Phạm Đức Thành",
-        "displayName": "Thanh Pham",
-        "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
-        "username": "thanh"
-      },
+      "seniority": null,
+      "lineManager": null,
       "positions": [],
-      "stacks": [
-        {
-          "id": "fa0f4e46-7eab-4e5c-9d31-30489e69fe2e",
-          "name": "React",
-          "code": "react",
-          "avatar": ""
-        }
-      ],
-      "roles": [
-        {
-          "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
-          "code": "member",
-          "name": "Member"
-        }
-      ],
+      "stacks": [],
+      "roles": [],
       "projects": [],
       "chapters": []
     },
@@ -422,7 +235,6 @@
       "fullName": "Le Nguyen An Khang",
       "displayName": "Khang Le",
       "teamEmail": "khanglna@dwarvesv.com",
-      "username": "khanglna",
       "personalEmail": "khangle123@gmail.com",
       "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/4368900905892223171.png",
       "phoneNumber": "0123456789",
@@ -436,39 +248,15 @@
       "notionName": "notionName",
       "discordID": "205167514731151360",
       "discordName": "discordName",
+      "username": "khanglna",
       "status": "probation",
       "joinedDate": "2022-05-25T00:00:00Z",
       "leftDate": null,
-      "seniority": {
-        "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
-        "createdAt": "2022-11-07T09:50:25.714604Z",
-        "updatedAt": "2022-11-07T09:50:25.714604Z",
-        "name": "Fresher",
-        "code": "fresher"
-      },
-      "lineManager": {
-        "id": "2655832e-f009-4b73-a535-64c3a22e558f",
-        "fullName": "Phạm Đức Thành",
-        "displayName": "Thanh Pham",
-        "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
-        "username": "thanh"
-      },
+      "seniority": null,
+      "lineManager": null,
       "positions": [],
-      "stacks": [
-        {
-          "id": "fa0f4e46-7eab-4e5c-9d31-30489e69fe2e",
-          "name": "React",
-          "code": "react",
-          "avatar": ""
-        }
-      ],
-      "roles": [
-        {
-          "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
-          "code": "member",
-          "name": "Member"
-        }
-      ],
+      "stacks": [],
+      "roles": [],
       "projects": [],
       "chapters": []
     },
@@ -479,7 +267,6 @@
       "fullName": "Đoàn Tấn Đạt",
       "displayName": "Dat Doan",
       "teamEmail": "datdt@dwarvesv.com",
-      "username": "datdt",
       "personalEmail": "doandat123@gmail.com",
       "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/1105085008506574007.png",
       "phoneNumber": "0123456789",
@@ -493,45 +280,15 @@
       "notionName": "notionName",
       "discordID": "236885900779454465",
       "discordName": "discordName",
+      "username": "datdt",
       "status": "left",
       "joinedDate": "2022-05-25T00:00:00Z",
       "leftDate": "2022-04-12T00:00:00Z",
-      "seniority": {
-        "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
-        "createdAt": "2022-11-07T09:50:25.714604Z",
-        "updatedAt": "2022-11-07T09:50:25.714604Z",
-        "name": "Junior",
-        "code": "junior"
-      },
-      "lineManager": {
-        "id": "2655832e-f009-4b73-a535-64c3a22e558f",
-        "fullName": "Phạm Đức Thành",
-        "displayName": "Thanh Pham",
-        "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
-        "username": "thanh"
-      },
-      "positions": [
-        {
-          "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
-          "code": "devops",
-          "name": "Devops"
-        }
-      ],
-      "stacks": [
-        {
-          "id": "fa0f4e46-7eab-4e5c-9d31-30489e69fe2e",
-          "name": "React",
-          "code": "react",
-          "avatar": ""
-        }
-      ],
-      "roles": [
-        {
-          "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
-          "code": "member",
-          "name": "Member"
-        }
-      ],
+      "seniority": null,
+      "lineManager": null,
+      "positions": [],
+      "stacks": [],
+      "roles": [],
       "projects": [],
       "chapters": []
     },
@@ -542,7 +299,6 @@
       "fullName": "Phùng Thị Thương Thương",
       "displayName": "Thuong Phung",
       "teamEmail": "thuongptt@dwarvesv.com",
-      "username": "thuongptt",
       "personalEmail": "thuongphung123@gmail.com",
       "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/7186955696154477566.png",
       "phoneNumber": "0123456789",
@@ -556,51 +312,15 @@
       "notionName": "notionName",
       "discordID": "435844136025849876",
       "discordName": "discordName",
+      "username": "thuongptt",
       "status": "full-time",
       "joinedDate": "2021-05-17T00:00:00Z",
       "leftDate": null,
-      "seniority": {
-        "id": "01fb6322-d727-47e3-a242-5039ea4732fc",
-        "createdAt": "2022-11-07T09:50:25.714604Z",
-        "updatedAt": "2022-11-07T09:50:25.714604Z",
-        "name": "Senior",
-        "code": "senior"
-      },
-      "lineManager": {
-        "id": "2655832e-f009-4b73-a535-64c3a22e558f",
-        "fullName": "Phạm Đức Thành",
-        "displayName": "Thanh Pham",
-        "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
-        "username": "thanh"
-      },
-      "positions": [
-        {
-          "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
-          "code": "devops",
-          "name": "Devops"
-        }
-      ],
-      "stacks": [
-        {
-          "id": "0ecf47c8-cca4-4c30-94bb-054b1124c44f",
-          "name": "Golang",
-          "code": "golang",
-          "avatar": ""
-        },
-        {
-          "id": "b403ef95-4269-4830-bbb6-8e56e5ec0af4",
-          "name": "Google Cloud",
-          "code": "gcloud",
-          "avatar": ""
-        }
-      ],
-      "roles": [
-        {
-          "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
-          "code": "member",
-          "name": "Member"
-        }
-      ],
+      "seniority": null,
+      "lineManager": null,
+      "positions": [],
+      "stacks": [],
+      "roles": [],
       "projects": [],
       "chapters": []
     },
@@ -611,7 +331,6 @@
       "fullName": "Nguyễn Trần Minh Thảo",
       "displayName": "Thao Nguyen",
       "teamEmail": "thaontm@dwarvesv.com",
-      "username": "thaontm",
       "personalEmail": "thaonguyen123@gmail.com",
       "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5348640939694049226.png",
       "phoneNumber": "0123456789",
@@ -625,51 +344,15 @@
       "notionName": "notionName",
       "discordID": "435844136025849876",
       "discordName": "discordName",
+      "username": "thaontm",
       "status": "full-time",
       "joinedDate": "2021-05-17T00:00:00Z",
       "leftDate": null,
-      "seniority": {
-        "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
-        "createdAt": "2022-11-07T09:50:25.714604Z",
-        "updatedAt": "2022-11-07T09:50:25.714604Z",
-        "name": "Mid",
-        "code": "mid"
-      },
-      "lineManager": {
-        "id": "2655832e-f009-4b73-a535-64c3a22e558f",
-        "fullName": "Phạm Đức Thành",
-        "displayName": "Thanh Pham",
-        "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
-        "username": "thanh"
-      },
-      "positions": [
-        {
-          "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
-          "code": "devops",
-          "name": "Devops"
-        }
-      ],
-      "stacks": [
-        {
-          "id": "0ecf47c8-cca4-4c30-94bb-054b1124c44f",
-          "name": "Golang",
-          "code": "golang",
-          "avatar": ""
-        },
-        {
-          "id": "b403ef95-4269-4830-bbb6-8e56e5ec0af4",
-          "name": "Google Cloud",
-          "code": "gcloud",
-          "avatar": ""
-        }
-      ],
-      "roles": [
-        {
-          "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
-          "code": "member",
-          "name": "Member"
-        }
-      ],
+      "seniority": null,
+      "lineManager": null,
+      "positions": [],
+      "stacks": [],
+      "roles": [],
       "projects": [],
       "chapters": []
     },
@@ -680,7 +363,6 @@
       "fullName": "Phan Duy Cường",
       "displayName": "Cuong Phan",
       "teamEmail": "cody@dwarvesv.com",
-      "username": "cody",
       "personalEmail": "cuongphan123@gmail.com",
       "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/8465254073957996724.png",
       "phoneNumber": "0123456789",
@@ -694,51 +376,15 @@
       "notionName": "notionName",
       "discordID": "435844136025849876",
       "discordName": "discordName",
+      "username": "cody",
       "status": "full-time",
       "joinedDate": "2021-05-17T00:00:00Z",
       "leftDate": null,
-      "seniority": {
-        "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
-        "createdAt": "2022-11-07T09:50:25.714604Z",
-        "updatedAt": "2022-11-07T09:50:25.714604Z",
-        "name": "Mid",
-        "code": "mid"
-      },
-      "lineManager": {
-        "id": "2655832e-f009-4b73-a535-64c3a22e558f",
-        "fullName": "Phạm Đức Thành",
-        "displayName": "Thanh Pham",
-        "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
-        "username": "thanh"
-      },
-      "positions": [
-        {
-          "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
-          "code": "devops",
-          "name": "Devops"
-        }
-      ],
-      "stacks": [
-        {
-          "id": "0ecf47c8-cca4-4c30-94bb-054b1124c44f",
-          "name": "Golang",
-          "code": "golang",
-          "avatar": ""
-        },
-        {
-          "id": "b403ef95-4269-4830-bbb6-8e56e5ec0af4",
-          "name": "Google Cloud",
-          "code": "gcloud",
-          "avatar": ""
-        }
-      ],
-      "roles": [
-        {
-          "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
-          "code": "member",
-          "name": "Member"
-        }
-      ],
+      "seniority": null,
+      "lineManager": null,
+      "positions": [],
+      "stacks": [],
+      "roles": [],
       "projects": [],
       "chapters": []
     },
@@ -749,7 +395,6 @@
       "fullName": "Võ Hải Biên",
       "displayName": "Bien Vo",
       "teamEmail": "bean@dwarvesv.com",
-      "username": "bean",
       "personalEmail": "vhbien123@gmail.com",
       "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/4114345912835654270.png",
       "phoneNumber": "0123456789",
@@ -763,51 +408,15 @@
       "notionName": "notionName",
       "discordID": "236885900779454465",
       "discordName": "discordName",
+      "username": "bean",
       "status": "full-time",
       "joinedDate": "2021-05-17T00:00:00Z",
       "leftDate": null,
-      "seniority": {
-        "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
-        "createdAt": "2022-11-07T09:50:25.714604Z",
-        "updatedAt": "2022-11-07T09:50:25.714604Z",
-        "name": "Mid",
-        "code": "mid"
-      },
-      "lineManager": {
-        "id": "2655832e-f009-4b73-a535-64c3a22e558f",
-        "fullName": "Phạm Đức Thành",
-        "displayName": "Thanh Pham",
-        "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
-        "username": "thanh"
-      },
-      "positions": [
-        {
-          "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
-          "code": "devops",
-          "name": "Devops"
-        }
-      ],
-      "stacks": [
-        {
-          "id": "0ecf47c8-cca4-4c30-94bb-054b1124c44f",
-          "name": "Golang",
-          "code": "golang",
-          "avatar": ""
-        },
-        {
-          "id": "b403ef95-4269-4830-bbb6-8e56e5ec0af4",
-          "name": "Google Cloud",
-          "code": "gcloud",
-          "avatar": ""
-        }
-      ],
-      "roles": [
-        {
-          "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
-          "code": "member",
-          "name": "Member"
-        }
-      ],
+      "seniority": null,
+      "lineManager": null,
+      "positions": [],
+      "stacks": [],
+      "roles": [],
       "projects": [],
       "chapters": []
     },
@@ -818,7 +427,6 @@
       "fullName": "Lê Việt Quỳnh",
       "displayName": "Quynh Le",
       "teamEmail": "quynhlv@dwarvesv.com",
-      "username": "quynhlv",
       "personalEmail": "lequynh123@gmail.com",
       "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/4916620003720295041.png",
       "phoneNumber": "0123456789",
@@ -832,51 +440,15 @@
       "notionName": "notionName",
       "discordID": "435844136025849876",
       "discordName": "discordName",
+      "username": "quynhlv",
       "status": "full-time",
       "joinedDate": "2021-05-17T00:00:00Z",
       "leftDate": null,
-      "seniority": {
-        "id": "01fb6322-d727-47e3-a242-5039ea4732fc",
-        "createdAt": "2022-11-07T09:50:25.714604Z",
-        "updatedAt": "2022-11-07T09:50:25.714604Z",
-        "name": "Senior",
-        "code": "senior"
-      },
-      "lineManager": {
-        "id": "2655832e-f009-4b73-a535-64c3a22e558f",
-        "fullName": "Phạm Đức Thành",
-        "displayName": "Thanh Pham",
-        "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
-        "username": "thanh"
-      },
-      "positions": [
-        {
-          "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
-          "code": "devops",
-          "name": "Devops"
-        }
-      ],
-      "stacks": [
-        {
-          "id": "0ecf47c8-cca4-4c30-94bb-054b1124c44f",
-          "name": "Golang",
-          "code": "golang",
-          "avatar": ""
-        },
-        {
-          "id": "b403ef95-4269-4830-bbb6-8e56e5ec0af4",
-          "name": "Google Cloud",
-          "code": "gcloud",
-          "avatar": ""
-        }
-      ],
-      "roles": [
-        {
-          "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
-          "code": "member",
-          "name": "Member"
-        }
-      ],
+      "seniority": null,
+      "lineManager": null,
+      "positions": [],
+      "stacks": [],
+      "roles": [],
       "projects": [],
       "chapters": []
     },
@@ -887,7 +459,6 @@
       "fullName": "Nghiêm Minh Đức",
       "displayName": "Duc Nghiem",
       "teamEmail": "duc@dwarvesv.com",
-      "username": "duc",
       "personalEmail": "ducnghiem123@gmail.com",
       "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/3851063061598282120.png",
       "phoneNumber": "0123456789",
@@ -901,51 +472,15 @@
       "notionName": "notionName",
       "discordID": "435844136025849876",
       "discordName": "discordName",
+      "username": "duc",
       "status": "probation",
       "joinedDate": "2021-05-17T00:00:00Z",
       "leftDate": null,
-      "seniority": {
-        "id": "01fb6322-d727-47e3-a242-5039ea4732fc",
-        "createdAt": "2022-11-07T09:50:25.714604Z",
-        "updatedAt": "2022-11-07T09:50:25.714604Z",
-        "name": "Senior",
-        "code": "senior"
-      },
-      "lineManager": {
-        "id": "2655832e-f009-4b73-a535-64c3a22e558f",
-        "fullName": "Phạm Đức Thành",
-        "displayName": "Thanh Pham",
-        "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
-        "username": "thanh"
-      },
-      "positions": [
-        {
-          "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
-          "code": "devops",
-          "name": "Devops"
-        }
-      ],
-      "stacks": [
-        {
-          "id": "0ecf47c8-cca4-4c30-94bb-054b1124c44f",
-          "name": "Golang",
-          "code": "golang",
-          "avatar": ""
-        },
-        {
-          "id": "b403ef95-4269-4830-bbb6-8e56e5ec0af4",
-          "name": "Google Cloud",
-          "code": "gcloud",
-          "avatar": ""
-        }
-      ],
-      "roles": [
-        {
-          "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
-          "code": "member",
-          "name": "Member"
-        }
-      ],
+      "seniority": null,
+      "lineManager": null,
+      "positions": [],
+      "stacks": [],
+      "roles": [],
       "projects": [],
       "chapters": []
     },
@@ -956,7 +491,6 @@
       "fullName": "Nguyễn Lâm Ngọc Duy",
       "displayName": "Duy Nguyen",
       "teamEmail": "mia@dwarvesv.com",
-      "username": "mia",
       "personalEmail": "ngocduy123@gmail.com",
       "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/7186955696154477566.png",
       "phoneNumber": "0123456789",
@@ -970,51 +504,15 @@
       "notionName": "notionName",
       "discordID": "435844136025849876",
       "discordName": "discordName",
+      "username": "mia",
       "status": "full-time",
       "joinedDate": "2021-05-17T00:00:00Z",
       "leftDate": null,
-      "seniority": {
-        "id": "01fb6322-d727-47e3-a242-5039ea4732fc",
-        "createdAt": "2022-11-07T09:50:25.714604Z",
-        "updatedAt": "2022-11-07T09:50:25.714604Z",
-        "name": "Senior",
-        "code": "senior"
-      },
-      "lineManager": {
-        "id": "2655832e-f009-4b73-a535-64c3a22e558f",
-        "fullName": "Phạm Đức Thành",
-        "displayName": "Thanh Pham",
-        "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
-        "username": "thanh"
-      },
-      "positions": [
-        {
-          "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
-          "code": "devops",
-          "name": "Devops"
-        }
-      ],
-      "stacks": [
-        {
-          "id": "0ecf47c8-cca4-4c30-94bb-054b1124c44f",
-          "name": "Golang",
-          "code": "golang",
-          "avatar": ""
-        },
-        {
-          "id": "b403ef95-4269-4830-bbb6-8e56e5ec0af4",
-          "name": "Google Cloud",
-          "code": "gcloud",
-          "avatar": ""
-        }
-      ],
-      "roles": [
-        {
-          "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
-          "code": "member",
-          "name": "Member"
-        }
-      ],
+      "seniority": null,
+      "lineManager": null,
+      "positions": [],
+      "stacks": [],
+      "roles": [],
       "projects": [],
       "chapters": []
     },
@@ -1025,7 +523,6 @@
       "fullName": "Nguyễn Hải Nam",
       "displayName": "Nam Nguyen",
       "teamEmail": "benjamin@d.foundation",
-      "username": "benjamin",
       "personalEmail": "nam123@gmail.com",
       "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/8399103964540935617.png",
       "phoneNumber": "0123456789",
@@ -1039,74 +536,16 @@
       "notionName": "notionName",
       "discordID": "646649040771219476",
       "discordName": "discordName",
+      "username": "benjamin",
       "status": "probation",
       "joinedDate": "2018-09-01T00:00:00Z",
       "leftDate": null,
-      "seniority": {
-        "id": "01fb6322-d727-47e3-a242-5039ea4732fd",
-        "createdAt": "2022-11-07T09:50:25.714604Z",
-        "updatedAt": "2022-11-07T09:50:25.714604Z",
-        "name": "Staff",
-        "code": "staff"
-      },
-      "lineManager": {
-        "id": "2655832e-f009-4b73-a535-64c3a22e558f",
-        "fullName": "Phạm Đức Thành",
-        "displayName": "Thanh Pham",
-        "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
-        "username": "thanh"
-      },
-      "positions": [
-        {
-          "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
-          "code": "frontend",
-          "name": "Frontend"
-        },
-        {
-          "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
-          "code": "backend",
-          "name": "Backend"
-        },
-        {
-          "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
-          "code": "devops",
-          "name": "Devops"
-        },
-        {
-          "id": "01fb6322-d727-47e3-a242-5039ea4732fc",
-          "code": "blockchain",
-          "name": "Blockchain"
-        }
-      ],
-      "stacks": [
-        {
-          "id": "fa0f4e46-7eab-4e5c-9d31-30489e69fe2e",
-          "name": "React",
-          "code": "react",
-          "avatar": ""
-        },
-        {
-          "id": "b403ef95-4269-4830-bbb6-8e56e5ec0af4",
-          "name": "Google Cloud",
-          "code": "gcloud",
-          "avatar": ""
-        }
-      ],
-      "roles": [
-        {
-          "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
-          "code": "admin",
-          "name": "Admin"
-        }
-      ],
-      "projects": [
-        {
-          "id": "8dc3be2e-19a4-4942-8a79-56db391a0b15",
-          "name": "Fortress",
-          "deploymentType": "official",
-          "positions": []
-        }
-      ],
+      "seniority": null,
+      "lineManager": null,
+      "positions": [],
+      "stacks": [],
+      "roles": [],
+      "projects": [],
       "chapters": []
     },
     {
@@ -1116,7 +555,6 @@
       "fullName": "Giang Ngọc Huy",
       "displayName": "Huy Giang",
       "teamEmail": "huy@dwarvesv.com",
-      "username": "huy",
       "personalEmail": "gnhuy123@gmail.com",
       "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/261887286241984054.png",
       "phoneNumber": "0123456789",
@@ -1130,66 +568,15 @@
       "notionName": "notionName",
       "discordID": "435844136025849876",
       "discordName": "discordName",
+      "username": "huy",
       "status": "full-time",
       "joinedDate": "2018-09-01T00:00:00Z",
       "leftDate": null,
-      "seniority": {
-        "id": "01fb6322-d727-47e3-a242-5039ea4732fd",
-        "createdAt": "2022-11-07T09:50:25.714604Z",
-        "updatedAt": "2022-11-07T09:50:25.714604Z",
-        "name": "Staff",
-        "code": "staff"
-      },
-      "lineManager": {
-        "id": "2655832e-f009-4b73-a535-64c3a22e558f",
-        "fullName": "Phạm Đức Thành",
-        "displayName": "Thanh Pham",
-        "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
-        "username": "thanh"
-      },
-      "positions": [
-        {
-          "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
-          "code": "frontend",
-          "name": "Frontend"
-        },
-        {
-          "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
-          "code": "backend",
-          "name": "Backend"
-        },
-        {
-          "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
-          "code": "devops",
-          "name": "Devops"
-        },
-        {
-          "id": "01fb6322-d727-47e3-a242-5039ea4732fc",
-          "code": "blockchain",
-          "name": "Blockchain"
-        }
-      ],
-      "stacks": [
-        {
-          "id": "0ecf47c8-cca4-4c30-94bb-054b1124c44f",
-          "name": "Golang",
-          "code": "golang",
-          "avatar": ""
-        },
-        {
-          "id": "b403ef95-4269-4830-bbb6-8e56e5ec0af4",
-          "name": "Google Cloud",
-          "code": "gcloud",
-          "avatar": ""
-        }
-      ],
-      "roles": [
-        {
-          "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
-          "code": "member",
-          "name": "Member"
-        }
-      ],
+      "seniority": null,
+      "lineManager": null,
+      "positions": [],
+      "stacks": [],
+      "roles": [],
       "projects": [],
       "chapters": []
     },
@@ -1200,7 +587,6 @@
       "fullName": "Nguyễn Hoàng Huy",
       "displayName": "Huy Nguyen",
       "teamEmail": "huynh@d.foundation",
-      "username": "huynh",
       "personalEmail": "hoanghuy123@gmail.com",
       "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/2830497479497502617.png",
       "phoneNumber": "0123456789",
@@ -1214,80 +600,16 @@
       "notionName": "notionName",
       "discordID": "646649040771219476",
       "discordName": "discordName",
+      "username": "huynh",
       "status": "probation",
       "joinedDate": "2018-09-01T00:00:00Z",
       "leftDate": null,
-      "seniority": {
-        "id": "01fb6322-d727-47e3-a242-5039ea4732fd",
-        "createdAt": "2022-11-07T09:50:25.714604Z",
-        "updatedAt": "2022-11-07T09:50:25.714604Z",
-        "name": "Staff",
-        "code": "staff"
-      },
-      "lineManager": {
-        "id": "2655832e-f009-4b73-a535-64c3a22e558f",
-        "fullName": "Phạm Đức Thành",
-        "displayName": "Thanh Pham",
-        "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
-        "username": "thanh"
-      },
-      "positions": [
-        {
-          "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
-          "code": "devops",
-          "name": "Devops"
-        },
-        {
-          "id": "01fb6322-d727-47e3-a242-5039ea4732fc",
-          "code": "blockchain",
-          "name": "Blockchain"
-        },
-        {
-          "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
-          "code": "frontend",
-          "name": "Frontend"
-        },
-        {
-          "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
-          "code": "backend",
-          "name": "Backend"
-        }
-      ],
-      "stacks": [
-        {
-          "id": "0ecf47c8-cca4-4c30-94bb-054b1124c44f",
-          "name": "Golang",
-          "code": "golang",
-          "avatar": ""
-        },
-        {
-          "id": "fa0f4e46-7eab-4e5c-9d31-30489e69fe2e",
-          "name": "React",
-          "code": "react",
-          "avatar": ""
-        },
-        {
-          "id": "b403ef95-4269-4830-bbb6-8e56e5ec0af4",
-          "name": "Google Cloud",
-          "code": "gcloud",
-          "avatar": ""
-        }
-      ],
-      "roles": [
-        {
-          "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
-          "code": "admin",
-          "name": "Admin"
-        }
-      ],
-      "projects": [
-        {
-          "id": "8dc3be2e-19a4-4942-8a79-56db391a0b15",
-          "name": "Fortress",
-          "deploymentType": "shadow",
-          "positions": []
-        }
-      ],
+      "seniority": null,
+      "lineManager": null,
+      "positions": [],
+      "stacks": [],
+      "roles": [],
+      "projects": [],
       "chapters": []
     },
     {
@@ -1297,7 +619,6 @@
       "fullName": "Phạm Đức Thành",
       "displayName": "Thanh Pham",
       "teamEmail": "thanh@d.foundation",
-      "username": "thanh",
       "personalEmail": "thanhpham123@gmail.com",
       "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
       "phoneNumber": "0123456788",
@@ -1311,68 +632,16 @@
       "notionName": "notionName",
       "discordID": "646649040771219476",
       "discordName": "discordName",
+      "username": "thanh",
       "status": "contractor",
       "joinedDate": "2018-09-01T00:00:00Z",
       "leftDate": null,
-      "seniority": {
-        "id": "01fb6322-d727-47e3-a242-5039ea4732fd",
-        "createdAt": "2022-11-07T09:50:25.714604Z",
-        "updatedAt": "2022-11-07T09:50:25.714604Z",
-        "name": "Staff",
-        "code": "staff"
-      },
+      "seniority": null,
       "lineManager": null,
-      "positions": [
-        {
-          "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
-          "code": "frontend",
-          "name": "Frontend"
-        },
-        {
-          "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
-          "code": "backend",
-          "name": "Backend"
-        },
-        {
-          "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
-          "code": "devops",
-          "name": "Devops"
-        },
-        {
-          "id": "01fb6322-d727-47e3-a242-5039ea4732fc",
-          "code": "blockchain",
-          "name": "Blockchain"
-        }
-      ],
-      "stacks": [
-        {
-          "id": "0ecf47c8-cca4-4c30-94bb-054b1124c44f",
-          "name": "Golang",
-          "code": "golang",
-          "avatar": ""
-        },
-        {
-          "id": "b403ef95-4269-4830-bbb6-8e56e5ec0af4",
-          "name": "Google Cloud",
-          "code": "gcloud",
-          "avatar": ""
-        }
-      ],
-      "roles": [
-        {
-          "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
-          "code": "admin",
-          "name": "Admin"
-        }
-      ],
-      "projects": [
-        {
-          "id": "8dc3be2e-19a4-4942-8a79-56db391a0b15",
-          "name": "Fortress",
-          "deploymentType": "official",
-          "positions": []
-        }
-      ],
+      "positions": [],
+      "stacks": [],
+      "roles": [],
+      "projects": [],
       "chapters": []
     },
     {
@@ -1382,7 +651,6 @@
       "fullName": "Nguyễn Ngô Lập",
       "displayName": "Lap Nguyen",
       "teamEmail": "alan@d.foundation",
-      "username": "alan",
       "personalEmail": "lap123@gmail.com",
       "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/2870969541970972723.png",
       "phoneNumber": "0123456789",
@@ -1396,68 +664,16 @@
       "notionName": "notionName",
       "discordID": "646649040771219476",
       "discordName": "discordName",
+      "username": "alan",
       "status": "probation",
       "joinedDate": "2018-09-01T00:00:00Z",
       "leftDate": null,
-      "seniority": {
-        "id": "01fb6322-d727-47e3-a242-5039ea4732fd",
-        "createdAt": "2022-11-07T09:50:25.714604Z",
-        "updatedAt": "2022-11-07T09:50:25.714604Z",
-        "name": "Staff",
-        "code": "staff"
-      },
-      "lineManager": {
-        "id": "2655832e-f009-4b73-a535-64c3a22e558f",
-        "fullName": "Phạm Đức Thành",
-        "displayName": "Thanh Pham",
-        "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
-        "username": "thanh"
-      },
-      "positions": [
-        {
-          "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
-          "code": "frontend",
-          "name": "Frontend"
-        },
-        {
-          "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
-          "code": "backend",
-          "name": "Backend"
-        },
-        {
-          "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
-          "code": "devops",
-          "name": "Devops"
-        },
-        {
-          "id": "01fb6322-d727-47e3-a242-5039ea4732fc",
-          "code": "blockchain",
-          "name": "Blockchain"
-        }
-      ],
-      "stacks": [
-        {
-          "id": "0ecf47c8-cca4-4c30-94bb-054b1124c44f",
-          "name": "Golang",
-          "code": "golang",
-          "avatar": ""
-        }
-      ],
-      "roles": [
-        {
-          "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
-          "code": "admin",
-          "name": "Admin"
-        }
-      ],
-      "projects": [
-        {
-          "id": "8dc3be2e-19a4-4942-8a79-56db391a0b15",
-          "name": "Fortress",
-          "deploymentType": "official",
-          "positions": []
-        }
-      ],
+      "seniority": null,
+      "lineManager": null,
+      "positions": [],
+      "stacks": [],
+      "roles": [],
+      "projects": [],
       "chapters": []
     },
     {
@@ -1467,7 +683,6 @@
       "fullName": "Tiêu Quang Huy",
       "displayName": "Huy Tieu",
       "teamEmail": "huytq@d.foundation",
-      "username": "huytq",
       "personalEmail": "huytq123@gmail.com",
       "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/3c420751-bb9a-4878-896e-2f10f3a633d6_avatar2535921977139052349.png",
       "phoneNumber": "0123456789",
@@ -1481,68 +696,16 @@
       "notionName": "notionName",
       "discordID": "435844136025849876",
       "discordName": "discordName",
+      "username": "huytq",
       "status": "contractor",
       "joinedDate": "2018-09-01T00:00:00Z",
       "leftDate": null,
-      "seniority": {
-        "id": "01fb6322-d727-47e3-a242-5039ea4732fd",
-        "createdAt": "2022-11-07T09:50:25.714604Z",
-        "updatedAt": "2022-11-07T09:50:25.714604Z",
-        "name": "Staff",
-        "code": "staff"
-      },
-      "lineManager": {
-        "id": "2655832e-f009-4b73-a535-64c3a22e558f",
-        "fullName": "Phạm Đức Thành",
-        "displayName": "Thanh Pham",
-        "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
-        "username": "thanh"
-      },
-      "positions": [
-        {
-          "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
-          "code": "frontend",
-          "name": "Frontend"
-        },
-        {
-          "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
-          "code": "backend",
-          "name": "Backend"
-        },
-        {
-          "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
-          "code": "devops",
-          "name": "Devops"
-        },
-        {
-          "id": "01fb6322-d727-47e3-a242-5039ea4732fc",
-          "code": "blockchain",
-          "name": "Blockchain"
-        }
-      ],
-      "stacks": [
-        {
-          "id": "b403ef95-4269-4830-bbb6-8e56e5ec0af4",
-          "name": "Google Cloud",
-          "code": "gcloud",
-          "avatar": ""
-        }
-      ],
-      "roles": [
-        {
-          "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
-          "code": "member",
-          "name": "Member"
-        }
-      ],
-      "projects": [
-        {
-          "id": "8dc3be2e-19a4-4942-8a79-56db391a0b15",
-          "name": "Fortress",
-          "deploymentType": "shadow",
-          "positions": []
-        }
-      ],
+      "seniority": null,
+      "lineManager": null,
+      "positions": [],
+      "stacks": [],
+      "roles": [],
+      "projects": [],
       "chapters": []
     }
   ]

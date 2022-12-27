@@ -24,8 +24,8 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 	v1.POST("/profile/upload-avatar", amw.WithAuth, h.Profile.UploadAvatar)
 
 	// employees
-	v1.GET("/employees", amw.WithAuth, pmw.WithPerm("employees.read"), h.Employee.List)
 	v1.POST("/employees", amw.WithAuth, pmw.WithPerm("employees.create"), h.Employee.Create)
+	v1.POST("/employees/search", amw.WithAuth, pmw.WithPerm("employees.read"), h.Employee.List)
 	v1.GET("/employees/:id", amw.WithAuth, pmw.WithPerm("employees.read"), h.Employee.One)
 	v1.PUT("/employees/:id/general-info", amw.WithAuth, pmw.WithPerm("employees.edit"), h.Employee.UpdateGeneralInfo)
 	v1.PUT("/employees/:id/personal-info", amw.WithAuth, pmw.WithPerm("employees.edit"), h.Employee.UpdatePersonalInfo)
