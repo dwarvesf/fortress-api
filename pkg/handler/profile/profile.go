@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/gin-gonic/gin"
+	"golang.org/x/exp/slices"
 	"gorm.io/gorm"
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
@@ -127,15 +128,28 @@ func (h *handler) UpdateInfo(c *gin.Context) {
 
 	input.MapEmployeeInput(employee)
 
+	if isValid := h.validateCountryAndCity(h.repo.DB(), input.Country, input.City); !isValid {
+		l.Info("country and city is invalid")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidCountryAndCity, input, ""))
+		return
+	}
+
 	_, err = h.store.Employee.UpdateSelectedFieldsByID(h.repo.DB(), employeeID, *employee,
 		"team_email",
 		"personal_email",
 		"phone_number",
 		"discord_id",
+		"discord_name",
 		"github_id",
 		"notion_id",
-		"discord_name",
-		"notion_name")
+		"notion_name",
+		"notion_email",
+		"linkedin_name",
+		"shelter_address",
+		"permanent_address",
+		"country",
+		"city",
+	)
 	if err != nil {
 		l.Error(err, "failed to update employee")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input, ""))
@@ -143,6 +157,40 @@ func (h *handler) UpdateInfo(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToUpdateProfileInfoData(employee), nil, nil, nil, ""))
+}
+
+func (h *handler) validateCountryAndCity(db *gorm.DB, countryName string, city string) bool {
+	if countryName == "" && city == "" {
+		return true
+	}
+
+	if countryName == "" && city != "" {
+		return false
+	}
+
+	l := h.logger.Fields(logger.Fields{
+		"handler":     "profile",
+		"method":      "validateCountryAndCity",
+		"countryName": countryName,
+		"city":        city,
+	})
+
+	country, err := h.store.Country.OneByName(db, countryName)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			l.Info("country not found")
+			return false
+		}
+		l.Error(err, "failed to get country by code")
+		return false
+	}
+
+	if city != "" && !slices.Contains([]string(country.Cities), city) {
+		l.Info("city does not belong to country")
+		return false
+	}
+
+	return true
 }
 
 // UploadAvatar godoc

@@ -3823,9 +3823,16 @@
             "required": [
                 "personalEmail",
                 "phoneNumber",
+                "shelterAddress",
                 "teamEmail"
             ],
             "properties": {
+                "city": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
                 "discordID": {
                     "type": "string"
                 },
@@ -3835,10 +3842,19 @@
                 "githubID": {
                     "type": "string"
                 },
+                "linkedInName": {
+                    "type": "string"
+                },
+                "notionEmail": {
+                    "type": "string"
+                },
                 "notionID": {
                     "type": "string"
                 },
                 "notionName": {
+                    "type": "string"
+                },
+                "permanentAddress": {
                     "type": "string"
                 },
                 "personalEmail": {
@@ -3848,6 +3864,9 @@
                     "type": "string",
                     "maxLength": 12,
                     "minLength": 10
+                },
+                "shelterAddress": {
+                    "type": "string"
                 },
                 "teamEmail": {
                     "type": "string"
@@ -4822,6 +4841,12 @@
                 "birthday": {
                     "type": "string"
                 },
+                "city": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
                 "discordID": {
                     "type": "string"
                 },
@@ -4843,16 +4868,28 @@
                 "id": {
                     "type": "string"
                 },
+                "linkedInName": {
+                    "type": "string"
+                },
+                "notionEmail": {
+                    "type": "string"
+                },
                 "notionID": {
                     "type": "string"
                 },
                 "notionName": {
                     "type": "string"
                 },
+                "permanentAddress": {
+                    "type": "string"
+                },
                 "personalEmail": {
                     "type": "string"
                 },
                 "phoneNumber": {
+                    "type": "string"
+                },
+                "shelterAddress": {
                     "type": "string"
                 },
                 "teamEmail": {
@@ -5453,6 +5490,12 @@
         "view.UpdateProfileInfoData": {
             "type": "object",
             "properties": {
+                "city": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
                 "createdAt": {
                     "type": "string"
                 },
@@ -5471,13 +5514,25 @@
                 "id": {
                     "type": "string"
                 },
+                "linkedInName": {
+                    "type": "string"
+                },
+                "notionEmail": {
+                    "type": "string"
+                },
                 "notionID": {
                     "type": "string"
                 },
                 "notionName": {
                     "type": "string"
                 },
+                "permanentAddress": {
+                    "type": "string"
+                },
                 "phoneNumber": {
+                    "type": "string"
+                },
+                "shelterAddress": {
                     "type": "string"
                 },
                 "teamEmail": {

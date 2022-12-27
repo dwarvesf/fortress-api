@@ -12,8 +12,14 @@
         "githubID": "thanhpham",
         "notionID": "39523061",
         "notionName": "",
+        "notionEmail": "",
         "discordID": "646649040771219476",
         "discordName": "",
-        "username": "thanh"
+        "username": "thanh",
+        "shelterAddress": "",
+        "permanentAddress": "",
+        "country": "",
+        "city": "",
+        "linkedInName": ""
     }
 }

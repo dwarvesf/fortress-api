@@ -5,11 +5,17 @@
         "updatedAt": "",
         "teamEmail": "thanh@d.foundation",
         "phoneNumber": "0123456788",
-        "githubID": "thanhpham",
-        "notionID": "39523061",
+        "githubID": "",
+        "notionID": "",
         "notionName": "notionName",
-        "discordID": "646649040771219476",
+        "notionEmail": "",
+        "discordID": "",
         "discordName": "discordName",
-        "username": "thanh"
+        "username": "thanh",
+        "shelterAddress": "200 Đường 3/2, Quận 10",
+        "permanentAddress": "201 Đường 3/2, Quận 10",
+        "country": "Vietnam",
+        "city": "Hồ Chí Minh",
+        "linkedInName": "linkedin"
     }
 }
