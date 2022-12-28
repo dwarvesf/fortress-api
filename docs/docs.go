@@ -3716,7 +3716,7 @@ const docTemplate = `{
         "request.SendSurveyInput": {
             "type": "object",
             "required": [
-                "topicIDs"
+                "type"
             ],
             "properties": {
                 "topicIDs": {
@@ -3724,6 +3724,9 @@ const docTemplate = `{
                     "items": {
                         "type": "string"
                     }
+                },
+                "type": {
+                    "type": "string"
                 }
             }
         },

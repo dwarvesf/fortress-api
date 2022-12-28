@@ -38,16 +38,17 @@ func (i *GetSurveyDetailInput) Validate() error {
 }
 
 type SendSurveyInput struct {
-	TopicIDs []model.UUID `json:"topicIDs" form:"topicIDs" binding:"required"`
+	Type     string       `json:"type" form:"type" binding:"required"`
+	TopicIDs []model.UUID `json:"topicIDs" form:"topicIDs"`
 }
 
 // CreateSurveyFeedbackInput view for create survey feedback
 type CreateSurveyFeedbackInput struct {
-	Quarter    string   `json:"quarter"`
-	Year       int      `json:"year"`
-	Type       string   `json:"type" binding:"required"`
-	FromDate   string   `json:"fromDate"`
-	ToDate     string   `json:"toDate"`
+	Quarter  string `json:"quarter"`
+	Year     int    `json:"year"`
+	Type     string `json:"type" binding:"required"`
+	FromDate string `json:"fromDate"`
+	ToDate   string `json:"toDate"`
 }
 
 type PeerReviewDetailInput struct {

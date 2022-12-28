@@ -152,6 +152,7 @@ func TestHandler_SendPerformanceReview(t *testing.T) {
 				TopicIDs: []model.UUID{
 					model.MustGetUUIDFromString("e4a33adc-2495-43cf-b816-32feb8d5250d"),
 				},
+				Type: model.EventSubtypePeerReview.String(),
 			},
 		},
 		{
@@ -160,9 +161,7 @@ func TestHandler_SendPerformanceReview(t *testing.T) {
 			wantCode:         http.StatusOK,
 			wantResponsePath: "testdata/send_survey/200_send_engagement.json",
 			body: request.SendSurveyInput{
-				TopicIDs: []model.UUID{
-					model.MustGetUUIDFromString("ebf376a6-3d11-4cea-b464-593103258838"),
-				},
+				Type: model.EventSubtypeEngagement.String(),
 			},
 		},
 		{
@@ -174,6 +173,7 @@ func TestHandler_SendPerformanceReview(t *testing.T) {
 				TopicIDs: []model.UUID{
 					model.MustGetUUIDFromString("e4a33adc-2495-43cf-b816-32feb8d5250d"),
 				},
+				Type: model.EventSubtypePeerReview.String(),
 			},
 		},
 	}
