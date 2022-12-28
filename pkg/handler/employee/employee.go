@@ -69,8 +69,6 @@ func (h *handler) List(c *gin.Context) {
 
 	body.Standardize()
 
-	fmt.Printf("%+v\n", body)
-
 	l := h.logger.Fields(logger.Fields{
 		"handler": "employee",
 		"method":  "List",

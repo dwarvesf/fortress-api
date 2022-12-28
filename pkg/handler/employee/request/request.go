@@ -2,6 +2,7 @@ package request
 
 import (
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/dwarvesf/fortress-api/pkg/handler/employee/errs"
@@ -76,35 +77,35 @@ func (i *UpdateWorkingStatusInput) Validate() error {
 func (input *GetListEmployeeInput) Validate() error {
 	if len(input.Positions) > 0 {
 		for _, p := range input.Positions {
-			if p == "" {
+			if strings.TrimSpace(p) == "" {
 				return errs.ErrInvalidPositionCode
 			}
 		}
 	}
 	if len(input.Stacks) > 0 {
 		for _, s := range input.Stacks {
-			if s == "" {
+			if strings.TrimSpace(s) == "" {
 				return errs.ErrInvalidStackCode
 			}
 		}
 	}
 	if len(input.Projects) > 0 {
 		for _, p := range input.Projects {
-			if p == "" {
+			if strings.TrimSpace(p) == "" {
 				return errs.ErrInvalidProjectCode
 			}
 		}
 	}
 	if len(input.Chapters) > 0 {
 		for _, c := range input.Chapters {
-			if c == "" {
+			if strings.TrimSpace(c) == "" {
 				return errs.ErrInvalidChapterCode
 			}
 		}
 	}
 	if len(input.Seniorities) > 0 {
 		for _, s := range input.Seniorities {
-			if s == "" {
+			if strings.TrimSpace(s) == "" {
 				return errs.ErrInvalidSeniorityCode
 			}
 		}
