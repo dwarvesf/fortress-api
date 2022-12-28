@@ -12,7 +12,5 @@ type IStore interface {
 	IsExist(db *gorm.DB, id string) (bool, error)
 	IsExistByCode(db *gorm.DB, code string) (bool, error)
 	One(db *gorm.DB, id string, preload bool) (*model.Project, error)
-
-	Update(db *gorm.DB, project *model.Project) (*model.Project, error)
 	UpdateSelectedFieldsByID(db *gorm.DB, id string, updateModel model.Project, updatedFields ...string) (*model.Project, error)
 }

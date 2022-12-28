@@ -12,8 +12,8 @@ func New() IStore {
 	return &store{}
 }
 
-// GetManyByProjectID get all work units of a project and having the status as required
-func (s *store) GetAllByProjectID(db *gorm.DB, projectID string, status model.WorkUnitStatus) ([]*model.WorkUnit, error) {
+// GetByProjectID get all work units of a project and having the status as required
+func (s *store) GetByProjectID(db *gorm.DB, projectID string, status model.WorkUnitStatus) ([]*model.WorkUnit, error) {
 	var workUnits []*model.WorkUnit
 	query := db.Where("project_id = ?", projectID)
 

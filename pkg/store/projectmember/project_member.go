@@ -41,12 +41,10 @@ func (s *store) One(db *gorm.DB, projectID string, employeeID string, preload bo
 	return member, query.First(&member).Error
 }
 
-// GetOneBySlotID return a project member by slotID
-func (s *store) GetOneBySlotID(db *gorm.DB, slotID string) (*model.ProjectMember, error) {
-	query := db.Where("project_slot_id = ? AND left_date IS NULL", slotID)
-
-	member := &model.ProjectMember{}
-	return member, query.Preload("Employee").First(&member).Error
+// OneBySlotID return a project member by slotID
+func (s *store) OneBySlotID(db *gorm.DB, slotID string) (*model.ProjectMember, error) {
+	var member *model.ProjectMember
+	return member, db.Where("project_slot_id = ? AND left_date IS NULL", slotID).Preload("Employee").First(&member).Error
 }
 
 // Create using for create new member
@@ -57,7 +55,7 @@ func (s *store) Create(db *gorm.DB, member *model.ProjectMember) error {
 // UpdateSelectedFieldsByID just update selected fields by id
 func (s *store) UpdateSelectedFieldsByID(db *gorm.DB, id string, updateModel model.ProjectMember, updatedFields ...string) (*model.ProjectMember, error) {
 	member := model.ProjectMember{}
-	return &member, db.Model(&member).Where("id = ?", id).Select(updatedFields).Updates(&updateModel).Error
+	return &member, db.Model(&member).Where("id = ?", id).Select(updatedFields).Updates(updateModel).Error
 }
 
 // IsExistsByEmployeeID check ProjectMember existance by project id and employee id

@@ -7,7 +7,7 @@ import (
 
 type IStore interface {
 	One(db *gorm.DB, projectID string, employeeID string, preload bool) (*model.ProjectMember, error)
-	GetOneBySlotID(db *gorm.DB, slotID string) (*model.ProjectMember, error)
+	OneBySlotID(db *gorm.DB, slotID string) (*model.ProjectMember, error)
 	Create(db *gorm.DB, member *model.ProjectMember) error
 	Delete(db *gorm.DB, id string) (err error)
 	IsExist(db *gorm.DB, id string) (bool, error)

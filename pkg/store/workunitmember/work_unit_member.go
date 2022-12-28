@@ -28,8 +28,8 @@ func (s *store) Create(db *gorm.DB, wum *model.WorkUnitMember) error {
 }
 
 // GetByWorkUnitID return list member of a work unit
-func (s *store) GetByWorkUnitID(db *gorm.DB, wuID string) (wuMembers []model.WorkUnitMember, err error) {
-	var members []model.WorkUnitMember
+func (s *store) GetByWorkUnitID(db *gorm.DB, wuID string) ([]*model.WorkUnitMember, error) {
+	var members []*model.WorkUnitMember
 	return members, db.Where("work_unit_id = ?", wuID).Find(&members).Error
 }
 

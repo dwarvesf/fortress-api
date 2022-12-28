@@ -12,7 +12,7 @@ func New() IStore {
 	return &store{}
 }
 
-// Create create new one by id
+// Create make new one by id
 func (s *store) Create(db *gorm.DB, employeeChapter *model.EmployeeChapter) (*model.EmployeeChapter, error) {
 	return employeeChapter, db.Create(&employeeChapter).Error
 }

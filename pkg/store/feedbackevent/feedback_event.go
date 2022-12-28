@@ -73,8 +73,8 @@ func (s *store) One(db *gorm.DB, id string, preload bool) (*model.FeedbackEvent,
 	return event, query.First(&event).Error
 }
 
-// One get 1 by id
-func (s *store) GetByTypeInTimeRange(db *gorm.DB, eventType model.EventType, eventSubtype model.EventSubtype, from, to *time.Time) (*model.FeedbackEvent, error) {
+// OneByTypeInTimeRange get 1 by type in time range
+func (s *store) OneByTypeInTimeRange(db *gorm.DB, eventType model.EventType, eventSubtype model.EventSubtype, from, to *time.Time) (*model.FeedbackEvent, error) {
 	var event *model.FeedbackEvent
 	return event, db.Where("type = ?", eventType).
 		Where("subtype = ?", eventSubtype).

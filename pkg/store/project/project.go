@@ -130,11 +130,6 @@ func (s *store) One(db *gorm.DB, id string, preload bool) (*model.Project, error
 	return project, query.First(&project).Error
 }
 
-// Update update all value (including nested model)
-func (s *store) Update(db *gorm.DB, project *model.Project) (*model.Project, error) {
-	return project, db.Model(&project).Where("id = ?", project.ID).Updates(&project).Error
-}
-
 // UpdateSelectedFieldsByID just update selected fields by id
 func (s *store) UpdateSelectedFieldsByID(db *gorm.DB, id string, updateModel model.Project, updatedFields ...string) (*model.Project, error) {
 	project := model.Project{}

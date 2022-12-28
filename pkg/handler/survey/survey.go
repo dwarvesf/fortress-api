@@ -309,7 +309,7 @@ func (h *handler) createPeerReview(db *gorm.DB, req request.CreateSurveyFeedback
 	}
 
 	//1.2 check event existed
-	_, err := h.store.FeedbackEvent.GetByTypeInTimeRange(db, model.EventTypeSurvey, model.EventSubtypePeerReview, &startTime, &endTime)
+	_, err := h.store.FeedbackEvent.OneByTypeInTimeRange(db, model.EventTypeSurvey, model.EventSubtypePeerReview, &startTime, &endTime)
 	if err == nil {
 		return http.StatusBadRequest, errs.ErrEventAlreadyExisted
 	} else {
@@ -510,7 +510,7 @@ func (h *handler) createEngagement(db *gorm.DB, req request.CreateSurveyFeedback
 	}
 
 	//1.2 check event existed
-	_, err := h.store.FeedbackEvent.GetByTypeInTimeRange(db, model.EventTypeSurvey, model.EventSubtypeEngagement, &startTime, &endTime)
+	_, err := h.store.FeedbackEvent.OneByTypeInTimeRange(db, model.EventTypeSurvey, model.EventSubtypeEngagement, &startTime, &endTime)
 	if err == nil {
 		return http.StatusBadRequest, errs.ErrEventAlreadyExisted
 	} else {
@@ -672,7 +672,7 @@ func (h *handler) createWorkEvent(db *gorm.DB, req request.CreateSurveyFeedbackI
 	title := fromDate.Format("Jan 02, 2006")
 
 	//1.2 check event existed
-	_, err = h.store.FeedbackEvent.GetByTypeInTimeRange(db, model.EventTypeSurvey, model.EventSubtypeWork, &fromDate, &toDate)
+	_, err = h.store.FeedbackEvent.OneByTypeInTimeRange(db, model.EventTypeSurvey, model.EventSubtypeWork, &fromDate, &toDate)
 	if err == nil {
 		return http.StatusBadRequest, errs.ErrEventAlreadyExisted
 	} else {
@@ -1692,7 +1692,7 @@ func (h *handler) deleteTopicReviewer(db *gorm.DB, eventID string, topicID strin
 	})
 
 	for _, reviewer := range reviewerIDs {
-		eventReviewer, err := h.store.EmployeeEventReviewer.GetByReviewerID(db, reviewer.String(), topicID)
+		eventReviewer, err := h.store.EmployeeEventReviewer.OneByReviewerID(db, reviewer.String(), topicID)
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Errorf(errs.ErrEventReviewerNotFound, "reviewer not found with reviewerID ", reviewer)
 			return http.StatusNotFound, errs.ErrEventReviewerNotFound
