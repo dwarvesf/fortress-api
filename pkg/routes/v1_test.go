@@ -65,6 +65,18 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/employee.IHandler.UploadContent-fm",
 			},
 		},
+		"/api/v1/employees/:id/mentees": {
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/employee.IHandler.AddMentee-fm",
+			},
+		},
+		"/api/v1/employees/:id/mentees/:menteeID": {
+			"DELETE": {
+				Method:  "DELETE",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/employee.IHandler.DeleteMentee-fm",
+			},
+		},
 		"/api/v1/metadata/working-status": {
 			"GET": {
 				Method:  "GET",

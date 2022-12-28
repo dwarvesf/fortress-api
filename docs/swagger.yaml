@@ -121,6 +121,13 @@ definitions:
       updatedAt:
         type: string
     type: object
+  request.AddMenteeInput:
+    properties:
+      menteeID:
+        type: string
+    required:
+    - menteeID
+    type: object
   request.AssignMemberInput:
     properties:
       deploymentType:
@@ -804,6 +811,10 @@ definitions:
         type: string
       mbti:
         type: string
+      mentees:
+        items:
+          $ref: '#/definitions/view.BasicEmployeeInfo'
+        type: array
       notionID:
         type: string
       notionName:
@@ -1914,6 +1925,93 @@ paths:
           schema:
             $ref: '#/definitions/view.ErrorResponse'
       summary: Update general info of the employee by id
+      tags:
+      - Employee
+  /employees/{id}/mentees:
+    post:
+      consumes:
+      - application/json
+      description: Add mentee for a mentor
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Employee ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Body
+        in: body
+        name: Body
+        required: true
+        schema:
+          $ref: '#/definitions/request.AddMenteeInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Add mentee for a mentor
+      tags:
+      - Employee
+  /employees/{id}/mentees/{menteeID}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete mentee of a mentor
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Employee ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Mentee ID
+        in: path
+        name: menteeID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Delete mentee of a mentor
       tags:
       - Employee
   /employees/{id}/personal-info:

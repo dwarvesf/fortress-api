@@ -38,7 +38,8 @@
       "stacks": [],
       "roles": [],
       "projects": [],
-      "chapters": []
+      "chapters": [],
+      "mentees": null
     },
     {
       "id": "2655832e-f009-4b73-a535-64c3a22e558f",
@@ -74,7 +75,8 @@
       "stacks": [],
       "roles": [],
       "projects": [],
-      "chapters": []
+      "chapters": [],
+      "mentees": null
     },
     {
       "id": "8d7c99c0-3253-4286-93a9-e7554cb327ef",
@@ -110,7 +112,8 @@
       "stacks": [],
       "roles": [],
       "projects": [],
-      "chapters": []
+      "chapters": [],
+      "mentees": null
     },
     {
       "id": "eeae589a-94e3-49ac-a94c-fcfb084152b2",
@@ -146,7 +149,8 @@
       "stacks": [],
       "roles": [],
       "projects": [],
-      "chapters": []
+      "chapters": [],
+      "mentees": null
     },
     {
       "id": "608ea227-45a5-4c8a-af43-6c7280d96340",
@@ -182,7 +186,8 @@
       "stacks": [],
       "roles": [],
       "projects": [],
-      "chapters": []
+      "chapters": [],
+      "mentees": null
     }
   ]
 }

@@ -45,6 +45,7 @@ type EmployeeData struct {
 	Roles       []Role                `json:"roles"`
 	Projects    []EmployeeProjectData `json:"projects"`
 	Chapters    []Chapter             `json:"chapters"`
+	Mentees     []*BasicEmployeeInfo  `json:"mentees"`
 }
 
 type EmployeeProjectData struct {
@@ -213,6 +214,7 @@ func ToEmployeeData(employee *model.Employee) *EmployeeData {
 	for _, v := range employee.ProjectMembers {
 		employeeProjects = append(employeeProjects, ToEmployeeProjectData(&v))
 	}
+
 	var lineManager *BasicEmployeeInfo
 	if employee.LineManager != nil {
 		lineManager = toBasicEmployeeInfo(*employee.LineManager)
@@ -255,6 +257,17 @@ func ToEmployeeData(employee *model.Employee) *EmployeeData {
 		Positions:        ToPositions(employee.EmployeePositions),
 		Stacks:           ToEmployeeStacks(employee.EmployeeStacks),
 		Chapters:         ToChapters(employee.EmployeeChapters),
+	}
+
+	if len(employee.Mentees) > 0 {
+		mentees := make([]*BasicEmployeeInfo, 0)
+		for _, v := range employee.Mentees {
+			if v.Mentee != nil {
+				mentees = append(mentees, toBasicEmployeeInfo(*v.Mentee))
+			}
+		}
+
+		rs.Mentees = mentees
 	}
 
 	if employee.Seniority != nil {

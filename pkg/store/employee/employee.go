@@ -35,7 +35,9 @@ func (s *store) One(db *gorm.DB, id string, preload bool) (*model.Employee, erro
 			Preload("EmployeeChapters", "deleted_at IS NULL").
 			Preload("EmployeeChapters.Chapter", "deleted_at IS NULL").
 			Preload("Seniority").
-			Preload("LineManager")
+			Preload("LineManager").
+			Preload("Mentees", "deleted_at IS NULL").
+			Preload("Mentees.Mentee", "deleted_at IS NULL AND NOT working_status = 'left'")
 	}
 
 	var employee *model.Employee
@@ -61,7 +63,9 @@ func (s *store) OneByUsername(db *gorm.DB, username string, preload bool) (*mode
 			Preload("EmployeeRoles", "deleted_at IS NULL").
 			Preload("EmployeeRoles.Role", "deleted_at IS NULL").
 			Preload("Seniority").
-			Preload("LineManager")
+			Preload("LineManager").
+			Preload("Mentees", "deleted_at IS NULL").
+			Preload("Mentees.Mentee", "deleted_at IS NULL AND NOT working_status = 'left'")
 	}
 
 	var employee *model.Employee

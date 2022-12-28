@@ -36,6 +36,27 @@ type UpdateEmployeeGeneralInfoInput struct {
 	LinkedInName  string     `form:"linkedInName" json:"linkedInName"`
 }
 
+type AddMenteeInput struct {
+	MenteeID model.UUID `form:"menteeID" json:"menteeID" binding:"required"`
+}
+
+type DeleteMenteeInput struct {
+	MentorID string
+	MenteeID string
+}
+
+func (e *DeleteMenteeInput) Validate() error {
+	if e.MentorID == "" || !model.IsUUIDFromString(e.MentorID) {
+		return errs.ErrInvalidEmployeeID
+	}
+
+	if e.MenteeID == "" || !model.IsUUIDFromString(e.MenteeID) {
+		return errs.ErrInvalidEmployeeID
+	}
+
+	return nil
+}
+
 // CreateEmployeeInput view for create new employee
 type CreateEmployeeInput struct {
 	FullName      string       `json:"fullName" binding:"required,max=100"`
