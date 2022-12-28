@@ -1,5 +1,13 @@
 basePath: /api/v1
 definitions:
+  gorm.DeletedAt:
+    properties:
+      time:
+        type: string
+      valid:
+        description: Valid is true if Time is not NULL
+        type: boolean
+    type: object
   model.Chapter:
     properties:
       code:
@@ -7,7 +15,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       id:
         type: string
       lead_id:
@@ -28,7 +36,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       id:
         type: string
       name:
@@ -56,7 +64,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       id:
         type: string
       name:
@@ -71,7 +79,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       id:
         type: string
       level:
@@ -88,7 +96,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       id:
         type: string
       name:
@@ -105,7 +113,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       id:
         type: string
       name:
@@ -712,7 +720,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       deliveryManager:
         $ref: '#/definitions/view.ProjectHead'
       id:
@@ -768,7 +776,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       discordID:
         type: string
       discordName:
@@ -1117,7 +1125,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       deliveryManager:
         $ref: '#/definitions/view.ProjectHead'
       endDate:
@@ -1421,7 +1429,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       discordID:
         type: string
       discordName:
@@ -1455,7 +1463,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       gender:
         type: string
       id:
@@ -1479,7 +1487,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       discordID:
         type: string
       discordName:
@@ -1563,7 +1571,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       id:
         type: string
       positions:
@@ -1589,7 +1597,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       endDate:
         type: string
       id:
@@ -2059,6 +2067,45 @@ paths:
           schema:
             $ref: '#/definitions/view.ErrorResponse'
       summary: Upload content of employee by id
+      tags:
+      - Employee
+  /employees/search:
+    post:
+      consumes:
+      - application/json
+      description: Get the list of employees with pagination and workingStatus
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Body
+        in: body
+        name: Body
+        required: true
+        schema:
+          $ref: '#/definitions/request.GetListEmployeeInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.EmployeeListDataResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get the list of employees
       tags:
       - Employee
   /feedbacks:
