@@ -252,8 +252,8 @@ func (h *handler) CreateSurvey(c *gin.Context) {
 		"input":   req,
 	})
 
-	if !model.EventSubtype(req.Type).IsValidSurvey() {
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidEventSubType, req, ""))
+	if err := req.Validate(); err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, req, ""))
 		return
 	}
 
@@ -283,8 +283,7 @@ func (h *handler) CreateSurvey(c *gin.Context) {
 		}
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, done(nil), nil, "success"))
-
+	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, done(nil), nil, "ok"))
 }
 
 func (h *handler) createPeerReview(db *gorm.DB, req request.CreateSurveyFeedbackInput, userID string) (int, error) {
