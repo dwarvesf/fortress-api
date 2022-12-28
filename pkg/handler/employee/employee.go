@@ -1067,3 +1067,195 @@ func (h *handler) UploadAvatar(c *gin.Context) {
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToContentData(filePath), nil, nil, nil, ""))
 }
+
+// AddMentee godoc
+// @Summary Add mentee for a mentor
+// @Description Add mentee for a mentor
+// @Tags Employee
+// @Accept  json
+// @Produce  json
+// @Param Authorization header string true "jwt token"
+// @Param id path string true "Employee ID"
+// @Param Body body request.AddMenteeInput true "Body"
+// @Success 200 {object} view.MessageResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /employees/{id}/mentees [post]
+func (h *handler) AddMentee(c *gin.Context) {
+	employeeID := c.Param("id")
+	if employeeID == "" || !model.IsUUIDFromString(employeeID) {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidEmployeeID, nil, ""))
+		return
+	}
+
+	var input request.AddMenteeInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, input, ""))
+		return
+	}
+
+	// TODO: can we move this to middleware ?
+	l := h.logger.Fields(logger.Fields{
+		"handler": "employee",
+		"method":  "AddMentee",
+		"input":   input,
+	})
+
+	// Check employee existence
+	mentor, err := h.store.Employee.One(h.repo.DB(), employeeID, false)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			l.Error(errs.ErrEmployeeNotFound, "employee not found")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrEmployeeNotFound, input, ""))
+			return
+		}
+
+		l.Error(err, "error when finding employee")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input, ""))
+		return
+	}
+
+	if mentor.WorkingStatus == model.WorkingStatusLeft {
+		l.Error(errs.ErrEmployeeLeft, "employee is left")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrEmployeeLeft, input, ""))
+		return
+	}
+
+	// Check mentee existence
+	mentee, err := h.store.Employee.One(h.repo.DB(), input.MenteeID.String(), false)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			l.Error(errs.ErrMenteeNotFound, "mentor not found")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrMenteeNotFound, input, ""))
+			return
+		}
+
+		l.Error(err, "error when finding mentee")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input, ""))
+		return
+	}
+
+	if mentee.WorkingStatus == model.WorkingStatusLeft {
+		l.Error(errs.ErrMenteeLeft, "mentee is left")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrMenteeLeft, input, ""))
+		return
+	}
+
+	if employeeID == input.MenteeID.String() {
+		l.Error(errs.ErrCouldNotMentorThemselves, "employee could not be their own mentor")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrCouldNotMentorThemselves, input, ""))
+		return
+	}
+
+	tx, done := h.repo.NewTransaction()
+
+	// Validate Mentee
+	employeeMentee, err := h.store.EmployeeMentee.OneByMenteeID(tx.DB(), employeeID, false)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		l.Error(err, "failed to get employee mentee")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
+		return
+	}
+
+	if !errors.Is(err, gorm.ErrRecordNotFound) && employeeMentee.MentorID == input.MenteeID {
+		l.Error(errs.ErrCouldNotMentorTheirMentor, "employee could not be mentor of their mentor")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, done(errs.ErrCouldNotMentorTheirMentor), input, ""))
+		return
+	}
+
+	// Remove old mentor
+	if err := h.store.EmployeeMentee.Delete(tx.DB(), input.MenteeID.String()); err != nil {
+		l.Error(err, "failed to delete employee mentee")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
+		return
+	}
+
+	if !errors.Is(err, gorm.ErrRecordNotFound) {
+		l.Error(err, "failed to get employee mentee")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
+		return
+	}
+
+	_, err = h.store.EmployeeMentee.Create(tx.DB(), &model.EmployeeMentee{
+		MenteeID: input.MenteeID,
+		MentorID: model.MustGetUUIDFromString(employeeID),
+	})
+	if err != nil {
+		l.Error(err, "failed to create employee mentee")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, done(nil), nil, "ok"))
+}
+
+// DeleteMentee godoc
+// @Summary Delete mentee of a mentor
+// @Description Delete mentee of a mentor
+// @Tags Employee
+// @Accept  json
+// @Produce  json
+// @Param Authorization header string true "jwt token"
+// @Param id path string true "Employee ID"
+// @Param menteeID path string true "Mentee ID"
+// @Success 200 {object} view.MessageResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /employees/{id}/mentees/{menteeID} [delete]
+func (h *handler) DeleteMentee(c *gin.Context) {
+	input := request.DeleteMenteeInput{
+		MentorID: c.Param("id"),
+		MenteeID: c.Param("menteeID"),
+	}
+
+	if err := input.Validate(); err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	// TODO: can we move this to middleware ?
+	l := h.logger.Fields(logger.Fields{
+		"handler": "employee",
+		"method":  "DeleteMentee",
+		"input":   input,
+	})
+
+	// Check employee existence
+	exist, err := h.store.Employee.IsExist(h.repo.DB(), input.MentorID)
+	if err != nil {
+		l.Error(err, "error when finding employee")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input, ""))
+		return
+	}
+
+	if !exist {
+		l.Error(errs.ErrEmployeeNotFound, "employee not found")
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrEmployeeNotFound, input, ""))
+		return
+	}
+
+	// Check mentee existence
+	exist, err = h.store.Employee.IsExist(h.repo.DB(), input.MenteeID)
+	if err != nil {
+		l.Error(err, "error when finding mentee")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input, ""))
+		return
+	}
+
+	if !exist {
+		l.Error(errs.ErrMenteeNotFound, "mentee not found")
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrMenteeNotFound, input, ""))
+		return
+	}
+
+	// Delete employee mentee
+	if err := h.store.EmployeeMentee.DeleteByMentorIDAndMenteeID(h.repo.DB(), input.MentorID, input.MenteeID); err != nil {
+		l.Error(err, "failed to delete employee mentee")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input, ""))
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))
+}

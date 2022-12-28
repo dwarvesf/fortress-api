@@ -2,17 +2,17 @@
     "data": {
         "id": "2655832e-f009-4b73-a535-64c3a22e558f",
         "createdAt": "2022-11-02T09:52:34.586566Z",
-        "updatedAt": "",
+        "updatedAt": "2022-11-02T09:52:34.586566Z",
         "fullName": "Phạm Đức Thành",
         "displayName": "Thanh Pham",
         "teamEmail": "thanh@d.foundation",
         "personalEmail": "thanhpham123@gmail.com",
-        "username": "thanh",
-        "linkedInName": "",
         "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
         "phoneNumber": "0123456788",
         "address": "Tan Binh District, Ho Chi Minh, Vietnam",
         "placeOfResidence": "",
+        "country": "",
+        "city": "",
         "mbti": "ISFJ-A",
         "gender": "Male",
         "horoscope": "Aquaman",
@@ -22,9 +22,9 @@
         "notionName": "notionName",
         "discordID": "646649040771219476",
         "discordName": "discordName",
+        "username": "thanh",
+        "linkedInName": "",
         "status": "contractor",
-        "city": "",
-        "country": "",
         "joinedDate": "2018-09-01T00:00:00Z",
         "leftDate": null,
         "seniority": {
@@ -94,6 +94,35 @@
             }
         ],
         "chapters": [],
-        "mentees": null
+        "mentees": [
+            {
+                "id": "d389d35e-c548-42cf-9f29-2a599969a8f2",
+                "fullName": "Nguyễn Trần Minh Thảo",
+                "displayName": "Thao Nguyen",
+                "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5348640939694049226.png",
+                "username": "thaontm"
+            },
+            {
+                "id": "a1f25e3e-cf40-4d97-a4d5-c27ee566b8c5",
+                "fullName": "Phan Duy Cường",
+                "displayName": "Cuong Phan",
+                "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/8465254073957996724.png",
+                "username": "cody"
+            },
+            {
+                "id": "498d5805-dd64-4643-902d-95067d6e5ab5",
+                "fullName": "Võ Hải Biên",
+                "displayName": "Bien Vo",
+                "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/4114345912835654270.png",
+                "username": "bean"
+            },
+            {
+                "id": "f6ce0d0f-5794-463b-ad0b-8240ab9c49be",
+                "fullName": "Nguyễn Hoàng Anh",
+                "displayName": "Anh Nguyen",
+                "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/3274097965772922906.png",
+                "username": "anhnh"
+            }
+        ]
     }
 }

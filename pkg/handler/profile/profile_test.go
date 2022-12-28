@@ -102,7 +102,7 @@ func TestHandler_UpdateProfileInfo(t *testing.T) {
 			input: request.UpdateInfoInput{
 				TeamEmail:        "thanh@d.foundation",
 				PersonalEmail:    "thanhpham123@gmail.com",
-				PhoneNumber:      "123456788",
+				PhoneNumber:      "1234567",
 				PlaceOfResidence: "200 Đường 3/2, Quận 10",
 				Address:          "201 Đường 3/2, Quận 10",
 				Country:          "Vietnam",

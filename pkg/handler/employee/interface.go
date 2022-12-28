@@ -12,4 +12,6 @@ type IHandler interface {
 	UpdatePersonalInfo(c *gin.Context)
 	UploadContent(c *gin.Context)
 	UploadAvatar(c *gin.Context)
+	AddMentee(c *gin.Context)
+	DeleteMentee(c *gin.Context)
 }
