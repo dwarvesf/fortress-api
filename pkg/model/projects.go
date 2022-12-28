@@ -57,23 +57,23 @@ func (e ProjectStatus) String() string {
 type Project struct {
 	BaseModel
 
-	Name                string
-	CountryID           UUID
-	Type                ProjectType
-	StartDate           *time.Time
-	EndDate             *time.Time
-	Status              ProjectStatus
-	Slots               []ProjectSlot
-	Heads               []*ProjectHead
-	ProjectMembers      []ProjectMember
-	ProjectStacks       []ProjectStack
-	ProjectEmail        string
-	ClientEmail         string
-	Avatar              string
-	AllowsSendingSurvey bool
-	Code                string
+	Name                string        `gorm:"default:null"`
+	CountryID           UUID          `gorm:"default:null"`
+	Type                ProjectType   `gorm:"default:null"`
+	StartDate           *time.Time    `gorm:"default:null"`
+	EndDate             *time.Time    `gorm:"default:null"`
+	Status              ProjectStatus `gorm:"default:null"`
+	ProjectEmail        string        `gorm:"default:null"`
+	ClientEmail         string        `gorm:"default:null"`
+	Avatar              string        `gorm:"default:null"`
+	AllowsSendingSurvey bool          `gorm:"default:null"`
+	Code                string        `gorm:"default:null"`
 
-	Country *Country
+	Country        *Country
+	Slots          []ProjectSlot
+	Heads          []*ProjectHead
+	ProjectMembers []ProjectMember
+	ProjectStacks  []ProjectStack
 }
 
 type DeploymentType string

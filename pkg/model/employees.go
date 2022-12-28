@@ -58,58 +58,58 @@ type Employee struct {
 	BaseModel
 
 	// basic info
-	FullName               string
-	DisplayName            string
-	Username               string
-	TeamEmail              string
-	PersonalEmail          string
-	Avatar                 string
-	PhoneNumber            string
-	Address                string
-	ShelterAddress         string
-	PermanentAddress       string
-	MBTI                   string
-	Gender                 string
-	Horoscope              string
-	PassportPhotoFront     string
-	PassportPhotoBack      string
-	IdentityCardPhotoFront string
-	IdentityCardPhotoBack  string
-	DateOfBirth            *time.Time
-	Country                string
-	City                   string
+	FullName               string     `gorm:"default:null"`
+	DisplayName            string     `gorm:"default:null"`
+	Username               string     `gorm:"default:null"`
+	TeamEmail              string     `gorm:"default:null"`
+	PersonalEmail          string     `gorm:"default:null"`
+	Avatar                 string     `gorm:"default:null"`
+	PhoneNumber            string     `gorm:"default:null"`
+	Address                string     `gorm:"default:null"`
+	ShelterAddress         string     `gorm:"default:null"`
+	PermanentAddress       string     `gorm:"default:null"`
+	MBTI                   string     `gorm:"default:null"`
+	Gender                 string     `gorm:"default:null"`
+	Horoscope              string     `gorm:"default:null"`
+	PassportPhotoFront     string     `gorm:"default:null"`
+	PassportPhotoBack      string     `gorm:"default:null"`
+	IdentityCardPhotoFront string     `gorm:"default:null"`
+	IdentityCardPhotoBack  string     `gorm:"default:null"`
+	DateOfBirth            *time.Time `gorm:"default:null"`
+	Country                string     `gorm:"default:null"`
+	City                   string     `gorm:"default:null"`
 
 	// working info
-	WorkingStatus WorkingStatus
-	JoinedDate    *time.Time
-	LeftDate      *time.Time
-	SeniorityID   UUID
-	LineManagerID UUID
+	WorkingStatus WorkingStatus `gorm:"default:null"`
+	JoinedDate    *time.Time    `gorm:"default:null"`
+	LeftDate      *time.Time    `gorm:"default:null"`
+	SeniorityID   UUID          `gorm:"default:null"`
+	LineManagerID UUID          `gorm:"default:null"`
 
 	// social services
-	BasecampID             string
-	BasecampAttachableSGID string `gorm:"column:basecamp_attachable_sgid"`
-	GitlabID               string
-	GithubID               string
-	NotionID               string
-	NotionName             string
-	NotionEmail            string
-	DiscordID              string
-	DiscordName            string
-	LinkedInName           string `gorm:"column:linkedin_name"`
+	BasecampID             string `gorm:"default:null"`
+	BasecampAttachableSGID string `gorm:"column:basecamp_attachable_sgid;default:null"`
+	GitlabID               string `gorm:"default:null"`
+	GithubID               string `gorm:"default:null"`
+	NotionID               string `gorm:"default:null"`
+	NotionName             string `gorm:"default:null"`
+	NotionEmail            string `gorm:"default:null"`
+	DiscordID              string `gorm:"default:null"`
+	DiscordName            string `gorm:"default:null"`
+	LinkedInName           string `gorm:"column:linkedin_name;default:null"`
 
 	// payroll info
-	WiseRecipientEmail string
-	WiseRecipientID    string
-	WiseRecipientName  string
-	WiseAccountNumber  string
-	WiseCurrency       string
+	WiseRecipientEmail string `gorm:"default:null"`
+	WiseRecipientID    string `gorm:"default:null"`
+	WiseRecipientName  string `gorm:"default:null"`
+	WiseAccountNumber  string `gorm:"default:null"`
+	WiseCurrency       string `gorm:"default:null"`
 
-	LocalBankBranch        string
-	LocalBankNumber        string
-	LocalBankCurrency      string
-	LocalBranchName        string
-	LocalBankRecipientName string
+	LocalBankBranch        string `gorm:"default:null"`
+	LocalBankNumber        string `gorm:"default:null"`
+	LocalBankCurrency      string `gorm:"default:null"`
+	LocalBranchName        string `gorm:"default:null"`
+	LocalBankRecipientName string `gorm:"default:null"`
 
 	Seniority         *Seniority
 	LineManager       *Employee
