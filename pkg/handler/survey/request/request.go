@@ -1,6 +1,8 @@
 package request
 
 import (
+	"time"
+
 	"github.com/dwarvesf/fortress-api/pkg/handler/survey/errs"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 )
@@ -49,6 +51,28 @@ type CreateSurveyFeedbackInput struct {
 	Type     string `json:"type" binding:"required"`
 	FromDate string `json:"fromDate"`
 	ToDate   string `json:"toDate"`
+}
+
+// Validate input for create survey feedback
+func (i *CreateSurveyFeedbackInput) Validate() error {
+	fromDate, err := time.Parse("2006-01-02", i.FromDate)
+	if err != nil {
+		return errs.ErrInvalidDate
+	}
+	toDate, err := time.Parse("2006-01-02", i.ToDate)
+	if err != nil {
+		return errs.ErrInvalidDate
+	}
+
+	if fromDate.After(toDate) {
+		return errs.ErrInvalidDateRange
+	}
+
+	if !model.EventSubtype(i.Type).IsValidSurvey() {
+		return errs.ErrInvalidEventSubType
+	}
+
+	return nil
 }
 
 type PeerReviewDetailInput struct {

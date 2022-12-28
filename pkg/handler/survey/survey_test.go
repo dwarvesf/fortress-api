@@ -611,3 +611,64 @@ func TestHandler_GetSurveyReviewDetail(t *testing.T) {
 
 	}
 }
+
+func TestHandler_CreateSurvey(t *testing.T) {
+	cfg := config.LoadTestConfig()
+	loggerMock := logger.NewLogrusLogger()
+	serviceMock := service.New(&cfg)
+	storeMock := store.New()
+
+	tests := []struct {
+		name             string
+		id               string
+		wantCode         int
+		wantResponsePath string
+		body             request.CreateSurveyFeedbackInput
+	}{
+		{
+			name:             "happy_case",
+			wantCode:         http.StatusOK,
+			wantResponsePath: "testdata/create_survey/200_work.json",
+			body: request.CreateSurveyFeedbackInput{
+				Quarter:  "q3,q4",
+				Year:     2023,
+				Type:     "peer-review",
+				FromDate: "2023-11-28",
+				ToDate:   "2023-11-29",
+			},
+		},
+		{
+			name:             "invalid_range_date",
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/create_survey/400.json",
+			body: request.CreateSurveyFeedbackInput{
+				Quarter:  "q3,q4",
+				Year:     2023,
+				Type:     "work",
+				FromDate: "2023-11-30",
+				ToDate:   "2023-11-29",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				testhelper.LoadTestSQLFile(t, txRepo, "./testdata/create_survey/create_survey.sql")
+				w := httptest.NewRecorder()
+				ctx, _ := gin.CreateTestContext(w)
+				byteReq, _ := json.Marshal(tt.body)
+				bodyReader := strings.NewReader(string(byteReq))
+				ctx.Request = httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/surveys"), bodyReader)
+				ctx.Request.Header.Set("Authorization", testToken)
+
+				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+				h.CreateSurvey(ctx)
+				require.Equal(t, tt.wantCode, w.Code)
+				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				require.NoError(t, err)
+
+				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Survey.SendSurvey] response mismatched")
+			})
+		})
+	}
+}
