@@ -54,7 +54,7 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 404 {object} view.ErrorResponse
 // @Failure 500 {object} view.ErrorResponse
-// @Router /employees [post]
+// @Router /employees/search [post]
 func (h *handler) List(c *gin.Context) {
 	var body request.GetListEmployeeInput
 	if err := c.ShouldBindJSON(&body); err != nil {
