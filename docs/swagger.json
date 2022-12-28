@@ -3708,7 +3708,7 @@
         "request.SendSurveyInput": {
             "type": "object",
             "required": [
-                "topicIDs"
+                "type"
             ],
             "properties": {
                 "topicIDs": {
@@ -3716,6 +3716,9 @@
                     "items": {
                         "type": "string"
                     }
+                },
+                "type": {
+                    "type": "string"
                 }
             }
         },

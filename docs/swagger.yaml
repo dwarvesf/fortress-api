@@ -280,8 +280,10 @@ definitions:
         items:
           type: string
         type: array
+      type:
+        type: string
     required:
-    - topicIDs
+    - type
     type: object
   request.SubmitBody:
     properties:

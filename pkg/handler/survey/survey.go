@@ -186,7 +186,7 @@ func (h *handler) GetSurveyDetail(c *gin.Context) {
 	})
 
 	// check feedback event existence
-	event, err := h.store.FeedbackEvent.One(h.repo.DB(), input.EventID)
+	event, err := h.store.FeedbackEvent.One(h.repo.DB(), input.EventID, true)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		l.Error(err, "event not found")
 		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrEventNotFound, input, ""))
@@ -709,7 +709,7 @@ func (h *handler) createWorkEvent(db *gorm.DB, req request.CreateSurveyFeedbackI
 	}
 
 	projects, _, err := h.store.Project.All(db, project.GetListProjectInput{
-		Statuses: []string{model.ProjectStatusActive.String()},
+		Statuses:            []string{model.ProjectStatusActive.String()},
 		AllowsSendingSurvey: true,
 	}, model.Pagination{})
 	if err != nil {
@@ -870,6 +870,11 @@ func (h *handler) SendSurvey(c *gin.Context) {
 		return
 	}
 
+	if !model.EventSubtype(input.Type).IsValid() {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidEventSubType, input, ""))
+		return
+	}
+
 	l := h.logger.Fields(logger.Fields{
 		"handler": "survey",
 		"method":  "SendSurvey",
@@ -880,12 +885,43 @@ func (h *handler) SendSurvey(c *gin.Context) {
 	// Begin transaction
 	tx, done := h.repo.NewTransaction()
 
-	for _, data := range input.TopicIDs {
-		errCode, err := h.updateEventReviewer(tx.DB(), l, data, eventID)
-		if err != nil {
-			l.Error(err, "error when running function updateEventReviewer")
-			c.JSON(errCode, view.CreateResponse[any](nil, nil, done(err), input, ""))
+	event, err := h.store.FeedbackEvent.One(h.repo.DB(), eventID, true)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			l.Error(errs.ErrEventNotFound, "feedback event not found")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, done(errs.ErrEventNotFound), input, ""))
 			return
+		}
+
+		l.Error(err, "failed to get feedback event")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
+		return
+	}
+
+	switch input.Type {
+	case model.EventSubtypeEngagement.String():
+		topicIDs := make([]model.UUID, 0)
+		for _, topic := range event.Topics {
+			topicIDs = append(topicIDs, topic.ID)
+		}
+
+		for _, data := range topicIDs {
+			errCode, err := h.updateEventReviewer(tx.DB(), l, data, eventID)
+			if err != nil {
+				l.Error(err, "error when running function updateEventReviewer")
+				c.JSON(errCode, view.CreateResponse[any](nil, nil, done(err), input, ""))
+				return
+			}
+		}
+
+	default:
+		for _, data := range input.TopicIDs {
+			errCode, err := h.updateEventReviewer(tx.DB(), l, data, eventID)
+			if err != nil {
+				l.Error(err, "error when running function updateEventReviewer")
+				c.JSON(errCode, view.CreateResponse[any](nil, nil, done(err), input, ""))
+				return
+			}
 		}
 	}
 
@@ -912,7 +948,7 @@ func (h *handler) updateEventReviewer(db *gorm.DB, l logger.Logger, topicID mode
 	}
 
 	// Update Event status to inprogress
-	event, err := h.store.FeedbackEvent.One(db, eventID)
+	event, err := h.store.FeedbackEvent.One(db, eventID, true)
 	if err != nil {
 		l.Error(err, "failed to get feedback event")
 		return http.StatusInternalServerError, err
@@ -1293,7 +1329,7 @@ func (h *handler) UpdateTopicReviewers(c *gin.Context) {
 	}
 
 	// check feedback event existence
-	event, err := h.store.FeedbackEvent.One(h.repo.DB(), input.EventID)
+	event, err := h.store.FeedbackEvent.One(h.repo.DB(), input.EventID, true)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Error(errs.ErrEventNotFound, "feedback event not found")
@@ -1508,7 +1544,7 @@ func (h *handler) MarkDone(c *gin.Context) {
 	tx, done := h.repo.NewTransaction()
 
 	// Update event status
-	event, err := h.store.FeedbackEvent.One(tx.DB(), eventID)
+	event, err := h.store.FeedbackEvent.One(tx.DB(), eventID, true)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		l.Error(errs.ErrEventNotFound, "feedback event not found")
 		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrEventNotFound, eventID, ""))

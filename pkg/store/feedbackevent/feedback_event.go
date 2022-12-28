@@ -62,11 +62,15 @@ func (s *store) Create(db *gorm.DB, feedbackEvent *model.FeedbackEvent) (*model.
 }
 
 // One get 1 by id
-func (s *store) One(db *gorm.DB, id string) (*model.FeedbackEvent, error) {
+func (s *store) One(db *gorm.DB, id string, preload bool) (*model.FeedbackEvent, error) {
 	var event *model.FeedbackEvent
-	return event, db.Where("id = ?", id).
-		Preload("Employee", "deleted_at IS NULL").
-		First(&event).Error
+
+	query := db.Where("id = ?", id)
+	if preload {
+		query = query.Preload("Employee", "deleted_at IS NULL").Preload("Topics", "deleted_at IS NULL")
+	}
+
+	return event, query.Debug().First(&event).Error
 }
 
 // One get 1 by id
