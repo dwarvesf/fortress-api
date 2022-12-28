@@ -726,7 +726,7 @@ func (h *handler) UpdateMember(c *gin.Context) {
 
 func (h *handler) assignMemberToProject(db *gorm.DB, slotID string, projectID string, input request.UpdateMemberInput) (*model.ProjectMember, error) {
 	// check is slot contains any member?
-	member, err := h.store.ProjectMember.GetOneBySlotID(db, slotID)
+	member, err := h.store.ProjectMember.OneBySlotID(db, slotID)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		h.logger.Fields(logger.Fields{"slotID": slotID}).Error(err, "failed to get project member by slotID")
 		return nil, err
@@ -1457,7 +1457,7 @@ func (h *handler) GetWorkUnits(c *gin.Context) {
 		return
 	}
 
-	workUnits, err := h.store.WorkUnit.GetAllByProjectID(h.repo.DB(), input.ProjectID, input.Query.Status)
+	workUnits, err := h.store.WorkUnit.GetByProjectID(h.repo.DB(), input.ProjectID, input.Query.Status)
 	if err != nil {
 		l.Error(err, "failed to get work units")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input.ProjectID, ""))
@@ -1919,7 +1919,7 @@ func (h *handler) ArchiveWorkUnit(c *gin.Context) {
 		member.LeftDate = &timeNow
 		member.Status = model.ProjectMemberStatusInactive.String()
 
-		_, err := h.store.WorkUnitMember.UpdateSelectedFieldsByID(tx.DB(), member.ID.String(), member, "left_date", "status")
+		_, err := h.store.WorkUnitMember.UpdateSelectedFieldsByID(tx.DB(), member.ID.String(), *member, "left_date", "status")
 		if err != nil {
 			l.Error(err, "failed to get work unit members")
 			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), nil, ""))
@@ -2025,7 +2025,7 @@ func (h *handler) UnarchiveWorkUnit(c *gin.Context) {
 		member.LeftDate = nil
 		member.Status = model.ProjectMemberStatusActive.String()
 
-		_, err = h.store.WorkUnitMember.UpdateSelectedFieldsByID(tx.DB(), member.ID.String(), member, "left_date", "status")
+		_, err = h.store.WorkUnitMember.UpdateSelectedFieldsByID(tx.DB(), member.ID.String(), *member, "left_date", "status")
 		if err != nil {
 			l.Error(err, "failed to get work unit members")
 			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), nil, ""))

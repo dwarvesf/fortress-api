@@ -10,7 +10,7 @@ import (
 
 type IStore interface {
 	Create(db *gorm.DB, wum *model.WorkUnitMember) error
-	GetByWorkUnitID(db *gorm.DB, wuID string) (wuMembers []model.WorkUnitMember, err error)
+	GetByWorkUnitID(db *gorm.DB, wuID string) (wuMembers []*model.WorkUnitMember, err error)
 	UpdateSelectedFieldsByID(db *gorm.DB, id string, updateModel model.WorkUnitMember, updatedFields ...string) (*model.WorkUnitMember, error)
 	DeleteByWorkUnitID(db *gorm.DB, workUnitID string) error
 	All(db *gorm.DB, workUnitID string) (members []*model.WorkUnitMember, err error)

@@ -856,7 +856,7 @@ func (h *handler) UploadContent(c *gin.Context) {
 	tx, done := h.repo.NewTransaction()
 
 	// 2.2 check file name exist
-	_, err = h.store.Content.GetByPath(tx.DB(), filePath)
+	_, err = h.store.Content.OneByPath(tx.DB(), filePath)
 	if err != nil && err != gorm.ErrRecordNotFound {
 		l.Error(err, "error query content from db")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
@@ -1012,7 +1012,7 @@ func (h *handler) UploadAvatar(c *gin.Context) {
 	}
 
 	// 2.3 check file name exist
-	_, err = h.store.Content.GetByPath(tx.DB(), filePath)
+	_, err = h.store.Content.OneByPath(tx.DB(), filePath)
 	if err != nil && err != gorm.ErrRecordNotFound {
 		l.Error(err, "error query content from db")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))

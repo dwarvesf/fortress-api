@@ -20,8 +20,8 @@ func (s *store) One(db *gorm.DB, id string) (*model.EmployeeEventReviewer, error
 		First(&eer).Error
 }
 
-// GetByReviewerID get one record by reviewerID and topicID
-func (s *store) GetByReviewerID(db *gorm.DB, reviewerID string, topicID string) (*model.EmployeeEventReviewer, error) {
+// OneByReviewerID get one record by reviewerID and topicID
+func (s *store) OneByReviewerID(db *gorm.DB, reviewerID string, topicID string) (*model.EmployeeEventReviewer, error) {
 	var eer *model.EmployeeEventReviewer
 	return eer, db.Where("reviewer_id = ? AND employee_event_topic_id = ? ", reviewerID, topicID).First(&eer).Error
 }

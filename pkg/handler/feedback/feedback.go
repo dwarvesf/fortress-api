@@ -145,7 +145,7 @@ func (h *handler) Detail(c *gin.Context) {
 		return
 	}
 
-	eventReviewer, err := h.store.EmployeeEventReviewer.GetByReviewerID(h.repo.DB(), userID, input.TopicID)
+	eventReviewer, err := h.store.EmployeeEventReviewer.OneByReviewerID(h.repo.DB(), userID, input.TopicID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		l.Error(errs.ErrEmployeeEventReviewerNotFound, "employee event reviewer not found")
 		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrEmployeeEventReviewerNotFound, nil, ""))
@@ -278,7 +278,7 @@ func (h *handler) Submit(c *gin.Context) {
 		return
 	}
 
-	eventReviewer, err := h.store.EmployeeEventReviewer.GetByReviewerID(tx.DB(), userID, input.TopicID)
+	eventReviewer, err := h.store.EmployeeEventReviewer.OneByReviewerID(tx.DB(), userID, input.TopicID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		l.Error(errs.ErrEventReviewerNotFound, "employee event reviewer not found")
 		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, done(errs.ErrEventReviewerNotFound), input, ""))
