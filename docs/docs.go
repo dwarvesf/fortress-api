@@ -3841,27 +3841,6 @@ const docTemplate = `{
                 "country": {
                     "type": "string"
                 },
-                "discordID": {
-                    "type": "string"
-                },
-                "discordName": {
-                    "type": "string"
-                },
-                "githubID": {
-                    "type": "string"
-                },
-                "linkedInName": {
-                    "type": "string"
-                },
-                "notionEmail": {
-                    "type": "string"
-                },
-                "notionID": {
-                    "type": "string"
-                },
-                "notionName": {
-                    "type": "string"
-                },
                 "personalEmail": {
                     "type": "string"
                 },
