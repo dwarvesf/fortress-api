@@ -7,6 +7,8 @@
         "address": "Phan Huy Ich, Tan Binh District, Ho Chi Minh, Vietnam",
         "placeOfResidence": "",
         "gender": "Male",
-        "birthday": "1990-01-02T00:00:00Z"
+        "birthday": "1990-01-02T00:00:00Z",
+        "country": "Viet Nam",
+        "city":"Ho Chi Minh"
     }
 }

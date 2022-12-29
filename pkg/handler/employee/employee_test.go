@@ -507,6 +507,8 @@ func Test_UpdatePersonalInfo(t *testing.T) {
 				Gender:        "Male",
 				Address:       "Phan Huy Ich, Tan Binh District, Ho Chi Minh, Vietnam",
 				PersonalEmail: "thanhpham124@gmail.com",
+				Country:       "Viet Nam",
+				City:          "Ho Chi Minh",
 			},
 			id: "2655832e-f009-4b73-a535-64c3a22e558f",
 		},

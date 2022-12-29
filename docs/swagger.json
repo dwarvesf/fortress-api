@@ -1709,7 +1709,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/view.ProjectListDataResponse"
+                            "$ref": "#/definitions/view.ProjectDataResponse"
                         }
                     },
                     "400": {
@@ -3802,6 +3802,12 @@
                 "lineManagerID": {
                     "type": "string"
                 },
+                "linkedInName": {
+                    "type": "string"
+                },
+                "notionEmail": {
+                    "type": "string"
+                },
                 "notionID": {
                     "type": "string"
                 },
@@ -3910,6 +3916,12 @@
                 "address": {
                     "type": "string",
                     "maxLength": 200
+                },
+                "city": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
                 },
                 "dob": {
                     "type": "string"
@@ -4995,6 +5007,14 @@
                 }
             }
         },
+        "view.ProjectDataResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/view.ProjectData"
+                }
+            }
+        },
         "view.ProjectHead": {
             "type": "object",
             "properties": {
@@ -5427,6 +5447,12 @@
                 "lineManager": {
                     "$ref": "#/definitions/view.BasicEmployeeInfo"
                 },
+                "linkedInName": {
+                    "type": "string"
+                },
+                "notionEmail": {
+                    "type": "string"
+                },
                 "notionID": {
                     "type": "string"
                 },
@@ -5451,6 +5477,12 @@
                     "type": "string"
                 },
                 "birthday": {
+                    "type": "string"
+                },
+                "city": {
+                    "type": "string"
+                },
+                "country": {
                     "type": "string"
                 },
                 "createdAt": {

@@ -79,6 +79,8 @@ type UpdatePersonalEmployeeData struct {
 	PlaceOfResidence string     `json:"placeOfResidence"`
 	Gender           string     `json:"gender"`
 	DateOfBirth      *time.Time `json:"birthday"`
+	Country          string     `json:"country"`
+	City             string     `json:"city"`
 }
 
 type BasicEmployeeInfo struct {
@@ -125,6 +127,8 @@ func ToUpdatePersonalEmployeeData(employee *model.Employee) *UpdatePersonalEmplo
 		Address:          employee.Address,
 		PlaceOfResidence: employee.PlaceOfResidence,
 		PersonalEmail:    employee.PersonalEmail,
+		Country:          employee.Country,
+		City:             employee.City,
 	}
 }
 

@@ -1717,7 +1717,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/view.ProjectListDataResponse"
+                            "$ref": "#/definitions/view.ProjectDataResponse"
                         }
                     },
                     "400": {
@@ -3810,6 +3810,12 @@ const docTemplate = `{
                 "lineManagerID": {
                     "type": "string"
                 },
+                "linkedInName": {
+                    "type": "string"
+                },
+                "notionEmail": {
+                    "type": "string"
+                },
                 "notionID": {
                     "type": "string"
                 },
@@ -3918,6 +3924,12 @@ const docTemplate = `{
                 "address": {
                     "type": "string",
                     "maxLength": 200
+                },
+                "city": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
                 },
                 "dob": {
                     "type": "string"
@@ -5003,6 +5015,14 @@ const docTemplate = `{
                 }
             }
         },
+        "view.ProjectDataResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/view.ProjectData"
+                }
+            }
+        },
         "view.ProjectHead": {
             "type": "object",
             "properties": {
@@ -5435,6 +5455,12 @@ const docTemplate = `{
                 "lineManager": {
                     "$ref": "#/definitions/view.BasicEmployeeInfo"
                 },
+                "linkedInName": {
+                    "type": "string"
+                },
+                "notionEmail": {
+                    "type": "string"
+                },
                 "notionID": {
                     "type": "string"
                 },
@@ -5459,6 +5485,12 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "birthday": {
+                    "type": "string"
+                },
+                "city": {
+                    "type": "string"
+                },
+                "country": {
                     "type": "string"
                 },
                 "createdAt": {

@@ -770,13 +770,10 @@ func (h *handler) UpdatePersonalInfo(c *gin.Context) {
 	employee.Address = body.Address
 	employee.PlaceOfResidence = body.PlaceOfResidence
 	employee.PersonalEmail = body.PersonalEmail
+	employee.Country = body.Country
+	employee.City = body.City
 
-	_, err = h.store.Employee.UpdateSelectedFieldsByID(h.repo.DB(), employeeID, *employee,
-		"date_of_birth",
-		"gender",
-		"address",
-		"place_of_residence",
-		"personal_email")
+	employee, err = h.store.Employee.Update(h.repo.DB(), employee)
 	if err != nil {
 		l.Error(err, "failed to update employee")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
