@@ -1033,3 +1033,72 @@ func (h *handler) UploadAvatar(c *gin.Context) {
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToContentData(filePath), nil, nil, nil, ""))
 }
+
+// UpdateSocialIntegration godoc
+// @Summary Update social info of the employee by id
+// @Description Update social info of the employee by id
+// @Tags Employee
+// @Accept  json
+// @Produce  json
+// @Param Authorization header string true "jwt token"
+// @Param id path string true "Employee ID"
+// @Param Body body request.UpdateSocialIntegrationInput true "Body"
+// @Success 200 {object} view.MessageResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /employees/{id}/social-integrations [put]
+func (h *handler) UpdateSocialIntegration(c *gin.Context) {
+	employeeID := c.Param("id")
+	if employeeID == "" || !model.IsUUIDFromString(employeeID) {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidEmployeeID, nil, ""))
+		return
+	}
+
+	var input request.UpdateSocialIntegrationInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		if err != nil {
+			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, input, ""))
+			return
+		}
+	}
+
+	// TODO: can we move this to middleware ?
+	l := h.logger.Fields(logger.Fields{
+		"handler": "employee",
+		"method":  "UpdateSocialIntegration",
+		"input":   input,
+	})
+
+	employee, err := h.store.Employee.One(h.repo.DB(), employeeID, true)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			l.Info("employee not found")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrEmployeeNotFound, nil, ""))
+			return
+		}
+		l.Error(err, "failed to get employee")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	employee.BasecampID = input.BasecampID
+	employee.BasecampAttachableSGID = input.BasecampAttachableSGID
+	employee.GitlabID = input.GitlabID
+	employee.GithubID = input.GithubID
+	employee.NotionID = input.NotionID
+	employee.NotionName = input.NotionName
+	employee.NotionEmail = input.NotionEmail
+	employee.DiscordID = input.DiscordID
+	employee.DiscordName = input.DiscordName
+	employee.LinkedInName = input.LinkedInName
+
+	_, err = h.store.Employee.Update(h.repo.DB(), employee)
+	if err != nil {
+		l.Error(err, "failed to update social integrations for employee")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input, ""))
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))
+}

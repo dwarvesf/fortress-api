@@ -508,6 +508,40 @@ definitions:
     - seniority
     - stacks
     type: object
+  request.UpdateSocialIntegrationInput:
+    properties:
+      basecampAttachableSGID:
+        type: string
+      basecampID:
+        type: string
+      discordID:
+        type: string
+      discordName:
+        type: string
+      githubID:
+        type: string
+      gitlabID:
+        type: string
+      linkedInName:
+        type: string
+      notionEmail:
+        type: string
+      notionID:
+        type: string
+      notionName:
+        type: string
+    required:
+    - basecampAttachableSGID
+    - basecampID
+    - discordID
+    - discordName
+    - githubID
+    - gitlabID
+    - linkedInName
+    - notionEmail
+    - notionID
+    - notionName
+    type: object
   request.UpdateTopicReviewersBody:
     properties:
       reviewerIDs:
@@ -1989,6 +2023,50 @@ paths:
           schema:
             $ref: '#/definitions/view.ErrorResponse'
       summary: Update Skill for employee by id
+      tags:
+      - Employee
+  /employees/{id}/social-integrations:
+    put:
+      consumes:
+      - application/json
+      description: Update social info of the employee by id
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Employee ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Body
+        in: body
+        name: Body
+        required: true
+        schema:
+          $ref: '#/definitions/request.UpdateSocialIntegrationInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Update social info of the employee by id
       tags:
       - Employee
   /employees/{id}/upload-avatar:

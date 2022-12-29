@@ -33,6 +33,7 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 	v1.PUT("/employees/:id/employee-status", amw.WithAuth, pmw.WithPerm("employees.edit"), h.Employee.UpdateEmployeeStatus)
 	v1.POST("/employees/:id/upload-content", amw.WithAuth, pmw.WithPerm("employees.edit"), h.Employee.UploadContent)
 	v1.POST("/employees/:id/upload-avatar", amw.WithAuth, pmw.WithPerm("employees.edit"), h.Employee.UploadAvatar)
+	v1.PUT("/employees/:id/social-integrations", amw.WithAuth, pmw.WithPerm("employees.edit"), h.Employee.UpdateSocialIntegration)
 
 	// metadata
 	v1.GET("/metadata/working-status", h.Metadata.WorkingStatuses)

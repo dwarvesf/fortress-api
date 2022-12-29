@@ -576,6 +576,72 @@ const docTemplate = `{
                 }
             }
         },
+        "/employees/{id}/social-integrations": {
+            "put": {
+                "description": "Update social info of the employee by id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Employee"
+                ],
+                "summary": "Update social info of the employee by id",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Employee ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Body",
+                        "name": "Body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.UpdateSocialIntegrationInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.MessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/employees/{id}/upload-avatar": {
             "post": {
                 "description": "Upload avatar of employee by id",
@@ -4013,6 +4079,53 @@ const docTemplate = `{
                     "items": {
                         "type": "string"
                     }
+                }
+            }
+        },
+        "request.UpdateSocialIntegrationInput": {
+            "type": "object",
+            "required": [
+                "basecampAttachableSGID",
+                "basecampID",
+                "discordID",
+                "discordName",
+                "githubID",
+                "gitlabID",
+                "linkedInName",
+                "notionEmail",
+                "notionID",
+                "notionName"
+            ],
+            "properties": {
+                "basecampAttachableSGID": {
+                    "type": "string"
+                },
+                "basecampID": {
+                    "type": "string"
+                },
+                "discordID": {
+                    "type": "string"
+                },
+                "discordName": {
+                    "type": "string"
+                },
+                "githubID": {
+                    "type": "string"
+                },
+                "gitlabID": {
+                    "type": "string"
+                },
+                "linkedInName": {
+                    "type": "string"
+                },
+                "notionEmail": {
+                    "type": "string"
+                },
+                "notionID": {
+                    "type": "string"
+                },
+                "notionName": {
+                    "type": "string"
                 }
             }
         },

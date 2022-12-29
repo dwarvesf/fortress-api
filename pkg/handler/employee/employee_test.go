@@ -554,3 +554,84 @@ func Test_UpdatePersonalInfo(t *testing.T) {
 		})
 	}
 }
+
+func Test_UpdateSocialIntegration(t *testing.T) {
+	cfg := config.LoadTestConfig()
+	loggerMock := logger.NewLogrusLogger()
+	serviceMock := service.New(&cfg)
+	storeMock := store.New()
+
+	tests := []struct {
+		name             string
+		wantCode         int
+		wantErr          bool
+		wantResponsePath string
+		body             request.UpdateSocialIntegrationInput
+		id               string
+	}{
+		{
+			name:             "ok_update_social",
+			wantCode:         200,
+			wantErr:          false,
+			wantResponsePath: "testdata/update_social/200.json",
+			body: request.UpdateSocialIntegrationInput{
+				BasecampID:             "basecampID",
+				BasecampAttachableSGID: "basecampAttachableSGID",
+				GitlabID:               "gitlabID",
+				GithubID:               "githubID",
+				NotionID:               "notionID",
+				NotionName:             "notionName",
+				NotionEmail:            "notionEmail",
+				DiscordID:              "discordID",
+				DiscordName:            "discordName",
+				LinkedInName:           "linkedInName",
+			},
+			id: "2655832e-f009-4b73-a535-64c3a22e558f",
+		},
+		{
+			name:             "employee_not_found",
+			wantCode:         404,
+			wantErr:          false,
+			wantResponsePath: "testdata/update_social/404.json",
+			body: request.UpdateSocialIntegrationInput{
+				BasecampID:             "basecampID",
+				BasecampAttachableSGID: "basecampAttachableSGID",
+				GitlabID:               "gitlabID",
+				GithubID:               "githubID",
+				NotionID:               "notionID",
+				NotionName:             "notionName",
+				NotionEmail:            "notionEmail",
+				DiscordID:              "discordID",
+				DiscordName:            "discordName",
+				LinkedInName:           "linkedInName",
+			},
+			id: "2655832e-f009-4b73-a535-64c3a22e558e",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				testhelper.LoadTestSQLFile(t, txRepo, "./testdata/update_social/update_social.sql")
+				byteReq, err := json.Marshal(tt.body)
+				require.Nil(t, err)
+				w := httptest.NewRecorder()
+
+				ctx, _ := gin.CreateTestContext(w)
+				bodyReader := strings.NewReader(string(byteReq))
+				ctx.Params = gin.Params{gin.Param{Key: "id", Value: tt.id}}
+				ctx.Request = httptest.NewRequest("PUT", "/api/v1/employees/"+tt.id+"/social-integration", bodyReader)
+				ctx.Request.Header.Set("Authorization", testToken)
+				metadataHandler := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+
+				metadataHandler.UpdateSocialIntegration(ctx)
+
+				require.Equal(t, tt.wantCode, w.Code)
+				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				require.NoError(t, err)
+
+				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.UpdateSocialIntegration] response mismatched")
+			})
+		})
+	}
+}

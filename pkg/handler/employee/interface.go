@@ -12,4 +12,5 @@ type IHandler interface {
 	UpdatePersonalInfo(c *gin.Context)
 	UploadContent(c *gin.Context)
 	UploadAvatar(c *gin.Context)
+	UpdateSocialIntegration(c *gin.Context)
 }

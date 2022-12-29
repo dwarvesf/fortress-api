@@ -63,6 +63,19 @@ type UpdatePersonalInfoInput struct {
 	PersonalEmail    string     `form:"personalEmail" json:"personalEmail" binding:"required,email"`
 }
 
+type UpdateSocialIntegrationInput struct {
+	BasecampID             string `form:"basecampID" json:"basecampID" binding:"required"`
+	BasecampAttachableSGID string `form:"basecampAttachableSGID" json:"basecampAttachableSGID" binding:"required"`
+	GitlabID               string `form:"gitlabID" json:"gitlabID" binding:"required"`
+	GithubID               string `form:"githubID" json:"githubID" binding:"required"`
+	NotionID               string `form:"notionID" json:"notionID" binding:"required"`
+	NotionName             string `form:"notionName" json:"notionName" binding:"required"`
+	NotionEmail            string `form:"notionEmail" json:"notionEmail" binding:"required"`
+	DiscordID              string `form:"discordID" json:"discordID" binding:"required"`
+	DiscordName            string `form:"discordName" json:"discordName" binding:"required"`
+	LinkedInName           string `form:"linkedInName" json:"linkedInName" binding:"required"`
+}
+
 type UpdateWorkingStatusInput struct {
 	EmployeeStatus model.WorkingStatus `json:"employeeStatus"`
 }
