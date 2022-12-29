@@ -18,7 +18,6 @@ INSERT INTO public.positions (id, deleted_at, created_at, updated_at, name, code
 ('dac16ce6-9e5a-4ff3-9ea2-fdea4853925e', NULL, '2022-11-07 09:50:25.714604', '2022-11-07 09:50:25.714604', 'Devops', 'devops'),
 ('01fb6322-d727-47e3-a242-5039ea4732fc', NULL, '2022-11-07 09:50:25.714604', '2022-11-07 09:50:25.714604', 'Blockchain', 'blockchain'),
 ('39735742-829b-47f3-8f9d-daf0983914e5', NULL, '2022-11-07 09:50:25.714604', '2022-11-07 09:50:25.714604', 'Project Manager', 'project-manager'),
-('50595285-5ed6-4196-b0e2-bd31ed639e9f', NULL, '2022-11-07 09:50:25.714604', '2022-11-07 09:50:25.714604', 'Devops', 'devops'),
 ('65c67b84-fbec-406f-bcae-a947a6f7f12a', NULL, '2022-11-07 09:50:25.714604', '2022-11-07 09:50:25.714604', 'Data Engineer', 'data-engineer'),
 ('0590d7f2-22ba-4f53-bc51-16e5aa775beb', NULL, '2022-11-07 09:50:25.714604', '2022-11-07 09:50:25.714604', 'Data Analyst', 'data-analyst'),
 ('ce2b8c4d-2ab6-4a32-82c2-e114d428fb1e', NULL, '2022-11-07 09:50:25.714604', '2022-11-07 09:50:25.714604', 'Quality Assurance', 'quality-assurance'),
