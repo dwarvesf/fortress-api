@@ -56,10 +56,11 @@ type UpdateSkillsInput struct {
 }
 
 type UpdatePersonalInfoInput struct {
-	DoB           *time.Time `form:"dob" json:"dob" binding:"required"`
-	Gender        string     `form:"gender" json:"gender" binding:"required"`
-	Address       string     `form:"address" json:"address" binding:"required,max=200"`
-	PersonalEmail string     `form:"personalEmail" json:"personalEmail" binding:"required,email"`
+	DoB              *time.Time `form:"dob" json:"dob" binding:"required"`
+	Gender           string     `form:"gender" json:"gender" binding:"required"`
+	PlaceOfResidence string     `form:"placeOfResidence" json:"placeOfResidence"`
+	Address          string     `form:"address" json:"address" binding:"required,max=200"`
+	PersonalEmail    string     `form:"personalEmail" json:"personalEmail" binding:"required,email"`
 }
 
 type UpdateWorkingStatusInput struct {

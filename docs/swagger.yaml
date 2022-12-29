@@ -377,6 +377,8 @@ definitions:
     type: object
   request.UpdateInfoInput:
     properties:
+      address:
+        type: string
       city:
         type: string
       country:
@@ -395,22 +397,20 @@ definitions:
         type: string
       notionName:
         type: string
-      permanentAddress:
-        type: string
       personalEmail:
         type: string
       phoneNumber:
         maxLength: 12
         minLength: 10
         type: string
-      shelterAddress:
+      placeOfResidence:
         type: string
       teamEmail:
         type: string
     required:
     - personalEmail
     - phoneNumber
-    - shelterAddress
+    - placeOfResidence
     - teamEmail
     type: object
   request.UpdateMemberInput:
@@ -457,6 +457,8 @@ definitions:
       gender:
         type: string
       personalEmail:
+        type: string
+      placeOfResidence:
         type: string
     required:
     - address
@@ -1050,6 +1052,8 @@ definitions:
     type: object
   view.ProfileData:
     properties:
+      address:
+        type: string
       avatar:
         type: string
       birthday:
@@ -1080,13 +1084,11 @@ definitions:
         type: string
       notionName:
         type: string
-      permanentAddress:
-        type: string
       personalEmail:
         type: string
       phoneNumber:
         type: string
-      shelterAddress:
+      place_of_residence:
         type: string
       teamEmail:
         type: string
@@ -1470,6 +1472,8 @@ definitions:
         type: string
       personalEmail:
         type: string
+      placeOfResidence:
+        type: string
       updatedAt:
         type: string
     type: object
@@ -1480,6 +1484,8 @@ definitions:
     type: object
   view.UpdateProfileInfoData:
     properties:
+      address:
+        type: string
       city:
         type: string
       country:
@@ -1504,11 +1510,9 @@ definitions:
         type: string
       notionName:
         type: string
-      permanentAddress:
-        type: string
       phoneNumber:
         type: string
-      shelterAddress:
+      place_of_residence:
         type: string
       teamEmail:
         description: basic info

@@ -145,8 +145,8 @@ func (h *handler) UpdateInfo(c *gin.Context) {
 		"notion_name",
 		"notion_email",
 		"linkedin_name",
-		"shelter_address",
-		"permanent_address",
+		"place_of_residence",
+		"address",
 		"country",
 		"city",
 	)

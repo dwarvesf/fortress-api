@@ -3820,10 +3820,13 @@
             "required": [
                 "personalEmail",
                 "phoneNumber",
-                "shelterAddress",
+                "placeOfResidence",
                 "teamEmail"
             ],
             "properties": {
+                "address": {
+                    "type": "string"
+                },
                 "city": {
                     "type": "string"
                 },
@@ -3851,9 +3854,6 @@
                 "notionName": {
                     "type": "string"
                 },
-                "permanentAddress": {
-                    "type": "string"
-                },
                 "personalEmail": {
                     "type": "string"
                 },
@@ -3862,7 +3862,7 @@
                     "maxLength": 12,
                     "minLength": 10
                 },
-                "shelterAddress": {
+                "placeOfResidence": {
                     "type": "string"
                 },
                 "teamEmail": {
@@ -3939,6 +3939,9 @@
                     "type": "string"
                 },
                 "personalEmail": {
+                    "type": "string"
+                },
+                "placeOfResidence": {
                     "type": "string"
                 }
             }
@@ -4838,6 +4841,9 @@
         "view.ProfileData": {
             "type": "object",
             "properties": {
+                "address": {
+                    "type": "string"
+                },
                 "avatar": {
                     "type": "string"
                 },
@@ -4883,16 +4889,13 @@
                 "notionName": {
                     "type": "string"
                 },
-                "permanentAddress": {
-                    "type": "string"
-                },
                 "personalEmail": {
                     "type": "string"
                 },
                 "phoneNumber": {
                     "type": "string"
                 },
-                "shelterAddress": {
+                "place_of_residence": {
                     "type": "string"
                 },
                 "teamEmail": {
@@ -5480,6 +5483,9 @@
                 "personalEmail": {
                     "type": "string"
                 },
+                "placeOfResidence": {
+                    "type": "string"
+                },
                 "updatedAt": {
                     "type": "string"
                 }
@@ -5496,6 +5502,9 @@
         "view.UpdateProfileInfoData": {
             "type": "object",
             "properties": {
+                "address": {
+                    "type": "string"
+                },
                 "city": {
                     "type": "string"
                 },
@@ -5532,13 +5541,10 @@
                 "notionName": {
                     "type": "string"
                 },
-                "permanentAddress": {
-                    "type": "string"
-                },
                 "phoneNumber": {
                     "type": "string"
                 },
-                "shelterAddress": {
+                "place_of_residence": {
                     "type": "string"
                 },
                 "teamEmail": {
