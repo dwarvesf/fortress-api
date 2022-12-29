@@ -709,7 +709,7 @@ func (h *handler) UpdatePersonalInfo(c *gin.Context) {
 	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler": "employee",
-		"method":  "UpdateGeneralInfo",
+		"method":  "UpdatePersonalInfo",
 		"request": body,
 	})
 
@@ -728,12 +728,14 @@ func (h *handler) UpdatePersonalInfo(c *gin.Context) {
 	employee.DateOfBirth = body.DoB
 	employee.Gender = body.Gender
 	employee.Address = body.Address
+	employee.PlaceOfResidence = body.PlaceOfResidence
 	employee.PersonalEmail = body.PersonalEmail
 
 	_, err = h.store.Employee.UpdateSelectedFieldsByID(h.repo.DB(), employeeID, *employee,
 		"date_of_birth",
 		"gender",
 		"address",
+		"place_of_residence",
 		"personal_email")
 	if err != nil {
 		l.Error(err, "failed to update employee")

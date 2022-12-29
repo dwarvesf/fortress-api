@@ -3828,10 +3828,13 @@ const docTemplate = `{
             "required": [
                 "personalEmail",
                 "phoneNumber",
-                "shelterAddress",
+                "placeOfResidence",
                 "teamEmail"
             ],
             "properties": {
+                "address": {
+                    "type": "string"
+                },
                 "city": {
                     "type": "string"
                 },
@@ -3859,9 +3862,6 @@ const docTemplate = `{
                 "notionName": {
                     "type": "string"
                 },
-                "permanentAddress": {
-                    "type": "string"
-                },
                 "personalEmail": {
                     "type": "string"
                 },
@@ -3870,7 +3870,7 @@ const docTemplate = `{
                     "maxLength": 12,
                     "minLength": 10
                 },
-                "shelterAddress": {
+                "placeOfResidence": {
                     "type": "string"
                 },
                 "teamEmail": {
@@ -3947,6 +3947,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "personalEmail": {
+                    "type": "string"
+                },
+                "placeOfResidence": {
                     "type": "string"
                 }
             }
@@ -4846,6 +4849,9 @@ const docTemplate = `{
         "view.ProfileData": {
             "type": "object",
             "properties": {
+                "address": {
+                    "type": "string"
+                },
                 "avatar": {
                     "type": "string"
                 },
@@ -4891,16 +4897,13 @@ const docTemplate = `{
                 "notionName": {
                     "type": "string"
                 },
-                "permanentAddress": {
-                    "type": "string"
-                },
                 "personalEmail": {
                     "type": "string"
                 },
                 "phoneNumber": {
                     "type": "string"
                 },
-                "shelterAddress": {
+                "place_of_residence": {
                     "type": "string"
                 },
                 "teamEmail": {
@@ -5488,6 +5491,9 @@ const docTemplate = `{
                 "personalEmail": {
                     "type": "string"
                 },
+                "placeOfResidence": {
+                    "type": "string"
+                },
                 "updatedAt": {
                     "type": "string"
                 }
@@ -5504,6 +5510,9 @@ const docTemplate = `{
         "view.UpdateProfileInfoData": {
             "type": "object",
             "properties": {
+                "address": {
+                    "type": "string"
+                },
                 "city": {
                     "type": "string"
                 },
@@ -5540,13 +5549,10 @@ const docTemplate = `{
                 "notionName": {
                     "type": "string"
                 },
-                "permanentAddress": {
-                    "type": "string"
-                },
                 "phoneNumber": {
                     "type": "string"
                 },
-                "shelterAddress": {
+                "place_of_residence": {
                     "type": "string"
                 },
                 "teamEmail": {

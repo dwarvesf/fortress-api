@@ -14,8 +14,8 @@ type UpdateInfoInput struct {
 	DiscordID        string `form:"discordID" json:"discordID"`
 	DiscordName      string `form:"discordName" json:"discordName"`
 	LinkedInName     string `form:"linkedInName" json:"linkedInName"`
-	ShelterAddress   string `form:"shelterAddress" json:"shelterAddress" binding:"required"`
-	PermanentAddress string `form:"permanentAddress" json:"permanentAddress"`
+	PlaceOfResidence string `form:"placeOfResidence" json:"placeOfResidence" binding:"required"`
+	Address          string `form:"address" json:"address"`
 	Country          string `form:"country" json:"country"`
 	City             string `form:"city" json:"city"`
 }
@@ -24,8 +24,8 @@ func (i UpdateInfoInput) MapEmployeeInput(employee *model.Employee) {
 	employee.TeamEmail = i.TeamEmail
 	employee.PersonalEmail = i.PersonalEmail
 	employee.PhoneNumber = i.PhoneNumber
-	employee.ShelterAddress = i.ShelterAddress
-	employee.PermanentAddress = i.PermanentAddress
+	employee.PlaceOfResidence = i.PlaceOfResidence
+	employee.Address = i.Address
 	employee.City = i.City
 	employee.Country = i.Country
 

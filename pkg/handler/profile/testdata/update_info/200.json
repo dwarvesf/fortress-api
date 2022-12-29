@@ -12,8 +12,8 @@
         "discordID": "",
         "discordName": "discordName",
         "username": "thanh",
-        "shelterAddress": "200 Đường 3/2, Quận 10",
-        "permanentAddress": "201 Đường 3/2, Quận 10",
+        "place_of_residence": "200 Đường 3/2, Quận 10",
+        "address": "201 Đường 3/2, Quận 10",
         "country": "Vietnam",
         "city": "Hồ Chí Minh",
         "linkedInName": "linkedin"

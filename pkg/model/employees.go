@@ -66,8 +66,7 @@ type Employee struct {
 	Avatar                 string     `gorm:"default:null"`
 	PhoneNumber            string     `gorm:"default:null"`
 	Address                string     `gorm:"default:null"`
-	ShelterAddress         string     `gorm:"default:null"`
-	PermanentAddress       string     `gorm:"default:null"`
+	PlaceOfResidence       string     `gorm:"default:null"`
 	MBTI                   string     `gorm:"default:null"`
 	Gender                 string     `gorm:"default:null"`
 	Horoscope              string     `gorm:"default:null"`

@@ -23,8 +23,8 @@ type ProfileData struct {
 	DiscordID        string     `json:"discordID"`
 	DiscordName      string     `json:"discordName"`
 	Username         string     `json:"username"`
-	ShelterAddress   string     `json:"shelterAddress"`
-	PermanentAddress string     `json:"permanentAddress"`
+	PlaceOfResidence string     `json:"place_of_residence"`
+	Address          string     `json:"address"`
 	Country          string     `json:"country"`
 	City             string     `json:"city"`
 	LinkedInName     string     `json:"linkedInName"`
@@ -43,8 +43,8 @@ type UpdateProfileInfoData struct {
 	DiscordID        string `json:"discordID"`
 	DiscordName      string `json:"discordName"`
 	Username         string `json:"username"`
-	ShelterAddress   string `json:"shelterAddress"`
-	PermanentAddress string `json:"permanentAddress"`
+	PlaceOfResidence string `json:"place_of_residence"`
+	Address          string `json:"address"`
 	Country          string `json:"country"`
 	City             string `json:"city"`
 	LinkedInName     string `json:"linkedInName"`
@@ -74,8 +74,8 @@ func ToUpdateProfileInfoData(employee *model.Employee) *UpdateProfileInfoData {
 		DiscordID:        employee.DiscordID,
 		DiscordName:      employee.DiscordName,
 		Username:         employee.Username,
-		ShelterAddress:   employee.ShelterAddress,
-		PermanentAddress: employee.PermanentAddress,
+		PlaceOfResidence: employee.PlaceOfResidence,
+		Address:          employee.Address,
 		Country:          employee.Country,
 		City:             employee.City,
 		LinkedInName:     employee.LinkedInName,
@@ -102,8 +102,8 @@ func ToProfileData(employee *model.Employee) *ProfileData {
 		DiscordID:        employee.DiscordID,
 		DiscordName:      employee.DiscordName,
 		Username:         employee.Username,
-		ShelterAddress:   employee.ShelterAddress,
-		PermanentAddress: employee.PermanentAddress,
+		PlaceOfResidence: employee.PlaceOfResidence,
+		Address:          employee.Address,
 		Country:          employee.Country,
 		City:             employee.City,
 		LinkedInName:     employee.LinkedInName,

@@ -70,10 +70,11 @@ type UpdateSkillEmployeeData struct {
 type UpdatePersonalEmployeeData struct {
 	model.BaseModel
 
-	PersonalEmail string     `json:"personalEmail"`
-	Address       string     `json:"address"`
-	Gender        string     `json:"gender"`
-	DateOfBirth   *time.Time `json:"birthday"`
+	PersonalEmail    string     `json:"personalEmail"`
+	Address          string     `json:"address"`
+	PlaceOfResidence string     `json:"placeOfResidence"`
+	Gender           string     `json:"gender"`
+	DateOfBirth      *time.Time `json:"birthday"`
 }
 
 type BasicEmployeeInfo struct {
@@ -115,10 +116,11 @@ func ToUpdatePersonalEmployeeData(employee *model.Employee) *UpdatePersonalEmplo
 			CreatedAt: employee.CreatedAt,
 			UpdatedAt: employee.UpdatedAt,
 		},
-		DateOfBirth:   employee.DateOfBirth,
-		Gender:        employee.Gender,
-		Address:       employee.Address,
-		PersonalEmail: employee.PersonalEmail,
+		DateOfBirth:      employee.DateOfBirth,
+		Gender:           employee.Gender,
+		Address:          employee.Address,
+		PlaceOfResidence: employee.PlaceOfResidence,
+		PersonalEmail:    employee.PersonalEmail,
 	}
 }
 
