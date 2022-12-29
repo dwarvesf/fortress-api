@@ -362,6 +362,10 @@ definitions:
         type: string
       lineManagerID:
         type: string
+      linkedInName:
+        type: string
+      notionEmail:
+        type: string
       notionID:
         type: string
       notionName:
@@ -437,6 +441,10 @@ definitions:
     properties:
       address:
         maxLength: 200
+        type: string
+      city:
+        type: string
+      country:
         type: string
       dob:
         type: string
@@ -1153,6 +1161,11 @@ definitions:
       updatedAt:
         type: string
     type: object
+  view.ProjectDataResponse:
+    properties:
+      data:
+        $ref: '#/definitions/view.ProjectData'
+    type: object
   view.ProjectHead:
     properties:
       avatar:
@@ -1435,6 +1448,10 @@ definitions:
         type: string
       lineManager:
         $ref: '#/definitions/view.BasicEmployeeInfo'
+      linkedInName:
+        type: string
+      notionEmail:
+        type: string
       notionID:
         type: string
       notionName:
@@ -1451,6 +1468,10 @@ definitions:
       address:
         type: string
       birthday:
+        type: string
+      city:
+        type: string
+      country:
         type: string
       createdAt:
         type: string
@@ -2775,7 +2796,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/view.ProjectListDataResponse'
+            $ref: '#/definitions/view.ProjectDataResponse'
         "400":
           description: Bad Request
           schema:

@@ -1074,7 +1074,7 @@ func (h *handler) createSlotInProject(db *gorm.DB, projectID string, req request
 // @Produce  json
 // @Param Authorization header string true "jwt token"
 // @Param id path string true "Project ID"
-// @Success 200 {object} view.ProjectListDataResponse
+// @Success 200 {object} view.ProjectDataResponse
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 404 {object} view.ErrorResponse
 // @Failure 500 {object} view.ErrorResponse

@@ -131,7 +131,7 @@ func (s *store) IsExist(db *gorm.DB, id string) (bool, error) {
 
 // Update update all value (including nested model)
 func (s *store) Update(db *gorm.DB, employee *model.Employee) (*model.Employee, error) {
-	return employee, db.Model(&employee).Where("id = ?", employee.ID).Updates(&employee).Error
+	return employee, db.Model(&employee).Where("id = ?", employee.ID).Updates(&employee).First(&employee).Error
 }
 
 // UpdateSelectedFieldsByID just update selected fields by id

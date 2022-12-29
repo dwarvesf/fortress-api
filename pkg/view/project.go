@@ -199,6 +199,10 @@ type ProjectListDataResponse struct {
 	Data []ProjectData `json:"data"`
 }
 
+type ProjectDataResponse struct {
+	Data ProjectData `json:"data"`
+}
+
 type EmployeeProjectData struct {
 	ID             string     `json:"id"`
 	Name           string     `json:"name"`
