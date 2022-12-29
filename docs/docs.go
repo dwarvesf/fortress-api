@@ -4464,6 +4464,9 @@ const docTemplate = `{
                 "lineManager": {
                     "$ref": "#/definitions/view.BasicEmployeeInfo"
                 },
+                "linkedInName": {
+                    "type": "string"
+                },
                 "mbti": {
                     "type": "string"
                 },
