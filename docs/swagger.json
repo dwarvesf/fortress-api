@@ -4456,6 +4456,9 @@
                 "lineManager": {
                     "$ref": "#/definitions/view.BasicEmployeeInfo"
                 },
+                "linkedInName": {
+                    "type": "string"
+                },
                 "mbti": {
                     "type": "string"
                 },
