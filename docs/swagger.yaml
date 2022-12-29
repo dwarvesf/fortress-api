@@ -367,8 +367,8 @@ definitions:
       notionName:
         type: string
       phone:
-        maxLength: 12
-        minLength: 10
+        maxLength: 18
+        minLength: 9
         type: string
     required:
     - email
