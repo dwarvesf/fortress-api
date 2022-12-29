@@ -20,31 +20,28 @@ UPDATE
           SELECT
             array_agg(DISTINCT substring(lexeme FOR len))
           FROM
-            unnest(to_tsvector(LOWER(c."full_name" || ' ' || c."team_email" || ' ' || c."discord_id" || ' ' || c."notion_id" || ' ' || c."github_id" ))),
+            unnest(to_tsvector(LOWER(COALESCE(c. "full_name", '') || ' ' || COALESCE(c. "team_email", '') || ' ' || COALESCE(c. "discord_id", '') || ' ' || COALESCE(c. "notion_id", '') || ' ' || COALESCE(c. "github_id", '') || ' ' || COALESCE(c. "notion_name", '') || ' ' || COALESCE(c. "discord_name", '')))),
             generate_series(1, length(lexeme)) len));
 
 -- +migrate StatementBegin
-CREATE OR REPLACE FUNCTION fn_insert_keyword_vector ()
+CREATE OR REPLACE FUNCTION public.fn_insert_keyword_vector ()
 	RETURNS TRIGGER
-	AS $BODY$
+	LANGUAGE plpgsql
+	AS $function$
 BEGIN
-  UPDATE
-        "employees" c
-      SET
-        "keyword_vector" = array_to_tsvector ((
-            SELECT
-              array_agg(DISTINCT substring(lexeme FOR len))
-            FROM
-              unnest(to_tsvector(LOWER(c."full_name" || ' ' || c."team_email" || ' ' || c."discord_id" || ' ' || c."notion_id" || ' ' || c."github_id" ))),
-              generate_series(1, length(lexeme)) len)) WHERE c.id = NEW.id;
-      RETURN new;
+	NEW. "keyword_vector" = array_to_tsvector ((
+			SELECT
+				array_agg(DISTINCT substring(lexeme FOR len))
+			FROM
+				unnest(to_tsvector(LOWER(COALESCE(NEW. "full_name", '') || ' ' || COALESCE(NEW. "team_email", '') || ' ' || COALESCE(NEW. "discord_id", '') || ' ' || COALESCE(NEW. "notion_id", '') || ' ' || COALESCE(NEW. "github_id", '') || ' ' || COALESCE(NEW. "notion_name", '') || ' ' || COALESCE(NEW. "discord_name", '')))),
+				generate_series(1, length(lexeme)) len));
+	RETURN NEW;
 END;
-$BODY$
-LANGUAGE plpgsql;
+$function$
 -- +migrate StatementEnd
 
 CREATE TRIGGER trig_insert_keyword_vector
-     AFTER INSERT ON employees
+     BEFORE INSERT OR UPDATE ON employees
      FOR EACH ROW
      EXECUTE PROCEDURE fn_insert_keyword_vector();
 
