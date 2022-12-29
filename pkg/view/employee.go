@@ -11,23 +11,24 @@ type EmployeeData struct {
 	model.BaseModel
 
 	// basic info
-	FullName      string     `json:"fullName"`
-	DisplayName   string     `json:"displayName"`
-	TeamEmail     string     `json:"teamEmail"`
-	PersonalEmail string     `json:"personalEmail"`
-	Avatar        string     `json:"avatar"`
-	PhoneNumber   string     `json:"phoneNumber"`
-	Address       string     `json:"address"`
-	MBTI          string     `json:"mbti"`
-	Gender        string     `json:"gender"`
-	Horoscope     string     `json:"horoscope"`
-	DateOfBirth   *time.Time `json:"birthday"`
-	GithubID      string     `json:"githubID"`
-	NotionID      string     `json:"notionID"`
-	NotionName    string     `json:"notionName"`
-	DiscordID     string     `json:"discordID"`
-	DiscordName   string     `json:"discordName"`
-	Username      string     `json:"username"`
+	FullName         string     `json:"fullName"`
+	DisplayName      string     `json:"displayName"`
+	TeamEmail        string     `json:"teamEmail"`
+	PersonalEmail    string     `json:"personalEmail"`
+	Avatar           string     `json:"avatar"`
+	PhoneNumber      string     `json:"phoneNumber"`
+	Address          string     `json:"address"`
+	PlaceOfResidence string     `json:"placeOfResidence"`
+	MBTI             string     `json:"mbti"`
+	Gender           string     `json:"gender"`
+	Horoscope        string     `json:"horoscope"`
+	DateOfBirth      *time.Time `json:"birthday"`
+	GithubID         string     `json:"githubID"`
+	NotionID         string     `json:"notionID"`
+	NotionName       string     `json:"notionName"`
+	DiscordID        string     `json:"discordID"`
+	DiscordName      string     `json:"discordName"`
+	Username         string     `json:"username"`
 
 	// working info
 	WorkingStatus model.WorkingStatus `json:"status"`
@@ -194,33 +195,34 @@ func ToEmployeeData(employee *model.Employee) *EmployeeData {
 			CreatedAt: employee.CreatedAt,
 			UpdatedAt: employee.UpdatedAt,
 		},
-		FullName:      employee.FullName,
-		DisplayName:   employee.DisplayName,
-		TeamEmail:     employee.TeamEmail,
-		PersonalEmail: employee.PersonalEmail,
-		Avatar:        employee.Avatar,
-		PhoneNumber:   employee.PhoneNumber,
-		Address:       employee.Address,
-		MBTI:          employee.MBTI,
-		Gender:        employee.Gender,
-		Horoscope:     employee.Horoscope,
-		DateOfBirth:   employee.DateOfBirth,
-		GithubID:      employee.GithubID,
-		NotionID:      employee.NotionID,
-		NotionName:    employee.NotionName,
-		DiscordID:     employee.DiscordID,
-		DiscordName:   employee.DiscordName,
-		Username:      employee.Username,
-		WorkingStatus: employee.WorkingStatus,
-		Seniority:     employee.Seniority,
-		JoinedDate:    employee.JoinedDate,
-		LeftDate:      employee.LeftDate,
-		Projects:      employeeProjects,
-		LineManager:   lineManager,
-		Roles:         ToRoles(employee.EmployeeRoles),
-		Positions:     ToPositions(employee.EmployeePositions),
-		Stacks:        ToEmployeeStacks(employee.EmployeeStacks),
-		Chapters:      ToChapters(employee.EmployeeChapters),
+		FullName:         employee.FullName,
+		DisplayName:      employee.DisplayName,
+		TeamEmail:        employee.TeamEmail,
+		PersonalEmail:    employee.PersonalEmail,
+		Avatar:           employee.Avatar,
+		PhoneNumber:      employee.PhoneNumber,
+		Address:          employee.Address,
+		PlaceOfResidence: employee.PlaceOfResidence,
+		MBTI:             employee.MBTI,
+		Gender:           employee.Gender,
+		Horoscope:        employee.Horoscope,
+		DateOfBirth:      employee.DateOfBirth,
+		GithubID:         employee.GithubID,
+		NotionID:         employee.NotionID,
+		NotionName:       employee.NotionName,
+		DiscordID:        employee.DiscordID,
+		DiscordName:      employee.DiscordName,
+		Username:         employee.Username,
+		WorkingStatus:    employee.WorkingStatus,
+		Seniority:        employee.Seniority,
+		JoinedDate:       employee.JoinedDate,
+		LeftDate:         employee.LeftDate,
+		Projects:         employeeProjects,
+		LineManager:      lineManager,
+		Roles:            ToRoles(employee.EmployeeRoles),
+		Positions:        ToPositions(employee.EmployeePositions),
+		Stacks:           ToEmployeeStacks(employee.EmployeeStacks),
+		Chapters:         ToChapters(employee.EmployeeChapters),
 	}
 
 	if employee.Seniority != nil {

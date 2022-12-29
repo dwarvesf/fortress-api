@@ -23,7 +23,7 @@ type ProfileData struct {
 	DiscordID        string     `json:"discordID"`
 	DiscordName      string     `json:"discordName"`
 	Username         string     `json:"username"`
-	PlaceOfResidence string     `json:"place_of_residence"`
+	PlaceOfResidence string     `json:"placeOfResidence"`
 	Address          string     `json:"address"`
 	Country          string     `json:"country"`
 	City             string     `json:"city"`
@@ -43,7 +43,7 @@ type UpdateProfileInfoData struct {
 	DiscordID        string `json:"discordID"`
 	DiscordName      string `json:"discordName"`
 	Username         string `json:"username"`
-	PlaceOfResidence string `json:"place_of_residence"`
+	PlaceOfResidence string `json:"placeOfResidence"`
 	Address          string `json:"address"`
 	Country          string `json:"country"`
 	City             string `json:"city"`

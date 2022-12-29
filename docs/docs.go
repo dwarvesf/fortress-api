@@ -4479,6 +4479,9 @@ const docTemplate = `{
                 "phoneNumber": {
                     "type": "string"
                 },
+                "placeOfResidence": {
+                    "type": "string"
+                },
                 "positions": {
                     "type": "array",
                     "items": {
@@ -4903,7 +4906,7 @@ const docTemplate = `{
                 "phoneNumber": {
                     "type": "string"
                 },
-                "place_of_residence": {
+                "placeOfResidence": {
                     "type": "string"
                 },
                 "teamEmail": {
@@ -5552,7 +5555,7 @@ const docTemplate = `{
                 "phoneNumber": {
                     "type": "string"
                 },
-                "place_of_residence": {
+                "placeOfResidence": {
                     "type": "string"
                 },
                 "teamEmail": {
