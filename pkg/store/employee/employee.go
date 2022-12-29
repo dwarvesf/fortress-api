@@ -75,7 +75,7 @@ func (s *store) OneByTeamEmail(db *gorm.DB, teamEmail string) (*model.Employee, 
 }
 
 // All get employees by query and pagination
-func (s store) All(db *gorm.DB, filter EmployeeFilter, pagination model.Pagination) ([]*model.Employee, int64, error) {
+func (s *store) All(db *gorm.DB, filter EmployeeFilter, pagination model.Pagination) ([]*model.Employee, int64, error) {
 	var total int64
 	var employees []*model.Employee
 
