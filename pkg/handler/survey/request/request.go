@@ -59,7 +59,7 @@ func (i *CreateSurveyFeedbackInput) Validate() error {
 		return errs.ErrInvalidEventSubType
 	}
 
-	if i.Type == model.EventSubtypePeerReview.String() || i.Type == model.EventSubtypeWork.String() {
+	if i.Type == model.EventSubtypeWork.String() {
 		fromDate, err := time.Parse("2006-01-02", i.FromDate)
 		if err != nil {
 			return errs.ErrInvalidDate
