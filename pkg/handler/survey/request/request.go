@@ -55,21 +55,24 @@ type CreateSurveyFeedbackInput struct {
 
 // Validate input for create survey feedback
 func (i *CreateSurveyFeedbackInput) Validate() error {
-	fromDate, err := time.Parse("2006-01-02", i.FromDate)
-	if err != nil {
-		return errs.ErrInvalidDate
-	}
-	toDate, err := time.Parse("2006-01-02", i.ToDate)
-	if err != nil {
-		return errs.ErrInvalidDate
-	}
-
-	if fromDate.After(toDate) {
-		return errs.ErrInvalidDateRange
-	}
-
 	if !model.EventSubtype(i.Type).IsValidSurvey() {
 		return errs.ErrInvalidEventSubType
+	}
+
+	if i.Type == model.EventSubtypePeerReview.String() || i.Type == model.EventSubtypeWork.String() {
+		fromDate, err := time.Parse("2006-01-02", i.FromDate)
+		if err != nil {
+			return errs.ErrInvalidDate
+		}
+
+		toDate, err := time.Parse("2006-01-02", i.ToDate)
+		if err != nil {
+			return errs.ErrInvalidDate
+		}
+
+		if fromDate.After(toDate) {
+			return errs.ErrInvalidDateRange
+		}
 	}
 
 	return nil
