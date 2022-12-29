@@ -49,15 +49,17 @@ type UpdateGeneralInfoEmployeeData struct {
 	model.BaseModel
 
 	// basic info
-	FullName    string             `json:"fullName"`
-	TeamEmail   string             `json:"teamEmail"`
-	PhoneNumber string             `json:"phoneNumber"`
-	GithubID    string             `json:"githubID"`
-	NotionID    string             `json:"notionID"`
-	NotionName  string             `json:"notionName"`
-	DiscordID   string             `json:"discordID"`
-	DiscordName string             `json:"discordName"`
-	LineManager *BasicEmployeeInfo `json:"lineManager"`
+	FullName     string             `json:"fullName"`
+	TeamEmail    string             `json:"teamEmail"`
+	PhoneNumber  string             `json:"phoneNumber"`
+	GithubID     string             `json:"githubID"`
+	NotionID     string             `json:"notionID"`
+	NotionName   string             `json:"notionName"`
+	NotionEmail  string             `json:"notionEmail"`
+	LinkedinName string             `json:"linkedInName"`
+	DiscordID    string             `json:"discordID"`
+	DiscordName  string             `json:"discordName"`
+	LineManager  *BasicEmployeeInfo `json:"lineManager"`
 }
 
 type UpdateSkillEmployeeData struct {
@@ -162,14 +164,16 @@ func ToUpdateGeneralInfoEmployeeData(employee *model.Employee) *UpdateGeneralInf
 			CreatedAt: employee.CreatedAt,
 			UpdatedAt: employee.UpdatedAt,
 		},
-		FullName:    employee.FullName,
-		TeamEmail:   employee.TeamEmail,
-		PhoneNumber: employee.PhoneNumber,
-		GithubID:    employee.GithubID,
-		NotionID:    employee.NotionID,
-		NotionName:  employee.NotionName,
-		DiscordID:   employee.DiscordID,
-		DiscordName: employee.DiscordName,
+		FullName:     employee.FullName,
+		TeamEmail:    employee.TeamEmail,
+		PhoneNumber:  employee.PhoneNumber,
+		GithubID:     employee.GithubID,
+		NotionID:     employee.NotionID,
+		NotionName:   employee.NotionName,
+		NotionEmail:  employee.NotionEmail,
+		DiscordID:    employee.DiscordID,
+		DiscordName:  employee.DiscordName,
+		LinkedinName: employee.LinkedInName,
 	}
 
 	if employee.LineManager != nil {
