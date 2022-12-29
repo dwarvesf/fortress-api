@@ -4471,6 +4471,9 @@
                 "phoneNumber": {
                     "type": "string"
                 },
+                "placeOfResidence": {
+                    "type": "string"
+                },
                 "positions": {
                     "type": "array",
                     "items": {
@@ -4895,7 +4898,7 @@
                 "phoneNumber": {
                     "type": "string"
                 },
-                "place_of_residence": {
+                "placeOfResidence": {
                     "type": "string"
                 },
                 "teamEmail": {
@@ -5544,7 +5547,7 @@
                 "phoneNumber": {
                     "type": "string"
                 },
-                "place_of_residence": {
+                "placeOfResidence": {
                     "type": "string"
                 },
                 "teamEmail": {
