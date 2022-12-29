@@ -274,15 +274,50 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 	}
 
 	// 3. update information and return
-	employee.FullName = body.FullName
-	employee.PersonalEmail = body.Email
-	employee.PhoneNumber = body.Phone
-	employee.LineManagerID = body.LineManagerID
-	employee.GithubID = body.GithubID
-	employee.NotionID = body.NotionID
-	employee.NotionName = body.NotionName
-	employee.DiscordID = body.DiscordID
-	employee.DiscordName = body.DiscordName
+
+	if strings.TrimSpace(body.FullName) != "" {
+		employee.FullName = body.FullName
+	}
+
+	if strings.TrimSpace(body.Email) != "" {
+		employee.PersonalEmail = body.Email
+	}
+
+	if strings.TrimSpace(body.Phone) != "" {
+		employee.PhoneNumber = body.Phone
+	}
+
+	if strings.TrimSpace(body.LineManagerID.String()) != "" {
+		employee.LineManagerID = body.LineManagerID
+	}
+
+	if strings.TrimSpace(body.GithubID) != "" {
+		employee.GithubID = body.GithubID
+	}
+
+	if strings.TrimSpace(body.NotionID) != "" {
+		employee.NotionID = body.NotionID
+	}
+
+	if strings.TrimSpace(body.NotionName) != "" {
+		employee.NotionName = body.NotionName
+	}
+
+	if strings.TrimSpace(body.NotionEmail) != "" {
+		employee.NotionEmail = body.NotionEmail
+	}
+
+	if strings.TrimSpace(body.DiscordID) != "" {
+		employee.DiscordID = body.DiscordID
+	}
+
+	if strings.TrimSpace(body.DiscordName) != "" {
+		employee.DiscordName = body.DiscordName
+	}
+
+	if strings.TrimSpace(body.LinkedInName) != "" {
+		employee.LinkedInName = body.LinkedInName
+	}
 
 	_, err = h.store.Employee.UpdateSelectedFieldsByID(h.repo.DB(), employeeID, *employee,
 		"full_name",
@@ -290,8 +325,13 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 		"phone_number",
 		"line_manager_id",
 		"discord_id",
+		"discord_name",
 		"github_id",
-		"notion_id")
+		"notion_id",
+		"notion_name",
+		"notion_email",
+		"linkedin_name",
+	)
 	if err != nil {
 		l.Error(err, "failed to update employee")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
