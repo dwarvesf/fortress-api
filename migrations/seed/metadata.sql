@@ -55,7 +55,8 @@ INSERT INTO public.stacks (id, deleted_at, created_at, updated_at, name, code, a
 ('54a3ac80-3ba0-4aeb-8852-904e2a1d7263', NULL, '2022-11-11 18:38:46.266725', '2022-11-11 18:38:46.266725', 'Flutter', 'flutter', NULL),
 ('d7a4f73e-35f4-425b-b380-6fa19199fc3e', NULL, '2022-11-11 18:38:46.266725', '2022-11-11 18:38:46.266725', 'React Native', 'react-native', NULL),
 ('569e50b4-0aa9-4406-aa99-fc9472ce5723', NULL, '2022-11-11 18:38:46.266725', '2022-11-11 18:38:46.266725', 'Angular', 'angular', NULL),
-('8944def6-6455-4e90-bbc9-3ab7a61f2ab3', NULL, '2022-11-11 18:38:46.266725', '2022-11-11 18:38:46.266725', 'Vue', 'vue', NULL);
+('76316412-60f9-4e06-9650-c369855428ce', NULL, '2022-11-11 18:38:46.266725', '2022-11-11 18:38:46.266725', 'Javascript', 'javascript', NULL),
+('1582f68b-4cc2-4c50-8e70-5f6ec9107361', NULL, '2022-11-11 18:38:46.266725', '2022-11-11 18:38:46.266725', 'Kubernetes', 'kubernetes', NULL);
 
 INSERT INTO public.questions (id, deleted_at, created_at, updated_at, category, subcategory, content, type, "order", domain) VALUES 
 ('da5dbdd5-8e1e-4ae7-8bb8-ab007f2580aa', NULL, '2022-12-06 03:02:39.049420', '2022-12-06 03:02:39.049420', 'survey', 'peer-review', 'Does this employee effectively communicate with others?', 'general', 1, NULL),
