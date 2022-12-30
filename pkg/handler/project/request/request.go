@@ -401,5 +401,5 @@ func (i GetListWorkUnitQuery) Validate() error {
 }
 
 type UpdateSendingSurveyInput struct {
-	AllowsSendingSurvey bool `form:"allowsSendingSurvey" json:"allowsSendingSurvey" binding:"required"`
+	AllowsSendingSurvey bool `form:"allowsSendingSurvey" json:"allowsSendingSurvey"`
 }
