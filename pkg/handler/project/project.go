@@ -2048,7 +2048,7 @@ func (h *handler) UnarchiveWorkUnit(c *gin.Context) {
 // @Produce  json
 // @Param Authorization header string true "jwt token"
 // @Param id path string true "Project ID"
-// @Param allowsSendingSurvey query bool true "Allows sending survey"
+// @Param allowsSendingSurvey query bool false "Allows sending survey"
 // @Success 200 {object} view.MessageResponse
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 404 {object} view.ErrorResponse

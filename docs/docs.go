@@ -2119,8 +2119,7 @@ const docTemplate = `{
                         "type": "boolean",
                         "description": "Allows sending survey",
                         "name": "allowsSendingSurvey",
-                        "in": "query",
-                        "required": true
+                        "in": "query"
                     }
                 ],
                 "responses": {

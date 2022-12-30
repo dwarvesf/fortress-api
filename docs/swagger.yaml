@@ -3068,7 +3068,6 @@ paths:
       - description: Allows sending survey
         in: query
         name: allowsSendingSurvey
-        required: true
         type: boolean
       produces:
       - application/json
