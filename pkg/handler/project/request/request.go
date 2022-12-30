@@ -1,8 +1,9 @@
 package request
 
 import (
-	"github.com/dwarvesf/fortress-api/pkg/utils"
 	"time"
+
+	"github.com/dwarvesf/fortress-api/pkg/utils"
 
 	"github.com/dwarvesf/fortress-api/pkg/handler/project/errs"
 	"github.com/dwarvesf/fortress-api/pkg/model"
@@ -37,7 +38,7 @@ type UpdateAccountStatusBody struct {
 	ProjectStatus model.ProjectStatus `json:"status"`
 }
 
-func (i *GetListProjectInput) StandardizeInput(){
+func (i *GetListProjectInput) StandardizeInput() {
 	statuses := utils.RemoveEmptyString(i.Status)
 	i.Pagination.Standardize()
 	i.Status = statuses
@@ -400,5 +401,5 @@ func (i GetListWorkUnitQuery) Validate() error {
 }
 
 type UpdateSendingSurveyInput struct {
-	AllowsSendingSurvey bool `form:"allows_survey" json:"allows_survey"`
+	AllowsSendingSurvey bool `form:"allowsSendingSurvey" json:"allowsSendingSurvey" binding:"required"`
 }

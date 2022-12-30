@@ -70,7 +70,7 @@ func (s *store) One(db *gorm.DB, id string, preload bool) (*model.FeedbackEvent,
 		query = query.Preload("Employee", "deleted_at IS NULL").Preload("Topics", "deleted_at IS NULL")
 	}
 
-	return event, query.Debug().First(&event).Error
+	return event, query.First(&event).Error
 }
 
 // One get 1 by id
