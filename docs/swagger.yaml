@@ -769,6 +769,10 @@ definitions:
         items:
           $ref: '#/definitions/view.Chapter'
         type: array
+      city:
+        type: string
+      country:
+        type: string
       createdAt:
         type: string
       deletedAt:

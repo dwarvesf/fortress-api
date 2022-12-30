@@ -19,6 +19,8 @@ type EmployeeData struct {
 	PhoneNumber      string     `json:"phoneNumber"`
 	Address          string     `json:"address"`
 	PlaceOfResidence string     `json:"placeOfResidence"`
+	Country          string     `json:"country"`
+	City             string     `json:"city"`
 	MBTI             string     `json:"mbti"`
 	Gender           string     `json:"gender"`
 	Horoscope        string     `json:"horoscope"`
@@ -247,6 +249,8 @@ func ToEmployeeData(employee *model.Employee) *EmployeeData {
 		LeftDate:         employee.LeftDate,
 		Projects:         employeeProjects,
 		LineManager:      lineManager,
+		Country:          employee.Country,
+		City:             employee.City,
 		Roles:            ToRoles(employee.EmployeeRoles),
 		Positions:        ToPositions(employee.EmployeePositions),
 		Stacks:           ToEmployeeStacks(employee.EmployeeStacks),

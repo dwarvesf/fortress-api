@@ -4415,6 +4415,12 @@ const docTemplate = `{
                         "$ref": "#/definitions/view.Chapter"
                     }
                 },
+                "city": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
                 "createdAt": {
                     "type": "string"
                 },
