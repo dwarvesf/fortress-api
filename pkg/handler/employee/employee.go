@@ -287,10 +287,6 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 		employee.PhoneNumber = body.Phone
 	}
 
-	if strings.TrimSpace(body.LineManagerID.String()) != "" {
-		employee.LineManagerID = body.LineManagerID
-	}
-
 	if strings.TrimSpace(body.GithubID) != "" {
 		employee.GithubID = body.GithubID
 	}
@@ -318,6 +314,8 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 	if strings.TrimSpace(body.LinkedInName) != "" {
 		employee.LinkedInName = body.LinkedInName
 	}
+
+	employee.LineManagerID = body.LineManagerID
 
 	_, err = h.store.Employee.UpdateSelectedFieldsByID(h.repo.DB(), employeeID, *employee,
 		"full_name",

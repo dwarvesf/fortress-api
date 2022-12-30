@@ -4532,6 +4532,9 @@ const docTemplate = `{
         "view.EmployeeProjectData": {
             "type": "object",
             "properties": {
+                "code": {
+                    "type": "string"
+                },
                 "deploymentType": {
                     "type": "string"
                 },

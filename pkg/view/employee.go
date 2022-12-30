@@ -45,6 +45,24 @@ type EmployeeData struct {
 	Chapters    []Chapter             `json:"chapters"`
 }
 
+type EmployeeProjectData struct {
+	ID             string     `json:"id"`
+	Name           string     `json:"name"`
+	DeploymentType string     `json:"deploymentType"`
+	Positions      []Position `json:"positions"`
+	Code           string     `json:"code"`
+}
+
+func ToEmployeeProjectData(pm *model.ProjectMember) EmployeeProjectData {
+	return EmployeeProjectData{
+		ID:             pm.ProjectID.String(),
+		Name:           pm.Project.Name,
+		DeploymentType: pm.DeploymentType.String(),
+		Positions:      ToProjectMemberPositions(pm.ProjectMemberPositions),
+		Code:           pm.Project.Code,
+	}
+}
+
 type UpdateGeneralInfoEmployeeData struct {
 	model.BaseModel
 

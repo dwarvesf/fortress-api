@@ -203,22 +203,6 @@ type ProjectDataResponse struct {
 	Data ProjectData `json:"data"`
 }
 
-type EmployeeProjectData struct {
-	ID             string     `json:"id"`
-	Name           string     `json:"name"`
-	DeploymentType string     `json:"deploymentType"`
-	Positions      []Position `json:"positions"`
-}
-
-func ToEmployeeProjectData(pm *model.ProjectMember) EmployeeProjectData {
-	return EmployeeProjectData{
-		ID:             pm.ProjectID.String(),
-		Name:           pm.Project.Name,
-		DeploymentType: pm.DeploymentType.String(),
-		Positions:      ToProjectMemberPositions(pm.ProjectMemberPositions),
-	}
-}
-
 type CreateMemberData struct {
 	ProjectSlotID   string          `json:"projectSlotID"`
 	ProjectMemberID string          `json:"projectMemberID"`
