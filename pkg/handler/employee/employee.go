@@ -824,8 +824,7 @@ func (h *handler) UploadContent(c *gin.Context) {
 	fileName := file.Filename
 	fileExtension := model.ContentExtension(filepath.Ext(fileName))
 	fileSize := file.Size
-	gcsPath := "employees/" + params.ID
-	filePath := fmt.Sprintf("https://storage.googleapis.com/%s/employees/%s", h.config.Google.GCSBucketName, params.ID)
+	filePath := "employees/" + params.ID
 	fileType := ""
 
 	// 2.1 validate
@@ -889,7 +888,7 @@ func (h *handler) UploadContent(c *gin.Context) {
 	content, err := h.store.Content.Create(tx.DB(), model.Content{
 		Type:       fileType,
 		Extension:  fileExtension.String(),
-		Path:       filePath,
+		Path:       fmt.Sprintf("https://storage.googleapis.com/%s/%s", h.config.Google.GCSBucketName, filePath),
 		EmployeeID: employee.ID,
 		UploadBy:   employee.ID,
 	})
@@ -909,7 +908,7 @@ func (h *handler) UploadContent(c *gin.Context) {
 	}
 
 	// 3. Upload to GCS
-	err = h.service.Google.UploadContentGCS(multipart, gcsPath)
+	err = h.service.Google.UploadContentGCS(multipart, filePath)
 	if err != nil {
 		l.Error(err, "error in upload file")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
