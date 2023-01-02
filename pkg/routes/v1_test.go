@@ -533,6 +533,12 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/dashboard.IHandler.GetWorkUnitDistribution-fm",
 			},
 		},
+		"/api/v1/dashboards/resources/work-survey-summaries": {
+			"GET": {
+				Method:  "GET",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/dashboard.IHandler.GetResourceWorkSurveySummaries-fm",
+			},
+		},
 		"/cronjobs/birthday": {
 			"POST": {
 				Method:  "POST",

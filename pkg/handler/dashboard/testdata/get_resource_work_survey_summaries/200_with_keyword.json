@@ -1,0 +1,20 @@
+{
+    "page": 0,
+    "size": 999,
+    "sort": "",
+    "total": 0,
+    "data": [
+        {
+            "type": "workload",
+            "data": null
+        },
+        {
+            "type": "deadline",
+            "data": null
+        },
+        {
+            "type": "learning",
+            "data": null
+        }
+    ]
+}

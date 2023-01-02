@@ -18,3 +18,8 @@ type WorkUnitDistributionInput struct {
 	Type model.WorkUnitType `json:"type" form:"type"`
 	Name string             `json:"name" form:"name"`
 }
+
+type GetResourceWorkSurveySummariesInput struct {
+	model.Pagination
+	Keyword string `json:"keyword" form:"keyword"`
+}
