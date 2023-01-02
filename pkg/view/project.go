@@ -313,6 +313,7 @@ func ToProjectMemberListData(slots []*model.ProjectSlot, projectHeads []*model.P
 
 	for _, slot := range slots {
 		m := slot.ProjectMember
+
 		member := ProjectMember{
 			ProjectSlotID:  slot.ID.String(),
 			Status:         slot.Status.String(),
@@ -337,6 +338,7 @@ func ToProjectMemberListData(slots []*model.ProjectSlot, projectHeads []*model.P
 			member.IsLead = leadMap[m.EmployeeID.String()]
 			member.Rate = m.Rate
 			member.Discount = m.Discount
+			member.Status = m.Status.String()
 			member.Positions = ToProjectMemberPositions(m.ProjectMemberPositions)
 		}
 

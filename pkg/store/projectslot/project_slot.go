@@ -25,8 +25,16 @@ func (s *store) All(db *gorm.DB, input GetListProjectSlotInput, pagination model
 	query = query.Where("project_slots.project_id = ?", input.ProjectID).
 		Joins("LEFT JOIN project_members pm ON pm.project_slot_id = project_slots.id AND pm.project_id = ?", input.ProjectID)
 
-	if input.Status != "" {
+	if input.Status == model.ProjectMemberStatusPending.String() {
 		query = query.Where("project_slots.status = ?", input.Status)
+	}
+
+	if input.Status == model.ProjectMemberStatusActive.String() || input.Status == model.ProjectMemberStatusOnBoarding.String() {
+		query = query.Where("project_slots.status = ? AND pm.status = ? ", input.Status, input.Status)
+	}
+
+	if input.Status == model.ProjectMemberStatusInactive.String() {
+		query = query.Where("project_slots.status = ? OR pm.status = ? ", input.Status, input.Status)
 	}
 
 	query = query.Count(&total)
@@ -47,8 +55,13 @@ func (s *store) All(db *gorm.DB, input GetListProjectSlotInput, pagination model
 	}
 
 	query = query.Offset(offset).
-		Preload("ProjectMember", "deleted_at IS NULL").
 		Preload("ProjectMember.Employee", "deleted_at IS NULL")
+
+	if input.Status != "" {
+		query.Preload("ProjectMember", "deleted_at IS NULL AND status = ?", input.Status)
+	} else {
+		query.Preload("ProjectMember", "deleted_at IS NULL")
+	}
 
 	if input.Preload {
 		query = query.Preload("Seniority", "deleted_at IS NULL").
