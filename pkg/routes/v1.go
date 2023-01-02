@@ -96,9 +96,4 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 		surveyGroup.PUT("/:id/done", pmw.WithPerm("surveys.edit"), h.Survey.MarkDone)
 		surveyGroup.DELETE("/:id/topics/:topicID/employees", pmw.WithPerm("surveys.edit"), h.Survey.DeleteTopicReviewers)
 	}
-
-	dashboard := v1.Group("/dashboards")
-	{
-		dashboard.GET("/resources/utilization", h.Dashboard.GetResourceUtilization)
-	}
 }
