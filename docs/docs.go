@@ -136,6 +136,82 @@ const docTemplate = `{
                 }
             }
         },
+        "/dashboards/engagement/detail": {
+            "get": {
+                "description": "Get engagement dashboard",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "Get engagement dashboard",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.GetEngagementDashboardDetailResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/dashboards/engagement/info": {
+            "get": {
+                "description": "Get engagement dashboard",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "Get engagement dashboard",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.GetEngagementDashboardResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/dashboards/projects/action-item-squash": {
             "get": {
                 "description": "Get Action items squash report for dashboard",
@@ -6952,6 +7028,65 @@ const docTemplate = `{
                 }
             }
         },
+        "view.EngagementDashboard": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "questionID": {
+                    "type": "string"
+                },
+                "stats": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.EngagementDashboardQuestionStat"
+                    }
+                }
+            }
+        },
+        "view.EngagementDashboardDetail": {
+            "type": "object",
+            "properties": {
+                "questionID": {
+                    "type": "string"
+                },
+                "stats": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.EngagementDashboardQuestionDetailStat"
+                    }
+                }
+            }
+        },
+        "view.EngagementDashboardQuestionDetailStat": {
+            "type": "object",
+            "properties": {
+                "field": {
+                    "type": "string"
+                },
+                "point": {
+                    "type": "number"
+                },
+                "startDate": {
+                    "type": "string"
+                }
+            }
+        },
+        "view.EngagementDashboardQuestionStat": {
+            "type": "object",
+            "properties": {
+                "point": {
+                    "type": "number"
+                },
+                "startDate": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
         "view.EngineeringHealth": {
             "type": "object",
             "properties": {
@@ -7151,6 +7286,22 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/view.FeedBackReviewDetail"
+                }
+            }
+        },
+        "view.GetEngagementDashboardDetailResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/view.EngagementDashboardDetail"
+                }
+            }
+        },
+        "view.GetEngagementDashboardResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/view.EngagementDashboard"
                 }
             }
         },

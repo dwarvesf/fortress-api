@@ -1,8 +1,11 @@
 package employeeeventquestion
 
 import (
-	"github.com/dwarvesf/fortress-api/pkg/model"
+	"time"
+
 	"gorm.io/gorm"
+
+	"github.com/dwarvesf/fortress-api/pkg/model"
 )
 
 type store struct{}
@@ -96,4 +99,57 @@ func (s *store) CountLikertScaleByEventIDAndDomain(db *gorm.DB, eventID string, 
 		model.AgreementLevelMap[model.AgreementLevelStronglyAgree])
 
 	return count, query.Scan(&count).Error
+}
+
+// GetAverageAnswerEngagementByTime return average answer of engagement dashboard by time
+func (s *store) GetAverageAnswerEngagementByTime(db *gorm.DB, times []time.Time) ([]*model.StatisticEngagementDashboard, error) {
+	var result []*model.StatisticEngagementDashboard
+
+	query := db.Table("feedback_events fe").
+		Select("DISTINCT q.content, eq.question_id, fe.title, fe.start_date, avg( CASE WHEN answer = '' THEN 0 ELSE cast(answer AS DECIMAL) END) AS point").
+		Joins("JOIN employee_event_questions eq ON fe.id = eq.event_id").
+		Joins("JOIN employee_event_reviewers er ON eq.employee_event_reviewer_id = er.id").
+		Joins("JOIN questions q ON eq.question_id = q.id").
+		Where("eq.domain = 'engagement'").
+		Where("er.reviewer_status = 'done' AND is_forced_done = FALSE").
+		Where("fe.start_date IN ?", times).
+		Group("q.content, eq.question_id, fe.title, fe.start_date").
+		Order("q.content asc")
+
+	return result, query.Find(&result).Error
+}
+
+// GetAverageAnswerEngagementByFilter return average answer of engagement dashboard by filter
+func (s *store) GetAverageAnswerEngagementByFilter(db *gorm.DB, filter model.EngagementDashboardFilter, time *time.Time) ([]*model.StatisticEngagementDashboard, error) {
+	var result []*model.StatisticEngagementDashboard
+
+	query := db.Table("feedback_events fe").
+		Select("DISTINCT f.name, eq.question_id, fe.title, fe.start_date, avg( CASE WHEN answer = '' THEN 0 ELSE cast(answer AS DECIMAL) END) AS point").
+		Joins("JOIN employee_event_questions eq ON fe.id = eq.event_id").
+		Joins("JOIN employee_event_reviewers er ON eq.employee_event_reviewer_id = er.id").
+		Where("eq.domain = 'engagement'").
+		Where("er.reviewer_status = 'done' AND is_forced_done = FALSE").
+		Where("fe.start_date = ?", time).
+		Group("eq.question_id, fe.title, fe.start_date")
+
+	if filter == model.EngagementDashboardFilterChapter {
+		query = query.
+			Joins("JOIN employee_chapters ec ON er.reviewer_id = ec.employee_id").
+			Joins("JOIN chapters f ON ec.chapter_id = f.id").
+			Group("f.name")
+	}
+	if filter == model.EngagementDashboardFilterSeniority {
+		query = query.
+			Joins("JOIN employees e ON er.reviewer_id = e.id").
+			Joins("JOIN seniorities f ON e.seniority_id = f.id").
+			Group("f.name")
+	}
+	if filter == model.EngagementDashboardFilterProject {
+		query = query.
+			Joins("JOIN project_members pm ON er.reviewer_id = pm.employee_id").
+			Joins("JOIN projects f ON pm.project_id = f.id").
+			Group("f.name")
+	}
+
+	return result, query.Find(&result).Error
 }
