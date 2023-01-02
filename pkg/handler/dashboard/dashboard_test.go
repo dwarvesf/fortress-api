@@ -380,3 +380,103 @@ func TestHandler_GetResourcesAvailability(t *testing.T) {
 		})
 	}
 }
+
+func TestHandler_GetEngagementInfo(t *testing.T) {
+	cfg := config.LoadTestConfig()
+	loggerMock := logger.NewLogrusLogger()
+	serviceMock := service.New(&cfg)
+	storeMock := store.New()
+
+	tests := []struct {
+		name             string
+		wantCode         int
+		wantErr          error
+		wantResponsePath string
+		query            string
+	}{
+		{
+			name:             "happy_case",
+			wantCode:         http.StatusOK,
+			wantResponsePath: "testdata/engagement_info/200.json",
+		},
+		{
+			name:             "no_record",
+			wantCode:         http.StatusOK,
+			wantResponsePath: "testdata/engagement_info/no_record.json",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				testhelper.LoadTestSQLFile(t, txRepo, fmt.Sprintf("./testdata/engagement_info/%s.sql", tt.name))
+				w := httptest.NewRecorder()
+				ctx, _ := gin.CreateTestContext(w)
+				ctx.Request = httptest.NewRequest(http.MethodGet, "/api/v1/dashboards/enagagement/info", nil)
+				ctx.Request.Header.Set("Authorization", testToken)
+
+				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+				h.GetEngagementInfo(ctx)
+				require.Equal(t, tt.wantCode, w.Code)
+				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				require.NoError(t, err)
+
+				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Dashboard.GetEngagementInfo] response mismatched")
+			})
+		})
+	}
+}
+
+func TestHandler_GetEngagementInfoDetail(t *testing.T) {
+	cfg := config.LoadTestConfig()
+	loggerMock := logger.NewLogrusLogger()
+	serviceMock := service.New(&cfg)
+	storeMock := store.New()
+
+	tests := []struct {
+		name             string
+		wantCode         int
+		wantErr          error
+		wantResponsePath string
+		query            string
+	}{
+		{
+			name:             "happy_case",
+			wantCode:         http.StatusOK,
+			wantResponsePath: "testdata/engagement_info_detail/200.json",
+			query:            "filter=seniority&startDate=2022-10-01",
+		},
+		{
+			name:             "invalid_filter",
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/engagement_info_detail/invalid_filter.json",
+			query:            "filter=unknown&startDate=2022-10-01",
+		},
+		{
+			name:             "invalid_start_date",
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/engagement_info_detail/invalid_start_date.json",
+			query:            "filter=chapter&startDate=unknown",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				if tt.wantCode == http.StatusOK {
+					testhelper.LoadTestSQLFile(t, txRepo, fmt.Sprintf("./testdata/engagement_info/%s.sql", tt.name))
+				}
+				w := httptest.NewRecorder()
+				ctx, _ := gin.CreateTestContext(w)
+				ctx.Request = httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/dashboards/enagagement/detail?%s", tt.query), nil)
+				ctx.Request.Header.Set("Authorization", testToken)
+
+				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+				h.GetEngagementInfoDetail(ctx)
+				require.Equal(t, tt.wantCode, w.Code)
+				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				require.NoError(t, err)
+
+				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Dashboard.GetEngagementInfoDetail] response mismatched")
+			})
+		})
+	}
+}

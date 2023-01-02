@@ -1,5 +1,7 @@
 package model
 
+import "time"
+
 // EmployeeEventQuestion model for employee_event_questions table
 type EmployeeEventQuestion struct {
 	BaseModel
@@ -13,6 +15,41 @@ type EmployeeEventQuestion struct {
 	Type                    string
 	Order                   int64
 	Domain                  QuestionDomain
+}
+
+type StatisticEngagementDashboard struct {
+	Name       string
+	Content    string
+	Title      string
+	Point      float64
+	QuestionID UUID
+	StartDate  time.Time
+}
+
+type EngagementDashboardFilter string
+
+const (
+	EngagementDashboardFilterDepartment EngagementDashboardFilter = "department"
+	EngagementDashboardFilterChapter    EngagementDashboardFilter = "chapter"
+	EngagementDashboardFilterSeniority  EngagementDashboardFilter = "seniority"
+	EngagementDashboardFilterProject    EngagementDashboardFilter = "project"
+)
+
+// String returns the string type from the EngagementDashboardFilter type
+func (e EngagementDashboardFilter) String() string {
+	return string(e)
+}
+
+func (e EngagementDashboardFilter) IsValid() bool {
+	switch e {
+	case
+		EngagementDashboardFilterDepartment,
+		EngagementDashboardFilterChapter,
+		EngagementDashboardFilterSeniority,
+		EngagementDashboardFilterProject:
+		return true
+	}
+	return false
 }
 
 // ToQuestionMap create map from EmployeeEventQuestion
