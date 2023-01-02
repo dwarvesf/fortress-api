@@ -632,6 +632,44 @@ const docTemplate = `{
                 }
             }
         },
+        "/dashboards/resources/utilization": {
+            "get": {
+                "description": "Get dashboard resource utilization",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "Get dashboard resource utilization",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.GetDashboardResourceUtilizationResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/employees": {
             "post": {
                 "description": "Create new employee",
@@ -5371,6 +5409,23 @@ const docTemplate = `{
                 }
             }
         },
+        "model.ResourceUtilization": {
+            "type": "object",
+            "properties": {
+                "available": {
+                    "type": "integer"
+                },
+                "date": {
+                    "type": "string"
+                },
+                "official": {
+                    "type": "integer"
+                },
+                "shadow": {
+                    "type": "integer"
+                }
+            }
+        },
         "model.Role": {
             "type": "object",
             "properties": {
@@ -7358,6 +7413,17 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/view.FeedBackReviewDetail"
+                }
+            }
+        },
+        "view.GetDashboardResourceUtilizationResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.ResourceUtilization"
+                    }
                 }
             }
         },

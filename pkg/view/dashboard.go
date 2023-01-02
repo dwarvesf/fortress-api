@@ -685,3 +685,7 @@ type GetEngagementDashboardResponse struct {
 type GetEngagementDashboardDetailResponse struct {
 	Data *EngagementDashboardDetail `json:"data"`
 }
+
+type GetDashboardResourceUtilizationResponse struct {
+	Data []model.ResourceUtilization `json:"data"`
+}

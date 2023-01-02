@@ -503,6 +503,12 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/dashboard.IHandler.GetEngagementInfoDetail-fm",
 			},
 		},
+		"/api/v1/dashboards/resources/utilization": {
+			"GET": {
+				Method:  "GET",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/dashboard.IHandler.GetResourceUtilization-fm",
+			},
+		},
 	}
 
 	l := logger.NewLogrusLogger()

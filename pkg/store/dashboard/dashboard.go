@@ -3,8 +3,9 @@ package dashboard
 import (
 	"time"
 
-	"github.com/dwarvesf/fortress-api/pkg/model"
 	"gorm.io/gorm"
+
+	"github.com/dwarvesf/fortress-api/pkg/model"
 )
 
 type store struct{}
@@ -479,4 +480,64 @@ func (s *store) GetAvailableEmployees(db *gorm.DB) ([]*model.Employee, error) {
 		Preload("ProjectMembers").
 		Preload("ProjectMembers.Project").
 		Find(&employees).Error
+}
+
+func (s *store) GetResourceUtilization(db *gorm.DB) ([]*model.ResourceUtilization, error) {
+	var ru []*model.ResourceUtilization
+
+	query := `
+	WITH resource_utilization AS (
+		SELECT d.d AS "date", 
+				e.id AS employee_id, 
+				p.id AS project_id,
+				p."type" AS "project_type",
+				pm.deployment_type,
+				pm.start_date,
+				pm.end_date 
+		FROM employees e 
+			LEFT JOIN project_members pm ON pm.employee_id = e.id 
+			LEFT JOIN projects p ON pm.project_id = p.id, 
+			generate_series(
+				date_trunc('month', CURRENT_DATE) - INTERVAL '3 month', 
+				date_trunc('month', CURRENT_DATE) + INTERVAL '3 month', 
+				'1 month'
+			) d
+		WHERE e."working_status" = 'full-time'
+		ORDER BY d.d
+	)
+	
+	SELECT "date" ,
+		COUNT(DISTINCT(employee_id)) FILTER (
+			WHERE deployment_type = 'official' 
+				AND "project_type" != 'dwarves'
+				AND start_date <= "date"
+				AND (end_date IS NULL OR end_date > "date")
+		) AS official,
+
+		COUNT(DISTINCT(employee_id)) FILTER (
+			WHERE start_date <= "date"
+				AND (end_date IS NULL OR end_date > "date")
+				AND employee_id NOT IN (
+					SELECT ru2.employee_id
+					FROM resource_utilization ru2
+					WHERE ru2.deployment_type = 'official' 
+						AND ru2."project_type" != 'dwarves'
+						AND ru2.start_date <= ru."date"
+						AND (ru2.end_date IS NULL OR ru2.end_date > ru."date")
+				)
+		) AS shadow,
+		
+		COUNT(DISTINCT(employee_id)) FILTER (
+			WHERE project_id IS NULL
+				OR employee_id NOT IN (
+					SELECT ru3.employee_id
+					FROM resource_utilization ru3
+					WHERE ru3.start_date <= ru."date" AND (ru3.end_date IS NULL OR ru3.end_date > ru."date")
+				)
+		) AS available
+	FROM resource_utilization ru 
+	GROUP BY "date" 
+	`
+
+	return ru, db.Raw(query).Scan(&ru).Error
 }
