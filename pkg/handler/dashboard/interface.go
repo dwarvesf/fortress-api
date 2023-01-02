@@ -1,3 +1,7 @@
 package dashboard
 
-type IHandler interface{}
+import "github.com/gin-gonic/gin"
+
+type IHandler interface {
+	GetResourceUtilization(c *gin.Context)
+}
