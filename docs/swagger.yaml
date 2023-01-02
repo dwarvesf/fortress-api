@@ -1773,6 +1773,44 @@ definitions:
       status:
         type: string
     type: object
+  view.EngagementDashboard:
+    properties:
+      content:
+        type: string
+      questionID:
+        type: string
+      stats:
+        items:
+          $ref: '#/definitions/view.EngagementDashboardQuestionStat'
+        type: array
+    type: object
+  view.EngagementDashboardDetail:
+    properties:
+      questionID:
+        type: string
+      stats:
+        items:
+          $ref: '#/definitions/view.EngagementDashboardQuestionDetailStat'
+        type: array
+    type: object
+  view.EngagementDashboardQuestionDetailStat:
+    properties:
+      field:
+        type: string
+      point:
+        type: number
+      startDate:
+        type: string
+    type: object
+  view.EngagementDashboardQuestionStat:
+    properties:
+      point:
+        type: number
+      startDate:
+        type: string
+      title:
+        type: string
+    type: object
   view.EngineeringHealth:
     properties:
       avg:
@@ -1903,6 +1941,16 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/view.FeedBackReviewDetail'
+    type: object
+  view.GetEngagementDashboardDetailResponse:
+    properties:
+      data:
+        $ref: '#/definitions/view.EngagementDashboardDetail'
+    type: object
+  view.GetEngagementDashboardResponse:
+    properties:
+      data:
+        $ref: '#/definitions/view.EngagementDashboard'
     type: object
   view.GetQuestionResponse:
     properties:
@@ -2884,6 +2932,56 @@ paths:
       summary: Get logged-in user data
       tags:
       - Auth
+  /dashboards/engagement/detail:
+    get:
+      consumes:
+      - application/json
+      description: Get engagement dashboard
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.GetEngagementDashboardDetailResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get engagement dashboard
+      tags:
+      - Dashboard
+  /dashboards/engagement/info:
+    get:
+      consumes:
+      - application/json
+      description: Get engagement dashboard
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.GetEngagementDashboardResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get engagement dashboard
+      tags:
+      - Dashboard
   /dashboards/projects/action-item-squash:
     get:
       consumes:

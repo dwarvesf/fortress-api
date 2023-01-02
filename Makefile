@@ -92,7 +92,7 @@ gen-mock:
 	echo "add later"
 
 gen-swagger:
-	${APP_ENVIRONMENT} swag init --parseDependency -g ./cmd/server/main.go
+	${APP_ENVIRONMENT} swag init -g ./cmd/server/main.go
 
 ci: init
 	@PROJECT_PATH=$(shell pwd) go test -cover ./... -count=1 -p=1

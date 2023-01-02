@@ -16,4 +16,5 @@ type IStore interface {
 	Create(db *gorm.DB, feedbackEvent *model.FeedbackEvent) (*model.FeedbackEvent, error)
 	UpdateSelectedFieldsByID(db *gorm.DB, id string, updateModel model.FeedbackEvent, updatedFields ...string) (event *model.FeedbackEvent, err error)
 	DeleteByID(db *gorm.DB, id string) error
+	GetLatestEventByType(db *gorm.DB, eventType model.EventType, eventSubtype model.EventSubtype, num int) ([]*model.FeedbackEvent, error)
 }

@@ -1,0 +1,316 @@
+{
+  "data": [
+    {
+      "content": "I have a best friend at work.",
+      "questionID": "1b9a91c7-7e67-4693-bb43-74170aaa0e3f",
+      "stats": [
+        {
+          "title": "Q4, 2022",
+          "startDate": "2022-10-01T00:00:00Z",
+          "point": 3
+        },
+        {
+          "title": "Q3, 2022",
+          "startDate": "2022-07-01T00:00:00Z",
+          "point": 2.95
+        },
+        {
+          "title": "Q2, 2022",
+          "startDate": "2022-04-01T00:00:00Z",
+          "point": 3.55
+        },
+        {
+          "title": "Q1, 2022",
+          "startDate": "2022-01-01T00:00:00Z",
+          "point": 2.55
+        }
+      ]
+    },
+    {
+      "content": "I have the materials and equipment I need to do my work right.",
+      "questionID": "ba00c397-f8ad-4cbd-ba63-02ac903d0886",
+      "stats": [
+        {
+          "title": "Q4, 2022",
+          "startDate": "2022-10-01T00:00:00Z",
+          "point": 3.05
+        },
+        {
+          "title": "Q3, 2022",
+          "startDate": "2022-07-01T00:00:00Z",
+          "point": 3.05
+        },
+        {
+          "title": "Q2, 2022",
+          "startDate": "2022-04-01T00:00:00Z",
+          "point": 3.1
+        },
+        {
+          "title": "Q1, 2022",
+          "startDate": "2022-01-01T00:00:00Z",
+          "point": 2.75
+        }
+      ]
+    },
+    {
+      "content": "I know what is expected of me at work.",
+      "questionID": "4e71821e-e8d7-4fc9-9f02-7b4de4efa7f8",
+      "stats": [
+        {
+          "title": "Q4, 2022",
+          "startDate": "2022-10-01T00:00:00Z",
+          "point": 2.9
+        },
+        {
+          "title": "Q3, 2022",
+          "startDate": "2022-07-01T00:00:00Z",
+          "point": 3.3
+        },
+        {
+          "title": "Q2, 2022",
+          "startDate": "2022-04-01T00:00:00Z",
+          "point": 2.75
+        },
+        {
+          "title": "Q1, 2022",
+          "startDate": "2022-01-01T00:00:00Z",
+          "point": 3.2
+        }
+      ]
+    },
+    {
+      "content": "In the last six months, someone at work has talked to me about my progress.",
+      "questionID": "edb5f946-1d2b-4029-9b1f-57483e92be60",
+      "stats": [
+        {
+          "title": "Q4, 2022",
+          "startDate": "2022-10-01T00:00:00Z",
+          "point": 2.75
+        },
+        {
+          "title": "Q3, 2022",
+          "startDate": "2022-07-01T00:00:00Z",
+          "point": 2.7
+        },
+        {
+          "title": "Q2, 2022",
+          "startDate": "2022-04-01T00:00:00Z",
+          "point": 3.05
+        },
+        {
+          "title": "Q1, 2022",
+          "startDate": "2022-01-01T00:00:00Z",
+          "point": 2.75
+        }
+      ]
+    },
+    {
+      "content": "My associates or fellow employees are committed to doing quality work.",
+      "questionID": "41db6b66-6942-43b3-b1fc-568ba4579762",
+      "stats": [
+        {
+          "title": "Q4, 2022",
+          "startDate": "2022-10-01T00:00:00Z",
+          "point": 3.3
+        },
+        {
+          "title": "Q3, 2022",
+          "startDate": "2022-07-01T00:00:00Z",
+          "point": 2.9
+        },
+        {
+          "title": "Q2, 2022",
+          "startDate": "2022-04-01T00:00:00Z",
+          "point": 3.85
+        },
+        {
+          "title": "Q1, 2022",
+          "startDate": "2022-01-01T00:00:00Z",
+          "point": 2.85
+        }
+      ]
+    },
+    {
+      "content": "At work, my opinions seem to count.",
+      "questionID": "ee16d005-4f9f-4a0c-93b0-43db5f8edbb3",
+      "stats": [
+        {
+          "title": "Q4, 2022",
+          "startDate": "2022-10-01T00:00:00Z",
+          "point": 2.65
+        },
+        {
+          "title": "Q3, 2022",
+          "startDate": "2022-07-01T00:00:00Z",
+          "point": 3.35
+        },
+        {
+          "title": "Q2, 2022",
+          "startDate": "2022-04-01T00:00:00Z",
+          "point": 2.9
+        },
+        {
+          "title": "Q1, 2022",
+          "startDate": "2022-01-01T00:00:00Z",
+          "point": 3.55
+        }
+      ]
+    },
+    {
+      "content": "In the last seven days, I have received recognition or praise for doing good work.",
+      "questionID": "6c6bf3d6-46cd-46d3-9ea6-f382a5052588",
+      "stats": [
+        {
+          "title": "Q4, 2022",
+          "startDate": "2022-10-01T00:00:00Z",
+          "point": 2.2
+        },
+        {
+          "title": "Q3, 2022",
+          "startDate": "2022-07-01T00:00:00Z",
+          "point": 2.8
+        },
+        {
+          "title": "Q2, 2022",
+          "startDate": "2022-04-01T00:00:00Z",
+          "point": 3.3
+        },
+        {
+          "title": "Q1, 2022",
+          "startDate": "2022-01-01T00:00:00Z",
+          "point": 3.5
+        }
+      ]
+    },
+    {
+      "content": "My supervisor, or someone at work, seems to care about me as a person.",
+      "questionID": "c7f2081a-11e6-4a2e-9e0c-852faaaf3d16",
+      "stats": [
+        {
+          "title": "Q4, 2022",
+          "startDate": "2022-10-01T00:00:00Z",
+          "point": 2.85
+        },
+        {
+          "title": "Q3, 2022",
+          "startDate": "2022-07-01T00:00:00Z",
+          "point": 3.35
+        },
+        {
+          "title": "Q2, 2022",
+          "startDate": "2022-04-01T00:00:00Z",
+          "point": 2.8
+        },
+        {
+          "title": "Q1, 2022",
+          "startDate": "2022-01-01T00:00:00Z",
+          "point": 3.15
+        }
+      ]
+    },
+    {
+      "content": "The mission or purpose of my company makes me feel my job is important.",
+      "questionID": "989d8e60-4b71-46d6-8d56-77ca8d37877c",
+      "stats": [
+        {
+          "title": "Q4, 2022",
+          "startDate": "2022-10-01T00:00:00Z",
+          "point": 3
+        },
+        {
+          "title": "Q3, 2022",
+          "startDate": "2022-07-01T00:00:00Z",
+          "point": 2.6
+        },
+        {
+          "title": "Q2, 2022",
+          "startDate": "2022-04-01T00:00:00Z",
+          "point": 3.05
+        },
+        {
+          "title": "Q1, 2022",
+          "startDate": "2022-01-01T00:00:00Z",
+          "point": 3.2
+        }
+      ]
+    },
+    {
+      "content": "There is someone at work who encourages my development.",
+      "questionID": "729cf731-ba4c-4b62-8aa6-8f4a9f4507b8",
+      "stats": [
+        {
+          "title": "Q4, 2022",
+          "startDate": "2022-10-01T00:00:00Z",
+          "point": 2.5
+        },
+        {
+          "title": "Q3, 2022",
+          "startDate": "2022-07-01T00:00:00Z",
+          "point": 2.9
+        },
+        {
+          "title": "Q2, 2022",
+          "startDate": "2022-04-01T00:00:00Z",
+          "point": 2.85
+        },
+        {
+          "title": "Q1, 2022",
+          "startDate": "2022-01-01T00:00:00Z",
+          "point": 3.2
+        }
+      ]
+    },
+    {
+      "content": "This last year, I have had opportunities at work to learn and grow.",
+      "questionID": "8d5f0723-e867-430e-82fc-26f8809140b2",
+      "stats": [
+        {
+          "title": "Q4, 2022",
+          "startDate": "2022-10-01T00:00:00Z",
+          "point": 2.95
+        },
+        {
+          "title": "Q3, 2022",
+          "startDate": "2022-07-01T00:00:00Z",
+          "point": 2.7
+        },
+        {
+          "title": "Q2, 2022",
+          "startDate": "2022-04-01T00:00:00Z",
+          "point": 2.45
+        },
+        {
+          "title": "Q1, 2022",
+          "startDate": "2022-01-01T00:00:00Z",
+          "point": 2.8
+        }
+      ]
+    },
+    {
+      "content": "At work, I have the opportunity to do what I do best every day.",
+      "questionID": "8c25c7c1-5148-4b85-92b2-5db919b0a118",
+      "stats": [
+        {
+          "title": "Q4, 2022",
+          "startDate": "2022-10-01T00:00:00Z",
+          "point": 2.25
+        },
+        {
+          "title": "Q3, 2022",
+          "startDate": "2022-07-01T00:00:00Z",
+          "point": 2.6
+        },
+        {
+          "title": "Q2, 2022",
+          "startDate": "2022-04-01T00:00:00Z",
+          "point": 3
+        },
+        {
+          "title": "Q1, 2022",
+          "startDate": "2022-01-01T00:00:00Z",
+          "point": 3.15
+        }
+      ]
+    }
+  ]
+}
