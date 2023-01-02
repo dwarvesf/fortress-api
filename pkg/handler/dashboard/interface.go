@@ -1,8 +1,6 @@
 package dashboard
 
-import (
-	"github.com/gin-gonic/gin"
-)
+import "github.com/gin-gonic/gin"
 
 type IHandler interface {
 	GetProjectSizes(c *gin.Context)
@@ -15,4 +13,5 @@ type IHandler interface {
 	GetResourcesAvailability(c *gin.Context)
 	GetEngagementInfo(c *gin.Context)
 	GetEngagementInfoDetail(c *gin.Context)
+	GetResourceUtilization(c *gin.Context)
 }
