@@ -87,4 +87,6 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 		surveyGroup.PUT("/:id/done", pmw.WithPerm("surveys.edit"), h.Survey.MarkDone)
 		surveyGroup.DELETE("/:id/topics/:topicID/employees", pmw.WithPerm("surveys.edit"), h.Survey.DeleteTopicReviewers)
 	}
+
+	v1.POST("/upload-content", amw.WithAuth, h.Content.UploadContent)
 }
