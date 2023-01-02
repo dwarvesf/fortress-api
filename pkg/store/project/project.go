@@ -93,36 +93,13 @@ func (s *store) IsExistByCode(db *gorm.DB, code string) (bool, error) {
 
 // One get 1 project by id
 func (s *store) One(db *gorm.DB, id string, preload bool) (*model.Project, error) {
-	query := db.Where("id = ?", id)
-
-	if preload {
-		query = query.
-			Preload("Heads", "deleted_at IS NULL and left_date IS NULL").
-			Preload("Heads.Employee").
-			Preload("ProjectStacks", "deleted_at IS NULL").
-			Preload("ProjectStacks.Stack", "deleted_at IS NULL").
-			Preload("Country").
-			Preload("Slots", "deleted_at IS NULL").
-			Preload("Slots.ProjectMember", "deleted_at IS NULL AND status IN ?",
-				[]model.ProjectMemberStatus{model.ProjectMemberStatusActive, model.ProjectMemberStatusOnBoarding}).
-			Preload("Slots.ProjectMember.Employee", "deleted_at IS NULL").
-			Preload("Slots.ProjectMember.ProjectMemberPositions", "deleted_at IS NULL").
-			Preload("Slots.ProjectMember.ProjectMemberPositions.Position", "deleted_at IS NULL").
-			Preload("Slots.ProjectMember.Seniority", "deleted_at IS NULL").
-			Preload("Slots.ProjectSlotPositions", "deleted_at IS NULL").
-			Preload("Slots.ProjectSlotPositions.Position", "deleted_at IS NULL").
-			Preload("Slots.ProjectSlotPositions.Position", "deleted_at IS NULL").
-			Preload("Slots.Seniority", "deleted_at IS NULL")
+	query := db
+	if !model.IsUUIDFromString(id) {
+		query = db.Where("code = ?", id)
+	} else {
+		query = db.Where("id = ?", id)
 	}
 
-	var project *model.Project
-	return project, query.First(&project).Error
-}
-
-// One get 1 project by code
-func (s *store) OneByCode(db *gorm.DB, code string, preload bool) (*model.Project, error) {
-	query := db.Where("code = ?", code)
-
 	if preload {
 		query = query.
 			Preload("Heads", "deleted_at IS NULL and left_date IS NULL").
@@ -130,7 +107,7 @@ func (s *store) OneByCode(db *gorm.DB, code string, preload bool) (*model.Projec
 			Preload("ProjectStacks", "deleted_at IS NULL").
 			Preload("ProjectStacks.Stack", "deleted_at IS NULL").
 			Preload("Country").
-			Preload("Slots", "deleted_at IS NULL").
+			Preload("Slots", "deleted_at IS NULL AND status = ?", model.ProjectMemberStatusActive).
 			Preload("Slots.ProjectMember", "deleted_at IS NULL AND status IN ?",
 				[]model.ProjectMemberStatus{model.ProjectMemberStatusActive, model.ProjectMemberStatusOnBoarding}).
 			Preload("Slots.ProjectMember.Employee", "deleted_at IS NULL").

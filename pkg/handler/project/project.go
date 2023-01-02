@@ -1093,14 +1093,7 @@ func (h *handler) Details(c *gin.Context) {
 		"id":      projectID,
 	})
 
-	var project *model.Project
-	var err error
-	if !model.IsUUIDFromString(projectID) {
-		project, err = h.store.Project.OneByCode(h.repo.DB(), projectID, true)
-	} else {
-		project, err = h.store.Project.One(h.repo.DB(), projectID, true)
-	}
-
+	rs, err := h.store.Project.One(h.repo.DB(), projectID, true)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Info("project not found")
@@ -1112,7 +1105,7 @@ func (h *handler) Details(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse(view.ToProjectData(project), nil, nil, nil, ""))
+	c.JSON(http.StatusOK, view.CreateResponse(view.ToProjectData(rs), nil, nil, nil, ""))
 }
 
 // UpdateGeneralInfo godoc

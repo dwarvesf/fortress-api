@@ -16,7 +16,7 @@ func (s *store) Delete(db *gorm.DB, id string) error {
 	return db.Unscoped().Where("id = ?", id).Delete(&model.ProjectMember{}).Error
 }
 
-// IsExist check ProjectMember existance
+// IsExist check ProjectMember existence
 func (s *store) IsExist(db *gorm.DB, id string) (bool, error) {
 	var record struct {
 		Result bool
@@ -70,8 +70,8 @@ func (s *store) IsExistsByEmployeeID(db *gorm.DB, projectID string, employeeID s
 	return record.Result, query.Scan(&record).Error
 }
 
-// GetByProjectIDList get project member by porjectID list
+// GetByProjectIDs get project member by porjectID list
 func (s *store) GetByProjectIDs(db *gorm.DB, projectIDs []string) ([]*model.ProjectMember, error) {
-	members := []*model.ProjectMember{}
+	var members []*model.ProjectMember
 	return members, db.Where("left_date IS NULL AND status = 'active' AND project_id IN ?", projectIDs).Preload("Employee").Find(&members).Error
 }
