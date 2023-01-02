@@ -754,3 +754,86 @@ func ToWorkUnitDistributionData(workUnitDistribution []*model.WorkUnitDistributi
 type WorkUnitDistributionsResponse struct {
 	Data *WorkUnitDistributionData `json:"data"`
 }
+
+type WorkSurveySummaryAnswer struct {
+	Date   time.Time `json:"date"`
+	Answer string    `json:"answer"`
+}
+
+type WorkSurveySummaryEmployee struct {
+	Reviewer BasicEmployeeInfo         `json:"reviewer"`
+	Project  BasicProjectInfo          `json:"project"`
+	Answers  []WorkSurveySummaryAnswer `json:"answers"`
+}
+
+type WorkSurveySummary struct {
+	Type string                      `json:"type"`
+	Data []WorkSurveySummaryEmployee `json:"data"`
+}
+
+type WorkSurveySummaryResponse struct {
+	Data []WorkSurveySummary `json:"data"`
+}
+
+func ToWorkSummaries(eers []*model.EmployeeEventReviewer) []WorkSurveySummary {
+	rs := []WorkSurveySummary{
+		{
+			Type: model.QuestionDomainWorkload.String(),
+		},
+		{
+			Type: model.QuestionDomainDeadline.String(),
+		},
+		{
+			Type: model.QuestionDomainLearning.String(),
+		},
+	}
+
+	domainMap := map[model.QuestionDomain]*WorkSurveySummary{
+		model.QuestionDomainWorkload: &rs[0],
+		model.QuestionDomainDeadline: &rs[1],
+		model.QuestionDomainLearning: &rs[2],
+	}
+
+	answerMap := map[model.QuestionDomain]map[model.UUID]map[model.UUID][]WorkSurveySummaryAnswer{
+		model.QuestionDomainWorkload: make(map[model.UUID]map[model.UUID][]WorkSurveySummaryAnswer),
+		model.QuestionDomainDeadline: make(map[model.UUID]map[model.UUID][]WorkSurveySummaryAnswer),
+		model.QuestionDomainLearning: make(map[model.UUID]map[model.UUID][]WorkSurveySummaryAnswer),
+	}
+
+	employeeMap := make(map[model.UUID]model.Employee)
+	projectMap := make(map[model.UUID]model.Project)
+
+	for _, eer := range eers {
+		employeeMap[eer.ReviewerID] = *eer.Reviewer
+		projectMap[eer.EmployeeEventTopic.ProjectID] = *eer.EmployeeEventTopic.Project
+
+		for _, eeq := range eer.EmployeeEventQuestions {
+			answer := WorkSurveySummaryAnswer{
+				Date:   *eer.Event.EndDate,
+				Answer: eeq.Answer,
+			}
+
+			if answerMap[eeq.Domain][eer.ReviewerID] == nil {
+				answerMap[eeq.Domain][eer.ReviewerID] = make(map[model.UUID][]WorkSurveySummaryAnswer)
+			}
+			answerMap[eeq.Domain][eer.ReviewerID][eer.EmployeeEventTopic.Project.ID] =
+				append(answerMap[eeq.Domain][eer.EmployeeEventTopic.ProjectID][eer.ReviewerID], answer)
+		}
+	}
+
+	for domain, eIDMap := range answerMap {
+		for eID, pIDMap := range eIDMap {
+			for pID, answers := range pIDMap {
+				employee := WorkSurveySummaryEmployee{
+					Reviewer: *toBasicEmployeeInfo(employeeMap[eID]),
+					Project:  *toBasicProjectInfo(projectMap[pID]),
+					Answers:  answers,
+				}
+
+				domainMap[domain].Data = append(domainMap[domain].Data, employee)
+			}
+		}
+	}
+
+	return rs
+}

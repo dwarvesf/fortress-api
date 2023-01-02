@@ -30,4 +30,5 @@ type IStore interface {
 	GetAvailableEmployees(db *gorm.DB) ([]*model.Employee, error)
 	GetResourceUtilization(db *gorm.DB) ([]*model.ResourceUtilization, error)
 	GetWorkUnitDistribution(db *gorm.DB, name string) ([]*model.WorkUnitDistribution, error)
+	GetAllWorkReviews(db *gorm.DB, keyword string, pagination model.Pagination) ([]*model.EmployeeEventReviewer, error)
 }

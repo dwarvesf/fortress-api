@@ -2932,6 +2932,40 @@ definitions:
       data:
         $ref: '#/definitions/view.WorkSurveysData'
     type: object
+  view.WorkSurveySummary:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/view.WorkSurveySummaryEmployee'
+        type: array
+      type:
+        type: string
+    type: object
+  view.WorkSurveySummaryAnswer:
+    properties:
+      answer:
+        type: string
+      date:
+        type: string
+    type: object
+  view.WorkSurveySummaryEmployee:
+    properties:
+      answers:
+        items:
+          $ref: '#/definitions/view.WorkSurveySummaryAnswer'
+        type: array
+      project:
+        $ref: '#/definitions/view.BasicProjectInfo'
+      reviewer:
+        $ref: '#/definitions/view.BasicEmployeeInfo'
+    type: object
+  view.WorkSurveySummaryResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/view.WorkSurveySummary'
+        type: array
+    type: object
   view.WorkSurveysData:
     properties:
       project:
@@ -3454,6 +3488,51 @@ paths:
           schema:
             $ref: '#/definitions/view.ErrorResponse'
       summary: Get dashboard resource utilization
+      tags:
+      - Dashboard
+  /dashboards/resources/work-survey-summaries:
+    get:
+      consumes:
+      - application/json
+      description: Get resource work summaries for dashboard
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Keyword
+        in: query
+        name: keyword
+        type: string
+      - description: Page
+        in: query
+        name: page
+        type: string
+      - description: Size
+        in: query
+        name: size
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.WorkSurveySummaryResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get resource work summaries for dashboard
       tags:
       - Dashboard
   /dashboards/resources/work-unit-distribution:
