@@ -72,6 +72,17 @@ definitions:
       updatedAt:
         type: string
     type: object
+  model.ResourceUtilization:
+    properties:
+      available:
+        type: integer
+      date:
+        type: string
+      official:
+        type: integer
+      shadow:
+        type: integer
+    type: object
   model.Role:
     properties:
       code:
@@ -1037,6 +1048,13 @@ definitions:
       data:
         $ref: '#/definitions/view.FeedBackReviewDetail'
     type: object
+  view.GetDashboardResourceUtilizationResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/model.ResourceUtilization'
+        type: array
+    type: object
   view.GetQuestionResponse:
     properties:
       data:
@@ -1857,6 +1875,31 @@ paths:
       summary: Get logged-in user data
       tags:
       - Auth
+  /dashboards/resources/utilization:
+    put:
+      consumes:
+      - application/json
+      description: Get dashboard resource utilization
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.GetDashboardResourceUtilizationResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get dashboard resource utilization
+      tags:
+      - Dashboard
   /employees:
     post:
       consumes:
