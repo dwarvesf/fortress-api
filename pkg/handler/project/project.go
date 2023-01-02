@@ -736,7 +736,8 @@ func (h *handler) assignMemberToProject(db *gorm.DB, slotID string, projectID st
 		h.logger.Fields(logger.Fields{"member": member}).Error(errs.ErrSlotIsInactive, "slot is inactive")
 		return nil, errs.ErrSlotIsInactive
 	}
-	if member.EmployeeID != input.EmployeeID {
+
+	if !member.EmployeeID.IsZero() && member.EmployeeID != input.EmployeeID {
 		h.logger.
 			Fields(logger.Fields{"member": member}).
 			Error(errs.ErrSlotAlreadyContainsAnotherMember, "slot already contains another member")
@@ -899,16 +900,18 @@ func (h *handler) AssignMember(c *gin.Context) {
 	}
 
 	// get active project member info
-	_, err := h.store.ProjectMember.One(h.repo.DB(), projectID, body.EmployeeID.String(), false)
-	if err != gorm.ErrRecordNotFound {
-		if err == nil {
-			l.Error(err, "project member exists")
-			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrProjectMemberExists, projectID, ""))
+	if !body.EmployeeID.IsZero() {
+		_, err := h.store.ProjectMember.One(h.repo.DB(), projectID, body.EmployeeID.String(), false)
+		if err != gorm.ErrRecordNotFound {
+			if err == nil {
+				l.Error(err, "project member exists")
+				c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrProjectMemberExists, projectID, ""))
+				return
+			}
+			l.Error(err, "failed to query project member")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, projectID, ""))
 			return
 		}
-		l.Error(err, "failed to query project member")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, projectID, ""))
-		return
 	}
 
 	// check project existence
@@ -1093,14 +1096,7 @@ func (h *handler) Details(c *gin.Context) {
 		"id":      projectID,
 	})
 
-	var project *model.Project
-	var err error
-	if !model.IsUUIDFromString(projectID) {
-		project, err = h.store.Project.OneByCode(h.repo.DB(), projectID, true)
-	} else {
-		project, err = h.store.Project.One(h.repo.DB(), projectID, true)
-	}
-
+	rs, err := h.store.Project.One(h.repo.DB(), projectID, true)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Info("project not found")
@@ -1112,7 +1108,7 @@ func (h *handler) Details(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse(view.ToProjectData(project), nil, nil, nil, ""))
+	c.JSON(http.StatusOK, view.CreateResponse(view.ToProjectData(rs), nil, nil, nil, ""))
 }
 
 // UpdateGeneralInfo godoc
