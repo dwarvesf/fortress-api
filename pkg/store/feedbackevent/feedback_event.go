@@ -92,3 +92,9 @@ func (s *store) UpdateSelectedFieldsByID(db *gorm.DB, id string, updateModel mod
 func (s *store) DeleteByID(db *gorm.DB, id string) error {
 	return db.Where("id = ?", id).Delete(&model.FeedbackEvent{}).Error
 }
+
+// GetLatestEventByType get FeedbackEvent by type with limit
+func (s *store) GetLatestEventByType(db *gorm.DB, eventType model.EventType, eventSubtype model.EventSubtype, num int) ([]*model.FeedbackEvent, error) {
+	var feedbackEvents []*model.FeedbackEvent
+	return feedbackEvents, db.Where("type = ? AND subtype = ?", eventType, eventSubtype).Order("start_date DESC").Limit(num).Find(&feedbackEvents).Error
+}

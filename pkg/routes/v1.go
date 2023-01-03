@@ -100,5 +100,7 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 	dashboard := v1.Group("/dashboards")
 	{
 		dashboard.GET("/resources/utilization", h.Dashboard.GetResourceUtilization)
+		dashboard.GET("/engagement/info", h.Dashboard.GetEngagementInfo)
+		dashboard.GET("/engagement/detail", h.Dashboard.GetEngagementInfoDetail)
 	}
 }
