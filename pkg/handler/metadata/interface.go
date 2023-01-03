@@ -13,4 +13,10 @@ type IHandler interface {
 	ProjectStatuses(c *gin.Context)
 	Stacks(c *gin.Context)
 	GetQuestions(c *gin.Context)
+	UpdateStack(c *gin.Context)
+	CreateStack(c *gin.Context)
+	DeleteStack(c *gin.Context)
+	UpdatePosition(c *gin.Context)
+	CreatePosition(c *gin.Context)
+	DeletePosition(c *gin.Context)
 }

@@ -47,6 +47,12 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 	v1.GET("/metadata/countries/:country_id/cities", h.Metadata.GetCities)
 	v1.GET("/metadata/project-statuses", h.Metadata.ProjectStatuses)
 	v1.GET("/metadata/questions", h.Metadata.GetQuestions)
+	v1.PUT("/metadata/stacks/:id", pmw.WithPerm("metadata.edit"), h.Metadata.UpdateStack)
+	v1.POST("/metadata/stacks", pmw.WithPerm("metadata.create"), h.Metadata.CreateStack)
+	v1.DELETE("/metadata/stacks/:id", pmw.WithPerm("metadata.delete"), h.Metadata.DeleteStack)
+	v1.PUT("/metadata/positions/:id", pmw.WithPerm("metadata.edit"), h.Metadata.UpdatePosition)
+	v1.POST("/metadata/positions", pmw.WithPerm("metadata.create"), h.Metadata.CreatePosition)
+	v1.DELETE("/metadata/positions/:id", pmw.WithPerm("metadata.delete"), h.Metadata.DeletePosition)
 
 	// projects
 	v1.POST("/projects", amw.WithAuth, pmw.WithPerm("projects.create"), h.Project.Create)
