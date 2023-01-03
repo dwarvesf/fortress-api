@@ -280,7 +280,7 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 	}
 
 	if strings.TrimSpace(body.Email) != "" {
-		employee.PersonalEmail = body.Email
+		employee.TeamEmail = body.Email
 	}
 
 	if strings.TrimSpace(body.Phone) != "" {
@@ -319,7 +319,7 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 
 	_, err = h.store.Employee.UpdateSelectedFieldsByID(h.repo.DB(), employeeID, *employee,
 		"full_name",
-		"personal_email",
+		"team_email",
 		"phone_number",
 		"line_manager_id",
 		"discord_id",

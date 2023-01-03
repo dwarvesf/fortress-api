@@ -390,8 +390,8 @@ definitions:
       personalEmail:
         type: string
       phoneNumber:
-        maxLength: 12
-        minLength: 10
+        maxLength: 18
+        minLength: 8
         type: string
       placeOfResidence:
         type: string

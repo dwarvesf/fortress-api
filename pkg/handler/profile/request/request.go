@@ -6,7 +6,7 @@ import "github.com/dwarvesf/fortress-api/pkg/model"
 type UpdateInfoInput struct {
 	TeamEmail        string `form:"teamEmail" json:"teamEmail" binding:"required,email"`
 	PersonalEmail    string `form:"personalEmail" json:"personalEmail" binding:"required,email"`
-	PhoneNumber      string `form:"phoneNumber" json:"phoneNumber" binding:"required,max=12,min=10"`
+	PhoneNumber      string `form:"phoneNumber" json:"phoneNumber" binding:"required,max=18,min=8"`
 	PlaceOfResidence string `form:"placeOfResidence" json:"placeOfResidence" binding:"required"`
 	Address          string `form:"address" json:"address"`
 	Country          string `form:"country" json:"country"`

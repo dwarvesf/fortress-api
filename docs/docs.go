@@ -3851,8 +3851,8 @@ const docTemplate = `{
                 },
                 "phoneNumber": {
                     "type": "string",
-                    "maxLength": 12,
-                    "minLength": 10
+                    "maxLength": 18,
+                    "minLength": 8
                 },
                 "placeOfResidence": {
                     "type": "string"
