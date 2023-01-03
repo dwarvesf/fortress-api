@@ -203,6 +203,16 @@ definitions:
     - status
     - teamEmail
     type: object
+  request.CreatePositionInput:
+    properties:
+      code:
+        type: string
+      name:
+        type: string
+    required:
+    - code
+    - name
+    type: object
   request.CreateProjectInput:
     properties:
       accountManagerID:
@@ -234,6 +244,18 @@ definitions:
     - countryID
     - name
     - status
+    type: object
+  request.CreateStackInput:
+    properties:
+      avatar:
+        type: string
+      code:
+        type: string
+      name:
+        type: string
+    required:
+    - code
+    - name
     type: object
   request.CreateSurveyFeedbackInput:
     properties:
@@ -467,6 +489,13 @@ definitions:
     - gender
     - personalEmail
     type: object
+  request.UpdatePositionBody:
+    properties:
+      code:
+        type: string
+      name:
+        type: string
+    type: object
   request.UpdateProjectGeneralInfoInput:
     properties:
       countryID:
@@ -508,6 +537,15 @@ definitions:
     - positions
     - seniority
     - stacks
+    type: object
+  request.UpdateStackBody:
+    properties:
+      avatar:
+        type: string
+      code:
+        type: string
+      name:
+        type: string
     type: object
   request.UpdateTopicReviewersBody:
     properties:
@@ -2475,6 +2513,125 @@ paths:
       summary: Get list values for positions
       tags:
       - Metadata
+    post:
+      consumes:
+      - application/json
+      description: Create new position
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Body
+        in: body
+        name: Body
+        required: true
+        schema:
+          $ref: '#/definitions/request.CreatePositionInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Create new position
+      tags:
+      - Metadata
+  /metadata/positions/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete position by ID
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Position ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Delete position by ID
+      tags:
+      - Metadata
+    put:
+      consumes:
+      - application/json
+      description: Update position information by ID
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Position ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Body
+        in: body
+        name: Body
+        required: true
+        schema:
+          $ref: '#/definitions/request.UpdatePositionBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Update position information by ID
+      tags:
+      - Metadata
   /metadata/project-statuses:
     get:
       consumes:
@@ -2567,6 +2724,125 @@ paths:
           schema:
             $ref: '#/definitions/view.ErrorResponse'
       summary: Get list values for stacks
+      tags:
+      - Metadata
+    post:
+      consumes:
+      - application/json
+      description: Create new stack
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Body
+        in: body
+        name: Body
+        required: true
+        schema:
+          $ref: '#/definitions/request.CreateStackInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Create new stack
+      tags:
+      - Metadata
+  /metadata/stacks/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete stack by ID
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Stack ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Delete stack by ID
+      tags:
+      - Metadata
+    put:
+      consumes:
+      - application/json
+      description: Update stack information by ID
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Stack ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Body
+        in: body
+        name: Body
+        required: true
+        schema:
+          $ref: '#/definitions/request.UpdateStackBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Update stack information by ID
       tags:
       - Metadata
   /metadata/working-status:

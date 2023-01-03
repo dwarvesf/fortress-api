@@ -4,15 +4,17 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/dwarvesf/fortress-api/pkg/model"
-
-	"github.com/gin-gonic/gin"
-	_ "github.com/lib/pq"
-
+	"github.com/dwarvesf/fortress-api/pkg/handler/metadata/errs"
+	"github.com/dwarvesf/fortress-api/pkg/handler/metadata/request"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
+	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/view"
+
+	"github.com/gin-gonic/gin"
+	_ "github.com/lib/pq"
+	"gorm.io/gorm"
 )
 
 type handler struct {
@@ -309,6 +311,293 @@ func (h *handler) Stacks(c *gin.Context) {
 
 	// 2 return array of account statuses
 	c.JSON(http.StatusOK, view.CreateResponse[any](stacks, nil, nil, nil, ""))
+}
+
+// UpdateStack godoc
+// @Summary Update stack information by ID
+// @Description Update stack information by ID
+// @Tags Metadata
+// @Accept  json
+// @Produce  json
+// @Param Authorization header string true "jwt token"
+// @Param id path string true "Stack ID"
+// @Param Body body request.UpdateStackBody true "Body"
+// @Success 200 {object} view.MessageResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /metadata/stacks/{id} [put]
+func (h *handler) UpdateStack(c *gin.Context) {
+	var input request.UpdateStackInput
+
+	input.ID = c.Param("id")
+	if err := c.ShouldBindJSON(&input.Body); err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, input, ""))
+		return
+	}
+
+	// TODO: can we move this to middleware ?
+	l := h.logger.Fields(logger.Fields{
+		"handler": "metadata",
+		"method":  "UpdateStack",
+		"input":   input,
+	})
+
+	if err := input.Validate(); err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, input, ""))
+		return
+	}
+
+	stack, err := h.store.Stack.One(h.repo.DB(), input.ID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			l.Error(err, "Stack not found")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrStackNotFound, input, ""))
+			return
+		}
+
+		l.Error(err, "failed to get stacks")
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, err, input, ""))
+		return
+	}
+
+	stack.Name = input.Body.Name
+	stack.Avatar = input.Body.Avatar
+	stack.Code = input.Body.Code
+
+	stack, err = h.store.Stack.Update(h.repo.DB(), stack)
+	if err != nil {
+		l.Error(err, "error query Stacks from db")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	// 2 return array of account statuses
+	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))
+}
+
+// CreateStack godoc
+// @Summary Create new stack
+// @Description Create new stack
+// @Tags Metadata
+// @Accept  json
+// @Produce  json
+// @Param Authorization header string true "jwt token"
+// @Param Body body request.CreateStackInput true "Body"
+// @Success 200 {object} view.MessageResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /metadata/stacks [post]
+func (h *handler) CreateStack(c *gin.Context) {
+	var input request.CreateStackInput
+
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, input, ""))
+		return
+	}
+
+	// TODO: can we move this to middleware ?
+	l := h.logger.Fields(logger.Fields{
+		"handler": "metadata",
+		"method":  "CreateStack",
+		"input":   input,
+	})
+
+	stack := &model.Stack{
+		Name:   input.Name,
+		Code:   input.Code,
+		Avatar: input.Avatar,
+	}
+
+	stack, err := h.store.Stack.Create(h.repo.DB(), stack)
+	if err != nil {
+		l.Error(err, "error query Stacks from db")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	// 2 return array of account statuses
+	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))
+}
+
+// DeleteStack godoc
+// @Summary Delete stack by ID
+// @Description Delete stack by ID
+// @Tags Metadata
+// @Accept  json
+// @Produce  json
+// @Param Authorization header string true "jwt token"
+// @Param id path string true "Stack ID"
+// @Success 200 {object} view.MessageResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /metadata/stacks/{id} [delete]
+func (h *handler) DeleteStack(c *gin.Context) {
+	stackID := c.Param("id")
+
+	if stackID == "" || !model.IsUUIDFromString(stackID) {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidStackID, stackID, ""))
+		return
+	}
+
+	// TODO: can we move this to middleware ?
+	l := h.logger.Fields(logger.Fields{
+		"handler": "metadata",
+		"method":  "DeleteStack",
+		"stackID": stackID,
+	})
+
+	if err := h.store.Stack.Delete(h.repo.DB(), stackID); err != nil {
+		l.Error(err, "error query Stacks from db")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	// 2 return array of account statuses
+	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))
+}
+
+// UpdatePosition godoc
+// @Summary Update position information by ID
+// @Description Update position information by ID
+// @Tags Metadata
+// @Accept  json
+// @Produce  json
+// @Param Authorization header string true "jwt token"
+// @Param id path string true "Position ID"
+// @Param Body body request.UpdatePositionBody true "Body"
+// @Success 200 {object} view.MessageResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /metadata/positions/{id} [put]
+func (h *handler) UpdatePosition(c *gin.Context) {
+	var input request.UpdatePositionInput
+
+	input.ID = c.Param("id")
+	if err := c.ShouldBindJSON(&input.Body); err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, input, ""))
+		return
+	}
+
+	// TODO: can we move this to middleware ?
+	l := h.logger.Fields(logger.Fields{
+		"handler": "metadata",
+		"method":  "UpdatePosition",
+		"input":   input,
+	})
+
+	if err := input.Validate(); err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, input, ""))
+		return
+	}
+
+	position, err := h.store.Position.One(h.repo.DB(), model.MustGetUUIDFromString(input.ID))
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			l.Error(err, "Position not found")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrPositionNotFound, input, ""))
+			return
+		}
+
+		l.Error(err, "failed to get position")
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, err, input, ""))
+		return
+	}
+
+	position.Name = input.Body.Name
+	position.Code = input.Body.Code
+
+	position, err = h.store.Position.Update(h.repo.DB(), position)
+	if err != nil {
+		l.Error(err, "error query Positions from db")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))
+}
+
+// CreatePosition godoc
+// @Summary Create new position
+// @Description Create new position
+// @Tags Metadata
+// @Accept  json
+// @Produce  json
+// @Param Authorization header string true "jwt token"
+// @Param Body body request.CreatePositionInput true "Body"
+// @Success 200 {object} view.MessageResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /metadata/positions [post]
+func (h *handler) CreatePosition(c *gin.Context) {
+	var input request.CreatePositionInput
+
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, input, ""))
+		return
+	}
+
+	// TODO: can we move this to middleware ?
+	l := h.logger.Fields(logger.Fields{
+		"handler": "metadata",
+		"method":  "CreatePosition",
+		"input":   input,
+	})
+
+	position := &model.Position{
+		Name: input.Name,
+		Code: input.Code,
+	}
+
+	position, err := h.store.Position.Create(h.repo.DB(), position)
+	if err != nil {
+		l.Error(err, "error query Positions from db")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))
+}
+
+// DeletePosition godoc
+// @Summary Delete position by ID
+// @Description Delete position by ID
+// @Tags Metadata
+// @Accept  json
+// @Produce  json
+// @Param Authorization header string true "jwt token"
+// @Param id path string true "Position ID"
+// @Success 200 {object} view.MessageResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /metadata/positions/{id} [delete]
+func (h *handler) DeletePosition(c *gin.Context) {
+	positionID := c.Param("id")
+
+	if positionID == "" || !model.IsUUIDFromString(positionID) {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidPositionID, positionID, ""))
+		return
+	}
+
+	// TODO: can we move this to middleware ?
+	l := h.logger.Fields(logger.Fields{
+		"handler":    "metadata",
+		"method":     "DeletePosition",
+		"positionID": positionID,
+	})
+
+	if err := h.store.Position.Delete(h.repo.DB(), positionID); err != nil {
+		l.Error(err, "error query Position from db")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))
 }
 
 // GetQuestions godoc

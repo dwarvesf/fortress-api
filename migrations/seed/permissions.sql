@@ -30,4 +30,8 @@ INSERT INTO public.permissions (id, deleted_at, created_at, updated_at, name, co
 ('ed107409-30c5-4555-ba2e-7d77ee8027dc', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Employee Mentees Create', 'employeeMentees.create'),
 ('0b8bc573-c8a8-49f4-8274-486990e76540', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Employee Mentees Read', 'employeeMentees.read'),
 ('910cd3bd-3b9b-4243-899f-86ed47e9d1c9', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Employee Mentees Edit', 'employeeMentees.edit'),
-('967f2d24-1bd9-4b62-8136-7fed60dee6d9', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Employee Mentees Delete', 'employeeMentees.delete');
+('967f2d24-1bd9-4b62-8136-7fed60dee6d9', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Employee Mentees Delete', 'employeeMentees.delete'),
+('050ee781-7f32-4d79-b3d3-1e9d550d4a8f', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Metadata Create', 'metadata.create'),
+('476156c1-70d8-4eb1-adc5-f8f5ec209666', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Metadata Read', 'metadata.read'),
+('a87e99c2-c40e-42e0-9310-943f2faa654b', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Metadata Edit', 'metadata.edit'),
+('befac4bf-bb20-4b46-9e56-f8175c93b191', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Metadata Delete', 'metadata.delete');   

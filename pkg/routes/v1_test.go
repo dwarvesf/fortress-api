@@ -106,6 +106,20 @@ func Test_loadV1Routes(t *testing.T) {
 				Method:  "GET",
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/metadata.IHandler.Positions-fm",
 			},
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/metadata.IHandler.CreatePosition-fm",
+			},
+		},
+		"/api/v1/metadata/positions/:id": {
+			"PUT": {
+				Method:  "PUT",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/metadata.IHandler.UpdatePosition-fm",
+			},
+			"DELETE": {
+				Method:  "DELETE",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/metadata.IHandler.DeletePosition-fm",
+			},
 		},
 		"/api/v1/auth": {
 			"POST": {
@@ -135,6 +149,20 @@ func Test_loadV1Routes(t *testing.T) {
 			"GET": {
 				Method:  "GET",
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/metadata.IHandler.Stacks-fm",
+			},
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/metadata.IHandler.CreateStack-fm",
+			},
+		},
+		"/api/v1/metadata/stacks/:id": {
+			"PUT": {
+				Method:  "PUT",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/metadata.IHandler.UpdateStack-fm",
+			},
+			"DELETE": {
+				Method:  "DELETE",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/metadata.IHandler.DeleteStack-fm",
 			},
 		},
 		"/api/v1/metadata/countries/:country_id/cities": {

@@ -33,7 +33,11 @@ INSERT INTO public.permissions (id, deleted_at, created_at, updated_at, name, co
 ('ed107409-30c5-4555-ba2e-7d77ee8027dc', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Employee Mentees Create', 'employeeMentees.create'),
 ('0b8bc573-c8a8-49f4-8274-486990e76540', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Employee Mentees Read', 'employeeMentees.read'),
 ('910cd3bd-3b9b-4243-899f-86ed47e9d1c9', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Employee Mentees Edit', 'employeeMentees.edit'),
-('967f2d24-1bd9-4b62-8136-7fed60dee6d9', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Employee Mentees Delete', 'employeeMentees.delete');
+('967f2d24-1bd9-4b62-8136-7fed60dee6d9', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Employee Mentees Delete', 'employeeMentees.delete'),
+('050ee781-7f32-4d79-b3d3-1e9d550d4a8f', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Metadata Create', 'metadata.create'),
+('476156c1-70d8-4eb1-adc5-f8f5ec209666', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Metadata Read', 'metadata.read'),
+('a87e99c2-c40e-42e0-9310-943f2faa654b', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Metadata Edit', 'metadata.edit'),
+('befac4bf-bb20-4b46-9e56-f8175c93b191', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Metadata Delete', 'metadata.delete');   
 
 INSERT INTO public.role_permissions (id, deleted_at, created_at, updated_at, role_id, permission_id) VALUES
 ('75012959-344d-449f-a7ec-00023d68b32b', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', 'd796884d-a8c4-4525-81e7-54a3b6099eac', '01ed1076-4028-4fdf-9a92-cb57a8e041af'),
@@ -67,7 +71,11 @@ INSERT INTO public.role_permissions (id, deleted_at, created_at, updated_at, rol
 ('067dbc36-ca1b-40be-bfc1-9289ea617a8d', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '11ccffea-2cc9-4e98-9bef-3464dfe4dec8', 'ed107409-30c5-4555-ba2e-7d77ee8027dc'),
 ('be045620-f435-4220-850d-d4b2be887746', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '11ccffea-2cc9-4e98-9bef-3464dfe4dec8', '0b8bc573-c8a8-49f4-8274-486990e76540'),
 ('357c4d81-59bd-46d7-8c9b-78a7b697e52d', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '11ccffea-2cc9-4e98-9bef-3464dfe4dec8', '910cd3bd-3b9b-4243-899f-86ed47e9d1c9'),
-('a6e38701-6efb-4a86-92b7-a6db7ada7064', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '11ccffea-2cc9-4e98-9bef-3464dfe4dec8', '967f2d24-1bd9-4b62-8136-7fed60dee6d9');
+('a6e38701-6efb-4a86-92b7-a6db7ada7064', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '11ccffea-2cc9-4e98-9bef-3464dfe4dec8', '967f2d24-1bd9-4b62-8136-7fed60dee6d9'),
+('995e790d-b8bc-44ee-a04d-1cc7cae4e6c3', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '11ccffea-2cc9-4e98-9bef-3464dfe4dec8', '050ee781-7f32-4d79-b3d3-1e9d550d4a8f'),
+('f77dd4e7-b472-4e90-baaa-35d79854f24f', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '11ccffea-2cc9-4e98-9bef-3464dfe4dec8', '476156c1-70d8-4eb1-adc5-f8f5ec209666'),
+('080fd0f5-8e12-4b2d-936e-a012615bd563', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '11ccffea-2cc9-4e98-9bef-3464dfe4dec8', 'a87e99c2-c40e-42e0-9310-943f2faa654b'),
+('d052884a-f03f-4f27-a99b-8aff6edfe5f5', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '11ccffea-2cc9-4e98-9bef-3464dfe4dec8', 'befac4bf-bb20-4b46-9e56-f8175c93b191');
 
 INSERT INTO public.positions (id, deleted_at, created_at, updated_at, name, code) VALUES
 ('11ccffea-2cc9-4e98-9bef-3464dfe4dec8', NULL, '2022-11-07 09:50:25.714604', '2022-11-07 09:50:25.714604', 'Frontend', 'frontend'),

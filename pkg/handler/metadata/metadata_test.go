@@ -1,12 +1,16 @@
 package metadata
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
+	"github.com/dwarvesf/fortress-api/pkg/handler/metadata/request"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/store"
@@ -16,6 +20,8 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/stretchr/testify/require"
 )
+
+const testToken = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2OTkzMjExNDIsImlkIjoiMjY1NTgzMmUtZjAwOS00YjczLWE1MzUtNjRjM2EyMmU1NThmIiwiYXZhdGFyIjoiaHR0cHM6Ly9zMy1hcC1zb3V0aGVhc3QtMS5hbWF6b25hd3MuY29tL2ZvcnRyZXNzLWltYWdlcy81MTUzNTc0Njk1NjYzOTU1OTQ0LnBuZyIsImVtYWlsIjoidGhhbmhAZC5mb3VuZGF0aW9uIiwicGVybWlzc2lvbnMiOlsiZW1wbG95ZWVzLnJlYWQiXSwidXNlcl9pbmZvIjpudWxsfQ.GENGPEucSUrILN6tHDKxLMtj0M0REVMUPC7-XhDMpGM"
 
 func TestHandler_GetWorkingStatus(t *testing.T) {
 	// load env and test data
@@ -346,6 +352,319 @@ func TestHandler_GetQuestion(t *testing.T) {
 				require.NoError(t, err)
 
 				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.GetQuestions] response mismatched")
+			})
+		})
+	}
+}
+
+func TestHandler_CreateStack(t *testing.T) {
+	// load env and test data
+	cfg := config.LoadTestConfig()
+	loggerMock := logger.NewLogrusLogger()
+	serviceMock := service.New(&cfg)
+	storeMock := store.New()
+
+	tests := []struct {
+		name             string
+		wantCode         int
+		body             request.CreateStackInput
+		wantResponsePath string
+	}{
+		{
+			name:     "ok_create_stack",
+			wantCode: http.StatusOK,
+			body: request.CreateStackInput{
+				Name:   "name",
+				Code:   "code",
+				Avatar: "avatar",
+			},
+			wantResponsePath: "testdata/create_stack/200.json",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				byteReq, err := json.Marshal(tt.body)
+				require.Nil(t, err)
+				w := httptest.NewRecorder()
+
+				ctx, _ := gin.CreateTestContext(w)
+				bodyReader := strings.NewReader(string(byteReq))
+				ctx.Request = httptest.NewRequest(http.MethodPost, fmt.Sprintf("/api/v1/metadata/stacks"), bodyReader)
+				ctx.Request.Header.Set("Authorization", testToken)
+
+				h := New(storeMock, txRepo, serviceMock, loggerMock)
+				h.CreateStack(ctx)
+
+				require.Equal(t, tt.wantCode, w.Code)
+				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				require.NoError(t, err)
+
+				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.CreateStack] response mismatched")
+			})
+		})
+	}
+}
+
+func TestHandler_UpdateStack(t *testing.T) {
+	// load env and test data
+	cfg := config.LoadTestConfig()
+	loggerMock := logger.NewLogrusLogger()
+	serviceMock := service.New(&cfg)
+	storeMock := store.New()
+
+	tests := []struct {
+		name             string
+		wantCode         int
+		id               string
+		body             request.UpdateStackBody
+		wantResponsePath string
+	}{
+		{
+			name:     "ok_update_stack",
+			wantCode: http.StatusOK,
+			id:       "0ecf47c8-cca4-4c30-94bb-054b1124c44f",
+			body: request.UpdateStackBody{
+				Name:   "Newname",
+				Code:   "code",
+				Avatar: "avatar",
+			},
+			wantResponsePath: "testdata/update_stack/200.json",
+		},
+		{
+			name:     "not_found_stack",
+			wantCode: http.StatusNotFound,
+			id:       "0ecf47c8-cca4-4c30-94bb-054b1124c44e",
+			body: request.UpdateStackBody{
+				Name:   "Newname",
+				Code:   "code",
+				Avatar: "avatar",
+			},
+			wantResponsePath: "testdata/update_stack/404.json",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				byteReq, err := json.Marshal(tt.body)
+				require.Nil(t, err)
+				w := httptest.NewRecorder()
+
+				ctx, _ := gin.CreateTestContext(w)
+				bodyReader := strings.NewReader(string(byteReq))
+				ctx.Request = httptest.NewRequest(http.MethodPut, fmt.Sprintf("/api/v1/metadata/stacks/%s", tt.id), bodyReader)
+				ctx.Request.Header.Set("Authorization", testToken)
+				ctx.AddParam("id", tt.id)
+
+				h := New(storeMock, txRepo, serviceMock, loggerMock)
+				h.UpdateStack(ctx)
+
+				require.Equal(t, tt.wantCode, w.Code)
+				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				require.NoError(t, err)
+
+				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.UpdateStack] response mismatched")
+			})
+		})
+	}
+}
+
+func TestHandler_DeleteStack(t *testing.T) {
+	// load env and test data
+	cfg := config.LoadTestConfig()
+	loggerMock := logger.NewLogrusLogger()
+	serviceMock := service.New(&cfg)
+	storeMock := store.New()
+
+	tests := []struct {
+		name             string
+		wantCode         int
+		id               string
+		wantResponsePath string
+	}{
+		{
+			name:             "ok_delete_stack",
+			wantCode:         http.StatusOK,
+			id:               "0ecf47c8-cca4-4c30-94bb-054b1124c44f",
+			wantResponsePath: "testdata/delete_stack/200.json",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				w := httptest.NewRecorder()
+
+				ctx, _ := gin.CreateTestContext(w)
+				ctx.Request = httptest.NewRequest(http.MethodPut, fmt.Sprintf("/api/v1/metadata/stacks/%s", tt.id), nil)
+				ctx.Request.Header.Set("Authorization", testToken)
+				ctx.AddParam("id", tt.id)
+
+				h := New(storeMock, txRepo, serviceMock, loggerMock)
+				h.DeleteStack(ctx)
+
+				require.Equal(t, tt.wantCode, w.Code)
+				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				require.NoError(t, err)
+
+				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.DeleteStack] response mismatched")
+			})
+		})
+	}
+}
+
+func TestHandler_CreatePosition(t *testing.T) {
+	// load env and test data
+	cfg := config.LoadTestConfig()
+	loggerMock := logger.NewLogrusLogger()
+	serviceMock := service.New(&cfg)
+	storeMock := store.New()
+
+	tests := []struct {
+		name             string
+		wantCode         int
+		body             request.CreatePositionInput
+		wantResponsePath string
+	}{
+		{
+			name:     "ok_create_position",
+			wantCode: http.StatusOK,
+			body: request.CreatePositionInput{
+				Name: "name",
+				Code: "code",
+			},
+			wantResponsePath: "testdata/create_position/200.json",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				byteReq, err := json.Marshal(tt.body)
+				require.Nil(t, err)
+				w := httptest.NewRecorder()
+
+				ctx, _ := gin.CreateTestContext(w)
+				bodyReader := strings.NewReader(string(byteReq))
+				ctx.Request = httptest.NewRequest(http.MethodPost, fmt.Sprintf("/api/v1/metadata/positions"), bodyReader)
+				ctx.Request.Header.Set("Authorization", testToken)
+
+				h := New(storeMock, txRepo, serviceMock, loggerMock)
+				h.CreatePosition(ctx)
+
+				require.Equal(t, tt.wantCode, w.Code)
+				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				require.NoError(t, err)
+
+				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.CreatePosition] response mismatched")
+			})
+		})
+	}
+}
+
+func TestHandler_UpdatePosition(t *testing.T) {
+	// load env and test data
+	cfg := config.LoadTestConfig()
+	loggerMock := logger.NewLogrusLogger()
+	serviceMock := service.New(&cfg)
+	storeMock := store.New()
+
+	tests := []struct {
+		name             string
+		wantCode         int
+		id               string
+		body             request.UpdatePositionBody
+		wantResponsePath string
+	}{
+		{
+			name:     "ok_update_position",
+			wantCode: http.StatusOK,
+			id:       "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
+			body: request.UpdatePositionBody{
+				Name: "Newname",
+				Code: "code",
+			},
+			wantResponsePath: "testdata/update_position/200.json",
+		},
+		{
+			name:     "not_found_position",
+			wantCode: http.StatusNotFound,
+			id:       "0ecf47c8-cca4-4c30-94bb-054b1124c44e",
+			body: request.UpdatePositionBody{
+				Name: "Newname",
+				Code: "code",
+			},
+			wantResponsePath: "testdata/update_position/404.json",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				byteReq, err := json.Marshal(tt.body)
+				require.Nil(t, err)
+				w := httptest.NewRecorder()
+
+				ctx, _ := gin.CreateTestContext(w)
+				bodyReader := strings.NewReader(string(byteReq))
+				ctx.Request = httptest.NewRequest(http.MethodPut, fmt.Sprintf("/api/v1/metadata/positions/%s", tt.id), bodyReader)
+				ctx.Request.Header.Set("Authorization", testToken)
+				ctx.AddParam("id", tt.id)
+
+				h := New(storeMock, txRepo, serviceMock, loggerMock)
+				h.UpdatePosition(ctx)
+
+				require.Equal(t, tt.wantCode, w.Code)
+				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				require.NoError(t, err)
+
+				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.UpdatePosition] response mismatched")
+			})
+		})
+	}
+}
+
+func TestHandler_DeletePosition(t *testing.T) {
+	// load env and test data
+	cfg := config.LoadTestConfig()
+	loggerMock := logger.NewLogrusLogger()
+	serviceMock := service.New(&cfg)
+	storeMock := store.New()
+
+	tests := []struct {
+		name             string
+		wantCode         int
+		id               string
+		wantResponsePath string
+	}{
+		{
+			name:             "ok_delete_stack",
+			wantCode:         http.StatusOK,
+			id:               "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
+			wantResponsePath: "testdata/delete_stack/200.json",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				w := httptest.NewRecorder()
+
+				ctx, _ := gin.CreateTestContext(w)
+				ctx.Request = httptest.NewRequest(http.MethodPut, fmt.Sprintf("/api/v1/metadata/stacks/%s", tt.id), nil)
+				ctx.Request.Header.Set("Authorization", testToken)
+				ctx.AddParam("id", tt.id)
+
+				h := New(storeMock, txRepo, serviceMock, loggerMock)
+				h.DeletePosition(ctx)
+
+				require.Equal(t, tt.wantCode, w.Code)
+				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				require.NoError(t, err)
+
+				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.DeletePosition] response mismatched")
 			})
 		})
 	}
