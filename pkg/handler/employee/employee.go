@@ -16,6 +16,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/handler/employee/request"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
+	"github.com/dwarvesf/fortress-api/pkg/mw"
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/store/employee"
@@ -56,6 +57,12 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 // @Failure 500 {object} view.ErrorResponse
 // @Router /employees/search [post]
 func (h *handler) List(c *gin.Context) {
+	userID, err := utils.GetUserIDFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
 	var body request.GetListEmployeeInput
 	if err := c.ShouldBindJSON(&body); err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, body, ""))
@@ -75,8 +82,8 @@ func (h *handler) List(c *gin.Context) {
 		"params":  body,
 	})
 
-	employees, total, err := h.store.Employee.All(h.repo.DB(), employee.EmployeeFilter{
-		WorkingStatuses: body.WorkingStatuses,
+	filter := employee.EmployeeFilter{
+		WorkingStatuses: []string{model.WorkingStatusFullTime.String()},
 		Preload:         body.Preload,
 		Keyword:         body.Keyword,
 		Positions:       body.Positions,
@@ -85,7 +92,21 @@ func (h *handler) List(c *gin.Context) {
 		Chapters:        body.Chapters,
 		Seniorities:     body.Seniorities,
 		JoinedDateSort:  model.SortOrderDESC,
-	}, body.Pagination)
+	}
+
+	// check user permission
+	hasPermission, err := h.store.Permission.HasPermission(h.repo.DB(), userID, "employees.filterByStatus")
+	if err != nil {
+		l.Error(err, "failed to check permission of user")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
+		return
+	}
+
+	if hasPermission || mw.IsAPIKey(c) {
+		filter.WorkingStatuses = body.WorkingStatuses
+	}
+
+	employees, total, err := h.store.Employee.All(h.repo.DB(), filter, body.Pagination)
 	if err != nil {
 		l.Error(err, "error query employee from db")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))

@@ -23,3 +23,21 @@ func (s *store) GetByEmployeeID(db *gorm.DB, employeeID string) ([]*model.Permis
 		Order("permissions.code").
 		Find(&permissions).Error
 }
+
+func (s *store) HasPermission(db *gorm.DB, employeeID string, permCode string) (bool, error) {
+	var res struct {
+		Result bool
+	}
+
+	query := db.Raw(`
+	SELECT EXISTS (
+		SELECT * 
+		FROM permissions p
+			JOIN role_permissions rp ON p.id = rp.permission_id
+			JOIN employee_roles er ON rp.role_id = er.role_id
+			JOIN employees e ON er.employee_id = e.id AND e.id = ? 
+		WHERE p.code = ?
+	) as result`, employeeID, permCode)
+
+	return res.Result, query.Scan(&res).Error
+}

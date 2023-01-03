@@ -178,3 +178,7 @@ func ensurePerm(storeDB *store.Store, db *gorm.DB, accessToken string, requiredP
 
 	return nil
 }
+
+func IsAPIKey(c *gin.Context) bool {
+	return strings.HasPrefix(c.Request.Header.Get("Authorization"), "ApiKey")
+}
