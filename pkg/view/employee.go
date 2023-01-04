@@ -45,7 +45,34 @@ type EmployeeData struct {
 	Roles       []Role                `json:"roles"`
 	Projects    []EmployeeProjectData `json:"projects"`
 	Chapters    []Chapter             `json:"chapters"`
-	Mentees     []*BasicEmployeeInfo  `json:"mentees"`
+	Mentees     []*MenteeInfo         `json:"mentees"`
+}
+
+type MenteeInfo struct {
+	ID          string           `json:"id"`
+	FullName    string           `json:"fullName"`
+	DisplayName string           `json:"displayName"`
+	Avatar      string           `json:"avatar"`
+	Username    string           `json:"username"`
+	Seniority   *model.Seniority `json:"seniority"`
+	Positions   []model.Position `json:"positions"`
+}
+
+func toMenteeInfo(employee model.Employee) *MenteeInfo {
+	positions := make([]model.Position, 0, len(employee.EmployeePositions))
+	for _, v := range employee.EmployeePositions {
+		positions = append(positions, v.Position)
+	}
+
+	return &MenteeInfo{
+		ID:          employee.ID.String(),
+		FullName:    employee.FullName,
+		DisplayName: employee.DisplayName,
+		Avatar:      employee.Avatar,
+		Username:    employee.Username,
+		Seniority:   employee.Seniority,
+		Positions:   positions,
+	}
 }
 
 type EmployeeProjectData struct {
@@ -260,10 +287,10 @@ func ToEmployeeData(employee *model.Employee) *EmployeeData {
 	}
 
 	if len(employee.Mentees) > 0 {
-		mentees := make([]*BasicEmployeeInfo, 0)
+		mentees := make([]*MenteeInfo, 0)
 		for _, v := range employee.Mentees {
 			if v.Mentee != nil {
-				mentees = append(mentees, toBasicEmployeeInfo(*v.Mentee))
+				mentees = append(mentees, toMenteeInfo(*v.Mentee))
 			}
 		}
 

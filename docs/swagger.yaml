@@ -851,7 +851,7 @@ definitions:
         type: string
       mentees:
         items:
-          $ref: '#/definitions/view.BasicEmployeeInfo'
+          $ref: '#/definitions/view.MenteeInfo'
         type: array
       notionID:
         type: string
@@ -1058,6 +1058,25 @@ definitions:
       role:
         type: string
       teamEmail:
+        type: string
+    type: object
+  view.MenteeInfo:
+    properties:
+      avatar:
+        type: string
+      displayName:
+        type: string
+      fullName:
+        type: string
+      id:
+        type: string
+      positions:
+        items:
+          $ref: '#/definitions/model.Position'
+        type: array
+      seniority:
+        $ref: '#/definitions/model.Seniority'
+      username:
         type: string
     type: object
   view.MessageResponse:
