@@ -100,6 +100,10 @@ func ToProjectData(project *model.Project) ProjectData {
 	for _, h := range project.Heads {
 		head := ToProjectHead(h)
 
+		if h.Employee.WorkingStatus == model.WorkingStatusLeft {
+			continue
+		}
+
 		if h.IsLead() {
 			leadMap[h.EmployeeID.String()] = true
 			technicalLeads = append(technicalLeads, *head)
