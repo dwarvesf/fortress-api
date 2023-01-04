@@ -65,3 +65,7 @@ func GetTokenFromRequest(c *gin.Context) (string, error) {
 		return "", ErrAuthenticationTypeHeaderInvalid
 	}
 }
+
+func IsAPIKey(c *gin.Context) bool {
+	return strings.HasPrefix(c.Request.Header.Get("Authorization"), "ApiKey")
+}

@@ -16,7 +16,6 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/handler/employee/request"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
-	"github.com/dwarvesf/fortress-api/pkg/mw"
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/store/employee"
@@ -83,28 +82,24 @@ func (h *handler) List(c *gin.Context) {
 	})
 
 	filter := employee.EmployeeFilter{
-		WorkingStatuses: []string{model.WorkingStatusFullTime.String()},
-		Preload:         body.Preload,
-		Keyword:         body.Keyword,
-		Positions:       body.Positions,
-		Stacks:          body.Stacks,
-		Projects:        body.Projects,
-		Chapters:        body.Chapters,
-		Seniorities:     body.Seniorities,
-		JoinedDateSort:  model.SortOrderDESC,
+		Preload:        body.Preload,
+		Keyword:        body.Keyword,
+		Positions:      body.Positions,
+		Stacks:         body.Stacks,
+		Projects:       body.Projects,
+		Chapters:       body.Chapters,
+		Seniorities:    body.Seniorities,
+		JoinedDateSort: model.SortOrderDESC,
 	}
 
-	// check user permission
-	hasPermission, err := h.store.Permission.HasPermission(h.repo.DB(), userID, "employees.filterByStatus")
+	workingStatuses, err := h.getWorkingStatusInput(c, userID, body.WorkingStatuses)
 	if err != nil {
-		l.Error(err, "failed to check permission of user")
+		l.Error(err, "failed to get working status input")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
 		return
 	}
 
-	if hasPermission || mw.IsAPIKey(c) {
-		filter.WorkingStatuses = body.WorkingStatuses
-	}
+	filter.WorkingStatuses = workingStatuses
 
 	employees, total, err := h.store.Employee.All(h.repo.DB(), filter, body.Pagination)
 	if err != nil {
@@ -115,6 +110,49 @@ func (h *handler) List(c *gin.Context) {
 
 	c.JSON(http.StatusOK, view.CreateResponse(view.ToEmployeeListData(employees),
 		&view.PaginationResponse{Pagination: body.Pagination, Total: total}, nil, nil, ""))
+}
+
+func (h *handler) getWorkingStatusInput(c *gin.Context, userID string, input []string) ([]string, error) {
+	hasPermission, err := h.store.Permission.HasPermission(h.repo.DB(), userID, "employees.filterByStatus")
+	if err != nil {
+		h.logger.Error(err, "failed to check permission of user")
+		return nil, err
+	}
+
+	// user who do not have permission
+	if !hasPermission && !utils.IsAPIKey(c) {
+		if len(input) == 0 {
+			return []string{
+				model.WorkingStatusOnBoarding.String(),
+				model.WorkingStatusProbation.String(),
+				model.WorkingStatusFullTime.String(),
+				model.WorkingStatusContractor.String(),
+			}, nil
+		}
+
+		var result []string
+
+		for _, v := range input {
+			if v != model.WorkingStatusLeft.String() {
+				result = append(result, v)
+			}
+		}
+
+		return result, nil
+	}
+
+	// user who have permission
+	if len(input) == 0 {
+		return []string{
+			model.WorkingStatusOnBoarding.String(),
+			model.WorkingStatusProbation.String(),
+			model.WorkingStatusFullTime.String(),
+			model.WorkingStatusContractor.String(),
+			model.WorkingStatusLeft.String(),
+		}, nil
+	}
+
+	return input, nil
 }
 
 // One godoc

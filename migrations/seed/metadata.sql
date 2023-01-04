@@ -54,7 +54,8 @@ INSERT INTO public.positions (id, deleted_at, created_at, updated_at, "name", co
 ('e3f65cd8-3ff4-46d1-8701-d942b4f39d2d', NULL, '2023-01-04 13:37:13.848379', '2023-01-04 13:37:13.848379', 'Community Moderator', 'community-moderator'),
 ('e7d38089-3c46-40f8-96e6-f4a2668d9e5b', NULL, '2023-01-04 13:37:13.848379', '2023-01-04 13:37:13.848379', 'Coordinator', 'coordinator'),
 ('0d33d297-5827-48f5-8460-ba14fcbba2d9', NULL, '2023-01-04 13:37:13.848379', '2023-01-04 13:37:13.848379', 'Account Manager', 'account-manager'),
-('0c70ed68-775c-472e-a968-1013728c8f49', NULL, '2023-01-04 13:37:13.848379', '2023-01-04 13:37:13.848379', 'Technical Trainer', 'technical-trainer');
+('0c70ed68-775c-472e-a968-1013728c8f49', NULL, '2023-01-04 13:37:13.848379', '2023-01-04 13:37:13.848379', 'Technical Trainer', 'technical-trainer'),
+('34483fcb-f231-4511-b36b-4250f211639d', NULL, '2023-01-04 13:37:13.848379', '2023-01-04 13:37:13.848379', 'VP of Engineering', 'vp-of-engineering');
 
 INSERT INTO public.seniorities (id, deleted_at, created_at, updated_at, name, code) VALUES
 ('d796884d-a8c4-4525-81e7-54a3b6099eac', NULL, '2022-11-07 09:50:25.714604', '2022-11-07 09:50:25.714604', 'Junior', 'junior'),
