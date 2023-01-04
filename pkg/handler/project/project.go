@@ -224,7 +224,7 @@ func (h *handler) Create(c *gin.Context) {
 		Status:       model.ProjectStatus(body.Status),
 		StartDate:    body.GetStartDate(),
 		ProjectEmail: body.ProjectEmail,
-		ClientEmail:  body.ClientEmail,
+		ClientEmail:  strings.Join(body.ClientEmail, ","),
 		Country:      country,
 		Code:         body.Code,
 		Function:     model.ProjectFunction(body.Function),
@@ -1285,6 +1285,13 @@ func (h *handler) UpdateContactInfo(c *gin.Context) {
 		"request": body,
 	})
 
+	// Validate client email address
+	if err := body.Validate(); err != nil {
+		l.Error(err, "invalid input request body")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, projectID, ""))
+		return
+	}
+
 	// Check project existence
 	project, err := h.store.Project.One(h.repo.DB(), projectID, true)
 	if err != nil {
@@ -1347,7 +1354,7 @@ func (h *handler) UpdateContactInfo(c *gin.Context) {
 	}
 
 	// Update email info
-	project.ClientEmail = body.ClientEmail
+	project.ClientEmail = strings.Join(body.ClientEmail, ",")
 	project.ProjectEmail = body.ProjectEmail
 
 	_, err = h.store.Project.UpdateSelectedFieldsByID(tx.DB(), projectID, *project, "client_email", "project_email")

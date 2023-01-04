@@ -218,7 +218,9 @@ definitions:
       accountManagerID:
         type: string
       clientEmail:
-        type: string
+        items:
+          type: string
+        type: array
       code:
         type: string
       countryID:
@@ -371,7 +373,9 @@ definitions:
       accountManagerID:
         type: string
       clientEmail:
-        type: string
+        items:
+          type: string
+        type: array
       deliveryManagerID:
         type: string
       projectEmail:
@@ -770,7 +774,9 @@ definitions:
       accountManager:
         $ref: '#/definitions/view.ProjectHead'
       clientEmail:
-        type: string
+        items:
+          type: string
+        type: array
       code:
         type: string
       country:
@@ -1212,7 +1218,9 @@ definitions:
       avatar:
         type: string
       clientEmail:
-        type: string
+        items:
+          type: string
+        type: array
       code:
         type: string
       country:
@@ -1638,7 +1646,9 @@ definitions:
   view.UpdateProjectContactInfo:
     properties:
       clientEmail:
-        type: string
+        items:
+          type: string
+        type: array
       projectEmail:
         type: string
       projectHead:
