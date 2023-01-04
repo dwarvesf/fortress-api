@@ -5024,7 +5024,7 @@ const docTemplate = `{
                 "mentees": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/view.BasicEmployeeInfo"
+                        "$ref": "#/definitions/view.MenteeInfo"
                     }
                 },
                 "notionID": {
@@ -5341,6 +5341,35 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "teamEmail": {
+                    "type": "string"
+                }
+            }
+        },
+        "view.MenteeInfo": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string"
+                },
+                "displayName": {
+                    "type": "string"
+                },
+                "fullName": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "positions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Position"
+                    }
+                },
+                "seniority": {
+                    "$ref": "#/definitions/model.Seniority"
+                },
+                "username": {
                     "type": "string"
                 }
             }

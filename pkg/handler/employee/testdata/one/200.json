@@ -100,28 +100,84 @@
                 "fullName": "Nguyễn Trần Minh Thảo",
                 "displayName": "Thao Nguyen",
                 "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5348640939694049226.png",
-                "username": "thaontm"
+                "username": "thaontm",
+                "seniority": {
+                    "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
+                    "createdAt": "2022-11-07T09:50:25.714604Z",
+                    "updatedAt": "2022-11-07T09:50:25.714604Z",
+                    "name": "Mid",
+                    "code": "mid"
+                },
+                "positions": [
+                    {
+                        "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
+                        "createdAt": "2022-11-07T09:50:25.714604Z",
+                        "updatedAt": "2022-11-07T09:50:25.714604Z",
+                        "name": "Devops",
+                        "code": "devops"
+                    }
+                ]
             },
             {
                 "id": "a1f25e3e-cf40-4d97-a4d5-c27ee566b8c5",
                 "fullName": "Phan Duy Cường",
                 "displayName": "Cuong Phan",
                 "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/8465254073957996724.png",
-                "username": "cody"
+                "username": "cody",
+                "seniority": {
+                    "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
+                    "createdAt": "2022-11-07T09:50:25.714604Z",
+                    "updatedAt": "2022-11-07T09:50:25.714604Z",
+                    "name": "Mid",
+                    "code": "mid"
+                },
+                "positions": [
+                    {
+                        "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
+                        "createdAt": "2022-11-07T09:50:25.714604Z",
+                        "updatedAt": "2022-11-07T09:50:25.714604Z",
+                        "name": "Devops",
+                        "code": "devops"
+                    }
+                ]
             },
             {
                 "id": "498d5805-dd64-4643-902d-95067d6e5ab5",
                 "fullName": "Võ Hải Biên",
                 "displayName": "Bien Vo",
                 "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/4114345912835654270.png",
-                "username": "bean"
+                "username": "bean",
+                "seniority": {
+                    "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
+                    "createdAt": "2022-11-07T09:50:25.714604Z",
+                    "updatedAt": "2022-11-07T09:50:25.714604Z",
+                    "name": "Mid",
+                    "code": "mid"
+                },
+                "positions": [
+                    {
+                        "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
+                        "createdAt": "2022-11-07T09:50:25.714604Z",
+                        "updatedAt": "2022-11-07T09:50:25.714604Z",
+                        "name": "Devops",
+                        "code": "devops"
+                    }
+                ]
             },
             {
                 "id": "f6ce0d0f-5794-463b-ad0b-8240ab9c49be",
                 "fullName": "Nguyễn Hoàng Anh",
                 "displayName": "Anh Nguyen",
                 "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/3274097965772922906.png",
-                "username": "anhnh"
+                "username": "anhnh",
+                "seniority": {
+                    "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
+                    "createdAt": "2022-11-07T09:50:25.714604Z",
+                    "updatedAt": "2022-11-07T09:50:25.714604Z",
+                    "name": "Junior",
+                    "code": "junior"
+                },
+                "positions": []
             }
         ]
     }
