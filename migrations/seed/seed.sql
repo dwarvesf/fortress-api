@@ -17,6 +17,7 @@
 \ir work_units.sql
 \ir work_unit_stacks.sql
 \ir work_unit_members.sql
+\ir employee_mentees.sql
 -- \ir feedback_events.sql
 -- \ir employee_event_topics.sql
 -- \ir employee_event_reviewers.sql
