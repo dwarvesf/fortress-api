@@ -152,3 +152,20 @@ func (input CreateEmployeeInput) Validate() error {
 
 	return nil
 }
+
+type UpdateRoleBody struct {
+	RoleID model.UUID `form:"roleID" json:"roleID" binding:"required"`
+}
+
+type UpdateRoleInput struct {
+	EmployeeID string
+	Body       UpdateRoleBody
+}
+
+func (i UpdateRoleInput) Validate() error {
+	if i.EmployeeID == "" || !model.IsUUIDFromString(i.EmployeeID) {
+		return errs.ErrInvalidEmployeeID
+	}
+
+	return nil
+}

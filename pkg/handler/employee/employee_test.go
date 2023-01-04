@@ -751,3 +751,76 @@ func Test_DeleteMentee(t *testing.T) {
 		})
 	}
 }
+
+func TestHandler_UpdateRole(t *testing.T) {
+	// load env and test data
+	cfg := config.LoadTestConfig()
+	loggerMock := logger.NewLogrusLogger()
+	serviceMock := service.New(&cfg)
+	storeMock := store.New()
+
+	tests := []struct {
+		name             string
+		wantCode         int
+		id               string
+		body             request.UpdateRoleBody
+		wantResponsePath string
+	}{
+		{
+			name:     "ok_update_role",
+			wantCode: http.StatusOK,
+			id:       "dcfee24b-306d-4609-9c24-a4021639a11b",
+			body: request.UpdateRoleBody{
+				RoleID: model.MustGetUUIDFromString("11ccffea-2cc9-4e98-9bef-3464dfe4dec8"),
+			},
+			wantResponsePath: "testdata/update_role/200.json",
+		},
+		{
+			name:     "employee_not_found",
+			wantCode: http.StatusNotFound,
+			id:       "dcfee24b-306d-4609-9c24-a4021639a11c",
+			body: request.UpdateRoleBody{
+				RoleID: model.MustGetUUIDFromString("11ccffea-2cc9-4e98-9bef-3464dfe4dec8"),
+			},
+			wantResponsePath: "testdata/update_role/404.json",
+		},
+		{
+			name:     "role_not_found",
+			wantCode: http.StatusNotFound,
+			id:       "dcfee24b-306d-4609-9c24-a4021639a11b",
+			body: request.UpdateRoleBody{
+				RoleID: model.MustGetUUIDFromString("11ccffea-2cc9-4e98-9bef-3464dfe4dec9"),
+			},
+			wantResponsePath: "testdata/update_role/404_role.json",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				testhelper.LoadTestSQLFile(t, txRepo, "./testdata/update_role/update_role.sql")
+				byteReq, err := json.Marshal(tt.body)
+				require.Nil(t, err)
+				w := httptest.NewRecorder()
+
+				ctx, _ := gin.CreateTestContext(w)
+				bodyReader := strings.NewReader(string(byteReq))
+				ctx.Request = httptest.NewRequest(http.MethodPut, fmt.Sprintf("/api/v1/employees/%s/roles", tt.id), bodyReader)
+				ctx.Request.Header.Set("Authorization", testToken)
+				ctx.AddParam("id", tt.id)
+
+				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+				h.UpdateRole(ctx)
+
+				require.Equal(t, tt.wantCode, w.Code)
+				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				require.NoError(t, err)
+
+				res, err := utils.RemoveFieldInResponse(w.Body.Bytes(), "updatedAt")
+				require.Nil(t, err)
+
+				require.JSONEq(t, string(expRespRaw), string(res), "[Handler.UpdateRole] response mismatched")
+			})
+		})
+	}
+}

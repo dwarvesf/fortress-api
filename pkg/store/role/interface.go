@@ -9,4 +9,5 @@ import (
 type IStore interface {
 	All(db *gorm.DB) (roles []*model.Role, err error)
 	One(db *gorm.DB, id model.UUID) (role *model.Role, err error)
+	IsExist(db *gorm.DB, id string) (exists bool, err error)
 }

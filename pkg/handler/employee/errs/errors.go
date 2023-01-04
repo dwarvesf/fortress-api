@@ -17,6 +17,7 @@ var (
 	ErrEmployeeMenteeNotFound    = errors.New("employee mentee not found")
 	ErrMenteeNotFound            = errors.New("mentee not found")
 	ErrEmployeeNotFound          = errors.New("employee not found")
+	ErrRoleNotFound              = errors.New("role not found")
 	ErrStackNotFound             = errors.New("stack not found")
 	ErrPositionNotFound          = errors.New("position not found")
 	ErrChapterNotFound           = errors.New("chapter not found")
@@ -39,6 +40,7 @@ var (
 	ErrCouldNotMentorTheirMentor = errors.New("employee could not be mentor of their mentor")
 	ErrMenteeLeft                = errors.New("mentee is left")
 	ErrEmployeeLeft              = errors.New("employee is left")
+	ErrInvalidAccountRole        = errors.New("invalid account role")
 )
 
 // ErrPositionNotFoundWithID returns bad request custom error

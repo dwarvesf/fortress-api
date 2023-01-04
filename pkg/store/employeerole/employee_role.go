@@ -17,3 +17,8 @@ func New() IStore {
 func (s *store) Create(db *gorm.DB, er *model.EmployeeRole) (*model.EmployeeRole, error) {
 	return er, db.Create(&er).Error
 }
+
+// HardDeleteByEmployeeID hard delete employeeRole by employeeID
+func (s *store) HardDeleteByEmployeeID(db *gorm.DB, employeeID string) error {
+	return db.Unscoped().Where("employee_id = ?", employeeID).Delete(&model.EmployeeRole{}).Error
+}
