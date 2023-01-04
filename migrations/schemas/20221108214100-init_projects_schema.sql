@@ -21,7 +21,8 @@ CREATE TYPE project_statuses AS ENUM (
 
 CREATE TYPE deployment_types AS ENUM (
     'shadow',
-    'official'
+    'official',
+    'part-time'
 );
 
 CREATE TYPE project_member_statuses AS ENUM (
