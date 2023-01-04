@@ -510,6 +510,12 @@ func TestHandler_Detail(t *testing.T) {
 		wantResponsePath string
 	}{
 		{
+			name:             "happy_case_slug",
+			id:               "fortress",
+			wantCode:         http.StatusOK,
+			wantResponsePath: "testdata/get_project/200.json",
+		},
+		{
 			name:             "happy_case",
 			id:               "8dc3be2e-19a4-4942-8a79-56db391a0b15",
 			wantCode:         http.StatusOK,
@@ -520,12 +526,6 @@ func TestHandler_Detail(t *testing.T) {
 			id:               "8dc3be2e-19a4-4942-8a79-56db391a0b11",
 			wantCode:         http.StatusNotFound,
 			wantResponsePath: "testdata/get_project/404.json",
-		},
-		{
-			name:             "happy_case_slug",
-			id:               "fortress",
-			wantCode:         http.StatusOK,
-			wantResponsePath: "testdata/get_project/200.json",
 		},
 	}
 	for _, tt := range tests {

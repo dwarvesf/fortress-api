@@ -53,6 +53,11 @@ func (e AccountRole) IsValid() bool {
 	return false
 }
 
+// String returns the string representation
+func (e AccountRole) String() string {
+	return string(e)
+}
+
 // Employee define the model for table employees
 type Employee struct {
 	BaseModel

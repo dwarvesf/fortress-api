@@ -23,3 +23,15 @@ func (s *store) One(db *gorm.DB, id model.UUID) (*model.Role, error) {
 	var role *model.Role
 	return role, db.Where("id = ?", id).First(&role).Error
 }
+
+// IsExist check the existence of employee
+func (s *store) IsExist(db *gorm.DB, id string) (bool, error) {
+	type res struct {
+		Result bool
+	}
+
+	result := res{}
+	query := db.Raw("SELECT EXISTS (SELECT * FROM roles WHERE id = ?) as result", id)
+
+	return result.Result, query.Scan(&result).Error
+}

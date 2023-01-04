@@ -35,4 +35,8 @@ INSERT INTO public.permissions (id, deleted_at, created_at, updated_at, name, co
 ('050ee781-7f32-4d79-b3d3-1e9d550d4a8f', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Metadata Create', 'metadata.create'),
 ('476156c1-70d8-4eb1-adc5-f8f5ec209666', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Metadata Read', 'metadata.read'),
 ('a87e99c2-c40e-42e0-9310-943f2faa654b', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Metadata Edit', 'metadata.edit'),
-('befac4bf-bb20-4b46-9e56-f8175c93b191', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Metadata Delete', 'metadata.delete');   
+('befac4bf-bb20-4b46-9e56-f8175c93b191', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Metadata Delete', 'metadata.delete'),
+('f632f18c-98da-4c1a-b2c6-9ccd0c7c5a39', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Employee Roles Create', 'employeeRoles.create'),
+('5c5919b5-e74b-4854-bdf6-b91396a8317c', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Employee Roles Read', 'employeeRoles.read'),
+('68fe5bcf-38ae-446a-8cbb-8f88b5c6eb44', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Employee Roles Edit', 'employeeRoles.edit'),
+('98744d43-f14b-4235-8dfc-5265668daa21', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Employee Roles Delete', 'employeeRoles.delete');

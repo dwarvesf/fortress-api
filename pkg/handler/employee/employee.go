@@ -1318,3 +1318,89 @@ func (h *handler) DeleteMentee(c *gin.Context) {
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))
 }
+
+// UpdateRole godoc
+// @Summary Update role by employee id
+// @Description Update role by employee id
+// @Tags Employee
+// @Accept  json
+// @Produce  json
+// @Param Authorization header string true "jwt token"
+// @Param id path string true "Employee ID"
+// @Param roleID body model.UUID true "Account role ID"
+// @Success 200 {object} view.MessageResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /employees/{id}/roles [put]
+func (h *handler) UpdateRole(c *gin.Context) {
+	var input request.UpdateRoleInput
+
+	input.EmployeeID = c.Param("id")
+	if err := c.ShouldBindJSON(&input.Body); err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, input, ""))
+		return
+	}
+
+	// TODO: can we move this to middleware ?
+	l := h.logger.Fields(logger.Fields{
+		"handler": "employee",
+		"method":  "UpdateRole",
+		"input":   input,
+	})
+
+	if err := input.Validate(); err != nil {
+		l.Error(err, "validate failed")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, input, ""))
+		return
+	}
+
+	// Check employee exists
+	exists, err := h.store.Employee.IsExist(h.repo.DB(), input.EmployeeID)
+	if err != nil {
+		l.Error(err, "error when finding employee")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input, ""))
+		return
+	}
+
+	if !exists {
+		l.Error(errs.ErrEmployeeNotFound, "error employee not found")
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrEmployeeNotFound, input, ""))
+		return
+	}
+
+	// Check role exists
+	exists, err = h.store.Role.IsExist(h.repo.DB(), input.Body.RoleID.String())
+	if err != nil {
+		l.Error(err, "error when finding role")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input, ""))
+		return
+	}
+
+	if !exists {
+		l.Error(errs.ErrEmployeeNotFound, "error role not found")
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrRoleNotFound, input, ""))
+		return
+	}
+
+	// Begin transaction
+	tx, done := h.repo.NewTransaction()
+
+	if err := h.store.EmployeeRole.HardDeleteByEmployeeID(tx.DB(), input.EmployeeID); err != nil {
+		l.Error(err, "failed to delete employee role")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
+		return
+	}
+
+	_, err = h.store.EmployeeRole.Create(tx.DB(), &model.EmployeeRole{
+		EmployeeID: model.MustGetUUIDFromString(input.EmployeeID),
+		RoleID:     input.Body.RoleID,
+	})
+	if err != nil {
+		l.Error(err, "failed to create employee role")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, done(nil), nil, "ok"))
+}

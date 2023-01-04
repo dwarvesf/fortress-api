@@ -7,5 +7,6 @@ import (
 )
 
 type IStore interface {
-	Create(db *gorm.DB, er *model.EmployeeRole) (*model.EmployeeRole, error)
+	Create(db *gorm.DB, er *model.EmployeeRole) (employeeRole *model.EmployeeRole, err error)
+	HardDeleteByEmployeeID(db *gorm.DB, employeeID string) (err error)
 }
