@@ -81,13 +81,15 @@ type DeploymentType string
 const (
 	MemberDeploymentTypeOfficial DeploymentType = "official"
 	MemberDeploymentTypeShadow   DeploymentType = "shadow"
+	MemberDeploymentTypePartTime DeploymentType = "part-time"
 )
 
 func (e DeploymentType) IsValid() bool {
 	switch e {
 	case
 		MemberDeploymentTypeOfficial,
-		MemberDeploymentTypeShadow:
+		MemberDeploymentTypeShadow,
+		MemberDeploymentTypePartTime:
 		return true
 	}
 	return false
