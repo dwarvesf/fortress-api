@@ -1,6 +1,7 @@
 package view
 
 import (
+	"strings"
 	"time"
 
 	"github.com/dwarvesf/fortress-api/pkg/model"
@@ -15,7 +16,7 @@ type ProjectData struct {
 	Type                string            `json:"type"`
 	Status              string            `json:"status"`
 	ProjectEmail        string            `json:"projectEmail"`
-	ClientEmail         string            `json:"clientEmail"`
+	ClientEmail         []string          `json:"clientEmail"`
 	Industry            string            `json:"industry"`
 	AllowsSendingSurvey bool              `json:"allowsSendingSurvey"`
 	Country             *BasicCountryInfo `json:"country"`
@@ -159,6 +160,11 @@ func ToProjectData(project *model.Project) ProjectData {
 		members = append(members, member)
 	}
 
+	var clientEmail []string
+	if project.ClientEmail != "" {
+		clientEmail = strings.Split(project.ClientEmail, ",")
+	}
+
 	d := ProjectData{
 		BaseModel:           project.BaseModel,
 		Avatar:              project.Avatar,
@@ -174,7 +180,7 @@ func ToProjectData(project *model.Project) ProjectData {
 		SalePerson:          salePerson,
 		AccountManager:      accountManager,
 		ProjectEmail:        project.ProjectEmail,
-		ClientEmail:         project.ClientEmail,
+		ClientEmail:         clientEmail,
 		AllowsSendingSurvey: project.AllowsSendingSurvey,
 		Code:                project.Code,
 		Function:            project.Function.String(),
@@ -260,7 +266,7 @@ type CreateProjectData struct {
 	AccountManager  *ProjectHead       `json:"accountManager"`
 	DeliveryManager *ProjectHead       `json:"deliveryManager"`
 	Members         []CreateMemberData `json:"members"`
-	ClientEmail     string             `json:"clientEmail"`
+	ClientEmail     []string           `json:"clientEmail"`
 	ProjectEmail    string             `json:"projectEmail"`
 	Country         *BasicCountryInfo  `json:"country"`
 	Code            string             `json:"code"`
@@ -268,13 +274,17 @@ type CreateProjectData struct {
 }
 
 func ToCreateProjectDataResponse(project *model.Project) CreateProjectData {
+	var clientEmail []string
+	if project.ClientEmail != "" {
+		clientEmail = strings.Split(project.ClientEmail, ",")
+	}
 
 	result := CreateProjectData{
 		BaseModel:    project.BaseModel,
 		Name:         project.Name,
 		Type:         project.Type.String(),
 		Status:       project.Status.String(),
-		ClientEmail:  project.ClientEmail,
+		ClientEmail:  clientEmail,
 		ProjectEmail: project.ProjectEmail,
 		Code:         project.Code,
 		Function:     project.Function.String(),
@@ -416,7 +426,7 @@ type BasicProjectHeadInfo struct {
 }
 
 type UpdateProjectContactInfo struct {
-	ClientEmail  string                 `json:"clientEmail"`
+	ClientEmail  []string               `json:"clientEmail"`
 	ProjectEmail string                 `json:"projectEmail"`
 	ProjectHead  []BasicProjectHeadInfo `json:"projectHead"`
 }
@@ -438,8 +448,13 @@ func ToUpdateProjectContactInfo(project *model.Project) UpdateProjectContactInfo
 		})
 	}
 
+	var clientEmail []string
+	if project.ClientEmail != "" {
+		clientEmail = strings.Split(project.ClientEmail, ",")
+	}
+
 	return UpdateProjectContactInfo{
-		ClientEmail:  project.ProjectEmail,
+		ClientEmail:  clientEmail,
 		ProjectEmail: project.ProjectEmail,
 		ProjectHead:  projectHeads,
 	}

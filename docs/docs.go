@@ -4148,7 +4148,10 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "clientEmail": {
-                    "type": "string"
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "code": {
                     "type": "string"
@@ -4372,7 +4375,10 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "clientEmail": {
-                    "type": "string"
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "deliveryManagerID": {
                     "type": "string"
@@ -4966,7 +4972,10 @@ const docTemplate = `{
                     "$ref": "#/definitions/view.ProjectHead"
                 },
                 "clientEmail": {
-                    "type": "string"
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "code": {
                     "type": "string"
@@ -5646,7 +5655,10 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "clientEmail": {
-                    "type": "string"
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "code": {
                     "type": "string"
@@ -6300,7 +6312,10 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "clientEmail": {
-                    "type": "string"
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "projectEmail": {
                     "type": "string"

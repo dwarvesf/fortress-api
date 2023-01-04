@@ -60,6 +60,7 @@ var (
 
 	ErrInvalidFileExtension = errors.New("invalid file extension")
 	ErrInvalidFileSize      = errors.New("invalid file size")
+	ErrInvalidEmailDomain   = errors.New("invalid email domain")
 )
 
 // ErrPositionNotFoundWithID returns unauthorized custom error

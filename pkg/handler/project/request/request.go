@@ -1,6 +1,7 @@
 package request
 
 import (
+	"regexp"
 	"time"
 
 	"github.com/dwarvesf/fortress-api/pkg/utils"
@@ -77,7 +78,7 @@ type CreateProjectInput struct {
 	CountryID         model.UUID          `form:"countryID" json:"countryID" binding:"required"`
 	StartDate         string              `form:"startDate" json:"startDate"`
 	Members           []AssignMemberInput `form:"members" json:"members"`
-	ClientEmail       string              `form:"clientEmail" json:"clientEmail" binding:"email"`
+	ClientEmail       []string            `form:"clientEmail" json:"clientEmail"`
 	ProjectEmail      string              `form:"projectEmail" json:"projectEmail" binding:"email"`
 	Code              string              `form:"code" json:"code"`
 	Function          string              `form:"function" json:"function" binding:"required"`
@@ -104,6 +105,13 @@ func (i *CreateProjectInput) Validate() error {
 	for _, member := range i.Members {
 		if err := member.Validate(); err != nil {
 			return err
+		}
+	}
+
+	regex, _ := regexp.Compile(".+@.+\\..+")
+	for _, v := range i.ClientEmail {
+		if !regex.MatchString(v) {
+			return errs.ErrInvalidEmailDomain
 		}
 	}
 
@@ -273,10 +281,21 @@ func (input DeleteMemberInput) Validate() error {
 }
 
 type UpdateContactInfoInput struct {
-	ClientEmail       string     `form:"clientEmail" json:"clientEmail" binding:"email"`
+	ClientEmail       []string   `form:"clientEmail" json:"clientEmail"`
 	ProjectEmail      string     `form:"projectEmail" json:"projectEmail" binding:"email"`
 	AccountManagerID  model.UUID `form:"accountManagerID" json:"accountManagerID" binding:"required"`
 	DeliveryManagerID model.UUID `form:"deliveryManagerID" json:"deliveryManagerID"`
+}
+
+func (i UpdateContactInfoInput) Validate() error {
+	regex, _ := regexp.Compile(".+@.+\\..+")
+	for _, v := range i.ClientEmail {
+		if !regex.MatchString(v) {
+			return errs.ErrInvalidEmailDomain
+		}
+	}
+
+	return nil
 }
 
 type UnassignMemberInput struct {

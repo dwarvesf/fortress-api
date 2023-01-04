@@ -22,7 +22,7 @@
             "username": "thanh"
         },
         "members": [],
-        "clientEmail": "b@gmail.com",
+        "clientEmail": ["b@gmail.com", "c@gmail.com"],
         "projectEmail": "a@gmail.com",
         "country": {
             "id": "4ef64490-c906-4192-a7f9-d2221dadfe4c",

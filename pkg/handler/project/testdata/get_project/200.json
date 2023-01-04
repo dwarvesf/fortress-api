@@ -7,7 +7,7 @@
         "type": "dwarves",
         "status": "active",
         "projectEmail": "fortress@d.foundation",
-        "clientEmail": "team@d.foundation",
+        "clientEmail": ["team@d.foundation"],
         "function": "",
         "code": "fortress",
         "industry": "",
