@@ -81,6 +81,7 @@ type EmployeeProjectData struct {
 	DeploymentType string     `json:"deploymentType"`
 	Positions      []Position `json:"positions"`
 	Code           string     `json:"code"`
+	Avatar         string     `json:"avatar"`
 }
 
 func ToEmployeeProjectData(pm *model.ProjectMember) EmployeeProjectData {
@@ -90,6 +91,7 @@ func ToEmployeeProjectData(pm *model.ProjectMember) EmployeeProjectData {
 		DeploymentType: pm.DeploymentType.String(),
 		Positions:      ToProjectMemberPositions(pm.ProjectMemberPositions),
 		Code:           pm.Project.Code,
+		Avatar:         pm.Project.Avatar,
 	}
 }
 

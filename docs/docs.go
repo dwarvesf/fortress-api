@@ -5164,6 +5164,9 @@ const docTemplate = `{
         "view.EmployeeProjectData": {
             "type": "object",
             "properties": {
+                "avatar": {
+                    "type": "string"
+                },
                 "code": {
                     "type": "string"
                 },
