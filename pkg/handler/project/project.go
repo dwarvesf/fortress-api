@@ -1320,20 +1320,6 @@ func (h *handler) UpdateContactInfo(c *gin.Context) {
 		return
 	}
 
-	// Check delivery manager exists
-	exist, err = h.store.Employee.IsExist(h.repo.DB(), body.DeliveryManagerID.String())
-	if err != nil {
-		l.Error(err, "error when finding delivery manager")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
-		return
-	}
-
-	if !exist {
-		l.Error(errs.ErrDeliveryManagerNotFound, "delivery manager not found")
-		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrDeliveryManagerNotFound, body, ""))
-		return
-	}
-
 	// Begin transaction
 	tx, done := h.repo.NewTransaction()
 
@@ -1346,11 +1332,27 @@ func (h *handler) UpdateContactInfo(c *gin.Context) {
 	}
 
 	// Update Delivery Manager
-	_, err = h.updateProjectHead(tx.DB(), projectID, body.DeliveryManagerID, model.HeadPositionDeliveryManager)
-	if err != nil {
-		l.Error(err, "failed to update delivery manager")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
-		return
+	if !body.DeliveryManagerID.IsZero() {
+		// Check delivery manager exists
+		exist, err = h.store.Employee.IsExist(tx.DB(), body.DeliveryManagerID.String())
+		if err != nil {
+			l.Error(err, "error when finding delivery manager")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
+			return
+		}
+
+		if !exist {
+			l.Error(errs.ErrDeliveryManagerNotFound, "delivery manager not found")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, done(errs.ErrDeliveryManagerNotFound), body, ""))
+			return
+		}
+
+		_, err = h.updateProjectHead(tx.DB(), projectID, body.DeliveryManagerID, model.HeadPositionDeliveryManager)
+		if err != nil {
+			l.Error(err, "failed to update delivery manager")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
+			return
+		}
 	}
 
 	// Update email info
