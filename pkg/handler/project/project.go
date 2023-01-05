@@ -522,7 +522,6 @@ func (h *handler) UnassignMember(c *gin.Context) {
 	tx, done := h.repo.NewTransaction()
 
 	// remove member out of project
-	// if projectMember.Status != model.ProjectMemberStatusInactive {
 	timeNow := time.Now()
 	projectMember.LeftDate = &timeNow
 	projectMember.Status = model.ProjectMemberStatusInactive
@@ -544,11 +543,10 @@ func (h *handler) UnassignMember(c *gin.Context) {
 	}
 	_, err = h.store.ProjectSlot.UpdateSelectedFieldsByID(tx.DB(), projectMember.ProjectSlotID.String(), slot, "status")
 	if err != nil {
-		l.Error(err, "failed to update project member")
+		l.Error(err, "failed to update project slot")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
 		return
 	}
-	// }
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, done(nil), nil, "ok"))
 }
@@ -899,20 +897,24 @@ func (h *handler) AssignMember(c *gin.Context) {
 		return
 	}
 
-	// get active project member info
-	if !body.EmployeeID.IsZero() {
-		_, err := h.store.ProjectMember.One(h.repo.DB(), projectID, body.EmployeeID.String(), false)
-		if err != gorm.ErrRecordNotFound {
-			if err == nil {
-				l.Error(err, "project member exists")
-				c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrProjectMemberExists, projectID, ""))
-				return
-			}
-			l.Error(err, "failed to query project member")
-			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, projectID, ""))
-			return
-		}
-	}
+	// TODO: uncomment
+	// The code has been commented because inactive user can be assigned to project,
+	// we do not need to check if member active in project or not
+
+	// // get active project member info
+	// if !body.EmployeeID.IsZero() {
+	// 	_, err := h.store.ProjectMember.One(h.repo.DB(), projectID, body.EmployeeID.String(), false)
+	// 	if err != gorm.ErrRecordNotFound {
+	// 		if err == nil {
+	// 			l.Error(err, "project member exists")
+	// 			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrProjectMemberExists, projectID, ""))
+	// 			return
+	// 		}
+	// 		l.Error(err, "failed to query project member")
+	// 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, projectID, ""))
+	// 		return
+	// 	}
+	// }
 
 	// check project existence
 	exists, err := h.store.Project.IsExist(h.repo.DB(), projectID)
