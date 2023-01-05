@@ -25,6 +25,7 @@
           "salePerson": null,
           "deliveryManager": null,
           "stacks": [],
+          "function": "",
           "code": "lorem-ipsum"
       },
       {
@@ -165,6 +166,7 @@
               "username": "thanh"
           },
           "stacks": [],
+          "function": "",
           "code": "fortress"
       }
   ]

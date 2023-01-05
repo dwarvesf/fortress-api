@@ -4131,6 +4131,7 @@
             "required": [
                 "accountManagerID",
                 "countryID",
+                "function",
                 "name",
                 "status"
             ],
@@ -4148,6 +4149,9 @@
                     "type": "string"
                 },
                 "deliveryManagerID": {
+                    "type": "string"
+                },
+                "function": {
                     "type": "string"
                 },
                 "members": {
@@ -4547,10 +4551,14 @@
             "type": "object",
             "required": [
                 "countryID",
+                "function",
                 "name"
             ],
             "properties": {
                 "countryID": {
+                    "type": "string"
+                },
+                "function": {
                     "type": "string"
                 },
                 "name": {
@@ -4949,6 +4957,9 @@
                 },
                 "deliveryManager": {
                     "$ref": "#/definitions/view.ProjectHead"
+                },
+                "function": {
+                    "type": "string"
                 },
                 "id": {
                     "type": "string"
@@ -5627,6 +5638,9 @@
                 "endDate": {
                     "type": "string"
                 },
+                "function": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "string"
                 },
@@ -6281,6 +6295,9 @@
             "properties": {
                 "country": {
                     "$ref": "#/definitions/view.BasicCountryInfo"
+                },
+                "function": {
+                    "type": "string"
                 },
                 "name": {
                     "type": "string"

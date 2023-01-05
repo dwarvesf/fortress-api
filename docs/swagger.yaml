@@ -225,6 +225,8 @@ definitions:
         type: string
       deliveryManagerID:
         type: string
+      function:
+        type: string
       members:
         items:
           $ref: '#/definitions/request.AssignMemberInput'
@@ -242,6 +244,7 @@ definitions:
     required:
     - accountManagerID
     - countryID
+    - function
     - name
     - status
     type: object
@@ -500,6 +503,8 @@ definitions:
     properties:
       countryID:
         type: string
+      function:
+        type: string
       name:
         type: string
       stacks:
@@ -510,6 +515,7 @@ definitions:
         type: string
     required:
     - countryID
+    - function
     - name
     type: object
   request.UpdateSkillsInput:
@@ -764,6 +770,8 @@ definitions:
         $ref: '#/definitions/gorm.DeletedAt'
       deliveryManager:
         $ref: '#/definitions/view.ProjectHead'
+      function:
+        type: string
       id:
         type: string
       members:
@@ -1206,6 +1214,8 @@ definitions:
         $ref: '#/definitions/view.ProjectHead'
       endDate:
         type: string
+      function:
+        type: string
       id:
         type: string
       industry:
@@ -1634,6 +1644,8 @@ definitions:
     properties:
       country:
         $ref: '#/definitions/view.BasicCountryInfo'
+      function:
+        type: string
       name:
         type: string
       stacks:

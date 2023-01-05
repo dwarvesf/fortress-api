@@ -21,6 +21,7 @@ var (
 	ErrInvalidStackID             = errors.New("invalid stack ID")
 	ErrInvalidWorkUnitStacks      = errors.New("invalid work unit stacks")
 	ErrInvalidInActiveMember      = errors.New("member is not active in work unit")
+	ErrInvalidProjectFunction     = errors.New("invalid project function value")
 
 	ErrProjectNotFound         = errors.New("project not found")
 	ErrCountryNotFound         = errors.New("country not found")

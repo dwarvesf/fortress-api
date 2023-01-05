@@ -227,6 +227,7 @@ func (h *handler) Create(c *gin.Context) {
 		ClientEmail:  body.ClientEmail,
 		Country:      country,
 		Code:         body.Code,
+		Function:     model.ProjectFunction(body.Function),
 	}
 
 	tx, done := h.repo.NewTransaction()
@@ -1138,6 +1139,11 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 		return
 	}
 
+	if err := body.Validate(); err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, body, ""))
+		return
+	}
+
 	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler": "project",
@@ -1225,11 +1231,13 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 	project.Name = body.Name
 	project.StartDate = body.GetStartDate()
 	project.CountryID = body.CountryID
+	project.Function = model.ProjectFunction(body.Function)
 
 	_, err = h.store.Project.UpdateSelectedFieldsByID(tx.DB(), projectID, *project,
 		"name",
 		"start_date",
-		"country_id")
+		"country_id",
+		"function")
 
 	if err != nil {
 		l.Error(err, "failed to update project")
