@@ -377,6 +377,10 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 		employee.LinkedInName = body.LinkedInName
 	}
 
+	if strings.TrimSpace(body.DisplayName) != "" {
+		employee.DisplayName = body.DisplayName
+	}
+
 	employee.LineManagerID = body.LineManagerID
 
 	_, err = h.store.Employee.UpdateSelectedFieldsByID(h.repo.DB(), employeeID, *employee,
@@ -391,6 +395,7 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 		"notion_name",
 		"notion_email",
 		"linkedin_name",
+		"display_name",
 	)
 	if err != nil {
 		l.Error(err, "failed to update employee")

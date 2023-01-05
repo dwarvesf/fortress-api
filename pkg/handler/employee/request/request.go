@@ -27,6 +27,7 @@ type UpdateEmployeeGeneralInfoInput struct {
 	Email         string     `form:"email" json:"email" binding:"required,email"`
 	Phone         string     `form:"phone" json:"phone" binding:"required,max=18,min=9"`
 	LineManagerID model.UUID `form:"lineManagerID" json:"lineManagerID"`
+	DisplayName   string     `form:"displayName" json:"displayName"`
 	GithubID      string     `form:"githubID" json:"githubID"`
 	NotionID      string     `form:"notionID" json:"notionID"`
 	NotionName    string     `form:"notionName" json:"notionName"`

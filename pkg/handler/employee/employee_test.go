@@ -289,9 +289,10 @@ func Test_UpdateGeneralInfo(t *testing.T) {
 			wantErr:          false,
 			wantResponsePath: "testdata/update_general_info/200.json",
 			body: request.UpdateEmployeeGeneralInfoInput{
-				FullName: "Phạm Đức Thành",
-				Email:    "thanh@d.foundation",
-				Phone:    "0123456788",
+				FullName:    "Phạm Đức Thành",
+				Email:       "thanh@d.foundation",
+				Phone:       "0123456788",
+				DisplayName: "new",
 			},
 			id: "2655832e-f009-4b73-a535-64c3a22e558f",
 		},
