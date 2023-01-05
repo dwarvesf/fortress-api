@@ -933,6 +933,8 @@ definitions:
         items:
           $ref: '#/definitions/view.Position'
         type: array
+      status:
+        type: string
     type: object
   view.ErrorResponse:
     properties:

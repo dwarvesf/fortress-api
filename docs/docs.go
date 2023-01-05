@@ -5212,6 +5212,9 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/view.Position"
                     }
+                },
+                "status": {
+                    "type": "string"
                 }
             }
         },
