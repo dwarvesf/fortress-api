@@ -145,7 +145,6 @@ func (h *handler) UpdateInfo(c *gin.Context) {
 		"notion_id",
 		"notion_name",
 		"notion_email",
-		"discord_id",
 		"discord_name",
 		"linkedin_name",
 	)

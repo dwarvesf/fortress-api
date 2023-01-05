@@ -419,8 +419,6 @@ definitions:
         type: string
       country:
         type: string
-      discordID:
-        type: string
       discordName:
         type: string
       githubID:

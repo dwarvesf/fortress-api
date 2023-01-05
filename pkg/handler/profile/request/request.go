@@ -14,7 +14,6 @@ type UpdateInfoInput struct {
 	NotionID         string `form:"notionID" json:"notionID"`
 	NotionName       string `form:"notionName" json:"notionName"`
 	NotionEmail      string `form:"notionEmail" json:"notionEmail"`
-	DiscordID        string `form:"discordID" json:"discordID"`
 	DiscordName      string `form:"discordName" json:"discordName"`
 	LinkedInName     string `form:"linkedInName" json:"linkedInName"`
 }
@@ -41,10 +40,6 @@ func (i UpdateInfoInput) MapEmployeeInput(employee *model.Employee) {
 
 	if i.NotionEmail != "" {
 		employee.NotionEmail = i.NotionEmail
-	}
-
-	if i.DiscordID != "" {
-		employee.DiscordID = i.DiscordID
 	}
 
 	if i.DiscordName != "" {

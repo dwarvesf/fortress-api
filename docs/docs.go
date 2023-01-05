@@ -4445,9 +4445,6 @@ const docTemplate = `{
                 "country": {
                     "type": "string"
                 },
-                "discordID": {
-                    "type": "string"
-                },
                 "discordName": {
                     "type": "string"
                 },
