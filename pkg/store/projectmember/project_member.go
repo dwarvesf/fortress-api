@@ -28,10 +28,9 @@ func (s *store) IsExist(db *gorm.DB, id string) (bool, error) {
 
 // One return a project member by projectID and employeeID
 func (s *store) One(db *gorm.DB, projectID string, employeeID string, preload bool) (*model.ProjectMember, error) {
-	query := db.Where("project_id = ? AND employee_id = ? AND status = ?",
+	query := db.Where("project_id = ? AND employee_id = ?",
 		projectID,
-		employeeID,
-		model.ProjectMemberStatusActive)
+		employeeID)
 
 	if preload {
 		query = query.Preload("Employee")
