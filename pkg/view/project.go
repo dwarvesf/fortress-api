@@ -28,6 +28,7 @@ type ProjectData struct {
 	DeliveryManager     *ProjectHead      `json:"deliveryManager"`
 	Stacks              []Stack           `json:"stacks"`
 	Code                string            `json:"code"`
+	Function            string            `json:"function"`
 }
 
 type UpdatedProject struct {
@@ -176,6 +177,7 @@ func ToProjectData(project *model.Project) ProjectData {
 		ClientEmail:         project.ClientEmail,
 		AllowsSendingSurvey: project.AllowsSendingSurvey,
 		Code:                project.Code,
+		Function:            project.Function.String(),
 	}
 
 	if project.Country != nil {
@@ -262,6 +264,7 @@ type CreateProjectData struct {
 	ProjectEmail    string             `json:"projectEmail"`
 	Country         *BasicCountryInfo  `json:"country"`
 	Code            string             `json:"code"`
+	Function        string             `json:"function"`
 }
 
 func ToCreateProjectDataResponse(project *model.Project) CreateProjectData {
@@ -274,6 +277,7 @@ func ToCreateProjectDataResponse(project *model.Project) CreateProjectData {
 		ClientEmail:  project.ClientEmail,
 		ProjectEmail: project.ProjectEmail,
 		Code:         project.Code,
+		Function:     project.Function.String(),
 	}
 
 	if project.Country != nil {
@@ -367,10 +371,11 @@ type BasicCountryInfo struct {
 }
 
 type UpdateProjectGeneralInfo struct {
-	Name      string            `json:"name"`
-	StartDate *time.Time        `json:"startDate"`
-	Country   *BasicCountryInfo `json:"country"`
-	Stacks    []model.Stack     `json:"stacks"`
+	Name      string                `json:"name"`
+	StartDate *time.Time            `json:"startDate"`
+	Country   *BasicCountryInfo     `json:"country"`
+	Stacks    []model.Stack         `json:"stacks"`
+	Function  model.ProjectFunction `json:"function"`
 }
 
 type UpdateProjectGeneralInfoResponse struct {
@@ -387,6 +392,7 @@ func ToUpdateProjectGeneralInfo(project *model.Project) UpdateProjectGeneralInfo
 		Name:      project.Name,
 		StartDate: project.StartDate,
 		Stacks:    stacks,
+		Function:  project.Function,
 	}
 
 	if project.Country != nil {

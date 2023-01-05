@@ -22,6 +22,7 @@ type UpdateProjectGeneralInfoInput struct {
 	Name      string       `form:"name" json:"name" binding:"required"`
 	StartDate string       `form:"startDate" json:"startDate"`
 	CountryID model.UUID   `form:"countryID" json:"countryID" binding:"required"`
+	Function  string       `form:"function" json:"function" binding:"required"`
 	Stacks    []model.UUID `form:"stacks" json:"stacks"`
 }
 
@@ -32,6 +33,14 @@ func (i UpdateProjectGeneralInfoInput) GetStartDate() *time.Time {
 	}
 
 	return &startDate
+}
+
+func (i UpdateProjectGeneralInfoInput) Validate() error {
+	if !model.ProjectFunction(i.Function).IsValid() {
+		return errs.ErrInvalidProjectFunction
+	}
+
+	return nil
 }
 
 type UpdateAccountStatusBody struct {
@@ -71,6 +80,7 @@ type CreateProjectInput struct {
 	ClientEmail       string              `form:"clientEmail" json:"clientEmail" binding:"email"`
 	ProjectEmail      string              `form:"projectEmail" json:"projectEmail" binding:"email"`
 	Code              string              `form:"code" json:"code"`
+	Function          string              `form:"function" json:"function" binding:"required"`
 }
 
 func (i *CreateProjectInput) Validate() error {
@@ -95,6 +105,10 @@ func (i *CreateProjectInput) Validate() error {
 		if err := member.Validate(); err != nil {
 			return err
 		}
+	}
+
+	if !model.ProjectFunction(i.Function).IsValid() {
+		return errs.ErrInvalidProjectFunction
 	}
 
 	return nil

@@ -4139,6 +4139,7 @@ const docTemplate = `{
             "required": [
                 "accountManagerID",
                 "countryID",
+                "function",
                 "name",
                 "status"
             ],
@@ -4156,6 +4157,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deliveryManagerID": {
+                    "type": "string"
+                },
+                "function": {
                     "type": "string"
                 },
                 "members": {
@@ -4555,10 +4559,14 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "countryID",
+                "function",
                 "name"
             ],
             "properties": {
                 "countryID": {
+                    "type": "string"
+                },
+                "function": {
                     "type": "string"
                 },
                 "name": {
@@ -4957,6 +4965,9 @@ const docTemplate = `{
                 },
                 "deliveryManager": {
                     "$ref": "#/definitions/view.ProjectHead"
+                },
+                "function": {
+                    "type": "string"
                 },
                 "id": {
                     "type": "string"
@@ -5635,6 +5646,9 @@ const docTemplate = `{
                 "endDate": {
                     "type": "string"
                 },
+                "function": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "string"
                 },
@@ -6289,6 +6303,9 @@ const docTemplate = `{
             "properties": {
                 "country": {
                     "$ref": "#/definitions/view.BasicCountryInfo"
+                },
+                "function": {
+                    "type": "string"
                 },
                 "name": {
                     "type": "string"

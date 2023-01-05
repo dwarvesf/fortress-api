@@ -57,17 +57,18 @@ func (e ProjectStatus) String() string {
 type Project struct {
 	BaseModel
 
-	Name                string        `gorm:"default:null"`
-	CountryID           UUID          `gorm:"default:null"`
-	Type                ProjectType   `gorm:"default:null"`
-	StartDate           *time.Time    `gorm:"default:null"`
-	EndDate             *time.Time    `gorm:"default:null"`
-	Status              ProjectStatus `gorm:"default:null"`
-	ProjectEmail        string        `gorm:"default:null"`
-	ClientEmail         string        `gorm:"default:null"`
-	Avatar              string        `gorm:"default:null"`
-	AllowsSendingSurvey bool          `gorm:"default:null"`
-	Code                string        `gorm:"default:null"`
+	Name                string          `gorm:"default:null"`
+	CountryID           UUID            `gorm:"default:null"`
+	Type                ProjectType     `gorm:"default:null"`
+	StartDate           *time.Time      `gorm:"default:null"`
+	EndDate             *time.Time      `gorm:"default:null"`
+	Status              ProjectStatus   `gorm:"default:null"`
+	ProjectEmail        string          `gorm:"default:null"`
+	ClientEmail         string          `gorm:"default:null"`
+	Avatar              string          `gorm:"default:null"`
+	AllowsSendingSurvey bool            `gorm:"default:null"`
+	Code                string          `gorm:"default:null"`
+	Function            ProjectFunction `gorm:"default:null"`
 
 	Country        *Country
 	Slots          []ProjectSlot
@@ -224,4 +225,29 @@ type ProjectStack struct {
 	StackID   UUID
 
 	Stack Stack
+}
+
+type ProjectFunction string
+
+const (
+	ProjectFunctionDevelopment ProjectFunction = "development"
+	ProjectFunctionLearning    ProjectFunction = "learning"
+	ProjectFunctionTraining    ProjectFunction = "training"
+	ProjectFunctionManagement  ProjectFunction = "management"
+)
+
+func (e ProjectFunction) IsValid() bool {
+	switch e {
+	case
+		ProjectFunctionDevelopment,
+		ProjectFunctionLearning,
+		ProjectFunctionTraining,
+		ProjectFunctionManagement:
+		return true
+	}
+	return false
+}
+
+func (e ProjectFunction) String() string {
+	return string(e)
 }
