@@ -414,11 +414,11 @@ func (h *handler) DeleteMember(c *gin.Context) {
 		return
 	}
 
-	if projectMember.Status == model.ProjectMemberStatusInactive {
-		l.Error(errs.ErrCouldNotDeleteInactiveMember, "can not change information of inactive member")
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrCouldNotDeleteInactiveMember, input.MemberID, ""))
-		return
-	}
+	// if projectMember.Status == model.ProjectMemberStatusInactive {
+	// 	l.Error(errs.ErrCouldNotDeleteInactiveMember, "can not change information of inactive member")
+	// 	c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrCouldNotDeleteInactiveMember, input.MemberID, ""))
+	// 	return
+	// }
 
 	// Begin transaction
 	tx, done := h.repo.NewTransaction()
@@ -512,43 +512,43 @@ func (h *handler) UnassignMember(c *gin.Context) {
 		return
 	}
 
-	if projectMember.Status == model.ProjectMemberStatusInactive {
-		l.Error(errs.ErrCouldNotDeleteInactiveMember, "can not change information of inactive member")
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrCouldNotDeleteInactiveMember, input.MemberID, ""))
-		return
-	}
+	// if projectMember.Status == model.ProjectMemberStatusInactive {
+	// 	l.Error(errs.ErrCouldNotDeleteInactiveMember, "can not change information of inactive member")
+	// 	c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrCouldNotDeleteInactiveMember, input.MemberID, ""))
+	// 	return
+	// }
 
 	// Begin transaction
 	tx, done := h.repo.NewTransaction()
 
 	// remove member out of project
-	if projectMember.Status != model.ProjectMemberStatusInactive {
-		timeNow := time.Now()
-		projectMember.LeftDate = &timeNow
-		projectMember.Status = model.ProjectMemberStatusInactive
+	// if projectMember.Status != model.ProjectMemberStatusInactive {
+	timeNow := time.Now()
+	projectMember.LeftDate = &timeNow
+	projectMember.Status = model.ProjectMemberStatusInactive
 
-		_, err := h.store.ProjectMember.UpdateSelectedFieldsByID(tx.DB(),
-			projectMember.ID.String(),
-			*projectMember,
-			"left_date",
-			"status")
-		if err != nil {
-			l.Error(err, "failed to update project member")
-			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
-			return
-		}
-
-		// update slot status -> pending
-		slot := model.ProjectSlot{
-			Status: model.ProjectMemberStatusPending,
-		}
-		_, err = h.store.ProjectSlot.UpdateSelectedFieldsByID(tx.DB(), projectMember.ProjectSlotID.String(), slot, "status")
-		if err != nil {
-			l.Error(err, "failed to update project member")
-			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
-			return
-		}
+	_, err = h.store.ProjectMember.UpdateSelectedFieldsByID(tx.DB(),
+		projectMember.ID.String(),
+		*projectMember,
+		"left_date",
+		"status")
+	if err != nil {
+		l.Error(err, "failed to update project member")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
+		return
 	}
+
+	// update slot status -> pending
+	slot := model.ProjectSlot{
+		Status: model.ProjectMemberStatusPending,
+	}
+	_, err = h.store.ProjectSlot.UpdateSelectedFieldsByID(tx.DB(), projectMember.ProjectSlotID.String(), slot, "status")
+	if err != nil {
+		l.Error(err, "failed to update project member")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
+		return
+	}
+	// }
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, done(nil), nil, "ok"))
 }
@@ -653,11 +653,11 @@ func (h *handler) UpdateMember(c *gin.Context) {
 		return
 	}
 
-	if slot.Status == model.ProjectMemberStatusInactive {
-		l.Info("slot is inactive")
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrSlotIsInactive, body, ""))
-		return
-	}
+	// if slot.Status == model.ProjectMemberStatusInactive {
+	// 	l.Info("slot is inactive")
+	// 	c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrSlotIsInactive, body, ""))
+	// 	return
+	// }
 
 	tx, done := h.repo.NewTransaction()
 
@@ -732,10 +732,10 @@ func (h *handler) assignMemberToProject(db *gorm.DB, slotID string, projectID st
 		return nil, err
 	}
 
-	if member.Status == model.ProjectMemberStatusInactive {
-		h.logger.Fields(logger.Fields{"member": member}).Error(errs.ErrSlotIsInactive, "slot is inactive")
-		return nil, errs.ErrSlotIsInactive
-	}
+	// if member.Status == model.ProjectMemberStatusInactive {
+	// 	h.logger.Fields(logger.Fields{"member": member}).Error(errs.ErrSlotIsInactive, "slot is inactive")
+	// 	return nil, errs.ErrSlotIsInactive
+	// }
 
 	if !member.EmployeeID.IsZero() && member.EmployeeID != input.EmployeeID {
 		h.logger.
@@ -783,10 +783,10 @@ func (h *handler) assignMemberToProject(db *gorm.DB, slotID string, projectID st
 			return nil, errs.ErrSlotIDCannotBeChanged
 		}
 
-		if member.Status == model.ProjectMemberStatusInactive {
-			h.logger.Fields(logger.Fields{"status": member.Status}).Info("member is inactive")
-			return nil, errs.ErrMemberIsInactive
-		}
+		// if member.Status == model.ProjectMemberStatusInactive {
+		// 	h.logger.Fields(logger.Fields{"status": member.Status}).Info("member is inactive")
+		// 	return nil, errs.ErrMemberIsInactive
+		// }
 
 		member.SeniorityID = input.SeniorityID
 		member.DeploymentType = model.DeploymentType(input.DeploymentType)
@@ -2009,18 +2009,18 @@ func (h *handler) UnarchiveWorkUnit(c *gin.Context) {
 
 	// check member status in project and update work unit member
 	for _, member := range wuMembers {
-		_, err := h.store.ProjectMember.One(tx.DB(), input.ProjectID, member.EmployeeID.String(), false)
+		// _, err := h.store.ProjectMember.One(tx.DB(), input.ProjectID, member.EmployeeID.String(), false)
 
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			l.Error(err, "member is not active in project")
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, done(errs.ErrMemberIsInactive), nil, ""))
-			return
-		}
-		if err != nil {
-			l.Error(err, "failed to get one project member")
-			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), nil, ""))
-			return
-		}
+		// if errors.Is(err, gorm.ErrRecordNotFound) {
+		// 	l.Error(err, "member is not active in project")
+		// 	c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, done(errs.ErrMemberIsInactive), nil, ""))
+		// 	return
+		// }
+		// if err != nil {
+		// 	l.Error(err, "failed to get one project member")
+		// 	c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), nil, ""))
+		// 	return
+		// }
 
 		member.LeftDate = nil
 		member.Status = model.ProjectMemberStatusActive.String()

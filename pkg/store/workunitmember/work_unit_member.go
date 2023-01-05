@@ -17,7 +17,7 @@ func New() IStore {
 // One return a work member by workUnitID and employeeID
 func (s *store) One(db *gorm.DB, workUnitID string, employeeID string, status string) (*model.WorkUnitMember, error) {
 	var member *model.WorkUnitMember
-	query := db.Where("work_unit_id = ? AND employee_id = ? and status = ?", workUnitID, employeeID, status)
+	query := db.Where("work_unit_id = ? AND employee_id = ?", workUnitID, employeeID)
 
 	return member, query.First(&member).Error
 }
