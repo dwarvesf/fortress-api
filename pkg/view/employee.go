@@ -111,6 +111,7 @@ type UpdateGeneralInfoEmployeeData struct {
 	LinkedinName string             `json:"linkedInName"`
 	DiscordID    string             `json:"discordID"`
 	DiscordName  string             `json:"discordName"`
+	DisplayName  string             `json:"displayName"`
 	LineManager  *BasicEmployeeInfo `json:"lineManager"`
 }
 
@@ -230,6 +231,7 @@ func ToUpdateGeneralInfoEmployeeData(employee *model.Employee) *UpdateGeneralInf
 		DiscordID:    employee.DiscordID,
 		DiscordName:  employee.DiscordName,
 		LinkedinName: employee.LinkedInName,
+		DisplayName:  employee.DisplayName,
 	}
 
 	if employee.LineManager != nil {

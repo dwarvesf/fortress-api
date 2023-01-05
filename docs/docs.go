@@ -4396,6 +4396,9 @@ const docTemplate = `{
                 "discordName": {
                     "type": "string"
                 },
+                "displayName": {
+                    "type": "string"
+                },
                 "email": {
                     "type": "string"
                 },
@@ -6138,6 +6141,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "discordName": {
+                    "type": "string"
+                },
+                "displayName": {
                     "type": "string"
                 },
                 "fullName": {

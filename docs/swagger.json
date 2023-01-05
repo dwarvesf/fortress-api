@@ -4388,6 +4388,9 @@
                 "discordName": {
                     "type": "string"
                 },
+                "displayName": {
+                    "type": "string"
+                },
                 "email": {
                     "type": "string"
                 },
@@ -6130,6 +6133,9 @@
                     "type": "string"
                 },
                 "discordName": {
+                    "type": "string"
+                },
+                "displayName": {
                     "type": "string"
                 },
                 "fullName": {

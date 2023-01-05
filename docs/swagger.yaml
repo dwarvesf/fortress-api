@@ -385,6 +385,8 @@ definitions:
         type: string
       discordName:
         type: string
+      displayName:
+        type: string
       email:
         type: string
       fullName:
@@ -1535,6 +1537,8 @@ definitions:
       discordID:
         type: string
       discordName:
+        type: string
+      displayName:
         type: string
       fullName:
         description: basic info
