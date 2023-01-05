@@ -4433,8 +4433,7 @@ const docTemplate = `{
             "required": [
                 "personalEmail",
                 "phoneNumber",
-                "placeOfResidence",
-                "teamEmail"
+                "placeOfResidence"
             ],
             "properties": {
                 "address": {
@@ -4446,6 +4445,27 @@ const docTemplate = `{
                 "country": {
                     "type": "string"
                 },
+                "discordID": {
+                    "type": "string"
+                },
+                "discordName": {
+                    "type": "string"
+                },
+                "githubID": {
+                    "type": "string"
+                },
+                "linkedInName": {
+                    "type": "string"
+                },
+                "notionEmail": {
+                    "type": "string"
+                },
+                "notionID": {
+                    "type": "string"
+                },
+                "notionName": {
+                    "type": "string"
+                },
                 "personalEmail": {
                     "type": "string"
                 },
@@ -4455,9 +4475,6 @@ const docTemplate = `{
                     "minLength": 8
                 },
                 "placeOfResidence": {
-                    "type": "string"
-                },
-                "teamEmail": {
                     "type": "string"
                 }
             }

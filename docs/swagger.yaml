@@ -419,6 +419,20 @@ definitions:
         type: string
       country:
         type: string
+      discordID:
+        type: string
+      discordName:
+        type: string
+      githubID:
+        type: string
+      linkedInName:
+        type: string
+      notionEmail:
+        type: string
+      notionID:
+        type: string
+      notionName:
+        type: string
       personalEmail:
         type: string
       phoneNumber:
@@ -427,13 +441,10 @@ definitions:
         type: string
       placeOfResidence:
         type: string
-      teamEmail:
-        type: string
     required:
     - personalEmail
     - phoneNumber
     - placeOfResidence
-    - teamEmail
     type: object
   request.UpdateMemberInput:
     properties:

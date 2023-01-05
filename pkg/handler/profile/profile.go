@@ -61,7 +61,7 @@ func (h *handler) GetProfile(c *gin.Context) {
 
 	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
-		"handler": "employee",
+		"handler": "profile",
 		"method":  "GetProfile",
 	})
 
@@ -135,13 +135,19 @@ func (h *handler) UpdateInfo(c *gin.Context) {
 	}
 
 	_, err = h.store.Employee.UpdateSelectedFieldsByID(h.repo.DB(), employeeID, *employee,
-		"team_email",
 		"personal_email",
 		"phone_number",
 		"place_of_residence",
 		"address",
 		"country",
 		"city",
+		"github_id",
+		"notion_id",
+		"notion_name",
+		"notion_email",
+		"discord_id",
+		"discord_name",
+		"linkedin_name",
 	)
 	if err != nil {
 		l.Error(err, "failed to update employee")
