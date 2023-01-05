@@ -85,13 +85,13 @@ func TestHandler_UpdateProfileInfo(t *testing.T) {
 			wantErr:          false,
 			wantResponsePath: "testdata/update_info/200.json",
 			input: request.UpdateInfoInput{
-				TeamEmail:        "thanh@d.foundation",
 				PersonalEmail:    "thanhpham123@gmail.com",
 				PhoneNumber:      "0123456788",
 				PlaceOfResidence: "200 Đường 3/2, Quận 10",
 				Address:          "201 Đường 3/2, Quận 10",
 				Country:          "Vietnam",
 				City:             "Hồ Chí Minh",
+				GithubID:         "githubid",
 			},
 		},
 		{
@@ -100,13 +100,13 @@ func TestHandler_UpdateProfileInfo(t *testing.T) {
 			wantErr:          true,
 			wantResponsePath: "testdata/update_info/400.json",
 			input: request.UpdateInfoInput{
-				TeamEmail:        "thanh@d.foundation",
 				PersonalEmail:    "thanhpham123@gmail.com",
 				PhoneNumber:      "1234567",
 				PlaceOfResidence: "200 Đường 3/2, Quận 10",
 				Address:          "201 Đường 3/2, Quận 10",
 				Country:          "Vietnam",
 				City:             "Hồ Chí Minh",
+				GithubID:         "githubid",
 			},
 		},
 	}
