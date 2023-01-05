@@ -48,6 +48,10 @@ func GetUserIDFromContext(c *gin.Context) (string, error) {
 		return "", err
 	}
 
+	if accessToken == "ApiKey" {
+		return "", nil
+	}
+
 	return GetUserIDFromToken(accessToken)
 }
 

@@ -56,12 +56,6 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 // @Failure 500 {object} view.ErrorResponse
 // @Router /employees/search [post]
 func (h *handler) List(c *gin.Context) {
-	userID, err := utils.GetUserIDFromContext(c)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
-		return
-	}
-
 	var body request.GetListEmployeeInput
 	if err := c.ShouldBindJSON(&body); err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, body, ""))
@@ -92,7 +86,7 @@ func (h *handler) List(c *gin.Context) {
 		JoinedDateSort: model.SortOrderDESC,
 	}
 
-	workingStatuses, err := h.getWorkingStatusInput(c, userID, body.WorkingStatuses)
+	workingStatuses, err := h.getWorkingStatusInput(c, body.WorkingStatuses)
 	if err != nil {
 		l.Error(err, "failed to get working status input")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
@@ -112,11 +106,20 @@ func (h *handler) List(c *gin.Context) {
 		&view.PaginationResponse{Pagination: body.Pagination, Total: total}, nil, nil, ""))
 }
 
-func (h *handler) getWorkingStatusInput(c *gin.Context, userID string, input []string) ([]string, error) {
-	hasPermission, err := h.store.Permission.HasPermission(h.repo.DB(), userID, "employees.filterByStatus")
+func (h *handler) getWorkingStatusInput(c *gin.Context, input []string) ([]string, error) {
+	userID, err := utils.GetUserIDFromContext(c)
 	if err != nil {
-		h.logger.Error(err, "failed to check permission of user")
+		h.logger.Error(err, "failed to get userID from context")
 		return nil, err
+	}
+
+	var hasPermission bool
+	if userID != "" {
+		hasPermission, err = h.store.Permission.HasPermission(h.repo.DB(), userID, "employees.filterByStatus")
+		if err != nil {
+			h.logger.Error(err, "failed to check permission of user")
+			return nil, err
+		}
 	}
 
 	// user who do not have permission
