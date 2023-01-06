@@ -345,7 +345,7 @@ func (h *handler) createPeerReview(db *gorm.DB, req request.CreateSurveyFeedback
 	}
 
 	//3. create EmployeeEventTopic
-	employees, err := h.store.Employee.GetByWorkingStatus(db, model.WorkingStatusFullTime)
+	employees, err := h.store.Employee.GetByWorkingStatus(db, model.WorkingStatusFullTime, false)
 	if err != nil {
 		return http.StatusInternalServerError, err
 	}
@@ -546,7 +546,7 @@ func (h *handler) createEngagement(db *gorm.DB, req request.CreateSurveyFeedback
 	}
 
 	//3. create EmployeeEventTopic
-	employees, err := h.store.Employee.GetByWorkingStatus(db, model.WorkingStatusFullTime)
+	employees, err := h.store.Employee.GetByWorkingStatus(db, model.WorkingStatusFullTime, false)
 	if err != nil {
 		return http.StatusInternalServerError, err
 	}
@@ -1366,7 +1366,7 @@ func (h *handler) updateTopicReviewer(db *gorm.DB, eventID string, topicID strin
 		"body":    body,
 	})
 
-	employees, err := h.store.Employee.GetByWorkingStatus(db, model.WorkingStatusFullTime)
+	employees, err := h.store.Employee.GetByWorkingStatus(db, model.WorkingStatusFullTime, false)
 	if err != nil {
 		l.Error(err, "failed to get employees by working status")
 		return http.StatusInternalServerError, err

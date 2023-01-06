@@ -383,6 +383,12 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/employee.IHandler.UpdateRole-fm",
 			},
 		},
+		"/api/v1/dashboards/work-unit-distribution": {
+			"GET": {
+				Method:  "GET",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/dashboard.IHandler.WorkUnitDistribution-fm",
+			},
+		},
 	}
 
 	l := logger.NewLogrusLogger()

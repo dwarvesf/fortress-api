@@ -15,6 +15,7 @@ type WorkUnitMember struct {
 	ProjectID  UUID
 
 	Employee Employee
+	WorkUnit WorkUnit
 }
 
 type WorkUnitPeer struct {

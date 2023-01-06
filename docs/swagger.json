@@ -128,6 +128,50 @@
                 }
             }
         },
+        "/dashboards//work-unit-distribution": {
+            "get": {
+                "description": "Get work unit distribution for dashboard",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "Get work unit distribution for dashboard",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.WorkUnitDistributionResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/employees": {
             "post": {
                 "description": "Create new employee",
@@ -6480,6 +6524,56 @@
                 },
                 "url": {
                     "type": "string"
+                }
+            }
+        },
+        "view.WorkUnitData": {
+            "type": "object",
+            "properties": {
+                "development": {
+                    "type": "integer"
+                },
+                "learning": {
+                    "type": "integer"
+                },
+                "management": {
+                    "type": "integer"
+                },
+                "training": {
+                    "type": "integer"
+                }
+            }
+        },
+        "view.WorkUnitDistributionData": {
+            "type": "object",
+            "properties": {
+                "employee": {
+                    "$ref": "#/definitions/view.BasicEmployeeInfo"
+                },
+                "workunits": {
+                    "$ref": "#/definitions/view.WorkUnitData"
+                }
+            }
+        },
+        "view.WorkUnitDistributionDataList": {
+            "type": "object",
+            "properties": {
+                "total": {
+                    "$ref": "#/definitions/view.WorkUnitData"
+                },
+                "workUnitDistributions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.WorkUnitDistributionData"
+                    }
+                }
+            }
+        },
+        "view.WorkUnitDistributionResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/view.WorkUnitDistributionDataList"
                 }
             }
         },

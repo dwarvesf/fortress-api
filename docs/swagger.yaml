@@ -1766,6 +1766,38 @@ definitions:
       url:
         type: string
     type: object
+  view.WorkUnitData:
+    properties:
+      development:
+        type: integer
+      learning:
+        type: integer
+      management:
+        type: integer
+      training:
+        type: integer
+    type: object
+  view.WorkUnitDistributionData:
+    properties:
+      employee:
+        $ref: '#/definitions/view.BasicEmployeeInfo'
+      workunits:
+        $ref: '#/definitions/view.WorkUnitData'
+    type: object
+  view.WorkUnitDistributionDataList:
+    properties:
+      total:
+        $ref: '#/definitions/view.WorkUnitData'
+      workUnitDistributions:
+        items:
+          $ref: '#/definitions/view.WorkUnitDistributionData'
+        type: array
+    type: object
+  view.WorkUnitDistributionResponse:
+    properties:
+      data:
+        $ref: '#/definitions/view.WorkUnitDistributionDataList'
+    type: object
   view.WorkUnitResponse:
     properties:
       data:
@@ -1857,6 +1889,35 @@ paths:
       summary: Get logged-in user data
       tags:
       - Auth
+  /dashboards//work-unit-distribution:
+    get:
+      consumes:
+      - application/json
+      description: Get work unit distribution for dashboard
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.WorkUnitDistributionResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get work unit distribution for dashboard
+      tags:
+      - Dashboard
   /employees:
     post:
       consumes:

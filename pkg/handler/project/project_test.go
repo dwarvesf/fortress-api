@@ -574,7 +574,7 @@ func TestHandler_List(t *testing.T) {
 		{
 			name:             "happy_case",
 			wantCode:         http.StatusOK,
-			wantResponsePath: "testdata/get_projects/200.json",
+			wantResponsePath: "testdata/get_projects/200_list.json",
 		},
 	}
 	for _, tt := range tests {
