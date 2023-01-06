@@ -1,3 +1,9 @@
 package dashboard
 
-type IHandler interface{}
+import (
+	"github.com/gin-gonic/gin"
+)
+
+type IHandler interface {
+	ProjectSizes(c *gin.Context)
+}

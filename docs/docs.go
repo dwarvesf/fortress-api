@@ -136,6 +136,44 @@ const docTemplate = `{
                 }
             }
         },
+        "/dashboards/projects/sizes": {
+            "get": {
+                "description": "Get the total number of active member in each project",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "Get the total number of active member in each project",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.ProjectSizeResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/employees": {
             "post": {
                 "description": "Create new employee",
@@ -3936,6 +3974,23 @@ const docTemplate = `{
                 }
             }
         },
+        "model.ProjectSize": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "size": {
+                    "type": "integer"
+                }
+            }
+        },
         "model.Role": {
             "type": "object",
             "properties": {
@@ -5963,6 +6018,17 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/view.ProjectMember"
+                    }
+                }
+            }
+        },
+        "view.ProjectSizeResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.ProjectSize"
                     }
                 }
             }
