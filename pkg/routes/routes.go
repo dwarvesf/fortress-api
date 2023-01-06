@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"github.com/dwarvesf/fortress-api/pkg/controller"
 	"strings"
 
 	"github.com/gin-contrib/cors"
@@ -44,7 +45,8 @@ func NewRoutes(cfg *config.Config, svc *service.Service, s *store.Store, logger 
 	pprof.Register(r)
 	repo := store.NewPostgresStore(cfg)
 
-	h := handler.New(s, repo, svc, logger, cfg)
+	ctrl := controller.New(s, repo, svc, logger, cfg)
+	h := handler.New(s, repo, svc, logger, cfg, ctrl)
 
 	r.Use(
 		gin.LoggerWithWriter(gin.DefaultWriter, "/healthz"),
