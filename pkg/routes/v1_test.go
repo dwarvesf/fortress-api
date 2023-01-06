@@ -484,7 +484,7 @@ func Test_loadV1Routes(t *testing.T) {
 	l := logger.NewLogrusLogger()
 	cfg := config.LoadConfig(config.DefaultConfigLoaders())
 
-	h := handler.New(nil, nil, nil, l, cfg)
+	h := handler.New(nil, nil, nil, nil, l, cfg)
 
 	router := gin.New()
 	loadV1Routes(router, h, nil, nil, nil)
