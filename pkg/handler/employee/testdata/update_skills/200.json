@@ -8,7 +8,8 @@
             "createdAt": "2022-11-07T09:50:25.714604Z",
             "updatedAt": "2022-11-07T09:50:25.714604Z",
             "name": "Staff",
-            "code": "staff"
+            "code": "staff",
+            "level": 5
         },
         "positions": [
             {
