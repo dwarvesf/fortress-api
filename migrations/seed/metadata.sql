@@ -57,12 +57,12 @@ INSERT INTO public.positions (id, deleted_at, created_at, updated_at, "name", co
 ('0c70ed68-775c-472e-a968-1013728c8f49', NULL, '2023-01-04 13:37:13.848379', '2023-01-04 13:37:13.848379', 'Technical Trainer', 'technical-trainer'),
 ('34483fcb-f231-4511-b36b-4250f211639d', NULL, '2023-01-04 13:37:13.848379', '2023-01-04 13:37:13.848379', 'VP of Engineering', 'vp-of-engineering');
 
-INSERT INTO public.seniorities (id, deleted_at, created_at, updated_at, name, code) VALUES
-('d796884d-a8c4-4525-81e7-54a3b6099eac', NULL, '2022-11-07 09:50:25.714604', '2022-11-07 09:50:25.714604', 'Junior', 'junior'),
-('dac16ce6-9e5a-4ff3-9ea2-fdea4853925e', NULL, '2022-11-07 09:50:25.714604', '2022-11-07 09:50:25.714604', 'Mid', 'mid'),
-('01fb6322-d727-47e3-a242-5039ea4732fc', NULL, '2022-11-07 09:50:25.714604', '2022-11-07 09:50:25.714604', 'Senior', 'senior'),
-('01fb6322-d727-47e3-a242-5039ea4732fd', NULL, '2022-11-07 09:50:25.714604', '2022-11-07 09:50:25.714604', 'Staff', 'staff'),
-('39735742-829b-47f3-8f9d-daf0983914e5', NULL, '2022-11-07 09:50:25.714604', '2022-11-07 09:50:25.714604', 'Principal', 'principal');
+INSERT INTO public.seniorities (id, deleted_at, created_at, updated_at, name, code, "level") VALUES
+('d796884d-a8c4-4525-81e7-54a3b6099eac', NULL, '2022-11-07 09:50:25.714604', '2022-11-07 09:50:25.714604', 'Junior', 'junior', 1),
+('dac16ce6-9e5a-4ff3-9ea2-fdea4853925e', NULL, '2022-11-07 09:50:25.714604', '2022-11-07 09:50:25.714604', 'Mid', 'mid', 2),
+('01fb6322-d727-47e3-a242-5039ea4732fc', NULL, '2022-11-07 09:50:25.714604', '2022-11-07 09:50:25.714604', 'Senior', 'senior', 3),
+('01fb6322-d727-47e3-a242-5039ea4732fd', NULL, '2022-11-07 09:50:25.714604', '2022-11-07 09:50:25.714604', 'Staff', 'staff', 4),
+('39735742-829b-47f3-8f9d-daf0983914e5', NULL, '2022-11-07 09:50:25.714604', '2022-11-07 09:50:25.714604', 'Principal', 'principal', 5);
 
 INSERT INTO public.stacks (id, deleted_at, created_at, updated_at, "name", code, avatar) VALUES
 ('0ecf47c8-cca4-4c30-94bb-054b1124c44f', NULL, '2022-11-11 18:38:46.266725', '2022-11-11 18:38:46.266725', 'Golang', 'golang', NULL),

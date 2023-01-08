@@ -108,11 +108,16 @@ func (s *store) One(db *gorm.DB, id string, preload bool) (*model.Project, error
 			Preload("ProjectStacks.Stack", "deleted_at IS NULL").
 			Preload("Country").
 			Preload("Slots", func(db *gorm.DB) *gorm.DB {
-				return db.Joins("JOIN project_members  ON project_members.project_slot_id = project_slots.id").
+				return db.Joins("JOIN project_members pm ON pm.project_slot_id = project_slots.id").
+					Joins("JOIN seniorities s ON s.id = pm.seniority_id").
+					Joins("LEFT JOIN project_heads ph ON ph.project_id = pm.project_id AND ph.employee_id = pm.employee_id").
 					Where("project_slots.deleted_at IS NULL").
-					Where("project_members.deleted_at IS NULL").
-					Where("project_members.status IN ?", []model.ProjectMemberStatus{model.ProjectMemberStatusActive, model.ProjectMemberStatusOnBoarding}).
-					Where("project_slots.status = ?", model.ProjectMemberStatusActive)
+					Where("pm.deleted_at IS NULL").
+					Where("pm.status IN ?", []model.ProjectMemberStatus{model.ProjectMemberStatusActive, model.ProjectMemberStatusOnBoarding}).
+					Where("project_slots.status = ?", model.ProjectMemberStatusActive).
+					Order("pm.left_date ASC").
+					Order("CASE ph.position WHEN 'technical-lead' THEN 1 ELSE 2 END").
+					Order("s.level DESC")
 			}).
 			Preload("Slots.ProjectMember", "deleted_at IS NULL AND status IN ?",
 				[]model.ProjectMemberStatus{model.ProjectMemberStatusActive, model.ProjectMemberStatusOnBoarding}).
