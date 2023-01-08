@@ -84,6 +84,7 @@ func (h *handler) List(c *gin.Context) {
 		Chapters:       body.Chapters,
 		Seniorities:    body.Seniorities,
 		Organizations:  body.Organizations,
+		LineManagers:   body.LineManagers,
 		JoinedDateSort: model.SortOrderDESC,
 	}
 

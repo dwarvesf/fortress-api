@@ -318,6 +318,10 @@ definitions:
         type: array
       keyword:
         type: string
+      lineManagers:
+        items:
+          type: string
+        type: array
       organizations:
         items:
           type: string
