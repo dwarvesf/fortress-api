@@ -20,6 +20,7 @@ type GetListEmployeeInput struct {
 	Chapters        []string `json:"chapters" form:"chapters"`
 	Seniorities     []string `json:"seniorities" form:"seniorities"`
 	Organizations   []string `json:"organizations" form:"organizations"`
+	LineManagers    []string `json:"lineManagers" form:"lineManagers"`
 	Keyword         string   `json:"keyword" form:"keyword"`
 }
 

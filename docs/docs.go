@@ -4290,6 +4290,12 @@ const docTemplate = `{
                 "keyword": {
                     "type": "string"
                 },
+                "lineManagers": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "organizations": {
                     "type": "array",
                     "items": {

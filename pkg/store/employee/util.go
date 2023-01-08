@@ -21,8 +21,23 @@ func getByWhereConditions(query *gorm.DB, filter EmployeeFilter) *gorm.DB {
 	}
 
 	if len(filter.Projects) > 0 {
-		query = query.Joins("JOIN project_members ON employees.id = project_members.employee_id JOIN projects ON project_members.project_id = projects.id AND projects.code IN ?",
-			filter.Projects)
+		if filter.Projects[0] == "-" {
+			query = query.Where(`employees.id NOT IN (
+				SELECT project_members.employee_id 
+				FROM project_members
+				WHERE project_members.deleted_at IS NULL AND project_members.status = 'active')`)
+		} else {
+			query = query.Joins("JOIN project_members ON employees.id = project_members.employee_id JOIN projects ON project_members.project_id = projects.id AND projects.code IN ?",
+				filter.Projects)
+		}
+	}
+
+	if len(filter.LineManagers) > 0 {
+		if filter.LineManagers[0] == "-" {
+			query = query.Where("employees.line_manager_id IS NULL")
+		} else {
+			query = query.Where("employees.line_manager_id IN ?", filter.LineManagers)
+		}
 	}
 
 	if len(filter.Chapters) > 0 {
