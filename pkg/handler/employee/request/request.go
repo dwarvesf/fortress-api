@@ -35,6 +35,7 @@ type UpdateEmployeeGeneralInfoInput struct {
 	DiscordID     string     `form:"discordID" json:"discordID"`
 	DiscordName   string     `form:"discordName" json:"discordName"`
 	LinkedInName  string     `form:"linkedInName" json:"linkedInName"`
+	Organization  string     `form:"organization" json:"organization"`
 }
 
 type AddMenteeInput struct {

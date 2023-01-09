@@ -3966,6 +3966,9 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
+                "level": {
+                    "type": "integer"
+                },
                 "name": {
                     "type": "string"
                 },
@@ -4428,6 +4431,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "notionName": {
+                    "type": "string"
+                },
+                "organization": {
                     "type": "string"
                 },
                 "phone": {
@@ -5134,6 +5140,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "notionName": {
+                    "type": "string"
+                },
+                "organization": {
                     "type": "string"
                 },
                 "personalEmail": {

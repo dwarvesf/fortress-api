@@ -99,6 +99,8 @@ definitions:
         $ref: '#/definitions/gorm.DeletedAt'
       id:
         type: string
+      level:
+        type: integer
       name:
         type: string
       updatedAt:
@@ -407,6 +409,8 @@ definitions:
       notionID:
         type: string
       notionName:
+        type: string
+      organization:
         type: string
       phone:
         maxLength: 18
@@ -881,6 +885,8 @@ definitions:
       notionID:
         type: string
       notionName:
+        type: string
+      organization:
         type: string
       personalEmail:
         type: string

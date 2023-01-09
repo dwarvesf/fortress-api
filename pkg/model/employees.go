@@ -58,6 +58,31 @@ func (e AccountRole) String() string {
 	return string(e)
 }
 
+// Organization represent for type of organization
+type Organization string
+
+// values for organization
+const (
+	OrganizationDwarvesFoundation Organization = "dwarves-foundation"
+	OrganizationConsoleLabs       Organization = "console-labs"
+)
+
+// IsValid validation for Organization
+func (e Organization) IsValid() bool {
+	switch e {
+	case
+		OrganizationDwarvesFoundation,
+		OrganizationConsoleLabs:
+		return true
+	}
+	return false
+}
+
+// String returns the string representation
+func (e Organization) String() string {
+	return string(e)
+}
+
 // Employee define the model for table employees
 type Employee struct {
 	BaseModel
@@ -89,6 +114,7 @@ type Employee struct {
 	LeftDate      *time.Time    `gorm:"default:null"`
 	SeniorityID   UUID          `gorm:"default:null"`
 	LineManagerID UUID          `gorm:"default:null"`
+	Organization  Organization  `gorm:"default:null"`
 
 	// social services
 	BasecampID             string `gorm:"default:null"`
