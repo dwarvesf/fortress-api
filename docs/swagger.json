@@ -3958,6 +3958,9 @@
                 "id": {
                     "type": "string"
                 },
+                "level": {
+                    "type": "integer"
+                },
                 "name": {
                     "type": "string"
                 },
@@ -4420,6 +4423,9 @@
                     "type": "string"
                 },
                 "notionName": {
+                    "type": "string"
+                },
+                "organization": {
                     "type": "string"
                 },
                 "phone": {
@@ -5126,6 +5132,9 @@
                     "type": "string"
                 },
                 "notionName": {
+                    "type": "string"
+                },
+                "organization": {
                     "type": "string"
                 },
                 "personalEmail": {
