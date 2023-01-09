@@ -1583,7 +1583,7 @@ func (h *handler) CreateWorkUnit(c *gin.Context) {
 
 	// create work unit member
 	for _, employee := range employees {
-		_, err = h.store.ProjectMember.One(tx.DB(), input.ProjectID, employee.ID.String(), false)
+		pMember, err := h.store.ProjectMember.One(tx.DB(), input.ProjectID, employee.ID.String(), false)
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Error(errs.ErrMemberIsNotActiveInProject, "member is not active in project")
 			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(errs.ErrMemberIsNotActiveInProject), input, ""))
@@ -1595,7 +1595,7 @@ func (h *handler) CreateWorkUnit(c *gin.Context) {
 			WorkUnitID: workUnit.ID,
 			EmployeeID: employee.ID,
 			ProjectID:  model.MustGetUUIDFromString(input.ProjectID),
-			JoinedDate: time.Now(),
+			JoinedDate: *pMember.JoinedDate,
 		}
 		if err := h.store.WorkUnitMember.Create(tx.DB(), &wuMember); err != nil {
 			l.Error(err, "failed to create new work unit member")
