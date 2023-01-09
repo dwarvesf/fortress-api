@@ -402,7 +402,13 @@ func (h *handler) createPeerReview(db *gorm.DB, req request.CreateSurveyFeedback
 		}
 	}
 
-	peers, err := h.store.WorkUnitMember.GetPeerReviewerInTimeRange(db, &startTime, &endTime)
+	//TODO: will reused this function later
+	// peers, err := h.store.WorkUnitMember.GetPeerReviewerInTimeRange(db, &startTime, &endTime)
+	// if err != nil {
+	// 	return http.StatusInternalServerError, err
+	// }
+
+	peers, err := h.store.WorkUnitMember.GetActivePeerReviewer(db)
 	if err != nil {
 		return http.StatusInternalServerError, err
 	}
