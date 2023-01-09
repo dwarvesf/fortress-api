@@ -662,7 +662,7 @@ func (h *handler) createEngagement(db *gorm.DB, req request.CreateSurveyFeedback
 }
 
 func (h *handler) createWorkEvent(db *gorm.DB, req request.CreateSurveyFeedbackInput, userID string) (int, error) {
-	//1. convert data
+	//1.1 convert data
 	fromDate, err := time.Parse("2006-01-02", req.FromDate)
 	if err != nil {
 		return http.StatusBadRequest, errs.ErrInvalidDate
@@ -731,7 +731,7 @@ func (h *handler) createWorkEvent(db *gorm.DB, req request.CreateSurveyFeedbackI
 	}
 
 	//3. create EmployeeEventTopic
-	employees, err := h.store.ProjectMember.GetByProjectIDs(db, projectIDs)
+	employees, err := h.store.ProjectMember.GetActiveByProjectIDs(db, projectIDs)
 	if err != nil {
 		return http.StatusInternalServerError, err
 	}
