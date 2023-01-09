@@ -36,6 +36,7 @@ var (
 	ErrInvalidProjectCode        = errors.New("invalid project code")
 	ErrInvalidChapterCode        = errors.New("invalid chapter code")
 	ErrInvalidSeniorityCode      = errors.New("invalid seniority code")
+	ErrInvalidOrganization       = errors.New("invalid organization")
 	ErrCouldNotMentorThemselves  = errors.New("employee could not be their own mentor")
 	ErrCouldNotMentorTheirMentor = errors.New("employee could not be mentor of their mentor")
 	ErrMenteeLeft                = errors.New("mentee is left")
