@@ -57,7 +57,12 @@ type Notion struct {
 	Secret string
 }
 
-func generateConfigFromViper(v *viper.Viper) *Config {
+type ENV interface {
+	GetBool(string) bool
+	GetString(string) string
+}
+
+func Generate(v ENV) *Config {
 	return &Config{
 		Debug:  v.GetBool("DEBUG"),
 		APIKey: v.GetString("API_KEY"),
@@ -122,7 +127,7 @@ func LoadConfig(loaders []Loader) *Config {
 			v = newV
 		}
 	}
-	return generateConfigFromViper(v)
+	return Generate(v)
 }
 
 func LoadTestConfig() Config {
