@@ -318,6 +318,10 @@ definitions:
         type: array
       keyword:
         type: string
+      organizations:
+        items:
+          type: string
+        type: array
       page:
         description: page index
         type: integer
@@ -1570,6 +1574,8 @@ definitions:
       notionID:
         type: string
       notionName:
+        type: string
+      organization:
         type: string
       phoneNumber:
         type: string

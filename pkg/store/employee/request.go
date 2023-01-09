@@ -10,6 +10,7 @@ type EmployeeFilter struct {
 	Projects        []string
 	Chapters        []string
 	Seniorities     []string
+	Organizations   []string
 	Keyword         string
 	//field sort
 	JoinedDateSort model.SortOrder

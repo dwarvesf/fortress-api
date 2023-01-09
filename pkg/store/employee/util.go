@@ -35,6 +35,10 @@ func getByWhereConditions(query *gorm.DB, filter EmployeeFilter) *gorm.DB {
 			filter.Seniorities)
 	}
 
+	if len(filter.Organizations) > 0 {
+		query = query.Where("employees.organization IN ?", filter.Organizations)
+	}
+
 	if filter.Keyword != "" {
 		query = query.Where("employees.keyword_vector @@ plainto_tsquery('english_nostop', fn_remove_vietnamese_accents(LOWER(?)))", filter.Keyword)
 	}

@@ -4290,6 +4290,12 @@ const docTemplate = `{
                 "keyword": {
                     "type": "string"
                 },
+                "organizations": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "page": {
                     "description": "page index",
                     "type": "integer"
@@ -6190,6 +6196,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "notionName": {
+                    "type": "string"
+                },
+                "organization": {
                     "type": "string"
                 },
                 "phoneNumber": {
