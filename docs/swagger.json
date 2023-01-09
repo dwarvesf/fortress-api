@@ -166,6 +166,62 @@
                 }
             }
         },
+        "/dashboards/work-surveys": {
+            "get": {
+                "description": "Get Work Surveys data for dashboard",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "Get Work Surveys data for dashboard",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Project ID",
+                        "name": "projectID",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.WorkSurveyResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/employees": {
             "post": {
                 "description": "Create new employee",
@@ -6335,6 +6391,20 @@
                 }
             }
         },
+        "view.Trend": {
+            "type": "object",
+            "properties": {
+                "deadline": {
+                    "type": "number"
+                },
+                "learning": {
+                    "type": "number"
+                },
+                "workload": {
+                    "type": "number"
+                }
+            }
+        },
         "view.UpdateEmployeeStatusResponse": {
             "type": "object",
             "properties": {
@@ -6664,6 +6734,48 @@
                 },
                 "updatedAt": {
                     "type": "string"
+                }
+            }
+        },
+        "view.WorkSurvey": {
+            "type": "object",
+            "properties": {
+                "deadline": {
+                    "type": "number"
+                },
+                "endDate": {
+                    "type": "string"
+                },
+                "learning": {
+                    "type": "number"
+                },
+                "trend": {
+                    "$ref": "#/definitions/view.Trend"
+                },
+                "workload": {
+                    "type": "number"
+                }
+            }
+        },
+        "view.WorkSurveyResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/view.WorkSurveysData"
+                }
+            }
+        },
+        "view.WorkSurveysData": {
+            "type": "object",
+            "properties": {
+                "project": {
+                    "$ref": "#/definitions/view.BasicProjectInfo"
+                },
+                "workSurveys": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.WorkSurvey"
+                    }
                 }
             }
         },
