@@ -1,0 +1,75 @@
+{
+    "data": {
+        "project": {
+            "id": "8dc3be2e-19a4-4942-8a79-56db391a0b15",
+            "name": "Fortress",
+            "type": "dwarves",
+            "status": "active",
+            "code": "fortress"
+        },
+        "workSurveys": [
+            {
+                "endDate": "28/02",
+                "workload": 0,
+                "deadline": 3,
+                "learning": 1,
+                "trend": null
+            },
+            {
+                "endDate": "21/02",
+                "workload": 0,
+                "deadline": 0,
+                "learning": 0,
+                "trend": {
+                    "workload": 0,
+                    "deadline": 0,
+                    "learning": 0
+                }
+            },
+            {
+                "endDate": "07/02",
+                "workload": 0,
+                "deadline": 0,
+                "learning": 0,
+                "trend": {
+                    "workload": 0,
+                    "deadline": 0,
+                    "learning": 0
+                }
+            },
+            {
+                "endDate": "23/01",
+                "workload": 0,
+                "deadline": 0,
+                "learning": 0,
+                "trend": {
+                    "workload": 0,
+                    "deadline": 0,
+                    "learning": 0
+                }
+            },
+            {
+                "endDate": "09/01",
+                "workload": 0,
+                "deadline": 0,
+                "learning": 0,
+                "trend": {
+                    "workload": 0,
+                    "deadline": 0,
+                    "learning": 0
+                }
+            },
+            {
+                "endDate": "01/01",
+                "workload": 0,
+                "deadline": 0,
+                "learning": 0,
+                "trend": {
+                    "workload": 0,
+                    "deadline": 0,
+                    "learning": 0
+                }
+            }
+        ]
+    }
+}

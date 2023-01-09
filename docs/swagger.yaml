@@ -1632,6 +1632,15 @@ definitions:
       type:
         type: string
     type: object
+  view.Trend:
+    properties:
+      deadline:
+        type: number
+      learning:
+        type: number
+      workload:
+        type: number
+    type: object
   view.UpdateEmployeeStatusResponse:
     properties:
       data:
@@ -1849,6 +1858,33 @@ definitions:
       updatedAt:
         type: string
     type: object
+  view.WorkSurvey:
+    properties:
+      deadline:
+        type: number
+      endDate:
+        type: string
+      learning:
+        type: number
+      trend:
+        $ref: '#/definitions/view.Trend'
+      workload:
+        type: number
+    type: object
+  view.WorkSurveyResponse:
+    properties:
+      data:
+        $ref: '#/definitions/view.WorkSurveysData'
+    type: object
+  view.WorkSurveysData:
+    properties:
+      project:
+        $ref: '#/definitions/view.BasicProjectInfo'
+      workSurveys:
+        items:
+          $ref: '#/definitions/view.WorkSurvey'
+        type: array
+    type: object
   view.WorkUnit:
     properties:
       code:
@@ -1988,6 +2024,43 @@ paths:
           schema:
             $ref: '#/definitions/view.ErrorResponse'
       summary: Get the total number of active member in each project
+      tags:
+      - Dashboard
+  /dashboards/work-surveys:
+    get:
+      consumes:
+      - application/json
+      description: Get Work Surveys data for dashboard
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Project ID
+        in: query
+        name: projectID
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.WorkSurveyResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get Work Surveys data for dashboard
       tags:
       - Dashboard
   /employees:

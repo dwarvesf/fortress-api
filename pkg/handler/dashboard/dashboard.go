@@ -1,14 +1,20 @@
 package dashboard
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
+	"github.com/dwarvesf/fortress-api/pkg/handler/dashboard/errs"
+	"github.com/dwarvesf/fortress-api/pkg/handler/dashboard/request"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
+	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/view"
+
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 type handler struct {
@@ -54,4 +60,73 @@ func (h *handler) ProjectSizes(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](res, nil, nil, nil, ""))
+}
+
+// WorkSurveys godoc
+// @Summary Get Work Surveys data for dashboard
+// @Description Get Work Surveys data for dashboard
+// @Tags Dashboard
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "jwt token"
+// @Param projectID   query  string false  "Project ID"
+// @Success 200 {object} view.WorkSurveyResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /dashboards/work-surveys [get]
+func (h *handler) WorkSurveys(c *gin.Context) {
+	input := request.WorkSurveysInput{}
+	if err := c.ShouldBindQuery(&input); err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, input, ""))
+		return
+	}
+
+	if input.ProjectID != "" && !model.IsUUIDFromString(input.ProjectID) {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidProjectID, nil, ""))
+		return
+	}
+
+	l := h.logger.Fields(logger.Fields{
+		"handler": "dashboard",
+		"method":  "WorkSurveys",
+		"input":   input,
+	})
+
+	var project *model.Project
+	var workSurveys []*model.WorkSurvey
+	var err error
+
+	if input.ProjectID != "" {
+		// Check project existence
+		project, err = h.store.Project.One(h.repo.DB(), input.ProjectID, false)
+		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				l.Error(err, "project not found")
+				c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, input, ""))
+				return
+			}
+
+			l.Error(err, "failed to get project")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input, ""))
+			return
+		}
+
+		// Get work survey by project ID
+		workSurveys, err = h.store.Dashboard.GetWorkSurveysByProjectID(h.repo.DB(), input.ProjectID)
+		if err != nil {
+			l.Error(err, "failed to get work survey by project ID")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+			return
+		}
+	} else {
+		workSurveys, err = h.store.Dashboard.GetAllWorkSurveys(h.repo.DB())
+		if err != nil {
+			l.Error(err, "failed to get work survey")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+			return
+		}
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToWorkSurveyData(project, workSurveys), nil, nil, nil, ""))
 }
