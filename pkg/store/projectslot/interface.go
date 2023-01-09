@@ -13,4 +13,5 @@ type IStore interface {
 	Delete(db *gorm.DB, id string) (err error)
 
 	UpdateSelectedFieldsByID(db *gorm.DB, id string, updateModel model.ProjectSlot, updatedFields ...string) (*model.ProjectSlot, error)
+	UpdateSelectedFieldByProjectID(db *gorm.DB, projectID string, updateModel model.ProjectSlot, updatedField string) error
 }

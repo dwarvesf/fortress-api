@@ -1,6 +1,8 @@
 package projectmember
 
 import (
+	"time"
+
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"gorm.io/gorm"
 )
@@ -55,6 +57,23 @@ func (s *store) Create(db *gorm.DB, member *model.ProjectMember) error {
 func (s *store) UpdateSelectedFieldsByID(db *gorm.DB, id string, updateModel model.ProjectMember, updatedFields ...string) (*model.ProjectMember, error) {
 	member := model.ProjectMember{}
 	return &member, db.Model(&member).Where("id = ?", id).Select(updatedFields).Updates(updateModel).Error
+}
+
+// UpdateSelectedFieldByProjectID just update selected field by projectID
+func (s *store) UpdateSelectedFieldByProjectID(db *gorm.DB, projectID string, updateModel model.ProjectMember, updatedField string) error {
+	return db.Model(&model.ProjectMember{}).
+		Where("project_id = ?", projectID).
+		Select(updatedField).
+		Updates(updateModel).Error
+}
+
+// UpdateLeftDateByProjectID just update left_date by projectID
+func (s *store) UpdateLeftDateByProjectID(db *gorm.DB, projectID string) error {
+	now := time.Now()
+	return db.Model(&model.ProjectMember{}).
+		Where("project_id = ? AND left_date IS NULL", projectID).
+		Select("left_date").
+		Updates(model.ProjectMember{LeftDate: &now}).Error
 }
 
 // IsExistsByEmployeeID check ProjectMember existance by project id and employee id
