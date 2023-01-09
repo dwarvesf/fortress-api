@@ -46,6 +46,9 @@ build:
 dev:
 	go run ./cmd/server/main.go
 
+cronjob:
+	go run ./cmd/cronjob/main.go
+
 test: reset-test-db
 	@PROJECT_PATH=$(shell pwd) go test -cover ./... -count=1 -p=1 
 
