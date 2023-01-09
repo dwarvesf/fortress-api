@@ -90,3 +90,11 @@ func (s *store) UpdateSelectedFieldsByID(db *gorm.DB, id string, updateModel mod
 	slot := model.ProjectSlot{}
 	return &slot, db.Model(&slot).Where("id = ?", id).Select(updatedFields).Updates(&updateModel).Error
 }
+
+// UpdateSelectedFieldByProjectID just update selected field by projectID
+func (s *store) UpdateSelectedFieldByProjectID(db *gorm.DB, projectID string, updateModel model.ProjectSlot, updatedField string) error {
+	return db.Model(&model.ProjectSlot{}).
+		Where("project_id = ?", projectID).
+		Select(updatedField).
+		Updates(updateModel).Error
+}
