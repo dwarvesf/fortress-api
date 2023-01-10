@@ -1,7 +1,7 @@
 -- +migrate Up
 
 CREATE TABLE if not exists "accounting_transactions" (
-    "id" uuid NOT NULL DEFAULT gen_random_uuid(),
+    "id" uuid NOT NULL DEFAULT uuid(),
     "created_at" timestamp(8) DEFAULT now(),
     "deleted_at" timestamp(8),
     "date" timestamp(8) DEFAULT now(),
@@ -20,7 +20,7 @@ CREATE TABLE if not exists "accounting_transactions" (
 );
 
 create table if not exists "assets" (
-    "id" uuid primary key NOT NULL DEFAULT gen_random_uuid(),
+    "id" uuid primary key NOT NULL DEFAULT uuid(),
     "created_at" timestamp(8) DEFAULT now(),
     "deleted_at" timestamp(8),
     "name" text,
@@ -36,7 +36,7 @@ create table if not exists "assets" (
 );
 
 create table if not exists "liabilities" (
-    "id" uuid primary key NOT NULL DEFAULT gen_random_uuid(),
+    "id" uuid primary key NOT NULL DEFAULT uuid(),
     "created_at" timestamp(8) DEFAULT now(),
     "deleted_at" timestamp(8),
     "paid_at" timestamp(8),
