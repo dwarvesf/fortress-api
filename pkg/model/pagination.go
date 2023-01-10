@@ -22,6 +22,16 @@ const (
 	SortOrderDESC SortOrder = "desc"
 )
 
+func (e SortOrder) IsValid() bool {
+	switch e {
+	case
+		SortOrderASC,
+		SortOrderDESC:
+		return true
+	}
+	return false
+}
+
 func (e SortOrder) String() string {
 	return string(e)
 }
