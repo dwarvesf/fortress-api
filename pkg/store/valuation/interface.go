@@ -14,5 +14,5 @@ type IStore interface {
 	// GetAssetAmount return total amount of current holding assets
 	GetAssetAmount(db *gorm.DB, year string) (total float64, err error)
 	GetExpense(db *gorm.DB, year string) (total *model.CurrencyView, err error)
-	GetPayroll(db *gorm.DB, year string) (total float64, err error)
+	GetPayroll(db *gorm.DB, year string) (total *model.CurrencyView, err error)
 }
