@@ -150,15 +150,52 @@ func (h *handler) UpdateProjectStatus(c *gin.Context) {
 		return
 	}
 
+	tx, done := h.repo.NewTransaction()
+
 	project.Status = body.ProjectStatus
-	_, err = h.store.Project.UpdateSelectedFieldsByID(h.repo.DB(), projectID, *project, "status")
+	_, err = h.store.Project.UpdateSelectedFieldsByID(tx.DB(), projectID, *project, "status")
 	if err != nil {
-		l.Error(err, "error query update status for project to db")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
+		l.Error(err, "failed to update project status")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
 		return
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToUpdateProjectStatusResponse(project), nil, nil, nil, ""))
+	if body.ProjectStatus == model.ProjectStatusClosed {
+		if err := h.closeProject(tx.DB(), projectID); err != nil {
+			l.Error(err, "failed to close project")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
+			return
+		}
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToUpdateProjectStatusResponse(project), nil, done(nil), nil, ""))
+}
+
+func (h *handler) closeProject(db *gorm.DB, projectID string) error {
+	err := h.store.ProjectMember.UpdateLeftDateByProjectID(db, projectID)
+	if err != nil {
+		h.logger.Error(err, "failed to update left_date by project_id")
+		return err
+	}
+
+	err = h.store.ProjectMember.UpdateSelectedFieldByProjectID(db, projectID,
+		model.ProjectMember{Status: model.ProjectMemberStatusInactive},
+		"status")
+	if err != nil {
+		h.logger.Error(err, "failed to update status of project_member by project_id")
+		return err
+	}
+
+	err = h.store.ProjectSlot.UpdateSelectedFieldByProjectID(db, projectID,
+		model.ProjectSlot{Status: model.ProjectMemberStatusInactive},
+		"status",
+	)
+	if err != nil {
+		h.logger.Error(err, "failed to update status of project_slot by project_id")
+		return err
+	}
+
+	return nil
 }
 
 // Create godoc
@@ -1583,7 +1620,7 @@ func (h *handler) CreateWorkUnit(c *gin.Context) {
 
 	// create work unit member
 	for _, employee := range employees {
-		_, err = h.store.ProjectMember.One(tx.DB(), input.ProjectID, employee.ID.String(), false)
+		pMember, err := h.store.ProjectMember.One(tx.DB(), input.ProjectID, employee.ID.String(), false)
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Error(errs.ErrMemberIsNotActiveInProject, "member is not active in project")
 			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(errs.ErrMemberIsNotActiveInProject), input, ""))
@@ -1595,7 +1632,7 @@ func (h *handler) CreateWorkUnit(c *gin.Context) {
 			WorkUnitID: workUnit.ID,
 			EmployeeID: employee.ID,
 			ProjectID:  model.MustGetUUIDFromString(input.ProjectID),
-			JoinedDate: time.Now(),
+			JoinedDate: *pMember.JoinedDate,
 		}
 		if err := h.store.WorkUnitMember.Create(tx.DB(), &wuMember); err != nil {
 			l.Error(err, "failed to create new work unit member")

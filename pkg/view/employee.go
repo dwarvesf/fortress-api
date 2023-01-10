@@ -37,6 +37,7 @@ type EmployeeData struct {
 	WorkingStatus model.WorkingStatus `json:"status"`
 	JoinedDate    *time.Time          `json:"joinedDate"`
 	LeftDate      *time.Time          `json:"leftDate"`
+	Organization  string              `json:"organization"`
 
 	Seniority   *model.Seniority      `json:"seniority"`
 	LineManager *BasicEmployeeInfo    `json:"lineManager"`
@@ -112,6 +113,7 @@ type UpdateGeneralInfoEmployeeData struct {
 	DiscordID    string             `json:"discordID"`
 	DiscordName  string             `json:"discordName"`
 	DisplayName  string             `json:"displayName"`
+	Organization string             `json:"organization"`
 	LineManager  *BasicEmployeeInfo `json:"lineManager"`
 }
 
@@ -232,6 +234,7 @@ func ToUpdateGeneralInfoEmployeeData(employee *model.Employee) *UpdateGeneralInf
 		DiscordName:  employee.DiscordName,
 		LinkedinName: employee.LinkedInName,
 		DisplayName:  employee.DisplayName,
+		Organization: employee.Organization.String(),
 	}
 
 	if employee.LineManager != nil {
@@ -282,6 +285,7 @@ func ToEmployeeData(employee *model.Employee) *EmployeeData {
 		Seniority:        employee.Seniority,
 		JoinedDate:       employee.JoinedDate,
 		LeftDate:         employee.LeftDate,
+		Organization:     employee.Organization.String(),
 		Projects:         employeeProjects,
 		LineManager:      lineManager,
 		Country:          employee.Country,

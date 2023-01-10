@@ -100,3 +100,46 @@ func (s *store) GetPeerReviewerInTimeRange(db *gorm.DB, from *time.Time, to *tim
 	`, to, from, to, from)
 	return peers, query.Scan(&peers).Error
 }
+
+func (s *store) GetActivePeerReviewer(db *gorm.DB) ([]model.WorkUnitPeer, error) {
+	var peers []model.WorkUnitPeer
+
+	query := db.Raw(`
+	WITH peer AS (
+		SELECT
+			employee_id,
+			reviewer_id
+		FROM (
+			SELECT
+				w1.employee_id,
+				w1.work_unit_id,
+				w2.employee_id AS reviewer_id,
+				w1.project_id
+			FROM
+				work_unit_members w1
+				JOIN work_unit_members w2 ON w1.work_unit_id = w2.work_unit_id
+			WHERE
+				w1.status = 'active'
+				AND w2.status = 'active') a
+			JOIN employees e ON a.employee_id = e.id
+		WHERE
+			employee_id <> reviewer_id
+			AND e.working_status = 'full-time'
+		GROUP BY
+			employee_id,
+			reviewer_id
+		HAVING
+			count(*) = 1
+	)
+	SELECT
+		p.employee_id,
+		p.reviewer_id
+	FROM
+		peer p
+		JOIN employees e ON e.id = p.reviewer_id
+	WHERE
+		e.line_manager_id <> p.reviewer_id
+		AND e.working_status = 'full-time';		
+	`)
+	return peers, query.Scan(&peers).Error
+}

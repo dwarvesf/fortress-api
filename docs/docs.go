@@ -3966,6 +3966,9 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
+                "level": {
+                    "type": "integer"
+                },
                 "name": {
                     "type": "string"
                 },
@@ -4287,6 +4290,18 @@ const docTemplate = `{
                 "keyword": {
                     "type": "string"
                 },
+                "lineManagers": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "organizations": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "page": {
                     "description": "page index",
                     "type": "integer"
@@ -4428,6 +4443,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "notionName": {
+                    "type": "string"
+                },
+                "organization": {
                     "type": "string"
                 },
                 "phone": {
@@ -5134,6 +5152,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "notionName": {
+                    "type": "string"
+                },
+                "organization": {
                     "type": "string"
                 },
                 "personalEmail": {
@@ -6181,6 +6202,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "notionName": {
+                    "type": "string"
+                },
+                "organization": {
                     "type": "string"
                 },
                 "phoneNumber": {

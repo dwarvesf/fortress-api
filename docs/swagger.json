@@ -3958,6 +3958,9 @@
                 "id": {
                     "type": "string"
                 },
+                "level": {
+                    "type": "integer"
+                },
                 "name": {
                     "type": "string"
                 },
@@ -4279,6 +4282,18 @@
                 "keyword": {
                     "type": "string"
                 },
+                "lineManagers": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "organizations": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "page": {
                     "description": "page index",
                     "type": "integer"
@@ -4420,6 +4435,9 @@
                     "type": "string"
                 },
                 "notionName": {
+                    "type": "string"
+                },
+                "organization": {
                     "type": "string"
                 },
                 "phone": {
@@ -5126,6 +5144,9 @@
                     "type": "string"
                 },
                 "notionName": {
+                    "type": "string"
+                },
+                "organization": {
                     "type": "string"
                 },
                 "personalEmail": {
@@ -6173,6 +6194,9 @@
                     "type": "string"
                 },
                 "notionName": {
+                    "type": "string"
+                },
+                "organization": {
                     "type": "string"
                 },
                 "phoneNumber": {

@@ -42,6 +42,7 @@ func (v *Vault) LoadConfig() *config.Config {
 	return &config.Config{
 		Debug:  v.GetBool("DEBUG"),
 		APIKey: v.GetString("API_KEY"),
+		Env:    v.GetString("ENV"),
 
 		ApiServer: config.ApiServer{
 			Port:           v.GetString("PORT"),
@@ -64,6 +65,11 @@ func (v *Vault) LoadConfig() *config.Config {
 			GCSBucketName:  v.GetString("GCS_BUCKET_NAME"),
 			GCSProjectID:   v.GetString("GCS_PROJECT_ID"),
 			GCSCredentials: v.GetString("GCS_CREDENTIALS"),
+		},
+
+		Wise: config.Wise{
+			APIKey:  v.GetString("WISE_API_KEY"),
+			Profile: v.GetString("WISE_PROFILE"),
 		},
 
 		Notion: config.Notion{

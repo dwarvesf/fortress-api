@@ -46,8 +46,11 @@ build:
 dev:
 	go run ./cmd/server/main.go
 
+cronjob:
+	go run ./cmd/cronjob/main.go
+
 test: reset-test-db
-	@PROJECT_PATH=$(shell pwd) go test -cover ./... -count=1 -p=1 
+	@PROJECT_PATH=$(shell pwd) go test -cover ./... -count=1 -p=1
 
 migrate-test:
 	${APP_ENVIRONMENT} sql-migrate up -env=test

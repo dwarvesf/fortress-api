@@ -15,8 +15,8 @@ require (
 	github.com/google/go-cmp v0.5.9
 	github.com/hashicorp/vault/api v1.8.2
 	github.com/joho/godotenv v1.4.0
-	github.com/k0kubun/pp/v3 v3.2.0
 	github.com/lib/pq v1.10.6
+	github.com/robfig/cron/v3 v3.0.1
 	github.com/satori/go.uuid v1.2.0
 	github.com/shopspring/decimal v1.3.1
 	github.com/sirupsen/logrus v1.9.0

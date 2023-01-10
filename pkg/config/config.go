@@ -15,12 +15,16 @@ type Config struct {
 
 	// server
 	ApiServer ApiServer
-	Google    Google
-	Vault     Vault
-	Notion    Notion
+
+	// service
+	Google Google
+	Vault  Vault
+	Notion Notion
+	Wise   Wise
 
 	APIKey string
 	Debug  bool
+	Env    string
 }
 
 type DBConnection struct {
@@ -47,6 +51,12 @@ type Google struct {
 	GCSCredentials string
 }
 
+type Wise struct {
+	APIKey  string
+	Profile string
+	Url     string
+}
+
 type Vault struct {
 	Address string
 	Token   string
@@ -57,10 +67,16 @@ type Notion struct {
 	Secret string
 }
 
-func generateConfigFromViper(v *viper.Viper) *Config {
+type ENV interface {
+	GetBool(string) bool
+	GetString(string) string
+}
+
+func Generate(v ENV) *Config {
 	return &Config{
 		Debug:  v.GetBool("DEBUG"),
 		APIKey: v.GetString("API_KEY"),
+		Env:    v.GetString("ENV"),
 
 		ApiServer: ApiServer{
 			Port:           v.GetString("PORT"),
@@ -83,6 +99,12 @@ func generateConfigFromViper(v *viper.Viper) *Config {
 			GCSBucketName:  v.GetString("GCS_BUCKET_NAME"),
 			GCSProjectID:   v.GetString("GCS_PROJECT_ID"),
 			GCSCredentials: v.GetString("GCS_CREDENTIALS"),
+		},
+
+		Wise: Wise{
+			APIKey:  v.GetString("WISE_API_KEY"),
+			Profile: v.GetString("WISE_PROFILE"),
+			Url:     v.GetString("WISE_URL"),
 		},
 
 		Vault: Vault{
@@ -122,7 +144,7 @@ func LoadConfig(loaders []Loader) *Config {
 			v = newV
 		}
 	}
-	return generateConfigFromViper(v)
+	return Generate(v)
 }
 
 func LoadTestConfig() Config {

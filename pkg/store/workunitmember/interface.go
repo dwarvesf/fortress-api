@@ -17,4 +17,5 @@ type IStore interface {
 	One(db *gorm.DB, workUnitID string, employeeID string, status string) (workUnitMember *model.WorkUnitMember, err error)
 	SoftDeleteByWorkUnitID(db *gorm.DB, workUnitID string, employeeID string) (err error)
 	GetPeerReviewerInTimeRange(db *gorm.DB, from *time.Time, to *time.Time) ([]model.WorkUnitPeer, error)
+	GetActivePeerReviewer(db *gorm.DB) ([]model.WorkUnitPeer, error)
 }

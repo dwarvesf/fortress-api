@@ -52,7 +52,11 @@ func (s *store) GetByEmployeeID(db *gorm.DB, employeeID string, input GetByEmplo
 	}
 
 	query = query.Count(&total)
-	query = query.Order(pagination.Sort)
+	if pagination.Sort != "" {
+		query = query.Order(pagination.Sort)
+	} else {
+		query = query.Order("created_at DESC")
+	}
 
 	limit, offset := pagination.ToLimitOffset()
 	if pagination.Page > 0 {

@@ -402,7 +402,13 @@ func (h *handler) createPeerReview(db *gorm.DB, req request.CreateSurveyFeedback
 		}
 	}
 
-	peers, err := h.store.WorkUnitMember.GetPeerReviewerInTimeRange(db, &startTime, &endTime)
+	//TODO: will reused this function later
+	// peers, err := h.store.WorkUnitMember.GetPeerReviewerInTimeRange(db, &startTime, &endTime)
+	// if err != nil {
+	// 	return http.StatusInternalServerError, err
+	// }
+
+	peers, err := h.store.WorkUnitMember.GetActivePeerReviewer(db)
 	if err != nil {
 		return http.StatusInternalServerError, err
 	}
@@ -656,7 +662,7 @@ func (h *handler) createEngagement(db *gorm.DB, req request.CreateSurveyFeedback
 }
 
 func (h *handler) createWorkEvent(db *gorm.DB, req request.CreateSurveyFeedbackInput, userID string) (int, error) {
-	//1. convert data
+	//1.1 convert data
 	fromDate, err := time.Parse("2006-01-02", req.FromDate)
 	if err != nil {
 		return http.StatusBadRequest, errs.ErrInvalidDate
@@ -725,7 +731,7 @@ func (h *handler) createWorkEvent(db *gorm.DB, req request.CreateSurveyFeedbackI
 	}
 
 	//3. create EmployeeEventTopic
-	employees, err := h.store.ProjectMember.GetByProjectIDs(db, projectIDs)
+	employees, err := h.store.ProjectMember.GetActiveByProjectIDs(db, projectIDs)
 	if err != nil {
 		return http.StatusInternalServerError, err
 	}

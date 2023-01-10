@@ -19,6 +19,8 @@ type GetListEmployeeInput struct {
 	Projects        []string `json:"projects" form:"projects"`
 	Chapters        []string `json:"chapters" form:"chapters"`
 	Seniorities     []string `json:"seniorities" form:"seniorities"`
+	Organizations   []string `json:"organizations" form:"organizations"`
+	LineManagers    []string `json:"lineManagers" form:"lineManagers"`
 	Keyword         string   `json:"keyword" form:"keyword"`
 }
 
@@ -35,6 +37,7 @@ type UpdateEmployeeGeneralInfoInput struct {
 	DiscordID     string     `form:"discordID" json:"discordID"`
 	DiscordName   string     `form:"discordName" json:"discordName"`
 	LinkedInName  string     `form:"linkedInName" json:"linkedInName"`
+	Organization  string     `form:"organization" json:"organization"`
 }
 
 type AddMenteeInput struct {
@@ -134,6 +137,13 @@ func (input *GetListEmployeeInput) Validate() error {
 		for _, s := range input.Seniorities {
 			if strings.TrimSpace(s) == "" {
 				return errs.ErrInvalidSeniorityCode
+			}
+		}
+	}
+	if len(input.Organizations) > 0 {
+		for _, v := range input.Organizations {
+			if !model.Organization(v).IsValid() {
+				return errs.ErrInvalidOrganization
 			}
 		}
 	}

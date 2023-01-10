@@ -44,7 +44,7 @@ func main() {
 	}
 
 	if vault != nil {
-		cfg = vault.LoadConfig()
+		cfg = config.Generate(vault)
 	}
 
 	svc := service.New(cfg)

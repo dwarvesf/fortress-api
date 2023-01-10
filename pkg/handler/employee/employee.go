@@ -83,6 +83,8 @@ func (h *handler) List(c *gin.Context) {
 		Projects:       body.Projects,
 		Chapters:       body.Chapters,
 		Seniorities:    body.Seniorities,
+		Organizations:  body.Organizations,
+		LineManagers:   body.LineManagers,
 		JoinedDateSort: model.SortOrderDESC,
 	}
 
@@ -381,6 +383,10 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 		employee.DisplayName = body.DisplayName
 	}
 
+	if body.Organization != "" && model.Organization(body.Organization).IsValid() {
+		employee.Organization = model.Organization(body.Organization)
+	}
+
 	employee.LineManagerID = body.LineManagerID
 
 	_, err = h.store.Employee.UpdateSelectedFieldsByID(h.repo.DB(), employeeID, *employee,
@@ -396,6 +402,7 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 		"notion_email",
 		"linkedin_name",
 		"display_name",
+		"organization",
 	)
 	if err != nil {
 		l.Error(err, "failed to update employee")

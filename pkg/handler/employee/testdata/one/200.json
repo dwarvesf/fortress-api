@@ -27,12 +27,14 @@
         "status": "contractor",
         "joinedDate": "2018-09-01T00:00:00Z",
         "leftDate": null,
+        "organization": "",
         "seniority": {
             "id": "01fb6322-d727-47e3-a242-5039ea4732fd",
             "createdAt": "2022-11-07T09:50:25.714604Z",
             "updatedAt": "2022-11-07T09:50:25.714604Z",
             "name": "Staff",
-            "code": "staff"
+            "code": "staff",
+            "level": 5
         },
         "lineManager": null,
         "positions": [
@@ -108,7 +110,8 @@
                     "createdAt": "2022-11-07T09:50:25.714604Z",
                     "updatedAt": "2022-11-07T09:50:25.714604Z",
                     "name": "Mid",
-                    "code": "mid"
+                    "code": "mid",
+                    "level": 3
                 },
                 "positions": [
                     {
@@ -131,7 +134,8 @@
                     "createdAt": "2022-11-07T09:50:25.714604Z",
                     "updatedAt": "2022-11-07T09:50:25.714604Z",
                     "name": "Mid",
-                    "code": "mid"
+                    "code": "mid",
+                    "level": 3
                 },
                 "positions": [
                     {
@@ -154,7 +158,8 @@
                     "createdAt": "2022-11-07T09:50:25.714604Z",
                     "updatedAt": "2022-11-07T09:50:25.714604Z",
                     "name": "Mid",
-                    "code": "mid"
+                    "code": "mid",
+                    "level": 3
                 },
                 "positions": [
                     {
@@ -177,7 +182,8 @@
                     "createdAt": "2022-11-07T09:50:25.714604Z",
                     "updatedAt": "2022-11-07T09:50:25.714604Z",
                     "name": "Junior",
-                    "code": "junior"
+                    "code": "junior",
+                    "level": 2
                 },
                 "positions": []
             }

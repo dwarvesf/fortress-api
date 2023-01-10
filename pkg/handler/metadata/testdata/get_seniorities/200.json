@@ -5,42 +5,48 @@
       "createdAt": "2022-11-07T09:50:25.714604Z",
       "updatedAt": "2022-11-07T09:50:25.714604Z",
       "name": "Fresher",
-      "code": "fresher"
+      "code": "fresher",
+      "level": 1
     },
     {
       "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
       "createdAt": "2022-11-07T09:50:25.714604Z",
       "updatedAt": "2022-11-07T09:50:25.714604Z",
       "name": "Junior",
-      "code": "junior"
+      "code": "junior",
+      "level": 2
     },
     {
       "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
       "createdAt": "2022-11-07T09:50:25.714604Z",
       "updatedAt": "2022-11-07T09:50:25.714604Z",
       "name": "Mid",
-      "code": "mid"
+      "code": "mid",
+      "level": 3
     },
     {
       "id": "01fb6322-d727-47e3-a242-5039ea4732fc",
       "createdAt": "2022-11-07T09:50:25.714604Z",
       "updatedAt": "2022-11-07T09:50:25.714604Z",
       "name": "Senior",
-      "code": "senior"
+      "code": "senior",
+      "level": 4
     },
     {
       "id": "01fb6322-d727-47e3-a242-5039ea4732fd",
       "createdAt": "2022-11-07T09:50:25.714604Z",
       "updatedAt": "2022-11-07T09:50:25.714604Z",
       "name": "Staff",
-      "code": "staff"
+      "code": "staff",
+      "level": 5
     },
     {
       "id": "39735742-829b-47f3-8f9d-daf0983914e5",
       "createdAt": "2022-11-07T09:50:25.714604Z",
       "updatedAt": "2022-11-07T09:50:25.714604Z",
       "name": "Principal",
-      "code": "principal"
+      "code": "principal",
+      "level": 6
     }
   ]
 }
