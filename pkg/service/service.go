@@ -5,11 +5,13 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/service/google"
 	"github.com/dwarvesf/fortress-api/pkg/service/notion"
+	"github.com/dwarvesf/fortress-api/pkg/service/wise"
 )
 
 type Service struct {
 	Google google.GoogleService
 	Notion notion.NotionService
+	Wise   wise.IWiseService
 }
 
 func New(cfg *config.Config) *Service {
@@ -31,5 +33,6 @@ func New(cfg *config.Config) *Service {
 		Notion: notion.New(
 			cfg.Notion.Secret,
 		),
+		Wise: wise.New(cfg, logger.L),
 	}
 }

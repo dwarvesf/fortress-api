@@ -21,7 +21,7 @@ func (s *store) OneByMenteeID(db *gorm.DB, menteeID string, preload bool) (*mode
 	}
 
 	var employeeMentee *model.EmployeeMentee
-	return employeeMentee, query.First(&employeeMentee).Debug().Error
+	return employeeMentee, query.First(&employeeMentee).Error
 }
 
 // Delete delete 1 employee mentee by id

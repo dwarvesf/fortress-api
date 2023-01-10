@@ -38,6 +38,46 @@ func New(cfg *config.Config) (VaultService, error) {
 	}, nil
 }
 
+func (v *Vault) LoadConfig() *config.Config {
+	return &config.Config{
+		Debug:  v.GetBool("DEBUG"),
+		APIKey: v.GetString("API_KEY"),
+		Env:    v.GetString("ENV"),
+
+		ApiServer: config.ApiServer{
+			Port:           v.GetString("PORT"),
+			AllowedOrigins: v.GetString("ALLOWED_ORIGINS"),
+		},
+
+		Postgres: config.DBConnection{
+			Host:    v.GetString("DB_HOST"),
+			Port:    v.GetString("DB_PORT"),
+			User:    v.GetString("DB_USER"),
+			Name:    v.GetString("DB_NAME"),
+			Pass:    v.GetString("DB_PASS"),
+			SSLMode: v.GetString("DB_SSL_MODE"),
+		},
+
+		Google: config.Google{
+			ClientSecret:   v.GetString("GOOGLE_API_CLIENT_SECRET"),
+			ClientID:       v.GetString("GOOGLE_API_CLIENT_ID"),
+			AppName:        v.GetString("GOOGLE_API_APP_NAME"),
+			GCSBucketName:  v.GetString("GCS_BUCKET_NAME"),
+			GCSProjectID:   v.GetString("GCS_PROJECT_ID"),
+			GCSCredentials: v.GetString("GCS_CREDENTIALS"),
+		},
+
+		Wise: config.Wise{
+			APIKey:  v.GetString("WISE_API_KEY"),
+			Profile: v.GetString("WISE_PROFILE"),
+		},
+
+		Notion: config.Notion{
+			Secret: v.GetString("NOTION_SECRET"),
+		},
+	}
+}
+
 func (v *Vault) GetString(key string) string {
 	value, _ := v.data[key].(string)
 	return value

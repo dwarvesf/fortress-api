@@ -56,24 +56,27 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 	v1.DELETE("/metadata/positions/:id", pmw.WithPerm("metadata.delete"), h.Metadata.DeletePosition)
 
 	// projects
-	v1.POST("/projects", amw.WithAuth, pmw.WithPerm("projects.create"), h.Project.Create)
-	v1.GET("/projects", amw.WithAuth, pmw.WithPerm("projects.read"), h.Project.List)
-	v1.GET("/projects/:id", amw.WithAuth, pmw.WithPerm("projects.read"), h.Project.Details)
-	v1.PUT("/projects/:id/sending-survey-state", amw.WithAuth, pmw.WithPerm("projects.edit"), h.Project.UpdateSendingSurveyState)
-	v1.POST("/projects/:id/upload-avatar", amw.WithAuth, pmw.WithPerm("projects.edit"), h.Project.UploadAvatar)
-	v1.PUT("/projects/:id/status", amw.WithAuth, pmw.WithPerm("projects.edit"), h.Project.UpdateProjectStatus)
-	v1.POST("/projects/:id/members", amw.WithAuth, pmw.WithPerm("projectMembers.create"), h.Project.AssignMember)
-	v1.GET("/projects/:id/members", amw.WithAuth, pmw.WithPerm("projectMembers.read"), h.Project.GetMembers)
-	v1.PUT("/projects/:id/members", amw.WithAuth, pmw.WithPerm("projectMembers.edit"), h.Project.UpdateMember)
-	v1.PUT("/projects/:id/members/:memberID", amw.WithAuth, pmw.WithPerm("projectMembers.edit"), h.Project.UnassignMember)
-	v1.DELETE("/projects/:id/members/:memberID", amw.WithAuth, pmw.WithPerm("projectMembers.delete"), h.Project.DeleteMember)
-	v1.PUT("/projects/:id/general-info", amw.WithAuth, pmw.WithPerm("projects.edit"), h.Project.UpdateGeneralInfo)
-	v1.PUT("/projects/:id/contact-info", amw.WithAuth, pmw.WithPerm("projects.edit"), h.Project.UpdateContactInfo)
-	v1.GET("/projects/:id/work-units", amw.WithAuth, pmw.WithPerm("projectWorkUnits.read"), h.Project.GetWorkUnits)
-	v1.POST("/projects/:id/work-units", amw.WithAuth, pmw.WithPerm("projectWorkUnits.create"), h.Project.CreateWorkUnit)
-	v1.PUT("/projects/:id/work-units/:workUnitID", amw.WithAuth, pmw.WithPerm("projectWorkUnits.edit"), h.Project.UpdateWorkUnit)
-	v1.PUT("/projects/:id/work-units/:workUnitID/archive", amw.WithAuth, pmw.WithPerm("projectWorkUnits.edit"), h.Project.ArchiveWorkUnit)
-	v1.PUT("/projects/:id/work-units/:workUnitID/unarchive", amw.WithAuth, pmw.WithPerm("projectWorkUnits.edit"), h.Project.UnarchiveWorkUnit)
+	projectGroup := v1.Group("projects")
+	{
+		projectGroup.POST("", amw.WithAuth, pmw.WithPerm("projects.create"), h.Project.Create)
+		projectGroup.GET("", amw.WithAuth, pmw.WithPerm("projects.read"), h.Project.List)
+		projectGroup.GET("/:id", amw.WithAuth, pmw.WithPerm("projects.read"), h.Project.Details)
+		projectGroup.PUT("/:id/sending-survey-state", amw.WithAuth, pmw.WithPerm("projects.edit"), h.Project.UpdateSendingSurveyState)
+		projectGroup.POST("/:id/upload-avatar", amw.WithAuth, pmw.WithPerm("projects.edit"), h.Project.UploadAvatar)
+		projectGroup.PUT("/:id/status", amw.WithAuth, pmw.WithPerm("projects.edit"), h.Project.UpdateProjectStatus)
+		projectGroup.POST("/:id/members", amw.WithAuth, pmw.WithPerm("projectMembers.create"), h.Project.AssignMember)
+		projectGroup.GET("/:id/members", amw.WithAuth, pmw.WithPerm("projectMembers.read"), h.Project.GetMembers)
+		projectGroup.PUT("/:id/members", amw.WithAuth, pmw.WithPerm("projectMembers.edit"), h.Project.UpdateMember)
+		projectGroup.PUT("/:id/members/:memberID", amw.WithAuth, pmw.WithPerm("projectMembers.edit"), h.Project.UnassignMember)
+		projectGroup.DELETE("/:id/members/:memberID", amw.WithAuth, pmw.WithPerm("projectMembers.delete"), h.Project.DeleteMember)
+		projectGroup.PUT("/:id/general-info", amw.WithAuth, pmw.WithPerm("projects.edit"), h.Project.UpdateGeneralInfo)
+		projectGroup.PUT("/:id/contact-info", amw.WithAuth, pmw.WithPerm("projects.edit"), h.Project.UpdateContactInfo)
+		projectGroup.GET("/:id/work-units", amw.WithAuth, pmw.WithPerm("projectWorkUnits.read"), h.Project.GetWorkUnits)
+		projectGroup.POST("/:id/work-units", amw.WithAuth, pmw.WithPerm("projectWorkUnits.create"), h.Project.CreateWorkUnit)
+		projectGroup.PUT("/:id/work-units/:workUnitID", amw.WithAuth, pmw.WithPerm("projectWorkUnits.edit"), h.Project.UpdateWorkUnit)
+		projectGroup.PUT("/:id/work-units/:workUnitID/archive", amw.WithAuth, pmw.WithPerm("projectWorkUnits.edit"), h.Project.ArchiveWorkUnit)
+		projectGroup.PUT("/:id/work-units/:workUnitID/unarchive", amw.WithAuth, pmw.WithPerm("projectWorkUnits.edit"), h.Project.UnarchiveWorkUnit)
+	}
 
 	feedbackGroup := v1.Group("/feedbacks")
 	{
@@ -95,5 +98,10 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 		surveyGroup.PUT("/:id/topics/:topicID/employees", pmw.WithPerm("surveys.edit"), h.Survey.UpdateTopicReviewers)
 		surveyGroup.PUT("/:id/done", pmw.WithPerm("surveys.edit"), h.Survey.MarkDone)
 		surveyGroup.DELETE("/:id/topics/:topicID/employees", pmw.WithPerm("surveys.edit"), h.Survey.DeleteTopicReviewers)
+	}
+
+	valuation := v1.Group("/valuation")
+	{
+		valuation.GET("/:year", pmw.WithPerm("valuations.read"), h.Valuation.One)
 	}
 }

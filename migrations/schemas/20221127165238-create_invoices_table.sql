@@ -54,7 +54,7 @@ CREATE TABLE invoices (
     tax               int4,
     discount          int4,
     invoice_file_url  TEXT,
-    error_invoice_id  uuid NOT NULL,
+    error_invoice_id  uuid,
     metadata          json,
     paid_at           TIMESTAMP(6),
     note              TEXT,
