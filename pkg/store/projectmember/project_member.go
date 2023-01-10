@@ -45,7 +45,7 @@ func (s *store) One(db *gorm.DB, projectID string, employeeID string, preload bo
 // OneBySlotID return a project member by slotID
 func (s *store) OneBySlotID(db *gorm.DB, slotID string) (*model.ProjectMember, error) {
 	var member *model.ProjectMember
-	return member, db.Where("project_slot_id = ? AND left_date IS NULL", slotID).Preload("Employee").First(&member).Error
+	return member, db.Where("project_slot_id = ? AND (left_date IS NULL OR left_date > ?)", slotID, time.Now()).Preload("Employee").First(&member).Error
 }
 
 // Create using for create new member
@@ -71,7 +71,7 @@ func (s *store) UpdateSelectedFieldByProjectID(db *gorm.DB, projectID string, up
 func (s *store) UpdateLeftDateByProjectID(db *gorm.DB, projectID string) error {
 	now := time.Now()
 	return db.Model(&model.ProjectMember{}).
-		Where("project_id = ? AND left_date IS NULL", projectID).
+		Where("project_id = ? AND (left_date IS NULL OR left_date > ?)", projectID, now).
 		Select("left_date").
 		Updates(model.ProjectMember{LeftDate: &now}).Error
 }
@@ -89,5 +89,5 @@ func (s *store) IsExistsByEmployeeID(db *gorm.DB, projectID string, employeeID s
 // GetActiveByProjectIDs get project member by porjectID list
 func (s *store) GetActiveByProjectIDs(db *gorm.DB, projectIDs []string) ([]*model.ProjectMember, error) {
 	var members []*model.ProjectMember
-	return members, db.Joins("JOIN employees ON project_members.employee_id = employees.id").Where("project_members.left_date IS NULL AND project_members.status = 'active' AND employees.working_status = 'full-time' AND project_members.project_id IN ?", projectIDs).Preload("Employee").Find(&members).Error
+	return members, db.Joins("JOIN employees ON project_members.employee_id = employees.id").Where("(project_members.left_date IS NULL OR project_members.left_date > ?) AND project_members.status = 'active' AND employees.working_status = 'full-time' AND project_members.project_id IN ?", time.Now(), projectIDs).Preload("Employee").Find(&members).Error
 }
