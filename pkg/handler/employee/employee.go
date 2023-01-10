@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"golang.org/x/exp/slices"
 	"gorm.io/gorm"
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
@@ -837,6 +838,12 @@ func (h *handler) UpdatePersonalInfo(c *gin.Context) {
 		return
 	}
 
+	if isValid := h.validateCountryAndCity(h.repo.DB(), body.Country, body.City); !isValid {
+		l.Info("country or city is invalid")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidCountryOrCity, body, ""))
+		return
+	}
+
 	employee.DateOfBirth = body.DoB
 	employee.Gender = body.Gender
 	employee.Address = body.Address
@@ -853,6 +860,40 @@ func (h *handler) UpdatePersonalInfo(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToUpdatePersonalEmployeeData(employee), nil, nil, nil, ""))
+}
+
+func (h *handler) validateCountryAndCity(db *gorm.DB, countryName string, city string) bool {
+	if countryName == "" && city == "" {
+		return true
+	}
+
+	if countryName == "" && city != "" {
+		return false
+	}
+
+	l := h.logger.Fields(logger.Fields{
+		"handler":     "profile",
+		"method":      "validateCountryAndCity",
+		"countryName": countryName,
+		"city":        city,
+	})
+
+	country, err := h.store.Country.OneByName(db, countryName)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			l.Info("country not found")
+			return false
+		}
+		l.Error(err, "failed to get country by code")
+		return false
+	}
+
+	if city != "" && !slices.Contains([]string(country.Cities), city) {
+		l.Info("city does not belong to country")
+		return false
+	}
+
+	return true
 }
 
 // UploadContent godoc

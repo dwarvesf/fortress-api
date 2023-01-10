@@ -84,6 +84,8 @@ type EmployeeProjectData struct {
 	Positions      []Position `json:"positions"`
 	Code           string     `json:"code"`
 	Avatar         string     `json:"avatar"`
+	JoinedDate     *time.Time `json:"joinedDate"`
+	LeftDate       *time.Time `json:"leftDate"`
 }
 
 func ToEmployeeProjectData(pm *model.ProjectMember) EmployeeProjectData {
@@ -95,6 +97,8 @@ func ToEmployeeProjectData(pm *model.ProjectMember) EmployeeProjectData {
 		Positions:      ToProjectMemberPositions(pm.ProjectMemberPositions),
 		Code:           pm.Project.Code,
 		Avatar:         pm.Project.Avatar,
+		JoinedDate:     pm.JoinedDate,
+		LeftDate:       pm.LeftDate,
 	}
 }
 

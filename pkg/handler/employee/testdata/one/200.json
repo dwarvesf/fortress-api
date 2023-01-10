@@ -94,7 +94,9 @@
                         "name": "Frontend"
                     }
                 ],
-                "code": ""
+                "code": "",
+                "joinedDate": "2022-11-01T00:00:00Z",
+                "leftDate": null
             }
         ],
         "chapters": [],

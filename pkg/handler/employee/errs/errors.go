@@ -37,6 +37,7 @@ var (
 	ErrInvalidChapterCode        = errors.New("invalid chapter code")
 	ErrInvalidSeniorityCode      = errors.New("invalid seniority code")
 	ErrInvalidOrganization       = errors.New("invalid organization")
+	ErrInvalidCountryOrCity      = errors.New("invalid country or city")
 	ErrCouldNotMentorThemselves  = errors.New("employee could not be their own mentor")
 	ErrCouldNotMentorTheirMentor = errors.New("employee could not be mentor of their mentor")
 	ErrMenteeLeft                = errors.New("mentee is left")

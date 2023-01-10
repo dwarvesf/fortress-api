@@ -129,8 +129,8 @@ func (h *handler) UpdateInfo(c *gin.Context) {
 	input.MapEmployeeInput(employee)
 
 	if isValid := h.validateCountryAndCity(h.repo.DB(), input.Country, input.City); !isValid {
-		l.Info("country and city is invalid")
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidCountryAndCity, input, ""))
+		l.Info("country or city is invalid")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidCountryOrCity, input, ""))
 		return
 	}
 

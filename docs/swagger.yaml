@@ -8,6 +8,13 @@ definitions:
         description: Valid is true if Time is not NULL
         type: boolean
     type: object
+  model.AccountingItem:
+    properties:
+      amount:
+        type: number
+      name:
+        type: string
+    type: object
   model.Chapter:
     properties:
       code:
@@ -121,6 +128,69 @@ definitions:
       name:
         type: string
       updatedAt:
+        type: string
+    type: object
+  model.Valuation:
+    properties:
+      accountReceivable:
+        description: money that company will receive in the future
+        properties:
+          items:
+            items:
+              $ref: '#/definitions/model.AccountingItem'
+            type: array
+          total:
+            type: number
+        type: object
+      assets:
+        description: valuation info
+        type: number
+      currency:
+        type: string
+      income:
+        description: Total paid invoice, investment & bank interest
+        properties:
+          detail:
+            properties:
+              consultantService:
+                type: number
+              interest:
+                type: number
+              investment:
+                type: number
+            type: object
+          total:
+            type: number
+        type: object
+      liabilities:
+        description: money that company will pay in the future
+        properties:
+          items:
+            items:
+              $ref: '#/definitions/model.AccountingItem'
+            type: array
+          total:
+            type: number
+        type: object
+      outcome:
+        description: Sum of Expenses and payroll
+        properties:
+          detail:
+            properties:
+              expense:
+                type: number
+              investment:
+                type: number
+              payroll:
+                type: number
+            type: object
+          total:
+            type: number
+        type: object
+      rate:
+        type: number
+      year:
+        description: basic info
         type: string
     type: object
   request.AddMenteeInput:
@@ -946,6 +1016,10 @@ definitions:
       deploymentType:
         type: string
       id:
+        type: string
+      joinedDate:
+        type: string
+      leftDate:
         type: string
       name:
         type: string

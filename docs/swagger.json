@@ -3819,6 +3819,17 @@
                 }
             }
         },
+        "model.AccountingItem": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "model.Chapter": {
             "type": "object",
             "properties": {
@@ -3991,6 +4002,101 @@
                     "type": "string"
                 },
                 "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.Valuation": {
+            "type": "object",
+            "properties": {
+                "accountReceivable": {
+                    "description": "money that company will receive in the future",
+                    "type": "object",
+                    "properties": {
+                        "items": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/model.AccountingItem"
+                            }
+                        },
+                        "total": {
+                            "type": "number"
+                        }
+                    }
+                },
+                "assets": {
+                    "description": "valuation info",
+                    "type": "number"
+                },
+                "currency": {
+                    "type": "string"
+                },
+                "income": {
+                    "description": "Total paid invoice, investment \u0026 bank interest",
+                    "type": "object",
+                    "properties": {
+                        "detail": {
+                            "type": "object",
+                            "properties": {
+                                "consultantService": {
+                                    "type": "number"
+                                },
+                                "interest": {
+                                    "type": "number"
+                                },
+                                "investment": {
+                                    "type": "number"
+                                }
+                            }
+                        },
+                        "total": {
+                            "type": "number"
+                        }
+                    }
+                },
+                "liabilities": {
+                    "description": "money that company will pay in the future",
+                    "type": "object",
+                    "properties": {
+                        "items": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/model.AccountingItem"
+                            }
+                        },
+                        "total": {
+                            "type": "number"
+                        }
+                    }
+                },
+                "outcome": {
+                    "description": "Sum of Expenses and payroll",
+                    "type": "object",
+                    "properties": {
+                        "detail": {
+                            "type": "object",
+                            "properties": {
+                                "expense": {
+                                    "type": "number"
+                                },
+                                "investment": {
+                                    "type": "number"
+                                },
+                                "payroll": {
+                                    "type": "number"
+                                }
+                            }
+                        },
+                        "total": {
+                            "type": "number"
+                        }
+                    }
+                },
+                "rate": {
+                    "type": "number"
+                },
+                "year": {
+                    "description": "basic info",
                     "type": "string"
                 }
             }
@@ -5224,6 +5330,12 @@
                     "type": "string"
                 },
                 "id": {
+                    "type": "string"
+                },
+                "joinedDate": {
+                    "type": "string"
+                },
+                "leftDate": {
                     "type": "string"
                 },
                 "name": {
