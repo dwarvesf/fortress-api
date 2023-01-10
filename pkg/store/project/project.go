@@ -2,6 +2,7 @@ package project
 
 import (
 	"fmt"
+	"time"
 
 	"gorm.io/gorm"
 
@@ -53,7 +54,7 @@ func (s *store) All(db *gorm.DB, input GetListProjectInput, pagination model.Pag
 	}
 
 	query = query.Preload("Slots", "deleted_at IS NULL").
-		Preload("Slots.ProjectMember", "deleted_at IS NULL and left_date IS NULL AND status = ?", model.ProjectMemberStatusActive).
+		Preload("Slots.ProjectMember", "deleted_at IS NULL and (left_date IS NULL OR left_date > ?) AND status = ?", time.Now(), model.ProjectMemberStatusActive).
 		Preload("Slots.ProjectMember.Employee").
 		Preload("Heads", "deleted_at IS NULL and left_date IS NULL").
 		Preload("Heads.Employee").
