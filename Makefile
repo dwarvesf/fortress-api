@@ -1,5 +1,6 @@
 APP_NAME=fortress-api
 DEFAULT_PORT=8200
+POSTGRES_TEST_SERVICE?=postgres_test
 POSTGRES_TEST_CONTAINER?=fortress_local_test
 POSTGRES_CONTAINER?=fortress_local
 TOOLS_IMAGE=fortress-tools
@@ -49,7 +50,15 @@ dev:
 cronjob:
 	go run ./cmd/cronjob/main.go
 
-test: reset-test-db
+test: 
+	docker rm -f ${POSTGRES_TEST_CONTAINER}
+	docker-compose up -d ${POSTGRES_TEST_SERVICE}
+	@while ! docker exec $(POSTGRES_TEST_CONTAINER) pg_isready > /dev/null; do \
+		sleep 1; \
+	done
+	make migrate-test
+	make seed-test
+
 	@PROJECT_PATH=$(shell pwd) go test -cover ./... -count=1 -p=1
 
 migrate-test:
