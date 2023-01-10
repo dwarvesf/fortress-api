@@ -15,6 +15,7 @@ ALTER TABLE "employees" ADD COLUMN "discord_name" TEXT;
 ALTER TABLE "employees" ADD COLUMN "notion_name" TEXT;
 
 ALTER TABLE "roles" ADD COLUMN "level" INT;
+
 -- +migrate Down
 ALTER TABLE "employee_event_reviewers" ADD COLUMN "status" TEXT;
 ALTER TABLE "employee_event_reviewers" DROP COLUMN "author_status";

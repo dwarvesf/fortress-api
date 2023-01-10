@@ -28,6 +28,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/store/role"
 	"github.com/dwarvesf/fortress-api/pkg/store/seniority"
 	"github.com/dwarvesf/fortress-api/pkg/store/stack"
+	"github.com/dwarvesf/fortress-api/pkg/store/valuation"
 	"github.com/dwarvesf/fortress-api/pkg/store/workunit"
 	"github.com/dwarvesf/fortress-api/pkg/store/workunitmember"
 	"github.com/dwarvesf/fortress-api/pkg/store/workunitstack"
@@ -64,6 +65,7 @@ type Store struct {
 	EmployeeEventReviewer employeeeventreviewer.IStore
 	EmployeeMentee        employeementee.IStore
 	Dashboard             dashboard.IStore
+	Valuation             valuation.IStore
 }
 
 func New() *Store {
@@ -98,5 +100,6 @@ func New() *Store {
 		EmployeeEventReviewer: employeeeventreviewer.New(),
 		EmployeeMentee:        employeementee.New(),
 		Dashboard:             dashboard.New(),
+		Valuation:             valuation.New(),
 	}
 }
