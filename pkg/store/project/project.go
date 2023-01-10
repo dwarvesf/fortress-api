@@ -56,7 +56,16 @@ func (s *store) All(db *gorm.DB, input GetListProjectInput, pagination model.Pag
 	query = query.Preload("Slots", "deleted_at IS NULL").
 		Preload("Slots.ProjectMember", "deleted_at IS NULL and (left_date IS NULL OR left_date > ?) AND status = ?", time.Now(), model.ProjectMemberStatusActive).
 		Preload("Slots.ProjectMember.Employee").
-		Preload("Heads", "deleted_at IS NULL and left_date IS NULL").
+		Preload("Heads", `deleted_at IS NULL 
+			AND (left_date IS NULL OR left_date > now())
+			AND employee_id IN (
+				SELECT pm.employee_id
+				FROM project_members pm
+				WHERE pm.deleted_at IS NULL 
+					AND (pm.left_date IS NULL OR pm.left_date > now())
+					AND pm.status != 'inactive'
+					AND pm.project_id = project_heads.project_id
+			)`).
 		Preload("Heads.Employee").
 		Offset(offset)
 
