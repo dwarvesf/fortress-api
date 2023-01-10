@@ -136,6 +136,120 @@ const docTemplate = `{
                 }
             }
         },
+        "/dashboards/engagement/detail": {
+            "get": {
+                "description": "Get engagement dashboard",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "Get engagement dashboard",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.GetEngagementDashboardDetailResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/dashboards/engagement/info": {
+            "get": {
+                "description": "Get engagement dashboard",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "Get engagement dashboard",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.GetEngagementDashboardResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/dashboards/resources/utilization": {
+            "get": {
+                "description": "Get dashboard resource utilization",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "Get dashboard resource utilization",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.GetDashboardResourceUtilizationResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/employees": {
             "post": {
                 "description": "Create new employee",
@@ -3815,18 +3929,6 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "gorm.DeletedAt": {
-            "type": "object",
-            "properties": {
-                "time": {
-                    "type": "string"
-                },
-                "valid": {
-                    "description": "Valid is true if Time is not NULL",
-                    "type": "boolean"
-                }
-            }
-        },
         "model.Chapter": {
             "type": "object",
             "properties": {
@@ -3837,7 +3939,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
+                    "type": "string"
                 },
                 "id": {
                     "type": "string"
@@ -3869,7 +3971,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
+                    "type": "string"
                 },
                 "id": {
                     "type": "string"
@@ -3912,7 +4014,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
+                    "type": "string"
                 },
                 "id": {
                     "type": "string"
@@ -3922,6 +4024,23 @@ const docTemplate = `{
                 },
                 "updatedAt": {
                     "type": "string"
+                }
+            }
+        },
+        "model.ResourceUtilization": {
+            "type": "object",
+            "properties": {
+                "available": {
+                    "type": "integer"
+                },
+                "date": {
+                    "type": "string"
+                },
+                "official": {
+                    "type": "integer"
+                },
+                "shadow": {
+                    "type": "integer"
                 }
             }
         },
@@ -3935,7 +4054,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
+                    "type": "string"
                 },
                 "id": {
                     "type": "string"
@@ -3961,7 +4080,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
+                    "type": "string"
                 },
                 "id": {
                     "type": "string"
@@ -3990,7 +4109,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
+                    "type": "string"
                 },
                 "id": {
                     "type": "string"
@@ -5005,7 +5124,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
+                    "type": "string"
                 },
                 "deliveryManager": {
                     "$ref": "#/definitions/view.ProjectHead"
@@ -5100,7 +5219,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
+                    "type": "string"
                 },
                 "discordID": {
                     "type": "string"
@@ -5248,6 +5367,65 @@ const docTemplate = `{
                 }
             }
         },
+        "view.EngagementDashboard": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "questionID": {
+                    "type": "string"
+                },
+                "stats": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.EngagementDashboardQuestionStat"
+                    }
+                }
+            }
+        },
+        "view.EngagementDashboardDetail": {
+            "type": "object",
+            "properties": {
+                "questionID": {
+                    "type": "string"
+                },
+                "stats": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.EngagementDashboardQuestionDetailStat"
+                    }
+                }
+            }
+        },
+        "view.EngagementDashboardQuestionDetailStat": {
+            "type": "object",
+            "properties": {
+                "field": {
+                    "type": "string"
+                },
+                "point": {
+                    "type": "number"
+                },
+                "startDate": {
+                    "type": "string"
+                }
+            }
+        },
+        "view.EngagementDashboardQuestionStat": {
+            "type": "object",
+            "properties": {
+                "point": {
+                    "type": "number"
+                },
+                "startDate": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
         "view.ErrorResponse": {
             "type": "object",
             "properties": {
@@ -5391,6 +5569,33 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/view.FeedBackReviewDetail"
+                }
+            }
+        },
+        "view.GetDashboardResourceUtilizationResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.ResourceUtilization"
+                    }
+                }
+            }
+        },
+        "view.GetEngagementDashboardDetailResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/view.EngagementDashboardDetail"
+                }
+            }
+        },
+        "view.GetEngagementDashboardResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/view.EngagementDashboard"
                 }
             }
         },
@@ -5691,7 +5896,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
+                    "type": "string"
                 },
                 "deliveryManager": {
                     "$ref": "#/definitions/view.ProjectHead"
@@ -6168,7 +6373,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
+                    "type": "string"
                 },
                 "discordID": {
                     "type": "string"
@@ -6237,7 +6442,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
+                    "type": "string"
                 },
                 "gender": {
                     "type": "string"
@@ -6280,7 +6485,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
+                    "type": "string"
                 },
                 "discordID": {
                     "type": "string"
@@ -6412,7 +6617,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
+                    "type": "string"
                 },
                 "id": {
                     "type": "string"
@@ -6452,7 +6657,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
+                    "type": "string"
                 },
                 "endDate": {
                     "type": "string"
