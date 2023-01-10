@@ -34,10 +34,12 @@ type Valuation struct {
 
 	// Sum of Expenses and payroll
 	Outcome struct {
-		Total      float64 `json:"total"`
-		Payroll    float64 `json:"payroll"`
-		Expense    float64 `json:"expense"`
-		Investment float64 `json:"investment"`
+		Total  float64 `json:"total"`
+		Detail struct {
+			Payroll    float64 `json:"payroll"`
+			Expense    float64 `json:"expense"`
+			Investment float64 `json:"investment"`
+		} `json:"detail"`
 	} `json:"outcome"`
 }
 

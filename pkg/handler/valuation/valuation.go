@@ -137,10 +137,11 @@ func (h *handler) One(c *gin.Context) {
 	valuation.Liabilities.Items = items
 
 	valuation.Income.Total = h.convertCurrency(revenue, convertTo)
-	valuation.Outcome.Expense = h.convertCurrency(expenses, convertTo)
-	valuation.Outcome.Payroll = payroll
-	valuation.Outcome.Investment = h.convertCurrency(investment, convertTo)
-	valuation.Outcome.Total = valuation.Outcome.Expense + valuation.Outcome.Payroll + valuation.Outcome.Investment
+
+	valuation.Outcome.Detail.Expense = h.convertCurrency(expenses, convertTo)
+	valuation.Outcome.Detail.Payroll = h.convertCurrency(payroll, convertTo)
+	valuation.Outcome.Detail.Investment = h.convertCurrency(investment, convertTo)
+	valuation.Outcome.Total = valuation.Outcome.Detail.Expense + valuation.Outcome.Detail.Payroll + valuation.Outcome.Detail.Investment
 
 	// return
 	c.JSON(http.StatusOK, view.CreateResponse[any](valuation, nil, nil, year, "get valuation successfully"))

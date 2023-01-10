@@ -53,7 +53,7 @@ func (s *store) GetExpense(db *gorm.DB, year string) (*model.CurrencyView, error
 	return res, db.Raw("select * from vw_expenses where year = ?", year).Find(&res).Error
 }
 
-func (s *store) GetPayroll(db *gorm.DB, year string) (float64, error) {
-	var total float64
-	return total, db.Raw("select total from vw_payrolls where year = ?", year).Scan(&total).Error
+func (s *store) GetPayroll(db *gorm.DB, year string) (*model.CurrencyView, error) {
+	res := &model.CurrencyView{}
+	return res, db.Raw("select total as vnd from vw_payrolls where year = ?", year).Scan(&res).Error
 }

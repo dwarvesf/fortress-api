@@ -115,7 +115,7 @@ func (w *wiseService) getTWRate(sourceCurrency, targetCurrency string) (float64,
 
 	err = json.Unmarshal(res, &conversionRate)
 	if len(conversionRate) == 0 {
-		l.Error(err, "can't unmarshal response")
+		l.Fields(logger.Fields{"msg": string(res)}).Error(err, "can't unmarshal response")
 		return 0, errors.New("cannot get exchange rates")
 	}
 
@@ -165,7 +165,7 @@ func (w *wiseService) getUrl(api string) string {
 }
 
 func (w *wiseService) getAuthHeader() string {
-	return "Bearer " + w.cfg.APIKey
+	return "Bearer " + w.cfg.Wise.APIKey
 }
 
 func (w *wiseService) newRequest(method, url string, body io.Reader) (*http.Request, error) {
