@@ -43,8 +43,8 @@ ALTER TABLE audit_cycles
     ADD CONSTRAINT audit_cycles_project_id_fkey FOREIGN KEY (project_id) REFERENCES projects (id);
 
 CREATE TYPE audit_type AS ENUM (
-    'engineering_health',
-    'engineering_process',
+    'engineering-health',
+    'engineering-process',
     'frontend',
     'backend',
     'system',
@@ -96,7 +96,7 @@ CREATE TABLE IF NOT EXISTS audit_items
     grade          DECIMAL,
     severity       severity,
     notes          TEXT,
-    action_item_id uuid NOT NULL
+    action_item_id uuid
 );
 
 ALTER TABLE audit_items
