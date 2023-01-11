@@ -290,27 +290,36 @@ func (h *handler) GetCities(c *gin.Context) {
 // @Tags Metadata
 // @Accept  json
 // @Produce  json
+// @Param keyword query string false "Keyword"
+// @Param page query string false "Page"
+// @Param size query string false "Size"
 // @Success 200 {object} view.StackResponse
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 500 {object} view.ErrorResponse
 // @Router /metadata/stacks [get]
 func (h *handler) Stacks(c *gin.Context) {
+	var input request.GetStacksInput
+	if err := c.ShouldBindQuery(&input); err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, input, ""))
+		return
+	}
+
 	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler": "metadata",
 		"method":  "Stacks",
+		"input":   input,
 	})
 
-	// 1 query stacks from db
-	stacks, err := h.store.Stack.All(h.repo.DB())
+	total, stacks, err := h.store.Stack.All(h.repo.DB(), input.Keyword, &input.Pagination)
 	if err != nil {
-		l.Error(err, "error query Stacks from db")
+		l.Error(err, "failed to get all stack")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
 	}
 
-	// 2 return array of account statuses
-	c.JSON(http.StatusOK, view.CreateResponse[any](stacks, nil, nil, nil, ""))
+	c.JSON(http.StatusOK, view.CreateResponse[any](stacks,
+		&view.PaginationResponse{Pagination: input.Pagination, Total: total}, nil, nil, ""))
 }
 
 // UpdateStack godoc

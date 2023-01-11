@@ -652,7 +652,7 @@ func (h *handler) UpdateSkills(c *gin.Context) {
 	}
 
 	// Check stack existence
-	stacks, err := h.store.Stack.All(h.repo.DB())
+	_, stacks, err := h.store.Stack.All(h.repo.DB(), "", nil)
 	if err != nil {
 		l.Error(err, "failed to get all stacks")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))

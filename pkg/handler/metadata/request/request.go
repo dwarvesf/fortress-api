@@ -52,3 +52,8 @@ type CreatePositionInput struct {
 	Name string `json:"name" binding:"required"`
 	Code string `json:"code" binding:"required"`
 }
+
+type GetStacksInput struct {
+	model.Pagination
+	Keyword string `json:"keyword" form:"keyword"`
+}
