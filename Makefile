@@ -6,7 +6,7 @@ POSTGRES_CONTAINER?=fortress_local
 TOOLS_IMAGE=fortress-tools
 APP_ENVIRONMENT=docker run --rm -v ${PWD}:/${APP_NAME} -w /${APP_NAME} --net=host ${TOOLS_IMAGE}
 
-.PHONY: setup init build dev test migrate-up migrate-down
+.PHONY: setup init build dev test migrate-up migrate-down ci
 
 setup:
 	docker build -f ./Dockerfile.tools -t ${TOOLS_IMAGE} .
@@ -93,3 +93,6 @@ gen-mock:
 
 gen-swagger:
 	${APP_ENVIRONMENT} swag init --parseDependency -g ./cmd/server/main.go
+
+ci: init
+	@PROJECT_PATH=$(shell pwd) go test -cover ./... -count=1 -p=1

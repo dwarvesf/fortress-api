@@ -178,6 +178,16 @@ func (i *UpdateMemberInput) Validate() error {
 		return errs.ErrInvalidLeftDate
 	}
 
+	if i.GetJoinedDate() != nil &&
+		i.GetLeftDate() != nil &&
+		!i.GetJoinedDate().Before(*i.GetLeftDate()) {
+		return errs.ErrInvalidLeftDate
+	}
+
+	if i.GetLeftDate() != nil && i.GetLeftDate().Before(time.Now()) {
+		i.Status = model.ProjectMemberStatusInactive.String()
+	}
+
 	return nil
 }
 
