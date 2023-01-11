@@ -2900,6 +2900,19 @@ paths:
       consumes:
       - application/json
       description: Get list values for stacks
+      parameters:
+      - description: Keyword
+        in: query
+        name: keyword
+        type: string
+      - description: Page
+        in: query
+        name: page
+        type: string
+      - description: Size
+        in: query
+        name: size
+        type: string
       produces:
       - application/json
       responses:
