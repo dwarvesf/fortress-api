@@ -104,4 +104,10 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 	{
 		valuation.GET("/:year", pmw.WithPerm("valuations.read"), h.Valuation.One)
 	}
+
+	dashboard := v1.Group("/dashboards")
+	{
+		dashboard.GET("/projects/sizes", pmw.WithPerm("dashboards.read"), h.Dashboard.ProjectSizes)
+	}
+
 }
