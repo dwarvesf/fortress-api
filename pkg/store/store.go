@@ -1,6 +1,11 @@
 package store
 
 import (
+	"github.com/dwarvesf/fortress-api/pkg/store/actionitem"
+	"github.com/dwarvesf/fortress-api/pkg/store/audit"
+	"github.com/dwarvesf/fortress-api/pkg/store/auditcycle"
+	"github.com/dwarvesf/fortress-api/pkg/store/audititem"
+	"github.com/dwarvesf/fortress-api/pkg/store/auditparticipant"
 	"github.com/dwarvesf/fortress-api/pkg/store/chapter"
 	"github.com/dwarvesf/fortress-api/pkg/store/content"
 	"github.com/dwarvesf/fortress-api/pkg/store/country"
@@ -66,6 +71,11 @@ type Store struct {
 	EmployeeMentee        employeementee.IStore
 	Dashboard             dashboard.IStore
 	Valuation             valuation.IStore
+	AuditCycle            auditcycle.IStore
+	Audit                 audit.IStore
+	ActionItem            actionitem.IStore
+	AuditItem             audititem.IStore
+	AuditParticipant      auditparticipant.IStore
 }
 
 func New() *Store {
@@ -101,5 +111,10 @@ func New() *Store {
 		EmployeeMentee:        employeementee.New(),
 		Dashboard:             dashboard.New(),
 		Valuation:             valuation.New(),
+		AuditCycle:            auditcycle.New(),
+		Audit:                 audit.New(),
+		ActionItem:            actionitem.New(),
+		AuditItem:             audititem.New(),
+		AuditParticipant:      auditparticipant.New(),
 	}
 }
