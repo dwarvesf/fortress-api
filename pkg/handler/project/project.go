@@ -1220,7 +1220,7 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 	}
 
 	// Check valid stack id
-	stacks, err := h.store.Stack.All(h.repo.DB())
+	_, stacks, err := h.store.Stack.All(h.repo.DB(), "", nil)
 	if err != nil {
 		l.Error(err, "error when finding stacks")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
@@ -1796,7 +1796,7 @@ func (h *handler) checkExitsInUpdateWorkUnitInput(db *gorm.DB, input request.Upd
 	}
 
 	// Check stack existence
-	stacks, err := h.store.Stack.All(h.repo.DB())
+	_, stacks, err := h.store.Stack.All(h.repo.DB(), "", nil)
 	if err != nil {
 		return http.StatusInternalServerError, errs.ErrFailToCheckInputExistence
 	}

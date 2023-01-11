@@ -1,6 +1,8 @@
 package stack
 
 import (
+	"fmt"
+
 	"gorm.io/gorm"
 
 	"github.com/dwarvesf/fortress-api/pkg/model"
@@ -13,9 +15,29 @@ func New() IStore {
 }
 
 // All get all Senitorities
-func (s *store) All(db *gorm.DB) ([]*model.Stack, error) {
+func (s *store) All(db *gorm.DB, keyword string, pagination *model.Pagination) (int64, []*model.Stack, error) {
 	var stacks []*model.Stack
-	return stacks, db.Find(&stacks).Error
+	var total int64
+
+	query := db.Table("stacks")
+
+	if keyword != "" {
+		query = query.Where("name ILIKE ?", fmt.Sprintf("%%%s%%", keyword)).
+			Where("code ILIKE ?", fmt.Sprintf("%%%s%%", keyword))
+	}
+
+	query = query.Count(&total).Order("code")
+
+	if pagination != nil {
+		limit, offset := pagination.ToLimitOffset()
+		if pagination.Page > 0 {
+			query = query.Limit(limit)
+		}
+
+		query = query.Offset(offset)
+	}
+
+	return total, stacks, query.Find(&stacks).Error
 }
 
 // One get 1 stack by id
