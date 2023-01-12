@@ -76,12 +76,12 @@ func IsAPIKey(c *gin.Context) bool {
 	return strings.HasPrefix(c.Request.Header.Get("Authorization"), "ApiKey")
 }
 
-func HasPermission(c *gin.Context, perms map[string]string, requiredPerm string) bool {
+func HasPermission(c *gin.Context, perms map[string]string, requiredPerm model.PermissionCode) bool {
 	if IsAPIKey(c) {
 		return true
 	}
 
-	_, ok := perms[requiredPerm]
+	_, ok := perms[requiredPerm.String()]
 
 	return ok
 }
