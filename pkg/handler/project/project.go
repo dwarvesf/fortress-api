@@ -727,6 +727,17 @@ func (h *handler) UpdateMember(c *gin.Context) {
 		return
 	}
 
+	if !body.EmployeeID.IsZero() {
+		member, err := h.assignMemberToProject(tx.DB(), body.ProjectSlotID.String(), projectID, body)
+		if err != nil {
+			l.Error(err, "failed to assign member to project")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), nil, ""))
+			return
+		}
+
+		slot.ProjectMember = *member
+	}
+
 	// update project slot positions
 	if err := h.store.ProjectSlotPosition.DeleteByProjectSlotID(tx.DB(), slot.ID.String()); err != nil {
 		l.Error(err, "failed to delete project member positions")
@@ -753,6 +764,7 @@ func (h *handler) UpdateMember(c *gin.Context) {
 	for i, v := range slot.ProjectSlotPositions {
 		slot.ProjectSlotPositions[i].Position = positionMap[v.PositionID]
 	}
+
 	for i, v := range slot.ProjectMember.ProjectMemberPositions {
 		slot.ProjectMember.ProjectMemberPositions[i].Position = positionMap[v.PositionID]
 	}
@@ -768,12 +780,7 @@ func (h *handler) assignMemberToProject(db *gorm.DB, slotID string, projectID st
 		return nil, err
 	}
 
-	// if member.Status == model.ProjectMemberStatusInactive {
-	// 	h.logger.Fields(logger.Fields{"member": member}).Error(errs.ErrSlotIsInactive, "slot is inactive")
-	// 	return nil, errs.ErrSlotIsInactive
-	// }
-
-	if !member.EmployeeID.IsZero() && member.EmployeeID != input.EmployeeID {
+	if member != nil && !member.EmployeeID.IsZero() && member.EmployeeID != input.EmployeeID {
 		h.logger.
 			Fields(logger.Fields{"member": member}).
 			Error(errs.ErrSlotAlreadyContainsAnotherMember, "slot already contains another member")
@@ -827,11 +834,13 @@ func (h *handler) assignMemberToProject(db *gorm.DB, slotID string, projectID st
 		member.SeniorityID = input.SeniorityID
 		member.DeploymentType = model.DeploymentType(input.DeploymentType)
 		member.Status = model.ProjectMemberStatus(input.Status)
+		member.JoinedDate = input.GetJoinedDate()
 		member.LeftDate = input.GetLeftDate()
 		member.Rate = input.Rate
 		member.Discount = input.Discount
 
 		_, err := h.store.ProjectMember.UpdateSelectedFieldsByID(db, member.ID.String(), *member,
+			"joined_date",
 			"left_date",
 			"status",
 			"rate",
