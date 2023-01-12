@@ -341,3 +341,42 @@ func TestHandler_GetSummary(t *testing.T) {
 		})
 	}
 }
+
+func TestHandler_GetResourcesAvailability(t *testing.T) {
+	cfg := config.LoadTestConfig()
+	loggerMock := logger.NewLogrusLogger()
+	serviceMock := service.New(&cfg)
+	storeMock := store.New()
+
+	tests := []struct {
+		name             string
+		wantCode         int
+		wantErr          error
+		wantResponsePath string
+	}{
+		{
+			name:             "happy_case",
+			wantCode:         http.StatusOK,
+			wantResponsePath: "testdata/get_resources_availability/200.json",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				testhelper.LoadTestSQLFile(t, txRepo, "./testdata/get_resources_availability/seed.sql")
+				w := httptest.NewRecorder()
+				ctx, _ := gin.CreateTestContext(w)
+				ctx.Request = httptest.NewRequest(http.MethodGet, "/api/v1/dashboards/resources/availabilities", nil)
+				ctx.Request.Header.Set("Authorization", testToken)
+
+				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+				h.GetResourcesAvailability(ctx)
+				require.Equal(t, tt.wantCode, w.Code)
+				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				require.NoError(t, err)
+
+				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Dashboard.GetResourcesAvailability] response mismatched")
+			})
+		})
+	}
+}

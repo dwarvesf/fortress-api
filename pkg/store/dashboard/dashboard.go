@@ -414,3 +414,33 @@ func (s *store) GetProjectSizesByStartTime(db *gorm.DB, curr time.Time) ([]*mode
 
 	return ru, db.Raw(query, curr.UTC()).Scan(&ru).Error
 }
+
+func (s *store) GetPendingSlots(db *gorm.DB) ([]*model.ProjectSlot, error) {
+	var slots []*model.ProjectSlot
+	return slots, db.
+		Where(`id NOT IN (
+			SELECT pm.project_slot_id
+			FROM project_members pm
+			WHERE pm.end_date IS NOT NULL AND pm.end_date > now()
+		)`).
+		Preload("Seniority").
+		Preload("Project").
+		Preload("ProjectSlotPositions").
+		Find(&slots).Error
+}
+
+func (s *store) GetAvailableEmployees(db *gorm.DB) ([]*model.Employee, error) {
+	var employees []*model.Employee
+	return employees, db.
+		Where(`working_status != ? AND id NOT IN (
+			SELECT pm.employee_id
+			FROM project_members pm
+			WHERE pm.end_date IS NOT NULL AND pm.end_date > now()
+		)`, model.WorkingStatusLeft).
+		Preload("Seniority").
+		Preload("EmployeePositions").
+		Preload("EmployeeStacks").
+		Preload("ProjectMembers").
+		Preload("ProjectMembers.Project").
+		Find(&employees).Error
+}
