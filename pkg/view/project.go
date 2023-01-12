@@ -1,6 +1,8 @@
 package view
 
 import (
+	"github.com/dwarvesf/fortress-api/pkg/utils"
+	"github.com/gin-gonic/gin"
 	"strings"
 	"time"
 
@@ -95,7 +97,7 @@ func ToUpdateProjectStatusResponse(p *model.Project) UpdatedProject {
 	}
 }
 
-func ToProjectData(project *model.Project) ProjectData {
+func ToProjectData(c *gin.Context, project *model.Project, userInfo *model.CurrentLoggedUserInfo) ProjectData {
 	leadMap := map[string]bool{}
 	var technicalLeads = make([]ProjectHead, 0, len(project.Heads))
 	var accountManager, salePerson, deliveryManager *ProjectHead
@@ -141,8 +143,13 @@ func ToProjectData(project *model.Project) ProjectData {
 		}
 
 		if slot.Status != model.ProjectMemberStatusPending && !m.ID.IsZero() {
+			member.DeploymentType = ""
+
+			if utils.HasPermission(c, userInfo.Permissions, "projectWorkUnits.read.fullAccess") {
+				member.DeploymentType = m.DeploymentType.String()
+			}
+
 			member.Status = m.Status.String()
-			member.DeploymentType = m.DeploymentType.String()
 			member.EmployeeID = m.EmployeeID.String()
 			member.FullName = m.Employee.FullName
 			member.DisplayName = m.Employee.DisplayName
@@ -160,30 +167,34 @@ func ToProjectData(project *model.Project) ProjectData {
 		members = append(members, member)
 	}
 
+	d := ProjectData{
+		BaseModel:       project.BaseModel,
+		Avatar:          project.Avatar,
+		Name:            project.Name,
+		Type:            project.Type.String(),
+		Status:          project.Status.String(),
+		Stacks:          ToProjectStacks(project.ProjectStacks),
+		StartDate:       project.StartDate,
+		EndDate:         project.EndDate,
+		Members:         members,
+		TechnicalLead:   technicalLeads,
+		DeliveryManager: deliveryManager,
+		SalePerson:      salePerson,
+		AccountManager:  accountManager,
+		ProjectEmail:    project.ProjectEmail,
+
+		AllowsSendingSurvey: project.AllowsSendingSurvey,
+		Code:                project.Code,
+		Function:            project.Function.String(),
+	}
+
 	var clientEmail []string
 	if project.ClientEmail != "" {
 		clientEmail = strings.Split(project.ClientEmail, ",")
 	}
 
-	d := ProjectData{
-		BaseModel:           project.BaseModel,
-		Avatar:              project.Avatar,
-		Name:                project.Name,
-		Type:                project.Type.String(),
-		Status:              project.Status.String(),
-		Stacks:              ToProjectStacks(project.ProjectStacks),
-		StartDate:           project.StartDate,
-		EndDate:             project.EndDate,
-		Members:             members,
-		TechnicalLead:       technicalLeads,
-		DeliveryManager:     deliveryManager,
-		SalePerson:          salePerson,
-		AccountManager:      accountManager,
-		ProjectEmail:        project.ProjectEmail,
-		ClientEmail:         clientEmail,
-		AllowsSendingSurvey: project.AllowsSendingSurvey,
-		Code:                project.Code,
-		Function:            project.Function.String(),
+	if utils.HasPermission(c, userInfo.Permissions, "projectWorkUnits.read.fullAccess") {
+		d.ClientEmail = clientEmail
 	}
 
 	if project.Country != nil {
@@ -197,11 +208,21 @@ func ToProjectData(project *model.Project) ProjectData {
 	return d
 }
 
-func ToProjectsData(projects []*model.Project) []ProjectData {
+func ToProjectsData(c *gin.Context, projects []*model.Project, userInfo *model.CurrentLoggedUserInfo) []ProjectData {
 	var results = make([]ProjectData, 0, len(projects))
 
 	for _, p := range projects {
-		results = append(results, ToProjectData(p))
+		// If the project belongs user, append it in the list
+		_, ok := userInfo.Projects[p.ID]
+		if ok && p.Status == model.ProjectStatusActive && model.IsUserActiveInProject(userInfo.UserID, p.Slots) {
+			results = append(results, ToProjectData(c, p, userInfo))
+			continue
+		}
+
+		// If the project is not belong user, check if the user has permission to view the project
+		if utils.HasPermission(c, userInfo.Permissions, "projects.read.fullAccess") {
+			results = append(results, ToProjectData(c, p, userInfo))
+		}
 	}
 
 	return results

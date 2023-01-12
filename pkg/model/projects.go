@@ -251,3 +251,13 @@ func (e ProjectFunction) IsValid() bool {
 func (e ProjectFunction) String() string {
 	return string(e)
 }
+
+func IsUserActiveInProject(userID string, ps []ProjectSlot) bool {
+	for _, p := range ps {
+		if p.ProjectMember.EmployeeID.String() == userID && p.ProjectMember.Status == ProjectMemberStatusActive {
+			return true
+		}
+	}
+
+	return false
+}
