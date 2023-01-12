@@ -2,6 +2,7 @@ package routes
 
 import (
 	"github.com/dwarvesf/fortress-api/pkg/config"
+	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/gin-gonic/gin"
 
@@ -16,7 +17,7 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 
 	// auth
 	v1.POST("/auth", h.Auth.Auth)
-	v1.GET("/auth/me", amw.WithAuth, pmw.WithPerm("auth.read"), h.Auth.Me)
+	v1.GET("/auth/me", amw.WithAuth, pmw.WithPerm(model.PermissionAuthRead.String()), h.Auth.Me)
 
 	// user profile
 	v1.GET("/profile", amw.WithAuth, h.Profile.GetProfile)

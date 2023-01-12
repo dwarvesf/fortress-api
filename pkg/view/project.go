@@ -145,7 +145,7 @@ func ToProjectData(c *gin.Context, project *model.Project, userInfo *model.Curre
 		if slot.Status != model.ProjectMemberStatusPending && !m.ID.IsZero() {
 			member.DeploymentType = ""
 
-			if utils.HasPermission(c, userInfo.Permissions, "projectWorkUnits.read.fullAccess") {
+			if utils.HasPermission(c, userInfo.Permissions, "projects.read.fullAccess") {
 				member.DeploymentType = m.DeploymentType.String()
 			}
 
@@ -193,7 +193,7 @@ func ToProjectData(c *gin.Context, project *model.Project, userInfo *model.Curre
 		clientEmail = strings.Split(project.ClientEmail, ",")
 	}
 
-	if utils.HasPermission(c, userInfo.Permissions, "projectWorkUnits.read.fullAccess") {
+	if utils.HasPermission(c, userInfo.Permissions, "projects.read.fullAccess") {
 		d.ClientEmail = clientEmail
 	}
 
