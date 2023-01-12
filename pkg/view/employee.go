@@ -3,7 +3,10 @@ package view
 import (
 	"time"
 
+	"github.com/gin-gonic/gin"
+
 	"github.com/dwarvesf/fortress-api/pkg/model"
+	"github.com/dwarvesf/fortress-api/pkg/utils"
 )
 
 // EmployeeData view for listing data
@@ -88,12 +91,31 @@ type EmployeeProjectData struct {
 	LeftDate       *time.Time `json:"leftDate"`
 }
 
+func ToEmployeeProjectDetailData(c *gin.Context, pm *model.ProjectMember, userInfo *model.CurrentLoggedUserInfo) EmployeeProjectData {
+	rs := EmployeeProjectData{
+		ID:        pm.ProjectID.String(),
+		Name:      pm.Project.Name,
+		Status:    pm.Project.Status.String(),
+		Positions: ToProjectMemberPositions(pm.ProjectMemberPositions),
+		Code:      pm.Project.Code,
+		Avatar:    pm.Project.Avatar,
+	}
+
+	if utils.HasPermission(c, userInfo.Permissions, "employees.read.projects.fullAccess") {
+		rs.JoinedDate = pm.JoinedDate
+		rs.LeftDate = pm.LeftDate
+		rs.DeploymentType = pm.DeploymentType.String()
+	}
+
+	return rs
+}
+
 func ToEmployeeProjectData(pm *model.ProjectMember) EmployeeProjectData {
 	return EmployeeProjectData{
 		ID:             pm.ProjectID.String(),
 		Name:           pm.Project.Name,
 		DeploymentType: pm.DeploymentType.String(),
-		Status:         pm.Status.String(),
+		Status:         pm.Project.Status.String(),
 		Positions:      ToProjectMemberPositions(pm.ProjectMemberPositions),
 		Code:           pm.Project.Code,
 		Avatar:         pm.Project.Avatar,
@@ -248,7 +270,103 @@ func ToUpdateGeneralInfoEmployeeData(employee *model.Employee) *UpdateGeneralInf
 	return rs
 }
 
-// ToEmployeeData parse employee date to response data
+// ToOneEmployeeData parse employee date to response data
+func ToOneEmployeeData(c *gin.Context, employee *model.Employee, userInfo *model.CurrentLoggedUserInfo) *EmployeeData {
+	employeeProjects := make([]EmployeeProjectData, 0, len(employee.ProjectMembers))
+	for _, v := range employee.ProjectMembers {
+
+		// If the project belongs user, append it in the list
+		p, ok := userInfo.Projects[v.ProjectID]
+		if ok && p.Status == model.ProjectStatusActive {
+			employeeProjects = append(employeeProjects, ToEmployeeProjectDetailData(c, &v, userInfo))
+			continue
+		}
+
+		// If the project is not belong user, check if the user has permission to view the project
+		if utils.HasPermission(c, userInfo.Permissions, "employees.read.projects.fullAccess") ||
+			utils.HasPermission(c, userInfo.Permissions, "employees.read.projects.readActive") {
+			if v.Project.Status != model.ProjectStatusActive && utils.HasPermission(c, userInfo.Permissions, "employees.read.projects.fullAccess") {
+				employeeProjects = append(employeeProjects, ToEmployeeProjectDetailData(c, &v, userInfo))
+				continue
+			}
+
+			employeeProjects = append(employeeProjects, ToEmployeeProjectDetailData(c, &v, userInfo))
+		}
+
+	}
+
+	var lineManager *BasicEmployeeInfo
+	if employee.LineManager != nil {
+		lineManager = toBasicEmployeeInfo(*employee.LineManager)
+	}
+
+	rs := &EmployeeData{
+		BaseModel: model.BaseModel{
+			ID:        employee.ID,
+			CreatedAt: employee.CreatedAt,
+			UpdatedAt: employee.UpdatedAt,
+		},
+
+		FullName:    employee.FullName,
+		DisplayName: employee.DisplayName,
+		TeamEmail:   employee.TeamEmail,
+		Avatar:      employee.Avatar,
+
+		Gender:      employee.Gender,
+		Horoscope:   employee.Horoscope,
+		DateOfBirth: employee.DateOfBirth,
+
+		DiscordName:   employee.DiscordName,
+		Username:      employee.Username,
+		WorkingStatus: employee.WorkingStatus,
+		Seniority:     employee.Seniority,
+		Projects:      employeeProjects,
+		LineManager:   lineManager,
+
+		Roles:     ToRoles(employee.EmployeeRoles),
+		Positions: ToPositions(employee.EmployeePositions),
+		Stacks:    ToEmployeeStacks(employee.EmployeeStacks),
+		Chapters:  ToChapters(employee.EmployeeChapters),
+	}
+
+	if utils.HasPermission(c, userInfo.Permissions, "employees.read.generalInfo.fullAccess") {
+		rs.NotionID = employee.NotionID
+		rs.GithubID = employee.GithubID
+		rs.NotionName = employee.NotionName
+		rs.LinkedInName = employee.LinkedInName
+		rs.DiscordID = employee.DiscordID
+		rs.PhoneNumber = employee.PhoneNumber
+		rs.JoinedDate = employee.JoinedDate
+		rs.LeftDate = employee.LeftDate
+	}
+
+	if utils.HasPermission(c, userInfo.Permissions, "employees.read.personalInfo.fullAccess") {
+		rs.MBTI = employee.MBTI
+		rs.PersonalEmail = employee.PersonalEmail
+		rs.Address = employee.Address
+		rs.PlaceOfResidence = employee.PlaceOfResidence
+		rs.City = employee.City
+		rs.Country = employee.Country
+	}
+
+	if len(employee.Mentees) > 0 {
+		mentees := make([]*MenteeInfo, 0)
+		for _, v := range employee.Mentees {
+			if v.Mentee != nil {
+				mentees = append(mentees, toMenteeInfo(*v.Mentee))
+			}
+		}
+
+		rs.Mentees = mentees
+	}
+
+	if employee.Seniority != nil {
+		rs.Seniority = employee.Seniority
+	}
+
+	return rs
+}
+
 func ToEmployeeData(employee *model.Employee) *EmployeeData {
 	employeeProjects := make([]EmployeeProjectData, 0, len(employee.ProjectMembers))
 	for _, v := range employee.ProjectMembers {
@@ -318,10 +436,10 @@ func ToEmployeeData(employee *model.Employee) *EmployeeData {
 	return rs
 }
 
-func ToEmployeeListData(employees []*model.Employee) []EmployeeData {
+func ToEmployeeListData(c *gin.Context, employees []*model.Employee, userInfo *model.CurrentLoggedUserInfo) []EmployeeData {
 	rs := make([]EmployeeData, 0, len(employees))
 	for _, emp := range employees {
-		empRes := ToEmployeeData(emp)
+		empRes := ToOneEmployeeData(c, emp, userInfo)
 		rs = append(rs, *empRes)
 	}
 	return rs

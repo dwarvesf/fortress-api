@@ -150,3 +150,19 @@ func (s *store) UpdateSelectedFieldsByID(db *gorm.DB, id string, updateModel mod
 	project := model.Project{}
 	return &project, db.Model(&project).Where("id = ?", id).Select(updatedFields).Updates(&updateModel).Error
 }
+
+// GetByEmployeeID get project list by employee id
+func (s *store) GetByEmployeeID(db *gorm.DB, employeeID string) ([]*model.Project, error) {
+	var projects []*model.Project
+
+	query := db.Table("projects").
+		Joins("JOIN project_members pm ON pm.project_id = projects.id").
+		Where("projects.deleted_at IS NULL AND pm.employee_id = ?", employeeID).
+		Preload("Heads", func(db *gorm.DB) *gorm.DB {
+			return db.Joins("JOIN projects p ON project_heads.project_id = p.id").
+				Where("(project_heads.left_date IS NULL OR project_heads.left_date > ?) AND project_heads.employee_id = ? AND project_heads.position = ?", time.Now(), employeeID, model.HeadPositionTechnicalLead)
+		}).
+		Preload("Heads.Employee")
+
+	return projects, query.Find(&projects).Error
+}

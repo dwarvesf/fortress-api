@@ -21,6 +21,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/store/project"
 	"github.com/dwarvesf/fortress-api/pkg/store/projectslot"
+	"github.com/dwarvesf/fortress-api/pkg/utils"
 	"github.com/dwarvesf/fortress-api/pkg/view"
 )
 
@@ -59,6 +60,13 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 // @Failure 500 {object} view.ErrorResponse
 // @Router /projects [get]
 func (h *handler) List(c *gin.Context) {
+	// 0. Get current logged in user data
+	userInfo, err := utils.GetLoggedInUserInfo(c, h.store, h.repo.DB())
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, userInfo.UserID, ""))
+		return
+	}
+
 	query := request.GetListProjectInput{}
 	if err := c.ShouldBindQuery(&query); err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, query, ""))
@@ -91,7 +99,7 @@ func (h *handler) List(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse(view.ToProjectsData(projects),
+	c.JSON(http.StatusOK, view.CreateResponse(view.ToProjectsData(c, projects, userInfo),
 		&view.PaginationResponse{Pagination: query.Pagination, Total: total}, nil, nil, ""))
 }
 
@@ -137,7 +145,7 @@ func (h *handler) UpdateProjectStatus(c *gin.Context) {
 		return
 	}
 
-	project, err := h.store.Project.One(h.repo.DB(), projectID, false)
+	p, err := h.store.Project.One(h.repo.DB(), projectID, false)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Error(err, "project not found")
@@ -152,8 +160,8 @@ func (h *handler) UpdateProjectStatus(c *gin.Context) {
 
 	tx, done := h.repo.NewTransaction()
 
-	project.Status = body.ProjectStatus
-	_, err = h.store.Project.UpdateSelectedFieldsByID(tx.DB(), projectID, *project, "status")
+	p.Status = body.ProjectStatus
+	_, err = h.store.Project.UpdateSelectedFieldsByID(tx.DB(), projectID, *p, "status")
 	if err != nil {
 		l.Error(err, "failed to update project status")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
@@ -168,7 +176,7 @@ func (h *handler) UpdateProjectStatus(c *gin.Context) {
 		}
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToUpdateProjectStatusResponse(project), nil, done(nil), nil, ""))
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToUpdateProjectStatusResponse(p), nil, done(nil), nil, ""))
 }
 
 func (h *handler) closeProject(db *gorm.DB, projectID string) error {
@@ -1132,6 +1140,13 @@ func (h *handler) createSlotInProject(db *gorm.DB, projectID string, req request
 // @Failure 500 {object} view.ErrorResponse
 // @Router /projects/{id} [get]
 func (h *handler) Details(c *gin.Context) {
+	// 0. Get current logged in user data
+	userInfo, err := utils.GetLoggedInUserInfo(c, h.store, h.repo.DB())
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, userInfo.UserID, ""))
+		return
+	}
+
 	projectID := c.Param("id")
 	if projectID == "" {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidProjectID, nil, ""))
@@ -1157,7 +1172,15 @@ func (h *handler) Details(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse(view.ToProjectData(rs), nil, nil, nil, ""))
+	if !utils.HasPermission(c, userInfo.Permissions, "projects.read.fullAccess") {
+		_, ok := userInfo.Projects[rs.ID]
+		if !ok || !model.IsUserActiveInProject(userInfo.UserID, rs.Slots) {
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, nil, ""))
+			return
+		}
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse(view.ToProjectData(c, rs, userInfo), nil, nil, nil, ""))
 }
 
 // UpdateGeneralInfo godoc
@@ -1201,7 +1224,7 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 	})
 
 	// Check project existence
-	project, err := h.store.Project.One(h.repo.DB(), projectID, true)
+	p, err := h.store.Project.One(h.repo.DB(), projectID, true)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Error(err, "project not found")
@@ -1276,12 +1299,12 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 		}
 	}
 
-	project.Name = body.Name
-	project.StartDate = body.GetStartDate()
-	project.CountryID = body.CountryID
-	project.Function = model.ProjectFunction(body.Function)
+	p.Name = body.Name
+	p.StartDate = body.GetStartDate()
+	p.CountryID = body.CountryID
+	p.Function = model.ProjectFunction(body.Function)
 
-	_, err = h.store.Project.UpdateSelectedFieldsByID(tx.DB(), projectID, *project,
+	_, err = h.store.Project.UpdateSelectedFieldsByID(tx.DB(), projectID, *p,
 		"name",
 		"start_date",
 		"country_id",
@@ -1293,7 +1316,7 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToUpdateProjectGeneralInfo(project), nil, done(nil), nil, ""))
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToUpdateProjectGeneralInfo(p), nil, done(nil), nil, ""))
 }
 
 // UpdateContactInfo godoc
@@ -1339,7 +1362,7 @@ func (h *handler) UpdateContactInfo(c *gin.Context) {
 	}
 
 	// Check project existence
-	project, err := h.store.Project.One(h.repo.DB(), projectID, true)
+	p, err := h.store.Project.One(h.repo.DB(), projectID, true)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Error(err, "project not found")
@@ -1402,10 +1425,10 @@ func (h *handler) UpdateContactInfo(c *gin.Context) {
 	}
 
 	// Update email info
-	project.ClientEmail = strings.Join(body.ClientEmail, ",")
-	project.ProjectEmail = body.ProjectEmail
+	p.ClientEmail = strings.Join(body.ClientEmail, ",")
+	p.ProjectEmail = body.ProjectEmail
 
-	_, err = h.store.Project.UpdateSelectedFieldsByID(tx.DB(), projectID, *project, "client_email", "project_email")
+	_, err = h.store.Project.UpdateSelectedFieldsByID(tx.DB(), projectID, *p, "client_email", "project_email")
 	if err != nil {
 		l.Error(err, "failed to update project information to db")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
@@ -1419,9 +1442,9 @@ func (h *handler) UpdateContactInfo(c *gin.Context) {
 		return
 	}
 
-	project.Heads = heads
+	p.Heads = heads
 
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToUpdateProjectContactInfo(project), nil, done(nil), nil, ""))
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToUpdateProjectContactInfo(p), nil, done(nil), nil, ""))
 }
 
 func (h *handler) updateProjectHead(db *gorm.DB, projectID string, employeeID model.UUID, position model.HeadPosition) (*model.ProjectHead, error) {
@@ -1486,6 +1509,13 @@ func (h *handler) updateProjectHead(db *gorm.DB, projectID string, employeeID mo
 // @Failure 500 {object} view.ErrorResponse
 // @Router /projects/{id}/work-units [get]
 func (h *handler) GetWorkUnits(c *gin.Context) {
+	// 0. Get current logged in user data
+	userInfo, err := utils.GetLoggedInUserInfo(c, h.store, h.repo.DB())
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, userInfo.UserID, ""))
+		return
+	}
+
 	input := request.GetListWorkUnitInput{
 		ProjectID: c.Param("id"),
 	}
@@ -1509,7 +1539,7 @@ func (h *handler) GetWorkUnits(c *gin.Context) {
 		return
 	}
 
-	project, err := h.store.Project.One(h.repo.DB(), input.ProjectID, false)
+	p, err := h.store.Project.One(h.repo.DB(), input.ProjectID, true)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Info("project not found")
@@ -1522,6 +1552,14 @@ func (h *handler) GetWorkUnits(c *gin.Context) {
 		return
 	}
 
+	if !utils.HasPermission(c, userInfo.Permissions, "projectWorkUnits.read.fullAccess") {
+		_, ok := userInfo.Projects[p.ID]
+		if !ok || !model.IsUserActiveInProject(userInfo.UserID, p.Slots) {
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, nil, ""))
+			return
+		}
+	}
+
 	workUnits, err := h.store.WorkUnit.GetByProjectID(h.repo.DB(), input.ProjectID, input.Query.Status)
 	if err != nil {
 		l.Error(err, "failed to get work units")
@@ -1529,7 +1567,7 @@ func (h *handler) GetWorkUnits(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse(view.ToWorkUnitList(workUnits, input.ProjectID, project.Code), nil, nil, nil, ""))
+	c.JSON(http.StatusOK, view.CreateResponse(view.ToWorkUnitList(workUnits, input.ProjectID, p.Code), nil, nil, nil, ""))
 }
 
 // CreateWorkUnit godoc
@@ -1547,6 +1585,13 @@ func (h *handler) GetWorkUnits(c *gin.Context) {
 // @Failure 500 {object} view.ErrorResponse
 // @Router /projects/{id}/work-units [post]
 func (h *handler) CreateWorkUnit(c *gin.Context) {
+	// 0. Get current logged in user data
+	userInfo, err := utils.GetLoggedInUserInfo(c, h.store, h.repo.DB())
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, userInfo.UserID, ""))
+		return
+	}
+
 	input := request.CreateWorkUnitInput{
 		ProjectID: c.Param("id"),
 	}
@@ -1568,7 +1613,7 @@ func (h *handler) CreateWorkUnit(c *gin.Context) {
 		return
 	}
 
-	project, err := h.store.Project.One(h.repo.DB(), input.ProjectID, false)
+	p, err := h.store.Project.One(h.repo.DB(), input.ProjectID, true)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Error(errs.ErrProjectNotFound, "project not found")
@@ -1579,6 +1624,14 @@ func (h *handler) CreateWorkUnit(c *gin.Context) {
 		l.Error(err, "failed to get project")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input, ""))
 		return
+	}
+
+	if !utils.HasPermission(c, userInfo.Permissions, "projectWorkUnits.create.fullAccess") {
+		_, ok := userInfo.Projects[p.ID]
+		if !ok || !model.IsUserActiveInProject(userInfo.UserID, p.Slots) {
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, nil, ""))
+			return
+		}
 	}
 
 	tx, done := h.repo.NewTransaction()
@@ -1653,7 +1706,7 @@ func (h *handler) CreateWorkUnit(c *gin.Context) {
 		workUnit.WorkUnitMembers = append(workUnit.WorkUnitMembers, &wuMember)
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse(view.ToWorkUnit(workUnit, project.Code), nil, done(nil), nil, ""))
+	c.JSON(http.StatusOK, view.CreateResponse(view.ToWorkUnit(workUnit, p.Code), nil, done(nil), nil, ""))
 }
 
 // UpdateWorkUnit godoc
@@ -1672,6 +1725,13 @@ func (h *handler) CreateWorkUnit(c *gin.Context) {
 // @Failure 500 {object} view.ErrorResponse
 // @Router /projects/{id}/work-units/{workUnitID} [put]
 func (h *handler) UpdateWorkUnit(c *gin.Context) {
+	// 0. Get current logged in user data
+	userInfo, err := utils.GetLoggedInUserInfo(c, h.store, h.repo.DB())
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, userInfo.UserID, ""))
+		return
+	}
+
 	input := request.UpdateWorkUnitInput{
 		ProjectID:  c.Param("id"),
 		WorkUnitID: c.Param("workUnitID"),
@@ -1693,6 +1753,27 @@ func (h *handler) UpdateWorkUnit(c *gin.Context) {
 		l.Error(err, "validate failed")
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
+	}
+
+	p, err := h.store.Project.One(h.repo.DB(), input.ProjectID, true)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			l.Error(errs.ErrProjectNotFound, "project not found")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, nil, ""))
+			return
+		}
+
+		l.Error(err, "failed to get project")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input, ""))
+		return
+	}
+
+	if !utils.HasPermission(c, userInfo.Permissions, "projectWorkUnits.edit.fullAccess") {
+		_, ok := userInfo.Projects[p.ID]
+		if !ok || !model.IsUserActiveInProject(userInfo.UserID, p.Slots) {
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, nil, ""))
+			return
+		}
 	}
 
 	// Check Exitsences of elements in input
@@ -1916,6 +1997,13 @@ func (h *handler) createWorkUnit(db *gorm.DB, projectID string, workUnitID strin
 // @Failure 500 {object} view.ErrorResponse
 // @Router /projects/{id}/work-units/{workUnitID}/archive [put]
 func (h *handler) ArchiveWorkUnit(c *gin.Context) {
+	// 0. Get current logged in user data
+	userInfo, err := utils.GetLoggedInUserInfo(c, h.store, h.repo.DB())
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, userInfo.UserID, ""))
+		return
+	}
+
 	input := request.ArchiveWorkUnitInput{
 		ProjectID:  c.Param("id"),
 		WorkUnitID: c.Param("workUnitID"),
@@ -1934,17 +2022,25 @@ func (h *handler) ArchiveWorkUnit(c *gin.Context) {
 		return
 	}
 
-	exists, err := h.store.Project.IsExist(h.repo.DB(), input.ProjectID)
+	p, err := h.store.Project.One(h.repo.DB(), input.ProjectID, true)
 	if err != nil {
-		l.Error(err, "failed to check project existence")
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			l.Error(errs.ErrProjectNotFound, "project not found")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, nil, ""))
+			return
+		}
+
+		l.Error(err, "failed to get project")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input, ""))
 		return
 	}
 
-	if !exists {
-		l.Error(errs.ErrProjectNotFound, "project not found")
-		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, nil, ""))
-		return
+	if !utils.HasPermission(c, userInfo.Permissions, "projectWorkUnits.edit.fullAccess") {
+		_, ok := userInfo.Projects[p.ID]
+		if !ok || !model.IsUserActiveInProject(userInfo.UserID, p.Slots) {
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, nil, ""))
+			return
+		}
 	}
 
 	workUnit, err := h.store.WorkUnit.One(h.repo.DB(), input.WorkUnitID)
@@ -2010,6 +2106,13 @@ func (h *handler) ArchiveWorkUnit(c *gin.Context) {
 // @Failure 500 {object} view.ErrorResponse
 // @Router /projects/{id}/work-units/{workUnitID}/unarchive [put]
 func (h *handler) UnarchiveWorkUnit(c *gin.Context) {
+	// 0. Get current logged in user data
+	userInfo, err := utils.GetLoggedInUserInfo(c, h.store, h.repo.DB())
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, userInfo.UserID, ""))
+		return
+	}
+
 	input := request.ArchiveWorkUnitInput{
 		ProjectID:  c.Param("id"),
 		WorkUnitID: c.Param("workUnitID"),
@@ -2028,17 +2131,25 @@ func (h *handler) UnarchiveWorkUnit(c *gin.Context) {
 		return
 	}
 
-	exists, err := h.store.Project.IsExist(h.repo.DB(), input.ProjectID)
+	p, err := h.store.Project.One(h.repo.DB(), input.ProjectID, true)
 	if err != nil {
-		l.Error(err, "failed to check project existence")
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			l.Error(errs.ErrProjectNotFound, "project not found")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, nil, ""))
+			return
+		}
+
+		l.Error(err, "failed to get project")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input, ""))
 		return
 	}
 
-	if !exists {
-		l.Error(errs.ErrProjectNotFound, "project not found")
-		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, nil, ""))
-		return
+	if !utils.HasPermission(c, userInfo.Permissions, "projectWorkUnits.edit.fullAccess") {
+		_, ok := userInfo.Projects[p.ID]
+		if !ok || !model.IsUserActiveInProject(userInfo.UserID, p.Slots) {
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, nil, ""))
+			return
+		}
 	}
 
 	workUnit, err := h.store.WorkUnit.One(h.repo.DB(), input.WorkUnitID)
@@ -2135,7 +2246,7 @@ func (h *handler) UpdateSendingSurveyState(c *gin.Context) {
 		"query":   query,
 	})
 
-	project, err := h.store.Project.One(h.repo.DB(), projectID, false)
+	p, err := h.store.Project.One(h.repo.DB(), projectID, false)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Error(err, "project not found")
@@ -2148,8 +2259,8 @@ func (h *handler) UpdateSendingSurveyState(c *gin.Context) {
 		return
 	}
 
-	project.AllowsSendingSurvey = query.AllowsSendingSurvey
-	_, err = h.store.Project.UpdateSelectedFieldsByID(h.repo.DB(), projectID, *project, "allows_sending_survey")
+	p.AllowsSendingSurvey = query.AllowsSendingSurvey
+	_, err = h.store.Project.UpdateSelectedFieldsByID(h.repo.DB(), projectID, *p, "allows_sending_survey")
 	if err != nil {
 		l.Error(err, "failed to update project")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, query, ""))
