@@ -26,4 +26,6 @@ type IStore interface {
 	GetGroupAuditByProjectNotionID(db *gorm.DB, projectID string) ([]*model.GroupAudit, error)
 	GetAuditSummaries(db *gorm.DB) ([]*model.AuditSummary, error)
 	GetProjectSizesByStartTime(db *gorm.DB, curr time.Time) ([]*model.ProjectSize, error)
+	GetPendingSlots(db *gorm.DB) ([]*model.ProjectSlot, error)
+	GetAvailableEmployees(db *gorm.DB) ([]*model.Employee, error)
 }

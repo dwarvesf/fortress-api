@@ -12,4 +12,5 @@ type IHandler interface {
 	GetAudits(c *gin.Context)
 	GetActionItemSquashReports(c *gin.Context)
 	GetSummary(c *gin.Context)
+	GetResourcesAvailability(c *gin.Context)
 }

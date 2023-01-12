@@ -473,6 +473,12 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/dashboard.IHandler.GetSummary-fm",
 			},
 		},
+		"/api/v1/dashboards/resources/availabilities": {
+			"GET": {
+				Method:  "GET",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/dashboard.IHandler.GetResourcesAvailability-fm",
+			},
+		},
 	}
 
 	l := logger.NewLogrusLogger()

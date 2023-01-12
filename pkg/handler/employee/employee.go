@@ -1398,7 +1398,7 @@ func (h *handler) UpdateRole(c *gin.Context) {
 // @Param Authorization header string true "jwt token"
 // @Success 200 {object} view.LineManagersResponse
 // @Failure 500 {object} view.ErrorResponse
-// @Router /line-managers [post]
+// @Router /line-managers [get]
 func (h *handler) GetLineManagers(c *gin.Context) {
 	userInfo, err := utils.GetLoggedInUserInfo(c, h.store, h.repo.DB(), h.config)
 	if err != nil {

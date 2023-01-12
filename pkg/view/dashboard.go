@@ -531,3 +531,68 @@ func ToAuditSummaries(summaryMap map[model.UUID][]*model.AuditSummary, previousQ
 
 	return rs
 }
+
+type AvailableSlot struct {
+	ID        string           `json:"id"`
+	Type      string           `json:"type"`
+	CreatedAt string           `json:"createdAt"`
+	Seniority Seniority        `json:"seniority"`
+	Project   BasicProjectInfo `json:"project"`
+	Positions []Position       `json:"positions"`
+}
+
+type AvailableEmployee struct {
+	ID          string             `json:"id"`
+	FullName    string             `json:"fullName"`
+	DisplayName string             `json:"displayName"`
+	Avatar      string             `json:"avatar"`
+	Seniority   Seniority          `json:"seniority"`
+	Positions   []Position         `json:"positions"`
+	Stacks      []Stack            `json:"stacks"`
+	Projects    []BasicProjectInfo `json:"projects"`
+}
+
+type ResourceAvailability struct {
+	Slots     []AvailableSlot     `json:"slots"`
+	Employees []AvailableEmployee `json:"employees"`
+}
+
+type ResourceAvailabilityResponse struct {
+	Data ResourceAvailability `json:"data"`
+}
+
+func ToResourceAvailability(slots []*model.ProjectSlot, employees []*model.Employee) ResourceAvailability {
+	var res ResourceAvailability
+
+	for _, v := range slots {
+		res.Slots = append(res.Slots, AvailableSlot{
+			ID:        v.ID.String(),
+			Type:      v.DeploymentType.String(),
+			CreatedAt: v.CreatedAt.String(),
+			Seniority: ToSeniority(v.Seniority),
+			Project:   *toBasicProjectInfo(v.Project),
+			Positions: ToProjectSlotPositions(v.ProjectSlotPositions),
+		})
+	}
+
+	for _, v := range employees {
+		employee := AvailableEmployee{
+			ID:          v.ID.String(),
+			FullName:    v.FullName,
+			DisplayName: v.DisplayName,
+			Avatar:      v.Avatar,
+			Seniority:   ToSeniority(*v.Seniority),
+			Positions:   ToEmployeePositions(v.EmployeePositions),
+			Stacks:      ToEmployeeStacks(v.EmployeeStacks),
+		}
+
+		for _, pm := range v.ProjectMembers {
+			project := toBasicProjectInfo(pm.Project)
+			employee.Projects = append(employee.Projects, *project)
+		}
+
+		res.Employees = append(res.Employees, employee)
+	}
+
+	return res
+}

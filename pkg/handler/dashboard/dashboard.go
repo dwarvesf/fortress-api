@@ -474,3 +474,36 @@ func (h *handler) GetSummary(c *gin.Context) {
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToAuditSummaries(summaryMap, previousQuarterMap), nil, nil, nil, ""))
 }
+
+// GetResourcesAvailability godoc
+// @Summary Get resources availability
+// @Description Get resources availability
+// @Tags Dashboard
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "jwt token"
+// @Success 200 {object} view.ResourceAvailabilityResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /dashboards/resources/availabilities [get]
+func (h *handler) GetResourcesAvailability(c *gin.Context) {
+	l := h.logger.Fields(logger.Fields{
+		"handler": "dashboard",
+		"method":  "GetResourcesAvailability",
+	})
+
+	slots, err := h.store.Dashboard.GetPendingSlots(h.repo.DB())
+	if err != nil {
+		l.Error(err, "failed to get pending slots")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	employees, err := h.store.Dashboard.GetAvailableEmployees(h.repo.DB())
+	if err != nil {
+		l.Error(err, "failed to get available employees")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToResourceAvailability(slots, employees), nil, nil, nil, ""))
+}
