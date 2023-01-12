@@ -12,6 +12,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
+	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/utils"
 )
@@ -119,7 +120,7 @@ type permMiddleware struct {
 }
 
 // WithPerm a middleware to check the permission
-func (m permMiddleware) WithPerm(perm string) func(c *gin.Context) {
+func (m permMiddleware) WithPerm(perm model.PermissionCode) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		accessToken, err := utils.GetTokenFromRequest(c)
 		if err != nil {
@@ -127,7 +128,7 @@ func (m permMiddleware) WithPerm(perm string) func(c *gin.Context) {
 			return
 		}
 
-		err = ensurePerm(m.store, m.repo.DB(), accessToken, perm)
+		err = ensurePerm(m.store, m.repo.DB(), accessToken, perm.String())
 		if err != nil {
 			c.AbortWithStatusJSON(401, map[string]string{"message": err.Error()})
 			return

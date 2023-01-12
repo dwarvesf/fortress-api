@@ -1,13 +1,14 @@
 package view
 
 import (
-	"github.com/dwarvesf/fortress-api/pkg/utils"
-	"github.com/gin-gonic/gin"
 	"strings"
 	"time"
 
-	"github.com/dwarvesf/fortress-api/pkg/model"
+	"github.com/gin-gonic/gin"
 	"github.com/shopspring/decimal"
+
+	"github.com/dwarvesf/fortress-api/pkg/model"
+	"github.com/dwarvesf/fortress-api/pkg/utils"
 )
 
 type ProjectData struct {
@@ -145,7 +146,7 @@ func ToProjectData(c *gin.Context, project *model.Project, userInfo *model.Curre
 		if slot.Status != model.ProjectMemberStatusPending && !m.ID.IsZero() {
 			member.DeploymentType = ""
 
-			if utils.HasPermission(c, userInfo.Permissions, "projects.read.fullAccess") {
+			if utils.HasPermission(c, userInfo.Permissions, model.PermissionProjectsReadFullAccess) {
 				member.DeploymentType = m.DeploymentType.String()
 			}
 
@@ -193,7 +194,7 @@ func ToProjectData(c *gin.Context, project *model.Project, userInfo *model.Curre
 		clientEmail = strings.Split(project.ClientEmail, ",")
 	}
 
-	if utils.HasPermission(c, userInfo.Permissions, "projects.read.fullAccess") {
+	if utils.HasPermission(c, userInfo.Permissions, model.PermissionProjectsReadFullAccess) {
 		d.ClientEmail = clientEmail
 	}
 
@@ -220,7 +221,7 @@ func ToProjectsData(c *gin.Context, projects []*model.Project, userInfo *model.C
 		}
 
 		// If the project is not belong user, check if the user has permission to view the project
-		if utils.HasPermission(c, userInfo.Permissions, "projects.read.fullAccess") {
+		if utils.HasPermission(c, userInfo.Permissions, model.PermissionProjectsReadFullAccess) {
 			results = append(results, ToProjectData(c, p, userInfo))
 		}
 	}

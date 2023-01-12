@@ -101,7 +101,7 @@ func ToEmployeeProjectDetailData(c *gin.Context, pm *model.ProjectMember, userIn
 		Avatar:    pm.Project.Avatar,
 	}
 
-	if utils.HasPermission(c, userInfo.Permissions, "employees.read.projects.fullAccess") {
+	if utils.HasPermission(c, userInfo.Permissions, model.PermissionEmployeesReadProjectsFullAccess) {
 		rs.JoinedDate = pm.JoinedDate
 		rs.LeftDate = pm.LeftDate
 		rs.DeploymentType = pm.DeploymentType.String()
@@ -274,25 +274,21 @@ func ToUpdateGeneralInfoEmployeeData(employee *model.Employee) *UpdateGeneralInf
 func ToOneEmployeeData(c *gin.Context, employee *model.Employee, userInfo *model.CurrentLoggedUserInfo) *EmployeeData {
 	employeeProjects := make([]EmployeeProjectData, 0, len(employee.ProjectMembers))
 	for _, v := range employee.ProjectMembers {
-
-		// If the project belongs user, append it in the list
-		p, ok := userInfo.Projects[v.ProjectID]
-		if ok && p.Status == model.ProjectStatusActive {
+		if v.Project.Status == model.ProjectStatusActive {
 			employeeProjects = append(employeeProjects, ToEmployeeProjectDetailData(c, &v, userInfo))
 			continue
 		}
 
 		// If the project is not belong user, check if the user has permission to view the project
-		if utils.HasPermission(c, userInfo.Permissions, "employees.read.projects.fullAccess") ||
-			utils.HasPermission(c, userInfo.Permissions, "employees.read.projects.readActive") {
-			if v.Project.Status != model.ProjectStatusActive && utils.HasPermission(c, userInfo.Permissions, "employees.read.projects.fullAccess") {
+		if utils.HasPermission(c, userInfo.Permissions, model.PermissionEmployeesReadProjectsFullAccess) ||
+			utils.HasPermission(c, userInfo.Permissions, model.PermissionEmployeesReadProjectsReadActive) {
+			if v.Project.Status != model.ProjectStatusActive && utils.HasPermission(c, userInfo.Permissions, model.PermissionEmployeesReadProjectsFullAccess) {
 				employeeProjects = append(employeeProjects, ToEmployeeProjectDetailData(c, &v, userInfo))
 				continue
 			}
 
 			employeeProjects = append(employeeProjects, ToEmployeeProjectDetailData(c, &v, userInfo))
 		}
-
 	}
 
 	var lineManager *BasicEmployeeInfo
@@ -329,7 +325,7 @@ func ToOneEmployeeData(c *gin.Context, employee *model.Employee, userInfo *model
 		Chapters:  ToChapters(employee.EmployeeChapters),
 	}
 
-	if utils.HasPermission(c, userInfo.Permissions, "employees.read.generalInfo.fullAccess") {
+	if utils.HasPermission(c, userInfo.Permissions, model.PermissionEmployeesReadGeneralInfoFullAccess) {
 		rs.NotionID = employee.NotionID
 		rs.GithubID = employee.GithubID
 		rs.NotionName = employee.NotionName
@@ -340,7 +336,7 @@ func ToOneEmployeeData(c *gin.Context, employee *model.Employee, userInfo *model
 		rs.LeftDate = employee.LeftDate
 	}
 
-	if utils.HasPermission(c, userInfo.Permissions, "employees.read.personalInfo.fullAccess") {
+	if utils.HasPermission(c, userInfo.Permissions, model.PermissionEmployeesReadPersonalInfoFullAccess) {
 		rs.MBTI = employee.MBTI
 		rs.PersonalEmail = employee.PersonalEmail
 		rs.Address = employee.Address

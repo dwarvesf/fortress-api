@@ -71,6 +71,7 @@ const (
 	PermissionEmployeeRolesRead                   PermissionCode = "employeeRoles.read"
 	PermissionEmployeeRolesEdit                   PermissionCode = "employeeRoles.edit"
 	PermissionEmployeeRolesDelete                 PermissionCode = "employeeRoles.delete"
+	PermissionValuationRead                       PermissionCode = "valuations.read"
 )
 
 func (p PermissionCode) String() string {

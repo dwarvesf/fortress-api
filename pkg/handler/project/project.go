@@ -1172,7 +1172,7 @@ func (h *handler) Details(c *gin.Context) {
 		return
 	}
 
-	if !utils.HasPermission(c, userInfo.Permissions, "projects.read.fullAccess") {
+	if !utils.HasPermission(c, userInfo.Permissions, model.PermissionProjectsReadFullAccess) {
 		_, ok := userInfo.Projects[rs.ID]
 		if !ok || !model.IsUserActiveInProject(userInfo.UserID, rs.Slots) {
 			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, nil, ""))
@@ -1552,7 +1552,7 @@ func (h *handler) GetWorkUnits(c *gin.Context) {
 		return
 	}
 
-	if !utils.HasPermission(c, userInfo.Permissions, "projectWorkUnits.read.fullAccess") {
+	if !utils.HasPermission(c, userInfo.Permissions, model.PermissionProjectWorkUnitsReadFullAccess) {
 		_, ok := userInfo.Projects[p.ID]
 		if !ok || !model.IsUserActiveInProject(userInfo.UserID, p.Slots) {
 			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, nil, ""))
@@ -1626,7 +1626,8 @@ func (h *handler) CreateWorkUnit(c *gin.Context) {
 		return
 	}
 
-	if !utils.HasPermission(c, userInfo.Permissions, "projectWorkUnits.create.fullAccess") {
+	// Has permission when have work unit create full-access and active in project
+	if !utils.HasPermission(c, userInfo.Permissions, model.PermissionProjectWorkUnitsCreateFullAccess) {
 		_, ok := userInfo.Projects[p.ID]
 		if !ok || !model.IsUserActiveInProject(userInfo.UserID, p.Slots) {
 			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, nil, ""))
@@ -1768,7 +1769,7 @@ func (h *handler) UpdateWorkUnit(c *gin.Context) {
 		return
 	}
 
-	if !utils.HasPermission(c, userInfo.Permissions, "projectWorkUnits.edit.fullAccess") {
+	if !utils.HasPermission(c, userInfo.Permissions, model.PermissionProjectWorkUnitsEditFullAccess) {
 		_, ok := userInfo.Projects[p.ID]
 		if !ok || !model.IsUserActiveInProject(userInfo.UserID, p.Slots) {
 			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, nil, ""))
@@ -2035,7 +2036,7 @@ func (h *handler) ArchiveWorkUnit(c *gin.Context) {
 		return
 	}
 
-	if !utils.HasPermission(c, userInfo.Permissions, "projectWorkUnits.edit.fullAccess") {
+	if !utils.HasPermission(c, userInfo.Permissions, model.PermissionProjectWorkUnitsEditFullAccess) {
 		_, ok := userInfo.Projects[p.ID]
 		if !ok || !model.IsUserActiveInProject(userInfo.UserID, p.Slots) {
 			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, nil, ""))
@@ -2144,7 +2145,7 @@ func (h *handler) UnarchiveWorkUnit(c *gin.Context) {
 		return
 	}
 
-	if !utils.HasPermission(c, userInfo.Permissions, "projectWorkUnits.edit.fullAccess") {
+	if !utils.HasPermission(c, userInfo.Permissions, model.PermissionProjectWorkUnitsEditFullAccess) {
 		_, ok := userInfo.Projects[p.ID]
 		if !ok || !model.IsUserActiveInProject(userInfo.UserID, p.Slots) {
 			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, nil, ""))

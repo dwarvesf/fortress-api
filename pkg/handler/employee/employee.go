@@ -126,7 +126,7 @@ func (h *handler) getWorkingStatusInput(c *gin.Context, input []string) ([]strin
 
 	var hasPermission bool
 	if userID != "" {
-		hasPermission, err = h.store.Permission.HasPermission(h.repo.DB(), userID, "employees.read.filterByAllStatuses")
+		hasPermission, err = h.store.Permission.HasPermission(h.repo.DB(), userID, model.PermissionEmployeesReadFilterByAllStatuses.String())
 		if err != nil {
 			h.logger.Error(err, "failed to check permission of user")
 			return nil, err
@@ -221,7 +221,7 @@ func (h *handler) One(c *gin.Context) {
 		return
 	}
 
-	if rs.WorkingStatus == model.WorkingStatusLeft && !utils.HasPermission(c, userInfo.Permissions, "employees.read.fullAccess") {
+	if rs.WorkingStatus == model.WorkingStatusLeft && !utils.HasPermission(c, userInfo.Permissions, model.PermissionEmployeesReadFullAccess) {
 		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrEmployeeNotFound, nil, ""))
 		return
 	}
