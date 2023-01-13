@@ -1,0 +1,24 @@
+{
+    "data": {
+        "auditActionItemReports": [
+            {
+                "quarter": "Q1/2022",
+                "high": 1,
+                "medium": 1,
+                "low": 1,
+                "trend": null
+            },
+            {
+                "quarter": "Q2/2022",
+                "high": 2,
+                "medium": 2,
+                "low": 2,
+                "trend": {
+                    "high": 100,
+                    "medium": 100,
+                    "low": 100
+                }
+            }
+        ]
+    }
+}

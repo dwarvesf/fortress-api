@@ -15,3 +15,10 @@ type WorkSurvey struct {
 	Deadline float64   `json:"deadline"`
 	Learning float64   `json:"learning"`
 }
+
+type ActionItemReport struct {
+	Quarter string `json:"quarter"`
+	High    int64  `json:"high"`
+	Medium  int64  `json:"medium"`
+	Low     int64  `json:"low"`
+}

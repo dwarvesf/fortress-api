@@ -106,3 +106,32 @@ func (s *store) GetAllWorkSurveys(db *gorm.DB) ([]*model.WorkSurvey, error) {
 
 	return rs, db.Raw(query).Scan(&rs).Error
 }
+
+func (s *store) GetAllActionItemReports(db *gorm.DB) ([]*model.ActionItemReport, error) {
+	var rs []*model.ActionItemReport
+
+	query := `
+		SELECT sum(action_item_high) AS high, sum(action_item_medium) AS medium, sum(action_item_low) AS low, quarter AS quarter
+		FROM audit_cycles
+		GROUP BY quarter 
+		ORDER BY quarter desc 
+		LIMIT 4
+	`
+
+	return rs, db.Raw(query).Scan(&rs).Error
+}
+
+func (s *store) GetActionItemReportsByProjectID(db *gorm.DB, projectID string) ([]*model.ActionItemReport, error) {
+	var rs []*model.ActionItemReport
+
+	query := `
+		SELECT sum(audit_cycles.action_item_high) AS high, sum(audit_cycles.action_item_medium) AS medium, sum(audit_cycles.action_item_low) AS low, audit_cycles.quarter AS quarter
+		FROM audit_cycles
+		WHERE audit_cycles.project_id = ?
+		GROUP BY quarter
+		ORDER BY quarter desc
+		LIMIT 4
+	`
+
+	return rs, db.Raw(query, projectID).Scan(&rs).Error
+}
