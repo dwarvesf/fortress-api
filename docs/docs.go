@@ -136,6 +136,62 @@ const docTemplate = `{
                 }
             }
         },
+        "/dashboards/action-items": {
+            "get": {
+                "description": "Get Action items report for dashboard",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "Get Action items report for dashboard",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Project ID",
+                        "name": "projectID",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.ActionItemReportResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/dashboards/projects/sizes": {
             "get": {
                 "description": "Get the total number of active member in each project",
@@ -4981,6 +5037,31 @@ const docTemplate = `{
                 }
             }
         },
+        "view.ActionItemReportResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.AuditActionItemReport"
+                    }
+                }
+            }
+        },
+        "view.ActionItemTrend": {
+            "type": "object",
+            "properties": {
+                "high": {
+                    "type": "number"
+                },
+                "low": {
+                    "type": "number"
+                },
+                "medium": {
+                    "type": "number"
+                }
+            }
+        },
         "view.ApiError": {
             "description": "validation error details",
             "type": "object",
@@ -4999,6 +5080,26 @@ const docTemplate = `{
                 "msg": {
                     "description": "error message",
                     "type": "string"
+                }
+            }
+        },
+        "view.AuditActionItemReport": {
+            "type": "object",
+            "properties": {
+                "high": {
+                    "type": "integer"
+                },
+                "low": {
+                    "type": "integer"
+                },
+                "medium": {
+                    "type": "integer"
+                },
+                "quarter": {
+                    "type": "string"
+                },
+                "trend": {
+                    "$ref": "#/definitions/view.ActionItemTrend"
                 }
             }
         },

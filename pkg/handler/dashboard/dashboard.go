@@ -130,3 +130,65 @@ func (h *handler) WorkSurveys(c *gin.Context) {
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToWorkSurveyData(project, workSurveys), nil, nil, nil, ""))
 }
+
+// GetActionItemReports godoc
+// @Summary Get Action items report for dashboard
+// @Description Get Action items report for dashboard
+// @Tags Dashboard
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "jwt token"
+// @Param projectID   query  string false  "Project ID"
+// @Success 200 {object} view.ActionItemReportResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /dashboards/action-items [get]
+func (h *handler) GetActionItemReports(c *gin.Context) {
+	input := request.ActionItemInput{}
+	if err := c.ShouldBindQuery(&input); err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, input, ""))
+		return
+	}
+
+	if input.ProjectID != "" && !model.IsUUIDFromString(input.ProjectID) {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidProjectID, nil, ""))
+		return
+	}
+
+	l := h.logger.Fields(logger.Fields{
+		"handler": "dashboard",
+		"method":  "GetActionItemReports",
+		"input":   input,
+	})
+
+	var actionItemReports []*model.ActionItemReport
+	var err error
+
+	if input.ProjectID != "" {
+		// Check project existence
+		isExist, err := h.store.Project.IsExist(h.repo.DB(), input.ProjectID)
+		if !isExist {
+			l.Error(err, "project not found")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, input, ""))
+			return
+		}
+
+		// Get action item report by project ID
+		actionItemReports, err = h.store.Dashboard.GetActionItemReportsByProjectID(h.repo.DB(), input.ProjectID)
+		if err != nil {
+			l.Error(err, "failed to get action item report by project ID")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+			return
+		}
+	} else {
+		actionItemReports, err = h.store.Dashboard.GetAllActionItemReports(h.repo.DB())
+		if err != nil {
+			l.Error(err, "failed to get action item report")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+			return
+		}
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToActionItemReportData(actionItemReports), nil, nil, nil, ""))
+}
