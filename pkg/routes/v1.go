@@ -110,6 +110,7 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 	{
 		dashboard.GET("/projects/sizes", pmw.WithPerm("dashboards.read"), h.Dashboard.ProjectSizes)
 		dashboard.GET("/work-surveys", pmw.WithPerm("dashboards.read"), h.Dashboard.WorkSurveys)
+		dashboard.GET("/action-items", pmw.WithPerm("dashboards.read"), h.Dashboard.GetActionItemReports)
 	}
 
 }

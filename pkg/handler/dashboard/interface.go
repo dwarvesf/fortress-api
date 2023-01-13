@@ -7,4 +7,5 @@ import (
 type IHandler interface {
 	ProjectSizes(c *gin.Context)
 	WorkSurveys(c *gin.Context)
+	GetActionItemReports(c *gin.Context)
 }

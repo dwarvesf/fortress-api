@@ -706,6 +706,22 @@ definitions:
           $ref: '#/definitions/model.Role'
         type: array
     type: object
+  view.ActionItemReportResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/view.AuditActionItemReport'
+        type: array
+    type: object
+  view.ActionItemTrend:
+    properties:
+      high:
+        type: number
+      low:
+        type: number
+      medium:
+        type: number
+    type: object
   view.ApiError:
     description: validation error details
     properties:
@@ -720,6 +736,19 @@ definitions:
       msg:
         description: error message
         type: string
+    type: object
+  view.AuditActionItemReport:
+    properties:
+      high:
+        type: integer
+      low:
+        type: integer
+      medium:
+        type: integer
+      quarter:
+        type: string
+      trend:
+        $ref: '#/definitions/view.ActionItemTrend'
     type: object
   view.AuthData:
     properties:
@@ -2001,6 +2030,43 @@ paths:
       summary: Get logged-in user data
       tags:
       - Auth
+  /dashboards/action-items:
+    get:
+      consumes:
+      - application/json
+      description: Get Action items report for dashboard
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Project ID
+        in: query
+        name: projectID
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.ActionItemReportResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get Action items report for dashboard
+      tags:
+      - Dashboard
   /dashboards/projects/sizes:
     get:
       consumes:
