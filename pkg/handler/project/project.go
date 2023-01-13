@@ -884,11 +884,18 @@ func (h *handler) assignMemberToProject(db *gorm.DB, slotID string, projectID st
 
 	// update project head
 	member.IsLead = input.IsLead
-	if !input.IsLead || input.GetLeftDate() != nil {
+	leftDate := input.GetLeftDate()
+	if !input.IsLead || leftDate != nil {
+		if leftDate == nil {
+			leftDate = new(time.Time)
+			*leftDate = time.Now()
+		}
+
 		_, err := h.store.ProjectHead.UpdateLeftDateOfEmployee(db,
 			input.EmployeeID.String(),
 			projectID,
-			model.HeadPositionTechnicalLead.String())
+			model.HeadPositionTechnicalLead.String(),
+			*leftDate)
 		if err != nil {
 			h.logger.Fields(logger.Fields{
 				"projectID":  projectID,
