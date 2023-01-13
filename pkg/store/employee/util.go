@@ -27,8 +27,11 @@ func getByWhereConditions(query *gorm.DB, filter EmployeeFilter) *gorm.DB {
 				FROM project_members
 				WHERE project_members.deleted_at IS NULL AND project_members.status = 'active')`)
 		} else {
-			query = query.Joins("JOIN project_members ON employees.id = project_members.employee_id JOIN projects ON project_members.project_id = projects.id AND projects.code IN ?",
-				filter.Projects)
+			query = query.Where(`employees.id IN (
+				SELECT pm.employee_id
+				FROM project_members pm JOIN projects p ON pm.project_id = p.id AND p.code IN ?
+				WHERE pm.deleted_at IS NULL AND pm.status = 'active'
+			)`, filter.Projects)
 		}
 	}
 
