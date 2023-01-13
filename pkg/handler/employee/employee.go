@@ -89,12 +89,25 @@ func (h *handler) List(c *gin.Context) {
 		Keyword:        body.Keyword,
 		Positions:      body.Positions,
 		Stacks:         body.Stacks,
-		Projects:       body.Projects,
 		Chapters:       body.Chapters,
 		Seniorities:    body.Seniorities,
 		Organizations:  body.Organizations,
 		LineManagers:   body.LineManagers,
 		JoinedDateSort: model.SortOrderDESC,
+		Projects:       body.Projects,
+	}
+
+	// If user don't have this permission, they can only see employees in the project that they are in
+	if !utils.HasPermission(c, userInfo.Permissions, model.PermissionEmployeesReadReadActive) {
+		projectIDs := make([]string, 0)
+		for _, p := range userInfo.Projects {
+			projectIDs = append(projectIDs, p.Code)
+		}
+
+		filter.Projects = []string{""}
+		if len(projectIDs) > 0 {
+			filter.Projects = projectIDs
+		}
 	}
 
 	workingStatuses, err := h.getWorkingStatusInput(c, body.WorkingStatuses)

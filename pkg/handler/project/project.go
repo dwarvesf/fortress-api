@@ -1633,6 +1633,19 @@ func (h *handler) CreateWorkUnit(c *gin.Context) {
 			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, nil, ""))
 			return
 		}
+
+		leadMap := map[string]bool{}
+		for _, v := range p.Heads {
+			if v.IsLead() {
+				leadMap[v.EmployeeID.String()] = true
+			}
+		}
+
+		_, ok = leadMap[userInfo.UserID]
+		if !ok || !model.IsUserActiveInProject(userInfo.UserID, p.Slots) {
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrMemberIsNotProjectLead, nil, ""))
+			return
+		}
 	}
 
 	tx, done := h.repo.NewTransaction()
@@ -1773,6 +1786,19 @@ func (h *handler) UpdateWorkUnit(c *gin.Context) {
 		_, ok := userInfo.Projects[p.ID]
 		if !ok || !model.IsUserActiveInProject(userInfo.UserID, p.Slots) {
 			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, nil, ""))
+			return
+		}
+
+		leadMap := map[string]bool{}
+		for _, v := range p.Heads {
+			if v.IsLead() {
+				leadMap[v.EmployeeID.String()] = true
+			}
+		}
+
+		_, ok = leadMap[userInfo.UserID]
+		if !ok || !model.IsUserActiveInProject(userInfo.UserID, p.Slots) {
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrMemberIsNotProjectLead, nil, ""))
 			return
 		}
 	}
@@ -2042,6 +2068,19 @@ func (h *handler) ArchiveWorkUnit(c *gin.Context) {
 			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, nil, ""))
 			return
 		}
+
+		leadMap := map[string]bool{}
+		for _, v := range p.Heads {
+			if v.IsLead() {
+				leadMap[v.EmployeeID.String()] = true
+			}
+		}
+
+		_, ok = leadMap[userInfo.UserID]
+		if !ok || !model.IsUserActiveInProject(userInfo.UserID, p.Slots) {
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrMemberIsNotProjectLead, nil, ""))
+			return
+		}
 	}
 
 	workUnit, err := h.store.WorkUnit.One(h.repo.DB(), input.WorkUnitID)
@@ -2149,6 +2188,19 @@ func (h *handler) UnarchiveWorkUnit(c *gin.Context) {
 		_, ok := userInfo.Projects[p.ID]
 		if !ok || !model.IsUserActiveInProject(userInfo.UserID, p.Slots) {
 			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, nil, ""))
+			return
+		}
+
+		leadMap := map[string]bool{}
+		for _, v := range p.Heads {
+			if v.IsLead() {
+				leadMap[v.EmployeeID.String()] = true
+			}
+		}
+
+		_, ok = leadMap[userInfo.UserID]
+		if !ok || !model.IsUserActiveInProject(userInfo.UserID, p.Slots) {
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrMemberIsNotProjectLead, nil, ""))
 			return
 		}
 	}

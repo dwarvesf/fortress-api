@@ -22,6 +22,7 @@ const (
 	PermissionAuthRead                            PermissionCode = "auth.read"
 	PermissionEmployeesRead                       PermissionCode = "employees.read"
 	PermissionEmployeesReadFullAccess             PermissionCode = "employees.read.fullAccess"
+	PermissionEmployeesReadReadActive             PermissionCode = "employees.read.readActive"
 	PermissionEmployeesReadGeneralInfoFullAccess  PermissionCode = "employees.read.generalInfo.fullAccess"
 	PermissionEmployeesReadPersonalInfoFullAccess PermissionCode = "employees.read.personalInfo.fullAccess"
 	PermissionEmployeesReadProjectsFullAccess     PermissionCode = "employees.read.projects.fullAccess"
