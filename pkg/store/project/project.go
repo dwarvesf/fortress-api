@@ -56,16 +56,7 @@ func (s *store) All(db *gorm.DB, input GetListProjectInput, pagination model.Pag
 	query = query.Preload("Slots", "deleted_at IS NULL").
 		Preload("Slots.ProjectMember", "deleted_at IS NULL and (left_date IS NULL OR left_date > ?) AND status = ?", time.Now(), model.ProjectMemberStatusActive).
 		Preload("Slots.ProjectMember.Employee").
-		Preload("Heads", `deleted_at IS NULL 
-			AND (left_date IS NULL OR left_date > now())
-			AND employee_id IN (
-				SELECT pm.employee_id
-				FROM project_members pm
-				WHERE pm.deleted_at IS NULL 
-					AND (pm.left_date IS NULL OR pm.left_date > now())
-					AND pm.status != 'inactive'
-					AND pm.project_id = project_heads.project_id
-			)`).
+		Preload("Heads", `deleted_at IS NULL AND (left_date IS NULL OR left_date > now())`).
 		Preload("Heads.Employee").
 		Offset(offset)
 
@@ -120,7 +111,10 @@ func (s *store) One(db *gorm.DB, id string, preload bool) (*model.Project, error
 			Preload("Slots", func(db *gorm.DB) *gorm.DB {
 				return db.Joins("JOIN project_members pm ON pm.project_slot_id = project_slots.id").
 					Joins("JOIN seniorities s ON s.id = pm.seniority_id").
-					Joins("LEFT JOIN project_heads ph ON ph.project_id = pm.project_id AND ph.employee_id = pm.employee_id").
+					Joins(`LEFT JOIN project_heads ph ON ph.project_id = pm.project_id 
+						AND ph.employee_id = pm.employee_id 
+						AND ph.position = 'technical-lead'
+						AND (ph.left_date IS NULL OR ph.left_date > now())`).
 					Where("project_slots.deleted_at IS NULL").
 					Where("pm.deleted_at IS NULL").
 					Where("pm.status IN ?", []model.ProjectMemberStatus{model.ProjectMemberStatusActive, model.ProjectMemberStatusOnBoarding}).

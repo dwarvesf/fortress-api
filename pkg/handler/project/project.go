@@ -884,15 +884,7 @@ func (h *handler) assignMemberToProject(db *gorm.DB, slotID string, projectID st
 
 	// update project head
 	member.IsLead = input.IsLead
-	if input.IsLead {
-		if _, err := h.updateProjectHead(db, projectID, input.EmployeeID, model.HeadPositionTechnicalLead); err != nil {
-			h.logger.Fields(logger.Fields{
-				"projectID":  projectID,
-				"employeeID": input.EmployeeID,
-			}).Error(err, "failed to update technicalLeads")
-			return nil, err
-		}
-	} else {
+	if !input.IsLead || input.GetLeftDate() != nil {
 		_, err := h.store.ProjectHead.UpdateLeftDateOfEmployee(db,
 			input.EmployeeID.String(),
 			projectID,
@@ -902,6 +894,14 @@ func (h *handler) assignMemberToProject(db *gorm.DB, slotID string, projectID st
 				"projectID":  projectID,
 				"employeeID": input.EmployeeID,
 			}).Error(err, "failed to update left_date of project head")
+			return nil, err
+		}
+	} else {
+		if _, err := h.updateProjectHead(db, projectID, input.EmployeeID, model.HeadPositionTechnicalLead); err != nil {
+			h.logger.Fields(logger.Fields{
+				"projectID":  projectID,
+				"employeeID": input.EmployeeID,
+			}).Error(err, "failed to update technicalLeads")
 			return nil, err
 		}
 	}
