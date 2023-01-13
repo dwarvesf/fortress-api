@@ -30,9 +30,7 @@ func (s *store) IsExist(db *gorm.DB, id string) (bool, error) {
 
 // One return a project member by projectID and employeeID
 func (s *store) One(db *gorm.DB, projectID string, employeeID string, preload bool) (*model.ProjectMember, error) {
-	query := db.Where("project_id = ? AND employee_id = ?",
-		projectID,
-		employeeID)
+	query := db.Where("project_id = ? AND employee_id = ?", projectID, employeeID)
 
 	if preload {
 		query = query.Preload("Employee")
@@ -90,4 +88,9 @@ func (s *store) IsExistsByEmployeeID(db *gorm.DB, projectID string, employeeID s
 func (s *store) GetActiveByProjectIDs(db *gorm.DB, projectIDs []string) ([]*model.ProjectMember, error) {
 	var members []*model.ProjectMember
 	return members, db.Joins("JOIN employees ON project_members.employee_id = employees.id").Where("(project_members.left_date IS NULL OR project_members.left_date > ?) AND project_members.status = 'active' AND employees.working_status = 'full-time' AND project_members.project_id IN ?", time.Now(), projectIDs).Preload("Employee").Find(&members).Error
+}
+
+func (s *store) GetActiveByProjectIDAndEmployeeID(db *gorm.DB, projectID string, employeeID string) (*model.ProjectMember, error) {
+	var member *model.ProjectMember
+	return member, db.Where("project_id = ? AND employee_id = ? AND (left_date IS NULL OR left_date > now())", projectID, employeeID).First(&member).Error
 }

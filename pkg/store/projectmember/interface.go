@@ -16,4 +16,5 @@ type IStore interface {
 	UpdateSelectedFieldByProjectID(db *gorm.DB, projectID string, updateModel model.ProjectMember, updatedField string) error
 	UpdateLeftDateByProjectID(db *gorm.DB, projectID string) error
 	GetActiveByProjectIDs(db *gorm.DB, projectIDs []string) ([]*model.ProjectMember, error)
+	GetActiveByProjectIDAndEmployeeID(db *gorm.DB, projectID string, employeeID string) (*model.ProjectMember, error)
 }
