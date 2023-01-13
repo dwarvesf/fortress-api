@@ -2,7 +2,9 @@ package store
 
 import (
 	"github.com/dwarvesf/fortress-api/pkg/store/actionitem"
+	"github.com/dwarvesf/fortress-api/pkg/store/actionitemsnapshot"
 	"github.com/dwarvesf/fortress-api/pkg/store/audit"
+	"github.com/dwarvesf/fortress-api/pkg/store/auditactionitem"
 	"github.com/dwarvesf/fortress-api/pkg/store/auditcycle"
 	"github.com/dwarvesf/fortress-api/pkg/store/audititem"
 	"github.com/dwarvesf/fortress-api/pkg/store/auditparticipant"
@@ -78,6 +80,8 @@ type Store struct {
 	AuditParticipant      auditparticipant.IStore
 	Organization          organization.IStore
 	EmployeeOrganization  employeeorganization.IStore
+	AuditActionItem       auditactionitem.IStore
+	ActionItemSnapshot    actionitemsnapshot.IStore
 }
 
 func New() *Store {
@@ -119,5 +123,7 @@ func New() *Store {
 		AuditParticipant:      auditparticipant.New(),
 		Organization:          organization.New(),
 		EmployeeOrganization:  employeeorganization.New(),
+		AuditActionItem:       auditactionitem.New(),
+		ActionItemSnapshot:    actionitemsnapshot.New(),
 	}
 }

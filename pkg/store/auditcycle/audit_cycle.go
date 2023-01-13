@@ -12,10 +12,16 @@ func New() IStore {
 	return &store{}
 }
 
+// One get audit cycle by id
+func (s *store) One(db *gorm.DB, id string) (*model.AuditCycle, error) {
+	var auditCycle *model.AuditCycle
+	return auditCycle, db.Where("id = ?", id).First(&auditCycle).Error
+}
+
 // All get all audit cycle
 func (s *store) All(db *gorm.DB) ([]*model.AuditCycle, error) {
 	var auditCycles []*model.AuditCycle
-	return auditCycles, db.Find(&auditCycles).Error
+	return auditCycles, db.Preload("Project", "deleted_at IS NULL").Find(&auditCycles).Error
 }
 
 // Delete delete 1 audit cycle by id
@@ -37,4 +43,9 @@ func (s *store) Update(db *gorm.DB, auditCycle *model.AuditCycle) (*model.AuditC
 func (s *store) UpdateSelectedFieldsByID(db *gorm.DB, id string, updateModel model.AuditCycle, updatedFields ...string) (*model.AuditCycle, error) {
 	auditCycle := model.AuditCycle{}
 	return &auditCycle, db.Model(&auditCycle).Where("id = ?", id).Select(updatedFields).Updates(updateModel).Error
+}
+
+// ResetActionItem reset action_item high medium low to 0 in audit_cycle table
+func (s *store) ResetActionItem(db *gorm.DB) error {
+	return db.Model(&model.AuditCycle{}).Where("deleted_at IS NULL").Updates(map[string]interface{}{"action_item_high": 0, "action_item_medium": 0, "action_item_low": 0}).Error
 }

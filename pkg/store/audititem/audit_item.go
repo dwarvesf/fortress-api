@@ -12,15 +12,32 @@ func New() IStore {
 	return &store{}
 }
 
+// One get audit item by id
+func (s *store) One(db *gorm.DB, id string) (*model.AuditItem, error) {
+	var auditItem *model.AuditItem
+	return auditItem, db.Where("id = ?", id).First(&auditItem).Error
+}
+
 // All get all audit item
 func (s *store) All(db *gorm.DB) ([]*model.AuditItem, error) {
 	var auditItems []*model.AuditItem
 	return auditItems, db.Find(&auditItems).Error
 }
 
+// All get all audit item by audit id
+func (s *store) AllByAuditID(db *gorm.DB, auditID string) ([]*model.AuditItem, error) {
+	var auditItems []*model.AuditItem
+	return auditItems, db.Where("audit_id = ?", auditID).Find(&auditItems).Error
+}
+
 // Delete delete 1 audit item by id
 func (s *store) Delete(db *gorm.DB, id string) error {
 	return db.Where("id = ?", id).Delete(&model.AuditItem{}).Error
+}
+
+// DeleteByAuditID delete 1 audit item by audit id
+func (s *store) DeleteByAuditID(db *gorm.DB, auditID string) error {
+	return db.Where("audit_id = ?", auditID).Delete(&model.AuditItem{}).Error
 }
 
 // Create creates a new audit item

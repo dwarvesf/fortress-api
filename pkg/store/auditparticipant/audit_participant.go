@@ -18,9 +18,20 @@ func (s *store) All(db *gorm.DB) ([]*model.AuditParticipant, error) {
 	return auditParticipants, db.Find(&auditParticipants).Error
 }
 
+// All get all audit participant
+func (s *store) AllByAuditID(db *gorm.DB, auditID string) ([]*model.AuditParticipant, error) {
+	var auditParticipants []*model.AuditParticipant
+	return auditParticipants, db.Where("audit_id = ?", auditID).Find(&auditParticipants).Error
+}
+
 // Delete delete 1 audit participant by id
 func (s *store) Delete(db *gorm.DB, id string) error {
 	return db.Where("id = ?", id).Delete(&model.AuditParticipant{}).Error
+}
+
+// DeleteByAuditID delete 1 audit participant by audit id
+func (s *store) DeleteByAuditID(db *gorm.DB, auditID string) error {
+	return db.Where("id = ?", auditID).Delete(&model.AuditParticipant{}).Error
 }
 
 // Create creates a new audit participant
