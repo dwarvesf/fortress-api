@@ -53,8 +53,23 @@ func (s *store) All(db *gorm.DB, input GetListProjectInput, pagination model.Pag
 		query = query.Limit(limit)
 	}
 
-	query = query.Preload("Slots", "deleted_at IS NULL").
-		Preload("Slots.ProjectMember", "deleted_at IS NULL and (left_date IS NULL OR left_date > ?) AND status = ?", time.Now(), model.ProjectMemberStatusActive).
+	// TODO: update member logic. project_slots in inactive project contains many members
+	query = query.Preload("Slots", `deleted_at IS NULL AND id IN (
+			SELECT project_members.project_slot_id
+			FROM project_members JOIN projects ON project_members.project_id = projects.id
+			WHERE project_members.deleted_at IS NULL
+				AND (((project_members.left_date IS NULL OR project_members.left_date > now()) 
+						AND projects.status != 'closed')
+					OR projects.status = 'closed')
+		)`).
+		Preload("Slots.ProjectMember", func(db *gorm.DB) *gorm.DB {
+			return db.Joins("JOIN projects ON project_members.project_id = projects.id").
+				Where(`project_members.deleted_at IS NULL 
+					AND (((project_members.left_date IS NULL OR project_members.left_date > now())
+							AND projects.status != 'closed')
+						OR projects.status = 'closed') 
+					`)
+		}).
 		Preload("Slots.ProjectMember.Employee").
 		Preload("Heads", `deleted_at IS NULL AND (left_date IS NULL OR left_date > now())`).
 		Preload("Heads.Employee").

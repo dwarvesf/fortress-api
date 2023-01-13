@@ -569,7 +569,10 @@ func (h *handler) UnassignMember(c *gin.Context) {
 
 	// remove member out of project
 	timeNow := time.Now()
-	projectMember.LeftDate = &timeNow
+	if projectMember.LeftDate == nil {
+		projectMember.LeftDate = &timeNow
+	}
+
 	projectMember.Status = model.ProjectMemberStatusInactive
 
 	_, err = h.store.ProjectMember.UpdateSelectedFieldsByID(tx.DB(),
@@ -579,6 +582,18 @@ func (h *handler) UnassignMember(c *gin.Context) {
 		"status")
 	if err != nil {
 		l.Error(err, "failed to update project member")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
+		return
+	}
+
+	// update technical lead if employees is technical lead
+	_, err = h.store.ProjectHead.UpdateLeftDateOfEmployee(tx.DB(),
+		input.MemberID,
+		input.ProjectID,
+		model.HeadPositionTechnicalLead.String(),
+		*projectMember.LeftDate)
+	if err != nil {
+		l.Error(err, "failed to update leftDate for technical lead")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
 		return
 	}
@@ -735,17 +750,6 @@ func (h *handler) UpdateMember(c *gin.Context) {
 		return
 	}
 
-	if !body.EmployeeID.IsZero() {
-		member, err := h.assignMemberToProject(tx.DB(), body.ProjectSlotID.String(), projectID, body)
-		if err != nil {
-			l.Error(err, "failed to assign member to project")
-			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), nil, ""))
-			return
-		}
-
-		slot.ProjectMember = *member
-	}
-
 	// update project slot positions
 	if err := h.store.ProjectSlotPosition.DeleteByProjectSlotID(tx.DB(), slot.ID.String()); err != nil {
 		l.Error(err, "failed to delete project member positions")
@@ -796,7 +800,7 @@ func (h *handler) assignMemberToProject(db *gorm.DB, slotID string, projectID st
 	}
 
 	// check is member active in project?
-	member, err = h.store.ProjectMember.One(db, projectID, input.EmployeeID.String(), true)
+	member, err = h.store.ProjectMember.GetActiveByProjectIDAndEmployeeID(db, projectID, input.EmployeeID.String())
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		h.logger.Fields(logger.Fields{
 			"projectID":  projectID,
@@ -1069,6 +1073,7 @@ func (h *handler) createSlotInProject(db *gorm.DB, projectID string, req request
 
 	slot.ProjectSlotPositions = slotPos
 
+	// assign member to slot
 	if !req.EmployeeID.IsZero() {
 		// check employee existence
 		exists, err := h.store.Employee.IsExist(db, req.EmployeeID.String())
@@ -1122,7 +1127,7 @@ func (h *handler) createSlotInProject(db *gorm.DB, projectID string, req request
 				EmployeeID:     req.EmployeeID,
 				CommissionRate: decimal.Zero,
 				Position:       model.HeadPositionTechnicalLead,
-				JoinedDate:     time.Now(),
+				JoinedDate:     *req.GetJoinedDate(),
 			}); err != nil {
 				l.Error(err, "failed to create project head")
 				return nil, http.StatusInternalServerError, err
