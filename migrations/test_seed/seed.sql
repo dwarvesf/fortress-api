@@ -5,6 +5,7 @@ INSERT INTO public.roles (id, deleted_at, created_at, updated_at, name, code, le
 INSERT INTO public.permissions (id, deleted_at, created_at, updated_at, name, code) VALUES
 ('495c96ae-60f9-4c57-bc96-9504d0fedde6', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Auth Read', 'auth.read'),
 ('01ed1076-4028-4fdf-9a92-cb57a8e041af', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Employee Read', 'employees.read'),
+('c353c4fd-5915-47f3-a59b-66ae75eae195', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Employee Read Get Active', 'employees.read.readActive'),
 ('20a442b2-9763-41d4-b3c9-e436b37bf534', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Employee Read', 'employees.fullAccess'),
 ('dc6fde9f-0b49-46d6-96bb-93be669b502b', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Employee Read Full Personal Info', 'employees.read.personalInfo.fullAccess'),
 ('f75677d6-3e22-45d4-b921-81d6a3645157', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Employee Read Full General Info', 'employees.read.generalInfo.fullAccess'),
@@ -63,6 +64,7 @@ INSERT INTO public.permissions (id, deleted_at, created_at, updated_at, name, co
 INSERT INTO public.role_permissions (id, deleted_at, created_at, updated_at, role_id, permission_id) VALUES
 ('6ef5b987-0a8d-42e8-b52c-fe683cd7a060', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '11ccffea-2cc9-4e98-9bef-3464dfe4dec8', '495c96ae-60f9-4c57-bc96-9504d0fedde6'),
 ('f73306cc-5b01-49bb-87af-a2c2af14bfae', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '11ccffea-2cc9-4e98-9bef-3464dfe4dec8', '01ed1076-4028-4fdf-9a92-cb57a8e041af'),
+('64b381e6-039e-42dc-bc13-b5ed46bac99d', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '11ccffea-2cc9-4e98-9bef-3464dfe4dec8', 'c353c4fd-5915-47f3-a59b-66ae75eae195'),
 ('9b63e271-261c-4f2f-9675-5b760fe6fa29', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '11ccffea-2cc9-4e98-9bef-3464dfe4dec8', '20a442b2-9763-41d4-b3c9-e436b37bf534'),
 ('642691b3-ac2e-45eb-9caa-0442e696d0da', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '11ccffea-2cc9-4e98-9bef-3464dfe4dec8', 'dc6fde9f-0b49-46d6-96bb-93be669b502b'),
 ('bfed95b5-6dd7-4f67-91b3-10ef314f8d9c', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '11ccffea-2cc9-4e98-9bef-3464dfe4dec8', 'f75677d6-3e22-45d4-b921-81d6a3645157'),

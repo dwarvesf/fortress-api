@@ -2,6 +2,7 @@ INSERT INTO public.permissions (id, deleted_at, created_at, updated_at, name, co
 ('495c96ae-60f9-4c57-bc96-9504d0fedde6', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Auth Read', 'auth.read'),
 ('01ed1076-4028-4fdf-9a92-cb57a8e041af', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Employee Read', 'employees.read'),
 ('20a442b2-9763-41d4-b3c9-e436b37bf534', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Employee Read Full Access', 'employees.read.fullAccess'),
+('c353c4fd-5915-47f3-a59b-66ae75eae195', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Employee Read Get Active', 'employees.read.readActive'),
 ('dc6fde9f-0b49-46d6-96bb-93be669b502b', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Employee Read Full Personal Info', 'employees.read.personalInfo.fullAccess'),
 ('f75677d6-3e22-45d4-b921-81d6a3645157', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Employee Read Full General Info', 'employees.read.generalInfo.fullAccess'),
 ('6add4087-e586-4313-b157-54d416bdc8d5', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Employee Read Full Project Belong to One Employee', 'employees.read.projects.fullAccess'),
