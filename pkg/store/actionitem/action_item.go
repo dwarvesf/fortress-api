@@ -12,6 +12,12 @@ func New() IStore {
 	return &store{}
 }
 
+// One get action item by id
+func (s *store) One(db *gorm.DB, id string) (*model.ActionItem, error) {
+	var actionItem *model.ActionItem
+	return actionItem, db.Where("id = ?", id).First(&actionItem).Error
+}
+
 // All get all action item
 func (s *store) All(db *gorm.DB) ([]*model.ActionItem, error) {
 	var actionItems []*model.ActionItem

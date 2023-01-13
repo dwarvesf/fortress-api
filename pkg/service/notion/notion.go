@@ -32,6 +32,19 @@ func (n *notionService) GetDatabase(databaseID string, filter *nt.DatabaseQueryF
 	return &res, nil
 }
 
+func (n *notionService) GetDatabaseWithStartCursor(databaseID string, startCursor string) (*nt.DatabaseQueryResponse, error) {
+	ctx := context.Background()
+
+	res, err := n.notionClient.QueryDatabase(ctx, databaseID, &nt.DatabaseQuery{
+		StartCursor: startCursor,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &res, nil
+}
+
 func (n *notionService) GetBlockChildren(pageID string) (*nt.BlockChildrenResponse, error) {
 	ctx := context.Background()
 

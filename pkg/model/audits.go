@@ -64,13 +64,11 @@ func NewAuditFromNotionPage(page notion.Page, projectID string, auditorID UUID, 
 
 	rs := &Audit{
 		BaseModel:  BaseModel{ID: MustGetUUIDFromString(page.ID)},
-		ProjectID:  MustGetUUIDFromString(projectID),
 		NotionDBID: MustGetUUIDFromString(notionDBID),
 		AuditorID:  auditorID,
 		Name:       properties["Name"].Title[0].PlainText,
 		SyncAt:     &now,
 		Flag:       flag,
-		// TODO: action item
 	}
 
 	if properties["Score"].Number != nil {
@@ -92,6 +90,10 @@ func NewAuditFromNotionPage(page notion.Page, projectID string, auditorID UUID, 
 		if MappingAuditType(properties["Name"].Title[0].PlainText) != "" {
 			rs.Type = MappingAuditType(properties["Name"].Title[0].PlainText)
 		}
+	}
+
+	if projectID != "" {
+		rs.ProjectID = MustGetUUIDFromString(projectID)
 	}
 
 	return rs
@@ -116,4 +118,14 @@ func MappingAuditType(auditType string) AuditType {
 	}
 
 	return ""
+}
+
+func CompareAudit(currAudit Audit, newAudit Audit) bool {
+	return ((currAudit.AuditedAt == nil && newAudit.AuditedAt == nil) ||
+		(currAudit.AuditedAt != nil && newAudit.AuditedAt != nil && currAudit.AuditedAt.Equal(*newAudit.AuditedAt))) &&
+		currAudit.ProjectID == newAudit.ProjectID &&
+		currAudit.NotionDBID == newAudit.NotionDBID && currAudit.AuditorID == newAudit.AuditorID &&
+		currAudit.Name == newAudit.Name && currAudit.Type == newAudit.Type &&
+		currAudit.Score == newAudit.Score && currAudit.Status == newAudit.Status &&
+		currAudit.Flag == newAudit.Flag && currAudit.Duration == newAudit.Duration
 }
