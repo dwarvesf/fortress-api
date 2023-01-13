@@ -18,6 +18,12 @@ func (s *store) All(db *gorm.DB) ([]*model.Role, error) {
 	return roles, db.Find(&roles).Error
 }
 
+// GetByLevel get by input level
+func (s *store) GetByLevel(db *gorm.DB, level int64) ([]*model.Role, error) {
+	var roles []*model.Role
+	return roles, db.Where("level >= ?", level).Find(&roles).Error
+}
+
 // One get 1 one by id
 func (s *store) One(db *gorm.DB, id model.UUID) (*model.Role, error) {
 	var role *model.Role

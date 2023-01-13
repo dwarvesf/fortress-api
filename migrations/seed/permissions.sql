@@ -54,4 +54,5 @@ INSERT INTO public.permissions (id, deleted_at, created_at, updated_at, name, co
 ('4be48741-f8b2-4562-964e-65c081fec7a9', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Dashboard Create', 'dashboards.create'),
 ('f5854cfd-f990-46fd-a6cb-77b48a80b24b', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Dashboard Read', 'dashboards.read'),
 ('6f4fe3df-9ab8-46c1-a8b7-9458413980f3', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Dashboard Edit', 'dashboards.edit'),
-('d93ede75-8fd5-4f88-b119-07493b757f4b', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Dashboard Delete', 'dashboards.delete');
+('d93ede75-8fd5-4f88-b119-07493b757f4b', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Dashboard Delete', 'dashboards.delete'),
+('78d617f8-b155-4051-b128-7f2d00ca31fd', NULL, '2023-01-10 05:19:00.330571', '2023-01-10 05:19:00.330571', 'Valuation Read', 'valuations.read');

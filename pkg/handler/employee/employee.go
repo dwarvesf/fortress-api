@@ -447,6 +447,12 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 // @Failure 500 {object} view.ErrorResponse
 // @Router /employees [post]
 func (h *handler) Create(c *gin.Context) {
+	userID, err := utils.GetUserIDFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
 	// 1. parse eml data from body
 	var input request.CreateEmployeeInput
 
@@ -466,6 +472,18 @@ func (h *handler) Create(c *gin.Context) {
 		"method":  "Create",
 		"input":   input,
 	})
+
+	loggedInUser, err := h.store.Employee.One(h.repo.DB(), userID, false)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrEmployeeNotFound, nil, ""))
+		return
+	}
+
+	if err != nil {
+		l.Error(err, "failed to get employee")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
 
 	// 1.2 prepare employee data
 	now := time.Now()
@@ -510,6 +528,12 @@ func (h *handler) Create(c *gin.Context) {
 			return
 		}
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input, ""))
+		return
+	}
+
+	if role.Level <= loggedInUser.EmployeeRoles[0].Role.Level {
+		l.Error(errs.ErrInvalidAccountRole, "failed to update role, invalid role")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidAccountRole, input, ""))
 		return
 	}
 
@@ -1409,6 +1433,12 @@ func (h *handler) DeleteMentee(c *gin.Context) {
 // @Failure 500 {object} view.ErrorResponse
 // @Router /employees/{id}/roles [put]
 func (h *handler) UpdateRole(c *gin.Context) {
+	userID, err := utils.GetUserIDFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
 	var input request.UpdateRoleInput
 
 	input.EmployeeID = c.Param("id")
@@ -1430,31 +1460,48 @@ func (h *handler) UpdateRole(c *gin.Context) {
 		return
 	}
 
-	// Check employee exists
-	exists, err := h.store.Employee.IsExist(h.repo.DB(), input.EmployeeID)
-	if err != nil {
-		l.Error(err, "error when finding employee")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input, ""))
+	loggedInUser, err := h.store.Employee.One(h.repo.DB(), userID, false)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrEmployeeNotFound, nil, ""))
 		return
 	}
 
-	if !exists {
-		l.Error(errs.ErrEmployeeNotFound, "error employee not found")
-		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrEmployeeNotFound, input, ""))
+	if err != nil {
+		l.Error(err, "failed to get employee")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	empl, err := h.store.Employee.One(h.repo.DB(), input.EmployeeID, false)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		l.Error(errs.ErrEmployeeNotFound, "reviewer not found")
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrEmployeeNotFound, nil, ""))
+		return
+	}
+
+	if err != nil {
+		l.Error(err, "failed to get employee")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
 	}
 
 	// Check role exists
-	exists, err = h.store.Role.IsExist(h.repo.DB(), input.Body.RoleID.String())
+	newRole, err := h.store.Role.One(h.repo.DB(), input.Body.RoleID)
 	if err != nil {
 		l.Error(err, "error when finding role")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input, ""))
 		return
 	}
 
-	if !exists {
-		l.Error(errs.ErrEmployeeNotFound, "error role not found")
-		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrRoleNotFound, input, ""))
+	if empl.EmployeeRoles[0].Role.Level == loggedInUser.EmployeeRoles[0].Role.Level {
+		l.Error(errs.ErrInvalidAccountRole, "failed to update role, invalid role")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrCouldNotAssignRoleForSameLevelEmployee, input, ""))
+		return
+	}
+
+	if newRole.Level <= loggedInUser.EmployeeRoles[0].Role.Level {
+		l.Error(errs.ErrInvalidAccountRole, "failed to update role, invalid role")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidAccountRole, input, ""))
 		return
 	}
 

@@ -2,6 +2,7 @@ package metadata
 
 import (
 	"errors"
+	"github.com/dwarvesf/fortress-api/pkg/utils"
 	"net/http"
 
 	"github.com/dwarvesf/fortress-api/pkg/handler/metadata/errs"
@@ -143,15 +144,33 @@ func (h *handler) Chapters(c *gin.Context) {
 // @Failure 500 {object} view.ErrorResponse
 // @Router /metadata/account-roles [get]
 func (h *handler) AccountRoles(c *gin.Context) {
-	// 1 prepare the logger
+	userID, err := utils.GetUserIDFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
 	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
-		"handler": "metadata",
-		"method":  "AccountRoles",
+		"handler": "employee",
+		"method":  "GetAccountRoles",
+		"input":   userID,
 	})
 
+	empl, err := h.store.Employee.One(h.repo.DB(), userID, false)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrEmployeeNotFound, nil, ""))
+		return
+	}
+
+	if err != nil {
+		l.Error(err, "failed to get employee")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
 	// 2 query roles from db
-	roles, err := h.store.Role.All(h.repo.DB())
+	roles, err := h.store.Role.GetByLevel(h.repo.DB(), empl.EmployeeRoles[0].Role.Level)
 	if err != nil {
 		l.Error(err, "error query roles from db")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
@@ -506,7 +525,7 @@ func (h *handler) UpdatePosition(c *gin.Context) {
 	position, err := h.store.Position.One(h.repo.DB(), model.MustGetUUIDFromString(input.ID))
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			l.Error(err, "Position not found")
+			l.Error(err, "position not found")
 			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrPositionNotFound, input, ""))
 			return
 		}
