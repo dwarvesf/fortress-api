@@ -1,0 +1,66 @@
+{
+    "data": {
+        "average": [
+            {
+                "quarter": "Q1/2022",
+                "avg": 3.9,
+                "trend": 0
+            },
+            {
+                "quarter": "Q2/2022",
+                "avg": 3.8,
+                "trend": -2.56
+            }
+        ],
+        "groups": {
+            "delivery": [
+                {
+                    "quarter": "Q1/2022",
+                    "avg": 4,
+                    "trend": 0
+                },
+                {
+                    "quarter": "Q2/2022",
+                    "avg": 3,
+                    "trend": -25
+                }
+            ],
+            "quality": [
+                {
+                    "quarter": "Q1/2022",
+                    "avg": 2,
+                    "trend": 0
+                },
+                {
+                    "quarter": "Q2/2022",
+                    "avg": 4,
+                    "trend": 100
+                }
+            ],
+            "collaboration": [
+                {
+                    "quarter": "Q1/2022",
+                    "avg": 3,
+                    "trend": 0
+                },
+                {
+                    "quarter": "Q2/2022",
+                    "avg": 3,
+                    "trend": 0
+                }
+            ],
+            "feedback": [
+                {
+                    "quarter": "Q1/2022",
+                    "avg": 4,
+                    "trend": 0
+                },
+                {
+                    "quarter": "Q2/2022",
+                    "avg": 4,
+                    "trend": 0
+                }
+            ]
+        }
+    }
+}

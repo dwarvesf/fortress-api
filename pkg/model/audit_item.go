@@ -32,6 +32,14 @@ func (e AuditItemSeverity) String() string {
 	return string(e)
 }
 
+// values for audit_area field
+const (
+	AuditItemAreaDelivery      string = "Delivery performance"
+	AuditItemAreaQuality       string = "Quality assurance"
+	AuditItemAreaCollaborating string = "Collaborating"
+	AuditItemAreaFeedback      string = "Engineering feedback"
+)
+
 type AuditItem struct {
 	BaseModel
 

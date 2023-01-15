@@ -136,7 +136,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/dashboards/action-items": {
+        "/dashboards/projects/action-items": {
             "get": {
                 "description": "Get Action items report for dashboard",
                 "consumes": [
@@ -169,6 +169,62 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/view.ActionItemReportResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/dashboards/projects/engineering-healths": {
+            "get": {
+                "description": "Get Enginerring health information for dashboard",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "Get Enginerring health information for dashboard",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Project ID",
+                        "name": "projectID",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.EngineringHealthResponse"
                         }
                     },
                     "400": {
@@ -230,7 +286,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/dashboards/work-surveys": {
+        "/dashboards/projects/work-surveys": {
             "get": {
                 "description": "Get Work Surveys data for dashboard",
                 "consumes": [
@@ -5592,6 +5648,42 @@ const docTemplate = `{
                 }
             }
         },
+        "view.EngineeringHealth": {
+            "type": "object",
+            "properties": {
+                "avg": {
+                    "type": "number"
+                },
+                "quarter": {
+                    "type": "string"
+                },
+                "trend": {
+                    "type": "number"
+                }
+            }
+        },
+        "view.EngineeringHealthData": {
+            "type": "object",
+            "properties": {
+                "average": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.EngineeringHealth"
+                    }
+                },
+                "groups": {
+                    "$ref": "#/definitions/view.GroupEngineeringHealth"
+                }
+            }
+        },
+        "view.EngineringHealthResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/view.EngineeringHealthData"
+                }
+            }
+        },
         "view.ErrorResponse": {
             "type": "object",
             "properties": {
@@ -5745,6 +5837,35 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/view.Question"
+                    }
+                }
+            }
+        },
+        "view.GroupEngineeringHealth": {
+            "type": "object",
+            "properties": {
+                "collaboration": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.EngineeringHealth"
+                    }
+                },
+                "delivery": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.EngineeringHealth"
+                    }
+                },
+                "feedback": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.EngineeringHealth"
+                    }
+                },
+                "quality": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.EngineeringHealth"
                     }
                 }
             }

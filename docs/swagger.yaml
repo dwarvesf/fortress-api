@@ -1070,6 +1070,29 @@ definitions:
       status:
         type: string
     type: object
+  view.EngineeringHealth:
+    properties:
+      avg:
+        type: number
+      quarter:
+        type: string
+      trend:
+        type: number
+    type: object
+  view.EngineeringHealthData:
+    properties:
+      average:
+        items:
+          $ref: '#/definitions/view.EngineeringHealth'
+        type: array
+      groups:
+        $ref: '#/definitions/view.GroupEngineeringHealth'
+    type: object
+  view.EngineringHealthResponse:
+    properties:
+      data:
+        $ref: '#/definitions/view.EngineeringHealthData'
+    type: object
   view.ErrorResponse:
     properties:
       error:
@@ -1170,6 +1193,25 @@ definitions:
       data:
         items:
           $ref: '#/definitions/view.Question'
+        type: array
+    type: object
+  view.GroupEngineeringHealth:
+    properties:
+      collaboration:
+        items:
+          $ref: '#/definitions/view.EngineeringHealth'
+        type: array
+      delivery:
+        items:
+          $ref: '#/definitions/view.EngineeringHealth'
+        type: array
+      feedback:
+        items:
+          $ref: '#/definitions/view.EngineeringHealth'
+        type: array
+      quality:
+        items:
+          $ref: '#/definitions/view.EngineeringHealth'
         type: array
     type: object
   view.ListFeedbackResponse:
@@ -2030,7 +2072,7 @@ paths:
       summary: Get logged-in user data
       tags:
       - Auth
-  /dashboards/action-items:
+  /dashboards/projects/action-items:
     get:
       consumes:
       - application/json
@@ -2067,6 +2109,43 @@ paths:
       summary: Get Action items report for dashboard
       tags:
       - Dashboard
+  /dashboards/projects/engineering-healths:
+    get:
+      consumes:
+      - application/json
+      description: Get Enginerring health information for dashboard
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Project ID
+        in: query
+        name: projectID
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.EngineringHealthResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get Enginerring health information for dashboard
+      tags:
+      - Dashboard
   /dashboards/projects/sizes:
     get:
       consumes:
@@ -2092,7 +2171,7 @@ paths:
       summary: Get the total number of active member in each project
       tags:
       - Dashboard
-  /dashboards/work-surveys:
+  /dashboards/projects/work-surveys:
     get:
       consumes:
       - application/json
