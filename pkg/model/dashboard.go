@@ -22,3 +22,14 @@ type ActionItemReport struct {
 	Medium  int64  `json:"medium"`
 	Low     int64  `json:"low"`
 }
+
+type AverageEngineeringHealth struct {
+	Quarter string  `json:"quarter"`
+	Avg     float64 `json:"avg"`
+}
+
+type GroupEngineeringHealth struct {
+	Quarter string  `json:"quarter"`
+	Avg     float64 `json:"avg"`
+	Area    string  `json:"area"`
+}

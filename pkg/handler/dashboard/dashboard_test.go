@@ -91,7 +91,7 @@ func TestHandler_WorkSurveys(t *testing.T) {
 				testhelper.LoadTestSQLFile(t, txRepo, "./testdata/work_surveys/work_surveys.sql")
 				w := httptest.NewRecorder()
 				ctx, _ := gin.CreateTestContext(w)
-				ctx.Request = httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/dashboard/work-surveys?%s", tt.query), nil)
+				ctx.Request = httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/dashboards/projects/work-surveys?%s", tt.query), nil)
 				ctx.Request.URL.RawQuery = tt.query
 				ctx.Request.Header.Set("Authorization", testToken)
 
@@ -138,7 +138,7 @@ func TestHandler_GetActionItemReports(t *testing.T) {
 				testhelper.LoadTestSQLFile(t, txRepo, "./testdata/action_items/action_items.sql")
 				w := httptest.NewRecorder()
 				ctx, _ := gin.CreateTestContext(w)
-				ctx.Request = httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/dashboard/action-items?%s", tt.query), nil)
+				ctx.Request = httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/dashboards/projects/action-items?%s", tt.query), nil)
 				ctx.Request.URL.RawQuery = tt.query
 				ctx.Request.Header.Set("Authorization", testToken)
 
@@ -149,6 +149,53 @@ func TestHandler_GetActionItemReports(t *testing.T) {
 				require.NoError(t, err)
 
 				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Dashboard.GetActionItemReports] response mismatched")
+			})
+		})
+	}
+}
+
+func TestHandler_EngineeringHealth(t *testing.T) {
+	cfg := config.LoadTestConfig()
+	loggerMock := logger.NewLogrusLogger()
+	serviceMock := service.New(&cfg)
+	storeMock := store.New()
+
+	tests := []struct {
+		name             string
+		wantCode         int
+		wantErr          error
+		wantResponsePath string
+		query            string
+	}{
+		{
+			name:             "happy_case",
+			wantCode:         http.StatusOK,
+			wantResponsePath: "testdata/engineering_healths/200_without_project_id.json",
+		},
+		{
+			name:             "happy_case_with_project_id",
+			wantCode:         http.StatusOK,
+			wantResponsePath: "testdata/engineering_healths/200_with_project_id.json",
+			query:            "projectID=8dc3be2e-19a4-4942-8a79-56db391a0b15",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				testhelper.LoadTestSQLFile(t, txRepo, "./testdata/engineering_healths/engineering_healths.sql")
+				w := httptest.NewRecorder()
+				ctx, _ := gin.CreateTestContext(w)
+				ctx.Request = httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/dashboards/projects/engineering-healths?%s", tt.query), nil)
+				ctx.Request.URL.RawQuery = tt.query
+				ctx.Request.Header.Set("Authorization", testToken)
+
+				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+				h.EngineeringHealth(ctx)
+				require.Equal(t, tt.wantCode, w.Code)
+				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				require.NoError(t, err)
+
+				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Dashboard.EngineeringHealth] response mismatched")
 			})
 		})
 	}

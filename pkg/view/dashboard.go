@@ -1,6 +1,7 @@
 package view
 
 import (
+	"math"
 	"strings"
 
 	"github.com/dwarvesf/fortress-api/pkg/model"
@@ -150,4 +151,116 @@ func calculateActionItemReportTrend(previous *model.ActionItemReport, current *m
 	}
 
 	return rs
+}
+
+type EngineringHealthResponse struct {
+	Data EngineeringHealthData `json:"data"`
+}
+
+type EngineeringHealthData struct {
+	Average []*EngineeringHealth    `json:"average"`
+	Groups  *GroupEngineeringHealth `json:"groups"`
+}
+
+type EngineeringHealth struct {
+	Quarter string  `json:"quarter"`
+	Value   float64 `json:"avg"`
+	Trend   float64 `json:"trend"`
+}
+
+type GroupEngineeringHealth struct {
+	Delivery      []*EngineeringHealth `json:"delivery"`
+	Quality       []*EngineeringHealth `json:"quality"`
+	Collaboration []*EngineeringHealth `json:"collaboration"`
+	Feedback      []*EngineeringHealth `json:"feedback"`
+}
+
+func ToEngineeringHealthData(average []*model.AverageEngineeringHealth, groups []*model.GroupEngineeringHealth) *EngineeringHealthData {
+	rs := &EngineeringHealthData{}
+
+	// Reverse quarter order
+	for i, j := 0, len(average)-1; i < j; i, j = i+1, j-1 {
+		average[i], average[j] = average[j], average[i]
+	}
+
+	for i, j := 0, len(groups)-1; i < j; i, j = i+1, j-1 {
+		groups[i], groups[j] = groups[j], groups[i]
+	}
+
+	for _, a := range average {
+		rs.Average = append(rs.Average, &EngineeringHealth{
+			Quarter: strings.Split(a.Quarter, "/")[1] + "/" + strings.Split(a.Quarter, "/")[0],
+			Value:   a.Avg,
+		})
+	}
+
+	calculateTrendForEngineeringHealthList(rs.Average)
+
+	rs.Groups = toGroupEngineeringHealth(groups)
+
+	calculateTrendForEngineeringHealthList(rs.Groups.Delivery)
+	calculateTrendForEngineeringHealthList(rs.Groups.Collaboration)
+	calculateTrendForEngineeringHealthList(rs.Groups.Quality)
+	calculateTrendForEngineeringHealthList(rs.Groups.Feedback)
+
+	return rs
+}
+
+func toGroupEngineeringHealth(groups []*model.GroupEngineeringHealth) *GroupEngineeringHealth {
+	rs := &GroupEngineeringHealth{}
+	count := 0
+	quarter := ""
+
+	for _, g := range groups {
+		if quarter != g.Quarter {
+			count++
+			quarter = g.Quarter
+
+			if count > 4 {
+				break
+			}
+		}
+
+		switch g.Area {
+		case model.AuditItemAreaDelivery:
+			rs.Delivery = append(rs.Delivery, &EngineeringHealth{
+				Quarter: strings.Split(g.Quarter, "/")[1] + "/" + strings.Split(g.Quarter, "/")[0],
+				Value:   g.Avg,
+			})
+		case model.AuditItemAreaQuality:
+			rs.Quality = append(rs.Quality, &EngineeringHealth{
+				Quarter: strings.Split(g.Quarter, "/")[1] + "/" + strings.Split(g.Quarter, "/")[0],
+				Value:   g.Avg,
+			})
+		case model.AuditItemAreaCollaborating:
+			rs.Collaboration = append(rs.Collaboration, &EngineeringHealth{
+				Quarter: strings.Split(g.Quarter, "/")[1] + "/" + strings.Split(g.Quarter, "/")[0],
+				Value:   g.Avg,
+			})
+		case model.AuditItemAreaFeedback:
+			rs.Feedback = append(rs.Feedback, &EngineeringHealth{
+				Quarter: strings.Split(g.Quarter, "/")[1] + "/" + strings.Split(g.Quarter, "/")[0],
+				Value:   g.Avg,
+			})
+		}
+
+	}
+
+	return rs
+}
+
+func calculateTrendForEngineeringHealthList(healths []*EngineeringHealth) {
+	for i := 1; i < len(healths); i++ {
+		healths[i].Trend = calculateEngineeringHealthTrend(healths[i-1], healths[i])
+	}
+}
+
+func calculateEngineeringHealthTrend(previous *EngineeringHealth, current *EngineeringHealth) float64 {
+	// if previous or current value = 0 trend = 0
+	if previous.Value == 0 || current.Value == 0 {
+		return 0
+	}
+
+	// return the value fixed 2 decimal places
+	return float64(math.Trunc((current.Value-previous.Value)/previous.Value*100*100)) / 100
 }

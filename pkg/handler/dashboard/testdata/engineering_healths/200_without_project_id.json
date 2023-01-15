@@ -1,0 +1,86 @@
+{
+    "data": {
+        "average": [
+            {
+                "quarter": "Q2/2022",
+                "avg": 3.8,
+                "trend": 0
+            },
+            {
+                "quarter": "Q3/2022",
+                "avg": 4.2,
+                "trend": 10.52
+            },
+            {
+                "quarter": "Q4/2022",
+                "avg": 3.6,
+                "trend": -14.28
+            },
+            {
+                "quarter": "Q1/2023",
+                "avg": 3.5,
+                "trend": -2.77
+            }
+        ],
+        "groups": {
+            "delivery": [
+                {
+                    "quarter": "Q1/2022",
+                    "avg": 4,
+                    "trend": 0
+                },
+                {
+                    "quarter": "Q2/2022",
+                    "avg": 3,
+                    "trend": -25
+                },
+                {
+                    "quarter": "Q4/2022",
+                    "avg": 2,
+                    "trend": -33.33
+                }
+            ],
+            "quality": [
+                {
+                    "quarter": "Q1/2022",
+                    "avg": 2,
+                    "trend": 0
+                },
+                {
+                    "quarter": "Q2/2022",
+                    "avg": 4,
+                    "trend": 100
+                }
+            ],
+            "collaboration": [
+                {
+                    "quarter": "Q1/2022",
+                    "avg": 3,
+                    "trend": 0
+                },
+                {
+                    "quarter": "Q2/2022",
+                    "avg": 3,
+                    "trend": 0
+                }
+            ],
+            "feedback": [
+                {
+                    "quarter": "Q1/2022",
+                    "avg": 4,
+                    "trend": 0
+                },
+                {
+                    "quarter": "Q2/2022",
+                    "avg": 4,
+                    "trend": 0
+                },
+                {
+                    "quarter": "Q3/2022",
+                    "avg": 3,
+                    "trend": -25
+                }
+            ]
+        }
+    }
+}
