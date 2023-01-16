@@ -168,13 +168,14 @@ func (h *handler) UpdateProjectStatus(c *gin.Context) {
 		return
 	}
 
-	if body.ProjectStatus == model.ProjectStatusClosed {
-		if err := h.closeProject(tx.DB(), projectID); err != nil {
-			l.Error(err, "failed to close project")
-			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
-			return
-		}
-	}
+	// TODO: we can open it when needing automation flow to inactivated project member
+	//if body.ProjectStatus == model.ProjectStatusClosed {
+	//	if err := h.closeProject(tx.DB(), projectID); err != nil {
+	//		l.Error(err, "failed to close project")
+	//		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
+	//		return
+	//	}
+	//}
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToUpdateProjectStatusResponse(p), nil, done(nil), nil, ""))
 }
@@ -1184,12 +1185,18 @@ func (h *handler) Details(c *gin.Context) {
 		return
 	}
 
-	if !utils.HasPermission(c, userInfo.Permissions, model.PermissionProjectsReadFullAccess) {
+
+	if !utils.HasPermission(c, userInfo.Permissions, model.PermissionProjectsReadFullAccess) && !utils.HasPermission(c, userInfo.Permissions, model.PermissionEmployeesReadProjectsReadActive) {
 		_, ok := userInfo.Projects[rs.ID]
 		if !ok || !model.IsUserActiveInProject(userInfo.UserID, rs.Slots) {
 			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, nil, ""))
 			return
 		}
+	}
+
+	if  rs.Status == model.ProjectStatusClosed  && !utils.HasPermission(c, userInfo.Permissions, model.PermissionProjectsReadFullAccess) {
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, nil, ""))
+		return
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse(view.ToProjectData(c, rs, userInfo), nil, nil, nil, ""))

@@ -221,8 +221,16 @@ func ToProjectsData(c *gin.Context, projects []*model.Project, userInfo *model.C
 		}
 
 		// If the project is not belong user, check if the user has permission to view the project
-		if utils.HasPermission(c, userInfo.Permissions, model.PermissionProjectsReadFullAccess) {
-			results = append(results, ToProjectData(c, p, userInfo))
+		if utils.HasPermission(c, userInfo.Permissions, model.PermissionProjectsReadFullAccess) ||
+			utils.HasPermission(c, userInfo.Permissions, model.PermissionEmployeesReadProjectsReadActive){
+
+			if p.Status == model.ProjectStatusActive {
+				results = append(results, ToProjectData(c, p, userInfo))
+			} else {
+				if  utils.HasPermission(c, userInfo.Permissions, model.PermissionProjectsReadFullAccess) {
+					results = append(results, ToProjectData(c, p, userInfo))
+				}
+			}
 		}
 	}
 
