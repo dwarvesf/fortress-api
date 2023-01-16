@@ -215,3 +215,129 @@ func (s *store) GroupEngineeringHealthByProjectID(db *gorm.DB, projectID string)
 
 	return rs, db.Raw(query, projectID).Scan(&rs).Error
 }
+
+func (s *store) GetAverageAudit(db *gorm.DB) ([]*model.AverageAudit, error) {
+	var rs []*model.AverageAudit
+
+	query := `
+		SELECT audit_cycles.quarter,
+			avg(CASE
+					When audit_cycles.average_score = 0 THEN null
+					ELSE audit_cycles.average_score
+				END) AS avg
+		FROM audit_cycles
+		GROUP BY audit_cycles.quarter
+		ORDER BY audit_cycles.quarter DESC
+		LIMIT 4
+	`
+
+	return rs, db.Raw(query).Scan(&rs).Error
+}
+
+func (s *store) GetGroupAudit(db *gorm.DB) ([]*model.GroupAudit, error) {
+	var rs []*model.GroupAudit
+
+	query := `
+		SELECT audit_cycles.quarter,
+			avg(CASE
+					When asy.score = 0 THEN null
+					ELSE asy.score
+				END) as system,
+			avg(CASE
+					When afe.score = 0 THEN null
+					ELSE afe.score
+				END) as frontend,
+			avg(CASE
+					When abe.score = 0 THEN null
+					ELSE abe.score
+				END) as backend,
+			avg(CASE
+					When ap.score = 0 THEN null
+					ELSE ap.score
+				END) as process,
+			avg(CASE
+					When ab.score = 0 THEN null
+					ELSE ab.score
+				END) as blockchain,
+			avg(CASE
+					When am.score = 0 THEN null
+					ELSE am.score
+				END) as mobile
+		FROM audit_cycles
+				LEFT JOIN audits AS afe ON audit_cycles.frontend_audit_id = afe.id
+				LEFT JOIN audits AS abe ON audit_cycles.backend_audit_id = abe.id
+				LEFT JOIN audits AS ap ON audit_cycles.process_audit_id = ap.id
+				LEFT JOIN audits AS asy ON audit_cycles.system_audit_id = asy.id
+				LEFT JOIN audits AS ab ON audit_cycles.blockchain_audit_id = ab.id
+				LEFT JOIN audits AS am ON audit_cycles.mobile_audit_id = am.id
+		GROUP BY audit_cycles.quarter
+		ORDER BY audit_cycles.quarter DESC
+		LIMIT 4
+	`
+
+	return rs, db.Raw(query).Scan(&rs).Error
+}
+
+func (s *store) GetAverageAuditByProjectID(db *gorm.DB, projectID string) ([]*model.AverageAudit, error) {
+	var rs []*model.AverageAudit
+
+	query := `
+		SELECT audit_cycles.quarter,
+			avg(CASE
+					When audit_cycles.average_score = 0 THEN null
+					ELSE audit_cycles.average_score
+				END) AS avg
+		FROM audit_cycles
+		WHERE audit_cycles.project_id = ?
+		GROUP BY audit_cycles.quarter
+		ORDER BY audit_cycles.quarter DESC
+		LIMIT 4
+	`
+
+	return rs, db.Raw(query, projectID).Scan(&rs).Error
+}
+
+func (s *store) GetGroupAuditByProjectID(db *gorm.DB, projectID string) ([]*model.GroupAudit, error) {
+	var rs []*model.GroupAudit
+
+	query := `
+		SELECT audit_cycles.quarter,
+			avg(CASE
+					When asy.score = 0 THEN null
+					ELSE asy.score
+				END) as system,
+			avg(CASE
+					When afe.score = 0 THEN null
+					ELSE afe.score
+				END) as frontend,
+			avg(CASE
+					When abe.score = 0 THEN null
+					ELSE abe.score
+				END) as backend,
+			avg(CASE
+					When ap.score = 0 THEN null
+					ELSE ap.score
+				END) as process,
+			avg(CASE
+					When ab.score = 0 THEN null
+					ELSE ab.score
+				END) as blockchain,
+			avg(CASE
+					When am.score = 0 THEN null
+					ELSE am.score
+				END) as mobile
+		FROM audit_cycles
+				LEFT JOIN audits AS afe ON audit_cycles.frontend_audit_id = afe.id
+				LEFT JOIN audits AS abe ON audit_cycles.backend_audit_id = abe.id
+				LEFT JOIN audits AS ap ON audit_cycles.process_audit_id = ap.id
+				LEFT JOIN audits AS asy ON audit_cycles.system_audit_id = asy.id
+				LEFT JOIN audits AS ab ON audit_cycles.blockchain_audit_id = ab.id
+				LEFT JOIN audits AS am ON audit_cycles.mobile_audit_id = am.id
+		WHERE audit_cycles.project_id = ?
+		GROUP BY audit_cycles.quarter
+		ORDER BY audit_cycles.quarter DESC
+		LIMIT 4
+	`
+
+	return rs, db.Raw(query, projectID).Scan(&rs).Error
+}

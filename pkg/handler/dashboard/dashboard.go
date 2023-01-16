@@ -273,3 +273,84 @@ func (h *handler) EngineeringHealth(c *gin.Context) {
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToEngineeringHealthData(average, groups), nil, nil, nil, ""))
 }
+
+// Audits godoc
+// @Summary Get Audit information for dashboard
+// @Description Get Audit information for dashboard
+// @Tags Dashboard
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "jwt token"
+// @Param projectID   query  string false  "Project ID"
+// @Success 200 {object} view.AuditResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /dashboards/projects/audits [get]
+func (h *handler) Audits(c *gin.Context) {
+	input := request.WorkSurveysInput{}
+	if err := c.ShouldBindQuery(&input); err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, input, ""))
+		return
+	}
+
+	if input.ProjectID != "" && !model.IsUUIDFromString(input.ProjectID) {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidProjectID, nil, ""))
+		return
+	}
+
+	l := h.logger.Fields(logger.Fields{
+		"handler": "dashboard",
+		"method":  "Audits",
+		"input":   input,
+	})
+
+	var average []*model.AverageAudit
+	var groups []*model.GroupAudit
+	var err error
+
+	if input.ProjectID != "" {
+		// Check project existence
+		exists, err := h.store.Project.IsExist(h.repo.DB(), input.ProjectID)
+		if err != nil {
+			l.Error(err, "failed to get project")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input, ""))
+			return
+		}
+
+		if !exists {
+			l.Error(errs.ErrProjectNotFound, "project not found")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, input, ""))
+		}
+
+		average, err = h.store.Dashboard.GetAverageAuditByProjectID(h.repo.DB(), input.ProjectID)
+		if err != nil {
+			l.Error(err, "failed to get average audits")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+			return
+		}
+
+		groups, err = h.store.Dashboard.GetGroupAuditByProjectID(h.repo.DB(), input.ProjectID)
+		if err != nil {
+			l.Error(err, "failed to get group audits")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+			return
+		}
+	} else {
+		average, err = h.store.Dashboard.GetAverageAudit(h.repo.DB())
+		if err != nil {
+			l.Error(err, "failed to get average audits")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+			return
+		}
+
+		groups, err = h.store.Dashboard.GetGroupAudit(h.repo.DB())
+		if err != nil {
+			l.Error(err, "failed to get group audits")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+			return
+		}
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToAuditData(average, groups), nil, nil, nil, ""))
+}

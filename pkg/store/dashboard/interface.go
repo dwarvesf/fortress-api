@@ -16,4 +16,8 @@ type IStore interface {
 	GroupEngineeringHealth(db *gorm.DB) ([]*model.GroupEngineeringHealth, error)
 	AverageEngineeringHealthByProjectID(db *gorm.DB, projectID string) ([]*model.AverageEngineeringHealth, error)
 	GroupEngineeringHealthByProjectID(db *gorm.DB, projectID string) ([]*model.GroupEngineeringHealth, error)
+	GetAverageAudit(db *gorm.DB) ([]*model.AverageAudit, error)
+	GetGroupAudit(db *gorm.DB) ([]*model.GroupAudit, error)
+	GetAverageAuditByProjectID(db *gorm.DB, projectID string) ([]*model.AverageAudit, error)
+	GetGroupAuditByProjectID(db *gorm.DB, projectID string) ([]*model.GroupAudit, error)
 }
