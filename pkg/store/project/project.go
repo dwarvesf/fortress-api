@@ -165,7 +165,7 @@ func (s *store) GetByEmployeeID(db *gorm.DB, employeeID string) ([]*model.Projec
 	var projects []*model.Project
 
 	query := db.Table("projects").
-		Joins("JOIN project_members pm ON pm.project_id = projects.id").
+		Joins("JOIN project_members pm ON pm.project_id = projects.id AND pm.status = ?", model.ProjectMemberStatusActive).
 		Where("projects.deleted_at IS NULL AND pm.employee_id = ?", employeeID).
 		Preload("Heads", func(db *gorm.DB) *gorm.DB {
 			return db.Joins("JOIN projects p ON project_heads.project_id = p.id").

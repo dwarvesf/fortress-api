@@ -274,7 +274,11 @@ func ToUpdateGeneralInfoEmployeeData(employee *model.Employee) *UpdateGeneralInf
 func ToOneEmployeeData(c *gin.Context, employee *model.Employee, userInfo *model.CurrentLoggedUserInfo) *EmployeeData {
 	employeeProjects := make([]EmployeeProjectData, 0, len(employee.ProjectMembers))
 	for _, v := range employee.ProjectMembers {
-		if v.Project.Status == model.ProjectStatusActive {
+		if v.Status == model.ProjectMemberStatusInactive {
+			continue
+		}
+		_, ok := userInfo.Projects[v.ProjectID]
+		if ok && v.Project.Status == model.ProjectStatusActive {
 			employeeProjects = append(employeeProjects, ToEmployeeProjectDetailData(c, &v, userInfo))
 			continue
 		}
@@ -282,12 +286,13 @@ func ToOneEmployeeData(c *gin.Context, employee *model.Employee, userInfo *model
 		// If the project is not belong user, check if the user has permission to view the project
 		if utils.HasPermission(c, userInfo.Permissions, model.PermissionEmployeesReadProjectsFullAccess) ||
 			utils.HasPermission(c, userInfo.Permissions, model.PermissionEmployeesReadProjectsReadActive) {
-			if v.Project.Status != model.ProjectStatusActive && utils.HasPermission(c, userInfo.Permissions, model.PermissionEmployeesReadProjectsFullAccess) {
+			if v.Project.Status == model.ProjectStatusActive {
 				employeeProjects = append(employeeProjects, ToEmployeeProjectDetailData(c, &v, userInfo))
-				continue
+			} else {
+				if utils.HasPermission(c, userInfo.Permissions, model.PermissionEmployeesReadProjectsFullAccess) {
+					employeeProjects = append(employeeProjects, ToEmployeeProjectDetailData(c, &v, userInfo))
+				}
 			}
-
-			employeeProjects = append(employeeProjects, ToEmployeeProjectDetailData(c, &v, userInfo))
 		}
 	}
 
