@@ -561,6 +561,8 @@ definitions:
         items:
           type: string
         type: array
+      projectMemberID:
+        type: string
       projectSlotID:
         type: string
       rate:
@@ -3548,12 +3550,12 @@ paths:
         name: Authorization
         required: true
         type: string
-      - description: project ID
+      - description: Project ID
         in: path
         name: id
         required: true
         type: string
-      - description: employee ID
+      - description: Project Member ID
         in: path
         name: memberID
         required: true
@@ -3620,6 +3622,49 @@ paths:
           schema:
             $ref: '#/definitions/view.ErrorResponse'
       summary: Unassign member in a project
+      tags:
+      - Project
+  /project/{id}/slot/{slotID}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete slot in a project
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Slot ID
+        in: path
+        name: slotID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Delete slot in a project
       tags:
       - Project
   /projects:

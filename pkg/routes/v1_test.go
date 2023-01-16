@@ -249,6 +249,12 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/project.IHandler.DeleteMember-fm",
 			},
 		},
+		"/api/v1/projects/:id/slots/:slotID": {
+			"DELETE": {
+				Method:  "DELETE",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/project.IHandler.DeleteSlot-fm",
+			},
+		},
 		"/api/v1/projects/:id/general-info": {
 			"PUT": {
 				Method:  "PUT",

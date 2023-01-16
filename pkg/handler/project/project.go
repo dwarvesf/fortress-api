@@ -322,7 +322,7 @@ func (h *handler) Create(c *gin.Context) {
 
 	// assign members to project
 	for _, member := range body.Members {
-		slot, code, err := h.createSlotInProject(tx.DB(), p.ID.String(), member)
+		slot, code, err := h.createSlotsAndAssignMembers(tx.DB(), p.ID.String(), member)
 		if err != nil {
 			l.Error(err, "failed to assign member to project")
 			c.JSON(code, view.CreateResponse[any](nil, nil, done(err), member, ""))
@@ -394,15 +394,51 @@ func (h *handler) GetMembers(c *gin.Context) {
 		return
 	}
 
-	members, total, err := h.store.ProjectSlot.All(h.repo.DB(), projectslot.GetListProjectSlotInput{
-		ProjectID: projectID,
-		Status:    query.Status,
-		Preload:   query.Preload,
-	}, query.Pagination)
-	if err != nil {
-		l.Error(err, "failed to get project members")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, query, ""))
-		return
+	var slots []*model.ProjectSlot
+	var total int64
+
+	if query.Status != "" {
+		// Get members by status
+		slots, total, err = h.store.ProjectSlot.All(h.repo.DB(), projectslot.GetListProjectSlotInput{
+			ProjectID: projectID,
+			Status:    query.Status,
+			Preload:   query.Preload,
+		}, query.Pagination)
+		if err != nil {
+			l.Error(err, "failed to get project members")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, query, ""))
+			return
+		}
+	} else {
+		// Get all members
+		pendingSlots, err := h.store.ProjectSlot.GetPendingSlots(h.repo.DB(), projectID, query.Preload)
+		if err != nil {
+			l.Error(err, "failed to get pending slots")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, query, ""))
+			return
+		}
+
+		assignedSlots, err := h.store.ProjectSlot.GetAssignedSlots(h.repo.DB(), projectID, query.Preload)
+		if err != nil {
+			l.Error(err, "failed to get assigned slots")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, query, ""))
+			return
+		}
+
+		slots = append(slots, pendingSlots...)
+		slots = append(slots, assignedSlots...)
+
+		total = int64(len(slots))
+
+		// Get response by offset and limit
+		limit, offset := query.Pagination.ToLimitOffset()
+		if offset > len(slots) {
+			slots = []*model.ProjectSlot{}
+		} else if limit+offset > len(slots) {
+			slots = slots[offset:]
+		} else {
+			slots = slots[offset : offset+limit]
+		}
 	}
 
 	heads, err := h.store.ProjectHead.GetActiveLeadsByProjectID(h.repo.DB(), projectID)
@@ -412,7 +448,7 @@ func (h *handler) GetMembers(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse(view.ToProjectMemberListData(members, heads),
+	c.JSON(http.StatusOK, view.CreateResponse(view.ToProjectMemberListData(slots, heads),
 		&view.PaginationResponse{Pagination: query.Pagination, Total: total}, nil, nil, ""))
 }
 
@@ -423,8 +459,8 @@ func (h *handler) GetMembers(c *gin.Context) {
 // @Accept  json
 // @Produce  json
 // @Param Authorization header string true "jwt token"
-// @Param id path string true "project ID"
-// @Param memberID path string true "employee ID"
+// @Param id path string true "Project ID"
+// @Param memberID path string true "Project Member ID"
 // @Success 200 {object} view.MessageResponse
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 404 {object} view.ErrorResponse
@@ -445,19 +481,18 @@ func (h *handler) DeleteMember(c *gin.Context) {
 	l := h.logger.Fields(logger.Fields{
 		"handler": "project",
 		"method":  "DeleteMember",
-		"body":    input.MemberID,
+		"body":    input,
 	})
 
-	// get member info
-	projectMember, err := h.store.ProjectMember.One(h.repo.DB(), input.ProjectID, input.MemberID, false)
+	member, err := h.store.ProjectMember.OneByID(h.repo.DB(), input.MemberID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Error(err, "project member not found")
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectMemberNotFound, input.MemberID, ""))
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectMemberNotFound, input, ""))
 			return
 		}
 		l.Error(err, "failed to get project member")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input.MemberID, ""))
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input, ""))
 		return
 	}
 
@@ -467,50 +502,102 @@ func (h *handler) DeleteMember(c *gin.Context) {
 	// 	return
 	// }
 
-	// Begin transaction
 	tx, done := h.repo.NewTransaction()
 
-	slotID := projectMember.ProjectSlotID.String()
-
-	err = h.store.ProjectMemberPosition.DeleteByProjectMemberID(tx.DB(), projectMember.ID.String())
+	err = h.store.ProjectMemberPosition.DeleteByProjectMemberID(tx.DB(), member.ID.String())
 	if err != nil {
 		l.Error(err, "failed to delete project member position")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input.MemberID, ""))
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
 		return
 	}
 
-	err = h.store.ProjectMember.Delete(tx.DB(), projectMember.ID.String())
+	err = h.store.ProjectMember.Delete(tx.DB(), member.ID.String())
 	if err != nil {
-		l.Error(err, "error delete project member")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input.MemberID, ""))
-		return
-	}
-
-	err = h.store.ProjectSlotPosition.DeleteByProjectSlotID(tx.DB(), slotID)
-	if err != nil {
-		l.Error(err, "error delete project slot position")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input.MemberID, ""))
-		return
-	}
-
-	err = h.store.ProjectSlot.Delete(tx.DB(), slotID)
-	if err != nil {
-		l.Error(err, "error delete project member")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input.MemberID, ""))
+		l.Error(err, "failed to delete project member")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
 		return
 	}
 
 	err = h.store.ProjectHead.DeleteByPositionInProject(tx.DB(),
-		projectMember.ProjectID.String(),
-		projectMember.EmployeeID.String(),
+		member.ProjectID.String(),
+		member.EmployeeID.String(),
 		model.HeadPositionTechnicalLead.String())
 	if err != nil {
-		l.Error(err, "error delete project head")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input.MemberID, ""))
+		l.Error(err, "failed to delete project head")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
+		return
+	}
+
+	// Update project slot status to inactive
+	_, err = h.store.ProjectSlot.UpdateSelectedFieldsByID(tx.DB(),
+		member.ProjectSlotID.String(),
+		model.ProjectSlot{
+			Status: model.ProjectMemberStatusInactive,
+		},
+		"status")
+	if err != nil {
+		l.Error(err, "failed to update project slot")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
 		return
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, done(nil), nil, "ok"))
+}
+
+// DeleteSlot godoc
+// @Summary Delete slot in a project
+// @Description Delete slot in a project
+// @Tags Project
+// @Accept  json
+// @Produce  json
+// @Param Authorization header string true "jwt token"
+// @Param id path string true "Project ID"
+// @Param slotID path string true "Slot ID"
+// @Success 200 {object} view.MessageResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /project/{id}/slot/{slotID} [delete]
+func (h *handler) DeleteSlot(c *gin.Context) {
+	input := request.DeleteSlotInput{
+		ProjectID: c.Param("id"),
+		SlotID:    c.Param("slotID"),
+	}
+
+	if err := input.Validate(); err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	// TODO: can we move this to middleware ?
+	l := h.logger.Fields(logger.Fields{
+		"handler": "project",
+		"method":  "DeleteSlot",
+		"body":    input,
+	})
+
+	slot, err := h.store.ProjectSlot.One(h.repo.DB(), input.SlotID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			l.Error(err, "project slot not found")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectSlotNotFound, input, ""))
+			return
+		}
+		l.Error(err, "failed to get project slot")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input, ""))
+		return
+	}
+
+	slot.Status = model.ProjectMemberStatusInactive
+
+	_, err = h.store.ProjectSlot.UpdateSelectedFieldsByID(h.repo.DB(), input.SlotID, *slot, "status")
+	if err != nil {
+		l.Error(err, "failed to update project slot")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input, ""))
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))
 }
 
 // UnassignMember godoc
@@ -547,7 +634,7 @@ func (h *handler) UnassignMember(c *gin.Context) {
 	})
 
 	// get member info
-	projectMember, err := h.store.ProjectMember.One(h.repo.DB(), input.ProjectID, input.MemberID, false)
+	projectMember, err := h.store.ProjectMember.GetActiveMemberInProject(h.repo.DB(), input.ProjectID, input.MemberID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Error(err, "project member not found")
@@ -722,9 +809,9 @@ func (h *handler) UpdateMember(c *gin.Context) {
 	tx, done := h.repo.NewTransaction()
 
 	if !body.EmployeeID.IsZero() {
-		member, err := h.assignMemberToProject(tx.DB(), slot.ID.String(), projectID, body)
+		member, err := h.updateProjectMember(tx.DB(), slot.ID.String(), projectID, body)
 		if err != nil {
-			l.Error(err, "failed to assign member to project")
+			l.Error(err, "failed to update project member")
 			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
 			return
 		}
@@ -767,7 +854,7 @@ func (h *handler) UpdateMember(c *gin.Context) {
 	}
 
 	if err := h.store.ProjectSlotPosition.Create(tx.DB(), slotPos...); err != nil {
-		l.Error(err, "failed to create project member positions")
+		l.Error(err, "failed to create project slot positions")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), nil, ""))
 		return
 	}
@@ -785,7 +872,7 @@ func (h *handler) UpdateMember(c *gin.Context) {
 	c.JSON(http.StatusOK, view.CreateResponse(view.ToCreateMemberData(slot), nil, done(nil), nil, ""))
 }
 
-func (h *handler) assignMemberToProject(db *gorm.DB, slotID string, projectID string, input request.UpdateMemberInput) (*model.ProjectMember, error) {
+func (h *handler) updateProjectMember(db *gorm.DB, slotID string, projectID string, input request.UpdateMemberInput) (*model.ProjectMember, error) {
 	// check is slot contains any member?
 	member, err := h.store.ProjectMember.OneBySlotID(db, slotID)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
@@ -801,12 +888,12 @@ func (h *handler) assignMemberToProject(db *gorm.DB, slotID string, projectID st
 	}
 
 	// check is member active in project?
-	member, err = h.store.ProjectMember.GetActiveByProjectIDAndEmployeeID(db, projectID, input.EmployeeID.String())
+	member, err = h.store.ProjectMember.GetActiveMemberInProject(db, projectID, input.EmployeeID.String())
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		h.logger.Fields(logger.Fields{
 			"projectID":  projectID,
 			"employeeID": input.EmployeeID,
-		}).Error(err, "failed to get project member")
+		}).Error(err, "failed to get active member in project")
 		return nil, err
 	}
 
@@ -835,8 +922,8 @@ func (h *handler) assignMemberToProject(db *gorm.DB, slotID string, projectID st
 			h.logger.Fields(logger.Fields{
 				"member.ProjectSlotID": member.ProjectSlotID,
 				"slotID":               slotID,
-			}).Info("slotID cannot be changed")
-			return nil, errs.ErrSlotIDCannotBeChanged
+			}).Info("employee worked on the project")
+			return nil, errs.ErrEmployeeWorkedOnTheProject
 		}
 
 		// if member.Status == model.ProjectMemberStatusInactive {
@@ -970,7 +1057,7 @@ func (h *handler) AssignMember(c *gin.Context) {
 
 	// // get active project member info
 	// if !body.EmployeeID.IsZero() {
-	// 	_, err := h.store.ProjectMember.One(h.repo.DB(), projectID, body.EmployeeID.String(), false)
+	// 	_, err := h.store.ProjectMember.GetActiveMemberInProject(h.repo.DB(), projectID, body.EmployeeID.String())
 	// 	if err != gorm.ErrRecordNotFound {
 	// 		if err == nil {
 	// 			l.Error(err, "project member exists")
@@ -999,7 +1086,7 @@ func (h *handler) AssignMember(c *gin.Context) {
 
 	tx, done := h.repo.NewTransaction()
 
-	slot, code, err := h.createSlotInProject(tx.DB(), projectID, body)
+	slot, code, err := h.createSlotsAndAssignMembers(tx.DB(), projectID, body)
 	if err != nil {
 		l.Error(err, "failed to assign member to project")
 		c.JSON(code, view.CreateResponse[any](nil, nil, done(err), body, ""))
@@ -1008,7 +1095,7 @@ func (h *handler) AssignMember(c *gin.Context) {
 	c.JSON(http.StatusOK, view.CreateResponse(view.ToCreateMemberData(slot), nil, done(nil), nil, ""))
 }
 
-func (h *handler) createSlotInProject(db *gorm.DB, projectID string, req request.AssignMemberInput) (*model.ProjectSlot, int, error) {
+func (h *handler) createSlotsAndAssignMembers(db *gorm.DB, projectID string, req request.AssignMemberInput) (*model.ProjectSlot, int, error) {
 	l := h.logger
 
 	// check seniority existence
@@ -1041,7 +1128,7 @@ func (h *handler) createSlotInProject(db *gorm.DB, projectID string, req request
 	slot := &model.ProjectSlot{
 		ProjectID:      model.MustGetUUIDFromString(projectID),
 		DeploymentType: model.DeploymentType(req.DeploymentType),
-		Status:         model.ProjectMemberStatus(req.Status),
+		Status:         req.GetStatus(),
 		Rate:           req.Rate,
 		Discount:       req.Discount,
 		SeniorityID:    req.SeniorityID,
@@ -1095,7 +1182,7 @@ func (h *handler) createSlotInProject(db *gorm.DB, projectID string, req request
 			SeniorityID:    req.SeniorityID,
 			ProjectSlotID:  slot.ID,
 			DeploymentType: model.DeploymentType(req.DeploymentType),
-			Status:         model.ProjectMemberStatus(req.Status),
+			Status:         req.GetStatus(),
 			JoinedDate:     req.GetJoinedDate(),
 			LeftDate:       req.GetLeftDate(),
 			Rate:           req.Rate,
@@ -1188,7 +1275,7 @@ func (h *handler) Details(c *gin.Context) {
 
 	if !utils.HasPermission(c, userInfo.Permissions, model.PermissionProjectsReadFullAccess) && !utils.HasPermission(c, userInfo.Permissions, model.PermissionEmployeesReadProjectsReadActive) {
 		_, ok := userInfo.Projects[rs.ID]
-		if !ok || !model.IsUserActiveInProject(userInfo.UserID, rs.Slots) {
+		if !ok || !model.IsUserActiveInProject(userInfo.UserID, rs.ProjectMembers) {
 			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, nil, ""))
 			return
 		}
@@ -1573,7 +1660,7 @@ func (h *handler) GetWorkUnits(c *gin.Context) {
 
 	if !utils.HasPermission(c, userInfo.Permissions, model.PermissionProjectWorkUnitsReadFullAccess) {
 		_, ok := userInfo.Projects[p.ID]
-		if !ok || !model.IsUserActiveInProject(userInfo.UserID, p.Slots) {
+		if !ok || !model.IsUserActiveInProject(userInfo.UserID, p.ProjectMembers) {
 			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, nil, ""))
 			return
 		}
@@ -1648,7 +1735,7 @@ func (h *handler) CreateWorkUnit(c *gin.Context) {
 	// Has permission when have work unit create full-access and active in project
 	if !utils.HasPermission(c, userInfo.Permissions, model.PermissionProjectWorkUnitsCreateFullAccess) {
 		_, ok := userInfo.Projects[p.ID]
-		if !ok || !model.IsUserActiveInProject(userInfo.UserID, p.Slots) {
+		if !ok || !model.IsUserActiveInProject(userInfo.UserID, p.ProjectMembers) {
 			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, nil, ""))
 			return
 		}
@@ -1661,7 +1748,7 @@ func (h *handler) CreateWorkUnit(c *gin.Context) {
 		}
 
 		_, ok = leadMap[userInfo.UserID]
-		if !ok || !model.IsUserActiveInProject(userInfo.UserID, p.Slots) {
+		if !ok || !model.IsUserActiveInProject(userInfo.UserID, p.ProjectMembers) {
 			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrMemberIsNotProjectLead, nil, ""))
 			return
 		}
@@ -1715,7 +1802,7 @@ func (h *handler) CreateWorkUnit(c *gin.Context) {
 
 	// create work unit member
 	for _, employee := range employees {
-		pMember, err := h.store.ProjectMember.One(tx.DB(), input.ProjectID, employee.ID.String(), false)
+		pMember, err := h.store.ProjectMember.GetActiveMemberInProject(tx.DB(), input.ProjectID, employee.ID.String())
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Error(errs.ErrMemberIsNotActiveInProject, "member is not active in project")
 			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(errs.ErrMemberIsNotActiveInProject), input, ""))
@@ -1803,7 +1890,7 @@ func (h *handler) UpdateWorkUnit(c *gin.Context) {
 
 	if !utils.HasPermission(c, userInfo.Permissions, model.PermissionProjectWorkUnitsEditFullAccess) {
 		_, ok := userInfo.Projects[p.ID]
-		if !ok || !model.IsUserActiveInProject(userInfo.UserID, p.Slots) {
+		if !ok || !model.IsUserActiveInProject(userInfo.UserID, p.ProjectMembers) {
 			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, nil, ""))
 			return
 		}
@@ -1816,7 +1903,7 @@ func (h *handler) UpdateWorkUnit(c *gin.Context) {
 		}
 
 		_, ok = leadMap[userInfo.UserID]
-		if !ok || !model.IsUserActiveInProject(userInfo.UserID, p.Slots) {
+		if !ok || !model.IsUserActiveInProject(userInfo.UserID, p.ProjectMembers) {
 			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrMemberIsNotProjectLead, nil, ""))
 			return
 		}
@@ -2002,7 +2089,7 @@ func (h *handler) deleteWorkUnit(db *gorm.DB, workUnitID string, deleteMemberIDL
 
 func (h *handler) createWorkUnit(db *gorm.DB, projectID string, workUnitID string, createMemberIDList []model.UUID) (int, error) {
 	for _, createMemberID := range createMemberIDList {
-		_, err := h.store.ProjectMember.One(db, projectID, createMemberID.String(), false)
+		_, err := h.store.ProjectMember.GetActiveMemberInProject(db, projectID, createMemberID.String())
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return http.StatusBadRequest, errs.ErrMemberIsInactive
 		}
@@ -2083,7 +2170,7 @@ func (h *handler) ArchiveWorkUnit(c *gin.Context) {
 
 	if !utils.HasPermission(c, userInfo.Permissions, model.PermissionProjectWorkUnitsEditFullAccess) {
 		_, ok := userInfo.Projects[p.ID]
-		if !ok || !model.IsUserActiveInProject(userInfo.UserID, p.Slots) {
+		if !ok || !model.IsUserActiveInProject(userInfo.UserID, p.ProjectMembers) {
 			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, nil, ""))
 			return
 		}
@@ -2096,7 +2183,7 @@ func (h *handler) ArchiveWorkUnit(c *gin.Context) {
 		}
 
 		_, ok = leadMap[userInfo.UserID]
-		if !ok || !model.IsUserActiveInProject(userInfo.UserID, p.Slots) {
+		if !ok || !model.IsUserActiveInProject(userInfo.UserID, p.ProjectMembers) {
 			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrMemberIsNotProjectLead, nil, ""))
 			return
 		}
@@ -2205,7 +2292,7 @@ func (h *handler) UnarchiveWorkUnit(c *gin.Context) {
 
 	if !utils.HasPermission(c, userInfo.Permissions, model.PermissionProjectWorkUnitsEditFullAccess) {
 		_, ok := userInfo.Projects[p.ID]
-		if !ok || !model.IsUserActiveInProject(userInfo.UserID, p.Slots) {
+		if !ok || !model.IsUserActiveInProject(userInfo.UserID, p.ProjectMembers) {
 			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, nil, ""))
 			return
 		}
@@ -2218,7 +2305,7 @@ func (h *handler) UnarchiveWorkUnit(c *gin.Context) {
 		}
 
 		_, ok = leadMap[userInfo.UserID]
-		if !ok || !model.IsUserActiveInProject(userInfo.UserID, p.Slots) {
+		if !ok || !model.IsUserActiveInProject(userInfo.UserID, p.ProjectMembers) {
 			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrMemberIsNotProjectLead, nil, ""))
 			return
 		}
@@ -2257,7 +2344,7 @@ func (h *handler) UnarchiveWorkUnit(c *gin.Context) {
 
 	// check member status in project and update work unit member
 	for _, member := range wuMembers {
-		// _, err := h.store.ProjectMember.One(tx.DB(), input.ProjectID, member.EmployeeID.String(), false)
+		// _, err := h.store.ProjectMember.GetActiveMemberInProject(tx.DB(), input.ProjectID, member.EmployeeID.String(), false)
 
 		// if errors.Is(err, gorm.ErrRecordNotFound) {
 		// 	l.Error(err, "member is not active in project")

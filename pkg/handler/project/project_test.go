@@ -571,7 +571,7 @@ func TestHandler_DeleteProjectMember(t *testing.T) {
 			wantCode:         200,
 			wantResponsePath: "testdata/delete_member/200.json",
 			id:               "8dc3be2e-19a4-4942-8a79-56db391a0b15",
-			memberID:         "2655832e-f009-4b73-a535-64c3a22e558f",
+			memberID:         "cb889a9c-b20c-47ee-83b8-44b6d1721aca",
 		},
 		{
 			name:             "failed_invalid_member_id",
@@ -596,7 +596,56 @@ func TestHandler_DeleteProjectMember(t *testing.T) {
 				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
 				require.NoError(t, err)
 
-				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.UpdateProjectStatus] response mismatched")
+				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.DeleteSlot] response mismatched")
+			})
+		})
+	}
+}
+
+func TestHandler_DeleteSlot(t *testing.T) {
+	cfg := config.LoadTestConfig()
+	loggerMock := logger.NewLogrusLogger()
+	serviceMock := service.New(&cfg)
+	storeMock := store.New()
+
+	tests := []struct {
+		name             string
+		wantCode         int
+		wantResponsePath string
+		id               string
+		slotID           string
+	}{
+		{
+			name:             "ok_update_project_status",
+			wantCode:         200,
+			wantResponsePath: "testdata/delete_slot/200.json",
+			id:               "8dc3be2e-19a4-4942-8a79-56db391a0b15",
+			slotID:           "f32d08ca-8863-4ab3-8c84-a11849451eb7",
+		},
+		{
+			name:             "failed_invalid_member_id",
+			wantCode:         404,
+			wantResponsePath: "testdata/delete_slot/404.json",
+			id:               "8dc3be2e-19a4-4942-8a79-56db391a0b15",
+			slotID:           "cb889a9c-b20c-47ee-83b8-44b6d1721acb",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				testhelper.LoadTestSQLFile(t, txRepo, "./testdata/delete_slot/delete_slot.sql")
+				w := httptest.NewRecorder()
+				ctx, _ := gin.CreateTestContext(w)
+				ctx.Params = gin.Params{gin.Param{Key: "id", Value: tt.id}, gin.Param{Key: "slotID", Value: tt.slotID}}
+				ctx.Request = httptest.NewRequest("DELETE", fmt.Sprintf("/api/v1/projects/%s/slots/%s", tt.id, tt.slotID), nil)
+				ctx.Request.Header.Set("Authorization", testToken)
+				metadataHandler := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+
+				metadataHandler.DeleteSlot(ctx)
+				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				require.NoError(t, err)
+
+				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.DeleteSlot] response mismatched")
 			})
 		})
 	}

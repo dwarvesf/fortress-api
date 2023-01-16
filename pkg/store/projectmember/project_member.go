@@ -28,22 +28,18 @@ func (s *store) IsExist(db *gorm.DB, id string) (bool, error) {
 	return record.Result, query.Scan(&record).Error
 }
 
-// One return a project member by projectID and employeeID
-func (s *store) One(db *gorm.DB, projectID string, employeeID string, preload bool) (*model.ProjectMember, error) {
-	query := db.Where("project_id = ? AND employee_id = ?", projectID, employeeID)
-
-	if preload {
-		query = query.Preload("Employee")
-	}
-
+// One return a project member by id
+func (s *store) OneByID(db *gorm.DB, id string) (*model.ProjectMember, error) {
 	var member *model.ProjectMember
-	return member, query.First(&member).Error
+	return member, db.Where("id = ?", id).First(&member).Error
 }
 
 // OneBySlotID return a project member by slotID
 func (s *store) OneBySlotID(db *gorm.DB, slotID string) (*model.ProjectMember, error) {
 	var member *model.ProjectMember
-	return member, db.Where("project_slot_id = ? AND (left_date IS NULL OR left_date > ?)", slotID, time.Now()).Preload("Employee").First(&member).Error
+	return member, db.Where("project_slot_id = ? AND status = ?", slotID, model.ProjectMemberStatusActive).
+		Preload("Employee").
+		First(&member).Error
 }
 
 // Create using for create new member
@@ -90,7 +86,16 @@ func (s *store) GetActiveByProjectIDs(db *gorm.DB, projectIDs []string) ([]*mode
 	return members, db.Joins("JOIN employees ON project_members.employee_id = employees.id").Where("(project_members.left_date IS NULL OR project_members.left_date > ?) AND project_members.status = 'active' AND employees.working_status = 'full-time' AND project_members.project_id IN ?", time.Now(), projectIDs).Preload("Employee").Find(&members).Error
 }
 
-func (s *store) GetActiveByProjectIDAndEmployeeID(db *gorm.DB, projectID string, employeeID string) (*model.ProjectMember, error) {
+func (s *store) GetActiveMemberInProject(db *gorm.DB, projectID string, employeeID string) (*model.ProjectMember, error) {
 	var member *model.ProjectMember
-	return member, db.Where("project_id = ? AND employee_id = ? AND (left_date IS NULL OR left_date > now())", projectID, employeeID).First(&member).Error
+	return member, db.Where("project_id = ? AND employee_id = ? AND status = ?",
+		projectID,
+		employeeID,
+		model.ProjectMemberStatusActive,
+	).Preload("Employee").First(&member).Error
+}
+
+func (s *store) GetActiveMembersBySlotID(db *gorm.DB, slotID string) ([]*model.ProjectMember, error) {
+	var members []*model.ProjectMember
+	return members, db.Where("project_slot_id = ? AND status = ?", slotID, model.ProjectMemberStatusActive).Find(&members).Error
 }
