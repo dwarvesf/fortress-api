@@ -105,10 +105,6 @@ func ToProjectData(c *gin.Context, project *model.Project, userInfo *model.Curre
 	for _, h := range project.Heads {
 		head := ToProjectHead(h)
 
-		if h.Employee.WorkingStatus == model.WorkingStatusLeft {
-			continue
-		}
-
 		if h.IsLead() {
 			leadMap[h.EmployeeID.String()] = true
 			technicalLeads = append(technicalLeads, *head)

@@ -118,7 +118,7 @@ func (s *store) One(db *gorm.DB, id string, preload bool) (*model.Project, error
 
 	if preload {
 		query = query.
-			Preload("Heads", "deleted_at IS NULL and left_date IS NULL").
+			Preload("Heads", "deleted_at IS NULL AND (left_date IS NULL OR left_date > now())").
 			Preload("Heads.Employee").
 			Preload("ProjectStacks", "deleted_at IS NULL").
 			Preload("ProjectStacks.Stack", "deleted_at IS NULL").
@@ -134,7 +134,6 @@ func (s *store) One(db *gorm.DB, id string, preload bool) (*model.Project, error
 					Where("pm.deleted_at IS NULL").
 					Where("pm.status IN ?", []model.ProjectMemberStatus{model.ProjectMemberStatusActive, model.ProjectMemberStatusOnBoarding}).
 					Where("project_slots.status = ?", model.ProjectMemberStatusActive).
-					Order("pm.left_date ASC").
 					Order("CASE ph.position WHEN 'technical-lead' THEN 1 ELSE 2 END").
 					Order("s.level DESC")
 			}).
