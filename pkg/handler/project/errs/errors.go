@@ -15,6 +15,7 @@ var (
 	ErrInvalidJoinedDate          = errors.New("invalid joined date")
 	ErrInvalidLeftDate            = errors.New("invalid left date")
 	ErrInvalidMemberID            = errors.New("invalid member ID")
+	ErrInvalidSlotID              = errors.New("invalid slot ID")
 	ErrInvalidWorkUnitID          = errors.New("invalid work unit ID")
 	ErrInvalidWorkUnitType        = errors.New("invalid work unit type")
 	ErrInvalidWorkUnitStatus      = errors.New("invalid work unit status")
@@ -35,7 +36,7 @@ var (
 	ErrProjectNotExisted       = errors.New("project not existed")
 
 	ErrMemberIsInactive                 = errors.New("member is inactive")
-	ErrSlotIDCannotBeChanged            = errors.New("slotID cannot be changed")
+	ErrEmployeeWorkedOnTheProject       = errors.New("employee worked on the project")
 	ErrPositionsIsEmpty                 = errors.New("positions is empty")
 	ErrMemberIsNotActiveInProject       = errors.New("member is not active in project")
 	ErrFailToCheckInputExistence        = errors.New("failed to check input existance")
