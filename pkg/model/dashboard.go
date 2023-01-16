@@ -33,3 +33,18 @@ type GroupEngineeringHealth struct {
 	Avg     float64 `json:"avg"`
 	Area    string  `json:"area"`
 }
+
+type GroupAudit struct {
+	Quarter    string  `json:"quarter"`
+	Frontend   float64 `json:"frontend"`
+	Backend    float64 `json:"backend"`
+	System     float64 `json:"system"`
+	Process    float64 `json:"process"`
+	Blockchain float64 `json:"blockchain"`
+	Mobile     float64 `json:"mobile"`
+}
+
+type AverageAudit struct {
+	Quarter string  `json:"quarter"`
+	Avg     float64 `json:"avg"`
+}

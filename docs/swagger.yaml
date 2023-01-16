@@ -737,6 +737,15 @@ definitions:
         description: error message
         type: string
     type: object
+  view.Audit:
+    properties:
+      avg:
+        type: number
+      quarter:
+        type: string
+      trend:
+        type: number
+    type: object
   view.AuditActionItemReport:
     properties:
       high:
@@ -749,6 +758,20 @@ definitions:
         type: string
       trend:
         $ref: '#/definitions/view.ActionItemTrend'
+    type: object
+  view.AuditData:
+    properties:
+      average:
+        items:
+          $ref: '#/definitions/view.Audit'
+        type: array
+      groups:
+        $ref: '#/definitions/view.GroupAudit'
+    type: object
+  view.AuditResponse:
+    properties:
+      data:
+        $ref: '#/definitions/view.AuditData'
     type: object
   view.AuthData:
     properties:
@@ -1193,6 +1216,33 @@ definitions:
       data:
         items:
           $ref: '#/definitions/view.Question'
+        type: array
+    type: object
+  view.GroupAudit:
+    properties:
+      backend:
+        items:
+          $ref: '#/definitions/view.Audit'
+        type: array
+      blockchain:
+        items:
+          $ref: '#/definitions/view.Audit'
+        type: array
+      frontend:
+        items:
+          $ref: '#/definitions/view.Audit'
+        type: array
+      mobile:
+        items:
+          $ref: '#/definitions/view.Audit'
+        type: array
+      process:
+        items:
+          $ref: '#/definitions/view.Audit'
+        type: array
+      system:
+        items:
+          $ref: '#/definitions/view.Audit'
         type: array
     type: object
   view.GroupEngineeringHealth:
@@ -2107,6 +2157,43 @@ paths:
           schema:
             $ref: '#/definitions/view.ErrorResponse'
       summary: Get Action items report for dashboard
+      tags:
+      - Dashboard
+  /dashboards/projects/audits:
+    get:
+      consumes:
+      - application/json
+      description: Get Audit information for dashboard
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Project ID
+        in: query
+        name: projectID
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.AuditResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get Audit information for dashboard
       tags:
       - Dashboard
   /dashboards/projects/engineering-healths:

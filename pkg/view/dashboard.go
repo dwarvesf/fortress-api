@@ -264,3 +264,114 @@ func calculateEngineeringHealthTrend(previous *EngineeringHealth, current *Engin
 	// return the value fixed 2 decimal places
 	return float64(math.Trunc((current.Value-previous.Value)/previous.Value*100*100)) / 100
 }
+
+type AuditResponse struct {
+	Data AuditData `json:"data"`
+}
+
+type AuditData struct {
+	Average []*Audit    `json:"average"`
+	Groups  *GroupAudit `json:"groups"`
+}
+
+type Audit struct {
+	Quarter string  `json:"quarter"`
+	Value   float64 `json:"avg"`
+	Trend   float64 `json:"trend"`
+}
+
+type GroupAudit struct {
+	Frontend   []*Audit `json:"frontend"`
+	Backend    []*Audit `json:"backend"`
+	System     []*Audit `json:"system"`
+	Process    []*Audit `json:"process"`
+	Mobile     []*Audit `json:"mobile"`
+	Blockchain []*Audit `json:"blockchain"`
+}
+
+func ToAuditData(average []*model.AverageAudit, groups []*model.GroupAudit) *AuditData {
+	rs := &AuditData{}
+
+	// Reverse quarter order
+	for i, j := 0, len(average)-1; i < j; i, j = i+1, j-1 {
+		average[i], average[j] = average[j], average[i]
+	}
+
+	for i, j := 0, len(groups)-1; i < j; i, j = i+1, j-1 {
+		groups[i], groups[j] = groups[j], groups[i]
+	}
+
+	for _, a := range average {
+		rs.Average = append(rs.Average, &Audit{
+			Quarter: strings.Split(a.Quarter, "/")[1] + "/" + strings.Split(a.Quarter, "/")[0],
+			Value:   a.Avg,
+		})
+	}
+
+	calculateTrendForAuditList(rs.Average)
+
+	rs.Groups = toGroupAudit(groups)
+
+	calculateTrendForAuditList(rs.Groups.Frontend)
+	calculateTrendForAuditList(rs.Groups.Backend)
+	calculateTrendForAuditList(rs.Groups.Process)
+	calculateTrendForAuditList(rs.Groups.System)
+	calculateTrendForAuditList(rs.Groups.Mobile)
+	calculateTrendForAuditList(rs.Groups.Blockchain)
+
+	return rs
+}
+
+func toGroupAudit(groups []*model.GroupAudit) *GroupAudit {
+	rs := &GroupAudit{}
+
+	for _, g := range groups {
+		rs.Frontend = append(rs.Frontend, &Audit{
+			Quarter: strings.Split(g.Quarter, "/")[1] + "/" + strings.Split(g.Quarter, "/")[0],
+			Value:   g.Frontend,
+		})
+
+		rs.Backend = append(rs.Backend, &Audit{
+			Quarter: strings.Split(g.Quarter, "/")[1] + "/" + strings.Split(g.Quarter, "/")[0],
+			Value:   g.Backend,
+		})
+
+		rs.System = append(rs.System, &Audit{
+			Quarter: strings.Split(g.Quarter, "/")[1] + "/" + strings.Split(g.Quarter, "/")[0],
+			Value:   g.System,
+		})
+
+		rs.Process = append(rs.Process, &Audit{
+			Quarter: strings.Split(g.Quarter, "/")[1] + "/" + strings.Split(g.Quarter, "/")[0],
+			Value:   g.Process,
+		})
+
+		rs.Mobile = append(rs.Mobile, &Audit{
+			Quarter: strings.Split(g.Quarter, "/")[1] + "/" + strings.Split(g.Quarter, "/")[0],
+			Value:   g.Mobile,
+		})
+
+		rs.Blockchain = append(rs.Blockchain, &Audit{
+			Quarter: strings.Split(g.Quarter, "/")[1] + "/" + strings.Split(g.Quarter, "/")[0],
+			Value:   g.Blockchain,
+		})
+	}
+
+	return rs
+}
+
+func calculateTrendForAuditList(healths []*Audit) {
+	for i := 1; i < len(healths); i++ {
+		healths[i].Trend = calculateAuditTrend(healths[i-1], healths[i])
+	}
+}
+
+func calculateAuditTrend(previous *Audit, current *Audit) float64 {
+	// if previous or current value = 0 trend = 0
+	if previous.Value == 0 || current.Value == 0 {
+		return 0
+	}
+
+	// return the value fixed 2 decimal places
+	return float64(math.Trunc((current.Value-previous.Value)/previous.Value*100*100)) / 100
+}

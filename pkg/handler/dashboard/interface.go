@@ -9,4 +9,5 @@ type IHandler interface {
 	WorkSurveys(c *gin.Context)
 	GetActionItemReports(c *gin.Context)
 	EngineeringHealth(c *gin.Context)
+	Audits(c *gin.Context)
 }

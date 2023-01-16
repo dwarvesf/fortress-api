@@ -192,6 +192,62 @@ const docTemplate = `{
                 }
             }
         },
+        "/dashboards/projects/audits": {
+            "get": {
+                "description": "Get Audit information for dashboard",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "Get Audit information for dashboard",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Project ID",
+                        "name": "projectID",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.AuditResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/dashboards/projects/engineering-healths": {
             "get": {
                 "description": "Get Enginerring health information for dashboard",
@@ -5139,6 +5195,20 @@ const docTemplate = `{
                 }
             }
         },
+        "view.Audit": {
+            "type": "object",
+            "properties": {
+                "avg": {
+                    "type": "number"
+                },
+                "quarter": {
+                    "type": "string"
+                },
+                "trend": {
+                    "type": "number"
+                }
+            }
+        },
         "view.AuditActionItemReport": {
             "type": "object",
             "properties": {
@@ -5156,6 +5226,28 @@ const docTemplate = `{
                 },
                 "trend": {
                     "$ref": "#/definitions/view.ActionItemTrend"
+                }
+            }
+        },
+        "view.AuditData": {
+            "type": "object",
+            "properties": {
+                "average": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.Audit"
+                    }
+                },
+                "groups": {
+                    "$ref": "#/definitions/view.GroupAudit"
+                }
+            }
+        },
+        "view.AuditResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/view.AuditData"
                 }
             }
         },
@@ -5837,6 +5929,47 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/view.Question"
+                    }
+                }
+            }
+        },
+        "view.GroupAudit": {
+            "type": "object",
+            "properties": {
+                "backend": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.Audit"
+                    }
+                },
+                "blockchain": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.Audit"
+                    }
+                },
+                "frontend": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.Audit"
+                    }
+                },
+                "mobile": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.Audit"
+                    }
+                },
+                "process": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.Audit"
+                    }
+                },
+                "system": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.Audit"
                     }
                 }
             }

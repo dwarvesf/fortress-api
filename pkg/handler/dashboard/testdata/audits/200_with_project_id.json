@@ -1,0 +1,90 @@
+{
+    "data": {
+        "average": [
+            {
+                "quarter": "Q1/2022",
+                "avg": 3.6,
+                "trend": 0
+            },
+            {
+                "quarter": "Q2/2022",
+                "avg": 3.5,
+                "trend": -2.77
+            }
+        ],
+        "groups": {
+            "frontend": [
+                {
+                    "quarter": "Q1/2022",
+                    "avg": 4.2,
+                    "trend": 0
+                },
+                {
+                    "quarter": "Q2/2022",
+                    "avg": 3.2,
+                    "trend": -23.8
+                }
+            ],
+            "backend": [
+                {
+                    "quarter": "Q1/2022",
+                    "avg": 3.4,
+                    "trend": 0
+                },
+                {
+                    "quarter": "Q2/2022",
+                    "avg": 3.3,
+                    "trend": -2.94
+                }
+            ],
+            "system": [
+                {
+                    "quarter": "Q1/2022",
+                    "avg": 3.2,
+                    "trend": 0
+                },
+                {
+                    "quarter": "Q2/2022",
+                    "avg": 3.8,
+                    "trend": 18.74
+                }
+            ],
+            "process": [
+                {
+                    "quarter": "Q1/2022",
+                    "avg": 3.6,
+                    "trend": 0
+                },
+                {
+                    "quarter": "Q2/2022",
+                    "avg": 3.7,
+                    "trend": 2.77
+                }
+            ],
+            "mobile": [
+                {
+                    "quarter": "Q1/2022",
+                    "avg": 3.3,
+                    "trend": 0
+                },
+                {
+                    "quarter": "Q2/2022",
+                    "avg": 4.2,
+                    "trend": 27.27
+                }
+            ],
+            "blockchain": [
+                {
+                    "quarter": "Q1/2022",
+                    "avg": 3.8,
+                    "trend": 0
+                },
+                {
+                    "quarter": "Q2/2022",
+                    "avg": 3.5,
+                    "trend": -7.89
+                }
+            ]
+        }
+    }
+}
