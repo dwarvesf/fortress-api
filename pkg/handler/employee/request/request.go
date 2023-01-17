@@ -25,19 +25,19 @@ type GetListEmployeeInput struct {
 }
 
 type UpdateEmployeeGeneralInfoInput struct {
-	FullName      string     `form:"fullName" json:"fullName" binding:"required,max=99"`
-	Email         string     `form:"email" json:"email" binding:"required,email"`
-	Phone         string     `form:"phone" json:"phone" binding:"required,max=18,min=9"`
-	LineManagerID model.UUID `form:"lineManagerID" json:"lineManagerID"`
-	DisplayName   string     `form:"displayName" json:"displayName"`
-	GithubID      string     `form:"githubID" json:"githubID"`
-	NotionID      string     `form:"notionID" json:"notionID"`
-	NotionName    string     `form:"notionName" json:"notionName"`
-	NotionEmail   string     `form:"notionEmail" json:"notionEmail"`
-	DiscordID     string     `form:"discordID" json:"discordID"`
-	DiscordName   string     `form:"discordName" json:"discordName"`
-	LinkedInName  string     `form:"linkedInName" json:"linkedInName"`
-	Organization  string     `form:"organization" json:"organization"`
+	FullName        string       `form:"fullName" json:"fullName" binding:"required,max=99"`
+	Email           string       `form:"email" json:"email" binding:"required,email"`
+	Phone           string       `form:"phone" json:"phone" binding:"required,max=18,min=9"`
+	LineManagerID   model.UUID   `form:"lineManagerID" json:"lineManagerID"`
+	DisplayName     string       `form:"displayName" json:"displayName"`
+	GithubID        string       `form:"githubID" json:"githubID"`
+	NotionID        string       `form:"notionID" json:"notionID"`
+	NotionName      string       `form:"notionName" json:"notionName"`
+	NotionEmail     string       `form:"notionEmail" json:"notionEmail"`
+	DiscordID       string       `form:"discordID" json:"discordID"`
+	DiscordName     string       `form:"discordName" json:"discordName"`
+	LinkedInName    string       `form:"linkedInName" json:"linkedInName"`
+	OrganizationIDs []model.UUID `form:"organizationIDs" json:"organizationIDs"`
 }
 
 type AddMenteeInput struct {
@@ -142,8 +142,8 @@ func (input *GetListEmployeeInput) Validate() error {
 	}
 	if len(input.Organizations) > 0 {
 		for _, v := range input.Organizations {
-			if !model.Organization(v).IsValid() {
-				return errs.ErrInvalidOrganization
+			if strings.TrimSpace(v) == "" {
+				return errs.ErrInvalidOrganizationCode
 			}
 		}
 	}

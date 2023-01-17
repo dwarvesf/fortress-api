@@ -58,31 +58,6 @@ func (e AccountRole) String() string {
 	return string(e)
 }
 
-// Organization represent for type of organization
-type Organization string
-
-// values for organization
-const (
-	OrganizationDwarvesFoundation Organization = "dwarves-foundation"
-	OrganizationConsoleLabs       Organization = "console-labs"
-)
-
-// IsValid validation for Organization
-func (e Organization) IsValid() bool {
-	switch e {
-	case
-		OrganizationDwarvesFoundation,
-		OrganizationConsoleLabs:
-		return true
-	}
-	return false
-}
-
-// String returns the string representation
-func (e Organization) String() string {
-	return string(e)
-}
-
 // Employee define the model for table employees
 type Employee struct {
 	BaseModel
@@ -114,7 +89,6 @@ type Employee struct {
 	LeftDate      *time.Time    `gorm:"default:null"`
 	SeniorityID   UUID          `gorm:"default:null"`
 	LineManagerID UUID          `gorm:"default:null"`
-	Organization  Organization  `gorm:"default:null"`
 
 	// social services
 	BasecampID             string `gorm:"default:null"`
@@ -141,16 +115,18 @@ type Employee struct {
 	LocalBranchName        string `gorm:"default:null"`
 	LocalBankRecipientName string `gorm:"default:null"`
 
-	Seniority         *Seniority
-	LineManager       *Employee
-	ProjectMembers    []ProjectMember
-	Roles             []Role     `gorm:"many2many:employee_roles;"`
-	Positions         []Position `gorm:"many2many:employee_positions;"`
-	EmployeeRoles     []EmployeeRole
-	EmployeePositions []EmployeePosition
-	EmployeeStacks    []EmployeeStack
-	EmployeeChapters  []EmployeeChapter
-	Mentees           []*EmployeeMentee `gorm:"foreignKey:MentorID"`
+	Seniority             *Seniority
+	LineManager           *Employee
+	ProjectMembers        []ProjectMember
+	Organizations         []Organization `gorm:"many2many:employee_organizations;"`
+	Roles                 []Role         `gorm:"many2many:employee_roles;"`
+	Positions             []Position     `gorm:"many2many:employee_positions;"`
+	EmployeeRoles         []EmployeeRole
+	EmployeePositions     []EmployeePosition
+	EmployeeOrganizations []EmployeeOrganization
+	EmployeeStacks        []EmployeeStack
+	EmployeeChapters      []EmployeeChapter
+	Mentees               []*EmployeeMentee `gorm:"foreignKey:MentorID"`
 }
 
 // ToEmployeeMap create map from employees

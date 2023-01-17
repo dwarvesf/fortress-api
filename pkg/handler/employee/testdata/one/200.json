@@ -1,194 +1,194 @@
 {
-    "data": {
-        "id": "2655832e-f009-4b73-a535-64c3a22e558f",
-        "createdAt": "2022-11-02T09:52:34.586566Z",
-        "updatedAt": "2022-11-02T09:52:34.586566Z",
-        "fullName": "Phạm Đức Thành",
-        "displayName": "Thanh Pham",
-        "teamEmail": "thanh@d.foundation",
-        "personalEmail": "thanhpham123@gmail.com",
-        "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
-        "phoneNumber": "0123456788",
-        "address": "Tan Binh District, Ho Chi Minh, Vietnam",
-        "placeOfResidence": "",
-        "country": "",
-        "city": "",
-        "mbti": "ISFJ-A",
-        "gender": "Male",
-        "horoscope": "Aquaman",
-        "birthday": "1990-01-02T00:00:00Z",
-        "githubID": "thanhpham",
-        "notionID": "39523061",
-        "notionName": "notionName",
-        "discordID": "646649040771219476",
-        "discordName": "discordName",
-        "username": "thanh",
-        "linkedInName": "",
-        "status": "contractor",
-        "joinedDate": "2018-09-01T00:00:00Z",
-        "leftDate": null,
-        "organization": "",
+  "data": {
+    "id": "2655832e-f009-4b73-a535-64c3a22e558f",
+    "createdAt": "2022-11-02T09:52:34.586566Z",
+    "updatedAt": "2022-11-02T09:52:34.586566Z",
+    "fullName": "Phạm Đức Thành",
+    "displayName": "Thanh Pham",
+    "teamEmail": "thanh@d.foundation",
+    "personalEmail": "thanhpham123@gmail.com",
+    "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
+    "phoneNumber": "0123456788",
+    "address": "Tan Binh District, Ho Chi Minh, Vietnam",
+    "placeOfResidence": "",
+    "country": "",
+    "city": "",
+    "mbti": "ISFJ-A",
+    "gender": "Male",
+    "horoscope": "Aquaman",
+    "birthday": "1990-01-02T00:00:00Z",
+    "githubID": "thanhpham",
+    "notionID": "39523061",
+    "notionName": "notionName",
+    "discordID": "646649040771219476",
+    "discordName": "discordName",
+    "username": "thanh",
+    "linkedInName": "",
+    "status": "contractor",
+    "joinedDate": "2018-09-01T00:00:00Z",
+    "leftDate": null,
+    "organizations": [],
+    "seniority": {
+      "id": "01fb6322-d727-47e3-a242-5039ea4732fd",
+      "createdAt": "2022-11-07T09:50:25.714604Z",
+      "updatedAt": "2022-11-07T09:50:25.714604Z",
+      "name": "Staff",
+      "code": "staff",
+      "level": 5
+    },
+    "lineManager": null,
+    "positions": [
+      {
+        "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
+        "code": "frontend",
+        "name": "Frontend"
+      },
+      {
+        "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
+        "code": "backend",
+        "name": "Backend"
+      },
+      {
+        "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
+        "code": "devops",
+        "name": "Devops"
+      },
+      {
+        "id": "01fb6322-d727-47e3-a242-5039ea4732fc",
+        "code": "blockchain",
+        "name": "Blockchain"
+      }
+    ],
+    "stacks": [
+      {
+        "id": "0ecf47c8-cca4-4c30-94bb-054b1124c44f",
+        "name": "Golang",
+        "code": "golang",
+        "avatar": ""
+      },
+      {
+        "id": "b403ef95-4269-4830-bbb6-8e56e5ec0af4",
+        "name": "Google Cloud",
+        "code": "gcloud",
+        "avatar": ""
+      }
+    ],
+    "roles": [
+      {
+        "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
+        "code": "admin",
+        "name": "Admin"
+      }
+    ],
+    "projects": [
+      {
+        "id": "8dc3be2e-19a4-4942-8a79-56db391a0b15",
+        "name": "Fortress",
+        "deploymentType": "official",
+        "status": "active",
+        "avatar": "",
+        "positions": [
+          {
+            "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
+            "code": "frontend",
+            "name": "Frontend"
+          }
+        ],
+        "code": "",
+        "startDate": "2022-11-01T00:00:00Z",
+        "endDate": null
+      }
+    ],
+    "chapters": [],
+    "mentees": [
+      {
+        "id": "d389d35e-c548-42cf-9f29-2a599969a8f2",
+        "fullName": "Nguyễn Trần Minh Thảo",
+        "displayName": "Thao Nguyen",
+        "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5348640939694049226.png",
+        "username": "thaontm",
         "seniority": {
-            "id": "01fb6322-d727-47e3-a242-5039ea4732fd",
+          "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
+          "createdAt": "2022-11-07T09:50:25.714604Z",
+          "updatedAt": "2022-11-07T09:50:25.714604Z",
+          "name": "Mid",
+          "code": "mid",
+          "level": 3
+        },
+        "positions": [
+          {
+            "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
             "createdAt": "2022-11-07T09:50:25.714604Z",
             "updatedAt": "2022-11-07T09:50:25.714604Z",
-            "name": "Staff",
-            "code": "staff",
-            "level": 5
-        },
-        "lineManager": null,
-        "positions": [
-            {
-                "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
-                "code": "frontend",
-                "name": "Frontend"
-            },
-            {
-                "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
-                "code": "backend",
-                "name": "Backend"
-            },
-            {
-                "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
-                "code": "devops",
-                "name": "Devops"
-            },
-            {
-                "id": "01fb6322-d727-47e3-a242-5039ea4732fc",
-                "code": "blockchain",
-                "name": "Blockchain"
-            }
-        ],
-        "stacks": [
-            {
-                "id": "0ecf47c8-cca4-4c30-94bb-054b1124c44f",
-                "name": "Golang",
-                "code": "golang",
-                "avatar": ""
-            },
-            {
-                "id": "b403ef95-4269-4830-bbb6-8e56e5ec0af4",
-                "name": "Google Cloud",
-                "code": "gcloud",
-                "avatar": ""
-            }
-        ],
-        "roles": [
-            {
-                "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
-                "code": "admin",
-                "name": "Admin"
-            }
-        ],
-        "projects": [
-            {
-                "id": "8dc3be2e-19a4-4942-8a79-56db391a0b15",
-                "name": "Fortress",
-                "deploymentType": "official",
-                "status": "active",
-                "avatar": "",
-                "positions": [
-                    {
-                        "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
-                        "code": "frontend",
-                        "name": "Frontend"
-                    }
-                ],
-                "code": "",
-                "startDate": "2022-11-01T00:00:00Z",
-                "endDate": null
-            }
-        ],
-        "chapters": [],
-        "mentees": [
-            {
-                "id": "d389d35e-c548-42cf-9f29-2a599969a8f2",
-                "fullName": "Nguyễn Trần Minh Thảo",
-                "displayName": "Thao Nguyen",
-                "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5348640939694049226.png",
-                "username": "thaontm",
-                "seniority": {
-                    "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
-                    "createdAt": "2022-11-07T09:50:25.714604Z",
-                    "updatedAt": "2022-11-07T09:50:25.714604Z",
-                    "name": "Mid",
-                    "code": "mid",
-                    "level": 3
-                },
-                "positions": [
-                    {
-                        "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
-                        "createdAt": "2022-11-07T09:50:25.714604Z",
-                        "updatedAt": "2022-11-07T09:50:25.714604Z",
-                        "name": "Devops",
-                        "code": "devops"
-                    }
-                ]
-            },
-            {
-                "id": "a1f25e3e-cf40-4d97-a4d5-c27ee566b8c5",
-                "fullName": "Phan Duy Cường",
-                "displayName": "Cuong Phan",
-                "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/8465254073957996724.png",
-                "username": "cody",
-                "seniority": {
-                    "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
-                    "createdAt": "2022-11-07T09:50:25.714604Z",
-                    "updatedAt": "2022-11-07T09:50:25.714604Z",
-                    "name": "Mid",
-                    "code": "mid",
-                    "level": 3
-                },
-                "positions": [
-                    {
-                        "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
-                        "createdAt": "2022-11-07T09:50:25.714604Z",
-                        "updatedAt": "2022-11-07T09:50:25.714604Z",
-                        "name": "Devops",
-                        "code": "devops"
-                    }
-                ]
-            },
-            {
-                "id": "498d5805-dd64-4643-902d-95067d6e5ab5",
-                "fullName": "Võ Hải Biên",
-                "displayName": "Bien Vo",
-                "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/4114345912835654270.png",
-                "username": "bean",
-                "seniority": {
-                    "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
-                    "createdAt": "2022-11-07T09:50:25.714604Z",
-                    "updatedAt": "2022-11-07T09:50:25.714604Z",
-                    "name": "Mid",
-                    "code": "mid",
-                    "level": 3
-                },
-                "positions": [
-                    {
-                        "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
-                        "createdAt": "2022-11-07T09:50:25.714604Z",
-                        "updatedAt": "2022-11-07T09:50:25.714604Z",
-                        "name": "Devops",
-                        "code": "devops"
-                    }
-                ]
-            },
-            {
-                "id": "f6ce0d0f-5794-463b-ad0b-8240ab9c49be",
-                "fullName": "Nguyễn Hoàng Anh",
-                "displayName": "Anh Nguyen",
-                "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/3274097965772922906.png",
-                "username": "anhnh",
-                "seniority": {
-                    "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
-                    "createdAt": "2022-11-07T09:50:25.714604Z",
-                    "updatedAt": "2022-11-07T09:50:25.714604Z",
-                    "name": "Junior",
-                    "code": "junior",
-                    "level": 2
-                },
-                "positions": []
-            }
+            "name": "Devops",
+            "code": "devops"
+          }
         ]
-    }
+      },
+      {
+        "id": "a1f25e3e-cf40-4d97-a4d5-c27ee566b8c5",
+        "fullName": "Phan Duy Cường",
+        "displayName": "Cuong Phan",
+        "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/8465254073957996724.png",
+        "username": "cody",
+        "seniority": {
+          "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
+          "createdAt": "2022-11-07T09:50:25.714604Z",
+          "updatedAt": "2022-11-07T09:50:25.714604Z",
+          "name": "Mid",
+          "code": "mid",
+          "level": 3
+        },
+        "positions": [
+          {
+            "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
+            "createdAt": "2022-11-07T09:50:25.714604Z",
+            "updatedAt": "2022-11-07T09:50:25.714604Z",
+            "name": "Devops",
+            "code": "devops"
+          }
+        ]
+      },
+      {
+        "id": "498d5805-dd64-4643-902d-95067d6e5ab5",
+        "fullName": "Võ Hải Biên",
+        "displayName": "Bien Vo",
+        "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/4114345912835654270.png",
+        "username": "bean",
+        "seniority": {
+          "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
+          "createdAt": "2022-11-07T09:50:25.714604Z",
+          "updatedAt": "2022-11-07T09:50:25.714604Z",
+          "name": "Mid",
+          "code": "mid",
+          "level": 3
+        },
+        "positions": [
+          {
+            "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
+            "createdAt": "2022-11-07T09:50:25.714604Z",
+            "updatedAt": "2022-11-07T09:50:25.714604Z",
+            "name": "Devops",
+            "code": "devops"
+          }
+        ]
+      },
+      {
+        "id": "f6ce0d0f-5794-463b-ad0b-8240ab9c49be",
+        "fullName": "Nguyễn Hoàng Anh",
+        "displayName": "Anh Nguyen",
+        "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/3274097965772922906.png",
+        "username": "anhnh",
+        "seniority": {
+          "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
+          "createdAt": "2022-11-07T09:50:25.714604Z",
+          "updatedAt": "2022-11-07T09:50:25.714604Z",
+          "name": "Junior",
+          "code": "junior",
+          "level": 2
+        },
+        "positions": []
+      }
+    ]
+  }
 }

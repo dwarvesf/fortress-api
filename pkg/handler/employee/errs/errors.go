@@ -14,6 +14,7 @@ var (
 	ErrSeniorityNotfound                      = errors.New("seniority not found")
 	ErrRoleNotfound                           = errors.New("role not found")
 	ErrLineManagerNotFound                    = errors.New("line manager not found")
+	ErrOrganizationNotFound                   = errors.New("organization not found")
 	ErrEmployeeMenteeNotFound                 = errors.New("employee mentee not found")
 	ErrMenteeNotFound                         = errors.New("mentee not found")
 	ErrEmployeeNotFound                       = errors.New("employee not found")
@@ -36,7 +37,7 @@ var (
 	ErrInvalidProjectCode                     = errors.New("invalid project code")
 	ErrInvalidChapterCode                     = errors.New("invalid chapter code")
 	ErrInvalidSeniorityCode                   = errors.New("invalid seniority code")
-	ErrInvalidOrganization                    = errors.New("invalid organization")
+	ErrInvalidOrganizationCode                = errors.New("invalid organization code")
 	ErrInvalidCountryOrCity                   = errors.New("invalid country or city")
 	ErrCouldNotMentorThemselves               = errors.New("employee could not be their own mentor")
 	ErrCouldNotMentorTheirMentor              = errors.New("employee could not be mentor of their mentor")
@@ -59,4 +60,9 @@ func ErrChapterNotFoundWithID(id string) error {
 // ErrStackNotFoundWithID returns bad request custom error
 func ErrStackNotFoundWithID(id string) error {
 	return fmt.Errorf("stack not found: %v", id)
+}
+
+// ErrOrganizationNotFoundWithID returns bad request custom error
+func ErrOrganizationNotFoundWithID(id string) error {
+	return fmt.Errorf("organization not found: %v", id)
 }

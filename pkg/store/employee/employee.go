@@ -34,6 +34,8 @@ func (s *store) One(db *gorm.DB, id string, preload bool) (*model.Employee, erro
 			Preload("EmployeeStacks.Stack", "deleted_at IS NULL").
 			Preload("EmployeeChapters", "deleted_at IS NULL").
 			Preload("EmployeeChapters.Chapter", "deleted_at IS NULL").
+			Preload("EmployeeOrganizations", "deleted_at IS NULL").
+			Preload("EmployeeOrganizations.Organization", "deleted_at IS NULL").
 			Preload("Seniority").
 			Preload("LineManager").
 			Preload("Mentees", "deleted_at IS NULL").
@@ -65,6 +67,8 @@ func (s *store) OneByUsername(db *gorm.DB, username string, preload bool) (*mode
 			Preload("EmployeeChapters.Chapter", "deleted_at IS NULL").
 			Preload("EmployeeRoles", "deleted_at IS NULL").
 			Preload("EmployeeRoles.Role", "deleted_at IS NULL").
+			Preload("EmployeeOrganizations", "deleted_at IS NULL").
+			Preload("EmployeeOrganizations.Organization", "deleted_at IS NULL").
 			Preload("Seniority").
 			Preload("LineManager").
 			Preload("Mentees", "deleted_at IS NULL").
@@ -115,6 +119,8 @@ func (s *store) All(db *gorm.DB, filter EmployeeFilter, pagination model.Paginat
 			Preload("Seniority", "deleted_at IS NULL").
 			Preload("ProjectMembers.Project", "deleted_at IS NULL").
 			Preload("ProjectMembers.Project.Heads", "deleted_at IS NULL").
+			Preload("EmployeeOrganizations", "deleted_at IS NULL").
+			Preload("EmployeeOrganizations.Organization", "deleted_at IS NULL").
 			Preload("EmployeePositions", "deleted_at IS NULL").
 			Preload("EmployeePositions.Position", "deleted_at IS NULL").
 			Preload("EmployeeRoles", "deleted_at IS NULL").

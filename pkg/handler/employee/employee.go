@@ -342,31 +342,33 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 		"request": body,
 	})
 
+	tx, done := h.repo.NewTransaction()
+
 	// check line manager existence
 	if !body.LineManagerID.IsZero() {
-		exist, err := h.store.Employee.IsExist(h.repo.DB(), body.LineManagerID.String())
+		exist, err := h.store.Employee.IsExist(tx.DB(), body.LineManagerID.String())
 		if err != nil {
 			l.Error(err, "error when finding line manager")
-			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done((err)), body, ""))
 			return
 		}
 
 		if !exist {
 			l.Error(errs.ErrLineManagerNotFound, "error line manager not found")
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrLineManagerNotFound, body, ""))
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, done(errs.ErrLineManagerNotFound), body, ""))
 			return
 		}
 	}
 
-	emp, err := h.store.Employee.One(h.repo.DB(), employeeID, true)
+	emp, err := h.store.Employee.One(tx.DB(), employeeID, true)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Info("employee not found")
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrEmployeeNotFound, nil, ""))
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, done(errs.ErrEmployeeNotFound), nil, ""))
 			return
 		}
 		l.Error(err, "failed to get employee")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), nil, ""))
 		return
 	}
 
@@ -416,13 +418,9 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 		emp.DisplayName = body.DisplayName
 	}
 
-	if body.Organization != "" && model.Organization(body.Organization).IsValid() {
-		emp.Organization = model.Organization(body.Organization)
-	}
-
 	emp.LineManagerID = body.LineManagerID
 
-	_, err = h.store.Employee.UpdateSelectedFieldsByID(h.repo.DB(), employeeID, *emp,
+	_, err = h.store.Employee.UpdateSelectedFieldsByID(tx.DB(), employeeID, *emp,
 		"full_name",
 		"team_email",
 		"phone_number",
@@ -435,15 +433,54 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 		"notion_email",
 		"linkedin_name",
 		"display_name",
-		"organization",
 	)
 	if err != nil {
 		l.Error(err, "failed to update employee")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
 		return
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToUpdateGeneralInfoEmployeeData(emp), nil, nil, nil, ""))
+	if len(body.OrganizationIDs) > 0 {
+		// Check organizations existence
+		organizations, err := h.store.Organization.All(tx.DB())
+		if err != nil {
+			l.Error(err, "failed to get all organizations")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
+			return
+		}
+
+		orgMaps := model.ToOrganizationMap(organizations)
+		for _, sID := range body.OrganizationIDs {
+			_, ok := orgMaps[sID]
+			if !ok {
+				l.Error(errs.ErrOrganizationNotFoundWithID(sID.String()), "organization not found")
+				c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, done(errs.ErrOrganizationNotFoundWithID(sID.String())), body, ""))
+				return
+			}
+		}
+
+		// Delete all exist employee organizations
+		if err := h.store.EmployeeOrganization.DeleteByEmployeeID(tx.DB(), employeeID); err != nil {
+			l.Error(err, "failed to delete employee organization")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
+			return
+		}
+
+		// Create new employee position
+		for _, orgID := range body.OrganizationIDs {
+			_, err := h.store.EmployeeOrganization.Create(tx.DB(), &model.EmployeeOrganization{
+				EmployeeID:     model.MustGetUUIDFromString(employeeID),
+				OrganizationID: orgID,
+			})
+			if err != nil {
+				l.Error(err, "failed to create employee organization")
+				c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
+				return
+			}
+		}
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToUpdateGeneralInfoEmployeeData(emp), nil, done(nil), nil, ""))
 }
 
 // Create godoc

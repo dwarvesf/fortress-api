@@ -16,10 +16,12 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/store/employeeeventreviewer"
 	"github.com/dwarvesf/fortress-api/pkg/store/employeeeventtopic"
 	"github.com/dwarvesf/fortress-api/pkg/store/employeementee"
+	"github.com/dwarvesf/fortress-api/pkg/store/employeeorganization"
 	"github.com/dwarvesf/fortress-api/pkg/store/employeeposition"
 	"github.com/dwarvesf/fortress-api/pkg/store/employeerole"
 	"github.com/dwarvesf/fortress-api/pkg/store/employeestack"
 	"github.com/dwarvesf/fortress-api/pkg/store/feedbackevent"
+	"github.com/dwarvesf/fortress-api/pkg/store/organization"
 	"github.com/dwarvesf/fortress-api/pkg/store/permission"
 	"github.com/dwarvesf/fortress-api/pkg/store/position"
 	"github.com/dwarvesf/fortress-api/pkg/store/project"
@@ -76,6 +78,8 @@ type Store struct {
 	ActionItem            actionitem.IStore
 	AuditItem             audititem.IStore
 	AuditParticipant      auditparticipant.IStore
+	Organization          organization.IStore
+	EmployeeOrganization  employeeorganization.IStore
 }
 
 func New() *Store {
@@ -116,5 +120,7 @@ func New() *Store {
 		ActionItem:            actionitem.New(),
 		AuditItem:             audititem.New(),
 		AuditParticipant:      auditparticipant.New(),
+		Organization:          organization.New(),
+		EmployeeOrganization:  employeeorganization.New(),
 	}
 }

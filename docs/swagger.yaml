@@ -1,13 +1,5 @@
 basePath: /api/v1
 definitions:
-  gorm.DeletedAt:
-    properties:
-      time:
-        type: string
-      valid:
-        description: Valid is true if Time is not NULL
-        type: boolean
-    type: object
   model.AccountingItem:
     properties:
       amount:
@@ -37,7 +29,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       id:
         type: string
       lead_id:
@@ -58,7 +50,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       id:
         type: string
       name:
@@ -122,7 +114,7 @@ definitions:
       dateOfBirth:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       discordID:
         type: string
       discordName:
@@ -132,6 +124,10 @@ definitions:
       employeeChapters:
         items:
           $ref: '#/definitions/model.EmployeeChapter'
+        type: array
+      employeeOrganizations:
+        items:
+          $ref: '#/definitions/model.EmployeeOrganization'
         type: array
       employeePositions:
         items:
@@ -194,8 +190,10 @@ definitions:
         type: string
       notionName:
         type: string
-      organization:
-        type: string
+      organizations:
+        items:
+          $ref: '#/definitions/model.Organization'
+        type: array
       passportPhotoBack:
         type: string
       passportPhotoFront:
@@ -252,7 +250,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       employeeID:
         type: string
       id:
@@ -265,7 +263,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       id:
         type: string
       mentee:
@@ -277,12 +275,29 @@ definitions:
       updatedAt:
         type: string
     type: object
+  model.EmployeeOrganization:
+    properties:
+      createdAt:
+        type: string
+      deletedAt:
+        type: string
+      employeeID:
+        type: string
+      id:
+        type: string
+      organization:
+        $ref: '#/definitions/model.Organization'
+      organizationID:
+        type: string
+      updatedAt:
+        type: string
+    type: object
   model.EmployeePosition:
     properties:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       employeeID:
         type: string
       id:
@@ -299,7 +314,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       employeeID:
         type: string
       id:
@@ -316,7 +331,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       employeeID:
         type: string
       id:
@@ -369,6 +384,23 @@ definitions:
       stronglyDisagree:
         type: integer
     type: object
+  model.Organization:
+    properties:
+      avatar:
+        type: string
+      code:
+        type: string
+      createdAt:
+        type: string
+      deletedAt:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      updatedAt:
+        type: string
+    type: object
   model.Position:
     properties:
       code:
@@ -376,7 +408,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       id:
         type: string
       name:
@@ -401,7 +433,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       endDate:
         type: string
       function:
@@ -444,7 +476,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       employee:
         $ref: '#/definitions/model.Employee'
       employeeID:
@@ -467,7 +499,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       deploymentType:
         type: string
       discount:
@@ -516,7 +548,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       id:
         type: string
       position:
@@ -544,7 +576,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       deploymentType:
         type: string
       discount:
@@ -579,7 +611,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       id:
         type: string
       position:
@@ -596,7 +628,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       id:
         type: string
       projectID:
@@ -615,7 +647,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       id:
         type: string
       level:
@@ -632,7 +664,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       id:
         type: string
       level:
@@ -651,7 +683,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       id:
         type: string
       name:
@@ -1034,7 +1066,7 @@ definitions:
         type: string
       notionName:
         type: string
-      organization:
+      organizationID:
         type: string
       phone:
         maxLength: 18
@@ -1501,7 +1533,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       deliveryManager:
         $ref: '#/definitions/view.ProjectHead'
       function:
@@ -1563,7 +1595,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       discordID:
         type: string
       discordName:
@@ -1599,8 +1631,10 @@ definitions:
         type: string
       notionName:
         type: string
-      organization:
-        type: string
+      organizations:
+        items:
+          $ref: '#/definitions/model.Organization'
+        type: array
       personalEmail:
         type: string
       phoneNumber:
@@ -1944,6 +1978,13 @@ definitions:
       name:
         type: string
     type: object
+  view.OrganizationsResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/model.Organization'
+        type: array
+    type: object
   view.PeerReviewer:
     properties:
       eventReviewerID:
@@ -2052,7 +2093,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       deliveryManager:
         $ref: '#/definitions/view.ProjectHead'
       endDate:
@@ -2379,7 +2420,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       discordID:
         type: string
       discordName:
@@ -2403,8 +2444,10 @@ definitions:
         type: string
       notionName:
         type: string
-      organization:
-        type: string
+      organizations:
+        items:
+          $ref: '#/definitions/model.Organization'
+        type: array
       phoneNumber:
         type: string
       teamEmail:
@@ -2425,7 +2468,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       gender:
         type: string
       id:
@@ -2453,7 +2496,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       discordID:
         type: string
       discordName:
@@ -2539,7 +2582,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       id:
         type: string
       positions:
@@ -2565,7 +2608,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       endDate:
         type: string
       id:
@@ -3711,6 +3754,29 @@ paths:
           schema:
             $ref: '#/definitions/view.ErrorResponse'
       summary: Get list cities by country
+      tags:
+      - Metadata
+  /metadata/organizations:
+    get:
+      consumes:
+      - application/json
+      description: Get list values for organizations
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.OrganizationsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get list values for organizations
       tags:
       - Metadata
   /metadata/positions:

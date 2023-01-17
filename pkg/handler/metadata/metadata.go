@@ -136,6 +136,35 @@ func (h *handler) Chapters(c *gin.Context) {
 	c.JSON(http.StatusOK, view.CreateResponse[any](chapters, nil, nil, nil, ""))
 }
 
+// Organizations godoc
+// @Summary Get list values for organizations
+// @Description Get list values for organizations
+// @Tags Metadata
+// @Accept  json
+// @Produce  json
+// @Success 200 {object} view.OrganizationsResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /metadata/organizations [get]
+func (h *handler) Organizations(c *gin.Context) {
+	// 1 prepare the logger
+	l := h.logger.Fields(logger.Fields{
+		"handler": "metadata",
+		"method":  "Organizations",
+	})
+
+	// 2 query organizations from db
+	organizations, err := h.store.Organization.All(h.repo.DB())
+	if err != nil {
+		l.Error(err, "error query organization from db")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	// 3 return array of organizations
+	c.JSON(http.StatusOK, view.CreateResponse[any](organizations, nil, nil, nil, ""))
+}
+
 // AccountRoles godoc
 // @Summary Get list values for account roles
 // @Description Get list values for account roles

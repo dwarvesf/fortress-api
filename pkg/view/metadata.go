@@ -36,6 +36,10 @@ type CitiesResponse struct {
 	Data []string `json:"data"`
 }
 
+type OrganizationsResponse struct {
+	Data []model.Organization `json:"data"`
+}
+
 // Question model question for get list question api
 type Question struct {
 	ID          string `json:"id"`
