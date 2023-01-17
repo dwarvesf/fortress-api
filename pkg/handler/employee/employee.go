@@ -58,7 +58,7 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 // @Router /employees/search [post]
 func (h *handler) List(c *gin.Context) {
 	// 0. Get current logged in user data
-	userInfo, err := utils.GetLoggedInUserInfo(c, h.store, h.repo.DB())
+	userInfo, err := utils.GetLoggedInUserInfo(c, h.store, h.repo.DB(), h.config)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, userInfo.UserID, ""))
 		return
@@ -131,7 +131,7 @@ func (h *handler) List(c *gin.Context) {
 }
 
 func (h *handler) getWorkingStatusInput(c *gin.Context, input []string) ([]string, error) {
-	userID, err := utils.GetUserIDFromContext(c)
+	userID, err := utils.GetUserIDFromContext(c, h.config)
 	if err != nil {
 		h.logger.Error(err, "failed to get userID from context")
 		return nil, err
@@ -197,7 +197,7 @@ func (h *handler) getWorkingStatusInput(c *gin.Context, input []string) ([]strin
 // @Router /employees/{id} [get]
 func (h *handler) One(c *gin.Context) {
 	// 0. Get current logged in user data
-	userInfo, err := utils.GetLoggedInUserInfo(c, h.store, h.repo.DB())
+	userInfo, err := utils.GetLoggedInUserInfo(c, h.store, h.repo.DB(), h.config)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, userInfo.UserID, ""))
 		return
@@ -460,7 +460,7 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 // @Failure 500 {object} view.ErrorResponse
 // @Router /employees [post]
 func (h *handler) Create(c *gin.Context) {
-	userID, err := utils.GetUserIDFromContext(c)
+	userID, err := utils.GetUserIDFromContext(c, h.config)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
@@ -1107,7 +1107,7 @@ func (h *handler) UploadContent(c *gin.Context) {
 // @Router /employees/{id}/upload-avatar [post]
 func (h *handler) UploadAvatar(c *gin.Context) {
 	// 1.1 get userID
-	userID, err := utils.GetUserIDFromContext(c)
+	userID, err := utils.GetUserIDFromContext(c, h.config)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
@@ -1446,7 +1446,7 @@ func (h *handler) DeleteMentee(c *gin.Context) {
 // @Failure 500 {object} view.ErrorResponse
 // @Router /employees/{id}/roles [put]
 func (h *handler) UpdateRole(c *gin.Context) {
-	userID, err := utils.GetUserIDFromContext(c)
+	userID, err := utils.GetUserIDFromContext(c, h.config)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return

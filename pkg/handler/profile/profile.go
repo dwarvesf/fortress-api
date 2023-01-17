@@ -53,7 +53,7 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 // @Failure 500 {object} view.ErrorResponse
 // @Router /profile [get]
 func (h *handler) GetProfile(c *gin.Context) {
-	userID, err := utils.GetUserIDFromContext(c)
+	userID, err := utils.GetUserIDFromContext(c, h.config)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
@@ -95,7 +95,7 @@ func (h *handler) GetProfile(c *gin.Context) {
 // @Failure 500 {object} view.ErrorResponse
 // @Router /profile [put]
 func (h *handler) UpdateInfo(c *gin.Context) {
-	employeeID, err := utils.GetUserIDFromContext(c)
+	employeeID, err := utils.GetUserIDFromContext(c, h.config)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
@@ -205,7 +205,7 @@ func (h *handler) validateCountryAndCity(db *gorm.DB, countryName string, city s
 // @Failure 500 {object} view.ErrorResponse
 // @Router /profile/upload-avatar [post]
 func (h *handler) UploadAvatar(c *gin.Context) {
-	employeeID, err := utils.GetUserIDFromContext(c)
+	employeeID, err := utils.GetUserIDFromContext(c, h.config)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return

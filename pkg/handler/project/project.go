@@ -61,7 +61,7 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 // @Router /projects [get]
 func (h *handler) List(c *gin.Context) {
 	// 0. Get current logged in user data
-	userInfo, err := utils.GetLoggedInUserInfo(c, h.store, h.repo.DB())
+	userInfo, err := utils.GetLoggedInUserInfo(c, h.store, h.repo.DB(), h.config)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, userInfo.UserID, ""))
 		return
@@ -1240,7 +1240,7 @@ func (h *handler) createSlotsAndAssignMembers(db *gorm.DB, projectID string, req
 // @Router /projects/{id} [get]
 func (h *handler) Details(c *gin.Context) {
 	// 0. Get current logged in user data
-	userInfo, err := utils.GetLoggedInUserInfo(c, h.store, h.repo.DB())
+	userInfo, err := utils.GetLoggedInUserInfo(c, h.store, h.repo.DB(), h.config)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, userInfo.UserID, ""))
 		return
@@ -1614,7 +1614,7 @@ func (h *handler) updateProjectHead(db *gorm.DB, projectID string, employeeID mo
 // @Router /projects/{id}/work-units [get]
 func (h *handler) GetWorkUnits(c *gin.Context) {
 	// 0. Get current logged in user data
-	userInfo, err := utils.GetLoggedInUserInfo(c, h.store, h.repo.DB())
+	userInfo, err := utils.GetLoggedInUserInfo(c, h.store, h.repo.DB(), h.config)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, userInfo.UserID, ""))
 		return
@@ -1690,7 +1690,7 @@ func (h *handler) GetWorkUnits(c *gin.Context) {
 // @Router /projects/{id}/work-units [post]
 func (h *handler) CreateWorkUnit(c *gin.Context) {
 	// 0. Get current logged in user data
-	userInfo, err := utils.GetLoggedInUserInfo(c, h.store, h.repo.DB())
+	userInfo, err := utils.GetLoggedInUserInfo(c, h.store, h.repo.DB(), h.config)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, userInfo.UserID, ""))
 		return
@@ -1844,7 +1844,7 @@ func (h *handler) CreateWorkUnit(c *gin.Context) {
 // @Router /projects/{id}/work-units/{workUnitID} [put]
 func (h *handler) UpdateWorkUnit(c *gin.Context) {
 	// 0. Get current logged in user data
-	userInfo, err := utils.GetLoggedInUserInfo(c, h.store, h.repo.DB())
+	userInfo, err := utils.GetLoggedInUserInfo(c, h.store, h.repo.DB(), h.config)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, userInfo.UserID, ""))
 		return
@@ -2129,7 +2129,7 @@ func (h *handler) createWorkUnit(db *gorm.DB, projectID string, workUnitID strin
 // @Router /projects/{id}/work-units/{workUnitID}/archive [put]
 func (h *handler) ArchiveWorkUnit(c *gin.Context) {
 	// 0. Get current logged in user data
-	userInfo, err := utils.GetLoggedInUserInfo(c, h.store, h.repo.DB())
+	userInfo, err := utils.GetLoggedInUserInfo(c, h.store, h.repo.DB(), h.config)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, userInfo.UserID, ""))
 		return
@@ -2251,7 +2251,7 @@ func (h *handler) ArchiveWorkUnit(c *gin.Context) {
 // @Router /projects/{id}/work-units/{workUnitID}/unarchive [put]
 func (h *handler) UnarchiveWorkUnit(c *gin.Context) {
 	// 0. Get current logged in user data
-	userInfo, err := utils.GetLoggedInUserInfo(c, h.store, h.repo.DB())
+	userInfo, err := utils.GetLoggedInUserInfo(c, h.store, h.repo.DB(), h.config)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, userInfo.UserID, ""))
 		return
