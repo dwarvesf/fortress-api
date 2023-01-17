@@ -1,0 +1,72 @@
+{
+    "data": {
+        "all": [
+            {
+                "snapDate": "16/03",
+                "value": 45,
+                "trend": 0
+            },
+            {
+                "snapDate": "16/04",
+                "value": 12,
+                "trend": -73.34
+            },
+            {
+                "snapDate": "16/01",
+                "value": 57,
+                "trend": 375
+            }
+        ],
+        "high": [
+            {
+                "snapDate": "16/03",
+                "value": 10,
+                "trend": 0
+            },
+            {
+                "snapDate": "16/04",
+                "value": 2,
+                "trend": -80
+            },
+            {
+                "snapDate": "16/01",
+                "value": 12,
+                "trend": 500
+            }
+        ],
+        "medium": [
+            {
+                "snapDate": "16/03",
+                "value": 15,
+                "trend": 0
+            },
+            {
+                "snapDate": "16/04",
+                "value": 4,
+                "trend": -73.34
+            },
+            {
+                "snapDate": "16/01",
+                "value": 19,
+                "trend": 375
+            }
+        ],
+        "low": [
+            {
+                "snapDate": "16/03",
+                "value": 20,
+                "trend": 0
+            },
+            {
+                "snapDate": "16/04",
+                "value": 6,
+                "trend": -70
+            },
+            {
+                "snapDate": "16/01",
+                "value": 26,
+                "trend": 333.33
+            }
+        ]
+    }
+}

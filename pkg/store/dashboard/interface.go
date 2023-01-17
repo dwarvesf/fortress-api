@@ -20,4 +20,6 @@ type IStore interface {
 	GetGroupAudit(db *gorm.DB) ([]*model.GroupAudit, error)
 	GetAverageAuditByProjectID(db *gorm.DB, projectID string) ([]*model.AverageAudit, error)
 	GetGroupAuditByProjectID(db *gorm.DB, projectID string) ([]*model.GroupAudit, error)
+	GetActionItemSquashReportsByProjectID(db *gorm.DB, projectID string) ([]*model.ActionItemSquashReport, error)
+	GetAllActionItemSquashReports(db *gorm.DB) ([]*model.ActionItemSquashReport, error)
 }

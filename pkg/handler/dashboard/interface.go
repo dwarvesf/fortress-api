@@ -10,4 +10,5 @@ type IHandler interface {
 	GetActionItemReports(c *gin.Context)
 	EngineeringHealth(c *gin.Context)
 	Audits(c *gin.Context)
+	GetActionItemSquashReports(c *gin.Context)
 }

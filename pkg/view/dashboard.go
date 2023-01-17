@@ -52,6 +52,23 @@ type ActionItemReportResponse struct {
 	AuditActionItemReports []*AuditActionItemReport `json:"data"`
 }
 
+type ActionItemSquash struct {
+	SnapDate string  `json:"snapDate"`
+	Value    int64   `json:"value"`
+	Trend    float64 `json:"trend"`
+}
+
+type ActionItemSquashReport struct {
+	All    []*ActionItemSquash `json:"all"`
+	High   []*ActionItemSquash `json:"high"`
+	Medium []*ActionItemSquash `json:"medium"`
+	Low    []*ActionItemSquash `json:"low"`
+}
+
+type ActionItemSquashReportResponse struct {
+	Data *ActionItemSquashReport `json:"data"`
+}
+
 func ToWorkSurveyData(project *model.Project, workSurveys []*model.WorkSurvey) *WorkSurveysData {
 	rs := &WorkSurveysData{}
 
@@ -374,4 +391,50 @@ func calculateAuditTrend(previous *Audit, current *Audit) float64 {
 
 	// return the value fixed 2 decimal places
 	return float64(math.Trunc((current.Value-previous.Value)/previous.Value*100*100)) / 100
+}
+
+func ToActionItemSquashReportData(actionItemReports []*model.ActionItemSquashReport) *ActionItemSquashReport {
+	rs := &ActionItemSquashReport{}
+	// reverse the order to correct timeline
+	for i, j := 0, len(actionItemReports)-1; i < j; i, j = i+1, j-1 {
+		actionItemReports[i], actionItemReports[j] = actionItemReports[j], actionItemReports[i]
+	}
+
+	for _, item := range actionItemReports {
+		date := item.SnapDate.Format("02/01")
+		rs.All = append(rs.All, &ActionItemSquash{
+			SnapDate: date,
+			Value:    item.All,
+		})
+		rs.High = append(rs.High, &ActionItemSquash{
+			SnapDate: date,
+			Value:    item.High,
+		})
+		rs.Medium = append(rs.Medium, &ActionItemSquash{
+			SnapDate: date,
+			Value:    item.Medium,
+		})
+		rs.Low = append(rs.Low, &ActionItemSquash{
+			SnapDate: date,
+			Value:    item.Low,
+		})
+	}
+
+	if actionItemReports != nil && len(actionItemReports) > 1 {
+		calculateTrendForActionItemSquash(rs.All)
+		calculateTrendForActionItemSquash(rs.High)
+		calculateTrendForActionItemSquash(rs.Medium)
+		calculateTrendForActionItemSquash(rs.Low)
+	}
+
+	return rs
+}
+func calculateTrendForActionItemSquash(items []*ActionItemSquash) {
+	for i := 1; i < len(items); i++ {
+		if items[i-1].Value == 0 || items[i].Value == 0 {
+			items[i].Trend = 0
+		}
+
+		items[i].Trend = math.Floor(float64(items[i].Value-items[i-1].Value)/float64(items[i-1].Value)*100*100) / 100
+	}
 }
