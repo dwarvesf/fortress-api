@@ -18,11 +18,12 @@ func New(secret string) NotionService {
 	}
 }
 
-func (n *notionService) GetDatabase(databaseID string, filter *nt.DatabaseQueryFilter) (*nt.DatabaseQueryResponse, error) {
+func (n *notionService) GetDatabase(databaseID string, filter *nt.DatabaseQueryFilter, sorts []nt.DatabaseQuerySort) (*nt.DatabaseQueryResponse, error) {
 	ctx := context.Background()
 
 	res, err := n.notionClient.QueryDatabase(ctx, databaseID, &nt.DatabaseQuery{
 		Filter: filter,
+		Sorts:  sorts,
 	})
 	if err != nil {
 		return nil, err

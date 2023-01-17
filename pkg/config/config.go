@@ -67,6 +67,7 @@ type Notion struct {
 	Secret        string
 	EarnDBID      string
 	TechRadarDBID string
+	AudienceDBID  string
 }
 
 type ENV interface {
@@ -119,6 +120,7 @@ func Generate(v ENV) *Config {
 			Secret:        v.GetString("NOTION_SECRET"),
 			EarnDBID:      v.GetString("NOTION_EARN_DB_ID"),
 			TechRadarDBID: v.GetString("NOTION_TECH_RADAR_DB_ID"),
+			AudienceDBID:  v.GetString("NOTION_AUDIENCE_DB_ID"),
 		},
 	}
 }
