@@ -19,4 +19,5 @@ type IHandler interface {
 	UpdatePosition(c *gin.Context)
 	CreatePosition(c *gin.Context)
 	DeletePosition(c *gin.Context)
+	Organizations(c *gin.Context)
 }

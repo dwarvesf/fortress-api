@@ -33,7 +33,7 @@
       "status": "contractor",
       "joinedDate": "2018-09-01T00:00:00Z",
       "leftDate": null,
-      "organization": "",
+      "organizations": [],
       "seniority": null,
       "lineManager": null,
       "positions": [],

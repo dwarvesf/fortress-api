@@ -3,6 +3,8 @@
 \ir permissions.sql
 \ir role_permissions.sql
 \ir employees.sql
+-- \ir organizations.sql
+\ir employee_organizations.sql
 \ir employee_roles.sql
 \ir chapters.sql
 \ir projects.sql

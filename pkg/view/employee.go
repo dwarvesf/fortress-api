@@ -40,16 +40,16 @@ type EmployeeData struct {
 	WorkingStatus model.WorkingStatus `json:"status"`
 	JoinedDate    *time.Time          `json:"joinedDate"`
 	LeftDate      *time.Time          `json:"leftDate"`
-	Organization  string              `json:"organization"`
 
-	Seniority   *model.Seniority      `json:"seniority"`
-	LineManager *BasicEmployeeInfo    `json:"lineManager"`
-	Positions   []Position            `json:"positions"`
-	Stacks      []Stack               `json:"stacks"`
-	Roles       []Role                `json:"roles"`
-	Projects    []EmployeeProjectData `json:"projects"`
-	Chapters    []Chapter             `json:"chapters"`
-	Mentees     []*MenteeInfo         `json:"mentees"`
+	Seniority     *model.Seniority      `json:"seniority"`
+	LineManager   *BasicEmployeeInfo    `json:"lineManager"`
+	Organizations []Organization        `json:"organizations"`
+	Positions     []Position            `json:"positions"`
+	Stacks        []Stack               `json:"stacks"`
+	Roles         []Role                `json:"roles"`
+	Projects      []EmployeeProjectData `json:"projects"`
+	Chapters      []Chapter             `json:"chapters"`
+	Mentees       []*MenteeInfo         `json:"mentees"`
 }
 
 type MenteeInfo struct {
@@ -128,19 +128,19 @@ type UpdateGeneralInfoEmployeeData struct {
 	model.BaseModel
 
 	// basic info
-	FullName     string             `json:"fullName"`
-	TeamEmail    string             `json:"teamEmail"`
-	PhoneNumber  string             `json:"phoneNumber"`
-	GithubID     string             `json:"githubID"`
-	NotionID     string             `json:"notionID"`
-	NotionName   string             `json:"notionName"`
-	NotionEmail  string             `json:"notionEmail"`
-	LinkedinName string             `json:"linkedInName"`
-	DiscordID    string             `json:"discordID"`
-	DiscordName  string             `json:"discordName"`
-	DisplayName  string             `json:"displayName"`
-	Organization string             `json:"organization"`
-	LineManager  *BasicEmployeeInfo `json:"lineManager"`
+	FullName      string             `json:"fullName"`
+	TeamEmail     string             `json:"teamEmail"`
+	PhoneNumber   string             `json:"phoneNumber"`
+	GithubID      string             `json:"githubID"`
+	NotionID      string             `json:"notionID"`
+	NotionName    string             `json:"notionName"`
+	NotionEmail   string             `json:"notionEmail"`
+	LinkedinName  string             `json:"linkedInName"`
+	DiscordID     string             `json:"discordID"`
+	DiscordName   string             `json:"discordName"`
+	DisplayName   string             `json:"displayName"`
+	Organizations []Organization     `json:"organizations"`
+	LineManager   *BasicEmployeeInfo `json:"lineManager"`
 }
 
 type UpdateSkillEmployeeData struct {
@@ -249,18 +249,18 @@ func ToUpdateGeneralInfoEmployeeData(employee *model.Employee) *UpdateGeneralInf
 			CreatedAt: employee.CreatedAt,
 			UpdatedAt: employee.UpdatedAt,
 		},
-		FullName:     employee.FullName,
-		TeamEmail:    employee.TeamEmail,
-		PhoneNumber:  employee.PhoneNumber,
-		GithubID:     employee.GithubID,
-		NotionID:     employee.NotionID,
-		NotionName:   employee.NotionName,
-		NotionEmail:  employee.NotionEmail,
-		DiscordID:    employee.DiscordID,
-		DiscordName:  employee.DiscordName,
-		LinkedinName: employee.LinkedInName,
-		DisplayName:  employee.DisplayName,
-		Organization: employee.Organization.String(),
+		FullName:      employee.FullName,
+		TeamEmail:     employee.TeamEmail,
+		PhoneNumber:   employee.PhoneNumber,
+		GithubID:      employee.GithubID,
+		NotionID:      employee.NotionID,
+		NotionName:    employee.NotionName,
+		NotionEmail:   employee.NotionEmail,
+		DiscordID:     employee.DiscordID,
+		DiscordName:   employee.DiscordName,
+		LinkedinName:  employee.LinkedInName,
+		DisplayName:   employee.DisplayName,
+		Organizations: ToOrganizations(employee.EmployeeOrganizations),
 	}
 
 	if employee.LineManager != nil {
@@ -320,6 +320,7 @@ func ToOneEmployeeData(c *gin.Context, employee *model.Employee, userInfo *model
 		Seniority:     employee.Seniority,
 		Projects:      employeeProjects,
 		LineManager:   lineManager,
+		Organizations: ToOrganizations(employee.EmployeeOrganizations),
 
 		Roles:     ToRoles(employee.EmployeeRoles),
 		Positions: ToEmployeePositions(employee.EmployeePositions),
@@ -405,7 +406,7 @@ func ToEmployeeData(employee *model.Employee) *EmployeeData {
 		Seniority:        employee.Seniority,
 		JoinedDate:       employee.JoinedDate,
 		LeftDate:         employee.LeftDate,
-		Organization:     employee.Organization.String(),
+		Organizations:    ToOrganizations(employee.EmployeeOrganizations),
 		Projects:         employeeProjects,
 		LineManager:      lineManager,
 		Country:          employee.Country,
