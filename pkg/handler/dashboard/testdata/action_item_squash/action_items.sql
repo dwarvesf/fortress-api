@@ -443,3 +443,16 @@ INSERT INTO public.audit_cycles (id, deleted_at, created_at, updated_at, project
 ('a9b63a36-0134-4aa3-9a9a-edb5a1d52647', null, '2022-12-05 16:33:28.085352', '2022-12-05 16:33:28.085352', 'dfa182fc-1d2d-49f6-a877-c01da9ce4207','8dc3be2e-19a4-4942-8a79-56db391a0b17','2022/Q3', 3,3,3),
 ('a9b63a36-0134-4aa3-9a9a-edb5a1d52648', null, '2022-12-05 16:33:28.085352', '2022-12-05 16:33:28.085352', 'dfa182fc-1d2d-49f6-a877-c01da9ce4207','8dc3be2e-19a4-4942-8a79-56db391a0b17','2022/Q4', 6,6,6),
 ('a9b63a36-0134-4aa3-9a9a-edb5a1d52649', null, '2022-12-05 16:33:28.085352', '2022-12-05 16:33:28.085352', 'dfa182fc-1d2d-49f6-a877-c01da9ce4207','8dc3be2e-19a4-4942-8a79-56db391a0b17','2023/Q1', 9,9,9);
+
+
+INSERT INTO public.action_item_snapshots (id, deleted_at, created_at, updated_at, project_id, audit_cycle_id, high, medium, low) VALUES 
+('d6f5c84c-01f9-40c9-9d39-7b62e433a268', null, '2023-01-16 15:53:47.850355', DEFAULT, '8dc3be2e-19a4-4942-8a79-56db391a0b15', 'a9b63a36-0134-4aa3-9a9a-edb5a1d52645', 10, 15, 20),
+('d6f5c84c-01f9-40c9-9d39-7b62e433a269', null, '2023-01-16 15:53:47.850355', DEFAULT, '8dc3be2e-19a4-4942-8a79-56db391a0b15', 'a9b63a36-0134-4aa3-9a9a-edb5a1d52646', 2, 4, 6),
+('d6f5c84c-01f9-40c9-9d39-7b62e433a260', null, '2023-01-16 15:53:47.850355', DEFAULT, 'dfa182fc-1d2d-49f6-a877-c01da9ce4207', 'a9b63a36-0134-4aa3-9a9a-edb5a1d52647', 3, 6, 9),
+('d6f5c84c-01f9-40c9-9d39-7b62e433a261', null, '2023-01-16 15:53:47.850355', DEFAULT, 'dfa182fc-1d2d-49f6-a877-c01da9ce4207', 'a9b63a36-0134-4aa3-9a9a-edb5a1d52648', 5, 10, 20),
+('d6f5c84c-01f9-40c9-9d39-7b62e433a262', null, '2023-02-16 15:53:47.850355', DEFAULT, 'dfa182fc-1d2d-49f6-a877-c01da9ce4207', 'a9b63a36-0134-4aa3-9a9a-edb5a1d52649', 4, 5, 6),
+('d6f5c84c-01f9-40c9-9d39-7b62e433a281', null, '2022-03-16 15:53:47.850355', DEFAULT, '8dc3be2e-19a4-4942-8a79-56db391a0b15', 'a9b63a36-0134-4aa3-9a9a-edb5a1d52645', 10, 15, 20),
+('d6f5c84c-01f9-40c9-9d39-7b62e433a282', null, '2022-04-16 15:53:47.850355', DEFAULT, '8dc3be2e-19a4-4942-8a79-56db391a0b15', 'a9b63a36-0134-4aa3-9a9a-edb5a1d52646', 2, 4, 6),
+('d6f5c84c-01f9-40c9-9d39-7b62e433a283', null, '2022-05-16 15:53:47.850355', DEFAULT, 'dfa182fc-1d2d-49f6-a877-c01da9ce4207', 'a9b63a36-0134-4aa3-9a9a-edb5a1d52647', 3, 6, 9),
+('d6f5c84c-01f9-40c9-9d39-7b62e433a284', null, '2022-06-16 15:53:47.850355', DEFAULT, 'dfa182fc-1d2d-49f6-a877-c01da9ce4207', 'a9b63a36-0134-4aa3-9a9a-edb5a1d52648', 5, 10, 20),
+('d6f5c84c-01f9-40c9-9d39-7b62e433a285', null, '2022-07-16 15:53:47.850355', DEFAULT, 'dfa182fc-1d2d-49f6-a877-c01da9ce4207', 'a9b63a36-0134-4aa3-9a9a-edb5a1d52649', 4, 5, 6);

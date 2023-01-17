@@ -136,6 +136,62 @@ const docTemplate = `{
                 }
             }
         },
+        "/dashboards/projects/action-item-squash": {
+            "get": {
+                "description": "Get Action items squash report for dashboard",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "Get Action items squash report for dashboard",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Project ID",
+                        "name": "projectID",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.ActionItemSquashReportResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/dashboards/projects/action-items": {
             "get": {
                 "description": "Get Action items report for dashboard",
@@ -5157,6 +5213,57 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/view.AuditActionItemReport"
                     }
+                }
+            }
+        },
+        "view.ActionItemSquash": {
+            "type": "object",
+            "properties": {
+                "snapDate": {
+                    "type": "string"
+                },
+                "trend": {
+                    "type": "number"
+                },
+                "value": {
+                    "type": "integer"
+                }
+            }
+        },
+        "view.ActionItemSquashReport": {
+            "type": "object",
+            "properties": {
+                "all": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.ActionItemSquash"
+                    }
+                },
+                "high": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.ActionItemSquash"
+                    }
+                },
+                "low": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.ActionItemSquash"
+                    }
+                },
+                "medium": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.ActionItemSquash"
+                    }
+                }
+            }
+        },
+        "view.ActionItemSquashReportResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/view.ActionItemSquashReport"
                 }
             }
         },

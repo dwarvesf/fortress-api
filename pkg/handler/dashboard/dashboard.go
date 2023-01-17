@@ -354,3 +354,65 @@ func (h *handler) Audits(c *gin.Context) {
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToAuditData(average, groups), nil, nil, nil, ""))
 }
+
+// GetActionItemSquashReports godoc
+// @Summary Get Action items squash report for dashboard
+// @Description Get Action items squash report for dashboard
+// @Tags Dashboard
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "jwt token"
+// @Param projectID   query  string false  "Project ID"
+// @Success 200 {object} view.ActionItemSquashReportResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /dashboards/projects/action-item-squash [get]
+func (h *handler) GetActionItemSquashReports(c *gin.Context) {
+	input := request.ActionItemInput{}
+	if err := c.ShouldBindQuery(&input); err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, input, ""))
+		return
+	}
+
+	if input.ProjectID != "" && !model.IsUUIDFromString(input.ProjectID) {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidProjectID, nil, ""))
+		return
+	}
+
+	l := h.logger.Fields(logger.Fields{
+		"handler": "dashboard",
+		"method":  "GetActionItemSquashReports",
+		"input":   input,
+	})
+
+	var actionItemSquashReports []*model.ActionItemSquashReport
+	var err error
+
+	if input.ProjectID != "" {
+		// Check project existence
+		isExist, err := h.store.Project.IsExist(h.repo.DB(), input.ProjectID)
+		if !isExist {
+			l.Error(err, "project not found")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, input, ""))
+			return
+		}
+
+		// Get action item report by project ID
+		actionItemSquashReports, err = h.store.Dashboard.GetActionItemSquashReportsByProjectID(h.repo.DB(), input.ProjectID)
+		if err != nil {
+			l.Error(err, "failed to get action item squash report by project ID")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+			return
+		}
+	} else {
+		actionItemSquashReports, err = h.store.Dashboard.GetAllActionItemSquashReports(h.repo.DB())
+		if err != nil {
+			l.Error(err, "failed to get action item squash report")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+			return
+		}
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToActionItemSquashReportData(actionItemSquashReports), nil, nil, nil, ""))
+}
