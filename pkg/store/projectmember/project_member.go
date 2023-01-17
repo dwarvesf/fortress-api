@@ -88,11 +88,12 @@ func (s *store) GetActiveByProjectIDs(db *gorm.DB, projectIDs []string) ([]*mode
 
 func (s *store) GetActiveMemberInProject(db *gorm.DB, projectID string, employeeID string) (*model.ProjectMember, error) {
 	var member *model.ProjectMember
-	return member, db.Where("project_id = ? AND employee_id = ? AND status = ?",
-		projectID,
-		employeeID,
-		model.ProjectMemberStatusActive,
-	).Preload("Employee").First(&member).Error
+	return member, db.
+		Where("project_id = ?", projectID).
+		Where("employee_id = ?", employeeID).
+		Where("(left_date IS NULL OR left_date > now())").
+		Preload("Employee").
+		First(&member).Error
 }
 
 func (s *store) GetActiveMembersBySlotID(db *gorm.DB, slotID string) ([]*model.ProjectMember, error) {

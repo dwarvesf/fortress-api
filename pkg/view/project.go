@@ -105,10 +105,6 @@ func ToProjectData(c *gin.Context, project *model.Project, userInfo *model.Curre
 	for _, h := range project.Heads {
 		head := ToProjectHead(h)
 
-		if h.Employee.WorkingStatus == model.WorkingStatusLeft {
-			continue
-		}
-
 		if h.IsLead() {
 			leadMap[h.EmployeeID.String()] = true
 			technicalLeads = append(technicalLeads, *head)
@@ -205,12 +201,12 @@ func ToProjectsData(c *gin.Context, projects []*model.Project, userInfo *model.C
 
 		// If the project is not belong user, check if the user has permission to view the project
 		if utils.HasPermission(c, userInfo.Permissions, model.PermissionProjectsReadFullAccess) ||
-			utils.HasPermission(c, userInfo.Permissions, model.PermissionEmployeesReadProjectsReadActive){
+			utils.HasPermission(c, userInfo.Permissions, model.PermissionEmployeesReadProjectsReadActive) {
 
 			if p.Status == model.ProjectStatusActive {
 				results = append(results, ToProjectData(c, p, userInfo))
 			} else {
-				if  utils.HasPermission(c, userInfo.Permissions, model.PermissionProjectsReadFullAccess) {
+				if utils.HasPermission(c, userInfo.Permissions, model.PermissionProjectsReadFullAccess) {
 					results = append(results, ToProjectData(c, p, userInfo))
 				}
 			}
