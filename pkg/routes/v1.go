@@ -114,6 +114,10 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 	{
 		techradar.GET("", h.TechRadar.List)
 	}
+	audience := v1.Group("/audiences")
+	{
+		audience.GET("", h.Audience.List)
+	}
 
 	dashboard := v1.Group("/dashboards")
 	{
