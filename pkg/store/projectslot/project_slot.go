@@ -19,22 +19,22 @@ func (s *store) Delete(db *gorm.DB, id string) error {
 
 // All get all projects by query and pagination
 func (s *store) All(db *gorm.DB, input GetListProjectSlotInput, pagination model.Pagination) ([]*model.ProjectSlot, int64, error) {
-	query := db.Table("project_slots").Where("project_slots.deleted_at IS NULL")
 	var total int64
 
-	query = query.Where("project_slots.project_id = ?", input.ProjectID).
-		Joins("LEFT JOIN project_members pm ON pm.project_slot_id = project_slots.id AND pm.project_id = ?", input.ProjectID)
+	query := db.Table("project_slots").
+		Where("project_slots.deleted_at IS NULL").
+		Where("project_slots.project_id = ?", input.ProjectID)
 
-	if input.Status == model.ProjectMemberStatusPending.String() {
+	switch input.Status {
+	case model.ProjectMemberStatusPending.String():
 		query = query.Where("project_slots.status = ?", input.Status)
-	}
 
-	if input.Status == model.ProjectMemberStatusActive.String() || input.Status == model.ProjectMemberStatusOnBoarding.String() {
-		query = query.Where("project_slots.status = ? AND pm.status = ? ", input.Status, input.Status)
-	}
-
-	if input.Status == model.ProjectMemberStatusInactive.String() {
-		query = query.Where("pm.status = ? ", input.Status)
+	case model.ProjectMemberStatusActive.String(),
+		model.ProjectMemberStatusOnBoarding.String(),
+		model.ProjectMemberStatusInactive.String():
+		query = query.Joins("LEFT JOIN project_members pm ON pm.project_slot_id = project_slots.id").
+			Where("pm.deleted_at IS NULL").
+			Where("pm.status = ? ", input.Status)
 	}
 
 	query = query.Count(&total)
@@ -42,7 +42,7 @@ func (s *store) All(db *gorm.DB, input GetListProjectSlotInput, pagination model
 	if pagination.Sort != "" {
 		query = query.Order(pagination.Sort)
 	} else {
-		query = query.Order("updated_at DESC")
+		query = query.Order("created_at DESC")
 	}
 
 	limit, offset := pagination.ToLimitOffset()
@@ -50,21 +50,12 @@ func (s *store) All(db *gorm.DB, input GetListProjectSlotInput, pagination model
 		query = query.Limit(limit)
 	}
 
-	if input.Status == "active" {
-		input.Preload = true
-	}
-
-	query = query.Offset(offset).
-		Preload("ProjectMember.Employee", "deleted_at IS NULL")
-
-	if input.Status != "" {
-		query.Preload("ProjectMember", "deleted_at IS NULL AND status = ?", input.Status)
-	} else {
-		query.Preload("ProjectMember", "deleted_at IS NULL")
-	}
+	query = query.Offset(offset)
 
 	if input.Preload {
 		query = query.Preload("Seniority", "deleted_at IS NULL").
+			Preload("ProjectMember", "deleted_at IS NULL AND status = ?", input.Status).
+			Preload("ProjectMember.Employee", "deleted_at IS NULL").
 			Preload("ProjectMember.Seniority", "deleted_at IS NULL").
 			Preload("ProjectMember.ProjectMemberPositions", "deleted_at IS NULL").
 			Preload("ProjectMember.ProjectMemberPositions.Position", "deleted_at IS NULL")
@@ -97,4 +88,43 @@ func (s *store) UpdateSelectedFieldByProjectID(db *gorm.DB, projectID string, up
 		Where("project_id = ?", projectID).
 		Select(updatedField).
 		Updates(updateModel).Error
+}
+
+func (s *store) GetPendingSlots(db *gorm.DB, projectID string, preload bool) ([]*model.ProjectSlot, error) {
+	query := db.Where("project_id = ? AND status = ?", projectID, model.ProjectMemberStatusPending).Order("created_at DESC")
+
+	if preload {
+		query = query.Preload("Seniority", "deleted_at IS NULL").
+			Preload("ProjectSlotPositions", "deleted_at IS NULL").
+			Preload("ProjectSlotPositions.Position", "deleted_at IS NULL")
+	}
+
+	var slots []*model.ProjectSlot
+	return slots, query.Find(&slots).Error
+}
+
+func (s *store) GetAssignedSlots(db *gorm.DB, projectID string, preload bool) ([]*model.ProjectSlot, error) {
+	query := db.Joins("JOIN project_members pm ON pm.project_slot_id = project_slots.id").
+		Joins("LEFT JOIN seniorities s ON pm.seniority_id = s.id").
+		Joins(`LEFT JOIN project_heads ph ON pm.status = ?
+			AND pm.project_id = ph.project_id 
+			AND pm.employee_id = ph.employee_id 
+			AND ph.deleted_at IS NULL
+			AND (ph.left_date IS NULL OR ph.left_date > now())
+			AND ph.position = ?
+		`, model.ProjectMemberStatusActive, model.HeadPositionTechnicalLead).
+		Where("pm.deleted_at IS NULL AND project_slots.deleted_at IS NULL AND project_slots.project_id = ?", projectID).
+		Order("pm.left_date DESC, ph.created_at, s.level DESC").
+		Preload("ProjectMember", "deleted_at IS NULL").
+		Preload("ProjectMember.Employee", "deleted_at IS NULL")
+
+	if preload {
+		query = query.Preload("ProjectMember.Seniority", "deleted_at IS NULL").
+			Preload("ProjectMember.ProjectMemberPositions", "deleted_at IS NULL").
+			Preload("ProjectMember.ProjectMemberPositions.Position", "deleted_at IS NULL")
+
+	}
+
+	var slots []*model.ProjectSlot
+	return slots, query.Find(&slots).Error
 }

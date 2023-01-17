@@ -249,6 +249,12 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/project.IHandler.DeleteMember-fm",
 			},
 		},
+		"/api/v1/projects/:id/slots/:slotID": {
+			"DELETE": {
+				Method:  "DELETE",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/project.IHandler.DeleteSlot-fm",
+			},
+		},
 		"/api/v1/projects/:id/general-info": {
 			"PUT": {
 				Method:  "PUT",
@@ -423,6 +429,24 @@ func Test_loadV1Routes(t *testing.T) {
 			"GET": {
 				Method:  "GET",
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/dashboard.IHandler.GetActionItemSquashReports-fm",
+      },
+    },
+		"/api/v1/earn": {
+			"GET": {
+				Method:  "GET",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/earn.IHandler.List-fm",
+			},
+		},
+		"/api/v1/tech-radar": {
+			"GET": {
+				Method:  "GET",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/techradar.IHandler.List-fm",
+			},
+		},
+		"/api/v1/audiences": {
+			"GET": {
+				Method:  "GET",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/audience.IHandler.List-fm",
 			},
 		},
 	}

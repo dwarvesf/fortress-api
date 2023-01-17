@@ -35,7 +35,7 @@ const (
 
 func (c *cronjob) SyncAuditCycle() {
 	// Get all audit cycle from notion
-	database, err := c.service.Notion.GetDatabase(AuditCycleBDID)
+	database, err := c.service.Notion.GetDatabase(AuditCycleBDID, nil, nil)
 	if err != nil {
 		c.logger.Error(err, "failed to get database from notion")
 		return
@@ -94,7 +94,7 @@ func (c *cronjob) createAudit(page *notion.Page, auditCycle *model.AuditCycle) e
 	}
 
 	properties := page.Properties.(notion.DatabasePageProperties)
-	auditChecklist, err := c.service.Notion.GetDatabase(audit.Results[auditChecklistIndex].ID())
+	auditChecklist, err := c.service.Notion.GetDatabase(audit.Results[auditChecklistIndex].ID(), nil, nil)
 	if err != nil {
 		c.logger.Error(err, "failed to get database from notion")
 		return err
@@ -195,7 +195,7 @@ func (c *cronjob) getFlag(page *notion.Page, row *notion.Page) (model.AuditFlag,
 		}
 	}
 
-	checklistDatabase, err := c.service.Notion.GetDatabase(checklistPage.Results[checklistDatabaseIndex].ID())
+	checklistDatabase, err := c.service.Notion.GetDatabase(checklistPage.Results[checklistDatabaseIndex].ID(), nil, nil)
 	if err != nil {
 		c.logger.Error(err, "failed to get database from notion")
 		return "", err
@@ -240,7 +240,7 @@ func (c *cronjob) createAuditItem(page *notion.Page, row *notion.Page) error {
 		}
 	}
 
-	checklistDatabase, err := c.service.Notion.GetDatabase(checklistPage.Results[checklistDatabaseIndex].ID())
+	checklistDatabase, err := c.service.Notion.GetDatabase(checklistPage.Results[checklistDatabaseIndex].ID(), nil, nil)
 	if err != nil {
 		c.logger.Error(err, "failed to get database from notion")
 		return err
@@ -267,7 +267,7 @@ func NotionDatabaseToMap(database *notion.DatabaseQueryResponse) map[string]noti
 
 func (c *cronjob) SyncActionItem() {
 	// Get audit action database
-	database, err := c.service.Notion.GetDatabase(AuditActionBDID)
+	database, err := c.service.Notion.GetDatabase(AuditActionBDID, nil, nil)
 	if err != nil {
 		c.logger.Error(err, "failed to get database from notion")
 		return

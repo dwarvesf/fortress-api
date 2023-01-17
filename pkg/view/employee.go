@@ -95,7 +95,7 @@ func ToEmployeeProjectDetailData(c *gin.Context, pm *model.ProjectMember, userIn
 	rs := EmployeeProjectData{
 		ID:        pm.ProjectID.String(),
 		Name:      pm.Project.Name,
-		Status:    pm.Project.Status.String(),
+		Status:    pm.Status.String(),
 		Positions: ToProjectMemberPositions(pm.ProjectMemberPositions),
 		Code:      pm.Project.Code,
 		Avatar:    pm.Project.Avatar,

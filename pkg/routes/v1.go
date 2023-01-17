@@ -70,6 +70,7 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 		projectGroup.PUT("/:id/members", amw.WithAuth, pmw.WithPerm(model.PermissionProjectMembersEdit), h.Project.UpdateMember)
 		projectGroup.PUT("/:id/members/:memberID", amw.WithAuth, pmw.WithPerm(model.PermissionProjectMembersEdit), h.Project.UnassignMember)
 		projectGroup.DELETE("/:id/members/:memberID", amw.WithAuth, pmw.WithPerm(model.PermissionProjectMembersDelete), h.Project.DeleteMember)
+		projectGroup.DELETE("/:id/slots/:slotID", amw.WithAuth, pmw.WithPerm(model.PermissionProjectMembersDelete), h.Project.DeleteSlot)
 		projectGroup.PUT("/:id/general-info", amw.WithAuth, pmw.WithPerm(model.PermissionProjectsEdit), h.Project.UpdateGeneralInfo)
 		projectGroup.PUT("/:id/contact-info", amw.WithAuth, pmw.WithPerm(model.PermissionProjectsEdit), h.Project.UpdateContactInfo)
 		projectGroup.GET("/:id/work-units", amw.WithAuth, pmw.WithPerm(model.PermissionProjectWorkUnitsRead), h.Project.GetWorkUnits)
@@ -104,6 +105,18 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 	valuation := v1.Group("/valuation")
 	{
 		valuation.GET("/:year", pmw.WithPerm(model.PermissionValuationRead), h.Valuation.One)
+	}
+	earn := v1.Group("/earn")
+	{
+		earn.GET("", h.Earn.List)
+	}
+	techradar := v1.Group("/tech-radar")
+	{
+		techradar.GET("", h.TechRadar.List)
+	}
+	audience := v1.Group("/audiences")
+	{
+		audience.GET("", h.Audience.List)
 	}
 
 	dashboard := v1.Group("/dashboards")
