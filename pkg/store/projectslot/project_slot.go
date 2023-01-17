@@ -29,20 +29,37 @@ func (s *store) All(db *gorm.DB, input GetListProjectSlotInput, pagination model
 	case model.ProjectMemberStatusPending.String():
 		query = query.Where("project_slots.status = ?", input.Status)
 
-	case model.ProjectMemberStatusActive.String(),
-		model.ProjectMemberStatusOnBoarding.String(),
-		model.ProjectMemberStatusInactive.String():
-		query = query.Joins("LEFT JOIN project_members pm ON pm.project_slot_id = project_slots.id").
+	case model.ProjectMemberStatusOnBoarding.String():
+		query = query.Joins("JOIN project_members pm ON pm.project_slot_id = project_slots.id").
+			Where("pm.deleted_at IS NULL AND pm.joined_date > now()")
+
+	case model.ProjectMemberStatusActive.String():
+		query = query.Joins("JOIN project_members pm ON pm.project_slot_id = project_slots.id").
 			Where("pm.deleted_at IS NULL").
-			Where("pm.status = ? ", input.Status)
+			Where("pm.left_date IS NULL OR pm.left_date > now()")
+
+	case model.ProjectMemberStatusInactive.String():
+		query = query.Joins("JOIN project_members pm ON pm.project_slot_id = project_slots.id").
+			Where("pm.deleted_at IS NULL").
+			Where("pm.left_date IS NOT NULL AND pm.left_date <= now()")
 	}
 
 	query = query.Count(&total)
 
 	if pagination.Sort != "" {
 		query = query.Order(pagination.Sort)
-	} else {
+	} else if input.Status == model.ProjectMemberStatusPending.String() {
 		query = query.Order("created_at DESC")
+	} else {
+		query = query.Joins("LEFT JOIN seniorities s ON pm.seniority_id = s.id").
+			Joins(`LEFT JOIN project_heads ph ON (pm.left_date IS NULL OR pm.left_date > now())
+				AND pm.project_id = ph.project_id 
+				AND pm.employee_id = ph.employee_id 
+				AND ph.deleted_at IS NULL
+				AND (ph.left_date IS NULL OR ph.left_date > now())
+				AND ph.position = ?
+			`, model.HeadPositionTechnicalLead).
+			Order("pm.left_date DESC, ph.created_at, s.level DESC")
 	}
 
 	limit, offset := pagination.ToLimitOffset()
@@ -106,13 +123,13 @@ func (s *store) GetPendingSlots(db *gorm.DB, projectID string, preload bool) ([]
 func (s *store) GetAssignedSlots(db *gorm.DB, projectID string, preload bool) ([]*model.ProjectSlot, error) {
 	query := db.Joins("JOIN project_members pm ON pm.project_slot_id = project_slots.id").
 		Joins("LEFT JOIN seniorities s ON pm.seniority_id = s.id").
-		Joins(`LEFT JOIN project_heads ph ON pm.status = ?
+		Joins(`LEFT JOIN project_heads ph ON (pm.left_date IS NULL OR pm.left_date > now())
 			AND pm.project_id = ph.project_id 
 			AND pm.employee_id = ph.employee_id 
 			AND ph.deleted_at IS NULL
 			AND (ph.left_date IS NULL OR ph.left_date > now())
 			AND ph.position = ?
-		`, model.ProjectMemberStatusActive, model.HeadPositionTechnicalLead).
+		`, model.HeadPositionTechnicalLead).
 		Where("pm.deleted_at IS NULL AND project_slots.deleted_at IS NULL AND project_slots.project_id = ?", projectID).
 		Order("pm.left_date DESC, ph.created_at, s.level DESC").
 		Preload("ProjectMember", "deleted_at IS NULL").
