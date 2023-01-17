@@ -84,6 +84,13 @@ func (s *store) OneByTeamEmail(db *gorm.DB, teamEmail string) (*model.Employee, 
 	return employee, db.Where("team_email = ?", teamEmail).First(&employee).Error
 }
 
+// OneByEmail get 1 employee by team email or personal email
+func (s *store) OneByEmail(db *gorm.DB, email string) (*model.Employee, error) {
+	var employee *model.Employee
+
+	return employee, db.Where("team_email = ? OR personal_email", email, email).First(&employee).Error
+}
+
 // OneByNotionID get 1 employee by notion id
 func (s *store) OneByNotionID(db *gorm.DB, notionID string) (*model.Employee, error) {
 	var employee *model.Employee
