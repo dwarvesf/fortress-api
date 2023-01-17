@@ -64,8 +64,9 @@ type Vault struct {
 }
 
 type Notion struct {
-	Secret   string
-	EarnDBID string
+	Secret        string
+	EarnDBID      string
+	TechRadarDBID string
 }
 
 type ENV interface {
@@ -115,8 +116,9 @@ func Generate(v ENV) *Config {
 		},
 
 		Notion: Notion{
-			Secret:   v.GetString("NOTION_SECRET"),
-			EarnDBID: v.GetString("NOTION_EARN_DB_ID"),
+			Secret:        v.GetString("NOTION_SECRET"),
+			EarnDBID:      v.GetString("NOTION_EARN_DB_ID"),
+			TechRadarDBID: v.GetString("NOTION_TECH_RADAR_DB_ID"),
 		},
 	}
 }
