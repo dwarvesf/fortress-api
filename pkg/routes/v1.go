@@ -110,6 +110,10 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 	{
 		earn.GET("", h.Earn.List)
 	}
+	techradar := v1.Group("/tech-radar")
+	{
+		techradar.GET("", h.TechRadar.List)
+	}
 
 	dashboard := v1.Group("/dashboards")
 	{

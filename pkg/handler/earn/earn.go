@@ -43,7 +43,7 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 // @Success 200 {object} []model.Earn
 // @Failure 400 {object} view.ErrorResponse
 func (h *handler) List(c *gin.Context) {
-	resp, err := h.service.Notion.GetDatabase(h.config.Notion.EarnDBID)
+	resp, err := h.service.Notion.GetDatabase(h.config.Notion.EarnDBID, nil)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, "can't get items earn from notion"))
 		return
@@ -77,9 +77,14 @@ func (h *handler) List(c *gin.Context) {
 			dueData = &props["Due Date"].Date.Start.Time
 		}
 
+		name := props["Name"].Title[0].Text.Content
+		if r.Icon != nil && r.Icon.Emoji != nil {
+			name = *r.Icon.Emoji + " " + props["Name"].Title[0].Text.Content
+		}
+
 		earns = append(earns, model.Earn{
 			ID:       r.ID,
-			Name:     *r.Icon.Emoji + " " + props["Name"].Title[0].Text.Content,
+			Name:     name,
 			Reward:   int(*props["Reward 🧊"].Number),
 			Progress: int(*props["Progress"].Number * 100),
 			Tags:     tags,
