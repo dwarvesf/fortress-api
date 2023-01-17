@@ -341,3 +341,35 @@ func (s *store) GetGroupAuditByProjectID(db *gorm.DB, projectID string) ([]*mode
 
 	return rs, db.Raw(query, projectID).Scan(&rs).Error
 }
+
+func (s *store) GetAllActionItemSquashReports(db *gorm.DB) ([]*model.ActionItemSquashReport, error) {
+	var rs []*model.ActionItemSquashReport
+
+	query := `
+		SELECT (sum(high) + sum(medium) + sum(low)) as all, sum(high) as high, sum(medium) as medium, sum(low) as low, action_item_snapshots.created_at as snap_date
+		FROM action_item_snapshots
+			LEFT JOIN projects on action_item_snapshots.project_id = projects.id
+		WHERE projects.function = 'development'
+		GROUP BY snap_date
+		ORDER BY snap_date desc
+		LIMIT 12
+	`
+
+	return rs, db.Raw(query).Scan(&rs).Error
+}
+
+func (s *store) GetActionItemSquashReportsByProjectID(db *gorm.DB, projectID string) ([]*model.ActionItemSquashReport, error) {
+	var rs []*model.ActionItemSquashReport
+
+	query := `
+		SELECT (sum(high) + sum(medium) + sum(low)) as all, sum(high) as high, sum(medium) as medium, sum(low) as low, action_item_snapshots.created_at as snap_date
+		FROM action_item_snapshots
+			LEFT JOIN projects on action_item_snapshots.project_id = projects.id
+		WHERE projects.function = 'development' AND projects.id = ?
+		GROUP BY snap_date
+		ORDER BY snap_date desc
+		LIMIT 12
+	`
+
+	return rs, db.Raw(query, projectID).Scan(&rs).Error
+}

@@ -48,9 +48,9 @@ INSERT INTO public.employee_roles (id, deleted_at, created_at, updated_at, emplo
 ('e8c8619d-295b-4d55-936f-cd6406f0857f', NULL, '2022-11-17 11:53:14.690017', '2022-11-17 11:53:14.690017', 'd675dfc5-acbe-4566-acde-f7cb132c0206', 'd796884d-a8c4-4525-81e7-54a3b6099eac'),
 ('f7a25073-6832-4ba0-a69e-b0a9c87c61b4', NULL, '2022-11-17 11:53:14.690017', '2022-11-17 11:53:14.690017', '38a00d4a-bc45-41de-965a-adc674ab82c9', 'd796884d-a8c4-4525-81e7-54a3b6099eac');
 
-INSERT INTO public.projects (id, deleted_at, created_at, updated_at, name, type, start_date, end_date, status, country_id, client_email, project_email, code, function, notion_id) VALUES
-('dfa182fc-1d2d-49f6-a877-c01da9ce4207', NULL, '2022-11-11 18:06:56.362902', '2022-11-11 18:06:56.362902', 'Lorem ipsum', 'time-material', '2022-07-06', NULL, 'active', NULL, NULL, NULL, 'lorem-ipsum', 'development', 'dfa182fc-1d2d-49f6-a877-c01da9ce4207'),
-('8dc3be2e-19a4-4942-8a79-56db391a0b15', NULL, '2022-11-11 18:06:56.362902', '2022-11-11 18:06:56.362902', 'Fortress', 'dwarves', '2022-11-01', NULL, 'active', '4ef64490-c906-4192-a7f9-d2221dadfe4c', 'team@d.foundation', 'fortress@d.foundation', 'fortress', 'development', '8dc3be2e-19a4-4942-8a79-56db391a0b15');
+INSERT INTO public.projects (id, deleted_at, created_at, updated_at, name, type, start_date, end_date, status, country_id, client_email, project_email, code, function) VALUES
+('dfa182fc-1d2d-49f6-a877-c01da9ce4207', NULL, '2022-11-11 18:06:56.362902', '2022-11-11 18:06:56.362902', 'Lorem ipsum', 'time-material', '2022-07-06', NULL, 'active', NULL, NULL, NULL, 'lorem-ipsum', 'development'),
+('8dc3be2e-19a4-4942-8a79-56db391a0b15', NULL, '2022-11-11 18:06:56.362902', '2022-11-11 18:06:56.362902', 'Fortress', 'dwarves', '2022-11-01', NULL, 'active', '4ef64490-c906-4192-a7f9-d2221dadfe4c', 'team@d.foundation', 'fortress@d.foundation', 'fortress', 'development');
 
 INSERT INTO public.project_slots (id, deleted_at, created_at, updated_at, project_id, seniority_id, upsell_person_id, deployment_type, rate, discount, status) VALUES
 ('f32d08ca-8863-4ab3-8c84-a11849451eb7', NULL, '2022-11-11 18:19:56.156172', '2022-11-11 18:19:56.156172', '8dc3be2e-19a4-4942-8a79-56db391a0b15', 'dac16ce6-9e5a-4ff3-9ea2-fdea4853925e', NULL, 'official', 5000, 0, 'active'),
@@ -443,3 +443,16 @@ INSERT INTO public.audit_cycles (id, deleted_at, created_at, updated_at, project
 ('a9b63a36-0134-4aa3-9a9a-edb5a1d52647', null, '2022-12-05 16:33:28.085352', '2022-12-05 16:33:28.085352', 'dfa182fc-1d2d-49f6-a877-c01da9ce4207','8dc3be2e-19a4-4942-8a79-56db391a0b17','2022/Q3', 3,3,3),
 ('a9b63a36-0134-4aa3-9a9a-edb5a1d52648', null, '2022-12-05 16:33:28.085352', '2022-12-05 16:33:28.085352', 'dfa182fc-1d2d-49f6-a877-c01da9ce4207','8dc3be2e-19a4-4942-8a79-56db391a0b17','2022/Q4', 6,6,6),
 ('a9b63a36-0134-4aa3-9a9a-edb5a1d52649', null, '2022-12-05 16:33:28.085352', '2022-12-05 16:33:28.085352', 'dfa182fc-1d2d-49f6-a877-c01da9ce4207','8dc3be2e-19a4-4942-8a79-56db391a0b17','2023/Q1', 9,9,9);
+
+
+INSERT INTO public.action_item_snapshots (id, deleted_at, created_at, updated_at, project_id, audit_cycle_id, high, medium, low) VALUES 
+('d6f5c84c-01f9-40c9-9d39-7b62e433a268', null, '2023-01-16 15:53:47.850355', DEFAULT, '8dc3be2e-19a4-4942-8a79-56db391a0b15', 'a9b63a36-0134-4aa3-9a9a-edb5a1d52645', 10, 15, 20),
+('d6f5c84c-01f9-40c9-9d39-7b62e433a269', null, '2023-01-16 15:53:47.850355', DEFAULT, '8dc3be2e-19a4-4942-8a79-56db391a0b15', 'a9b63a36-0134-4aa3-9a9a-edb5a1d52646', 2, 4, 6),
+('d6f5c84c-01f9-40c9-9d39-7b62e433a260', null, '2023-01-16 15:53:47.850355', DEFAULT, 'dfa182fc-1d2d-49f6-a877-c01da9ce4207', 'a9b63a36-0134-4aa3-9a9a-edb5a1d52647', 3, 6, 9),
+('d6f5c84c-01f9-40c9-9d39-7b62e433a261', null, '2023-01-16 15:53:47.850355', DEFAULT, 'dfa182fc-1d2d-49f6-a877-c01da9ce4207', 'a9b63a36-0134-4aa3-9a9a-edb5a1d52648', 5, 10, 20),
+('d6f5c84c-01f9-40c9-9d39-7b62e433a262', null, '2023-02-16 15:53:47.850355', DEFAULT, 'dfa182fc-1d2d-49f6-a877-c01da9ce4207', 'a9b63a36-0134-4aa3-9a9a-edb5a1d52649', 4, 5, 6),
+('d6f5c84c-01f9-40c9-9d39-7b62e433a281', null, '2022-03-16 15:53:47.850355', DEFAULT, '8dc3be2e-19a4-4942-8a79-56db391a0b15', 'a9b63a36-0134-4aa3-9a9a-edb5a1d52645', 10, 15, 20),
+('d6f5c84c-01f9-40c9-9d39-7b62e433a282', null, '2022-04-16 15:53:47.850355', DEFAULT, '8dc3be2e-19a4-4942-8a79-56db391a0b15', 'a9b63a36-0134-4aa3-9a9a-edb5a1d52646', 2, 4, 6),
+('d6f5c84c-01f9-40c9-9d39-7b62e433a283', null, '2022-05-16 15:53:47.850355', DEFAULT, 'dfa182fc-1d2d-49f6-a877-c01da9ce4207', 'a9b63a36-0134-4aa3-9a9a-edb5a1d52647', 3, 6, 9),
+('d6f5c84c-01f9-40c9-9d39-7b62e433a284', null, '2022-06-16 15:53:47.850355', DEFAULT, 'dfa182fc-1d2d-49f6-a877-c01da9ce4207', 'a9b63a36-0134-4aa3-9a9a-edb5a1d52648', 5, 10, 20),
+('d6f5c84c-01f9-40c9-9d39-7b62e433a285', null, '2022-07-16 15:53:47.850355', DEFAULT, 'dfa182fc-1d2d-49f6-a877-c01da9ce4207', 'a9b63a36-0134-4aa3-9a9a-edb5a1d52649', 4, 5, 6);

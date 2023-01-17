@@ -48,3 +48,11 @@ type AverageAudit struct {
 	Quarter string  `json:"quarter"`
 	Avg     float64 `json:"avg"`
 }
+
+type ActionItemSquashReport struct {
+	SnapDate time.Time `json:"snapDate"`
+	All      int64     `json:"all"`
+	High     int64     `json:"high"`
+	Medium   int64     `json:"medium"`
+	Low      int64     `json:"low"`
+}
