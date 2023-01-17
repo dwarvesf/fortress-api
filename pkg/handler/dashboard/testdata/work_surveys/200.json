@@ -1,0 +1,69 @@
+{
+    "data": {
+        "project": null,
+        "workSurveys": [
+            {
+                "endDate": "28/02",
+                "workload": 1,
+                "deadline": 2.5,
+                "learning": 2,
+                "trend": null
+            },
+            {
+                "endDate": "21/02",
+                "workload": 0,
+                "deadline": 0,
+                "learning": 0,
+                "trend": {
+                    "workload": 0,
+                    "deadline": 0,
+                    "learning": 0
+                }
+            },
+            {
+                "endDate": "07/02",
+                "workload": 0,
+                "deadline": 0,
+                "learning": 0,
+                "trend": {
+                    "workload": 0,
+                    "deadline": 0,
+                    "learning": 0
+                }
+            },
+            {
+                "endDate": "23/01",
+                "workload": 0,
+                "deadline": 0,
+                "learning": 0,
+                "trend": {
+                    "workload": 0,
+                    "deadline": 0,
+                    "learning": 0
+                }
+            },
+            {
+                "endDate": "09/01",
+                "workload": 0,
+                "deadline": 0,
+                "learning": 0,
+                "trend": {
+                    "workload": 0,
+                    "deadline": 0,
+                    "learning": 0
+                }
+            },
+            {
+                "endDate": "01/01",
+                "workload": 0,
+                "deadline": 0,
+                "learning": 0,
+                "trend": {
+                    "workload": 0,
+                    "deadline": 0,
+                    "learning": 0
+                }
+            }
+        ]
+    }
+}

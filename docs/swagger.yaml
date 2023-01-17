@@ -8,6 +8,13 @@ definitions:
         description: Valid is true if Time is not NULL
         type: boolean
     type: object
+  model.AccountingItem:
+    properties:
+      amount:
+        type: number
+      name:
+        type: string
+    type: object
   model.Chapter:
     properties:
       code:
@@ -72,6 +79,17 @@ definitions:
       updatedAt:
         type: string
     type: object
+  model.ProjectSize:
+    properties:
+      code:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      size:
+        type: integer
+    type: object
   model.Role:
     properties:
       code:
@@ -121,6 +139,69 @@ definitions:
       name:
         type: string
       updatedAt:
+        type: string
+    type: object
+  model.Valuation:
+    properties:
+      accountReceivable:
+        description: money that company will receive in the future
+        properties:
+          items:
+            items:
+              $ref: '#/definitions/model.AccountingItem'
+            type: array
+          total:
+            type: number
+        type: object
+      assets:
+        description: valuation info
+        type: number
+      currency:
+        type: string
+      income:
+        description: Total paid invoice, investment & bank interest
+        properties:
+          detail:
+            properties:
+              consultantService:
+                type: number
+              interest:
+                type: number
+              investment:
+                type: number
+            type: object
+          total:
+            type: number
+        type: object
+      liabilities:
+        description: money that company will pay in the future
+        properties:
+          items:
+            items:
+              $ref: '#/definitions/model.AccountingItem'
+            type: array
+          total:
+            type: number
+        type: object
+      outcome:
+        description: Sum of Expenses and payroll
+        properties:
+          detail:
+            properties:
+              expense:
+                type: number
+              investment:
+                type: number
+              payroll:
+                type: number
+            type: object
+          total:
+            type: number
+        type: object
+      rate:
+        type: number
+      year:
+        description: basic info
         type: string
     type: object
   request.AddMenteeInput:
@@ -480,6 +561,8 @@ definitions:
         items:
           type: string
         type: array
+      projectMemberID:
+        type: string
       projectSlotID:
         type: string
       rate:
@@ -625,6 +708,22 @@ definitions:
           $ref: '#/definitions/model.Role'
         type: array
     type: object
+  view.ActionItemReportResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/view.AuditActionItemReport'
+        type: array
+    type: object
+  view.ActionItemTrend:
+    properties:
+      high:
+        type: number
+      low:
+        type: number
+      medium:
+        type: number
+    type: object
   view.ApiError:
     description: validation error details
     properties:
@@ -639,6 +738,42 @@ definitions:
       msg:
         description: error message
         type: string
+    type: object
+  view.Audit:
+    properties:
+      avg:
+        type: number
+      quarter:
+        type: string
+      trend:
+        type: number
+    type: object
+  view.AuditActionItemReport:
+    properties:
+      high:
+        type: integer
+      low:
+        type: integer
+      medium:
+        type: integer
+      quarter:
+        type: string
+      trend:
+        $ref: '#/definitions/view.ActionItemTrend'
+    type: object
+  view.AuditData:
+    properties:
+      average:
+        items:
+          $ref: '#/definitions/view.Audit'
+        type: array
+      groups:
+        $ref: '#/definitions/view.GroupAudit'
+    type: object
+  view.AuditResponse:
+    properties:
+      data:
+        $ref: '#/definitions/view.AuditData'
     type: object
   view.AuthData:
     properties:
@@ -947,6 +1082,10 @@ definitions:
         type: string
       id:
         type: string
+      joinedDate:
+        type: string
+      leftDate:
+        type: string
       name:
         type: string
       positions:
@@ -955,6 +1094,29 @@ definitions:
         type: array
       status:
         type: string
+    type: object
+  view.EngineeringHealth:
+    properties:
+      avg:
+        type: number
+      quarter:
+        type: string
+      trend:
+        type: number
+    type: object
+  view.EngineeringHealthData:
+    properties:
+      average:
+        items:
+          $ref: '#/definitions/view.EngineeringHealth'
+        type: array
+      groups:
+        $ref: '#/definitions/view.GroupEngineeringHealth'
+    type: object
+  view.EngineringHealthResponse:
+    properties:
+      data:
+        $ref: '#/definitions/view.EngineeringHealthData'
     type: object
   view.ErrorResponse:
     properties:
@@ -1056,6 +1218,52 @@ definitions:
       data:
         items:
           $ref: '#/definitions/view.Question'
+        type: array
+    type: object
+  view.GroupAudit:
+    properties:
+      backend:
+        items:
+          $ref: '#/definitions/view.Audit'
+        type: array
+      blockchain:
+        items:
+          $ref: '#/definitions/view.Audit'
+        type: array
+      frontend:
+        items:
+          $ref: '#/definitions/view.Audit'
+        type: array
+      mobile:
+        items:
+          $ref: '#/definitions/view.Audit'
+        type: array
+      process:
+        items:
+          $ref: '#/definitions/view.Audit'
+        type: array
+      system:
+        items:
+          $ref: '#/definitions/view.Audit'
+        type: array
+    type: object
+  view.GroupEngineeringHealth:
+    properties:
+      collaboration:
+        items:
+          $ref: '#/definitions/view.EngineeringHealth'
+        type: array
+      delivery:
+        items:
+          $ref: '#/definitions/view.EngineeringHealth'
+        type: array
+      feedback:
+        items:
+          $ref: '#/definitions/view.EngineeringHealth'
+        type: array
+      quality:
+        items:
+          $ref: '#/definitions/view.EngineeringHealth'
         type: array
     type: object
   view.ListFeedbackResponse:
@@ -1351,6 +1559,13 @@ definitions:
           $ref: '#/definitions/view.ProjectMember'
         type: array
     type: object
+  view.ProjectSizeResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/model.ProjectSize'
+        type: array
+    type: object
   view.Question:
     properties:
       category:
@@ -1539,6 +1754,15 @@ definitions:
         type: string
       type:
         type: string
+    type: object
+  view.Trend:
+    properties:
+      deadline:
+        type: number
+      learning:
+        type: number
+      workload:
+        type: number
     type: object
   view.UpdateEmployeeStatusResponse:
     properties:
@@ -1757,6 +1981,33 @@ definitions:
       updatedAt:
         type: string
     type: object
+  view.WorkSurvey:
+    properties:
+      deadline:
+        type: number
+      endDate:
+        type: string
+      learning:
+        type: number
+      trend:
+        $ref: '#/definitions/view.Trend'
+      workload:
+        type: number
+    type: object
+  view.WorkSurveyResponse:
+    properties:
+      data:
+        $ref: '#/definitions/view.WorkSurveysData'
+    type: object
+  view.WorkSurveysData:
+    properties:
+      project:
+        $ref: '#/definitions/view.BasicProjectInfo'
+      workSurveys:
+        items:
+          $ref: '#/definitions/view.WorkSurvey'
+        type: array
+    type: object
   view.WorkUnit:
     properties:
       code:
@@ -1873,6 +2124,179 @@ paths:
       summary: Get logged-in user data
       tags:
       - Auth
+  /dashboards/projects/action-items:
+    get:
+      consumes:
+      - application/json
+      description: Get Action items report for dashboard
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Project ID
+        in: query
+        name: projectID
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.ActionItemReportResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get Action items report for dashboard
+      tags:
+      - Dashboard
+  /dashboards/projects/audits:
+    get:
+      consumes:
+      - application/json
+      description: Get Audit information for dashboard
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Project ID
+        in: query
+        name: projectID
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.AuditResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get Audit information for dashboard
+      tags:
+      - Dashboard
+  /dashboards/projects/engineering-healths:
+    get:
+      consumes:
+      - application/json
+      description: Get Enginerring health information for dashboard
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Project ID
+        in: query
+        name: projectID
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.EngineringHealthResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get Enginerring health information for dashboard
+      tags:
+      - Dashboard
+  /dashboards/projects/sizes:
+    get:
+      consumes:
+      - application/json
+      description: Get the total number of active member in each project
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.ProjectSizeResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get the total number of active member in each project
+      tags:
+      - Dashboard
+  /dashboards/projects/work-surveys:
+    get:
+      consumes:
+      - application/json
+      description: Get Work Surveys data for dashboard
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Project ID
+        in: query
+        name: projectID
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.WorkSurveyResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get Work Surveys data for dashboard
+      tags:
+      - Dashboard
   /employees:
     post:
       consumes:
@@ -2826,6 +3250,19 @@ paths:
       consumes:
       - application/json
       description: Get list values for stacks
+      parameters:
+      - description: Keyword
+        in: query
+        name: keyword
+        type: string
+      - description: Page
+        in: query
+        name: page
+        type: string
+      - description: Size
+        in: query
+        name: size
+        type: string
       produces:
       - application/json
       responses:
@@ -3113,12 +3550,12 @@ paths:
         name: Authorization
         required: true
         type: string
-      - description: project ID
+      - description: Project ID
         in: path
         name: id
         required: true
         type: string
-      - description: employee ID
+      - description: Project Member ID
         in: path
         name: memberID
         required: true
@@ -3185,6 +3622,49 @@ paths:
           schema:
             $ref: '#/definitions/view.ErrorResponse'
       summary: Unassign member in a project
+      tags:
+      - Project
+  /project/{id}/slot/{slotID}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete slot in a project
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Slot ID
+        in: path
+        name: slotID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Delete slot in a project
       tags:
       - Project
   /projects:

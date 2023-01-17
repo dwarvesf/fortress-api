@@ -2,6 +2,7 @@ package project
 
 import (
 	"fmt"
+	"time"
 
 	"gorm.io/gorm"
 
@@ -52,10 +53,14 @@ func (s *store) All(db *gorm.DB, input GetListProjectInput, pagination model.Pag
 		query = query.Limit(limit)
 	}
 
-	query = query.Preload("Slots", "deleted_at IS NULL").
-		Preload("Slots.ProjectMember", "deleted_at IS NULL and left_date IS NULL AND status = ?", model.ProjectMemberStatusActive).
-		Preload("Slots.ProjectMember.Employee").
-		Preload("Heads", "deleted_at IS NULL and left_date IS NULL").
+	query = query.Preload("ProjectMembers", func(db *gorm.DB) *gorm.DB {
+		return db.Joins("JOIN projects ON project_members.project_id = projects.id").
+			Where("project_members.deleted_at IS NULL AND (projects.status = ? OR project_members.status = ?)",
+				model.ProjectStatusClosed,
+				model.ProjectMemberStatusActive)
+	}).
+		Preload("ProjectMembers.Employee").
+		Preload("Heads", `deleted_at IS NULL AND (left_date IS NULL OR left_date > now())`).
 		Preload("Heads.Employee").
 		Offset(offset)
 
@@ -102,33 +107,31 @@ func (s *store) One(db *gorm.DB, id string, preload bool) (*model.Project, error
 
 	if preload {
 		query = query.
-			Preload("Heads", "deleted_at IS NULL and left_date IS NULL").
-			Preload("Heads.Employee").
+			Preload("Heads", "deleted_at IS NULL AND (left_date IS NULL OR left_date > now())").
+			Preload("Heads.Employee", "deleted_at IS NULL").
 			Preload("ProjectStacks", "deleted_at IS NULL").
 			Preload("ProjectStacks.Stack", "deleted_at IS NULL").
-			Preload("Country").
-			Preload("Slots", func(db *gorm.DB) *gorm.DB {
-				return db.Joins("JOIN project_members pm ON pm.project_slot_id = project_slots.id").
-					Joins("JOIN seniorities s ON s.id = pm.seniority_id").
-					Joins("LEFT JOIN project_heads ph ON ph.project_id = pm.project_id AND ph.employee_id = pm.employee_id").
-					Where("project_slots.deleted_at IS NULL").
-					Where("pm.deleted_at IS NULL").
-					Where("pm.status IN ?", []model.ProjectMemberStatus{model.ProjectMemberStatusActive, model.ProjectMemberStatusOnBoarding}).
-					Where("project_slots.status = ?", model.ProjectMemberStatusActive).
-					Order("pm.left_date ASC").
+			Preload("Country", "deleted_at IS NULL").
+			Preload("ProjectMembers", func(db *gorm.DB) *gorm.DB {
+				return db.Joins("JOIN seniorities s ON s.id = project_members.seniority_id").
+					Joins(`LEFT JOIN project_heads ph ON ph.project_id = project_members.project_id 
+						AND ph.employee_id = project_members.employee_id 
+						AND ph.position = ?
+						AND (ph.left_date IS NULL OR ph.left_date > now())`,
+						model.HeadPositionTechnicalLead,
+					).
+					Where("project_members.deleted_at IS NULL").
+					Where("project_members.status IN ?", []model.ProjectMemberStatus{
+						model.ProjectMemberStatusActive,
+						model.ProjectMemberStatusOnBoarding,
+					}).
 					Order("CASE ph.position WHEN 'technical-lead' THEN 1 ELSE 2 END").
 					Order("s.level DESC")
 			}).
-			Preload("Slots.ProjectMember", "deleted_at IS NULL AND status IN ?",
-				[]model.ProjectMemberStatus{model.ProjectMemberStatusActive, model.ProjectMemberStatusOnBoarding}).
-			Preload("Slots.ProjectMember.Employee", "deleted_at IS NULL").
-			Preload("Slots.ProjectMember.ProjectMemberPositions", "deleted_at IS NULL").
-			Preload("Slots.ProjectMember.ProjectMemberPositions.Position", "deleted_at IS NULL").
-			Preload("Slots.ProjectMember.Seniority", "deleted_at IS NULL").
-			Preload("Slots.ProjectSlotPositions", "deleted_at IS NULL").
-			Preload("Slots.ProjectSlotPositions.Position", "deleted_at IS NULL").
-			Preload("Slots.ProjectSlotPositions.Position", "deleted_at IS NULL").
-			Preload("Slots.Seniority", "deleted_at IS NULL")
+			Preload("ProjectMembers.Employee", "deleted_at IS NULL").
+			Preload("ProjectMembers.ProjectMemberPositions", "deleted_at IS NULL").
+			Preload("ProjectMembers.ProjectMemberPositions.Position", "deleted_at IS NULL").
+			Preload("ProjectMembers.Seniority", "deleted_at IS NULL")
 	}
 
 	var project *model.Project
@@ -139,4 +142,20 @@ func (s *store) One(db *gorm.DB, id string, preload bool) (*model.Project, error
 func (s *store) UpdateSelectedFieldsByID(db *gorm.DB, id string, updateModel model.Project, updatedFields ...string) (*model.Project, error) {
 	project := model.Project{}
 	return &project, db.Model(&project).Where("id = ?", id).Select(updatedFields).Updates(&updateModel).Error
+}
+
+// GetByEmployeeID get project list by employee id
+func (s *store) GetByEmployeeID(db *gorm.DB, employeeID string) ([]*model.Project, error) {
+	var projects []*model.Project
+
+	query := db.Table("projects").
+		Joins("JOIN project_members pm ON pm.project_id = projects.id AND pm.status = ?", model.ProjectMemberStatusActive).
+		Where("projects.deleted_at IS NULL AND pm.employee_id = ?", employeeID).
+		Preload("Heads", func(db *gorm.DB) *gorm.DB {
+			return db.Joins("JOIN projects p ON project_heads.project_id = p.id").
+				Where("(project_heads.left_date IS NULL OR project_heads.left_date > ?) AND project_heads.employee_id = ? AND project_heads.position = ?", time.Now(), employeeID, model.HeadPositionTechnicalLead)
+		}).
+		Preload("Heads.Employee")
+
+	return projects, query.Find(&projects).Error
 }

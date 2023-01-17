@@ -4,8 +4,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dwarvesf/fortress-api/pkg/model"
+	"github.com/gin-gonic/gin"
 	"github.com/shopspring/decimal"
+
+	"github.com/dwarvesf/fortress-api/pkg/model"
+	"github.com/dwarvesf/fortress-api/pkg/utils"
 )
 
 type ProjectData struct {
@@ -95,7 +98,7 @@ func ToUpdateProjectStatusResponse(p *model.Project) UpdatedProject {
 	}
 }
 
-func ToProjectData(project *model.Project) ProjectData {
+func ToProjectData(c *gin.Context, project *model.Project, userInfo *model.CurrentLoggedUserInfo) ProjectData {
 	leadMap := map[string]bool{}
 	var technicalLeads = make([]ProjectHead, 0, len(project.Heads))
 	var accountManager, salePerson, deliveryManager *ProjectHead
@@ -127,37 +130,46 @@ func ToProjectData(project *model.Project) ProjectData {
 		}
 	}
 
-	var members = make([]ProjectMember, 0, len(project.Slots))
-	for _, slot := range project.Slots {
-		m := slot.ProjectMember
+	var members = make([]ProjectMember, 0, len(project.ProjectMembers))
+	for _, m := range project.ProjectMembers {
 		member := ProjectMember{
-			Status:         slot.Status.String(),
-			DeploymentType: slot.DeploymentType.String(),
-			Positions:      ToProjectSlotPositions(slot.ProjectSlotPositions),
+			Status:      m.Status.String(),
+			EmployeeID:  m.EmployeeID.String(),
+			FullName:    m.Employee.FullName,
+			DisplayName: m.Employee.DisplayName,
+			Avatar:      m.Employee.Avatar,
+			Username:    m.Employee.Username,
+			Seniority:   m.Seniority,
+			IsLead:      leadMap[m.EmployeeID.String()],
+			Positions:   ToProjectMemberPositions(m.ProjectMemberPositions),
 		}
 
-		if !slot.Seniority.ID.IsZero() {
-			member.Seniority = &slot.Seniority
-		}
-
-		if slot.Status != model.ProjectMemberStatusPending && !m.ID.IsZero() {
-			member.Status = m.Status.String()
+		if utils.HasPermission(c, userInfo.Permissions, model.PermissionProjectsReadFullAccess) {
 			member.DeploymentType = m.DeploymentType.String()
-			member.EmployeeID = m.EmployeeID.String()
-			member.FullName = m.Employee.FullName
-			member.DisplayName = m.Employee.DisplayName
-			member.Avatar = m.Employee.Avatar
-			member.Username = m.Employee.Username
-			member.Seniority = m.Seniority
-			member.IsLead = leadMap[m.EmployeeID.String()]
-			member.Positions = ToProjectMemberPositions(m.ProjectMemberPositions)
-		}
-
-		if m.Status == model.ProjectMemberStatusInactive {
-			member.LeftDate = m.LeftDate
 		}
 
 		members = append(members, member)
+	}
+
+	d := ProjectData{
+		BaseModel:       project.BaseModel,
+		Avatar:          project.Avatar,
+		Name:            project.Name,
+		Type:            project.Type.String(),
+		Status:          project.Status.String(),
+		Stacks:          ToProjectStacks(project.ProjectStacks),
+		StartDate:       project.StartDate,
+		EndDate:         project.EndDate,
+		Members:         members,
+		TechnicalLead:   technicalLeads,
+		DeliveryManager: deliveryManager,
+		SalePerson:      salePerson,
+		AccountManager:  accountManager,
+		ProjectEmail:    project.ProjectEmail,
+
+		AllowsSendingSurvey: project.AllowsSendingSurvey,
+		Code:                project.Code,
+		Function:            project.Function.String(),
 	}
 
 	var clientEmail []string
@@ -165,25 +177,8 @@ func ToProjectData(project *model.Project) ProjectData {
 		clientEmail = strings.Split(project.ClientEmail, ",")
 	}
 
-	d := ProjectData{
-		BaseModel:           project.BaseModel,
-		Avatar:              project.Avatar,
-		Name:                project.Name,
-		Type:                project.Type.String(),
-		Status:              project.Status.String(),
-		Stacks:              ToProjectStacks(project.ProjectStacks),
-		StartDate:           project.StartDate,
-		EndDate:             project.EndDate,
-		Members:             members,
-		TechnicalLead:       technicalLeads,
-		DeliveryManager:     deliveryManager,
-		SalePerson:          salePerson,
-		AccountManager:      accountManager,
-		ProjectEmail:        project.ProjectEmail,
-		ClientEmail:         clientEmail,
-		AllowsSendingSurvey: project.AllowsSendingSurvey,
-		Code:                project.Code,
-		Function:            project.Function.String(),
+	if utils.HasPermission(c, userInfo.Permissions, model.PermissionProjectsReadFullAccess) {
+		d.ClientEmail = clientEmail
 	}
 
 	if project.Country != nil {
@@ -197,11 +192,29 @@ func ToProjectData(project *model.Project) ProjectData {
 	return d
 }
 
-func ToProjectsData(projects []*model.Project) []ProjectData {
+func ToProjectsData(c *gin.Context, projects []*model.Project, userInfo *model.CurrentLoggedUserInfo) []ProjectData {
 	var results = make([]ProjectData, 0, len(projects))
 
 	for _, p := range projects {
-		results = append(results, ToProjectData(p))
+		// If the project belongs user, append it in the list
+		_, ok := userInfo.Projects[p.ID]
+		if ok && p.Status == model.ProjectStatusActive && model.IsUserActiveInProject(userInfo.UserID, p.ProjectMembers) {
+			results = append(results, ToProjectData(c, p, userInfo))
+			continue
+		}
+
+		// If the project is not belong user, check if the user has permission to view the project
+		if utils.HasPermission(c, userInfo.Permissions, model.PermissionProjectsReadFullAccess) ||
+			utils.HasPermission(c, userInfo.Permissions, model.PermissionEmployeesReadProjectsReadActive){
+
+			if p.Status == model.ProjectStatusActive {
+				results = append(results, ToProjectData(c, p, userInfo))
+			} else {
+				if  utils.HasPermission(c, userInfo.Permissions, model.PermissionProjectsReadFullAccess) {
+					results = append(results, ToProjectData(c, p, userInfo))
+				}
+			}
+		}
 	}
 
 	return results
@@ -332,36 +345,36 @@ func ToProjectMemberListData(slots []*model.ProjectSlot, projectHeads []*model.P
 	for _, slot := range slots {
 		m := slot.ProjectMember
 
-		member := ProjectMember{
-			ProjectSlotID:  slot.ID.String(),
-			Status:         slot.Status.String(),
-			DeploymentType: slot.DeploymentType.String(),
-			Rate:           slot.Rate,
-			Discount:       slot.Discount,
-			Positions:      ToProjectSlotPositions(slot.ProjectSlotPositions),
-		}
-
-		if !slot.Seniority.ID.IsZero() {
-			member.Seniority = &slot.Seniority
-		}
-
-		if slot.Status != model.ProjectMemberStatusPending && !m.ID.IsZero() {
-			member.ProjectMemberID = m.ID.String()
-			member.EmployeeID = m.EmployeeID.String()
-			member.FullName = m.Employee.FullName
-			member.DisplayName = m.Employee.DisplayName
-			member.Avatar = m.Employee.Avatar
-			member.Username = m.Employee.Username
-			member.JoinedDate = m.JoinedDate
-			member.IsLead = leadMap[m.EmployeeID.String()]
-			member.Rate = m.Rate
-			member.Discount = m.Discount
-			member.Status = m.Status.String()
-			member.Positions = ToProjectMemberPositions(m.ProjectMemberPositions)
-		}
-
-		if m.Status == model.ProjectMemberStatusInactive {
-			member.LeftDate = m.LeftDate
+		var member ProjectMember
+		if m.ID.IsZero() {
+			member = ProjectMember{
+				ProjectSlotID:  slot.ID.String(),
+				Status:         slot.Status.String(),
+				DeploymentType: slot.DeploymentType.String(),
+				Rate:           slot.Rate,
+				Discount:       slot.Discount,
+				Seniority:      &slot.Seniority,
+				Positions:      ToProjectSlotPositions(slot.ProjectSlotPositions),
+			}
+		} else {
+			member = ProjectMember{
+				ProjectSlotID:   m.ProjectSlotID.String(),
+				ProjectMemberID: m.ID.String(),
+				EmployeeID:      m.EmployeeID.String(),
+				FullName:        m.Employee.FullName,
+				DisplayName:     m.Employee.DisplayName,
+				Avatar:          m.Employee.Avatar,
+				Username:        m.Employee.Username,
+				JoinedDate:      m.JoinedDate,
+				LeftDate:        m.LeftDate,
+				IsLead:          leadMap[m.EmployeeID.String()],
+				Status:          m.Status.String(),
+				DeploymentType:  m.DeploymentType.String(),
+				Rate:            m.Rate,
+				Discount:        m.Discount,
+				Seniority:       m.Seniority,
+				Positions:       ToProjectMemberPositions(m.ProjectMemberPositions),
+			}
 		}
 
 		results = append(results, member)

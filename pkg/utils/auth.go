@@ -6,8 +6,10 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 
 	"github.com/dwarvesf/fortress-api/pkg/model"
+	"github.com/dwarvesf/fortress-api/pkg/store"
 )
 
 // GenerateJWTToken ...
@@ -72,4 +74,57 @@ func GetTokenFromRequest(c *gin.Context) (string, error) {
 
 func IsAPIKey(c *gin.Context) bool {
 	return strings.HasPrefix(c.Request.Header.Get("Authorization"), "ApiKey")
+}
+
+func HasPermission(c *gin.Context, perms map[string]string, requiredPerm model.PermissionCode) bool {
+	if IsAPIKey(c) {
+		return true
+	}
+
+	_, ok := perms[requiredPerm.String()]
+
+	return ok
+}
+
+func GetLoggedInUserInfo(c *gin.Context, storeDB *store.Store, db *gorm.DB) (*model.CurrentLoggedUserInfo, error) {
+	if IsAPIKey(c) {
+		return nil, nil
+	}
+
+	userID, err := GetUserIDFromContext(c)
+	if err != nil {
+		return nil, err
+	}
+
+	e, err := storeDB.Employee.One(db, userID, false)
+	if err != nil {
+		return nil, err
+	}
+
+	perms, err := storeDB.Permission.GetByEmployeeID(db, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	//Get a map of the project and managed flag if they are lead of project.
+
+	projects, err := storeDB.Project.GetByEmployeeID(db, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	projectMap := make(map[model.UUID]*model.Project)
+	for _, p := range projects {
+		projectMap[p.ID] = p
+	}
+
+	rs := &model.CurrentLoggedUserInfo{
+		UserID:      userID,
+		Permissions: model.ToPermissionMap(perms),
+		Projects:    projectMap,
+		Role:        e.EmployeeRoles[0].Role.Code,
+	}
+
+	return rs, nil
+	//return userID, model.ToPermissionMap(perms), projectMap, nil
 }

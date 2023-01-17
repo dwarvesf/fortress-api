@@ -136,6 +136,268 @@ const docTemplate = `{
                 }
             }
         },
+        "/dashboards/projects/action-items": {
+            "get": {
+                "description": "Get Action items report for dashboard",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "Get Action items report for dashboard",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Project ID",
+                        "name": "projectID",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.ActionItemReportResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/dashboards/projects/audits": {
+            "get": {
+                "description": "Get Audit information for dashboard",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "Get Audit information for dashboard",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Project ID",
+                        "name": "projectID",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.AuditResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/dashboards/projects/engineering-healths": {
+            "get": {
+                "description": "Get Enginerring health information for dashboard",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "Get Enginerring health information for dashboard",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Project ID",
+                        "name": "projectID",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.EngineringHealthResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/dashboards/projects/sizes": {
+            "get": {
+                "description": "Get the total number of active member in each project",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "Get the total number of active member in each project",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.ProjectSizeResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/dashboards/projects/work-surveys": {
+            "get": {
+                "description": "Get Work Surveys data for dashboard",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "Get Work Surveys data for dashboard",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Project ID",
+                        "name": "projectID",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.WorkSurveyResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/employees": {
             "post": {
                 "description": "Create new employee",
@@ -1573,6 +1835,26 @@ const docTemplate = `{
                     "Metadata"
                 ],
                 "summary": "Get list values for stacks",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Keyword",
+                        "name": "keyword",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Page",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Size",
+                        "name": "size",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -2067,15 +2349,79 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "project ID",
+                        "description": "Project ID",
                         "name": "id",
                         "in": "path",
                         "required": true
                     },
                     {
                         "type": "string",
-                        "description": "employee ID",
+                        "description": "Project Member ID",
                         "name": "memberID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.MessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/project/{id}/slot/{slotID}": {
+            "delete": {
+                "description": "Delete slot in a project",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Project"
+                ],
+                "summary": "Delete slot in a project",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Project ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Slot ID",
+                        "name": "slotID",
                         "in": "path",
                         "required": true
                     }
@@ -3827,6 +4173,17 @@ const docTemplate = `{
                 }
             }
         },
+        "model.AccountingItem": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "model.Chapter": {
             "type": "object",
             "properties": {
@@ -3925,6 +4282,23 @@ const docTemplate = `{
                 }
             }
         },
+        "model.ProjectSize": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "size": {
+                    "type": "integer"
+                }
+            }
+        },
         "model.Role": {
             "type": "object",
             "properties": {
@@ -3999,6 +4373,101 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.Valuation": {
+            "type": "object",
+            "properties": {
+                "accountReceivable": {
+                    "description": "money that company will receive in the future",
+                    "type": "object",
+                    "properties": {
+                        "items": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/model.AccountingItem"
+                            }
+                        },
+                        "total": {
+                            "type": "number"
+                        }
+                    }
+                },
+                "assets": {
+                    "description": "valuation info",
+                    "type": "number"
+                },
+                "currency": {
+                    "type": "string"
+                },
+                "income": {
+                    "description": "Total paid invoice, investment \u0026 bank interest",
+                    "type": "object",
+                    "properties": {
+                        "detail": {
+                            "type": "object",
+                            "properties": {
+                                "consultantService": {
+                                    "type": "number"
+                                },
+                                "interest": {
+                                    "type": "number"
+                                },
+                                "investment": {
+                                    "type": "number"
+                                }
+                            }
+                        },
+                        "total": {
+                            "type": "number"
+                        }
+                    }
+                },
+                "liabilities": {
+                    "description": "money that company will pay in the future",
+                    "type": "object",
+                    "properties": {
+                        "items": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/model.AccountingItem"
+                            }
+                        },
+                        "total": {
+                            "type": "number"
+                        }
+                    }
+                },
+                "outcome": {
+                    "description": "Sum of Expenses and payroll",
+                    "type": "object",
+                    "properties": {
+                        "detail": {
+                            "type": "object",
+                            "properties": {
+                                "expense": {
+                                    "type": "number"
+                                },
+                                "investment": {
+                                    "type": "number"
+                                },
+                                "payroll": {
+                                    "type": "number"
+                                }
+                            }
+                        },
+                        "total": {
+                            "type": "number"
+                        }
+                    }
+                },
+                "rate": {
+                    "type": "number"
+                },
+                "year": {
+                    "description": "basic info",
                     "type": "string"
                 }
             }
@@ -4538,6 +5007,9 @@ const docTemplate = `{
                         "type": "string"
                     }
                 },
+                "projectMemberID": {
+                    "type": "string"
+                },
                 "projectSlotID": {
                     "type": "string"
                 },
@@ -4744,6 +5216,31 @@ const docTemplate = `{
                 }
             }
         },
+        "view.ActionItemReportResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.AuditActionItemReport"
+                    }
+                }
+            }
+        },
+        "view.ActionItemTrend": {
+            "type": "object",
+            "properties": {
+                "high": {
+                    "type": "number"
+                },
+                "low": {
+                    "type": "number"
+                },
+                "medium": {
+                    "type": "number"
+                }
+            }
+        },
         "view.ApiError": {
             "description": "validation error details",
             "type": "object",
@@ -4762,6 +5259,62 @@ const docTemplate = `{
                 "msg": {
                     "description": "error message",
                     "type": "string"
+                }
+            }
+        },
+        "view.Audit": {
+            "type": "object",
+            "properties": {
+                "avg": {
+                    "type": "number"
+                },
+                "quarter": {
+                    "type": "string"
+                },
+                "trend": {
+                    "type": "number"
+                }
+            }
+        },
+        "view.AuditActionItemReport": {
+            "type": "object",
+            "properties": {
+                "high": {
+                    "type": "integer"
+                },
+                "low": {
+                    "type": "integer"
+                },
+                "medium": {
+                    "type": "integer"
+                },
+                "quarter": {
+                    "type": "string"
+                },
+                "trend": {
+                    "$ref": "#/definitions/view.ActionItemTrend"
+                }
+            }
+        },
+        "view.AuditData": {
+            "type": "object",
+            "properties": {
+                "average": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.Audit"
+                    }
+                },
+                "groups": {
+                    "$ref": "#/definitions/view.GroupAudit"
+                }
+            }
+        },
+        "view.AuditResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/view.AuditData"
                 }
             }
         },
@@ -5234,6 +5787,12 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
+                "joinedDate": {
+                    "type": "string"
+                },
+                "leftDate": {
+                    "type": "string"
+                },
                 "name": {
                     "type": "string"
                 },
@@ -5245,6 +5804,42 @@ const docTemplate = `{
                 },
                 "status": {
                     "type": "string"
+                }
+            }
+        },
+        "view.EngineeringHealth": {
+            "type": "object",
+            "properties": {
+                "avg": {
+                    "type": "number"
+                },
+                "quarter": {
+                    "type": "string"
+                },
+                "trend": {
+                    "type": "number"
+                }
+            }
+        },
+        "view.EngineeringHealthData": {
+            "type": "object",
+            "properties": {
+                "average": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.EngineeringHealth"
+                    }
+                },
+                "groups": {
+                    "$ref": "#/definitions/view.GroupEngineeringHealth"
+                }
+            }
+        },
+        "view.EngineringHealthResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/view.EngineeringHealthData"
                 }
             }
         },
@@ -5401,6 +5996,76 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/view.Question"
+                    }
+                }
+            }
+        },
+        "view.GroupAudit": {
+            "type": "object",
+            "properties": {
+                "backend": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.Audit"
+                    }
+                },
+                "blockchain": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.Audit"
+                    }
+                },
+                "frontend": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.Audit"
+                    }
+                },
+                "mobile": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.Audit"
+                    }
+                },
+                "process": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.Audit"
+                    }
+                },
+                "system": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.Audit"
+                    }
+                }
+            }
+        },
+        "view.GroupEngineeringHealth": {
+            "type": "object",
+            "properties": {
+                "collaboration": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.EngineeringHealth"
+                    }
+                },
+                "delivery": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.EngineeringHealth"
+                    }
+                },
+                "feedback": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.EngineeringHealth"
+                    }
+                },
+                "quality": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.EngineeringHealth"
                     }
                 }
             }
@@ -5855,6 +6520,17 @@ const docTemplate = `{
                 }
             }
         },
+        "view.ProjectSizeResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.ProjectSize"
+                    }
+                }
+            }
+        },
         "view.Question": {
             "type": "object",
             "properties": {
@@ -6142,6 +6818,20 @@ const docTemplate = `{
                 },
                 "type": {
                     "type": "string"
+                }
+            }
+        },
+        "view.Trend": {
+            "type": "object",
+            "properties": {
+                "deadline": {
+                    "type": "number"
+                },
+                "learning": {
+                    "type": "number"
+                },
+                "workload": {
+                    "type": "number"
                 }
             }
         },
@@ -6474,6 +7164,48 @@ const docTemplate = `{
                 },
                 "updatedAt": {
                     "type": "string"
+                }
+            }
+        },
+        "view.WorkSurvey": {
+            "type": "object",
+            "properties": {
+                "deadline": {
+                    "type": "number"
+                },
+                "endDate": {
+                    "type": "string"
+                },
+                "learning": {
+                    "type": "number"
+                },
+                "trend": {
+                    "$ref": "#/definitions/view.Trend"
+                },
+                "workload": {
+                    "type": "number"
+                }
+            }
+        },
+        "view.WorkSurveyResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/view.WorkSurveysData"
+                }
+            }
+        },
+        "view.WorkSurveysData": {
+            "type": "object",
+            "properties": {
+                "project": {
+                    "$ref": "#/definitions/view.BasicProjectInfo"
+                },
+                "workSurveys": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.WorkSurvey"
+                    }
                 }
             }
         },

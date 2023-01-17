@@ -18,6 +18,30 @@ func New(secret string) NotionService {
 	}
 }
 
+func (n *notionService) GetDatabase(databaseID string, filter *nt.DatabaseQueryFilter) (*nt.DatabaseQueryResponse, error) {
+	ctx := context.Background()
+
+	res, err := n.notionClient.QueryDatabase(ctx, databaseID, &nt.DatabaseQuery{
+		Filter: filter,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &res, nil
+}
+
+func (n *notionService) GetBlockChildren(pageID string) (*nt.BlockChildrenResponse, error) {
+	ctx := context.Background()
+
+	res, err := n.notionClient.FindBlockChildrenByID(ctx, pageID, &nt.PaginationQuery{})
+	if err != nil {
+		return nil, err
+	}
+
+	return &res, nil
+}
+
 func (n *notionService) GetProjectInDB(pageID, projectPageID string) (*nt.DatabasePageProperties, error) {
 	ctx := context.Background()
 

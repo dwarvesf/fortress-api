@@ -6,7 +6,7 @@ import (
 )
 
 type IStore interface {
-	One(db *gorm.DB, projectID string, employeeID string, preload bool) (*model.ProjectMember, error)
+	OneByID(db *gorm.DB, id string) (*model.ProjectMember, error)
 	OneBySlotID(db *gorm.DB, slotID string) (*model.ProjectMember, error)
 	Create(db *gorm.DB, member *model.ProjectMember) error
 	Delete(db *gorm.DB, id string) (err error)
@@ -16,4 +16,6 @@ type IStore interface {
 	UpdateSelectedFieldByProjectID(db *gorm.DB, projectID string, updateModel model.ProjectMember, updatedField string) error
 	UpdateLeftDateByProjectID(db *gorm.DB, projectID string) error
 	GetActiveByProjectIDs(db *gorm.DB, projectIDs []string) ([]*model.ProjectMember, error)
+	GetActiveMemberInProject(db *gorm.DB, projectID string, employeeID string) (*model.ProjectMember, error)
+	GetActiveMembersBySlotID(db *gorm.DB, slotID string) ([]*model.ProjectMember, error)
 }

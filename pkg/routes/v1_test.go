@@ -249,6 +249,12 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/project.IHandler.DeleteMember-fm",
 			},
 		},
+		"/api/v1/projects/:id/slots/:slotID": {
+			"DELETE": {
+				Method:  "DELETE",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/project.IHandler.DeleteSlot-fm",
+			},
+		},
 		"/api/v1/projects/:id/general-info": {
 			"PUT": {
 				Method:  "PUT",
@@ -387,6 +393,48 @@ func Test_loadV1Routes(t *testing.T) {
 			"GET": {
 				Method:  "GET",
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/valuation.IHandler.One-fm",
+			},
+		},
+		"/api/v1/dashboards/projects/sizes": {
+			"GET": {
+				Method:  "GET",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/dashboard.IHandler.ProjectSizes-fm",
+			},
+		},
+		"/api/v1/dashboards/projects/work-surveys": {
+			"GET": {
+				Method:  "GET",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/dashboard.IHandler.WorkSurveys-fm",
+			},
+		},
+		"/api/v1/dashboards/projects/action-items": {
+			"GET": {
+				Method:  "GET",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/dashboard.IHandler.GetActionItemReports-fm",
+			},
+		},
+		"/api/v1/dashboards/projects/engineering-healths": {
+			"GET": {
+				Method:  "GET",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/dashboard.IHandler.EngineeringHealth-fm",
+			},
+		},
+		"/api/v1/dashboards/projects/audits": {
+			"GET": {
+				Method:  "GET",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/dashboard.IHandler.Audits-fm",
+			},
+		},
+		"/api/v1/earn": {
+			"GET": {
+				Method:  "GET",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/earn.IHandler.List-fm",
+			},
+		},
+		"/api/v1/tech-radar": {
+			"GET": {
+				Method:  "GET",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/techradar.IHandler.List-fm",
 			},
 		},
 	}

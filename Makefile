@@ -1,11 +1,12 @@
 APP_NAME=fortress-api
 DEFAULT_PORT=8200
+POSTGRES_TEST_SERVICE?=postgres_test
 POSTGRES_TEST_CONTAINER?=fortress_local_test
 POSTGRES_CONTAINER?=fortress_local
 TOOLS_IMAGE=fortress-tools
 APP_ENVIRONMENT=docker run --rm -v ${PWD}:/${APP_NAME} -w /${APP_NAME} --net=host ${TOOLS_IMAGE}
 
-.PHONY: setup init build dev test migrate-up migrate-down
+.PHONY: setup init build dev test migrate-up migrate-down ci
 
 setup:
 	docker build -f ./Dockerfile.tools -t ${TOOLS_IMAGE} .
@@ -49,7 +50,15 @@ dev:
 cronjob:
 	go run ./cmd/cronjob/main.go
 
-test: reset-test-db
+test: 
+	docker rm -f ${POSTGRES_TEST_CONTAINER}
+	docker-compose up -d ${POSTGRES_TEST_SERVICE}
+	@while ! docker exec $(POSTGRES_TEST_CONTAINER) pg_isready > /dev/null; do \
+		sleep 1; \
+	done
+	make migrate-test
+	make seed-test
+
 	@PROJECT_PATH=$(shell pwd) go test -cover ./... -count=1 -p=1
 
 migrate-test:
@@ -84,3 +93,6 @@ gen-mock:
 
 gen-swagger:
 	${APP_ENVIRONMENT} swag init --parseDependency -g ./cmd/server/main.go
+
+ci: init
+	@PROJECT_PATH=$(shell pwd) go test -cover ./... -count=1 -p=1

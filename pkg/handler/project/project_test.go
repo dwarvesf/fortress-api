@@ -28,6 +28,109 @@ import (
 
 const testToken = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2OTkzMjExNDIsImlkIjoiMjY1NTgzMmUtZjAwOS00YjczLWE1MzUtNjRjM2EyMmU1NThmIiwiYXZhdGFyIjoiaHR0cHM6Ly9zMy1hcC1zb3V0aGVhc3QtMS5hbWF6b25hd3MuY29tL2ZvcnRyZXNzLWltYWdlcy81MTUzNTc0Njk1NjYzOTU1OTQ0LnBuZyIsImVtYWlsIjoidGhhbmhAZC5mb3VuZGF0aW9uIiwicGVybWlzc2lvbnMiOlsiZW1wbG95ZWVzLnJlYWQiXSwidXNlcl9pbmZvIjpudWxsfQ.GENGPEucSUrILN6tHDKxLMtj0M0REVMUPC7-XhDMpGM"
 
+func TestHandler_Detail(t *testing.T) {
+	cfg := config.LoadTestConfig()
+	loggerMock := logger.NewLogrusLogger()
+	serviceMock := service.New(&cfg)
+	storeMock := store.New()
+
+	tests := []struct {
+		name             string
+		id               string
+		query            string
+		wantCode         int
+		wantErr          error
+		wantResponsePath string
+	}{
+		{
+			name:             "happy_case_slug",
+			id:               "fortress",
+			wantCode:         http.StatusOK,
+			wantResponsePath: "testdata/get_project/200.json",
+		},
+		{
+			name:             "happy_case",
+			id:               "8dc3be2e-19a4-4942-8a79-56db391a0b15",
+			wantCode:         http.StatusOK,
+			wantResponsePath: "testdata/get_project/200.json",
+		},
+		{
+			name:             "not_found",
+			id:               "8dc3be2e-19a4-4942-8a79-56db391a0b11",
+			wantCode:         http.StatusNotFound,
+			wantResponsePath: "testdata/get_project/404.json",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				testhelper.LoadTestSQLFile(t, txRepo, "./testdata/get_project/get_project.sql")
+				w := httptest.NewRecorder()
+				ctx, _ := gin.CreateTestContext(w)
+				ctx.Request = httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/projects/%v", tt.id), nil)
+				ctx.Request.Header.Set("Authorization", testToken)
+				ctx.Request.URL.RawQuery = tt.query
+				ctx.AddParam("id", tt.id)
+
+				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+				h.Details(ctx)
+				require.Equal(t, tt.wantCode, w.Code)
+				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				require.NoError(t, err)
+
+				res := w.Body.Bytes()
+				res, _ = utils.RemoveFieldInResponse(res, "createdAt")
+				res, _ = utils.RemoveFieldInResponse(res, "updatedAt")
+
+				require.JSONEq(t, string(expRespRaw), string(res), "[Handler.Project.Details] response mismatched")
+			})
+		})
+	}
+}
+
+func TestHandler_List(t *testing.T) {
+	cfg := config.LoadTestConfig()
+	loggerMock := logger.NewLogrusLogger()
+	serviceMock := service.New(&cfg)
+	storeMock := store.New()
+
+	tests := []struct {
+		name             string
+		wantCode         int
+		wantErr          error
+		wantResponsePath string
+	}{
+		{
+			name:             "happy_case",
+			wantCode:         http.StatusOK,
+			wantResponsePath: "testdata/get_projects/200.json",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				testhelper.LoadTestSQLFile(t, txRepo, "./testdata/get_projects/get_projects.sql")
+				w := httptest.NewRecorder()
+				ctx, _ := gin.CreateTestContext(w)
+				ctx.Request = httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/projects"), nil)
+				ctx.Request.Header.Set("Authorization", testToken)
+
+				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+				h.List(ctx)
+				require.Equal(t, tt.wantCode, w.Code)
+				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				require.NoError(t, err)
+
+				res := w.Body.Bytes()
+				res, _ = utils.RemoveFieldInResponse(res, "createdAt")
+				res, _ = utils.RemoveFieldInResponse(res, "updatedAt")
+
+				require.JSONEq(t, string(expRespRaw), string(res), "[Handler.Project.Details] response mismatched")
+			})
+		})
+	}
+}
+
 func TestHandler_UpdateProjectStatus(t *testing.T) {
 	// load env and test data
 	cfg := config.LoadTestConfig()
@@ -468,7 +571,7 @@ func TestHandler_DeleteProjectMember(t *testing.T) {
 			wantCode:         200,
 			wantResponsePath: "testdata/delete_member/200.json",
 			id:               "8dc3be2e-19a4-4942-8a79-56db391a0b15",
-			memberID:         "2655832e-f009-4b73-a535-64c3a22e558f",
+			memberID:         "cb889a9c-b20c-47ee-83b8-44b6d1721aca",
 		},
 		{
 			name:             "failed_invalid_member_id",
@@ -493,13 +596,13 @@ func TestHandler_DeleteProjectMember(t *testing.T) {
 				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
 				require.NoError(t, err)
 
-				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.UpdateProjectStatus] response mismatched")
+				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.DeleteSlot] response mismatched")
 			})
 		})
 	}
 }
 
-func TestHandler_Detail(t *testing.T) {
+func TestHandler_DeleteSlot(t *testing.T) {
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg)
@@ -507,96 +610,42 @@ func TestHandler_Detail(t *testing.T) {
 
 	tests := []struct {
 		name             string
+		wantCode         int
+		wantResponsePath string
 		id               string
-		query            string
-		wantCode         int
-		wantErr          error
-		wantResponsePath string
+		slotID           string
 	}{
 		{
-			name:             "happy_case_slug",
-			id:               "fortress",
-			wantCode:         http.StatusOK,
-			wantResponsePath: "testdata/get_project/200.json",
-		},
-		{
-			name:             "happy_case",
+			name:             "ok_update_project_status",
+			wantCode:         200,
+			wantResponsePath: "testdata/delete_slot/200.json",
 			id:               "8dc3be2e-19a4-4942-8a79-56db391a0b15",
-			wantCode:         http.StatusOK,
-			wantResponsePath: "testdata/get_project/200.json",
+			slotID:           "f32d08ca-8863-4ab3-8c84-a11849451eb7",
 		},
 		{
-			name:             "not_found",
-			id:               "8dc3be2e-19a4-4942-8a79-56db391a0b11",
-			wantCode:         http.StatusNotFound,
-			wantResponsePath: "testdata/get_project/404.json",
+			name:             "failed_invalid_member_id",
+			wantCode:         404,
+			wantResponsePath: "testdata/delete_slot/404.json",
+			id:               "8dc3be2e-19a4-4942-8a79-56db391a0b15",
+			slotID:           "cb889a9c-b20c-47ee-83b8-44b6d1721acb",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
-				testhelper.LoadTestSQLFile(t, txRepo, "./testdata/get_project/get_project.sql")
+				testhelper.LoadTestSQLFile(t, txRepo, "./testdata/delete_slot/delete_slot.sql")
 				w := httptest.NewRecorder()
 				ctx, _ := gin.CreateTestContext(w)
-				ctx.Request = httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/projects/%v", tt.id), nil)
+				ctx.Params = gin.Params{gin.Param{Key: "id", Value: tt.id}, gin.Param{Key: "slotID", Value: tt.slotID}}
+				ctx.Request = httptest.NewRequest("DELETE", fmt.Sprintf("/api/v1/projects/%s/slots/%s", tt.id, tt.slotID), nil)
 				ctx.Request.Header.Set("Authorization", testToken)
-				ctx.Request.URL.RawQuery = tt.query
-				ctx.AddParam("id", tt.id)
+				metadataHandler := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 
-				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
-				h.Details(ctx)
-				require.Equal(t, tt.wantCode, w.Code)
+				metadataHandler.DeleteSlot(ctx)
 				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
 				require.NoError(t, err)
 
-				res := w.Body.Bytes()
-				res, _ = utils.RemoveFieldInResponse(res, "createdAt")
-				res, _ = utils.RemoveFieldInResponse(res, "updatedAt")
-
-				require.JSONEq(t, string(expRespRaw), string(res), "[Handler.Project.Details] response mismatched")
-			})
-		})
-	}
-}
-
-func TestHandler_List(t *testing.T) {
-	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg)
-	storeMock := store.New()
-
-	tests := []struct {
-		name             string
-		wantCode         int
-		wantErr          error
-		wantResponsePath string
-	}{
-		{
-			name:             "happy_case",
-			wantCode:         http.StatusOK,
-			wantResponsePath: "testdata/get_projects/200.json",
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
-				testhelper.LoadTestSQLFile(t, txRepo, "./testdata/get_projects/get_projects.sql")
-				w := httptest.NewRecorder()
-				ctx, _ := gin.CreateTestContext(w)
-				ctx.Request = httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/projects"), nil)
-				ctx.Request.Header.Set("Authorization", testToken)
-
-				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
-				h.List(ctx)
-				require.Equal(t, tt.wantCode, w.Code)
-				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
-				require.NoError(t, err)
-
-				res := w.Body.Bytes()
-				res, _ = utils.RemoveFieldInResponse(res, "createdAt")
-				res, _ = utils.RemoveFieldInResponse(res, "updatedAt")
-
-				require.JSONEq(t, string(expRespRaw), string(res), "[Handler.Project.Details] response mismatched")
+				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.DeleteSlot] response mismatched")
 			})
 		})
 	}

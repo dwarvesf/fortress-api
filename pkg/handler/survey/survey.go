@@ -675,7 +675,7 @@ func (h *handler) createWorkEvent(db *gorm.DB, req request.CreateSurveyFeedbackI
 		return http.StatusBadRequest, errs.ErrInvalidDateRange
 	}
 
-	title := fromDate.Format("Jan 02, 2006")
+	title := fromDate.Format("Jan 02, 2006") + " - " + toDate.Format("Jan 02, 2006")
 
 	//1.2 check event existed
 	_, err = h.store.FeedbackEvent.OneByTypeInTimeRange(db, model.EventTypeSurvey, model.EventSubtypeWork, &fromDate, &toDate)

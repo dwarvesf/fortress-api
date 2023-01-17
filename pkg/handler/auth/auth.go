@@ -88,7 +88,7 @@ func (h *handler) Auth(c *gin.Context) {
 	}
 
 	// 2.4 check user is active
-	employee, err := h.store.Employee.OneByTeamEmail(h.repo.DB(), primaryEmail)
+	employee, err := h.store.Employee.OneByEmail(h.repo.DB(), primaryEmail)
 	if err != nil {
 		l.Error(err, "error query employee from db")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req, ""))

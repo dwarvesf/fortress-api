@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"golang.org/x/exp/slices"
 	"gorm.io/gorm"
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
@@ -56,7 +57,15 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 // @Failure 500 {object} view.ErrorResponse
 // @Router /employees/search [post]
 func (h *handler) List(c *gin.Context) {
+	// 0. Get current logged in user data
+	userInfo, err := utils.GetLoggedInUserInfo(c, h.store, h.repo.DB())
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, userInfo.UserID, ""))
+		return
+	}
+
 	var body request.GetListEmployeeInput
+
 	if err := c.ShouldBindJSON(&body); err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, body, ""))
 		return
@@ -80,12 +89,25 @@ func (h *handler) List(c *gin.Context) {
 		Keyword:        body.Keyword,
 		Positions:      body.Positions,
 		Stacks:         body.Stacks,
-		Projects:       body.Projects,
 		Chapters:       body.Chapters,
 		Seniorities:    body.Seniorities,
 		Organizations:  body.Organizations,
 		LineManagers:   body.LineManagers,
 		JoinedDateSort: model.SortOrderDESC,
+		Projects:       body.Projects,
+	}
+
+	// If user don't have this permission, they can only see employees in the project that they are in
+	if !utils.HasPermission(c, userInfo.Permissions, model.PermissionEmployeesReadReadActive) {
+		projectIDs := make([]string, 0)
+		for _, p := range userInfo.Projects {
+			projectIDs = append(projectIDs, p.Code)
+		}
+
+		filter.Projects = []string{""}
+		if len(projectIDs) > 0 {
+			filter.Projects = projectIDs
+		}
 	}
 
 	workingStatuses, err := h.getWorkingStatusInput(c, body.WorkingStatuses)
@@ -104,7 +126,7 @@ func (h *handler) List(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse(view.ToEmployeeListData(employees),
+	c.JSON(http.StatusOK, view.CreateResponse(view.ToEmployeeListData(c, employees, userInfo),
 		&view.PaginationResponse{Pagination: body.Pagination, Total: total}, nil, nil, ""))
 }
 
@@ -117,7 +139,7 @@ func (h *handler) getWorkingStatusInput(c *gin.Context, input []string) ([]strin
 
 	var hasPermission bool
 	if userID != "" {
-		hasPermission, err = h.store.Permission.HasPermission(h.repo.DB(), userID, "employees.filterByStatus")
+		hasPermission, err = h.store.Permission.HasPermission(h.repo.DB(), userID, model.PermissionEmployeesReadFilterByAllStatuses.String())
 		if err != nil {
 			h.logger.Error(err, "failed to check permission of user")
 			return nil, err
@@ -174,6 +196,13 @@ func (h *handler) getWorkingStatusInput(c *gin.Context, input []string) ([]strin
 // @Failure 500 {object} view.ErrorResponse
 // @Router /employees/{id} [get]
 func (h *handler) One(c *gin.Context) {
+	// 0. Get current logged in user data
+	userInfo, err := utils.GetLoggedInUserInfo(c, h.store, h.repo.DB())
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, userInfo.UserID, ""))
+		return
+	}
+
 	// 1. parse id from uri, validate id
 	id := c.Param("id")
 
@@ -187,7 +216,6 @@ func (h *handler) One(c *gin.Context) {
 
 	// 2. get employee from store
 	var rs *model.Employee
-	var err error
 
 	if model.IsUUIDFromString(id) {
 		rs, err = h.store.Employee.One(h.repo.DB(), id, true)
@@ -206,8 +234,13 @@ func (h *handler) One(c *gin.Context) {
 		return
 	}
 
+	if rs.WorkingStatus == model.WorkingStatusLeft && !utils.HasPermission(c, userInfo.Permissions, model.PermissionEmployeesReadFullAccess) {
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrEmployeeNotFound, nil, ""))
+		return
+	}
+
 	// 3. return employee
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToEmployeeData(rs), nil, nil, nil, ""))
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToOneEmployeeData(c, rs, userInfo), nil, nil, nil, ""))
 }
 
 // UpdateEmployeeStatus godoc
@@ -250,7 +283,7 @@ func (h *handler) UpdateEmployeeStatus(c *gin.Context) {
 		return
 	}
 
-	employee, err := h.store.Employee.One(h.repo.DB(), employeeID, true)
+	emp, err := h.store.Employee.One(h.repo.DB(), employeeID, true)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Info("employee not found")
@@ -262,15 +295,15 @@ func (h *handler) UpdateEmployeeStatus(c *gin.Context) {
 		return
 	}
 
-	employee.WorkingStatus = body.EmployeeStatus
-	_, err = h.store.Employee.UpdateSelectedFieldsByID(h.repo.DB(), employeeID, *employee, "working_status")
+	emp.WorkingStatus = body.EmployeeStatus
+	_, err = h.store.Employee.UpdateSelectedFieldsByID(h.repo.DB(), employeeID, *emp, "working_status")
 	if err != nil {
 		l.Error(err, "failed to update employee status")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
 		return
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToEmployeeData(employee), nil, nil, nil, ""))
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToEmployeeData(emp), nil, nil, nil, ""))
 }
 
 // UpdateGeneralInfo godoc
@@ -325,7 +358,7 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 		}
 	}
 
-	employee, err := h.store.Employee.One(h.repo.DB(), employeeID, true)
+	emp, err := h.store.Employee.One(h.repo.DB(), employeeID, true)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Info("employee not found")
@@ -340,56 +373,56 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 	// 3. update information and return
 
 	if strings.TrimSpace(body.FullName) != "" {
-		employee.FullName = body.FullName
+		emp.FullName = body.FullName
 	}
 
 	if strings.TrimSpace(body.Email) != "" {
-		employee.TeamEmail = body.Email
+		emp.TeamEmail = body.Email
 	}
 
 	if strings.TrimSpace(body.Phone) != "" {
-		employee.PhoneNumber = body.Phone
+		emp.PhoneNumber = body.Phone
 	}
 
 	if strings.TrimSpace(body.GithubID) != "" {
-		employee.GithubID = body.GithubID
+		emp.GithubID = body.GithubID
 	}
 
 	if strings.TrimSpace(body.NotionID) != "" {
-		employee.NotionID = body.NotionID
+		emp.NotionID = body.NotionID
 	}
 
 	if strings.TrimSpace(body.NotionName) != "" {
-		employee.NotionName = body.NotionName
+		emp.NotionName = body.NotionName
 	}
 
 	if strings.TrimSpace(body.NotionEmail) != "" {
-		employee.NotionEmail = body.NotionEmail
+		emp.NotionEmail = body.NotionEmail
 	}
 
 	if strings.TrimSpace(body.DiscordID) != "" {
-		employee.DiscordID = body.DiscordID
+		emp.DiscordID = body.DiscordID
 	}
 
 	if strings.TrimSpace(body.DiscordName) != "" {
-		employee.DiscordName = body.DiscordName
+		emp.DiscordName = body.DiscordName
 	}
 
 	if strings.TrimSpace(body.LinkedInName) != "" {
-		employee.LinkedInName = body.LinkedInName
+		emp.LinkedInName = body.LinkedInName
 	}
 
 	if strings.TrimSpace(body.DisplayName) != "" {
-		employee.DisplayName = body.DisplayName
+		emp.DisplayName = body.DisplayName
 	}
 
 	if body.Organization != "" && model.Organization(body.Organization).IsValid() {
-		employee.Organization = model.Organization(body.Organization)
+		emp.Organization = model.Organization(body.Organization)
 	}
 
-	employee.LineManagerID = body.LineManagerID
+	emp.LineManagerID = body.LineManagerID
 
-	_, err = h.store.Employee.UpdateSelectedFieldsByID(h.repo.DB(), employeeID, *employee,
+	_, err = h.store.Employee.UpdateSelectedFieldsByID(h.repo.DB(), employeeID, *emp,
 		"full_name",
 		"team_email",
 		"phone_number",
@@ -410,7 +443,7 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToUpdateGeneralInfoEmployeeData(employee), nil, nil, nil, ""))
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToUpdateGeneralInfoEmployeeData(emp), nil, nil, nil, ""))
 }
 
 // Create godoc
@@ -427,6 +460,12 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 // @Failure 500 {object} view.ErrorResponse
 // @Router /employees [post]
 func (h *handler) Create(c *gin.Context) {
+	userID, err := utils.GetUserIDFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
 	// 1. parse eml data from body
 	var input request.CreateEmployeeInput
 
@@ -446,6 +485,18 @@ func (h *handler) Create(c *gin.Context) {
 		"method":  "Create",
 		"input":   input,
 	})
+
+	loggedInUser, err := h.store.Employee.One(h.repo.DB(), userID, false)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrEmployeeNotFound, nil, ""))
+		return
+	}
+
+	if err != nil {
+		l.Error(err, "failed to get employee")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
 
 	// 1.2 prepare employee data
 	now := time.Now()
@@ -490,6 +541,12 @@ func (h *handler) Create(c *gin.Context) {
 			return
 		}
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input, ""))
+		return
+	}
+
+	if role.Level <= loggedInUser.EmployeeRoles[0].Role.Level {
+		l.Error(errs.ErrInvalidAccountRole, "failed to update role, invalid role")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidAccountRole, input, ""))
 		return
 	}
 
@@ -606,7 +663,7 @@ func (h *handler) UpdateSkills(c *gin.Context) {
 		"request": body,
 	})
 
-	employee, err := h.store.Employee.One(h.repo.DB(), employeeID, true)
+	emp, err := h.store.Employee.One(h.repo.DB(), employeeID, true)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Info("employee not found")
@@ -651,7 +708,7 @@ func (h *handler) UpdateSkills(c *gin.Context) {
 	}
 
 	// Check stack existence
-	stacks, err := h.store.Stack.All(h.repo.DB())
+	_, stacks, err := h.store.Stack.All(h.repo.DB(), "", nil)
 	if err != nil {
 		l.Error(err, "failed to get all stacks")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
@@ -777,16 +834,16 @@ func (h *handler) UpdateSkills(c *gin.Context) {
 	}
 
 	// Update employee information
-	employee.SeniorityID = body.Seniority
+	emp.SeniorityID = body.Seniority
 
-	_, err = h.store.Employee.UpdateSelectedFieldsByID(tx.DB(), employeeID, *employee, "chapter_id", "seniority_id")
+	_, err = h.store.Employee.UpdateSelectedFieldsByID(tx.DB(), employeeID, *emp, "chapter_id", "seniority_id")
 	if err != nil {
 		l.Error(err, "failed to update employee")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
 		return
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToUpdateSkillEmployeeData(employee), nil, done(nil), nil, ""))
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToUpdateSkillEmployeeData(emp), nil, done(nil), nil, ""))
 }
 
 // UpdatePersonalInfo godoc
@@ -825,7 +882,7 @@ func (h *handler) UpdatePersonalInfo(c *gin.Context) {
 		"request": body,
 	})
 
-	employee, err := h.store.Employee.One(h.repo.DB(), employeeID, true)
+	emp, err := h.store.Employee.One(h.repo.DB(), employeeID, true)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Info("employee not found")
@@ -837,22 +894,62 @@ func (h *handler) UpdatePersonalInfo(c *gin.Context) {
 		return
 	}
 
-	employee.DateOfBirth = body.DoB
-	employee.Gender = body.Gender
-	employee.Address = body.Address
-	employee.PlaceOfResidence = body.PlaceOfResidence
-	employee.PersonalEmail = body.PersonalEmail
-	employee.Country = body.Country
-	employee.City = body.City
+	if isValid := h.validateCountryAndCity(h.repo.DB(), body.Country, body.City); !isValid {
+		l.Info("country or city is invalid")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidCountryOrCity, body, ""))
+		return
+	}
 
-	employee, err = h.store.Employee.Update(h.repo.DB(), employee)
+	emp.DateOfBirth = body.DoB
+	emp.Gender = body.Gender
+	emp.Address = body.Address
+	emp.PlaceOfResidence = body.PlaceOfResidence
+	emp.PersonalEmail = body.PersonalEmail
+	emp.Country = body.Country
+	emp.City = body.City
+
+	emp, err = h.store.Employee.Update(h.repo.DB(), emp)
 	if err != nil {
 		l.Error(err, "failed to update employee")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
 		return
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToUpdatePersonalEmployeeData(employee), nil, nil, nil, ""))
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToUpdatePersonalEmployeeData(emp), nil, nil, nil, ""))
+}
+
+func (h *handler) validateCountryAndCity(db *gorm.DB, countryName string, city string) bool {
+	if countryName == "" && city == "" {
+		return true
+	}
+
+	if countryName == "" && city != "" {
+		return false
+	}
+
+	l := h.logger.Fields(logger.Fields{
+		"handler":     "profile",
+		"method":      "validateCountryAndCity",
+		"countryName": countryName,
+		"city":        city,
+	})
+
+	country, err := h.store.Country.OneByName(db, countryName)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			l.Info("country not found")
+			return false
+		}
+		l.Error(err, "failed to get country by code")
+		return false
+	}
+
+	if city != "" && !slices.Contains([]string(country.Cities), city) {
+		l.Info("city does not belong to country")
+		return false
+	}
+
+	return true
 }
 
 // UploadContent godoc
@@ -945,7 +1042,7 @@ func (h *handler) UploadContent(c *gin.Context) {
 	}
 
 	// 2.3 check employee existed
-	employee, err := h.store.Employee.One(tx.DB(), params.ID, false)
+	emp, err := h.store.Employee.One(tx.DB(), params.ID, false)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			l.Info("employee not found")
@@ -963,8 +1060,8 @@ func (h *handler) UploadContent(c *gin.Context) {
 		Type:       fileType,
 		Extension:  fileExtension.String(),
 		Path:       fmt.Sprintf("https://storage.googleapis.com/%s/%s", h.config.Google.GCSBucketName, filePath),
-		EmployeeID: employee.ID,
-		UploadBy:   employee.ID,
+		EmployeeID: emp.ID,
+		UploadBy:   emp.ID,
 	})
 	if err != nil {
 		l.Error(err, "error query employee from db")
@@ -1071,7 +1168,7 @@ func (h *handler) UploadAvatar(c *gin.Context) {
 	tx, done := h.repo.NewTransaction()
 
 	// 2.2 check employee existed
-	employee, err := h.store.Employee.One(tx.DB(), params.ID, false)
+	emp, err := h.store.Employee.One(tx.DB(), params.ID, false)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			l.Info("employee not found")
@@ -1099,7 +1196,7 @@ func (h *handler) UploadAvatar(c *gin.Context) {
 			Type:       fileType,
 			Extension:  fileExtension.String(),
 			Path:       filePath,
-			EmployeeID: employee.ID,
+			EmployeeID: emp.ID,
 			UploadBy:   uuidUserID,
 		})
 		if err != nil {
@@ -1127,7 +1224,7 @@ func (h *handler) UploadAvatar(c *gin.Context) {
 	}
 
 	// 3. update avatar field
-	_, err = h.store.Employee.UpdateSelectedFieldsByID(tx.DB(), employee.ID.String(), model.Employee{
+	_, err = h.store.Employee.UpdateSelectedFieldsByID(tx.DB(), emp.ID.String(), model.Employee{
 		Avatar: filePath,
 	}, "avatar")
 	if err != nil {
@@ -1349,6 +1446,12 @@ func (h *handler) DeleteMentee(c *gin.Context) {
 // @Failure 500 {object} view.ErrorResponse
 // @Router /employees/{id}/roles [put]
 func (h *handler) UpdateRole(c *gin.Context) {
+	userID, err := utils.GetUserIDFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
 	var input request.UpdateRoleInput
 
 	input.EmployeeID = c.Param("id")
@@ -1370,31 +1473,48 @@ func (h *handler) UpdateRole(c *gin.Context) {
 		return
 	}
 
-	// Check employee exists
-	exists, err := h.store.Employee.IsExist(h.repo.DB(), input.EmployeeID)
-	if err != nil {
-		l.Error(err, "error when finding employee")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input, ""))
+	loggedInUser, err := h.store.Employee.One(h.repo.DB(), userID, false)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrEmployeeNotFound, nil, ""))
 		return
 	}
 
-	if !exists {
-		l.Error(errs.ErrEmployeeNotFound, "error employee not found")
-		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrEmployeeNotFound, input, ""))
+	if err != nil {
+		l.Error(err, "failed to get employee")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	empl, err := h.store.Employee.One(h.repo.DB(), input.EmployeeID, false)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		l.Error(errs.ErrEmployeeNotFound, "reviewer not found")
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrEmployeeNotFound, nil, ""))
+		return
+	}
+
+	if err != nil {
+		l.Error(err, "failed to get employee")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
 	}
 
 	// Check role exists
-	exists, err = h.store.Role.IsExist(h.repo.DB(), input.Body.RoleID.String())
+	newRole, err := h.store.Role.One(h.repo.DB(), input.Body.RoleID)
 	if err != nil {
 		l.Error(err, "error when finding role")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input, ""))
 		return
 	}
 
-	if !exists {
-		l.Error(errs.ErrEmployeeNotFound, "error role not found")
-		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrRoleNotFound, input, ""))
+	if empl.EmployeeRoles[0].Role.Level == loggedInUser.EmployeeRoles[0].Role.Level {
+		l.Error(errs.ErrInvalidAccountRole, "failed to update role, invalid role")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrCouldNotAssignRoleForSameLevelEmployee, input, ""))
+		return
+	}
+
+	if newRole.Level <= loggedInUser.EmployeeRoles[0].Role.Level {
+		l.Error(errs.ErrInvalidAccountRole, "failed to update role, invalid role")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidAccountRole, input, ""))
 		return
 	}
 

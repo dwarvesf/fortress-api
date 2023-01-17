@@ -146,17 +146,18 @@ func (i *GetListStaffInput) Validate() error {
 }
 
 type UpdateMemberInput struct {
-	ProjectSlotID  model.UUID      `from:"projectSlotID" json:"projectSlotID" binding:"required"`
-	EmployeeID     model.UUID      `form:"employeeID" json:"employeeID"`
-	SeniorityID    model.UUID      `form:"seniorityID" json:"seniorityID" binding:"required"`
-	Positions      []model.UUID    `form:"positions" json:"positions" binding:"required"`
-	DeploymentType string          `form:"deploymentType" json:"deploymentType" binding:"required"`
-	Status         string          `form:"status" json:"status" binding:"required"`
-	JoinedDate     string          `form:"joinedDate" json:"joinedDate"`
-	LeftDate       string          `form:"leftDate" json:"leftDate"`
-	Rate           decimal.Decimal `form:"rate" json:"rate" binding:"required"`
-	Discount       decimal.Decimal `form:"discount" json:"discount"`
-	IsLead         bool            `form:"isLead" json:"isLead"`
+	ProjectSlotID   model.UUID      `from:"projectSlotID" json:"projectSlotID" binding:"required"`
+	ProjectMemberID model.UUID      `from:"projectMemberID" json:"projectMemberID"`
+	EmployeeID      model.UUID      `form:"employeeID" json:"employeeID"`
+	SeniorityID     model.UUID      `form:"seniorityID" json:"seniorityID" binding:"required"`
+	Positions       []model.UUID    `form:"positions" json:"positions" binding:"required"`
+	DeploymentType  string          `form:"deploymentType" json:"deploymentType" binding:"required"`
+	Status          string          `form:"status" json:"status" binding:"required"`
+	JoinedDate      string          `form:"joinedDate" json:"joinedDate"`
+	LeftDate        string          `form:"leftDate" json:"leftDate"`
+	Rate            decimal.Decimal `form:"rate" json:"rate" binding:"required"`
+	Discount        decimal.Decimal `form:"discount" json:"discount"`
+	IsLead          bool            `form:"isLead" json:"isLead"`
 }
 
 func (i *UpdateMemberInput) Validate() error {
@@ -176,6 +177,16 @@ func (i *UpdateMemberInput) Validate() error {
 	_, err = time.Parse("2006-01-02", i.LeftDate)
 	if i.LeftDate != "" && err != nil {
 		return errs.ErrInvalidLeftDate
+	}
+
+	if i.GetJoinedDate() != nil &&
+		i.GetLeftDate() != nil &&
+		!i.GetJoinedDate().Before(*i.GetLeftDate()) {
+		return errs.ErrInvalidLeftDate
+	}
+
+	if i.GetLeftDate() != nil && i.GetLeftDate().Before(time.Now()) {
+		i.Status = model.ProjectMemberStatusInactive.String()
 	}
 
 	return nil
@@ -263,6 +274,18 @@ func (i *AssignMemberInput) GetLeftDate() *time.Time {
 	return &date
 }
 
+func (i *AssignMemberInput) GetStatus() model.ProjectMemberStatus {
+	if i.EmployeeID.IsZero() {
+		return model.ProjectMemberStatusPending
+	}
+
+	if !i.EmployeeID.IsZero() && i.Status == model.ProjectMemberStatusPending.String() {
+		return model.ProjectMemberStatusActive
+	}
+
+	return model.ProjectMemberStatus(i.Status)
+}
+
 type DeleteMemberInput struct {
 	ProjectID string
 	MemberID  string
@@ -275,6 +298,23 @@ func (input DeleteMemberInput) Validate() error {
 
 	if input.MemberID == "" {
 		return errs.ErrInvalidMemberID
+	}
+
+	return nil
+}
+
+type DeleteSlotInput struct {
+	ProjectID string
+	SlotID    string
+}
+
+func (input DeleteSlotInput) Validate() error {
+	if input.ProjectID == "" {
+		return errs.ErrInvalidProjectID
+	}
+
+	if input.SlotID == "" {
+		return errs.ErrInvalidSlotID
 	}
 
 	return nil

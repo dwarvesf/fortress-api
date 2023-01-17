@@ -42,10 +42,10 @@ func (s *store) One(db *gorm.DB, projectID string, position model.HeadPosition) 
 	return projectHead, db.Where("project_id = ? AND position = ? AND left_date IS NULL", projectID, position).First(&projectHead).Error
 }
 
-func (s *store) UpdateLeftDateOfEmployee(db *gorm.DB, employeeID string, projectID string, position string) (*model.ProjectHead, error) {
+func (s *store) UpdateLeftDateOfEmployee(db *gorm.DB, employeeID string, projectID string, position string, leftDate time.Time) (*model.ProjectHead, error) {
 	head := model.ProjectHead{}
 	return &head, db.
 		Model(&head).
 		Where("employee_id = ? AND project_id = ? AND position = ? AND left_date is NULL", employeeID, projectID, position).
-		Update("left_date", time.Now()).Error
+		Update("left_date", leftDate).Error
 }
