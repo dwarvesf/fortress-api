@@ -348,7 +348,7 @@ func (s *store) GetAllActionItemSquashReports(db *gorm.DB) ([]*model.ActionItemS
 	query := `
 		SELECT (sum(high) + sum(medium) + sum(low)) as all, sum(high) as high, sum(medium) as medium, sum(low) as low, action_item_snapshots.created_at as snap_date
 		FROM action_item_snapshots
-			LEFT JOIN projects on action_item_snapshots.project_id = projects.id
+			LEFT JOIN projects on action_item_snapshots.project_id = projects.notion_id
 		WHERE projects.function = 'development'
 		GROUP BY snap_date
 		ORDER BY snap_date desc
@@ -364,7 +364,7 @@ func (s *store) GetActionItemSquashReportsByProjectID(db *gorm.DB, projectID str
 	query := `
 		SELECT (sum(high) + sum(medium) + sum(low)) as all, sum(high) as high, sum(medium) as medium, sum(low) as low, action_item_snapshots.created_at as snap_date
 		FROM action_item_snapshots
-			LEFT JOIN projects on action_item_snapshots.project_id = projects.id
+			LEFT JOIN projects on action_item_snapshots.project_id = projects.notion_id
 		WHERE projects.function = 'development' AND projects.id = ?
 		GROUP BY snap_date
 		ORDER BY snap_date desc
