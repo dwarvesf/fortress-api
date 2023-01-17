@@ -12,6 +12,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/handler/profile"
 	"github.com/dwarvesf/fortress-api/pkg/handler/project"
 	"github.com/dwarvesf/fortress-api/pkg/handler/survey"
+	"github.com/dwarvesf/fortress-api/pkg/handler/techradar"
 	"github.com/dwarvesf/fortress-api/pkg/handler/valuation"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/service"
@@ -30,6 +31,7 @@ type Handler struct {
 	Dashboard   dashboard.IHandler
 	Valuation   valuation.IHandler
 	Earn        earn.IHandler
+	TechRadar   techradar.IHandler
 }
 
 func New(store *store.Store, repo store.DBRepo, service *service.Service, logger logger.Logger, cfg *config.Config) *Handler {
@@ -45,5 +47,6 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 		Dashboard:   dashboard.New(store, repo, service, logger, cfg),
 		Valuation:   valuation.New(store, repo, service, logger, cfg),
 		Earn:        earn.New(store, repo, service, logger, cfg),
+		TechRadar:   techradar.New(store, repo, service, logger, cfg),
 	}
 }
