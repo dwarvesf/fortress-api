@@ -74,12 +74,15 @@ func (s *store) All(db *gorm.DB, filter EmployeeFilter, pagination model.Paginat
 	var total int64
 	var employees []*model.Employee
 
-	query := db.Table("employees")
+	query := db.Table("employees").Distinct("ON(employees.id) employees.*")
 
 	query = getByWhereConditions(query, filter)
-	query = getByFieldSort(query, "employees.joined_date", filter.JoinedDateSort)
+	err := db.Raw("SELECT COUNT(*) FROM (?) res", query).Scan(&total).Error
+	if err != nil {
+		return nil, 0, err
+	}
 
-	query = query.Count(&total)
+	query = getByFieldSort(db, query, "employees.joined_date", filter.JoinedDateSort)
 
 	if filter.Preload {
 		query = query.Preload("ProjectMembers", "deleted_at IS NULL").
