@@ -274,6 +274,9 @@ func ToUpdateGeneralInfoEmployeeData(employee *model.Employee) *UpdateGeneralInf
 func ToOneEmployeeData(c *gin.Context, employee *model.Employee, userInfo *model.CurrentLoggedUserInfo) *EmployeeData {
 	employeeProjects := make([]EmployeeProjectData, 0, len(employee.ProjectMembers))
 	for _, v := range employee.ProjectMembers {
+		if v.Status == model.ProjectMemberStatusInactive {
+			continue
+		}
 		_, ok := userInfo.Projects[v.ProjectID]
 		if ok && v.Project.Status == model.ProjectStatusActive {
 			employeeProjects = append(employeeProjects, ToEmployeeProjectDetailData(c, &v, userInfo))
