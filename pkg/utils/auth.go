@@ -88,7 +88,7 @@ func HasPermission(c *gin.Context, perms map[string]string, requiredPerm model.P
 
 func GetLoggedInUserInfo(c *gin.Context, storeDB *store.Store, db *gorm.DB) (*model.CurrentLoggedUserInfo, error) {
 	if IsAPIKey(c) {
-		return nil, nil
+		return &model.CurrentLoggedUserInfo{}, nil
 	}
 
 	userID, err := GetUserIDFromContext(c)
