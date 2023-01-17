@@ -12,7 +12,7 @@ import (
 
 func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store.Store, cfg *config.Config) {
 	v1 := r.Group("/api/v1")
-	pmw := mw.NewPermissionMiddleware(s, repo)
+	pmw := mw.NewPermissionMiddleware(s, repo, cfg)
 	amw := mw.NewAuthMiddleware(cfg)
 
 	// auth

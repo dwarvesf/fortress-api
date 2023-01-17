@@ -40,8 +40,8 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 	return &Handler{
 		Healthcheck: healthz.New(),
 		Employee:    employee.New(store, repo, service, logger, cfg),
-		Metadata:    metadata.New(store, repo, service, logger),
-		Auth:        auth.New(store, repo, service, logger),
+		Metadata:    metadata.New(store, repo, service, logger, cfg),
+		Auth:        auth.New(store, repo, service, logger, cfg),
 		Project:     project.New(store, repo, service, logger, cfg),
 		Profile:     profile.New(store, repo, service, logger, cfg),
 		Feedback:    feedback.New(store, repo, service, logger, cfg),

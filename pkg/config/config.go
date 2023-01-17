@@ -22,9 +22,10 @@ type Config struct {
 	Notion Notion
 	Wise   Wise
 
-	APIKey string
-	Debug  bool
-	Env    string
+	APIKey       string
+	Debug        bool
+	Env          string
+	JWTSecretKey string
 }
 
 type DBConnection struct {
@@ -77,9 +78,10 @@ type ENV interface {
 
 func Generate(v ENV) *Config {
 	return &Config{
-		Debug:  v.GetBool("DEBUG"),
-		APIKey: v.GetString("API_KEY"),
-		Env:    v.GetString("ENV"),
+		Debug:        v.GetBool("DEBUG"),
+		APIKey:       v.GetString("API_KEY"),
+		Env:          v.GetString("ENV"),
+		JWTSecretKey: v.GetString("JWT_SECRET_KEY"),
 
 		ApiServer: ApiServer{
 			Port:           v.GetString("PORT"),
@@ -159,6 +161,7 @@ func LoadTestConfig() Config {
 		ApiServer: ApiServer{
 			Port: "8080",
 		},
+		JWTSecretKey: "JWTSecretKey",
 		Postgres: DBConnection{
 			Host:    "127.0.0.1",
 			Port:    "35432",

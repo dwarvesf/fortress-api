@@ -54,7 +54,7 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 // @Failure 500 {object} view.ErrorResponse
 // @Router /feedbacks [get]
 func (h *handler) List(c *gin.Context) {
-	userID, err := utils.GetUserIDFromContext(c)
+	userID, err := utils.GetUserIDFromContext(c, h.config)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
@@ -109,7 +109,7 @@ func (h *handler) List(c *gin.Context) {
 // @Failure 500 {object} view.ErrorResponse
 // @Router /feedbacks/{id}/topics/{topicID} [get]
 func (h *handler) Detail(c *gin.Context) {
-	userID, err := utils.GetUserIDFromContext(c)
+	userID, err := utils.GetUserIDFromContext(c, h.config)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
@@ -233,7 +233,7 @@ func (h *handler) Detail(c *gin.Context) {
 // @Failure 500 {object} view.ErrorResponse
 // @Router /feedbacks/{id}/topics/{topicID}/submit [post]
 func (h *handler) Submit(c *gin.Context) {
-	userID, err := utils.GetUserIDFromContext(c)
+	userID, err := utils.GetUserIDFromContext(c, h.config)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return

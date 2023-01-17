@@ -3,6 +3,7 @@ package utils
 import (
 	"testing"
 
+	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 )
 
@@ -46,6 +47,7 @@ func TestGenerateJWTToken(t *testing.T) {
 }
 
 func TestGetUserIDFromToken(t *testing.T) {
+	cfg := config.LoadTestConfig()
 	type args struct {
 		tokenString string
 	}
@@ -74,7 +76,7 @@ func TestGetUserIDFromToken(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := GetUserIDFromToken(tt.args.tokenString)
+			got, err := GetUserIDFromToken(&cfg, tt.args.tokenString)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetUserIDFromToken() error = %v, wantErr %v", err, tt.wantErr)
 				return
