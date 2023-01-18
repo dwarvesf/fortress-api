@@ -384,24 +384,6 @@ func (h *handler) createPeerReview(db *gorm.DB, req request.CreateSurveyFeedback
 
 	reviewers := make([]model.EmployeeEventReviewer, 0)
 
-	for i, e := range eets {
-		if !employees[i].LineManagerID.IsZero() {
-			reviewers = append(reviewers, model.EmployeeEventReviewer{
-				BaseModel: model.BaseModel{
-					ID: model.NewUUID(),
-				},
-				EventID:              event.ID,
-				EmployeeEventTopicID: e.ID,
-				ReviewerID:           employees[i].LineManagerID,
-				Relationship:         model.RelationshipLineManager,
-				AuthorStatus:         model.EventAuthorStatusDraft,
-				ReviewerStatus:       model.EventReviewerStatusNone,
-				IsShared:             false,
-				IsRead:               false,
-			})
-		}
-	}
-
 	//TODO: will reused this function later
 	// peers, err := h.store.WorkUnitMember.GetPeerReviewerInTimeRange(db, &startTime, &endTime)
 	// if err != nil {
@@ -413,8 +395,10 @@ func (h *handler) createPeerReview(db *gorm.DB, req request.CreateSurveyFeedback
 		return http.StatusInternalServerError, err
 	}
 
+	reviewerMap := make(map[model.UUID]model.UUID)
 	for _, p := range peers {
 		if !p.ReviewerID.IsZero() {
+			reviewerMap[p.ReviewerID] = p.EmployeeID
 			reviewers = append(reviewers, model.EmployeeEventReviewer{
 				BaseModel: model.BaseModel{
 					ID: model.NewUUID(),
@@ -423,6 +407,29 @@ func (h *handler) createPeerReview(db *gorm.DB, req request.CreateSurveyFeedback
 				EmployeeEventTopicID: employeeEventMapper[p.EmployeeID],
 				ReviewerID:           p.ReviewerID,
 				Relationship:         model.RelationshipPeer,
+				AuthorStatus:         model.EventAuthorStatusDraft,
+				ReviewerStatus:       model.EventReviewerStatusNone,
+				IsShared:             false,
+				IsRead:               false,
+			})
+		}
+	}
+
+	for i, e := range eets {
+		if !employees[i].LineManagerID.IsZero() {
+			_, ok := reviewerMap[employees[i].LineManagerID]
+			if ok {
+				continue
+			}
+
+			reviewers = append(reviewers, model.EmployeeEventReviewer{
+				BaseModel: model.BaseModel{
+					ID: model.NewUUID(),
+				},
+				EventID:              event.ID,
+				EmployeeEventTopicID: e.ID,
+				ReviewerID:           employees[i].LineManagerID,
+				Relationship:         model.RelationshipLineManager,
 				AuthorStatus:         model.EventAuthorStatusDraft,
 				ReviewerStatus:       model.EventReviewerStatusNone,
 				IsShared:             false,
