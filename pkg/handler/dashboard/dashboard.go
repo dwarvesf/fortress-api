@@ -392,6 +392,11 @@ func (h *handler) GetActionItemSquashReports(c *gin.Context) {
 	if input.ProjectID != "" {
 		// Check project existence
 		isExist, err := h.store.Project.IsExist(h.repo.DB(), input.ProjectID)
+		if err != nil {
+			l.Error(err, "failed to get project by project ID")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+			return
+		}
 		if !isExist {
 			l.Error(err, "project not found")
 			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, input, ""))
