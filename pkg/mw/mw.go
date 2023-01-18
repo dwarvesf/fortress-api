@@ -8,8 +8,8 @@ import (
 
 	"gorm.io/gorm"
 
-	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v4"
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/model"
@@ -66,20 +66,20 @@ func (mw *authMiddleware) authenticate(c *gin.Context) error {
 	}
 	switch headers[0] {
 	case "Bearer":
-		return validateToken(headers[1])
+		return mw.validateToken(headers[1])
 	case "ApiKey":
-		return validateApiKey(headers[1], mw.cfg.APIKey)
+		return mw.validateApiKey(headers[1], mw.cfg.APIKey)
 	default:
 		return ErrAuthenticationTypeHeaderInvalid
 	}
 }
 
 // validateToken a func help validate the access token we got
-func validateToken(accessToken string) error {
+func (mw *authMiddleware) validateToken(accessToken string) error {
 	claims := &jwt.StandardClaims{}
 
 	_, err := jwt.ParseWithClaims(accessToken, claims, func(token *jwt.Token) (interface{}, error) {
-		return []byte("JWTSecretKey"), nil
+		return []byte(mw.cfg.JWTSecretKey), nil
 	})
 	if err != nil {
 		return err
@@ -87,14 +87,15 @@ func validateToken(accessToken string) error {
 
 	return claims.Valid()
 }
-func NewPermissionMiddleware(s *store.Store, r store.DBRepo) *permMiddleware {
+func NewPermissionMiddleware(s *store.Store, r store.DBRepo, cfg *config.Config) *permMiddleware {
 	return &permMiddleware{
-		store: s,
-		repo:  r,
+		store:  s,
+		repo:   r,
+		config: cfg,
 	}
 }
 
-func validateApiKey(privK string, pubK string) error {
+func (mw *authMiddleware) validateApiKey(privK string, pubK string) error {
 	pubKey, err := base32.StdEncoding.WithPadding(base32.StdPadding).DecodeString(pubK)
 	if err != nil {
 		return errors.New("invalid public key")
@@ -115,8 +116,9 @@ func validateApiKey(privK string, pubK string) error {
 }
 
 type permMiddleware struct {
-	store *store.Store
-	repo  store.DBRepo
+	store  *store.Store
+	repo   store.DBRepo
+	config *config.Config
 }
 
 // WithPerm a middleware to check the permission
@@ -128,7 +130,7 @@ func (m permMiddleware) WithPerm(perm model.PermissionCode) func(c *gin.Context)
 			return
 		}
 
-		err = ensurePerm(m.store, m.repo.DB(), accessToken, perm.String())
+		err = m.ensurePerm(m.store, m.repo.DB(), accessToken, perm.String())
 		if err != nil {
 			c.AbortWithStatusJSON(401, map[string]string{"message": err.Error()})
 			return
@@ -138,13 +140,13 @@ func (m permMiddleware) WithPerm(perm model.PermissionCode) func(c *gin.Context)
 	}
 }
 
-func ensurePerm(storeDB *store.Store, db *gorm.DB, accessToken string, requiredPerm string) error {
+func (m *permMiddleware) ensurePerm(storeDB *store.Store, db *gorm.DB, accessToken string, requiredPerm string) error {
 	if accessToken == "ApiKey" {
 		return nil
 	}
 
 	token, err := jwt.Parse(accessToken, func(token *jwt.Token) (interface{}, error) {
-		return []byte("JWTSecretKey"), nil
+		return []byte(m.config.JWTSecretKey), nil
 	})
 	if err != nil {
 		return err

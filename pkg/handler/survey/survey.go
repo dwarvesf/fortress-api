@@ -233,7 +233,7 @@ func (h *handler) GetSurveyDetail(c *gin.Context) {
 // @Router /surveys [post]
 func (h *handler) CreateSurvey(c *gin.Context) {
 	// 1. parse request
-	userID, err := utils.GetUserIDFromContext(c)
+	userID, err := utils.GetUserIDFromContext(c, h.config)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
