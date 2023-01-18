@@ -50,7 +50,7 @@ func TestHandler_GetWorkingStatus(t *testing.T) {
 
 				ctx, _ := gin.CreateTestContext(w)
 				ctx.Request = httptest.NewRequest("GET", "/api/v1/metadata/working-status?%s", nil)
-				metadataHandler := New(storeMock, txRepo, serviceMock, loggerMock)
+				metadataHandler := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 
 				metadataHandler.WorkingStatuses(ctx)
 				require.Equal(t, tt.wantCode, w.Code)
@@ -90,7 +90,7 @@ func TestHandler_GetSeniority(t *testing.T) {
 
 				ctx, _ := gin.CreateTestContext(w)
 				ctx.Request = httptest.NewRequest("GET", fmt.Sprintf("/api/v1/metadata/seniorities"), nil)
-				metadataHandler := New(storeMock, txRepo, serviceMock, loggerMock)
+				metadataHandler := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 
 				metadataHandler.Seniorities(ctx)
 
@@ -131,7 +131,7 @@ func TestHandler_GetChapters(t *testing.T) {
 
 				ctx, _ := gin.CreateTestContext(w)
 				ctx.Request = httptest.NewRequest("GET", fmt.Sprintf("/api/v1/metadata/chapters"), nil)
-				metadataHandler := New(storeMock, txRepo, serviceMock, loggerMock)
+				metadataHandler := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 
 				metadataHandler.Chapters(ctx)
 
@@ -172,7 +172,7 @@ func TestHandler_GetProjectStatuses(t *testing.T) {
 
 				ctx, _ := gin.CreateTestContext(w)
 				ctx.Request = httptest.NewRequest("GET", fmt.Sprintf("/api/v1/metadata/project-statuses"), nil)
-				metadataHandler := New(storeMock, txRepo, serviceMock, loggerMock)
+				metadataHandler := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 
 				metadataHandler.ProjectStatuses(ctx)
 
@@ -213,7 +213,7 @@ func TestHandler_GetPositions(t *testing.T) {
 
 				ctx, _ := gin.CreateTestContext(w)
 				ctx.Request = httptest.NewRequest("GET", fmt.Sprintf("/api/v1/metadata/positions"), nil)
-				metadataHandler := New(storeMock, txRepo, serviceMock, loggerMock)
+				metadataHandler := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 
 				metadataHandler.Positions(ctx)
 
@@ -254,7 +254,7 @@ func TestHandler_GetTechStacks(t *testing.T) {
 
 				ctx, _ := gin.CreateTestContext(w)
 				ctx.Request = httptest.NewRequest("GET", fmt.Sprintf("/api/v1/metadata/stacks"), nil)
-				metadataHandler := New(storeMock, txRepo, serviceMock, loggerMock)
+				metadataHandler := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 
 				metadataHandler.Stacks(ctx)
 
@@ -302,7 +302,7 @@ func TestHandler_GetQuestion(t *testing.T) {
 				ctx, _ := gin.CreateTestContext(w)
 				ctx.Request = httptest.NewRequest("GET", "/api/v1/metadata/questions", nil)
 				ctx.Request.URL.RawQuery = tt.query
-				h := New(storeMock, txRepo, serviceMock, loggerMock)
+				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 
 				h.GetQuestions(ctx)
 
@@ -353,7 +353,7 @@ func TestHandler_CreateStack(t *testing.T) {
 				ctx.Request = httptest.NewRequest(http.MethodPost, fmt.Sprintf("/api/v1/metadata/stacks"), bodyReader)
 				ctx.Request.Header.Set("Authorization", testToken)
 
-				h := New(storeMock, txRepo, serviceMock, loggerMock)
+				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 				h.CreateStack(ctx)
 
 				require.Equal(t, tt.wantCode, w.Code)
@@ -417,7 +417,7 @@ func TestHandler_UpdateStack(t *testing.T) {
 				ctx.Request.Header.Set("Authorization", testToken)
 				ctx.AddParam("id", tt.id)
 
-				h := New(storeMock, txRepo, serviceMock, loggerMock)
+				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 				h.UpdateStack(ctx)
 
 				require.Equal(t, tt.wantCode, w.Code)
@@ -461,7 +461,7 @@ func TestHandler_DeleteStack(t *testing.T) {
 				ctx.Request.Header.Set("Authorization", testToken)
 				ctx.AddParam("id", tt.id)
 
-				h := New(storeMock, txRepo, serviceMock, loggerMock)
+				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 				h.DeleteStack(ctx)
 
 				require.Equal(t, tt.wantCode, w.Code)
@@ -510,7 +510,7 @@ func TestHandler_CreatePosition(t *testing.T) {
 				ctx.Request = httptest.NewRequest(http.MethodPost, fmt.Sprintf("/api/v1/metadata/positions"), bodyReader)
 				ctx.Request.Header.Set("Authorization", testToken)
 
-				h := New(storeMock, txRepo, serviceMock, loggerMock)
+				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 				h.CreatePosition(ctx)
 
 				require.Equal(t, tt.wantCode, w.Code)
@@ -572,7 +572,7 @@ func TestHandler_UpdatePosition(t *testing.T) {
 				ctx.Request.Header.Set("Authorization", testToken)
 				ctx.AddParam("id", tt.id)
 
-				h := New(storeMock, txRepo, serviceMock, loggerMock)
+				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 				h.UpdatePosition(ctx)
 
 				require.Equal(t, tt.wantCode, w.Code)
@@ -616,7 +616,7 @@ func TestHandler_DeletePosition(t *testing.T) {
 				ctx.Request.Header.Set("Authorization", testToken)
 				ctx.AddParam("id", tt.id)
 
-				h := New(storeMock, txRepo, serviceMock, loggerMock)
+				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 				h.DeletePosition(ctx)
 
 				require.Equal(t, tt.wantCode, w.Code)

@@ -4,10 +4,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v4"
 	"gorm.io/gorm"
 
+	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 )
@@ -23,10 +24,10 @@ func GenerateJWTToken(info *model.AuthenticationInfo, expiresAt int64, secretKey
 	return encryptedToken, nil
 }
 
-func GetUserIDFromToken(tokenString string) (string, error) {
+func GetUserIDFromToken(cfg *config.Config, tokenString string) (string, error) {
 	claims := model.AuthenticationInfo{}
 	token, err := jwt.ParseWithClaims(tokenString, &claims, func(token *jwt.Token) (interface{}, error) {
-		return []byte("JWTSecretKey"), nil
+		return []byte(cfg.JWTSecretKey), nil
 	})
 
 	if !token.Valid {
@@ -44,7 +45,7 @@ func GetUserIDFromToken(tokenString string) (string, error) {
 	return claims.UserID, nil
 }
 
-func GetUserIDFromContext(c *gin.Context) (string, error) {
+func GetUserIDFromContext(c *gin.Context, cfg *config.Config) (string, error) {
 	accessToken, err := GetTokenFromRequest(c)
 	if err != nil {
 		return "", err
@@ -54,7 +55,7 @@ func GetUserIDFromContext(c *gin.Context) (string, error) {
 		return "", nil
 	}
 
-	return GetUserIDFromToken(accessToken)
+	return GetUserIDFromToken(cfg, accessToken)
 }
 
 func GetTokenFromRequest(c *gin.Context) (string, error) {
@@ -86,12 +87,12 @@ func HasPermission(c *gin.Context, perms map[string]string, requiredPerm model.P
 	return ok
 }
 
-func GetLoggedInUserInfo(c *gin.Context, storeDB *store.Store, db *gorm.DB) (*model.CurrentLoggedUserInfo, error) {
+func GetLoggedInUserInfo(c *gin.Context, storeDB *store.Store, db *gorm.DB, cfg *config.Config) (*model.CurrentLoggedUserInfo, error) {
 	if IsAPIKey(c) {
 		return &model.CurrentLoggedUserInfo{}, nil
 	}
 
-	userID, err := GetUserIDFromContext(c)
+	userID, err := GetUserIDFromContext(c, cfg)
 	if err != nil {
 		return nil, err
 	}

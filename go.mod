@@ -4,7 +4,6 @@ go 1.18
 
 require (
 	cloud.google.com/go/storage v1.27.0
-	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/dstotijn/go-notion v0.9.0
 	github.com/gin-contrib/cors v1.4.0
 	github.com/gin-contrib/pprof v1.4.0
@@ -12,6 +11,7 @@ require (
 	github.com/go-playground/validator/v10 v10.11.1
 	github.com/go-testfixtures/testfixtures/v3 v3.8.1
 	github.com/goccy/go-json v0.9.7
+	github.com/golang-jwt/jwt/v4 v4.4.3
 	github.com/google/go-cmp v0.5.9
 	github.com/hashicorp/vault/api v1.8.2
 	github.com/joho/godotenv v1.4.0
@@ -26,6 +26,7 @@ require (
 	github.com/swaggo/files v0.0.0-20220728132757-551d4a08d97a
 	github.com/swaggo/gin-swagger v1.5.3
 	github.com/swaggo/swag v1.8.7
+	github.com/thoas/go-funk v0.9.3
 	golang.org/x/exp v0.0.0-20221217163422-3c43f8badb15
 	golang.org/x/oauth2 v0.0.0-20221014153046-6fdb5e3db783
 	google.golang.org/api v0.102.0
@@ -115,7 +116,6 @@ require (
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/subosito/gotenv v1.4.1 // indirect
-	github.com/thoas/go-funk v0.9.3 // indirect
 	github.com/ugorji/go/codec v1.2.7 // indirect
 	go.opencensus.io v0.23.0 // indirect
 	go.uber.org/atomic v1.9.0 // indirect

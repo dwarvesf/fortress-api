@@ -22,9 +22,10 @@ type Config struct {
 	Notion Notion
 	Wise   Wise
 
-	APIKey string
-	Debug  bool
-	Env    string
+	APIKey       string
+	Debug        bool
+	Env          string
+	JWTSecretKey string
 }
 
 type DBConnection struct {
@@ -68,6 +69,8 @@ type Notion struct {
 	EarnDBID      string
 	TechRadarDBID string
 	AudienceDBID  string
+	EventDBID     string
+	HiringDBID    string
 }
 
 type ENV interface {
@@ -77,9 +80,10 @@ type ENV interface {
 
 func Generate(v ENV) *Config {
 	return &Config{
-		Debug:  v.GetBool("DEBUG"),
-		APIKey: v.GetString("API_KEY"),
-		Env:    v.GetString("ENV"),
+		Debug:        v.GetBool("DEBUG"),
+		APIKey:       v.GetString("API_KEY"),
+		Env:          v.GetString("ENV"),
+		JWTSecretKey: v.GetString("JWT_SECRET_KEY"),
 
 		ApiServer: ApiServer{
 			Port:           v.GetString("PORT"),
@@ -121,6 +125,8 @@ func Generate(v ENV) *Config {
 			EarnDBID:      v.GetString("NOTION_EARN_DB_ID"),
 			TechRadarDBID: v.GetString("NOTION_TECH_RADAR_DB_ID"),
 			AudienceDBID:  v.GetString("NOTION_AUDIENCE_DB_ID"),
+			EventDBID:     v.GetString("NOTION_EVENT_DB_ID"),
+			HiringDBID:    v.GetString("NOTION_HIRING_DB_ID"),
 		},
 	}
 }
@@ -159,6 +165,7 @@ func LoadTestConfig() Config {
 		ApiServer: ApiServer{
 			Port: "8080",
 		},
+		JWTSecretKey: "JWTSecretKey",
 		Postgres: DBConnection{
 			Host:    "127.0.0.1",
 			Port:    "35432",

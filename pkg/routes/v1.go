@@ -12,7 +12,7 @@ import (
 
 func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store.Store, cfg *config.Config) {
 	v1 := r.Group("/api/v1")
-	pmw := mw.NewPermissionMiddleware(s, repo)
+	pmw := mw.NewPermissionMiddleware(s, repo, cfg)
 	amw := mw.NewAuthMiddleware(cfg)
 
 	// auth
@@ -117,6 +117,14 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 	audience := v1.Group("/audiences")
 	{
 		audience.GET("", h.Audience.List)
+	}
+	event := v1.Group("/events")
+	{
+		event.GET("", h.Event.List)
+	}
+	hiring := v1.Group("/hiring-positions")
+	{
+		hiring.GET("", h.Hiring.List)
 	}
 
 	dashboard := v1.Group("/dashboards")

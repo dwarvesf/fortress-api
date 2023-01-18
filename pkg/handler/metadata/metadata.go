@@ -2,15 +2,16 @@ package metadata
 
 import (
 	"errors"
-	"github.com/dwarvesf/fortress-api/pkg/utils"
 	"net/http"
 
+	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/handler/metadata/errs"
 	"github.com/dwarvesf/fortress-api/pkg/handler/metadata/request"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/store"
+	"github.com/dwarvesf/fortress-api/pkg/utils"
 	"github.com/dwarvesf/fortress-api/pkg/view"
 
 	"github.com/gin-gonic/gin"
@@ -23,14 +24,16 @@ type handler struct {
 	service *service.Service
 	logger  logger.Logger
 	repo    store.DBRepo
+	config  *config.Config
 }
 
-func New(store *store.Store, repo store.DBRepo, service *service.Service, logger logger.Logger) IHandler {
+func New(store *store.Store, repo store.DBRepo, service *service.Service, logger logger.Logger, cfg *config.Config) IHandler {
 	return &handler{
 		store:   store,
 		repo:    repo,
 		service: service,
 		logger:  logger,
+		config:  cfg,
 	}
 }
 
@@ -144,7 +147,7 @@ func (h *handler) Chapters(c *gin.Context) {
 // @Failure 500 {object} view.ErrorResponse
 // @Router /metadata/account-roles [get]
 func (h *handler) AccountRoles(c *gin.Context) {
-	userID, err := utils.GetUserIDFromContext(c)
+	userID, err := utils.GetUserIDFromContext(c, h.config)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return

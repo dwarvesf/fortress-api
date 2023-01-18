@@ -2,12 +2,14 @@ package auth
 
 import (
 	"errors"
-	"gorm.io/gorm"
 	"net/http"
 	"time"
 
+	"gorm.io/gorm"
+
 	"github.com/gin-gonic/gin"
 
+	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service"
@@ -21,14 +23,16 @@ type handler struct {
 	service *service.Service
 	logger  logger.Logger
 	repo    store.DBRepo
+	config  *config.Config
 }
 
-func New(store *store.Store, repo store.DBRepo, service *service.Service, logger logger.Logger) IHandler {
+func New(store *store.Store, repo store.DBRepo, service *service.Service, logger logger.Logger, cfg *config.Config) IHandler {
 	return &handler{
 		store:   store,
 		repo:    repo,
 		service: service,
 		logger:  logger,
+		config:  cfg,
 	}
 }
 
@@ -106,7 +110,7 @@ func (h *handler) Auth(c *gin.Context) {
 		Avatar: employee.Avatar,
 		Email:  primaryEmail,
 	}
-	jwt, err := utils.GenerateJWTToken(&authenticationInfo, time.Now().Add(24*365*time.Hour).Unix(), "JWTSecretKey")
+	jwt, err := utils.GenerateJWTToken(&authenticationInfo, time.Now().Add(24*365*time.Hour).Unix(), h.config.JWTSecretKey)
 	if err != nil {
 		l.Error(err, "error query employee from db")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req, ""))
@@ -130,7 +134,7 @@ func (h *handler) Auth(c *gin.Context) {
 // @Failure 500 {object} view.ErrorResponse
 // @Router /auth/me [get]
 func (h *handler) Me(c *gin.Context) {
-	userID, err := utils.GetUserIDFromContext(c)
+	userID, err := utils.GetUserIDFromContext(c, h.config)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
