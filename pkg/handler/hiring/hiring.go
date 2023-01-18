@@ -12,6 +12,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/view"
 	"github.com/gin-gonic/gin"
+	"github.com/k0kubun/pp/v3"
 	"github.com/thoas/go-funk"
 )
 
@@ -62,6 +63,8 @@ func (h *handler) List(c *gin.Context) {
 		},
 	})
 
+	pp.Println(filter)
+
 	resp, err := h.service.Notion.GetDatabase(h.config.Notion.HiringDBID, nil, []notion.DatabaseQuerySort{
 		{
 			Direction: notion.SortDirDesc,
@@ -78,6 +81,10 @@ func (h *handler) List(c *gin.Context) {
 	for _, r := range resp.Results {
 		props := r.Properties.(notion.DatabasePageProperties)
 
+		if props["Status"].Select == nil || props["Status"].Select.Name != status {
+			continue
+		}
+
 		name := props["Name"].Title[0].Text.Content
 		if r.Icon != nil && r.Icon.Emoji != nil {
 			name = *r.Icon.Emoji + " " + props["Name"].Title[0].Text.Content
@@ -93,7 +100,7 @@ func (h *handler) List(c *gin.Context) {
 		positions = append(positions, model.HiringPosition{
 			ID:        r.ID,
 			Name:      name,
-			Status:    status,
+			Status:    props["Status"].Select.Name,
 			Projects:  projects,
 			CreatedAt: r.CreatedTime,
 		})
