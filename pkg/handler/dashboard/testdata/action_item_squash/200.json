@@ -1,0 +1,152 @@
+{
+    "data": {
+        "all": [
+            {
+                "snapDate": "16/03",
+                "value": 45,
+                "trend": 0
+            },
+            {
+                "snapDate": "16/04",
+                "value": 12,
+                "trend": -73.34
+            },
+            {
+                "snapDate": "16/05",
+                "value": 18,
+                "trend": 50
+            },
+            {
+                "snapDate": "16/06",
+                "value": 35,
+                "trend": 94.44
+            },
+            {
+                "snapDate": "16/07",
+                "value": 15,
+                "trend": -57.15
+            },
+            {
+                "snapDate": "16/01",
+                "value": 110,
+                "trend": 633.33
+            },
+            {
+                "snapDate": "16/02",
+                "value": 15,
+                "trend": -86.37
+            }
+        ],
+        "high": [
+            {
+                "snapDate": "16/03",
+                "value": 10,
+                "trend": 0
+            },
+            {
+                "snapDate": "16/04",
+                "value": 2,
+                "trend": -80
+            },
+            {
+                "snapDate": "16/05",
+                "value": 3,
+                "trend": 50
+            },
+            {
+                "snapDate": "16/06",
+                "value": 5,
+                "trend": 66.66
+            },
+            {
+                "snapDate": "16/07",
+                "value": 4,
+                "trend": -20
+            },
+            {
+                "snapDate": "16/01",
+                "value": 20,
+                "trend": 400
+            },
+            {
+                "snapDate": "16/02",
+                "value": 4,
+                "trend": -80
+            }
+        ],
+        "medium": [
+            {
+                "snapDate": "16/03",
+                "value": 15,
+                "trend": 0
+            },
+            {
+                "snapDate": "16/04",
+                "value": 4,
+                "trend": -73.34
+            },
+            {
+                "snapDate": "16/05",
+                "value": 6,
+                "trend": 50
+            },
+            {
+                "snapDate": "16/06",
+                "value": 10,
+                "trend": 66.66
+            },
+            {
+                "snapDate": "16/07",
+                "value": 5,
+                "trend": -50
+            },
+            {
+                "snapDate": "16/01",
+                "value": 35,
+                "trend": 600
+            },
+            {
+                "snapDate": "16/02",
+                "value": 5,
+                "trend": -85.72
+            }
+        ],
+        "low": [
+            {
+                "snapDate": "16/03",
+                "value": 20,
+                "trend": 0
+            },
+            {
+                "snapDate": "16/04",
+                "value": 6,
+                "trend": -70
+            },
+            {
+                "snapDate": "16/05",
+                "value": 9,
+                "trend": 50
+            },
+            {
+                "snapDate": "16/06",
+                "value": 20,
+                "trend": 122.22
+            },
+            {
+                "snapDate": "16/07",
+                "value": 6,
+                "trend": -70
+            },
+            {
+                "snapDate": "16/01",
+                "value": 55,
+                "trend": 816.66
+            },
+            {
+                "snapDate": "16/02",
+                "value": 6,
+                "trend": -89.1
+            }
+        ]
+    }
+}

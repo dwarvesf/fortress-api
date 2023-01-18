@@ -1250,6 +1250,39 @@ definitions:
           $ref: '#/definitions/view.AuditActionItemReport'
         type: array
     type: object
+  view.ActionItemSquash:
+    properties:
+      snapDate:
+        type: string
+      trend:
+        type: number
+      value:
+        type: integer
+    type: object
+  view.ActionItemSquashReport:
+    properties:
+      all:
+        items:
+          $ref: '#/definitions/view.ActionItemSquash'
+        type: array
+      high:
+        items:
+          $ref: '#/definitions/view.ActionItemSquash'
+        type: array
+      low:
+        items:
+          $ref: '#/definitions/view.ActionItemSquash'
+        type: array
+      medium:
+        items:
+          $ref: '#/definitions/view.ActionItemSquash'
+        type: array
+    type: object
+  view.ActionItemSquashReportResponse:
+    properties:
+      data:
+        $ref: '#/definitions/view.ActionItemSquashReport'
+    type: object
   view.ActionItemTrend:
     properties:
       high:
@@ -2684,6 +2717,43 @@ paths:
       summary: Get logged-in user data
       tags:
       - Auth
+  /dashboards/projects/action-item-squash:
+    get:
+      consumes:
+      - application/json
+      description: Get Action items squash report for dashboard
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Project ID
+        in: query
+        name: projectID
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.ActionItemSquashReportResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get Action items squash report for dashboard
+      tags:
+      - Dashboard
   /dashboards/projects/action-items:
     get:
       consumes:
