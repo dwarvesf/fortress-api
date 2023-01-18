@@ -118,6 +118,14 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 	{
 		audience.GET("", h.Audience.List)
 	}
+	event := v1.Group("/events")
+	{
+		event.GET("", h.Event.List)
+	}
+	hiring := v1.Group("/hiring-positions")
+	{
+		hiring.GET("", h.Hiring.List)
+	}
 
 	dashboard := v1.Group("/dashboards")
 	{
