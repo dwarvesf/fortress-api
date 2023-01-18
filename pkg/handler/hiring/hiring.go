@@ -12,7 +12,6 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/view"
 	"github.com/gin-gonic/gin"
-	"github.com/k0kubun/pp/v3"
 	"github.com/thoas/go-funk"
 )
 
@@ -62,8 +61,6 @@ func (h *handler) List(c *gin.Context) {
 			},
 		},
 	})
-
-	pp.Println(filter)
 
 	resp, err := h.service.Notion.GetDatabase(h.config.Notion.HiringDBID, nil, []notion.DatabaseQuerySort{
 		{
