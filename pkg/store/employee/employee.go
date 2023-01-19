@@ -174,3 +174,30 @@ func (s *store) GetByWorkingStatus(db *gorm.DB, workingStatus model.WorkingStatu
 	var employees []*model.Employee
 	return employees, db.Where("working_status = ?", workingStatus).Find(&employees).Error
 }
+
+func (s *store) GetLineManagers(db *gorm.DB) ([]*model.Employee, error) {
+	var employees []*model.Employee
+	return employees, db.Where(`id IN (
+		SELECT e.line_manager_id
+		FROM employees e
+		WHERE e.deleted_at IS NULL
+			AND e.working_status != ? 
+			AND (e.left_date IS NULL OR e.left_date >= now())
+	)`, model.WorkingStatusLeft).Find(&employees).Error
+}
+
+func (s *store) GetLineManagersOfPeers(db *gorm.DB, employeeID string) ([]*model.Employee, error) {
+	var employees []*model.Employee
+	return employees, db.Where(`id IN (
+		SELECT e.line_manager_id
+		FROM employees e JOIN project_members pm ON pm.employee_id = e.id
+		WHERE e.deleted_at IS NULL
+			AND e.working_status != ? 
+			AND (e.left_date IS NULL OR e.left_date >= now())
+			AND pm.project_id IN (
+				SELECT pm2.project_id
+				FROM project_members pm2
+				WHERE pm2.employee_id = employees.id
+			)
+	)`, model.WorkingStatusLeft).Find(&employees).Error
+}

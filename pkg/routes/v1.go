@@ -38,6 +38,8 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 	v1.DELETE("/employees/:id/mentees/:menteeID", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeeMenteesDelete), h.Employee.DeleteMentee)
 	v1.PUT("/employees/:id/roles", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeeRolesEdit), h.Employee.UpdateRole)
 
+	v1.GET("/line-managers", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesRead), h.Employee.GetLineManagers)
+
 	// metadata
 	v1.GET("/metadata/working-status", h.Metadata.WorkingStatuses)
 	v1.GET("/metadata/stacks", h.Metadata.Stacks)

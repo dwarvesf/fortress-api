@@ -77,6 +77,12 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/employee.IHandler.DeleteMentee-fm",
 			},
 		},
+		"/api/v1/line-managers": {
+			"GET": {
+				Method:  "GET",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/employee.IHandler.GetLineManagers-fm",
+			},
+		},
 		"/api/v1/metadata/working-status": {
 			"GET": {
 				Method:  "GET",

@@ -1539,3 +1539,47 @@ func (h *handler) UpdateRole(c *gin.Context) {
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, done(nil), nil, "ok"))
 }
+
+// GetLineManagers godoc
+// @Summary Get the list of line managers
+// @Description Get the list of line managers
+// @Tags Employee
+// @Accept  json
+// @Produce  json
+// @Param Authorization header string true "jwt token"
+// @Success 200 {object} view.LineManagersResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /line-managers [post]
+func (h *handler) GetLineManagers(c *gin.Context) {
+	userInfo, err := utils.GetLoggedInUserInfo(c, h.store, h.repo.DB(), h.config)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	l := h.logger.Fields(logger.Fields{
+		"handler":  "employee",
+		"method":   "GetLineManagers",
+		"userInfo": userInfo.UserID,
+	})
+
+	var managers []*model.Employee
+
+	if utils.HasPermission(c, userInfo.Permissions, model.PermissionEmployeesReadLineManagerFullAccess) {
+		managers, err = h.store.Employee.GetLineManagers(h.repo.DB())
+		if err != nil {
+			l.Error(err, "failed to get line managers")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, userInfo.UserID, ""))
+			return
+		}
+	} else {
+		managers, err = h.store.Employee.GetLineManagersOfPeers(h.repo.DB(), userInfo.UserID)
+		if err != nil {
+			l.Error(err, "failed to get line managers of peers")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, userInfo.UserID, ""))
+			return
+		}
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToBasicEmployees(managers), nil, nil, nil, ""))
+}

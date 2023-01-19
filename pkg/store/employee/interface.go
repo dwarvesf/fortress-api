@@ -17,6 +17,8 @@ type IStore interface {
 	OneByNotionID(db *gorm.DB, notionID string) (employee *model.Employee, err error)
 	GetByIDs(db *gorm.DB, ids []model.UUID) (employees []*model.Employee, err error)
 	GetByWorkingStatus(db *gorm.DB, workingStatus model.WorkingStatus) ([]*model.Employee, error)
+	GetLineManagers(db *gorm.DB) ([]*model.Employee, error)
+	GetLineManagersOfPeers(db *gorm.DB, employeeID string) ([]*model.Employee, error)
 
 	IsExist(db *gorm.DB, id string) (bool, error)
 
