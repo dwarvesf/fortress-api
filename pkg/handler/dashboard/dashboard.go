@@ -201,7 +201,7 @@ func (h *handler) GetActionItemReports(c *gin.Context) {
 // @Produce json
 // @Param Authorization header string true "jwt token"
 // @Param projectID   query  string false  "Project ID"
-// @Success 200 {object} view.EngineringHealthResponse
+// @Success 200 {object} view.EngineeringHealthResponse
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 404 {object} view.ErrorResponse
 // @Failure 500 {object} view.ErrorResponse

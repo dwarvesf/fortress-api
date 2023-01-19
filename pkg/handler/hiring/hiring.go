@@ -40,8 +40,9 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 // @Tags hiring
 // @Accept  json
 // @Produce  json
-// @Success 200 {object} []model.Hiring
+// @Success 200 {object} view.HiringResponse
 // @Failure 400 {object} view.ErrorResponse
+// @Router /hiring-positions [get]
 func (h *handler) List(c *gin.Context) {
 	filter := &notion.DatabaseQueryFilter{}
 
