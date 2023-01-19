@@ -315,7 +315,8 @@ func (h *handler) Submit(c *gin.Context) {
 		}
 
 		if questionMap[e.EventQuestionID] == model.QuestionTypeScale.String() {
-			if !model.AgreementLevel(e.Answer).IsValid() {
+			if (input.Body.Status == model.EventReviewerStatusDone && e.Answer == "" && !model.AgreementLevel(e.Answer).IsValid()) ||
+				(input.Body.Status == model.EventReviewerStatusDraft && e.Answer != "" && !model.AgreementLevel(e.Answer).IsValid()){
 				l.Error(errs.ErrInvalidAnswerForLikertScale, "invalid answer for likert-scale question")
 				c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, done(errs.ErrInvalidAnswerForLikertScale), input, ""))
 				return
