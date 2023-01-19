@@ -15,6 +15,21 @@ definitions:
       name:
         type: string
     type: object
+  model.Audience:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      full_name:
+        type: string
+      id:
+        type: string
+      source:
+        items:
+          type: string
+        type: array
+    type: object
   model.Chapter:
     properties:
       code:
@@ -51,6 +66,296 @@ definitions:
       updatedAt:
         type: string
     type: object
+  model.DateTime:
+    properties:
+      has_time:
+        type: boolean
+      time:
+        type: string
+    type: object
+  model.Earn:
+    properties:
+      due_date:
+        type: string
+      function:
+        items:
+          type: string
+        type: array
+      id:
+        type: string
+      name:
+        type: string
+      pics:
+        items:
+          $ref: '#/definitions/model.Employee'
+        type: array
+      priority:
+        type: string
+      progress:
+        type: integer
+      reward:
+        type: integer
+      status:
+        type: string
+      tags:
+        items:
+          type: string
+        type: array
+    type: object
+  model.Employee:
+    properties:
+      address:
+        type: string
+      avatar:
+        type: string
+      basecampAttachableSGID:
+        type: string
+      basecampID:
+        description: social services
+        type: string
+      city:
+        type: string
+      country:
+        type: string
+      createdAt:
+        type: string
+      dateOfBirth:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      discordID:
+        type: string
+      discordName:
+        type: string
+      displayName:
+        type: string
+      employeeChapters:
+        items:
+          $ref: '#/definitions/model.EmployeeChapter'
+        type: array
+      employeePositions:
+        items:
+          $ref: '#/definitions/model.EmployeePosition'
+        type: array
+      employeeRoles:
+        items:
+          $ref: '#/definitions/model.EmployeeRole'
+        type: array
+      employeeStacks:
+        items:
+          $ref: '#/definitions/model.EmployeeStack'
+        type: array
+      fullName:
+        description: basic info
+        type: string
+      gender:
+        type: string
+      githubID:
+        type: string
+      gitlabID:
+        type: string
+      horoscope:
+        type: string
+      id:
+        type: string
+      identityCardPhotoBack:
+        type: string
+      identityCardPhotoFront:
+        type: string
+      joinedDate:
+        type: string
+      leftDate:
+        type: string
+      lineManager:
+        $ref: '#/definitions/model.Employee'
+      lineManagerID:
+        type: string
+      linkedInName:
+        type: string
+      localBankBranch:
+        type: string
+      localBankCurrency:
+        type: string
+      localBankNumber:
+        type: string
+      localBankRecipientName:
+        type: string
+      localBranchName:
+        type: string
+      mbti:
+        type: string
+      mentees:
+        items:
+          $ref: '#/definitions/model.EmployeeMentee'
+        type: array
+      notionEmail:
+        type: string
+      notionID:
+        type: string
+      notionName:
+        type: string
+      organization:
+        type: string
+      passportPhotoBack:
+        type: string
+      passportPhotoFront:
+        type: string
+      personalEmail:
+        type: string
+      phoneNumber:
+        type: string
+      placeOfResidence:
+        type: string
+      positions:
+        items:
+          $ref: '#/definitions/model.Position'
+        type: array
+      projectMembers:
+        items:
+          $ref: '#/definitions/model.ProjectMember'
+        type: array
+      roles:
+        items:
+          $ref: '#/definitions/model.Role'
+        type: array
+      seniority:
+        $ref: '#/definitions/model.Seniority'
+      seniorityID:
+        type: string
+      teamEmail:
+        type: string
+      updatedAt:
+        type: string
+      username:
+        type: string
+      wiseAccountNumber:
+        type: string
+      wiseCurrency:
+        type: string
+      wiseRecipientEmail:
+        description: payroll info
+        type: string
+      wiseRecipientID:
+        type: string
+      wiseRecipientName:
+        type: string
+      workingStatus:
+        description: working info
+        type: string
+    type: object
+  model.EmployeeChapter:
+    properties:
+      chapter:
+        $ref: '#/definitions/model.Chapter'
+      chapterID:
+        type: string
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      employeeID:
+        type: string
+      id:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  model.EmployeeMentee:
+    properties:
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      id:
+        type: string
+      mentee:
+        $ref: '#/definitions/model.Employee'
+      menteeID:
+        type: string
+      mentorID:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  model.EmployeePosition:
+    properties:
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      employeeID:
+        type: string
+      id:
+        type: string
+      position:
+        $ref: '#/definitions/model.Position'
+      positionID:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  model.EmployeeRole:
+    properties:
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      employeeID:
+        type: string
+      id:
+        type: string
+      role:
+        $ref: '#/definitions/model.Role'
+      roleID:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  model.EmployeeStack:
+    properties:
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      employeeID:
+        type: string
+      id:
+        type: string
+      stack:
+        $ref: '#/definitions/model.Stack'
+      stackID:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  model.Event:
+    properties:
+      activity_type:
+        type: string
+      created_at:
+        type: string
+      date:
+        $ref: '#/definitions/model.DateTime'
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  model.HiringPosition:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      project:
+        items:
+          type: string
+        type: array
+      status:
+        type: string
+    type: object
   model.LikertScaleCount:
     properties:
       agree:
@@ -79,6 +384,146 @@ definitions:
       updatedAt:
         type: string
     type: object
+  model.Project:
+    properties:
+      allowsSendingSurvey:
+        type: boolean
+      avatar:
+        type: string
+      clientEmail:
+        type: string
+      code:
+        type: string
+      country:
+        $ref: '#/definitions/model.Country'
+      countryID:
+        type: string
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      endDate:
+        type: string
+      function:
+        type: string
+      heads:
+        items:
+          $ref: '#/definitions/model.ProjectHead'
+        type: array
+      id:
+        type: string
+      name:
+        type: string
+      projectEmail:
+        type: string
+      projectMembers:
+        items:
+          $ref: '#/definitions/model.ProjectMember'
+        type: array
+      projectStacks:
+        items:
+          $ref: '#/definitions/model.ProjectStack'
+        type: array
+      slots:
+        items:
+          $ref: '#/definitions/model.ProjectSlot'
+        type: array
+      startDate:
+        type: string
+      status:
+        type: string
+      type:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  model.ProjectHead:
+    properties:
+      commissionRate:
+        type: number
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      employee:
+        $ref: '#/definitions/model.Employee'
+      employeeID:
+        type: string
+      id:
+        type: string
+      joinedDate:
+        type: string
+      leftDate:
+        type: string
+      position:
+        type: string
+      projectID:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  model.ProjectMember:
+    properties:
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      deploymentType:
+        type: string
+      discount:
+        type: number
+      employee:
+        $ref: '#/definitions/model.Employee'
+      employeeID:
+        type: string
+      id:
+        type: string
+      isLead:
+        type: boolean
+      joinedDate:
+        type: string
+      leftDate:
+        type: string
+      project:
+        $ref: '#/definitions/model.Project'
+      projectID:
+        type: string
+      projectMemberPositions:
+        items:
+          $ref: '#/definitions/model.ProjectMemberPosition'
+        type: array
+      projectSlotID:
+        type: string
+      rate:
+        type: number
+      seniority:
+        $ref: '#/definitions/model.Seniority'
+      seniorityID:
+        type: string
+      status:
+        type: string
+      updatedAt:
+        type: string
+      upsellPersonID:
+        type: string
+    type: object
+  model.ProjectMemberPosition:
+    properties:
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      id:
+        type: string
+      position:
+        $ref: '#/definitions/model.Position'
+      positionID:
+        type: string
+      projectMemberID:
+        type: string
+      updatedAt:
+        type: string
+    type: object
   model.ProjectSize:
     properties:
       code:
@@ -89,6 +534,75 @@ definitions:
         type: string
       size:
         type: integer
+    type: object
+  model.ProjectSlot:
+    properties:
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      deploymentType:
+        type: string
+      discount:
+        type: number
+      id:
+        type: string
+      project:
+        $ref: '#/definitions/model.Project'
+      projectID:
+        type: string
+      projectMember:
+        $ref: '#/definitions/model.ProjectMember'
+      projectSlotPositions:
+        items:
+          $ref: '#/definitions/model.ProjectSlotPosition'
+        type: array
+      rate:
+        type: number
+      seniority:
+        $ref: '#/definitions/model.Seniority'
+      seniorityID:
+        type: string
+      status:
+        type: string
+      updatedAt:
+        type: string
+      upsellPersonID:
+        type: string
+    type: object
+  model.ProjectSlotPosition:
+    properties:
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      id:
+        type: string
+      position:
+        $ref: '#/definitions/model.Position'
+      positionID:
+        type: string
+      projectSlotID:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  model.ProjectStack:
+    properties:
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      id:
+        type: string
+      projectID:
+        type: string
+      stack:
+        $ref: '#/definitions/model.Stack'
+      stackID:
+        type: string
+      updatedAt:
+        type: string
     type: object
   model.Role:
     properties:
@@ -139,6 +653,23 @@ definitions:
       name:
         type: string
       updatedAt:
+        type: string
+    type: object
+  model.TechRadar:
+    properties:
+      assign:
+        type: string
+      categories:
+        items:
+          type: string
+        type: array
+      id:
+        type: string
+      name:
+        type: string
+      quadrant:
+        type: string
+      ring:
         type: string
     type: object
   model.Valuation:
@@ -768,7 +1299,9 @@ definitions:
           $ref: '#/definitions/view.Audit'
         type: array
       groups:
-        $ref: '#/definitions/view.GroupAudit'
+        items:
+          $ref: '#/definitions/view.GroupAudit'
+        type: array
     type: object
   view.AuditResponse:
     properties:
@@ -1111,12 +1644,25 @@ definitions:
           $ref: '#/definitions/view.EngineeringHealth'
         type: array
       groups:
-        $ref: '#/definitions/view.GroupEngineeringHealth'
+        items:
+          $ref: '#/definitions/view.GroupEngineeringHealth'
+        type: array
     type: object
-  view.EngineringHealthResponse:
+  view.EngineeringHealthResponse:
     properties:
       data:
         $ref: '#/definitions/view.EngineeringHealthData'
+    type: object
+  view.EngineeringHealthTrend:
+    properties:
+      collaboration:
+        type: number
+      delivery:
+        type: number
+      feedback:
+        type: number
+      quality:
+        type: number
     type: object
   view.ErrorResponse:
     properties:
@@ -1223,47 +1769,57 @@ definitions:
   view.GroupAudit:
     properties:
       backend:
-        items:
-          $ref: '#/definitions/view.Audit'
-        type: array
+        type: number
       blockchain:
-        items:
-          $ref: '#/definitions/view.Audit'
-        type: array
+        type: number
       frontend:
-        items:
-          $ref: '#/definitions/view.Audit'
-        type: array
+        type: number
       mobile:
-        items:
-          $ref: '#/definitions/view.Audit'
-        type: array
+        type: number
       process:
-        items:
-          $ref: '#/definitions/view.Audit'
-        type: array
+        type: number
+      quarter:
+        type: string
       system:
-        items:
-          $ref: '#/definitions/view.Audit'
-        type: array
+        type: number
+      trend:
+        $ref: '#/definitions/view.GroupAuditTrend'
+    type: object
+  view.GroupAuditTrend:
+    properties:
+      backend:
+        type: number
+      blockchain:
+        type: number
+      frontend:
+        type: number
+      mobile:
+        type: number
+      process:
+        type: number
+      system:
+        type: number
     type: object
   view.GroupEngineeringHealth:
     properties:
       collaboration:
-        items:
-          $ref: '#/definitions/view.EngineeringHealth'
-        type: array
+        type: number
       delivery:
-        items:
-          $ref: '#/definitions/view.EngineeringHealth'
-        type: array
+        type: number
       feedback:
-        items:
-          $ref: '#/definitions/view.EngineeringHealth'
-        type: array
+        type: number
       quality:
+        type: number
+      quarter:
+        type: string
+      trend:
+        $ref: '#/definitions/view.EngineeringHealthTrend'
+    type: object
+  view.HiringResponse:
+    properties:
+      data:
         items:
-          $ref: '#/definitions/view.EngineeringHealth'
+          $ref: '#/definitions/model.HiringPosition'
         type: array
     type: object
   view.ListFeedbackResponse:
@@ -2219,7 +2775,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/view.EngineringHealthResponse'
+            $ref: '#/definitions/view.EngineeringHealthResponse'
         "400":
           description: Bad Request
           schema:
@@ -2940,6 +3496,25 @@ paths:
       summary: Submit the draft or done answers
       tags:
       - Feedback
+  /hiring-positions:
+    get:
+      consumes:
+      - application/json
+      description: Get list hirings from DF Dwarves Hiring
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.HiringResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get list hirings from DF Dwarves Hiring
+      tags:
+      - hiring
   /metadata/account-roles:
     get:
       consumes:

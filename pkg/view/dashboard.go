@@ -153,13 +153,13 @@ func calculateActionItemReportTrend(previous *model.ActionItemReport, current *m
 	return rs
 }
 
-type EngineringHealthResponse struct {
+type EngineeringHealthResponse struct {
 	Data EngineeringHealthData `json:"data"`
 }
 
 type EngineeringHealthData struct {
-	Average []*EngineeringHealth    `json:"average"`
-	Groups  *GroupEngineeringHealth `json:"groups"`
+	Average []*EngineeringHealth      `json:"average"`
+	Groups  []*GroupEngineeringHealth `json:"groups"`
 }
 
 type EngineeringHealth struct {
@@ -169,10 +169,19 @@ type EngineeringHealth struct {
 }
 
 type GroupEngineeringHealth struct {
-	Delivery      []*EngineeringHealth `json:"delivery"`
-	Quality       []*EngineeringHealth `json:"quality"`
-	Collaboration []*EngineeringHealth `json:"collaboration"`
-	Feedback      []*EngineeringHealth `json:"feedback"`
+	Quarter       string                 `json:"quarter"`
+	Delivery      float64                `json:"delivery"`
+	Quality       float64                `json:"quality"`
+	Collaboration float64                `json:"collaboration"`
+	Feedback      float64                `json:"feedback"`
+	Trend         EngineeringHealthTrend `json:"trend"`
+}
+
+type EngineeringHealthTrend struct {
+	Delivery      float64 `json:"delivery"`
+	Quality       float64 `json:"quality"`
+	Collaboration float64 `json:"collaboration"`
+	Feedback      float64 `json:"feedback"`
 }
 
 func ToEngineeringHealthData(average []*model.AverageEngineeringHealth, groups []*model.GroupEngineeringHealth) *EngineeringHealthData {
@@ -197,51 +206,47 @@ func ToEngineeringHealthData(average []*model.AverageEngineeringHealth, groups [
 	calculateTrendForEngineeringHealthList(rs.Average)
 
 	rs.Groups = toGroupEngineeringHealth(groups)
-
-	calculateTrendForEngineeringHealthList(rs.Groups.Delivery)
-	calculateTrendForEngineeringHealthList(rs.Groups.Collaboration)
-	calculateTrendForEngineeringHealthList(rs.Groups.Quality)
-	calculateTrendForEngineeringHealthList(rs.Groups.Feedback)
+	calculateEngineeringHealthGroupTrend(rs.Groups)
 
 	return rs
 }
 
-func toGroupEngineeringHealth(groups []*model.GroupEngineeringHealth) *GroupEngineeringHealth {
-	rs := &GroupEngineeringHealth{}
+func toGroupEngineeringHealth(groups []*model.GroupEngineeringHealth) []*GroupEngineeringHealth {
+	var rs []*GroupEngineeringHealth
 	count := 0
 	quarter := ""
+	i := 0
 
-	for _, g := range groups {
-		if quarter != g.Quarter {
+	for i < len(groups) {
+		if quarter != groups[i].Quarter {
 			count++
-			quarter = g.Quarter
+			quarter = groups[i].Quarter
 
 			if count > 4 {
 				break
 			}
 		}
 
-		switch g.Area {
-		case model.AuditItemAreaDelivery:
-			rs.Delivery = append(rs.Delivery, &EngineeringHealth{
-				Quarter: strings.Split(g.Quarter, "/")[1] + "/" + strings.Split(g.Quarter, "/")[0],
-				Value:   g.Avg,
-			})
-		case model.AuditItemAreaQuality:
-			rs.Quality = append(rs.Quality, &EngineeringHealth{
-				Quarter: strings.Split(g.Quarter, "/")[1] + "/" + strings.Split(g.Quarter, "/")[0],
-				Value:   g.Avg,
-			})
-		case model.AuditItemAreaCollaborating:
-			rs.Collaboration = append(rs.Collaboration, &EngineeringHealth{
-				Quarter: strings.Split(g.Quarter, "/")[1] + "/" + strings.Split(g.Quarter, "/")[0],
-				Value:   g.Avg,
-			})
-		case model.AuditItemAreaFeedback:
-			rs.Feedback = append(rs.Feedback, &EngineeringHealth{
-				Quarter: strings.Split(g.Quarter, "/")[1] + "/" + strings.Split(g.Quarter, "/")[0],
-				Value:   g.Avg,
-			})
+		rs = append(rs, &GroupEngineeringHealth{
+			Quarter: strings.Split(groups[i].Quarter, "/")[1] + "/" + strings.Split(groups[i].Quarter, "/")[0],
+		})
+
+		for quarter == groups[i].Quarter {
+			switch groups[i].Area {
+			case model.AuditItemAreaDelivery:
+				rs[count-1].Delivery = groups[i].Avg
+			case model.AuditItemAreaQuality:
+				rs[count-1].Quality = groups[i].Avg
+			case model.AuditItemAreaCollaborating:
+				rs[count-1].Collaboration = groups[i].Avg
+			case model.AuditItemAreaFeedback:
+				rs[count-1].Feedback = groups[i].Avg
+			}
+
+			i++
+			if i >= len(groups) {
+				break
+			}
 		}
 
 	}
@@ -252,6 +257,15 @@ func toGroupEngineeringHealth(groups []*model.GroupEngineeringHealth) *GroupEngi
 func calculateTrendForEngineeringHealthList(healths []*EngineeringHealth) {
 	for i := 1; i < len(healths); i++ {
 		healths[i].Trend = calculateEngineeringHealthTrend(healths[i-1], healths[i])
+	}
+}
+
+func calculateEngineeringHealthGroupTrend(groups []*GroupEngineeringHealth) {
+	for i := 1; i < len(groups); i++ {
+		groups[i].Trend.Delivery = calculateEngineeringHealthTrend(&EngineeringHealth{Value: groups[i-1].Delivery}, &EngineeringHealth{Value: groups[i].Delivery})
+		groups[i].Trend.Quality = calculateEngineeringHealthTrend(&EngineeringHealth{Value: groups[i-1].Quality}, &EngineeringHealth{Value: groups[i].Quality})
+		groups[i].Trend.Collaboration = calculateEngineeringHealthTrend(&EngineeringHealth{Value: groups[i-1].Collaboration}, &EngineeringHealth{Value: groups[i].Collaboration})
+		groups[i].Trend.Feedback = calculateEngineeringHealthTrend(&EngineeringHealth{Value: groups[i-1].Feedback}, &EngineeringHealth{Value: groups[i].Feedback})
 	}
 }
 
@@ -270,8 +284,8 @@ type AuditResponse struct {
 }
 
 type AuditData struct {
-	Average []*Audit    `json:"average"`
-	Groups  *GroupAudit `json:"groups"`
+	Average []*Audit      `json:"average"`
+	Groups  []*GroupAudit `json:"groups"`
 }
 
 type Audit struct {
@@ -281,12 +295,23 @@ type Audit struct {
 }
 
 type GroupAudit struct {
-	Frontend   []*Audit `json:"frontend"`
-	Backend    []*Audit `json:"backend"`
-	System     []*Audit `json:"system"`
-	Process    []*Audit `json:"process"`
-	Mobile     []*Audit `json:"mobile"`
-	Blockchain []*Audit `json:"blockchain"`
+	Quarter    string          `json:"quarter"`
+	Frontend   float64         `json:"frontend"`
+	Backend    float64         `json:"backend"`
+	System     float64         `json:"system"`
+	Process    float64         `json:"process"`
+	Mobile     float64         `json:"mobile"`
+	Blockchain float64         `json:"blockchain"`
+	Trend      GroupAuditTrend `json:"trend"`
+}
+
+type GroupAuditTrend struct {
+	Frontend   float64 `json:"frontend"`
+	Backend    float64 `json:"backend"`
+	System     float64 `json:"system"`
+	Process    float64 `json:"process"`
+	Mobile     float64 `json:"mobile"`
+	Blockchain float64 `json:"blockchain"`
 }
 
 func ToAuditData(average []*model.AverageAudit, groups []*model.GroupAudit) *AuditData {
@@ -311,49 +336,23 @@ func ToAuditData(average []*model.AverageAudit, groups []*model.GroupAudit) *Aud
 	calculateTrendForAuditList(rs.Average)
 
 	rs.Groups = toGroupAudit(groups)
-
-	calculateTrendForAuditList(rs.Groups.Frontend)
-	calculateTrendForAuditList(rs.Groups.Backend)
-	calculateTrendForAuditList(rs.Groups.Process)
-	calculateTrendForAuditList(rs.Groups.System)
-	calculateTrendForAuditList(rs.Groups.Mobile)
-	calculateTrendForAuditList(rs.Groups.Blockchain)
+	calculateAuditGroupTrend(rs.Groups)
 
 	return rs
 }
 
-func toGroupAudit(groups []*model.GroupAudit) *GroupAudit {
-	rs := &GroupAudit{}
+func toGroupAudit(groups []*model.GroupAudit) []*GroupAudit {
+	var rs []*GroupAudit
 
-	for _, g := range groups {
-		rs.Frontend = append(rs.Frontend, &Audit{
-			Quarter: strings.Split(g.Quarter, "/")[1] + "/" + strings.Split(g.Quarter, "/")[0],
-			Value:   g.Frontend,
-		})
-
-		rs.Backend = append(rs.Backend, &Audit{
-			Quarter: strings.Split(g.Quarter, "/")[1] + "/" + strings.Split(g.Quarter, "/")[0],
-			Value:   g.Backend,
-		})
-
-		rs.System = append(rs.System, &Audit{
-			Quarter: strings.Split(g.Quarter, "/")[1] + "/" + strings.Split(g.Quarter, "/")[0],
-			Value:   g.System,
-		})
-
-		rs.Process = append(rs.Process, &Audit{
-			Quarter: strings.Split(g.Quarter, "/")[1] + "/" + strings.Split(g.Quarter, "/")[0],
-			Value:   g.Process,
-		})
-
-		rs.Mobile = append(rs.Mobile, &Audit{
-			Quarter: strings.Split(g.Quarter, "/")[1] + "/" + strings.Split(g.Quarter, "/")[0],
-			Value:   g.Mobile,
-		})
-
-		rs.Blockchain = append(rs.Blockchain, &Audit{
-			Quarter: strings.Split(g.Quarter, "/")[1] + "/" + strings.Split(g.Quarter, "/")[0],
-			Value:   g.Blockchain,
+	for i := range groups {
+		rs = append(rs, &GroupAudit{
+			Quarter:    strings.Split(groups[i].Quarter, "/")[1] + "/" + strings.Split(groups[i].Quarter, "/")[0],
+			Frontend:   groups[i].Frontend,
+			Backend:    groups[i].Backend,
+			System:     groups[i].System,
+			Process:    groups[i].Process,
+			Mobile:     groups[i].Mobile,
+			Blockchain: groups[i].Blockchain,
 		})
 	}
 
@@ -363,6 +362,17 @@ func toGroupAudit(groups []*model.GroupAudit) *GroupAudit {
 func calculateTrendForAuditList(healths []*Audit) {
 	for i := 1; i < len(healths); i++ {
 		healths[i].Trend = calculateAuditTrend(healths[i-1], healths[i])
+	}
+}
+
+func calculateAuditGroupTrend(groups []*GroupAudit) {
+	for i := 1; i < len(groups); i++ {
+		groups[i].Trend.Frontend = calculateAuditTrend(&Audit{Value: groups[i-1].Frontend}, &Audit{Value: groups[i].Frontend})
+		groups[i].Trend.Backend = calculateAuditTrend(&Audit{Value: groups[i-1].Backend}, &Audit{Value: groups[i].Backend})
+		groups[i].Trend.System = calculateAuditTrend(&Audit{Value: groups[i-1].System}, &Audit{Value: groups[i].System})
+		groups[i].Trend.Process = calculateAuditTrend(&Audit{Value: groups[i-1].Process}, &Audit{Value: groups[i].Process})
+		groups[i].Trend.Mobile = calculateAuditTrend(&Audit{Value: groups[i-1].Mobile}, &Audit{Value: groups[i].Mobile})
+		groups[i].Trend.Blockchain = calculateAuditTrend(&Audit{Value: groups[i-1].Blockchain}, &Audit{Value: groups[i].Blockchain})
 	}
 }
 

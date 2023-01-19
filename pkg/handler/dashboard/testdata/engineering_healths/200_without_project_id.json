@@ -22,65 +22,59 @@
                 "trend": -2.77
             }
         ],
-        "groups": {
-            "delivery": [
-                {
-                    "quarter": "Q1/2022",
-                    "avg": 4,
-                    "trend": 0
-                },
-                {
-                    "quarter": "Q2/2022",
-                    "avg": 3,
-                    "trend": -25
-                },
-                {
-                    "quarter": "Q4/2022",
-                    "avg": 2,
-                    "trend": -33.33
+        "groups": [
+            {
+                "quarter": "Q1/2022",
+                "delivery": 4,
+                "quality": 2,
+                "collaboration": 3,
+                "feedback": 4,
+                "trend": {
+                    "delivery": 0,
+                    "quality": 0,
+                    "collaboration": 0,
+                    "feedback": 0
                 }
-            ],
-            "quality": [
-                {
-                    "quarter": "Q1/2022",
-                    "avg": 2,
-                    "trend": 0
-                },
-                {
-                    "quarter": "Q2/2022",
-                    "avg": 4,
-                    "trend": 100
+            },
+            {
+                "quarter": "Q2/2022",
+                "delivery": 3,
+                "quality": 4,
+                "collaboration": 3,
+                "feedback": 4,
+                "trend": {
+                    "delivery": -25,
+                    "quality": 100,
+                    "collaboration": 0,
+                    "feedback": 0
                 }
-            ],
-            "collaboration": [
-                {
-                    "quarter": "Q1/2022",
-                    "avg": 3,
-                    "trend": 0
-                },
-                {
-                    "quarter": "Q2/2022",
-                    "avg": 3,
-                    "trend": 0
+            },
+            {
+                "quarter": "Q3/2022",
+                "delivery": 0,
+                "quality": 0,
+                "collaboration": 0,
+                "feedback": 3,
+                "trend": {
+                    "delivery": 0,
+                    "quality": 0,
+                    "collaboration": 0,
+                    "feedback": -25
                 }
-            ],
-            "feedback": [
-                {
-                    "quarter": "Q1/2022",
-                    "avg": 4,
-                    "trend": 0
-                },
-                {
-                    "quarter": "Q2/2022",
-                    "avg": 4,
-                    "trend": 0
-                },
-                {
-                    "quarter": "Q3/2022",
-                    "avg": 3,
-                    "trend": -25
+            },
+            {
+                "quarter": "Q4/2022",
+                "delivery": 2,
+                "quality": 0,
+                "collaboration": 0,
+                "feedback": 0,
+                "trend": {
+                    "delivery": 0,
+                    "quality": 0,
+                    "collaboration": 0,
+                    "feedback": 0
                 }
-            ]
-        }
+            }
+        ]
     }
 }

@@ -280,7 +280,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/view.EngineringHealthResponse"
+                            "$ref": "#/definitions/view.EngineeringHealthResponse"
                         }
                     },
                     "400": {
@@ -1354,6 +1354,35 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/hiring-positions": {
+            "get": {
+                "description": "Get list hirings from DF Dwarves Hiring",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "hiring"
+                ],
+                "summary": "Get list hirings from DF Dwarves Hiring",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.HiringResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/view.ErrorResponse"
                         }
@@ -4184,6 +4213,29 @@ const docTemplate = `{
                 }
             }
         },
+        "model.Audience": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "full_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "source": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
         "model.Chapter": {
             "type": "object",
             "properties": {
@@ -4239,6 +4291,444 @@ const docTemplate = `{
                 }
             }
         },
+        "model.DateTime": {
+            "type": "object",
+            "properties": {
+                "has_time": {
+                    "type": "boolean"
+                },
+                "time": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.Earn": {
+            "type": "object",
+            "properties": {
+                "due_date": {
+                    "type": "string"
+                },
+                "function": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "pics": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Employee"
+                    }
+                },
+                "priority": {
+                    "type": "string"
+                },
+                "progress": {
+                    "type": "integer"
+                },
+                "reward": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "model.Employee": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "avatar": {
+                    "type": "string"
+                },
+                "basecampAttachableSGID": {
+                    "type": "string"
+                },
+                "basecampID": {
+                    "description": "social services",
+                    "type": "string"
+                },
+                "city": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "dateOfBirth": {
+                    "type": "string"
+                },
+                "deletedAt": {
+                    "$ref": "#/definitions/gorm.DeletedAt"
+                },
+                "discordID": {
+                    "type": "string"
+                },
+                "discordName": {
+                    "type": "string"
+                },
+                "displayName": {
+                    "type": "string"
+                },
+                "employeeChapters": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.EmployeeChapter"
+                    }
+                },
+                "employeePositions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.EmployeePosition"
+                    }
+                },
+                "employeeRoles": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.EmployeeRole"
+                    }
+                },
+                "employeeStacks": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.EmployeeStack"
+                    }
+                },
+                "fullName": {
+                    "description": "basic info",
+                    "type": "string"
+                },
+                "gender": {
+                    "type": "string"
+                },
+                "githubID": {
+                    "type": "string"
+                },
+                "gitlabID": {
+                    "type": "string"
+                },
+                "horoscope": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "identityCardPhotoBack": {
+                    "type": "string"
+                },
+                "identityCardPhotoFront": {
+                    "type": "string"
+                },
+                "joinedDate": {
+                    "type": "string"
+                },
+                "leftDate": {
+                    "type": "string"
+                },
+                "lineManager": {
+                    "$ref": "#/definitions/model.Employee"
+                },
+                "lineManagerID": {
+                    "type": "string"
+                },
+                "linkedInName": {
+                    "type": "string"
+                },
+                "localBankBranch": {
+                    "type": "string"
+                },
+                "localBankCurrency": {
+                    "type": "string"
+                },
+                "localBankNumber": {
+                    "type": "string"
+                },
+                "localBankRecipientName": {
+                    "type": "string"
+                },
+                "localBranchName": {
+                    "type": "string"
+                },
+                "mbti": {
+                    "type": "string"
+                },
+                "mentees": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.EmployeeMentee"
+                    }
+                },
+                "notionEmail": {
+                    "type": "string"
+                },
+                "notionID": {
+                    "type": "string"
+                },
+                "notionName": {
+                    "type": "string"
+                },
+                "organization": {
+                    "type": "string"
+                },
+                "passportPhotoBack": {
+                    "type": "string"
+                },
+                "passportPhotoFront": {
+                    "type": "string"
+                },
+                "personalEmail": {
+                    "type": "string"
+                },
+                "phoneNumber": {
+                    "type": "string"
+                },
+                "placeOfResidence": {
+                    "type": "string"
+                },
+                "positions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Position"
+                    }
+                },
+                "projectMembers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.ProjectMember"
+                    }
+                },
+                "roles": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Role"
+                    }
+                },
+                "seniority": {
+                    "$ref": "#/definitions/model.Seniority"
+                },
+                "seniorityID": {
+                    "type": "string"
+                },
+                "teamEmail": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                },
+                "wiseAccountNumber": {
+                    "type": "string"
+                },
+                "wiseCurrency": {
+                    "type": "string"
+                },
+                "wiseRecipientEmail": {
+                    "description": "payroll info",
+                    "type": "string"
+                },
+                "wiseRecipientID": {
+                    "type": "string"
+                },
+                "wiseRecipientName": {
+                    "type": "string"
+                },
+                "workingStatus": {
+                    "description": "working info",
+                    "type": "string"
+                }
+            }
+        },
+        "model.EmployeeChapter": {
+            "type": "object",
+            "properties": {
+                "chapter": {
+                    "$ref": "#/definitions/model.Chapter"
+                },
+                "chapterID": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "deletedAt": {
+                    "$ref": "#/definitions/gorm.DeletedAt"
+                },
+                "employeeID": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.EmployeeMentee": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "deletedAt": {
+                    "$ref": "#/definitions/gorm.DeletedAt"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "mentee": {
+                    "$ref": "#/definitions/model.Employee"
+                },
+                "menteeID": {
+                    "type": "string"
+                },
+                "mentorID": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.EmployeePosition": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "deletedAt": {
+                    "$ref": "#/definitions/gorm.DeletedAt"
+                },
+                "employeeID": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "position": {
+                    "$ref": "#/definitions/model.Position"
+                },
+                "positionID": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.EmployeeRole": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "deletedAt": {
+                    "$ref": "#/definitions/gorm.DeletedAt"
+                },
+                "employeeID": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "role": {
+                    "$ref": "#/definitions/model.Role"
+                },
+                "roleID": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.EmployeeStack": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "deletedAt": {
+                    "$ref": "#/definitions/gorm.DeletedAt"
+                },
+                "employeeID": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "stack": {
+                    "$ref": "#/definitions/model.Stack"
+                },
+                "stackID": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.Event": {
+            "type": "object",
+            "properties": {
+                "activity_type": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "date": {
+                    "$ref": "#/definitions/model.DateTime"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.HiringPosition": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "project": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
         "model.LikertScaleCount": {
             "type": "object",
             "properties": {
@@ -4282,6 +4772,218 @@ const docTemplate = `{
                 }
             }
         },
+        "model.Project": {
+            "type": "object",
+            "properties": {
+                "allowsSendingSurvey": {
+                    "type": "boolean"
+                },
+                "avatar": {
+                    "type": "string"
+                },
+                "clientEmail": {
+                    "type": "string"
+                },
+                "code": {
+                    "type": "string"
+                },
+                "country": {
+                    "$ref": "#/definitions/model.Country"
+                },
+                "countryID": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "deletedAt": {
+                    "$ref": "#/definitions/gorm.DeletedAt"
+                },
+                "endDate": {
+                    "type": "string"
+                },
+                "function": {
+                    "type": "string"
+                },
+                "heads": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.ProjectHead"
+                    }
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "projectEmail": {
+                    "type": "string"
+                },
+                "projectMembers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.ProjectMember"
+                    }
+                },
+                "projectStacks": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.ProjectStack"
+                    }
+                },
+                "slots": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.ProjectSlot"
+                    }
+                },
+                "startDate": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.ProjectHead": {
+            "type": "object",
+            "properties": {
+                "commissionRate": {
+                    "type": "number"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "deletedAt": {
+                    "$ref": "#/definitions/gorm.DeletedAt"
+                },
+                "employee": {
+                    "$ref": "#/definitions/model.Employee"
+                },
+                "employeeID": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "joinedDate": {
+                    "type": "string"
+                },
+                "leftDate": {
+                    "type": "string"
+                },
+                "position": {
+                    "type": "string"
+                },
+                "projectID": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.ProjectMember": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "deletedAt": {
+                    "$ref": "#/definitions/gorm.DeletedAt"
+                },
+                "deploymentType": {
+                    "type": "string"
+                },
+                "discount": {
+                    "type": "number"
+                },
+                "employee": {
+                    "$ref": "#/definitions/model.Employee"
+                },
+                "employeeID": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "isLead": {
+                    "type": "boolean"
+                },
+                "joinedDate": {
+                    "type": "string"
+                },
+                "leftDate": {
+                    "type": "string"
+                },
+                "project": {
+                    "$ref": "#/definitions/model.Project"
+                },
+                "projectID": {
+                    "type": "string"
+                },
+                "projectMemberPositions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.ProjectMemberPosition"
+                    }
+                },
+                "projectSlotID": {
+                    "type": "string"
+                },
+                "rate": {
+                    "type": "number"
+                },
+                "seniority": {
+                    "$ref": "#/definitions/model.Seniority"
+                },
+                "seniorityID": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                },
+                "upsellPersonID": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.ProjectMemberPosition": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "deletedAt": {
+                    "$ref": "#/definitions/gorm.DeletedAt"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "position": {
+                    "$ref": "#/definitions/model.Position"
+                },
+                "positionID": {
+                    "type": "string"
+                },
+                "projectMemberID": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
         "model.ProjectSize": {
             "type": "object",
             "properties": {
@@ -4296,6 +4998,111 @@ const docTemplate = `{
                 },
                 "size": {
                     "type": "integer"
+                }
+            }
+        },
+        "model.ProjectSlot": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "deletedAt": {
+                    "$ref": "#/definitions/gorm.DeletedAt"
+                },
+                "deploymentType": {
+                    "type": "string"
+                },
+                "discount": {
+                    "type": "number"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "project": {
+                    "$ref": "#/definitions/model.Project"
+                },
+                "projectID": {
+                    "type": "string"
+                },
+                "projectMember": {
+                    "$ref": "#/definitions/model.ProjectMember"
+                },
+                "projectSlotPositions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.ProjectSlotPosition"
+                    }
+                },
+                "rate": {
+                    "type": "number"
+                },
+                "seniority": {
+                    "$ref": "#/definitions/model.Seniority"
+                },
+                "seniorityID": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                },
+                "upsellPersonID": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.ProjectSlotPosition": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "deletedAt": {
+                    "$ref": "#/definitions/gorm.DeletedAt"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "position": {
+                    "$ref": "#/definitions/model.Position"
+                },
+                "positionID": {
+                    "type": "string"
+                },
+                "projectSlotID": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.ProjectStack": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "deletedAt": {
+                    "$ref": "#/definitions/gorm.DeletedAt"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "projectID": {
+                    "type": "string"
+                },
+                "stack": {
+                    "$ref": "#/definitions/model.Stack"
+                },
+                "stackID": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
                 }
             }
         },
@@ -4373,6 +5180,32 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.TechRadar": {
+            "type": "object",
+            "properties": {
+                "assign": {
+                    "type": "string"
+                },
+                "categories": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "quadrant": {
+                    "type": "string"
+                },
+                "ring": {
                     "type": "string"
                 }
             }
@@ -5306,7 +6139,10 @@ const docTemplate = `{
                     }
                 },
                 "groups": {
-                    "$ref": "#/definitions/view.GroupAudit"
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.GroupAudit"
+                    }
                 }
             }
         },
@@ -5831,15 +6667,35 @@ const docTemplate = `{
                     }
                 },
                 "groups": {
-                    "$ref": "#/definitions/view.GroupEngineeringHealth"
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.GroupEngineeringHealth"
+                    }
                 }
             }
         },
-        "view.EngineringHealthResponse": {
+        "view.EngineeringHealthResponse": {
             "type": "object",
             "properties": {
                 "data": {
                     "$ref": "#/definitions/view.EngineeringHealthData"
+                }
+            }
+        },
+        "view.EngineeringHealthTrend": {
+            "type": "object",
+            "properties": {
+                "collaboration": {
+                    "type": "number"
+                },
+                "delivery": {
+                    "type": "number"
+                },
+                "feedback": {
+                    "type": "number"
+                },
+                "quality": {
+                    "type": "number"
                 }
             }
         },
@@ -6004,40 +6860,51 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "backend": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/view.Audit"
-                    }
+                    "type": "number"
                 },
                 "blockchain": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/view.Audit"
-                    }
+                    "type": "number"
                 },
                 "frontend": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/view.Audit"
-                    }
+                    "type": "number"
                 },
                 "mobile": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/view.Audit"
-                    }
+                    "type": "number"
                 },
                 "process": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/view.Audit"
-                    }
+                    "type": "number"
+                },
+                "quarter": {
+                    "type": "string"
                 },
                 "system": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/view.Audit"
-                    }
+                    "type": "number"
+                },
+                "trend": {
+                    "$ref": "#/definitions/view.GroupAuditTrend"
+                }
+            }
+        },
+        "view.GroupAuditTrend": {
+            "type": "object",
+            "properties": {
+                "backend": {
+                    "type": "number"
+                },
+                "blockchain": {
+                    "type": "number"
+                },
+                "frontend": {
+                    "type": "number"
+                },
+                "mobile": {
+                    "type": "number"
+                },
+                "process": {
+                    "type": "number"
+                },
+                "system": {
+                    "type": "number"
                 }
             }
         },
@@ -6045,27 +6912,32 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "collaboration": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/view.EngineeringHealth"
-                    }
+                    "type": "number"
                 },
                 "delivery": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/view.EngineeringHealth"
-                    }
+                    "type": "number"
                 },
                 "feedback": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/view.EngineeringHealth"
-                    }
+                    "type": "number"
                 },
                 "quality": {
+                    "type": "number"
+                },
+                "quarter": {
+                    "type": "string"
+                },
+                "trend": {
+                    "$ref": "#/definitions/view.EngineeringHealthTrend"
+                }
+            }
+        },
+        "view.HiringResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/view.EngineeringHealth"
+                        "$ref": "#/definitions/model.HiringPosition"
                     }
                 }
             }
