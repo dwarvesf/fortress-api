@@ -20,7 +20,6 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/store/project"
-	"github.com/dwarvesf/fortress-api/pkg/store/projectslot"
 	"github.com/dwarvesf/fortress-api/pkg/utils"
 	"github.com/dwarvesf/fortress-api/pkg/view"
 )
@@ -181,9 +180,9 @@ func (h *handler) UpdateProjectStatus(c *gin.Context) {
 }
 
 func (h *handler) closeProject(db *gorm.DB, projectID string) error {
-	err := h.store.ProjectMember.UpdateLeftDateByProjectID(db, projectID)
+	err := h.store.ProjectMember.UpdateEndDateByProjectID(db, projectID)
 	if err != nil {
-		h.logger.Error(err, "failed to update left_date by project_id")
+		h.logger.Error(err, "failed to update end_date by project_id")
 		return err
 	}
 
@@ -288,7 +287,7 @@ func (h *handler) Create(c *gin.Context) {
 	accountManager := model.ProjectHead{
 		ProjectID:      p.ID,
 		EmployeeID:     body.AccountManagerID,
-		JoinedDate:     time.Now(),
+		StartDate:      time.Now(),
 		CommissionRate: decimal.Zero,
 		Position:       model.HeadPositionAccountManager,
 	}
@@ -306,7 +305,7 @@ func (h *handler) Create(c *gin.Context) {
 		deliveryManager := model.ProjectHead{
 			ProjectID:      p.ID,
 			EmployeeID:     body.DeliveryManagerID,
-			JoinedDate:     time.Now(),
+			StartDate:      time.Now(),
 			CommissionRate: decimal.Zero,
 			Position:       model.HeadPositionDeliveryManager,
 		}
@@ -394,52 +393,31 @@ func (h *handler) GetMembers(c *gin.Context) {
 		return
 	}
 
-	var slots []*model.ProjectSlot
-	var total int64
+	var pendingSlots []*model.ProjectSlot
+	var assignedMembers []*model.ProjectMember
 
-	if query.Status != "" {
-		// Get members by status
-		slots, total, err = h.store.ProjectSlot.All(h.repo.DB(), projectslot.GetListProjectSlotInput{
-			ProjectID: projectID,
-			Status:    query.Status,
-			Preload:   query.Preload,
-		}, query.Pagination)
-		if err != nil {
-			l.Error(err, "failed to get project members")
-			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, query, ""))
-			return
-		}
-	} else {
-		// Get all members
-		pendingSlots, err := h.store.ProjectSlot.GetPendingSlots(h.repo.DB(), projectID, query.Preload)
+	// Get pending slots
+	if query.Status == "" || query.Status == model.ProjectMemberStatusPending.String() {
+		pendingSlots, err = h.store.ProjectSlot.GetPendingSlots(h.repo.DB(), projectID, query.Preload)
 		if err != nil {
 			l.Error(err, "failed to get pending slots")
 			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, query, ""))
 			return
 		}
+	}
 
-		assignedSlots, err := h.store.ProjectSlot.GetAssignedSlots(h.repo.DB(), projectID, query.Preload)
+	// Get assigned members
+	if query.Status != model.ProjectMemberStatusPending.String() {
+		assignedMembers, err = h.store.ProjectMember.GetAssignedMembers(h.repo.DB(), projectID, query.Status, query.Preload)
 		if err != nil {
-			l.Error(err, "failed to get assigned slots")
+			l.Error(err, "failed to get assigned members")
 			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, query, ""))
 			return
 		}
-
-		slots = append(slots, pendingSlots...)
-		slots = append(slots, assignedSlots...)
-
-		total = int64(len(slots))
-
-		// Get response by offset and limit
-		limit, offset := query.Pagination.ToLimitOffset()
-		if offset > len(slots) {
-			slots = []*model.ProjectSlot{}
-		} else if limit+offset > len(slots) {
-			slots = slots[offset:]
-		} else {
-			slots = slots[offset : offset+limit]
-		}
 	}
+
+	// Merge pending slots and assigned members into a slice
+	total, members := h.mergeSlotAndMembers(h.repo.DB(), pendingSlots, assignedMembers, query.Pagination)
 
 	heads, err := h.store.ProjectHead.GetActiveLeadsByProjectID(h.repo.DB(), projectID)
 	if err != nil {
@@ -448,8 +426,47 @@ func (h *handler) GetMembers(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse(view.ToProjectMemberListData(slots, heads),
+	c.JSON(http.StatusOK, view.CreateResponse(view.ToProjectMemberListData(members, heads),
 		&view.PaginationResponse{Pagination: query.Pagination, Total: total}, nil, nil, ""))
+}
+
+func (h *handler) mergeSlotAndMembers(db *gorm.DB, slots []*model.ProjectSlot, members []*model.ProjectMember, pagination model.Pagination) (int64, []*model.ProjectMember) {
+	results := make([]*model.ProjectMember, 0, len(slots)+len(members))
+
+	for _, slot := range slots {
+		member := &model.ProjectMember{
+			ProjectID:      slot.ProjectID,
+			ProjectSlotID:  slot.ID,
+			SeniorityID:    slot.SeniorityID,
+			DeploymentType: slot.DeploymentType,
+			Status:         slot.Status,
+			Rate:           slot.Rate,
+			Discount:       slot.Discount,
+			Seniority:      &slot.Seniority,
+		}
+
+		for _, psPosition := range slot.ProjectSlotPositions {
+			member.Positions = append(member.Positions, psPosition.Position)
+		}
+
+		results = append(results, member)
+	}
+
+	results = append(results, members...)
+
+	total := int64(len(results))
+
+	// Get response by offset and limit
+	limit, offset := pagination.ToLimitOffset()
+	if offset > len(results) {
+		results = []*model.ProjectMember{}
+	} else if limit+offset > len(slots) {
+		results = results[offset:]
+	} else {
+		results = results[offset : offset+limit]
+	}
+
+	return total, results
 }
 
 // DeleteMember godoc
@@ -657,8 +674,8 @@ func (h *handler) UnassignMember(c *gin.Context) {
 
 	// remove member out of project
 	timeNow := time.Now()
-	if projectMember.LeftDate == nil {
-		projectMember.LeftDate = &timeNow
+	if projectMember.EndDate == nil {
+		projectMember.EndDate = &timeNow
 	}
 
 	projectMember.Status = model.ProjectMemberStatusInactive
@@ -666,7 +683,7 @@ func (h *handler) UnassignMember(c *gin.Context) {
 	_, err = h.store.ProjectMember.UpdateSelectedFieldsByID(tx.DB(),
 		projectMember.ID.String(),
 		*projectMember,
-		"left_date",
+		"end_date",
 		"status")
 	if err != nil {
 		l.Error(err, "failed to update project member")
@@ -675,13 +692,13 @@ func (h *handler) UnassignMember(c *gin.Context) {
 	}
 
 	// update technical lead if employees is technical lead
-	_, err = h.store.ProjectHead.UpdateLeftDateOfEmployee(tx.DB(),
+	_, err = h.store.ProjectHead.UpdateEndDateOfEmployee(tx.DB(),
 		input.MemberID,
 		input.ProjectID,
 		model.HeadPositionTechnicalLead.String(),
-		*projectMember.LeftDate)
+		*projectMember.EndDate)
 	if err != nil {
-		l.Error(err, "failed to update leftDate for technical lead")
+		l.Error(err, "failed to update endDate for technical lead")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
 		return
 	}
@@ -884,15 +901,15 @@ func (h *handler) updateProjectMember(db *gorm.DB, slotID string, projectID stri
 			SeniorityID:    input.SeniorityID,
 			DeploymentType: model.DeploymentType(input.DeploymentType),
 			Status:         model.ProjectMemberStatus(input.Status),
-			JoinedDate:     input.GetJoinedDate(),
-			LeftDate:       input.GetLeftDate(),
+			StartDate:      input.GetStartDate(),
+			EndDate:        input.GetEndDate(),
 			Rate:           input.Rate,
 			Discount:       input.Discount,
 		}
 
 		_, err := h.store.ProjectMember.UpdateSelectedFieldsByID(db, input.ProjectMemberID.String(), *member,
-			"joined_date",
-			"left_date",
+			"start_date",
+			"end_date",
 			"status",
 			"rate",
 			"discount",
@@ -939,8 +956,8 @@ func (h *handler) updateProjectMember(db *gorm.DB, slotID string, projectID stri
 				ProjectSlotID:  model.MustGetUUIDFromString(slotID),
 				DeploymentType: model.DeploymentType(input.DeploymentType),
 				Status:         model.ProjectMemberStatus(input.Status),
-				JoinedDate:     input.GetJoinedDate(),
-				LeftDate:       input.GetLeftDate(),
+				StartDate:      input.GetStartDate(),
+				EndDate:        input.GetEndDate(),
 				Rate:           input.Rate,
 				Discount:       input.Discount,
 			}
@@ -975,23 +992,23 @@ func (h *handler) updateProjectMember(db *gorm.DB, slotID string, projectID stri
 
 	// update project head
 	member.IsLead = input.IsLead
-	leftDate := input.GetLeftDate()
-	if !input.IsLead || leftDate != nil {
-		if leftDate == nil {
-			leftDate = new(time.Time)
-			*leftDate = time.Now()
+	endDate := input.GetEndDate()
+	if !input.IsLead || endDate != nil {
+		if endDate == nil {
+			endDate = new(time.Time)
+			*endDate = time.Now()
 		}
 
-		_, err := h.store.ProjectHead.UpdateLeftDateOfEmployee(db,
+		_, err := h.store.ProjectHead.UpdateEndDateOfEmployee(db,
 			input.EmployeeID.String(),
 			projectID,
 			model.HeadPositionTechnicalLead.String(),
-			*leftDate)
+			*endDate)
 		if err != nil {
 			h.logger.Fields(logger.Fields{
 				"projectID":  projectID,
 				"employeeID": input.EmployeeID,
-			}).Error(err, "failed to update left_date of project head")
+			}).Error(err, "failed to update end_date of project head")
 			return nil, err
 		}
 	} else {
@@ -1182,8 +1199,8 @@ func (h *handler) createSlotsAndAssignMembers(db *gorm.DB, projectID string, req
 			ProjectSlotID:  slot.ID,
 			DeploymentType: model.DeploymentType(req.DeploymentType),
 			Status:         req.GetStatus(),
-			JoinedDate:     req.GetJoinedDate(),
-			LeftDate:       req.GetLeftDate(),
+			StartDate:      req.GetStartDate(),
+			EndDate:        req.GetEndDate(),
 			Rate:           req.Rate,
 			Discount:       req.Discount,
 		}
@@ -1214,7 +1231,7 @@ func (h *handler) createSlotsAndAssignMembers(db *gorm.DB, projectID string, req
 				EmployeeID:     req.EmployeeID,
 				CommissionRate: decimal.Zero,
 				Position:       model.HeadPositionTechnicalLead,
-				JoinedDate:     *req.GetJoinedDate(),
+				StartDate:      *req.GetStartDate(),
 			}); err != nil {
 				l.Error(err, "failed to create project head")
 				return nil, http.StatusInternalServerError, err
@@ -1565,7 +1582,7 @@ func (h *handler) updateProjectHead(db *gorm.DB, projectID string, employeeID mo
 
 	// - For delivery-manager & account-manager:
 	// 		if employee is the head, do nothing;
-	// 		else update left_date of old head and create new head
+	// 		else update end_date of old head and create new head
 	// - For technical-lead:
 	//		if employee is the head, do nothing;
 	//		else create new head
@@ -1575,8 +1592,8 @@ func (h *handler) updateProjectHead(db *gorm.DB, projectID string, employeeID mo
 		}
 
 		if position == model.HeadPositionAccountManager || position == model.HeadPositionDeliveryManager {
-			head.LeftDate = &timeNow
-			_, err := h.store.ProjectHead.UpdateSelectedFieldsByID(db, head.ID.String(), *head, "left_date")
+			head.EndDate = &timeNow
+			_, err := h.store.ProjectHead.UpdateSelectedFieldsByID(db, head.ID.String(), *head, "end_date")
 			if err != nil {
 				h.logger.Fields(logger.Fields{"head": *head}).Error(err, "failed to update project head")
 				return nil, err
@@ -1587,7 +1604,7 @@ func (h *handler) updateProjectHead(db *gorm.DB, projectID string, employeeID mo
 	head = &model.ProjectHead{
 		ProjectID:  model.MustGetUUIDFromString(projectID),
 		EmployeeID: employeeID,
-		JoinedDate: timeNow,
+		StartDate:  timeNow,
 		Position:   position,
 	}
 	if err := h.store.ProjectHead.Create(db, head); err != nil {
@@ -1812,7 +1829,7 @@ func (h *handler) CreateWorkUnit(c *gin.Context) {
 			WorkUnitID: workUnit.ID,
 			EmployeeID: employee.ID,
 			ProjectID:  model.MustGetUUIDFromString(input.ProjectID),
-			JoinedDate: *pMember.JoinedDate,
+			StartDate:  *pMember.StartDate,
 		}
 		if err := h.store.WorkUnitMember.Create(tx.DB(), &wuMember); err != nil {
 			l.Error(err, "failed to create new work unit member")
@@ -2069,11 +2086,11 @@ func (h *handler) deleteWorkUnit(db *gorm.DB, workUnitID string, deleteMemberIDL
 		}
 
 		deleteMember := &model.WorkUnitMember{
-			Status:   model.WorkUnitMemberStatusInactive.String(),
-			LeftDate: &now,
+			Status:  model.WorkUnitMemberStatusInactive.String(),
+			EndDate: &now,
 		}
 
-		if _, err = h.store.WorkUnitMember.UpdateSelectedFieldsByID(db, workUnitMember.ID.String(), *deleteMember, "status", "left_date"); err != nil {
+		if _, err = h.store.WorkUnitMember.UpdateSelectedFieldsByID(db, workUnitMember.ID.String(), *deleteMember, "status", "end_date"); err != nil {
 			return http.StatusInternalServerError, errs.ErrFailedToUpdateWorkUnitMember
 		}
 
@@ -2102,7 +2119,7 @@ func (h *handler) createWorkUnit(db *gorm.DB, projectID string, workUnitID strin
 			WorkUnitID: model.MustGetUUIDFromString(workUnitID),
 			EmployeeID: createMemberID,
 			ProjectID:  model.MustGetUUIDFromString(projectID),
-			JoinedDate: now,
+			StartDate:  now,
 		}
 
 		if err := h.store.WorkUnitMember.Create(db, &wuMember); err != nil {
@@ -2218,13 +2235,13 @@ func (h *handler) ArchiveWorkUnit(c *gin.Context) {
 		return
 	}
 
-	// update work unit member: left_date = now() and status = 'inactive'
+	// update work unit member: end_date = now() and status = 'inactive'
 	timeNow := time.Now()
 	for _, member := range wuMembers {
-		member.LeftDate = &timeNow
+		member.EndDate = &timeNow
 		member.Status = model.ProjectMemberStatusInactive.String()
 
-		_, err := h.store.WorkUnitMember.UpdateSelectedFieldsByID(tx.DB(), member.ID.String(), *member, "left_date", "status")
+		_, err := h.store.WorkUnitMember.UpdateSelectedFieldsByID(tx.DB(), member.ID.String(), *member, "end_date", "status")
 		if err != nil {
 			l.Error(err, "failed to get work unit members")
 			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), nil, ""))
@@ -2355,10 +2372,10 @@ func (h *handler) UnarchiveWorkUnit(c *gin.Context) {
 		// 	return
 		// }
 
-		member.LeftDate = nil
+		member.EndDate = nil
 		member.Status = model.ProjectMemberStatusActive.String()
 
-		_, err = h.store.WorkUnitMember.UpdateSelectedFieldsByID(tx.DB(), member.ID.String(), *member, "left_date", "status")
+		_, err = h.store.WorkUnitMember.UpdateSelectedFieldsByID(tx.DB(), member.ID.String(), *member, "end_date", "status")
 		if err != nil {
 			l.Error(err, "failed to get work unit members")
 			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), nil, ""))

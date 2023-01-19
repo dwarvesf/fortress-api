@@ -14,5 +14,5 @@ type IStore interface {
 	DeleteByPositionInProject(db *gorm.DB, projectID string, employeeID string, position string) (err error)
 	One(db *gorm.DB, projectID string, position model.HeadPosition) (projectHead *model.ProjectHead, err error)
 	UpdateSelectedFieldsByID(db *gorm.DB, id string, updateModel model.ProjectHead, updatedFields ...string) (*model.ProjectHead, error)
-	UpdateLeftDateOfEmployee(db *gorm.DB, employeeID string, projectID string, position string, leftDate time.Time) (*model.ProjectHead, error)
+	UpdateEndDateOfEmployee(db *gorm.DB, employeeID string, projectID string, position string, endDate time.Time) (*model.ProjectHead, error)
 }

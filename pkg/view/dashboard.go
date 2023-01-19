@@ -68,7 +68,7 @@ func ToWorkSurveyData(project *model.Project, workSurveys []*model.WorkSurvey) *
 		rs.Project = toBasicProjectInfo(*project)
 	}
 
-	if workSurveys != nil && len(workSurveys) > 1 {
+	if len(workSurveys) > 1 {
 		for i := 1; i < len(workSurveys); i++ {
 			rs.WorkSurveys[i].Trend = calculateTrend(workSurveys[i-1], workSurveys[i])
 		}
@@ -92,7 +92,7 @@ func ToActionItemReportData(actionItemReports []*model.ActionItemReport) []*Audi
 		})
 	}
 
-	if actionItemReports != nil && len(actionItemReports) > 1 {
+	if len(actionItemReports) > 1 {
 		for i := 1; i < len(actionItemReports); i++ {
 			rs[i].Trend = calculateActionItemReportTrend(actionItemReports[i-1], actionItemReports[i])
 		}

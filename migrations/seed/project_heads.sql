@@ -1,4 +1,4 @@
-INSERT INTO public.project_heads (id, deleted_at, created_at, updated_at, project_id, employee_id, joined_date, left_date, commission_rate, position) VALUES
+INSERT INTO public.project_heads (id, deleted_at, created_at, updated_at, project_id, employee_id, start_date, end_date, commission_rate, position) VALUES
 ('528433a5-4001-408d-bd0c-3b032eef0a70', NULL, '2022-11-11 18:27:03.906845', '2022-11-11 18:27:03.906845', '8dc3be2e-19a4-4942-8a79-56db391a0b15', '2655832e-f009-4b73-a535-64c3a22e558f', '2022-11-01', NULL, 1, 'account-manager'),
 ('14d1d9f0-5f0f-49d5-8309-ac0a40de013d', NULL, '2022-11-11 18:27:03.906845', '2022-11-11 18:27:03.906845', '8dc3be2e-19a4-4942-8a79-56db391a0b15', '8d7c99c0-3253-4286-93a9-e7554cb327ef', '2022-11-11', NULL, 1, 'technical-lead'),
 ('e17b6bfc-79b0-4d65-ac88-559d8c597d2e', NULL, '2022-11-11 18:27:03.906845', '2022-11-11 18:27:03.906845', '8dc3be2e-19a4-4942-8a79-56db391a0b15', '608ea227-45a5-4c8a-af43-6c7280d96340', '2022-11-02', NULL, 2, 'sale-person'),

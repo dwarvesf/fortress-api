@@ -153,8 +153,8 @@ type UpdateMemberInput struct {
 	Positions       []model.UUID    `form:"positions" json:"positions" binding:"required"`
 	DeploymentType  string          `form:"deploymentType" json:"deploymentType" binding:"required"`
 	Status          string          `form:"status" json:"status" binding:"required"`
-	JoinedDate      string          `form:"joinedDate" json:"joinedDate"`
-	LeftDate        string          `form:"leftDate" json:"leftDate"`
+	StartDate       string          `form:"startDate" json:"startDate"`
+	EndDate         string          `form:"endDate" json:"endDate"`
 	Rate            decimal.Decimal `form:"rate" json:"rate" binding:"required"`
 	Discount        decimal.Decimal `form:"discount" json:"discount"`
 	IsLead          bool            `form:"isLead" json:"isLead"`
@@ -169,41 +169,41 @@ func (i *UpdateMemberInput) Validate() error {
 		return errs.ErrInvalidProjectMemberStatus
 	}
 
-	_, err := time.Parse("2006-01-02", i.JoinedDate)
-	if i.JoinedDate != "" && err != nil {
-		return errs.ErrInvalidJoinedDate
+	_, err := time.Parse("2006-01-02", i.StartDate)
+	if i.StartDate != "" && err != nil {
+		return errs.ErrInvalidStartDate
 	}
 
-	_, err = time.Parse("2006-01-02", i.LeftDate)
-	if i.LeftDate != "" && err != nil {
-		return errs.ErrInvalidLeftDate
+	_, err = time.Parse("2006-01-02", i.EndDate)
+	if i.EndDate != "" && err != nil {
+		return errs.ErrInvalidEndDate
 	}
 
-	if i.GetJoinedDate() != nil &&
-		i.GetLeftDate() != nil &&
-		!i.GetJoinedDate().Before(*i.GetLeftDate()) {
-		return errs.ErrInvalidLeftDate
+	if i.GetStartDate() != nil &&
+		i.GetEndDate() != nil &&
+		!i.GetStartDate().Before(*i.GetEndDate()) {
+		return errs.ErrInvalidEndDate
 	}
 
-	if i.GetLeftDate() != nil && i.GetLeftDate().Before(time.Now()) {
+	if i.GetEndDate() != nil && i.GetEndDate().Before(time.Now()) {
 		i.Status = model.ProjectMemberStatusInactive.String()
 	}
 
 	return nil
 }
 
-func (i *UpdateMemberInput) GetJoinedDate() *time.Time {
-	date, err := time.Parse("2006-01-02", i.JoinedDate)
-	if i.JoinedDate == "" || err != nil {
+func (i *UpdateMemberInput) GetStartDate() *time.Time {
+	date, err := time.Parse("2006-01-02", i.StartDate)
+	if i.StartDate == "" || err != nil {
 		return nil
 	}
 
 	return &date
 }
 
-func (i *UpdateMemberInput) GetLeftDate() *time.Time {
-	date, err := time.Parse("2006-01-02", i.LeftDate)
-	if i.LeftDate == "" || err != nil {
+func (i *UpdateMemberInput) GetEndDate() *time.Time {
+	date, err := time.Parse("2006-01-02", i.EndDate)
+	if i.EndDate == "" || err != nil {
 		return nil
 	}
 
@@ -216,8 +216,8 @@ type AssignMemberInput struct {
 	Positions      []model.UUID    `form:"positions" json:"positions" binding:"required"`
 	DeploymentType string          `form:"deploymentType" json:"deploymentType" binding:"required"`
 	Status         string          `form:"status" json:"status" binding:"required"`
-	JoinedDate     string          `form:"joinedDate" json:"joinedDate"`
-	LeftDate       string          `form:"leftDate" json:"leftDate"`
+	StartDate      string          `form:"startDate" json:"startDate"`
+	EndDate        string          `form:"endDate" json:"endDate"`
 	Rate           decimal.Decimal `form:"rate" json:"rate" binding:"required"`
 	Discount       decimal.Decimal `form:"discount" json:"discount"`
 	IsLead         bool            `form:"isLead" json:"isLead"`
@@ -239,14 +239,14 @@ func (i *AssignMemberInput) Validate() error {
 		return errs.ErrPositionsIsEmpty
 	}
 
-	_, err := time.Parse("2006-01-02", i.JoinedDate)
-	if i.JoinedDate != "" && err != nil {
-		return errs.ErrInvalidJoinedDate
+	_, err := time.Parse("2006-01-02", i.StartDate)
+	if i.StartDate != "" && err != nil {
+		return errs.ErrInvalidStartDate
 	}
 
-	_, err = time.Parse("2006-01-02", i.LeftDate)
-	if i.LeftDate != "" && err != nil {
-		return errs.ErrInvalidLeftDate
+	_, err = time.Parse("2006-01-02", i.EndDate)
+	if i.EndDate != "" && err != nil {
+		return errs.ErrInvalidEndDate
 	}
 
 	if i.Status == model.ProjectMemberStatusPending.String() && !i.EmployeeID.IsZero() {
@@ -256,18 +256,18 @@ func (i *AssignMemberInput) Validate() error {
 	return nil
 }
 
-func (i *AssignMemberInput) GetJoinedDate() *time.Time {
-	date, err := time.Parse("2006-01-02", i.JoinedDate)
-	if i.JoinedDate == "" || err != nil {
+func (i *AssignMemberInput) GetStartDate() *time.Time {
+	date, err := time.Parse("2006-01-02", i.StartDate)
+	if i.StartDate == "" || err != nil {
 		return nil
 	}
 
 	return &date
 }
 
-func (i *AssignMemberInput) GetLeftDate() *time.Time {
-	date, err := time.Parse("2006-01-02", i.LeftDate)
-	if i.LeftDate == "" || err != nil {
+func (i *AssignMemberInput) GetEndDate() *time.Time {
+	date, err := time.Parse("2006-01-02", i.EndDate)
+	if i.EndDate == "" || err != nil {
 		return nil
 	}
 

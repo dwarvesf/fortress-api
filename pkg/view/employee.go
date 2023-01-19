@@ -87,8 +87,8 @@ type EmployeeProjectData struct {
 	Positions      []Position `json:"positions"`
 	Code           string     `json:"code"`
 	Avatar         string     `json:"avatar"`
-	JoinedDate     *time.Time `json:"joinedDate"`
-	LeftDate       *time.Time `json:"leftDate"`
+	StartDate      *time.Time `json:"startDate"`
+	EndDate        *time.Time `json:"endDate"`
 }
 
 func ToEmployeeProjectDetailData(c *gin.Context, pm *model.ProjectMember, userInfo *model.CurrentLoggedUserInfo) EmployeeProjectData {
@@ -102,8 +102,8 @@ func ToEmployeeProjectDetailData(c *gin.Context, pm *model.ProjectMember, userIn
 	}
 
 	if utils.HasPermission(c, userInfo.Permissions, model.PermissionEmployeesReadProjectsFullAccess) {
-		rs.JoinedDate = pm.JoinedDate
-		rs.LeftDate = pm.LeftDate
+		rs.StartDate = pm.StartDate
+		rs.EndDate = pm.EndDate
 		rs.DeploymentType = pm.DeploymentType.String()
 	}
 
@@ -119,8 +119,8 @@ func ToEmployeeProjectData(pm *model.ProjectMember) EmployeeProjectData {
 		Positions:      ToProjectMemberPositions(pm.ProjectMemberPositions),
 		Code:           pm.Project.Code,
 		Avatar:         pm.Project.Avatar,
-		JoinedDate:     pm.JoinedDate,
-		LeftDate:       pm.LeftDate,
+		StartDate:      pm.StartDate,
+		EndDate:        pm.EndDate,
 	}
 }
 
@@ -325,7 +325,7 @@ func ToOneEmployeeData(c *gin.Context, employee *model.Employee, userInfo *model
 		LineManager:   lineManager,
 
 		Roles:     ToRoles(employee.EmployeeRoles),
-		Positions: ToPositions(employee.EmployeePositions),
+		Positions: ToEmployeePositions(employee.EmployeePositions),
 		Stacks:    ToEmployeeStacks(employee.EmployeeStacks),
 		Chapters:  ToChapters(employee.EmployeeChapters),
 	}
@@ -414,7 +414,7 @@ func ToEmployeeData(employee *model.Employee) *EmployeeData {
 		Country:          employee.Country,
 		City:             employee.City,
 		Roles:            ToRoles(employee.EmployeeRoles),
-		Positions:        ToPositions(employee.EmployeePositions),
+		Positions:        ToEmployeePositions(employee.EmployeePositions),
 		Stacks:           ToEmployeeStacks(employee.EmployeeStacks),
 		Chapters:         ToChapters(employee.EmployeeChapters),
 	}

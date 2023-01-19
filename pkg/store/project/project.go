@@ -60,7 +60,7 @@ func (s *store) All(db *gorm.DB, input GetListProjectInput, pagination model.Pag
 				model.ProjectMemberStatusActive)
 	}).
 		Preload("ProjectMembers.Employee").
-		Preload("Heads", `deleted_at IS NULL AND (left_date IS NULL OR left_date > now())`).
+		Preload("Heads", `deleted_at IS NULL AND (end_date IS NULL OR end_date > now())`).
 		Preload("Heads.Employee").
 		Offset(offset)
 
@@ -107,7 +107,7 @@ func (s *store) One(db *gorm.DB, id string, preload bool) (*model.Project, error
 
 	if preload {
 		query = query.
-			Preload("Heads", "deleted_at IS NULL AND (left_date IS NULL OR left_date > now())").
+			Preload("Heads", "deleted_at IS NULL AND (end_date IS NULL OR end_date > now())").
 			Preload("Heads.Employee", "deleted_at IS NULL").
 			Preload("ProjectStacks", "deleted_at IS NULL").
 			Preload("ProjectStacks.Stack", "deleted_at IS NULL").
@@ -117,7 +117,7 @@ func (s *store) One(db *gorm.DB, id string, preload bool) (*model.Project, error
 					Joins(`LEFT JOIN project_heads ph ON ph.project_id = project_members.project_id 
 						AND ph.employee_id = project_members.employee_id 
 						AND ph.position = ?
-						AND (ph.left_date IS NULL OR ph.left_date > now())`,
+						AND (ph.end_date IS NULL OR ph.end_date > now())`,
 						model.HeadPositionTechnicalLead,
 					).
 					Where("project_members.deleted_at IS NULL").
@@ -153,7 +153,7 @@ func (s *store) GetByEmployeeID(db *gorm.DB, employeeID string) ([]*model.Projec
 		Where("projects.deleted_at IS NULL AND pm.employee_id = ?", employeeID).
 		Preload("Heads", func(db *gorm.DB) *gorm.DB {
 			return db.Joins("JOIN projects p ON project_heads.project_id = p.id").
-				Where("(project_heads.left_date IS NULL OR project_heads.left_date > ?) AND project_heads.employee_id = ? AND project_heads.position = ?", time.Now(), employeeID, model.HeadPositionTechnicalLead)
+				Where("(project_heads.end_date IS NULL OR project_heads.end_date > ?) AND project_heads.employee_id = ? AND project_heads.position = ?", time.Now(), employeeID, model.HeadPositionTechnicalLead)
 		}).
 		Preload("Heads.Employee")
 
