@@ -110,7 +110,7 @@ func (s *store) All(db *gorm.DB, filter EmployeeFilter, pagination model.Paginat
 	query = query.Count(&total)
 
 	if filter.Preload {
-		query = query.Preload("ProjectMembers", "deleted_at IS NULL AND status != 'inactive'").
+		query = query.Preload("ProjectMembers", "deleted_at IS NULL").
 			Preload("LineManager", "deleted_at IS NULL").
 			Preload("Seniority", "deleted_at IS NULL").
 			Preload("ProjectMembers.Project", "deleted_at IS NULL").
