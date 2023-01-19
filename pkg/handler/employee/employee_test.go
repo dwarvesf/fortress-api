@@ -3,9 +3,9 @@ package employee
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -148,7 +148,7 @@ func TestHandler_List(t *testing.T) {
 				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 				h.List(ctx)
 				require.Equal(t, tt.wantCode, w.Code)
-				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
 				require.NoError(t, err)
 
 				res, err := utils.RemoveFieldInSliceResponse(w.Body.Bytes(), "updatedAt")
@@ -205,7 +205,7 @@ func TestHandler_One(t *testing.T) {
 				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 				h.One(ctx)
 				require.Equal(t, tt.wantCode, w.Code)
-				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
 				require.NoError(t, err)
 
 				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Employee.One] response mismatched")
@@ -257,7 +257,7 @@ func TestHandler_UpdateEmployeeStatus(t *testing.T) {
 				h.UpdateEmployeeStatus(ctx)
 
 				require.Equal(t, tt.wantCode, w.Code)
-				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
 				require.NoError(t, err)
 
 				res, err := utils.RemoveFieldInResponse(w.Body.Bytes(), "updatedAt")
@@ -328,7 +328,7 @@ func Test_UpdateGeneralInfo(t *testing.T) {
 				metadataHandler.UpdateGeneralInfo(ctx)
 
 				require.Equal(t, tt.wantCode, w.Code)
-				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
 				require.NoError(t, err)
 
 				res, err := utils.RemoveFieldInResponse(w.Body.Bytes(), "updatedAt")
@@ -419,7 +419,7 @@ func Test_UpdateSkill(t *testing.T) {
 				metadataHandler.UpdateSkills(ctx)
 
 				require.Equal(t, tt.wantCode, w.Code)
-				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
 				require.NoError(t, err)
 
 				res, err := utils.RemoveFieldInResponse(w.Body.Bytes(), "updatedAt")
@@ -519,7 +519,7 @@ func Test_Create(t *testing.T) {
 				metadataHandler.Create(ctx)
 
 				require.Equal(t, tt.wantCode, w.Code)
-				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
 				require.NoError(t, err)
 
 				if !tt.wantErr {
@@ -602,7 +602,7 @@ func Test_UpdatePersonalInfo(t *testing.T) {
 				metadataHandler.UpdatePersonalInfo(ctx)
 
 				require.Equal(t, tt.wantCode, w.Code)
-				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
 				require.NoError(t, err)
 
 				res, err := utils.RemoveFieldInResponse(w.Body.Bytes(), "updatedAt")
@@ -698,7 +698,7 @@ func Test_AddMentee(t *testing.T) {
 				metadataHandler.AddMentee(ctx)
 
 				require.Equal(t, tt.wantCode, w.Code)
-				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
 				require.NoError(t, err)
 
 				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.AddMentee] response mismatched")
@@ -746,10 +746,50 @@ func Test_DeleteMentee(t *testing.T) {
 				metadataHandler.DeleteMentee(ctx)
 
 				// require.Equal(t, tt.wantCode, w.Code)
-				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
 				require.NoError(t, err)
 
 				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.DeleteMentee] response mismatched")
+			})
+		})
+	}
+}
+
+func TestHandler_GetLineManagers(t *testing.T) {
+	cfg := config.LoadTestConfig()
+	loggerMock := logger.NewLogrusLogger()
+	serviceMock := service.New(&cfg)
+	storeMock := store.New()
+
+	tests := []struct {
+		name             string
+		wantCode         int
+		wantResponsePath string
+		menteeID         string
+		id               string
+	}{
+		{
+			name:             "happy_case",
+			wantCode:         http.StatusOK,
+			wantResponsePath: "testdata/get_line_managers/200_ok.json",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				testhelper.LoadTestSQLFile(t, txRepo, "./testdata/get_line_managers/seed.sql")
+				w := httptest.NewRecorder()
+				ctx, _ := gin.CreateTestContext(w)
+				ctx.Request = httptest.NewRequest(http.MethodGet, "/api/v1/line-managers", nil)
+				ctx.Request.Header.Set("Authorization", testToken)
+
+				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+				h.GetLineManagers(ctx)
+				require.Equal(t, tt.wantCode, w.Code)
+				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
+				require.NoError(t, err)
+
+				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Employee.GetLineManagers] response mismatched")
 			})
 		})
 	}

@@ -466,3 +466,18 @@ func toBasicEmployeeInfo(employee model.Employee) *BasicEmployeeInfo {
 		Username:    employee.Username,
 	}
 }
+
+type LineManagersResponse struct {
+	Data []BasicEmployeeInfo `json:"data"`
+}
+
+func ToBasicEmployees(employees []*model.Employee) []BasicEmployeeInfo {
+	results := make([]BasicEmployeeInfo, 0, len(employees))
+
+	for _, e := range employees {
+		emp := toBasicEmployeeInfo(*e)
+		results = append(results, *emp)
+	}
+
+	return results
+}

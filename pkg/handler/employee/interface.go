@@ -15,4 +15,5 @@ type IHandler interface {
 	AddMentee(c *gin.Context)
 	DeleteMentee(c *gin.Context)
 	UpdateRole(c *gin.Context)
+	GetLineManagers(c *gin.Context)
 }

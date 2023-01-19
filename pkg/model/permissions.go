@@ -29,6 +29,7 @@ const (
 	PermissionEmployeesReadProjectsReadActive     PermissionCode = "employees.read.projects.readActive"
 	PermissionEmployeesReadFilterByAllStatuses    PermissionCode = "employees.read.filterByAllStatuses"
 	PermissionEmployeesReadFilterByProject        PermissionCode = "employees.read.filterByProject"
+	PermissionEmployeesReadLineManagerFullAccess  PermissionCode = "employees.read.lineManager.fullAccess"
 	PermissionEmployeesCreate                     PermissionCode = "employees.create"
 	PermissionEmployeesEdit                       PermissionCode = "employees.edit"
 	PermissionEmployeesDelete                     PermissionCode = "employees.delete"

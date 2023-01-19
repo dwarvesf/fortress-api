@@ -1859,6 +1859,13 @@ definitions:
           $ref: '#/definitions/model.HiringPosition'
         type: array
     type: object
+  view.LineManagersResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/view.BasicEmployeeInfo'
+        type: array
+    type: object
   view.ListFeedbackResponse:
     properties:
       data:
@@ -3589,6 +3596,31 @@ paths:
       summary: Get list hirings from DF Dwarves Hiring
       tags:
       - hiring
+  /line-managers:
+    post:
+      consumes:
+      - application/json
+      description: Get the list of line managers
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.LineManagersResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get the list of line managers
+      tags:
+      - Employee
   /metadata/account-roles:
     get:
       consumes:
