@@ -4862,19 +4862,19 @@
                 "employeeID": {
                     "type": "string"
                 },
+                "endDate": {
+                    "type": "string"
+                },
                 "id": {
-                    "type": "string"
-                },
-                "joinedDate": {
-                    "type": "string"
-                },
-                "leftDate": {
                     "type": "string"
                 },
                 "position": {
                     "type": "string"
                 },
                 "projectID": {
+                    "type": "string"
+                },
+                "startDate": {
                     "type": "string"
                 },
                 "updatedAt": {
@@ -4903,17 +4903,20 @@
                 "employeeID": {
                     "type": "string"
                 },
+                "endDate": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "string"
                 },
                 "isLead": {
                     "type": "boolean"
                 },
-                "joinedDate": {
-                    "type": "string"
-                },
-                "leftDate": {
-                    "type": "string"
+                "positions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Position"
+                    }
                 },
                 "project": {
                     "$ref": "#/definitions/model.Project"
@@ -4937,6 +4940,9 @@
                     "$ref": "#/definitions/model.Seniority"
                 },
                 "seniorityID": {
+                    "type": "string"
+                },
+                "startDate": {
                     "type": "string"
                 },
                 "status": {
@@ -5327,14 +5333,11 @@
                 "employeeID": {
                     "type": "string"
                 },
+                "endDate": {
+                    "type": "string"
+                },
                 "isLead": {
                     "type": "boolean"
-                },
-                "joinedDate": {
-                    "type": "string"
-                },
-                "leftDate": {
-                    "type": "string"
                 },
                 "positions": {
                     "type": "array",
@@ -5346,6 +5349,9 @@
                     "type": "number"
                 },
                 "seniorityID": {
+                    "type": "string"
+                },
+                "startDate": {
                     "type": "string"
                 },
                 "status": {
@@ -5817,14 +5823,11 @@
                 "employeeID": {
                     "type": "string"
                 },
+                "endDate": {
+                    "type": "string"
+                },
                 "isLead": {
                     "type": "boolean"
-                },
-                "joinedDate": {
-                    "type": "string"
-                },
-                "leftDate": {
-                    "type": "string"
                 },
                 "positions": {
                     "type": "array",
@@ -5842,6 +5845,9 @@
                     "type": "number"
                 },
                 "seniorityID": {
+                    "type": "string"
+                },
+                "startDate": {
                     "type": "string"
                 },
                 "status": {
@@ -6612,13 +6618,10 @@
                 "deploymentType": {
                     "type": "string"
                 },
+                "endDate": {
+                    "type": "string"
+                },
                 "id": {
-                    "type": "string"
-                },
-                "joinedDate": {
-                    "type": "string"
-                },
-                "leftDate": {
                     "type": "string"
                 },
                 "name": {
@@ -6629,6 +6632,9 @@
                     "items": {
                         "$ref": "#/definitions/view.Position"
                     }
+                },
+                "startDate": {
+                    "type": "string"
                 },
                 "status": {
                     "type": "string"
@@ -7335,17 +7341,14 @@
                 "employeeID": {
                     "type": "string"
                 },
+                "endDate": {
+                    "type": "string"
+                },
                 "fullName": {
                     "type": "string"
                 },
                 "isLead": {
                     "type": "boolean"
-                },
-                "joinedDate": {
-                    "type": "string"
-                },
-                "leftDate": {
-                    "type": "string"
                 },
                 "positions": {
                     "type": "array",
@@ -7364,6 +7367,9 @@
                 },
                 "seniority": {
                     "$ref": "#/definitions/model.Seniority"
+                },
+                "startDate": {
+                    "type": "string"
                 },
                 "status": {
                     "type": "string"

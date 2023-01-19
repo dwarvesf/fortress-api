@@ -56,8 +56,8 @@ type ProjectMember struct {
 	Status          string          `json:"status"`
 	IsLead          bool            `json:"isLead"`
 	DeploymentType  string          `json:"deploymentType"`
-	JoinedDate      *time.Time      `json:"joinedDate"`
-	LeftDate        *time.Time      `json:"leftDate"`
+	StartDate       *time.Time      `json:"startDate"`
+	EndDate         *time.Time      `json:"endDate"`
 	Rate            decimal.Decimal `json:"rate"`
 	Discount        decimal.Decimal `json:"discount"`
 
@@ -328,8 +328,8 @@ func ToCreateProjectDataResponse(project *model.Project) CreateProjectData {
 	return result
 }
 
-func ToProjectMemberListData(slots []*model.ProjectSlot, projectHeads []*model.ProjectHead) []ProjectMember {
-	var results = make([]ProjectMember, 0, len(slots))
+func ToProjectMemberListData(members []*model.ProjectMember, projectHeads []*model.ProjectHead) []ProjectMember {
+	var results = make([]ProjectMember, 0, len(members))
 
 	leadMap := map[string]bool{}
 	for _, v := range projectHeads {
@@ -338,19 +338,18 @@ func ToProjectMemberListData(slots []*model.ProjectSlot, projectHeads []*model.P
 		}
 	}
 
-	for _, slot := range slots {
-		m := slot.ProjectMember
-
+	for _, m := range members {
 		var member ProjectMember
+
 		if m.ID.IsZero() {
 			member = ProjectMember{
-				ProjectSlotID:  slot.ID.String(),
-				Status:         slot.Status.String(),
-				DeploymentType: slot.DeploymentType.String(),
-				Rate:           slot.Rate,
-				Discount:       slot.Discount,
-				Seniority:      &slot.Seniority,
-				Positions:      ToProjectSlotPositions(slot.ProjectSlotPositions),
+				ProjectSlotID:  m.ProjectSlotID.String(),
+				Status:         m.Status.String(),
+				DeploymentType: m.DeploymentType.String(),
+				Rate:           m.Rate,
+				Discount:       m.Discount,
+				Seniority:      m.Seniority,
+				Positions:      ToPositions(m.Positions),
 			}
 		} else {
 			member = ProjectMember{
@@ -361,8 +360,8 @@ func ToProjectMemberListData(slots []*model.ProjectSlot, projectHeads []*model.P
 				DisplayName:     m.Employee.DisplayName,
 				Avatar:          m.Employee.Avatar,
 				Username:        m.Employee.Username,
-				JoinedDate:      m.JoinedDate,
-				LeftDate:        m.LeftDate,
+				StartDate:       m.StartDate,
+				EndDate:         m.EndDate,
 				IsLead:          leadMap[m.EmployeeID.String()],
 				Status:          m.Status.String(),
 				DeploymentType:  m.DeploymentType.String(),

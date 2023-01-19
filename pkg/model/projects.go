@@ -148,8 +148,8 @@ type ProjectMember struct {
 	ProjectID      UUID
 	EmployeeID     UUID
 	ProjectSlotID  UUID
-	JoinedDate     *time.Time
-	LeftDate       *time.Time
+	StartDate      *time.Time
+	EndDate        *time.Time
 	Status         ProjectMemberStatus
 	Rate           decimal.Decimal
 	Discount       decimal.Decimal
@@ -163,6 +163,7 @@ type ProjectMember struct {
 	Project                Project
 	Seniority              *Seniority
 	ProjectMemberPositions []ProjectMemberPosition
+	Positions              []Position `gorm:"-"`
 }
 
 type HeadPosition string
@@ -195,8 +196,8 @@ type ProjectHead struct {
 
 	ProjectID      UUID
 	EmployeeID     UUID
-	JoinedDate     time.Time
-	LeftDate       *time.Time
+	StartDate      time.Time
+	EndDate        *time.Time
 	CommissionRate decimal.Decimal
 	Position       HeadPosition
 	Employee       Employee

@@ -4870,19 +4870,19 @@ const docTemplate = `{
                 "employeeID": {
                     "type": "string"
                 },
+                "endDate": {
+                    "type": "string"
+                },
                 "id": {
-                    "type": "string"
-                },
-                "joinedDate": {
-                    "type": "string"
-                },
-                "leftDate": {
                     "type": "string"
                 },
                 "position": {
                     "type": "string"
                 },
                 "projectID": {
+                    "type": "string"
+                },
+                "startDate": {
                     "type": "string"
                 },
                 "updatedAt": {
@@ -4911,17 +4911,20 @@ const docTemplate = `{
                 "employeeID": {
                     "type": "string"
                 },
+                "endDate": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "string"
                 },
                 "isLead": {
                     "type": "boolean"
                 },
-                "joinedDate": {
-                    "type": "string"
-                },
-                "leftDate": {
-                    "type": "string"
+                "positions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Position"
+                    }
                 },
                 "project": {
                     "$ref": "#/definitions/model.Project"
@@ -4945,6 +4948,9 @@ const docTemplate = `{
                     "$ref": "#/definitions/model.Seniority"
                 },
                 "seniorityID": {
+                    "type": "string"
+                },
+                "startDate": {
                     "type": "string"
                 },
                 "status": {
@@ -5335,14 +5341,11 @@ const docTemplate = `{
                 "employeeID": {
                     "type": "string"
                 },
+                "endDate": {
+                    "type": "string"
+                },
                 "isLead": {
                     "type": "boolean"
-                },
-                "joinedDate": {
-                    "type": "string"
-                },
-                "leftDate": {
-                    "type": "string"
                 },
                 "positions": {
                     "type": "array",
@@ -5354,6 +5357,9 @@ const docTemplate = `{
                     "type": "number"
                 },
                 "seniorityID": {
+                    "type": "string"
+                },
+                "startDate": {
                     "type": "string"
                 },
                 "status": {
@@ -5825,14 +5831,11 @@ const docTemplate = `{
                 "employeeID": {
                     "type": "string"
                 },
+                "endDate": {
+                    "type": "string"
+                },
                 "isLead": {
                     "type": "boolean"
-                },
-                "joinedDate": {
-                    "type": "string"
-                },
-                "leftDate": {
-                    "type": "string"
                 },
                 "positions": {
                     "type": "array",
@@ -5850,6 +5853,9 @@ const docTemplate = `{
                     "type": "number"
                 },
                 "seniorityID": {
+                    "type": "string"
+                },
+                "startDate": {
                     "type": "string"
                 },
                 "status": {
@@ -6620,13 +6626,10 @@ const docTemplate = `{
                 "deploymentType": {
                     "type": "string"
                 },
+                "endDate": {
+                    "type": "string"
+                },
                 "id": {
-                    "type": "string"
-                },
-                "joinedDate": {
-                    "type": "string"
-                },
-                "leftDate": {
                     "type": "string"
                 },
                 "name": {
@@ -6637,6 +6640,9 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/view.Position"
                     }
+                },
+                "startDate": {
+                    "type": "string"
                 },
                 "status": {
                     "type": "string"
@@ -7343,17 +7349,14 @@ const docTemplate = `{
                 "employeeID": {
                     "type": "string"
                 },
+                "endDate": {
+                    "type": "string"
+                },
                 "fullName": {
                     "type": "string"
                 },
                 "isLead": {
                     "type": "boolean"
-                },
-                "joinedDate": {
-                    "type": "string"
-                },
-                "leftDate": {
-                    "type": "string"
                 },
                 "positions": {
                     "type": "array",
@@ -7372,6 +7375,9 @@ const docTemplate = `{
                 },
                 "seniority": {
                     "$ref": "#/definitions/model.Seniority"
+                },
+                "startDate": {
+                    "type": "string"
                 },
                 "status": {
                     "type": "string"

@@ -95,8 +95,8 @@
                     }
                 ],
                 "code": "",
-                "joinedDate": "2022-11-01T00:00:00Z",
-                "leftDate": null
+                "startDate": "2022-11-01T00:00:00Z",
+                "endDate": null
             }
         ],
         "chapters": [],

@@ -14,8 +14,9 @@ type IStore interface {
 	IsExistsByEmployeeID(db *gorm.DB, projectID string, employeeID string) (bool, error)
 	UpdateSelectedFieldsByID(db *gorm.DB, id string, updateModel model.ProjectMember, updatedFields ...string) (*model.ProjectMember, error)
 	UpdateSelectedFieldByProjectID(db *gorm.DB, projectID string, updateModel model.ProjectMember, updatedField string) error
-	UpdateLeftDateByProjectID(db *gorm.DB, projectID string) error
+	UpdateEndDateByProjectID(db *gorm.DB, projectID string) error
 	GetActiveByProjectIDs(db *gorm.DB, projectIDs []string) ([]*model.ProjectMember, error)
 	GetActiveMemberInProject(db *gorm.DB, projectID string, employeeID string) (*model.ProjectMember, error)
 	GetActiveMembersBySlotID(db *gorm.DB, slotID string) ([]*model.ProjectMember, error)
+	GetAssignedMembers(db *gorm.DB, projectID string, status string, preload bool) ([]*model.ProjectMember, error)
 }

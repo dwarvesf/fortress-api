@@ -1,4 +1,4 @@
-INSERT INTO public.work_unit_members (id, deleted_at, created_at, updated_at, joined_date, left_date, status, project_id, work_unit_id, employee_id) VALUES
+INSERT INTO public.work_unit_members (id, deleted_at, created_at, updated_at, start_date, end_date, status, project_id, work_unit_id, employee_id) VALUES
 ('f79ae054-4ab4-41cd-aa5f-c871887cc35c', NULL, '2022-11-29 08:03:33.233262', '2022-11-29 08:03:33.233262', '2022-11-29', NULL, 'active', '8dc3be2e-19a4-4942-8a79-56db391a0b15', '4797347d-21e0-4dac-a6c7-c98bf2d6b27c', 'ecea9d15-05ba-4a4e-9787-54210e3b98ce'),
 ('7e4da4ac-241f-4af8-b0a0-f59e5a64065b', NULL, '2022-11-29 08:03:33.233262', '2022-11-29 08:03:33.233262', '2022-11-29', NULL, 'active', '8dc3be2e-19a4-4942-8a79-56db391a0b15', '4797347d-21e0-4dac-a6c7-c98bf2d6b27c', '8d7c99c0-3253-4286-93a9-e7554cb327ef'),
 ('303fd2e5-0b4d-401c-b5fa-74820991e6c0', NULL, '2022-11-29 08:03:33.233262', '2022-11-29 08:03:33.233262', '2022-11-29', NULL, 'active', '8dc3be2e-19a4-4942-8a79-56db391a0b15', '4a68d3ae-fe4c-4bab-8b73-c8e9f9533fba', '2655832e-f009-4b73-a535-64c3a22e558f'),

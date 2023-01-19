@@ -449,15 +449,15 @@ definitions:
         $ref: '#/definitions/model.Employee'
       employeeID:
         type: string
+      endDate:
+        type: string
       id:
-        type: string
-      joinedDate:
-        type: string
-      leftDate:
         type: string
       position:
         type: string
       projectID:
+        type: string
+      startDate:
         type: string
       updatedAt:
         type: string
@@ -476,14 +476,16 @@ definitions:
         $ref: '#/definitions/model.Employee'
       employeeID:
         type: string
+      endDate:
+        type: string
       id:
         type: string
       isLead:
         type: boolean
-      joinedDate:
-        type: string
-      leftDate:
-        type: string
+      positions:
+        items:
+          $ref: '#/definitions/model.Position'
+        type: array
       project:
         $ref: '#/definitions/model.Project'
       projectID:
@@ -499,6 +501,8 @@ definitions:
       seniority:
         $ref: '#/definitions/model.Seniority'
       seniorityID:
+        type: string
+      startDate:
         type: string
       status:
         type: string
@@ -750,12 +754,10 @@ definitions:
         type: number
       employeeID:
         type: string
+      endDate:
+        type: string
       isLead:
         type: boolean
-      joinedDate:
-        type: string
-      leftDate:
-        type: string
       positions:
         items:
           type: string
@@ -763,6 +765,8 @@ definitions:
       rate:
         type: number
       seniorityID:
+        type: string
+      startDate:
         type: string
       status:
         type: string
@@ -1082,12 +1086,10 @@ definitions:
         type: number
       employeeID:
         type: string
+      endDate:
+        type: string
       isLead:
         type: boolean
-      joinedDate:
-        type: string
-      leftDate:
-        type: string
       positions:
         items:
           type: string
@@ -1099,6 +1101,8 @@ definitions:
       rate:
         type: number
       seniorityID:
+        type: string
+      startDate:
         type: string
       status:
         type: string
@@ -1613,11 +1617,9 @@ definitions:
         type: string
       deploymentType:
         type: string
+      endDate:
+        type: string
       id:
-        type: string
-      joinedDate:
-        type: string
-      leftDate:
         type: string
       name:
         type: string
@@ -1625,6 +1627,8 @@ definitions:
         items:
           $ref: '#/definitions/view.Position'
         type: array
+      startDate:
+        type: string
       status:
         type: string
     type: object
@@ -2083,14 +2087,12 @@ definitions:
         type: string
       employeeID:
         type: string
+      endDate:
+        type: string
       fullName:
         type: string
       isLead:
         type: boolean
-      joinedDate:
-        type: string
-      leftDate:
-        type: string
       positions:
         items:
           $ref: '#/definitions/view.Position'
@@ -2103,6 +2105,8 @@ definitions:
         type: number
       seniority:
         $ref: '#/definitions/model.Seniority'
+      startDate:
+        type: string
       status:
         type: string
       username:
