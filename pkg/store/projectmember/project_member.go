@@ -83,7 +83,7 @@ func (s *store) IsExistsByEmployeeID(db *gorm.DB, projectID string, employeeID s
 // GetActiveByProjectIDs get project member by porjectID list
 func (s *store) GetActiveByProjectIDs(db *gorm.DB, projectIDs []string) ([]*model.ProjectMember, error) {
 	var members []*model.ProjectMember
-	return members, db.Joins("JOIN employees ON project_members.employee_id = employees.id").Where("(project_members.end_date IS NULL OR project_members.left_date > ?) AND project_members.status = 'active' AND employees.working_status = 'full-time' AND project_members.project_id IN ?", time.Now(), projectIDs).Preload("Employee").Find(&members).Error
+	return members, db.Joins("JOIN employees ON project_members.employee_id = employees.id").Where("(project_members.end_date IS NULL OR project_members.end_date > ?) AND project_members.status = 'active' AND employees.working_status = 'full-time' AND project_members.project_id IN ?", time.Now(), projectIDs).Preload("Employee").Find(&members).Error
 }
 
 func (s *store) GetActiveMemberInProject(db *gorm.DB, projectID string, employeeID string) (*model.ProjectMember, error) {

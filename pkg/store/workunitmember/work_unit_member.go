@@ -72,12 +72,12 @@ func (s *store) GetPeerReviewerInTimeRange(db *gorm.DB, from *time.Time, to *tim
 				FROM
 					work_unit_members w1
 					JOIN work_unit_members w2 ON w1.work_unit_id = w2.work_unit_id
-				WHERE (w1.joined_date < ?
-					AND(w1.left_date > ?
-						OR w1.left_date IS NULL))
-				AND(w2.joined_date < ?
-					AND(w2.left_date > ?
-						OR w2.left_date IS NULL))) a
+				WHERE (w1.start_date < ?
+					AND(w1.end_date > ?
+						OR w1.end_date IS NULL))
+				AND(w2.start_date < ?
+					AND(w2.end_date > ?
+						OR w2.end_date IS NULL))) a
 			JOIN employees e ON a.employee_id = e.id
 		WHERE
 			employee_id <> reviewer_id
