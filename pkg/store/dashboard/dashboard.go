@@ -175,7 +175,7 @@ func (s *store) GroupEngineeringHealth(db *gorm.DB) ([]*model.GroupEngineeringHe
 	return rs, db.Raw(query).Scan(&rs).Error
 }
 
-func (s *store) AverageEngineeringHealthByProjectID(db *gorm.DB, projectID string) ([]*model.AverageEngineeringHealth, error) {
+func (s *store) AverageEngineeringHealthByProjectNotionID(db *gorm.DB, projectID string) ([]*model.AverageEngineeringHealth, error) {
 	var rs []*model.AverageEngineeringHealth
 
 	query := `
@@ -195,7 +195,7 @@ func (s *store) AverageEngineeringHealthByProjectID(db *gorm.DB, projectID strin
 	return rs, db.Raw(query, projectID).Scan(&rs).Error
 }
 
-func (s *store) GroupEngineeringHealthByProjectID(db *gorm.DB, projectID string) ([]*model.GroupEngineeringHealth, error) {
+func (s *store) GroupEngineeringHealthByProjectNotionID(db *gorm.DB, projectID string) ([]*model.GroupEngineeringHealth, error) {
 	var rs []*model.GroupEngineeringHealth
 
 	query := `
@@ -278,7 +278,7 @@ func (s *store) GetGroupAudit(db *gorm.DB) ([]*model.GroupAudit, error) {
 	return rs, db.Raw(query).Scan(&rs).Error
 }
 
-func (s *store) GetAverageAuditByProjectID(db *gorm.DB, projectID string) ([]*model.AverageAudit, error) {
+func (s *store) GetAverageAuditByProjectNotionID(db *gorm.DB, projectID string) ([]*model.AverageAudit, error) {
 	var rs []*model.AverageAudit
 
 	query := `
@@ -297,7 +297,7 @@ func (s *store) GetAverageAuditByProjectID(db *gorm.DB, projectID string) ([]*mo
 	return rs, db.Raw(query, projectID).Scan(&rs).Error
 }
 
-func (s *store) GetGroupAuditByProjectID(db *gorm.DB, projectID string) ([]*model.GroupAudit, error) {
+func (s *store) GetGroupAuditByProjectNotionID(db *gorm.DB, projectID string) ([]*model.GroupAudit, error) {
 	var rs []*model.GroupAudit
 
 	query := `

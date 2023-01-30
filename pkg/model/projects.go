@@ -69,6 +69,7 @@ type Project struct {
 	AllowsSendingSurvey bool            `gorm:"default:null"`
 	Code                string          `gorm:"default:null"`
 	Function            ProjectFunction `gorm:"default:null"`
+	NotionID            UUID            `gorm:"default:null"`
 
 	Country        *Country
 	Slots          []ProjectSlot
