@@ -51,10 +51,10 @@
                 "trend": {
                     "frontend": 34.37,
                     "backend": 36.36,
-                    "system": 10.52,
+                    "system": 10.53,
                     "process": 21.62,
                     "mobile": 4.76,
-                    "blockchain": 31.42
+                    "blockchain": 31.43
                 }
             },
             {
@@ -67,10 +67,10 @@
                 "blockchain": 3.2,
                 "trend": {
                     "frontend": -20.93,
-                    "backend": -28.88,
+                    "backend": -28.89,
                     "system": -11.9,
-                    "process": -28.88,
-                    "mobile": -13.63,
+                    "process": -28.89,
+                    "mobile": -13.64,
                     "blockchain": -30.43
                 }
             },
@@ -84,11 +84,11 @@
                 "blockchain": 3.8,
                 "trend": {
                     "frontend": -8.82,
-                    "backend": 12.49,
-                    "system": 5.4,
+                    "backend": 12.5,
+                    "system": 5.41,
                     "process": 3.12,
                     "mobile": -5.26,
-                    "blockchain": 18.74
+                    "blockchain": 18.75
                 }
             }
         ]

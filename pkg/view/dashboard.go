@@ -276,7 +276,7 @@ func calculateEngineeringHealthTrend(previous *EngineeringHealth, current *Engin
 	}
 
 	// return the value fixed 2 decimal places
-	return float64(math.Trunc((current.Value-previous.Value)/previous.Value*100*100)) / 100
+	return float64(math.Round((current.Value-previous.Value)/previous.Value*100*100)) / 100
 }
 
 type AuditResponse struct {
@@ -383,7 +383,7 @@ func calculateAuditTrend(previous *Audit, current *Audit) float64 {
 	}
 
 	// return the value fixed 2 decimal places
-	return float64(math.Trunc((current.Value-previous.Value)/previous.Value*100*100)) / 100
+	return float64(math.Round((current.Value-previous.Value)/previous.Value*100*100)) / 100
 }
 
 type ActionItemSquash struct {
@@ -448,4 +448,84 @@ func calculateTrendForActionItemSquash(items []*ActionItemSquash) {
 
 		items[i].Trend = math.Floor(float64(items[i].Value-items[i-1].Value)/float64(items[i-1].Value)*100*100) / 100
 	}
+}
+
+type AuditValue struct {
+	Value float64 `json:"value"`
+	Trend float64 `json:"trend"`
+}
+
+type ItemValue struct {
+	Value int64   `json:"value"`
+	Trend float64 `json:"trend"`
+}
+
+type AuditSummary struct {
+	ID           model.UUID `json:"id"`
+	Name         string     `json:"name"`
+	Code         string     `json:"code"`
+	Size         ItemValue  `json:"size"`
+	Health       AuditValue `json:"health"`
+	Audit        AuditValue `json:"audit"`
+	NewItem      ItemValue  `json:"newItem"`
+	ResolvedItem ItemValue  `json:"resolvedItem"`
+}
+
+type AuditSummaries struct {
+	Summary []*AuditSummary `json:"summary"`
+}
+
+type AuditSummariesResponse struct {
+	Data *AuditSummaries `json:"data"`
+}
+
+func ToAuditSummary(summary []*model.AuditSummary, previousSize int) *AuditSummary {
+	rs := &AuditSummary{
+		ID:   summary[0].ID,
+		Name: summary[0].Name,
+		Code: summary[0].Code,
+	}
+
+	// Size
+	rs.Size.Value = summary[0].Size
+	if previousSize != 0 {
+		rs.Size.Trend = math.Round((float64(rs.Size.Value)-float64(previousSize))/float64(previousSize)*100*100) / 100
+	}
+
+	// Health and Audit value
+	rs.Health.Value = summary[0].Health
+	rs.Audit.Value = summary[0].Audit
+
+	if len(summary) > 1 && summary[1].Audit != 0 && summary[0].Audit != 0 {
+		rs.Health.Trend = math.Round((summary[0].Health-summary[1].Health)/summary[1].Health*100*100) / 100
+		rs.Audit.Trend = math.Round((summary[0].Audit-summary[1].Audit)/summary[1].Audit*100*100) / 100
+	}
+
+	// New and Resolved item
+	rs.NewItem.Value = (summary[0].High + summary[0].Medium + summary[0].Low) / summary[0].Size
+	if len(summary) > 1 {
+		currentItem := (summary[1].High + summary[1].Medium + summary[1].Low) / summary[0].Size
+		rs.NewItem.Trend = math.Round((float64(rs.NewItem.Value)-float64(currentItem))/float64(currentItem)*100*100) / 100
+
+		rs.ResolvedItem.Value = summary[1].Done
+		if len(summary) > 2 {
+			rs.ResolvedItem.Trend = math.Round((float64(summary[1].Done)-float64(summary[2].Done))/float64(summary[2].Done)*100*100) / 100
+		}
+	}
+
+	return rs
+}
+
+func ToAuditSummaries(summaryMap map[model.UUID][]*model.AuditSummary, previousQuarterMap map[model.UUID]int64) *AuditSummaries {
+	rs := &AuditSummaries{}
+	for _, summaries := range summaryMap {
+		previouSize := 0
+
+		if size, ok := previousQuarterMap[summaries[0].ID]; ok {
+			previouSize = int(size)
+		}
+		rs.Summary = append(rs.Summary, ToAuditSummary(summaries, previouSize))
+	}
+
+	return rs
 }

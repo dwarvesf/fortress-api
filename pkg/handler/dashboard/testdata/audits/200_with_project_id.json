@@ -9,7 +9,7 @@
             {
                 "quarter": "Q2/2022",
                 "avg": 3.5,
-                "trend": -2.77
+                "trend": -2.78
             }
         ],
         "groups": [
@@ -39,10 +39,10 @@
                 "mobile": 4.2,
                 "blockchain": 3.5,
                 "trend": {
-                    "frontend": -23.8,
+                    "frontend": -23.81,
                     "backend": -2.94,
-                    "system": 18.74,
-                    "process": 2.77,
+                    "system": 18.75,
+                    "process": 2.78,
                     "mobile": 27.27,
                     "blockchain": -7.89
                 }

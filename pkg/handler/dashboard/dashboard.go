@@ -3,6 +3,7 @@ package dashboard
 import (
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/handler/dashboard/errs"
@@ -36,7 +37,7 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 	}
 }
 
-// ProjectSizes godoc
+// GetProjectSizes godoc
 // @Summary Get the total number of active member in each project
 // @Description Get the total number of active member in each project
 // @Tags Dashboard
@@ -46,10 +47,10 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 // @Success 200 {object} view.ProjectSizeResponse
 // @Failure 500 {object} view.ErrorResponse
 // @Router /dashboards/projects/sizes [get]
-func (h *handler) ProjectSizes(c *gin.Context) {
+func (h *handler) GetProjectSizes(c *gin.Context) {
 	l := h.logger.Fields(logger.Fields{
 		"handler": "dashboard",
-		"method":  "ProjectSizes",
+		"method":  "GetProjectSizes",
 	})
 
 	res, err := h.store.Dashboard.GetProjectSizes(h.repo.DB())
@@ -62,7 +63,7 @@ func (h *handler) ProjectSizes(c *gin.Context) {
 	c.JSON(http.StatusOK, view.CreateResponse[any](res, nil, nil, nil, ""))
 }
 
-// WorkSurveys godoc
+// GetWorkSurveys godoc
 // @Summary Get Work Surveys data for dashboard
 // @Description Get Work Surveys data for dashboard
 // @Tags Dashboard
@@ -75,7 +76,7 @@ func (h *handler) ProjectSizes(c *gin.Context) {
 // @Failure 404 {object} view.ErrorResponse
 // @Failure 500 {object} view.ErrorResponse
 // @Router /dashboards/projects/work-surveys [get]
-func (h *handler) WorkSurveys(c *gin.Context) {
+func (h *handler) GetWorkSurveys(c *gin.Context) {
 	input := request.WorkSurveysInput{}
 	if err := c.ShouldBindQuery(&input); err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, input, ""))
@@ -89,7 +90,7 @@ func (h *handler) WorkSurveys(c *gin.Context) {
 
 	l := h.logger.Fields(logger.Fields{
 		"handler": "dashboard",
-		"method":  "WorkSurveys",
+		"method":  "GetWorkSurveys",
 		"input":   input,
 	})
 
@@ -193,7 +194,7 @@ func (h *handler) GetActionItemReports(c *gin.Context) {
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToActionItemReportData(actionItemReports), nil, nil, nil, ""))
 }
 
-// EngineeringHealth godoc
+// GetEngineeringHealth godoc
 // @Summary Get Enginerring health information for dashboard
 // @Description Get Enginerring health information for dashboard
 // @Tags Dashboard
@@ -206,7 +207,7 @@ func (h *handler) GetActionItemReports(c *gin.Context) {
 // @Failure 404 {object} view.ErrorResponse
 // @Failure 500 {object} view.ErrorResponse
 // @Router /dashboards/projects/engineering-healths [get]
-func (h *handler) EngineeringHealth(c *gin.Context) {
+func (h *handler) GetEngineeringHealth(c *gin.Context) {
 	input := request.WorkSurveysInput{}
 	if err := c.ShouldBindQuery(&input); err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, input, ""))
@@ -220,7 +221,7 @@ func (h *handler) EngineeringHealth(c *gin.Context) {
 
 	l := h.logger.Fields(logger.Fields{
 		"handler": "dashboard",
-		"method":  "EngineeringHealth",
+		"method":  "GetEngineeringHealth",
 		"input":   input,
 	})
 
@@ -275,7 +276,7 @@ func (h *handler) EngineeringHealth(c *gin.Context) {
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToEngineeringHealthData(average, groups), nil, nil, nil, ""))
 }
 
-// Audits godoc
+// GetAudits godoc
 // @Summary Get Audit information for dashboard
 // @Description Get Audit information for dashboard
 // @Tags Dashboard
@@ -288,7 +289,7 @@ func (h *handler) EngineeringHealth(c *gin.Context) {
 // @Failure 404 {object} view.ErrorResponse
 // @Failure 500 {object} view.ErrorResponse
 // @Router /dashboards/projects/audits [get]
-func (h *handler) Audits(c *gin.Context) {
+func (h *handler) GetAudits(c *gin.Context) {
 	input := request.WorkSurveysInput{}
 	if err := c.ShouldBindQuery(&input); err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, input, ""))
@@ -302,7 +303,7 @@ func (h *handler) Audits(c *gin.Context) {
 
 	l := h.logger.Fields(logger.Fields{
 		"handler": "dashboard",
-		"method":  "Audits",
+		"method":  "GetAudits",
 		"input":   input,
 	})
 
@@ -422,4 +423,54 @@ func (h *handler) GetActionItemSquashReports(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToActionItemSquashReportData(actionItemSquashReports), nil, nil, nil, ""))
+}
+
+// GetSummary godoc
+// @Summary Get the summary audit info for projects
+// @Description Get the summary audit info for projects
+// @Tags Dashboard
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "jwt token"
+// @Success 200 {object} view.AuditSummariesResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /dashboards/projects/summary [get]
+func (h *handler) GetSummary(c *gin.Context) {
+	l := h.logger.Fields(logger.Fields{
+		"handler": "dashboard",
+		"method":  "GetSummary",
+	})
+
+	summaries, err := h.store.Dashboard.GetAuditSummaries(h.repo.DB())
+	if err != nil {
+		l.Error(err, "failed to get audit summaries")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	summaryMap := make(map[model.UUID][]*model.AuditSummary)
+
+	for _, summary := range summaries {
+		summaryMap[summary.ID] = append(summaryMap[summary.ID], summary)
+	}
+
+	now := time.Now()
+	currentMonth := now.Month()
+	currentYear := now.Year()
+	firstDayOfLastQuarter := time.Date(currentYear, (currentMonth-1)/3*3+1, 1, 0, 0, 0, 0, time.UTC)
+	previousQuarterSizes, err := h.store.Dashboard.GetProjectSizesByStartTime(h.repo.DB(), firstDayOfLastQuarter)
+	if err != nil {
+		l.Error(err, "failed to get project sizes")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	previousQuarterMap := make(map[model.UUID]int64)
+	for _, projectSize := range previousQuarterSizes {
+		previousQuarterMap[projectSize.ID] = projectSize.Size
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToAuditSummaries(summaryMap, previousQuarterMap), nil, nil, nil, ""))
 }

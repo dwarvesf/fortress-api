@@ -9,17 +9,17 @@
             {
                 "quarter": "Q3/2022",
                 "avg": 4.2,
-                "trend": 10.52
+                "trend": 10.53
             },
             {
                 "quarter": "Q4/2022",
                 "avg": 3.6,
-                "trend": -14.28
+                "trend": -14.29
             },
             {
                 "quarter": "Q1/2023",
                 "avg": 3.5,
-                "trend": -2.77
+                "trend": -2.78
             }
         ],
         "groups": [
