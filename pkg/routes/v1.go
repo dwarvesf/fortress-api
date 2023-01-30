@@ -134,6 +134,7 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 		dashboard.GET("/projects/action-items", pmw.WithPerm("dashboards.read"), h.Dashboard.GetActionItemReports)
 		dashboard.GET("/projects/engineering-healths", pmw.WithPerm("dashboards.read"), h.Dashboard.EngineeringHealth)
 		dashboard.GET("/projects/audits", pmw.WithPerm("dashboards.read"), h.Dashboard.Audits)
+		dashboard.GET("/projects/action-item-squash", pmw.WithPerm("dashboards.read"), h.Dashboard.GetActionItemSquashReports)
 	}
 
 }
