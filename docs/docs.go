@@ -4318,6 +4318,17 @@ const docTemplate = `{
                 }
             }
         },
+        "model.DateTime": {
+            "type": "object",
+            "properties": {
+                "has_time": {
+                    "type": "boolean"
+                },
+                "time": {
+                    "type": "string"
+                }
+            }
+        },
         "model.Earn": {
             "type": "object",
             "properties": {
@@ -4698,6 +4709,49 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.Event": {
+            "type": "object",
+            "properties": {
+                "activity_type": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "date": {
+                    "$ref": "#/definitions/model.DateTime"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.HiringPosition": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "project": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "status": {
                     "type": "string"
                 }
             }
