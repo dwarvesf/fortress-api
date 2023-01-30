@@ -414,6 +414,8 @@ definitions:
         type: string
       name:
         type: string
+      notionID:
+        type: string
       projectEmail:
         type: string
       projectMembers:
@@ -1345,6 +1347,44 @@ definitions:
       data:
         $ref: '#/definitions/view.AuditData'
     type: object
+  view.AuditSummaries:
+    properties:
+      summary:
+        items:
+          $ref: '#/definitions/view.AuditSummary'
+        type: array
+    type: object
+  view.AuditSummariesResponse:
+    properties:
+      data:
+        $ref: '#/definitions/view.AuditSummaries'
+    type: object
+  view.AuditSummary:
+    properties:
+      audit:
+        $ref: '#/definitions/view.AuditValue'
+      code:
+        type: string
+      health:
+        $ref: '#/definitions/view.AuditValue'
+      id:
+        type: string
+      name:
+        type: string
+      newItem:
+        $ref: '#/definitions/view.ItemValue'
+      resolvedItem:
+        $ref: '#/definitions/view.ItemValue'
+      size:
+        $ref: '#/definitions/view.ItemValue'
+    type: object
+  view.AuditValue:
+    properties:
+      trend:
+        type: number
+      value:
+        type: number
+    type: object
   view.AuthData:
     properties:
       accessToken:
@@ -1858,6 +1898,13 @@ definitions:
         items:
           $ref: '#/definitions/model.HiringPosition'
         type: array
+    type: object
+  view.ItemValue:
+    properties:
+      trend:
+        type: number
+      value:
+        type: integer
     type: object
   view.LineManagersResponse:
     properties:
@@ -2895,6 +2942,39 @@ paths:
           schema:
             $ref: '#/definitions/view.ErrorResponse'
       summary: Get the total number of active member in each project
+      tags:
+      - Dashboard
+  /dashboards/projects/summary:
+    get:
+      consumes:
+      - application/json
+      description: Get the summary audit info for projects
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.AuditSummariesResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get the summary audit info for projects
       tags:
       - Dashboard
   /dashboards/projects/work-surveys:

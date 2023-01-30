@@ -131,12 +131,13 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 
 	dashboard := v1.Group("/dashboards")
 	{
-		dashboard.GET("/projects/sizes", pmw.WithPerm("dashboards.read"), h.Dashboard.ProjectSizes)
-		dashboard.GET("/projects/work-surveys", pmw.WithPerm("dashboards.read"), h.Dashboard.WorkSurveys)
+		dashboard.GET("/projects/sizes", pmw.WithPerm("dashboards.read"), h.Dashboard.GetProjectSizes)
+		dashboard.GET("/projects/work-surveys", pmw.WithPerm("dashboards.read"), h.Dashboard.GetWorkSurveys)
 		dashboard.GET("/projects/action-items", pmw.WithPerm("dashboards.read"), h.Dashboard.GetActionItemReports)
-		dashboard.GET("/projects/engineering-healths", pmw.WithPerm("dashboards.read"), h.Dashboard.EngineeringHealth)
-		dashboard.GET("/projects/audits", pmw.WithPerm("dashboards.read"), h.Dashboard.Audits)
+		dashboard.GET("/projects/engineering-healths", pmw.WithPerm("dashboards.read"), h.Dashboard.GetEngineeringHealth)
+		dashboard.GET("/projects/audits", pmw.WithPerm("dashboards.read"), h.Dashboard.GetAudits)
 		dashboard.GET("/projects/action-item-squash", pmw.WithPerm("dashboards.read"), h.Dashboard.GetActionItemSquashReports)
+		dashboard.GET("/projects/summary", pmw.WithPerm("dashboards.read"), h.Dashboard.GetSummary)
 	}
 
 }

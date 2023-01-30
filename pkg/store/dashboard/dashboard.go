@@ -1,6 +1,8 @@
 package dashboard
 
 import (
+	"time"
+
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"gorm.io/gorm"
 )
@@ -17,7 +19,7 @@ func (s *store) GetProjectSizes(db *gorm.DB) ([]*model.ProjectSize, error) {
 	query := `
 		SELECT projects.id, projects.name, projects.code, count(*) AS size
 			FROM (projects join project_members pm ON projects.id = pm.project_id)
-			WHERE projects.function = 'development' AND pm.status = 'active' 
+			WHERE projects.function = 'development' AND pm.status = 'active' AND (pm.status = 'active' OR pm.status='on-boarding') 
 			GROUP BY projects.id
 	`
 
@@ -372,4 +374,43 @@ func (s *store) GetActionItemSquashReportsByProjectID(db *gorm.DB, projectID str
 	`
 
 	return rs, db.Raw(query, projectID).Scan(&rs).Error
+}
+
+func (s *store) GetAuditSummaries(db *gorm.DB) ([]*model.AuditSummary, error) {
+	var rs []*model.AuditSummary
+
+	query := `
+		SELECT audit_cycles.quarter, p.id, p.name, p.code, SUM(audit_cycles.action_item_high) AS high, SUM(audit_cycles.action_item_medium) AS medium, SUM(audit_cycles.action_item_low) AS low,
+			(SELECT count(*) FROM action_items WHERE status = 'done' AND audit_cycle_id = audit_cycles.id) as done,
+			count(DISTINCT pm.id) as size,
+			avg(CASE
+					When a.score = 0 THEN NULL
+					ELSE a.score
+				END) as health,
+			avg(CASE
+					When audit_cycles.average_score = 0 THEN null
+					ELSE audit_cycles.average_score
+				END) AS audit
+		FROM audit_cycles
+				LEFT JOIN audits AS a ON audit_cycles.health_audit_id = a.id
+				JOIN projects AS p ON audit_cycles.project_id = p.notion_id
+				JOIN project_members pm ON p.id = pm.project_id
+		WHERE (pm.status = 'active' OR pm.status='on-boarding')
+		GROUP BY audit_cycles.id,audit_cycles.quarter, p.id
+		ORDER BY audit_cycles.quarter DESC`
+
+	return rs, db.Raw(query).Scan(&rs).Error
+}
+
+func (s *store) GetProjectSizesByStartTime(db *gorm.DB, curr time.Time) ([]*model.ProjectSize, error) {
+	var ru []*model.ProjectSize
+
+	query := `
+		SELECT projects.id, projects.name, projects.code, count(*) AS size
+			FROM (projects join project_members pm ON projects.id = pm.project_id)
+			WHERE projects.function = 'development' AND pm.status = 'active' AND (pm.status = 'active' OR pm.status='on-boarding') AND pm.start_date <= ?
+			GROUP BY projects.id
+	`
+
+	return ru, db.Raw(query, curr.UTC()).Scan(&ru).Error
 }

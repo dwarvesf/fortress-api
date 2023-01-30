@@ -56,3 +56,23 @@ type ActionItemSquashReport struct {
 	Medium   int64     `json:"medium"`
 	Low      int64     `json:"low"`
 }
+
+type ResolvedActionItem struct {
+	ID      UUID   `json:"id"`
+	Quarter string `json:"quarter"`
+	Count   int64  `json:"count"`
+}
+
+type AuditSummary struct {
+	Quarter string  `json:"quarter"`
+	ID      UUID    `json:"id"`
+	Name    string  `json:"name"`
+	Size    int64   `json:"size"`
+	Code    string  `json:"code"`
+	High    int64   `json:"high"`
+	Medium  int64   `json:"medium"`
+	Low     int64   `json:"low"`
+	Done    int64   `json:"done"`
+	Health  float64 `json:"health"`
+	Audit   float64 `json:"audit"`
+}

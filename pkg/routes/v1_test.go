@@ -404,13 +404,13 @@ func Test_loadV1Routes(t *testing.T) {
 		"/api/v1/dashboards/projects/sizes": {
 			"GET": {
 				Method:  "GET",
-				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/dashboard.IHandler.ProjectSizes-fm",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/dashboard.IHandler.GetProjectSizes-fm",
 			},
 		},
 		"/api/v1/dashboards/projects/work-surveys": {
 			"GET": {
 				Method:  "GET",
-				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/dashboard.IHandler.WorkSurveys-fm",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/dashboard.IHandler.GetWorkSurveys-fm",
 			},
 		},
 		"/api/v1/dashboards/projects/action-items": {
@@ -422,13 +422,13 @@ func Test_loadV1Routes(t *testing.T) {
 		"/api/v1/dashboards/projects/engineering-healths": {
 			"GET": {
 				Method:  "GET",
-				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/dashboard.IHandler.EngineeringHealth-fm",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/dashboard.IHandler.GetEngineeringHealth-fm",
 			},
 		},
 		"/api/v1/dashboards/projects/audits": {
 			"GET": {
 				Method:  "GET",
-				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/dashboard.IHandler.Audits-fm",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/dashboard.IHandler.GetAudits-fm",
 			},
 		},
 		"/api/v1/earn": {
@@ -465,6 +465,12 @@ func Test_loadV1Routes(t *testing.T) {
 			"GET": {
 				Method:  "GET",
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/dashboard.IHandler.GetActionItemSquashReports-fm",
+			},
+		},
+		"/api/v1/dashboards/projects/summary": {
+			"GET": {
+				Method:  "GET",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/dashboard.IHandler.GetSummary-fm",
 			},
 		},
 	}

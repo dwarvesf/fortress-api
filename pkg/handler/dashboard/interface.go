@@ -5,10 +5,11 @@ import (
 )
 
 type IHandler interface {
-	ProjectSizes(c *gin.Context)
-	WorkSurveys(c *gin.Context)
+	GetProjectSizes(c *gin.Context)
+	GetWorkSurveys(c *gin.Context)
 	GetActionItemReports(c *gin.Context)
-	EngineeringHealth(c *gin.Context)
-	Audits(c *gin.Context)
+	GetEngineeringHealth(c *gin.Context)
+	GetAudits(c *gin.Context)
 	GetActionItemSquashReports(c *gin.Context)
+	GetSummary(c *gin.Context)
 }

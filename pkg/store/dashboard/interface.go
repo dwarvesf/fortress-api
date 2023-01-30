@@ -1,6 +1,8 @@
 package dashboard
 
 import (
+	"time"
+
 	"gorm.io/gorm"
 
 	"github.com/dwarvesf/fortress-api/pkg/model"
@@ -22,4 +24,6 @@ type IStore interface {
 	GetAllActionItemSquashReports(db *gorm.DB) ([]*model.ActionItemSquashReport, error)
 	GetAverageAuditByProjectNotionID(db *gorm.DB, projectID string) ([]*model.AverageAudit, error)
 	GetGroupAuditByProjectNotionID(db *gorm.DB, projectID string) ([]*model.GroupAudit, error)
+	GetAuditSummaries(db *gorm.DB) ([]*model.AuditSummary, error)
+	GetProjectSizesByStartTime(db *gorm.DB, curr time.Time) ([]*model.ProjectSize, error)
 }

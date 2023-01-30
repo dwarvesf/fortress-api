@@ -390,6 +390,56 @@
                 }
             }
         },
+        "/dashboards/projects/summary": {
+            "get": {
+                "description": "Get the summary audit info for projects",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "Get the summary audit info for projects",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.AuditSummariesResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/dashboards/projects/work-surveys": {
             "get": {
                 "description": "Get Work Surveys data for dashboard",
@@ -4903,6 +4953,9 @@
                 "name": {
                     "type": "string"
                 },
+                "notionID": {
+                    "type": "string"
+                },
                 "projectEmail": {
                     "type": "string"
                 },
@@ -6297,6 +6350,65 @@
                 }
             }
         },
+        "view.AuditSummaries": {
+            "type": "object",
+            "properties": {
+                "summary": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.AuditSummary"
+                    }
+                }
+            }
+        },
+        "view.AuditSummariesResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/view.AuditSummaries"
+                }
+            }
+        },
+        "view.AuditSummary": {
+            "type": "object",
+            "properties": {
+                "audit": {
+                    "$ref": "#/definitions/view.AuditValue"
+                },
+                "code": {
+                    "type": "string"
+                },
+                "health": {
+                    "$ref": "#/definitions/view.AuditValue"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "newItem": {
+                    "$ref": "#/definitions/view.ItemValue"
+                },
+                "resolvedItem": {
+                    "$ref": "#/definitions/view.ItemValue"
+                },
+                "size": {
+                    "$ref": "#/definitions/view.ItemValue"
+                }
+            }
+        },
+        "view.AuditValue": {
+            "type": "object",
+            "properties": {
+                "trend": {
+                    "type": "number"
+                },
+                "value": {
+                    "type": "number"
+                }
+            }
+        },
         "view.AuthData": {
             "type": "object",
             "properties": {
@@ -7082,6 +7194,17 @@
                     "items": {
                         "$ref": "#/definitions/model.HiringPosition"
                     }
+                }
+            }
+        },
+        "view.ItemValue": {
+            "type": "object",
+            "properties": {
+                "trend": {
+                    "type": "number"
+                },
+                "value": {
+                    "type": "integer"
                 }
             }
         },
