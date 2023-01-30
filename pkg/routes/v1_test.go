@@ -443,6 +443,12 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/audience.IHandler.List-fm",
 			},
 		},
+		"/api/v1/dashboards/projects/action-item-squash": {
+			"GET": {
+				Method:  "GET",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/dashboard.IHandler.GetActionItemSquashReports-fm",
+      },
+		},
 		"/api/v1/events": {
 			"GET": {
 				Method:  "GET",
