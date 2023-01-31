@@ -3,8 +3,9 @@ package employeeeventquestion
 import (
 	"time"
 
-	"github.com/dwarvesf/fortress-api/pkg/model"
 	"gorm.io/gorm"
+
+	"github.com/dwarvesf/fortress-api/pkg/model"
 )
 
 type store struct{}
@@ -100,7 +101,7 @@ func (s *store) CountLikertScaleByEventIDAndDomain(db *gorm.DB, eventID string, 
 	return count, query.Scan(&count).Error
 }
 
-// CountLikertScaleByEventIDAndDomain return LikertScaleCount by eventID and domain
+// GetAverageAnswerEngagementByTime return average answer of engagement dashboard by time
 func (s *store) GetAverageAnswerEngagementByTime(db *gorm.DB, times []time.Time) ([]*model.StatisticEngagementDashboard, error) {
 	var result []*model.StatisticEngagementDashboard
 
@@ -118,7 +119,7 @@ func (s *store) GetAverageAnswerEngagementByTime(db *gorm.DB, times []time.Time)
 	return result, query.Find(&result).Error
 }
 
-// CountLikertScaleByEventIDAndDomain return LikertScaleCount by eventID and domain
+// GetAverageAnswerEngagementByFilter return average answer of engagement dashboard by filter
 func (s *store) GetAverageAnswerEngagementByFilter(db *gorm.DB, filter model.EngagementDashboardFilter, time *time.Time) ([]*model.StatisticEngagementDashboard, error) {
 	var result []*model.StatisticEngagementDashboard
 
