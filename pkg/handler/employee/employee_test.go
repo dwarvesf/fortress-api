@@ -203,12 +203,12 @@ func TestHandler_One(t *testing.T) {
 				ctx.Request.Header.Set("Authorization", testToken)
 
 				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
-				h.One(ctx)
+				h.Details(ctx)
 				require.Equal(t, tt.wantCode, w.Code)
 				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
 				require.NoError(t, err)
 
-				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Employee.One] response mismatched")
+				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Employee.Details] response mismatched")
 			})
 		})
 	}
@@ -609,147 +609,6 @@ func Test_UpdatePersonalInfo(t *testing.T) {
 				require.Nil(t, err)
 
 				require.JSONEq(t, string(expRespRaw), string(res), "[Handler.UpdatePersonalInfo] response mismatched")
-			})
-		})
-	}
-}
-
-func Test_AddMentee(t *testing.T) {
-	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg)
-	storeMock := store.New()
-
-	tests := []struct {
-		name             string
-		wantCode         int
-		wantErr          bool
-		wantResponsePath string
-		body             request.AddMenteeInput
-		id               string
-	}{
-		{
-			name:             "ok_add_mentee",
-			wantCode:         200,
-			wantErr:          false,
-			wantResponsePath: "testdata/add_mentee/200.json",
-			body: request.AddMenteeInput{
-				MenteeID: model.MustGetUUIDFromString("f7c6016b-85b5-47f7-8027-23c2db482197"),
-			},
-			id: "2655832e-f009-4b73-a535-64c3a22e558f",
-		},
-		{
-			name:             "employee_not_found",
-			wantCode:         404,
-			wantErr:          true,
-			wantResponsePath: "testdata/add_mentee/404.json",
-			body: request.AddMenteeInput{
-				MenteeID: model.MustGetUUIDFromString("f7c6016b-85b5-47f7-8027-23c2db482197"),
-			},
-			id: "2655832e-f009-4b73-a535-64c3a22e558e",
-		},
-		{
-			name:             "mentee_not_found",
-			wantCode:         404,
-			wantErr:          true,
-			wantResponsePath: "testdata/add_mentee/404_mentee_not_found.json",
-			body: request.AddMenteeInput{
-				MenteeID: model.MustGetUUIDFromString("f7c6016b-85b5-47f7-8027-23c2db482196"),
-			},
-			id: "2655832e-f009-4b73-a535-64c3a22e558f",
-		},
-		{
-			name:             "failed_mentor_themselves",
-			wantCode:         400,
-			wantErr:          true,
-			wantResponsePath: "testdata/add_mentee/400_mentor_themselves.json",
-			body: request.AddMenteeInput{
-				MenteeID: model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
-			},
-			id: "2655832e-f009-4b73-a535-64c3a22e558f",
-		},
-		{
-			name:             "failed_mentee_their_mentor",
-			wantCode:         400,
-			wantErr:          true,
-			wantResponsePath: "testdata/add_mentee/400_mentee_their_mentor.json",
-			body: request.AddMenteeInput{
-				MenteeID: model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
-			},
-			id: "d389d35e-c548-42cf-9f29-2a599969a8f2",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
-				testhelper.LoadTestSQLFile(t, txRepo, "./testdata/add_mentee/add_mentee.sql")
-				byteReq, err := json.Marshal(tt.body)
-				require.Nil(t, err)
-				w := httptest.NewRecorder()
-
-				ctx, _ := gin.CreateTestContext(w)
-				bodyReader := strings.NewReader(string(byteReq))
-				ctx.Params = gin.Params{gin.Param{Key: "id", Value: tt.id}}
-				ctx.Request = httptest.NewRequest("POST", "/api/v1/employees/"+tt.id+"/mentees", bodyReader)
-				ctx.Request.Header.Set("Authorization", testToken)
-				metadataHandler := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
-
-				metadataHandler.AddMentee(ctx)
-
-				require.Equal(t, tt.wantCode, w.Code)
-				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
-				require.NoError(t, err)
-
-				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.AddMentee] response mismatched")
-			})
-		})
-	}
-}
-
-func Test_DeleteMentee(t *testing.T) {
-	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg)
-	storeMock := store.New()
-
-	tests := []struct {
-		name             string
-		wantCode         int
-		wantErr          bool
-		wantResponsePath string
-		menteeID         string
-		id               string
-	}{
-		{
-			name:             "ok_delete_mentee",
-			wantCode:         200,
-			wantErr:          false,
-			wantResponsePath: "testdata/delete_mentee/200.json",
-			id:               "2655832e-f009-4b73-a535-64c3a22e558f",
-			menteeID:         "fae443f8-e8ff-4eec-b86c-98216d7662d8",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
-				testhelper.LoadTestSQLFile(t, txRepo, "./testdata/delete_mentee/delete_mentee.sql")
-				w := httptest.NewRecorder()
-
-				ctx, _ := gin.CreateTestContext(w)
-				ctx.Params = gin.Params{gin.Param{Key: "id", Value: tt.id}, gin.Param{Key: "menteeID", Value: tt.menteeID}}
-				ctx.Request = httptest.NewRequest("DELETE", fmt.Sprintf("/api/v1/employees/%s/mentees/%s", tt.id, tt.menteeID), nil)
-				ctx.Request.Header.Set("Authorization", testToken)
-				metadataHandler := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
-
-				metadataHandler.DeleteMentee(ctx)
-
-				// require.Equal(t, tt.wantCode, w.Code)
-				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
-				require.NoError(t, err)
-
-				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.DeleteMentee] response mismatched")
 			})
 		})
 	}

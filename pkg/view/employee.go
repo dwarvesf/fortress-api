@@ -351,9 +351,7 @@ func ToOneEmployeeData(c *gin.Context, employee *model.Employee, userInfo *model
 	if len(employee.Mentees) > 0 {
 		mentees := make([]*MenteeInfo, 0)
 		for _, v := range employee.Mentees {
-			if v.Mentee != nil {
-				mentees = append(mentees, toMenteeInfo(*v.Mentee))
-			}
+			mentees = append(mentees, toMenteeInfo(v))
 		}
 
 		rs.Mentees = mentees
@@ -420,9 +418,7 @@ func ToEmployeeData(employee *model.Employee) *EmployeeData {
 	if len(employee.Mentees) > 0 {
 		mentees := make([]*MenteeInfo, 0)
 		for _, v := range employee.Mentees {
-			if v.Mentee != nil {
-				mentees = append(mentees, toMenteeInfo(*v.Mentee))
-			}
+			mentees = append(mentees, toMenteeInfo(v))
 		}
 
 		rs.Mentees = mentees

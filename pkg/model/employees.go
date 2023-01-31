@@ -126,7 +126,7 @@ type Employee struct {
 	EmployeeOrganizations []EmployeeOrganization
 	EmployeeStacks        []EmployeeStack
 	EmployeeChapters      []EmployeeChapter
-	Mentees               []*EmployeeMentee `gorm:"foreignKey:MentorID"`
+	Mentees               []Employee `gorm:"-"`
 }
 
 // ToEmployeeMap create map from employees
