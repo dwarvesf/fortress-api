@@ -37,6 +37,8 @@ type UpdateEmployeeGeneralInfoInput struct {
 	DiscordID       string       `form:"discordID" json:"discordID"`
 	DiscordName     string       `form:"discordName" json:"discordName"`
 	LinkedInName    string       `form:"linkedInName" json:"linkedInName"`
+	LeftDate        string       `form:"leftDate" json:"leftDate"`
+	JoinedDate      string       `form:"joinedDate" json:"joinedDate"`
 	OrganizationIDs []model.UUID `form:"organizationIDs" json:"organizationIDs"`
 }
 

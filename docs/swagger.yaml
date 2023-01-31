@@ -1042,6 +1042,10 @@ definitions:
         type: string
       githubID:
         type: string
+      joinedDate:
+        type: string
+      leftDate:
+        type: string
       lineManagerID:
         type: string
       linkedInName:
