@@ -27,15 +27,13 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 	// employees
 	v1.POST("/employees", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesCreate), h.Employee.Create)
 	v1.POST("/employees/search", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesRead), h.Employee.List)
-	v1.GET("/employees/:id", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesRead), h.Employee.One)
+	v1.GET("/employees/:id", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesRead), h.Employee.Details)
 	v1.PUT("/employees/:id/general-info", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesEdit), h.Employee.UpdateGeneralInfo)
 	v1.PUT("/employees/:id/personal-info", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesEdit), h.Employee.UpdatePersonalInfo)
 	v1.PUT("/employees/:id/skills", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesEdit), h.Employee.UpdateSkills)
 	v1.PUT("/employees/:id/employee-status", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesEdit), h.Employee.UpdateEmployeeStatus)
 	v1.POST("/employees/:id/upload-content", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesEdit), h.Employee.UploadContent)
 	v1.POST("/employees/:id/upload-avatar", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesEdit), h.Employee.UploadAvatar)
-	v1.POST("/employees/:id/mentees", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeeMenteesCreate), h.Employee.AddMentee)
-	v1.DELETE("/employees/:id/mentees/:menteeID", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeeMenteesDelete), h.Employee.DeleteMentee)
 	v1.PUT("/employees/:id/roles", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeeRolesEdit), h.Employee.UpdateRole)
 
 	v1.GET("/line-managers", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesRead), h.Employee.GetLineManagers)

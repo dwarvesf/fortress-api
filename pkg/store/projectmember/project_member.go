@@ -28,7 +28,7 @@ func (s *store) IsExist(db *gorm.DB, id string) (bool, error) {
 	return record.Result, query.Scan(&record).Error
 }
 
-// One return a project member by id
+// Details return a project member by id
 func (s *store) OneByID(db *gorm.DB, id string) (*model.ProjectMember, error) {
 	var member *model.ProjectMember
 	return member, db.Where("id = ?", id).First(&member).Error

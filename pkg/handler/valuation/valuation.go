@@ -55,7 +55,7 @@ func (h *handler) One(c *gin.Context) {
 
 	l := h.logger.Fields(logger.Fields{
 		"handler": "valuation",
-		"method":  "One",
+		"method":  "Details",
 		"year":    year,
 	})
 

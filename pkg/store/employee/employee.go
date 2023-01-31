@@ -14,12 +14,18 @@ func New() IStore {
 
 // One get 1 employee by id
 func (s *store) One(db *gorm.DB, id string, preload bool) (*model.Employee, error) {
-	query := db.Where("id = ?", id).
-		Preload("EmployeeRoles", func(db *gorm.DB) *gorm.DB {
-			return db.Joins("employee_roles JOIN roles ON roles.id = employee_roles.role_id").
-				Where("employee_roles.deleted_at IS NULL").
-				Order("roles.level")
-		}).
+	query := db
+	if !model.IsUUIDFromString(id) {
+		query = db.Where("username = ?", id)
+	} else {
+		query = db.Where("id = ?", id)
+	}
+
+	query = query.Preload("EmployeeRoles", func(db *gorm.DB) *gorm.DB {
+		return db.Joins("employee_roles JOIN roles ON roles.id = employee_roles.role_id").
+			Where("employee_roles.deleted_at IS NULL").
+			Order("roles.level")
+	}).
 		Preload("EmployeeRoles.Role", "deleted_at IS NULL")
 
 	if preload {
@@ -37,45 +43,7 @@ func (s *store) One(db *gorm.DB, id string, preload bool) (*model.Employee, erro
 			Preload("EmployeeOrganizations", "deleted_at IS NULL").
 			Preload("EmployeeOrganizations.Organization", "deleted_at IS NULL").
 			Preload("Seniority").
-			Preload("LineManager").
-			Preload("Mentees", "deleted_at IS NULL").
-			Preload("Mentees.Mentee", "deleted_at IS NULL AND NOT working_status = 'left'").
-			Preload("Mentees.Mentee.EmployeePositions", "deleted_at IS NULL").
-			Preload("Mentees.Mentee.EmployeePositions.Position", "deleted_at IS NULL").
-			Preload("Mentees.Mentee.Seniority")
-	}
-
-	var employee *model.Employee
-	return employee, query.First(&employee).Error
-}
-
-// OneByUsername get 1 employee by username
-func (s *store) OneByUsername(db *gorm.DB, username string, preload bool) (*model.Employee, error) {
-	query := db.Where("username = ?", username)
-
-	if preload {
-		query = query.
-			Preload("ProjectMembers", "deleted_at IS NULL").
-			Preload("ProjectMembers.Project", "deleted_at IS NULL").
-			Preload("ProjectMembers.ProjectMemberPositions", "deleted_at IS NULL").
-			Preload("ProjectMembers.ProjectMemberPositions.Position", "deleted_at IS NULL").
-			Preload("EmployeePositions", "deleted_at IS NULL").
-			Preload("EmployeePositions.Position", "deleted_at IS NULL").
-			Preload("EmployeeStacks", "deleted_at IS NULL").
-			Preload("EmployeeStacks.Stack", "deleted_at IS NULL").
-			Preload("EmployeeChapters", "deleted_at IS NULL").
-			Preload("EmployeeChapters.Chapter", "deleted_at IS NULL").
-			Preload("EmployeeRoles", "deleted_at IS NULL").
-			Preload("EmployeeRoles.Role", "deleted_at IS NULL").
-			Preload("EmployeeOrganizations", "deleted_at IS NULL").
-			Preload("EmployeeOrganizations.Organization", "deleted_at IS NULL").
-			Preload("Seniority").
-			Preload("LineManager").
-			Preload("Mentees", "deleted_at IS NULL").
-			Preload("Mentees.Mentee", "deleted_at IS NULL AND NOT working_status = 'left'").
-			Preload("Mentees.Mentee.EmployeePositions", "deleted_at IS NULL").
-			Preload("Mentees.Mentee.EmployeePositions.Position", "deleted_at IS NULL").
-			Preload("Mentees.Mentee.Seniority")
+			Preload("LineManager")
 	}
 
 	var employee *model.Employee
@@ -206,4 +174,20 @@ func (s *store) GetLineManagersOfPeers(db *gorm.DB, employeeID string) ([]*model
 				WHERE pm2.employee_id = employees.id
 			)
 	)`, model.WorkingStatusLeft).Find(&employees).Error
+}
+
+func (s *store) GetMenteesByID(db *gorm.DB, employeeID string) ([]model.Employee, error) {
+	var employees []model.Employee
+	return employees, db.Where(`id IN (
+		SELECT e.id
+		FROM employees e
+		WHERE e.deleted_at IS NULL
+			AND e.line_manager_id = ?
+			AND e.working_status <> ? 
+			AND (e.left_date IS NULL OR e.left_date >= now())
+	)`, employeeID, model.WorkingStatusLeft).
+		Preload("EmployeePositions", "deleted_at IS NULL").
+		Preload("EmployeePositions.Position", "deleted_at IS NULL").
+		Preload("Seniority").
+		Find(&employees).Error
 }
