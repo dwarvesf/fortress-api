@@ -37,13 +37,14 @@ func (s *store) GetByEmployeeID(db *gorm.DB, employeeID string, input GetByEmplo
 
 	query := db.
 		Table("employee_event_topics").
-		Joins("JOIN employee_event_reviewers eer ON employee_event_topics.id = eer.employee_event_topic_id").
+		Joins("JOIN employee_event_reviewers eer ON employee_event_topics.id = eer.employee_event_topic_id AND eer.deleted_at IS NULL").
 		Joins("JOIN feedback_events fe ON employee_event_topics.event_id = fe.id").
-		Where("((eer.reviewer_id = ? AND fe.type = ?) OR (employee_event_topics.employee_id = ? AND fe.type = ?)) AND eer.reviewer_status <> ?",
+		Where("((eer.reviewer_id = ? AND fe.type = ?) OR (employee_event_topics.employee_id = ? AND fe.type = ?)) AND eer.author_status <> ? AND eer.reviewer_status <> ?",
 			employeeID,
 			model.EventTypeSurvey,
 			employeeID,
 			model.EventTypeFeedback,
+			model.EventAuthorStatusDraft,
 			model.EventReviewerStatusNone,
 		)
 
