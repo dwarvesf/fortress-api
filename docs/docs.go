@@ -6467,6 +6467,9 @@ const docTemplate = `{
                 "audit": {
                     "$ref": "#/definitions/view.AuditValue"
                 },
+                "avatar": {
+                    "type": "string"
+                },
                 "code": {
                     "type": "string"
                 },

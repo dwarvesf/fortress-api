@@ -464,6 +464,7 @@ type AuditSummary struct {
 	ID           model.UUID `json:"id"`
 	Name         string     `json:"name"`
 	Code         string     `json:"code"`
+	Avatar       string     `json:"avatar"`
 	Size         ItemValue  `json:"size"`
 	Health       AuditValue `json:"health"`
 	Audit        AuditValue `json:"audit"`
@@ -481,9 +482,10 @@ type AuditSummariesResponse struct {
 
 func ToAuditSummary(summary []*model.AuditSummary, previousSize int) *AuditSummary {
 	rs := &AuditSummary{
-		ID:   summary[0].ID,
-		Name: summary[0].Name,
-		Code: summary[0].Code,
+		ID:     summary[0].ID,
+		Name:   summary[0].Name,
+		Code:   summary[0].Code,
+		Avatar: summary[0].Avatar,
 	}
 
 	// Size
