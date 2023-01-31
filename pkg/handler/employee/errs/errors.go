@@ -6,6 +6,8 @@ import (
 )
 
 var (
+	ErrInvalidLeftDate                        = errors.New("invalid left date")
+	ErrInvalidJoinedDate                      = errors.New("invalid joined date")
 	ErrInvalidEmployeeStatus                  = errors.New("invalid value for employee status")
 	ErrInvalidEmailDomain                     = errors.New("invalid email domain")
 	ErrCantFindLineManager                    = errors.New("can't find line manager with the input id")

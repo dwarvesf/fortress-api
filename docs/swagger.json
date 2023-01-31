@@ -5961,6 +5961,12 @@
                 "githubID": {
                     "type": "string"
                 },
+                "joinedDate": {
+                    "type": "string"
+                },
+                "leftDate": {
+                    "type": "string"
+                },
                 "lineManagerID": {
                     "type": "string"
                 },
@@ -5976,8 +5982,11 @@
                 "notionName": {
                     "type": "string"
                 },
-                "organizationID": {
-                    "type": "string"
+                "organizationIDs": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "phone": {
                     "type": "string",
@@ -6888,7 +6897,7 @@
                 "organizations": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/model.Organization"
+                        "$ref": "#/definitions/view.Organization"
                     }
                 },
                 "personalEmail": {
@@ -7419,6 +7428,23 @@
         "view.MetaData": {
             "type": "object",
             "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "view.Organization": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string"
+                },
                 "code": {
                     "type": "string"
                 },
@@ -8147,7 +8173,7 @@
                 "organizations": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/model.Organization"
+                        "$ref": "#/definitions/view.Organization"
                     }
                 },
                 "phoneNumber": {

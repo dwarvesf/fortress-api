@@ -5969,6 +5969,12 @@ const docTemplate = `{
                 "githubID": {
                     "type": "string"
                 },
+                "joinedDate": {
+                    "type": "string"
+                },
+                "leftDate": {
+                    "type": "string"
+                },
                 "lineManagerID": {
                     "type": "string"
                 },
@@ -5984,8 +5990,11 @@ const docTemplate = `{
                 "notionName": {
                     "type": "string"
                 },
-                "organizationID": {
-                    "type": "string"
+                "organizationIDs": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "phone": {
                     "type": "string",
@@ -6896,7 +6905,7 @@ const docTemplate = `{
                 "organizations": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/model.Organization"
+                        "$ref": "#/definitions/view.Organization"
                     }
                 },
                 "personalEmail": {
@@ -7427,6 +7436,23 @@ const docTemplate = `{
         "view.MetaData": {
             "type": "object",
             "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "view.Organization": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string"
+                },
                 "code": {
                     "type": "string"
                 },
@@ -8155,7 +8181,7 @@ const docTemplate = `{
                 "organizations": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/model.Organization"
+                        "$ref": "#/definitions/view.Organization"
                     }
                 },
                 "phoneNumber": {

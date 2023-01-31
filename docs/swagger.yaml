@@ -1058,6 +1058,10 @@ definitions:
         type: string
       githubID:
         type: string
+      joinedDate:
+        type: string
+      leftDate:
+        type: string
       lineManagerID:
         type: string
       linkedInName:
@@ -1068,8 +1072,10 @@ definitions:
         type: string
       notionName:
         type: string
-      organizationID:
-        type: string
+      organizationIDs:
+        items:
+          type: string
+        type: array
       phone:
         maxLength: 18
         minLength: 9
@@ -1675,7 +1681,7 @@ definitions:
         type: string
       organizations:
         items:
-          $ref: '#/definitions/model.Organization'
+          $ref: '#/definitions/view.Organization'
         type: array
       personalEmail:
         type: string
@@ -2020,6 +2026,17 @@ definitions:
     type: object
   view.MetaData:
     properties:
+      code:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  view.Organization:
+    properties:
+      avatar:
+        type: string
       code:
         type: string
       id:
@@ -2495,7 +2512,7 @@ definitions:
         type: string
       organizations:
         items:
-          $ref: '#/definitions/model.Organization'
+          $ref: '#/definitions/view.Organization'
         type: array
       phoneNumber:
         type: string
