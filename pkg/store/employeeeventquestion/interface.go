@@ -3,8 +3,9 @@ package employeeeventquestion
 import (
 	"time"
 
-	"github.com/dwarvesf/fortress-api/pkg/model"
 	"gorm.io/gorm"
+
+	"github.com/dwarvesf/fortress-api/pkg/model"
 )
 
 type IStore interface {
