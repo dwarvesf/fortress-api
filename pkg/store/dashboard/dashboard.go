@@ -380,7 +380,7 @@ func (s *store) GetAuditSummaries(db *gorm.DB) ([]*model.AuditSummary, error) {
 	var rs []*model.AuditSummary
 
 	query := `
-		SELECT audit_cycles.quarter, p.id, p.name, p.code, SUM(audit_cycles.action_item_high) AS high, SUM(audit_cycles.action_item_medium) AS medium, SUM(audit_cycles.action_item_low) AS low,
+		SELECT audit_cycles.quarter, p.id, p.name, p.code, p.avatar, SUM(audit_cycles.action_item_high) AS high, SUM(audit_cycles.action_item_medium) AS medium, SUM(audit_cycles.action_item_low) AS low,
 			(SELECT count(*) FROM action_items WHERE status = 'done' AND audit_cycle_id = audit_cycles.id) as done,
 			count(DISTINCT pm.id) as size,
 			avg(CASE

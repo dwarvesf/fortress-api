@@ -1395,6 +1395,8 @@ definitions:
     properties:
       audit:
         $ref: '#/definitions/view.AuditValue'
+      avatar:
+        type: string
       code:
         type: string
       health:

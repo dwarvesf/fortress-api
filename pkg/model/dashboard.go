@@ -67,6 +67,7 @@ type AuditSummary struct {
 	Quarter string  `json:"quarter"`
 	ID      UUID    `json:"id"`
 	Name    string  `json:"name"`
+	Avatar  string  `json:"avatar"`
 	Size    int64   `json:"size"`
 	Code    string  `json:"code"`
 	High    int64   `json:"high"`
