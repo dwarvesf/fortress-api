@@ -360,6 +360,7 @@ func (h *handler) createPeerReview(db *gorm.DB, req request.CreateSurveyFeedback
 			Title:      topicTitle,
 			EventID:    event.ID,
 			EmployeeID: e.ID,
+			Employee:   e,
 		})
 	}
 
@@ -415,9 +416,9 @@ func (h *handler) createPeerReview(db *gorm.DB, req request.CreateSurveyFeedback
 		}
 	}
 
-	for i, e := range eets {
-		if !employees[i].LineManagerID.IsZero() {
-			_, ok := reviewerMap[employees[i].LineManagerID]
+	for _, e := range eets {
+		if !e.Employee.LineManagerID.IsZero() {
+			_, ok := reviewerMap[e.Employee.LineManagerID]
 			if ok {
 				continue
 			}
@@ -428,7 +429,7 @@ func (h *handler) createPeerReview(db *gorm.DB, req request.CreateSurveyFeedback
 				},
 				EventID:              event.ID,
 				EmployeeEventTopicID: e.ID,
-				ReviewerID:           employees[i].LineManagerID,
+				ReviewerID:           e.Employee.LineManagerID,
 				Relationship:         model.RelationshipLineManager,
 				AuthorStatus:         model.EventAuthorStatusDraft,
 				ReviewerStatus:       model.EventReviewerStatusNone,
