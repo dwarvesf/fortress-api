@@ -85,8 +85,6 @@ func (s *store) GetPeerReviewerInTimeRange(db *gorm.DB, from *time.Time, to *tim
 		GROUP BY
 			employee_id,
 			reviewer_id
-		HAVING
-			count(*) = 1
 		)
 		SELECT
 			p.employee_id,
@@ -128,8 +126,6 @@ func (s *store) GetActivePeerReviewer(db *gorm.DB) ([]model.WorkUnitPeer, error)
 		GROUP BY
 			employee_id,
 			reviewer_id
-		HAVING
-			count(*) = 1
 	)
 	SELECT
 		p.employee_id,
