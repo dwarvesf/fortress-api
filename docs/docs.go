@@ -5852,6 +5852,12 @@ const docTemplate = `{
                 "githubID": {
                     "type": "string"
                 },
+                "joinedDate": {
+                    "type": "string"
+                },
+                "leftDate": {
+                    "type": "string"
+                },
                 "lineManagerID": {
                     "type": "string"
                 },
