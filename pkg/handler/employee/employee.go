@@ -443,8 +443,10 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 	}
 
 	if emp.JoinedDate != nil && emp.LeftDate != nil {
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrLeftDateBeforeJoinedDate, body, ""))
-		return
+		if emp.LeftDate.Before(*emp.JoinedDate) {
+			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrLeftDateBeforeJoinedDate, body, ""))
+			return
+		}
 	}
 
 	emp.LineManagerID = body.LineManagerID
