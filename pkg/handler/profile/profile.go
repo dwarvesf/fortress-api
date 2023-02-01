@@ -134,6 +134,16 @@ func (h *handler) UpdateInfo(c *gin.Context) {
 		return
 	}
 
+	tx, done := h.repo.NewTransaction()
+
+	// Update social accounts
+	if err := h.updateSocialAccounts(tx.DB(), input, employeeID); err != nil {
+		l.Error(err, "failed to update employee")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
+		return
+	}
+
+	// Update employee
 	_, err = h.store.Employee.UpdateSelectedFieldsByID(h.repo.DB(), employeeID, *employee,
 		"personal_email",
 		"phone_number",
@@ -150,11 +160,81 @@ func (h *handler) UpdateInfo(c *gin.Context) {
 	)
 	if err != nil {
 		l.Error(err, "failed to update employee")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input, ""))
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
 		return
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToUpdateProfileInfoData(employee), nil, nil, nil, ""))
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToUpdateProfileInfoData(employee), nil, done(nil), nil, ""))
+}
+
+func (h *handler) updateSocialAccounts(db *gorm.DB, input request.UpdateInfoInput, employeeID string) error {
+	l := h.logger.Fields(logger.Fields{
+		"handler": "profile",
+		"method":  "updateSocialAccounts",
+		"request": input,
+	})
+
+	accounts, err := h.store.SocialAccount.GetByEmployeeID(db, employeeID)
+	if err != nil {
+		l.Error(err, "failed to get social accounts by employeeID")
+		return err
+	}
+
+	accountsInput := map[model.SocialType]model.SocialAccount{
+		model.SocialTypeGitHub: {
+			Type:        model.SocialTypeGitHub,
+			AccountID:   input.GithubID,
+			DisplayName: input.GithubID,
+		},
+		model.SocialTypeNotion: {
+			Type:        model.SocialTypeNotion,
+			AccountID:   input.NotionID,
+			DisplayName: input.NotionName,
+			Email:       input.NotionEmail,
+		},
+		model.SocialTypeDiscord: {
+			Type:        model.SocialTypeDiscord,
+			DisplayName: input.DiscordName,
+		},
+		model.SocialTypeLinkedIn: {
+			Type:        model.SocialTypeLinkedIn,
+			AccountID:   input.LinkedInName,
+			DisplayName: input.LinkedInName,
+		},
+	}
+
+	for _, account := range accounts {
+		delete(accountsInput, account.Type)
+
+		switch account.Type {
+		case model.SocialTypeGitHub:
+			account.AccountID = input.GithubID
+		case model.SocialTypeNotion:
+			account.AccountID = input.NotionID
+			account.DisplayName = input.NotionName
+			account.Email = input.NotionEmail
+		case model.SocialTypeDiscord:
+			account.DisplayName = input.DiscordName
+		case model.SocialTypeLinkedIn:
+			account.DisplayName = input.LinkedInName
+		default:
+			continue
+		}
+
+		if _, err := h.store.SocialAccount.Update(db, account); err != nil {
+			l.Errorf(err, "failed to update social account %s", account.ID)
+			return err
+		}
+	}
+
+	for _, account := range accountsInput {
+		if _, err := h.store.SocialAccount.Create(db, &account); err != nil {
+			l.AddField("account", account).Error(err, "failed to create social account")
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (h *handler) validateCountryAndCity(db *gorm.DB, countryName string, city string) bool {
