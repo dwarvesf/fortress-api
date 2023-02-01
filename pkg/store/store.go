@@ -35,6 +35,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/store/question"
 	"github.com/dwarvesf/fortress-api/pkg/store/role"
 	"github.com/dwarvesf/fortress-api/pkg/store/seniority"
+	"github.com/dwarvesf/fortress-api/pkg/store/socialaccount"
 	"github.com/dwarvesf/fortress-api/pkg/store/stack"
 	"github.com/dwarvesf/fortress-api/pkg/store/valuation"
 	"github.com/dwarvesf/fortress-api/pkg/store/workunit"
@@ -82,6 +83,7 @@ type Store struct {
 	EmployeeOrganization  employeeorganization.IStore
 	AuditActionItem       auditactionitem.IStore
 	ActionItemSnapshot    actionitemsnapshot.IStore
+	SocialAccount         socialaccount.IStore
 }
 
 func New() *Store {
@@ -125,5 +127,6 @@ func New() *Store {
 		EmployeeOrganization:  employeeorganization.New(),
 		AuditActionItem:       auditactionitem.New(),
 		ActionItemSnapshot:    actionitemsnapshot.New(),
+		SocialAccount:         socialaccount.New(),
 	}
 }
