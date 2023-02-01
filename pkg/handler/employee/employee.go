@@ -442,6 +442,11 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 		emp.LeftDate = &leftDate
 	}
 
+	if emp.JoinedDate != nil && emp.LeftDate != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrLeftDateBeforeJoinedDate, body, ""))
+		return
+	}
+
 	emp.LineManagerID = body.LineManagerID
 
 	_, err = h.store.Employee.UpdateSelectedFieldsByID(tx.DB(), employeeID, *emp,
