@@ -90,7 +90,7 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 
 	surveyGroup := v1.Group("/surveys")
 	{
-		surveyGroup.POST("", h.Survey.CreateSurvey)
+		surveyGroup.POST("", amw.WithAuth, pmw.WithPerm(model.PermissionSurveysCreate), h.Survey.CreateSurvey)
 		surveyGroup.GET("", pmw.WithPerm(model.PermissionSurveysRead), h.Survey.ListSurvey)
 		surveyGroup.GET("/:id", pmw.WithPerm(model.PermissionSurveysRead), h.Survey.GetSurveyDetail)
 		surveyGroup.DELETE("/:id", pmw.WithPerm(model.PermissionSurveysDelete), h.Survey.DeleteSurvey)
