@@ -72,6 +72,7 @@ type Notion struct {
 	EventDBID          string
 	HiringDBID         string
 	StaffingDemandDBID string
+	ProjectDBID        string
 }
 
 type ENV interface {
@@ -129,6 +130,7 @@ func Generate(v ENV) *Config {
 			EventDBID:          v.GetString("NOTION_EVENT_DB_ID"),
 			HiringDBID:         v.GetString("NOTION_HIRING_DB_ID"),
 			StaffingDemandDBID: v.GetString("NOTION_STAFFING_DEMAND_DB_ID"),
+			ProjectDBID:        v.GetString("NOTION_PROJECT_DB_ID"),
 		},
 	}
 }
