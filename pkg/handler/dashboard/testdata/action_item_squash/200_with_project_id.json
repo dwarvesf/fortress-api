@@ -2,70 +2,70 @@
     "data": {
         "all": [
             {
-                "snapDate": "16/03",
-                "value": 45,
+                "snapDate": "18/12",
+                "value": 69,
                 "trend": 0
             },
             {
-                "snapDate": "16/04",
+                "snapDate": "01/01",
                 "value": 12,
-                "trend": -73.34
+                "trend": -82.61
             },
             {
-                "snapDate": "16/01",
-                "value": 57,
-                "trend": 375
+                "snapDate": "27/02",
+                "value": 135,
+                "trend": 1025
             }
         ],
         "high": [
             {
-                "snapDate": "16/03",
-                "value": 10,
+                "snapDate": "18/12",
+                "value": 14,
                 "trend": 0
             },
             {
-                "snapDate": "16/04",
+                "snapDate": "01/01",
                 "value": 2,
-                "trend": -80
+                "trend": -85.72
             },
             {
-                "snapDate": "16/01",
-                "value": 12,
-                "trend": 500
+                "snapDate": "27/02",
+                "value": 30,
+                "trend": 1400
             }
         ],
         "medium": [
             {
-                "snapDate": "16/03",
-                "value": 15,
+                "snapDate": "18/12",
+                "value": 23,
                 "trend": 0
             },
             {
-                "snapDate": "16/04",
+                "snapDate": "01/01",
                 "value": 4,
-                "trend": -73.34
+                "trend": -82.61
             },
             {
-                "snapDate": "16/01",
-                "value": 19,
-                "trend": 375
+                "snapDate": "27/02",
+                "value": 45,
+                "trend": 1025
             }
         ],
         "low": [
             {
-                "snapDate": "16/03",
-                "value": 20,
+                "snapDate": "18/12",
+                "value": 32,
                 "trend": 0
             },
             {
-                "snapDate": "16/04",
+                "snapDate": "01/01",
                 "value": 6,
-                "trend": -70
+                "trend": -81.25
             },
             {
-                "snapDate": "16/01",
-                "value": 26,
-                "trend": 333.33
+                "snapDate": "27/02",
+                "value": 60,
+                "trend": 900
             }
         ]
     }

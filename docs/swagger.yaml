@@ -1,5 +1,13 @@
 basePath: /api/v1
 definitions:
+  gorm.DeletedAt:
+    properties:
+      time:
+        type: string
+      valid:
+        description: Valid is true if Time is not NULL
+        type: boolean
+    type: object
   model.AccountingItem:
     properties:
       amount:
@@ -29,7 +37,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       id:
         type: string
       lead_id:
@@ -50,7 +58,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       id:
         type: string
       name:
@@ -114,7 +122,7 @@ definitions:
       dateOfBirth:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       discordID:
         type: string
       discordName:
@@ -182,7 +190,7 @@ definitions:
         type: string
       mentees:
         items:
-          $ref: '#/definitions/model.EmployeeMentee'
+          $ref: '#/definitions/model.Employee'
         type: array
       notionEmail:
         type: string
@@ -250,27 +258,10 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       employeeID:
         type: string
       id:
-        type: string
-      updatedAt:
-        type: string
-    type: object
-  model.EmployeeMentee:
-    properties:
-      createdAt:
-        type: string
-      deletedAt:
-        type: string
-      id:
-        type: string
-      mentee:
-        $ref: '#/definitions/model.Employee'
-      menteeID:
-        type: string
-      mentorID:
         type: string
       updatedAt:
         type: string
@@ -280,7 +271,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       employeeID:
         type: string
       id:
@@ -297,7 +288,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       employeeID:
         type: string
       id:
@@ -314,7 +305,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       employeeID:
         type: string
       id:
@@ -331,7 +322,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       employeeID:
         type: string
       id:
@@ -393,7 +384,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       id:
         type: string
       name:
@@ -408,7 +399,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       id:
         type: string
       name:
@@ -433,7 +424,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       endDate:
         type: string
       function:
@@ -478,7 +469,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       employee:
         $ref: '#/definitions/model.Employee'
       employeeID:
@@ -501,7 +492,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       deploymentType:
         type: string
       discount:
@@ -550,7 +541,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       id:
         type: string
       position:
@@ -578,7 +569,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       deploymentType:
         type: string
       discount:
@@ -613,7 +604,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       id:
         type: string
       position:
@@ -630,7 +621,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       id:
         type: string
       projectID:
@@ -649,7 +640,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       id:
         type: string
       level:
@@ -666,7 +657,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       id:
         type: string
       level:
@@ -685,7 +676,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       id:
         type: string
       name:
@@ -772,13 +763,6 @@ definitions:
       year:
         description: basic info
         type: string
-    type: object
-  request.AddMenteeInput:
-    properties:
-      menteeID:
-        type: string
-    required:
-    - menteeID
     type: object
   request.AssignMemberInput:
     properties:
@@ -1068,8 +1052,10 @@ definitions:
         type: string
       notionName:
         type: string
-      organizationID:
-        type: string
+      organizationIDs:
+        items:
+          type: string
+        type: array
       phone:
         maxLength: 18
         minLength: 9
@@ -1575,7 +1561,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       deliveryManager:
         $ref: '#/definitions/view.ProjectHead'
       function:
@@ -1637,7 +1623,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       discordID:
         type: string
       discordName:
@@ -1675,7 +1661,7 @@ definitions:
         type: string
       organizations:
         items:
-          $ref: '#/definitions/model.Organization'
+          $ref: '#/definitions/view.Organization'
         type: array
       personalEmail:
         type: string
@@ -2027,6 +2013,17 @@ definitions:
       name:
         type: string
     type: object
+  view.Organization:
+    properties:
+      avatar:
+        type: string
+      code:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+    type: object
   view.OrganizationsResponse:
     properties:
       data:
@@ -2142,7 +2139,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       deliveryManager:
         $ref: '#/definitions/view.ProjectHead'
       endDate:
@@ -2469,7 +2466,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       discordID:
         type: string
       discordName:
@@ -2495,7 +2492,7 @@ definitions:
         type: string
       organizations:
         items:
-          $ref: '#/definitions/model.Organization'
+          $ref: '#/definitions/view.Organization'
         type: array
       phoneNumber:
         type: string
@@ -2517,7 +2514,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       gender:
         type: string
       id:
@@ -2545,7 +2542,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       discordID:
         type: string
       discordName:
@@ -2631,7 +2628,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       id:
         type: string
       positions:
@@ -2657,7 +2654,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        type: string
+        $ref: '#/definitions/gorm.DeletedAt'
       endDate:
         type: string
       id:
@@ -3223,93 +3220,6 @@ paths:
           schema:
             $ref: '#/definitions/view.ErrorResponse'
       summary: Update general info of the employee by id
-      tags:
-      - Employee
-  /employees/{id}/mentees:
-    post:
-      consumes:
-      - application/json
-      description: Add mentee for a mentor
-      parameters:
-      - description: jwt token
-        in: header
-        name: Authorization
-        required: true
-        type: string
-      - description: Employee ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: Body
-        in: body
-        name: Body
-        required: true
-        schema:
-          $ref: '#/definitions/request.AddMenteeInput'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/view.MessageResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/view.ErrorResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/view.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/view.ErrorResponse'
-      summary: Add mentee for a mentor
-      tags:
-      - Employee
-  /employees/{id}/mentees/{menteeID}:
-    delete:
-      consumes:
-      - application/json
-      description: Delete mentee of a mentor
-      parameters:
-      - description: jwt token
-        in: header
-        name: Authorization
-        required: true
-        type: string
-      - description: Employee ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: Mentee ID
-        in: path
-        name: menteeID
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/view.MessageResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/view.ErrorResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/view.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/view.ErrorResponse'
-      summary: Delete mentee of a mentor
       tags:
       - Employee
   /employees/{id}/personal-info:
