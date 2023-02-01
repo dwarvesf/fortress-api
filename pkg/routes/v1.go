@@ -123,6 +123,10 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 	{
 		event.GET("", h.Event.List)
 	}
+	staffingDemand := v1.Group("/staffing-demands")
+	{
+		staffingDemand.GET("", h.StaffingDemand.List)
+	}
 	hiring := v1.Group("/hiring-positions")
 	{
 		hiring.GET("", h.Hiring.List)
