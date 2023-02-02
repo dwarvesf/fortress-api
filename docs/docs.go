@@ -136,6 +136,96 @@ const docTemplate = `{
                 }
             }
         },
+        "/dashboards/engagement/detail": {
+            "get": {
+                "description": "Get engagement dashboard",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "Get engagement dashboard",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "chapter/seniority/project",
+                        "name": "filter",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "startDate",
+                        "name": "startDate",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.GetEngagementDashboardDetailResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/dashboards/engagement/info": {
+            "get": {
+                "description": "Get engagement dashboard",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "Get engagement dashboard",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.GetEngagementDashboardResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/dashboards/projects/action-item-squash": {
             "get": {
                 "description": "Get Action items squash report for dashboard",
@@ -1221,6 +1311,50 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/view.ListFeedbackResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/feedbacks/unreads": {
+            "get": {
+                "description": "Get number of unread inbox for user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Feedback"
+                ],
+                "summary": "Get number of unread inbox for user",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.UnreadFeedbackCountResponse"
                         }
                     },
                     "400": {
@@ -5315,6 +5449,20 @@ const docTemplate = `{
                 }
             }
         },
+        "model.StaffingDemand": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "request": {
+                    "type": "string"
+                }
+            }
+        },
         "model.TechRadar": {
             "type": "object",
             "properties": {
@@ -6952,6 +7100,65 @@ const docTemplate = `{
                 }
             }
         },
+        "view.EngagementDashboard": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "questionID": {
+                    "type": "string"
+                },
+                "stats": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.EngagementDashboardQuestionStat"
+                    }
+                }
+            }
+        },
+        "view.EngagementDashboardDetail": {
+            "type": "object",
+            "properties": {
+                "questionID": {
+                    "type": "string"
+                },
+                "stats": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.EngagementDashboardQuestionDetailStat"
+                    }
+                }
+            }
+        },
+        "view.EngagementDashboardQuestionDetailStat": {
+            "type": "object",
+            "properties": {
+                "field": {
+                    "type": "string"
+                },
+                "point": {
+                    "type": "number"
+                },
+                "startDate": {
+                    "type": "string"
+                }
+            }
+        },
+        "view.EngagementDashboardQuestionStat": {
+            "type": "object",
+            "properties": {
+                "point": {
+                    "type": "number"
+                },
+                "startDate": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
         "view.EngineeringHealth": {
             "type": "object",
             "properties": {
@@ -7151,6 +7358,22 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/view.FeedBackReviewDetail"
+                }
+            }
+        },
+        "view.GetEngagementDashboardDetailResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/view.EngagementDashboardDetail"
+                }
+            }
+        },
+        "view.GetEngagementDashboardResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/view.EngagementDashboard"
                 }
             }
         },
@@ -8102,6 +8325,25 @@ const docTemplate = `{
                 },
                 "workload": {
                     "type": "number"
+                }
+            }
+        },
+        "view.UnreadFeedbackCountData": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "reviewerID": {
+                    "type": "string"
+                }
+            }
+        },
+        "view.UnreadFeedbackCountResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/view.UnreadFeedbackCountData"
                 }
             }
         },

@@ -319,6 +319,12 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/feedback.IHandler.Detail-fm",
 			},
 		},
+		"/api/v1/feedbacks/unreads": {
+			"GET": {
+				Method:  "GET",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/feedback.IHandler.CountUnreadFeedback-fm",
+			},
+		},
 		"/api/v1/feedbacks/:id/topics/:topicID/submit": {
 			"POST": {
 				Method:  "POST",
@@ -483,6 +489,18 @@ func Test_loadV1Routes(t *testing.T) {
 			"GET": {
 				Method:  "GET",
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/dashboard.IHandler.GetResourcesAvailability-fm",
+			},
+		},
+		"/api/v1/dashboards/engagement/info": {
+			"GET": {
+				Method:  "GET",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/dashboard.IHandler.GetEngagementInfo-fm",
+			},
+		},
+		"/api/v1/dashboards/engagement/detail": {
+			"GET": {
+				Method:  "GET",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/dashboard.IHandler.GetEngagementInfoDetail-fm",
 			},
 		},
 	}

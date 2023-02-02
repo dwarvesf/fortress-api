@@ -7,6 +7,7 @@ import (
 )
 
 type IStore interface {
+	One(db *gorm.DB, id string) (actionItem *model.ActionItem, err error)
 	All(db *gorm.DB) (actionItems []*model.ActionItem, err error)
 	Delete(db *gorm.DB, id string) (err error)
 	Create(db *gorm.DB, e *model.ActionItem) (actionItem *model.ActionItem, err error)

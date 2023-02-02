@@ -13,4 +13,6 @@ type IHandler interface {
 	GetActionItemSquashReports(c *gin.Context)
 	GetSummary(c *gin.Context)
 	GetResourcesAvailability(c *gin.Context)
+	GetEngagementInfo(c *gin.Context)
+	GetEngagementInfoDetail(c *gin.Context)
 }

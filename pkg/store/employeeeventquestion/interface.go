@@ -1,8 +1,11 @@
 package employeeeventquestion
 
 import (
-	"github.com/dwarvesf/fortress-api/pkg/model"
+	"time"
+
 	"gorm.io/gorm"
+
+	"github.com/dwarvesf/fortress-api/pkg/model"
 )
 
 type IStore interface {
@@ -14,4 +17,6 @@ type IStore interface {
 	DeleteByEventReviewerIDList(db *gorm.DB, reviewerIDList []string) error
 	DeleteByEventReviewerID(db *gorm.DB, eventReviewerID string) error
 	CountLikertScaleByEventIDAndDomain(db *gorm.DB, eventID string, domain string) (*model.LikertScaleCount, error)
+	GetAverageAnswerEngagementByTime(db *gorm.DB, times []time.Time) ([]*model.StatisticEngagementDashboard, error)
+	GetAverageAnswerEngagementByFilter(db *gorm.DB, filter model.EngagementDashboardFilter, time *time.Time) ([]*model.StatisticEngagementDashboard, error)
 }
