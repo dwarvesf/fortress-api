@@ -87,6 +87,7 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 		feedbackGroup.GET("", pmw.WithPerm(model.PermissionFeedbacksRead), h.Feedback.List)
 		feedbackGroup.GET("/:id/topics/:topicID", amw.WithAuth, pmw.WithPerm(model.PermissionFeedbacksRead), h.Feedback.Detail)
 		feedbackGroup.POST("/:id/topics/:topicID/submit", amw.WithAuth, pmw.WithPerm(model.PermissionFeedbacksCreate), h.Feedback.Submit)
+		feedbackGroup.GET("/unreads", pmw.WithPerm(model.PermissionSurveysEdit), h.Feedback.CountUnreadFeedback)
 	}
 
 	surveyGroup := v1.Group("/surveys")

@@ -1314,6 +1314,50 @@ const docTemplate = `{
                 }
             }
         },
+        "/feedbacks/unreads": {
+            "get": {
+                "description": "Get number of unread inbox for user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Feedback"
+                ],
+                "summary": "Get number of unread inbox for user",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.UnreadFeedbackCountResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/feedbacks/{id}/topics/{topicID}": {
             "get": {
                 "description": "Get feedback detail for logged-in users",
@@ -5391,6 +5435,20 @@ const docTemplate = `{
                 }
             }
         },
+        "model.StaffingDemand": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "request": {
+                    "type": "string"
+                }
+            }
+        },
         "model.TechRadar": {
             "type": "object",
             "properties": {
@@ -8253,6 +8311,25 @@ const docTemplate = `{
                 },
                 "workload": {
                     "type": "number"
+                }
+            }
+        },
+        "view.UnreadFeedbackCountData": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "reviewerID": {
+                    "type": "string"
+                }
+            }
+        },
+        "view.UnreadFeedbackCountResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/view.UnreadFeedbackCountData"
                 }
             }
         },

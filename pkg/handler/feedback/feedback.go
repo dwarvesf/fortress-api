@@ -316,7 +316,7 @@ func (h *handler) Submit(c *gin.Context) {
 
 		if questionMap[e.EventQuestionID] == model.QuestionTypeScale.String() {
 			if (input.Body.Status == model.EventReviewerStatusDone && e.Answer == "" && !model.AgreementLevel(e.Answer).IsValid()) ||
-				(input.Body.Status == model.EventReviewerStatusDraft && e.Answer != "" && !model.AgreementLevel(e.Answer).IsValid()){
+				(input.Body.Status == model.EventReviewerStatusDraft && e.Answer != "" && !model.AgreementLevel(e.Answer).IsValid()) {
 				l.Error(errs.ErrInvalidAnswerForLikertScale, "invalid answer for likert-scale question")
 				c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, done(errs.ErrInvalidAnswerForLikertScale), input, ""))
 				return
@@ -393,4 +393,39 @@ func (h *handler) Submit(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToListSubmitFeedback(eventQuestions, detailInfo), nil, nil, done(nil), ""))
+}
+
+// CountUnreadFeedback godoc
+// @Summary Get number of unread inbox for user
+// @Description Get number of unread inbox for user
+// @Tags Feedback
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "jwt token"
+// @Success 200 {object} view.UnreadFeedbackCountResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /feedbacks/unreads [get]
+func (h *handler) CountUnreadFeedback(c *gin.Context) {
+	userID, err := utils.GetUserIDFromContext(c, h.config)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	l := h.logger.Fields(logger.Fields{
+		"handler": "feedback",
+		"method":  "CountUnreadFeedback",
+		"userID":  userID,
+	})
+
+	// Get unread inbox
+	count, err := h.store.EmployeeEventTopic.CountUnreadFeedbackByEmployeeID(h.repo.DB(), userID)
+	if err != nil {
+		l.Error(err, "failed to get unread inbox")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToUnreadFeedbackCountData(userID, count), nil, nil, nil, ""))
 }
