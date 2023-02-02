@@ -4367,6 +4367,18 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "gorm.DeletedAt": {
+            "type": "object",
+            "properties": {
+                "time": {
+                    "type": "string"
+                },
+                "valid": {
+                    "description": "Valid is true if Time is not NULL",
+                    "type": "boolean"
+                }
+            }
+        },
         "model.AccountingItem": {
             "type": "object",
             "properties": {
@@ -4411,7 +4423,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "id": {
                     "type": "string"
@@ -4443,7 +4455,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "id": {
                     "type": "string"
@@ -4540,7 +4552,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "discordID": {
                     "type": "string"
@@ -4743,7 +4755,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "employeeID": {
                     "type": "string"
@@ -4763,7 +4775,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "employeeID": {
                     "type": "string"
@@ -4789,7 +4801,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "employeeID": {
                     "type": "string"
@@ -4815,7 +4827,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "employeeID": {
                     "type": "string"
@@ -4841,7 +4853,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "employeeID": {
                     "type": "string"
@@ -4936,7 +4948,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "id": {
                     "type": "string"
@@ -4959,7 +4971,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "id": {
                     "type": "string"
@@ -4997,7 +5009,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "endDate": {
                     "type": "string"
@@ -5065,7 +5077,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "employee": {
                     "$ref": "#/definitions/model.Employee"
@@ -5100,7 +5112,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "deploymentType": {
                     "type": "string"
@@ -5174,7 +5186,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "id": {
                     "type": "string"
@@ -5217,7 +5229,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "deploymentType": {
                     "type": "string"
@@ -5270,7 +5282,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "id": {
                     "type": "string"
@@ -5296,7 +5308,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "id": {
                     "type": "string"
@@ -5325,7 +5337,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "id": {
                     "type": "string"
@@ -5351,7 +5363,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "id": {
                     "type": "string"
@@ -5380,7 +5392,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "id": {
                     "type": "string"
@@ -6792,7 +6804,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "deliveryManager": {
                     "$ref": "#/definitions/view.ProjectHead"
@@ -6887,7 +6899,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "discordID": {
                     "type": "string"
@@ -7754,7 +7766,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "deliveryManager": {
                     "$ref": "#/definitions/view.ProjectHead"
@@ -8295,7 +8307,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "discordID": {
                     "type": "string"
@@ -8367,7 +8379,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "gender": {
                     "type": "string"
@@ -8410,7 +8422,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "discordID": {
                     "type": "string"
@@ -8542,7 +8554,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "id": {
                     "type": "string"
@@ -8582,7 +8594,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deletedAt": {
-                    "type": "string"
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "endDate": {
                     "type": "string"
