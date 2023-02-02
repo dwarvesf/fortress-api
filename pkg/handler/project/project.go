@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"net/http"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
+	"github.com/dstotijn/go-notion"
 	"github.com/gin-gonic/gin"
 	"github.com/shopspring/decimal"
 	"gorm.io/gorm"
@@ -2551,4 +2553,100 @@ func (h *handler) UploadAvatar(c *gin.Context) {
 	done(nil)
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToProjectContentData(filePath), nil, nil, nil, ""))
+}
+
+func (h *handler) ListMilestones(c *gin.Context) {
+	if c.Query("project_name") == "" {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errors.New("project name is required"), nil, "project name is required"))
+		return
+	}
+
+	resp, err := h.service.Notion.GetDatabase(h.config.Notion.ProjectDBID, nil, nil)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, "can't get projects from notion"))
+		return
+	}
+
+	var prj = struct {
+		Name       string                   `json:"name"`
+		Milestones []model.ProjectMilestone `json:"milestones"`
+	}{}
+	var miletones = []model.ProjectMilestone{}
+
+	for _, r := range resp.Results {
+		props := r.Properties.(notion.DatabasePageProperties)
+
+		if len(props["Project"].Title) == 0 || len(props["Parent item"].Relation) > 0 {
+			continue
+		}
+
+		matched, err := regexp.MatchString(".*"+strings.ToLower(c.Query("project_name"))+".*", strings.ToLower(props["Project"].Title[0].Text.Content))
+		if err != nil || !matched {
+			continue
+		}
+
+		prj.Name = props["Project"].Title[0].Text.Content
+
+		for _, p := range props["Sub-item"].Relation {
+			resp, err := h.service.Notion.GetPage(p.ID)
+			if err != nil {
+				continue
+			}
+			props := resp.Properties.(notion.DatabasePageProperties)
+			name := ""
+			if len(props["Project"].Title) > 0 {
+				name = props["Project"].Title[0].Text.Content
+			}
+			m := &model.ProjectMilestone{
+				ID:            resp.ID,
+				Name:          name,
+				SubMilestones: []*model.ProjectMilestone{},
+			}
+			if props["Milestone Date"].Date != nil {
+				m.StartDate = props["Milestone Date"].Date.Start.Time
+				m.EndDate = props["Milestone Date"].Date.End.Time
+			}
+			subItems := h.getMilestones(m, []*model.ProjectMilestone{})
+			m.SubMilestones = subItems
+			miletones = append(miletones, *m)
+		}
+
+		prj.Milestones = miletones
+
+		break
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](prj, nil, nil, nil, "get list miletones successfully"))
+}
+
+func (h *handler) getMilestones(item *model.ProjectMilestone, subItems []*model.ProjectMilestone) []*model.ProjectMilestone {
+	resp, err := h.service.Notion.GetPage(item.ID)
+	if err != nil {
+		return subItems
+	}
+	props := resp.Properties.(notion.DatabasePageProperties)
+	for _, p := range props["Sub-item"].Relation {
+		resp, err := h.service.Notion.GetPage(p.ID)
+		if err != nil {
+			continue
+		}
+		props := resp.Properties.(notion.DatabasePageProperties)
+		name := ""
+		if len(props["Project"].Title) > 0 {
+			name = props["Project"].Title[0].Text.Content
+		}
+		m := &model.ProjectMilestone{
+			ID:            resp.ID,
+			Name:          name,
+			SubMilestones: []*model.ProjectMilestone{},
+		}
+		if props["Milestone Date"].Date != nil {
+			m.StartDate = props["Milestone Date"].Date.Start.Time
+			m.EndDate = props["Milestone Date"].Date.End.Time
+		}
+		subItems = h.getMilestones(m, subItems)
+		subItems = append(subItems, m)
+	}
+
+	return subItems
 }

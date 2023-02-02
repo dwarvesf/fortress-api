@@ -43,7 +43,7 @@ func TestHandler_GetProjectSizes(t *testing.T) {
 				testhelper.LoadTestSQLFile(t, txRepo, "./testdata/project_sizes/project_sizes.sql")
 				w := httptest.NewRecorder()
 				ctx, _ := gin.CreateTestContext(w)
-				ctx.Request = httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/dashboards/projects/sizes"), nil)
+				ctx.Request = httptest.NewRequest(http.MethodGet, "/api/v1/dashboards/projects/sizes", nil)
 				ctx.Request.Header.Set("Authorization", testToken)
 				ctx.Request.URL.RawQuery = tt.query
 

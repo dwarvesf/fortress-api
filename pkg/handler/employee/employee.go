@@ -422,6 +422,33 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 		emp.DisplayName = body.DisplayName
 	}
 
+	if strings.TrimSpace(body.JoinedDate) != "" {
+		joinedDate, err := time.Parse("2006-01-02", body.JoinedDate)
+		if err != nil {
+			l.Error(errs.ErrInvalidJoinedDate, "invalid left date")
+			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidJoinedDate, body, ""))
+			return
+		}
+		emp.JoinedDate = &joinedDate
+	}
+
+	if strings.TrimSpace(body.LeftDate) != "" {
+		leftDate, err := time.Parse("2006-01-02", body.LeftDate)
+		if err != nil {
+			l.Error(errs.ErrInvalidLeftDate, "invalid left date")
+			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidLeftDate, body, ""))
+			return
+		}
+		emp.LeftDate = &leftDate
+	}
+
+	if emp.JoinedDate != nil && emp.LeftDate != nil {
+		if emp.LeftDate.Before(*emp.JoinedDate) {
+			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrLeftDateBeforeJoinedDate, body, ""))
+			return
+		}
+	}
+
 	emp.LineManagerID = body.LineManagerID
 
 	_, err = h.store.Employee.UpdateSelectedFieldsByID(tx.DB(), employeeID, *emp,
@@ -437,6 +464,8 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 		"notion_email",
 		"linkedin_name",
 		"display_name",
+		"joined_date",
+		"left_date",
 	)
 	if err != nil {
 		l.Error(err, "failed to update employee")
