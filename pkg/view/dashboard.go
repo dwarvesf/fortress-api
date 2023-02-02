@@ -689,3 +689,68 @@ type GetEngagementDashboardDetailResponse struct {
 type GetDashboardResourceUtilizationResponse struct {
 	Data []model.ResourceUtilization `json:"data"`
 }
+
+type WorkUnitDistribution struct {
+	Employee    BasicEmployeeInfo `json:"employee"`
+	Learning    int64             `json:"learning"`
+	Development int64             `json:"development"`
+	Management  int64             `json:"management"`
+	Training    int64             `json:"training"`
+}
+
+type WorkUnitDistributionData struct {
+	WorkUnitDistributions []*WorkUnitDistribution `json:"workUnitDistributions"`
+}
+
+func ToWorkUnitDistributionData(workUnitDistribution []*model.WorkUnitDistribution, ty model.WorkUnitType, sortRequired model.SortOrder) *WorkUnitDistributionData {
+	rs := &WorkUnitDistributionData{}
+
+	for _, item := range workUnitDistribution {
+		newWorkUnitDistribution := &WorkUnitDistribution{
+			Employee: BasicEmployeeInfo{
+				ID:          item.ID.String(),
+				FullName:    item.FullName,
+				DisplayName: item.DisplayName,
+				Avatar:      item.Avatar,
+				Username:    item.Username,
+			},
+		}
+
+		if ty == "" || ty == model.WorkUnitTypeLearning {
+			newWorkUnitDistribution.Learning = item.Learning
+		}
+
+		if ty == "" || ty == model.WorkUnitTypeDevelopment {
+			newWorkUnitDistribution.Development = item.Development
+		}
+
+		if ty == "" || ty == model.WorkUnitTypeManagement {
+			newWorkUnitDistribution.Management = item.Management + item.ProjectHeadCount
+		}
+		if ty == "" || ty == model.WorkUnitTypeTraining {
+			newWorkUnitDistribution.Training = item.Training + item.LineManagerCount
+		}
+
+		rs.WorkUnitDistributions = append(rs.WorkUnitDistributions, newWorkUnitDistribution)
+	}
+
+	if sortRequired != "" {
+		if sortRequired == model.SortOrderASC {
+			sort.Slice(rs.WorkUnitDistributions, func(i, j int) bool {
+				return rs.WorkUnitDistributions[i].Learning+rs.WorkUnitDistributions[i].Development+rs.WorkUnitDistributions[i].Management+rs.WorkUnitDistributions[i].Training <
+					rs.WorkUnitDistributions[j].Learning+rs.WorkUnitDistributions[j].Development+rs.WorkUnitDistributions[j].Management+rs.WorkUnitDistributions[j].Training
+			})
+		} else {
+			sort.Slice(rs.WorkUnitDistributions, func(i, j int) bool {
+				return rs.WorkUnitDistributions[i].Learning+rs.WorkUnitDistributions[i].Development+rs.WorkUnitDistributions[i].Management+rs.WorkUnitDistributions[i].Training >
+					rs.WorkUnitDistributions[j].Learning+rs.WorkUnitDistributions[j].Development+rs.WorkUnitDistributions[j].Management+rs.WorkUnitDistributions[j].Training
+			})
+		}
+	}
+
+	return rs
+}
+
+type WorkUnitDistributionsResponse struct {
+	Data *WorkUnitDistributionData `json:"data"`
+}

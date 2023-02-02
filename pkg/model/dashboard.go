@@ -84,3 +84,17 @@ type ResourceUtilization struct {
 	Shadow    int       `json:"shadow"`
 	Available int       `json:"available"`
 }
+
+type WorkUnitDistribution struct {
+	ID               UUID   `json:"id"`
+	FullName         string `json:"fullName"`
+	DisplayName      string `json:"displayName"`
+	Avatar           string `json:"avatar"`
+	Username         string `json:"username"`
+	LineManagerCount int64  `json:"lineManagerCount"`
+	ProjectHeadCount int64  `json:"projectHeadCount"`
+	Learning         int64  `json:"learning"`
+	Development      int64  `json:"development"`
+	Management       int64  `json:"management"`
+	Training         int64  `json:"training"`
+}
