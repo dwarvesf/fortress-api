@@ -451,6 +451,12 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 
 	emp.LineManagerID = body.LineManagerID
 
+	if err := h.updateSocialAccounts(tx.DB(), body, employeeID); err != nil {
+		l.Error(err, "failed to update social accounts")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
+		return
+	}
+
 	_, err = h.store.Employee.UpdateSelectedFieldsByID(tx.DB(), employeeID, *emp,
 		"full_name",
 		"team_email",
@@ -514,6 +520,79 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToUpdateGeneralInfoEmployeeData(emp), nil, done(nil), nil, ""))
+}
+
+func (h *handler) updateSocialAccounts(db *gorm.DB, input request.UpdateEmployeeGeneralInfoInput, employeeID string) error {
+	l := h.logger.Fields(logger.Fields{
+		"handler":    "employee",
+		"method":     "updateSocialAccounts",
+		"input":      input,
+		"employeeID": employeeID,
+	})
+
+	accounts, err := h.store.SocialAccount.GetByEmployeeID(db, employeeID)
+	if err != nil {
+		l.Error(err, "failed to get social accounts by employeeID")
+		return err
+	}
+
+	accountsInput := map[model.SocialType]model.SocialAccount{
+		model.SocialTypeGitHub: {
+			Type:        model.SocialTypeGitHub,
+			AccountID:   input.GithubID,
+			DisplayName: input.GithubID,
+		},
+		model.SocialTypeNotion: {
+			Type:        model.SocialTypeNotion,
+			AccountID:   input.NotionID,
+			DisplayName: input.NotionName,
+			Email:       input.NotionEmail,
+		},
+		model.SocialTypeDiscord: {
+			Type:        model.SocialTypeDiscord,
+			AccountID:   input.DiscordID,
+			DisplayName: input.DiscordName,
+		},
+		model.SocialTypeLinkedIn: {
+			Type:        model.SocialTypeLinkedIn,
+			AccountID:   input.LinkedInName,
+			DisplayName: input.LinkedInName,
+		},
+	}
+
+	for _, account := range accounts {
+		delete(accountsInput, account.Type)
+
+		switch account.Type {
+		case model.SocialTypeGitHub:
+			account.AccountID = input.GithubID
+		case model.SocialTypeNotion:
+			account.AccountID = input.NotionID
+			account.DisplayName = input.NotionName
+			account.Email = input.NotionEmail
+		case model.SocialTypeDiscord:
+			account.AccountID = input.DiscordID
+			account.DisplayName = input.DiscordName
+		case model.SocialTypeLinkedIn:
+			account.DisplayName = input.LinkedInName
+		default:
+			continue
+		}
+
+		if _, err := h.store.SocialAccount.Update(db, account); err != nil {
+			l.Errorf(err, "failed to update social account %s", account.ID)
+			return err
+		}
+	}
+
+	for _, account := range accountsInput {
+		if _, err := h.store.SocialAccount.Create(db, &account); err != nil {
+			l.AddField("account", account).Error(err, "failed to create social account")
+			return err
+		}
+	}
+
+	return nil
 }
 
 // Create godoc

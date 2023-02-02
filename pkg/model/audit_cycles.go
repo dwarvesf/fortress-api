@@ -1,6 +1,7 @@
 package model
 
 import (
+	"fmt"
 	"strings"
 	"time"
 
@@ -64,13 +65,13 @@ type AuditCycle struct {
 
 	ProjectID         UUID
 	NotionDBID        UUID
-	HealthAuditID     UUID
-	ProcessAuditID    UUID
-	BackendAuditID    UUID
-	FrontendAuditID   UUID
-	SystemAuditID     UUID
-	MobileAuditID     UUID
-	BlockchainAuditID UUID
+	HealthAuditID     *UUID
+	ProcessAuditID    *UUID
+	BackendAuditID    *UUID
+	FrontendAuditID   *UUID
+	SystemAuditID     *UUID
+	MobileAuditID     *UUID
+	BlockchainAuditID *UUID
 	Cycle             int64
 	AverageScore      float64
 	Status            AuditStatus
@@ -80,6 +81,8 @@ type AuditCycle struct {
 	ActionItemMedium  int64
 	ActionItemLow     int64
 	SyncAt            *time.Time
+
+	Project *Project
 }
 
 func AuditCycleToMap(auditCycles []*AuditCycle) map[UUID]*AuditCycle {
@@ -91,15 +94,14 @@ func AuditCycleToMap(auditCycles []*AuditCycle) map[UUID]*AuditCycle {
 	return rs
 }
 
-func NewAuditCycleFromNotionPage(page *notion.Page) *AuditCycle {
+func NewAuditCycleFromNotionPage(page *notion.Page, notionDBID string) *AuditCycle {
 	properties := page.Properties.(notion.DatabasePageProperties)
 	now := time.Now()
 
 	rs := &AuditCycle{
 		BaseModel:  BaseModel{ID: MustGetUUIDFromString(page.ID)},
-		ProjectID:  MustGetUUIDFromString(properties["Project"].Relation[0].ID),
-		NotionDBID: MustGetUUIDFromString(page.ID),
-		Status:     AuditStatusPending, //TODO: quarter
+		NotionDBID: MustGetUUIDFromString(notionDBID),
+		Status:     AuditStatusPending,
 		Flag:       AuditFlag(strings.ToLower(properties["Flag"].Status.Name)),
 		SyncAt:     &now,
 	}
@@ -112,5 +114,64 @@ func NewAuditCycleFromNotionPage(page *notion.Page) *AuditCycle {
 		rs.Cycle = int64(*properties["Cycle"].Number)
 	}
 
+	if properties["Date"].Date != nil {
+		date := properties["Date"].Date.Start.Time
+		rs.Quarter = fmt.Sprintf("%d/Q%d", date.Year(), (date.Month()-1)/3+1)
+	}
+
+	if properties["Project"].Relation != nil && len(properties["Project"].Relation) > 0 {
+		rs.ProjectID = MustGetUUIDFromString(properties["Project"].Relation[0].ID)
+	}
+
 	return rs
+}
+
+func AuditMap(ac AuditCycle) map[UUID]AuditType {
+	rs := make(map[UUID]AuditType)
+
+	if !ac.HealthAuditID.IsZero() {
+		rs[*ac.HealthAuditID] = AuditTypeHealth
+	}
+
+	if !ac.ProcessAuditID.IsZero() {
+		rs[*ac.ProcessAuditID] = AuditTypeProcess
+	}
+
+	if !ac.BackendAuditID.IsZero() {
+		rs[*ac.BackendAuditID] = AuditTypeBackend
+	}
+
+	if !ac.FrontendAuditID.IsZero() {
+		rs[*ac.FrontendAuditID] = AuditTypeFrontend
+	}
+
+	if !ac.SystemAuditID.IsZero() {
+		rs[*ac.SystemAuditID] = AuditTypeSystem
+	}
+
+	if !ac.MobileAuditID.IsZero() {
+		rs[*ac.MobileAuditID] = AuditTypeMobile
+	}
+
+	if !ac.BlockchainAuditID.IsZero() {
+		rs[*ac.BlockchainAuditID] = AuditTypeBlockchain
+	}
+
+	return rs
+}
+
+func CheckTypeExists(auditMap map[UUID]AuditType, auditType AuditType) UUID {
+	for k, v := range auditMap {
+		if v == auditType {
+			return k
+		}
+	}
+
+	return UUID{}
+}
+
+func CompareAuditCycle(currAC *AuditCycle, newAC *AuditCycle) bool {
+	return currAC.ProjectID == newAC.ProjectID && currAC.NotionDBID == newAC.NotionDBID &&
+		currAC.Cycle == newAC.Cycle && currAC.AverageScore == newAC.AverageScore &&
+		currAC.Flag == newAC.Flag && currAC.Quarter == newAC.Quarter
 }

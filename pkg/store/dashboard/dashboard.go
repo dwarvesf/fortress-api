@@ -21,6 +21,7 @@ func (s *store) GetProjectSizes(db *gorm.DB) ([]*model.ProjectSize, error) {
 			FROM (projects join project_members pm ON projects.id = pm.project_id)
 			WHERE projects.function = 'development' AND pm.status = 'active' AND (pm.status = 'active' OR pm.status='on-boarding') AND projects.deleted_at IS NULL
 			GROUP BY projects.id
+			ORDER BY size DESC
 	`
 
 	return ru, db.Raw(query).Scan(&ru).Error

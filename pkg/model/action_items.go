@@ -64,7 +64,7 @@ type ActionItem struct {
 	ProjectID    UUID
 	NotionDBID   UUID
 	PICID        UUID
-	AuditCycleID UUID
+	AuditCycleID *UUID
 	Name         string
 	Description  string
 	NeedHelp     bool
@@ -81,16 +81,14 @@ func ActionItemToMap(actionItems []*ActionItem) map[UUID]*ActionItem {
 	return rs
 }
 
-func NewActionItemFromNotionPage(page notion.Page, picID UUID) *ActionItem {
+func NewActionItemFromNotionPage(page notion.Page, picID UUID, notionDB string) *ActionItem {
 	properties := page.Properties.(notion.DatabasePageProperties)
 
 	rs := &ActionItem{
 		BaseModel:  BaseModel{ID: MustGetUUIDFromString(page.ID)},
-		NotionDBID: MustGetUUIDFromString(page.ID),
-		Status:     ActionItemStatus(strings.ToLower(properties["Status"].Status.Name)),
-
+		NotionDBID: MustGetUUIDFromString(notionDB),
+		Status:     ActionItemStatus(strings.ReplaceAll(strings.ToLower(properties["Status"].Status.Name), " ", "-")),
 		// TODO:Description:
-
 	}
 
 	if properties["Project"].Relation != nil && len(properties["Project"].Relation) > 0 {
@@ -117,7 +115,8 @@ func NewActionItemFromNotionPage(page notion.Page, picID UUID) *ActionItem {
 	}
 
 	if len(properties["👏 Audit Changelog"].Relation) > 0 {
-		rs.AuditCycleID = MustGetUUIDFromString(properties["👏 Audit Changelog"].Relation[0].ID)
+		auditCycleID := MustGetUUIDFromString(properties["👏 Audit Changelog"].Relation[0].ID)
+		rs.AuditCycleID = &auditCycleID
 	}
 
 	return rs
@@ -125,13 +124,23 @@ func NewActionItemFromNotionPage(page notion.Page, picID UUID) *ActionItem {
 
 func MappingAuditActionPriority(auditGrade string) ActionItemPriority {
 	switch auditGrade {
-	case "1 - Critical":
+	case "High":
 		return ActionItemPriorityHigh
-	case "2 - Medium":
+	case "Medium":
 		return ActionItemPriorityMedium
-	case "3- Low":
+	case "Low":
 		return ActionItemPriorityLow
 	default:
 		return ""
 	}
+}
+
+func CompareActionItem(old, new *ActionItem) bool {
+	return ((old.Priority == nil && new.Priority == nil) ||
+		(old.Priority != nil && new.Priority != nil && *old.Priority == *new.Priority)) &&
+		((old.AuditCycleID == nil && new.AuditCycleID == nil) ||
+			(old.AuditCycleID != nil && new.AuditCycleID != nil && *old.AuditCycleID == *new.AuditCycleID)) &&
+		old.ProjectID == new.ProjectID && old.NotionDBID == new.NotionDBID &&
+		old.PICID == new.PICID && old.Name == new.Name && old.Description == new.Description &&
+		old.NeedHelp == new.NeedHelp && old.Status == new.Status
 }

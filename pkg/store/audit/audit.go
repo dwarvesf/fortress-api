@@ -12,6 +12,12 @@ func New() IStore {
 	return &store{}
 }
 
+// One get audit by id
+func (s *store) One(db *gorm.DB, id string) (*model.Audit, error) {
+	var audit *model.Audit
+	return audit, db.Where("id = ?", id).First(&audit).Error
+}
+
 // All get all audit
 func (s *store) All(db *gorm.DB) ([]*model.Audit, error) {
 	var audit []*model.Audit
@@ -37,4 +43,9 @@ func (s *store) Update(db *gorm.DB, audit *model.Audit) (*model.Audit, error) {
 func (s *store) UpdateSelectedFieldsByID(db *gorm.DB, id string, updateModel model.Audit, updatedFields ...string) (*model.Audit, error) {
 	audit := model.Audit{}
 	return &audit, db.Model(&audit).Where("id = ?", id).Select(updatedFields).Updates(updateModel).Error
+}
+
+// ResetActionItem reset action item in audit table
+func (s *store) ResetActionItem(db *gorm.DB) error {
+	return db.Model(&model.Audit{}).Where("deleted_at IS NULL").Updates(map[string]interface{}{"action_item": 0}).Error
 }

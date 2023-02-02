@@ -65,14 +65,16 @@ type Vault struct {
 }
 
 type Notion struct {
-	Secret             string
-	EarnDBID           string
-	TechRadarDBID      string
-	AudienceDBID       string
-	EventDBID          string
-	HiringDBID         string
-	StaffingDemandDBID string
-	ProjectDBID        string
+	Secret              string
+	EarnDBID            string
+	TechRadarDBID       string
+	AudienceDBID        string
+	EventDBID           string
+	HiringDBID          string
+	StaffingDemandDBID  string
+	ProjectDBID         string
+	AuditCycleBDID      string
+	AuditActionItemBDID string
 }
 
 type ENV interface {
@@ -123,14 +125,16 @@ func Generate(v ENV) *Config {
 		},
 
 		Notion: Notion{
-			Secret:             v.GetString("NOTION_SECRET"),
-			EarnDBID:           v.GetString("NOTION_EARN_DB_ID"),
-			TechRadarDBID:      v.GetString("NOTION_TECH_RADAR_DB_ID"),
-			AudienceDBID:       v.GetString("NOTION_AUDIENCE_DB_ID"),
-			EventDBID:          v.GetString("NOTION_EVENT_DB_ID"),
-			HiringDBID:         v.GetString("NOTION_HIRING_DB_ID"),
-			StaffingDemandDBID: v.GetString("NOTION_STAFFING_DEMAND_DB_ID"),
-			ProjectDBID:        v.GetString("NOTION_PROJECT_DB_ID"),
+			Secret:              v.GetString("NOTION_SECRET"),
+			EarnDBID:            v.GetString("NOTION_EARN_DB_ID"),
+			TechRadarDBID:       v.GetString("NOTION_TECH_RADAR_DB_ID"),
+			AudienceDBID:        v.GetString("NOTION_AUDIENCE_DB_ID"),
+			EventDBID:           v.GetString("NOTION_EVENT_DB_ID"),
+			HiringDBID:          v.GetString("NOTION_HIRING_DB_ID"),
+			StaffingDemandDBID:  v.GetString("NOTION_STAFFING_DEMAND_DB_ID"),
+			ProjectDBID:         v.GetString("NOTION_PROJECT_DB_ID"),
+			AuditCycleBDID:      v.GetString("NOTION_AUDIT_CYCLE_DB_ID"),
+			AuditActionItemBDID: v.GetString("NOTION_AUDIT_ACTION_ITEM_DB_ID"),
 		},
 	}
 }

@@ -233,3 +233,19 @@ func ToFeedbackReviewDetail(questions []*model.EmployeeEventQuestion, topic *mod
 
 	return rs
 }
+
+type UnreadFeedbackCountResponse struct {
+	Data UnreadFeedbackCountData `json:"data"`
+}
+
+type UnreadFeedbackCountData struct {
+	Count      int64  `json:"count"`
+	ReviewerID string `json:"reviewerID"`
+}
+
+func ToUnreadFeedbackCountData(reviewerID string, count int64) UnreadFeedbackCountData {
+	return UnreadFeedbackCountData{
+		ReviewerID: reviewerID,
+		Count:      count,
+	}
+}

@@ -35,11 +35,6 @@ func (c *Cronjob) Run() error {
 		return err
 	}
 
-	_, err = c.caller.AddFunc("@midnight", c.audit.SyncActionItem)
-	if err != nil {
-		return err
-	}
-
 	c.caller.Start()
 	wg := sync.WaitGroup{}
 	wg.Add(1)

@@ -61,7 +61,6 @@ func NewAuditItemFromNotionPage(page notion.Page, auditID string, notionDBID str
 		AuditID:    MustGetUUIDFromString(auditID),
 		Name:       properties["Name"].Title[0].PlainText,
 		NotionDBID: MustGetUUIDFromString(notionDBID),
-		// TODO: ActionItemID
 	}
 
 	if properties["Area"].Select != nil {
@@ -96,7 +95,7 @@ func MappingAuditItemGrade(auditGrade string) int64 {
 		return 5
 	case "Good":
 		return 4
-	case "Accceptable":
+	case "Acceptable":
 		return 3
 	case "Poor":
 		return 2
@@ -105,4 +104,20 @@ func MappingAuditItemGrade(auditGrade string) int64 {
 	default:
 		return 0
 	}
+}
+
+func CompareAuditItem(currAuditItem *AuditItem, newAuditItem *AuditItem) bool {
+	return ((currAuditItem.Severity == nil && newAuditItem.Severity == nil) ||
+		(currAuditItem.Severity != nil && newAuditItem.Severity != nil && *currAuditItem.Severity == *newAuditItem.Severity)) &&
+		currAuditItem.Name == newAuditItem.Name && currAuditItem.Area == newAuditItem.Area &&
+		currAuditItem.Requirements == newAuditItem.Requirements && currAuditItem.Grade == newAuditItem.Grade &&
+		currAuditItem.Notes == newAuditItem.Notes && currAuditItem.AuditID == newAuditItem.AuditID && currAuditItem.NotionDBID == newAuditItem.NotionDBID
+}
+
+func AuditItemToMap(ai []*AuditItem) map[UUID]AuditItem {
+	rs := make(map[UUID]AuditItem)
+	for _, item := range ai {
+		rs[item.ID] = *item
+	}
+	return rs
 }

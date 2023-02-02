@@ -386,3 +386,40 @@ func TestHandler_Submit(t *testing.T) {
 		})
 	}
 }
+
+func TestHandler_UnreadInbox(t *testing.T) {
+	cfg := config.LoadTestConfig()
+	loggerMock := logger.NewLogrusLogger()
+	serviceMock := service.New(&cfg)
+	storeMock := store.New()
+	tests := []struct {
+		name             string
+		wantCode         int
+		wantResponsePath string
+	}{
+		{
+			name:             "happy_case",
+			wantCode:         http.StatusOK,
+			wantResponsePath: "testdata/get_unread_inbox/200_happy_case.json",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				testhelper.LoadTestSQLFile(t, txRepo, "./testdata/get_unread_inbox/get_unread_inbox.sql")
+				w := httptest.NewRecorder()
+				ctx, _ := gin.CreateTestContext(w)
+				ctx.Request = httptest.NewRequest(http.MethodGet, "/api/v1/feedbacks/unreads", nil)
+				ctx.Request.Header.Set("Authorization", testToken)
+
+				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+				h.CountUnreadFeedback(ctx)
+				require.Equal(t, tt.wantCode, w.Code)
+				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				require.NoError(t, err)
+
+				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Feedback.CountUnreadFeedback] response mismatched")
+			})
+		})
+	}
+}

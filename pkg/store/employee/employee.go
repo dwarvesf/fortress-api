@@ -66,7 +66,11 @@ func (s *store) OneByEmail(db *gorm.DB, email string) (*model.Employee, error) {
 // OneByNotionID get 1 employee by notion id
 func (s *store) OneByNotionID(db *gorm.DB, notionID string) (*model.Employee, error) {
 	var employee *model.Employee
-	return employee, db.Where("notion_id = ?", notionID).First(&employee).Error
+	return employee, db.Where(`id IN (
+			SELECT sa.employee_id 
+			FROM social_accounts sa 
+			WHERE sa.account_id = ? AND sa.type = ?
+		)`, notionID, model.SocialTypeNotion).First(&employee).Error
 }
 
 // All get employees by query and pagination

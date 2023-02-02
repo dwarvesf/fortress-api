@@ -319,6 +319,12 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/feedback.IHandler.Detail-fm",
 			},
 		},
+		"/api/v1/feedbacks/unreads": {
+			"GET": {
+				Method:  "GET",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/feedback.IHandler.CountUnreadFeedback-fm",
+			},
+		},
 		"/api/v1/feedbacks/:id/topics/:topicID/submit": {
 			"POST": {
 				Method:  "POST",
