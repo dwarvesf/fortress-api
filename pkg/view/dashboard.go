@@ -645,6 +645,10 @@ func ToEngagementDashboard(statistic []*model.StatisticEngagementDashboard) []En
 			QuestionID: questionIDMapper[k],
 		})
 	}
+
+	sort.Slice(dashboard, func(i, j int) bool {
+		return dashboard[i].Content < dashboard[j].Content
+	})
 	return dashboard
 }
 
@@ -666,6 +670,11 @@ func ToEngagementDashboardDetails(statistic []*model.StatisticEngagementDashboar
 			Stats:      v,
 		})
 	}
+
+	sort.Slice(dashboard, func(i, j int) bool {
+		return dashboard[i].QuestionID < dashboard[j].QuestionID
+	})
+
 	return dashboard
 }
 
