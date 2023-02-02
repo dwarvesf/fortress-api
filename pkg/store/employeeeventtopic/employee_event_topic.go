@@ -84,6 +84,26 @@ func (s *store) GetByEmployeeID(db *gorm.DB, employeeID string, input GetByEmplo
 		Find(&eTopics).Error
 }
 
+// CountUnreadFeedbackByEmployeeID return total of unread inbox of the employee
+func (s *store) CountUnreadFeedbackByEmployeeID(db *gorm.DB, employeeID string) (int64, error) {
+	var total int64
+
+	query := db.
+		Table("employee_event_topics").
+		Joins("JOIN employee_event_reviewers eer ON employee_event_topics.id = eer.employee_event_topic_id AND eer.deleted_at IS NULL").
+		Joins("JOIN feedback_events fe ON employee_event_topics.event_id = fe.id").
+		Where("((eer.reviewer_id = ? AND fe.type = ?) OR (employee_event_topics.employee_id = ? AND fe.type = ?)) AND eer.author_status <> ? AND eer.reviewer_status <> ? AND eer.is_read = false",
+			employeeID,
+			model.EventTypeSurvey,
+			employeeID,
+			model.EventTypeFeedback,
+			model.EventAuthorStatusDone,
+			model.EventReviewerStatusNone,
+		)
+
+	return total, query.Count(&total).Error
+}
+
 // All return list of EmployeeEventTopic by input and pagination
 func (s *store) All(db *gorm.DB, input GetByEventIDInput, pagination *model.Pagination) ([]*model.EmployeeEventTopic, int64, error) {
 	var topics []*model.EmployeeEventTopic

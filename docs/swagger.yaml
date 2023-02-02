@@ -2579,6 +2579,18 @@ definitions:
       workload:
         type: number
     type: object
+  view.UnreadFeedbackCountData:
+    properties:
+      count:
+        type: integer
+      reviewerID:
+        type: string
+    type: object
+  view.UnreadFeedbackCountResponse:
+    properties:
+      data:
+        $ref: '#/definitions/view.UnreadFeedbackCountData'
+    type: object
   view.UpdateEmployeeStatusResponse:
     properties:
       data:
@@ -3823,6 +3835,35 @@ paths:
           schema:
             $ref: '#/definitions/view.ErrorResponse'
       summary: Submit the draft or done answers
+      tags:
+      - Feedback
+  /feedbacks/unreads:
+    get:
+      consumes:
+      - application/json
+      description: Get number of unread inbox for user
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.UnreadFeedbackCountResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get number of unread inbox for user
       tags:
       - Feedback
   /hiring-positions:
