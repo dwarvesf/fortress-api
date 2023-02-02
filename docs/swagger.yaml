@@ -1,13 +1,5 @@
 basePath: /api/v1
 definitions:
-  gorm.DeletedAt:
-    properties:
-      time:
-        type: string
-      valid:
-        description: Valid is true if Time is not NULL
-        type: boolean
-    type: object
   model.AccountingItem:
     properties:
       amount:
@@ -37,7 +29,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       id:
         type: string
       lead_id:
@@ -58,7 +50,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       id:
         type: string
       name:
@@ -122,7 +114,7 @@ definitions:
       dateOfBirth:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       discordID:
         type: string
       discordName:
@@ -258,7 +250,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       employeeID:
         type: string
       id:
@@ -271,7 +263,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       employeeID:
         type: string
       id:
@@ -288,7 +280,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       employeeID:
         type: string
       id:
@@ -305,7 +297,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       employeeID:
         type: string
       id:
@@ -322,7 +314,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       employeeID:
         type: string
       id:
@@ -384,7 +376,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       id:
         type: string
       name:
@@ -399,7 +391,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       id:
         type: string
       name:
@@ -424,7 +416,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       endDate:
         type: string
       function:
@@ -469,7 +461,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       employee:
         $ref: '#/definitions/model.Employee'
       employeeID:
@@ -492,7 +484,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       deploymentType:
         type: string
       discount:
@@ -541,7 +533,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       id:
         type: string
       position:
@@ -569,7 +561,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       deploymentType:
         type: string
       discount:
@@ -604,7 +596,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       id:
         type: string
       position:
@@ -621,7 +613,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       id:
         type: string
       projectID:
@@ -640,7 +632,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       id:
         type: string
       level:
@@ -657,7 +649,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       id:
         type: string
       level:
@@ -676,12 +668,21 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       id:
         type: string
       name:
         type: string
       updatedAt:
+        type: string
+    type: object
+  model.StaffingDemand:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      request:
         type: string
     type: object
   model.TechRadar:
@@ -1607,7 +1608,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       deliveryManager:
         $ref: '#/definitions/view.ProjectHead'
       function:
@@ -1669,7 +1670,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       discordID:
         type: string
       discordName:
@@ -2233,7 +2234,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       deliveryManager:
         $ref: '#/definitions/view.ProjectHead'
       endDate:
@@ -2585,7 +2586,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       discordID:
         type: string
       discordName:
@@ -2633,7 +2634,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       gender:
         type: string
       id:
@@ -2661,7 +2662,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       discordID:
         type: string
       discordName:
@@ -2747,7 +2748,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       id:
         type: string
       positions:
@@ -2773,7 +2774,7 @@ definitions:
       createdAt:
         type: string
       deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
+        type: string
       endDate:
         type: string
       id:
@@ -2941,6 +2942,16 @@ paths:
       - description: jwt token
         in: header
         name: Authorization
+        required: true
+        type: string
+      - description: chapter/seniority/project
+        in: query
+        name: filter
+        required: true
+        type: string
+      - description: startDate
+        in: query
+        name: startDate
         required: true
         type: string
       produces:

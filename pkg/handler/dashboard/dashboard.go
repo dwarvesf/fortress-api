@@ -553,6 +553,8 @@ func (h *handler) GetEngagementInfo(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param Authorization header string true "jwt token"
+// @Param filter  query  string true  "chapter/seniority/project"
+// @Param startDate  query  string true  "startDate"
 // @Success 200 {object} view.GetEngagementDashboardDetailResponse
 // @Failure 500 {object} view.ErrorResponse
 // @Router /dashboards/engagement/detail [get]

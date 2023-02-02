@@ -148,6 +148,20 @@
                         "name": "Authorization",
                         "in": "header",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "chapter/seniority/project",
+                        "name": "filter",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "startDate",
+                        "name": "startDate",
+                        "in": "query",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -4345,18 +4359,6 @@
         }
     },
     "definitions": {
-        "gorm.DeletedAt": {
-            "type": "object",
-            "properties": {
-                "time": {
-                    "type": "string"
-                },
-                "valid": {
-                    "description": "Valid is true if Time is not NULL",
-                    "type": "boolean"
-                }
-            }
-        },
         "model.AccountingItem": {
             "type": "object",
             "properties": {
@@ -4401,7 +4403,7 @@
                     "type": "string"
                 },
                 "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
+                    "type": "string"
                 },
                 "id": {
                     "type": "string"
@@ -4433,7 +4435,7 @@
                     "type": "string"
                 },
                 "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
+                    "type": "string"
                 },
                 "id": {
                     "type": "string"
@@ -4530,7 +4532,7 @@
                     "type": "string"
                 },
                 "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
+                    "type": "string"
                 },
                 "discordID": {
                     "type": "string"
@@ -4733,7 +4735,7 @@
                     "type": "string"
                 },
                 "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
+                    "type": "string"
                 },
                 "employeeID": {
                     "type": "string"
@@ -4753,7 +4755,7 @@
                     "type": "string"
                 },
                 "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
+                    "type": "string"
                 },
                 "employeeID": {
                     "type": "string"
@@ -4779,7 +4781,7 @@
                     "type": "string"
                 },
                 "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
+                    "type": "string"
                 },
                 "employeeID": {
                     "type": "string"
@@ -4805,7 +4807,7 @@
                     "type": "string"
                 },
                 "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
+                    "type": "string"
                 },
                 "employeeID": {
                     "type": "string"
@@ -4831,7 +4833,7 @@
                     "type": "string"
                 },
                 "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
+                    "type": "string"
                 },
                 "employeeID": {
                     "type": "string"
@@ -4926,7 +4928,7 @@
                     "type": "string"
                 },
                 "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
+                    "type": "string"
                 },
                 "id": {
                     "type": "string"
@@ -4949,7 +4951,7 @@
                     "type": "string"
                 },
                 "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
+                    "type": "string"
                 },
                 "id": {
                     "type": "string"
@@ -4987,7 +4989,7 @@
                     "type": "string"
                 },
                 "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
+                    "type": "string"
                 },
                 "endDate": {
                     "type": "string"
@@ -5055,7 +5057,7 @@
                     "type": "string"
                 },
                 "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
+                    "type": "string"
                 },
                 "employee": {
                     "$ref": "#/definitions/model.Employee"
@@ -5090,7 +5092,7 @@
                     "type": "string"
                 },
                 "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
+                    "type": "string"
                 },
                 "deploymentType": {
                     "type": "string"
@@ -5164,7 +5166,7 @@
                     "type": "string"
                 },
                 "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
+                    "type": "string"
                 },
                 "id": {
                     "type": "string"
@@ -5207,7 +5209,7 @@
                     "type": "string"
                 },
                 "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
+                    "type": "string"
                 },
                 "deploymentType": {
                     "type": "string"
@@ -5260,7 +5262,7 @@
                     "type": "string"
                 },
                 "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
+                    "type": "string"
                 },
                 "id": {
                     "type": "string"
@@ -5286,7 +5288,7 @@
                     "type": "string"
                 },
                 "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
+                    "type": "string"
                 },
                 "id": {
                     "type": "string"
@@ -5315,7 +5317,7 @@
                     "type": "string"
                 },
                 "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
+                    "type": "string"
                 },
                 "id": {
                     "type": "string"
@@ -5341,7 +5343,7 @@
                     "type": "string"
                 },
                 "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
+                    "type": "string"
                 },
                 "id": {
                     "type": "string"
@@ -5370,7 +5372,7 @@
                     "type": "string"
                 },
                 "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
+                    "type": "string"
                 },
                 "id": {
                     "type": "string"
@@ -5379,6 +5381,20 @@
                     "type": "string"
                 },
                 "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.StaffingDemand": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "request": {
                     "type": "string"
                 }
             }
@@ -6768,7 +6784,7 @@
                     "type": "string"
                 },
                 "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
+                    "type": "string"
                 },
                 "deliveryManager": {
                     "$ref": "#/definitions/view.ProjectHead"
@@ -6863,7 +6879,7 @@
                     "type": "string"
                 },
                 "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
+                    "type": "string"
                 },
                 "discordID": {
                     "type": "string"
@@ -7730,7 +7746,7 @@
                     "type": "string"
                 },
                 "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
+                    "type": "string"
                 },
                 "deliveryManager": {
                     "$ref": "#/definitions/view.ProjectHead"
@@ -8271,7 +8287,7 @@
                     "type": "string"
                 },
                 "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
+                    "type": "string"
                 },
                 "discordID": {
                     "type": "string"
@@ -8343,7 +8359,7 @@
                     "type": "string"
                 },
                 "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
+                    "type": "string"
                 },
                 "gender": {
                     "type": "string"
@@ -8386,7 +8402,7 @@
                     "type": "string"
                 },
                 "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
+                    "type": "string"
                 },
                 "discordID": {
                     "type": "string"
@@ -8518,7 +8534,7 @@
                     "type": "string"
                 },
                 "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
+                    "type": "string"
                 },
                 "id": {
                     "type": "string"
@@ -8558,7 +8574,7 @@
                     "type": "string"
                 },
                 "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
+                    "type": "string"
                 },
                 "endDate": {
                     "type": "string"
