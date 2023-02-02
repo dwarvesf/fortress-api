@@ -455,6 +455,12 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/hiring.IHandler.List-fm",
 			},
 		},
+		"/api/v1/audits": {
+			"PUT": {
+				Method:  "PUT",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/audit.IHandler.Sync-fm",
+			},
+		},
 		"/api/v1/staffing-demands": {
 			"GET": {
 				Method:  "GET",

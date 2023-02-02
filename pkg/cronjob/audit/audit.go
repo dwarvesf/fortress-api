@@ -3,6 +3,7 @@ package audit
 import (
 	"errors"
 	"reflect"
+	"time"
 
 	"github.com/dstotijn/go-notion"
 	"gorm.io/gorm"
@@ -1194,10 +1195,29 @@ func (c *cronjob) snapShot(db *gorm.DB) error {
 				Low:          auditCycle.ActionItemLow,
 			}
 
-			if _, err := c.store.ActionItemSnapshot.Create(db, actionItemSnapshot); err != nil {
-				l.Error(err, "failed to create action item snapshot")
-				return err
+			// Check record exists in database
+			today := time.Now().Format("2006-01-02")
+
+			if snapShot, err := c.store.ActionItemSnapshot.OneByAuditCycleIDAndTime(db, auditCycle.ID.String(), today); err != nil {
+				if errors.Is(err, gorm.ErrRecordNotFound) {
+					if _, err := c.store.ActionItemSnapshot.Create(db, actionItemSnapshot); err != nil {
+						l.Error(err, "failed to create action item snapshot")
+						return err
+					}
+				} else {
+					l.Error(err, "failed to get action item snapshot from database")
+					return err
+				}
+			} else {
+				// Update if record exists
+				if !model.CompareActionItemSnapshot(snapShot, actionItemSnapshot) {
+					if _, err := c.store.ActionItemSnapshot.UpdateSelectedFieldsByID(db, snapShot.ID.String(), *actionItemSnapshot, "high", "medium", "low"); err != nil {
+						l.Error(err, "failed to update action item snapshot")
+						return err
+					}
+				}
 			}
+
 		}
 	}
 

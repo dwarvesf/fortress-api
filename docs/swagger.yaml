@@ -684,6 +684,15 @@ definitions:
       updatedAt:
         type: string
     type: object
+  model.StaffingDemand:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      request:
+        type: string
+    type: object
   model.TechRadar:
     properties:
       assign:
@@ -2859,6 +2868,27 @@ info:
   title: Swagger Example API
   version: "1.0"
 paths:
+  /audits:
+    put:
+      consumes:
+      - application/json
+      description: Sync audit info from Notion to database
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.MessageResponse'
+      summary: Sync audit info from Notion to database
+      tags:
+      - Audit
   /auth:
     post:
       consumes:
