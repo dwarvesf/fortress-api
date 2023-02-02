@@ -541,3 +541,53 @@ func (s *store) GetResourceUtilization(db *gorm.DB) ([]*model.ResourceUtilizatio
 
 	return ru, db.Raw(query).Scan(&ru).Error
 }
+
+func (s *store) GetWorkUnitDistribution(db *gorm.DB, fullName string) ([]*model.WorkUnitDistribution, error) {
+	var rs []*model.WorkUnitDistribution
+
+	query := `
+		WITH work_unit_info AS (SELECT wum.employee_id,
+									wu.type,
+									COUNT(*) AS work_unit_count
+								FROM work_units wu
+										JOIN work_unit_members wum ON wu.id = wum.work_unit_id
+								WHERE wum.status = 'active'
+								AND wu.status = 'active'
+								AND wum.deleted_at IS NULL
+								AND wu.deleted_at IS NULL
+								GROUP BY wum.employee_id, wu.type)
+		SELECT e.id,
+			e.full_name,
+			e.display_name,
+			e.username,
+			e.avatar,
+			(SELECT COUNT(*)
+				FROM employees
+				WHERE line_manager_id = e.id
+				AND deleted_at IS NULL)                   AS line_manager_count,
+			(SELECT COUNT(*)
+				FROM project_heads ph
+				WHERE ph.position <> 'sale-person'
+				AND ph.employee_id = e.id
+				AND ph.end_date IS NULL)                  AS project_head_count,
+			COALESCE(wui_learning.work_unit_count, 0)    AS learning,
+			COALESCE(wui_development.work_unit_count, 0) AS development,
+			COALESCE(wui_management.work_unit_count, 0)  AS management,
+			COALESCE(wui_training.work_unit_count, 0)    AS training
+		FROM employees e
+				LEFT JOIN work_unit_info wui_learning ON e.id = wui_learning.employee_id AND wui_learning.type = 'learning'
+				LEFT JOIN work_unit_info wui_development
+						ON e.id = wui_development.employee_id AND wui_development.type = 'development'
+				LEFT JOIN work_unit_info wui_management
+						ON e.id = wui_management.employee_id AND wui_management.type = 'management'
+				LEFT JOIN work_unit_info wui_training ON e.id = wui_training.employee_id AND wui_training.type = 'training'
+	`
+
+	if fullName != "" {
+		query += `WHERE LOWER(e.full_name) LIKE LOWER('%` + fullName + `%') AND e.deleted_at IS NULL`
+	} else {
+		query += `WHERE e.deleted_at IS NULL`
+	}
+
+	return rs, db.Raw(query).Scan(&rs).Error
+}

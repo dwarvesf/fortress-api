@@ -629,3 +629,55 @@ func (h *handler) GetResourceUtilization(c *gin.Context) {
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](res, nil, nil, nil, ""))
 }
+
+// GetWorkUnitDistribution godoc
+// @Summary Get work unit distribution data for dashboard
+// @Description Get work unit distribution data for dashboard
+// @Tags Dashboard
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "jwt token"
+// @Param name   query  string false  "employee name for filter"
+// @Param sort   query  model.SortOrder false  "sort required"
+// @Param type   query  model.WorkUnitType false  "work unit type for filter"
+// @Success 200 {object} view.WorkUnitDistributionsResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /dashboards/resources/work-unit-distribution [get]
+func (h *handler) GetWorkUnitDistribution(c *gin.Context) {
+	input := request.WorkUnitDistributionInput{}
+	if err := c.ShouldBindQuery(&input); err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, input, ""))
+		return
+	}
+
+	l := h.logger.Fields(logger.Fields{
+		"handler": "dashboard",
+		"method":  "GetWorkUnitDistribution",
+		"input":   input,
+	})
+
+	// Check and validate input
+	if input.Type != "" && !input.Type.IsValid() {
+		l.Error(errs.ErrInvalidWorkUnitDistributionType, "invalid work unit distribution type")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidWorkUnitDistributionType, nil, ""))
+		return
+	}
+
+	if input.Sort != "" && !input.Sort.IsValid() {
+		l.Error(errs.ErrInvalidWorkUnitDistributionSort, "invalid work unit distribution sort")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidWorkUnitDistributionSort, nil, ""))
+		return
+	}
+
+	// Get all work unit distribution for employees
+	workUnitDistributions, err := h.store.Dashboard.GetWorkUnitDistribution(h.repo.DB(), input.Name)
+	if err != nil {
+		l.Error(err, "failed to get work unit distribution")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToWorkUnitDistributionData(workUnitDistributions, input.Type, input.Sort), nil, nil, nil, ""))
+}

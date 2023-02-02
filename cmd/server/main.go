@@ -47,10 +47,6 @@ func main() {
 		cfg = config.Generate(vault)
 	}
 
-	cfg.Notion.DigestDBID = "d5906ef57d5442c983905db7a400b4ab"
-	cfg.Notion.UpdatesDBID = "d62a92ab43d04ec6989c068da0986f02"
-	cfg.Notion.MemoDBID = "1f6986deb0db47769ddd7e9012699740"
-	cfg.Notion.Secret = "secret_JIhHPgGIEZJv6qJd9pfiNS5VGnhvGrN5xpdRAjebxVZ"
 	svc := service.New(cfg)
 	s := store.New()
 
