@@ -684,6 +684,15 @@ definitions:
       updatedAt:
         type: string
     type: object
+  model.StaffingDemand:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      request:
+        type: string
+    type: object
   model.TechRadar:
     properties:
       assign:
@@ -2941,6 +2950,16 @@ paths:
       - description: jwt token
         in: header
         name: Authorization
+        required: true
+        type: string
+      - description: chapter/seniority/project
+        in: query
+        name: filter
+        required: true
+        type: string
+      - description: startDate
+        in: query
+        name: startDate
         required: true
         type: string
       produces:
