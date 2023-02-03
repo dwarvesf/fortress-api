@@ -134,6 +134,11 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 		hiring.GET("", h.Hiring.List)
 	}
 
+	audit := v1.Group("/audits")
+	{
+		audit.PUT("", h.Audit.Sync)
+	}
+
 	dashboard := v1.Group("/dashboards")
 	{
 		engagementDashboardGroup := dashboard.Group("/engagement")
@@ -155,7 +160,7 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 		resourceDashboardGroup := dashboard.Group("/resources")
 		{
 			resourceDashboardGroup.GET("/availabilities", pmw.WithPerm("dashboards.read"), h.Dashboard.GetResourcesAvailability)
+			resourceDashboardGroup.GET("/utilization", pmw.WithPerm("dashboards.read"), h.Dashboard.GetResourceUtilization)
 		}
 	}
-
 }

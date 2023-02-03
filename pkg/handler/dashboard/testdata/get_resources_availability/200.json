@@ -15,7 +15,8 @@
                     "name": "Fortress",
                     "type": "dwarves",
                     "status": "active",
-                    "code": "fortress"
+                    "code": "fortress",
+                    "avatar": ""
                 },
                 "positions": [
                     {
@@ -39,7 +40,8 @@
                     "name": "Fortress",
                     "type": "dwarves",
                     "status": "active",
-                    "code": "fortress"
+                    "code": "fortress",
+                    "avatar": ""
                 },
                 "positions": [
                     {
@@ -63,7 +65,8 @@
                     "name": "Fortress",
                     "type": "dwarves",
                     "status": "active",
-                    "code": "fortress"
+                    "code": "fortress",
+                    "avatar": ""
                 },
                 "positions": [
                     {
@@ -87,7 +90,8 @@
                     "name": "Fortress",
                     "type": "dwarves",
                     "status": "active",
-                    "code": "fortress"
+                    "code": "fortress",
+                    "avatar": ""
                 },
                 "positions": [
                     {
@@ -111,7 +115,8 @@
                     "name": "Fortress",
                     "type": "dwarves",
                     "status": "active",
-                    "code": "fortress"
+                    "code": "fortress",
+                    "avatar": ""
                 },
                 "positions": [
                     {
@@ -277,7 +282,8 @@
                         "name": "Fortress",
                         "type": "dwarves",
                         "status": "active",
-                        "code": "fortress"
+                        "code": "fortress",
+                        "avatar": ""
                     }
                 ]
             },
@@ -333,7 +339,8 @@
                         "name": "Fortress",
                         "type": "dwarves",
                         "status": "active",
-                        "code": "fortress"
+                        "code": "fortress",
+                        "avatar": ""
                     }
                 ]
             },
@@ -383,7 +390,8 @@
                         "name": "Fortress",
                         "type": "dwarves",
                         "status": "active",
-                        "code": "fortress"
+                        "code": "fortress",
+                        "avatar": ""
                     }
                 ]
             },
@@ -682,7 +690,8 @@
                         "name": "Fortress",
                         "type": "dwarves",
                         "status": "active",
-                        "code": "fortress"
+                        "code": "fortress",
+                        "avatar": ""
                     }
                 ]
             },
@@ -732,7 +741,8 @@
                         "name": "Fortress",
                         "type": "dwarves",
                         "status": "active",
-                        "code": "fortress"
+                        "code": "fortress",
+                        "avatar": ""
                     }
                 ]
             },

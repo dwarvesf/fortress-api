@@ -77,3 +77,10 @@ type AuditSummary struct {
 	Health  float64 `json:"health"`
 	Audit   float64 `json:"audit"`
 }
+
+type ResourceUtilization struct {
+	Date      time.Time `json:"date"`
+	Official  int       `json:"official"`
+	Shadow    int       `json:"shadow"`
+	Available int       `json:"available"`
+}

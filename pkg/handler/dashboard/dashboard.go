@@ -5,6 +5,9 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
+
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/handler/dashboard/errs"
 	"github.com/dwarvesf/fortress-api/pkg/handler/dashboard/request"
@@ -13,9 +16,6 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/view"
-
-	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 )
 
 type handler struct {
@@ -602,4 +602,30 @@ func (h *handler) GetEngagementInfoDetail(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToEngagementDashboardDetails(statistic), nil, nil, nil, ""))
+}
+
+// GetResourceUtilization godoc
+// @Summary Get dashboard resource utilization
+// @Description Get dashboard resource utilization
+// @Tags Dashboard
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "jwt token"
+// @Success 200 {object} view.GetDashboardResourceUtilizationResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /dashboards/resources/utilization [get]
+func (h *handler) GetResourceUtilization(c *gin.Context) {
+	l := h.logger.Fields(logger.Fields{
+		"handler": "dashboard",
+		"method":  "GetResourceUtilization",
+	})
+
+	res, err := h.store.Dashboard.GetResourceUtilization(h.repo.DB())
+	if err != nil {
+		l.Error(err, "failed to get resource utilization by year")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](res, nil, nil, nil, ""))
 }

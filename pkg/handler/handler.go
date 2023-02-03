@@ -3,6 +3,7 @@ package handler
 import (
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/handler/audience"
+	"github.com/dwarvesf/fortress-api/pkg/handler/audit"
 	"github.com/dwarvesf/fortress-api/pkg/handler/auth"
 	"github.com/dwarvesf/fortress-api/pkg/handler/dashboard"
 	"github.com/dwarvesf/fortress-api/pkg/handler/earn"
@@ -40,6 +41,7 @@ type Handler struct {
 	Event          event.IHandler
 	Hiring         hiring.IHandler
 	StaffingDemand staffingdemand.IHandler
+	Audit          audit.IHandler
 }
 
 func New(store *store.Store, repo store.DBRepo, service *service.Service, logger logger.Logger, cfg *config.Config) *Handler {
@@ -60,5 +62,6 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 		Event:          event.New(store, repo, service, logger, cfg),
 		Hiring:         hiring.New(store, repo, service, logger, cfg),
 		StaffingDemand: staffingdemand.New(store, repo, service, logger, cfg),
+		Audit:          audit.New(store, repo, service, logger, cfg),
 	}
 }

@@ -13,4 +13,5 @@ type IStore interface {
 	Create(db *gorm.DB, e *model.ActionItemSnapshot) (actionItemSnapshot *model.ActionItemSnapshot, err error)
 	Update(db *gorm.DB, actionItemSnapshot *model.ActionItemSnapshot) (ac *model.ActionItemSnapshot, err error)
 	UpdateSelectedFieldsByID(db *gorm.DB, id string, actionItemSnapshot model.ActionItemSnapshot, updatedFields ...string) (ac *model.ActionItemSnapshot, err error)
+	OneByAuditCycleIDAndTime(db *gorm.DB, auditCycleID string, today string) (actionItemSnapshot *model.ActionItemSnapshot, err error)
 }

@@ -44,3 +44,9 @@ func (s *store) UpdateSelectedFieldsByID(db *gorm.DB, id string, updateModel mod
 	actionItemSnapshot := model.ActionItemSnapshot{}
 	return &actionItemSnapshot, db.Model(&actionItemSnapshot).Where("id = ?", id).Select(updatedFields).Updates(updateModel).Error
 }
+
+// OneByAuditCycleIDAndTime get one snapshot by audit cycle id and time
+func (s *store) OneByAuditCycleIDAndTime(db *gorm.DB, auditCycleID string, today string) (*model.ActionItemSnapshot, error) {
+	var actionItemSnapshot *model.ActionItemSnapshot
+	return actionItemSnapshot, db.Where("audit_cycle_id = ? AND created_at >= ? AND created_at < ?", auditCycleID, today, today+" 24:00:00").First(&actionItemSnapshot).Error
+}

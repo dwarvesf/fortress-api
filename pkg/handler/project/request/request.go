@@ -79,7 +79,7 @@ type CreateProjectInput struct {
 	StartDate         string              `form:"startDate" json:"startDate"`
 	Members           []AssignMemberInput `form:"members" json:"members"`
 	ClientEmail       []string            `form:"clientEmail" json:"clientEmail"`
-	ProjectEmail      string              `form:"projectEmail" json:"projectEmail" binding:"email"`
+	ProjectEmail      string              `form:"projectEmail" json:"projectEmail"`
 	Code              string              `form:"code" json:"code"`
 	Function          string              `form:"function" json:"function" binding:"required"`
 }
@@ -111,8 +111,12 @@ func (i *CreateProjectInput) Validate() error {
 	regex, _ := regexp.Compile(".+@.+\\..+")
 	for _, v := range i.ClientEmail {
 		if !regex.MatchString(v) {
-			return errs.ErrInvalidEmailDomain
+			return errs.ErrInvalidEmailDomainForClient
 		}
+	}
+
+	if i.ProjectEmail != "" && !regex.MatchString(i.ProjectEmail) {
+		return errs.ErrInvalidEmailDomainForProject
 	}
 
 	if !model.ProjectFunction(i.Function).IsValid() {
@@ -322,7 +326,7 @@ func (input DeleteSlotInput) Validate() error {
 
 type UpdateContactInfoInput struct {
 	ClientEmail       []string   `form:"clientEmail" json:"clientEmail"`
-	ProjectEmail      string     `form:"projectEmail" json:"projectEmail" binding:"email"`
+	ProjectEmail      string     `form:"projectEmail" json:"projectEmail"`
 	AccountManagerID  model.UUID `form:"accountManagerID" json:"accountManagerID" binding:"required"`
 	DeliveryManagerID model.UUID `form:"deliveryManagerID" json:"deliveryManagerID"`
 }
@@ -331,8 +335,12 @@ func (i UpdateContactInfoInput) Validate() error {
 	regex, _ := regexp.Compile(".+@.+\\..+")
 	for _, v := range i.ClientEmail {
 		if !regex.MatchString(v) {
-			return errs.ErrInvalidEmailDomain
+			return errs.ErrInvalidEmailDomainForClient
 		}
+	}
+
+	if i.ProjectEmail != "" && !regex.MatchString(i.ProjectEmail) {
+		return errs.ErrInvalidEmailDomainForProject
 	}
 
 	return nil
