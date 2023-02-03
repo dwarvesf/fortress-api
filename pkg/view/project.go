@@ -474,6 +474,7 @@ type BasicProjectInfo struct {
 	Type   string `json:"type"`
 	Status string `json:"status"`
 	Code   string `json:"code"`
+	Avatar string `json:"avatar"`
 }
 
 func toBasicProjectInfo(project model.Project) *BasicProjectInfo {
@@ -483,6 +484,7 @@ func toBasicProjectInfo(project model.Project) *BasicProjectInfo {
 		Name:   project.Name,
 		Status: project.Status.String(),
 		Code:   project.Code,
+		Avatar: project.Avatar,
 	}
 }
 

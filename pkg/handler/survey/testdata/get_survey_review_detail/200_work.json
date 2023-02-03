@@ -50,7 +50,8 @@
             "name": "Fortress",
             "type": "dwarves",
             "status": "active",
-            "code": "fortress"
+            "code": "fortress",
+            "avatar": ""
         }
     }
 }

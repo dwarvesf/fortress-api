@@ -6794,6 +6794,9 @@ const docTemplate = `{
         "view.BasicProjectInfo": {
             "type": "object",
             "properties": {
+                "avatar": {
+                    "type": "string"
+                },
                 "code": {
                     "type": "string"
                 },
