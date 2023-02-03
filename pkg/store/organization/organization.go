@@ -19,3 +19,8 @@ func (s *store) All(db *gorm.DB) ([]*model.Organization, error) {
 	var organizaitons []*model.Organization
 	return organizaitons, db.Find(&organizaitons).Error
 }
+
+func (s *store) OneByCode(db *gorm.DB, code string) (*model.Organization, error) {
+	var organization *model.Organization
+	return organization, db.Where("code = ?", code).First(&organization).Error
+}
