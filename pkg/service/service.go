@@ -36,7 +36,7 @@ func New(cfg *config.Config) *Service {
 	return &Service{
 		Google: googleSvc,
 		Notion: notion.New(
-			cfg.Notion.Secret,
+			cfg.Notion.AuditSecret,
 		),
 		Wise:  wise.New(cfg, logger.L),
 		Cache: cch,
