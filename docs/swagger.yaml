@@ -1974,12 +1974,16 @@ definitions:
   view.GetEngagementDashboardDetailResponse:
     properties:
       data:
-        $ref: '#/definitions/view.EngagementDashboardDetail'
+        items:
+          $ref: '#/definitions/view.EngagementDashboardDetail'
+        type: array
     type: object
   view.GetEngagementDashboardResponse:
     properties:
       data:
-        $ref: '#/definitions/view.EngagementDashboard'
+        items:
+          $ref: '#/definitions/view.EngagementDashboard'
+        type: array
     type: object
   view.GetQuestionResponse:
     properties:

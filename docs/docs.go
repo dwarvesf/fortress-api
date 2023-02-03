@@ -7466,7 +7466,10 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "data": {
-                    "$ref": "#/definitions/view.EngagementDashboardDetail"
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.EngagementDashboardDetail"
+                    }
                 }
             }
         },
@@ -7474,7 +7477,10 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "data": {
-                    "$ref": "#/definitions/view.EngagementDashboard"
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.EngagementDashboard"
+                    }
                 }
             }
         },
