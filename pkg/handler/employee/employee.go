@@ -772,6 +772,24 @@ func (h *handler) Create(c *gin.Context) {
 		return
 	}
 
+	// Create employee organization
+	org, err := h.store.Organization.OneByCode(tx.DB(), model.OrganizationCodeDwarves)
+	if err != nil {
+		l.Error(err, "error invalid organization")
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, done(errs.ErrOrganizationNotFound), input, ""))
+			return
+		}
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
+		return
+	}
+
+	if _, err := h.store.EmployeeOrganization.Create(tx.DB(), &model.EmployeeOrganization{EmployeeID: eml.ID, OrganizationID: org.ID}); err != nil {
+		l.Error(err, "error invalid organization")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
+		return
+	}
+
 	// 3. return employee
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToEmployeeData(eml), nil, done(nil), nil, ""))
 }
