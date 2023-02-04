@@ -228,6 +228,10 @@ definitions:
         $ref: '#/definitions/model.Seniority'
       seniorityID:
         type: string
+      socialAccounts:
+        items:
+          $ref: '#/definitions/model.SocialAccount'
+        type: array
       teamEmail:
         type: string
       updatedAt:
@@ -674,6 +678,27 @@ definitions:
       level:
         type: integer
       name:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  model.SocialAccount:
+    properties:
+      accountID:
+        type: string
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      email:
+        type: string
+      employeeID:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      type:
         type: string
       updatedAt:
         type: string

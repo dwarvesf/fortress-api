@@ -4825,6 +4825,12 @@ const docTemplate = `{
                 "seniorityID": {
                     "type": "string"
                 },
+                "socialAccounts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.SocialAccount"
+                    }
+                },
                 "teamEmail": {
                     "type": "string"
                 },
@@ -5503,6 +5509,38 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "name": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.SocialAccount": {
+            "type": "object",
+            "properties": {
+                "accountID": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "deletedAt": {
+                    "$ref": "#/definitions/gorm.DeletedAt"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "employeeID": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "type": {
                     "type": "string"
                 },
                 "updatedAt": {
