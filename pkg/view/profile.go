@@ -85,6 +85,22 @@ func ToUpdateProfileInfoData(employee *model.Employee) *UpdateProfileInfoData {
 }
 
 func ToProfileData(employee *model.Employee) *ProfileData {
+	empSocialData := SocialAccount{}
+	for _, sa := range employee.SocialAccounts {
+		switch sa.Type {
+		case model.SocialAccountTypeDiscord:
+			empSocialData.DiscordID = sa.AccountID
+			empSocialData.DiscordName = sa.Name
+		case model.SocialAccountTypeGitHub:
+			empSocialData.GithubID = sa.AccountID
+		case model.SocialAccountTypeNotion:
+			empSocialData.NotionID = sa.AccountID
+			empSocialData.NotionName = sa.Name
+		case model.SocialAccountTypeLinkedIn:
+			empSocialData.LinkedInName = sa.AccountID
+		}
+	}
+
 	return &ProfileData{
 		ID:               employee.ID,
 		FullName:         employee.FullName,
@@ -95,17 +111,17 @@ func ToProfileData(employee *model.Employee) *ProfileData {
 		TeamEmail:        employee.TeamEmail,
 		PersonalEmail:    employee.PersonalEmail,
 		PhoneNumber:      employee.PhoneNumber,
-		GithubID:         employee.GithubID,
-		NotionID:         employee.NotionID,
-		NotionName:       employee.NotionName,
-		NotionEmail:      employee.NotionEmail,
-		DiscordID:        employee.DiscordID,
-		DiscordName:      employee.DiscordName,
 		Username:         employee.Username,
 		PlaceOfResidence: employee.PlaceOfResidence,
 		Address:          employee.Address,
 		Country:          employee.Country,
 		City:             employee.City,
-		LinkedInName:     employee.LinkedInName,
+		GithubID:         empSocialData.GithubID,
+		NotionID:         empSocialData.NotionID,
+		NotionName:       empSocialData.NotionName,
+		NotionEmail:      empSocialData.NotionEmail,
+		DiscordID:        empSocialData.DiscordID,
+		DiscordName:      empSocialData.DiscordName,
+		LinkedInName:     empSocialData.LinkedInName,
 	}
 }

@@ -28,12 +28,12 @@ type EmployeeData struct {
 	Gender           string     `json:"gender"`
 	Horoscope        string     `json:"horoscope"`
 	DateOfBirth      *time.Time `json:"birthday"`
+	Username         string     `json:"username"`
 	GithubID         string     `json:"githubID"`
 	NotionID         string     `json:"notionID"`
 	NotionName       string     `json:"notionName"`
 	DiscordID        string     `json:"discordID"`
 	DiscordName      string     `json:"discordName"`
-	Username         string     `json:"username"`
 	LinkedInName     string     `json:"linkedInName"`
 
 	// working info
@@ -60,6 +60,16 @@ type MenteeInfo struct {
 	Username    string           `json:"username"`
 	Seniority   *model.Seniority `json:"seniority"`
 	Positions   []model.Position `json:"positions"`
+}
+
+type SocialAccount struct {
+	GithubID     string `json:"githubID"`
+	NotionID     string `json:"notionID"`
+	NotionName   string `json:"notionName"`
+	NotionEmail  string `json:"notionEmail"`
+	DiscordID    string `json:"discordID"`
+	DiscordName  string `json:"discordName"`
+	LinkedInName string `json:"linkedInName"`
 }
 
 func toMenteeInfo(employee model.Employee) *MenteeInfo {
@@ -301,6 +311,22 @@ func ToOneEmployeeData(c *gin.Context, employee *model.Employee, userInfo *model
 		lineManager = toBasicEmployeeInfo(*employee.LineManager)
 	}
 
+	empSocialData := SocialAccount{}
+	for _, sa := range employee.SocialAccounts {
+		switch sa.Type {
+		case model.SocialAccountTypeDiscord:
+			empSocialData.DiscordID = sa.AccountID
+			empSocialData.DiscordName = sa.Name
+		case model.SocialAccountTypeGitHub:
+			empSocialData.GithubID = sa.AccountID
+		case model.SocialAccountTypeNotion:
+			empSocialData.NotionID = sa.AccountID
+			empSocialData.NotionName = sa.Name
+		case model.SocialAccountTypeLinkedIn:
+			empSocialData.LinkedInName = sa.AccountID
+		}
+	}
+
 	rs := &EmployeeData{
 		BaseModel: model.BaseModel{
 			ID:        employee.ID,
@@ -317,13 +343,15 @@ func ToOneEmployeeData(c *gin.Context, employee *model.Employee, userInfo *model
 		Horoscope:   employee.Horoscope,
 		DateOfBirth: employee.DateOfBirth,
 
-		DiscordName:   employee.DiscordName,
 		Username:      employee.Username,
 		WorkingStatus: employee.WorkingStatus,
 		Seniority:     employee.Seniority,
 		Projects:      employeeProjects,
 		LineManager:   lineManager,
 		Organizations: ToOrganizations(employee.EmployeeOrganizations),
+
+		DiscordName: empSocialData.DiscordName,
+		GithubID:    empSocialData.GithubID,
 
 		Roles:     ToRoles(employee.EmployeeRoles),
 		Positions: ToEmployeePositions(employee.EmployeePositions),
@@ -332,11 +360,10 @@ func ToOneEmployeeData(c *gin.Context, employee *model.Employee, userInfo *model
 	}
 
 	if utils.HasPermission(c, userInfo.Permissions, model.PermissionEmployeesReadGeneralInfoFullAccess) {
-		rs.NotionID = employee.NotionID
-		rs.GithubID = employee.GithubID
-		rs.NotionName = employee.NotionName
-		rs.LinkedInName = employee.LinkedInName
-		rs.DiscordID = employee.DiscordID
+		rs.NotionID = empSocialData.NotionID
+		rs.NotionName = empSocialData.NotionName
+		rs.LinkedInName = empSocialData.LinkedInName
+		rs.DiscordID = empSocialData.DiscordID
 		rs.PhoneNumber = employee.PhoneNumber
 		rs.JoinedDate = employee.JoinedDate
 		rs.LeftDate = employee.LeftDate
