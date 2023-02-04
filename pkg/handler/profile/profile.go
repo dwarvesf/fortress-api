@@ -180,26 +180,26 @@ func (h *handler) updateSocialAccounts(db *gorm.DB, input request.UpdateInfoInpu
 		return err
 	}
 
-	accountsInput := map[model.SocialType]model.SocialAccount{
-		model.SocialTypeGitHub: {
-			Type:        model.SocialTypeGitHub,
-			AccountID:   input.GithubID,
-			DisplayName: input.GithubID,
+	accountsInput := map[model.SocialAccountType]model.SocialAccount{
+		model.SocialAccountTypeGitHub: {
+			Type:      model.SocialAccountTypeGitHub,
+			AccountID: input.GithubID,
+			Name:      input.GithubID,
 		},
-		model.SocialTypeNotion: {
-			Type:        model.SocialTypeNotion,
-			AccountID:   input.NotionID,
-			DisplayName: input.NotionName,
-			Email:       input.NotionEmail,
+		model.SocialAccountTypeNotion: {
+			Type:      model.SocialAccountTypeNotion,
+			AccountID: input.NotionID,
+			Name:      input.NotionName,
+			Email:     input.NotionEmail,
 		},
-		model.SocialTypeDiscord: {
-			Type:        model.SocialTypeDiscord,
-			DisplayName: input.DiscordName,
+		model.SocialAccountTypeDiscord: {
+			Type: model.SocialAccountTypeDiscord,
+			Name: input.DiscordName,
 		},
-		model.SocialTypeLinkedIn: {
-			Type:        model.SocialTypeLinkedIn,
-			AccountID:   input.LinkedInName,
-			DisplayName: input.LinkedInName,
+		model.SocialAccountTypeLinkedIn: {
+			Type:      model.SocialAccountTypeLinkedIn,
+			AccountID: input.LinkedInName,
+			Name:      input.LinkedInName,
 		},
 	}
 
@@ -207,16 +207,16 @@ func (h *handler) updateSocialAccounts(db *gorm.DB, input request.UpdateInfoInpu
 		delete(accountsInput, account.Type)
 
 		switch account.Type {
-		case model.SocialTypeGitHub:
+		case model.SocialAccountTypeGitHub:
 			account.AccountID = input.GithubID
-		case model.SocialTypeNotion:
+		case model.SocialAccountTypeNotion:
 			account.AccountID = input.NotionID
-			account.DisplayName = input.NotionName
+			account.Name = input.NotionName
 			account.Email = input.NotionEmail
-		case model.SocialTypeDiscord:
-			account.DisplayName = input.DiscordName
-		case model.SocialTypeLinkedIn:
-			account.DisplayName = input.LinkedInName
+		case model.SocialAccountTypeDiscord:
+			account.Name = input.DiscordName
+		case model.SocialAccountTypeLinkedIn:
+			account.Name = input.LinkedInName
 		default:
 			continue
 		}

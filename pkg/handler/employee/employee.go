@@ -451,7 +451,7 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 
 	emp.LineManagerID = body.LineManagerID
 
-	if err := h.updateSocialAccounts(tx.DB(), body, employeeID); err != nil {
+	if err := h.updateSocialAccounts(tx.DB(), body, emp.ID); err != nil {
 		l.Error(err, "failed to update social accounts")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
 		return
@@ -522,7 +522,7 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToUpdateGeneralInfoEmployeeData(emp), nil, done(nil), nil, ""))
 }
 
-func (h *handler) updateSocialAccounts(db *gorm.DB, input request.UpdateEmployeeGeneralInfoInput, employeeID string) error {
+func (h *handler) updateSocialAccounts(db *gorm.DB, input request.UpdateEmployeeGeneralInfoInput, employeeID model.UUID) error {
 	l := h.logger.Fields(logger.Fields{
 		"handler":    "employee",
 		"method":     "updateSocialAccounts",
@@ -530,33 +530,37 @@ func (h *handler) updateSocialAccounts(db *gorm.DB, input request.UpdateEmployee
 		"employeeID": employeeID,
 	})
 
-	accounts, err := h.store.SocialAccount.GetByEmployeeID(db, employeeID)
+	accounts, err := h.store.SocialAccount.GetByEmployeeID(db, employeeID.String())
 	if err != nil {
 		l.Error(err, "failed to get social accounts by employeeID")
 		return err
 	}
 
-	accountsInput := map[model.SocialType]model.SocialAccount{
-		model.SocialTypeGitHub: {
-			Type:        model.SocialTypeGitHub,
-			AccountID:   input.GithubID,
-			DisplayName: input.GithubID,
+	accountsInput := map[model.SocialAccountType]model.SocialAccount{
+		model.SocialAccountTypeGitHub: {
+			Type:       model.SocialAccountTypeGitHub,
+			EmployeeID: employeeID,
+			AccountID:  input.GithubID,
+			Name:       input.GithubID,
 		},
-		model.SocialTypeNotion: {
-			Type:        model.SocialTypeNotion,
-			AccountID:   input.NotionID,
-			DisplayName: input.NotionName,
-			Email:       input.NotionEmail,
+		model.SocialAccountTypeNotion: {
+			Type:       model.SocialAccountTypeNotion,
+			EmployeeID: employeeID,
+			AccountID:  input.NotionID,
+			Name:       input.NotionName,
+			Email:      input.NotionEmail,
 		},
-		model.SocialTypeDiscord: {
-			Type:        model.SocialTypeDiscord,
-			AccountID:   input.DiscordID,
-			DisplayName: input.DiscordName,
+		model.SocialAccountTypeDiscord: {
+			Type:       model.SocialAccountTypeDiscord,
+			EmployeeID: employeeID,
+			AccountID:  input.DiscordID,
+			Name:       input.DiscordName,
 		},
-		model.SocialTypeLinkedIn: {
-			Type:        model.SocialTypeLinkedIn,
-			AccountID:   input.LinkedInName,
-			DisplayName: input.LinkedInName,
+		model.SocialAccountTypeLinkedIn: {
+			Type:       model.SocialAccountTypeLinkedIn,
+			EmployeeID: employeeID,
+			AccountID:  input.LinkedInName,
+			Name:       input.LinkedInName,
 		},
 	}
 
@@ -564,17 +568,17 @@ func (h *handler) updateSocialAccounts(db *gorm.DB, input request.UpdateEmployee
 		delete(accountsInput, account.Type)
 
 		switch account.Type {
-		case model.SocialTypeGitHub:
+		case model.SocialAccountTypeGitHub:
 			account.AccountID = input.GithubID
-		case model.SocialTypeNotion:
+		case model.SocialAccountTypeNotion:
 			account.AccountID = input.NotionID
-			account.DisplayName = input.NotionName
+			account.Name = input.NotionName
 			account.Email = input.NotionEmail
-		case model.SocialTypeDiscord:
+		case model.SocialAccountTypeDiscord:
 			account.AccountID = input.DiscordID
-			account.DisplayName = input.DiscordName
-		case model.SocialTypeLinkedIn:
-			account.DisplayName = input.LinkedInName
+			account.Name = input.DiscordName
+		case model.SocialAccountTypeLinkedIn:
+			account.Name = input.LinkedInName
 		default:
 			continue
 		}

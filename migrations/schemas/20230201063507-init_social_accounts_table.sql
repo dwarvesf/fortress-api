@@ -7,9 +7,9 @@ CREATE TABLE IF NOT EXISTS social_accounts (
     updated_at      TIMESTAMP(6)     DEFAULT (NOW()),
     employee_id     uuid,
     type            TEXT,
-    account_id      TEXT,
-    email           TEXT,
-    display_name    TEXT
+    account_id      TEXT, -- e.g. id use for integrate with social platform.
+    name            TEXT,
+    email           TEXT
 );
 
 ALTER TABLE social_accounts

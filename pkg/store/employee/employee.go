@@ -43,7 +43,8 @@ func (s *store) One(db *gorm.DB, id string, preload bool) (*model.Employee, erro
 			Preload("EmployeeOrganizations", "deleted_at IS NULL").
 			Preload("EmployeeOrganizations.Organization", "deleted_at IS NULL").
 			Preload("Seniority").
-			Preload("LineManager")
+			Preload("LineManager").
+			Preload("SocialAccounts", "deleted_at IS NULL")
 	}
 
 	var employee *model.Employee
@@ -70,7 +71,7 @@ func (s *store) OneByNotionID(db *gorm.DB, notionID string) (*model.Employee, er
 			SELECT sa.employee_id 
 			FROM social_accounts sa 
 			WHERE sa.account_id = ? AND sa.type = ?
-		)`, notionID, model.SocialTypeNotion).First(&employee).Error
+		)`, notionID, model.SocialAccountTypeNotion).First(&employee).Error
 }
 
 // All get employees by query and pagination
@@ -103,7 +104,8 @@ func (s *store) All(db *gorm.DB, filter EmployeeFilter, pagination model.Paginat
 			Preload("EmployeeChapters", "deleted_at IS NULL").
 			Preload("EmployeeChapters.Chapter", "deleted_at IS NULL").
 			Preload("EmployeeStacks", "deleted_at IS NULL").
-			Preload("EmployeeStacks.Stack", "deleted_at IS NULL")
+			Preload("EmployeeStacks.Stack", "deleted_at IS NULL").
+			Preload("SocialAccounts", "deleted_at IS NULL")
 	}
 
 	limit, offset := pagination.ToLimitOffset()
