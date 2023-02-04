@@ -22,7 +22,13 @@ func (s *store) Update(db *gorm.DB, sa *model.SocialAccount) (*model.SocialAccou
 	return sa, db.Model(&sa).Where("id = ?", sa.ID).Updates(&sa).Error
 }
 
-func (s store) GetByEmployeeID(db *gorm.DB, employeeID string) ([]*model.SocialAccount, error) {
-	accounts := []*model.SocialAccount{}
+func (s *store) GetByEmployeeID(db *gorm.DB, employeeID string) ([]*model.SocialAccount, error) {
+	var accounts []*model.SocialAccount
 	return accounts, db.Where("employee_id = ?", employeeID).Find(&accounts).Error
+}
+
+// UpdateSelectedFieldsByID just update selected fields by id
+func (s *store) UpdateSelectedFieldsByID(db *gorm.DB, id string, updateModel model.SocialAccount, updatedFields ...string) (*model.SocialAccount, error) {
+	sa := model.SocialAccount{}
+	return &sa, db.Model(&sa).Where("id = ?", id).Select(updatedFields).Updates(updateModel).Error
 }

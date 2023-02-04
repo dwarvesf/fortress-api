@@ -17,10 +17,11 @@ type Config struct {
 	ApiServer ApiServer
 
 	// service
-	Google Google
-	Vault  Vault
-	Notion Notion
-	Wise   Wise
+	Google      Google
+	Vault       Vault
+	Notion      Notion
+	NotionAudit NotionAudit
+	Wise        Wise
 
 	APIKey       string
 	Debug        bool
@@ -65,16 +66,23 @@ type Vault struct {
 }
 
 type Notion struct {
-	AuditSecret         string
-	EarnDBID            string
-	TechRadarDBID       string
-	AudienceDBID        string
-	EventDBID           string
-	HiringDBID          string
-	StaffingDemandDBID  string
-	ProjectDBID         string
-	AuditCycleBDID      string
-	AuditActionItemBDID string
+	Secret             string
+	EarnDBID           string
+	TechRadarDBID      string
+	AudienceDBID       string
+	EventDBID          string
+	HiringDBID         string
+	StaffingDemandDBID string
+	ProjectDBID        string
+	DigestDBID         string
+	UpdatesDBID        string
+	MemoDBID           string
+}
+
+type NotionAudit struct {
+	Secret              string
+	AuditCycleDBID      string
+	AuditActionItemDBID string
 }
 
 type ENV interface {
@@ -123,18 +131,23 @@ func Generate(v ENV) *Config {
 			Token:   v.GetString("VAULT_TOKEN"),
 			Path:    v.GetString("VAULT_PATH"),
 		},
-
 		Notion: Notion{
-			AuditSecret:         v.GetString("AUDIT_NOTION_SECRET"),
-			EarnDBID:            v.GetString("NOTION_EARN_DB_ID"),
-			TechRadarDBID:       v.GetString("NOTION_TECH_RADAR_DB_ID"),
-			AudienceDBID:        v.GetString("NOTION_AUDIENCE_DB_ID"),
-			EventDBID:           v.GetString("NOTION_EVENT_DB_ID"),
-			HiringDBID:          v.GetString("NOTION_HIRING_DB_ID"),
-			StaffingDemandDBID:  v.GetString("NOTION_STAFFING_DEMAND_DB_ID"),
-			ProjectDBID:         v.GetString("NOTION_PROJECT_DB_ID"),
-			AuditCycleBDID:      v.GetString("NOTION_AUDIT_CYCLE_DB_ID"),
-			AuditActionItemBDID: v.GetString("NOTION_AUDIT_ACTION_ITEM_DB_ID"),
+			Secret:             v.GetString("NOTION_SECRET"),
+			EarnDBID:           v.GetString("NOTION_EARN_DB_ID"),
+			TechRadarDBID:      v.GetString("NOTION_TECH_RADAR_DB_ID"),
+			AudienceDBID:       v.GetString("NOTION_AUDIENCE_DB_ID"),
+			EventDBID:          v.GetString("NOTION_EVENT_DB_ID"),
+			HiringDBID:         v.GetString("NOTION_HIRING_DB_ID"),
+			StaffingDemandDBID: v.GetString("NOTION_STAFFING_DEMAND_DB_ID"),
+			ProjectDBID:        v.GetString("NOTION_PROJECT_DB_ID"),
+			DigestDBID:         v.GetString("NOTION_DIGEST_DB_ID"),
+			UpdatesDBID:        v.GetString("NOTION_UPDATES_DB_ID"),
+			MemoDBID:           v.GetString("NOTION_MEMO_DB_ID"),
+		},
+		NotionAudit: NotionAudit{
+			Secret:              v.GetString("NOTION_AUDIT_SECRET"),
+			AuditCycleDBID:      v.GetString("NOTION_AUDIT_CYCLE_DB_ID"),
+			AuditActionItemDBID: v.GetString("NOTION_AUDIT_ACTION_ITEM_DB_ID"),
 		},
 	}
 }

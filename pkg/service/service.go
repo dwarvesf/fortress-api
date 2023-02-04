@@ -12,10 +12,11 @@ import (
 )
 
 type Service struct {
-	Google google.GoogleService
-	Notion notion.NotionService
-	Wise   wise.IWiseService
-	Cache  *cache.Cache
+	Google      google.GoogleService
+	Notion      notion.NotionService
+	NotionAudit notion.NotionService
+	Wise        wise.IWiseService
+	Cache       *cache.Cache
 }
 
 func New(cfg *config.Config) *Service {
@@ -36,7 +37,10 @@ func New(cfg *config.Config) *Service {
 	return &Service{
 		Google: googleSvc,
 		Notion: notion.New(
-			cfg.Notion.AuditSecret,
+			cfg.Notion.Secret,
+		),
+		NotionAudit: notion.New(
+			cfg.NotionAudit.Secret,
 		),
 		Wise:  wise.New(cfg, logger.L),
 		Cache: cch,
