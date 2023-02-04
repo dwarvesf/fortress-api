@@ -125,6 +125,18 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 	{
 		event.GET("", h.Event.List)
 	}
+	digest := v1.Group("/digests")
+	{
+		digest.GET("", h.Digest.List)
+	}
+	update := v1.Group("/updates")
+	{
+		update.GET("", h.Update.List)
+	}
+	memo := v1.Group("/memos")
+	{
+		memo.GET("", h.Memo.List)
+	}
 	staffingDemand := v1.Group("/staffing-demands")
 	{
 		staffingDemand.GET("", h.StaffingDemand.List)
