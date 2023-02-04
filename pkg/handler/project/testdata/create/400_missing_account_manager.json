@@ -1,0 +1,10 @@
+{
+    "data": null,
+    "error": "Key: 'CreateProjectInput.AccountManagerID' Error:Field validation for 'AccountManagerID' failed on the 'required' tag",
+    "errors": [
+        {
+            "field": "AccountManagerID",
+            "msg": "Field validation for 'AccountManagerID' failed on the 'required' tag"
+        }
+    ]
+}

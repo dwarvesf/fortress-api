@@ -107,6 +107,18 @@ func TestHandler_GetSurveyDetail(t *testing.T) {
 			wantCode:         http.StatusNotFound,
 			wantResponsePath: "testdata/get_survey_detail/404_event_id_not_found.json",
 		},
+		{
+			name:             "empty_event_id",
+			id:               "",
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/get_survey_detail/invalid_event_id.json",
+		},
+		{
+			name:             "invalid_event_id_format",
+			id:               "8a5bfedb-6e11-4f5c-82d9-2635cfcce1234",
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/get_survey_detail/invalid_event_id.json",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -176,6 +188,30 @@ func TestHandler_SendPerformanceReview(t *testing.T) {
 				Type: model.EventSubtypePeerReview.String(),
 			},
 		},
+		{
+			name:             "empty_event_id",
+			id:               "",
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/send_survey/invalid_event_id.json",
+		},
+		{
+			name:             "invalid_event_id_format",
+			id:               "8a5bfedb-6e11-4f5c-82d9-2635cfcce1234",
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/send_survey/invalid_event_id.json",
+		},
+		{
+			name:             "invalid_subtype",
+			id:               "8a5bfedb-6e11-4f5c-82d9-2635cfcce3e2",
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/send_survey/invalid_subtype.json",
+			body: request.SendSurveyInput{
+				TopicIDs: []model.UUID{
+					model.MustGetUUIDFromString("e4a33adc-2495-43cf-b816-32feb8d5250d"),
+				},
+				Type: "a",
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -225,6 +261,18 @@ func TestHandler_DeleteSurvey(t *testing.T) {
 			wantCode:         http.StatusNotFound,
 			wantResponsePath: "testdata/delete_survey/404_event_not_found.json",
 		},
+		{
+			name:             "empty_event_id",
+			id:               "",
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/delete_survey/invalid_event_id.json",
+		},
+		{
+			name:             "invalid_event_id_format",
+			id:               "8a5bfedb-6e11-4f5c-82d9-2635cfcce1234",
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/delete_survey/invalid_event_id.json",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -273,6 +321,41 @@ func TestHandler_GetPeerReviewDetail(t *testing.T) {
 			wantResponsePath: "testdata/get_peer_review_detail/404.json",
 			feedbackID:       "8a5bfedb-6e11-4f5c-82d9-2635cfcce3e2",
 			topicID:          "e4a33adc-2495-43cf-b816-32feb8d5250e",
+		},
+		{
+			name:             "empty_feedback_id",
+			feedbackID:       "",
+			topicID:          "e4a33adc-2495-43cf-b816-32feb8d5250d",
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/get_peer_review_detail/invalid_feedback_id.json",
+		},
+		{
+			name:             "invalid_feedback_id_format",
+			feedbackID:       "8a5bfedb-6e11-4f5c-82d9-2635cfcce3e23",
+			topicID:          "e4a33adc-2495-43cf-b816-32feb8d5250d",
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/get_peer_review_detail/invalid_feedback_id.json",
+		},
+		{
+			name:             "empty_topic_id",
+			feedbackID:       "8a5bfedb-6e11-4f5c-82d9-2635cfcce3e2",
+			topicID:          "",
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/get_peer_review_detail/invalid_topic_id.json",
+		},
+		{
+			name:             "invalid_topic_id_format",
+			feedbackID:       "8a5bfedb-6e11-4f5c-82d9-2635cfcce3e2",
+			topicID:          "e4a33adc-2495-43cf-b816-32feb8d5250de",
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/get_peer_review_detail/invalid_topic_id.json",
+		},
+		{
+			name:             "topic_not_found",
+			feedbackID:       "8a5bfedb-6e11-4f5c-82d9-2635cfcce3e2",
+			topicID:          "e4a33adc-2495-43cf-b816-32feb8d5250e",
+			wantCode:         http.StatusNotFound,
+			wantResponsePath: "testdata/get_peer_review_detail/topic_not_found.json",
 		},
 	}
 	for _, tt := range tests {
@@ -348,6 +431,42 @@ func TestHandler_UpdateTopicReviewers(t *testing.T) {
 			wantCode:         http.StatusBadRequest,
 			wantResponsePath: "testdata/update_topic_participants/400_participant_not_ready.json",
 		},
+		{
+			name: "empty_event_id",
+			input: request.UpdateTopicReviewersInput{
+				EventID: "",
+				TopicID: "e4a33adc-2495-43cf-b816-32feb8d5250d",
+			},
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/update_topic_participants/invalid_event_id.json",
+		},
+		{
+			name: "invalid_event_id_format",
+			input: request.UpdateTopicReviewersInput{
+				EventID: "8a5bfedb-6e11-4f5c-82d9-2635cfcce3e23",
+				TopicID: "e4a33adc-2495-43cf-b816-32feb8d5250d",
+			},
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/update_topic_participants/invalid_event_id.json",
+		},
+		{
+			name: "empty_topic_id",
+			input: request.UpdateTopicReviewersInput{
+				EventID: "8a5bfedb-6e11-4f5c-82d9-2635cfcce3e2",
+				TopicID: "",
+			},
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/update_topic_participants/invalid_topic_id.json",
+		},
+		{
+			name: "invalid_topic_id_format",
+			input: request.UpdateTopicReviewersInput{
+				EventID: "8a5bfedb-6e11-4f5c-82d9-2635cfcce3e2",
+				TopicID: "e4a33adc-2495-43cf-b816-32feb8d5250de",
+			},
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/update_topic_participants/invalid_topic_id.json",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -400,6 +519,18 @@ func TestHandler_MarkDone(t *testing.T) {
 			eventID:          "9b3480be-86a2-4ff9-84d8-545a4146122a",
 			wantCode:         http.StatusNotFound,
 			wantResponsePath: "testdata/mark_done/404.json",
+		},
+		{
+			name:             "empty_event_id",
+			eventID:          "",
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/mark_done/invalid_event_id.json",
+		},
+		{
+			name:             "invalid_event_id_format",
+			eventID:          "8a5bfedb-6e11-4f5c-82d9-2635cfcce3e23",
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/mark_done/invalid_event_id.json",
 		},
 	}
 	for _, tt := range tests {
@@ -521,6 +652,41 @@ func TestHandler_DeleteSurveyTopic(t *testing.T) {
 			wantCode:         http.StatusBadRequest,
 			wantResponsePath: "testdata/delete_survey/404_event_not_found.json",
 		},
+		{
+			name:             "empty_event_id",
+			eventID:          "",
+			topicID:          "e4a33adc-2495-43cf-b816-32feb8d5250d",
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/delete_survey/invalid_event_id.json",
+		},
+		{
+			name:             "invalid_event_id_format",
+			eventID:          "8a5bfedb-6e11-4f5c-82d9-2635cfcce3e23",
+			topicID:          "e4a33adc-2495-43cf-b816-32feb8d5250d",
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/delete_survey/invalid_event_id.json",
+		},
+		{
+			name:             "empty_topic_id",
+			eventID:          "8a5bfedb-6e11-4f5c-82d9-2635cfcce3e2",
+			topicID:          "",
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/delete_survey/invalid_topic_id.json",
+		},
+		{
+			name:             "invalid_topic_id_format",
+			eventID:          "8a5bfedb-6e11-4f5c-82d9-2635cfcce3e2",
+			topicID:          "e4a33adc-2495-43cf-b816-32feb8d5250de",
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/delete_survey/invalid_topic_id.json",
+		},
+		{
+			name:             "topic_not_found",
+			eventID:          "8a5bfedb-6e11-4f5c-82d9-2635cfcce3e2",
+			topicID:          "e4a33adc-2495-43cf-b816-32feb8d5250e",
+			wantCode:         http.StatusNotFound,
+			wantResponsePath: "testdata/delete_survey/topic_not_found.json",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -585,6 +751,54 @@ func TestHandler_GetSurveyReviewDetail(t *testing.T) {
 			wantCode:         http.StatusOK,
 			wantResponsePath: "testdata/get_survey_review_detail/200_work.json",
 		},
+		{
+			name:             "empty_event_id",
+			eventID:          "",
+			topicID:          "e4a33adc-2495-43cf-b816-32feb8d5250d",
+			reviewerID:       "bc9a5715-9723-4a2f-ad42-0d0f19a80b4d",
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/get_survey_review_detail/invalid_event_id.json",
+		},
+		{
+			name:             "invalid_event_id_format",
+			eventID:          "8a5bfedb-6e11-4f5c-82d9-2635cfcce3e23",
+			topicID:          "e4a33adc-2495-43cf-b816-32feb8d5250d",
+			reviewerID:       "bc9a5715-9723-4a2f-ad42-0d0f19a80b4d",
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/get_survey_review_detail/invalid_event_id.json",
+		},
+		{
+			name:             "empty_topic_id",
+			eventID:          "8a5bfedb-6e11-4f5c-82d9-2635cfcce3e2",
+			topicID:          "",
+			reviewerID:       "bc9a5715-9723-4a2f-ad42-0d0f19a80b4d",
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/get_survey_review_detail/invalid_topic_id.json",
+		},
+		{
+			name:             "invalid_topic_id_format",
+			eventID:          "8a5bfedb-6e11-4f5c-82d9-2635cfcce3e2",
+			topicID:          "e4a33adc-2495-43cf-b816-32feb8d5250de",
+			reviewerID:       "bc9a5715-9723-4a2f-ad42-0d0f19a80b4d",
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/get_survey_review_detail/invalid_topic_id.json",
+		},
+		{
+			name:             "empty_reviewer_id",
+			eventID:          "8a5bfedb-6e11-4f5c-82d9-2635cfcce3e2",
+			topicID:          "e4a33adc-2495-43cf-b816-32feb8d5250d",
+			reviewerID:       "",
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/get_survey_review_detail/invalid_review_id.json",
+		},
+		{
+			name:             "empty_reviewer_id",
+			eventID:          "8a5bfedb-6e11-4f5c-82d9-2635cfcce3e2",
+			topicID:          "e4a33adc-2495-43cf-b816-32feb8d5250d",
+			reviewerID:       "e4a33adc-2495-43cf-b816-32feb8d5250de",
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/get_survey_review_detail/invalid_review_id.json",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -646,6 +860,30 @@ func TestHandler_CreateSurvey(t *testing.T) {
 				Year:     2023,
 				Type:     "work",
 				FromDate: "2023-11-30",
+				ToDate:   "2023-11-29",
+			},
+		},
+		{
+			name:             "invalid_subtype",
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/create_survey/invalid_subtype.json",
+			body: request.CreateSurveyFeedbackInput{
+				Quarter:  "q3,q4",
+				Year:     2023,
+				Type:     "peer-revieww",
+				FromDate: "2023-11-28",
+				ToDate:   "2023-11-29",
+			},
+		},
+		{
+			name:             "invalid_date",
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/create_survey/invalid_date.json",
+			body: request.CreateSurveyFeedbackInput{
+				Quarter:  "q3,q4",
+				Year:     2023,
+				Type:     "work",
+				FromDate: "2023-13-28",
 				ToDate:   "2023-11-29",
 			},
 		},

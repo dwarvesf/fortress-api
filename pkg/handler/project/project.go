@@ -728,7 +728,6 @@ func (h *handler) DeleteSlot(c *gin.Context) {
 // @Failure 500 {object} view.ErrorResponse
 // @Router /project/{id}/members/{memberID} [put]
 func (h *handler) UnassignMember(c *gin.Context) {
-	// TODO: add test
 	input := request.UnassignMemberInput{
 		ProjectID: c.Param("id"),
 		MemberID:  c.Param("memberID"),
@@ -2336,7 +2335,7 @@ func (h *handler) checkExitsInUpdateWorkUnitInput(db *gorm.DB, input request.Upd
 	for _, sID := range input.Body.Stacks {
 		_, ok := stackMap[sID]
 		if !ok {
-			return http.StatusNotFound, errs.ErrPositionNotFoundWithID(sID.String())
+			return http.StatusNotFound, errs.ErrStackNotFoundWithID(sID.String())
 		}
 	}
 

@@ -60,6 +60,18 @@ func TestHandler_Detail(t *testing.T) {
 			wantCode:         http.StatusNotFound,
 			wantResponsePath: "testdata/get_project/404.json",
 		},
+		{
+			name:             "not_found_slug",
+			id:               "a",
+			wantCode:         http.StatusNotFound,
+			wantResponsePath: "testdata/get_project/404.json",
+		},
+		{
+			name:             "empty_project_id",
+			id:               "",
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/get_project/invalid_project_id.json",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -99,11 +111,30 @@ func TestHandler_List(t *testing.T) {
 		wantCode         int
 		wantErr          error
 		wantResponsePath string
+		query            string
 	}{
 		{
 			name:             "happy_case",
 			wantCode:         http.StatusOK,
 			wantResponsePath: "testdata/get_projects/200.json",
+		},
+		{
+			name:             "happy_case_with_pagination",
+			wantCode:         http.StatusOK,
+			wantResponsePath: "testdata/get_projects/200_with_paging.json",
+			query:            "page=1&size=1",
+		},
+		{
+			name:             "invalid_project_type",
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/get_projects/invalid_project_type.json",
+			query:            "type=a",
+		},
+		{
+			name:             "invalid_project_status",
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/get_projects/invalid_project_status.json",
+			query:            "status=a",
 		},
 	}
 	for _, tt := range tests {
@@ -112,7 +143,8 @@ func TestHandler_List(t *testing.T) {
 				testhelper.LoadTestSQLFile(t, txRepo, "./testdata/get_projects/get_projects.sql")
 				w := httptest.NewRecorder()
 				ctx, _ := gin.CreateTestContext(w)
-				ctx.Request = httptest.NewRequest(http.MethodGet, "/api/v1/projects", nil)
+				ctx.Request = httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/projects?%s", tt.query), nil)
+				ctx.Request.URL.RawQuery = tt.query
 				ctx.Request.Header.Set("Authorization", testToken)
 
 				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
@@ -148,7 +180,7 @@ func TestHandler_UpdateProjectStatus(t *testing.T) {
 	}{
 		{
 			name:             "ok_update_project_status",
-			wantCode:         200,
+			wantCode:         http.StatusOK,
 			wantErr:          false,
 			wantResponsePath: "testdata/update_project_status/200.json",
 			request: request.UpdateAccountStatusBody{
@@ -158,7 +190,7 @@ func TestHandler_UpdateProjectStatus(t *testing.T) {
 		},
 		{
 			name:             "failed_invalid_project_id",
-			wantCode:         404,
+			wantCode:         http.StatusNotFound,
 			wantErr:          true,
 			wantResponsePath: "testdata/update_project_status/404.json",
 			request: request.UpdateAccountStatusBody{
@@ -168,13 +200,33 @@ func TestHandler_UpdateProjectStatus(t *testing.T) {
 		},
 		{
 			name:             "failed_invalid_value_for_status",
-			wantCode:         400,
+			wantCode:         http.StatusBadRequest,
 			wantErr:          true,
 			wantResponsePath: "testdata/update_project_status/400.json",
 			request: request.UpdateAccountStatusBody{
 				ProjectStatus: "activee",
 			},
 			id: "8dc3be2e-19a4-4942-8a79-56db391a0b15",
+		},
+		{
+			name:             "empty_project_id",
+			wantCode:         http.StatusBadRequest,
+			wantErr:          true,
+			wantResponsePath: "testdata/update_project_status/invalid_project_id.json",
+			request: request.UpdateAccountStatusBody{
+				ProjectStatus: "activee",
+			},
+			id: "",
+		},
+		{
+			name:             "wrong_format_project_id",
+			wantCode:         http.StatusBadRequest,
+			wantErr:          true,
+			wantResponsePath: "testdata/update_project_status/invalid_project_id.json",
+			request: request.UpdateAccountStatusBody{
+				ProjectStatus: "activee",
+			},
+			id: "8dc3be2e-19a4-4942-8a79-56db391a0b15a",
 		},
 	}
 
@@ -286,6 +338,204 @@ func TestHandler_Create(t *testing.T) {
 			wantCode:         http.StatusBadRequest,
 			wantResponsePath: "testdata/create/400_misssing_status.json",
 		},
+		{
+			name: "missing_status",
+			args: request.CreateProjectInput{
+				Status:            "something",
+				StartDate:         "2022-11-14",
+				AccountManagerID:  model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
+				DeliveryManagerID: model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
+				CountryID:         model.MustGetUUIDFromString("4ef64490-c906-4192-a7f9-d2221dadfe4c"),
+				ProjectEmail:      "a@gmail.com",
+				ClientEmail:       []string{"b@gmail.com"},
+				Function:          model.ProjectFunctionLearning.String(),
+			},
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/create/400_misssing_name.json",
+		},
+		{
+			name: "missing_account_manager",
+			args: request.CreateProjectInput{
+				Name:              "Project1",
+				Status:            string(model.ProjectStatusOnBoarding),
+				StartDate:         "2022-11-14",
+				DeliveryManagerID: model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
+				CountryID:         model.MustGetUUIDFromString("4ef64490-c906-4192-a7f9-d2221dadfe4c"),
+				ProjectEmail:      "a@gmail.com",
+				ClientEmail:       []string{"b@gmail.com", "c@gmail.com"},
+				Function:          model.ProjectFunctionLearning.String(),
+			},
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/create/400_missing_account_manager.json",
+		},
+		{
+			name: "invalid_email_domain",
+			args: request.CreateProjectInput{
+				Name:              "Project1",
+				Status:            string(model.ProjectStatusOnBoarding),
+				StartDate:         "2022-11-14",
+				AccountManagerID:  model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
+				DeliveryManagerID: model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
+				CountryID:         model.MustGetUUIDFromString("4ef64490-c906-4192-a7f9-d2221dadfe4c"),
+				ProjectEmail:      "a@gmail.com",
+				ClientEmail:       []string{"bgmail.com", "c@gmail.com"},
+				Function:          model.ProjectFunctionLearning.String(),
+			},
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/create/400_invalid_email.json",
+		},
+		{
+			name: "invalid_email_domain",
+			args: request.CreateProjectInput{
+				Name:              "Project1",
+				Status:            string(model.ProjectStatusOnBoarding),
+				StartDate:         "2022-11-14",
+				AccountManagerID:  model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
+				DeliveryManagerID: model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
+				CountryID:         model.MustGetUUIDFromString("4ef64490-c906-4192-a7f9-d2221dadfe4c"),
+				ProjectEmail:      "a@gmail.com",
+				ClientEmail:       []string{"b@gmail.com", "c@gmail.com"},
+				Function:          "a",
+			},
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/create/400_invalid_function.json",
+		},
+		{
+			name: "400_invalid_deployment_type",
+			args: request.CreateProjectInput{
+				Name:              "project1",
+				Status:            string(model.ProjectStatusOnBoarding),
+				StartDate:         "2022-11-14",
+				AccountManagerID:  model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
+				DeliveryManagerID: model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
+				CountryID:         model.MustGetUUIDFromString("4ef64490-c906-4192-a7f9-d2221dadfe4c"),
+				ProjectEmail:      "a@gmail.com",
+				ClientEmail:       []string{"b@gmail.com"},
+				Function:          model.ProjectFunctionDevelopment.String(),
+				Members: []request.AssignMemberInput{
+					{
+						EmployeeID:     model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
+						SeniorityID:    model.MustGetUUIDFromString("39735742-829b-47f3-8f9d-daf0983914e5"),
+						Positions:      []model.UUID{model.MustGetUUIDFromString("39735742-829b-47f3-8f9d-daf0983914e5")},
+						DeploymentType: "a",
+						Status:         model.ProjectMemberStatusOnBoarding.String(),
+						Rate:           decimal.NewFromInt(10),
+						StartDate:      "2022-11-14",
+					},
+				},
+			},
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/create/400_invalid_deployment_type.json",
+		},
+		{
+			name: "invalid_project_member_status",
+			args: request.CreateProjectInput{
+				Name:              "project1",
+				Status:            string(model.ProjectStatusOnBoarding),
+				StartDate:         "2022-11-14",
+				AccountManagerID:  model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
+				DeliveryManagerID: model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
+				CountryID:         model.MustGetUUIDFromString("4ef64490-c906-4192-a7f9-d2221dadfe4c"),
+				ProjectEmail:      "a@gmail.com",
+				ClientEmail:       []string{"b@gmail.com"},
+				Function:          model.ProjectFunctionDevelopment.String(),
+				Members: []request.AssignMemberInput{
+					{
+						EmployeeID:     model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
+						SeniorityID:    model.MustGetUUIDFromString("39735742-829b-47f3-8f9d-daf0983914e5"),
+						Positions:      []model.UUID{model.MustGetUUIDFromString("39735742-829b-47f3-8f9d-daf0983914e5")},
+						DeploymentType: model.MemberDeploymentTypeOfficial.String(),
+						Status:         "a",
+						Rate:           decimal.NewFromInt(10),
+						StartDate:      "2022-11-14",
+					},
+				},
+			},
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/create/400_project_member_status.json",
+		},
+		{
+			name: "empty_project_position",
+			args: request.CreateProjectInput{
+				Name:              "project1",
+				Status:            string(model.ProjectStatusOnBoarding),
+				StartDate:         "2022-11-14",
+				AccountManagerID:  model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
+				DeliveryManagerID: model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
+				CountryID:         model.MustGetUUIDFromString("4ef64490-c906-4192-a7f9-d2221dadfe4c"),
+				ProjectEmail:      "a@gmail.com",
+				ClientEmail:       []string{"b@gmail.com"},
+				Function:          model.ProjectFunctionDevelopment.String(),
+				Members: []request.AssignMemberInput{
+					{
+						EmployeeID:     model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
+						SeniorityID:    model.MustGetUUIDFromString("39735742-829b-47f3-8f9d-daf0983914e5"),
+						Positions:      []model.UUID{},
+						DeploymentType: model.MemberDeploymentTypeOfficial.String(),
+						Status:         model.ProjectMemberStatusOnBoarding.String(),
+						Rate:           decimal.NewFromInt(10),
+						StartDate:      "2022-11-14",
+					},
+				},
+			},
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/create/400_project_position_empty.json",
+		},
+		{
+			name: "invalid_member_start_date",
+			args: request.CreateProjectInput{
+				Name:              "project1",
+				Status:            string(model.ProjectStatusOnBoarding),
+				StartDate:         "2022-11-14",
+				AccountManagerID:  model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
+				DeliveryManagerID: model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
+				CountryID:         model.MustGetUUIDFromString("4ef64490-c906-4192-a7f9-d2221dadfe4c"),
+				ProjectEmail:      "a@gmail.com",
+				ClientEmail:       []string{"b@gmail.com"},
+				Function:          model.ProjectFunctionDevelopment.String(),
+				Members: []request.AssignMemberInput{
+					{
+						EmployeeID:     model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
+						SeniorityID:    model.MustGetUUIDFromString("39735742-829b-47f3-8f9d-daf0983914e5"),
+						Positions:      []model.UUID{model.MustGetUUIDFromString("39735742-829b-47f3-8f9d-daf0983914e5")},
+						DeploymentType: model.MemberDeploymentTypeOfficial.String(),
+						Status:         model.ProjectMemberStatusOnBoarding.String(),
+						Rate:           decimal.NewFromInt(10),
+						StartDate:      "2022-13-14",
+					},
+				},
+			},
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/create/400_invalid_start_date_member.json",
+		},
+		{
+			name: "invalid_member_end_date",
+			args: request.CreateProjectInput{
+				Name:              "project1",
+				Status:            string(model.ProjectStatusOnBoarding),
+				StartDate:         "2022-11-14",
+				AccountManagerID:  model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
+				DeliveryManagerID: model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
+				CountryID:         model.MustGetUUIDFromString("4ef64490-c906-4192-a7f9-d2221dadfe4c"),
+				ProjectEmail:      "a@gmail.com",
+				ClientEmail:       []string{"b@gmail.com"},
+				Function:          model.ProjectFunctionDevelopment.String(),
+				Members: []request.AssignMemberInput{
+					{
+						EmployeeID:     model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
+						SeniorityID:    model.MustGetUUIDFromString("39735742-829b-47f3-8f9d-daf0983914e5"),
+						Positions:      []model.UUID{model.MustGetUUIDFromString("39735742-829b-47f3-8f9d-daf0983914e5")},
+						DeploymentType: model.MemberDeploymentTypeOfficial.String(),
+						Status:         model.ProjectMemberStatusOnBoarding.String(),
+						Rate:           decimal.NewFromInt(10),
+						StartDate:      "2022-11-14",
+						EndDate:        "2022-13-13",
+					},
+				},
+			},
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/create/400_invalid_end_date_member.json",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -354,6 +604,27 @@ func TestHandler_GetMembers(t *testing.T) {
 			query:            "preload=false&distinct=true",
 			wantCode:         http.StatusOK,
 			wantResponsePath: "testdata/get_members/distinct.json",
+		},
+		{
+			name:             "invalid_project_id_format",
+			id:               "8dc3be2e-19a4-4942-8a79-56db391a0b156",
+			query:            "preload=false",
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/get_members/invalid_project_id.json",
+		},
+		{
+			name:             "invalid_project_member_status",
+			id:               "8dc3be2e-19a4-4942-8a79-56db391a0b15",
+			query:            "preload=false&status=invalid",
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/get_members/invalid_project_member_status.json",
+		},
+		{
+			name:             "project_not_found",
+			id:               "8dc3be2e-19a4-4942-8a79-56db391a0b16",
+			query:            "preload=false",
+			wantCode:         http.StatusNotFound,
+			wantResponsePath: "testdata/get_members/project_not_found.json",
 		},
 	}
 	for _, tt := range tests {
@@ -461,6 +732,153 @@ func TestHandler_UpdateMember(t *testing.T) {
 			wantCode:         http.StatusNotFound,
 			wantResponsePath: "testdata/update_member/404_project_not_found.json",
 		},
+		{
+			name: "empty_project_id",
+			id:   "",
+			args: request.UpdateMemberInput{
+				ProjectSlotID: model.MustGetUUIDFromString("f32d08ca-8863-4ab3-8c84-a11849451eb7"),
+				EmployeeID:    model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
+				SeniorityID:   model.MustGetUUIDFromString("01fb6322-d727-47e3-a242-5039ea4732fc"),
+				Positions: []model.UUID{
+					model.MustGetUUIDFromString("11ccffea-2cc9-4e98-9bef-3464dfe4dec8"),
+					model.MustGetUUIDFromString("d796884d-a8c4-4525-81e7-54a3b6099eac"),
+				},
+				DeploymentType: model.MemberDeploymentTypeOfficial.String(),
+				Status:         model.ProjectMemberStatusActive.String(),
+				StartDate:      "2022-11-15",
+				Rate:           decimal.NewFromInt(10),
+				Discount:       decimal.NewFromInt(1),
+				IsLead:         true,
+			},
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/update_member/invalid_project_id.json",
+		},
+		{
+			name: "invalid_project_id_format",
+			id:   "8dc3be2e-19a4-4942-8a79-56db391a0b168",
+			args: request.UpdateMemberInput{
+				ProjectSlotID: model.MustGetUUIDFromString("f32d08ca-8863-4ab3-8c84-a11849451eb7"),
+				EmployeeID:    model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
+				SeniorityID:   model.MustGetUUIDFromString("01fb6322-d727-47e3-a242-5039ea4732fc"),
+				Positions: []model.UUID{
+					model.MustGetUUIDFromString("11ccffea-2cc9-4e98-9bef-3464dfe4dec8"),
+					model.MustGetUUIDFromString("d796884d-a8c4-4525-81e7-54a3b6099eac"),
+				},
+				DeploymentType: model.MemberDeploymentTypeOfficial.String(),
+				Status:         model.ProjectMemberStatusActive.String(),
+				StartDate:      "2022-11-15",
+				Rate:           decimal.NewFromInt(10),
+				Discount:       decimal.NewFromInt(1),
+				IsLead:         true,
+			},
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/update_member/invalid_project_id.json",
+		},
+		{
+			name: "invalid_deployment_type",
+			id:   "8dc3be2e-19a4-4942-8a79-56db391a0b15",
+			args: request.UpdateMemberInput{
+				ProjectSlotID: model.MustGetUUIDFromString("f32d08ca-8863-4ab3-8c84-a11849451eb7"),
+				EmployeeID:    model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
+				SeniorityID:   model.MustGetUUIDFromString("01fb6322-d727-47e3-a242-5039ea4732fc"),
+				Positions: []model.UUID{
+					model.MustGetUUIDFromString("11ccffea-2cc9-4e98-9bef-3464dfe4dec8"),
+					model.MustGetUUIDFromString("d796884d-a8c4-4525-81e7-54a3b6099eac"),
+				},
+				DeploymentType: "invalid",
+				Status:         model.ProjectMemberStatusActive.String(),
+				StartDate:      "2022-11-15",
+				Rate:           decimal.NewFromInt(10),
+				Discount:       decimal.NewFromInt(1),
+				IsLead:         true,
+			},
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/update_member/invalid_deployment_type.json",
+		},
+		{
+			name: "invalid_status",
+			id:   "8dc3be2e-19a4-4942-8a79-56db391a0b15",
+			args: request.UpdateMemberInput{
+				ProjectSlotID: model.MustGetUUIDFromString("f32d08ca-8863-4ab3-8c84-a11849451eb7"),
+				EmployeeID:    model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
+				SeniorityID:   model.MustGetUUIDFromString("01fb6322-d727-47e3-a242-5039ea4732fc"),
+				Positions: []model.UUID{
+					model.MustGetUUIDFromString("11ccffea-2cc9-4e98-9bef-3464dfe4dec8"),
+					model.MustGetUUIDFromString("d796884d-a8c4-4525-81e7-54a3b6099eac"),
+				},
+				DeploymentType: model.MemberDeploymentTypeOfficial.String(),
+				Status:         "invalid",
+				StartDate:      "2022-11-15",
+				Rate:           decimal.NewFromInt(10),
+				Discount:       decimal.NewFromInt(1),
+				IsLead:         true,
+			},
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/update_member/invalid_status.json",
+		},
+		{
+			name: "seniority_not_found",
+			id:   "8dc3be2e-19a4-4942-8a79-56db391a0b15",
+			args: request.UpdateMemberInput{
+				ProjectSlotID: model.MustGetUUIDFromString("f32d08ca-8863-4ab3-8c84-a11849451eb7"),
+				EmployeeID:    model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
+				SeniorityID:   model.MustGetUUIDFromString("01fb6322-d727-47e3-a242-5039ea4732f9"),
+				Positions: []model.UUID{
+					model.MustGetUUIDFromString("11ccffea-2cc9-4e98-9bef-3464dfe4dec8"),
+					model.MustGetUUIDFromString("d796884d-a8c4-4525-81e7-54a3b6099eac"),
+				},
+				DeploymentType: model.MemberDeploymentTypeOfficial.String(),
+				Status:         model.ProjectMemberStatusOnBoarding.String(),
+				StartDate:      "2022-11-15",
+				Rate:           decimal.NewFromInt(10),
+				Discount:       decimal.NewFromInt(1),
+				IsLead:         true,
+			},
+			wantCode:         http.StatusNotFound,
+			wantResponsePath: "testdata/update_member/seniority_not_found.json",
+		},
+		{
+			name: "position_not_found",
+			id:   "8dc3be2e-19a4-4942-8a79-56db391a0b15",
+			args: request.UpdateMemberInput{
+				ProjectSlotID: model.MustGetUUIDFromString("f32d08ca-8863-4ab3-8c84-a11849451eb7"),
+				EmployeeID:    model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
+				SeniorityID:   model.MustGetUUIDFromString("01fb6322-d727-47e3-a242-5039ea4732fc"),
+				Positions: []model.UUID{
+					model.MustGetUUIDFromString("11ccffea-2cc9-4e98-9bef-3464dfe4dec9"),
+					model.MustGetUUIDFromString("d796884d-a8c4-4525-81e7-54a3b6099eac"),
+				},
+				DeploymentType: model.MemberDeploymentTypeOfficial.String(),
+				Status:         model.ProjectMemberStatusOnBoarding.String(),
+				StartDate:      "2022-11-15",
+				Rate:           decimal.NewFromInt(10),
+				Discount:       decimal.NewFromInt(1),
+				IsLead:         true,
+			},
+			wantCode:         http.StatusNotFound,
+			wantResponsePath: "testdata/update_member/position_not_found.json",
+		},
+		{
+			name: "project_slot_not_found",
+			id:   "8dc3be2e-19a4-4942-8a79-56db391a0b15",
+			args: request.UpdateMemberInput{
+				ProjectSlotID: model.MustGetUUIDFromString("f32d08ca-8863-4ab3-8c84-a11849451eb8"),
+				EmployeeID:    model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
+				SeniorityID:   model.MustGetUUIDFromString("01fb6322-d727-47e3-a242-5039ea4732fc"),
+				Positions: []model.UUID{
+					model.MustGetUUIDFromString("11ccffea-2cc9-4e98-9bef-3464dfe4dec8"),
+					model.MustGetUUIDFromString("d796884d-a8c4-4525-81e7-54a3b6099eac"),
+				},
+				DeploymentType: model.MemberDeploymentTypeOfficial.String(),
+				Status:         model.ProjectMemberStatusOnBoarding.String(),
+				StartDate:      "2022-11-15",
+				Rate:           decimal.NewFromInt(10),
+				Discount:       decimal.NewFromInt(1),
+				IsLead:         true,
+			},
+			wantCode:         http.StatusNotFound,
+			wantResponsePath: "testdata/update_member/project_slot_not_found.json",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -529,6 +947,66 @@ func TestHandler_AssignMember(t *testing.T) {
 			wantCode:         http.StatusOK,
 			wantResponsePath: "testdata/assign_member/200_success.json",
 		},
+		{
+			name: "empty_project_id",
+			id:   "",
+			args: request.AssignMemberInput{
+				EmployeeID:  model.MustGetUUIDFromString("fae443f8-e8ff-4eec-b86c-98216d7662d8"),
+				SeniorityID: model.MustGetUUIDFromString("01fb6322-d727-47e3-a242-5039ea4732fc"),
+				Positions: []model.UUID{
+					model.MustGetUUIDFromString("11ccffea-2cc9-4e98-9bef-3464dfe4dec8"),
+					model.MustGetUUIDFromString("d796884d-a8c4-4525-81e7-54a3b6099eac"),
+				},
+				DeploymentType: model.MemberDeploymentTypeOfficial.String(),
+				Status:         model.ProjectMemberStatusActive.String(),
+				StartDate:      "2022-11-15",
+				Rate:           decimal.NewFromInt(10),
+				Discount:       decimal.NewFromInt(1),
+				IsLead:         false,
+			},
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/assign_member/invalid_project_id.json",
+		},
+		{
+			name: "invalid_project_id_format",
+			id:   "8dc3be2e-19a4-4942-8a79-56db391a0b156",
+			args: request.AssignMemberInput{
+				EmployeeID:  model.MustGetUUIDFromString("fae443f8-e8ff-4eec-b86c-98216d7662d8"),
+				SeniorityID: model.MustGetUUIDFromString("01fb6322-d727-47e3-a242-5039ea4732fc"),
+				Positions: []model.UUID{
+					model.MustGetUUIDFromString("11ccffea-2cc9-4e98-9bef-3464dfe4dec8"),
+					model.MustGetUUIDFromString("d796884d-a8c4-4525-81e7-54a3b6099eac"),
+				},
+				DeploymentType: model.MemberDeploymentTypeOfficial.String(),
+				Status:         model.ProjectMemberStatusActive.String(),
+				StartDate:      "2022-11-15",
+				Rate:           decimal.NewFromInt(10),
+				Discount:       decimal.NewFromInt(1),
+				IsLead:         false,
+			},
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/assign_member/invalid_project_id.json",
+		},
+		{
+			name: "project_not_found",
+			id:   "8dc3be2e-19a4-4942-8a79-56db391a0b16",
+			args: request.AssignMemberInput{
+				EmployeeID:  model.MustGetUUIDFromString("fae443f8-e8ff-4eec-b86c-98216d7662d8"),
+				SeniorityID: model.MustGetUUIDFromString("01fb6322-d727-47e3-a242-5039ea4732fc"),
+				Positions: []model.UUID{
+					model.MustGetUUIDFromString("11ccffea-2cc9-4e98-9bef-3464dfe4dec8"),
+					model.MustGetUUIDFromString("d796884d-a8c4-4525-81e7-54a3b6099eac"),
+				},
+				DeploymentType: model.MemberDeploymentTypeOfficial.String(),
+				Status:         model.ProjectMemberStatusActive.String(),
+				StartDate:      "2022-11-15",
+				Rate:           decimal.NewFromInt(10),
+				Discount:       decimal.NewFromInt(1),
+				IsLead:         false,
+			},
+			wantCode:         http.StatusNotFound,
+			wantResponsePath: "testdata/assign_member/404_project_not_found.json",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -578,16 +1056,37 @@ func TestHandler_DeleteProjectMember(t *testing.T) {
 	}{
 		{
 			name:             "ok_update_project_status",
-			wantCode:         200,
+			wantCode:         http.StatusOK,
 			wantResponsePath: "testdata/delete_member/200.json",
 			id:               "8dc3be2e-19a4-4942-8a79-56db391a0b15",
 			memberID:         "cb889a9c-b20c-47ee-83b8-44b6d1721aca",
 		},
 		{
 			name:             "failed_invalid_member_id",
-			wantCode:         404,
+			wantCode:         http.StatusNotFound,
 			wantResponsePath: "testdata/delete_member/404.json",
 			id:               "8dc3be2e-19a4-4942-8a79-56db391a0b15",
+			memberID:         "cb889a9c-b20c-47ee-83b8-44b6d1721acb",
+		},
+		{
+			name:             "empty_project_id",
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/delete_member/empty_project_id.json",
+			id:               "",
+			memberID:         "cb889a9c-b20c-47ee-83b8-44b6d1721acb",
+		},
+		{
+			name:             "empty_member_id",
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/delete_member/empty_member_id.json",
+			id:               "8dc3be2e-19a4-4942-8a79-56db391a0b15",
+			memberID:         "",
+		},
+		{
+			name:             "project_not_found",
+			wantCode:         http.StatusNotFound,
+			wantResponsePath: "testdata/delete_member/project_not_found.json",
+			id:               "cb889a9c-b20c-47ee-83b8-44b6d1721acb",
 			memberID:         "cb889a9c-b20c-47ee-83b8-44b6d1721acb",
 		},
 	}
@@ -627,17 +1126,31 @@ func TestHandler_DeleteSlot(t *testing.T) {
 	}{
 		{
 			name:             "ok_update_project_status",
-			wantCode:         200,
+			wantCode:         http.StatusOK,
 			wantResponsePath: "testdata/delete_slot/200.json",
 			id:               "8dc3be2e-19a4-4942-8a79-56db391a0b15",
 			slotID:           "f32d08ca-8863-4ab3-8c84-a11849451eb7",
 		},
 		{
 			name:             "failed_invalid_member_id",
-			wantCode:         404,
+			wantCode:         http.StatusNotFound,
 			wantResponsePath: "testdata/delete_slot/404.json",
 			id:               "8dc3be2e-19a4-4942-8a79-56db391a0b15",
 			slotID:           "cb889a9c-b20c-47ee-83b8-44b6d1721acb",
+		},
+		{
+			name:             "empty_project_id",
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/delete_slot/empty_project_id.json",
+			id:               "",
+			slotID:           "f32d08ca-8863-4ab3-8c84-a11849451eb7",
+		},
+		{
+			name:             "empty_member_id",
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/delete_slot/empty_slot_id.json",
+			id:               "8dc3be2e-19a4-4942-8a79-56db391a0b15",
+			slotID:           "",
 		},
 	}
 	for _, tt := range tests {
@@ -710,6 +1223,86 @@ func TestHandler_UpdateGeneralInfo(t *testing.T) {
 				Function: model.ProjectFunctionManagement.String(),
 			},
 		},
+		{
+			name:             "empty_project_id",
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/update_general_info/invalid_project_id.json",
+			id:               "",
+			input: request.UpdateProjectGeneralInfoInput{
+				Name:      "Fortress",
+				StartDate: "1990-01-02",
+				CountryID: model.MustGetUUIDFromString("4ef64490-c906-4192-a7f9-d2221dadfe4c"),
+				Stacks: []model.UUID{
+					model.MustGetUUIDFromString("fa0f4e46-7eab-4e5c-9d31-30489e69fe2e"),
+					model.MustGetUUIDFromString("b403ef95-4269-4830-bbb6-8e56e5ec0af4"),
+				},
+				Function: model.ProjectFunctionManagement.String(),
+			},
+		},
+		{
+			name:             "invalid_project_id_format",
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/update_general_info/invalid_project_id.json",
+			id:               "d100efd1-bfce-4cd6-885c-1e4ac3d307156",
+			input: request.UpdateProjectGeneralInfoInput{
+				Name:      "Fortress",
+				StartDate: "1990-01-02",
+				CountryID: model.MustGetUUIDFromString("4ef64490-c906-4192-a7f9-d2221dadfe4c"),
+				Stacks: []model.UUID{
+					model.MustGetUUIDFromString("fa0f4e46-7eab-4e5c-9d31-30489e69fe2e"),
+					model.MustGetUUIDFromString("b403ef95-4269-4830-bbb6-8e56e5ec0af4"),
+				},
+				Function: model.ProjectFunctionManagement.String(),
+			},
+		},
+		{
+			name:             "invalid_project_function",
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/update_general_info/invalid_project_function.json",
+			id:               "d100efd1-bfce-4cd6-885c-1e4ac3d30715",
+			input: request.UpdateProjectGeneralInfoInput{
+				Name:      "Fortress",
+				StartDate: "1990-01-02",
+				CountryID: model.MustGetUUIDFromString("4ef64490-c906-4192-a7f9-d2221dadfe4c"),
+				Stacks: []model.UUID{
+					model.MustGetUUIDFromString("fa0f4e46-7eab-4e5c-9d31-30489e69fe2e"),
+					model.MustGetUUIDFromString("b403ef95-4269-4830-bbb6-8e56e5ec0af4"),
+				},
+				Function: "a",
+			},
+		},
+		{
+			name:             "country_not_found",
+			wantCode:         http.StatusNotFound,
+			wantResponsePath: "testdata/update_general_info/country_not_found.json",
+			id:               "8dc3be2e-19a4-4942-8a79-56db391a0b15",
+			input: request.UpdateProjectGeneralInfoInput{
+				Name:      "Fortress",
+				StartDate: "1990-01-02",
+				CountryID: model.MustGetUUIDFromString("4ef64490-c906-4192-a7f9-d2221dadfe4d"),
+				Stacks: []model.UUID{
+					model.MustGetUUIDFromString("fa0f4e46-7eab-4e5c-9d31-30489e69fe2e"),
+					model.MustGetUUIDFromString("b403ef95-4269-4830-bbb6-8e56e5ec0af4"),
+				},
+				Function: model.ProjectFunctionDevelopment.String(),
+			},
+		},
+		{
+			name:             "stack_not_found",
+			wantCode:         http.StatusNotFound,
+			wantResponsePath: "testdata/update_general_info/stack_not_found.json",
+			id:               "8dc3be2e-19a4-4942-8a79-56db391a0b15",
+			input: request.UpdateProjectGeneralInfoInput{
+				Name:      "Fortress",
+				StartDate: "1990-01-02",
+				CountryID: model.MustGetUUIDFromString("4ef64490-c906-4192-a7f9-d2221dadfe4c"),
+				Stacks: []model.UUID{
+					model.MustGetUUIDFromString("fa0f4e46-7eab-4e5c-9d31-30489e69fe2d"),
+					model.MustGetUUIDFromString("b403ef95-4269-4830-bbb6-8e56e5ec0af4"),
+				},
+				Function: model.ProjectFunctionDevelopment.String(),
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -753,7 +1346,7 @@ func TestHandler_UpdateContactInfo(t *testing.T) {
 	}{
 		{
 			name:             "ok_update_project_contact_infomation",
-			wantCode:         200,
+			wantCode:         http.StatusOK,
 			wantResponsePath: "testdata/update_contact_info/200.json",
 			id:               "8dc3be2e-19a4-4942-8a79-56db391a0b15",
 			input: request.UpdateContactInfoInput{
@@ -764,8 +1357,8 @@ func TestHandler_UpdateContactInfo(t *testing.T) {
 			},
 		},
 		{
-			name:             "failed_invalid_project_id",
-			wantCode:         404,
+			name:             "project_id_not_found",
+			wantCode:         http.StatusNotFound,
 			wantResponsePath: "testdata/update_contact_info/404.json",
 			id:               "d100efd1-bfce-4cd6-885c-1e4ac3d30714",
 			input: request.UpdateContactInfoInput{
@@ -773,6 +1366,66 @@ func TestHandler_UpdateContactInfo(t *testing.T) {
 				ProjectEmail:      "fortress@d.foundation",
 				AccountManagerID:  model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
 				DeliveryManagerID: model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
+			},
+		},
+		{
+			name:             "empty_project_id",
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/update_contact_info/invalid_project_id.json",
+			id:               "",
+			input: request.UpdateContactInfoInput{
+				ClientEmail:       []string{"fortress@gmai.com"},
+				ProjectEmail:      "fortress@d.foundation",
+				AccountManagerID:  model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
+				DeliveryManagerID: model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
+			},
+		},
+		{
+			name:             "invalid_project_id_format",
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/update_contact_info/invalid_project_id.json",
+			id:               "d100efd1-bfce-4cd6-885c-1e4ac3d307149",
+			input: request.UpdateContactInfoInput{
+				ClientEmail:       []string{"fortress@gmai.com"},
+				ProjectEmail:      "fortress@d.foundation",
+				AccountManagerID:  model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
+				DeliveryManagerID: model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
+			},
+		},
+		{
+			name:             "invalid_email_format",
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/update_contact_info/invalid_email_format.json",
+			id:               "8dc3be2e-19a4-4942-8a79-56db391a0b15",
+			input: request.UpdateContactInfoInput{
+				ClientEmail:       []string{"fortressgmai.com"},
+				ProjectEmail:      "fortress@d.foundation",
+				AccountManagerID:  model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
+				DeliveryManagerID: model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
+			},
+		},
+		{
+			name:             "account_manager_not_found",
+			wantCode:         http.StatusNotFound,
+			wantResponsePath: "testdata/update_contact_info/account_manager_not_found.json",
+			id:               "8dc3be2e-19a4-4942-8a79-56db391a0b15",
+			input: request.UpdateContactInfoInput{
+				ClientEmail:       []string{"fortress@gmai.com"},
+				ProjectEmail:      "fortress@d.foundation",
+				AccountManagerID:  model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558d"),
+				DeliveryManagerID: model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
+			},
+		},
+		{
+			name:             "delivery_manager_not_found",
+			wantCode:         http.StatusNotFound,
+			wantResponsePath: "testdata/update_contact_info/delivery_manager_not_found.json",
+			id:               "8dc3be2e-19a4-4942-8a79-56db391a0b15",
+			input: request.UpdateContactInfoInput{
+				ClientEmail:       []string{"fortress@gmai.com"},
+				ProjectEmail:      "fortress@d.foundation",
+				AccountManagerID:  model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
+				DeliveryManagerID: model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98cd"),
 			},
 		},
 	}
@@ -818,23 +1471,37 @@ func TestHandler_GetListWorkUnit(t *testing.T) {
 	}{
 		{
 			name:             "ok_get_list_work_unit",
-			wantCode:         200,
+			wantCode:         http.StatusOK,
 			wantResponsePath: "testdata/get_list_work_unit/200.json",
 			id:               "8dc3be2e-19a4-4942-8a79-56db391a0b15",
 			query:            "status=active",
 		},
 		{
 			name:             "err_invalid_status",
-			wantCode:         400,
+			wantCode:         http.StatusBadRequest,
 			wantResponsePath: "testdata/get_list_work_unit/400.json",
 			id:               "8dc3be2e-19a4-4942-8a79-56db391a0b15",
 			query:            "status=activ",
 		},
 		{
 			name:             "err_project_not_found",
-			wantCode:         404,
+			wantCode:         http.StatusNotFound,
 			wantResponsePath: "testdata/get_list_work_unit/404.json",
 			id:               "8dc3be2e-19a4-4942-8a79-56db391a0b14",
+			query:            "status=active",
+		},
+		{
+			name:             "empty_project_id",
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/get_list_work_unit/invalid_project_id.json",
+			id:               "",
+			query:            "status=active",
+		},
+		{
+			name:             "invalid_project_id_format",
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/get_list_work_unit/invalid_project_id.json",
+			id:               "8dc3be2e-19a4-4942-8a79-56db391a0b156",
 			query:            "status=active",
 		},
 	}
@@ -939,6 +1606,90 @@ func TestHandler_UpdateWorkUnit(t *testing.T) {
 			wantCode:         http.StatusBadRequest,
 			wantResponsePath: "testdata/update_work_unit/400.json",
 		},
+		{
+			name: "empty_project_id",
+			input: request.UpdateWorkUnitInput{
+				ProjectID:  "",
+				WorkUnitID: "69b32f7e-0433-4566-a801-72909172940e",
+				Body: request.UpdateWorkUnitBody{
+					Name: "New Fortress Web",
+					Type: model.WorkUnitTypeManagement,
+					URL:  "https://github.com/dwarvesf/fortress-web",
+					Members: []model.UUID{
+						model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
+						model.MustGetUUIDFromString("608ea227-45a5-4c8a-af43-6c7280d96340"),
+					},
+					Stacks: []model.UUID{
+						model.MustGetUUIDFromString("fa0f4e46-7eab-4e5c-9d31-30489e69fe2e"),
+						model.MustGetUUIDFromString("0ecf47c8-cca4-4c30-94bb-054b1124c44f"),
+					},
+				},
+			},
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/update_work_unit/invalid_project_id.json",
+		},
+		{
+			name: "invalid_format_project_id",
+			input: request.UpdateWorkUnitInput{
+				ProjectID:  "8dc3be2e-19a4-4942-8a79-56db391a0b156",
+				WorkUnitID: "69b32f7e-0433-4566-a801-72909172940e",
+				Body: request.UpdateWorkUnitBody{
+					Name: "New Fortress Web",
+					Type: model.WorkUnitTypeManagement,
+					URL:  "https://github.com/dwarvesf/fortress-web",
+					Members: []model.UUID{
+						model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
+						model.MustGetUUIDFromString("608ea227-45a5-4c8a-af43-6c7280d96340"),
+					},
+					Stacks: []model.UUID{
+						model.MustGetUUIDFromString("fa0f4e46-7eab-4e5c-9d31-30489e69fe2e"),
+						model.MustGetUUIDFromString("0ecf47c8-cca4-4c30-94bb-054b1124c44f"),
+					},
+				},
+			},
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/update_work_unit/invalid_project_id.json",
+		},
+		{
+			name: "invalid_stack",
+			input: request.UpdateWorkUnitInput{
+				ProjectID:  "8dc3be2e-19a4-4942-8a79-56db391a0b15",
+				WorkUnitID: "69b32f7e-0433-4566-a801-72909172940e",
+				Body: request.UpdateWorkUnitBody{
+					Name: "New Fortress Web",
+					Type: model.WorkUnitTypeManagement,
+					URL:  "https://github.com/dwarvesf/fortress-web",
+					Members: []model.UUID{
+						model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
+						model.MustGetUUIDFromString("608ea227-45a5-4c8a-af43-6c7280d96340"),
+					},
+					Stacks: []model.UUID{
+						model.MustGetUUIDFromString("fa0f4e46-7eab-4e5c-9d31-30489e69fe2d"),
+						model.MustGetUUIDFromString("0ecf47c8-cca4-4c30-94bb-054b1124c44f"),
+					}},
+			},
+			wantCode:         http.StatusNotFound,
+			wantResponsePath: "testdata/update_work_unit/stack_not_found.json",
+		},
+		{
+			name: "invalid_stack",
+			input: request.UpdateWorkUnitInput{
+				ProjectID:  "8dc3be2e-19a4-4942-8a79-56db391a0b15",
+				WorkUnitID: "69b32f7e-0433-4566-a801-72909172940e",
+				Body: request.UpdateWorkUnitBody{
+					Name: "New Fortress Web",
+					Type: model.WorkUnitTypeManagement,
+					URL:  "https://github.com/dwarvesf/fortress-web",
+					Members: []model.UUID{
+						model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
+						model.MustGetUUIDFromString("608ea227-45a5-4c8a-af43-6c7280d96340"),
+					},
+					Stacks: []model.UUID{},
+				},
+			},
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/update_work_unit/invalid_stack.json",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -1028,6 +1779,113 @@ func TestHandler_CreateWorkUnit(t *testing.T) {
 			wantCode:         http.StatusNotFound,
 			wantResponsePath: "testdata/create_work_unit/404_project_not_found.json",
 		},
+		{
+			name: "empty_project_id",
+			input: request.CreateWorkUnitInput{
+				ProjectID: "",
+				Body: request.CreateWorkUnitBody{
+					Name:   "workunit1",
+					Type:   model.WorkUnitTypeDevelopment.String(),
+					Status: model.WorkUnitStatusArchived.String(),
+					URL:    "https://github.com/dwarvesf/fortress-api",
+					Members: []model.UUID{
+						model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
+						model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
+					},
+					Stacks: []model.UUID{
+						model.MustGetUUIDFromString("0ecf47c8-cca4-4c30-94bb-054b1124c44f"),
+						model.MustGetUUIDFromString("fa0f4e46-7eab-4e5c-9d31-30489e69fe2e"),
+					},
+				},
+			},
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/create_work_unit/invalid_project_id.json",
+		},
+		{
+			name: "invalid_project_id_format",
+			input: request.CreateWorkUnitInput{
+				ProjectID: "8dc3be2e-19a4-4942-8a79-56db391a0b156",
+				Body: request.CreateWorkUnitBody{
+					Name:   "workunit1",
+					Type:   model.WorkUnitTypeDevelopment.String(),
+					Status: model.WorkUnitStatusArchived.String(),
+					URL:    "https://github.com/dwarvesf/fortress-api",
+					Members: []model.UUID{
+						model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
+						model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
+					},
+					Stacks: []model.UUID{
+						model.MustGetUUIDFromString("0ecf47c8-cca4-4c30-94bb-054b1124c44f"),
+						model.MustGetUUIDFromString("fa0f4e46-7eab-4e5c-9d31-30489e69fe2e"),
+					},
+				},
+			},
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/create_work_unit/invalid_project_id.json",
+		},
+		{
+			name: "invalid_work_unit_type",
+			input: request.CreateWorkUnitInput{
+				ProjectID: "8dc3be2e-19a4-4942-8a79-56db391a0b15",
+				Body: request.CreateWorkUnitBody{
+					Name:   "workunit1",
+					Type:   "a",
+					Status: model.WorkUnitStatusArchived.String(),
+					URL:    "https://github.com/dwarvesf/fortress-api",
+					Members: []model.UUID{
+						model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
+						model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
+					},
+					Stacks: []model.UUID{
+						model.MustGetUUIDFromString("0ecf47c8-cca4-4c30-94bb-054b1124c44f"),
+						model.MustGetUUIDFromString("fa0f4e46-7eab-4e5c-9d31-30489e69fe2e"),
+					},
+				},
+			},
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/create_work_unit/invalid_work_unit_type.json",
+		},
+		{
+			name: "invalid_work_unit_status",
+			input: request.CreateWorkUnitInput{
+				ProjectID: "8dc3be2e-19a4-4942-8a79-56db391a0b15",
+				Body: request.CreateWorkUnitBody{
+					Name:   "workunit1",
+					Type:   model.WorkUnitTypeDevelopment.String(),
+					Status: "a",
+					URL:    "https://github.com/dwarvesf/fortress-api",
+					Members: []model.UUID{
+						model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
+						model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
+					},
+					Stacks: []model.UUID{
+						model.MustGetUUIDFromString("0ecf47c8-cca4-4c30-94bb-054b1124c44f"),
+						model.MustGetUUIDFromString("fa0f4e46-7eab-4e5c-9d31-30489e69fe2e"),
+					},
+				},
+			},
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/create_work_unit/invalid_work_unit_status.json",
+		},
+		{
+			name: "invalid_work_unit_stack",
+			input: request.CreateWorkUnitInput{
+				ProjectID: "8dc3be2e-19a4-4942-8a79-56db391a0b15",
+				Body: request.CreateWorkUnitBody{
+					Name:   "workunit1",
+					Type:   model.WorkUnitTypeDevelopment.String(),
+					Status: model.WorkUnitStatusArchived.String(),
+					URL:    "https://github.com/dwarvesf/fortress-api",
+					Members: []model.UUID{
+						model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
+						model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
+					},
+					Stacks: []model.UUID{},
+				},
+			},
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/create_work_unit/invalid_work_unit_stack.json",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -1093,6 +1951,42 @@ func TestHandler_ArchiveWorkUnit(t *testing.T) {
 				WorkUnitID: "4797347d-21e0-4dac-a6c7-c98bf2d6b27c",
 			},
 		},
+		{
+			name:             "empty_project_id",
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/archive_work_unit/invalid_project_id.json",
+			input: request.ArchiveWorkUnitInput{
+				ProjectID:  "",
+				WorkUnitID: "4797347d-21e0-4dac-a6c7-c98bf2d6b27c",
+			},
+		},
+		{
+			name:             "invalid_project_id_format",
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/archive_work_unit/invalid_project_id.json",
+			input: request.ArchiveWorkUnitInput{
+				ProjectID:  "8dc3be2e-19a4-4942-8a79-56db391a0b156",
+				WorkUnitID: "4797347d-21e0-4dac-a6c7-c98bf2d6b27c",
+			},
+		},
+		{
+			name:             "empty_work_unit_id",
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/archive_work_unit/invalid_work_unit_id.json",
+			input: request.ArchiveWorkUnitInput{
+				ProjectID:  "8dc3be2e-19a4-4942-8a79-56db391a0b15",
+				WorkUnitID: "",
+			},
+		},
+		{
+			name:             "invalid_work_unit_id_format",
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/archive_work_unit/invalid_work_unit_id.json",
+			input: request.ArchiveWorkUnitInput{
+				ProjectID:  "8dc3be2e-19a4-4942-8a79-56db391a0b15",
+				WorkUnitID: "4797347d-21e0-4dac-a6c7-c98bf2d6b27cd",
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -1150,6 +2044,42 @@ func TestHandler_UnarchiveWorkUnit(t *testing.T) {
 				WorkUnitID: "4797347d-21e0-4dac-a6c7-c98bf2d6b27c",
 			},
 		},
+		{
+			name:             "empty_project_id",
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/unarchive_work_unit/invalid_project_id.json",
+			input: request.ArchiveWorkUnitInput{
+				ProjectID:  "",
+				WorkUnitID: "4797347d-21e0-4dac-a6c7-c98bf2d6b27c",
+			},
+		},
+		{
+			name:             "invalid_project_id_format",
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/unarchive_work_unit/invalid_project_id.json",
+			input: request.ArchiveWorkUnitInput{
+				ProjectID:  "8dc3be2e-19a4-4942-8a79-56db391a0b156",
+				WorkUnitID: "4797347d-21e0-4dac-a6c7-c98bf2d6b27c",
+			},
+		},
+		{
+			name:             "empty_work_unit_id",
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/unarchive_work_unit/invalid_work_unit_id.json",
+			input: request.ArchiveWorkUnitInput{
+				ProjectID:  "8dc3be2e-19a4-4942-8a79-56db391a0b15",
+				WorkUnitID: "",
+			},
+		},
+		{
+			name:             "invalid_work_unit_id_format",
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/unarchive_work_unit/invalid_work_unit_id.json",
+			input: request.ArchiveWorkUnitInput{
+				ProjectID:  "8dc3be2e-19a4-4942-8a79-56db391a0b15",
+				WorkUnitID: "4797347d-21e0-4dac-a6c7-c98bf2d6b27cd",
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -1194,7 +2124,7 @@ func TestHandler_UpdateSendingSurveyState(t *testing.T) {
 	}{
 		{
 			name:             "ok_update_sending_survey",
-			wantCode:         200,
+			wantCode:         http.StatusOK,
 			wantErr:          false,
 			wantResponsePath: "testdata/update_sending_survey/200.json",
 			query:            "allowsSendingSurvey=true",
@@ -1202,11 +2132,27 @@ func TestHandler_UpdateSendingSurveyState(t *testing.T) {
 		},
 		{
 			name:             "failed_invalid_project_id",
-			wantCode:         404,
+			wantCode:         http.StatusNotFound,
 			wantErr:          true,
 			wantResponsePath: "testdata/update_sending_survey/404.json",
 			query:            "allowsSendingSurvey=true",
 			id:               "8dc3be2e-19a4-4942-8a79-56db391a0b11",
+		},
+		{
+			name:             "empty_project_id",
+			wantCode:         http.StatusBadRequest,
+			wantErr:          false,
+			wantResponsePath: "testdata/update_sending_survey/invalid_project_id.json",
+			query:            "allowsSendingSurvey=true",
+			id:               "",
+		},
+		{
+			name:             "invalid_project_id_format",
+			wantCode:         http.StatusBadRequest,
+			wantErr:          false,
+			wantResponsePath: "testdata/update_sending_survey/invalid_project_id.json",
+			query:            "allowsSendingSurvey=true",
+			id:               "8dc3be2e-19a4-4942-8a79-56db391a0b156",
 		},
 	}
 
@@ -1229,6 +2175,76 @@ func TestHandler_UpdateSendingSurveyState(t *testing.T) {
 
 				require.Equal(t, tt.wantCode, w.Code)
 				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.UpdateSendingSurveyState] response mismatched")
+			})
+		})
+	}
+}
+
+func TestHandler_UnassignMember(t *testing.T) {
+	cfg := config.LoadTestConfig()
+	loggerMock := logger.NewLogrusLogger()
+	serviceMock := service.New(&cfg)
+	storeMock := store.New()
+
+	tests := []struct {
+		name             string
+		wantCode         int
+		wantResponsePath string
+		id               string
+		memberID         string
+	}{
+		{
+			name:             "ok_update_project_status",
+			wantCode:         http.StatusOK,
+			wantResponsePath: "testdata/unassign_member/200.json",
+			id:               "8dc3be2e-19a4-4942-8a79-56db391a0b15",
+			memberID:         "2655832e-f009-4b73-a535-64c3a22e558f",
+		},
+		{
+			name:             "failed_invalid_member_id",
+			wantCode:         http.StatusNotFound,
+			wantResponsePath: "testdata/unassign_member/404.json",
+			id:               "8dc3be2e-19a4-4942-8a79-56db391a0b15",
+			memberID:         "cb889a9c-b20c-47ee-83b8-44b6d1721acb",
+		},
+		{
+			name:             "empty_project_id",
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/unassign_member/empty_project_id.json",
+			id:               "",
+			memberID:         "cb889a9c-b20c-47ee-83b8-44b6d1721acb",
+		},
+		{
+			name:             "empty_member_id",
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/unassign_member/empty_member_id.json",
+			id:               "8dc3be2e-19a4-4942-8a79-56db391a0b15",
+			memberID:         "",
+		},
+		{
+			name:             "project_not_found",
+			wantCode:         http.StatusNotFound,
+			wantResponsePath: "testdata/unassign_member/project_not_found.json",
+			id:               "cb889a9c-b20c-47ee-83b8-44b6d1721acb",
+			memberID:         "cb889a9c-b20c-47ee-83b8-44b6d1721acb",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				testhelper.LoadTestSQLFile(t, txRepo, "./testdata/unassign_member/unassign_member.sql")
+				w := httptest.NewRecorder()
+				ctx, _ := gin.CreateTestContext(w)
+				ctx.Params = gin.Params{gin.Param{Key: "id", Value: tt.id}, gin.Param{Key: "memberID", Value: tt.memberID}}
+				ctx.Request = httptest.NewRequest("PUT", fmt.Sprintf("/api/v1/projects/%s/members/%s", tt.id, tt.memberID), nil)
+				ctx.Request.Header.Set("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2OTkzMjExNDIsImlkIjoiMjY1NTgzMmUtZjAwOS00YjczLWE1MzUtNjRjM2EyMmU1NThmIiwiYXZhdGFyIjoiaHR0cHM6Ly9zMy1hcC1zb3V0aGVhc3QtMS5hbWF6b25hd3MuY29tL2ZvcnRyZXNzLWltYWdlcy81MTUzNTc0Njk1NjYzOTU1OTQ0LnBuZyIsImVtYWlsIjoidGhhbmhAZC5mb3VuZGF0aW9uIiwicGVybWlzc2lvbnMiOlsiZW1wbG95ZWVzLnJlYWQiXSwidXNlcl9pbmZvIjpudWxsfQ.GENGPEucSUrILN6tHDKxLMtj0M0REVMUPC7-XhDMpGM")
+				metadataHandler := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+
+				metadataHandler.UnassignMember(ctx)
+				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				require.NoError(t, err)
+
+				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.UnassignMember] response mismatched")
 			})
 		})
 	}

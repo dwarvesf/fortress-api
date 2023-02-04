@@ -1,0 +1,65 @@
+{
+    "data": {
+        "id": "",
+        "createdAt": "",
+        "updatedAt": "",
+        "name": "project1",
+        "type": "dwarves",
+        "status": "on-boarding",
+        "startDate": "2022-11-14",
+        "accountManager": {
+            "employeeID": "ecea9d15-05ba-4a4e-9787-54210e3b98ce",
+            "fullName": "Nguyễn Hoàng Huy",
+            "displayName": "Huy Nguyen",
+            "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/2830497479497502617.png",
+            "username": "huynh"
+        },
+        "deliveryManager": {
+            "employeeID": "2655832e-f009-4b73-a535-64c3a22e558f",
+            "fullName": "Phạm Đức Thành",
+            "displayName": "Thanh Pham",
+            "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
+            "username": "thanh"
+        },
+        "members": [
+            {
+                "projectSlotID": "",
+                "projectMemberID": "",
+                "employeeID": "2655832e-f009-4b73-a535-64c3a22e558f",
+                "fullName": "Phạm Đức Thành",
+                "displayName": "Thanh Pham",
+                "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
+                "positions": [
+                    {
+                        "id": "39735742-829b-47f3-8f9d-daf0983914e5",
+                        "code": "project-management",
+                        "name": "Project-Management"
+                    }
+                ],
+                "deploymentType": "official",
+                "status": "on-boarding",
+                "isLead": false,
+                "seniority": {
+                    "id": "39735742-829b-47f3-8f9d-daf0983914e5",
+                    "createdAt": "2022-11-07T09:50:25.714604Z",
+                    "updatedAt": "2022-11-07T09:50:25.714604Z",
+                    "name": "Principal",
+                    "code": "principal",
+                    "level": 6
+                },
+                "username": "thanh"
+            }
+        ],
+        "clientEmail": [
+            "b@gmail.com"
+        ],
+        "projectEmail": "a@gmail.com",
+        "country": {
+            "id": "4ef64490-c906-4192-a7f9-d2221dadfe4c",
+            "name": "Vietnam",
+            "code": "+84"
+        },
+        "code": "project1",
+        "function": "development"
+    }
+}

@@ -1117,13 +1117,13 @@ func (h *handler) GetSurveyReviewDetail(c *gin.Context) {
 	}
 
 	topicID := c.Param("topicID")
-	if topicID == "" || !model.IsUUIDFromString(eventID) {
+	if topicID == "" || !model.IsUUIDFromString(topicID) {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidTopicID, nil, ""))
 		return
 	}
 
 	reviewID := c.Param("reviewID")
-	if reviewID == "" || !model.IsUUIDFromString(eventID) {
+	if reviewID == "" || !model.IsUUIDFromString(reviewID) {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidReviewerID, nil, ""))
 		return
 	}
@@ -1209,7 +1209,7 @@ func (h *handler) DeleteSurveyTopic(c *gin.Context) {
 	}
 
 	topicID := c.Param("topicID")
-	if topicID == "" || !model.IsUUIDFromString(eventID) {
+	if topicID == "" || !model.IsUUIDFromString(topicID) {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidTopicID, nil, ""))
 		return
 	}
