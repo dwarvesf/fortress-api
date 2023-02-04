@@ -26,7 +26,8 @@ func (s *store) One(db *gorm.DB, id string, preload bool) (*model.Employee, erro
 			Where("employee_roles.deleted_at IS NULL").
 			Order("roles.level")
 	}).
-		Preload("EmployeeRoles.Role", "deleted_at IS NULL")
+		Preload("EmployeeRoles.Role", "deleted_at IS NULL").
+		Preload("SocialAccounts", "deleted_at IS NULL")
 
 	if preload {
 		query = query.
@@ -43,8 +44,7 @@ func (s *store) One(db *gorm.DB, id string, preload bool) (*model.Employee, erro
 			Preload("EmployeeOrganizations", "deleted_at IS NULL").
 			Preload("EmployeeOrganizations.Organization", "deleted_at IS NULL").
 			Preload("Seniority").
-			Preload("LineManager").
-			Preload("SocialAccounts", "deleted_at IS NULL")
+			Preload("LineManager")
 	}
 
 	var employee *model.Employee
@@ -87,7 +87,8 @@ func (s *store) All(db *gorm.DB, filter EmployeeFilter, pagination model.Paginat
 		return nil, 0, err
 	}
 
-	query = getByFieldSort(db, query, "employees.joined_date", filter.JoinedDateSort)
+	query = getByFieldSort(db, query, "employees.joined_date", filter.JoinedDateSort).
+		Preload("SocialAccounts", "deleted_at IS NULL")
 
 	if filter.Preload {
 		query = query.Preload("ProjectMembers", "deleted_at IS NULL").
@@ -104,8 +105,7 @@ func (s *store) All(db *gorm.DB, filter EmployeeFilter, pagination model.Paginat
 			Preload("EmployeeChapters", "deleted_at IS NULL").
 			Preload("EmployeeChapters.Chapter", "deleted_at IS NULL").
 			Preload("EmployeeStacks", "deleted_at IS NULL").
-			Preload("EmployeeStacks.Stack", "deleted_at IS NULL").
-			Preload("SocialAccounts", "deleted_at IS NULL")
+			Preload("EmployeeStacks.Stack", "deleted_at IS NULL")
 	}
 
 	limit, offset := pagination.ToLimitOffset()

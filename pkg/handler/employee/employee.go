@@ -570,20 +570,20 @@ func (h *handler) updateSocialAccounts(db *gorm.DB, input request.UpdateEmployee
 		switch account.Type {
 		case model.SocialAccountTypeGitHub:
 			account.AccountID = input.GithubID
+			account.Name = input.GithubID
 		case model.SocialAccountTypeNotion:
-			account.AccountID = input.NotionID
 			account.Name = input.NotionName
 			account.Email = input.NotionEmail
 		case model.SocialAccountTypeDiscord:
-			account.AccountID = input.DiscordID
 			account.Name = input.DiscordName
 		case model.SocialAccountTypeLinkedIn:
+			account.AccountID = input.LinkedInName
 			account.Name = input.LinkedInName
 		default:
 			continue
 		}
 
-		if _, err := h.store.SocialAccount.Update(db, account); err != nil {
+		if _, err := h.store.SocialAccount.UpdateSelectedFieldsByID(db, account.ID.String(), *account, "account_id", "name", "email"); err != nil {
 			l.Errorf(err, "failed to update social account %s", account.ID)
 			return err
 		}
