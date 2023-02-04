@@ -45,7 +45,7 @@ func (c *cronjob) SyncAuditCycle() {
 	tx, done := c.repo.NewTransaction()
 
 	// Get all audit cycle from notion
-	database, err := c.service.Notion.GetDatabase(c.config.Notion.AuditCycleBDID, nil, nil)
+	database, err := c.service.NotionAudit.GetDatabase(c.config.NotionAudit.AuditCycleDBID, nil, nil)
 	if err != nil {
 		l.Error(err, "failed to get database from notion")
 		return
@@ -70,7 +70,7 @@ func (c *cronjob) SyncAuditCycle() {
 		// If auditCycle not exist in mapPage
 		if ac, ok := auditCycleMap[model.MustGetUUIDFromString(page.ID)]; !ok {
 			l.Infof("Create audit cycle ID: %s", page.ID)
-			auditCycle := model.NewAuditCycleFromNotionPage(&page, c.config.Notion.AuditCycleBDID)
+			auditCycle := model.NewAuditCycleFromNotionPage(&page, c.config.NotionAudit.AuditCycleDBID)
 			// Create audits
 			if err := c.createAudits(tx.DB(), &page, auditCycle); err != nil {
 				l.Error(err, "failed to create audit")
@@ -150,7 +150,7 @@ func (c *cronjob) SyncActionItem(db *gorm.DB) error {
 	actionItemMap := model.ActionItemToMap(actionItems)
 
 	// Sync action item
-	if err := c.syncActionItemPage(db, c.config.Notion.AuditActionItemBDID, false, actionItemMap); err != nil {
+	if err := c.syncActionItemPage(db, c.config.NotionAudit.AuditActionItemDBID, false, actionItemMap); err != nil {
 		l.Error(err, "failed to run function syncActionItemPage")
 		return err
 	}
@@ -236,7 +236,7 @@ func (c *cronjob) syncActionItemPage(db *gorm.DB, databaseID string, withStartCu
 	var err error
 
 	if withStartCursor {
-		database, err = c.service.Notion.GetDatabaseWithStartCursor(c.config.Notion.AuditActionItemBDID, databaseID)
+		database, err = c.service.Notion.GetDatabaseWithStartCursor(c.config.NotionAudit.AuditActionItemDBID, databaseID)
 		if err != nil {
 			l.Error(err, "failed to get database from notion")
 			return err
@@ -277,7 +277,7 @@ func (c *cronjob) syncActionItemPage(db *gorm.DB, databaseID string, withStartCu
 			}
 		}
 
-		newActionItem := model.NewActionItemFromNotionPage(page, pic.ID, c.config.Notion.AuditActionItemBDID)
+		newActionItem := model.NewActionItemFromNotionPage(page, pic.ID, c.config.NotionAudit.AuditActionItemDBID)
 
 		if !newActionItem.AuditCycleID.IsZero() {
 			auditCycle, err := c.store.AuditCycle.One(db, newActionItem.AuditCycleID.String())
@@ -358,7 +358,7 @@ func (c *cronjob) syncAuditCycle(db *gorm.DB, page *notion.Page, auditCycle *mod
 		"pageID": page.ID,
 	})
 
-	newAuditCycle := model.NewAuditCycleFromNotionPage(page, c.config.Notion.AuditCycleBDID)
+	newAuditCycle := model.NewAuditCycleFromNotionPage(page, c.config.NotionAudit.AuditCycleDBID)
 
 	cloneAuditCycle, err := c.store.AuditCycle.One(db, newAuditCycle.ID.String())
 	if err != nil {
