@@ -131,6 +131,62 @@ func TestHandler_List(t *testing.T) {
 			wantCode:         http.StatusOK,
 			wantResponsePath: "testdata/list/with_list_working_status.json",
 		},
+		{
+			name: "invalid_position_code",
+			body: request.GetListEmployeeInput{
+				Positions: []string{""},
+			},
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/list/invalid_position_code.json",
+		},
+		{
+			name: "invalid_chapter_code",
+			body: request.GetListEmployeeInput{
+				Chapters: []string{""},
+			},
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/list/invalid_chapter_code.json",
+		},
+		{
+			name: "invalid_organization_code",
+			body: request.GetListEmployeeInput{
+				Organizations: []string{""},
+			},
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/list/invalid_organization_code.json",
+		},
+		{
+			name: "invalid_project_code",
+			body: request.GetListEmployeeInput{
+				Projects: []string{""},
+			},
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/list/invalid_project_code.json",
+		},
+		{
+			name: "invalid_seniority_code",
+			body: request.GetListEmployeeInput{
+				Seniorities: []string{""},
+			},
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/list/invalid_seniority_code.json",
+		},
+		{
+			name: "invalid_stack_code",
+			body: request.GetListEmployeeInput{
+				Stacks: []string{""},
+			},
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/list/invalid_stack_code.json",
+		},
+		{
+			name: "with_multiple_stacks",
+			body: request.GetListEmployeeInput{
+				Stacks: []string{"golang", "react"},
+			},
+			wantCode:         http.StatusOK,
+			wantResponsePath: "testdata/list/with_multiple_stack.json",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -237,6 +293,42 @@ func TestHandler_UpdateEmployeeStatus(t *testing.T) {
 			},
 			wantResponsePath: "testdata/update_employee_status/200.json",
 		},
+		{
+			name:     "empty_employee_id",
+			wantCode: http.StatusBadRequest,
+			id:       "",
+			body: request.UpdateWorkingStatusInput{
+				EmployeeStatus: "contractor",
+			},
+			wantResponsePath: "testdata/update_employee_status/400.json",
+		},
+		{
+			name:     "wrong_format_employee_id",
+			wantCode: http.StatusBadRequest,
+			id:       "2655832e-f009-4b73-a535-64c3a22e558fa",
+			body: request.UpdateWorkingStatusInput{
+				EmployeeStatus: "contractor",
+			},
+			wantResponsePath: "testdata/update_employee_status/400.json",
+		},
+		{
+			name:     "invalid_employee_status",
+			wantCode: http.StatusBadRequest,
+			id:       "2655832e-f009-4b73-a535-64c3a22e558f",
+			body: request.UpdateWorkingStatusInput{
+				EmployeeStatus: "contractorr",
+			},
+			wantResponsePath: "testdata/update_employee_status/invalid_employee_status.json",
+		},
+		{
+			name:     "employee_not_found",
+			wantCode: http.StatusNotFound,
+			id:       "2655832e-f009-4b73-a535-64c3a22e558d",
+			body: request.UpdateWorkingStatusInput{
+				EmployeeStatus: "contractor",
+			},
+			wantResponsePath: "testdata/update_employee_status/404.json",
+		},
 	}
 
 	for _, tt := range tests {
@@ -285,7 +377,7 @@ func Test_UpdateGeneralInfo(t *testing.T) {
 	}{
 		{
 			name:             "ok_update_general_info",
-			wantCode:         200,
+			wantCode:         http.StatusOK,
 			wantErr:          false,
 			wantResponsePath: "testdata/update_general_info/200.json",
 			body: request.UpdateEmployeeGeneralInfoInput{
@@ -298,7 +390,7 @@ func Test_UpdateGeneralInfo(t *testing.T) {
 		},
 		{
 			name:             "fail_wrong_employee_id",
-			wantCode:         404,
+			wantCode:         http.StatusNotFound,
 			wantErr:          true,
 			wantResponsePath: "testdata/update_general_info/404.json",
 			body: request.UpdateEmployeeGeneralInfoInput{
@@ -307,6 +399,69 @@ func Test_UpdateGeneralInfo(t *testing.T) {
 				Phone:    "0123456788",
 			},
 			id: "2655832e-f009-4b73-a535-64c3a22e558a",
+		},
+		{
+			name:             "empty_employee_id",
+			wantCode:         http.StatusBadRequest,
+			wantErr:          true,
+			wantResponsePath: "testdata/update_general_info/400.json",
+			body: request.UpdateEmployeeGeneralInfoInput{
+				FullName: "Phạm Đức Thành",
+				Email:    "thanh@d.foundation",
+				Phone:    "0123456788",
+			},
+			id: "",
+		},
+		{
+			name:             "wrong_format_employee_id",
+			wantCode:         http.StatusBadRequest,
+			wantErr:          true,
+			wantResponsePath: "testdata/update_general_info/400.json",
+			body: request.UpdateEmployeeGeneralInfoInput{
+				FullName: "Phạm Đức Thành",
+				Email:    "thanh@d.foundation",
+				Phone:    "0123456788",
+			},
+			id: "2655832e-f009-4b73-a535-64c3a22e558aa",
+		},
+		{
+			name:             "not_found_line_manager",
+			wantCode:         http.StatusNotFound,
+			wantErr:          true,
+			wantResponsePath: "testdata/update_general_info/line_manager_not_found.json",
+			body: request.UpdateEmployeeGeneralInfoInput{
+				FullName:      "Phạm Đức Thành",
+				Email:         "thanh@d.foundation",
+				Phone:         "0123456788",
+				LineManagerID: model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558b"),
+			},
+			id: "2655832e-f009-4b73-a535-64c3a22e558a",
+		},
+		{
+			name:             "invalid_join_date",
+			wantCode:         http.StatusBadRequest,
+			wantErr:          true,
+			wantResponsePath: "testdata/update_general_info/invalid_join_date.json",
+			body: request.UpdateEmployeeGeneralInfoInput{
+				FullName:   "Phạm Đức Thành",
+				Email:      "thanh@d.foundation",
+				Phone:      "0123456788",
+				JoinedDate: "2006-13-12",
+			},
+			id: "2655832e-f009-4b73-a535-64c3a22e558f",
+		},
+		{
+			name:             "organization_not_found",
+			wantCode:         http.StatusNotFound,
+			wantErr:          true,
+			wantResponsePath: "testdata/update_general_info/organization_not_found.json",
+			body: request.UpdateEmployeeGeneralInfoInput{
+				FullName:        "Phạm Đức Thành",
+				Email:           "thanh@d.foundation",
+				Phone:           "0123456788",
+				OrganizationIDs: []model.UUID{model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f")},
+			},
+			id: "2655832e-f009-4b73-a535-64c3a22e558f",
 		},
 	}
 
@@ -357,7 +512,7 @@ func Test_UpdateSkill(t *testing.T) {
 	}{
 		{
 			name:             "ok_update_skill",
-			wantCode:         200,
+			wantCode:         http.StatusOK,
 			wantErr:          false,
 			wantResponsePath: "testdata/update_skills/200.json",
 			body: request.UpdateSkillsInput{
@@ -378,8 +533,8 @@ func Test_UpdateSkill(t *testing.T) {
 			id: "2655832e-f009-4b73-a535-64c3a22e558f",
 		},
 		{
-			name:             "failed_invalid_employee_id",
-			wantCode:         404,
+			name:             "not_found_employee",
+			wantCode:         http.StatusNotFound,
 			wantErr:          true,
 			wantResponsePath: "testdata/update_skills/404.json",
 			body: request.UpdateSkillsInput{
@@ -398,6 +553,72 @@ func Test_UpdateSkill(t *testing.T) {
 				},
 			},
 			id: "2655832e-f009-4b73-a535-64c3a22e558a",
+		},
+		{
+			name:             "empty_employee_id",
+			wantCode:         http.StatusBadRequest,
+			wantErr:          true,
+			wantResponsePath: "testdata/update_skills/400.json",
+			body: request.UpdateSkillsInput{
+				Positions: []model.UUID{
+					model.MustGetUUIDFromString("11ccffea-2cc9-4e98-9bef-3464dfe4dec8"),
+					model.MustGetUUIDFromString("d796884d-a8c4-4525-81e7-54a3b6099eac"),
+				},
+				Chapters:  []model.UUID{model.MustGetUUIDFromString("11ccffea-2cc9-4e98-9bef-3464dfe4dec8")},
+				Seniority: model.MustGetUUIDFromString("39735742-829b-47f3-8f9d-daf0983914e5"),
+				Stacks: []model.UUID{
+					model.MustGetUUIDFromString("0ecf47c8-cca4-4c30-94bb-054b1124c44f"),
+					model.MustGetUUIDFromString("fa0f4e46-7eab-4e5c-9d31-30489e69fe2e"),
+				},
+				LeadingChapters: []model.UUID{
+					model.MustGetUUIDFromString("11ccffea-2cc9-4e98-9bef-3464dfe4dec8"),
+				},
+			},
+			id: "",
+		},
+		{
+			name:             "wrong_format_employee_id",
+			wantCode:         http.StatusBadRequest,
+			wantErr:          true,
+			wantResponsePath: "testdata/update_skills/400.json",
+			body: request.UpdateSkillsInput{
+				Positions: []model.UUID{
+					model.MustGetUUIDFromString("11ccffea-2cc9-4e98-9bef-3464dfe4dec8"),
+					model.MustGetUUIDFromString("d796884d-a8c4-4525-81e7-54a3b6099eac"),
+				},
+				Chapters:  []model.UUID{model.MustGetUUIDFromString("11ccffea-2cc9-4e98-9bef-3464dfe4dec8")},
+				Seniority: model.MustGetUUIDFromString("39735742-829b-47f3-8f9d-daf0983914e5"),
+				Stacks: []model.UUID{
+					model.MustGetUUIDFromString("0ecf47c8-cca4-4c30-94bb-054b1124c44f"),
+					model.MustGetUUIDFromString("fa0f4e46-7eab-4e5c-9d31-30489e69fe2e"),
+				},
+				LeadingChapters: []model.UUID{
+					model.MustGetUUIDFromString("11ccffea-2cc9-4e98-9bef-3464dfe4dec8"),
+				},
+			},
+			id: "2655832e-f009-4b73-a535-64c3a22e558aa",
+		},
+		{
+			name:             "invalid_stack",
+			wantCode:         http.StatusNotFound,
+			wantErr:          true,
+			wantResponsePath: "testdata/update_skills/stack_not_found.json",
+			body: request.UpdateSkillsInput{
+				Positions: []model.UUID{
+					model.MustGetUUIDFromString("11ccffea-2cc9-4e98-9bef-3464dfe4dec8"),
+					model.MustGetUUIDFromString("d796884d-a8c4-4525-81e7-54a3b6099eac"),
+				},
+				Chapters:  []model.UUID{model.MustGetUUIDFromString("11ccffea-2cc9-4e98-9bef-3464dfe4dec8")},
+				Seniority: model.MustGetUUIDFromString("39735742-829b-47f3-8f9d-daf0983914e5"),
+				Stacks: []model.UUID{
+					model.MustGetUUIDFromString("0ecf47c8-cca4-4c30-94bb-054b1124c44d"),
+					model.MustGetUUIDFromString("fa0f4e46-7eab-4e5c-9d31-30489e69fe2e"),
+				},
+				LeadingChapters: []model.UUID{
+					model.MustGetUUIDFromString("11ccffea-2cc9-4e98-9bef-3464dfe4dec8"),
+				},
+			},
+			id: "2655832e-f009-4b73-a535-64c3a22e558f",
 		},
 	}
 
@@ -554,7 +775,7 @@ func Test_UpdatePersonalInfo(t *testing.T) {
 	}{
 		{
 			name:             "ok_update_personal_info",
-			wantCode:         200,
+			wantCode:         http.StatusOK,
 			wantErr:          false,
 			wantResponsePath: "testdata/update_personal_info/200.json",
 			body: request.UpdatePersonalInfoInput{
@@ -568,8 +789,8 @@ func Test_UpdatePersonalInfo(t *testing.T) {
 			id: "2655832e-f009-4b73-a535-64c3a22e558f",
 		},
 		{
-			name:             "fail_wrong_employee_id",
-			wantCode:         404,
+			name:             "employee_not_found",
+			wantCode:         http.StatusNotFound,
 			wantErr:          true,
 			wantResponsePath: "testdata/update_personal_info/404.json",
 			body: request.UpdatePersonalInfoInput{
@@ -581,6 +802,51 @@ func Test_UpdatePersonalInfo(t *testing.T) {
 				City:          "Hồ Chí Minh",
 			},
 			id: "2655832e-f009-4b73-a535-64c3a22e558a",
+		},
+		{
+			name:             "empty_employee_id",
+			wantCode:         http.StatusBadRequest,
+			wantErr:          true,
+			wantResponsePath: "testdata/update_personal_info/400.json",
+			body: request.UpdatePersonalInfoInput{
+				DoB:           &dob,
+				Gender:        "Male",
+				Address:       "Phan Huy Ich, Tan Binh District, Ho Chi Minh, Vietnam",
+				PersonalEmail: "thanhpham123@gmail.com",
+				Country:       "Vietnam",
+				City:          "Hồ Chí Minh",
+			},
+			id: "",
+		},
+		{
+			name:             "wrong_employee_id_format",
+			wantCode:         http.StatusBadRequest,
+			wantErr:          true,
+			wantResponsePath: "testdata/update_personal_info/400.json",
+			body: request.UpdatePersonalInfoInput{
+				DoB:           &dob,
+				Gender:        "Male",
+				Address:       "Phan Huy Ich, Tan Binh District, Ho Chi Minh, Vietnam",
+				PersonalEmail: "thanhpham123@gmail.com",
+				Country:       "Vietnam",
+				City:          "Hồ Chí Minh",
+			},
+			id: "2655832e-f009-4b73-a535-64c3a22e558aa",
+		},
+		{
+			name:             "wrong_employee_id_format",
+			wantCode:         http.StatusBadRequest,
+			wantErr:          true,
+			wantResponsePath: "testdata/update_personal_info/invalid_country.json",
+			body: request.UpdatePersonalInfoInput{
+				DoB:           &dob,
+				Gender:        "Male",
+				Address:       "Phan Huy Ich, Tan Binh District, Ho Chi Minh, Vietnam",
+				PersonalEmail: "thanhpham123@gmail.com",
+				Country:       "Vietnam",
+				City:          "Hồ Chí Minhh",
+			},
+			id: "2655832e-f009-4b73-a535-64c3a22e558f",
 		},
 	}
 

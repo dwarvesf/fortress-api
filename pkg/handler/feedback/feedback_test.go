@@ -48,6 +48,12 @@ func TestHandler_List(t *testing.T) {
 			query:            "status=draft",
 			wantResponsePath: "testdata/list/200_get_draft_feedbacks.json",
 		},
+		{
+			name:             "get_draft_feedbacks",
+			wantCode:         http.StatusBadRequest,
+			query:            "status=draftf",
+			wantResponsePath: "testdata/list/invalid_status.json",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
