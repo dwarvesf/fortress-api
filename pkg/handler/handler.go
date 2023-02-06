@@ -49,7 +49,7 @@ type Handler struct {
 	Digest         digest.IHandler
 	Update         update.IHandler
 	Memo           memo.IHandler
-	Birthday       birthday.IBirthday
+	Birthday       birthday.IHandler
 }
 
 func New(store *store.Store, repo store.DBRepo, service *service.Service, logger logger.Logger, cfg *config.Config) *Handler {

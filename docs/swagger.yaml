@@ -3009,27 +3009,6 @@ info:
   title: Swagger Example API
   version: "1.0"
 paths:
-  /audits:
-    put:
-      consumes:
-      - application/json
-      description: Sync audit info from Notion to database
-      parameters:
-      - description: jwt token
-        in: header
-        name: Authorization
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/view.MessageResponse'
-      summary: Sync audit info from Notion to database
-      tags:
-      - Audit
   /auth:
     post:
       consumes:
@@ -3103,6 +3082,27 @@ paths:
       summary: Get logged-in user data
       tags:
       - Auth
+  /cronjobs/audits:
+    post:
+      consumes:
+      - application/json
+      description: Sync audit info from Notion to database
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.MessageResponse'
+      summary: Sync audit info from Notion to database
+      tags:
+      - Audit
   /dashboards/engagement/detail:
     get:
       consumes:

@@ -479,12 +479,6 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/hiring.IHandler.List-fm",
 			},
 		},
-		"/api/v1/audits": {
-			"PUT": {
-				Method:  "PUT",
-				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/audit.IHandler.Sync-fm",
-			},
-		},
 		"/api/v1/staffing-demands": {
 			"GET": {
 				Method:  "GET",
@@ -539,10 +533,16 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/dashboard.IHandler.GetWorkUnitDistribution-fm",
 			},
 		},
-		"/cronjob/birthday": {
+		"/cronjobs/birthday": {
 			"POST": {
 				Method:  "POST",
-				Handler: "github.com/dwarvesf/fortress-api/pkg/cronjob/birthday.ICronjob.BirthdayDailyMessage-fm",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/birthday.IHandler.BirthdayDailyMessage-fm",
+			},
+		},
+		"/cronjobs/audits": {
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/audit.IHandler.Sync-fm",
 			},
 		},
 	}
@@ -553,7 +553,7 @@ func Test_loadV1Routes(t *testing.T) {
 	h := handler.New(nil, nil, nil, l, cfg)
 
 	router := gin.New()
-	loadV1Routes(router, h, nil, nil, nil, nil)
+	loadV1Routes(router, h, nil, nil, nil)
 
 	routeInfo := router.Routes()
 

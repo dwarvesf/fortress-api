@@ -58,7 +58,7 @@ func NewRoutes(cfg *config.Config, svc *service.Service, s *store.Store, logger 
 	// use ginSwagger middleware to serve the API docs
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	// load API here
-	loadV1Routes(r, h, repo, s, logger, cfg)
+	loadV1Routes(r, h, repo, s, cfg)
 
 	return r
 }
