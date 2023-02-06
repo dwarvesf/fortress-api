@@ -25,7 +25,7 @@ type birthday struct {
 	config  *config.Config
 }
 
-func New(store *store.Store, repo store.DBRepo, service *service.Service, logger logger.Logger, cfg *config.Config) IBirthday {
+func New(store *store.Store, repo store.DBRepo, service *service.Service, logger logger.Logger, cfg *config.Config) IHandler {
 	return &birthday{store: store, repo: repo, service: service, logger: logger, config: cfg}
 }
 

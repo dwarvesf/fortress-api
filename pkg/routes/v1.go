@@ -5,21 +5,23 @@ import (
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/handler"
-	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/mw"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 )
 
-func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store.Store, logger logger.Logger, cfg *config.Config) {
+func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store.Store, cfg *config.Config) {
 	v1 := r.Group("/api/v1")
-	cronjob := r.Group("/cronjob")
+	cronjob := r.Group("/cronjobs")
 
 	pmw := mw.NewPermissionMiddleware(s, repo, cfg)
 	amw := mw.NewAuthMiddleware(cfg)
 
 	// cronjob group
-	cronjob.POST("/birthday", h.Birthday.BirthdayDailyMessage)
+	{
+		cronjob.POST("/audits", h.Audit.Sync)
+		cronjob.POST("/birthday", h.Birthday.BirthdayDailyMessage)
+	}
 
 	/////////////////
 	// API GROUP
@@ -154,11 +156,6 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 	hiring := v1.Group("/hiring-positions")
 	{
 		hiring.GET("", h.Hiring.List)
-	}
-
-	audit := v1.Group("/audits")
-	{
-		audit.PUT("", h.Audit.Sync)
 	}
 
 	dashboard := v1.Group("/dashboards")

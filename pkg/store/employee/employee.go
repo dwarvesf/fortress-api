@@ -202,8 +202,3 @@ func (s *store) GetMenteesByID(db *gorm.DB, employeeID string) ([]model.Employee
 		Preload("Seniority").
 		Find(&employees).Error
 }
-
-func (s *store) GetAllActive(db *gorm.DB) ([]model.Employee, error) {
-	var employees []model.Employee
-	return employees, db.Where("working_status <> ?", model.WorkingStatusLeft).Find(&employees).Error
-}
