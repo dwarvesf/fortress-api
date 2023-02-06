@@ -73,6 +73,15 @@ definitions:
       time:
         type: string
     type: object
+  model.Digest:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+    type: object
   model.Earn:
     properties:
       due_date:
@@ -378,6 +387,21 @@ definitions:
         type: integer
       stronglyDisagree:
         type: integer
+    type: object
+  model.Memo:
+    properties:
+      author:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      tags:
+        items:
+          type: string
+        type: array
     type: object
   model.Organization:
     properties:
@@ -746,6 +770,17 @@ definitions:
       ring:
         type: string
     type: object
+  model.Update:
+    properties:
+      audience:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+    type: object
   model.Valuation:
     properties:
       accountReceivable:
@@ -915,6 +950,8 @@ definitions:
           $ref: '#/definitions/request.AssignMemberInput'
         type: array
       name:
+        type: string
+      notionID:
         type: string
       projectEmail:
         type: string
@@ -1220,6 +1257,8 @@ definitions:
       function:
         type: string
       name:
+        type: string
+      notionID:
         type: string
       stacks:
         items:
@@ -2308,6 +2347,8 @@ definitions:
         type: array
       name:
         type: string
+      notionID:
+        type: string
       projectEmail:
         type: string
       salePerson:
@@ -2790,6 +2831,8 @@ definitions:
       function:
         type: string
       name:
+        type: string
+      notionID:
         type: string
       stacks:
         items:

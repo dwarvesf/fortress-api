@@ -33,6 +33,7 @@ type ProjectData struct {
 	Stacks              []Stack           `json:"stacks"`
 	Code                string            `json:"code"`
 	Function            string            `json:"function"`
+	NotionID            string            `json:"notionID"`
 }
 
 type UpdatedProject struct {
@@ -183,6 +184,10 @@ func ToProjectData(c *gin.Context, project *model.Project, userInfo *model.Curre
 			Name: project.Country.Name,
 			Code: project.Country.Code,
 		}
+	}
+
+	if !project.NotionID.IsZero() {
+		d.NotionID = project.NotionID.String()
 	}
 
 	return d
@@ -394,6 +399,7 @@ type UpdateProjectGeneralInfo struct {
 	Country   *BasicCountryInfo     `json:"country"`
 	Stacks    []model.Stack         `json:"stacks"`
 	Function  model.ProjectFunction `json:"function"`
+	NotionID  string                `json:"notionID"`
 }
 
 type UpdateProjectGeneralInfoResponse struct {
@@ -411,6 +417,10 @@ func ToUpdateProjectGeneralInfo(project *model.Project) UpdateProjectGeneralInfo
 		StartDate: project.StartDate,
 		Stacks:    stacks,
 		Function:  project.Function,
+	}
+
+	if !project.NotionID.IsZero() {
+		rs.NotionID = project.NotionID.String()
 	}
 
 	if project.Country != nil {
