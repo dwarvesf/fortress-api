@@ -50,7 +50,7 @@ func (r *controller) Auth(c *gin.Context, in AuthenticationInput) (*model.Employ
 		Email:  primaryEmail,
 	}
 
-	jwt, err := utils.GenerateJWTToken(&authenticationInfo, time.Now().Add(24*365*time.Hour).Unix(), "JWTSecretKey")
+	jwt, err := utils.GenerateJWTToken(&authenticationInfo, time.Now().Add(24*365*time.Hour).Unix(), r.config.JWTSecretKey)
 	if err != nil {
 		return nil, "", err
 	}

@@ -17,6 +17,6 @@ type Controller struct {
 
 func New(store *store.Store, repo store.DBRepo, service *service.Service, logger logger.Logger, cfg *config.Config) *Controller {
 	return &Controller{
-		Auth: auth.New(store, repo, service, logger),
+		Auth: auth.New(store, repo, service, logger, cfg),
 	}
 }
