@@ -70,7 +70,9 @@ type Project struct {
 	Code                string          `gorm:"default:null"`
 	Function            ProjectFunction `gorm:"default:null"`
 	NotionID            UUID            `gorm:"default:null"`
+	BankAccountID       UUID            `gorm:"default:null"`
 
+	BankAccount    *BankAccount
 	Country        *Country
 	Slots          []ProjectSlot
 	Heads          []*ProjectHead

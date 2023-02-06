@@ -1,0 +1,119 @@
+{
+    "data": [
+        {
+            "id": "e79eb5b3-e2cb-4d7f-9273-46f4be88cb20",
+            "createdAt": "2023-02-06T13:00:37.732758Z",
+            "updatedAt": "2023-02-06T13:00:37.732758Z",
+            "AccountNumber": "1234567891",
+            "BankName": "OCB",
+            "OwnerName": "Phạm Văn Đạt",
+            "Address": "HCM VN",
+            "SwiftCode": "123456",
+            "RoutingNumber": "123456",
+            "Name": "name1",
+            "UKSortCode": "name1",
+            "CurrencyID": "06a699ed-618b-400b-ac8c-8739956fa8e7",
+            "Currency": {
+                "id": "06a699ed-618b-400b-ac8c-8739956fa8e7",
+                "createdAt": "2019-02-20T04:24:14.967209Z",
+                "updatedAt": "2019-02-20T04:24:14.967209Z",
+                "Name": "GBP",
+                "Symbol": "£",
+                "Locale": "en-gb",
+                "Type": "fiat"
+            }
+        },
+        {
+            "id": "99419004-e1c7-405a-acee-a32ba2ec140b",
+            "createdAt": "2023-02-06T13:04:13.453113Z",
+            "updatedAt": "2023-02-06T13:04:13.453113Z",
+            "AccountNumber": "1234567892",
+            "BankName": "ACB",
+            "OwnerName": "Nguyễn Xuân Trường",
+            "Address": "HCM VN",
+            "SwiftCode": "123457",
+            "RoutingNumber": "123457",
+            "Name": "name2",
+            "UKSortCode": "name2",
+            "CurrencyID": "0a6f4a2e-a097-4f7e-ae65-bfee3298e5cc",
+            "Currency": {
+                "id": "0a6f4a2e-a097-4f7e-ae65-bfee3298e5cc",
+                "createdAt": "2020-11-23T08:59:49.802559Z",
+                "updatedAt": "2020-11-23T08:59:49.802559Z",
+                "Name": "TEN",
+                "Symbol": "",
+                "Locale": "",
+                "Type": "crypto"
+            }
+        },
+        {
+            "id": "48e92dc4-d241-4772-95c2-3c3339d8057f",
+            "createdAt": "2023-02-06T13:04:13.453113Z",
+            "updatedAt": "2023-02-06T13:04:13.453113Z",
+            "AccountNumber": "1234567893",
+            "BankName": "OCB",
+            "OwnerName": "Nguyễn Hoàng Huy",
+            "Address": "HCM VN",
+            "SwiftCode": "123458",
+            "RoutingNumber": "123458",
+            "Name": "name3",
+            "UKSortCode": "name3",
+            "CurrencyID": "1c7dcbe2-6984-461d-8ed9-537676f2b590",
+            "Currency": {
+                "id": "1c7dcbe2-6984-461d-8ed9-537676f2b590",
+                "createdAt": "2021-07-21T18:10:24.194492Z",
+                "updatedAt": "2021-07-21T18:10:24.194492Z",
+                "Name": "USD",
+                "Symbol": "$",
+                "Locale": "en-us",
+                "Type": "crypto"
+            }
+        },
+        {
+            "id": "1317126e-22e2-41db-a66c-86e6b21054cd",
+            "createdAt": "2023-02-06T13:04:13.453113Z",
+            "updatedAt": "2023-02-06T13:04:13.453113Z",
+            "AccountNumber": "1234567894",
+            "BankName": "ACB",
+            "OwnerName": "Phạm Đức Thành",
+            "Address": "HN VN",
+            "SwiftCode": "123459",
+            "RoutingNumber": "123459",
+            "Name": "name4",
+            "UKSortCode": "name4",
+            "CurrencyID": "0a6f4a2e-a097-4f7e-ae65-bfee3298e5cc",
+            "Currency": {
+                "id": "0a6f4a2e-a097-4f7e-ae65-bfee3298e5cc",
+                "createdAt": "2020-11-23T08:59:49.802559Z",
+                "updatedAt": "2020-11-23T08:59:49.802559Z",
+                "Name": "TEN",
+                "Symbol": "",
+                "Locale": "",
+                "Type": "crypto"
+            }
+        },
+        {
+            "id": "34960de1-2206-48e2-b4d5-5b536ff2a460",
+            "createdAt": "2023-02-06T13:04:13.453113Z",
+            "updatedAt": "2023-02-06T13:04:13.453113Z",
+            "AccountNumber": "1234567895",
+            "BankName": "OCB",
+            "OwnerName": "Võ Hải Biên",
+            "Address": "HN VN",
+            "SwiftCode": "123450",
+            "RoutingNumber": "123450",
+            "Name": "name5",
+            "UKSortCode": "name5",
+            "CurrencyID": "06a699ed-618b-400b-ac8c-8739956fa8e7",
+            "Currency": {
+                "id": "06a699ed-618b-400b-ac8c-8739956fa8e7",
+                "createdAt": "2019-02-20T04:24:14.967209Z",
+                "updatedAt": "2019-02-20T04:24:14.967209Z",
+                "Name": "GBP",
+                "Symbol": "£",
+                "Locale": "en-gb",
+                "Type": "fiat"
+            }
+        }
+    ]
+}

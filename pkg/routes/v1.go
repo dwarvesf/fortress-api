@@ -117,6 +117,11 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 		surveyGroup.DELETE("/:id/topics/:topicID/employees", pmw.WithPerm(model.PermissionSurveysEdit), h.Survey.DeleteTopicReviewers)
 	}
 
+	bankGroup := v1.Group("/bank-accounts")
+	{
+		bankGroup.GET("", pmw.WithPerm(model.PermissionProjectsEdit), h.BankAccount.List)
+	}
+
 	valuation := v1.Group("/valuation")
 	{
 		valuation.GET("/:year", pmw.WithPerm(model.PermissionValuationRead), h.Valuation.One)

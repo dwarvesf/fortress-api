@@ -27,7 +27,8 @@
           "stacks": [],
           "function": "",
           "code": "lorem-ipsum",
-          "notionID": ""
+          "notionID": "",
+          "bankAccount": null
       },
       {
           "id": "8dc3be2e-19a4-4942-8a79-56db391a0b15",
@@ -169,7 +170,8 @@
           "stacks": [],
           "function": "",
           "code": "fortress",
-          "notionID": ""
+          "notionID": "",
+          "bankAccount": null
       }
   ]
 }

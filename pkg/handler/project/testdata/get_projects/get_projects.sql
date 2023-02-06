@@ -22,6 +22,13 @@ INSERT INTO public.employees (id,deleted_at,created_at,updated_at,full_name,disp
 ('7bcf4b45-0279-4da2-84e4-eec5d9d05ba3', NULL, '2022-11-17 11:06:03.261104', '2022-11-17 11:06:03.261104', 'Nguyễn Lâm Ngọc Duy','Duy Nguyen','Female','mia@dwarvesv.com','ngocduy123@gmail.com','https://s3-ap-southeast-1.amazonaws.com/fortress-images/7186955696154477566.png','0123456789','Binh An, District 2, Ho Chi Minh, Vietnam','INTJ-S','Scorpio',NULL,NULL,NULL,NULL,'1991-11-11','full-time','2021-05-17',NULL,NULL,NULL,'mia','mia','435844136025849876',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'01fb6322-d727-47e3-a242-5039ea4732fc','29088916','2655832e-f009-4b73-a535-64c3a22e558f', 'discordName', 'notionName', 'mia'),
 ('7fbfb59b-e00e-46b2-85cd-64f9f9942daa', NULL, '2022-11-17 11:06:03.27344', '2022-11-17 11:06:03.27344', 'Đoàn Tấn Đạt','Dat Doan','Male','datdt@dwarvesv.com','doandat123@gmail.com','https://s3-ap-southeast-1.amazonaws.com/fortress-images/1105085008506574007.png','0123456789','Binh Tan District, Ho Chi Minh, Vietnam','INFP-A','Aries',NULL,NULL,NULL,NULL,'2000-02-02','left','2022-05-25','2022-04-12',NULL,NULL,'datdt','datdt','236885900779454465',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'d796884d-a8c4-4525-81e7-54a3b6099eac','26581472','2655832e-f009-4b73-a535-64c3a22e558f','discordName', 'notionName', 'datdt');
 
+INSERT INTO public.bank_accounts (id, deleted_at, created_at, updated_at, account_number, bank_name, currency_id, owner_name, address, swift_code, routing_number, name, uk_sort_code) VALUES 
+('e79eb5b3-e2cb-4d7f-9273-46f4be88cb20', null, '2023-02-06 13:00:37.732758', '2023-02-06 13:00:37.732758', '1234567891', 'OCB', '06a699ed-618b-400b-ac8c-8739956fa8e7', 'Phạm Văn Đạt', 'HCM VN', '123456', '123456', 'name1', 'name1'),
+('99419004-e1c7-405a-acee-a32ba2ec140b', null, '2023-02-06 13:04:13.453113', '2023-02-06 13:04:13.453113', '1234567892', 'ACB', '0a6f4a2e-a097-4f7e-ae65-bfee3298e5cc', 'Nguyễn Xuân Trường', 'HCM VN', '123457', '123457', 'name2', 'name2'),
+('48e92dc4-d241-4772-95c2-3c3339d8057f', null, '2023-02-06 13:04:13.453113', '2023-02-06 13:04:13.453113', '1234567893', 'OCB', '1c7dcbe2-6984-461d-8ed9-537676f2b590', 'Nguyễn Hoàng Huy', 'HCM VN', '123458', '123458', 'name3', 'name3'),
+('1317126e-22e2-41db-a66c-86e6b21054cd', null, '2023-02-06 13:04:13.453113', '2023-02-06 13:04:13.453113', '1234567894', 'ACB', '0a6f4a2e-a097-4f7e-ae65-bfee3298e5cc', 'Phạm Đức Thành', 'HN VN', '123459', '123459', 'name4', 'name4'),
+('34960de1-2206-48e2-b4d5-5b536ff2a460', null, '2023-02-06 13:04:13.453113', '2023-02-06 13:04:13.453113', '1234567895', 'OCB', '06a699ed-618b-400b-ac8c-8739956fa8e7', 'Võ Hải Biên', 'HN VN', '123450', '123450', 'name5', 'name5');
+
 UPDATE chapters SET lead_id = '8d7c99c0-3253-4286-93a9-e7554cb327ef' WHERE id = '11ccffea-2cc9-4e98-9bef-3464dfe4dec8';
 
 INSERT INTO public.employee_roles (id, deleted_at, created_at, updated_at, employee_id, role_id) VALUES
@@ -48,9 +55,9 @@ INSERT INTO public.employee_roles (id, deleted_at, created_at, updated_at, emplo
 ('e8c8619d-295b-4d55-936f-cd6406f0857f', NULL, '2022-11-17 11:53:14.690017', '2022-11-17 11:53:14.690017', 'd675dfc5-acbe-4566-acde-f7cb132c0206', 'd796884d-a8c4-4525-81e7-54a3b6099eac'),
 ('f7a25073-6832-4ba0-a69e-b0a9c87c61b4', NULL, '2022-11-17 11:53:14.690017', '2022-11-17 11:53:14.690017', '38a00d4a-bc45-41de-965a-adc674ab82c9', 'd796884d-a8c4-4525-81e7-54a3b6099eac');
 
-INSERT INTO public.projects (id, deleted_at, created_at, updated_at, name, type, start_date, end_date, status, country_id, client_email, project_email, code) VALUES
-('dfa182fc-1d2d-49f6-a877-c01da9ce4207', NULL, '2022-11-11 18:06:56.362902', '2022-11-11 18:06:56.362902', 'Lorem ipsum', 'time-material', '2022-07-06', NULL, 'active', NULL, NULL, NULL, 'lorem-ipsum'),
-('8dc3be2e-19a4-4942-8a79-56db391a0b15', NULL, '2022-11-11 18:06:56.362902', '2022-11-11 18:06:56.362902', 'Fortress', 'dwarves', '2022-11-01', NULL, 'active', '4ef64490-c906-4192-a7f9-d2221dadfe4c', 'team@d.foundation', 'fortress@d.foundation', 'fortress');
+INSERT INTO public.projects (id, deleted_at, created_at, updated_at, name, type, start_date, end_date, status, country_id, client_email, project_email, code, bank_account_id) VALUES
+('dfa182fc-1d2d-49f6-a877-c01da9ce4207', NULL, '2022-11-11 18:06:56.362902', '2022-11-11 18:06:56.362902', 'Lorem ipsum', 'time-material', '2022-07-06', NULL, 'active', NULL, NULL, NULL, 'lorem-ipsum', 'e79eb5b3-e2cb-4d7f-9273-46f4be88cb20'),
+('8dc3be2e-19a4-4942-8a79-56db391a0b15', NULL, '2022-11-11 18:06:56.362902', '2022-11-11 18:06:56.362902', 'Fortress', 'dwarves', '2022-11-01', NULL, 'active', '4ef64490-c906-4192-a7f9-d2221dadfe4c', 'team@d.foundation', 'fortress@d.foundation', 'fortress', 'e79eb5b3-e2cb-4d7f-9273-46f4be88cb20');
 
 INSERT INTO public.project_slots (id, deleted_at, created_at, updated_at, project_id, seniority_id, upsell_person_id, deployment_type, rate, discount, status) VALUES
 ('f32d08ca-8863-4ab3-8c84-a11849451eb7', NULL, '2022-11-11 18:19:56.156172', '2022-11-11 18:19:56.156172', '8dc3be2e-19a4-4942-8a79-56db391a0b15', 'dac16ce6-9e5a-4ff3-9ea2-fdea4853925e', NULL, 'official', 5000, 0, 'active'),
