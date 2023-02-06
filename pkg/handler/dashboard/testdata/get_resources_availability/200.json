@@ -20,9 +20,9 @@
                 },
                 "positions": [
                     {
-                        "id": "",
-                        "code": "",
-                        "name": ""
+                        "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
+                        "code": "frontend",
+                        "name": "Frontend"
                     }
                 ]
             },
@@ -45,9 +45,9 @@
                 },
                 "positions": [
                     {
-                        "id": "",
-                        "code": "",
-                        "name": ""
+                        "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
+                        "code": "backend",
+                        "name": "Backend"
                     }
                 ]
             },
@@ -70,9 +70,9 @@
                 },
                 "positions": [
                     {
-                        "id": "",
-                        "code": "",
-                        "name": ""
+                        "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
+                        "code": "backend",
+                        "name": "Backend"
                     }
                 ]
             },
@@ -95,9 +95,9 @@
                 },
                 "positions": [
                     {
-                        "id": "",
-                        "code": "",
-                        "name": ""
+                        "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
+                        "code": "devops",
+                        "name": "Devops"
                     }
                 ]
             },
@@ -120,9 +120,9 @@
                 },
                 "positions": [
                     {
-                        "id": "",
-                        "code": "",
-                        "name": ""
+                        "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
+                        "code": "frontend",
+                        "name": "Frontend"
                     }
                 ]
             }
@@ -141,9 +141,9 @@
                 "positions": [],
                 "stacks": [
                     {
-                        "id": "",
-                        "name": "",
-                        "code": "",
+                        "id": "fa0f4e46-7eab-4e5c-9d31-30489e69fe2e",
+                        "name": "React",
+                        "code": "react",
                         "avatar": ""
                     }
                 ],
@@ -162,9 +162,9 @@
                 "positions": [],
                 "stacks": [
                     {
-                        "id": "",
-                        "name": "",
-                        "code": "",
+                        "id": "fa0f4e46-7eab-4e5c-9d31-30489e69fe2e",
+                        "name": "React",
+                        "code": "react",
                         "avatar": ""
                     }
                 ],
@@ -182,22 +182,22 @@
                 },
                 "positions": [
                     {
-                        "id": "",
-                        "code": "",
-                        "name": ""
+                        "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
+                        "code": "devops",
+                        "name": "Devops"
                     }
                 ],
                 "stacks": [
                     {
-                        "id": "",
-                        "name": "",
-                        "code": "",
+                        "id": "0ecf47c8-cca4-4c30-94bb-054b1124c44f",
+                        "name": "Golang",
+                        "code": "golang",
                         "avatar": ""
                     },
                     {
-                        "id": "",
-                        "name": "",
-                        "code": "",
+                        "id": "b403ef95-4269-4830-bbb6-8e56e5ec0af4",
+                        "name": "Google Cloud",
+                        "code": "gcloud",
                         "avatar": ""
                     }
                 ],
@@ -216,9 +216,9 @@
                 "positions": [],
                 "stacks": [
                     {
-                        "id": "",
-                        "name": "",
-                        "code": "",
+                        "id": "fa0f4e46-7eab-4e5c-9d31-30489e69fe2e",
+                        "name": "React",
+                        "code": "react",
                         "avatar": ""
                     }
                 ],
@@ -236,43 +236,43 @@
                 },
                 "positions": [
                     {
-                        "id": "",
-                        "code": "",
-                        "name": ""
+                        "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
+                        "code": "devops",
+                        "name": "Devops"
                     },
                     {
-                        "id": "",
-                        "code": "",
-                        "name": ""
+                        "id": "01fb6322-d727-47e3-a242-5039ea4732fc",
+                        "code": "blockchain",
+                        "name": "Blockchain"
                     },
                     {
-                        "id": "",
-                        "code": "",
-                        "name": ""
+                        "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
+                        "code": "frontend",
+                        "name": "Frontend"
                     },
                     {
-                        "id": "",
-                        "code": "",
-                        "name": ""
+                        "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
+                        "code": "backend",
+                        "name": "Backend"
                     }
                 ],
                 "stacks": [
                     {
-                        "id": "",
-                        "name": "",
-                        "code": "",
+                        "id": "0ecf47c8-cca4-4c30-94bb-054b1124c44f",
+                        "name": "Golang",
+                        "code": "golang",
                         "avatar": ""
                     },
                     {
-                        "id": "",
-                        "name": "",
-                        "code": "",
+                        "id": "fa0f4e46-7eab-4e5c-9d31-30489e69fe2e",
+                        "name": "React",
+                        "code": "react",
                         "avatar": ""
                     },
                     {
-                        "id": "",
-                        "name": "",
-                        "code": "",
+                        "id": "b403ef95-4269-4830-bbb6-8e56e5ec0af4",
+                        "name": "Google Cloud",
+                        "code": "gcloud",
                         "avatar": ""
                     }
                 ],
@@ -299,37 +299,37 @@
                 },
                 "positions": [
                     {
-                        "id": "",
-                        "code": "",
-                        "name": ""
+                        "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
+                        "code": "frontend",
+                        "name": "Frontend"
                     },
                     {
-                        "id": "",
-                        "code": "",
-                        "name": ""
+                        "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
+                        "code": "backend",
+                        "name": "Backend"
                     },
                     {
-                        "id": "",
-                        "code": "",
-                        "name": ""
+                        "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
+                        "code": "devops",
+                        "name": "Devops"
                     },
                     {
-                        "id": "",
-                        "code": "",
-                        "name": ""
+                        "id": "01fb6322-d727-47e3-a242-5039ea4732fc",
+                        "code": "blockchain",
+                        "name": "Blockchain"
                     }
                 ],
                 "stacks": [
                     {
-                        "id": "",
-                        "name": "",
-                        "code": "",
+                        "id": "0ecf47c8-cca4-4c30-94bb-054b1124c44f",
+                        "name": "Golang",
+                        "code": "golang",
                         "avatar": ""
                     },
                     {
-                        "id": "",
-                        "name": "",
-                        "code": "",
+                        "id": "b403ef95-4269-4830-bbb6-8e56e5ec0af4",
+                        "name": "Google Cloud",
+                        "code": "gcloud",
                         "avatar": ""
                     }
                 ],
@@ -356,31 +356,31 @@
                 },
                 "positions": [
                     {
-                        "id": "",
-                        "code": "",
-                        "name": ""
+                        "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
+                        "code": "frontend",
+                        "name": "Frontend"
                     },
                     {
-                        "id": "",
-                        "code": "",
-                        "name": ""
+                        "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
+                        "code": "backend",
+                        "name": "Backend"
                     },
                     {
-                        "id": "",
-                        "code": "",
-                        "name": ""
+                        "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
+                        "code": "devops",
+                        "name": "Devops"
                     },
                     {
-                        "id": "",
-                        "code": "",
-                        "name": ""
+                        "id": "01fb6322-d727-47e3-a242-5039ea4732fc",
+                        "code": "blockchain",
+                        "name": "Blockchain"
                     }
                 ],
                 "stacks": [
                     {
-                        "id": "",
-                        "name": "",
-                        "code": "",
+                        "id": "b403ef95-4269-4830-bbb6-8e56e5ec0af4",
+                        "name": "Google Cloud",
+                        "code": "gcloud",
                         "avatar": ""
                     }
                 ],
@@ -407,37 +407,37 @@
                 },
                 "positions": [
                     {
-                        "id": "",
-                        "code": "",
-                        "name": ""
+                        "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
+                        "code": "frontend",
+                        "name": "Frontend"
                     },
                     {
-                        "id": "",
-                        "code": "",
-                        "name": ""
+                        "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
+                        "code": "backend",
+                        "name": "Backend"
                     },
                     {
-                        "id": "",
-                        "code": "",
-                        "name": ""
+                        "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
+                        "code": "devops",
+                        "name": "Devops"
                     },
                     {
-                        "id": "",
-                        "code": "",
-                        "name": ""
+                        "id": "01fb6322-d727-47e3-a242-5039ea4732fc",
+                        "code": "blockchain",
+                        "name": "Blockchain"
                     }
                 ],
                 "stacks": [
                     {
-                        "id": "",
-                        "name": "",
-                        "code": "",
+                        "id": "0ecf47c8-cca4-4c30-94bb-054b1124c44f",
+                        "name": "Golang",
+                        "code": "golang",
                         "avatar": ""
                     },
                     {
-                        "id": "",
-                        "name": "",
-                        "code": "",
+                        "id": "b403ef95-4269-4830-bbb6-8e56e5ec0af4",
+                        "name": "Google Cloud",
+                        "code": "gcloud",
                         "avatar": ""
                     }
                 ],
@@ -455,22 +455,22 @@
                 },
                 "positions": [
                     {
-                        "id": "",
-                        "code": "",
-                        "name": ""
+                        "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
+                        "code": "devops",
+                        "name": "Devops"
                     }
                 ],
                 "stacks": [
                     {
-                        "id": "",
-                        "name": "",
-                        "code": "",
+                        "id": "0ecf47c8-cca4-4c30-94bb-054b1124c44f",
+                        "name": "Golang",
+                        "code": "golang",
                         "avatar": ""
                     },
                     {
-                        "id": "",
-                        "name": "",
-                        "code": "",
+                        "id": "b403ef95-4269-4830-bbb6-8e56e5ec0af4",
+                        "name": "Google Cloud",
+                        "code": "gcloud",
                         "avatar": ""
                     }
                 ],
@@ -488,22 +488,22 @@
                 },
                 "positions": [
                     {
-                        "id": "",
-                        "code": "",
-                        "name": ""
+                        "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
+                        "code": "devops",
+                        "name": "Devops"
                     }
                 ],
                 "stacks": [
                     {
-                        "id": "",
-                        "name": "",
-                        "code": "",
+                        "id": "0ecf47c8-cca4-4c30-94bb-054b1124c44f",
+                        "name": "Golang",
+                        "code": "golang",
                         "avatar": ""
                     },
                     {
-                        "id": "",
-                        "name": "",
-                        "code": "",
+                        "id": "b403ef95-4269-4830-bbb6-8e56e5ec0af4",
+                        "name": "Google Cloud",
+                        "code": "gcloud",
                         "avatar": ""
                     }
                 ],
@@ -521,22 +521,22 @@
                 },
                 "positions": [
                     {
-                        "id": "",
-                        "code": "",
-                        "name": ""
+                        "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
+                        "code": "devops",
+                        "name": "Devops"
                     }
                 ],
                 "stacks": [
                     {
-                        "id": "",
-                        "name": "",
-                        "code": "",
+                        "id": "0ecf47c8-cca4-4c30-94bb-054b1124c44f",
+                        "name": "Golang",
+                        "code": "golang",
                         "avatar": ""
                     },
                     {
-                        "id": "",
-                        "name": "",
-                        "code": "",
+                        "id": "b403ef95-4269-4830-bbb6-8e56e5ec0af4",
+                        "name": "Google Cloud",
+                        "code": "gcloud",
                         "avatar": ""
                     }
                 ],
@@ -554,22 +554,22 @@
                 },
                 "positions": [
                     {
-                        "id": "",
-                        "code": "",
-                        "name": ""
+                        "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
+                        "code": "devops",
+                        "name": "Devops"
                     }
                 ],
                 "stacks": [
                     {
-                        "id": "",
-                        "name": "",
-                        "code": "",
+                        "id": "0ecf47c8-cca4-4c30-94bb-054b1124c44f",
+                        "name": "Golang",
+                        "code": "golang",
                         "avatar": ""
                     },
                     {
-                        "id": "",
-                        "name": "",
-                        "code": "",
+                        "id": "b403ef95-4269-4830-bbb6-8e56e5ec0af4",
+                        "name": "Google Cloud",
+                        "code": "gcloud",
                         "avatar": ""
                     }
                 ],
@@ -588,9 +588,9 @@
                 "positions": [],
                 "stacks": [
                     {
-                        "id": "",
-                        "name": "",
-                        "code": "",
+                        "id": "fa0f4e46-7eab-4e5c-9d31-30489e69fe2e",
+                        "name": "React",
+                        "code": "react",
                         "avatar": ""
                     }
                 ],
@@ -609,9 +609,9 @@
                 "positions": [],
                 "stacks": [
                     {
-                        "id": "",
-                        "name": "",
-                        "code": "",
+                        "id": "fa0f4e46-7eab-4e5c-9d31-30489e69fe2e",
+                        "name": "React",
+                        "code": "react",
                         "avatar": ""
                     }
                 ],
@@ -630,9 +630,9 @@
                 "positions": [],
                 "stacks": [
                     {
-                        "id": "",
-                        "name": "",
-                        "code": "",
+                        "id": "fa0f4e46-7eab-4e5c-9d31-30489e69fe2e",
+                        "name": "React",
+                        "code": "react",
                         "avatar": ""
                     }
                 ],
@@ -650,37 +650,37 @@
                 },
                 "positions": [
                     {
-                        "id": "",
-                        "code": "",
-                        "name": ""
+                        "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
+                        "code": "frontend",
+                        "name": "Frontend"
                     },
                     {
-                        "id": "",
-                        "code": "",
-                        "name": ""
+                        "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
+                        "code": "backend",
+                        "name": "Backend"
                     },
                     {
-                        "id": "",
-                        "code": "",
-                        "name": ""
+                        "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
+                        "code": "devops",
+                        "name": "Devops"
                     },
                     {
-                        "id": "",
-                        "code": "",
-                        "name": ""
+                        "id": "01fb6322-d727-47e3-a242-5039ea4732fc",
+                        "code": "blockchain",
+                        "name": "Blockchain"
                     }
                 ],
                 "stacks": [
                     {
-                        "id": "",
-                        "name": "",
-                        "code": "",
+                        "id": "fa0f4e46-7eab-4e5c-9d31-30489e69fe2e",
+                        "name": "React",
+                        "code": "react",
                         "avatar": ""
                     },
                     {
-                        "id": "",
-                        "name": "",
-                        "code": "",
+                        "id": "b403ef95-4269-4830-bbb6-8e56e5ec0af4",
+                        "name": "Google Cloud",
+                        "code": "gcloud",
                         "avatar": ""
                     }
                 ],
@@ -707,31 +707,31 @@
                 },
                 "positions": [
                     {
-                        "id": "",
-                        "code": "",
-                        "name": ""
+                        "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
+                        "code": "frontend",
+                        "name": "Frontend"
                     },
                     {
-                        "id": "",
-                        "code": "",
-                        "name": ""
+                        "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
+                        "code": "backend",
+                        "name": "Backend"
                     },
                     {
-                        "id": "",
-                        "code": "",
-                        "name": ""
+                        "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
+                        "code": "devops",
+                        "name": "Devops"
                     },
                     {
-                        "id": "",
-                        "code": "",
-                        "name": ""
+                        "id": "01fb6322-d727-47e3-a242-5039ea4732fc",
+                        "code": "blockchain",
+                        "name": "Blockchain"
                     }
                 ],
                 "stacks": [
                     {
-                        "id": "",
-                        "name": "",
-                        "code": "",
+                        "id": "0ecf47c8-cca4-4c30-94bb-054b1124c44f",
+                        "name": "Golang",
+                        "code": "golang",
                         "avatar": ""
                     }
                 ],
@@ -758,22 +758,22 @@
                 },
                 "positions": [
                     {
-                        "id": "",
-                        "code": "",
-                        "name": ""
+                        "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
+                        "code": "devops",
+                        "name": "Devops"
                     }
                 ],
                 "stacks": [
                     {
-                        "id": "",
-                        "name": "",
-                        "code": "",
+                        "id": "0ecf47c8-cca4-4c30-94bb-054b1124c44f",
+                        "name": "Golang",
+                        "code": "golang",
                         "avatar": ""
                     },
                     {
-                        "id": "",
-                        "name": "",
-                        "code": "",
+                        "id": "b403ef95-4269-4830-bbb6-8e56e5ec0af4",
+                        "name": "Google Cloud",
+                        "code": "gcloud",
                         "avatar": ""
                     }
                 ],
@@ -791,22 +791,22 @@
                 },
                 "positions": [
                     {
-                        "id": "",
-                        "code": "",
-                        "name": ""
+                        "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
+                        "code": "devops",
+                        "name": "Devops"
                     }
                 ],
                 "stacks": [
                     {
-                        "id": "",
-                        "name": "",
-                        "code": "",
+                        "id": "0ecf47c8-cca4-4c30-94bb-054b1124c44f",
+                        "name": "Golang",
+                        "code": "golang",
                         "avatar": ""
                     },
                     {
-                        "id": "",
-                        "name": "",
-                        "code": "",
+                        "id": "b403ef95-4269-4830-bbb6-8e56e5ec0af4",
+                        "name": "Google Cloud",
+                        "code": "gcloud",
                         "avatar": ""
                     }
                 ],
