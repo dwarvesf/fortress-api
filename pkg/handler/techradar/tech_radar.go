@@ -2,6 +2,7 @@
 package techradar
 
 import (
+	"html"
 	"net/http"
 	"regexp"
 	"strings"
@@ -85,11 +86,14 @@ func (h *handler) List(c *gin.Context) {
 
 		name := props["Name"].Title[0].Text.Content
 		if c.Query("name") != "" {
-			matched, err := regexp.MatchString(".*"+strings.ToLower(c.Query("name"))+".*", strings.ToLower(name))
+			input := c.Query("name")
+			escaped := html.EscapeString(input)
+			matched, err := regexp.MatchString(".*"+strings.ToLower(escaped)+".*", html.EscapeString(strings.ToLower(name)))
 			if err != nil || !matched {
 				continue
 			}
 		}
+
 		if r.Icon != nil && r.Icon.Emoji != nil {
 			name = *r.Icon.Emoji + " " + props["Name"].Title[0].Text.Content
 		}
