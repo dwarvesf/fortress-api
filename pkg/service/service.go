@@ -46,6 +46,6 @@ func New(cfg *config.Config) *Service {
 		),
 		Wise:    wise.New(cfg, logger.L),
 		Cache:   cch,
-		Discord: discord.New(cfg.Discord.Webhook),
+		Discord: discord.New(cfg.Discord.Webhooks.Campfire),
 	}
 }

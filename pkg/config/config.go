@@ -104,7 +104,7 @@ type Discord struct {
 }
 
 type DiscordWebhook struct {
-	Woodland string
+	Campfire string
 }
 
 type ENV interface {
@@ -173,7 +173,7 @@ func Generate(v ENV) *Config {
 		},
 		Discord: Discord{
 			Webhooks: DiscordWebhook{
-				Woodland: v.GetString("DISCORD_WEBHOOK_WOODLAND"),
+				Campfire: v.GetString("DISCORD_WEBHOOK_CAMPFIRE"),
 			},
 		},
 	}
