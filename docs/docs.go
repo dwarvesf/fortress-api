@@ -4649,6 +4649,20 @@ const docTemplate = `{
                 }
             }
         },
+        "model.Digest": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "model.Earn": {
             "type": "object",
             "properties": {
@@ -5108,6 +5122,29 @@ const docTemplate = `{
                 },
                 "stronglyDisagree": {
                     "type": "integer"
+                }
+            }
+        },
+        "model.Memo": {
+            "type": "object",
+            "properties": {
+                "author": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },
@@ -5670,6 +5707,23 @@ const docTemplate = `{
                 }
             }
         },
+        "model.Update": {
+            "type": "object",
+            "properties": {
+                "audience": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "model.Valuation": {
             "type": "object",
             "properties": {
@@ -5926,6 +5980,9 @@ const docTemplate = `{
                     }
                 },
                 "name": {
+                    "type": "string"
+                },
+                "notionID": {
                     "type": "string"
                 },
                 "projectEmail": {
@@ -6374,6 +6431,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "name": {
+                    "type": "string"
+                },
+                "notionID": {
                     "type": "string"
                 },
                 "stacks": {
@@ -8037,6 +8097,9 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
+                "notionID": {
+                    "type": "string"
+                },
                 "projectEmail": {
                     "type": "string"
                 },
@@ -8776,6 +8839,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "name": {
+                    "type": "string"
+                },
+                "notionID": {
                     "type": "string"
                 },
                 "stacks": {
