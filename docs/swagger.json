@@ -4875,6 +4875,12 @@
                         "$ref": "#/definitions/model.ProjectMember"
                     }
                 },
+                "referredBy": {
+                    "type": "string"
+                },
+                "referrer": {
+                    "$ref": "#/definitions/model.Employee"
+                },
                 "roles": {
                     "type": "array",
                     "items": {
@@ -5902,6 +5908,9 @@
                         "type": "string"
                     }
                 },
+                "referredBy": {
+                    "type": "string"
+                },
                 "roleID": {
                     "type": "string"
                 },
@@ -6261,6 +6270,9 @@
                     "type": "string",
                     "maxLength": 18,
                     "minLength": 9
+                },
+                "referredBy": {
+                    "type": "string"
                 }
             }
         },
@@ -7259,6 +7271,9 @@
                     "items": {
                         "$ref": "#/definitions/view.EmployeeProjectData"
                     }
+                },
+                "referredBy": {
+                    "$ref": "#/definitions/view.BasicEmployeeInfo"
                 },
                 "roles": {
                     "type": "array",
@@ -8670,6 +8685,9 @@
                 },
                 "phoneNumber": {
                     "type": "string"
+                },
+                "referredBy": {
+                    "$ref": "#/definitions/view.BasicEmployeeInfo"
                 },
                 "teamEmail": {
                     "type": "string"

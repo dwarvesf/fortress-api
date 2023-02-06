@@ -229,6 +229,10 @@ definitions:
         items:
           $ref: '#/definitions/model.ProjectMember'
         type: array
+      referredBy:
+        type: string
+      referrer:
+        $ref: '#/definitions/model.Employee'
       roles:
         items:
           $ref: '#/definitions/model.Role'
@@ -899,6 +903,8 @@ definitions:
         items:
           type: string
         type: array
+      referredBy:
+        type: string
       roleID:
         type: string
       salary:
@@ -1145,6 +1151,8 @@ definitions:
       phone:
         maxLength: 18
         minLength: 9
+        type: string
+      referredBy:
         type: string
     required:
     - email
@@ -1809,6 +1817,8 @@ definitions:
         items:
           $ref: '#/definitions/view.EmployeeProjectData'
         type: array
+      referredBy:
+        $ref: '#/definitions/view.BasicEmployeeInfo'
       roles:
         items:
           $ref: '#/definitions/view.Role'
@@ -2726,6 +2736,8 @@ definitions:
         type: array
       phoneNumber:
         type: string
+      referredBy:
+        $ref: '#/definitions/view.BasicEmployeeInfo'
       teamEmail:
         type: string
       updatedAt:

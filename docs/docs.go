@@ -4883,6 +4883,12 @@ const docTemplate = `{
                         "$ref": "#/definitions/model.ProjectMember"
                     }
                 },
+                "referredBy": {
+                    "type": "string"
+                },
+                "referrer": {
+                    "$ref": "#/definitions/model.Employee"
+                },
                 "roles": {
                     "type": "array",
                     "items": {
@@ -5910,6 +5916,9 @@ const docTemplate = `{
                         "type": "string"
                     }
                 },
+                "referredBy": {
+                    "type": "string"
+                },
                 "roleID": {
                     "type": "string"
                 },
@@ -6269,6 +6278,9 @@ const docTemplate = `{
                     "type": "string",
                     "maxLength": 18,
                     "minLength": 9
+                },
+                "referredBy": {
+                    "type": "string"
                 }
             }
         },
@@ -7267,6 +7279,9 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/view.EmployeeProjectData"
                     }
+                },
+                "referredBy": {
+                    "$ref": "#/definitions/view.BasicEmployeeInfo"
                 },
                 "roles": {
                     "type": "array",
@@ -8678,6 +8693,9 @@ const docTemplate = `{
                 },
                 "phoneNumber": {
                     "type": "string"
+                },
+                "referredBy": {
+                    "$ref": "#/definitions/view.BasicEmployeeInfo"
                 },
                 "teamEmail": {
                     "type": "string"
