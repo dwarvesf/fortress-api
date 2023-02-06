@@ -22,6 +22,7 @@ type Config struct {
 	Notion      Notion
 	NotionAudit NotionAudit
 	Wise        Wise
+	Discord     Discord
 
 	APIKey       string
 	Debug        bool
@@ -83,6 +84,10 @@ type NotionAudit struct {
 	Secret              string
 	AuditCycleDBID      string
 	AuditActionItemDBID string
+}
+
+type Discord struct {
+	Webhook string
 }
 
 type ENV interface {
@@ -148,6 +153,9 @@ func Generate(v ENV) *Config {
 			Secret:              v.GetString("NOTION_AUDIT_SECRET"),
 			AuditCycleDBID:      v.GetString("NOTION_AUDIT_CYCLE_DB_ID"),
 			AuditActionItemDBID: v.GetString("NOTION_AUDIT_ACTION_ITEM_DB_ID"),
+		},
+		Discord: Discord{
+			Webhook: v.GetString("DISCORD_WEBHOOK"),
 		},
 	}
 }

@@ -539,6 +539,12 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/dashboard.IHandler.GetWorkUnitDistribution-fm",
 			},
 		},
+		"/cronjob/birthday": {
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/cronjob/birthday.ICronjob.BirthdayDailyMessage-fm",
+			},
+		},
 	}
 
 	l := logger.NewLogrusLogger()
@@ -547,7 +553,7 @@ func Test_loadV1Routes(t *testing.T) {
 	h := handler.New(nil, nil, nil, l, cfg)
 
 	router := gin.New()
-	loadV1Routes(router, h, nil, nil, nil)
+	loadV1Routes(router, h, nil, nil, nil, nil, nil)
 
 	routeInfo := router.Routes()
 
