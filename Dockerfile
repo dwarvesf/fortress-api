@@ -9,6 +9,7 @@ RUN go install -v github.com/rubenv/sql-migrate/sql-migrate@latest
 
 FROM alpine:3.15.0
 RUN apk --no-cache add ca-certificates
+RUN apk --no-cache add curl
 RUN ln -fs /usr/share/zoneinfo/Asia/Ho_Chi_Minh /etc/localtime
 WORKDIR /
 
