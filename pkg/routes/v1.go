@@ -125,6 +125,18 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 	{
 		event.GET("", h.Event.List)
 	}
+	digest := v1.Group("/digests")
+	{
+		digest.GET("", h.Digest.List)
+	}
+	update := v1.Group("/updates")
+	{
+		update.GET("", h.Update.List)
+	}
+	memo := v1.Group("/memos")
+	{
+		memo.GET("", h.Memo.List)
+	}
 	staffingDemand := v1.Group("/staffing-demands")
 	{
 		staffingDemand.GET("", h.StaffingDemand.List)
@@ -132,6 +144,11 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 	hiring := v1.Group("/hiring-positions")
 	{
 		hiring.GET("", h.Hiring.List)
+	}
+
+	audit := v1.Group("/audits")
+	{
+		audit.PUT("", h.Audit.Sync)
 	}
 
 	dashboard := v1.Group("/dashboards")
@@ -155,7 +172,7 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 		resourceDashboardGroup := dashboard.Group("/resources")
 		{
 			resourceDashboardGroup.GET("/availabilities", pmw.WithPerm("dashboards.read"), h.Dashboard.GetResourcesAvailability)
+			resourceDashboardGroup.GET("/utilization", pmw.WithPerm("dashboards.read"), h.Dashboard.GetResourceUtilization)
 		}
 	}
-
 }

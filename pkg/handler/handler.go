@@ -3,20 +3,24 @@ package handler
 import (
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/handler/audience"
+	"github.com/dwarvesf/fortress-api/pkg/handler/audit"
 	"github.com/dwarvesf/fortress-api/pkg/handler/auth"
 	"github.com/dwarvesf/fortress-api/pkg/handler/dashboard"
+	"github.com/dwarvesf/fortress-api/pkg/handler/digest"
 	"github.com/dwarvesf/fortress-api/pkg/handler/earn"
 	"github.com/dwarvesf/fortress-api/pkg/handler/employee"
 	"github.com/dwarvesf/fortress-api/pkg/handler/event"
 	"github.com/dwarvesf/fortress-api/pkg/handler/feedback"
 	"github.com/dwarvesf/fortress-api/pkg/handler/healthz"
 	"github.com/dwarvesf/fortress-api/pkg/handler/hiring"
+	"github.com/dwarvesf/fortress-api/pkg/handler/memo"
 	"github.com/dwarvesf/fortress-api/pkg/handler/metadata"
 	"github.com/dwarvesf/fortress-api/pkg/handler/profile"
 	"github.com/dwarvesf/fortress-api/pkg/handler/project"
 	"github.com/dwarvesf/fortress-api/pkg/handler/staffingdemand"
 	"github.com/dwarvesf/fortress-api/pkg/handler/survey"
 	"github.com/dwarvesf/fortress-api/pkg/handler/techradar"
+	"github.com/dwarvesf/fortress-api/pkg/handler/update"
 	"github.com/dwarvesf/fortress-api/pkg/handler/valuation"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/service"
@@ -40,6 +44,10 @@ type Handler struct {
 	Event          event.IHandler
 	Hiring         hiring.IHandler
 	StaffingDemand staffingdemand.IHandler
+	Audit          audit.IHandler
+	Digest         digest.IHandler
+	Update         update.IHandler
+	Memo           memo.IHandler
 }
 
 func New(store *store.Store, repo store.DBRepo, service *service.Service, logger logger.Logger, cfg *config.Config) *Handler {
@@ -60,5 +68,9 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 		Event:          event.New(store, repo, service, logger, cfg),
 		Hiring:         hiring.New(store, repo, service, logger, cfg),
 		StaffingDemand: staffingdemand.New(store, repo, service, logger, cfg),
+		Audit:          audit.New(store, repo, service, logger, cfg),
+		Digest:         digest.New(store, repo, service, logger, cfg),
+		Update:         update.New(store, repo, service, logger, cfg),
+		Memo:           memo.New(store, repo, service, logger, cfg),
 	}
 }

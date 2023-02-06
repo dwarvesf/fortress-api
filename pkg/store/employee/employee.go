@@ -26,7 +26,8 @@ func (s *store) One(db *gorm.DB, id string, preload bool) (*model.Employee, erro
 			Where("employee_roles.deleted_at IS NULL").
 			Order("roles.level")
 	}).
-		Preload("EmployeeRoles.Role", "deleted_at IS NULL")
+		Preload("EmployeeRoles.Role", "deleted_at IS NULL").
+		Preload("SocialAccounts", "deleted_at IS NULL")
 
 	if preload {
 		query = query.
@@ -66,7 +67,11 @@ func (s *store) OneByEmail(db *gorm.DB, email string) (*model.Employee, error) {
 // OneByNotionID get 1 employee by notion id
 func (s *store) OneByNotionID(db *gorm.DB, notionID string) (*model.Employee, error) {
 	var employee *model.Employee
-	return employee, db.Where("notion_id = ?", notionID).First(&employee).Error
+	return employee, db.Where(`id IN (
+			SELECT sa.employee_id 
+			FROM social_accounts sa 
+			WHERE sa.account_id = ? AND sa.type = ?
+		)`, notionID, model.SocialAccountTypeNotion).First(&employee).Error
 }
 
 // All get employees by query and pagination
@@ -82,7 +87,8 @@ func (s *store) All(db *gorm.DB, filter EmployeeFilter, pagination model.Paginat
 		return nil, 0, err
 	}
 
-	query = getByFieldSort(db, query, "employees.joined_date", filter.JoinedDateSort)
+	query = getByFieldSort(db, query, "employees.joined_date", filter.JoinedDateSort).
+		Preload("SocialAccounts", "deleted_at IS NULL")
 
 	if filter.Preload {
 		query = query.Preload("ProjectMembers", "deleted_at IS NULL").

@@ -49,9 +49,10 @@ var (
 	ErrSlotAlreadyContainsAnotherMember = errors.New("slot already contains another member")
 	ErrDuplicateProjectCode             = errors.New("project code is duplicated")
 
-	ErrInvalidFileExtension = errors.New("invalid file extension")
-	ErrInvalidFileSize      = errors.New("invalid file size")
-	ErrInvalidEmailDomain   = errors.New("invalid email domain")
+	ErrInvalidFileExtension         = errors.New("invalid file extension")
+	ErrInvalidFileSize              = errors.New("invalid file size")
+	ErrInvalidEmailDomainForClient  = errors.New("invalid email domain for client")
+	ErrInvalidEmailDomainForProject = errors.New("invalid email domain for project")
 )
 
 // ErrPositionNotFoundWithID returns unauthorized custom error

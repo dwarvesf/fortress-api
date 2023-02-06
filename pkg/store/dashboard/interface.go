@@ -28,4 +28,5 @@ type IStore interface {
 	GetProjectSizesByStartTime(db *gorm.DB, curr time.Time) ([]*model.ProjectSize, error)
 	GetPendingSlots(db *gorm.DB) ([]*model.ProjectSlot, error)
 	GetAvailableEmployees(db *gorm.DB) ([]*model.Employee, error)
+	GetResourceUtilization(db *gorm.DB) ([]*model.ResourceUtilization, error)
 }

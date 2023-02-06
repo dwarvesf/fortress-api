@@ -126,6 +126,7 @@ type Employee struct {
 	EmployeeOrganizations []EmployeeOrganization
 	EmployeeStacks        []EmployeeStack
 	EmployeeChapters      []EmployeeChapter
+	SocialAccounts        []SocialAccount
 	Mentees               []Employee `gorm:"-"`
 }
 

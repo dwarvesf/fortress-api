@@ -9,3 +9,9 @@ type ActionItemSnapshot struct {
 	Medium       int64
 	Low          int64
 }
+
+func CompareActionItemSnapshot(old, new *ActionItemSnapshot) bool {
+	return old.High == new.High &&
+		old.Medium == new.Medium &&
+		old.Low == new.Low
+}

@@ -1,5 +1,9 @@
 package model
 
+const (
+	OrganizationCodeDwarves = "dwarves-foundation"
+)
+
 type Organization struct {
 	BaseModel
 

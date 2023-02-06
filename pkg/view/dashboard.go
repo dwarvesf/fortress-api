@@ -679,9 +679,13 @@ func ToEngagementDashboardDetails(statistic []*model.StatisticEngagementDashboar
 }
 
 type GetEngagementDashboardResponse struct {
-	Data *EngagementDashboard `json:"data"`
+	Data []EngagementDashboard `json:"data"`
 }
 
 type GetEngagementDashboardDetailResponse struct {
-	Data *EngagementDashboardDetail `json:"data"`
+	Data []EngagementDashboardDetail `json:"data"`
+}
+
+type GetDashboardResourceUtilizationResponse struct {
+	Data []model.ResourceUtilization `json:"data"`
 }

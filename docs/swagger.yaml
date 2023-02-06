@@ -228,6 +228,10 @@ definitions:
         $ref: '#/definitions/model.Seniority'
       seniorityID:
         type: string
+      socialAccounts:
+        items:
+          $ref: '#/definitions/model.SocialAccount'
+        type: array
       teamEmail:
         type: string
       updatedAt:
@@ -633,6 +637,17 @@ definitions:
       updatedAt:
         type: string
     type: object
+  model.ResourceUtilization:
+    properties:
+      available:
+        type: integer
+      date:
+        type: string
+      official:
+        type: integer
+      shadow:
+        type: integer
+    type: object
   model.Role:
     properties:
       code:
@@ -663,6 +678,27 @@ definitions:
       level:
         type: integer
       name:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  model.SocialAccount:
+    properties:
+      accountID:
+        type: string
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      email:
+        type: string
+      employeeID:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      type:
         type: string
       updatedAt:
         type: string
@@ -1524,6 +1560,8 @@ definitions:
     type: object
   view.BasicProjectInfo:
     properties:
+      avatar:
+        type: string
       code:
         type: string
       id:
@@ -1951,15 +1989,26 @@ definitions:
       data:
         $ref: '#/definitions/view.FeedBackReviewDetail'
     type: object
+  view.GetDashboardResourceUtilizationResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/model.ResourceUtilization'
+        type: array
+    type: object
   view.GetEngagementDashboardDetailResponse:
     properties:
       data:
-        $ref: '#/definitions/view.EngagementDashboardDetail'
+        items:
+          $ref: '#/definitions/view.EngagementDashboardDetail'
+        type: array
     type: object
   view.GetEngagementDashboardResponse:
     properties:
       data:
-        $ref: '#/definitions/view.EngagementDashboard'
+        items:
+          $ref: '#/definitions/view.EngagementDashboard'
+        type: array
     type: object
   view.GetQuestionResponse:
     properties:
@@ -2880,6 +2929,27 @@ info:
   title: Swagger Example API
   version: "1.0"
 paths:
+  /audits:
+    put:
+      consumes:
+      - application/json
+      description: Sync audit info from Notion to database
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.MessageResponse'
+      summary: Sync audit info from Notion to database
+      tags:
+      - Audit
   /auth:
     post:
       consumes:
@@ -3279,6 +3349,31 @@ paths:
           schema:
             $ref: '#/definitions/view.ErrorResponse'
       summary: Get resources availability
+      tags:
+      - Dashboard
+  /dashboards/resources/utilization:
+    get:
+      consumes:
+      - application/json
+      description: Get dashboard resource utilization
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.GetDashboardResourceUtilizationResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get dashboard resource utilization
       tags:
       - Dashboard
   /employees:

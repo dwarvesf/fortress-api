@@ -455,10 +455,34 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/event.IHandler.List-fm",
 			},
 		},
+		"/api/v1/digests": {
+			"GET": {
+				Method:  "GET",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/digest.IHandler.List-fm",
+			},
+		},
+		"/api/v1/updates": {
+			"GET": {
+				Method:  "GET",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/update.IHandler.List-fm",
+			},
+		},
+		"/api/v1/memos": {
+			"GET": {
+				Method:  "GET",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/memo.IHandler.List-fm",
+			},
+		},
 		"/api/v1/hiring-positions": {
 			"GET": {
 				Method:  "GET",
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/hiring.IHandler.List-fm",
+			},
+		},
+		"/api/v1/audits": {
+			"PUT": {
+				Method:  "PUT",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/audit.IHandler.Sync-fm",
 			},
 		},
 		"/api/v1/staffing-demands": {
@@ -501,6 +525,12 @@ func Test_loadV1Routes(t *testing.T) {
 			"GET": {
 				Method:  "GET",
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/dashboard.IHandler.GetEngagementInfoDetail-fm",
+			},
+		},
+		"/api/v1/dashboards/resources/utilization": {
+			"GET": {
+				Method:  "GET",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/dashboard.IHandler.GetResourceUtilization-fm",
 			},
 		},
 	}

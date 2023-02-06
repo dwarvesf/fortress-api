@@ -1,7 +1,7 @@
 # Default reviewers for every PR
 *           @huynguyenh @namnhce
 .github/    @huynguyenh @namnhce @nguyennh4522
-cmd/        @huynguyenh @namnhce @nguyennh4522 @mkhoi1998 @datphamcode295
-docs/       @huynguyenh @namnhce @nguyennh4522 @mkhoi1998 @datphamcode295
-migrations/ @huynguyenh @namnhce @nguyennh4522 @mkhoi1998 @datphamcode295
-pkg/        @huynguyenh @namnhce @nguyennh4522 @mkhoi1998 @datphamcode295
+cmd/        @huynguyenh @namnhce @nguyennh4522 @thanhpn @datphamcode295
+docs/       @huynguyenh @namnhce @nguyennh4522 @thanhpn @datphamcode295
+migrations/ @huynguyenh @namnhce @nguyennh4522 @thanhpn @datphamcode295
+pkg/        @huynguyenh @namnhce @nguyennh4522 @thanhpn @datphamcode295
