@@ -69,8 +69,8 @@ func (s *store) OneByEmail(db *gorm.DB, email string) (*model.Employee, error) {
 func (s *store) OneByNotionID(db *gorm.DB, notionID string) (*model.Employee, error) {
 	var employee *model.Employee
 	return employee, db.Where(`id IN (
-			SELECT sa.employee_id 
-			FROM social_accounts sa 
+			SELECT sa.employee_id
+			FROM social_accounts sa
 			WHERE sa.account_id = ? AND sa.type = ?
 		)`, notionID, model.SocialAccountTypeNotion).First(&employee).Error
 }
@@ -166,7 +166,7 @@ func (s *store) GetLineManagers(db *gorm.DB) ([]*model.Employee, error) {
 		SELECT e.line_manager_id
 		FROM employees e
 		WHERE e.deleted_at IS NULL
-			AND e.working_status != ? 
+			AND e.working_status != ?
 			AND (e.left_date IS NULL OR e.left_date >= now())
 	)`, model.WorkingStatusLeft).Find(&employees).Error
 }
@@ -177,7 +177,7 @@ func (s *store) GetLineManagersOfPeers(db *gorm.DB, employeeID string) ([]*model
 		SELECT e.line_manager_id
 		FROM employees e JOIN project_members pm ON pm.employee_id = e.id
 		WHERE e.deleted_at IS NULL
-			AND e.working_status != ? 
+			AND e.working_status != ?
 			AND (e.left_date IS NULL OR e.left_date >= now())
 			AND pm.project_id IN (
 				SELECT pm2.project_id
@@ -194,16 +194,11 @@ func (s *store) GetMenteesByID(db *gorm.DB, employeeID string) ([]model.Employee
 		FROM employees e
 		WHERE e.deleted_at IS NULL
 			AND e.line_manager_id = ?
-			AND e.working_status <> ? 
+			AND e.working_status <> ?
 			AND (e.left_date IS NULL OR e.left_date >= now())
 	)`, employeeID, model.WorkingStatusLeft).
 		Preload("EmployeePositions", "deleted_at IS NULL").
 		Preload("EmployeePositions.Position", "deleted_at IS NULL").
 		Preload("Seniority").
 		Find(&employees).Error
-}
-
-func (s *store) GetAllActive(db *gorm.DB) ([]model.Employee, error) {
-	var employees []model.Employee
-	return employees, db.Where("working_status <> ?", model.WorkingStatusLeft).Find(&employees).Error
 }

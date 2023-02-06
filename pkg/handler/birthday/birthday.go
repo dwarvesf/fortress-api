@@ -7,13 +7,14 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gin-gonic/gin"
+
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/store"
-
-	"github.com/gin-gonic/gin"
+	"github.com/dwarvesf/fortress-api/pkg/store/employee"
 )
 
 type birthday struct {
@@ -28,10 +29,10 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 	return &birthday{store: store, repo: repo, service: service, logger: logger, config: cfg}
 }
 
-var check = false
-
+// BirthdayDailyMessage check if today is birthday of any employee in the system
+// if yes, send birthday message to employee thru discord
 func (b *birthday) BirthdayDailyMessage(c *gin.Context) {
-	funcName := "BirthdayDailyMessage"
+	// random message pool
 	pool := []string{
 		`Dear %s, we wish you courage and persistence in reaching all your greatest goals. Have a great birthday!`,
 		`Happy Birthday to %s. No one knows your real age, except God, Human Resources and you yourself. Enjoy the blast!`,
@@ -47,9 +48,17 @@ func (b *birthday) BirthdayDailyMessage(c *gin.Context) {
 		`I wish you could have a programming language that does not need compiling, installing, or debugging to run perfectly on the first run. Have a happy birthday, %s`,
 	}
 
-	employees, err := b.store.Employee.GetAllActive(b.repo.DB())
+	// query active user
+	filter := employee.EmployeeFilter{
+		WorkingStatuses: []string{"full-time"},
+	}
+
+	employees, _, err := b.store.Employee.All(b.repo.DB(), filter, model.Pagination{
+		Page: 0,
+		Size: 1000,
+	})
 	if err != nil {
-		b.logger.Error(err, fmt.Sprintf("%s get users failed", funcName))
+		b.logger.Error(err, "get users failed")
 		return
 	}
 
@@ -69,7 +78,7 @@ func (b *birthday) BirthdayDailyMessage(c *gin.Context) {
 	var discordMsg model.DiscordMessage
 	discordMsg, err = b.service.Discord.PostBirthdayMsg(msg)
 	if err != nil {
-		b.logger.Error(err, fmt.Sprintf("%s can not post Discord message", funcName))
+		b.logger.Error(err, "can not post Discord message")
 		return
 	}
 

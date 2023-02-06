@@ -80,6 +80,19 @@ type Notion struct {
 	MemoDBID           string
 }
 
+type NotionDatabase struct {
+	Earn           string
+	TechRadar      string
+	Audience       string
+	Event          string
+	Hiring         string
+	StaffingDemand string
+	Project        string
+	Digest         string
+	Updates        string
+	Memo           string
+}
+
 type NotionAudit struct {
 	Secret              string
 	AuditCycleDBID      string
@@ -87,7 +100,11 @@ type NotionAudit struct {
 }
 
 type Discord struct {
-	Webhook string
+	Webhooks DiscordWebhook
+}
+
+type DiscordWebhook struct {
+	Woodland string
 }
 
 type ENV interface {
@@ -155,7 +172,9 @@ func Generate(v ENV) *Config {
 			AuditActionItemDBID: v.GetString("NOTION_AUDIT_ACTION_ITEM_DB_ID"),
 		},
 		Discord: Discord{
-			Webhook: v.GetString("DISCORD_WEBHOOK"),
+			Webhooks: DiscordWebhook{
+				Woodland: v.GetString("DISCORD_WEBHOOK_WOODLAND"),
+			},
 		},
 	}
 }

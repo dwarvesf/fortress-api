@@ -4,25 +4,26 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
-	"github.com/dwarvesf/fortress-api/pkg/cronjob/birthday"
 	"github.com/dwarvesf/fortress-api/pkg/handler"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/mw"
-	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 )
 
-func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, svc *service.Service, s *store.Store, logger logger.Logger, cfg *config.Config) {
+func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store.Store, logger logger.Logger, cfg *config.Config) {
 	v1 := r.Group("/api/v1")
 	cronjob := r.Group("/cronjob")
 
-	b := birthday.New(s, repo, svc, logger, cfg)
 	pmw := mw.NewPermissionMiddleware(s, repo, cfg)
 	amw := mw.NewAuthMiddleware(cfg)
 
-	// birthday
-	cronjob.POST("/birthday", b.BirthdayDailyMessage)
+	// cronjob group
+	cronjob.POST("/birthday", h.Birthday.BirthdayDailyMessage)
+
+	/////////////////
+	// API GROUP
+	/////////////////
 
 	// auth
 	v1.POST("/auth", h.Auth.Auth)
