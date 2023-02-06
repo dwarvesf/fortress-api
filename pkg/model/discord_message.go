@@ -1,7 +1,6 @@
 package model
 
 type DiscordMessage struct {
-	Username   string                     `json:"username"`
 	AvatarURL  string                     `json:"avatar_url"`
 	Content    string                     `json:"content"`
 	Embeds     []DiscordMessageEmbed      `json:"embeds"`

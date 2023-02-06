@@ -14,7 +14,6 @@ import (
 func main() {
 	cfg := config.LoadConfig(config.DefaultConfigLoaders())
 	log := logger.NewLogrusLogger()
-	log.Infof("Cronjob starting")
 
 	vault, err := vault.New(cfg)
 	if err != nil {
@@ -29,8 +28,5 @@ func main() {
 	st := store.New()
 	repo := store.NewPostgresStore(cfg)
 
-	job := cronjob.New(st, repo, svc, log, cfg)
-	if err := job.Run(); err != nil {
-		log.Fatal(err, "error when running cronjob")
-	}
+	cronjob.NewSyncAuditJob(st, repo, svc, log, cfg).Run()
 }

@@ -25,7 +25,7 @@ type birthday struct {
 	config  *config.Config
 }
 
-func New(store *store.Store, repo store.DBRepo, service *service.Service, logger logger.Logger, cfg *config.Config) ICronjob {
+func New(store *store.Store, repo store.DBRepo, service *service.Service, logger logger.Logger, cfg *config.Config) IBirthday {
 	return &birthday{store: store, repo: repo, service: service, logger: logger, config: cfg}
 }
 
@@ -64,11 +64,18 @@ func (b *birthday) BirthdayDailyMessage(c *gin.Context) {
 
 	// format message if there is user's birthday
 	var names string
+	havingBirthday := false
 	for _, employee := range employees {
 		now := time.Now()
 		if now.Day() == employee.DateOfBirth.Day() && now.Month() == employee.DateOfBirth.Month() {
 			names += fmt.Sprintf("<@%s>, ", employee.DiscordID)
+			havingBirthday = true
 		}
+	}
+
+	if !havingBirthday {
+		c.JSON(http.StatusOK, gin.H{"message": "no birthday today"})
+		return
 	}
 
 	rand.Seed(time.Now().Unix())
