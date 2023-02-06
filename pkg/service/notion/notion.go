@@ -18,13 +18,18 @@ func New(secret string) NotionService {
 	}
 }
 
-func (n *notionService) GetDatabase(databaseID string, filter *nt.DatabaseQueryFilter, sorts []nt.DatabaseQuerySort) (*nt.DatabaseQueryResponse, error) {
+func (n *notionService) GetDatabase(databaseID string, filter *nt.DatabaseQueryFilter, sorts []nt.DatabaseQuerySort, pageSize int) (*nt.DatabaseQueryResponse, error) {
 	ctx := context.Background()
 
-	res, err := n.notionClient.QueryDatabase(ctx, databaseID, &nt.DatabaseQuery{
+	q := &nt.DatabaseQuery{
 		Filter: filter,
 		Sorts:  sorts,
-	})
+	}
+	if pageSize > 0 {
+		q.PageSize = pageSize
+	}
+
+	res, err := n.notionClient.QueryDatabase(ctx, databaseID, q)
 	if err != nil {
 		return nil, err
 	}

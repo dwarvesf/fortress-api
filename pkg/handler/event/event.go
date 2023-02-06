@@ -83,7 +83,7 @@ func (h *handler) List(c *gin.Context) {
 			Property:  "Date",
 			Direction: notion.SortDirAsc,
 		},
-	})
+	}, 0)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, "can't get events from notion"))
 		return

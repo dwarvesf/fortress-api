@@ -68,7 +68,7 @@ func (h *handler) List(c *gin.Context) {
 			Direction: notion.SortDirDesc,
 			Timestamp: notion.SortTimeStampCreatedTime,
 		},
-	})
+	}, 0)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, "can't get hiring positions from notion"))
 		return
