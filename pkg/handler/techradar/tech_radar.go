@@ -3,6 +3,8 @@ package techradar
 
 import (
 	"net/http"
+	"regexp"
+	"strings"
 
 	"github.com/dstotijn/go-notion"
 	"github.com/dwarvesf/fortress-api/pkg/config"
@@ -45,16 +47,27 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 func (h *handler) List(c *gin.Context) {
 	filter := &notion.DatabaseQueryFilter{}
 
-	if c.Query("ring") != "" {
-		if !funk.Contains([]string{"Adopt", "Trial", "Assess", "Hold"}, c.Query("ring")) {
-			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, nil, nil, "ring should be one of Adopt, Trial, Assess, Hold"))
-			return
+	rings := []string{"Adopt", "Trial", "Assess", "Hold"}
+	filterRings := rings
+
+	if c.Query("name") != "" && len(c.Query("name")) < 2 {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, nil, nil, "name must be at least 2 characters"))
+		return
+	}
+
+	if len(c.Request.URL.Query()["ring"]) != 0 {
+		filterRings = c.Request.URL.Query()["ring"]
+	}
+
+	for _, r := range filterRings {
+		if !funk.Contains(rings, r) {
+			continue
 		}
-		filter.And = append(filter.And, notion.DatabaseQueryFilter{
+		filter.Or = append(filter.Or, notion.DatabaseQueryFilter{
 			Property: "Ring",
 			DatabaseQueryPropertyFilter: notion.DatabaseQueryPropertyFilter{
 				Select: &notion.SelectDatabaseQueryFilter{
-					Equals: c.Query("ring"),
+					Equals: r,
 				},
 			},
 		})
@@ -71,6 +84,12 @@ func (h *handler) List(c *gin.Context) {
 		props := r.Properties.(notion.DatabasePageProperties)
 
 		name := props["Name"].Title[0].Text.Content
+		if c.Query("name") != "" {
+			matched, err := regexp.MatchString(".*"+strings.ToLower(c.Query("name"))+".*", strings.ToLower(name))
+			if err != nil || !matched {
+				continue
+			}
+		}
 		if r.Icon != nil && r.Icon.Emoji != nil {
 			name = *r.Icon.Emoji + " " + props["Name"].Title[0].Text.Content
 		}
