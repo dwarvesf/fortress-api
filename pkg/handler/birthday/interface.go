@@ -2,6 +2,6 @@ package birthday
 
 import "github.com/gin-gonic/gin"
 
-type ICronjob interface {
+type IBirthday interface {
 	BirthdayDailyMessage(c *gin.Context)
 }

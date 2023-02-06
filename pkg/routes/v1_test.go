@@ -553,7 +553,7 @@ func Test_loadV1Routes(t *testing.T) {
 	h := handler.New(nil, nil, nil, l, cfg)
 
 	router := gin.New()
-	loadV1Routes(router, h, nil, nil, nil, nil, nil)
+	loadV1Routes(router, h, nil, nil, nil, nil)
 
 	routeInfo := router.Routes()
 

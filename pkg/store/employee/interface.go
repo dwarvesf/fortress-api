@@ -19,7 +19,6 @@ type IStore interface {
 	GetLineManagers(db *gorm.DB) ([]*model.Employee, error)
 	GetLineManagersOfPeers(db *gorm.DB, employeeID string) ([]*model.Employee, error)
 	GetMenteesByID(db *gorm.DB, employeeID string) ([]model.Employee, error)
-	GetAllActive(db *gorm.DB) (employeees []model.Employee, err error)
 
 	IsExist(db *gorm.DB, id string) (bool, error)
 
