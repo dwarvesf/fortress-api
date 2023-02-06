@@ -42,7 +42,7 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 // @Success 200 {object} []model.StaffingDemand
 // @Failure 400 {object} view.ErrorResponse
 func (h *handler) List(c *gin.Context) {
-	resp, err := h.service.Notion.GetDatabase(h.config.Notion.StaffingDemandDBID, nil, nil)
+	resp, err := h.service.Notion.GetDatabase(h.config.Notion.StaffingDemandDBID, nil, nil, 0)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, "can't get staffing demands from notion"))
 		return

@@ -47,7 +47,7 @@ func (h *handler) List(c *gin.Context) {
 			Property:  "Created at",
 			Direction: notion.SortDirDesc,
 		},
-	})
+	}, 5)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, "can't get updates from notion"))
 		return

@@ -1,0 +1,45 @@
+{
+    "data": {
+        "workUnitDistributions": [
+            {
+                "employee": {
+                    "id": "37e00d47-de69-4ac8-991b-cf3e39565c00",
+                    "fullName": "Phùng Thị Thương Thương",
+                    "displayName": "Thuong Phung",
+                    "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/7186955696154477566.png",
+                    "username": "thuongptt"
+                },
+                "learning": 0,
+                "development": 0,
+                "management": 0,
+                "training": 0
+            },
+            {
+                "employee": {
+                    "id": "d389d35e-c548-42cf-9f29-2a599969a8f2",
+                    "fullName": "Nguyễn Trần Minh Thảo",
+                    "displayName": "Thao Nguyen",
+                    "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5348640939694049226.png",
+                    "username": "thaontm"
+                },
+                "learning": 0,
+                "development": 0,
+                "management": 0,
+                "training": 0
+            },
+            {
+                "employee": {
+                    "id": "2655832e-f009-4b73-a535-64c3a22e558f",
+                    "fullName": "Phạm Đức Thành",
+                    "displayName": "Thanh Pham",
+                    "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
+                    "username": "thanh"
+                },
+                "learning": 0,
+                "development": 1,
+                "management": 2,
+                "training": 21
+            }
+        ]
+    }
+}

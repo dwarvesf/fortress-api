@@ -2911,6 +2911,31 @@ definitions:
       url:
         type: string
     type: object
+  view.WorkUnitDistribution:
+    properties:
+      development:
+        type: integer
+      employee:
+        $ref: '#/definitions/view.BasicEmployeeInfo'
+      learning:
+        type: integer
+      management:
+        type: integer
+      training:
+        type: integer
+    type: object
+  view.WorkUnitDistributionData:
+    properties:
+      workUnitDistributions:
+        items:
+          $ref: '#/definitions/view.WorkUnitDistribution'
+        type: array
+    type: object
+  view.WorkUnitDistributionsResponse:
+    properties:
+      data:
+        $ref: '#/definitions/view.WorkUnitDistributionData'
+    type: object
   view.WorkUnitResponse:
     properties:
       data:
@@ -3374,6 +3399,43 @@ paths:
           schema:
             $ref: '#/definitions/view.ErrorResponse'
       summary: Get dashboard resource utilization
+      tags:
+      - Dashboard
+  /dashboards/resources/work-unit-distribution:
+    get:
+      consumes:
+      - application/json
+      description: Get work unit distribution data for dashboard
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: employee name for filter
+        in: query
+        name: name
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.WorkUnitDistributionsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get work unit distribution data for dashboard
       tags:
       - Dashboard
   /employees:

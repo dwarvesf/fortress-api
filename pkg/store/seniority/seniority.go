@@ -15,7 +15,7 @@ func New() IStore {
 // All get all Seniorities
 func (s *store) All(db *gorm.DB) ([]*model.Seniority, error) {
 	var seniories []*model.Seniority
-	return seniories, db.Find(&seniories).Error
+	return seniories, db.Order("level").Find(&seniories).Error
 }
 
 // One get 1 one by id

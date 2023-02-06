@@ -2,6 +2,7 @@ package dashboard
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -515,6 +516,72 @@ func TestHandler_GetResourceUtilization(t *testing.T) {
 				require.NoError(t, err)
 
 				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Dashboard.GetResourceUtilization] response mismatched")
+			})
+		})
+	}
+}
+
+func TestHandler_GetWorkUnitDistribution(t *testing.T) {
+	cfg := config.LoadTestConfig()
+	loggerMock := logger.NewLogrusLogger()
+	serviceMock := service.New(&cfg)
+	storeMock := store.New()
+
+	tests := []struct {
+		name             string
+		wantCode         int
+		wantErr          error
+		wantResponsePath string
+		query            string
+	}{
+		{
+			name:             "happy_case_with_name",
+			wantCode:         http.StatusOK,
+			wantResponsePath: "testdata/work_unit_distribution/200_with_name.json",
+			query:            "name=th",
+		},
+		{
+			name:             "happy_case_with_name_and_sort",
+			wantCode:         http.StatusOK,
+			wantResponsePath: "testdata/work_unit_distribution/200_with_name_and_sort.json",
+			query:            "name=th&sort=asc",
+		},
+		{
+			name:             "happy_case_with_name_and_sort",
+			wantCode:         http.StatusOK,
+			wantResponsePath: "testdata/work_unit_distribution/200_with_name_sort_and_type.json",
+			query:            "name=th&sort=asc&type=training",
+		},
+		{
+			name:             "invalid_sort",
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/work_unit_distribution/400_invalid_sort.json",
+			query:            "name=th&sort=ascd&type=training",
+		},
+		{
+			name:             "invalid_type",
+			wantCode:         http.StatusBadRequest,
+			wantResponsePath: "testdata/work_unit_distribution/400_invalid_type.json",
+			query:            "name=th&sort=asc&type=trainding",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				testhelper.LoadTestSQLFile(t, txRepo, "./testdata/work_unit_distribution/work_unit_distribution.sql")
+				w := httptest.NewRecorder()
+				ctx, _ := gin.CreateTestContext(w)
+				ctx.Request = httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/dashboards/resources/work-unit-distribution?%s", tt.query), nil)
+				ctx.Request.URL.RawQuery = tt.query
+				ctx.Request.Header.Set("Authorization", testToken)
+
+				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+				h.GetWorkUnitDistribution(ctx)
+				require.Equal(t, tt.wantCode, w.Code)
+				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				require.NoError(t, err)
+
+				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Dashboard.GetWorkUnitDistribution] response mismatched")
 			})
 		})
 	}
