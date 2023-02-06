@@ -4641,6 +4641,20 @@
                 }
             }
         },
+        "model.Digest": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "model.Earn": {
             "type": "object",
             "properties": {
@@ -4860,6 +4874,12 @@
                     "items": {
                         "$ref": "#/definitions/model.ProjectMember"
                     }
+                },
+                "referredBy": {
+                    "type": "string"
+                },
+                "referrer": {
+                    "$ref": "#/definitions/model.Employee"
                 },
                 "roles": {
                     "type": "array",
@@ -5100,6 +5120,29 @@
                 },
                 "stronglyDisagree": {
                     "type": "integer"
+                }
+            }
+        },
+        "model.Memo": {
+            "type": "object",
+            "properties": {
+                "author": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },
@@ -5662,6 +5705,23 @@
                 }
             }
         },
+        "model.Update": {
+            "type": "object",
+            "properties": {
+                "audience": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "model.Valuation": {
             "type": "object",
             "properties": {
@@ -5848,6 +5908,9 @@
                         "type": "string"
                     }
                 },
+                "referredBy": {
+                    "type": "string"
+                },
                 "roleID": {
                     "type": "string"
                 },
@@ -5918,6 +5981,9 @@
                     }
                 },
                 "name": {
+                    "type": "string"
+                },
+                "notionID": {
                     "type": "string"
                 },
                 "projectEmail": {
@@ -6204,6 +6270,9 @@
                     "type": "string",
                     "maxLength": 18,
                     "minLength": 9
+                },
+                "referredBy": {
+                    "type": "string"
                 }
             }
         },
@@ -6366,6 +6435,9 @@
                     "type": "string"
                 },
                 "name": {
+                    "type": "string"
+                },
+                "notionID": {
                     "type": "string"
                 },
                 "stacks": {
@@ -7200,6 +7272,9 @@
                         "$ref": "#/definitions/view.EmployeeProjectData"
                     }
                 },
+                "referredBy": {
+                    "$ref": "#/definitions/view.BasicEmployeeInfo"
+                },
                 "roles": {
                     "type": "array",
                     "items": {
@@ -8029,6 +8104,9 @@
                 "name": {
                     "type": "string"
                 },
+                "notionID": {
+                    "type": "string"
+                },
                 "projectEmail": {
                     "type": "string"
                 },
@@ -8608,6 +8686,9 @@
                 "phoneNumber": {
                     "type": "string"
                 },
+                "referredBy": {
+                    "$ref": "#/definitions/view.BasicEmployeeInfo"
+                },
                 "teamEmail": {
                     "type": "string"
                 },
@@ -8768,6 +8849,9 @@
                     "type": "string"
                 },
                 "name": {
+                    "type": "string"
+                },
+                "notionID": {
                     "type": "string"
                 },
                 "stacks": {

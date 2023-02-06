@@ -43,6 +43,7 @@ type EmployeeData struct {
 
 	Seniority     *model.Seniority      `json:"seniority"`
 	LineManager   *BasicEmployeeInfo    `json:"lineManager"`
+	ReferredBy    *BasicEmployeeInfo    `json:"referredBy"`
 	Organizations []Organization        `json:"organizations"`
 	Positions     []Position            `json:"positions"`
 	Stacks        []Stack               `json:"stacks"`
@@ -151,6 +152,7 @@ type UpdateGeneralInfoEmployeeData struct {
 	DisplayName   string             `json:"displayName"`
 	Organizations []Organization     `json:"organizations"`
 	LineManager   *BasicEmployeeInfo `json:"lineManager"`
+	ReferredBy    *BasicEmployeeInfo `json:"referredBy"`
 }
 
 type UpdateSkillEmployeeData struct {
@@ -277,6 +279,10 @@ func ToUpdateGeneralInfoEmployeeData(employee *model.Employee) *UpdateGeneralInf
 		rs.LineManager = toBasicEmployeeInfo(*employee.LineManager)
 	}
 
+	if !employee.ReferredBy.IsZero() {
+		rs.ReferredBy = toBasicEmployeeInfo(*employee.Referrer)
+	}
+
 	return rs
 }
 
@@ -306,9 +312,12 @@ func ToOneEmployeeData(c *gin.Context, employee *model.Employee, userInfo *model
 		}
 	}
 
-	var lineManager *BasicEmployeeInfo
+	var lineManager, referrer *BasicEmployeeInfo
 	if employee.LineManager != nil {
 		lineManager = toBasicEmployeeInfo(*employee.LineManager)
+	}
+	if employee.Referrer != nil {
+		referrer = toBasicEmployeeInfo(*employee.Referrer)
 	}
 
 	empSocialData := SocialAccount{}
@@ -348,6 +357,7 @@ func ToOneEmployeeData(c *gin.Context, employee *model.Employee, userInfo *model
 		Seniority:     employee.Seniority,
 		Projects:      employeeProjects,
 		LineManager:   lineManager,
+		ReferredBy:    referrer,
 		Organizations: ToOrganizations(employee.EmployeeOrganizations),
 
 		DiscordName: empSocialData.DiscordName,
@@ -400,9 +410,12 @@ func ToEmployeeData(employee *model.Employee) *EmployeeData {
 		employeeProjects = append(employeeProjects, ToEmployeeProjectData(&v))
 	}
 
-	var lineManager *BasicEmployeeInfo
+	var lineManager, referrer *BasicEmployeeInfo
 	if employee.LineManager != nil {
 		lineManager = toBasicEmployeeInfo(*employee.LineManager)
+	}
+	if employee.Referrer != nil {
+		referrer = toBasicEmployeeInfo(*employee.Referrer)
 	}
 
 	rs := &EmployeeData{
@@ -437,6 +450,7 @@ func ToEmployeeData(employee *model.Employee) *EmployeeData {
 		Organizations:    ToOrganizations(employee.EmployeeOrganizations),
 		Projects:         employeeProjects,
 		LineManager:      lineManager,
+		ReferredBy:       referrer,
 		Country:          employee.Country,
 		City:             employee.City,
 		Roles:            ToRoles(employee.EmployeeRoles),

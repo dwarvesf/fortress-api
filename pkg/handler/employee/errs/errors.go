@@ -21,6 +21,7 @@ var (
 	ErrEmployeeMenteeNotFound                 = errors.New("employee mentee not found")
 	ErrMenteeNotFound                         = errors.New("mentee not found")
 	ErrEmployeeNotFound                       = errors.New("employee not found")
+	ErrReferrerNotFound                       = errors.New("referrer not found")
 	ErrRoleNotFound                           = errors.New("role not found")
 	ErrStackNotFound                          = errors.New("stack not found")
 	ErrPositionNotFound                       = errors.New("position not found")

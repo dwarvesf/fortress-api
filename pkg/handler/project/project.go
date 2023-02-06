@@ -277,6 +277,10 @@ func (h *handler) Create(c *gin.Context) {
 		Function:     model.ProjectFunction(body.Function),
 	}
 
+	if !body.NotionID.IsZero() {
+		p.NotionID = body.NotionID
+	}
+
 	tx, done := h.repo.NewTransaction()
 
 	if err := h.store.Project.Create(tx.DB(), p); err != nil {
@@ -1426,12 +1430,14 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 	p.StartDate = body.GetStartDate()
 	p.CountryID = body.CountryID
 	p.Function = model.ProjectFunction(body.Function)
+	p.NotionID = body.NotionID
 
 	_, err = h.store.Project.UpdateSelectedFieldsByID(tx.DB(), projectID, *p,
 		"name",
 		"start_date",
 		"country_id",
-		"function")
+		"function",
+		"notion_id")
 
 	if err != nil {
 		l.Error(err, "failed to update project")
