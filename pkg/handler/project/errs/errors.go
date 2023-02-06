@@ -25,6 +25,7 @@ var (
 
 	ErrProjectNotFound         = errors.New("project not found")
 	ErrCountryNotFound         = errors.New("country not found")
+	ErrBankAccountNotFound     = errors.New("bank account not found")
 	ErrEmployeeNotFound        = errors.New("employee not found")
 	ErrSeniorityNotFound       = errors.New("seniority not found")
 	ErrProjectSlotNotFound     = errors.New("project slot not found")

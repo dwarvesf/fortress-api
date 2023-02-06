@@ -136,6 +136,38 @@ const docTemplate = `{
                 }
             }
         },
+        "/bank-accounts": {
+            "get": {
+                "description": "Get all bank accounts",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Bank"
+                ],
+                "summary": "Get all bank accounts",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/view.ListBankAccountResponse"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/cronjobs/audits": {
             "post": {
                 "description": "Sync audit info from Notion to database",
@@ -4651,6 +4683,53 @@ const docTemplate = `{
                 }
             }
         },
+        "model.BankAccount": {
+            "type": "object",
+            "properties": {
+                "accountNumber": {
+                    "type": "string"
+                },
+                "address": {
+                    "type": "string"
+                },
+                "bankName": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "currency": {
+                    "$ref": "#/definitions/model.Currency"
+                },
+                "currencyID": {
+                    "type": "string"
+                },
+                "deletedAt": {
+                    "$ref": "#/definitions/gorm.DeletedAt"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "ownerName": {
+                    "type": "string"
+                },
+                "routingNumber": {
+                    "type": "string"
+                },
+                "swiftCode": {
+                    "type": "string"
+                },
+                "uksortCode": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
         "model.Chapter": {
             "type": "object",
             "properties": {
@@ -4699,6 +4778,35 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "name": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.Currency": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "deletedAt": {
+                    "$ref": "#/definitions/gorm.DeletedAt"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "locale": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "symbol": {
+                    "type": "string"
+                },
+                "type": {
                     "type": "string"
                 },
                 "updatedAt": {
@@ -5278,6 +5386,12 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "avatar": {
+                    "type": "string"
+                },
+                "bankAccount": {
+                    "$ref": "#/definitions/model.BankAccount"
+                },
+                "bankAccountID": {
                     "type": "string"
                 },
                 "clientEmail": {
@@ -6032,6 +6146,9 @@ const docTemplate = `{
                 "accountManagerID": {
                     "type": "string"
                 },
+                "bankAccountID": {
+                    "type": "string"
+                },
                 "clientEmail": {
                     "type": "array",
                     "items": {
@@ -6504,6 +6621,9 @@ const docTemplate = `{
                 "name"
             ],
             "properties": {
+                "bankAccountID": {
+                    "type": "string"
+                },
                 "countryID": {
                     "type": "string"
                 },
@@ -6948,6 +7068,23 @@ const docTemplate = `{
                 }
             }
         },
+        "view.BasicBankAccountInfo": {
+            "type": "object",
+            "properties": {
+                "accountNumber": {
+                    "type": "string"
+                },
+                "bankName": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "ownerName": {
+                    "type": "string"
+                }
+            }
+        },
         "view.BasicCountryInfo": {
             "type": "object",
             "properties": {
@@ -7155,6 +7292,9 @@ const docTemplate = `{
             "properties": {
                 "accountManager": {
                     "$ref": "#/definitions/view.ProjectHead"
+                },
+                "bankAccount": {
+                    "$ref": "#/definitions/view.BasicBankAccountInfo"
                 },
                 "clientEmail": {
                     "type": "array",
@@ -7840,6 +7980,17 @@ const docTemplate = `{
                 }
             }
         },
+        "view.ListBankAccountResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.BankAccount"
+                    }
+                }
+            }
+        },
         "view.ListFeedbackResponse": {
             "type": "object",
             "properties": {
@@ -8137,6 +8288,9 @@ const docTemplate = `{
                 },
                 "avatar": {
                     "type": "string"
+                },
+                "bankAccount": {
+                    "$ref": "#/definitions/view.BasicBankAccountInfo"
                 },
                 "clientEmail": {
                     "type": "array",
@@ -8918,6 +9072,9 @@ const docTemplate = `{
         "view.UpdateProjectGeneralInfo": {
             "type": "object",
             "properties": {
+                "bankAccount": {
+                    "$ref": "#/definitions/view.BasicBankAccountInfo"
+                },
                 "country": {
                     "$ref": "#/definitions/view.BasicCountryInfo"
                 },

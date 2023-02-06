@@ -551,6 +551,12 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/audit.IHandler.Sync-fm",
 			},
 		},
+		"/api/v1/bank-accounts": {
+			"GET": {
+				Method:  "GET",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/bankaccount.IHandler.List-fm",
+			},
+		},
 	}
 
 	l := logger.NewLogrusLogger()

@@ -20,12 +20,13 @@ type GetListProjectInput struct {
 }
 
 type UpdateProjectGeneralInfoInput struct {
-	Name      string       `form:"name" json:"name" binding:"required"`
-	StartDate string       `form:"startDate" json:"startDate"`
-	CountryID model.UUID   `form:"countryID" json:"countryID" binding:"required"`
-	Function  string       `form:"function" json:"function" binding:"required"`
-	NotionID  model.UUID   `form:"notionID" json:"notionID"`
-	Stacks    []model.UUID `form:"stacks" json:"stacks"`
+	Name          string       `form:"name" json:"name" binding:"required"`
+	StartDate     string       `form:"startDate" json:"startDate"`
+	CountryID     model.UUID   `form:"countryID" json:"countryID" binding:"required"`
+	Function      string       `form:"function" json:"function" binding:"required"`
+	NotionID      model.UUID   `form:"notionID" json:"notionID"`
+	Stacks        []model.UUID `form:"stacks" json:"stacks"`
+	BankAccountID model.UUID   `form:"bankAccountID" json:"bankAccountID"`
 }
 
 func (i UpdateProjectGeneralInfoInput) GetStartDate() *time.Time {
@@ -84,6 +85,7 @@ type CreateProjectInput struct {
 	Code              string              `form:"code" json:"code"`
 	Function          string              `form:"function" json:"function" binding:"required"`
 	NotionID          model.UUID          `form:"notionID" json:"notionID"`
+	BankAccountID     model.UUID          `form:"bankAccountID" json:"bankAccountID"`
 }
 
 func (i *CreateProjectInput) Validate() error {
