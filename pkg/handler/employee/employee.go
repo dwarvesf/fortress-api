@@ -364,6 +364,22 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 		}
 	}
 
+	// check referrer existence
+	if !body.ReferredBy.IsZero() {
+		exist, err := h.store.Employee.IsExist(tx.DB(), body.ReferredBy.String())
+		if err != nil {
+			l.Error(err, "error when finding referrer")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done((err)), body, ""))
+			return
+		}
+
+		if !exist {
+			l.Error(errs.ErrReferrerNotFound, "error referrer not found")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, done(errs.ErrReferrerNotFound), body, ""))
+			return
+		}
+	}
+
 	emp, err := h.store.Employee.One(tx.DB(), employeeID, true)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -450,6 +466,7 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 	}
 
 	emp.LineManagerID = body.LineManagerID
+	emp.ReferredBy = body.ReferredBy
 
 	if err := h.updateSocialAccounts(tx.DB(), body, emp.ID); err != nil {
 		l.Error(err, "failed to update social accounts")
@@ -472,6 +489,7 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 		"display_name",
 		"joined_date",
 		"left_date",
+		"referred_by",
 	)
 	if err != nil {
 		l.Error(err, "failed to update employee")
@@ -517,6 +535,13 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 				return
 			}
 		}
+	}
+
+	emp, err = h.store.Employee.One(tx.DB(), employeeID, true)
+	if err != nil {
+		l.Error(err, "failed to get employee")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), nil, ""))
+		return
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToUpdateGeneralInfoEmployeeData(emp), nil, done(nil), nil, ""))
@@ -716,6 +741,23 @@ func (h *handler) Create(c *gin.Context) {
 		JoinedDate:    &now,
 		SeniorityID:   sen.ID,
 		Username:      strings.Split(input.TeamEmail, "@")[0],
+	}
+
+	if !input.ReferredBy.IsZero() {
+		exists, err := h.store.Employee.IsExist(h.repo.DB(), input.ReferredBy.String())
+		if err != nil {
+			l.Error(err, "failed to getting referrer")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input, ""))
+			return
+		}
+
+		if !exists {
+			l.Error(errs.ErrReferrerNotFound, "referrer not found")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrReferrerNotFound, input, ""))
+			return
+		}
+
+		eml.ReferredBy = input.ReferredBy
 	}
 
 	// 2.1 check employee exists -> raise error

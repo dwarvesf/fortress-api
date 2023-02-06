@@ -27,6 +27,7 @@
     "status": "contractor",
     "joinedDate": "2018-09-01T00:00:00Z",
     "leftDate": null,
+    "referredBy": null,
     "organizations": [],
     "seniority": {
       "id": "01fb6322-d727-47e3-a242-5039ea4732fd",

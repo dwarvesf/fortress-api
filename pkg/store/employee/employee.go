@@ -43,6 +43,7 @@ func (s *store) One(db *gorm.DB, id string, preload bool) (*model.Employee, erro
 			Preload("EmployeeChapters.Chapter", "deleted_at IS NULL").
 			Preload("EmployeeOrganizations", "deleted_at IS NULL").
 			Preload("EmployeeOrganizations.Organization", "deleted_at IS NULL").
+			Preload("Referrer", "deleted_at IS NULL").
 			Preload("Seniority").
 			Preload("LineManager")
 	}
@@ -93,6 +94,7 @@ func (s *store) All(db *gorm.DB, filter EmployeeFilter, pagination model.Paginat
 	if filter.Preload {
 		query = query.Preload("ProjectMembers", "deleted_at IS NULL").
 			Preload("LineManager", "deleted_at IS NULL").
+			Preload("Referrer", "deleted_at IS NULL").
 			Preload("Seniority", "deleted_at IS NULL").
 			Preload("ProjectMembers.Project", "deleted_at IS NULL").
 			Preload("ProjectMembers.Project.Heads", "deleted_at IS NULL").

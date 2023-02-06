@@ -4649,6 +4649,20 @@ const docTemplate = `{
                 }
             }
         },
+        "model.Digest": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "model.Earn": {
             "type": "object",
             "properties": {
@@ -4868,6 +4882,12 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/model.ProjectMember"
                     }
+                },
+                "referredBy": {
+                    "type": "string"
+                },
+                "referrer": {
+                    "$ref": "#/definitions/model.Employee"
                 },
                 "roles": {
                     "type": "array",
@@ -5108,6 +5128,29 @@ const docTemplate = `{
                 },
                 "stronglyDisagree": {
                     "type": "integer"
+                }
+            }
+        },
+        "model.Memo": {
+            "type": "object",
+            "properties": {
+                "author": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },
@@ -5670,6 +5713,23 @@ const docTemplate = `{
                 }
             }
         },
+        "model.Update": {
+            "type": "object",
+            "properties": {
+                "audience": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "model.Valuation": {
             "type": "object",
             "properties": {
@@ -5855,6 +5915,9 @@ const docTemplate = `{
                     "items": {
                         "type": "string"
                     }
+                },
+                "referredBy": {
+                    "type": "string"
                 },
                 "roleID": {
                     "type": "string"
@@ -6212,6 +6275,9 @@ const docTemplate = `{
                     "type": "string",
                     "maxLength": 18,
                     "minLength": 9
+                },
+                "referredBy": {
+                    "type": "string"
                 }
             }
         },
@@ -7207,6 +7273,9 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/view.EmployeeProjectData"
                     }
+                },
+                "referredBy": {
+                    "$ref": "#/definitions/view.BasicEmployeeInfo"
                 },
                 "roles": {
                     "type": "array",
@@ -8615,6 +8684,9 @@ const docTemplate = `{
                 },
                 "phoneNumber": {
                     "type": "string"
+                },
+                "referredBy": {
+                    "$ref": "#/definitions/view.BasicEmployeeInfo"
                 },
                 "teamEmail": {
                     "type": "string"
