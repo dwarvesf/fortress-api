@@ -30,6 +30,37 @@ definitions:
           type: string
         type: array
     type: object
+  model.BankAccount:
+    properties:
+      accountNumber:
+        type: string
+      address:
+        type: string
+      bankName:
+        type: string
+      createdAt:
+        type: string
+      currency:
+        $ref: '#/definitions/model.Currency'
+      currencyID:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      id:
+        type: string
+      name:
+        type: string
+      ownerName:
+        type: string
+      routingNumber:
+        type: string
+      swiftCode:
+        type: string
+      uksortCode:
+        type: string
+      updatedAt:
+        type: string
+    type: object
   model.Chapter:
     properties:
       code:
@@ -62,6 +93,25 @@ definitions:
       id:
         type: string
       name:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  model.Currency:
+    properties:
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      id:
+        type: string
+      locale:
+        type: string
+      name:
+        type: string
+      symbol:
+        type: string
+      type:
         type: string
       updatedAt:
         type: string
@@ -444,6 +494,10 @@ definitions:
       allowsSendingSurvey:
         type: boolean
       avatar:
+        type: string
+      bankAccount:
+        $ref: '#/definitions/model.BankAccount'
+      bankAccountID:
         type: string
       clientEmail:
         type: string
@@ -939,6 +993,8 @@ definitions:
     properties:
       accountManagerID:
         type: string
+      bankAccountID:
+        type: string
       clientEmail:
         items:
           type: string
@@ -1260,6 +1316,8 @@ definitions:
     type: object
   request.UpdateProjectGeneralInfoInput:
     properties:
+      bankAccountID:
+        type: string
       countryID:
         type: string
       function:
@@ -1555,6 +1613,17 @@ definitions:
       type:
         type: string
     type: object
+  view.BasicBankAccountInfo:
+    properties:
+      accountNumber:
+        type: string
+      bankName:
+        type: string
+      id:
+        type: string
+      ownerName:
+        type: string
+    type: object
   view.BasicCountryInfo:
     properties:
       code:
@@ -1690,6 +1759,8 @@ definitions:
     properties:
       accountManager:
         $ref: '#/definitions/view.ProjectHead'
+      bankAccount:
+        $ref: '#/definitions/view.BasicBankAccountInfo'
       clientEmail:
         items:
           type: string
@@ -2136,6 +2207,13 @@ definitions:
           $ref: '#/definitions/view.BasicEmployeeInfo'
         type: array
     type: object
+  view.ListBankAccountResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/model.BankAccount'
+        type: array
+    type: object
   view.ListFeedbackResponse:
     properties:
       data:
@@ -2329,6 +2407,8 @@ definitions:
         type: boolean
       avatar:
         type: string
+      bankAccount:
+        $ref: '#/definitions/view.BasicBankAccountInfo'
       clientEmail:
         items:
           type: string
@@ -2838,6 +2918,8 @@ definitions:
     type: object
   view.UpdateProjectGeneralInfo:
     properties:
+      bankAccount:
+        $ref: '#/definitions/view.BasicBankAccountInfo'
       country:
         $ref: '#/definitions/view.BasicCountryInfo'
       function:
@@ -2932,6 +3014,40 @@ definitions:
       data:
         $ref: '#/definitions/view.WorkSurveysData'
     type: object
+  view.WorkSurveySummary:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/view.WorkSurveySummaryEmployee'
+        type: array
+      type:
+        type: string
+    type: object
+  view.WorkSurveySummaryAnswer:
+    properties:
+      answer:
+        type: string
+      date:
+        type: string
+    type: object
+  view.WorkSurveySummaryEmployee:
+    properties:
+      answers:
+        items:
+          $ref: '#/definitions/view.WorkSurveySummaryAnswer'
+        type: array
+      project:
+        $ref: '#/definitions/view.BasicProjectInfo'
+      reviewer:
+        $ref: '#/definitions/view.BasicEmployeeInfo'
+    type: object
+  view.WorkSurveySummaryResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/view.WorkSurveySummary'
+        type: array
+    type: object
   view.WorkSurveysData:
     properties:
       project:
@@ -3009,27 +3125,6 @@ info:
   title: Swagger Example API
   version: "1.0"
 paths:
-  /audits:
-    put:
-      consumes:
-      - application/json
-      description: Sync audit info from Notion to database
-      parameters:
-      - description: jwt token
-        in: header
-        name: Authorization
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/view.MessageResponse'
-      summary: Sync audit info from Notion to database
-      tags:
-      - Audit
   /auth:
     post:
       consumes:
@@ -3103,6 +3198,48 @@ paths:
       summary: Get logged-in user data
       tags:
       - Auth
+  /bank-accounts:
+    get:
+      consumes:
+      - application/json
+      description: Get all bank accounts
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/view.ListBankAccountResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get all bank accounts
+      tags:
+      - Bank
+  /cronjobs/audits:
+    post:
+      consumes:
+      - application/json
+      description: Sync audit info from Notion to database
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.MessageResponse'
+      summary: Sync audit info from Notion to database
+      tags:
+      - Audit
   /dashboards/engagement/detail:
     get:
       consumes:
@@ -3454,6 +3591,51 @@ paths:
           schema:
             $ref: '#/definitions/view.ErrorResponse'
       summary: Get dashboard resource utilization
+      tags:
+      - Dashboard
+  /dashboards/resources/work-survey-summaries:
+    get:
+      consumes:
+      - application/json
+      description: Get resource work summaries for dashboard
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Keyword
+        in: query
+        name: keyword
+        type: string
+      - description: Page
+        in: query
+        name: page
+        type: string
+      - description: Size
+        in: query
+        name: size
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.WorkSurveySummaryResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get resource work summaries for dashboard
       tags:
       - Dashboard
   /dashboards/resources/work-unit-distribution:

@@ -460,9 +460,10 @@ func (s *store) GetPendingSlots(db *gorm.DB) ([]*model.ProjectSlot, error) {
 			FROM project_members pm
 			WHERE pm.end_date IS NOT NULL AND pm.end_date > now()
 		)`).
-		Preload("Seniority").
-		Preload("Project").
-		Preload("ProjectSlotPositions").
+		Preload("Seniority", "deleted_at IS NULL").
+		Preload("Project", "deleted_at IS NULL").
+		Preload("ProjectSlotPositions", "deleted_at IS NULL").
+		Preload("ProjectSlotPositions.Position", "deleted_at IS NULL").
 		Find(&slots).Error
 }
 
@@ -474,11 +475,13 @@ func (s *store) GetAvailableEmployees(db *gorm.DB) ([]*model.Employee, error) {
 			FROM project_members pm
 			WHERE pm.end_date IS NOT NULL AND pm.end_date > now()
 		)`, model.WorkingStatusLeft).
-		Preload("Seniority").
-		Preload("EmployeePositions").
-		Preload("EmployeeStacks").
-		Preload("ProjectMembers").
-		Preload("ProjectMembers.Project").
+		Preload("Seniority", "deleted_at IS NULL").
+		Preload("EmployeePositions", "deleted_at IS NULL").
+		Preload("EmployeePositions.Position", "deleted_at IS NULL").
+		Preload("EmployeeStacks", "deleted_at IS NULL").
+		Preload("EmployeeStacks.Stack", "deleted_at IS NULL").
+		Preload("ProjectMembers", "deleted_at IS NULL").
+		Preload("ProjectMembers.Project", "deleted_at IS NULL").
 		Find(&employees).Error
 }
 
@@ -590,4 +593,34 @@ func (s *store) GetWorkUnitDistribution(db *gorm.DB, fullName string) ([]*model.
 	}
 
 	return rs, db.Raw(query).Scan(&rs).Error
+}
+
+func (s *store) GetAllWorkReviews(db *gorm.DB, keyword string, pagination model.Pagination) ([]*model.EmployeeEventReviewer, error) {
+	var eer []*model.EmployeeEventReviewer
+
+	query := db.Table("employee_event_reviewers").
+		Joins(`JOIN feedback_events fe ON employee_event_reviewers.event_id = fe.id 
+			AND fe.deleted_at IS NULL
+			AND fe.subtype = ?
+			AND fe.start_date > now() - INTERVAL '70 DAYS'`, model.EventSubtypeWork). // last 10 weeks
+		Joins("JOIN employee_event_topics eet ON employee_event_reviewers.employee_event_topic_id = eet.id").
+		Joins("JOIN employees e ON employee_event_reviewers.reviewer_id = e.id AND e.deleted_at IS NULL")
+
+	limit, offset := pagination.ToLimitOffset()
+
+	if keyword != "" {
+		query = query.Where("e.keyword_vector @@ plainto_tsquery('english_nostop', fn_remove_vietnamese_accents(LOWER(?)))", keyword)
+	}
+
+	query = query.Where("employee_event_reviewers.reviewer_status = ?", model.EventReviewerStatusDone)
+
+	return eer, query.Order("fe.end_date DESC, employee_event_reviewers.reviewer_id, eet.project_id").
+		Preload("Event", "deleted_at IS NULL").
+		Preload("Reviewer", "deleted_at IS NULL").
+		Preload("EmployeeEventQuestions", "deleted_at IS NULL").
+		Preload("EmployeeEventTopic", "deleted_at IS NULL").
+		Preload("EmployeeEventTopic.Project", "deleted_at IS NULL").
+		Limit(limit).
+		Offset(offset).
+		Find(&eer).Error
 }

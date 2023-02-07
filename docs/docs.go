@@ -25,38 +25,6 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/audits": {
-            "put": {
-                "description": "Sync audit info from Notion to database",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Audit"
-                ],
-                "summary": "Sync audit info from Notion to database",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "jwt token",
-                        "name": "Authorization",
-                        "in": "header",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/view.MessageResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/auth": {
             "post": {
                 "description": "Authorise user when login",
@@ -163,6 +131,70 @@ const docTemplate = `{
                         "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/bank-accounts": {
+            "get": {
+                "description": "Get all bank accounts",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Bank"
+                ],
+                "summary": "Get all bank accounts",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/view.ListBankAccountResponse"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/cronjobs/audits": {
+            "post": {
+                "description": "Sync audit info from Notion to database",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Audit"
+                ],
+                "summary": "Sync audit info from Notion to database",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.MessageResponse"
                         }
                     }
                 }
@@ -691,6 +723,74 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/view.GetDashboardResourceUtilizationResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/dashboards/resources/work-survey-summaries": {
+            "get": {
+                "description": "Get resource work summaries for dashboard",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "Get resource work summaries for dashboard",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Keyword",
+                        "name": "keyword",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Page",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Size",
+                        "name": "size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.WorkSurveySummaryResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
                         }
                     },
                     "500": {
@@ -4583,6 +4683,53 @@ const docTemplate = `{
                 }
             }
         },
+        "model.BankAccount": {
+            "type": "object",
+            "properties": {
+                "accountNumber": {
+                    "type": "string"
+                },
+                "address": {
+                    "type": "string"
+                },
+                "bankName": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "currency": {
+                    "$ref": "#/definitions/model.Currency"
+                },
+                "currencyID": {
+                    "type": "string"
+                },
+                "deletedAt": {
+                    "$ref": "#/definitions/gorm.DeletedAt"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "ownerName": {
+                    "type": "string"
+                },
+                "routingNumber": {
+                    "type": "string"
+                },
+                "swiftCode": {
+                    "type": "string"
+                },
+                "uksortCode": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
         "model.Chapter": {
             "type": "object",
             "properties": {
@@ -4631,6 +4778,35 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "name": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.Currency": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "deletedAt": {
+                    "$ref": "#/definitions/gorm.DeletedAt"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "locale": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "symbol": {
+                    "type": "string"
+                },
+                "type": {
                     "type": "string"
                 },
                 "updatedAt": {
@@ -5210,6 +5386,12 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "avatar": {
+                    "type": "string"
+                },
+                "bankAccount": {
+                    "$ref": "#/definitions/model.BankAccount"
+                },
+                "bankAccountID": {
                     "type": "string"
                 },
                 "clientEmail": {
@@ -5964,6 +6146,9 @@ const docTemplate = `{
                 "accountManagerID": {
                     "type": "string"
                 },
+                "bankAccountID": {
+                    "type": "string"
+                },
                 "clientEmail": {
                     "type": "array",
                     "items": {
@@ -6436,6 +6621,9 @@ const docTemplate = `{
                 "name"
             ],
             "properties": {
+                "bankAccountID": {
+                    "type": "string"
+                },
                 "countryID": {
                     "type": "string"
                 },
@@ -6880,6 +7068,23 @@ const docTemplate = `{
                 }
             }
         },
+        "view.BasicBankAccountInfo": {
+            "type": "object",
+            "properties": {
+                "accountNumber": {
+                    "type": "string"
+                },
+                "bankName": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "ownerName": {
+                    "type": "string"
+                }
+            }
+        },
         "view.BasicCountryInfo": {
             "type": "object",
             "properties": {
@@ -7087,6 +7292,9 @@ const docTemplate = `{
             "properties": {
                 "accountManager": {
                     "$ref": "#/definitions/view.ProjectHead"
+                },
+                "bankAccount": {
+                    "$ref": "#/definitions/view.BasicBankAccountInfo"
                 },
                 "clientEmail": {
                     "type": "array",
@@ -7772,6 +7980,17 @@ const docTemplate = `{
                 }
             }
         },
+        "view.ListBankAccountResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.BankAccount"
+                    }
+                }
+            }
+        },
         "view.ListFeedbackResponse": {
             "type": "object",
             "properties": {
@@ -8069,6 +8288,9 @@ const docTemplate = `{
                 },
                 "avatar": {
                     "type": "string"
+                },
+                "bankAccount": {
+                    "$ref": "#/definitions/view.BasicBankAccountInfo"
                 },
                 "clientEmail": {
                     "type": "array",
@@ -8850,6 +9072,9 @@ const docTemplate = `{
         "view.UpdateProjectGeneralInfo": {
             "type": "object",
             "properties": {
+                "bankAccount": {
+                    "$ref": "#/definitions/view.BasicBankAccountInfo"
+                },
                 "country": {
                     "$ref": "#/definitions/view.BasicCountryInfo"
                 },
@@ -8992,6 +9217,59 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/view.WorkSurveysData"
+                }
+            }
+        },
+        "view.WorkSurveySummary": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.WorkSurveySummaryEmployee"
+                    }
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "view.WorkSurveySummaryAnswer": {
+            "type": "object",
+            "properties": {
+                "answer": {
+                    "type": "string"
+                },
+                "date": {
+                    "type": "string"
+                }
+            }
+        },
+        "view.WorkSurveySummaryEmployee": {
+            "type": "object",
+            "properties": {
+                "answers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.WorkSurveySummaryAnswer"
+                    }
+                },
+                "project": {
+                    "$ref": "#/definitions/view.BasicProjectInfo"
+                },
+                "reviewer": {
+                    "$ref": "#/definitions/view.BasicEmployeeInfo"
+                }
+            }
+        },
+        "view.WorkSurveySummaryResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.WorkSurveySummary"
+                    }
                 }
             }
         },

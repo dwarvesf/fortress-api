@@ -42,7 +42,7 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 // @Success 200 {object} []model.Digest
 // @Failure 400 {object} view.ErrorResponse
 func (h *handler) List(c *gin.Context) {
-	resp, err := h.service.Notion.GetDatabase(h.config.Notion.DigestDBID, nil, []notion.DatabaseQuerySort{
+	resp, err := h.service.Notion.GetDatabase(h.config.Notion.Databases.Digest, nil, []notion.DatabaseQuerySort{
 		{
 			Property:  "Created at",
 			Direction: notion.SortDirDesc,

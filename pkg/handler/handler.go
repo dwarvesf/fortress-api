@@ -2,9 +2,12 @@ package handler
 
 import (
 	"github.com/dwarvesf/fortress-api/pkg/config"
+	"github.com/dwarvesf/fortress-api/pkg/controller"
 	"github.com/dwarvesf/fortress-api/pkg/handler/audience"
 	"github.com/dwarvesf/fortress-api/pkg/handler/audit"
 	"github.com/dwarvesf/fortress-api/pkg/handler/auth"
+	"github.com/dwarvesf/fortress-api/pkg/handler/bankaccount"
+	"github.com/dwarvesf/fortress-api/pkg/handler/birthday"
 	"github.com/dwarvesf/fortress-api/pkg/handler/dashboard"
 	"github.com/dwarvesf/fortress-api/pkg/handler/digest"
 	"github.com/dwarvesf/fortress-api/pkg/handler/earn"
@@ -48,14 +51,16 @@ type Handler struct {
 	Digest         digest.IHandler
 	Update         update.IHandler
 	Memo           memo.IHandler
+	BankAccount    bankaccount.IHandler
+	Birthday       birthday.IHandler
 }
 
-func New(store *store.Store, repo store.DBRepo, service *service.Service, logger logger.Logger, cfg *config.Config) *Handler {
+func New(store *store.Store, repo store.DBRepo, service *service.Service, ctrl *controller.Controller, logger logger.Logger, cfg *config.Config) *Handler {
 	return &Handler{
 		Healthcheck:    healthz.New(),
 		Employee:       employee.New(store, repo, service, logger, cfg),
 		Metadata:       metadata.New(store, repo, service, logger, cfg),
-		Auth:           auth.New(store, repo, service, logger, cfg),
+		Auth:           auth.New(ctrl, logger, cfg),
 		Project:        project.New(store, repo, service, logger, cfg),
 		Profile:        profile.New(store, repo, service, logger, cfg),
 		Feedback:       feedback.New(store, repo, service, logger, cfg),
@@ -72,5 +77,7 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 		Digest:         digest.New(store, repo, service, logger, cfg),
 		Update:         update.New(store, repo, service, logger, cfg),
 		Memo:           memo.New(store, repo, service, logger, cfg),
+		BankAccount:    bankaccount.New(store, repo, service, logger, cfg),
+		Birthday:       birthday.New(store, repo, service, logger, cfg),
 	}
 }

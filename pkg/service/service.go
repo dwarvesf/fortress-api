@@ -5,6 +5,7 @@ import (
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
+	"github.com/dwarvesf/fortress-api/pkg/service/discord"
 	"github.com/dwarvesf/fortress-api/pkg/service/google"
 	"github.com/dwarvesf/fortress-api/pkg/service/notion"
 	"github.com/dwarvesf/fortress-api/pkg/service/wise"
@@ -12,11 +13,11 @@ import (
 )
 
 type Service struct {
-	Google      google.GoogleService
-	Notion      notion.NotionService
-	NotionAudit notion.NotionService
-	Wise        wise.IWiseService
-	Cache       *cache.Cache
+	Google  google.GoogleService
+	Notion  notion.NotionService
+	Wise    wise.IWiseService
+	Cache   *cache.Cache
+	Discord discord.DiscordService
 }
 
 func New(cfg *config.Config) *Service {
@@ -39,10 +40,8 @@ func New(cfg *config.Config) *Service {
 		Notion: notion.New(
 			cfg.Notion.Secret,
 		),
-		NotionAudit: notion.New(
-			cfg.NotionAudit.Secret,
-		),
-		Wise:  wise.New(cfg, logger.L),
-		Cache: cch,
+		Wise:    wise.New(cfg, logger.L),
+		Cache:   cch,
+		Discord: discord.New(cfg.Discord.Webhooks.Campfire),
 	}
 }

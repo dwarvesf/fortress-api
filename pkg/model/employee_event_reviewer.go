@@ -14,6 +14,8 @@ type EmployeeEventReviewer struct {
 	IsForcedDone         bool
 	EventID              UUID
 
+	Event                  FeedbackEvent
+	EmployeeEventTopic     EmployeeEventTopic
 	Reviewer               *Employee
 	EmployeeEventQuestions []EmployeeEventQuestion
 }

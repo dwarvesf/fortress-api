@@ -12,8 +12,20 @@ import (
 
 func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store.Store, cfg *config.Config) {
 	v1 := r.Group("/api/v1")
+	cronjob := r.Group("/cronjobs")
+
 	pmw := mw.NewPermissionMiddleware(s, repo, cfg)
 	amw := mw.NewAuthMiddleware(cfg)
+
+	// cronjob group
+	{
+		cronjob.POST("/audits", h.Audit.Sync)
+		cronjob.POST("/birthday", h.Birthday.BirthdayDailyMessage)
+	}
+
+	/////////////////
+	// API GROUP
+	/////////////////
 
 	// auth
 	v1.POST("/auth", h.Auth.Auth)
@@ -87,7 +99,7 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 		feedbackGroup.GET("", pmw.WithPerm(model.PermissionFeedbacksRead), h.Feedback.List)
 		feedbackGroup.GET("/:id/topics/:topicID", amw.WithAuth, pmw.WithPerm(model.PermissionFeedbacksRead), h.Feedback.Detail)
 		feedbackGroup.POST("/:id/topics/:topicID/submit", amw.WithAuth, pmw.WithPerm(model.PermissionFeedbacksCreate), h.Feedback.Submit)
-		feedbackGroup.GET("/unreads", pmw.WithPerm(model.PermissionSurveysEdit), h.Feedback.CountUnreadFeedback)
+		feedbackGroup.GET("/unreads", pmw.WithPerm(model.PermissionFeedbacksRead), h.Feedback.CountUnreadFeedback)
 	}
 
 	surveyGroup := v1.Group("/surveys")
@@ -103,6 +115,11 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 		surveyGroup.PUT("/:id/topics/:topicID/employees", pmw.WithPerm(model.PermissionSurveysEdit), h.Survey.UpdateTopicReviewers)
 		surveyGroup.PUT("/:id/done", pmw.WithPerm(model.PermissionSurveysEdit), h.Survey.MarkDone)
 		surveyGroup.DELETE("/:id/topics/:topicID/employees", pmw.WithPerm(model.PermissionSurveysEdit), h.Survey.DeleteTopicReviewers)
+	}
+
+	bankGroup := v1.Group("/bank-accounts")
+	{
+		bankGroup.GET("", pmw.WithPerm(model.PermissionProjectsEdit), h.BankAccount.List)
 	}
 
 	valuation := v1.Group("/valuation")
@@ -146,11 +163,6 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 		hiring.GET("", h.Hiring.List)
 	}
 
-	audit := v1.Group("/audits")
-	{
-		audit.PUT("", h.Audit.Sync)
-	}
-
 	dashboard := v1.Group("/dashboards")
 	{
 		engagementDashboardGroup := dashboard.Group("/engagement")
@@ -158,6 +170,7 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 			engagementDashboardGroup.GET("/info", h.Dashboard.GetEngagementInfo)
 			engagementDashboardGroup.GET("/detail", h.Dashboard.GetEngagementInfoDetail)
 		}
+
 		projectDashboardGroup := dashboard.Group("/projects")
 		{
 			projectDashboardGroup.GET("/sizes", pmw.WithPerm("dashboards.read"), h.Dashboard.GetProjectSizes)
@@ -174,7 +187,7 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 			resourceDashboardGroup.GET("/availabilities", pmw.WithPerm("dashboards.read"), h.Dashboard.GetResourcesAvailability)
 			resourceDashboardGroup.GET("/utilization", pmw.WithPerm("dashboards.read"), h.Dashboard.GetResourceUtilization)
 			resourceDashboardGroup.GET("/work-unit-distribution", pmw.WithPerm("dashboards.read"), h.Dashboard.GetWorkUnitDistribution)
-
+			resourceDashboardGroup.GET("/work-survey-summaries", h.Dashboard.GetResourceWorkSurveySummaries)
 		}
 	}
 }

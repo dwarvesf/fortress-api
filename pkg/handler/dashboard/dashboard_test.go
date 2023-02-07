@@ -2,7 +2,6 @@ package dashboard
 
 import (
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -578,10 +577,56 @@ func TestHandler_GetWorkUnitDistribution(t *testing.T) {
 				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 				h.GetWorkUnitDistribution(ctx)
 				require.Equal(t, tt.wantCode, w.Code)
-				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
 				require.NoError(t, err)
 
 				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Dashboard.GetWorkUnitDistribution] response mismatched")
+			})
+		})
+	}
+}
+
+func TestHandler_GetResourceWorkSurveySummaries(t *testing.T) {
+	cfg := config.LoadTestConfig()
+	loggerMock := logger.NewLogrusLogger()
+	serviceMock := service.New(&cfg)
+	storeMock := store.New()
+
+	tests := []struct {
+		name             string
+		wantCode         int
+		wantResponsePath string
+		query            string
+	}{
+		{
+			name:             "happy_case",
+			wantCode:         http.StatusOK,
+			wantResponsePath: "testdata/get_resource_work_survey_summaries/200.json",
+		},
+		{
+			name:             "query_by_keyword",
+			wantCode:         http.StatusOK,
+			wantResponsePath: "testdata/get_resource_work_survey_summaries/200_with_keyword.json",
+			query:            "keyword=nam",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				testhelper.LoadTestSQLFile(t, txRepo, "./testdata/get_resource_work_survey_summaries/seed.sql")
+				w := httptest.NewRecorder()
+				ctx, _ := gin.CreateTestContext(w)
+				ctx.Request = httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/dashboards/resources/work-survey-summaries?%s", tt.query), nil)
+				ctx.Request.URL.RawQuery = tt.query
+				ctx.Request.Header.Set("Authorization", testToken)
+
+				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+				h.GetResourceWorkSurveySummaries(ctx)
+				require.Equal(t, tt.wantCode, w.Code)
+				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
+				require.NoError(t, err)
+
+				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Dashboard.GetResourceWorkSurveySummaries] response mismatched")
 			})
 		})
 	}

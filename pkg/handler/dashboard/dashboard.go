@@ -681,3 +681,44 @@ func (h *handler) GetWorkUnitDistribution(c *gin.Context) {
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToWorkUnitDistributionData(workUnitDistributions, input.Type, input.Sort), nil, nil, nil, ""))
 }
+
+// GetResourceWorkSurveySummaries godoc
+// @Summary Get resource work summaries for dashboard
+// @Description Get resource work summaries for dashboard
+// @Tags Dashboard
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "jwt token"
+// @Param keyword query string false "Keyword"
+// @Param page query string false "Page"
+// @Param size query string false "Size"
+// @Success 200 {object} view.WorkSurveySummaryResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /dashboards/resources/work-survey-summaries [get]
+func (h *handler) GetResourceWorkSurveySummaries(c *gin.Context) {
+	input := request.GetResourceWorkSurveySummariesInput{}
+	if err := c.ShouldBindQuery(&input); err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, input, ""))
+		return
+	}
+
+	input.Standardize()
+
+	l := h.logger.Fields(logger.Fields{
+		"handler": "dashboard",
+		"method":  "GetResourceWorkSurveySummaries",
+		"input":   input,
+	})
+
+	reviews, err := h.store.Dashboard.GetAllWorkReviews(h.repo.DB(), input.Keyword, input.Pagination)
+	if err != nil {
+		l.Error(err, "failed to get all work reviews")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToWorkSummaries(reviews),
+		&view.PaginationResponse{Pagination: input.Pagination}, nil, nil, ""))
+}

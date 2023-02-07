@@ -8,6 +8,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/store/auditcycle"
 	"github.com/dwarvesf/fortress-api/pkg/store/audititem"
 	"github.com/dwarvesf/fortress-api/pkg/store/auditparticipant"
+	"github.com/dwarvesf/fortress-api/pkg/store/bankaccount"
 	"github.com/dwarvesf/fortress-api/pkg/store/chapter"
 	"github.com/dwarvesf/fortress-api/pkg/store/content"
 	"github.com/dwarvesf/fortress-api/pkg/store/country"
@@ -84,6 +85,7 @@ type Store struct {
 	AuditActionItem       auditactionitem.IStore
 	ActionItemSnapshot    actionitemsnapshot.IStore
 	SocialAccount         socialaccount.IStore
+	BankAccount           bankaccount.IStore
 }
 
 func New() *Store {
@@ -128,5 +130,6 @@ func New() *Store {
 		AuditActionItem:       auditactionitem.New(),
 		ActionItemSnapshot:    actionitemsnapshot.New(),
 		SocialAccount:         socialaccount.New(),
+		BankAccount:           bankaccount.New(),
 	}
 }

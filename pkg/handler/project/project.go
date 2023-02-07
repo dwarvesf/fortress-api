@@ -247,6 +247,16 @@ func (h *handler) Create(c *gin.Context) {
 		return
 	}
 
+	var bankAccount *model.BankAccount
+	if !body.BankAccountID.IsZero() {
+		bankAccount, err = h.store.BankAccount.One(h.repo.DB(), body.BankAccountID.String())
+		if err != nil {
+			l.Error(err, "failed to get bank account")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
+			return
+		}
+	}
+
 	if body.Code == "" {
 		body.Code = strings.ReplaceAll(strings.ToLower(body.Name), " ", "-")
 	}
@@ -275,6 +285,11 @@ func (h *handler) Create(c *gin.Context) {
 		Country:      country,
 		Code:         body.Code,
 		Function:     model.ProjectFunction(body.Function),
+	}
+
+	if !body.BankAccountID.IsZero() {
+		p.BankAccountID = body.BankAccountID
+		p.BankAccount = bankAccount
 	}
 
 	if !body.NotionID.IsZero() {
@@ -1378,6 +1393,22 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 		return
 	}
 
+	// Check bank account existence
+	if !body.BankAccountID.IsZero() {
+		exist, err := h.store.BankAccount.IsExist(h.repo.DB(), body.BankAccountID.String())
+		if err != nil {
+			l.Error(err, "error check existence of bank account")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, err, body, ""))
+			return
+		}
+
+		if !exist {
+			l.Error(err, "bank account not found")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrBankAccountNotFound, body, ""))
+			return
+		}
+	}
+
 	// Check valid stack id
 	_, stacks, err := h.store.Stack.All(h.repo.DB(), "", nil)
 	if err != nil {
@@ -1431,13 +1462,15 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 	p.CountryID = body.CountryID
 	p.Function = model.ProjectFunction(body.Function)
 	p.NotionID = body.NotionID
+	p.BankAccountID = body.BankAccountID
 
 	_, err = h.store.Project.UpdateSelectedFieldsByID(tx.DB(), projectID, *p,
 		"name",
 		"start_date",
 		"country_id",
 		"function",
-		"notion_id")
+		"notion_id",
+		"bank_account_id")
 
 	if err != nil {
 		l.Error(err, "failed to update project")
@@ -2567,7 +2600,7 @@ func (h *handler) ListMilestones(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.service.Notion.GetDatabase(h.config.Notion.ProjectDBID, nil, nil, 0)
+	resp, err := h.service.Notion.GetDatabase(h.config.Notion.Databases.Project, nil, nil, 0)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, "can't get projects from notion"))
 		return

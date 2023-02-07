@@ -74,7 +74,7 @@ func (h *handler) List(c *gin.Context) {
 		})
 	}
 
-	resp, err := h.service.Notion.GetDatabase(h.config.Notion.TechRadarDBID, filter, nil, 0)
+	resp, err := h.service.Notion.GetDatabase(h.config.Notion.Databases.TechRadar, filter, nil, 0)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, "can't get items tech radar from notion"))
 		return
