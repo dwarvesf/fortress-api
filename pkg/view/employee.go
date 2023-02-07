@@ -357,7 +357,6 @@ func ToOneEmployeeData(c *gin.Context, employee *model.Employee, userInfo *model
 		Seniority:     employee.Seniority,
 		Projects:      employeeProjects,
 		LineManager:   lineManager,
-		ReferredBy:    referrer,
 		Organizations: ToOrganizations(employee.EmployeeOrganizations),
 
 		DiscordName: empSocialData.DiscordName,
@@ -377,6 +376,7 @@ func ToOneEmployeeData(c *gin.Context, employee *model.Employee, userInfo *model
 		rs.PhoneNumber = employee.PhoneNumber
 		rs.JoinedDate = employee.JoinedDate
 		rs.LeftDate = employee.LeftDate
+		rs.ReferredBy = referrer
 	}
 
 	if utils.HasPermission(c, userInfo.Permissions, model.PermissionEmployeesReadPersonalInfoFullAccess) {
