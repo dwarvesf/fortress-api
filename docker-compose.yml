@@ -33,3 +33,20 @@ services:
       - "35432:5432"
     expose:
       - 35432
+
+  cache:
+    image: redis:6.2-alpine
+    restart: always
+    ports:
+      - '16379:6379'
+    command: '--requirepass redisPassword'
+    expose:
+      - 16379
+  cache_test:
+    image: redis:6.2-alpine
+    restart: always
+    ports:
+      - '26379:6379'
+    command: '--requirepass redisPassword'
+    expose:
+      - 26379

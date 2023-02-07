@@ -201,6 +201,56 @@ const docTemplate = `{
                 }
             }
         },
+        "/auth/logout": {
+            "post": {
+                "description": "Post log out user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Post log out user",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.AuthLoggedOutUserResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/auth/me": {
             "get": {
                 "description": "Get logged-in user data",
@@ -9187,6 +9237,14 @@ const docTemplate = `{
                 }
             }
         },
+        "view.AuthLoggedOutUserResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/view.LoggedOutUserData"
+                }
+            }
+        },
         "view.AuthUserResponse": {
             "type": "object",
             "properties": {
@@ -10909,6 +10967,14 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "teamEmail": {
+                    "type": "string"
+                }
+            }
+        },
+        "view.LoggedOutUserData": {
+            "type": "object",
+            "properties": {
+                "id": {
                     "type": "string"
                 }
             }

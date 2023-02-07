@@ -2148,6 +2148,11 @@ definitions:
       employee:
         $ref: '#/definitions/view.EmployeeData'
     type: object
+  view.AuthLoggedOutUserResponse:
+    properties:
+      data:
+        $ref: '#/definitions/view.LoggedOutUserData'
+    type: object
   view.AuthUserResponse:
     properties:
       data:
@@ -3272,6 +3277,11 @@ definitions:
       role:
         type: string
       teamEmail:
+        type: string
+    type: object
+  view.LoggedOutUserData:
+    properties:
+      id:
         type: string
     type: object
   view.MenteeInfo:
@@ -4425,6 +4435,39 @@ paths:
           schema:
             $ref: '#/definitions/view.ErrorResponse'
       summary: Create API key
+      tags:
+      - Auth
+  /auth/logout:
+    post:
+      consumes:
+      - application/json
+      description: Post log out user
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.AuthLoggedOutUserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Post log out user
       tags:
       - Auth
   /auth/me:

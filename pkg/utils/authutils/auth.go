@@ -91,6 +91,20 @@ func GetUserIDFromToken(cfg *config.Config, tokenString string) (string, error) 
 	return claims.UserID, nil
 }
 
+func GetExpireAtFromToken(cfg *config.Config, tokenString string) (int64, error) {
+	claims := model.AuthenticationInfo{}
+	_, err := jwt.ParseWithClaims(tokenString, &claims, func(token *jwt.Token) (interface{}, error) {
+		return []byte(cfg.JWTSecretKey), nil
+	})
+	if err != nil {
+		if err == jwt.ErrSignatureInvalid {
+			return -1, utils.ErrInvalidSignature
+		}
+		return -1, utils.ErrBadToken
+	}
+	return claims.ExpiresAt, nil
+}
+
 func GetUserIDFromContext(c *gin.Context, cfg *config.Config) (string, error) {
 	accessToken, err := GetTokenFromRequest(c)
 	if err != nil {

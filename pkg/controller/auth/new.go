@@ -30,4 +30,5 @@ type IController interface {
 	Auth(in AuthenticationInput) (employee *model.Employee, jwt string, err error)
 	Me(userID string) (employee *model.Employee, perms []*model.Permission, err error)
 	CreateAPIKey(roleID string) (string, error)
+	Logout(c *gin.Context, userID, token string) (employee *model.Employee, err error)
 }

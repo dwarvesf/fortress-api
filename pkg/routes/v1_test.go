@@ -139,6 +139,12 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/auth.IHandler.CreateAPIKey-fm",
 			},
 		},
+		"/api/v1/auth/logout": {
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/auth.IHandler.Logout-fm",
+			},
+		},
 		"/api/v1/metadata/countries": {
 			"GET": {
 				Method:  "GET",
@@ -764,7 +770,7 @@ func Test_loadV1Routes(t *testing.T) {
 	h := handler.New(nil, nil, nil, nil, nil, l, cfg)
 
 	router := gin.New()
-	loadV1Routes(router, h, nil, nil, nil)
+	loadV1Routes(router, h, nil, nil, nil, nil)
 
 	routeInfo := router.Routes()
 

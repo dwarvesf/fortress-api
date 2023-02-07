@@ -12,6 +12,7 @@ type Loader interface {
 type Config struct {
 	// db
 	Postgres DBConnection
+	Redis    Redis
 
 	// server
 	ApiServer ApiServer
@@ -74,6 +75,12 @@ type Wise struct {
 
 type CurrencyLayer struct {
 	APIKey string
+}
+
+type Redis struct {
+	Host     string
+	Port     string
+	Password string
 }
 
 type Vault struct {
@@ -249,6 +256,12 @@ func Generate(v ENV) *Config {
 		ImprovMX: ImprovMX{
 			Token: v.GetString("IMPROVMX_API_TOKEN"),
 		},
+
+		Redis: Redis{
+			Host:     v.GetString("REDIS_HOST"),
+			Port:     v.GetString("REDIS_PORT"),
+			Password: v.GetString("REDIS_PASSWORD"),
+		},
 	}
 }
 
@@ -294,6 +307,11 @@ func LoadTestConfig() Config {
 			Pass:    "postgres",
 			Name:    "fortress_local_test",
 			SSLMode: "disable",
+		},
+		Redis: Redis{
+			Host:     "127.0.0.1",
+			Port:     "26379",
+			Password: "redisPassword",
 		},
 	}
 }

@@ -6,4 +6,5 @@ type IHandler interface {
 	Auth(c *gin.Context)
 	Me(c *gin.Context)
 	CreateAPIKey(c *gin.Context)
+	Logout(c *gin.Context)
 }

@@ -10,6 +10,7 @@ import (
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/model"
+	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/utils/authutils"
 )
@@ -19,16 +20,14 @@ var noAuthPath = []string{
 }
 
 type AuthMiddleware struct {
-	cfg   *config.Config
-	store *store.Store
-	repo  store.DBRepo
+	cfg     *config.Config
+	service *service.Service
 }
 
-func NewAuthMiddleware(cfg *config.Config, s *store.Store, r store.DBRepo) *AuthMiddleware {
-	return &AuthMiddleware{
-		cfg:   cfg,
-		store: s,
-		repo:  r,
+func NewAuthMiddleware(cfg *config.Config, service *service.Service) *authMiddleware {
+	return &authMiddleware{
+		cfg:     cfg,
+		service: service,
 	}
 }
 
@@ -38,7 +37,6 @@ func (amw *AuthMiddleware) WithAuth(c *gin.Context) {
 		c.Next()
 		return
 	}
-
 	err := amw.authenticate(c)
 	if err != nil {
 		c.AbortWithStatusJSON(401, map[string]string{"message": err.Error()})
@@ -85,7 +83,12 @@ func (amw *AuthMiddleware) validateToken(accessToken string) error {
 		return err
 	}
 
-	return claims.Valid()
+	err = claims.Valid()
+	if err != nil {
+		return err
+	}
+
+	return mw.validateTokenFromBlackList(accessToken)
 }
 func NewPermissionMiddleware(s *store.Store, r store.DBRepo, cfg *config.Config) *PermMiddleware {
 	return &PermMiddleware{
@@ -113,6 +116,20 @@ func (amw *AuthMiddleware) validateAPIKey(apiKey string) error {
 	}
 
 	return authutils.ValidateHashedKey(rec.SecretKey, key)
+}
+
+func (mw *authMiddleware) validateTokenFromBlackList(token string) error {
+	tokens, err := mw.service.Redis.GetAllBlacklistToken()
+	if err != nil {
+		return err
+	}
+
+	for _, t := range tokens {
+		if t == token {
+			return ErrInvalidToken
+		}
+	}
+	return nil
 }
 
 type PermMiddleware struct {

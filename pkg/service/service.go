@@ -20,6 +20,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/service/improvmx"
 	"github.com/dwarvesf/fortress-api/pkg/service/mochi"
 	"github.com/dwarvesf/fortress-api/pkg/service/notion"
+	"github.com/dwarvesf/fortress-api/pkg/service/redis"
 	"github.com/dwarvesf/fortress-api/pkg/service/sendgrid"
 	"github.com/dwarvesf/fortress-api/pkg/service/wise"
 	"github.com/dwarvesf/fortress-api/pkg/store"
@@ -36,6 +37,7 @@ type Service struct {
 	ImprovMX    improvmx.IService
 	Mochi       mochi.IService
 	Notion      notion.IService
+	Redis       redis.RedisService
 	Sendgrid    sendgrid.Service
 	Wise        wise.IService
 }
@@ -87,6 +89,12 @@ func New(cfg *config.Config, store *store.Store, repo store.DBRepo) *Service {
 	}
 	Currency := currency.New(cfg)
 
+	cch := cache.New(5*time.Minute, 10*time.Minute)
+	redisSvc, err := redis.New(cfg)
+	if err != nil {
+		logger.L.Error(err, "failed to init redis service")
+	}
+
 	return &Service{
 		Basecamp:    basecamp.NewService(store, repo, cfg, &bc, logger.L),
 		Cache:       cch,
@@ -98,6 +106,7 @@ func New(cfg *config.Config, store *store.Store, repo store.DBRepo) *Service {
 		ImprovMX:    improvmx.New(cfg.ImprovMX.Token),
 		Mochi:       mochi.New(cfg, logger.L),
 		Notion:      notion.New(cfg.Notion.Secret, cfg.Notion.Databases.Project, logger.L),
+		Redis:       redisSvc,
 		Sendgrid:    sendgrid.New(cfg.Sendgrid.APIKey, cfg, logger.L),
 		Wise:        wise.New(cfg, logger.L),
 	}

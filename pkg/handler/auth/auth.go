@@ -145,3 +145,43 @@ func (h *handler) CreateAPIKey(c *gin.Context) {
 		Key: key,
 	}, nil, nil, nil, ""))
 }
+
+// Logout godoc
+// @Summary Post log out user
+// @Description Post log out user
+// @Tags Auth
+// @Accept  json
+// @Produce  json
+// @Param Authorization header string true "jwt token"
+// @Success 200 {object} view.AuthLoggedOutUserResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /auth/logout [post]
+func (h *handler) Logout(c *gin.Context) {
+	userID, err := utils.GetUserIDFromContext(c, h.config)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+	token, err := utils.GetTokenFromRequest(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	// TODO: can we move this to middleware ?
+	l := h.logger.Fields(logger.Fields{
+		"handler": "auth",
+		"method":  "Logout",
+	})
+
+	em, err := h.controller.Auth.Logout(c, userID, token)
+	if err != nil {
+		l.Error(err, "error when logout")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToLogoutData(em.ID), nil, nil, nil, ""))
+}

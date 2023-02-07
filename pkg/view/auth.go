@@ -54,3 +54,17 @@ type AuthUserResponse struct {
 type APIKeyResponse struct {
 	Data APIKeyData `json:"data"`
 }
+
+type LoggedOutUserData struct {
+	ID model.UUID `json:"id"`
+}
+
+type AuthLoggedOutUserResponse struct {
+	Data LoggedOutUserData `json:"data"`
+}
+
+func ToLogoutData(userID model.UUID) *LoggedOutUserData {
+	return &LoggedOutUserData{
+		ID: userID,
+	}
+}

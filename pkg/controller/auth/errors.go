@@ -7,4 +7,5 @@ var (
 	ErrEmptyPrimaryEmail = errors.New("empty primary email")
 	ErrUserNotFound      = errors.New("user is not found")
 	ErrRoleNotfound      = errors.New("role is not found")
+	ErrInvalidToken      = errors.New("invalid Token")
 )

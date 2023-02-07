@@ -10,10 +10,17 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/gin-gonic/gin"
+
+	"github.com/dwarvesf/fortress-api/pkg/config"
+	"github.com/dwarvesf/fortress-api/pkg/logger"
+	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/stretchr/testify/require"
 )
 
 func TestWithAuth(t *testing.T) {
+	cfg := config.LoadTestConfig()
+	_ = logger.NewLogrusLogger()
+	serviceMock := service.New(&cfg)
 	type args struct {
 		testURL          string
 		testTokenType    string
@@ -73,7 +80,7 @@ func TestWithAuth(t *testing.T) {
 	}
 	for desc, tc := range tcs {
 		t.Run(desc, func(t *testing.T) {
-			r := prepareTestDefaultRoutes()
+			r := prepareTestDefaultRoutes(&cfg, serviceMock)
 			req, _ := http.NewRequest("GET", tc.testURL, nil)
 			req.Header.Set("Authorization", fmt.Sprintf("%s %s", tc.testTokenType, tc.testAccessToken))
 
