@@ -828,6 +828,18 @@ const docTemplate = `{
                         "description": "employee name for filter",
                         "name": "name",
                         "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "sort required",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "work unit type for filter",
+                        "name": "type",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -8664,6 +8676,23 @@ const docTemplate = `{
                 }
             }
         },
+        "view.SummaryWorkDistribution": {
+            "type": "object",
+            "properties": {
+                "development": {
+                    "type": "number"
+                },
+                "learning": {
+                    "type": "number"
+                },
+                "management": {
+                    "type": "number"
+                },
+                "training": {
+                    "type": "number"
+                }
+            }
+        },
         "view.Survey": {
             "type": "object",
             "properties": {
@@ -9348,6 +9377,9 @@ const docTemplate = `{
         "view.WorkUnitDistributionData": {
             "type": "object",
             "properties": {
+                "summary": {
+                    "$ref": "#/definitions/view.SummaryWorkDistribution"
+                },
                 "workUnitDistributions": {
                     "type": "array",
                     "items": {

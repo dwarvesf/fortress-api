@@ -698,12 +698,28 @@ type WorkUnitDistribution struct {
 	Training    int64             `json:"training"`
 }
 
+type SummaryWorkDistribution struct {
+	Learning    float64 `json:"learning"`
+	Development float64 `json:"development"`
+	Management  float64 `json:"management"`
+	Training    float64 `json:"training"`
+}
+
+type SummaryWorkDistributionCount struct {
+	Learning    int64 `json:"learning"`
+	Development int64 `json:"development"`
+	Management  int64 `json:"management"`
+	Training    int64 `json:"training"`
+}
+
 type WorkUnitDistributionData struct {
 	WorkUnitDistributions []*WorkUnitDistribution `json:"workUnitDistributions"`
+	Summary               SummaryWorkDistribution `json:"summary"`
 }
 
 func ToWorkUnitDistributionData(workUnitDistribution []*model.WorkUnitDistribution, ty model.WorkUnitType, sortRequired model.SortOrder) *WorkUnitDistributionData {
 	rs := &WorkUnitDistributionData{}
+	count := SummaryWorkDistributionCount{}
 
 	for _, item := range workUnitDistribution {
 		newWorkUnitDistribution := &WorkUnitDistribution{
@@ -731,6 +747,11 @@ func ToWorkUnitDistributionData(workUnitDistribution []*model.WorkUnitDistributi
 			newWorkUnitDistribution.Training = item.Training + item.LineManagerCount
 		}
 
+		count.Learning += item.Learning
+		count.Development += item.Development
+		count.Management += item.Management + item.ProjectHeadCount
+		count.Training += item.Training + item.LineManagerCount
+
 		rs.WorkUnitDistributions = append(rs.WorkUnitDistributions, newWorkUnitDistribution)
 	}
 
@@ -747,6 +768,17 @@ func ToWorkUnitDistributionData(workUnitDistribution []*model.WorkUnitDistributi
 			})
 		}
 	}
+
+	// Update the summary
+	total := count.Learning + count.Development + count.Management + count.Training
+	if total == 0 {
+		total = 1
+	}
+
+	rs.Summary.Learning = float64(math.Round(float64(count.Learning)/float64(total)*100*100)) / 100
+	rs.Summary.Development = float64(math.Round(float64(count.Development)/float64(total)*100*100)) / 100
+	rs.Summary.Management = float64(math.Round(float64(count.Management)/float64(total)*100*100)) / 100
+	rs.Summary.Training = float64(math.Round(float64(count.Training)/float64(total)*100*100)) / 100
 
 	return rs
 }

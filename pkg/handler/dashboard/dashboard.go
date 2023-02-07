@@ -638,8 +638,8 @@ func (h *handler) GetResourceUtilization(c *gin.Context) {
 // @Produce json
 // @Param Authorization header string true "jwt token"
 // @Param name   query  string false  "employee name for filter"
-// @Param sort   query  model.SortOrder false  "sort required"
-// @Param type   query  model.WorkUnitType false  "work unit type for filter"
+// @Param sort   query  string false  "sort required"
+// @Param type   query  string false  "work unit type for filter"
 // @Success 200 {object} view.WorkUnitDistributionsResponse
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 404 {object} view.ErrorResponse

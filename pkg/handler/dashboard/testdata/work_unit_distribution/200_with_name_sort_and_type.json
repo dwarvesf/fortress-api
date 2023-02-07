@@ -40,6 +40,12 @@
                 "management": 0,
                 "training": 21
             }
-        ]
+        ],
+        "summary": {
+            "learning": 0,
+            "development": 4.17,
+            "management": 8.33,
+            "training": 87.5
+        }
     }
 }

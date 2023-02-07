@@ -2651,6 +2651,17 @@ definitions:
       data:
         $ref: '#/definitions/view.SubmitFeedback'
     type: object
+  view.SummaryWorkDistribution:
+    properties:
+      development:
+        type: number
+      learning:
+        type: number
+      management:
+        type: number
+      training:
+        type: number
+    type: object
   view.Survey:
     properties:
       count:
@@ -3097,6 +3108,8 @@ definitions:
     type: object
   view.WorkUnitDistributionData:
     properties:
+      summary:
+        $ref: '#/definitions/view.SummaryWorkDistribution'
       workUnitDistributions:
         items:
           $ref: '#/definitions/view.WorkUnitDistribution'
@@ -3652,6 +3665,14 @@ paths:
       - description: employee name for filter
         in: query
         name: name
+        type: string
+      - description: sort required
+        in: query
+        name: sort
+        type: string
+      - description: work unit type for filter
+        in: query
+        name: type
         type: string
       produces:
       - application/json
