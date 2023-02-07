@@ -70,7 +70,7 @@ func (h *handler) SyncAuditCycle() {
 	tx, done := h.repo.NewTransaction()
 
 	// Get all audit cycle from notion
-	database, err := h.service.NotionAudit.GetDatabase(h.config.NotionAudit.AuditCycleDBID, nil, nil, 0)
+	database, err := h.service.Notion.GetDatabase(h.config.Notion.Databases.AuditCycle, nil, nil, 0)
 	if err != nil {
 		l.Error(err, "failed to get database from notion")
 		return
@@ -95,7 +95,7 @@ func (h *handler) SyncAuditCycle() {
 		// If auditCycle not exist in mapPage
 		if ac, ok := auditCycleMap[model.MustGetUUIDFromString(page.ID)]; !ok {
 			l.Infof("Create audit cycle ID: %s", page.ID)
-			auditCycle := model.NewAuditCycleFromNotionPage(&page, h.config.NotionAudit.AuditCycleDBID)
+			auditCycle := model.NewAuditCycleFromNotionPage(&page, h.config.Notion.Databases.AuditCycle)
 			// Create audits
 			if err := h.createAudits(tx.DB(), &page, auditCycle); err != nil {
 				l.Error(err, "failed to create audit")
@@ -173,7 +173,7 @@ func (h *handler) SyncActionItem(db *gorm.DB) error {
 	actionItemMap := model.ActionItemToMap(actionItems)
 
 	// Sync action item
-	if err := h.syncActionItemPage(db, h.config.NotionAudit.AuditActionItemDBID, false, actionItemMap); err != nil {
+	if err := h.syncActionItemPage(db, h.config.Notion.Databases.AuditActionItem, false, actionItemMap); err != nil {
 		l.Error(err, "failed to run function syncActionItemPage")
 		return err
 	}
@@ -210,7 +210,7 @@ func (h *handler) createAudits(db *gorm.DB, page *notion.Page, auditCycle *model
 		"auditCycleID": auditCycle.ID.String(),
 	})
 
-	audit, err := h.service.NotionAudit.GetBlockChildren(page.ID)
+	audit, err := h.service.Notion.GetBlockChildren(page.ID)
 	if err != nil {
 		l.Error(err, "failed to get audit from notion")
 		return err
@@ -229,7 +229,7 @@ func (h *handler) createAudits(db *gorm.DB, page *notion.Page, auditCycle *model
 	}
 
 	properties := page.Properties.(notion.DatabasePageProperties)
-	auditChecklist, err := h.service.NotionAudit.GetDatabase(audit.Results[auditChecklistIndex].ID(), nil, nil, 0)
+	auditChecklist, err := h.service.Notion.GetDatabase(audit.Results[auditChecklistIndex].ID(), nil, nil, 0)
 	if err != nil {
 		l.Error(err, "failed to get database from notion")
 		return err
@@ -259,13 +259,13 @@ func (h *handler) syncActionItemPage(db *gorm.DB, databaseID string, withStartCu
 	var err error
 
 	if withStartCursor {
-		database, err = h.service.NotionAudit.GetDatabaseWithStartCursor(h.config.NotionAudit.AuditActionItemDBID, databaseID)
+		database, err = h.service.Notion.GetDatabaseWithStartCursor(h.config.Notion.Databases.AuditActionItem, databaseID)
 		if err != nil {
 			l.Error(err, "failed to get database from notion")
 			return err
 		}
 	} else {
-		database, err = h.service.NotionAudit.GetDatabase(databaseID, nil, nil, 0)
+		database, err = h.service.Notion.GetDatabase(databaseID, nil, nil, 0)
 		if err != nil {
 			l.Error(err, "failed to get database from notion")
 			return err
@@ -300,7 +300,7 @@ func (h *handler) syncActionItemPage(db *gorm.DB, databaseID string, withStartCu
 			}
 		}
 
-		newActionItem := model.NewActionItemFromNotionPage(page, pic.ID, h.config.NotionAudit.AuditActionItemDBID)
+		newActionItem := model.NewActionItemFromNotionPage(page, pic.ID, h.config.Notion.Databases.AuditActionItem)
 
 		if !newActionItem.AuditCycleID.IsZero() {
 			auditCycle, err := h.store.AuditCycle.One(db, newActionItem.AuditCycleID.String())
@@ -381,7 +381,7 @@ func (h *handler) syncAuditCycle(db *gorm.DB, page *notion.Page, auditCycle *mod
 		"pageID": page.ID,
 	})
 
-	newAuditCycle := model.NewAuditCycleFromNotionPage(page, h.config.NotionAudit.AuditCycleDBID)
+	newAuditCycle := model.NewAuditCycleFromNotionPage(page, h.config.Notion.Databases.AuditCycle)
 
 	cloneAuditCycle, err := h.store.AuditCycle.One(db, newAuditCycle.ID.String())
 	if err != nil {
@@ -474,7 +474,7 @@ func (h *handler) syncAudit(db *gorm.DB, page *notion.Page, auditCycle *model.Au
 		"auditCycleID": auditCycle.ID.String(),
 	})
 
-	audit, err := h.service.NotionAudit.GetBlockChildren(page.ID)
+	audit, err := h.service.Notion.GetBlockChildren(page.ID)
 	if err != nil {
 		l.Error(err, "failed to get audit from notion")
 		return err
@@ -493,7 +493,7 @@ func (h *handler) syncAudit(db *gorm.DB, page *notion.Page, auditCycle *model.Au
 	}
 
 	properties := page.Properties.(notion.DatabasePageProperties)
-	auditChecklist, err := h.service.NotionAudit.GetDatabase(audit.Results[auditChecklistIndex].ID(), nil, nil, 0)
+	auditChecklist, err := h.service.Notion.GetDatabase(audit.Results[auditChecklistIndex].ID(), nil, nil, 0)
 	if err != nil {
 		l.Error(err, "failed to get database from notion")
 		return err
@@ -812,7 +812,7 @@ func (h *handler) getFlag(db *gorm.DB, page *notion.Page, row *notion.Page) (mod
 	})
 
 	countPoor, countAcceptable := 0, 0
-	checklistPage, err := h.service.NotionAudit.GetBlockChildren(row.ID)
+	checklistPage, err := h.service.Notion.GetBlockChildren(row.ID)
 	if err != nil {
 		l.Error(err, "failed to get audit from notion")
 		return "", err
@@ -826,7 +826,7 @@ func (h *handler) getFlag(db *gorm.DB, page *notion.Page, row *notion.Page) (mod
 		}
 	}
 
-	checklistDatabase, err := h.service.NotionAudit.GetDatabase(checklistPage.Results[checklistDatabaseIndex].ID(), nil, nil, 0)
+	checklistDatabase, err := h.service.Notion.GetDatabase(checklistPage.Results[checklistDatabaseIndex].ID(), nil, nil, 0)
 	if err != nil {
 		l.Error(err, "failed to get database from notion")
 		return "", err
@@ -863,7 +863,7 @@ func (h *handler) createAuditItem(db *gorm.DB, page *notion.Page, row *notion.Pa
 	})
 
 	l.Infof("Create audit item %s", row.ID)
-	checklistPage, err := h.service.NotionAudit.GetBlockChildren(row.ID)
+	checklistPage, err := h.service.Notion.GetBlockChildren(row.ID)
 	if err != nil {
 		l.Error(err, "failed to get audit from notion")
 		return err
@@ -877,7 +877,7 @@ func (h *handler) createAuditItem(db *gorm.DB, page *notion.Page, row *notion.Pa
 		}
 	}
 
-	checklistDatabase, err := h.service.NotionAudit.GetDatabase(checklistPage.Results[checklistDatabaseIndex].ID(), nil, nil, 0)
+	checklistDatabase, err := h.service.Notion.GetDatabase(checklistPage.Results[checklistDatabaseIndex].ID(), nil, nil, 0)
 	if err != nil {
 		l.Error(err, "failed to get database from notion")
 		return err
@@ -910,7 +910,7 @@ func (h *handler) syncAuditItem(db *gorm.DB, page *notion.Page, row *notion.Page
 	aiMap := model.AuditItemToMap(auditItems)
 
 	l.Infof("Sync audit item %s", row.ID)
-	checklistPage, err := h.service.NotionAudit.GetBlockChildren(row.ID)
+	checklistPage, err := h.service.Notion.GetBlockChildren(row.ID)
 	if err != nil {
 		l.Error(err, "failed to get audit from notion")
 		return err
@@ -924,7 +924,7 @@ func (h *handler) syncAuditItem(db *gorm.DB, page *notion.Page, row *notion.Page
 		}
 	}
 
-	checklistDatabase, err := h.service.NotionAudit.GetDatabase(checklistPage.Results[checklistDatabaseIndex].ID(), nil, nil, 0)
+	checklistDatabase, err := h.service.Notion.GetDatabase(checklistPage.Results[checklistDatabaseIndex].ID(), nil, nil, 0)
 	if err != nil {
 		l.Error(err, "failed to get database from notion")
 		return err
@@ -1086,7 +1086,7 @@ func (h *handler) syncAuditActionItemInAudit(db *gorm.DB, auditCycle *model.Audi
 	}
 
 	// call api to get data of the audit from notion
-	checklistPage, err := h.service.NotionAudit.GetBlockChildren(audit.ID.String())
+	checklistPage, err := h.service.Notion.GetBlockChildren(audit.ID.String())
 	if err != nil {
 		l.Error(err, "failed to get audit from notion")
 		return err
@@ -1100,7 +1100,7 @@ func (h *handler) syncAuditActionItemInAudit(db *gorm.DB, auditCycle *model.Audi
 		}
 	}
 
-	checklistDatabase, err := h.service.NotionAudit.GetDatabase(checklistPage.Results[checklistDatabaseIndex].ID(), nil, nil, 0)
+	checklistDatabase, err := h.service.Notion.GetDatabase(checklistPage.Results[checklistDatabaseIndex].ID(), nil, nil, 0)
 	if err != nil {
 		l.Error(err, "failed to get database from notion")
 		return err

@@ -2600,7 +2600,7 @@ func (h *handler) ListMilestones(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.service.Notion.GetDatabase(h.config.Notion.ProjectDBID, nil, nil, 0)
+	resp, err := h.service.Notion.GetDatabase(h.config.Notion.Databases.Project, nil, nil, 0)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, "can't get projects from notion"))
 		return

@@ -78,7 +78,7 @@ func (h *handler) List(c *gin.Context) {
 		},
 	})
 
-	resp, err := h.service.Notion.GetDatabase(h.config.Notion.EventDBID, filter, []notion.DatabaseQuerySort{
+	resp, err := h.service.Notion.GetDatabase(h.config.Notion.Databases.Event, filter, []notion.DatabaseQuerySort{
 		{
 			Property:  "Date",
 			Direction: notion.SortDirAsc,
