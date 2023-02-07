@@ -175,6 +175,10 @@ func ToProjectData(c *gin.Context, project *model.Project, userInfo *model.Curre
 	}
 
 	if utils.HasPermission(c, userInfo.Permissions, model.PermissionProjectsReadFullAccess) {
+		if !project.NotionID.IsZero() {
+			d.NotionID = project.NotionID.String()
+		}
+
 		d.ClientEmail = clientEmail
 	}
 
@@ -184,10 +188,6 @@ func ToProjectData(c *gin.Context, project *model.Project, userInfo *model.Curre
 			Name: project.Country.Name,
 			Code: project.Country.Code,
 		}
-	}
-
-	if !project.NotionID.IsZero() {
-		d.NotionID = project.NotionID.String()
 	}
 
 	return d
