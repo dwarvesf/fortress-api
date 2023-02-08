@@ -1,4 +1,4 @@
-INSERT INTO public.social_accounts (id, deleted_at, created_at, updated_at, employee_id, "type", account_id, email, display_name) VALUES
+INSERT INTO public.social_accounts (id, deleted_at, created_at, updated_at, employee_id, "type", account_id, email, name) VALUES
 ('4f9ca0fa-a0e7-4e66-9a15-15c056d00780', NULL, '2023-02-01 23:35:58.650083', '2023-02-01 23:35:58.650083', 'd42a6fca-d3b8-4a48-80f7-a95772abda56', 'github', 'truongnguyen', NULL, 'truongnguyen'),
 ('753a0c60-dde1-4d8c-b479-7924124af800', NULL, '2023-02-01 23:35:58.650083', '2023-02-01 23:35:58.650083', 'f7c6016b-85b5-47f7-8027-23c2db482197', 'github', 'ducnv', NULL, 'ducnv'),
 ('537bf447-f3fe-4a03-8c66-0117090fd6c6', NULL, '2023-02-01 23:35:58.650083', '2023-02-01 23:35:58.650083', '38a00d4a-bc45-41de-965a-adc674ab82c9', 'github', 'nguyennh', NULL, 'nguyennh'),
