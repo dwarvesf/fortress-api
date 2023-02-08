@@ -458,8 +458,13 @@ func (s *store) GetPendingSlots(db *gorm.DB) ([]*model.ProjectSlot, error) {
 		Where(`id NOT IN (
 			SELECT pm.project_slot_id
 			FROM project_members pm
-			WHERE pm.end_date IS NOT NULL AND pm.end_date > now()
-		)`).
+			WHERE (pm.end_date IS NULL OR pm.end_date > now()) AND pm.deleted_at IS NULL
+		) AND project_id NOT IN (
+			SELECT p.id
+			FROM projects p
+			WHERE p.status = ? AND p.deleted_at IS NULL
+		)`, model.ProjectStatusActive).
+		Order("updated_at").
 		Preload("Seniority", "deleted_at IS NULL").
 		Preload("Project", "deleted_at IS NULL").
 		Preload("ProjectSlotPositions", "deleted_at IS NULL").
@@ -473,8 +478,9 @@ func (s *store) GetAvailableEmployees(db *gorm.DB) ([]*model.Employee, error) {
 		Where(`working_status != ? AND id NOT IN (
 			SELECT pm.employee_id
 			FROM project_members pm
-			WHERE pm.end_date IS NOT NULL AND pm.end_date > now()
+			WHERE pm.end_date IS NULL OR pm.end_date > now()
 		)`, model.WorkingStatusLeft).
+		Order("updated_at").
 		Preload("Seniority", "deleted_at IS NULL").
 		Preload("EmployeePositions", "deleted_at IS NULL").
 		Preload("EmployeePositions.Position", "deleted_at IS NULL").
