@@ -5837,9 +5837,6 @@
                 "name": {
                     "type": "string"
                 },
-                "notionID": {
-                    "type": "string"
-                },
                 "projectEmail": {
                     "type": "string"
                 },
@@ -5848,6 +5845,9 @@
                     "items": {
                         "$ref": "#/definitions/model.ProjectMember"
                     }
+                },
+                "projectNotion": {
+                    "$ref": "#/definitions/model.ProjectNotion"
                 },
                 "projectStacks": {
                     "type": "array",
@@ -6006,6 +6006,32 @@
                     "type": "string"
                 },
                 "projectMemberID": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.ProjectNotion": {
+            "type": "object",
+            "properties": {
+                "auditNotionID": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "deletedAt": {
+                    "$ref": "#/definitions/gorm.DeletedAt"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "project": {
+                    "$ref": "#/definitions/model.Project"
+                },
+                "projectID": {
                     "type": "string"
                 },
                 "updatedAt": {
@@ -6618,6 +6644,9 @@
                 "accountManagerID": {
                     "type": "string"
                 },
+                "auditNotionID": {
+                    "type": "string"
+                },
                 "bankAccountID": {
                     "type": "string"
                 },
@@ -6646,9 +6675,6 @@
                     }
                 },
                 "name": {
-                    "type": "string"
-                },
-                "notionID": {
                     "type": "string"
                 },
                 "projectEmail": {
@@ -7093,6 +7119,9 @@
                 "name"
             ],
             "properties": {
+                "auditNotionID": {
+                    "type": "string"
+                },
                 "bankAccountID": {
                     "type": "string"
                 },
@@ -7103,9 +7132,6 @@
                     "type": "string"
                 },
                 "name": {
-                    "type": "string"
-                },
-                "notionID": {
                     "type": "string"
                 },
                 "stacks": {
@@ -8774,6 +8800,9 @@
                 "allowsSendingSurvey": {
                     "type": "boolean"
                 },
+                "auditNotionID": {
+                    "type": "string"
+                },
                 "avatar": {
                     "type": "string"
                 },
@@ -8820,9 +8849,6 @@
                     }
                 },
                 "name": {
-                    "type": "string"
-                },
-                "notionID": {
                     "type": "string"
                 },
                 "projectEmail": {
@@ -9560,6 +9586,9 @@
         "view.UpdateProjectGeneralInfo": {
             "type": "object",
             "properties": {
+                "auditNotionID": {
+                    "type": "string"
+                },
                 "bankAccount": {
                     "$ref": "#/definitions/view.BasicBankAccountInfo"
                 },
@@ -9570,9 +9599,6 @@
                     "type": "string"
                 },
                 "name": {
-                    "type": "string"
-                },
-                "notionID": {
                     "type": "string"
                 },
                 "stacks": {

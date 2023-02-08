@@ -169,14 +169,33 @@ func (h *handler) GetActionItemReports(c *gin.Context) {
 	if input.ProjectID != "" {
 		// Check project existence
 		isExist, err := h.store.Project.IsExist(h.repo.DB(), input.ProjectID)
+		if err != nil {
+			l.Error(err, "failed to get project by project ID")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+			return
+		}
 		if !isExist {
 			l.Error(err, "project not found")
 			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, input, ""))
 			return
 		}
 
+		// Get audit notion id by project ID
+		projectNotion, err := h.store.ProjectNotion.OneByProjectID(h.repo.DB(), input.ProjectID)
+		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				l.Error(err, "project notion not found")
+				c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotionNotFound, input, ""))
+				return
+			}
+
+			l.Error(err, "failed to get project notion by project ID")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+			return
+		}
+
 		// Get action item report by project ID
-		actionItemReports, err = h.store.Dashboard.GetActionItemReportsByProjectID(h.repo.DB(), input.ProjectID)
+		actionItemReports, err = h.store.Dashboard.GetActionItemReportsByProjectNotionID(h.repo.DB(), projectNotion.AuditNotionID.String())
 		if err != nil {
 			l.Error(err, "failed to get action item report by project ID")
 			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
@@ -231,27 +250,40 @@ func (h *handler) GetEngineeringHealth(c *gin.Context) {
 
 	if input.ProjectID != "" {
 		// Check project existence
-		project, err := h.store.Project.One(h.repo.DB(), input.ProjectID, false)
+		isExist, err := h.store.Project.IsExist(h.repo.DB(), input.ProjectID)
 		if err != nil {
-			if errors.Is(err, gorm.ErrRecordNotFound) {
-				l.Error(err, "project not found")
-				c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, input, ""))
-				return
-			}
-
-			l.Error(err, "failed to get project")
-			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input, ""))
+			l.Error(err, "failed to get project by project ID")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+			return
+		}
+		if !isExist {
+			l.Error(err, "project not found")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, input, ""))
 			return
 		}
 
-		average, err = h.store.Dashboard.AverageEngineeringHealthByProjectNotionID(h.repo.DB(), project.NotionID.String())
+		// Get audit notion id by project ID
+		projectNotion, err := h.store.ProjectNotion.OneByProjectID(h.repo.DB(), input.ProjectID)
+		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				l.Error(err, "project notion not found")
+				c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotionNotFound, input, ""))
+				return
+			}
+
+			l.Error(err, "failed to get project notion by project ID")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+			return
+		}
+
+		average, err = h.store.Dashboard.AverageEngineeringHealthByProjectNotionID(h.repo.DB(), projectNotion.AuditNotionID.String())
 		if err != nil {
 			l.Error(err, "failed to get average engineering health")
 			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 			return
 		}
 
-		groups, err = h.store.Dashboard.GroupEngineeringHealthByProjectNotionID(h.repo.DB(), project.NotionID.String())
+		groups, err = h.store.Dashboard.GroupEngineeringHealthByProjectNotionID(h.repo.DB(), projectNotion.AuditNotionID.String())
 		if err != nil {
 			l.Error(err, "failed to get group engineering health")
 			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
@@ -313,27 +345,40 @@ func (h *handler) GetAudits(c *gin.Context) {
 
 	if input.ProjectID != "" {
 		// Check project existence
-		project, err := h.store.Project.One(h.repo.DB(), input.ProjectID, false)
+		isExist, err := h.store.Project.IsExist(h.repo.DB(), input.ProjectID)
 		if err != nil {
-			if errors.Is(err, gorm.ErrRecordNotFound) {
-				l.Error(err, "project not found")
-				c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, input, ""))
-				return
-			}
-
-			l.Error(err, "failed to get project")
-			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input, ""))
+			l.Error(err, "failed to get project by project ID")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+			return
+		}
+		if !isExist {
+			l.Error(err, "project not found")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, input, ""))
 			return
 		}
 
-		average, err = h.store.Dashboard.GetAverageAuditByProjectNotionID(h.repo.DB(), project.NotionID.String())
+		// Get audit notion id by project ID
+		projectNotion, err := h.store.ProjectNotion.OneByProjectID(h.repo.DB(), input.ProjectID)
+		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				l.Error(err, "project notion not found")
+				c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotionNotFound, input, ""))
+				return
+			}
+
+			l.Error(err, "failed to get project notion by project ID")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+			return
+		}
+
+		average, err = h.store.Dashboard.GetAverageAuditByProjectNotionID(h.repo.DB(), projectNotion.AuditNotionID.String())
 		if err != nil {
 			l.Error(err, "failed to get average audits")
 			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 			return
 		}
 
-		groups, err = h.store.Dashboard.GetGroupAuditByProjectNotionID(h.repo.DB(), project.NotionID.String())
+		groups, err = h.store.Dashboard.GetGroupAuditByProjectNotionID(h.repo.DB(), projectNotion.AuditNotionID.String())
 		if err != nil {
 			l.Error(err, "failed to get group audits")
 			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))

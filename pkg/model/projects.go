@@ -21,11 +21,11 @@ type Project struct {
 	AllowsSendingSurvey bool            `gorm:"default:null"`
 	Code                string          `gorm:"default:null"`
 	Function            ProjectFunction `gorm:"default:null"`
-	NotionID            UUID            `gorm:"default:null"`
 	BankAccountID       UUID            `gorm:"default:null"`
 	CompanyInfoID       UUID            `gorm:"default:null"`
 	ClientID            UUID            `gorm:"default:null"`
 
+	ProjectNotion  *ProjectNotion `gorm:"foreignKey:project_id"`
 	BankAccount    *BankAccount
 	Country        *Country
 	Client         *Client

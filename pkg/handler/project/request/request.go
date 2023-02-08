@@ -24,7 +24,7 @@ type UpdateProjectGeneralInfoInput struct {
 	StartDate     string       `form:"startDate" json:"startDate"`
 	CountryID     model.UUID   `form:"countryID" json:"countryID" binding:"required"`
 	Function      string       `form:"function" json:"function" binding:"required"`
-	NotionID      model.UUID   `form:"notionID" json:"notionID"`
+	AuditNotionID model.UUID   `form:"auditNotionID" json:"auditNotionID"`
 	Stacks        []model.UUID `form:"stacks" json:"stacks"`
 	BankAccountID model.UUID   `form:"bankAccountID" json:"bankAccountID"`
 }
@@ -84,7 +84,7 @@ type CreateProjectInput struct {
 	ProjectEmail      string              `form:"projectEmail" json:"projectEmail"`
 	Code              string              `form:"code" json:"code"`
 	Function          string              `form:"function" json:"function" binding:"required"`
-	NotionID          model.UUID          `form:"notionID" json:"notionID"`
+	AuditNotionID     model.UUID          `form:"auditNotionID" json:"auditNotionID"`
 	BankAccountID     model.UUID          `form:"bankAccountID" json:"bankAccountID"`
 }
 

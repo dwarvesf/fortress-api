@@ -292,16 +292,21 @@ func (h *handler) Create(c *gin.Context) {
 		p.BankAccount = bankAccount
 	}
 
-	if !body.NotionID.IsZero() {
-		p.NotionID = body.NotionID
-	}
-
 	tx, done := h.repo.NewTransaction()
 
 	if err := h.store.Project.Create(tx.DB(), p); err != nil {
 		l.Error(err, "failed to create project")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), nil, ""))
 		return
+	}
+
+	// Create audit notion id
+	if !body.AuditNotionID.IsZero() {
+		if _, err := h.store.ProjectNotion.Create(tx.DB(), &model.ProjectNotion{ProjectID: p.ID, AuditNotionID: body.AuditNotionID}); err != nil {
+			l.Error(err, "failed to create project notion")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
+			return
+		}
 	}
 
 	// create project account manager
@@ -1461,15 +1466,42 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 	p.StartDate = body.GetStartDate()
 	p.CountryID = body.CountryID
 	p.Function = model.ProjectFunction(body.Function)
-	p.NotionID = body.NotionID
 	p.BankAccountID = body.BankAccountID
+
+	projectNotion, err := h.store.ProjectNotion.OneByProjectID(tx.DB(), p.ID.String())
+
+	if err != nil {
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			l.Error(err, "failed to get project notion")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), projectID, ""))
+			return
+		} else if !body.AuditNotionID.IsZero() {
+			// create new project notion
+			_, err := h.store.ProjectNotion.Create(tx.DB(), &model.ProjectNotion{
+				ProjectID:     p.ID,
+				AuditNotionID: body.AuditNotionID,
+			})
+			if err != nil {
+				l.Error(err, "failed to create project notion")
+				c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
+				return
+			}
+		}
+	} else {
+		projectNotion.AuditNotionID = body.AuditNotionID
+		// update audit notion id
+		if _, err := h.store.ProjectNotion.UpdateSelectedFieldsByID(tx.DB(), projectNotion.ID.String(), *projectNotion); err != nil {
+			l.Error(err, "failed to create project notion")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
+			return
+		}
+	}
 
 	_, err = h.store.Project.UpdateSelectedFieldsByID(tx.DB(), projectID, *p,
 		"name",
 		"start_date",
 		"country_id",
 		"function",
-		"notion_id",
 		"bank_account_id")
 
 	if err != nil {

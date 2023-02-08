@@ -1209,40 +1209,46 @@ func (h *handler) snapShot(db *gorm.DB) error {
 
 	// Create action item snapshot record for each audit cycle
 	for _, auditCycle := range auditCycles {
-		// if auditCycle.Project.Status != model.ProjectStatusClosed && auditCycle.Project.Status != model.ProjectStatusPaused {
-		actionItemSnapshot := &model.ActionItemSnapshot{
-			ProjectID:    auditCycle.ProjectID,
-			AuditCycleID: auditCycle.ID,
-			High:         auditCycle.ActionItemHigh,
-			Medium:       auditCycle.ActionItemMedium,
-			Low:          auditCycle.ActionItemLow,
+		projectNotion, err := h.store.ProjectNotion.OneByAuditNotionID(db, auditCycle.ProjectID.String())
+		if err != nil {
+			l.Error(err, "failed to get project notion from database")
+			return err
 		}
 
-		// Check record exists in database
-		today := time.Now().Format("2006-01-02")
+		if projectNotion.Project.Status != model.ProjectStatusClosed && projectNotion.Project.Status != model.ProjectStatusPaused {
+			actionItemSnapshot := &model.ActionItemSnapshot{
+				ProjectID:    auditCycle.ProjectID,
+				AuditCycleID: auditCycle.ID,
+				High:         auditCycle.ActionItemHigh,
+				Medium:       auditCycle.ActionItemMedium,
+				Low:          auditCycle.ActionItemLow,
+			}
 
-		if snapShot, err := h.store.ActionItemSnapshot.OneByAuditCycleIDAndTime(db, auditCycle.ID.String(), today); err != nil {
-			if errors.Is(err, gorm.ErrRecordNotFound) {
-				if _, err := h.store.ActionItemSnapshot.Create(db, actionItemSnapshot); err != nil {
-					l.Error(err, "failed to create action item snapshot")
+			// Check record exists in database
+			today := time.Now().Format("2006-01-02")
+
+			if snapShot, err := h.store.ActionItemSnapshot.OneByAuditCycleIDAndTime(db, auditCycle.ID.String(), today); err != nil {
+				if errors.Is(err, gorm.ErrRecordNotFound) {
+					if _, err := h.store.ActionItemSnapshot.Create(db, actionItemSnapshot); err != nil {
+						l.Error(err, "failed to create action item snapshot")
+						return err
+					}
+				} else {
+					l.Error(err, "failed to get action item snapshot from database")
 					return err
 				}
 			} else {
-				l.Error(err, "failed to get action item snapshot from database")
-				return err
-			}
-		} else {
-			// Update if record exists
-			if !model.CompareActionItemSnapshot(snapShot, actionItemSnapshot) {
-				if _, err := h.store.ActionItemSnapshot.UpdateSelectedFieldsByID(db, snapShot.ID.String(), *actionItemSnapshot, "high", "medium", "low"); err != nil {
-					l.Error(err, "failed to update action item snapshot")
-					return err
+				// Update if record exists
+				if !model.CompareActionItemSnapshot(snapShot, actionItemSnapshot) {
+					if _, err := h.store.ActionItemSnapshot.UpdateSelectedFieldsByID(db, snapShot.ID.String(), *actionItemSnapshot, "high", "medium", "low"); err != nil {
+						l.Error(err, "failed to update action item snapshot")
+						return err
+					}
 				}
 			}
-		}
 
+		}
 	}
-	// }
 
 	return nil
 }
