@@ -55,7 +55,7 @@ FROM (
 		FROM
 			icy_transactions_in iti
 		GROUP BY
-			category_id) t2 ON t1.category_id = t2.category_id
+			category_id) t2 ON t1.category_id = t2.category_id;
 
 
 -- +migrate Down
