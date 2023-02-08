@@ -532,10 +532,13 @@ func ToAuditSummary(summary []*model.AuditSummary, previousSize int) *AuditSumma
 	rs.NewItem.Value = (summary[0].High + summary[0].Medium + summary[0].Low) / summary[0].Size
 	if len(summary) > 1 {
 		currentItem := (summary[1].High + summary[1].Medium + summary[1].Low) / summary[0].Size
-		rs.NewItem.Trend = math.Round((float64(rs.NewItem.Value)-float64(currentItem))/float64(currentItem)*100*100) / 100
+
+		if currentItem != 0 {
+			rs.NewItem.Trend = math.Round((float64(rs.NewItem.Value)-float64(currentItem))/float64(currentItem)*100*100) / 100
+		}
 
 		rs.ResolvedItem.Value = summary[1].Done
-		if len(summary) > 2 {
+		if len(summary) > 2 && summary[2].Done != 0 {
 			rs.ResolvedItem.Trend = math.Round((float64(summary[1].Done)-float64(summary[2].Done))/float64(summary[2].Done)*100*100) / 100
 		}
 	}

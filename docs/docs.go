@@ -5845,9 +5845,6 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
-                "notionID": {
-                    "type": "string"
-                },
                 "projectEmail": {
                     "type": "string"
                 },
@@ -5856,6 +5853,9 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/model.ProjectMember"
                     }
+                },
+                "projectNotion": {
+                    "$ref": "#/definitions/model.ProjectNotion"
                 },
                 "projectStacks": {
                     "type": "array",
@@ -6014,6 +6014,32 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "projectMemberID": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.ProjectNotion": {
+            "type": "object",
+            "properties": {
+                "auditNotionID": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "deletedAt": {
+                    "$ref": "#/definitions/gorm.DeletedAt"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "project": {
+                    "$ref": "#/definitions/model.Project"
+                },
+                "projectID": {
                     "type": "string"
                 },
                 "updatedAt": {
@@ -6626,6 +6652,9 @@ const docTemplate = `{
                 "accountManagerID": {
                     "type": "string"
                 },
+                "auditNotionID": {
+                    "type": "string"
+                },
                 "bankAccountID": {
                     "type": "string"
                 },
@@ -6654,9 +6683,6 @@ const docTemplate = `{
                     }
                 },
                 "name": {
-                    "type": "string"
-                },
-                "notionID": {
                     "type": "string"
                 },
                 "projectEmail": {
@@ -7101,6 +7127,9 @@ const docTemplate = `{
                 "name"
             ],
             "properties": {
+                "auditNotionID": {
+                    "type": "string"
+                },
                 "bankAccountID": {
                     "type": "string"
                 },
@@ -7111,9 +7140,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "name": {
-                    "type": "string"
-                },
-                "notionID": {
                     "type": "string"
                 },
                 "stacks": {
@@ -8782,6 +8808,9 @@ const docTemplate = `{
                 "allowsSendingSurvey": {
                     "type": "boolean"
                 },
+                "auditNotionID": {
+                    "type": "string"
+                },
                 "avatar": {
                     "type": "string"
                 },
@@ -8828,9 +8857,6 @@ const docTemplate = `{
                     }
                 },
                 "name": {
-                    "type": "string"
-                },
-                "notionID": {
                     "type": "string"
                 },
                 "projectEmail": {
@@ -9568,6 +9594,9 @@ const docTemplate = `{
         "view.UpdateProjectGeneralInfo": {
             "type": "object",
             "properties": {
+                "auditNotionID": {
+                    "type": "string"
+                },
                 "bankAccount": {
                     "$ref": "#/definitions/view.BasicBankAccountInfo"
                 },
@@ -9578,9 +9607,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "name": {
-                    "type": "string"
-                },
-                "notionID": {
                     "type": "string"
                 },
                 "stacks": {

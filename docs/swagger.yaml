@@ -688,14 +688,14 @@ definitions:
         type: string
       name:
         type: string
-      notionID:
-        type: string
       projectEmail:
         type: string
       projectMembers:
         items:
           $ref: '#/definitions/model.ProjectMember'
         type: array
+      projectNotion:
+        $ref: '#/definitions/model.ProjectNotion'
       projectStacks:
         items:
           $ref: '#/definitions/model.ProjectStack'
@@ -800,6 +800,23 @@ definitions:
       positionID:
         type: string
       projectMemberID:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  model.ProjectNotion:
+    properties:
+      auditNotionID:
+        type: string
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      id:
+        type: string
+      project:
+        $ref: '#/definitions/model.Project'
+      projectID:
         type: string
       updatedAt:
         type: string
@@ -1201,6 +1218,8 @@ definitions:
     properties:
       accountManagerID:
         type: string
+      auditNotionID:
+        type: string
       bankAccountID:
         type: string
       clientEmail:
@@ -1220,8 +1239,6 @@ definitions:
           $ref: '#/definitions/request.AssignMemberInput'
         type: array
       name:
-        type: string
-      notionID:
         type: string
       projectEmail:
         type: string
@@ -1524,6 +1541,8 @@ definitions:
     type: object
   request.UpdateProjectGeneralInfoInput:
     properties:
+      auditNotionID:
+        type: string
       bankAccountID:
         type: string
       countryID:
@@ -1531,8 +1550,6 @@ definitions:
       function:
         type: string
       name:
-        type: string
-      notionID:
         type: string
       stacks:
         items:
@@ -2623,6 +2640,8 @@ definitions:
         $ref: '#/definitions/view.ProjectHead'
       allowsSendingSurvey:
         type: boolean
+      auditNotionID:
+        type: string
       avatar:
         type: string
       bankAccount:
@@ -2654,8 +2673,6 @@ definitions:
           $ref: '#/definitions/view.ProjectMember'
         type: array
       name:
-        type: string
-      notionID:
         type: string
       projectEmail:
         type: string
@@ -3136,6 +3153,8 @@ definitions:
     type: object
   view.UpdateProjectGeneralInfo:
     properties:
+      auditNotionID:
+        type: string
       bankAccount:
         $ref: '#/definitions/view.BasicBankAccountInfo'
       country:
@@ -3143,8 +3162,6 @@ definitions:
       function:
         type: string
       name:
-        type: string
-      notionID:
         type: string
       stacks:
         items:

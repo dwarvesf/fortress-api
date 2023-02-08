@@ -33,7 +33,7 @@ type ProjectData struct {
 	Stacks              []Stack               `json:"stacks"`
 	Code                string                `json:"code"`
 	Function            string                `json:"function"`
-	NotionID            string                `json:"notionID"`
+	AuditNotionID       string                `json:"auditNotionID"`
 	BankAccount         *BasicBankAccountInfo `json:"bankAccount"`
 }
 
@@ -176,8 +176,8 @@ func ToProjectData(c *gin.Context, project *model.Project, userInfo *model.Curre
 	}
 
 	if utils.HasPermission(c, userInfo.Permissions, model.PermissionProjectsReadFullAccess) {
-		if !project.NotionID.IsZero() {
-			d.NotionID = project.NotionID.String()
+		if project.ProjectNotion != nil && !project.ProjectNotion.AuditNotionID.IsZero() {
+			d.AuditNotionID = project.ProjectNotion.AuditNotionID.String()
 		}
 
 		d.ClientEmail = clientEmail
@@ -421,13 +421,13 @@ type BasicCountryInfo struct {
 }
 
 type UpdateProjectGeneralInfo struct {
-	Name        string                `json:"name"`
-	StartDate   *time.Time            `json:"startDate"`
-	Country     *BasicCountryInfo     `json:"country"`
-	Stacks      []model.Stack         `json:"stacks"`
-	Function    model.ProjectFunction `json:"function"`
-	NotionID    string                `json:"notionID"`
-	BankAccount *BasicBankAccountInfo `json:"bankAccount"`
+	Name          string                `json:"name"`
+	StartDate     *time.Time            `json:"startDate"`
+	Country       *BasicCountryInfo     `json:"country"`
+	Stacks        []model.Stack         `json:"stacks"`
+	Function      model.ProjectFunction `json:"function"`
+	AuditNotionID string                `json:"auditNotionID"`
+	BankAccount   *BasicBankAccountInfo `json:"bankAccount"`
 }
 
 type UpdateProjectGeneralInfoResponse struct {
@@ -447,8 +447,8 @@ func ToUpdateProjectGeneralInfo(project *model.Project) UpdateProjectGeneralInfo
 		Function:  project.Function,
 	}
 
-	if !project.NotionID.IsZero() {
-		rs.NotionID = project.NotionID.String()
+	if project.ProjectNotion != nil && !project.ProjectNotion.AuditNotionID.IsZero() {
+		rs.AuditNotionID = project.ProjectNotion.AuditNotionID.String()
 	}
 
 	if project.Country != nil {

@@ -126,7 +126,7 @@ func (s *store) GetAllActionItemReports(db *gorm.DB) ([]*model.ActionItemReport,
 	return rs, db.Raw(query).Scan(&rs).Error
 }
 
-func (s *store) GetActionItemReportsByProjectID(db *gorm.DB, projectID string) ([]*model.ActionItemReport, error) {
+func (s *store) GetActionItemReportsByProjectNotionID(db *gorm.DB, projectID string) ([]*model.ActionItemReport, error) {
 	var rs []*model.ActionItemReport
 
 	query := `
@@ -369,7 +369,8 @@ func (s *store) GetAllActionItemSquashReports(db *gorm.DB) ([]*model.ActionItemS
 			sum(low)                             as low,
 			action_item_snapshots.created_at     as snap_date
 		FROM action_item_snapshots
-				LEFT JOIN projects on action_item_snapshots.project_id = projects.notion_id
+				JOIN project_notions ON action_item_snapshots.project_id = project_notions.audit_notion_id
+				JOIN projects ON project_notions.project_id = projects.id
 				JOIN days ON date_trunc('DAY', action_item_snapshots.created_at) = date_trunc('DAY', days.day)
 		WHERE projects.function = 'development'
 			AND action_item_snapshots.deleted_at IS NULL
@@ -396,7 +397,8 @@ func (s *store) GetActionItemSquashReportsByProjectID(db *gorm.DB, projectID str
 			sum(low)                             as low,
 			action_item_snapshots.created_at     as snap_date
 		FROM action_item_snapshots
-				LEFT JOIN projects on action_item_snapshots.project_id = projects.notion_id
+				LEFT JOIN project_notions ON action_item_snapshots.project_id = project_notions.audit_notion_id
+				JOIN projects ON project_notions.project_id = projects.id
 				JOIN days ON date_trunc('DAY', action_item_snapshots.created_at) = date_trunc('DAY', days.day)
 		WHERE projects.function = 'development'
 			AND action_item_snapshots.deleted_at IS NULL
@@ -427,7 +429,8 @@ func (s *store) GetAuditSummaries(db *gorm.DB) ([]*model.AuditSummary, error) {
 				END) AS audit
 		FROM audit_cycles
 				LEFT JOIN audits AS a ON audit_cycles.health_audit_id = a.id
-				JOIN projects AS p ON audit_cycles.project_id = p.notion_id
+				JOIN project_notions ON audit_cycles.project_id = project_notions.audit_notion_id
+				JOIN projects AS p ON project_notions.project_id = p.id
 				JOIN project_members pm ON p.id = pm.project_id
 		WHERE (pm.status = 'active' OR pm.status='on-boarding') AND audit_cycles.deleted_at IS NULL AND 
 			a.deleted_at IS NULL AND pm.deleted_at IS NULL AND p.deleted_at IS NULL
