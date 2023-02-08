@@ -23,6 +23,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/store/employeerole"
 	"github.com/dwarvesf/fortress-api/pkg/store/employeestack"
 	"github.com/dwarvesf/fortress-api/pkg/store/feedbackevent"
+	"github.com/dwarvesf/fortress-api/pkg/store/invoice"
 	"github.com/dwarvesf/fortress-api/pkg/store/organization"
 	"github.com/dwarvesf/fortress-api/pkg/store/permission"
 	"github.com/dwarvesf/fortress-api/pkg/store/position"
@@ -86,6 +87,7 @@ type Store struct {
 	ActionItemSnapshot    actionitemsnapshot.IStore
 	SocialAccount         socialaccount.IStore
 	BankAccount           bankaccount.IStore
+	Invoice               invoice.IStore
 }
 
 func New() *Store {
@@ -131,5 +133,6 @@ func New() *Store {
 		ActionItemSnapshot:    actionitemsnapshot.New(),
 		SocialAccount:         socialaccount.New(),
 		BankAccount:           bankaccount.New(),
+		Invoice:               invoice.New(),
 	}
 }

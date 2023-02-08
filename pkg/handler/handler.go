@@ -16,6 +16,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/handler/feedback"
 	"github.com/dwarvesf/fortress-api/pkg/handler/healthz"
 	"github.com/dwarvesf/fortress-api/pkg/handler/hiring"
+	"github.com/dwarvesf/fortress-api/pkg/handler/invoice"
 	"github.com/dwarvesf/fortress-api/pkg/handler/memo"
 	"github.com/dwarvesf/fortress-api/pkg/handler/metadata"
 	"github.com/dwarvesf/fortress-api/pkg/handler/profile"
@@ -53,6 +54,7 @@ type Handler struct {
 	Memo           memo.IHandler
 	BankAccount    bankaccount.IHandler
 	Birthday       birthday.IHandler
+	Invoice        invoice.IHandler
 }
 
 func New(store *store.Store, repo store.DBRepo, service *service.Service, ctrl *controller.Controller, logger logger.Logger, cfg *config.Config) *Handler {
@@ -79,5 +81,6 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, ctrl *
 		Memo:           memo.New(store, repo, service, logger, cfg),
 		BankAccount:    bankaccount.New(store, repo, service, logger, cfg),
 		Birthday:       birthday.New(store, repo, service, logger, cfg),
+		Invoice:        invoice.New(store, repo, service, logger, cfg),
 	}
 }
