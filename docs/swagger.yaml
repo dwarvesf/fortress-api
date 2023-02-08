@@ -78,6 +78,79 @@ definitions:
       updatedAt:
         type: string
     type: object
+  model.Client:
+    properties:
+      address:
+        type: string
+      contacts:
+        items:
+          $ref: '#/definitions/model.ClientContact'
+        type: array
+      country:
+        type: string
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      description:
+        type: string
+      id:
+        type: string
+      industry:
+        type: string
+      name:
+        type: string
+      registrationNumber:
+        type: string
+      updatedAt:
+        type: string
+      website:
+        type: string
+    type: object
+  model.ClientContact:
+    properties:
+      clientID:
+        type: string
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      emails:
+        items:
+          type: integer
+        type: array
+      id:
+        type: string
+      isMainContact:
+        type: boolean
+      name:
+        type: string
+      role:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  model.CompanyInfo:
+    properties:
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      description:
+        type: string
+      id:
+        type: string
+      info:
+        items:
+          type: integer
+        type: array
+      name:
+        type: string
+      registration_number:
+        type: string
+      updatedAt:
+        type: string
+    type: object
   model.Country:
     properties:
       cities:
@@ -429,6 +502,90 @@ definitions:
       status:
         type: string
     type: object
+  model.Invoice:
+    properties:
+      bank:
+        $ref: '#/definitions/model.BankAccount'
+      bankID:
+        type: string
+      cc:
+        items:
+          type: integer
+        type: array
+      conversionAmount:
+        type: integer
+      conversionRate:
+        type: number
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      description:
+        type: string
+      discount:
+        type: integer
+      dueAt:
+        type: string
+      email:
+        type: string
+      errorInvoiceID:
+        type: string
+      failedAt:
+        type: string
+      id:
+        type: string
+      invoiceFileContent:
+        description: we not store this in db
+        items:
+          type: integer
+        type: array
+      invoiceFileURL:
+        type: string
+      invoicedAt:
+        type: string
+      lineItems:
+        items:
+          type: integer
+        type: array
+      messageID:
+        type: string
+      month:
+        type: integer
+      note:
+        type: string
+      number:
+        type: string
+      paidAt:
+        type: string
+      project:
+        $ref: '#/definitions/model.Project'
+      projectID:
+        type: string
+      references:
+        type: string
+      scheduledDate:
+        type: string
+      sender:
+        $ref: '#/definitions/model.Employee'
+      sentBy:
+        type: string
+      status:
+        type: string
+      subTotal:
+        type: integer
+      tax:
+        type: integer
+      threadID:
+        type: string
+      todoAttachment:
+        type: string
+      total:
+        type: integer
+      updatedAt:
+        type: string
+      year:
+        type: integer
+    type: object
   model.LikertScaleCount:
     properties:
       agree:
@@ -499,9 +656,17 @@ definitions:
         $ref: '#/definitions/model.BankAccount'
       bankAccountID:
         type: string
+      client:
+        $ref: '#/definitions/model.Client'
       clientEmail:
         type: string
+      clientID:
+        type: string
       code:
+        type: string
+      companyInfo:
+        $ref: '#/definitions/model.CompanyInfo'
+      companyInfoID:
         type: string
       country:
         $ref: '#/definitions/model.Country'
@@ -978,6 +1143,49 @@ definitions:
     - seniorityID
     - status
     - teamEmail
+    type: object
+  request.CreateInput:
+    properties:
+      bankID:
+        type: string
+      conversionAmount:
+        type: integer
+      conversionRate:
+        type: number
+      description:
+        type: string
+      discount:
+        type: integer
+      dueAt:
+        type: string
+      email:
+        type: string
+      month:
+        type: integer
+      note:
+        type: string
+      number:
+        type: string
+      paidAt:
+        type: string
+      projectID:
+        type: string
+      scheduledDate:
+        type: string
+      status:
+        type: string
+      subTotal:
+        type: integer
+      tax:
+        type: integer
+      threadID:
+        type: string
+      total:
+        type: integer
+      year:
+        type: integer
+    required:
+    - bankID
     type: object
   request.CreatePositionInput:
     properties:
@@ -1721,6 +1929,11 @@ definitions:
           $ref: '#/definitions/model.Country'
         type: array
     type: object
+  view.CreateInvoiceResponse:
+    properties:
+      data:
+        $ref: '#/definitions/model.Invoice'
+    type: object
   view.CreateMemberData:
     properties:
       avatar:
@@ -2129,6 +2342,11 @@ definitions:
         items:
           $ref: '#/definitions/view.EngagementDashboard'
         type: array
+    type: object
+  view.GetLatestInvoiceResponse:
+    properties:
+      data:
+        $ref: '#/definitions/model.Invoice'
     type: object
   view.GetQuestionResponse:
     properties:
@@ -4279,6 +4497,116 @@ paths:
       summary: Get list hirings from DF Dwarves Hiring
       tags:
       - hiring
+  /invoices/:
+    post:
+      consumes:
+      - application/json
+      description: Create new invoice
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: body
+        in: body
+        name: Body
+        required: true
+        schema:
+          $ref: '#/definitions/request.CreateInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.CreateInvoiceResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Create new invoice
+      tags:
+      - Invoice
+  /invoices/{id}/status:
+    get:
+      consumes:
+      - application/json
+      description: Update status for invoice
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Update status for invoice
+      tags:
+      - Invoice
+  /invoices/latest:
+    get:
+      consumes:
+      - application/json
+      description: Get latest invoice by project id
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: projectID
+        in: query
+        name: projectID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.GetLatestInvoiceResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get latest invoice by project id
+      tags:
+      - Invoice
   /line-managers:
     get:
       consumes:

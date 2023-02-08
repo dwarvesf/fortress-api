@@ -6,6 +6,36 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+type Project struct {
+	BaseModel
+
+	Name                string          `gorm:"default:null"`
+	CountryID           UUID            `gorm:"default:null"`
+	Type                ProjectType     `gorm:"default:null"`
+	StartDate           *time.Time      `gorm:"default:null"`
+	EndDate             *time.Time      `gorm:"default:null"`
+	Status              ProjectStatus   `gorm:"default:null"`
+	ProjectEmail        string          `gorm:"default:null"`
+	ClientEmail         string          `gorm:"default:null"`
+	Avatar              string          `gorm:"default:null"`
+	AllowsSendingSurvey bool            `gorm:"default:null"`
+	Code                string          `gorm:"default:null"`
+	Function            ProjectFunction `gorm:"default:null"`
+	NotionID            UUID            `gorm:"default:null"`
+	BankAccountID       UUID            `gorm:"default:null"`
+	CompanyInfoID       UUID            `gorm:"default:null"`
+	ClientID            UUID            `gorm:"default:null"`
+
+	BankAccount    *BankAccount
+	Country        *Country
+	Client         *Client
+	CompanyInfo    *CompanyInfo
+	Slots          []ProjectSlot
+	Heads          []*ProjectHead
+	ProjectMembers []ProjectMember
+	ProjectStacks  []ProjectStack
+}
+
 type ProjectType string
 
 const (
@@ -52,32 +82,6 @@ func (e ProjectStatus) IsValid() bool {
 
 func (e ProjectStatus) String() string {
 	return string(e)
-}
-
-type Project struct {
-	BaseModel
-
-	Name                string          `gorm:"default:null"`
-	CountryID           UUID            `gorm:"default:null"`
-	Type                ProjectType     `gorm:"default:null"`
-	StartDate           *time.Time      `gorm:"default:null"`
-	EndDate             *time.Time      `gorm:"default:null"`
-	Status              ProjectStatus   `gorm:"default:null"`
-	ProjectEmail        string          `gorm:"default:null"`
-	ClientEmail         string          `gorm:"default:null"`
-	Avatar              string          `gorm:"default:null"`
-	AllowsSendingSurvey bool            `gorm:"default:null"`
-	Code                string          `gorm:"default:null"`
-	Function            ProjectFunction `gorm:"default:null"`
-	NotionID            UUID            `gorm:"default:null"`
-	BankAccountID       UUID            `gorm:"default:null"`
-
-	BankAccount    *BankAccount
-	Country        *Country
-	Slots          []ProjectSlot
-	Heads          []*ProjectHead
-	ProjectMembers []ProjectMember
-	ProjectStacks  []ProjectStack
 }
 
 type DeploymentType string

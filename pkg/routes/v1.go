@@ -122,6 +122,13 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 		bankGroup.GET("", pmw.WithPerm(model.PermissionProjectsEdit), h.BankAccount.List)
 	}
 
+	invoiceGroup := v1.Group("/invoices")
+	{
+		invoiceGroup.POST("", pmw.WithPerm(model.PermissionInvoiceCreate), h.Invoice.Create)
+		invoiceGroup.PUT("/:id/status", pmw.WithPerm(model.PermissionInvoiceEdit), h.Invoice.Update)
+		invoiceGroup.GET("/latest", pmw.WithPerm(model.PermissionInvoiceRead), h.Invoice.GetLatestInvoice)
+	}
+
 	valuation := v1.Group("/valuation")
 	{
 		valuation.GET("/:year", pmw.WithPerm(model.PermissionValuationRead), h.Valuation.One)
