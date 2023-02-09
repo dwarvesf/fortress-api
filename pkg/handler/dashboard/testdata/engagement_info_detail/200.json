@@ -8,21 +8,13 @@
           "startDate": "2022-10-01T00:00:00Z",
           "point": 3.5
         },
-        {
-          "field": "Mid",
-          "startDate": "2022-10-01T00:00:00Z",
-          "point": 2.6666666666666665
-        },
+        { "field": "Mid", "startDate": "2022-10-01T00:00:00Z", "point": 2.66 },
         {
           "field": "Senior",
           "startDate": "2022-10-01T00:00:00Z",
-          "point": 2.6666666666666665
+          "point": 2.66
         },
-        {
-          "field": "Staff",
-          "startDate": "2022-10-01T00:00:00Z",
-          "point": 2.875
-        }
+        { "field": "Staff", "startDate": "2022-10-01T00:00:00Z", "point": 2.87 }
       ]
     },
     {
@@ -31,7 +23,7 @@
         {
           "field": "Junior",
           "startDate": "2022-10-01T00:00:00Z",
-          "point": 3.6666666666666665
+          "point": 3.66
         },
         { "field": "Mid", "startDate": "2022-10-01T00:00:00Z", "point": 3 },
         { "field": "Senior", "startDate": "2022-10-01T00:00:00Z", "point": 3 },
@@ -44,19 +36,15 @@
         {
           "field": "Junior",
           "startDate": "2022-10-01T00:00:00Z",
-          "point": 2.8333333333333335
+          "point": 2.83
         },
         { "field": "Mid", "startDate": "2022-10-01T00:00:00Z", "point": 3 },
         {
           "field": "Senior",
           "startDate": "2022-10-01T00:00:00Z",
-          "point": 2.3333333333333335
+          "point": 2.33
         },
-        {
-          "field": "Staff",
-          "startDate": "2022-10-01T00:00:00Z",
-          "point": 3.125
-        }
+        { "field": "Staff", "startDate": "2022-10-01T00:00:00Z", "point": 3.12 }
       ]
     },
     {
@@ -65,7 +53,7 @@
         {
           "field": "Junior",
           "startDate": "2022-10-01T00:00:00Z",
-          "point": 2.1666666666666665
+          "point": 2.16
         },
         { "field": "Mid", "startDate": "2022-10-01T00:00:00Z", "point": 2 },
         { "field": "Senior", "startDate": "2022-10-01T00:00:00Z", "point": 3 },
@@ -78,19 +66,11 @@
         {
           "field": "Junior",
           "startDate": "2022-10-01T00:00:00Z",
-          "point": 1.8333333333333333
+          "point": 1.83
         },
-        {
-          "field": "Mid",
-          "startDate": "2022-10-01T00:00:00Z",
-          "point": 2.3333333333333335
-        },
+        { "field": "Mid", "startDate": "2022-10-01T00:00:00Z", "point": 2.33 },
         { "field": "Senior", "startDate": "2022-10-01T00:00:00Z", "point": 3 },
-        {
-          "field": "Staff",
-          "startDate": "2022-10-01T00:00:00Z",
-          "point": 2.875
-        }
+        { "field": "Staff", "startDate": "2022-10-01T00:00:00Z", "point": 2.87 }
       ]
     },
     {
@@ -99,17 +79,13 @@
         {
           "field": "Junior",
           "startDate": "2022-10-01T00:00:00Z",
-          "point": 2.6666666666666665
+          "point": 2.66
         },
-        {
-          "field": "Mid",
-          "startDate": "2022-10-01T00:00:00Z",
-          "point": 2.6666666666666665
-        },
+        { "field": "Mid", "startDate": "2022-10-01T00:00:00Z", "point": 2.66 },
         {
           "field": "Senior",
           "startDate": "2022-10-01T00:00:00Z",
-          "point": 1.6666666666666667
+          "point": 1.66
         },
         { "field": "Staff", "startDate": "2022-10-01T00:00:00Z", "point": 2 }
       ]
@@ -120,17 +96,13 @@
         {
           "field": "Junior",
           "startDate": "2022-10-01T00:00:00Z",
-          "point": 3.8333333333333335
+          "point": 3.83
         },
-        {
-          "field": "Mid",
-          "startDate": "2022-10-01T00:00:00Z",
-          "point": 2.6666666666666665
-        },
+        { "field": "Mid", "startDate": "2022-10-01T00:00:00Z", "point": 2.66 },
         {
           "field": "Senior",
           "startDate": "2022-10-01T00:00:00Z",
-          "point": 2.6666666666666665
+          "point": 2.66
         },
         { "field": "Staff", "startDate": "2022-10-01T00:00:00Z", "point": 2.5 }
       ]
@@ -141,23 +113,15 @@
         {
           "field": "Junior",
           "startDate": "2022-10-01T00:00:00Z",
-          "point": 3.3333333333333335
+          "point": 3.33
         },
-        {
-          "field": "Mid",
-          "startDate": "2022-10-01T00:00:00Z",
-          "point": 1.6666666666666667
-        },
+        { "field": "Mid", "startDate": "2022-10-01T00:00:00Z", "point": 1.66 },
         {
           "field": "Senior",
           "startDate": "2022-10-01T00:00:00Z",
-          "point": 4.666666666666667
+          "point": 4.66
         },
-        {
-          "field": "Staff",
-          "startDate": "2022-10-01T00:00:00Z",
-          "point": 2.625
-        }
+        { "field": "Staff", "startDate": "2022-10-01T00:00:00Z", "point": 2.62 }
       ]
     },
     {
@@ -166,34 +130,22 @@
         {
           "field": "Junior",
           "startDate": "2022-10-01T00:00:00Z",
-          "point": 3.1666666666666665
+          "point": 3.16
         },
-        {
-          "field": "Mid",
-          "startDate": "2022-10-01T00:00:00Z",
-          "point": 3.3333333333333335
-        },
+        { "field": "Mid", "startDate": "2022-10-01T00:00:00Z", "point": 3.33 },
         {
           "field": "Senior",
           "startDate": "2022-10-01T00:00:00Z",
-          "point": 2.3333333333333335
+          "point": 2.33
         },
-        {
-          "field": "Staff",
-          "startDate": "2022-10-01T00:00:00Z",
-          "point": 3.125
-        }
+        { "field": "Staff", "startDate": "2022-10-01T00:00:00Z", "point": 3.12 }
       ]
     },
     {
       "questionID": "c7f2081a-11e6-4a2e-9e0c-852faaaf3d16",
       "stats": [
         { "field": "Junior", "startDate": "2022-10-01T00:00:00Z", "point": 3 },
-        {
-          "field": "Mid",
-          "startDate": "2022-10-01T00:00:00Z",
-          "point": 2.6666666666666665
-        },
+        { "field": "Mid", "startDate": "2022-10-01T00:00:00Z", "point": 2.66 },
         { "field": "Senior", "startDate": "2022-10-01T00:00:00Z", "point": 3 },
         { "field": "Staff", "startDate": "2022-10-01T00:00:00Z", "point": 2.75 }
       ]
@@ -210,7 +162,7 @@
         {
           "field": "Senior",
           "startDate": "2022-10-01T00:00:00Z",
-          "point": 2.3333333333333335
+          "point": 2.33
         },
         { "field": "Staff", "startDate": "2022-10-01T00:00:00Z", "point": 3 }
       ]
@@ -221,7 +173,7 @@
         {
           "field": "Junior",
           "startDate": "2022-10-01T00:00:00Z",
-          "point": 2.6666666666666665
+          "point": 2.66
         },
         { "field": "Mid", "startDate": "2022-10-01T00:00:00Z", "point": 2 },
         { "field": "Senior", "startDate": "2022-10-01T00:00:00Z", "point": 3 },
