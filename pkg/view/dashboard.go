@@ -659,7 +659,7 @@ func ToEngagementDashboard(statistic []*model.StatisticEngagementDashboard) []En
 func ToEngagementDashboardDetails(statistic []*model.StatisticEngagementDashboard) []EngagementDashboardDetail {
 	questionMapper := make(map[string][]EngagementDashboardQuestionDetailStat)
 	for _, s := range statistic {
-		questionMapper[s.QuestionID.String()] = append(questionMapper[s.Content], EngagementDashboardQuestionDetailStat{
+		questionMapper[s.QuestionID.String()] = append(questionMapper[s.QuestionID.String()], EngagementDashboardQuestionDetailStat{
 			Field:     s.Name,
 			StartDate: &s.StartDate,
 			Point:     s.Point,
