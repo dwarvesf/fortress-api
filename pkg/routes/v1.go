@@ -194,7 +194,7 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 			resourceDashboardGroup.GET("/availabilities", pmw.WithPerm("dashboards.read"), h.Dashboard.GetResourcesAvailability)
 			resourceDashboardGroup.GET("/utilization", pmw.WithPerm("dashboards.read"), h.Dashboard.GetResourceUtilization)
 			resourceDashboardGroup.GET("/work-unit-distribution", pmw.WithPerm("dashboards.read"), h.Dashboard.GetWorkUnitDistribution)
-			resourceDashboardGroup.GET("/work-survey-summaries", h.Dashboard.GetResourceWorkSurveySummaries)
+			resourceDashboardGroup.GET("/work-survey-summaries", pmw.WithPerm("dashboards.read"), h.Dashboard.GetResourceWorkSurveySummaries)
 		}
 	}
 }

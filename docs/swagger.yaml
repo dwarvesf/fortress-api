@@ -3245,19 +3245,26 @@ definitions:
     properties:
       answer:
         type: string
-      date:
-        type: string
+      project:
+        $ref: '#/definitions/view.BasicProjectInfo'
     type: object
   view.WorkSurveySummaryEmployee:
+    properties:
+      listAnswers:
+        items:
+          $ref: '#/definitions/view.WorkSurveySummaryListAnswer'
+        type: array
+      reviewer:
+        $ref: '#/definitions/view.BasicEmployeeInfo'
+    type: object
+  view.WorkSurveySummaryListAnswer:
     properties:
       answers:
         items:
           $ref: '#/definitions/view.WorkSurveySummaryAnswer'
         type: array
-      project:
-        $ref: '#/definitions/view.BasicProjectInfo'
-      reviewer:
-        $ref: '#/definitions/view.BasicEmployeeInfo'
+      date:
+        type: string
     type: object
   view.WorkSurveySummaryResponse:
     properties:

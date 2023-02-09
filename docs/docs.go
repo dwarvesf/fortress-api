@@ -9736,12 +9736,26 @@ const docTemplate = `{
                 "answer": {
                     "type": "string"
                 },
-                "date": {
-                    "type": "string"
+                "project": {
+                    "$ref": "#/definitions/view.BasicProjectInfo"
                 }
             }
         },
         "view.WorkSurveySummaryEmployee": {
+            "type": "object",
+            "properties": {
+                "listAnswers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.WorkSurveySummaryListAnswer"
+                    }
+                },
+                "reviewer": {
+                    "$ref": "#/definitions/view.BasicEmployeeInfo"
+                }
+            }
+        },
+        "view.WorkSurveySummaryListAnswer": {
             "type": "object",
             "properties": {
                 "answers": {
@@ -9750,11 +9764,8 @@ const docTemplate = `{
                         "$ref": "#/definitions/view.WorkSurveySummaryAnswer"
                     }
                 },
-                "project": {
-                    "$ref": "#/definitions/view.BasicProjectInfo"
-                },
-                "reviewer": {
-                    "$ref": "#/definitions/view.BasicEmployeeInfo"
+                "date": {
+                    "type": "string"
                 }
             }
         },
