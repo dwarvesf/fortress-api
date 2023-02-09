@@ -6,6 +6,14 @@
     "data": [
         {
             "type": "workload",
+            "dates": [
+                "2023-01-01",
+                "2023-01-09",
+                "2023-01-23",
+                "2023-02-07",
+                "2023-02-21",
+                "2023-02-28"
+            ],
             "data": [
                 {
                     "reviewer": {
@@ -17,66 +25,7 @@
                     },
                     "listAnswers": [
                         {
-                            "date": "2023-02-28",
-                            "answers": [
-                                {
-                                    "answer": "",
-                                    "project": {
-                                        "id": "8dc3be2e-19a4-4942-8a79-56db391a0b15",
-                                        "name": "Fortress",
-                                        "type": "dwarves",
-                                        "status": "active",
-                                        "code": "fortress",
-                                        "avatar": ""
-                                    }
-                                },
-                                {
-                                    "answer": "1",
-                                    "project": {
-                                        "id": "dfa182fc-1d2d-49f6-a877-c01da9ce4207",
-                                        "name": "Lorem ipsum",
-                                        "type": "time-material",
-                                        "status": "active",
-                                        "code": "lorem-ipsum",
-                                        "avatar": ""
-                                    }
-                                }
-                            ]
-                        },
-                        {
-                            "date": "2023-02-21",
-                            "answers": [
-                                {
-                                    "answer": "",
-                                    "project": {
-                                        "id": "8dc3be2e-19a4-4942-8a79-56db391a0b15",
-                                        "name": "Fortress",
-                                        "type": "dwarves",
-                                        "status": "active",
-                                        "code": "fortress",
-                                        "avatar": ""
-                                    }
-                                }
-                            ]
-                        },
-                        {
-                            "date": "2023-02-07",
-                            "answers": [
-                                {
-                                    "answer": "",
-                                    "project": {
-                                        "id": "8dc3be2e-19a4-4942-8a79-56db391a0b15",
-                                        "name": "Fortress",
-                                        "type": "dwarves",
-                                        "status": "active",
-                                        "code": "fortress",
-                                        "avatar": ""
-                                    }
-                                }
-                            ]
-                        },
-                        {
-                            "date": "2023-01-23",
+                            "date": "2023-01-01",
                             "answers": [
                                 {
                                     "answer": "",
@@ -119,6 +68,105 @@
                             ]
                         },
                         {
+                            "date": "2023-01-23",
+                            "answers": [
+                                {
+                                    "answer": "",
+                                    "project": {
+                                        "id": "8dc3be2e-19a4-4942-8a79-56db391a0b15",
+                                        "name": "Fortress",
+                                        "type": "dwarves",
+                                        "status": "active",
+                                        "code": "fortress",
+                                        "avatar": ""
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "date": "2023-02-07",
+                            "answers": [
+                                {
+                                    "answer": "",
+                                    "project": {
+                                        "id": "8dc3be2e-19a4-4942-8a79-56db391a0b15",
+                                        "name": "Fortress",
+                                        "type": "dwarves",
+                                        "status": "active",
+                                        "code": "fortress",
+                                        "avatar": ""
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "date": "2023-02-21",
+                            "answers": [
+                                {
+                                    "answer": "",
+                                    "project": {
+                                        "id": "8dc3be2e-19a4-4942-8a79-56db391a0b15",
+                                        "name": "Fortress",
+                                        "type": "dwarves",
+                                        "status": "active",
+                                        "code": "fortress",
+                                        "avatar": ""
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "date": "2023-02-28",
+                            "answers": [
+                                {
+                                    "answer": "",
+                                    "project": {
+                                        "id": "8dc3be2e-19a4-4942-8a79-56db391a0b15",
+                                        "name": "Fortress",
+                                        "type": "dwarves",
+                                        "status": "active",
+                                        "code": "fortress",
+                                        "avatar": ""
+                                    }
+                                },
+                                {
+                                    "answer": "1",
+                                    "project": {
+                                        "id": "dfa182fc-1d2d-49f6-a877-c01da9ce4207",
+                                        "name": "Lorem ipsum",
+                                        "type": "time-material",
+                                        "status": "active",
+                                        "code": "lorem-ipsum",
+                                        "avatar": ""
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "deadline",
+            "dates": [
+                "2023-01-01",
+                "2023-01-09",
+                "2023-01-23",
+                "2023-02-07",
+                "2023-02-21",
+                "2023-02-28"
+            ],
+            "data": [
+                {
+                    "reviewer": {
+                        "id": "2655832e-f009-4b73-a535-64c3a22e558f",
+                        "fullName": "Phạm Đức Thành",
+                        "displayName": "Thanh Pham",
+                        "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
+                        "username": "thanh"
+                    },
+                    "listAnswers": [
+                        {
                             "date": "2023-01-01",
                             "answers": [
                                 {
@@ -133,23 +181,82 @@
                                     }
                                 }
                             ]
-                        }
-                    ]
-                }
-            ]
-        },
-        {
-            "type": "deadline",
-            "data": [
-                {
-                    "reviewer": {
-                        "id": "2655832e-f009-4b73-a535-64c3a22e558f",
-                        "fullName": "Phạm Đức Thành",
-                        "displayName": "Thanh Pham",
-                        "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
-                        "username": "thanh"
-                    },
-                    "listAnswers": [
+                        },
+                        {
+                            "date": "2023-01-09",
+                            "answers": [
+                                {
+                                    "answer": "",
+                                    "project": {
+                                        "id": "8dc3be2e-19a4-4942-8a79-56db391a0b15",
+                                        "name": "Fortress",
+                                        "type": "dwarves",
+                                        "status": "active",
+                                        "code": "fortress",
+                                        "avatar": ""
+                                    }
+                                },
+                                {
+                                    "answer": "",
+                                    "project": {
+                                        "id": "8dc3be2e-19a4-4942-8a79-56db391a0b15",
+                                        "name": "Fortress",
+                                        "type": "dwarves",
+                                        "status": "active",
+                                        "code": "fortress",
+                                        "avatar": ""
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "date": "2023-01-23",
+                            "answers": [
+                                {
+                                    "answer": "",
+                                    "project": {
+                                        "id": "8dc3be2e-19a4-4942-8a79-56db391a0b15",
+                                        "name": "Fortress",
+                                        "type": "dwarves",
+                                        "status": "active",
+                                        "code": "fortress",
+                                        "avatar": ""
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "date": "2023-02-07",
+                            "answers": [
+                                {
+                                    "answer": "",
+                                    "project": {
+                                        "id": "8dc3be2e-19a4-4942-8a79-56db391a0b15",
+                                        "name": "Fortress",
+                                        "type": "dwarves",
+                                        "status": "active",
+                                        "code": "fortress",
+                                        "avatar": ""
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "date": "2023-02-21",
+                            "answers": [
+                                {
+                                    "answer": "",
+                                    "project": {
+                                        "id": "8dc3be2e-19a4-4942-8a79-56db391a0b15",
+                                        "name": "Fortress",
+                                        "type": "dwarves",
+                                        "status": "active",
+                                        "code": "fortress",
+                                        "avatar": ""
+                                    }
+                                }
+                            ]
+                        },
                         {
                             "date": "2023-02-28",
                             "answers": [
@@ -176,41 +283,33 @@
                                     }
                                 }
                             ]
-                        },
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "learning",
+            "dates": [
+                "2023-01-01",
+                "2023-01-09",
+                "2023-01-23",
+                "2023-02-07",
+                "2023-02-21",
+                "2023-02-28"
+            ],
+            "data": [
+                {
+                    "reviewer": {
+                        "id": "2655832e-f009-4b73-a535-64c3a22e558f",
+                        "fullName": "Phạm Đức Thành",
+                        "displayName": "Thanh Pham",
+                        "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
+                        "username": "thanh"
+                    },
+                    "listAnswers": [
                         {
-                            "date": "2023-02-21",
-                            "answers": [
-                                {
-                                    "answer": "",
-                                    "project": {
-                                        "id": "8dc3be2e-19a4-4942-8a79-56db391a0b15",
-                                        "name": "Fortress",
-                                        "type": "dwarves",
-                                        "status": "active",
-                                        "code": "fortress",
-                                        "avatar": ""
-                                    }
-                                }
-                            ]
-                        },
-                        {
-                            "date": "2023-02-07",
-                            "answers": [
-                                {
-                                    "answer": "",
-                                    "project": {
-                                        "id": "8dc3be2e-19a4-4942-8a79-56db391a0b15",
-                                        "name": "Fortress",
-                                        "type": "dwarves",
-                                        "status": "active",
-                                        "code": "fortress",
-                                        "avatar": ""
-                                    }
-                                }
-                            ]
-                        },
-                        {
-                            "date": "2023-01-23",
+                            "date": "2023-01-01",
                             "answers": [
                                 {
                                     "answer": "",
@@ -253,7 +352,7 @@
                             ]
                         },
                         {
-                            "date": "2023-01-01",
+                            "date": "2023-01-23",
                             "answers": [
                                 {
                                     "answer": "",
@@ -267,23 +366,39 @@
                                     }
                                 }
                             ]
-                        }
-                    ]
-                }
-            ]
-        },
-        {
-            "type": "learning",
-            "data": [
-                {
-                    "reviewer": {
-                        "id": "2655832e-f009-4b73-a535-64c3a22e558f",
-                        "fullName": "Phạm Đức Thành",
-                        "displayName": "Thanh Pham",
-                        "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
-                        "username": "thanh"
-                    },
-                    "listAnswers": [
+                        },
+                        {
+                            "date": "2023-02-07",
+                            "answers": [
+                                {
+                                    "answer": "",
+                                    "project": {
+                                        "id": "8dc3be2e-19a4-4942-8a79-56db391a0b15",
+                                        "name": "Fortress",
+                                        "type": "dwarves",
+                                        "status": "active",
+                                        "code": "fortress",
+                                        "avatar": ""
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "date": "2023-02-21",
+                            "answers": [
+                                {
+                                    "answer": "",
+                                    "project": {
+                                        "id": "8dc3be2e-19a4-4942-8a79-56db391a0b15",
+                                        "name": "Fortress",
+                                        "type": "dwarves",
+                                        "status": "active",
+                                        "code": "fortress",
+                                        "avatar": ""
+                                    }
+                                }
+                            ]
+                        },
                         {
                             "date": "2023-02-28",
                             "answers": [
@@ -306,97 +421,6 @@
                                         "type": "time-material",
                                         "status": "active",
                                         "code": "lorem-ipsum",
-                                        "avatar": ""
-                                    }
-                                }
-                            ]
-                        },
-                        {
-                            "date": "2023-02-21",
-                            "answers": [
-                                {
-                                    "answer": "",
-                                    "project": {
-                                        "id": "8dc3be2e-19a4-4942-8a79-56db391a0b15",
-                                        "name": "Fortress",
-                                        "type": "dwarves",
-                                        "status": "active",
-                                        "code": "fortress",
-                                        "avatar": ""
-                                    }
-                                }
-                            ]
-                        },
-                        {
-                            "date": "2023-02-07",
-                            "answers": [
-                                {
-                                    "answer": "",
-                                    "project": {
-                                        "id": "8dc3be2e-19a4-4942-8a79-56db391a0b15",
-                                        "name": "Fortress",
-                                        "type": "dwarves",
-                                        "status": "active",
-                                        "code": "fortress",
-                                        "avatar": ""
-                                    }
-                                }
-                            ]
-                        },
-                        {
-                            "date": "2023-01-23",
-                            "answers": [
-                                {
-                                    "answer": "",
-                                    "project": {
-                                        "id": "8dc3be2e-19a4-4942-8a79-56db391a0b15",
-                                        "name": "Fortress",
-                                        "type": "dwarves",
-                                        "status": "active",
-                                        "code": "fortress",
-                                        "avatar": ""
-                                    }
-                                }
-                            ]
-                        },
-                        {
-                            "date": "2023-01-09",
-                            "answers": [
-                                {
-                                    "answer": "",
-                                    "project": {
-                                        "id": "8dc3be2e-19a4-4942-8a79-56db391a0b15",
-                                        "name": "Fortress",
-                                        "type": "dwarves",
-                                        "status": "active",
-                                        "code": "fortress",
-                                        "avatar": ""
-                                    }
-                                },
-                                {
-                                    "answer": "",
-                                    "project": {
-                                        "id": "8dc3be2e-19a4-4942-8a79-56db391a0b15",
-                                        "name": "Fortress",
-                                        "type": "dwarves",
-                                        "status": "active",
-                                        "code": "fortress",
-                                        "avatar": ""
-                                    }
-                                }
-                            ]
-                        },
-                        {
-                            "date": "2023-01-01",
-                            "answers": [
-                                {
-                                    "answer": "",
-                                    "project": {
-                                        "id": "8dc3be2e-19a4-4942-8a79-56db391a0b15",
-                                        "name": "Fortress",
-                                        "type": "dwarves",
-                                        "status": "active",
-                                        "code": "fortress",
                                         "avatar": ""
                                     }
                                 }

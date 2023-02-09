@@ -775,8 +775,9 @@ type WorkSurveySummaryEmployee struct {
 }
 
 type WorkSurveySummary struct {
-	Type string                      `json:"type"`
-	Data []WorkSurveySummaryEmployee `json:"data"`
+	Type  string                      `json:"type"`
+	Dates []string                    `json:"dates"`
+	Data  []WorkSurveySummaryEmployee `json:"data"`
 }
 
 type WorkSurveySummaryResponse struct {
@@ -834,6 +835,8 @@ func ToWorkSummaries(eers []*model.EmployeeEventReviewer) []WorkSurveySummary {
 	}
 
 	for domain, eIDMap := range answerMap {
+		domainMap[domain].Dates = listDate
+
 		for eID, dateMap := range eIDMap {
 			listAnswers := make([]WorkSurveySummaryListAnswer, 0)
 

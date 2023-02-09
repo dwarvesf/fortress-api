@@ -6,14 +6,17 @@
     "data": [
         {
             "type": "workload",
+            "dates": [],
             "data": null
         },
         {
             "type": "deadline",
+            "dates": [],
             "data": null
         },
         {
             "type": "learning",
+            "dates": [],
             "data": null
         }
     ]
