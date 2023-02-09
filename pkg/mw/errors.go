@@ -10,6 +10,7 @@ var (
 	ErrInvalidUserID                   = errors.New("invalid user id")
 	ErrAuthenticationTypeHeaderInvalid = errors.New("authentication type header is invalid")
 	ErrUnexpectedAuthorizationHeader   = errors.New("unexpected authorization headers")
+	ErrInvalidAPIKey                   = errors.New("invalid API key")
 )
 
 // errUnauthorized returns unauthorized custom error

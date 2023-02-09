@@ -98,7 +98,7 @@ func (h *handler) List(c *gin.Context) {
 	}
 
 	// If user don't have this permission, they can only see employees in the project that they are in
-	if !utils.HasPermission(c, userInfo.Permissions, model.PermissionEmployeesReadReadActive) {
+	if !utils.HasPermission(userInfo.Permissions, model.PermissionEmployeesReadReadActive) {
 		projectIDs := make([]string, 0)
 		for _, p := range userInfo.Projects {
 			projectIDs = append(projectIDs, p.Code)
@@ -227,7 +227,7 @@ func (h *handler) Details(c *gin.Context) {
 		return
 	}
 
-	if rs.WorkingStatus == model.WorkingStatusLeft && !utils.HasPermission(c, userInfo.Permissions, model.PermissionEmployeesReadFullAccess) {
+	if rs.WorkingStatus == model.WorkingStatusLeft && !utils.HasPermission(userInfo.Permissions, model.PermissionEmployeesReadFullAccess) {
 		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrEmployeeNotFound, nil, ""))
 		return
 	}
@@ -1586,7 +1586,7 @@ func (h *handler) GetLineManagers(c *gin.Context) {
 
 	var managers []*model.Employee
 
-	if utils.HasPermission(c, userInfo.Permissions, model.PermissionEmployeesReadLineManagerFullAccess) {
+	if utils.HasPermission(userInfo.Permissions, model.PermissionEmployeesReadLineManagerFullAccess) {
 		managers, err = h.store.Employee.GetLineManagers(h.repo.DB())
 		if err != nil {
 			l.Error(err, "failed to get line managers")
