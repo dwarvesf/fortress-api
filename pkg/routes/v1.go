@@ -126,7 +126,7 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 
 	bankGroup := v1.Group("/bank-accounts")
 	{
-		bankGroup.GET("", pmw.WithPerm(model.PermissionProjectsEdit), h.BankAccount.List)
+		bankGroup.GET("", pmw.WithPerm(model.PermissionBankAccountRead), h.BankAccount.List)
 	}
 
 	invoiceGroup := v1.Group("/invoices")

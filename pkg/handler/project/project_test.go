@@ -232,6 +232,7 @@ func TestHandler_Create(t *testing.T) {
 				ClientEmail:       []string{"b@gmail.com", "c@gmail.com"},
 				Function:          model.ProjectFunctionLearning.String(),
 				BankAccountID:     model.MustGetUUIDFromString("e79eb5b3-e2cb-4d7f-9273-46f4be88cb20"),
+				ClientID:          model.MustGetUUIDFromString("afb9cf05-9517-4fb9-a4f2-66e6d90ad215"),
 			},
 			wantCode:         http.StatusOK,
 			wantResponsePath: "testdata/create/200.json",
@@ -681,6 +682,7 @@ func TestHandler_UpdateGeneralInfo(t *testing.T) {
 				},
 				Function:      model.ProjectFunctionManagement.String(),
 				BankAccountID: model.MustGetUUIDFromString("e79eb5b3-e2cb-4d7f-9273-46f4be88cb20"),
+				ClientID:      model.MustGetUUIDFromString("afb9cf05-9517-4fb9-a4f2-66e6d90ad215"),
 			},
 		},
 		{

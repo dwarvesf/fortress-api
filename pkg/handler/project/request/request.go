@@ -27,6 +27,7 @@ type UpdateProjectGeneralInfoInput struct {
 	AuditNotionID model.UUID   `form:"auditNotionID" json:"auditNotionID"`
 	Stacks        []model.UUID `form:"stacks" json:"stacks"`
 	BankAccountID model.UUID   `form:"bankAccountID" json:"bankAccountID"`
+	ClientID      model.UUID   `form:"clientID" json:"clientID"`
 }
 
 func (i UpdateProjectGeneralInfoInput) GetStartDate() *time.Time {
@@ -86,6 +87,7 @@ type CreateProjectInput struct {
 	Function          string              `form:"function" json:"function" binding:"required"`
 	AuditNotionID     model.UUID          `form:"auditNotionID" json:"auditNotionID"`
 	BankAccountID     model.UUID          `form:"bankAccountID" json:"bankAccountID"`
+	ClientID          model.UUID          `form:"clientID" json:"clientID"`
 }
 
 func (i *CreateProjectInput) Validate() error {
