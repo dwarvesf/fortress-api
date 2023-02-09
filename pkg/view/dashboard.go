@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/dwarvesf/fortress-api/pkg/model"
+	"golang.org/x/exp/slices"
 )
 
 type EngagementDashboardQuestionStat struct {
@@ -756,14 +757,18 @@ type WorkUnitDistributionsResponse struct {
 }
 
 type WorkSurveySummaryAnswer struct {
-	Date   time.Time `json:"date"`
-	Answer string    `json:"answer"`
+	Answer  string           `json:"answer"`
+	Project BasicProjectInfo `json:"project"`
+}
+
+type WorkSurveySummaryListAnswer struct {
+	Date    string                    `json:"date"`
+	Answers []WorkSurveySummaryAnswer `json:"answers"`
 }
 
 type WorkSurveySummaryEmployee struct {
-	Reviewer BasicEmployeeInfo         `json:"reviewer"`
-	Project  BasicProjectInfo          `json:"project"`
-	Answers  []WorkSurveySummaryAnswer `json:"answers"`
+	Reviewer    BasicEmployeeInfo             `json:"reviewer"`
+	ListAnswers []WorkSurveySummaryListAnswer `json:"listAnswers"`
 }
 
 type WorkSurveySummary struct {
@@ -794,44 +799,56 @@ func ToWorkSummaries(eers []*model.EmployeeEventReviewer) []WorkSurveySummary {
 		model.QuestionDomainLearning: &rs[2],
 	}
 
-	answerMap := map[model.QuestionDomain]map[model.UUID]map[model.UUID][]WorkSurveySummaryAnswer{
-		model.QuestionDomainWorkload: make(map[model.UUID]map[model.UUID][]WorkSurveySummaryAnswer),
-		model.QuestionDomainDeadline: make(map[model.UUID]map[model.UUID][]WorkSurveySummaryAnswer),
-		model.QuestionDomainLearning: make(map[model.UUID]map[model.UUID][]WorkSurveySummaryAnswer),
+	answerMap := map[model.QuestionDomain]map[model.UUID]map[string][]WorkSurveySummaryAnswer{
+		model.QuestionDomainWorkload: make(map[model.UUID]map[string][]WorkSurveySummaryAnswer),
+		model.QuestionDomainDeadline: make(map[model.UUID]map[string][]WorkSurveySummaryAnswer),
+		model.QuestionDomainLearning: make(map[model.UUID]map[string][]WorkSurveySummaryAnswer),
 	}
 
 	employeeMap := make(map[model.UUID]model.Employee)
-	projectMap := make(map[model.UUID]model.Project)
 
+	listDate := make([]string, 0)
 	for _, eer := range eers {
 		employeeMap[eer.ReviewerID] = *eer.Reviewer
-		projectMap[eer.EmployeeEventTopic.ProjectID] = *eer.EmployeeEventTopic.Project
+
+		// to order date
+		date := eer.Event.EndDate.Format("2006-01-02")
+		if !slices.Contains(listDate, date) {
+			listDate = append(listDate, date)
+		}
 
 		for _, eeq := range eer.EmployeeEventQuestions {
 			answer := WorkSurveySummaryAnswer{
-				Date:   *eer.Event.EndDate,
-				Answer: eeq.Answer,
+				Answer:  eeq.Answer,
+				Project: *toBasicProjectInfo(*eer.EmployeeEventTopic.Project),
 			}
 
 			if answerMap[eeq.Domain][eer.ReviewerID] == nil {
-				answerMap[eeq.Domain][eer.ReviewerID] = make(map[model.UUID][]WorkSurveySummaryAnswer)
+				answerMap[eeq.Domain][eer.ReviewerID] = make(map[string][]WorkSurveySummaryAnswer)
 			}
-			answerMap[eeq.Domain][eer.ReviewerID][eer.EmployeeEventTopic.Project.ID] =
-				append(answerMap[eeq.Domain][eer.EmployeeEventTopic.ProjectID][eer.ReviewerID], answer)
+			answerMap[eeq.Domain][eer.ReviewerID][date] = append(answerMap[eeq.Domain][eer.ReviewerID][date], answer)
 		}
 	}
 
 	for domain, eIDMap := range answerMap {
-		for eID, pIDMap := range eIDMap {
-			for pID, answers := range pIDMap {
-				employee := WorkSurveySummaryEmployee{
-					Reviewer: *toBasicEmployeeInfo(employeeMap[eID]),
-					Project:  *toBasicProjectInfo(projectMap[pID]),
-					Answers:  answers,
-				}
+		for eID, dateMap := range eIDMap {
+			listAnswers := make([]WorkSurveySummaryListAnswer, 0)
 
-				domainMap[domain].Data = append(domainMap[domain].Data, employee)
+			for _, date := range listDate {
+				if dateMap[date] != nil && len(dateMap[date]) > 0 {
+					listAnswers = append(listAnswers, WorkSurveySummaryListAnswer{
+						Date:    date,
+						Answers: dateMap[date],
+					})
+				}
 			}
+
+			employee := WorkSurveySummaryEmployee{
+				Reviewer:    *toBasicEmployeeInfo(employeeMap[eID]),
+				ListAnswers: listAnswers,
+			}
+
+			domainMap[domain].Data = append(domainMap[domain].Data, employee)
 		}
 	}
 
