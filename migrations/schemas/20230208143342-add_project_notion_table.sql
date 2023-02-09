@@ -31,6 +31,7 @@ ALTER TABLE action_item_snapshots DROP CONSTRAINT IF EXISTS action_item_snapshot
 ALTER TABLE project_notions DROP CONSTRAINT IF EXISTS project_notions_project_id_fkey;
 DROP TABLE IF EXISTS project_notions;
 ALTER TABLE projects ADD COLUMN "notion_id" UUID;
+ALTER TABLE projects ADD UNIQUE (notion_id);
 ALTER TABLE audit_cycles ADD CONSTRAINT audit_cycles_project_notion_id_fkey FOREIGN KEY (project_id) REFERENCES projects (notion_id);
 ALTER TABLE audits ADD CONSTRAINT audits_project_notion_id_fkey FOREIGN KEY (project_id) REFERENCES projects (notion_id);
 ALTER TABLE action_items ADD CONSTRAINT action_items_project_notion_id_fkey FOREIGN KEY (project_id) REFERENCES projects (notion_id);
