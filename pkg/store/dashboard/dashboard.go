@@ -617,7 +617,7 @@ func (s *store) GetAllWorkReviews(db *gorm.DB, keyword string, pagination model.
 
 	query = query.Where("employee_event_reviewers.reviewer_status = ?", model.EventReviewerStatusDone)
 
-	return eer, query.Order("fe.end_date DESC, employee_event_reviewers.reviewer_id, eet.project_id").
+	return eer, query.Order("fe.end_date, employee_event_reviewers.reviewer_id, eet.project_id").
 		Preload("Event", "deleted_at IS NULL").
 		Preload("Reviewer", "deleted_at IS NULL").
 		Preload("EmployeeEventQuestions", "deleted_at IS NULL").
