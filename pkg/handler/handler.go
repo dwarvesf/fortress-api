@@ -26,6 +26,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/handler/techradar"
 	"github.com/dwarvesf/fortress-api/pkg/handler/update"
 	"github.com/dwarvesf/fortress-api/pkg/handler/valuation"
+	"github.com/dwarvesf/fortress-api/pkg/handler/webhook"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/store"
@@ -55,6 +56,7 @@ type Handler struct {
 	BankAccount    bankaccount.IHandler
 	Birthday       birthday.IHandler
 	Invoice        invoice.IHandler
+	Webhook        webhook.IHandler
 }
 
 func New(store *store.Store, repo store.DBRepo, service *service.Service, ctrl *controller.Controller, logger logger.Logger, cfg *config.Config) *Handler {
@@ -82,5 +84,6 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, ctrl *
 		BankAccount:    bankaccount.New(store, repo, service, logger, cfg),
 		Birthday:       birthday.New(store, repo, service, logger, cfg),
 		Invoice:        invoice.New(store, repo, service, logger, cfg),
+		Webhook:        webhook.New(store, repo, service, logger, cfg),
 	}
 }

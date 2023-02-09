@@ -86,11 +86,17 @@ type NotionDatabase struct {
 }
 
 type Discord struct {
-	Webhooks DiscordWebhook
+	SecretToken string
+	Webhooks    DiscordWebhook
+	IDs         DiscordID
 }
 
 type DiscordWebhook struct {
 	Campfire string
+}
+
+type DiscordID struct {
+	DwarvesGuild string
 }
 
 type ENV interface {
@@ -159,6 +165,10 @@ func Generate(v ENV) *Config {
 		Discord: Discord{
 			Webhooks: DiscordWebhook{
 				Campfire: v.GetString("DISCORD_WEBHOOK_CAMPFIRE"),
+			},
+			SecretToken: v.GetString("DISCORD_SECRET_TOKEN"),
+			IDs: DiscordID{
+				DwarvesGuild: v.GetString("DISCORD_DWARVES_GUILD_ID"),
 			},
 		},
 	}

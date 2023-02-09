@@ -37,6 +37,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/store/projectstack"
 	"github.com/dwarvesf/fortress-api/pkg/store/question"
 	"github.com/dwarvesf/fortress-api/pkg/store/role"
+	"github.com/dwarvesf/fortress-api/pkg/store/schedule"
 	"github.com/dwarvesf/fortress-api/pkg/store/seniority"
 	"github.com/dwarvesf/fortress-api/pkg/store/socialaccount"
 	"github.com/dwarvesf/fortress-api/pkg/store/stack"
@@ -90,6 +91,7 @@ type Store struct {
 	BankAccount           bankaccount.IStore
 	Invoice               invoice.IStore
 	ProjectNotion         projectnotion.IStore
+	Schedule              schedule.IStore
 }
 
 func New() *Store {
@@ -137,5 +139,6 @@ func New() *Store {
 		BankAccount:           bankaccount.New(),
 		Invoice:               invoice.New(),
 		ProjectNotion:         projectnotion.New(),
+		Schedule:              schedule.New(),
 	}
 }

@@ -551,6 +551,12 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/audit.IHandler.Sync-fm",
 			},
 		},
+		"/webhooks/n8n": {
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/webhook.IHandler.N8n-fm",
+			},
+		},
 		"/api/v1/bank-accounts": {
 			"GET": {
 				Method:  "GET",

@@ -11,4 +11,7 @@ type NotionService interface {
 	GetBlockChildren(pageID string) (blockChildrenResponse *nt.BlockChildrenResponse, err error)
 	GetDatabase(databaseID string, filter *nt.DatabaseQueryFilter, sorts []nt.DatabaseQuerySort, pageSize int) (database *nt.DatabaseQueryResponse, err error)
 	GetDatabaseWithStartCursor(databaseID string, startCursor string) (*nt.DatabaseQueryResponse, error)
+
+	// CreatePage create a page in notion
+	CreatePage() error
 }

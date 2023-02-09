@@ -13,6 +13,7 @@ import (
 func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store.Store, cfg *config.Config) {
 	v1 := r.Group("/api/v1")
 	cronjob := r.Group("/cronjobs")
+	webhook := r.Group("/webhooks")
 
 	pmw := mw.NewPermissionMiddleware(s, repo, cfg)
 	amw := mw.NewAuthMiddleware(cfg)
@@ -22,6 +23,11 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 		cronjob.POST("/audits", h.Audit.Sync)
 		cronjob.POST("/birthday", h.Birthday.BirthdayDailyMessage)
 	}
+
+	/////////////////
+	// Webhook GROUP
+	/////////////////
+	webhook.POST("/n8n", h.Webhook.N8n)
 
 	/////////////////
 	// API GROUP
