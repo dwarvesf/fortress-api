@@ -35,6 +35,7 @@ type ProjectData struct {
 	Function            string                `json:"function"`
 	AuditNotionID       string                `json:"auditNotionID"`
 	BankAccount         *BasicBankAccountInfo `json:"bankAccount"`
+	Client              *Client               `json:"client"`
 }
 
 type UpdatedProject struct {
@@ -190,6 +191,10 @@ func ToProjectData(c *gin.Context, project *model.Project, userInfo *model.Curre
 				OwnerName:     project.BankAccount.OwnerName,
 			}
 		}
+
+		if project.Client != nil {
+			d.Client = toClient(project.Client)
+		}
 	}
 
 	if project.Country != nil {
@@ -296,6 +301,7 @@ type CreateProjectData struct {
 	Code            string                `json:"code"`
 	Function        string                `json:"function"`
 	BankAccount     *BasicBankAccountInfo `json:"bankAccount"`
+	Client          *Client               `json:"client"`
 }
 
 type BasicBankAccountInfo struct {
@@ -337,6 +343,10 @@ func ToCreateProjectDataResponse(project *model.Project) CreateProjectData {
 			BankName:      project.BankAccount.BankName,
 			OwnerName:     project.BankAccount.OwnerName,
 		}
+	}
+
+	if project.Client != nil {
+		result.Client = toClient(project.Client)
 	}
 
 	if project.StartDate != nil {
@@ -428,6 +438,7 @@ type UpdateProjectGeneralInfo struct {
 	Function      model.ProjectFunction `json:"function"`
 	AuditNotionID string                `json:"auditNotionID"`
 	BankAccount   *BasicBankAccountInfo `json:"bankAccount"`
+	Client        *Client               `json:"client"`
 }
 
 type UpdateProjectGeneralInfoResponse struct {
@@ -466,6 +477,10 @@ func ToUpdateProjectGeneralInfo(project *model.Project) UpdateProjectGeneralInfo
 			BankName:      project.BankAccount.BankName,
 			OwnerName:     project.BankAccount.OwnerName,
 		}
+	}
+
+	if project.Client != nil {
+		rs.Client = toClient(project.Client)
 	}
 
 	return rs

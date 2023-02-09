@@ -134,7 +134,9 @@ func (s *store) One(db *gorm.DB, id string, preload bool) (*model.Project, error
 			Preload("ProjectMembers.Employee", "deleted_at IS NULL").
 			Preload("ProjectMembers.ProjectMemberPositions", "deleted_at IS NULL").
 			Preload("ProjectMembers.ProjectMemberPositions.Position", "deleted_at IS NULL").
-			Preload("ProjectMembers.Seniority", "deleted_at IS NULL")
+			Preload("ProjectMembers.Seniority", "deleted_at IS NULL").
+			Preload("Client", "deleted_at IS NULL").
+			Preload("Client.Contacts", "deleted_at IS NULL")
 	}
 
 	var project *model.Project

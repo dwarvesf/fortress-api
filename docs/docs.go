@@ -4938,7 +4938,7 @@ const docTemplate = `{
                 "swiftCode": {
                     "type": "string"
                 },
-                "uksortCode": {
+                "ukSortCode": {
                     "type": "string"
                 },
                 "updatedAt": {
@@ -6714,6 +6714,9 @@ const docTemplate = `{
                         "type": "string"
                     }
                 },
+                "clientID": {
+                    "type": "string"
+                },
                 "code": {
                     "type": "string"
                 },
@@ -7183,6 +7186,9 @@ const docTemplate = `{
                 "bankAccountID": {
                     "type": "string"
                 },
+                "clientID": {
+                    "type": "string"
+                },
                 "countryID": {
                     "type": "string"
                 },
@@ -7624,6 +7630,44 @@ const docTemplate = `{
                 }
             }
         },
+        "view.BankAccount": {
+            "type": "object",
+            "properties": {
+                "accountNumber": {
+                    "type": "string"
+                },
+                "address": {
+                    "type": "string"
+                },
+                "bankName": {
+                    "type": "string"
+                },
+                "currency": {
+                    "$ref": "#/definitions/view.Currency"
+                },
+                "currencyID": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "ownerName": {
+                    "type": "string"
+                },
+                "routingNumber": {
+                    "type": "string"
+                },
+                "swiftCode": {
+                    "type": "string"
+                },
+                "ukSortCode": {
+                    "type": "string"
+                }
+            }
+        },
         "view.BasicBankAccountInfo": {
             "type": "object",
             "properties": {
@@ -7780,6 +7824,64 @@ const docTemplate = `{
                 }
             }
         },
+        "view.Client": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "contacts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.ClientContact"
+                    }
+                },
+                "country": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "industry": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "registrationNumber": {
+                    "type": "string"
+                },
+                "website": {
+                    "type": "string"
+                }
+            }
+        },
+        "view.ClientContact": {
+            "type": "object",
+            "properties": {
+                "emails": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "id": {
+                    "type": "string"
+                },
+                "isMainContact": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "role": {
+                    "type": "string"
+                }
+            }
+        },
         "view.CountriesResponse": {
             "type": "object",
             "properties": {
@@ -7860,6 +7962,9 @@ const docTemplate = `{
                 "bankAccount": {
                     "$ref": "#/definitions/view.BasicBankAccountInfo"
                 },
+                "client": {
+                    "$ref": "#/definitions/view.Client"
+                },
                 "clientEmail": {
                     "type": "array",
                     "items": {
@@ -7909,6 +8014,26 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "view.Currency": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "locale": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "symbol": {
+                    "type": "string"
+                },
+                "type": {
                     "type": "string"
                 }
             }
@@ -8558,7 +8683,7 @@ const docTemplate = `{
                 "data": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/model.BankAccount"
+                        "$ref": "#/definitions/view.BankAccount"
                     }
                 }
             }
@@ -8866,6 +8991,9 @@ const docTemplate = `{
                 },
                 "bankAccount": {
                     "$ref": "#/definitions/view.BasicBankAccountInfo"
+                },
+                "client": {
+                    "$ref": "#/definitions/view.Client"
                 },
                 "clientEmail": {
                     "type": "array",
@@ -9657,6 +9785,9 @@ const docTemplate = `{
                 },
                 "bankAccount": {
                     "$ref": "#/definitions/view.BasicBankAccountInfo"
+                },
+                "client": {
+                    "$ref": "#/definitions/view.Client"
                 },
                 "country": {
                     "$ref": "#/definitions/view.BasicCountryInfo"

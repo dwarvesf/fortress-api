@@ -274,6 +274,16 @@ func (h *handler) Create(c *gin.Context) {
 		return
 	}
 
+	var client *model.Client
+	if !body.ClientID.IsZero() {
+		client, err = h.store.Client.OneByID(h.repo.DB(), body.ClientID.String())
+		if err != nil {
+			l.Error(err, "client not found")
+			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrClientNotFound, body, ""))
+			return
+		}
+	}
+
 	p := &model.Project{
 		Name:         body.Name,
 		CountryID:    body.CountryID,
@@ -285,6 +295,7 @@ func (h *handler) Create(c *gin.Context) {
 		Country:      country,
 		Code:         body.Code,
 		Function:     model.ProjectFunction(body.Function),
+		ClientID:     body.ClientID,
 	}
 
 	if !body.BankAccountID.IsZero() {
@@ -299,6 +310,8 @@ func (h *handler) Create(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), nil, ""))
 		return
 	}
+
+	p.Client = client
 
 	// Create audit notion id
 	if !body.AuditNotionID.IsZero() {
@@ -1464,6 +1477,17 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 		return
 	}
 
+	if !body.ClientID.IsZero() {
+		client, err := h.store.Client.OneByID(h.repo.DB(), body.ClientID.String())
+		if err != nil {
+			l.Error(err, "client not found")
+			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrClientNotFound, body, ""))
+			return
+		}
+
+		p.Client = client
+	}
+
 	// Begin transaction
 	tx, done := h.repo.NewTransaction()
 
@@ -1492,6 +1516,7 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 	p.CountryID = body.CountryID
 	p.Function = model.ProjectFunction(body.Function)
 	p.BankAccountID = body.BankAccountID
+	p.ClientID = body.ClientID
 
 	projectNotion, err := h.store.ProjectNotion.OneByProjectID(tx.DB(), p.ID.String())
 
@@ -1527,7 +1552,9 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 		"start_date",
 		"country_id",
 		"function",
-		"bank_account_id")
+		"bank_account_id",
+		"client_id",
+	)
 
 	if err != nil {
 		l.Error(err, "failed to update project")

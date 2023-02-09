@@ -56,7 +56,7 @@ definitions:
         type: string
       swiftCode:
         type: string
-      uksortCode:
+      ukSortCode:
         type: string
       updatedAt:
         type: string
@@ -1226,6 +1226,8 @@ definitions:
         items:
           type: string
         type: array
+      clientID:
+        type: string
       code:
         type: string
       countryID:
@@ -1545,6 +1547,8 @@ definitions:
         type: string
       bankAccountID:
         type: string
+      clientID:
+        type: string
       countryID:
         type: string
       function:
@@ -1838,6 +1842,31 @@ definitions:
       type:
         type: string
     type: object
+  view.BankAccount:
+    properties:
+      accountNumber:
+        type: string
+      address:
+        type: string
+      bankName:
+        type: string
+      currency:
+        $ref: '#/definitions/view.Currency'
+      currencyID:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      ownerName:
+        type: string
+      routingNumber:
+        type: string
+      swiftCode:
+        type: string
+      ukSortCode:
+        type: string
+    type: object
   view.BasicBankAccountInfo:
     properties:
       accountNumber:
@@ -1939,6 +1968,44 @@ definitions:
           type: string
         type: array
     type: object
+  view.Client:
+    properties:
+      address:
+        type: string
+      contacts:
+        items:
+          $ref: '#/definitions/view.ClientContact'
+        type: array
+      country:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      industry:
+        type: string
+      name:
+        type: string
+      registrationNumber:
+        type: string
+      website:
+        type: string
+    type: object
+  view.ClientContact:
+    properties:
+      emails:
+        items:
+          type: string
+        type: array
+      id:
+        type: string
+      isMainContact:
+        type: boolean
+      name:
+        type: string
+      role:
+        type: string
+    type: object
   view.CountriesResponse:
     properties:
       data:
@@ -1991,6 +2058,8 @@ definitions:
         $ref: '#/definitions/view.ProjectHead'
       bankAccount:
         $ref: '#/definitions/view.BasicBankAccountInfo'
+      client:
+        $ref: '#/definitions/view.Client'
       clientEmail:
         items:
           type: string
@@ -2024,6 +2093,19 @@ definitions:
       type:
         type: string
       updatedAt:
+        type: string
+    type: object
+  view.Currency:
+    properties:
+      id:
+        type: string
+      locale:
+        type: string
+      name:
+        type: string
+      symbol:
+        type: string
+      type:
         type: string
     type: object
   view.Domain:
@@ -2446,7 +2528,7 @@ definitions:
     properties:
       data:
         items:
-          $ref: '#/definitions/model.BankAccount'
+          $ref: '#/definitions/view.BankAccount'
         type: array
     type: object
   view.ListFeedbackResponse:
@@ -2646,6 +2728,8 @@ definitions:
         type: string
       bankAccount:
         $ref: '#/definitions/view.BasicBankAccountInfo'
+      client:
+        $ref: '#/definitions/view.Client'
       clientEmail:
         items:
           type: string
@@ -3162,6 +3246,8 @@ definitions:
         type: string
       bankAccount:
         $ref: '#/definitions/view.BasicBankAccountInfo'
+      client:
+        $ref: '#/definitions/view.Client'
       country:
         $ref: '#/definitions/view.BasicCountryInfo'
       function:

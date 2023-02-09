@@ -34,6 +34,7 @@ var (
 	ErrAccountManagerNotFound  = errors.New("account manager not found")
 	ErrDeliveryManagerNotFound = errors.New("delivery manager not found")
 	ErrWorkUnitNotFound        = errors.New("work unit not found")
+	ErrClientNotFound          = errors.New("client not found")
 	ErrProjectNotExisted       = errors.New("project not existed")
 
 	ErrMemberIsInactive                 = errors.New("member is inactive")

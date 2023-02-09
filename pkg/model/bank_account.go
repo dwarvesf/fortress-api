@@ -1,6 +1,6 @@
 package model
 
-//BankAccount contain company information
+// BankAccount contain company information
 type BankAccount struct {
 	BaseModel
 
