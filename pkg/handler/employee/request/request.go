@@ -40,6 +40,7 @@ type UpdateEmployeeGeneralInfoInput struct {
 	LeftDate        string       `form:"leftDate" json:"leftDate"`
 	JoinedDate      string       `form:"joinedDate" json:"joinedDate"`
 	OrganizationIDs []model.UUID `form:"organizationIDs" json:"organizationIDs"`
+	ReferredBy      model.UUID   `form:"referredBy" json:"referredBy"`
 }
 
 type AddMenteeInput struct {
@@ -74,6 +75,7 @@ type CreateEmployeeInput struct {
 	SeniorityID   model.UUID   `json:"seniorityID" binding:"required"`
 	RoleID        model.UUID   `json:"roleID" binding:"required"`
 	Status        string       `json:"status" binding:"required"`
+	ReferredBy    model.UUID   `json:"referredBy"`
 }
 
 type UpdateSkillsInput struct {

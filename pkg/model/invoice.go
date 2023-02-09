@@ -23,6 +23,19 @@ const (
 	InvoiceScheduled InvoiceStatus = "scheduled"
 )
 
+func (i InvoiceStatus) IsValid() bool {
+	switch i {
+	case InvoiceDraft,
+		InvoiceSent,
+		InvoiceOverdue,
+		InvoicePaid,
+		InvoiceError,
+		InvoiceScheduled:
+		return true
+	}
+	return false
+}
+
 func (i InvoiceStatus) String() string {
 	return string(i)
 }
@@ -36,8 +49,7 @@ type Invoice struct {
 	DueAt            *time.Time
 	PaidAt           *time.Time
 	FailedAt         *time.Time
-	UpdatedAt        *time.Time
-	StatusID         InvoiceStatus
+	Status           InvoiceStatus
 	Email            string
 	CC               JSON
 	Description      string
@@ -52,14 +64,14 @@ type Invoice struct {
 	LineItems        JSON
 	Month            int
 	Year             int
-	SentByID         *UUID
-	SentBy           *Employee
+	SentBy           *UUID
+	Sender           *Employee `gorm:"foreignKey:sent_by;"`
 	ThreadID         string
 	ScheduledDate    *time.Time
 	ConversionRate   float64
 
 	BankID UUID
-	Bank   BankAccount
+	Bank   *BankAccount
 
 	ProjectID UUID
 	Project   *Project

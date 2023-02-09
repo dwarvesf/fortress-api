@@ -97,7 +97,7 @@ func (s *store) CountUnreadFeedbackByEmployeeID(db *gorm.DB, employeeID string) 
 			model.EventTypeSurvey,
 			employeeID,
 			model.EventTypeFeedback,
-			model.EventAuthorStatusDone,
+			model.EventAuthorStatusDraft,
 			model.EventReviewerStatusNone,
 		)
 

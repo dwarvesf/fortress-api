@@ -59,6 +59,10 @@ INSERT INTO public.permissions (id, deleted_at, created_at, updated_at, name, co
 ('4be48741-f8b2-4562-964e-65c081fec7a9', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Dashboard Create', 'dashboards.create'),
 ('f5854cfd-f990-46fd-a6cb-77b48a80b24b', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Dashboard Read', 'dashboards.read'),
 ('6f4fe3df-9ab8-46c1-a8b7-9458413980f3', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Dashboard Edit', 'dashboards.edit'),
+('9c644140-c71d-4435-bd6b-a81171913046', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Invoice Create', 'invoices.create'),
+('259fb434-5321-43be-b007-76f3c2dfbfcc', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Invoice Read', 'invoices.read'),
+('fa6961f1-1cee-494f-8f1f-f4552b49b6fa', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Invoice Edit', 'invoices.edit'),
+('60768a38-8ff1-493a-85ba-b62df98a60d4', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Invoice Delete', 'invoices.delete'),
 ('d93ede75-8fd5-4f88-b119-07493b757f4b', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Dashboard Delete', 'dashboards.delete');
 
 INSERT INTO public.role_permissions (id, deleted_at, created_at, updated_at, role_id, permission_id) VALUES
@@ -119,6 +123,10 @@ INSERT INTO public.role_permissions (id, deleted_at, created_at, updated_at, rol
 ('86aae609-c38d-407c-9428-06e9cc812302', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '11ccffea-2cc9-4e98-9bef-3464dfe4dec8', '4be48741-f8b2-4562-964e-65c081fec7a9'),
 ('f8054472-8545-41ed-a654-ce6e84844b55', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '11ccffea-2cc9-4e98-9bef-3464dfe4dec8', 'f5854cfd-f990-46fd-a6cb-77b48a80b24b'),
 ('15796145-1534-4362-977e-69699646cda0', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '11ccffea-2cc9-4e98-9bef-3464dfe4dec8', '6f4fe3df-9ab8-46c1-a8b7-9458413980f3'),
+('6cd703ce-72b6-466b-8262-ba3fdf1d1d57', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '11ccffea-2cc9-4e98-9bef-3464dfe4dec8', '9c644140-c71d-4435-bd6b-a81171913046'),
+('39a58779-f4c3-4e46-b9af-3ae867554d2e', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '11ccffea-2cc9-4e98-9bef-3464dfe4dec8', '259fb434-5321-43be-b007-76f3c2dfbfcc'),
+('cad5bfb9-2421-487b-a217-e8e2108271c7', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '11ccffea-2cc9-4e98-9bef-3464dfe4dec8', 'fa6961f1-1cee-494f-8f1f-f4552b49b6fa'),
+('a5c9bbc2-5ab6-4219-add8-532763ff9490', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '11ccffea-2cc9-4e98-9bef-3464dfe4dec8', '60768a38-8ff1-493a-85ba-b62df98a60d4'),
 ('4dcc0416-d5e8-43a7-8694-2cd55c2f160e', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '11ccffea-2cc9-4e98-9bef-3464dfe4dec8', 'd93ede75-8fd5-4f88-b119-07493b757f4b');
 
 INSERT INTO public.positions (id, deleted_at, created_at, updated_at, name, code) VALUES

@@ -89,6 +89,7 @@ type Employee struct {
 	LeftDate      *time.Time    `gorm:"default:null"`
 	SeniorityID   UUID          `gorm:"default:null"`
 	LineManagerID UUID          `gorm:"default:null"`
+	ReferredBy    UUID          `gorm:"default:null"`
 
 	// social services
 	BasecampID             string `gorm:"default:null"`
@@ -117,6 +118,7 @@ type Employee struct {
 
 	Seniority             *Seniority
 	LineManager           *Employee
+	Referrer              *Employee `gorm:"foreignKey:referred_by;"`
 	ProjectMembers        []ProjectMember
 	Organizations         []Organization `gorm:"many2many:employee_organizations;"`
 	Roles                 []Role         `gorm:"many2many:employee_roles;"`

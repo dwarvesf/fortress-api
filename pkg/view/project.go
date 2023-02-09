@@ -14,25 +14,27 @@ import (
 type ProjectData struct {
 	model.BaseModel
 
-	Name                string            `json:"name"`
-	Avatar              string            `json:"avatar"`
-	Type                string            `json:"type"`
-	Status              string            `json:"status"`
-	ProjectEmail        string            `json:"projectEmail"`
-	ClientEmail         []string          `json:"clientEmail"`
-	Industry            string            `json:"industry"`
-	AllowsSendingSurvey bool              `json:"allowsSendingSurvey"`
-	Country             *BasicCountryInfo `json:"country"`
-	StartDate           *time.Time        `json:"startDate"`
-	EndDate             *time.Time        `json:"endDate"`
-	Members             []ProjectMember   `json:"members"`
-	TechnicalLead       []ProjectHead     `json:"technicalLeads"`
-	AccountManager      *ProjectHead      `json:"accountManager"`
-	SalePerson          *ProjectHead      `json:"salePerson"`
-	DeliveryManager     *ProjectHead      `json:"deliveryManager"`
-	Stacks              []Stack           `json:"stacks"`
-	Code                string            `json:"code"`
-	Function            string            `json:"function"`
+	Name                string                `json:"name"`
+	Avatar              string                `json:"avatar"`
+	Type                string                `json:"type"`
+	Status              string                `json:"status"`
+	ProjectEmail        string                `json:"projectEmail"`
+	ClientEmail         []string              `json:"clientEmail"`
+	Industry            string                `json:"industry"`
+	AllowsSendingSurvey bool                  `json:"allowsSendingSurvey"`
+	Country             *BasicCountryInfo     `json:"country"`
+	StartDate           *time.Time            `json:"startDate"`
+	EndDate             *time.Time            `json:"endDate"`
+	Members             []ProjectMember       `json:"members"`
+	TechnicalLead       []ProjectHead         `json:"technicalLeads"`
+	AccountManager      *ProjectHead          `json:"accountManager"`
+	SalePerson          *ProjectHead          `json:"salePerson"`
+	DeliveryManager     *ProjectHead          `json:"deliveryManager"`
+	Stacks              []Stack               `json:"stacks"`
+	Code                string                `json:"code"`
+	Function            string                `json:"function"`
+	AuditNotionID       string                `json:"auditNotionID"`
+	BankAccount         *BasicBankAccountInfo `json:"bankAccount"`
 }
 
 type UpdatedProject struct {
@@ -174,7 +176,20 @@ func ToProjectData(c *gin.Context, project *model.Project, userInfo *model.Curre
 	}
 
 	if utils.HasPermission(c, userInfo.Permissions, model.PermissionProjectsReadFullAccess) {
+		if project.ProjectNotion != nil && !project.ProjectNotion.AuditNotionID.IsZero() {
+			d.AuditNotionID = project.ProjectNotion.AuditNotionID.String()
+		}
+
 		d.ClientEmail = clientEmail
+
+		if project.BankAccount != nil {
+			d.BankAccount = &BasicBankAccountInfo{
+				ID:            project.BankAccount.ID.String(),
+				AccountNumber: project.BankAccount.AccountNumber,
+				BankName:      project.BankAccount.BankName,
+				OwnerName:     project.BankAccount.OwnerName,
+			}
+		}
 	}
 
 	if project.Country != nil {
@@ -268,18 +283,26 @@ func ToCreateMemberData(slot *model.ProjectSlot) CreateMemberData {
 type CreateProjectData struct {
 	model.BaseModel
 
-	Name            string             `json:"name"`
-	Type            string             `json:"type"`
-	Status          string             `json:"status"`
-	StartDate       string             `json:"startDate"`
-	AccountManager  *ProjectHead       `json:"accountManager"`
-	DeliveryManager *ProjectHead       `json:"deliveryManager"`
-	Members         []CreateMemberData `json:"members"`
-	ClientEmail     []string           `json:"clientEmail"`
-	ProjectEmail    string             `json:"projectEmail"`
-	Country         *BasicCountryInfo  `json:"country"`
-	Code            string             `json:"code"`
-	Function        string             `json:"function"`
+	Name            string                `json:"name"`
+	Type            string                `json:"type"`
+	Status          string                `json:"status"`
+	StartDate       string                `json:"startDate"`
+	AccountManager  *ProjectHead          `json:"accountManager"`
+	DeliveryManager *ProjectHead          `json:"deliveryManager"`
+	Members         []CreateMemberData    `json:"members"`
+	ClientEmail     []string              `json:"clientEmail"`
+	ProjectEmail    string                `json:"projectEmail"`
+	Country         *BasicCountryInfo     `json:"country"`
+	Code            string                `json:"code"`
+	Function        string                `json:"function"`
+	BankAccount     *BasicBankAccountInfo `json:"bankAccount"`
+}
+
+type BasicBankAccountInfo struct {
+	ID            string `json:"id"`
+	AccountNumber string `json:"accountNumber"`
+	BankName      string `json:"bankName"`
+	OwnerName     string `json:"ownerName"`
 }
 
 func ToCreateProjectDataResponse(project *model.Project) CreateProjectData {
@@ -304,6 +327,15 @@ func ToCreateProjectDataResponse(project *model.Project) CreateProjectData {
 			ID:   project.Country.ID,
 			Name: project.Country.Name,
 			Code: project.Country.Code,
+		}
+	}
+
+	if project.BankAccount != nil {
+		result.BankAccount = &BasicBankAccountInfo{
+			ID:            project.BankAccount.ID.String(),
+			AccountNumber: project.BankAccount.AccountNumber,
+			BankName:      project.BankAccount.BankName,
+			OwnerName:     project.BankAccount.OwnerName,
 		}
 	}
 
@@ -389,11 +421,13 @@ type BasicCountryInfo struct {
 }
 
 type UpdateProjectGeneralInfo struct {
-	Name      string                `json:"name"`
-	StartDate *time.Time            `json:"startDate"`
-	Country   *BasicCountryInfo     `json:"country"`
-	Stacks    []model.Stack         `json:"stacks"`
-	Function  model.ProjectFunction `json:"function"`
+	Name          string                `json:"name"`
+	StartDate     *time.Time            `json:"startDate"`
+	Country       *BasicCountryInfo     `json:"country"`
+	Stacks        []model.Stack         `json:"stacks"`
+	Function      model.ProjectFunction `json:"function"`
+	AuditNotionID string                `json:"auditNotionID"`
+	BankAccount   *BasicBankAccountInfo `json:"bankAccount"`
 }
 
 type UpdateProjectGeneralInfoResponse struct {
@@ -413,11 +447,24 @@ func ToUpdateProjectGeneralInfo(project *model.Project) UpdateProjectGeneralInfo
 		Function:  project.Function,
 	}
 
+	if project.ProjectNotion != nil && !project.ProjectNotion.AuditNotionID.IsZero() {
+		rs.AuditNotionID = project.ProjectNotion.AuditNotionID.String()
+	}
+
 	if project.Country != nil {
 		rs.Country = &BasicCountryInfo{
 			ID:   project.Country.ID,
 			Name: project.Country.Name,
 			Code: project.Country.Code,
+		}
+	}
+
+	if project.BankAccount != nil {
+		rs.BankAccount = &BasicBankAccountInfo{
+			ID:            project.BankAccount.ID.String(),
+			AccountNumber: project.BankAccount.AccountNumber,
+			BankName:      project.BankAccount.BankName,
+			OwnerName:     project.BankAccount.OwnerName,
 		}
 	}
 

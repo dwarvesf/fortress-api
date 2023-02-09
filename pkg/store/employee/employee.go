@@ -43,6 +43,7 @@ func (s *store) One(db *gorm.DB, id string, preload bool) (*model.Employee, erro
 			Preload("EmployeeChapters.Chapter", "deleted_at IS NULL").
 			Preload("EmployeeOrganizations", "deleted_at IS NULL").
 			Preload("EmployeeOrganizations.Organization", "deleted_at IS NULL").
+			Preload("Referrer", "deleted_at IS NULL").
 			Preload("Seniority").
 			Preload("LineManager")
 	}
@@ -68,8 +69,8 @@ func (s *store) OneByEmail(db *gorm.DB, email string) (*model.Employee, error) {
 func (s *store) OneByNotionID(db *gorm.DB, notionID string) (*model.Employee, error) {
 	var employee *model.Employee
 	return employee, db.Where(`id IN (
-			SELECT sa.employee_id 
-			FROM social_accounts sa 
+			SELECT sa.employee_id
+			FROM social_accounts sa
 			WHERE sa.account_id = ? AND sa.type = ?
 		)`, notionID, model.SocialAccountTypeNotion).First(&employee).Error
 }
@@ -93,6 +94,7 @@ func (s *store) All(db *gorm.DB, filter EmployeeFilter, pagination model.Paginat
 	if filter.Preload {
 		query = query.Preload("ProjectMembers", "deleted_at IS NULL").
 			Preload("LineManager", "deleted_at IS NULL").
+			Preload("Referrer", "deleted_at IS NULL").
 			Preload("Seniority", "deleted_at IS NULL").
 			Preload("ProjectMembers.Project", "deleted_at IS NULL").
 			Preload("ProjectMembers.Project.Heads", "deleted_at IS NULL").
@@ -164,7 +166,7 @@ func (s *store) GetLineManagers(db *gorm.DB) ([]*model.Employee, error) {
 		SELECT e.line_manager_id
 		FROM employees e
 		WHERE e.deleted_at IS NULL
-			AND e.working_status != ? 
+			AND e.working_status != ?
 			AND (e.left_date IS NULL OR e.left_date >= now())
 	)`, model.WorkingStatusLeft).Find(&employees).Error
 }
@@ -175,7 +177,7 @@ func (s *store) GetLineManagersOfPeers(db *gorm.DB, employeeID string) ([]*model
 		SELECT e.line_manager_id
 		FROM employees e JOIN project_members pm ON pm.employee_id = e.id
 		WHERE e.deleted_at IS NULL
-			AND e.working_status != ? 
+			AND e.working_status != ?
 			AND (e.left_date IS NULL OR e.left_date >= now())
 			AND pm.project_id IN (
 				SELECT pm2.project_id
@@ -192,7 +194,7 @@ func (s *store) GetMenteesByID(db *gorm.DB, employeeID string) ([]model.Employee
 		FROM employees e
 		WHERE e.deleted_at IS NULL
 			AND e.line_manager_id = ?
-			AND e.working_status <> ? 
+			AND e.working_status <> ?
 			AND (e.left_date IS NULL OR e.left_date >= now())
 	)`, employeeID, model.WorkingStatusLeft).
 		Preload("EmployeePositions", "deleted_at IS NULL").

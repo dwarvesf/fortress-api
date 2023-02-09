@@ -8,6 +8,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/store/auditcycle"
 	"github.com/dwarvesf/fortress-api/pkg/store/audititem"
 	"github.com/dwarvesf/fortress-api/pkg/store/auditparticipant"
+	"github.com/dwarvesf/fortress-api/pkg/store/bankaccount"
 	"github.com/dwarvesf/fortress-api/pkg/store/chapter"
 	"github.com/dwarvesf/fortress-api/pkg/store/content"
 	"github.com/dwarvesf/fortress-api/pkg/store/country"
@@ -22,6 +23,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/store/employeerole"
 	"github.com/dwarvesf/fortress-api/pkg/store/employeestack"
 	"github.com/dwarvesf/fortress-api/pkg/store/feedbackevent"
+	"github.com/dwarvesf/fortress-api/pkg/store/invoice"
 	"github.com/dwarvesf/fortress-api/pkg/store/organization"
 	"github.com/dwarvesf/fortress-api/pkg/store/permission"
 	"github.com/dwarvesf/fortress-api/pkg/store/position"
@@ -29,11 +31,13 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/store/projecthead"
 	"github.com/dwarvesf/fortress-api/pkg/store/projectmember"
 	"github.com/dwarvesf/fortress-api/pkg/store/projectmemberposition"
+	"github.com/dwarvesf/fortress-api/pkg/store/projectnotion"
 	"github.com/dwarvesf/fortress-api/pkg/store/projectslot"
 	"github.com/dwarvesf/fortress-api/pkg/store/projectslotposition"
 	"github.com/dwarvesf/fortress-api/pkg/store/projectstack"
 	"github.com/dwarvesf/fortress-api/pkg/store/question"
 	"github.com/dwarvesf/fortress-api/pkg/store/role"
+	"github.com/dwarvesf/fortress-api/pkg/store/schedule"
 	"github.com/dwarvesf/fortress-api/pkg/store/seniority"
 	"github.com/dwarvesf/fortress-api/pkg/store/socialaccount"
 	"github.com/dwarvesf/fortress-api/pkg/store/stack"
@@ -84,6 +88,10 @@ type Store struct {
 	AuditActionItem       auditactionitem.IStore
 	ActionItemSnapshot    actionitemsnapshot.IStore
 	SocialAccount         socialaccount.IStore
+	BankAccount           bankaccount.IStore
+	Invoice               invoice.IStore
+	ProjectNotion         projectnotion.IStore
+	Schedule              schedule.IStore
 }
 
 func New() *Store {
@@ -128,5 +136,9 @@ func New() *Store {
 		AuditActionItem:       auditactionitem.New(),
 		ActionItemSnapshot:    actionitemsnapshot.New(),
 		SocialAccount:         socialaccount.New(),
+		BankAccount:           bankaccount.New(),
+		Invoice:               invoice.New(),
+		ProjectNotion:         projectnotion.New(),
+		Schedule:              schedule.New(),
 	}
 }

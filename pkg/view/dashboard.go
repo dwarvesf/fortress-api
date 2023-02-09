@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/dwarvesf/fortress-api/pkg/model"
+	"golang.org/x/exp/slices"
 )
 
 type EngagementDashboardQuestionStat struct {
@@ -531,10 +532,13 @@ func ToAuditSummary(summary []*model.AuditSummary, previousSize int) *AuditSumma
 	rs.NewItem.Value = (summary[0].High + summary[0].Medium + summary[0].Low) / summary[0].Size
 	if len(summary) > 1 {
 		currentItem := (summary[1].High + summary[1].Medium + summary[1].Low) / summary[0].Size
-		rs.NewItem.Trend = math.Round((float64(rs.NewItem.Value)-float64(currentItem))/float64(currentItem)*100*100) / 100
+
+		if currentItem != 0 {
+			rs.NewItem.Trend = math.Round((float64(rs.NewItem.Value)-float64(currentItem))/float64(currentItem)*100*100) / 100
+		}
 
 		rs.ResolvedItem.Value = summary[1].Done
-		if len(summary) > 2 {
+		if len(summary) > 2 && summary[2].Done != 0 {
 			rs.ResolvedItem.Trend = math.Round((float64(summary[1].Done)-float64(summary[2].Done))/float64(summary[2].Done)*100*100) / 100
 		}
 	}
@@ -753,4 +757,103 @@ func ToWorkUnitDistributionData(workUnitDistribution []*model.WorkUnitDistributi
 
 type WorkUnitDistributionsResponse struct {
 	Data *WorkUnitDistributionData `json:"data"`
+}
+
+type WorkSurveySummaryAnswer struct {
+	Answer  string           `json:"answer"`
+	Project BasicProjectInfo `json:"project"`
+}
+
+type WorkSurveySummaryListAnswer struct {
+	Date    string                    `json:"date"`
+	Answers []WorkSurveySummaryAnswer `json:"answers"`
+}
+
+type WorkSurveySummaryEmployee struct {
+	Reviewer    BasicEmployeeInfo             `json:"reviewer"`
+	ListAnswers []WorkSurveySummaryListAnswer `json:"listAnswers"`
+}
+
+type WorkSurveySummary struct {
+	Type string                      `json:"type"`
+	Data []WorkSurveySummaryEmployee `json:"data"`
+}
+
+type WorkSurveySummaryResponse struct {
+	Data []WorkSurveySummary `json:"data"`
+}
+
+func ToWorkSummaries(eers []*model.EmployeeEventReviewer) []WorkSurveySummary {
+	rs := []WorkSurveySummary{
+		{
+			Type: model.QuestionDomainWorkload.String(),
+		},
+		{
+			Type: model.QuestionDomainDeadline.String(),
+		},
+		{
+			Type: model.QuestionDomainLearning.String(),
+		},
+	}
+
+	domainMap := map[model.QuestionDomain]*WorkSurveySummary{
+		model.QuestionDomainWorkload: &rs[0],
+		model.QuestionDomainDeadline: &rs[1],
+		model.QuestionDomainLearning: &rs[2],
+	}
+
+	answerMap := map[model.QuestionDomain]map[model.UUID]map[string][]WorkSurveySummaryAnswer{
+		model.QuestionDomainWorkload: make(map[model.UUID]map[string][]WorkSurveySummaryAnswer),
+		model.QuestionDomainDeadline: make(map[model.UUID]map[string][]WorkSurveySummaryAnswer),
+		model.QuestionDomainLearning: make(map[model.UUID]map[string][]WorkSurveySummaryAnswer),
+	}
+
+	employeeMap := make(map[model.UUID]model.Employee)
+
+	listDate := make([]string, 0)
+	for _, eer := range eers {
+		employeeMap[eer.ReviewerID] = *eer.Reviewer
+
+		// to order date
+		date := eer.Event.EndDate.Format("2006-01-02")
+		if !slices.Contains(listDate, date) {
+			listDate = append(listDate, date)
+		}
+
+		for _, eeq := range eer.EmployeeEventQuestions {
+			answer := WorkSurveySummaryAnswer{
+				Answer:  eeq.Answer,
+				Project: *toBasicProjectInfo(*eer.EmployeeEventTopic.Project),
+			}
+
+			if answerMap[eeq.Domain][eer.ReviewerID] == nil {
+				answerMap[eeq.Domain][eer.ReviewerID] = make(map[string][]WorkSurveySummaryAnswer)
+			}
+			answerMap[eeq.Domain][eer.ReviewerID][date] = append(answerMap[eeq.Domain][eer.ReviewerID][date], answer)
+		}
+	}
+
+	for domain, eIDMap := range answerMap {
+		for eID, dateMap := range eIDMap {
+			listAnswers := make([]WorkSurveySummaryListAnswer, 0)
+
+			for _, date := range listDate {
+				if dateMap[date] != nil && len(dateMap[date]) > 0 {
+					listAnswers = append(listAnswers, WorkSurveySummaryListAnswer{
+						Date:    date,
+						Answers: dateMap[date],
+					})
+				}
+			}
+
+			employee := WorkSurveySummaryEmployee{
+				Reviewer:    *toBasicEmployeeInfo(employeeMap[eID]),
+				ListAnswers: listAnswers,
+			}
+
+			domainMap[domain].Data = append(domainMap[domain].Data, employee)
+		}
+	}
+
+	return rs
 }

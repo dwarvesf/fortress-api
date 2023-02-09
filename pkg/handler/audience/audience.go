@@ -58,7 +58,7 @@ func (h *handler) List(c *gin.Context) {
 		},
 	})
 
-	resp, err := h.service.Notion.GetDatabase(h.config.Notion.AudienceDBID, filter, []notion.DatabaseQuerySort{
+	resp, err := h.service.Notion.GetDatabase(h.config.Notion.Databases.Audience, filter, []notion.DatabaseQuerySort{
 		{
 			Direction: notion.SortDirDesc,
 			Timestamp: notion.SortTimeStampCreatedTime,

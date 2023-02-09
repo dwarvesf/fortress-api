@@ -15,4 +15,5 @@ type IHandler interface {
 	GetEngagementInfoDetail(c *gin.Context)
 	GetResourceUtilization(c *gin.Context)
 	GetWorkUnitDistribution(c *gin.Context)
+	GetResourceWorkSurveySummaries(c *gin.Context)
 }

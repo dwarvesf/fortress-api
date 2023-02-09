@@ -479,12 +479,6 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/hiring.IHandler.List-fm",
 			},
 		},
-		"/api/v1/audits": {
-			"PUT": {
-				Method:  "PUT",
-				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/audit.IHandler.Sync-fm",
-			},
-		},
 		"/api/v1/staffing-demands": {
 			"GET": {
 				Method:  "GET",
@@ -539,12 +533,60 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/dashboard.IHandler.GetWorkUnitDistribution-fm",
 			},
 		},
+		"/api/v1/dashboards/resources/work-survey-summaries": {
+			"GET": {
+				Method:  "GET",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/dashboard.IHandler.GetResourceWorkSurveySummaries-fm",
+			},
+		},
+		"/cronjobs/birthday": {
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/birthday.IHandler.BirthdayDailyMessage-fm",
+			},
+		},
+		"/cronjobs/audits": {
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/audit.IHandler.Sync-fm",
+			},
+		},
+		"/webhooks/n8n": {
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/webhook.IHandler.N8n-fm",
+			},
+		},
+		"/api/v1/bank-accounts": {
+			"GET": {
+				Method:  "GET",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/bankaccount.IHandler.List-fm",
+			},
+		},
+		"/api/v1/invoices": {
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/invoice.IHandler.Create-fm",
+			},
+		},
+		"/api/v1/invoices/:id/status": {
+			"PUT": {
+				Method:  "PUT",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/invoice.IHandler.Update-fm",
+			},
+		},
+		"/api/v1/invoices/latest": {
+			"GET": {
+				Method:  "GET",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/invoice.IHandler.GetLatestInvoice-fm",
+			},
+		},
 	}
 
 	l := logger.NewLogrusLogger()
 	cfg := config.LoadConfig(config.DefaultConfigLoaders())
 
-	h := handler.New(nil, nil, nil, l, cfg)
+	h := handler.New(nil, nil, nil, nil, l, cfg)
 
 	router := gin.New()
 	loadV1Routes(router, h, nil, nil, nil)

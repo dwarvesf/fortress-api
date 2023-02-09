@@ -1,38 +1,29 @@
 package auth
 
 import (
-	"errors"
 	"net/http"
-	"time"
-
-	"gorm.io/gorm"
 
 	"github.com/gin-gonic/gin"
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
+	"github.com/dwarvesf/fortress-api/pkg/controller"
+	"github.com/dwarvesf/fortress-api/pkg/controller/auth"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
-	"github.com/dwarvesf/fortress-api/pkg/model"
-	"github.com/dwarvesf/fortress-api/pkg/service"
-	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/utils"
 	"github.com/dwarvesf/fortress-api/pkg/view"
 )
 
 type handler struct {
-	store   *store.Store
-	service *service.Service
-	logger  logger.Logger
-	repo    store.DBRepo
-	config  *config.Config
+	controller *controller.Controller
+	logger     logger.Logger
+	config     *config.Config
 }
 
-func New(store *store.Store, repo store.DBRepo, service *service.Service, logger logger.Logger, cfg *config.Config) IHandler {
+func New(controller *controller.Controller, logger logger.Logger, cfg *config.Config) IHandler {
 	return &handler{
-		store:   store,
-		repo:    repo,
-		service: service,
-		logger:  logger,
-		config:  cfg,
+		controller: controller,
+		logger:     logger,
+		config:     cfg,
 	}
 }
 
@@ -68,57 +59,18 @@ func (h *handler) Auth(c *gin.Context) {
 		"body":    req,
 	})
 
-	// 2.1 get access token from req code and redirect url
-	accessToken, err := h.service.Google.GetAccessToken(req.Code, req.RedirectURL)
+	e, jwt, err := h.controller.Auth.Auth(c, auth.AuthenticationInput{
+		Code:        req.Code,
+		RedirectURL: req.RedirectURL,
+	})
 	if err != nil {
-		l.Error(err, "error getting access token from google")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req, ""))
-		return
-	}
-
-	// 2.2 get login user email from access token
-	primaryEmail, err := h.service.Google.GetGoogleEmail(accessToken)
-	if err != nil {
-		l.Error(err, "error getting email from google")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req, ""))
-		return
-	}
-
-	// 2.3 double check empty primary email
-	if primaryEmail == "" {
-		l.Error(err, "error nil email from google")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req, ""))
-		return
-	}
-
-	// 2.4 check user is active
-	employee, err := h.store.Employee.OneByEmail(h.repo.DB(), primaryEmail)
-	if err != nil {
-		l.Error(err, "error query employee from db")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req, ""))
-		return
-	}
-	if employee == nil {
-		l.Error(err, "error employee is not activated")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req, ""))
-		return
-	}
-
-	// 2.5 generate jwt bearer token
-	authenticationInfo := model.AuthenticationInfo{
-		UserID: employee.ID.String(),
-		Avatar: employee.Avatar,
-		Email:  primaryEmail,
-	}
-	jwt, err := utils.GenerateJWTToken(&authenticationInfo, time.Now().Add(24*365*time.Hour).Unix(), h.config.JWTSecretKey)
-	if err != nil {
-		l.Error(err, "error query employee from db")
+		l.Info("failed to called controller")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req, ""))
 		return
 	}
 
 	// 3. return auth data
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToAuthData(jwt, employee), nil, nil, nil, ""))
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToAuthData(jwt, e), nil, nil, nil, ""))
 }
 
 // Me godoc
@@ -146,20 +98,9 @@ func (h *handler) Me(c *gin.Context) {
 		"method":  "Me",
 	})
 
-	rs, err := h.store.Employee.One(h.repo.DB(), userID, false)
+	rs, perms, err := h.controller.Auth.Me(c, userID)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			l.Info("user not found")
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, err, nil, ""))
-			return
-		}
 		l.Error(err, "error query employee from db")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
-		return
-	}
-
-	perms, err := h.store.Permission.GetByEmployeeID(h.repo.DB(), userID)
-	if err != nil {
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
 	}

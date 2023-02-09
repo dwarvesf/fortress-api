@@ -114,3 +114,7 @@ func (n *notionService) GetPage(pageID string) (nt.Page, error) {
 
 	return res, nil
 }
+
+func (n *notionService) CreatePage() error {
+	return nil
+}

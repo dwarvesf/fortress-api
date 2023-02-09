@@ -63,7 +63,7 @@ func (h *handler) List(c *gin.Context) {
 		},
 	})
 
-	resp, err := h.service.Notion.GetDatabase(h.config.Notion.HiringDBID, nil, []notion.DatabaseQuerySort{
+	resp, err := h.service.Notion.GetDatabase(h.config.Notion.Databases.Hiring, nil, []notion.DatabaseQuerySort{
 		{
 			Direction: notion.SortDirDesc,
 			Timestamp: notion.SortTimeStampCreatedTime,
