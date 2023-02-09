@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
+	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/require"
 )
@@ -91,7 +92,8 @@ func TestWithAuth(t *testing.T) {
 
 func prepareTestDefaultRoutes() *gin.Engine {
 	cfg := config.LoadTestConfig()
-	amw := NewAuthMiddleware(&cfg)
+	storeMock := store.New()
+	amw := NewAuthMiddleware(&cfg, storeMock, nil)
 
 	r := gin.Default()
 	r.GET("/sample-routes", amw.WithAuth)

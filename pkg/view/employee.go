@@ -112,7 +112,7 @@ func ToEmployeeProjectDetailData(c *gin.Context, pm *model.ProjectMember, userIn
 		Avatar:    pm.Project.Avatar,
 	}
 
-	if utils.HasPermission(c, userInfo.Permissions, model.PermissionEmployeesReadProjectsFullAccess) {
+	if utils.HasPermission(userInfo.Permissions, model.PermissionEmployeesReadProjectsFullAccess) {
 		rs.StartDate = pm.StartDate
 		rs.EndDate = pm.EndDate
 		rs.DeploymentType = pm.DeploymentType.String()
@@ -300,12 +300,12 @@ func ToOneEmployeeData(c *gin.Context, employee *model.Employee, userInfo *model
 		}
 
 		// If the project is not belong user, check if the user has permission to view the project
-		if utils.HasPermission(c, userInfo.Permissions, model.PermissionEmployeesReadProjectsFullAccess) ||
-			utils.HasPermission(c, userInfo.Permissions, model.PermissionEmployeesReadProjectsReadActive) {
+		if utils.HasPermission(userInfo.Permissions, model.PermissionEmployeesReadProjectsFullAccess) ||
+			utils.HasPermission(userInfo.Permissions, model.PermissionEmployeesReadProjectsReadActive) {
 			if v.Project.Status == model.ProjectStatusActive {
 				employeeProjects = append(employeeProjects, ToEmployeeProjectDetailData(c, &v, userInfo))
 			} else {
-				if utils.HasPermission(c, userInfo.Permissions, model.PermissionEmployeesReadProjectsFullAccess) {
+				if utils.HasPermission(userInfo.Permissions, model.PermissionEmployeesReadProjectsFullAccess) {
 					employeeProjects = append(employeeProjects, ToEmployeeProjectDetailData(c, &v, userInfo))
 				}
 			}
@@ -368,7 +368,7 @@ func ToOneEmployeeData(c *gin.Context, employee *model.Employee, userInfo *model
 		Chapters:  ToChapters(employee.EmployeeChapters),
 	}
 
-	if utils.HasPermission(c, userInfo.Permissions, model.PermissionEmployeesReadGeneralInfoFullAccess) {
+	if utils.HasPermission(userInfo.Permissions, model.PermissionEmployeesReadGeneralInfoFullAccess) {
 		rs.NotionID = empSocialData.NotionID
 		rs.NotionName = empSocialData.NotionName
 		rs.LinkedInName = empSocialData.LinkedInName
@@ -379,7 +379,7 @@ func ToOneEmployeeData(c *gin.Context, employee *model.Employee, userInfo *model
 		rs.ReferredBy = referrer
 	}
 
-	if utils.HasPermission(c, userInfo.Permissions, model.PermissionEmployeesReadPersonalInfoFullAccess) {
+	if utils.HasPermission(userInfo.Permissions, model.PermissionEmployeesReadPersonalInfoFullAccess) {
 		rs.MBTI = employee.MBTI
 		rs.PersonalEmail = employee.PersonalEmail
 		rs.Address = employee.Address

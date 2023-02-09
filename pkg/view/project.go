@@ -176,7 +176,7 @@ func ToProjectData(c *gin.Context, project *model.Project, userInfo *model.Curre
 			Positions:   ToProjectMemberPositions(m.ProjectMemberPositions),
 		}
 
-		if utils.HasPermission(c, userInfo.Permissions, model.PermissionProjectsReadFullAccess) {
+		if utils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadFullAccess) {
 			member.DeploymentType = m.DeploymentType.String()
 		}
 
@@ -209,7 +209,7 @@ func ToProjectData(c *gin.Context, project *model.Project, userInfo *model.Curre
 		clientEmail = strings.Split(project.ClientEmail, ",")
 	}
 
-	if utils.HasPermission(c, userInfo.Permissions, model.PermissionProjectsReadFullAccess) {
+	if utils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadFullAccess) {
 		if project.ProjectNotion != nil && !project.ProjectNotion.AuditNotionID.IsZero() {
 			d.AuditNotionID = project.ProjectNotion.AuditNotionID.String()
 		}
@@ -257,13 +257,13 @@ func ToProjectsData(c *gin.Context, projects []*model.Project, userInfo *model.C
 		}
 
 		// If the project is not belong user, check if the user has permission to view the project
-		if utils.HasPermission(c, userInfo.Permissions, model.PermissionProjectsReadFullAccess) ||
-			utils.HasPermission(c, userInfo.Permissions, model.PermissionEmployeesReadProjectsReadActive) {
+		if utils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadFullAccess) ||
+			utils.HasPermission(userInfo.Permissions, model.PermissionEmployeesReadProjectsReadActive) {
 
 			if p.Status == model.ProjectStatusActive {
 				results = append(results, ToProjectData(c, p, userInfo))
 			} else {
-				if utils.HasPermission(c, userInfo.Permissions, model.PermissionProjectsReadFullAccess) {
+				if utils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadFullAccess) {
 					results = append(results, ToProjectData(c, p, userInfo))
 				}
 			}

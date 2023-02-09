@@ -3,6 +3,8 @@ package store
 import (
 	"github.com/dwarvesf/fortress-api/pkg/store/actionitem"
 	"github.com/dwarvesf/fortress-api/pkg/store/actionitemsnapshot"
+	"github.com/dwarvesf/fortress-api/pkg/store/apikey"
+	"github.com/dwarvesf/fortress-api/pkg/store/apikeyrole"
 	"github.com/dwarvesf/fortress-api/pkg/store/audit"
 	"github.com/dwarvesf/fortress-api/pkg/store/auditactionitem"
 	"github.com/dwarvesf/fortress-api/pkg/store/auditcycle"
@@ -96,6 +98,8 @@ type Store struct {
 	Schedule              schedule.IStore
 	Client                client.IStore
 	ClientContact         clientcontact.IStore
+	APIkey                apikey.IStore
+	ApikeyRole            apikeyrole.IStore
 }
 
 func New() *Store {
@@ -146,5 +150,7 @@ func New() *Store {
 		Schedule:              schedule.New(),
 		Client:                client.New(),
 		ClientContact:         clientcontact.New(),
+		APIkey:                apikey.New(),
+		ApikeyRole:            apikeyrole.New(),
 	}
 }

@@ -41,3 +41,14 @@ func (s *store) HasPermission(db *gorm.DB, employeeID string, permCode string) (
 
 	return res.Result, query.Scan(&res).Error
 }
+
+func (s *store) GetByApiKeyID(db *gorm.DB, apiKeyID string) ([]*model.Permission, error) {
+	var permissions []*model.Permission
+	return permissions, db.
+		Select("DISTINCT permissions.*").
+		Joins("JOIN role_permissions rp ON permissions.id = rp.permission_id").
+		Joins("JOIN apikey_roles ar ON ar.role_id = rp.role_id").
+		Where("ar.apikey_id = ?", apiKeyID).
+		Order("permissions.code").
+		Find(&permissions).Error
+}

@@ -8,6 +8,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/controller"
 	"github.com/dwarvesf/fortress-api/pkg/controller/auth"
+	"github.com/dwarvesf/fortress-api/pkg/handler/auth/request"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/utils"
 	"github.com/dwarvesf/fortress-api/pkg/view"
@@ -106,4 +107,42 @@ func (h *handler) Me(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToAuthorizedUserData(rs, perms), nil, nil, nil, ""))
+}
+
+// CreateAPIKey godoc
+// @Summary Create API key
+// @Description Create API key
+// @Tags Auth
+// @Accept  json
+// @Produce  json
+// @Param Authorization header string true "jwt token"
+// @Success 200 {object} view.APIKeyResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /auth/apikey [post]
+func (h *handler) CreateAPIkey(c *gin.Context) {
+	var body request.CreateAPIKeyInput
+
+	if err := c.ShouldBindJSON(&body); err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, body, ""))
+		return
+	}
+
+	// TODO: can we move this to middleware ?
+	l := h.logger.Fields(logger.Fields{
+		"handler": "auth",
+		"method":  "CreateAPIkey",
+	})
+
+	key, err := h.controller.Auth.CreateAPIkey(c, body.RoleID)
+	if err != nil {
+		l.Error(err, "error create api key")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](&view.APIKeyData{
+		Key: key,
+	}, nil, nil, nil, ""))
 }

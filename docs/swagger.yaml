@@ -1707,6 +1707,16 @@ definitions:
       workUnitID:
         type: string
     type: object
+  view.APIKeyData:
+    properties:
+      key:
+        type: string
+    type: object
+  view.APIKeyResponse:
+    properties:
+      data:
+        $ref: '#/definitions/view.APIKeyData'
+    type: object
   view.AccountRoleResponse:
     properties:
       data:
@@ -3680,6 +3690,39 @@ paths:
           schema:
             $ref: '#/definitions/view.ErrorResponse'
       summary: Authorise user when login
+      tags:
+      - Auth
+  /auth/apikey:
+    post:
+      consumes:
+      - application/json
+      description: Create API key
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.APIKeyResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Create API key
       tags:
       - Auth
   /auth/me:

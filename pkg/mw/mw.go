@@ -1,8 +1,6 @@
 package mw
 
 import (
-	"crypto/ed25519"
-	"encoding/base32"
 	"errors"
 	"strings"
 
@@ -19,16 +17,19 @@ import (
 
 var noAuthPath = []string{
 	"/healthz",
-	"/auth",
 }
 
 type authMiddleware struct {
-	cfg *config.Config
+	cfg   *config.Config
+	store *store.Store
+	repo  store.DBRepo
 }
 
-func NewAuthMiddleware(cfg *config.Config) *authMiddleware {
+func NewAuthMiddleware(cfg *config.Config, s *store.Store, r store.DBRepo) *authMiddleware {
 	return &authMiddleware{
-		cfg: cfg,
+		cfg:   cfg,
+		store: s,
+		repo:  r,
 	}
 }
 
@@ -68,7 +69,7 @@ func (mw *authMiddleware) authenticate(c *gin.Context) error {
 	case "Bearer":
 		return mw.validateToken(headers[1])
 	case "ApiKey":
-		return mw.validateApiKey(headers[1], mw.cfg.APIKey)
+		return mw.validateApikey(headers[1])
 	default:
 		return ErrAuthenticationTypeHeaderInvalid
 	}
@@ -95,24 +96,24 @@ func NewPermissionMiddleware(s *store.Store, r store.DBRepo, cfg *config.Config)
 	}
 }
 
-func (mw *authMiddleware) validateApiKey(privK string, pubK string) error {
-	pubKey, err := base32.StdEncoding.WithPadding(base32.StdPadding).DecodeString(pubK)
+func (mw *authMiddleware) validateApikey(apiKey string) error {
+	clientID, key, err := utils.ExtractAPIKey(apiKey)
 	if err != nil {
-		return errors.New("invalid public key")
+		return ErrInvalidAPIKey
 	}
 
-	privKey, err := base32.StdEncoding.WithPadding(base32.StdPadding).DecodeString(privK)
+	rec, err := mw.store.APIkey.GetByClientID(mw.repo.DB(), clientID)
 	if err != nil {
-		return errors.New("invalid private key")
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ErrInvalidAPIKey
+		}
+		return err
+	}
+	if rec.Status != model.ApikeyStatusValid {
+		return ErrInvalidAPIKey
 	}
 
-	signature := ed25519.Sign(privKey, nil)
-
-	ok := ed25519.Verify(pubKey, nil, signature)
-	if !ok {
-		return errors.New("invalid key")
-	}
-	return nil
+	return utils.ValidateHashedKey(rec.SecretKey, key)
 }
 
 type permMiddleware struct {
@@ -129,8 +130,12 @@ func (m permMiddleware) WithPerm(perm model.PermissionCode) func(c *gin.Context)
 			c.AbortWithStatusJSON(401, map[string]string{"message": err.Error()})
 			return
 		}
+		tokenType := "JWT"
+		if utils.IsAPIKey(c) {
+			tokenType = "ApiKey"
+		}
 
-		err = m.ensurePerm(m.store, m.repo.DB(), accessToken, perm.String())
+		err = m.ensurePerm(m.store, m.repo.DB(), accessToken, perm.String(), tokenType)
 		if err != nil {
 			c.AbortWithStatusJSON(401, map[string]string{"message": err.Error()})
 			return
@@ -140,34 +145,57 @@ func (m permMiddleware) WithPerm(perm model.PermissionCode) func(c *gin.Context)
 	}
 }
 
-func (m *permMiddleware) ensurePerm(storeDB *store.Store, db *gorm.DB, accessToken string, requiredPerm string) error {
-	if accessToken == "ApiKey" {
-		return nil
-	}
+func (m *permMiddleware) ensurePerm(storeDB *store.Store, db *gorm.DB, accessToken string, requiredPerm string, tokenType string) error {
+	var perms []*model.Permission
+	if tokenType == "ApiKey" {
+		clientID, key, err := utils.ExtractAPIKey(accessToken)
+		if err != nil {
+			return ErrInvalidAPIKey
+		}
+		apikey, err := storeDB.APIkey.GetByClientID(db, clientID)
+		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return ErrInvalidAPIKey
+			}
+			return err
+		}
+		if apikey.Status != model.ApikeyStatusValid {
+			return ErrInvalidAPIKey
+		}
 
-	token, err := jwt.Parse(accessToken, func(token *jwt.Token) (interface{}, error) {
-		return []byte(m.config.JWTSecretKey), nil
-	})
-	if err != nil {
-		return err
-	}
+		err = utils.ValidateHashedKey(apikey.SecretKey, key)
+		if err != nil {
+			return err
+		}
 
-	claims, ok := token.Claims.(jwt.MapClaims)
-	if !ok || !token.Valid {
-		return ErrUnauthorized
-	}
+		perms, err = storeDB.Permission.GetByApiKeyID(db, apikey.ID.String())
+		if err != nil {
+			return err
+		}
+	} else {
+		token, err := jwt.Parse(accessToken, func(token *jwt.Token) (interface{}, error) {
+			return []byte(m.config.JWTSecretKey), nil
+		})
+		if err != nil {
+			return err
+		}
 
-	userID, ok := claims["id"].(string)
-	if !ok {
-		return ErrInvalidUserID
-	}
+		claims, ok := token.Claims.(jwt.MapClaims)
+		if !ok || !token.Valid {
+			return ErrUnauthorized
+		}
 
-	perms, err := storeDB.Permission.GetByEmployeeID(db, userID)
-	if err != nil {
-		return err
-	}
+		userID, ok := claims["id"].(string)
+		if !ok {
+			return ErrInvalidUserID
+		}
 
-	ok = false
+		perms, err = storeDB.Permission.GetByEmployeeID(db, userID)
+		if err != nil {
+			return err
+		}
+	}
+	ok := false
 	for _, v := range perms {
 		if v.Code == requiredPerm {
 			ok = true

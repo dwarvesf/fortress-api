@@ -20,6 +20,7 @@ type PermissionCode string
 
 const (
 	PermissionAuthRead                            PermissionCode = "auth.read"
+	PermissionAuthCreate                          PermissionCode = "auth.create"
 	PermissionEmployeesRead                       PermissionCode = "employees.read"
 	PermissionEmployeesReadFullAccess             PermissionCode = "employees.read.fullAccess"
 	PermissionEmployeesReadReadActive             PermissionCode = "employees.read.readActive"

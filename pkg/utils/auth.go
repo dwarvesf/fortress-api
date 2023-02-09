@@ -1,16 +1,25 @@
 package utils
 
 import (
+	"encoding/base64"
 	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
+	gonanoid "github.com/matoous/go-nanoid"
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/store"
+)
+
+const (
+	alphabet        = "abcdefghijklmnpqrstuvwxyzABCDEFGHIJKLMNPQRSTUVWXYZ123456789"
+	ClientIDLength  = 24
+	SecretKeyLength = 32
 )
 
 // GenerateJWTToken ...
@@ -22,6 +31,36 @@ func GenerateJWTToken(info *model.AuthenticationInfo, expiresAt int64, secretKey
 		return "", err
 	}
 	return encryptedToken, nil
+}
+
+func GenerateUniqueNanoID(length int) (string, error) {
+	rs, err := gonanoid.Generate(alphabet, length)
+	if err != nil {
+		return "", err
+	}
+	return rs, nil
+}
+
+func GenerateHashedKey(key string) (string, error) {
+	val := strings.TrimSpace(key)
+	hashedKey, err := bcrypt.GenerateFromPassword([]byte(val), bcrypt.DefaultCost)
+	if err != nil {
+		return "", err
+	}
+	return string(hashedKey), nil
+}
+
+func ExtractAPIKey(apiKey string) (clientID string, key string, err error) {
+	decodedStr, err := base64.StdEncoding.DecodeString(apiKey)
+	if err != nil {
+		return "", "", err
+	}
+	return string(decodedStr)[:ClientIDLength], string(decodedStr)[ClientIDLength:SecretKeyLength], nil
+
+}
+
+func ValidateHashedKey(hashedKey string, key string) error {
+	return bcrypt.CompareHashAndPassword([]byte(hashedKey), []byte(key))
 }
 
 func GetUserIDFromToken(cfg *config.Config, tokenString string) (string, error) {
@@ -67,7 +106,7 @@ func GetTokenFromRequest(c *gin.Context) (string, error) {
 	case "Bearer":
 		return headers[1], nil
 	case "ApiKey":
-		return "ApiKey", nil
+		return headers[1], nil
 	default:
 		return "", ErrAuthenticationTypeHeaderInvalid
 	}
@@ -77,11 +116,7 @@ func IsAPIKey(c *gin.Context) bool {
 	return strings.HasPrefix(c.Request.Header.Get("Authorization"), "ApiKey")
 }
 
-func HasPermission(c *gin.Context, perms map[string]string, requiredPerm model.PermissionCode) bool {
-	if IsAPIKey(c) {
-		return true
-	}
-
+func HasPermission(perms map[string]string, requiredPerm model.PermissionCode) bool {
 	_, ok := perms[requiredPerm.String()]
 
 	return ok
