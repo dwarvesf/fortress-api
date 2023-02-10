@@ -2886,6 +2886,11 @@ definitions:
       data:
         $ref: '#/definitions/view.SubmitFeedback'
     type: object
+  view.SummaryWorkUnitDistributionResponse:
+    properties:
+      data:
+        $ref: '#/definitions/view.WorkUnitDistributionData'
+    type: object
   view.Survey:
     properties:
       count:
@@ -3331,15 +3336,15 @@ definitions:
   view.WorkUnitDistribution:
     properties:
       development:
-        type: integer
+        $ref: '#/definitions/view.WorkUnitDistributionDevelopment'
       employee:
         $ref: '#/definitions/view.BasicEmployeeInfo'
       learning:
-        type: integer
+        $ref: '#/definitions/view.WorkUnitDistributionLearning'
       management:
-        type: integer
+        $ref: '#/definitions/view.WorkUnitDistributionManagement'
       training:
-        type: integer
+        $ref: '#/definitions/view.WorkUnitDistributionTraining'
     type: object
   view.WorkUnitDistributionData:
     properties:
@@ -3347,6 +3352,64 @@ definitions:
         items:
           $ref: '#/definitions/view.WorkUnitDistribution'
         type: array
+    type: object
+  view.WorkUnitDistributionDevelopment:
+    properties:
+      total:
+        type: integer
+      workUnits:
+        items:
+          $ref: '#/definitions/view.WorkUnitDistributionWU'
+        type: array
+    type: object
+  view.WorkUnitDistributionLearning:
+    properties:
+      total:
+        type: integer
+      workUnits:
+        items:
+          $ref: '#/definitions/view.WorkUnitDistributionWU'
+        type: array
+    type: object
+  view.WorkUnitDistributionManagement:
+    properties:
+      projectHeads:
+        items:
+          $ref: '#/definitions/view.WorkUnitDistributionWUProjectHead'
+        type: array
+      total:
+        type: integer
+      workUnits:
+        items:
+          $ref: '#/definitions/view.WorkUnitDistributionWU'
+        type: array
+    type: object
+  view.WorkUnitDistributionTraining:
+    properties:
+      mentees:
+        items:
+          $ref: '#/definitions/view.BasicEmployeeInfo'
+        type: array
+      total:
+        type: integer
+      workUnits:
+        items:
+          $ref: '#/definitions/view.WorkUnitDistributionWU'
+        type: array
+    type: object
+  view.WorkUnitDistributionWU:
+    properties:
+      project:
+        $ref: '#/definitions/view.BasicProjectInfo'
+      workUnitName:
+        type: string
+    type: object
+  view.WorkUnitDistributionWUProjectHead:
+    properties:
+      position:
+        type: string
+      project:
+        $ref: '#/definitions/view.BasicProjectInfo'
     type: object
   view.WorkUnitDistributionsResponse:
     properties:
@@ -3899,6 +3962,14 @@ paths:
         in: query
         name: name
         type: string
+      - description: sort required
+        in: query
+        name: sort
+        type: string
+      - description: work unit type for filter
+        in: query
+        name: type
+        type: string
       produces:
       - application/json
       responses:
@@ -3919,6 +3990,31 @@ paths:
           schema:
             $ref: '#/definitions/view.ErrorResponse'
       summary: Get work unit distribution data for dashboard
+      tags:
+      - Dashboard
+  /dashboards/resources/work-unit-distribution-summary:
+    get:
+      consumes:
+      - application/json
+      description: Get summary for workunit distribution dashboard
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.SummaryWorkUnitDistributionResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get summary for workunit distribution dashboard
       tags:
       - Dashboard
   /employees:

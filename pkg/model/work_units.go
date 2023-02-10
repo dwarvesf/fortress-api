@@ -16,6 +16,7 @@ type WorkUnit struct {
 
 	WorkUnitMembers []*WorkUnitMember
 	WorkUnitStacks  []*WorkUnitStack
+	Project         *Project
 }
 
 type WorkUnitStatus string

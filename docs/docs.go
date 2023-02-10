@@ -828,6 +828,18 @@ const docTemplate = `{
                         "description": "employee name for filter",
                         "name": "name",
                         "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "sort required",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "work unit type for filter",
+                        "name": "type",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -847,6 +859,44 @@ const docTemplate = `{
                         "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/dashboards/resources/work-unit-distribution-summary": {
+            "get": {
+                "description": "Get summary for workunit distribution dashboard",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "Get summary for workunit distribution dashboard",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.SummaryWorkUnitDistributionResponse"
                         }
                     },
                     "500": {
@@ -9186,6 +9236,14 @@ const docTemplate = `{
                 }
             }
         },
+        "view.SummaryWorkUnitDistributionResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/view.WorkUnitDistributionData"
+                }
+            }
+        },
         "view.Survey": {
             "type": "object",
             "properties": {
@@ -9868,19 +9926,19 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "development": {
-                    "type": "integer"
+                    "$ref": "#/definitions/view.WorkUnitDistributionDevelopment"
                 },
                 "employee": {
                     "$ref": "#/definitions/view.BasicEmployeeInfo"
                 },
                 "learning": {
-                    "type": "integer"
+                    "$ref": "#/definitions/view.WorkUnitDistributionLearning"
                 },
                 "management": {
-                    "type": "integer"
+                    "$ref": "#/definitions/view.WorkUnitDistributionManagement"
                 },
                 "training": {
-                    "type": "integer"
+                    "$ref": "#/definitions/view.WorkUnitDistributionTraining"
                 }
             }
         },
@@ -9892,6 +9950,96 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/view.WorkUnitDistribution"
                     }
+                }
+            }
+        },
+        "view.WorkUnitDistributionDevelopment": {
+            "type": "object",
+            "properties": {
+                "total": {
+                    "type": "integer"
+                },
+                "workUnits": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.WorkUnitDistributionWU"
+                    }
+                }
+            }
+        },
+        "view.WorkUnitDistributionLearning": {
+            "type": "object",
+            "properties": {
+                "total": {
+                    "type": "integer"
+                },
+                "workUnits": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.WorkUnitDistributionWU"
+                    }
+                }
+            }
+        },
+        "view.WorkUnitDistributionManagement": {
+            "type": "object",
+            "properties": {
+                "projectHeads": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.WorkUnitDistributionWUProjectHead"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                },
+                "workUnits": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.WorkUnitDistributionWU"
+                    }
+                }
+            }
+        },
+        "view.WorkUnitDistributionTraining": {
+            "type": "object",
+            "properties": {
+                "mentees": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.BasicEmployeeInfo"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                },
+                "workUnits": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.WorkUnitDistributionWU"
+                    }
+                }
+            }
+        },
+        "view.WorkUnitDistributionWU": {
+            "type": "object",
+            "properties": {
+                "project": {
+                    "$ref": "#/definitions/view.BasicProjectInfo"
+                },
+                "workUnitName": {
+                    "type": "string"
+                }
+            }
+        },
+        "view.WorkUnitDistributionWUProjectHead": {
+            "type": "object",
+            "properties": {
+                "position": {
+                    "type": "string"
+                },
+                "project": {
+                    "$ref": "#/definitions/view.BasicProjectInfo"
                 }
             }
         },
