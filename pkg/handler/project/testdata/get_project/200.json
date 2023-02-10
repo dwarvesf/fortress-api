@@ -10,7 +10,8 @@
         "projectEmail": "fortress@d.foundation",
         "clientEmail": [
             "team@d.foundation"
-        ],"industry": "",
+        ],
+        "industry": "",
         "allowsSendingSurvey": false,
         "country": {
             "id": "4ef64490-c906-4192-a7f9-d2221dadfe4c",
@@ -239,23 +240,13 @@
             "id": "afb9cf05-9517-4fb9-a4f2-66e6d90ad215",
             "name": "Dwarves Client",
             "description": "Using For Internal Project",
-            "registrationNumber": "123455099999999",
-            "address": "Hado Centrosa",
-            "country": "Vietnam",
-            "industry": "Technology",
-            "website": "https://d.foundations",
-            "contacts": [
-                {
-                    "id": "0569e64d-3b57-454a-ab88-0482e087eb5f",
-                    "name": "Thanh Pham ",
-                    "role": "PM",
-                    "emails": [
-                        "thanh@d.foundation",
-                        "huytq@d.foundation"
-                    ],
-                    "isMainContact": true
-                }
-            ]
+            "registrationNumber": "123455099999999"
+        },
+        "companyInfo": {
+            "id": "ed8bebd2-e6be-4e84-b86b-b3983db0447d",
+            "name": "company A",
+            "description": "description",
+            "registrationNumber": "0123123123"
         }
     }
 }

@@ -4938,7 +4938,7 @@ const docTemplate = `{
                 "swiftCode": {
                     "type": "string"
                 },
-                "ukSortCode": {
+                "uksortCode": {
                     "type": "string"
                 },
                 "updatedAt": {
@@ -7685,6 +7685,40 @@ const docTemplate = `{
                 }
             }
         },
+        "view.BasicClientInfo": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "registrationNumber": {
+                    "type": "string"
+                }
+            }
+        },
+        "view.BasicCompanyInfo": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "registrationNumber": {
+                    "type": "string"
+                }
+            }
+        },
         "view.BasicCountryInfo": {
             "type": "object",
             "properties": {
@@ -8993,7 +9027,7 @@ const docTemplate = `{
                     "$ref": "#/definitions/view.BasicBankAccountInfo"
                 },
                 "client": {
-                    "$ref": "#/definitions/view.Client"
+                    "$ref": "#/definitions/view.BasicClientInfo"
                 },
                 "clientEmail": {
                     "type": "array",
@@ -9003,6 +9037,9 @@ const docTemplate = `{
                 },
                 "code": {
                     "type": "string"
+                },
+                "companyInfo": {
+                    "$ref": "#/definitions/view.BasicCompanyInfo"
                 },
                 "country": {
                     "$ref": "#/definitions/view.BasicCountryInfo"
