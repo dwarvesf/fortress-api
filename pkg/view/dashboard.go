@@ -630,7 +630,7 @@ func ToEngagementDashboard(statistic []*model.StatisticEngagementDashboard) []En
 	questionIDMapper := make(map[string]string)
 	for _, s := range statistic {
 		questionMapper[s.Content] = append(questionMapper[s.Content], EngagementDashboardQuestionStat{
-			Title:     s.Title,
+			Title:     strings.Replace(s.Title, ", ", "/", -1),
 			StartDate: &s.StartDate,
 			Point:     math.Floor(s.Point*100) / 100,
 		})
