@@ -35,7 +35,40 @@ type ProjectData struct {
 	Function            string                `json:"function"`
 	AuditNotionID       string                `json:"auditNotionID"`
 	BankAccount         *BasicBankAccountInfo `json:"bankAccount"`
-	Client              *Client               `json:"client"`
+	Client              *BasicClientInfo      `json:"client"`
+	CompanyInfo         *BasicCompanyInfo     `json:"companyInfo"`
+}
+
+type BasicClientInfo struct {
+	ID                 string `json:"id"`
+	Name               string `json:"name"`
+	Description        string `json:"description"`
+	RegistrationNumber string `json:"registrationNumber"`
+}
+
+func ToBasicClientInfo(client *model.Client) *BasicClientInfo {
+	return &BasicClientInfo{
+		ID:                 client.ID.String(),
+		Name:               client.Name,
+		Description:        client.Description,
+		RegistrationNumber: client.RegistrationNumber,
+	}
+}
+
+type BasicCompanyInfo struct {
+	ID                 string `json:"id"`
+	Name               string `json:"name"`
+	Description        string `json:"description"`
+	RegistrationNumber string `json:"registrationNumber"`
+}
+
+func ToBasicCompanyInfo(company *model.CompanyInfo) *BasicCompanyInfo {
+	return &BasicCompanyInfo{
+		ID:                 company.ID.String(),
+		Name:               company.Name,
+		Description:        *company.Description,
+		RegistrationNumber: *company.RegistrationNumber,
+	}
 }
 
 type UpdatedProject struct {
@@ -193,7 +226,11 @@ func ToProjectData(c *gin.Context, project *model.Project, userInfo *model.Curre
 		}
 
 		if project.Client != nil {
-			d.Client = toClient(project.Client)
+			d.Client = ToBasicClientInfo(project.Client)
+		}
+
+		if project.CompanyInfo != nil {
+			d.CompanyInfo = ToBasicCompanyInfo(project.CompanyInfo)
 		}
 	}
 

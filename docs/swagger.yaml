@@ -56,7 +56,7 @@ definitions:
         type: string
       swiftCode:
         type: string
-      ukSortCode:
+      uksortCode:
         type: string
       updatedAt:
         type: string
@@ -1878,6 +1878,28 @@ definitions:
       ownerName:
         type: string
     type: object
+  view.BasicClientInfo:
+    properties:
+      description:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      registrationNumber:
+        type: string
+    type: object
+  view.BasicCompanyInfo:
+    properties:
+      description:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      registrationNumber:
+        type: string
+    type: object
   view.BasicCountryInfo:
     properties:
       code:
@@ -2729,13 +2751,15 @@ definitions:
       bankAccount:
         $ref: '#/definitions/view.BasicBankAccountInfo'
       client:
-        $ref: '#/definitions/view.Client'
+        $ref: '#/definitions/view.BasicClientInfo'
       clientEmail:
         items:
           type: string
         type: array
       code:
         type: string
+      companyInfo:
+        $ref: '#/definitions/view.BasicCompanyInfo'
       country:
         $ref: '#/definitions/view.BasicCountryInfo'
       createdAt:

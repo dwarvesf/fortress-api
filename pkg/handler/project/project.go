@@ -251,6 +251,12 @@ func (h *handler) Create(c *gin.Context) {
 	if !body.BankAccountID.IsZero() {
 		bankAccount, err = h.store.BankAccount.One(h.repo.DB(), body.BankAccountID.String())
 		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				l.Error(err, "bank account not found")
+				c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrBankAccountNotFound, body, ""))
+				return
+			}
+
 			l.Error(err, "failed to get bank account")
 			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
 			return
@@ -1441,7 +1447,7 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 		exist, err := h.store.BankAccount.IsExist(h.repo.DB(), body.BankAccountID.String())
 		if err != nil {
 			l.Error(err, "error check existence of bank account")
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, err, body, ""))
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
 			return
 		}
 
