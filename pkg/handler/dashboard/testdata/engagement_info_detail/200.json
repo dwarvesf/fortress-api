@@ -4,120 +4,180 @@
       "questionID": "1b9a91c7-7e67-4693-bb43-74170aaa0e3f",
       "stats": [
         {
-          "field": "Staff",
+          "field": "Junior",
           "startDate": "2022-10-01T00:00:00Z",
-          "point": 2.875
-        }
+          "point": 3.5
+        },
+        { "field": "Mid", "startDate": "2022-10-01T00:00:00Z", "point": 2.66 },
+        {
+          "field": "Senior",
+          "startDate": "2022-10-01T00:00:00Z",
+          "point": 2.66
+        },
+        { "field": "Staff", "startDate": "2022-10-01T00:00:00Z", "point": 2.87 }
       ]
     },
     {
       "questionID": "41db6b66-6942-43b3-b1fc-568ba4579762",
       "stats": [
         {
-          "field": "Staff",
+          "field": "Junior",
           "startDate": "2022-10-01T00:00:00Z",
-          "point": 3.25
-        }
+          "point": 3.66
+        },
+        { "field": "Mid", "startDate": "2022-10-01T00:00:00Z", "point": 3 },
+        { "field": "Senior", "startDate": "2022-10-01T00:00:00Z", "point": 3 },
+        { "field": "Staff", "startDate": "2022-10-01T00:00:00Z", "point": 3.25 }
       ]
     },
     {
       "questionID": "4e71821e-e8d7-4fc9-9f02-7b4de4efa7f8",
       "stats": [
         {
-          "field": "Staff",
+          "field": "Junior",
           "startDate": "2022-10-01T00:00:00Z",
-          "point": 3.125
-        }
+          "point": 2.83
+        },
+        { "field": "Mid", "startDate": "2022-10-01T00:00:00Z", "point": 3 },
+        {
+          "field": "Senior",
+          "startDate": "2022-10-01T00:00:00Z",
+          "point": 2.33
+        },
+        { "field": "Staff", "startDate": "2022-10-01T00:00:00Z", "point": 3.12 }
       ]
     },
     {
       "questionID": "6c6bf3d6-46cd-46d3-9ea6-f382a5052588",
       "stats": [
         {
-          "field": "Staff",
+          "field": "Junior",
           "startDate": "2022-10-01T00:00:00Z",
-          "point": 2
-        }
+          "point": 2.16
+        },
+        { "field": "Mid", "startDate": "2022-10-01T00:00:00Z", "point": 2 },
+        { "field": "Senior", "startDate": "2022-10-01T00:00:00Z", "point": 3 },
+        { "field": "Staff", "startDate": "2022-10-01T00:00:00Z", "point": 2 }
       ]
     },
     {
       "questionID": "729cf731-ba4c-4b62-8aa6-8f4a9f4507b8",
       "stats": [
         {
-          "field": "Staff",
+          "field": "Junior",
           "startDate": "2022-10-01T00:00:00Z",
-          "point": 2.875
-        }
+          "point": 1.83
+        },
+        { "field": "Mid", "startDate": "2022-10-01T00:00:00Z", "point": 2.33 },
+        { "field": "Senior", "startDate": "2022-10-01T00:00:00Z", "point": 3 },
+        { "field": "Staff", "startDate": "2022-10-01T00:00:00Z", "point": 2.87 }
       ]
     },
     {
       "questionID": "8c25c7c1-5148-4b85-92b2-5db919b0a118",
       "stats": [
         {
-          "field": "Staff",
+          "field": "Junior",
           "startDate": "2022-10-01T00:00:00Z",
-          "point": 2
-        }
+          "point": 2.66
+        },
+        { "field": "Mid", "startDate": "2022-10-01T00:00:00Z", "point": 2.66 },
+        {
+          "field": "Senior",
+          "startDate": "2022-10-01T00:00:00Z",
+          "point": 1.66
+        },
+        { "field": "Staff", "startDate": "2022-10-01T00:00:00Z", "point": 2 }
       ]
     },
     {
       "questionID": "8d5f0723-e867-430e-82fc-26f8809140b2",
       "stats": [
         {
-          "field": "Staff",
+          "field": "Junior",
           "startDate": "2022-10-01T00:00:00Z",
-          "point": 2.5
-        }
+          "point": 3.83
+        },
+        { "field": "Mid", "startDate": "2022-10-01T00:00:00Z", "point": 2.66 },
+        {
+          "field": "Senior",
+          "startDate": "2022-10-01T00:00:00Z",
+          "point": 2.66
+        },
+        { "field": "Staff", "startDate": "2022-10-01T00:00:00Z", "point": 2.5 }
       ]
     },
     {
       "questionID": "989d8e60-4b71-46d6-8d56-77ca8d37877c",
       "stats": [
         {
-          "field": "Staff",
+          "field": "Junior",
           "startDate": "2022-10-01T00:00:00Z",
-          "point": 2.625
-        }
+          "point": 3.33
+        },
+        { "field": "Mid", "startDate": "2022-10-01T00:00:00Z", "point": 1.66 },
+        {
+          "field": "Senior",
+          "startDate": "2022-10-01T00:00:00Z",
+          "point": 4.66
+        },
+        { "field": "Staff", "startDate": "2022-10-01T00:00:00Z", "point": 2.62 }
       ]
     },
     {
       "questionID": "ba00c397-f8ad-4cbd-ba63-02ac903d0886",
       "stats": [
         {
-          "field": "Staff",
+          "field": "Junior",
           "startDate": "2022-10-01T00:00:00Z",
-          "point": 3.125
-        }
+          "point": 3.16
+        },
+        { "field": "Mid", "startDate": "2022-10-01T00:00:00Z", "point": 3.33 },
+        {
+          "field": "Senior",
+          "startDate": "2022-10-01T00:00:00Z",
+          "point": 2.33
+        },
+        { "field": "Staff", "startDate": "2022-10-01T00:00:00Z", "point": 3.12 }
       ]
     },
     {
       "questionID": "c7f2081a-11e6-4a2e-9e0c-852faaaf3d16",
       "stats": [
-        {
-          "field": "Staff",
-          "startDate": "2022-10-01T00:00:00Z",
-          "point": 2.75
-        }
+        { "field": "Junior", "startDate": "2022-10-01T00:00:00Z", "point": 3 },
+        { "field": "Mid", "startDate": "2022-10-01T00:00:00Z", "point": 2.66 },
+        { "field": "Senior", "startDate": "2022-10-01T00:00:00Z", "point": 3 },
+        { "field": "Staff", "startDate": "2022-10-01T00:00:00Z", "point": 2.75 }
       ]
     },
     {
       "questionID": "edb5f946-1d2b-4029-9b1f-57483e92be60",
       "stats": [
         {
-          "field": "Staff",
+          "field": "Junior",
           "startDate": "2022-10-01T00:00:00Z",
-          "point": 3
-        }
+          "point": 2.5
+        },
+        { "field": "Mid", "startDate": "2022-10-01T00:00:00Z", "point": 3 },
+        {
+          "field": "Senior",
+          "startDate": "2022-10-01T00:00:00Z",
+          "point": 2.33
+        },
+        { "field": "Staff", "startDate": "2022-10-01T00:00:00Z", "point": 3 }
       ]
     },
     {
       "questionID": "ee16d005-4f9f-4a0c-93b0-43db5f8edbb3",
       "stats": [
         {
-          "field": "Staff",
+          "field": "Junior",
           "startDate": "2022-10-01T00:00:00Z",
-          "point": 2.75
-        }
+          "point": 2.66
+        },
+        { "field": "Mid", "startDate": "2022-10-01T00:00:00Z", "point": 2 },
+        { "field": "Senior", "startDate": "2022-10-01T00:00:00Z", "point": 3 },
+        { "field": "Staff", "startDate": "2022-10-01T00:00:00Z", "point": 2.75 }
       ]
     }
   ]

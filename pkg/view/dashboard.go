@@ -630,9 +630,9 @@ func ToEngagementDashboard(statistic []*model.StatisticEngagementDashboard) []En
 	questionIDMapper := make(map[string]string)
 	for _, s := range statistic {
 		questionMapper[s.Content] = append(questionMapper[s.Content], EngagementDashboardQuestionStat{
-			Title:     s.Title,
+			Title:     strings.Replace(s.Title, ", ", "/", -1),
 			StartDate: &s.StartDate,
-			Point:     s.Point,
+			Point:     math.Floor(s.Point*100) / 100,
 		})
 		questionIDMapper[s.Content] = s.QuestionID.String()
 	}
@@ -659,10 +659,10 @@ func ToEngagementDashboard(statistic []*model.StatisticEngagementDashboard) []En
 func ToEngagementDashboardDetails(statistic []*model.StatisticEngagementDashboard) []EngagementDashboardDetail {
 	questionMapper := make(map[string][]EngagementDashboardQuestionDetailStat)
 	for _, s := range statistic {
-		questionMapper[s.QuestionID.String()] = append(questionMapper[s.Content], EngagementDashboardQuestionDetailStat{
+		questionMapper[s.QuestionID.String()] = append(questionMapper[s.QuestionID.String()], EngagementDashboardQuestionDetailStat{
 			Field:     s.Name,
 			StartDate: &s.StartDate,
-			Point:     s.Point,
+			Point:     math.Floor(s.Point*100) / 100,
 		})
 	}
 
@@ -775,8 +775,9 @@ type WorkSurveySummaryEmployee struct {
 }
 
 type WorkSurveySummary struct {
-	Type string                      `json:"type"`
-	Data []WorkSurveySummaryEmployee `json:"data"`
+	Type  string                      `json:"type"`
+	Dates []string                    `json:"dates"`
+	Data  []WorkSurveySummaryEmployee `json:"data"`
 }
 
 type WorkSurveySummaryResponse struct {
@@ -834,6 +835,8 @@ func ToWorkSummaries(eers []*model.EmployeeEventReviewer) []WorkSurveySummary {
 	}
 
 	for domain, eIDMap := range answerMap {
+		domainMap[domain].Dates = listDate
+
 		for eID, dateMap := range eIDMap {
 			listAnswers := make([]WorkSurveySummaryListAnswer, 0)
 

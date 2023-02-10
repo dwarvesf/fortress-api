@@ -9751,6 +9751,12 @@ const docTemplate = `{
                         "$ref": "#/definitions/view.WorkSurveySummaryEmployee"
                     }
                 },
+                "dates": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "type": {
                     "type": "string"
                 }

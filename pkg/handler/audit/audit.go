@@ -96,6 +96,20 @@ func (h *handler) SyncAuditCycle() {
 		if ac, ok := auditCycleMap[model.MustGetUUIDFromString(page.ID)]; !ok {
 			l.Infof("Create audit cycle ID: %s", page.ID)
 			auditCycle := model.NewAuditCycleFromNotionPage(&page, h.config.Notion.Databases.AuditCycle)
+
+			// Check project_is map with audit_notion_id in db or not
+			exists, err := h.store.ProjectNotion.IsExistByAuditNotionID(tx.DB(), auditCycle.ProjectID.String())
+			if err != nil {
+				l.Error(err, "failed to check project_notion")
+				done(err)
+				return
+			}
+
+			if !exists {
+				l.Infof("Project %s not exist in project_notion", auditCycle.ProjectID.String())
+				continue
+			}
+
 			// Create audits
 			if err := h.createAudits(tx.DB(), &page, auditCycle); err != nil {
 				l.Error(err, "failed to create audit")
@@ -302,9 +316,28 @@ func (h *handler) syncActionItemPage(db *gorm.DB, databaseID string, withStartCu
 
 		newActionItem := model.NewActionItemFromNotionPage(page, pic.ID, h.config.Notion.Databases.AuditActionItem)
 
+		// Check whether project_id map with audit_notion_id in db or not
+		if !newActionItem.ProjectID.IsZero() {
+			exits, err := h.store.ProjectNotion.IsExistByAuditNotionID(db, newActionItem.ProjectID.String())
+			if err != nil {
+				l.Error(err, "failed to check project_notion_id exits in db")
+				return err
+			}
+
+			if !exits {
+				l.Infof("Project ID: %s not exits in project_notion_id table", newActionItem.ProjectID.String())
+				continue
+			}
+		}
+
 		if !newActionItem.AuditCycleID.IsZero() {
 			auditCycle, err := h.store.AuditCycle.One(db, newActionItem.AuditCycleID.String())
 			if err != nil {
+				if errors.Is(err, gorm.ErrRecordNotFound) {
+					l.Infof("Audit cycle ID: %s not exits in db", newActionItem.AuditCycleID.String())
+					continue
+				}
+
 				l.Error(err, "failed to get audit cycle from database")
 				return err
 			}
@@ -1002,7 +1035,7 @@ func (h *handler) syncAuditActionItem(db *gorm.DB) error {
 	// Sync audit action item for all audit cycles
 	for _, auditCycle := range auditCycles {
 		if err := h.syncAuditActionItemInAuditCycle(db, auditCycle); err != nil {
-			l.Error(err, "failed to create audit")
+			l.Error(err, "failed to run syncAuditActionItemInAuditCycle function")
 			return err
 		}
 	}
