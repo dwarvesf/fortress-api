@@ -3255,6 +3255,10 @@ definitions:
         items:
           $ref: '#/definitions/view.WorkSurveySummaryEmployee'
         type: array
+      dates:
+        items:
+          type: string
+        type: array
       type:
         type: string
     type: object
