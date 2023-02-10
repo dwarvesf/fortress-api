@@ -695,62 +695,166 @@ type GetDashboardResourceUtilizationResponse struct {
 }
 
 type WorkUnitDistribution struct {
-	Employee    BasicEmployeeInfo `json:"employee"`
-	Learning    int64             `json:"learning"`
-	Development int64             `json:"development"`
-	Management  int64             `json:"management"`
-	Training    int64             `json:"training"`
+	Employee    BasicEmployeeInfo               `json:"employee"`
+	Learning    WorkUnitDistributionLearning    `json:"learning"`
+	Development WorkUnitDistributionDevelopment `json:"development"`
+	Management  WorkUnitDistributionManagement  `json:"management"`
+	Training    WorkUnitDistributionTraining    `json:"training"`
+}
+
+func ToWorkUnitDistribution(employee *model.Employee, mentees []model.Employee, workUnits []*model.WorkUnit, managementInfos []*model.ManagementInfo, ty model.WorkUnitType) *WorkUnitDistribution {
+	rs := &WorkUnitDistribution{}
+
+	rs.Employee = BasicEmployeeInfo{
+		ID:          employee.ID.String(),
+		FullName:    employee.FullName,
+		DisplayName: employee.DisplayName,
+		Avatar:      employee.Avatar,
+	}
+
+	rs.Employee = *toBasicEmployeeInfo(*employee)
+
+	for _, mentee := range mentees {
+		if ty == "" || ty == model.WorkUnitTypeTraining {
+			rs.Training.Mentees = append(rs.Training.Mentees, toBasicEmployeeInfo(mentee))
+			rs.Training.Total++
+		}
+	}
+
+	for _, wu := range workUnits {
+		switch wu.Type {
+		case model.WorkUnitTypeLearning:
+			if ty == "" || ty == model.WorkUnitTypeLearning {
+				rs.Learning.WorkUnits = append(rs.Learning.WorkUnits, ToWorkUnitDistributionWU(wu))
+				rs.Learning.Total++
+			}
+		case model.WorkUnitTypeDevelopment:
+			if ty == "" || ty == model.WorkUnitTypeDevelopment {
+				rs.Development.WorkUnits = append(rs.Development.WorkUnits, ToWorkUnitDistributionWU(wu))
+				rs.Development.Total++
+			}
+		case model.WorkUnitTypeManagement:
+			if ty == "" || ty == model.WorkUnitTypeManagement {
+				rs.Management.WorkUnits = append(rs.Management.WorkUnits, ToWorkUnitDistributionWU(wu))
+				rs.Management.Total++
+			}
+		case model.WorkUnitTypeTraining:
+			if ty == "" || ty == model.WorkUnitTypeTraining {
+				rs.Training.WorkUnits = append(rs.Training.WorkUnits, ToWorkUnitDistributionWU(wu))
+				rs.Training.Total++
+			}
+		}
+	}
+
+	if ty == "" || ty == model.WorkUnitTypeManagement {
+		for _, managementInfo := range managementInfos {
+			switch managementInfo.Position {
+			case model.HeadPositionTechnicalLead,
+				model.HeadPositionAccountManager,
+				model.HeadPositionDeliveryManager:
+				rs.Management.ProjectHeads = append(rs.Management.ProjectHeads, ManagementInfoToProjectHead(managementInfo))
+				rs.Management.Total++
+			}
+		}
+	}
+
+	return rs
+}
+
+func ManagementInfoToProjectHead(managementInfo *model.ManagementInfo) *WorkUnitDistributionWUProjectHead {
+	return &WorkUnitDistributionWUProjectHead{
+		Project: BasicProjectInfo{
+			ID:     managementInfo.ID.String(),
+			Name:   managementInfo.Name,
+			Type:   managementInfo.Type.String(),
+			Status: managementInfo.Status.String(),
+			Avatar: managementInfo.Avatar,
+			Code:   managementInfo.Code,
+		},
+		Position: managementInfo.Position.String(),
+	}
+}
+
+func ToWorkUnitDistributionWU(workUnit *model.WorkUnit) *WorkUnitDistributionWU {
+	return &WorkUnitDistributionWU{
+		Project:      *toBasicProjectInfo(*workUnit.Project),
+		WorkUnitName: workUnit.Name,
+	}
+}
+
+type WorkUnitDistributionLearning struct {
+	Total     int64                     `json:"total"`
+	WorkUnits []*WorkUnitDistributionWU `json:"workUnits"`
+}
+
+type WorkUnitDistributionDevelopment struct {
+	Total     int64                     `json:"total"`
+	WorkUnits []*WorkUnitDistributionWU `json:"workUnits"`
+}
+
+type WorkUnitDistributionManagement struct {
+	Total        int64                                `json:"total"`
+	WorkUnits    []*WorkUnitDistributionWU            `json:"workUnits"`
+	ProjectHeads []*WorkUnitDistributionWUProjectHead `json:"projectHeads"`
+}
+
+type WorkUnitDistributionTraining struct {
+	Total     int64                     `json:"total"`
+	WorkUnits []*WorkUnitDistributionWU `json:"workUnits"`
+	Mentees   []*BasicEmployeeInfo      `json:"mentees"`
+}
+
+type WorkUnitDistributionWU struct {
+	Project      BasicProjectInfo `json:"project"`
+	WorkUnitName string           `json:"workUnitName"`
+}
+
+type WorkUnitDistributionWUProjectHead struct {
+	Project  BasicProjectInfo `json:"project"`
+	Position string           `json:"position"`
 }
 
 type WorkUnitDistributionData struct {
 	WorkUnitDistributions []*WorkUnitDistribution `json:"workUnitDistributions"`
 }
 
-func ToWorkUnitDistributionData(workUnitDistribution []*model.WorkUnitDistribution, ty model.WorkUnitType, sortRequired model.SortOrder) *WorkUnitDistributionData {
-	rs := &WorkUnitDistributionData{}
-
-	for _, item := range workUnitDistribution {
-		newWorkUnitDistribution := &WorkUnitDistribution{
-			Employee: BasicEmployeeInfo{
-				ID:          item.ID.String(),
-				FullName:    item.FullName,
-				DisplayName: item.DisplayName,
-				Avatar:      item.Avatar,
-				Username:    item.Username,
-			},
-		}
-
-		if ty == "" || ty == model.WorkUnitTypeLearning {
-			newWorkUnitDistribution.Learning = item.Learning
-		}
-
-		if ty == "" || ty == model.WorkUnitTypeDevelopment {
-			newWorkUnitDistribution.Development = item.Development
-		}
-
-		if ty == "" || ty == model.WorkUnitTypeManagement {
-			newWorkUnitDistribution.Management = item.Management + item.ProjectHeadCount
-		}
-		if ty == "" || ty == model.WorkUnitTypeTraining {
-			newWorkUnitDistribution.Training = item.Training + item.LineManagerCount
-		}
-
-		rs.WorkUnitDistributions = append(rs.WorkUnitDistributions, newWorkUnitDistribution)
-	}
-
+func SortWorkUnitDistributionData(wudd *WorkUnitDistributionData, sortRequired model.SortOrder) *WorkUnitDistributionData {
 	if sortRequired != "" {
 		if sortRequired == model.SortOrderASC {
-			sort.Slice(rs.WorkUnitDistributions, func(i, j int) bool {
-				return rs.WorkUnitDistributions[i].Learning+rs.WorkUnitDistributions[i].Development+rs.WorkUnitDistributions[i].Management+rs.WorkUnitDistributions[i].Training <
-					rs.WorkUnitDistributions[j].Learning+rs.WorkUnitDistributions[j].Development+rs.WorkUnitDistributions[j].Management+rs.WorkUnitDistributions[j].Training
+			sort.Slice(wudd.WorkUnitDistributions, func(i, j int) bool {
+				return wudd.WorkUnitDistributions[i].Learning.Total+wudd.WorkUnitDistributions[i].Development.Total+wudd.WorkUnitDistributions[i].Management.Total+wudd.WorkUnitDistributions[i].Training.Total <
+					wudd.WorkUnitDistributions[j].Learning.Total+wudd.WorkUnitDistributions[j].Development.Total+wudd.WorkUnitDistributions[j].Management.Total+wudd.WorkUnitDistributions[j].Training.Total
 			})
 		} else {
-			sort.Slice(rs.WorkUnitDistributions, func(i, j int) bool {
-				return rs.WorkUnitDistributions[i].Learning+rs.WorkUnitDistributions[i].Development+rs.WorkUnitDistributions[i].Management+rs.WorkUnitDistributions[i].Training >
-					rs.WorkUnitDistributions[j].Learning+rs.WorkUnitDistributions[j].Development+rs.WorkUnitDistributions[j].Management+rs.WorkUnitDistributions[j].Training
+			sort.Slice(wudd.WorkUnitDistributions, func(i, j int) bool {
+				return wudd.WorkUnitDistributions[i].Learning.Total+wudd.WorkUnitDistributions[i].Development.Total+wudd.WorkUnitDistributions[i].Management.Total+wudd.WorkUnitDistributions[i].Training.Total >
+					wudd.WorkUnitDistributions[j].Learning.Total+wudd.WorkUnitDistributions[j].Development.Total+wudd.WorkUnitDistributions[j].Management.Total+wudd.WorkUnitDistributions[j].Training.Total
 			})
 		}
 	}
+
+	return wudd
+}
+
+type SummaryWorkUnitDistributionData struct {
+	Learning    float64 `json:"learning"`
+	Development float64 `json:"development"`
+	Management  float64 `json:"management"`
+	Training    float64 `json:"training"`
+}
+
+type SummaryWorkUnitDistributionResponse struct {
+	Data *WorkUnitDistributionData `json:"data"`
+}
+
+func ToSummaryWorkUnitDistributionData(data *model.TotalWorkUnitDistribution) *SummaryWorkUnitDistributionData {
+	total := data.TotalLineManagerCount + data.TotalProjectHead + data.TotalLearning + data.TotalDevelopment + data.TotalManagement + data.TotalTraining
+	rs := &SummaryWorkUnitDistributionData{}
+
+	rs.Learning = math.Round(float64(data.TotalLearning+data.TotalLineManagerCount)/float64(total)*100*100) / 100
+	rs.Development = math.Round(float64(data.TotalDevelopment)/float64(total)*100*100) / 100
+	rs.Management = math.Round(float64(data.TotalManagement+data.TotalProjectHead)/float64(total)*100*100) / 100
+	rs.Training = math.Round(float64(data.TotalTraining)/float64(total)*100*100) / 100
 
 	return rs
 }

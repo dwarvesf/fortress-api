@@ -11,5 +11,6 @@ type IStore interface {
 	GetByProjectID(db *gorm.DB, projectID string, status model.WorkUnitStatus) (workUnits []*model.WorkUnit, err error)
 	One(db *gorm.DB, id string) (*model.WorkUnit, error)
 	IsExists(db *gorm.DB, id string) (bool, error)
-	UpdateSelectedFieldsByID(db *gorm.DB, id string, updateModel model.WorkUnit, updatedFields ...string) (*model.WorkUnit, error)
+	UpdateSelectedFieldsByID(db *gorm.DB, id string, updateModel model.WorkUnit, updatedFields ...string) (workUnit *model.WorkUnit, err error)
+	GetAllWorkUnitByEmployeeID(db *gorm.DB, employeeID string) (workUnits []*model.WorkUnit, err error)
 }

@@ -631,3 +631,42 @@ func TestHandler_GetWorkUnitDistribution(t *testing.T) {
 		})
 	}
 }
+
+func TestHandler_GetWorkUnitDistributionSummary(t *testing.T) {
+	cfg := config.LoadTestConfig()
+	loggerMock := logger.NewLogrusLogger()
+	serviceMock := service.New(&cfg)
+	storeMock := store.New()
+
+	tests := []struct {
+		name             string
+		wantCode         int
+		wantErr          error
+		wantResponsePath string
+	}{
+		{
+			name:             "happy_case_with_name",
+			wantCode:         http.StatusOK,
+			wantResponsePath: "testdata/work_unit_distribution_summary/200.json",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
+				testhelper.LoadTestSQLFile(t, txRepo, "./testdata/work_unit_distribution_summary/work_unit_distribution_summary.sql")
+				w := httptest.NewRecorder()
+				ctx, _ := gin.CreateTestContext(w)
+				ctx.Request = httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/dashboards/resources/work-unit-distribution-summary"), nil)
+				ctx.Request.Header.Set("Authorization", testToken)
+
+				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+				h.GetWorkUnitDistributionSummary(ctx)
+				require.Equal(t, tt.wantCode, w.Code)
+				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
+				require.NoError(t, err)
+
+				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Dashboard.GetWorkUnitDistributionSummary] response mismatched")
+			})
+		})
+	}
+}

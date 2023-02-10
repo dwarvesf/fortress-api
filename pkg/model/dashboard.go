@@ -85,16 +85,21 @@ type ResourceUtilization struct {
 	Available int       `json:"available"`
 }
 
-type WorkUnitDistribution struct {
-	ID               UUID   `json:"id"`
-	FullName         string `json:"fullName"`
-	DisplayName      string `json:"displayName"`
-	Avatar           string `json:"avatar"`
-	Username         string `json:"username"`
-	LineManagerCount int64  `json:"lineManagerCount"`
-	ProjectHeadCount int64  `json:"projectHeadCount"`
-	Learning         int64  `json:"learning"`
-	Development      int64  `json:"development"`
-	Management       int64  `json:"management"`
-	Training         int64  `json:"training"`
+type TotalWorkUnitDistribution struct {
+	TotalLineManagerCount int64
+	TotalProjectHead      int64
+	TotalLearning         int64
+	TotalDevelopment      int64
+	TotalManagement       int64
+	TotalTraining         int64
+}
+
+type ManagementInfo struct {
+	ID       UUID          `json:"id"`
+	Name     string        `json:"name"`
+	Code     string        `json:"code"`
+	Avatar   string        `json:"avatar"`
+	Type     ProjectType   `json:"type"`
+	Status   ProjectStatus `json:"status"`
+	Position HeadPosition  `json:"position"`
 }

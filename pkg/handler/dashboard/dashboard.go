@@ -15,6 +15,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/store"
+	"github.com/dwarvesf/fortress-api/pkg/store/employee"
 	"github.com/dwarvesf/fortress-api/pkg/view"
 )
 
@@ -675,6 +676,33 @@ func (h *handler) GetResourceUtilization(c *gin.Context) {
 	c.JSON(http.StatusOK, view.CreateResponse[any](res, nil, nil, nil, ""))
 }
 
+// GetWorkUnitDistributionSummary godoc
+// @Summary Get summary for workunit distribution dashboard
+// @Description Get summary for workunit distribution dashboard
+// @Tags Dashboard
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "jwt token"
+// @Success 200 {object} view.SummaryWorkUnitDistributionResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /dashboards/resources/work-unit-distribution-summary [get]
+func (h *handler) GetWorkUnitDistributionSummary(c *gin.Context) {
+	l := h.logger.Fields(logger.Fields{
+		"handler": "dashboard",
+		"method":  "GetWorkUnitDistributionSummary",
+	})
+
+	// Get total work unit distribution
+	totalWorkUnitDistribution, err := h.store.Dashboard.TotalWorkUnitDistribution(h.repo.DB())
+	if err != nil {
+		l.Error(err, "failed to get total work unit distribution")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToSummaryWorkUnitDistributionData(totalWorkUnitDistribution), nil, nil, nil, ""))
+}
+
 // GetWorkUnitDistribution godoc
 // @Summary Get work unit distribution data for dashboard
 // @Description Get work unit distribution data for dashboard
@@ -683,8 +711,8 @@ func (h *handler) GetResourceUtilization(c *gin.Context) {
 // @Produce json
 // @Param Authorization header string true "jwt token"
 // @Param name   query  string false  "employee name for filter"
-// @Param sort   query  model.SortOrder false  "sort required"
-// @Param type   query  model.WorkUnitType false  "work unit type for filter"
+// @Param sort   query  string false  "sort required"
+// @Param type   query  string false  "work unit type for filter"
 // @Success 200 {object} view.WorkUnitDistributionsResponse
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 404 {object} view.ErrorResponse
@@ -716,15 +744,49 @@ func (h *handler) GetWorkUnitDistribution(c *gin.Context) {
 		return
 	}
 
-	// Get all work unit distribution for employees
-	workUnitDistributions, err := h.store.Dashboard.GetWorkUnitDistribution(h.repo.DB(), input.Name)
+	rs := &view.WorkUnitDistributionData{}
+
+	// Get all employee
+	employees, _, err := h.store.Employee.All(h.repo.DB(), employee.EmployeeFilter{Keyword: input.Name}, model.Pagination{
+		Page: 0,
+		Size: 1000,
+	})
+
 	if err != nil {
-		l.Error(err, "failed to get work unit distribution")
+		l.Error(err, "failed to get all employee")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToWorkUnitDistributionData(workUnitDistributions, input.Type, input.Sort), nil, nil, nil, ""))
+	for _, employee := range employees {
+		// Get all mentee
+		mentees, err := h.store.Employee.GetMenteesByID(h.repo.DB(), employee.ID.String())
+		if err != nil {
+			l.Error(err, "failed to get mentees")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+			return
+		}
+
+		// Get all work units info
+		workUnits, err := h.store.WorkUnit.GetAllWorkUnitByEmployeeID(h.repo.DB(), employee.ID.String())
+		if err != nil {
+			l.Error(err, "failed to get work units")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+			return
+		}
+
+		// Get all project head info
+		managementInfos, err := h.store.Dashboard.GetProjectHeadByEmployeeID(h.repo.DB(), employee.ID.String())
+		if err != nil {
+			l.Error(err, "failed to get project head")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+			return
+		}
+
+		rs.WorkUnitDistributions = append(rs.WorkUnitDistributions, view.ToWorkUnitDistribution(employee, mentees, workUnits, managementInfos, input.Type))
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.SortWorkUnitDistributionData(rs, input.Sort), nil, nil, nil, ""))
 }
 
 // GetResourceWorkSurveySummaries godoc

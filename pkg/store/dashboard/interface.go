@@ -29,6 +29,7 @@ type IStore interface {
 	GetPendingSlots(db *gorm.DB) ([]*model.ProjectSlot, error)
 	GetAvailableEmployees(db *gorm.DB) ([]*model.Employee, error)
 	GetResourceUtilization(db *gorm.DB) ([]*model.ResourceUtilization, error)
-	GetWorkUnitDistribution(db *gorm.DB, name string) ([]*model.WorkUnitDistribution, error)
+	TotalWorkUnitDistribution(db *gorm.DB) (*model.TotalWorkUnitDistribution, error)
 	GetAllWorkReviews(db *gorm.DB, keyword string, pagination model.Pagination) ([]*model.EmployeeEventReviewer, error)
+	GetProjectHeadByEmployeeID(db *gorm.DB, employeeID string) ([]*model.ManagementInfo, error)
 }
