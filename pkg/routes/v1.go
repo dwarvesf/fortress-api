@@ -22,6 +22,7 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 	{
 		cronjob.POST("/audits", h.Audit.Sync)
 		cronjob.POST("/birthday", h.Birthday.BirthdayDailyMessage)
+		cronjob.POST("/sync-discord-info", h.Discord.SyncDiscordInfo)
 	}
 
 	/////////////////

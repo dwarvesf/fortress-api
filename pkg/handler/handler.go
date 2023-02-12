@@ -10,6 +10,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/handler/birthday"
 	"github.com/dwarvesf/fortress-api/pkg/handler/dashboard"
 	"github.com/dwarvesf/fortress-api/pkg/handler/digest"
+	"github.com/dwarvesf/fortress-api/pkg/handler/discord"
 	"github.com/dwarvesf/fortress-api/pkg/handler/earn"
 	"github.com/dwarvesf/fortress-api/pkg/handler/employee"
 	"github.com/dwarvesf/fortress-api/pkg/handler/event"
@@ -57,6 +58,7 @@ type Handler struct {
 	Birthday       birthday.IHandler
 	Invoice        invoice.IHandler
 	Webhook        webhook.IHandler
+	Discord        discord.IHandler
 }
 
 func New(store *store.Store, repo store.DBRepo, service *service.Service, ctrl *controller.Controller, logger logger.Logger, cfg *config.Config) *Handler {
@@ -85,5 +87,6 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, ctrl *
 		Birthday:       birthday.New(store, repo, service, logger, cfg),
 		Invoice:        invoice.New(store, repo, service, logger, cfg),
 		Webhook:        webhook.New(store, repo, service, logger, cfg),
+		Discord:        discord.New(store, repo, service, logger, cfg),
 	}
 }
