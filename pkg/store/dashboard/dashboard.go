@@ -466,7 +466,7 @@ func (s *store) GetPendingSlots(db *gorm.DB) ([]*model.ProjectSlot, error) {
 			SELECT p.id
 			FROM projects p
 			WHERE p.status = ? AND p.deleted_at IS NULL
-		)`, model.ProjectStatusActive).
+		) AND status = ?`, model.ProjectStatusClosed, model.ProjectMemberStatusPending).
 		Order("updated_at").
 		Preload("Seniority", "deleted_at IS NULL").
 		Preload("Project", "deleted_at IS NULL").
