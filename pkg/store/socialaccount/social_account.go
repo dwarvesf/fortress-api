@@ -22,6 +22,7 @@ func (s *store) Update(db *gorm.DB, sa *model.SocialAccount) (*model.SocialAccou
 	return sa, db.Model(&sa).Where("id = ?", sa.ID).Updates(&sa).Error
 }
 
+// GetByEmployeeID get social account by employee id
 func (s *store) GetByEmployeeID(db *gorm.DB, employeeID string) ([]*model.SocialAccount, error) {
 	var accounts []*model.SocialAccount
 	return accounts, db.Where("employee_id = ?", employeeID).Find(&accounts).Error
@@ -31,4 +32,10 @@ func (s *store) GetByEmployeeID(db *gorm.DB, employeeID string) ([]*model.Social
 func (s *store) UpdateSelectedFieldsByID(db *gorm.DB, id string, updateModel model.SocialAccount, updatedFields ...string) (*model.SocialAccount, error) {
 	sa := model.SocialAccount{}
 	return &sa, db.Model(&sa).Where("id = ?", id).Select(updatedFields).Updates(updateModel).Error
+}
+
+// GetByType get social account by type
+func (s *store) GetByType(db *gorm.DB, saType string) ([]*model.SocialAccount, error) {
+	var accounts []*model.SocialAccount
+	return accounts, db.Where("type = ?", saType).Find(&accounts).Error
 }

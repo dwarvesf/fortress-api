@@ -103,3 +103,26 @@ func (d *discordClient) newRequest(method string, url string, payload io.Reader)
 	}
 	return resBody, nil
 }
+
+func (d *discordClient) GetMembers() ([]*discordgo.Member, error) {
+	members := make([]*discordgo.Member, 0)
+
+	after := ""
+	limit := 1000
+	for {
+		guildMembers, err := d.session.GuildMembers(d.cfg.Discord.IDs.DwarvesGuild, after, limit)
+		if err != nil {
+			return nil, err
+		}
+
+		members = append(members, guildMembers...)
+
+		if len(guildMembers) < limit {
+			break
+		}
+
+		after = guildMembers[len(guildMembers)-1].User.ID
+	}
+
+	return members, nil
+}
