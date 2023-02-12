@@ -23,7 +23,8 @@ type Config struct {
 	Wise    Wise
 	Discord Discord
 
-	Invoice Invoice
+	Invoice  Invoice
+	Sendgrid Sendgrid
 
 	APIKey       string
 	Debug        bool
@@ -111,6 +112,10 @@ type Invoice struct {
 	TestEmail    string
 }
 
+type Sendgrid struct {
+	APIKey string
+}
+
 type ENV interface {
 	GetBool(string) bool
 	GetString(string) string
@@ -191,6 +196,10 @@ func Generate(v ENV) *Config {
 			TemplatePath: v.GetString("INVOICE_TEMPLATE_PATH"),
 			DirID:        v.GetString("INVOICE_DIR_ID"),
 			TestEmail:    v.GetString("INVOICE_TEST_EMAIL"),
+		},
+
+		Sendgrid: Sendgrid{
+			APIKey: v.GetString("SENDGRID_API_KEY"),
 		},
 	}
 }

@@ -223,4 +223,10 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 			resourceDashboardGroup.GET("/work-survey-summaries", h.Dashboard.GetResourceWorkSurveySummaries)
 		}
 	}
+
+	notionChangelog := v1.Group("notion-changelog")
+	{
+		notionChangelog.GET("/projects/available", h.Changelog.GetAvailableProjectsChangelog)
+		notionChangelog.POST("/project", h.Changelog.SendProjectChangelog)
+	}
 }
