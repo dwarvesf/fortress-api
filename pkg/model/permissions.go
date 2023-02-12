@@ -81,6 +81,10 @@ const (
 	PermissionInvoiceEdit                         PermissionCode = "invoices.edit"
 	PermissionInvoiceDelete                       PermissionCode = "invoices.delete"
 	PermissionBankAccountRead                     PermissionCode = "bankAccounts.read"
+	PermissionClientCreate                        PermissionCode = "clients.create"
+	PermissionClientRead                          PermissionCode = "clients.read"
+	PermissionClientEdit                          PermissionCode = "clients.edit"
+	PermissionClientDelete                        PermissionCode = "clients.delete"
 )
 
 func (p PermissionCode) String() string {

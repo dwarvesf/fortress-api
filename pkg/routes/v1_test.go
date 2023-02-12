@@ -593,6 +593,30 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/invoice.IHandler.GetLatestInvoice-fm",
 			},
 		},
+		"/api/v1/clients": {
+			"GET": {
+				Method:  "GET",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/client.IHandler.List-fm",
+			},
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/client.IHandler.Create-fm",
+			},
+		},
+		"/api/v1/clients/:id": {
+			"GET": {
+				Method:  "GET",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/client.IHandler.Detail-fm",
+			},
+			"PUT": {
+				Method:  "PUT",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/client.IHandler.Update-fm",
+			},
+			"DELETE": {
+				Method:  "DELETE",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/client.IHandler.Delete-fm",
+			},
+		},
 	}
 
 	l := logger.NewLogrusLogger()

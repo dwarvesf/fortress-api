@@ -1,8 +1,18 @@
 package view
 
-import (
-	"github.com/dwarvesf/fortress-api/pkg/model"
-)
+import "github.com/dwarvesf/fortress-api/pkg/model"
+
+type CreateClientResponse struct {
+	Data *model.Client `json:"data"`
+}
+
+type GetListClientResponse struct {
+	Data []*model.Client `json:"data"`
+}
+
+type GetDetailClientResponse struct {
+	Data *model.Client `json:"data"`
+}
 
 type Client struct {
 	ID                 string          `json:"id"`
