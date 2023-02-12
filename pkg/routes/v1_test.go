@@ -639,6 +639,18 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/client.IHandler.Delete-fm",
 			},
 		},
+		"/api/v1/notion-changelog/projects/available": {
+			"GET": {
+				Method:  "GET",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/changelog.IHandler.GetAvailableProjectsChangelog-fm",
+			},
+		},
+		"/api/v1/notion-changelog/project": {
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/changelog.IHandler.SendProjectChangelog-fm",
+			},
+		},
 	}
 
 	l := logger.NewLogrusLogger()
