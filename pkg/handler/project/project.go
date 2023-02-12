@@ -282,7 +282,7 @@ func (h *handler) Create(c *gin.Context) {
 
 	var client *model.Client
 	if !body.ClientID.IsZero() {
-		client, err = h.store.Client.OneByID(h.repo.DB(), body.ClientID.String())
+		client, err = h.store.Client.One(h.repo.DB(), body.ClientID.String())
 		if err != nil {
 			l.Error(err, "client not found")
 			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrClientNotFound, body, ""))
@@ -1484,7 +1484,7 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 	}
 
 	if !body.ClientID.IsZero() {
-		client, err := h.store.Client.OneByID(h.repo.DB(), body.ClientID.String())
+		client, err := h.store.Client.One(h.repo.DB(), body.ClientID.String())
 		if err != nil {
 			l.Error(err, "client not found")
 			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrClientNotFound, body, ""))

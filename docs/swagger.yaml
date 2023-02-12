@@ -1126,6 +1126,40 @@ definitions:
     required:
     - eventQuestionID
     type: object
+  request.CreateClientContactInput:
+    properties:
+      emails:
+        items:
+          type: string
+        type: array
+      isMainContact:
+        type: boolean
+      name:
+        type: string
+      role:
+        type: string
+    type: object
+  request.CreateClientInput:
+    properties:
+      address:
+        type: string
+      contacts:
+        items:
+          $ref: '#/definitions/request.CreateClientContactInput'
+        type: array
+      country:
+        type: string
+      description:
+        type: string
+      industry:
+        type: string
+      name:
+        type: string
+      registrationNumber:
+        type: string
+      website:
+        type: string
+    type: object
   request.CreateEmployeeInput:
     properties:
       displayName:
@@ -1382,6 +1416,40 @@ definitions:
     required:
     - answers
     - status
+    type: object
+  request.UpdateClientContactInput:
+    properties:
+      emails:
+        items:
+          type: string
+        type: array
+      isMainContact:
+        type: boolean
+      name:
+        type: string
+      role:
+        type: string
+    type: object
+  request.UpdateClientInput:
+    properties:
+      address:
+        type: string
+      contacts:
+        items:
+          $ref: '#/definitions/request.UpdateClientContactInput'
+        type: array
+      country:
+        type: string
+      description:
+        type: string
+      industry:
+        type: string
+      name:
+        type: string
+      registrationNumber:
+        type: string
+      website:
+        type: string
     type: object
   request.UpdateContactInfoInput:
     properties:
@@ -2035,6 +2103,11 @@ definitions:
           $ref: '#/definitions/model.Country'
         type: array
     type: object
+  view.CreateClientResponse:
+    properties:
+      data:
+        $ref: '#/definitions/model.Client'
+    type: object
   view.CreateInvoiceResponse:
     properties:
       data:
@@ -2450,6 +2523,11 @@ definitions:
           $ref: '#/definitions/model.ResourceUtilization'
         type: array
     type: object
+  view.GetDetailClientResponse:
+    properties:
+      data:
+        $ref: '#/definitions/model.Client'
+    type: object
   view.GetEngagementDashboardDetailResponse:
     properties:
       data:
@@ -2468,6 +2546,13 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/model.Invoice'
+    type: object
+  view.GetListClientResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/model.Client'
+        type: array
     type: object
   view.GetQuestionResponse:
     properties:
@@ -3649,6 +3734,164 @@ paths:
       summary: Get all bank accounts
       tags:
       - Bank
+  /clients:
+    get:
+      consumes:
+      - application/json
+      description: Get all clients
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Body
+        in: body
+        name: Body
+        required: true
+        schema:
+          $ref: '#/definitions/request.CreateClientInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.GetListClientResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get all clients
+      tags:
+      - Client
+    post:
+      consumes:
+      - application/json
+      description: Create new client
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Body
+        in: body
+        name: Body
+        required: true
+        schema:
+          $ref: '#/definitions/request.CreateClientInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.CreateClientResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Create new client
+      tags:
+      - Client
+  /clients/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete client by id
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Delete client by id
+      tags:
+      - Client
+    get:
+      consumes:
+      - application/json
+      description: Get client detail by id
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.GetDetailClientResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get client detail by id
+      tags:
+      - Client
+    put:
+      consumes:
+      - application/json
+      description: Update client by id
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Body
+        in: body
+        name: Body
+        required: true
+        schema:
+          $ref: '#/definitions/request.UpdateClientInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Update client by id
+      tags:
+      - Client
   /cronjobs/audits:
     post:
       consumes:

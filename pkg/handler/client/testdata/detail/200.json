@@ -1,0 +1,46 @@
+{
+    "data": {
+        "id": "67f9f420-cdd5-4793-88c7-d2068bd17f61",
+        "createdAt": "2023-02-10T16:40:03.932475Z",
+        "updatedAt": "2023-02-10T16:40:03.932475Z",
+        "Name": "John",
+        "Description": "description",
+        "RegistrationNumber": "456",
+        "Address": "CA",
+        "Country": "USA",
+        "Industry": "education",
+        "Website": "b.com",
+        "Contacts": [
+            {
+                "id": "596ae21d-570b-4852-92a6-117633629046",
+                "createdAt": "2023-02-10T16:40:03.934235Z",
+                "updatedAt": "2023-02-10T16:40:03.934235Z",
+                "Name": "contact name 1",
+                "ClientID": "67f9f420-cdd5-4793-88c7-d2068bd17f61",
+                "Role": "manager",
+                "Emails": {
+                    "emails": [
+                        "john1@gmail.com",
+                        "john2@gmail.com"
+                    ]
+                },
+                "IsMainContact": true
+            },
+            {
+                "id": "bebfe6b3-a09b-4a90-bba5-fe8a97d00047",
+                "createdAt": "2023-02-10T16:40:03.935914Z",
+                "updatedAt": "2023-02-10T16:40:03.935914Z",
+                "Name": "contact name 2",
+                "ClientID": "67f9f420-cdd5-4793-88c7-d2068bd17f61",
+                "Role": "manager",
+                "Emails": {
+                    "emails": [
+                        "john3@gmail.com",
+                        "john4@gmail.com"
+                    ]
+                },
+                "IsMainContact": false
+            }
+        ]
+    }
+}
