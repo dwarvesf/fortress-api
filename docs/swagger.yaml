@@ -2994,10 +2994,21 @@ definitions:
       data:
         $ref: '#/definitions/view.SubmitFeedback'
     type: object
+  view.SummaryWorkUnitDistributionData:
+    properties:
+      development:
+        type: number
+      learning:
+        type: number
+      management:
+        type: number
+      training:
+        type: number
+    type: object
   view.SummaryWorkUnitDistributionResponse:
     properties:
       data:
-        $ref: '#/definitions/view.WorkUnitDistributionData'
+        $ref: '#/definitions/view.SummaryWorkUnitDistributionData'
     type: object
   view.Survey:
     properties:

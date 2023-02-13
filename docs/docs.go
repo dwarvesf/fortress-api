@@ -9401,11 +9401,28 @@ const docTemplate = `{
                 }
             }
         },
+        "view.SummaryWorkUnitDistributionData": {
+            "type": "object",
+            "properties": {
+                "development": {
+                    "type": "number"
+                },
+                "learning": {
+                    "type": "number"
+                },
+                "management": {
+                    "type": "number"
+                },
+                "training": {
+                    "type": "number"
+                }
+            }
+        },
         "view.SummaryWorkUnitDistributionResponse": {
             "type": "object",
             "properties": {
                 "data": {
-                    "$ref": "#/definitions/view.WorkUnitDistributionData"
+                    "$ref": "#/definitions/view.SummaryWorkUnitDistributionData"
                 }
             }
         },

@@ -844,7 +844,7 @@ type SummaryWorkUnitDistributionData struct {
 }
 
 type SummaryWorkUnitDistributionResponse struct {
-	Data *WorkUnitDistributionData `json:"data"`
+	Data *SummaryWorkUnitDistributionData `json:"data"`
 }
 
 func ToSummaryWorkUnitDistributionData(data *model.TotalWorkUnitDistribution) *SummaryWorkUnitDistributionData {
