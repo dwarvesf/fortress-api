@@ -367,7 +367,7 @@ func (s *store) GetAllActionItemSquashReports(db *gorm.DB) ([]*model.ActionItemS
 			sum(high)                            as high,
 			sum(medium)                          as medium,
 			sum(low)                             as low,
-			action_item_snapshots.created_at     as snap_date
+			date_trunc('DAY', action_item_snapshots.created_at)     as snap_date
 		FROM action_item_snapshots
 				JOIN project_notions ON action_item_snapshots.project_id = project_notions.audit_notion_id
 				JOIN projects ON project_notions.project_id = projects.id
