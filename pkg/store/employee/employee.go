@@ -98,8 +98,6 @@ func (s *store) All(db *gorm.DB, filter EmployeeFilter, pagination model.Paginat
 			Preload("Seniority", "deleted_at IS NULL").
 			Preload("ProjectMembers.Project", "deleted_at IS NULL").
 			Preload("ProjectMembers.Project.Heads", "deleted_at IS NULL").
-			Preload("EmployeeOrganizations", "deleted_at IS NULL").
-			Preload("EmployeeOrganizations.Organization", "deleted_at IS NULL").
 			Preload("EmployeePositions", "deleted_at IS NULL").
 			Preload("EmployeePositions.Position", "deleted_at IS NULL").
 			Preload("EmployeeRoles", "deleted_at IS NULL").
@@ -107,7 +105,13 @@ func (s *store) All(db *gorm.DB, filter EmployeeFilter, pagination model.Paginat
 			Preload("EmployeeChapters", "deleted_at IS NULL").
 			Preload("EmployeeChapters.Chapter", "deleted_at IS NULL").
 			Preload("EmployeeStacks", "deleted_at IS NULL").
-			Preload("EmployeeStacks.Stack", "deleted_at IS NULL")
+			Preload("EmployeeStacks.Stack", "deleted_at IS NULL").
+			Preload("EmployeeOrganizations", func(db *gorm.DB) *gorm.DB {
+				return db.Joins("JOIN organizations ON organizations.id = employee_organizations.organization_id").
+					Where("employee_organizations.deleted_at IS NULL").
+					Order("organizations.code DESC")
+			}).
+			Preload("EmployeeOrganizations.Organization", "deleted_at IS NULL")
 	}
 
 	limit, offset := pagination.ToLimitOffset()

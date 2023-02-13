@@ -478,11 +478,17 @@ func (s *store) GetPendingSlots(db *gorm.DB) ([]*model.ProjectSlot, error) {
 func (s *store) GetAvailableEmployees(db *gorm.DB) ([]*model.Employee, error) {
 	var employees []*model.Employee
 	return employees, db.
-		Where(`working_status != ? AND id NOT IN (
-			SELECT pm.employee_id
-			FROM project_members pm
-			WHERE pm.end_date IS NULL OR pm.end_date > now()
-		)`, model.WorkingStatusLeft).
+		Where(`working_status != ? 
+			AND id IN (
+				SELECT eo.employee_id
+				FROM employee_organizations eo JOIN organizations o ON eo.organization_id = o.id
+				WHERE o.deleted_at IS NULL AND eo.deleted_at IS NULL AND o.code = ?
+			)
+			AND id NOT IN (
+				SELECT pm.employee_id
+				FROM project_members pm
+				WHERE (pm.end_date IS NULL OR pm.end_date > now() + INTERVAL '2 months') AND pm.deleted_at IS NULL
+			)`, model.WorkingStatusLeft, model.OrganizationCodeDwarves).
 		Order("updated_at").
 		Preload("Seniority", "deleted_at IS NULL").
 		Preload("EmployeePositions", "deleted_at IS NULL").
