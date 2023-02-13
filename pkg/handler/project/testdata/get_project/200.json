@@ -50,7 +50,14 @@
                         "code": "frontend",
                         "name": "Frontend"
                     }
-                ]
+                ],
+                "upsellPerson": {
+                    "id": "608ea227-45a5-4c8a-af43-6c7280d96340",
+                    "fullName": "Tiêu Quang Huy",
+                    "displayName": "Huy Tieu",
+                    "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/3c420751-bb9a-4878-896e-2f10f3a633d6_avatar2535921977139052349.png",
+                    "username": "huytq"
+                }
             },
             {
                 "projectMemberID": "",
@@ -81,7 +88,14 @@
                         "code": "frontend",
                         "name": "Frontend"
                     }
-                ]
+                ],
+                "upsellPerson": {
+                    "id": "608ea227-45a5-4c8a-af43-6c7280d96340",
+                    "fullName": "Tiêu Quang Huy",
+                    "displayName": "Huy Tieu",
+                    "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/3c420751-bb9a-4878-896e-2f10f3a633d6_avatar2535921977139052349.png",
+                    "username": "huytq"
+                }
             },
             {
                 "projectMemberID": "",
@@ -112,7 +126,14 @@
                         "code": "frontend",
                         "name": "Frontend"
                     }
-                ]
+                ],
+                "upsellPerson": {
+                    "id": "608ea227-45a5-4c8a-af43-6c7280d96340",
+                    "fullName": "Tiêu Quang Huy",
+                    "displayName": "Huy Tieu",
+                    "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/3c420751-bb9a-4878-896e-2f10f3a633d6_avatar2535921977139052349.png",
+                    "username": "huytq"
+                }
             },
             {
                 "projectMemberID": "",
@@ -143,7 +164,14 @@
                         "code": "backend",
                         "name": "Backend"
                     }
-                ]
+                ],
+                "upsellPerson": {
+                    "id": "608ea227-45a5-4c8a-af43-6c7280d96340",
+                    "fullName": "Tiêu Quang Huy",
+                    "displayName": "Huy Tieu",
+                    "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/3c420751-bb9a-4878-896e-2f10f3a633d6_avatar2535921977139052349.png",
+                    "username": "huytq"
+                }
             },
             {
                 "projectMemberID": "",
@@ -174,7 +202,14 @@
                         "code": "backend",
                         "name": "Backend"
                     }
-                ]
+                ],
+                "upsellPerson": {
+                    "id": "608ea227-45a5-4c8a-af43-6c7280d96340",
+                    "fullName": "Tiêu Quang Huy",
+                    "displayName": "Huy Tieu",
+                    "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/3c420751-bb9a-4878-896e-2f10f3a633d6_avatar2535921977139052349.png",
+                    "username": "huytq"
+                }
             }
         ],
         "technicalLeads": [

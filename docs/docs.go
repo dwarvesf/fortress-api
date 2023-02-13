@@ -6328,6 +6328,9 @@ const docTemplate = `{
                 "updatedAt": {
                     "type": "string"
                 },
+                "upsellPerson": {
+                    "$ref": "#/definitions/model.Employee"
+                },
                 "upsellPersonID": {
                     "type": "string"
                 }
@@ -6449,6 +6452,9 @@ const docTemplate = `{
                 },
                 "updatedAt": {
                     "type": "string"
+                },
+                "upsellPerson": {
+                    "$ref": "#/definitions/model.Employee"
                 },
                 "upsellPersonID": {
                     "type": "string"
@@ -6827,6 +6833,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "status": {
+                    "type": "string"
+                },
+                "upsellPersonID": {
                     "type": "string"
                 }
             }
@@ -7516,6 +7525,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "status": {
+                    "type": "string"
+                },
+                "upsellPersonID": {
                     "type": "string"
                 }
             }
@@ -8392,6 +8404,9 @@ const docTemplate = `{
                 },
                 "status": {
                     "type": "string"
+                },
+                "upsellPerson": {
+                    "$ref": "#/definitions/view.BasicEmployeeInfo"
                 },
                 "username": {
                     "type": "string"
@@ -9633,6 +9648,9 @@ const docTemplate = `{
                 },
                 "status": {
                     "type": "string"
+                },
+                "upsellPerson": {
+                    "$ref": "#/definitions/view.BasicEmployeeInfo"
                 },
                 "username": {
                     "type": "string"

@@ -6320,6 +6320,9 @@
                 "updatedAt": {
                     "type": "string"
                 },
+                "upsellPerson": {
+                    "$ref": "#/definitions/model.Employee"
+                },
                 "upsellPersonID": {
                     "type": "string"
                 }
@@ -6441,6 +6444,9 @@
                 },
                 "updatedAt": {
                     "type": "string"
+                },
+                "upsellPerson": {
+                    "$ref": "#/definitions/model.Employee"
                 },
                 "upsellPersonID": {
                     "type": "string"
@@ -6819,6 +6825,9 @@
                     "type": "string"
                 },
                 "status": {
+                    "type": "string"
+                },
+                "upsellPersonID": {
                     "type": "string"
                 }
             }
@@ -7508,6 +7517,9 @@
                     "type": "string"
                 },
                 "status": {
+                    "type": "string"
+                },
+                "upsellPersonID": {
                     "type": "string"
                 }
             }
@@ -8384,6 +8396,9 @@
                 },
                 "status": {
                     "type": "string"
+                },
+                "upsellPerson": {
+                    "$ref": "#/definitions/view.BasicEmployeeInfo"
                 },
                 "username": {
                     "type": "string"
@@ -9625,6 +9640,9 @@
                 },
                 "status": {
                     "type": "string"
+                },
+                "upsellPerson": {
+                    "$ref": "#/definitions/view.BasicEmployeeInfo"
                 },
                 "username": {
                     "type": "string"

@@ -221,6 +221,12 @@ func (h *handler) UpdateProjectStatus(c *gin.Context) {
 // @Failure 500 {object} view.ErrorResponse
 // @Router /projects [post]
 func (h *handler) Create(c *gin.Context) {
+	userInfo, err := utils.GetLoggedInUserInfo(c, h.store, h.repo.DB(), h.config)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, userInfo.UserID, ""))
+		return
+	}
+
 	body := request.CreateProjectInput{}
 	if err := c.ShouldBindJSON(&body); err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, body, ""))
@@ -376,7 +382,7 @@ func (h *handler) Create(c *gin.Context) {
 		p.Slots = append(p.Slots, *slot)
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse(view.ToCreateProjectDataResponse(p), nil, done(nil), nil, ""))
+	c.JSON(http.StatusOK, view.CreateResponse(view.ToCreateProjectDataResponse(userInfo, p), nil, done(nil), nil, ""))
 }
 
 // GetMembers godoc
@@ -398,6 +404,12 @@ func (h *handler) Create(c *gin.Context) {
 // @Failure 500 {object} view.ErrorResponse
 // @Router /projects/{id}/members [get]
 func (h *handler) GetMembers(c *gin.Context) {
+	userInfo, err := utils.GetLoggedInUserInfo(c, h.store, h.repo.DB(), h.config)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, userInfo.UserID, ""))
+		return
+	}
+
 	query := request.GetListStaffInput{}
 	if err := c.ShouldBindQuery(&query); err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, query, ""))
@@ -471,7 +483,7 @@ func (h *handler) GetMembers(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse(view.ToProjectMemberListData(members, heads),
+	c.JSON(http.StatusOK, view.CreateResponse(view.ToProjectMemberListData(userInfo, members, heads),
 		&view.PaginationResponse{Pagination: query.Pagination, Total: total}, nil, nil, ""))
 }
 
@@ -778,6 +790,12 @@ func (h *handler) UnassignMember(c *gin.Context) {
 // @Failure 500 {object} view.ErrorResponse
 // @Router /projects/{id}/members [put]
 func (h *handler) UpdateMember(c *gin.Context) {
+	userInfo, err := utils.GetLoggedInUserInfo(c, h.store, h.repo.DB(), h.config)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, userInfo.UserID, ""))
+		return
+	}
+
 	var body request.UpdateMemberInput
 	if err := c.ShouldBindJSON(&body); err != nil {
 		if err != nil {
@@ -932,7 +950,7 @@ func (h *handler) UpdateMember(c *gin.Context) {
 		slot.ProjectMember.ProjectMemberPositions[i].Position = positionMap[v.PositionID]
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse(view.ToCreateMemberData(slot), nil, done(nil), nil, ""))
+	c.JSON(http.StatusOK, view.CreateResponse(view.ToCreateMemberData(userInfo, slot), nil, done(nil), nil, ""))
 }
 
 // updateProjectMember flow:
@@ -960,6 +978,22 @@ func (h *handler) UpdateMember(c *gin.Context) {
 func (h *handler) updateProjectMember(db *gorm.DB, slotID string, projectID string, input request.UpdateMemberInput) (*model.ProjectMember, error) {
 	var member *model.ProjectMember
 	var err error
+
+	// check upsell person existance
+	var upsellPerson *model.Employee
+	if !input.UpsellPersonID.IsZero() {
+		upsellPerson, err = h.store.Employee.One(h.repo.DB(), input.UpsellPersonID.String(), false)
+		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				h.logger.Error(errs.ErrEmployeeNotFound, "upsell person not found")
+				return nil, err
+			}
+
+			h.logger.Error(err, "failed to get upsell person by id")
+			return nil, err
+		}
+	}
+
 	if !input.ProjectMemberID.IsZero() {
 		// Update assigned slot
 		member = &model.ProjectMember{
@@ -973,8 +1007,10 @@ func (h *handler) updateProjectMember(db *gorm.DB, slotID string, projectID stri
 			EndDate:        input.GetEndDate(),
 			Rate:           input.Rate,
 			Discount:       input.Discount,
+			UpsellPersonID: input.UpsellPersonID,
 		}
 
+		// TODO: allow updating sell_person_id
 		_, err := h.store.ProjectMember.UpdateSelectedFieldsByID(db, input.ProjectMemberID.String(), *member,
 			"start_date",
 			"end_date",
@@ -982,7 +1018,9 @@ func (h *handler) updateProjectMember(db *gorm.DB, slotID string, projectID stri
 			"rate",
 			"discount",
 			"deployment_type",
-			"seniority_id")
+			"seniority_id",
+			// "upsell_person_id",
+		)
 		if err != nil {
 			h.logger.Fields(logger.Fields{"member": member}).Error(err, "failed to update project member")
 			return nil, err
@@ -1027,6 +1065,7 @@ func (h *handler) updateProjectMember(db *gorm.DB, slotID string, projectID stri
 				EndDate:        input.GetEndDate(),
 				Rate:           input.Rate,
 				Discount:       input.Discount,
+				UpsellPersonID: input.UpsellPersonID,
 			}
 
 			if err := h.store.ProjectMember.Create(db, member); err != nil {
@@ -1055,6 +1094,7 @@ func (h *handler) updateProjectMember(db *gorm.DB, slotID string, projectID stri
 		return nil, err
 	}
 
+	member.UpsellPerson = upsellPerson
 	member.ProjectMemberPositions = memberPos
 
 	member.IsLead = input.IsLead
@@ -1109,6 +1149,12 @@ func (h *handler) updateProjectMember(db *gorm.DB, slotID string, projectID stri
 // @Failure 500 {object} view.ErrorResponse
 // @Router /projects/{id}/members [post]
 func (h *handler) AssignMember(c *gin.Context) {
+	userInfo, err := utils.GetLoggedInUserInfo(c, h.store, h.repo.DB(), h.config)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, userInfo.UserID, ""))
+		return
+	}
+
 	var body request.AssignMemberInput
 	if err := c.ShouldBindJSON(&body); err != nil {
 		if err != nil {
@@ -1178,7 +1224,7 @@ func (h *handler) AssignMember(c *gin.Context) {
 		c.JSON(code, view.CreateResponse[any](nil, nil, done(err), body, ""))
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse(view.ToCreateMemberData(slot), nil, done(nil), nil, ""))
+	c.JSON(http.StatusOK, view.CreateResponse(view.ToCreateMemberData(userInfo, slot), nil, done(nil), nil, ""))
 }
 
 func (h *handler) createSlotsAndAssignMembers(db *gorm.DB, projectID string, req request.AssignMemberInput) (*model.ProjectSlot, int, error) {
@@ -1261,6 +1307,20 @@ func (h *handler) createSlotsAndAssignMembers(db *gorm.DB, projectID string, req
 			return nil, http.StatusNotFound, errs.ErrEmployeeNotFound
 		}
 
+		// check upsell person existence
+		var upsellPerson *model.Employee
+		if !req.UpsellPersonID.IsZero() {
+			upsellPerson, err = h.store.Employee.One(db, req.UpsellPersonID.String(), false)
+			if err != nil {
+				if errors.Is(err, gorm.ErrRecordNotFound) {
+					l.Error(err, "failed to get upsell person")
+					return nil, http.StatusInternalServerError, err
+				}
+				l.Error(errs.ErrEmployeeNotFound, "upsell person not found")
+				return nil, http.StatusNotFound, errs.ErrEmployeeNotFound
+			}
+		}
+
 		// create project member
 		member := &model.ProjectMember{
 			ProjectID:      model.MustGetUUIDFromString(projectID),
@@ -1273,6 +1333,7 @@ func (h *handler) createSlotsAndAssignMembers(db *gorm.DB, projectID string, req
 			EndDate:        req.GetEndDate(),
 			Rate:           req.Rate,
 			Discount:       req.Discount,
+			UpsellPersonID: req.UpsellPersonID,
 		}
 
 		if err = h.store.ProjectMember.Create(db, member); err != nil {
@@ -1280,6 +1341,7 @@ func (h *handler) createSlotsAndAssignMembers(db *gorm.DB, projectID string, req
 			return nil, http.StatusInternalServerError, err
 		}
 
+		member.UpsellPerson = upsellPerson
 		slot.ProjectMember = *member
 
 		// create project member positions
@@ -1553,13 +1615,14 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 		}
 	}
 
+	// TODO: allow updating client_id
 	_, err = h.store.Project.UpdateSelectedFieldsByID(tx.DB(), projectID, *p,
 		"name",
 		"start_date",
 		"country_id",
 		"function",
 		"bank_account_id",
-		"client_id",
+		// "client_id",
 	)
 
 	if err != nil {
