@@ -33,7 +33,14 @@
                     "code": "frontend",
                     "name": "Frontend"
                 }
-            ]
+            ],
+            "upsellPerson": {
+                "id": "608ea227-45a5-4c8a-af43-6c7280d96340",
+                "fullName": "Tiêu Quang Huy",
+                "displayName": "Huy Tieu",
+                "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/3c420751-bb9a-4878-896e-2f10f3a633d6_avatar2535921977139052349.png",
+                "username": "huytq"
+            }
         },
         {
             "projectMemberID": "cb889a9c-b20c-47ee-83b8-44b6d1721aca",
@@ -64,7 +71,14 @@
                     "code": "frontend",
                     "name": "Frontend"
                 }
-            ]
+            ],
+            "upsellPerson": {
+                "id": "608ea227-45a5-4c8a-af43-6c7280d96340",
+                "fullName": "Tiêu Quang Huy",
+                "displayName": "Huy Tieu",
+                "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/3c420751-bb9a-4878-896e-2f10f3a633d6_avatar2535921977139052349.png",
+                "username": "huytq"
+            }
         },
         {
             "projectMemberID": "7310b51a-3855-498b-99ab-41aa82934269",
@@ -95,7 +109,14 @@
                     "code": "frontend",
                     "name": "Frontend"
                 }
-            ]
+            ],
+            "upsellPerson": {
+                "id": "608ea227-45a5-4c8a-af43-6c7280d96340",
+                "fullName": "Tiêu Quang Huy",
+                "displayName": "Huy Tieu",
+                "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/3c420751-bb9a-4878-896e-2f10f3a633d6_avatar2535921977139052349.png",
+                "username": "huytq"
+            }
         },
         {
             "projectMemberID": "5a9a07aa-e8f3-4b62-b9ad-0f057866dc6c",
@@ -126,7 +147,14 @@
                     "code": "backend",
                     "name": "Backend"
                 }
-            ]
+            ],
+            "upsellPerson": {
+                "id": "608ea227-45a5-4c8a-af43-6c7280d96340",
+                "fullName": "Tiêu Quang Huy",
+                "displayName": "Huy Tieu",
+                "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/3c420751-bb9a-4878-896e-2f10f3a633d6_avatar2535921977139052349.png",
+                "username": "huytq"
+            }
         },
         {
             "projectMemberID": "fcd5c16f-40fd-48b6-9649-410691373eea",
@@ -157,7 +185,14 @@
                     "code": "backend",
                     "name": "Backend"
                 }
-            ]
+            ],
+            "upsellPerson": {
+                "id": "608ea227-45a5-4c8a-af43-6c7280d96340",
+                "fullName": "Tiêu Quang Huy",
+                "displayName": "Huy Tieu",
+                "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/3c420751-bb9a-4878-896e-2f10f3a633d6_avatar2535921977139052349.png",
+                "username": "huytq"
+            }
         }
     ]
 }

@@ -160,6 +160,7 @@ type UpdateMemberInput struct {
 	ProjectMemberID model.UUID      `from:"projectMemberID" json:"projectMemberID"`
 	EmployeeID      model.UUID      `form:"employeeID" json:"employeeID"`
 	SeniorityID     model.UUID      `form:"seniorityID" json:"seniorityID" binding:"required"`
+	UpsellPersonID  model.UUID      `form:"upsellPersonID" json:"upsellPersonID"`
 	Positions       []model.UUID    `form:"positions" json:"positions" binding:"required"`
 	DeploymentType  string          `form:"deploymentType" json:"deploymentType" binding:"required"`
 	Status          string          `form:"status" json:"status" binding:"required"`
@@ -231,6 +232,7 @@ type AssignMemberInput struct {
 	Rate           decimal.Decimal `form:"rate" json:"rate" binding:"required"`
 	Discount       decimal.Decimal `form:"discount" json:"discount"`
 	IsLead         bool            `form:"isLead" json:"isLead"`
+	UpsellPersonID model.UUID      `form:"upsellPersonID" json:"upsellPersonID"`
 }
 
 func (i *AssignMemberInput) Validate() error {

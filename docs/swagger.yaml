@@ -784,6 +784,8 @@ definitions:
         type: string
       updatedAt:
         type: string
+      upsellPerson:
+        $ref: '#/definitions/model.Employee'
       upsellPersonID:
         type: string
     type: object
@@ -864,6 +866,8 @@ definitions:
         type: string
       updatedAt:
         type: string
+      upsellPerson:
+        $ref: '#/definitions/model.Employee'
       upsellPersonID:
         type: string
     type: object
@@ -1107,6 +1111,8 @@ definitions:
       startDate:
         type: string
       status:
+        type: string
+      upsellPersonID:
         type: string
     required:
     - deploymentType
@@ -1570,6 +1576,8 @@ definitions:
       startDate:
         type: string
       status:
+        type: string
+      upsellPersonID:
         type: string
     required:
     - deploymentType
@@ -2151,6 +2159,8 @@ definitions:
         $ref: '#/definitions/model.Seniority'
       status:
         type: string
+      upsellPerson:
+        $ref: '#/definitions/view.BasicEmployeeInfo'
       username:
         type: string
     type: object
@@ -2959,6 +2969,8 @@ definitions:
         type: string
       status:
         type: string
+      upsellPerson:
+        $ref: '#/definitions/view.BasicEmployeeInfo'
       username:
         type: string
     type: object

@@ -97,8 +97,9 @@ type ProjectMember struct {
 	Rate            decimal.Decimal `json:"rate"`
 	Discount        decimal.Decimal `json:"discount"`
 
-	Seniority *model.Seniority `json:"seniority"`
-	Positions []Position       `json:"positions"`
+	Seniority    *model.Seniority   `json:"seniority"`
+	Positions    []Position         `json:"positions"`
+	UpsellPerson *BasicEmployeeInfo `json:"upsellPerson"`
 }
 
 type ProjectHead struct {
@@ -178,6 +179,10 @@ func ToProjectData(c *gin.Context, project *model.Project, userInfo *model.Curre
 
 		if utils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadFullAccess) {
 			member.DeploymentType = m.DeploymentType.String()
+
+			if m.UpsellPerson != nil {
+				member.UpsellPerson = toBasicEmployeeInfo(*m.UpsellPerson)
+			}
 		}
 
 		members = append(members, member)
@@ -282,25 +287,26 @@ type ProjectDataResponse struct {
 }
 
 type CreateMemberData struct {
-	ProjectSlotID   string          `json:"projectSlotID"`
-	ProjectMemberID string          `json:"projectMemberID"`
-	EmployeeID      string          `json:"employeeID"`
-	FullName        string          `json:"fullName"`
-	DisplayName     string          `json:"displayName"`
-	Avatar          string          `json:"avatar"`
-	Positions       []Position      `json:"positions"`
-	DeploymentType  string          `json:"deploymentType"`
-	Status          string          `json:"status"`
-	IsLead          bool            `json:"isLead"`
-	Seniority       model.Seniority `json:"seniority"`
-	Username        string          `json:"username"`
+	ProjectSlotID   string             `json:"projectSlotID"`
+	ProjectMemberID string             `json:"projectMemberID"`
+	EmployeeID      string             `json:"employeeID"`
+	FullName        string             `json:"fullName"`
+	DisplayName     string             `json:"displayName"`
+	Avatar          string             `json:"avatar"`
+	Positions       []Position         `json:"positions"`
+	DeploymentType  string             `json:"deploymentType"`
+	Status          string             `json:"status"`
+	IsLead          bool               `json:"isLead"`
+	Seniority       model.Seniority    `json:"seniority"`
+	Username        string             `json:"username"`
+	UpsellPerson    *BasicEmployeeInfo `json:"upsellPerson"`
 }
 
 type CreateMemberDataResponse struct {
 	Data CreateMemberData `json:"data"`
 }
 
-func ToCreateMemberData(slot *model.ProjectSlot) CreateMemberData {
+func ToCreateMemberData(userInfo *model.CurrentLoggedUserInfo, slot *model.ProjectSlot) CreateMemberData {
 	rs := CreateMemberData{
 		ProjectSlotID:  slot.ID.String(),
 		FullName:       slot.ProjectMember.Employee.FullName,
@@ -317,6 +323,10 @@ func ToCreateMemberData(slot *model.ProjectSlot) CreateMemberData {
 	if !slot.ProjectMember.ID.IsZero() {
 		rs.ProjectMemberID = slot.ProjectMember.ID.String()
 		rs.EmployeeID = slot.ProjectMember.EmployeeID.String()
+	}
+
+	if slot.ProjectMember.UpsellPerson != nil && utils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadFullAccess) {
+		rs.UpsellPerson = toBasicEmployeeInfo(*slot.ProjectMember.UpsellPerson)
 	}
 
 	return rs
@@ -348,7 +358,7 @@ type BasicBankAccountInfo struct {
 	OwnerName     string `json:"ownerName"`
 }
 
-func ToCreateProjectDataResponse(project *model.Project) CreateProjectData {
+func ToCreateProjectDataResponse(userInfo *model.CurrentLoggedUserInfo, project *model.Project) CreateProjectData {
 	var clientEmail []string
 	if project.ClientEmail != "" {
 		clientEmail = strings.Split(project.ClientEmail, ",")
@@ -401,13 +411,13 @@ func ToCreateProjectDataResponse(project *model.Project) CreateProjectData {
 
 	result.Members = make([]CreateMemberData, 0, len(project.Slots))
 	for _, slot := range project.Slots {
-		result.Members = append(result.Members, ToCreateMemberData(&slot))
+		result.Members = append(result.Members, ToCreateMemberData(userInfo, &slot))
 	}
 
 	return result
 }
 
-func ToProjectMemberListData(members []*model.ProjectMember, projectHeads []*model.ProjectHead) []ProjectMember {
+func ToProjectMemberListData(userInfo *model.CurrentLoggedUserInfo, members []*model.ProjectMember, projectHeads []*model.ProjectHead) []ProjectMember {
 	var results = make([]ProjectMember, 0, len(members))
 
 	leadMap := map[string]bool{}
@@ -448,6 +458,10 @@ func ToProjectMemberListData(members []*model.ProjectMember, projectHeads []*mod
 				Discount:        m.Discount,
 				Seniority:       m.Seniority,
 				Positions:       ToProjectMemberPositions(m.ProjectMemberPositions),
+			}
+
+			if m.UpsellPerson != nil && utils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadFullAccess) {
+				member.UpsellPerson = toBasicEmployeeInfo(*m.UpsellPerson)
 			}
 		}
 

@@ -20,7 +20,8 @@
             "rate": "3000",
             "discount": "3",
             "seniority": null,
-            "positions": []
+            "positions": [],
+            "upsellPerson": null
         },
         {
             "projectMemberID": "cb889a9c-b20c-47ee-83b8-44b6d1721aca",
@@ -38,7 +39,8 @@
             "rate": "5000",
             "discount": "0",
             "seniority": null,
-            "positions": []
+            "positions": [],
+            "upsellPerson": null
         },
         {
             "projectMemberID": "7310b51a-3855-498b-99ab-41aa82934269",
@@ -56,7 +58,8 @@
             "rate": "4000",
             "discount": "0",
             "seniority": null,
-            "positions": []
+            "positions": [],
+            "upsellPerson": null
         },
         {
             "projectMemberID": "5a9a07aa-e8f3-4b62-b9ad-0f057866dc6c",
@@ -74,7 +77,8 @@
             "rate": "3000",
             "discount": "3",
             "seniority": null,
-            "positions": []
+            "positions": [],
+            "upsellPerson": null
         },
         {
             "projectMemberID": "fcd5c16f-40fd-48b6-9649-410691373eea",
@@ -92,7 +96,8 @@
             "rate": "4000",
             "discount": "0",
             "seniority": null,
-            "positions": []
+            "positions": [],
+            "upsellPerson": null
         }
     ]
 }

@@ -147,6 +147,7 @@ type ProjectSlot struct {
 	Project              Project
 	ProjectMember        ProjectMember
 	ProjectSlotPositions []ProjectSlotPosition
+	UpsellPerson         *Employee
 }
 
 type ProjectMember struct {
@@ -166,7 +167,8 @@ type ProjectMember struct {
 
 	IsLead bool `gorm:"-"`
 
-	Employee               Employee
+	Employee               Employee  `gorm:"foreignKey:EmployeeID"`
+	UpsellPerson           *Employee `gorm:"foreignKey:UpsellPersonID"`
 	Project                Project
 	Seniority              *Seniority
 	ProjectMemberPositions []ProjectMemberPosition

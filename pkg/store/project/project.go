@@ -115,6 +115,7 @@ func (s *store) One(db *gorm.DB, id string, preload bool) (*model.Project, error
 			Preload("Country", "deleted_at IS NULL").
 			Preload("BankAccount", "deleted_at IS NULL").
 			Preload("Client", "deleted_at IS NULL").
+			Preload("Client.Contacts", "deleted_at IS NULL").
 			Preload("CompanyInfo", "deleted_at IS NULL").
 			Preload("ProjectNotion", "deleted_at IS NULL").
 			Preload("ProjectMembers", func(db *gorm.DB) *gorm.DB {
@@ -135,8 +136,7 @@ func (s *store) One(db *gorm.DB, id string, preload bool) (*model.Project, error
 			Preload("ProjectMembers.ProjectMemberPositions", "deleted_at IS NULL").
 			Preload("ProjectMembers.ProjectMemberPositions.Position", "deleted_at IS NULL").
 			Preload("ProjectMembers.Seniority", "deleted_at IS NULL").
-			Preload("Client", "deleted_at IS NULL").
-			Preload("Client.Contacts", "deleted_at IS NULL")
+			Preload("ProjectMembers.UpsellPerson", "deleted_at IS NULL")
 	}
 
 	var project *model.Project
