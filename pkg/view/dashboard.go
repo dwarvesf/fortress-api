@@ -471,7 +471,9 @@ func calculateTrendForActionItemSquash(items []*ActionItemSquash) {
 			items[i].Trend = 0
 		}
 
-		items[i].Trend = math.Floor(float64(items[i].Value-items[i-1].Value)/float64(items[i-1].Value)*100*100) / 100
+		if float64(items[i-1].Value) != 0 {
+			items[i].Trend = math.Floor(float64(items[i].Value-items[i-1].Value)/float64(items[i-1].Value)*100*100) / 100
+		}
 	}
 }
 
@@ -523,15 +525,21 @@ func ToAuditSummary(summary []*model.AuditSummary, previousSize int) *AuditSumma
 	rs.Health.Value = summary[0].Health
 	rs.Audit.Value = summary[0].Audit
 
-	if len(summary) > 1 && summary[1].Audit != 0 && summary[0].Audit != 0 {
+	if len(summary) > 1 && summary[1].Audit != 0 && summary[0].Audit != 0 && summary[1].Health != 0 && summary[0].Health != 0 {
 		rs.Health.Trend = math.Round((summary[0].Health-summary[1].Health)/summary[1].Health*100*100) / 100
 		rs.Audit.Trend = math.Round((summary[0].Audit-summary[1].Audit)/summary[1].Audit*100*100) / 100
 	}
 
 	// New and Resolved item
-	rs.NewItem.Value = (summary[0].High + summary[0].Medium + summary[0].Low) / summary[0].Size
+	if summary[0].Size != 0 {
+		rs.NewItem.Value = (summary[0].High + summary[0].Medium + summary[0].Low) / summary[0].Size
+	}
+
 	if len(summary) > 1 {
-		currentItem := (summary[1].High + summary[1].Medium + summary[1].Low) / summary[0].Size
+		var currentItem int64
+		if summary[0].Size != 0 {
+			currentItem = (summary[1].High + summary[1].Medium + summary[1].Low) / summary[0].Size
+		}
 
 		if currentItem != 0 {
 			rs.NewItem.Trend = math.Round((float64(rs.NewItem.Value)-float64(currentItem))/float64(currentItem)*100*100) / 100
