@@ -3,8 +3,6 @@ package view
 import (
 	"time"
 
-	"github.com/gin-gonic/gin"
-
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/utils"
 )
@@ -102,14 +100,18 @@ type EmployeeProjectData struct {
 	EndDate        *time.Time `json:"endDate"`
 }
 
-func ToEmployeeProjectDetailData(c *gin.Context, pm *model.ProjectMember, userInfo *model.CurrentLoggedUserInfo) EmployeeProjectData {
+func ToEmployeeProjectDetailData(pm *model.ProjectMember, userInfo *model.CurrentLoggedUserInfo) EmployeeProjectData {
 	rs := EmployeeProjectData{
 		ID:        pm.ProjectID.String(),
 		Name:      pm.Project.Name,
-		Status:    pm.Status.String(),
+		Status:    model.ProjectMemberStatusActive.String(),
 		Positions: ToProjectMemberPositions(pm.ProjectMemberPositions),
 		Code:      pm.Project.Code,
 		Avatar:    pm.Project.Avatar,
+	}
+
+	if !pm.IsActive() {
+		rs.Status = model.ProjectMemberStatusInactive.String()
 	}
 
 	if utils.HasPermission(userInfo.Permissions, model.PermissionEmployeesReadProjectsFullAccess) {
@@ -287,28 +289,20 @@ func ToUpdateGeneralInfoEmployeeData(employee *model.Employee) *UpdateGeneralInf
 }
 
 // ToOneEmployeeData parse employee date to response data
-func ToOneEmployeeData(c *gin.Context, employee *model.Employee, userInfo *model.CurrentLoggedUserInfo) *EmployeeData {
+func ToOneEmployeeData(employee *model.Employee, userInfo *model.CurrentLoggedUserInfo) *EmployeeData {
 	employeeProjects := make([]EmployeeProjectData, 0, len(employee.ProjectMembers))
-	for _, v := range employee.ProjectMembers {
-		if v.Status == model.ProjectMemberStatusInactive {
-			continue
-		}
-		_, ok := userInfo.Projects[v.ProjectID]
-		if ok && v.Project.Status == model.ProjectStatusActive {
-			employeeProjects = append(employeeProjects, ToEmployeeProjectDetailData(c, &v, userInfo))
+	for _, pm := range employee.ProjectMembers {
+		// If logged user is working on the same project or user have permission to read active, show the project
+		_, ok := userInfo.Projects[pm.ProjectID]
+		if (ok || utils.HasPermission(userInfo.Permissions, model.PermissionEmployeesReadProjectsReadActive)) &&
+			pm.IsActive() && pm.Project.Status == model.ProjectStatusActive {
+			employeeProjects = append(employeeProjects, ToEmployeeProjectDetailData(&pm, userInfo))
 			continue
 		}
 
-		// If the project is not belong user, check if the user has permission to view the project
-		if utils.HasPermission(userInfo.Permissions, model.PermissionEmployeesReadProjectsFullAccess) ||
-			utils.HasPermission(userInfo.Permissions, model.PermissionEmployeesReadProjectsReadActive) {
-			if v.Project.Status == model.ProjectStatusActive {
-				employeeProjects = append(employeeProjects, ToEmployeeProjectDetailData(c, &v, userInfo))
-			} else {
-				if utils.HasPermission(userInfo.Permissions, model.PermissionEmployeesReadProjectsFullAccess) {
-					employeeProjects = append(employeeProjects, ToEmployeeProjectDetailData(c, &v, userInfo))
-				}
-			}
+		// If logged user have permission to read all projects, show the project
+		if utils.HasPermission(userInfo.Permissions, model.PermissionEmployeesReadProjectsFullAccess) {
+			employeeProjects = append(employeeProjects, ToEmployeeProjectDetailData(&pm, userInfo))
 		}
 	}
 
@@ -475,10 +469,10 @@ func ToEmployeeData(employee *model.Employee) *EmployeeData {
 	return rs
 }
 
-func ToEmployeeListData(c *gin.Context, employees []*model.Employee, userInfo *model.CurrentLoggedUserInfo) []EmployeeData {
+func ToEmployeeListData(employees []*model.Employee, userInfo *model.CurrentLoggedUserInfo) []EmployeeData {
 	rs := make([]EmployeeData, 0, len(employees))
 	for _, emp := range employees {
-		empRes := ToOneEmployeeData(c, emp, userInfo)
+		empRes := ToOneEmployeeData(emp, userInfo)
 		rs = append(rs, *empRes)
 	}
 	return rs
