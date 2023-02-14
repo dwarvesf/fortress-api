@@ -581,6 +581,7 @@ type AvailableEmployee struct {
 	ID          string             `json:"id"`
 	FullName    string             `json:"fullName"`
 	DisplayName string             `json:"displayName"`
+	Username    string             `json:"username"`
 	Avatar      string             `json:"avatar"`
 	Seniority   Seniority          `json:"seniority"`
 	Positions   []Position         `json:"positions"`
@@ -616,6 +617,7 @@ func ToResourceAvailability(slots []*model.ProjectSlot, employees []*model.Emplo
 			ID:          v.ID.String(),
 			FullName:    v.FullName,
 			DisplayName: v.DisplayName,
+			Username:    v.Username,
 			Avatar:      v.Avatar,
 			Seniority:   ToSeniority(*v.Seniority),
 			Positions:   ToEmployeePositions(v.EmployeePositions),

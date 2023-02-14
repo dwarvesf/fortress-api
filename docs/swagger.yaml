@@ -1824,6 +1824,8 @@ definitions:
         items:
           $ref: '#/definitions/view.Stack'
         type: array
+      username:
+        type: string
     type: object
   view.AvailableSlot:
     properties:

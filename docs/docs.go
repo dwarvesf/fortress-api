@@ -7601,6 +7601,9 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/view.Stack"
                     }
+                },
+                "username": {
+                    "type": "string"
                 }
             }
         },
