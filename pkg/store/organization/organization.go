@@ -24,3 +24,15 @@ func (s *store) OneByCode(db *gorm.DB, code string) (*model.Organization, error)
 	var organization *model.Organization
 	return organization, db.Where("code = ?", code).First(&organization).Error
 }
+
+// IsExist check organization existence
+func (s *store) IsExist(db *gorm.DB, id string) (bool, error) {
+	type res struct {
+		Result bool
+	}
+
+	result := res{}
+	query := db.Raw("SELECT EXISTS (SELECT * FROM organizations WHERE id = ?) as result", id)
+
+	return result.Result, query.Scan(&result).Error
+}

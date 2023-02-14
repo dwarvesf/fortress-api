@@ -1,53 +1,61 @@
 {
-  "page": 0,
-  "size": 999,
-  "sort": "",
-  "total": 2,
-  "data": [
-      {
-          "id": "dfa182fc-1d2d-49f6-a877-c01da9ce4207",
-          "createdAt": "2022-11-11T18:06:56.362902Z",
-          "updatedAt": "2022-11-11T18:06:56.362902Z",
-          "name": "Lorem ipsum",
-          "avatar": "",
-          "type": "time-material",
-          "status": "active",
-          "projectEmail": "",
-          "clientEmail": null,
-          "industry": "",
-          "allowsSendingSurvey": false,
-          "country": null,
-          "startDate": "2022-07-06T00:00:00Z",
-          "endDate": null,
-          "members": [],
-          "technicalLeads": [],
-          "accountManager": null,
-          "salePerson": null,
-          "deliveryManager": null,
-          "stacks": [],
-          "function": "",
-          "code": "lorem-ipsum",
-          "auditNotionID": "",
-          "bankAccount": null,
-          "client": null,
-          "companyInfo": null
-      },
-      {
-          "id": "8dc3be2e-19a4-4942-8a79-56db391a0b15",
-          "createdAt": "2022-11-11T18:06:56.362902Z",
-          "updatedAt": "2022-11-11T18:06:56.362902Z",
-          "name": "Fortress",
-          "avatar": "",
-          "type": "dwarves",
-          "status": "active",
-          "projectEmail": "fortress@d.foundation",
-          "clientEmail": ["team@d.foundation"],
-          "industry": "",
-          "allowsSendingSurvey": false,
-          "country": null,
-          "startDate": "2022-11-01T00:00:00Z",
-          "endDate": null,
-          "members": [
+    "page": 0,
+    "size": 999,
+    "sort": "",
+    "total": 2,
+    "data": [
+        {
+            "id": "dfa182fc-1d2d-49f6-a877-c01da9ce4207",
+            "createdAt": "2022-11-11T18:06:56.362902Z",
+            "updatedAt": "2022-11-11T18:06:56.362902Z",
+            "name": "Lorem ipsum",
+            "avatar": "",
+            "type": "time-material",
+            "status": "active",
+            "projectEmail": "",
+            "clientEmail": null,
+            "industry": "",
+            "allowsSendingSurvey": false,
+            "country": null,
+            "startDate": "2022-07-06T00:00:00Z",
+            "endDate": null,
+            "members": [],
+            "technicalLeads": [],
+            "accountManager": null,
+            "salePerson": null,
+            "deliveryManager": null,
+            "stacks": [],
+            "code": "lorem-ipsum",
+            "function": "",
+            "auditNotionID": "",
+            "bankAccount": null,
+            "client": null,
+            "companyInfo": null,
+            "organization": {
+                "id": "31fdf38f-77c0-4c06-b530-e2be8bc297e0",
+                "code": "dwarves-foundation",
+                "name": "Dwarves Foundation",
+                "avatar": ""
+            }
+        },
+        {
+            "id": "8dc3be2e-19a4-4942-8a79-56db391a0b15",
+            "createdAt": "2022-11-11T18:06:56.362902Z",
+            "updatedAt": "2022-11-11T18:06:56.362902Z",
+            "name": "Fortress",
+            "avatar": "",
+            "type": "dwarves",
+            "status": "active",
+            "projectEmail": "fortress@d.foundation",
+            "clientEmail": [
+                "team@d.foundation"
+            ],
+            "industry": "",
+            "allowsSendingSurvey": false,
+            "country": null,
+            "startDate": "2022-11-01T00:00:00Z",
+            "endDate": null,
+            "members": [
                 {
                     "projectMemberID": "",
                     "projectSlotID": "",
@@ -180,7 +188,13 @@
           "auditNotionID": "",
           "bankAccount": null,
           "client": null,
-          "companyInfo": null
+          "companyInfo": null,
+          "organization": {
+            "id": "31fdf38f-77c0-4c06-b530-e2be8bc297e0",
+            "code": "dwarves-foundation",
+            "name": "Dwarves Foundation",
+            "avatar": ""
+        }
       }
   ]
 }

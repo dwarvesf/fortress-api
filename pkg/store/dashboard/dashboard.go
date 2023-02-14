@@ -18,9 +18,13 @@ func (s *store) GetProjectSizes(db *gorm.DB) ([]*model.ProjectSize, error) {
 	var ru []*model.ProjectSize
 
 	query := `
-		SELECT projects.id, projects.name, projects.code, count(*) AS size
-			FROM (projects join project_members pm ON projects.id = pm.project_id)
-			WHERE projects.function = 'development' AND pm.status = 'active' AND (pm.status = 'active' OR pm.status='on-boarding') AND projects.deleted_at IS NULL
+		SELECT projects.id, projects.name, projects.code, count(*) AS size 
+			FROM (projects 
+				JOIN project_members pm ON projects.id = pm.project_id
+				JOIN organizations ON projects.organization_id = organizations.id)
+			WHERE projects.function = 'development' 
+				AND organizations.code = 'dwarves-foundation' 
+				AND pm.status = 'active' AND (pm.status = 'active' OR pm.status='on-boarding') AND projects.deleted_at IS NULL
 			GROUP BY projects.id
 			ORDER BY size DESC
 	`
@@ -58,11 +62,11 @@ func (s *store) GetWorkSurveysByProjectID(db *gorm.DB, projectID string) ([]*mod
 							END
 					END) as learning
 		FROM feedback_events
-				LEFT JOIN employee_event_topics eet ON feedback_events.id = eet.event_id
-				LEFT JOIN employee_event_questions eeq ON feedback_events.id = eeq.event_id
-		WHERE eet.project_id = ? AND feedback_events.deleted_at IS NULL AND eet.deleted_at IS NULL AND eeq.deleted_at IS NULL
-		GROUP BY eeq.event_id, feedback_events.id
-		ORDER BY feedback_events.end_date desc
+				JOIN employee_event_topics eet ON feedback_events.id = eet.event_id
+				JOIN employee_event_questions eeq ON feedback_events.id = eeq.event_id
+		WHERE eet.project_id = ? AND feedback_events.subtype='work' AND feedback_events.deleted_at IS NULL AND eet.deleted_at IS NULL AND eeq.deleted_at IS NULL
+		GROUP BY feedback_events.end_date
+		ORDER BY feedback_events.end_date
 		LIMIT 6
 	`
 
@@ -99,12 +103,13 @@ func (s *store) GetAllWorkSurveys(db *gorm.DB) ([]*model.WorkSurvey, error) {
 							END
 					END) as learning
 		FROM feedback_events
-			LEFT JOIN employee_event_topics eet ON feedback_events.id = eet.event_id
+			JOIN employee_event_topics eet ON feedback_events.id = eet.event_id
 			JOIN projects p ON eet.project_id = p.id
-			LEFT JOIN employee_event_questions eeq ON feedback_events.id = eeq.event_id
-		WHERE p.function = 'development' AND feedback_events.deleted_at IS NULL AND eet.deleted_at IS NULL AND eeq.deleted_at IS NULL
+			JOIN organizations ON p.organization_id = organizations.id
+			JOIN employee_event_questions eeq ON feedback_events.id = eeq.event_id
+		WHERE p.function = 'development' AND organizations.code = 'dwarves-foundation' AND feedback_events.subtype='work' AND feedback_events.deleted_at IS NULL AND eet.deleted_at IS NULL AND eeq.deleted_at IS NULL
 		GROUP BY feedback_events.end_date
-		ORDER BY feedback_events.end_date desc
+		ORDER BY feedback_events.end_date
 		LIMIT 6
 	`
 
@@ -371,8 +376,10 @@ func (s *store) GetAllActionItemSquashReports(db *gorm.DB) ([]*model.ActionItemS
 		FROM action_item_snapshots
 				JOIN project_notions ON action_item_snapshots.project_id = project_notions.audit_notion_id
 				JOIN projects ON project_notions.project_id = projects.id
+				JOIN organizations ON projects.organization_id = organizations.id
 				JOIN days ON date_trunc('DAY', action_item_snapshots.created_at) = date_trunc('DAY', days.day)
 		WHERE projects.function = 'development'
+			AND organizations.code = 'dwarves-foundation'
 			AND action_item_snapshots.deleted_at IS NULL
 			AND projects.deleted_at IS NULL
 		GROUP BY snap_date
@@ -392,15 +399,17 @@ func (s *store) GetActionItemSquashReportsByProjectID(db *gorm.DB, projectID str
 					WHERE subtype = 'work'
 					GROUP BY date_trunc('DAY', start_date))
 		SELECT (sum(high) + sum(medium) + sum(low)) as all,
-			sum(high)                            as high,
-			sum(medium)                          as medium,
-			sum(low)                             as low,
-			action_item_snapshots.created_at     as snap_date
+			sum(high)                            					as high,
+			sum(medium)                          					as medium,
+			sum(low)                             					as low,
+			date_trunc('DAY', action_item_snapshots.created_at )    as snap_date
 		FROM action_item_snapshots
 				LEFT JOIN project_notions ON action_item_snapshots.project_id = project_notions.audit_notion_id
 				JOIN projects ON project_notions.project_id = projects.id
+				JOIN organizations ON projects.organization_id = organizations.id
 				JOIN days ON date_trunc('DAY', action_item_snapshots.created_at) = date_trunc('DAY', days.day)
 		WHERE projects.function = 'development'
+			AND organizations.code = 'dwarves-foundation'
 			AND action_item_snapshots.deleted_at IS NULL
 			AND projects.deleted_at IS NULL
 			AND projects.id = ?
@@ -431,11 +440,12 @@ func (s *store) GetAuditSummaries(db *gorm.DB) ([]*model.AuditSummary, error) {
 				LEFT JOIN audits AS a ON audit_cycles.health_audit_id = a.id
 				JOIN project_notions ON audit_cycles.project_id = project_notions.audit_notion_id
 				JOIN projects AS p ON project_notions.project_id = p.id
+				JOIN organizations ON p.organization_id = organizations.id
 				JOIN project_members pm ON p.id = pm.project_id
 		WHERE (pm.status = 'active' OR pm.status='on-boarding') AND audit_cycles.deleted_at IS NULL AND 
-			a.deleted_at IS NULL AND pm.deleted_at IS NULL AND p.deleted_at IS NULL
+			a.deleted_at IS NULL AND pm.deleted_at IS NULL AND p.deleted_at IS NULL AND organizations.code = 'dwarves-foundation'
 		GROUP BY audit_cycles.id,audit_cycles.quarter, p.id
-		ORDER BY audit_cycles.quarter DESC`
+		ORDER BY size DESC, audit_cycles.quarter DESC`
 
 	return rs, db.Raw(query).Scan(&rs).Error
 }
@@ -445,8 +455,12 @@ func (s *store) GetProjectSizesByStartTime(db *gorm.DB, curr time.Time) ([]*mode
 
 	query := `
 		SELECT projects.id, projects.name, projects.code, count(*) AS size
-			FROM (projects JOIN project_members pm ON projects.id = pm.project_id)
-			WHERE projects.function = 'development' AND pm.status = 'active' AND 
+			FROM (projects 
+				JOIN project_members pm ON projects.id = pm.project_id
+				JOIN organizations ON projects.organization_id = organizations.id)
+			WHERE projects.function = 'development' AND 
+				organizations.code = 'dwarves-foundation' AND 
+				pm.status = 'active' AND 
 				projects.deleted_at IS NULL AND pm.deleted_at IS NULL AND
 				(pm.status = 'active' OR pm.status='on-boarding') AND pm.start_date <= ?
 			GROUP BY projects.id

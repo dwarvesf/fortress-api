@@ -2,32 +2,6 @@
     "data": {
         "summary": [
             {
-                "id": "dfa182fc-1d2d-49f6-a877-c01da9ce4207",
-                "name": "Lorem ipsum",
-                "code": "lorem-ipsum",
-                "avatar": "https://storage.googleapis.com/fortress-dev/projects/4f7bd4e6-f8d1-45f3-886c-82518079d47b/images/82569263-025b-4c3f-8944-737c9d7c2b9c.png",
-                "size": {
-                    "value": 1,
-                    "trend": 0
-                },
-                "health": {
-                    "value": 3.5,
-                    "trend": -2.78
-                },
-                "audit": {
-                    "value": 3.9,
-                    "trend": 2.63
-                },
-                "newItem": {
-                    "value": 27,
-                    "trend": 50
-                },
-                "resolvedItem": {
-                    "value": 2,
-                    "trend": -33.33
-                }
-            },
-            {
                 "id": "8dc3be2e-19a4-4942-8a79-56db391a0b15",
                 "name": "Fortress",
                 "code": "fortress",
@@ -51,6 +25,32 @@
                 "resolvedItem": {
                     "value": 3,
                     "trend": 0
+                }
+            },
+            {
+                "id": "dfa182fc-1d2d-49f6-a877-c01da9ce4207",
+                "name": "Lorem ipsum",
+                "code": "lorem-ipsum",
+                "avatar": "https://storage.googleapis.com/fortress-dev/projects/4f7bd4e6-f8d1-45f3-886c-82518079d47b/images/82569263-025b-4c3f-8944-737c9d7c2b9c.png",
+                "size": {
+                    "value": 1,
+                    "trend": 0
+                },
+                "health": {
+                    "value": 3.5,
+                    "trend": -2.78
+                },
+                "audit": {
+                    "value": 3.9,
+                    "trend": 2.63
+                },
+                "newItem": {
+                    "value": 27,
+                    "trend": 50
+                },
+                "resolvedItem": {
+                    "value": 2,
+                    "trend": -33.33
                 }
             }
         ]

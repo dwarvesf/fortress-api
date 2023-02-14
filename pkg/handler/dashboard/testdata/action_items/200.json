@@ -5,7 +5,11 @@
             "high": 2,
             "medium": 2,
             "low": 2,
-            "trend": null
+            "trend": {
+                "high": 0,
+                "medium": 0,
+                "low": 0
+            }
         },
         {
             "quarter": "Q3/2022",

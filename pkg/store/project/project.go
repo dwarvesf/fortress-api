@@ -61,6 +61,7 @@ func (s *store) All(db *gorm.DB, input GetListProjectInput, pagination model.Pag
 	}).
 		Preload("ProjectMembers.Employee").
 		Preload("ProjectNotion", "deleted_at IS NULL").
+		Preload("Organization", "deleted_at IS NULL").
 		Preload("Heads", `deleted_at IS NULL AND (end_date IS NULL OR end_date > now())`).
 		Preload("Heads.Employee").
 		Offset(offset)
@@ -118,6 +119,7 @@ func (s *store) One(db *gorm.DB, id string, preload bool) (*model.Project, error
 			Preload("Client.Contacts", "deleted_at IS NULL").
 			Preload("CompanyInfo", "deleted_at IS NULL").
 			Preload("ProjectNotion", "deleted_at IS NULL").
+			Preload("Organization", "deleted_at IS NULL").
 			Preload("ProjectMembers", func(db *gorm.DB) *gorm.DB {
 				return db.Joins("JOIN seniorities s ON s.id = project_members.seniority_id").
 					Joins(`LEFT JOIN project_heads ph ON ph.project_id = project_members.project_id 

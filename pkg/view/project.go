@@ -37,6 +37,7 @@ type ProjectData struct {
 	BankAccount         *BasicBankAccountInfo `json:"bankAccount"`
 	Client              *BasicClientInfo      `json:"client"`
 	CompanyInfo         *BasicCompanyInfo     `json:"companyInfo"`
+	Organization        *Organization         `json:"organization"`
 }
 
 type BasicClientInfo struct {
@@ -214,6 +215,24 @@ func ToProjectData(c *gin.Context, project *model.Project, userInfo *model.Curre
 		clientEmail = strings.Split(project.ClientEmail, ",")
 	}
 
+	if project.Organization != nil {
+		d.Organization = &Organization{
+			ID:     project.Organization.ID.String(),
+			Code:   project.Organization.Code,
+			Name:   project.Organization.Name,
+			Avatar: project.Organization.Avatar,
+		}
+	}
+
+	if project.Organization != nil {
+		d.Organization = &Organization{
+			ID:     project.Organization.ID.String(),
+			Code:   project.Organization.Code,
+			Name:   project.Organization.Name,
+			Avatar: project.Organization.Avatar,
+		}
+	}
+
 	if utils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadFullAccess) {
 		if project.ProjectNotion != nil && !project.ProjectNotion.AuditNotionID.IsZero() {
 			d.AuditNotionID = project.ProjectNotion.AuditNotionID.String()
@@ -349,6 +368,7 @@ type CreateProjectData struct {
 	Function        string                `json:"function"`
 	BankAccount     *BasicBankAccountInfo `json:"bankAccount"`
 	Client          *Client               `json:"client"`
+	Organization    *Organization         `json:"organization"`
 }
 
 type BasicBankAccountInfo struct {
@@ -389,6 +409,15 @@ func ToCreateProjectDataResponse(userInfo *model.CurrentLoggedUserInfo, project 
 			AccountNumber: project.BankAccount.AccountNumber,
 			BankName:      project.BankAccount.BankName,
 			OwnerName:     project.BankAccount.OwnerName,
+		}
+	}
+
+	if project.Organization != nil {
+		result.Organization = &Organization{
+			ID:     project.Organization.ID.String(),
+			Code:   project.Organization.Code,
+			Name:   project.Organization.Name,
+			Avatar: project.Organization.Avatar,
 		}
 	}
 
@@ -490,6 +519,7 @@ type UpdateProjectGeneralInfo struct {
 	AuditNotionID string                `json:"auditNotionID"`
 	BankAccount   *BasicBankAccountInfo `json:"bankAccount"`
 	Client        *Client               `json:"client"`
+	Organization  *Organization         `json:"organization"`
 }
 
 type UpdateProjectGeneralInfoResponse struct {
@@ -527,6 +557,15 @@ func ToUpdateProjectGeneralInfo(project *model.Project) UpdateProjectGeneralInfo
 			AccountNumber: project.BankAccount.AccountNumber,
 			BankName:      project.BankAccount.BankName,
 			OwnerName:     project.BankAccount.OwnerName,
+		}
+	}
+
+	if project.Organization != nil {
+		rs.Organization = &Organization{
+			ID:     project.Organization.ID.String(),
+			Code:   project.Organization.Code,
+			Name:   project.Organization.Name,
+			Avatar: project.Organization.Avatar,
 		}
 	}
 
