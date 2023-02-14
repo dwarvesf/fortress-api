@@ -5,6 +5,7 @@ type TechRadar struct {
 	Name       string   `json:"name"`
 	Assign     string   `json:"assign"`
 	Categories []string `json:"categories"`
+	Tags       []string `json:"tags"`
 	Quadrant   string   `json:"quadrant"`
 	Ring       string   `json:"ring"`
 }
