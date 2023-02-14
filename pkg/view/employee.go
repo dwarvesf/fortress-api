@@ -110,8 +110,9 @@ func ToEmployeeProjectDetailData(pm *model.ProjectMember, userInfo *model.Curren
 		Avatar:    pm.Project.Avatar,
 	}
 
-	if !pm.IsActive() && pm.Project.Status.IsValid() &&
-		(pm.Project.Status == model.ProjectStatusClosed || pm.Project.Status == model.ProjectStatusPaused) {
+	if !pm.IsActive() ||
+		pm.Project.Status == model.ProjectStatusClosed ||
+		pm.Project.Status == model.ProjectStatusPaused {
 		rs.Status = model.ProjectMemberStatusInactive.String()
 	}
 
