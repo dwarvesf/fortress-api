@@ -92,10 +92,17 @@ func (s *store) All(db *gorm.DB, filter EmployeeFilter, pagination model.Paginat
 		Preload("SocialAccounts", "deleted_at IS NULL")
 
 	if filter.Preload {
-		query = query.Preload("ProjectMembers", "deleted_at IS NULL").
+		query = query.
 			Preload("LineManager", "deleted_at IS NULL").
 			Preload("Referrer", "deleted_at IS NULL").
 			Preload("Seniority", "deleted_at IS NULL").
+			Preload("ProjectMembers", func(db *gorm.DB) *gorm.DB {
+				return db.Joins("JOIN projects ON projects.id = project_members.project_id").
+					Where("project_members.deleted_at IS NULL").
+					Where("project_members.start_date <= now()").
+					Where("(project_members.end_date IS NULL OR project_members.end_date > now())").
+					Order("projects.name")
+			}).
 			Preload("ProjectMembers.Project", "deleted_at IS NULL").
 			Preload("ProjectMembers.Project.Heads", "deleted_at IS NULL").
 			Preload("EmployeePositions", "deleted_at IS NULL").

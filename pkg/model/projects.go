@@ -269,3 +269,13 @@ func IsUserActiveInProject(userID string, pm []ProjectMember) bool {
 
 	return false
 }
+
+func (pm *ProjectMember) IsActive() bool {
+	if pm.StartDate != nil &&
+		!pm.StartDate.After(time.Now()) && // start_date <= now()
+		(pm.EndDate == nil || pm.EndDate.After(time.Now())) { // end_date > now()
+		return true
+	}
+
+	return false
+}

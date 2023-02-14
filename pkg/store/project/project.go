@@ -126,10 +126,8 @@ func (s *store) One(db *gorm.DB, id string, preload bool) (*model.Project, error
 						model.HeadPositionTechnicalLead,
 					).
 					Where("project_members.deleted_at IS NULL").
-					Where("project_members.status IN ?", []model.ProjectMemberStatus{
-						model.ProjectMemberStatusActive,
-						model.ProjectMemberStatusOnBoarding,
-					}).
+					Where("project_members.start_date <= now()").
+					Where("(project_members.end_date IS NULL OR project_members.end_date > now())").
 					Order("CASE ph.position WHEN 'technical-lead' THEN 1 ELSE 2 END").
 					Order("s.level DESC")
 			}).
@@ -156,7 +154,9 @@ func (s *store) GetByEmployeeID(db *gorm.DB, employeeID string) ([]*model.Projec
 	var projects []*model.Project
 
 	query := db.Table("projects").
-		Joins("JOIN project_members pm ON pm.project_id = projects.id AND pm.status = ?", model.ProjectMemberStatusActive).
+		Joins("JOIN project_members pm ON pm.project_id = projects.id").
+		Where("pm.start_date <= now() AND (pm.end_date IS NULL OR pm.end_date > now())").
+		Where("projects.status = ?", model.ProjectStatusActive).
 		Where("projects.deleted_at IS NULL AND pm.employee_id = ?", employeeID).
 		Preload("Heads", func(db *gorm.DB) *gorm.DB {
 			return db.Joins("JOIN projects p ON project_heads.project_id = p.id").
