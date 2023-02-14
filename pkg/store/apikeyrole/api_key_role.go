@@ -11,6 +11,6 @@ func New() IStore {
 	return &store{}
 }
 
-func (s *store) Create(db *gorm.DB, e *model.ApikeyRole) (*model.ApikeyRole, error) {
+func (s *store) Create(db *gorm.DB, e *model.APIKeyRole) (*model.APIKeyRole, error) {
 	return e, db.Create(e).Error
 }

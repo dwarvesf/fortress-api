@@ -131,23 +131,14 @@ func (h *handler) List(c *gin.Context) {
 }
 
 func (h *handler) getWorkingStatusInput(c *gin.Context, input []string) ([]string, error) {
-	userID, err := utils.GetUserIDFromContext(c, h.config)
+	userInfo, err := utils.GetLoggedInUserInfo(c, h.store, h.repo.DB(), h.config)
 	if err != nil {
 		h.logger.Error(err, "failed to get userID from context")
 		return nil, err
 	}
 
-	var hasPermission bool
-	if userID != "" {
-		hasPermission, err = h.store.Permission.HasPermission(h.repo.DB(), userID, model.PermissionEmployeesReadFilterByAllStatuses.String())
-		if err != nil {
-			h.logger.Error(err, "failed to check permission of user")
-			return nil, err
-		}
-	}
-
 	// user who do not have permission
-	if !hasPermission && !utils.IsAPIKey(c) {
+	if !utils.HasPermission(userInfo.Permissions, model.PermissionEmployeesReadFilterByAllStatuses) {
 		if len(input) == 0 {
 			return []string{
 				model.WorkingStatusOnBoarding.String(),

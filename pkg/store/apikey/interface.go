@@ -7,6 +7,6 @@ import (
 )
 
 type IStore interface {
-	GetByClientID(db *gorm.DB, id string) (*model.Apikey, error)
-	Create(db *gorm.DB, e *model.Apikey) (apiKey *model.Apikey, err error)
+	GetByClientID(db *gorm.DB, id string) (*model.APIKey, error)
+	Create(db *gorm.DB, e *model.APIKey) (apiKey *model.APIKey, err error)
 }

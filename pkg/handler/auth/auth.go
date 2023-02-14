@@ -120,8 +120,8 @@ func (h *handler) Me(c *gin.Context) {
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 404 {object} view.ErrorResponse
 // @Failure 500 {object} view.ErrorResponse
-// @Router /auth/apikey [post]
-func (h *handler) CreateAPIkey(c *gin.Context) {
+// @Router /auth/api-key [post]
+func (h *handler) CreateAPIKey(c *gin.Context) {
 	var body request.CreateAPIKeyInput
 
 	if err := c.ShouldBindJSON(&body); err != nil {
@@ -132,10 +132,10 @@ func (h *handler) CreateAPIkey(c *gin.Context) {
 	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler": "auth",
-		"method":  "CreateAPIkey",
+		"method":  "CreateAPIKey",
 	})
 
-	key, err := h.controller.Auth.CreateAPIkey(c, body.RoleID)
+	key, err := h.controller.Auth.CreateAPIKey(c, body.RoleID)
 	if err != nil {
 		l.Error(err, "error create api key")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))

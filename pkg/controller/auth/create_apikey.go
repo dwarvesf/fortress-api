@@ -11,7 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func (r *controller) CreateAPIkey(c *gin.Context, roleID string) (string, error) {
+func (r *controller) CreateAPIKey(c *gin.Context, roleID string) (string, error) {
 	clientID, err := utils.GenerateUniqueNanoID(utils.ClientIDLength)
 	if err != nil {
 		return "", err
@@ -41,7 +41,7 @@ func (r *controller) CreateAPIkey(c *gin.Context, roleID string) (string, error)
 		return "", done(err)
 	}
 
-	apikey, err := r.store.APIkey.Create(tx.DB(), &model.Apikey{
+	apikey, err := r.store.APIKey.Create(tx.DB(), &model.APIKey{
 		ClientID:  clientID,
 		SecretKey: hashedKey,
 		Status:    model.ApikeyStatusValid,
@@ -50,13 +50,13 @@ func (r *controller) CreateAPIkey(c *gin.Context, roleID string) (string, error)
 		return "", done(err)
 	}
 
-	_, err = r.store.ApikeyRole.Create(tx.DB(), &model.ApikeyRole{
-		ApiKeyID: apikey.ID,
+	_, err = r.store.APIKeyRole.Create(tx.DB(), &model.APIKeyRole{
+		APIKeyID: apikey.ID,
 		RoleID:   role.ID,
 	})
 	if err != nil {
 		return "", done(err)
 	}
 
-	return base64.StdEncoding.EncodeToString([]byte(clientID + key)), done(nil)
+	return base64.URLEncoding.EncodeToString([]byte(clientID + key)), done(nil)
 }

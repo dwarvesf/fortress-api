@@ -47,8 +47,8 @@ func (s *store) GetByApiKeyID(db *gorm.DB, apiKeyID string) ([]*model.Permission
 	return permissions, db.
 		Select("DISTINCT permissions.*").
 		Joins("JOIN role_permissions rp ON permissions.id = rp.permission_id").
-		Joins("JOIN apikey_roles ar ON ar.role_id = rp.role_id").
-		Where("ar.apikey_id = ?", apiKeyID).
+		Joins("JOIN api_key_roles ar ON ar.role_id = rp.role_id").
+		Where("ar.api_key_id = ?", apiKeyID).
 		Order("permissions.code").
 		Find(&permissions).Error
 }

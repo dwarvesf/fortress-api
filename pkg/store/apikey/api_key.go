@@ -12,12 +12,12 @@ func New() IStore {
 	return &store{}
 }
 
-func (s *store) GetByClientID(db *gorm.DB, id string) (*model.Apikey, error) {
-	var apikey *model.Apikey
+func (s *store) GetByClientID(db *gorm.DB, id string) (*model.APIKey, error) {
+	var apikey *model.APIKey
 	return apikey, db.Where("client_id = ?", id).
 		First(&apikey).Error
 }
 
-func (s *store) Create(db *gorm.DB, e *model.Apikey) (apiKey *model.Apikey, err error) {
+func (s *store) Create(db *gorm.DB, e *model.APIKey) (apiKey *model.APIKey, err error) {
 	return e, db.Create(e).Error
 }
