@@ -930,7 +930,7 @@ func ToWorkSummaries(eers []*model.EmployeeEventReviewer) []WorkSurveySummary {
 		employeeMap[eer.ReviewerID] = *eer.Reviewer
 
 		// to order date
-		date := eer.Event.EndDate.Format("2006-01-02")
+		date := eer.Event.EndDate.Format("02-01-2006")
 		if !slices.Contains(listDate, date) {
 			listDate = append(listDate, date)
 		}
