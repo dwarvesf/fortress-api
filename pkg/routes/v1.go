@@ -37,7 +37,7 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 	// auth
 	v1.POST("/auth", h.Auth.Auth)
 	v1.GET("/auth/me", amw.WithAuth, pmw.WithPerm(model.PermissionAuthRead), h.Auth.Me)
-	v1.POST("/auth/apikey", amw.WithAuth, pmw.WithPerm(model.PermissionAuthCreate), h.Auth.CreateAPIkey)
+	v1.POST("/auth/api-key", amw.WithAuth, pmw.WithPerm(model.PermissionAuthCreate), h.Auth.CreateAPIKey)
 
 	// user profile
 	v1.GET("/profile", amw.WithAuth, h.Profile.GetProfile)

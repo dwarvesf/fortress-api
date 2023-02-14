@@ -86,7 +86,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/auth/apikey": {
+        "/auth/api-key": {
             "post": {
                 "description": "Create API key",
                 "consumes": [

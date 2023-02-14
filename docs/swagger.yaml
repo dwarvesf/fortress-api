@@ -3692,7 +3692,7 @@ paths:
       summary: Authorise user when login
       tags:
       - Auth
-  /auth/apikey:
+  /auth/api-key:
     post:
       consumes:
       - application/json

@@ -133,10 +133,10 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/auth.IHandler.Me-fm",
 			},
 		},
-		"/api/v1/auth/apikey": {
+		"/api/v1/auth/api-key": {
 			"POST": {
 				Method:  "POST",
-				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/auth.IHandler.CreateAPIkey-fm",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/auth.IHandler.CreateAPIKey-fm",
 			},
 		},
 		"/api/v1/metadata/countries": {

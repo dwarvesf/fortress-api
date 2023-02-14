@@ -98,8 +98,8 @@ type Store struct {
 	Schedule              schedule.IStore
 	Client                client.IStore
 	ClientContact         clientcontact.IStore
-	APIkey                apikey.IStore
-	ApikeyRole            apikeyrole.IStore
+	APIKey                apikey.IStore
+	APIKeyRole            apikeyrole.IStore
 }
 
 func New() *Store {
@@ -150,7 +150,7 @@ func New() *Store {
 		Schedule:              schedule.New(),
 		Client:                client.New(),
 		ClientContact:         clientcontact.New(),
-		APIkey:                apikey.New(),
-		ApikeyRole:            apikeyrole.New(),
+		APIKey:                apikey.New(),
+		APIKeyRole:            apikeyrole.New(),
 	}
 }

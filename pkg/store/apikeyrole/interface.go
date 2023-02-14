@@ -7,5 +7,5 @@ import (
 )
 
 type IStore interface {
-	Create(db *gorm.DB, e *model.ApikeyRole) (*model.ApikeyRole, error)
+	Create(db *gorm.DB, e *model.APIKeyRole) (*model.APIKeyRole, error)
 }

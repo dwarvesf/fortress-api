@@ -50,13 +50,19 @@ func GenerateHashedKey(key string) (string, error) {
 	return string(hashedKey), nil
 }
 
-func ExtractAPIKey(apiKey string) (clientID string, key string, err error) {
+func ExtractAPIKey(apiKey string) (string, string, error) {
+	clientID, key := "", ""
+
 	decodedStr, err := base64.StdEncoding.DecodeString(apiKey)
 	if err != nil {
 		return "", "", err
 	}
-	return string(decodedStr)[:ClientIDLength], string(decodedStr)[ClientIDLength:SecretKeyLength], nil
 
+	decodedAPIKey := string(decodedStr)
+	clientID = decodedAPIKey[:ClientIDLength]
+	key = decodedAPIKey[ClientIDLength:]
+
+	return clientID, key, nil
 }
 
 func ValidateHashedKey(hashedKey string, key string) error {
@@ -90,7 +96,7 @@ func GetUserIDFromContext(c *gin.Context, cfg *config.Config) (string, error) {
 		return "", err
 	}
 
-	if accessToken == "ApiKey" {
+	if IsAPIKey(c) {
 		return "", nil
 	}
 
@@ -124,7 +130,36 @@ func HasPermission(perms map[string]string, requiredPerm model.PermissionCode) b
 
 func GetLoggedInUserInfo(c *gin.Context, storeDB *store.Store, db *gorm.DB, cfg *config.Config) (*model.CurrentLoggedUserInfo, error) {
 	if IsAPIKey(c) {
-		return &model.CurrentLoggedUserInfo{}, nil
+		accessToken, err := GetTokenFromRequest(c)
+
+		clientID, key, err := ExtractAPIKey(accessToken)
+		if err != nil {
+			return nil, err
+		}
+
+		apikey, err := storeDB.APIKey.GetByClientID(db, clientID)
+		if err != nil {
+			return nil, err
+		}
+
+		if apikey.Status != model.ApikeyStatusValid {
+			return nil, err
+		}
+
+		err = ValidateHashedKey(apikey.SecretKey, key)
+		if err != nil {
+			return nil, err
+		}
+
+		perms, err := storeDB.Permission.GetByApiKeyID(db, apikey.ID.String())
+		if err != nil {
+			return nil, err
+		}
+
+		return &model.CurrentLoggedUserInfo{
+			UserID:      clientID,
+			Permissions: model.ToPermissionMap(perms),
+		}, nil
 	}
 
 	userID, err := GetUserIDFromContext(c, cfg)
