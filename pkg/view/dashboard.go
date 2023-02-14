@@ -51,7 +51,7 @@ type WorkSurvey struct {
 	Workload float64 `json:"workload"`
 	Deadline float64 `json:"deadline"`
 	Learning float64 `json:"learning"`
-	Trend    *Trend  `json:"trend"`
+	Trend    Trend   `json:"trend"`
 }
 
 type ActionItemTrend struct {
@@ -61,11 +61,11 @@ type ActionItemTrend struct {
 }
 
 type AuditActionItemReport struct {
-	Quarter string           `json:"quarter"`
-	High    int64            `json:"high"`
-	Medium  int64            `json:"medium"`
-	Low     int64            `json:"low"`
-	Trend   *ActionItemTrend `json:"trend"`
+	Quarter string          `json:"quarter"`
+	High    int64           `json:"high"`
+	Medium  int64           `json:"medium"`
+	Low     int64           `json:"low"`
+	Trend   ActionItemTrend `json:"trend"`
 }
 
 type WorkSurveysData struct {
@@ -127,8 +127,8 @@ func ToActionItemReportData(actionItemReports []*model.ActionItemReport) []*Audi
 }
 
 // calculateTrend calculate the trend for work survey
-func calculateTrend(previous *model.WorkSurvey, current *model.WorkSurvey) *Trend {
-	rs := &Trend{}
+func calculateTrend(previous *model.WorkSurvey, current *model.WorkSurvey) Trend {
+	rs := Trend{}
 
 	// if previous or current value = 0 trend = 0
 	if previous.Workload == 0 || current.Workload == 0 {
@@ -153,8 +153,8 @@ func calculateTrend(previous *model.WorkSurvey, current *model.WorkSurvey) *Tren
 }
 
 // calculateTrend calculate the trend for action item report
-func calculateActionItemReportTrend(previous *model.ActionItemReport, current *model.ActionItemReport) *ActionItemTrend {
-	rs := &ActionItemTrend{}
+func calculateActionItemReportTrend(previous *model.ActionItemReport, current *model.ActionItemReport) ActionItemTrend {
+	rs := ActionItemTrend{}
 
 	// if previous or current value = 0 trend = 0
 	if previous.High == 0 || current.High == 0 {
