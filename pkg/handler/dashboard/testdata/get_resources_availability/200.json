@@ -6,6 +6,7 @@
                 "id": "3f705527-0455-4e67-a585-6c1f23726fff",
                 "fullName": "Giang Ngọc Huy",
                 "displayName": "Huy Giang",
+                "username": "huy",
                 "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/261887286241984054.png",
                 "seniority": {
                     "id": "01fb6322-d727-47e3-a242-5039ea4732fd",
@@ -54,6 +55,7 @@
                 "id": "d1b1dcbe-f4ed-49cc-a16b-56c9a3145c14",
                 "fullName": "Nghiêm Minh Đức",
                 "displayName": "Duc Nghiem",
+                "username": "duc",
                 "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/3851063061598282120.png",
                 "seniority": {
                     "id": "01fb6322-d727-47e3-a242-5039ea4732fc",
@@ -87,6 +89,7 @@
                 "id": "7bcf4b45-0279-4da2-84e4-eec5d9d05ba3",
                 "fullName": "Nguyễn Lâm Ngọc Duy",
                 "displayName": "Duy Nguyen",
+                "username": "mia",
                 "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/7186955696154477566.png",
                 "seniority": {
                     "id": "01fb6322-d727-47e3-a242-5039ea4732fc",
@@ -120,6 +123,7 @@
                 "id": "37e00d47-de69-4ac8-991b-cf3e39565c00",
                 "fullName": "Phùng Thị Thương Thương",
                 "displayName": "Thuong Phung",
+                "username": "thuongptt",
                 "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/7186955696154477566.png",
                 "seniority": {
                     "id": "01fb6322-d727-47e3-a242-5039ea4732fc",
@@ -153,6 +157,7 @@
                 "id": "dcfee24b-306d-4609-9c24-a4021639a11b",
                 "fullName": "Lê Việt Quỳnh",
                 "displayName": "Quynh Le",
+                "username": "quynhlv",
                 "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/4916620003720295041.png",
                 "seniority": {
                     "id": "01fb6322-d727-47e3-a242-5039ea4732fc",
@@ -186,6 +191,7 @@
                 "id": "a1f25e3e-cf40-4d97-a4d5-c27ee566b8c5",
                 "fullName": "Phan Duy Cường",
                 "displayName": "Cuong Phan",
+                "username": "cody",
                 "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/8465254073957996724.png",
                 "seniority": {
                     "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
@@ -219,6 +225,7 @@
                 "id": "d389d35e-c548-42cf-9f29-2a599969a8f2",
                 "fullName": "Nguyễn Trần Minh Thảo",
                 "displayName": "Thao Nguyen",
+                "username": "thaontm",
                 "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5348640939694049226.png",
                 "seniority": {
                     "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
@@ -252,6 +259,7 @@
                 "id": "498d5805-dd64-4643-902d-95067d6e5ab5",
                 "fullName": "Võ Hải Biên",
                 "displayName": "Bien Vo",
+                "username": "bean",
                 "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/4114345912835654270.png",
                 "seniority": {
                     "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
@@ -285,6 +293,7 @@
                 "id": "f7c6016b-85b5-47f7-8027-23c2db482197",
                 "fullName": "Nguyen Van Duc",
                 "displayName": "Duc Nguyen",
+                "username": "ducnv",
                 "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/7227222220023148542.png",
                 "seniority": {
                     "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
@@ -306,6 +315,7 @@
                 "id": "f6ce0d0f-5794-463b-ad0b-8240ab9c49be",
                 "fullName": "Nguyễn Hoàng Anh",
                 "displayName": "Anh Nguyen",
+                "username": "anhnh",
                 "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/3274097965772922906.png",
                 "seniority": {
                     "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
@@ -327,6 +337,7 @@
                 "id": "061820c0-bf6c-4b4a-9753-875f75d71a2c",
                 "fullName": "Vong Tieu Hung",
                 "displayName": "Hung Vong",
+                "username": "hungvt",
                 "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5762098830282049280.png",
                 "seniority": {
                     "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
@@ -348,6 +359,7 @@
                 "id": "d42a6fca-d3b8-4a48-80f7-a95772abda56",
                 "fullName": "Nguyễn Xuân Trường",
                 "displayName": "Truong Nguyen",
+                "username": "truongnx",
                 "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/8690187460973853786.png",
                 "seniority": {
                     "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
@@ -369,6 +381,7 @@
                 "id": "d675dfc5-acbe-4566-acde-f7cb132c0206",
                 "fullName": "Le Nguyen An Khang",
                 "displayName": "Khang Le",
+                "username": "khanglna",
                 "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/4368900905892223171.png",
                 "seniority": {
                     "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
@@ -390,6 +403,7 @@
                 "id": "38a00d4a-bc45-41de-965a-adc674ab82c9",
                 "fullName": "Nguyễn Hữu Nguyên",
                 "displayName": "Nguyen Nguyen",
+                "username": "nguyennh",
                 "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/2137109913829673789.png",
                 "seniority": {
                     "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
