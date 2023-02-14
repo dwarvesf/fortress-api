@@ -101,7 +101,7 @@ func (s *store) All(db *gorm.DB, filter EmployeeFilter, pagination model.Paginat
 					Where("project_members.deleted_at IS NULL").
 					Where("project_members.start_date <= now()").
 					Where("(project_members.end_date IS NULL OR project_members.end_date > now())").
-					Where("projects.status = IN ?", []string{
+					Where("projects.status IN ?", []string{
 						model.ProjectStatusOnBoarding.String(),
 						model.ProjectStatusActive.String(),
 					}).
