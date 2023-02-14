@@ -352,16 +352,25 @@ func (h *handler) createPeerReview(db *gorm.DB, req request.CreateSurveyFeedback
 
 	eets := make([]model.EmployeeEventTopic, 0)
 	for _, e := range employees {
-		topicTitle := fmt.Sprintf("Peer Performance Review: %s - %s", e.DisplayName, title)
-		eets = append(eets, model.EmployeeEventTopic{
-			BaseModel: model.BaseModel{
-				ID: model.NewUUID(),
-			},
-			Title:      topicTitle,
-			EventID:    event.ID,
-			EmployeeID: e.ID,
-			Employee:   e,
-		})
+		isDwarves := false
+		for _, o := range e.Organizations {
+			if o.Code == model.OrganizationCodeDwarves {
+				isDwarves = true
+				break
+			}
+		}
+		if isDwarves {
+			topicTitle := fmt.Sprintf("Peer Performance Review: %s - %s", e.DisplayName, title)
+			eets = append(eets, model.EmployeeEventTopic{
+				BaseModel: model.BaseModel{
+					ID: model.NewUUID(),
+				},
+				Title:      topicTitle,
+				EventID:    event.ID,
+				EmployeeID: e.ID,
+				Employee:   e,
+			})
+		}
 	}
 
 	i := 0
@@ -398,7 +407,14 @@ func (h *handler) createPeerReview(db *gorm.DB, req request.CreateSurveyFeedback
 
 	reviewerMap := make(map[model.UUID]model.UUID)
 	for _, p := range peers {
-		if !p.ReviewerID.IsZero() {
+		canReview := false
+		for _, e := range eets {
+			if e.EmployeeID == p.EmployeeID {
+				canReview = true
+				break
+			}
+		}
+		if canReview && !p.ReviewerID.IsZero() {
 			reviewerMap[p.ReviewerID] = p.EmployeeID
 			reviewers = append(reviewers, model.EmployeeEventReviewer{
 				BaseModel: model.BaseModel{
@@ -567,15 +583,24 @@ func (h *handler) createEngagement(db *gorm.DB, req request.CreateSurveyFeedback
 
 	eets := make([]model.EmployeeEventTopic, 0)
 	for _, e := range employees {
-		topicTitle := fmt.Sprintf("Engagement Survey: %s - %s", e.DisplayName, title)
-		eets = append(eets, model.EmployeeEventTopic{
-			BaseModel: model.BaseModel{
-				ID: model.NewUUID(),
-			},
-			Title:      topicTitle,
-			EventID:    event.ID,
-			EmployeeID: e.ID,
-		})
+		isDwarves := false
+		for _, o := range e.Organizations {
+			if o.Code == model.OrganizationCodeDwarves {
+				isDwarves = true
+				break
+			}
+		}
+		if isDwarves {
+			topicTitle := fmt.Sprintf("Engagement Survey: %s - %s", e.DisplayName, title)
+			eets = append(eets, model.EmployeeEventTopic{
+				BaseModel: model.BaseModel{
+					ID: model.NewUUID(),
+				},
+				Title:      topicTitle,
+				EventID:    event.ID,
+				EmployeeID: e.ID,
+			})
+		}
 	}
 
 	i := 0
