@@ -178,6 +178,10 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 	{
 		memo.GET("", h.Memo.List)
 	}
+	issue := v1.Group("/issues")
+	{
+		issue.GET("", h.Issue.List)
+	}
 	staffingDemand := v1.Group("/staffing-demands")
 	{
 		staffingDemand.GET("", h.StaffingDemand.List)
