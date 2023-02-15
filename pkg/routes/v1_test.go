@@ -133,6 +133,12 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/auth.IHandler.Me-fm",
 			},
 		},
+		"/api/v1/auth/api-key": {
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/auth.IHandler.CreateAPIKey-fm",
+			},
+		},
 		"/api/v1/metadata/countries": {
 			"GET": {
 				Method:  "GET",
@@ -533,6 +539,12 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/dashboard.IHandler.GetWorkUnitDistribution-fm",
 			},
 		},
+		"/api/v1/dashboards/resources/work-unit-distribution-summary": {
+			"GET": {
+				Method:  "GET",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/dashboard.IHandler.GetWorkUnitDistributionSummary-fm",
+			},
+		},
 		"/api/v1/dashboards/resources/work-survey-summaries": {
 			"GET": {
 				Method:  "GET",
@@ -549,6 +561,12 @@ func Test_loadV1Routes(t *testing.T) {
 			"POST": {
 				Method:  "POST",
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/audit.IHandler.Sync-fm",
+			},
+		},
+		"/cronjobs/sync-discord-info": {
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/discord.IHandler.SyncDiscordInfo-fm",
 			},
 		},
 		"/webhooks/n8n": {
@@ -579,6 +597,30 @@ func Test_loadV1Routes(t *testing.T) {
 			"GET": {
 				Method:  "GET",
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/invoice.IHandler.GetLatestInvoice-fm",
+			},
+		},
+		"/api/v1/clients": {
+			"GET": {
+				Method:  "GET",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/client.IHandler.List-fm",
+			},
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/client.IHandler.Create-fm",
+			},
+		},
+		"/api/v1/clients/:id": {
+			"GET": {
+				Method:  "GET",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/client.IHandler.Detail-fm",
+			},
+			"PUT": {
+				Method:  "PUT",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/client.IHandler.Update-fm",
+			},
+			"DELETE": {
+				Method:  "DELETE",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/client.IHandler.Delete-fm",
 			},
 		},
 	}

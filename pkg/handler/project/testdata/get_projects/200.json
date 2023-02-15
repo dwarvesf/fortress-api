@@ -28,7 +28,9 @@
           "function": "",
           "code": "lorem-ipsum",
           "auditNotionID": "",
-          "bankAccount": null
+          "bankAccount": null,
+          "client": null,
+          "companyInfo": null
       },
       {
           "id": "8dc3be2e-19a4-4942-8a79-56db391a0b15",
@@ -62,7 +64,8 @@
                     "rate": "0",
                     "discount": "0",
                     "seniority": null,
-                    "positions": []
+                    "positions": [],
+                    "upsellPerson": null
                 },
                 {
                     "projectMemberID": "",
@@ -80,7 +83,8 @@
                     "rate": "0",
                     "discount": "0",
                     "seniority": null,
-                    "positions": []
+                    "positions": [],
+                    "upsellPerson": null
                 },
                 {
                     "projectMemberID": "",
@@ -98,7 +102,8 @@
                     "rate": "0",
                     "discount": "0",
                     "seniority": null,
-                    "positions": []
+                    "positions": [],
+                    "upsellPerson": null
                 },
                 {
                     "projectMemberID": "",
@@ -116,7 +121,8 @@
                     "rate": "0",
                     "discount": "0",
                     "seniority": null,
-                    "positions": []
+                    "positions": [],
+                    "upsellPerson": null
                 },
                 {                 
                   "projectMemberID": "",
@@ -134,7 +140,8 @@
                   "rate": "0",
                   "discount": "0",
                   "seniority": null,
-                  "positions": []
+                  "positions": [],
+                  "upsellPerson": null
               }
           ],
           "technicalLeads": [
@@ -171,7 +178,9 @@
           "function": "",
           "code": "fortress",
           "auditNotionID": "",
-          "bankAccount": null
+          "bankAccount": null,
+          "client": null,
+          "companyInfo": null
       }
   ]
 }

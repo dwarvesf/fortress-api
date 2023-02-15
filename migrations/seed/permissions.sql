@@ -61,4 +61,8 @@ INSERT INTO public.permissions (id, deleted_at, created_at, updated_at, name, co
 ('259fb434-5321-43be-b007-76f3c2dfbfcc', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Invoice Read', 'invoices.read'),
 ('fa6961f1-1cee-494f-8f1f-f4552b49b6fa', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Invoice Edit', 'invoices.edit'),
 ('60768a38-8ff1-493a-85ba-b62df98a60d4', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Invoice Delete', 'invoices.delete'),
+('75ae4f79-cef1-4dfd-be66-064c118ba6cf', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Clients Create', 'clients.create'),
+('97a02a4d-b8fb-486d-af1a-25139014b375', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Clients Read', 'clients.read'),
+('92031f1a-b745-42cf-aac1-a067bbee08e6', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Clients Edit', 'clients.edit'),
+('7fb332e7-3231-42e6-8f38-a5c8b224d84e', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Clients Delete', 'clients.delete'),
 ('78d617f8-b155-4051-b128-7f2d00ca31fd', NULL, '2023-01-10 05:19:00.330571', '2023-01-10 05:19:00.330571', 'Valuation Read', 'valuations.read');

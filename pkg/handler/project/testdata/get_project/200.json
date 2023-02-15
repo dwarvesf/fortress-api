@@ -10,7 +10,8 @@
         "projectEmail": "fortress@d.foundation",
         "clientEmail": [
             "team@d.foundation"
-        ],"industry": "",
+        ],
+        "industry": "",
         "allowsSendingSurvey": false,
         "country": {
             "id": "4ef64490-c906-4192-a7f9-d2221dadfe4c",
@@ -49,7 +50,14 @@
                         "code": "frontend",
                         "name": "Frontend"
                     }
-                ]
+                ],
+                "upsellPerson": {
+                    "id": "608ea227-45a5-4c8a-af43-6c7280d96340",
+                    "fullName": "Tiêu Quang Huy",
+                    "displayName": "Huy Tieu",
+                    "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/3c420751-bb9a-4878-896e-2f10f3a633d6_avatar2535921977139052349.png",
+                    "username": "huytq"
+                }
             },
             {
                 "projectMemberID": "",
@@ -80,7 +88,14 @@
                         "code": "frontend",
                         "name": "Frontend"
                     }
-                ]
+                ],
+                "upsellPerson": {
+                    "id": "608ea227-45a5-4c8a-af43-6c7280d96340",
+                    "fullName": "Tiêu Quang Huy",
+                    "displayName": "Huy Tieu",
+                    "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/3c420751-bb9a-4878-896e-2f10f3a633d6_avatar2535921977139052349.png",
+                    "username": "huytq"
+                }
             },
             {
                 "projectMemberID": "",
@@ -111,7 +126,14 @@
                         "code": "frontend",
                         "name": "Frontend"
                     }
-                ]
+                ],
+                "upsellPerson": {
+                    "id": "608ea227-45a5-4c8a-af43-6c7280d96340",
+                    "fullName": "Tiêu Quang Huy",
+                    "displayName": "Huy Tieu",
+                    "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/3c420751-bb9a-4878-896e-2f10f3a633d6_avatar2535921977139052349.png",
+                    "username": "huytq"
+                }
             },
             {
                 "projectMemberID": "",
@@ -142,7 +164,14 @@
                         "code": "backend",
                         "name": "Backend"
                     }
-                ]
+                ],
+                "upsellPerson": {
+                    "id": "608ea227-45a5-4c8a-af43-6c7280d96340",
+                    "fullName": "Tiêu Quang Huy",
+                    "displayName": "Huy Tieu",
+                    "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/3c420751-bb9a-4878-896e-2f10f3a633d6_avatar2535921977139052349.png",
+                    "username": "huytq"
+                }
             },
             {
                 "projectMemberID": "",
@@ -173,7 +202,14 @@
                         "code": "backend",
                         "name": "Backend"
                     }
-                ]
+                ],
+                "upsellPerson": {
+                    "id": "608ea227-45a5-4c8a-af43-6c7280d96340",
+                    "fullName": "Tiêu Quang Huy",
+                    "displayName": "Huy Tieu",
+                    "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/3c420751-bb9a-4878-896e-2f10f3a633d6_avatar2535921977139052349.png",
+                    "username": "huytq"
+                }
             }
         ],
         "technicalLeads": [
@@ -234,6 +270,18 @@
             "accountNumber": "1234567891",
             "bankName": "OCB",
             "ownerName": "Phạm Văn Đạt"
+        },
+        "client": {
+            "id": "afb9cf05-9517-4fb9-a4f2-66e6d90ad215",
+            "name": "Dwarves Client",
+            "description": "Using For Internal Project",
+            "registrationNumber": "123455099999999"
+        },
+        "companyInfo": {
+            "id": "ed8bebd2-e6be-4e84-b86b-b3983db0447d",
+            "name": "company A",
+            "description": "description",
+            "registrationNumber": "0123123123"
         }
     }
 }

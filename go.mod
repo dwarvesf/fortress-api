@@ -4,6 +4,7 @@ go 1.18
 
 require (
 	cloud.google.com/go/storage v1.27.0
+	github.com/bwmarrin/discordgo v0.27.0
 	github.com/dstotijn/go-notion v0.9.0
 	github.com/gin-contrib/cors v1.4.0
 	github.com/gin-contrib/pprof v1.4.0
@@ -15,8 +16,9 @@ require (
 	github.com/google/go-cmp v0.5.9
 	github.com/hashicorp/vault/api v1.8.2
 	github.com/joho/godotenv v1.4.0
-	github.com/k0kubun/pp v3.0.1+incompatible
+	github.com/k0kubun/pp/v3 v3.2.0
 	github.com/lib/pq v1.10.6
+	github.com/matoous/go-nanoid v1.5.0
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/satori/go.uuid v1.2.0
 	github.com/shopspring/decimal v1.3.1
@@ -27,6 +29,7 @@ require (
 	github.com/swaggo/gin-swagger v1.5.3
 	github.com/swaggo/swag v1.8.7
 	github.com/thoas/go-funk v0.9.3
+	golang.org/x/crypto v0.0.0-20220722155217-630584e8d5aa
 	golang.org/x/exp v0.0.0-20221217163422-3c43f8badb15
 	golang.org/x/oauth2 v0.0.0-20221014153046-6fdb5e3db783
 	google.golang.org/api v0.102.0
@@ -45,7 +48,6 @@ require (
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
 	github.com/armon/go-metrics v0.3.10 // indirect
 	github.com/armon/go-radix v1.0.0 // indirect
-	github.com/bwmarrin/discordgo v0.27.0 // indirect
 	github.com/cenkalti/backoff/v3 v3.0.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/fatih/color v1.13.0 // indirect
@@ -95,7 +97,6 @@ require (
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
-	github.com/k0kubun/colorstring v0.0.0-20150214042306-9440f1994b88 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/magiconair/properties v1.8.6 // indirect
 	github.com/mailru/easyjson v0.7.6 // indirect
@@ -122,7 +123,6 @@ require (
 	github.com/ugorji/go/codec v1.2.7 // indirect
 	go.opencensus.io v0.23.0 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
-	golang.org/x/crypto v0.0.0-20220722155217-630584e8d5aa // indirect
 	golang.org/x/net v0.1.0 // indirect
 	golang.org/x/sys v0.1.0 // indirect
 	golang.org/x/text v0.4.0 // indirect

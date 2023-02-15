@@ -9,6 +9,10 @@ type AuthData struct {
 	AccessToken string       `json:"accessToken"`
 }
 
+type APIKeyData struct {
+	Key string `json:"key"`
+}
+
 func ToAuthData(accessToken string, employee *model.Employee) *AuthData {
 	return &AuthData{
 		Employee:    *ToEmployeeData(employee),
@@ -45,4 +49,8 @@ func ToAuthorizedUserData(employee *model.Employee, perms []*model.Permission) *
 
 type AuthUserResponse struct {
 	Data LoggedInUserData `json:"data"`
+}
+
+type APIKeyResponse struct {
+	Data APIKeyData `json:"data"`
 }

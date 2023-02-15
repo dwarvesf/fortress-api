@@ -35,6 +35,40 @@ type ProjectData struct {
 	Function            string                `json:"function"`
 	AuditNotionID       string                `json:"auditNotionID"`
 	BankAccount         *BasicBankAccountInfo `json:"bankAccount"`
+	Client              *BasicClientInfo      `json:"client"`
+	CompanyInfo         *BasicCompanyInfo     `json:"companyInfo"`
+}
+
+type BasicClientInfo struct {
+	ID                 string `json:"id"`
+	Name               string `json:"name"`
+	Description        string `json:"description"`
+	RegistrationNumber string `json:"registrationNumber"`
+}
+
+func ToBasicClientInfo(client *model.Client) *BasicClientInfo {
+	return &BasicClientInfo{
+		ID:                 client.ID.String(),
+		Name:               client.Name,
+		Description:        client.Description,
+		RegistrationNumber: client.RegistrationNumber,
+	}
+}
+
+type BasicCompanyInfo struct {
+	ID                 string `json:"id"`
+	Name               string `json:"name"`
+	Description        string `json:"description"`
+	RegistrationNumber string `json:"registrationNumber"`
+}
+
+func ToBasicCompanyInfo(company *model.CompanyInfo) *BasicCompanyInfo {
+	return &BasicCompanyInfo{
+		ID:                 company.ID.String(),
+		Name:               company.Name,
+		Description:        *company.Description,
+		RegistrationNumber: *company.RegistrationNumber,
+	}
 }
 
 type UpdatedProject struct {
@@ -63,8 +97,9 @@ type ProjectMember struct {
 	Rate            decimal.Decimal `json:"rate"`
 	Discount        decimal.Decimal `json:"discount"`
 
-	Seniority *model.Seniority `json:"seniority"`
-	Positions []Position       `json:"positions"`
+	Seniority    *model.Seniority   `json:"seniority"`
+	Positions    []Position         `json:"positions"`
+	UpsellPerson *BasicEmployeeInfo `json:"upsellPerson"`
 }
 
 type ProjectHead struct {
@@ -142,8 +177,12 @@ func ToProjectData(c *gin.Context, project *model.Project, userInfo *model.Curre
 			Positions:   ToProjectMemberPositions(m.ProjectMemberPositions),
 		}
 
-		if utils.HasPermission(c, userInfo.Permissions, model.PermissionProjectsReadFullAccess) {
+		if utils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadFullAccess) {
 			member.DeploymentType = m.DeploymentType.String()
+
+			if m.UpsellPerson != nil {
+				member.UpsellPerson = toBasicEmployeeInfo(*m.UpsellPerson)
+			}
 		}
 
 		members = append(members, member)
@@ -175,7 +214,7 @@ func ToProjectData(c *gin.Context, project *model.Project, userInfo *model.Curre
 		clientEmail = strings.Split(project.ClientEmail, ",")
 	}
 
-	if utils.HasPermission(c, userInfo.Permissions, model.PermissionProjectsReadFullAccess) {
+	if utils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadFullAccess) {
 		if project.ProjectNotion != nil && !project.ProjectNotion.AuditNotionID.IsZero() {
 			d.AuditNotionID = project.ProjectNotion.AuditNotionID.String()
 		}
@@ -189,6 +228,14 @@ func ToProjectData(c *gin.Context, project *model.Project, userInfo *model.Curre
 				BankName:      project.BankAccount.BankName,
 				OwnerName:     project.BankAccount.OwnerName,
 			}
+		}
+
+		if project.Client != nil {
+			d.Client = ToBasicClientInfo(project.Client)
+		}
+
+		if project.CompanyInfo != nil {
+			d.CompanyInfo = ToBasicCompanyInfo(project.CompanyInfo)
 		}
 	}
 
@@ -215,13 +262,13 @@ func ToProjectsData(c *gin.Context, projects []*model.Project, userInfo *model.C
 		}
 
 		// If the project is not belong user, check if the user has permission to view the project
-		if utils.HasPermission(c, userInfo.Permissions, model.PermissionProjectsReadFullAccess) ||
-			utils.HasPermission(c, userInfo.Permissions, model.PermissionEmployeesReadProjectsReadActive) {
+		if utils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadFullAccess) ||
+			utils.HasPermission(userInfo.Permissions, model.PermissionEmployeesReadProjectsReadActive) {
 
 			if p.Status == model.ProjectStatusActive {
 				results = append(results, ToProjectData(c, p, userInfo))
 			} else {
-				if utils.HasPermission(c, userInfo.Permissions, model.PermissionProjectsReadFullAccess) {
+				if utils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadFullAccess) {
 					results = append(results, ToProjectData(c, p, userInfo))
 				}
 			}
@@ -240,25 +287,26 @@ type ProjectDataResponse struct {
 }
 
 type CreateMemberData struct {
-	ProjectSlotID   string          `json:"projectSlotID"`
-	ProjectMemberID string          `json:"projectMemberID"`
-	EmployeeID      string          `json:"employeeID"`
-	FullName        string          `json:"fullName"`
-	DisplayName     string          `json:"displayName"`
-	Avatar          string          `json:"avatar"`
-	Positions       []Position      `json:"positions"`
-	DeploymentType  string          `json:"deploymentType"`
-	Status          string          `json:"status"`
-	IsLead          bool            `json:"isLead"`
-	Seniority       model.Seniority `json:"seniority"`
-	Username        string          `json:"username"`
+	ProjectSlotID   string             `json:"projectSlotID"`
+	ProjectMemberID string             `json:"projectMemberID"`
+	EmployeeID      string             `json:"employeeID"`
+	FullName        string             `json:"fullName"`
+	DisplayName     string             `json:"displayName"`
+	Avatar          string             `json:"avatar"`
+	Positions       []Position         `json:"positions"`
+	DeploymentType  string             `json:"deploymentType"`
+	Status          string             `json:"status"`
+	IsLead          bool               `json:"isLead"`
+	Seniority       model.Seniority    `json:"seniority"`
+	Username        string             `json:"username"`
+	UpsellPerson    *BasicEmployeeInfo `json:"upsellPerson"`
 }
 
 type CreateMemberDataResponse struct {
 	Data CreateMemberData `json:"data"`
 }
 
-func ToCreateMemberData(slot *model.ProjectSlot) CreateMemberData {
+func ToCreateMemberData(userInfo *model.CurrentLoggedUserInfo, slot *model.ProjectSlot) CreateMemberData {
 	rs := CreateMemberData{
 		ProjectSlotID:  slot.ID.String(),
 		FullName:       slot.ProjectMember.Employee.FullName,
@@ -275,6 +323,10 @@ func ToCreateMemberData(slot *model.ProjectSlot) CreateMemberData {
 	if !slot.ProjectMember.ID.IsZero() {
 		rs.ProjectMemberID = slot.ProjectMember.ID.String()
 		rs.EmployeeID = slot.ProjectMember.EmployeeID.String()
+	}
+
+	if slot.ProjectMember.UpsellPerson != nil && utils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadFullAccess) {
+		rs.UpsellPerson = toBasicEmployeeInfo(*slot.ProjectMember.UpsellPerson)
 	}
 
 	return rs
@@ -296,6 +348,7 @@ type CreateProjectData struct {
 	Code            string                `json:"code"`
 	Function        string                `json:"function"`
 	BankAccount     *BasicBankAccountInfo `json:"bankAccount"`
+	Client          *Client               `json:"client"`
 }
 
 type BasicBankAccountInfo struct {
@@ -305,7 +358,7 @@ type BasicBankAccountInfo struct {
 	OwnerName     string `json:"ownerName"`
 }
 
-func ToCreateProjectDataResponse(project *model.Project) CreateProjectData {
+func ToCreateProjectDataResponse(userInfo *model.CurrentLoggedUserInfo, project *model.Project) CreateProjectData {
 	var clientEmail []string
 	if project.ClientEmail != "" {
 		clientEmail = strings.Split(project.ClientEmail, ",")
@@ -339,6 +392,10 @@ func ToCreateProjectDataResponse(project *model.Project) CreateProjectData {
 		}
 	}
 
+	if project.Client != nil {
+		result.Client = toClient(project.Client)
+	}
+
 	if project.StartDate != nil {
 		result.StartDate = project.StartDate.Format("2006-01-02")
 	}
@@ -354,13 +411,13 @@ func ToCreateProjectDataResponse(project *model.Project) CreateProjectData {
 
 	result.Members = make([]CreateMemberData, 0, len(project.Slots))
 	for _, slot := range project.Slots {
-		result.Members = append(result.Members, ToCreateMemberData(&slot))
+		result.Members = append(result.Members, ToCreateMemberData(userInfo, &slot))
 	}
 
 	return result
 }
 
-func ToProjectMemberListData(members []*model.ProjectMember, projectHeads []*model.ProjectHead) []ProjectMember {
+func ToProjectMemberListData(userInfo *model.CurrentLoggedUserInfo, members []*model.ProjectMember, projectHeads []*model.ProjectHead) []ProjectMember {
 	var results = make([]ProjectMember, 0, len(members))
 
 	leadMap := map[string]bool{}
@@ -402,6 +459,10 @@ func ToProjectMemberListData(members []*model.ProjectMember, projectHeads []*mod
 				Seniority:       m.Seniority,
 				Positions:       ToProjectMemberPositions(m.ProjectMemberPositions),
 			}
+
+			if m.UpsellPerson != nil && utils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadFullAccess) {
+				member.UpsellPerson = toBasicEmployeeInfo(*m.UpsellPerson)
+			}
 		}
 
 		results = append(results, member)
@@ -428,6 +489,7 @@ type UpdateProjectGeneralInfo struct {
 	Function      model.ProjectFunction `json:"function"`
 	AuditNotionID string                `json:"auditNotionID"`
 	BankAccount   *BasicBankAccountInfo `json:"bankAccount"`
+	Client        *Client               `json:"client"`
 }
 
 type UpdateProjectGeneralInfoResponse struct {
@@ -466,6 +528,10 @@ func ToUpdateProjectGeneralInfo(project *model.Project) UpdateProjectGeneralInfo
 			BankName:      project.BankAccount.BankName,
 			OwnerName:     project.BankAccount.OwnerName,
 		}
+	}
+
+	if project.Client != nil {
+		rs.Client = toClient(project.Client)
 	}
 
 	return rs

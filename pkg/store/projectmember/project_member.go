@@ -131,6 +131,7 @@ func (s *store) GetAssignedMembers(db *gorm.DB, projectID string, status string,
 
 	if preload {
 		query = query.Preload("Seniority", "deleted_at IS NULL").
+			Preload("UpsellPerson", "deleted_at IS NULL").
 			Preload("ProjectMemberPositions", "deleted_at IS NULL").
 			Preload("ProjectMemberPositions.Position", "deleted_at IS NULL")
 	}

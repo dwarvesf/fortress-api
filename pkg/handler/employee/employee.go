@@ -98,7 +98,7 @@ func (h *handler) List(c *gin.Context) {
 	}
 
 	// If user don't have this permission, they can only see employees in the project that they are in
-	if !utils.HasPermission(c, userInfo.Permissions, model.PermissionEmployeesReadReadActive) {
+	if !utils.HasPermission(userInfo.Permissions, model.PermissionEmployeesReadReadActive) {
 		projectIDs := make([]string, 0)
 		for _, p := range userInfo.Projects {
 			projectIDs = append(projectIDs, p.Code)
@@ -126,28 +126,19 @@ func (h *handler) List(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse(view.ToEmployeeListData(c, employees, userInfo),
+	c.JSON(http.StatusOK, view.CreateResponse(view.ToEmployeeListData(employees, userInfo),
 		&view.PaginationResponse{Pagination: body.Pagination, Total: total}, nil, nil, ""))
 }
 
 func (h *handler) getWorkingStatusInput(c *gin.Context, input []string) ([]string, error) {
-	userID, err := utils.GetUserIDFromContext(c, h.config)
+	userInfo, err := utils.GetLoggedInUserInfo(c, h.store, h.repo.DB(), h.config)
 	if err != nil {
 		h.logger.Error(err, "failed to get userID from context")
 		return nil, err
 	}
 
-	var hasPermission bool
-	if userID != "" {
-		hasPermission, err = h.store.Permission.HasPermission(h.repo.DB(), userID, model.PermissionEmployeesReadFilterByAllStatuses.String())
-		if err != nil {
-			h.logger.Error(err, "failed to check permission of user")
-			return nil, err
-		}
-	}
-
 	// user who do not have permission
-	if !hasPermission && !utils.IsAPIKey(c) {
+	if !utils.HasPermission(userInfo.Permissions, model.PermissionEmployeesReadFilterByAllStatuses) {
 		if len(input) == 0 {
 			return []string{
 				model.WorkingStatusOnBoarding.String(),
@@ -227,7 +218,7 @@ func (h *handler) Details(c *gin.Context) {
 		return
 	}
 
-	if rs.WorkingStatus == model.WorkingStatusLeft && !utils.HasPermission(c, userInfo.Permissions, model.PermissionEmployeesReadFullAccess) {
+	if rs.WorkingStatus == model.WorkingStatusLeft && !utils.HasPermission(userInfo.Permissions, model.PermissionEmployeesReadFullAccess) {
 		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrEmployeeNotFound, nil, ""))
 		return
 	}
@@ -244,7 +235,7 @@ func (h *handler) Details(c *gin.Context) {
 	}
 
 	// 3. return employee
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToOneEmployeeData(c, rs, userInfo), nil, nil, nil, ""))
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToOneEmployeeData(rs, userInfo), nil, nil, nil, ""))
 }
 
 // UpdateEmployeeStatus godoc
@@ -1586,7 +1577,7 @@ func (h *handler) GetLineManagers(c *gin.Context) {
 
 	var managers []*model.Employee
 
-	if utils.HasPermission(c, userInfo.Permissions, model.PermissionEmployeesReadLineManagerFullAccess) {
+	if utils.HasPermission(userInfo.Permissions, model.PermissionEmployeesReadLineManagerFullAccess) {
 		managers, err = h.store.Employee.GetLineManagers(h.repo.DB())
 		if err != nil {
 			l.Error(err, "failed to get line managers")

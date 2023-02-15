@@ -148,6 +148,7 @@ func (s *store) GetAverageAnswerEngagementByFilter(db *gorm.DB, filter model.Eng
 		query = query.
 			Joins("JOIN project_members pm ON er.reviewer_id = pm.employee_id").
 			Joins("JOIN projects f ON pm.project_id = f.id").
+			Where("f.status = ?", model.ProjectStatusActive).
 			Group("f.name")
 	}
 

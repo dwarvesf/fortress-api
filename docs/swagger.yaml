@@ -784,6 +784,8 @@ definitions:
         type: string
       updatedAt:
         type: string
+      upsellPerson:
+        $ref: '#/definitions/model.Employee'
       upsellPersonID:
         type: string
     type: object
@@ -864,6 +866,8 @@ definitions:
         type: string
       updatedAt:
         type: string
+      upsellPerson:
+        $ref: '#/definitions/model.Employee'
       upsellPersonID:
         type: string
     type: object
@@ -1108,6 +1112,8 @@ definitions:
         type: string
       status:
         type: string
+      upsellPersonID:
+        type: string
     required:
     - deploymentType
     - positions
@@ -1125,6 +1131,40 @@ definitions:
         type: string
     required:
     - eventQuestionID
+    type: object
+  request.CreateClientContactInput:
+    properties:
+      emails:
+        items:
+          type: string
+        type: array
+      isMainContact:
+        type: boolean
+      name:
+        type: string
+      role:
+        type: string
+    type: object
+  request.CreateClientInput:
+    properties:
+      address:
+        type: string
+      contacts:
+        items:
+          $ref: '#/definitions/request.CreateClientContactInput'
+        type: array
+      country:
+        type: string
+      description:
+        type: string
+      industry:
+        type: string
+      name:
+        type: string
+      registrationNumber:
+        type: string
+      website:
+        type: string
     type: object
   request.CreateEmployeeInput:
     properties:
@@ -1226,6 +1266,8 @@ definitions:
         items:
           type: string
         type: array
+      clientID:
+        type: string
       code:
         type: string
       countryID:
@@ -1381,6 +1423,40 @@ definitions:
     - answers
     - status
     type: object
+  request.UpdateClientContactInput:
+    properties:
+      emails:
+        items:
+          type: string
+        type: array
+      isMainContact:
+        type: boolean
+      name:
+        type: string
+      role:
+        type: string
+    type: object
+  request.UpdateClientInput:
+    properties:
+      address:
+        type: string
+      contacts:
+        items:
+          $ref: '#/definitions/request.UpdateClientContactInput'
+        type: array
+      country:
+        type: string
+      description:
+        type: string
+      industry:
+        type: string
+      name:
+        type: string
+      registrationNumber:
+        type: string
+      website:
+        type: string
+    type: object
   request.UpdateContactInfoInput:
     properties:
       accountManagerID:
@@ -1501,6 +1577,8 @@ definitions:
         type: string
       status:
         type: string
+      upsellPersonID:
+        type: string
     required:
     - deploymentType
     - positions
@@ -1544,6 +1622,8 @@ definitions:
       auditNotionID:
         type: string
       bankAccountID:
+        type: string
+      clientID:
         type: string
       countryID:
         type: string
@@ -1634,6 +1714,16 @@ definitions:
         type: string
       workUnitID:
         type: string
+    type: object
+  view.APIKeyData:
+    properties:
+      key:
+        type: string
+    type: object
+  view.APIKeyResponse:
+    properties:
+      data:
+        $ref: '#/definitions/view.APIKeyData'
     type: object
   view.AccountRoleResponse:
     properties:
@@ -1820,6 +1910,8 @@ definitions:
         items:
           $ref: '#/definitions/view.Stack'
         type: array
+      username:
+        type: string
     type: object
   view.AvailableSlot:
     properties:
@@ -1838,6 +1930,31 @@ definitions:
       type:
         type: string
     type: object
+  view.BankAccount:
+    properties:
+      accountNumber:
+        type: string
+      address:
+        type: string
+      bankName:
+        type: string
+      currency:
+        $ref: '#/definitions/view.Currency'
+      currencyID:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      ownerName:
+        type: string
+      routingNumber:
+        type: string
+      swiftCode:
+        type: string
+      ukSortCode:
+        type: string
+    type: object
   view.BasicBankAccountInfo:
     properties:
       accountNumber:
@@ -1847,6 +1964,28 @@ definitions:
       id:
         type: string
       ownerName:
+        type: string
+    type: object
+  view.BasicClientInfo:
+    properties:
+      description:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      registrationNumber:
+        type: string
+    type: object
+  view.BasicCompanyInfo:
+    properties:
+      description:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      registrationNumber:
         type: string
     type: object
   view.BasicCountryInfo:
@@ -1939,12 +2078,55 @@ definitions:
           type: string
         type: array
     type: object
+  view.Client:
+    properties:
+      address:
+        type: string
+      contacts:
+        items:
+          $ref: '#/definitions/view.ClientContact'
+        type: array
+      country:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      industry:
+        type: string
+      name:
+        type: string
+      registrationNumber:
+        type: string
+      website:
+        type: string
+    type: object
+  view.ClientContact:
+    properties:
+      emails:
+        items:
+          type: string
+        type: array
+      id:
+        type: string
+      isMainContact:
+        type: boolean
+      name:
+        type: string
+      role:
+        type: string
+    type: object
   view.CountriesResponse:
     properties:
       data:
         items:
           $ref: '#/definitions/model.Country'
         type: array
+    type: object
+  view.CreateClientResponse:
+    properties:
+      data:
+        $ref: '#/definitions/model.Client'
     type: object
   view.CreateInvoiceResponse:
     properties:
@@ -1977,6 +2159,8 @@ definitions:
         $ref: '#/definitions/model.Seniority'
       status:
         type: string
+      upsellPerson:
+        $ref: '#/definitions/view.BasicEmployeeInfo'
       username:
         type: string
     type: object
@@ -1991,6 +2175,8 @@ definitions:
         $ref: '#/definitions/view.ProjectHead'
       bankAccount:
         $ref: '#/definitions/view.BasicBankAccountInfo'
+      client:
+        $ref: '#/definitions/view.Client'
       clientEmail:
         items:
           type: string
@@ -2024,6 +2210,19 @@ definitions:
       type:
         type: string
       updatedAt:
+        type: string
+    type: object
+  view.Currency:
+    properties:
+      id:
+        type: string
+      locale:
+        type: string
+      name:
+        type: string
+      symbol:
+        type: string
+      type:
         type: string
     type: object
   view.Domain:
@@ -2346,6 +2545,11 @@ definitions:
           $ref: '#/definitions/model.ResourceUtilization'
         type: array
     type: object
+  view.GetDetailClientResponse:
+    properties:
+      data:
+        $ref: '#/definitions/model.Client'
+    type: object
   view.GetEngagementDashboardDetailResponse:
     properties:
       data:
@@ -2364,6 +2568,13 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/model.Invoice'
+    type: object
+  view.GetListClientResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/model.Client'
+        type: array
     type: object
   view.GetQuestionResponse:
     properties:
@@ -2446,7 +2657,7 @@ definitions:
     properties:
       data:
         items:
-          $ref: '#/definitions/model.BankAccount'
+          $ref: '#/definitions/view.BankAccount'
         type: array
     type: object
   view.ListFeedbackResponse:
@@ -2646,12 +2857,16 @@ definitions:
         type: string
       bankAccount:
         $ref: '#/definitions/view.BasicBankAccountInfo'
+      client:
+        $ref: '#/definitions/view.BasicClientInfo'
       clientEmail:
         items:
           type: string
         type: array
       code:
         type: string
+      companyInfo:
+        $ref: '#/definitions/view.BasicCompanyInfo'
       country:
         $ref: '#/definitions/view.BasicCountryInfo'
       createdAt:
@@ -2754,6 +2969,8 @@ definitions:
         type: string
       status:
         type: string
+      upsellPerson:
+        $ref: '#/definitions/view.BasicEmployeeInfo'
       username:
         type: string
     type: object
@@ -2885,6 +3102,22 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/view.SubmitFeedback'
+    type: object
+  view.SummaryWorkUnitDistributionData:
+    properties:
+      development:
+        type: number
+      learning:
+        type: number
+      management:
+        type: number
+      training:
+        type: number
+    type: object
+  view.SummaryWorkUnitDistributionResponse:
+    properties:
+      data:
+        $ref: '#/definitions/view.SummaryWorkUnitDistributionData'
     type: object
   view.Survey:
     properties:
@@ -3157,6 +3390,8 @@ definitions:
         type: string
       bankAccount:
         $ref: '#/definitions/view.BasicBankAccountInfo'
+      client:
+        $ref: '#/definitions/view.Client'
       country:
         $ref: '#/definitions/view.BasicCountryInfo'
       function:
@@ -3331,15 +3566,15 @@ definitions:
   view.WorkUnitDistribution:
     properties:
       development:
-        type: integer
+        $ref: '#/definitions/view.WorkUnitDistributionDevelopment'
       employee:
         $ref: '#/definitions/view.BasicEmployeeInfo'
       learning:
-        type: integer
+        $ref: '#/definitions/view.WorkUnitDistributionLearning'
       management:
-        type: integer
+        $ref: '#/definitions/view.WorkUnitDistributionManagement'
       training:
-        type: integer
+        $ref: '#/definitions/view.WorkUnitDistributionTraining'
     type: object
   view.WorkUnitDistributionData:
     properties:
@@ -3347,6 +3582,64 @@ definitions:
         items:
           $ref: '#/definitions/view.WorkUnitDistribution'
         type: array
+    type: object
+  view.WorkUnitDistributionDevelopment:
+    properties:
+      total:
+        type: integer
+      workUnits:
+        items:
+          $ref: '#/definitions/view.WorkUnitDistributionWU'
+        type: array
+    type: object
+  view.WorkUnitDistributionLearning:
+    properties:
+      total:
+        type: integer
+      workUnits:
+        items:
+          $ref: '#/definitions/view.WorkUnitDistributionWU'
+        type: array
+    type: object
+  view.WorkUnitDistributionManagement:
+    properties:
+      projectHeads:
+        items:
+          $ref: '#/definitions/view.WorkUnitDistributionWUProjectHead'
+        type: array
+      total:
+        type: integer
+      workUnits:
+        items:
+          $ref: '#/definitions/view.WorkUnitDistributionWU'
+        type: array
+    type: object
+  view.WorkUnitDistributionTraining:
+    properties:
+      mentees:
+        items:
+          $ref: '#/definitions/view.BasicEmployeeInfo'
+        type: array
+      total:
+        type: integer
+      workUnits:
+        items:
+          $ref: '#/definitions/view.WorkUnitDistributionWU'
+        type: array
+    type: object
+  view.WorkUnitDistributionWU:
+    properties:
+      project:
+        $ref: '#/definitions/view.BasicProjectInfo'
+      workUnitName:
+        type: string
+    type: object
+  view.WorkUnitDistributionWUProjectHead:
+    properties:
+      position:
+        type: string
+      project:
+        $ref: '#/definitions/view.BasicProjectInfo'
     type: object
   view.WorkUnitDistributionsResponse:
     properties:
@@ -3411,6 +3704,39 @@ paths:
       summary: Authorise user when login
       tags:
       - Auth
+  /auth/api-key:
+    post:
+      consumes:
+      - application/json
+      description: Create API key
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.APIKeyResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Create API key
+      tags:
+      - Auth
   /auth/me:
     get:
       consumes:
@@ -3465,6 +3791,164 @@ paths:
       summary: Get all bank accounts
       tags:
       - Bank
+  /clients:
+    get:
+      consumes:
+      - application/json
+      description: Get all clients
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Body
+        in: body
+        name: Body
+        required: true
+        schema:
+          $ref: '#/definitions/request.CreateClientInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.GetListClientResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get all clients
+      tags:
+      - Client
+    post:
+      consumes:
+      - application/json
+      description: Create new client
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Body
+        in: body
+        name: Body
+        required: true
+        schema:
+          $ref: '#/definitions/request.CreateClientInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.CreateClientResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Create new client
+      tags:
+      - Client
+  /clients/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete client by id
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Delete client by id
+      tags:
+      - Client
+    get:
+      consumes:
+      - application/json
+      description: Get client detail by id
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.GetDetailClientResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get client detail by id
+      tags:
+      - Client
+    put:
+      consumes:
+      - application/json
+      description: Update client by id
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Body
+        in: body
+        name: Body
+        required: true
+        schema:
+          $ref: '#/definitions/request.UpdateClientInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Update client by id
+      tags:
+      - Client
   /cronjobs/audits:
     post:
       consumes:
@@ -3899,6 +4383,14 @@ paths:
         in: query
         name: name
         type: string
+      - description: sort required
+        in: query
+        name: sort
+        type: string
+      - description: work unit type for filter
+        in: query
+        name: type
+        type: string
       produces:
       - application/json
       responses:
@@ -3919,6 +4411,31 @@ paths:
           schema:
             $ref: '#/definitions/view.ErrorResponse'
       summary: Get work unit distribution data for dashboard
+      tags:
+      - Dashboard
+  /dashboards/resources/work-unit-distribution-summary:
+    get:
+      consumes:
+      - application/json
+      description: Get summary for workunit distribution dashboard
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.SummaryWorkUnitDistributionResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get summary for workunit distribution dashboard
       tags:
       - Dashboard
   /employees:

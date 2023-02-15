@@ -8,6 +8,7 @@ import (
 
 type DiscordService interface {
 	PostBirthdayMsg(msg string) (model.DiscordMessage, error)
+	GetMembers() ([]*discordgo.Member, error)
 
 	// CreateEvent create a discord event
 	CreateEvent(event *model.Schedule) (scheduledEvent *discordgo.GuildScheduledEvent, err error)

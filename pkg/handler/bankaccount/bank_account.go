@@ -54,5 +54,5 @@ func (h *handler) List(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse[any](res, nil, nil, nil, ""))
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToListBankAccount(res), nil, nil, nil, ""))
 }

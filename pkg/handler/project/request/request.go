@@ -27,6 +27,7 @@ type UpdateProjectGeneralInfoInput struct {
 	AuditNotionID model.UUID   `form:"auditNotionID" json:"auditNotionID"`
 	Stacks        []model.UUID `form:"stacks" json:"stacks"`
 	BankAccountID model.UUID   `form:"bankAccountID" json:"bankAccountID"`
+	ClientID      model.UUID   `form:"clientID" json:"clientID"`
 }
 
 func (i UpdateProjectGeneralInfoInput) GetStartDate() *time.Time {
@@ -86,6 +87,7 @@ type CreateProjectInput struct {
 	Function          string              `form:"function" json:"function" binding:"required"`
 	AuditNotionID     model.UUID          `form:"auditNotionID" json:"auditNotionID"`
 	BankAccountID     model.UUID          `form:"bankAccountID" json:"bankAccountID"`
+	ClientID          model.UUID          `form:"clientID" json:"clientID"`
 }
 
 func (i *CreateProjectInput) Validate() error {
@@ -158,6 +160,7 @@ type UpdateMemberInput struct {
 	ProjectMemberID model.UUID      `from:"projectMemberID" json:"projectMemberID"`
 	EmployeeID      model.UUID      `form:"employeeID" json:"employeeID"`
 	SeniorityID     model.UUID      `form:"seniorityID" json:"seniorityID" binding:"required"`
+	UpsellPersonID  model.UUID      `form:"upsellPersonID" json:"upsellPersonID"`
 	Positions       []model.UUID    `form:"positions" json:"positions" binding:"required"`
 	DeploymentType  string          `form:"deploymentType" json:"deploymentType" binding:"required"`
 	Status          string          `form:"status" json:"status" binding:"required"`
@@ -229,6 +232,7 @@ type AssignMemberInput struct {
 	Rate           decimal.Decimal `form:"rate" json:"rate" binding:"required"`
 	Discount       decimal.Decimal `form:"discount" json:"discount"`
 	IsLead         bool            `form:"isLead" json:"isLead"`
+	UpsellPersonID model.UUID      `form:"upsellPersonID" json:"upsellPersonID"`
 }
 
 func (i *AssignMemberInput) Validate() error {

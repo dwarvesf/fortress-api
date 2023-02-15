@@ -61,3 +61,12 @@ func (s *store) IsExists(db *gorm.DB, id string) (bool, error) {
 
 	return result.Result, query.Scan(&result).Error
 }
+
+func (s *store) GetAllWorkUnitByEmployeeID(db *gorm.DB, employeeID string) ([]*model.WorkUnit, error) {
+	var workUnits []*model.WorkUnit
+	return workUnits, db.Where("id IN (SELECT work_unit_id FROM work_unit_members WHERE employee_id = ?)", employeeID).
+		Preload("WorkUnitMembers", "deleted_at IS NULL").
+		Preload("WorkUnitMembers.Employee", "deleted_at IS NULL").
+		Preload("Project", "deleted_at IS NULL").
+		Find(&workUnits).Error
+}

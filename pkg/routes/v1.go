@@ -16,12 +16,13 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 	webhook := r.Group("/webhooks")
 
 	pmw := mw.NewPermissionMiddleware(s, repo, cfg)
-	amw := mw.NewAuthMiddleware(cfg)
+	amw := mw.NewAuthMiddleware(cfg, s, repo)
 
 	// cronjob group
 	{
 		cronjob.POST("/audits", h.Audit.Sync)
 		cronjob.POST("/birthday", h.Birthday.BirthdayDailyMessage)
+		cronjob.POST("/sync-discord-info", h.Discord.SyncDiscordInfo)
 	}
 
 	/////////////////
@@ -36,6 +37,7 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 	// auth
 	v1.POST("/auth", h.Auth.Auth)
 	v1.GET("/auth/me", amw.WithAuth, pmw.WithPerm(model.PermissionAuthRead), h.Auth.Me)
+	v1.POST("/auth/api-key", amw.WithAuth, pmw.WithPerm(model.PermissionAuthCreate), h.Auth.CreateAPIKey)
 
 	// user profile
 	v1.GET("/profile", amw.WithAuth, h.Profile.GetProfile)
@@ -100,6 +102,15 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 		projectGroup.GET("/milestones", h.Project.ListMilestones)
 	}
 
+	clientGroup := v1.Group("/clients")
+	{
+		clientGroup.POST("", amw.WithAuth, pmw.WithPerm(model.PermissionClientCreate), h.Client.Create)
+		clientGroup.GET("", amw.WithAuth, pmw.WithPerm(model.PermissionClientRead), h.Client.List)
+		clientGroup.GET("/:id", amw.WithAuth, pmw.WithPerm(model.PermissionClientEdit), h.Client.Detail)
+		clientGroup.PUT("/:id", amw.WithAuth, pmw.WithPerm(model.PermissionClientRead), h.Client.Update)
+		clientGroup.DELETE("/:id", amw.WithAuth, pmw.WithPerm(model.PermissionClientDelete), h.Client.Delete)
+	}
+
 	feedbackGroup := v1.Group("/feedbacks")
 	{
 		feedbackGroup.GET("", pmw.WithPerm(model.PermissionFeedbacksRead), h.Feedback.List)
@@ -125,7 +136,7 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 
 	bankGroup := v1.Group("/bank-accounts")
 	{
-		bankGroup.GET("", pmw.WithPerm(model.PermissionProjectsEdit), h.BankAccount.List)
+		bankGroup.GET("", pmw.WithPerm(model.PermissionBankAccountRead), h.BankAccount.List)
 	}
 
 	invoiceGroup := v1.Group("/invoices")
@@ -200,6 +211,7 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 			resourceDashboardGroup.GET("/availabilities", pmw.WithPerm("dashboards.read"), h.Dashboard.GetResourcesAvailability)
 			resourceDashboardGroup.GET("/utilization", pmw.WithPerm("dashboards.read"), h.Dashboard.GetResourceUtilization)
 			resourceDashboardGroup.GET("/work-unit-distribution", pmw.WithPerm("dashboards.read"), h.Dashboard.GetWorkUnitDistribution)
+			resourceDashboardGroup.GET("/work-unit-distribution-summary", pmw.WithPerm("dashboards.read"), h.Dashboard.GetWorkUnitDistributionSummary)
 			resourceDashboardGroup.GET("/work-survey-summaries", pmw.WithPerm("dashboards.read"), h.Dashboard.GetResourceWorkSurveySummaries)
 		}
 	}

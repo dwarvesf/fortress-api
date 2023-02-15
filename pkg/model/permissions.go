@@ -20,6 +20,7 @@ type PermissionCode string
 
 const (
 	PermissionAuthRead                            PermissionCode = "auth.read"
+	PermissionAuthCreate                          PermissionCode = "auth.create"
 	PermissionEmployeesRead                       PermissionCode = "employees.read"
 	PermissionEmployeesReadFullAccess             PermissionCode = "employees.read.fullAccess"
 	PermissionEmployeesReadReadActive             PermissionCode = "employees.read.readActive"
@@ -80,6 +81,11 @@ const (
 	PermissionInvoiceRead                         PermissionCode = "invoices.read"
 	PermissionInvoiceEdit                         PermissionCode = "invoices.edit"
 	PermissionInvoiceDelete                       PermissionCode = "invoices.delete"
+	PermissionBankAccountRead                     PermissionCode = "bankAccounts.read"
+	PermissionClientCreate                        PermissionCode = "clients.create"
+	PermissionClientRead                          PermissionCode = "clients.read"
+	PermissionClientEdit                          PermissionCode = "clients.edit"
+	PermissionClientDelete                        PermissionCode = "clients.delete"
 )
 
 func (p PermissionCode) String() string {

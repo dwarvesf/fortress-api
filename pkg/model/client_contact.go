@@ -14,3 +14,7 @@ type ClientContact struct {
 	Emails        datatypes.JSON
 	IsMainContact bool
 }
+
+type ClientEmail struct {
+	Emails []string `json:"emails"`
+}

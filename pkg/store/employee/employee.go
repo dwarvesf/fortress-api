@@ -92,14 +92,23 @@ func (s *store) All(db *gorm.DB, filter EmployeeFilter, pagination model.Paginat
 		Preload("SocialAccounts", "deleted_at IS NULL")
 
 	if filter.Preload {
-		query = query.Preload("ProjectMembers", "deleted_at IS NULL").
+		query = query.
 			Preload("LineManager", "deleted_at IS NULL").
 			Preload("Referrer", "deleted_at IS NULL").
 			Preload("Seniority", "deleted_at IS NULL").
+			Preload("ProjectMembers", func(db *gorm.DB) *gorm.DB {
+				return db.Joins("JOIN projects ON projects.id = project_members.project_id").
+					Where("project_members.deleted_at IS NULL").
+					Where("project_members.start_date <= now()").
+					Where("(project_members.end_date IS NULL OR project_members.end_date > now())").
+					Where("projects.status IN ?", []string{
+						model.ProjectStatusOnBoarding.String(),
+						model.ProjectStatusActive.String(),
+					}).
+					Order("projects.name")
+			}).
 			Preload("ProjectMembers.Project", "deleted_at IS NULL").
 			Preload("ProjectMembers.Project.Heads", "deleted_at IS NULL").
-			Preload("EmployeeOrganizations", "deleted_at IS NULL").
-			Preload("EmployeeOrganizations.Organization", "deleted_at IS NULL").
 			Preload("EmployeePositions", "deleted_at IS NULL").
 			Preload("EmployeePositions.Position", "deleted_at IS NULL").
 			Preload("EmployeeRoles", "deleted_at IS NULL").
@@ -107,7 +116,13 @@ func (s *store) All(db *gorm.DB, filter EmployeeFilter, pagination model.Paginat
 			Preload("EmployeeChapters", "deleted_at IS NULL").
 			Preload("EmployeeChapters.Chapter", "deleted_at IS NULL").
 			Preload("EmployeeStacks", "deleted_at IS NULL").
-			Preload("EmployeeStacks.Stack", "deleted_at IS NULL")
+			Preload("EmployeeStacks.Stack", "deleted_at IS NULL").
+			Preload("EmployeeOrganizations", func(db *gorm.DB) *gorm.DB {
+				return db.Joins("JOIN organizations ON organizations.id = employee_organizations.organization_id").
+					Where("employee_organizations.deleted_at IS NULL").
+					Order("organizations.code DESC")
+			}).
+			Preload("EmployeeOrganizations.Organization", "deleted_at IS NULL")
 	}
 
 	limit, offset := pagination.ToLimitOffset()
@@ -157,7 +172,9 @@ func (s *store) GetByIDs(db *gorm.DB, ids []model.UUID) ([]*model.Employee, erro
 // GetByWorkingStatus return list employee by working status
 func (s *store) GetByWorkingStatus(db *gorm.DB, workingStatus model.WorkingStatus) ([]*model.Employee, error) {
 	var employees []*model.Employee
-	return employees, db.Where("working_status = ?", workingStatus).Find(&employees).Error
+	return employees, db.Where("working_status = ?", workingStatus).
+		Preload("Organizations", "deleted_at IS NULL").
+		Find(&employees).Error
 }
 
 func (s *store) GetLineManagers(db *gorm.DB) ([]*model.Employee, error) {

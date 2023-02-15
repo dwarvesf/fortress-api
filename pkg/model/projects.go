@@ -147,6 +147,7 @@ type ProjectSlot struct {
 	Project              Project
 	ProjectMember        ProjectMember
 	ProjectSlotPositions []ProjectSlotPosition
+	UpsellPerson         *Employee
 }
 
 type ProjectMember struct {
@@ -166,7 +167,8 @@ type ProjectMember struct {
 
 	IsLead bool `gorm:"-"`
 
-	Employee               Employee
+	Employee               Employee  `gorm:"foreignKey:EmployeeID"`
+	UpsellPerson           *Employee `gorm:"foreignKey:UpsellPersonID"`
 	Project                Project
 	Seniority              *Seniority
 	ProjectMemberPositions []ProjectMemberPosition
@@ -265,6 +267,16 @@ func IsUserActiveInProject(userID string, pm []ProjectMember) bool {
 		if p.EmployeeID.String() == userID && p.Status == ProjectMemberStatusActive {
 			return true
 		}
+	}
+
+	return false
+}
+
+func (pm *ProjectMember) IsActive() bool {
+	if pm.StartDate != nil &&
+		!pm.StartDate.After(time.Now()) && // start_date <= now()
+		(pm.EndDate == nil || pm.EndDate.After(time.Now())) { // end_date > now()
+		return true
 	}
 
 	return false

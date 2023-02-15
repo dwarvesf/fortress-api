@@ -1,0 +1,104 @@
+{
+    "data": [
+        {
+            "id": "afb9cf05-9517-4fb9-a4f2-66e6d90ad215",
+            "createdAt": "2023-02-07T18:41:35.740901Z",
+            "updatedAt": "2023-02-07T18:41:35.740901Z",
+            "Name": "Dwarves Client",
+            "Description": "Using For Internal Project",
+            "RegistrationNumber": "123455099999999",
+            "Address": "Hado Centrosa",
+            "Country": "Vietnam",
+            "Industry": "Technology",
+            "Website": "https://d.foundations",
+            "Contacts": [
+                {
+                    "id": "0569e64d-3b57-454a-ab88-0482e087eb5f",
+                    "createdAt": "2023-02-07T19:05:04.354072Z",
+                    "updatedAt": "2023-02-07T19:05:04.354072Z",
+                    "Name": "Thanh Pham ",
+                    "ClientID": "afb9cf05-9517-4fb9-a4f2-66e6d90ad215",
+                    "Role": "PM",
+                    "Emails": [
+                        "thanh@d.foundation",
+                        "huytq@d.foundation"
+                    ],
+                    "IsMainContact": true
+                }
+            ]
+        },
+        {
+            "id": "377241ad-1216-46be-9733-fa624da60555",
+            "createdAt": "2023-02-10T16:21:03.774651Z",
+            "updatedAt": "2023-02-10T16:21:03.774651Z",
+            "Name": "name",
+            "Description": "description",
+            "RegistrationNumber": "123",
+            "Address": "LA",
+            "Country": "USA",
+            "Industry": "technical",
+            "Website": "a.com",
+            "Contacts": [
+                {
+                    "id": "c191a78c-0d34-4bc8-bbb6-18ffa63750d9",
+                    "createdAt": "2023-02-10T16:21:03.777661Z",
+                    "updatedAt": "2023-02-10T16:21:03.777661Z",
+                    "Name": "contact name",
+                    "ClientID": "377241ad-1216-46be-9733-fa624da60555",
+                    "Role": "manager",
+                    "Emails": {
+                        "emails": [
+                            "a@gmail.com",
+                            "b@gmail.com"
+                        ]
+                    },
+                    "IsMainContact": true
+                }
+            ]
+        },
+        {
+            "id": "67f9f420-cdd5-4793-88c7-d2068bd17f61",
+            "createdAt": "2023-02-10T16:40:03.932475Z",
+            "updatedAt": "2023-02-10T16:40:03.932475Z",
+            "Name": "John",
+            "Description": "description",
+            "RegistrationNumber": "456",
+            "Address": "CA",
+            "Country": "USA",
+            "Industry": "education",
+            "Website": "b.com",
+            "Contacts": [
+                {
+                    "id": "596ae21d-570b-4852-92a6-117633629046",
+                    "createdAt": "2023-02-10T16:40:03.934235Z",
+                    "updatedAt": "2023-02-10T16:40:03.934235Z",
+                    "Name": "contact name 1",
+                    "ClientID": "67f9f420-cdd5-4793-88c7-d2068bd17f61",
+                    "Role": "manager",
+                    "Emails": {
+                        "emails": [
+                            "john1@gmail.com",
+                            "john2@gmail.com"
+                        ]
+                    },
+                    "IsMainContact": true
+                },
+                {
+                    "id": "bebfe6b3-a09b-4a90-bba5-fe8a97d00047",
+                    "createdAt": "2023-02-10T16:40:03.935914Z",
+                    "updatedAt": "2023-02-10T16:40:03.935914Z",
+                    "Name": "contact name 2",
+                    "ClientID": "67f9f420-cdd5-4793-88c7-d2068bd17f61",
+                    "Role": "manager",
+                    "Emails": {
+                        "emails": [
+                            "john3@gmail.com",
+                            "john4@gmail.com"
+                        ]
+                    },
+                    "IsMainContact": false
+                }
+            ]
+        }
+    ]
+}

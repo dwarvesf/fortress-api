@@ -3,6 +3,8 @@ package store
 import (
 	"github.com/dwarvesf/fortress-api/pkg/store/actionitem"
 	"github.com/dwarvesf/fortress-api/pkg/store/actionitemsnapshot"
+	"github.com/dwarvesf/fortress-api/pkg/store/apikey"
+	"github.com/dwarvesf/fortress-api/pkg/store/apikeyrole"
 	"github.com/dwarvesf/fortress-api/pkg/store/audit"
 	"github.com/dwarvesf/fortress-api/pkg/store/auditactionitem"
 	"github.com/dwarvesf/fortress-api/pkg/store/auditcycle"
@@ -10,6 +12,8 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/store/auditparticipant"
 	"github.com/dwarvesf/fortress-api/pkg/store/bankaccount"
 	"github.com/dwarvesf/fortress-api/pkg/store/chapter"
+	"github.com/dwarvesf/fortress-api/pkg/store/client"
+	"github.com/dwarvesf/fortress-api/pkg/store/clientcontact"
 	"github.com/dwarvesf/fortress-api/pkg/store/content"
 	"github.com/dwarvesf/fortress-api/pkg/store/country"
 	"github.com/dwarvesf/fortress-api/pkg/store/dashboard"
@@ -92,6 +96,10 @@ type Store struct {
 	Invoice               invoice.IStore
 	ProjectNotion         projectnotion.IStore
 	Schedule              schedule.IStore
+	Client                client.IStore
+	ClientContact         clientcontact.IStore
+	APIKey                apikey.IStore
+	APIKeyRole            apikeyrole.IStore
 }
 
 func New() *Store {
@@ -140,5 +148,9 @@ func New() *Store {
 		Invoice:               invoice.New(),
 		ProjectNotion:         projectnotion.New(),
 		Schedule:              schedule.New(),
+		Client:                client.New(),
+		ClientContact:         clientcontact.New(),
+		APIKey:                apikey.New(),
+		APIKeyRole:            apikeyrole.New(),
 	}
 }

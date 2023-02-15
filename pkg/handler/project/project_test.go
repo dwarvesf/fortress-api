@@ -112,7 +112,7 @@ func TestHandler_List(t *testing.T) {
 				testhelper.LoadTestSQLFile(t, txRepo, "./testdata/get_projects/get_projects.sql")
 				w := httptest.NewRecorder()
 				ctx, _ := gin.CreateTestContext(w)
-				ctx.Request = httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/projects"), nil)
+				ctx.Request = httptest.NewRequest(http.MethodGet, "/api/v1/projects", nil)
 				ctx.Request.Header.Set("Authorization", testToken)
 
 				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
@@ -232,6 +232,7 @@ func TestHandler_Create(t *testing.T) {
 				ClientEmail:       []string{"b@gmail.com", "c@gmail.com"},
 				Function:          model.ProjectFunctionLearning.String(),
 				BankAccountID:     model.MustGetUUIDFromString("e79eb5b3-e2cb-4d7f-9273-46f4be88cb20"),
+				ClientID:          model.MustGetUUIDFromString("afb9cf05-9517-4fb9-a4f2-66e6d90ad215"),
 			},
 			wantCode:         http.StatusOK,
 			wantResponsePath: "testdata/create/200.json",
@@ -681,6 +682,7 @@ func TestHandler_UpdateGeneralInfo(t *testing.T) {
 				},
 				Function:      model.ProjectFunctionManagement.String(),
 				BankAccountID: model.MustGetUUIDFromString("e79eb5b3-e2cb-4d7f-9273-46f4be88cb20"),
+				ClientID:      model.MustGetUUIDFromString("afb9cf05-9517-4fb9-a4f2-66e6d90ad215"),
 			},
 		},
 		{
@@ -844,7 +846,7 @@ func TestHandler_GetListWorkUnit(t *testing.T) {
 				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
 				require.NoError(t, err)
 
-				require.JSONEq(t, string(expRespRaw), string(w.Body.Bytes()), "[Handler.Project.GetListWorkUnit] response mismatched")
+				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Project.GetListWorkUnit] response mismatched")
 			})
 		})
 	}
@@ -1217,7 +1219,7 @@ func TestHandler_UpdateSendingSurveyState(t *testing.T) {
 				require.NoError(t, err)
 
 				require.Equal(t, tt.wantCode, w.Code)
-				require.JSONEq(t, string(expRespRaw), string(w.Body.Bytes()), "[Handler.UpdateSendingSurveyState] response mismatched")
+				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.UpdateSendingSurveyState] response mismatched")
 			})
 		})
 	}
