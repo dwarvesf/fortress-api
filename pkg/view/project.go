@@ -446,7 +446,7 @@ func ToCreateProjectDataResponse(userInfo *model.CurrentLoggedUserInfo, project 
 	return result
 }
 
-func ToProjectMemberListData(userInfo *model.CurrentLoggedUserInfo, members []*model.ProjectMember, projectHeads []*model.ProjectHead) []ProjectMember {
+func ToProjectMemberListData(userInfo *model.CurrentLoggedUserInfo, members []*model.ProjectMember, projectHeads []*model.ProjectHead, distinct bool) []ProjectMember {
 	var results = make([]ProjectMember, 0, len(members))
 
 	leadMap := map[string]bool{}
@@ -495,6 +495,20 @@ func ToProjectMemberListData(userInfo *model.CurrentLoggedUserInfo, members []*m
 		}
 
 		results = append(results, member)
+	}
+
+	// Remove duplicate members
+	if distinct {
+		uniqueResults := make([]ProjectMember, 0, len(results))
+		uniqueMap := map[string]bool{}
+		for _, v := range results {
+			if _, ok := uniqueMap[v.EmployeeID]; !ok {
+				uniqueMap[v.EmployeeID] = true
+				uniqueResults = append(uniqueResults, v)
+			}
+		}
+
+		return uniqueResults
 	}
 
 	return results

@@ -522,7 +522,7 @@ func (h *handler) GetMembers(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse(view.ToProjectMemberListData(userInfo, members, heads),
+	c.JSON(http.StatusOK, view.CreateResponse(view.ToProjectMemberListData(userInfo, members, heads, query.Distinct),
 		&view.PaginationResponse{Pagination: query.Pagination, Total: total}, nil, nil, ""))
 }
 
