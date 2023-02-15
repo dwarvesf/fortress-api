@@ -35,7 +35,7 @@ func (r *controller) Auth(c *gin.Context, in AuthenticationInput) (*model.Employ
 	}
 
 	// 2.4 check user is active
-	employee, err := r.store.Employee.OneByTeamEmail(r.repo.DB(), primaryEmail)
+	employee, err := r.store.Employee.OneByEmail(r.repo.DB(), primaryEmail)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, "", ErrUserInactivated
