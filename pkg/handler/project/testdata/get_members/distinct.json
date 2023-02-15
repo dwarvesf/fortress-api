@@ -43,25 +43,6 @@
             "upsellPerson": null
         },
         {
-            "projectMemberID": "7310b51a-3855-498b-99ab-41aa82934269",
-            "projectSlotID": "bdc64b18-4c5f-4025-827a-f5b91d599dc7",
-            "employeeID": "2655832e-f009-4b73-a535-64c3a22e558f",
-            "fullName": "Phạm Đức Thành",
-            "displayName": "Thanh Pham",
-            "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
-            "username": "thanh",
-            "status": "active",
-            "isLead": false,
-            "deploymentType": "shadow",
-            "startDate": "2022-11-01T00:00:00Z",
-            "endDate": null,
-            "rate": "4000",
-            "discount": "0",
-            "seniority": null,
-            "positions": [],
-            "upsellPerson": null
-        },
-        {
             "projectMemberID": "5a9a07aa-e8f3-4b62-b9ad-0f057866dc6c",
             "projectSlotID": "b25bd3fa-eb6d-49d5-b278-7aacf4594f79",
             "employeeID": "eeae589a-94e3-49ac-a94c-fcfb084152b2",

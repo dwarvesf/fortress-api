@@ -15,3 +15,5 @@ build
 
 # dependencies
 vendor
+
+.env.dev

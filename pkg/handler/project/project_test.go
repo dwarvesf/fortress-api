@@ -348,6 +348,13 @@ func TestHandler_GetMembers(t *testing.T) {
 			wantCode:         http.StatusOK,
 			wantResponsePath: "testdata/get_members/without_preload.json",
 		},
+		{
+			name:             "happy_case_with_unique",
+			id:               "8dc3be2e-19a4-4942-8a79-56db391a0b15",
+			query:            "preload=false&distinct=true",
+			wantCode:         http.StatusOK,
+			wantResponsePath: "testdata/get_members/distinct.json",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
