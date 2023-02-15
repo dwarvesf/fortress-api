@@ -199,6 +199,10 @@ INSERT INTO public.questions (id, deleted_at, created_at, updated_at, category, 
 ('d9bf74dd-6f25-44e3-b83c-9b7fb19af548', NULL, '2022-12-06 03:07:13.021661', '2022-12-06 03:07:13.021661', 'survey', 'work', 'How is your confidence in the teams ability to meet the deadline?', 'likert-scale', 2, 'deadline'),
 ('627b2be7-2dcb-4574-b8db-24d67f06e7b0', NULL, '2022-12-06 03:07:13.021661', '2022-12-06 03:07:13.021661', 'survey', 'work', 'How much did you learn from your work and your team''s in the past two weeks?', 'likert-scale', 3, 'learning');
 
+INSERT INTO public.organizations (id, deleted_at, created_at, updated_at, name, code, avatar) VALUES
+('31fdf38f-77c0-4c06-b530-e2be8bc297e0', NULL, '2023-01-19 11:13:13.487168', '2023-01-19 11:13:13.487168', 'Dwarves Foundation', 'dwarves-foundation', 'https://storage.googleapis.com/fortress-dev/projects/db2c3f9a-8388-471f-bc1f-973efafb1ec6/images/4af08724-ff2c-4826-aaf2-994d2d14121b.png'),
+('e4725383-943a-468a-b0cd-ce249c573cf7', NULL, '2023-01-19 11:13:13.487168', '2023-01-19 11:13:13.487168', 'Console Labs', 'console-labs', 'https://storage.googleapis.com/fortress-dev/projects/cab8e2ec-f78b-4290-8083-1e1d64c49165/images/a42dca5e-830c-47c1-9415-0d723fe54bea.png');
+
 INSERT INTO public.clients (id, deleted_at, created_at, updated_at, name, description, registration_number, address, country, industry, website, emails) VALUES
 ('afb9cf05-9517-4fb9-a4f2-66e6d90ad215', null, '2023-02-07 18:41:35.740901', '2023-02-07 18:41:35.740901', 'Dwarves Client', 'Using For Internal Project', '123455099999999', 'Hado Centrosa', 'Vietnam', 'Technology', 'https://d.foundations', '{benjamin@d.foundation,namnh@d.foundation}');
 

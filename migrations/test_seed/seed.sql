@@ -11,6 +11,7 @@ INSERT INTO public.permissions (id, deleted_at, created_at, updated_at, name, co
 ('f75677d6-3e22-45d4-b921-81d6a3645157', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Employee Read Full General Info', 'employees.read.generalInfo.fullAccess'),
 ('6add4087-e586-4313-b157-54d416bdc8d5', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Employee Read Full Project Belong to One Employee', 'employees.read.projects.fullAccess'),
 ('911df73b-b860-4319-8944-c274781591ca', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Employee Read Full Active Project Belong to One Employee', 'employees.read.projects.readActive'),
+('5c1745b6-d920-47d2-986a-fe6c48802ace', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Employee Read Line Manager', 'employees.read.lineManager.fullAccess'),
 ('834ce06a-2797-4974-bbdd-2dfffc431c5f', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Employee Read Filter By All Statuses', 'employees.read.filterByAllStatuses'),
 ('11e16c63-87b2-4874-8961-c21716bdd97e', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Employee Read Filter By All Statuses', 'employees.read.filterByProject'),
 ('a7549f30-987c-47d1-9266-452f3cfc68b7', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Employee Create', 'employees.create'),
@@ -211,4 +212,8 @@ INSERT INTO public.invoice_number_caching (id, deleted_at, created_at, updated_a
 
 INSERT INTO public.bank_accounts (id, deleted_at, created_at, updated_at, account_number, bank_name, currency_id, owner_name, address, swift_code, routing_number, name, uk_sort_code) VALUES
 ('fc6b1743-05c5-4152-9340-1d20d96d8fc0', null, '2023-02-07 18:39:35.547782', '2023-02-07 18:39:35.547782', '0999999888', 'ACB', '7037bdb6-584e-4e35-996d-ef28a243f48a', 'Dwarves Foundation', 'Hado Centrosa', 'AVBWFPW', null, 'DF Bank Account', null);
+
+INSERT INTO public.organizations (id, deleted_at, created_at, updated_at, name, code, avatar) VALUES
+('31fdf38f-77c0-4c06-b530-e2be8bc297e0', NULL, '2023-01-19 11:13:13.487168', '2023-01-19 11:13:13.487168', 'Dwarves Foundation', 'dwarves-foundation', NULL),
+('e4725383-943a-468a-b0cd-ce249c573cf7', NULL, '2023-01-19 11:13:13.487168', '2023-01-19 11:13:13.487168', 'Console Labs', 'console-labs', NULL);
 
