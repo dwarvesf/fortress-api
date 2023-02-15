@@ -67,8 +67,8 @@ func ToBasicCompanyInfo(company *model.CompanyInfo) *BasicCompanyInfo {
 	return &BasicCompanyInfo{
 		ID:                 company.ID.String(),
 		Name:               company.Name,
-		Description:        *company.Description,
-		RegistrationNumber: *company.RegistrationNumber,
+		Description:        company.Description,
+		RegistrationNumber: company.RegistrationNumber,
 	}
 }
 
