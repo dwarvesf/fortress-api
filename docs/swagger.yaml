@@ -586,6 +586,39 @@ definitions:
       year:
         type: integer
     type: object
+  model.Issue:
+    properties:
+      id:
+        type: string
+      incident_date:
+        type: string
+      name:
+        type: string
+      pic:
+        type: string
+      priority:
+        type: string
+      profile:
+        type: string
+      projects:
+        items:
+          type: string
+        type: array
+      resolution:
+        type: string
+      rootcause:
+        type: string
+      scope:
+        type: string
+      severity:
+        type: string
+      solve_date:
+        type: string
+      source:
+        type: string
+      status:
+        type: string
+    type: object
   model.LikertScaleCount:
     properties:
       agree:
@@ -1017,6 +1050,10 @@ definitions:
         type: string
       ring:
         type: string
+      tags:
+        items:
+          type: string
+        type: array
     type: object
   model.Update:
     properties:
@@ -6187,6 +6224,10 @@ paths:
         in: query
         name: sort
         type: string
+      - description: Distinct
+        in: query
+        name: distinct
+        type: boolean
       produces:
       - application/json
       responses:
