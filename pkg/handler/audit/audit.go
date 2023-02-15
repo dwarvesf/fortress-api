@@ -384,7 +384,7 @@ func (h *handler) syncActionItemPage(db *gorm.DB, databaseID string, withStartCu
 				return err
 			}
 
-			if newActionItem.Priority != nil {
+			if newActionItem.Priority != nil && newActionItem.Status != model.ActionItemStatusDone {
 				// Update audit cycle
 				switch *newActionItem.Priority {
 				case model.ActionItemPriorityLow:
