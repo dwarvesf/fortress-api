@@ -83,6 +83,7 @@ type NotionDatabase struct {
 	Digest          string
 	Updates         string
 	Memo            string
+	Issue           string
 }
 
 type Discord struct {
@@ -160,6 +161,7 @@ func Generate(v ENV) *Config {
 				Digest:          v.GetString("NOTION_DIGEST_DB_ID"),
 				Updates:         v.GetString("NOTION_UPDATES_DB_ID"),
 				Memo:            v.GetString("NOTION_MEMO_DB_ID"),
+				Issue:           v.GetString("NOTION_ISSUE_DB_ID"),
 			},
 		},
 		Discord: Discord{

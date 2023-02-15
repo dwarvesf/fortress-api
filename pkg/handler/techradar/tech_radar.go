@@ -114,6 +114,10 @@ func (h *handler) List(c *gin.Context) {
 		for _, c := range props["Categories"].MultiSelect {
 			categories = append(categories, c.Name)
 		}
+		tags := []string{}
+		for _, t := range props["Tag"].MultiSelect {
+			tags = append(tags, t.Name)
+		}
 
 		techs = append(techs, model.TechRadar{
 			ID:         r.ID,
@@ -122,6 +126,7 @@ func (h *handler) List(c *gin.Context) {
 			Quadrant:   quadrant,
 			Categories: categories,
 			Ring:       ring,
+			Tags:       tags,
 		})
 	}
 

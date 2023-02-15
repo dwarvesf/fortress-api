@@ -19,6 +19,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/handler/healthz"
 	"github.com/dwarvesf/fortress-api/pkg/handler/hiring"
 	"github.com/dwarvesf/fortress-api/pkg/handler/invoice"
+	"github.com/dwarvesf/fortress-api/pkg/handler/issue"
 	"github.com/dwarvesf/fortress-api/pkg/handler/memo"
 	"github.com/dwarvesf/fortress-api/pkg/handler/metadata"
 	"github.com/dwarvesf/fortress-api/pkg/handler/profile"
@@ -47,6 +48,7 @@ type Handler struct {
 	Valuation      valuation.IHandler
 	Earn           earn.IHandler
 	TechRadar      techradar.IHandler
+	Issue          issue.IHandler
 	Audience       audience.IHandler
 	Event          event.IHandler
 	Hiring         hiring.IHandler
@@ -77,6 +79,7 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, ctrl *
 		Valuation:      valuation.New(store, repo, service, logger, cfg),
 		Earn:           earn.New(store, repo, service, logger, cfg),
 		TechRadar:      techradar.New(store, repo, service, logger, cfg),
+		Issue:          issue.New(store, repo, service, logger, cfg),
 		Audience:       audience.New(store, repo, service, logger, cfg),
 		Event:          event.New(store, repo, service, logger, cfg),
 		Hiring:         hiring.New(store, repo, service, logger, cfg),
