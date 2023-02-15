@@ -116,33 +116,11 @@ type AgreementLevel string
 
 // AgreementLevel values
 const (
-	// engagement
 	AgreementLevelStronglyDisagree AgreementLevel = "strongly-disagree"
 	AgreementLevelDisagree         AgreementLevel = "disagree"
 	AgreementLevelMixed            AgreementLevel = "mixed"
 	AgreementLevelAgree            AgreementLevel = "agree"
 	AgreementLevelStronglyAgree    AgreementLevel = "strongly-agree"
-
-	// work - workload domain
-	AgreementLevelBreeze          AgreementLevel = "breeze"
-	AgreementLevelCouldHandleMore AgreementLevel = "could-handle-more"
-	AgreementLevelManageable      AgreementLevel = "manageable"
-	AgreementLevelOverwhelming    AgreementLevel = "overwhelming"
-	AgreementLevelCantKeepUp      AgreementLevel = "cant-keep-up"
-
-	// work - deadline domain
-	AgreementLevelVeryUncertain     AgreementLevel = "very-uncertain"
-	AgreementLevelSomewhatUncertain AgreementLevel = "somewhat-uncertain"
-	AgreementLevelNeutral           AgreementLevel = "neutral"
-	AgreementLevelSomewhatConfident AgreementLevel = "somewhat-confident"
-	AgreementLevelVeryConfident     AgreementLevel = "very-confident"
-
-	// work - learning domain
-	AgreementLevelVeryLittle AgreementLevel = "very-little"
-	AgreementLevelSomewhat   AgreementLevel = "somewhat"
-	AgreementLevelModerate   AgreementLevel = "moderate"
-	AgreementLevelALot       AgreementLevel = "a-lot"
-	AgreementLevelExtremely  AgreementLevel = "extremely"
 )
 
 // IsValid validation for AgreementLevel
@@ -153,22 +131,7 @@ func (e AgreementLevel) IsValid() bool {
 		AgreementLevelDisagree,
 		AgreementLevelMixed,
 		AgreementLevelAgree,
-		AgreementLevelStronglyAgree,
-		AgreementLevelBreeze,
-		AgreementLevelCouldHandleMore,
-		AgreementLevelManageable,
-		AgreementLevelOverwhelming,
-		AgreementLevelCantKeepUp,
-		AgreementLevelVeryUncertain,
-		AgreementLevelSomewhatUncertain,
-		AgreementLevelNeutral,
-		AgreementLevelSomewhatConfident,
-		AgreementLevelVeryConfident,
-		AgreementLevelVeryLittle,
-		AgreementLevelSomewhat,
-		AgreementLevelModerate,
-		AgreementLevelALot,
-		AgreementLevelExtremely:
+		AgreementLevelStronglyAgree:
 		return true
 	}
 	return false
@@ -180,33 +143,11 @@ func (e AgreementLevel) String() string {
 }
 
 var AgreementLevelMap = map[AgreementLevel]string{
-	// engagement
 	AgreementLevelStronglyDisagree: "1",
 	AgreementLevelDisagree:         "2",
 	AgreementLevelMixed:            "3",
 	AgreementLevelAgree:            "4",
 	AgreementLevelStronglyAgree:    "5",
-
-	// workload
-	AgreementLevelBreeze:          "1",
-	AgreementLevelCouldHandleMore: "2",
-	AgreementLevelManageable:      "3",
-	AgreementLevelOverwhelming:    "4",
-	AgreementLevelCantKeepUp:      "5",
-
-	// deadline
-	AgreementLevelVeryUncertain:     "1",
-	AgreementLevelSomewhatUncertain: "2",
-	AgreementLevelNeutral:           "3",
-	AgreementLevelSomewhatConfident: "4",
-	AgreementLevelVeryConfident:     "5",
-
-	// learning
-	AgreementLevelVeryLittle: "1",
-	AgreementLevelSomewhat:   "2",
-	AgreementLevelModerate:   "3",
-	AgreementLevelALot:       "4",
-	AgreementLevelExtremely:  "5",
 }
 
 var AgreementLevelValueMap = map[string]AgreementLevel{
