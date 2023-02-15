@@ -3807,6 +3807,12 @@ const docTemplate = `{
                         "description": "Sort",
                         "name": "sort",
                         "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Distinct",
+                        "name": "distinct",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -6028,6 +6034,56 @@ const docTemplate = `{
                 }
             }
         },
+        "model.Issue": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "incident_date": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "pic": {
+                    "type": "string"
+                },
+                "priority": {
+                    "type": "string"
+                },
+                "profile": {
+                    "type": "string"
+                },
+                "projects": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "resolution": {
+                    "type": "string"
+                },
+                "rootcause": {
+                    "type": "string"
+                },
+                "scope": {
+                    "type": "string"
+                },
+                "severity": {
+                    "type": "string"
+                },
+                "solve_date": {
+                    "type": "string"
+                },
+                "source": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
         "model.LikertScaleCount": {
             "type": "object",
             "properties": {
@@ -6683,6 +6739,12 @@ const docTemplate = `{
                 },
                 "ring": {
                     "type": "string"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },
