@@ -204,7 +204,7 @@ INSERT INTO public.client_contacts (id, deleted_at, created_at, updated_at, name
 ('0569e64d-3b57-454a-ab88-0482e087eb5f', null, '2023-02-07 19:05:04.354072', '2023-02-07 19:05:04.354072', 'Thanh Pham ', 'afb9cf05-9517-4fb9-a4f2-66e6d90ad215', 'PM', null, '["thanh@d.foundation", "huytq@d.foundation"]', true);
 
 INSERT INTO public.company_infos (id, deleted_at, created_at, updated_at, name, description, registration_number, info) VALUES
-('2b57ec32-19c2-46f0-8cf5-04623241a464', null, '2023-02-07 18:42:38.328707', '2023-02-07 18:42:38.328707', 'Dwarves Foundation', null, '1245888282', '{"phone": "0988999999", "address": "Hado Centrosa"}');
+('2b57ec32-19c2-46f0-8cf5-04623241a464', null, '2023-02-07 18:42:38.328707', '2023-02-07 18:42:38.328707', 'Dwarves Foundation', null, '1245888282', '{"vn": {"phone": "0988999999", "address": "Hado Centrosa"}}');
 
 INSERT INTO public.invoice_number_caching (id, deleted_at, created_at, updated_at, key, number) VALUES
 ('25938962-611b-45ad-b6be-c0a1365ea1de', null, '2023-02-07 18:57:47.312554', '2023-02-07 18:57:47.312554', 'year_invoice_2023', 1),
