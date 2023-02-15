@@ -6183,6 +6183,12 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
+                "organization": {
+                    "$ref": "#/definitions/model.Organization"
+                },
+                "organizationID": {
+                    "type": "string"
+                },
                 "projectEmail": {
                     "type": "string"
                 },
@@ -7087,6 +7093,9 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
+                "organizationID": {
+                    "type": "string"
+                },
                 "projectEmail": {
                     "type": "string"
                 },
@@ -7600,6 +7609,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "name": {
+                    "type": "string"
+                },
+                "organizationID": {
                     "type": "string"
                 },
                 "stacks": {
@@ -8468,6 +8480,9 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string"
+                },
+                "organization": {
+                    "$ref": "#/definitions/view.Organization"
                 },
                 "projectEmail": {
                     "type": "string"
@@ -9527,6 +9542,9 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
+                "organization": {
+                    "$ref": "#/definitions/view.Organization"
+                },
                 "projectEmail": {
                     "type": "string"
                 },
@@ -10307,6 +10325,9 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string"
+                },
+                "organization": {
+                    "$ref": "#/definitions/view.Organization"
                 },
                 "stacks": {
                     "type": "array",

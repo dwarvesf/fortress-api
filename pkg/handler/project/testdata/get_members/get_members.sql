@@ -61,7 +61,7 @@ INSERT INTO public.project_slots (id, deleted_at, created_at, updated_at, projec
 
 INSERT INTO public.project_members (id, deleted_at, created_at, updated_at, project_id, project_slot_id ,employee_id, seniority_id, start_date, end_date, rate, discount, status,deployment_type, upsell_person_id) VALUES
 ('cb889a9c-b20c-47ee-83b8-44b6d1721aca', NULL, '2022-11-11 18:19:56.156172', '2022-11-11 18:19:56.156172', '8dc3be2e-19a4-4942-8a79-56db391a0b15', 'f32d08ca-8863-4ab3-8c84-a11849451eb7', '2655832e-f009-4b73-a535-64c3a22e558f', 'dac16ce6-9e5a-4ff3-9ea2-fdea4853925e' ,'2022-11-01', NULL, 5000, 0, 'active', 'official', '608ea227-45a5-4c8a-af43-6c7280d96340'),
-('7310b51a-3855-498b-99ab-41aa82934269', NULL, '2022-11-11 18:19:56.156172', '2022-11-11 18:19:56.156172', '8dc3be2e-19a4-4942-8a79-56db391a0b15', 'bdc64b18-4c5f-4025-827a-f5b91d599dc7', 'ecea9d15-05ba-4a4e-9787-54210e3b98ce', 'dac16ce6-9e5a-4ff3-9ea2-fdea4853925e' ,'2022-11-01', NULL, 4000, 0, 'active', 'shadow', '608ea227-45a5-4c8a-af43-6c7280d96340'),
+('7310b51a-3855-498b-99ab-41aa82934269', NULL, '2022-11-11 18:19:56.156172', '2022-11-11 18:19:56.156172', '8dc3be2e-19a4-4942-8a79-56db391a0b15', 'bdc64b18-4c5f-4025-827a-f5b91d599dc7', '2655832e-f009-4b73-a535-64c3a22e558f', 'dac16ce6-9e5a-4ff3-9ea2-fdea4853925e' ,'2022-11-01', NULL, 4000, 0, 'active', 'shadow', '608ea227-45a5-4c8a-af43-6c7280d96340'),
 ('35149aab-0506-4eb3-9300-c706ccbf2bde', NULL, '2022-11-11 18:19:56.156172', '2022-11-11 18:19:56.156172', '8dc3be2e-19a4-4942-8a79-56db391a0b15', '1406fcce-6f90-4e0f-bea1-c373e2b2b5b1', '8d7c99c0-3253-4286-93a9-e7554cb327ef', 'dac16ce6-9e5a-4ff3-9ea2-fdea4853925e' ,'2022-11-01', NULL, 3000, 3, 'active', 'official', '608ea227-45a5-4c8a-af43-6c7280d96340'),
 ('5a9a07aa-e8f3-4b62-b9ad-0f057866dc6c', NULL, '2022-11-11 18:19:56.156172', '2022-11-11 18:19:56.156172', '8dc3be2e-19a4-4942-8a79-56db391a0b15', 'b25bd3fa-eb6d-49d5-b278-7aacf4594f79', 'eeae589a-94e3-49ac-a94c-fcfb084152b2', 'dac16ce6-9e5a-4ff3-9ea2-fdea4853925e' ,'2022-11-01', NULL, 3000, 3, 'active', 'official', '608ea227-45a5-4c8a-af43-6c7280d96340'),
 ('fcd5c16f-40fd-48b6-9649-410691373eea', NULL, '2022-11-11 18:19:56.156172', '2022-11-11 18:19:56.156172', '8dc3be2e-19a4-4942-8a79-56db391a0b15', 'ce379dc0-95be-471a-9227-8e045a5630af', '608ea227-45a5-4c8a-af43-6c7280d96340', 'dac16ce6-9e5a-4ff3-9ea2-fdea4853925e' ,'2022-11-01', NULL, 4000, 0, 'active', 'shadow', '608ea227-45a5-4c8a-af43-6c7280d96340');
@@ -164,17 +164,17 @@ INSERT INTO public.project_member_positions (id,deleted_at,created_at,updated_at
 ('3a35f08a-5af8-4145-bbb9-3eea86ee7783',NULL,'2022-11-18 01:14:47.124502','2022-11-18 01:14:47.124502','5a9a07aa-e8f3-4b62-b9ad-0f057866dc6c','d796884d-a8c4-4525-81e7-54a3b6099eac'),
 ('913e5ecb-0053-4ff3-aa23-64dd96f216a6',NULL,'2022-11-18 01:14:47.556013','2022-11-18 01:14:47.556013','fcd5c16f-40fd-48b6-9649-410691373eea','d796884d-a8c4-4525-81e7-54a3b6099eac');
 
-INSERT INTO public.work_units (id, deleted_at, created_at, updated_at, name, status, type, source_url, project_id, source_metadata) VALUES 
+INSERT INTO public.work_units (id, deleted_at, created_at, updated_at, name, status, type, source_url, project_id, source_metadata) VALUES
 ('4797347d-21e0-4dac-a6c7-c98bf2d6b27c', NULL, '2022-11-29 08:03:33.233262', '2022-11-29 08:03:33.233262', 'Fortress API', 'active', 'development', 'https://github.com/dwarvesf/fortress-api', '8dc3be2e-19a4-4942-8a79-56db391a0b15', '[]'),
 ('69b32f7e-0433-4566-a801-72909172940e', NULL, '2022-11-29 08:03:33.233262', '2022-11-29 08:03:33.233262', 'Fortress Web', 'archived', 'management', 'https://github.com/dwarvesf/fortress-web', 'dfa182fc-1d2d-49f6-a877-c01da9ce4207', '[]');
 
-INSERT INTO public.work_unit_stacks (id, deleted_at, created_at, updated_at, stack_id, work_unit_id) VALUES 
+INSERT INTO public.work_unit_stacks (id, deleted_at, created_at, updated_at, stack_id, work_unit_id) VALUES
 ('95851b98-c8d0-46f6-b6b0-8dd2037f44d6', NULL, '2022-11-29 08:03:33.233262', '2022-11-29 08:03:33.233262', '0ecf47c8-cca4-4c30-94bb-054b1124c44f', '4797347d-21e0-4dac-a6c7-c98bf2d6b27c'),
 ('f1ddeeb2-ad44-4c97-a934-86ad8f24ca57', NULL, '2022-11-29 08:03:33.233262', '2022-11-29 08:03:33.233262', 'fa0f4e46-7eab-4e5c-9d31-30489e69fe2e', '4797347d-21e0-4dac-a6c7-c98bf2d6b27c'),
 ('9b7c9d01-75a3-4386-93a7-4ff099887847', NULL, '2022-11-29 08:03:33.233262', '2022-11-29 08:03:33.233262', 'b403ef95-4269-4830-bbb6-8e56e5ec0af4', '69b32f7e-0433-4566-a801-72909172940e'),
 ('b851f3bc-a758-4e28-834b-0d2c0a04bf71', NULL, '2022-11-29 08:03:33.233262', '2022-11-29 08:03:33.233262', 'fa0f4e46-7eab-4e5c-9d31-30489e69fe2e', '69b32f7e-0433-4566-a801-72909172940e');
 
-INSERT INTO public.work_unit_members (id, deleted_at, created_at, updated_at, start_date, end_date, status, project_id, employee_id, work_unit_id) VALUES 
+INSERT INTO public.work_unit_members (id, deleted_at, created_at, updated_at, start_date, end_date, status, project_id, employee_id, work_unit_id) VALUES
 ('303fd2e5-0b4d-401c-b5fa-74820991e6c0', NULL, '2022-11-29 08:03:33.233262', '2022-11-29 08:03:33.233262', '2022-11-29', NULL, 'active', '8dc3be2e-19a4-4942-8a79-56db391a0b15', '2655832e-f009-4b73-a535-64c3a22e558f', '4797347d-21e0-4dac-a6c7-c98bf2d6b27c'),
 ('f79ae054-4ab4-41cd-aa5f-c871887cc35c', NULL, '2022-11-29 08:03:33.233262', '2022-11-29 08:03:33.233262', '2022-11-29', NULL, 'active', '8dc3be2e-19a4-4942-8a79-56db391a0b15', 'ecea9d15-05ba-4a4e-9787-54210e3b98ce', '69b32f7e-0433-4566-a801-72909172940e'),
 ('7e4da4ac-241f-4af8-b0a0-f59e5a64065b', NULL, '2022-11-29 08:03:33.233262', '2022-11-29 08:03:33.233262', '2022-11-29', NULL, 'active', '8dc3be2e-19a4-4942-8a79-56db391a0b15', '8d7c99c0-3253-4286-93a9-e7554cb327ef', '69b32f7e-0433-4566-a801-72909172940e'),

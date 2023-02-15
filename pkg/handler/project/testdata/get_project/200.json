@@ -282,6 +282,12 @@
             "name": "company A",
             "description": "description",
             "registrationNumber": "0123123123"
+        },
+        "organization": {
+            "id": "31fdf38f-77c0-4c06-b530-e2be8bc297e0",
+            "code": "dwarves-foundation",
+            "name": "Dwarves Foundation",
+            "avatar": ""
         }
     }
 }

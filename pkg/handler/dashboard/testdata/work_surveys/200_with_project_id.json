@@ -10,36 +10,7 @@
         },
         "workSurveys": [
             {
-                "endDate": "28/02",
-                "workload": 0,
-                "deadline": 3,
-                "learning": 1,
-                "trend": null
-            },
-            {
-                "endDate": "21/02",
-                "workload": 0,
-                "deadline": 0,
-                "learning": 0,
-                "trend": {
-                    "workload": 0,
-                    "deadline": 0,
-                    "learning": 0
-                }
-            },
-            {
-                "endDate": "07/02",
-                "workload": 0,
-                "deadline": 0,
-                "learning": 0,
-                "trend": {
-                    "workload": 0,
-                    "deadline": 0,
-                    "learning": 0
-                }
-            },
-            {
-                "endDate": "23/01",
+                "endDate": "01/01",
                 "workload": 0,
                 "deadline": 0,
                 "learning": 0,
@@ -61,10 +32,43 @@
                 }
             },
             {
-                "endDate": "01/01",
+                "endDate": "23/01",
                 "workload": 0,
                 "deadline": 0,
                 "learning": 0,
+                "trend": {
+                    "workload": 0,
+                    "deadline": 0,
+                    "learning": 0
+                }
+            },
+            {
+                "endDate": "07/02",
+                "workload": 0,
+                "deadline": 0,
+                "learning": 0,
+                "trend": {
+                    "workload": 0,
+                    "deadline": 0,
+                    "learning": 0
+                }
+            },
+            {
+                "endDate": "21/02",
+                "workload": 0,
+                "deadline": 0,
+                "learning": 0,
+                "trend": {
+                    "workload": 0,
+                    "deadline": 0,
+                    "learning": 0
+                }
+            },
+            {
+                "endDate": "28/02",
+                "workload": 0,
+                "deadline": 3,
+                "learning": 1,
                 "trend": {
                     "workload": 0,
                     "deadline": 0,

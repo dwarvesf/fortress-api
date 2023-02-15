@@ -37,6 +37,7 @@ type ProjectData struct {
 	BankAccount         *BasicBankAccountInfo `json:"bankAccount"`
 	Client              *BasicClientInfo      `json:"client"`
 	CompanyInfo         *BasicCompanyInfo     `json:"companyInfo"`
+	Organization        *Organization         `json:"organization"`
 }
 
 type BasicClientInfo struct {
@@ -214,6 +215,24 @@ func ToProjectData(c *gin.Context, project *model.Project, userInfo *model.Curre
 		clientEmail = strings.Split(project.ClientEmail, ",")
 	}
 
+	if project.Organization != nil {
+		d.Organization = &Organization{
+			ID:     project.Organization.ID.String(),
+			Code:   project.Organization.Code,
+			Name:   project.Organization.Name,
+			Avatar: project.Organization.Avatar,
+		}
+	}
+
+	if project.Organization != nil {
+		d.Organization = &Organization{
+			ID:     project.Organization.ID.String(),
+			Code:   project.Organization.Code,
+			Name:   project.Organization.Name,
+			Avatar: project.Organization.Avatar,
+		}
+	}
+
 	if utils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadFullAccess) {
 		if project.ProjectNotion != nil && !project.ProjectNotion.AuditNotionID.IsZero() {
 			d.AuditNotionID = project.ProjectNotion.AuditNotionID.String()
@@ -349,6 +368,7 @@ type CreateProjectData struct {
 	Function        string                `json:"function"`
 	BankAccount     *BasicBankAccountInfo `json:"bankAccount"`
 	Client          *Client               `json:"client"`
+	Organization    *Organization         `json:"organization"`
 }
 
 type BasicBankAccountInfo struct {
@@ -392,6 +412,15 @@ func ToCreateProjectDataResponse(userInfo *model.CurrentLoggedUserInfo, project 
 		}
 	}
 
+	if project.Organization != nil {
+		result.Organization = &Organization{
+			ID:     project.Organization.ID.String(),
+			Code:   project.Organization.Code,
+			Name:   project.Organization.Name,
+			Avatar: project.Organization.Avatar,
+		}
+	}
+
 	if project.Client != nil {
 		result.Client = toClient(project.Client)
 	}
@@ -417,7 +446,7 @@ func ToCreateProjectDataResponse(userInfo *model.CurrentLoggedUserInfo, project 
 	return result
 }
 
-func ToProjectMemberListData(userInfo *model.CurrentLoggedUserInfo, members []*model.ProjectMember, projectHeads []*model.ProjectHead) []ProjectMember {
+func ToProjectMemberListData(userInfo *model.CurrentLoggedUserInfo, members []*model.ProjectMember, projectHeads []*model.ProjectHead, distinct bool) []ProjectMember {
 	var results = make([]ProjectMember, 0, len(members))
 
 	leadMap := map[string]bool{}
@@ -468,6 +497,20 @@ func ToProjectMemberListData(userInfo *model.CurrentLoggedUserInfo, members []*m
 		results = append(results, member)
 	}
 
+	// Remove duplicate members
+	if distinct {
+		uniqueResults := make([]ProjectMember, 0, len(results))
+		uniqueMap := map[string]bool{}
+		for _, v := range results {
+			if _, ok := uniqueMap[v.EmployeeID]; !ok {
+				uniqueMap[v.EmployeeID] = true
+				uniqueResults = append(uniqueResults, v)
+			}
+		}
+
+		return uniqueResults
+	}
+
 	return results
 }
 
@@ -490,6 +533,7 @@ type UpdateProjectGeneralInfo struct {
 	AuditNotionID string                `json:"auditNotionID"`
 	BankAccount   *BasicBankAccountInfo `json:"bankAccount"`
 	Client        *Client               `json:"client"`
+	Organization  *Organization         `json:"organization"`
 }
 
 type UpdateProjectGeneralInfoResponse struct {
@@ -527,6 +571,15 @@ func ToUpdateProjectGeneralInfo(project *model.Project) UpdateProjectGeneralInfo
 			AccountNumber: project.BankAccount.AccountNumber,
 			BankName:      project.BankAccount.BankName,
 			OwnerName:     project.BankAccount.OwnerName,
+		}
+	}
+
+	if project.Organization != nil {
+		rs.Organization = &Organization{
+			ID:     project.Organization.ID.String(),
+			Code:   project.Organization.Code,
+			Name:   project.Organization.Name,
+			Avatar: project.Organization.Avatar,
 		}
 	}
 

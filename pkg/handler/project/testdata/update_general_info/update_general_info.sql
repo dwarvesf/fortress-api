@@ -55,9 +55,9 @@ INSERT INTO public.employee_roles (id, deleted_at, created_at, updated_at, emplo
 ('e8c8619d-295b-4d55-936f-cd6406f0857f', NULL, '2022-11-17 11:53:14.690017', '2022-11-17 11:53:14.690017', 'd675dfc5-acbe-4566-acde-f7cb132c0206', 'd796884d-a8c4-4525-81e7-54a3b6099eac'),
 ('f7a25073-6832-4ba0-a69e-b0a9c87c61b4', NULL, '2022-11-17 11:53:14.690017', '2022-11-17 11:53:14.690017', '38a00d4a-bc45-41de-965a-adc674ab82c9', 'd796884d-a8c4-4525-81e7-54a3b6099eac');
 
-INSERT INTO public.projects (id, deleted_at, created_at, updated_at, name, type, start_date, end_date, status, country_id, client_email, project_email, code, bank_account_id) VALUES
-('dfa182fc-1d2d-49f6-a877-c01da9ce4207', NULL, '2022-11-11 18:06:56.362902', '2022-11-11 18:06:56.362902', 'Lorem ipsum', 'time-material', '2022-07-06', NULL, 'active', NULL, NULL, NULL, 'lorem-ipsum', 'e79eb5b3-e2cb-4d7f-9273-46f4be88cb20'),
-('8dc3be2e-19a4-4942-8a79-56db391a0b15', NULL, '2022-11-11 18:06:56.362902', '2022-11-11 18:06:56.362902', 'Fortress', 'dwarves', '2022-11-01', NULL, 'active', '4ef64490-c906-4192-a7f9-d2221dadfe4c', 'team@d.foundation', 'fortress@d.foundation', 'fortress', 'e79eb5b3-e2cb-4d7f-9273-46f4be88cb20');
+INSERT INTO public.projects (id, deleted_at, created_at, updated_at, name, type, start_date, end_date, status, country_id, client_email, project_email, code, bank_account_id, organization_id) VALUES
+('dfa182fc-1d2d-49f6-a877-c01da9ce4207', NULL, '2022-11-11 18:06:56.362902', '2022-11-11 18:06:56.362902', 'Lorem ipsum', 'time-material', '2022-07-06', NULL, 'active', NULL, NULL, NULL, 'lorem-ipsum', 'e79eb5b3-e2cb-4d7f-9273-46f4be88cb20', '31fdf38f-77c0-4c06-b530-e2be8bc297e0'),
+('8dc3be2e-19a4-4942-8a79-56db391a0b15', NULL, '2022-11-11 18:06:56.362902', '2022-11-11 18:06:56.362902', 'Fortress', 'dwarves', '2022-11-01', NULL, 'active', '4ef64490-c906-4192-a7f9-d2221dadfe4c', 'team@d.foundation', 'fortress@d.foundation', 'fortress', 'e79eb5b3-e2cb-4d7f-9273-46f4be88cb20', '31fdf38f-77c0-4c06-b530-e2be8bc297e0');
 
 INSERT INTO public.project_slots (id, deleted_at, created_at, updated_at, project_id, seniority_id, upsell_person_id, deployment_type, rate, discount, status) VALUES
 ('f32d08ca-8863-4ab3-8c84-a11849451eb7', NULL, '2022-11-11 18:19:56.156172', '2022-11-11 18:19:56.156172', '8dc3be2e-19a4-4942-8a79-56db391a0b15', 'dac16ce6-9e5a-4ff3-9ea2-fdea4853925e', NULL, 'official', 5000, 0, 'active'),

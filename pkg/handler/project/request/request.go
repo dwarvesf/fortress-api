@@ -20,14 +20,15 @@ type GetListProjectInput struct {
 }
 
 type UpdateProjectGeneralInfoInput struct {
-	Name          string       `form:"name" json:"name" binding:"required"`
-	StartDate     string       `form:"startDate" json:"startDate"`
-	CountryID     model.UUID   `form:"countryID" json:"countryID" binding:"required"`
-	Function      string       `form:"function" json:"function" binding:"required"`
-	AuditNotionID model.UUID   `form:"auditNotionID" json:"auditNotionID"`
-	Stacks        []model.UUID `form:"stacks" json:"stacks"`
-	BankAccountID model.UUID   `form:"bankAccountID" json:"bankAccountID"`
-	ClientID      model.UUID   `form:"clientID" json:"clientID"`
+	Name           string       `form:"name" json:"name" binding:"required"`
+	StartDate      string       `form:"startDate" json:"startDate"`
+	CountryID      model.UUID   `form:"countryID" json:"countryID" binding:"required"`
+	Function       string       `form:"function" json:"function" binding:"required"`
+	AuditNotionID  model.UUID   `form:"auditNotionID" json:"auditNotionID"`
+	Stacks         []model.UUID `form:"stacks" json:"stacks"`
+	BankAccountID  model.UUID   `form:"bankAccountID" json:"bankAccountID"`
+	ClientID       model.UUID   `form:"clientID" json:"clientID"`
+	OrganizationID model.UUID   `form:"organizationID" json:"organizationID"`
 }
 
 func (i UpdateProjectGeneralInfoInput) GetStartDate() *time.Time {
@@ -88,6 +89,7 @@ type CreateProjectInput struct {
 	AuditNotionID     model.UUID          `form:"auditNotionID" json:"auditNotionID"`
 	BankAccountID     model.UUID          `form:"bankAccountID" json:"bankAccountID"`
 	ClientID          model.UUID          `form:"clientID" json:"clientID"`
+	OrganizationID    model.UUID          `form:"organizationID" json:"organizationID"`
 }
 
 func (i *CreateProjectInput) Validate() error {
@@ -144,8 +146,9 @@ func (i *CreateProjectInput) GetStartDate() *time.Time {
 type GetListStaffInput struct {
 	model.Pagination
 
-	Status  string `form:"status" json:"status"`
-	Preload bool   `json:"preload" form:"preload,default=true"`
+	Status   string `form:"status" json:"status"`
+	Preload  bool   `json:"preload" form:"preload,default=true"`
+	Distinct bool   `json:"distinct" form:"distinct,default=false"`
 }
 
 func (i *GetListStaffInput) Validate() error {

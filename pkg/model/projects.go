@@ -24,8 +24,10 @@ type Project struct {
 	BankAccountID       UUID            `gorm:"default:null"`
 	CompanyInfoID       UUID            `gorm:"default:null"`
 	ClientID            UUID            `gorm:"default:null"`
+	OrganizationID      UUID            `gorm:"default:null"`
 
 	ProjectNotion  *ProjectNotion `gorm:"foreignKey:project_id"`
+	Organization   *Organization
 	BankAccount    *BankAccount
 	Country        *Country
 	Client         *Client

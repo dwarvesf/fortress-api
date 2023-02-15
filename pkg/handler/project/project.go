@@ -269,6 +269,22 @@ func (h *handler) Create(c *gin.Context) {
 		}
 	}
 
+	var organization *model.Organization
+	if !body.OrganizationID.IsZero() {
+		organization, err = h.store.Organization.One(h.repo.DB(), body.OrganizationID.String())
+		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				l.Error(err, "organization not found")
+				c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrOrganizationNotFound, body, ""))
+				return
+			}
+
+			l.Error(err, "failed to get organization")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
+			return
+		}
+	}
+
 	if body.Code == "" {
 		body.Code = strings.ReplaceAll(strings.ToLower(body.Name), " ", "-")
 	}
@@ -296,6 +312,18 @@ func (h *handler) Create(c *gin.Context) {
 		}
 	}
 
+	// Create employee organization
+	org, err := h.store.Organization.OneByCode(h.repo.DB(), model.OrganizationCodeDwarves)
+	if err != nil {
+		l.Error(err, "error invalid organization")
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrOrganizationNotFound, body, ""))
+			return
+		}
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
+		return
+	}
+
 	p := &model.Project{
 		Name:         body.Name,
 		CountryID:    body.CountryID,
@@ -310,9 +338,20 @@ func (h *handler) Create(c *gin.Context) {
 		ClientID:     body.ClientID,
 	}
 
+	if body.OrganizationID.IsZero() {
+		p.OrganizationID = org.ID
+	} else {
+		p.OrganizationID = body.OrganizationID
+	}
+
 	if !body.BankAccountID.IsZero() {
 		p.BankAccountID = body.BankAccountID
 		p.BankAccount = bankAccount
+	}
+
+	if !body.OrganizationID.IsZero() {
+		p.OrganizationID = body.OrganizationID
+		p.Organization = organization
 	}
 
 	tx, done := h.repo.NewTransaction()
@@ -483,7 +522,7 @@ func (h *handler) GetMembers(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse(view.ToProjectMemberListData(userInfo, members, heads),
+	c.JSON(http.StatusOK, view.CreateResponse(view.ToProjectMemberListData(userInfo, members, heads, query.Distinct),
 		&view.PaginationResponse{Pagination: query.Pagination, Total: total}, nil, nil, ""))
 }
 
@@ -1520,6 +1559,22 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 		}
 	}
 
+	// Check organization existence
+	if !body.OrganizationID.IsZero() {
+		exist, err := h.store.Organization.IsExist(h.repo.DB(), body.OrganizationID.String())
+		if err != nil {
+			l.Error(err, "error check existence of organization")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
+			return
+		}
+
+		if !exist {
+			l.Error(err, "organization not found")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrOrganizationNotFound, body, ""))
+			return
+		}
+	}
+
 	// Check valid stack id
 	_, stacks, err := h.store.Stack.All(h.repo.DB(), "", nil)
 	if err != nil {
@@ -1585,6 +1640,7 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 	p.Function = model.ProjectFunction(body.Function)
 	p.BankAccountID = body.BankAccountID
 	p.ClientID = body.ClientID
+	p.OrganizationID = body.OrganizationID
 
 	projectNotion, err := h.store.ProjectNotion.OneByProjectID(tx.DB(), p.ID.String())
 
@@ -1623,6 +1679,7 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 		"function",
 		"bank_account_id",
 		// "client_id",
+		"organization_id",
 	)
 
 	if err != nil {

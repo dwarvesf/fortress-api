@@ -233,6 +233,7 @@ func TestHandler_Create(t *testing.T) {
 				Function:          model.ProjectFunctionLearning.String(),
 				BankAccountID:     model.MustGetUUIDFromString("e79eb5b3-e2cb-4d7f-9273-46f4be88cb20"),
 				ClientID:          model.MustGetUUIDFromString("afb9cf05-9517-4fb9-a4f2-66e6d90ad215"),
+				OrganizationID:    model.MustGetUUIDFromString("31fdf38f-77c0-4c06-b530-e2be8bc297e0"),
 			},
 			wantCode:         http.StatusOK,
 			wantResponsePath: "testdata/create/200.json",
@@ -346,6 +347,13 @@ func TestHandler_GetMembers(t *testing.T) {
 			query:            "preload=false",
 			wantCode:         http.StatusOK,
 			wantResponsePath: "testdata/get_members/without_preload.json",
+		},
+		{
+			name:             "happy_case_with_unique",
+			id:               "8dc3be2e-19a4-4942-8a79-56db391a0b15",
+			query:            "preload=false&distinct=true",
+			wantCode:         http.StatusOK,
+			wantResponsePath: "testdata/get_members/distinct.json",
 		},
 	}
 	for _, tt := range tests {
@@ -680,9 +688,10 @@ func TestHandler_UpdateGeneralInfo(t *testing.T) {
 					model.MustGetUUIDFromString("fa0f4e46-7eab-4e5c-9d31-30489e69fe2e"),
 					model.MustGetUUIDFromString("b403ef95-4269-4830-bbb6-8e56e5ec0af4"),
 				},
-				Function:      model.ProjectFunctionManagement.String(),
-				BankAccountID: model.MustGetUUIDFromString("e79eb5b3-e2cb-4d7f-9273-46f4be88cb20"),
-				ClientID:      model.MustGetUUIDFromString("afb9cf05-9517-4fb9-a4f2-66e6d90ad215"),
+				Function:       model.ProjectFunctionManagement.String(),
+				BankAccountID:  model.MustGetUUIDFromString("e79eb5b3-e2cb-4d7f-9273-46f4be88cb20"),
+				ClientID:       model.MustGetUUIDFromString("afb9cf05-9517-4fb9-a4f2-66e6d90ad215"),
+				OrganizationID: model.MustGetUUIDFromString("31fdf38f-77c0-4c06-b530-e2be8bc297e0"),
 			},
 		},
 		{
