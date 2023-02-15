@@ -437,6 +437,7 @@ func (h *handler) Create(c *gin.Context) {
 // @Param page query string false "Page"
 // @Param size query string false "Size"
 // @Param sort query string false "Sort"
+// @Param distinct query bool false "Distinct"
 // @Success 200 {object} view.ProjectMemberListResponse
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 404 {object} view.ErrorResponse
