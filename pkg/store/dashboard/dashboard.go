@@ -445,7 +445,7 @@ func (s *store) GetAuditSummaries(db *gorm.DB) ([]*model.AuditSummary, error) {
 		WHERE (pm.status = 'active' OR pm.status='on-boarding') AND audit_cycles.deleted_at IS NULL AND 
 			a.deleted_at IS NULL AND pm.deleted_at IS NULL AND p.deleted_at IS NULL AND organizations.code = 'dwarves-foundation'
 		GROUP BY audit_cycles.id,audit_cycles.quarter, p.id
-		ORDER BY size DESC, audit_cycles.quarter DESC`
+		ORDER BY audit_cycles.quarter DESC`
 
 	return rs, db.Raw(query).Scan(&rs).Error
 }
