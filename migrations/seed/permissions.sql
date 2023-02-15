@@ -1,5 +1,6 @@
 INSERT INTO public.permissions (id, deleted_at, created_at, updated_at, name, code) VALUES
 ('495c96ae-60f9-4c57-bc96-9504d0fedde6', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Auth Read', 'auth.read'),
+('5820dd37-a9bd-455e-b49b-b54ad7df180e', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Auth Create', 'auth.create'),
 ('01ed1076-4028-4fdf-9a92-cb57a8e041af', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Employee Read', 'employees.read'),
 ('20a442b2-9763-41d4-b3c9-e436b37bf534', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Employee Read Full Access', 'employees.read.fullAccess'),
 ('c353c4fd-5915-47f3-a59b-66ae75eae195', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Employee Read Get Active', 'employees.read.readActive'),
@@ -9,6 +10,7 @@ INSERT INTO public.permissions (id, deleted_at, created_at, updated_at, name, co
 ('911df73b-b860-4319-8944-c274781591ca', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Employee Read Full Project Belong to One Employee', 'employees.read.projects.readActive'),
 ('834ce06a-2797-4974-bbdd-2dfffc431c5f', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Employee Read Filter By All Statuses', 'employees.read.filterByAllStatuses'),
 ('11e16c63-87b2-4874-8961-c21716bdd97e', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Employee Read Filter By All Statuses', 'employees.read.filterByProject'),
+('5c1745b6-d920-47d2-986a-fe6c48802ace', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Employee Read Line Manager', 'employees.read.lineManager.fullAccess'),
 ('a7549f30-987c-47d1-9266-452f3cfc68b7', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Employee Create', 'employees.create'),
 ('e4e68398-da67-438f-9fb0-07a779b504a0', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Employee Edit', 'employees.edit'),
 ('33279d12-6daa-41d3-a037-9f805e8ebf61', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Employee Delete', 'employees.delete'),
@@ -61,4 +63,9 @@ INSERT INTO public.permissions (id, deleted_at, created_at, updated_at, name, co
 ('259fb434-5321-43be-b007-76f3c2dfbfcc', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Invoice Read', 'invoices.read'),
 ('fa6961f1-1cee-494f-8f1f-f4552b49b6fa', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Invoice Edit', 'invoices.edit'),
 ('60768a38-8ff1-493a-85ba-b62df98a60d4', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Invoice Delete', 'invoices.delete'),
-('78d617f8-b155-4051-b128-7f2d00ca31fd', NULL, '2023-01-10 05:19:00.330571', '2023-01-10 05:19:00.330571', 'Valuation Read', 'valuations.read');
+('78d617f8-b155-4051-b128-7f2d00ca31fd', NULL, '2023-01-10 05:19:00.330571', '2023-01-10 05:19:00.330571', 'Valuation Read', 'valuations.read'),
+('738ae6ae-e961-4fc2-b941-079e130f4213', NULL, '2023-02-13 13:32:29.330571', '2023-02-13 13:32:29.330571', 'Bank Account Read', 'bankAccounts.read'),
+('75ae4f79-cef1-4dfd-be66-064c118ba6cf', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Clients Create', 'clients.create'),
+('97a02a4d-b8fb-486d-af1a-25139014b375', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Clients Read', 'clients.read'),
+('92031f1a-b745-42cf-aac1-a067bbee08e6', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Clients Edit', 'clients.edit'),
+('7fb332e7-3231-42e6-8f38-a5c8b224d84e', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Clients Delete', 'clients.delete');

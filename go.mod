@@ -16,7 +16,6 @@ require (
 	github.com/google/go-cmp v0.5.9
 	github.com/hashicorp/vault/api v1.8.2
 	github.com/joho/godotenv v1.4.0
-	github.com/k0kubun/pp/v3 v3.2.0
 	github.com/lib/pq v1.10.6
 	github.com/matoous/go-nanoid v1.5.0
 	github.com/patrickmn/go-cache v2.1.0+incompatible
@@ -97,7 +96,6 @@ require (
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
-	github.com/k0kubun/pp v3.0.1+incompatible // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/magiconair/properties v1.8.6 // indirect
 	github.com/mailru/easyjson v0.7.6 // indirect

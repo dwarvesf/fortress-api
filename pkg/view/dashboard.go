@@ -112,7 +112,7 @@ func ToActionItemReportData(actionItemReports []*model.ActionItemReport) []*Audi
 		rs = append(rs, &AuditActionItemReport{
 			Quarter: strings.Split(ws.Quarter, "/")[1] + "/" + strings.Split(ws.Quarter, "/")[0],
 			High:    ws.High,
-			Medium:  ws.Low,
+			Medium:  ws.Medium,
 			Low:     ws.Low,
 		})
 	}
@@ -565,6 +565,10 @@ func ToAuditSummaries(summaryMap map[model.UUID][]*model.AuditSummary, previousQ
 		rs.Summary = append(rs.Summary, ToAuditSummary(summaries, previouSize))
 	}
 
+	sort.Slice(rs.Summary, func(i, j int) bool {
+		return rs.Summary[i].Name < rs.Summary[j].Name
+	})
+
 	return rs
 }
 
@@ -679,6 +683,9 @@ func ToEngagementDashboardDetails(statistic []*model.StatisticEngagementDashboar
 	dashboard := make([]EngagementDashboardDetail, 0)
 
 	for k, v := range questionMapper {
+		sort.Slice(v, func(i, j int) bool {
+			return v[i].Point > v[j].Point
+		})
 		dashboard = append(dashboard, EngagementDashboardDetail{
 			QuestionID: k,
 			Stats:      v,

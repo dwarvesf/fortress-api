@@ -747,10 +747,19 @@ func (h *handler) GetWorkUnitDistribution(c *gin.Context) {
 	rs := &view.WorkUnitDistributionData{}
 
 	// Get all employee
-	employees, _, err := h.store.Employee.All(h.repo.DB(), employee.EmployeeFilter{Keyword: input.Name}, model.Pagination{
-		Page: 0,
-		Size: 1000,
-	})
+	employees, _, err := h.store.Employee.All(h.repo.DB(),
+		employee.EmployeeFilter{
+			Keyword: input.Name,
+			WorkingStatuses: []string{
+				model.WorkingStatusOnBoarding.String(),
+				model.WorkingStatusContractor.String(),
+				model.WorkingStatusFullTime.String(),
+				model.WorkingStatusProbation.String()},
+		},
+		model.Pagination{
+			Page: 0,
+			Size: 1000,
+		})
 
 	if err != nil {
 		l.Error(err, "failed to get all employee")
