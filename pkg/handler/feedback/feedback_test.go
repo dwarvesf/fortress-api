@@ -48,6 +48,12 @@ func TestHandler_List(t *testing.T) {
 			query:            "status=draft",
 			wantResponsePath: "testdata/list/200_get_draft_feedbacks.json",
 		},
+		{
+			name:             "get_draft_feedbacks",
+			wantCode:         http.StatusBadRequest,
+			query:            "status=draftf",
+			wantResponsePath: "testdata/list/invalid_status.json",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -340,16 +346,16 @@ func TestHandler_Submit(t *testing.T) {
 				Answers: []request.BasicEventQuestionInput{
 					{
 						EventQuestionID: model.MustGetUUIDFromString("3784e437-c7d6-4142-9007-82a7f18f7d50"),
-						Answer:          "manageable",
+						Answer:          model.AgreementLevelMixed.String(),
 						Note:            "nothing",
 					},
 					{
 						EventQuestionID: model.MustGetUUIDFromString("25ae4b9c-4d44-4946-8034-29ccec02a005"),
-						Answer:          "neutral",
+						Answer:          model.AgreementLevelMixed.String(),
 					},
 					{
 						EventQuestionID: model.MustGetUUIDFromString("5c49dbcd-df16-4f04-bb98-a2dbb339e4d6"),
-						Answer:          "moderate",
+						Answer:          model.AgreementLevelMixed.String(),
 						Note:            "ok",
 					},
 				},

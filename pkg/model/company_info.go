@@ -4,13 +4,13 @@ import (
 	"gorm.io/datatypes"
 )
 
-//CompanyInfo contain company information
+// CompanyInfo contain company information
 type CompanyInfo struct {
 	BaseModel
 
 	Name               string         `json:"name"`
-	Description        *string        `json:"description"`
-	RegistrationNumber *string        `json:"registration_number"`
+	Description        string         `json:"description"`
+	RegistrationNumber string         `json:"registration_number"`
 	Info               datatypes.JSON `json:"info"`
 }
 

@@ -132,69 +132,69 @@
                     "positions": [],
                     "upsellPerson": null
                 },
-                {                 
-                  "projectMemberID": "",
-                  "projectSlotID": "",
-                  "employeeID": "608ea227-45a5-4c8a-af43-6c7280d96340",
-                  "fullName": "Tiêu Quang Huy",
-                  "displayName": "Huy Tieu",
-                  "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/3c420751-bb9a-4878-896e-2f10f3a633d6_avatar2535921977139052349.png",
-                  "username": "huytq",
-                  "status": "active",
-                  "isLead": false,
-                  "deploymentType": "shadow",
-                  "startDate": null,
-                  "endDate": null,
-                  "rate": "0",
-                  "discount": "0",
-                  "seniority": null,
-                  "positions": [],
-                  "upsellPerson": null
-              }
-          ],
-          "technicalLeads": [
-              {
-                  "employeeID": "8d7c99c0-3253-4286-93a9-e7554cb327ef",
-                  "fullName": "Nguyễn Hải Nam",
-                  "displayName": "Nam Nguyen",
-                  "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/8399103964540935617.png",
-                  "username": "benjamin"
-              }
-          ],
-          "accountManager": {
-              "employeeID": "2655832e-f009-4b73-a535-64c3a22e558f",
-              "fullName": "Phạm Đức Thành",
-              "displayName": "Thanh Pham",
-              "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
-              "username": "thanh"
-          },
-          "salePerson": {
-              "employeeID": "608ea227-45a5-4c8a-af43-6c7280d96340",
-              "fullName": "Tiêu Quang Huy",
-              "displayName": "Huy Tieu",
-              "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/3c420751-bb9a-4878-896e-2f10f3a633d6_avatar2535921977139052349.png",
-              "username": "huytq"
-          },
-          "deliveryManager": {
-              "employeeID": "2655832e-f009-4b73-a535-64c3a22e558f",
-              "fullName": "Phạm Đức Thành",
-              "displayName": "Thanh Pham",
-              "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
-              "username": "thanh"
-          },
-          "stacks": [],
-          "function": "",
-          "code": "fortress",
-          "auditNotionID": "",
-          "bankAccount": null,
-          "client": null,
-          "companyInfo": null,
-          "organization": {
-            "id": "31fdf38f-77c0-4c06-b530-e2be8bc297e0",
-            "code": "dwarves-foundation",
-            "name": "Dwarves Foundation",
-            "avatar": ""
+                {
+                    "projectMemberID": "",
+                    "projectSlotID": "",
+                    "employeeID": "608ea227-45a5-4c8a-af43-6c7280d96340",
+                    "fullName": "Tiêu Quang Huy",
+                    "displayName": "Huy Tieu",
+                    "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/3c420751-bb9a-4878-896e-2f10f3a633d6_avatar2535921977139052349.png",
+                    "username": "huytq",
+                    "status": "active",
+                    "isLead": false,
+                    "deploymentType": "shadow",
+                    "startDate": null,
+                    "endDate": null,
+                    "rate": "0",
+                    "discount": "0",
+                    "seniority": null,
+                    "positions": [],
+                    "upsellPerson": null
+                }
+            ],
+            "technicalLeads": [
+                {
+                    "employeeID": "8d7c99c0-3253-4286-93a9-e7554cb327ef",
+                    "fullName": "Nguyễn Hải Nam",
+                    "displayName": "Nam Nguyen",
+                    "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/8399103964540935617.png",
+                    "username": "benjamin"
+                }
+            ],
+            "accountManager": {
+                "employeeID": "2655832e-f009-4b73-a535-64c3a22e558f",
+                "fullName": "Phạm Đức Thành",
+                "displayName": "Thanh Pham",
+                "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
+                "username": "thanh"
+            },
+            "salePerson": {
+                "employeeID": "608ea227-45a5-4c8a-af43-6c7280d96340",
+                "fullName": "Tiêu Quang Huy",
+                "displayName": "Huy Tieu",
+                "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/3c420751-bb9a-4878-896e-2f10f3a633d6_avatar2535921977139052349.png",
+                "username": "huytq"
+            },
+            "deliveryManager": {
+                "employeeID": "2655832e-f009-4b73-a535-64c3a22e558f",
+                "fullName": "Phạm Đức Thành",
+                "displayName": "Thanh Pham",
+                "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
+                "username": "thanh"
+            },
+            "stacks": [],
+            "code": "fortress",
+            "function": "",
+            "auditNotionID": "",
+            "bankAccount": null,
+            "client": null,
+            "companyInfo": null,
+            "organization": {
+                "id": "31fdf38f-77c0-4c06-b530-e2be8bc297e0",
+                "code": "dwarves-foundation",
+                "name": "Dwarves Foundation",
+                "avatar": ""
+            }
         }
-      }
-  ]
+    ]
 }

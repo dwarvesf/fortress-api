@@ -432,7 +432,7 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 	if strings.TrimSpace(body.JoinedDate) != "" {
 		joinedDate, err := time.Parse("2006-01-02", body.JoinedDate)
 		if err != nil {
-			l.Error(errs.ErrInvalidJoinedDate, "invalid left date")
+			l.Error(errs.ErrInvalidJoinedDate, "invalid join date")
 			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidJoinedDate, body, ""))
 			return
 		}
