@@ -6453,6 +6453,9 @@ const docTemplate = `{
         "model.ProjectSize": {
             "type": "object",
             "properties": {
+                "avatar": {
+                    "type": "string"
+                },
                 "code": {
                     "type": "string"
                 },

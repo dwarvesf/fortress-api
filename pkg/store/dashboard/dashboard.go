@@ -18,7 +18,7 @@ func (s *store) GetProjectSizes(db *gorm.DB) ([]*model.ProjectSize, error) {
 	var ru []*model.ProjectSize
 
 	query := `
-		SELECT projects.id, projects.name, projects.code, count(*) AS size 
+		SELECT projects.id, projects.name, projects.code, projects.avatar, count(*) AS size 
 			FROM (projects 
 				JOIN project_members pm ON projects.id = pm.project_id
 				JOIN organizations ON projects.organization_id = organizations.id)
@@ -364,10 +364,10 @@ func (s *store) GetAllActionItemSquashReports(db *gorm.DB) ([]*model.ActionItemS
 	var rs []*model.ActionItemSquashReport
 
 	query := `
-		WITH days AS (SELECT date_trunc('DAY', start_date) AS day
+		WITH days AS (SELECT date_trunc('DAY', end_date) AS day
 					FROM feedback_events
 					WHERE subtype = 'work'
-					GROUP BY date_trunc('DAY', start_date))
+					GROUP BY date_trunc('DAY', end_date))
 		SELECT (sum(high) + sum(medium) + sum(low)) as all,
 			sum(high)                            as high,
 			sum(medium)                          as medium,
@@ -394,10 +394,10 @@ func (s *store) GetActionItemSquashReportsByProjectID(db *gorm.DB, projectID str
 	var rs []*model.ActionItemSquashReport
 
 	query := `
-		WITH days AS (SELECT date_trunc('DAY', start_date) AS day
+		WITH days AS (SELECT date_trunc('DAY', end_date) AS day
 					FROM feedback_events
 					WHERE subtype = 'work'
-					GROUP BY date_trunc('DAY', start_date))
+					GROUP BY date_trunc('DAY', end_date))
 		SELECT (sum(high) + sum(medium) + sum(low)) as all,
 			sum(high)                            					as high,
 			sum(medium)                          					as medium,

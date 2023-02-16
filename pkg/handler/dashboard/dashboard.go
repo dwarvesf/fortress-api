@@ -518,7 +518,20 @@ func (h *handler) GetSummary(c *gin.Context) {
 		previousQuarterMap[projectSize.ID] = projectSize.Size
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToAuditSummaries(summaryMap, previousQuarterMap), nil, nil, nil, ""))
+	allProjects, err := h.store.Dashboard.GetProjectSizes(h.repo.DB())
+	if err != nil {
+		l.Error(err, "failed to get project sizes")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	// Create map for all projects
+	allProjectsMap := make(map[model.UUID]*model.ProjectSize)
+	for _, project := range allProjects {
+		allProjectsMap[project.ID] = project
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToAuditSummaries(summaryMap, previousQuarterMap, allProjectsMap), nil, nil, nil, ""))
 }
 
 // GetResourcesAvailability godoc

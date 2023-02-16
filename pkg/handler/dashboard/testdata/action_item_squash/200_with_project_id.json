@@ -2,14 +2,9 @@
     "data": {
         "all": [
             {
-                "snapDate": "18/12",
-                "value": 69,
-                "trend": 0
-            },
-            {
                 "snapDate": "01/01",
                 "value": 12,
-                "trend": -82.61
+                "trend": 0
             },
             {
                 "snapDate": "27/02",
@@ -19,14 +14,9 @@
         ],
         "high": [
             {
-                "snapDate": "18/12",
-                "value": 14,
-                "trend": 0
-            },
-            {
                 "snapDate": "01/01",
                 "value": 2,
-                "trend": -85.72
+                "trend": 0
             },
             {
                 "snapDate": "27/02",
@@ -36,14 +26,9 @@
         ],
         "medium": [
             {
-                "snapDate": "18/12",
-                "value": 23,
-                "trend": 0
-            },
-            {
                 "snapDate": "01/01",
                 "value": 4,
-                "trend": -82.61
+                "trend": 0
             },
             {
                 "snapDate": "27/02",
@@ -53,14 +38,9 @@
         ],
         "low": [
             {
-                "snapDate": "18/12",
-                "value": 32,
-                "trend": 0
-            },
-            {
                 "snapDate": "01/01",
                 "value": 6,
-                "trend": -81.25
+                "trend": 0
             },
             {
                 "snapDate": "27/02",
