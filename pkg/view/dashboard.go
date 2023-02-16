@@ -684,7 +684,7 @@ func ToEngagementDashboardDetails(statistic []*model.StatisticEngagementDashboar
 
 	for k, v := range questionMapper {
 		sort.Slice(v, func(i, j int) bool {
-			return v[i].Point > v[j].Point
+			return v[i].Point < v[j].Point
 		})
 		dashboard = append(dashboard, EngagementDashboardDetail{
 			QuestionID: k,
