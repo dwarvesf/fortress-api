@@ -120,7 +120,7 @@
                                 "code": "fortress",
                                 "avatar": ""
                             },
-                            "position": "delivery-manager"
+                            "position": "account-manager"
                         },
                         {
                             "project": {
@@ -131,7 +131,7 @@
                                 "code": "fortress",
                                 "avatar": ""
                             },
-                            "position": "account-manager"
+                            "position": "delivery-manager"
                         }
                     ]
                 },

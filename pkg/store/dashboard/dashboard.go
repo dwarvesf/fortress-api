@@ -673,8 +673,8 @@ func (s *store) GetProjectHeadByEmployeeID(db *gorm.DB, employeeID string) ([]*m
 		SELECT projects.id, projects.name, projects.code, projects.type, projects.status, projects.avatar, ph.position
 		FROM projects
 				JOIN project_heads AS ph ON projects.id = ph.project_id
-		WHERE ph.employee_id = ? AND projects.status <> ?
+		WHERE ph.employee_id = ? AND projects.status IN (?, ?)
 	`
 
-	return rs, db.Raw(query, employeeID, model.ProjectStatusClosed).Scan(&rs).Error
+	return rs, db.Raw(query, employeeID, model.ProjectStatusActive, model.ProjectStatusOnBoarding).Scan(&rs).Error
 }
