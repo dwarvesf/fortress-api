@@ -492,24 +492,43 @@ func (s *store) GetPendingSlots(db *gorm.DB) ([]*model.ProjectSlot, error) {
 func (s *store) GetAvailableEmployees(db *gorm.DB) ([]*model.Employee, error) {
 	var employees []*model.Employee
 	return employees, db.
-		Where(`working_status != ? 
-			AND id IN (
-				SELECT eo.employee_id
-				FROM employee_organizations eo JOIN organizations o ON eo.organization_id = o.id
-				WHERE o.deleted_at IS NULL AND eo.deleted_at IS NULL AND o.code = ?
-			)
-			AND id NOT IN (
-				SELECT pm.employee_id
-				FROM project_members pm
-				WHERE (pm.end_date IS NULL OR pm.end_date > now() + INTERVAL '2 months') AND pm.deleted_at IS NULL
-			)`, model.WorkingStatusLeft, model.OrganizationCodeDwarves).
-		Order("updated_at").
+		Where("working_status != ? ", model.WorkingStatusLeft).
+		Where(`id IN (
+			SELECT eo.employee_id
+			FROM employee_organizations eo JOIN organizations o ON eo.organization_id = o.id
+			WHERE o.deleted_at IS NULL AND eo.deleted_at IS NULL AND o.code = ?
+		)`, model.OrganizationCodeDwarves).
+		Where(`id NOT IN (
+			SELECT pm.employee_id
+			FROM project_members pm JOIN projects p ON pm.project_id = p.id
+			WHERE p.type <> ?
+				AND p.status IN ?
+				AND (pm.end_date IS NULL OR pm.end_date > now() + INTERVAL '2 months') 
+				AND p.deleted_at IS NULL
+				AND pm.deleted_at IS NULL
+		)`,
+			model.ProjectTypeDwarves,
+			[]string{
+				model.ProjectStatusOnBoarding.String(),
+				model.ProjectStatusActive.String(),
+			}).
+		Order("created_at, display_name").
 		Preload("Seniority", "deleted_at IS NULL").
 		Preload("EmployeePositions", "deleted_at IS NULL").
 		Preload("EmployeePositions.Position", "deleted_at IS NULL").
 		Preload("EmployeeStacks", "deleted_at IS NULL").
 		Preload("EmployeeStacks.Stack", "deleted_at IS NULL").
-		Preload("ProjectMembers", "deleted_at IS NULL").
+		Preload("ProjectMembers", func(db *gorm.DB) *gorm.DB {
+			return db.Joins("JOIN projects ON projects.id = project_members.project_id").
+				Where("project_members.deleted_at IS NULL").
+				Where("project_members.start_date <= now()").
+				Where("(project_members.end_date IS NULL OR project_members.end_date > now())").
+				Where("projects.status IN ?", []string{
+					model.ProjectStatusOnBoarding.String(),
+					model.ProjectStatusActive.String(),
+				}).
+				Order("projects.name")
+		}).
 		Preload("ProjectMembers.Project", "deleted_at IS NULL").
 		Find(&employees).Error
 }
