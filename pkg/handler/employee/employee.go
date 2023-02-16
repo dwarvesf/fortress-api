@@ -291,7 +291,14 @@ func (h *handler) UpdateEmployeeStatus(c *gin.Context) {
 	}
 
 	emp.WorkingStatus = body.EmployeeStatus
-	_, err = h.store.Employee.UpdateSelectedFieldsByID(h.repo.DB(), employeeID, *emp, "working_status")
+	emp.LeftDate = nil
+
+	now := time.Now()
+	if body.EmployeeStatus == model.WorkingStatusLeft {
+		emp.LeftDate = &now
+	}
+
+	_, err = h.store.Employee.UpdateSelectedFieldsByID(h.repo.DB(), employeeID, *emp, "working_status", "left_date")
 	if err != nil {
 		l.Error(err, "failed to update employee status")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
