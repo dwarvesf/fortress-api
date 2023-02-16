@@ -124,7 +124,7 @@ func getByWhereConditions(query *gorm.DB, filter EmployeeFilter) *gorm.DB {
 		if filter.Organizations[0] == "-" {
 			query = query.Joins(`LEFT JOIN employee_organizations ON employees.id = employee_organizations.employee_id AND employee_organizations.id IS NULL`)
 		} else {
-			query = query.Joins(`JOIN employee_organizations ON employees.id = employee_organizations.employee_id JOIN organizations ON employee_organizations.organization_id = organizations.id AND organizations.code IN ?`,
+			query = query.Joins(`LEFT JOIN employee_organizations ON employees.id = employee_organizations.employee_id LEFT JOIN organizations ON employee_organizations.organization_id = organizations.id AND organizations.code IN ?`,
 				filter.Organizations)
 		}
 	}
