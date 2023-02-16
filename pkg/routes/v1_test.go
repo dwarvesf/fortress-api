@@ -448,6 +448,10 @@ func Test_loadV1Routes(t *testing.T) {
 				Method:  "GET",
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/techradar.IHandler.List-fm",
 			},
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/techradar.IHandler.Create-fm",
+			},
 		},
 		"/api/v1/audiences": {
 			"GET": {

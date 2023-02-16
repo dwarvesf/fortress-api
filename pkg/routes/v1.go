@@ -157,6 +157,7 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 	techradar := v1.Group("/tech-radar")
 	{
 		techradar.GET("", h.TechRadar.List)
+		techradar.POST("", h.TechRadar.Create)
 	}
 	audience := v1.Group("/audiences")
 	{

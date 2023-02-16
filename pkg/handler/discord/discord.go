@@ -51,8 +51,9 @@ func (h *handler) SyncDiscordInfo(c *gin.Context) {
 	discordUsernameMap := make(map[string]string)
 
 	for _, member := range discordMembers {
-		discordIDMap[member.User.ID] = member.User.Username
-		discordUsernameMap[fmt.Sprintf("%s#%s", member.User.Username, member.User.Discriminator)] = member.User.ID
+		username := fmt.Sprintf("%s#%s", member.User.Username, member.User.Discriminator)
+		discordIDMap[member.User.ID] = username
+		discordUsernameMap[username] = member.User.ID
 	}
 
 	tx, done := h.repo.NewTransaction()
@@ -82,7 +83,7 @@ func (h *handler) SyncDiscordInfo(c *gin.Context) {
 		// Update username from discord_id
 		username, ok := discordIDMap[sa.AccountID]
 		if !ok {
-			h.logger.AddField("account_id", sa.AccountID).Info("discord id does not exist in guild")
+			h.logger.Field("account_id", sa.AccountID).Info("discord id does not exist in guild")
 			continue
 		}
 

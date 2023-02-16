@@ -3,6 +3,7 @@ package notion
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 
 	nt "github.com/dstotijn/go-notion"
@@ -117,4 +118,61 @@ func (n *notionService) GetPage(pageID string) (nt.Page, error) {
 
 func (n *notionService) CreatePage() error {
 	return nil
+}
+
+// create a record in notion database
+func (n *notionService) CreateDatabaseRecord(databaseID string, properties map[string]interface{}) (string, error) {
+	ctx := context.Background()
+
+	props, err := convertMapToProperties(properties)
+	if err != nil {
+		return "", err
+	}
+	p, err := n.notionClient.CreatePage(ctx, nt.CreatePageParams{
+		ParentType:             nt.ParentTypeDatabase,
+		ParentID:               databaseID,
+		DatabasePageProperties: &props,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	return p.ID, nil
+}
+
+func convertMapToProperties(properties map[string]interface{}) (nt.DatabasePageProperties, error) {
+	props := nt.DatabasePageProperties{}
+
+	for key, value := range properties {
+		switch key {
+		case "Name":
+			props["Name"] = nt.DatabasePageProperty{
+				Type:  nt.DBPropTypeTitle,
+				Title: []nt.RichText{{Text: &nt.Text{Content: value.(string)}}},
+			}
+		case "Status":
+			props["Status"] = nt.DatabasePageProperty{
+				Type: nt.DBPropTypeSelect,
+				Select: &nt.SelectOptions{
+					Name: value.(string),
+				},
+			}
+		// case "Assign":
+		// 	props["Assign"] = nt.DatabasePageProperty{
+		// 		Type: nt.DatabasePropertyType(nt.DBPropTypePeople),
+		// 		People: []nt.User{
+		// 			{
+		// 				BaseUser: nt.BaseUser{
+		// 					ID: value.(string),
+		// 				},
+		// 			},
+		// 		},
+		// 	}
+
+		default:
+			return nil, fmt.Errorf("unsupported property: %s", key)
+		}
+	}
+
+	return props, nil
 }
