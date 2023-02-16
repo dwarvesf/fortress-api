@@ -502,12 +502,14 @@ func (s *store) GetAvailableEmployees(db *gorm.DB) ([]*model.Employee, error) {
 			SELECT pm.employee_id
 			FROM project_members pm JOIN projects p ON pm.project_id = p.id
 			WHERE p.type <> ?
+				AND pm.deployment_type = ?
 				AND p.status IN ?
 				AND (pm.end_date IS NULL OR pm.end_date > now() + INTERVAL '2 months') 
 				AND p.deleted_at IS NULL
 				AND pm.deleted_at IS NULL
 		)`,
 			model.ProjectTypeDwarves,
+			model.MemberDeploymentTypeOfficial,
 			[]string{
 				model.ProjectStatusOnBoarding.String(),
 				model.ProjectStatusActive.String(),
