@@ -14,4 +14,5 @@ type NotionService interface {
 
 	// CreatePage create a page in notion
 	CreatePage() error
+	CreateDatabaseRecord(databaseID string, properties map[string]interface{}) (pageID string, err error)
 }

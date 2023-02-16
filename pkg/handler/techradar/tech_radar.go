@@ -65,7 +65,7 @@ func (h *handler) List(c *gin.Context) {
 			continue
 		}
 		filter.Or = append(filter.Or, notion.DatabaseQueryFilter{
-			Property: "Ring",
+			Property: "Status",
 			DatabaseQueryPropertyFilter: notion.DatabaseQueryPropertyFilter{
 				Select: &notion.SelectDatabaseQueryFilter{
 					Equals: r,
@@ -107,8 +107,8 @@ func (h *handler) List(c *gin.Context) {
 			quadrant = props["Quadrant"].Select.Name
 		}
 		ring := ""
-		if props["Ring"].Select != nil {
-			ring = props["Ring"].Select.Name
+		if props["Status"].Select != nil {
+			ring = props["Status"].Select.Name
 		}
 		categories := []string{}
 		for _, c := range props["Categories"].MultiSelect {
@@ -131,4 +131,64 @@ func (h *handler) List(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](techs, nil, nil, nil, "get list earn items successfully"))
+}
+
+// create a new tech radar item
+// @Summary Create a new tech radar item
+// @Description Create a new tech radar item
+// @Tags TechRadar
+// @Accept  json
+// @Produce  json
+// @Param body body model.TechRadar true "body for create tech radar item"
+// @Success 200 {object} model.TechRadar
+// @Failure 400 {object} view.ErrorResponse
+func (h *handler) Create(c *gin.Context) {
+	var input model.TechRadar
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, "invalid input"))
+		return
+	}
+	if input.Name == "" {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, nil, nil, "name and ring are required"))
+		return
+	}
+
+	// check item is exist
+	var filter = &notion.DatabaseQueryFilter{}
+	filter.And = append(filter.And, notion.DatabaseQueryFilter{
+		Property: "Name",
+		DatabaseQueryPropertyFilter: notion.DatabaseQueryPropertyFilter{
+			Title: &notion.TextPropertyFilter{
+				Equals: input.Name,
+			},
+		},
+	})
+
+	resp, err := h.service.Notion.GetDatabase(h.config.Notion.Databases.TechRadar, filter, nil, 0)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, "can't get items tech radar from notion"))
+		return
+	}
+	if len(resp.Results) > 0 {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, nil, nil, "item is exist"))
+		return
+	}
+
+	properties := map[string]interface{}{
+		"Name":   input.Name,
+		"Status": "Assess",
+	}
+
+	if input.Assign != "" {
+		properties["Assign"] = input.Assign
+	}
+
+	// create tech radar item
+	pageID, err := h.service.Notion.CreateDatabaseRecord(h.config.Notion.Databases.TechRadar, properties)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, "can't create tech radar item"))
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](pageID, nil, nil, nil, "create tech radar item successfully"))
 }
