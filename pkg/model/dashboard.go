@@ -3,10 +3,11 @@ package model
 import "time"
 
 type ProjectSize struct {
-	ID   UUID   `json:"id"`
-	Name string `json:"name"`
-	Code string `json:"code"`
-	Size int64  `json:"size"`
+	ID     UUID   `json:"id"`
+	Name   string `json:"name"`
+	Code   string `json:"code"`
+	Avatar string `json:"avatar"`
+	Size   int64  `json:"size"`
 }
 
 type WorkSurvey struct {
