@@ -6,7 +6,9 @@ import (
 	"net/http"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/dstotijn/go-notion"
@@ -2876,6 +2878,9 @@ func (h *handler) ListMilestones(c *gin.Context) {
 		Milestones []model.ProjectMilestone `json:"milestones"`
 	}{}
 
+	var wg sync.WaitGroup
+	var pmu sync.Mutex
+
 	for _, r := range resp.Results {
 		props := r.Properties.(notion.DatabasePageProperties)
 
@@ -2894,40 +2899,70 @@ func (h *handler) ListMilestones(c *gin.Context) {
 			Name       string                   `json:"name"`
 			Milestones []model.ProjectMilestone `json:"milestones"`
 		}{}
-		var miletones = []model.ProjectMilestone{}
+		var milestones = []model.ProjectMilestone{}
 
 		p.Name = props["Project"].Title[0].Text.Content
 
-		for _, p := range props["Sub-item"].Relation {
-			resp, err := h.service.Notion.GetPage(p.ID)
-			if err != nil {
-				continue
-			}
-			props := resp.Properties.(notion.DatabasePageProperties)
-			name := ""
-			if len(props["Project"].Title) > 0 {
-				name = props["Project"].Title[0].Text.Content
-			}
-			m := &model.ProjectMilestone{
-				ID:            resp.ID,
-				Name:          name,
-				SubMilestones: []*model.ProjectMilestone{},
-			}
-			if props["Milestone Date"].Date != nil {
-				m.StartDate = props["Milestone Date"].Date.Start.Time
-				m.EndDate = props["Milestone Date"].Date.End.Time
-			}
-			subItems := h.getMilestones(m, []*model.ProjectMilestone{})
-			m.SubMilestones = subItems
-			miletones = append(miletones, *m)
-		}
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
 
-		p.Milestones = miletones
+			workers := make(chan struct{}, 10) // limit to 10 workers
 
-		projects = append(projects, p)
+			var mmilestones = make(map[string]model.ProjectMilestone)
+			for _, p := range props["Sub-item"].Relation {
+				workers <- struct{}{}
+				go func(p notion.Relation) {
+					defer func() { <-workers }()
+					if x, found := h.service.Cache.Get(p.ID); found {
+						mmilestones[p.ID] = x.(model.ProjectMilestone)
+						return
+					}
+					resp, err := h.service.Notion.GetPage(p.ID)
+					if err != nil {
+						return
+					}
+					props := resp.Properties.(notion.DatabasePageProperties)
+					name := ""
+					if len(props["Project"].Title) > 0 {
+						name = props["Project"].Title[0].Text.Content
+					}
+					m := model.ProjectMilestone{
+						ID:            resp.ID,
+						Name:          name,
+						SubMilestones: []*model.ProjectMilestone{},
+					}
+					if props["Milestone Date"].Date != nil {
+						m.StartDate = props["Milestone Date"].Date.Start.Time
+						m.EndDate = props["Milestone Date"].Date.End.Time
+					}
+					mmilestones[p.ID] = m
+					h.service.Cache.Set(p.ID, m, 0)
+				}(p)
+			}
+			for i := 0; i < cap(workers); i++ {
+				workers <- struct{}{}
+			}
+			for _, m := range mmilestones {
+				milestones = append(milestones, m)
+			}
+			sort.Slice(milestones[:], func(i, j int) bool {
+				return milestones[i].StartDate.After(milestones[j].StartDate)
+			})
+
+			p.Milestones = milestones
+
+			pmu.Lock()
+			projects = append(projects, p)
+			pmu.Unlock()
+		}()
 	}
+	wg.Wait()
+	sort.Slice(projects[:], func(i, j int) bool {
+		return projects[i].Name < projects[j].Name
+	})
 
-	c.JSON(http.StatusOK, view.CreateResponse[any](projects, nil, nil, nil, "get list miletones successfully"))
+	c.JSON(http.StatusOK, view.CreateResponse[any](projects, nil, nil, nil, "get list milestones successfully"))
 }
 
 func (h *handler) getMilestones(item *model.ProjectMilestone, subItems []*model.ProjectMilestone) []*model.ProjectMilestone {
@@ -2955,7 +2990,6 @@ func (h *handler) getMilestones(item *model.ProjectMilestone, subItems []*model.
 			m.StartDate = props["Milestone Date"].Date.Start.Time
 			m.EndDate = props["Milestone Date"].Date.End.Time
 		}
-		subItems = h.getMilestones(m, subItems)
 		subItems = append(subItems, m)
 	}
 
