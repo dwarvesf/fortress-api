@@ -2868,7 +2868,6 @@ func (h *handler) ListMilestones(c *gin.Context) {
 		Name       string                   `json:"name"`
 		Milestones []model.ProjectMilestone `json:"milestones"`
 	}{}
-	var miletones = []model.ProjectMilestone{}
 
 	for _, r := range resp.Results {
 		props := r.Properties.(notion.DatabasePageProperties)
@@ -2888,6 +2887,7 @@ func (h *handler) ListMilestones(c *gin.Context) {
 			Name       string                   `json:"name"`
 			Milestones []model.ProjectMilestone `json:"milestones"`
 		}{}
+		var miletones = []model.ProjectMilestone{}
 
 		p.Name = props["Project"].Title[0].Text.Content
 

@@ -52,6 +52,32 @@
                     "value": 2,
                     "trend": -33.33
                 }
+            },
+            {
+                "id": "dfa182fc-1d2d-49f6-a877-c01da9ce4208",
+                "name": "Test 1",
+                "code": "test1",
+                "avatar": "https://storage.googleapis.com/fortress-dev/projects/4f7bd4e6-f8d1-45f3-886c-82518079d47b/images/82569263-025b-4c3f-8944-737c9d7c2b9c.png",
+                "size": {
+                    "value": 1,
+                    "trend": 0
+                },
+                "health": {
+                    "value": 0,
+                    "trend": 0
+                },
+                "audit": {
+                    "value": 0,
+                    "trend": 0
+                },
+                "newItem": {
+                    "value": 0,
+                    "trend": 0
+                },
+                "resolvedItem": {
+                    "value": 0,
+                    "trend": 0
+                }
             }
         ]
     }
