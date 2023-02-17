@@ -6587,10 +6587,10 @@ const docTemplate = `{
                 "date": {
                     "type": "string"
                 },
-                "official": {
+                "internal": {
                     "type": "integer"
                 },
-                "shadow": {
+                "staffed": {
                     "type": "integer"
                 }
             }

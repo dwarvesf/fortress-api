@@ -950,9 +950,9 @@ definitions:
         type: integer
       date:
         type: string
-      official:
+      internal:
         type: integer
-      shadow:
+      staffed:
         type: integer
     type: object
   model.Role:

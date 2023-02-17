@@ -514,6 +514,16 @@ func (s *store) GetAvailableEmployees(db *gorm.DB) ([]*model.Employee, error) {
 				model.ProjectStatusOnBoarding.String(),
 				model.ProjectStatusActive.String(),
 			}).
+		Where(`id IN (
+			SELECT e2.id 
+			FROM employees e2
+				LEFT JOIN employee_chapters ec ON ec.employee_id = e2.id
+				LEFT JOIN chapters c ON ec.chapter_id = c.id 
+			WHERE ec.deleted_at IS NULL
+				AND c.deleted_at IS NULL
+				AND e2.deleted_at IS NULL
+				AND (c.code IS NULL OR (c.code <> 'sales' AND c.code <> 'operations'))
+		)`).
 		Order("created_at, display_name").
 		Preload("Seniority", "deleted_at IS NULL").
 		Preload("EmployeePositions", "deleted_at IS NULL").
@@ -546,16 +556,34 @@ func (s *store) GetResourceUtilization(db *gorm.DB) ([]*model.ResourceUtilizatio
 				p."type" AS "project_type",
 				pm.deployment_type,
 				pm.start_date,
-				pm.end_date 
+				pm.end_date AS pm_end_date,
+				p.end_date AS p_end_date,
+				e.left_date 
 		FROM employees e 
 			LEFT JOIN project_members pm ON pm.employee_id = e.id 
-			LEFT JOIN projects p ON pm.project_id = p.id, 
+			LEFT JOIN projects p ON pm.project_id = p.id
+			JOIN employee_organizations eo ON eo.employee_id = e.id
+			JOIN organizations o ON eo.organization_id = o.id AND o.code = ?,
 			generate_series(
 				date_trunc('month', CURRENT_DATE) - INTERVAL '3 month', 
 				date_trunc('month', CURRENT_DATE) + INTERVAL '3 month', 
 				'1 month'
 			) d
-		WHERE e."working_status" = 'full-time'
+		WHERE e.deleted_at IS NULL 
+			AND pm.deleted_at IS NULL
+			AND p.deleted_at IS NULL 
+			AND eo.deleted_at IS NULL
+			AND o.deleted_at IS NULL
+			AND e.id IN (
+				SELECT e2.id 
+				FROM employees e2
+					LEFT JOIN employee_chapters ec ON ec.employee_id = e2.id
+					LEFT JOIN chapters c ON ec.chapter_id = c.id 
+				WHERE ec.deleted_at IS NULL
+					AND c.deleted_at IS NULL
+					AND e2.deleted_at IS NULL
+					AND (c.code IS NULL OR (c.code <> 'sales' AND c.code <> 'operations'))
+			)
 		ORDER BY d.d
 	)
 	
@@ -564,35 +592,44 @@ func (s *store) GetResourceUtilization(db *gorm.DB) ([]*model.ResourceUtilizatio
 			WHERE deployment_type = 'official' 
 				AND "project_type" != 'dwarves'
 				AND start_date <= "date"
-				AND (end_date IS NULL OR end_date > "date")
-		) AS official,
+				AND (pm_end_date IS NULL OR pm_end_date > "date")
+				AND (p_end_date IS NULL OR p_end_date > "date")
+				AND (left_date IS NULL OR left_date > "date")
+		) AS staffed,
 
 		COUNT(DISTINCT(employee_id)) FILTER (
 			WHERE start_date <= "date"
-				AND (end_date IS NULL OR end_date > "date")
+				AND (pm_end_date IS NULL OR pm_end_date > "date")
 				AND employee_id NOT IN (
 					SELECT ru2.employee_id
 					FROM resource_utilization ru2
 					WHERE ru2.deployment_type = 'official' 
 						AND ru2."project_type" != 'dwarves'
 						AND ru2.start_date <= ru."date"
-						AND (ru2.end_date IS NULL OR ru2.end_date > ru."date")
+						AND (ru2.pm_end_date IS NULL OR ru2.pm_end_date > ru."date") 
+						AND (ru2.p_end_date IS NULL OR ru2.p_end_date > ru."date")
+						AND (ru2.left_date IS NULL OR ru2.left_date > ru."date")
 				)
-		) AS shadow,
+				AND (left_date IS NULL OR left_date > "date")
+		) AS internal,
 		
 		COUNT(DISTINCT(employee_id)) FILTER (
-			WHERE project_id IS NULL
+			WHERE (project_id IS NULL
 				OR employee_id NOT IN (
 					SELECT ru3.employee_id
 					FROM resource_utilization ru3
-					WHERE ru3.start_date <= ru."date" AND (ru3.end_date IS NULL OR ru3.end_date > ru."date")
-				)
+					WHERE ru3.start_date <= ru."date" 
+						AND (ru3.pm_end_date IS NULL OR ru3.pm_end_date > ru."date") 
+						AND (ru3.p_end_date IS NULL OR ru3.p_end_date > ru."date")
+						AND (ru3.left_date IS NULL OR ru3.left_date > ru."date")
+				))
+				AND (left_date IS NULL OR left_date > "date")
 		) AS available
 	FROM resource_utilization ru 
 	GROUP BY "date" 
 	`
 
-	return ru, db.Raw(query).Scan(&ru).Error
+	return ru, db.Raw(query, model.OrganizationCodeDwarves).Scan(&ru).Error
 }
 
 func (s *store) TotalWorkUnitDistribution(db *gorm.DB) (*model.TotalWorkUnitDistribution, error) {
