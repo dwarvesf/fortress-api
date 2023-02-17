@@ -2847,12 +2847,18 @@ func (h *handler) UploadAvatar(c *gin.Context) {
 }
 
 func (h *handler) ListMilestones(c *gin.Context) {
-	if c.Query("project_name") == "" {
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errors.New("project name is required"), nil, "project name is required"))
-		return
-	}
+	filter := &notion.DatabaseQueryFilter{}
 
-	resp, err := h.service.Notion.GetDatabase(h.config.Notion.Databases.Project, nil, nil, 0)
+	filter.And = append(filter.And, notion.DatabaseQueryFilter{
+		Property: "Status",
+		DatabaseQueryPropertyFilter: notion.DatabaseQueryPropertyFilter{
+			Select: &notion.SelectDatabaseQueryFilter{
+				Equals: "Active",
+			},
+		},
+	})
+
+	resp, err := h.service.Notion.GetDatabase(h.config.Notion.Databases.Project, filter, nil, 0)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, "can't get projects from notion"))
 		return
@@ -2871,9 +2877,11 @@ func (h *handler) ListMilestones(c *gin.Context) {
 			continue
 		}
 
-		matched, err := regexp.MatchString(".*"+strings.ToLower(c.Query("project_name"))+".*", strings.ToLower(props["Project"].Title[0].Text.Content))
-		if err != nil || !matched {
-			continue
+		if c.Query("project_name") != "" {
+			matched, err := regexp.MatchString(".*"+strings.ToLower(c.Query("project_name"))+".*", strings.ToLower(props["Project"].Title[0].Text.Content))
+			if err != nil || !matched {
+				continue
+			}
 		}
 
 		prj.Name = props["Project"].Title[0].Text.Content
