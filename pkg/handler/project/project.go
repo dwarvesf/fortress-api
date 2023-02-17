@@ -2947,7 +2947,7 @@ func (h *handler) ListMilestones(c *gin.Context) {
 				milestones = append(milestones, m)
 			}
 			sort.Slice(milestones[:], func(i, j int) bool {
-				return milestones[i].StartDate.After(milestones[j].StartDate)
+				return milestones[i].StartDate.Before(milestones[j].StartDate)
 			})
 
 			p.Milestones = milestones
