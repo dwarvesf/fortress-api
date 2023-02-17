@@ -57,22 +57,25 @@ func getByWhereConditions(query *gorm.DB, filter EmployeeFilter) *gorm.DB {
 	if len(filter.Projects) > 0 {
 		if len(filter.Projects) == 1 {
 			if filter.Projects[0] == "-" {
-				query = query.Joins(`LEFT JOIN project_members pm ON employees.id = pm.employee_id`).
-					Where("pm.id IS NULL OR pm.status = ? OR pm.start_date > now() OR pm.end_date <= now()", model.ProjectMemberStatusInactive)
+				query = query.Where(`employees.id NOT IN (SELECT DISTINCT employee_id FROM project_members WHERE 
+					deleted_at IS NULL AND start_date <= now() AND (end_date IS NULL OR end_date > now()))`)
 			} else {
 				query = query.Joins(`JOIN project_members pm ON employees.id = pm.employee_id`).Joins(`JOIN projects p ON pm.project_id = p.id`).
-					Where("p.code = ? AND pm.deleted_at IS NULL AND pm.status = 'active'", filter.Projects[0])
+					Where("p.code = ? AND pm.deleted_at IS NULL AND pm.start_date <= now() AND (pm.end_date IS NULL OR pm.end_date > now())", filter.Projects[0])
 			}
 		}
 		if len(filter.Projects) > 1 {
 			if filter.Projects[0] == "-" {
 				query = query.Joins(`LEFT JOIN project_members pm ON employees.id = pm.employee_id`).
 					Joins(`LEFT JOIN projects p ON pm.project_id = p.id`).
-					Where(`pm.id IS NULL OR (p.code IN ? AND pm.deleted_at IS NULL AND pm.status = 'active')`, filter.Projects[1:])
+					Where(`(p.code IN ? AND pm.deleted_at IS NULL AND pm.start_date <= now() AND 
+							(pm.end_date IS NULL OR pm.end_date > now())) OR 
+							(employees.id NOT IN (SELECT DISTINCT employee_id FROM project_members WHERE deleted_at IS NULL AND
+							start_date <= now() AND (end_date IS NULL OR end_date > now())))`, filter.Projects[1:])
 			} else {
 				query = query.Joins(`JOIN project_members pm ON employees.id = pm.employee_id`).
 					Joins(`JOIN projects p ON pm.project_id = p.id`).
-					Where(`p.code IN ? AND pm.deleted_at IS NULL AND pm.status = 'active'`, filter.Projects)
+					Where(`p.code IN ? AND pm.deleted_at IS NULL AND pm.start_date <= now() AND (pm.end_date IS NULL OR pm.end_date > now())`, filter.Projects)
 			}
 		}
 	}
