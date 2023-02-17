@@ -567,13 +567,24 @@ func ToAuditSummaries(summaryMap map[model.UUID][]*model.AuditSummary, previousQ
 		rs.Summary = append(rs.Summary, ToAuditSummary(summaries, previouSize))
 	}
 
-	for _, project := range allProjectsMap {
-		rs.Summary = append(rs.Summary, &AuditSummary{
+	for projectID, project := range allProjectsMap {
+		newAuditSummary := &AuditSummary{
 			ID:     project.ID,
 			Name:   project.Name,
 			Code:   project.Code,
 			Avatar: project.Avatar,
-		})
+			Size:   ItemValue{Value: project.Size},
+		}
+
+		if size, ok := previousQuarterMap[projectID]; ok {
+			previouSize := int(size)
+
+			if previouSize != 0 && newAuditSummary.Size.Trend != 0 {
+				newAuditSummary.Size.Trend = math.Round((float64(newAuditSummary.Size.Value)-float64(previouSize))/float64(previouSize)*100*100) / 100
+			}
+		}
+
+		rs.Summary = append(rs.Summary, newAuditSummary)
 	}
 
 	sort.Slice(rs.Summary, func(i, j int) bool {
