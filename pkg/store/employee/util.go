@@ -57,7 +57,8 @@ func getByWhereConditions(query *gorm.DB, filter EmployeeFilter) *gorm.DB {
 	if len(filter.Projects) > 0 {
 		if len(filter.Projects) == 1 {
 			if filter.Projects[0] == "-" {
-				query = query.Joins(`LEFT JOIN project_members pm ON employees.id = pm.employee_id`).Where("pm.id IS NULL")
+				query = query.Joins(`LEFT JOIN project_members pm ON employees.id = pm.employee_id`).
+					Where("pm.id IS NULL OR pm.status = ? OR pm.start_date > now() OR pm.end_date <= now()", model.ProjectMemberStatusInactive)
 			} else {
 				query = query.Joins(`JOIN project_members pm ON employees.id = pm.employee_id`).Joins(`JOIN projects p ON pm.project_id = p.id`).
 					Where("p.code = ? AND pm.deleted_at IS NULL AND pm.status = 'active'", filter.Projects[0])
@@ -122,9 +123,9 @@ func getByWhereConditions(query *gorm.DB, filter EmployeeFilter) *gorm.DB {
 
 	if len(filter.Organizations) > 0 {
 		if filter.Organizations[0] == "-" {
-			query = query.Joins(`LEFT JOIN employee_organizations ON employees.id = employee_organizations.employee_id AND employee_organizations.id IS NULL`)
+			query = query.Where(`employees.id NOT IN (SELECT DISTINCT employee_id FROM employee_organizations)`)
 		} else {
-			query = query.Joins(`LEFT JOIN employee_organizations ON employees.id = employee_organizations.employee_id LEFT JOIN organizations ON employee_organizations.organization_id = organizations.id AND organizations.code IN ?`,
+			query = query.Joins(`JOIN employee_organizations ON employees.id = employee_organizations.employee_id JOIN organizations ON employee_organizations.organization_id = organizations.id AND organizations.code IN ?`,
 				filter.Organizations)
 		}
 	}
