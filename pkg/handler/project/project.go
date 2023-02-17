@@ -162,7 +162,14 @@ func (h *handler) UpdateProjectStatus(c *gin.Context) {
 	tx, done := h.repo.NewTransaction()
 
 	p.Status = body.ProjectStatus
-	_, err = h.store.Project.UpdateSelectedFieldsByID(tx.DB(), projectID, *p, "status")
+	p.EndDate = nil
+
+	if body.ProjectStatus == model.ProjectStatusClosed {
+		p.EndDate = new(time.Time)
+		*p.EndDate = time.Now()
+	}
+
+	_, err = h.store.Project.UpdateSelectedFieldsByID(tx.DB(), projectID, *p, "status", "end_date")
 	if err != nil {
 		l.Error(err, "failed to update project status")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
