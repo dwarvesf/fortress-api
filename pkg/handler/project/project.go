@@ -2864,7 +2864,7 @@ func (h *handler) ListMilestones(c *gin.Context) {
 		return
 	}
 
-	var prj = struct {
+	var projects = []struct {
 		Name       string                   `json:"name"`
 		Milestones []model.ProjectMilestone `json:"milestones"`
 	}{}
@@ -2884,7 +2884,12 @@ func (h *handler) ListMilestones(c *gin.Context) {
 			}
 		}
 
-		prj.Name = props["Project"].Title[0].Text.Content
+		var p = struct {
+			Name       string                   `json:"name"`
+			Milestones []model.ProjectMilestone `json:"milestones"`
+		}{}
+
+		p.Name = props["Project"].Title[0].Text.Content
 
 		for _, p := range props["Sub-item"].Relation {
 			resp, err := h.service.Notion.GetPage(p.ID)
@@ -2910,12 +2915,12 @@ func (h *handler) ListMilestones(c *gin.Context) {
 			miletones = append(miletones, *m)
 		}
 
-		prj.Milestones = miletones
+		p.Milestones = miletones
 
-		break
+		projects = append(projects, p)
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse[any](prj, nil, nil, nil, "get list miletones successfully"))
+	c.JSON(http.StatusOK, view.CreateResponse[any](projects, nil, nil, nil, "get list miletones successfully"))
 }
 
 func (h *handler) getMilestones(item *model.ProjectMilestone, subItems []*model.ProjectMilestone) []*model.ProjectMilestone {
