@@ -17,7 +17,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/store"
-	"github.com/dwarvesf/fortress-api/pkg/utils"
+	"github.com/dwarvesf/fortress-api/pkg/utils/authutils"
 	"github.com/dwarvesf/fortress-api/pkg/view"
 )
 
@@ -53,7 +53,7 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 // @Failure 500 {object} view.ErrorResponse
 // @Router /profile [get]
 func (h *handler) GetProfile(c *gin.Context) {
-	userID, err := utils.GetUserIDFromContext(c, h.config)
+	userID, err := authutils.GetUserIDFromContext(c, h.config)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
@@ -95,7 +95,7 @@ func (h *handler) GetProfile(c *gin.Context) {
 // @Failure 500 {object} view.ErrorResponse
 // @Router /profile [put]
 func (h *handler) UpdateInfo(c *gin.Context) {
-	employeeID, err := utils.GetUserIDFromContext(c, h.config)
+	employeeID, err := authutils.GetUserIDFromContext(c, h.config)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
@@ -290,7 +290,7 @@ func (h *handler) validateCountryAndCity(db *gorm.DB, countryName string, city s
 // @Failure 500 {object} view.ErrorResponse
 // @Router /profile/upload-avatar [post]
 func (h *handler) UploadAvatar(c *gin.Context) {
-	employeeID, err := utils.GetUserIDFromContext(c, h.config)
+	employeeID, err := authutils.GetUserIDFromContext(c, h.config)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return

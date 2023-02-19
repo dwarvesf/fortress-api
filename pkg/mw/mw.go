@@ -11,7 +11,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/store"
-	"github.com/dwarvesf/fortress-api/pkg/utils"
+	"github.com/dwarvesf/fortress-api/pkg/utils/authutils"
 )
 
 var noAuthPath = []string{
@@ -96,7 +96,7 @@ func NewPermissionMiddleware(s *store.Store, r store.DBRepo, cfg *config.Config)
 }
 
 func (amw *AuthMiddleware) validateAPIKey(apiKey string) error {
-	clientID, key, err := utils.ExtractAPIKey(apiKey)
+	clientID, key, err := authutils.ExtractAPIKey(apiKey)
 	if err != nil {
 		return ErrInvalidAPIKey
 	}
@@ -112,7 +112,7 @@ func (amw *AuthMiddleware) validateAPIKey(apiKey string) error {
 		return ErrInvalidAPIKey
 	}
 
-	return utils.ValidateHashedKey(rec.SecretKey, key)
+	return authutils.ValidateHashedKey(rec.SecretKey, key)
 }
 
 type PermMiddleware struct {
@@ -124,13 +124,13 @@ type PermMiddleware struct {
 // WithPerm a middleware to check the permission
 func (m *PermMiddleware) WithPerm(perm model.PermissionCode) func(c *gin.Context) {
 	return func(c *gin.Context) {
-		accessToken, err := utils.GetTokenFromRequest(c)
+		accessToken, err := authutils.GetTokenFromRequest(c)
 		if err != nil {
 			c.AbortWithStatusJSON(401, map[string]string{"message": err.Error()})
 			return
 		}
 		tokenType := model.TokenTypeJWT
-		if utils.IsAPIKey(c) {
+		if authutils.IsAPIKey(c) {
 			tokenType = model.TokenTypeAPIKey
 		}
 
@@ -148,7 +148,7 @@ func (m *PermMiddleware) ensurePerm(storeDB *store.Store, db *gorm.DB, accessTok
 	var perms []*model.Permission
 
 	if tokenType == model.TokenTypeAPIKey.String() {
-		clientID, key, err := utils.ExtractAPIKey(accessToken)
+		clientID, key, err := authutils.ExtractAPIKey(accessToken)
 		if err != nil {
 			return ErrInvalidAPIKey
 		}
@@ -165,7 +165,7 @@ func (m *PermMiddleware) ensurePerm(storeDB *store.Store, db *gorm.DB, accessTok
 			return ErrInvalidAPIKey
 		}
 
-		err = utils.ValidateHashedKey(apikey.SecretKey, key)
+		err = authutils.ValidateHashedKey(apikey.SecretKey, key)
 		if err != nil {
 			return err
 		}

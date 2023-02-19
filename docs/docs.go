@@ -2102,9 +2102,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/invoices/": {
-            "post": {
-                "description": "Create new invoice",
+        "/invoices/latest": {
+            "get": {
+                "description": "Get latest invoice by project id",
                 "consumes": [
                     "application/json"
                 ],
@@ -2114,7 +2114,7 @@ const docTemplate = `{
                 "tags": [
                     "Invoice"
                 ],
-                "summary": "Create new invoice",
+                "summary": "Get latest invoice by project id",
                 "parameters": [
                     {
                         "type": "string",
@@ -2124,20 +2124,18 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "description": "body",
-                        "name": "Body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/request.CreateInput"
-                        }
+                        "type": "string",
+                        "description": "projectID",
+                        "name": "projectID",
+                        "in": "query",
+                        "required": true
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/view.CreateInvoiceResponse"
+                            "$ref": "#/definitions/view.GetLatestInvoiceResponse"
                         }
                     },
                     "400": {
@@ -2161,7 +2159,66 @@ const docTemplate = `{
                 }
             }
         },
-        "/invoices/latest": {
+        "/invoices/send": {
+            "post": {
+                "description": "Create new invoice and send to clientm",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Invoice"
+                ],
+                "summary": "Create new invoice and send to client",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "body",
+                        "name": "Body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.SendInvoiceRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.MessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/invoices/template": {
             "get": {
                 "description": "Get latest invoice by project id",
                 "consumes": [
@@ -5361,10 +5418,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "info": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
+                    "$ref": "#/definitions/pgtype.JSONB"
                 },
                 "name": {
                     "type": "string"
@@ -6863,6 +6917,20 @@ const docTemplate = `{
                 }
             }
         },
+        "pgtype.JSONB": {
+            "type": "object",
+            "properties": {
+                "bytes": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "status": {
+                    "type": "integer"
+                }
+            }
+        },
         "request.AssignMemberInput": {
             "type": "object",
             "required": [
@@ -7026,71 +7094,6 @@ const docTemplate = `{
                 },
                 "teamEmail": {
                     "type": "string"
-                }
-            }
-        },
-        "request.CreateInput": {
-            "type": "object",
-            "required": [
-                "bankID"
-            ],
-            "properties": {
-                "bankID": {
-                    "type": "string"
-                },
-                "conversionAmount": {
-                    "type": "integer"
-                },
-                "conversionRate": {
-                    "type": "number"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "discount": {
-                    "type": "integer"
-                },
-                "dueAt": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "month": {
-                    "type": "integer"
-                },
-                "note": {
-                    "type": "string"
-                },
-                "number": {
-                    "type": "string"
-                },
-                "paidAt": {
-                    "type": "string"
-                },
-                "projectID": {
-                    "type": "string"
-                },
-                "scheduledDate": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "subTotal": {
-                    "type": "integer"
-                },
-                "tax": {
-                    "type": "integer"
-                },
-                "threadID": {
-                    "type": "string"
-                },
-                "total": {
-                    "type": "integer"
-                },
-                "year": {
-                    "type": "integer"
                 }
             }
         },
@@ -7326,6 +7329,85 @@ const docTemplate = `{
                     "items": {
                         "type": "string"
                     }
+                }
+            }
+        },
+        "request.SendInvoiceRequest": {
+            "type": "object",
+            "required": [
+                "bankID",
+                "dueDate",
+                "email",
+                "invoiceDate",
+                "projectID"
+            ],
+            "properties": {
+                "bankID": {
+                    "type": "string"
+                },
+                "cc": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "description": {
+                    "type": "string"
+                },
+                "discount": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "dueDate": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "invoiceDate": {
+                    "type": "string"
+                },
+                "invoiceMonth": {
+                    "type": "integer",
+                    "maximum": 11,
+                    "minimum": 0
+                },
+                "invoiceYear": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "isDraft": {
+                    "type": "boolean"
+                },
+                "lineItems": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "note": {
+                    "type": "string"
+                },
+                "number": {
+                    "type": "string"
+                },
+                "projectID": {
+                    "type": "string"
+                },
+                "sentByID": {
+                    "type": "string"
+                },
+                "subtotal": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "tax": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "total": {
+                    "type": "integer",
+                    "minimum": 0
                 }
             }
         },
@@ -8432,14 +8514,6 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/model.Client"
-                }
-            }
-        },
-        "view.CreateInvoiceResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/model.Invoice"
                 }
             }
         },

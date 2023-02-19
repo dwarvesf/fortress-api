@@ -11,6 +11,10 @@ FROM alpine:3.15.0
 RUN apk --no-cache add ca-certificates
 RUN apk --no-cache add curl
 RUN ln -fs /usr/share/zoneinfo/Asia/Ho_Chi_Minh /etc/localtime
+
+COPY --from=wkhtmltopdf /bin/wkhtmltopdf /usr/bin/wkhtmltopdf
+RUN chmod +x /usr/bin/wkhtmltopdf
+
 WORKDIR /
 
 COPY --from=0 /go/bin/* /usr/bin/

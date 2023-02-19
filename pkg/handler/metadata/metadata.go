@@ -4,6 +4,10 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/gin-gonic/gin"
+	_ "github.com/lib/pq"
+	"gorm.io/gorm"
+
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/handler/metadata/errs"
 	"github.com/dwarvesf/fortress-api/pkg/handler/metadata/request"
@@ -11,12 +15,8 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/store"
-	"github.com/dwarvesf/fortress-api/pkg/utils"
+	"github.com/dwarvesf/fortress-api/pkg/utils/authutils"
 	"github.com/dwarvesf/fortress-api/pkg/view"
-
-	"github.com/gin-gonic/gin"
-	_ "github.com/lib/pq"
-	"gorm.io/gorm"
 )
 
 type handler struct {
@@ -176,7 +176,7 @@ func (h *handler) Organizations(c *gin.Context) {
 // @Failure 500 {object} view.ErrorResponse
 // @Router /metadata/account-roles [get]
 func (h *handler) AccountRoles(c *gin.Context) {
-	userID, err := utils.GetUserIDFromContext(c, h.config)
+	userID, err := authutils.GetUserIDFromContext(c, h.config)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return

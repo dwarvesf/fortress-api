@@ -11,7 +11,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/handler/auth/errs"
 	"github.com/dwarvesf/fortress-api/pkg/handler/auth/request"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
-	"github.com/dwarvesf/fortress-api/pkg/utils"
+	"github.com/dwarvesf/fortress-api/pkg/utils/authutils"
 	"github.com/dwarvesf/fortress-api/pkg/view"
 )
 
@@ -88,7 +88,7 @@ func (h *handler) Auth(c *gin.Context) {
 // @Failure 500 {object} view.ErrorResponse
 // @Router /auth/me [get]
 func (h *handler) Me(c *gin.Context) {
-	userID, err := utils.GetUserIDFromContext(c, h.config)
+	userID, err := authutils.GetUserIDFromContext(c, h.config)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
