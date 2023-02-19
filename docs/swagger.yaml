@@ -141,9 +141,7 @@ definitions:
       id:
         type: string
       info:
-        items:
-          type: integer
-        type: array
+        $ref: '#/definitions/pgtype.JSONB'
       name:
         type: string
       registration_number:
@@ -1131,6 +1129,15 @@ definitions:
         description: basic info
         type: string
     type: object
+  pgtype.JSONB:
+    properties:
+      bytes:
+        items:
+          type: integer
+        type: array
+      status:
+        type: integer
+    type: object
   request.AssignMemberInput:
     properties:
       deploymentType:
@@ -1243,49 +1250,6 @@ definitions:
     - seniorityID
     - status
     - teamEmail
-    type: object
-  request.CreateInput:
-    properties:
-      bankID:
-        type: string
-      conversionAmount:
-        type: integer
-      conversionRate:
-        type: number
-      description:
-        type: string
-      discount:
-        type: integer
-      dueAt:
-        type: string
-      email:
-        type: string
-      month:
-        type: integer
-      note:
-        type: string
-      number:
-        type: string
-      paidAt:
-        type: string
-      projectID:
-        type: string
-      scheduledDate:
-        type: string
-      status:
-        type: string
-      subTotal:
-        type: integer
-      tax:
-        type: integer
-      threadID:
-        type: string
-      total:
-        type: integer
-      year:
-        type: integer
-    required:
-    - bankID
     type: object
   request.CreatePositionInput:
     properties:
@@ -1444,6 +1408,62 @@ definitions:
         items:
           type: string
         type: array
+    type: object
+  request.SendInvoiceRequest:
+    properties:
+      bankID:
+        type: string
+      cc:
+        items:
+          type: integer
+        type: array
+      description:
+        type: string
+      discount:
+        minimum: 0
+        type: integer
+      dueDate:
+        type: string
+      email:
+        type: string
+      invoiceDate:
+        type: string
+      invoiceMonth:
+        maximum: 11
+        minimum: 0
+        type: integer
+      invoiceYear:
+        minimum: 0
+        type: integer
+      isDraft:
+        type: boolean
+      lineItems:
+        items:
+          type: integer
+        type: array
+      note:
+        type: string
+      number:
+        type: string
+      projectID:
+        type: string
+      sentByID:
+        type: string
+      subtotal:
+        minimum: 0
+        type: integer
+      tax:
+        minimum: 0
+        type: integer
+      total:
+        minimum: 0
+        type: integer
+    required:
+    - bankID
+    - dueDate
+    - email
+    - invoiceDate
+    - projectID
     type: object
   request.SendSurveyInput:
     properties:
@@ -2174,11 +2194,6 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/model.Client'
-    type: object
-  view.CreateInvoiceResponse:
-    properties:
-      data:
-        $ref: '#/definitions/model.Invoice'
     type: object
   view.CreateMemberData:
     properties:
@@ -5095,45 +5110,6 @@ paths:
       summary: Get list hirings from DF Dwarves Hiring
       tags:
       - hiring
-  /invoices/:
-    post:
-      consumes:
-      - application/json
-      description: Create new invoice
-      parameters:
-      - description: jwt token
-        in: header
-        name: Authorization
-        required: true
-        type: string
-      - description: body
-        in: body
-        name: Body
-        required: true
-        schema:
-          $ref: '#/definitions/request.CreateInput'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/view.CreateInvoiceResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/view.ErrorResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/view.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/view.ErrorResponse'
-      summary: Create new invoice
-      tags:
-      - Invoice
   /invoices/{id}/status:
     get:
       consumes:
@@ -5168,6 +5144,83 @@ paths:
       tags:
       - Invoice
   /invoices/latest:
+    get:
+      consumes:
+      - application/json
+      description: Get latest invoice by project id
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: projectID
+        in: query
+        name: projectID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.GetLatestInvoiceResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get latest invoice by project id
+      tags:
+      - Invoice
+  /invoices/send:
+    post:
+      consumes:
+      - application/json
+      description: Create new invoice and send to clientm
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: body
+        in: body
+        name: Body
+        required: true
+        schema:
+          $ref: '#/definitions/request.SendInvoiceRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Create new invoice and send to client
+      tags:
+      - Invoice
+  /invoices/template:
     get:
       consumes:
       - application/json

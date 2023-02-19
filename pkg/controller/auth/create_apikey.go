@@ -7,20 +7,20 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/dwarvesf/fortress-api/pkg/model"
-	"github.com/dwarvesf/fortress-api/pkg/utils"
+	"github.com/dwarvesf/fortress-api/pkg/utils/authutils"
 )
 
 func (r *controller) CreateAPIKey(roleID string) (string, error) {
-	clientID, err := utils.GenerateUniqueNanoID(utils.ClientIDLength)
+	clientID, err := authutils.GenerateUniqueNanoID(authutils.ClientIDLength)
 	if err != nil {
 		return "", err
 	}
-	key, err := utils.GenerateUniqueNanoID(utils.SecretKeyLength)
+	key, err := authutils.GenerateUniqueNanoID(authutils.SecretKeyLength)
 	if err != nil {
 		return "", err
 	}
 
-	hashedKey, err := utils.GenerateHashedKey(key)
+	hashedKey, err := authutils.GenerateHashedKey(key)
 	if err != nil {
 		return "", err
 	}

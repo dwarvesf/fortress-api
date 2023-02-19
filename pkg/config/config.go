@@ -23,6 +23,8 @@ type Config struct {
 	Wise    Wise
 	Discord Discord
 
+	Invoice Invoice
+
 	APIKey       string
 	Debug        bool
 	Env          string
@@ -45,12 +47,16 @@ type ApiServer struct {
 }
 
 type Google struct {
-	ClientSecret   string
-	ClientID       string
-	AppName        string
-	GCSBucketName  string
-	GCSProjectID   string
-	GCSCredentials string
+	ClientSecret                 string
+	ClientID                     string
+	AppName                      string
+	GCSBucketName                string
+	GCSProjectID                 string
+	GCSCredentials               string
+	GDSBucketURL                 string
+	AccountingGoogleRefreshToken string
+	AccountingEmailID            string
+	APIKey                       string
 }
 
 type Wise struct {
@@ -100,6 +106,11 @@ type DiscordID struct {
 	DwarvesGuild string
 }
 
+type Invoice struct {
+	TemplatePath string
+	DirID        string
+}
+
 type ENV interface {
 	GetBool(string) bool
 	GetString(string) string
@@ -127,12 +138,16 @@ func Generate(v ENV) *Config {
 		},
 
 		Google: Google{
-			ClientSecret:   v.GetString("GOOGLE_API_CLIENT_SECRET"),
-			ClientID:       v.GetString("GOOGLE_API_CLIENT_ID"),
-			AppName:        v.GetString("GOOGLE_API_APP_NAME"),
-			GCSBucketName:  v.GetString("GCS_BUCKET_NAME"),
-			GCSProjectID:   v.GetString("GCS_PROJECT_ID"),
-			GCSCredentials: v.GetString("GCS_CREDENTIALS"),
+			ClientSecret:                 v.GetString("GOOGLE_API_CLIENT_SECRET"),
+			ClientID:                     v.GetString("GOOGLE_API_CLIENT_ID"),
+			AppName:                      v.GetString("GOOGLE_API_APP_NAME"),
+			GCSBucketName:                v.GetString("GCS_BUCKET_NAME"),
+			GCSProjectID:                 v.GetString("GCS_PROJECT_ID"),
+			GCSCredentials:               v.GetString("GCS_CREDENTIALS"),
+			GDSBucketURL:                 v.GetString("GDS_BUCKET_URL"),
+			AccountingGoogleRefreshToken: v.GetString("ACCOUNTING_GOOGLE_REFRESH_TOKEN"),
+			AccountingEmailID:            v.GetString("ACCOUNTING_EMAIL_ID"),
+			APIKey:                       v.GetString("GOOGLE_API_KEY"),
 		},
 
 		Wise: Wise{
@@ -172,6 +187,10 @@ func Generate(v ENV) *Config {
 			IDs: DiscordID{
 				DwarvesGuild: v.GetString("DISCORD_DWARVES_GUILD_ID"),
 			},
+		},
+		Invoice: Invoice{
+			TemplatePath: v.GetString("INVOICE_TEMPLATE_PATH"),
+			DirID:        v.GetString("INVOICE_DIR_ID"),
 		},
 	}
 }

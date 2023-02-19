@@ -8,7 +8,7 @@ import (
 	"github.com/shopspring/decimal"
 
 	"github.com/dwarvesf/fortress-api/pkg/model"
-	"github.com/dwarvesf/fortress-api/pkg/utils"
+	"github.com/dwarvesf/fortress-api/pkg/utils/authutils"
 )
 
 type ProjectData struct {
@@ -178,7 +178,7 @@ func ToProjectData(c *gin.Context, project *model.Project, userInfo *model.Curre
 			Positions:   ToProjectMemberPositions(m.ProjectMemberPositions),
 		}
 
-		if utils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadFullAccess) {
+		if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadFullAccess) {
 			member.DeploymentType = m.DeploymentType.String()
 
 			if m.UpsellPerson != nil {
@@ -233,7 +233,7 @@ func ToProjectData(c *gin.Context, project *model.Project, userInfo *model.Curre
 		}
 	}
 
-	if utils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadFullAccess) {
+	if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadFullAccess) {
 		if project.ProjectNotion != nil && !project.ProjectNotion.AuditNotionID.IsZero() {
 			d.AuditNotionID = project.ProjectNotion.AuditNotionID.String()
 		}
@@ -281,13 +281,13 @@ func ToProjectsData(c *gin.Context, projects []*model.Project, userInfo *model.C
 		}
 
 		// If the project is not belong user, check if the user has permission to view the project
-		if utils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadFullAccess) ||
-			utils.HasPermission(userInfo.Permissions, model.PermissionEmployeesReadProjectsReadActive) {
+		if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadFullAccess) ||
+			authutils.HasPermission(userInfo.Permissions, model.PermissionEmployeesReadProjectsReadActive) {
 
 			if p.Status == model.ProjectStatusActive {
 				results = append(results, ToProjectData(c, p, userInfo))
 			} else {
-				if utils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadFullAccess) {
+				if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadFullAccess) {
 					results = append(results, ToProjectData(c, p, userInfo))
 				}
 			}
@@ -344,7 +344,7 @@ func ToCreateMemberData(userInfo *model.CurrentLoggedUserInfo, slot *model.Proje
 		rs.EmployeeID = slot.ProjectMember.EmployeeID.String()
 	}
 
-	if slot.ProjectMember.UpsellPerson != nil && utils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadFullAccess) {
+	if slot.ProjectMember.UpsellPerson != nil && authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadFullAccess) {
 		rs.UpsellPerson = toBasicEmployeeInfo(*slot.ProjectMember.UpsellPerson)
 	}
 
@@ -489,7 +489,7 @@ func ToProjectMemberListData(userInfo *model.CurrentLoggedUserInfo, members []*m
 				Positions:       ToProjectMemberPositions(m.ProjectMemberPositions),
 			}
 
-			if m.UpsellPerson != nil && utils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadFullAccess) {
+			if m.UpsellPerson != nil && authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadFullAccess) {
 				member.UpsellPerson = toBasicEmployeeInfo(*m.UpsellPerson)
 			}
 		}

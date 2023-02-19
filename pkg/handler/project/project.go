@@ -24,7 +24,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/store/project"
-	"github.com/dwarvesf/fortress-api/pkg/utils"
+	"github.com/dwarvesf/fortress-api/pkg/utils/authutils"
 	"github.com/dwarvesf/fortress-api/pkg/view"
 )
 
@@ -64,7 +64,7 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 // @Router /projects [get]
 func (h *handler) List(c *gin.Context) {
 	// 0. Get current logged in user data
-	userInfo, err := utils.GetLoggedInUserInfo(c, h.store, h.repo.DB(), h.config)
+	userInfo, err := authutils.GetLoggedInUserInfo(c, h.store, h.repo.DB(), h.config)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, userInfo.UserID, ""))
 		return
@@ -230,7 +230,7 @@ func (h *handler) UpdateProjectStatus(c *gin.Context) {
 // @Failure 500 {object} view.ErrorResponse
 // @Router /projects [post]
 func (h *handler) Create(c *gin.Context) {
-	userInfo, err := utils.GetLoggedInUserInfo(c, h.store, h.repo.DB(), h.config)
+	userInfo, err := authutils.GetLoggedInUserInfo(c, h.store, h.repo.DB(), h.config)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, userInfo.UserID, ""))
 		return
@@ -453,7 +453,7 @@ func (h *handler) Create(c *gin.Context) {
 // @Failure 500 {object} view.ErrorResponse
 // @Router /projects/{id}/members [get]
 func (h *handler) GetMembers(c *gin.Context) {
-	userInfo, err := utils.GetLoggedInUserInfo(c, h.store, h.repo.DB(), h.config)
+	userInfo, err := authutils.GetLoggedInUserInfo(c, h.store, h.repo.DB(), h.config)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, userInfo.UserID, ""))
 		return
@@ -838,7 +838,7 @@ func (h *handler) UnassignMember(c *gin.Context) {
 // @Failure 500 {object} view.ErrorResponse
 // @Router /projects/{id}/members [put]
 func (h *handler) UpdateMember(c *gin.Context) {
-	userInfo, err := utils.GetLoggedInUserInfo(c, h.store, h.repo.DB(), h.config)
+	userInfo, err := authutils.GetLoggedInUserInfo(c, h.store, h.repo.DB(), h.config)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, userInfo.UserID, ""))
 		return
@@ -1197,7 +1197,7 @@ func (h *handler) updateProjectMember(db *gorm.DB, slotID string, projectID stri
 // @Failure 500 {object} view.ErrorResponse
 // @Router /projects/{id}/members [post]
 func (h *handler) AssignMember(c *gin.Context) {
-	userInfo, err := utils.GetLoggedInUserInfo(c, h.store, h.repo.DB(), h.config)
+	userInfo, err := authutils.GetLoggedInUserInfo(c, h.store, h.repo.DB(), h.config)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, userInfo.UserID, ""))
 		return
@@ -1437,7 +1437,7 @@ func (h *handler) createSlotsAndAssignMembers(db *gorm.DB, projectID string, req
 // @Router /projects/{id} [get]
 func (h *handler) Details(c *gin.Context) {
 	// 0. Get current logged in user data
-	userInfo, err := utils.GetLoggedInUserInfo(c, h.store, h.repo.DB(), h.config)
+	userInfo, err := authutils.GetLoggedInUserInfo(c, h.store, h.repo.DB(), h.config)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, userInfo.UserID, ""))
 		return
@@ -1468,7 +1468,7 @@ func (h *handler) Details(c *gin.Context) {
 		return
 	}
 
-	if !utils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadFullAccess) && !utils.HasPermission(userInfo.Permissions, model.PermissionEmployeesReadProjectsReadActive) {
+	if !authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadFullAccess) && !authutils.HasPermission(userInfo.Permissions, model.PermissionEmployeesReadProjectsReadActive) {
 		_, ok := userInfo.Projects[rs.ID]
 		if !ok || !model.IsUserActiveInProject(userInfo.UserID, rs.ProjectMembers) {
 			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, nil, ""))
@@ -1476,7 +1476,7 @@ func (h *handler) Details(c *gin.Context) {
 		}
 	}
 
-	if rs.Status == model.ProjectStatusClosed && !utils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadFullAccess) {
+	if rs.Status == model.ProjectStatusClosed && !authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadFullAccess) {
 		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, nil, ""))
 		return
 	}
@@ -1933,7 +1933,7 @@ func (h *handler) updateProjectLead(db *gorm.DB, projectID string, employeeID mo
 // @Router /projects/{id}/work-units [get]
 func (h *handler) GetWorkUnits(c *gin.Context) {
 	// 0. Get current logged in user data
-	userInfo, err := utils.GetLoggedInUserInfo(c, h.store, h.repo.DB(), h.config)
+	userInfo, err := authutils.GetLoggedInUserInfo(c, h.store, h.repo.DB(), h.config)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, userInfo.UserID, ""))
 		return
@@ -1975,7 +1975,7 @@ func (h *handler) GetWorkUnits(c *gin.Context) {
 		return
 	}
 
-	if !utils.HasPermission(userInfo.Permissions, model.PermissionProjectWorkUnitsReadFullAccess) {
+	if !authutils.HasPermission(userInfo.Permissions, model.PermissionProjectWorkUnitsReadFullAccess) {
 		_, ok := userInfo.Projects[p.ID]
 		if !ok || !model.IsUserActiveInProject(userInfo.UserID, p.ProjectMembers) {
 			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, nil, ""))
@@ -2009,7 +2009,7 @@ func (h *handler) GetWorkUnits(c *gin.Context) {
 // @Router /projects/{id}/work-units [post]
 func (h *handler) CreateWorkUnit(c *gin.Context) {
 	// 0. Get current logged in user data
-	userInfo, err := utils.GetLoggedInUserInfo(c, h.store, h.repo.DB(), h.config)
+	userInfo, err := authutils.GetLoggedInUserInfo(c, h.store, h.repo.DB(), h.config)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, userInfo.UserID, ""))
 		return
@@ -2050,7 +2050,7 @@ func (h *handler) CreateWorkUnit(c *gin.Context) {
 	}
 
 	// Has permission when have work unit create full-access and active in project
-	if !utils.HasPermission(userInfo.Permissions, model.PermissionProjectWorkUnitsCreateFullAccess) {
+	if !authutils.HasPermission(userInfo.Permissions, model.PermissionProjectWorkUnitsCreateFullAccess) {
 		_, ok := userInfo.Projects[p.ID]
 		if !ok || !model.IsUserActiveInProject(userInfo.UserID, p.ProjectMembers) {
 			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, nil, ""))
@@ -2163,7 +2163,7 @@ func (h *handler) CreateWorkUnit(c *gin.Context) {
 // @Router /projects/{id}/work-units/{workUnitID} [put]
 func (h *handler) UpdateWorkUnit(c *gin.Context) {
 	// 0. Get current logged in user data
-	userInfo, err := utils.GetLoggedInUserInfo(c, h.store, h.repo.DB(), h.config)
+	userInfo, err := authutils.GetLoggedInUserInfo(c, h.store, h.repo.DB(), h.config)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, userInfo.UserID, ""))
 		return
@@ -2205,7 +2205,7 @@ func (h *handler) UpdateWorkUnit(c *gin.Context) {
 		return
 	}
 
-	if !utils.HasPermission(userInfo.Permissions, model.PermissionProjectWorkUnitsEditFullAccess) {
+	if !authutils.HasPermission(userInfo.Permissions, model.PermissionProjectWorkUnitsEditFullAccess) {
 		_, ok := userInfo.Projects[p.ID]
 		if !ok || !model.IsUserActiveInProject(userInfo.UserID, p.ProjectMembers) {
 			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, nil, ""))
@@ -2448,7 +2448,7 @@ func (h *handler) createWorkUnit(db *gorm.DB, projectID string, workUnitID strin
 // @Router /projects/{id}/work-units/{workUnitID}/archive [put]
 func (h *handler) ArchiveWorkUnit(c *gin.Context) {
 	// 0. Get current logged in user data
-	userInfo, err := utils.GetLoggedInUserInfo(c, h.store, h.repo.DB(), h.config)
+	userInfo, err := authutils.GetLoggedInUserInfo(c, h.store, h.repo.DB(), h.config)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, userInfo.UserID, ""))
 		return
@@ -2485,7 +2485,7 @@ func (h *handler) ArchiveWorkUnit(c *gin.Context) {
 		return
 	}
 
-	if !utils.HasPermission(userInfo.Permissions, model.PermissionProjectWorkUnitsEditFullAccess) {
+	if !authutils.HasPermission(userInfo.Permissions, model.PermissionProjectWorkUnitsEditFullAccess) {
 		_, ok := userInfo.Projects[p.ID]
 		if !ok || !model.IsUserActiveInProject(userInfo.UserID, p.ProjectMembers) {
 			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, nil, ""))
@@ -2570,7 +2570,7 @@ func (h *handler) ArchiveWorkUnit(c *gin.Context) {
 // @Router /projects/{id}/work-units/{workUnitID}/unarchive [put]
 func (h *handler) UnarchiveWorkUnit(c *gin.Context) {
 	// 0. Get current logged in user data
-	userInfo, err := utils.GetLoggedInUserInfo(c, h.store, h.repo.DB(), h.config)
+	userInfo, err := authutils.GetLoggedInUserInfo(c, h.store, h.repo.DB(), h.config)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, userInfo.UserID, ""))
 		return
@@ -2607,7 +2607,7 @@ func (h *handler) UnarchiveWorkUnit(c *gin.Context) {
 		return
 	}
 
-	if !utils.HasPermission(userInfo.Permissions, model.PermissionProjectWorkUnitsEditFullAccess) {
+	if !authutils.HasPermission(userInfo.Permissions, model.PermissionProjectWorkUnitsEditFullAccess) {
 		_, ok := userInfo.Projects[p.ID]
 		if !ok || !model.IsUserActiveInProject(userInfo.UserID, p.ProjectMembers) {
 			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, nil, ""))

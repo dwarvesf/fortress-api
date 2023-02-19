@@ -1,4 +1,4 @@
-package utils
+package authutils
 
 import (
 	"encoding/base64"
@@ -14,6 +14,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/store"
+	"github.com/dwarvesf/fortress-api/pkg/utils"
 )
 
 const (
@@ -76,16 +77,16 @@ func GetUserIDFromToken(cfg *config.Config, tokenString string) (string, error) 
 	})
 
 	if !token.Valid {
-		return "", ErrInvalidToken
+		return "", utils.ErrInvalidToken
 	}
 	if err != nil {
 		if err == jwt.ErrSignatureInvalid {
-			return "", ErrInvalidSignature
+			return "", utils.ErrInvalidSignature
 		}
-		return "", ErrBadToken
+		return "", utils.ErrBadToken
 	}
 	if time.Unix(claims.ExpiresAt, 0).Before(time.Now()) {
-		return "", ErrInvalidToken
+		return "", utils.ErrInvalidToken
 	}
 	return claims.UserID, nil
 }
@@ -106,7 +107,7 @@ func GetUserIDFromContext(c *gin.Context, cfg *config.Config) (string, error) {
 func GetTokenFromRequest(c *gin.Context) (string, error) {
 	headers := strings.Split(c.Request.Header.Get("Authorization"), " ")
 	if len(headers) != 2 {
-		return "", ErrUnexpectedAuthorizationHeader
+		return "", utils.ErrUnexpectedAuthorizationHeader
 	}
 	switch headers[0] {
 	case "Bearer":
@@ -114,7 +115,7 @@ func GetTokenFromRequest(c *gin.Context) (string, error) {
 	case "ApiKey":
 		return headers[1], nil
 	default:
-		return "", ErrAuthenticationTypeHeaderInvalid
+		return "", utils.ErrAuthenticationTypeHeaderInvalid
 	}
 }
 

@@ -1,17 +1,15 @@
 package model
 
-import (
-	"gorm.io/datatypes"
-)
+import "github.com/jackc/pgtype"
 
 // CompanyInfo contain company information
 type CompanyInfo struct {
 	BaseModel
 
-	Name               string         `json:"name"`
-	Description        string         `json:"description"`
-	RegistrationNumber string         `json:"registration_number"`
-	Info               datatypes.JSON `json:"info"`
+	Name               string       `json:"name"`
+	Description        string       `json:"description"`
+	RegistrationNumber string       `json:"registrationNumber"`
+	Info               pgtype.JSONB `json:"info"`
 }
 
 type CompanyContactInfo struct {
