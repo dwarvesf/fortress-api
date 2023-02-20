@@ -5,4 +5,5 @@ INSERT INTO public.roles (id, deleted_at, created_at, updated_at, name, code, le
 ('0ed4d996-669f-4198-8fa5-bacddc7f85dd', NULL, '2022-11-07 09:50:25.714604', '2022-11-07 09:50:25.714604', 'Project Lead', 'project-lead', 11),
 ('5085c471-8858-40aa-b92a-97d579ae71a6', NULL, '2022-11-07 09:50:25.714604', '2022-11-07 09:50:25.714604', 'Full-time', 'full-time', 12),
 ('87575671-481b-460f-8887-c8abcda1ba39', NULL, '2022-11-07 09:50:25.714604', '2022-11-07 09:50:25.714604', 'Probation', 'probation', 13),
-('9f65e480-b591-49c1-9cc2-de31c47ee007', NULL, '2022-11-07 09:50:25.714604', '2022-11-07 09:50:25.714604', 'Contractor', 'contractor', 14);
+('9f65e480-b591-49c1-9cc2-de31c47ee007', NULL, '2022-11-07 09:50:25.714604', '2022-11-07 09:50:25.714604', 'Contractor', 'contractor', 14),
+('349876e0-4d3b-463a-a9b0-4083b3ebcd83', NULL, '2023-11-07 09:50:25.714604', '2023-11-07 09:50:25.714604', 'Cronjob', 'cronjob', 20);
