@@ -3,13 +3,12 @@ package auth
 import (
 	"errors"
 
-	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 
 	"github.com/dwarvesf/fortress-api/pkg/model"
 )
 
-func (r *controller) Me(c *gin.Context, userID string) (*model.Employee, []*model.Permission, error) {
+func (r *controller) Me(userID string) (*model.Employee, []*model.Permission, error) {
 	e, err := r.store.Employee.One(r.repo.DB(), userID, false)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
