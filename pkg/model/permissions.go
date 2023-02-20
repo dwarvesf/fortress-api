@@ -86,6 +86,7 @@ const (
 	PermissionClientRead                          PermissionCode = "clients.read"
 	PermissionClientEdit                          PermissionCode = "clients.edit"
 	PermissionClientDelete                        PermissionCode = "clients.delete"
+	PermissionCronjobExecute                      PermissionCode = "cronjobs.execute"
 )
 
 func (p PermissionCode) String() string {

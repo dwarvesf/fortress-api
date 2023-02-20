@@ -1,3 +1,7 @@
+-- CRONJOB
+INSERT INTO public.role_permissions (id, deleted_at, created_at, updated_at, role_id, permission_id) VALUES
+('35db0910-66e6-4362-9082-9eb800730c74', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '349876e0-4d3b-463a-a9b0-4083b3ebcd83', '475d8075-aec7-4d75-aa79-dc90c9dd9edb');
+
 -- CONTRACTOR
 INSERT INTO public.role_permissions (id, deleted_at, created_at, updated_at, role_id, permission_id) VALUES
 ('8d80717d-34a9-4e40-8981-f179bd444877', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '9f65e480-b591-49c1-9cc2-de31c47ee007', '495c96ae-60f9-4c57-bc96-9504d0fedde6'),
@@ -126,7 +130,8 @@ INSERT INTO public.role_permissions (id, deleted_at, created_at, updated_at, rol
 ('3416baf7-43d2-45e9-b6ec-f7f12c8c3d1f', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '11ccffea-2cc9-4e98-9bef-3464dfe4dec8', '75ae4f79-cef1-4dfd-be66-064c118ba6cf'),
 ('5957cf4d-6f48-4a2e-83b5-4d0dba9fb4e7', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '11ccffea-2cc9-4e98-9bef-3464dfe4dec8', '97a02a4d-b8fb-486d-af1a-25139014b375'),
 ('df33dc00-62b5-4adf-8496-7ce23303b4b3', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '11ccffea-2cc9-4e98-9bef-3464dfe4dec8', '92031f1a-b745-42cf-aac1-a067bbee08e6'),
-('51d9267f-e26d-4ca9-b369-c455ebc7d9f9', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '11ccffea-2cc9-4e98-9bef-3464dfe4dec8', '7fb332e7-3231-42e6-8f38-a5c8b224d84e');
+('51d9267f-e26d-4ca9-b369-c455ebc7d9f9', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '11ccffea-2cc9-4e98-9bef-3464dfe4dec8', '7fb332e7-3231-42e6-8f38-a5c8b224d84e'),
+('eef810aa-2079-44f1-9d3d-c0e2ea2f48e8', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '11ccffea-2cc9-4e98-9bef-3464dfe4dec8', '475d8075-aec7-4d75-aa79-dc90c9dd9edb');
 
 -- ADMIN
 INSERT INTO public.role_permissions (id, deleted_at, created_at, updated_at, role_id, permission_id) VALUES
@@ -199,4 +204,5 @@ INSERT INTO public.role_permissions (id, deleted_at, created_at, updated_at, rol
 ('c5f35ac8-de0f-4146-a659-37292cc88045', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', 'c23c1c1c-bfaf-41e6-a4d7-6ef196fd2736', '75ae4f79-cef1-4dfd-be66-064c118ba6cf'),
 ('835d4178-9125-437e-864b-2fd651fdc52d', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', 'c23c1c1c-bfaf-41e6-a4d7-6ef196fd2736', '97a02a4d-b8fb-486d-af1a-25139014b375'),
 ('cde4fd2e-5274-44c5-9dc3-0e7db96c53e6', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', 'c23c1c1c-bfaf-41e6-a4d7-6ef196fd2736', '92031f1a-b745-42cf-aac1-a067bbee08e6'),
-('c0966cd2-36e0-48d8-b9ea-41dc6b055082', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', 'c23c1c1c-bfaf-41e6-a4d7-6ef196fd2736', '7fb332e7-3231-42e6-8f38-a5c8b224d84e');
+('c0966cd2-36e0-48d8-b9ea-41dc6b055082', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', 'c23c1c1c-bfaf-41e6-a4d7-6ef196fd2736', '7fb332e7-3231-42e6-8f38-a5c8b224d84e'),
+('c0b9f38f-f64a-40ae-9d32-7ee41fe5471d', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', 'c23c1c1c-bfaf-41e6-a4d7-6ef196fd2736', '475d8075-aec7-4d75-aa79-dc90c9dd9edb');
