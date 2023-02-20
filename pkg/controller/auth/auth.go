@@ -4,7 +4,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 
 	"github.com/dwarvesf/fortress-api/pkg/model"
@@ -16,7 +15,7 @@ type AuthenticationInput struct {
 	RedirectURL string
 }
 
-func (r *controller) Auth(c *gin.Context, in AuthenticationInput) (*model.Employee, string, error) {
+func (r *controller) Auth(in AuthenticationInput) (*model.Employee, string, error) {
 	// 2.1 get access token from req code and redirect url
 	accessToken, err := r.service.Google.GetAccessToken(in.Code, in.RedirectURL)
 	if err != nil {

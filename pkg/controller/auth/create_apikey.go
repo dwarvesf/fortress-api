@@ -8,10 +8,9 @@ import (
 
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/utils"
-	"github.com/gin-gonic/gin"
 )
 
-func (r *controller) CreateAPIKey(c *gin.Context, roleID string) (string, error) {
+func (r *controller) CreateAPIKey(roleID string) (string, error) {
 	clientID, err := utils.GenerateUniqueNanoID(utils.ClientIDLength)
 	if err != nil {
 		return "", err
