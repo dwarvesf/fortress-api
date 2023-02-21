@@ -639,43 +639,58 @@ func (s *store) TotalWorkUnitDistribution(db *gorm.DB) (*model.TotalWorkUnitDist
 	var rs *model.TotalWorkUnitDistribution
 
 	query := `
-		WITH work_unit_info AS (
-			SELECT 
+		WITH
+		employee_data AS (
+			SELECT
+				e.id,
+				e.full_name,
+				e.display_name,
+				e.username,
+				e.avatar,
+				e.line_manager_id,
+				o.code as organization_code
+			FROM employees e
+				LEFT JOIN employee_organizations eo on e.id = eo.employee_id
+				LEFT JOIN organizations o on eo.organization_id = o.id
+			WHERE
+				e.deleted_at IS NULL AND o.code = 'dwarves-foundation'
+		),
+		work_unit_info AS (
+			SELECT
 				wum.employee_id,
 				wu.type,
 				COUNT(*) AS work_unit_count
 			FROM work_units wu
 					JOIN work_unit_members wum ON wu.id = wum.work_unit_id
-			WHERE 
+			WHERE
 				wum.status = 'active'
 				AND wu.status = 'active'
 				AND wum.deleted_at IS NULL
 				AND wu.deleted_at IS NULL
 			GROUP BY wum.employee_id, wu.type),
 			count_work_unit_distribution AS (
-				SELECT 
+				SELECT
 					e.id,
 					e.full_name,
 					e.display_name,
 					e.username,
 					e.avatar,
 					(SELECT COUNT(*)
-					FROM employees
-					WHERE line_manager_id = e.id
-						AND deleted_at IS NULL)                   AS line_manager_count,
+					FROM employee_data
+					WHERE line_manager_id = e.id)                   AS line_manager_count,
 					(SELECT COUNT(*)
 					FROM project_heads ph
 					WHERE (ph.position = 'technical-lead' OR
 							ph.position = 'delivery-manager' OR
 							ph.position = 'account-manager')
 						AND ph.employee_id = e.id
-						AND ph.end_date IS NULL)                  AS project_head_count,
+						AND ph.end_date IS NULL)                 AS project_head_count,
 					COALESCE(wui_learning.work_unit_count, 0)    AS learning,
 					COALESCE(wui_development.work_unit_count, 0) AS development,
 					COALESCE(wui_management.work_unit_count, 0)  AS management,
 					COALESCE(wui_training.work_unit_count, 0)    AS training
-				FROM 
-					employees e
+				FROM
+					employee_data e
 					LEFT JOIN work_unit_info wui_learning
 								ON e.id = wui_learning.employee_id AND wui_learning.type = 'learning'
 					LEFT JOIN work_unit_info wui_development
@@ -685,7 +700,7 @@ func (s *store) TotalWorkUnitDistribution(db *gorm.DB) (*model.TotalWorkUnitDist
 								ON e.id = wui_management.employee_id AND wui_management.type = 'management'
 					LEFT JOIN work_unit_info wui_training
 								ON e.id = wui_training.employee_id AND wui_training.type = 'training')
-		SELECT 
+		SELECT
 			SUM(line_manager_count) AS total_line_manager,
 			SUM(project_head_count) AS total_project_head,
 			SUM(learning)           AS total_learning,

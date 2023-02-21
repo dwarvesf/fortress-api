@@ -583,19 +583,19 @@ func TestHandler_GetWorkUnitDistribution(t *testing.T) {
 			name:             "happy_case_with_name",
 			wantCode:         http.StatusOK,
 			wantResponsePath: "testdata/work_unit_distribution/200_with_name.json",
-			query:            "name=th",
+			query:            "name=hai",
 		},
 		{
 			name:             "happy_case_with_name_and_sort",
 			wantCode:         http.StatusOK,
 			wantResponsePath: "testdata/work_unit_distribution/200_with_name_and_sort.json",
-			query:            "name=th&sort=asc",
+			query:            "name=hai&sort=asc",
 		},
 		{
 			name:             "happy_case_with_name_and_sort",
 			wantCode:         http.StatusOK,
 			wantResponsePath: "testdata/work_unit_distribution/200_with_name_sort_and_type.json",
-			query:            "name=th&sort=asc&type=training",
+			query:            "name=hai&sort=asc&type=training",
 		},
 		{
 			name:             "invalid_sort",

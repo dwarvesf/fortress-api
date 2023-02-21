@@ -768,6 +768,9 @@ func (h *handler) GetWorkUnitDistribution(c *gin.Context) {
 				model.WorkingStatusContractor.String(),
 				model.WorkingStatusFullTime.String(),
 				model.WorkingStatusProbation.String()},
+			Organizations: []string{
+				model.OrganizationCodeDwarves,
+			},
 		},
 		model.Pagination{
 			Page: 0,
@@ -780,9 +783,9 @@ func (h *handler) GetWorkUnitDistribution(c *gin.Context) {
 		return
 	}
 
-	for _, employee := range employees {
+	for _, e := range employees {
 		// Get all mentee
-		mentees, err := h.store.Employee.GetMenteesByID(h.repo.DB(), employee.ID.String())
+		mentees, err := h.store.Employee.GetMenteesByID(h.repo.DB(), e.ID.String())
 		if err != nil {
 			l.Error(err, "failed to get mentees")
 			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
@@ -790,7 +793,7 @@ func (h *handler) GetWorkUnitDistribution(c *gin.Context) {
 		}
 
 		// Get all work units info
-		workUnits, err := h.store.WorkUnit.GetAllWorkUnitByEmployeeID(h.repo.DB(), employee.ID.String())
+		workUnits, err := h.store.WorkUnit.GetAllWorkUnitByEmployeeID(h.repo.DB(), e.ID.String())
 		if err != nil {
 			l.Error(err, "failed to get work units")
 			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
@@ -798,14 +801,14 @@ func (h *handler) GetWorkUnitDistribution(c *gin.Context) {
 		}
 
 		// Get all project head info
-		managementInfos, err := h.store.Dashboard.GetProjectHeadByEmployeeID(h.repo.DB(), employee.ID.String())
+		managementInfos, err := h.store.Dashboard.GetProjectHeadByEmployeeID(h.repo.DB(), e.ID.String())
 		if err != nil {
 			l.Error(err, "failed to get project head")
 			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 			return
 		}
 
-		rs.WorkUnitDistributions = append(rs.WorkUnitDistributions, view.ToWorkUnitDistribution(employee, mentees, workUnits, managementInfos, input.Type))
+		rs.WorkUnitDistributions = append(rs.WorkUnitDistributions, view.ToWorkUnitDistribution(e, mentees, workUnits, managementInfos, input.Type))
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.SortWorkUnitDistributionData(rs, input.Sort), nil, nil, nil, ""))
