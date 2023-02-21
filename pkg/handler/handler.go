@@ -3,6 +3,7 @@ package handler
 import (
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/controller"
+	"github.com/dwarvesf/fortress-api/pkg/handler/asset"
 	"github.com/dwarvesf/fortress-api/pkg/handler/audience"
 	"github.com/dwarvesf/fortress-api/pkg/handler/audit"
 	"github.com/dwarvesf/fortress-api/pkg/handler/auth"
@@ -63,6 +64,7 @@ type Handler struct {
 	Webhook        webhook.IHandler
 	Discord        discord.IHandler
 	Client         client.IHandler
+	Asset          asset.IHandler
 }
 
 func New(store *store.Store, repo store.DBRepo, service *service.Service, ctrl *controller.Controller, logger logger.Logger, cfg *config.Config) *Handler {
@@ -94,5 +96,6 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, ctrl *
 		Webhook:        webhook.New(store, repo, service, logger, cfg),
 		Discord:        discord.New(store, repo, service, logger, cfg),
 		Client:         client.New(ctrl, store, repo, service, logger, cfg),
+		Asset:          asset.New(store, repo, service, logger, cfg),
 	}
 }

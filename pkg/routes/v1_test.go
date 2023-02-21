@@ -437,6 +437,12 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/dashboard.IHandler.GetAudits-fm",
 			},
 		},
+		"/api/v1/assets/upload": {
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/asset.IHandler.Upload-fm",
+			},
+		},
 		"/api/v1/earn": {
 			"GET": {
 				Method:  "GET",

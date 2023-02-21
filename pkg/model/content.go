@@ -17,7 +17,9 @@ type Content struct {
 	Extension  string `json:"extension"`
 	Path       string `json:"path"`
 	UploadBy   UUID   `json:"uploadBy"`
-	EmployeeID UUID   `json:"employee_id"`
+	TargetID   UUID   `json:"target_id"`
+	TargetType string `json:"target_type"`
+	AuthType   string `json:"auth_type"`
 }
 
 // BeforeCreate prepare data before create data
@@ -32,6 +34,22 @@ const (
 	ContentExtensionJpg ContentExtension = ".jpg"
 	ContentExtensionPng ContentExtension = ".png"
 	ContentExtensionPdf ContentExtension = ".pdf"
+)
+
+type ContentTargetType string
+
+const (
+	ContentTargetTypeEmployee  ContentTargetType = "employees"
+	ContentTargetTypeProject   ContentTargetType = "projects"
+	ContentTargetTypeChangeLog ContentTargetType = "changelogs"
+	ContentTargetTypeInvoice   ContentTargetType = "invoices"
+)
+
+type ContentType string
+
+const (
+	ContentTypeImage ContentType = "image"
+	ContentTypeDoc   ContentType = "doc"
 )
 
 const (
@@ -60,5 +78,35 @@ func (e ContentExtension) ImageValid() bool {
 }
 
 func (e ContentExtension) String() string {
+	return string(e)
+}
+
+func (e ContentTargetType) Valid() bool {
+	switch e {
+	case
+		ContentTargetTypeEmployee,
+		ContentTargetTypeProject,
+		ContentTargetTypeInvoice,
+		ContentTargetTypeChangeLog:
+		return true
+	}
+	return false
+}
+
+func (e ContentTargetType) String() string {
+	return string(e)
+}
+
+func (e ContentType) Valid() bool {
+	switch e {
+	case
+		ContentTypeImage,
+		ContentTypeDoc:
+		return true
+	}
+	return false
+}
+
+func (e ContentType) String() string {
 	return string(e)
 }

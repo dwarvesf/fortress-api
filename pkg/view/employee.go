@@ -489,7 +489,7 @@ type EmployeeContentDataResponse struct {
 	Data *EmployeeContentData `json:"data"`
 }
 
-func ToContentData(url string) *EmployeeContentData {
+func ToEmployeeContentData(url string) *EmployeeContentData {
 	return &EmployeeContentData{
 		Url: url,
 	}

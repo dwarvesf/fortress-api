@@ -144,7 +144,7 @@ definitions:
         $ref: '#/definitions/pgtype.JSONB'
       name:
         type: string
-      registration_number:
+      registrationNumber:
         type: string
       updatedAt:
         type: string
@@ -2183,6 +2183,16 @@ definitions:
       role:
         type: string
     type: object
+  view.ContentData:
+    properties:
+      url:
+        type: string
+    type: object
+  view.ContentDataResponse:
+    properties:
+      data:
+        $ref: '#/definitions/view.ContentData'
+    type: object
   view.CountriesResponse:
     properties:
       data:
@@ -3732,6 +3742,50 @@ info:
   title: Swagger Example API
   version: "1.0"
 paths:
+  /assets/upload:
+    post:
+      consumes:
+      - application/json
+      description: Upload the content
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: content upload
+        in: formData
+        name: file
+        required: true
+        type: file
+      - description: image/doc
+        in: formData
+        name: type
+        required: true
+        type: string
+      - description: employees/projects/changelogs/invoices
+        in: formData
+        name: targetType
+        required: true
+        type: string
+      - description: employeeID/projectID
+        in: formData
+        name: targetID
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.ContentDataResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Upload the content
+      tags:
+      - Asset
   /auth:
     post:
       consumes:
@@ -5111,7 +5165,7 @@ paths:
       tags:
       - hiring
   /invoices/{id}/status:
-    get:
+    put:
       consumes:
       - application/json
       description: Update status for invoice

@@ -358,11 +358,11 @@ func (h *handler) UploadAvatar(c *gin.Context) {
 	}
 
 	_, err = h.store.Content.Create(tx.DB(), model.Content{
-		Type:       fileType,
-		Extension:  fileExtension.String(),
-		Path:       filePath,
-		EmployeeID: existedEmployee.ID,
-		UploadBy:   existedEmployee.ID,
+		Type:      fileType,
+		Extension: fileExtension.String(),
+		Path:      filePath,
+		TargetID:  existedEmployee.ID,
+		UploadBy:  existedEmployee.ID,
 	})
 	if err != nil {
 		l.Error(err, "error query employee from db")

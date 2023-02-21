@@ -1268,11 +1268,11 @@ func (h *handler) UploadContent(c *gin.Context) {
 	}
 
 	content, err := h.store.Content.Create(tx.DB(), model.Content{
-		Type:       fileType,
-		Extension:  fileExtension.String(),
-		Path:       fmt.Sprintf("https://storage.googleapis.com/%s/%s", h.config.Google.GCSBucketName, filePath),
-		EmployeeID: emp.ID,
-		UploadBy:   emp.ID,
+		Type:      fileType,
+		Extension: fileExtension.String(),
+		Path:      fmt.Sprintf("https://storage.googleapis.com/%s/%s", h.config.Google.GCSBucketName, filePath),
+		TargetID:  emp.ID,
+		UploadBy:  emp.ID,
 	})
 	if err != nil {
 		l.Error(err, "error query employee from db")
@@ -1404,11 +1404,11 @@ func (h *handler) UploadAvatar(c *gin.Context) {
 	if err != nil && err == gorm.ErrRecordNotFound {
 		// not found => create and upload content to GCS
 		_, err = h.store.Content.Create(tx.DB(), model.Content{
-			Type:       fileType,
-			Extension:  fileExtension.String(),
-			Path:       filePath,
-			EmployeeID: emp.ID,
-			UploadBy:   uuidUserID,
+			Type:      fileType,
+			Extension: fileExtension.String(),
+			Path:      filePath,
+			TargetID:  emp.ID,
+			UploadBy:  uuidUserID,
 		})
 		if err != nil {
 			l.Error(err, "error query employee from db")
