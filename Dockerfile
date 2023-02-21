@@ -7,12 +7,10 @@ ENV GOOS=linux GOARCH=amd64 CGO_ENABLED=0
 RUN go install -v ./...
 RUN go install -v github.com/rubenv/sql-migrate/sql-migrate@latest
 
-FROM alpine:3.15.0
+FROM alpine:3.14.0
 RUN apk --no-cache add ca-certificates
-RUN apk --no-cache add curl
+RUN apk --no-cache add wkhtmltopdf
 RUN ln -fs /usr/share/zoneinfo/Asia/Ho_Chi_Minh /etc/localtime
-
-COPY --from=wkhtmltopdf /bin/wkhtmltopdf /usr/bin/wkhtmltopdf
 RUN chmod +x /usr/bin/wkhtmltopdf
 
 WORKDIR /
