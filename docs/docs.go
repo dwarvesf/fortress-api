@@ -2276,7 +2276,7 @@ const docTemplate = `{
             }
         },
         "/invoices/{id}/status": {
-            "get": {
+            "put": {
                 "description": "Update status for invoice",
                 "consumes": [
                     "application/json"
@@ -5423,7 +5423,7 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
-                "registration_number": {
+                "registrationNumber": {
                     "type": "string"
                 },
                 "updatedAt": {

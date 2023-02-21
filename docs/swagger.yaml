@@ -144,7 +144,7 @@ definitions:
         $ref: '#/definitions/pgtype.JSONB'
       name:
         type: string
-      registration_number:
+      registrationNumber:
         type: string
       updatedAt:
         type: string
@@ -5111,7 +5111,7 @@ paths:
       tags:
       - hiring
   /invoices/{id}/status:
-    get:
+    put:
       consumes:
       - application/json
       description: Update status for invoice

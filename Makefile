@@ -11,11 +11,7 @@ APP_ENVIRONMENT=docker run --rm -v ${PWD}:/${APP_NAME} -w /${APP_NAME} --net=hos
 setup:
 	docker pull ${TOOLS_IMAGE}
 
-init:
-	@if [[ "$(docker images -q dwarvesv/fortress-tools:latest 2> /dev/null)" == "" ]]; then \
-		docker pull ${TOOLS_IMAGE}; \
-	fi
-
+init: setup
 	make remove-infras
 	docker-compose up -d
 	@echo "Waiting for database connection..."
@@ -65,16 +61,16 @@ test:
 
 	@PROJECT_PATH=$(shell pwd) go test -cover ./... -count=1 -p=1
 
-migrate-test:
+migrate-test: setup
 	${APP_ENVIRONMENT} sql-migrate up -env=test
 
-migrate-new:
+migrate-new: setup
 	${APP_ENVIRONMENT} sql-migrate new -env=local ${name}
 
-migrate-up:
+migrate-up: setup
 	${APP_ENVIRONMENT} sql-migrate up -env=local
 
-migrate-down:
+migrate-down: setup
 	${APP_ENVIRONMENT} sql-migrate down -env=local
 
 docker-build:
@@ -82,12 +78,12 @@ docker-build:
 	--build-arg DEFAULT_PORT="${DEFAULT_PORT}" \
 	-t ${APP_NAME}:latest .
 
-reset-db:
+reset-db: setup
 	${APP_ENVIRONMENT} sql-migrate down -env=local -limit=0
 	${APP_ENVIRONMENT} sql-migrate up -env=local
 	make seed
 
-reset-test-db:
+reset-test-db: setup
 	${APP_ENVIRONMENT} sql-migrate down -env=test -limit=0
 	${APP_ENVIRONMENT} sql-migrate up -env=test
 	make seed-test
@@ -95,7 +91,7 @@ reset-test-db:
 gen-mock:
 	echo "add later"
 
-gen-swagger:
+gen-swagger: setup
 	${APP_ENVIRONMENT} swag init --parseDependency -g ./cmd/server/main.go
 
 ci: init
