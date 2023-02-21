@@ -1,6 +1,8 @@
 package model
 
 import (
+	"database/sql/driver"
+	"encoding/json"
 	"time"
 
 	"github.com/shopspring/decimal"
@@ -282,4 +284,34 @@ func (pm *ProjectMember) IsActive() bool {
 	}
 
 	return false
+}
+
+var priority = []string{"us", "eu", "vn"}
+
+func (p Project) GetCompanyContactInfo() (*CompanyContactInfo, error) {
+	res := CompanyContactInfo{}
+	if p.CompanyInfo == nil {
+		return &res, nil
+	}
+	m := map[string]*CompanyContactInfo{}
+	v, err := p.CompanyInfo.Info.Value()
+	if err != nil {
+		return nil, err
+	}
+
+	if !driver.IsValue(v) || v == nil {
+		return &res, nil
+	}
+
+	if err = json.Unmarshal(v.([]byte), &m); err != nil {
+		return nil, err
+	}
+
+	for _, v := range priority {
+		if m[v] != nil {
+			return m[v], nil
+		}
+	}
+
+	return &res, nil
 }

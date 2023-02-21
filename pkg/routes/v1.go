@@ -20,9 +20,9 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 
 	// cronjob group
 	{
-		cronjob.POST("/audits", h.Audit.Sync)
-		cronjob.POST("/birthday", h.Birthday.BirthdayDailyMessage)
-		cronjob.POST("/sync-discord-info", h.Discord.SyncDiscordInfo)
+		cronjob.POST("/audits", amw.WithAuth, pmw.WithPerm(model.PermissionCronjobExecute), h.Audit.Sync)
+		cronjob.POST("/birthday", amw.WithAuth, pmw.WithPerm(model.PermissionCronjobExecute), h.Birthday.BirthdayDailyMessage)
+		cronjob.POST("/sync-discord-info", amw.WithAuth, pmw.WithPerm(model.PermissionCronjobExecute), h.Discord.SyncDiscordInfo)
 	}
 
 	/////////////////
@@ -141,9 +141,10 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 
 	invoiceGroup := v1.Group("/invoices")
 	{
-		invoiceGroup.POST("", pmw.WithPerm(model.PermissionInvoiceCreate), h.Invoice.Create)
-		invoiceGroup.PUT("/:id/status", pmw.WithPerm(model.PermissionInvoiceEdit), h.Invoice.Update)
+		invoiceGroup.PUT("/:id/status", pmw.WithPerm(model.PermissionInvoiceEdit), h.Invoice.UpdateStatus)
 		invoiceGroup.GET("/latest", pmw.WithPerm(model.PermissionInvoiceRead), h.Invoice.GetLatestInvoice)
+		invoiceGroup.GET("/template", h.Invoice.GetTemplate)
+		invoiceGroup.POST("/send", h.Invoice.Send)
 	}
 
 	valuation := v1.Group("/valuation")

@@ -28,6 +28,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/store/employeestack"
 	"github.com/dwarvesf/fortress-api/pkg/store/feedbackevent"
 	"github.com/dwarvesf/fortress-api/pkg/store/invoice"
+	"github.com/dwarvesf/fortress-api/pkg/store/invoicenumbercaching"
 	"github.com/dwarvesf/fortress-api/pkg/store/organization"
 	"github.com/dwarvesf/fortress-api/pkg/store/permission"
 	"github.com/dwarvesf/fortress-api/pkg/store/position"
@@ -94,6 +95,7 @@ type Store struct {
 	SocialAccount         socialaccount.IStore
 	BankAccount           bankaccount.IStore
 	Invoice               invoice.IStore
+	InvoiceNumberCaching  invoicenumbercaching.IStore
 	ProjectNotion         projectnotion.IStore
 	Schedule              schedule.IStore
 	Client                client.IStore
@@ -146,6 +148,7 @@ func New() *Store {
 		SocialAccount:         socialaccount.New(),
 		BankAccount:           bankaccount.New(),
 		Invoice:               invoice.New(),
+		InvoiceNumberCaching:  invoicenumbercaching.New(),
 		ProjectNotion:         projectnotion.New(),
 		Schedule:              schedule.New(),
 		Client:                client.New(),

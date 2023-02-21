@@ -8,9 +8,10 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/controller"
 	"github.com/dwarvesf/fortress-api/pkg/controller/auth"
+	"github.com/dwarvesf/fortress-api/pkg/handler/auth/errs"
 	"github.com/dwarvesf/fortress-api/pkg/handler/auth/request"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
-	"github.com/dwarvesf/fortress-api/pkg/utils"
+	"github.com/dwarvesf/fortress-api/pkg/utils/authutils"
 	"github.com/dwarvesf/fortress-api/pkg/view"
 )
 
@@ -60,7 +61,7 @@ func (h *handler) Auth(c *gin.Context) {
 		"body":    req,
 	})
 
-	e, jwt, err := h.controller.Auth.Auth(c, auth.AuthenticationInput{
+	e, jwt, err := h.controller.Auth.Auth(auth.AuthenticationInput{
 		Code:        req.Code,
 		RedirectURL: req.RedirectURL,
 	})
@@ -87,7 +88,7 @@ func (h *handler) Auth(c *gin.Context) {
 // @Failure 500 {object} view.ErrorResponse
 // @Router /auth/me [get]
 func (h *handler) Me(c *gin.Context) {
-	userID, err := utils.GetUserIDFromContext(c, h.config)
+	userID, err := authutils.GetUserIDFromContext(c, h.config)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
@@ -99,7 +100,7 @@ func (h *handler) Me(c *gin.Context) {
 		"method":  "Me",
 	})
 
-	rs, perms, err := h.controller.Auth.Me(c, userID)
+	rs, perms, err := h.controller.Auth.Me(userID)
 	if err != nil {
 		l.Error(err, "error query employee from db")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
@@ -135,10 +136,10 @@ func (h *handler) CreateAPIKey(c *gin.Context) {
 		"method":  "CreateAPIKey",
 	})
 
-	key, err := h.controller.Auth.CreateAPIKey(c, body.RoleID)
+	key, err := h.controller.Auth.CreateAPIKey(body.RoleID)
 	if err != nil {
 		l.Error(err, "error create api key")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		errs.ConvertControllerErr(c, err)
 		return
 	}
 

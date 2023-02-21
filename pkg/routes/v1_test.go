@@ -591,22 +591,28 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/bankaccount.IHandler.List-fm",
 			},
 		},
-		"/api/v1/invoices": {
+		"/api/v1/invoices/send": {
 			"POST": {
 				Method:  "POST",
-				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/invoice.IHandler.Create-fm",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/invoice.IHandler.Send-fm",
 			},
 		},
 		"/api/v1/invoices/:id/status": {
 			"PUT": {
 				Method:  "PUT",
-				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/invoice.IHandler.Update-fm",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/invoice.IHandler.UpdateStatus-fm",
 			},
 		},
 		"/api/v1/invoices/latest": {
 			"GET": {
 				Method:  "GET",
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/invoice.IHandler.GetLatestInvoice-fm",
+			},
+		},
+		"/api/v1/invoices/template": {
+			"GET": {
+				Method:  "GET",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/invoice.IHandler.GetTemplate-fm",
 			},
 		},
 		"/api/v1/clients": {

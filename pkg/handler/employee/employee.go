@@ -20,7 +20,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/store/employee"
-	"github.com/dwarvesf/fortress-api/pkg/utils"
+	"github.com/dwarvesf/fortress-api/pkg/utils/authutils"
 	"github.com/dwarvesf/fortress-api/pkg/view"
 )
 
@@ -58,7 +58,7 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 // @Router /employees/search [post]
 func (h *handler) List(c *gin.Context) {
 	// 0. Get current logged in user data
-	userInfo, err := utils.GetLoggedInUserInfo(c, h.store, h.repo.DB(), h.config)
+	userInfo, err := authutils.GetLoggedInUserInfo(c, h.store, h.repo.DB(), h.config)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, userInfo.UserID, ""))
 		return
@@ -98,7 +98,7 @@ func (h *handler) List(c *gin.Context) {
 	}
 
 	// If user don't have this permission, they can only see employees in the project that they are in
-	if !utils.HasPermission(userInfo.Permissions, model.PermissionEmployeesReadReadActive) {
+	if !authutils.HasPermission(userInfo.Permissions, model.PermissionEmployeesReadReadActive) {
 		projectIDs := make([]string, 0)
 		for _, p := range userInfo.Projects {
 			projectIDs = append(projectIDs, p.Code)
@@ -131,14 +131,14 @@ func (h *handler) List(c *gin.Context) {
 }
 
 func (h *handler) getWorkingStatusInput(c *gin.Context, input []string) ([]string, error) {
-	userInfo, err := utils.GetLoggedInUserInfo(c, h.store, h.repo.DB(), h.config)
+	userInfo, err := authutils.GetLoggedInUserInfo(c, h.store, h.repo.DB(), h.config)
 	if err != nil {
 		h.logger.Error(err, "failed to get userID from context")
 		return nil, err
 	}
 
 	// user who do not have permission
-	if !utils.HasPermission(userInfo.Permissions, model.PermissionEmployeesReadFilterByAllStatuses) {
+	if !authutils.HasPermission(userInfo.Permissions, model.PermissionEmployeesReadFilterByAllStatuses) {
 		if len(input) == 0 {
 			return []string{
 				model.WorkingStatusOnBoarding.String(),
@@ -188,7 +188,7 @@ func (h *handler) getWorkingStatusInput(c *gin.Context, input []string) ([]strin
 // @Router /employees/{id} [get]
 func (h *handler) Details(c *gin.Context) {
 	// 0. Get current logged in user data
-	userInfo, err := utils.GetLoggedInUserInfo(c, h.store, h.repo.DB(), h.config)
+	userInfo, err := authutils.GetLoggedInUserInfo(c, h.store, h.repo.DB(), h.config)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, userInfo.UserID, ""))
 		return
@@ -218,7 +218,7 @@ func (h *handler) Details(c *gin.Context) {
 		return
 	}
 
-	if rs.WorkingStatus == model.WorkingStatusLeft && !utils.HasPermission(userInfo.Permissions, model.PermissionEmployeesReadFullAccess) {
+	if rs.WorkingStatus == model.WorkingStatusLeft && !authutils.HasPermission(userInfo.Permissions, model.PermissionEmployeesReadFullAccess) {
 		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrEmployeeNotFound, nil, ""))
 		return
 	}
@@ -636,7 +636,7 @@ func (h *handler) updateSocialAccounts(db *gorm.DB, input request.UpdateEmployee
 // @Failure 500 {object} view.ErrorResponse
 // @Router /employees [post]
 func (h *handler) Create(c *gin.Context) {
-	userID, err := utils.GetUserIDFromContext(c, h.config)
+	userID, err := authutils.GetUserIDFromContext(c, h.config)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
@@ -1318,7 +1318,7 @@ func (h *handler) UploadContent(c *gin.Context) {
 // @Router /employees/{id}/upload-avatar [post]
 func (h *handler) UploadAvatar(c *gin.Context) {
 	// 1.1 get userID
-	userID, err := utils.GetUserIDFromContext(c, h.config)
+	userID, err := authutils.GetUserIDFromContext(c, h.config)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
@@ -1465,7 +1465,7 @@ func (h *handler) UploadAvatar(c *gin.Context) {
 // @Failure 500 {object} view.ErrorResponse
 // @Router /employees/{id}/roles [put]
 func (h *handler) UpdateRole(c *gin.Context) {
-	userID, err := utils.GetUserIDFromContext(c, h.config)
+	userID, err := authutils.GetUserIDFromContext(c, h.config)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
@@ -1570,7 +1570,7 @@ func (h *handler) UpdateRole(c *gin.Context) {
 // @Failure 500 {object} view.ErrorResponse
 // @Router /line-managers [get]
 func (h *handler) GetLineManagers(c *gin.Context) {
-	userInfo, err := utils.GetLoggedInUserInfo(c, h.store, h.repo.DB(), h.config)
+	userInfo, err := authutils.GetLoggedInUserInfo(c, h.store, h.repo.DB(), h.config)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
@@ -1584,7 +1584,7 @@ func (h *handler) GetLineManagers(c *gin.Context) {
 
 	var managers []*model.Employee
 
-	if utils.HasPermission(userInfo.Permissions, model.PermissionEmployeesReadLineManagerFullAccess) {
+	if authutils.HasPermission(userInfo.Permissions, model.PermissionEmployeesReadLineManagerFullAccess) {
 		managers, err = h.store.Employee.GetLineManagers(h.repo.DB())
 		if err != nil {
 			l.Error(err, "failed to get line managers")

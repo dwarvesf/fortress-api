@@ -7,30 +7,25 @@ import (
 	"time"
 )
 
-var (
-	ErrInvoiceAlreadyMarkedAsPaid  = errors.New("invoice has already been marked as paid")
-	ErrInvoiceAlreadyMarkedAsError = errors.New("invoice has already been marked as error")
-)
-
 type InvoiceStatus string
 
 const (
-	InvoiceDraft     InvoiceStatus = "draft"
-	InvoiceSent      InvoiceStatus = "sent"
-	InvoiceOverdue   InvoiceStatus = "overdue"
-	InvoicePaid      InvoiceStatus = "paid"
-	InvoiceError     InvoiceStatus = "error"
-	InvoiceScheduled InvoiceStatus = "scheduled"
+	InvoiceStatusDraft     InvoiceStatus = "draft"
+	InvoiceStatusSent      InvoiceStatus = "sent"
+	InvoiceStatusOverdue   InvoiceStatus = "overdue"
+	InvoiceStatusPaid      InvoiceStatus = "paid"
+	InvoiceStatusError     InvoiceStatus = "error"
+	InvoiceStatusScheduled InvoiceStatus = "scheduled"
 )
 
 func (i InvoiceStatus) IsValid() bool {
 	switch i {
-	case InvoiceDraft,
-		InvoiceSent,
-		InvoiceOverdue,
-		InvoicePaid,
-		InvoiceError,
-		InvoiceScheduled:
+	case InvoiceStatusDraft,
+		InvoiceStatusSent,
+		InvoiceStatusOverdue,
+		InvoiceStatusPaid,
+		InvoiceStatusError,
+		InvoiceStatusScheduled:
 		return true
 	}
 	return false
@@ -40,7 +35,7 @@ func (i InvoiceStatus) String() string {
 	return string(i)
 }
 
-//Invoice contain company information
+// Invoice contain company information
 type Invoice struct {
 	BaseModel
 
@@ -118,7 +113,7 @@ type InvoiceItem struct {
 }
 
 func GetInfoItems(lineItems JSON) ([]InvoiceItem, error) {
-	items := []InvoiceItem{}
+	var items []InvoiceItem
 
 	if len(lineItems) == 0 || string(lineItems) == "null" {
 		return items, nil

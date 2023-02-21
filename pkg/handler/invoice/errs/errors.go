@@ -14,4 +14,5 @@ var (
 	ErrInvoiceNotFound      = errors.New("invoice not found")
 	ErrInvalidEmailDomain   = errors.New("invalid email domain")
 	ErrInvalidProjectID     = errors.New("invalid project id")
+	ErrInvoiceStatusAlready = errors.New("invoice status already")
 )
