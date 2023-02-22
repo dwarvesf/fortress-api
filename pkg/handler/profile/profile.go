@@ -126,6 +126,19 @@ func (h *handler) UpdateInfo(c *gin.Context) {
 		return
 	}
 
+	// validate personal email
+	_, err = h.store.Employee.OneByEmail(h.repo.DB(), input.PersonalEmail)
+	if employee.PersonalEmail != input.PersonalEmail && input.PersonalEmail != "" && !errors.Is(err, gorm.ErrRecordNotFound) {
+		if err == nil {
+			l.Error(err, "personal email exists")
+			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrEmailExisted, input, ""))
+			return
+		}
+		l.Error(err, "failed to get employee by email")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input, ""))
+		return
+	}
+
 	input.MapEmployeeInput(employee)
 
 	if isValid := h.validateCountryAndCity(h.repo.DB(), input.Country, input.City); !isValid {
@@ -358,11 +371,11 @@ func (h *handler) UploadAvatar(c *gin.Context) {
 	}
 
 	_, err = h.store.Content.Create(tx.DB(), model.Content{
-		Type:       fileType,
-		Extension:  fileExtension.String(),
-		Path:       filePath,
-		EmployeeID: existedEmployee.ID,
-		UploadBy:   existedEmployee.ID,
+		Type:      fileType,
+		Extension: fileExtension.String(),
+		Path:      filePath,
+		TargetID:  existedEmployee.ID,
+		UploadBy:  existedEmployee.ID,
 	})
 	if err != nil {
 		l.Error(err, "error query employee from db")

@@ -760,19 +760,31 @@ func (h *handler) Create(c *gin.Context) {
 
 	// 2.1 check employee exists -> raise error
 	_, err = h.store.Employee.OneByTeamEmail(h.repo.DB(), eml.TeamEmail)
-	if err != gorm.ErrRecordNotFound {
+	if !errors.Is(err, gorm.ErrRecordNotFound) {
 		if err == nil {
-			l.Error(err, "error eml exists")
-			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrEmployeeExisted, input, ""))
+			l.Error(err, "team email exists")
+			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrEmailExisted, input, ""))
 			return
 		}
-		l.Error(err, "error store new eml")
+		l.Error(err, "failed to get employee by email")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input, ""))
+		return
+	}
+
+	_, err = h.store.Employee.OneByEmail(h.repo.DB(), eml.PersonalEmail)
+	if !errors.Is(err, gorm.ErrRecordNotFound) {
+		if err == nil {
+			l.Error(err, "personal email exists")
+			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrEmailExisted, input, ""))
+			return
+		}
+		l.Error(err, "failed to get employee by email")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input, ""))
 		return
 	}
 
 	_, err = h.store.Employee.One(h.repo.DB(), eml.Username, false)
-	if err != gorm.ErrRecordNotFound {
+	if !errors.Is(err, gorm.ErrRecordNotFound) {
 		if err == nil {
 			l.Error(err, "username exists")
 			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrEmployeeExisted, input, ""))
@@ -1111,6 +1123,19 @@ func (h *handler) UpdatePersonalInfo(c *gin.Context) {
 		return
 	}
 
+	// validate personal email
+	_, err = h.store.Employee.OneByEmail(h.repo.DB(), body.PersonalEmail)
+	if emp.PersonalEmail != body.PersonalEmail && body.PersonalEmail != "" && !errors.Is(err, gorm.ErrRecordNotFound) {
+		if err == nil {
+			l.Error(err, "personal email exists")
+			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrEmailExisted, body, ""))
+			return
+		}
+		l.Error(err, "failed to get employee by email")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
+		return
+	}
+
 	emp.DateOfBirth = body.DoB
 	emp.Gender = body.Gender
 	emp.Address = body.Address
@@ -1268,11 +1293,11 @@ func (h *handler) UploadContent(c *gin.Context) {
 	}
 
 	content, err := h.store.Content.Create(tx.DB(), model.Content{
-		Type:       fileType,
-		Extension:  fileExtension.String(),
-		Path:       fmt.Sprintf("https://storage.googleapis.com/%s/%s", h.config.Google.GCSBucketName, filePath),
-		EmployeeID: emp.ID,
-		UploadBy:   emp.ID,
+		Type:      fileType,
+		Extension: fileExtension.String(),
+		Path:      fmt.Sprintf("https://storage.googleapis.com/%s/%s", h.config.Google.GCSBucketName, filePath),
+		TargetID:  emp.ID,
+		UploadBy:  emp.ID,
 	})
 	if err != nil {
 		l.Error(err, "error query employee from db")
@@ -1404,11 +1429,11 @@ func (h *handler) UploadAvatar(c *gin.Context) {
 	if err != nil && err == gorm.ErrRecordNotFound {
 		// not found => create and upload content to GCS
 		_, err = h.store.Content.Create(tx.DB(), model.Content{
-			Type:       fileType,
-			Extension:  fileExtension.String(),
-			Path:       filePath,
-			EmployeeID: emp.ID,
-			UploadBy:   uuidUserID,
+			Type:      fileType,
+			Extension: fileExtension.String(),
+			Path:      filePath,
+			TargetID:  emp.ID,
+			UploadBy:  uuidUserID,
 		})
 		if err != nil {
 			l.Error(err, "error query employee from db")

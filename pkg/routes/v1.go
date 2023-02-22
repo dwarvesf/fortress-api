@@ -44,6 +44,9 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 	v1.PUT("/profile", amw.WithAuth, h.Profile.UpdateInfo)
 	v1.POST("/profile/upload-avatar", amw.WithAuth, h.Profile.UploadAvatar)
 
+	// assets
+	v1.POST("/assets/upload", amw.WithAuth, pmw.WithPerm(model.PermissionAssetUpload), h.Asset.Upload)
+
 	// employees
 	v1.POST("/employees", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesCreate), h.Employee.Create)
 	v1.POST("/employees/search", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesRead), h.Employee.List)

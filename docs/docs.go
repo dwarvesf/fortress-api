@@ -25,6 +25,71 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/assets/upload": {
+            "post": {
+                "description": "Upload the content",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Asset"
+                ],
+                "summary": "Upload the content",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "content upload",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "image/doc",
+                        "name": "type",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "employees/projects/changelogs/invoices",
+                        "name": "targetType",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "employeeID/projectID",
+                        "name": "targetID",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.ContentDataResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/auth": {
             "post": {
                 "description": "Authorise user when login",
@@ -2276,7 +2341,7 @@ const docTemplate = `{
             }
         },
         "/invoices/{id}/status": {
-            "get": {
+            "put": {
                 "description": "Update status for invoice",
                 "consumes": [
                     "application/json"
@@ -5423,7 +5488,7 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
-                "registration_number": {
+                "registrationNumber": {
                     "type": "string"
                 },
                 "updatedAt": {
@@ -6405,6 +6470,9 @@ const docTemplate = `{
                 "isLead": {
                     "type": "boolean"
                 },
+                "note": {
+                    "type": "string"
+                },
                 "positions": {
                     "type": "array",
                     "items": {
@@ -6540,6 +6608,9 @@ const docTemplate = `{
                     "type": "number"
                 },
                 "id": {
+                    "type": "string"
+                },
+                "note": {
                     "type": "string"
                 },
                 "project": {
@@ -6955,6 +7026,9 @@ const docTemplate = `{
                 },
                 "isLead": {
                     "type": "boolean"
+                },
+                "note": {
+                    "type": "string"
                 },
                 "positions": {
                     "type": "array",
@@ -7659,6 +7733,9 @@ const docTemplate = `{
                 "isLead": {
                     "type": "boolean"
                 },
+                "note": {
+                    "type": "string"
+                },
                 "positions": {
                     "type": "array",
                     "items": {
@@ -8195,6 +8272,9 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
+                "note": {
+                    "type": "string"
+                },
                 "positions": {
                     "type": "array",
                     "items": {
@@ -8498,6 +8578,22 @@ const docTemplate = `{
                 }
             }
         },
+        "view.ContentData": {
+            "type": "object",
+            "properties": {
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "view.ContentDataResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/view.ContentData"
+                }
+            }
+        },
         "view.CountriesResponse": {
             "type": "object",
             "properties": {
@@ -8537,6 +8633,9 @@ const docTemplate = `{
                 },
                 "isLead": {
                     "type": "boolean"
+                },
+                "note": {
+                    "type": "string"
                 },
                 "positions": {
                     "type": "array",
@@ -9781,6 +9880,9 @@ const docTemplate = `{
                 },
                 "isLead": {
                     "type": "boolean"
+                },
+                "note": {
+                    "type": "string"
                 },
                 "positions": {
                     "type": "array",

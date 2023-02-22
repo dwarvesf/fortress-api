@@ -73,7 +73,8 @@
                     "discount": "0",
                     "seniority": null,
                     "positions": [],
-                    "upsellPerson": null
+                    "upsellPerson": null,
+                    "note": ""
                 },
                 {
                     "projectMemberID": "",
@@ -92,7 +93,8 @@
                     "discount": "0",
                     "seniority": null,
                     "positions": [],
-                    "upsellPerson": null
+                    "upsellPerson": null,
+                    "note": ""
                 },
                 {
                     "projectMemberID": "",
@@ -111,7 +113,8 @@
                     "discount": "0",
                     "seniority": null,
                     "positions": [],
-                    "upsellPerson": null
+                    "upsellPerson": null,
+                    "note": ""
                 },
                 {
                     "projectMemberID": "",
@@ -130,7 +133,8 @@
                     "discount": "0",
                     "seniority": null,
                     "positions": [],
-                    "upsellPerson": null
+                    "upsellPerson": null,
+                    "note": ""
                 },
                 {
                     "projectMemberID": "",
@@ -149,7 +153,8 @@
                     "discount": "0",
                     "seniority": null,
                     "positions": [],
-                    "upsellPerson": null
+                    "upsellPerson": null,
+                    "note": ""
                 }
             ],
             "technicalLeads": [

@@ -97,6 +97,7 @@ type ProjectMember struct {
 	EndDate         *time.Time      `json:"endDate"`
 	Rate            decimal.Decimal `json:"rate"`
 	Discount        decimal.Decimal `json:"discount"`
+	Note            string          `json:"note"`
 
 	Seniority    *model.Seniority   `json:"seniority"`
 	Positions    []Position         `json:"positions"`
@@ -319,6 +320,7 @@ type CreateMemberData struct {
 	Seniority       model.Seniority    `json:"seniority"`
 	Username        string             `json:"username"`
 	UpsellPerson    *BasicEmployeeInfo `json:"upsellPerson"`
+	Note            string             `json:"note"`
 }
 
 type CreateMemberDataResponse struct {
@@ -337,11 +339,13 @@ func ToCreateMemberData(userInfo *model.CurrentLoggedUserInfo, slot *model.Proje
 		Positions:      ToProjectSlotPositions(slot.ProjectSlotPositions),
 		IsLead:         slot.ProjectMember.IsLead,
 		Seniority:      slot.Seniority,
+		Note:           slot.Note,
 	}
 
 	if !slot.ProjectMember.ID.IsZero() {
 		rs.ProjectMemberID = slot.ProjectMember.ID.String()
 		rs.EmployeeID = slot.ProjectMember.EmployeeID.String()
+		rs.Note = slot.ProjectMember.Note
 	}
 
 	if slot.ProjectMember.UpsellPerson != nil && authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadFullAccess) {
@@ -467,6 +471,7 @@ func ToProjectMemberListData(userInfo *model.CurrentLoggedUserInfo, members []*m
 				Rate:           m.Rate,
 				Discount:       m.Discount,
 				Seniority:      m.Seniority,
+				Note:           m.Note,
 				Positions:      ToPositions(m.Positions),
 			}
 		} else {
@@ -486,6 +491,7 @@ func ToProjectMemberListData(userInfo *model.CurrentLoggedUserInfo, members []*m
 				Rate:            m.Rate,
 				Discount:        m.Discount,
 				Seniority:       m.Seniority,
+				Note:            m.Note,
 				Positions:       ToProjectMemberPositions(m.ProjectMemberPositions),
 			}
 

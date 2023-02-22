@@ -549,6 +549,7 @@ func (h *handler) mergeSlotAndMembers(db *gorm.DB, slots []*model.ProjectSlot, m
 			Rate:           slot.Rate,
 			Discount:       slot.Discount,
 			Seniority:      &slot.Seniority,
+			Note:           slot.Note,
 		}
 
 		for _, psPosition := range slot.ProjectSlotPositions {
@@ -954,13 +955,16 @@ func (h *handler) UpdateMember(c *gin.Context) {
 	slot.Status = model.ProjectMemberStatus(body.Status)
 	slot.Rate = body.Rate
 	slot.Discount = body.Discount
+	slot.Note = body.Note
 
 	_, err = h.store.ProjectSlot.UpdateSelectedFieldsByID(tx.DB(), body.ProjectSlotID.String(), *slot,
 		"seniority_id",
 		"deployment_type",
 		"status",
 		"rate",
-		"discount")
+		"discount",
+		"note",
+	)
 	if err != nil {
 		l.Error(err, "failed to update project slot")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
@@ -1056,6 +1060,7 @@ func (h *handler) updateProjectMember(db *gorm.DB, slotID string, projectID stri
 			Rate:           input.Rate,
 			Discount:       input.Discount,
 			UpsellPersonID: input.UpsellPersonID,
+			Note:           input.Note,
 		}
 
 		// TODO: allow updating sell_person_id
@@ -1067,6 +1072,7 @@ func (h *handler) updateProjectMember(db *gorm.DB, slotID string, projectID stri
 			"discount",
 			"deployment_type",
 			"seniority_id",
+			"note",
 			// "upsell_person_id",
 		)
 		if err != nil {
@@ -1114,6 +1120,7 @@ func (h *handler) updateProjectMember(db *gorm.DB, slotID string, projectID stri
 				Rate:           input.Rate,
 				Discount:       input.Discount,
 				UpsellPersonID: input.UpsellPersonID,
+				Note:           input.Note,
 			}
 
 			if err := h.store.ProjectMember.Create(db, member); err != nil {
@@ -1312,6 +1319,7 @@ func (h *handler) createSlotsAndAssignMembers(db *gorm.DB, projectID string, req
 		Rate:           req.Rate,
 		Discount:       req.Discount,
 		SeniorityID:    req.SeniorityID,
+		Note:           req.Note,
 	}
 
 	if err := h.store.ProjectSlot.Create(db, slot); err != nil {
@@ -1382,6 +1390,7 @@ func (h *handler) createSlotsAndAssignMembers(db *gorm.DB, projectID string, req
 			Rate:           req.Rate,
 			Discount:       req.Discount,
 			UpsellPersonID: req.UpsellPersonID,
+			Note:           req.Note,
 		}
 
 		if err = h.store.ProjectMember.Create(db, member); err != nil {

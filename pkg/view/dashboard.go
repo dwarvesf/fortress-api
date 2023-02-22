@@ -597,6 +597,7 @@ func ToAuditSummaries(summaryMap map[model.UUID][]*model.AuditSummary, previousQ
 type AvailableSlot struct {
 	ID        string           `json:"id"`
 	Type      string           `json:"type"`
+	Note      string           `json:"note"`
 	CreatedAt string           `json:"createdAt"`
 	Seniority Seniority        `json:"seniority"`
 	Project   BasicProjectInfo `json:"project"`
@@ -631,6 +632,7 @@ func ToResourceAvailability(slots []*model.ProjectSlot, employees []*model.Emplo
 		res.Slots = append(res.Slots, AvailableSlot{
 			ID:        v.ID.String(),
 			Type:      v.DeploymentType.String(),
+			Note:      v.Note,
 			CreatedAt: v.CreatedAt.String(),
 			Seniority: ToSeniority(v.Seniority),
 			Project:   *toBasicProjectInfo(v.Project),
