@@ -30,6 +30,7 @@
             "code": "senior",
             "level": 4
         },
-        "upsellPerson": null
+        "upsellPerson": null,
+        "note": ""
     }
 }

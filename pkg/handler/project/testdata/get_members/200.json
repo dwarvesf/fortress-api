@@ -19,6 +19,7 @@
             "endDate": null,
             "rate": "3000",
             "discount": "3",
+            "note": "",
             "seniority": {
                 "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
                 "createdAt": "2022-11-07T09:50:25.714604Z",
@@ -57,6 +58,7 @@
             "endDate": null,
             "rate": "5000",
             "discount": "0",
+            "note": "",
             "seniority": {
                 "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
                 "createdAt": "2022-11-07T09:50:25.714604Z",
@@ -95,6 +97,7 @@
             "endDate": null,
             "rate": "4000",
             "discount": "0",
+            "note": "",
             "seniority": {
                 "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
                 "createdAt": "2022-11-07T09:50:25.714604Z",
@@ -133,6 +136,7 @@
             "endDate": null,
             "rate": "3000",
             "discount": "3",
+            "note": "",
             "seniority": {
                 "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
                 "createdAt": "2022-11-07T09:50:25.714604Z",
@@ -171,6 +175,7 @@
             "endDate": null,
             "rate": "4000",
             "discount": "0",
+            "note": "",
             "seniority": {
                 "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
                 "createdAt": "2022-11-07T09:50:25.714604Z",

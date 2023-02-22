@@ -6462,6 +6462,9 @@
                 "isLead": {
                     "type": "boolean"
                 },
+                "note": {
+                    "type": "string"
+                },
                 "positions": {
                     "type": "array",
                     "items": {
@@ -6597,6 +6600,9 @@
                     "type": "number"
                 },
                 "id": {
+                    "type": "string"
+                },
+                "note": {
                     "type": "string"
                 },
                 "project": {
@@ -7012,6 +7018,9 @@
                 },
                 "isLead": {
                     "type": "boolean"
+                },
+                "note": {
+                    "type": "string"
                 },
                 "positions": {
                     "type": "array",
@@ -7716,6 +7725,9 @@
                 "isLead": {
                     "type": "boolean"
                 },
+                "note": {
+                    "type": "string"
+                },
                 "positions": {
                     "type": "array",
                     "items": {
@@ -8252,6 +8264,9 @@
                 "id": {
                     "type": "string"
                 },
+                "note": {
+                    "type": "string"
+                },
                 "positions": {
                     "type": "array",
                     "items": {
@@ -8610,6 +8625,9 @@
                 },
                 "isLead": {
                     "type": "boolean"
+                },
+                "note": {
+                    "type": "string"
                 },
                 "positions": {
                     "type": "array",
@@ -9854,6 +9872,9 @@
                 },
                 "isLead": {
                     "type": "boolean"
+                },
+                "note": {
+                    "type": "string"
                 },
                 "positions": {
                     "type": "array",

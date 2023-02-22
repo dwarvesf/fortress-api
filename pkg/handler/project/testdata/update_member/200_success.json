@@ -30,6 +30,7 @@
             "code": "mid",
             "level": 3
         },
-        "upsellPerson": null
+        "upsellPerson": null,
+        "note": ""
     }
 }

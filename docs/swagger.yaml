@@ -793,6 +793,8 @@ definitions:
         type: string
       isLead:
         type: boolean
+      note:
+        type: string
       positions:
         items:
           $ref: '#/definitions/model.Position'
@@ -882,6 +884,8 @@ definitions:
       discount:
         type: number
       id:
+        type: string
+      note:
         type: string
       project:
         $ref: '#/definitions/model.Project'
@@ -1150,6 +1154,8 @@ definitions:
         type: string
       isLead:
         type: boolean
+      note:
+        type: string
       positions:
         items:
           type: string
@@ -1626,6 +1632,8 @@ definitions:
         type: string
       isLead:
         type: boolean
+      note:
+        type: string
       positions:
         items:
           type: string
@@ -1986,6 +1994,8 @@ definitions:
         type: string
       id:
         type: string
+      note:
+        type: string
       positions:
         items:
           $ref: '#/definitions/view.Position'
@@ -2219,6 +2229,8 @@ definitions:
         type: string
       isLead:
         type: boolean
+      note:
+        type: string
       positions:
         items:
           $ref: '#/definitions/view.Position'
@@ -3029,6 +3041,8 @@ definitions:
         type: string
       isLead:
         type: boolean
+      note:
+        type: string
       positions:
         items:
           $ref: '#/definitions/view.Position'

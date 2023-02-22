@@ -19,6 +19,7 @@
             "endDate": null,
             "rate": "3000",
             "discount": "3",
+            "note": "",
             "seniority": null,
             "positions": [],
             "upsellPerson": null
@@ -38,6 +39,7 @@
             "endDate": null,
             "rate": "5000",
             "discount": "0",
+            "note": "",
             "seniority": null,
             "positions": [],
             "upsellPerson": null
@@ -57,6 +59,7 @@
             "endDate": null,
             "rate": "3000",
             "discount": "3",
+            "note": "",
             "seniority": null,
             "positions": [],
             "upsellPerson": null
@@ -76,6 +79,7 @@
             "endDate": null,
             "rate": "4000",
             "discount": "0",
+            "note": "",
             "seniority": null,
             "positions": [],
             "upsellPerson": null
