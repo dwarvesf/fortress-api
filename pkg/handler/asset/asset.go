@@ -44,20 +44,20 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 // @Param Authorization header string true "jwt token"
 // @Param file formData file true "content upload"
 // @Param type formData string true "image/doc"
-// @Param targetType formData string true "employees/projects/changelogs/invoices"
+// @Param targetType formData string true "employees/projects/change-logs/invoices"
 // @Param targetID formData string false "employeeID/projectID"
 // @Success 200 {object} view.ContentDataResponse
 // @Failure 500 {object} view.ErrorResponse
 // @Router /assets/upload [post]
 func (h *handler) Upload(c *gin.Context) {
 	// 1.1 get userID
-	userID, err := authutils.GetUserIDFromContext(c, h.config)
+	userInfo, err := authutils.GetLoggedInUserInfo(c, h.store, h.repo.DB(), h.config)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
 	}
 
-	uuidUserID, err := model.UUIDFromString(userID)
+	uuidUserID, err := model.UUIDFromString(userInfo.UserID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
@@ -130,11 +130,11 @@ func (h *handler) Upload(c *gin.Context) {
 	}
 	gcsPath := ""
 	if targetType == model.ContentTargetTypeEmployee || targetType == model.ContentTargetTypeProject {
-		gcsPath = fmt.Sprintf("%s/%s/%s/%s/%s", h.config.Google.GCSBucketName, targetType, tID, fileType, fileName)
+		gcsPath = fmt.Sprintf("%s/%s/%s/%s", targetType, tID, fileType, fileName)
 	} else {
-		gcsPath = fmt.Sprintf("%s/%s/%s", h.config.Google.GCSBucketName, targetType, fileName)
+		gcsPath = fmt.Sprintf("%s/%s", targetType, fileName)
 	}
-	filePath := fmt.Sprintf("https://storage.googleapis.com/%s", gcsPath)
+	filePath := fmt.Sprintf("https://storage.googleapis.com/%s/%s", h.config.Google.GCSBucketName, gcsPath)
 
 	var targetID model.UUID
 	if targetType == model.ContentTargetTypeEmployee || targetType == model.ContentTargetTypeProject {
@@ -144,6 +144,10 @@ func (h *handler) Upload(c *gin.Context) {
 			return
 		}
 	}
+	authType := "Authorization"
+	if authutils.IsAPIKey(c) {
+		authType = "ApiKey"
+	}
 	content, err := h.store.Content.Create(tx.DB(), model.Content{
 		Type:       fileType.String(),
 		Extension:  fileExtension.String(),
@@ -151,7 +155,7 @@ func (h *handler) Upload(c *gin.Context) {
 		TargetID:   targetID,
 		UploadBy:   uuidUserID,
 		TargetType: targetType.String(),
-		AuthType:   "Authorization",
+		AuthType:   authType,
 	})
 	if err != nil {
 		l.Error(err, "error create content")

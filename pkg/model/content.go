@@ -41,7 +41,7 @@ type ContentTargetType string
 const (
 	ContentTargetTypeEmployee  ContentTargetType = "employees"
 	ContentTargetTypeProject   ContentTargetType = "projects"
-	ContentTargetTypeChangeLog ContentTargetType = "changelogs"
+	ContentTargetTypeChangeLog ContentTargetType = "change-logs"
 	ContentTargetTypeInvoice   ContentTargetType = "invoices"
 )
 
