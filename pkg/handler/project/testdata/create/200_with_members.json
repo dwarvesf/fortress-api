@@ -47,7 +47,8 @@
                     "code": "principal",
                     "level": 6
                 },
-                "username": "thanh"
+                "username": "thanh",
+                "note": ""
             }
         ],
         "clientEmail": [

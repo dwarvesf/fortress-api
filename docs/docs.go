@@ -6470,6 +6470,9 @@ const docTemplate = `{
                 "isLead": {
                     "type": "boolean"
                 },
+                "note": {
+                    "type": "string"
+                },
                 "positions": {
                     "type": "array",
                     "items": {
@@ -6605,6 +6608,9 @@ const docTemplate = `{
                     "type": "number"
                 },
                 "id": {
+                    "type": "string"
+                },
+                "note": {
                     "type": "string"
                 },
                 "project": {
@@ -7020,6 +7026,9 @@ const docTemplate = `{
                 },
                 "isLead": {
                     "type": "boolean"
+                },
+                "note": {
+                    "type": "string"
                 },
                 "positions": {
                     "type": "array",
@@ -7724,6 +7733,9 @@ const docTemplate = `{
                 "isLead": {
                     "type": "boolean"
                 },
+                "note": {
+                    "type": "string"
+                },
                 "positions": {
                     "type": "array",
                     "items": {
@@ -8260,6 +8272,9 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
+                "note": {
+                    "type": "string"
+                },
                 "positions": {
                     "type": "array",
                     "items": {
@@ -8618,6 +8633,9 @@ const docTemplate = `{
                 },
                 "isLead": {
                     "type": "boolean"
+                },
+                "note": {
+                    "type": "string"
                 },
                 "positions": {
                     "type": "array",
@@ -9862,6 +9880,9 @@ const docTemplate = `{
                 },
                 "isLead": {
                     "type": "boolean"
+                },
+                "note": {
+                    "type": "string"
                 },
                 "positions": {
                     "type": "array",

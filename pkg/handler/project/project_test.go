@@ -3,9 +3,9 @@ package project
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 
@@ -87,7 +87,7 @@ func TestHandler_Detail(t *testing.T) {
 				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 				h.Details(ctx)
 				require.Equal(t, tt.wantCode, w.Code)
-				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
 				require.NoError(t, err)
 
 				res := w.Body.Bytes()
@@ -150,14 +150,14 @@ func TestHandler_List(t *testing.T) {
 				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 				h.List(ctx)
 				require.Equal(t, tt.wantCode, w.Code)
-				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
 				require.NoError(t, err)
 
 				res := w.Body.Bytes()
 				res, _ = utils.RemoveFieldInResponse(res, "createdAt")
 				res, _ = utils.RemoveFieldInResponse(res, "updatedAt")
 
-				require.JSONEq(t, string(expRespRaw), string(res), "[Handler.Project.Details] response mismatched")
+				require.JSONEq(t, string(expRespRaw), string(res), "[Handler.Project.List] response mismatched")
 			})
 		})
 	}
@@ -246,7 +246,7 @@ func TestHandler_UpdateProjectStatus(t *testing.T) {
 				metadataHandler := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 
 				metadataHandler.UpdateProjectStatus(ctx)
-				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
 				require.NoError(t, err)
 
 				require.Equal(t, tt.wantCode, w.Code)
@@ -556,7 +556,7 @@ func TestHandler_Create(t *testing.T) {
 				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 				h.Create(ctx)
 				require.Equal(t, tt.wantCode, w.Code)
-				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
 				require.NoError(t, err)
 
 				res := w.Body.Bytes()
@@ -641,7 +641,7 @@ func TestHandler_GetMembers(t *testing.T) {
 				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 				h.GetMembers(ctx)
 				require.Equal(t, tt.wantCode, w.Code)
-				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
 				require.NoError(t, err)
 
 				res := w.Body.Bytes()
@@ -686,6 +686,7 @@ func TestHandler_UpdateMember(t *testing.T) {
 				Rate:           decimal.NewFromInt(10),
 				Discount:       decimal.NewFromInt(1),
 				IsLead:         true,
+				Note:           "",
 			},
 			wantCode:         http.StatusOK,
 			wantResponsePath: "testdata/update_member/200_success.json",
@@ -900,7 +901,7 @@ func TestHandler_UpdateMember(t *testing.T) {
 				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 				h.UpdateMember(ctx)
 				require.Equal(t, tt.wantCode, w.Code)
-				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
 				require.NoError(t, err)
 
 				res := w.Body.Bytes()
@@ -1028,7 +1029,7 @@ func TestHandler_AssignMember(t *testing.T) {
 				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 				h.AssignMember(ctx)
 				require.Equal(t, tt.wantCode, w.Code)
-				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
 				require.NoError(t, err)
 
 				res := w.Body.Bytes()
@@ -1102,7 +1103,7 @@ func TestHandler_DeleteProjectMember(t *testing.T) {
 				metadataHandler := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 
 				metadataHandler.DeleteMember(ctx)
-				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
 				require.NoError(t, err)
 
 				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.DeleteSlot] response mismatched")
@@ -1165,7 +1166,7 @@ func TestHandler_DeleteSlot(t *testing.T) {
 				metadataHandler := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 
 				metadataHandler.DeleteSlot(ctx)
-				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
 				require.NoError(t, err)
 
 				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.DeleteSlot] response mismatched")
@@ -1321,7 +1322,7 @@ func TestHandler_UpdateGeneralInfo(t *testing.T) {
 				metadataHandler := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 
 				metadataHandler.UpdateGeneralInfo(ctx)
-				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
 				require.NoError(t, err)
 
 				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.UpdateProjectGeneralInfo] response mismatched")
@@ -1446,7 +1447,7 @@ func TestHandler_UpdateContactInfo(t *testing.T) {
 				metadataHandler := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 
 				metadataHandler.UpdateContactInfo(ctx)
-				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
 				require.NoError(t, err)
 
 				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.UpdateProjectContactInfo] response mismatched")
@@ -1519,7 +1520,7 @@ func TestHandler_GetListWorkUnit(t *testing.T) {
 				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 				h.GetWorkUnits(ctx)
 				require.Equal(t, tt.wantCode, w.Code)
-				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
 				require.NoError(t, err)
 
 				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Project.GetListWorkUnit] response mismatched")
@@ -1714,7 +1715,7 @@ func TestHandler_UpdateWorkUnit(t *testing.T) {
 				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 				h.UpdateWorkUnit(ctx)
 				require.Equal(t, tt.wantCode, w.Code)
-				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
 				require.NoError(t, err)
 
 				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Project.UpdateWorkUnit] response mismatched")
@@ -1909,7 +1910,7 @@ func TestHandler_CreateWorkUnit(t *testing.T) {
 				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 				h.CreateWorkUnit(ctx)
 				require.Equal(t, tt.wantCode, w.Code)
-				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
 				require.NoError(t, err)
 
 				res := w.Body.Bytes()
@@ -2005,7 +2006,7 @@ func TestHandler_ArchiveWorkUnit(t *testing.T) {
 				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 				h.ArchiveWorkUnit(ctx)
 				require.Equal(t, tt.wantCode, w.Code)
-				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
 				require.NoError(t, err)
 
 				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.ArchiveWorkUnit] response mismatched")
@@ -2098,7 +2099,7 @@ func TestHandler_UnarchiveWorkUnit(t *testing.T) {
 				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 				h.UnarchiveWorkUnit(ctx)
 				require.Equal(t, tt.wantCode, w.Code)
-				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
 				require.NoError(t, err)
 
 				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.UnarchiveWorkUnit] response mismatched")
@@ -2170,7 +2171,7 @@ func TestHandler_UpdateSendingSurveyState(t *testing.T) {
 				metadataHandler := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 
 				metadataHandler.UpdateSendingSurveyState(ctx)
-				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
 				require.NoError(t, err)
 
 				require.Equal(t, tt.wantCode, w.Code)
@@ -2241,7 +2242,7 @@ func TestHandler_UnassignMember(t *testing.T) {
 				metadataHandler := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 
 				metadataHandler.UnassignMember(ctx)
-				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
 				require.NoError(t, err)
 
 				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.UnassignMember] response mismatched")

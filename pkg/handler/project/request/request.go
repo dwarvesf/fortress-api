@@ -172,6 +172,7 @@ type UpdateMemberInput struct {
 	Rate            decimal.Decimal `form:"rate" json:"rate" binding:"required"`
 	Discount        decimal.Decimal `form:"discount" json:"discount"`
 	IsLead          bool            `form:"isLead" json:"isLead"`
+	Note            string          `form:"note" json:"note"`
 }
 
 func (i *UpdateMemberInput) Validate() error {
@@ -236,6 +237,7 @@ type AssignMemberInput struct {
 	Discount       decimal.Decimal `form:"discount" json:"discount"`
 	IsLead         bool            `form:"isLead" json:"isLead"`
 	UpsellPersonID model.UUID      `form:"upsellPersonID" json:"upsellPersonID"`
+	Note           string          `form:"note" json:"note"`
 }
 
 func (i *AssignMemberInput) Validate() error {
