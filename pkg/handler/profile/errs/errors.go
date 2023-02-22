@@ -10,4 +10,5 @@ var (
 	ErrInvalidFileType      = errors.New("invalid file type")
 	ErrInvalidFileSize      = errors.New("invalid file size")
 	ErrFileAlreadyExisted   = errors.New("file already existed")
+	ErrEmailExisted         = errors.New("email already exists")
 )
