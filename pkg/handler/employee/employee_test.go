@@ -15,6 +15,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
+	"github.com/dwarvesf/fortress-api/pkg/controller"
 	"github.com/dwarvesf/fortress-api/pkg/handler/employee/request"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
@@ -201,7 +202,8 @@ func TestHandler_List(t *testing.T) {
 				ctx.Request = httptest.NewRequest(http.MethodPost, "/api/v1/employees/search", bodyReader)
 				ctx.Request.Header.Set("Authorization", testToken)
 
-				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+				ctrl := controller.New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+				h := New(ctrl, storeMock, txRepo, serviceMock, loggerMock, &cfg)
 				h.List(ctx)
 				require.Equal(t, tt.wantCode, w.Code)
 				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
@@ -258,7 +260,8 @@ func TestHandler_One(t *testing.T) {
 				ctx.Request = httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/employees/%s", tt.id), nil)
 				ctx.Request.Header.Set("Authorization", testToken)
 
-				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+				ctrl := controller.New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+				h := New(ctrl, storeMock, txRepo, serviceMock, loggerMock, &cfg)
 				h.Details(ctx)
 				require.Equal(t, tt.wantCode, w.Code)
 				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
@@ -345,7 +348,8 @@ func TestHandler_UpdateEmployeeStatus(t *testing.T) {
 				ctx.Request.Header.Set("Authorization", testToken)
 				ctx.AddParam("id", tt.id)
 
-				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+				ctrl := controller.New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+				h := New(ctrl, storeMock, txRepo, serviceMock, loggerMock, &cfg)
 				h.UpdateEmployeeStatus(ctx)
 
 				require.Equal(t, tt.wantCode, w.Code)
@@ -478,9 +482,10 @@ func Test_UpdateGeneralInfo(t *testing.T) {
 				ctx.Params = gin.Params{gin.Param{Key: "id", Value: tt.id}}
 				ctx.Request = httptest.NewRequest("PUT", "/api/v1/employees/"+tt.id+"/general-info", bodyReader)
 				ctx.Request.Header.Set("Authorization", testToken)
-				metadataHandler := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+				ctrl := controller.New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+				h := New(ctrl, storeMock, txRepo, serviceMock, loggerMock, &cfg)
 
-				metadataHandler.UpdateGeneralInfo(ctx)
+				h.UpdateGeneralInfo(ctx)
 
 				require.Equal(t, tt.wantCode, w.Code)
 				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
@@ -635,9 +640,10 @@ func Test_UpdateSkill(t *testing.T) {
 				ctx.Params = gin.Params{gin.Param{Key: "id", Value: tt.id}}
 				ctx.Request = httptest.NewRequest("PUT", fmt.Sprintf("/api/v1/employees/%s/skills", tt.id), bodyReader)
 				ctx.Request.Header.Set("Authorization", testToken)
-				metadataHandler := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+				ctrl := controller.New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+				h := New(ctrl, storeMock, txRepo, serviceMock, loggerMock, &cfg)
 
-				metadataHandler.UpdateSkills(ctx)
+				h.UpdateSkills(ctx)
 
 				require.Equal(t, tt.wantCode, w.Code)
 				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
@@ -735,9 +741,10 @@ func Test_Create(t *testing.T) {
 				ctx.Params = gin.Params{gin.Param{Key: "id", Value: tt.id}}
 				ctx.Request = httptest.NewRequest("POST", "/api/v1/employees/", bodyReader)
 				ctx.Request.Header.Set("Authorization", testToken)
-				metadataHandler := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+				ctrl := controller.New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+				h := New(ctrl, storeMock, txRepo, serviceMock, loggerMock, &cfg)
 
-				metadataHandler.Create(ctx)
+				h.Create(ctx)
 
 				require.Equal(t, tt.wantCode, w.Code)
 				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
@@ -834,7 +841,7 @@ func Test_UpdatePersonalInfo(t *testing.T) {
 			id: "2655832e-f009-4b73-a535-64c3a22e558aa",
 		},
 		{
-			name:             "wrong_employee_id_format",
+			name:             "invalid_country",
 			wantCode:         http.StatusBadRequest,
 			wantErr:          true,
 			wantResponsePath: "testdata/update_personal_info/invalid_country.json",
@@ -863,9 +870,10 @@ func Test_UpdatePersonalInfo(t *testing.T) {
 				ctx.Params = gin.Params{gin.Param{Key: "id", Value: tt.id}}
 				ctx.Request = httptest.NewRequest("PUT", "/api/v1/employees/"+tt.id+"/personal-info", bodyReader)
 				ctx.Request.Header.Set("Authorization", testToken)
-				metadataHandler := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+				ctrl := controller.New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+				h := New(ctrl, storeMock, txRepo, serviceMock, loggerMock, &cfg)
 
-				metadataHandler.UpdatePersonalInfo(ctx)
+				h.UpdatePersonalInfo(ctx)
 
 				require.Equal(t, tt.wantCode, w.Code)
 				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
@@ -908,7 +916,8 @@ func TestHandler_GetLineManagers(t *testing.T) {
 				ctx.Request = httptest.NewRequest(http.MethodGet, "/api/v1/line-managers", nil)
 				ctx.Request.Header.Set("Authorization", testToken)
 
-				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+				ctrl := controller.New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+				h := New(ctrl, storeMock, txRepo, serviceMock, loggerMock, &cfg)
 				h.GetLineManagers(ctx)
 				require.Equal(t, tt.wantCode, w.Code)
 				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
