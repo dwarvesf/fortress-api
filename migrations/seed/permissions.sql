@@ -69,4 +69,5 @@ INSERT INTO public.permissions (id, deleted_at, created_at, updated_at, name, co
 ('97a02a4d-b8fb-486d-af1a-25139014b375', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Clients Read', 'clients.read'),
 ('92031f1a-b745-42cf-aac1-a067bbee08e6', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Clients Edit', 'clients.edit'),
 ('7fb332e7-3231-42e6-8f38-a5c8b224d84e', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Clients Delete', 'clients.delete'),
-('475d8075-aec7-4d75-aa79-dc90c9dd9edb', NULL, '2023-02-20 09:50:25.714604', '2023-02-20 09:50:25.714604', 'Cronjob Execute', 'cronjobs.execute');
+('475d8075-aec7-4d75-aa79-dc90c9dd9edb', NULL, '2023-02-20 09:50:25.714604', '2023-02-20 09:50:25.714604', 'Cronjob Execute', 'cronjobs.execute'),
+('93886b0b-6592-4838-b024-1aefb123fed6', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Asset Upload', 'assets.upload');
