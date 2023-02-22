@@ -1,4 +1,4 @@
 {
     "data": null,
-    "error": "can't create existed employee"
+    "error": "email already exists"
 }

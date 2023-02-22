@@ -760,19 +760,31 @@ func (h *handler) Create(c *gin.Context) {
 
 	// 2.1 check employee exists -> raise error
 	_, err = h.store.Employee.OneByTeamEmail(h.repo.DB(), eml.TeamEmail)
-	if err != gorm.ErrRecordNotFound {
+	if !errors.Is(err, gorm.ErrRecordNotFound) {
 		if err == nil {
-			l.Error(err, "error eml exists")
-			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrEmployeeExisted, input, ""))
+			l.Error(err, "team email exists")
+			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrEmailExisted, input, ""))
 			return
 		}
-		l.Error(err, "error store new eml")
+		l.Error(err, "failed to get employee by email")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input, ""))
+		return
+	}
+
+	_, err = h.store.Employee.OneByEmail(h.repo.DB(), eml.PersonalEmail)
+	if !errors.Is(err, gorm.ErrRecordNotFound) {
+		if err == nil {
+			l.Error(err, "personal email exists")
+			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrEmailExisted, input, ""))
+			return
+		}
+		l.Error(err, "failed to get employee by email")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input, ""))
 		return
 	}
 
 	_, err = h.store.Employee.One(h.repo.DB(), eml.Username, false)
-	if err != gorm.ErrRecordNotFound {
+	if !errors.Is(err, gorm.ErrRecordNotFound) {
 		if err == nil {
 			l.Error(err, "username exists")
 			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrEmployeeExisted, input, ""))
@@ -1108,6 +1120,19 @@ func (h *handler) UpdatePersonalInfo(c *gin.Context) {
 	if isValid := h.validateCountryAndCity(h.repo.DB(), body.Country, body.City); !isValid {
 		l.Info("country or city is invalid")
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidCountryOrCity, body, ""))
+		return
+	}
+
+	// validate personal email
+	_, err = h.store.Employee.OneByEmail(h.repo.DB(), body.PersonalEmail)
+	if emp.PersonalEmail != body.PersonalEmail && body.PersonalEmail != "" && !errors.Is(err, gorm.ErrRecordNotFound) {
+		if err == nil {
+			l.Error(err, "personal email exists")
+			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrEmailExisted, body, ""))
+			return
+		}
+		l.Error(err, "failed to get employee by email")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
 		return
 	}
 
