@@ -514,58 +514,6 @@ func (h *handler) validateCountryAndCity(db *gorm.DB, countryName string, city s
 	return true
 }
 
-// UploadContent godoc
-// @Summary Upload content of employee by id
-// @Description Upload content of employee by id
-// @Tags Employee
-// @Accept  json
-// @Produce  json
-// @Param id path string true "Employee ID"
-// @Param Authorization header string true "jwt token"
-// @Param file formData file true "content upload"
-// @Success 200 {object} view.EmployeeContentDataResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
-// @Router /employees/{id}/upload-content [post]
-func (h *handler) UploadContent(c *gin.Context) {
-	// 1.1 parse id from uri, validate id
-	var params struct {
-		ID string `uri:"id" binding:"required"`
-	}
-
-	if err := c.ShouldBindUri(&params); err != nil {
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, params, ""))
-		return
-	}
-
-	// 1.2 get upload file
-	file, err := c.FormFile("file")
-	if err != nil {
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, file, ""))
-		return
-	}
-
-	// 1.3 prepare the logger
-	l := h.logger.Fields(logger.Fields{
-		"handler": "employee",
-		"method":  "UploadContent",
-		"params":  params,
-		// "body":    body,
-	})
-
-	content, err := h.controller.Employee.UploadContent(file, employee.UploadContentInput{
-		ID: params.ID,
-	})
-	if err != nil {
-		l.Error(err, "failed to update content")
-		errs.ConvertControllerErr(c, err)
-		return
-	}
-
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToContentData(content.Path), nil, nil, nil, ""))
-}
-
 // UploadAvatar godoc
 // @Summary Upload avatar of employee by id
 // @Description Upload avatar of employee by id

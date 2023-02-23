@@ -39,7 +39,6 @@ type IController interface {
 	Create(l logger.Logger, userID string, body CreateEmployeeInput) (employee *model.Employee, err error)
 	UpdateSkills(l logger.Logger, employeeID string, body UpdateSkillsInput) (employee *model.Employee, err error)
 	UpdatePersonalInfo(employeeID string, body UpdatePersonalInfoInput) (employee *model.Employee, err error)
-	UploadContent(file *multipart.FileHeader, params UploadContentInput) (content *model.Content, err error)
 	UploadAvatar(uuidUserID model.UUID, file *multipart.FileHeader, params UploadAvatarInput) (filePath string, err error)
 	UpdateRole(userID string, input UpdateRoleInput) (err error)
 	GetLineManagers(userInfo *model.CurrentLoggedUserInfo) (employees []*model.Employee, err error)

@@ -62,7 +62,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "employees/projects/changelogs/invoices",
+                        "description": "employees/projects/change-logs/invoices",
                         "name": "targetType",
                         "in": "formData",
                         "required": true
@@ -1798,70 +1798,6 @@ const docTemplate = `{
                     {
                         "type": "file",
                         "description": "avatar upload",
-                        "name": "file",
-                        "in": "formData",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/view.EmployeeContentDataResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/view.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/view.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/view.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/employees/{id}/upload-content": {
-            "post": {
-                "description": "Upload content of employee by id",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Employee"
-                ],
-                "summary": "Upload content of employee by id",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Employee ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "jwt token",
-                        "name": "Authorization",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "file",
-                        "description": "content upload",
                         "name": "file",
                         "in": "formData",
                         "required": true
