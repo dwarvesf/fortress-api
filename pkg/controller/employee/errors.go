@@ -49,4 +49,5 @@ var (
 	ErrInvalidAccountRole                     = errors.New("invalid account role")
 	ErrCouldNotAssignRoleForSameLevelEmployee = errors.New("could not assign role for the same level employee")
 	ErrEmailExisted                           = errors.New("email already exists")
+	ErrCannotSelfReferral                     = errors.New("cannot self referral")
 )
