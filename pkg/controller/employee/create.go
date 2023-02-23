@@ -103,7 +103,7 @@ func (r *controller) Create(l logger.Logger, userID string, input CreateEmployee
 	}
 
 	// 2.1 check employee exists -> raise error
-	_, err = r.store.Employee.OneByTeamEmail(r.repo.DB(), eml.TeamEmail)
+	_, err = r.store.Employee.OneByEmail(r.repo.DB(), eml.TeamEmail)
 	if !errors.Is(err, gorm.ErrRecordNotFound) {
 		if err == nil {
 			return nil, ErrEmailExisted

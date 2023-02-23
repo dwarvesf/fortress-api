@@ -55,6 +55,10 @@ func (r *controller) UpdateGeneralInfo(l logger.Logger, employeeID string, body 
 		if !exist {
 			return nil, done(ErrReferrerNotFound)
 		}
+
+		if employeeID == body.ReferredBy.String() {
+			return nil, done(ErrCannotSelfReferral)
+		}
 	}
 
 	emp, err := r.store.Employee.One(tx.DB(), employeeID, true)
@@ -63,6 +67,16 @@ func (r *controller) UpdateGeneralInfo(l logger.Logger, employeeID string, body 
 			return nil, done(ErrEmployeeNotFound)
 		}
 		return nil, done(err)
+	}
+
+	if emp.TeamEmail != "" && emp.TeamEmail != body.Email {
+		_, err = r.store.Employee.OneByEmail(r.repo.DB(), body.Email)
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			if err == nil {
+				return nil, ErrEmailExisted
+			}
+			return nil, err
+		}
 	}
 
 	// 3. update information and return nil, done(err)
