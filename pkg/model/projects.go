@@ -215,7 +215,9 @@ type ProjectHead struct {
 	EndDate        *time.Time
 	CommissionRate decimal.Decimal
 	Position       HeadPosition
-	Employee       Employee
+
+	Employee Employee
+	Project  Project
 }
 
 func (p ProjectHead) IsLead() bool {

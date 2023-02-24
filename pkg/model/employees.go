@@ -129,7 +129,9 @@ type Employee struct {
 	EmployeeStacks        []EmployeeStack
 	EmployeeChapters      []EmployeeChapter
 	SocialAccounts        []SocialAccount
-	Mentees               []Employee `gorm:"-"`
+	Mentees               []*Employee `gorm:"references:ID;foreignKey:LineManagerID"`
+	WorkUnitMembers       []WorkUnitMember
+	Heads                 []ProjectHead
 }
 
 // ToEmployeeMap create map from employees
