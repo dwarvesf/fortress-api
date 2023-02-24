@@ -743,65 +743,6 @@ type WorkUnitDistribution struct {
 	Training    WorkUnitDistributionTraining    `json:"training"`
 }
 
-func ToWorkUnitDistribution(employee *model.Employee, mentees []model.Employee, workUnits []*model.WorkUnit, managementInfos []*model.ManagementInfo, ty model.WorkUnitType) *WorkUnitDistribution {
-	rs := &WorkUnitDistribution{}
-
-	rs.Employee = BasicEmployeeInfo{
-		ID:          employee.ID.String(),
-		FullName:    employee.FullName,
-		DisplayName: employee.DisplayName,
-		Avatar:      employee.Avatar,
-	}
-
-	rs.Employee = *toBasicEmployeeInfo(*employee)
-
-	for _, mentee := range mentees {
-		if ty == "" || ty == model.WorkUnitTypeTraining {
-			rs.Training.Mentees = append(rs.Training.Mentees, toBasicEmployeeInfo(mentee))
-			rs.Training.Total++
-		}
-	}
-
-	for _, wu := range workUnits {
-		switch wu.Type {
-		case model.WorkUnitTypeLearning:
-			if ty == "" || ty == model.WorkUnitTypeLearning {
-				rs.Learning.WorkUnits = append(rs.Learning.WorkUnits, ToWorkUnitDistributionWU(wu))
-				rs.Learning.Total++
-			}
-		case model.WorkUnitTypeDevelopment:
-			if ty == "" || ty == model.WorkUnitTypeDevelopment {
-				rs.Development.WorkUnits = append(rs.Development.WorkUnits, ToWorkUnitDistributionWU(wu))
-				rs.Development.Total++
-			}
-		case model.WorkUnitTypeManagement:
-			if ty == "" || ty == model.WorkUnitTypeManagement {
-				rs.Management.WorkUnits = append(rs.Management.WorkUnits, ToWorkUnitDistributionWU(wu))
-				rs.Management.Total++
-			}
-		case model.WorkUnitTypeTraining:
-			if ty == "" || ty == model.WorkUnitTypeTraining {
-				rs.Training.WorkUnits = append(rs.Training.WorkUnits, ToWorkUnitDistributionWU(wu))
-				rs.Training.Total++
-			}
-		}
-	}
-
-	if ty == "" || ty == model.WorkUnitTypeManagement {
-		for _, managementInfo := range managementInfos {
-			switch managementInfo.Position {
-			case model.HeadPositionTechnicalLead,
-				model.HeadPositionAccountManager,
-				model.HeadPositionDeliveryManager:
-				rs.Management.ProjectHeads = append(rs.Management.ProjectHeads, ManagementInfoToProjectHead(managementInfo))
-				rs.Management.Total++
-			}
-		}
-	}
-
-	return rs
-}
-
 func ManagementInfoToProjectHead(managementInfo *model.ManagementInfo) *WorkUnitDistributionWUProjectHead {
 	return &WorkUnitDistributionWUProjectHead{
 		Project: BasicProjectInfo{
@@ -824,25 +765,25 @@ func ToWorkUnitDistributionWU(workUnit *model.WorkUnit) *WorkUnitDistributionWU 
 }
 
 type WorkUnitDistributionLearning struct {
-	Total     int64                     `json:"total"`
+	Total     int                       `json:"total"`
 	WorkUnits []*WorkUnitDistributionWU `json:"workUnits"`
 }
 
 type WorkUnitDistributionDevelopment struct {
-	Total     int64                     `json:"total"`
+	Total     int                       `json:"total"`
 	WorkUnits []*WorkUnitDistributionWU `json:"workUnits"`
 }
 
 type WorkUnitDistributionManagement struct {
-	Total        int64                                `json:"total"`
+	Total        int                                  `json:"total"`
 	WorkUnits    []*WorkUnitDistributionWU            `json:"workUnits"`
 	ProjectHeads []*WorkUnitDistributionWUProjectHead `json:"projectHeads"`
 }
 
 type WorkUnitDistributionTraining struct {
-	Total     int64                     `json:"total"`
+	Total     int                       `json:"total"`
 	WorkUnits []*WorkUnitDistributionWU `json:"workUnits"`
-	Mentees   []*BasicEmployeeInfo      `json:"mentees"`
+	Mentees   []BasicEmployeeInfo       `json:"mentees"`
 }
 
 type WorkUnitDistributionWU struct {
@@ -857,6 +798,19 @@ type WorkUnitDistributionWUProjectHead struct {
 
 type WorkUnitDistributionData struct {
 	WorkUnitDistributions []*WorkUnitDistribution `json:"workUnitDistributions"`
+}
+
+func toWorkUnitDistributionWUProjectHeads(projectHeads []model.ProjectHead) []*WorkUnitDistributionWUProjectHead {
+	rs := make([]*WorkUnitDistributionWUProjectHead, 0)
+
+	for _, projectHead := range projectHeads {
+		rs = append(rs, &WorkUnitDistributionWUProjectHead{
+			Project:  *toBasicProjectInfo(projectHead.Project),
+			Position: projectHead.Position.String(),
+		})
+	}
+
+	return rs
 }
 
 func SortWorkUnitDistributionData(wudd *WorkUnitDistributionData, sortRequired model.SortOrder) *WorkUnitDistributionData {
@@ -875,6 +829,46 @@ func SortWorkUnitDistributionData(wudd *WorkUnitDistributionData, sortRequired m
 	}
 
 	return wudd
+}
+
+func ToWorkUnitDistributionData(employees []*model.Employee, sort string) WorkUnitDistributionData {
+	wuds := make([]*WorkUnitDistribution, 0)
+
+	for _, employee := range employees {
+		wud := &WorkUnitDistribution{
+			Employee: *toBasicEmployeeInfo(*employee),
+			Management: WorkUnitDistributionManagement{
+				ProjectHeads: toWorkUnitDistributionWUProjectHeads(employee.Heads),
+				Total:        len(employee.Heads),
+			},
+			Training: WorkUnitDistributionTraining{
+				Mentees: ToBasicEmployees(employee.Mentees),
+				Total:   len(employee.Mentees),
+			},
+		}
+
+		for _, wum := range employee.WorkUnitMembers {
+			switch wum.WorkUnit.Type {
+			case model.WorkUnitTypeLearning:
+				wud.Learning.WorkUnits = append(wud.Learning.WorkUnits, ToWorkUnitDistributionWU(&wum.WorkUnit))
+				wud.Learning.Total++
+			case model.WorkUnitTypeDevelopment:
+				wud.Development.WorkUnits = append(wud.Development.WorkUnits, ToWorkUnitDistributionWU(&wum.WorkUnit))
+				wud.Development.Total++
+			case model.WorkUnitTypeManagement:
+				wud.Management.WorkUnits = append(wud.Management.WorkUnits, ToWorkUnitDistributionWU(&wum.WorkUnit))
+				wud.Management.Total++
+			case model.WorkUnitTypeTraining:
+				wud.Training.WorkUnits = append(wud.Training.WorkUnits, ToWorkUnitDistributionWU(&wum.WorkUnit))
+				wud.Training.Total++
+			}
+		}
+		wuds = append(wuds, wud)
+	}
+
+	return *SortWorkUnitDistributionData(&WorkUnitDistributionData{
+		WorkUnitDistributions: wuds,
+	}, model.SortOrder(sort))
 }
 
 type SummaryWorkUnitDistributionData struct {

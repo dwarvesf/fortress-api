@@ -20,39 +20,12 @@
                 "management": {
                     "total": 0,
                     "workUnits": null,
-                    "projectHeads": null
+                    "projectHeads": []
                 },
                 "training": {
                     "total": 0,
                     "workUnits": null,
-                    "mentees": null
-                }
-            },
-            {
-                "employee": {
-                    "id": "8d7c99c0-3253-4286-93a9-e7554cb327ef",
-                    "fullName": "Nguyễn Hải Nam",
-                    "displayName": "Nam Nguyen",
-                    "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/8399103964540935617.png",
-                    "username": "benjamin"
-                },
-                "learning": {
-                    "total": 0,
-                    "workUnits": null
-                },
-                "development": {
-                    "total": 0,
-                    "workUnits": null
-                },
-                "management": {
-                    "total": 0,
-                    "workUnits": null,
-                    "projectHeads": null
-                },
-                "training": {
-                    "total": 0,
-                    "workUnits": null,
-                    "mentees": null
+                    "mentees": []
                 }
             }
         ]

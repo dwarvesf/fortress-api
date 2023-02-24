@@ -204,8 +204,8 @@ func (s *store) GetLineManagersOfPeers(db *gorm.DB, employeeID string) ([]*model
 	)`, model.WorkingStatusLeft).Find(&employees).Error
 }
 
-func (s *store) GetMenteesByID(db *gorm.DB, employeeID string) ([]model.Employee, error) {
-	var employees []model.Employee
+func (s *store) GetMenteesByID(db *gorm.DB, employeeID string) ([]*model.Employee, error) {
+	var employees []*model.Employee
 	return employees, db.Where(`id IN (
 		SELECT e.id
 		FROM employees e
