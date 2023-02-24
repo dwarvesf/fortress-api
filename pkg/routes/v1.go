@@ -72,12 +72,12 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 	v1.GET("/metadata/countries/:country_id/cities", h.Metadata.GetCities)
 	v1.GET("/metadata/project-statuses", h.Metadata.ProjectStatuses)
 	v1.GET("/metadata/questions", h.Metadata.GetQuestions)
-	v1.PUT("/metadata/stacks/:id", pmw.WithPerm(model.PermissionMetadataEdit), h.Metadata.UpdateStack)
-	v1.POST("/metadata/stacks", pmw.WithPerm(model.PermissionMetadataCreate), h.Metadata.CreateStack)
-	v1.DELETE("/metadata/stacks/:id", pmw.WithPerm(model.PermissionMetadataDelete), h.Metadata.DeleteStack)
-	v1.PUT("/metadata/positions/:id", pmw.WithPerm(model.PermissionMetadataEdit), h.Metadata.UpdatePosition)
-	v1.POST("/metadata/positions", pmw.WithPerm(model.PermissionMetadataCreate), h.Metadata.CreatePosition)
-	v1.DELETE("/metadata/positions/:id", pmw.WithPerm(model.PermissionMetadataDelete), h.Metadata.DeletePosition)
+	v1.PUT("/metadata/stacks/:id", amw.WithAuth, pmw.WithPerm(model.PermissionMetadataEdit), h.Metadata.UpdateStack)
+	v1.POST("/metadata/stacks", amw.WithAuth, pmw.WithPerm(model.PermissionMetadataCreate), h.Metadata.CreateStack)
+	v1.DELETE("/metadata/stacks/:id", amw.WithAuth, pmw.WithPerm(model.PermissionMetadataDelete), h.Metadata.DeleteStack)
+	v1.PUT("/metadata/positions/:id", amw.WithAuth, pmw.WithPerm(model.PermissionMetadataEdit), h.Metadata.UpdatePosition)
+	v1.POST("/metadata/positions", amw.WithAuth, pmw.WithPerm(model.PermissionMetadataCreate), h.Metadata.CreatePosition)
+	v1.DELETE("/metadata/positions/:id", amw.WithAuth, pmw.WithPerm(model.PermissionMetadataDelete), h.Metadata.DeletePosition)
 
 	// projects
 	projectGroup := v1.Group("projects")
@@ -115,25 +115,25 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 
 	feedbackGroup := v1.Group("/feedbacks")
 	{
-		feedbackGroup.GET("", pmw.WithPerm(model.PermissionFeedbacksRead), h.Feedback.List)
+		feedbackGroup.GET("", amw.WithAuth, pmw.WithPerm(model.PermissionFeedbacksRead), h.Feedback.List)
 		feedbackGroup.GET("/:id/topics/:topicID", amw.WithAuth, pmw.WithPerm(model.PermissionFeedbacksRead), h.Feedback.Detail)
 		feedbackGroup.POST("/:id/topics/:topicID/submit", amw.WithAuth, pmw.WithPerm(model.PermissionFeedbacksCreate), h.Feedback.Submit)
-		feedbackGroup.GET("/unreads", pmw.WithPerm(model.PermissionFeedbacksRead), h.Feedback.CountUnreadFeedback)
+		feedbackGroup.GET("/unreads", amw.WithAuth, pmw.WithPerm(model.PermissionFeedbacksRead), h.Feedback.CountUnreadFeedback)
 	}
 
 	surveyGroup := v1.Group("/surveys")
 	{
 		surveyGroup.POST("", amw.WithAuth, pmw.WithPerm(model.PermissionSurveysCreate), h.Survey.CreateSurvey)
-		surveyGroup.GET("", pmw.WithPerm(model.PermissionSurveysRead), h.Survey.ListSurvey)
-		surveyGroup.GET("/:id", pmw.WithPerm(model.PermissionSurveysRead), h.Survey.GetSurveyDetail)
-		surveyGroup.DELETE("/:id", pmw.WithPerm(model.PermissionSurveysDelete), h.Survey.DeleteSurvey)
-		surveyGroup.POST("/:id/send", pmw.WithPerm(model.PermissionSurveysCreate), h.Survey.SendSurvey)
+		surveyGroup.GET("", amw.WithAuth, pmw.WithPerm(model.PermissionSurveysRead), h.Survey.ListSurvey)
+		surveyGroup.GET("/:id", amw.WithAuth, pmw.WithPerm(model.PermissionSurveysRead), h.Survey.GetSurveyDetail)
+		surveyGroup.DELETE("/:id", amw.WithAuth, pmw.WithPerm(model.PermissionSurveysDelete), h.Survey.DeleteSurvey)
+		surveyGroup.POST("/:id/send", amw.WithAuth, pmw.WithPerm(model.PermissionSurveysCreate), h.Survey.SendSurvey)
 		surveyGroup.GET("/:id/topics/:topicID/reviews/:reviewID", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeeEventQuestionsRead), h.Survey.GetSurveyReviewDetail)
 		surveyGroup.DELETE("/:id/topics/:topicID", amw.WithAuth, pmw.WithPerm(model.PermissionSurveysDelete), h.Survey.DeleteSurveyTopic)
-		surveyGroup.GET("/:id/topics/:topicID", pmw.WithPerm(model.PermissionSurveysRead), h.Survey.GetSurveyTopicDetail)
-		surveyGroup.PUT("/:id/topics/:topicID/employees", pmw.WithPerm(model.PermissionSurveysEdit), h.Survey.UpdateTopicReviewers)
-		surveyGroup.PUT("/:id/done", pmw.WithPerm(model.PermissionSurveysEdit), h.Survey.MarkDone)
-		surveyGroup.DELETE("/:id/topics/:topicID/employees", pmw.WithPerm(model.PermissionSurveysEdit), h.Survey.DeleteTopicReviewers)
+		surveyGroup.GET("/:id/topics/:topicID", amw.WithAuth, pmw.WithPerm(model.PermissionSurveysRead), h.Survey.GetSurveyTopicDetail)
+		surveyGroup.PUT("/:id/topics/:topicID/employees", amw.WithAuth, pmw.WithPerm(model.PermissionSurveysEdit), h.Survey.UpdateTopicReviewers)
+		surveyGroup.PUT("/:id/done", amw.WithAuth, pmw.WithPerm(model.PermissionSurveysEdit), h.Survey.MarkDone)
+		surveyGroup.DELETE("/:id/topics/:topicID/employees", amw.WithAuth, pmw.WithPerm(model.PermissionSurveysEdit), h.Survey.DeleteTopicReviewers)
 	}
 
 	bankGroup := v1.Group("/bank-accounts")
@@ -143,10 +143,10 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 
 	invoiceGroup := v1.Group("/invoices")
 	{
-		invoiceGroup.PUT("/:id/status", pmw.WithPerm(model.PermissionInvoiceEdit), h.Invoice.UpdateStatus)
-		invoiceGroup.GET("/latest", pmw.WithPerm(model.PermissionInvoiceRead), h.Invoice.GetLatestInvoice)
-		invoiceGroup.GET("/template", h.Invoice.GetTemplate)
-		invoiceGroup.POST("/send", h.Invoice.Send)
+		invoiceGroup.PUT("/:id/status", amw.WithAuth, pmw.WithPerm(model.PermissionInvoiceEdit), h.Invoice.UpdateStatus)
+		invoiceGroup.GET("/latest", amw.WithAuth, pmw.WithPerm(model.PermissionInvoiceRead), h.Invoice.GetLatestInvoice)
+		invoiceGroup.GET("/template", amw.WithAuth, pmw.WithPerm(model.PermissionInvoiceRead), h.Invoice.GetTemplate)
+		invoiceGroup.POST("/send", amw.WithAuth, pmw.WithPerm(model.PermissionInvoiceRead), h.Invoice.Send)
 	}
 
 	valuation := v1.Group("/valuation")
@@ -197,30 +197,30 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 
 	dashboard := v1.Group("/dashboards")
 	{
-		engagementDashboardGroup := dashboard.Group("/engagement")
+		engagementDashboardGroup := dashboard.Group("/engagement", amw.WithAuth, pmw.WithPerm(model.PermissionDashBoardEngagementRead))
 		{
 			engagementDashboardGroup.GET("/info", h.Dashboard.GetEngagementInfo)
 			engagementDashboardGroup.GET("/detail", h.Dashboard.GetEngagementInfoDetail)
 		}
 
-		projectDashboardGroup := dashboard.Group("/projects")
+		projectDashboardGroup := dashboard.Group("/projects", amw.WithAuth, pmw.WithPerm(model.PermissionDashBoardProjectsRead))
 		{
-			projectDashboardGroup.GET("/sizes", pmw.WithPerm("dashboards.read"), h.Dashboard.GetProjectSizes)
-			projectDashboardGroup.GET("/work-surveys", pmw.WithPerm("dashboards.read"), h.Dashboard.GetWorkSurveys)
-			projectDashboardGroup.GET("/action-items", pmw.WithPerm("dashboards.read"), h.Dashboard.GetActionItemReports)
-			projectDashboardGroup.GET("/engineering-healths", pmw.WithPerm("dashboards.read"), h.Dashboard.GetEngineeringHealth)
-			projectDashboardGroup.GET("/audits", pmw.WithPerm("dashboards.read"), h.Dashboard.GetAudits)
-			projectDashboardGroup.GET("/action-item-squash", pmw.WithPerm("dashboards.read"), h.Dashboard.GetActionItemSquashReports)
-			projectDashboardGroup.GET("/summary", pmw.WithPerm("dashboards.read"), h.Dashboard.GetSummary)
+			projectDashboardGroup.GET("/sizes", h.Dashboard.GetProjectSizes)
+			projectDashboardGroup.GET("/work-surveys", h.Dashboard.GetWorkSurveys)
+			projectDashboardGroup.GET("/action-items", h.Dashboard.GetActionItemReports)
+			projectDashboardGroup.GET("/engineering-healths", h.Dashboard.GetEngineeringHealth)
+			projectDashboardGroup.GET("/audits", h.Dashboard.GetAudits)
+			projectDashboardGroup.GET("/action-item-squash", h.Dashboard.GetActionItemSquashReports)
+			projectDashboardGroup.GET("/summary", h.Dashboard.GetSummary)
 		}
 
-		resourceDashboardGroup := dashboard.Group("/resources")
+		resourceDashboardGroup := dashboard.Group("/resources", amw.WithAuth, pmw.WithPerm(model.PermissionDashBoardResourcesRead))
 		{
-			resourceDashboardGroup.GET("/availabilities", pmw.WithPerm("dashboards.read"), h.Dashboard.GetResourcesAvailability)
-			resourceDashboardGroup.GET("/utilization", pmw.WithPerm("dashboards.read"), h.Dashboard.GetResourceUtilization)
-			resourceDashboardGroup.GET("/work-unit-distribution", pmw.WithPerm("dashboards.read"), h.Dashboard.GetWorkUnitDistribution)
-			resourceDashboardGroup.GET("/work-unit-distribution-summary", pmw.WithPerm("dashboards.read"), h.Dashboard.GetWorkUnitDistributionSummary)
-			resourceDashboardGroup.GET("/work-survey-summaries", pmw.WithPerm("dashboards.read"), h.Dashboard.GetResourceWorkSurveySummaries)
+			resourceDashboardGroup.GET("/availabilities", h.Dashboard.GetResourcesAvailability)
+			resourceDashboardGroup.GET("/utilization", h.Dashboard.GetResourceUtilization)
+			resourceDashboardGroup.GET("/work-unit-distribution", h.Dashboard.GetWorkUnitDistribution)
+			resourceDashboardGroup.GET("/work-unit-distribution-summary", h.Dashboard.GetWorkUnitDistributionSummary)
+			resourceDashboardGroup.GET("/work-survey-summaries", h.Dashboard.GetResourceWorkSurveySummaries)
 		}
 	}
 }
