@@ -2,44 +2,43 @@ package employee
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
-	"path/filepath"
-	"strings"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"golang.org/x/exp/slices"
 	"gorm.io/gorm"
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
+	"github.com/dwarvesf/fortress-api/pkg/controller"
+	"github.com/dwarvesf/fortress-api/pkg/controller/employee"
 	"github.com/dwarvesf/fortress-api/pkg/handler/employee/errs"
 	"github.com/dwarvesf/fortress-api/pkg/handler/employee/request"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/store"
-	"github.com/dwarvesf/fortress-api/pkg/store/employee"
 	"github.com/dwarvesf/fortress-api/pkg/utils/authutils"
 	"github.com/dwarvesf/fortress-api/pkg/view"
 )
 
 type handler struct {
-	store   *store.Store
-	service *service.Service
-	logger  logger.Logger
-	repo    store.DBRepo
-	config  *config.Config
+	controller *controller.Controller
+	store      *store.Store
+	service    *service.Service
+	logger     logger.Logger
+	repo       store.DBRepo
+	config     *config.Config
 }
 
 // New returns a handler
-func New(store *store.Store, repo store.DBRepo, service *service.Service, logger logger.Logger, cfg *config.Config) IHandler {
+func New(controller *controller.Controller, store *store.Store, repo store.DBRepo, service *service.Service, logger logger.Logger, cfg *config.Config) IHandler {
 	return &handler{
-		store:   store,
-		repo:    repo,
-		service: service,
-		logger:  logger,
-		config:  cfg,
+		controller: controller,
+		store:      store,
+		repo:       repo,
+		service:    service,
+		logger:     logger,
+		config:     cfg,
 	}
 }
 
@@ -84,45 +83,31 @@ func (h *handler) List(c *gin.Context) {
 		"params":  body,
 	})
 
-	filter := employee.EmployeeFilter{
-		Preload:        body.Preload,
-		Keyword:        body.Keyword,
-		Positions:      body.Positions,
-		Stacks:         body.Stacks,
-		Chapters:       body.Chapters,
-		Seniorities:    body.Seniorities,
-		Organizations:  body.Organizations,
-		LineManagers:   body.LineManagers,
-		JoinedDateSort: model.SortOrderDESC,
-		Projects:       body.Projects,
-	}
-
-	// If user don't have this permission, they can only see employees in the project that they are in
-	if !authutils.HasPermission(userInfo.Permissions, model.PermissionEmployeesReadReadActive) {
-		projectIDs := make([]string, 0)
-		for _, p := range userInfo.Projects {
-			projectIDs = append(projectIDs, p.Code)
-		}
-
-		filter.Projects = []string{""}
-		if len(projectIDs) > 0 {
-			filter.Projects = projectIDs
-		}
-	}
-
-	workingStatuses, err := h.getWorkingStatusInput(c, body.WorkingStatuses)
+	workingStatuses, err := h.getWorkingStatusInput(body.WorkingStatuses, userInfo)
 	if err != nil {
-		l.Error(err, "failed to get working status input")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
-		return
+		l.Error(err, "failed to get working status")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 	}
 
-	filter.WorkingStatuses = workingStatuses
+	requestBody := employee.GetListEmployeeInput{
+		Pagination: body.Pagination,
 
-	employees, total, err := h.store.Employee.All(h.repo.DB(), filter, body.Pagination)
+		WorkingStatuses: body.WorkingStatuses,
+		Preload:         body.Preload,
+		Positions:       body.Positions,
+		Stacks:          body.Stacks,
+		Projects:        body.Projects,
+		Chapters:        body.Chapters,
+		Seniorities:     body.Seniorities,
+		Organizations:   body.Organizations,
+		LineManagers:    body.LineManagers,
+		Keyword:         body.Keyword,
+	}
+
+	employees, total, err := h.controller.Employee.List(workingStatuses, requestBody, userInfo)
 	if err != nil {
-		l.Error(err, "error query employee from db")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
+		l.Error(err, "failed to get list employees")
+		errs.ConvertControllerErr(c, err)
 		return
 	}
 
@@ -130,13 +115,7 @@ func (h *handler) List(c *gin.Context) {
 		&view.PaginationResponse{Pagination: body.Pagination, Total: total}, nil, nil, ""))
 }
 
-func (h *handler) getWorkingStatusInput(c *gin.Context, input []string) ([]string, error) {
-	userInfo, err := authutils.GetLoggedInUserInfo(c, h.store, h.repo.DB(), h.config)
-	if err != nil {
-		h.logger.Error(err, "failed to get userID from context")
-		return nil, err
-	}
-
+func (h *handler) getWorkingStatusInput(input []string, userInfo *model.CurrentLoggedUserInfo) ([]string, error) {
 	// user who do not have permission
 	if !authutils.HasPermission(userInfo.Permissions, model.PermissionEmployeesReadFilterByAllStatuses) {
 		if len(input) == 0 {
@@ -205,33 +184,11 @@ func (h *handler) Details(c *gin.Context) {
 		"id":      id,
 	})
 
-	// 2. get employee from store
-	rs, err := h.store.Employee.One(h.repo.DB(), id, true)
+	rs, err := h.controller.Employee.Details(id, userInfo)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			l.Info("employee not found")
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrEmployeeNotFound, id, ""))
-			return
-		}
-		l.Error(err, "error query employee from db")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, id, ""))
+		l.Error(err, "failed to get detail employees")
+		errs.ConvertControllerErr(c, err)
 		return
-	}
-
-	if rs.WorkingStatus == model.WorkingStatusLeft && !authutils.HasPermission(userInfo.Permissions, model.PermissionEmployeesReadFullAccess) {
-		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrEmployeeNotFound, nil, ""))
-		return
-	}
-
-	mentees, err := h.store.Employee.GetMenteesByID(h.repo.DB(), rs.ID.String())
-	if err != nil {
-		l.Error(err, "error query mentees from db")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, id, ""))
-		return
-	}
-
-	if len(mentees) > 0 {
-		rs.Mentees = mentees
 	}
 
 	// 3. return employee
@@ -278,30 +235,12 @@ func (h *handler) UpdateEmployeeStatus(c *gin.Context) {
 		return
 	}
 
-	emp, err := h.store.Employee.One(h.repo.DB(), employeeID, true)
+	emp, err := h.controller.Employee.UpdateEmployeeStatus(employeeID, employee.UpdateWorkingStatusInput{
+		EmployeeStatus: body.EmployeeStatus,
+	})
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			l.Info("employee not found")
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrEmployeeNotFound, nil, ""))
-			return
-		}
-		l.Error(err, "failed to get employee")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
-		return
-	}
-
-	emp.WorkingStatus = body.EmployeeStatus
-	emp.LeftDate = nil
-
-	now := time.Now()
-	if body.EmployeeStatus == model.WorkingStatusLeft {
-		emp.LeftDate = &now
-	}
-
-	_, err = h.store.Employee.UpdateSelectedFieldsByID(h.repo.DB(), employeeID, *emp, "working_status", "left_date")
-	if err != nil {
-		l.Error(err, "failed to update employee status")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
+		l.Error(err, "failed to get detail employees")
+		errs.ConvertControllerErr(c, err)
 		return
 	}
 
@@ -344,282 +283,33 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 		"request": body,
 	})
 
-	tx, done := h.repo.NewTransaction()
-
-	// check line manager existence
-	if !body.LineManagerID.IsZero() {
-		exist, err := h.store.Employee.IsExist(tx.DB(), body.LineManagerID.String())
-		if err != nil {
-			l.Error(err, "error when finding line manager")
-			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done((err)), body, ""))
-			return
-		}
-
-		if !exist {
-			l.Error(errs.ErrLineManagerNotFound, "error line manager not found")
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, done(errs.ErrLineManagerNotFound), body, ""))
-			return
-		}
+	requestBody := employee.UpdateEmployeeGeneralInfoInput{
+		FullName:        body.FullName,
+		Email:           body.Email,
+		Phone:           body.Phone,
+		LineManagerID:   body.LineManagerID,
+		DisplayName:     body.DisplayName,
+		GithubID:        body.GithubID,
+		NotionID:        body.NotionID,
+		NotionName:      body.NotionName,
+		NotionEmail:     body.NotionEmail,
+		DiscordID:       body.DiscordID,
+		DiscordName:     body.DiscordName,
+		LinkedInName:    body.LinkedInName,
+		LeftDate:        body.LeftDate,
+		JoinedDate:      body.JoinedDate,
+		OrganizationIDs: body.OrganizationIDs,
+		ReferredBy:      body.ReferredBy,
 	}
 
-	// check referrer existence
-	if !body.ReferredBy.IsZero() {
-		exist, err := h.store.Employee.IsExist(tx.DB(), body.ReferredBy.String())
-		if err != nil {
-			l.Error(err, "error when finding referrer")
-			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done((err)), body, ""))
-			return
-		}
-
-		if !exist {
-			l.Error(errs.ErrReferrerNotFound, "error referrer not found")
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, done(errs.ErrReferrerNotFound), body, ""))
-			return
-		}
-	}
-
-	emp, err := h.store.Employee.One(tx.DB(), employeeID, true)
+	emp, err := h.controller.Employee.UpdateGeneralInfo(h.logger, employeeID, requestBody)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			l.Info("employee not found")
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, done(errs.ErrEmployeeNotFound), nil, ""))
-			return
-		}
-		l.Error(err, "failed to get employee")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), nil, ""))
+		l.Error(err, "failed to update general info for employee")
+		errs.ConvertControllerErr(c, err)
 		return
 	}
 
-	// 3. update information and return
-
-	if strings.TrimSpace(body.FullName) != "" {
-		emp.FullName = body.FullName
-	}
-
-	if strings.TrimSpace(body.Email) != "" {
-		emp.TeamEmail = body.Email
-	}
-
-	if strings.TrimSpace(body.Phone) != "" {
-		emp.PhoneNumber = body.Phone
-	}
-
-	if strings.TrimSpace(body.GithubID) != "" {
-		emp.GithubID = body.GithubID
-	}
-
-	if strings.TrimSpace(body.NotionID) != "" {
-		emp.NotionID = body.NotionID
-	}
-
-	if strings.TrimSpace(body.NotionName) != "" {
-		emp.NotionName = body.NotionName
-	}
-
-	if strings.TrimSpace(body.NotionEmail) != "" {
-		emp.NotionEmail = body.NotionEmail
-	}
-
-	if strings.TrimSpace(body.DiscordID) != "" {
-		emp.DiscordID = body.DiscordID
-	}
-
-	if strings.TrimSpace(body.DiscordName) != "" {
-		emp.DiscordName = body.DiscordName
-	}
-
-	if strings.TrimSpace(body.LinkedInName) != "" {
-		emp.LinkedInName = body.LinkedInName
-	}
-
-	if strings.TrimSpace(body.DisplayName) != "" {
-		emp.DisplayName = body.DisplayName
-	}
-
-	if strings.TrimSpace(body.JoinedDate) != "" {
-		joinedDate, err := time.Parse("2006-01-02", body.JoinedDate)
-		if err != nil {
-			l.Error(errs.ErrInvalidJoinedDate, "invalid join date")
-			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidJoinedDate, body, ""))
-			return
-		}
-		emp.JoinedDate = &joinedDate
-	}
-
-	if strings.TrimSpace(body.LeftDate) != "" {
-		leftDate, err := time.Parse("2006-01-02", body.LeftDate)
-		if err != nil {
-			l.Error(errs.ErrInvalidLeftDate, "invalid left date")
-			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidLeftDate, body, ""))
-			return
-		}
-		emp.LeftDate = &leftDate
-	}
-
-	if emp.JoinedDate != nil && emp.LeftDate != nil {
-		if emp.LeftDate.Before(*emp.JoinedDate) {
-			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrLeftDateBeforeJoinedDate, body, ""))
-			return
-		}
-	}
-
-	emp.LineManagerID = body.LineManagerID
-	emp.ReferredBy = body.ReferredBy
-
-	if err := h.updateSocialAccounts(tx.DB(), body, emp.ID); err != nil {
-		l.Error(err, "failed to update social accounts")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
-		return
-	}
-
-	_, err = h.store.Employee.UpdateSelectedFieldsByID(tx.DB(), employeeID, *emp,
-		"full_name",
-		"team_email",
-		"phone_number",
-		"line_manager_id",
-		"discord_id",
-		"discord_name",
-		"github_id",
-		"notion_id",
-		"notion_name",
-		"notion_email",
-		"linkedin_name",
-		"display_name",
-		"joined_date",
-		"left_date",
-		"referred_by",
-	)
-	if err != nil {
-		l.Error(err, "failed to update employee")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
-		return
-	}
-
-	if len(body.OrganizationIDs) > 0 {
-		// Check organizations existence
-		organizations, err := h.store.Organization.All(tx.DB())
-		if err != nil {
-			l.Error(err, "failed to get all organizations")
-			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
-			return
-		}
-
-		orgMaps := model.ToOrganizationMap(organizations)
-		for _, sID := range body.OrganizationIDs {
-			_, ok := orgMaps[sID]
-			if !ok {
-				l.Error(errs.ErrOrganizationNotFoundWithID(sID.String()), "organization not found")
-				c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, done(errs.ErrOrganizationNotFoundWithID(sID.String())), body, ""))
-				return
-			}
-		}
-
-		// Delete all exist employee organizations
-		if err := h.store.EmployeeOrganization.DeleteByEmployeeID(tx.DB(), employeeID); err != nil {
-			l.Error(err, "failed to delete employee organization")
-			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
-			return
-		}
-
-		// Create new employee position
-		for _, orgID := range body.OrganizationIDs {
-			_, err := h.store.EmployeeOrganization.Create(tx.DB(), &model.EmployeeOrganization{
-				EmployeeID:     model.MustGetUUIDFromString(employeeID),
-				OrganizationID: orgID,
-			})
-			if err != nil {
-				l.Error(err, "failed to create employee organization")
-				c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
-				return
-			}
-		}
-	}
-
-	emp, err = h.store.Employee.One(tx.DB(), employeeID, true)
-	if err != nil {
-		l.Error(err, "failed to get employee")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), nil, ""))
-		return
-	}
-
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToUpdateGeneralInfoEmployeeData(emp), nil, done(nil), nil, ""))
-}
-
-func (h *handler) updateSocialAccounts(db *gorm.DB, input request.UpdateEmployeeGeneralInfoInput, employeeID model.UUID) error {
-	l := h.logger.Fields(logger.Fields{
-		"handler":    "employee",
-		"method":     "updateSocialAccounts",
-		"input":      input,
-		"employeeID": employeeID,
-	})
-
-	accounts, err := h.store.SocialAccount.GetByEmployeeID(db, employeeID.String())
-	if err != nil {
-		l.Error(err, "failed to get social accounts by employeeID")
-		return err
-	}
-
-	accountsInput := map[model.SocialAccountType]model.SocialAccount{
-		model.SocialAccountTypeGitHub: {
-			Type:       model.SocialAccountTypeGitHub,
-			EmployeeID: employeeID,
-			AccountID:  input.GithubID,
-			Name:       input.GithubID,
-		},
-		model.SocialAccountTypeNotion: {
-			Type:       model.SocialAccountTypeNotion,
-			EmployeeID: employeeID,
-			AccountID:  input.NotionID,
-			Name:       input.NotionName,
-			Email:      input.NotionEmail,
-		},
-		model.SocialAccountTypeDiscord: {
-			Type:       model.SocialAccountTypeDiscord,
-			EmployeeID: employeeID,
-			AccountID:  input.DiscordID,
-			Name:       input.DiscordName,
-		},
-		model.SocialAccountTypeLinkedIn: {
-			Type:       model.SocialAccountTypeLinkedIn,
-			EmployeeID: employeeID,
-			AccountID:  input.LinkedInName,
-			Name:       input.LinkedInName,
-		},
-	}
-
-	for _, account := range accounts {
-		delete(accountsInput, account.Type)
-
-		switch account.Type {
-		case model.SocialAccountTypeGitHub:
-			account.AccountID = input.GithubID
-			account.Name = input.GithubID
-		case model.SocialAccountTypeNotion:
-			account.Name = input.NotionName
-			account.Email = input.NotionEmail
-		case model.SocialAccountTypeDiscord:
-			account.Name = input.DiscordName
-		case model.SocialAccountTypeLinkedIn:
-			account.AccountID = input.LinkedInName
-			account.Name = input.LinkedInName
-		default:
-			continue
-		}
-
-		if _, err := h.store.SocialAccount.UpdateSelectedFieldsByID(db, account.ID.String(), *account, "account_id", "name", "email"); err != nil {
-			l.Errorf(err, "failed to update social account %s", account.ID)
-			return err
-		}
-	}
-
-	for _, account := range accountsInput {
-		if _, err := h.store.SocialAccount.Create(db, &account); err != nil {
-			l.AddField("account", account).Error(err, "failed to create social account")
-			return err
-		}
-	}
-
-	return nil
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToUpdateGeneralInfoEmployeeData(emp), nil, nil, nil, ""))
 }
 
 // Create godoc
@@ -662,192 +352,28 @@ func (h *handler) Create(c *gin.Context) {
 		"input":   input,
 	})
 
-	loggedInUser, err := h.store.Employee.One(h.repo.DB(), userID, false)
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrEmployeeNotFound, nil, ""))
-		return
-	}
-
-	if err != nil {
-		l.Error(err, "failed to get employee")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
-		return
-	}
-
-	// 1.2 prepare employee data
-	now := time.Now()
-
-	// Check position existence
-	positions, err := h.store.Position.All(h.repo.DB())
-	if err != nil {
-		l.Error(err, "error when finding position")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input, ""))
-		return
-	}
-
-	positionsReq := make([]model.Position, 0)
-	positionMap := model.ToPositionMap(positions)
-	for _, pID := range input.Positions {
-		_, ok := positionMap[pID]
-		if !ok {
-			l.Error(errs.ErrPositionNotFoundWithID(pID.String()), "error position not found")
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrPositionNotFoundWithID(pID.String()), input, ""))
-			return
-		}
-
-		positionsReq = append(positionsReq, positionMap[pID])
-	}
-
-	sen, err := h.store.Seniority.One(h.repo.DB(), input.SeniorityID)
-	if err != nil {
-		l.Error(err, "error invalid seniority")
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrSeniorityNotfound, input, ""))
-			return
-		}
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input, ""))
-		return
-	}
-
-	role, err := h.store.Role.One(h.repo.DB(), input.RoleID)
-	if err != nil {
-		l.Error(err, "error invalid role")
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrRoleNotfound, input, ""))
-			return
-		}
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input, ""))
-		return
-	}
-
-	if role.Level <= loggedInUser.EmployeeRoles[0].Role.Level {
-		l.Error(errs.ErrInvalidAccountRole, "failed to update role, invalid role")
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidAccountRole, input, ""))
-		return
-	}
-
-	// get the username
-	eml := &model.Employee{
-		BaseModel: model.BaseModel{
-			ID: model.NewUUID(),
-		},
+	requestBody := employee.CreateEmployeeInput{
 		FullName:      input.FullName,
 		DisplayName:   input.DisplayName,
 		TeamEmail:     input.TeamEmail,
 		PersonalEmail: input.PersonalEmail,
-		WorkingStatus: model.WorkingStatus(input.Status),
-		JoinedDate:    &now,
-		SeniorityID:   sen.ID,
-		Username:      strings.Split(input.TeamEmail, "@")[0],
+		Positions:     input.Positions,
+		Salary:        input.Salary,
+		SeniorityID:   input.SeniorityID,
+		RoleID:        input.RoleID,
+		Status:        input.Status,
+		ReferredBy:    input.ReferredBy,
 	}
 
-	if !input.ReferredBy.IsZero() {
-		exists, err := h.store.Employee.IsExist(h.repo.DB(), input.ReferredBy.String())
-		if err != nil {
-			l.Error(err, "failed to getting referrer")
-			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input, ""))
-			return
-		}
-
-		if !exists {
-			l.Error(errs.ErrReferrerNotFound, "referrer not found")
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrReferrerNotFound, input, ""))
-			return
-		}
-
-		eml.ReferredBy = input.ReferredBy
-	}
-
-	// 2.1 check employee exists -> raise error
-	_, err = h.store.Employee.OneByTeamEmail(h.repo.DB(), eml.TeamEmail)
-	if !errors.Is(err, gorm.ErrRecordNotFound) {
-		if err == nil {
-			l.Error(err, "team email exists")
-			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrEmailExisted, input, ""))
-			return
-		}
-		l.Error(err, "failed to get employee by email")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input, ""))
-		return
-	}
-
-	_, err = h.store.Employee.OneByEmail(h.repo.DB(), eml.PersonalEmail)
-	if !errors.Is(err, gorm.ErrRecordNotFound) {
-		if err == nil {
-			l.Error(err, "personal email exists")
-			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrEmailExisted, input, ""))
-			return
-		}
-		l.Error(err, "failed to get employee by email")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input, ""))
-		return
-	}
-
-	_, err = h.store.Employee.One(h.repo.DB(), eml.Username, false)
-	if !errors.Is(err, gorm.ErrRecordNotFound) {
-		if err == nil {
-			l.Error(err, "username exists")
-			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrEmployeeExisted, input, ""))
-			return
-		}
-		l.Error(err, "failed to check username existence")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input, ""))
-		return
-	}
-
-	tx, done := h.repo.NewTransaction()
-	// 2.2 store employee
-	eml, err = h.store.Employee.Create(tx.DB(), eml)
+	eml, err := h.controller.Employee.Create(h.logger, userID, requestBody)
 	if err != nil {
-		l.Error(err, "failed to create new employee")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
-		return
-	}
-
-	// 2.3 create employee position
-	for _, p := range positionsReq {
-		_, err = h.store.EmployeePosition.Create(tx.DB(), &model.EmployeePosition{
-			EmployeeID: eml.ID,
-			PositionID: p.ID,
-		})
-		if err != nil {
-			l.Error(err, "failed to create new employee position")
-			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
-			return
-		}
-	}
-
-	// 2.4 create employee role
-	_, err = h.store.EmployeeRole.Create(tx.DB(), &model.EmployeeRole{
-		EmployeeID: eml.ID,
-		RoleID:     role.ID,
-	})
-	if err != nil {
-		l.Error(err, "failed to create new employee position")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
-		return
-	}
-
-	// Create employee organization
-	org, err := h.store.Organization.OneByCode(tx.DB(), model.OrganizationCodeDwarves)
-	if err != nil {
-		l.Error(err, "error invalid organization")
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, done(errs.ErrOrganizationNotFound), input, ""))
-			return
-		}
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
-		return
-	}
-
-	if _, err := h.store.EmployeeOrganization.Create(tx.DB(), &model.EmployeeOrganization{EmployeeID: eml.ID, OrganizationID: org.ID}); err != nil {
-		l.Error(err, "error invalid organization")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
+		l.Error(err, "failed to create employee")
+		errs.ConvertControllerErr(c, err)
 		return
 	}
 
 	// 3. return employee
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToEmployeeData(eml), nil, done(nil), nil, ""))
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToEmployeeData(eml), nil, nil, nil, ""))
 }
 
 // UpdateSkills godoc
@@ -886,187 +412,21 @@ func (h *handler) UpdateSkills(c *gin.Context) {
 		"request": body,
 	})
 
-	emp, err := h.store.Employee.One(h.repo.DB(), employeeID, true)
+	requestBody := employee.UpdateSkillsInput{
+		Positions:       body.Positions,
+		LeadingChapters: body.LeadingChapters,
+		Chapters:        body.Chapters,
+		Seniority:       body.Seniority,
+		Stacks:          body.Stacks,
+	}
+	emp, err := h.controller.Employee.UpdateSkills(h.logger, employeeID, requestBody)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			l.Info("employee not found")
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrEmployeeNotFound, nil, ""))
-			return
-		}
-		l.Error(err, "failed to get employee")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		l.Error(err, "failed to update skills")
+		errs.ConvertControllerErr(c, err)
 		return
 	}
 
-	// Check chapter existence
-	chapters, err := h.store.Chapter.All(h.repo.DB())
-	if err != nil {
-		l.Error(err, "failed to get all chapters")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
-		return
-	}
-
-	chapterMap := model.ToChapterMap(chapters)
-	for _, sID := range body.Chapters {
-		_, ok := chapterMap[sID]
-		if !ok {
-			l.Error(errs.ErrChapterNotFoundWithID(sID.String()), "chapter not found")
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrChapterNotFoundWithID(sID.String()), body, ""))
-			return
-		}
-	}
-
-	// Check seniority existence
-	exist, err := h.store.Seniority.IsExist(h.repo.DB(), body.Seniority.String())
-	if err != nil {
-		l.Error(err, "failed to check seniority existence")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
-		return
-	}
-
-	if !exist {
-		l.Error(errs.ErrSeniorityNotFound, "seniority not found")
-		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrSeniorityNotFound, body, ""))
-		return
-	}
-
-	// Check stack existence
-	_, stacks, err := h.store.Stack.All(h.repo.DB(), "", nil)
-	if err != nil {
-		l.Error(err, "failed to get all stacks")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
-		return
-	}
-
-	stackMap := model.ToStackMap(stacks)
-	for _, sID := range body.Stacks {
-		_, ok := stackMap[sID]
-		if !ok {
-			l.Error(errs.ErrStackNotFoundWithID(sID.String()), "stack not found")
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrStackNotFoundWithID(sID.String()), body, ""))
-			return
-		}
-	}
-
-	// Check position existence
-	positions, err := h.store.Position.All(h.repo.DB())
-	if err != nil {
-		l.Error(err, "failed to get all positions")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
-		return
-	}
-
-	positionMap := model.ToPositionMap(positions)
-	for _, pID := range body.Positions {
-		_, ok := positionMap[pID]
-
-		if !ok {
-			l.Error(errs.ErrPositionNotFoundWithID(pID.String()), "position not found")
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrPositionNotFoundWithID(pID.String()), body, ""))
-			return
-		}
-	}
-
-	// Begin transaction
-	tx, done := h.repo.NewTransaction()
-
-	// Delete all exist employee positions
-	if err := h.store.EmployeePosition.DeleteByEmployeeID(tx.DB(), employeeID); err != nil {
-		l.Error(err, "failed to delete employee position")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
-		return
-	}
-
-	// Create new employee position
-	for _, positionID := range body.Positions {
-		_, err := h.store.EmployeePosition.Create(tx.DB(), &model.EmployeePosition{
-			EmployeeID: model.MustGetUUIDFromString(employeeID),
-			PositionID: positionID,
-		})
-		if err != nil {
-			l.Error(err, "failed to create employee position")
-			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
-			return
-		}
-	}
-
-	// Delete all exist employee stack
-	if err := h.store.EmployeeStack.DeleteByEmployeeID(tx.DB(), employeeID); err != nil {
-		l.Error(err, "failed to delete employee stack in database")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
-		return
-	}
-
-	// Create new employee stack
-	for _, stackID := range body.Stacks {
-		_, err := h.store.EmployeeStack.Create(tx.DB(), &model.EmployeeStack{
-			EmployeeID: model.MustGetUUIDFromString(employeeID),
-			StackID:    stackID,
-		})
-		if err != nil {
-			l.Error(err, "failed to create employee stack")
-			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
-			return
-		}
-	}
-
-	// Delete all exist employee stack
-	if err := h.store.EmployeeChapter.DeleteByEmployeeID(tx.DB(), employeeID); err != nil {
-		l.Error(err, "failed to delete employee chapter in database")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
-		return
-	}
-
-	// Create new employee stack
-	for _, chapterID := range body.Chapters {
-		_, err := h.store.EmployeeChapter.Create(tx.DB(), &model.EmployeeChapter{
-			EmployeeID: model.MustGetUUIDFromString(employeeID),
-			ChapterID:  chapterID,
-		})
-		if err != nil {
-			l.Error(err, "failed to create employee chapter")
-			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
-			return
-		}
-	}
-
-	// Remove all chapter lead by employee
-	leadingChapters, err := h.store.Chapter.GetAllByLeadID(tx.DB(), employeeID)
-	if err != nil {
-		l.Error(err, "failed to get list chapter lead by the employee")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
-		return
-	}
-
-	for _, lChapter := range leadingChapters {
-		if err := h.store.Chapter.UpdateChapterLead(tx.DB(), lChapter.ID.String(), nil); err != nil {
-			l.Error(err, "failed to remove chapter lead")
-			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
-			return
-		}
-	}
-
-	// Create new chapter
-	leader := model.MustGetUUIDFromString(employeeID)
-	for _, lChapter := range body.LeadingChapters {
-		if err := h.store.Chapter.UpdateChapterLead(tx.DB(), lChapter.String(), &leader); err != nil {
-			l.Error(err, "failed to remove chapter lead")
-			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
-			return
-		}
-	}
-
-	// Update employee information
-	emp.SeniorityID = body.Seniority
-
-	_, err = h.store.Employee.UpdateSelectedFieldsByID(tx.DB(), employeeID, *emp, "chapter_id", "seniority_id")
-	if err != nil {
-		l.Error(err, "failed to update employee")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
-		return
-	}
-
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToUpdateSkillEmployeeData(emp), nil, done(nil), nil, ""))
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToUpdateSkillEmployeeData(emp), nil, nil, nil, ""))
 }
 
 // UpdatePersonalInfo godoc
@@ -1105,49 +465,25 @@ func (h *handler) UpdatePersonalInfo(c *gin.Context) {
 		"request": body,
 	})
 
-	emp, err := h.store.Employee.One(h.repo.DB(), employeeID, true)
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			l.Info("employee not found")
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrEmployeeNotFound, nil, ""))
-			return
-		}
-		l.Error(err, "failed to get employee")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
-		return
+	requestBody := employee.UpdatePersonalInfoInput{
+		DoB:              body.DoB,
+		Gender:           body.Gender,
+		PlaceOfResidence: body.PlaceOfResidence,
+		Address:          body.Address,
+		PersonalEmail:    body.PersonalEmail,
+		Country:          body.Country,
+		City:             body.City,
 	}
 
 	if isValid := h.validateCountryAndCity(h.repo.DB(), body.Country, body.City); !isValid {
-		l.Info("country or city is invalid")
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidCountryOrCity, body, ""))
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidCountryOrCity, nil, ""))
 		return
 	}
 
-	// validate personal email
-	_, err = h.store.Employee.OneByEmail(h.repo.DB(), body.PersonalEmail)
-	if emp.PersonalEmail != body.PersonalEmail && body.PersonalEmail != "" && !errors.Is(err, gorm.ErrRecordNotFound) {
-		if err == nil {
-			l.Error(err, "personal email exists")
-			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrEmailExisted, body, ""))
-			return
-		}
-		l.Error(err, "failed to get employee by email")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
-		return
-	}
-
-	emp.DateOfBirth = body.DoB
-	emp.Gender = body.Gender
-	emp.Address = body.Address
-	emp.PlaceOfResidence = body.PlaceOfResidence
-	emp.PersonalEmail = body.PersonalEmail
-	emp.Country = body.Country
-	emp.City = body.City
-
-	emp, err = h.store.Employee.Update(h.repo.DB(), emp)
+	emp, err := h.controller.Employee.UpdatePersonalInfo(employeeID, requestBody)
 	if err != nil {
-		l.Error(err, "failed to update employee")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
+		l.Error(err, "failed to update personal info")
+		errs.ConvertControllerErr(c, err)
 		return
 	}
 
@@ -1163,168 +499,19 @@ func (h *handler) validateCountryAndCity(db *gorm.DB, countryName string, city s
 		return false
 	}
 
-	l := h.logger.Fields(logger.Fields{
-		"handler":     "profile",
-		"method":      "validateCountryAndCity",
-		"countryName": countryName,
-		"city":        city,
-	})
-
 	country, err := h.store.Country.OneByName(db, countryName)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			l.Info("country not found")
 			return false
 		}
-		l.Error(err, "failed to get country by code")
 		return false
 	}
 
 	if city != "" && !slices.Contains([]string(country.Cities), city) {
-		l.Info("city does not belong to country")
 		return false
 	}
 
 	return true
-}
-
-// UploadContent godoc
-// @Summary Upload content of employee by id
-// @Description Upload content of employee by id
-// @Tags Employee
-// @Accept  json
-// @Produce  json
-// @Param id path string true "Employee ID"
-// @Param Authorization header string true "jwt token"
-// @Param file formData file true "content upload"
-// @Success 200 {object} view.EmployeeContentDataResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
-// @Router /employees/{id}/upload-content [post]
-func (h *handler) UploadContent(c *gin.Context) {
-	// 1.1 parse id from uri, validate id
-	var params struct {
-		ID string `uri:"id" binding:"required"`
-	}
-
-	if err := c.ShouldBindUri(&params); err != nil {
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, params, ""))
-		return
-	}
-
-	// 1.2 get upload file
-	file, err := c.FormFile("file")
-	if err != nil {
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, file, ""))
-		return
-	}
-
-	// 1.3 prepare the logger
-	l := h.logger.Fields(logger.Fields{
-		"handler": "employee",
-		"method":  "UploadContent",
-		"params":  params,
-		// "body":    body,
-	})
-
-	fileName := file.Filename
-	fileExtension := model.ContentExtension(filepath.Ext(fileName))
-	fileSize := file.Size
-	filePath := "employees/" + params.ID
-	fileType := ""
-
-	// 2.1 validate
-	if !fileExtension.Valid() {
-		l.Info("invalid file extension")
-		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrInvalidFileExtension, nil, ""))
-		return
-	}
-	if fileExtension == model.ContentExtensionJpg || fileExtension == model.ContentExtensionPng {
-		if fileSize > model.MaxFileSizeImage {
-			l.Info("invalid file size")
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrInvalidFileSize, nil, ""))
-			return
-		}
-		filePath = filePath + "/images"
-		fileType = "image"
-	}
-	if fileExtension == model.ContentExtensionPdf {
-		if fileSize > model.MaxFileSizePdf {
-			l.Info("invalid file size")
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrInvalidFileSize, nil, ""))
-			return
-		}
-		filePath = filePath + "/docs"
-		fileType = "document"
-	}
-	filePath = filePath + "/" + fileName
-
-	tx, done := h.repo.NewTransaction()
-
-	// 2.2 check file name exist
-	_, err = h.store.Content.OneByPath(tx.DB(), filePath)
-	if err != nil && err != gorm.ErrRecordNotFound {
-		l.Error(err, "error query content from db")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
-		done(err)
-		return
-	}
-	if err == nil {
-		l.Info("file already existed")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, errs.ErrFileAlreadyExisted, nil, ""))
-		done(errs.ErrFileAlreadyExisted)
-		return
-	}
-
-	// 2.3 check employee existed
-	emp, err := h.store.Employee.One(tx.DB(), params.ID, false)
-	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			l.Info("employee not found")
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, err, nil, ""))
-			done(err)
-			return
-		}
-		l.Error(err, "error query employee from db")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
-		done(err)
-		return
-	}
-
-	content, err := h.store.Content.Create(tx.DB(), model.Content{
-		Type:      fileType,
-		Extension: fileExtension.String(),
-		Path:      fmt.Sprintf("https://storage.googleapis.com/%s/%s", h.config.Google.GCSBucketName, filePath),
-		TargetID:  emp.ID,
-		UploadBy:  emp.ID,
-	})
-	if err != nil {
-		l.Error(err, "error query employee from db")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
-		done(err)
-		return
-	}
-
-	multipart, err := file.Open()
-	if err != nil {
-		l.Error(err, "error in open file")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
-		done(err)
-		return
-	}
-
-	// 3. Upload to GCS
-	err = h.service.Google.UploadContentGCS(multipart, filePath)
-	if err != nil {
-		l.Error(err, "error in upload file")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
-		done(err)
-		return
-	}
-	done(nil)
-
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToContentData(content.Path), nil, nil, nil, ""))
 }
 
 // UploadAvatar godoc
@@ -1380,97 +567,14 @@ func (h *handler) UploadAvatar(c *gin.Context) {
 		// "body":    body,
 	})
 
-	fileName := file.Filename
-	fileExtension := model.ContentExtension(filepath.Ext(fileName))
-	fileSize := file.Size
-	fileType := "image"
-	filePath := fmt.Sprintf("https://storage.googleapis.com/%s/employees/%s/images/%s", h.config.Google.GCSBucketName, params.ID, fileName)
-	gcsPath := fmt.Sprintf("employees/%s/images/%s", params.ID, fileName)
-
-	// 2.1 validate
-	if !fileExtension.ImageValid() {
-		l.Info("invalid file extension")
-		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrInvalidFileExtension, nil, ""))
-		return
-	}
-	if fileExtension == model.ContentExtensionJpg || fileExtension == model.ContentExtensionPng {
-		if fileSize > model.MaxFileSizeImage {
-			l.Info("invalid file size")
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrInvalidFileSize, nil, ""))
-			return
-		}
-	}
-
-	tx, done := h.repo.NewTransaction()
-
-	// 2.2 check employee existed
-	emp, err := h.store.Employee.One(tx.DB(), params.ID, false)
+	filePath, err := h.controller.Employee.UploadAvatar(uuidUserID, file, employee.UploadAvatarInput{
+		ID: params.ID,
+	})
 	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			l.Info("employee not found")
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, err, nil, ""))
-			done(err)
-			return
-		}
-		l.Error(err, "error query employee from db")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
-		done(err)
+		l.Error(err, "failed to update avatar")
+		errs.ConvertControllerErr(c, err)
 		return
 	}
-
-	// 2.3 check file name exist
-	_, err = h.store.Content.OneByPath(tx.DB(), filePath)
-	if err != nil && err != gorm.ErrRecordNotFound {
-		l.Error(err, "error query content from db")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
-		done(err)
-		return
-	}
-	if err != nil && err == gorm.ErrRecordNotFound {
-		// not found => create and upload content to GCS
-		_, err = h.store.Content.Create(tx.DB(), model.Content{
-			Type:      fileType,
-			Extension: fileExtension.String(),
-			Path:      filePath,
-			TargetID:  emp.ID,
-			UploadBy:  uuidUserID,
-		})
-		if err != nil {
-			l.Error(err, "error query employee from db")
-			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
-			done(err)
-			return
-		}
-
-		multipart, err := file.Open()
-		if err != nil {
-			l.Error(err, "error in open file")
-			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
-			done(err)
-			return
-		}
-
-		err = h.service.Google.UploadContentGCS(multipart, gcsPath)
-		if err != nil {
-			l.Error(err, "error in upload file")
-			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
-			done(err)
-			return
-		}
-	}
-
-	// 3. update avatar field
-	_, err = h.store.Employee.UpdateSelectedFieldsByID(tx.DB(), emp.ID.String(), model.Employee{
-		Avatar: filePath,
-	}, "avatar")
-	if err != nil {
-		l.Error(err, "error in update avatar")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
-		done(err)
-		return
-	}
-
-	done(nil)
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToContentData(filePath), nil, nil, nil, ""))
 }
@@ -1517,71 +621,21 @@ func (h *handler) UpdateRole(c *gin.Context) {
 		return
 	}
 
-	loggedInUser, err := h.store.Employee.One(h.repo.DB(), userID, false)
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrEmployeeNotFound, nil, ""))
-		return
+	inputRequest := employee.UpdateRoleInput{
+		EmployeeID: input.EmployeeID,
+		Body: employee.UpdateRoleBody{
+			RoleID: input.Body.RoleID,
+		},
 	}
 
+	err = h.controller.Employee.UpdateRole(userID, inputRequest)
 	if err != nil {
-		l.Error(err, "failed to get employee")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		l.Error(err, "failed to update role")
+		errs.ConvertControllerErr(c, err)
 		return
 	}
 
-	empl, err := h.store.Employee.One(h.repo.DB(), input.EmployeeID, false)
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		l.Error(errs.ErrEmployeeNotFound, "reviewer not found")
-		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrEmployeeNotFound, nil, ""))
-		return
-	}
-
-	if err != nil {
-		l.Error(err, "failed to get employee")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
-		return
-	}
-
-	// Check role exists
-	newRole, err := h.store.Role.One(h.repo.DB(), input.Body.RoleID)
-	if err != nil {
-		l.Error(err, "error when finding role")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input, ""))
-		return
-	}
-
-	if empl.EmployeeRoles[0].Role.Level == loggedInUser.EmployeeRoles[0].Role.Level {
-		l.Error(errs.ErrInvalidAccountRole, "failed to update role, invalid role")
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrCouldNotAssignRoleForSameLevelEmployee, input, ""))
-		return
-	}
-
-	if newRole.Level <= loggedInUser.EmployeeRoles[0].Role.Level {
-		l.Error(errs.ErrInvalidAccountRole, "failed to update role, invalid role")
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidAccountRole, input, ""))
-		return
-	}
-
-	// Begin transaction
-	tx, done := h.repo.NewTransaction()
-
-	if err := h.store.EmployeeRole.HardDeleteByEmployeeID(tx.DB(), input.EmployeeID); err != nil {
-		l.Error(err, "failed to delete employee role")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
-		return
-	}
-
-	_, err = h.store.EmployeeRole.Create(tx.DB(), &model.EmployeeRole{
-		EmployeeID: model.MustGetUUIDFromString(input.EmployeeID),
-		RoleID:     input.Body.RoleID,
-	})
-	if err != nil {
-		l.Error(err, "failed to create employee role")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
-		return
-	}
-
-	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, done(nil), nil, "ok"))
+	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))
 }
 
 // GetLineManagers godoc
@@ -1607,22 +661,11 @@ func (h *handler) GetLineManagers(c *gin.Context) {
 		"userInfo": userInfo.UserID,
 	})
 
-	var managers []*model.Employee
-
-	if authutils.HasPermission(userInfo.Permissions, model.PermissionEmployeesReadLineManagerFullAccess) {
-		managers, err = h.store.Employee.GetLineManagers(h.repo.DB())
-		if err != nil {
-			l.Error(err, "failed to get line managers")
-			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, userInfo.UserID, ""))
-			return
-		}
-	} else {
-		managers, err = h.store.Employee.GetLineManagersOfPeers(h.repo.DB(), userInfo.UserID)
-		if err != nil {
-			l.Error(err, "failed to get line managers of peers")
-			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, userInfo.UserID, ""))
-			return
-		}
+	managers, err := h.controller.Employee.GetLineManagers(userInfo)
+	if err != nil {
+		l.Error(err, "failed to get line managers")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, userInfo.UserID, ""))
+		return
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToBasicEmployees(managers), nil, nil, nil, ""))

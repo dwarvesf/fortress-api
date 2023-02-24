@@ -52,12 +52,6 @@ func (s *store) One(db *gorm.DB, id string, preload bool) (*model.Employee, erro
 	return employee, query.First(&employee).Error
 }
 
-// OneByTeamEmail get 1 employee by team email
-func (s *store) OneByTeamEmail(db *gorm.DB, teamEmail string) (*model.Employee, error) {
-	var employee *model.Employee
-	return employee, db.Where("team_email = ?", teamEmail).First(&employee).Error
-}
-
 // OneByEmail get 1 employee by team email or personal email
 func (s *store) OneByEmail(db *gorm.DB, email string) (*model.Employee, error) {
 	var employee *model.Employee

@@ -70,7 +70,7 @@ type Handler struct {
 func New(store *store.Store, repo store.DBRepo, service *service.Service, ctrl *controller.Controller, logger logger.Logger, cfg *config.Config) *Handler {
 	return &Handler{
 		Healthcheck:    healthz.New(),
-		Employee:       employee.New(store, repo, service, logger, cfg),
+		Employee:       employee.New(ctrl, store, repo, service, logger, cfg),
 		Metadata:       metadata.New(store, repo, service, logger, cfg),
 		Auth:           auth.New(ctrl, logger, cfg),
 		Project:        project.New(store, repo, service, logger, cfg),
