@@ -247,7 +247,14 @@ func (h *handler) GetTemplate(c *gin.Context) {
 		lastInvoice = nil
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToInvoiceTemplateResponse(p, lastInvoice, *nextInvoiceNumber), nil, nil, nil, ""))
+	rs, err := view.ToInvoiceTemplateResponse(p, lastInvoice, *nextInvoiceNumber)
+	if err != nil {
+		l.Error(err, "failed to parse invoice template response")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input, ""))
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](rs, nil, nil, nil, ""))
 }
 
 // Send godoc

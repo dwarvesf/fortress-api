@@ -1,6 +1,7 @@
 package request
 
 import (
+	"encoding/json"
 	"regexp"
 
 	"github.com/dwarvesf/fortress-api/pkg/handler/invoice/errs"
@@ -60,35 +61,45 @@ type GetInvoiceInput struct {
 }
 
 type SendInvoiceRequest struct {
-	IsDraft     bool       `json:"isDraft"`
-	ProjectID   model.UUID `json:"projectID" binding:"required"`
-	BankID      model.UUID `json:"bankID" binding:"required"`
-	Description string     `json:"description"`
-	Note        string     `json:"note"`
-	CC          model.JSON `json:"cc"`
-	LineItems   model.JSON `json:"lineItems"`
-	Email       string     `json:"email" binding:"required,email"`
-	Total       int        `json:"total" binding:"gte=0"`
-	Discount    int        `json:"discount" binding:"gte=0"`
-	Tax         int        `json:"tax" binding:"gte=0"`
-	SubTotal    int        `json:"subtotal" binding:"gte=0"`
-	InvoiceDate string     `json:"invoiceDate" binding:"required"`
-	DueDate     string     `json:"dueDate" binding:"required"`
-	Month       int        `json:"invoiceMonth" binding:"gte=0,lte=11"`
-	Year        int        `json:"invoiceYear" binding:"gte=0"`
+	IsDraft     bool                `json:"isDraft"`
+	ProjectID   model.UUID          `json:"projectID" binding:"required"`
+	BankID      model.UUID          `json:"bankID" binding:"required"`
+	Description string              `json:"description"`
+	Note        string              `json:"note"`
+	CC          []string            `json:"cc"`
+	LineItems   []model.InvoiceItem `json:"lineItems"`
+	Email       string              `json:"email" binding:"required,email"`
+	Total       int                 `json:"total" binding:"gte=0"`
+	Discount    int                 `json:"discount" binding:"gte=0"`
+	Tax         int                 `json:"tax" binding:"gte=0"`
+	SubTotal    int                 `json:"subtotal" binding:"gte=0"`
+	InvoiceDate string              `json:"invoiceDate" binding:"required"`
+	DueDate     string              `json:"dueDate" binding:"required"`
+	Month       int                 `json:"invoiceMonth" binding:"gte=0,lte=11"`
+	Year        int                 `json:"invoiceYear" binding:"gte=0"`
 	SentByID    *model.UUID
 	Number      string
 }
 
 func (i *SendInvoiceRequest) ToInvoiceModel() (*model.Invoice, error) {
+	lineItems, err := json.Marshal(i.LineItems)
+	if err != nil {
+		return nil, err
+	}
+
+	cc, err := json.Marshal(i.CC)
+	if err != nil {
+		return nil, err
+	}
+
 	return &model.Invoice{
 		ProjectID:   i.ProjectID,
 		BankID:      i.BankID,
 		Description: i.Description,
 		Note:        i.Note,
-		LineItems:   i.LineItems,
+		LineItems:   lineItems,
 		Email:       i.Email,
-		CC:          i.CC,
+		CC:          cc,
 		Total:       int64(i.Total),
 		Discount:    int64(i.Discount),
 		Tax:         int64(i.Tax),

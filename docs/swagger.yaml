@@ -584,6 +584,21 @@ definitions:
       year:
         type: integer
     type: object
+  model.InvoiceItem:
+    properties:
+      cost:
+        type: integer
+      description:
+        type: string
+      discount:
+        type: integer
+      isExternal:
+        type: boolean
+      quantity:
+        type: number
+      unitCost:
+        type: integer
+    type: object
   model.Issue:
     properties:
       id:
@@ -1421,7 +1436,7 @@ definitions:
         type: string
       cc:
         items:
-          type: integer
+          type: string
         type: array
       description:
         type: string
@@ -1445,7 +1460,7 @@ definitions:
         type: boolean
       lineItems:
         items:
-          type: integer
+          $ref: '#/definitions/model.InvoiceItem'
         type: array
       note:
         type: string
@@ -2197,7 +2212,7 @@ definitions:
     properties:
       emails:
         items:
-          type: integer
+          type: string
         type: array
       id:
         type: string
@@ -2768,7 +2783,7 @@ definitions:
         type: string
       cc:
         items:
-          type: integer
+          type: string
         type: array
       conversionAmount:
         type: integer
@@ -2792,7 +2807,7 @@ definitions:
         type: string
       lineItems:
         items:
-          type: integer
+          $ref: '#/definitions/model.InvoiceItem'
         type: array
       month:
         type: integer
