@@ -2193,6 +2193,43 @@ definitions:
       role:
         type: string
     type: object
+  view.ClientContactInfo:
+    properties:
+      emails:
+        items:
+          type: integer
+        type: array
+      id:
+        type: string
+      isMainContact:
+        type: boolean
+      name:
+        type: string
+    type: object
+  view.ClientInfo:
+    properties:
+      clientAddress:
+        type: string
+      clientCompany:
+        type: string
+      contacts:
+        items:
+          $ref: '#/definitions/view.ClientContactInfo'
+        type: array
+    type: object
+  view.CompanyInfo:
+    properties:
+      description:
+        type: string
+      id:
+        type: string
+      info:
+        $ref: '#/definitions/pgtype.JSONB'
+      name:
+        type: string
+      registrationNumber:
+        type: string
+    type: object
   view.ContentData:
     properties:
       url:
@@ -2725,6 +2762,70 @@ definitions:
           $ref: '#/definitions/model.HiringPosition'
         type: array
     type: object
+  view.Invoice:
+    properties:
+      bankID:
+        type: string
+      cc:
+        items:
+          type: integer
+        type: array
+      conversionAmount:
+        type: integer
+      conversionRate:
+        type: number
+      description:
+        type: string
+      discount:
+        type: integer
+      dueAt:
+        type: string
+      email:
+        type: string
+      errorInvoiceID:
+        type: string
+      failedAt:
+        type: string
+      invoiceFileURL:
+        type: string
+      invoicedAt:
+        type: string
+      lineItems:
+        items:
+          type: integer
+        type: array
+      month:
+        type: integer
+      note:
+        type: string
+      number:
+        type: string
+      paidAt:
+        type: string
+      projectID:
+        type: string
+      scheduledDate:
+        type: string
+      sentBy:
+        type: string
+      status:
+        type: string
+      subTotal:
+        type: integer
+      tax:
+        type: integer
+      threadID:
+        type: string
+      total:
+        type: integer
+      year:
+        type: integer
+    type: object
+  view.InvoiceTemplateResponse:
+    properties:
+      data:
+        $ref: '#/definitions/view.ProjectInvoiceTemplate'
+    type: object
   view.ItemValue:
     properties:
       trend:
@@ -3014,6 +3115,23 @@ definitions:
       fullName:
         type: string
       username:
+        type: string
+    type: object
+  view.ProjectInvoiceTemplate:
+    properties:
+      bankAccount:
+        $ref: '#/definitions/view.BankAccount'
+      client:
+        $ref: '#/definitions/view.ClientInfo'
+      companyInfo:
+        $ref: '#/definitions/view.CompanyInfo'
+      id:
+        type: string
+      invoiceNumber:
+        type: string
+      lastInvoice:
+        $ref: '#/definitions/view.Invoice'
+      name:
         type: string
     type: object
   view.ProjectListDataResponse:
@@ -5267,7 +5385,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/view.GetLatestInvoiceResponse'
+            $ref: '#/definitions/view.InvoiceTemplateResponse'
         "400":
           description: Bad Request
           schema:

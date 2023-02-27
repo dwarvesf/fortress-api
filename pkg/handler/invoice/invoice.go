@@ -191,7 +191,7 @@ func (h *handler) GetLatestInvoice(c *gin.Context) {
 // @Produce json
 // @Param Authorization header string true "jwt token"
 // @Param projectID query string true "projectID"
-// @Success 200 {object} view.GetLatestInvoiceResponse
+// @Success 200 {object} view.InvoiceTemplateResponse
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 404 {object} view.ErrorResponse
 // @Failure 500 {object} view.ErrorResponse
