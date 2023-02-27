@@ -13,7 +13,7 @@ type notionService struct {
 	notionClient *nt.Client
 }
 
-func New(secret string) NotionService {
+func New(secret string) IService {
 	return &notionService{
 		notionClient: nt.NewClient(secret),
 	}

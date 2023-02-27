@@ -12,11 +12,11 @@ type Vault struct {
 	data map[string]interface{}
 }
 
-func New(cfg *config.Config) (VaultService, error) {
-	config := vault.DefaultConfig()
-	config.Address = cfg.Vault.Address
+func New(cfg *config.Config) (IService, error) {
+	defaultConfig := vault.DefaultConfig()
+	defaultConfig.Address = cfg.Vault.Address
 
-	client, err := vault.NewClient(config)
+	client, err := vault.NewClient(defaultConfig)
 	if err != nil {
 		return nil, fmt.Errorf("unable to initialize Vault client: %v", err)
 	}

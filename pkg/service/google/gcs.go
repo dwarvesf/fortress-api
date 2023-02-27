@@ -16,7 +16,7 @@ type CloudStorage struct {
 	bucketName string
 }
 
-func (g *Google) UploadContentGCS(file multipart.File, filePath string) error {
+func (g *googleService) UploadContentGCS(file multipart.File, filePath string) error {
 	ctx := context.Background()
 
 	ctx, cancel := context.WithTimeout(ctx, time.Second*50)

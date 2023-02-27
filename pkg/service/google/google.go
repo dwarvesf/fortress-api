@@ -5,7 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 
@@ -19,14 +19,14 @@ const (
 	getGoogleUserInfoAPIEndpoint = "https://www.googleapis.com/plus/v1/people/me"
 )
 
-type Google struct {
+type googleService struct {
 	config *oauth2.Config
 	gcs    *CloudStorage
 	token  *oauth2.Token
 }
 
 // New function return Google service
-func New(config *oauth2.Config, BucketName string, GCSProjectID string, GCSCredentials string) (*Google, error) {
+func New(config *oauth2.Config, BucketName string, GCSProjectID string, GCSCredentials string) (IService, error) {
 
 	decoded, err := base64.StdEncoding.DecodeString(GCSCredentials)
 	if err != nil {
@@ -38,7 +38,7 @@ func New(config *oauth2.Config, BucketName string, GCSProjectID string, GCSCrede
 		return nil, fmt.Errorf("failed to create client: %v", err)
 	}
 
-	return &Google{
+	return &googleService{
 		config: config,
 		gcs: &CloudStorage{
 			client:     client,
@@ -49,13 +49,13 @@ func New(config *oauth2.Config, BucketName string, GCSProjectID string, GCSCrede
 }
 
 // GetLoginURL return url for user loggin to google account
-func (g *Google) GetLoginURL() string {
+func (g *googleService) GetLoginURL() string {
 	authURL := g.config.AuthCodeURL(state, oauth2.AccessTypeOffline)
 	return authURL
 }
 
 // GetAccessToken return google access token
-func (g *Google) GetAccessToken(code string, redirectURL string) (string, error) {
+func (g *googleService) GetAccessToken(code string, redirectURL string) (string, error) {
 	g.config.RedirectURL = redirectURL
 	token, err := g.config.Exchange(context.Background(), code)
 	if err != nil {
@@ -65,7 +65,7 @@ func (g *Google) GetAccessToken(code string, redirectURL string) (string, error)
 }
 
 // GetGoogleEmail return google user info
-func (g *Google) GetGoogleEmail(accessToken string) (email string, err error) {
+func (g *googleService) GetGoogleEmail(accessToken string) (email string, err error) {
 	var gu struct {
 		DisplayName string `json:"displayName"`
 		ID          string `json:"id"`
@@ -80,7 +80,7 @@ func (g *Google) GetGoogleEmail(accessToken string) (email string, err error) {
 		return "", err
 	}
 
-	body, err := ioutil.ReadAll(response.Body)
+	body, err := io.ReadAll(response.Body)
 	if err != nil {
 		return "", err
 	}

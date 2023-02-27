@@ -19,13 +19,13 @@ import (
 )
 
 type Service struct {
-	Google      googleauth.Service
-	GoogleDrive googledrive.Service
-	GoogleMail  googlemail.Service
-	Notion      notion.NotionService
-	Wise        wise.IWiseService
 	Cache       *cache.Cache
-	Discord     discord.DiscordService
+	Discord     discord.IService
+	Google      googleauth.IService
+	GoogleDrive googledrive.Service
+	GoogleMail  googlemail.IService
+	Notion      notion.IService
+	Wise        wise.IService
 }
 
 func New(cfg *config.Config) *Service {
