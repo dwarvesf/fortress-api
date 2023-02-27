@@ -6081,6 +6081,29 @@
                 }
             }
         },
+        "model.InvoiceItem": {
+            "type": "object",
+            "properties": {
+                "cost": {
+                    "type": "integer"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "discount": {
+                    "type": "integer"
+                },
+                "isExternal": {
+                    "type": "boolean"
+                },
+                "quantity": {
+                    "type": "number"
+                },
+                "unitCost": {
+                    "type": "integer"
+                }
+            }
+        },
         "model.Issue": {
             "type": "object",
             "properties": {
@@ -7350,7 +7373,7 @@
                 "cc": {
                     "type": "array",
                     "items": {
-                        "type": "integer"
+                        "type": "string"
                     }
                 },
                 "description": {
@@ -7384,7 +7407,7 @@
                 "lineItems": {
                     "type": "array",
                     "items": {
-                        "type": "integer"
+                        "$ref": "#/definitions/model.InvoiceItem"
                     }
                 },
                 "note": {
@@ -8512,7 +8535,7 @@
                 "emails": {
                     "type": "array",
                     "items": {
-                        "type": "integer"
+                        "type": "string"
                     }
                 },
                 "id": {
@@ -9389,7 +9412,7 @@
                 "cc": {
                     "type": "array",
                     "items": {
-                        "type": "integer"
+                        "type": "string"
                     }
                 },
                 "conversionAmount": {
@@ -9425,7 +9448,7 @@
                 "lineItems": {
                     "type": "array",
                     "items": {
-                        "type": "integer"
+                        "$ref": "#/definitions/model.InvoiceItem"
                     }
                 },
                 "month": {

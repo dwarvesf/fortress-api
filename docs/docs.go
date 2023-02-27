@@ -6089,6 +6089,29 @@ const docTemplate = `{
                 }
             }
         },
+        "model.InvoiceItem": {
+            "type": "object",
+            "properties": {
+                "cost": {
+                    "type": "integer"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "discount": {
+                    "type": "integer"
+                },
+                "isExternal": {
+                    "type": "boolean"
+                },
+                "quantity": {
+                    "type": "number"
+                },
+                "unitCost": {
+                    "type": "integer"
+                }
+            }
+        },
         "model.Issue": {
             "type": "object",
             "properties": {
@@ -7358,7 +7381,7 @@ const docTemplate = `{
                 "cc": {
                     "type": "array",
                     "items": {
-                        "type": "integer"
+                        "type": "string"
                     }
                 },
                 "description": {
@@ -7392,7 +7415,7 @@ const docTemplate = `{
                 "lineItems": {
                     "type": "array",
                     "items": {
-                        "type": "integer"
+                        "$ref": "#/definitions/model.InvoiceItem"
                     }
                 },
                 "note": {
@@ -8520,7 +8543,7 @@ const docTemplate = `{
                 "emails": {
                     "type": "array",
                     "items": {
-                        "type": "integer"
+                        "type": "string"
                     }
                 },
                 "id": {
@@ -9397,7 +9420,7 @@ const docTemplate = `{
                 "cc": {
                     "type": "array",
                     "items": {
-                        "type": "integer"
+                        "type": "string"
                     }
                 },
                 "conversionAmount": {
@@ -9433,7 +9456,7 @@ const docTemplate = `{
                 "lineItems": {
                     "type": "array",
                     "items": {
-                        "type": "integer"
+                        "$ref": "#/definitions/model.InvoiceItem"
                     }
                 },
                 "month": {
