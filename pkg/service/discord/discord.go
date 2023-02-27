@@ -22,7 +22,7 @@ type discordClient struct {
 	session *discordgo.Session
 }
 
-func New(cfg *config.Config) DiscordService {
+func New(cfg *config.Config) IService {
 	ses, _ := discordgo.New("Bot " + cfg.Discord.SecretToken)
 	return &discordClient{
 		cfg:     cfg,

@@ -1,6 +1,6 @@
 package vault
 
-type VaultService interface {
+type IService interface {
 	GetString(key string) string
 	GetBool(key string) bool
 }

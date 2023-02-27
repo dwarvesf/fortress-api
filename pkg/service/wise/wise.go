@@ -17,7 +17,7 @@ import (
 
 const (
 	// api version
-	apiv1 = "v1/"
+	apiV1 = "v1/"
 
 	// get transfer rates
 	rates = "rates"
@@ -25,17 +25,17 @@ const (
 
 type wiseService struct {
 	sync.Mutex
-	cachemap map[string]float64
+	cacheMap map[string]float64
 
 	cfg *config.Config
 	l   logger.Logger
 }
 
-func New(cfg *config.Config, l logger.Logger) IWiseService {
+func New(cfg *config.Config, l logger.Logger) IService {
 	client := &wiseService{
 		cfg:      cfg,
 		l:        l,
-		cachemap: make(map[string]float64),
+		cacheMap: make(map[string]float64),
 	}
 	go client.janitor()
 	return client
@@ -46,7 +46,7 @@ func (w *wiseService) janitor() {
 	for {
 		<-t.C
 		w.Lock()
-		w.cachemap = map[string]float64{}
+		w.cacheMap = map[string]float64{}
 		w.Unlock()
 	}
 }
@@ -125,11 +125,11 @@ func (w *wiseService) getTWRate(sourceCurrency, targetCurrency string) (float64,
 	return conversionRate[0].Rate, nil
 }
 
-/////////////////////
+// ///////////////////
 // INTERNAL FUNCTIONS
-/////////////////////
+// ///////////////////
 func (w *wiseService) getCache(key string) float64 {
-	if rate, ok := w.cachemap[key]; ok {
+	if rate, ok := w.cacheMap[key]; ok {
 		return rate
 	}
 	return 0
@@ -138,7 +138,7 @@ func (w *wiseService) getCache(key string) float64 {
 func (w *wiseService) setCache(key string, val float64) {
 	w.Lock()
 	defer w.Unlock()
-	w.cachemap[key] = val
+	w.cacheMap[key] = val
 }
 
 // getLocalRate get conversion rate without making api call, for non-prod env
@@ -161,7 +161,7 @@ func getLocalRate(target string) (float64, error) {
 }
 
 func (w *wiseService) getUrl(api string) string {
-	return w.cfg.Wise.Url + apiv1 + api
+	return w.cfg.Wise.Url + apiV1 + api
 }
 
 func (w *wiseService) getAuthHeader() string {

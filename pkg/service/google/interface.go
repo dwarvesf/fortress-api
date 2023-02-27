@@ -2,7 +2,7 @@ package google
 
 import "mime/multipart"
 
-type Service interface {
+type IService interface {
 	GetLoginURL() string
 	GetAccessToken(code string, redirectURL string) (accessToken string, err error)
 	GetGoogleEmail(accessToken string) (email string, err error)

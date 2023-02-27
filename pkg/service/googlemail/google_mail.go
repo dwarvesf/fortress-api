@@ -32,7 +32,7 @@ type googleService struct {
 }
 
 // New function return Google service
-func New(apiKey string, config *oauth2.Config, appConfig *config.Config) Service {
+func New(apiKey string, config *oauth2.Config, appConfig *config.Config) IService {
 	return &googleService{
 		apiKey:    apiKey,
 		config:    config,
