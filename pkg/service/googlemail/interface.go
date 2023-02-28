@@ -6,7 +6,8 @@ import (
 )
 
 var (
-	MissingThreadIDErr = errors.New("missing thread_id")
+	ErrMissingThreadID = errors.New("missing thread_id")
+	ErrInvalidEmail    = errors.New("invalid email")
 )
 
 // IService interface contain related google calendar method

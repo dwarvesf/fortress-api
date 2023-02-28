@@ -18,5 +18,6 @@ WORKDIR /
 COPY --from=0 /go/bin/* /usr/bin/
 COPY migrations /migrations
 COPY dbconfig.yml /
+COPY pkg/templates /
 
 ENTRYPOINT [ "server" ]
