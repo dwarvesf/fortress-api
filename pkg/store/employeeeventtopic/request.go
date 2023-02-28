@@ -5,8 +5,9 @@ type GetByEmployeeIDInput struct {
 }
 
 type GetByEventIDInput struct {
-	EventID string
-	Keyword string
-	Preload bool
-	Paging  bool
+	EventID  string
+	Keyword  string
+	Projects []string
+	Preload  bool
+	Paging   bool
 }
