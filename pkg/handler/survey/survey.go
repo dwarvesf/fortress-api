@@ -200,10 +200,11 @@ func (h *handler) GetSurveyDetail(c *gin.Context) {
 
 	topics, total, err := h.store.EmployeeEventTopic.All(h.repo.DB(),
 		employeeeventtopic.GetByEventIDInput{
-			EventID: input.EventID,
-			Keyword: input.Query.Keyword,
-			Preload: true,
-			Paging:  true,
+			EventID:  input.EventID,
+			Keyword:  input.Query.Keyword,
+			Projects: input.Query.Projects,
+			Preload:  true,
+			Paging:   true,
 		},
 		&input.Query.Pagination)
 	if err != nil {

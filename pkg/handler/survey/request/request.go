@@ -23,7 +23,8 @@ func (i *GetListSurveyInput) Validate() error {
 
 type GetSurveyDetailQuery struct {
 	model.Pagination
-	Keyword string `json:"keyword" form:"keyword"`
+	Keyword  string   `json:"keyword" form:"keyword"`
+	Projects []string `json:"projects" form:"projects"`
 }
 
 type GetSurveyDetailInput struct {

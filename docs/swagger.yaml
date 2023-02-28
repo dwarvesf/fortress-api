@@ -288,6 +288,10 @@ definitions:
         type: string
       gitlabID:
         type: string
+      heads:
+        items:
+          $ref: '#/definitions/model.ProjectHead'
+        type: array
       horoscope:
         type: string
       id:
@@ -383,6 +387,10 @@ definitions:
         type: string
       wiseRecipientName:
         type: string
+      workUnitMembers:
+        items:
+          $ref: '#/definitions/model.WorkUnitMember'
+        type: array
       workingStatus:
         description: working info
         type: string
@@ -781,6 +789,8 @@ definitions:
         type: string
       position:
         type: string
+      project:
+        $ref: '#/definitions/model.Project'
       projectID:
         type: string
       startDate:
@@ -1146,6 +1156,85 @@ definitions:
         type: number
       year:
         description: basic info
+        type: string
+    type: object
+  model.WorkUnit:
+    properties:
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      id:
+        type: string
+      name:
+        type: string
+      project:
+        $ref: '#/definitions/model.Project'
+      projectID:
+        type: string
+      sourceMetadata:
+        items:
+          type: integer
+        type: array
+      sourceURL:
+        type: string
+      status:
+        type: string
+      type:
+        type: string
+      updatedAt:
+        type: string
+      workUnitMembers:
+        items:
+          $ref: '#/definitions/model.WorkUnitMember'
+        type: array
+      workUnitStacks:
+        items:
+          $ref: '#/definitions/model.WorkUnitStack'
+        type: array
+    type: object
+  model.WorkUnitMember:
+    properties:
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      employee:
+        $ref: '#/definitions/model.Employee'
+      employeeID:
+        type: string
+      endDate:
+        type: string
+      id:
+        type: string
+      projectID:
+        type: string
+      startDate:
+        type: string
+      status:
+        type: string
+      updatedAt:
+        type: string
+      workUnit:
+        $ref: '#/definitions/model.WorkUnit'
+      workUnitID:
+        type: string
+    type: object
+  model.WorkUnitStack:
+    properties:
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      id:
+        type: string
+      stack:
+        $ref: '#/definitions/model.Stack'
+      stackID:
+        type: string
+      updatedAt:
+        type: string
+      workUnitID:
         type: string
     type: object
   pgtype.JSONB:

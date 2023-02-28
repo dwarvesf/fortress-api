@@ -5642,6 +5642,12 @@ const docTemplate = `{
                 "gitlabID": {
                     "type": "string"
                 },
+                "heads": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.ProjectHead"
+                    }
+                },
                 "horoscope": {
                     "type": "string"
                 },
@@ -5783,6 +5789,12 @@ const docTemplate = `{
                 },
                 "wiseRecipientName": {
                     "type": "string"
+                },
+                "workUnitMembers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.WorkUnitMember"
+                    }
                 },
                 "workingStatus": {
                     "description": "working info",
@@ -6388,6 +6400,9 @@ const docTemplate = `{
                 "position": {
                     "type": "string"
                 },
+                "project": {
+                    "$ref": "#/definitions/model.Project"
+                },
                 "projectID": {
                     "type": "string"
                 },
@@ -6943,6 +6958,126 @@ const docTemplate = `{
                 },
                 "year": {
                     "description": "basic info",
+                    "type": "string"
+                }
+            }
+        },
+        "model.WorkUnit": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "deletedAt": {
+                    "$ref": "#/definitions/gorm.DeletedAt"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "project": {
+                    "$ref": "#/definitions/model.Project"
+                },
+                "projectID": {
+                    "type": "string"
+                },
+                "sourceMetadata": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "sourceURL": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                },
+                "workUnitMembers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.WorkUnitMember"
+                    }
+                },
+                "workUnitStacks": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.WorkUnitStack"
+                    }
+                }
+            }
+        },
+        "model.WorkUnitMember": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "deletedAt": {
+                    "$ref": "#/definitions/gorm.DeletedAt"
+                },
+                "employee": {
+                    "$ref": "#/definitions/model.Employee"
+                },
+                "employeeID": {
+                    "type": "string"
+                },
+                "endDate": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "projectID": {
+                    "type": "string"
+                },
+                "startDate": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                },
+                "workUnit": {
+                    "$ref": "#/definitions/model.WorkUnit"
+                },
+                "workUnitID": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.WorkUnitStack": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "deletedAt": {
+                    "$ref": "#/definitions/gorm.DeletedAt"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "stack": {
+                    "$ref": "#/definitions/model.Stack"
+                },
+                "stackID": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                },
+                "workUnitID": {
                     "type": "string"
                 }
             }

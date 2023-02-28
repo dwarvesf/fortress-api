@@ -114,7 +114,34 @@ func (s *store) All(db *gorm.DB, input GetByEventIDInput, pagination *model.Pagi
 		query = query.Where("title ILIKE ?", fmt.Sprintf("%%%s%%", input.Keyword))
 	}
 
+	if len(input.Projects) > 0 {
+		query = query.Where(`project_id IN (
+			SELECT p.id 
+			FROM projects p
+			WHERE p.code IN ? AND p.deleted_at IS NULL
+		)`, input.Projects)
+	}
+
 	query = query.Where("event_id = ? AND deleted_at IS NULL", input.EventID).Count(&total)
+
+	// sort by comments
+	query = query.Joins(`JOIN (
+			SELECT eet.id, COUNT(*) AS comments
+			FROM employee_event_topics eet
+				LEFT JOIN employee_event_reviewers eer ON eet.id = eer.employee_event_topic_id AND eer.reviewer_status = ?
+				LEFT JOIN employee_event_questions eeq ON eer.id = eeq.employee_event_reviewer_id
+			WHERE eet.deleted_at IS NULL
+				AND eer.deleted_at IS NULL
+				AND eeq.deleted_at IS NULL
+			GROUP BY eet.id
+		) as eet_comments ON employee_event_topics.id = eet_comments.id
+	`, model.EventReviewerStatusDone)
+
+	if pagination != nil && pagination.Sort != "" {
+		query = query.Order(pagination.Sort)
+	} else {
+		query = query.Order("eet_comments.comments")
+	}
 
 	if input.Paging {
 		limit, offset := pagination.ToLimitOffset()
@@ -122,7 +149,7 @@ func (s *store) All(db *gorm.DB, input GetByEventIDInput, pagination *model.Pagi
 			query = query.Limit(limit)
 		}
 
-		query = query.Offset(offset).Order(pagination.Sort)
+		query = query.Offset(offset)
 	}
 
 	if input.Preload {
