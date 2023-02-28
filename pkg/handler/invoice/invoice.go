@@ -51,83 +51,6 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 	}
 }
 
-// UpdateStatus godoc
-// @Summary Update status for invoice
-// @Description Update status for invoice
-// @Tags Invoice
-// @Accept json
-// @Produce json
-// @Param Authorization header string true "jwt token"
-// @Success 200 {object} view.MessageResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
-// @Router /invoices/{id}/status [put]
-func (h *handler) UpdateStatus(c *gin.Context) {
-	invoiceID := c.Param("id")
-	if invoiceID == "" || !model.IsUUIDFromString(invoiceID) {
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidInvoiceID, nil, ""))
-		return
-	}
-
-	var req request.UpdateStatusRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, req, ""))
-		return
-	}
-
-	l := h.logger.Fields(logger.Fields{
-		"handler": "invoice",
-		"method":  "UpdateStatus",
-		"req":     req,
-	})
-
-	if err := req.Validate(); err != nil {
-		l.Error(err, "invalid req")
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, req, ""))
-		return
-	}
-
-	// check invoice existence
-	invoice, err := h.store.Invoice.One(h.repo.DB(), invoiceID)
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			l.Error(errs.ErrInvoiceNotFound, "invoice not found")
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrInvoiceNotFound, req, ""))
-			return
-		}
-
-		l.Error(err, "failed to get invoice")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req, ""))
-		return
-	}
-
-	if invoice.Status == req.Status {
-		l.Error(errs.ErrInvoiceStatusAlready, "invoice status already")
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvoiceStatusAlready, req, ""))
-		return
-	}
-
-	// Start Transaction
-	tx, done := h.repo.NewTransaction()
-
-	switch req.Status {
-	case model.InvoiceStatusError:
-		_, err = h.markInvoiceAsError(tx.DB(), l, *invoice)
-	case model.InvoiceStatusPaid:
-		_, err = h.markInvoiceAsPaid(tx.DB(), l, *invoice, req.SendThankYouEmail)
-	default:
-		_, err = h.store.Invoice.UpdateSelectedFieldsByID(tx.DB(), invoice.ID.String(), *invoice, "status")
-	}
-	if err != nil {
-		l.Error(err, "failed to update invoice")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), req, ""))
-		return
-	}
-
-	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))
-}
-
 // GetLatestInvoice godoc
 // @Summary Get latest invoice by project id
 // @Description Get latest invoice by project id
@@ -184,8 +107,8 @@ func (h *handler) GetLatestInvoice(c *gin.Context) {
 }
 
 // GetTemplate godoc
-// @Summary Get latest invoice by project id
-// @Description Get latest invoice by project id
+// @Summary Get the latest invoice by project id
+// @Description Get the latest invoice by project id
 // @Tags Invoice
 // @Accept json
 // @Produce json
@@ -365,7 +288,6 @@ func (h *handler) Send(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input, ""))
 		return
 	}
-
 	iv.Project = p
 
 	nextInvoiceNumber, err := h.store.Invoice.GetNextInvoiceNumber(h.repo.DB(), now.Year(), p.Code)
@@ -390,7 +312,7 @@ func (h *handler) Send(c *gin.Context) {
 	var amountGr = 1
 
 	go func() {
-		temp, rate, err := h.service.Wise.Convert(float64(iv.Total), iv.Project.BankAccount.Currency.Name, "VND")
+		temp, rate, err := h.service.Wise.Convert(float64(iv.Total), iv.Bank.Currency.Name, "VND")
 		if err != nil {
 			errsCh <- err
 			return
@@ -398,14 +320,14 @@ func (h *handler) Send(c *gin.Context) {
 		am := model.NewVietnamDong(int64(temp))
 		iv.ConversionAmount = int64(am)
 		iv.ConversionRate = rate
-		// store invoice to db
 
-		_, err = h.store.Invoice.Save(h.repo.DB(), iv)
+		invrs, err := h.store.Invoice.Save(h.repo.DB(), iv)
 		if err != nil {
 			l.Errorf(err, "failed to create invoice", "invoice", iv.Number)
 			errsCh <- err
 			return
 		}
+		iv.ID = invrs.ID
 
 		if err := h.store.InvoiceNumberCaching.UpdateInvoiceCachingNumber(h.repo.DB(), time.Now(), iv.Project.Code); err != nil {
 			l.Errorf(err, "failed to update invoice caching number", "project", iv.Project.Code)
@@ -418,10 +340,18 @@ func (h *handler) Send(c *gin.Context) {
 	if !input.IsDraft {
 		amountGr += 2
 		fn := strconv.FormatInt(rand.Int63(), 10) + "_" + iv.Number + ".pdf"
-		iv.InvoiceFileURL = h.config.Google.GDSBucketURL + fn
+
+		invoiceFilePath := fmt.Sprintf("https://storage.googleapis.com/%s/invoices/%s", h.config.Google.GCSBucketName, fn)
+		iv.InvoiceFileURL = invoiceFilePath
 
 		go func() {
-			errsCh <- h.service.GoogleDrive.UploadInvoicePDF(iv, "Sent")
+			err = h.service.GoogleDrive.UploadInvoicePDF(iv, "Sent")
+			if err != nil {
+				l.Errorf(err, "failed to upload invoice")
+				errsCh <- err
+				return
+			}
+			errsCh <- nil
 		}()
 
 		go func() {
@@ -431,6 +361,7 @@ func (h *handler) Send(c *gin.Context) {
 				errsCh <- err
 				return
 			}
+			iv.ThreadID = threadID
 
 			_, err = h.store.Invoice.UpdateSelectedFieldsByID(h.repo.DB(), iv.ID.String(), *iv, "thread_id")
 			if err != nil {
@@ -438,6 +369,7 @@ func (h *handler) Send(c *gin.Context) {
 				errsCh <- err
 				return
 			}
+			errsCh <- nil
 		}()
 	}
 
@@ -451,16 +383,14 @@ func (h *handler) Send(c *gin.Context) {
 		count++
 		if count == amountGr {
 			close(errsCh)
-			c.JSON(http.StatusOK, view.CreateResponse[any](view.MessageResponse{Message: "ok"}, nil, nil, nil, ""))
+			c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))
 			return
 		}
 	}
-
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.MessageResponse{Message: "ok"}, nil, nil, nil, ""))
 }
 
 func (h *handler) generateInvoicePDF(l logger.Logger, invoice *model.Invoice) error {
-	pound := money.New(1, invoice.Bank.Currency.Name)
+	pound := money.New(1, invoice.Project.BankAccount.Currency.Name)
 
 	items, err := model.GetInfoItems(invoice.LineItems)
 	if err != nil {
@@ -579,6 +509,90 @@ func (h *handler) generateInvoicePDF(l logger.Logger, invoice *model.Invoice) er
 	return nil
 }
 
+type processPaidInvoiceRequest struct {
+	Invoice          *model.Invoice
+	InvoiceTodoID    int
+	InvoiceBucketID  int
+	SentThankYouMail bool
+}
+
+// UpdateStatus godoc
+// @Summary Update status for invoice
+// @Description Update status for invoice
+// @Tags Invoice
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "jwt token"
+// @Success 200 {object} view.MessageResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /invoices/{id}/status [put]
+func (h *handler) UpdateStatus(c *gin.Context) {
+	invoiceID := c.Param("id")
+	if invoiceID == "" || !model.IsUUIDFromString(invoiceID) {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidInvoiceID, nil, ""))
+		return
+	}
+
+	var req request.UpdateStatusRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, req, ""))
+		return
+	}
+
+	l := h.logger.Fields(logger.Fields{
+		"handler": "invoice",
+		"method":  "UpdateStatus",
+		"req":     req,
+	})
+
+	if err := req.Validate(); err != nil {
+		l.Error(err, "invalid req")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, req, ""))
+		return
+	}
+
+	// check invoice existence
+	invoice, err := h.store.Invoice.One(h.repo.DB(), invoiceID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			l.Error(errs.ErrInvoiceNotFound, "invoice not found")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrInvoiceNotFound, req, ""))
+			return
+		}
+
+		l.Error(err, "failed to get invoice")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req, ""))
+		return
+	}
+
+	if invoice.Status == req.Status {
+		l.Error(errs.ErrInvoiceStatusAlready, "invoice status already")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvoiceStatusAlready, req, ""))
+		return
+	}
+
+	// Start Transaction
+	tx, done := h.repo.NewTransaction()
+
+	switch req.Status {
+	case model.InvoiceStatusError:
+		_, err = h.markInvoiceAsError(tx.DB(), l, *invoice)
+	case model.InvoiceStatusPaid:
+		_, err = h.markInvoiceAsPaid(tx.DB(), l, *invoice, req.SendThankYouEmail)
+	default:
+		_, err = h.store.Invoice.UpdateSelectedFieldsByID(tx.DB(), invoice.ID.String(), *invoice, "status")
+	}
+	if err != nil {
+		l.Error(err, "failed to update invoice")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), req, ""))
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, done(nil), nil, "ok"))
+}
+
 func (h *handler) markInvoiceAsError(db *gorm.DB, l logger.Logger, invoice model.Invoice) (*model.Invoice, error) {
 	invoice.Status = model.InvoiceStatusError
 	iv, err := h.store.Invoice.UpdateSelectedFieldsByID(db, invoice.ID.String(), invoice, "status")
@@ -604,13 +618,6 @@ func (h *handler) markInvoiceAsError(db *gorm.DB, l logger.Logger, invoice model
 	}
 
 	return iv, nil
-}
-
-type processPaidInvoiceRequest struct {
-	Invoice          *model.Invoice
-	InvoiceTodoID    int
-	InvoiceBucketID  int
-	SentThankYouMail bool
 }
 
 func (h *handler) markInvoiceAsPaid(db *gorm.DB, l logger.Logger, invoice model.Invoice, sendThankYouEmail bool) (*model.Invoice, error) {
@@ -648,8 +655,8 @@ func (h *handler) processPaidInvoice(db *gorm.DB, l logger.Logger, req *processP
 	wg := &sync.WaitGroup{}
 	wg.Add(3)
 	go h.processPaidInvoiceData(db, l, wg, req)
-	go h.sendThankYouEmail(db, l, wg, req)
-	go h.movePaidInvoiceGDrive(db, l, wg, req)
+	go h.sendThankYouEmail(l, wg, req)
+	go h.movePaidInvoiceGDrive(l, wg, req)
 	wg.Wait()
 }
 
@@ -661,6 +668,8 @@ func (h *handler) processPaidInvoiceData(db *gorm.DB, l logger.Logger, wg *sync.
 	//	CommentResult(req.InvoiceBucketID, req.InvoiceTodoID, msg)
 	//}()
 
+	//TODO: calculate commission
+
 	now := time.Now()
 	req.Invoice.PaidAt = &now
 	_, err := h.store.Invoice.UpdateSelectedFieldsByID(db, req.Invoice.ID.String(), *req.Invoice, "status", "paid_at")
@@ -670,10 +679,28 @@ func (h *handler) processPaidInvoiceData(db *gorm.DB, l logger.Logger, wg *sync.
 	}
 }
 
-func (h *handler) sendThankYouEmail(db *gorm.DB, l logger.Logger, wg *sync.WaitGroup, req *processPaidInvoiceRequest) {
+func (h *handler) sendThankYouEmail(l logger.Logger, wg *sync.WaitGroup, req *processPaidInvoiceRequest) {
 	defer wg.Done()
+	err := h.service.GoogleMail.SendInvoiceThankYouMail(req.Invoice)
+	if err != nil {
+		l.Errorf(err, "failed to send invoice thank you mail", "invoice", req.Invoice)
+		// Todo: Add comment to basecamp
+		//CommentResult(req.InvoiceBucketID, req.InvoiceTodoID, BuildFailedComment(domain.CommentThankyouEmailFailed))
+		return
+	}
+	// Todo: Add comment to basecamp
+	//CommentResult(req.InvoiceBucketID, req.InvoiceTodoID, BuildCompletedComment(domain.CommentThankyouEmailSent))
 }
 
-func (h *handler) movePaidInvoiceGDrive(db *gorm.DB, l logger.Logger, wg *sync.WaitGroup, req *processPaidInvoiceRequest) {
+func (h *handler) movePaidInvoiceGDrive(l logger.Logger, wg *sync.WaitGroup, req *processPaidInvoiceRequest) {
 	defer wg.Done()
+	err := h.service.GoogleDrive.MoveInvoicePDF(req.Invoice, "Sent", "Paid")
+	if err != nil {
+		l.Errorf(err, "failed to send invoice thank you mail", "invoice", req.Invoice)
+		// Todo: Add comment to basecamp
+		//CommentResult(req.InvoiceBucketID, req.InvoiceTodoID, BuildFailedComment(domain.CommentMoveInvoicePDFToPaidDirFailed))
+		return
+	}
+	// Todo: Add comment to basecamp
+	//CommentResult(req.InvoiceBucketID, req.InvoiceTodoID, BuildCompletedComment(domain.CommentMoveInvoicePDFToPaidDirSuccessfully))
 }

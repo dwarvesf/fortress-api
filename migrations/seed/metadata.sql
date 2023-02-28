@@ -204,7 +204,7 @@ INSERT INTO public.organizations (id, deleted_at, created_at, updated_at, name, 
 ('e4725383-943a-468a-b0cd-ce249c573cf7', NULL, '2023-01-19 11:13:13.487168', '2023-01-19 11:13:13.487168', 'Console Labs', 'console-labs', 'https://storage.googleapis.com/fortress-dev/projects/cab8e2ec-f78b-4290-8083-1e1d64c49165/images/a42dca5e-830c-47c1-9415-0d723fe54bea.png');
 
 INSERT INTO public.clients (id, deleted_at, created_at, updated_at, name, description, registration_number, address, country, industry, website, emails) VALUES
-('afb9cf05-9517-4fb9-a4f2-66e6d90ad215', null, '2023-02-07 18:41:35.740901', '2023-02-07 18:41:35.740901', 'Dwarves Client', 'Using For Internal Project', '123455099999999', 'Hado Centrosa', 'Vietnam', 'Technology', 'https://d.foundations', '{benjamin@d.foundation,namnh@d.foundation}');
+('afb9cf05-9517-4fb9-a4f2-66e6d90ad215', null, '2023-02-07 18:41:35.740901', '2023-02-07 18:41:35.740901', 'Lorem Ipsum Inc.', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.', '32320398488', 'Hado Centrosa', 'Vietnam', 'Technology', 'https://d.foundations', '{benjamin@d.foundation,namnh@d.foundation}');
 
 INSERT INTO public.client_contacts (id, deleted_at, created_at, updated_at, name, client_id, role, metadata, emails, is_main_contact) VALUES
 ('0569e64d-3b57-454a-ab88-0482e087eb5f', null, '2023-02-07 19:05:04.354072', '2023-02-07 19:05:04.354072', 'Thanh Pham ', 'afb9cf05-9517-4fb9-a4f2-66e6d90ad215', 'PM', null, '["thanh@d.foundation", "huytq@d.foundation"]', true);

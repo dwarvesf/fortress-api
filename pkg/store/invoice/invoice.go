@@ -18,7 +18,9 @@ func New() IStore {
 // One getNext invoice by id
 func (s *store) One(db *gorm.DB, id string) (*model.Invoice, error) {
 	var invoice *model.Invoice
-	return invoice, db.Where("id = ?", id).First(&invoice).Error
+	return invoice, db.Where("id = ?", id).
+		Preload("Project").
+		First(&invoice).Error
 }
 
 // IsExist check the existence of invoice

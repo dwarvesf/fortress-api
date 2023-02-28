@@ -15,7 +15,9 @@ func New() IStore {
 // One get bank account by id
 func (s *store) One(db *gorm.DB, id string) (*model.BankAccount, error) {
 	var bankAccount *model.BankAccount
-	return bankAccount, db.Where("id = ?", id).First(&bankAccount).Error
+	return bankAccount, db.Where("id = ?", id).
+		Preload("Currency").
+		First(&bankAccount).Error
 }
 
 // All get all bank account

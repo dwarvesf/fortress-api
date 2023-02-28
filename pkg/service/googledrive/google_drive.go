@@ -85,7 +85,7 @@ func (g *googleService) MoveInvoicePDF(invoice *model.Invoice, fromDirName, toDi
 		return err
 	}
 	if invoicePdf == nil {
-		return errors.New("Invoice pdf not found")
+		return ErrInvoicePDFNotFound
 	}
 
 	return g.updateInvoiceDir(invoicePdf.Id, fromDir.Id, toDir.Id)
@@ -134,6 +134,7 @@ func (g *googleService) ensureToken(rToken string) error {
 		}
 		g.token = tok
 	}
+
 	return nil
 }
 

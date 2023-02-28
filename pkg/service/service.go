@@ -65,7 +65,6 @@ func New(cfg *config.Config) *Service {
 	}
 
 	googleMailService := googlemail.New(
-		cfg.Google.APIKey,
 		mailConfig,
 		cfg,
 	)

@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/jackc/pgtype"
-
 	"github.com/dwarvesf/fortress-api/pkg/model"
 )
 
@@ -61,11 +59,11 @@ type ClientContactInfo struct {
 }
 
 type CompanyInfo struct {
-	ID                 string       `json:"id"`
-	Name               string       `json:"name"`
-	Description        string       `json:"description"`
-	RegistrationNumber string       `json:"registrationNumber"`
-	Info               pgtype.JSONB `json:"info"`
+	ID                 string                              `json:"id"`
+	Name               string                              `json:"name"`
+	Description        string                              `json:"description"`
+	RegistrationNumber string                              `json:"registrationNumber"`
+	Info               map[string]model.CompanyContactInfo `json:"info"`
 }
 
 type ProjectInvoiceTemplate struct {
@@ -137,14 +135,18 @@ func ToInvoiceInfo(invoice *model.Invoice) (*Invoice, error) {
 	return nil, nil
 }
 func ToInvoiceTemplateResponse(p *model.Project, lastInvoice *model.Invoice, nextInvoiceNUmber string) (*ProjectInvoiceTemplate, error) {
+
 	companyInfo := CompanyInfo{}
 	if p.CompanyInfo != nil {
+		companyContact := make(map[string]model.CompanyContactInfo)
+		_ = json.Unmarshal(p.CompanyInfo.Info.Bytes, &companyContact)
+
 		companyInfo = CompanyInfo{
 			ID:                 p.CompanyInfo.ID.String(),
 			Name:               p.CompanyInfo.Name,
 			Description:        p.CompanyInfo.Description,
 			RegistrationNumber: p.CompanyInfo.RegistrationNumber,
-			Info:               p.CompanyInfo.Info,
+			Info:               companyContact,
 		}
 	}
 

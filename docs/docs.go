@@ -2221,7 +2221,7 @@ const docTemplate = `{
         },
         "/invoices/template": {
             "get": {
-                "description": "Get latest invoice by project id",
+                "description": "Get the latest invoice by project id",
                 "consumes": [
                     "application/json"
                 ],
@@ -2231,7 +2231,7 @@ const docTemplate = `{
                 "tags": [
                     "Invoice"
                 ],
-                "summary": "Get latest invoice by project id",
+                "summary": "Get the latest invoice by project id",
                 "parameters": [
                     {
                         "type": "string",
@@ -5399,6 +5399,17 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.CompanyContactInfo": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "phone": {
                     "type": "string"
                 }
             }
@@ -8719,7 +8730,10 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "info": {
-                    "$ref": "#/definitions/pgtype.JSONB"
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/model.CompanyContactInfo"
+                    }
                 },
                 "name": {
                     "type": "string"
