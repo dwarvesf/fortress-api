@@ -1,4 +1,6 @@
-FROM golang:1.18-alpine
+FROM surnet/alpine-wkhtmltopdf:3.10-0.12.5-full as wkhtmltopdf
+
+FROM golang:1.18-alpine as builder
 RUN mkdir /build
 WORKDIR /build
 COPY . .
@@ -7,17 +9,41 @@ ENV GOOS=linux GOARCH=amd64 CGO_ENABLED=0
 RUN go install -v ./...
 RUN go install -v github.com/rubenv/sql-migrate/sql-migrate@latest
 
-FROM alpine:3.14.0
-RUN apk --no-cache add ca-certificates
-RUN apk --no-cache add wkhtmltopdf
+FROM alpine:3.15
+
+RUN echo http://dl-cdn.alpinelinux.org/alpine/edge/community >> /etc/apk/repositories && \
+    echo http://dl-cdn.alpinelinux.org/alpine/edge/main >> /etc/apk/repositories && \
+    echo http://dl-cdn.alpinelinux.org/alpine/v3.8/main >> /etc/apk/repositories
+
+RUN apk update && \
+    apk add --no-cache \
+      bash \
+      openssl-dev
+
+RUN apk add --no-cache \
+  libstdc++ \
+  libx11 \
+  libxrender \
+  libxext \
+  libssl1.1 \
+  ca-certificates \
+  fontconfig \
+  freetype \
+  ttf-dejavu \
+  ttf-droid \
+  ttf-freefont \
+  ttf-liberation \
+  ttf-ubuntu-font-family
+
 RUN ln -fs /usr/share/zoneinfo/Asia/Ho_Chi_Minh /etc/localtime
+
+COPY --from=wkhtmltopdf /bin/wkhtmltopdf /usr/bin/wkhtmltopdf
 RUN chmod +x /usr/bin/wkhtmltopdf
 
 WORKDIR /
-
-COPY --from=0 /go/bin/* /usr/bin/
+COPY --from=builder /go/bin/* /usr/bin/
 COPY migrations /migrations
 COPY dbconfig.yml /
-COPY pkg/templates /
+COPY pkg/templates /templates
 
 ENTRYPOINT [ "server" ]
