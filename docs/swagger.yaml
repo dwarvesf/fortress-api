@@ -7133,6 +7133,20 @@ paths:
         in: query
         name: size
         type: string
+      - description: Keyword
+        in: query
+        name: keyword
+        type: string
+      - description: Status
+        in: query
+        name: status
+        type: string
+      - description: Projects
+        in: query
+        items:
+          type: string
+        name: projects
+        type: array
       produces:
       - application/json
       responses:

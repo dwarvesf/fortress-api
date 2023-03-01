@@ -114,6 +114,14 @@ func (s *store) All(db *gorm.DB, input GetByEventIDInput, pagination *model.Pagi
 		query = query.Where("title ILIKE ?", fmt.Sprintf("%%%s%%", input.Keyword))
 	}
 
+	if input.Status != "" {
+		query = query.Where(`employee_event_topics.id IN (
+			SELECT eer.employee_event_topic_id
+			FROM employee_event_reviewers eer
+			WHERE eer.event_id = ? AND eer.author_status = ?
+		)`, input.EventID, input.Status)
+	}
+
 	if len(input.Projects) > 0 {
 		query = query.Where(`project_id IN (
 			SELECT p.id 

@@ -4703,6 +4703,27 @@ const docTemplate = `{
                         "description": "Size",
                         "name": "size",
                         "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Keyword",
+                        "name": "keyword",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Status",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "description": "Projects",
+                        "name": "projects",
+                        "in": "query"
                     }
                 ],
                 "responses": {
