@@ -13,7 +13,7 @@ log
 build
 .env
 .env.dev
-
+.env.docker
 
 # dependencies
 vendor

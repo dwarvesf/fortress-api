@@ -500,7 +500,7 @@ func (h *handler) generateInvoicePDF(l logger.Logger, invoice *model.Invoice) er
 	pdfg.PageSize.Set("A4")
 
 	if err := pdfg.Create(); err != nil {
-		l.Errorf(err, "failed to create pdf", "invoice", invoice)
+		l.Errorf(err, "failed to create invoice pdf", "invoice", invoice)
 		return err
 	}
 
