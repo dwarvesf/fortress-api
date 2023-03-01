@@ -87,6 +87,10 @@ const (
 	PermissionClientEdit                          PermissionCode = "clients.edit"
 	PermissionClientDelete                        PermissionCode = "clients.delete"
 	PermissionCronjobExecute                      PermissionCode = "cronjobs.execute"
+	PermissionDashBoardRead                       PermissionCode = "dashboards.read"
+	PermissionDashBoardProjectsRead               PermissionCode = "dashboards.projects.read"
+	PermissionDashBoardResourcesRead              PermissionCode = "dashboards.resources.read"
+	PermissionDashBoardEngagementRead             PermissionCode = "dashboards.engagement.read"
 	PermissionAssetUpload                         PermissionCode = "assets.upload"
 )
 
