@@ -6,11 +6,12 @@ import (
 )
 
 var (
-	MissingThreadIDErr = errors.New("missing thread_id")
+	ErrMissingThreadID = errors.New("missing thread_id")
+	ErrInvalidEmail    = errors.New("invalid email")
 )
 
-// Service interface contain related google calendar method
-type Service interface {
+// IService interface contain related google calendar method
+type IService interface {
 	SendInvoiceMail(invoice *model.Invoice) (msgID string, err error)
 	SendInvoiceThankYouMail(invoice *model.Invoice) (err error)
 	SendInvoiceOverdueMail(invoice *model.Invoice) (err error)

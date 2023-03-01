@@ -14,5 +14,5 @@ type BankAccount struct {
 	UKSortCode    string
 
 	CurrencyID UUID
-	Currency   Currency
+	Currency   *Currency
 }

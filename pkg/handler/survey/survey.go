@@ -158,6 +158,9 @@ func (h *handler) getQuestionDomainCountsByEvent(db *gorm.DB, eventID string) ([
 // @Param id path string true "Feedback Event ID"
 // @Param page query string false "Page"
 // @Param size query string false "Size"
+// @Param keyword query string false "Keyword"
+// @Param status query string false "Status"
+// @Param projects query []string false "Projects"
 // @Success 200 {object} view.ListSurveyDetailResponse
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 404 {object} view.ErrorResponse
@@ -200,10 +203,12 @@ func (h *handler) GetSurveyDetail(c *gin.Context) {
 
 	topics, total, err := h.store.EmployeeEventTopic.All(h.repo.DB(),
 		employeeeventtopic.GetByEventIDInput{
-			EventID: input.EventID,
-			Keyword: input.Query.Keyword,
-			Preload: true,
-			Paging:  true,
+			EventID:  input.EventID,
+			Keyword:  input.Query.Keyword,
+			Status:   input.Query.Status,
+			Projects: input.Query.Projects,
+			Preload:  true,
+			Paging:   true,
 		},
 		&input.Query.Pagination)
 	if err != nil {

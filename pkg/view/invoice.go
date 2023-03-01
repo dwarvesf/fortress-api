@@ -1,10 +1,8 @@
 package view
 
 import (
+	"encoding/json"
 	"time"
-
-	"github.com/jackc/pgtype"
-	"gorm.io/datatypes"
 
 	"github.com/dwarvesf/fortress-api/pkg/model"
 )
@@ -18,32 +16,32 @@ type GetLatestInvoiceResponse struct {
 }
 
 type Invoice struct {
-	Number           string     `json:"number"`
-	InvoicedAt       *time.Time `json:"invoicedAt"`
-	DueAt            *time.Time `json:"dueAt"`
-	PaidAt           *time.Time `json:"paidAt"`
-	FailedAt         *time.Time `json:"failedAt"`
-	Status           string     `json:"status"`
-	Email            string     `json:"email"`
-	CC               model.JSON `json:"cc"`
-	Description      string     `json:"description"`
-	Note             string     `json:"note"`
-	SubTotal         int64      `json:"subTotal"`
-	Tax              int64      `json:"tax"`
-	Discount         int64      `json:"discount"`
-	Total            int64      `json:"total"`
-	ConversionAmount int64      `json:"conversionAmount"`
-	InvoiceFileURL   string     `json:"invoiceFileURL"`
-	ErrorInvoiceID   string     `json:"errorInvoiceID"`
-	LineItems        model.JSON `json:"lineItems"`
-	Month            int        `json:"month"`
-	Year             int        `json:"year"`
-	SentBy           string     `json:"sentBy"`
-	ThreadID         string     `json:"threadID"`
-	ScheduledDate    *time.Time `json:"scheduledDate"`
-	ConversionRate   float64    `json:"conversionRate"`
-	BankID           string     `json:"bankID"`
-	ProjectID        string     `json:"projectID"`
+	Number           string              `json:"number"`
+	InvoicedAt       *time.Time          `json:"invoicedAt"`
+	DueAt            *time.Time          `json:"dueAt"`
+	PaidAt           *time.Time          `json:"paidAt"`
+	FailedAt         *time.Time          `json:"failedAt"`
+	Status           string              `json:"status"`
+	Email            string              `json:"email"`
+	CC               []string            `json:"cc"`
+	Description      string              `json:"description"`
+	Note             string              `json:"note"`
+	SubTotal         int64               `json:"subTotal"`
+	Tax              int64               `json:"tax"`
+	Discount         int64               `json:"discount"`
+	Total            int64               `json:"total"`
+	ConversionAmount int64               `json:"conversionAmount"`
+	InvoiceFileURL   string              `json:"invoiceFileURL"`
+	ErrorInvoiceID   string              `json:"errorInvoiceID"`
+	LineItems        []model.InvoiceItem `json:"lineItems"`
+	Month            int                 `json:"month"`
+	Year             int                 `json:"year"`
+	SentBy           string              `json:"sentBy"`
+	ThreadID         string              `json:"threadID"`
+	ScheduledDate    *time.Time          `json:"scheduledDate"`
+	ConversionRate   float64             `json:"conversionRate"`
+	BankID           string              `json:"bankID"`
+	ProjectID        string              `json:"projectID"`
 }
 
 type ClientInfo struct {
@@ -53,19 +51,19 @@ type ClientInfo struct {
 }
 
 type ClientContactInfo struct {
-	ID            string         `json:"id"`
-	Name          string         `json:"name"`
-	Role          string         `json:"-"`
-	Emails        datatypes.JSON `json:"emails"`
-	IsMainContact bool           `json:"isMainContact"`
+	ID            string   `json:"id"`
+	Name          string   `json:"name"`
+	Role          string   `json:"-"`
+	Emails        []string `json:"emails"`
+	IsMainContact bool     `json:"isMainContact"`
 }
 
 type CompanyInfo struct {
-	ID                 string       `json:"id"`
-	Name               string       `json:"name"`
-	Description        string       `json:"description"`
-	RegistrationNumber string       `json:"registrationNumber"`
-	Info               pgtype.JSONB `json:"info"`
+	ID                 string                              `json:"id"`
+	Name               string                              `json:"name"`
+	Description        string                              `json:"description"`
+	RegistrationNumber string                              `json:"registrationNumber"`
+	Info               map[string]model.CompanyContactInfo `json:"info"`
 }
 
 type ProjectInvoiceTemplate struct {
@@ -82,8 +80,20 @@ type InvoiceTemplateResponse struct {
 	Data ProjectInvoiceTemplate `json:"data"`
 }
 
-func ToInvoiceInfo(invoice *model.Invoice) *Invoice {
+func ToInvoiceInfo(invoice *model.Invoice) (*Invoice, error) {
 	if invoice != nil {
+
+		cc := make([]string, 0)
+		err := json.Unmarshal(invoice.CC, &cc)
+		if err != nil {
+			return nil, err
+		}
+
+		invoiceItems, err := model.GetInfoItems(invoice.LineItems)
+		if err != nil {
+			return nil, err
+		}
+
 		rs := &Invoice{
 			Number:           invoice.Number,
 			InvoicedAt:       invoice.InvoicedAt,
@@ -92,7 +102,7 @@ func ToInvoiceInfo(invoice *model.Invoice) *Invoice {
 			FailedAt:         invoice.FailedAt,
 			Status:           invoice.Status.String(),
 			Email:            invoice.Email,
-			CC:               invoice.CC,
+			CC:               cc,
 			Description:      invoice.Description,
 			Note:             invoice.Note,
 			SubTotal:         invoice.SubTotal,
@@ -101,7 +111,7 @@ func ToInvoiceInfo(invoice *model.Invoice) *Invoice {
 			Total:            invoice.Total,
 			ConversionAmount: invoice.ConversionAmount,
 			InvoiceFileURL:   invoice.InvoiceFileURL,
-			LineItems:        invoice.LineItems,
+			LineItems:        invoiceItems,
 			Month:            invoice.Month,
 			Year:             invoice.Year,
 			ThreadID:         invoice.ThreadID,
@@ -119,20 +129,24 @@ func ToInvoiceInfo(invoice *model.Invoice) *Invoice {
 			rs.ErrorInvoiceID = invoice.ErrorInvoiceID.String()
 		}
 
-		return rs
+		return rs, nil
 	}
 
-	return nil
+	return nil, nil
 }
-func ToInvoiceTemplateResponse(p *model.Project, lastInvoice *model.Invoice, nextInvoiceNUmber string) ProjectInvoiceTemplate {
+func ToInvoiceTemplateResponse(p *model.Project, lastInvoice *model.Invoice, nextInvoiceNUmber string) (*ProjectInvoiceTemplate, error) {
+
 	companyInfo := CompanyInfo{}
 	if p.CompanyInfo != nil {
+		companyContact := make(map[string]model.CompanyContactInfo)
+		_ = json.Unmarshal(p.CompanyInfo.Info.Bytes, &companyContact)
+
 		companyInfo = CompanyInfo{
 			ID:                 p.CompanyInfo.ID.String(),
 			Name:               p.CompanyInfo.Name,
 			Description:        p.CompanyInfo.Description,
 			RegistrationNumber: p.CompanyInfo.RegistrationNumber,
-			Info:               p.CompanyInfo.Info,
+			Info:               companyContact,
 		}
 	}
 
@@ -141,11 +155,18 @@ func ToInvoiceTemplateResponse(p *model.Project, lastInvoice *model.Invoice, nex
 
 		contacts := make([]ClientContactInfo, 0)
 		for _, c := range p.Client.Contacts {
+
+			emails := make([]string, 0)
+			err := json.Unmarshal(c.Emails, &emails)
+			if err != nil {
+				return nil, err
+			}
+
 			contacts = append(contacts, ClientContactInfo{
 				ID:            c.ID.String(),
 				Name:          c.Name,
 				Role:          c.Role,
-				Emails:        c.Emails,
+				Emails:        emails,
 				IsMainContact: c.IsMainContact,
 			})
 		}
@@ -181,13 +202,17 @@ func ToInvoiceTemplateResponse(p *model.Project, lastInvoice *model.Invoice, nex
 		}
 	}
 
-	return ProjectInvoiceTemplate{
+	iv, err := ToInvoiceInfo(lastInvoice)
+	if err != nil {
+		return nil, err
+	}
+	return &ProjectInvoiceTemplate{
 		ID:            p.ID.String(),
 		Name:          p.Name,
 		InvoiceNumber: nextInvoiceNUmber,
-		LastInvoice:   ToInvoiceInfo(lastInvoice),
+		LastInvoice:   iv,
 		Client:        clientInfo,
 		BankAccount:   bankAccount,
 		CompanyInfo:   companyInfo,
-	}
+	}, nil
 }

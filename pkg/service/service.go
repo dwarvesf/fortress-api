@@ -3,10 +3,10 @@ package service
 import (
 	"time"
 
-	"github.com/patrickmn/go-cache"
+	cache "github.com/patrickmn/go-cache"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
-	"google.golang.org/api/gmail/v1"
+	gmail "google.golang.org/api/gmail/v1"
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
@@ -15,17 +15,19 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/service/googledrive"
 	"github.com/dwarvesf/fortress-api/pkg/service/googlemail"
 	"github.com/dwarvesf/fortress-api/pkg/service/notion"
+	"github.com/dwarvesf/fortress-api/pkg/service/sendgrid"
 	"github.com/dwarvesf/fortress-api/pkg/service/wise"
 )
 
 type Service struct {
-	Google      googleauth.Service
-	GoogleDrive googledrive.Service
-	GoogleMail  googlemail.Service
-	Notion      notion.NotionService
-	Wise        wise.IWiseService
 	Cache       *cache.Cache
-	Discord     discord.DiscordService
+	Discord     discord.IService
+	Google      googleauth.IService
+	GoogleDrive googledrive.Service
+	GoogleMail  googlemail.IService
+	Notion      notion.IService
+	Wise        wise.IService
+	Sendgrid    sendgrid.Service
 }
 
 func New(cfg *config.Config) *Service {
@@ -65,7 +67,6 @@ func New(cfg *config.Config) *Service {
 	}
 
 	googleMailService := googlemail.New(
-		cfg.Google.APIKey,
 		mailConfig,
 		cfg,
 	)
@@ -76,9 +77,16 @@ func New(cfg *config.Config) *Service {
 		GoogleMail:  googleMailService,
 		Notion: notion.New(
 			cfg.Notion.Secret,
+			cfg.Notion.Databases.Project,
+			logger.L,
 		),
 		Wise:    wise.New(cfg, logger.L),
 		Cache:   cch,
 		Discord: discord.New(cfg),
+		Sendgrid: sendgrid.New(
+			cfg.Sendgrid.APIKey,
+			cfg,
+			logger.L,
+		),
 	}
 }

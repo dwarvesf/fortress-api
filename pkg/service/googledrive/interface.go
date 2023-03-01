@@ -1,6 +1,14 @@
 package googledrive
 
-import "github.com/dwarvesf/fortress-api/pkg/model"
+import (
+	"errors"
+
+	"github.com/dwarvesf/fortress-api/pkg/model"
+)
+
+var (
+	ErrInvoicePDFNotFound = errors.New("invoice pdf not found")
+)
 
 type Service interface {
 	UploadInvoicePDF(invoice *model.Invoice, dirName string) error

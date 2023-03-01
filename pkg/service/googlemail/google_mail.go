@@ -1,17 +1,17 @@
 package googlemail
 
 import (
-	"bytes"
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"net/http"
 	"strings"
 	"text/template"
 	"time"
 
 	"golang.org/x/oauth2"
+	"google.golang.org/api/gmail/v1"
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/model"
@@ -19,25 +19,31 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/utils/timeutil"
 )
 
-const (
-	gmailURL = `https://www.googleapis.com/gmail/v1/users/`
-)
-
 type googleService struct {
-	apiKey         string
 	config         *oauth2.Config
 	token          *oauth2.Token
 	StartHistoryId uint64
+	service        *gmail.Service
 	appConfig      *config.Config
 }
 
 // New function return Google service
-func New(apiKey string, config *oauth2.Config, appConfig *config.Config) Service {
+func New(config *oauth2.Config, appConfig *config.Config) IService {
 	return &googleService{
-		apiKey:    apiKey,
 		config:    config,
 		appConfig: appConfig,
 	}
+}
+
+func (g *googleService) prepareService() error {
+	service, err := gmail.New(g.config.Client(context.Background(), g.token))
+	if err != nil {
+		return errors.New("Get Gmail Service Failed " + err.Error())
+	}
+
+	g.service = service
+
+	return nil
 }
 
 // SendInvoiceMail function to send invoice email
@@ -47,11 +53,12 @@ func (g *googleService) SendInvoiceMail(invoice *model.Invoice) (msgID string, e
 		return "", err
 	}
 
-	g.token = &oauth2.Token{
-		RefreshToken: g.appConfig.Google.AccountingGoogleRefreshToken,
+	if err = g.ensureToken(g.appConfig.Google.AccountingGoogleRefreshToken); err != nil {
+		return "", err
 	}
-	if err = g.ensureToken(); err != nil {
-		return
+
+	if err := g.prepareService(); err != nil {
+		return "", err
 	}
 
 	if !mailutils.Email(invoice.Email) {
@@ -114,18 +121,20 @@ func (g *googleService) SendInvoiceThankYouMail(invoice *model.Invoice) (err err
 		return err
 	}
 
-	g.token = &oauth2.Token{
-		RefreshToken: g.appConfig.Google.AccountingGoogleRefreshToken,
-	}
-	if err := g.ensureToken(); err != nil {
+	if err := g.ensureToken(g.appConfig.Google.AccountingGoogleRefreshToken); err != nil {
 		return err
 	}
+
+	if err := g.prepareService(); err != nil {
+		return err
+	}
+
 	if invoice.ThreadID == "" {
-		return MissingThreadIDErr
+		return ErrMissingThreadID
 	}
 
 	id := g.appConfig.Google.AccountingEmailID
-	thread, err := g.getEmailThread(invoice.ThreadID, id)
+	thread, err := g.service.Users.Threads.Get(id, invoice.ThreadID).Do()
 	if err != nil {
 		return err
 	}
@@ -136,7 +145,7 @@ func (g *googleService) SendInvoiceThankYouMail(invoice *model.Invoice) (err err
 	}
 
 	if !mailutils.Email(invoice.Email) {
-		return errors.New("email invalid")
+		return ErrInvalidEmail
 	}
 
 	addresses, err := model.GatherAddresses(invoice.CC)
@@ -173,14 +182,11 @@ func (g *googleService) SendInvoiceOverdueMail(invoice *model.Invoice) error {
 		return err
 	}
 
-	g.token = &oauth2.Token{
-		RefreshToken: g.appConfig.Google.AccountingGoogleRefreshToken,
-	}
-	if err := g.ensureToken(); err != nil {
+	if err := g.ensureToken(g.appConfig.Google.AccountingGoogleRefreshToken); err != nil {
 		return err
 	}
 	if invoice.ThreadID == "" {
-		return MissingThreadIDErr
+		return ErrMissingThreadID
 	}
 
 	id := g.appConfig.Google.AccountingEmailID
@@ -226,149 +232,45 @@ func (g *googleService) SendInvoiceOverdueMail(invoice *model.Invoice) error {
 	return err
 }
 
-func (g *googleService) ensureToken() error {
+func (g *googleService) ensureToken(refreshToken string) error {
+	token := &oauth2.Token{
+		RefreshToken: refreshToken,
+	}
+
 	if !g.token.Valid() {
-		tks := g.config.TokenSource(oauth2.NoContext, g.token)
+		tks := g.config.TokenSource(oauth2.NoContext, token)
 		tok, err := tks.Token()
 		if err != nil {
 			return err
 		}
+
 		g.token = tok
 	}
+
 	return nil
 }
 
-func buildEmailRequest(encodedEmail, id string, g *googleService) (*http.Request, error) {
-	url := getGMailURL(g.apiKey, id, "messages/send")
-
-	jsonContent, err := json.Marshal(map[string]interface{}{
-		"raw": encodedEmail,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonContent))
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %v", g.token.AccessToken))
-
-	return req, nil
-}
-
-func buildGetEmailRequest(mailID, id string, g *googleService) (*http.Request, error) {
-	url := getGMailURL(g.apiKey, id, "messages/"+mailID)
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %v", g.token.AccessToken))
-
-	return req, nil
-}
-
-func buildGetEmailThreadRequest(threadID, id string, g *googleService) (*http.Request, error) {
-	url := getGMailURL(g.apiKey, id, "threads/"+threadID)
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %v", g.token.AccessToken))
-
-	return req, nil
-}
-
-func getGMailURL(apiKey, id, action string) string {
-	return fmt.Sprintf(
-		"%v%v/%v?key=%v",
-		gmailURL,
-		id,
-		action,
-		apiKey,
-	)
-}
-
 func (g *googleService) sendEmail(encodedEmail, id string) (msgID string, err error) {
-	req, err := buildEmailRequest(encodedEmail, id, g)
+	rs, err := g.service.Users.Messages.Send(id, &gmail.Message{
+		Raw: encodedEmail,
+	}).Do()
 	if err != nil {
 		return
 	}
-	res, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return
-	}
-	defer res.Body.Close()
 
-	if res.StatusCode != 200 {
-		return msgID, errors.New(res.Status)
-	}
-
-	payload := &struct {
-		ThreadID string `json:"threadId"`
-	}{}
-
-	if err := json.NewDecoder(res.Body).Decode(payload); err != nil {
-		return msgID, err
-	}
-
-	return payload.ThreadID, nil
+	return rs.ThreadId, nil
 }
 
-func (g *googleService) getEmail(mailID, id string) (*model.GoogleMailMessage, error) {
-	msg := &model.GoogleMailMessage{}
-	req, err := buildGetEmailRequest(mailID, id, g)
+func (g *googleService) getEmailThread(threadID, id string) (*gmail.Thread, error) {
+	thread, err := g.service.Users.Threads.Get(id, threadID).Do()
 	if err != nil {
 		return nil, err
 	}
-	client := &http.Client{}
-	res, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
 
-	if res.StatusCode != 200 {
-		return nil, errors.New(res.Status)
-	}
-
-	if err := json.NewDecoder(res.Body).Decode(msg); err != nil {
-		return nil, err
-	}
-	return msg, err
+	return thread, nil
 }
 
-func (g *googleService) getEmailThread(threadID, id string) (*model.GoogleMailThread, error) {
-	thread := &model.GoogleMailThread{}
-	req, err := buildGetEmailThreadRequest(threadID, id, g)
-	if err != nil {
-		return nil, err
-	}
-	client := &http.Client{}
-	res, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
-
-	if res.StatusCode != 200 {
-		return nil, errors.New(res.Status)
-	}
-
-	if err := json.NewDecoder(res.Body).Decode(thread); err != nil {
-		return nil, err
-	}
-	return thread, err
-}
-
-func getMessageIDFromThread(thread *model.GoogleMailThread) (msgID, references string, err error) {
+func getMessageIDFromThread(thread *gmail.Thread) (msgID, references string, err error) {
 	if len(thread.Messages) == 0 {
 		return "", "", errors.New("empty message thread")
 	}
@@ -393,9 +295,11 @@ func (g *googleService) filterReceiver(i *model.Invoice) error {
 	if g.appConfig.Env == "prod" {
 		return nil
 	}
+
 	if !mailutils.IsDwarvesMail(i.Email) {
-		i.Email = "huynh@dwarvesv.com"
+		i.Email = g.appConfig.Invoice.TestEmail
 	}
+
 	var ccList []string
 	if err := json.Unmarshal(i.CC, &ccList); err != nil {
 		return err
@@ -406,9 +310,10 @@ func (g *googleService) filterReceiver(i *model.Invoice) error {
 			continue
 		}
 		if !mailutils.IsDwarvesMail(ccList[idx]) {
-			ccList[idx] = "huynh@dwarvesv.com"
+			ccList[idx] = g.appConfig.Invoice.TestEmail
 		}
 	}
+
 	b, err := json.Marshal(ccList)
 	if err != nil {
 		return err
@@ -419,5 +324,6 @@ func (g *googleService) filterReceiver(i *model.Invoice) error {
 		return err
 	}
 	i.CC = js
+
 	return nil
 }

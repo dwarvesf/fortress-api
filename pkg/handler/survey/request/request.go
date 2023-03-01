@@ -23,7 +23,9 @@ func (i *GetListSurveyInput) Validate() error {
 
 type GetSurveyDetailQuery struct {
 	model.Pagination
-	Keyword string `json:"keyword" form:"keyword"`
+	Keyword  string   `json:"keyword" form:"keyword"`
+	Status   string   `json:"status" form:"status"`
+	Projects []string `json:"projects" form:"projects"`
 }
 
 type GetSurveyDetailInput struct {
@@ -35,6 +37,14 @@ func (i *GetSurveyDetailInput) Validate() error {
 	if i.EventID == "" || !model.IsUUIDFromString(i.EventID) {
 		return errs.ErrInvalidEventID
 	}
+
+	var projects []string
+	for _, p := range i.Query.Projects {
+		if p != "" {
+			projects = append(projects, p)
+		}
+	}
+	i.Query.Projects = projects
 
 	return nil
 }

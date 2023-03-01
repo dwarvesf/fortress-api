@@ -388,7 +388,7 @@ func ToOneEmployeeData(employee *model.Employee, userInfo *model.CurrentLoggedUs
 	if len(employee.Mentees) > 0 {
 		mentees := make([]*MenteeInfo, 0)
 		for _, v := range employee.Mentees {
-			mentees = append(mentees, toMenteeInfo(v))
+			mentees = append(mentees, toMenteeInfo(*v))
 		}
 
 		rs.Mentees = mentees
@@ -459,7 +459,7 @@ func ToEmployeeData(employee *model.Employee) *EmployeeData {
 	if len(employee.Mentees) > 0 {
 		mentees := make([]*MenteeInfo, 0)
 		for _, v := range employee.Mentees {
-			mentees = append(mentees, toMenteeInfo(v))
+			mentees = append(mentees, toMenteeInfo(*v))
 		}
 
 		rs.Mentees = mentees

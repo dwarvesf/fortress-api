@@ -23,7 +23,8 @@ type Config struct {
 	Wise    Wise
 	Discord Discord
 
-	Invoice Invoice
+	Invoice  Invoice
+	Sendgrid Sendgrid
 
 	APIKey       string
 	Debug        bool
@@ -50,13 +51,12 @@ type Google struct {
 	ClientSecret                 string
 	ClientID                     string
 	AppName                      string
-	GCSBucketName                string
 	GCSProjectID                 string
+	GCSBucketName                string
 	GCSCredentials               string
-	GDSBucketURL                 string
+	GCPProjectID                 string
 	AccountingGoogleRefreshToken string
 	AccountingEmailID            string
-	APIKey                       string
 }
 
 type Wise struct {
@@ -109,6 +109,11 @@ type DiscordID struct {
 type Invoice struct {
 	TemplatePath string
 	DirID        string
+	TestEmail    string
+}
+
+type Sendgrid struct {
+	APIKey string
 }
 
 type ENV interface {
@@ -141,13 +146,12 @@ func Generate(v ENV) *Config {
 			ClientSecret:                 v.GetString("GOOGLE_API_CLIENT_SECRET"),
 			ClientID:                     v.GetString("GOOGLE_API_CLIENT_ID"),
 			AppName:                      v.GetString("GOOGLE_API_APP_NAME"),
+			GCPProjectID:                 v.GetString("GCP_PROJECT_ID"),
 			GCSBucketName:                v.GetString("GCS_BUCKET_NAME"),
 			GCSProjectID:                 v.GetString("GCS_PROJECT_ID"),
 			GCSCredentials:               v.GetString("GCS_CREDENTIALS"),
-			GDSBucketURL:                 v.GetString("GDS_BUCKET_URL"),
 			AccountingGoogleRefreshToken: v.GetString("ACCOUNTING_GOOGLE_REFRESH_TOKEN"),
 			AccountingEmailID:            v.GetString("ACCOUNTING_EMAIL_ID"),
-			APIKey:                       v.GetString("GOOGLE_API_KEY"),
 		},
 
 		Wise: Wise{
@@ -191,12 +195,17 @@ func Generate(v ENV) *Config {
 		Invoice: Invoice{
 			TemplatePath: v.GetString("INVOICE_TEMPLATE_PATH"),
 			DirID:        v.GetString("INVOICE_DIR_ID"),
+			TestEmail:    v.GetString("INVOICE_TEST_EMAIL"),
+		},
+
+		Sendgrid: Sendgrid{
+			APIKey: v.GetString("SENDGRID_API_KEY"),
 		},
 	}
 }
 
 func DefaultConfigLoaders() []Loader {
-	loaders := []Loader{}
+	var loaders []Loader
 	fileLoader := NewFileLoader(".env", ".")
 	loaders = append(loaders, fileLoader)
 	loaders = append(loaders, NewENVLoader())

@@ -15,7 +15,6 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/store"
-	"github.com/dwarvesf/fortress-api/pkg/store/employee"
 	"github.com/dwarvesf/fortress-api/pkg/view"
 )
 
@@ -757,61 +756,14 @@ func (h *handler) GetWorkUnitDistribution(c *gin.Context) {
 		return
 	}
 
-	rs := &view.WorkUnitDistributionData{}
-
-	// Get all employee
-	employees, _, err := h.store.Employee.All(h.repo.DB(),
-		employee.EmployeeFilter{
-			Keyword: input.Name,
-			WorkingStatuses: []string{
-				model.WorkingStatusOnBoarding.String(),
-				model.WorkingStatusContractor.String(),
-				model.WorkingStatusFullTime.String(),
-				model.WorkingStatusProbation.String()},
-			Organizations: []string{
-				model.OrganizationCodeDwarves,
-			},
-		},
-		model.Pagination{
-			Page: 0,
-			Size: 1000,
-		})
-
+	employees, err := h.store.Dashboard.GetWorkUnitDistributionEmployees(h.repo.DB(), input.Name, input.Type.String())
 	if err != nil {
-		l.Error(err, "failed to get all employee")
+		l.Error(err, "failed to get work unit distribution employees")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
 	}
 
-	for _, e := range employees {
-		// Get all mentee
-		mentees, err := h.store.Employee.GetMenteesByID(h.repo.DB(), e.ID.String())
-		if err != nil {
-			l.Error(err, "failed to get mentees")
-			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
-			return
-		}
-
-		// Get all work units info
-		workUnits, err := h.store.WorkUnit.GetAllWorkUnitByEmployeeID(h.repo.DB(), e.ID.String())
-		if err != nil {
-			l.Error(err, "failed to get work units")
-			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
-			return
-		}
-
-		// Get all project head info
-		managementInfos, err := h.store.Dashboard.GetProjectHeadByEmployeeID(h.repo.DB(), e.ID.String())
-		if err != nil {
-			l.Error(err, "failed to get project head")
-			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
-			return
-		}
-
-		rs.WorkUnitDistributions = append(rs.WorkUnitDistributions, view.ToWorkUnitDistribution(e, mentees, workUnits, managementInfos, input.Type))
-	}
-
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.SortWorkUnitDistributionData(rs, input.Sort), nil, nil, nil, ""))
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToWorkUnitDistributionData(employees, input.Sort.String()), nil, nil, nil, ""))
 }
 
 // GetResourceWorkSurveySummaries godoc

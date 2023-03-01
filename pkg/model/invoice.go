@@ -91,7 +91,7 @@ func (i *Invoice) Validate() error {
 }
 
 func GatherAddresses(CCs JSON) (string, error) {
-	ccList := []string{}
+	var ccList []string
 	if err := json.Unmarshal(CCs, &ccList); err != nil {
 		return "", err
 	}

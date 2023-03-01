@@ -6,7 +6,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/model"
 )
 
-type DiscordService interface {
+type IService interface {
 	PostBirthdayMsg(msg string) (model.DiscordMessage, error)
 	GetMembers() ([]*discordgo.Member, error)
 

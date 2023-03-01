@@ -592,7 +592,7 @@ func TestHandler_GetWorkUnitDistribution(t *testing.T) {
 			query:            "name=hai&sort=asc",
 		},
 		{
-			name:             "happy_case_with_name_and_sort",
+			name:             "happy_case_with_name_sort_and_type",
 			wantCode:         http.StatusOK,
 			wantResponsePath: "testdata/work_unit_distribution/200_with_name_sort_and_type.json",
 			query:            "name=hai&sort=asc&type=training",
@@ -656,7 +656,7 @@ func TestHandler_GetWorkUnitDistributionSummary(t *testing.T) {
 				testhelper.LoadTestSQLFile(t, txRepo, "./testdata/work_unit_distribution_summary/work_unit_distribution_summary.sql")
 				w := httptest.NewRecorder()
 				ctx, _ := gin.CreateTestContext(w)
-				ctx.Request = httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/dashboards/resources/work-unit-distribution-summary"), nil)
+				ctx.Request = httptest.NewRequest(http.MethodGet, "/api/v1/dashboards/resources/work-unit-distribution-summary", nil)
 				ctx.Request.Header.Set("Authorization", testToken)
 
 				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)

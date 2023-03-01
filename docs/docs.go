@@ -2221,7 +2221,7 @@ const docTemplate = `{
         },
         "/invoices/template": {
             "get": {
-                "description": "Get latest invoice by project id",
+                "description": "Get the latest invoice by project id",
                 "consumes": [
                     "application/json"
                 ],
@@ -2231,7 +2231,7 @@ const docTemplate = `{
                 "tags": [
                     "Invoice"
                 ],
-                "summary": "Get latest invoice by project id",
+                "summary": "Get the latest invoice by project id",
                 "parameters": [
                     {
                         "type": "string",
@@ -2252,7 +2252,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/view.GetLatestInvoiceResponse"
+                            "$ref": "#/definitions/view.InvoiceTemplateResponse"
                         }
                     },
                     "400": {
@@ -4703,6 +4703,27 @@ const docTemplate = `{
                         "description": "Size",
                         "name": "size",
                         "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Keyword",
+                        "name": "keyword",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Status",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "description": "Projects",
+                        "name": "projects",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -5403,6 +5424,17 @@ const docTemplate = `{
                 }
             }
         },
+        "model.CompanyContactInfo": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                }
+            }
+        },
         "model.CompanyInfo": {
             "type": "object",
             "properties": {
@@ -5642,6 +5674,12 @@ const docTemplate = `{
                 "gitlabID": {
                     "type": "string"
                 },
+                "heads": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.ProjectHead"
+                    }
+                },
                 "horoscope": {
                     "type": "string"
                 },
@@ -5783,6 +5821,12 @@ const docTemplate = `{
                 },
                 "wiseRecipientName": {
                     "type": "string"
+                },
+                "workUnitMembers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.WorkUnitMember"
+                    }
                 },
                 "workingStatus": {
                     "description": "working info",
@@ -6089,6 +6133,29 @@ const docTemplate = `{
                 }
             }
         },
+        "model.InvoiceItem": {
+            "type": "object",
+            "properties": {
+                "cost": {
+                    "type": "integer"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "discount": {
+                    "type": "integer"
+                },
+                "isExternal": {
+                    "type": "boolean"
+                },
+                "quantity": {
+                    "type": "number"
+                },
+                "unitCost": {
+                    "type": "integer"
+                }
+            }
+        },
         "model.Issue": {
             "type": "object",
             "properties": {
@@ -6364,6 +6431,9 @@ const docTemplate = `{
                 },
                 "position": {
                     "type": "string"
+                },
+                "project": {
+                    "$ref": "#/definitions/model.Project"
                 },
                 "projectID": {
                     "type": "string"
@@ -6924,6 +6994,126 @@ const docTemplate = `{
                 }
             }
         },
+        "model.WorkUnit": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "deletedAt": {
+                    "$ref": "#/definitions/gorm.DeletedAt"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "project": {
+                    "$ref": "#/definitions/model.Project"
+                },
+                "projectID": {
+                    "type": "string"
+                },
+                "sourceMetadata": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "sourceURL": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                },
+                "workUnitMembers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.WorkUnitMember"
+                    }
+                },
+                "workUnitStacks": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.WorkUnitStack"
+                    }
+                }
+            }
+        },
+        "model.WorkUnitMember": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "deletedAt": {
+                    "$ref": "#/definitions/gorm.DeletedAt"
+                },
+                "employee": {
+                    "$ref": "#/definitions/model.Employee"
+                },
+                "employeeID": {
+                    "type": "string"
+                },
+                "endDate": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "projectID": {
+                    "type": "string"
+                },
+                "startDate": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                },
+                "workUnit": {
+                    "$ref": "#/definitions/model.WorkUnit"
+                },
+                "workUnitID": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.WorkUnitStack": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "deletedAt": {
+                    "$ref": "#/definitions/gorm.DeletedAt"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "stack": {
+                    "$ref": "#/definitions/model.Stack"
+                },
+                "stackID": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                },
+                "workUnitID": {
+                    "type": "string"
+                }
+            }
+        },
         "pgtype.JSONB": {
             "type": "object",
             "properties": {
@@ -7358,7 +7548,7 @@ const docTemplate = `{
                 "cc": {
                     "type": "array",
                     "items": {
-                        "type": "integer"
+                        "type": "string"
                     }
                 },
                 "description": {
@@ -7392,7 +7582,7 @@ const docTemplate = `{
                 "lineItems": {
                     "type": "array",
                     "items": {
-                        "type": "integer"
+                        "$ref": "#/definitions/model.InvoiceItem"
                     }
                 },
                 "note": {
@@ -8514,6 +8704,66 @@ const docTemplate = `{
                 }
             }
         },
+        "view.ClientContactInfo": {
+            "type": "object",
+            "properties": {
+                "emails": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "id": {
+                    "type": "string"
+                },
+                "isMainContact": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "view.ClientInfo": {
+            "type": "object",
+            "properties": {
+                "clientAddress": {
+                    "type": "string"
+                },
+                "clientCompany": {
+                    "type": "string"
+                },
+                "contacts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.ClientContactInfo"
+                    }
+                }
+            }
+        },
+        "view.CompanyInfo": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "info": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/model.CompanyContactInfo"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                },
+                "registrationNumber": {
+                    "type": "string"
+                }
+            }
+        },
         "view.ContentData": {
             "type": "object",
             "properties": {
@@ -9331,6 +9581,103 @@ const docTemplate = `{
                 }
             }
         },
+        "view.Invoice": {
+            "type": "object",
+            "properties": {
+                "bankID": {
+                    "type": "string"
+                },
+                "cc": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "conversionAmount": {
+                    "type": "integer"
+                },
+                "conversionRate": {
+                    "type": "number"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "discount": {
+                    "type": "integer"
+                },
+                "dueAt": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "errorInvoiceID": {
+                    "type": "string"
+                },
+                "failedAt": {
+                    "type": "string"
+                },
+                "invoiceFileURL": {
+                    "type": "string"
+                },
+                "invoicedAt": {
+                    "type": "string"
+                },
+                "lineItems": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.InvoiceItem"
+                    }
+                },
+                "month": {
+                    "type": "integer"
+                },
+                "note": {
+                    "type": "string"
+                },
+                "number": {
+                    "type": "string"
+                },
+                "paidAt": {
+                    "type": "string"
+                },
+                "projectID": {
+                    "type": "string"
+                },
+                "scheduledDate": {
+                    "type": "string"
+                },
+                "sentBy": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "subTotal": {
+                    "type": "integer"
+                },
+                "tax": {
+                    "type": "integer"
+                },
+                "threadID": {
+                    "type": "string"
+                },
+                "total": {
+                    "type": "integer"
+                },
+                "year": {
+                    "type": "integer"
+                }
+            }
+        },
+        "view.InvoiceTemplateResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/view.ProjectInvoiceTemplate"
+                }
+            }
+        },
         "view.ItemValue": {
             "type": "object",
             "properties": {
@@ -9775,6 +10122,32 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "view.ProjectInvoiceTemplate": {
+            "type": "object",
+            "properties": {
+                "bankAccount": {
+                    "$ref": "#/definitions/view.BankAccount"
+                },
+                "client": {
+                    "$ref": "#/definitions/view.ClientInfo"
+                },
+                "companyInfo": {
+                    "$ref": "#/definitions/view.CompanyInfo"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "invoiceNumber": {
+                    "type": "string"
+                },
+                "lastInvoice": {
+                    "$ref": "#/definitions/view.Invoice"
+                },
+                "name": {
                     "type": "string"
                 }
             }

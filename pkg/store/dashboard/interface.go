@@ -32,4 +32,5 @@ type IStore interface {
 	TotalWorkUnitDistribution(db *gorm.DB) (*model.TotalWorkUnitDistribution, error)
 	GetAllWorkReviews(db *gorm.DB, keyword string, pagination model.Pagination) ([]*model.EmployeeEventReviewer, error)
 	GetProjectHeadByEmployeeID(db *gorm.DB, employeeID string) ([]*model.ManagementInfo, error)
+	GetWorkUnitDistributionEmployees(db *gorm.DB, keyword string, workUnitType string) ([]*model.Employee, error)
 }

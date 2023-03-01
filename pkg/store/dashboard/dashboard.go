@@ -754,3 +754,71 @@ func (s *store) GetProjectHeadByEmployeeID(db *gorm.DB, employeeID string) ([]*m
 
 	return rs, db.Raw(query, employeeID, model.ProjectStatusActive, model.ProjectStatusOnBoarding).Scan(&rs).Error
 }
+
+func (s *store) GetWorkUnitDistributionEmployees(db *gorm.DB, keyword string, workUnitType string) ([]*model.Employee, error) {
+	var employees []*model.Employee
+
+	query := db.Table("employees")
+
+	if keyword != "" {
+		query = query.Where("keyword_vector @@ plainto_tsquery('english_nostop', fn_remove_vietnamese_accents(LOWER(?)))", keyword)
+	}
+
+	query = query.Where("deleted_at IS NULL").
+		Where("working_status IN ?", []string{
+			model.WorkingStatusFullTime.String(),
+			model.WorkingStatusContractor.String(),
+		}).
+		Order("display_name ASC")
+
+	// preload mentees
+	if workUnitType == "" || workUnitType == model.WorkUnitTypeTraining.String() {
+		query = query.Preload("Mentees", "deleted_at IS NULL AND working_status IN ?", []string{
+			model.WorkingStatusFullTime.String(),
+			model.WorkingStatusContractor.String(),
+		})
+	}
+
+	// preload project heads
+	if workUnitType == "" || workUnitType == model.WorkUnitTypeManagement.String() {
+		query = query.Preload("Heads", func(db *gorm.DB) *gorm.DB {
+			return db.Joins("JOIN projects p ON project_heads.project_id = p.id").
+				Where("(project_heads.start_date IS NULL OR project_heads.start_date <= now())").
+				Where("(project_heads.end_date IS NULL OR project_heads.end_date > now())").
+				Where("p.status IN ?", []string{
+					model.ProjectStatusActive.String(),
+					model.ProjectStatusOnBoarding.String(),
+				}).
+				Where("project_heads.deleted_at IS NULL").
+				Where("p.deleted_at IS NULL")
+		}).Preload("Heads.Project", "deleted_at IS NULL")
+	}
+
+	// preload work units
+	query = query.Preload("WorkUnitMembers", func(db *gorm.DB) *gorm.DB {
+		db = db.
+			Joins("JOIN work_units wu ON wu.id = work_unit_members.work_unit_id").
+			Joins("JOIN projects p ON p.id = wu.project_id").
+			Joins("JOIN project_members pm ON pm.project_id = work_unit_members.project_id AND pm.employee_id = work_unit_members.employee_id").
+			Where("wu.status = ?", model.WorkUnitStatusActive).
+			Where("p.status IN ?", []string{
+				model.ProjectStatusActive.String(),
+				model.ProjectStatusOnBoarding.String(),
+			}).
+			Where("pm.start_date <= now() AND (pm.end_date IS NULL OR pm.end_date > now())").
+			Where("p.deleted_at IS NULL").
+			Where("pm.deleted_at IS NULL").
+			Where("wu.deleted_at IS NULL").
+			Where("work_unit_members.deleted_at IS NULL")
+
+		if workUnitType != "" {
+			db = db.Where("wu.type = ?", workUnitType)
+		}
+
+		return db
+	}).
+		Preload("WorkUnitMembers.WorkUnit").
+		Preload("WorkUnitMembers.WorkUnit.Project")
+
+	return employees, query.Find(&employees).Error
+}
