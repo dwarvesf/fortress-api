@@ -201,91 +201,91 @@ func (h *handler) Send(c *gin.Context) {
 		return
 	}
 
-	var input request.SendInvoiceRequest
-
-	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, input, ""))
-		return
-	}
+	var req request.SendInvoiceRequest
 
 	l := h.logger.Fields(logger.Fields{
 		"handler": "invoice",
 		"method":  "Send",
-		"input":   input,
 	})
+
+	if err := req.ValidateAndMappingRequest(c, h.config); err != nil {
+		l.Errorf(err, "failed to validating and mapping the quest", "input", req)
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, req, ""))
+		return
+	}
 
 	senderID, err := model.UUIDFromString(userID)
 	if err != nil {
 		l.Error(err, "failed to parse sender id")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input, ""))
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req, ""))
 	}
 
-	input.SentByID = &senderID
+	req.SentByID = &senderID
 
 	// check sender existence
 	exists, err := h.store.Employee.IsExist(h.repo.DB(), senderID.String())
 	if err != nil {
 		l.Error(err, "failed to check sender existence")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input, ""))
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req, ""))
 		return
 	}
 
 	if !exists {
 		l.Error(errs.ErrSenderNotFound, "sender not exist")
-		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrSenderNotFound, input, ""))
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrSenderNotFound, req, ""))
 		return
 	}
 
-	iv, err := input.ToInvoiceModel()
+	iv, err := req.ToInvoiceModel()
 	if err != nil {
-		l.Error(err, "invalid input")
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, input, ""))
+		l.Error(err, "invalid req")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, req, ""))
 		return
 	}
 
-	dueAt, err := time.Parse("2006-01-02", input.DueDate)
+	dueAt, err := time.Parse("2006-01-02", req.DueDate)
 	if err != nil {
 		l.Error(errs.ErrInvalidDueAt, "invalid invoice due date")
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidDueAt, input, ""))
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidDueAt, req, ""))
 		return
 	}
 	iv.DueAt = &dueAt
 
-	invoiceAt, err := time.Parse("2006-01-02", input.InvoiceDate)
+	invoiceAt, err := time.Parse("2006-01-02", req.InvoiceDate)
 	if err != nil {
 		l.Error(errs.ErrInvalidPaidAt, "invalid invoice date")
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidPaidAt, input, ""))
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidPaidAt, req, ""))
 		return
 	}
 	iv.InvoicedAt = &invoiceAt
 
 	// check bank account existence
-	b, err := h.store.BankAccount.One(h.repo.DB(), input.BankID.String())
+	b, err := h.store.BankAccount.One(h.repo.DB(), req.BankID.String())
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Error(errs.ErrBankAccountNotFound, "project not found")
-			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, errs.ErrBankAccountNotFound, input, ""))
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, errs.ErrBankAccountNotFound, req, ""))
 			return
 		}
 
 		l.Error(err, "failed to check bank account existence")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input, ""))
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req, ""))
 		return
 	}
 
 	iv.Bank = b
 
 	// check project existence
-	p, err := h.store.Project.One(h.repo.DB(), input.ProjectID.String(), true)
+	p, err := h.store.Project.One(h.repo.DB(), req.ProjectID.String(), true)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Error(errs.ErrProjectNotFound, "project not found")
-			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, input, ""))
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, req, ""))
 			return
 		}
 
 		l.Error(err, "failed to check project existence")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input, ""))
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req, ""))
 		return
 	}
 	iv.Project = p
@@ -293,18 +293,18 @@ func (h *handler) Send(c *gin.Context) {
 	nextInvoiceNumber, err := h.store.Invoice.GetNextInvoiceNumber(h.repo.DB(), now.Year(), p.Code)
 	if err != nil {
 		l.Error(err, "failed to get next invoice Number")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input, ""))
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req, ""))
 		return
 	}
 	iv.Number = *nextInvoiceNumber
 
 	if err := h.generateInvoicePDF(l, iv); err != nil {
 		l.Error(err, "failed to get next invoice Number")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input, ""))
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req, ""))
 		return
 	}
 
-	if input.IsDraft {
+	if req.IsDraft {
 		iv.Status = model.InvoiceStatusDraft
 	}
 
@@ -337,7 +337,7 @@ func (h *handler) Send(c *gin.Context) {
 		errsCh <- nil
 	}()
 
-	if !input.IsDraft {
+	if !req.IsDraft {
 		amountGr += 2
 		fn := strconv.FormatInt(rand.Int63(), 10) + "_" + iv.Number + ".pdf"
 
@@ -377,7 +377,7 @@ func (h *handler) Send(c *gin.Context) {
 	for e := range errsCh {
 		if e != nil {
 			close(errsCh)
-			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, e, input, ""))
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, e, req, ""))
 			return
 		}
 		count++
