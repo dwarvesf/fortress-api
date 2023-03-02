@@ -185,8 +185,13 @@ func (g *googleService) SendInvoiceOverdueMail(invoice *model.Invoice) error {
 	if err := g.ensureToken(g.appConfig.Google.AccountingGoogleRefreshToken); err != nil {
 		return err
 	}
+
 	if invoice.ThreadID == "" {
 		return ErrMissingThreadID
+	}
+
+	if err := g.prepareService(); err != nil {
+		return err
 	}
 
 	id := g.appConfig.Google.AccountingEmailID
@@ -201,7 +206,7 @@ func (g *googleService) SendInvoiceOverdueMail(invoice *model.Invoice) error {
 	}
 
 	if !mailutils.Email(invoice.Email) {
-		return errors.New("email invalid")
+		return ErrInvalidEmail
 	}
 
 	addresses, err := model.GatherAddresses(invoice.CC)
@@ -272,7 +277,7 @@ func (g *googleService) getEmailThread(threadID, id string) (*gmail.Thread, erro
 
 func getMessageIDFromThread(thread *gmail.Thread) (msgID, references string, err error) {
 	if len(thread.Messages) == 0 {
-		return "", "", errors.New("empty message thread")
+		return "", "", ErrEmptyMessageThread
 	}
 
 	for _, v := range thread.Messages[len(thread.Messages)-1].Payload.Headers {
@@ -285,7 +290,7 @@ func getMessageIDFromThread(thread *gmail.Thread) (msgID, references string, err
 	}
 
 	if msgID == "" {
-		return "", "", errors.New("can't find message_id")
+		return "", "", ErrCannotFindMessageID
 	}
 
 	return msgID, fmt.Sprintf(`%s %s`, references, msgID), nil
