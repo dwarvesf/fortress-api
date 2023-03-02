@@ -61,28 +61,53 @@ type GetInvoiceInput struct {
 }
 
 type SendInvoiceRequest struct {
-	IsDraft     bool                `json:"isDraft"`
-	ProjectID   model.UUID          `json:"projectID" binding:"required"`
-	BankID      model.UUID          `json:"bankID" binding:"required"`
-	Description string              `json:"description"`
-	Note        string              `json:"note"`
-	CC          []string            `json:"cc"`
-	LineItems   []model.InvoiceItem `json:"lineItems"`
-	Email       string              `json:"email" binding:"required,email"`
-	Total       int                 `json:"total" binding:"gte=0"`
-	Discount    int                 `json:"discount" binding:"gte=0"`
-	Tax         int                 `json:"tax" binding:"gte=0"`
-	SubTotal    int                 `json:"subtotal" binding:"gte=0"`
-	InvoiceDate string              `json:"invoiceDate" binding:"required"`
-	DueDate     string              `json:"dueDate" binding:"required"`
-	Month       int                 `json:"invoiceMonth" binding:"gte=0,lte=11"`
-	Year        int                 `json:"invoiceYear" binding:"gte=0"`
+	IsDraft     bool          `json:"isDraft"`
+	ProjectID   model.UUID    `json:"projectID" binding:"required"`
+	BankID      model.UUID    `json:"bankID" binding:"required"`
+	Description string        `json:"description"`
+	Note        string        `json:"note"`
+	CC          []string      `json:"cc"`
+	LineItems   []InvoiceItem `json:"lineItems"`
+	Email       string        `json:"email" binding:"required,email"`
+	Total       int           `json:"total" binding:"gte=0"`
+	Discount    int           `json:"discount" binding:"gte=0"`
+	Tax         int           `json:"tax" binding:"gte=0"`
+	SubTotal    int           `json:"subtotal" binding:"gte=0"`
+	InvoiceDate string        `json:"invoiceDate" binding:"required"`
+	DueDate     string        `json:"dueDate" binding:"required"`
+	Month       int           `json:"invoiceMonth" binding:"gte=0,lte=11"`
+	Year        int           `json:"invoiceYear" binding:"gte=0"`
 	SentByID    *model.UUID
 	Number      string
 }
 
+type InvoiceItem struct {
+	Quantity    float64 `json:"quantity"`
+	UnitCost    int64   `json:"unitCost"`
+	Discount    int64   `json:"discount"`
+	Cost        int64   `json:"cost"`
+	Description string  `json:"description"`
+	IsExternal  bool    `json:"isExternal"`
+}
+
+func toInvoiceItemsModel(lineItems []InvoiceItem) []model.InvoiceItem {
+	var items []model.InvoiceItem
+	for _, item := range lineItems {
+		items = append(items, model.InvoiceItem{
+			Quantity:    item.Quantity,
+			UnitCost:    item.UnitCost,
+			Discount:    item.Discount,
+			Cost:        item.Cost,
+			Description: item.Description,
+			IsExternal:  item.IsExternal,
+		})
+	}
+
+	return items
+}
+
 func (i *SendInvoiceRequest) ToInvoiceModel() (*model.Invoice, error) {
-	lineItems, err := json.Marshal(i.LineItems)
+	lineItems, err := json.Marshal(toInvoiceItemsModel(i.LineItems))
 	if err != nil {
 		return nil, err
 	}

@@ -3,13 +3,12 @@ package mailutils
 import (
 	"errors"
 	"regexp"
-	"strings"
 )
 
 // email regex
 var (
-	emailRegex    = "^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
-	ErrInvaidMail = errors.New("invalid email format")
+	emailRegex     = "^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
+	teamEmailRegex = ".+@((dwarvesv\\.com)|(d\\.foundation))"
 )
 
 // Regex : validate regex
@@ -36,5 +35,9 @@ func Email(email string) bool {
 }
 
 func IsDwarvesMail(mail string) bool {
-	return strings.Contains(mail, "@dwarvesv.com") || strings.Contains(mail, "@d.foundation")
+	regex, _ := regexp.Compile(teamEmailRegex)
+	if !regex.MatchString(mail) {
+		return false
+	}
+	return true
 }
