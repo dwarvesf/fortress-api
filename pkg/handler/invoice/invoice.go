@@ -601,7 +601,7 @@ func (h *handler) markInvoiceAsError(db *gorm.DB, l logger.Logger, invoice model
 		return nil, err
 	}
 
-	err = h.store.InvoiceNumberCaching.UnCountErrorInvoice(db, *iv.InvoicedAt)
+	err = h.store.InvoiceNumberCaching.UnCountErrorInvoice(db, *invoice.InvoicedAt)
 	if err != nil {
 		l.Errorf(err, "failed to un-count error invoice")
 		return nil, err
@@ -612,7 +612,7 @@ func (h *handler) markInvoiceAsError(db *gorm.DB, l logger.Logger, invoice model
 	//	return nil, err
 	//}
 
-	if err := h.service.GoogleDrive.MoveInvoicePDF(iv, "Sent", "Error"); err != nil {
+	if err := h.service.GoogleDrive.MoveInvoicePDF(&invoice, "Sent", "Error"); err != nil {
 		l.Errorf(err, "failed to upload invoice pdf to google drive")
 		return nil, err
 	}
