@@ -73,7 +73,7 @@ type CreateEmployeeInput struct {
 	Positions     []model.UUID `form:"positions" json:"positions" binding:"required"`
 	Salary        int          `json:"salary" binding:"required"`
 	SeniorityID   model.UUID   `json:"seniorityID" binding:"required"`
-	RoleID        model.UUID   `json:"roleID" binding:"required"`
+	Roles         []model.UUID `json:"roles" binding:"required"`
 	Status        string       `json:"status" binding:"required"`
 	ReferredBy    model.UUID   `json:"referredBy"`
 }
@@ -169,7 +169,7 @@ func (input CreateEmployeeInput) Validate() error {
 }
 
 type UpdateRoleBody struct {
-	RoleID model.UUID `form:"roleID" json:"roleID" binding:"required"`
+	Roles []model.UUID `form:"roles" json:"roles" binding:"required"`
 }
 
 type UpdateRoleInput struct {

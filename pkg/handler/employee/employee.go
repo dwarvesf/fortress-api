@@ -360,12 +360,12 @@ func (h *handler) Create(c *gin.Context) {
 		Positions:     input.Positions,
 		Salary:        input.Salary,
 		SeniorityID:   input.SeniorityID,
-		RoleID:        input.RoleID,
+		Roles:         input.Roles,
 		Status:        input.Status,
 		ReferredBy:    input.ReferredBy,
 	}
 
-	eml, err := h.controller.Employee.Create(h.logger, userID, requestBody)
+	eml, err := h.controller.Employee.Create(userID, requestBody)
 	if err != nil {
 		l.Error(err, "failed to create employee")
 		errs.ConvertControllerErr(c, err)
@@ -624,7 +624,7 @@ func (h *handler) UpdateRole(c *gin.Context) {
 	inputRequest := employee.UpdateRoleInput{
 		EmployeeID: input.EmployeeID,
 		Body: employee.UpdateRoleBody{
-			RoleID: input.Body.RoleID,
+			Roles: input.Body.Roles,
 		},
 	}
 

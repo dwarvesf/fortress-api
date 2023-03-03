@@ -6133,29 +6133,6 @@ const docTemplate = `{
                 }
             }
         },
-        "model.InvoiceItem": {
-            "type": "object",
-            "properties": {
-                "cost": {
-                    "type": "integer"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "discount": {
-                    "type": "integer"
-                },
-                "isExternal": {
-                    "type": "boolean"
-                },
-                "quantity": {
-                    "type": "number"
-                },
-                "unitCost": {
-                    "type": "integer"
-                }
-            }
-        },
         "model.Issue": {
             "type": "object",
             "properties": {
@@ -7254,7 +7231,7 @@ const docTemplate = `{
                 "fullName",
                 "personalEmail",
                 "positions",
-                "roleID",
+                "roles",
                 "salary",
                 "seniorityID",
                 "status",
@@ -7280,8 +7257,11 @@ const docTemplate = `{
                 "referredBy": {
                     "type": "string"
                 },
-                "roleID": {
-                    "type": "string"
+                "roles": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "salary": {
                     "type": "integer"
@@ -7532,6 +7512,29 @@ const docTemplate = `{
                 }
             }
         },
+        "request.InvoiceItem": {
+            "type": "object",
+            "properties": {
+                "cost": {
+                    "type": "integer"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "discount": {
+                    "type": "integer"
+                },
+                "isExternal": {
+                    "type": "boolean"
+                },
+                "quantity": {
+                    "type": "number"
+                },
+                "unitCost": {
+                    "type": "integer"
+                }
+            }
+        },
         "request.SendInvoiceRequest": {
             "type": "object",
             "required": [
@@ -7582,7 +7585,7 @@ const docTemplate = `{
                 "lineItems": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/model.InvoiceItem"
+                        "$ref": "#/definitions/request.InvoiceItem"
                     }
                 },
                 "note": {
@@ -9626,7 +9629,7 @@ const docTemplate = `{
                 "lineItems": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/model.InvoiceItem"
+                        "$ref": "#/definitions/view.InvoiceItem"
                     }
                 },
                 "month": {
@@ -9666,6 +9669,29 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "year": {
+                    "type": "integer"
+                }
+            }
+        },
+        "view.InvoiceItem": {
+            "type": "object",
+            "properties": {
+                "cost": {
+                    "type": "integer"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "discount": {
+                    "type": "integer"
+                },
+                "isExternal": {
+                    "type": "boolean"
+                },
+                "quantity": {
+                    "type": "number"
+                },
+                "unitCost": {
                     "type": "integer"
                 }
             }
@@ -9964,6 +9990,12 @@ const docTemplate = `{
                 },
                 "placeOfResidence": {
                     "type": "string"
+                },
+                "roles": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.Role"
+                    }
                 },
                 "teamEmail": {
                     "type": "string"

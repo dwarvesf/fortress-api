@@ -599,21 +599,6 @@ definitions:
       year:
         type: integer
     type: object
-  model.InvoiceItem:
-    properties:
-      cost:
-        type: integer
-      description:
-        type: string
-      discount:
-        type: integer
-      isExternal:
-        type: boolean
-      quantity:
-        type: number
-      unitCost:
-        type: integer
-    type: object
   model.Issue:
     properties:
       id:
@@ -1348,8 +1333,10 @@ definitions:
         type: array
       referredBy:
         type: string
-      roleID:
-        type: string
+      roles:
+        items:
+          type: string
+        type: array
       salary:
         type: integer
       seniorityID:
@@ -1362,7 +1349,7 @@ definitions:
     - fullName
     - personalEmail
     - positions
-    - roleID
+    - roles
     - salary
     - seniorityID
     - status
@@ -1526,6 +1513,21 @@ definitions:
           type: string
         type: array
     type: object
+  request.InvoiceItem:
+    properties:
+      cost:
+        type: integer
+      description:
+        type: string
+      discount:
+        type: integer
+      isExternal:
+        type: boolean
+      quantity:
+        type: number
+      unitCost:
+        type: integer
+    type: object
   request.SendInvoiceRequest:
     properties:
       bankID:
@@ -1556,7 +1558,7 @@ definitions:
         type: boolean
       lineItems:
         items:
-          $ref: '#/definitions/model.InvoiceItem'
+          $ref: '#/definitions/request.InvoiceItem'
         type: array
       note:
         type: string
@@ -2905,7 +2907,7 @@ definitions:
         type: string
       lineItems:
         items:
-          $ref: '#/definitions/model.InvoiceItem'
+          $ref: '#/definitions/view.InvoiceItem'
         type: array
       month:
         type: integer
@@ -2932,6 +2934,21 @@ definitions:
       total:
         type: integer
       year:
+        type: integer
+    type: object
+  view.InvoiceItem:
+    properties:
+      cost:
+        type: integer
+      description:
+        type: string
+      discount:
+        type: integer
+      isExternal:
+        type: boolean
+      quantity:
+        type: number
+      unitCost:
         type: integer
     type: object
   view.InvoiceTemplateResponse:
@@ -3125,6 +3142,10 @@ definitions:
         type: string
       placeOfResidence:
         type: string
+      roles:
+        items:
+          $ref: '#/definitions/view.Role'
+        type: array
       teamEmail:
         type: string
       username:
