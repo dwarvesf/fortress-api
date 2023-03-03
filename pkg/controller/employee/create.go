@@ -18,12 +18,12 @@ type CreateEmployeeInput struct {
 	Positions     []model.UUID
 	Salary        int
 	SeniorityID   model.UUID
-	RoleID        model.UUID
+	Roles         []model.UUID
 	Status        string
 	ReferredBy    model.UUID
 }
 
-func (r *controller) Create(l logger.Logger, userID string, input CreateEmployeeInput) (*model.Employee, error) {
+func (r *controller) Create(userID string, input CreateEmployeeInput) (*model.Employee, error) {
 	loggedInUser, err := r.store.Employee.One(r.repo.DB(), userID, false)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, ErrEmployeeNotFound
@@ -47,7 +47,7 @@ func (r *controller) Create(l logger.Logger, userID string, input CreateEmployee
 	for _, pID := range input.Positions {
 		_, ok := positionMap[pID]
 		if !ok {
-			l.Errorf(ErrPositionNotFound, "postion not found with id ", pID.String())
+			r.logger.Errorf(ErrPositionNotFound, "postion not found with id ", pID.String())
 			return nil, ErrPositionNotFound
 		}
 
@@ -62,16 +62,16 @@ func (r *controller) Create(l logger.Logger, userID string, input CreateEmployee
 		return nil, err
 	}
 
-	role, err := r.store.Role.One(r.repo.DB(), input.RoleID)
+	roles, err := r.store.Role.GetByIDs(r.repo.DB(), input.Roles)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, ErrRoleNotfound
-		}
+		r.logger.Error(err, "failed to get roles by ids")
 		return nil, err
 	}
 
-	if role.Level <= loggedInUser.EmployeeRoles[0].Role.Level {
-		return nil, ErrInvalidAccountRole
+	for _, role := range roles {
+		if role.Level <= loggedInUser.EmployeeRoles[0].Role.Level {
+			return nil, ErrInvalidAccountRole
+		}
 	}
 
 	// get the username
@@ -145,13 +145,19 @@ func (r *controller) Create(l logger.Logger, userID string, input CreateEmployee
 		}
 	}
 
-	// 2.4 create employee role
-	_, err = r.store.EmployeeRole.Create(tx.DB(), &model.EmployeeRole{
-		EmployeeID: eml.ID,
-		RoleID:     role.ID,
-	})
-	if err != nil {
-		return nil, done(err)
+	// 2.4 create employee roles
+	for _, role := range roles {
+		_, err = r.store.EmployeeRole.Create(tx.DB(), &model.EmployeeRole{
+			EmployeeID: eml.ID,
+			RoleID:     role.ID,
+		})
+		if err != nil {
+			r.logger.Fields(logger.Fields{
+				"emlID":  eml.ID,
+				"roleID": role.ID,
+			}).Error(err, "failed to create employee role")
+			return nil, done(err)
+		}
 	}
 
 	// Create employee organization

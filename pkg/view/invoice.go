@@ -16,32 +16,32 @@ type GetLatestInvoiceResponse struct {
 }
 
 type Invoice struct {
-	Number           string                `json:"number"`
-	InvoicedAt       *time.Time            `json:"invoicedAt"`
-	DueAt            *time.Time            `json:"dueAt"`
-	PaidAt           *time.Time            `json:"paidAt"`
-	FailedAt         *time.Time            `json:"failedAt"`
-	Status           string                `json:"status"`
-	Email            string                `json:"email"`
-	CC               []string              `json:"cc"`
-	Description      string                `json:"description"`
-	Note             string                `json:"note"`
-	SubTotal         int64                 `json:"subTotal"`
-	Tax              int64                 `json:"tax"`
-	Discount         int64                 `json:"discount"`
-	Total            int64                 `json:"total"`
-	ConversionAmount int64                 `json:"conversionAmount"`
-	InvoiceFileURL   string                `json:"invoiceFileURL"`
-	ErrorInvoiceID   string                `json:"errorInvoiceID"`
-	LineItems        []InvoiceItemResponse `json:"lineItems"`
-	Month            int                   `json:"month"`
-	Year             int                   `json:"year"`
-	SentBy           string                `json:"sentBy"`
-	ThreadID         string                `json:"threadID"`
-	ScheduledDate    *time.Time            `json:"scheduledDate"`
-	ConversionRate   float64               `json:"conversionRate"`
-	BankID           string                `json:"bankID"`
-	ProjectID        string                `json:"projectID"`
+	Number           string        `json:"number"`
+	InvoicedAt       *time.Time    `json:"invoicedAt"`
+	DueAt            *time.Time    `json:"dueAt"`
+	PaidAt           *time.Time    `json:"paidAt"`
+	FailedAt         *time.Time    `json:"failedAt"`
+	Status           string        `json:"status"`
+	Email            string        `json:"email"`
+	CC               []string      `json:"cc"`
+	Description      string        `json:"description"`
+	Note             string        `json:"note"`
+	SubTotal         int64         `json:"subTotal"`
+	Tax              int64         `json:"tax"`
+	Discount         int64         `json:"discount"`
+	Total            int64         `json:"total"`
+	ConversionAmount int64         `json:"conversionAmount"`
+	InvoiceFileURL   string        `json:"invoiceFileURL"`
+	ErrorInvoiceID   string        `json:"errorInvoiceID"`
+	LineItems        []InvoiceItem `json:"lineItems"`
+	Month            int           `json:"month"`
+	Year             int           `json:"year"`
+	SentBy           string        `json:"sentBy"`
+	ThreadID         string        `json:"threadID"`
+	ScheduledDate    *time.Time    `json:"scheduledDate"`
+	ConversionRate   float64       `json:"conversionRate"`
+	BankID           string        `json:"bankID"`
+	ProjectID        string        `json:"projectID"`
 }
 
 type ClientInfo struct {
@@ -66,7 +66,7 @@ type CompanyInfo struct {
 	Info               map[string]model.CompanyContactInfo `json:"info"`
 }
 
-type InvoiceItemResponse struct {
+type InvoiceItem struct {
 	Quantity    float64 `json:"quantity"`
 	UnitCost    int64   `json:"unitCost"`
 	Discount    int64   `json:"discount"`
@@ -75,8 +75,8 @@ type InvoiceItemResponse struct {
 	IsExternal  bool    `json:"isExternal"`
 }
 
-func toInvoiceItemResponse(lineItems model.JSON) ([]InvoiceItemResponse, error) {
-	var items []InvoiceItemResponse
+func toInvoiceItem(lineItems model.JSON) ([]InvoiceItem, error) {
+	var items []InvoiceItem
 	var tmp []model.InvoiceItem
 
 	if len(lineItems) == 0 || string(lineItems) == "null" {
@@ -88,7 +88,7 @@ func toInvoiceItemResponse(lineItems model.JSON) ([]InvoiceItemResponse, error) 
 	}
 
 	for _, item := range tmp {
-		items = append(items, InvoiceItemResponse{
+		items = append(items, InvoiceItem{
 			Quantity:    item.Quantity,
 			UnitCost:    item.UnitCost,
 			Discount:    item.Discount,
@@ -124,7 +124,7 @@ func ToInvoiceInfo(invoice *model.Invoice) (*Invoice, error) {
 			return nil, err
 		}
 
-		invoiceItems, err := toInvoiceItemResponse(invoice.LineItems)
+		invoiceItems, err := toInvoiceItem(invoice.LineItems)
 		if err != nil {
 			return nil, err
 		}
