@@ -50,7 +50,8 @@ func (r *controller) UpdateRole(userID string, input UpdateRoleInput) (err error
 		}
 	}
 
-	if empl.EmployeeRoles[0].Role.Level == loggedInUser.EmployeeRoles[0].Role.Level {
+	if empl.EmployeeRoles[0].Role.Level == loggedInUser.EmployeeRoles[0].Role.Level &&
+		loggedInUser.EmployeeRoles[0].Role.Code != model.AccountRoleAdmin.String() {
 		return ErrInvalidAccountRole
 	}
 
