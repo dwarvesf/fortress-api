@@ -34,7 +34,6 @@ func ConvertControllerErr(c *gin.Context, err error) {
 	switch err {
 	case employee.ErrEmployeeNotFound,
 		employee.ErrLineManagerNotFound,
-		employee.ErrReferrerNotFound,
 		employee.ErrRoleNotfound,
 		employee.ErrSeniorityNotfound,
 		employee.ErrReferrerNotFound,
@@ -46,7 +45,6 @@ func ConvertControllerErr(c *gin.Context, err error) {
 	case employee.ErrInvalidJoinedDate,
 		employee.ErrInvalidLeftDate,
 		employee.ErrLeftDateBeforeJoinedDate,
-		employee.ErrInvalidAccountRole,
 		employee.ErrEmployeeExisted,
 		employee.ErrInvalidCountryOrCity,
 		employee.ErrInvalidFileExtension,
