@@ -53,8 +53,8 @@ const (
 )
 
 const (
-	MaxFileSizeImage = 1000000
-	MaxFileSizePdf   = 5000000
+	MaxFileSizeImage = 2202099
+	MaxFileSizePdf   = 5347737
 )
 
 func (e ContentExtension) Valid() bool {
