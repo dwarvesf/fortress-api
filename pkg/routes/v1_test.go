@@ -89,10 +89,10 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/metadata.IHandler.Organizations-fm",
 			},
 		},
-		"/api/v1/metadata/account-roles": {
+		"/api/v1/metadata/roles": {
 			"GET": {
 				Method:  "GET",
-				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/metadata.IHandler.AccountRoles-fm",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/metadata.IHandler.GetRoles-fm",
 			},
 		},
 		"/api/v1/metadata/positions": {
