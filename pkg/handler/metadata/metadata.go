@@ -164,21 +164,21 @@ func (h *handler) Organizations(c *gin.Context) {
 	c.JSON(http.StatusOK, view.CreateResponse[any](organizations, nil, nil, nil, ""))
 }
 
-// AccountRoles godoc
-// @Summary Get list values for account roles
-// @Description Get list values for account roles
+// GetRoles godoc
+// @Summary Get list roles
+// @Description Get list roles
 // @Tags Metadata
 // @Accept  json
 // @Produce  json
-// @Success 200 {object} view.AccountRoleResponse
+// @Success 200 {object} view.RolesResponse
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 500 {object} view.ErrorResponse
-// @Router /metadata/account-roles [get]
-func (h *handler) AccountRoles(c *gin.Context) {
+// @Router /metadata/roles [get]
+func (h *handler) GetRoles(c *gin.Context) {
 	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler": "metadata",
-		"method":  "AccountRoles",
+		"method":  "GetRoles",
 	})
 
 	// 2 query roles from db

@@ -6,7 +6,7 @@ type IHandler interface {
 	WorkingStatuses(c *gin.Context)
 	Seniorities(c *gin.Context)
 	Chapters(c *gin.Context)
-	AccountRoles(c *gin.Context)
+	GetRoles(c *gin.Context)
 	Positions(c *gin.Context)
 	GetCountries(c *gin.Context)
 	GetCities(c *gin.Context)

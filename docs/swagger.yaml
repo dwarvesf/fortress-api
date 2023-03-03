@@ -1913,13 +1913,6 @@ definitions:
       data:
         $ref: '#/definitions/view.APIKeyData'
     type: object
-  view.AccountRoleResponse:
-    properties:
-      data:
-        items:
-          $ref: '#/definitions/model.Role'
-        type: array
-    type: object
   view.ActionItemReportResponse:
     properties:
       data:
@@ -3386,6 +3379,13 @@ definitions:
         type: string
       name:
         type: string
+    type: object
+  view.RolesResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/model.Role'
+        type: array
     type: object
   view.Seniority:
     properties:
@@ -5560,29 +5560,6 @@ paths:
       summary: Get the list of line managers
       tags:
       - Employee
-  /metadata/account-roles:
-    get:
-      consumes:
-      - application/json
-      description: Get list values for account roles
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/view.AccountRoleResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/view.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/view.ErrorResponse'
-      summary: Get list values for account roles
-      tags:
-      - Metadata
   /metadata/chapters:
     get:
       consumes:
@@ -5863,6 +5840,29 @@ paths:
           schema:
             $ref: '#/definitions/view.ErrorResponse'
       summary: Get list question by category and subcategory
+      tags:
+      - Metadata
+  /metadata/roles:
+    get:
+      consumes:
+      - application/json
+      description: Get list roles
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.RolesResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get list roles
       tags:
       - Metadata
   /metadata/seniorities:

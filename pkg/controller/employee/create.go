@@ -69,7 +69,8 @@ func (r *controller) Create(userID string, input CreateEmployeeInput) (*model.Em
 	}
 
 	for _, role := range roles {
-		if role.Level <= loggedInUser.EmployeeRoles[0].Role.Level {
+		if role.Level <= loggedInUser.EmployeeRoles[0].Role.Level &&
+			loggedInUser.EmployeeRoles[0].Role.Code != model.AccountRoleAdmin.String() {
 			return nil, ErrInvalidAccountRole
 		}
 	}
