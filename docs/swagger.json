@@ -6125,29 +6125,6 @@
                 }
             }
         },
-        "model.InvoiceItem": {
-            "type": "object",
-            "properties": {
-                "cost": {
-                    "type": "integer"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "discount": {
-                    "type": "integer"
-                },
-                "isExternal": {
-                    "type": "boolean"
-                },
-                "quantity": {
-                    "type": "number"
-                },
-                "unitCost": {
-                    "type": "integer"
-                }
-            }
-        },
         "model.Issue": {
             "type": "object",
             "properties": {
@@ -7246,7 +7223,7 @@
                 "fullName",
                 "personalEmail",
                 "positions",
-                "roleID",
+                "roles",
                 "salary",
                 "seniorityID",
                 "status",
@@ -7272,8 +7249,11 @@
                 "referredBy": {
                     "type": "string"
                 },
-                "roleID": {
-                    "type": "string"
+                "roles": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "salary": {
                     "type": "integer"
@@ -7524,6 +7504,29 @@
                 }
             }
         },
+        "request.InvoiceItem": {
+            "type": "object",
+            "properties": {
+                "cost": {
+                    "type": "integer"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "discount": {
+                    "type": "integer"
+                },
+                "isExternal": {
+                    "type": "boolean"
+                },
+                "quantity": {
+                    "type": "number"
+                },
+                "unitCost": {
+                    "type": "integer"
+                }
+            }
+        },
         "request.SendInvoiceRequest": {
             "type": "object",
             "required": [
@@ -7574,7 +7577,7 @@
                 "lineItems": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/model.InvoiceItem"
+                        "$ref": "#/definitions/request.InvoiceItem"
                     }
                 },
                 "note": {
@@ -9618,7 +9621,7 @@
                 "lineItems": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/model.InvoiceItem"
+                        "$ref": "#/definitions/view.InvoiceItem"
                     }
                 },
                 "month": {
@@ -9658,6 +9661,29 @@
                     "type": "integer"
                 },
                 "year": {
+                    "type": "integer"
+                }
+            }
+        },
+        "view.InvoiceItem": {
+            "type": "object",
+            "properties": {
+                "cost": {
+                    "type": "integer"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "discount": {
+                    "type": "integer"
+                },
+                "isExternal": {
+                    "type": "boolean"
+                },
+                "quantity": {
+                    "type": "number"
+                },
+                "unitCost": {
                     "type": "integer"
                 }
             }
@@ -9956,6 +9982,12 @@
                 },
                 "placeOfResidence": {
                     "type": "string"
+                },
+                "roles": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.Role"
+                    }
                 },
                 "teamEmail": {
                     "type": "string"

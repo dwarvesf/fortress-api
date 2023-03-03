@@ -15,7 +15,6 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/store"
-	"github.com/dwarvesf/fortress-api/pkg/utils/authutils"
 	"github.com/dwarvesf/fortress-api/pkg/view"
 )
 
@@ -176,35 +175,16 @@ func (h *handler) Organizations(c *gin.Context) {
 // @Failure 500 {object} view.ErrorResponse
 // @Router /metadata/account-roles [get]
 func (h *handler) AccountRoles(c *gin.Context) {
-	userID, err := authutils.GetUserIDFromContext(c, h.config)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
-		return
-	}
-
 	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
-		"handler": "employee",
-		"method":  "GetAccountRoles",
-		"input":   userID,
+		"handler": "metadata",
+		"method":  "AccountRoles",
 	})
 
-	empl, err := h.store.Employee.One(h.repo.DB(), userID, false)
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrEmployeeNotFound, nil, ""))
-		return
-	}
-
-	if err != nil {
-		l.Error(err, "failed to get employee")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
-		return
-	}
-
 	// 2 query roles from db
-	roles, err := h.store.Role.GetByLevel(h.repo.DB(), empl.EmployeeRoles[0].Role.Level)
+	roles, err := h.store.Role.All(h.repo.DB())
 	if err != nil {
-		l.Error(err, "error query roles from db")
+		l.Error(err, "failed to get all roles")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
 	}

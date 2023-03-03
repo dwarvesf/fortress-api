@@ -36,7 +36,7 @@ type IController interface {
 	Details(id string, userInfo *model.CurrentLoggedUserInfo) (employee *model.Employee, err error)
 	UpdateEmployeeStatus(employeeID string, body UpdateWorkingStatusInput) (employee *model.Employee, err error)
 	UpdateGeneralInfo(l logger.Logger, employeeID string, body UpdateEmployeeGeneralInfoInput) (employee *model.Employee, err error)
-	Create(l logger.Logger, userID string, body CreateEmployeeInput) (employee *model.Employee, err error)
+	Create(userID string, body CreateEmployeeInput) (employee *model.Employee, err error)
 	UpdateSkills(l logger.Logger, employeeID string, body UpdateSkillsInput) (employee *model.Employee, err error)
 	UpdatePersonalInfo(employeeID string, body UpdatePersonalInfoInput) (employee *model.Employee, err error)
 	UploadAvatar(uuidUserID model.UUID, file *multipart.FileHeader, params UploadAvatarInput) (filePath string, err error)

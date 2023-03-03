@@ -28,6 +28,7 @@ type ProfileData struct {
 	Country          string     `json:"country"`
 	City             string     `json:"city"`
 	LinkedInName     string     `json:"linkedInName"`
+	Roles            []Role     `json:"roles"`
 }
 
 type UpdateProfileInfoData struct {
@@ -123,5 +124,6 @@ func ToProfileData(employee *model.Employee) *ProfileData {
 		DiscordID:        empSocialData.DiscordID,
 		DiscordName:      empSocialData.DiscordName,
 		LinkedInName:     empSocialData.LinkedInName,
+		Roles:            ToRoles(employee.EmployeeRoles),
 	}
 }

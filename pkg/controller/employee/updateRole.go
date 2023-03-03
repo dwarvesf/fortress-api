@@ -5,11 +5,12 @@ import (
 
 	"gorm.io/gorm"
 
+	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 )
 
 type UpdateRoleBody struct {
-	RoleID model.UUID
+	Roles []model.UUID
 }
 
 type UpdateRoleInput struct {
@@ -37,16 +38,18 @@ func (r *controller) UpdateRole(userID string, input UpdateRoleInput) (err error
 	}
 
 	// Check role exists
-	newRole, err := r.store.Role.One(r.repo.DB(), input.Body.RoleID)
+	roles, err := r.store.Role.GetByIDs(r.repo.DB(), input.Body.Roles)
 	if err != nil {
 		return err
 	}
 
-	if empl.EmployeeRoles[0].Role.Level == loggedInUser.EmployeeRoles[0].Role.Level {
-		return ErrInvalidAccountRole
+	for _, role := range roles {
+		if role.Level <= loggedInUser.EmployeeRoles[0].Role.Level {
+			return ErrInvalidAccountRole
+		}
 	}
 
-	if newRole.Level <= loggedInUser.EmployeeRoles[0].Role.Level {
+	if empl.EmployeeRoles[0].Role.Level == loggedInUser.EmployeeRoles[0].Role.Level {
 		return ErrInvalidAccountRole
 	}
 
@@ -57,12 +60,18 @@ func (r *controller) UpdateRole(userID string, input UpdateRoleInput) (err error
 		return done(err)
 	}
 
-	_, err = r.store.EmployeeRole.Create(tx.DB(), &model.EmployeeRole{
-		EmployeeID: model.MustGetUUIDFromString(input.EmployeeID),
-		RoleID:     input.Body.RoleID,
-	})
-	if err != nil {
-		return done(err)
+	for _, role := range roles {
+		_, err = r.store.EmployeeRole.Create(tx.DB(), &model.EmployeeRole{
+			EmployeeID: model.MustGetUUIDFromString(input.EmployeeID),
+			RoleID:     role.ID,
+		})
+		if err != nil {
+			r.logger.Fields(logger.Fields{
+				"emlID":  input.EmployeeID,
+				"roleID": role.ID,
+			}).Error(err, "failed to create employee role")
+			return done(err)
+		}
 	}
 
 	return done(nil)

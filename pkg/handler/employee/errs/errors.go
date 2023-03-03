@@ -21,6 +21,7 @@ var (
 	ErrInvalidOrganizationCode = errors.New("invalid organization code")
 	ErrInvalidEmailDomain      = errors.New("invalid email domain")
 	ErrInvalidCountryOrCity    = errors.New("invalid country or city")
+	ErrRoleCannotBeEmpty       = errors.New("role cannot be empty")
 )
 
 func ConvertControllerErr(c *gin.Context, err error) {
@@ -33,7 +34,6 @@ func ConvertControllerErr(c *gin.Context, err error) {
 	switch err {
 	case employee.ErrEmployeeNotFound,
 		employee.ErrLineManagerNotFound,
-		employee.ErrReferrerNotFound,
 		employee.ErrRoleNotfound,
 		employee.ErrSeniorityNotfound,
 		employee.ErrReferrerNotFound,
@@ -45,7 +45,6 @@ func ConvertControllerErr(c *gin.Context, err error) {
 	case employee.ErrInvalidJoinedDate,
 		employee.ErrInvalidLeftDate,
 		employee.ErrLeftDateBeforeJoinedDate,
-		employee.ErrInvalidAccountRole,
 		employee.ErrEmployeeExisted,
 		employee.ErrInvalidCountryOrCity,
 		employee.ErrInvalidFileExtension,
