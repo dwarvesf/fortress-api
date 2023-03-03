@@ -21,6 +21,7 @@ var (
 	ErrInvalidOrganizationCode = errors.New("invalid organization code")
 	ErrInvalidEmailDomain      = errors.New("invalid email domain")
 	ErrInvalidCountryOrCity    = errors.New("invalid country or city")
+	ErrRoleCannotBeEmpty       = errors.New("role cannot be empty")
 )
 
 func ConvertControllerErr(c *gin.Context, err error) {

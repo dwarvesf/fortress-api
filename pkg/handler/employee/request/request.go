@@ -165,6 +165,10 @@ func (input CreateEmployeeInput) Validate() error {
 		return errs.ErrInvalidEmployeeStatus
 	}
 
+	if len(input.Roles) == 0 {
+		return errs.ErrRoleCannotBeEmpty
+	}
+
 	return nil
 }
 
@@ -180,6 +184,10 @@ type UpdateRoleInput struct {
 func (i UpdateRoleInput) Validate() error {
 	if i.EmployeeID == "" || !model.IsUUIDFromString(i.EmployeeID) {
 		return errs.ErrInvalidEmployeeID
+	}
+
+	if len(i.Body.Roles) == 0 {
+		return errs.ErrRoleCannotBeEmpty
 	}
 
 	return nil
