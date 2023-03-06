@@ -648,7 +648,6 @@ func (h *handler) markInvoiceAsPaid(db *gorm.DB, l logger.Logger, invoice model.
 	})
 
 	return &invoice, nil
-
 }
 
 func (h *handler) processPaidInvoice(db *gorm.DB, l logger.Logger, req *processPaidInvoiceRequest) {

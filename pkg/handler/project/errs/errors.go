@@ -42,7 +42,7 @@ var (
 	ErrEmployeeWorkedOnTheProject       = errors.New("employee worked on the project")
 	ErrPositionsIsEmpty                 = errors.New("positions is empty")
 	ErrMemberIsNotActiveInProject       = errors.New("member is not active in project")
-	ErrFailToCheckInputExistence        = errors.New("failed to check input existance")
+	ErrFailToCheckInputExistence        = errors.New("failed to check input existence")
 	ErrFailToDeleteWorkUnitStack        = errors.New("failed to delete work unit stack in database")
 	ErrFailedToCreateWorkUnitStack      = errors.New("failed to create work unit stack")
 	ErrFailedToGetWorkUnitMember        = errors.New("failed to get work unit member")

@@ -132,6 +132,9 @@ func HasPermission(perms map[string]string, requiredPerm model.PermissionCode) b
 func GetLoggedInUserInfo(c *gin.Context, storeDB *store.Store, db *gorm.DB, cfg *config.Config) (*model.CurrentLoggedUserInfo, error) {
 	if IsAPIKey(c) {
 		accessToken, err := GetTokenFromRequest(c)
+		if err != nil {
+			return nil, err
+		}
 
 		clientID, key, err := ExtractAPIKey(accessToken)
 		if err != nil {

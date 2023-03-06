@@ -76,7 +76,7 @@ func (amw *AuthMiddleware) authenticate(c *gin.Context) error {
 
 // validateToken a func help validate the access token we got
 func (amw *AuthMiddleware) validateToken(accessToken string) error {
-	claims := &jwt.StandardClaims{}
+	claims := &jwt.RegisteredClaims{}
 
 	_, err := jwt.ParseWithClaims(accessToken, claims, func(token *jwt.Token) (interface{}, error) {
 		return []byte(amw.cfg.JWTSecretKey), nil

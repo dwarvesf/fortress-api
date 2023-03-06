@@ -11,7 +11,6 @@ import (
 )
 
 func (r *controller) Create(c *gin.Context, input request.CreateClientInput) (*model.Client, error) {
-
 	tx, done := r.repo.NewTransaction()
 
 	// Create client

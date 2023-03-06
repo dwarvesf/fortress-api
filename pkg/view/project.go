@@ -284,7 +284,6 @@ func ToProjectsData(c *gin.Context, projects []*model.Project, userInfo *model.C
 		// If the project is not belong user, check if the user has permission to view the project
 		if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadFullAccess) ||
 			authutils.HasPermission(userInfo.Permissions, model.PermissionEmployeesReadProjectsReadActive) {
-
 			if p.Status == model.ProjectStatusActive {
 				results = append(results, ToProjectData(c, p, userInfo))
 			} else {

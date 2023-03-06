@@ -3,9 +3,9 @@ package invoice
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 
@@ -83,7 +83,7 @@ func TestHandler_UpdateStatus(t *testing.T) {
 				metadataHandler := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 
 				metadataHandler.UpdateStatus(ctx)
-				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
 				require.NoError(t, err)
 
 				require.Equal(t, tt.wantCode, w.Code)
@@ -129,11 +129,11 @@ func TestHandler_GetLatest(t *testing.T) {
 				metadataHandler := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 
 				metadataHandler.GetLatestInvoice(ctx)
-				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
 				require.NoError(t, err)
 
 				require.Equal(t, tt.wantCode, w.Code)
-				require.JSONEq(t, string(expRespRaw), string(w.Body.Bytes()), "[Handler.GetLatestInvoice] response mismatched")
+				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.GetLatestInvoice] response mismatched")
 			})
 		})
 	}

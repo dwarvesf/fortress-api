@@ -3,7 +3,6 @@ package testhelper
 import (
 	"database/sql"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 	"sync"
@@ -105,7 +104,7 @@ func TestWithTxDB(t *testing.T, callback func(tx store.DBRepo)) {
 }
 
 func LoadTestSQLFile(t *testing.T, txRepo store.DBRepo, fileName string) {
-	file, err := ioutil.ReadFile(fileName)
+	file, err := os.ReadFile(fileName)
 	require.NoError(t, err)
 	for _, q := range strings.Split(string(file), ";") {
 		q := strings.TrimSpace(q)

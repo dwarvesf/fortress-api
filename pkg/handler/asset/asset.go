@@ -140,7 +140,7 @@ func (h *handler) Upload(c *gin.Context) {
 	if targetType == model.ContentTargetTypeEmployee || targetType == model.ContentTargetTypeProject {
 		targetID, err = model.UUIDFromString(tID)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
+			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, done(err), nil, ""))
 			return
 		}
 	}
@@ -159,16 +159,14 @@ func (h *handler) Upload(c *gin.Context) {
 	})
 	if err != nil {
 		l.Error(err, "error create content")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
-		done(err)
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), nil, ""))
 		return
 	}
 
 	multipart, err := file.Open()
 	if err != nil {
 		l.Error(err, "error in open file")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
-		done(err)
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), nil, ""))
 		return
 	}
 
@@ -176,11 +174,9 @@ func (h *handler) Upload(c *gin.Context) {
 	err = h.service.Google.UploadContentGCS(multipart, gcsPath)
 	if err != nil {
 		l.Error(err, "error in upload file")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
-		done(err)
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), nil, ""))
 		return
 	}
-	done(nil)
 
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToContentData(content.Path), nil, nil, nil, ""))
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToContentData(content.Path), nil, done(nil), nil, ""))
 }

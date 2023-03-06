@@ -160,19 +160,19 @@ func calculateActionItemReportTrend(previous *model.ActionItemReport, current *m
 	if previous.High == 0 || current.High == 0 {
 		rs.High = 0
 	} else {
-		rs.High = float64(float64(current.High-previous.High) / float64(previous.High) * 100)
+		rs.High = float64(current.High-previous.High) / float64(previous.High) * 100
 	}
 
 	if previous.Medium == 0 || current.Medium == 0 {
 		rs.Medium = 0
 	} else {
-		rs.Medium = float64(float64(current.Medium-previous.Medium) / float64(previous.Medium) * 100)
+		rs.Medium = float64(current.Medium-previous.Medium) / float64(previous.Medium) * 100
 	}
 
 	if previous.Low == 0 || current.Low == 0 {
 		rs.Low = 0
 	} else {
-		rs.Low = float64(float64(current.Low-previous.Low) / float64(previous.Low) * 100)
+		rs.Low = float64(current.Low-previous.Low) / float64(previous.Low) * 100
 	}
 
 	return rs
@@ -273,7 +273,6 @@ func toGroupEngineeringHealth(groups []*model.GroupEngineeringHealth) []*GroupEn
 				break
 			}
 		}
-
 	}
 
 	return rs
@@ -301,7 +300,7 @@ func calculateEngineeringHealthTrend(previous *EngineeringHealth, current *Engin
 	}
 
 	// return the value fixed 2 decimal places
-	return float64(math.Round((current.Value-previous.Value)/previous.Value*100*100)) / 100
+	return math.Round((current.Value-previous.Value)/previous.Value*100*100) / 100
 }
 
 type AuditResponse struct {
@@ -408,7 +407,7 @@ func calculateAuditTrend(previous *Audit, current *Audit) float64 {
 	}
 
 	// return the value fixed 2 decimal places
-	return float64(math.Round((current.Value-previous.Value)/previous.Value*100*100)) / 100
+	return math.Round((current.Value-previous.Value)/previous.Value*100*100) / 100
 }
 
 type ActionItemSquash struct {
@@ -455,7 +454,7 @@ func ToActionItemSquashReportData(actionItemReports []*model.ActionItemSquashRep
 		})
 	}
 
-	if actionItemReports != nil && len(actionItemReports) > 1 {
+	if len(actionItemReports) > 1 {
 		calculateTrendForActionItemSquash(rs.All)
 		calculateTrendForActionItemSquash(rs.High)
 		calculateTrendForActionItemSquash(rs.Medium)

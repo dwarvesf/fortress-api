@@ -1190,7 +1190,7 @@ func TestHandler_UpdateGeneralInfo(t *testing.T) {
 		input            request.UpdateProjectGeneralInfoInput
 	}{
 		{
-			name:             "ok_update_project_general_infomation",
+			name:             "ok_update_project_general_information",
 			wantCode:         200,
 			wantResponsePath: "testdata/update_general_info/200.json",
 			id:               "8dc3be2e-19a4-4942-8a79-56db391a0b15",
@@ -1346,12 +1346,12 @@ func TestHandler_UpdateContactInfo(t *testing.T) {
 		input            request.UpdateContactInfoInput
 	}{
 		{
-			name:             "ok_update_project_contact_infomation",
+			name:             "ok_update_project_contact_information",
 			wantCode:         http.StatusOK,
 			wantResponsePath: "testdata/update_contact_info/200.json",
 			id:               "8dc3be2e-19a4-4942-8a79-56db391a0b15",
 			input: request.UpdateContactInfoInput{
-				ClientEmail:       []string{"fortress@gmai.com"},
+				ClientEmail:       []string{"fortress@gmail.com"},
 				ProjectEmail:      "fortress@d.foundation",
 				AccountManagerID:  model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
 				DeliveryManagerID: model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
@@ -1363,7 +1363,7 @@ func TestHandler_UpdateContactInfo(t *testing.T) {
 			wantResponsePath: "testdata/update_contact_info/404.json",
 			id:               "d100efd1-bfce-4cd6-885c-1e4ac3d30714",
 			input: request.UpdateContactInfoInput{
-				ClientEmail:       []string{"fortress@gmai.com"},
+				ClientEmail:       []string{"fortress@gmail.com"},
 				ProjectEmail:      "fortress@d.foundation",
 				AccountManagerID:  model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
 				DeliveryManagerID: model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
@@ -1375,7 +1375,7 @@ func TestHandler_UpdateContactInfo(t *testing.T) {
 			wantResponsePath: "testdata/update_contact_info/invalid_project_id.json",
 			id:               "",
 			input: request.UpdateContactInfoInput{
-				ClientEmail:       []string{"fortress@gmai.com"},
+				ClientEmail:       []string{"fortress@gmail.com"},
 				ProjectEmail:      "fortress@d.foundation",
 				AccountManagerID:  model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
 				DeliveryManagerID: model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
@@ -1387,7 +1387,7 @@ func TestHandler_UpdateContactInfo(t *testing.T) {
 			wantResponsePath: "testdata/update_contact_info/invalid_project_id.json",
 			id:               "d100efd1-bfce-4cd6-885c-1e4ac3d307149",
 			input: request.UpdateContactInfoInput{
-				ClientEmail:       []string{"fortress@gmai.com"},
+				ClientEmail:       []string{"fortress@gmail.com"},
 				ProjectEmail:      "fortress@d.foundation",
 				AccountManagerID:  model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
 				DeliveryManagerID: model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
@@ -1399,7 +1399,7 @@ func TestHandler_UpdateContactInfo(t *testing.T) {
 			wantResponsePath: "testdata/update_contact_info/invalid_email_format.json",
 			id:               "8dc3be2e-19a4-4942-8a79-56db391a0b15",
 			input: request.UpdateContactInfoInput{
-				ClientEmail:       []string{"fortressgmai.com"},
+				ClientEmail:       []string{"fortressgmail.com"},
 				ProjectEmail:      "fortress@d.foundation",
 				AccountManagerID:  model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
 				DeliveryManagerID: model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
@@ -1411,7 +1411,7 @@ func TestHandler_UpdateContactInfo(t *testing.T) {
 			wantResponsePath: "testdata/update_contact_info/account_manager_not_found.json",
 			id:               "8dc3be2e-19a4-4942-8a79-56db391a0b15",
 			input: request.UpdateContactInfoInput{
-				ClientEmail:       []string{"fortress@gmai.com"},
+				ClientEmail:       []string{"fortress@gmail.com"},
 				ProjectEmail:      "fortress@d.foundation",
 				AccountManagerID:  model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558d"),
 				DeliveryManagerID: model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
@@ -1423,7 +1423,7 @@ func TestHandler_UpdateContactInfo(t *testing.T) {
 			wantResponsePath: "testdata/update_contact_info/delivery_manager_not_found.json",
 			id:               "8dc3be2e-19a4-4942-8a79-56db391a0b15",
 			input: request.UpdateContactInfoInput{
-				ClientEmail:       []string{"fortress@gmai.com"},
+				ClientEmail:       []string{"fortress@gmail.com"},
 				ProjectEmail:      "fortress@d.foundation",
 				AccountManagerID:  model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
 				DeliveryManagerID: model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98cd"),

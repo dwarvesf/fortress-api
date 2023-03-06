@@ -12,6 +12,7 @@ import (
 
 	"golang.org/x/oauth2"
 	"google.golang.org/api/gmail/v1"
+	"google.golang.org/api/option"
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/model"
@@ -36,7 +37,8 @@ func New(config *oauth2.Config, appConfig *config.Config) IService {
 }
 
 func (g *googleService) prepareService() error {
-	service, err := gmail.New(g.config.Client(context.Background(), g.token))
+	client := g.config.Client(context.Background(), g.token)
+	service, err := gmail.NewService(context.Background(), option.WithHTTPClient(client))
 	if err != nil {
 		return errors.New("Get Gmail Service Failed " + err.Error())
 	}
@@ -243,7 +245,7 @@ func (g *googleService) ensureToken(refreshToken string) error {
 	}
 
 	if !g.token.Valid() {
-		tks := g.config.TokenSource(oauth2.NoContext, token)
+		tks := g.config.TokenSource(context.Background(), token)
 		tok, err := tks.Token()
 		if err != nil {
 			return err

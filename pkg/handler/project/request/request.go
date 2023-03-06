@@ -11,6 +11,8 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+const emailRegex = ".+@.+\\..+"
+
 type GetListProjectInput struct {
 	model.Pagination
 
@@ -116,7 +118,7 @@ func (i *CreateProjectInput) Validate() error {
 		}
 	}
 
-	regex, _ := regexp.Compile(".+@.+\\..+")
+	regex, _ := regexp.Compile(emailRegex)
 	for _, v := range i.ClientEmail {
 		if !regex.MatchString(v) {
 			return errs.ErrInvalidEmailDomainForClient
@@ -248,7 +250,6 @@ func (i *AssignMemberInput) Validate() error {
 	if i.Status == "" ||
 		!model.ProjectMemberStatus(i.Status).IsValid() ||
 		i.Status == model.ProjectMemberStatusInactive.String() {
-
 		return errs.ErrInvalidProjectMemberStatus
 	}
 
@@ -345,7 +346,7 @@ type UpdateContactInfoInput struct {
 }
 
 func (i UpdateContactInfoInput) Validate() error {
-	regex, _ := regexp.Compile(".+@.+\\..+")
+	regex, _ := regexp.Compile(emailRegex)
 	for _, v := range i.ClientEmail {
 		if !regex.MatchString(v) {
 			return errs.ErrInvalidEmailDomainForClient
