@@ -103,7 +103,7 @@ func NewActionItemFromNotionPage(page notion.Page, picID UUID, notionDB string) 
 		rs.NeedHelp = *properties["NEED HELP???"].Checkbox
 	}
 
-	if properties["Name"].Title != nil {
+	if properties["Name"].Title != nil && len(properties["Name"].Title) > 0 {
 		rs.Name = properties["Name"].Title[0].PlainText
 	}
 
