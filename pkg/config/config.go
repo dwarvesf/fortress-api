@@ -50,6 +50,7 @@ type ApiServer struct {
 type Google struct {
 	ClientSecret                 string
 	ClientID                     string
+	RedirectURL                  string
 	AppName                      string
 	GCSProjectID                 string
 	GCSBucketName                string
@@ -143,9 +144,10 @@ func Generate(v ENV) *Config {
 		},
 
 		Google: Google{
-			ClientSecret:                 v.GetString("GOOGLE_API_CLIENT_SECRET"),
-			ClientID:                     v.GetString("GOOGLE_API_CLIENT_ID"),
 			AppName:                      v.GetString("GOOGLE_API_APP_NAME"),
+			ClientID:                     v.GetString("GOOGLE_API_CLIENT_ID"),
+			ClientSecret:                 v.GetString("GOOGLE_API_CLIENT_SECRET"),
+			RedirectURL:                  v.GetString("GOOGLE_REDIRECT_URL"),
 			GCPProjectID:                 v.GetString("GCP_PROJECT_ID"),
 			GCSBucketName:                v.GetString("GCS_BUCKET_NAME"),
 			GCSProjectID:                 v.GetString("GCS_PROJECT_ID"),

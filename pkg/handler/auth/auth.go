@@ -66,7 +66,7 @@ func (h *handler) Auth(c *gin.Context) {
 		RedirectURL: req.RedirectURL,
 	})
 	if err != nil {
-		l.Info("failed to called controller")
+		l.Error(err, "failed to auth")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req, ""))
 		return
 	}
@@ -108,6 +108,13 @@ func (h *handler) Me(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToAuthorizedUserData(rs, perms), nil, nil, nil, ""))
+}
+
+func (h *handler) GetLoginURL(c *gin.Context) {
+	// TODO: can we move this to middleware ?
+	rs := h.controller.Auth.GetLoginURL()
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](rs, nil, nil, nil, ""))
 }
 
 // CreateAPIKey godoc

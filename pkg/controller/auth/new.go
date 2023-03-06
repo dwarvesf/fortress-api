@@ -28,6 +28,7 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 
 type IController interface {
 	Auth(in AuthenticationInput) (employee *model.Employee, jwt string, err error)
+	GetLoginURL() (loginURL string)
 	Me(userID string) (employee *model.Employee, perms []*model.Permission, err error)
 	CreateAPIKey(roleID string) (string, error)
 }

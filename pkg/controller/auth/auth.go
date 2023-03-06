@@ -6,6 +6,7 @@ import (
 
 	"gorm.io/gorm"
 
+	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/utils/authutils"
 )
@@ -16,15 +17,21 @@ type AuthenticationInput struct {
 }
 
 func (r *controller) Auth(in AuthenticationInput) (*model.Employee, string, error) {
+	l := r.logger.Fields(logger.Fields{
+		"controller": "auth",
+		"method":     "Auth",
+	})
 	// 2.1 get access token from req code and redirect url
 	accessToken, err := r.service.Google.GetAccessToken(in.Code, in.RedirectURL)
 	if err != nil {
+		l.Error(err, "failed to get access token from google")
 		return nil, "", err
 	}
 
 	// 2.2 get login user email from access token
 	primaryEmail, err := r.service.Google.GetGoogleEmail(accessToken)
 	if err != nil {
+		l.Error(err, "failed to get google email")
 		return nil, "", err
 	}
 
@@ -55,4 +62,8 @@ func (r *controller) Auth(in AuthenticationInput) (*model.Employee, string, erro
 	}
 
 	return employee, jwt, nil
+}
+
+func (r *controller) GetLoginURL() (loginURL string) {
+	return r.service.Google.GetLoginURL()
 }

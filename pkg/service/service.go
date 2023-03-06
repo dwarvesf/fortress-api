@@ -36,6 +36,7 @@ func New(cfg *config.Config) *Service {
 	authServiceCfg := &oauth2.Config{
 		ClientID:     cfg.Google.ClientID,
 		ClientSecret: cfg.Google.ClientSecret,
+		RedirectURL:  cfg.Google.RedirectURL,
 		Endpoint:     google.Endpoint,
 		Scopes:       []string{"email", "profile"},
 	}

@@ -28,7 +28,6 @@ type googleService struct {
 
 // New function return Google service
 func New(config *oauth2.Config, BucketName string, GCSProjectID string, GCSCredentials string) (IService, error) {
-
 	decoded, err := base64.StdEncoding.DecodeString(GCSCredentials)
 	if err != nil {
 		return nil, fmt.Errorf("failed to decode gcs credentials: %v", err)
