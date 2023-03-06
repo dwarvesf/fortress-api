@@ -402,7 +402,7 @@ func ToOneEmployeeData(employee *model.Employee, userInfo *model.CurrentLoggedUs
 }
 
 func ToEmployeeData(employee *model.Employee) *EmployeeData {
-	employeeProjects := make([]EmployeeProjectData, 0, len(employee.ProjectMembers))
+	employeeProjects := make([]EmployeeProjectData, 0)
 	for _, v := range employee.ProjectMembers {
 		employeeProjects = append(employeeProjects, ToEmployeeProjectData(&v))
 	}

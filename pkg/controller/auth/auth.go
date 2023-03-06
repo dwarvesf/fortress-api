@@ -23,14 +23,22 @@ func (r *controller) Auth(in AuthenticationInput) (*model.Employee, string, erro
 	}
 
 	// 2.2 get login user email from access token
-	primaryEmail, err := r.service.Google.GetGoogleEmail(accessToken)
-	if err != nil {
-		return nil, "", err
+	primaryEmail := ""
+	if r.config.Env == "prod" {
+		primaryEmail, err = r.service.Google.GetGoogleEmailLegacy(accessToken)
+		if err != nil {
+			return nil, "", err
+		}
+	} else {
+		primaryEmail, err = r.service.Google.GetGoogleEmail(accessToken)
+		if err != nil {
+			return nil, "", err
+		}
 	}
 
 	// 2.3 double check empty primary email
 	if primaryEmail == "" {
-		return nil, "", err
+		return nil, "", ErrEmptyPrimaryEmail
 	}
 
 	// 2.4 check user is active
