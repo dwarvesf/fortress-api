@@ -65,10 +65,13 @@ func NewAuditFromNotionPage(page notion.Page, projectID string, auditorID UUID, 
 	rs := &Audit{
 		BaseModel:  BaseModel{ID: MustGetUUIDFromString(page.ID)},
 		NotionDBID: MustGetUUIDFromString(notionDBID),
-		AuditorID:  auditorID,
 		Name:       properties["Name"].Title[0].PlainText,
 		SyncAt:     &now,
 		Flag:       flag,
+	}
+
+	if !auditorID.IsZero() {
+		rs.AuditorID = auditorID
 	}
 
 	if properties["Score"].Number != nil {
@@ -89,7 +92,11 @@ func NewAuditFromNotionPage(page notion.Page, projectID string, auditorID UUID, 
 	if len(properties["Name"].Title) > 0 {
 		if MappingAuditType(properties["Name"].Title[0].PlainText) != "" {
 			rs.Type = MappingAuditType(properties["Name"].Title[0].PlainText)
+		} else {
+			return nil
 		}
+	} else {
+		return nil
 	}
 
 	if projectID != "" {

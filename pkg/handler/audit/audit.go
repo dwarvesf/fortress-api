@@ -305,16 +305,20 @@ func (h *handler) syncActionItemPage(db *gorm.DB, databaseID string, withStartCu
 		actionItempProperties := page.Properties.(notion.DatabasePageProperties)
 
 		pic := &model.Employee{}
+		picID := model.UUID{}
 
 		if actionItempProperties["PIC"].People != nil && len(actionItempProperties["PIC"].People) > 0 {
 			pic, err = h.store.Employee.OneByNotionID(db, actionItempProperties["PIC"].People[0].ID)
 			if err != nil {
 				l.Error(err, "failed to get pic from notion id")
-				return err
 			}
 		}
 
-		newActionItem := model.NewActionItemFromNotionPage(page, pic.ID, h.config.Notion.Databases.AuditActionItem)
+		if pic != nil {
+			picID = pic.ID
+		}
+
+		newActionItem := model.NewActionItemFromNotionPage(page, picID, h.config.Notion.Databases.AuditActionItem)
 
 		// Check whether project_id map with audit_notion_id in db or not
 		if !newActionItem.ProjectID.IsZero() {
@@ -565,7 +569,11 @@ func (h *handler) syncAudit(db *gorm.DB, page *notion.Page, auditCycle *model.Au
 			auditor, err := h.store.Employee.OneByNotionID(db, checklistProperties["Auditor"].People[0].ID)
 			if err != nil {
 				l.Error(err, "failed to get auditor from notion id")
-				return err
+			}
+
+			auditorID := model.UUID{}
+			if auditor != nil {
+				auditorID = auditor.ID
 			}
 
 			flag, err := h.getFlag(db, page, &row)
@@ -579,7 +587,7 @@ func (h *handler) syncAudit(db *gorm.DB, page *notion.Page, auditCycle *model.Au
 				return errs.ErrMissingProjectInAudit
 			}
 
-			newAudit := model.NewAuditFromNotionPage(row, properties["Project"].Relation[0].ID, auditor.ID, flag, audit.Results[auditChecklistIndex].ID())
+			newAudit := model.NewAuditFromNotionPage(row, properties["Project"].Relation[0].ID, auditorID, flag, audit.Results[auditChecklistIndex].ID())
 
 			// compare new audit object
 			if !model.CompareAudit(*auditDB, *newAudit) {
@@ -697,6 +705,11 @@ func (h *handler) createAudit(db *gorm.DB, page *notion.Page, row notion.Page, p
 	}
 
 	newAudit := model.NewAuditFromNotionPage(row, projectID, auditor.ID, flag, audit.Results[auditChecklistIndex].ID())
+	// if something wrong with the audit object, return nil
+	if newAudit == nil {
+		return nil
+	}
+
 	newAudit, _ = h.store.Audit.Create(db, newAudit)
 
 	// Create new audit participant
@@ -705,7 +718,7 @@ func (h *handler) createAudit(db *gorm.DB, page *notion.Page, row notion.Page, p
 			participant, err := h.store.Employee.OneByNotionID(db, p.ID)
 			if err != nil {
 				l.Error(err, "failed to get participant by notion id")
-				return err
+				continue
 			}
 
 			_, err = h.store.AuditParticipant.Create(db, &model.AuditParticipant{
@@ -752,7 +765,7 @@ func (h *handler) syncParticipant(db *gorm.DB, checklistProperties notion.Databa
 			participant, err := h.store.Employee.OneByNotionID(db, p.ID)
 			if err != nil {
 				l.Error(err, "failed to get participant by notion id")
-				return err
+				continue
 			}
 
 			if _, ok := apMap[participant.ID]; !ok {
@@ -859,6 +872,9 @@ func (h *handler) getFlag(db *gorm.DB, page *notion.Page, row *notion.Page) (mod
 		}
 	}
 
+	if checklistDatabaseIndex == -1 {
+		return model.AuditFlagGreen, nil
+	}
 	checklistDatabase, err := h.service.Notion.GetDatabase(checklistPage.Results[checklistDatabaseIndex].ID(), nil, nil, 0)
 	if err != nil {
 		l.Error(err, "failed to get database from notion")
