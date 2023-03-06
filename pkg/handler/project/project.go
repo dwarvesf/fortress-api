@@ -1031,7 +1031,7 @@ func (h *handler) updateProjectMember(db *gorm.DB, slotID string, projectID stri
 	var member *model.ProjectMember
 	var err error
 
-	// check upsell person existance
+	// check upsell person existence
 	var upsellPerson *model.Employee
 	if !input.UpsellPersonID.IsZero() {
 		upsellPerson, err = h.store.Employee.One(h.repo.DB(), input.UpsellPersonID.String(), false)
@@ -2820,14 +2820,12 @@ func (h *handler) UploadAvatar(c *gin.Context) {
 	existed, err := h.store.Project.IsExist(tx.DB(), params.ID)
 	if err != nil {
 		l.Error(err, "error query project from db")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
-		done(err)
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), nil, ""))
 		return
 	}
 	if !existed {
 		l.Info("project not existed")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, errs.ErrProjectNotExisted, nil, ""))
-		done(err)
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(errs.ErrProjectNotExisted), nil, ""))
 		return
 	}
 
@@ -2835,16 +2833,14 @@ func (h *handler) UploadAvatar(c *gin.Context) {
 	multipart, err := file.Open()
 	if err != nil {
 		l.Error(err, "error in open file")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
-		done(err)
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), nil, ""))
 		return
 	}
 
 	err = h.service.Google.UploadContentGCS(multipart, gcsPath)
 	if err != nil {
 		l.Error(err, "error in upload file")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
-		done(err)
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), nil, ""))
 		return
 	}
 
@@ -2854,14 +2850,11 @@ func (h *handler) UploadAvatar(c *gin.Context) {
 	}, "avatar")
 	if err != nil {
 		l.Error(err, "error in update avatar")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
-		done(err)
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), nil, ""))
 		return
 	}
 
-	done(nil)
-
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToProjectContentData(filePath), nil, nil, nil, ""))
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToProjectContentData(filePath), nil, done(nil), nil, ""))
 }
 
 func (h *handler) ListMilestones(c *gin.Context) {
@@ -2974,33 +2967,33 @@ func (h *handler) ListMilestones(c *gin.Context) {
 	c.JSON(http.StatusOK, view.CreateResponse[any](projects, nil, nil, nil, "get list milestones successfully"))
 }
 
-func (h *handler) getMilestones(item *model.ProjectMilestone, subItems []*model.ProjectMilestone) []*model.ProjectMilestone {
-	resp, err := h.service.Notion.GetPage(item.ID)
-	if err != nil {
-		return subItems
-	}
-	props := resp.Properties.(notion.DatabasePageProperties)
-	for _, p := range props["Sub-item"].Relation {
-		resp, err := h.service.Notion.GetPage(p.ID)
-		if err != nil {
-			continue
-		}
-		props := resp.Properties.(notion.DatabasePageProperties)
-		name := ""
-		if len(props["Project"].Title) > 0 {
-			name = props["Project"].Title[0].Text.Content
-		}
-		m := &model.ProjectMilestone{
-			ID:            resp.ID,
-			Name:          name,
-			SubMilestones: []*model.ProjectMilestone{},
-		}
-		if props["Milestone Date"].Date != nil {
-			m.StartDate = props["Milestone Date"].Date.Start.Time
-			m.EndDate = props["Milestone Date"].Date.End.Time
-		}
-		subItems = append(subItems, m)
-	}
+// func (h *handler) getMilestones(item *model.ProjectMilestone, subItems []*model.ProjectMilestone) []*model.ProjectMilestone {
+// 	resp, err := h.service.Notion.GetPage(item.ID)
+// 	if err != nil {
+// 		return subItems
+// 	}
+// 	props := resp.Properties.(notion.DatabasePageProperties)
+// 	for _, p := range props["Sub-item"].Relation {
+// 		resp, err := h.service.Notion.GetPage(p.ID)
+// 		if err != nil {
+// 			continue
+// 		}
+// 		props := resp.Properties.(notion.DatabasePageProperties)
+// 		name := ""
+// 		if len(props["Project"].Title) > 0 {
+// 			name = props["Project"].Title[0].Text.Content
+// 		}
+// 		m := &model.ProjectMilestone{
+// 			ID:            resp.ID,
+// 			Name:          name,
+// 			SubMilestones: []*model.ProjectMilestone{},
+// 		}
+// 		if props["Milestone Date"].Date != nil {
+// 			m.StartDate = props["Milestone Date"].Date.Start.Time
+// 			m.EndDate = props["Milestone Date"].Date.End.Time
+// 		}
+// 		subItems = append(subItems, m)
+// 	}
 
-	return subItems
-}
+// 	return subItems
+// }

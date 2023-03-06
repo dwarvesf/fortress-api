@@ -756,17 +756,12 @@ func Test_Create(t *testing.T) {
 				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
 				require.NoError(t, err)
 
-				if !tt.wantErr {
-					res, err := utils.RemoveFieldInResponse(w.Body.Bytes(), "updatedAt")
-					require.Nil(t, err)
+				res, err := utils.RemoveFieldInResponse(w.Body.Bytes(), "updatedAt")
+				require.Nil(t, err)
 
-					require.JSONEq(t, string(expRespRaw), string(res), "[employee.Handler.Create] response mismatched")
-				} else {
-					require.JSONEq(t, string(expRespRaw), w.Body.String(), "[employee.Handler.Create] response mismatched")
-				}
+				require.JSONEq(t, string(expRespRaw), string(res), "[employee.Handler.Create] response mismatched")
 			})
 		})
-
 	}
 }
 

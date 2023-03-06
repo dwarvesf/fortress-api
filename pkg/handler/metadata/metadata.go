@@ -405,7 +405,7 @@ func (h *handler) UpdateStack(c *gin.Context) {
 	stack.Avatar = input.Body.Avatar
 	stack.Code = input.Body.Code
 
-	stack, err = h.store.Stack.Update(h.repo.DB(), stack)
+	_, err = h.store.Stack.Update(h.repo.DB(), stack)
 	if err != nil {
 		l.Error(err, "error query Stacks from db")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
@@ -450,7 +450,7 @@ func (h *handler) CreateStack(c *gin.Context) {
 		Avatar: input.Avatar,
 	}
 
-	stack, err := h.store.Stack.Create(h.repo.DB(), stack)
+	_, err := h.store.Stack.Create(h.repo.DB(), stack)
 	if err != nil {
 		l.Error(err, "error query Stacks from db")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
@@ -550,7 +550,7 @@ func (h *handler) UpdatePosition(c *gin.Context) {
 	position.Name = input.Body.Name
 	position.Code = input.Body.Code
 
-	position, err = h.store.Position.Update(h.repo.DB(), position)
+	_, err = h.store.Position.Update(h.repo.DB(), position)
 	if err != nil {
 		l.Error(err, "error query Positions from db")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
@@ -593,7 +593,7 @@ func (h *handler) CreatePosition(c *gin.Context) {
 		Code: input.Code,
 	}
 
-	position, err := h.store.Position.Create(h.repo.DB(), position)
+	_, err := h.store.Position.Create(h.repo.DB(), position)
 	if err != nil {
 		l.Error(err, "error query Positions from db")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))

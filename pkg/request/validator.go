@@ -8,6 +8,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
+
+	"github.com/dwarvesf/fortress-api/pkg/logger"
 )
 
 func RegisCustomValidators(engine *gin.Engine) {
@@ -17,7 +19,7 @@ func RegisCustomValidators(engine *gin.Engine) {
 }
 
 func regisCrossFieldGte(v *validator.Validate) {
-	v.RegisterValidation("fieldgte", func(fl validator.FieldLevel) bool {
+	err := v.RegisterValidation("fieldgte", func(fl validator.FieldLevel) bool {
 		field := fl.Field()
 		kind := field.Kind()
 		params := strings.Split(fl.Param(), " ")
@@ -44,4 +46,7 @@ func regisCrossFieldGte(v *validator.Validate) {
 
 		return len(field.String())-len(currentField.String()) >= int(gteValue)
 	})
+	if err != nil {
+		logger.L.Error(err, "failed to register validation")
+	}
 }

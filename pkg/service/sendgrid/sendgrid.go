@@ -61,5 +61,4 @@ func (s *sendgridClient) SendEmail(email *model.Email) error {
 	}
 
 	return nil
-
 }

@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 
@@ -62,7 +62,7 @@ func TestHandler_ListSurvey(t *testing.T) {
 				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 				h.ListSurvey(ctx)
 				require.Equal(t, tt.wantCode, w.Code)
-				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
 				require.NoError(t, err)
 
 				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Survey.ListSurvey] response mismatched")
@@ -133,7 +133,7 @@ func TestHandler_GetSurveyDetail(t *testing.T) {
 				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 				h.GetSurveyDetail(ctx)
 				require.Equal(t, tt.wantCode, w.Code)
-				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
 				require.NoError(t, err)
 
 				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Survey.GetSurveyDetail] response mismatched")
@@ -159,7 +159,7 @@ func TestHandler_SendPerformanceReview(t *testing.T) {
 			name:             "happy_case",
 			id:               "8a5bfedb-6e11-4f5c-82d9-2635cfcce3e2",
 			wantCode:         http.StatusOK,
-			wantResponsePath: "testdata/send_survey/200_perfomance_review.json",
+			wantResponsePath: "testdata/send_survey/200_performance_review.json",
 			body: request.SendSurveyInput{
 				TopicIDs: []model.UUID{
 					model.MustGetUUIDFromString("e4a33adc-2495-43cf-b816-32feb8d5250d"),
@@ -228,7 +228,7 @@ func TestHandler_SendPerformanceReview(t *testing.T) {
 				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 				h.SendSurvey(ctx)
 				require.Equal(t, tt.wantCode, w.Code)
-				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
 				require.NoError(t, err)
 
 				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Survey.SendSurvey] response mismatched")
@@ -287,7 +287,7 @@ func TestHandler_DeleteSurvey(t *testing.T) {
 				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 				h.DeleteSurvey(ctx)
 				require.Equal(t, tt.wantCode, w.Code)
-				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
 				require.NoError(t, err)
 
 				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Survey.DeleteSurvey] response mismatched")
@@ -371,7 +371,7 @@ func TestHandler_GetPeerReviewDetail(t *testing.T) {
 				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 				h.GetSurveyTopicDetail(ctx)
 				require.Equal(t, tt.wantCode, w.Code)
-				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
 				require.NoError(t, err)
 
 				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Survey.GetSurveyTopicDetail] response mismatched")
@@ -487,7 +487,7 @@ func TestHandler_UpdateTopicReviewers(t *testing.T) {
 				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 				h.UpdateTopicReviewers(ctx)
 				require.Equal(t, tt.wantCode, w.Code)
-				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
 				require.NoError(t, err)
 
 				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Survey.UpdateTopicReviewers] response mismatched")
@@ -546,7 +546,7 @@ func TestHandler_MarkDone(t *testing.T) {
 				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 				h.MarkDone(ctx)
 				require.Equal(t, tt.wantCode, w.Code)
-				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
 				require.NoError(t, err)
 
 				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Survey.MarkDone] response mismatched")
@@ -616,7 +616,7 @@ func TestHandler_DeleteTopicReviewers(t *testing.T) {
 				h.DeleteTopicReviewers(ctx)
 
 				require.Equal(t, tt.wantCode, w.Code)
-				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
 				require.NoError(t, err)
 
 				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Survey.DeleteTopicReviewers] response mismatched")
@@ -703,13 +703,12 @@ func TestHandler_DeleteSurveyTopic(t *testing.T) {
 				h.DeleteSurveyTopic(ctx)
 
 				require.Equal(t, tt.wantCode, w.Code)
-				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
 				require.NoError(t, err)
 
 				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Survey.DeleteSurveyTopic] response mismatched")
 			})
 		})
-
 	}
 }
 
@@ -816,13 +815,12 @@ func TestHandler_GetSurveyReviewDetail(t *testing.T) {
 				h.GetSurveyReviewDetail(ctx)
 
 				require.Equal(t, tt.wantCode, w.Code)
-				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
 				require.NoError(t, err)
 
 				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Survey.GetSurveyReviewDetail] response mismatched")
 			})
 		})
-
 	}
 }
 
@@ -896,13 +894,13 @@ func TestHandler_CreateSurvey(t *testing.T) {
 				ctx, _ := gin.CreateTestContext(w)
 				byteReq, _ := json.Marshal(tt.body)
 				bodyReader := strings.NewReader(string(byteReq))
-				ctx.Request = httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/surveys"), bodyReader)
+				ctx.Request = httptest.NewRequest(http.MethodGet, "/api/v1/surveys", bodyReader)
 				ctx.Request.Header.Set("Authorization", testToken)
 
 				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 				h.CreateSurvey(ctx)
 				require.Equal(t, tt.wantCode, w.Code)
-				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
 				require.NoError(t, err)
 
 				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Survey.SendSurvey] response mismatched")

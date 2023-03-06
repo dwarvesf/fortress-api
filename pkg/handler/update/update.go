@@ -74,7 +74,6 @@ func (h *handler) List(c *gin.Context) {
 			CreatedAt: props["Created at"].Date.Start.Time,
 			Audience:  audience,
 		})
-
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](updates, nil, nil, nil, "get list updates successfully"))

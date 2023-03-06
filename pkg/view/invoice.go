@@ -117,7 +117,6 @@ type InvoiceTemplateResponse struct {
 
 func ToInvoiceInfo(invoice *model.Invoice) (*Invoice, error) {
 	if invoice != nil {
-
 		cc := make([]string, 0)
 		err := json.Unmarshal(invoice.CC, &cc)
 		if err != nil {
@@ -169,8 +168,8 @@ func ToInvoiceInfo(invoice *model.Invoice) (*Invoice, error) {
 
 	return nil, nil
 }
-func ToInvoiceTemplateResponse(p *model.Project, lastInvoice *model.Invoice, nextInvoiceNUmber string) (*ProjectInvoiceTemplate, error) {
 
+func ToInvoiceTemplateResponse(p *model.Project, lastInvoice *model.Invoice, nextInvoiceNUmber string) (*ProjectInvoiceTemplate, error) {
 	companyInfo := CompanyInfo{}
 	if p.CompanyInfo != nil {
 		companyContact := make(map[string]model.CompanyContactInfo)
@@ -187,10 +186,8 @@ func ToInvoiceTemplateResponse(p *model.Project, lastInvoice *model.Invoice, nex
 
 	clientInfo := ClientInfo{}
 	if p.Client != nil {
-
 		contacts := make([]ClientContactInfo, 0)
 		for _, c := range p.Client.Contacts {
-
 			emails := make([]string, 0)
 			err := json.Unmarshal(c.Emails, &emails)
 			if err != nil {
@@ -214,7 +211,6 @@ func ToInvoiceTemplateResponse(p *model.Project, lastInvoice *model.Invoice, nex
 
 	bankAccount := BankAccount{}
 	if p.BankAccount != nil {
-
 		currency := Currency{
 			ID:     p.BankAccount.Currency.ID.String(),
 			Name:   p.BankAccount.Currency.Name,

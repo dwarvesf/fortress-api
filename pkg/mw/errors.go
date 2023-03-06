@@ -15,5 +15,5 @@ var (
 
 // errUnauthorized returns unauthorized custom error
 func errUnauthorized(description string) error {
-	return errors.New(fmt.Sprintf("unauthorized permission required: %v", description))
+	return fmt.Errorf("unauthorized permission required: %v", description)
 }

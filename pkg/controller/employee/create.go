@@ -47,7 +47,7 @@ func (r *controller) Create(userID string, input CreateEmployeeInput) (*model.Em
 	for _, pID := range input.Positions {
 		_, ok := positionMap[pID]
 		if !ok {
-			r.logger.Errorf(ErrPositionNotFound, "postion not found with id ", pID.String())
+			r.logger.Errorf(ErrPositionNotFound, "position not found with id ", pID.String())
 			return nil, ErrPositionNotFound
 		}
 

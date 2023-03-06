@@ -29,7 +29,7 @@ func ConvertControllerErr(c *gin.Context, err error) {
 		return
 	}
 
-	status := http.StatusInternalServerError
+	var status int
 
 	switch err {
 	case employee.ErrEmployeeNotFound,

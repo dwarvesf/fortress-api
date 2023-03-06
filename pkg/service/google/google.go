@@ -24,12 +24,10 @@ const (
 type googleService struct {
 	config *oauth2.Config
 	gcs    *CloudStorage
-	token  *oauth2.Token
 }
 
 // New function return Google service
 func New(config *oauth2.Config, BucketName string, GCSProjectID string, GCSCredentials string) (IService, error) {
-
 	decoded, err := base64.StdEncoding.DecodeString(GCSCredentials)
 	if err != nil {
 		return nil, fmt.Errorf("failed to decode gcs credentials: %v", err)
@@ -81,12 +79,13 @@ func (g *googleService) GetGoogleEmailLegacy(accessToken string) (email string, 
 	if err != nil {
 		return "", err
 	}
+	defer response.Body.Close()
 
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
 		return "", err
 	}
-	if err = json.Unmarshal([]byte(body), &gu); err != nil {
+	if err = json.Unmarshal(body, &gu); err != nil {
 		return "", err
 	}
 
@@ -119,12 +118,13 @@ func (g *googleService) GetGoogleEmail(accessToken string) (email string, err er
 	if err != nil {
 		return "", err
 	}
+	defer response.Body.Close()
 
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
 		return "", err
 	}
-	if err = json.Unmarshal([]byte(body), &gu); err != nil {
+	if err = json.Unmarshal(body, &gu); err != nil {
 		return "", err
 	}
 

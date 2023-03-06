@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"sync"
 	"time"
@@ -107,7 +106,7 @@ func (w *wiseService) getTWRate(sourceCurrency, targetCurrency string) (float64,
 	}
 	defer resp.Body.Close()
 	body := resp.Body
-	res, err := ioutil.ReadAll(body)
+	res, err := io.ReadAll(body)
 	if err != nil {
 		l.Error(err, "can't read response")
 		return 0, err

@@ -18,7 +18,7 @@ func (j JSONArrayString) Value() (driver.Value, error) {
 
 func (j *JSONArrayString) Scan(value interface{}) error {
 	if value == nil {
-		j = nil
+		*j = nil
 		return nil
 	}
 
@@ -30,7 +30,7 @@ func (j *JSONArrayString) Scan(value interface{}) error {
 	}
 }
 
-// JSON custom type for storing db & responsing API req purpose only
+// JSON custom type for storing db & responding API req purpose only
 type JSON []byte
 
 func (j JSON) Value() (driver.Value, error) {
@@ -42,7 +42,7 @@ func (j JSON) Value() (driver.Value, error) {
 
 func (j *JSON) Scan(value interface{}) error {
 	if value == nil {
-		j = nil
+		*j = nil
 		return nil
 	}
 
@@ -75,7 +75,7 @@ func (j JSON) MarshalJSON() ([]byte, error) {
 
 func (j *JSON) UnmarshalJSON(raw []byte) error {
 	if string(raw) == "null" {
-		j = nil
+		*j = nil
 		return nil
 	}
 
