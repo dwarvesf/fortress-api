@@ -16,8 +16,9 @@ import (
 )
 
 const (
-	state                        = "state-token"
-	getGoogleUserInfoAPIEndpoint = "https://www.googleapis.com/plus/v1/people/me"
+	state                              = "state-token"
+	getGoogleUserInfoAPIEndpointLegacy = "https://www.googleapis.com/plus/v1/people/me"
+	getGoogleUserInfoAPIEndpoint       = "https://people.googleapis.com/v1/people/me"
 )
 
 type googleService struct {
@@ -65,8 +66,8 @@ func (g *googleService) GetAccessToken(code string, redirectURL string) (string,
 	return token.AccessToken, nil
 }
 
-// GetGoogleEmail return google user info
-func (g *googleService) GetGoogleEmail(accessToken string) (email string, err error) {
+// GetGoogleEmailLegacy return google user info
+func (g *googleService) GetGoogleEmailLegacy(accessToken string) (email string, err error) {
 	var gu struct {
 		DisplayName string `json:"displayName"`
 		ID          string `json:"id"`
@@ -76,7 +77,7 @@ func (g *googleService) GetGoogleEmail(accessToken string) (email string, err er
 		} `json:"emails"`
 	}
 
-	response, err := http.Get(getGoogleUserInfoAPIEndpoint + "?access_token=" + accessToken)
+	response, err := http.Get(getGoogleUserInfoAPIEndpointLegacy + "?access_token=" + accessToken)
 	if err != nil {
 		return "", err
 	}
@@ -96,6 +97,45 @@ func (g *googleService) GetGoogleEmail(accessToken string) (email string, err er
 			break
 		}
 	}
+	return primaryEmail, nil
+}
+
+// GetGoogleEmail return google user info
+func (g *googleService) GetGoogleEmail(accessToken string) (email string, err error) {
+	var gu struct {
+		DisplayName string `json:"displayName"`
+		ID          string `json:"id"`
+		Emails      []struct {
+			Metadata struct {
+				Primary       bool `json:"primary"`
+				Verified      bool `json:"verified"`
+				SourcePrimary bool `json:"sourcePrimary"`
+			} `json:"metadata"`
+			Value string `json:"value"`
+		} `json:"emailAddresses"`
+	}
+
+	response, err := http.Get(getGoogleUserInfoAPIEndpoint + "?&personFields=emailAddresses&access_token=" + accessToken)
+	if err != nil {
+		return "", err
+	}
+
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
+		return "", err
+	}
+	if err = json.Unmarshal([]byte(body), &gu); err != nil {
+		return "", err
+	}
+
+	var primaryEmail string
+	for i := range gu.Emails {
+		if gu.Emails[i].Metadata.SourcePrimary {
+			primaryEmail = gu.Emails[i].Value
+			break
+		}
+	}
+
 	return primaryEmail, nil
 }
 
