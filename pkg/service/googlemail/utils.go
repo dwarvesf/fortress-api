@@ -25,8 +25,12 @@ type MailParseInfo struct {
 
 func composeMailContent(appConfig *config.Config, m *MailParseInfo) (string, error) {
 	templatePath := appConfig.Invoice.TemplatePath
-	if appConfig.Env == "local" {
-		templatePath = filepath.Join(os.Getenv("GOPATH"), "src/github.com/dwarvesf/fortress-api/pkg/templates")
+	if appConfig.Env == "local" || templatePath == "" {
+		pwd, err := os.Getwd()
+		if err != nil {
+			pwd = os.Getenv("GOPATH") + "/src/github.com/dwarvesf/fortress-api"
+		}
+		templatePath = filepath.Join(pwd, "pkg/templates")
 	}
 	m.FuncMap["signatureName"] = func() string {
 		switch m.Sender {

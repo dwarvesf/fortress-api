@@ -20,6 +20,7 @@
 \ir work_unit_members.sql
 \ir employee_mentees.sql
 \ir social_accounts.sql
+\ir accounting_categories.sql
 -- \ir feedback_events.sql
 -- \ir employee_event_topics.sql
 -- \ir employee_event_reviewers.sql

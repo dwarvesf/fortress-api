@@ -5,6 +5,7 @@ import (
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
+	aModel "github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service/basecamp/attachment"
 	"github.com/dwarvesf/fortress-api/pkg/service/basecamp/campfire"
 	"github.com/dwarvesf/fortress-api/pkg/service/basecamp/client"
@@ -52,11 +53,10 @@ func NewService(store *store.Store, repo store.DBRepo, cfg *config.Config, bc *m
 	}
 
 	return &Service{
-		store:  store,
-		repo:   repo,
-		config: cfg,
-		logger: logger,
-
+		store:        store,
+		repo:         repo,
+		config:       cfg,
+		logger:       logger,
 		Basecamp:     bc,
 		Client:       c,
 		Comment:      comment.NewService(c),
@@ -126,4 +126,12 @@ func (s *Service) buildFailedComment(content string) *model.Comment {
 
 func (s *Service) buildCompletedComment(content string) *model.Comment {
 	return &model.Comment{Content: fmt.Sprintf(`<img width="17" class="thread-entry__icon" src="https://3.basecamp-static.com/assets/icons/thread_events/completed-12705cf5fc372d800bba74c8133d705dc43a12c939a8477099749e2ef056e739.svg"><div><em>%s</em></div>`, content)}
+}
+
+func (s *Service) CommentResult(bucketID, recordID int, content *model.Comment) aModel.BasecampCommentMessageModel {
+	return aModel.BasecampCommentMessageModel{
+		RecordingID: recordID,
+		ProjectID:   bucketID,
+		Payload:     content,
+	}
 }

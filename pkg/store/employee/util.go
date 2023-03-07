@@ -1,8 +1,9 @@
 package employee
 
 import (
-	"github.com/dwarvesf/fortress-api/pkg/model"
 	"gorm.io/gorm"
+
+	"github.com/dwarvesf/fortress-api/pkg/model"
 )
 
 func getByWhereConditions(query *gorm.DB, filter EmployeeFilter) *gorm.DB {
@@ -129,6 +130,14 @@ func getByWhereConditions(query *gorm.DB, filter EmployeeFilter) *gorm.DB {
 		} else {
 			query = query.Joins(`JOIN employee_organizations ON employees.id = employee_organizations.employee_id JOIN organizations ON employee_organizations.organization_id = organizations.id AND organizations.code IN ?`,
 				filter.Organizations)
+		}
+	}
+
+	if filter.IsLeft != nil {
+		if *filter.IsLeft {
+			query = query.Where("employees.left_date IS NOT NULL")
+		} else {
+			query = query.Where("(employees.left_date IS NULL OR employees.left_date >= now())")
 		}
 	}
 
