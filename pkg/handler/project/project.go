@@ -486,16 +486,15 @@ func (h *handler) GetMembers(c *gin.Context) {
 		return
 	}
 
-	exists, err := h.store.Project.IsExist(h.repo.DB(), projectID)
+	project, err := h.store.Project.One(h.repo.DB(), projectID, true)
 	if err != nil {
-		l.Error(err, "failed to check project existence")
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			l.Error(err, "project not found")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, query, ""))
+			return
+		}
+		l.Error(err, "cannot find project by id")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, query, ""))
-		return
-	}
-
-	if !exists {
-		l.Error(errs.ErrProjectNotFound, "cannot find project by id")
-		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, nil, ""))
 		return
 	}
 
@@ -532,7 +531,7 @@ func (h *handler) GetMembers(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse(view.ToProjectMemberListData(userInfo, members, heads, query.Distinct),
+	c.JSON(http.StatusOK, view.CreateResponse(view.ToProjectMemberListData(userInfo, members, heads, project, query.Distinct),
 		&view.PaginationResponse{Pagination: query.Pagination, Total: total}, nil, nil, ""))
 }
 

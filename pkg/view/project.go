@@ -97,6 +97,7 @@ type ProjectMember struct {
 	EndDate         *time.Time      `json:"endDate"`
 	Rate            decimal.Decimal `json:"rate"`
 	Discount        decimal.Decimal `json:"discount"`
+	Currency        *Currency       `json:"currency"`
 	Note            string          `json:"note"`
 
 	Seniority    *model.Seniority   `json:"seniority"`
@@ -449,7 +450,7 @@ func ToCreateProjectDataResponse(userInfo *model.CurrentLoggedUserInfo, project 
 	return result
 }
 
-func ToProjectMemberListData(userInfo *model.CurrentLoggedUserInfo, members []*model.ProjectMember, projectHeads []*model.ProjectHead, distinct bool) []ProjectMember {
+func ToProjectMemberListData(userInfo *model.CurrentLoggedUserInfo, members []*model.ProjectMember, projectHeads []*model.ProjectHead, project *model.Project, distinct bool) []ProjectMember {
 	var results = make([]ProjectMember, 0, len(members))
 
 	leadMap := map[string]bool{}
@@ -467,8 +468,6 @@ func ToProjectMemberListData(userInfo *model.CurrentLoggedUserInfo, members []*m
 				ProjectSlotID:  m.ProjectSlotID.String(),
 				Status:         m.Status.String(),
 				DeploymentType: m.DeploymentType.String(),
-				Rate:           m.Rate,
-				Discount:       m.Discount,
 				Seniority:      m.Seniority,
 				Note:           m.Note,
 				Positions:      ToPositions(m.Positions),
@@ -487,14 +486,22 @@ func ToProjectMemberListData(userInfo *model.CurrentLoggedUserInfo, members []*m
 				IsLead:          leadMap[m.EmployeeID.String()],
 				Status:          m.Status.String(),
 				DeploymentType:  m.DeploymentType.String(),
-				Rate:            m.Rate,
-				Discount:        m.Discount,
 				Seniority:       m.Seniority,
 				Note:            m.Note,
 				Positions:       ToProjectMemberPositions(m.ProjectMemberPositions),
 			}
+		}
 
-			if m.UpsellPerson != nil && authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadFullAccess) {
+		if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadFullAccess) {
+			member.Rate = m.Rate
+			member.Discount = m.Discount
+
+			if project.BankAccount != nil && project.BankAccount.Currency != nil {
+				member.Currency = new(Currency)
+				*member.Currency = toCurrency(project.BankAccount.Currency)
+			}
+
+			if m.UpsellPerson != nil {
 				member.UpsellPerson = toBasicEmployeeInfo(*m.UpsellPerson)
 			}
 		}
