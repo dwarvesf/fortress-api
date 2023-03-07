@@ -12,6 +12,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/service/basecamp"
 	"github.com/dwarvesf/fortress-api/pkg/service/basecamp/model"
+	"github.com/dwarvesf/fortress-api/pkg/service/currency"
 	"github.com/dwarvesf/fortress-api/pkg/service/discord"
 	googleauth "github.com/dwarvesf/fortress-api/pkg/service/google"
 	"github.com/dwarvesf/fortress-api/pkg/service/googledrive"
@@ -30,6 +31,7 @@ type Service struct {
 	GoogleMail  googlemail.IService
 	Notion      notion.IService
 	Wise        wise.IService
+	Currency    currency.IService
 	Sendgrid    sendgrid.Service
 	Basecamp    *basecamp.Service
 }
@@ -79,6 +81,7 @@ func New(cfg *config.Config, store *store.Store, repo store.DBRepo) *Service {
 		ClientID:     cfg.Basecamp.ClientID,
 		ClientSecret: cfg.Basecamp.ClientSecret,
 	}
+	Currency := currency.New(cfg)
 
 	return &Service{
 		Google:      googleSvc,
@@ -89,9 +92,10 @@ func New(cfg *config.Config, store *store.Store, repo store.DBRepo) *Service {
 			cfg.Notion.Databases.Project,
 			logger.L,
 		),
-		Wise:    wise.New(cfg, logger.L),
-		Cache:   cch,
-		Discord: discord.New(cfg),
+		Wise:     wise.New(cfg, logger.L),
+		Currency: Currency,
+		Cache:    cch,
+		Discord:  discord.New(cfg),
 		Sendgrid: sendgrid.New(
 			cfg.Sendgrid.APIKey,
 			cfg,

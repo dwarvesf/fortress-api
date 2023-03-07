@@ -5,7 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -14,9 +16,19 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/model"
 )
 
+var (
+	// default for now
+	client = http.Client{
+		Timeout: 5 * time.Second,
+	}
+)
+
 const (
 	// api version
 	apiV1 = "v1/"
+
+	// get quote url
+	quotes = "quotes"
 
 	// get transfer rates
 	rates = "rates"
@@ -25,15 +37,16 @@ const (
 type wiseService struct {
 	sync.Mutex
 	cacheMap map[string]float64
-
-	cfg *config.Config
-	l   logger.Logger
+	profile  string
+	cfg      *config.Config
+	l        logger.Logger
 }
 
 func New(cfg *config.Config, l logger.Logger) IService {
 	client := &wiseService{
 		cfg:      cfg,
 		l:        l,
+		profile:  cfg.Wise.Profile,
 		cacheMap: make(map[string]float64),
 	}
 	go client.janitor()
@@ -172,4 +185,31 @@ func (w *wiseService) newRequest(method, url string, body io.Reader) (*http.Requ
 	req.Header.Set("Authorization", w.getAuthHeader())
 	req.Header.Set("Content-Type", "application/json")
 	return req, err
+}
+
+func (w *wiseService) GetPayrollQuotes(sourceCurrency, targetCurrency string, targetAmount float64) (*model.TWQuote, error) {
+	var q *model.TWQuote
+	if w.cfg.Env != "prod" {
+		return &model.TWQuote{
+			SourceAmount: 0,
+			Fee:          0,
+			Rate:         0,
+		}, nil
+	}
+
+	// Todo: (hnh)
+	payload := strings.NewReader(fmt.Sprintf("{\n\t\"profile\": %v,\n\t\"source\": \"%s\",\n\t\"target\": \"%s\",\n\t\"rateType\": \"FIXED\",\n\t\"targetAmount\": %v,\n\t\"type\": \"BALANCE_PAYOUT\"\n}", w.profile, sourceCurrency, targetCurrency, targetAmount))
+
+	req, _ := w.newRequest("POST", w.getUrl(quotes), payload)
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	body := resp.Body
+
+	res, _ := ioutil.ReadAll(body)
+
+	return q, json.Unmarshal(res, &q)
 }

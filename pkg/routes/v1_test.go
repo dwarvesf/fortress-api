@@ -657,6 +657,30 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/df_update.IHandler.Send-fm",
 			},
 		},
+		"/api/v1/payrolls": {
+			"PUT": {
+				Method:  "PUT",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/payroll.IHandler.MarkPayrollAsPaid-fm",
+			},
+		},
+		"/api/v1/payrolls/detail": {
+			"GET": {
+				Method:  "GET",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/payroll.IHandler.GetPayrollsByMonth-fm",
+			},
+		},
+		"/api/v1/payrolls/bhxh": {
+			"GET": {
+				Method:  "GET",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/payroll.IHandler.GetPayrollsBHXH-fm",
+			},
+		},
+		"/api/v1/payrolls/commit": {
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/payroll.IHandler.CommitPayroll-fm",
+			},
+		},
 	}
 
 	l := logger.NewLogrusLogger()

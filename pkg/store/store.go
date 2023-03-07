@@ -1,6 +1,7 @@
 package store
 
 import (
+	"github.com/dwarvesf/fortress-api/pkg/store/accounting"
 	"github.com/dwarvesf/fortress-api/pkg/store/actionitem"
 	"github.com/dwarvesf/fortress-api/pkg/store/actionitemsnapshot"
 	"github.com/dwarvesf/fortress-api/pkg/store/apikey"
@@ -11,11 +12,15 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/store/audititem"
 	"github.com/dwarvesf/fortress-api/pkg/store/auditparticipant"
 	"github.com/dwarvesf/fortress-api/pkg/store/bankaccount"
+	"github.com/dwarvesf/fortress-api/pkg/store/bonus"
+	"github.com/dwarvesf/fortress-api/pkg/store/cachedpayroll"
 	"github.com/dwarvesf/fortress-api/pkg/store/chapter"
 	"github.com/dwarvesf/fortress-api/pkg/store/client"
 	"github.com/dwarvesf/fortress-api/pkg/store/clientcontact"
+	"github.com/dwarvesf/fortress-api/pkg/store/commission"
 	"github.com/dwarvesf/fortress-api/pkg/store/content"
 	"github.com/dwarvesf/fortress-api/pkg/store/country"
+	"github.com/dwarvesf/fortress-api/pkg/store/currency"
 	"github.com/dwarvesf/fortress-api/pkg/store/dashboard"
 	"github.com/dwarvesf/fortress-api/pkg/store/employee"
 	"github.com/dwarvesf/fortress-api/pkg/store/employeechapter"
@@ -26,10 +31,12 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/store/employeeposition"
 	"github.com/dwarvesf/fortress-api/pkg/store/employeerole"
 	"github.com/dwarvesf/fortress-api/pkg/store/employeestack"
+	"github.com/dwarvesf/fortress-api/pkg/store/expense"
 	"github.com/dwarvesf/fortress-api/pkg/store/feedbackevent"
 	"github.com/dwarvesf/fortress-api/pkg/store/invoice"
 	"github.com/dwarvesf/fortress-api/pkg/store/invoicenumbercaching"
 	"github.com/dwarvesf/fortress-api/pkg/store/organization"
+	"github.com/dwarvesf/fortress-api/pkg/store/payroll"
 	"github.com/dwarvesf/fortress-api/pkg/store/permission"
 	"github.com/dwarvesf/fortress-api/pkg/store/position"
 	"github.com/dwarvesf/fortress-api/pkg/store/project"
@@ -41,6 +48,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/store/projectslotposition"
 	"github.com/dwarvesf/fortress-api/pkg/store/projectstack"
 	"github.com/dwarvesf/fortress-api/pkg/store/question"
+	"github.com/dwarvesf/fortress-api/pkg/store/recruitment"
 	"github.com/dwarvesf/fortress-api/pkg/store/role"
 	"github.com/dwarvesf/fortress-api/pkg/store/schedule"
 	"github.com/dwarvesf/fortress-api/pkg/store/seniority"
@@ -54,6 +62,8 @@ import (
 
 type Store struct {
 	Employee              employee.IStore
+	Expense               expense.IStore
+	Recruitment           recruitment.IStore
 	Seniority             seniority.IStore
 	Chapter               chapter.IStore
 	Position              position.IStore
@@ -78,6 +88,10 @@ type Store struct {
 	WorkUnitStack         workunitstack.IStore
 	EmployeeEventTopic    employeeeventtopic.IStore
 	Question              question.IStore
+	Payroll               payroll.IStore
+	CachedPayroll         cachedpayroll.IStore
+	Bonus                 bonus.IStore
+	Commission            commission.IStore
 	EmployeeEventQuestion employeeeventquestion.IStore
 	FeedbackEvent         feedbackevent.IStore
 	EmployeeEventReviewer employeeeventreviewer.IStore
@@ -102,11 +116,15 @@ type Store struct {
 	ClientContact         clientcontact.IStore
 	APIKey                apikey.IStore
 	APIKeyRole            apikeyrole.IStore
+	Accounting            accounting.IStore
+	Currency              currency.IStore
 }
 
 func New() *Store {
 	return &Store{
 		Employee:              employee.New(),
+		Expense:               expense.New(),
+		Recruitment:           recruitment.New(),
 		Seniority:             seniority.New(),
 		Chapter:               chapter.New(),
 		Position:              position.New(),
@@ -131,6 +149,10 @@ func New() *Store {
 		WorkUnitStack:         workunitstack.New(),
 		EmployeeEventTopic:    employeeeventtopic.New(),
 		Question:              question.New(),
+		Payroll:               payroll.New(),
+		CachedPayroll:         cachedpayroll.New(),
+		Bonus:                 bonus.New(),
+		Commission:            commission.New(),
 		EmployeeEventQuestion: employeeeventquestion.New(),
 		FeedbackEvent:         feedbackevent.New(),
 		EmployeeEventReviewer: employeeeventreviewer.New(),
@@ -155,5 +177,7 @@ func New() *Store {
 		ClientContact:         clientcontact.New(),
 		APIKey:                apikey.New(),
 		APIKeyRole:            apikeyrole.New(),
+		Accounting:            accounting.New(),
+		Currency:              currency.New(),
 	}
 }

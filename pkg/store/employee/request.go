@@ -13,6 +13,7 @@ type EmployeeFilter struct {
 	Organizations   []string
 	LineManagers    []string
 	Keyword         string
+	IsLeft          *bool
 	//field sort
 	JoinedDateSort model.SortOrder
 }

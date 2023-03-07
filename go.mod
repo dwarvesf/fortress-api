@@ -7,6 +7,7 @@ require (
 	github.com/Boostport/mjml-go v0.9.0
 	github.com/Rhymond/go-money v1.0.9
 	github.com/SebastiaanKlippert/go-wkhtmltopdf v1.7.1
+	github.com/antchfx/htmlquery v1.3.0
 	github.com/bwmarrin/discordgo v0.27.0
 	github.com/dstotijn/go-notion v0.9.0
 	github.com/gin-contrib/cors v1.4.0
@@ -21,7 +22,6 @@ require (
 	github.com/jackc/pgtype v1.12.0
 	github.com/jinzhu/now v1.1.5
 	github.com/joho/godotenv v1.4.0
-	github.com/k0kubun/pp/v3 v3.2.0
 	github.com/lib/pq v1.10.6
 	github.com/matoous/go-nanoid v1.5.0
 	github.com/patrickmn/go-cache v2.1.0+incompatible
@@ -53,7 +53,6 @@ require (
 	github.com/PuerkitoBio/purell v1.1.1 // indirect
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
 	github.com/andybalholm/brotli v1.0.4 // indirect
-	github.com/antchfx/htmlquery v1.3.0 // indirect
 	github.com/antchfx/xpath v1.2.3 // indirect
 	github.com/armon/go-metrics v0.3.10 // indirect
 	github.com/armon/go-radix v1.0.0 // indirect
@@ -105,6 +104,7 @@ require (
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
+	github.com/k0kubun/pp v3.0.1+incompatible // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/magiconair/properties v1.8.6 // indirect
 	github.com/mailru/easyjson v0.7.6 // indirect

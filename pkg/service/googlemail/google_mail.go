@@ -16,6 +16,7 @@ import (
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/model"
+	"github.com/dwarvesf/fortress-api/pkg/utils"
 	"github.com/dwarvesf/fortress-api/pkg/utils/mailutils"
 	"github.com/dwarvesf/fortress-api/pkg/utils/timeutil"
 )
@@ -333,4 +334,93 @@ func (g *googleService) filterReceiver(i *model.Invoice) error {
 	i.CC = js
 
 	return nil
+}
+
+// SendPayrollPaidMail after paid a payroll for a user to notify that
+// we have been paid their payroll
+func (g *googleService) SendPayrollPaidMail(p *model.Payroll) (err error) {
+	if g.appConfig.Env == "local" {
+		p.Employee.TeamEmail = "quang@d.foundation"
+	}
+
+	if err := g.ensureToken(g.appConfig.Google.AccountingGoogleRefreshToken); err != nil {
+		return err
+	}
+
+	if err := g.prepareService(); err != nil {
+		return err
+	}
+
+	id := g.appConfig.Google.AccountingEmailID
+
+	if !mailutils.Email(p.Employee.TeamEmail) {
+		return errors.New("email invalid")
+	}
+
+	funcMap := g.getPaidSuccessfulEmailFuncMap(p)
+	encodedEmail, err := composeMailContent(g.appConfig,
+		&MailParseInfo{
+			accountingUser,
+			"paidPayroll.tpl",
+			p,
+			funcMap,
+		})
+	if err != nil {
+		return err
+	}
+
+	_, err = g.sendEmail(encodedEmail, id)
+	return err
+}
+
+// ToPaidSuccessfulEmailContent to parse the payroll object
+// into template when sending email after payroll is paid
+func (g *googleService) getPaidSuccessfulEmailFuncMap(p *model.Payroll) map[string]interface{} {
+	// the salary will be the contract(companyAccountAmount in DB)
+	// plus the base salary(personalAccountAmount in DB)
+
+	var addresses string = "quang@d.foundation"
+	if g.appConfig.Env == "prod" {
+		addresses = "quang@d.foundation, accounting@d.foundation"
+	}
+
+	return template.FuncMap{
+		"ccList": func() string {
+			return addresses
+		},
+		"userFirstName": func() string {
+			return p.Employee.GetFirstNameFromFullName()
+		},
+		"currency": func() string {
+			return p.Employee.BaseSalary.Currency.Symbol
+		},
+		"currencyName": func() string {
+			return p.Employee.BaseSalary.Currency.Name
+		},
+		"formattedCurrentMonth": func() string {
+			fm := time.Month(int(p.Month))
+			return fm.String()
+		},
+		"formattedBaseSalaryAmount": func() string {
+			return utils.FormatNumber(p.BaseSalaryAmount)
+		},
+		"formattedTotalAllowance": func() string {
+			return utils.FormatNumber(int64(p.TotalAllowance))
+		},
+		"haveBonusOrCommission": func() bool {
+			return len(p.CommissionExplains) > 0 || len(p.ProjectBonusExplains) > 0
+		},
+		"haveCommission": func() bool {
+			return len(p.CommissionExplains) > 0
+		},
+		"haveBonus": func() bool {
+			return len(p.ProjectBonusExplains) > 0
+		},
+		"commissionExplain": func() []model.CommissionExplain {
+			return p.CommissionExplains
+		},
+		"projectBonusExplains": func() []model.ProjectBonusExplain {
+			return p.ProjectBonusExplains
+		},
+	}
 }

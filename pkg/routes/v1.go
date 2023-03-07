@@ -234,4 +234,12 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 	{
 		dfUpdates.POST("/:id/send", h.DFUpdate.Send)
 	}
+
+	payroll := v1.Group("payrolls")
+	{
+		payroll.PUT("", h.Payroll.MarkPayrollAsPaid)
+		payroll.GET("/detail", h.Payroll.GetPayrollsByMonth)
+		payroll.GET("/bhxh", h.Payroll.GetPayrollsBHXH)
+		payroll.POST("/commit", h.Payroll.CommitPayroll)
+	}
 }
