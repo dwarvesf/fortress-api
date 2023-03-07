@@ -1,6 +1,9 @@
 package model
 
-import "time"
+import (
+	"strings"
+	"time"
+)
 
 // WorkingStatus working_status type for employee table
 type WorkingStatus string
@@ -132,6 +135,9 @@ type Employee struct {
 	Mentees               []*Employee `gorm:"references:ID;foreignKey:LineManagerID"`
 	WorkUnitMembers       []WorkUnitMember
 	Heads                 []ProjectHead
+
+	EmployeeSalary *EmployeeSalary `json:"employee_salary"`
+	BaseSalary     BaseSalary      `json:"base_salary"`
 }
 
 // ToEmployeeMap create map from employees
@@ -142,4 +148,12 @@ func ToEmployeeMap(employees []*Employee) map[UUID]Employee {
 	}
 
 	return rs
+}
+
+func (e Employee) GetFirstNameFromFullName() string {
+	if e.FullName == "" {
+		return ""
+	}
+	s := strings.Split(e.FullName, " ")
+	return s[len(s)-1]
 }
