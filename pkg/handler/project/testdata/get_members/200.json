@@ -19,6 +19,13 @@
             "endDate": null,
             "rate": "3000",
             "discount": "3",
+            "currency": {
+                "id": "7037bdb6-584e-4e35-996d-ef28a243f48a",
+                "name": "VND",
+                "symbol": "đ",
+                "locale": "vi-vn",
+                "type": "fiat"
+            },
             "note": "",
             "seniority": {
                 "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
@@ -58,6 +65,13 @@
             "endDate": null,
             "rate": "5000",
             "discount": "0",
+            "currency": {
+                "id": "7037bdb6-584e-4e35-996d-ef28a243f48a",
+                "name": "VND",
+                "symbol": "đ",
+                "locale": "vi-vn",
+                "type": "fiat"
+            },
             "note": "",
             "seniority": {
                 "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
@@ -97,6 +111,13 @@
             "endDate": null,
             "rate": "4000",
             "discount": "0",
+            "currency": {
+                "id": "7037bdb6-584e-4e35-996d-ef28a243f48a",
+                "name": "VND",
+                "symbol": "đ",
+                "locale": "vi-vn",
+                "type": "fiat"
+            },
             "note": "",
             "seniority": {
                 "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
@@ -136,6 +157,13 @@
             "endDate": null,
             "rate": "3000",
             "discount": "3",
+            "currency": {
+                "id": "7037bdb6-584e-4e35-996d-ef28a243f48a",
+                "name": "VND",
+                "symbol": "đ",
+                "locale": "vi-vn",
+                "type": "fiat"
+            },
             "note": "",
             "seniority": {
                 "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
@@ -175,6 +203,13 @@
             "endDate": null,
             "rate": "4000",
             "discount": "0",
+            "currency": {
+                "id": "7037bdb6-584e-4e35-996d-ef28a243f48a",
+                "name": "VND",
+                "symbol": "đ",
+                "locale": "vi-vn",
+                "type": "fiat"
+            },
             "note": "",
             "seniority": {
                 "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",

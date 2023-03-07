@@ -36,6 +36,7 @@
                 "endDate": null,
                 "rate": "0",
                 "discount": "0",
+                "currency": null,
                 "seniority": {
                     "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
                     "createdAt": "2022-11-07T09:50:25.714604Z",
@@ -75,6 +76,7 @@
                 "endDate": null,
                 "rate": "0",
                 "discount": "0",
+                "currency": null,
                 "seniority": {
                     "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
                     "createdAt": "2022-11-07T09:50:25.714604Z",
@@ -114,6 +116,7 @@
                 "endDate": null,
                 "rate": "0",
                 "discount": "0",
+                "currency": null,
                 "seniority": {
                     "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
                     "createdAt": "2022-11-07T09:50:25.714604Z",
@@ -153,6 +156,7 @@
                 "endDate": null,
                 "rate": "0",
                 "discount": "0",
+                "currency": null,
                 "seniority": {
                     "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
                     "createdAt": "2022-11-07T09:50:25.714604Z",
@@ -192,6 +196,7 @@
                 "endDate": null,
                 "rate": "0",
                 "discount": "0",
+                "currency": null,
                 "seniority": {
                     "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
                     "createdAt": "2022-11-07T09:50:25.714604Z",
