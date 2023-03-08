@@ -49,12 +49,6 @@ ALTER TABLE
     "accounting_transactions"
 ADD
     CONSTRAINT "transaction_info_unique" UNIQUE ("name", "date");
-
-ALTER TABLE
-    "accounting_transactions"
-ADD
-    CONSTRAINT "accounting_transactions_pkey" PRIMARY KEY ("id");
-
 ALTER TABLE
     "accounting_transactions"
 ADD
