@@ -2,9 +2,9 @@ package model
 
 import "gorm.io/datatypes"
 
-const (
-	rateUSD = 22500
-)
+// const (
+// 	rateUSD = 22500
+// )
 
 type EmployeeSalary struct {
 	ID UUID `json:"-"`
