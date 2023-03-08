@@ -80,8 +80,8 @@ func (p Payroll) GetPaidSuccessfulEmailFuncMap() map[string]interface{} {
 	// the salary will be the contract(companyAccountAmount in DB)
 	// plus the base salary(personalAccountAmount in DB)
 
-	var addresses string
-	addresses = "huy@d.foundation"
+	var addresses string = "huy@d.foundation"
+	// addresses = "huy@d.foundation"
 	// if vault.Get("run_mode") == "prod" {
 	// 	addresses = "quang@d.foundation, accounting@d.foundation"
 	// }
