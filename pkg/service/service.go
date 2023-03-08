@@ -10,6 +10,8 @@ import (
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
+	"github.com/dwarvesf/fortress-api/pkg/service/basecamp"
+	"github.com/dwarvesf/fortress-api/pkg/service/basecamp/model"
 	"github.com/dwarvesf/fortress-api/pkg/service/discord"
 	googleauth "github.com/dwarvesf/fortress-api/pkg/service/google"
 	"github.com/dwarvesf/fortress-api/pkg/service/googledrive"
@@ -28,6 +30,7 @@ type Service struct {
 	Notion      notion.IService
 	Wise        wise.IService
 	Sendgrid    sendgrid.Service
+	Basecamp    *basecamp.Service
 }
 
 func New(cfg *config.Config) *Service {
@@ -71,6 +74,8 @@ func New(cfg *config.Config) *Service {
 		cfg,
 	)
 
+	bc := model.Basecamp{}
+
 	return &Service{
 		Google:      googleSvc,
 		GoogleDrive: googleDriveSvc,
@@ -88,5 +93,6 @@ func New(cfg *config.Config) *Service {
 			cfg,
 			logger.L,
 		),
+		Basecamp: basecamp.NewService(&bc, cfg, logger.L),
 	}
 }
