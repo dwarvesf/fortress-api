@@ -10190,6 +10190,9 @@ const docTemplate = `{
                 "avatar": {
                     "type": "string"
                 },
+                "currency": {
+                    "$ref": "#/definitions/view.Currency"
+                },
                 "deploymentType": {
                     "type": "string"
                 },
