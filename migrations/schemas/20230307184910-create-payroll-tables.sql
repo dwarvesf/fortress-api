@@ -1,7 +1,6 @@
 
 -- +migrate Up
-DROP TABLE IF EXISTS "accounting_transaction";
-CREATE TABLE "base_salary" (
+CREATE TABLE IF NOT EXISTS "base_salary" (
   "id" uuid PRIMARY KEY DEFAULT (uuid()),
   "employee_id" uuid,
   "contract_amount" int8 NOT NULL DEFAULT 0,
@@ -21,8 +20,7 @@ CREATE TABLE "base_salary" (
 ALTER TABLE "base_salary" ADD CONSTRAINT "base_salary_currency_id_fkey" FOREIGN KEY ("currency_id") REFERENCES "currencies" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "base_salary" ADD CONSTRAINT "base_salary_employee_id_fkey" FOREIGN KEY ("employee_id") REFERENCES "employees" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
-DROP TABLE IF EXISTS "accounting_transaction";
-CREATE TABLE "accounting_transaction" (
+CREATE TABLE IF NOT EXISTS "accounting_transaction" (
   "id" uuid PRIMARY KEY DEFAULT (uuid()),
   "created_at" timestamptz(6) DEFAULT now(),
   "deleted_at" timestamptz(6),
@@ -43,8 +41,7 @@ ALTER TABLE "accounting_transaction" ADD CONSTRAINT "transaction_info_unique" UN
 ALTER TABLE "accounting_transaction" ADD CONSTRAINT "accounting_transactions_pkey" PRIMARY KEY ("id");
 ALTER TABLE "accounting_transaction" ADD CONSTRAINT "accounting_transactions_currency_id_fkey" FOREIGN KEY ("currency_id") REFERENCES "currencies" ("id") ON DELETE CASCADE ON UPDATE NO ACTION;
 
-DROP TABLE IF EXISTS "accounting_category";
-CREATE TABLE "accounting_category" (
+CREATE TABLE IF NOT EXISTS "accounting_category" (
   "id" uuid PRIMARY KEY DEFAULT (uuid()),
   "created_at" timestamptz(6) DEFAULT now(),
   "deleted_at" timestamptz(6),
@@ -77,8 +74,7 @@ INSERT INTO "accounting_category" ("created_at", "deleted_at", "name", "type") V
 COMMIT;
 ALTER TABLE "accounting_category" ADD CONSTRAINT "accounting_categories_pkey" PRIMARY KEY ("id");
 
-DROP TABLE IF EXISTS "employee_commission";
-CREATE TABLE "employee_commission" (
+CREATE TABLE IF NOT EXISTS "employee_commission" (
   "id" uuid PRIMARY KEY DEFAULT (uuid()),
   "invoice_id" uuid NOT NULL,
   "employee_id" uuid,
@@ -94,8 +90,7 @@ CREATE TABLE "employee_commission" (
 )
 ;
 
-DROP TABLE IF EXISTS "employee_bonus";
-CREATE TABLE "employee_bonus" (
+CREATE TABLE IF NOT EXISTS "employee_bonus" (
   "id" uuid PRIMARY KEY DEFAULT (uuid()),
   "employee_id" uuid NOT NULL,
   "amount" int8,
@@ -106,8 +101,7 @@ CREATE TABLE "employee_bonus" (
 ;
 ALTER TABLE "employee_bonus" ADD CONSTRAINT "employee_bonus_employee_id_fkey" FOREIGN KEY ("employee_id") REFERENCES "employees" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
-DROP TABLE IF EXISTS "payroll";
-CREATE TABLE "payroll" (
+CREATE TABLE IF NOT EXISTS "payroll" (
   "id" uuid PRIMARY KEY DEFAULT (uuid()),
   "employee_id" uuid NOT NULL,
   "total" int8 NOT NULL DEFAULT 0,
@@ -127,4 +121,16 @@ CREATE TABLE "payroll" (
 )
 ;
 ALTER TABLE "payroll" ADD CONSTRAINT "payroll_employee_id_fkey" FOREIGN KEY ("employee_id") REFERENCES "employees" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+CREATE TABLE IF NOT EXISTS project_commission_configs (
+    id         UUID PRIMARY KEY DEFAULT (uuid()),
+    deleted_at TIMESTAMP(6),
+    created_at TIMESTAMP(6)     DEFAULT (NOW()),
+    updated_at TIMESTAMP(6)     DEFAULT (NOW()),
+
+    project_id UUID,
+    position   project_head_positions,
+    commission_rate DECIMAL
+);
+ALTER TABLE project_commission_configs ADD CONSTRAINT project_commission_configs_project_id_fkey FOREIGN KEY (project_id) REFERENCES projects (id);
 -- +migrate Down
