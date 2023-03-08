@@ -1,6 +1,9 @@
 package utils
 
-import "strconv"
+import (
+	"strconv"
+	"strings"
+)
 
 // IsNumber checks if a string is a number
 func IsNumber(s string) bool {
@@ -25,4 +28,19 @@ func FormatNumber(n int64) string {
 			out[j] = ','
 		}
 	}
+}
+
+func RemoveEmptyString(in []string) []string {
+	out := make([]string, 0)
+	for _, status := range in {
+		if RemoveAllSpace(status) != "" {
+			out = append(out, status)
+		}
+	}
+
+	return out
+}
+
+func RemoveAllSpace(str string) string {
+	return strings.ReplaceAll(str, " ", "")
 }
