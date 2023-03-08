@@ -4,11 +4,11 @@ import (
 	"text/template"
 	"time"
 
+	"gorm.io/datatypes"
 	"gorm.io/gorm"
 
 	// "git.d.foundation/fortress/ragnarok/src/service/vault"
 	"github.com/dwarvesf/fortress-api/pkg/utils"
-	"github.com/jinzhu/gorm/dialects/postgres"
 )
 
 type Payroll struct {
@@ -21,11 +21,11 @@ type Payroll struct {
 	Month               int64          `json:"month"`
 	Year                int64          `json:"year"`
 	CommissionAmount    VietnamDong    `json:"commission_amount"`
-	CommissionExplain   postgres.Jsonb `json:"commission_explain"`
-	UserRankSnapshot    postgres.Jsonb `json:"user_rank_snapshot"`
-	TotalExplain        postgres.Jsonb `json:"total_explain"`
+	CommissionExplain   datatypes.JSON `json:"commission_explain"`
+	UserRankSnapshot    datatypes.JSON `json:"user_rank_snapshot"`
+	TotalExplain        datatypes.JSON `json:"total_explain"`
 	ProjectBonusAmount  VietnamDong    `json:"project_bonus"`
-	ProjectBonusExplain postgres.Jsonb `json:"project_bonus_explain"`
+	ProjectBonusExplain datatypes.JSON `json:"project_bonus_explain"`
 	DueDate             *time.Time     `json:"due_date"`
 	IsPaid              bool           `json:"is_paid"`
 

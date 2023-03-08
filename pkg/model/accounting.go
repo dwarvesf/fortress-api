@@ -3,7 +3,7 @@ package model
 import (
 	"time"
 
-	"github.com/jinzhu/gorm/dialects/postgres"
+	"gorm.io/datatypes"
 )
 
 const (
@@ -47,7 +47,7 @@ type AccountingTransaction struct {
 	Currency         string         `json:"currency_name"`
 	CurrencyID       *UUID          `json:"-"`
 	ConversionRate   float64        `json:"conversion_rate"`
-	Metadata         postgres.Jsonb `json:"metadata"`
+	Metadata         datatypes.JSON `json:"metadata"`
 
 	CurrencyInfo       *Currency           `json:"currency" gorm:"foreignkey:ID;association_foreignkey:CurrencyID"`
 	AccountingCategory *AccountingCategory `json:"category" gorm:"foreignkey:Type;association_foreignkey:Type"`

@@ -1,9 +1,8 @@
 package model
 
-import "github.com/jinzhu/gorm/dialects/postgres"
+import "gorm.io/datatypes"
 
 const (
-	rateGem = 20
 	rateUSD = 22500
 )
 
@@ -14,11 +13,11 @@ type EmployeeSalary struct {
 	Employee   *Employee `json:"-"`
 
 	CommissionAmount    int64          `json:"commission_amount"`
-	CommissionDetail    postgres.Jsonb `json:"commission_detail"`
+	CommissionDetail    datatypes.JSON `json:"commission_detail"`
 	ReimbursementAmount int64          `json:"reimbursement_amount"`
-	ReimbursementDetail postgres.Jsonb `json:"reimbursement_detail"`
+	ReimbursementDetail datatypes.JSON `json:"reimbursement_detail"`
 	BonusAmount         int64          `json:"bonus_amount"`
-	BonusDetail         postgres.Jsonb `json:"bonus_detail"`
+	BonusDetail         datatypes.JSON `json:"bonus_detail"`
 	TotalAmount         int64          `json:"total_amount"`
 
 	Month        uint8 `json:"month"`
