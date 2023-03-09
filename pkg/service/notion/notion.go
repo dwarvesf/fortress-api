@@ -9,6 +9,7 @@ import (
 	nt "github.com/dstotijn/go-notion"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
+	"github.com/dwarvesf/fortress-api/pkg/utils"
 )
 
 type notionService struct {
@@ -70,6 +71,15 @@ func (n *notionService) ToChangelogMJML(blocks []nt.Block, email model.Email) (s
 			// get array of plain text
 			var plainText []string
 			for _, text := range v.RichText {
+				if text.HRef != nil {
+					link := *text.HRef
+					// check if text.href is a link
+					if !utils.HasDomain(*text.HRef) {
+						link = fmt.Sprintf("https://www.notion.so/dwarves/%s", *text.HRef)
+					}
+
+					text.PlainText = fmt.Sprintf(`<a href="%s">%s</a>`, link, text.PlainText)
+				}
 				plainText = append(plainText, text.PlainText)
 			}
 
@@ -371,4 +381,92 @@ func (n *notionService) ListProject() ([]model.ProjectChangelogPage, error) {
 		}
 	}
 	return res, nil
+}
+
+func (n *notionService) QueryAudienceDatabase(audienceDBId, audience string) (records []nt.Page, err error) {
+	ctx := context.Background()
+	var t bool = true
+	var cursor string = ""
+
+	var filter *nt.DatabaseQueryFilter
+	switch audience {
+	case "Developers Only":
+		filter = &nt.DatabaseQueryFilter{
+			And: []nt.DatabaseQueryFilter{
+				{
+					Or: []nt.DatabaseQueryFilter{
+						{Property: "Personas", DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{MultiSelect: &nt.MultiSelectDatabaseQueryFilter{Contains: "Developer"}}},
+						{Property: "Personas", DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{MultiSelect: &nt.MultiSelectDatabaseQueryFilter{Contains: "Engineer"}}},
+						{Property: "Personas", DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{MultiSelect: &nt.MultiSelectDatabaseQueryFilter{Contains: "Tester"}}},
+						{Property: "Personas", DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{MultiSelect: &nt.MultiSelectDatabaseQueryFilter{Contains: "Product Manager"}}},
+					},
+				},
+				{
+					And: []nt.DatabaseQueryFilter{
+						{Property: "Tags", DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{MultiSelect: &nt.MultiSelectDatabaseQueryFilter{DoesNotContain: "Community"}}},
+						{Property: "Tags", DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{MultiSelect: &nt.MultiSelectDatabaseQueryFilter{DoesNotContain: "Employee"}}},
+						{Property: "Tags", DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{MultiSelect: &nt.MultiSelectDatabaseQueryFilter{DoesNotContain: "CLient"}}},
+						{Property: "Tags", DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{MultiSelect: &nt.MultiSelectDatabaseQueryFilter{DoesNotContain: "Past Client"}}},
+						{Property: "Tags", DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{MultiSelect: &nt.MultiSelectDatabaseQueryFilter{DoesNotContain: "Fellowship"}}},
+						{Property: "Tags", DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{MultiSelect: &nt.MultiSelectDatabaseQueryFilter{DoesNotContain: "Prospect"}}},
+						{Property: "Tags", DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{MultiSelect: &nt.MultiSelectDatabaseQueryFilter{DoesNotContain: "Failed CV"}}},
+						{Property: "Tags", DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{MultiSelect: &nt.MultiSelectDatabaseQueryFilter{DoesNotContain: "Failed Test"}}},
+						{Property: "Tags", DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{MultiSelect: &nt.MultiSelectDatabaseQueryFilter{DoesNotContain: "Failed Interview"}}},
+					},
+				},
+			},
+		}
+	case "Partner Updates", "Dwarves Updates":
+		filter = &nt.DatabaseQueryFilter{
+			And: []nt.DatabaseQueryFilter{
+				{
+					Property: audience,
+					DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+						Checkbox: &nt.CheckboxDatabaseQueryFilter{
+							Equals: &t,
+						},
+					},
+				},
+			},
+		}
+
+	default:
+		return nil, errors.New("audience not found")
+	}
+
+	// filter out unsubscribed
+	var unsubscribed bool = true
+	filter.And = append(filter.And, nt.DatabaseQueryFilter{
+		Property: "Unsubscribed",
+		DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+			Checkbox: &nt.CheckboxDatabaseQueryFilter{
+				Equals: &unsubscribed,
+			},
+		},
+	})
+
+	n.l.Info("start querying audience database")
+	for {
+		res, err := n.notionClient.QueryDatabase(ctx, audienceDBId, &nt.DatabaseQuery{
+			Filter: filter,
+			Sorts: []nt.DatabaseQuerySort{
+				{
+					Property:  "Created Time",
+					Direction: nt.SortDirAsc,
+				},
+			},
+			StartCursor: cursor,
+			PageSize:    100,
+		})
+		if err != nil {
+			return nil, err
+		}
+		records = append(records, res.Results...)
+		if !res.HasMore {
+			break
+		}
+		cursor = *res.NextCursor
+	}
+	n.l.Info("finish querying audience database")
+	return records, nil
 }

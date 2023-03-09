@@ -30,8 +30,8 @@ func New(controller *controller.Controller, logger logger.Logger, cfg *config.Co
 }
 
 // Auth godoc
-// @Summary Authorise user when login
-// @Description Authorise user when login
+// @Summary Authorize user when login
+// @Description Authorize user when login
 // @Tags Auth
 // @Accept  json
 // @Produce  json

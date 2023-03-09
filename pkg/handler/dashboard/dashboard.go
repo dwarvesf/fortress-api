@@ -214,8 +214,8 @@ func (h *handler) GetActionItemReports(c *gin.Context) {
 }
 
 // GetEngineeringHealth godoc
-// @Summary Get Enginerring health information for dashboard
-// @Description Get Enginerring health information for dashboard
+// @Summary Get Engineering health information for dashboard
+// @Description Get Engineering health information for dashboard
 // @Tags Dashboard
 // @Accept json
 // @Produce json
@@ -639,18 +639,6 @@ func (h *handler) GetEngagementInfoDetail(c *gin.Context) {
 		"handler": "dashboard",
 		"method":  "GetEngagementInfoDetail",
 	})
-
-	events, err := h.store.FeedbackEvent.GetLatestEventByType(h.repo.DB(), model.EventTypeSurvey, model.EventSubtypeEngagement, 4)
-	if err != nil {
-		l.Error(err, "failed to get engagement events")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, errs.ErrEventNotFound, nil, ""))
-		return
-	}
-
-	timeList := make([]time.Time, 0)
-	for _, t := range events {
-		timeList = append(timeList, *t.StartDate)
-	}
 
 	statistic, err := h.store.EmployeeEventQuestion.GetAverageAnswerEngagementByFilter(h.repo.DB(), filter, &startDate)
 	if err != nil {

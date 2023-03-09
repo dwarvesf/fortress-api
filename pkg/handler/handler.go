@@ -12,6 +12,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/handler/changelog"
 	"github.com/dwarvesf/fortress-api/pkg/handler/client"
 	"github.com/dwarvesf/fortress-api/pkg/handler/dashboard"
+	dfupdate "github.com/dwarvesf/fortress-api/pkg/handler/df_update"
 	"github.com/dwarvesf/fortress-api/pkg/handler/digest"
 	"github.com/dwarvesf/fortress-api/pkg/handler/discord"
 	"github.com/dwarvesf/fortress-api/pkg/handler/earn"
@@ -67,6 +68,7 @@ type Handler struct {
 	Client         client.IHandler
 	Asset          asset.IHandler
 	Changelog      changelog.IHandler
+	DFUpdate       dfupdate.IHandler
 }
 
 func New(store *store.Store, repo store.DBRepo, service *service.Service, ctrl *controller.Controller, logger logger.Logger, cfg *config.Config) *Handler {
@@ -100,5 +102,6 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, ctrl *
 		Client:         client.New(ctrl, store, repo, service, logger, cfg),
 		Asset:          asset.New(store, repo, service, logger, cfg),
 		Changelog:      changelog.New(store, repo, service, logger, cfg),
+		DFUpdate:       dfupdate.New(store, repo, service, logger, cfg),
 	}
 }

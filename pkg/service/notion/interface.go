@@ -20,4 +20,6 @@ type IService interface {
 	CreatePage() error
 	CreateDatabaseRecord(databaseID string, properties map[string]interface{}) (pageID string, err error)
 	ToChangelogMJML(blocks []nt.Block, email model.Email) (string, error)
+
+	QueryAudienceDatabase(audienceDBId, audience string) (records []nt.Page, err error)
 }

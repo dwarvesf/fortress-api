@@ -1,7 +1,6 @@
 package timeutil
 
 import (
-	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -10,7 +9,7 @@ import (
 	"github.com/jinzhu/now"
 )
 
-const dataFormat = "2006-02-01"
+const dataFormat = "2006-01-02"
 
 var months = [...]string{
 	"january",
@@ -40,7 +39,7 @@ func WeekdayDuration(from, to time.Weekday) time.Duration {
 	return time.Duration(offset) * 24 * time.Hour
 }
 
-//GetQuarterFromMonth get quarter from month
+// GetQuarterFromMonth get quarter from month
 func GetQuarterFromMonth(m time.Month) int {
 	switch {
 	case m < 4:
@@ -52,7 +51,6 @@ func GetQuarterFromMonth(m time.Month) int {
 	default:
 		return 4
 	}
-
 }
 
 // IsCurrentMonth is a function checking whether a given month and year is current month
@@ -67,7 +65,7 @@ func IsCurrentMonth(m, y int) bool {
 	return true
 }
 
-//BeginningOfYear return first day of the year
+// BeginningOfYear return first day of the year
 func BeginningOfYear(year int) time.Time {
 	return time.Date(year, time.January, 1, 0, 0, 0, 0, time.Now().Location())
 }
@@ -159,7 +157,7 @@ func ParseWithMultipleFormats(s string) (*time.Time, error) {
 			return &t, nil
 		}
 	}
-	return nil, errors.New(fmt.Sprintf(`parsing time %s does not match any remaining time format`, s))
+	return nil, fmt.Errorf(`parsing time %s does not match any remaining time format`, s)
 }
 
 func GetMonthFromString(s string) (int, error) {

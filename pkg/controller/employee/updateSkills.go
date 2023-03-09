@@ -77,7 +77,7 @@ func (r *controller) UpdateSkills(l logger.Logger, employeeID string, body Updat
 		_, ok := positionMap[pID]
 
 		if !ok {
-			l.Errorf(ErrPositionNotFound, "postion not found with id ", pID.String())
+			l.Errorf(ErrPositionNotFound, "position not found with id ", pID.String())
 			return nil, ErrPositionNotFound
 		}
 	}

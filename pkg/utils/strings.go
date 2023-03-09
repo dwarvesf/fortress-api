@@ -1,14 +1,16 @@
 package utils
 
-import "strconv"
+import (
+	"net/url"
+	"regexp"
+	"strconv"
+	"strings"
+)
 
 // IsNumber checks if a string is a number
 func IsNumber(s string) bool {
 	_, err := strconv.Atoi(s)
-	if err == nil {
-		return true
-	}
-	return false
+	return err == nil
 }
 
 func FormatNumber(n int64) string {
@@ -28,4 +30,24 @@ func FormatNumber(n int64) string {
 			out[j] = ','
 		}
 	}
+}
+
+func RemoveEmptyString(in []string) []string {
+	out := make([]string, 0)
+	for _, status := range in {
+		if RemoveAllSpace(status) != "" {
+			out = append(out, status)
+		}
+	}
+
+	return out
+}
+
+func RemoveAllSpace(str string) string {
+	return strings.ReplaceAll(str, " ", "")
+}
+
+func HasDomain(str string) bool {
+	u, err := url.Parse(str)
+	return err == nil && u.Scheme != "" && u.Host != "" && regexp.MustCompile(`^[^.]+\.?[^.]+$`).MatchString(u.Host)
 }

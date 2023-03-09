@@ -27,17 +27,10 @@ func Regex(regex, sample string) error {
 // Email validate
 func Email(email string) bool {
 	err := Regex(emailRegex, email)
-	if err != nil {
-		return false
-	}
-
-	return true
+	return err == nil
 }
 
 func IsDwarvesMail(mail string) bool {
 	regex, _ := regexp.Compile(teamEmailRegex)
-	if !regex.MatchString(mail) {
-		return false
-	}
-	return true
+	return regex.MatchString(mail)
 }

@@ -2,8 +2,8 @@ package profile
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 
@@ -56,7 +56,7 @@ func TestHandler_GetProfile(t *testing.T) {
 				metadataHandler.GetProfile(ctx)
 
 				require.Equal(t, tt.wantCode, w.Code)
-				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
 				require.NoError(t, err)
 
 				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.GetProfile] response mismatched")
@@ -128,7 +128,7 @@ func TestHandler_UpdateProfileInfo(t *testing.T) {
 				metadataHandler.UpdateInfo(ctx)
 
 				require.Equal(t, tt.wantCode, w.Code)
-				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
 				require.NoError(t, err)
 
 				res, err := utils.RemoveFieldInResponse(w.Body.Bytes(), "updatedAt")

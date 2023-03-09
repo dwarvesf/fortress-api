@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"io"
 	"strconv"
-	"strings"
 
 	"golang.org/x/oauth2"
 	"google.golang.org/api/drive/v3"
+	"google.golang.org/api/option"
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/model"
@@ -127,7 +127,7 @@ func (g *googleService) ensureToken(rToken string) error {
 	}
 
 	if !token.Valid() {
-		tks := g.config.TokenSource(oauth2.NoContext, token)
+		tks := g.config.TokenSource(context.Background(), token)
 		tok, err := tks.Token()
 		if err != nil {
 			return err
@@ -139,7 +139,8 @@ func (g *googleService) ensureToken(rToken string) error {
 }
 
 func (g *googleService) prepareService() error {
-	service, err := drive.New(g.config.Client(context.Background(), g.token))
+	client := g.config.Client(context.Background(), g.token)
+	service, err := drive.NewService(context.Background(), option.WithHTTPClient(client))
 	if err != nil {
 		return errors.New("Get Drive Service Failed " + err.Error())
 	}
@@ -191,18 +192,18 @@ func (g *googleService) newFile(name string, mimeType string, content io.Reader,
 	return g.service.Files.Create(f).Media(content).Do()
 }
 
-func (g *googleService) deleteFile(id string) error {
-	return g.service.Files.Delete(id).Do()
-}
+// func (g *googleService) deleteFile(id string) error {
+// 	return g.service.Files.Delete(id).Do()
+// }
 
-func getDrivePreviewLink(fileID string) string {
-	return fmt.Sprintf(`https://drive.google.com/file/d/%s/view`, fileID)
-}
+// func getDrivePreviewLink(fileID string) string {
+// 	return fmt.Sprintf(`https://drive.google.com/file/d/%s/view`, fileID)
+// }
 
-func getFileIDFromLink(url string) string {
-	s := strings.Replace(url, "https://drive.google.com/file/d/", "", 1)
-	return strings.Replace(s, "/view", "", 1)
-}
+// func getFileIDFromLink(url string) string {
+// 	s := strings.Replace(url, "https://drive.google.com/file/d/", "", 1)
+// 	return strings.Replace(s, "/view", "", 1)
+// }
 
 func (g *googleService) DownloadInvoicePDF(invoice *model.Invoice, dirName string) ([]byte, error) {
 	if err := g.ensureToken(g.appConfig.Google.AccountingGoogleRefreshToken); err != nil {

@@ -94,7 +94,6 @@ func getByWhereConditions(query *gorm.DB, filter EmployeeFilter) *gorm.DB {
 				query = query.Where("employees.line_manager_id IN ?", filter.LineManagers)
 			}
 		}
-
 	}
 
 	if len(filter.Chapters) > 0 {

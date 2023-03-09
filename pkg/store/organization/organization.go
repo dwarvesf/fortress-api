@@ -16,8 +16,8 @@ func (s *store) One(db *gorm.DB, id string) (*model.Organization, error) {
 }
 
 func (s *store) All(db *gorm.DB) ([]*model.Organization, error) {
-	var organizaitons []*model.Organization
-	return organizaitons, db.Find(&organizaitons).Error
+	var organizations []*model.Organization
+	return organizations, db.Find(&organizations).Error
 }
 
 func (s *store) OneByCode(db *gorm.DB, code string) (*model.Organization, error) {

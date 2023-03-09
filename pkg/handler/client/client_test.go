@@ -97,7 +97,7 @@ func TestHandler_List(t *testing.T) {
 				testhelper.LoadTestSQLFile(t, txRepo, "./testdata/list/list.sql")
 				w := httptest.NewRecorder()
 				ctx, _ := gin.CreateTestContext(w)
-				ctx.Request = httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/clients"), nil)
+				ctx.Request = httptest.NewRequest(http.MethodGet, "/api/v1/clients", nil)
 				ctx.Request.Header.Set("Authorization", testToken)
 
 				ctrl := controller.New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
@@ -167,7 +167,7 @@ func TestHandler_Create(t *testing.T) {
 				ctx, _ := gin.CreateTestContext(w)
 				ctx.AddParam("id", tt.id)
 				bodyReader := strings.NewReader(string(byteReq))
-				ctx.Request = httptest.NewRequest(http.MethodPost, fmt.Sprintf("/api/v1/clients"), bodyReader)
+				ctx.Request = httptest.NewRequest(http.MethodPost, "/api/v1/clients", bodyReader)
 				ctx.Request.Header.Set("Authorization", testToken)
 
 				ctrl := controller.New(storeMock, txRepo, serviceMock, loggerMock, &cfg)

@@ -34,7 +34,7 @@ func (r *controller) Update(c *gin.Context, clientID string, input request.Updat
 	client.Industry = input.Industry
 	client.Website = input.Website
 
-	client, err = r.store.Client.UpdateSelectedFieldsByID(tx.DB(), clientID, *client,
+	_, err = r.store.Client.UpdateSelectedFieldsByID(tx.DB(), clientID, *client,
 		"name",
 		"description",
 		"registration_number",

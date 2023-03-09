@@ -92,7 +92,7 @@ const docTemplate = `{
         },
         "/auth": {
             "post": {
-                "description": "Authorise user when login",
+                "description": "Authorize user when login",
                 "consumes": [
                     "application/json"
                 ],
@@ -102,7 +102,7 @@ const docTemplate = `{
                 "tags": [
                     "Auth"
                 ],
-                "summary": "Authorise user when login",
+                "summary": "Authorize user when login",
                 "parameters": [
                     {
                         "description": "Google login code",
@@ -813,7 +813,7 @@ const docTemplate = `{
         },
         "/dashboards/projects/engineering-healths": {
             "get": {
-                "description": "Get Enginerring health information for dashboard",
+                "description": "Get Engineering health information for dashboard",
                 "consumes": [
                     "application/json"
                 ],
@@ -823,7 +823,7 @@ const docTemplate = `{
                 "tags": [
                     "Dashboard"
                 ],
-                "summary": "Get Enginerring health information for dashboard",
+                "summary": "Get Engineering health information for dashboard",
                 "parameters": [
                     {
                         "type": "string",
@@ -10189,6 +10189,9 @@ const docTemplate = `{
             "properties": {
                 "avatar": {
                     "type": "string"
+                },
+                "currency": {
+                    "$ref": "#/definitions/view.Currency"
                 },
                 "deploymentType": {
                     "type": "string"

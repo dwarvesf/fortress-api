@@ -17,11 +17,12 @@ type Config struct {
 	ApiServer ApiServer
 
 	// service
-	Google  Google
-	Vault   Vault
-	Notion  Notion
-	Wise    Wise
-	Discord Discord
+	Google   Google
+	Vault    Vault
+	Notion   Notion
+	Wise     Wise
+	Discord  Discord
+	Basecamp Basecamp
 
 	Invoice  Invoice
 	Sendgrid Sendgrid
@@ -116,6 +117,13 @@ type Sendgrid struct {
 	APIKey string
 }
 
+type Basecamp struct {
+	BotKey            string
+	ClientID          string
+	ClientSecret      string
+	OAuthRefreshToken string
+}
+
 type ENV interface {
 	GetBool(string) bool
 	GetString(string) string
@@ -191,6 +199,12 @@ func Generate(v ENV) *Config {
 			IDs: DiscordID{
 				DwarvesGuild: v.GetString("DISCORD_DWARVES_GUILD_ID"),
 			},
+		},
+		Basecamp: Basecamp{
+			BotKey:            v.GetString("BASECAMP_BOT_KEY"),
+			ClientID:          v.GetString("BASECAMP_CLIENT_ID"),
+			ClientSecret:      v.GetString("BASECAMP_CLIENT_SECRET"),
+			OAuthRefreshToken: v.GetString("BASECAMP_OAUTH_REFRESH_TOKEN"),
 		},
 		Invoice: Invoice{
 			TemplatePath: v.GetString("INVOICE_TEMPLATE_PATH"),

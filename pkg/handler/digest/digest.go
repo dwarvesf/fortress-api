@@ -68,7 +68,6 @@ func (h *handler) List(c *gin.Context) {
 			Name:      name,
 			CreatedAt: props["Created at"].Date.Start.Time,
 		})
-
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](digests, nil, nil, nil, "get list digests successfully"))
