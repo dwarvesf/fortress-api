@@ -26,6 +26,18 @@ func New(secret, projectID string, l logger.Logger) IService {
 	}
 }
 
+// GetBlock implements IService
+func (n *notionService) GetBlock(pageID string) (blockResponse nt.Block, err error) {
+	ctx := context.Background()
+
+	res, err := n.notionClient.FindBlockByID(ctx, pageID)
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}
+
 // ToChangelogMJML implements Service
 func (n *notionService) ToChangelogMJML(blocks []nt.Block, email model.Email) (string, error) {
 	var resutl string
@@ -50,7 +62,7 @@ func (n *notionService) ToChangelogMJML(blocks []nt.Block, email model.Email) (s
 				plainText = append(plainText, text.PlainText)
 			}
 
-			resutl = resutl + fmt.Sprintf(`<mj-text padding-bottom="0px">
+			resutl = resutl + fmt.Sprintf(`<mj-text padding-bottom="0px" line-height="28px">
 		  <h2 style="font-weight: bold"> 
 		 %s
 				</h2>
@@ -62,7 +74,7 @@ func (n *notionService) ToChangelogMJML(blocks []nt.Block, email model.Email) (s
 				plainText = append(plainText, text.PlainText)
 			}
 
-			resutl = resutl + fmt.Sprintf(`<mj-text padding-bottom="0px" font-size="16px">
+			resutl = resutl + fmt.Sprintf(`<mj-text padding-bottom="0px" font-size="16px" line-height="24px">
 	  <h3 style="font-weight: bold"> 
 	 %s
 			</h3>
@@ -84,7 +96,7 @@ func (n *notionService) ToChangelogMJML(blocks []nt.Block, email model.Email) (s
 			}
 
 			resutl = resutl + fmt.Sprintf(`<mj-text padding-bottom="0px" padding-top="0px">
-	  <p> 
+	  <p style="margin:4px 0px;"> 
 	 %s
 			</p>
 </mj-text>`, strings.Join(plainText, " "))
@@ -435,7 +447,7 @@ func (n *notionService) QueryAudienceDatabase(audienceDBId, audience string) (re
 	}
 
 	// filter out unsubscribed
-	var unsubscribed bool = true
+	var unsubscribed bool = false
 	filter.And = append(filter.And, nt.DatabaseQueryFilter{
 		Property: "Unsubscribed",
 		DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{

@@ -54,7 +54,7 @@ func (h *handler) Send(c *gin.Context) {
 		}
 		emails = append(emails, &model.Email{
 			HTMLContent: m.HTMLContent,
-			Subject:     "Dwarves Updates",
+			Subject:     m.Subject,
 			From:        m.From,
 			To:          []*mail.Email{s},
 			Categories:  categories,
@@ -114,6 +114,19 @@ func (h *handler) getSubcribers(pageID, audience string) ([]*mail.Email, []strin
 func (h *handler) generateEmailNewsletter(id string, from *mail.Email, categories []string) (*model.Email, error) {
 	m := model.Email{From: from, Categories: categories}
 	var changelogBlocks []nt.Block
+	title := "Dwarves Updates"
+
+	page, err := h.service.Notion.GetBlock(id)
+	if err != nil {
+		h.logger.Error(err, "get block")
+		return nil, err
+	}
+	switch v := page.(type) {
+	case *nt.ChildPageBlock:
+		title = v.Title
+	}
+	m.Subject = title
+
 	pageContent, err := h.service.Notion.GetBlockChildren(id)
 	if err != nil {
 		h.logger.Error(err, "download page")

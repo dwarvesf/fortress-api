@@ -32,8 +32,10 @@ func New(key string, cfg *config.Config, l logger.Logger) Service {
 func (s *sendgridClient) SendEmail(email *model.Email) error {
 	// boundary check to make sure we don't mess up
 	if s.cfg.Env != "prod" {
-		m := mail.NewEmail("Minh Luu", "leo@dwarvesv.com")
-		email.To = []*mail.Email{m}
+		email.To = []*mail.Email{
+			mail.NewEmail("Minh Luu", "leo@d.foundation"),
+			// mail.NewEmail("Nikki", "nikki@d.foundation"),
+		}
 		email.Bcc = []*mail.Email{}
 	}
 	m := mail.NewV3Mail()
