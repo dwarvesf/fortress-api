@@ -13,6 +13,7 @@ type IService interface {
 	GetProjectInDB(pageID string) (project *nt.DatabasePageProperties, err error)
 	GetProjectsInDB(pageIDs []string, projectPageID string) (projects map[string]nt.DatabasePageProperties, err error)
 	GetBlockChildren(pageID string) (blockChildrenResponse *nt.BlockChildrenResponse, err error)
+	GetBlock(pageID string) (blockResponse nt.Block, err error)
 	ListProject() ([]model.ProjectChangelogPage, error)
 	GetPagePropByID(pageID, propID string, query *nt.PaginationQuery) (*nt.PagePropResponse, error)
 
