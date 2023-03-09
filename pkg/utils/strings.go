@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"net/url"
+	"regexp"
 	"strconv"
 	"strings"
 )
@@ -43,4 +45,9 @@ func RemoveEmptyString(in []string) []string {
 
 func RemoveAllSpace(str string) string {
 	return strings.ReplaceAll(str, " ", "")
+}
+
+func HasDomain(str string) bool {
+	u, err := url.Parse(str)
+	return err == nil && u.Scheme != "" && u.Host != "" && regexp.MustCompile(`^[^.]+\.?[^.]+$`).MatchString(u.Host)
 }
