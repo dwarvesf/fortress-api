@@ -125,42 +125,6 @@ const MJMLDFUpdateTemplate = ` <mjml> <mj-head> <mj-title>Changelog Email</mj-ti
                 would love to have you as a part of the journey. If
                 you don't want to be on the list, you can
                 unsubscribe.</p>
-              <p style="font-family: Helvetica;
-            font-style: normal;
-            font-weight: 700;
-            font-size: 11px;
-            line-height: 14px;
-            color: #222222;">My mailing address is:</p>
-              <p style="font-family: Helvetica;
-            font-style: normal;
-            font-weight: 400;
-            font-size: 11px;
-            line-height: 14px;
-            color: #222222;">Hado Centrosa Garden</p>
-              <p style="font-family: Helvetica;
-            font-style: normal;
-            font-weight: 400;
-            font-size: 11px;
-            line-height: 14px;
-            color: #222222;">200 3/2 street</p>
-              <p style="font-family: Helvetica;
-            font-style: normal;
-            font-weight: 400;
-            font-size: 11px;
-            line-height: 14px;
-            color: #222222;">District 10</p>
-              <p style="font-family: Helvetica;
-            font-style: normal;
-            font-weight: 400;
-            font-size: 11px;
-            line-height: 14px;
-            color: #222222;">Ho Chi Minh City</p>
-              <p style="font-family: Helvetica;
-            font-style: normal;
-            font-weight: 400;
-            font-size: 11px;
-            line-height: 14px;
-            color: #222222;">Vietnam</p>
             </td>
           </tr>
         </mj-table>
