@@ -102,7 +102,7 @@ func (h *handler) List(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse(view.ToProjectsData(c, projects, userInfo),
+	c.JSON(http.StatusOK, view.CreateResponse(view.ToProjectsData(projects, userInfo),
 		&view.PaginationResponse{Pagination: query.Pagination, Total: total}, nil, nil, ""))
 }
 
@@ -1175,7 +1175,7 @@ func (h *handler) updateProjectMember(db *gorm.DB, slotID string, projectID stri
 		}
 	} else {
 		// Start of lead time or update lead time
-		_, err := h.updateProjectHead(db, projectID, input.EmployeeID, model.HeadPositionTechnicalLead, input.GetStartDate(), input.GetEndDate())
+		_, err := h.updateProjectLead(db, projectID, input.EmployeeID, input.GetStartDate(), input.GetEndDate())
 		if err != nil {
 			h.logger.Fields(logger.Fields{
 				"projectID":  projectID,
@@ -1489,7 +1489,7 @@ func (h *handler) Details(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse(view.ToProjectData(c, rs, userInfo), nil, nil, nil, ""))
+	c.JSON(http.StatusOK, view.CreateResponse(view.ToProjectData(rs, userInfo), nil, nil, nil, ""))
 }
 
 // UpdateGeneralInfo godoc
@@ -1764,53 +1764,28 @@ func (h *handler) UpdateContactInfo(c *gin.Context) {
 		return
 	}
 
-	// Check account manager exists
-	exist, err := h.store.Employee.IsExist(h.repo.DB(), body.AccountManagerID.String())
-	if err != nil {
-		l.Error(err, "failed to find account manager")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
-		return
-	}
-
-	if !exist {
-		l.Error(errs.ErrAccountManagerNotFound, "account manager not found")
-		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrAccountManagerNotFound, body, ""))
-		return
-	}
-
 	// Begin transaction
 	tx, done := h.repo.NewTransaction()
 
-	// Update Account Manager
-	_, err = h.updateProjectHead(tx.DB(), projectID, body.AccountManagerID, model.HeadPositionAccountManager, nil, nil)
+	err = h.updateProjectHeads(tx.DB(), projectID, model.HeadPositionAccountManager, body.AccountManagers)
 	if err != nil {
-		l.Error(err, "failed to update account manager")
+		l.Error(err, "failed to update account managers")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
 		return
 	}
 
-	// Update Delivery Manager
-	if !body.DeliveryManagerID.IsZero() {
-		// Check delivery manager exists
-		exist, err = h.store.Employee.IsExist(tx.DB(), body.DeliveryManagerID.String())
-		if err != nil {
-			l.Error(err, "error when finding delivery manager")
-			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
-			return
-		}
+	err = h.updateProjectHeads(tx.DB(), projectID, model.HeadPositionDeliveryManager, body.DeliveryManagers)
+	if err != nil {
+		l.Error(err, "failed to update delivery managers")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
+		return
+	}
 
-		if !exist {
-			l.Error(errs.ErrDeliveryManagerNotFound, "delivery manager not found")
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, done(errs.ErrDeliveryManagerNotFound), body, ""))
-			return
-		}
-
-		_, err = h.updateProjectHead(tx.DB(), projectID, body.DeliveryManagerID, model.HeadPositionDeliveryManager, nil, nil)
-		if err != nil {
-			l.Error(err, "failed to update delivery manager")
-			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
-			return
-		}
+	err = h.updateProjectHeads(tx.DB(), projectID, model.HeadPositionSalePerson, body.SalePersons)
+	if err != nil {
+		l.Error(err, "failed to update sale persons")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
+		return
 	}
 
 	// Update email info
@@ -1836,54 +1811,78 @@ func (h *handler) UpdateContactInfo(c *gin.Context) {
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToUpdateProjectContactInfo(p), nil, done(nil), nil, ""))
 }
 
-func (h *handler) updateProjectHead(db *gorm.DB, projectID string, employeeID model.UUID, position model.HeadPosition, startDate *time.Time, endDate *time.Time) (*model.ProjectHead, error) {
-	if position == model.HeadPositionTechnicalLead {
-		return h.updateProjectLead(db, projectID, employeeID, startDate, endDate)
-	}
-
+func (h *handler) updateProjectHeads(db *gorm.DB, projectID string, position model.HeadPosition, headsInput []request.ProjectHeadInput) error {
 	heads, err := h.store.ProjectHead.GetByProjectIDAndPosition(db, projectID, position)
 	if err != nil {
 		h.logger.Fields(logger.Fields{
 			"projectID": projectID,
 			"position":  position,
-		}).Error(err, "failed to get one project head")
-		return nil, err
+		}).Error(err, "failed to get heads")
+		return err
 	}
 
-	// Create new head
-	if len(heads) == 0 {
+	// create input map
+	headInputMap := map[model.UUID]decimal.Decimal{}
+	for _, head := range headsInput {
+		exists, err := h.store.Employee.IsExist(db, head.EmployeeID.String())
+		if err != nil {
+			h.logger.Error(err, "failed to check employee existence")
+			return err
+		}
+
+		if !exists {
+			h.logger.Error(errs.ErrEmployeeNotFound, "employee not found")
+			return errs.ErrEmployeeNotFound
+		}
+
+		headInputMap[head.EmployeeID] = decimal.NewFromInt(int64(head.CommissionRate))
+	}
+
+	// update/delete exist heads
+	for _, head := range heads {
+		if _, ok := headInputMap[head.EmployeeID]; ok {
+			head.CommissionRate = headInputMap[head.EmployeeID]
+
+			_, err := h.store.ProjectHead.UpdateSelectedFieldsByID(db, head.ID.String(), *head, "commission_rate")
+			if err != nil {
+				h.logger.Fields(logger.Fields{
+					"projectID": projectID,
+					"headID":    head.ID.String(),
+				}).Error(err, "failed to update head")
+				return err
+			}
+
+			delete(headInputMap, head.EmployeeID)
+		} else {
+			if err := h.store.ProjectHead.DeleteByID(db, head.ID.String()); err != nil {
+				h.logger.Fields(logger.Fields{
+					"projectID": projectID,
+					"headID":    head.ID.String(),
+				}).Error(err, "failed to delete head")
+				return err
+			}
+		}
+	}
+
+	// create new head
+	for employeeID, commissionRate := range headInputMap {
 		head := &model.ProjectHead{
-			ProjectID:  model.MustGetUUIDFromString(projectID),
-			EmployeeID: employeeID,
-			Position:   position,
+			BaseModel: model.BaseModel{
+				ID: model.NewUUID(),
+			},
+			ProjectID:      model.MustGetUUIDFromString(projectID),
+			EmployeeID:     employeeID,
+			CommissionRate: commissionRate,
+			Position:       position,
 		}
+
 		if err := h.store.ProjectHead.Create(db, head); err != nil {
-			h.logger.Fields(logger.Fields{"head": head}).Error(err, "failed to create project head")
-			return nil, err
+			h.logger.AddField("head", head).Error(err, "failed to create head")
+			return err
 		}
-
-		return head, nil
 	}
 
-	// Delivery manager or account manager just only have one record
-	if len(heads) > 1 {
-		return nil, errors.New("more than one head")
-	}
-
-	if heads[0].EmployeeID == employeeID {
-		return heads[0], nil
-	}
-
-	heads[0].EmployeeID = employeeID
-
-	// Update old record
-	_, err = h.store.ProjectHead.UpdateSelectedFieldsByID(db, heads[0].ID.String(), *heads[0], "employee_id")
-	if err != nil {
-		h.logger.Fields(logger.Fields{"head": *heads[0]}).Error(err, "failed to update project head")
-		return nil, err
-	}
-
-	return heads[0], nil
+	return nil
 }
 
 func (h *handler) updateProjectLead(db *gorm.DB, projectID string, employeeID model.UUID, startDate *time.Time, endDate *time.Time) (*model.ProjectHead, error) {

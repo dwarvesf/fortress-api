@@ -4,7 +4,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/shopspring/decimal"
 
 	"github.com/dwarvesf/fortress-api/pkg/model"
@@ -27,9 +26,9 @@ type ProjectData struct {
 	EndDate             *time.Time            `json:"endDate"`
 	Members             []ProjectMember       `json:"members"`
 	TechnicalLead       []ProjectHead         `json:"technicalLeads"`
-	AccountManager      *ProjectHead          `json:"accountManager"`
-	SalePerson          *ProjectHead          `json:"salePerson"`
-	DeliveryManager     *ProjectHead          `json:"deliveryManager"`
+	AccountManagers     []ProjectHead         `json:"accountManagers"`
+	DeliveryManagers    []ProjectHead         `json:"deliveryManagers"`
+	SalePersons         []ProjectHead         `json:"salePersons"`
 	Stacks              []Stack               `json:"stacks"`
 	Code                string                `json:"code"`
 	Function            string                `json:"function"`
@@ -106,21 +105,28 @@ type ProjectMember struct {
 }
 
 type ProjectHead struct {
-	EmployeeID  string `json:"employeeID"`
-	FullName    string `json:"fullName"`
-	DisplayName string `json:"displayName"`
-	Avatar      string `json:"avatar"`
-	Username    string `json:"username"`
+	EmployeeID     string          `json:"employeeID"`
+	FullName       string          `json:"fullName"`
+	DisplayName    string          `json:"displayName"`
+	Avatar         string          `json:"avatar"`
+	Username       string          `json:"username"`
+	CommissionRate decimal.Decimal `json:"commissionRate"`
 }
 
-func ToProjectHead(head *model.ProjectHead) *ProjectHead {
-	return &ProjectHead{
+func ToProjectHead(userInfo *model.CurrentLoggedUserInfo, head *model.ProjectHead) *ProjectHead {
+	res := &ProjectHead{
 		EmployeeID:  head.EmployeeID.String(),
 		FullName:    head.Employee.FullName,
 		DisplayName: head.Employee.DisplayName,
 		Avatar:      head.Employee.Avatar,
 		Username:    head.Employee.Username,
 	}
+
+	if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadFullAccess) {
+		res.CommissionRate = head.CommissionRate
+	}
+
+	return res
 }
 
 type UpdateProjectStatusResponse struct {
@@ -138,31 +144,24 @@ func ToUpdateProjectStatusResponse(p *model.Project) UpdatedProject {
 	}
 }
 
-func ToProjectData(c *gin.Context, project *model.Project, userInfo *model.CurrentLoggedUserInfo) ProjectData {
+func ToProjectData(project *model.Project, userInfo *model.CurrentLoggedUserInfo) ProjectData {
 	leadMap := map[string]bool{}
 	var technicalLeads = make([]ProjectHead, 0, len(project.Heads))
-	var accountManager, salePerson, deliveryManager *ProjectHead
-	for _, h := range project.Heads {
-		head := ToProjectHead(h)
+	var accountManagers, salePersons, deliveryManagers []ProjectHead
 
-		if h.IsLead() {
+	for _, h := range project.Heads {
+		head := ToProjectHead(userInfo, h)
+
+		switch h.Position {
+		case model.HeadPositionTechnicalLead:
 			leadMap[h.EmployeeID.String()] = true
 			technicalLeads = append(technicalLeads, *head)
-			continue
-		}
-
-		if h.IsAccountManager() {
-			accountManager = head
-			continue
-		}
-
-		if h.IsSalePerson() {
-			salePerson = head
-			continue
-		}
-
-		if h.IsDeliveryManager() {
-			deliveryManager = head
+		case model.HeadPositionAccountManager:
+			accountManagers = append(accountManagers, *head)
+		case model.HeadPositionDeliveryManager:
+			deliveryManagers = append(deliveryManagers, *head)
+		case model.HeadPositionSalePerson:
+			salePersons = append(salePersons, *head)
 		}
 	}
 
@@ -192,20 +191,20 @@ func ToProjectData(c *gin.Context, project *model.Project, userInfo *model.Curre
 	}
 
 	d := ProjectData{
-		BaseModel:       project.BaseModel,
-		Avatar:          project.Avatar,
-		Name:            project.Name,
-		Type:            project.Type.String(),
-		Status:          project.Status.String(),
-		Stacks:          ToProjectStacks(project.ProjectStacks),
-		StartDate:       project.StartDate,
-		EndDate:         project.EndDate,
-		Members:         members,
-		TechnicalLead:   technicalLeads,
-		DeliveryManager: deliveryManager,
-		SalePerson:      salePerson,
-		AccountManager:  accountManager,
-		ProjectEmail:    project.ProjectEmail,
+		BaseModel:        project.BaseModel,
+		Avatar:           project.Avatar,
+		Name:             project.Name,
+		Type:             project.Type.String(),
+		Status:           project.Status.String(),
+		Stacks:           ToProjectStacks(project.ProjectStacks),
+		StartDate:        project.StartDate,
+		EndDate:          project.EndDate,
+		Members:          members,
+		TechnicalLead:    technicalLeads,
+		DeliveryManagers: deliveryManagers,
+		AccountManagers:  accountManagers,
+		SalePersons:      salePersons,
+		ProjectEmail:     project.ProjectEmail,
 
 		AllowsSendingSurvey: project.AllowsSendingSurvey,
 		Code:                project.Code,
@@ -271,14 +270,14 @@ func ToProjectData(c *gin.Context, project *model.Project, userInfo *model.Curre
 	return d
 }
 
-func ToProjectsData(c *gin.Context, projects []*model.Project, userInfo *model.CurrentLoggedUserInfo) []ProjectData {
+func ToProjectsData(projects []*model.Project, userInfo *model.CurrentLoggedUserInfo) []ProjectData {
 	var results = make([]ProjectData, 0, len(projects))
 
 	for _, p := range projects {
 		// If the project belongs user, append it in the list
 		_, ok := userInfo.Projects[p.ID]
 		if ok && p.Status == model.ProjectStatusActive && model.IsUserActiveInProject(userInfo.UserID, p.ProjectMembers) {
-			results = append(results, ToProjectData(c, p, userInfo))
+			results = append(results, ToProjectData(p, userInfo))
 			continue
 		}
 
@@ -286,10 +285,10 @@ func ToProjectsData(c *gin.Context, projects []*model.Project, userInfo *model.C
 		if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadFullAccess) ||
 			authutils.HasPermission(userInfo.Permissions, model.PermissionEmployeesReadProjectsReadActive) {
 			if p.Status == model.ProjectStatusActive {
-				results = append(results, ToProjectData(c, p, userInfo))
+				results = append(results, ToProjectData(p, userInfo))
 			} else {
 				if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadFullAccess) {
-					results = append(results, ToProjectData(c, p, userInfo))
+					results = append(results, ToProjectData(p, userInfo))
 				}
 			}
 		}
@@ -436,9 +435,9 @@ func ToCreateProjectDataResponse(userInfo *model.CurrentLoggedUserInfo, project 
 	for _, head := range project.Heads {
 		switch head.Position {
 		case model.HeadPositionAccountManager:
-			result.AccountManager = ToProjectHead(head)
+			result.AccountManager = ToProjectHead(userInfo, head)
 		case model.HeadPositionDeliveryManager:
-			result.DeliveryManager = ToProjectHead(head)
+			result.DeliveryManager = ToProjectHead(userInfo, head)
 		}
 	}
 
@@ -603,12 +602,13 @@ func ToUpdateProjectGeneralInfo(project *model.Project) UpdateProjectGeneralInfo
 }
 
 type BasicProjectHeadInfo struct {
-	EmployeeID  string             `json:"employeeID"`
-	FullName    string             `json:"fullName"`
-	DisplayName string             `json:"displayName"`
-	Avatar      string             `json:"avatar"`
-	Position    model.HeadPosition `json:"position"`
-	Username    string             `json:"username"`
+	EmployeeID     string             `json:"employeeID"`
+	FullName       string             `json:"fullName"`
+	DisplayName    string             `json:"displayName"`
+	Avatar         string             `json:"avatar"`
+	Position       model.HeadPosition `json:"position"`
+	Username       string             `json:"username"`
+	CommissionRate decimal.Decimal    `json:"commissionRate"`
 }
 
 type UpdateProjectContactInfo struct {
@@ -625,12 +625,13 @@ func ToUpdateProjectContactInfo(project *model.Project) UpdateProjectContactInfo
 	projectHeads := make([]BasicProjectHeadInfo, 0, len(project.Heads))
 	for _, v := range project.Heads {
 		projectHeads = append(projectHeads, BasicProjectHeadInfo{
-			EmployeeID:  v.Employee.ID.String(),
-			FullName:    v.Employee.FullName,
-			Avatar:      v.Employee.Avatar,
-			DisplayName: v.Employee.DisplayName,
-			Position:    v.Position,
-			Username:    v.Employee.Username,
+			EmployeeID:     v.Employee.ID.String(),
+			FullName:       v.Employee.FullName,
+			Avatar:         v.Employee.Avatar,
+			DisplayName:    v.Employee.DisplayName,
+			Position:       v.Position,
+			Username:       v.Employee.Username,
+			CommissionRate: v.CommissionRate,
 		})
 	}
 
