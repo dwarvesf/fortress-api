@@ -338,11 +338,17 @@ func (input DeleteSlotInput) Validate() error {
 	return nil
 }
 
+type ProjectHeadInput struct {
+	EmployeeID     model.UUID `json:"employeeID" form:"employeeID"`
+	CommissionRate int        `json:"commissionRate" form:"commissionRate"`
+}
+
 type UpdateContactInfoInput struct {
-	ClientEmail       []string   `form:"clientEmail" json:"clientEmail"`
-	ProjectEmail      string     `form:"projectEmail" json:"projectEmail"`
-	AccountManagerID  model.UUID `form:"accountManagerID" json:"accountManagerID" binding:"required"`
-	DeliveryManagerID model.UUID `form:"deliveryManagerID" json:"deliveryManagerID"`
+	ClientEmail      []string           `form:"clientEmail" json:"clientEmail"`
+	ProjectEmail     string             `form:"projectEmail" json:"projectEmail"`
+	AccountManagers  []ProjectHeadInput `form:"accountManagers" json:"accountManagers"`
+	DeliveryManagers []ProjectHeadInput `form:"deliveryManagers" json:"deliveryManagers"`
+	SalePersons      []ProjectHeadInput `form:"salePersons" json:"salePersons"`
 }
 
 func (i UpdateContactInfoInput) Validate() error {
@@ -357,7 +363,29 @@ func (i UpdateContactInfoInput) Validate() error {
 		return errs.ErrInvalidEmailDomainForProject
 	}
 
+	if len(i.AccountManagers) == 0 {
+		return errs.ErrAccountManagerCannotEmpty
+	}
+
+	if !isValidCommissionRate(i.AccountManagers) ||
+		!isValidCommissionRate(i.DeliveryManagers) ||
+		!isValidCommissionRate(i.SalePersons) {
+		return errs.ErrTotalCommissionRateMustBe100
+	}
+
 	return nil
+}
+
+func isValidCommissionRate(heads []ProjectHeadInput) bool {
+	if len(heads) == 0 {
+		return true
+	}
+
+	sum := 0
+	for _, head := range heads {
+		sum += head.CommissionRate
+	}
+	return sum == 100
 }
 
 type UnassignMemberInput struct {

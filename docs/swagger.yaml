@@ -1528,6 +1528,13 @@ definitions:
       unitCost:
         type: integer
     type: object
+  request.ProjectHeadInput:
+    properties:
+      commissionRate:
+        type: integer
+      employeeID:
+        type: string
+    type: object
   request.SendInvoiceRequest:
     properties:
       bankID:
@@ -1643,18 +1650,24 @@ definitions:
     type: object
   request.UpdateContactInfoInput:
     properties:
-      accountManagerID:
-        type: string
+      accountManagers:
+        items:
+          $ref: '#/definitions/request.ProjectHeadInput'
+        type: array
       clientEmail:
         items:
           type: string
         type: array
-      deliveryManagerID:
-        type: string
+      deliveryManagers:
+        items:
+          $ref: '#/definitions/request.ProjectHeadInput'
+        type: array
       projectEmail:
         type: string
-    required:
-    - accountManagerID
+      salePersons:
+        items:
+          $ref: '#/definitions/request.ProjectHeadInput'
+        type: array
     type: object
   request.UpdateEmployeeGeneralInfoInput:
     properties:
@@ -2210,6 +2223,8 @@ definitions:
     properties:
       avatar:
         type: string
+      commissionRate:
+        type: number
       displayName:
         type: string
       employeeID:
@@ -3161,8 +3176,10 @@ definitions:
     type: object
   view.ProjectData:
     properties:
-      accountManager:
-        $ref: '#/definitions/view.ProjectHead'
+      accountManagers:
+        items:
+          $ref: '#/definitions/view.ProjectHead'
+        type: array
       allowsSendingSurvey:
         type: boolean
       auditNotionID:
@@ -3187,8 +3204,10 @@ definitions:
         type: string
       deletedAt:
         $ref: '#/definitions/gorm.DeletedAt'
-      deliveryManager:
-        $ref: '#/definitions/view.ProjectHead'
+      deliveryManagers:
+        items:
+          $ref: '#/definitions/view.ProjectHead'
+        type: array
       endDate:
         type: string
       function:
@@ -3207,8 +3226,10 @@ definitions:
         $ref: '#/definitions/view.Organization'
       projectEmail:
         type: string
-      salePerson:
-        $ref: '#/definitions/view.ProjectHead'
+      salePersons:
+        items:
+          $ref: '#/definitions/view.ProjectHead'
+        type: array
       stacks:
         items:
           $ref: '#/definitions/view.Stack'
@@ -3235,6 +3256,8 @@ definitions:
     properties:
       avatar:
         type: string
+      commissionRate:
+        type: number
       displayName:
         type: string
       employeeID:

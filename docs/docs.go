@@ -7535,6 +7535,17 @@ const docTemplate = `{
                 }
             }
         },
+        "request.ProjectHeadInput": {
+            "type": "object",
+            "properties": {
+                "commissionRate": {
+                    "type": "integer"
+                },
+                "employeeID": {
+                    "type": "string"
+                }
+            }
+        },
         "request.SendInvoiceRequest": {
             "type": "object",
             "required": [
@@ -7703,12 +7714,12 @@ const docTemplate = `{
         },
         "request.UpdateContactInfoInput": {
             "type": "object",
-            "required": [
-                "accountManagerID"
-            ],
             "properties": {
-                "accountManagerID": {
-                    "type": "string"
+                "accountManagers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/request.ProjectHeadInput"
+                    }
                 },
                 "clientEmail": {
                     "type": "array",
@@ -7716,11 +7727,20 @@ const docTemplate = `{
                         "type": "string"
                     }
                 },
-                "deliveryManagerID": {
-                    "type": "string"
+                "deliveryManagers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/request.ProjectHeadInput"
+                    }
                 },
                 "projectEmail": {
                     "type": "string"
+                },
+                "salePersons": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/request.ProjectHeadInput"
+                    }
                 }
             }
         },
@@ -8558,6 +8578,9 @@ const docTemplate = `{
             "properties": {
                 "avatar": {
                     "type": "string"
+                },
+                "commissionRate": {
+                    "type": "number"
                 },
                 "displayName": {
                     "type": "string"
@@ -10021,8 +10044,11 @@ const docTemplate = `{
         "view.ProjectData": {
             "type": "object",
             "properties": {
-                "accountManager": {
-                    "$ref": "#/definitions/view.ProjectHead"
+                "accountManagers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.ProjectHead"
+                    }
                 },
                 "allowsSendingSurvey": {
                     "type": "boolean"
@@ -10060,8 +10086,11 @@ const docTemplate = `{
                 "deletedAt": {
                     "$ref": "#/definitions/gorm.DeletedAt"
                 },
-                "deliveryManager": {
-                    "$ref": "#/definitions/view.ProjectHead"
+                "deliveryManagers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.ProjectHead"
+                    }
                 },
                 "endDate": {
                     "type": "string"
@@ -10090,8 +10119,11 @@ const docTemplate = `{
                 "projectEmail": {
                     "type": "string"
                 },
-                "salePerson": {
-                    "$ref": "#/definitions/view.ProjectHead"
+                "salePersons": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.ProjectHead"
+                    }
                 },
                 "stacks": {
                     "type": "array",
@@ -10132,6 +10164,9 @@ const docTemplate = `{
             "properties": {
                 "avatar": {
                     "type": "string"
+                },
+                "commissionRate": {
+                    "type": "number"
                 },
                 "displayName": {
                     "type": "string"

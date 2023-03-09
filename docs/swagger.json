@@ -7527,6 +7527,17 @@
                 }
             }
         },
+        "request.ProjectHeadInput": {
+            "type": "object",
+            "properties": {
+                "commissionRate": {
+                    "type": "integer"
+                },
+                "employeeID": {
+                    "type": "string"
+                }
+            }
+        },
         "request.SendInvoiceRequest": {
             "type": "object",
             "required": [
@@ -7695,12 +7706,12 @@
         },
         "request.UpdateContactInfoInput": {
             "type": "object",
-            "required": [
-                "accountManagerID"
-            ],
             "properties": {
-                "accountManagerID": {
-                    "type": "string"
+                "accountManagers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/request.ProjectHeadInput"
+                    }
                 },
                 "clientEmail": {
                     "type": "array",
@@ -7708,11 +7719,20 @@
                         "type": "string"
                     }
                 },
-                "deliveryManagerID": {
-                    "type": "string"
+                "deliveryManagers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/request.ProjectHeadInput"
+                    }
                 },
                 "projectEmail": {
                     "type": "string"
+                },
+                "salePersons": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/request.ProjectHeadInput"
+                    }
                 }
             }
         },
@@ -8550,6 +8570,9 @@
             "properties": {
                 "avatar": {
                     "type": "string"
+                },
+                "commissionRate": {
+                    "type": "number"
                 },
                 "displayName": {
                     "type": "string"
@@ -10013,8 +10036,11 @@
         "view.ProjectData": {
             "type": "object",
             "properties": {
-                "accountManager": {
-                    "$ref": "#/definitions/view.ProjectHead"
+                "accountManagers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.ProjectHead"
+                    }
                 },
                 "allowsSendingSurvey": {
                     "type": "boolean"
@@ -10052,8 +10078,11 @@
                 "deletedAt": {
                     "$ref": "#/definitions/gorm.DeletedAt"
                 },
-                "deliveryManager": {
-                    "$ref": "#/definitions/view.ProjectHead"
+                "deliveryManagers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.ProjectHead"
+                    }
                 },
                 "endDate": {
                     "type": "string"
@@ -10082,8 +10111,11 @@
                 "projectEmail": {
                     "type": "string"
                 },
-                "salePerson": {
-                    "$ref": "#/definitions/view.ProjectHead"
+                "salePersons": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.ProjectHead"
+                    }
                 },
                 "stacks": {
                     "type": "array",
@@ -10124,6 +10156,9 @@
             "properties": {
                 "avatar": {
                     "type": "string"
+                },
+                "commissionRate": {
+                    "type": "number"
                 },
                 "displayName": {
                     "type": "string"

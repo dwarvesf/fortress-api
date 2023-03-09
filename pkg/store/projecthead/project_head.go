@@ -24,13 +24,18 @@ func (s *store) GetActiveLeadsByProjectID(db *gorm.DB, projectID string) ([]*mod
 	var projectHeads []*model.ProjectHead
 
 	now := time.Now()
-	return projectHeads, db.Where("project_id = ? AND (end_date IS NULL OR end_date > ?) AND deleted_at IS NULL", projectID, now).
+	return projectHeads, db.Where("project_id = ? AND (end_date IS NULL OR end_date > ?)", projectID, now).
+		Order("position").
 		Preload("Employee").
 		Find(&projectHeads).Error
 }
 
 func (s *store) DeleteByPositionInProject(db *gorm.DB, projectID string, employeeID string, position string) error {
 	return db.Unscoped().Where("project_id = ? AND employee_id = ? AND position = ?", projectID, employeeID, position).Delete(&model.ProjectHead{}).Error
+}
+
+func (s *store) DeleteByID(db *gorm.DB, id string) error {
+	return db.Unscoped().Where("id = ?", id).Delete(&model.ProjectHead{}).Error
 }
 
 func (s *store) UpdateSelectedFieldsByID(db *gorm.DB, id string, updateModel model.ProjectHead, updatedFields ...string) (*model.ProjectHead, error) {
