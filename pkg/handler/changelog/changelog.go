@@ -301,7 +301,7 @@ func (h *handler) generateEmailChangelog(
 		return nil, nil, singleChangelogError{ProjectName: projectName, Err: err}
 	}
 
-	m.HTMLContent, err = mjml.ToHTML(context.Background(), fmt.Sprintf(notion.MJMLTemplate, content, archiveURL, archiveURL))
+	m.HTMLContent, err = mjml.ToHTML(context.Background(), fmt.Sprintf(notion.MJMLChangelogTemplate, content, archiveURL, archiveURL))
 	if err != nil {
 		h.logger.Error(err, "To HTML")
 		return nil, nil, singleChangelogError{ProjectName: projectName, Err: err}

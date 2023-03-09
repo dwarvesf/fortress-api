@@ -229,4 +229,9 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 		notionChangelog.GET("/projects/available", h.Changelog.GetAvailableProjectsChangelog)
 		notionChangelog.POST("/project", h.Changelog.SendProjectChangelog)
 	}
+
+	dfUpdates := v1.Group("df-updates")
+	{
+		dfUpdates.POST("/:id/send", h.DFUpdate.Send)
+	}
 }
