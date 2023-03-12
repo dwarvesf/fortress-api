@@ -59,7 +59,6 @@ func (h *handler) GetProfile(c *gin.Context) {
 		return
 	}
 
-	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler": "profile",
 		"method":  "GetProfile",
@@ -107,7 +106,6 @@ func (h *handler) UpdateInfo(c *gin.Context) {
 		return
 	}
 
-	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler": "profile",
 		"method":  "UpdateInfo",

@@ -31,7 +31,7 @@ const testToken = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2OTkzM
 func TestHandler_Detail(t *testing.T) {
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg)
+	serviceMock := service.New(&cfg, nil, nil)
 	storeMock := store.New()
 
 	tests := []struct {
@@ -103,7 +103,7 @@ func TestHandler_Detail(t *testing.T) {
 func TestHandler_List(t *testing.T) {
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg)
+	serviceMock := service.New(&cfg, nil, nil)
 	storeMock := store.New()
 
 	tests := []struct {
@@ -167,7 +167,7 @@ func TestHandler_UpdateProjectStatus(t *testing.T) {
 	// load env and test data
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg)
+	serviceMock := service.New(&cfg, nil, nil)
 	storeMock := store.New()
 
 	tests := []struct {
@@ -261,7 +261,7 @@ func TestHandler_UpdateProjectStatus(t *testing.T) {
 func TestHandler_Create(t *testing.T) {
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg)
+	serviceMock := service.New(&cfg, nil, nil)
 	storeMock := store.New()
 
 	tests := []struct {
@@ -573,7 +573,7 @@ func TestHandler_Create(t *testing.T) {
 func TestHandler_GetMembers(t *testing.T) {
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg)
+	serviceMock := service.New(&cfg, nil, nil)
 	storeMock := store.New()
 
 	tests := []struct {
@@ -658,7 +658,7 @@ func TestHandler_GetMembers(t *testing.T) {
 func TestHandler_UpdateMember(t *testing.T) {
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg)
+	serviceMock := service.New(&cfg, nil, nil)
 	storeMock := store.New()
 
 	tests := []struct {
@@ -917,7 +917,7 @@ func TestHandler_UpdateMember(t *testing.T) {
 func TestHandler_AssignMember(t *testing.T) {
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg)
+	serviceMock := service.New(&cfg, nil, nil)
 	storeMock := store.New()
 
 	tests := []struct {
@@ -1045,7 +1045,7 @@ func TestHandler_AssignMember(t *testing.T) {
 func TestHandler_DeleteProjectMember(t *testing.T) {
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg)
+	serviceMock := service.New(&cfg, nil, nil)
 	storeMock := store.New()
 
 	tests := []struct {
@@ -1115,7 +1115,7 @@ func TestHandler_DeleteProjectMember(t *testing.T) {
 func TestHandler_DeleteSlot(t *testing.T) {
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg)
+	serviceMock := service.New(&cfg, nil, nil)
 	storeMock := store.New()
 
 	tests := []struct {
@@ -1179,7 +1179,7 @@ func TestHandler_UpdateGeneralInfo(t *testing.T) {
 	// load env and test data
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg)
+	serviceMock := service.New(&cfg, nil, nil)
 	storeMock := store.New()
 
 	tests := []struct {
@@ -1335,7 +1335,7 @@ func TestHandler_UpdateContactInfo(t *testing.T) {
 	// load env and test data
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg)
+	serviceMock := service.New(&cfg, nil, nil)
 	storeMock := store.New()
 
 	tests := []struct {
@@ -1460,7 +1460,7 @@ func TestHandler_GetListWorkUnit(t *testing.T) {
 	// load env and test data
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg)
+	serviceMock := service.New(&cfg, nil, nil)
 	storeMock := store.New()
 
 	tests := []struct {
@@ -1532,7 +1532,7 @@ func TestHandler_GetListWorkUnit(t *testing.T) {
 func TestHandler_UpdateWorkUnit(t *testing.T) {
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg)
+	serviceMock := service.New(&cfg, nil, nil)
 	storeMock := store.New()
 
 	tests := []struct {
@@ -1727,7 +1727,7 @@ func TestHandler_UpdateWorkUnit(t *testing.T) {
 func TestHandler_CreateWorkUnit(t *testing.T) {
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg)
+	serviceMock := service.New(&cfg, nil, nil)
 	storeMock := store.New()
 
 	tests := []struct {
@@ -1925,7 +1925,7 @@ func TestHandler_CreateWorkUnit(t *testing.T) {
 func TestHandler_ArchiveWorkUnit(t *testing.T) {
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg)
+	serviceMock := service.New(&cfg, nil, nil)
 	storeMock := store.New()
 
 	tests := []struct {
@@ -2018,7 +2018,7 @@ func TestHandler_ArchiveWorkUnit(t *testing.T) {
 func TestHandler_UnarchiveWorkUnit(t *testing.T) {
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg)
+	serviceMock := service.New(&cfg, nil, nil)
 	storeMock := store.New()
 
 	tests := []struct {
@@ -2112,7 +2112,7 @@ func TestHandler_UpdateSendingSurveyState(t *testing.T) {
 	// load env and test data
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg)
+	serviceMock := service.New(&cfg, nil, nil)
 	storeMock := store.New()
 
 	tests := []struct {
@@ -2184,7 +2184,7 @@ func TestHandler_UpdateSendingSurveyState(t *testing.T) {
 func TestHandler_UnassignMember(t *testing.T) {
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg)
+	serviceMock := service.New(&cfg, nil, nil)
 	storeMock := store.New()
 
 	tests := []struct {

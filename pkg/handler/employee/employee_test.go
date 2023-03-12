@@ -30,7 +30,7 @@ const testToken = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2OTkzM
 func TestHandler_List(t *testing.T) {
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg)
+	serviceMock := service.New(&cfg, nil, nil)
 	storeMock := store.New()
 
 	tests := []struct {
@@ -221,7 +221,7 @@ func TestHandler_List(t *testing.T) {
 func TestHandler_One(t *testing.T) {
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg)
+	serviceMock := service.New(&cfg, nil, nil)
 	storeMock := store.New()
 
 	tests := []struct {
@@ -277,7 +277,7 @@ func TestHandler_UpdateEmployeeStatus(t *testing.T) {
 	// load env and test data
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg)
+	serviceMock := service.New(&cfg, nil, nil)
 	storeMock := store.New()
 
 	tests := []struct {
@@ -368,7 +368,7 @@ func TestHandler_UpdateEmployeeStatus(t *testing.T) {
 func Test_UpdateGeneralInfo(t *testing.T) {
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg)
+	serviceMock := service.New(&cfg, nil, nil)
 	storeMock := store.New()
 
 	tests := []struct {
@@ -503,7 +503,7 @@ func Test_UpdateGeneralInfo(t *testing.T) {
 func Test_UpdateSkill(t *testing.T) {
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg)
+	serviceMock := service.New(&cfg, nil, nil)
 	storeMock := store.New()
 	// testRepoMock := store.NewPostgresStore(&cfg)
 
@@ -661,7 +661,7 @@ func Test_UpdateSkill(t *testing.T) {
 func Test_Create(t *testing.T) {
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg)
+	serviceMock := service.New(&cfg, nil, nil)
 	storeMock := store.New()
 
 	tests := []struct {
@@ -768,7 +768,7 @@ func Test_Create(t *testing.T) {
 func Test_UpdatePersonalInfo(t *testing.T) {
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg)
+	serviceMock := service.New(&cfg, nil, nil)
 	storeMock := store.New()
 
 	dob, err := time.Parse("2006-01-02", "1990-01-02")
@@ -892,7 +892,7 @@ func Test_UpdatePersonalInfo(t *testing.T) {
 func TestHandler_GetLineManagers(t *testing.T) {
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg)
+	serviceMock := service.New(&cfg, nil, nil)
 	storeMock := store.New()
 
 	tests := []struct {

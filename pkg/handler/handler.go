@@ -36,6 +36,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/store"
+	"github.com/dwarvesf/fortress-api/pkg/worker"
 )
 
 type Handler struct {
@@ -71,7 +72,7 @@ type Handler struct {
 	DFUpdate       dfupdate.IHandler
 }
 
-func New(store *store.Store, repo store.DBRepo, service *service.Service, ctrl *controller.Controller, logger logger.Logger, cfg *config.Config) *Handler {
+func New(store *store.Store, repo store.DBRepo, service *service.Service, ctrl *controller.Controller, worker *worker.Worker, logger logger.Logger, cfg *config.Config) *Handler {
 	return &Handler{
 		Healthcheck:    healthz.New(),
 		Employee:       employee.New(ctrl, store, repo, service, logger, cfg),
@@ -96,7 +97,7 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, ctrl *
 		Memo:           memo.New(store, repo, service, logger, cfg),
 		BankAccount:    bankaccount.New(store, repo, service, logger, cfg),
 		Birthday:       birthday.New(store, repo, service, logger, cfg),
-		Invoice:        invoice.New(store, repo, service, logger, cfg),
+		Invoice:        invoice.New(store, repo, service, worker, logger, cfg),
 		Webhook:        webhook.New(store, repo, service, logger, cfg),
 		Discord:        discord.New(store, repo, service, logger, cfg),
 		Client:         client.New(ctrl, store, repo, service, logger, cfg),

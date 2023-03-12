@@ -87,7 +87,6 @@ func (h *handler) WorkingStatuses(c *gin.Context) {
 // @Router /metadata/seniorities [get]
 func (h *handler) Seniorities(c *gin.Context) {
 	// 1 prepare the logger
-	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler": "metadata",
 		"method":  "Seniorities",
@@ -117,7 +116,7 @@ func (h *handler) Seniorities(c *gin.Context) {
 // @Router /metadata/chapters [get]
 func (h *handler) Chapters(c *gin.Context) {
 	// 1 prepare the logger
-	// TODO: can we move this to middleware ?
+
 	l := h.logger.Fields(logger.Fields{
 		"handler": "metadata",
 		"method":  "Chapters",
@@ -175,7 +174,6 @@ func (h *handler) Organizations(c *gin.Context) {
 // @Failure 500 {object} view.ErrorResponse
 // @Router /metadata/roles [get]
 func (h *handler) GetRoles(c *gin.Context) {
-	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler": "metadata",
 		"method":  "GetRoles",
@@ -240,7 +238,7 @@ func (h *handler) ProjectStatuses(c *gin.Context) {
 // @Router /metadata/positions [get]
 func (h *handler) Positions(c *gin.Context) {
 	// 1 prepare the logger
-	// TODO: can we move this to middleware ?
+
 	l := h.logger.Fields(logger.Fields{
 		"handler": "metadata",
 		"method":  "Positions",
@@ -335,7 +333,6 @@ func (h *handler) Stacks(c *gin.Context) {
 		return
 	}
 
-	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler": "metadata",
 		"method":  "Stacks",
@@ -376,7 +373,6 @@ func (h *handler) UpdateStack(c *gin.Context) {
 		return
 	}
 
-	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler": "metadata",
 		"method":  "UpdateStack",
@@ -437,7 +433,6 @@ func (h *handler) CreateStack(c *gin.Context) {
 		return
 	}
 
-	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler": "metadata",
 		"method":  "CreateStack",
@@ -482,7 +477,6 @@ func (h *handler) DeleteStack(c *gin.Context) {
 		return
 	}
 
-	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler": "metadata",
 		"method":  "DeleteStack",
@@ -522,7 +516,6 @@ func (h *handler) UpdatePosition(c *gin.Context) {
 		return
 	}
 
-	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler": "metadata",
 		"method":  "UpdatePosition",
@@ -581,7 +574,6 @@ func (h *handler) CreatePosition(c *gin.Context) {
 		return
 	}
 
-	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler": "metadata",
 		"method":  "CreatePosition",
@@ -624,7 +616,6 @@ func (h *handler) DeletePosition(c *gin.Context) {
 		return
 	}
 
-	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler":    "metadata",
 		"method":     "DeletePosition",
@@ -665,7 +656,6 @@ func (h *handler) GetQuestions(c *gin.Context) {
 		return
 	}
 
-	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler": "metadata",
 		"method":  "GetQuestions",
