@@ -69,6 +69,12 @@ func (s *store) OneByNotionID(db *gorm.DB, notionID string) (*model.Employee, er
 		)`, notionID, model.SocialAccountTypeNotion).First(&employee).Error
 }
 
+// OneByBasecampID get 1 employee by basecampID
+func (s *store) OneByBasecampID(db *gorm.DB, basecampID int) (*model.Employee, error) {
+	var employee *model.Employee
+	return employee, db.Where("basecamp_id = ?", basecampID).First(&employee).Error
+}
+
 // All get employees by query and pagination
 func (s *store) All(db *gorm.DB, filter EmployeeFilter, pagination model.Pagination) ([]*model.Employee, int64, error) {
 	var total int64

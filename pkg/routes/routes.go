@@ -16,6 +16,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/store"
+	"github.com/dwarvesf/fortress-api/pkg/worker"
 )
 
 func setupCORS(r *gin.Engine, cfg *config.Config) {
@@ -35,7 +36,7 @@ func setupCORS(r *gin.Engine, cfg *config.Config) {
 	})
 }
 
-func NewRoutes(cfg *config.Config, svc *service.Service, s *store.Store, logger logger.Logger) *gin.Engine {
+func NewRoutes(cfg *config.Config, svc *service.Service, s *store.Store, repo store.DBRepo, worker *worker.Worker, logger logger.Logger) *gin.Engine {
 	// programmatically set swagger info
 	docs.SwaggerInfo.Title = "Swagger API"
 	docs.SwaggerInfo.Description = "This is a swagger for API."
@@ -43,10 +44,9 @@ func NewRoutes(cfg *config.Config, svc *service.Service, s *store.Store, logger 
 	docs.SwaggerInfo.Schemes = []string{"https", "http"}
 	r := gin.New()
 	pprof.Register(r)
-	repo := store.NewPostgresStore(cfg)
 
 	ctrl := controller.New(s, repo, svc, logger, cfg)
-	h := handler.New(s, repo, svc, ctrl, logger, cfg)
+	h := handler.New(s, repo, svc, ctrl, worker, logger, cfg)
 
 	r.Use(
 		gin.LoggerWithWriter(gin.DefaultWriter, "/healthz"),

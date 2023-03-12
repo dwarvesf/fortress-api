@@ -177,7 +177,6 @@ func (h *handler) Details(c *gin.Context) {
 	id := c.Param("id")
 
 	// 1.1 prepare the logger
-	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler": "employee",
 		"method":  "Details",
@@ -222,7 +221,6 @@ func (h *handler) UpdateEmployeeStatus(c *gin.Context) {
 		return
 	}
 
-	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler": "employee",
 		"method":  "UpdateEmployeeStatus",
@@ -276,7 +274,6 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 		}
 	}
 
-	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler": "employee",
 		"method":  "UpdateGeneralInfo",
@@ -405,7 +402,6 @@ func (h *handler) UpdateSkills(c *gin.Context) {
 		}
 	}
 
-	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler": "employee",
 		"method":  "UpdateSkills",
@@ -458,7 +454,6 @@ func (h *handler) UpdatePersonalInfo(c *gin.Context) {
 		}
 	}
 
-	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler": "employee",
 		"method":  "UpdatePersonalInfo",
@@ -608,7 +603,6 @@ func (h *handler) UpdateRole(c *gin.Context) {
 		return
 	}
 
-	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler": "employee",
 		"method":  "UpdateRole",

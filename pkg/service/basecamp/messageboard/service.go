@@ -1,4 +1,4 @@
-package mb
+package messageboard
 
 import "github.com/dwarvesf/fortress-api/pkg/service/basecamp/model"
 

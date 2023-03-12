@@ -94,7 +94,6 @@ func (h *handler) Me(c *gin.Context) {
 		return
 	}
 
-	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler": "auth",
 		"method":  "Me",
@@ -130,7 +129,6 @@ func (h *handler) CreateAPIKey(c *gin.Context) {
 		return
 	}
 
-	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler": "auth",
 		"method":  "CreateAPIKey",

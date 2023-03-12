@@ -78,7 +78,6 @@ func (h *handler) List(c *gin.Context) {
 
 	query.StandardizeInput()
 
-	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler": "project",
 		"method":  "List",
@@ -135,7 +134,6 @@ func (h *handler) UpdateProjectStatus(c *gin.Context) {
 		}
 	}
 
-	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler": "project",
 		"method":  "UpdateProjectStatus",
@@ -242,7 +240,6 @@ func (h *handler) Create(c *gin.Context) {
 		return
 	}
 
-	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler": "project",
 		"method":  "Create",
@@ -472,7 +469,6 @@ func (h *handler) GetMembers(c *gin.Context) {
 		return
 	}
 
-	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler":   "project",
 		"method":    "GetMembers",
@@ -600,7 +596,6 @@ func (h *handler) DeleteMember(c *gin.Context) {
 		return
 	}
 
-	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler": "project",
 		"method":  "DeleteMember",
@@ -692,7 +687,6 @@ func (h *handler) DeleteSlot(c *gin.Context) {
 		return
 	}
 
-	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler": "project",
 		"method":  "DeleteSlot",
@@ -748,7 +742,6 @@ func (h *handler) UnassignMember(c *gin.Context) {
 		return
 	}
 
-	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler": "project",
 		"method":  "UnassignMember",
@@ -858,7 +851,6 @@ func (h *handler) UpdateMember(c *gin.Context) {
 		return
 	}
 
-	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler": "project",
 		"method":  "UpdateMember",
@@ -1223,7 +1215,6 @@ func (h *handler) AssignMember(c *gin.Context) {
 		return
 	}
 
-	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler": "project",
 		"method":  "AssignMember",
@@ -1457,7 +1448,6 @@ func (h *handler) Details(c *gin.Context) {
 		return
 	}
 
-	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler": "project",
 		"method":  "Details",
@@ -1524,7 +1514,6 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 		return
 	}
 
-	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler": "project",
 		"method":  "UpdateGeneralInfo",
@@ -1735,7 +1724,6 @@ func (h *handler) UpdateContactInfo(c *gin.Context) {
 		return
 	}
 
-	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler": "project",
 		"method":  "UpdateContactInfo",
@@ -1956,7 +1944,6 @@ func (h *handler) GetWorkUnits(c *gin.Context) {
 		return
 	}
 
-	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler":   "project",
 		"method":    "GetWorkUnits",
@@ -2031,7 +2018,6 @@ func (h *handler) CreateWorkUnit(c *gin.Context) {
 		return
 	}
 
-	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler": "project",
 		"method":  "CreateWorkUnit",
@@ -2187,7 +2173,6 @@ func (h *handler) UpdateWorkUnit(c *gin.Context) {
 		return
 	}
 
-	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler": "project",
 		"method":  "UpdateWorkUnit",
@@ -2467,7 +2452,6 @@ func (h *handler) ArchiveWorkUnit(c *gin.Context) {
 		WorkUnitID: c.Param("workUnitID"),
 	}
 
-	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler": "project",
 		"method":  "ArchiveWorkUnit",
@@ -2589,7 +2573,6 @@ func (h *handler) UnarchiveWorkUnit(c *gin.Context) {
 		WorkUnitID: c.Param("workUnitID"),
 	}
 
-	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler": "project",
 		"method":  "UnarchiveWorkUnit",
@@ -2723,7 +2706,6 @@ func (h *handler) UpdateSendingSurveyState(c *gin.Context) {
 		return
 	}
 
-	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler": "project",
 		"method":  "UpdateSendingSurveyState",

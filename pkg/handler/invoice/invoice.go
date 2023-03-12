@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -26,26 +27,32 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service"
+	"github.com/dwarvesf/fortress-api/pkg/service/basecamp/consts"
+	bcConst "github.com/dwarvesf/fortress-api/pkg/service/basecamp/consts"
+	bcModel "github.com/dwarvesf/fortress-api/pkg/service/basecamp/model"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/utils/authutils"
 	"github.com/dwarvesf/fortress-api/pkg/utils/timeutil"
 	"github.com/dwarvesf/fortress-api/pkg/view"
+	"github.com/dwarvesf/fortress-api/pkg/worker"
 )
 
 type handler struct {
 	store   *store.Store
 	service *service.Service
+	worker  *worker.Worker
 	logger  logger.Logger
 	repo    store.DBRepo
 	config  *config.Config
 }
 
 // New returns a handler
-func New(store *store.Store, repo store.DBRepo, service *service.Service, logger logger.Logger, cfg *config.Config) IHandler {
+func New(store *store.Store, repo store.DBRepo, service *service.Service, worker *worker.Worker, logger logger.Logger, cfg *config.Config) IHandler {
 	return &handler{
 		store:   store,
 		repo:    repo,
 		service: service,
+		worker:  worker,
 		logger:  logger,
 		config:  cfg,
 	}
@@ -369,6 +376,29 @@ func (h *handler) Send(c *gin.Context) {
 				errsCh <- err
 				return
 			}
+
+			attachmentSgID, err := h.service.Basecamp.Attachment.Create("application/pdf", fn, iv.InvoiceFileContent)
+			if err != nil {
+				l.Errorf(err, "failed to create Basecamp Attachment", "invoice", iv)
+				errsCh <- err
+				return
+			}
+
+			iv.TodoAttachment = fmt.Sprintf(`<bc-attachment sgid="%v" caption="My photo"></bc-attachment>`, attachmentSgID)
+
+			bucketID, todoID, err := h.getInvoiceTodo(iv)
+			if err != nil {
+				l.Errorf(err, "failed to get invoice todo", "invoice", iv)
+				errsCh <- err
+				return
+			}
+
+			msg := fmt.Sprintf(`#Invoice %v has been sent
+
+			Confirm Command: Paid @Giang #%v`, iv.Number, iv.Number)
+
+			h.worker.Enqueue(bcModel.BasecampCommentMsg, h.service.Basecamp.BuildCommentMessage(bucketID, todoID, msg, ""))
+
 			errsCh <- nil
 		}()
 	}
@@ -509,11 +539,79 @@ func (h *handler) generateInvoicePDF(l logger.Logger, invoice *model.Invoice) er
 	return nil
 }
 
-type processPaidInvoiceRequest struct {
-	Invoice          *model.Invoice
-	InvoiceTodoID    int
-	InvoiceBucketID  int
-	SentThankYouMail bool
+func (h *handler) getInvoiceTodo(iv *model.Invoice) (bucketID, todoID int, err error) {
+	if iv.Project == nil {
+		return 0, 0, fmt.Errorf(`missing project info`)
+	}
+
+	accountingID := consts.AccountingID
+	accountingTodoID := consts.AccountingTodoID
+
+	if h.config.Env != "prod" {
+		accountingID = consts.PlaygroundID
+		accountingTodoID = consts.PlaygroundTodoID
+	}
+
+	re := regexp.MustCompile(`Accounting \| ([A-Za-z]+) ([0-9]{4})`)
+
+	todoLists, err := h.service.Basecamp.Todo.GetLists(accountingID, accountingTodoID)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	var todoList *bcModel.TodoList
+	var latestListDate time.Time
+
+	for i := range todoLists {
+		info := re.FindStringSubmatch(todoLists[i].Title)
+		if len(info) == 3 {
+			month, err := timeutil.GetMonthFromString(info[1])
+			if err != nil {
+				continue
+			}
+			year, _ := strconv.Atoi(info[2])
+			listDate := time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.UTC)
+			if listDate.After(latestListDate) {
+				todoList = &todoLists[i]
+				latestListDate = listDate
+			}
+		}
+	}
+
+	if todoList == nil {
+		month := iv.Month + 1
+		if month > 12 {
+			month = 1
+		}
+		todoList, err = h.service.Basecamp.Todo.CreateList(
+			accountingID,
+			accountingTodoID,
+			bcModel.TodoList{Name: fmt.Sprintf(
+				`Accounting | %v %v`, time.Month(month).String(),
+				iv.Year)},
+		)
+		if err != nil {
+			return 0, 0, err
+		}
+	}
+
+	todoGroup, err := h.service.Basecamp.Todo.FirstOrCreateGroup(
+		accountingID,
+		todoList.ID,
+		`In`)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	todo, err := h.service.Basecamp.Todo.FirstOrCreateInvoiceTodo(
+		accountingID,
+		todoGroup.ID,
+		iv)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	return accountingID, todo.ID, nil
 }
 
 // UpdateStatus godoc
@@ -578,9 +676,9 @@ func (h *handler) UpdateStatus(c *gin.Context) {
 
 	switch req.Status {
 	case model.InvoiceStatusError:
-		_, err = h.markInvoiceAsError(tx.DB(), l, *invoice)
+		_, err = h.markInvoiceAsError(tx.DB(), l, invoice)
 	case model.InvoiceStatusPaid:
-		_, err = h.markInvoiceAsPaid(tx.DB(), l, *invoice, req.SendThankYouEmail)
+		_, err = h.markInvoiceAsPaid(tx.DB(), l, invoice, req.SendThankYouEmail)
 	default:
 		_, err = h.store.Invoice.UpdateSelectedFieldsByID(tx.DB(), invoice.ID.String(), *invoice, "status")
 	}
@@ -593,9 +691,9 @@ func (h *handler) UpdateStatus(c *gin.Context) {
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, done(nil), nil, "ok"))
 }
 
-func (h *handler) markInvoiceAsError(db *gorm.DB, l logger.Logger, invoice model.Invoice) (*model.Invoice, error) {
+func (h *handler) markInvoiceAsError(db *gorm.DB, l logger.Logger, invoice *model.Invoice) (*model.Invoice, error) {
 	invoice.Status = model.InvoiceStatusError
-	iv, err := h.store.Invoice.UpdateSelectedFieldsByID(db, invoice.ID.String(), invoice, "status")
+	iv, err := h.store.Invoice.UpdateSelectedFieldsByID(db, invoice.ID.String(), *invoice, "status")
 	if err != nil {
 		l.Errorf(err, "failed to update invoice status to error")
 		return nil, err
@@ -607,12 +705,11 @@ func (h *handler) markInvoiceAsError(db *gorm.DB, l logger.Logger, invoice model
 		return nil, err
 	}
 
-	//TODO: mark Invoice as Error in Basecamp
-	//if err := markInvoiceTodoAsError(cfg, i); err != nil {
-	//	return nil, err
-	//}
+	if err := h.markInvoiceTodoAsError(invoice); err != nil {
+		return nil, err
+	}
 
-	if err := h.service.GoogleDrive.MoveInvoicePDF(&invoice, "Sent", "Error"); err != nil {
+	if err := h.service.GoogleDrive.MoveInvoicePDF(invoice, "Sent", "Error"); err != nil {
 		l.Errorf(err, "failed to upload invoice pdf to google drive")
 		return nil, err
 	}
@@ -620,7 +717,29 @@ func (h *handler) markInvoiceAsError(db *gorm.DB, l logger.Logger, invoice model
 	return iv, nil
 }
 
-func (h *handler) markInvoiceAsPaid(db *gorm.DB, l logger.Logger, invoice model.Invoice, sendThankYouEmail bool) (*model.Invoice, error) {
+func (h *handler) markInvoiceTodoAsError(invoice *model.Invoice) error {
+	if invoice.Project == nil {
+		return fmt.Errorf(`missing project info`)
+	}
+
+	bucketID, todoID, err := h.getInvoiceTodo(invoice)
+	if err != nil {
+		return err
+	}
+
+	h.worker.Enqueue(bcModel.BasecampCommentMsg, h.service.Basecamp.BuildCommentMessage(bucketID, todoID, "Invoice has been mark as error", "failed"))
+
+	return h.service.Basecamp.Recording.Archive(bucketID, todoID)
+}
+
+type processPaidInvoiceRequest struct {
+	Invoice          *model.Invoice
+	InvoiceTodoID    int
+	InvoiceBucketID  int
+	SentThankYouMail bool
+}
+
+func (h *handler) markInvoiceAsPaid(db *gorm.DB, l logger.Logger, invoice *model.Invoice, sendThankYouEmail bool) (*model.Invoice, error) {
 	if invoice.Status != model.InvoiceStatusSent && invoice.Status != model.InvoiceStatusOverdue {
 		err := fmt.Errorf(`unable to update invoice status, invoice have status %v`, invoice.Status)
 		l.Errorf(err, "failed to update invoice", "invoiceID", invoice.ID.String())
@@ -628,44 +747,45 @@ func (h *handler) markInvoiceAsPaid(db *gorm.DB, l logger.Logger, invoice model.
 	}
 	invoice.Status = model.InvoiceStatusPaid
 
-	//TODO: mark Invoice as Paid in Basecamp
-	//bucketID, todoID, err := handler.GetInvoiceTodo(cfg, i)
-	//if err != nil {
-	//	log.E("Get invoice todo failed", err, log.M{"invoice": i})
-	//	return nil, err
-	//}
-	//
-	//err = cfg.Service().Basecamp.Todo.Complete(bucketID, todoID)
-	//if err != nil {
-	//	log.E("complete invoice todo failed", err, log.M{"bucketID": bucketID, "todoID": todoID})
-	//}
+	bucketID, todoID, err := h.getInvoiceTodo(invoice)
+	if err != nil {
+		l.Errorf(err, "failed to get invoice todo", "invoiceID", invoice.ID.String())
+		return nil, err
+	}
+
+	err = h.service.Basecamp.Todo.Complete(bucketID, todoID)
+	if err != nil {
+		l.Errorf(err, "failed to complete invoice todo", "invoiceID", invoice.ID.String())
+	}
 
 	h.processPaidInvoice(db, l, &processPaidInvoiceRequest{
-		Invoice:          &invoice,
-		InvoiceTodoID:    0,
-		InvoiceBucketID:  0,
+		Invoice:          invoice,
+		InvoiceTodoID:    todoID,
+		InvoiceBucketID:  bucketID,
 		SentThankYouMail: sendThankYouEmail,
 	})
 
-	return &invoice, nil
+	return invoice, nil
 }
 
 func (h *handler) processPaidInvoice(db *gorm.DB, l logger.Logger, req *processPaidInvoiceRequest) {
 	wg := &sync.WaitGroup{}
 	wg.Add(3)
+
 	go h.processPaidInvoiceData(db, l, wg, req)
 	go h.sendThankYouEmail(l, wg, req)
 	go h.movePaidInvoiceGDrive(l, wg, req)
+
 	wg.Wait()
 }
 
 func (h *handler) processPaidInvoiceData(db *gorm.DB, l logger.Logger, wg *sync.WaitGroup, req *processPaidInvoiceRequest) {
-	defer wg.Done()
-	//TODO: mark Invoice as Paid in Basecamp
-	//msg := BuildFailedComment(domain.CommentUpdateInvoiceFailed)
-	//defer func() {
-	//	CommentResult(req.InvoiceBucketID, req.InvoiceTodoID, msg)
-	//}()
+	msg := bcConst.CommentUpdateInvoiceFailed
+	msgType := bcModel.CommentMsgTypeFailed
+	defer func() {
+		wg.Done()
+		h.worker.Enqueue(bcModel.BasecampCommentMsg, h.service.Basecamp.BuildCommentMessage(req.InvoiceBucketID, req.InvoiceTodoID, msg, msgType))
+	}()
 
 	//TODO: calculate commission
 
@@ -676,30 +796,39 @@ func (h *handler) processPaidInvoiceData(db *gorm.DB, l logger.Logger, wg *sync.
 		l.Errorf(err, "failed to update invoice status to paid", "invoice", req.Invoice)
 		return
 	}
+
+	msg = bcConst.CommentUpdateInvoiceSuccessfully
+	msgType = bcModel.CommentMsgTypeCompleted
 }
 
 func (h *handler) sendThankYouEmail(l logger.Logger, wg *sync.WaitGroup, req *processPaidInvoiceRequest) {
-	defer wg.Done()
+	msg := h.service.Basecamp.BuildCommentMessage(req.InvoiceBucketID, req.InvoiceTodoID, bcConst.CommentThankYouEmailSent, bcModel.CommentMsgTypeCompleted)
+
+	defer func() {
+		h.worker.Enqueue(bcModel.BasecampCommentMsg, msg)
+		wg.Done()
+	}()
+
 	err := h.service.GoogleMail.SendInvoiceThankYouMail(req.Invoice)
 	if err != nil {
 		l.Errorf(err, "failed to send invoice thank you mail", "invoice", req.Invoice)
-		// Todo: Add comment to basecamp
-		//CommentResult(req.InvoiceBucketID, req.InvoiceTodoID, BuildFailedComment(domain.CommentThankyouEmailFailed))
+		msg = h.service.Basecamp.BuildCommentMessage(req.InvoiceBucketID, req.InvoiceTodoID, bcConst.CommentThankYouEmailFailed, bcModel.CommentMsgTypeFailed)
 		return
 	}
-	// Todo: Add comment to basecamp
-	//CommentResult(req.InvoiceBucketID, req.InvoiceTodoID, BuildCompletedComment(domain.CommentThankyouEmailSent))
 }
 
 func (h *handler) movePaidInvoiceGDrive(l logger.Logger, wg *sync.WaitGroup, req *processPaidInvoiceRequest) {
-	defer wg.Done()
+	msg := h.service.Basecamp.BuildCommentMessage(req.InvoiceBucketID, req.InvoiceTodoID, bcConst.CommentMoveInvoicePDFToPaidDirSuccessfully, bcModel.CommentMsgTypeCompleted)
+
+	defer func() {
+		h.worker.Enqueue(bcModel.BasecampCommentMsg, msg)
+		wg.Done()
+	}()
+
 	err := h.service.GoogleDrive.MoveInvoicePDF(req.Invoice, "Sent", "Paid")
 	if err != nil {
-		l.Errorf(err, "failed to send invoice thank you mail", "invoice", req.Invoice)
-		// Todo: Add comment to basecamp
-		//CommentResult(req.InvoiceBucketID, req.InvoiceTodoID, BuildFailedComment(domain.CommentMoveInvoicePDFToPaidDirFailed))
+		l.Errorf(err, "failed to move invoice pdf from sent to paid folder", "invoice", req.Invoice)
+		msg = h.service.Basecamp.BuildCommentMessage(req.InvoiceBucketID, req.InvoiceTodoID, bcConst.CommentMoveInvoicePDFToPaidDirFailed, bcModel.CommentMsgTypeFailed)
 		return
 	}
-	// Todo: Add comment to basecamp
-	//CommentResult(req.InvoiceBucketID, req.InvoiceTodoID, BuildCompletedComment(domain.CommentMoveInvoicePDFToPaidDirSuccessfully))
 }
