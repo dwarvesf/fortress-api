@@ -52,7 +52,7 @@ var (
 	ErrFailedToCreateWorkUnitMember     = errors.New("failed to create work unit member")
 	ErrSlotAlreadyContainsAnotherMember = errors.New("slot already contains another member")
 	ErrDuplicateProjectCode             = errors.New("project code is duplicated")
-	ErrAccountManagerCannotEmpty        = errors.New("account manager cannot empty")
+	ErrAccountManagerRequired           = errors.New("account manager is required")
 	ErrTotalCommissionRateMustBe100     = errors.New("total commission rate must be 100")
 
 	ErrInvalidFileExtension         = errors.New("invalid file extension")
