@@ -19,6 +19,11 @@ func (s *store) Create(db *gorm.DB, projectHead *model.ProjectHead) error {
 	return db.Create(projectHead).Preload("Employee").First(projectHead).Error
 }
 
+// BatchCreate create multiple project heads in one transaction
+func (s *store) BatchCreate(db *gorm.DB, heads []*model.ProjectHead) ([]*model.ProjectHead, error) {
+	return heads, db.Create(&heads).Error
+}
+
 // GetActiveLeadsByProjectID get active project heads by projectID
 func (s *store) GetActiveLeadsByProjectID(db *gorm.DB, projectID string) ([]*model.ProjectHead, error) {
 	var projectHeads []*model.ProjectHead

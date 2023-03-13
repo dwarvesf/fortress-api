@@ -10,6 +10,7 @@ import (
 
 type IStore interface {
 	Create(db *gorm.DB, head *model.ProjectHead) error
+	BatchCreate(db *gorm.DB, heads []*model.ProjectHead) ([]*model.ProjectHead, error)
 	GetActiveLeadsByProjectID(db *gorm.DB, projectID string) (projectHeads []*model.ProjectHead, err error)
 	DeleteByPositionInProject(db *gorm.DB, projectID string, employeeID string, position string) (err error)
 	DeleteByID(db *gorm.DB, id string) (err error)

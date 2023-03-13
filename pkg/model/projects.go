@@ -158,18 +158,19 @@ type ProjectSlot struct {
 type ProjectMember struct {
 	BaseModel
 
-	ProjectID      UUID
-	EmployeeID     UUID
-	ProjectSlotID  UUID
-	StartDate      *time.Time
-	EndDate        *time.Time
-	Status         ProjectMemberStatus
-	Rate           decimal.Decimal
-	Discount       decimal.Decimal
-	DeploymentType DeploymentType
-	UpsellPersonID UUID
-	SeniorityID    UUID
-	Note           string
+	ProjectID            UUID
+	EmployeeID           UUID
+	ProjectSlotID        UUID
+	StartDate            *time.Time
+	EndDate              *time.Time
+	Status               ProjectMemberStatus
+	Rate                 decimal.Decimal
+	Discount             decimal.Decimal
+	DeploymentType       DeploymentType
+	UpsellPersonID       UUID
+	UpsellCommissionRate decimal.Decimal
+	SeniorityID          UUID
+	Note                 string
 
 	IsLead bool `gorm:"-"`
 
@@ -178,7 +179,8 @@ type ProjectMember struct {
 	Project                Project
 	Seniority              *Seniority
 	ProjectMemberPositions []ProjectMemberPosition
-	Positions              []Position `gorm:"-"`
+	Positions              []Position   `gorm:"-"`
+	Head                   *ProjectHead `gorm:"-"`
 }
 
 type HeadPosition string

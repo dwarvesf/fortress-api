@@ -380,40 +380,31 @@ func (h *handler) Create(c *gin.Context) {
 	}
 
 	// create project account manager
-	accountManager := model.ProjectHead{
-		ProjectID:      p.ID,
-		EmployeeID:     body.AccountManagerID,
-		StartDate:      time.Now(),
-		CommissionRate: decimal.Zero,
-		Position:       model.HeadPositionAccountManager,
-	}
-
-	if err := h.store.ProjectHead.Create(tx.DB(), &accountManager); err != nil {
-		l.Error(err, "failed to create account manager")
+	ams, err := h.createProjectHeads(tx.DB(), p.ID, model.HeadPositionAccountManager, body.AccountManagers)
+	if err != nil {
+		l.Error(err, "failed to create account managers")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
 		return
 	}
-
-	p.Heads = append(p.Heads, &accountManager)
+	p.Heads = append(p.Heads, ams...)
 
 	// create project delivery manager
-	if !body.DeliveryManagerID.IsZero() {
-		deliveryManager := model.ProjectHead{
-			ProjectID:      p.ID,
-			EmployeeID:     body.DeliveryManagerID,
-			StartDate:      time.Now(),
-			CommissionRate: decimal.Zero,
-			Position:       model.HeadPositionDeliveryManager,
-		}
-
-		if err := h.store.ProjectHead.Create(tx.DB(), &deliveryManager); err != nil {
-			l.Error(err, "failed to create delivery manager")
-			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
-			return
-		}
-
-		p.Heads = append(p.Heads, &deliveryManager)
+	dms, err := h.createProjectHeads(tx.DB(), p.ID, model.HeadPositionDeliveryManager, body.DeliveryManagers)
+	if err != nil {
+		l.Error(err, "failed to create delivery managers")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
+		return
 	}
+	p.Heads = append(p.Heads, dms...)
+
+	// create project sale persons
+	sps, err := h.createProjectHeads(tx.DB(), p.ID, model.HeadPositionSalePerson, body.DeliveryManagers)
+	if err != nil {
+		l.Error(err, "failed to create sale persons")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
+		return
+	}
+	p.Heads = append(p.Heads, sps...)
 
 	// assign members to project
 	for _, member := range body.Members {
@@ -428,6 +419,34 @@ func (h *handler) Create(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse(view.ToCreateProjectDataResponse(userInfo, p), nil, done(nil), nil, ""))
+}
+
+func (h *handler) createProjectHeads(db *gorm.DB, projectID model.UUID, position model.HeadPosition, req []request.ProjectHeadInput) ([]*model.ProjectHead, error) {
+	var heads []*model.ProjectHead
+	for _, head := range req {
+		emp, err := h.store.Employee.One(db, head.EmployeeID.String(), false)
+		if err != nil {
+			h.logger.Error(err, "failed to get employee by id")
+			return nil, err
+		}
+
+		head := &model.ProjectHead{
+			ProjectID:      projectID,
+			EmployeeID:     head.EmployeeID,
+			CommissionRate: decimal.NewFromInt(int64(head.CommissionRate)),
+			Position:       position,
+		}
+
+		if err := h.store.ProjectHead.Create(db, head); err != nil {
+			h.logger.Error(err, "failed to create project head")
+			return nil, err
+		}
+
+		head.Employee = *emp
+		heads = append(heads, head)
+	}
+
+	return heads, nil
 }
 
 // GetMembers godoc
@@ -1043,18 +1062,19 @@ func (h *handler) updateProjectMember(db *gorm.DB, slotID string, projectID stri
 			BaseModel: model.BaseModel{
 				ID: input.ProjectMemberID,
 			},
-			SeniorityID:    input.SeniorityID,
-			DeploymentType: model.DeploymentType(input.DeploymentType),
-			Status:         model.ProjectMemberStatus(input.Status),
-			StartDate:      input.GetStartDate(),
-			EndDate:        input.GetEndDate(),
-			Rate:           input.Rate,
-			Discount:       input.Discount,
-			UpsellPersonID: input.UpsellPersonID,
-			Note:           input.Note,
+			SeniorityID:          input.SeniorityID,
+			DeploymentType:       model.DeploymentType(input.DeploymentType),
+			Status:               model.ProjectMemberStatus(input.Status),
+			StartDate:            input.GetStartDate(),
+			EndDate:              input.GetEndDate(),
+			Rate:                 input.Rate,
+			Discount:             input.Discount,
+			UpsellPersonID:       input.UpsellPersonID,
+			UpsellCommissionRate: input.UpsellCommissionRate,
+			Note:                 input.Note,
 		}
 
-		// TODO: allow updating sell_person_id
+		// TODO: allow updating sell_person_id & upsell_commission_rate
 		_, err := h.store.ProjectMember.UpdateSelectedFieldsByID(db, input.ProjectMemberID.String(), *member,
 			"start_date",
 			"end_date",
@@ -1065,6 +1085,7 @@ func (h *handler) updateProjectMember(db *gorm.DB, slotID string, projectID stri
 			"seniority_id",
 			"note",
 			// "upsell_person_id",
+			// "upsell_commission_rate",
 		)
 		if err != nil {
 			h.logger.Fields(logger.Fields{"member": member}).Error(err, "failed to update project member")
@@ -1167,7 +1188,7 @@ func (h *handler) updateProjectMember(db *gorm.DB, slotID string, projectID stri
 		}
 	} else {
 		// Start of lead time or update lead time
-		_, err := h.updateProjectLead(db, projectID, input.EmployeeID, input.GetStartDate(), input.GetEndDate())
+		_, err := h.updateProjectLead(db, projectID, input.EmployeeID, input.GetStartDate(), input.GetEndDate(), input.LeadCommissionRate)
 		if err != nil {
 			h.logger.Fields(logger.Fields{
 				"projectID":  projectID,
@@ -1405,16 +1426,20 @@ func (h *handler) createSlotsAndAssignMembers(db *gorm.DB, projectID string, req
 		// create project head
 		slot.ProjectMember.IsLead = req.IsLead
 		if req.IsLead {
-			if err := h.store.ProjectHead.Create(db, &model.ProjectHead{
+			head := &model.ProjectHead{
 				ProjectID:      model.MustGetUUIDFromString(projectID),
 				EmployeeID:     req.EmployeeID,
-				CommissionRate: decimal.Zero,
+				CommissionRate: req.LeadCommissionRate,
 				Position:       model.HeadPositionTechnicalLead,
 				StartDate:      *req.GetStartDate(),
-			}); err != nil {
+			}
+
+			if err := h.store.ProjectHead.Create(db, head); err != nil {
 				l.Error(err, "failed to create project head")
 				return nil, http.StatusInternalServerError, err
 			}
+
+			slot.ProjectMember.Head = head
 		}
 	}
 
@@ -1873,7 +1898,7 @@ func (h *handler) updateProjectHeads(db *gorm.DB, projectID string, position mod
 	return nil
 }
 
-func (h *handler) updateProjectLead(db *gorm.DB, projectID string, employeeID model.UUID, startDate *time.Time, endDate *time.Time) (*model.ProjectHead, error) {
+func (h *handler) updateProjectLead(db *gorm.DB, projectID string, employeeID model.UUID, startDate *time.Time, endDate *time.Time, commissionRate decimal.Decimal) (*model.ProjectHead, error) {
 	head, err := h.store.ProjectHead.One(db, projectID, employeeID.String(), model.HeadPositionTechnicalLead)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		h.logger.Fields(logger.Fields{
@@ -1887,8 +1912,13 @@ func (h *handler) updateProjectLead(db *gorm.DB, projectID string, employeeID mo
 		// Update old record
 		head.StartDate = *startDate
 		head.EndDate = endDate
+		head.CommissionRate = commissionRate
 
-		_, err := h.store.ProjectHead.UpdateSelectedFieldsByID(db, head.ID.String(), *head, "start_date", "end_date")
+		_, err := h.store.ProjectHead.UpdateSelectedFieldsByID(db, head.ID.String(), *head,
+			"start_date",
+			"end_date",
+			"commission_rate",
+		)
 		if err != nil {
 			h.logger.Fields(logger.Fields{"head": *head}).Error(err, "failed to update project head")
 			return nil, err
@@ -1896,11 +1926,12 @@ func (h *handler) updateProjectLead(db *gorm.DB, projectID string, employeeID mo
 	} else {
 		// Create new record
 		head = &model.ProjectHead{
-			ProjectID:  model.MustGetUUIDFromString(projectID),
-			EmployeeID: employeeID,
-			StartDate:  *startDate,
-			EndDate:    endDate,
-			Position:   model.HeadPositionTechnicalLead,
+			ProjectID:      model.MustGetUUIDFromString(projectID),
+			EmployeeID:     employeeID,
+			CommissionRate: commissionRate,
+			StartDate:      *startDate,
+			EndDate:        endDate,
+			Position:       model.HeadPositionTechnicalLead,
 		}
 
 		if err := h.store.ProjectHead.Create(db, head); err != nil {

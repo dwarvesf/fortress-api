@@ -76,22 +76,23 @@ func (i *GetListProjectInput) Validate() error {
 }
 
 type CreateProjectInput struct {
-	Name              string              `form:"name" json:"name" binding:"required"`
-	Status            string              `form:"status" json:"status" binding:"required"`
-	Type              string              `form:"type" json:"type"`
-	AccountManagerID  model.UUID          `form:"accountManagerID" json:"accountManagerID" binding:"required"`
-	DeliveryManagerID model.UUID          `form:"deliveryManagerID" json:"deliveryManagerID"`
-	CountryID         model.UUID          `form:"countryID" json:"countryID" binding:"required"`
-	StartDate         string              `form:"startDate" json:"startDate"`
-	Members           []AssignMemberInput `form:"members" json:"members"`
-	ClientEmail       []string            `form:"clientEmail" json:"clientEmail"`
-	ProjectEmail      string              `form:"projectEmail" json:"projectEmail"`
-	Code              string              `form:"code" json:"code"`
-	Function          string              `form:"function" json:"function" binding:"required"`
-	AuditNotionID     model.UUID          `form:"auditNotionID" json:"auditNotionID"`
-	BankAccountID     model.UUID          `form:"bankAccountID" json:"bankAccountID"`
-	ClientID          model.UUID          `form:"clientID" json:"clientID"`
-	OrganizationID    model.UUID          `form:"organizationID" json:"organizationID"`
+	Name             string              `form:"name" json:"name" binding:"required"`
+	Status           string              `form:"status" json:"status" binding:"required"`
+	Type             string              `form:"type" json:"type"`
+	AccountManagers  []ProjectHeadInput  `form:"accountManagers" json:"accountManagers"`
+	DeliveryManagers []ProjectHeadInput  `form:"deliveryManagers" json:"deliveryManagers"`
+	SalePersons      []ProjectHeadInput  `form:"salePersons" json:"salePersons"`
+	CountryID        model.UUID          `form:"countryID" json:"countryID" binding:"required"`
+	StartDate        string              `form:"startDate" json:"startDate"`
+	Members          []AssignMemberInput `form:"members" json:"members"`
+	ClientEmail      []string            `form:"clientEmail" json:"clientEmail"`
+	ProjectEmail     string              `form:"projectEmail" json:"projectEmail"`
+	Code             string              `form:"code" json:"code"`
+	Function         string              `form:"function" json:"function" binding:"required"`
+	AuditNotionID    model.UUID          `form:"auditNotionID" json:"auditNotionID"`
+	BankAccountID    model.UUID          `form:"bankAccountID" json:"bankAccountID"`
+	ClientID         model.UUID          `form:"clientID" json:"clientID"`
+	OrganizationID   model.UUID          `form:"organizationID" json:"organizationID"`
 }
 
 func (i *CreateProjectInput) Validate() error {
@@ -133,6 +134,10 @@ func (i *CreateProjectInput) Validate() error {
 		return errs.ErrInvalidProjectFunction
 	}
 
+	if len(i.AccountManagers) == 0 {
+		return errs.ErrAccountManagerRequired
+	}
+
 	return nil
 }
 
@@ -161,20 +166,22 @@ func (i *GetListStaffInput) Validate() error {
 }
 
 type UpdateMemberInput struct {
-	ProjectSlotID   model.UUID      `from:"projectSlotID" json:"projectSlotID" binding:"required"`
-	ProjectMemberID model.UUID      `from:"projectMemberID" json:"projectMemberID"`
-	EmployeeID      model.UUID      `form:"employeeID" json:"employeeID"`
-	SeniorityID     model.UUID      `form:"seniorityID" json:"seniorityID" binding:"required"`
-	UpsellPersonID  model.UUID      `form:"upsellPersonID" json:"upsellPersonID"`
-	Positions       []model.UUID    `form:"positions" json:"positions" binding:"required"`
-	DeploymentType  string          `form:"deploymentType" json:"deploymentType" binding:"required"`
-	Status          string          `form:"status" json:"status" binding:"required"`
-	StartDate       string          `form:"startDate" json:"startDate"`
-	EndDate         string          `form:"endDate" json:"endDate"`
-	Rate            decimal.Decimal `form:"rate" json:"rate" binding:"required"`
-	Discount        decimal.Decimal `form:"discount" json:"discount"`
-	IsLead          bool            `form:"isLead" json:"isLead"`
-	Note            string          `form:"note" json:"note"`
+	ProjectSlotID        model.UUID      `from:"projectSlotID" json:"projectSlotID" binding:"required"`
+	ProjectMemberID      model.UUID      `from:"projectMemberID" json:"projectMemberID"`
+	EmployeeID           model.UUID      `form:"employeeID" json:"employeeID"`
+	SeniorityID          model.UUID      `form:"seniorityID" json:"seniorityID" binding:"required"`
+	UpsellPersonID       model.UUID      `form:"upsellPersonID" json:"upsellPersonID"`
+	UpsellCommissionRate decimal.Decimal `form:"upsellCommissionRate" json:"upsellCommissionRate"`
+	LeadCommissionRate   decimal.Decimal `form:"leadCommissionRate" json:"leadCommissionRate"`
+	Positions            []model.UUID    `form:"positions" json:"positions" binding:"required"`
+	DeploymentType       string          `form:"deploymentType" json:"deploymentType" binding:"required"`
+	Status               string          `form:"status" json:"status" binding:"required"`
+	StartDate            string          `form:"startDate" json:"startDate"`
+	EndDate              string          `form:"endDate" json:"endDate"`
+	Rate                 decimal.Decimal `form:"rate" json:"rate" binding:"required"`
+	Discount             decimal.Decimal `form:"discount" json:"discount"`
+	IsLead               bool            `form:"isLead" json:"isLead"`
+	Note                 string          `form:"note" json:"note"`
 }
 
 func (i *UpdateMemberInput) Validate() error {
@@ -228,18 +235,19 @@ func (i *UpdateMemberInput) GetEndDate() *time.Time {
 }
 
 type AssignMemberInput struct {
-	EmployeeID     model.UUID      `form:"employeeID" json:"employeeID"`
-	SeniorityID    model.UUID      `form:"seniorityID" json:"seniorityID" binding:"required"`
-	Positions      []model.UUID    `form:"positions" json:"positions" binding:"required"`
-	DeploymentType string          `form:"deploymentType" json:"deploymentType" binding:"required"`
-	Status         string          `form:"status" json:"status" binding:"required"`
-	StartDate      string          `form:"startDate" json:"startDate"`
-	EndDate        string          `form:"endDate" json:"endDate"`
-	Rate           decimal.Decimal `form:"rate" json:"rate" binding:"required"`
-	Discount       decimal.Decimal `form:"discount" json:"discount"`
-	IsLead         bool            `form:"isLead" json:"isLead"`
-	UpsellPersonID model.UUID      `form:"upsellPersonID" json:"upsellPersonID"`
-	Note           string          `form:"note" json:"note"`
+	EmployeeID         model.UUID      `form:"employeeID" json:"employeeID"`
+	SeniorityID        model.UUID      `form:"seniorityID" json:"seniorityID" binding:"required"`
+	Positions          []model.UUID    `form:"positions" json:"positions" binding:"required"`
+	DeploymentType     string          `form:"deploymentType" json:"deploymentType" binding:"required"`
+	Status             string          `form:"status" json:"status" binding:"required"`
+	StartDate          string          `form:"startDate" json:"startDate"`
+	EndDate            string          `form:"endDate" json:"endDate"`
+	Rate               decimal.Decimal `form:"rate" json:"rate" binding:"required"`
+	Discount           decimal.Decimal `form:"discount" json:"discount"`
+	LeadCommissionRate decimal.Decimal `form:"leadCommissionRate" json:"leadCommissionRate"`
+	IsLead             bool            `form:"isLead" json:"isLead"`
+	UpsellPersonID     model.UUID      `form:"upsellPersonID" json:"upsellPersonID"`
+	Note               string          `form:"note" json:"note"`
 }
 
 func (i *AssignMemberInput) Validate() error {
@@ -364,7 +372,7 @@ func (i UpdateContactInfoInput) Validate() error {
 	}
 
 	if len(i.AccountManagers) == 0 {
-		return errs.ErrAccountManagerCannotEmpty
+		return errs.ErrAccountManagerRequired
 	}
 
 	if !isValidCommissionRate(i.AccountManagers) ||

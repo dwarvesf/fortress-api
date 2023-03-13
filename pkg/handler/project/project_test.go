@@ -274,18 +274,28 @@ func TestHandler_Create(t *testing.T) {
 		{
 			name: "happy_case",
 			args: request.CreateProjectInput{
-				Name:              "Project1",
-				Status:            string(model.ProjectStatusOnBoarding),
-				StartDate:         "2022-11-14",
-				AccountManagerID:  model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
-				DeliveryManagerID: model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
-				CountryID:         model.MustGetUUIDFromString("4ef64490-c906-4192-a7f9-d2221dadfe4c"),
-				ProjectEmail:      "a@gmail.com",
-				ClientEmail:       []string{"b@gmail.com", "c@gmail.com"},
-				Function:          model.ProjectFunctionLearning.String(),
-				BankAccountID:     model.MustGetUUIDFromString("e79eb5b3-e2cb-4d7f-9273-46f4be88cb20"),
-				ClientID:          model.MustGetUUIDFromString("afb9cf05-9517-4fb9-a4f2-66e6d90ad215"),
-				OrganizationID:    model.MustGetUUIDFromString("31fdf38f-77c0-4c06-b530-e2be8bc297e0"),
+				Name:      "Project1",
+				Status:    string(model.ProjectStatusOnBoarding),
+				StartDate: "2022-11-14",
+				AccountManagers: []request.ProjectHeadInput{
+					{
+						EmployeeID:     model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
+						CommissionRate: 100,
+					},
+				},
+				DeliveryManagers: []request.ProjectHeadInput{
+					{
+						EmployeeID:     model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
+						CommissionRate: 100,
+					},
+				},
+				CountryID:      model.MustGetUUIDFromString("4ef64490-c906-4192-a7f9-d2221dadfe4c"),
+				ProjectEmail:   "a@gmail.com",
+				ClientEmail:    []string{"b@gmail.com", "c@gmail.com"},
+				Function:       model.ProjectFunctionLearning.String(),
+				BankAccountID:  model.MustGetUUIDFromString("e79eb5b3-e2cb-4d7f-9273-46f4be88cb20"),
+				ClientID:       model.MustGetUUIDFromString("afb9cf05-9517-4fb9-a4f2-66e6d90ad215"),
+				OrganizationID: model.MustGetUUIDFromString("31fdf38f-77c0-4c06-b530-e2be8bc297e0"),
 			},
 			wantCode:         http.StatusOK,
 			wantResponsePath: "testdata/create/200.json",
@@ -293,16 +303,26 @@ func TestHandler_Create(t *testing.T) {
 		{
 			name: "duplicate_slug",
 			args: request.CreateProjectInput{
-				Name:              "Lorem Ipsum",
-				Status:            string(model.ProjectStatusOnBoarding),
-				StartDate:         "2022-11-14",
-				AccountManagerID:  model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
-				DeliveryManagerID: model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
-				CountryID:         model.MustGetUUIDFromString("4ef64490-c906-4192-a7f9-d2221dadfe4c"),
-				ProjectEmail:      "a@gmail.com",
-				ClientEmail:       []string{"b@gmail.com"},
-				Code:              "lorem-ipsum",
-				Function:          model.ProjectFunctionLearning.String(),
+				Name:      "Lorem Ipsum",
+				Status:    string(model.ProjectStatusOnBoarding),
+				StartDate: "2022-11-14",
+				AccountManagers: []request.ProjectHeadInput{
+					{
+						EmployeeID:     model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
+						CommissionRate: 100,
+					},
+				},
+				DeliveryManagers: []request.ProjectHeadInput{
+					{
+						EmployeeID:     model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
+						CommissionRate: 100,
+					},
+				},
+				CountryID:    model.MustGetUUIDFromString("4ef64490-c906-4192-a7f9-d2221dadfe4c"),
+				ProjectEmail: "a@gmail.com",
+				ClientEmail:  []string{"b@gmail.com"},
+				Code:         "lorem-ipsum",
+				Function:     model.ProjectFunctionLearning.String(),
 			},
 			wantCode:         http.StatusBadRequest,
 			wantResponsePath: "testdata/create/400_duplicate_slug.json",
@@ -310,15 +330,25 @@ func TestHandler_Create(t *testing.T) {
 		{
 			name: "invalid_status",
 			args: request.CreateProjectInput{
-				Name:              "project1",
-				Status:            "something",
-				StartDate:         "2022-11-14",
-				AccountManagerID:  model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
-				DeliveryManagerID: model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
-				CountryID:         model.MustGetUUIDFromString("4ef64490-c906-4192-a7f9-d2221dadfe4c"),
-				ProjectEmail:      "a@gmail.com",
-				ClientEmail:       []string{"b@gmail.com"},
-				Function:          model.ProjectFunctionLearning.String(),
+				Name:      "project1",
+				Status:    "something",
+				StartDate: "2022-11-14",
+				AccountManagers: []request.ProjectHeadInput{
+					{
+						EmployeeID:     model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
+						CommissionRate: 100,
+					},
+				},
+				DeliveryManagers: []request.ProjectHeadInput{
+					{
+						EmployeeID:     model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
+						CommissionRate: 100,
+					},
+				},
+				CountryID:    model.MustGetUUIDFromString("4ef64490-c906-4192-a7f9-d2221dadfe4c"),
+				ProjectEmail: "a@gmail.com",
+				ClientEmail:  []string{"b@gmail.com"},
+				Function:     model.ProjectFunctionLearning.String(),
 			},
 			wantCode:         http.StatusBadRequest,
 			wantResponsePath: "testdata/create/400_invalid_status.json",
@@ -326,44 +356,44 @@ func TestHandler_Create(t *testing.T) {
 		{
 			name: "missing_status",
 			args: request.CreateProjectInput{
-				Name:              "project1",
-				StartDate:         "2022-11-14",
-				AccountManagerID:  model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
-				DeliveryManagerID: model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
-				CountryID:         model.MustGetUUIDFromString("4ef64490-c906-4192-a7f9-d2221dadfe4c"),
-				ProjectEmail:      "a@gmail.com",
-				ClientEmail:       []string{"b@gmail.com"},
-				Function:          model.ProjectFunctionLearning.String(),
+				Name:      "project1",
+				StartDate: "2022-11-14",
+				AccountManagers: []request.ProjectHeadInput{
+					{
+						EmployeeID:     model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
+						CommissionRate: 100,
+					},
+				},
+				DeliveryManagers: []request.ProjectHeadInput{
+					{
+						EmployeeID:     model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
+						CommissionRate: 100,
+					},
+				},
+				CountryID:    model.MustGetUUIDFromString("4ef64490-c906-4192-a7f9-d2221dadfe4c"),
+				ProjectEmail: "a@gmail.com",
+				ClientEmail:  []string{"b@gmail.com"},
+				Function:     model.ProjectFunctionLearning.String(),
 			},
 			wantCode:         http.StatusBadRequest,
 			wantResponsePath: "testdata/create/400_misssing_status.json",
 		},
 		{
-			name: "missing_status",
-			args: request.CreateProjectInput{
-				Status:            "something",
-				StartDate:         "2022-11-14",
-				AccountManagerID:  model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
-				DeliveryManagerID: model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
-				CountryID:         model.MustGetUUIDFromString("4ef64490-c906-4192-a7f9-d2221dadfe4c"),
-				ProjectEmail:      "a@gmail.com",
-				ClientEmail:       []string{"b@gmail.com"},
-				Function:          model.ProjectFunctionLearning.String(),
-			},
-			wantCode:         http.StatusBadRequest,
-			wantResponsePath: "testdata/create/400_misssing_name.json",
-		},
-		{
 			name: "missing_account_manager",
 			args: request.CreateProjectInput{
-				Name:              "Project1",
-				Status:            string(model.ProjectStatusOnBoarding),
-				StartDate:         "2022-11-14",
-				DeliveryManagerID: model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
-				CountryID:         model.MustGetUUIDFromString("4ef64490-c906-4192-a7f9-d2221dadfe4c"),
-				ProjectEmail:      "a@gmail.com",
-				ClientEmail:       []string{"b@gmail.com", "c@gmail.com"},
-				Function:          model.ProjectFunctionLearning.String(),
+				Name:      "Project1",
+				Status:    string(model.ProjectStatusOnBoarding),
+				StartDate: "2022-11-14",
+				DeliveryManagers: []request.ProjectHeadInput{
+					{
+						EmployeeID:     model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
+						CommissionRate: 100,
+					},
+				},
+				CountryID:    model.MustGetUUIDFromString("4ef64490-c906-4192-a7f9-d2221dadfe4c"),
+				ProjectEmail: "a@gmail.com",
+				ClientEmail:  []string{"b@gmail.com", "c@gmail.com"},
+				Function:     model.ProjectFunctionLearning.String(),
 			},
 			wantCode:         http.StatusBadRequest,
 			wantResponsePath: "testdata/create/400_missing_account_manager.json",
@@ -371,31 +401,51 @@ func TestHandler_Create(t *testing.T) {
 		{
 			name: "invalid_email_domain",
 			args: request.CreateProjectInput{
-				Name:              "Project1",
-				Status:            string(model.ProjectStatusOnBoarding),
-				StartDate:         "2022-11-14",
-				AccountManagerID:  model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
-				DeliveryManagerID: model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
-				CountryID:         model.MustGetUUIDFromString("4ef64490-c906-4192-a7f9-d2221dadfe4c"),
-				ProjectEmail:      "a@gmail.com",
-				ClientEmail:       []string{"bgmail.com", "c@gmail.com"},
-				Function:          model.ProjectFunctionLearning.String(),
+				Name:      "Project1",
+				Status:    string(model.ProjectStatusOnBoarding),
+				StartDate: "2022-11-14",
+				AccountManagers: []request.ProjectHeadInput{
+					{
+						EmployeeID:     model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
+						CommissionRate: 100,
+					},
+				},
+				DeliveryManagers: []request.ProjectHeadInput{
+					{
+						EmployeeID:     model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
+						CommissionRate: 100,
+					},
+				},
+				CountryID:    model.MustGetUUIDFromString("4ef64490-c906-4192-a7f9-d2221dadfe4c"),
+				ProjectEmail: "a@gmail.com",
+				ClientEmail:  []string{"bgmail.com", "c@gmail.com"},
+				Function:     model.ProjectFunctionLearning.String(),
 			},
 			wantCode:         http.StatusBadRequest,
 			wantResponsePath: "testdata/create/400_invalid_email.json",
 		},
 		{
-			name: "invalid_email_domain",
+			name: "invalid_function",
 			args: request.CreateProjectInput{
-				Name:              "Project1",
-				Status:            string(model.ProjectStatusOnBoarding),
-				StartDate:         "2022-11-14",
-				AccountManagerID:  model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
-				DeliveryManagerID: model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
-				CountryID:         model.MustGetUUIDFromString("4ef64490-c906-4192-a7f9-d2221dadfe4c"),
-				ProjectEmail:      "a@gmail.com",
-				ClientEmail:       []string{"b@gmail.com", "c@gmail.com"},
-				Function:          "a",
+				Name:      "Project1",
+				Status:    string(model.ProjectStatusOnBoarding),
+				StartDate: "2022-11-14",
+				AccountManagers: []request.ProjectHeadInput{
+					{
+						EmployeeID:     model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
+						CommissionRate: 100,
+					},
+				},
+				DeliveryManagers: []request.ProjectHeadInput{
+					{
+						EmployeeID:     model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
+						CommissionRate: 100,
+					},
+				},
+				CountryID:    model.MustGetUUIDFromString("4ef64490-c906-4192-a7f9-d2221dadfe4c"),
+				ProjectEmail: "a@gmail.com",
+				ClientEmail:  []string{"b@gmail.com", "c@gmail.com"},
+				Function:     "a",
 			},
 			wantCode:         http.StatusBadRequest,
 			wantResponsePath: "testdata/create/400_invalid_function.json",
@@ -403,15 +453,25 @@ func TestHandler_Create(t *testing.T) {
 		{
 			name: "400_invalid_deployment_type",
 			args: request.CreateProjectInput{
-				Name:              "project1",
-				Status:            string(model.ProjectStatusOnBoarding),
-				StartDate:         "2022-11-14",
-				AccountManagerID:  model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
-				DeliveryManagerID: model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
-				CountryID:         model.MustGetUUIDFromString("4ef64490-c906-4192-a7f9-d2221dadfe4c"),
-				ProjectEmail:      "a@gmail.com",
-				ClientEmail:       []string{"b@gmail.com"},
-				Function:          model.ProjectFunctionDevelopment.String(),
+				Name:      "project1",
+				Status:    string(model.ProjectStatusOnBoarding),
+				StartDate: "2022-11-14",
+				AccountManagers: []request.ProjectHeadInput{
+					{
+						EmployeeID:     model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
+						CommissionRate: 100,
+					},
+				},
+				DeliveryManagers: []request.ProjectHeadInput{
+					{
+						EmployeeID:     model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
+						CommissionRate: 100,
+					},
+				},
+				CountryID:    model.MustGetUUIDFromString("4ef64490-c906-4192-a7f9-d2221dadfe4c"),
+				ProjectEmail: "a@gmail.com",
+				ClientEmail:  []string{"b@gmail.com"},
+				Function:     model.ProjectFunctionDevelopment.String(),
 				Members: []request.AssignMemberInput{
 					{
 						EmployeeID:     model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
@@ -430,15 +490,25 @@ func TestHandler_Create(t *testing.T) {
 		{
 			name: "invalid_project_member_status",
 			args: request.CreateProjectInput{
-				Name:              "project1",
-				Status:            string(model.ProjectStatusOnBoarding),
-				StartDate:         "2022-11-14",
-				AccountManagerID:  model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
-				DeliveryManagerID: model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
-				CountryID:         model.MustGetUUIDFromString("4ef64490-c906-4192-a7f9-d2221dadfe4c"),
-				ProjectEmail:      "a@gmail.com",
-				ClientEmail:       []string{"b@gmail.com"},
-				Function:          model.ProjectFunctionDevelopment.String(),
+				Name:      "project1",
+				Status:    string(model.ProjectStatusOnBoarding),
+				StartDate: "2022-11-14",
+				AccountManagers: []request.ProjectHeadInput{
+					{
+						EmployeeID:     model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
+						CommissionRate: 100,
+					},
+				},
+				DeliveryManagers: []request.ProjectHeadInput{
+					{
+						EmployeeID:     model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
+						CommissionRate: 100,
+					},
+				},
+				CountryID:    model.MustGetUUIDFromString("4ef64490-c906-4192-a7f9-d2221dadfe4c"),
+				ProjectEmail: "a@gmail.com",
+				ClientEmail:  []string{"b@gmail.com"},
+				Function:     model.ProjectFunctionDevelopment.String(),
 				Members: []request.AssignMemberInput{
 					{
 						EmployeeID:     model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
@@ -457,15 +527,25 @@ func TestHandler_Create(t *testing.T) {
 		{
 			name: "empty_project_position",
 			args: request.CreateProjectInput{
-				Name:              "project1",
-				Status:            string(model.ProjectStatusOnBoarding),
-				StartDate:         "2022-11-14",
-				AccountManagerID:  model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
-				DeliveryManagerID: model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
-				CountryID:         model.MustGetUUIDFromString("4ef64490-c906-4192-a7f9-d2221dadfe4c"),
-				ProjectEmail:      "a@gmail.com",
-				ClientEmail:       []string{"b@gmail.com"},
-				Function:          model.ProjectFunctionDevelopment.String(),
+				Name:      "project1",
+				Status:    string(model.ProjectStatusOnBoarding),
+				StartDate: "2022-11-14",
+				AccountManagers: []request.ProjectHeadInput{
+					{
+						EmployeeID:     model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
+						CommissionRate: 100,
+					},
+				},
+				DeliveryManagers: []request.ProjectHeadInput{
+					{
+						EmployeeID:     model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
+						CommissionRate: 100,
+					},
+				},
+				CountryID:    model.MustGetUUIDFromString("4ef64490-c906-4192-a7f9-d2221dadfe4c"),
+				ProjectEmail: "a@gmail.com",
+				ClientEmail:  []string{"b@gmail.com"},
+				Function:     model.ProjectFunctionDevelopment.String(),
 				Members: []request.AssignMemberInput{
 					{
 						EmployeeID:     model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
@@ -484,15 +564,25 @@ func TestHandler_Create(t *testing.T) {
 		{
 			name: "invalid_member_start_date",
 			args: request.CreateProjectInput{
-				Name:              "project1",
-				Status:            string(model.ProjectStatusOnBoarding),
-				StartDate:         "2022-11-14",
-				AccountManagerID:  model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
-				DeliveryManagerID: model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
-				CountryID:         model.MustGetUUIDFromString("4ef64490-c906-4192-a7f9-d2221dadfe4c"),
-				ProjectEmail:      "a@gmail.com",
-				ClientEmail:       []string{"b@gmail.com"},
-				Function:          model.ProjectFunctionDevelopment.String(),
+				Name:      "project1",
+				Status:    string(model.ProjectStatusOnBoarding),
+				StartDate: "2022-11-14",
+				AccountManagers: []request.ProjectHeadInput{
+					{
+						EmployeeID:     model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
+						CommissionRate: 100,
+					},
+				},
+				DeliveryManagers: []request.ProjectHeadInput{
+					{
+						EmployeeID:     model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
+						CommissionRate: 100,
+					},
+				},
+				CountryID:    model.MustGetUUIDFromString("4ef64490-c906-4192-a7f9-d2221dadfe4c"),
+				ProjectEmail: "a@gmail.com",
+				ClientEmail:  []string{"b@gmail.com"},
+				Function:     model.ProjectFunctionDevelopment.String(),
 				Members: []request.AssignMemberInput{
 					{
 						EmployeeID:     model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
@@ -511,15 +601,25 @@ func TestHandler_Create(t *testing.T) {
 		{
 			name: "invalid_member_end_date",
 			args: request.CreateProjectInput{
-				Name:              "project1",
-				Status:            string(model.ProjectStatusOnBoarding),
-				StartDate:         "2022-11-14",
-				AccountManagerID:  model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
-				DeliveryManagerID: model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
-				CountryID:         model.MustGetUUIDFromString("4ef64490-c906-4192-a7f9-d2221dadfe4c"),
-				ProjectEmail:      "a@gmail.com",
-				ClientEmail:       []string{"b@gmail.com"},
-				Function:          model.ProjectFunctionDevelopment.String(),
+				Name:      "project1",
+				Status:    string(model.ProjectStatusOnBoarding),
+				StartDate: "2022-11-14",
+				AccountManagers: []request.ProjectHeadInput{
+					{
+						EmployeeID:     model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
+						CommissionRate: 100,
+					},
+				},
+				DeliveryManagers: []request.ProjectHeadInput{
+					{
+						EmployeeID:     model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
+						CommissionRate: 100,
+					},
+				},
+				CountryID:    model.MustGetUUIDFromString("4ef64490-c906-4192-a7f9-d2221dadfe4c"),
+				ProjectEmail: "a@gmail.com",
+				ClientEmail:  []string{"b@gmail.com"},
+				Function:     model.ProjectFunctionDevelopment.String(),
 				Members: []request.AssignMemberInput{
 					{
 						EmployeeID:     model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),

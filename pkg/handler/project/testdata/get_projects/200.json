@@ -22,8 +22,8 @@
             "members": [],
             "technicalLeads": [],
             "accountManagers": null,
-            "salePersons": null,
             "deliveryManagers": null,
+            "salePersons": null,
             "stacks": [],
             "code": "lorem-ipsum",
             "function": "",
@@ -71,11 +71,13 @@
                     "endDate": null,
                     "rate": "0",
                     "discount": "0",
+                    "upsellCommissionRate": "0",
+                    "leadCommissionRate": "0",
                     "currency": null,
+                    "note": "",
                     "seniority": null,
                     "positions": [],
-                    "upsellPerson": null,
-                    "note": ""
+                    "upsellPerson": null
                 },
                 {
                     "projectMemberID": "",
@@ -92,11 +94,13 @@
                     "endDate": null,
                     "rate": "0",
                     "discount": "0",
+                    "upsellCommissionRate": "0",
+                    "leadCommissionRate": "0",
                     "currency": null,
+                    "note": "",
                     "seniority": null,
                     "positions": [],
-                    "upsellPerson": null,
-                    "note": ""
+                    "upsellPerson": null
                 },
                 {
                     "projectMemberID": "",
@@ -113,11 +117,13 @@
                     "endDate": null,
                     "rate": "0",
                     "discount": "0",
+                    "upsellCommissionRate": "0",
+                    "leadCommissionRate": "0",
                     "currency": null,
+                    "note": "",
                     "seniority": null,
                     "positions": [],
-                    "upsellPerson": null,
-                    "note": ""
+                    "upsellPerson": null
                 },
                 {
                     "projectMemberID": "",
@@ -134,11 +140,13 @@
                     "endDate": null,
                     "rate": "0",
                     "discount": "0",
+                    "upsellCommissionRate": "0",
+                    "leadCommissionRate": "0",
                     "currency": null,
+                    "note": "",
                     "seniority": null,
                     "positions": [],
-                    "upsellPerson": null,
-                    "note": ""
+                    "upsellPerson": null
                 },
                 {
                     "projectMemberID": "",
@@ -155,11 +163,13 @@
                     "endDate": null,
                     "rate": "0",
                     "discount": "0",
+                    "upsellCommissionRate": "0",
+                    "leadCommissionRate": "0",
                     "currency": null,
+                    "note": "",
                     "seniority": null,
                     "positions": [],
-                    "upsellPerson": null,
-                    "note": ""
+                    "upsellPerson": null
                 }
             ],
             "technicalLeads": [
@@ -182,16 +192,6 @@
                     "commissionRate": "1"
                 }
             ],
-            "salePersons": [
-                {
-                    "employeeID": "608ea227-45a5-4c8a-af43-6c7280d96340",
-                    "fullName": "Tiêu Quang Huy",
-                    "displayName": "Huy Tieu",
-                    "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/3c420751-bb9a-4878-896e-2f10f3a633d6_avatar2535921977139052349.png",
-                    "username": "huytq",
-                    "commissionRate": "2"
-                }
-            ],
             "deliveryManagers": [
                 {
                     "employeeID": "2655832e-f009-4b73-a535-64c3a22e558f",
@@ -200,6 +200,16 @@
                     "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
                     "username": "thanh",
                     "commissionRate": "0.5"
+                }
+            ],
+            "salePersons": [
+                {
+                    "employeeID": "608ea227-45a5-4c8a-af43-6c7280d96340",
+                    "fullName": "Tiêu Quang Huy",
+                    "displayName": "Huy Tieu",
+                    "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/3c420751-bb9a-4878-896e-2f10f3a633d6_avatar2535921977139052349.png",
+                    "username": "huytq",
+                    "commissionRate": "2"
                 }
             ],
             "stacks": [],

@@ -82,22 +82,24 @@ type UpdatedProject struct {
 }
 
 type ProjectMember struct {
-	ProjectMemberID string          `json:"projectMemberID"`
-	ProjectSlotID   string          `json:"projectSlotID"`
-	EmployeeID      string          `json:"employeeID"`
-	FullName        string          `json:"fullName"`
-	DisplayName     string          `json:"displayName"`
-	Avatar          string          `json:"avatar"`
-	Username        string          `json:"username"`
-	Status          string          `json:"status"`
-	IsLead          bool            `json:"isLead"`
-	DeploymentType  string          `json:"deploymentType"`
-	StartDate       *time.Time      `json:"startDate"`
-	EndDate         *time.Time      `json:"endDate"`
-	Rate            decimal.Decimal `json:"rate"`
-	Discount        decimal.Decimal `json:"discount"`
-	Currency        *Currency       `json:"currency"`
-	Note            string          `json:"note"`
+	ProjectMemberID      string          `json:"projectMemberID"`
+	ProjectSlotID        string          `json:"projectSlotID"`
+	EmployeeID           string          `json:"employeeID"`
+	FullName             string          `json:"fullName"`
+	DisplayName          string          `json:"displayName"`
+	Avatar               string          `json:"avatar"`
+	Username             string          `json:"username"`
+	Status               string          `json:"status"`
+	IsLead               bool            `json:"isLead"`
+	DeploymentType       string          `json:"deploymentType"`
+	StartDate            *time.Time      `json:"startDate"`
+	EndDate              *time.Time      `json:"endDate"`
+	Rate                 decimal.Decimal `json:"rate"`
+	Discount             decimal.Decimal `json:"discount"`
+	UpsellCommissionRate decimal.Decimal `json:"upsellCommissionRate"`
+	LeadCommissionRate   decimal.Decimal `json:"leadCommissionRate"`
+	Currency             *Currency       `json:"currency"`
+	Note                 string          `json:"note"`
 
 	Seniority    *model.Seniority   `json:"seniority"`
 	Positions    []Position         `json:"positions"`
@@ -113,8 +115,8 @@ type ProjectHead struct {
 	CommissionRate decimal.Decimal `json:"commissionRate"`
 }
 
-func ToProjectHead(userInfo *model.CurrentLoggedUserInfo, head *model.ProjectHead) *ProjectHead {
-	res := &ProjectHead{
+func ToProjectHead(userInfo *model.CurrentLoggedUserInfo, head *model.ProjectHead) ProjectHead {
+	res := ProjectHead{
 		EmployeeID:  head.EmployeeID.String(),
 		FullName:    head.Employee.FullName,
 		DisplayName: head.Employee.DisplayName,
@@ -155,13 +157,13 @@ func ToProjectData(project *model.Project, userInfo *model.CurrentLoggedUserInfo
 		switch h.Position {
 		case model.HeadPositionTechnicalLead:
 			leadMap[h.EmployeeID.String()] = true
-			technicalLeads = append(technicalLeads, *head)
+			technicalLeads = append(technicalLeads, head)
 		case model.HeadPositionAccountManager:
-			accountManagers = append(accountManagers, *head)
+			accountManagers = append(accountManagers, head)
 		case model.HeadPositionDeliveryManager:
-			deliveryManagers = append(deliveryManagers, *head)
+			deliveryManagers = append(deliveryManagers, head)
 		case model.HeadPositionSalePerson:
-			salePersons = append(salePersons, *head)
+			salePersons = append(salePersons, head)
 		}
 	}
 
@@ -306,20 +308,24 @@ type ProjectDataResponse struct {
 }
 
 type CreateMemberData struct {
-	ProjectSlotID   string             `json:"projectSlotID"`
-	ProjectMemberID string             `json:"projectMemberID"`
-	EmployeeID      string             `json:"employeeID"`
-	FullName        string             `json:"fullName"`
-	DisplayName     string             `json:"displayName"`
-	Avatar          string             `json:"avatar"`
-	Positions       []Position         `json:"positions"`
-	DeploymentType  string             `json:"deploymentType"`
-	Status          string             `json:"status"`
-	IsLead          bool               `json:"isLead"`
-	Seniority       model.Seniority    `json:"seniority"`
-	Username        string             `json:"username"`
-	UpsellPerson    *BasicEmployeeInfo `json:"upsellPerson"`
-	Note            string             `json:"note"`
+	ProjectSlotID        string             `json:"projectSlotID"`
+	ProjectMemberID      string             `json:"projectMemberID"`
+	EmployeeID           string             `json:"employeeID"`
+	FullName             string             `json:"fullName"`
+	DisplayName          string             `json:"displayName"`
+	Avatar               string             `json:"avatar"`
+	Positions            []Position         `json:"positions"`
+	DeploymentType       string             `json:"deploymentType"`
+	Status               string             `json:"status"`
+	IsLead               bool               `json:"isLead"`
+	Seniority            model.Seniority    `json:"seniority"`
+	Username             string             `json:"username"`
+	Rate                 decimal.Decimal    `json:"rate"`
+	Discount             decimal.Decimal    `json:"discount"`
+	UpsellPerson         *BasicEmployeeInfo `json:"upsellPerson"`
+	UpsellCommissionRate decimal.Decimal    `json:"upsellCommissionRate"`
+	LeadCommissionRate   decimal.Decimal    `json:"leadCommissionRate"`
+	Note                 string             `json:"note"`
 }
 
 type CreateMemberDataResponse struct {
@@ -347,8 +353,19 @@ func ToCreateMemberData(userInfo *model.CurrentLoggedUserInfo, slot *model.Proje
 		rs.Note = slot.ProjectMember.Note
 	}
 
-	if slot.ProjectMember.UpsellPerson != nil && authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadFullAccess) {
-		rs.UpsellPerson = toBasicEmployeeInfo(*slot.ProjectMember.UpsellPerson)
+	if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadFullAccess) {
+		rs.Rate = slot.Rate
+		rs.Discount = slot.Discount
+
+		if !slot.ProjectMember.ID.IsZero() {
+			rs.Rate = slot.ProjectMember.Rate
+			rs.Discount = slot.ProjectMember.Discount
+		}
+
+		if slot.ProjectMember.UpsellPerson != nil {
+			rs.UpsellPerson = toBasicEmployeeInfo(*slot.ProjectMember.UpsellPerson)
+			rs.UpsellCommissionRate = slot.ProjectMember.UpsellCommissionRate
+		}
 	}
 
 	return rs
@@ -357,21 +374,22 @@ func ToCreateMemberData(userInfo *model.CurrentLoggedUserInfo, slot *model.Proje
 type CreateProjectData struct {
 	model.BaseModel
 
-	Name            string                `json:"name"`
-	Type            string                `json:"type"`
-	Status          string                `json:"status"`
-	StartDate       string                `json:"startDate"`
-	AccountManager  *ProjectHead          `json:"accountManager"`
-	DeliveryManager *ProjectHead          `json:"deliveryManager"`
-	Members         []CreateMemberData    `json:"members"`
-	ClientEmail     []string              `json:"clientEmail"`
-	ProjectEmail    string                `json:"projectEmail"`
-	Country         *BasicCountryInfo     `json:"country"`
-	Code            string                `json:"code"`
-	Function        string                `json:"function"`
-	BankAccount     *BasicBankAccountInfo `json:"bankAccount"`
-	Client          *Client               `json:"client"`
-	Organization    *Organization         `json:"organization"`
+	Name             string                `json:"name"`
+	Type             string                `json:"type"`
+	Status           string                `json:"status"`
+	StartDate        string                `json:"startDate"`
+	AccountManagers  []ProjectHead         `json:"accountManagers"`
+	DeliveryManagers []ProjectHead         `json:"deliveryManagers"`
+	SalePersons      []ProjectHead         `json:"salePersons"`
+	Members          []CreateMemberData    `json:"members"`
+	ClientEmail      []string              `json:"clientEmail"`
+	ProjectEmail     string                `json:"projectEmail"`
+	Country          *BasicCountryInfo     `json:"country"`
+	Code             string                `json:"code"`
+	Function         string                `json:"function"`
+	BankAccount      *BasicBankAccountInfo `json:"bankAccount"`
+	Client           *Client               `json:"client"`
+	Organization     *Organization         `json:"organization"`
 }
 
 type BasicBankAccountInfo struct {
@@ -435,9 +453,11 @@ func ToCreateProjectDataResponse(userInfo *model.CurrentLoggedUserInfo, project 
 	for _, head := range project.Heads {
 		switch head.Position {
 		case model.HeadPositionAccountManager:
-			result.AccountManager = ToProjectHead(userInfo, head)
+			result.AccountManagers = append(result.AccountManagers, ToProjectHead(userInfo, head))
 		case model.HeadPositionDeliveryManager:
-			result.DeliveryManager = ToProjectHead(userInfo, head)
+			result.DeliveryManagers = append(result.DeliveryManagers, ToProjectHead(userInfo, head))
+		case model.HeadPositionSalePerson:
+			result.SalePersons = append(result.SalePersons, ToProjectHead(userInfo, head))
 		}
 	}
 
@@ -452,10 +472,10 @@ func ToCreateProjectDataResponse(userInfo *model.CurrentLoggedUserInfo, project 
 func ToProjectMemberListData(userInfo *model.CurrentLoggedUserInfo, members []*model.ProjectMember, projectHeads []*model.ProjectHead, project *model.Project, distinct bool) []ProjectMember {
 	var results = make([]ProjectMember, 0, len(members))
 
-	leadMap := map[string]bool{}
+	leadMap := map[string]*model.ProjectHead{}
 	for _, v := range projectHeads {
 		if v.IsLead() {
-			leadMap[v.EmployeeID.String()] = true
+			leadMap[v.EmployeeID.String()] = v
 		}
 	}
 
@@ -482,7 +502,7 @@ func ToProjectMemberListData(userInfo *model.CurrentLoggedUserInfo, members []*m
 				Username:        m.Employee.Username,
 				StartDate:       m.StartDate,
 				EndDate:         m.EndDate,
-				IsLead:          leadMap[m.EmployeeID.String()],
+				IsLead:          leadMap[m.EmployeeID.String()] != nil,
 				Status:          m.Status.String(),
 				DeploymentType:  m.DeploymentType.String(),
 				Seniority:       m.Seniority,
@@ -502,6 +522,11 @@ func ToProjectMemberListData(userInfo *model.CurrentLoggedUserInfo, members []*m
 
 			if m.UpsellPerson != nil {
 				member.UpsellPerson = toBasicEmployeeInfo(*m.UpsellPerson)
+				member.UpsellCommissionRate = m.UpsellCommissionRate
+			}
+
+			if leadMap[m.EmployeeID.String()] != nil {
+				member.LeadCommissionRate = leadMap[m.EmployeeID.String()].CommissionRate
 			}
 		}
 
