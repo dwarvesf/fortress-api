@@ -124,7 +124,7 @@ func ToProjectHead(userInfo *model.CurrentLoggedUserInfo, head *model.ProjectHea
 		Username:    head.Employee.Username,
 	}
 
-	if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadFullAccess) {
+	if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsCommissionRateRead) {
 		res.CommissionRate = head.CommissionRate
 	}
 
@@ -183,10 +183,10 @@ func ToProjectData(project *model.Project, userInfo *model.CurrentLoggedUserInfo
 
 		if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadFullAccess) {
 			member.DeploymentType = m.DeploymentType.String()
+		}
 
-			if m.UpsellPerson != nil {
-				member.UpsellPerson = toBasicEmployeeInfo(*m.UpsellPerson)
-			}
+		if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsCommissionRateRead) && m.UpsellPerson != nil {
+			member.UpsellPerson = toBasicEmployeeInfo(*m.UpsellPerson)
 		}
 
 		members = append(members, member)
@@ -216,15 +216,6 @@ func ToProjectData(project *model.Project, userInfo *model.CurrentLoggedUserInfo
 	var clientEmail []string
 	if project.ClientEmail != "" {
 		clientEmail = strings.Split(project.ClientEmail, ",")
-	}
-
-	if project.Organization != nil {
-		d.Organization = &Organization{
-			ID:     project.Organization.ID.String(),
-			Code:   project.Organization.Code,
-			Name:   project.Organization.Name,
-			Avatar: project.Organization.Avatar,
-		}
 	}
 
 	if project.Organization != nil {
@@ -285,14 +276,10 @@ func ToProjectsData(projects []*model.Project, userInfo *model.CurrentLoggedUser
 
 		// If the project is not belong user, check if the user has permission to view the project
 		if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadFullAccess) ||
-			authutils.HasPermission(userInfo.Permissions, model.PermissionEmployeesReadProjectsReadActive) {
-			if p.Status == model.ProjectStatusActive {
-				results = append(results, ToProjectData(p, userInfo))
-			} else {
-				if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadFullAccess) {
-					results = append(results, ToProjectData(p, userInfo))
-				}
-			}
+			(authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadReadActive) &&
+				p.Status == model.ProjectStatusActive) {
+			results = append(results, ToProjectData(p, userInfo))
+			continue
 		}
 	}
 
@@ -353,7 +340,7 @@ func ToCreateMemberData(userInfo *model.CurrentLoggedUserInfo, slot *model.Proje
 		rs.Note = slot.ProjectMember.Note
 	}
 
-	if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadFullAccess) {
+	if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsCommissionRateRead) {
 		rs.Rate = slot.Rate
 		rs.Discount = slot.Discount
 
@@ -511,22 +498,25 @@ func ToProjectMemberListData(userInfo *model.CurrentLoggedUserInfo, members []*m
 			}
 		}
 
-		if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadFullAccess) {
+		if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadFullAccess) &&
+			project.BankAccount != nil &&
+			project.BankAccount.Currency != nil {
+			member.Currency = new(Currency)
+			*member.Currency = toCurrency(project.BankAccount.Currency)
+		}
+
+		// add commission rate
+		if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsCommissionRateRead) {
 			member.Rate = m.Rate
 			member.Discount = m.Discount
 
-			if project.BankAccount != nil && project.BankAccount.Currency != nil {
-				member.Currency = new(Currency)
-				*member.Currency = toCurrency(project.BankAccount.Currency)
+			if leadMap[m.EmployeeID.String()] != nil {
+				member.LeadCommissionRate = leadMap[m.EmployeeID.String()].CommissionRate
 			}
 
 			if m.UpsellPerson != nil {
 				member.UpsellPerson = toBasicEmployeeInfo(*m.UpsellPerson)
 				member.UpsellCommissionRate = m.UpsellCommissionRate
-			}
-
-			if leadMap[m.EmployeeID.String()] != nil {
-				member.LeadCommissionRate = leadMap[m.EmployeeID.String()].CommissionRate
 			}
 		}
 
@@ -646,18 +636,23 @@ type UpdateProjectContactInfoResponse struct {
 	Data UpdateProjectContactInfo `json:"data"`
 }
 
-func ToUpdateProjectContactInfo(project *model.Project) UpdateProjectContactInfo {
+func ToUpdateProjectContactInfo(project *model.Project, userInfo *model.CurrentLoggedUserInfo) UpdateProjectContactInfo {
 	projectHeads := make([]BasicProjectHeadInfo, 0, len(project.Heads))
 	for _, v := range project.Heads {
-		projectHeads = append(projectHeads, BasicProjectHeadInfo{
-			EmployeeID:     v.Employee.ID.String(),
-			FullName:       v.Employee.FullName,
-			Avatar:         v.Employee.Avatar,
-			DisplayName:    v.Employee.DisplayName,
-			Position:       v.Position,
-			Username:       v.Employee.Username,
-			CommissionRate: v.CommissionRate,
-		})
+		ph := BasicProjectHeadInfo{
+			EmployeeID:  v.Employee.ID.String(),
+			FullName:    v.Employee.FullName,
+			Avatar:      v.Employee.Avatar,
+			DisplayName: v.Employee.DisplayName,
+			Position:    v.Position,
+			Username:    v.Employee.Username,
+		}
+
+		if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsCommissionRateRead) {
+			ph.CommissionRate = v.CommissionRate
+		}
+
+		projectHeads = append(projectHeads, ph)
 	}
 
 	var clientEmail []string

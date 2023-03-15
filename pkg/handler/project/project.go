@@ -949,7 +949,7 @@ func (h *handler) UpdateMember(c *gin.Context) {
 	tx, done := h.repo.NewTransaction()
 
 	if !body.EmployeeID.IsZero() {
-		member, err := h.updateProjectMember(tx.DB(), slot.ID.String(), projectID, body)
+		member, err := h.updateProjectMember(tx.DB(), slot.ID.String(), projectID, body, userInfo)
 		if err != nil {
 			l.Error(err, "failed to update project member")
 			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
@@ -963,9 +963,12 @@ func (h *handler) UpdateMember(c *gin.Context) {
 	slot.SeniorityID = body.SeniorityID
 	slot.DeploymentType = model.DeploymentType(body.DeploymentType)
 	slot.Status = model.ProjectMemberStatus(body.Status)
-	slot.Rate = body.Rate
-	slot.Discount = body.Discount
 	slot.Note = body.Note
+
+	if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsCommissionRateEdit) {
+		slot.Rate = body.Rate
+		slot.Discount = body.Discount
+	}
 
 	_, err = h.store.ProjectSlot.UpdateSelectedFieldsByID(tx.DB(), body.ProjectSlotID.String(), *slot,
 		"seniority_id",
@@ -1037,7 +1040,7 @@ func (h *handler) UpdateMember(c *gin.Context) {
 //		 }
 //
 // --- end ---
-func (h *handler) updateProjectMember(db *gorm.DB, slotID string, projectID string, input request.UpdateMemberInput) (*model.ProjectMember, error) {
+func (h *handler) updateProjectMember(db *gorm.DB, slotID string, projectID string, input request.UpdateMemberInput, userInfo *model.CurrentLoggedUserInfo) (*model.ProjectMember, error) {
 	var member *model.ProjectMember
 	var err error
 
@@ -1062,16 +1065,19 @@ func (h *handler) updateProjectMember(db *gorm.DB, slotID string, projectID stri
 			BaseModel: model.BaseModel{
 				ID: input.ProjectMemberID,
 			},
-			SeniorityID:          input.SeniorityID,
-			DeploymentType:       model.DeploymentType(input.DeploymentType),
-			Status:               model.ProjectMemberStatus(input.Status),
-			StartDate:            input.GetStartDate(),
-			EndDate:              input.GetEndDate(),
-			Rate:                 input.Rate,
-			Discount:             input.Discount,
-			UpsellPersonID:       input.UpsellPersonID,
-			UpsellCommissionRate: input.UpsellCommissionRate,
-			Note:                 input.Note,
+			SeniorityID:    input.SeniorityID,
+			DeploymentType: model.DeploymentType(input.DeploymentType),
+			Status:         model.ProjectMemberStatus(input.Status),
+			StartDate:      input.GetStartDate(),
+			EndDate:        input.GetEndDate(),
+			Note:           input.Note,
+		}
+
+		if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsCommissionRateEdit) {
+			member.Rate = input.Rate
+			member.Discount = input.Discount
+			member.UpsellPersonID = input.UpsellPersonID
+			member.UpsellCommissionRate = input.UpsellCommissionRate
 		}
 
 		// TODO: allow updating sell_person_id & upsell_commission_rate
@@ -1129,10 +1135,14 @@ func (h *handler) updateProjectMember(db *gorm.DB, slotID string, projectID stri
 				Status:         model.ProjectMemberStatus(input.Status),
 				StartDate:      input.GetStartDate(),
 				EndDate:        input.GetEndDate(),
-				Rate:           input.Rate,
-				Discount:       input.Discount,
-				UpsellPersonID: input.UpsellPersonID,
 				Note:           input.Note,
+			}
+
+			if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsCommissionRateEdit) {
+				member.Rate = input.Rate
+				member.Discount = input.Discount
+				member.UpsellPersonID = input.UpsellPersonID
+				member.UpsellCommissionRate = input.UpsellCommissionRate
 			}
 
 			if err := h.store.ProjectMember.Create(db, member); err != nil {
@@ -1188,7 +1198,7 @@ func (h *handler) updateProjectMember(db *gorm.DB, slotID string, projectID stri
 		}
 	} else {
 		// Start of lead time or update lead time
-		_, err := h.updateProjectLead(db, projectID, input.EmployeeID, input.GetStartDate(), input.GetEndDate(), input.LeadCommissionRate)
+		_, err := h.updateProjectLead(db, projectID, input.EmployeeID, input.GetStartDate(), input.GetEndDate(), input.LeadCommissionRate, userInfo)
 		if err != nil {
 			h.logger.Fields(logger.Fields{
 				"projectID":  projectID,
@@ -1281,6 +1291,9 @@ func (h *handler) AssignMember(c *gin.Context) {
 		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, body, ""))
 		return
 	}
+
+	// remove commission rate if user does not have permission
+	body.RestrictPermission(userInfo)
 
 	tx, done := h.repo.NewTransaction()
 
@@ -1737,6 +1750,12 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 // @Failure 500 {object} view.ErrorResponse
 // @Router /projects/{id}/contact-info [put]
 func (h *handler) UpdateContactInfo(c *gin.Context) {
+	userInfo, err := authutils.GetLoggedInUserInfo(c, h.store, h.repo.DB(), h.config)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, userInfo.UserID, ""))
+		return
+	}
+
 	projectID := c.Param("id")
 	if projectID == "" || !model.IsUUIDFromString(projectID) {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidProjectID, nil, ""))
@@ -1777,24 +1796,31 @@ func (h *handler) UpdateContactInfo(c *gin.Context) {
 		return
 	}
 
+	err = body.ValidateCommissionRate()
+	if err != nil && authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsCommissionRateEdit) {
+		l.Error(err, "commission rate is invalid")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, body, ""))
+		return
+	}
+
 	// Begin transaction
 	tx, done := h.repo.NewTransaction()
 
-	err = h.updateProjectHeads(tx.DB(), projectID, model.HeadPositionAccountManager, body.AccountManagers)
+	err = h.updateProjectHeads(tx.DB(), projectID, model.HeadPositionAccountManager, body.AccountManagers, userInfo)
 	if err != nil {
 		l.Error(err, "failed to update account managers")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
 		return
 	}
 
-	err = h.updateProjectHeads(tx.DB(), projectID, model.HeadPositionDeliveryManager, body.DeliveryManagers)
+	err = h.updateProjectHeads(tx.DB(), projectID, model.HeadPositionDeliveryManager, body.DeliveryManagers, userInfo)
 	if err != nil {
 		l.Error(err, "failed to update delivery managers")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
 		return
 	}
 
-	err = h.updateProjectHeads(tx.DB(), projectID, model.HeadPositionSalePerson, body.SalePersons)
+	err = h.updateProjectHeads(tx.DB(), projectID, model.HeadPositionSalePerson, body.SalePersons, userInfo)
 	if err != nil {
 		l.Error(err, "failed to update sale persons")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
@@ -1821,10 +1847,10 @@ func (h *handler) UpdateContactInfo(c *gin.Context) {
 
 	p.Heads = heads
 
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToUpdateProjectContactInfo(p), nil, done(nil), nil, ""))
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToUpdateProjectContactInfo(p, userInfo), nil, done(nil), nil, ""))
 }
 
-func (h *handler) updateProjectHeads(db *gorm.DB, projectID string, position model.HeadPosition, headsInput []request.ProjectHeadInput) error {
+func (h *handler) updateProjectHeads(db *gorm.DB, projectID string, position model.HeadPosition, headsInput []request.ProjectHeadInput, userInfo *model.CurrentLoggedUserInfo) error {
 	heads, err := h.store.ProjectHead.GetByProjectIDAndPosition(db, projectID, position)
 	if err != nil {
 		h.logger.Fields(logger.Fields{
@@ -1854,15 +1880,17 @@ func (h *handler) updateProjectHeads(db *gorm.DB, projectID string, position mod
 	// update/delete exist heads
 	for _, head := range heads {
 		if _, ok := headInputMap[head.EmployeeID]; ok {
-			head.CommissionRate = headInputMap[head.EmployeeID]
+			if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsCommissionRateEdit) {
+				head.CommissionRate = headInputMap[head.EmployeeID]
 
-			_, err := h.store.ProjectHead.UpdateSelectedFieldsByID(db, head.ID.String(), *head, "commission_rate")
-			if err != nil {
-				h.logger.Fields(logger.Fields{
-					"projectID": projectID,
-					"headID":    head.ID.String(),
-				}).Error(err, "failed to update head")
-				return err
+				_, err := h.store.ProjectHead.UpdateSelectedFieldsByID(db, head.ID.String(), *head, "commission_rate")
+				if err != nil {
+					h.logger.Fields(logger.Fields{
+						"projectID": projectID,
+						"headID":    head.ID.String(),
+					}).Error(err, "failed to update head")
+					return err
+				}
 			}
 
 			delete(headInputMap, head.EmployeeID)
@@ -1879,6 +1907,10 @@ func (h *handler) updateProjectHeads(db *gorm.DB, projectID string, position mod
 
 	// create new head
 	for employeeID, commissionRate := range headInputMap {
+		if !authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsCommissionRateEdit) {
+			commissionRate = decimal.Zero
+		}
+
 		head := &model.ProjectHead{
 			BaseModel: model.BaseModel{
 				ID: model.NewUUID(),
@@ -1898,7 +1930,7 @@ func (h *handler) updateProjectHeads(db *gorm.DB, projectID string, position mod
 	return nil
 }
 
-func (h *handler) updateProjectLead(db *gorm.DB, projectID string, employeeID model.UUID, startDate *time.Time, endDate *time.Time, commissionRate decimal.Decimal) (*model.ProjectHead, error) {
+func (h *handler) updateProjectLead(db *gorm.DB, projectID string, employeeID model.UUID, startDate *time.Time, endDate *time.Time, commissionRate decimal.Decimal, userInfo *model.CurrentLoggedUserInfo) (*model.ProjectHead, error) {
 	head, err := h.store.ProjectHead.One(db, projectID, employeeID.String(), model.HeadPositionTechnicalLead)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		h.logger.Fields(logger.Fields{
@@ -1908,11 +1940,16 @@ func (h *handler) updateProjectLead(db *gorm.DB, projectID string, employeeID mo
 		return nil, err
 	}
 
+	if !authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsCommissionRateEdit) {
+		commissionRate = decimal.Zero
+	} else if head != nil {
+		head.CommissionRate = commissionRate
+	}
+
 	if err == nil {
 		// Update old record
 		head.StartDate = *startDate
 		head.EndDate = endDate
-		head.CommissionRate = commissionRate
 
 		_, err := h.store.ProjectHead.UpdateSelectedFieldsByID(db, head.ID.String(), *head,
 			"start_date",

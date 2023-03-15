@@ -19,6 +19,8 @@ INSERT INTO public.permissions (id, deleted_at, created_at, updated_at, name, co
 ('a8299847-4d10-41e9-8327-42e13e0672ae', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Project Read Full Access', 'projects.read.fullAccess'),
 ('3c26a977-f4b9-4bc4-8d31-a2dcf075d254', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Project Read Active', 'projects.read.readActive'),
 ('80a2c800-02ea-4264-9289-57b92e911097', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Project Edit', 'projects.edit'),
+('6118a1da-aa9a-40eb-b664-87a6969c5759', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Project Commission Rate Read', 'projects.commissionRate.read'),
+('79b1a377-7b73-4bea-90c2-330bda11b635', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Project Commission Rate Edit', 'projects.commissionRate.edit'),
 ('6797aeac-7d5e-4216-b260-a8a3f62d3cf6', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Project Member Create', 'projectMembers.create'),
 ('57ead3c5-b09f-4cd8-ac38-d9c0d4654af5', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Project Member Read', 'projectMembers.read'),
 ('58719469-e01d-4667-bafa-12020931e317', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Project Member Edit', 'projectMembers.edit'),
