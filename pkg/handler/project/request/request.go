@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/dwarvesf/fortress-api/pkg/utils"
+	"github.com/dwarvesf/fortress-api/pkg/utils/authutils"
 
 	"github.com/dwarvesf/fortress-api/pkg/handler/project/errs"
 	"github.com/dwarvesf/fortress-api/pkg/model"
@@ -312,6 +313,14 @@ func (i *AssignMemberInput) GetStatus() model.ProjectMemberStatus {
 	return model.ProjectMemberStatus(i.Status)
 }
 
+func (i *AssignMemberInput) RestrictPermission(userInfo *model.CurrentLoggedUserInfo) {
+	if !authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsCommissionRateEdit) {
+		i.Rate = decimal.Zero
+		i.Discount = decimal.Zero
+		i.LeadCommissionRate = decimal.Zero
+	}
+}
+
 type DeleteMemberInput struct {
 	ProjectID string
 	MemberID  string
@@ -375,25 +384,30 @@ func (i UpdateContactInfoInput) Validate() error {
 		return errs.ErrAccountManagerRequired
 	}
 
-	// if !isValidCommissionRate(i.AccountManagers) ||
-	// 	!isValidCommissionRate(i.DeliveryManagers) ||
-	// 	!isValidCommissionRate(i.SalePersons) {
-	// 	return errs.ErrTotalCommissionRateMustBe100
-	// }
 	return nil
 }
 
-// func isValidCommissionRate(heads []ProjectHeadInput) bool {
-// 	if len(heads) == 0 {
-// 		return true
-// 	}
+func (i UpdateContactInfoInput) ValidateCommissionRate() error {
+	if !isValidCommissionRate(i.AccountManagers) ||
+		!isValidCommissionRate(i.DeliveryManagers) ||
+		!isValidCommissionRate(i.SalePersons) {
+		return errs.ErrTotalCommissionRateMustBe100
+	}
 
-// 	sum := decimal.Zero
-// 	for _, head := range heads {
-// 		sum = sum.Add(head.CommissionRate)
-// 	}
-// 	return sum.Equal(decimal.NewFromInt(100))
-// }
+	return nil
+}
+
+func isValidCommissionRate(heads []ProjectHeadInput) bool {
+	if len(heads) == 0 {
+		return true
+	}
+
+	sum := decimal.Zero
+	for _, head := range heads {
+		sum = sum.Add(head.CommissionRate)
+	}
+	return sum.Equal(decimal.NewFromInt(100))
+}
 
 type UnassignMemberInput struct {
 	ProjectID string
