@@ -280,13 +280,13 @@ func TestHandler_Create(t *testing.T) {
 				AccountManagers: []request.ProjectHeadInput{
 					{
 						EmployeeID:     model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
-						CommissionRate: 100,
+						CommissionRate: decimal.NewFromInt(100),
 					},
 				},
 				DeliveryManagers: []request.ProjectHeadInput{
 					{
 						EmployeeID:     model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
-						CommissionRate: 100,
+						CommissionRate: decimal.NewFromInt(100),
 					},
 				},
 				CountryID:      model.MustGetUUIDFromString("4ef64490-c906-4192-a7f9-d2221dadfe4c"),
@@ -309,13 +309,13 @@ func TestHandler_Create(t *testing.T) {
 				AccountManagers: []request.ProjectHeadInput{
 					{
 						EmployeeID:     model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
-						CommissionRate: 100,
+						CommissionRate: decimal.NewFromInt(100),
 					},
 				},
 				DeliveryManagers: []request.ProjectHeadInput{
 					{
 						EmployeeID:     model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
-						CommissionRate: 100,
+						CommissionRate: decimal.NewFromInt(100),
 					},
 				},
 				CountryID:    model.MustGetUUIDFromString("4ef64490-c906-4192-a7f9-d2221dadfe4c"),
@@ -336,13 +336,13 @@ func TestHandler_Create(t *testing.T) {
 				AccountManagers: []request.ProjectHeadInput{
 					{
 						EmployeeID:     model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
-						CommissionRate: 100,
+						CommissionRate: decimal.NewFromInt(100),
 					},
 				},
 				DeliveryManagers: []request.ProjectHeadInput{
 					{
 						EmployeeID:     model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
-						CommissionRate: 100,
+						CommissionRate: decimal.NewFromInt(100),
 					},
 				},
 				CountryID:    model.MustGetUUIDFromString("4ef64490-c906-4192-a7f9-d2221dadfe4c"),
@@ -361,13 +361,13 @@ func TestHandler_Create(t *testing.T) {
 				AccountManagers: []request.ProjectHeadInput{
 					{
 						EmployeeID:     model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
-						CommissionRate: 100,
+						CommissionRate: decimal.NewFromInt(100),
 					},
 				},
 				DeliveryManagers: []request.ProjectHeadInput{
 					{
 						EmployeeID:     model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
-						CommissionRate: 100,
+						CommissionRate: decimal.NewFromInt(100),
 					},
 				},
 				CountryID:    model.MustGetUUIDFromString("4ef64490-c906-4192-a7f9-d2221dadfe4c"),
@@ -387,7 +387,7 @@ func TestHandler_Create(t *testing.T) {
 				DeliveryManagers: []request.ProjectHeadInput{
 					{
 						EmployeeID:     model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
-						CommissionRate: 100,
+						CommissionRate: decimal.NewFromInt(100),
 					},
 				},
 				CountryID:    model.MustGetUUIDFromString("4ef64490-c906-4192-a7f9-d2221dadfe4c"),
@@ -407,13 +407,13 @@ func TestHandler_Create(t *testing.T) {
 				AccountManagers: []request.ProjectHeadInput{
 					{
 						EmployeeID:     model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
-						CommissionRate: 100,
+						CommissionRate: decimal.NewFromInt(100),
 					},
 				},
 				DeliveryManagers: []request.ProjectHeadInput{
 					{
 						EmployeeID:     model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
-						CommissionRate: 100,
+						CommissionRate: decimal.NewFromInt(100),
 					},
 				},
 				CountryID:    model.MustGetUUIDFromString("4ef64490-c906-4192-a7f9-d2221dadfe4c"),
@@ -433,13 +433,13 @@ func TestHandler_Create(t *testing.T) {
 				AccountManagers: []request.ProjectHeadInput{
 					{
 						EmployeeID:     model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
-						CommissionRate: 100,
+						CommissionRate: decimal.NewFromInt(100),
 					},
 				},
 				DeliveryManagers: []request.ProjectHeadInput{
 					{
 						EmployeeID:     model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
-						CommissionRate: 100,
+						CommissionRate: decimal.NewFromInt(100),
 					},
 				},
 				CountryID:    model.MustGetUUIDFromString("4ef64490-c906-4192-a7f9-d2221dadfe4c"),
@@ -459,13 +459,13 @@ func TestHandler_Create(t *testing.T) {
 				AccountManagers: []request.ProjectHeadInput{
 					{
 						EmployeeID:     model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
-						CommissionRate: 100,
+						CommissionRate: decimal.NewFromInt(100),
 					},
 				},
 				DeliveryManagers: []request.ProjectHeadInput{
 					{
 						EmployeeID:     model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
-						CommissionRate: 100,
+						CommissionRate: decimal.NewFromInt(100),
 					},
 				},
 				CountryID:    model.MustGetUUIDFromString("4ef64490-c906-4192-a7f9-d2221dadfe4c"),
@@ -496,13 +496,13 @@ func TestHandler_Create(t *testing.T) {
 				AccountManagers: []request.ProjectHeadInput{
 					{
 						EmployeeID:     model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
-						CommissionRate: 100,
+						CommissionRate: decimal.NewFromInt(100),
 					},
 				},
 				DeliveryManagers: []request.ProjectHeadInput{
 					{
 						EmployeeID:     model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
-						CommissionRate: 100,
+						CommissionRate: decimal.NewFromInt(100),
 					},
 				},
 				CountryID:    model.MustGetUUIDFromString("4ef64490-c906-4192-a7f9-d2221dadfe4c"),
@@ -533,13 +533,13 @@ func TestHandler_Create(t *testing.T) {
 				AccountManagers: []request.ProjectHeadInput{
 					{
 						EmployeeID:     model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
-						CommissionRate: 100,
+						CommissionRate: decimal.NewFromInt(100),
 					},
 				},
 				DeliveryManagers: []request.ProjectHeadInput{
 					{
 						EmployeeID:     model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
-						CommissionRate: 100,
+						CommissionRate: decimal.NewFromInt(100),
 					},
 				},
 				CountryID:    model.MustGetUUIDFromString("4ef64490-c906-4192-a7f9-d2221dadfe4c"),
@@ -570,13 +570,13 @@ func TestHandler_Create(t *testing.T) {
 				AccountManagers: []request.ProjectHeadInput{
 					{
 						EmployeeID:     model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
-						CommissionRate: 100,
+						CommissionRate: decimal.NewFromInt(100),
 					},
 				},
 				DeliveryManagers: []request.ProjectHeadInput{
 					{
 						EmployeeID:     model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
-						CommissionRate: 100,
+						CommissionRate: decimal.NewFromInt(100),
 					},
 				},
 				CountryID:    model.MustGetUUIDFromString("4ef64490-c906-4192-a7f9-d2221dadfe4c"),
@@ -607,13 +607,13 @@ func TestHandler_Create(t *testing.T) {
 				AccountManagers: []request.ProjectHeadInput{
 					{
 						EmployeeID:     model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
-						CommissionRate: 100,
+						CommissionRate: decimal.NewFromInt(100),
 					},
 				},
 				DeliveryManagers: []request.ProjectHeadInput{
 					{
 						EmployeeID:     model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
-						CommissionRate: 100,
+						CommissionRate: decimal.NewFromInt(100),
 					},
 				},
 				CountryID:    model.MustGetUUIDFromString("4ef64490-c906-4192-a7f9-d2221dadfe4c"),
@@ -1456,19 +1456,19 @@ func TestHandler_UpdateContactInfo(t *testing.T) {
 				AccountManagers: []request.ProjectHeadInput{
 					{
 						EmployeeID:     model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
-						CommissionRate: 100,
+						CommissionRate: decimal.NewFromInt(100),
 					},
 				},
 				DeliveryManagers: []request.ProjectHeadInput{
 					{
 						EmployeeID:     model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
-						CommissionRate: 100,
+						CommissionRate: decimal.NewFromInt(100),
 					},
 				},
 				SalePersons: []request.ProjectHeadInput{
 					{
 						EmployeeID:     model.MustGetUUIDFromString("608ea227-45a5-4c8a-af43-6c7280d96340"),
-						CommissionRate: 100,
+						CommissionRate: decimal.NewFromInt(100),
 					},
 				},
 			},
@@ -1484,19 +1484,19 @@ func TestHandler_UpdateContactInfo(t *testing.T) {
 				AccountManagers: []request.ProjectHeadInput{
 					{
 						EmployeeID:     model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
-						CommissionRate: 100,
+						CommissionRate: decimal.NewFromInt(100),
 					},
 				},
 				DeliveryManagers: []request.ProjectHeadInput{
 					{
 						EmployeeID:     model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
-						CommissionRate: 100,
+						CommissionRate: decimal.NewFromInt(100),
 					},
 				},
 				SalePersons: []request.ProjectHeadInput{
 					{
 						EmployeeID:     model.MustGetUUIDFromString("608ea227-45a5-4c8a-af43-6c7280d96340"),
-						CommissionRate: 100,
+						CommissionRate: decimal.NewFromInt(100),
 					},
 				},
 			},
@@ -1512,19 +1512,19 @@ func TestHandler_UpdateContactInfo(t *testing.T) {
 				AccountManagers: []request.ProjectHeadInput{
 					{
 						EmployeeID:     model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
-						CommissionRate: 100,
+						CommissionRate: decimal.NewFromInt(100),
 					},
 				},
 				DeliveryManagers: []request.ProjectHeadInput{
 					{
 						EmployeeID:     model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
-						CommissionRate: 100,
+						CommissionRate: decimal.NewFromInt(100),
 					},
 				},
 				SalePersons: []request.ProjectHeadInput{
 					{
 						EmployeeID:     model.MustGetUUIDFromString("608ea227-45a5-4c8a-af43-6c7280d96340"),
-						CommissionRate: 100,
+						CommissionRate: decimal.NewFromInt(100),
 					},
 				},
 			},
@@ -1540,19 +1540,19 @@ func TestHandler_UpdateContactInfo(t *testing.T) {
 				AccountManagers: []request.ProjectHeadInput{
 					{
 						EmployeeID:     model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
-						CommissionRate: 100,
+						CommissionRate: decimal.NewFromInt(100),
 					},
 				},
 				DeliveryManagers: []request.ProjectHeadInput{
 					{
 						EmployeeID:     model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
-						CommissionRate: 100,
+						CommissionRate: decimal.NewFromInt(100),
 					},
 				},
 				SalePersons: []request.ProjectHeadInput{
 					{
 						EmployeeID:     model.MustGetUUIDFromString("608ea227-45a5-4c8a-af43-6c7280d96340"),
-						CommissionRate: 100,
+						CommissionRate: decimal.NewFromInt(100),
 					},
 				},
 			},
@@ -1568,19 +1568,19 @@ func TestHandler_UpdateContactInfo(t *testing.T) {
 				AccountManagers: []request.ProjectHeadInput{
 					{
 						EmployeeID:     model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
-						CommissionRate: 100,
+						CommissionRate: decimal.NewFromInt(100),
 					},
 				},
 				DeliveryManagers: []request.ProjectHeadInput{
 					{
 						EmployeeID:     model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
-						CommissionRate: 100,
+						CommissionRate: decimal.NewFromInt(100),
 					},
 				},
 				SalePersons: []request.ProjectHeadInput{
 					{
 						EmployeeID:     model.MustGetUUIDFromString("608ea227-45a5-4c8a-af43-6c7280d96340"),
-						CommissionRate: 100,
+						CommissionRate: decimal.NewFromInt(100),
 					},
 				},
 			},
@@ -1596,19 +1596,19 @@ func TestHandler_UpdateContactInfo(t *testing.T) {
 				AccountManagers: []request.ProjectHeadInput{
 					{
 						EmployeeID:     model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558d"),
-						CommissionRate: 100,
+						CommissionRate: decimal.NewFromInt(100),
 					},
 				},
 				DeliveryManagers: []request.ProjectHeadInput{
 					{
 						EmployeeID:     model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
-						CommissionRate: 100,
+						CommissionRate: decimal.NewFromInt(100),
 					},
 				},
 				SalePersons: []request.ProjectHeadInput{
 					{
 						EmployeeID:     model.MustGetUUIDFromString("608ea227-45a5-4c8a-af43-6c7280d96340"),
-						CommissionRate: 100,
+						CommissionRate: decimal.NewFromInt(100),
 					},
 				},
 			},
@@ -1624,19 +1624,19 @@ func TestHandler_UpdateContactInfo(t *testing.T) {
 				AccountManagers: []request.ProjectHeadInput{
 					{
 						EmployeeID:     model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
-						CommissionRate: 100,
+						CommissionRate: decimal.NewFromInt(100),
 					},
 				},
 				DeliveryManagers: []request.ProjectHeadInput{
 					{
 						EmployeeID:     model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98cd"),
-						CommissionRate: 100,
+						CommissionRate: decimal.NewFromInt(100),
 					},
 				},
 				SalePersons: []request.ProjectHeadInput{
 					{
 						EmployeeID:     model.MustGetUUIDFromString("608ea227-45a5-4c8a-af43-6c7280d96340"),
-						CommissionRate: 100,
+						CommissionRate: decimal.NewFromInt(100),
 					},
 				},
 			},

@@ -347,8 +347,8 @@ func (input DeleteSlotInput) Validate() error {
 }
 
 type ProjectHeadInput struct {
-	EmployeeID     model.UUID `json:"employeeID" form:"employeeID"`
-	CommissionRate int        `json:"commissionRate" form:"commissionRate"`
+	EmployeeID     model.UUID      `json:"employeeID" form:"employeeID"`
+	CommissionRate decimal.Decimal `json:"commissionRate" form:"commissionRate"`
 }
 
 type UpdateContactInfoInput struct {
@@ -375,26 +375,25 @@ func (i UpdateContactInfoInput) Validate() error {
 		return errs.ErrAccountManagerRequired
 	}
 
-	if !isValidCommissionRate(i.AccountManagers) ||
-		!isValidCommissionRate(i.DeliveryManagers) ||
-		!isValidCommissionRate(i.SalePersons) {
-		return errs.ErrTotalCommissionRateMustBe100
-	}
-
+	// if !isValidCommissionRate(i.AccountManagers) ||
+	// 	!isValidCommissionRate(i.DeliveryManagers) ||
+	// 	!isValidCommissionRate(i.SalePersons) {
+	// 	return errs.ErrTotalCommissionRateMustBe100
+	// }
 	return nil
 }
 
-func isValidCommissionRate(heads []ProjectHeadInput) bool {
-	if len(heads) == 0 {
-		return true
-	}
+// func isValidCommissionRate(heads []ProjectHeadInput) bool {
+// 	if len(heads) == 0 {
+// 		return true
+// 	}
 
-	sum := 0
-	for _, head := range heads {
-		sum += head.CommissionRate
-	}
-	return sum == 100
-}
+// 	sum := decimal.Zero
+// 	for _, head := range heads {
+// 		sum = sum.Add(head.CommissionRate)
+// 	}
+// 	return sum.Equal(decimal.NewFromInt(100))
+// }
 
 type UnassignMemberInput struct {
 	ProjectID string

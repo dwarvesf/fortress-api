@@ -433,7 +433,7 @@ func (h *handler) createProjectHeads(db *gorm.DB, projectID model.UUID, position
 		head := &model.ProjectHead{
 			ProjectID:      projectID,
 			EmployeeID:     head.EmployeeID,
-			CommissionRate: decimal.NewFromInt(int64(head.CommissionRate)),
+			CommissionRate: head.CommissionRate,
 			Position:       position,
 		}
 
@@ -1848,7 +1848,7 @@ func (h *handler) updateProjectHeads(db *gorm.DB, projectID string, position mod
 			return errs.ErrEmployeeNotFound
 		}
 
-		headInputMap[head.EmployeeID] = decimal.NewFromInt(int64(head.CommissionRate))
+		headInputMap[head.EmployeeID] = head.CommissionRate
 	}
 
 	// update/delete exist heads
