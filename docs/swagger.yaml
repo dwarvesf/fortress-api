@@ -1270,6 +1270,8 @@ definitions:
         type: string
       status:
         type: string
+      upsellCommissionRate:
+        type: number
       upsellPersonID:
         type: string
     required:
@@ -1544,7 +1546,7 @@ definitions:
   request.ProjectHeadInput:
     properties:
       commissionRate:
-        type: integer
+        type: number
       employeeID:
         type: string
     type: object

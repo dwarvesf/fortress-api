@@ -236,19 +236,20 @@ func (i *UpdateMemberInput) GetEndDate() *time.Time {
 }
 
 type AssignMemberInput struct {
-	EmployeeID         model.UUID      `form:"employeeID" json:"employeeID"`
-	SeniorityID        model.UUID      `form:"seniorityID" json:"seniorityID" binding:"required"`
-	Positions          []model.UUID    `form:"positions" json:"positions" binding:"required"`
-	DeploymentType     string          `form:"deploymentType" json:"deploymentType" binding:"required"`
-	Status             string          `form:"status" json:"status" binding:"required"`
-	StartDate          string          `form:"startDate" json:"startDate"`
-	EndDate            string          `form:"endDate" json:"endDate"`
-	Rate               decimal.Decimal `form:"rate" json:"rate" binding:"required"`
-	Discount           decimal.Decimal `form:"discount" json:"discount"`
-	LeadCommissionRate decimal.Decimal `form:"leadCommissionRate" json:"leadCommissionRate"`
-	IsLead             bool            `form:"isLead" json:"isLead"`
-	UpsellPersonID     model.UUID      `form:"upsellPersonID" json:"upsellPersonID"`
-	Note               string          `form:"note" json:"note"`
+	EmployeeID           model.UUID      `form:"employeeID" json:"employeeID"`
+	SeniorityID          model.UUID      `form:"seniorityID" json:"seniorityID" binding:"required"`
+	Positions            []model.UUID    `form:"positions" json:"positions" binding:"required"`
+	DeploymentType       string          `form:"deploymentType" json:"deploymentType" binding:"required"`
+	Status               string          `form:"status" json:"status" binding:"required"`
+	StartDate            string          `form:"startDate" json:"startDate"`
+	EndDate              string          `form:"endDate" json:"endDate"`
+	Rate                 decimal.Decimal `form:"rate" json:"rate" binding:"required"`
+	Discount             decimal.Decimal `form:"discount" json:"discount"`
+	LeadCommissionRate   decimal.Decimal `form:"leadCommissionRate" json:"leadCommissionRate"`
+	IsLead               bool            `form:"isLead" json:"isLead"`
+	UpsellPersonID       model.UUID      `form:"upsellPersonID" json:"upsellPersonID"`
+	UpsellCommissionRate decimal.Decimal `form:"upsellCommissionRate" json:"upsellCommissionRate"`
+	Note                 string          `form:"note" json:"note"`
 }
 
 func (i *AssignMemberInput) Validate() error {

@@ -408,7 +408,7 @@ func (h *handler) Create(c *gin.Context) {
 
 	// assign members to project
 	for _, member := range body.Members {
-		slot, code, err := h.createSlotsAndAssignMembers(tx.DB(), p.ID.String(), member)
+		slot, code, err := h.createSlotsAndAssignMembers(tx.DB(), p.ID.String(), member, userInfo)
 		if err != nil {
 			l.Error(err, "failed to assign member to project")
 			c.JSON(code, view.CreateResponse[any](nil, nil, done(err), member, ""))
@@ -1080,7 +1080,6 @@ func (h *handler) updateProjectMember(db *gorm.DB, slotID string, projectID stri
 			member.UpsellCommissionRate = input.UpsellCommissionRate
 		}
 
-		// TODO: allow updating sell_person_id & upsell_commission_rate
 		_, err := h.store.ProjectMember.UpdateSelectedFieldsByID(db, input.ProjectMemberID.String(), *member,
 			"start_date",
 			"end_date",
@@ -1090,8 +1089,8 @@ func (h *handler) updateProjectMember(db *gorm.DB, slotID string, projectID stri
 			"deployment_type",
 			"seniority_id",
 			"note",
-			// "upsell_person_id",
-			// "upsell_commission_rate",
+			"upsell_person_id",
+			"upsell_commission_rate",
 		)
 		if err != nil {
 			h.logger.Fields(logger.Fields{"member": member}).Error(err, "failed to update project member")
@@ -1297,7 +1296,7 @@ func (h *handler) AssignMember(c *gin.Context) {
 
 	tx, done := h.repo.NewTransaction()
 
-	slot, code, err := h.createSlotsAndAssignMembers(tx.DB(), projectID, body)
+	slot, code, err := h.createSlotsAndAssignMembers(tx.DB(), projectID, body, userInfo)
 	if err != nil {
 		l.Error(err, "failed to assign member to project")
 		c.JSON(code, view.CreateResponse[any](nil, nil, done(err), body, ""))
@@ -1306,7 +1305,7 @@ func (h *handler) AssignMember(c *gin.Context) {
 	c.JSON(http.StatusOK, view.CreateResponse(view.ToCreateMemberData(userInfo, slot), nil, done(nil), nil, ""))
 }
 
-func (h *handler) createSlotsAndAssignMembers(db *gorm.DB, projectID string, req request.AssignMemberInput) (*model.ProjectSlot, int, error) {
+func (h *handler) createSlotsAndAssignMembers(db *gorm.DB, projectID string, req request.AssignMemberInput, userInfo *model.CurrentLoggedUserInfo) (*model.ProjectSlot, int, error) {
 	l := h.logger
 
 	// check seniority existence
@@ -1340,10 +1339,13 @@ func (h *handler) createSlotsAndAssignMembers(db *gorm.DB, projectID string, req
 		ProjectID:      model.MustGetUUIDFromString(projectID),
 		DeploymentType: model.DeploymentType(req.DeploymentType),
 		Status:         req.GetStatus(),
-		Rate:           req.Rate,
-		Discount:       req.Discount,
 		SeniorityID:    req.SeniorityID,
 		Note:           req.Note,
+	}
+
+	if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsCommissionRateEdit) {
+		slot.Rate = req.Rate
+		slot.Discount = req.Discount
 	}
 
 	if err := h.store.ProjectSlot.Create(db, slot); err != nil {
@@ -1411,10 +1413,14 @@ func (h *handler) createSlotsAndAssignMembers(db *gorm.DB, projectID string, req
 			Status:         req.GetStatus(),
 			StartDate:      req.GetStartDate(),
 			EndDate:        req.GetEndDate(),
-			Rate:           req.Rate,
-			Discount:       req.Discount,
-			UpsellPersonID: req.UpsellPersonID,
 			Note:           req.Note,
+		}
+
+		if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsCommissionRateEdit) {
+			member.Rate = req.Rate
+			member.Discount = req.Discount
+			member.UpsellPersonID = req.UpsellPersonID
+			member.UpsellCommissionRate = req.UpsellCommissionRate
 		}
 
 		if err = h.store.ProjectMember.Create(db, member); err != nil {
@@ -1440,11 +1446,14 @@ func (h *handler) createSlotsAndAssignMembers(db *gorm.DB, projectID string, req
 		slot.ProjectMember.IsLead = req.IsLead
 		if req.IsLead {
 			head := &model.ProjectHead{
-				ProjectID:      model.MustGetUUIDFromString(projectID),
-				EmployeeID:     req.EmployeeID,
-				CommissionRate: req.LeadCommissionRate,
-				Position:       model.HeadPositionTechnicalLead,
-				StartDate:      *req.GetStartDate(),
+				ProjectID:  model.MustGetUUIDFromString(projectID),
+				EmployeeID: req.EmployeeID,
+				Position:   model.HeadPositionTechnicalLead,
+				StartDate:  *req.GetStartDate(),
+			}
+
+			if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsCommissionRateEdit) {
+				head.CommissionRate = req.LeadCommissionRate
 			}
 
 			if err := h.store.ProjectHead.Create(db, head); err != nil {
