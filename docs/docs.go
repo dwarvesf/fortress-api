@@ -7160,6 +7160,9 @@ const docTemplate = `{
                 "status": {
                     "type": "string"
                 },
+                "upsellCommissionRate": {
+                    "type": "number"
+                },
                 "upsellPersonID": {
                     "type": "string"
                 }
@@ -7559,7 +7562,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "commissionRate": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "employeeID": {
                     "type": "string"

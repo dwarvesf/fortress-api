@@ -7152,6 +7152,9 @@
                 "status": {
                     "type": "string"
                 },
+                "upsellCommissionRate": {
+                    "type": "number"
+                },
                 "upsellPersonID": {
                     "type": "string"
                 }
@@ -7551,7 +7554,7 @@
             "type": "object",
             "properties": {
                 "commissionRate": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "employeeID": {
                     "type": "string"
