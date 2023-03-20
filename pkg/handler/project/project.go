@@ -965,7 +965,7 @@ func (h *handler) UpdateMember(c *gin.Context) {
 	slot.Status = model.ProjectMemberStatus(body.Status)
 	slot.Note = body.Note
 
-	if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsCommissionRateEdit) {
+	if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectMembersRateEdit) {
 		slot.Rate = body.Rate
 		slot.Discount = body.Discount
 	}
@@ -1061,26 +1061,34 @@ func (h *handler) updateProjectMember(db *gorm.DB, slotID string, projectID stri
 
 	if !input.ProjectMemberID.IsZero() {
 		// Update assigned slot
-		member = &model.ProjectMember{
-			BaseModel: model.BaseModel{
-				ID: input.ProjectMemberID,
-			},
-			SeniorityID:    input.SeniorityID,
-			DeploymentType: model.DeploymentType(input.DeploymentType),
-			Status:         model.ProjectMemberStatus(input.Status),
-			StartDate:      input.GetStartDate(),
-			EndDate:        input.GetEndDate(),
-			Note:           input.Note,
+		member, err := h.store.ProjectMember.OneByID(db, input.ProjectMemberID.String())
+		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				h.logger.Error(errs.ErrProjectMemberNotFound, "project member not found")
+				return nil, err
+			}
+			h.logger.Error(err, "failed to get project member by id")
+			return nil, err
 		}
 
+		member.SeniorityID = input.SeniorityID
+		member.DeploymentType = model.DeploymentType(input.DeploymentType)
+		member.Status = model.ProjectMemberStatus(input.Status)
+		member.StartDate = input.GetStartDate()
+		member.EndDate = input.GetEndDate()
+		member.Note = input.Note
+
 		if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsCommissionRateEdit) {
-			member.Rate = input.Rate
-			member.Discount = input.Discount
 			member.UpsellPersonID = input.UpsellPersonID
 			member.UpsellCommissionRate = input.UpsellCommissionRate
 		}
 
-		_, err := h.store.ProjectMember.UpdateSelectedFieldsByID(db, input.ProjectMemberID.String(), *member,
+		if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectMembersRateEdit) {
+			member.Rate = input.Rate
+			member.Discount = input.Discount
+		}
+
+		_, err = h.store.ProjectMember.UpdateSelectedFieldsByID(db, input.ProjectMemberID.String(), *member,
 			"start_date",
 			"end_date",
 			"status",
@@ -1138,10 +1146,13 @@ func (h *handler) updateProjectMember(db *gorm.DB, slotID string, projectID stri
 			}
 
 			if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsCommissionRateEdit) {
-				member.Rate = input.Rate
-				member.Discount = input.Discount
 				member.UpsellPersonID = input.UpsellPersonID
 				member.UpsellCommissionRate = input.UpsellCommissionRate
+			}
+
+			if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectMembersRateEdit) {
+				member.Rate = input.Rate
+				member.Discount = input.Discount
 			}
 
 			if err := h.store.ProjectMember.Create(db, member); err != nil {
@@ -1343,7 +1354,7 @@ func (h *handler) createSlotsAndAssignMembers(db *gorm.DB, projectID string, req
 		Note:           req.Note,
 	}
 
-	if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsCommissionRateEdit) {
+	if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectMembersRateEdit) {
 		slot.Rate = req.Rate
 		slot.Discount = req.Discount
 	}
@@ -1417,10 +1428,13 @@ func (h *handler) createSlotsAndAssignMembers(db *gorm.DB, projectID string, req
 		}
 
 		if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsCommissionRateEdit) {
-			member.Rate = req.Rate
-			member.Discount = req.Discount
 			member.UpsellPersonID = req.UpsellPersonID
 			member.UpsellCommissionRate = req.UpsellCommissionRate
+		}
+
+		if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectMembersRateEdit) {
+			member.Rate = req.Rate
+			member.Discount = req.Discount
 		}
 
 		if err = h.store.ProjectMember.Create(db, member); err != nil {

@@ -45,6 +45,8 @@ const (
 	PermissionProjectMembersRead                  PermissionCode = "projectMembers.read"
 	PermissionProjectMembersEdit                  PermissionCode = "projectMembers.edit"
 	PermissionProjectMembersDelete                PermissionCode = "projectMembers.delete"
+	PermissionProjectMembersRateRead              PermissionCode = "projectMembers.rate.read"
+	PermissionProjectMembersRateEdit              PermissionCode = "projectMembers.rate.edit"
 	PermissionProjectWorkUnitsCreate              PermissionCode = "projectWorkUnits.create"
 	PermissionProjectWorkUnitsCreateFullAccess    PermissionCode = "projectWorkUnits.create.fullAccess"
 	PermissionProjectWorkUnitsRead                PermissionCode = "projectWorkUnits.read"

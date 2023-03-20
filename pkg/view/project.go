@@ -340,18 +340,19 @@ func ToCreateMemberData(userInfo *model.CurrentLoggedUserInfo, slot *model.Proje
 		rs.Note = slot.ProjectMember.Note
 	}
 
-	if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsCommissionRateRead) {
+	if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsCommissionRateRead) &&
+		slot.ProjectMember.UpsellPerson != nil {
+		rs.UpsellPerson = toBasicEmployeeInfo(*slot.ProjectMember.UpsellPerson)
+		rs.UpsellCommissionRate = slot.ProjectMember.UpsellCommissionRate
+	}
+
+	if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectMembersRateRead) {
 		rs.Rate = slot.Rate
 		rs.Discount = slot.Discount
 
 		if !slot.ProjectMember.ID.IsZero() {
 			rs.Rate = slot.ProjectMember.Rate
 			rs.Discount = slot.ProjectMember.Discount
-		}
-
-		if slot.ProjectMember.UpsellPerson != nil {
-			rs.UpsellPerson = toBasicEmployeeInfo(*slot.ProjectMember.UpsellPerson)
-			rs.UpsellCommissionRate = slot.ProjectMember.UpsellCommissionRate
 		}
 	}
 
@@ -507,9 +508,6 @@ func ToProjectMemberListData(userInfo *model.CurrentLoggedUserInfo, members []*m
 
 		// add commission rate
 		if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsCommissionRateRead) {
-			member.Rate = m.Rate
-			member.Discount = m.Discount
-
 			if leadMap[m.EmployeeID.String()] != nil {
 				member.LeadCommissionRate = leadMap[m.EmployeeID.String()].CommissionRate
 			}
@@ -518,6 +516,11 @@ func ToProjectMemberListData(userInfo *model.CurrentLoggedUserInfo, members []*m
 				member.UpsellPerson = toBasicEmployeeInfo(*m.UpsellPerson)
 				member.UpsellCommissionRate = m.UpsellCommissionRate
 			}
+		}
+
+		if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectMembersRateRead) {
+			member.Rate = m.Rate
+			member.Discount = m.Discount
 		}
 
 		results = append(results, member)

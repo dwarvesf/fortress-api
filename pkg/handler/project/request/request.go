@@ -316,9 +316,12 @@ func (i *AssignMemberInput) GetStatus() model.ProjectMemberStatus {
 
 func (i *AssignMemberInput) RestrictPermission(userInfo *model.CurrentLoggedUserInfo) {
 	if !authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsCommissionRateEdit) {
+		i.LeadCommissionRate = decimal.Zero
+	}
+
+	if !authutils.HasPermission(userInfo.Permissions, model.PermissionProjectMembersRateEdit) {
 		i.Rate = decimal.Zero
 		i.Discount = decimal.Zero
-		i.LeadCommissionRate = decimal.Zero
 	}
 }
 
