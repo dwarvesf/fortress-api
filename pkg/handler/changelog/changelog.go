@@ -9,6 +9,7 @@ import (
 	"runtime/debug"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/Boostport/mjml-go"
 	nt "github.com/dstotijn/go-notion"
@@ -214,7 +215,21 @@ func (h *handler) generateEmailChangelog(
 			fields := strings.Split(changelogsURL, "/")
 			changelogsID = strings.Split(fields[len(fields)-1], "?")[0]
 
-			resp, err := h.service.Notion.GetDatabase(changelogsID, nil, nil, 0)
+			// timeFilter is one month ago from now
+			timeFilter := time.Now().AddDate(0, -1, 0)
+
+			resp, err := h.service.Notion.GetDatabase(changelogsID, &nt.DatabaseQueryFilter{
+				And: []nt.DatabaseQueryFilter{
+					{
+						Property: "Created",
+						DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+							Date: &nt.DatePropertyFilter{
+								OnOrAfter: &timeFilter,
+							},
+						},
+					},
+				},
+			}, nil, 0)
 			if err != nil {
 				h.logger.Error(err, "download page")
 				return nil, nil, singleChangelogError{ProjectName: projectName, Err: err}
@@ -269,8 +284,17 @@ func (h *handler) generateEmailChangelog(
 	for i, block := range changelogBlocks {
 		switch v := block.(type) {
 		case *nt.ImageBlock:
+			var isExternalFile = v.External != nil
+			var imgURL string
+
+			if isExternalFile {
+				imgURL = v.External.URL
+			} else {
+				imgURL = v.File.URL
+			}
+
 			// parse the url
-			u, err := url.Parse(v.File.URL)
+			u, err := url.Parse(imgURL)
 			if err != nil {
 				return nil, nil, singleChangelogError{ProjectName: projectName, Err: err}
 			}
@@ -281,7 +305,7 @@ func (h *handler) generateEmailChangelog(
 			fPath := fmt.Sprintf("https://storage.googleapis.com/%s/projects/change-logs-images/%s", h.config.Google.GCSBucketName, v.ID())
 			gcsPath := fmt.Sprintf("projects/change-logs-images/%s", v.ID()+extension)
 
-			response, err := http.Get(v.File.URL)
+			response, err := http.Get(imgURL)
 			if err != nil {
 				return nil, nil, singleChangelogError{ProjectName: projectName, Err: err}
 			}
@@ -291,7 +315,11 @@ func (h *handler) generateEmailChangelog(
 			if err := h.service.Google.UploadContentGCS(response.Body, gcsPath); err != nil {
 				return nil, nil, singleChangelogError{ProjectName: projectName, Err: err}
 			}
-			changelogBlocks[i].(*nt.ImageBlock).File.URL = fPath + extension
+			if isExternalFile {
+				changelogBlocks[i].(*nt.ImageBlock).External.URL = fPath + extension
+			} else {
+				changelogBlocks[i].(*nt.ImageBlock).File.URL = fPath + extension
+			}
 		}
 	}
 
