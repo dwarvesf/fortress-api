@@ -131,7 +131,11 @@ func (n *notionService) ToChangelogMJML(blocks []nt.Block, email model.Email) (s
 				}
 			}
 		case *nt.ImageBlock:
-			resutl = resutl + fmt.Sprintf(` <mj-image width="600px" padding-top="0" src="%s"></mj-image>`, v.File.URL)
+			if v.External != nil {
+				resutl = resutl + fmt.Sprintf(` <mj-image width="600px" padding-top="0" src="%s"></mj-image>`, v.External.URL)
+			} else {
+				resutl = resutl + fmt.Sprintf(` <mj-image width="600px" padding-top="0" src="%s"></mj-image>`, v.File.URL)
+			}
 		}
 	}
 	return resutl, nil
