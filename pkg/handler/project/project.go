@@ -1527,7 +1527,7 @@ func (h *handler) Details(c *gin.Context) {
 		return
 	}
 
-	if !authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadFullAccess) && !authutils.HasPermission(userInfo.Permissions, model.PermissionEmployeesReadProjectsReadActive) {
+	if !authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadFullAccess) && !authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadReadActive) {
 		_, ok := userInfo.Projects[rs.ID]
 		if !ok || !model.IsUserActiveInProject(userInfo.UserID, rs.ProjectMembers) {
 			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, nil, ""))
