@@ -1061,7 +1061,7 @@ func (h *handler) updateProjectMember(db *gorm.DB, slotID string, projectID stri
 
 	if !input.ProjectMemberID.IsZero() {
 		// Update assigned slot
-		member, err := h.store.ProjectMember.OneByID(db, input.ProjectMemberID.String())
+		member, err = h.store.ProjectMember.OneByID(db, input.ProjectMemberID.String())
 		if err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				h.logger.Error(errs.ErrProjectMemberNotFound, "project member not found")
