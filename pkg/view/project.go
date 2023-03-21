@@ -512,9 +512,9 @@ func ToProjectMemberListData(userInfo *model.CurrentLoggedUserInfo, members []*m
 				member.LeadCommissionRate = leadMap[m.EmployeeID.String()].CommissionRate
 			}
 
+			member.UpsellCommissionRate = m.UpsellCommissionRate
 			if m.UpsellPerson != nil {
 				member.UpsellPerson = toBasicEmployeeInfo(*m.UpsellPerson)
-				member.UpsellCommissionRate = m.UpsellCommissionRate
 			}
 		}
 
