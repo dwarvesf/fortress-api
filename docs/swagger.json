@@ -6439,6 +6439,9 @@
                 "endDate": {
                     "type": "string"
                 },
+                "head": {
+                    "$ref": "#/definitions/model.ProjectHead"
+                },
                 "id": {
                     "type": "string"
                 },
@@ -6486,6 +6489,9 @@
                 },
                 "updatedAt": {
                     "type": "string"
+                },
+                "upsellCommissionRate": {
+                    "type": "number"
                 },
                 "upsellPerson": {
                     "$ref": "#/definitions/model.Employee"
@@ -7122,6 +7128,9 @@
                 "isLead": {
                     "type": "boolean"
                 },
+                "leadCommissionRate": {
+                    "type": "number"
+                },
                 "note": {
                     "type": "string"
                 },
@@ -7142,6 +7151,9 @@
                 },
                 "status": {
                     "type": "string"
+                },
+                "upsellCommissionRate": {
+                    "type": "number"
                 },
                 "upsellPersonID": {
                     "type": "string"
@@ -7287,15 +7299,17 @@
         "request.CreateProjectInput": {
             "type": "object",
             "required": [
-                "accountManagerID",
                 "countryID",
                 "function",
                 "name",
                 "status"
             ],
             "properties": {
-                "accountManagerID": {
-                    "type": "string"
+                "accountManagers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/request.ProjectHeadInput"
+                    }
                 },
                 "auditNotionID": {
                     "type": "string"
@@ -7318,8 +7332,11 @@
                 "countryID": {
                     "type": "string"
                 },
-                "deliveryManagerID": {
-                    "type": "string"
+                "deliveryManagers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/request.ProjectHeadInput"
+                    }
                 },
                 "function": {
                     "type": "string"
@@ -7338,6 +7355,12 @@
                 },
                 "projectEmail": {
                     "type": "string"
+                },
+                "salePersons": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/request.ProjectHeadInput"
+                    }
                 },
                 "startDate": {
                     "type": "string"
@@ -7527,6 +7550,17 @@
                 }
             }
         },
+        "request.ProjectHeadInput": {
+            "type": "object",
+            "properties": {
+                "commissionRate": {
+                    "type": "number"
+                },
+                "employeeID": {
+                    "type": "string"
+                }
+            }
+        },
         "request.SendInvoiceRequest": {
             "type": "object",
             "required": [
@@ -7695,12 +7729,12 @@
         },
         "request.UpdateContactInfoInput": {
             "type": "object",
-            "required": [
-                "accountManagerID"
-            ],
             "properties": {
-                "accountManagerID": {
-                    "type": "string"
+                "accountManagers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/request.ProjectHeadInput"
+                    }
                 },
                 "clientEmail": {
                     "type": "array",
@@ -7708,11 +7742,20 @@
                         "type": "string"
                     }
                 },
-                "deliveryManagerID": {
-                    "type": "string"
+                "deliveryManagers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/request.ProjectHeadInput"
+                    }
                 },
                 "projectEmail": {
                     "type": "string"
+                },
+                "salePersons": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/request.ProjectHeadInput"
+                    }
                 }
             }
         },
@@ -7854,6 +7897,9 @@
                 "isLead": {
                     "type": "boolean"
                 },
+                "leadCommissionRate": {
+                    "type": "number"
+                },
                 "note": {
                     "type": "string"
                 },
@@ -7880,6 +7926,9 @@
                 },
                 "status": {
                     "type": "string"
+                },
+                "upsellCommissionRate": {
+                    "type": "number"
                 },
                 "upsellPersonID": {
                     "type": "string"
@@ -8551,6 +8600,9 @@
                 "avatar": {
                     "type": "string"
                 },
+                "commissionRate": {
+                    "type": "number"
+                },
                 "displayName": {
                     "type": "string"
                 },
@@ -8792,6 +8844,9 @@
                 "deploymentType": {
                     "type": "string"
                 },
+                "discount": {
+                    "type": "number"
+                },
                 "displayName": {
                     "type": "string"
                 },
@@ -8803,6 +8858,9 @@
                 },
                 "isLead": {
                     "type": "boolean"
+                },
+                "leadCommissionRate": {
+                    "type": "number"
                 },
                 "note": {
                     "type": "string"
@@ -8819,11 +8877,17 @@
                 "projectSlotID": {
                     "type": "string"
                 },
+                "rate": {
+                    "type": "number"
+                },
                 "seniority": {
                     "$ref": "#/definitions/model.Seniority"
                 },
                 "status": {
                     "type": "string"
+                },
+                "upsellCommissionRate": {
+                    "type": "number"
                 },
                 "upsellPerson": {
                     "$ref": "#/definitions/view.BasicEmployeeInfo"
@@ -8844,8 +8908,11 @@
         "view.CreateProjectData": {
             "type": "object",
             "properties": {
-                "accountManager": {
-                    "$ref": "#/definitions/view.ProjectHead"
+                "accountManagers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.ProjectHead"
+                    }
                 },
                 "bankAccount": {
                     "$ref": "#/definitions/view.BasicBankAccountInfo"
@@ -8871,8 +8938,11 @@
                 "deletedAt": {
                     "$ref": "#/definitions/gorm.DeletedAt"
                 },
-                "deliveryManager": {
-                    "$ref": "#/definitions/view.ProjectHead"
+                "deliveryManagers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.ProjectHead"
+                    }
                 },
                 "function": {
                     "type": "string"
@@ -8894,6 +8964,12 @@
                 },
                 "projectEmail": {
                     "type": "string"
+                },
+                "salePersons": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.ProjectHead"
+                    }
                 },
                 "startDate": {
                     "type": "string"
@@ -10013,8 +10089,11 @@
         "view.ProjectData": {
             "type": "object",
             "properties": {
-                "accountManager": {
-                    "$ref": "#/definitions/view.ProjectHead"
+                "accountManagers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.ProjectHead"
+                    }
                 },
                 "allowsSendingSurvey": {
                     "type": "boolean"
@@ -10052,8 +10131,11 @@
                 "deletedAt": {
                     "$ref": "#/definitions/gorm.DeletedAt"
                 },
-                "deliveryManager": {
-                    "$ref": "#/definitions/view.ProjectHead"
+                "deliveryManagers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.ProjectHead"
+                    }
                 },
                 "endDate": {
                     "type": "string"
@@ -10082,8 +10164,11 @@
                 "projectEmail": {
                     "type": "string"
                 },
-                "salePerson": {
-                    "$ref": "#/definitions/view.ProjectHead"
+                "salePersons": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.ProjectHead"
+                    }
                 },
                 "stacks": {
                     "type": "array",
@@ -10124,6 +10209,9 @@
             "properties": {
                 "avatar": {
                     "type": "string"
+                },
+                "commissionRate": {
+                    "type": "number"
                 },
                 "displayName": {
                     "type": "string"
@@ -10206,6 +10294,9 @@
                 "isLead": {
                     "type": "boolean"
                 },
+                "leadCommissionRate": {
+                    "type": "number"
+                },
                 "note": {
                     "type": "string"
                 },
@@ -10232,6 +10323,9 @@
                 },
                 "status": {
                     "type": "string"
+                },
+                "upsellCommissionRate": {
+                    "type": "number"
                 },
                 "upsellPerson": {
                     "$ref": "#/definitions/view.BasicEmployeeInfo"

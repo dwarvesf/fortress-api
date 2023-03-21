@@ -806,6 +806,8 @@ definitions:
         type: string
       endDate:
         type: string
+      head:
+        $ref: '#/definitions/model.ProjectHead'
       id:
         type: string
       isLead:
@@ -838,6 +840,8 @@ definitions:
         type: string
       updatedAt:
         type: string
+      upsellCommissionRate:
+        type: number
       upsellPerson:
         $ref: '#/definitions/model.Employee'
       upsellPersonID:
@@ -1250,6 +1254,8 @@ definitions:
         type: string
       isLead:
         type: boolean
+      leadCommissionRate:
+        type: number
       note:
         type: string
       positions:
@@ -1264,6 +1270,8 @@ definitions:
         type: string
       status:
         type: string
+      upsellCommissionRate:
+        type: number
       upsellPersonID:
         type: string
     required:
@@ -1367,8 +1375,10 @@ definitions:
     type: object
   request.CreateProjectInput:
     properties:
-      accountManagerID:
-        type: string
+      accountManagers:
+        items:
+          $ref: '#/definitions/request.ProjectHeadInput'
+        type: array
       auditNotionID:
         type: string
       bankAccountID:
@@ -1383,8 +1393,10 @@ definitions:
         type: string
       countryID:
         type: string
-      deliveryManagerID:
-        type: string
+      deliveryManagers:
+        items:
+          $ref: '#/definitions/request.ProjectHeadInput'
+        type: array
       function:
         type: string
       members:
@@ -1397,6 +1409,10 @@ definitions:
         type: string
       projectEmail:
         type: string
+      salePersons:
+        items:
+          $ref: '#/definitions/request.ProjectHeadInput'
+        type: array
       startDate:
         type: string
       status:
@@ -1404,7 +1420,6 @@ definitions:
       type:
         type: string
     required:
-    - accountManagerID
     - countryID
     - function
     - name
@@ -1528,6 +1543,13 @@ definitions:
       unitCost:
         type: integer
     type: object
+  request.ProjectHeadInput:
+    properties:
+      commissionRate:
+        type: number
+      employeeID:
+        type: string
+    type: object
   request.SendInvoiceRequest:
     properties:
       bankID:
@@ -1643,18 +1665,24 @@ definitions:
     type: object
   request.UpdateContactInfoInput:
     properties:
-      accountManagerID:
-        type: string
+      accountManagers:
+        items:
+          $ref: '#/definitions/request.ProjectHeadInput'
+        type: array
       clientEmail:
         items:
           type: string
         type: array
-      deliveryManagerID:
-        type: string
+      deliveryManagers:
+        items:
+          $ref: '#/definitions/request.ProjectHeadInput'
+        type: array
       projectEmail:
         type: string
-    required:
-    - accountManagerID
+      salePersons:
+        items:
+          $ref: '#/definitions/request.ProjectHeadInput'
+        type: array
     type: object
   request.UpdateEmployeeGeneralInfoInput:
     properties:
@@ -1745,6 +1773,8 @@ definitions:
         type: string
       isLead:
         type: boolean
+      leadCommissionRate:
+        type: number
       note:
         type: string
       positions:
@@ -1763,6 +1793,8 @@ definitions:
         type: string
       status:
         type: string
+      upsellCommissionRate:
+        type: number
       upsellPersonID:
         type: string
     required:
@@ -2210,6 +2242,8 @@ definitions:
     properties:
       avatar:
         type: string
+      commissionRate:
+        type: number
       displayName:
         type: string
       employeeID:
@@ -2366,6 +2400,8 @@ definitions:
         type: string
       deploymentType:
         type: string
+      discount:
+        type: number
       displayName:
         type: string
       employeeID:
@@ -2374,6 +2410,8 @@ definitions:
         type: string
       isLead:
         type: boolean
+      leadCommissionRate:
+        type: number
       note:
         type: string
       positions:
@@ -2384,10 +2422,14 @@ definitions:
         type: string
       projectSlotID:
         type: string
+      rate:
+        type: number
       seniority:
         $ref: '#/definitions/model.Seniority'
       status:
         type: string
+      upsellCommissionRate:
+        type: number
       upsellPerson:
         $ref: '#/definitions/view.BasicEmployeeInfo'
       username:
@@ -2400,8 +2442,10 @@ definitions:
     type: object
   view.CreateProjectData:
     properties:
-      accountManager:
-        $ref: '#/definitions/view.ProjectHead'
+      accountManagers:
+        items:
+          $ref: '#/definitions/view.ProjectHead'
+        type: array
       bankAccount:
         $ref: '#/definitions/view.BasicBankAccountInfo'
       client:
@@ -2418,8 +2462,10 @@ definitions:
         type: string
       deletedAt:
         $ref: '#/definitions/gorm.DeletedAt'
-      deliveryManager:
-        $ref: '#/definitions/view.ProjectHead'
+      deliveryManagers:
+        items:
+          $ref: '#/definitions/view.ProjectHead'
+        type: array
       function:
         type: string
       id:
@@ -2434,6 +2480,10 @@ definitions:
         $ref: '#/definitions/view.Organization'
       projectEmail:
         type: string
+      salePersons:
+        items:
+          $ref: '#/definitions/view.ProjectHead'
+        type: array
       startDate:
         type: string
       status:
@@ -3161,8 +3211,10 @@ definitions:
     type: object
   view.ProjectData:
     properties:
-      accountManager:
-        $ref: '#/definitions/view.ProjectHead'
+      accountManagers:
+        items:
+          $ref: '#/definitions/view.ProjectHead'
+        type: array
       allowsSendingSurvey:
         type: boolean
       auditNotionID:
@@ -3187,8 +3239,10 @@ definitions:
         type: string
       deletedAt:
         $ref: '#/definitions/gorm.DeletedAt'
-      deliveryManager:
-        $ref: '#/definitions/view.ProjectHead'
+      deliveryManagers:
+        items:
+          $ref: '#/definitions/view.ProjectHead'
+        type: array
       endDate:
         type: string
       function:
@@ -3207,8 +3261,10 @@ definitions:
         $ref: '#/definitions/view.Organization'
       projectEmail:
         type: string
-      salePerson:
-        $ref: '#/definitions/view.ProjectHead'
+      salePersons:
+        items:
+          $ref: '#/definitions/view.ProjectHead'
+        type: array
       stacks:
         items:
           $ref: '#/definitions/view.Stack'
@@ -3235,6 +3291,8 @@ definitions:
     properties:
       avatar:
         type: string
+      commissionRate:
+        type: number
       displayName:
         type: string
       employeeID:
@@ -3288,6 +3346,8 @@ definitions:
         type: string
       isLead:
         type: boolean
+      leadCommissionRate:
+        type: number
       note:
         type: string
       positions:
@@ -3306,6 +3366,8 @@ definitions:
         type: string
       status:
         type: string
+      upsellCommissionRate:
+        type: number
       upsellPerson:
         $ref: '#/definitions/view.BasicEmployeeInfo'
       username:

@@ -1,4 +1,4 @@
-package mb
+package messageboard
 
 import (
 	"bytes"

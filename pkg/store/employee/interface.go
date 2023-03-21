@@ -13,6 +13,7 @@ type IStore interface {
 	One(db *gorm.DB, id string, preload bool) (employee *model.Employee, err error)
 	OneByEmail(db *gorm.DB, email string) (*model.Employee, error)
 	OneByNotionID(db *gorm.DB, notionID string) (employee *model.Employee, err error)
+	OneByBasecampID(db *gorm.DB, basecampID int) (employee *model.Employee, err error)
 	GetByIDs(db *gorm.DB, ids []model.UUID) (employees []*model.Employee, err error)
 	GetByWorkingStatus(db *gorm.DB, workingStatus model.WorkingStatus) ([]*model.Employee, error)
 	GetLineManagers(db *gorm.DB) ([]*model.Employee, error)

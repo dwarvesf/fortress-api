@@ -6447,6 +6447,9 @@ const docTemplate = `{
                 "endDate": {
                     "type": "string"
                 },
+                "head": {
+                    "$ref": "#/definitions/model.ProjectHead"
+                },
                 "id": {
                     "type": "string"
                 },
@@ -6494,6 +6497,9 @@ const docTemplate = `{
                 },
                 "updatedAt": {
                     "type": "string"
+                },
+                "upsellCommissionRate": {
+                    "type": "number"
                 },
                 "upsellPerson": {
                     "$ref": "#/definitions/model.Employee"
@@ -7130,6 +7136,9 @@ const docTemplate = `{
                 "isLead": {
                     "type": "boolean"
                 },
+                "leadCommissionRate": {
+                    "type": "number"
+                },
                 "note": {
                     "type": "string"
                 },
@@ -7150,6 +7159,9 @@ const docTemplate = `{
                 },
                 "status": {
                     "type": "string"
+                },
+                "upsellCommissionRate": {
+                    "type": "number"
                 },
                 "upsellPersonID": {
                     "type": "string"
@@ -7295,15 +7307,17 @@ const docTemplate = `{
         "request.CreateProjectInput": {
             "type": "object",
             "required": [
-                "accountManagerID",
                 "countryID",
                 "function",
                 "name",
                 "status"
             ],
             "properties": {
-                "accountManagerID": {
-                    "type": "string"
+                "accountManagers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/request.ProjectHeadInput"
+                    }
                 },
                 "auditNotionID": {
                     "type": "string"
@@ -7326,8 +7340,11 @@ const docTemplate = `{
                 "countryID": {
                     "type": "string"
                 },
-                "deliveryManagerID": {
-                    "type": "string"
+                "deliveryManagers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/request.ProjectHeadInput"
+                    }
                 },
                 "function": {
                     "type": "string"
@@ -7346,6 +7363,12 @@ const docTemplate = `{
                 },
                 "projectEmail": {
                     "type": "string"
+                },
+                "salePersons": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/request.ProjectHeadInput"
+                    }
                 },
                 "startDate": {
                     "type": "string"
@@ -7535,6 +7558,17 @@ const docTemplate = `{
                 }
             }
         },
+        "request.ProjectHeadInput": {
+            "type": "object",
+            "properties": {
+                "commissionRate": {
+                    "type": "number"
+                },
+                "employeeID": {
+                    "type": "string"
+                }
+            }
+        },
         "request.SendInvoiceRequest": {
             "type": "object",
             "required": [
@@ -7703,12 +7737,12 @@ const docTemplate = `{
         },
         "request.UpdateContactInfoInput": {
             "type": "object",
-            "required": [
-                "accountManagerID"
-            ],
             "properties": {
-                "accountManagerID": {
-                    "type": "string"
+                "accountManagers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/request.ProjectHeadInput"
+                    }
                 },
                 "clientEmail": {
                     "type": "array",
@@ -7716,11 +7750,20 @@ const docTemplate = `{
                         "type": "string"
                     }
                 },
-                "deliveryManagerID": {
-                    "type": "string"
+                "deliveryManagers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/request.ProjectHeadInput"
+                    }
                 },
                 "projectEmail": {
                     "type": "string"
+                },
+                "salePersons": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/request.ProjectHeadInput"
+                    }
                 }
             }
         },
@@ -7862,6 +7905,9 @@ const docTemplate = `{
                 "isLead": {
                     "type": "boolean"
                 },
+                "leadCommissionRate": {
+                    "type": "number"
+                },
                 "note": {
                     "type": "string"
                 },
@@ -7888,6 +7934,9 @@ const docTemplate = `{
                 },
                 "status": {
                     "type": "string"
+                },
+                "upsellCommissionRate": {
+                    "type": "number"
                 },
                 "upsellPersonID": {
                     "type": "string"
@@ -8559,6 +8608,9 @@ const docTemplate = `{
                 "avatar": {
                     "type": "string"
                 },
+                "commissionRate": {
+                    "type": "number"
+                },
                 "displayName": {
                     "type": "string"
                 },
@@ -8800,6 +8852,9 @@ const docTemplate = `{
                 "deploymentType": {
                     "type": "string"
                 },
+                "discount": {
+                    "type": "number"
+                },
                 "displayName": {
                     "type": "string"
                 },
@@ -8811,6 +8866,9 @@ const docTemplate = `{
                 },
                 "isLead": {
                     "type": "boolean"
+                },
+                "leadCommissionRate": {
+                    "type": "number"
                 },
                 "note": {
                     "type": "string"
@@ -8827,11 +8885,17 @@ const docTemplate = `{
                 "projectSlotID": {
                     "type": "string"
                 },
+                "rate": {
+                    "type": "number"
+                },
                 "seniority": {
                     "$ref": "#/definitions/model.Seniority"
                 },
                 "status": {
                     "type": "string"
+                },
+                "upsellCommissionRate": {
+                    "type": "number"
                 },
                 "upsellPerson": {
                     "$ref": "#/definitions/view.BasicEmployeeInfo"
@@ -8852,8 +8916,11 @@ const docTemplate = `{
         "view.CreateProjectData": {
             "type": "object",
             "properties": {
-                "accountManager": {
-                    "$ref": "#/definitions/view.ProjectHead"
+                "accountManagers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.ProjectHead"
+                    }
                 },
                 "bankAccount": {
                     "$ref": "#/definitions/view.BasicBankAccountInfo"
@@ -8879,8 +8946,11 @@ const docTemplate = `{
                 "deletedAt": {
                     "$ref": "#/definitions/gorm.DeletedAt"
                 },
-                "deliveryManager": {
-                    "$ref": "#/definitions/view.ProjectHead"
+                "deliveryManagers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.ProjectHead"
+                    }
                 },
                 "function": {
                     "type": "string"
@@ -8902,6 +8972,12 @@ const docTemplate = `{
                 },
                 "projectEmail": {
                     "type": "string"
+                },
+                "salePersons": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.ProjectHead"
+                    }
                 },
                 "startDate": {
                     "type": "string"
@@ -10021,8 +10097,11 @@ const docTemplate = `{
         "view.ProjectData": {
             "type": "object",
             "properties": {
-                "accountManager": {
-                    "$ref": "#/definitions/view.ProjectHead"
+                "accountManagers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.ProjectHead"
+                    }
                 },
                 "allowsSendingSurvey": {
                     "type": "boolean"
@@ -10060,8 +10139,11 @@ const docTemplate = `{
                 "deletedAt": {
                     "$ref": "#/definitions/gorm.DeletedAt"
                 },
-                "deliveryManager": {
-                    "$ref": "#/definitions/view.ProjectHead"
+                "deliveryManagers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.ProjectHead"
+                    }
                 },
                 "endDate": {
                     "type": "string"
@@ -10090,8 +10172,11 @@ const docTemplate = `{
                 "projectEmail": {
                     "type": "string"
                 },
-                "salePerson": {
-                    "$ref": "#/definitions/view.ProjectHead"
+                "salePersons": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.ProjectHead"
+                    }
                 },
                 "stacks": {
                     "type": "array",
@@ -10132,6 +10217,9 @@ const docTemplate = `{
             "properties": {
                 "avatar": {
                     "type": "string"
+                },
+                "commissionRate": {
+                    "type": "number"
                 },
                 "displayName": {
                     "type": "string"
@@ -10214,6 +10302,9 @@ const docTemplate = `{
                 "isLead": {
                     "type": "boolean"
                 },
+                "leadCommissionRate": {
+                    "type": "number"
+                },
                 "note": {
                     "type": "string"
                 },
@@ -10240,6 +10331,9 @@ const docTemplate = `{
                 },
                 "status": {
                     "type": "string"
+                },
+                "upsellCommissionRate": {
+                    "type": "number"
                 },
                 "upsellPerson": {
                     "$ref": "#/definitions/view.BasicEmployeeInfo"

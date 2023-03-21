@@ -11,11 +11,13 @@ import (
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
+	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/request"
 	"github.com/dwarvesf/fortress-api/pkg/routes"
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/service/vault"
 	"github.com/dwarvesf/fortress-api/pkg/store"
+	"github.com/dwarvesf/fortress-api/pkg/worker"
 )
 
 // @title           Swagger Example API
@@ -47,10 +49,23 @@ func main() {
 		cfg = config.Generate(vault)
 	}
 
-	svc := service.New(cfg)
 	s := store.New()
+	repo := store.NewPostgresStore(cfg)
 
-	router := routes.NewRoutes(cfg, svc, s, log)
+	ctx, cancel := context.WithCancel(context.Background())
+	svc := service.New(cfg, s, repo)
+
+	queue := make(chan model.WorkerMessage, 1000)
+	w := worker.New(ctx, queue, svc, log)
+
+	go func() {
+		err := w.ProcessMessage()
+		if err != nil {
+			log.Error(err, "failed to process message")
+		}
+	}()
+
+	router := routes.NewRoutes(cfg, svc, s, repo, w, log)
 	request.RegisCustomValidators(router)
 
 	srv := &http.Server{
@@ -69,6 +84,9 @@ func main() {
 	signal.Notify(quit, os.Interrupt)
 
 	<-quit
+
+	cancel()
+
 	shutdownServer(srv, log)
 }
 

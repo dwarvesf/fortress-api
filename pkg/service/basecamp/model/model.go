@@ -281,3 +281,28 @@ type Event struct {
 	CreatedAt   time.Time `json:"created_at"`
 	Creator     Person    `json:"creator"`
 }
+
+// below is list of message model, use with caution
+const (
+	BasecampCommentMsg    string = "basecamp_comment"
+	BasecampTodoMsg       string = "basecamp_todo"
+	BasecampHiringTodoMsg string = "basecamp_todo_hiring"
+)
+
+const (
+	CommentMsgTypeFailed    string = "failed"
+	CommentMsgTypeCompleted string = "completed"
+)
+
+// BasecampCommentMessage is use for worker to create a basecamp comment
+type BasecampCommentMessage struct {
+	ProjectID   int
+	RecordingID int
+	Payload     *Comment
+}
+
+type BasecampTodoMessageModel struct {
+	ProjectID int
+	ListID    int
+	Payload   Todo
+}

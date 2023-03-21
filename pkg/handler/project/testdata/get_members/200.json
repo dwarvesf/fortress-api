@@ -19,6 +19,8 @@
             "endDate": null,
             "rate": "3000",
             "discount": "3",
+            "upsellCommissionRate": "0",
+            "leadCommissionRate": "1",
             "currency": {
                 "id": "7037bdb6-584e-4e35-996d-ef28a243f48a",
                 "name": "VND",
@@ -65,6 +67,8 @@
             "endDate": null,
             "rate": "5000",
             "discount": "0",
+            "upsellCommissionRate": "0",
+            "leadCommissionRate": "0",
             "currency": {
                 "id": "7037bdb6-584e-4e35-996d-ef28a243f48a",
                 "name": "VND",
@@ -111,6 +115,8 @@
             "endDate": null,
             "rate": "4000",
             "discount": "0",
+            "upsellCommissionRate": "0",
+            "leadCommissionRate": "0",
             "currency": {
                 "id": "7037bdb6-584e-4e35-996d-ef28a243f48a",
                 "name": "VND",
@@ -157,6 +163,8 @@
             "endDate": null,
             "rate": "3000",
             "discount": "3",
+            "upsellCommissionRate": "0",
+            "leadCommissionRate": "0",
             "currency": {
                 "id": "7037bdb6-584e-4e35-996d-ef28a243f48a",
                 "name": "VND",
@@ -203,6 +211,8 @@
             "endDate": null,
             "rate": "4000",
             "discount": "0",
+            "upsellCommissionRate": "0",
+            "leadCommissionRate": "0",
             "currency": {
                 "id": "7037bdb6-584e-4e35-996d-ef28a243f48a",
                 "name": "VND",

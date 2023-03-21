@@ -82,7 +82,7 @@ const (
 	HelenBasecampID        = 40439249
 	ThuongBasecampID       = 38246363
 
-	// Orgchart
+	// OrgChart
 	ManagementLevel = 3
 
 	// Basecamp kind list
@@ -92,4 +92,33 @@ const (
 	CommentCreate      = "comment_created"
 	MessageBoardCreate = "message_created"
 	MessageBoardActive = "message_active"
+
+	AutoBotSgID = "BAh7CEkiCGdpZAY6BkVUSSIpZ2lkOi8vYmMzL1BlcnNvbi8yNTcyNzYyNz9leHBpcmVzX2luBjsAVEkiDHB1cnBvc2UGOwBUSSIPYXR0YWNoYWJsZQY7AFRJIg9leHBpcmVzX2F0BjsAVDA=--5a1528460315bfd57bc41cf6bd3f899b1c346e7b"
+
+	// Basecamp Comment Message
+	CommentThankYouEmailSent                      = "Thank you email has been sent"
+	CommentThankYouEmailFailed                    = "Unable to send thank you email invoice."
+	CommentUpdateInvoiceSuccessfully              = "Invoice status has been set to paid"
+	CommentUpdateInvoiceFailed                    = `Unable to update invoice status`
+	CommentMoveInvoicePDFToPaidDirSuccessfully    = "GDrive file has been updated"
+	CommentMoveInvoicePDFToPaidDirFailed          = "Unable to move invoice pdf to paid directory"
+	CommentCantFindInvoice                        = "Invoice not found"
+	CommentInvoiceFileMoved                       = "Invoice file has been moved to Paid folder in Google Drive"
+	CommentUnableToUpdateGDLoc                    = "Unable to update Google Drive location"
+	CommentMissingConfirmation                    = "Missing Confirmation"
+	CommentInvalidOnLeaveFormat                   = "Invalid on leave format"
+	CommentCreateScheduleSuccessfully             = "Create schedule successfully"
+	CommentCreateScheduleFailed                   = "Unable to create schedule"
+	CommentCreateExpenseSuccessfully              = "Create expense successfully"
+	CommentCreateExpenseFailed                    = "Unable to create expense"
+	CommentDeleteExpenseSuccessfully              = "Delete expense successfully"
+	CommentDeleteExpenseFailed                    = "Delete expense failed"
+	CommentStoreAccountingTransactionFailed       = "Store accounting transaction failed"
+	CommentStoreAccountingTransactionSuccessfully = "Store accounting transaction successfully"
+	CommentProbationReviewSuccessfully            = "Probation review succeed"
+	CommentThankYouEmailSentSuccessfully          = "Thank you email sent successfully"
+	CommentOfferEmailSentSuccessfully             = "Offer email sent successfully"
+	CommentHiringNoActionTaken                    = "Neither Offered nor Fail, no action taken"
+	CommentHiredCandidate                         = "Candidate hired"
+	CommentRejectedCandidate                      = "Candidate rejected"
 )

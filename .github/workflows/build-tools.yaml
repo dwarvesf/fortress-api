@@ -5,7 +5,7 @@ on:
     branches:
       - develop
     paths:
-      - Dockerfile.tools
+      - tools.Dockerfile
       - go.mod
 
 # Environment variables available to all jobs and steps in this workflow
@@ -34,7 +34,7 @@ jobs:
       # Build & Push the Docker image
       - name: Build & Push
         run: |
-          docker build -f Dockerfile.tools -t $PROJECT/${IMAGE}:${GITHUB_SHA} .
+          docker build -f tools.Dockerfile -t $PROJECT/${IMAGE}:${GITHUB_SHA} .
           docker push $PROJECT/${IMAGE}:${GITHUB_SHA}
 
           docker tag $PROJECT/${IMAGE}:${GITHUB_SHA} $PROJECT/${IMAGE}:latest

@@ -1,8 +1,11 @@
 package invoice
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/dwarvesf/fortress-api/pkg/model"
+	"github.com/dwarvesf/fortress-api/pkg/worker"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -28,8 +31,10 @@ func TestHandler_UpdateStatus(t *testing.T) {
 	// load env and test data
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg)
+	serviceMock := service.New(&cfg, nil, nil)
 	storeMock := store.New()
+	queue := make(chan model.WorkerMessage, 1000)
+	workerMock := worker.New(context.Background(), queue, serviceMock, loggerMock)
 
 	tests := []struct {
 		name             string
@@ -80,7 +85,7 @@ func TestHandler_UpdateStatus(t *testing.T) {
 				ctx.Params = gin.Params{gin.Param{Key: "id", Value: tt.id}}
 				ctx.Request = httptest.NewRequest("PUT", fmt.Sprintf("/api/v1/invoices/%s/status", tt.id), bodyReader)
 				ctx.Request.Header.Set("Authorization", testToken)
-				metadataHandler := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+				metadataHandler := New(storeMock, txRepo, serviceMock, workerMock, loggerMock, &cfg)
 
 				metadataHandler.UpdateStatus(ctx)
 				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
@@ -99,9 +104,10 @@ func TestHandler_GetLatest(t *testing.T) {
 	// load env and test data
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg)
+	serviceMock := service.New(&cfg, nil, nil)
 	storeMock := store.New()
-
+	queue := make(chan model.WorkerMessage, 1000)
+	workerMock := worker.New(context.Background(), queue, serviceMock, loggerMock)
 	tests := []struct {
 		name             string
 		wantCode         int
@@ -126,7 +132,7 @@ func TestHandler_GetLatest(t *testing.T) {
 				ctx.Request = httptest.NewRequest("GET", fmt.Sprintf("/api/v1/invoices/latest?%s", tt.query), nil)
 				ctx.Request.URL.RawQuery = tt.query
 				ctx.Request.Header.Set("Authorization", testToken)
-				metadataHandler := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+				metadataHandler := New(storeMock, txRepo, serviceMock, workerMock, loggerMock, &cfg)
 
 				metadataHandler.GetLatestInvoice(ctx)
 				expRespRaw, err := os.ReadFile(tt.wantResponsePath)

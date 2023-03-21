@@ -78,7 +78,6 @@ func (h *handler) List(c *gin.Context) {
 
 	query.StandardizeInput()
 
-	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler": "project",
 		"method":  "List",
@@ -102,7 +101,7 @@ func (h *handler) List(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse(view.ToProjectsData(c, projects, userInfo),
+	c.JSON(http.StatusOK, view.CreateResponse(view.ToProjectsData(projects, userInfo),
 		&view.PaginationResponse{Pagination: query.Pagination, Total: total}, nil, nil, ""))
 }
 
@@ -135,7 +134,6 @@ func (h *handler) UpdateProjectStatus(c *gin.Context) {
 		}
 	}
 
-	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler": "project",
 		"method":  "UpdateProjectStatus",
@@ -242,7 +240,6 @@ func (h *handler) Create(c *gin.Context) {
 		return
 	}
 
-	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler": "project",
 		"method":  "Create",
@@ -383,44 +380,35 @@ func (h *handler) Create(c *gin.Context) {
 	}
 
 	// create project account manager
-	accountManager := model.ProjectHead{
-		ProjectID:      p.ID,
-		EmployeeID:     body.AccountManagerID,
-		StartDate:      time.Now(),
-		CommissionRate: decimal.Zero,
-		Position:       model.HeadPositionAccountManager,
-	}
-
-	if err := h.store.ProjectHead.Create(tx.DB(), &accountManager); err != nil {
-		l.Error(err, "failed to create account manager")
+	ams, err := h.createProjectHeads(tx.DB(), p.ID, model.HeadPositionAccountManager, body.AccountManagers)
+	if err != nil {
+		l.Error(err, "failed to create account managers")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
 		return
 	}
-
-	p.Heads = append(p.Heads, &accountManager)
+	p.Heads = append(p.Heads, ams...)
 
 	// create project delivery manager
-	if !body.DeliveryManagerID.IsZero() {
-		deliveryManager := model.ProjectHead{
-			ProjectID:      p.ID,
-			EmployeeID:     body.DeliveryManagerID,
-			StartDate:      time.Now(),
-			CommissionRate: decimal.Zero,
-			Position:       model.HeadPositionDeliveryManager,
-		}
-
-		if err := h.store.ProjectHead.Create(tx.DB(), &deliveryManager); err != nil {
-			l.Error(err, "failed to create delivery manager")
-			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
-			return
-		}
-
-		p.Heads = append(p.Heads, &deliveryManager)
+	dms, err := h.createProjectHeads(tx.DB(), p.ID, model.HeadPositionDeliveryManager, body.DeliveryManagers)
+	if err != nil {
+		l.Error(err, "failed to create delivery managers")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
+		return
 	}
+	p.Heads = append(p.Heads, dms...)
+
+	// create project sale persons
+	sps, err := h.createProjectHeads(tx.DB(), p.ID, model.HeadPositionSalePerson, body.DeliveryManagers)
+	if err != nil {
+		l.Error(err, "failed to create sale persons")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
+		return
+	}
+	p.Heads = append(p.Heads, sps...)
 
 	// assign members to project
 	for _, member := range body.Members {
-		slot, code, err := h.createSlotsAndAssignMembers(tx.DB(), p.ID.String(), member)
+		slot, code, err := h.createSlotsAndAssignMembers(tx.DB(), p.ID.String(), member, userInfo)
 		if err != nil {
 			l.Error(err, "failed to assign member to project")
 			c.JSON(code, view.CreateResponse[any](nil, nil, done(err), member, ""))
@@ -431,6 +419,34 @@ func (h *handler) Create(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse(view.ToCreateProjectDataResponse(userInfo, p), nil, done(nil), nil, ""))
+}
+
+func (h *handler) createProjectHeads(db *gorm.DB, projectID model.UUID, position model.HeadPosition, req []request.ProjectHeadInput) ([]*model.ProjectHead, error) {
+	var heads []*model.ProjectHead
+	for _, head := range req {
+		emp, err := h.store.Employee.One(db, head.EmployeeID.String(), false)
+		if err != nil {
+			h.logger.Error(err, "failed to get employee by id")
+			return nil, err
+		}
+
+		head := &model.ProjectHead{
+			ProjectID:      projectID,
+			EmployeeID:     head.EmployeeID,
+			CommissionRate: head.CommissionRate,
+			Position:       position,
+		}
+
+		if err := h.store.ProjectHead.Create(db, head); err != nil {
+			h.logger.Error(err, "failed to create project head")
+			return nil, err
+		}
+
+		head.Employee = *emp
+		heads = append(heads, head)
+	}
+
+	return heads, nil
 }
 
 // GetMembers godoc
@@ -472,7 +488,6 @@ func (h *handler) GetMembers(c *gin.Context) {
 		return
 	}
 
-	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler":   "project",
 		"method":    "GetMembers",
@@ -600,7 +615,6 @@ func (h *handler) DeleteMember(c *gin.Context) {
 		return
 	}
 
-	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler": "project",
 		"method":  "DeleteMember",
@@ -692,7 +706,6 @@ func (h *handler) DeleteSlot(c *gin.Context) {
 		return
 	}
 
-	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler": "project",
 		"method":  "DeleteSlot",
@@ -748,7 +761,6 @@ func (h *handler) UnassignMember(c *gin.Context) {
 		return
 	}
 
-	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler": "project",
 		"method":  "UnassignMember",
@@ -858,7 +870,6 @@ func (h *handler) UpdateMember(c *gin.Context) {
 		return
 	}
 
-	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler": "project",
 		"method":  "UpdateMember",
@@ -938,7 +949,7 @@ func (h *handler) UpdateMember(c *gin.Context) {
 	tx, done := h.repo.NewTransaction()
 
 	if !body.EmployeeID.IsZero() {
-		member, err := h.updateProjectMember(tx.DB(), slot.ID.String(), projectID, body)
+		member, err := h.updateProjectMember(tx.DB(), slot.ID.String(), projectID, body, userInfo)
 		if err != nil {
 			l.Error(err, "failed to update project member")
 			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
@@ -952,9 +963,12 @@ func (h *handler) UpdateMember(c *gin.Context) {
 	slot.SeniorityID = body.SeniorityID
 	slot.DeploymentType = model.DeploymentType(body.DeploymentType)
 	slot.Status = model.ProjectMemberStatus(body.Status)
-	slot.Rate = body.Rate
-	slot.Discount = body.Discount
 	slot.Note = body.Note
+
+	if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectMembersRateEdit) {
+		slot.Rate = body.Rate
+		slot.Discount = body.Discount
+	}
 
 	_, err = h.store.ProjectSlot.UpdateSelectedFieldsByID(tx.DB(), body.ProjectSlotID.String(), *slot,
 		"seniority_id",
@@ -1026,7 +1040,7 @@ func (h *handler) UpdateMember(c *gin.Context) {
 //		 }
 //
 // --- end ---
-func (h *handler) updateProjectMember(db *gorm.DB, slotID string, projectID string, input request.UpdateMemberInput) (*model.ProjectMember, error) {
+func (h *handler) updateProjectMember(db *gorm.DB, slotID string, projectID string, input request.UpdateMemberInput, userInfo *model.CurrentLoggedUserInfo) (*model.ProjectMember, error) {
 	var member *model.ProjectMember
 	var err error
 
@@ -1047,23 +1061,34 @@ func (h *handler) updateProjectMember(db *gorm.DB, slotID string, projectID stri
 
 	if !input.ProjectMemberID.IsZero() {
 		// Update assigned slot
-		member = &model.ProjectMember{
-			BaseModel: model.BaseModel{
-				ID: input.ProjectMemberID,
-			},
-			SeniorityID:    input.SeniorityID,
-			DeploymentType: model.DeploymentType(input.DeploymentType),
-			Status:         model.ProjectMemberStatus(input.Status),
-			StartDate:      input.GetStartDate(),
-			EndDate:        input.GetEndDate(),
-			Rate:           input.Rate,
-			Discount:       input.Discount,
-			UpsellPersonID: input.UpsellPersonID,
-			Note:           input.Note,
+		member, err = h.store.ProjectMember.OneByID(db, input.ProjectMemberID.String())
+		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				h.logger.Error(errs.ErrProjectMemberNotFound, "project member not found")
+				return nil, err
+			}
+			h.logger.Error(err, "failed to get project member by id")
+			return nil, err
 		}
 
-		// TODO: allow updating sell_person_id
-		_, err := h.store.ProjectMember.UpdateSelectedFieldsByID(db, input.ProjectMemberID.String(), *member,
+		member.SeniorityID = input.SeniorityID
+		member.DeploymentType = model.DeploymentType(input.DeploymentType)
+		member.Status = model.ProjectMemberStatus(input.Status)
+		member.StartDate = input.GetStartDate()
+		member.EndDate = input.GetEndDate()
+		member.Note = input.Note
+
+		if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsCommissionRateEdit) {
+			member.UpsellPersonID = input.UpsellPersonID
+			member.UpsellCommissionRate = input.UpsellCommissionRate
+		}
+
+		if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectMembersRateEdit) {
+			member.Rate = input.Rate
+			member.Discount = input.Discount
+		}
+
+		_, err = h.store.ProjectMember.UpdateSelectedFieldsByID(db, input.ProjectMemberID.String(), *member,
 			"start_date",
 			"end_date",
 			"status",
@@ -1072,7 +1097,8 @@ func (h *handler) updateProjectMember(db *gorm.DB, slotID string, projectID stri
 			"deployment_type",
 			"seniority_id",
 			"note",
-			// "upsell_person_id",
+			"upsell_person_id",
+			"upsell_commission_rate",
 		)
 		if err != nil {
 			h.logger.Fields(logger.Fields{"member": member}).Error(err, "failed to update project member")
@@ -1116,10 +1142,17 @@ func (h *handler) updateProjectMember(db *gorm.DB, slotID string, projectID stri
 				Status:         model.ProjectMemberStatus(input.Status),
 				StartDate:      input.GetStartDate(),
 				EndDate:        input.GetEndDate(),
-				Rate:           input.Rate,
-				Discount:       input.Discount,
-				UpsellPersonID: input.UpsellPersonID,
 				Note:           input.Note,
+			}
+
+			if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsCommissionRateEdit) {
+				member.UpsellPersonID = input.UpsellPersonID
+				member.UpsellCommissionRate = input.UpsellCommissionRate
+			}
+
+			if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectMembersRateEdit) {
+				member.Rate = input.Rate
+				member.Discount = input.Discount
 			}
 
 			if err := h.store.ProjectMember.Create(db, member); err != nil {
@@ -1175,7 +1208,7 @@ func (h *handler) updateProjectMember(db *gorm.DB, slotID string, projectID stri
 		}
 	} else {
 		// Start of lead time or update lead time
-		_, err := h.updateProjectHead(db, projectID, input.EmployeeID, model.HeadPositionTechnicalLead, input.GetStartDate(), input.GetEndDate())
+		_, err := h.updateProjectLead(db, projectID, input.EmployeeID, input.GetStartDate(), input.GetEndDate(), input.LeadCommissionRate, userInfo)
 		if err != nil {
 			h.logger.Fields(logger.Fields{
 				"projectID":  projectID,
@@ -1223,7 +1256,6 @@ func (h *handler) AssignMember(c *gin.Context) {
 		return
 	}
 
-	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler": "project",
 		"method":  "AssignMember",
@@ -1270,9 +1302,12 @@ func (h *handler) AssignMember(c *gin.Context) {
 		return
 	}
 
+	// remove commission rate if user does not have permission
+	body.RestrictPermission(userInfo)
+
 	tx, done := h.repo.NewTransaction()
 
-	slot, code, err := h.createSlotsAndAssignMembers(tx.DB(), projectID, body)
+	slot, code, err := h.createSlotsAndAssignMembers(tx.DB(), projectID, body, userInfo)
 	if err != nil {
 		l.Error(err, "failed to assign member to project")
 		c.JSON(code, view.CreateResponse[any](nil, nil, done(err), body, ""))
@@ -1281,7 +1316,7 @@ func (h *handler) AssignMember(c *gin.Context) {
 	c.JSON(http.StatusOK, view.CreateResponse(view.ToCreateMemberData(userInfo, slot), nil, done(nil), nil, ""))
 }
 
-func (h *handler) createSlotsAndAssignMembers(db *gorm.DB, projectID string, req request.AssignMemberInput) (*model.ProjectSlot, int, error) {
+func (h *handler) createSlotsAndAssignMembers(db *gorm.DB, projectID string, req request.AssignMemberInput, userInfo *model.CurrentLoggedUserInfo) (*model.ProjectSlot, int, error) {
 	l := h.logger
 
 	// check seniority existence
@@ -1315,10 +1350,13 @@ func (h *handler) createSlotsAndAssignMembers(db *gorm.DB, projectID string, req
 		ProjectID:      model.MustGetUUIDFromString(projectID),
 		DeploymentType: model.DeploymentType(req.DeploymentType),
 		Status:         req.GetStatus(),
-		Rate:           req.Rate,
-		Discount:       req.Discount,
 		SeniorityID:    req.SeniorityID,
 		Note:           req.Note,
+	}
+
+	if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectMembersRateEdit) {
+		slot.Rate = req.Rate
+		slot.Discount = req.Discount
 	}
 
 	if err := h.store.ProjectSlot.Create(db, slot); err != nil {
@@ -1386,10 +1424,17 @@ func (h *handler) createSlotsAndAssignMembers(db *gorm.DB, projectID string, req
 			Status:         req.GetStatus(),
 			StartDate:      req.GetStartDate(),
 			EndDate:        req.GetEndDate(),
-			Rate:           req.Rate,
-			Discount:       req.Discount,
-			UpsellPersonID: req.UpsellPersonID,
 			Note:           req.Note,
+		}
+
+		if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsCommissionRateEdit) {
+			member.UpsellPersonID = req.UpsellPersonID
+			member.UpsellCommissionRate = req.UpsellCommissionRate
+		}
+
+		if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectMembersRateEdit) {
+			member.Rate = req.Rate
+			member.Discount = req.Discount
 		}
 
 		if err = h.store.ProjectMember.Create(db, member); err != nil {
@@ -1414,16 +1459,23 @@ func (h *handler) createSlotsAndAssignMembers(db *gorm.DB, projectID string, req
 		// create project head
 		slot.ProjectMember.IsLead = req.IsLead
 		if req.IsLead {
-			if err := h.store.ProjectHead.Create(db, &model.ProjectHead{
-				ProjectID:      model.MustGetUUIDFromString(projectID),
-				EmployeeID:     req.EmployeeID,
-				CommissionRate: decimal.Zero,
-				Position:       model.HeadPositionTechnicalLead,
-				StartDate:      *req.GetStartDate(),
-			}); err != nil {
+			head := &model.ProjectHead{
+				ProjectID:  model.MustGetUUIDFromString(projectID),
+				EmployeeID: req.EmployeeID,
+				Position:   model.HeadPositionTechnicalLead,
+				StartDate:  *req.GetStartDate(),
+			}
+
+			if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsCommissionRateEdit) {
+				head.CommissionRate = req.LeadCommissionRate
+			}
+
+			if err := h.store.ProjectHead.Create(db, head); err != nil {
 				l.Error(err, "failed to create project head")
 				return nil, http.StatusInternalServerError, err
 			}
+
+			slot.ProjectMember.Head = head
 		}
 	}
 
@@ -1457,7 +1509,6 @@ func (h *handler) Details(c *gin.Context) {
 		return
 	}
 
-	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler": "project",
 		"method":  "Details",
@@ -1489,7 +1540,7 @@ func (h *handler) Details(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse(view.ToProjectData(c, rs, userInfo), nil, nil, nil, ""))
+	c.JSON(http.StatusOK, view.CreateResponse(view.ToProjectData(rs, userInfo), nil, nil, nil, ""))
 }
 
 // UpdateGeneralInfo godoc
@@ -1524,7 +1575,6 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 		return
 	}
 
-	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler": "project",
 		"method":  "UpdateGeneralInfo",
@@ -1723,6 +1773,12 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 // @Failure 500 {object} view.ErrorResponse
 // @Router /projects/{id}/contact-info [put]
 func (h *handler) UpdateContactInfo(c *gin.Context) {
+	userInfo, err := authutils.GetLoggedInUserInfo(c, h.store, h.repo.DB(), h.config)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, userInfo.UserID, ""))
+		return
+	}
+
 	projectID := c.Param("id")
 	if projectID == "" || !model.IsUUIDFromString(projectID) {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidProjectID, nil, ""))
@@ -1735,7 +1791,6 @@ func (h *handler) UpdateContactInfo(c *gin.Context) {
 		return
 	}
 
-	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler": "project",
 		"method":  "UpdateContactInfo",
@@ -1764,53 +1819,35 @@ func (h *handler) UpdateContactInfo(c *gin.Context) {
 		return
 	}
 
-	// Check account manager exists
-	exist, err := h.store.Employee.IsExist(h.repo.DB(), body.AccountManagerID.String())
-	if err != nil {
-		l.Error(err, "failed to find account manager")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
-		return
-	}
-
-	if !exist {
-		l.Error(errs.ErrAccountManagerNotFound, "account manager not found")
-		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrAccountManagerNotFound, body, ""))
+	err = body.ValidateCommissionRate()
+	if err != nil && authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsCommissionRateEdit) {
+		l.Error(err, "commission rate is invalid")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, body, ""))
 		return
 	}
 
 	// Begin transaction
 	tx, done := h.repo.NewTransaction()
 
-	// Update Account Manager
-	_, err = h.updateProjectHead(tx.DB(), projectID, body.AccountManagerID, model.HeadPositionAccountManager, nil, nil)
+	err = h.updateProjectHeads(tx.DB(), projectID, model.HeadPositionAccountManager, body.AccountManagers, userInfo)
 	if err != nil {
-		l.Error(err, "failed to update account manager")
+		l.Error(err, "failed to update account managers")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
 		return
 	}
 
-	// Update Delivery Manager
-	if !body.DeliveryManagerID.IsZero() {
-		// Check delivery manager exists
-		exist, err = h.store.Employee.IsExist(tx.DB(), body.DeliveryManagerID.String())
-		if err != nil {
-			l.Error(err, "error when finding delivery manager")
-			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
-			return
-		}
+	err = h.updateProjectHeads(tx.DB(), projectID, model.HeadPositionDeliveryManager, body.DeliveryManagers, userInfo)
+	if err != nil {
+		l.Error(err, "failed to update delivery managers")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
+		return
+	}
 
-		if !exist {
-			l.Error(errs.ErrDeliveryManagerNotFound, "delivery manager not found")
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, done(errs.ErrDeliveryManagerNotFound), body, ""))
-			return
-		}
-
-		_, err = h.updateProjectHead(tx.DB(), projectID, body.DeliveryManagerID, model.HeadPositionDeliveryManager, nil, nil)
-		if err != nil {
-			l.Error(err, "failed to update delivery manager")
-			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
-			return
-		}
+	err = h.updateProjectHeads(tx.DB(), projectID, model.HeadPositionSalePerson, body.SalePersons, userInfo)
+	if err != nil {
+		l.Error(err, "failed to update sale persons")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
+		return
 	}
 
 	// Update email info
@@ -1833,60 +1870,90 @@ func (h *handler) UpdateContactInfo(c *gin.Context) {
 
 	p.Heads = heads
 
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToUpdateProjectContactInfo(p), nil, done(nil), nil, ""))
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToUpdateProjectContactInfo(p, userInfo), nil, done(nil), nil, ""))
 }
 
-func (h *handler) updateProjectHead(db *gorm.DB, projectID string, employeeID model.UUID, position model.HeadPosition, startDate *time.Time, endDate *time.Time) (*model.ProjectHead, error) {
-	if position == model.HeadPositionTechnicalLead {
-		return h.updateProjectLead(db, projectID, employeeID, startDate, endDate)
-	}
-
+func (h *handler) updateProjectHeads(db *gorm.DB, projectID string, position model.HeadPosition, headsInput []request.ProjectHeadInput, userInfo *model.CurrentLoggedUserInfo) error {
 	heads, err := h.store.ProjectHead.GetByProjectIDAndPosition(db, projectID, position)
 	if err != nil {
 		h.logger.Fields(logger.Fields{
 			"projectID": projectID,
 			"position":  position,
-		}).Error(err, "failed to get one project head")
-		return nil, err
+		}).Error(err, "failed to get heads")
+		return err
 	}
 
-	// Create new head
-	if len(heads) == 0 {
+	// create input map
+	headInputMap := map[model.UUID]decimal.Decimal{}
+	for _, head := range headsInput {
+		exists, err := h.store.Employee.IsExist(db, head.EmployeeID.String())
+		if err != nil {
+			h.logger.Error(err, "failed to check employee existence")
+			return err
+		}
+
+		if !exists {
+			h.logger.Error(errs.ErrEmployeeNotFound, "employee not found")
+			return errs.ErrEmployeeNotFound
+		}
+
+		headInputMap[head.EmployeeID] = head.CommissionRate
+	}
+
+	// update/delete exist heads
+	for _, head := range heads {
+		if _, ok := headInputMap[head.EmployeeID]; ok {
+			if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsCommissionRateEdit) {
+				head.CommissionRate = headInputMap[head.EmployeeID]
+
+				_, err := h.store.ProjectHead.UpdateSelectedFieldsByID(db, head.ID.String(), *head, "commission_rate")
+				if err != nil {
+					h.logger.Fields(logger.Fields{
+						"projectID": projectID,
+						"headID":    head.ID.String(),
+					}).Error(err, "failed to update head")
+					return err
+				}
+			}
+
+			delete(headInputMap, head.EmployeeID)
+		} else {
+			if err := h.store.ProjectHead.DeleteByID(db, head.ID.String()); err != nil {
+				h.logger.Fields(logger.Fields{
+					"projectID": projectID,
+					"headID":    head.ID.String(),
+				}).Error(err, "failed to delete head")
+				return err
+			}
+		}
+	}
+
+	// create new head
+	for employeeID, commissionRate := range headInputMap {
+		if !authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsCommissionRateEdit) {
+			commissionRate = decimal.Zero
+		}
+
 		head := &model.ProjectHead{
-			ProjectID:  model.MustGetUUIDFromString(projectID),
-			EmployeeID: employeeID,
-			Position:   position,
+			BaseModel: model.BaseModel{
+				ID: model.NewUUID(),
+			},
+			ProjectID:      model.MustGetUUIDFromString(projectID),
+			EmployeeID:     employeeID,
+			CommissionRate: commissionRate,
+			Position:       position,
 		}
+
 		if err := h.store.ProjectHead.Create(db, head); err != nil {
-			h.logger.Fields(logger.Fields{"head": head}).Error(err, "failed to create project head")
-			return nil, err
+			h.logger.AddField("head", head).Error(err, "failed to create head")
+			return err
 		}
-
-		return head, nil
 	}
 
-	// Delivery manager or account manager just only have one record
-	if len(heads) > 1 {
-		return nil, errors.New("more than one head")
-	}
-
-	if heads[0].EmployeeID == employeeID {
-		return heads[0], nil
-	}
-
-	heads[0].EmployeeID = employeeID
-
-	// Update old record
-	_, err = h.store.ProjectHead.UpdateSelectedFieldsByID(db, heads[0].ID.String(), *heads[0], "employee_id")
-	if err != nil {
-		h.logger.Fields(logger.Fields{"head": *heads[0]}).Error(err, "failed to update project head")
-		return nil, err
-	}
-
-	return heads[0], nil
+	return nil
 }
 
-func (h *handler) updateProjectLead(db *gorm.DB, projectID string, employeeID model.UUID, startDate *time.Time, endDate *time.Time) (*model.ProjectHead, error) {
+func (h *handler) updateProjectLead(db *gorm.DB, projectID string, employeeID model.UUID, startDate *time.Time, endDate *time.Time, commissionRate decimal.Decimal, userInfo *model.CurrentLoggedUserInfo) (*model.ProjectHead, error) {
 	head, err := h.store.ProjectHead.One(db, projectID, employeeID.String(), model.HeadPositionTechnicalLead)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		h.logger.Fields(logger.Fields{
@@ -1896,12 +1963,22 @@ func (h *handler) updateProjectLead(db *gorm.DB, projectID string, employeeID mo
 		return nil, err
 	}
 
+	if !authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsCommissionRateEdit) {
+		commissionRate = decimal.Zero
+	} else if head != nil {
+		head.CommissionRate = commissionRate
+	}
+
 	if err == nil {
 		// Update old record
 		head.StartDate = *startDate
 		head.EndDate = endDate
 
-		_, err := h.store.ProjectHead.UpdateSelectedFieldsByID(db, head.ID.String(), *head, "start_date", "end_date")
+		_, err := h.store.ProjectHead.UpdateSelectedFieldsByID(db, head.ID.String(), *head,
+			"start_date",
+			"end_date",
+			"commission_rate",
+		)
 		if err != nil {
 			h.logger.Fields(logger.Fields{"head": *head}).Error(err, "failed to update project head")
 			return nil, err
@@ -1909,11 +1986,12 @@ func (h *handler) updateProjectLead(db *gorm.DB, projectID string, employeeID mo
 	} else {
 		// Create new record
 		head = &model.ProjectHead{
-			ProjectID:  model.MustGetUUIDFromString(projectID),
-			EmployeeID: employeeID,
-			StartDate:  *startDate,
-			EndDate:    endDate,
-			Position:   model.HeadPositionTechnicalLead,
+			ProjectID:      model.MustGetUUIDFromString(projectID),
+			EmployeeID:     employeeID,
+			CommissionRate: commissionRate,
+			StartDate:      *startDate,
+			EndDate:        endDate,
+			Position:       model.HeadPositionTechnicalLead,
 		}
 
 		if err := h.store.ProjectHead.Create(db, head); err != nil {
@@ -1956,7 +2034,6 @@ func (h *handler) GetWorkUnits(c *gin.Context) {
 		return
 	}
 
-	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler":   "project",
 		"method":    "GetWorkUnits",
@@ -2031,7 +2108,6 @@ func (h *handler) CreateWorkUnit(c *gin.Context) {
 		return
 	}
 
-	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler": "project",
 		"method":  "CreateWorkUnit",
@@ -2187,7 +2263,6 @@ func (h *handler) UpdateWorkUnit(c *gin.Context) {
 		return
 	}
 
-	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler": "project",
 		"method":  "UpdateWorkUnit",
@@ -2467,7 +2542,6 @@ func (h *handler) ArchiveWorkUnit(c *gin.Context) {
 		WorkUnitID: c.Param("workUnitID"),
 	}
 
-	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler": "project",
 		"method":  "ArchiveWorkUnit",
@@ -2589,7 +2663,6 @@ func (h *handler) UnarchiveWorkUnit(c *gin.Context) {
 		WorkUnitID: c.Param("workUnitID"),
 	}
 
-	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler": "project",
 		"method":  "UnarchiveWorkUnit",
@@ -2723,7 +2796,6 @@ func (h *handler) UpdateSendingSurveyState(c *gin.Context) {
 		return
 	}
 
-	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler": "project",
 		"method":  "UpdateSendingSurveyState",

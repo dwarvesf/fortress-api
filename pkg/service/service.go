@@ -19,6 +19,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/service/notion"
 	"github.com/dwarvesf/fortress-api/pkg/service/sendgrid"
 	"github.com/dwarvesf/fortress-api/pkg/service/wise"
+	"github.com/dwarvesf/fortress-api/pkg/store"
 )
 
 type Service struct {
@@ -33,7 +34,7 @@ type Service struct {
 	Basecamp    *basecamp.Service
 }
 
-func New(cfg *config.Config) *Service {
+func New(cfg *config.Config, store *store.Store, repo store.DBRepo) *Service {
 	cch := cache.New(5*time.Minute, 10*time.Minute)
 
 	authServiceCfg := &oauth2.Config{
@@ -74,7 +75,10 @@ func New(cfg *config.Config) *Service {
 		cfg,
 	)
 
-	bc := model.Basecamp{}
+	bc := model.Basecamp{
+		ClientID:     cfg.Basecamp.ClientID,
+		ClientSecret: cfg.Basecamp.ClientSecret,
+	}
 
 	return &Service{
 		Google:      googleSvc,
@@ -93,6 +97,6 @@ func New(cfg *config.Config) *Service {
 			cfg,
 			logger.L,
 		),
-		Basecamp: basecamp.NewService(&bc, cfg, logger.L),
+		Basecamp: basecamp.NewService(store, repo, cfg, &bc, logger.L),
 	}
 }

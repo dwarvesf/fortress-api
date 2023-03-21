@@ -21,10 +21,14 @@ INSERT INTO public.permissions (id, deleted_at, created_at, updated_at, name, co
 ('35bb795a-0b9f-428c-861d-48c1e8d4e73a', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Project Read', 'projects.read'),
 ('a8299847-4d10-41e9-8327-42e13e0672ae', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Project Read Full Access', 'projects.read.fullAccess'),
 ('80a2c800-02ea-4264-9289-57b92e911097', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Project Edit', 'projects.edit'),
+('6118a1da-aa9a-40eb-b664-87a6969c5759', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Project Commission Rate Read', 'projects.commissionRate.read'),
+('79b1a377-7b73-4bea-90c2-330bda11b635', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Project Commission Rate Edit', 'projects.commissionRate.edit'),
 ('6797aeac-7d5e-4216-b260-a8a3f62d3cf6', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Project Member Create', 'projectMembers.create'),
 ('57ead3c5-b09f-4cd8-ac38-d9c0d4654af5', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Project Member Read', 'projectMembers.read'),
 ('58719469-e01d-4667-bafa-12020931e317', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Project Member Edit', 'projectMembers.edit'),
 ('1a1303f3-a929-41b3-be7f-d372e6aab87a', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Project Member Delete', 'projectMembers.delete'),
+('e33cc269-3a12-436e-aab7-75f14953388f', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Project Member Rate Read', 'projectMembers.rate.read'),
+('2f6c957c-725b-4da4-ad6d-9a23a1e18a98', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Project Member Rate Edit', 'projectMembers.rate.edit'),
 ('819adaec-f4a2-4438-937d-fcd9cc15d76b', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Work Unit Create', 'projectWorkUnits.create'),
 ('7c7937f6-f3ae-47a4-8ee1-fb03f2a5197b', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Work Unit Create Full Access', 'projectWorkUnits.create.fullAccess'),
 ('7c2d5fef-3096-4b68-bd76-f26cb2a3baea', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Work Unit Read', 'projectWorkUnits.read'),
@@ -134,7 +138,11 @@ INSERT INTO public.role_permissions (id, deleted_at, created_at, updated_at, rol
 ('e3db8e5a-0f9d-4ab9-8d6f-f16e3e3f8bbe', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '11ccffea-2cc9-4e98-9bef-3464dfe4dec8', 'a66215da-48dc-419d-8e2d-3f409aa038e3'),
 ('9b175068-7a0f-415c-8e98-5fa92895984f', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '11ccffea-2cc9-4e98-9bef-3464dfe4dec8', '36e9c7bd-c98f-4414-a8f4-164da5299874'),
 ('e84db5f8-66bc-408c-a38b-659cdf254b0b', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '11ccffea-2cc9-4e98-9bef-3464dfe4dec8', 'ca0af093-65ed-48d4-a6d1-62985a35fd8f'),
-('4dcc0416-d5e8-43a7-8694-2cd55c2f160e', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '11ccffea-2cc9-4e98-9bef-3464dfe4dec8', 'd93ede75-8fd5-4f88-b119-07493b757f4b');
+('4dcc0416-d5e8-43a7-8694-2cd55c2f160e', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '11ccffea-2cc9-4e98-9bef-3464dfe4dec8', 'd93ede75-8fd5-4f88-b119-07493b757f4b'),
+('10649145-3440-49f4-bb42-b6670eabd579', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '11ccffea-2cc9-4e98-9bef-3464dfe4dec8', '6118a1da-aa9a-40eb-b664-87a6969c5759'),
+('4177d9fb-9968-4eae-b3e3-66541295305a', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '11ccffea-2cc9-4e98-9bef-3464dfe4dec8', '79b1a377-7b73-4bea-90c2-330bda11b635'),
+('0f987cdd-1af4-4d54-bd5f-017ce5a6f64d', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '11ccffea-2cc9-4e98-9bef-3464dfe4dec8', 'e33cc269-3a12-436e-aab7-75f14953388f'),
+('09c991c4-bb65-4088-badb-80f916a51600', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '11ccffea-2cc9-4e98-9bef-3464dfe4dec8', '2f6c957c-725b-4da4-ad6d-9a23a1e18a98');
 
 INSERT INTO public.positions (id, deleted_at, created_at, updated_at, name, code) VALUES
 ('11ccffea-2cc9-4e98-9bef-3464dfe4dec8', NULL, '2022-11-07 09:50:25.714604', '2022-11-07 09:50:25.714604', 'Frontend', 'frontend'),

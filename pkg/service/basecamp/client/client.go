@@ -32,7 +32,7 @@ type Client struct {
 
 // NewClient --
 func NewClient(bc *model.Basecamp, cfg *config.Config) (Service, error) {
-	newToken, err := accesstoken(cfg)
+	newToken, err := getAccessToken(cfg)
 	if err != nil {
 		logger.L.Error(err, "can't init basecamp service")
 		return nil, err
@@ -44,7 +44,7 @@ func NewClient(bc *model.Basecamp, cfg *config.Config) (Service, error) {
 	}, nil
 }
 
-func accesstoken(cfg *config.Config) (*oauth2.Token, error) {
+func getAccessToken(cfg *config.Config) (*oauth2.Token, error) {
 	basecampOauthConfig.ClientID = cfg.Basecamp.ClientID
 	basecampOauthConfig.ClientSecret = cfg.Basecamp.ClientSecret
 
@@ -66,7 +66,7 @@ func accesstoken(cfg *config.Config) (*oauth2.Token, error) {
 // 	interval := time.Tick(15 * time.Minute)
 // 	for {
 // 		<-interval
-// 		newToken, _ := accesstoken()
+// 		newToken, _ := getAccessToken()
 // 		c.client = basecampOauthConfig.Client(oauth2.NoContext, newToken)
 // 	}
 // }
