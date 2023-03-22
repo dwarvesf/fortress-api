@@ -1077,9 +1077,9 @@ func (h *handler) updateProjectMember(db *gorm.DB, slotID string, projectID stri
 		member.StartDate = input.GetStartDate()
 		member.EndDate = input.GetEndDate()
 		member.Note = input.Note
+		member.UpsellPersonID = input.UpsellPersonID
 
 		if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsCommissionRateEdit) {
-			member.UpsellPersonID = input.UpsellPersonID
 			member.UpsellCommissionRate = input.UpsellCommissionRate
 		}
 
@@ -1143,10 +1143,10 @@ func (h *handler) updateProjectMember(db *gorm.DB, slotID string, projectID stri
 				StartDate:      input.GetStartDate(),
 				EndDate:        input.GetEndDate(),
 				Note:           input.Note,
+				UpsellPersonID: input.UpsellPersonID,
 			}
 
 			if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsCommissionRateEdit) {
-				member.UpsellPersonID = input.UpsellPersonID
 				member.UpsellCommissionRate = input.UpsellCommissionRate
 			}
 
@@ -1425,10 +1425,10 @@ func (h *handler) createSlotsAndAssignMembers(db *gorm.DB, projectID string, req
 			StartDate:      req.GetStartDate(),
 			EndDate:        req.GetEndDate(),
 			Note:           req.Note,
+			UpsellPersonID: req.UpsellPersonID,
 		}
 
 		if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsCommissionRateEdit) {
-			member.UpsellPersonID = req.UpsellPersonID
 			member.UpsellCommissionRate = req.UpsellCommissionRate
 		}
 
