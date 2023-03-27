@@ -19,7 +19,12 @@ import (
 // Send implements IHandler
 func (h *handler) Send(c *gin.Context) {
 	contentID := c.Param("id")
+	isPreview := false
+	if c.Query("preview") == "true" {
+		isPreview = true
+	}
 	categories := []string{"newsletter", contentID}
+	emails := []*model.Email{}
 
 	m, err := h.generateEmailNewsletter(
 		contentID,
@@ -35,35 +40,48 @@ func (h *handler) Send(c *gin.Context) {
 		return
 	}
 
-	// get subscribers
-	subscribers, _, err := h.getSubcribers(h.config.Notion.Databases.Audience, "Dwarves Updates")
-	if err != nil {
-		h.logger.Error(err, "getSubcribers() failed")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
-		return
-	}
-
-	emails := []*model.Email{}
-
-	// get audience list
-	for _, s := range subscribers {
+	if isPreview {
+		emails = []*model.Email{
+			{
+				HTMLContent: m.HTMLContent,
+				Subject:     m.Subject,
+				From:        m.From,
+				To: []*mail.Email{
+					mail.NewEmail("Minh Luu", "leo@d.foundation"),
+					mail.NewEmail("Huy Nguyen", "hnh@d.foundation"),
+				},
+				Categories: categories,
+			},
+		}
+	} else {
+		// get subscribers
+		subscribers, _, err := h.getSubcribers(h.config.Notion.Databases.Audience, "Dwarves Updates")
 		if err != nil {
-			h.logger.Error(err, "ToNewsletterHtml() failed with "+s.Address)
+			h.logger.Error(err, "getSubcribers() failed")
 			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 			return
 		}
-		emails = append(emails, &model.Email{
-			HTMLContent: m.HTMLContent,
-			Subject:     m.Subject,
-			From:        m.From,
-			To:          []*mail.Email{s},
-			Categories:  categories,
-		})
-	}
 
-	if h.config.Env != "prod" {
-		if len(emails) > 1 {
-			emails = emails[:1]
+		// get audience list
+		for _, s := range subscribers {
+			if err != nil {
+				h.logger.Error(err, "ToNewsletterHtml() failed with "+s.Address)
+				c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+				return
+			}
+			emails = append(emails, &model.Email{
+				HTMLContent: m.HTMLContent,
+				Subject:     m.Subject,
+				From:        m.From,
+				To:          []*mail.Email{s},
+				Categories:  categories,
+			})
+		}
+
+		if h.config.Env != "prod" {
+			if len(emails) > 1 {
+				emails = emails[:1]
+			}
 		}
 	}
 
