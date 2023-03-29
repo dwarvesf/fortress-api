@@ -53,7 +53,6 @@ var (
 	ErrSlotAlreadyContainsAnotherMember = errors.New("slot already contains another member")
 	ErrDuplicateProjectCode             = errors.New("project code is duplicated")
 	ErrAccountManagerRequired           = errors.New("account manager is required")
-	ErrTotalCommissionRateMustBe100     = errors.New("total commission rate must be 100")
 
 	ErrInvalidFileExtension         = errors.New("invalid file extension")
 	ErrInvalidFileSize              = errors.New("invalid file size")
