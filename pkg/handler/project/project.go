@@ -1819,13 +1819,6 @@ func (h *handler) UpdateContactInfo(c *gin.Context) {
 		return
 	}
 
-	err = body.ValidateCommissionRate()
-	if err != nil && authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsCommissionRateEdit) {
-		l.Error(err, "commission rate is invalid")
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, body, ""))
-		return
-	}
-
 	// Begin transaction
 	tx, done := h.repo.NewTransaction()
 

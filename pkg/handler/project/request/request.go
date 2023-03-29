@@ -391,28 +391,6 @@ func (i UpdateContactInfoInput) Validate() error {
 	return nil
 }
 
-func (i UpdateContactInfoInput) ValidateCommissionRate() error {
-	if !isValidCommissionRate(i.AccountManagers) ||
-		!isValidCommissionRate(i.DeliveryManagers) ||
-		!isValidCommissionRate(i.SalePersons) {
-		return errs.ErrTotalCommissionRateMustBe100
-	}
-
-	return nil
-}
-
-func isValidCommissionRate(heads []ProjectHeadInput) bool {
-	if len(heads) == 0 {
-		return true
-	}
-
-	sum := decimal.Zero
-	for _, head := range heads {
-		sum = sum.Add(head.CommissionRate)
-	}
-	return sum.Equal(decimal.NewFromInt(100))
-}
-
 type UnassignMemberInput struct {
 	ProjectID string
 	MemberID  string
