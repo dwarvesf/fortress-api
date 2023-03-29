@@ -17,12 +17,13 @@ type Config struct {
 	ApiServer ApiServer
 
 	// service
-	Google   Google
-	Vault    Vault
-	Notion   Notion
-	Wise     Wise
-	Discord  Discord
-	Basecamp Basecamp
+	Google        Google
+	Vault         Vault
+	Notion        Notion
+	Wise          Wise
+	Discord       Discord
+	Basecamp      Basecamp
+	CurrencyLayer CurrencyLayer
 
 	Invoice  Invoice
 	Sendgrid Sendgrid
@@ -64,6 +65,10 @@ type Wise struct {
 	APIKey  string
 	Profile string
 	Url     string
+}
+
+type CurrencyLayer struct {
+	APIKey string
 }
 
 type Vault struct {
@@ -166,6 +171,9 @@ func Generate(v ENV) *Config {
 			APIKey:  v.GetString("WISE_API_KEY"),
 			Profile: v.GetString("WISE_PROFILE"),
 			Url:     v.GetString("WISE_URL"),
+		},
+		CurrencyLayer: CurrencyLayer{
+			APIKey: v.GetString("CURRENCY_LAYER_API_KEY"),
 		},
 
 		Vault: Vault{

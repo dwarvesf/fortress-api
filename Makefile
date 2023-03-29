@@ -51,6 +51,9 @@ build:
 dev:
 	go run ./cmd/server/main.go
 
+air:
+	air -c .air.toml
+
 cronjob:
 	go run ./cmd/cronjob/main.go
 
@@ -100,3 +103,7 @@ gen-swagger:
 
 ci: init
 	@PROJECT_PATH=$(shell pwd) go test -cover ./... -count=1 -p=1
+
+WD := $(shell pwd)
+lint:
+	docker run -t --rm -v $(WD):/app -w /app golangci/golangci-lint:v1.52.2 golangci-lint run -v

@@ -1,6 +1,6 @@
 Mime-Version: 1.0
-From: "Team @ Dwarves Ventures" <team@dwarvesv.com>
-To: {{.User.Email}}
+From: "Team @ Dwarves Foundation" <team@d.foundation>
+To: {{.Employee.TeamEmail}}
 CC: {{ccList}}
 Subject: Dwarves Foundation - Allowance {{formattedCurrentMonth}} {{.Year}}
 Content-Type: multipart/mixed; boundary=main
@@ -14,7 +14,7 @@ Content-Transfer-Encoding: quoted-printable
 	<br /><br />
 	<div>
 		Below is your payslip of {{formattedCurrentMonth}} {{.Year}}. If you have any question, please contact <a
-			href="mailto:huynh@dwarvesv.com">huynh@dwarvesv.com</a>.
+			href="mailto:huy@d.foundation">huy@d.foundation</a>.
 	</div>
 	<br />
 	<ul>

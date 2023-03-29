@@ -25,6 +25,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/handler/issue"
 	"github.com/dwarvesf/fortress-api/pkg/handler/memo"
 	"github.com/dwarvesf/fortress-api/pkg/handler/metadata"
+	"github.com/dwarvesf/fortress-api/pkg/handler/payroll"
 	"github.com/dwarvesf/fortress-api/pkg/handler/profile"
 	"github.com/dwarvesf/fortress-api/pkg/handler/project"
 	"github.com/dwarvesf/fortress-api/pkg/handler/staffingdemand"
@@ -70,6 +71,7 @@ type Handler struct {
 	Asset          asset.IHandler
 	Changelog      changelog.IHandler
 	DFUpdate       dfupdate.IHandler
+	Payroll        payroll.IHandler
 }
 
 func New(store *store.Store, repo store.DBRepo, service *service.Service, ctrl *controller.Controller, worker *worker.Worker, logger logger.Logger, cfg *config.Config) *Handler {
@@ -104,5 +106,6 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, ctrl *
 		Asset:          asset.New(store, repo, service, logger, cfg),
 		Changelog:      changelog.New(store, repo, service, logger, cfg),
 		DFUpdate:       dfupdate.New(store, repo, service, logger, cfg),
+		Payroll:        payroll.New(store, repo, service, worker, logger, cfg),
 	}
 }

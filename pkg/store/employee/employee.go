@@ -122,7 +122,9 @@ func (s *store) All(db *gorm.DB, filter EmployeeFilter, pagination model.Paginat
 					Where("employee_organizations.deleted_at IS NULL").
 					Order("organizations.code DESC")
 			}).
-			Preload("EmployeeOrganizations.Organization", "deleted_at IS NULL")
+			Preload("EmployeeOrganizations.Organization", "deleted_at IS NULL").
+			Preload("BaseSalary").
+			Preload("BaseSalary.Currency")
 	}
 
 	limit, offset := pagination.ToLimitOffset()

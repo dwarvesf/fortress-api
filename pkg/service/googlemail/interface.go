@@ -2,6 +2,7 @@ package googlemail
 
 import (
 	"errors"
+
 	"github.com/dwarvesf/fortress-api/pkg/model"
 )
 
@@ -17,4 +18,5 @@ type IService interface {
 	SendInvoiceMail(invoice *model.Invoice) (msgID string, err error)
 	SendInvoiceThankYouMail(invoice *model.Invoice) (err error)
 	SendInvoiceOverdueMail(invoice *model.Invoice) (err error)
+	SendPayrollPaidMail(p *model.Payroll) (err error)
 }
