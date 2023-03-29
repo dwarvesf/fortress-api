@@ -116,4 +116,14 @@ ALTER TABLE
 ADD
     CONSTRAINT "project_commission_configs_project_id_fkey" FOREIGN KEY ("project_id") REFERENCES "projects" ("id");
 
+CREATE TABLE IF NOT EXISTS "cached_payrolls" (
+  "id" UUID PRIMARY KEY DEFAULT (uuid()),
+  "month" int4,
+  "year" int4,
+  "batch" int4,
+  "payrolls" json
+)
+;
+ALTER TABLE "cached_payrolls" ADD CONSTRAINT "cached_payrolls_month_year_batch_key" UNIQUE ("month", "year", "batch");
+
 -- +migrate Down
