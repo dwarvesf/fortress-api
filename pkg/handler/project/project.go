@@ -1077,9 +1077,9 @@ func (h *handler) updateProjectMember(db *gorm.DB, slotID string, projectID stri
 		member.StartDate = input.GetStartDate()
 		member.EndDate = input.GetEndDate()
 		member.Note = input.Note
+		member.UpsellPersonID = input.UpsellPersonID
 
 		if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsCommissionRateEdit) {
-			member.UpsellPersonID = input.UpsellPersonID
 			member.UpsellCommissionRate = input.UpsellCommissionRate
 		}
 
@@ -1143,10 +1143,10 @@ func (h *handler) updateProjectMember(db *gorm.DB, slotID string, projectID stri
 				StartDate:      input.GetStartDate(),
 				EndDate:        input.GetEndDate(),
 				Note:           input.Note,
+				UpsellPersonID: input.UpsellPersonID,
 			}
 
 			if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsCommissionRateEdit) {
-				member.UpsellPersonID = input.UpsellPersonID
 				member.UpsellCommissionRate = input.UpsellCommissionRate
 			}
 
@@ -1425,10 +1425,10 @@ func (h *handler) createSlotsAndAssignMembers(db *gorm.DB, projectID string, req
 			StartDate:      req.GetStartDate(),
 			EndDate:        req.GetEndDate(),
 			Note:           req.Note,
+			UpsellPersonID: req.UpsellPersonID,
 		}
 
 		if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsCommissionRateEdit) {
-			member.UpsellPersonID = req.UpsellPersonID
 			member.UpsellCommissionRate = req.UpsellCommissionRate
 		}
 
@@ -1816,13 +1816,6 @@ func (h *handler) UpdateContactInfo(c *gin.Context) {
 
 		l.Error(err, "failed to get project")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, projectID, ""))
-		return
-	}
-
-	err = body.ValidateCommissionRate()
-	if err != nil && authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsCommissionRateEdit) {
-		l.Error(err, "commission rate is invalid")
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, body, ""))
 		return
 	}
 

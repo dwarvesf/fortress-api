@@ -183,10 +183,10 @@ func ToProjectData(project *model.Project, userInfo *model.CurrentLoggedUserInfo
 
 		if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadFullAccess) {
 			member.DeploymentType = m.DeploymentType.String()
-		}
 
-		if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsCommissionRateRead) && m.UpsellPerson != nil {
-			member.UpsellPerson = toBasicEmployeeInfo(*m.UpsellPerson)
+			if m.UpsellPerson != nil {
+				member.UpsellPerson = toBasicEmployeeInfo(*m.UpsellPerson)
+			}
 		}
 
 		members = append(members, member)
@@ -338,11 +338,13 @@ func ToCreateMemberData(userInfo *model.CurrentLoggedUserInfo, slot *model.Proje
 		rs.ProjectMemberID = slot.ProjectMember.ID.String()
 		rs.EmployeeID = slot.ProjectMember.EmployeeID.String()
 		rs.Note = slot.ProjectMember.Note
+
+		if slot.ProjectMember.UpsellPerson != nil {
+			rs.UpsellPerson = toBasicEmployeeInfo(*slot.ProjectMember.UpsellPerson)
+		}
 	}
 
-	if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsCommissionRateRead) &&
-		slot.ProjectMember.UpsellPerson != nil {
-		rs.UpsellPerson = toBasicEmployeeInfo(*slot.ProjectMember.UpsellPerson)
+	if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsCommissionRateRead) {
 		rs.UpsellCommissionRate = slot.ProjectMember.UpsellCommissionRate
 	}
 
@@ -504,6 +506,10 @@ func ToProjectMemberListData(userInfo *model.CurrentLoggedUserInfo, members []*m
 			project.BankAccount.Currency != nil {
 			member.Currency = new(Currency)
 			*member.Currency = toCurrency(project.BankAccount.Currency)
+
+			if m.UpsellPerson != nil {
+				member.UpsellPerson = toBasicEmployeeInfo(*m.UpsellPerson)
+			}
 		}
 
 		// add commission rate
@@ -513,9 +519,6 @@ func ToProjectMemberListData(userInfo *model.CurrentLoggedUserInfo, members []*m
 			}
 
 			member.UpsellCommissionRate = m.UpsellCommissionRate
-			if m.UpsellPerson != nil {
-				member.UpsellPerson = toBasicEmployeeInfo(*m.UpsellPerson)
-			}
 		}
 
 		if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectMembersRateRead) {
