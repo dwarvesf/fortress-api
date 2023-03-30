@@ -1,6 +1,8 @@
 package employee
 
 import (
+	"time"
+
 	"gorm.io/gorm"
 
 	"github.com/dwarvesf/fortress-api/pkg/model"
@@ -137,7 +139,11 @@ func getByWhereConditions(query *gorm.DB, filter EmployeeFilter) *gorm.DB {
 		if *filter.IsLeft {
 			query = query.Where("employees.left_date IS NOT NULL")
 		} else {
-			query = query.Where("(employees.left_date IS NULL OR employees.left_date >= now())")
+			from := time.Now()
+			if filter.BatchDate != nil {
+				from = *filter.BatchDate
+			}
+			query = query.Where("(employees.left_date IS NULL OR employees.left_date > ?)", from)
 		}
 	}
 

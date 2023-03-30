@@ -146,7 +146,8 @@ func GetPayrollBHXHHandler(h *handler) (interface{}, error) {
 
 	isLeft := false
 	for _, b := range []int{int(model.FirstBatch), int(model.SecondBatch)} {
-		us, _, err := h.store.Employee.All(h.repo.DB(), employee.EmployeeFilter{IsLeft: &isLeft, Preload: true}, model.Pagination{Page: 0, Size: 200})
+		date := time.Date(time.Now().Year(), time.Now().Month(), b, 0, 0, 0, 0, time.Now().Location())
+		us, _, err := h.store.Employee.All(h.repo.DB(), employee.EmployeeFilter{IsLeft: &isLeft, BatchDate: &date, Preload: true}, model.Pagination{Page: 0, Size: 500})
 		if err != nil {
 			return nil, err
 		}
@@ -221,7 +222,7 @@ func GetPayrollDetailHandler(h *handler, month, year, batch int, email string) (
 
 			// TODO : get all user payroll
 			isLeft := false
-			us, _, err := h.store.Employee.All(tx.DB(), employee.EmployeeFilter{IsLeft: &isLeft, Preload: true}, model.Pagination{Page: 0, Size: 200})
+			us, _, err := h.store.Employee.All(tx.DB(), employee.EmployeeFilter{IsLeft: &isLeft, BatchDate: &batchDate, Preload: true}, model.Pagination{Page: 0, Size: 500})
 			if err != nil {
 				h.logger.Error(err, "can't get list active employee")
 				return nil, err
