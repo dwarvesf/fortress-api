@@ -120,6 +120,7 @@ type payrollResponse struct {
 	Year                 int               `json:"year"`
 	BankAccountNumber    string            `json:"bank_account_number"`
 	TWRecipientID        string            `json:"tw_recipient_id"` // will be removed
+	TWRecipientName      string            `json:"tw_recipient_name"`
 	TWAccountNumber      string            `json:"tw_account_number"`
 	Bank                 string            `json:"bank"`
 	HasContract          bool              `json:"has_contract"`
@@ -333,6 +334,7 @@ func GetPayrollDetailHandler(h *handler, month, year, batch int, email string) (
 				HasContract:          payrolls[i].ContractAmount != 0,
 				PayrollID:            "",
 				TWRecipientID:        payrolls[i].Employee.WiseRecipientID,
+				TWRecipientName:      payrolls[i].Employee.WiseRecipientName,
 				TWAccountNumber:      payrolls[i].Employee.WiseAccountNumber,
 				TWEmail:              payrolls[i].Employee.WiseRecipientEmail,
 				TWGBP:                payrolls[i].TWAmount,
