@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/dwarvesf/fortress-api/pkg/consts"
@@ -422,42 +423,53 @@ func getAccountingExpense(h *handler, batch int) (res []bcModel.Todo, err error)
 		return nil, err
 	}
 
+	var wg sync.WaitGroup
+	var mu sync.Mutex
 	// get all group in each list
 	for i := range lists {
-		groups, err := h.service.Basecamp.Todo.GetGroups(lists[i].ID, accountingID)
-		if err != nil {
-			return nil, err
-		}
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			groups, err := h.service.Basecamp.Todo.GetGroups(lists[i].ID, accountingID)
+			if err != nil {
+				h.logger.Error(err, "can't get groups in todo list")
+				return
+			}
 
-		// filter out group only
-		for j := range groups {
-			if strings.ToLower(groups[j].Title) == "out" {
-				// get all todo in out grou
-				todos, err := h.service.Basecamp.Todo.GetAllInList(groups[j].ID, accountingID)
-				if err != nil {
-					h.logger.Error(err, "can't get todo in out group")
-				}
+			// filter out group only
+			for j := range groups {
+				if strings.ToLower(groups[j].Title) == "out" {
+					// get all todo in out grou
+					todos, err := h.service.Basecamp.Todo.GetAllInList(groups[j].ID, accountingID)
+					if err != nil {
+						h.logger.Error(err, "can't get todo in out group")
+						return
+					}
 
-				// find expense in list of todos
-				for k := range todos {
-					if len(todos[k].Assignees) == 1 && todos[k].Assignees[0].ID != consts.HanBasecampID {
-						// HACK: some todo is specific batch only
-						if strings.Contains(todos[k].Title, "Tiền điện") {
-							if batch != 1 {
-								continue
+					// find expense in list of todos
+					for k := range todos {
+						if len(todos[k].Assignees) == 1 && todos[k].Assignees[0].ID != consts.HanBasecampID {
+							// HACK: some todo is specific batch only
+							if strings.Contains(todos[k].Title, "Tiền điện") {
+								if batch != 1 {
+									continue
+								}
+							} else if strings.Contains(todos[k].Title, "Office Rental") || strings.Contains(todos[k].Title, "CBRE") {
+								if batch != 15 {
+									continue
+								}
 							}
-						} else if strings.Contains(todos[k].Title, "Office Rental") || strings.Contains(todos[k].Title, "CBRE") {
-							if batch != 15 {
-								continue
-							}
+							mu.Lock()
+							res = append(res, todos[k])
+							mu.Unlock()
 						}
-
-						res = append(res, todos[k])
 					}
 				}
+
 			}
-		}
+		}(i)
 	}
+	wg.Wait()
 
 	return res, nil
 }
