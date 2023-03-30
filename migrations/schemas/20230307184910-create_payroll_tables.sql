@@ -1,5 +1,8 @@
 
 -- +migrate Up
+UPDATE "employees" SET "basecamp_id" = NULL WHERE "basecamp_id" = '';
+ALTER TABLE "employees" ALTER COLUMN "basecamp_id" TYPE integer USING ("basecamp_id"::integer);
+
 CREATE TABLE IF NOT EXISTS "base_salaries" (
   "id" uuid PRIMARY KEY DEFAULT (uuid()),
   "employee_id" uuid,

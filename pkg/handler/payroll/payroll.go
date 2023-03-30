@@ -120,6 +120,7 @@ type payrollResponse struct {
 	Year                 int               `json:"year"`
 	BankAccountNumber    string            `json:"bank_account_number"`
 	TWRecipientID        string            `json:"tw_recipient_id"` // will be removed
+	TWRecipientName      string            `json:"tw_recipient_name"`
 	TWAccountNumber      string            `json:"tw_account_number"`
 	Bank                 string            `json:"bank"`
 	HasContract          bool              `json:"has_contract"`
@@ -146,7 +147,8 @@ func GetPayrollBHXHHandler(h *handler) (interface{}, error) {
 
 	isLeft := false
 	for _, b := range []int{int(model.FirstBatch), int(model.SecondBatch)} {
-		us, _, err := h.store.Employee.All(h.repo.DB(), employee.EmployeeFilter{IsLeft: &isLeft, Preload: true}, model.Pagination{Page: 0, Size: 200})
+		date := time.Date(time.Now().Year(), time.Now().Month(), b, 0, 0, 0, 0, time.Now().Location())
+		us, _, err := h.store.Employee.All(h.repo.DB(), employee.EmployeeFilter{IsLeft: &isLeft, BatchDate: &date, Preload: true}, model.Pagination{Page: 0, Size: 500})
 		if err != nil {
 			return nil, err
 		}
@@ -221,7 +223,7 @@ func GetPayrollDetailHandler(h *handler, month, year, batch int, email string) (
 
 			// TODO : get all user payroll
 			isLeft := false
-			us, _, err := h.store.Employee.All(tx.DB(), employee.EmployeeFilter{IsLeft: &isLeft, Preload: true}, model.Pagination{Page: 0, Size: 200})
+			us, _, err := h.store.Employee.All(tx.DB(), employee.EmployeeFilter{IsLeft: &isLeft, BatchDate: &batchDate, Preload: true}, model.Pagination{Page: 0, Size: 500})
 			if err != nil {
 				h.logger.Error(err, "can't get list active employee")
 				return nil, err
@@ -332,6 +334,7 @@ func GetPayrollDetailHandler(h *handler, month, year, batch int, email string) (
 				HasContract:          payrolls[i].ContractAmount != 0,
 				PayrollID:            "",
 				TWRecipientID:        payrolls[i].Employee.WiseRecipientID,
+				TWRecipientName:      payrolls[i].Employee.WiseRecipientName,
 				TWAccountNumber:      payrolls[i].Employee.WiseAccountNumber,
 				TWEmail:              payrolls[i].Employee.WiseRecipientEmail,
 				TWGBP:                payrolls[i].TWAmount,
