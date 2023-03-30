@@ -1,6 +1,10 @@
 package employee
 
-import "github.com/dwarvesf/fortress-api/pkg/model"
+import (
+	"time"
+
+	"github.com/dwarvesf/fortress-api/pkg/model"
+)
 
 type EmployeeFilter struct {
 	WorkingStatuses []string
@@ -14,6 +18,7 @@ type EmployeeFilter struct {
 	LineManagers    []string
 	Keyword         string
 	IsLeft          *bool
+	BatchDate       *time.Time
 	//field sort
 	JoinedDateSort model.SortOrder
 }
