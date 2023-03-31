@@ -48,7 +48,8 @@ func (h *handler) Send(c *gin.Context) {
 				From:        m.From,
 				To: []*mail.Email{
 					mail.NewEmail("Minh Luu", "leo@d.foundation"),
-					mail.NewEmail("Huy Nguyen", "hnh@d.foundation"),
+					mail.NewEmail("Huy Nguyen", "huy@d.foundation"),
+					mail.NewEmail("Nikki", "nikki@d.foundation"),
 				},
 				Categories: categories,
 			},
