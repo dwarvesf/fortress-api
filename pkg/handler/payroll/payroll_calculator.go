@@ -465,7 +465,6 @@ func (h *handler) getAccountingExpense(batch int) (res []bcModel.Todo, err error
 						}
 					}
 				}
-
 			}
 		}(i)
 	}
