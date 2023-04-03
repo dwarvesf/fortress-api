@@ -125,3 +125,17 @@ func (d *discordClient) GetMembers() ([]*discordgo.Member, error) {
 
 	return members, nil
 }
+
+func (d *discordClient) SendMessage(msg, webhookUrl string) (*model.DiscordMessage, error) {
+	discordMsg := model.DiscordMessage{Content: msg}
+	reqByte, err := json.Marshal(discordMsg)
+	if err != nil {
+		return &discordMsg, err
+	}
+
+	payload := bytes.NewReader(reqByte)
+	if _, err := d.newRequest(http.MethodPost, webhookUrl, payload); err != nil {
+		return &discordMsg, err
+	}
+	return &discordMsg, nil
+}

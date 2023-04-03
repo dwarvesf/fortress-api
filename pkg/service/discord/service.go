@@ -14,4 +14,7 @@ type IService interface {
 	CreateEvent(event *model.Schedule) (scheduledEvent *discordgo.GuildScheduledEvent, err error)
 	UpdateEvent(event *model.Schedule) (scheduledEvent *discordgo.GuildScheduledEvent, err error)
 	DeleteEvent(event *model.Schedule) error
+
+	// Log discord
+	SendMessage(msg, webhookUrl string) (*model.DiscordMessage, error)
 }
