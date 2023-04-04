@@ -110,6 +110,11 @@ func (b *birthday) BirthdayDailyMessage(c *gin.Context) {
 			Title:   fmt.Sprintf("Prepare gift for %s, %s", birthDateNames, todayDate),
 			Content: fmt.Sprintf("Prepare gift for %s, %s", birthDateNames, todayDate),
 		}
-		b.service.Basecamp.Todo.Create(projectID, todoListID, birthDayTodo)
+		_, err := b.service.Basecamp.Todo.Create(projectID, todoListID, birthDayTodo)
+		if err != nil {
+			b.logger.Error(err, "Error create Basecamp todo")
+			return
+		}
+
 	}
 }
