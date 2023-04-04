@@ -17,6 +17,7 @@ require (
 	github.com/go-testfixtures/testfixtures/v3 v3.8.1
 	github.com/goccy/go-json v0.9.7
 	github.com/golang-jwt/jwt/v4 v4.4.3
+	github.com/golang/mock v1.4.4
 	github.com/google/go-cmp v0.5.9
 	github.com/hashicorp/vault/api v1.8.2
 	github.com/jackc/pgtype v1.12.0
@@ -104,7 +105,6 @@ require (
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
-	github.com/k0kubun/pp v3.0.1+incompatible // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/magiconair/properties v1.8.6 // indirect
 	github.com/mailru/easyjson v0.7.6 // indirect

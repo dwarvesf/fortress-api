@@ -12,6 +12,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/handler/changelog"
 	"github.com/dwarvesf/fortress-api/pkg/handler/client"
 	"github.com/dwarvesf/fortress-api/pkg/handler/dashboard"
+	"github.com/dwarvesf/fortress-api/pkg/handler/dashboard/util"
 	dfupdate "github.com/dwarvesf/fortress-api/pkg/handler/df_update"
 	"github.com/dwarvesf/fortress-api/pkg/handler/digest"
 	"github.com/dwarvesf/fortress-api/pkg/handler/discord"
@@ -84,7 +85,7 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, ctrl *
 		Profile:        profile.New(store, repo, service, logger, cfg),
 		Feedback:       feedback.New(store, repo, service, logger, cfg),
 		Survey:         survey.New(store, repo, service, logger, cfg),
-		Dashboard:      dashboard.New(store, repo, service, logger, cfg),
+		Dashboard:      dashboard.New(store, repo, service, logger, cfg, util.New()),
 		Valuation:      valuation.New(store, repo, service, logger, cfg),
 		Earn:           earn.New(store, repo, service, logger, cfg),
 		TechRadar:      techradar.New(store, repo, service, logger, cfg),
