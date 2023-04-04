@@ -11,6 +11,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/handler/dashboard/errs"
 	"github.com/dwarvesf/fortress-api/pkg/handler/dashboard/request"
+	"github.com/dwarvesf/fortress-api/pkg/handler/dashboard/util"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service"
@@ -24,16 +25,18 @@ type handler struct {
 	logger  logger.Logger
 	repo    store.DBRepo
 	config  *config.Config
+	util    util.IUtil
 }
 
 // New returns a handler
-func New(store *store.Store, repo store.DBRepo, service *service.Service, logger logger.Logger, cfg *config.Config) IHandler {
+func New(store *store.Store, repo store.DBRepo, service *service.Service, logger logger.Logger, cfg *config.Config, u util.IUtil) IHandler {
 	return &handler{
 		store:   store,
 		repo:    repo,
 		service: service,
 		logger:  logger,
 		config:  cfg,
+		util:    u,
 	}
 }
 
@@ -666,7 +669,7 @@ func (h *handler) GetResourceUtilization(c *gin.Context) {
 		"method":  "GetResourceUtilization",
 	})
 
-	res, err := h.store.Dashboard.GetResourceUtilization(h.repo.DB())
+	res, err := h.store.Dashboard.GetResourceUtilization(h.repo.DB(), h.util.TimeNow())
 	if err != nil {
 		l.Error(err, "failed to get resource utilization by year")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
