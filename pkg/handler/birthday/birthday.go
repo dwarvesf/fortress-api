@@ -116,6 +116,5 @@ func (b *birthday) BirthdayDailyMessage(c *gin.Context) {
 			b.logger.Error(err, "Error create Basecamp todo")
 			return
 		}
-
 	}
 }
