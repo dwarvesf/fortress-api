@@ -2,12 +2,13 @@ package birthday
 
 import (
 	"fmt"
-	"github.com/dwarvesf/fortress-api/pkg/service/basecamp/consts"
-	models "github.com/dwarvesf/fortress-api/pkg/service/basecamp/model"
 	"math/rand"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/dwarvesf/fortress-api/pkg/service/basecamp/consts"
+	models "github.com/dwarvesf/fortress-api/pkg/service/basecamp/model"
 
 	"github.com/gin-gonic/gin"
 
