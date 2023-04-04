@@ -33,7 +33,6 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 // BirthdayDailyMessage check if today is birthday of any employee in the system
 // if yes, send birthday message to employee thru discord
 func (b *birthday) BirthdayDailyMessage(c *gin.Context) {
-
 	// check app run mode
 	projectID := consts.OperationID
 	todoListID := consts.BirthdayToDoListID
