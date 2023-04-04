@@ -545,7 +545,7 @@ func (s *store) GetAvailableEmployees(db *gorm.DB) ([]*model.Employee, error) {
 		Find(&employees).Error
 }
 
-func (s *store) GetResourceUtilization(db *gorm.DB) ([]*model.ResourceUtilization, error) {
+func (s *store) GetResourceUtilization(db *gorm.DB, currentDate time.Time) ([]*model.ResourceUtilization, error) {
 	var ru []*model.ResourceUtilization
 
 	query := `
@@ -563,8 +563,8 @@ func (s *store) GetResourceUtilization(db *gorm.DB) ([]*model.ResourceUtilizatio
 			LEFT JOIN project_members pm ON pm.employee_id = e.id
 			LEFT JOIN projects p ON pm.project_id = p.id,
 			generate_series(
-				date_trunc('month', CURRENT_DATE) - INTERVAL '3 month',
-				date_trunc('month', CURRENT_DATE) + INTERVAL '3 month',
+				date_trunc('month', TO_DATE(?, 'YYYY-MM-DD')) - INTERVAL '3 month',
+				date_trunc('month', TO_DATE(?, 'YYYY-MM-DD')) + INTERVAL '3 month',
 				'1 month'
 			) d
 		WHERE e.deleted_at IS NULL
@@ -632,7 +632,7 @@ func (s *store) GetResourceUtilization(db *gorm.DB) ([]*model.ResourceUtilizatio
 	GROUP BY "date"
 	`
 
-	return ru, db.Raw(query, model.OrganizationCodeDwarves).Scan(&ru).Error
+	return ru, db.Raw(query, currentDate, currentDate, model.OrganizationCodeDwarves).Scan(&ru).Error
 }
 
 func (s *store) TotalWorkUnitDistribution(db *gorm.DB) (*model.TotalWorkUnitDistribution, error) {
