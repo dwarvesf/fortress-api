@@ -134,7 +134,7 @@ func (d *discordClient) SendMessage(msg, webhookUrl string) (*model.DiscordMessa
 	}
 
 	payload := bytes.NewReader(reqByte)
-	if _, err := d.newRequest(http.MethodPost, webhookUrl, payload); err != nil {
+	if _, err := d.session.Client.Post(webhookUrl, "application/json", payload); err != nil {
 		return &discordMsg, err
 	}
 	return &discordMsg, nil
