@@ -1,6 +1,12 @@
 {
     "data": [
         {
+            "date": "2022-12-01T00:00:00Z",
+            "staffed": 0,
+            "internal": 4,
+            "available": 14
+        },
+        {
             "date": "2023-01-01T00:00:00Z",
             "staffed": 0,
             "internal": 4,
@@ -32,12 +38,6 @@
         },
         {
             "date": "2023-06-01T00:00:00Z",
-            "staffed": 0,
-            "internal": 4,
-            "available": 14
-        },
-        {
-            "date": "2023-07-01T00:00:00Z",
             "staffed": 0,
             "internal": 4,
             "available": 14
