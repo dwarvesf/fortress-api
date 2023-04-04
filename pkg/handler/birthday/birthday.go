@@ -7,17 +7,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dwarvesf/fortress-api/pkg/service/basecamp/consts"
-	models "github.com/dwarvesf/fortress-api/pkg/service/basecamp/model"
-
-	"github.com/gin-gonic/gin"
-
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service"
+	"github.com/dwarvesf/fortress-api/pkg/service/basecamp/consts"
+	models "github.com/dwarvesf/fortress-api/pkg/service/basecamp/model"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/store/employee"
+	"github.com/gin-gonic/gin"
 )
 
 type birthday struct {
@@ -35,14 +33,16 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 // BirthdayDailyMessage check if today is birthday of any employee in the system
 // if yes, send birthday message to employee thru discord
 func (b *birthday) BirthdayDailyMessage(c *gin.Context) {
+
 	// check app run mode
 	projectID := consts.OperationID
 	todoListID := consts.BirthdayToDoListID
-	runMode := b.config.Env
-	if runMode != "prod" {
+
+	if b.config.Env != "prod" {
 		projectID = consts.PlaygroundID
 		todoListID = consts.PlaygroundBirthdayTodoID
 	}
+
 	//random message pool
 	pool := []string{
 		`Dear %s, we wish you courage and persistence in reaching all your greatest goals. Have a great birthday!`,
@@ -76,18 +76,16 @@ func (b *birthday) BirthdayDailyMessage(c *gin.Context) {
 	// format message if there is user's birthday
 	var names string
 	var birthDateNames []string
-	havingBirthday := false
 	todayDate := time.Now().Format("01/02")
 	for _, employee := range employees {
 		now := time.Now()
 		if now.Day() == employee.DateOfBirth.Day() && now.Month() == employee.DateOfBirth.Month() {
 			names += fmt.Sprintf("<@%s>, ", employee.DiscordID)
 			birthDateNames = append(birthDateNames, employee.FullName)
-			havingBirthday = true
 		}
 	}
 
-	if !havingBirthday {
+	if len(birthDateNames) == 0 {
 		c.JSON(http.StatusOK, gin.H{"message": "no birthday today"})
 		return
 	}
