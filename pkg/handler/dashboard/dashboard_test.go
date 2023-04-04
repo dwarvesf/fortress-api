@@ -8,14 +8,17 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang/mock/gomock"
 	_ "github.com/lib/pq"
 	"github.com/stretchr/testify/require"
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
+	utilMock "github.com/dwarvesf/fortress-api/pkg/handler/dashboard/util/mocks"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/utils/testhelper"
+	"github.com/dwarvesf/fortress-api/pkg/utils/timeutil"
 )
 
 const testToken = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2OTkzMjExNDIsImlkIjoiMjY1NTgzMmUtZjAwOS00YjczLWE1MzUtNjRjM2EyMmU1NThmIiwiYXZhdGFyIjoiaHR0cHM6Ly9zMy1hcC1zb3V0aGVhc3QtMS5hbWF6b25hd3MuY29tL2ZvcnRyZXNzLWltYWdlcy81MTUzNTc0Njk1NjYzOTU1OTQ0LnBuZyIsImVtYWlsIjoidGhhbmhAZC5mb3VuZGF0aW9uIiwicGVybWlzc2lvbnMiOlsiZW1wbG95ZWVzLnJlYWQiXSwidXNlcl9pbmZvIjpudWxsfQ.GENGPEucSUrILN6tHDKxLMtj0M0REVMUPC7-XhDMpGM"
@@ -25,6 +28,11 @@ func TestHandler_GetProjectSizes(t *testing.T) {
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg, nil, nil)
 	storeMock := store.New()
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	uMock := utilMock.NewMockIUtil(ctrl)
+
 	tests := []struct {
 		name             string
 		query            string
@@ -47,7 +55,7 @@ func TestHandler_GetProjectSizes(t *testing.T) {
 				ctx.Request.Header.Set("Authorization", testToken)
 				ctx.Request.URL.RawQuery = tt.query
 
-				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg, uMock)
 				h.GetProjectSizes(ctx)
 
 				require.Equal(t, tt.wantCode, w.Code)
@@ -112,6 +120,10 @@ func TestHandler_GetWorkSurveys(t *testing.T) {
 	serviceMock := service.New(&cfg, nil, nil)
 	storeMock := store.New()
 
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	uMock := utilMock.NewMockIUtil(ctrl)
+
 	tests := []struct {
 		name             string
 		wantCode         int
@@ -141,7 +153,7 @@ func TestHandler_GetWorkSurveys(t *testing.T) {
 				ctx.Request.URL.RawQuery = tt.query
 				ctx.Request.Header.Set("Authorization", testToken)
 
-				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg, uMock)
 				h.GetWorkSurveys(ctx)
 				require.Equal(t, tt.wantCode, w.Code)
 				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
@@ -158,6 +170,10 @@ func TestHandler_GetActionItemReports(t *testing.T) {
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg, nil, nil)
 	storeMock := store.New()
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	uMock := utilMock.NewMockIUtil(ctrl)
 
 	tests := []struct {
 		name             string
@@ -188,7 +204,7 @@ func TestHandler_GetActionItemReports(t *testing.T) {
 				ctx.Request.URL.RawQuery = tt.query
 				ctx.Request.Header.Set("Authorization", testToken)
 
-				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg, uMock)
 				h.GetActionItemReports(ctx)
 				require.Equal(t, tt.wantCode, w.Code)
 				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
@@ -205,6 +221,10 @@ func TestHandler_GetEngineeringHealth(t *testing.T) {
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg, nil, nil)
 	storeMock := store.New()
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	uMock := utilMock.NewMockIUtil(ctrl)
 
 	tests := []struct {
 		name             string
@@ -235,7 +255,7 @@ func TestHandler_GetEngineeringHealth(t *testing.T) {
 				ctx.Request.URL.RawQuery = tt.query
 				ctx.Request.Header.Set("Authorization", testToken)
 
-				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg, uMock)
 				h.GetEngineeringHealth(ctx)
 				require.Equal(t, tt.wantCode, w.Code)
 				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
@@ -252,6 +272,10 @@ func TestHandler_GetAudits(t *testing.T) {
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg, nil, nil)
 	storeMock := store.New()
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	uMock := utilMock.NewMockIUtil(ctrl)
 
 	tests := []struct {
 		name             string
@@ -282,7 +306,7 @@ func TestHandler_GetAudits(t *testing.T) {
 				ctx.Request.URL.RawQuery = tt.query
 				ctx.Request.Header.Set("Authorization", testToken)
 
-				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg, uMock)
 				h.GetAudits(ctx)
 				require.Equal(t, tt.wantCode, w.Code)
 				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
@@ -299,6 +323,10 @@ func TestHandler_GetActionItemSquashReports(t *testing.T) {
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg, nil, nil)
 	storeMock := store.New()
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	uMock := utilMock.NewMockIUtil(ctrl)
 
 	tests := []struct {
 		name             string
@@ -335,7 +363,7 @@ func TestHandler_GetActionItemSquashReports(t *testing.T) {
 				ctx.Request.URL.RawQuery = tt.query
 				ctx.Request.Header.Set("Authorization", testToken)
 
-				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg, uMock)
 				h.GetActionItemSquashReports(ctx)
 				require.Equal(t, tt.wantCode, w.Code)
 				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
@@ -352,6 +380,10 @@ func TestHandler_GetSummary(t *testing.T) {
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg, nil, nil)
 	storeMock := store.New()
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	uMock := utilMock.NewMockIUtil(ctrl)
 
 	tests := []struct {
 		name             string
@@ -375,7 +407,7 @@ func TestHandler_GetSummary(t *testing.T) {
 				ctx.Request.Header.Set("Authorization", testToken)
 				ctx.Request.URL.RawQuery = tt.query
 
-				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg, uMock)
 				h.GetSummary(ctx)
 
 				require.Equal(t, tt.wantCode, w.Code)
@@ -393,6 +425,10 @@ func TestHandler_GetResourcesAvailability(t *testing.T) {
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg, nil, nil)
 	storeMock := store.New()
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	uMock := utilMock.NewMockIUtil(ctrl)
 
 	tests := []struct {
 		name             string
@@ -415,7 +451,7 @@ func TestHandler_GetResourcesAvailability(t *testing.T) {
 				ctx.Request = httptest.NewRequest(http.MethodGet, "/api/v1/dashboards/resources/availabilities", nil)
 				ctx.Request.Header.Set("Authorization", testToken)
 
-				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg, uMock)
 				h.GetResourcesAvailability(ctx)
 				require.Equal(t, tt.wantCode, w.Code)
 				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
@@ -432,6 +468,10 @@ func TestHandler_GetEngagementInfo(t *testing.T) {
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg, nil, nil)
 	storeMock := store.New()
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	uMock := utilMock.NewMockIUtil(ctrl)
 
 	tests := []struct {
 		name             string
@@ -460,7 +500,7 @@ func TestHandler_GetEngagementInfo(t *testing.T) {
 				ctx.Request = httptest.NewRequest(http.MethodGet, "/api/v1/dashboards/enagagement/info", nil)
 				ctx.Request.Header.Set("Authorization", testToken)
 
-				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg, uMock)
 				h.GetEngagementInfo(ctx)
 				require.Equal(t, tt.wantCode, w.Code)
 				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
@@ -477,6 +517,10 @@ func TestHandler_GetEngagementInfoDetail(t *testing.T) {
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg, nil, nil)
 	storeMock := store.New()
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	uMock := utilMock.NewMockIUtil(ctrl)
 
 	tests := []struct {
 		name             string
@@ -515,7 +559,7 @@ func TestHandler_GetEngagementInfoDetail(t *testing.T) {
 				ctx.Request = httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/dashboards/enagagement/detail?%s", tt.query), nil)
 				ctx.Request.Header.Set("Authorization", testToken)
 
-				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg, uMock)
 				h.GetEngagementInfoDetail(ctx)
 				require.Equal(t, tt.wantCode, w.Code)
 				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
@@ -532,6 +576,13 @@ func TestHandler_GetResourceUtilization(t *testing.T) {
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg, nil, nil)
 	storeMock := store.New()
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	uMock := utilMock.NewMockIUtil(ctrl)
+
+	timeNow, err := timeutil.ParseStringToDate("2023-03-03")
+	require.NoError(t, err)
 
 	tests := []struct {
 		name             string
@@ -553,7 +604,9 @@ func TestHandler_GetResourceUtilization(t *testing.T) {
 				ctx.Request = httptest.NewRequest(http.MethodPost, "/api/v1/dashboards/resources/utilization", nil)
 				ctx.Request.Header.Set("Authorization", testToken)
 
-				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+				uMock.EXPECT().TimeNow().Return(*timeNow).AnyTimes()
+
+				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg, uMock)
 				h.GetResourceUtilization(ctx)
 				require.Equal(t, tt.wantCode, w.Code)
 				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
@@ -570,6 +623,10 @@ func TestHandler_GetWorkUnitDistribution(t *testing.T) {
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg, nil, nil)
 	storeMock := store.New()
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	uMock := utilMock.NewMockIUtil(ctrl)
 
 	tests := []struct {
 		name             string
@@ -619,7 +676,7 @@ func TestHandler_GetWorkUnitDistribution(t *testing.T) {
 				ctx.Request.URL.RawQuery = tt.query
 				ctx.Request.Header.Set("Authorization", testToken)
 
-				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg, uMock)
 				h.GetWorkUnitDistribution(ctx)
 				require.Equal(t, tt.wantCode, w.Code)
 				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
@@ -636,6 +693,10 @@ func TestHandler_GetWorkUnitDistributionSummary(t *testing.T) {
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg, nil, nil)
 	storeMock := store.New()
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	uMock := utilMock.NewMockIUtil(ctrl)
 
 	tests := []struct {
 		name             string
@@ -658,7 +719,7 @@ func TestHandler_GetWorkUnitDistributionSummary(t *testing.T) {
 				ctx.Request = httptest.NewRequest(http.MethodGet, "/api/v1/dashboards/resources/work-unit-distribution-summary", nil)
 				ctx.Request.Header.Set("Authorization", testToken)
 
-				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg, uMock)
 				h.GetWorkUnitDistributionSummary(ctx)
 				require.Equal(t, tt.wantCode, w.Code)
 				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
