@@ -134,8 +134,11 @@ func (d *discordClient) SendMessage(msg, webhookUrl string) (*model.DiscordMessa
 	}
 
 	payload := bytes.NewReader(reqByte)
-	if _, err := d.session.Client.Post(webhookUrl, "application/json", payload); err != nil {
+	res, err := d.session.Client.Post(webhookUrl, "application/json", payload)
+	if err != nil {
 		return &discordMsg, err
 	}
+	defer res.Body.Close()
+
 	return &discordMsg, nil
 }
