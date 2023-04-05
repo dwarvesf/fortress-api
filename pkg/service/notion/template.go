@@ -91,7 +91,7 @@ const MJMLChangelogTemplate = ` <mjml> <mj-head> <mj-title>Changelog Email</mj-t
 
 // MJMLDFUpdateTemplate is the template for the Dwarves Updates email
 const MJMLDFUpdateTemplate = ` <mjml> <mj-head> <mj-title>Changelog Email</mj-title> <mj-attributes> <mj-all font-family="Helvetica, sans-serif"></mj-all> <mj-section padding="0px"></mj-section>
-      <mj-text font-weight="400" font-size="12px" line-height="16px" font-family="helvetica"></mj-text>
+      <mj-text font-weight="400" font-size="13px" line-height="16px" font-family="helvetica"></mj-text>
     </mj-attributes>
   </mj-head>
   <mj-body>
