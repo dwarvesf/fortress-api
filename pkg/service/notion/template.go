@@ -91,7 +91,7 @@ const MJMLChangelogTemplate = ` <mjml> <mj-head> <mj-title>Changelog Email</mj-t
 
 // MJMLDFUpdateTemplate is the template for the Dwarves Updates email
 const MJMLDFUpdateTemplate = ` <mjml> <mj-head> <mj-title>Changelog Email</mj-title> <mj-attributes> <mj-all font-family="Helvetica, sans-serif"></mj-all> <mj-section padding="0px"></mj-section>
-      <mj-text font-weight="400" font-size="13px" line-height="16px" font-family="helvetica"></mj-text>
+      <mj-text font-weight="400" font-size="14px" line-height="18px" font-family="helvetica"></mj-text>
     </mj-attributes>
   </mj-head>
   <mj-body>
@@ -122,9 +122,7 @@ const MJMLDFUpdateTemplate = ` <mjml> <mj-head> <mj-title>Changelog Email</mj-ti
             margin-top: 10px;
             margin-bottom: 10px;
             color: #222222;">You're receiving this because we
-                would love to have you as a part of the journey. If
-                you don't want to be on the list, you can
-                unsubscribe.</p>
+                would love to have you as a part of the journey. If you don't want to be on the list, reply this email with "Unsubscribe".</p>
             </td>
           </tr>
         </mj-table>
