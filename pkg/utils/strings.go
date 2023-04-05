@@ -49,8 +49,8 @@ func RemoveAllSpace(str string) string {
 
 func HasDomain(str string) bool {
 	u, err := url.Parse(str)
-	if err != nil || u.Scheme == "mailto" {
-		return false
+	if u.Scheme == "mailto" {
+		return true
 	}
 	return err == nil && u.Scheme != "" && u.Host != "" && regexp.MustCompile(`^[^.]+\.[^.]+(\.[^.]+)*$`).MatchString(u.Host)
 }
