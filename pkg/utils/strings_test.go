@@ -53,7 +53,7 @@ func TestHasDomain(t *testing.T) {
 		{"https://example..com", false},
 		{"ftp://example.com", true},
 		{"not a url", false},
-		{"mailto:test@example.com", false},
+		{"mailto:test@example.com", true},
 	}
 
 	for _, tc := range testCases {
