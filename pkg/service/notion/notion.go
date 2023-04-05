@@ -41,7 +41,7 @@ func (n *notionService) GetBlock(pageID string) (blockResponse nt.Block, err err
 // ToChangelogMJML implements Service
 func (n *notionService) ToChangelogMJML(blocks []nt.Block, email model.Email) (string, error) {
 	var resutl string
-	for _, block := range blocks {
+	for i, block := range blocks {
 		switch v := block.(type) {
 		case *nt.Heading1Block:
 			// get array of plain text
@@ -106,28 +106,49 @@ func (n *notionService) ToChangelogMJML(blocks []nt.Block, email model.Email) (s
 			for _, text := range v.RichText {
 				plainText = append(plainText, text.PlainText)
 			}
-			resutl = resutl + fmt.Sprintf(`<mj-text padding-bottom="0px" padding-top="0px">
-			<ul>
-			  <li> 
-				%s
-			  </li>
-			</ul>
-	</mj-text>`, strings.Join(plainText, " "))
 
-			for _, child := range v.Children {
-				switch child := child.(type) {
-				case *nt.BulletedListItemBlock:
-					var plainTextChild []string
-					for _, textChild := range child.RichText {
-						plainTextChild = append(plainTextChild, textChild.PlainText)
+			// if first block
+			if i == 0 {
+				resutl = resutl + fmt.Sprintf(`<mj-text padding="0px 0px">
+							<ul>
+								  <li style="margin: 4px 0px;"> 
+									%s
+								  </li>`, strings.Join(plainText, " "))
+				resutl = handleNestedBulletText(v, resutl)
+			} else if i == len(blocks)-1 { // if last block
+				resutl = resutl + fmt.Sprintf(`
+								  <li style="margin: 4px 0px;"> 
+									%s
+								  </li>
+							</ul>
+						</mj-text>`, strings.Join(plainText, " "))
+				resutl = handleNestedBulletText(v, resutl)
+			} else { // handle block in between first and last block
+				// if block before this is a bullet list
+				if _, ok := blocks[i-1].(*nt.BulletedListItemBlock); ok {
+					if _, ok := blocks[i+1].(*nt.BulletedListItemBlock); ok { // and block after this is a bullet list
+						resutl = resutl + fmt.Sprintf(`
+								  <li style="margin: 4px 0px;"> 
+									%s
+								  </li>
+						`, strings.Join(plainText, " "))
+						resutl = handleNestedBulletText(v, resutl)
+					} else { // and block after this is not a bullet list
+						resutl = resutl + fmt.Sprintf(`
+								  <li style="margin: 4px 0px;"> 
+									%s
+								  </li>
+							</ul>
+						</mj-text>`, strings.Join(plainText, " "))
+						resutl = handleNestedBulletText(v, resutl)
 					}
-					resutl = resutl + fmt.Sprintf(`<mj-text padding-bottom="0px" padding-top="0px" padding-left="45px">
-			<ul>
-			  <li> 
-				%s
-			  </li>
-			</ul>
-	</mj-text>`, strings.Join(plainTextChild, " "))
+				} else { // if block before this is not a bullet list
+					resutl = resutl + fmt.Sprintf(`<mj-text padding="0px 0px">
+							<ul>
+								  <li style="margin: 4px 0px;"> 
+									%s
+								  </li>`, strings.Join(plainText, " "))
+					resutl = handleNestedBulletText(v, resutl)
 				}
 			}
 		case *nt.ImageBlock:
@@ -139,6 +160,26 @@ func (n *notionService) ToChangelogMJML(blocks []nt.Block, email model.Email) (s
 		}
 	}
 	return resutl, nil
+}
+
+func handleNestedBulletText(v *nt.BulletedListItemBlock, resutl string) string {
+	for _, child := range v.Children {
+		switch child := child.(type) {
+		case *nt.BulletedListItemBlock:
+			var plainTextChild []string
+			for _, textChild := range child.RichText {
+				plainTextChild = append(plainTextChild, textChild.PlainText)
+			}
+			resutl = resutl + fmt.Sprintf(`<mj-text padding-bottom="0px" padding-top="0px" padding-left="45px">
+			<ul>
+			  <li> 
+				%s
+			  </li>
+			</ul>
+	</mj-text>`, strings.Join(plainTextChild, " "))
+		}
+	}
+	return resutl
 }
 
 func (n *notionService) FindClientPageForChangelog(clientID string) (nt.Page, error) {
