@@ -20,6 +20,11 @@ func (s *store) One(db *gorm.DB, id string) (*model.Invoice, error) {
 	var invoice *model.Invoice
 	return invoice, db.Where("id = ?", id).
 		Preload("Project").
+		Preload("Project.Heads", "deleted_at IS NULL AND (end_date IS NULL OR end_date > now())").
+		Preload("Project.Heads.Employee", "deleted_at IS NULL").
+		Preload("Project.BankAccount", "deleted_at IS NULL").
+		Preload("Project.BankAccount.Currency", "deleted_at IS NULL").
+		Preload("Project.Organization", "deleted_at IS NULL").
 		First(&invoice).Error
 }
 

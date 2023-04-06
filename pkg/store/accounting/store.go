@@ -6,7 +6,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/model"
 )
 
-// Service implement calendar method
+// IStore implement calendar method
 type IStore interface {
 	CreateTransaction(db *gorm.DB, transaction *model.AccountingTransaction) error
 	GetAccountingTransactions(db *gorm.DB) ([]model.AccountingTransaction, error)

@@ -24,6 +24,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/store/dashboard"
 	"github.com/dwarvesf/fortress-api/pkg/store/employee"
 	"github.com/dwarvesf/fortress-api/pkg/store/employeechapter"
+	"github.com/dwarvesf/fortress-api/pkg/store/employeecommission"
 	"github.com/dwarvesf/fortress-api/pkg/store/employeeeventquestion"
 	"github.com/dwarvesf/fortress-api/pkg/store/employeeeventreviewer"
 	"github.com/dwarvesf/fortress-api/pkg/store/employeeeventtopic"
@@ -40,6 +41,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/store/permission"
 	"github.com/dwarvesf/fortress-api/pkg/store/position"
 	"github.com/dwarvesf/fortress-api/pkg/store/project"
+	"github.com/dwarvesf/fortress-api/pkg/store/projectcommissionconfig"
 	"github.com/dwarvesf/fortress-api/pkg/store/projecthead"
 	"github.com/dwarvesf/fortress-api/pkg/store/projectmember"
 	"github.com/dwarvesf/fortress-api/pkg/store/projectmemberposition"
@@ -61,123 +63,127 @@ import (
 )
 
 type Store struct {
-	Employee              employee.IStore
-	Expense               expense.IStore
-	Recruitment           recruitment.IStore
-	Seniority             seniority.IStore
-	Chapter               chapter.IStore
-	Position              position.IStore
-	Permission            permission.IStore
-	Country               country.IStore
-	Role                  role.IStore
-	Project               project.IStore
-	ProjectHead           projecthead.IStore
-	ProjectMember         projectmember.IStore
-	ProjectMemberPosition projectmemberposition.IStore
-	ProjectSlot           projectslot.IStore
-	ProjectSlotPosition   projectslotposition.IStore
-	Stack                 stack.IStore
-	EmployeePosition      employeeposition.IStore
-	EmployeeRole          employeerole.IStore
-	EmployeeStack         employeestack.IStore
-	EmployeeChapter       employeechapter.IStore
-	ProjectStack          projectstack.IStore
-	Content               content.IStore
-	WorkUnit              workunit.IStore
-	WorkUnitMember        workunitmember.IStore
-	WorkUnitStack         workunitstack.IStore
-	EmployeeEventTopic    employeeeventtopic.IStore
-	Question              question.IStore
-	Payroll               payroll.IStore
-	CachedPayroll         cachedpayroll.IStore
-	Bonus                 bonus.IStore
-	Commission            commission.IStore
-	EmployeeEventQuestion employeeeventquestion.IStore
-	FeedbackEvent         feedbackevent.IStore
-	EmployeeEventReviewer employeeeventreviewer.IStore
-	Dashboard             dashboard.IStore
-	Valuation             valuation.IStore
-	AuditCycle            auditcycle.IStore
-	Audit                 audit.IStore
-	ActionItem            actionitem.IStore
-	AuditItem             audititem.IStore
-	AuditParticipant      auditparticipant.IStore
-	Organization          organization.IStore
-	EmployeeOrganization  employeeorganization.IStore
-	AuditActionItem       auditactionitem.IStore
-	ActionItemSnapshot    actionitemsnapshot.IStore
-	SocialAccount         socialaccount.IStore
-	BankAccount           bankaccount.IStore
-	Invoice               invoice.IStore
-	InvoiceNumberCaching  invoicenumbercaching.IStore
-	ProjectNotion         projectnotion.IStore
-	Schedule              schedule.IStore
-	Client                client.IStore
-	ClientContact         clientcontact.IStore
-	APIKey                apikey.IStore
-	APIKeyRole            apikeyrole.IStore
-	Accounting            accounting.IStore
-	Currency              currency.IStore
+	Accounting              accounting.IStore
+	ActionItem              actionitem.IStore
+	ActionItemSnapshot      actionitemsnapshot.IStore
+	APIKey                  apikey.IStore
+	APIKeyRole              apikeyrole.IStore
+	Audit                   audit.IStore
+	AuditActionItem         auditactionitem.IStore
+	AuditCycle              auditcycle.IStore
+	AuditItem               audititem.IStore
+	AuditParticipant        auditparticipant.IStore
+	BankAccount             bankaccount.IStore
+	Bonus                   bonus.IStore
+	CachedPayroll           cachedpayroll.IStore
+	Chapter                 chapter.IStore
+	Client                  client.IStore
+	ClientContact           clientcontact.IStore
+	Commission              commission.IStore
+	Content                 content.IStore
+	Country                 country.IStore
+	Currency                currency.IStore
+	Dashboard               dashboard.IStore
+	Employee                employee.IStore
+	EmployeeChapter         employeechapter.IStore
+	EmployeeCommission      employeecommission.IStore
+	EmployeeEventQuestion   employeeeventquestion.IStore
+	EmployeeEventReviewer   employeeeventreviewer.IStore
+	EmployeeEventTopic      employeeeventtopic.IStore
+	EmployeeOrganization    employeeorganization.IStore
+	EmployeePosition        employeeposition.IStore
+	EmployeeRole            employeerole.IStore
+	EmployeeStack           employeestack.IStore
+	Expense                 expense.IStore
+	FeedbackEvent           feedbackevent.IStore
+	Invoice                 invoice.IStore
+	InvoiceNumberCaching    invoicenumbercaching.IStore
+	Organization            organization.IStore
+	Payroll                 payroll.IStore
+	Permission              permission.IStore
+	Position                position.IStore
+	Project                 project.IStore
+	ProjectCommissionConfig projectcommissionconfig.IStore
+	ProjectHead             projecthead.IStore
+	ProjectMember           projectmember.IStore
+	ProjectMemberPosition   projectmemberposition.IStore
+	ProjectNotion           projectnotion.IStore
+	ProjectSlot             projectslot.IStore
+	ProjectSlotPosition     projectslotposition.IStore
+	ProjectStack            projectstack.IStore
+	Question                question.IStore
+	Recruitment             recruitment.IStore
+	Role                    role.IStore
+	Schedule                schedule.IStore
+	Seniority               seniority.IStore
+	SocialAccount           socialaccount.IStore
+	Stack                   stack.IStore
+	Valuation               valuation.IStore
+	WorkUnit                workunit.IStore
+	WorkUnitMember          workunitmember.IStore
+	WorkUnitStack           workunitstack.IStore
 }
 
 func New() *Store {
 	return &Store{
-		Employee:              employee.New(),
-		Expense:               expense.New(),
-		Recruitment:           recruitment.New(),
-		Seniority:             seniority.New(),
-		Chapter:               chapter.New(),
-		Position:              position.New(),
-		Permission:            permission.New(),
-		Country:               country.New(),
-		Role:                  role.New(),
-		Project:               project.New(),
-		ProjectHead:           projecthead.New(),
-		ProjectMember:         projectmember.New(),
-		ProjectMemberPosition: projectmemberposition.New(),
-		ProjectSlot:           projectslot.New(),
-		ProjectSlotPosition:   projectslotposition.New(),
-		Stack:                 stack.New(),
-		EmployeePosition:      employeeposition.New(),
-		EmployeeRole:          employeerole.New(),
-		EmployeeStack:         employeestack.New(),
-		EmployeeChapter:       employeechapter.New(),
-		ProjectStack:          projectstack.New(),
-		Content:               content.New(),
-		WorkUnit:              workunit.New(),
-		WorkUnitMember:        workunitmember.New(),
-		WorkUnitStack:         workunitstack.New(),
-		EmployeeEventTopic:    employeeeventtopic.New(),
-		Question:              question.New(),
-		Payroll:               payroll.New(),
-		CachedPayroll:         cachedpayroll.New(),
-		Bonus:                 bonus.New(),
-		Commission:            commission.New(),
-		EmployeeEventQuestion: employeeeventquestion.New(),
-		FeedbackEvent:         feedbackevent.New(),
-		EmployeeEventReviewer: employeeeventreviewer.New(),
-		Dashboard:             dashboard.New(),
-		Valuation:             valuation.New(),
-		AuditCycle:            auditcycle.New(),
-		Audit:                 audit.New(),
-		ActionItem:            actionitem.New(),
-		AuditItem:             audititem.New(),
-		AuditParticipant:      auditparticipant.New(),
-		Organization:          organization.New(),
-		EmployeeOrganization:  employeeorganization.New(),
-		AuditActionItem:       auditactionitem.New(),
-		ActionItemSnapshot:    actionitemsnapshot.New(),
-		SocialAccount:         socialaccount.New(),
-		BankAccount:           bankaccount.New(),
-		Invoice:               invoice.New(),
-		InvoiceNumberCaching:  invoicenumbercaching.New(),
-		ProjectNotion:         projectnotion.New(),
-		Schedule:              schedule.New(),
-		Client:                client.New(),
-		ClientContact:         clientcontact.New(),
-		APIKey:                apikey.New(),
-		APIKeyRole:            apikeyrole.New(),
-		Accounting:            accounting.New(),
-		Currency:              currency.New(),
+		Accounting:              accounting.New(),
+		ActionItem:              actionitem.New(),
+		ActionItemSnapshot:      actionitemsnapshot.New(),
+		APIKey:                  apikey.New(),
+		APIKeyRole:              apikeyrole.New(),
+		Audit:                   audit.New(),
+		AuditActionItem:         auditactionitem.New(),
+		AuditCycle:              auditcycle.New(),
+		AuditItem:               audititem.New(),
+		AuditParticipant:        auditparticipant.New(),
+		BankAccount:             bankaccount.New(),
+		Bonus:                   bonus.New(),
+		CachedPayroll:           cachedpayroll.New(),
+		Chapter:                 chapter.New(),
+		Client:                  client.New(),
+		ClientContact:           clientcontact.New(),
+		Commission:              commission.New(),
+		Content:                 content.New(),
+		Country:                 country.New(),
+		Currency:                currency.New(),
+		Dashboard:               dashboard.New(),
+		Employee:                employee.New(),
+		EmployeeChapter:         employeechapter.New(),
+		EmployeeCommission:      employeecommission.New(),
+		EmployeeEventQuestion:   employeeeventquestion.New(),
+		EmployeeEventReviewer:   employeeeventreviewer.New(),
+		EmployeeEventTopic:      employeeeventtopic.New(),
+		EmployeeOrganization:    employeeorganization.New(),
+		EmployeePosition:        employeeposition.New(),
+		EmployeeRole:            employeerole.New(),
+		EmployeeStack:           employeestack.New(),
+		Expense:                 expense.New(),
+		FeedbackEvent:           feedbackevent.New(),
+		Invoice:                 invoice.New(),
+		InvoiceNumberCaching:    invoicenumbercaching.New(),
+		Organization:            organization.New(),
+		Payroll:                 payroll.New(),
+		Permission:              permission.New(),
+		Position:                position.New(),
+		Project:                 project.New(),
+		ProjectCommissionConfig: projectcommissionconfig.New(),
+		ProjectHead:             projecthead.New(),
+		ProjectMember:           projectmember.New(),
+		ProjectMemberPosition:   projectmemberposition.New(),
+		ProjectNotion:           projectnotion.New(),
+		ProjectSlot:             projectslot.New(),
+		ProjectSlotPosition:     projectslotposition.New(),
+		ProjectStack:            projectstack.New(),
+		Question:                question.New(),
+		Recruitment:             recruitment.New(),
+		Role:                    role.New(),
+		Schedule:                schedule.New(),
+		Seniority:               seniority.New(),
+		SocialAccount:           socialaccount.New(),
+		Stack:                   stack.New(),
+		Valuation:               valuation.New(),
+		WorkUnit:                workunit.New(),
+		WorkUnitMember:          workunitmember.New(),
+		WorkUnitStack:           workunitstack.New(),
 	}
 }
