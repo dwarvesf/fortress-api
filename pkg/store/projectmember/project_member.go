@@ -115,7 +115,8 @@ func (s *store) GetAssignedMembers(db *gorm.DB, projectID string, status string,
 		`, timeNow, timeNow, model.HeadPositionTechnicalLead).
 		Where("project_members.deleted_at IS NULL AND project_members.project_id = ?", projectID).
 		Order("project_members.end_date DESC, ph.created_at, s.level DESC").
-		Preload("Employee", "deleted_at IS NULL")
+		Preload("Employee", "deleted_at IS NULL").
+		Preload("Employee.Referrer", "deleted_at IS NULL")
 
 	switch status {
 	case model.ProjectMemberStatusOnBoarding.String():

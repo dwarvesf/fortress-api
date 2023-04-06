@@ -18,7 +18,7 @@ func New() IStore {
 }
 
 func (s *accountingService) GetAccountingTransactions(db *gorm.DB) ([]model.AccountingTransaction, error) {
-	transactions := []model.AccountingTransaction{}
+	var transactions []model.AccountingTransaction
 	return transactions, db.
 		Joins(`left join accounting_categories on accounting_transactions.category = accounting_categories.name`).
 		Preload("CurrencyInfo").
@@ -46,7 +46,7 @@ func (s *accountingService) DeleteTransaction(db *gorm.DB, t *model.AccountingTr
 }
 
 func (s *accountingService) GetAccountingCategories(db *gorm.DB) ([]model.AccountingCategory, error) {
-	categories := []model.AccountingCategory{}
+	var categories []model.AccountingCategory
 	return categories, db.Find(&categories).Error
 }
 
@@ -55,8 +55,8 @@ func (s *accountingService) CreateMultipleTransaction(db *gorm.DB, transactions 
 		return nil
 	}
 
-	valueStrings := []string{}
-	valueArgs := []interface{}{}
+	var valueStrings []string
+	var valueArgs []interface{}
 
 	for _, v := range transactions {
 		valueStrings = append(valueStrings, "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")

@@ -34,9 +34,10 @@ const (
 	AccountingCommHiring  = "Commission for Hiring"
 )
 
-// Accounting --
+// AccountingTransaction --
 type AccountingTransaction struct {
 	BaseModel
+
 	Name             string         `json:"name"`
 	Date             *time.Time     `json:"date"`
 	Amount           float64        `json:"amount"`

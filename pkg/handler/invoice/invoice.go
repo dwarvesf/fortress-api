@@ -2,6 +2,7 @@ package invoice
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"math"
@@ -671,50 +672,48 @@ func (h *handler) UpdateStatus(c *gin.Context) {
 		return
 	}
 
-	// Start Transaction
-	tx, done := h.repo.NewTransaction()
-
 	switch req.Status {
 	case model.InvoiceStatusError:
-		_, err = h.markInvoiceAsError(tx.DB(), l, invoice)
+		_, err = h.markInvoiceAsError(l, invoice)
 	case model.InvoiceStatusPaid:
-		_, err = h.markInvoiceAsPaid(tx.DB(), l, invoice, req.SendThankYouEmail)
+		_, err = h.markInvoiceAsPaid(l, invoice, req.SendThankYouEmail)
 	default:
-		_, err = h.store.Invoice.UpdateSelectedFieldsByID(tx.DB(), invoice.ID.String(), *invoice, "status")
+		_, err = h.store.Invoice.UpdateSelectedFieldsByID(h.repo.DB(), invoice.ID.String(), *invoice, "status")
 	}
 	if err != nil {
 		l.Error(err, "failed to update invoice")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), req, ""))
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req, ""))
 		return
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, done(nil), nil, "ok"))
+	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))
 }
 
-func (h *handler) markInvoiceAsError(db *gorm.DB, l logger.Logger, invoice *model.Invoice) (*model.Invoice, error) {
+func (h *handler) markInvoiceAsError(l logger.Logger, invoice *model.Invoice) (*model.Invoice, error) {
+	tx, done := h.repo.NewTransaction()
 	invoice.Status = model.InvoiceStatusError
-	iv, err := h.store.Invoice.UpdateSelectedFieldsByID(db, invoice.ID.String(), *invoice, "status")
+	iv, err := h.store.Invoice.UpdateSelectedFieldsByID(tx.DB(), invoice.ID.String(), *invoice, "status")
 	if err != nil {
 		l.Errorf(err, "failed to update invoice status to error")
-		return nil, err
+		return nil, done(err)
 	}
 
-	err = h.store.InvoiceNumberCaching.UnCountErrorInvoice(db, *invoice.InvoicedAt)
+	err = h.store.InvoiceNumberCaching.UnCountErrorInvoice(tx.DB(), *invoice.InvoicedAt)
 	if err != nil {
 		l.Errorf(err, "failed to un-count error invoice")
-		return nil, err
+		return nil, done(err)
 	}
 
 	if err := h.markInvoiceTodoAsError(invoice); err != nil {
-		return nil, err
+		return nil, done(err)
 	}
 
 	if err := h.service.GoogleDrive.MoveInvoicePDF(invoice, "Sent", "Error"); err != nil {
 		l.Errorf(err, "failed to upload invoice pdf to google drive")
-		return nil, err
+		return nil, done(err)
 	}
 
-	return iv, nil
+	return iv, done(nil)
 }
 
 func (h *handler) markInvoiceTodoAsError(invoice *model.Invoice) error {
@@ -739,7 +738,7 @@ type processPaidInvoiceRequest struct {
 	SentThankYouMail bool
 }
 
-func (h *handler) markInvoiceAsPaid(db *gorm.DB, l logger.Logger, invoice *model.Invoice, sendThankYouEmail bool) (*model.Invoice, error) {
+func (h *handler) markInvoiceAsPaid(l logger.Logger, invoice *model.Invoice, sendThankYouEmail bool) (*model.Invoice, error) {
 	if invoice.Status != model.InvoiceStatusSent && invoice.Status != model.InvoiceStatusOverdue {
 		err := fmt.Errorf(`unable to update invoice status, invoice have status %v`, invoice.Status)
 		l.Errorf(err, "failed to update invoice", "invoiceID", invoice.ID.String())
@@ -758,7 +757,7 @@ func (h *handler) markInvoiceAsPaid(db *gorm.DB, l logger.Logger, invoice *model
 		l.Errorf(err, "failed to complete invoice todo", "invoiceID", invoice.ID.String())
 	}
 
-	h.processPaidInvoice(db, l, &processPaidInvoiceRequest{
+	h.processPaidInvoice(l, &processPaidInvoiceRequest{
 		Invoice:          invoice,
 		InvoiceTodoID:    todoID,
 		InvoiceBucketID:  bucketID,
@@ -768,18 +767,24 @@ func (h *handler) markInvoiceAsPaid(db *gorm.DB, l logger.Logger, invoice *model
 	return invoice, nil
 }
 
-func (h *handler) processPaidInvoice(db *gorm.DB, l logger.Logger, req *processPaidInvoiceRequest) {
+func (h *handler) processPaidInvoice(l logger.Logger, req *processPaidInvoiceRequest) {
 	wg := &sync.WaitGroup{}
 	wg.Add(3)
 
-	go h.processPaidInvoiceData(db, l, wg, req)
+	go func() {
+		_ = h.processPaidInvoiceData(l, wg, req)
+	}()
+
 	go h.sendThankYouEmail(l, wg, req)
 	go h.movePaidInvoiceGDrive(l, wg, req)
 
 	wg.Wait()
 }
 
-func (h *handler) processPaidInvoiceData(db *gorm.DB, l logger.Logger, wg *sync.WaitGroup, req *processPaidInvoiceRequest) {
+func (h *handler) processPaidInvoiceData(l logger.Logger, wg *sync.WaitGroup, req *processPaidInvoiceRequest) error {
+	// Start Transaction
+	tx, done := h.repo.NewTransaction()
+
 	msg := bcConst.CommentUpdateInvoiceFailed
 	msgType := bcModel.CommentMsgTypeFailed
 	defer func() {
@@ -787,18 +792,67 @@ func (h *handler) processPaidInvoiceData(db *gorm.DB, l logger.Logger, wg *sync.
 		h.worker.Enqueue(bcModel.BasecampCommentMsg, h.service.Basecamp.BuildCommentMessage(req.InvoiceBucketID, req.InvoiceTodoID, msg, msgType))
 	}()
 
-	//TODO: calculate commission
-
 	now := time.Now()
 	req.Invoice.PaidAt = &now
-	_, err := h.store.Invoice.UpdateSelectedFieldsByID(db, req.Invoice.ID.String(), *req.Invoice, "status", "paid_at")
+	_, err := h.store.Invoice.UpdateSelectedFieldsByID(tx.DB(), req.Invoice.ID.String(), *req.Invoice, "status", "paid_at")
 	if err != nil {
 		l.Errorf(err, "failed to update invoice status to paid", "invoice", req.Invoice)
-		return
+		return done(err)
+	}
+
+	_, err = h.storeCommission(tx.DB(), l, req.Invoice)
+	if err != nil {
+		l.Errorf(err, "failed to store invoice commission", "invoice", req.Invoice)
+		return done(err)
+	}
+
+	m := model.AccountingMetadata{
+		Source: "invoice",
+		ID:     req.Invoice.ID.String(),
+	}
+
+	bonusBytes, err := json.Marshal(&m)
+	if err != nil {
+		l.Errorf(err, "failed to process invoice accounting metadata", "invoiceNumber", req.Invoice.Number)
+		return done(err)
+	}
+
+	projectOrg := ""
+	if req.Invoice.Project.Organization != nil {
+		projectOrg = req.Invoice.Project.Organization.Name
+	}
+
+	currencyName := "VND"
+	currencyID := model.UUID{}
+	if req.Invoice.Project.BankAccount.Currency != nil {
+		currencyName = req.Invoice.Project.BankAccount.Currency.Name
+		currencyID = req.Invoice.Project.BankAccount.Currency.ID
+	}
+
+	accountingTxn := &model.AccountingTransaction{
+		Name:             req.Invoice.Number,
+		Amount:           float64(req.Invoice.Total),
+		Date:             &now,
+		ConversionAmount: model.VietnamDong(req.Invoice.ConversionAmount),
+		Organization:     projectOrg,
+		Category:         model.AccountingIn,
+		Type:             model.AccountingIncome,
+		Currency:         currencyName,
+		CurrencyID:       &currencyID,
+		ConversionRate:   req.Invoice.ConversionRate,
+		Metadata:         bonusBytes,
+	}
+
+	err = h.store.Accounting.CreateTransaction(tx.DB(), accountingTxn)
+	if err != nil {
+		l.Errorf(err, "failed to create accounting transaction", "Accounting Transaction", accountingTxn)
+		return done(err)
 	}
 
 	msg = bcConst.CommentUpdateInvoiceSuccessfully
 	msgType = bcModel.CommentMsgTypeCompleted
+
+	return done(nil)
 }
 
 func (h *handler) sendThankYouEmail(l logger.Logger, wg *sync.WaitGroup, req *processPaidInvoiceRequest) {
@@ -813,22 +867,6 @@ func (h *handler) sendThankYouEmail(l logger.Logger, wg *sync.WaitGroup, req *pr
 	if err != nil {
 		l.Errorf(err, "failed to send invoice thank you mail", "invoice", req.Invoice)
 		msg = h.service.Basecamp.BuildCommentMessage(req.InvoiceBucketID, req.InvoiceTodoID, bcConst.CommentThankYouEmailFailed, bcModel.CommentMsgTypeFailed)
-		return
-	}
-}
-
-func (h *handler) movePaidInvoiceGDrive(l logger.Logger, wg *sync.WaitGroup, req *processPaidInvoiceRequest) {
-	msg := h.service.Basecamp.BuildCommentMessage(req.InvoiceBucketID, req.InvoiceTodoID, bcConst.CommentMoveInvoicePDFToPaidDirSuccessfully, bcModel.CommentMsgTypeCompleted)
-
-	defer func() {
-		h.worker.Enqueue(bcModel.BasecampCommentMsg, msg)
-		wg.Done()
-	}()
-
-	err := h.service.GoogleDrive.MoveInvoicePDF(req.Invoice, "Sent", "Paid")
-	if err != nil {
-		l.Errorf(err, "failed to move invoice pdf from sent to paid folder", "invoice", req.Invoice)
-		msg = h.service.Basecamp.BuildCommentMessage(req.InvoiceBucketID, req.InvoiceTodoID, bcConst.CommentMoveInvoicePDFToPaidDirFailed, bcModel.CommentMsgTypeFailed)
 		return
 	}
 }
