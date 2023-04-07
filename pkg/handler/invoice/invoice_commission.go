@@ -112,7 +112,7 @@ func (h *handler) calculateCommissionFromInvoice(db *gorm.DB, l logger.Logger, i
 	}
 
 	if len(pics.upsells) > 0 {
-		c, err := h.calculateRefBonusCommission(pics.upsells, invoice, float64(invoice.Total))
+		c, err := h.calculateRefBonusCommission(pics.upsells, invoice)
 		if err != nil {
 			l.Errorf(err, "failed to calculate account manager commission rate", "projectID", invoice.ProjectID.String())
 			return nil, err
@@ -121,7 +121,7 @@ func (h *handler) calculateCommissionFromInvoice(db *gorm.DB, l logger.Logger, i
 	}
 
 	if len(pics.suppliers) > 0 {
-		c, err := h.calculateRefBonusCommission(pics.suppliers, invoice, float64(invoice.Total))
+		c, err := h.calculateRefBonusCommission(pics.suppliers, invoice)
 		if err != nil {
 			l.Errorf(err, "failed to calculate account manager commission rate", "projectID", invoice.ProjectID.String())
 			return nil, err
@@ -255,12 +255,12 @@ func (h *handler) calculateHeadCommission(projectCommissionRate decimal.Decimal,
 	return rs, nil
 }
 
-func (h *handler) calculateRefBonusCommission(pics []pic, invoice *model.Invoice, chargeRate float64) ([]model.EmployeeCommission, error) {
+func (h *handler) calculateRefBonusCommission(pics []pic, invoice *model.Invoice) ([]model.EmployeeCommission, error) {
 	// conversionRate by percentage
 	var rs []model.EmployeeCommission
 	for _, pic := range pics {
 		percentage := pic.CommissionRate.Div(decimal.NewFromInt(100))
-		commissionValue, _ := percentage.Mul(decimal.NewFromFloat(chargeRate)).Float64()
+		commissionValue, _ := percentage.Mul(decimal.NewFromFloat(pic.ChargeRate)).Float64()
 		convertedValue, rate, err := h.service.Wise.Convert(commissionValue, invoice.Project.BankAccount.Currency.Name, "VND")
 		if err != nil {
 			return nil, err
@@ -272,7 +272,7 @@ func (h *handler) calculateRefBonusCommission(pics []pic, invoice *model.Invoice
 			Project:        invoice.Project.Name,
 			ConversionRate: rate,
 			InvoiceID:      invoice.ID,
-			Formula:        fmt.Sprintf("%v%%(RCR) * %v(CR) * %v(RATE)", pic.CommissionRate, chargeRate, rate),
+			Formula:        fmt.Sprintf("%v%%(RCR) * %v(CR) * %v(RATE)", pic.CommissionRate, pic.ChargeRate, rate),
 			Note:           pic.Note,
 		})
 	}
