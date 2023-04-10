@@ -117,9 +117,9 @@ func (h handler) createTodoInOutGroup(outGroupID int, projectID int, outTodoTemp
 			s := v.Name
 			content := strings.Replace(s, "Office Rental", "CBRE Management fee", 1)
 			todo := bcModel.Todo{
-				Content: content,
-				DueOn:   fmt.Sprintf("%v-%v-%v", 21, month, year),
-				//AssigneeIDs: []int{consts.QuangBasecampID},
+				Content:     content,
+				DueOn:       fmt.Sprintf("%v-%v-%v", 21, month, year),
+				AssigneeIDs: []int{consts.QuangBasecampID},
 				Description: getCBREDescription(partment, month, year),
 			}
 			_, err := h.service.Basecamp.Todo.Create(projectID, outGroupID, todo)
@@ -131,9 +131,9 @@ func (h handler) createTodoInOutGroup(outGroupID int, projectID int, outTodoTemp
 			s = v.Name
 			contentElectric := strings.Replace(s, "Office Rental", "Tiền điện", 1)
 			todo = bcModel.Todo{
-				Content: fmt.Sprintf("%s %v/%v", contentElectric, month, year),
-				DueOn:   fmt.Sprintf("%v-%v-%v", timeutil.LastDayOfMonth(month, year).Day(), month, year),
-				//AssigneeIDs: []int{consts.QuangBasecampID},
+				Content:     fmt.Sprintf("%s %v/%v", contentElectric, month, year),
+				DueOn:       fmt.Sprintf("%v-%v-%v", timeutil.LastDayOfMonth(month, year).Day(), month, year),
+				AssigneeIDs: []int{consts.QuangBasecampID},
 			}
 			_, err = h.service.Basecamp.Todo.Create(projectID, outGroupID, todo)
 			if err != nil {
@@ -143,9 +143,9 @@ func (h handler) createTodoInOutGroup(outGroupID int, projectID int, outTodoTemp
 		}
 
 		todo := bcModel.Todo{
-			Content: fmt.Sprintf("%s | %s | %s", v.Name, utils.FormatCurrencyAmount(v.Amount), v.Currency.Name), //nolint:govet
-			DueOn:   fmt.Sprintf("%v-%v-%v", timeutil.LastDayOfMonth(month, year).Day(), month, year),
-			//AssigneeIDs: []int{consts.QuangBasecampID},
+			Content:     fmt.Sprintf("%s | %s | %s", v.Name, utils.FormatCurrencyAmount(v.Amount), v.Currency.Name), //nolint:govet
+			DueOn:       fmt.Sprintf("%v-%v-%v", timeutil.LastDayOfMonth(month, year).Day(), month, year),
+			AssigneeIDs: []int{consts.QuangBasecampID},
 			Description: extraMsg,
 		}
 		_, err := h.service.Basecamp.Todo.Create(projectID, outGroupID, todo)
@@ -170,9 +170,9 @@ func getCBREDescription(partment string, month int, year int) string {
 func (h handler) createSalaryTodo(outGroupID int, projectID int, month int, year int) error {
 	//created TO DO salary 15th
 	salary15 := bcModel.Todo{
-		Content: "salary 15th",
-		DueOn:   fmt.Sprintf("%v-%v-%v", 12, year, month),
-		//AssigneeIDs: []int{consts.QuangBasecampID, consts.HanBasecampID},
+		Content:     "salary 15th",
+		DueOn:       fmt.Sprintf("%v-%v-%v", 12, year, month),
+		AssigneeIDs: []int{consts.QuangBasecampID, consts.HanBasecampID},
 	}
 	_, err := h.service.Basecamp.Todo.Create(projectID, outGroupID, salary15)
 	if err != nil {
@@ -181,9 +181,9 @@ func (h handler) createSalaryTodo(outGroupID int, projectID int, month int, year
 
 	// Create To do Salary 1st
 	salary1 := bcModel.Todo{
-		Content: "salary 1st",
-		DueOn:   fmt.Sprintf("%v-%v-%v", 27, year, month),
-		//AssigneeIDs: []int{consts.QuangBasecampID, consts.HanBasecampID},
+		Content:     "salary 1st",
+		DueOn:       fmt.Sprintf("%v-%v-%v", 27, year, month),
+		AssigneeIDs: []int{consts.QuangBasecampID, consts.HanBasecampID},
 	}
 
 	_, err = h.service.Basecamp.Todo.Create(projectID, outGroupID, salary1)
