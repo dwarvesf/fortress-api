@@ -1,10 +1,11 @@
-package service
+package operationalservice
 
 import (
 	"time"
 
-	"github.com/dwarvesf/fortress-api/pkg/model"
 	"gorm.io/gorm"
+
+	"github.com/dwarvesf/fortress-api/pkg/model"
 )
 
 type store struct{}
@@ -14,7 +15,11 @@ func New() IStore {
 }
 func (s store) FindOperationByMonth(db *gorm.DB, month time.Month) ([]*model.OperationalService, error) {
 	var res []*model.OperationalService
-	err := db.Table("operational_services").Preload("Currency").Where("is_active is true and date_part('month',register_date) = ?", month).Find(&res).Error
+	query := db.Table("operational_services").
+		Preload("Currency").
+		Where("is_active is true and date_part('month',register_date) = ?", month)
+
+	err := query.Find(&res).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, err
 	}
