@@ -1,9 +1,10 @@
 package service
 
 import (
+	"time"
+
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"gorm.io/gorm"
-	"time"
 )
 
 type store struct{}

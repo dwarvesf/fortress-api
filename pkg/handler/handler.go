@@ -3,7 +3,7 @@ package handler
 import (
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/controller"
-	"github.com/dwarvesf/fortress-api/pkg/handler/accouting"
+	"github.com/dwarvesf/fortress-api/pkg/handler/accounting"
 	"github.com/dwarvesf/fortress-api/pkg/handler/asset"
 	"github.com/dwarvesf/fortress-api/pkg/handler/audience"
 	"github.com/dwarvesf/fortress-api/pkg/handler/audit"

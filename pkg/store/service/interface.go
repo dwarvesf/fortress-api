@@ -1,10 +1,10 @@
 package service
 
 import (
-	"gorm.io/gorm"
 	"time"
 
 	"github.com/dwarvesf/fortress-api/pkg/model"
+	"gorm.io/gorm"
 )
 
 type IStore interface {
