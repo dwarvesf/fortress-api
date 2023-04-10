@@ -2,6 +2,7 @@ package accounting
 
 import (
 	"fmt"
+	"github.com/dwarvesf/fortress-api/pkg/store/project"
 	"strings"
 	"time"
 
@@ -24,18 +25,6 @@ type handler struct {
 	config  *config.Config
 }
 
-func operationSubcribersID() []int {
-	return []int{
-		// 22658825, // huynguyen
-		13492147, // autobot
-		13154176, // duyen
-		11452222, // an
-		10558375, // tieubao
-		11893188, // ly
-		11649047, // quang
-	}
-}
-
 func New(store *store.Store, repo store.DBRepo, service *service.Service, logger logger.Logger, cfg *config.Config) IHandler {
 	return &handler{
 		store:   store,
@@ -47,7 +36,11 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 }
 
 func (h handler) CreateAccountingTodo(month, year int) error {
-	logger.NewLogrusLogger().Info(fmt.Sprintf("Creating accouting todo for %s-%v", time.Month(month), year))
+	l := h.logger.Fields(logger.Fields{
+		"handler": "Accounting",
+		"method":  "CreateAccountingTodo",
+	})
+	l.Info(fmt.Sprintf("Creating accounting todo for %s-%v", time.Month(month), year))
 	accountingTodo := consts.PlaygroundID
 	todoSetID := consts.PlaygroundTodoID
 	if h.config.Env == "prod" {
@@ -67,12 +60,6 @@ func (h handler) CreateAccountingTodo(month, year int) error {
 	}
 
 	createTodo, err := h.service.Basecamp.Todo.CreateList(accountingTodo, todoSetID, todoList)
-	if err != nil {
-		return err
-	}
-
-	// Subscribe operation accounts to this BasecampTodoList
-	err = h.service.Basecamp.Subscription.Subscribe(createTodo.SubscriptionURL, &bcModel.SubscriptionList{Subscriptions: operationSubcribersID()})
 	if err != nil {
 		return err
 	}
@@ -107,38 +94,28 @@ func (h handler) CreateAccountingTodo(month, year int) error {
 }
 
 func (h handler) createTodoInOutGroup(outGroupID int, projectID int, outTodoTemplates []*model.OperationalService, month int, year int) error {
+	l := h.logger.Fields(logger.Fields{
+		"handler": "Accounting",
+		"method":  "createTodoInOutGroup",
+	})
 	for _, v := range outTodoTemplates {
 		extraMsg := ""
 
 		// Create CBRE management fee from `Office Rental` template
 		if strings.Contains(v.Name, "Office Rental") {
 			partment := strings.Replace(v.Name, "Office Rental ", "", 1)
-			extraMsg = fmt.Sprintf("Skycenter Office Rental %s %v/%v", partment, month, year)
+			extraMsg = fmt.Sprintf("Hado Office Rental %s %v/%v", partment, month, year)
 
 			s := v.Name
-			content := strings.Replace(s, "Office Rental", "CBRE Management fee", 1)
-			todo := bcModel.Todo{
-				Content:     content,
-				DueOn:       fmt.Sprintf("%v-%v-%v", 21, month, year),
-				AssigneeIDs: []int{consts.QuangBasecampID},
-				Description: getCBREDescription(partment, month, year),
-			}
-			_, err := h.service.Basecamp.Todo.Create(projectID, outGroupID, todo)
-			if err != nil {
-				logger.NewLogrusLogger().Error(err, "Fail when try to create CBRE management fee")
-				return err
-			}
-
-			s = v.Name
 			contentElectric := strings.Replace(s, "Office Rental", "Tiền điện", 1)
-			todo = bcModel.Todo{
+			todo := bcModel.Todo{
 				Content:     fmt.Sprintf("%s %v/%v", contentElectric, month, year),
 				DueOn:       fmt.Sprintf("%v-%v-%v", timeutil.LastDayOfMonth(month, year).Day(), month, year),
 				AssigneeIDs: []int{consts.QuangBasecampID},
 			}
-			_, err = h.service.Basecamp.Todo.Create(projectID, outGroupID, todo)
+			_, err := h.service.Basecamp.Todo.Create(projectID, outGroupID, todo)
 			if err != nil {
-				logger.NewLogrusLogger().Error(err, "Fail when try to create CBRE management fee")
+				l.Error(err, "Fail when try to create CBRE management fee")
 				return err
 			}
 		}
@@ -151,21 +128,11 @@ func (h handler) createTodoInOutGroup(outGroupID int, projectID int, outTodoTemp
 		}
 		_, err := h.service.Basecamp.Todo.Create(projectID, outGroupID, todo)
 		if err != nil {
-			logger.NewLogrusLogger().Error(err, "Fail when try to create out todos")
+			l.Error(err, "Fail when try to create out todos")
 			return err
 		}
 	}
 	return nil
-}
-
-func getCBREDescription(partment string, month int, year int) string {
-	switch string(partment[len(partment)-1]) {
-	case "D":
-		return fmt.Sprintf("%s(D10.11) thanh toan phi thang %v/%v", partment, month, year)
-	case "B":
-		return fmt.Sprintf("%s(B1.04) thanh toan phi thang %v/%v", partment, month, year)
-	}
-	return fmt.Sprintf("%s thanh toan phi thang %v/%v", partment, month, year)
 }
 
 func (h handler) createSalaryTodo(outGroupID int, projectID int, month int, year int) error {
@@ -195,7 +162,11 @@ func (h handler) createSalaryTodo(outGroupID int, projectID int, month int, year
 }
 
 func (h handler) createTodoInInGroup(inGroupID int, projectID int) error {
-	activeProjects, err := h.store.Project.GetActiveProjects(h.repo.DB())
+	l := h.logger.Fields(logger.Fields{
+		"handler": "Accounting",
+		"method":  "createSalaryTodo",
+	})
+	activeProjects, _, err := h.store.Project.All(h.repo.DB(), project.GetListProjectInput{Statuses: []string{model.ProjectStatusActive.String()}}, model.Pagination{})
 	if err != nil {
 		return err
 	}
@@ -209,7 +180,7 @@ func (h handler) createTodoInInGroup(inGroupID int, projectID int) error {
 
 		_, err := h.service.Basecamp.Todo.Create(projectID, inGroupID, buildInvoiceTodo(p.Name, month, year, assigneeIDs))
 		if err != nil {
-			logger.NewLogrusLogger().Error(err, fmt.Sprint("Failed to create invoice todo on project", p.Name))
+			l.Error(err, fmt.Sprint("Failed to create invoice todo on project", p.Name))
 		}
 	}
 	return nil
