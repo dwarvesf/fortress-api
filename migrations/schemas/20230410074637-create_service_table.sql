@@ -1,19 +1,18 @@
 
 -- +migrate Up
-CREATE TABLE IF NOT EXISTS public.operational_services
-(
-    id            uuid not null primary key,
-    name          varchar(255),
-    amount        bigint,
-    currency_id   uuid references public.currencies(id),
-    note          varchar(255),
-    register_date date,
-    start_at      date      default now(),
-    end_at        date,
-    is_active     boolean   default true,
-    created_at    timestamp default now(),
-    update_at     timestamp default now(),
-    deleted_at    timestamp
-    );
+CREATE TABLE IF NOT EXISTS public.operational_services (
+    id            uuid PRIMARY KEY DEFAULT (uuid()),
+    created_at    TIMESTAMP(6) DEFAULT NOW(),
+    update_at     TIMESTAMP(6) DEFAULT NOW(),
+    deleted_at    TIMESTAMP(6),
+    name          TEXT,
+    amount        INT8,
+    currency_id   UUID REFERENCES public.currencies (id),
+    note          TEXT,
+    register_date DATE      DEFAULT NOW(),
+    start_at      DATE      DEFAULT NOW(),
+    end_at        DATE,
+    is_active     BOOLEAN   DEFAULT TRUE
+);
 -- +migrate Down
 DROP TABLE public.operational_services;

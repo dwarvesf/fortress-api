@@ -123,7 +123,7 @@ type Store struct {
 	WorkUnit                workunit.IStore
 	WorkUnitMember          workunitmember.IStore
 	WorkUnitStack           workunitstack.IStore
-	OperationalService    service.IStore
+	OperationalService      service.IStore
 }
 
 func New() *Store {
@@ -187,6 +187,6 @@ func New() *Store {
 		WorkUnit:                workunit.New(),
 		WorkUnitMember:          workunitmember.New(),
 		WorkUnitStack:           workunitstack.New(),
-		OperationalService:    service.New(),
+		OperationalService:      service.New(),
 	}
 }
