@@ -3,6 +3,7 @@ package handler
 import (
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/controller"
+	"github.com/dwarvesf/fortress-api/pkg/handler/accouting"
 	"github.com/dwarvesf/fortress-api/pkg/handler/asset"
 	"github.com/dwarvesf/fortress-api/pkg/handler/audience"
 	"github.com/dwarvesf/fortress-api/pkg/handler/audit"
@@ -73,6 +74,7 @@ type Handler struct {
 	Changelog      changelog.IHandler
 	DFUpdate       dfupdate.IHandler
 	Payroll        payroll.IHandler
+	Accounting     accounting.IHandler
 }
 
 func New(store *store.Store, repo store.DBRepo, service *service.Service, ctrl *controller.Controller, worker *worker.Worker, logger logger.Logger, cfg *config.Config) *Handler {
@@ -108,5 +110,6 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, ctrl *
 		Changelog:      changelog.New(store, repo, service, logger, cfg),
 		DFUpdate:       dfupdate.New(store, repo, service, logger, cfg),
 		Payroll:        payroll.New(store, repo, service, worker, logger, cfg),
+		Accounting:     accounting.New(store, repo, service, logger, cfg),
 	}
 }

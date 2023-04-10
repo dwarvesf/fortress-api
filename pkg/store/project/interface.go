@@ -14,4 +14,5 @@ type IStore interface {
 	One(db *gorm.DB, id string, preload bool) (*model.Project, error)
 	UpdateSelectedFieldsByID(db *gorm.DB, id string, updateModel model.Project, updatedFields ...string) (*model.Project, error)
 	GetByEmployeeID(db *gorm.DB, employeeID string) ([]*model.Project, error)
+	GetActiveProjects(db *gorm.DB) ([]*model.Project, error)
 }
