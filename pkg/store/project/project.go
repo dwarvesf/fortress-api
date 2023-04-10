@@ -169,3 +169,14 @@ func (s *store) GetByEmployeeID(db *gorm.DB, employeeID string) ([]*model.Projec
 
 	return projects, query.Find(&projects).Error
 }
+func (s *store) GetActiveProjects(db *gorm.DB) ([]*model.Project, error) {
+	var projects []*model.Project
+
+	query := db.Table("projects").
+		Preload("Client", "deleted_at IS NULL").
+		Preload("CompanyInfo", "deleted_at IS NULL").
+		Preload("BankAccount.Currency", "deleted_at IS NULL").
+		Where("status = ?", model.ProjectStatusActive)
+
+	return projects, query.Find(&projects).Error
+}

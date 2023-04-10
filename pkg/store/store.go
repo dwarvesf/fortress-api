@@ -54,6 +54,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/store/role"
 	"github.com/dwarvesf/fortress-api/pkg/store/schedule"
 	"github.com/dwarvesf/fortress-api/pkg/store/seniority"
+	"github.com/dwarvesf/fortress-api/pkg/store/service"
 	"github.com/dwarvesf/fortress-api/pkg/store/socialaccount"
 	"github.com/dwarvesf/fortress-api/pkg/store/stack"
 	"github.com/dwarvesf/fortress-api/pkg/store/valuation"
@@ -122,6 +123,7 @@ type Store struct {
 	WorkUnit                workunit.IStore
 	WorkUnitMember          workunitmember.IStore
 	WorkUnitStack           workunitstack.IStore
+	OperationalService    service.IStore
 }
 
 func New() *Store {
@@ -185,5 +187,6 @@ func New() *Store {
 		WorkUnit:                workunit.New(),
 		WorkUnitMember:          workunitmember.New(),
 		WorkUnitStack:           workunitstack.New(),
+		OperationalService:    service.New(),
 	}
 }
