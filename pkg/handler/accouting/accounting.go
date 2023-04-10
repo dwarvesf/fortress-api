@@ -143,7 +143,7 @@ func (h handler) createTodoInOutGroup(outGroupID int, projectID int, outTodoTemp
 		}
 
 		todo := bcModel.Todo{
-			Content: fmt.Sprintf("%s | %s | %s", v.Name, utils.FormatCurrencyAmount(int(v.Amount)), v.Currency.Name), //nolint:govet
+			Content: fmt.Sprintf("%s | %s | %s", v.Name, utils.FormatCurrencyAmount(v.Amount), v.Currency.Name), //nolint:govet
 			DueOn:   fmt.Sprintf("%v-%v-%v", timeutil.LastDayOfMonth(month, year).Day(), month, year),
 			//AssigneeIDs: []int{consts.QuangBasecampID},
 			Description: extraMsg,
