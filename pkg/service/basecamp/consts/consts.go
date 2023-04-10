@@ -61,6 +61,8 @@ const (
 	SudoID                               = 16473245
 	SudoCampfireID                       = 2538063314
 	OpsExpenseTodoID                     = 4665885355
+	PlaygroundBirthdayTodoID             = 3942871393
+	BirthdayToDoListID                   = 3941578970
 
 	// People
 	LyBasecampID           = 21564173

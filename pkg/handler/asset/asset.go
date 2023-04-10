@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"path/filepath"
 
+	"github.com/gin-gonic/gin"
+
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/handler/asset/errs"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
@@ -13,7 +15,6 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/utils/authutils"
 	"github.com/dwarvesf/fortress-api/pkg/view"
-	"github.com/gin-gonic/gin"
 )
 
 type handler struct {
