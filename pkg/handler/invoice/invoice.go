@@ -2,7 +2,6 @@ package invoice
 
 import (
 	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"math"
@@ -13,7 +12,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"sync"
 	"text/template"
 	"time"
 
@@ -23,13 +21,14 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
+	"github.com/dwarvesf/fortress-api/pkg/controller"
+	invoiceCtrl "github.com/dwarvesf/fortress-api/pkg/controller/invoice"
 	"github.com/dwarvesf/fortress-api/pkg/handler/invoice/errs"
 	"github.com/dwarvesf/fortress-api/pkg/handler/invoice/request"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/service/basecamp/consts"
-	bcConst "github.com/dwarvesf/fortress-api/pkg/service/basecamp/consts"
 	bcModel "github.com/dwarvesf/fortress-api/pkg/service/basecamp/model"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/utils/authutils"
@@ -39,23 +38,25 @@ import (
 )
 
 type handler struct {
-	store   *store.Store
-	service *service.Service
-	worker  *worker.Worker
-	logger  logger.Logger
-	repo    store.DBRepo
-	config  *config.Config
+	controller *controller.Controller
+	store      *store.Store
+	service    *service.Service
+	worker     *worker.Worker
+	logger     logger.Logger
+	repo       store.DBRepo
+	config     *config.Config
 }
 
 // New returns a handler
-func New(store *store.Store, repo store.DBRepo, service *service.Service, worker *worker.Worker, logger logger.Logger, cfg *config.Config) IHandler {
+func New(ctrl *controller.Controller, store *store.Store, repo store.DBRepo, service *service.Service, worker *worker.Worker, logger logger.Logger, cfg *config.Config) IHandler {
 	return &handler{
-		store:   store,
-		repo:    repo,
-		service: service,
-		worker:  worker,
-		logger:  logger,
-		config:  cfg,
+		controller: ctrl,
+		store:      store,
+		repo:       repo,
+		service:    service,
+		worker:     worker,
+		logger:     logger,
+		config:     cfg,
 	}
 }
 
@@ -647,226 +648,22 @@ func (h *handler) UpdateStatus(c *gin.Context) {
 	})
 
 	if err := req.Validate(); err != nil {
-		l.Error(err, "invalid req")
+		l.Error(err, "invalid request")
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, req, ""))
 		return
 	}
 
 	// check invoice existence
-	invoice, err := h.store.Invoice.One(h.repo.DB(), invoiceID)
+	_, err := h.controller.Invoice.UpdateStatus(invoiceCtrl.UpdateStatusInput{
+		InvoiceID:         invoiceID,
+		Status:            req.Status,
+		SendThankYouEmail: req.SendThankYouEmail,
+	})
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			l.Error(errs.ErrInvoiceNotFound, "invoice not found")
-			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrInvoiceNotFound, req, ""))
-			return
-		}
-
-		l.Error(err, "failed to get invoice")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req, ""))
-		return
-	}
-
-	if invoice.Status == req.Status {
-		l.Error(errs.ErrInvoiceStatusAlready, "invoice status already")
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvoiceStatusAlready, req, ""))
-		return
-	}
-
-	switch req.Status {
-	case model.InvoiceStatusError:
-		_, err = h.markInvoiceAsError(l, invoice)
-	case model.InvoiceStatusPaid:
-		_, err = h.markInvoiceAsPaid(l, invoice, req.SendThankYouEmail)
-	default:
-		_, err = h.store.Invoice.UpdateSelectedFieldsByID(h.repo.DB(), invoice.ID.String(), *invoice, "status")
-	}
-	if err != nil {
-		l.Error(err, "failed to update invoice")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req, ""))
+		l.Error(err, "failed to update invoice status")
+		errs.ConvertControllerErr(c, err)
 		return
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))
-}
-
-func (h *handler) markInvoiceAsError(l logger.Logger, invoice *model.Invoice) (*model.Invoice, error) {
-	tx, done := h.repo.NewTransaction()
-	invoice.Status = model.InvoiceStatusError
-	iv, err := h.store.Invoice.UpdateSelectedFieldsByID(tx.DB(), invoice.ID.String(), *invoice, "status")
-	if err != nil {
-		l.Errorf(err, "failed to update invoice status to error")
-		return nil, done(err)
-	}
-
-	err = h.store.InvoiceNumberCaching.UnCountErrorInvoice(tx.DB(), *invoice.InvoicedAt)
-	if err != nil {
-		l.Errorf(err, "failed to un-count error invoice")
-		return nil, done(err)
-	}
-
-	if err := h.markInvoiceTodoAsError(invoice); err != nil {
-		return nil, done(err)
-	}
-
-	if err := h.service.GoogleDrive.MoveInvoicePDF(invoice, "Sent", "Error"); err != nil {
-		l.Errorf(err, "failed to upload invoice pdf to google drive")
-		return nil, done(err)
-	}
-
-	return iv, done(nil)
-}
-
-func (h *handler) markInvoiceTodoAsError(invoice *model.Invoice) error {
-	if invoice.Project == nil {
-		return fmt.Errorf(`missing project info`)
-	}
-
-	bucketID, todoID, err := h.getInvoiceTodo(invoice)
-	if err != nil {
-		return err
-	}
-
-	h.worker.Enqueue(bcModel.BasecampCommentMsg, h.service.Basecamp.BuildCommentMessage(bucketID, todoID, "Invoice has been mark as error", "failed"))
-
-	return h.service.Basecamp.Recording.Archive(bucketID, todoID)
-}
-
-type processPaidInvoiceRequest struct {
-	Invoice          *model.Invoice
-	InvoiceTodoID    int
-	InvoiceBucketID  int
-	SentThankYouMail bool
-}
-
-func (h *handler) markInvoiceAsPaid(l logger.Logger, invoice *model.Invoice, sendThankYouEmail bool) (*model.Invoice, error) {
-	if invoice.Status != model.InvoiceStatusSent && invoice.Status != model.InvoiceStatusOverdue {
-		err := fmt.Errorf(`unable to update invoice status, invoice have status %v`, invoice.Status)
-		l.Errorf(err, "failed to update invoice", "invoiceID", invoice.ID.String())
-		return nil, err
-	}
-	invoice.Status = model.InvoiceStatusPaid
-
-	bucketID, todoID, err := h.getInvoiceTodo(invoice)
-	if err != nil {
-		l.Errorf(err, "failed to get invoice todo", "invoiceID", invoice.ID.String())
-		return nil, err
-	}
-
-	err = h.service.Basecamp.Todo.Complete(bucketID, todoID)
-	if err != nil {
-		l.Errorf(err, "failed to complete invoice todo", "invoiceID", invoice.ID.String())
-	}
-
-	h.processPaidInvoice(l, &processPaidInvoiceRequest{
-		Invoice:          invoice,
-		InvoiceTodoID:    todoID,
-		InvoiceBucketID:  bucketID,
-		SentThankYouMail: sendThankYouEmail,
-	})
-
-	return invoice, nil
-}
-
-func (h *handler) processPaidInvoice(l logger.Logger, req *processPaidInvoiceRequest) {
-	wg := &sync.WaitGroup{}
-	wg.Add(3)
-
-	go func() {
-		_ = h.processPaidInvoiceData(l, wg, req)
-	}()
-
-	go h.sendThankYouEmail(l, wg, req)
-	go h.movePaidInvoiceGDrive(l, wg, req)
-
-	wg.Wait()
-}
-
-func (h *handler) processPaidInvoiceData(l logger.Logger, wg *sync.WaitGroup, req *processPaidInvoiceRequest) error {
-	// Start Transaction
-	tx, done := h.repo.NewTransaction()
-
-	msg := bcConst.CommentUpdateInvoiceFailed
-	msgType := bcModel.CommentMsgTypeFailed
-	defer func() {
-		wg.Done()
-		h.worker.Enqueue(bcModel.BasecampCommentMsg, h.service.Basecamp.BuildCommentMessage(req.InvoiceBucketID, req.InvoiceTodoID, msg, msgType))
-	}()
-
-	now := time.Now()
-	req.Invoice.PaidAt = &now
-	_, err := h.store.Invoice.UpdateSelectedFieldsByID(tx.DB(), req.Invoice.ID.String(), *req.Invoice, "status", "paid_at")
-	if err != nil {
-		l.Errorf(err, "failed to update invoice status to paid", "invoice", req.Invoice)
-		return done(err)
-	}
-
-	_, err = h.storeCommission(tx.DB(), l, req.Invoice)
-	if err != nil {
-		l.Errorf(err, "failed to store invoice commission", "invoice", req.Invoice)
-		return done(err)
-	}
-
-	m := model.AccountingMetadata{
-		Source: "invoice",
-		ID:     req.Invoice.ID.String(),
-	}
-
-	bonusBytes, err := json.Marshal(&m)
-	if err != nil {
-		l.Errorf(err, "failed to process invoice accounting metadata", "invoiceNumber", req.Invoice.Number)
-		return done(err)
-	}
-
-	projectOrg := ""
-	if req.Invoice.Project.Organization != nil {
-		projectOrg = req.Invoice.Project.Organization.Name
-	}
-
-	currencyName := "VND"
-	currencyID := model.UUID{}
-	if req.Invoice.Project.BankAccount.Currency != nil {
-		currencyName = req.Invoice.Project.BankAccount.Currency.Name
-		currencyID = req.Invoice.Project.BankAccount.Currency.ID
-	}
-
-	accountingTxn := &model.AccountingTransaction{
-		Name:             req.Invoice.Number,
-		Amount:           float64(req.Invoice.Total),
-		Date:             &now,
-		ConversionAmount: model.VietnamDong(req.Invoice.ConversionAmount),
-		Organization:     projectOrg,
-		Category:         model.AccountingIn,
-		Type:             model.AccountingIncome,
-		Currency:         currencyName,
-		CurrencyID:       &currencyID,
-		ConversionRate:   req.Invoice.ConversionRate,
-		Metadata:         bonusBytes,
-	}
-
-	err = h.store.Accounting.CreateTransaction(tx.DB(), accountingTxn)
-	if err != nil {
-		l.Errorf(err, "failed to create accounting transaction", "Accounting Transaction", accountingTxn)
-		return done(err)
-	}
-
-	msg = bcConst.CommentUpdateInvoiceSuccessfully
-	msgType = bcModel.CommentMsgTypeCompleted
-
-	return done(nil)
-}
-
-func (h *handler) sendThankYouEmail(l logger.Logger, wg *sync.WaitGroup, req *processPaidInvoiceRequest) {
-	msg := h.service.Basecamp.BuildCommentMessage(req.InvoiceBucketID, req.InvoiceTodoID, bcConst.CommentThankYouEmailSent, bcModel.CommentMsgTypeCompleted)
-
-	defer func() {
-		h.worker.Enqueue(bcModel.BasecampCommentMsg, msg)
-		wg.Done()
-	}()
-
-	err := h.service.GoogleMail.SendInvoiceThankYouMail(req.Invoice)
-	if err != nil {
-		l.Errorf(err, "failed to send invoice thank you mail", "invoice", req.Invoice)
-		msg = h.service.Basecamp.BuildCommentMessage(req.InvoiceBucketID, req.InvoiceTodoID, bcConst.CommentThankYouEmailFailed, bcModel.CommentMsgTypeFailed)
-		return
-	}
 }

@@ -9,10 +9,11 @@ import (
 
 	"github.com/Boostport/mjml-go"
 	nt "github.com/dstotijn/go-notion"
+	"github.com/gin-gonic/gin"
+
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service/notion"
 	"github.com/dwarvesf/fortress-api/pkg/view"
-	"github.com/gin-gonic/gin"
 	"github.com/sendgrid/sendgrid-go/helpers/mail"
 )
 
@@ -24,7 +25,7 @@ func (h *handler) Send(c *gin.Context) {
 		isPreview = true
 	}
 	categories := []string{"newsletter", contentID}
-	emails := []*model.Email{}
+	var emails []*model.Email
 
 	m, err := h.generateEmailNewsletter(
 		contentID,

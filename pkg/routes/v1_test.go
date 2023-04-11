@@ -654,7 +654,7 @@ func Test_loadV1Routes(t *testing.T) {
 		"/api/v1/df-updates/:id/send": {
 			"POST": {
 				Method:  "POST",
-				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/df_update.IHandler.Send-fm",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/dfupdate.IHandler.Send-fm",
 			},
 		},
 		"/api/v1/payrolls": {

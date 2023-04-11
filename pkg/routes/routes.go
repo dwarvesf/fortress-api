@@ -45,7 +45,7 @@ func NewRoutes(cfg *config.Config, svc *service.Service, s *store.Store, repo st
 	r := gin.New()
 	pprof.Register(r)
 
-	ctrl := controller.New(s, repo, svc, logger, cfg)
+	ctrl := controller.New(s, repo, svc, worker, logger, cfg)
 	h := handler.New(s, repo, svc, ctrl, worker, logger, cfg)
 
 	r.Use(
