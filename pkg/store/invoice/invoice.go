@@ -2,9 +2,10 @@ package invoice
 
 import (
 	"fmt"
-	"gorm.io/gorm"
 	"strings"
 	"time"
+
+	"gorm.io/gorm"
 
 	"github.com/dwarvesf/fortress-api/pkg/model"
 )
@@ -16,9 +17,15 @@ func New() IStore {
 }
 
 // One getNext invoice by id
-func (s *store) One(db *gorm.DB, id string) (*model.Invoice, error) {
+func (s *store) One(db *gorm.DB, query *Query) (*model.Invoice, error) {
 	var invoice *model.Invoice
-	return invoice, db.Where("id = ?", id).
+	if query.ID != "" {
+		db = db.Where("id = ?", query.ID)
+	}
+	if query.Number != "" {
+		db = db.Where("number = ?", query.Number)
+	}
+	return invoice, db.
 		Preload("Project").
 		Preload("Project.Heads", "deleted_at IS NULL AND (end_date IS NULL OR end_date > now())").
 		Preload("Project.Heads.Employee", "deleted_at IS NULL").

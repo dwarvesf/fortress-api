@@ -20,6 +20,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/service/basecamp/subscription"
 	"github.com/dwarvesf/fortress-api/pkg/service/basecamp/todo"
 	"github.com/dwarvesf/fortress-api/pkg/service/basecamp/webhook"
+	"github.com/dwarvesf/fortress-api/pkg/service/wise"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 )
 
@@ -43,6 +44,8 @@ type Service struct {
 	Schedule     schedule.Service
 	Webhook      webhook.Service
 	Attachment   attachment.Service
+
+	Wise wise.IService
 }
 
 func NewService(store *store.Store, repo store.DBRepo, cfg *config.Config, bc *model.Basecamp, logger logger.Logger) *Service {
@@ -70,6 +73,7 @@ func NewService(store *store.Store, repo store.DBRepo, cfg *config.Config, bc *m
 		Schedule:     schedule.NewService(c, logger),
 		Webhook:      webhook.NewService(c),
 		Attachment:   attachment.NewService(c),
+		Wise:         wise.New(cfg, logger),
 	}
 }
 
@@ -77,9 +81,9 @@ func (s *Service) BuildCommentMessage(bucketID, recordID int, content string, ms
 	var cmtPayload *model.Comment
 	switch msgType {
 	case model.CommentMsgTypeFailed:
-		cmtPayload = s.buildFailedComment(content)
+		cmtPayload = s.BuildFailedComment(content)
 	case model.CommentMsgTypeCompleted:
-		cmtPayload = s.buildCompletedComment(content)
+		cmtPayload = s.BuildCompletedComment(content)
 	default:
 		cmtPayload = &model.Comment{Content: content}
 	}
@@ -116,7 +120,7 @@ func (s *Service) BasecampMention(basecampID int) (res string, err error) {
 	return fmt.Sprintf(`<bc-attachment sgid="%s" content-type="application/vnd.basecamp.mention"></bc-attachment>`, employee.BasecampAttachableSGID), nil
 }
 
-func (s *Service) buildFailedComment(content string) *model.Comment {
+func (s *Service) BuildFailedComment(content string) *model.Comment {
 	if s.config.Env == "prod" {
 		m, _ := s.BasecampMention(consts.HuyNguyenBasecampID)
 		return &model.Comment{Content: fmt.Sprintf(`<img width="17" class="thread-entry__icon" src="https://3.basecamp-static.com/assets/icons/thread_events/uncompleted-6066b80e80b6463243d7773fa67373b62e2a7d159ba12a17c94b1e18b30a5770.svg"><div><em>%s</em> %s</div>`, content, m)}
@@ -124,7 +128,7 @@ func (s *Service) buildFailedComment(content string) *model.Comment {
 	return &model.Comment{Content: fmt.Sprintf(`<img width="17" class="thread-entry__icon" src="https://3.basecamp-static.com/assets/icons/thread_events/uncompleted-6066b80e80b6463243d7773fa67373b62e2a7d159ba12a17c94b1e18b30a5770.svg"><div><em>%s</em></div>`, content)}
 }
 
-func (s *Service) buildCompletedComment(content string) *model.Comment {
+func (s *Service) BuildCompletedComment(content string) *model.Comment {
 	return &model.Comment{Content: fmt.Sprintf(`<img width="17" class="thread-entry__icon" src="https://3.basecamp-static.com/assets/icons/thread_events/completed-12705cf5fc372d800bba74c8133d705dc43a12c939a8477099749e2ef056e739.svg"><div><em>%s</em></div>`, content)}
 }
 

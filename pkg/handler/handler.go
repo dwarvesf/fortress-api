@@ -103,7 +103,7 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, ctrl *
 		BankAccount:    bankaccount.New(store, repo, service, logger, cfg),
 		Birthday:       birthday.New(store, repo, service, logger, cfg),
 		Invoice:        invoice.New(ctrl, store, repo, service, worker, logger, cfg),
-		Webhook:        webhook.New(store, repo, service, logger, cfg),
+		Webhook:        webhook.New(ctrl, store, repo, service, logger, cfg),
 		Discord:        discord.New(store, repo, service, logger, cfg),
 		Client:         client.New(ctrl, store, repo, service, logger, cfg),
 		Asset:          asset.New(store, repo, service, logger, cfg),
