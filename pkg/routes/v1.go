@@ -29,6 +29,21 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 	// Webhook GROUP
 	/////////////////
 	webhook.POST("/n8n", h.Webhook.N8n)
+	// Basecamp
+	basecampGroup := webhook.Group("/basecamp")
+	{
+		expenseGroup := basecampGroup.Group("/expense")
+		{
+			expenseGroup.POST("/validate", h.Webhook.BasecampExpenseValidate)
+			expenseGroup.POST("", h.Webhook.BasecampExpense)
+			expenseGroup.DELETE("", h.Webhook.UncheckBasecampExpense)
+		}
+		operationGroup := basecampGroup.Group("/operation")
+		{
+			operationGroup.POST("/accounting-transaction", h.Webhook.StoreAccountingTransaction)
+			operationGroup.PUT("/invoice", h.Webhook.MarkInvoiceAsPaidViaBasecamp)
+		}
+	}
 
 	/////////////////
 	// API GROUP
@@ -101,7 +116,6 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 		projectGroup.PUT("/:id/work-units/:workUnitID", amw.WithAuth, pmw.WithPerm(model.PermissionProjectWorkUnitsEdit), h.Project.UpdateWorkUnit)
 		projectGroup.PUT("/:id/work-units/:workUnitID/archive", amw.WithAuth, pmw.WithPerm(model.PermissionProjectWorkUnitsEdit), h.Project.ArchiveWorkUnit)
 		projectGroup.PUT("/:id/work-units/:workUnitID/unarchive", amw.WithAuth, pmw.WithPerm(model.PermissionProjectWorkUnitsEdit), h.Project.UnarchiveWorkUnit)
-		projectGroup.GET("/milestones", h.Project.ListMilestones)
 	}
 
 	clientGroup := v1.Group("/clients")
@@ -153,46 +167,51 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 	{
 		valuation.GET("/:year", pmw.WithPerm(model.PermissionValuationRead), h.Valuation.One)
 	}
-	earn := v1.Group("/earn")
+
+	notion := v1.Group("/notion")
 	{
-		earn.GET("", h.Earn.List)
-	}
-	techradar := v1.Group("/tech-radar")
-	{
-		techradar.GET("", h.TechRadar.List)
-		techradar.POST("", h.TechRadar.Create)
-	}
-	audience := v1.Group("/audiences")
-	{
-		audience.GET("", h.Audience.List)
-	}
-	event := v1.Group("/events")
-	{
-		event.GET("", h.Event.List)
-	}
-	digest := v1.Group("/digests")
-	{
-		digest.GET("", h.Digest.List)
-	}
-	update := v1.Group("/updates")
-	{
-		update.GET("", h.Update.List)
-	}
-	memo := v1.Group("/memos")
-	{
-		memo.GET("", h.Memo.List)
-	}
-	issue := v1.Group("/issues")
-	{
-		issue.GET("", h.Issue.List)
-	}
-	staffingDemand := v1.Group("/staffing-demands")
-	{
-		staffingDemand.GET("", h.StaffingDemand.List)
-	}
-	hiring := v1.Group("/hiring-positions")
-	{
-		hiring.GET("", h.Hiring.List)
+		earn := notion.Group("/earn")
+		{
+			earn.GET("", h.Earn.List)
+		}
+		techradar := notion.Group("/tech-radar")
+		{
+			techradar.GET("", h.TechRadar.List)
+			techradar.POST("", h.TechRadar.Create)
+		}
+		audience := notion.Group("/audiences")
+		{
+			audience.GET("", h.Audience.List)
+		}
+		event := notion.Group("/events")
+		{
+			event.GET("", h.Event.List)
+		}
+		digest := notion.Group("/digests")
+		{
+			digest.GET("", h.Digest.List)
+		}
+		update := notion.Group("/updates")
+		{
+			update.GET("", h.Update.List)
+		}
+		memo := notion.Group("/memos")
+		{
+			memo.GET("", h.Memo.List)
+		}
+		issue := notion.Group("/issues")
+		{
+			issue.GET("", h.Issue.List)
+		}
+		staffingDemand := notion.Group("/staffing-demands")
+		{
+			staffingDemand.GET("", h.StaffingDemand.List)
+		}
+		hiring := notion.Group("/hiring-positions")
+		{
+			hiring.GET("", h.Hiring.List)
+		}
+		notion.GET("/projects/milestones", h.Project.ListMilestones)
 	}
 
 	dashboard := v1.Group("/dashboards")

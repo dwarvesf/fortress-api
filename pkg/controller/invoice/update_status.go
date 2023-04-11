@@ -16,6 +16,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	bcConst "github.com/dwarvesf/fortress-api/pkg/service/basecamp/consts"
 	bcModel "github.com/dwarvesf/fortress-api/pkg/service/basecamp/model"
+	sInvoice "github.com/dwarvesf/fortress-api/pkg/store/invoice"
 	"github.com/dwarvesf/fortress-api/pkg/utils/timeutil"
 )
 
@@ -33,7 +34,7 @@ func (c *controller) UpdateStatus(in UpdateStatusInput) (*model.Invoice, error) 
 	})
 
 	// check invoice existence
-	invoice, err := c.store.Invoice.One(c.repo.DB(), in.InvoiceID)
+	invoice, err := c.store.Invoice.One(c.repo.DB(), &sInvoice.Query{ID: in.InvoiceID})
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Error(ErrInvoiceNotFound, "invoice not found")
