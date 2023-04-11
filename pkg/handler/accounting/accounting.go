@@ -2,7 +2,6 @@ package accounting
 
 import (
 	"fmt"
-	"github.com/dwarvesf/fortress-api/pkg/store/project"
 	"strings"
 	"time"
 
@@ -13,6 +12,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	bcModel "github.com/dwarvesf/fortress-api/pkg/service/basecamp/model"
 	"github.com/dwarvesf/fortress-api/pkg/store"
+	"github.com/dwarvesf/fortress-api/pkg/store/project"
 	"github.com/dwarvesf/fortress-api/pkg/utils"
 	"github.com/dwarvesf/fortress-api/pkg/utils/timeutil"
 )
