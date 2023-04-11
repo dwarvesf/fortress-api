@@ -14,7 +14,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/handler/client"
 	"github.com/dwarvesf/fortress-api/pkg/handler/dashboard"
 	"github.com/dwarvesf/fortress-api/pkg/handler/dashboard/util"
-	dfupdate "github.com/dwarvesf/fortress-api/pkg/handler/df_update"
+	"github.com/dwarvesf/fortress-api/pkg/handler/dfupdate"
 	"github.com/dwarvesf/fortress-api/pkg/handler/digest"
 	"github.com/dwarvesf/fortress-api/pkg/handler/discord"
 	"github.com/dwarvesf/fortress-api/pkg/handler/earn"
@@ -102,7 +102,7 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, ctrl *
 		Memo:           memo.New(store, repo, service, logger, cfg),
 		BankAccount:    bankaccount.New(store, repo, service, logger, cfg),
 		Birthday:       birthday.New(store, repo, service, logger, cfg),
-		Invoice:        invoice.New(store, repo, service, worker, logger, cfg),
+		Invoice:        invoice.New(ctrl, store, repo, service, worker, logger, cfg),
 		Webhook:        webhook.New(store, repo, service, logger, cfg),
 		Discord:        discord.New(store, repo, service, logger, cfg),
 		Client:         client.New(ctrl, store, repo, service, logger, cfg),

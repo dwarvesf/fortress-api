@@ -1,8 +1,11 @@
 package client
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/dwarvesf/fortress-api/pkg/model"
+	"github.com/dwarvesf/fortress-api/pkg/worker"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -29,6 +32,8 @@ func TestHandler_Detail(t *testing.T) {
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg, nil, nil)
 	storeMock := store.New()
+	queue := make(chan model.WorkerMessage, 1000)
+	workerMock := worker.New(context.Background(), queue, serviceMock, loggerMock)
 
 	tests := []struct {
 		name             string
@@ -60,7 +65,7 @@ func TestHandler_Detail(t *testing.T) {
 				ctx.Request = httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/clients/%s", tt.id), nil)
 				ctx.Request.Header.Set("Authorization", testToken)
 
-				ctrl := controller.New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+				ctrl := controller.New(storeMock, txRepo, serviceMock, workerMock, loggerMock, &cfg)
 				h := New(ctrl, storeMock, txRepo, serviceMock, loggerMock, &cfg)
 				h.Detail(ctx)
 				require.Equal(t, tt.wantCode, w.Code)
@@ -78,6 +83,8 @@ func TestHandler_List(t *testing.T) {
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg, nil, nil)
 	storeMock := store.New()
+	queue := make(chan model.WorkerMessage, 1000)
+	workerMock := worker.New(context.Background(), queue, serviceMock, loggerMock)
 
 	tests := []struct {
 		name             string
@@ -100,7 +107,7 @@ func TestHandler_List(t *testing.T) {
 				ctx.Request = httptest.NewRequest(http.MethodGet, "/api/v1/clients", nil)
 				ctx.Request.Header.Set("Authorization", testToken)
 
-				ctrl := controller.New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+				ctrl := controller.New(storeMock, txRepo, serviceMock, workerMock, loggerMock, &cfg)
 				h := New(ctrl, storeMock, txRepo, serviceMock, loggerMock, &cfg)
 				h.List(ctx)
 				require.Equal(t, tt.wantCode, w.Code)
@@ -118,7 +125,9 @@ func TestHandler_Create(t *testing.T) {
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg, nil, nil)
 	storeMock := store.New()
-
+	queue := make(chan model.WorkerMessage, 1000)
+	workerMock := worker.New(context.Background(), queue, serviceMock, loggerMock)
+	
 	tests := []struct {
 		name             string
 		id               string
@@ -170,7 +179,7 @@ func TestHandler_Create(t *testing.T) {
 				ctx.Request = httptest.NewRequest(http.MethodPost, "/api/v1/clients", bodyReader)
 				ctx.Request.Header.Set("Authorization", testToken)
 
-				ctrl := controller.New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+				ctrl := controller.New(storeMock, txRepo, serviceMock, workerMock, loggerMock, &cfg)
 				h := New(ctrl, storeMock, txRepo, serviceMock, loggerMock, &cfg)
 				h.Create(ctx)
 				require.Equal(t, tt.wantCode, w.Code)
@@ -184,6 +193,8 @@ func TestHandler_Update(t *testing.T) {
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg, nil, nil)
 	storeMock := store.New()
+	queue := make(chan model.WorkerMessage, 1000)
+	workerMock := worker.New(context.Background(), queue, serviceMock, loggerMock)
 
 	tests := []struct {
 		name             string
@@ -243,7 +254,7 @@ func TestHandler_Update(t *testing.T) {
 				ctx.Request = httptest.NewRequest(http.MethodPut, fmt.Sprintf("/api/v1/clients/%s", tt.id), bodyReader)
 				ctx.Request.Header.Set("Authorization", testToken)
 
-				ctrl := controller.New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+				ctrl := controller.New(storeMock, txRepo, serviceMock, workerMock, loggerMock, &cfg)
 				h := New(ctrl, storeMock, txRepo, serviceMock, loggerMock, &cfg)
 				h.Update(ctx)
 				require.Equal(t, tt.wantCode, w.Code)
@@ -261,6 +272,8 @@ func TestHandler_Delete(t *testing.T) {
 	loggerMock := logger.NewLogrusLogger()
 	serviceMock := service.New(&cfg, nil, nil)
 	storeMock := store.New()
+	queue := make(chan model.WorkerMessage, 1000)
+	workerMock := worker.New(context.Background(), queue, serviceMock, loggerMock)
 
 	tests := []struct {
 		name             string
@@ -297,7 +310,7 @@ func TestHandler_Delete(t *testing.T) {
 				ctx.Request = httptest.NewRequest(http.MethodDelete, fmt.Sprintf("/api/v1/clients/%s", tt.id), bodyReader)
 				ctx.Request.Header.Set("Authorization", testToken)
 
-				ctrl := controller.New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+				ctrl := controller.New(storeMock, txRepo, serviceMock, workerMock, loggerMock, &cfg)
 				h := New(ctrl, storeMock, txRepo, serviceMock, loggerMock, &cfg)
 				h.Delete(ctx)
 				require.Equal(t, tt.wantCode, w.Code)
