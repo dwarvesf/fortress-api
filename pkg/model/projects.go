@@ -38,6 +38,8 @@ type Project struct {
 	Heads          []*ProjectHead
 	ProjectMembers []ProjectMember
 	ProjectStacks  []ProjectStack
+
+	ProjectInfo *ProjectInfo `json:"-" gorm:"foreignkey:ProjectID;association_foreignkey:ID"`
 }
 
 type ProjectType string

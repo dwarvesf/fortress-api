@@ -3,6 +3,7 @@ package handler
 import (
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/controller"
+	"github.com/dwarvesf/fortress-api/pkg/handler/accounting"
 	"github.com/dwarvesf/fortress-api/pkg/handler/asset"
 	"github.com/dwarvesf/fortress-api/pkg/handler/audience"
 	"github.com/dwarvesf/fortress-api/pkg/handler/audit"
@@ -13,7 +14,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/handler/client"
 	"github.com/dwarvesf/fortress-api/pkg/handler/dashboard"
 	"github.com/dwarvesf/fortress-api/pkg/handler/dashboard/util"
-	dfupdate "github.com/dwarvesf/fortress-api/pkg/handler/df_update"
+	"github.com/dwarvesf/fortress-api/pkg/handler/dfupdate"
 	"github.com/dwarvesf/fortress-api/pkg/handler/digest"
 	"github.com/dwarvesf/fortress-api/pkg/handler/discord"
 	"github.com/dwarvesf/fortress-api/pkg/handler/earn"
@@ -73,6 +74,7 @@ type Handler struct {
 	Changelog      changelog.IHandler
 	DFUpdate       dfupdate.IHandler
 	Payroll        payroll.IHandler
+	Accounting     accounting.IHandler
 }
 
 func New(store *store.Store, repo store.DBRepo, service *service.Service, ctrl *controller.Controller, worker *worker.Worker, logger logger.Logger, cfg *config.Config) *Handler {
@@ -100,13 +102,14 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, ctrl *
 		Memo:           memo.New(store, repo, service, logger, cfg),
 		BankAccount:    bankaccount.New(store, repo, service, logger, cfg),
 		Birthday:       birthday.New(store, repo, service, logger, cfg),
-		Invoice:        invoice.New(store, repo, service, worker, logger, cfg),
-		Webhook:        webhook.New(store, repo, service, logger, cfg),
+		Invoice:        invoice.New(ctrl, store, repo, service, worker, logger, cfg),
+		Webhook:        webhook.New(ctrl, store, repo, service, logger, cfg),
 		Discord:        discord.New(store, repo, service, logger, cfg),
 		Client:         client.New(ctrl, store, repo, service, logger, cfg),
 		Asset:          asset.New(store, repo, service, logger, cfg),
 		Changelog:      changelog.New(store, repo, service, logger, cfg),
 		DFUpdate:       dfupdate.New(store, repo, service, logger, cfg),
 		Payroll:        payroll.New(store, repo, service, worker, logger, cfg),
+		Accounting:     accounting.New(store, repo, service, logger, cfg),
 	}
 }

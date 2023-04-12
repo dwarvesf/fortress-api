@@ -8,7 +8,6 @@ import (
 
 	"github.com/dwarvesf/fortress-api/pkg/consts"
 	"github.com/dwarvesf/fortress-api/pkg/model"
-	"github.com/dwarvesf/fortress-api/pkg/service/basecamp"
 	bcModel "github.com/dwarvesf/fortress-api/pkg/service/basecamp/model"
 	"github.com/dwarvesf/fortress-api/pkg/service/currency"
 	commissionStore "github.com/dwarvesf/fortress-api/pkg/store/commission"
@@ -392,7 +391,7 @@ func getReimbursement(h *handler, expense string) (string, model.VietnamDong, er
 		return "", 0, nil
 	}
 	c := strings.TrimSpace(splits[2])
-	bcAmount := basecamp.ExtractBasecampExpenseAmount(strings.TrimSpace(splits[1]))
+	bcAmount := h.service.Basecamp.ExtractBasecampExpenseAmount(strings.TrimSpace(splits[1]))
 	if c != currency.VNDCurrency {
 		tempAmount, _, err := h.service.Wise.Convert(float64(bcAmount), c, currency.VNDCurrency)
 		if err != nil {
@@ -400,7 +399,7 @@ func getReimbursement(h *handler, expense string) (string, model.VietnamDong, er
 		}
 		amount = model.NewVietnamDong(int64(tempAmount))
 	} else {
-		amount = model.NewVietnamDong(int64(basecamp.ExtractBasecampExpenseAmount(strings.TrimSpace(splits[1]))))
+		amount = model.NewVietnamDong(int64(h.service.Basecamp.ExtractBasecampExpenseAmount(strings.TrimSpace(splits[1]))))
 	}
 
 	return strings.TrimSpace(splits[0]), amount.Format(), nil

@@ -31,29 +31,29 @@ type pics struct {
 	upsells          []pic
 }
 
-func (h *handler) storeCommission(db *gorm.DB, l logger.Logger, invoice *model.Invoice) ([]model.EmployeeCommission, error) {
+func (c *controller) storeCommission(db *gorm.DB, l logger.Logger, invoice *model.Invoice) ([]model.EmployeeCommission, error) {
 	if invoice.Project.Type != model.ProjectTypeTimeMaterial {
 		return nil, nil
 	}
-	employeeCommissions, err := h.calculateCommissionFromInvoice(db, l, invoice)
+	employeeCommissions, err := c.calculateCommissionFromInvoice(db, l, invoice)
 	if err != nil {
 		l.Errorf(err, "failed to create commission", "invoice", invoice)
 		return nil, err
 	}
 
-	return h.store.EmployeeCommission.Create(db, employeeCommissions)
+	return c.store.EmployeeCommission.Create(db, employeeCommissions)
 }
 
-func (h *handler) calculateCommissionFromInvoice(db *gorm.DB, l logger.Logger, invoice *model.Invoice) ([]model.EmployeeCommission, error) {
+func (c *controller) calculateCommissionFromInvoice(db *gorm.DB, l logger.Logger, invoice *model.Invoice) ([]model.EmployeeCommission, error) {
 	// Get project commission configs
-	commissionConfigs, err := h.store.ProjectCommissionConfig.GetByProjectID(db, invoice.ProjectID.String())
+	commissionConfigs, err := c.store.ProjectCommissionConfig.GetByProjectID(db, invoice.ProjectID.String())
 	if err != nil {
 		l.Errorf(err, "failed to get project commission config", "projectID", invoice.ProjectID.String())
 		return nil, err
 	}
 	commissionConfigMap := commissionConfigs.ToMap()
 
-	projectMembers, err := h.store.ProjectMember.GetAssignedMembers(db, invoice.ProjectID.String(), model.ProjectMemberStatusActive.String(), true)
+	projectMembers, err := c.store.ProjectMember.GetAssignedMembers(db, invoice.ProjectID.String(), model.ProjectMemberStatusActive.String(), true)
 	if err != nil {
 		l.Errorf(err, "failed to calculate account manager commission rate", "projectID", invoice.ProjectID.String())
 		return nil, err
@@ -66,7 +66,7 @@ func (h *handler) calculateCommissionFromInvoice(db *gorm.DB, l logger.Logger, i
 	if len(pics.devLeads) > 0 {
 		commissionRate := commissionConfigMap[model.HeadPositionTechnicalLead.String()]
 		if commissionRate.GreaterThan(decimal.NewFromInt(0)) {
-			c, err := h.calculateHeadCommission(commissionRate, pics.devLeads, invoice, float64(invoice.Total))
+			c, err := c.calculateHeadCommission(commissionRate, pics.devLeads, invoice, float64(invoice.Total))
 			if err != nil {
 				l.Errorf(err, "failed to calculate dev lead commission rate", "projectID", invoice.ProjectID.String())
 				return nil, err
@@ -78,7 +78,7 @@ func (h *handler) calculateCommissionFromInvoice(db *gorm.DB, l logger.Logger, i
 	if len(pics.accountManagers) > 0 {
 		commissionRate := commissionConfigMap[model.HeadPositionAccountManager.String()]
 		if commissionRate.GreaterThan(decimal.NewFromInt(0)) {
-			c, err := h.calculateHeadCommission(commissionRate, pics.accountManagers, invoice, float64(invoice.Total))
+			c, err := c.calculateHeadCommission(commissionRate, pics.accountManagers, invoice, float64(invoice.Total))
 			if err != nil {
 				l.Errorf(err, "failed to calculate account manager commission rate", "projectID", invoice.ProjectID.String())
 				return nil, err
@@ -90,7 +90,7 @@ func (h *handler) calculateCommissionFromInvoice(db *gorm.DB, l logger.Logger, i
 	if len(pics.deliveryManagers) > 0 {
 		commissionRate := commissionConfigMap[model.HeadPositionDeliveryManager.String()]
 		if commissionRate.GreaterThan(decimal.NewFromInt(0)) {
-			c, err := h.calculateHeadCommission(commissionRate, pics.deliveryManagers, invoice, float64(invoice.Total))
+			c, err := c.calculateHeadCommission(commissionRate, pics.deliveryManagers, invoice, float64(invoice.Total))
 			if err != nil {
 				l.Errorf(err, "failed to calculate delivery manager commission rate", "projectID", invoice.ProjectID.String())
 				return nil, err
@@ -102,7 +102,7 @@ func (h *handler) calculateCommissionFromInvoice(db *gorm.DB, l logger.Logger, i
 	if len(pics.sales) > 0 {
 		commissionRate := commissionConfigMap[model.HeadPositionSalePerson.String()]
 		if commissionRate.GreaterThan(decimal.NewFromInt(0)) {
-			c, err := h.calculateHeadCommission(commissionRate, pics.sales, invoice, float64(invoice.Total))
+			c, err := c.calculateHeadCommission(commissionRate, pics.sales, invoice, float64(invoice.Total))
 			if err != nil {
 				l.Errorf(err, "failed to calculate account manager commission rate", "projectID", invoice.ProjectID.String())
 				return nil, err
@@ -112,7 +112,7 @@ func (h *handler) calculateCommissionFromInvoice(db *gorm.DB, l logger.Logger, i
 	}
 
 	if len(pics.upsells) > 0 {
-		c, err := h.calculateRefBonusCommission(pics.upsells, invoice)
+		c, err := c.calculateRefBonusCommission(pics.upsells, invoice)
 		if err != nil {
 			l.Errorf(err, "failed to calculate account manager commission rate", "projectID", invoice.ProjectID.String())
 			return nil, err
@@ -121,7 +121,7 @@ func (h *handler) calculateCommissionFromInvoice(db *gorm.DB, l logger.Logger, i
 	}
 
 	if len(pics.suppliers) > 0 {
-		c, err := h.calculateRefBonusCommission(pics.suppliers, invoice)
+		c, err := c.calculateRefBonusCommission(pics.suppliers, invoice)
 		if err != nil {
 			l.Errorf(err, "failed to calculate account manager commission rate", "projectID", invoice.ProjectID.String())
 			return nil, err
@@ -209,27 +209,27 @@ func getPICs(invoice *model.Invoice, projectMembers []*model.ProjectMember) *pic
 	}
 }
 
-func (h *handler) movePaidInvoiceGDrive(l logger.Logger, wg *sync.WaitGroup, req *processPaidInvoiceRequest) {
-	msg := h.service.Basecamp.BuildCommentMessage(req.InvoiceBucketID, req.InvoiceTodoID, bcConst.CommentMoveInvoicePDFToPaidDirSuccessfully, bcModel.CommentMsgTypeCompleted)
+func (c *controller) movePaidInvoiceGDrive(l logger.Logger, wg *sync.WaitGroup, req *processPaidInvoiceRequest) {
+	msg := c.service.Basecamp.BuildCommentMessage(req.InvoiceBucketID, req.InvoiceTodoID, bcConst.CommentMoveInvoicePDFToPaidDirSuccessfully, bcModel.CommentMsgTypeCompleted)
 
 	defer func() {
-		h.worker.Enqueue(bcModel.BasecampCommentMsg, msg)
+		c.worker.Enqueue(bcModel.BasecampCommentMsg, msg)
 		wg.Done()
 	}()
 
-	err := h.service.GoogleDrive.MoveInvoicePDF(req.Invoice, "Sent", "Paid")
+	err := c.service.GoogleDrive.MoveInvoicePDF(req.Invoice, "Sent", "Paid")
 	if err != nil {
 		l.Errorf(err, "failed to move invoice pdf from sent to paid folder", "invoice", req.Invoice)
-		msg = h.service.Basecamp.BuildCommentMessage(req.InvoiceBucketID, req.InvoiceTodoID, bcConst.CommentMoveInvoicePDFToPaidDirFailed, bcModel.CommentMsgTypeFailed)
+		msg = c.service.Basecamp.BuildCommentMessage(req.InvoiceBucketID, req.InvoiceTodoID, bcConst.CommentMoveInvoicePDFToPaidDirFailed, bcModel.CommentMsgTypeFailed)
 		return
 	}
 }
 
-func (h *handler) calculateHeadCommission(projectCommissionRate decimal.Decimal, beneficiaries []pic, invoice *model.Invoice, invoiceTotalPrice float64) ([]model.EmployeeCommission, error) {
+func (c *controller) calculateHeadCommission(projectCommissionRate decimal.Decimal, beneficiaries []pic, invoice *model.Invoice, invoiceTotalPrice float64) ([]model.EmployeeCommission, error) {
 	// conversionRate by percentage
 	pcrPercentage := projectCommissionRate.Div(decimal.NewFromInt(100))
 	projectCommissionValue, _ := pcrPercentage.Mul(decimal.NewFromFloat(invoiceTotalPrice)).Float64()
-	convertedValue, rate, err := h.service.Wise.Convert(projectCommissionValue, invoice.Project.BankAccount.Currency.Name, "VND")
+	convertedValue, rate, err := c.service.Wise.Convert(projectCommissionValue, invoice.Project.BankAccount.Currency.Name, "VND")
 	if err != nil {
 		return nil, err
 	}
@@ -255,13 +255,13 @@ func (h *handler) calculateHeadCommission(projectCommissionRate decimal.Decimal,
 	return rs, nil
 }
 
-func (h *handler) calculateRefBonusCommission(pics []pic, invoice *model.Invoice) ([]model.EmployeeCommission, error) {
+func (c *controller) calculateRefBonusCommission(pics []pic, invoice *model.Invoice) ([]model.EmployeeCommission, error) {
 	// conversionRate by percentage
 	var rs []model.EmployeeCommission
 	for _, pic := range pics {
 		percentage := pic.CommissionRate.Div(decimal.NewFromInt(100))
 		commissionValue, _ := percentage.Mul(decimal.NewFromFloat(pic.ChargeRate)).Float64()
-		convertedValue, rate, err := h.service.Wise.Convert(commissionValue, invoice.Project.BankAccount.Currency.Name, "VND")
+		convertedValue, rate, err := c.service.Wise.Convert(commissionValue, invoice.Project.BankAccount.Currency.Name, "VND")
 		if err != nil {
 			return nil, err
 		}

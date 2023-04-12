@@ -36,6 +36,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/store/feedbackevent"
 	"github.com/dwarvesf/fortress-api/pkg/store/invoice"
 	"github.com/dwarvesf/fortress-api/pkg/store/invoicenumbercaching"
+	"github.com/dwarvesf/fortress-api/pkg/store/operationalservice"
 	"github.com/dwarvesf/fortress-api/pkg/store/organization"
 	"github.com/dwarvesf/fortress-api/pkg/store/payroll"
 	"github.com/dwarvesf/fortress-api/pkg/store/permission"
@@ -122,6 +123,7 @@ type Store struct {
 	WorkUnit                workunit.IStore
 	WorkUnitMember          workunitmember.IStore
 	WorkUnitStack           workunitstack.IStore
+	OperationalService      operationalservice.IStore
 }
 
 func New() *Store {
@@ -185,5 +187,6 @@ func New() *Store {
 		WorkUnit:                workunit.New(),
 		WorkUnitMember:          workunitmember.New(),
 		WorkUnitStack:           workunitstack.New(),
+		OperationalService:      operationalservice.New(),
 	}
 }

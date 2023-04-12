@@ -1,13 +1,27 @@
 package basecamp
 
 import (
+	"encoding/json"
+	"errors"
 	"math"
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/thoas/go-funk"
 	"gorm.io/datatypes"
+
+	"github.com/dwarvesf/fortress-api/pkg/model"
+	"github.com/dwarvesf/fortress-api/pkg/service/currency"
+	"github.com/dwarvesf/fortress-api/pkg/store/expense"
+)
+
+const (
+	defaultCurrencyType = "VND"
+	thousandUnit        = 1000
+	millionUnit         = 1000000
+	amountPat           = "(\\d+(k|tr|m)\\d+|\\d+(k|tr|m)|\\d+)"
 )
 
 // BasecampExpenseData --
@@ -21,12 +35,98 @@ type BasecampExpenseData struct {
 	BasecampID      int
 }
 
-const (
-	defaultCurrencyType = "VND"
-	thousandUnit        = 1000
-	millionUnit         = 1000000
-	amountPat           = "(\\d+(k|tr|m)\\d+|\\d+(k|tr|m)|\\d+)"
-)
+// ExtractBasecampExpenseAmount --
+func (s *Service) ExtractBasecampExpenseAmount(source string) int {
+	return getAmount(strings.Replace(source, ".", "", -1))
+}
+
+// BasecampExpenseHandler --
+func (s *Service) BasecampExpenseHandler(
+	data BasecampExpenseData,
+) error {
+	employee, err := s.store.Employee.OneByEmail(s.repo.DB(), data.CreatorEmail)
+	if err != nil {
+		return errors.New("can't find employee by email: " + data.CreatorEmail)
+	}
+
+	c, err := s.store.Currency.GetByName(s.repo.DB(), data.CurrencyType)
+	if err != nil {
+		return errors.New("can't get currency by name: " + data.CurrencyType)
+	}
+
+	date := time.Now()
+
+	e, err := s.store.Expense.Create(s.repo.DB(), &model.Expense{
+		Amount:          data.Amount,
+		Reason:          data.Reason,
+		EmployeeID:      employee.ID,
+		CurrencyID:      c.ID,
+		InvoiceImageURL: data.InvoiceImageURL,
+		Metadata:        data.MetaData,
+		BasecampID:      data.BasecampID,
+	})
+	if err != nil {
+		return err
+	}
+
+	m := model.AccountingMetadata{
+		Source: "expense",
+		ID:     e.ID.String(),
+	}
+	bonusBytes, err := json.Marshal(&m)
+	if err != nil {
+		return err
+	}
+
+	temp, rate, err := s.Wise.Convert(float64(data.Amount), c.Name, currency.VNDCurrency)
+	if err != nil {
+		return nil
+	}
+	am := model.NewVietnamDong(int64(temp))
+
+	transaction := &model.AccountingTransaction{
+		Name:             "Expense - " + data.Reason,
+		Amount:           float64(data.Amount),
+		ConversionAmount: am.Format(),
+		Date:             &date,
+		Category:         model.AccountingOfficeSupply,
+		CurrencyID:       &c.ID,
+		Currency:         c.Name,
+		ConversionRate:   rate,
+		Metadata:         bonusBytes,
+		Type:             model.AccountingOV,
+	}
+
+	if err = s.store.Accounting.CreateTransaction(
+		s.repo.DB(),
+		transaction,
+	); err != nil {
+		return err
+	}
+
+	e.AccountingTransactionID = &transaction.ID
+
+	if _, err = s.store.Expense.Update(s.repo.DB(), e); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *Service) UncheckBasecampExpenseHandler(
+	data BasecampExpenseData,
+) error {
+	e, err := s.store.Expense.GetByQuery(s.repo.DB(), &expense.ExpenseQuery{BasecampID: data.BasecampID})
+	if err != nil {
+		return err
+	}
+
+	if _, err = s.store.Expense.Delete(s.repo.DB(), e); err != nil {
+		return err
+	}
+
+	return nil
+}
 
 func getAmountStr(s string) string {
 	c, _ := regexp.Compile(amountPat)
@@ -38,11 +138,6 @@ func getAmountStr(s string) string {
 // 	s = strings.Replace(s, amount, "", 1)
 // 	return strings.TrimSpace(strings.Replace(s, "for", "", 1))
 // }
-
-// ExtractBasecampExpenseAmount --
-func ExtractBasecampExpenseAmount(source string) int {
-	return getAmount(strings.Replace(source, ".", "", -1))
-}
 
 func getAmount(source string) int {
 	s := getAmountStr(source)

@@ -169,3 +169,8 @@ func (s *store) GetByEmployeeID(db *gorm.DB, employeeID string) ([]*model.Projec
 
 	return projects, query.Find(&projects).Error
 }
+
+func (s *store) GetProjectByAlias(db *gorm.DB, alias string) (*model.Project, error) {
+	res := model.Project{}
+	return &res, db.Where("alias = ?", alias).Preload("ProjectInfo").Find(&res).Error
+}
