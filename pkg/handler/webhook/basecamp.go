@@ -113,7 +113,8 @@ func (h *handler) markInvoiceAsPaid(msg *model.BasecampWebhookMessage) error {
 		return nil
 	}
 
-	if _, err := h.controller.Invoice.MarkInvoiceAsPaid(invoice, true); err != nil {
+	// if _, err := h.controller.Invoice.MarkInvoiceAsPaid(invoice, true); err != nil {
+	if _, err := h.controller.Invoice.MarkInvoiceAsPaidByBasecampWebhookMessage(invoice, msg); err != nil {
 		h.service.Basecamp.CommentResult(msg.Recording.Bucket.ID, msg.Recording.ID, h.service.Basecamp.BuildFailedComment(err.Error()))
 		return err
 	}
