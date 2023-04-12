@@ -2,8 +2,11 @@ package accounting
 
 import (
 	"fmt"
+	"net/http"
 	"strings"
 	"time"
+
+	"github.com/gin-gonic/gin"
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/consts"
@@ -15,6 +18,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/store/project"
 	"github.com/dwarvesf/fortress-api/pkg/utils"
 	"github.com/dwarvesf/fortress-api/pkg/utils/timeutil"
+	"github.com/dwarvesf/fortress-api/pkg/view"
 )
 
 type handler struct {
@@ -35,11 +39,14 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 	}
 }
 
-func (h handler) CreateAccountingTodo(month, year int) error {
+func (h handler) CreateAccountingTodo(c *gin.Context) {
 	l := h.logger.Fields(logger.Fields{
 		"handler": "Accounting",
 		"method":  "CreateAccountingTodo",
 	})
+
+	month, year := timeutil.GetMonthAndYearOfNextMonth()
+
 	l.Info(fmt.Sprintf("Creating accounting todo for %s-%v", time.Month(month), year))
 	accountingTodo := consts.PlaygroundID
 	todoSetID := consts.PlaygroundTodoID
@@ -56,41 +63,58 @@ func (h handler) CreateAccountingTodo(month, year int) error {
 
 	outTodoTemplates, err := h.store.OperationalService.FindOperationByMonth(h.repo.DB(), time.Month(month))
 	if err != nil {
-		return err
+		l.Errorf(err, "failed to find operation by month", "month", time.Month(month))
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, time.Month(month), ""))
+		return
 	}
 
 	createTodo, err := h.service.Basecamp.Todo.CreateList(accountingTodo, todoSetID, todoList)
 	if err != nil {
-		return err
+		l.Errorf(err, "failed to create todo list", "accountingTodo", accountingTodo, "todoSetID", todoSetID, "todoList", todoList)
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, accountingTodo, ""))
+		return
 	}
 
 	//Create In group
 	inGroup, err := h.service.Basecamp.Todo.CreateGroup(accountingTodo, createTodo.ID, todoGroupInFoundation)
 	if err != nil {
-		return err
+		l.Errorf(err, "failed to create todo list", "accountingTodo", accountingTodo, "createTodo.ID", createTodo.ID, "todoGroupInFoundation", todoGroupInFoundation)
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, accountingTodo, ""))
+		return
 	}
 
 	// Create Out group
 	outGroup, err := h.service.Basecamp.Todo.CreateGroup(accountingTodo, createTodo.ID, todoGroupOut)
 	if err != nil {
-		return err
+		l.Errorf(err, "failed to create group", "accountingTodo", accountingTodo, "createTodo.ID", createTodo.ID, "todoGroupOut", todoGroupOut)
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, accountingTodo, ""))
+		return
 	}
+
 	// Create todoList for each accounting template into out Group
 	err = h.createTodoInOutGroup(outGroup.ID, accountingTodo, outTodoTemplates, month, year)
 	if err != nil {
-		return err
+		l.Errorf(err, "failed to create In Out todo group", "accountingTodo", accountingTodo, "outTodoTemplates", outTodoTemplates, "month", month, "year", year)
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, accountingTodo, ""))
+		return
 	}
+
 	// Create Salary to do and add into out group
 	err = h.createSalaryTodo(outGroup.ID, accountingTodo, month, year)
 	if err != nil {
-		return err
+		l.Errorf(err, "failed to create salary todo", "accountingTodo", accountingTodo, "month", month, "year", year)
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, accountingTodo, ""))
+		return
 	}
-	// create to do in IN group
+	// create to do IN group
 	err = h.createTodoInInGroup(inGroup.ID, accountingTodo)
 	if err != nil {
-		return err
+		l.Errorf(err, "failed to create salary todo", "accountingTodo", accountingTodo, "inGroup.ID", inGroup.ID)
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, accountingTodo, ""))
+		return
 	}
-	return nil
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))
 }
 
 func (h handler) createTodoInOutGroup(outGroupID int, projectID int, outTodoTemplates []*model.OperationalService, month int, year int) error {
