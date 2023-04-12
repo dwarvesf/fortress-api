@@ -41,6 +41,10 @@ func (c *controller) storeCommission(db *gorm.DB, l logger.Logger, invoice *mode
 		return nil, err
 	}
 
+	if len(employeeCommissions) == 0 {
+		return []model.EmployeeCommission{}, nil
+	}
+
 	return c.store.EmployeeCommission.Create(db, employeeCommissions)
 }
 
@@ -61,7 +65,6 @@ func (c *controller) calculateCommissionFromInvoice(db *gorm.DB, l logger.Logger
 
 	// Get list of project head who will get the commission from this invoice
 	pics := getPICs(invoice, projectMembers)
-
 	var res []model.EmployeeCommission
 	if len(pics.devLeads) > 0 {
 		commissionRate := commissionConfigMap[model.HeadPositionTechnicalLead.String()]
@@ -119,7 +122,6 @@ func (c *controller) calculateCommissionFromInvoice(db *gorm.DB, l logger.Logger
 		}
 		res = append(res, c...)
 	}
-
 	if len(pics.suppliers) > 0 {
 		c, err := c.calculateRefBonusCommission(pics.suppliers, invoice)
 		if err != nil {
