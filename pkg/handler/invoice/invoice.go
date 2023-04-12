@@ -317,35 +317,32 @@ func (h *handler) Send(c *gin.Context) {
 		iv.Status = model.InvoiceStatusDraft
 	}
 
+	temp, rate, err := h.service.Wise.Convert(float64(iv.Total), iv.Bank.Currency.Name, "VND")
+	if err != nil {
+		l.Error(err, "failed to convert currency")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req, ""))
+		return
+	}
+	am := model.NewVietnamDong(int64(temp))
+	iv.ConversionAmount = int64(am)
+	iv.ConversionRate = rate
+
+	invrs, err := h.store.Invoice.Save(h.repo.DB(), iv)
+	if err != nil {
+		l.Errorf(err, "failed to create invoice", "invoice", iv.Number)
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req, ""))
+		return
+	}
+	iv.ID = invrs.ID
+
+	if err := h.store.InvoiceNumberCaching.UpdateInvoiceCachingNumber(h.repo.DB(), time.Now(), iv.Project.Code); err != nil {
+		l.Errorf(err, "failed to update invoice caching number", "project", iv.Project.Code)
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req, ""))
+		return
+	}
+
 	errsCh := make(chan error)
-	var amountGr = 1
-
-	go func() {
-		temp, rate, err := h.service.Wise.Convert(float64(iv.Total), iv.Bank.Currency.Name, "VND")
-		if err != nil {
-			errsCh <- err
-			return
-		}
-		am := model.NewVietnamDong(int64(temp))
-		iv.ConversionAmount = int64(am)
-		iv.ConversionRate = rate
-
-		invrs, err := h.store.Invoice.Save(h.repo.DB(), iv)
-		if err != nil {
-			l.Errorf(err, "failed to create invoice", "invoice", iv.Number)
-			errsCh <- err
-			return
-		}
-		iv.ID = invrs.ID
-
-		if err := h.store.InvoiceNumberCaching.UpdateInvoiceCachingNumber(h.repo.DB(), time.Now(), iv.Project.Code); err != nil {
-			l.Errorf(err, "failed to update invoice caching number", "project", iv.Project.Code)
-			errsCh <- err
-			return
-		}
-		errsCh <- nil
-	}()
-
+	var amountGr = 0
 	if !req.IsDraft {
 		amountGr += 2
 		fn := strconv.FormatInt(rand.Int63(), 10) + "_" + iv.Number + ".pdf"
@@ -370,8 +367,8 @@ func (h *handler) Send(c *gin.Context) {
 				errsCh <- err
 				return
 			}
-			iv.ThreadID = threadID
 
+			iv.ThreadID = threadID
 			_, err = h.store.Invoice.UpdateSelectedFieldsByID(h.repo.DB(), iv.ID.String(), *iv, "thread_id")
 			if err != nil {
 				l.Errorf(err, "failed to update invoice thread id", "thread_id", threadID)
