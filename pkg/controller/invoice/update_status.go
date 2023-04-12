@@ -156,6 +156,24 @@ func (c *controller) MarkInvoiceAsPaid(invoice *model.Invoice, sendThankYouEmail
 	return invoice, nil
 }
 
+func (c *controller) MarkInvoiceAsPaidByBasecampWebhookMessage(invoice *model.Invoice, msg *model.BasecampWebhookMessage) (*model.Invoice, error) {
+	l := c.logger.Fields(logger.Fields{
+		"controller": "invoice",
+		"method":     "MarkInvoiceAsPaidByBasecampWebhookMessage",
+		"req":        invoice,
+	})
+	invoice.Status = model.InvoiceStatusPaid
+
+	c.processPaidInvoice(l, &processPaidInvoiceRequest{
+		Invoice:          invoice,
+		InvoiceTodoID:    msg.Recording.ID,
+		InvoiceBucketID:  msg.Recording.Bucket.ID,
+		SentThankYouMail: true,
+	})
+
+	return invoice, nil
+}
+
 func (c *controller) processPaidInvoice(l logger.Logger, req *processPaidInvoiceRequest) {
 	wg := &sync.WaitGroup{}
 	wg.Add(3)
