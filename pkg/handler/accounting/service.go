@@ -1,5 +1,7 @@
 package accounting
 
+import "github.com/gin-gonic/gin"
+
 type IHandler interface {
-	CreateAccountingTodo(month, year int) error
+	CreateAccountingTodo(c *gin.Context)
 }
