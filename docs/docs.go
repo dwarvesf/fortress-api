@@ -5299,6 +5299,12 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
+                "intermediaryBankAddress": {
+                    "type": "string"
+                },
+                "intermediaryBankName": {
+                    "type": "string"
+                },
                 "name": {
                     "type": "string"
                 },
@@ -5312,6 +5318,59 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "uksortCode": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.BaseSalary": {
+            "type": "object",
+            "properties": {
+                "batch": {
+                    "type": "integer"
+                },
+                "category": {
+                    "type": "string"
+                },
+                "company_account_amount": {
+                    "type": "integer"
+                },
+                "contract_amount": {
+                    "type": "integer"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "currency": {
+                    "$ref": "#/definitions/model.Currency"
+                },
+                "currency_id": {
+                    "type": "string"
+                },
+                "deletedAt": {
+                    "$ref": "#/definitions/gorm.DeletedAt"
+                },
+                "effective_date": {
+                    "type": "string"
+                },
+                "employee": {
+                    "$ref": "#/definitions/model.Employee"
+                },
+                "employee_id": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "insurance_amount": {
+                    "type": "integer"
+                },
+                "personal_account_amount": {
+                    "type": "integer"
+                },
+                "type": {
                     "type": "string"
                 },
                 "updatedAt": {
@@ -5421,6 +5480,35 @@ const docTemplate = `{
                 },
                 "updatedAt": {
                     "type": "string"
+                }
+            }
+        },
+        "model.CommissionExplain": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "integer"
+                },
+                "bucket_id": {
+                    "type": "integer"
+                },
+                "formatted_amount": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "month": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "todo_id": {
+                    "type": "integer"
+                },
+                "year": {
+                    "type": "integer"
                 }
             }
         },
@@ -5600,12 +5688,15 @@ const docTemplate = `{
                 "avatar": {
                     "type": "string"
                 },
+                "base_salary": {
+                    "$ref": "#/definitions/model.BaseSalary"
+                },
                 "basecampAttachableSGID": {
                     "type": "string"
                 },
                 "basecampID": {
                     "description": "social services",
-                    "type": "string"
+                    "type": "integer"
                 },
                 "city": {
                     "type": "string"
@@ -5660,6 +5751,9 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/model.EmployeeStack"
                     }
+                },
+                "employee_salary": {
+                    "$ref": "#/definitions/model.EmployeeSalary"
                 },
                 "fullName": {
                     "description": "basic info",
@@ -5935,6 +6029,59 @@ const docTemplate = `{
                 },
                 "updatedAt": {
                     "type": "string"
+                }
+            }
+        },
+        "model.EmployeeSalary": {
+            "type": "object",
+            "properties": {
+                "actual_pay_day": {
+                    "type": "integer"
+                },
+                "bonus_amount": {
+                    "type": "integer"
+                },
+                "bonus_detail": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "commission_amount": {
+                    "type": "integer"
+                },
+                "commission_detail": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "employee_id": {
+                    "type": "string"
+                },
+                "is_done": {
+                    "type": "boolean"
+                },
+                "month": {
+                    "type": "integer"
+                },
+                "plan_pay_day": {
+                    "type": "integer"
+                },
+                "reimbursement_amount": {
+                    "type": "integer"
+                },
+                "reimbursement_detail": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "total_amount": {
+                    "type": "integer"
+                },
+                "year": {
+                    "type": "integer"
                 }
             }
         },
@@ -6252,6 +6399,103 @@ const docTemplate = `{
                 }
             }
         },
+        "model.Payroll": {
+            "type": "object",
+            "properties": {
+                "base_salary_amount": {
+                    "type": "integer"
+                },
+                "commission_amount": {
+                    "type": "integer"
+                },
+                "commission_explain": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "commission_explains": {
+                    "description": "CommissionExplains is commission explains in email template",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.CommissionExplain"
+                    }
+                },
+                "contract_amount": {
+                    "type": "integer"
+                },
+                "conversion_amount": {
+                    "type": "integer"
+                },
+                "due_date": {
+                    "type": "string"
+                },
+                "employee": {
+                    "$ref": "#/definitions/model.Employee"
+                },
+                "employee_id": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_paid": {
+                    "type": "boolean"
+                },
+                "month": {
+                    "type": "integer"
+                },
+                "project_bonus": {
+                    "type": "integer"
+                },
+                "project_bonus_explain": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "project_bonus_explains": {
+                    "description": "ProjectBonusExplains is project bonus explains in email template",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.ProjectBonusExplain"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                },
+                "total_allowance": {
+                    "description": "TotalAllowance is amount of allowance in email template",
+                    "type": "number"
+                },
+                "total_explain": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "twAmount": {
+                    "description": "TotalAllowance is amount of allowance in email template",
+                    "type": "number"
+                },
+                "twFee": {
+                    "type": "number"
+                },
+                "twRate": {
+                    "description": "TWRate is rate of allowance in email template",
+                    "type": "number"
+                },
+                "user_rank_snapshot": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "year": {
+                    "type": "integer"
+                }
+            }
+        },
         "model.Position": {
             "type": "object",
             "properties": {
@@ -6379,6 +6623,35 @@ const docTemplate = `{
                 },
                 "updatedAt": {
                     "type": "string"
+                }
+            }
+        },
+        "model.ProjectBonusExplain": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "integer"
+                },
+                "bucket_id": {
+                    "type": "integer"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "formatted_amount": {
+                    "type": "string"
+                },
+                "month": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "todo_id": {
+                    "type": "integer"
+                },
+                "year": {
+                    "type": "integer"
                 }
             }
         },
@@ -8478,6 +8751,12 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
+                    "type": "string"
+                },
+                "intermediaryBankAddress": {
+                    "type": "string"
+                },
+                "intermediaryBankName": {
                     "type": "string"
                 },
                 "name": {

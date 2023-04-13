@@ -443,23 +443,30 @@ func (h *handler) generateInvoicePDF(l logger.Logger, invoice *model.Invoice) er
 	haveRouting := invoice.Bank.RoutingNumber != ""
 	haveSwiftCode := invoice.Bank.SwiftCode != ""
 	haveUKSortCode := invoice.Bank.UKSortCode != ""
+	haveIntermediaryBankName := invoice.Bank.IntermediaryBankName != ""
+	haveIntermediaryBankAddress := invoice.Bank.IntermediaryBankAddress != ""
 
 	data := &struct {
-		Path               string
-		Invoice            *model.Invoice
-		HaveRouting        bool
-		HaveUKSortCode     bool
-		HaveSWIFTCode      bool
-		CompanyContactInfo *model.CompanyContactInfo
-		InvoiceItem        []model.InvoiceItem
+		Path                        string
+		Invoice                     *model.Invoice
+		HaveRouting                 bool
+		HaveUKSortCode              bool
+		HaveSWIFTCode               bool
+		HaveIntermediaryBankName    bool
+		HaveIntermediaryBankAddress bool
+		CompanyContactInfo          *model.CompanyContactInfo
+		InvoiceItem                 []model.InvoiceItem
+		IntermediaryBankName        string
 	}{
-		Path:               h.config.Invoice.TemplatePath,
-		Invoice:            invoice,
-		HaveRouting:        haveRouting,
-		HaveUKSortCode:     haveUKSortCode,
-		HaveSWIFTCode:      haveSwiftCode,
-		CompanyContactInfo: companyInfo,
-		InvoiceItem:        items,
+		Path:                        h.config.Invoice.TemplatePath,
+		Invoice:                     invoice,
+		HaveRouting:                 haveRouting,
+		HaveUKSortCode:              haveUKSortCode,
+		HaveSWIFTCode:               haveSwiftCode,
+		HaveIntermediaryBankName:    haveIntermediaryBankName,
+		HaveIntermediaryBankAddress: haveIntermediaryBankAddress,
+		CompanyContactInfo:          companyInfo,
+		InvoiceItem:                 items,
 	}
 
 	funcMap := template.FuncMap{

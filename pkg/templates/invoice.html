@@ -285,6 +285,18 @@
         <td>{{.Invoice.Bank.SwiftCode}}</td>
       </tr>
       {{end}}
+      {{if .HaveIntermediaryBankName}}
+      <tr>
+        <td class="text-grey">Intermediary Bank:</td>
+        <td>{{.Invoice.Bank.IntermediaryBankName}}</td>
+      </tr>
+      {{end}}
+      {{if .HaveIntermediaryBankAddress}}
+      <tr>
+        <td class="text-grey">Intermediary Bank Address:</td>
+        <td>{{.Invoice.Bank.IntermediaryBankNameAddress}}</td>
+      </tr>
+      {{end}}
       {{if .HaveRouting}}
       <tr>
         <td class="text-grey">Routing number:</td>
