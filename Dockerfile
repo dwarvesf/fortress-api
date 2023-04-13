@@ -1,4 +1,4 @@
-FROM surnet/alpine-wkhtmltopdf:3.10-0.12.5-full as wkhtmltopdf
+FROM surnet/alpine-wkhtmltopdf:3.17.0-0.12.6-full as wkhtmltopdf
 
 FROM golang:1.18-alpine as builder
 RUN mkdir /build
@@ -9,7 +9,7 @@ ENV GOOS=linux GOARCH=amd64 CGO_ENABLED=0
 RUN go install -v ./...
 RUN go install -v github.com/rubenv/sql-migrate/sql-migrate@latest
 
-FROM alpine:3.15
+FROM alpine:3.17.3
 
 RUN echo http://dl-cdn.alpinelinux.org/alpine/edge/community >> /etc/apk/repositories && \
     echo http://dl-cdn.alpinelinux.org/alpine/edge/main >> /etc/apk/repositories && \

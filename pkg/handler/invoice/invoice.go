@@ -308,7 +308,7 @@ func (h *handler) Send(c *gin.Context) {
 	iv.Number = *nextInvoiceNumber
 
 	if err := h.generateInvoicePDF(l, iv); err != nil {
-		l.Error(err, "failed to get next invoice Number")
+		l.Error(err, "failed to generate Invoice PDF")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req, ""))
 		return
 	}
