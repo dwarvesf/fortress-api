@@ -33,4 +33,5 @@ type IController interface {
 	UpdateStatus(in UpdateStatusInput) (*model.Invoice, error)
 	MarkInvoiceAsError(invoice *model.Invoice) (*model.Invoice, error)
 	MarkInvoiceAsPaid(invoice *model.Invoice, sendThankYouEmail bool) (*model.Invoice, error)
+	MarkInvoiceAsPaidByBasecampWebhookMessage(invoice *model.Invoice, msg *model.BasecampWebhookMessage) (*model.Invoice, error)
 }
