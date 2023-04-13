@@ -4,14 +4,16 @@ package model
 type BankAccount struct {
 	BaseModel
 
-	AccountNumber string
-	BankName      string
-	OwnerName     string
-	Address       *string
-	SwiftCode     string
-	RoutingNumber string
-	Name          string
-	UKSortCode    string
+	AccountNumber           string
+	BankName                string
+	OwnerName               string
+	Address                 *string
+	SwiftCode               string
+	RoutingNumber           string
+	Name                    string
+	UKSortCode              string
+	IntermediaryBankName    string
+	IntermediaryBankAddress string
 
 	CurrencyID UUID
 	Currency   *Currency

@@ -48,6 +48,10 @@ definitions:
         $ref: '#/definitions/gorm.DeletedAt'
       id:
         type: string
+      intermediaryBankAddress:
+        type: string
+      intermediaryBankName:
+        type: string
       name:
         type: string
       ownerName:
@@ -57,6 +61,41 @@ definitions:
       swiftCode:
         type: string
       uksortCode:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  model.BaseSalary:
+    properties:
+      batch:
+        type: integer
+      category:
+        type: string
+      company_account_amount:
+        type: integer
+      contract_amount:
+        type: integer
+      createdAt:
+        type: string
+      currency:
+        $ref: '#/definitions/model.Currency'
+      currency_id:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      effective_date:
+        type: string
+      employee:
+        $ref: '#/definitions/model.Employee'
+      employee_id:
+        type: string
+      id:
+        type: string
+      insurance_amount:
+        type: integer
+      personal_account_amount:
+        type: integer
+      type:
         type: string
       updatedAt:
         type: string
@@ -129,6 +168,25 @@ definitions:
         type: string
       updatedAt:
         type: string
+    type: object
+  model.CommissionExplain:
+    properties:
+      amount:
+        type: integer
+      bucket_id:
+        type: integer
+      formatted_amount:
+        type: string
+      id:
+        type: string
+      month:
+        type: integer
+      name:
+        type: string
+      todo_id:
+        type: integer
+      year:
+        type: integer
     type: object
   model.CompanyContactInfo:
     properties:
@@ -245,11 +303,13 @@ definitions:
         type: string
       avatar:
         type: string
+      base_salary:
+        $ref: '#/definitions/model.BaseSalary'
       basecampAttachableSGID:
         type: string
       basecampID:
         description: social services
-        type: string
+        type: integer
       city:
         type: string
       country:
@@ -266,6 +326,8 @@ definitions:
         type: string
       displayName:
         type: string
+      employee_salary:
+        $ref: '#/definitions/model.EmployeeSalary'
       employeeChapters:
         items:
           $ref: '#/definitions/model.EmployeeChapter'
@@ -469,6 +531,41 @@ definitions:
         type: string
       updatedAt:
         type: string
+    type: object
+  model.EmployeeSalary:
+    properties:
+      actual_pay_day:
+        type: integer
+      bonus_amount:
+        type: integer
+      bonus_detail:
+        items:
+          type: integer
+        type: array
+      commission_amount:
+        type: integer
+      commission_detail:
+        items:
+          type: integer
+        type: array
+      employee_id:
+        type: string
+      is_done:
+        type: boolean
+      month:
+        type: integer
+      plan_pay_day:
+        type: integer
+      reimbursement_amount:
+        type: integer
+      reimbursement_detail:
+        items:
+          type: integer
+        type: array
+      total_amount:
+        type: integer
+      year:
+        type: integer
     type: object
   model.EmployeeStack:
     properties:
@@ -677,6 +774,72 @@ definitions:
       updatedAt:
         type: string
     type: object
+  model.Payroll:
+    properties:
+      base_salary_amount:
+        type: integer
+      commission_amount:
+        type: integer
+      commission_explain:
+        items:
+          type: integer
+        type: array
+      commission_explains:
+        description: CommissionExplains is commission explains in email template
+        items:
+          $ref: '#/definitions/model.CommissionExplain'
+        type: array
+      contract_amount:
+        type: integer
+      conversion_amount:
+        type: integer
+      due_date:
+        type: string
+      employee:
+        $ref: '#/definitions/model.Employee'
+      employee_id:
+        type: string
+      id:
+        type: string
+      is_paid:
+        type: boolean
+      month:
+        type: integer
+      project_bonus:
+        type: integer
+      project_bonus_explain:
+        items:
+          type: integer
+        type: array
+      project_bonus_explains:
+        description: ProjectBonusExplains is project bonus explains in email template
+        items:
+          $ref: '#/definitions/model.ProjectBonusExplain'
+        type: array
+      total:
+        type: integer
+      total_allowance:
+        description: TotalAllowance is amount of allowance in email template
+        type: number
+      total_explain:
+        items:
+          type: integer
+        type: array
+      twAmount:
+        description: TotalAllowance is amount of allowance in email template
+        type: number
+      twFee:
+        type: number
+      twRate:
+        description: TWRate is rate of allowance in email template
+        type: number
+      user_rank_snapshot:
+        items:
+          type: integer
+        type: array
+      year:
+        type: integer
+    type: object
   model.Position:
     properties:
       code:
@@ -762,6 +925,25 @@ definitions:
         type: string
       updatedAt:
         type: string
+    type: object
+  model.ProjectBonusExplain:
+    properties:
+      amount:
+        type: integer
+      bucket_id:
+        type: integer
+      description:
+        type: string
+      formatted_amount:
+        type: string
+      month:
+        type: integer
+      name:
+        type: string
+      todo_id:
+        type: integer
+      year:
+        type: integer
     type: object
   model.ProjectHead:
     properties:
@@ -2158,6 +2340,10 @@ definitions:
       currencyID:
         type: string
       id:
+        type: string
+      intermediaryBankAddress:
+        type: string
+      intermediaryBankName:
         type: string
       name:
         type: string

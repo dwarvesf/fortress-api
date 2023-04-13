@@ -7,17 +7,19 @@ type ListBankAccountResponse struct {
 }
 
 type BankAccount struct {
-	ID            string   `json:"id"`
-	AccountNumber string   `json:"accountNumber"`
-	BankName      string   `json:"bankName"`
-	OwnerName     string   `json:"ownerName"`
-	Address       *string  `json:"address"`
-	SwiftCode     string   `json:"swiftCode"`
-	RoutingNumber string   `json:"routingNumber"`
-	Name          string   `json:"name"`
-	UKSortCode    string   `json:"ukSortCode"`
-	CurrencyID    string   `json:"currencyID"`
-	Currency      Currency `json:"currency"`
+	ID                      string   `json:"id"`
+	AccountNumber           string   `json:"accountNumber"`
+	BankName                string   `json:"bankName"`
+	OwnerName               string   `json:"ownerName"`
+	Address                 *string  `json:"address"`
+	SwiftCode               string   `json:"swiftCode"`
+	IntermediaryBankAddress string   `json:"intermediaryBankAddress"`
+	IntermediaryBankName    string   `json:"intermediaryBankName"`
+	RoutingNumber           string   `json:"routingNumber"`
+	Name                    string   `json:"name"`
+	UKSortCode              string   `json:"ukSortCode"`
+	CurrencyID              string   `json:"currencyID"`
+	Currency                Currency `json:"currency"`
 }
 
 func ToListBankAccount(accounts []*model.BankAccount) []BankAccount {
@@ -25,17 +27,19 @@ func ToListBankAccount(accounts []*model.BankAccount) []BankAccount {
 
 	for _, acc := range accounts {
 		res = append(res, BankAccount{
-			ID:            acc.ID.String(),
-			AccountNumber: acc.AccountNumber,
-			BankName:      acc.BankName,
-			OwnerName:     acc.OwnerName,
-			Address:       acc.Address,
-			SwiftCode:     acc.SwiftCode,
-			RoutingNumber: acc.RoutingNumber,
-			Name:          acc.Name,
-			UKSortCode:    acc.UKSortCode,
-			CurrencyID:    acc.CurrencyID.String(),
-			Currency:      toCurrency(acc.Currency),
+			ID:                      acc.ID.String(),
+			AccountNumber:           acc.AccountNumber,
+			BankName:                acc.BankName,
+			OwnerName:               acc.OwnerName,
+			Address:                 acc.Address,
+			SwiftCode:               acc.SwiftCode,
+			RoutingNumber:           acc.RoutingNumber,
+			Name:                    acc.Name,
+			UKSortCode:              acc.UKSortCode,
+			IntermediaryBankName:    acc.IntermediaryBankName,
+			IntermediaryBankAddress: acc.IntermediaryBankAddress,
+			CurrencyID:              acc.CurrencyID.String(),
+			Currency:                toCurrency(acc.Currency),
 		})
 	}
 
