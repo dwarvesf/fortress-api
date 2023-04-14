@@ -15,7 +15,7 @@ type EmployeeCommission struct {
 	ConversionRate float64
 	Formula        string
 	Note           string
-	PaidAt         time.Time
+	PaidAt         *time.Time
 
 	Employee *Employee
 	Invoice  *Invoice
