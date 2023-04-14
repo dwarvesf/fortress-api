@@ -65,6 +65,7 @@ func (c *controller) calculateCommissionFromInvoice(db *gorm.DB, l logger.Logger
 
 	// Get list of project head who will get the commission from this invoice
 	pics := getPICs(invoice, projectMembers)
+
 	var res []model.EmployeeCommission
 	if len(pics.devLeads) > 0 {
 		commissionRate := commissionConfigMap[model.HeadPositionTechnicalLead.String()]
@@ -196,7 +197,7 @@ func getPICs(invoice *model.Invoice, projectMembers []*model.ProjectMember) *pic
 				ID:             pm.Employee.Referrer.ID,
 				CommissionRate: decimal.NewFromInt(hiringCommissionRate),
 				ChargeRate:     pm.Rate.InexactFloat64(),
-				Note:           pm.Employee.FullName,
+				Note:           fmt.Sprintf("Hiring - %s", pm.Employee.FullName),
 			})
 		}
 	}
