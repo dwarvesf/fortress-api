@@ -20,7 +20,6 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service"
-	bcModel "github.com/dwarvesf/fortress-api/pkg/service/basecamp/model"
 	"github.com/dwarvesf/fortress-api/pkg/service/currency"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	commissionStore "github.com/dwarvesf/fortress-api/pkg/store/commission"
@@ -795,13 +794,8 @@ func markBonusAsDone(h *handler, p *model.Payroll) error {
 					return err
 				}
 				msg := fmt.Sprintf("Amount has been deposited in your payroll %v", mention)
-				cr := h.service.Basecamp.CommentResult(projectBonusExplains[i].BasecampBucketID,
-					projectBonusExplains[i].BasecampTodoID,
-					h.service.Basecamp.BuildCommentMessage(
-						projectBonusExplains[i].BasecampBucketID,
-						projectBonusExplains[i].BasecampTodoID,
-						msg, bcModel.CommentMsgTypeCompleted).Payload)
-				h.worker.Enqueue(model.BasecampCommentMsg, cr)
+				cm := h.service.Basecamp.BuildCommentMessage(projectBonusExplains[i].BasecampBucketID, projectBonusExplains[i].BasecampTodoID, msg, "")
+				h.worker.Enqueue(model.BasecampCommentMsg, cm)
 			}
 		}
 	}
