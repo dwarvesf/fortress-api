@@ -169,64 +169,64 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 		valuation.GET("/:year", pmw.WithPerm(model.PermissionValuationRead), h.Valuation.One)
 	}
 
-	notion := v1.Group("/notion", amw.WithAuth, pmw.WithPerm(model.PermissionCronjobExecute))
+	notion := v1.Group("/notion")
 	{
 		earn := notion.Group("/earn")
 		{
-			earn.GET("", h.Notion.ListEarns)
+			earn.GET("", amw.WithAuth, pmw.WithPerm(model.PermissionNotionRead), h.Notion.ListEarns)
 		}
 		techRadar := notion.Group("/tech-radar")
 		{
-			techRadar.GET("", h.Notion.ListTechRadars)
-			techRadar.POST("", h.Notion.CreateTechRadar)
+			techRadar.GET("", amw.WithAuth, pmw.WithPerm(model.PermissionNotionRead), h.Notion.ListTechRadars)
+			techRadar.POST("", amw.WithAuth, pmw.WithPerm(model.PermissionNotionCreate), h.Notion.CreateTechRadar)
 		}
 		audience := notion.Group("/audiences")
 		{
-			audience.GET("", h.Notion.ListAudiences)
+			audience.GET("", amw.WithAuth, pmw.WithPerm(model.PermissionNotionRead), h.Notion.ListAudiences)
 		}
 		event := notion.Group("/events")
 		{
-			event.GET("", h.Notion.ListEvents)
+			event.GET("", amw.WithAuth, pmw.WithPerm(model.PermissionNotionRead), h.Notion.ListEvents)
 		}
 		digest := notion.Group("/digests")
 		{
-			digest.GET("", h.Notion.ListDigests)
+			digest.GET("", amw.WithAuth, pmw.WithPerm(model.PermissionNotionRead), h.Notion.ListDigests)
 		}
 		update := notion.Group("/updates")
 		{
-			update.GET("", h.Notion.ListUpdates)
+			update.GET("", amw.WithAuth, pmw.WithPerm(model.PermissionNotionRead), h.Notion.ListUpdates)
 		}
 		memo := notion.Group("/memos")
 		{
-			memo.GET("", h.Notion.ListMemos)
+			memo.GET("", amw.WithAuth, pmw.WithPerm(model.PermissionNotionRead), h.Notion.ListMemos)
 		}
 		issue := notion.Group("/issues")
 		{
-			issue.GET("", h.Notion.ListIssues)
+			issue.GET("", amw.WithAuth, pmw.WithPerm(model.PermissionNotionRead), h.Notion.ListIssues)
 		}
 		staffingDemand := notion.Group("/staffing-demands")
 		{
-			staffingDemand.GET("", h.Notion.ListStaffingDemands)
+			staffingDemand.GET("", amw.WithAuth, pmw.WithPerm(model.PermissionNotionRead), h.Notion.ListStaffingDemands)
 		}
 		hiring := notion.Group("/hiring-positions")
 		{
-			hiring.GET("", h.Notion.ListHiringPositions)
+			hiring.GET("", amw.WithAuth, pmw.WithPerm(model.PermissionNotionRead), h.Notion.ListHiringPositions)
 		}
 
 		projectNotion := notion.Group("/projects")
 		{
-			projectNotion.GET("/milestones", h.Notion.ListProjectMilestones)
+			projectNotion.GET("/milestones", amw.WithAuth, pmw.WithPerm(model.PermissionNotionRead), h.Notion.ListProjectMilestones)
 		}
 
 		dfUpdates := notion.Group("df-updates")
 		{
-			dfUpdates.POST("/:id/send", h.Notion.SendNewsLetter)
+			dfUpdates.POST("/:id/send", amw.WithAuth, pmw.WithPerm(model.PermissionNotionSend), h.Notion.SendNewsLetter)
 		}
 
 		notionChangelog := notion.Group("changelogs")
 		{
-			notionChangelog.GET("/projects/available", h.Notion.GetAvailableProjectsChangelog)
-			notionChangelog.POST("/project", h.Notion.SendProjectChangelog)
+			notionChangelog.GET("/projects/available", amw.WithAuth, pmw.WithPerm(model.PermissionNotionRead), h.Notion.GetAvailableProjectsChangelog)
+			notionChangelog.POST("/project", amw.WithAuth, pmw.WithPerm(model.PermissionNotionSend), h.Notion.SendProjectChangelog)
 		}
 	}
 

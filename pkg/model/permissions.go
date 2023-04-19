@@ -96,6 +96,9 @@ const (
 	PermissionDashBoardResourcesRead              PermissionCode = "dashboards.resources.read"
 	PermissionDashBoardEngagementRead             PermissionCode = "dashboards.engagement.read"
 	PermissionAssetUpload                         PermissionCode = "assets.upload"
+	PermissionNotionRead                          PermissionCode = "notion.read"
+	PermissionNotionCreate                        PermissionCode = "notion.create"
+	PermissionNotionSend                          PermissionCode = "notion.send"
 )
 
 func (p PermissionCode) String() string {
