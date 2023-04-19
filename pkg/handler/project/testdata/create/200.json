@@ -7,20 +7,36 @@
         "type": "dwarves",
         "status": "on-boarding",
         "startDate": "2022-11-14",
-        "accountManager": {
-            "employeeID": "ecea9d15-05ba-4a4e-9787-54210e3b98ce",
-            "fullName": "Nguyễn Hoàng Huy",
-            "displayName": "Huy Nguyen",
-            "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/2830497479497502617.png",
-            "username": "huynh"
-        },
-        "deliveryManager": {
-            "employeeID": "2655832e-f009-4b73-a535-64c3a22e558f",
-            "fullName": "Phạm Đức Thành",
-            "displayName": "Thanh Pham",
-            "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
-            "username": "thanh"
-        },
+        "accountManagers": [
+            {
+                "employeeID": "ecea9d15-05ba-4a4e-9787-54210e3b98ce",
+                "fullName": "Nguyễn Hoàng Huy",
+                "displayName": "Huy Nguyen",
+                "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/2830497479497502617.png",
+                "username": "huynh",
+                "commissionRate": "100"
+            }
+        ],
+        "deliveryManagers": [
+            {
+                "employeeID": "2655832e-f009-4b73-a535-64c3a22e558f",
+                "fullName": "Phạm Đức Thành",
+                "displayName": "Thanh Pham",
+                "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
+                "username": "thanh",
+                "commissionRate": "100"
+            }
+        ],
+        "salePersons": [
+            {
+                "employeeID": "2655832e-f009-4b73-a535-64c3a22e558f",
+                "fullName": "Phạm Đức Thành",
+                "displayName": "Thanh Pham",
+                "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
+                "username": "thanh",
+                "commissionRate": "100"
+            }
+        ],
         "members": [],
         "clientEmail": ["b@gmail.com", "c@gmail.com"],
         "projectEmail": "a@gmail.com",
@@ -39,9 +55,9 @@
         },
         "client": {
             "id": "afb9cf05-9517-4fb9-a4f2-66e6d90ad215",
-            "name": "Dwarves Client",
-            "description": "Using For Internal Project",
-            "registrationNumber": "123455099999999",
+            "name": "Lorem Ipsum Inc.",
+            "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+            "registrationNumber": "32320398488",
             "address": "Hado Centrosa",
             "country": "Vietnam",
             "industry": "Technology",

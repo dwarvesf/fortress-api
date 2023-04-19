@@ -7,14 +7,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gin-gonic/gin"
-
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service"
+	"github.com/dwarvesf/fortress-api/pkg/service/basecamp/consts"
+	models "github.com/dwarvesf/fortress-api/pkg/service/basecamp/model"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/store/employee"
+	"github.com/gin-gonic/gin"
 )
 
 type birthday struct {
@@ -32,7 +33,16 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 // BirthdayDailyMessage check if today is birthday of any employee in the system
 // if yes, send birthday message to employee thru discord
 func (b *birthday) BirthdayDailyMessage(c *gin.Context) {
-	// random message pool
+	// check app run mode
+	projectID := consts.OperationID
+	todoListID := consts.BirthdayToDoListID
+
+	if b.config.Env != "prod" {
+		projectID = consts.PlaygroundID
+		todoListID = consts.PlaygroundBirthdayTodoID
+	}
+
+	//random message pool
 	pool := []string{
 		`Dear %s, we wish you courage and persistence in reaching all your greatest goals. Have a great birthday!`,
 		`Happy Birthday to %s. No one knows your real age, except God, Human Resources and you yourself. Enjoy the blast!`,
@@ -64,16 +74,17 @@ func (b *birthday) BirthdayDailyMessage(c *gin.Context) {
 
 	// format message if there is user's birthday
 	var names string
-	havingBirthday := false
+	var birthDateNames []string
+	todayDate := time.Now().Format("01/02")
 	for _, employee := range employees {
 		now := time.Now()
 		if now.Day() == employee.DateOfBirth.Day() && now.Month() == employee.DateOfBirth.Month() {
 			names += fmt.Sprintf("<@%s>, ", employee.DiscordID)
-			havingBirthday = true
+			birthDateNames = append(birthDateNames, employee.FullName)
 		}
 	}
 
-	if !havingBirthday {
+	if len(birthDateNames) == 0 {
 		c.JSON(http.StatusOK, gin.H{"message": "no birthday today"})
 		return
 	}
@@ -81,7 +92,7 @@ func (b *birthday) BirthdayDailyMessage(c *gin.Context) {
 	rand.Seed(time.Now().Unix())
 	msg := fmt.Sprintf(pool[rand.Intn(len(pool))], strings.TrimSuffix(names, ", "))
 
-	// send message to Discord channel
+	//send message to Discord channel
 	var discordMsg model.DiscordMessage
 	discordMsg, err = b.service.Discord.PostBirthdayMsg(msg)
 	if err != nil {
@@ -90,4 +101,17 @@ func (b *birthday) BirthdayDailyMessage(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, discordMsg)
+
+	//Make Basecamp todos
+	for _, birthDateNames := range birthDateNames {
+		birthDayTodo := models.Todo{
+			Title:   fmt.Sprintf("Prepare gift for %s, %s", birthDateNames, todayDate),
+			Content: fmt.Sprintf("Prepare gift for %s, %s", birthDateNames, todayDate),
+		}
+		_, err := b.service.Basecamp.Todo.Create(projectID, todoListID, birthDayTodo)
+		if err != nil {
+			b.logger.Error(err, "Error create Basecamp todo")
+			return
+		}
+	}
 }

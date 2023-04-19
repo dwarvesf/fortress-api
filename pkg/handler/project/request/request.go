@@ -5,11 +5,14 @@ import (
 	"time"
 
 	"github.com/dwarvesf/fortress-api/pkg/utils"
+	"github.com/dwarvesf/fortress-api/pkg/utils/authutils"
 
 	"github.com/dwarvesf/fortress-api/pkg/handler/project/errs"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/shopspring/decimal"
 )
+
+const emailRegex = ".+@.+\\..+"
 
 type GetListProjectInput struct {
 	model.Pagination
@@ -74,22 +77,23 @@ func (i *GetListProjectInput) Validate() error {
 }
 
 type CreateProjectInput struct {
-	Name              string              `form:"name" json:"name" binding:"required"`
-	Status            string              `form:"status" json:"status" binding:"required"`
-	Type              string              `form:"type" json:"type"`
-	AccountManagerID  model.UUID          `form:"accountManagerID" json:"accountManagerID" binding:"required"`
-	DeliveryManagerID model.UUID          `form:"deliveryManagerID" json:"deliveryManagerID"`
-	CountryID         model.UUID          `form:"countryID" json:"countryID" binding:"required"`
-	StartDate         string              `form:"startDate" json:"startDate"`
-	Members           []AssignMemberInput `form:"members" json:"members"`
-	ClientEmail       []string            `form:"clientEmail" json:"clientEmail"`
-	ProjectEmail      string              `form:"projectEmail" json:"projectEmail"`
-	Code              string              `form:"code" json:"code"`
-	Function          string              `form:"function" json:"function" binding:"required"`
-	AuditNotionID     model.UUID          `form:"auditNotionID" json:"auditNotionID"`
-	BankAccountID     model.UUID          `form:"bankAccountID" json:"bankAccountID"`
-	ClientID          model.UUID          `form:"clientID" json:"clientID"`
-	OrganizationID    model.UUID          `form:"organizationID" json:"organizationID"`
+	Name             string              `form:"name" json:"name" binding:"required"`
+	Status           string              `form:"status" json:"status" binding:"required"`
+	Type             string              `form:"type" json:"type"`
+	AccountManagers  []ProjectHeadInput  `form:"accountManagers" json:"accountManagers"`
+	DeliveryManagers []ProjectHeadInput  `form:"deliveryManagers" json:"deliveryManagers"`
+	SalePersons      []ProjectHeadInput  `form:"salePersons" json:"salePersons"`
+	CountryID        model.UUID          `form:"countryID" json:"countryID" binding:"required"`
+	StartDate        string              `form:"startDate" json:"startDate"`
+	Members          []AssignMemberInput `form:"members" json:"members"`
+	ClientEmail      []string            `form:"clientEmail" json:"clientEmail"`
+	ProjectEmail     string              `form:"projectEmail" json:"projectEmail"`
+	Code             string              `form:"code" json:"code"`
+	Function         string              `form:"function" json:"function" binding:"required"`
+	AuditNotionID    model.UUID          `form:"auditNotionID" json:"auditNotionID"`
+	BankAccountID    model.UUID          `form:"bankAccountID" json:"bankAccountID"`
+	ClientID         model.UUID          `form:"clientID" json:"clientID"`
+	OrganizationID   model.UUID          `form:"organizationID" json:"organizationID"`
 }
 
 func (i *CreateProjectInput) Validate() error {
@@ -116,7 +120,7 @@ func (i *CreateProjectInput) Validate() error {
 		}
 	}
 
-	regex, _ := regexp.Compile(".+@.+\\..+")
+	regex, _ := regexp.Compile(emailRegex)
 	for _, v := range i.ClientEmail {
 		if !regex.MatchString(v) {
 			return errs.ErrInvalidEmailDomainForClient
@@ -129,6 +133,10 @@ func (i *CreateProjectInput) Validate() error {
 
 	if !model.ProjectFunction(i.Function).IsValid() {
 		return errs.ErrInvalidProjectFunction
+	}
+
+	if len(i.AccountManagers) == 0 {
+		return errs.ErrAccountManagerRequired
 	}
 
 	return nil
@@ -159,19 +167,22 @@ func (i *GetListStaffInput) Validate() error {
 }
 
 type UpdateMemberInput struct {
-	ProjectSlotID   model.UUID      `from:"projectSlotID" json:"projectSlotID" binding:"required"`
-	ProjectMemberID model.UUID      `from:"projectMemberID" json:"projectMemberID"`
-	EmployeeID      model.UUID      `form:"employeeID" json:"employeeID"`
-	SeniorityID     model.UUID      `form:"seniorityID" json:"seniorityID" binding:"required"`
-	UpsellPersonID  model.UUID      `form:"upsellPersonID" json:"upsellPersonID"`
-	Positions       []model.UUID    `form:"positions" json:"positions" binding:"required"`
-	DeploymentType  string          `form:"deploymentType" json:"deploymentType" binding:"required"`
-	Status          string          `form:"status" json:"status" binding:"required"`
-	StartDate       string          `form:"startDate" json:"startDate"`
-	EndDate         string          `form:"endDate" json:"endDate"`
-	Rate            decimal.Decimal `form:"rate" json:"rate" binding:"required"`
-	Discount        decimal.Decimal `form:"discount" json:"discount"`
-	IsLead          bool            `form:"isLead" json:"isLead"`
+	ProjectSlotID        model.UUID      `from:"projectSlotID" json:"projectSlotID" binding:"required"`
+	ProjectMemberID      model.UUID      `from:"projectMemberID" json:"projectMemberID"`
+	EmployeeID           model.UUID      `form:"employeeID" json:"employeeID"`
+	SeniorityID          model.UUID      `form:"seniorityID" json:"seniorityID" binding:"required"`
+	UpsellPersonID       model.UUID      `form:"upsellPersonID" json:"upsellPersonID"`
+	UpsellCommissionRate decimal.Decimal `form:"upsellCommissionRate" json:"upsellCommissionRate"`
+	LeadCommissionRate   decimal.Decimal `form:"leadCommissionRate" json:"leadCommissionRate"`
+	Positions            []model.UUID    `form:"positions" json:"positions" binding:"required"`
+	DeploymentType       string          `form:"deploymentType" json:"deploymentType" binding:"required"`
+	Status               string          `form:"status" json:"status" binding:"required"`
+	StartDate            string          `form:"startDate" json:"startDate"`
+	EndDate              string          `form:"endDate" json:"endDate"`
+	Rate                 decimal.Decimal `form:"rate" json:"rate" binding:"required"`
+	Discount             decimal.Decimal `form:"discount" json:"discount"`
+	IsLead               bool            `form:"isLead" json:"isLead"`
+	Note                 string          `form:"note" json:"note"`
 }
 
 func (i *UpdateMemberInput) Validate() error {
@@ -225,17 +236,20 @@ func (i *UpdateMemberInput) GetEndDate() *time.Time {
 }
 
 type AssignMemberInput struct {
-	EmployeeID     model.UUID      `form:"employeeID" json:"employeeID"`
-	SeniorityID    model.UUID      `form:"seniorityID" json:"seniorityID" binding:"required"`
-	Positions      []model.UUID    `form:"positions" json:"positions" binding:"required"`
-	DeploymentType string          `form:"deploymentType" json:"deploymentType" binding:"required"`
-	Status         string          `form:"status" json:"status" binding:"required"`
-	StartDate      string          `form:"startDate" json:"startDate"`
-	EndDate        string          `form:"endDate" json:"endDate"`
-	Rate           decimal.Decimal `form:"rate" json:"rate" binding:"required"`
-	Discount       decimal.Decimal `form:"discount" json:"discount"`
-	IsLead         bool            `form:"isLead" json:"isLead"`
-	UpsellPersonID model.UUID      `form:"upsellPersonID" json:"upsellPersonID"`
+	EmployeeID           model.UUID      `form:"employeeID" json:"employeeID"`
+	SeniorityID          model.UUID      `form:"seniorityID" json:"seniorityID" binding:"required"`
+	Positions            []model.UUID    `form:"positions" json:"positions" binding:"required"`
+	DeploymentType       string          `form:"deploymentType" json:"deploymentType" binding:"required"`
+	Status               string          `form:"status" json:"status" binding:"required"`
+	StartDate            string          `form:"startDate" json:"startDate"`
+	EndDate              string          `form:"endDate" json:"endDate"`
+	Rate                 decimal.Decimal `form:"rate" json:"rate" binding:"required"`
+	Discount             decimal.Decimal `form:"discount" json:"discount"`
+	LeadCommissionRate   decimal.Decimal `form:"leadCommissionRate" json:"leadCommissionRate"`
+	IsLead               bool            `form:"isLead" json:"isLead"`
+	UpsellPersonID       model.UUID      `form:"upsellPersonID" json:"upsellPersonID"`
+	UpsellCommissionRate decimal.Decimal `form:"upsellCommissionRate" json:"upsellCommissionRate"`
+	Note                 string          `form:"note" json:"note"`
 }
 
 func (i *AssignMemberInput) Validate() error {
@@ -246,7 +260,6 @@ func (i *AssignMemberInput) Validate() error {
 	if i.Status == "" ||
 		!model.ProjectMemberStatus(i.Status).IsValid() ||
 		i.Status == model.ProjectMemberStatusInactive.String() {
-
 		return errs.ErrInvalidProjectMemberStatus
 	}
 
@@ -301,6 +314,17 @@ func (i *AssignMemberInput) GetStatus() model.ProjectMemberStatus {
 	return model.ProjectMemberStatus(i.Status)
 }
 
+func (i *AssignMemberInput) RestrictPermission(userInfo *model.CurrentLoggedUserInfo) {
+	if !authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsCommissionRateEdit) {
+		i.LeadCommissionRate = decimal.Zero
+	}
+
+	if !authutils.HasPermission(userInfo.Permissions, model.PermissionProjectMembersRateEdit) {
+		i.Rate = decimal.Zero
+		i.Discount = decimal.Zero
+	}
+}
+
 type DeleteMemberInput struct {
 	ProjectID string
 	MemberID  string
@@ -335,15 +359,21 @@ func (input DeleteSlotInput) Validate() error {
 	return nil
 }
 
+type ProjectHeadInput struct {
+	EmployeeID     model.UUID      `json:"employeeID" form:"employeeID"`
+	CommissionRate decimal.Decimal `json:"commissionRate" form:"commissionRate"`
+}
+
 type UpdateContactInfoInput struct {
-	ClientEmail       []string   `form:"clientEmail" json:"clientEmail"`
-	ProjectEmail      string     `form:"projectEmail" json:"projectEmail"`
-	AccountManagerID  model.UUID `form:"accountManagerID" json:"accountManagerID" binding:"required"`
-	DeliveryManagerID model.UUID `form:"deliveryManagerID" json:"deliveryManagerID"`
+	ClientEmail      []string           `form:"clientEmail" json:"clientEmail"`
+	ProjectEmail     string             `form:"projectEmail" json:"projectEmail"`
+	AccountManagers  []ProjectHeadInput `form:"accountManagers" json:"accountManagers"`
+	DeliveryManagers []ProjectHeadInput `form:"deliveryManagers" json:"deliveryManagers"`
+	SalePersons      []ProjectHeadInput `form:"salePersons" json:"salePersons"`
 }
 
 func (i UpdateContactInfoInput) Validate() error {
-	regex, _ := regexp.Compile(".+@.+\\..+")
+	regex, _ := regexp.Compile(emailRegex)
 	for _, v := range i.ClientEmail {
 		if !regex.MatchString(v) {
 			return errs.ErrInvalidEmailDomainForClient
@@ -352,6 +382,10 @@ func (i UpdateContactInfoInput) Validate() error {
 
 	if i.ProjectEmail != "" && !regex.MatchString(i.ProjectEmail) {
 		return errs.ErrInvalidEmailDomainForProject
+	}
+
+	if len(i.AccountManagers) == 0 {
+		return errs.ErrAccountManagerRequired
 	}
 
 	return nil

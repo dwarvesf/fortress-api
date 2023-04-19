@@ -3,15 +3,19 @@ DEFAULT_PORT=8200
 POSTGRES_TEST_SERVICE?=postgres_test
 POSTGRES_TEST_CONTAINER?=fortress_local_test
 POSTGRES_CONTAINER?=fortress_local
-TOOLS_IMAGE=fortress-tools
+TOOLS_IMAGE=dwarvesv/fortress-tools:latest
 APP_ENVIRONMENT=docker run --rm -v ${PWD}:/${APP_NAME} -w /${APP_NAME} --net=host ${TOOLS_IMAGE}
 
 .PHONY: setup init build dev test migrate-up migrate-down ci
 
 setup:
-	docker build -f ./Dockerfile.tools -t ${TOOLS_IMAGE} .
+	docker pull ${TOOLS_IMAGE}
 
-init: setup
+init:
+	@if [[ "$(docker images -q dwarvesv/fortress-tools:latest 2> /dev/null)" == "" ]]; then \
+		docker pull ${TOOLS_IMAGE}; \
+	fi
+
 	make remove-infras
 	docker-compose up -d
 	@echo "Waiting for database connection..."
@@ -39,7 +43,7 @@ seed-test:
 	@docker exec -t $(POSTGRES_TEST_CONTAINER) sh -c "PGPASSWORD=postgres psql -U postgres -d $(POSTGRES_TEST_CONTAINER) -f /test_seed/seed.sql"
 
 remove-infras:
-	docker-compose down --remove-orphans
+	docker-compose down --remove-orphans --volumes
 
 build:
 	env GOOS=darwin GOARCH=amd64 go build -o bin ./...
@@ -47,11 +51,14 @@ build:
 dev:
 	go run ./cmd/server/main.go
 
+air:
+	air -c .air.toml
+
 cronjob:
 	go run ./cmd/cronjob/main.go
 
 test: 
-	docker rm -f ${POSTGRES_TEST_CONTAINER}
+	docker rm --volumes -f ${POSTGRES_TEST_CONTAINER}
 	docker-compose up -d ${POSTGRES_TEST_SERVICE}
 	@while ! docker exec $(POSTGRES_TEST_CONTAINER) pg_isready > /dev/null; do \
 		sleep 1; \
@@ -96,3 +103,7 @@ gen-swagger:
 
 ci: init
 	@PROJECT_PATH=$(shell pwd) go test -cover ./... -count=1 -p=1
+
+WD := $(shell pwd)
+lint:
+	docker run -t --rm -v $(WD):/app -w /app golangci/golangci-lint:v1.52.2 golangci-lint run -v

@@ -4,11 +4,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/shopspring/decimal"
 
 	"github.com/dwarvesf/fortress-api/pkg/model"
-	"github.com/dwarvesf/fortress-api/pkg/utils"
+	"github.com/dwarvesf/fortress-api/pkg/utils/authutils"
 )
 
 type ProjectData struct {
@@ -27,9 +26,9 @@ type ProjectData struct {
 	EndDate             *time.Time            `json:"endDate"`
 	Members             []ProjectMember       `json:"members"`
 	TechnicalLead       []ProjectHead         `json:"technicalLeads"`
-	AccountManager      *ProjectHead          `json:"accountManager"`
-	SalePerson          *ProjectHead          `json:"salePerson"`
-	DeliveryManager     *ProjectHead          `json:"deliveryManager"`
+	AccountManagers     []ProjectHead         `json:"accountManagers"`
+	DeliveryManagers    []ProjectHead         `json:"deliveryManagers"`
+	SalePersons         []ProjectHead         `json:"salePersons"`
 	Stacks              []Stack               `json:"stacks"`
 	Code                string                `json:"code"`
 	Function            string                `json:"function"`
@@ -83,20 +82,24 @@ type UpdatedProject struct {
 }
 
 type ProjectMember struct {
-	ProjectMemberID string          `json:"projectMemberID"`
-	ProjectSlotID   string          `json:"projectSlotID"`
-	EmployeeID      string          `json:"employeeID"`
-	FullName        string          `json:"fullName"`
-	DisplayName     string          `json:"displayName"`
-	Avatar          string          `json:"avatar"`
-	Username        string          `json:"username"`
-	Status          string          `json:"status"`
-	IsLead          bool            `json:"isLead"`
-	DeploymentType  string          `json:"deploymentType"`
-	StartDate       *time.Time      `json:"startDate"`
-	EndDate         *time.Time      `json:"endDate"`
-	Rate            decimal.Decimal `json:"rate"`
-	Discount        decimal.Decimal `json:"discount"`
+	ProjectMemberID      string          `json:"projectMemberID"`
+	ProjectSlotID        string          `json:"projectSlotID"`
+	EmployeeID           string          `json:"employeeID"`
+	FullName             string          `json:"fullName"`
+	DisplayName          string          `json:"displayName"`
+	Avatar               string          `json:"avatar"`
+	Username             string          `json:"username"`
+	Status               string          `json:"status"`
+	IsLead               bool            `json:"isLead"`
+	DeploymentType       string          `json:"deploymentType"`
+	StartDate            *time.Time      `json:"startDate"`
+	EndDate              *time.Time      `json:"endDate"`
+	Rate                 decimal.Decimal `json:"rate"`
+	Discount             decimal.Decimal `json:"discount"`
+	UpsellCommissionRate decimal.Decimal `json:"upsellCommissionRate"`
+	LeadCommissionRate   decimal.Decimal `json:"leadCommissionRate"`
+	Currency             *Currency       `json:"currency"`
+	Note                 string          `json:"note"`
 
 	Seniority    *model.Seniority   `json:"seniority"`
 	Positions    []Position         `json:"positions"`
@@ -104,21 +107,28 @@ type ProjectMember struct {
 }
 
 type ProjectHead struct {
-	EmployeeID  string `json:"employeeID"`
-	FullName    string `json:"fullName"`
-	DisplayName string `json:"displayName"`
-	Avatar      string `json:"avatar"`
-	Username    string `json:"username"`
+	EmployeeID     string          `json:"employeeID"`
+	FullName       string          `json:"fullName"`
+	DisplayName    string          `json:"displayName"`
+	Avatar         string          `json:"avatar"`
+	Username       string          `json:"username"`
+	CommissionRate decimal.Decimal `json:"commissionRate"`
 }
 
-func ToProjectHead(head *model.ProjectHead) *ProjectHead {
-	return &ProjectHead{
+func ToProjectHead(userInfo *model.CurrentLoggedUserInfo, head *model.ProjectHead) ProjectHead {
+	res := ProjectHead{
 		EmployeeID:  head.EmployeeID.String(),
 		FullName:    head.Employee.FullName,
 		DisplayName: head.Employee.DisplayName,
 		Avatar:      head.Employee.Avatar,
 		Username:    head.Employee.Username,
 	}
+
+	if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsCommissionRateRead) {
+		res.CommissionRate = head.CommissionRate
+	}
+
+	return res
 }
 
 type UpdateProjectStatusResponse struct {
@@ -136,31 +146,24 @@ func ToUpdateProjectStatusResponse(p *model.Project) UpdatedProject {
 	}
 }
 
-func ToProjectData(c *gin.Context, project *model.Project, userInfo *model.CurrentLoggedUserInfo) ProjectData {
+func ToProjectData(project *model.Project, userInfo *model.CurrentLoggedUserInfo) ProjectData {
 	leadMap := map[string]bool{}
 	var technicalLeads = make([]ProjectHead, 0, len(project.Heads))
-	var accountManager, salePerson, deliveryManager *ProjectHead
+	var accountManagers, salePersons, deliveryManagers []ProjectHead
+
 	for _, h := range project.Heads {
-		head := ToProjectHead(h)
+		head := ToProjectHead(userInfo, h)
 
-		if h.IsLead() {
+		switch h.Position {
+		case model.HeadPositionTechnicalLead:
 			leadMap[h.EmployeeID.String()] = true
-			technicalLeads = append(technicalLeads, *head)
-			continue
-		}
-
-		if h.IsAccountManager() {
-			accountManager = head
-			continue
-		}
-
-		if h.IsSalePerson() {
-			salePerson = head
-			continue
-		}
-
-		if h.IsDeliveryManager() {
-			deliveryManager = head
+			technicalLeads = append(technicalLeads, head)
+		case model.HeadPositionAccountManager:
+			accountManagers = append(accountManagers, head)
+		case model.HeadPositionDeliveryManager:
+			deliveryManagers = append(deliveryManagers, head)
+		case model.HeadPositionSalePerson:
+			salePersons = append(salePersons, head)
 		}
 	}
 
@@ -178,7 +181,7 @@ func ToProjectData(c *gin.Context, project *model.Project, userInfo *model.Curre
 			Positions:   ToProjectMemberPositions(m.ProjectMemberPositions),
 		}
 
-		if utils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadFullAccess) {
+		if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadFullAccess) {
 			member.DeploymentType = m.DeploymentType.String()
 
 			if m.UpsellPerson != nil {
@@ -190,20 +193,20 @@ func ToProjectData(c *gin.Context, project *model.Project, userInfo *model.Curre
 	}
 
 	d := ProjectData{
-		BaseModel:       project.BaseModel,
-		Avatar:          project.Avatar,
-		Name:            project.Name,
-		Type:            project.Type.String(),
-		Status:          project.Status.String(),
-		Stacks:          ToProjectStacks(project.ProjectStacks),
-		StartDate:       project.StartDate,
-		EndDate:         project.EndDate,
-		Members:         members,
-		TechnicalLead:   technicalLeads,
-		DeliveryManager: deliveryManager,
-		SalePerson:      salePerson,
-		AccountManager:  accountManager,
-		ProjectEmail:    project.ProjectEmail,
+		BaseModel:        project.BaseModel,
+		Avatar:           project.Avatar,
+		Name:             project.Name,
+		Type:             project.Type.String(),
+		Status:           project.Status.String(),
+		Stacks:           ToProjectStacks(project.ProjectStacks),
+		StartDate:        project.StartDate,
+		EndDate:          project.EndDate,
+		Members:          members,
+		TechnicalLead:    technicalLeads,
+		DeliveryManagers: deliveryManagers,
+		AccountManagers:  accountManagers,
+		SalePersons:      salePersons,
+		ProjectEmail:     project.ProjectEmail,
 
 		AllowsSendingSurvey: project.AllowsSendingSurvey,
 		Code:                project.Code,
@@ -224,16 +227,7 @@ func ToProjectData(c *gin.Context, project *model.Project, userInfo *model.Curre
 		}
 	}
 
-	if project.Organization != nil {
-		d.Organization = &Organization{
-			ID:     project.Organization.ID.String(),
-			Code:   project.Organization.Code,
-			Name:   project.Organization.Name,
-			Avatar: project.Organization.Avatar,
-		}
-	}
-
-	if utils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadFullAccess) {
+	if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadFullAccess) {
 		if project.ProjectNotion != nil && !project.ProjectNotion.AuditNotionID.IsZero() {
 			d.AuditNotionID = project.ProjectNotion.AuditNotionID.String()
 		}
@@ -269,28 +263,23 @@ func ToProjectData(c *gin.Context, project *model.Project, userInfo *model.Curre
 	return d
 }
 
-func ToProjectsData(c *gin.Context, projects []*model.Project, userInfo *model.CurrentLoggedUserInfo) []ProjectData {
+func ToProjectsData(projects []*model.Project, userInfo *model.CurrentLoggedUserInfo) []ProjectData {
 	var results = make([]ProjectData, 0, len(projects))
 
 	for _, p := range projects {
 		// If the project belongs user, append it in the list
 		_, ok := userInfo.Projects[p.ID]
 		if ok && p.Status == model.ProjectStatusActive && model.IsUserActiveInProject(userInfo.UserID, p.ProjectMembers) {
-			results = append(results, ToProjectData(c, p, userInfo))
+			results = append(results, ToProjectData(p, userInfo))
 			continue
 		}
 
 		// If the project is not belong user, check if the user has permission to view the project
-		if utils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadFullAccess) ||
-			utils.HasPermission(userInfo.Permissions, model.PermissionEmployeesReadProjectsReadActive) {
-
-			if p.Status == model.ProjectStatusActive {
-				results = append(results, ToProjectData(c, p, userInfo))
-			} else {
-				if utils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadFullAccess) {
-					results = append(results, ToProjectData(c, p, userInfo))
-				}
-			}
+		if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadFullAccess) ||
+			(authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadReadActive) &&
+				p.Status == model.ProjectStatusActive) {
+			results = append(results, ToProjectData(p, userInfo))
+			continue
 		}
 	}
 
@@ -306,19 +295,24 @@ type ProjectDataResponse struct {
 }
 
 type CreateMemberData struct {
-	ProjectSlotID   string             `json:"projectSlotID"`
-	ProjectMemberID string             `json:"projectMemberID"`
-	EmployeeID      string             `json:"employeeID"`
-	FullName        string             `json:"fullName"`
-	DisplayName     string             `json:"displayName"`
-	Avatar          string             `json:"avatar"`
-	Positions       []Position         `json:"positions"`
-	DeploymentType  string             `json:"deploymentType"`
-	Status          string             `json:"status"`
-	IsLead          bool               `json:"isLead"`
-	Seniority       model.Seniority    `json:"seniority"`
-	Username        string             `json:"username"`
-	UpsellPerson    *BasicEmployeeInfo `json:"upsellPerson"`
+	ProjectSlotID        string             `json:"projectSlotID"`
+	ProjectMemberID      string             `json:"projectMemberID"`
+	EmployeeID           string             `json:"employeeID"`
+	FullName             string             `json:"fullName"`
+	DisplayName          string             `json:"displayName"`
+	Avatar               string             `json:"avatar"`
+	Positions            []Position         `json:"positions"`
+	DeploymentType       string             `json:"deploymentType"`
+	Status               string             `json:"status"`
+	IsLead               bool               `json:"isLead"`
+	Seniority            model.Seniority    `json:"seniority"`
+	Username             string             `json:"username"`
+	Rate                 decimal.Decimal    `json:"rate"`
+	Discount             decimal.Decimal    `json:"discount"`
+	UpsellPerson         *BasicEmployeeInfo `json:"upsellPerson"`
+	UpsellCommissionRate decimal.Decimal    `json:"upsellCommissionRate"`
+	LeadCommissionRate   decimal.Decimal    `json:"leadCommissionRate"`
+	Note                 string             `json:"note"`
 }
 
 type CreateMemberDataResponse struct {
@@ -337,15 +331,31 @@ func ToCreateMemberData(userInfo *model.CurrentLoggedUserInfo, slot *model.Proje
 		Positions:      ToProjectSlotPositions(slot.ProjectSlotPositions),
 		IsLead:         slot.ProjectMember.IsLead,
 		Seniority:      slot.Seniority,
+		Note:           slot.Note,
 	}
 
 	if !slot.ProjectMember.ID.IsZero() {
 		rs.ProjectMemberID = slot.ProjectMember.ID.String()
 		rs.EmployeeID = slot.ProjectMember.EmployeeID.String()
+		rs.Note = slot.ProjectMember.Note
+
+		if slot.ProjectMember.UpsellPerson != nil {
+			rs.UpsellPerson = toBasicEmployeeInfo(*slot.ProjectMember.UpsellPerson)
+		}
 	}
 
-	if slot.ProjectMember.UpsellPerson != nil && utils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadFullAccess) {
-		rs.UpsellPerson = toBasicEmployeeInfo(*slot.ProjectMember.UpsellPerson)
+	if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsCommissionRateRead) {
+		rs.UpsellCommissionRate = slot.ProjectMember.UpsellCommissionRate
+	}
+
+	if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectMembersRateRead) {
+		rs.Rate = slot.Rate
+		rs.Discount = slot.Discount
+
+		if !slot.ProjectMember.ID.IsZero() {
+			rs.Rate = slot.ProjectMember.Rate
+			rs.Discount = slot.ProjectMember.Discount
+		}
 	}
 
 	return rs
@@ -354,21 +364,22 @@ func ToCreateMemberData(userInfo *model.CurrentLoggedUserInfo, slot *model.Proje
 type CreateProjectData struct {
 	model.BaseModel
 
-	Name            string                `json:"name"`
-	Type            string                `json:"type"`
-	Status          string                `json:"status"`
-	StartDate       string                `json:"startDate"`
-	AccountManager  *ProjectHead          `json:"accountManager"`
-	DeliveryManager *ProjectHead          `json:"deliveryManager"`
-	Members         []CreateMemberData    `json:"members"`
-	ClientEmail     []string              `json:"clientEmail"`
-	ProjectEmail    string                `json:"projectEmail"`
-	Country         *BasicCountryInfo     `json:"country"`
-	Code            string                `json:"code"`
-	Function        string                `json:"function"`
-	BankAccount     *BasicBankAccountInfo `json:"bankAccount"`
-	Client          *Client               `json:"client"`
-	Organization    *Organization         `json:"organization"`
+	Name             string                `json:"name"`
+	Type             string                `json:"type"`
+	Status           string                `json:"status"`
+	StartDate        string                `json:"startDate"`
+	AccountManagers  []ProjectHead         `json:"accountManagers"`
+	DeliveryManagers []ProjectHead         `json:"deliveryManagers"`
+	SalePersons      []ProjectHead         `json:"salePersons"`
+	Members          []CreateMemberData    `json:"members"`
+	ClientEmail      []string              `json:"clientEmail"`
+	ProjectEmail     string                `json:"projectEmail"`
+	Country          *BasicCountryInfo     `json:"country"`
+	Code             string                `json:"code"`
+	Function         string                `json:"function"`
+	BankAccount      *BasicBankAccountInfo `json:"bankAccount"`
+	Client           *Client               `json:"client"`
+	Organization     *Organization         `json:"organization"`
 }
 
 type BasicBankAccountInfo struct {
@@ -432,9 +443,11 @@ func ToCreateProjectDataResponse(userInfo *model.CurrentLoggedUserInfo, project 
 	for _, head := range project.Heads {
 		switch head.Position {
 		case model.HeadPositionAccountManager:
-			result.AccountManager = ToProjectHead(head)
+			result.AccountManagers = append(result.AccountManagers, ToProjectHead(userInfo, head))
 		case model.HeadPositionDeliveryManager:
-			result.DeliveryManager = ToProjectHead(head)
+			result.DeliveryManagers = append(result.DeliveryManagers, ToProjectHead(userInfo, head))
+		case model.HeadPositionSalePerson:
+			result.SalePersons = append(result.SalePersons, ToProjectHead(userInfo, head))
 		}
 	}
 
@@ -446,13 +459,13 @@ func ToCreateProjectDataResponse(userInfo *model.CurrentLoggedUserInfo, project 
 	return result
 }
 
-func ToProjectMemberListData(userInfo *model.CurrentLoggedUserInfo, members []*model.ProjectMember, projectHeads []*model.ProjectHead, distinct bool) []ProjectMember {
+func ToProjectMemberListData(userInfo *model.CurrentLoggedUserInfo, members []*model.ProjectMember, projectHeads []*model.ProjectHead, project *model.Project, distinct bool) []ProjectMember {
 	var results = make([]ProjectMember, 0, len(members))
 
-	leadMap := map[string]bool{}
+	leadMap := map[string]*model.ProjectHead{}
 	for _, v := range projectHeads {
 		if v.IsLead() {
-			leadMap[v.EmployeeID.String()] = true
+			leadMap[v.EmployeeID.String()] = v
 		}
 	}
 
@@ -464,9 +477,8 @@ func ToProjectMemberListData(userInfo *model.CurrentLoggedUserInfo, members []*m
 				ProjectSlotID:  m.ProjectSlotID.String(),
 				Status:         m.Status.String(),
 				DeploymentType: m.DeploymentType.String(),
-				Rate:           m.Rate,
-				Discount:       m.Discount,
 				Seniority:      m.Seniority,
+				Note:           m.Note,
 				Positions:      ToPositions(m.Positions),
 			}
 		} else {
@@ -480,18 +492,38 @@ func ToProjectMemberListData(userInfo *model.CurrentLoggedUserInfo, members []*m
 				Username:        m.Employee.Username,
 				StartDate:       m.StartDate,
 				EndDate:         m.EndDate,
-				IsLead:          leadMap[m.EmployeeID.String()],
+				IsLead:          leadMap[m.EmployeeID.String()] != nil,
 				Status:          m.Status.String(),
 				DeploymentType:  m.DeploymentType.String(),
-				Rate:            m.Rate,
-				Discount:        m.Discount,
 				Seniority:       m.Seniority,
+				Note:            m.Note,
 				Positions:       ToProjectMemberPositions(m.ProjectMemberPositions),
 			}
+		}
 
-			if m.UpsellPerson != nil && utils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadFullAccess) {
+		if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadFullAccess) &&
+			project.BankAccount != nil &&
+			project.BankAccount.Currency != nil {
+			member.Currency = new(Currency)
+			*member.Currency = toCurrency(project.BankAccount.Currency)
+
+			if m.UpsellPerson != nil {
 				member.UpsellPerson = toBasicEmployeeInfo(*m.UpsellPerson)
 			}
+		}
+
+		// add commission rate
+		if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsCommissionRateRead) {
+			if leadMap[m.EmployeeID.String()] != nil {
+				member.LeadCommissionRate = leadMap[m.EmployeeID.String()].CommissionRate
+			}
+
+			member.UpsellCommissionRate = m.UpsellCommissionRate
+		}
+
+		if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectMembersRateRead) {
+			member.Rate = m.Rate
+			member.Discount = m.Discount
 		}
 
 		results = append(results, member)
@@ -591,12 +623,13 @@ func ToUpdateProjectGeneralInfo(project *model.Project) UpdateProjectGeneralInfo
 }
 
 type BasicProjectHeadInfo struct {
-	EmployeeID  string             `json:"employeeID"`
-	FullName    string             `json:"fullName"`
-	DisplayName string             `json:"displayName"`
-	Avatar      string             `json:"avatar"`
-	Position    model.HeadPosition `json:"position"`
-	Username    string             `json:"username"`
+	EmployeeID     string             `json:"employeeID"`
+	FullName       string             `json:"fullName"`
+	DisplayName    string             `json:"displayName"`
+	Avatar         string             `json:"avatar"`
+	Position       model.HeadPosition `json:"position"`
+	Username       string             `json:"username"`
+	CommissionRate decimal.Decimal    `json:"commissionRate"`
 }
 
 type UpdateProjectContactInfo struct {
@@ -609,17 +642,23 @@ type UpdateProjectContactInfoResponse struct {
 	Data UpdateProjectContactInfo `json:"data"`
 }
 
-func ToUpdateProjectContactInfo(project *model.Project) UpdateProjectContactInfo {
+func ToUpdateProjectContactInfo(project *model.Project, userInfo *model.CurrentLoggedUserInfo) UpdateProjectContactInfo {
 	projectHeads := make([]BasicProjectHeadInfo, 0, len(project.Heads))
 	for _, v := range project.Heads {
-		projectHeads = append(projectHeads, BasicProjectHeadInfo{
+		ph := BasicProjectHeadInfo{
 			EmployeeID:  v.Employee.ID.String(),
 			FullName:    v.Employee.FullName,
 			Avatar:      v.Employee.Avatar,
 			DisplayName: v.Employee.DisplayName,
 			Position:    v.Position,
 			Username:    v.Employee.Username,
-		})
+		}
+
+		if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsCommissionRateRead) {
+			ph.CommissionRate = v.CommissionRate
+		}
+
+		projectHeads = append(projectHeads, ph)
 	}
 
 	var clientEmail []string

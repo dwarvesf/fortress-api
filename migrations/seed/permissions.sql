@@ -19,10 +19,14 @@ INSERT INTO public.permissions (id, deleted_at, created_at, updated_at, name, co
 ('a8299847-4d10-41e9-8327-42e13e0672ae', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Project Read Full Access', 'projects.read.fullAccess'),
 ('3c26a977-f4b9-4bc4-8d31-a2dcf075d254', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Project Read Active', 'projects.read.readActive'),
 ('80a2c800-02ea-4264-9289-57b92e911097', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Project Edit', 'projects.edit'),
+('6118a1da-aa9a-40eb-b664-87a6969c5759', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Project Commission Rate Read', 'projects.commissionRate.read'),
+('79b1a377-7b73-4bea-90c2-330bda11b635', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Project Commission Rate Edit', 'projects.commissionRate.edit'),
 ('6797aeac-7d5e-4216-b260-a8a3f62d3cf6', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Project Member Create', 'projectMembers.create'),
 ('57ead3c5-b09f-4cd8-ac38-d9c0d4654af5', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Project Member Read', 'projectMembers.read'),
 ('58719469-e01d-4667-bafa-12020931e317', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Project Member Edit', 'projectMembers.edit'),
 ('1a1303f3-a929-41b3-be7f-d372e6aab87a', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Project Member Delete', 'projectMembers.delete'),
+('e33cc269-3a12-436e-aab7-75f14953388f', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Project Member Rate Read', 'projectMembers.rate.read'),
+('2f6c957c-725b-4da4-ad6d-9a23a1e18a98', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Project Member Rate Edit', 'projectMembers.rate.edit'),
 ('819adaec-f4a2-4438-937d-fcd9cc15d76b', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Work Unit Create', 'projectWorkUnits.create'),
 ('7c7937f6-f3ae-47a4-8ee1-fb03f2a5197b', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Work Unit Create Full Access', 'projectWorkUnits.create.fullAccess'), --
 ('7c2d5fef-3096-4b68-bd76-f26cb2a3baea', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Work Unit Read', 'projectWorkUnits.read'),
@@ -59,6 +63,9 @@ INSERT INTO public.permissions (id, deleted_at, created_at, updated_at, name, co
 ('f5854cfd-f990-46fd-a6cb-77b48a80b24b', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Dashboard Read', 'dashboards.read'),
 ('6f4fe3df-9ab8-46c1-a8b7-9458413980f3', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Dashboard Edit', 'dashboards.edit'),
 ('d93ede75-8fd5-4f88-b119-07493b757f4b', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Dashboard Delete', 'dashboards.delete'),
+('a66215da-48dc-419d-8e2d-3f409aa038e3', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Dashboard Projects Read', 'dashboards.project.read'),
+('36e9c7bd-c98f-4414-a8f4-164da5299874', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Dashboard Resources Read', 'dashboards.resources.read'),
+('ca0af093-65ed-48d4-a6d1-62985a35fd8f', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Dashboard Engagement Read', 'dashboards.engagement.read'),
 ('9c644140-c71d-4435-bd6b-a81171913046', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Invoice Create', 'invoices.create'),
 ('259fb434-5321-43be-b007-76f3c2dfbfcc', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Invoice Read', 'invoices.read'),
 ('fa6961f1-1cee-494f-8f1f-f4552b49b6fa', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Invoice Edit', 'invoices.edit'),
@@ -68,4 +75,6 @@ INSERT INTO public.permissions (id, deleted_at, created_at, updated_at, name, co
 ('75ae4f79-cef1-4dfd-be66-064c118ba6cf', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Clients Create', 'clients.create'),
 ('97a02a4d-b8fb-486d-af1a-25139014b375', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Clients Read', 'clients.read'),
 ('92031f1a-b745-42cf-aac1-a067bbee08e6', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Clients Edit', 'clients.edit'),
-('7fb332e7-3231-42e6-8f38-a5c8b224d84e', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Clients Delete', 'clients.delete');
+('7fb332e7-3231-42e6-8f38-a5c8b224d84e', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Clients Delete', 'clients.delete'),
+('475d8075-aec7-4d75-aa79-dc90c9dd9edb', NULL, '2023-02-20 09:50:25.714604', '2023-02-20 09:50:25.714604', 'Cronjob Execute', 'cronjobs.execute'),
+('93886b0b-6592-4838-b024-1aefb123fed6', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Asset Upload', 'assets.upload');

@@ -3,9 +3,9 @@ package metadata
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 
@@ -27,7 +27,7 @@ func TestHandler_GetWorkingStatus(t *testing.T) {
 	// load env and test data
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg)
+	serviceMock := service.New(&cfg, nil, nil)
 	storeMock := &store.Store{}
 
 	tests := []struct {
@@ -54,7 +54,7 @@ func TestHandler_GetWorkingStatus(t *testing.T) {
 
 				metadataHandler.WorkingStatuses(ctx)
 				require.Equal(t, tt.wantCode, w.Code)
-				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
 				require.NoError(t, err)
 
 				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.GetWorkingStatus] response mismatched")
@@ -67,7 +67,7 @@ func TestHandler_GetSeniority(t *testing.T) {
 	// load env and test data
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg)
+	serviceMock := service.New(&cfg, nil, nil)
 	storeMock := store.New()
 
 	tests := []struct {
@@ -89,13 +89,13 @@ func TestHandler_GetSeniority(t *testing.T) {
 				w := httptest.NewRecorder()
 
 				ctx, _ := gin.CreateTestContext(w)
-				ctx.Request = httptest.NewRequest("GET", fmt.Sprintf("/api/v1/metadata/seniorities"), nil)
+				ctx.Request = httptest.NewRequest("GET", "/api/v1/metadata/seniorities", nil)
 				metadataHandler := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 
 				metadataHandler.Seniorities(ctx)
 
 				require.Equal(t, tt.wantCode, w.Code)
-				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
 				require.NoError(t, err)
 
 				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.seniorities] response mismatched")
@@ -108,7 +108,7 @@ func TestHandler_GetChapters(t *testing.T) {
 	// load env and test data
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg)
+	serviceMock := service.New(&cfg, nil, nil)
 	storeMock := store.New()
 
 	tests := []struct {
@@ -130,13 +130,13 @@ func TestHandler_GetChapters(t *testing.T) {
 				w := httptest.NewRecorder()
 
 				ctx, _ := gin.CreateTestContext(w)
-				ctx.Request = httptest.NewRequest("GET", fmt.Sprintf("/api/v1/metadata/chapters"), nil)
+				ctx.Request = httptest.NewRequest("GET", "/api/v1/metadata/chapters", nil)
 				metadataHandler := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 
 				metadataHandler.Chapters(ctx)
 
 				require.Equal(t, tt.wantCode, w.Code)
-				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
 				require.NoError(t, err)
 
 				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Chapters] response mismatched")
@@ -149,7 +149,7 @@ func TestHandler_GetProjectStatuses(t *testing.T) {
 	// load env and test data
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg)
+	serviceMock := service.New(&cfg, nil, nil)
 	storeMock := store.New()
 
 	tests := []struct {
@@ -171,13 +171,13 @@ func TestHandler_GetProjectStatuses(t *testing.T) {
 				w := httptest.NewRecorder()
 
 				ctx, _ := gin.CreateTestContext(w)
-				ctx.Request = httptest.NewRequest("GET", fmt.Sprintf("/api/v1/metadata/project-statuses"), nil)
+				ctx.Request = httptest.NewRequest("GET", "/api/v1/metadata/project-statuses", nil)
 				metadataHandler := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 
 				metadataHandler.ProjectStatuses(ctx)
 
 				require.Equal(t, tt.wantCode, w.Code)
-				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
 				require.NoError(t, err)
 
 				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.ProjectStatuses] response mismatched")
@@ -190,7 +190,7 @@ func TestHandler_GetPositions(t *testing.T) {
 	// load env and test data
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg)
+	serviceMock := service.New(&cfg, nil, nil)
 	storeMock := store.New()
 
 	tests := []struct {
@@ -212,13 +212,13 @@ func TestHandler_GetPositions(t *testing.T) {
 				w := httptest.NewRecorder()
 
 				ctx, _ := gin.CreateTestContext(w)
-				ctx.Request = httptest.NewRequest("GET", fmt.Sprintf("/api/v1/metadata/positions"), nil)
+				ctx.Request = httptest.NewRequest("GET", "/api/v1/metadata/positions", nil)
 				metadataHandler := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 
 				metadataHandler.Positions(ctx)
 
 				require.Equal(t, tt.wantCode, w.Code)
-				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
 				require.NoError(t, err)
 
 				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Positions] response mismatched")
@@ -231,7 +231,7 @@ func TestHandler_GetTechStacks(t *testing.T) {
 	// load env and test data
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg)
+	serviceMock := service.New(&cfg, nil, nil)
 	storeMock := store.New()
 
 	tests := []struct {
@@ -253,13 +253,13 @@ func TestHandler_GetTechStacks(t *testing.T) {
 				w := httptest.NewRecorder()
 
 				ctx, _ := gin.CreateTestContext(w)
-				ctx.Request = httptest.NewRequest("GET", fmt.Sprintf("/api/v1/metadata/stacks"), nil)
+				ctx.Request = httptest.NewRequest("GET", "/api/v1/metadata/stacks", nil)
 				metadataHandler := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 
 				metadataHandler.Stacks(ctx)
 
 				require.Equal(t, tt.wantCode, w.Code)
-				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
 				require.NoError(t, err)
 
 				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Stacks] response mismatched")
@@ -272,7 +272,7 @@ func TestHandler_GetQuestion(t *testing.T) {
 	// load env and test data
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg)
+	serviceMock := service.New(&cfg, nil, nil)
 	storeMock := store.New()
 
 	tests := []struct {
@@ -307,7 +307,7 @@ func TestHandler_GetQuestion(t *testing.T) {
 				h.GetQuestions(ctx)
 
 				require.Equal(t, tt.wantCode, w.Code)
-				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
 				require.NoError(t, err)
 
 				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.GetQuestions] response mismatched")
@@ -320,7 +320,7 @@ func TestHandler_CreateStack(t *testing.T) {
 	// load env and test data
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg)
+	serviceMock := service.New(&cfg, nil, nil)
 	storeMock := store.New()
 
 	tests := []struct {
@@ -350,14 +350,14 @@ func TestHandler_CreateStack(t *testing.T) {
 
 				ctx, _ := gin.CreateTestContext(w)
 				bodyReader := strings.NewReader(string(byteReq))
-				ctx.Request = httptest.NewRequest(http.MethodPost, fmt.Sprintf("/api/v1/metadata/stacks"), bodyReader)
+				ctx.Request = httptest.NewRequest(http.MethodPost, "/api/v1/metadata/stacks", bodyReader)
 				ctx.Request.Header.Set("Authorization", testToken)
 
 				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 				h.CreateStack(ctx)
 
 				require.Equal(t, tt.wantCode, w.Code)
-				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
 				require.NoError(t, err)
 
 				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.CreateStack] response mismatched")
@@ -370,7 +370,7 @@ func TestHandler_UpdateStack(t *testing.T) {
 	// load env and test data
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg)
+	serviceMock := service.New(&cfg, nil, nil)
 	storeMock := store.New()
 
 	tests := []struct {
@@ -421,7 +421,7 @@ func TestHandler_UpdateStack(t *testing.T) {
 				h.UpdateStack(ctx)
 
 				require.Equal(t, tt.wantCode, w.Code)
-				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
 				require.NoError(t, err)
 
 				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.UpdateStack] response mismatched")
@@ -434,7 +434,7 @@ func TestHandler_DeleteStack(t *testing.T) {
 	// load env and test data
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg)
+	serviceMock := service.New(&cfg, nil, nil)
 	storeMock := store.New()
 
 	tests := []struct {
@@ -465,7 +465,7 @@ func TestHandler_DeleteStack(t *testing.T) {
 				h.DeleteStack(ctx)
 
 				require.Equal(t, tt.wantCode, w.Code)
-				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
 				require.NoError(t, err)
 
 				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.DeleteStack] response mismatched")
@@ -478,7 +478,7 @@ func TestHandler_CreatePosition(t *testing.T) {
 	// load env and test data
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg)
+	serviceMock := service.New(&cfg, nil, nil)
 	storeMock := store.New()
 
 	tests := []struct {
@@ -507,14 +507,14 @@ func TestHandler_CreatePosition(t *testing.T) {
 
 				ctx, _ := gin.CreateTestContext(w)
 				bodyReader := strings.NewReader(string(byteReq))
-				ctx.Request = httptest.NewRequest(http.MethodPost, fmt.Sprintf("/api/v1/metadata/positions"), bodyReader)
+				ctx.Request = httptest.NewRequest(http.MethodPost, "/api/v1/metadata/positions", bodyReader)
 				ctx.Request.Header.Set("Authorization", testToken)
 
 				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 				h.CreatePosition(ctx)
 
 				require.Equal(t, tt.wantCode, w.Code)
-				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
 				require.NoError(t, err)
 
 				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.CreatePosition] response mismatched")
@@ -527,7 +527,7 @@ func TestHandler_UpdatePosition(t *testing.T) {
 	// load env and test data
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg)
+	serviceMock := service.New(&cfg, nil, nil)
 	storeMock := store.New()
 
 	tests := []struct {
@@ -576,7 +576,7 @@ func TestHandler_UpdatePosition(t *testing.T) {
 				h.UpdatePosition(ctx)
 
 				require.Equal(t, tt.wantCode, w.Code)
-				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
 				require.NoError(t, err)
 
 				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.UpdatePosition] response mismatched")
@@ -589,7 +589,7 @@ func TestHandler_DeletePosition(t *testing.T) {
 	// load env and test data
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg)
+	serviceMock := service.New(&cfg, nil, nil)
 	storeMock := store.New()
 
 	tests := []struct {
@@ -620,7 +620,7 @@ func TestHandler_DeletePosition(t *testing.T) {
 				h.DeletePosition(ctx)
 
 				require.Equal(t, tt.wantCode, w.Code)
-				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
 				require.NoError(t, err)
 
 				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.DeletePosition] response mismatched")

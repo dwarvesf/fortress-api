@@ -1,6 +1,8 @@
 package model
 
 import (
+	"database/sql/driver"
+	"encoding/json"
 	"time"
 
 	"github.com/shopspring/decimal"
@@ -36,6 +38,8 @@ type Project struct {
 	Heads          []*ProjectHead
 	ProjectMembers []ProjectMember
 	ProjectStacks  []ProjectStack
+
+	ProjectInfo *ProjectInfo `json:"-" gorm:"foreignkey:ProjectID;association_foreignkey:ID"`
 }
 
 type ProjectType string
@@ -144,6 +148,7 @@ type ProjectSlot struct {
 	Status         ProjectMemberStatus
 	Rate           decimal.Decimal
 	Discount       decimal.Decimal
+	Note           string
 
 	Seniority            Seniority
 	Project              Project
@@ -155,17 +160,19 @@ type ProjectSlot struct {
 type ProjectMember struct {
 	BaseModel
 
-	ProjectID      UUID
-	EmployeeID     UUID
-	ProjectSlotID  UUID
-	StartDate      *time.Time
-	EndDate        *time.Time
-	Status         ProjectMemberStatus
-	Rate           decimal.Decimal
-	Discount       decimal.Decimal
-	DeploymentType DeploymentType
-	UpsellPersonID UUID
-	SeniorityID    UUID
+	ProjectID            UUID
+	EmployeeID           UUID
+	ProjectSlotID        UUID
+	StartDate            *time.Time
+	EndDate              *time.Time
+	Status               ProjectMemberStatus
+	Rate                 decimal.Decimal
+	Discount             decimal.Decimal
+	DeploymentType       DeploymentType
+	UpsellPersonID       UUID
+	UpsellCommissionRate decimal.Decimal
+	SeniorityID          UUID
+	Note                 string
 
 	IsLead bool `gorm:"-"`
 
@@ -174,7 +181,8 @@ type ProjectMember struct {
 	Project                Project
 	Seniority              *Seniority
 	ProjectMemberPositions []ProjectMemberPosition
-	Positions              []Position `gorm:"-"`
+	Positions              []Position   `gorm:"-"`
+	Head                   *ProjectHead `gorm:"-"`
 }
 
 type HeadPosition string
@@ -211,7 +219,9 @@ type ProjectHead struct {
 	EndDate        *time.Time
 	CommissionRate decimal.Decimal
 	Position       HeadPosition
-	Employee       Employee
+
+	Employee Employee
+	Project  Project
 }
 
 func (p ProjectHead) IsLead() bool {
@@ -282,4 +292,34 @@ func (pm *ProjectMember) IsActive() bool {
 	}
 
 	return false
+}
+
+var priority = []string{"us", "eu", "vn"}
+
+func (p Project) GetCompanyContactInfo() (*CompanyContactInfo, error) {
+	res := CompanyContactInfo{}
+	if p.CompanyInfo == nil {
+		return &res, nil
+	}
+	m := map[string]*CompanyContactInfo{}
+	v, err := p.CompanyInfo.Info.Value()
+	if err != nil {
+		return nil, err
+	}
+
+	if !driver.IsValue(v) || v == nil {
+		return &res, nil
+	}
+
+	if err = json.Unmarshal(v.([]byte), &m); err != nil {
+		return nil, err
+	}
+
+	for _, v := range priority {
+		if m[v] != nil {
+			return m[v], nil
+		}
+	}
+
+	return &res, nil
 }

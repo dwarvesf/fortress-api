@@ -42,7 +42,7 @@ var (
 	ErrEmployeeWorkedOnTheProject       = errors.New("employee worked on the project")
 	ErrPositionsIsEmpty                 = errors.New("positions is empty")
 	ErrMemberIsNotActiveInProject       = errors.New("member is not active in project")
-	ErrFailToCheckInputExistence        = errors.New("failed to check input existance")
+	ErrFailToCheckInputExistence        = errors.New("failed to check input existence")
 	ErrFailToDeleteWorkUnitStack        = errors.New("failed to delete work unit stack in database")
 	ErrFailedToCreateWorkUnitStack      = errors.New("failed to create work unit stack")
 	ErrFailedToGetWorkUnitMember        = errors.New("failed to get work unit member")
@@ -52,6 +52,7 @@ var (
 	ErrFailedToCreateWorkUnitMember     = errors.New("failed to create work unit member")
 	ErrSlotAlreadyContainsAnotherMember = errors.New("slot already contains another member")
 	ErrDuplicateProjectCode             = errors.New("project code is duplicated")
+	ErrAccountManagerRequired           = errors.New("account manager is required")
 
 	ErrInvalidFileExtension         = errors.New("invalid file extension")
 	ErrInvalidFileSize              = errors.New("invalid file size")

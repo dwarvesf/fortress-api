@@ -10,7 +10,10 @@ type Currency struct {
 	Type   string `json:"type"`
 }
 
-func toCurrency(c model.Currency) Currency {
+func toCurrency(c *model.Currency) Currency {
+	if c == nil {
+		return Currency{}
+	}
 	return Currency{
 		ID:     c.ID.String(),
 		Name:   c.Name,

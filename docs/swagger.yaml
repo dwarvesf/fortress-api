@@ -48,6 +48,10 @@ definitions:
         $ref: '#/definitions/gorm.DeletedAt'
       id:
         type: string
+      intermediaryBankAddress:
+        type: string
+      intermediaryBankName:
+        type: string
       name:
         type: string
       ownerName:
@@ -57,6 +61,41 @@ definitions:
       swiftCode:
         type: string
       uksortCode:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  model.BaseSalary:
+    properties:
+      batch:
+        type: integer
+      category:
+        type: string
+      company_account_amount:
+        type: integer
+      contract_amount:
+        type: integer
+      createdAt:
+        type: string
+      currency:
+        $ref: '#/definitions/model.Currency'
+      currency_id:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      effective_date:
+        type: string
+      employee:
+        $ref: '#/definitions/model.Employee'
+      employee_id:
+        type: string
+      id:
+        type: string
+      insurance_amount:
+        type: integer
+      personal_account_amount:
+        type: integer
+      type:
         type: string
       updatedAt:
         type: string
@@ -130,6 +169,32 @@ definitions:
       updatedAt:
         type: string
     type: object
+  model.CommissionExplain:
+    properties:
+      amount:
+        type: integer
+      bucket_id:
+        type: integer
+      formatted_amount:
+        type: string
+      id:
+        type: string
+      month:
+        type: integer
+      name:
+        type: string
+      todo_id:
+        type: integer
+      year:
+        type: integer
+    type: object
+  model.CompanyContactInfo:
+    properties:
+      address:
+        type: string
+      phone:
+        type: string
+    type: object
   model.CompanyInfo:
     properties:
       createdAt:
@@ -141,12 +206,10 @@ definitions:
       id:
         type: string
       info:
-        items:
-          type: integer
-        type: array
+        $ref: '#/definitions/pgtype.JSONB'
       name:
         type: string
-      registration_number:
+      registrationNumber:
         type: string
       updatedAt:
         type: string
@@ -240,11 +303,13 @@ definitions:
         type: string
       avatar:
         type: string
+      base_salary:
+        $ref: '#/definitions/model.BaseSalary'
       basecampAttachableSGID:
         type: string
       basecampID:
         description: social services
-        type: string
+        type: integer
       city:
         type: string
       country:
@@ -261,6 +326,8 @@ definitions:
         type: string
       displayName:
         type: string
+      employee_salary:
+        $ref: '#/definitions/model.EmployeeSalary'
       employeeChapters:
         items:
           $ref: '#/definitions/model.EmployeeChapter'
@@ -290,6 +357,10 @@ definitions:
         type: string
       gitlabID:
         type: string
+      heads:
+        items:
+          $ref: '#/definitions/model.ProjectHead'
+        type: array
       horoscope:
         type: string
       id:
@@ -385,6 +456,10 @@ definitions:
         type: string
       wiseRecipientName:
         type: string
+      workUnitMembers:
+        items:
+          $ref: '#/definitions/model.WorkUnitMember'
+        type: array
       workingStatus:
         description: working info
         type: string
@@ -456,6 +531,41 @@ definitions:
         type: string
       updatedAt:
         type: string
+    type: object
+  model.EmployeeSalary:
+    properties:
+      actual_pay_day:
+        type: integer
+      bonus_amount:
+        type: integer
+      bonus_detail:
+        items:
+          type: integer
+        type: array
+      commission_amount:
+        type: integer
+      commission_detail:
+        items:
+          type: integer
+        type: array
+      employee_id:
+        type: string
+      is_done:
+        type: boolean
+      month:
+        type: integer
+      plan_pay_day:
+        type: integer
+      reimbursement_amount:
+        type: integer
+      reimbursement_detail:
+        items:
+          type: integer
+        type: array
+      total_amount:
+        type: integer
+      year:
+        type: integer
     type: object
   model.EmployeeStack:
     properties:
@@ -664,6 +774,72 @@ definitions:
       updatedAt:
         type: string
     type: object
+  model.Payroll:
+    properties:
+      base_salary_amount:
+        type: integer
+      commission_amount:
+        type: integer
+      commission_explain:
+        items:
+          type: integer
+        type: array
+      commission_explains:
+        description: CommissionExplains is commission explains in email template
+        items:
+          $ref: '#/definitions/model.CommissionExplain'
+        type: array
+      contract_amount:
+        type: integer
+      conversion_amount:
+        type: integer
+      due_date:
+        type: string
+      employee:
+        $ref: '#/definitions/model.Employee'
+      employee_id:
+        type: string
+      id:
+        type: string
+      is_paid:
+        type: boolean
+      month:
+        type: integer
+      project_bonus:
+        type: integer
+      project_bonus_explain:
+        items:
+          type: integer
+        type: array
+      project_bonus_explains:
+        description: ProjectBonusExplains is project bonus explains in email template
+        items:
+          $ref: '#/definitions/model.ProjectBonusExplain'
+        type: array
+      total:
+        type: integer
+      total_allowance:
+        description: TotalAllowance is amount of allowance in email template
+        type: number
+      total_explain:
+        items:
+          type: integer
+        type: array
+      twAmount:
+        description: TotalAllowance is amount of allowance in email template
+        type: number
+      twFee:
+        type: number
+      twRate:
+        description: TWRate is rate of allowance in email template
+        type: number
+      user_rank_snapshot:
+        items:
+          type: integer
+        type: array
+      year:
+        type: integer
+    type: object
   model.Position:
     properties:
       code:
@@ -750,6 +926,25 @@ definitions:
       updatedAt:
         type: string
     type: object
+  model.ProjectBonusExplain:
+    properties:
+      amount:
+        type: integer
+      bucket_id:
+        type: integer
+      description:
+        type: string
+      formatted_amount:
+        type: string
+      month:
+        type: integer
+      name:
+        type: string
+      todo_id:
+        type: integer
+      year:
+        type: integer
+    type: object
   model.ProjectHead:
     properties:
       commissionRate:
@@ -768,6 +963,8 @@ definitions:
         type: string
       position:
         type: string
+      project:
+        $ref: '#/definitions/model.Project'
       projectID:
         type: string
       startDate:
@@ -791,10 +988,14 @@ definitions:
         type: string
       endDate:
         type: string
+      head:
+        $ref: '#/definitions/model.ProjectHead'
       id:
         type: string
       isLead:
         type: boolean
+      note:
+        type: string
       positions:
         items:
           $ref: '#/definitions/model.Position'
@@ -821,6 +1022,8 @@ definitions:
         type: string
       updatedAt:
         type: string
+      upsellCommissionRate:
+        type: number
       upsellPerson:
         $ref: '#/definitions/model.Employee'
       upsellPersonID:
@@ -884,6 +1087,8 @@ definitions:
       discount:
         type: number
       id:
+        type: string
+      note:
         type: string
       project:
         $ref: '#/definitions/model.Project'
@@ -950,9 +1155,9 @@ definitions:
         type: integer
       date:
         type: string
-      official:
+      internal:
         type: integer
-      shadow:
+      staffed:
         type: integer
     type: object
   model.Role:
@@ -1131,6 +1336,94 @@ definitions:
         description: basic info
         type: string
     type: object
+  model.WorkUnit:
+    properties:
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      id:
+        type: string
+      name:
+        type: string
+      project:
+        $ref: '#/definitions/model.Project'
+      projectID:
+        type: string
+      sourceMetadata:
+        items:
+          type: integer
+        type: array
+      sourceURL:
+        type: string
+      status:
+        type: string
+      type:
+        type: string
+      updatedAt:
+        type: string
+      workUnitMembers:
+        items:
+          $ref: '#/definitions/model.WorkUnitMember'
+        type: array
+      workUnitStacks:
+        items:
+          $ref: '#/definitions/model.WorkUnitStack'
+        type: array
+    type: object
+  model.WorkUnitMember:
+    properties:
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      employee:
+        $ref: '#/definitions/model.Employee'
+      employeeID:
+        type: string
+      endDate:
+        type: string
+      id:
+        type: string
+      projectID:
+        type: string
+      startDate:
+        type: string
+      status:
+        type: string
+      updatedAt:
+        type: string
+      workUnit:
+        $ref: '#/definitions/model.WorkUnit'
+      workUnitID:
+        type: string
+    type: object
+  model.WorkUnitStack:
+    properties:
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      id:
+        type: string
+      stack:
+        $ref: '#/definitions/model.Stack'
+      stackID:
+        type: string
+      updatedAt:
+        type: string
+      workUnitID:
+        type: string
+    type: object
+  pgtype.JSONB:
+    properties:
+      bytes:
+        items:
+          type: integer
+        type: array
+      status:
+        type: integer
+    type: object
   request.AssignMemberInput:
     properties:
       deploymentType:
@@ -1143,6 +1436,10 @@ definitions:
         type: string
       isLead:
         type: boolean
+      leadCommissionRate:
+        type: number
+      note:
+        type: string
       positions:
         items:
           type: string
@@ -1155,6 +1452,8 @@ definitions:
         type: string
       status:
         type: string
+      upsellCommissionRate:
+        type: number
       upsellPersonID:
         type: string
     required:
@@ -1224,8 +1523,10 @@ definitions:
         type: array
       referredBy:
         type: string
-      roleID:
-        type: string
+      roles:
+        items:
+          type: string
+        type: array
       salary:
         type: integer
       seniorityID:
@@ -1238,54 +1539,11 @@ definitions:
     - fullName
     - personalEmail
     - positions
-    - roleID
+    - roles
     - salary
     - seniorityID
     - status
     - teamEmail
-    type: object
-  request.CreateInput:
-    properties:
-      bankID:
-        type: string
-      conversionAmount:
-        type: integer
-      conversionRate:
-        type: number
-      description:
-        type: string
-      discount:
-        type: integer
-      dueAt:
-        type: string
-      email:
-        type: string
-      month:
-        type: integer
-      note:
-        type: string
-      number:
-        type: string
-      paidAt:
-        type: string
-      projectID:
-        type: string
-      scheduledDate:
-        type: string
-      status:
-        type: string
-      subTotal:
-        type: integer
-      tax:
-        type: integer
-      threadID:
-        type: string
-      total:
-        type: integer
-      year:
-        type: integer
-    required:
-    - bankID
     type: object
   request.CreatePositionInput:
     properties:
@@ -1299,8 +1557,10 @@ definitions:
     type: object
   request.CreateProjectInput:
     properties:
-      accountManagerID:
-        type: string
+      accountManagers:
+        items:
+          $ref: '#/definitions/request.ProjectHeadInput'
+        type: array
       auditNotionID:
         type: string
       bankAccountID:
@@ -1315,8 +1575,10 @@ definitions:
         type: string
       countryID:
         type: string
-      deliveryManagerID:
-        type: string
+      deliveryManagers:
+        items:
+          $ref: '#/definitions/request.ProjectHeadInput'
+        type: array
       function:
         type: string
       members:
@@ -1329,6 +1591,10 @@ definitions:
         type: string
       projectEmail:
         type: string
+      salePersons:
+        items:
+          $ref: '#/definitions/request.ProjectHeadInput'
+        type: array
       startDate:
         type: string
       status:
@@ -1336,7 +1602,6 @@ definitions:
       type:
         type: string
     required:
-    - accountManagerID
     - countryID
     - function
     - name
@@ -1445,6 +1710,84 @@ definitions:
           type: string
         type: array
     type: object
+  request.InvoiceItem:
+    properties:
+      cost:
+        type: integer
+      description:
+        type: string
+      discount:
+        type: integer
+      isExternal:
+        type: boolean
+      quantity:
+        type: number
+      unitCost:
+        type: integer
+    type: object
+  request.ProjectHeadInput:
+    properties:
+      commissionRate:
+        type: number
+      employeeID:
+        type: string
+    type: object
+  request.SendInvoiceRequest:
+    properties:
+      bankID:
+        type: string
+      cc:
+        items:
+          type: string
+        type: array
+      description:
+        type: string
+      discount:
+        minimum: 0
+        type: integer
+      dueDate:
+        type: string
+      email:
+        type: string
+      invoiceDate:
+        type: string
+      invoiceMonth:
+        maximum: 11
+        minimum: 0
+        type: integer
+      invoiceYear:
+        minimum: 0
+        type: integer
+      isDraft:
+        type: boolean
+      lineItems:
+        items:
+          $ref: '#/definitions/request.InvoiceItem'
+        type: array
+      note:
+        type: string
+      number:
+        type: string
+      projectID:
+        type: string
+      sentByID:
+        type: string
+      subtotal:
+        minimum: 0
+        type: integer
+      tax:
+        minimum: 0
+        type: integer
+      total:
+        minimum: 0
+        type: integer
+    required:
+    - bankID
+    - dueDate
+    - email
+    - invoiceDate
+    - projectID
+    type: object
   request.SendSurveyInput:
     properties:
       topicIDs:
@@ -1504,18 +1847,24 @@ definitions:
     type: object
   request.UpdateContactInfoInput:
     properties:
-      accountManagerID:
-        type: string
+      accountManagers:
+        items:
+          $ref: '#/definitions/request.ProjectHeadInput'
+        type: array
       clientEmail:
         items:
           type: string
         type: array
-      deliveryManagerID:
-        type: string
+      deliveryManagers:
+        items:
+          $ref: '#/definitions/request.ProjectHeadInput'
+        type: array
       projectEmail:
         type: string
-    required:
-    - accountManagerID
+      salePersons:
+        items:
+          $ref: '#/definitions/request.ProjectHeadInput'
+        type: array
     type: object
   request.UpdateEmployeeGeneralInfoInput:
     properties:
@@ -1606,6 +1955,10 @@ definitions:
         type: string
       isLead:
         type: boolean
+      leadCommissionRate:
+        type: number
+      note:
+        type: string
       positions:
         items:
           type: string
@@ -1622,6 +1975,8 @@ definitions:
         type: string
       status:
         type: string
+      upsellCommissionRate:
+        type: number
       upsellPersonID:
         type: string
     required:
@@ -1771,13 +2126,6 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/view.APIKeyData'
-    type: object
-  view.AccountRoleResponse:
-    properties:
-      data:
-        items:
-          $ref: '#/definitions/model.Role'
-        type: array
     type: object
   view.ActionItemReportResponse:
     properties:
@@ -1966,6 +2314,8 @@ definitions:
         type: string
       id:
         type: string
+      note:
+        type: string
       positions:
         items:
           $ref: '#/definitions/view.Position'
@@ -1990,6 +2340,10 @@ definitions:
       currencyID:
         type: string
       id:
+        type: string
+      intermediaryBankAddress:
+        type: string
+      intermediaryBankName:
         type: string
       name:
         type: string
@@ -2074,6 +2428,8 @@ definitions:
     properties:
       avatar:
         type: string
+      commissionRate:
+        type: number
       displayName:
         type: string
       employeeID:
@@ -2163,6 +2519,55 @@ definitions:
       role:
         type: string
     type: object
+  view.ClientContactInfo:
+    properties:
+      emails:
+        items:
+          type: string
+        type: array
+      id:
+        type: string
+      isMainContact:
+        type: boolean
+      name:
+        type: string
+    type: object
+  view.ClientInfo:
+    properties:
+      clientAddress:
+        type: string
+      clientCompany:
+        type: string
+      contacts:
+        items:
+          $ref: '#/definitions/view.ClientContactInfo'
+        type: array
+    type: object
+  view.CompanyInfo:
+    properties:
+      description:
+        type: string
+      id:
+        type: string
+      info:
+        additionalProperties:
+          $ref: '#/definitions/model.CompanyContactInfo'
+        type: object
+      name:
+        type: string
+      registrationNumber:
+        type: string
+    type: object
+  view.ContentData:
+    properties:
+      url:
+        type: string
+    type: object
+  view.ContentDataResponse:
+    properties:
+      data:
+        $ref: '#/definitions/view.ContentData'
+    type: object
   view.CountriesResponse:
     properties:
       data:
@@ -2175,17 +2580,14 @@ definitions:
       data:
         $ref: '#/definitions/model.Client'
     type: object
-  view.CreateInvoiceResponse:
-    properties:
-      data:
-        $ref: '#/definitions/model.Invoice'
-    type: object
   view.CreateMemberData:
     properties:
       avatar:
         type: string
       deploymentType:
         type: string
+      discount:
+        type: number
       displayName:
         type: string
       employeeID:
@@ -2194,6 +2596,10 @@ definitions:
         type: string
       isLead:
         type: boolean
+      leadCommissionRate:
+        type: number
+      note:
+        type: string
       positions:
         items:
           $ref: '#/definitions/view.Position'
@@ -2202,10 +2608,14 @@ definitions:
         type: string
       projectSlotID:
         type: string
+      rate:
+        type: number
       seniority:
         $ref: '#/definitions/model.Seniority'
       status:
         type: string
+      upsellCommissionRate:
+        type: number
       upsellPerson:
         $ref: '#/definitions/view.BasicEmployeeInfo'
       username:
@@ -2218,8 +2628,10 @@ definitions:
     type: object
   view.CreateProjectData:
     properties:
-      accountManager:
-        $ref: '#/definitions/view.ProjectHead'
+      accountManagers:
+        items:
+          $ref: '#/definitions/view.ProjectHead'
+        type: array
       bankAccount:
         $ref: '#/definitions/view.BasicBankAccountInfo'
       client:
@@ -2236,8 +2648,10 @@ definitions:
         type: string
       deletedAt:
         $ref: '#/definitions/gorm.DeletedAt'
-      deliveryManager:
-        $ref: '#/definitions/view.ProjectHead'
+      deliveryManagers:
+        items:
+          $ref: '#/definitions/view.ProjectHead'
+        type: array
       function:
         type: string
       id:
@@ -2252,6 +2666,10 @@ definitions:
         $ref: '#/definitions/view.Organization'
       projectEmail:
         type: string
+      salePersons:
+        items:
+          $ref: '#/definitions/view.ProjectHead'
+        type: array
       startDate:
         type: string
       status:
@@ -2688,6 +3106,85 @@ definitions:
           $ref: '#/definitions/model.HiringPosition'
         type: array
     type: object
+  view.Invoice:
+    properties:
+      bankID:
+        type: string
+      cc:
+        items:
+          type: string
+        type: array
+      conversionAmount:
+        type: integer
+      conversionRate:
+        type: number
+      description:
+        type: string
+      discount:
+        type: integer
+      dueAt:
+        type: string
+      email:
+        type: string
+      errorInvoiceID:
+        type: string
+      failedAt:
+        type: string
+      invoiceFileURL:
+        type: string
+      invoicedAt:
+        type: string
+      lineItems:
+        items:
+          $ref: '#/definitions/view.InvoiceItem'
+        type: array
+      month:
+        type: integer
+      note:
+        type: string
+      number:
+        type: string
+      paidAt:
+        type: string
+      projectID:
+        type: string
+      scheduledDate:
+        type: string
+      sentBy:
+        type: string
+      status:
+        type: string
+      subTotal:
+        type: integer
+      tax:
+        type: integer
+      threadID:
+        type: string
+      total:
+        type: integer
+      year:
+        type: integer
+    type: object
+  view.InvoiceItem:
+    properties:
+      cost:
+        type: integer
+      description:
+        type: string
+      discount:
+        type: integer
+      isExternal:
+        type: boolean
+      quantity:
+        type: number
+      unitCost:
+        type: integer
+    type: object
+  view.InvoiceTemplateResponse:
+    properties:
+      data:
+        $ref: '#/definitions/view.ProjectInvoiceTemplate'
+    type: object
   view.ItemValue:
     properties:
       trend:
@@ -2874,6 +3371,10 @@ definitions:
         type: string
       placeOfResidence:
         type: string
+      roles:
+        items:
+          $ref: '#/definitions/view.Role'
+        type: array
       teamEmail:
         type: string
       username:
@@ -2896,8 +3397,10 @@ definitions:
     type: object
   view.ProjectData:
     properties:
-      accountManager:
-        $ref: '#/definitions/view.ProjectHead'
+      accountManagers:
+        items:
+          $ref: '#/definitions/view.ProjectHead'
+        type: array
       allowsSendingSurvey:
         type: boolean
       auditNotionID:
@@ -2922,8 +3425,10 @@ definitions:
         type: string
       deletedAt:
         $ref: '#/definitions/gorm.DeletedAt'
-      deliveryManager:
-        $ref: '#/definitions/view.ProjectHead'
+      deliveryManagers:
+        items:
+          $ref: '#/definitions/view.ProjectHead'
+        type: array
       endDate:
         type: string
       function:
@@ -2942,8 +3447,10 @@ definitions:
         $ref: '#/definitions/view.Organization'
       projectEmail:
         type: string
-      salePerson:
-        $ref: '#/definitions/view.ProjectHead'
+      salePersons:
+        items:
+          $ref: '#/definitions/view.ProjectHead'
+        type: array
       stacks:
         items:
           $ref: '#/definitions/view.Stack'
@@ -2970,6 +3477,8 @@ definitions:
     properties:
       avatar:
         type: string
+      commissionRate:
+        type: number
       displayName:
         type: string
       employeeID:
@@ -2977,6 +3486,23 @@ definitions:
       fullName:
         type: string
       username:
+        type: string
+    type: object
+  view.ProjectInvoiceTemplate:
+    properties:
+      bankAccount:
+        $ref: '#/definitions/view.BankAccount'
+      client:
+        $ref: '#/definitions/view.ClientInfo'
+      companyInfo:
+        $ref: '#/definitions/view.CompanyInfo'
+      id:
+        type: string
+      invoiceNumber:
+        type: string
+      lastInvoice:
+        $ref: '#/definitions/view.Invoice'
+      name:
         type: string
     type: object
   view.ProjectListDataResponse:
@@ -2990,6 +3516,8 @@ definitions:
     properties:
       avatar:
         type: string
+      currency:
+        $ref: '#/definitions/view.Currency'
       deploymentType:
         type: string
       discount:
@@ -3004,6 +3532,10 @@ definitions:
         type: string
       isLead:
         type: boolean
+      leadCommissionRate:
+        type: number
+      note:
+        type: string
       positions:
         items:
           $ref: '#/definitions/view.Position'
@@ -3020,6 +3552,8 @@ definitions:
         type: string
       status:
         type: string
+      upsellCommissionRate:
+        type: number
       upsellPerson:
         $ref: '#/definitions/view.BasicEmployeeInfo'
       username:
@@ -3095,6 +3629,13 @@ definitions:
         type: string
       name:
         type: string
+    type: object
+  view.RolesResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/model.Role'
+        type: array
     type: object
   view.Seniority:
     properties:
@@ -3717,11 +4258,55 @@ info:
   title: Swagger Example API
   version: "1.0"
 paths:
+  /assets/upload:
+    post:
+      consumes:
+      - application/json
+      description: Upload the content
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: content upload
+        in: formData
+        name: file
+        required: true
+        type: file
+      - description: image/doc
+        in: formData
+        name: type
+        required: true
+        type: string
+      - description: employees/projects/change-logs/invoices
+        in: formData
+        name: targetType
+        required: true
+        type: string
+      - description: employeeID/projectID
+        in: formData
+        name: targetID
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.ContentDataResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Upload the content
+      tags:
+      - Asset
   /auth:
     post:
       consumes:
       - application/json
-      description: Authorise user when login
+      description: Authorize user when login
       parameters:
       - description: Google login code
         in: body
@@ -3754,7 +4339,7 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/view.ErrorResponse'
-      summary: Authorise user when login
+      summary: Authorize user when login
       tags:
       - Auth
   /auth/api-key:
@@ -4198,7 +4783,7 @@ paths:
     get:
       consumes:
       - application/json
-      description: Get Enginerring health information for dashboard
+      description: Get Engineering health information for dashboard
       parameters:
       - description: jwt token
         in: header
@@ -4228,7 +4813,7 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/view.ErrorResponse'
-      summary: Get Enginerring health information for dashboard
+      summary: Get Engineering health information for dashboard
       tags:
       - Dashboard
   /dashboards/projects/sizes:
@@ -4832,49 +5417,6 @@ paths:
       summary: Upload avatar of employee by id
       tags:
       - Employee
-  /employees/{id}/upload-content:
-    post:
-      consumes:
-      - application/json
-      description: Upload content of employee by id
-      parameters:
-      - description: Employee ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: jwt token
-        in: header
-        name: Authorization
-        required: true
-        type: string
-      - description: content upload
-        in: formData
-        name: file
-        required: true
-        type: file
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/view.EmployeeContentDataResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/view.ErrorResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/view.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/view.ErrorResponse'
-      summary: Upload content of employee by id
-      tags:
-      - Employee
   /employees/search:
     post:
       consumes:
@@ -5095,47 +5637,8 @@ paths:
       summary: Get list hirings from DF Dwarves Hiring
       tags:
       - hiring
-  /invoices/:
-    post:
-      consumes:
-      - application/json
-      description: Create new invoice
-      parameters:
-      - description: jwt token
-        in: header
-        name: Authorization
-        required: true
-        type: string
-      - description: body
-        in: body
-        name: Body
-        required: true
-        schema:
-          $ref: '#/definitions/request.CreateInput'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/view.CreateInvoiceResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/view.ErrorResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/view.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/view.ErrorResponse'
-      summary: Create new invoice
-      tags:
-      - Invoice
   /invoices/{id}/status:
-    get:
+    put:
       consumes:
       - application/json
       description: Update status for invoice
@@ -5205,6 +5708,83 @@ paths:
       summary: Get latest invoice by project id
       tags:
       - Invoice
+  /invoices/send:
+    post:
+      consumes:
+      - application/json
+      description: Create new invoice and send to clientm
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: body
+        in: body
+        name: Body
+        required: true
+        schema:
+          $ref: '#/definitions/request.SendInvoiceRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Create new invoice and send to client
+      tags:
+      - Invoice
+  /invoices/template:
+    get:
+      consumes:
+      - application/json
+      description: Get the latest invoice by project id
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: projectID
+        in: query
+        name: projectID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.InvoiceTemplateResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get the latest invoice by project id
+      tags:
+      - Invoice
   /line-managers:
     get:
       consumes:
@@ -5230,29 +5810,6 @@ paths:
       summary: Get the list of line managers
       tags:
       - Employee
-  /metadata/account-roles:
-    get:
-      consumes:
-      - application/json
-      description: Get list values for account roles
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/view.AccountRoleResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/view.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/view.ErrorResponse'
-      summary: Get list values for account roles
-      tags:
-      - Metadata
   /metadata/chapters:
     get:
       consumes:
@@ -5533,6 +6090,29 @@ paths:
           schema:
             $ref: '#/definitions/view.ErrorResponse'
       summary: Get list question by category and subcategory
+      tags:
+      - Metadata
+  /metadata/roles:
+    get:
+      consumes:
+      - application/json
+      description: Get list roles
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.RolesResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get list roles
       tags:
       - Metadata
   /metadata/seniorities:
@@ -6824,6 +7404,20 @@ paths:
         in: query
         name: size
         type: string
+      - description: Keyword
+        in: query
+        name: keyword
+        type: string
+      - description: Status
+        in: query
+        name: status
+        type: string
+      - description: Projects
+        in: query
+        items:
+          type: string
+        name: projects
+        type: array
       produces:
       - application/json
       responses:

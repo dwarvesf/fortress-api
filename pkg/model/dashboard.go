@@ -81,8 +81,8 @@ type AuditSummary struct {
 
 type ResourceUtilization struct {
 	Date      time.Time `json:"date"`
-	Official  int       `json:"official"`
-	Shadow    int       `json:"shadow"`
+	Staffed   int       `json:"staffed"`
+	Internal  int       `json:"internal"`
 	Available int       `json:"available"`
 }
 

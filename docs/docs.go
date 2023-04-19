@@ -25,9 +25,74 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/assets/upload": {
+            "post": {
+                "description": "Upload the content",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Asset"
+                ],
+                "summary": "Upload the content",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "content upload",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "image/doc",
+                        "name": "type",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "employees/projects/change-logs/invoices",
+                        "name": "targetType",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "employeeID/projectID",
+                        "name": "targetID",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.ContentDataResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/auth": {
             "post": {
-                "description": "Authorise user when login",
+                "description": "Authorize user when login",
                 "consumes": [
                     "application/json"
                 ],
@@ -37,7 +102,7 @@ const docTemplate = `{
                 "tags": [
                     "Auth"
                 ],
-                "summary": "Authorise user when login",
+                "summary": "Authorize user when login",
                 "parameters": [
                     {
                         "description": "Google login code",
@@ -748,7 +813,7 @@ const docTemplate = `{
         },
         "/dashboards/projects/engineering-healths": {
             "get": {
-                "description": "Get Enginerring health information for dashboard",
+                "description": "Get Engineering health information for dashboard",
                 "consumes": [
                     "application/json"
                 ],
@@ -758,7 +823,7 @@ const docTemplate = `{
                 "tags": [
                     "Dashboard"
                 ],
-                "summary": "Get Enginerring health information for dashboard",
+                "summary": "Get Engineering health information for dashboard",
                 "parameters": [
                     {
                         "type": "string",
@@ -1766,70 +1831,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/employees/{id}/upload-content": {
-            "post": {
-                "description": "Upload content of employee by id",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Employee"
-                ],
-                "summary": "Upload content of employee by id",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Employee ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "jwt token",
-                        "name": "Authorization",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "file",
-                        "description": "content upload",
-                        "name": "file",
-                        "in": "formData",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/view.EmployeeContentDataResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/view.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/view.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/view.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/feedbacks": {
             "get": {
                 "description": "Get list feedbacks",
@@ -2102,65 +2103,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/invoices/": {
-            "post": {
-                "description": "Create new invoice",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Invoice"
-                ],
-                "summary": "Create new invoice",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "jwt token",
-                        "name": "Authorization",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "description": "body",
-                        "name": "Body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/request.CreateInput"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/view.CreateInvoiceResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/view.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/view.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/view.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/invoices/latest": {
             "get": {
                 "description": "Get latest invoice by project id",
@@ -2218,8 +2160,124 @@ const docTemplate = `{
                 }
             }
         },
-        "/invoices/{id}/status": {
+        "/invoices/send": {
+            "post": {
+                "description": "Create new invoice and send to clientm",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Invoice"
+                ],
+                "summary": "Create new invoice and send to client",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "body",
+                        "name": "Body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.SendInvoiceRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.MessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/invoices/template": {
             "get": {
+                "description": "Get the latest invoice by project id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Invoice"
+                ],
+                "summary": "Get the latest invoice by project id",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "projectID",
+                        "name": "projectID",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.InvoiceTemplateResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/invoices/{id}/status": {
+            "put": {
                 "description": "Update status for invoice",
                 "consumes": [
                     "application/json"
@@ -2295,41 +2353,6 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/view.LineManagersResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/view.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/metadata/account-roles": {
-            "get": {
-                "description": "Get list values for account roles",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Metadata"
-                ],
-                "summary": "Get list values for account roles",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/view.AccountRoleResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/view.ErrorResponse"
                         }
                     },
                     "500": {
@@ -2750,6 +2773,41 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/view.GetQuestionResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/metadata/roles": {
+            "get": {
+                "description": "Get list roles",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Metadata"
+                ],
+                "summary": "Get list roles",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.RolesResponse"
                         }
                     },
                     "400": {
@@ -4645,6 +4703,27 @@ const docTemplate = `{
                         "description": "Size",
                         "name": "size",
                         "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Keyword",
+                        "name": "keyword",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Status",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "description": "Projects",
+                        "name": "projects",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -5220,6 +5299,12 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
+                "intermediaryBankAddress": {
+                    "type": "string"
+                },
+                "intermediaryBankName": {
+                    "type": "string"
+                },
                 "name": {
                     "type": "string"
                 },
@@ -5233,6 +5318,59 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "uksortCode": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.BaseSalary": {
+            "type": "object",
+            "properties": {
+                "batch": {
+                    "type": "integer"
+                },
+                "category": {
+                    "type": "string"
+                },
+                "company_account_amount": {
+                    "type": "integer"
+                },
+                "contract_amount": {
+                    "type": "integer"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "currency": {
+                    "$ref": "#/definitions/model.Currency"
+                },
+                "currency_id": {
+                    "type": "string"
+                },
+                "deletedAt": {
+                    "$ref": "#/definitions/gorm.DeletedAt"
+                },
+                "effective_date": {
+                    "type": "string"
+                },
+                "employee": {
+                    "$ref": "#/definitions/model.Employee"
+                },
+                "employee_id": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "insurance_amount": {
+                    "type": "integer"
+                },
+                "personal_account_amount": {
+                    "type": "integer"
+                },
+                "type": {
                     "type": "string"
                 },
                 "updatedAt": {
@@ -5345,6 +5483,46 @@ const docTemplate = `{
                 }
             }
         },
+        "model.CommissionExplain": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "integer"
+                },
+                "bucket_id": {
+                    "type": "integer"
+                },
+                "formatted_amount": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "month": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "todo_id": {
+                    "type": "integer"
+                },
+                "year": {
+                    "type": "integer"
+                }
+            }
+        },
+        "model.CompanyContactInfo": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                }
+            }
+        },
         "model.CompanyInfo": {
             "type": "object",
             "properties": {
@@ -5361,15 +5539,12 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "info": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
+                    "$ref": "#/definitions/pgtype.JSONB"
                 },
                 "name": {
                     "type": "string"
                 },
-                "registration_number": {
+                "registrationNumber": {
                     "type": "string"
                 },
                 "updatedAt": {
@@ -5513,12 +5688,15 @@ const docTemplate = `{
                 "avatar": {
                     "type": "string"
                 },
+                "base_salary": {
+                    "$ref": "#/definitions/model.BaseSalary"
+                },
                 "basecampAttachableSGID": {
                     "type": "string"
                 },
                 "basecampID": {
                     "description": "social services",
-                    "type": "string"
+                    "type": "integer"
                 },
                 "city": {
                     "type": "string"
@@ -5574,6 +5752,9 @@ const docTemplate = `{
                         "$ref": "#/definitions/model.EmployeeStack"
                     }
                 },
+                "employee_salary": {
+                    "$ref": "#/definitions/model.EmployeeSalary"
+                },
                 "fullName": {
                     "description": "basic info",
                     "type": "string"
@@ -5586,6 +5767,12 @@ const docTemplate = `{
                 },
                 "gitlabID": {
                     "type": "string"
+                },
+                "heads": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.ProjectHead"
+                    }
                 },
                 "horoscope": {
                     "type": "string"
@@ -5729,6 +5916,12 @@ const docTemplate = `{
                 "wiseRecipientName": {
                     "type": "string"
                 },
+                "workUnitMembers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.WorkUnitMember"
+                    }
+                },
                 "workingStatus": {
                     "description": "working info",
                     "type": "string"
@@ -5836,6 +6029,59 @@ const docTemplate = `{
                 },
                 "updatedAt": {
                     "type": "string"
+                }
+            }
+        },
+        "model.EmployeeSalary": {
+            "type": "object",
+            "properties": {
+                "actual_pay_day": {
+                    "type": "integer"
+                },
+                "bonus_amount": {
+                    "type": "integer"
+                },
+                "bonus_detail": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "commission_amount": {
+                    "type": "integer"
+                },
+                "commission_detail": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "employee_id": {
+                    "type": "string"
+                },
+                "is_done": {
+                    "type": "boolean"
+                },
+                "month": {
+                    "type": "integer"
+                },
+                "plan_pay_day": {
+                    "type": "integer"
+                },
+                "reimbursement_amount": {
+                    "type": "integer"
+                },
+                "reimbursement_detail": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "total_amount": {
+                    "type": "integer"
+                },
+                "year": {
+                    "type": "integer"
                 }
             }
         },
@@ -6153,6 +6399,103 @@ const docTemplate = `{
                 }
             }
         },
+        "model.Payroll": {
+            "type": "object",
+            "properties": {
+                "base_salary_amount": {
+                    "type": "integer"
+                },
+                "commission_amount": {
+                    "type": "integer"
+                },
+                "commission_explain": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "commission_explains": {
+                    "description": "CommissionExplains is commission explains in email template",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.CommissionExplain"
+                    }
+                },
+                "contract_amount": {
+                    "type": "integer"
+                },
+                "conversion_amount": {
+                    "type": "integer"
+                },
+                "due_date": {
+                    "type": "string"
+                },
+                "employee": {
+                    "$ref": "#/definitions/model.Employee"
+                },
+                "employee_id": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_paid": {
+                    "type": "boolean"
+                },
+                "month": {
+                    "type": "integer"
+                },
+                "project_bonus": {
+                    "type": "integer"
+                },
+                "project_bonus_explain": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "project_bonus_explains": {
+                    "description": "ProjectBonusExplains is project bonus explains in email template",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.ProjectBonusExplain"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                },
+                "total_allowance": {
+                    "description": "TotalAllowance is amount of allowance in email template",
+                    "type": "number"
+                },
+                "total_explain": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "twAmount": {
+                    "description": "TotalAllowance is amount of allowance in email template",
+                    "type": "number"
+                },
+                "twFee": {
+                    "type": "number"
+                },
+                "twRate": {
+                    "description": "TWRate is rate of allowance in email template",
+                    "type": "number"
+                },
+                "user_rank_snapshot": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "year": {
+                    "type": "integer"
+                }
+            }
+        },
         "model.Position": {
             "type": "object",
             "properties": {
@@ -6283,6 +6626,35 @@ const docTemplate = `{
                 }
             }
         },
+        "model.ProjectBonusExplain": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "integer"
+                },
+                "bucket_id": {
+                    "type": "integer"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "formatted_amount": {
+                    "type": "string"
+                },
+                "month": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "todo_id": {
+                    "type": "integer"
+                },
+                "year": {
+                    "type": "integer"
+                }
+            }
+        },
         "model.ProjectHead": {
             "type": "object",
             "properties": {
@@ -6309,6 +6681,9 @@ const docTemplate = `{
                 },
                 "position": {
                     "type": "string"
+                },
+                "project": {
+                    "$ref": "#/definitions/model.Project"
                 },
                 "projectID": {
                     "type": "string"
@@ -6345,11 +6720,17 @@ const docTemplate = `{
                 "endDate": {
                     "type": "string"
                 },
+                "head": {
+                    "$ref": "#/definitions/model.ProjectHead"
+                },
                 "id": {
                     "type": "string"
                 },
                 "isLead": {
                     "type": "boolean"
+                },
+                "note": {
+                    "type": "string"
                 },
                 "positions": {
                     "type": "array",
@@ -6389,6 +6770,9 @@ const docTemplate = `{
                 },
                 "updatedAt": {
                     "type": "string"
+                },
+                "upsellCommissionRate": {
+                    "type": "number"
                 },
                 "upsellPerson": {
                     "$ref": "#/definitions/model.Employee"
@@ -6486,6 +6870,9 @@ const docTemplate = `{
                     "type": "number"
                 },
                 "id": {
+                    "type": "string"
+                },
+                "note": {
                     "type": "string"
                 },
                 "project": {
@@ -6587,10 +6974,10 @@ const docTemplate = `{
                 "date": {
                     "type": "string"
                 },
-                "official": {
+                "internal": {
                     "type": "integer"
                 },
-                "shadow": {
+                "staffed": {
                     "type": "integer"
                 }
             }
@@ -6863,6 +7250,140 @@ const docTemplate = `{
                 }
             }
         },
+        "model.WorkUnit": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "deletedAt": {
+                    "$ref": "#/definitions/gorm.DeletedAt"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "project": {
+                    "$ref": "#/definitions/model.Project"
+                },
+                "projectID": {
+                    "type": "string"
+                },
+                "sourceMetadata": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "sourceURL": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                },
+                "workUnitMembers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.WorkUnitMember"
+                    }
+                },
+                "workUnitStacks": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.WorkUnitStack"
+                    }
+                }
+            }
+        },
+        "model.WorkUnitMember": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "deletedAt": {
+                    "$ref": "#/definitions/gorm.DeletedAt"
+                },
+                "employee": {
+                    "$ref": "#/definitions/model.Employee"
+                },
+                "employeeID": {
+                    "type": "string"
+                },
+                "endDate": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "projectID": {
+                    "type": "string"
+                },
+                "startDate": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                },
+                "workUnit": {
+                    "$ref": "#/definitions/model.WorkUnit"
+                },
+                "workUnitID": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.WorkUnitStack": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "deletedAt": {
+                    "$ref": "#/definitions/gorm.DeletedAt"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "stack": {
+                    "$ref": "#/definitions/model.Stack"
+                },
+                "stackID": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                },
+                "workUnitID": {
+                    "type": "string"
+                }
+            }
+        },
+        "pgtype.JSONB": {
+            "type": "object",
+            "properties": {
+                "bytes": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "status": {
+                    "type": "integer"
+                }
+            }
+        },
         "request.AssignMemberInput": {
             "type": "object",
             "required": [
@@ -6888,6 +7409,12 @@ const docTemplate = `{
                 "isLead": {
                     "type": "boolean"
                 },
+                "leadCommissionRate": {
+                    "type": "number"
+                },
+                "note": {
+                    "type": "string"
+                },
                 "positions": {
                     "type": "array",
                     "items": {
@@ -6905,6 +7432,9 @@ const docTemplate = `{
                 },
                 "status": {
                     "type": "string"
+                },
+                "upsellCommissionRate": {
+                    "type": "number"
                 },
                 "upsellPersonID": {
                     "type": "string"
@@ -6986,7 +7516,7 @@ const docTemplate = `{
                 "fullName",
                 "personalEmail",
                 "positions",
-                "roleID",
+                "roles",
                 "salary",
                 "seniorityID",
                 "status",
@@ -7012,8 +7542,11 @@ const docTemplate = `{
                 "referredBy": {
                     "type": "string"
                 },
-                "roleID": {
-                    "type": "string"
+                "roles": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "salary": {
                     "type": "integer"
@@ -7026,71 +7559,6 @@ const docTemplate = `{
                 },
                 "teamEmail": {
                     "type": "string"
-                }
-            }
-        },
-        "request.CreateInput": {
-            "type": "object",
-            "required": [
-                "bankID"
-            ],
-            "properties": {
-                "bankID": {
-                    "type": "string"
-                },
-                "conversionAmount": {
-                    "type": "integer"
-                },
-                "conversionRate": {
-                    "type": "number"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "discount": {
-                    "type": "integer"
-                },
-                "dueAt": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "month": {
-                    "type": "integer"
-                },
-                "note": {
-                    "type": "string"
-                },
-                "number": {
-                    "type": "string"
-                },
-                "paidAt": {
-                    "type": "string"
-                },
-                "projectID": {
-                    "type": "string"
-                },
-                "scheduledDate": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "subTotal": {
-                    "type": "integer"
-                },
-                "tax": {
-                    "type": "integer"
-                },
-                "threadID": {
-                    "type": "string"
-                },
-                "total": {
-                    "type": "integer"
-                },
-                "year": {
-                    "type": "integer"
                 }
             }
         },
@@ -7112,15 +7580,17 @@ const docTemplate = `{
         "request.CreateProjectInput": {
             "type": "object",
             "required": [
-                "accountManagerID",
                 "countryID",
                 "function",
                 "name",
                 "status"
             ],
             "properties": {
-                "accountManagerID": {
-                    "type": "string"
+                "accountManagers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/request.ProjectHeadInput"
+                    }
                 },
                 "auditNotionID": {
                     "type": "string"
@@ -7143,8 +7613,11 @@ const docTemplate = `{
                 "countryID": {
                     "type": "string"
                 },
-                "deliveryManagerID": {
-                    "type": "string"
+                "deliveryManagers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/request.ProjectHeadInput"
+                    }
                 },
                 "function": {
                     "type": "string"
@@ -7163,6 +7636,12 @@ const docTemplate = `{
                 },
                 "projectEmail": {
                     "type": "string"
+                },
+                "salePersons": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/request.ProjectHeadInput"
+                    }
                 },
                 "startDate": {
                     "type": "string"
@@ -7329,6 +7808,119 @@ const docTemplate = `{
                 }
             }
         },
+        "request.InvoiceItem": {
+            "type": "object",
+            "properties": {
+                "cost": {
+                    "type": "integer"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "discount": {
+                    "type": "integer"
+                },
+                "isExternal": {
+                    "type": "boolean"
+                },
+                "quantity": {
+                    "type": "number"
+                },
+                "unitCost": {
+                    "type": "integer"
+                }
+            }
+        },
+        "request.ProjectHeadInput": {
+            "type": "object",
+            "properties": {
+                "commissionRate": {
+                    "type": "number"
+                },
+                "employeeID": {
+                    "type": "string"
+                }
+            }
+        },
+        "request.SendInvoiceRequest": {
+            "type": "object",
+            "required": [
+                "bankID",
+                "dueDate",
+                "email",
+                "invoiceDate",
+                "projectID"
+            ],
+            "properties": {
+                "bankID": {
+                    "type": "string"
+                },
+                "cc": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "description": {
+                    "type": "string"
+                },
+                "discount": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "dueDate": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "invoiceDate": {
+                    "type": "string"
+                },
+                "invoiceMonth": {
+                    "type": "integer",
+                    "maximum": 11,
+                    "minimum": 0
+                },
+                "invoiceYear": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "isDraft": {
+                    "type": "boolean"
+                },
+                "lineItems": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/request.InvoiceItem"
+                    }
+                },
+                "note": {
+                    "type": "string"
+                },
+                "number": {
+                    "type": "string"
+                },
+                "projectID": {
+                    "type": "string"
+                },
+                "sentByID": {
+                    "type": "string"
+                },
+                "subtotal": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "tax": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "total": {
+                    "type": "integer",
+                    "minimum": 0
+                }
+            }
+        },
         "request.SendSurveyInput": {
             "type": "object",
             "required": [
@@ -7418,12 +8010,12 @@ const docTemplate = `{
         },
         "request.UpdateContactInfoInput": {
             "type": "object",
-            "required": [
-                "accountManagerID"
-            ],
             "properties": {
-                "accountManagerID": {
-                    "type": "string"
+                "accountManagers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/request.ProjectHeadInput"
+                    }
                 },
                 "clientEmail": {
                     "type": "array",
@@ -7431,11 +8023,20 @@ const docTemplate = `{
                         "type": "string"
                     }
                 },
-                "deliveryManagerID": {
-                    "type": "string"
+                "deliveryManagers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/request.ProjectHeadInput"
+                    }
                 },
                 "projectEmail": {
                     "type": "string"
+                },
+                "salePersons": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/request.ProjectHeadInput"
+                    }
                 }
             }
         },
@@ -7577,6 +8178,12 @@ const docTemplate = `{
                 "isLead": {
                     "type": "boolean"
                 },
+                "leadCommissionRate": {
+                    "type": "number"
+                },
+                "note": {
+                    "type": "string"
+                },
                 "positions": {
                     "type": "array",
                     "items": {
@@ -7600,6 +8207,9 @@ const docTemplate = `{
                 },
                 "status": {
                     "type": "string"
+                },
+                "upsellCommissionRate": {
+                    "type": "number"
                 },
                 "upsellPersonID": {
                     "type": "string"
@@ -7812,17 +8422,6 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/view.APIKeyData"
-                }
-            }
-        },
-        "view.AccountRoleResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.Role"
-                    }
                 }
             }
         },
@@ -8113,6 +8712,9 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
+                "note": {
+                    "type": "string"
+                },
                 "positions": {
                     "type": "array",
                     "items": {
@@ -8149,6 +8751,12 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
+                    "type": "string"
+                },
+                "intermediaryBankAddress": {
+                    "type": "string"
+                },
+                "intermediaryBankName": {
                     "type": "string"
                 },
                 "name": {
@@ -8278,6 +8886,9 @@ const docTemplate = `{
             "properties": {
                 "avatar": {
                     "type": "string"
+                },
+                "commissionRate": {
+                    "type": "number"
                 },
                 "displayName": {
                     "type": "string"
@@ -8416,6 +9027,82 @@ const docTemplate = `{
                 }
             }
         },
+        "view.ClientContactInfo": {
+            "type": "object",
+            "properties": {
+                "emails": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "id": {
+                    "type": "string"
+                },
+                "isMainContact": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "view.ClientInfo": {
+            "type": "object",
+            "properties": {
+                "clientAddress": {
+                    "type": "string"
+                },
+                "clientCompany": {
+                    "type": "string"
+                },
+                "contacts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.ClientContactInfo"
+                    }
+                }
+            }
+        },
+        "view.CompanyInfo": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "info": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/model.CompanyContactInfo"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                },
+                "registrationNumber": {
+                    "type": "string"
+                }
+            }
+        },
+        "view.ContentData": {
+            "type": "object",
+            "properties": {
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "view.ContentDataResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/view.ContentData"
+                }
+            }
+        },
         "view.CountriesResponse": {
             "type": "object",
             "properties": {
@@ -8435,14 +9122,6 @@ const docTemplate = `{
                 }
             }
         },
-        "view.CreateInvoiceResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/model.Invoice"
-                }
-            }
-        },
         "view.CreateMemberData": {
             "type": "object",
             "properties": {
@@ -8451,6 +9130,9 @@ const docTemplate = `{
                 },
                 "deploymentType": {
                     "type": "string"
+                },
+                "discount": {
+                    "type": "number"
                 },
                 "displayName": {
                     "type": "string"
@@ -8464,6 +9146,12 @@ const docTemplate = `{
                 "isLead": {
                     "type": "boolean"
                 },
+                "leadCommissionRate": {
+                    "type": "number"
+                },
+                "note": {
+                    "type": "string"
+                },
                 "positions": {
                     "type": "array",
                     "items": {
@@ -8476,11 +9164,17 @@ const docTemplate = `{
                 "projectSlotID": {
                     "type": "string"
                 },
+                "rate": {
+                    "type": "number"
+                },
                 "seniority": {
                     "$ref": "#/definitions/model.Seniority"
                 },
                 "status": {
                     "type": "string"
+                },
+                "upsellCommissionRate": {
+                    "type": "number"
                 },
                 "upsellPerson": {
                     "$ref": "#/definitions/view.BasicEmployeeInfo"
@@ -8501,8 +9195,11 @@ const docTemplate = `{
         "view.CreateProjectData": {
             "type": "object",
             "properties": {
-                "accountManager": {
-                    "$ref": "#/definitions/view.ProjectHead"
+                "accountManagers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.ProjectHead"
+                    }
                 },
                 "bankAccount": {
                     "$ref": "#/definitions/view.BasicBankAccountInfo"
@@ -8528,8 +9225,11 @@ const docTemplate = `{
                 "deletedAt": {
                     "$ref": "#/definitions/gorm.DeletedAt"
                 },
-                "deliveryManager": {
-                    "$ref": "#/definitions/view.ProjectHead"
+                "deliveryManagers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.ProjectHead"
+                    }
                 },
                 "function": {
                     "type": "string"
@@ -8551,6 +9251,12 @@ const docTemplate = `{
                 },
                 "projectEmail": {
                     "type": "string"
+                },
+                "salePersons": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.ProjectHead"
+                    }
                 },
                 "startDate": {
                     "type": "string"
@@ -9222,6 +9928,126 @@ const docTemplate = `{
                 }
             }
         },
+        "view.Invoice": {
+            "type": "object",
+            "properties": {
+                "bankID": {
+                    "type": "string"
+                },
+                "cc": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "conversionAmount": {
+                    "type": "integer"
+                },
+                "conversionRate": {
+                    "type": "number"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "discount": {
+                    "type": "integer"
+                },
+                "dueAt": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "errorInvoiceID": {
+                    "type": "string"
+                },
+                "failedAt": {
+                    "type": "string"
+                },
+                "invoiceFileURL": {
+                    "type": "string"
+                },
+                "invoicedAt": {
+                    "type": "string"
+                },
+                "lineItems": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.InvoiceItem"
+                    }
+                },
+                "month": {
+                    "type": "integer"
+                },
+                "note": {
+                    "type": "string"
+                },
+                "number": {
+                    "type": "string"
+                },
+                "paidAt": {
+                    "type": "string"
+                },
+                "projectID": {
+                    "type": "string"
+                },
+                "scheduledDate": {
+                    "type": "string"
+                },
+                "sentBy": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "subTotal": {
+                    "type": "integer"
+                },
+                "tax": {
+                    "type": "integer"
+                },
+                "threadID": {
+                    "type": "string"
+                },
+                "total": {
+                    "type": "integer"
+                },
+                "year": {
+                    "type": "integer"
+                }
+            }
+        },
+        "view.InvoiceItem": {
+            "type": "object",
+            "properties": {
+                "cost": {
+                    "type": "integer"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "discount": {
+                    "type": "integer"
+                },
+                "isExternal": {
+                    "type": "boolean"
+                },
+                "quantity": {
+                    "type": "number"
+                },
+                "unitCost": {
+                    "type": "integer"
+                }
+            }
+        },
+        "view.InvoiceTemplateResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/view.ProjectInvoiceTemplate"
+                }
+            }
+        },
         "view.ItemValue": {
             "type": "object",
             "properties": {
@@ -9509,6 +10335,12 @@ const docTemplate = `{
                 "placeOfResidence": {
                     "type": "string"
                 },
+                "roles": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.Role"
+                    }
+                },
                 "teamEmail": {
                     "type": "string"
                 },
@@ -9544,8 +10376,11 @@ const docTemplate = `{
         "view.ProjectData": {
             "type": "object",
             "properties": {
-                "accountManager": {
-                    "$ref": "#/definitions/view.ProjectHead"
+                "accountManagers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.ProjectHead"
+                    }
                 },
                 "allowsSendingSurvey": {
                     "type": "boolean"
@@ -9583,8 +10418,11 @@ const docTemplate = `{
                 "deletedAt": {
                     "$ref": "#/definitions/gorm.DeletedAt"
                 },
-                "deliveryManager": {
-                    "$ref": "#/definitions/view.ProjectHead"
+                "deliveryManagers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.ProjectHead"
+                    }
                 },
                 "endDate": {
                     "type": "string"
@@ -9613,8 +10451,11 @@ const docTemplate = `{
                 "projectEmail": {
                     "type": "string"
                 },
-                "salePerson": {
-                    "$ref": "#/definitions/view.ProjectHead"
+                "salePersons": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.ProjectHead"
+                    }
                 },
                 "stacks": {
                     "type": "array",
@@ -9656,6 +10497,9 @@ const docTemplate = `{
                 "avatar": {
                     "type": "string"
                 },
+                "commissionRate": {
+                    "type": "number"
+                },
                 "displayName": {
                     "type": "string"
                 },
@@ -9666,6 +10510,32 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "view.ProjectInvoiceTemplate": {
+            "type": "object",
+            "properties": {
+                "bankAccount": {
+                    "$ref": "#/definitions/view.BankAccount"
+                },
+                "client": {
+                    "$ref": "#/definitions/view.ClientInfo"
+                },
+                "companyInfo": {
+                    "$ref": "#/definitions/view.CompanyInfo"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "invoiceNumber": {
+                    "type": "string"
+                },
+                "lastInvoice": {
+                    "$ref": "#/definitions/view.Invoice"
+                },
+                "name": {
                     "type": "string"
                 }
             }
@@ -9687,6 +10557,9 @@ const docTemplate = `{
                 "avatar": {
                     "type": "string"
                 },
+                "currency": {
+                    "$ref": "#/definitions/view.Currency"
+                },
                 "deploymentType": {
                     "type": "string"
                 },
@@ -9707,6 +10580,12 @@ const docTemplate = `{
                 },
                 "isLead": {
                     "type": "boolean"
+                },
+                "leadCommissionRate": {
+                    "type": "number"
+                },
+                "note": {
+                    "type": "string"
                 },
                 "positions": {
                     "type": "array",
@@ -9731,6 +10610,9 @@ const docTemplate = `{
                 },
                 "status": {
                     "type": "string"
+                },
+                "upsellCommissionRate": {
+                    "type": "number"
                 },
                 "upsellPerson": {
                     "$ref": "#/definitions/view.BasicEmployeeInfo"
@@ -9847,6 +10729,17 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string"
+                }
+            }
+        },
+        "view.RolesResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Role"
+                    }
                 }
             }
         },

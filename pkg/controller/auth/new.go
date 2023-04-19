@@ -1,8 +1,6 @@
 package auth
 
 import (
-	"github.com/gin-gonic/gin"
-
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
@@ -29,7 +27,7 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 }
 
 type IController interface {
-	Auth(c *gin.Context, in AuthenticationInput) (employee *model.Employee, jwt string, err error)
-	Me(c *gin.Context, userID string) (employee *model.Employee, perms []*model.Permission, err error)
-	CreateAPIKey(c *gin.Context, roleID string) (string, error)
+	Auth(in AuthenticationInput) (employee *model.Employee, jwt string, err error)
+	Me(userID string) (employee *model.Employee, perms []*model.Permission, err error)
+	CreateAPIKey(roleID string) (string, error)
 }

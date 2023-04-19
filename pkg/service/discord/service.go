@@ -6,7 +6,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/model"
 )
 
-type DiscordService interface {
+type IService interface {
 	PostBirthdayMsg(msg string) (model.DiscordMessage, error)
 	GetMembers() ([]*discordgo.Member, error)
 
@@ -14,4 +14,7 @@ type DiscordService interface {
 	CreateEvent(event *model.Schedule) (scheduledEvent *discordgo.GuildScheduledEvent, err error)
 	UpdateEvent(event *model.Schedule) (scheduledEvent *discordgo.GuildScheduledEvent, err error)
 	DeleteEvent(event *model.Schedule) error
+
+	// Log discord
+	SendMessage(msg, webhookUrl string) (*model.DiscordMessage, error)
 }

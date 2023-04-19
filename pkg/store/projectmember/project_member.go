@@ -28,7 +28,7 @@ func (s *store) IsExist(db *gorm.DB, id string) (bool, error) {
 	return record.Result, query.Scan(&record).Error
 }
 
-// Details return a project member by id
+// OneByID return a project member by id
 func (s *store) OneByID(db *gorm.DB, id string) (*model.ProjectMember, error) {
 	var member *model.ProjectMember
 	return member, db.Where("id = ?", id).First(&member).Error
@@ -70,7 +70,7 @@ func (s *store) UpdateEndDateByProjectID(db *gorm.DB, projectID string) error {
 		Updates(model.ProjectMember{EndDate: &now}).Error
 }
 
-// IsExistsByEmployeeID check ProjectMember existance by project id and employee id
+// IsExistsByEmployeeID check ProjectMember existence by project id and employee id
 func (s *store) IsExistsByEmployeeID(db *gorm.DB, projectID string, employeeID string) (bool, error) {
 	var record struct {
 		Result bool
@@ -80,7 +80,7 @@ func (s *store) IsExistsByEmployeeID(db *gorm.DB, projectID string, employeeID s
 	return record.Result, query.Scan(&record).Error
 }
 
-// GetActiveByProjectIDs get project member by porjectID list
+// GetActiveByProjectIDs get project member by projectID list
 func (s *store) GetActiveByProjectIDs(db *gorm.DB, projectIDs []string) ([]*model.ProjectMember, error) {
 	var members []*model.ProjectMember
 	return members, db.Joins("JOIN employees ON project_members.employee_id = employees.id").Where("(project_members.end_date IS NULL OR project_members.end_date > ?) AND project_members.status = 'active' AND employees.working_status = 'full-time' AND project_members.project_id IN ?", time.Now(), projectIDs).Preload("Employee").Find(&members).Error
@@ -115,7 +115,8 @@ func (s *store) GetAssignedMembers(db *gorm.DB, projectID string, status string,
 		`, timeNow, timeNow, model.HeadPositionTechnicalLead).
 		Where("project_members.deleted_at IS NULL AND project_members.project_id = ?", projectID).
 		Order("project_members.end_date DESC, ph.created_at, s.level DESC").
-		Preload("Employee", "deleted_at IS NULL")
+		Preload("Employee", "deleted_at IS NULL").
+		Preload("Employee.Referrer", "deleted_at IS NULL")
 
 	switch status {
 	case model.ProjectMemberStatusOnBoarding.String():

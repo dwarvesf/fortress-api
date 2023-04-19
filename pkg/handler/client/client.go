@@ -57,7 +57,6 @@ func (h *handler) Create(c *gin.Context) {
 		return
 	}
 
-	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler": "client",
 		"method":  "Create",
@@ -86,7 +85,6 @@ func (h *handler) Create(c *gin.Context) {
 // @Failure 500 {object} view.ErrorResponse
 // @Router /clients [get]
 func (h *handler) List(c *gin.Context) {
-	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler": "client",
 		"method":  "List",
@@ -121,7 +119,6 @@ func (h *handler) Detail(c *gin.Context) {
 		return
 	}
 
-	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler": "client",
 		"method":  "Detail",
@@ -168,7 +165,6 @@ func (h *handler) Update(c *gin.Context) {
 		return
 	}
 
-	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler": "client",
 		"method":  "Update",
@@ -203,7 +199,6 @@ func (h *handler) Delete(c *gin.Context) {
 		return
 	}
 
-	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler":  "client",
 		"method":   "UpdateInfo",

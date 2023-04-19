@@ -514,6 +514,16 @@ func (s *store) GetAvailableEmployees(db *gorm.DB) ([]*model.Employee, error) {
 				model.ProjectStatusOnBoarding.String(),
 				model.ProjectStatusActive.String(),
 			}).
+		Where(`id IN (
+			SELECT e2.id 
+			FROM employees e2
+				LEFT JOIN employee_chapters ec ON ec.employee_id = e2.id
+				LEFT JOIN chapters c ON ec.chapter_id = c.id 
+			WHERE ec.deleted_at IS NULL
+				AND c.deleted_at IS NULL
+				AND e2.deleted_at IS NULL
+				AND (c.code IS NULL OR (c.code <> 'sales' AND c.code <> 'operations'))
+		)`).
 		Order("created_at, display_name").
 		Preload("Seniority", "deleted_at IS NULL").
 		Preload("EmployeePositions", "deleted_at IS NULL").
@@ -535,107 +545,152 @@ func (s *store) GetAvailableEmployees(db *gorm.DB) ([]*model.Employee, error) {
 		Find(&employees).Error
 }
 
-func (s *store) GetResourceUtilization(db *gorm.DB) ([]*model.ResourceUtilization, error) {
+func (s *store) GetResourceUtilization(db *gorm.DB, currentDate time.Time) ([]*model.ResourceUtilization, error) {
 	var ru []*model.ResourceUtilization
 
 	query := `
 	WITH resource_utilization AS (
-		SELECT d.d AS "date", 
-				e.id AS employee_id, 
+		SELECT d.d AS "date",
+				e.id AS employee_id,
 				p.id AS project_id,
 				p."type" AS "project_type",
 				pm.deployment_type,
 				pm.start_date,
-				pm.end_date 
-		FROM employees e 
-			LEFT JOIN project_members pm ON pm.employee_id = e.id 
-			LEFT JOIN projects p ON pm.project_id = p.id, 
+				pm.end_date AS pm_end_date,
+				p.end_date AS p_end_date,
+				e.left_date
+		FROM employees e
+			LEFT JOIN project_members pm ON pm.employee_id = e.id
+			LEFT JOIN projects p ON pm.project_id = p.id,
 			generate_series(
-				date_trunc('month', CURRENT_DATE) - INTERVAL '3 month', 
-				date_trunc('month', CURRENT_DATE) + INTERVAL '3 month', 
+				date_trunc('month', TO_DATE(?, 'YYYY-MM-DD')) - INTERVAL '3 month',
+				date_trunc('month', TO_DATE(?, 'YYYY-MM-DD')) + INTERVAL '3 month',
 				'1 month'
 			) d
-		WHERE e."working_status" = 'full-time'
+		WHERE e.deleted_at IS NULL
+			AND pm.deleted_at IS NULL
+			AND p.deleted_at IS NULL
+			AND e.id IN (
+				SELECT e2.id
+				FROM employees e2
+					LEFT JOIN employee_chapters ec ON ec.employee_id = e2.id
+					LEFT JOIN chapters c ON ec.chapter_id = c.id
+				WHERE ec.deleted_at IS NULL
+					AND c.deleted_at IS NULL
+					AND e2.deleted_at IS NULL
+					AND (c.code IS NULL OR (c.code <> 'sales' AND c.code <> 'operations'))
+			)
+			AND e.id IN (
+				SELECT eo.employee_id 
+				FROM employee_organizations eo JOIN organizations o ON eo.organization_id = o.id 
+				WHERE o.code = ? 
+					AND eo.deleted_at IS NULL 
+					AND o.deleted_at IS NULL 
+			)
 		ORDER BY d.d
 	)
-	
+
 	SELECT "date" ,
 		COUNT(DISTINCT(employee_id)) FILTER (
-			WHERE deployment_type = 'official' 
+			WHERE deployment_type = 'official'
 				AND "project_type" != 'dwarves'
 				AND start_date <= "date"
-				AND (end_date IS NULL OR end_date > "date")
-		) AS official,
+				AND (pm_end_date IS NULL OR pm_end_date > "date")
+				AND (p_end_date IS NULL OR p_end_date > "date")
+				AND (left_date IS NULL OR left_date > "date")
+		) AS staffed,
 
 		COUNT(DISTINCT(employee_id)) FILTER (
 			WHERE start_date <= "date"
-				AND (end_date IS NULL OR end_date > "date")
+				AND (pm_end_date IS NULL OR pm_end_date > "date")
 				AND employee_id NOT IN (
 					SELECT ru2.employee_id
 					FROM resource_utilization ru2
-					WHERE ru2.deployment_type = 'official' 
+					WHERE ru2.deployment_type = 'official'
 						AND ru2."project_type" != 'dwarves'
 						AND ru2.start_date <= ru."date"
-						AND (ru2.end_date IS NULL OR ru2.end_date > ru."date")
+						AND (ru2.pm_end_date IS NULL OR ru2.pm_end_date > ru."date")
+						AND (ru2.p_end_date IS NULL OR ru2.p_end_date > ru."date")
+						AND (ru2.left_date IS NULL OR ru2.left_date > ru."date")
 				)
-		) AS shadow,
-		
+				AND (left_date IS NULL OR left_date > "date")
+		) AS internal,
+
 		COUNT(DISTINCT(employee_id)) FILTER (
-			WHERE project_id IS NULL
+			WHERE (project_id IS NULL
 				OR employee_id NOT IN (
 					SELECT ru3.employee_id
 					FROM resource_utilization ru3
-					WHERE ru3.start_date <= ru."date" AND (ru3.end_date IS NULL OR ru3.end_date > ru."date")
-				)
+					WHERE ru3.start_date <= ru."date"
+						AND (ru3.pm_end_date IS NULL OR ru3.pm_end_date > ru."date")
+						AND (ru3.p_end_date IS NULL OR ru3.p_end_date > ru."date")
+						AND (ru3.left_date IS NULL OR ru3.left_date > ru."date")
+				))
+				AND (left_date IS NULL OR left_date > "date")
 		) AS available
-	FROM resource_utilization ru 
-	GROUP BY "date" 
+	FROM resource_utilization ru
+	GROUP BY "date"
 	`
 
-	return ru, db.Raw(query).Scan(&ru).Error
+	return ru, db.Raw(query, currentDate, currentDate, model.OrganizationCodeDwarves).Scan(&ru).Error
 }
 
 func (s *store) TotalWorkUnitDistribution(db *gorm.DB) (*model.TotalWorkUnitDistribution, error) {
 	var rs *model.TotalWorkUnitDistribution
 
 	query := `
-		WITH work_unit_info AS (
-			SELECT 
+		WITH
+		employee_data AS (
+			SELECT
+				e.id,
+				e.full_name,
+				e.display_name,
+				e.username,
+				e.avatar,
+				e.line_manager_id,
+				o.code as organization_code
+			FROM employees e
+				LEFT JOIN employee_organizations eo on e.id = eo.employee_id
+				LEFT JOIN organizations o on eo.organization_id = o.id
+			WHERE
+				e.deleted_at IS NULL AND o.code = 'dwarves-foundation'
+		),
+		work_unit_info AS (
+			SELECT
 				wum.employee_id,
 				wu.type,
 				COUNT(*) AS work_unit_count
 			FROM work_units wu
 					JOIN work_unit_members wum ON wu.id = wum.work_unit_id
-			WHERE 
+			WHERE
 				wum.status = 'active'
 				AND wu.status = 'active'
 				AND wum.deleted_at IS NULL
 				AND wu.deleted_at IS NULL
 			GROUP BY wum.employee_id, wu.type),
 			count_work_unit_distribution AS (
-				SELECT 
+				SELECT
 					e.id,
 					e.full_name,
 					e.display_name,
 					e.username,
 					e.avatar,
 					(SELECT COUNT(*)
-					FROM employees
-					WHERE line_manager_id = e.id
-						AND deleted_at IS NULL)                   AS line_manager_count,
+					FROM employee_data
+					WHERE line_manager_id = e.id)                   AS line_manager_count,
 					(SELECT COUNT(*)
 					FROM project_heads ph
 					WHERE (ph.position = 'technical-lead' OR
 							ph.position = 'delivery-manager' OR
 							ph.position = 'account-manager')
 						AND ph.employee_id = e.id
-						AND ph.end_date IS NULL)                  AS project_head_count,
+						AND ph.end_date IS NULL)                 AS project_head_count,
 					COALESCE(wui_learning.work_unit_count, 0)    AS learning,
 					COALESCE(wui_development.work_unit_count, 0) AS development,
 					COALESCE(wui_management.work_unit_count, 0)  AS management,
 					COALESCE(wui_training.work_unit_count, 0)    AS training
-				FROM 
-					employees e
+				FROM
+					employee_data e
 					LEFT JOIN work_unit_info wui_learning
 								ON e.id = wui_learning.employee_id AND wui_learning.type = 'learning'
 					LEFT JOIN work_unit_info wui_development
@@ -645,7 +700,7 @@ func (s *store) TotalWorkUnitDistribution(db *gorm.DB) (*model.TotalWorkUnitDist
 								ON e.id = wui_management.employee_id AND wui_management.type = 'management'
 					LEFT JOIN work_unit_info wui_training
 								ON e.id = wui_training.employee_id AND wui_training.type = 'training')
-		SELECT 
+		SELECT
 			SUM(line_manager_count) AS total_line_manager,
 			SUM(project_head_count) AS total_project_head,
 			SUM(learning)           AS total_learning,
@@ -698,4 +753,72 @@ func (s *store) GetProjectHeadByEmployeeID(db *gorm.DB, employeeID string) ([]*m
 	`
 
 	return rs, db.Raw(query, employeeID, model.ProjectStatusActive, model.ProjectStatusOnBoarding).Scan(&rs).Error
+}
+
+func (s *store) GetWorkUnitDistributionEmployees(db *gorm.DB, keyword string, workUnitType string) ([]*model.Employee, error) {
+	var employees []*model.Employee
+
+	query := db.Table("employees")
+
+	if keyword != "" {
+		query = query.Where("keyword_vector @@ plainto_tsquery('english_nostop', fn_remove_vietnamese_accents(LOWER(?)))", keyword)
+	}
+
+	query = query.Where("deleted_at IS NULL").
+		Where("working_status IN ?", []string{
+			model.WorkingStatusFullTime.String(),
+			model.WorkingStatusContractor.String(),
+		}).
+		Order("display_name ASC")
+
+	// preload mentees
+	if workUnitType == "" || workUnitType == model.WorkUnitTypeTraining.String() {
+		query = query.Preload("Mentees", "deleted_at IS NULL AND working_status IN ?", []string{
+			model.WorkingStatusFullTime.String(),
+			model.WorkingStatusContractor.String(),
+		})
+	}
+
+	// preload project heads
+	if workUnitType == "" || workUnitType == model.WorkUnitTypeManagement.String() {
+		query = query.Preload("Heads", func(db *gorm.DB) *gorm.DB {
+			return db.Joins("JOIN projects p ON project_heads.project_id = p.id").
+				Where("(project_heads.start_date IS NULL OR project_heads.start_date <= now())").
+				Where("(project_heads.end_date IS NULL OR project_heads.end_date > now())").
+				Where("p.status IN ?", []string{
+					model.ProjectStatusActive.String(),
+					model.ProjectStatusOnBoarding.String(),
+				}).
+				Where("project_heads.deleted_at IS NULL").
+				Where("p.deleted_at IS NULL")
+		}).Preload("Heads.Project", "deleted_at IS NULL")
+	}
+
+	// preload work units
+	query = query.Preload("WorkUnitMembers", func(db *gorm.DB) *gorm.DB {
+		db = db.
+			Joins("JOIN work_units wu ON wu.id = work_unit_members.work_unit_id").
+			Joins("JOIN projects p ON p.id = wu.project_id").
+			Joins("JOIN project_members pm ON pm.project_id = work_unit_members.project_id AND pm.employee_id = work_unit_members.employee_id").
+			Where("wu.status = ?", model.WorkUnitStatusActive).
+			Where("p.status IN ?", []string{
+				model.ProjectStatusActive.String(),
+				model.ProjectStatusOnBoarding.String(),
+			}).
+			Where("pm.start_date <= now() AND (pm.end_date IS NULL OR pm.end_date > now())").
+			Where("p.deleted_at IS NULL").
+			Where("pm.deleted_at IS NULL").
+			Where("wu.deleted_at IS NULL").
+			Where("work_unit_members.deleted_at IS NULL")
+
+		if workUnitType != "" {
+			db = db.Where("wu.type = ?", workUnitType)
+		}
+
+		return db
+	}).
+		Preload("WorkUnitMembers.WorkUnit").
+		Preload("WorkUnitMembers.WorkUnit.Project")
+
+	return employees, query.Find(&employees).Error
 }

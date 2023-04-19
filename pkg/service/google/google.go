@@ -6,42 +6,28 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
-	"mime/multipart"
 	"net/http"
 	"strings"
 	"time"
 
 	"cloud.google.com/go/storage"
 	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/google"
 	"google.golang.org/api/option"
 )
 
 const (
-	state                        = "state-token"
-	getGoogleUserInfoAPIEndpoint = "https://www.googleapis.com/plus/v1/people/me"
+	state                              = "state-token"
+	getGoogleUserInfoAPIEndpointLegacy = "https://www.googleapis.com/plus/v1/people/me"
+	getGoogleUserInfoAPIEndpoint       = "https://people.googleapis.com/v1/people/me"
 )
 
-type ClientUploader struct {
-	cl         *storage.Client
-	projectID  string
-	bucketName string
-}
-type Google struct {
-	Config   *oauth2.Config
-	Uploader *ClientUploader
+type googleService struct {
+	config *oauth2.Config
+	gcs    *CloudStorage
 }
 
 // New function return Google service
-func New(ClientID, ClientSecret, AppName string, Scopes []string, BucketName string, GCSProjectID string, GCSCredentials string) (*Google, error) {
-	Config := &oauth2.Config{
-		ClientID:     ClientID,
-		ClientSecret: ClientSecret,
-		Endpoint:     google.Endpoint,
-		Scopes:       Scopes,
-	}
-
+func New(config *oauth2.Config, BucketName string, GCSProjectID string, GCSCredentials string) (IService, error) {
 	decoded, err := base64.StdEncoding.DecodeString(GCSCredentials)
 	if err != nil {
 		return nil, fmt.Errorf("failed to decode gcs credentials: %v", err)
@@ -52,10 +38,10 @@ func New(ClientID, ClientSecret, AppName string, Scopes []string, BucketName str
 		return nil, fmt.Errorf("failed to create client: %v", err)
 	}
 
-	return &Google{
-		Config: Config,
-		Uploader: &ClientUploader{
-			cl:         client,
+	return &googleService{
+		config: config,
+		gcs: &CloudStorage{
+			client:     client,
 			projectID:  GCSProjectID,
 			bucketName: BucketName,
 		},
@@ -63,23 +49,23 @@ func New(ClientID, ClientSecret, AppName string, Scopes []string, BucketName str
 }
 
 // GetLoginURL return url for user loggin to google account
-func (g *Google) GetLoginURL() string {
-	authURL := g.Config.AuthCodeURL(state, oauth2.AccessTypeOffline)
+func (g *googleService) GetLoginURL() string {
+	authURL := g.config.AuthCodeURL(state, oauth2.AccessTypeOffline)
 	return authURL
 }
 
 // GetAccessToken return google access token
-func (g *Google) GetAccessToken(code string, redirectURL string) (string, error) {
-	g.Config.RedirectURL = redirectURL
-	token, err := g.Config.Exchange(context.Background(), code)
+func (g *googleService) GetAccessToken(code string, redirectURL string) (string, error) {
+	g.config.RedirectURL = redirectURL
+	token, err := g.config.Exchange(context.Background(), code)
 	if err != nil {
 		return "", err
 	}
 	return token.AccessToken, nil
 }
 
-// GetGoogleUserInfo return google user info
-func (g *Google) GetGoogleEmail(accessToken string) (email string, err error) {
+// GetGoogleEmailLegacy return google user info
+func (g *googleService) GetGoogleEmailLegacy(accessToken string) (email string, err error) {
 	var gu struct {
 		DisplayName string `json:"displayName"`
 		ID          string `json:"id"`
@@ -89,16 +75,17 @@ func (g *Google) GetGoogleEmail(accessToken string) (email string, err error) {
 		} `json:"emails"`
 	}
 
-	response, err := http.Get(getGoogleUserInfoAPIEndpoint + "?access_token=" + accessToken)
+	response, err := http.Get(getGoogleUserInfoAPIEndpointLegacy + "?access_token=" + accessToken)
 	if err != nil {
 		return "", err
 	}
+	defer response.Body.Close()
 
-	body, err := ioutil.ReadAll(response.Body)
+	body, err := io.ReadAll(response.Body)
 	if err != nil {
 		return "", err
 	}
-	if err = json.Unmarshal([]byte(body), &gu); err != nil {
+	if err = json.Unmarshal(body, &gu); err != nil {
 		return "", err
 	}
 
@@ -112,14 +99,54 @@ func (g *Google) GetGoogleEmail(accessToken string) (email string, err error) {
 	return primaryEmail, nil
 }
 
-func (g *Google) UploadContentGCS(file multipart.File, filePath string) error {
+// GetGoogleEmail return google user info
+func (g *googleService) GetGoogleEmail(accessToken string) (email string, err error) {
+	var gu struct {
+		DisplayName string `json:"displayName"`
+		ID          string `json:"id"`
+		Emails      []struct {
+			Metadata struct {
+				Primary       bool `json:"primary"`
+				Verified      bool `json:"verified"`
+				SourcePrimary bool `json:"sourcePrimary"`
+			} `json:"metadata"`
+			Value string `json:"value"`
+		} `json:"emailAddresses"`
+	}
+
+	response, err := http.Get(getGoogleUserInfoAPIEndpoint + "?&personFields=emailAddresses&access_token=" + accessToken)
+	if err != nil {
+		return "", err
+	}
+	defer response.Body.Close()
+
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
+		return "", err
+	}
+	if err = json.Unmarshal(body, &gu); err != nil {
+		return "", err
+	}
+
+	var primaryEmail string
+	for i := range gu.Emails {
+		if gu.Emails[i].Metadata.SourcePrimary {
+			primaryEmail = gu.Emails[i].Value
+			break
+		}
+	}
+
+	return primaryEmail, nil
+}
+
+func (g *googleService) UploadContentGCS(file io.Reader, filePath string) error {
 	ctx := context.Background()
 
 	ctx, cancel := context.WithTimeout(ctx, time.Second*50)
 	defer cancel()
 
 	// Upload an object with storage.Writer.
-	wc := g.Uploader.cl.Bucket(g.Uploader.bucketName).Object(filePath).NewWriter(ctx)
+	wc := g.gcs.client.Bucket(g.gcs.bucketName).Object(filePath).NewWriter(ctx)
 	if _, err := io.Copy(wc, file); err != nil {
 		return fmt.Errorf("io.Copy: %v", err)
 	}

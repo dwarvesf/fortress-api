@@ -117,6 +117,9 @@ func NewAuditCycleFromNotionPage(page *notion.Page, notionDBID string) *AuditCyc
 	if properties["Date"].Date != nil {
 		date := properties["Date"].Date.Start.Time
 		rs.Quarter = fmt.Sprintf("%d/Q%d", date.Year(), (date.Month()-1)/3+1)
+	} else {
+		date := time.Now()
+		rs.Quarter = fmt.Sprintf("%d/Q%d", date.Year(), (date.Month()-1)/3+1)
 	}
 
 	if properties["Project"].Relation != nil && len(properties["Project"].Relation) > 0 {

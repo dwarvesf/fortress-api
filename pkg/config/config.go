@@ -17,11 +17,16 @@ type Config struct {
 	ApiServer ApiServer
 
 	// service
-	Google  Google
-	Vault   Vault
-	Notion  Notion
-	Wise    Wise
-	Discord Discord
+	Google        Google
+	Vault         Vault
+	Notion        Notion
+	Wise          Wise
+	Discord       Discord
+	Basecamp      Basecamp
+	CurrencyLayer CurrencyLayer
+
+	Invoice  Invoice
+	Sendgrid Sendgrid
 
 	APIKey       string
 	Debug        bool
@@ -45,18 +50,25 @@ type ApiServer struct {
 }
 
 type Google struct {
-	ClientSecret   string
-	ClientID       string
-	AppName        string
-	GCSBucketName  string
-	GCSProjectID   string
-	GCSCredentials string
+	ClientSecret                 string
+	ClientID                     string
+	AppName                      string
+	GCSProjectID                 string
+	GCSBucketName                string
+	GCSCredentials               string
+	GCPProjectID                 string
+	AccountingGoogleRefreshToken string
+	AccountingEmailID            string
 }
 
 type Wise struct {
 	APIKey  string
 	Profile string
 	Url     string
+}
+
+type CurrencyLayer struct {
+	APIKey string
 }
 
 type Vault struct {
@@ -100,6 +112,23 @@ type DiscordID struct {
 	DwarvesGuild string
 }
 
+type Invoice struct {
+	TemplatePath string
+	DirID        string
+	TestEmail    string
+}
+
+type Sendgrid struct {
+	APIKey string
+}
+
+type Basecamp struct {
+	BotKey            string
+	ClientID          string
+	ClientSecret      string
+	OAuthRefreshToken string
+}
+
 type ENV interface {
 	GetBool(string) bool
 	GetString(string) string
@@ -127,18 +156,24 @@ func Generate(v ENV) *Config {
 		},
 
 		Google: Google{
-			ClientSecret:   v.GetString("GOOGLE_API_CLIENT_SECRET"),
-			ClientID:       v.GetString("GOOGLE_API_CLIENT_ID"),
-			AppName:        v.GetString("GOOGLE_API_APP_NAME"),
-			GCSBucketName:  v.GetString("GCS_BUCKET_NAME"),
-			GCSProjectID:   v.GetString("GCS_PROJECT_ID"),
-			GCSCredentials: v.GetString("GCS_CREDENTIALS"),
+			ClientSecret:                 v.GetString("GOOGLE_API_CLIENT_SECRET"),
+			ClientID:                     v.GetString("GOOGLE_API_CLIENT_ID"),
+			AppName:                      v.GetString("GOOGLE_API_APP_NAME"),
+			GCPProjectID:                 v.GetString("GCP_PROJECT_ID"),
+			GCSBucketName:                v.GetString("GCS_BUCKET_NAME"),
+			GCSProjectID:                 v.GetString("GCS_PROJECT_ID"),
+			GCSCredentials:               v.GetString("GCS_CREDENTIALS"),
+			AccountingGoogleRefreshToken: v.GetString("ACCOUNTING_GOOGLE_REFRESH_TOKEN"),
+			AccountingEmailID:            v.GetString("ACCOUNTING_EMAIL_ID"),
 		},
 
 		Wise: Wise{
 			APIKey:  v.GetString("WISE_API_KEY"),
 			Profile: v.GetString("WISE_PROFILE"),
 			Url:     v.GetString("WISE_URL"),
+		},
+		CurrencyLayer: CurrencyLayer{
+			APIKey: v.GetString("CURRENCY_LAYER_API_KEY"),
 		},
 
 		Vault: Vault{
@@ -173,11 +208,26 @@ func Generate(v ENV) *Config {
 				DwarvesGuild: v.GetString("DISCORD_DWARVES_GUILD_ID"),
 			},
 		},
+		Basecamp: Basecamp{
+			BotKey:            v.GetString("BASECAMP_BOT_KEY"),
+			ClientID:          v.GetString("BASECAMP_CLIENT_ID"),
+			ClientSecret:      v.GetString("BASECAMP_CLIENT_SECRET"),
+			OAuthRefreshToken: v.GetString("BASECAMP_OAUTH_REFRESH_TOKEN"),
+		},
+		Invoice: Invoice{
+			TemplatePath: v.GetString("INVOICE_TEMPLATE_PATH"),
+			DirID:        v.GetString("INVOICE_DIR_ID"),
+			TestEmail:    v.GetString("INVOICE_TEST_EMAIL"),
+		},
+
+		Sendgrid: Sendgrid{
+			APIKey: v.GetString("SENDGRID_API_KEY"),
+		},
 	}
 }
 
 func DefaultConfigLoaders() []Loader {
-	loaders := []Loader{}
+	var loaders []Loader
 	fileLoader := NewFileLoader(".env", ".")
 	loaders = append(loaders, fileLoader)
 	loaders = append(loaders, NewENVLoader())

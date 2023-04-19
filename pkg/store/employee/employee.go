@@ -52,12 +52,6 @@ func (s *store) One(db *gorm.DB, id string, preload bool) (*model.Employee, erro
 	return employee, query.First(&employee).Error
 }
 
-// OneByTeamEmail get 1 employee by team email
-func (s *store) OneByTeamEmail(db *gorm.DB, teamEmail string) (*model.Employee, error) {
-	var employee *model.Employee
-	return employee, db.Where("team_email = ?", teamEmail).First(&employee).Error
-}
-
 // OneByEmail get 1 employee by team email or personal email
 func (s *store) OneByEmail(db *gorm.DB, email string) (*model.Employee, error) {
 	var employee *model.Employee
@@ -73,6 +67,12 @@ func (s *store) OneByNotionID(db *gorm.DB, notionID string) (*model.Employee, er
 			FROM social_accounts sa
 			WHERE sa.account_id = ? AND sa.type = ?
 		)`, notionID, model.SocialAccountTypeNotion).First(&employee).Error
+}
+
+// OneByBasecampID get 1 employee by basecampID
+func (s *store) OneByBasecampID(db *gorm.DB, basecampID int) (*model.Employee, error) {
+	var employee *model.Employee
+	return employee, db.Where("basecamp_id = ?", basecampID).First(&employee).Error
 }
 
 // All get employees by query and pagination
@@ -122,7 +122,9 @@ func (s *store) All(db *gorm.DB, filter EmployeeFilter, pagination model.Paginat
 					Where("employee_organizations.deleted_at IS NULL").
 					Order("organizations.code DESC")
 			}).
-			Preload("EmployeeOrganizations.Organization", "deleted_at IS NULL")
+			Preload("EmployeeOrganizations.Organization", "deleted_at IS NULL").
+			Preload("BaseSalary").
+			Preload("BaseSalary.Currency")
 	}
 
 	limit, offset := pagination.ToLimitOffset()
@@ -166,7 +168,7 @@ func (s *store) UpdateSelectedFieldsByID(db *gorm.DB, id string, updateModel mod
 // GetByIDs return list employee by IDs
 func (s *store) GetByIDs(db *gorm.DB, ids []model.UUID) ([]*model.Employee, error) {
 	var employees []*model.Employee
-	return employees, db.Where("id IN ?", ids).Find(&employees).Error
+	return employees, db.Where("id IN ?", ids).Order("created_at").Find(&employees).Error
 }
 
 // GetByWorkingStatus return list employee by working status
@@ -204,8 +206,8 @@ func (s *store) GetLineManagersOfPeers(db *gorm.DB, employeeID string) ([]*model
 	)`, model.WorkingStatusLeft).Find(&employees).Error
 }
 
-func (s *store) GetMenteesByID(db *gorm.DB, employeeID string) ([]model.Employee, error) {
-	var employees []model.Employee
+func (s *store) GetMenteesByID(db *gorm.DB, employeeID string) ([]*model.Employee, error) {
+	var employees []*model.Employee
 	return employees, db.Where(`id IN (
 		SELECT e.id
 		FROM employees e

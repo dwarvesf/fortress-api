@@ -7,6 +7,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -15,9 +16,19 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/model"
 )
 
+var (
+	// default for now
+	client = http.Client{
+		Timeout: 5 * time.Second,
+	}
+)
+
 const (
 	// api version
-	apiv1 = "v1/"
+	apiV1 = "v1/"
+
+	// get quote url
+	quotes = "quotes"
 
 	// get transfer rates
 	rates = "rates"
@@ -25,17 +36,18 @@ const (
 
 type wiseService struct {
 	sync.Mutex
-	cachemap map[string]float64
-
-	cfg *config.Config
-	l   logger.Logger
+	cacheMap map[string]float64
+	profile  string
+	cfg      *config.Config
+	l        logger.Logger
 }
 
-func New(cfg *config.Config, l logger.Logger) IWiseService {
+func New(cfg *config.Config, l logger.Logger) IService {
 	client := &wiseService{
 		cfg:      cfg,
 		l:        l,
-		cachemap: make(map[string]float64),
+		profile:  cfg.Wise.Profile,
+		cacheMap: make(map[string]float64),
 	}
 	go client.janitor()
 	return client
@@ -46,7 +58,7 @@ func (w *wiseService) janitor() {
 	for {
 		<-t.C
 		w.Lock()
-		w.cachemap = map[string]float64{}
+		w.cacheMap = map[string]float64{}
 		w.Unlock()
 	}
 }
@@ -107,7 +119,7 @@ func (w *wiseService) getTWRate(sourceCurrency, targetCurrency string) (float64,
 	}
 	defer resp.Body.Close()
 	body := resp.Body
-	res, err := ioutil.ReadAll(body)
+	res, err := io.ReadAll(body)
 	if err != nil {
 		l.Error(err, "can't read response")
 		return 0, err
@@ -125,11 +137,11 @@ func (w *wiseService) getTWRate(sourceCurrency, targetCurrency string) (float64,
 	return conversionRate[0].Rate, nil
 }
 
-/////////////////////
+// ///////////////////
 // INTERNAL FUNCTIONS
-/////////////////////
+// ///////////////////
 func (w *wiseService) getCache(key string) float64 {
-	if rate, ok := w.cachemap[key]; ok {
+	if rate, ok := w.cacheMap[key]; ok {
 		return rate
 	}
 	return 0
@@ -138,7 +150,7 @@ func (w *wiseService) getCache(key string) float64 {
 func (w *wiseService) setCache(key string, val float64) {
 	w.Lock()
 	defer w.Unlock()
-	w.cachemap[key] = val
+	w.cacheMap[key] = val
 }
 
 // getLocalRate get conversion rate without making api call, for non-prod env
@@ -161,7 +173,7 @@ func getLocalRate(target string) (float64, error) {
 }
 
 func (w *wiseService) getUrl(api string) string {
-	return w.cfg.Wise.Url + apiv1 + api
+	return w.cfg.Wise.Url + apiV1 + api
 }
 
 func (w *wiseService) getAuthHeader() string {
@@ -173,4 +185,31 @@ func (w *wiseService) newRequest(method, url string, body io.Reader) (*http.Requ
 	req.Header.Set("Authorization", w.getAuthHeader())
 	req.Header.Set("Content-Type", "application/json")
 	return req, err
+}
+
+func (w *wiseService) GetPayrollQuotes(sourceCurrency, targetCurrency string, targetAmount float64) (*model.TWQuote, error) {
+	var q *model.TWQuote
+	if w.cfg.Env != "prod" {
+		return &model.TWQuote{
+			SourceAmount: 0,
+			Fee:          0,
+			Rate:         0,
+		}, nil
+	}
+
+	// Todo: (hnh)
+	payload := strings.NewReader(fmt.Sprintf("{\n\t\"profile\": %v,\n\t\"source\": \"%s\",\n\t\"target\": \"%s\",\n\t\"rateType\": \"FIXED\",\n\t\"targetAmount\": %v,\n\t\"type\": \"BALANCE_PAYOUT\"\n}", w.profile, sourceCurrency, targetCurrency, targetAmount))
+
+	req, _ := w.newRequest("POST", w.getUrl(quotes), payload)
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	body := resp.Body
+
+	res, _ := ioutil.ReadAll(body)
+
+	return q, json.Unmarshal(res, &q)
 }

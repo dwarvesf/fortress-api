@@ -282,7 +282,6 @@ func ToPeerReviewDetail(topic *model.EmployeeEventTopic) SurveyTopicDetail {
 		}
 
 		rs.Participants = append(rs.Participants, participant)
-
 	}
 
 	return rs

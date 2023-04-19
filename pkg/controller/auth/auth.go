@@ -4,11 +4,10 @@ import (
 	"errors"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 
 	"github.com/dwarvesf/fortress-api/pkg/model"
-	"github.com/dwarvesf/fortress-api/pkg/utils"
+	"github.com/dwarvesf/fortress-api/pkg/utils/authutils"
 )
 
 type AuthenticationInput struct {
@@ -16,7 +15,7 @@ type AuthenticationInput struct {
 	RedirectURL string
 }
 
-func (r *controller) Auth(c *gin.Context, in AuthenticationInput) (*model.Employee, string, error) {
+func (r *controller) Auth(in AuthenticationInput) (*model.Employee, string, error) {
 	// 2.1 get access token from req code and redirect url
 	accessToken, err := r.service.Google.GetAccessToken(in.Code, in.RedirectURL)
 	if err != nil {
@@ -24,14 +23,22 @@ func (r *controller) Auth(c *gin.Context, in AuthenticationInput) (*model.Employ
 	}
 
 	// 2.2 get login user email from access token
-	primaryEmail, err := r.service.Google.GetGoogleEmail(accessToken)
-	if err != nil {
-		return nil, "", err
+	primaryEmail := ""
+	if r.config.Env == "prod" {
+		primaryEmail, err = r.service.Google.GetGoogleEmailLegacy(accessToken)
+		if err != nil {
+			return nil, "", err
+		}
+	} else {
+		primaryEmail, err = r.service.Google.GetGoogleEmail(accessToken)
+		if err != nil {
+			return nil, "", err
+		}
 	}
 
 	// 2.3 double check empty primary email
 	if primaryEmail == "" {
-		return nil, "", err
+		return nil, "", ErrEmptyPrimaryEmail
 	}
 
 	// 2.4 check user is active
@@ -50,7 +57,7 @@ func (r *controller) Auth(c *gin.Context, in AuthenticationInput) (*model.Employ
 		Email:  primaryEmail,
 	}
 
-	jwt, err := utils.GenerateJWTToken(&authenticationInfo, time.Now().Add(24*365*time.Hour).Unix(), r.config.JWTSecretKey)
+	jwt, err := authutils.GenerateJWTToken(&authenticationInfo, time.Now().Add(24*365*time.Hour).Unix(), r.config.JWTSecretKey)
 	if err != nil {
 		return nil, "", err
 	}

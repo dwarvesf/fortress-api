@@ -8,14 +8,15 @@ import (
 	"strings"
 
 	"github.com/dstotijn/go-notion"
+	"github.com/gin-gonic/gin"
+	"github.com/thoas/go-funk"
+
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/view"
-	"github.com/gin-gonic/gin"
-	"github.com/thoas/go-funk"
 )
 
 type handler struct {
@@ -83,6 +84,10 @@ func (h *handler) List(c *gin.Context) {
 	var techs = []model.TechRadar{}
 	for _, r := range resp.Results {
 		props := r.Properties.(notion.DatabasePageProperties)
+
+		if props["Name"].Title == nil || len(props["Name"].Title) == 0 {
+			continue
+		}
 
 		name := props["Name"].Title[0].Text.Content
 		if c.Query("name") != "" {

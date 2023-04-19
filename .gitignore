@@ -12,7 +12,9 @@ log
 *.test
 build
 .env
-.env.*
+.env.dev
+.env.docker
 
 # dependencies
 vendor
+tmp

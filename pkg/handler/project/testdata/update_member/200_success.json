@@ -7,6 +7,8 @@
         "displayName": "Thanh Pham",
         "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
         "username": "thanh",
+        "rate": "5000",
+        "discount": "0",
         "positions": [
             {
                 "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
@@ -22,6 +24,7 @@
         "deploymentType": "official",
         "status": "active",
         "isLead": true,
+        "leadCommissionRate": "0",
         "seniority": {
             "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
             "createdAt": "2022-11-07T09:50:25.714604Z",
@@ -30,6 +33,8 @@
             "code": "mid",
             "level": 3
         },
-        "upsellPerson": null
+        "upsellPerson": null,
+        "upsellCommissionRate": "0",
+        "note": ""
     }
 }

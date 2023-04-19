@@ -115,6 +115,7 @@ func (s *store) One(db *gorm.DB, id string, preload bool) (*model.Project, error
 			Preload("ProjectStacks.Stack", "deleted_at IS NULL").
 			Preload("Country", "deleted_at IS NULL").
 			Preload("BankAccount", "deleted_at IS NULL").
+			Preload("BankAccount.Currency", "deleted_at IS NULL").
 			Preload("Client", "deleted_at IS NULL").
 			Preload("Client.Contacts", "deleted_at IS NULL").
 			Preload("CompanyInfo", "deleted_at IS NULL").
@@ -167,4 +168,9 @@ func (s *store) GetByEmployeeID(db *gorm.DB, employeeID string) ([]*model.Projec
 		Preload("Heads.Employee")
 
 	return projects, query.Find(&projects).Error
+}
+
+func (s *store) GetProjectByAlias(db *gorm.DB, alias string) (*model.Project, error) {
+	res := model.Project{}
+	return &res, db.Where("alias = ?", alias).Preload("ProjectInfo").Find(&res).Error
 }

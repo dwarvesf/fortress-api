@@ -20,15 +20,31 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 
 	// cronjob group
 	{
-		cronjob.POST("/audits", h.Audit.Sync)
-		cronjob.POST("/birthday", h.Birthday.BirthdayDailyMessage)
-		cronjob.POST("/sync-discord-info", h.Discord.SyncDiscordInfo)
+		cronjob.POST("/audits", amw.WithAuth, pmw.WithPerm(model.PermissionCronjobExecute), h.Audit.Sync)
+		cronjob.POST("/birthday", amw.WithAuth, pmw.WithPerm(model.PermissionCronjobExecute), h.Birthday.BirthdayDailyMessage)
+		cronjob.POST("/sync-discord-info", amw.WithAuth, pmw.WithPerm(model.PermissionCronjobExecute), h.Discord.SyncDiscordInfo)
+		cronjob.POST("/sync-monthly-accounting-todo", amw.WithAuth, pmw.WithPerm(model.PermissionCronjobExecute), h.Accounting.CreateAccountingTodo)
 	}
 
 	/////////////////
 	// Webhook GROUP
 	/////////////////
 	webhook.POST("/n8n", h.Webhook.N8n)
+	// Basecamp
+	basecampGroup := webhook.Group("/basecamp")
+	{
+		expenseGroup := basecampGroup.Group("/expense")
+		{
+			expenseGroup.POST("/validate", h.Webhook.BasecampExpenseValidate)
+			expenseGroup.POST("", h.Webhook.BasecampExpense)
+			expenseGroup.DELETE("", h.Webhook.UncheckBasecampExpense)
+		}
+		operationGroup := basecampGroup.Group("/operation")
+		{
+			operationGroup.POST("/accounting-transaction", h.Webhook.StoreAccountingTransaction)
+			operationGroup.PUT("/invoice", h.Webhook.MarkInvoiceAsPaidViaBasecamp)
+		}
+	}
 
 	/////////////////
 	// API GROUP
@@ -44,6 +60,9 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 	v1.PUT("/profile", amw.WithAuth, h.Profile.UpdateInfo)
 	v1.POST("/profile/upload-avatar", amw.WithAuth, h.Profile.UploadAvatar)
 
+	// assets
+	v1.POST("/assets/upload", amw.WithAuth, pmw.WithPerm(model.PermissionAssetUpload), h.Asset.Upload)
+
 	// employees
 	v1.POST("/employees", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesCreate), h.Employee.Create)
 	v1.POST("/employees/search", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesRead), h.Employee.List)
@@ -52,7 +71,6 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 	v1.PUT("/employees/:id/personal-info", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesEdit), h.Employee.UpdatePersonalInfo)
 	v1.PUT("/employees/:id/skills", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesEdit), h.Employee.UpdateSkills)
 	v1.PUT("/employees/:id/employee-status", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesEdit), h.Employee.UpdateEmployeeStatus)
-	v1.POST("/employees/:id/upload-content", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesEdit), h.Employee.UploadContent)
 	v1.POST("/employees/:id/upload-avatar", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesEdit), h.Employee.UploadAvatar)
 	v1.PUT("/employees/:id/roles", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeeRolesEdit), h.Employee.UpdateRole)
 
@@ -64,18 +82,18 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 	v1.GET("/metadata/seniorities", h.Metadata.Seniorities)
 	v1.GET("/metadata/chapters", h.Metadata.Chapters)
 	v1.GET("/metadata/organizations", h.Metadata.Organizations)
-	v1.GET("/metadata/account-roles", amw.WithAuth, h.Metadata.AccountRoles)
+	v1.GET("/metadata/roles", h.Metadata.GetRoles)
 	v1.GET("/metadata/positions", h.Metadata.Positions)
 	v1.GET("/metadata/countries", h.Metadata.GetCountries)
 	v1.GET("/metadata/countries/:country_id/cities", h.Metadata.GetCities)
 	v1.GET("/metadata/project-statuses", h.Metadata.ProjectStatuses)
 	v1.GET("/metadata/questions", h.Metadata.GetQuestions)
-	v1.PUT("/metadata/stacks/:id", pmw.WithPerm(model.PermissionMetadataEdit), h.Metadata.UpdateStack)
-	v1.POST("/metadata/stacks", pmw.WithPerm(model.PermissionMetadataCreate), h.Metadata.CreateStack)
-	v1.DELETE("/metadata/stacks/:id", pmw.WithPerm(model.PermissionMetadataDelete), h.Metadata.DeleteStack)
-	v1.PUT("/metadata/positions/:id", pmw.WithPerm(model.PermissionMetadataEdit), h.Metadata.UpdatePosition)
-	v1.POST("/metadata/positions", pmw.WithPerm(model.PermissionMetadataCreate), h.Metadata.CreatePosition)
-	v1.DELETE("/metadata/positions/:id", pmw.WithPerm(model.PermissionMetadataDelete), h.Metadata.DeletePosition)
+	v1.PUT("/metadata/stacks/:id", amw.WithAuth, pmw.WithPerm(model.PermissionMetadataEdit), h.Metadata.UpdateStack)
+	v1.POST("/metadata/stacks", amw.WithAuth, pmw.WithPerm(model.PermissionMetadataCreate), h.Metadata.CreateStack)
+	v1.DELETE("/metadata/stacks/:id", amw.WithAuth, pmw.WithPerm(model.PermissionMetadataDelete), h.Metadata.DeleteStack)
+	v1.PUT("/metadata/positions/:id", amw.WithAuth, pmw.WithPerm(model.PermissionMetadataEdit), h.Metadata.UpdatePosition)
+	v1.POST("/metadata/positions", amw.WithAuth, pmw.WithPerm(model.PermissionMetadataCreate), h.Metadata.CreatePosition)
+	v1.DELETE("/metadata/positions/:id", amw.WithAuth, pmw.WithPerm(model.PermissionMetadataDelete), h.Metadata.DeletePosition)
 
 	// projects
 	projectGroup := v1.Group("projects")
@@ -99,7 +117,6 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 		projectGroup.PUT("/:id/work-units/:workUnitID", amw.WithAuth, pmw.WithPerm(model.PermissionProjectWorkUnitsEdit), h.Project.UpdateWorkUnit)
 		projectGroup.PUT("/:id/work-units/:workUnitID/archive", amw.WithAuth, pmw.WithPerm(model.PermissionProjectWorkUnitsEdit), h.Project.ArchiveWorkUnit)
 		projectGroup.PUT("/:id/work-units/:workUnitID/unarchive", amw.WithAuth, pmw.WithPerm(model.PermissionProjectWorkUnitsEdit), h.Project.UnarchiveWorkUnit)
-		projectGroup.GET("/milestones", h.Project.ListMilestones)
 	}
 
 	clientGroup := v1.Group("/clients")
@@ -113,25 +130,25 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 
 	feedbackGroup := v1.Group("/feedbacks")
 	{
-		feedbackGroup.GET("", pmw.WithPerm(model.PermissionFeedbacksRead), h.Feedback.List)
+		feedbackGroup.GET("", amw.WithAuth, pmw.WithPerm(model.PermissionFeedbacksRead), h.Feedback.List)
 		feedbackGroup.GET("/:id/topics/:topicID", amw.WithAuth, pmw.WithPerm(model.PermissionFeedbacksRead), h.Feedback.Detail)
 		feedbackGroup.POST("/:id/topics/:topicID/submit", amw.WithAuth, pmw.WithPerm(model.PermissionFeedbacksCreate), h.Feedback.Submit)
-		feedbackGroup.GET("/unreads", pmw.WithPerm(model.PermissionFeedbacksRead), h.Feedback.CountUnreadFeedback)
+		feedbackGroup.GET("/unreads", amw.WithAuth, pmw.WithPerm(model.PermissionFeedbacksRead), h.Feedback.CountUnreadFeedback)
 	}
 
 	surveyGroup := v1.Group("/surveys")
 	{
 		surveyGroup.POST("", amw.WithAuth, pmw.WithPerm(model.PermissionSurveysCreate), h.Survey.CreateSurvey)
-		surveyGroup.GET("", pmw.WithPerm(model.PermissionSurveysRead), h.Survey.ListSurvey)
-		surveyGroup.GET("/:id", pmw.WithPerm(model.PermissionSurveysRead), h.Survey.GetSurveyDetail)
-		surveyGroup.DELETE("/:id", pmw.WithPerm(model.PermissionSurveysDelete), h.Survey.DeleteSurvey)
-		surveyGroup.POST("/:id/send", pmw.WithPerm(model.PermissionSurveysCreate), h.Survey.SendSurvey)
+		surveyGroup.GET("", amw.WithAuth, pmw.WithPerm(model.PermissionSurveysRead), h.Survey.ListSurvey)
+		surveyGroup.GET("/:id", amw.WithAuth, pmw.WithPerm(model.PermissionSurveysRead), h.Survey.GetSurveyDetail)
+		surveyGroup.DELETE("/:id", amw.WithAuth, pmw.WithPerm(model.PermissionSurveysDelete), h.Survey.DeleteSurvey)
+		surveyGroup.POST("/:id/send", amw.WithAuth, pmw.WithPerm(model.PermissionSurveysCreate), h.Survey.SendSurvey)
 		surveyGroup.GET("/:id/topics/:topicID/reviews/:reviewID", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeeEventQuestionsRead), h.Survey.GetSurveyReviewDetail)
 		surveyGroup.DELETE("/:id/topics/:topicID", amw.WithAuth, pmw.WithPerm(model.PermissionSurveysDelete), h.Survey.DeleteSurveyTopic)
-		surveyGroup.GET("/:id/topics/:topicID", pmw.WithPerm(model.PermissionSurveysRead), h.Survey.GetSurveyTopicDetail)
-		surveyGroup.PUT("/:id/topics/:topicID/employees", pmw.WithPerm(model.PermissionSurveysEdit), h.Survey.UpdateTopicReviewers)
-		surveyGroup.PUT("/:id/done", pmw.WithPerm(model.PermissionSurveysEdit), h.Survey.MarkDone)
-		surveyGroup.DELETE("/:id/topics/:topicID/employees", pmw.WithPerm(model.PermissionSurveysEdit), h.Survey.DeleteTopicReviewers)
+		surveyGroup.GET("/:id/topics/:topicID", amw.WithAuth, pmw.WithPerm(model.PermissionSurveysRead), h.Survey.GetSurveyTopicDetail)
+		surveyGroup.PUT("/:id/topics/:topicID/employees", amw.WithAuth, pmw.WithPerm(model.PermissionSurveysEdit), h.Survey.UpdateTopicReviewers)
+		surveyGroup.PUT("/:id/done", amw.WithAuth, pmw.WithPerm(model.PermissionSurveysEdit), h.Survey.MarkDone)
+		surveyGroup.DELETE("/:id/topics/:topicID/employees", amw.WithAuth, pmw.WithPerm(model.PermissionSurveysEdit), h.Survey.DeleteTopicReviewers)
 	}
 
 	bankGroup := v1.Group("/bank-accounts")
@@ -141,83 +158,108 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 
 	invoiceGroup := v1.Group("/invoices")
 	{
-		invoiceGroup.POST("", pmw.WithPerm(model.PermissionInvoiceCreate), h.Invoice.Create)
-		invoiceGroup.PUT("/:id/status", pmw.WithPerm(model.PermissionInvoiceEdit), h.Invoice.Update)
-		invoiceGroup.GET("/latest", pmw.WithPerm(model.PermissionInvoiceRead), h.Invoice.GetLatestInvoice)
+		invoiceGroup.PUT("/:id/status", amw.WithAuth, pmw.WithPerm(model.PermissionInvoiceEdit), h.Invoice.UpdateStatus)
+		invoiceGroup.GET("/latest", amw.WithAuth, pmw.WithPerm(model.PermissionInvoiceRead), h.Invoice.GetLatestInvoice)
+		invoiceGroup.GET("/template", amw.WithAuth, pmw.WithPerm(model.PermissionInvoiceRead), h.Invoice.GetTemplate)
+		invoiceGroup.POST("/send", amw.WithAuth, pmw.WithPerm(model.PermissionInvoiceRead), h.Invoice.Send)
 	}
 
 	valuation := v1.Group("/valuation")
 	{
 		valuation.GET("/:year", pmw.WithPerm(model.PermissionValuationRead), h.Valuation.One)
 	}
-	earn := v1.Group("/earn")
+
+	notion := v1.Group("/notion")
 	{
-		earn.GET("", h.Earn.List)
-	}
-	techradar := v1.Group("/tech-radar")
-	{
-		techradar.GET("", h.TechRadar.List)
-		techradar.POST("", h.TechRadar.Create)
-	}
-	audience := v1.Group("/audiences")
-	{
-		audience.GET("", h.Audience.List)
-	}
-	event := v1.Group("/events")
-	{
-		event.GET("", h.Event.List)
-	}
-	digest := v1.Group("/digests")
-	{
-		digest.GET("", h.Digest.List)
-	}
-	update := v1.Group("/updates")
-	{
-		update.GET("", h.Update.List)
-	}
-	memo := v1.Group("/memos")
-	{
-		memo.GET("", h.Memo.List)
-	}
-	issue := v1.Group("/issues")
-	{
-		issue.GET("", h.Issue.List)
-	}
-	staffingDemand := v1.Group("/staffing-demands")
-	{
-		staffingDemand.GET("", h.StaffingDemand.List)
-	}
-	hiring := v1.Group("/hiring-positions")
-	{
-		hiring.GET("", h.Hiring.List)
+		earn := notion.Group("/earn")
+		{
+			earn.GET("", h.Earn.List)
+		}
+		techradar := notion.Group("/tech-radar")
+		{
+			techradar.GET("", h.TechRadar.List)
+			techradar.POST("", h.TechRadar.Create)
+		}
+		audience := notion.Group("/audiences")
+		{
+			audience.GET("", h.Audience.List)
+		}
+		event := notion.Group("/events")
+		{
+			event.GET("", h.Event.List)
+		}
+		digest := notion.Group("/digests")
+		{
+			digest.GET("", h.Digest.List)
+		}
+		update := notion.Group("/updates")
+		{
+			update.GET("", h.Update.List)
+		}
+		memo := notion.Group("/memos")
+		{
+			memo.GET("", h.Memo.List)
+		}
+		issue := notion.Group("/issues")
+		{
+			issue.GET("", h.Issue.List)
+		}
+		staffingDemand := notion.Group("/staffing-demands")
+		{
+			staffingDemand.GET("", h.StaffingDemand.List)
+		}
+		hiring := notion.Group("/hiring-positions")
+		{
+			hiring.GET("", h.Hiring.List)
+		}
+		notion.GET("/projects/milestones", h.Project.ListMilestones)
 	}
 
 	dashboard := v1.Group("/dashboards")
 	{
-		engagementDashboardGroup := dashboard.Group("/engagement")
+		engagementDashboardGroup := dashboard.Group("/engagement", amw.WithAuth, pmw.WithPerm(model.PermissionDashBoardEngagementRead))
 		{
 			engagementDashboardGroup.GET("/info", h.Dashboard.GetEngagementInfo)
 			engagementDashboardGroup.GET("/detail", h.Dashboard.GetEngagementInfoDetail)
 		}
 
-		projectDashboardGroup := dashboard.Group("/projects")
+		projectDashboardGroup := dashboard.Group("/projects", amw.WithAuth, pmw.WithPerm(model.PermissionDashBoardProjectsRead))
 		{
-			projectDashboardGroup.GET("/sizes", pmw.WithPerm("dashboards.read"), h.Dashboard.GetProjectSizes)
-			projectDashboardGroup.GET("/work-surveys", pmw.WithPerm("dashboards.read"), h.Dashboard.GetWorkSurveys)
-			projectDashboardGroup.GET("/action-items", pmw.WithPerm("dashboards.read"), h.Dashboard.GetActionItemReports)
-			projectDashboardGroup.GET("/engineering-healths", pmw.WithPerm("dashboards.read"), h.Dashboard.GetEngineeringHealth)
-			projectDashboardGroup.GET("/audits", pmw.WithPerm("dashboards.read"), h.Dashboard.GetAudits)
-			projectDashboardGroup.GET("/action-item-squash", pmw.WithPerm("dashboards.read"), h.Dashboard.GetActionItemSquashReports)
-			projectDashboardGroup.GET("/summary", pmw.WithPerm("dashboards.read"), h.Dashboard.GetSummary)
+			projectDashboardGroup.GET("/sizes", h.Dashboard.GetProjectSizes)
+			projectDashboardGroup.GET("/work-surveys", h.Dashboard.GetWorkSurveys)
+			projectDashboardGroup.GET("/action-items", h.Dashboard.GetActionItemReports)
+			projectDashboardGroup.GET("/engineering-healths", h.Dashboard.GetEngineeringHealth)
+			projectDashboardGroup.GET("/audits", h.Dashboard.GetAudits)
+			projectDashboardGroup.GET("/action-item-squash", h.Dashboard.GetActionItemSquashReports)
+			projectDashboardGroup.GET("/summary", h.Dashboard.GetSummary)
 		}
 
-		resourceDashboardGroup := dashboard.Group("/resources")
+		resourceDashboardGroup := dashboard.Group("/resources", amw.WithAuth, pmw.WithPerm(model.PermissionDashBoardResourcesRead))
 		{
-			resourceDashboardGroup.GET("/availabilities", pmw.WithPerm("dashboards.read"), h.Dashboard.GetResourcesAvailability)
-			resourceDashboardGroup.GET("/utilization", pmw.WithPerm("dashboards.read"), h.Dashboard.GetResourceUtilization)
-			resourceDashboardGroup.GET("/work-unit-distribution", pmw.WithPerm("dashboards.read"), h.Dashboard.GetWorkUnitDistribution)
-			resourceDashboardGroup.GET("/work-unit-distribution-summary", pmw.WithPerm("dashboards.read"), h.Dashboard.GetWorkUnitDistributionSummary)
-			resourceDashboardGroup.GET("/work-survey-summaries", pmw.WithPerm("dashboards.read"), h.Dashboard.GetResourceWorkSurveySummaries)
+			resourceDashboardGroup.GET("/availabilities", h.Dashboard.GetResourcesAvailability)
+			resourceDashboardGroup.GET("/utilization", h.Dashboard.GetResourceUtilization)
+			resourceDashboardGroup.GET("/work-unit-distribution", h.Dashboard.GetWorkUnitDistribution)
+			resourceDashboardGroup.GET("/work-unit-distribution-summary", h.Dashboard.GetWorkUnitDistributionSummary)
+			resourceDashboardGroup.GET("/work-survey-summaries", h.Dashboard.GetResourceWorkSurveySummaries)
 		}
+	}
+
+	notionChangelog := v1.Group("notion-changelog")
+	{
+		notionChangelog.GET("/projects/available", h.Changelog.GetAvailableProjectsChangelog)
+		notionChangelog.POST("/project", h.Changelog.SendProjectChangelog)
+	}
+
+	dfUpdates := v1.Group("df-updates")
+	{
+		dfUpdates.POST("/:id/send", h.DFUpdate.Send)
+	}
+
+	payroll := v1.Group("payrolls")
+	{
+		payroll.PUT("", h.Payroll.MarkPayrollAsPaid)
+		payroll.GET("/detail", h.Payroll.GetPayrollsByMonth)
+		payroll.GET("/bhxh", h.Payroll.GetPayrollsBHXH)
+		payroll.POST("/commit", h.Payroll.CommitPayroll)
 	}
 }

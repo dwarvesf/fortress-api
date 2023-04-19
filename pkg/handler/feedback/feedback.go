@@ -16,7 +16,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/store/employeeeventquestion"
 	"github.com/dwarvesf/fortress-api/pkg/store/employeeeventtopic"
-	"github.com/dwarvesf/fortress-api/pkg/utils"
+	"github.com/dwarvesf/fortress-api/pkg/utils/authutils"
 	"github.com/dwarvesf/fortress-api/pkg/view"
 )
 
@@ -54,7 +54,7 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 // @Failure 500 {object} view.ErrorResponse
 // @Router /feedbacks [get]
 func (h *handler) List(c *gin.Context) {
-	userID, err := utils.GetUserIDFromContext(c, h.config)
+	userID, err := authutils.GetUserIDFromContext(c, h.config)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
@@ -109,7 +109,7 @@ func (h *handler) List(c *gin.Context) {
 // @Failure 500 {object} view.ErrorResponse
 // @Router /feedbacks/{id}/topics/{topicID} [get]
 func (h *handler) Detail(c *gin.Context) {
-	userID, err := utils.GetUserIDFromContext(c, h.config)
+	userID, err := authutils.GetUserIDFromContext(c, h.config)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
@@ -233,7 +233,7 @@ func (h *handler) Detail(c *gin.Context) {
 // @Failure 500 {object} view.ErrorResponse
 // @Router /feedbacks/{id}/topics/{topicID}/submit [post]
 func (h *handler) Submit(c *gin.Context) {
-	userID, err := utils.GetUserIDFromContext(c, h.config)
+	userID, err := authutils.GetUserIDFromContext(c, h.config)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
@@ -407,7 +407,7 @@ func (h *handler) Submit(c *gin.Context) {
 // @Failure 500 {object} view.ErrorResponse
 // @Router /feedbacks/unreads [get]
 func (h *handler) CountUnreadFeedback(c *gin.Context) {
-	userID, err := utils.GetUserIDFromContext(c, h.config)
+	userID, err := authutils.GetUserIDFromContext(c, h.config)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return

@@ -1,10 +1,13 @@
 package google
 
-import "mime/multipart"
+import (
+	"io"
+)
 
-type GoogleService interface {
+type IService interface {
 	GetLoginURL() string
 	GetAccessToken(code string, redirectURL string) (accessToken string, err error)
+	GetGoogleEmailLegacy(accessToken string) (email string, err error)
 	GetGoogleEmail(accessToken string) (email string, err error)
-	UploadContentGCS(file multipart.File, fileName string) error
+	UploadContentGCS(file io.Reader, fileName string) error
 }

@@ -28,8 +28,9 @@ type IStore interface {
 	GetProjectSizesByStartTime(db *gorm.DB, curr time.Time) ([]*model.ProjectSize, error)
 	GetPendingSlots(db *gorm.DB) ([]*model.ProjectSlot, error)
 	GetAvailableEmployees(db *gorm.DB) ([]*model.Employee, error)
-	GetResourceUtilization(db *gorm.DB) ([]*model.ResourceUtilization, error)
+	GetResourceUtilization(db *gorm.DB, currentDate time.Time) ([]*model.ResourceUtilization, error)
 	TotalWorkUnitDistribution(db *gorm.DB) (*model.TotalWorkUnitDistribution, error)
 	GetAllWorkReviews(db *gorm.DB, keyword string, pagination model.Pagination) ([]*model.EmployeeEventReviewer, error)
 	GetProjectHeadByEmployeeID(db *gorm.DB, employeeID string) ([]*model.ManagementInfo, error)
+	GetWorkUnitDistributionEmployees(db *gorm.DB, keyword string, workUnitType string) ([]*model.Employee, error)
 }

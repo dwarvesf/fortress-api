@@ -17,7 +17,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/store"
-	"github.com/dwarvesf/fortress-api/pkg/utils"
+	"github.com/dwarvesf/fortress-api/pkg/utils/authutils"
 	"github.com/dwarvesf/fortress-api/pkg/view"
 )
 
@@ -53,13 +53,12 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 // @Failure 500 {object} view.ErrorResponse
 // @Router /profile [get]
 func (h *handler) GetProfile(c *gin.Context) {
-	userID, err := utils.GetUserIDFromContext(c, h.config)
+	userID, err := authutils.GetUserIDFromContext(c, h.config)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
 	}
 
-	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler": "profile",
 		"method":  "GetProfile",
@@ -95,7 +94,7 @@ func (h *handler) GetProfile(c *gin.Context) {
 // @Failure 500 {object} view.ErrorResponse
 // @Router /profile [put]
 func (h *handler) UpdateInfo(c *gin.Context) {
-	employeeID, err := utils.GetUserIDFromContext(c, h.config)
+	employeeID, err := authutils.GetUserIDFromContext(c, h.config)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
@@ -107,7 +106,6 @@ func (h *handler) UpdateInfo(c *gin.Context) {
 		return
 	}
 
-	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler": "profile",
 		"method":  "UpdateInfo",
@@ -123,6 +121,19 @@ func (h *handler) UpdateInfo(c *gin.Context) {
 		}
 		l.Error(err, "failed to get employee")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	// validate personal email
+	_, err = h.store.Employee.OneByEmail(h.repo.DB(), input.PersonalEmail)
+	if employee.PersonalEmail != input.PersonalEmail && input.PersonalEmail != "" && !errors.Is(err, gorm.ErrRecordNotFound) {
+		if err == nil {
+			l.Error(err, "personal email exists")
+			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrEmailExisted, input, ""))
+			return
+		}
+		l.Error(err, "failed to get employee by email")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input, ""))
 		return
 	}
 
@@ -290,7 +301,7 @@ func (h *handler) validateCountryAndCity(db *gorm.DB, countryName string, city s
 // @Failure 500 {object} view.ErrorResponse
 // @Router /profile/upload-avatar [post]
 func (h *handler) UploadAvatar(c *gin.Context) {
-	employeeID, err := utils.GetUserIDFromContext(c, h.config)
+	employeeID, err := authutils.GetUserIDFromContext(c, h.config)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
@@ -358,11 +369,11 @@ func (h *handler) UploadAvatar(c *gin.Context) {
 	}
 
 	_, err = h.store.Content.Create(tx.DB(), model.Content{
-		Type:       fileType,
-		Extension:  fileExtension.String(),
-		Path:       filePath,
-		EmployeeID: existedEmployee.ID,
-		UploadBy:   existedEmployee.ID,
+		Type:      fileType,
+		Extension: fileExtension.String(),
+		Path:      filePath,
+		TargetID:  existedEmployee.ID,
+		UploadBy:  existedEmployee.ID,
 	})
 	if err != nil {
 		l.Error(err, "error query employee from db")

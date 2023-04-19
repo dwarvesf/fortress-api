@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Invoice</title>
+  <style>
+    @font-face {
+      font-family: "Avenir Next";
+      src: url("{{.Path}}/assets/fonts/AvenirNext-BoldItalic.woff") format("woff");
+      font-weight: bold;
+      font-style: italic;
+    }
+
+    @font-face {
+      font-family: "Avenir Next";
+      src: url("{{.Path}}/assets/fonts/AvenirNext-DemiBold.woff") format("woff");
+      font-weight: 600;
+      font-style: normal;
+    }
+
+    @font-face {
+      font-family: "Avenir Next";
+      src: url("{{.Path}}/assets/fonts/AvenirNext-Regular.woff") format("woff");
+      font-weight: normal;
+      font-style: normal;
+    }
+
+    html,
+    body {
+      font-family: "Avenir Next";
+      background: white;
+      color: #23252C;
+      font-size: 11px;
+      line-height: 1.5;
+      padding: 0;
+      margin: 0;
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .container {
+      margin: 0 auto;
+    }
+
+    .image {
+      width: 118px;
+      height: auto;
+      max-width: 118px;
+    }
+
+    .header-title {
+      font-weight: 700;
+      font-size: 24px;
+      line-height: 33px;
+      text-align: right;
+      font-family: "Avenir Next";
+    }
+
+    .text-grey {
+      color: #787777;
+    }
+
+    .text-right {
+      text-align: right;
+    }
+
+    .table {
+      width: 100%;
+      table-layout: fixed;
+    }
+
+    .table tr,
+    .table td,
+    .table th {
+      padding: 0;
+    }
+
+    /* TABLE BILL */
+    .table-bill td {
+      vertical-align: top;
+      padding-bottom: 5px;
+    }
+
+    .table-bill td:first-child {
+      width: 95px;
+    }
+
+    .table-bill td:last-child {
+      padding-left: 16px;
+    }
+
+    /* TABLE INVOICE */
+    .table-invoice {
+      border-spacing: 0;
+      border: 0;
+    }
+
+    .table-invoice th,
+    .table-invoice td {
+      padding: 5px;
+    }
+
+    .table-invoice thead th,
+    .table-invoice tbody td {
+      text-align: right;
+    }
+
+    .table-invoice th {
+      background: black;
+      color: white;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .table-invoice tbody td {
+      background-color: #F3F3F5;
+      border-bottom: 1px dashed #D8D8D8;
+    }
+
+    .table-invoice td:first-child,
+    .table-invoice th:first-child {
+      width: 25%;
+      padding-left: 12px;
+      text-align: left;
+    }
+
+    .table-invoice td:last-child,
+    .table-invoice th:last-child {
+      padding-right: 18px;
+      text-align: right;
+    }
+
+    .font-bold {
+      font-weight: 600;
+    }
+
+    .total-price {
+      color: #E13F5E;
+    }
+
+    .bank-info-title {
+      font-size: 14px;
+      margin-top: 24px;
+    }
+
+    hr {
+      border: 0;
+      height: 1px;
+      background-color: #CECECE;
+      margin: 8px 0;
+    }
+
+    .terms-content {
+      margin-top: 5px;
+      font-size: 9px;
+      line-height: 2;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <table class="table" cellspacing="0" style="margin-bottom: 16px;">
+      <tr>
+        <td>
+          <img class="image" src="https://assets-df.s3-ap-southeast-1.amazonaws.com/DFLogo-full.png" width="118"
+            height="auto" />
+        </td>
+        <td class="header-title">INVOICE</td>
+      </tr>
+    </table>
+    <table class="table" cellspacing="0" style="line-height: 1.75;margin-bottom: 40px;">
+      <tr>
+        <td>
+          {{.CompanyContactInfo.Address}}
+          <a href="tel:+18184086969">{{.CompanyContactInfo.Phone}}</a>
+        </td>
+        <td class="text-right">
+          <div><span class="text-grey title">Invoice #: </span>{{.Invoice.Number}}</div>
+          <div><span class="text-grey title">Invoice Date: </span>{{formatDate .Invoice.InvoicedAt}}</div>
+          <div><span class="text-grey title">Due Date: </span>{{formatDate .Invoice.DueAt}}</div>
+        </td>
+      </tr>
+    </table>
+    <div style="margin-bottom: 4px;" class="font-bold">BILL TO</div>
+    <table class="table table-bill" cellspacing="0" style="margin-bottom: 24px;">
+      <tr>
+        <td class="text-grey">Company:</td>
+        <td>{{.Invoice.Project.Client.Name}}</td>
+      </tr>
+      <tr>
+        <td class="text-grey">Address:</td>
+        <td>{{.Invoice.Project.Client.Address}}</td>
+      </tr>
+      <tr>
+        <td class="text-grey">Project:</td>
+        <td>{{.Invoice.Project.Name}}</td>
+      </tr>
+      {{if haveDescription .Invoice.Description}}
+      <tr>
+        <td class="text-grey">Description:</td>
+        <td>{{.Invoice.Description}}</td>
+      </tr>
+      {{end}}
+      {{if haveNote .Invoice.Note}}
+      <tr>
+        <td class="text-grey">Note:</td>
+        <td>{{.Invoice.Note}}</td>
+      </tr>
+      {{end}}
+    </table>
+    <table class="table table-invoice" cellspacing="0" cellpadding="0">
+      <thead>
+        <tr>
+          <th colspan="2">DESCRIPTION</th>
+          <th colspan="2">QUANTITY</th>
+          <th colspan="2">UNIT COST</th>
+          {{if haveDiscountColumn}}
+          <th colspan="2">DISCOUNT</th>
+          {{end}}
+          <th colspan="2">COST</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{range .InvoiceItem}}
+        <tr>
+          <td colspan="2" style="word-wrap: break-word">{{.Description}}</td>
+          <td colspan="2">{{float .Quantity}}</td>
+          <td colspan="2">{{formatMoney .UnitCost}}</td>
+          {{if haveDiscountColumn}}
+          <td colspan="2">{{.Discount}}%</td>
+          {{end}}
+          <td colspan="2">{{formatMoney .Cost}}</td>
+        </tr>
+        {{end}}
+      </tbody>
+      <tfoot>
+        <tr>
+          <td style="padding-top:4px;"></td>
+        </tr>
+        <tr style="line-height: 1">
+          <td colspan="{{if haveDiscountColumn}}6{{else}}4{{end}}"></td>
+          <td colspan="{{if haveDiscountColumn}}2{{else}}2{{end}}" class="font-bold text-right">Subtotal</td>
+          <td colspan="2">{{formatMoney .Invoice.SubTotal}}</td>
+        </tr>
+        <tr style="line-height: 1">
+          <td colspan="{{if haveDiscountColumn}}6{{else}}4{{end}}"></td>
+          <td colspan="{{if haveDiscountColumn}}2{{else}}2{{end}}" class="font-bold text-right">Total</td>
+          <td colspan="2" class="total-price font-bold">{{formatMoney .Invoice.Total}}</td>
+        </tr>
+      </tfoot>
+    </table>
+    <div class="bank-info-title font-bold">BANK INFO</div>
+    <hr style="margin-top: 4px; margin-bottom: 12px">
+    <table class="table table-bill" cellspacing="0">
+      <tr>
+        <td class="text-grey">Bank Name:</td>
+        <td>{{.Invoice.Bank.BankName}}</td>
+      </tr>
+      <tr>
+        <td class="text-grey">Currency:</td>
+        <td>{{.Invoice.Bank.Currency.Name}}</td>
+      </tr>
+      <tr>
+        <td class="text-grey">Account Number:</td>
+        <td class="font-bold">{{.Invoice.Bank.AccountNumber}}</td>
+      </tr>
+      <tr>
+        <td class="text-grey">Account Holder:</td>
+        <td>{{.Invoice.Bank.OwnerName}}</td>
+      </tr>
+      <tr>
+        <td class="text-grey">Address:</td>
+        <td>{{.Invoice.Bank.Address}}</td>
+      </tr>
+      {{if .HaveSWIFTCode}}
+      <tr>
+        <td class="text-grey">SWIFT code:</td>
+        <td>{{.Invoice.Bank.SwiftCode}}</td>
+      </tr>
+      {{end}}
+      {{if .HaveIntermediaryBankName}}
+      <tr>
+        <td class="text-grey">Intermediary Bank:</td>
+        <td>{{.Invoice.Bank.IntermediaryBankName}}</td>
+      </tr>
+      {{end}}
+      {{if .HaveIntermediaryBankAddress}}
+      <tr>
+        <td class="text-grey">Intermediary Bank Address:</td>
+        <td>{{.Invoice.Bank.IntermediaryBankAddress}}</td>
+      </tr>
+      {{end}}
+      {{if .HaveRouting}}
+      <tr>
+        <td class="text-grey">Routing number:</td>
+        <td>{{.Invoice.Bank.RoutingNumber}}</td>
+      </tr>
+      {{end}}
+      {{if .HaveUKSortCode}}
+      <tr>
+        <td class="text-grey">UK Sort Code:</td>
+        <td>{{.Invoice.Bank.UKSortCode}}</td>
+      </tr>
+      {{end}}
+    </table>
+  </div>
+</body>
+
+</html>

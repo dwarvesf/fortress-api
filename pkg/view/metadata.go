@@ -20,7 +20,7 @@ type StackResponse struct {
 	Data []model.Stack `json:"data"`
 }
 
-type AccountRoleResponse struct {
+type RolesResponse struct {
 	Data []model.Role `json:"data"`
 }
 

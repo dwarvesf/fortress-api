@@ -39,10 +39,14 @@ const (
 	PermissionProjectsReadFullAccess              PermissionCode = "projects.read.fullAccess"
 	PermissionProjectsReadReadActive              PermissionCode = "projects.read.readActive"
 	PermissionProjectsEdit                        PermissionCode = "projects.edit"
+	PermissionProjectsCommissionRateRead          PermissionCode = "projects.commissionRate.read"
+	PermissionProjectsCommissionRateEdit          PermissionCode = "projects.commissionRate.edit"
 	PermissionProjectMembersCreate                PermissionCode = "projectMembers.create"
 	PermissionProjectMembersRead                  PermissionCode = "projectMembers.read"
 	PermissionProjectMembersEdit                  PermissionCode = "projectMembers.edit"
 	PermissionProjectMembersDelete                PermissionCode = "projectMembers.delete"
+	PermissionProjectMembersRateRead              PermissionCode = "projectMembers.rate.read"
+	PermissionProjectMembersRateEdit              PermissionCode = "projectMembers.rate.edit"
 	PermissionProjectWorkUnitsCreate              PermissionCode = "projectWorkUnits.create"
 	PermissionProjectWorkUnitsCreateFullAccess    PermissionCode = "projectWorkUnits.create.fullAccess"
 	PermissionProjectWorkUnitsRead                PermissionCode = "projectWorkUnits.read"
@@ -86,6 +90,12 @@ const (
 	PermissionClientRead                          PermissionCode = "clients.read"
 	PermissionClientEdit                          PermissionCode = "clients.edit"
 	PermissionClientDelete                        PermissionCode = "clients.delete"
+	PermissionCronjobExecute                      PermissionCode = "cronjobs.execute"
+	PermissionDashBoardRead                       PermissionCode = "dashboards.read"
+	PermissionDashBoardProjectsRead               PermissionCode = "dashboards.projects.read"
+	PermissionDashBoardResourcesRead              PermissionCode = "dashboards.resources.read"
+	PermissionDashBoardEngagementRead             PermissionCode = "dashboards.engagement.read"
+	PermissionAssetUpload                         PermissionCode = "assets.upload"
 )
 
 func (p PermissionCode) String() string {

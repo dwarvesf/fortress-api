@@ -36,6 +36,10 @@
                 "endDate": null,
                 "rate": "0",
                 "discount": "0",
+                "upsellCommissionRate": "0",
+                "leadCommissionRate": "0",
+                "currency": null,
+                "note": "",
                 "seniority": {
                     "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
                     "createdAt": "2022-11-07T09:50:25.714604Z",
@@ -74,6 +78,10 @@
                 "endDate": null,
                 "rate": "0",
                 "discount": "0",
+                "upsellCommissionRate": "0",
+                "leadCommissionRate": "0",
+                "currency": null,
+                "note": "",
                 "seniority": {
                     "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
                     "createdAt": "2022-11-07T09:50:25.714604Z",
@@ -112,6 +120,10 @@
                 "endDate": null,
                 "rate": "0",
                 "discount": "0",
+                "upsellCommissionRate": "0",
+                "leadCommissionRate": "0",
+                "currency": null,
+                "note": "",
                 "seniority": {
                     "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
                     "createdAt": "2022-11-07T09:50:25.714604Z",
@@ -150,6 +162,10 @@
                 "endDate": null,
                 "rate": "0",
                 "discount": "0",
+                "upsellCommissionRate": "0",
+                "leadCommissionRate": "0",
+                "currency": null,
+                "note": "",
                 "seniority": {
                     "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
                     "createdAt": "2022-11-07T09:50:25.714604Z",
@@ -188,6 +204,10 @@
                 "endDate": null,
                 "rate": "0",
                 "discount": "0",
+                "upsellCommissionRate": "0",
+                "leadCommissionRate": "0",
+                "currency": null,
+                "note": "",
                 "seniority": {
                     "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
                     "createdAt": "2022-11-07T09:50:25.714604Z",
@@ -218,30 +238,40 @@
                 "fullName": "Nguyễn Hải Nam",
                 "displayName": "Nam Nguyen",
                 "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/8399103964540935617.png",
-                "username": "benjamin"
+                "username": "benjamin",
+                "commissionRate": "1"
             }
         ],
-        "accountManager": {
-            "employeeID": "2655832e-f009-4b73-a535-64c3a22e558f",
-            "fullName": "Phạm Đức Thành",
-            "displayName": "Thanh Pham",
-            "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
-            "username": "thanh"
-        },
-        "salePerson": {
-            "employeeID": "608ea227-45a5-4c8a-af43-6c7280d96340",
-            "fullName": "Tiêu Quang Huy",
-            "displayName": "Huy Tieu",
-            "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/3c420751-bb9a-4878-896e-2f10f3a633d6_avatar2535921977139052349.png",
-            "username": "huytq"
-        },
-        "deliveryManager": {
-            "employeeID": "2655832e-f009-4b73-a535-64c3a22e558f",
-            "fullName": "Phạm Đức Thành",
-            "displayName": "Thanh Pham",
-            "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
-            "username": "thanh"
-        },
+        "accountManagers": [
+            {
+                "employeeID": "2655832e-f009-4b73-a535-64c3a22e558f",
+                "fullName": "Phạm Đức Thành",
+                "displayName": "Thanh Pham",
+                "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
+                "username": "thanh",
+                "commissionRate": "1"
+            }
+        ],
+        "deliveryManagers": [
+            {
+                "employeeID": "2655832e-f009-4b73-a535-64c3a22e558f",
+                "fullName": "Phạm Đức Thành",
+                "displayName": "Thanh Pham",
+                "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
+                "username": "thanh",
+                "commissionRate": "0.5"
+            }
+        ],
+        "salePersons": [
+            {
+                "employeeID": "608ea227-45a5-4c8a-af43-6c7280d96340",
+                "fullName": "Tiêu Quang Huy",
+                "displayName": "Huy Tieu",
+                "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/3c420751-bb9a-4878-896e-2f10f3a633d6_avatar2535921977139052349.png",
+                "username": "huytq",
+                "commissionRate": "2"
+            }
+        ],
         "stacks": [
             {
                 "id": "0ecf47c8-cca4-4c30-94bb-054b1124c44f",
@@ -273,9 +303,9 @@
         },
         "client": {
             "id": "afb9cf05-9517-4fb9-a4f2-66e6d90ad215",
-            "name": "Dwarves Client",
-            "description": "Using For Internal Project",
-            "registrationNumber": "123455099999999"
+            "name": "Lorem Ipsum Inc.",
+            "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+            "registrationNumber": "32320398488"
         },
         "companyInfo": {
             "id": "ed8bebd2-e6be-4e84-b86b-b3983db0447d",

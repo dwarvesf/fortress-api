@@ -4,6 +4,10 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/gin-gonic/gin"
+	_ "github.com/lib/pq"
+	"gorm.io/gorm"
+
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/handler/metadata/errs"
 	"github.com/dwarvesf/fortress-api/pkg/handler/metadata/request"
@@ -11,12 +15,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/store"
-	"github.com/dwarvesf/fortress-api/pkg/utils"
 	"github.com/dwarvesf/fortress-api/pkg/view"
-
-	"github.com/gin-gonic/gin"
-	_ "github.com/lib/pq"
-	"gorm.io/gorm"
 )
 
 type handler struct {
@@ -88,7 +87,6 @@ func (h *handler) WorkingStatuses(c *gin.Context) {
 // @Router /metadata/seniorities [get]
 func (h *handler) Seniorities(c *gin.Context) {
 	// 1 prepare the logger
-	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler": "metadata",
 		"method":  "Seniorities",
@@ -118,7 +116,7 @@ func (h *handler) Seniorities(c *gin.Context) {
 // @Router /metadata/chapters [get]
 func (h *handler) Chapters(c *gin.Context) {
 	// 1 prepare the logger
-	// TODO: can we move this to middleware ?
+
 	l := h.logger.Fields(logger.Fields{
 		"handler": "metadata",
 		"method":  "Chapters",
@@ -165,46 +163,26 @@ func (h *handler) Organizations(c *gin.Context) {
 	c.JSON(http.StatusOK, view.CreateResponse[any](organizations, nil, nil, nil, ""))
 }
 
-// AccountRoles godoc
-// @Summary Get list values for account roles
-// @Description Get list values for account roles
+// GetRoles godoc
+// @Summary Get list roles
+// @Description Get list roles
 // @Tags Metadata
 // @Accept  json
 // @Produce  json
-// @Success 200 {object} view.AccountRoleResponse
+// @Success 200 {object} view.RolesResponse
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 500 {object} view.ErrorResponse
-// @Router /metadata/account-roles [get]
-func (h *handler) AccountRoles(c *gin.Context) {
-	userID, err := utils.GetUserIDFromContext(c, h.config)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
-		return
-	}
-
-	// TODO: can we move this to middleware ?
+// @Router /metadata/roles [get]
+func (h *handler) GetRoles(c *gin.Context) {
 	l := h.logger.Fields(logger.Fields{
-		"handler": "employee",
-		"method":  "GetAccountRoles",
-		"input":   userID,
+		"handler": "metadata",
+		"method":  "GetRoles",
 	})
 
-	empl, err := h.store.Employee.One(h.repo.DB(), userID, false)
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrEmployeeNotFound, nil, ""))
-		return
-	}
-
-	if err != nil {
-		l.Error(err, "failed to get employee")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
-		return
-	}
-
 	// 2 query roles from db
-	roles, err := h.store.Role.GetByLevel(h.repo.DB(), empl.EmployeeRoles[0].Role.Level)
+	roles, err := h.store.Role.All(h.repo.DB())
 	if err != nil {
-		l.Error(err, "error query roles from db")
+		l.Error(err, "failed to get all roles")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
 	}
@@ -260,7 +238,7 @@ func (h *handler) ProjectStatuses(c *gin.Context) {
 // @Router /metadata/positions [get]
 func (h *handler) Positions(c *gin.Context) {
 	// 1 prepare the logger
-	// TODO: can we move this to middleware ?
+
 	l := h.logger.Fields(logger.Fields{
 		"handler": "metadata",
 		"method":  "Positions",
@@ -355,7 +333,6 @@ func (h *handler) Stacks(c *gin.Context) {
 		return
 	}
 
-	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler": "metadata",
 		"method":  "Stacks",
@@ -396,7 +373,6 @@ func (h *handler) UpdateStack(c *gin.Context) {
 		return
 	}
 
-	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler": "metadata",
 		"method":  "UpdateStack",
@@ -425,7 +401,7 @@ func (h *handler) UpdateStack(c *gin.Context) {
 	stack.Avatar = input.Body.Avatar
 	stack.Code = input.Body.Code
 
-	stack, err = h.store.Stack.Update(h.repo.DB(), stack)
+	_, err = h.store.Stack.Update(h.repo.DB(), stack)
 	if err != nil {
 		l.Error(err, "error query Stacks from db")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
@@ -457,7 +433,6 @@ func (h *handler) CreateStack(c *gin.Context) {
 		return
 	}
 
-	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler": "metadata",
 		"method":  "CreateStack",
@@ -470,7 +445,7 @@ func (h *handler) CreateStack(c *gin.Context) {
 		Avatar: input.Avatar,
 	}
 
-	stack, err := h.store.Stack.Create(h.repo.DB(), stack)
+	_, err := h.store.Stack.Create(h.repo.DB(), stack)
 	if err != nil {
 		l.Error(err, "error query Stacks from db")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
@@ -502,7 +477,6 @@ func (h *handler) DeleteStack(c *gin.Context) {
 		return
 	}
 
-	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler": "metadata",
 		"method":  "DeleteStack",
@@ -542,7 +516,6 @@ func (h *handler) UpdatePosition(c *gin.Context) {
 		return
 	}
 
-	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler": "metadata",
 		"method":  "UpdatePosition",
@@ -570,7 +543,7 @@ func (h *handler) UpdatePosition(c *gin.Context) {
 	position.Name = input.Body.Name
 	position.Code = input.Body.Code
 
-	position, err = h.store.Position.Update(h.repo.DB(), position)
+	_, err = h.store.Position.Update(h.repo.DB(), position)
 	if err != nil {
 		l.Error(err, "error query Positions from db")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
@@ -601,7 +574,6 @@ func (h *handler) CreatePosition(c *gin.Context) {
 		return
 	}
 
-	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler": "metadata",
 		"method":  "CreatePosition",
@@ -613,7 +585,7 @@ func (h *handler) CreatePosition(c *gin.Context) {
 		Code: input.Code,
 	}
 
-	position, err := h.store.Position.Create(h.repo.DB(), position)
+	_, err := h.store.Position.Create(h.repo.DB(), position)
 	if err != nil {
 		l.Error(err, "error query Positions from db")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
@@ -644,7 +616,6 @@ func (h *handler) DeletePosition(c *gin.Context) {
 		return
 	}
 
-	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler":    "metadata",
 		"method":     "DeletePosition",
@@ -685,7 +656,6 @@ func (h *handler) GetQuestions(c *gin.Context) {
 		return
 	}
 
-	// TODO: can we move this to middleware ?
 	l := h.logger.Fields(logger.Fields{
 		"handler": "metadata",
 		"method":  "GetQuestions",

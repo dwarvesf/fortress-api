@@ -49,5 +49,4 @@ func (i UpdateInfoInput) MapEmployeeInput(employee *model.Employee) {
 	if i.LinkedInName != "" {
 		employee.LinkedInName = i.LinkedInName
 	}
-
 }

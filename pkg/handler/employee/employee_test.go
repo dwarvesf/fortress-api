@@ -1,6 +1,7 @@
 package employee
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -15,6 +16,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
+	"github.com/dwarvesf/fortress-api/pkg/controller"
 	"github.com/dwarvesf/fortress-api/pkg/handler/employee/request"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
@@ -22,6 +24,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/utils"
 	"github.com/dwarvesf/fortress-api/pkg/utils/testhelper"
+	"github.com/dwarvesf/fortress-api/pkg/worker"
 )
 
 const testToken = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2OTkzMjExNDIsImlkIjoiMjY1NTgzMmUtZjAwOS00YjczLWE1MzUtNjRjM2EyMmU1NThmIiwiYXZhdGFyIjoiaHR0cHM6Ly9zMy1hcC1zb3V0aGVhc3QtMS5hbWF6b25hd3MuY29tL2ZvcnRyZXNzLWltYWdlcy81MTUzNTc0Njk1NjYzOTU1OTQ0LnBuZyIsImVtYWlsIjoidGhhbmhAZC5mb3VuZGF0aW9uIiwicGVybWlzc2lvbnMiOlsiZW1wbG95ZWVzLnJlYWQiXSwidXNlcl9pbmZvIjpudWxsfQ.GENGPEucSUrILN6tHDKxLMtj0M0REVMUPC7-XhDMpGM"
@@ -29,8 +32,10 @@ const testToken = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2OTkzM
 func TestHandler_List(t *testing.T) {
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg)
+	serviceMock := service.New(&cfg, nil, nil)
 	storeMock := store.New()
+	queue := make(chan model.WorkerMessage, 1000)
+	workerMock := worker.New(context.Background(), queue, serviceMock, loggerMock)
 
 	tests := []struct {
 		name             string
@@ -201,7 +206,8 @@ func TestHandler_List(t *testing.T) {
 				ctx.Request = httptest.NewRequest(http.MethodPost, "/api/v1/employees/search", bodyReader)
 				ctx.Request.Header.Set("Authorization", testToken)
 
-				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+				ctrl := controller.New(storeMock, txRepo, serviceMock, workerMock, loggerMock, &cfg)
+				h := New(ctrl, storeMock, txRepo, serviceMock, loggerMock, &cfg)
 				h.List(ctx)
 				require.Equal(t, tt.wantCode, w.Code)
 				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
@@ -219,8 +225,10 @@ func TestHandler_List(t *testing.T) {
 func TestHandler_One(t *testing.T) {
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg)
+	serviceMock := service.New(&cfg, nil, nil)
 	storeMock := store.New()
+	queue := make(chan model.WorkerMessage, 1000)
+	workerMock := worker.New(context.Background(), queue, serviceMock, loggerMock)
 
 	tests := []struct {
 		name             string
@@ -258,7 +266,8 @@ func TestHandler_One(t *testing.T) {
 				ctx.Request = httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/employees/%s", tt.id), nil)
 				ctx.Request.Header.Set("Authorization", testToken)
 
-				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+				ctrl := controller.New(storeMock, txRepo, serviceMock, workerMock, loggerMock, &cfg)
+				h := New(ctrl, storeMock, txRepo, serviceMock, loggerMock, &cfg)
 				h.Details(ctx)
 				require.Equal(t, tt.wantCode, w.Code)
 				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
@@ -274,8 +283,10 @@ func TestHandler_UpdateEmployeeStatus(t *testing.T) {
 	// load env and test data
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg)
+	serviceMock := service.New(&cfg, nil, nil)
 	storeMock := store.New()
+	queue := make(chan model.WorkerMessage, 1000)
+	workerMock := worker.New(context.Background(), queue, serviceMock, loggerMock)
 
 	tests := []struct {
 		name             string
@@ -345,7 +356,8 @@ func TestHandler_UpdateEmployeeStatus(t *testing.T) {
 				ctx.Request.Header.Set("Authorization", testToken)
 				ctx.AddParam("id", tt.id)
 
-				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+				ctrl := controller.New(storeMock, txRepo, serviceMock, workerMock, loggerMock, &cfg)
+				h := New(ctrl, storeMock, txRepo, serviceMock, loggerMock, &cfg)
 				h.UpdateEmployeeStatus(ctx)
 
 				require.Equal(t, tt.wantCode, w.Code)
@@ -364,8 +376,10 @@ func TestHandler_UpdateEmployeeStatus(t *testing.T) {
 func Test_UpdateGeneralInfo(t *testing.T) {
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg)
+	serviceMock := service.New(&cfg, nil, nil)
 	storeMock := store.New()
+	queue := make(chan model.WorkerMessage, 1000)
+	workerMock := worker.New(context.Background(), queue, serviceMock, loggerMock)
 
 	tests := []struct {
 		name             string
@@ -478,9 +492,10 @@ func Test_UpdateGeneralInfo(t *testing.T) {
 				ctx.Params = gin.Params{gin.Param{Key: "id", Value: tt.id}}
 				ctx.Request = httptest.NewRequest("PUT", "/api/v1/employees/"+tt.id+"/general-info", bodyReader)
 				ctx.Request.Header.Set("Authorization", testToken)
-				metadataHandler := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+				ctrl := controller.New(storeMock, txRepo, serviceMock, workerMock, loggerMock, &cfg)
+				h := New(ctrl, storeMock, txRepo, serviceMock, loggerMock, &cfg)
 
-				metadataHandler.UpdateGeneralInfo(ctx)
+				h.UpdateGeneralInfo(ctx)
 
 				require.Equal(t, tt.wantCode, w.Code)
 				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
@@ -498,8 +513,10 @@ func Test_UpdateGeneralInfo(t *testing.T) {
 func Test_UpdateSkill(t *testing.T) {
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg)
+	serviceMock := service.New(&cfg, nil, nil)
 	storeMock := store.New()
+	queue := make(chan model.WorkerMessage, 1000)
+	workerMock := worker.New(context.Background(), queue, serviceMock, loggerMock)
 	// testRepoMock := store.NewPostgresStore(&cfg)
 
 	tests := []struct {
@@ -635,9 +652,10 @@ func Test_UpdateSkill(t *testing.T) {
 				ctx.Params = gin.Params{gin.Param{Key: "id", Value: tt.id}}
 				ctx.Request = httptest.NewRequest("PUT", fmt.Sprintf("/api/v1/employees/%s/skills", tt.id), bodyReader)
 				ctx.Request.Header.Set("Authorization", testToken)
-				metadataHandler := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+				ctrl := controller.New(storeMock, txRepo, serviceMock, workerMock, loggerMock, &cfg)
+				h := New(ctrl, storeMock, txRepo, serviceMock, loggerMock, &cfg)
 
-				metadataHandler.UpdateSkills(ctx)
+				h.UpdateSkills(ctx)
 
 				require.Equal(t, tt.wantCode, w.Code)
 				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
@@ -655,8 +673,10 @@ func Test_UpdateSkill(t *testing.T) {
 func Test_Create(t *testing.T) {
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg)
+	serviceMock := service.New(&cfg, nil, nil)
 	storeMock := store.New()
+	queue := make(chan model.WorkerMessage, 1000)
+	workerMock := worker.New(context.Background(), queue, serviceMock, loggerMock)
 
 	tests := []struct {
 		name             string
@@ -679,8 +699,10 @@ func Test_Create(t *testing.T) {
 				Positions:     []model.UUID{model.MustGetUUIDFromString("d796884d-a8c4-4525-81e7-54a3b6099eac")},
 				Salary:        300,
 				SeniorityID:   model.MustGetUUIDFromString("11ccffea-2cc9-4e98-9bef-3464dfe4dec8"),
-				RoleID:        model.MustGetUUIDFromString("d796884d-a8c4-4525-81e7-54a3b6099eac"),
-				Status:        model.WorkingStatusOnBoarding.String(),
+				Roles: []model.UUID{
+					model.MustGetUUIDFromString("d796884d-a8c4-4525-81e7-54a3b6099eac"),
+				},
+				Status: model.WorkingStatusOnBoarding.String(),
 			},
 			id: "2655832e-f009-4b73-a535-64c3a22e558f",
 		},
@@ -697,8 +719,10 @@ func Test_Create(t *testing.T) {
 				Positions:     []model.UUID{model.MustGetUUIDFromString("d796884d-a8c4-4525-81e7-54a3b6099eac")},
 				Salary:        300,
 				SeniorityID:   model.MustGetUUIDFromString("11ccffea-2cc9-4e98-9bef-3464dfe4dec8"),
-				RoleID:        model.MustGetUUIDFromString("d796884d-a8c4-4525-81e7-54a3b6099eac"),
-				Status:        model.WorkingStatusOnBoarding.String(),
+				Roles: []model.UUID{
+					model.MustGetUUIDFromString("d796884d-a8c4-4525-81e7-54a3b6099eac"),
+				},
+				Status: model.WorkingStatusOnBoarding.String(),
 			},
 			id: "2655832e-f009-4b73-a535-64c3a22e558f",
 		},
@@ -715,8 +739,10 @@ func Test_Create(t *testing.T) {
 				Positions:     []model.UUID{model.MustGetUUIDFromString("c44c987c-ad34-4745-be2b-942e8670d32a")},
 				Salary:        300,
 				SeniorityID:   model.MustGetUUIDFromString("11ccffea-2cc9-4e98-9bef-3464dfe4dec8"),
-				RoleID:        model.MustGetUUIDFromString("d796884d-a8c4-4525-81e7-54a3b6099eac"),
-				Status:        model.WorkingStatusOnBoarding.String(),
+				Roles: []model.UUID{
+					model.MustGetUUIDFromString("d796884d-a8c4-4525-81e7-54a3b6099eac"),
+				},
+				Status: model.WorkingStatusOnBoarding.String(),
 			},
 			id: "2655832e-f009-4b73-a535-64c3a22e558f",
 		},
@@ -735,33 +761,31 @@ func Test_Create(t *testing.T) {
 				ctx.Params = gin.Params{gin.Param{Key: "id", Value: tt.id}}
 				ctx.Request = httptest.NewRequest("POST", "/api/v1/employees/", bodyReader)
 				ctx.Request.Header.Set("Authorization", testToken)
-				metadataHandler := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+				ctrl := controller.New(storeMock, txRepo, serviceMock, workerMock, loggerMock, &cfg)
+				h := New(ctrl, storeMock, txRepo, serviceMock, loggerMock, &cfg)
 
-				metadataHandler.Create(ctx)
+				h.Create(ctx)
 
 				require.Equal(t, tt.wantCode, w.Code)
 				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
 				require.NoError(t, err)
 
-				if !tt.wantErr {
-					res, err := utils.RemoveFieldInResponse(w.Body.Bytes(), "updatedAt")
-					require.Nil(t, err)
+				res, err := utils.RemoveFieldInResponse(w.Body.Bytes(), "updatedAt")
+				require.Nil(t, err)
 
-					require.JSONEq(t, string(expRespRaw), string(res), "[employee.Handler.Create] response mismatched")
-				} else {
-					require.JSONEq(t, string(expRespRaw), w.Body.String(), "[employee.Handler.Create] response mismatched")
-				}
+				require.JSONEq(t, string(expRespRaw), string(res), "[employee.Handler.Create] response mismatched")
 			})
 		})
-
 	}
 }
 
 func Test_UpdatePersonalInfo(t *testing.T) {
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg)
+	serviceMock := service.New(&cfg, nil, nil)
 	storeMock := store.New()
+	queue := make(chan model.WorkerMessage, 1000)
+	workerMock := worker.New(context.Background(), queue, serviceMock, loggerMock)
 
 	dob, err := time.Parse("2006-01-02", "1990-01-02")
 	require.Nil(t, err)
@@ -797,7 +821,7 @@ func Test_UpdatePersonalInfo(t *testing.T) {
 				DoB:           &dob,
 				Gender:        "Male",
 				Address:       "Phan Huy Ich, Tan Binh District, Ho Chi Minh, Vietnam",
-				PersonalEmail: "thanhpham123@gmail.com",
+				PersonalEmail: "thanhpham124@gmail.com",
 				Country:       "Vietnam",
 				City:          "Hồ Chí Minh",
 			},
@@ -812,7 +836,7 @@ func Test_UpdatePersonalInfo(t *testing.T) {
 				DoB:           &dob,
 				Gender:        "Male",
 				Address:       "Phan Huy Ich, Tan Binh District, Ho Chi Minh, Vietnam",
-				PersonalEmail: "thanhpham123@gmail.com",
+				PersonalEmail: "thanhpham124@gmail.com",
 				Country:       "Vietnam",
 				City:          "Hồ Chí Minh",
 			},
@@ -827,14 +851,14 @@ func Test_UpdatePersonalInfo(t *testing.T) {
 				DoB:           &dob,
 				Gender:        "Male",
 				Address:       "Phan Huy Ich, Tan Binh District, Ho Chi Minh, Vietnam",
-				PersonalEmail: "thanhpham123@gmail.com",
+				PersonalEmail: "thanhpham124@gmail.com",
 				Country:       "Vietnam",
 				City:          "Hồ Chí Minh",
 			},
 			id: "2655832e-f009-4b73-a535-64c3a22e558aa",
 		},
 		{
-			name:             "wrong_employee_id_format",
+			name:             "invalid_country",
 			wantCode:         http.StatusBadRequest,
 			wantErr:          true,
 			wantResponsePath: "testdata/update_personal_info/invalid_country.json",
@@ -842,7 +866,7 @@ func Test_UpdatePersonalInfo(t *testing.T) {
 				DoB:           &dob,
 				Gender:        "Male",
 				Address:       "Phan Huy Ich, Tan Binh District, Ho Chi Minh, Vietnam",
-				PersonalEmail: "thanhpham123@gmail.com",
+				PersonalEmail: "thanhpham124@gmail.com",
 				Country:       "Vietnam",
 				City:          "Hồ Chí Minhh",
 			},
@@ -863,9 +887,10 @@ func Test_UpdatePersonalInfo(t *testing.T) {
 				ctx.Params = gin.Params{gin.Param{Key: "id", Value: tt.id}}
 				ctx.Request = httptest.NewRequest("PUT", "/api/v1/employees/"+tt.id+"/personal-info", bodyReader)
 				ctx.Request.Header.Set("Authorization", testToken)
-				metadataHandler := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+				ctrl := controller.New(storeMock, txRepo, serviceMock, workerMock, loggerMock, &cfg)
+				h := New(ctrl, storeMock, txRepo, serviceMock, loggerMock, &cfg)
 
-				metadataHandler.UpdatePersonalInfo(ctx)
+				h.UpdatePersonalInfo(ctx)
 
 				require.Equal(t, tt.wantCode, w.Code)
 				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
@@ -883,8 +908,10 @@ func Test_UpdatePersonalInfo(t *testing.T) {
 func TestHandler_GetLineManagers(t *testing.T) {
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg)
+	serviceMock := service.New(&cfg, nil, nil)
 	storeMock := store.New()
+	queue := make(chan model.WorkerMessage, 1000)
+	workerMock := worker.New(context.Background(), queue, serviceMock, loggerMock)
 
 	tests := []struct {
 		name             string
@@ -908,7 +935,8 @@ func TestHandler_GetLineManagers(t *testing.T) {
 				ctx.Request = httptest.NewRequest(http.MethodGet, "/api/v1/line-managers", nil)
 				ctx.Request.Header.Set("Authorization", testToken)
 
-				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+				ctrl := controller.New(storeMock, txRepo, serviceMock, workerMock, loggerMock, &cfg)
+				h := New(ctrl, storeMock, txRepo, serviceMock, loggerMock, &cfg)
 				h.GetLineManagers(ctx)
 				require.Equal(t, tt.wantCode, w.Code)
 				expRespRaw, err := os.ReadFile(tt.wantResponsePath)

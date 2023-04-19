@@ -11,11 +11,11 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/handler/dashboard/errs"
 	"github.com/dwarvesf/fortress-api/pkg/handler/dashboard/request"
+	"github.com/dwarvesf/fortress-api/pkg/handler/dashboard/util"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/store"
-	"github.com/dwarvesf/fortress-api/pkg/store/employee"
 	"github.com/dwarvesf/fortress-api/pkg/view"
 )
 
@@ -25,16 +25,18 @@ type handler struct {
 	logger  logger.Logger
 	repo    store.DBRepo
 	config  *config.Config
+	util    util.IUtil
 }
 
 // New returns a handler
-func New(store *store.Store, repo store.DBRepo, service *service.Service, logger logger.Logger, cfg *config.Config) IHandler {
+func New(store *store.Store, repo store.DBRepo, service *service.Service, logger logger.Logger, cfg *config.Config, u util.IUtil) IHandler {
 	return &handler{
 		store:   store,
 		repo:    repo,
 		service: service,
 		logger:  logger,
 		config:  cfg,
+		util:    u,
 	}
 }
 
@@ -215,8 +217,8 @@ func (h *handler) GetActionItemReports(c *gin.Context) {
 }
 
 // GetEngineeringHealth godoc
-// @Summary Get Enginerring health information for dashboard
-// @Description Get Enginerring health information for dashboard
+// @Summary Get Engineering health information for dashboard
+// @Description Get Engineering health information for dashboard
 // @Tags Dashboard
 // @Accept json
 // @Produce json
@@ -641,18 +643,6 @@ func (h *handler) GetEngagementInfoDetail(c *gin.Context) {
 		"method":  "GetEngagementInfoDetail",
 	})
 
-	events, err := h.store.FeedbackEvent.GetLatestEventByType(h.repo.DB(), model.EventTypeSurvey, model.EventSubtypeEngagement, 4)
-	if err != nil {
-		l.Error(err, "failed to get engagement events")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, errs.ErrEventNotFound, nil, ""))
-		return
-	}
-
-	timeList := make([]time.Time, 0)
-	for _, t := range events {
-		timeList = append(timeList, *t.StartDate)
-	}
-
 	statistic, err := h.store.EmployeeEventQuestion.GetAverageAnswerEngagementByFilter(h.repo.DB(), filter, &startDate)
 	if err != nil {
 		l.Error(err, "failed to get engagement statistic")
@@ -679,7 +669,7 @@ func (h *handler) GetResourceUtilization(c *gin.Context) {
 		"method":  "GetResourceUtilization",
 	})
 
-	res, err := h.store.Dashboard.GetResourceUtilization(h.repo.DB())
+	res, err := h.store.Dashboard.GetResourceUtilization(h.repo.DB(), h.util.TimeNow())
 	if err != nil {
 		l.Error(err, "failed to get resource utilization by year")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
@@ -757,58 +747,14 @@ func (h *handler) GetWorkUnitDistribution(c *gin.Context) {
 		return
 	}
 
-	rs := &view.WorkUnitDistributionData{}
-
-	// Get all employee
-	employees, _, err := h.store.Employee.All(h.repo.DB(),
-		employee.EmployeeFilter{
-			Keyword: input.Name,
-			WorkingStatuses: []string{
-				model.WorkingStatusOnBoarding.String(),
-				model.WorkingStatusContractor.String(),
-				model.WorkingStatusFullTime.String(),
-				model.WorkingStatusProbation.String()},
-		},
-		model.Pagination{
-			Page: 0,
-			Size: 1000,
-		})
-
+	employees, err := h.store.Dashboard.GetWorkUnitDistributionEmployees(h.repo.DB(), input.Name, input.Type.String())
 	if err != nil {
-		l.Error(err, "failed to get all employee")
+		l.Error(err, "failed to get work unit distribution employees")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
 	}
 
-	for _, employee := range employees {
-		// Get all mentee
-		mentees, err := h.store.Employee.GetMenteesByID(h.repo.DB(), employee.ID.String())
-		if err != nil {
-			l.Error(err, "failed to get mentees")
-			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
-			return
-		}
-
-		// Get all work units info
-		workUnits, err := h.store.WorkUnit.GetAllWorkUnitByEmployeeID(h.repo.DB(), employee.ID.String())
-		if err != nil {
-			l.Error(err, "failed to get work units")
-			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
-			return
-		}
-
-		// Get all project head info
-		managementInfos, err := h.store.Dashboard.GetProjectHeadByEmployeeID(h.repo.DB(), employee.ID.String())
-		if err != nil {
-			l.Error(err, "failed to get project head")
-			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
-			return
-		}
-
-		rs.WorkUnitDistributions = append(rs.WorkUnitDistributions, view.ToWorkUnitDistribution(employee, mentees, workUnits, managementInfos, input.Type))
-	}
-
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.SortWorkUnitDistributionData(rs, input.Sort), nil, nil, nil, ""))
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToWorkUnitDistributionData(employees, input.Sort.String()), nil, nil, nil, ""))
 }
 
 // GetResourceWorkSurveySummaries godoc

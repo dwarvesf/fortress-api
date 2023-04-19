@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"io"
-	"io/ioutil"
 	"net/http"
 
 	"github.com/bwmarrin/discordgo"
@@ -22,7 +21,7 @@ type discordClient struct {
 	session *discordgo.Session
 }
 
-func New(cfg *config.Config) DiscordService {
+func New(cfg *config.Config) IService {
 	ses, _ := discordgo.New("Bot " + cfg.Discord.SecretToken)
 	return &discordClient{
 		cfg:     cfg,
@@ -97,7 +96,7 @@ func (d *discordClient) newRequest(method string, url string, payload io.Reader)
 	}
 	defer res.Body.Close()
 
-	resBody, err := ioutil.ReadAll(res.Body)
+	resBody, err := io.ReadAll(res.Body)
 	if err != nil {
 		return nil, err
 	}
@@ -125,4 +124,21 @@ func (d *discordClient) GetMembers() ([]*discordgo.Member, error) {
 	}
 
 	return members, nil
+}
+
+func (d *discordClient) SendMessage(msg, webhookUrl string) (*model.DiscordMessage, error) {
+	discordMsg := model.DiscordMessage{Content: msg}
+	reqByte, err := json.Marshal(discordMsg)
+	if err != nil {
+		return &discordMsg, err
+	}
+
+	payload := bytes.NewReader(reqByte)
+	res, err := d.session.Client.Post(webhookUrl, "application/json", payload)
+	if err != nil {
+		return &discordMsg, err
+	}
+	defer res.Body.Close()
+
+	return &discordMsg, nil
 }

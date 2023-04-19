@@ -3,9 +3,9 @@ package feedback
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 
@@ -28,7 +28,7 @@ const testToken = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2OTkzM
 func TestHandler_List(t *testing.T) {
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg)
+	serviceMock := service.New(&cfg, nil, nil)
 	storeMock := store.New()
 
 	tests := []struct {
@@ -68,7 +68,7 @@ func TestHandler_List(t *testing.T) {
 				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 				h.List(ctx)
 				require.Equal(t, tt.wantCode, w.Code)
-				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
 				require.NoError(t, err)
 
 				res, err := utils.RemoveFieldInSliceResponse(w.Body.Bytes(), "lastUpdated")
@@ -83,7 +83,7 @@ func TestHandler_List(t *testing.T) {
 func TestHandler_Detail(t *testing.T) {
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg)
+	serviceMock := service.New(&cfg, nil, nil)
 	storeMock := store.New()
 	tests := []struct {
 		name             string
@@ -134,7 +134,7 @@ func TestHandler_Detail(t *testing.T) {
 				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 				h.Detail(ctx)
 				require.Equal(t, tt.wantCode, w.Code)
-				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
 				require.NoError(t, err)
 
 				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Feedback.Detail] response mismatched")
@@ -146,7 +146,7 @@ func TestHandler_Detail(t *testing.T) {
 func TestHandler_Submit(t *testing.T) {
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg)
+	serviceMock := service.New(&cfg, nil, nil)
 	storeMock := store.New()
 	tests := []struct {
 		name             string
@@ -381,7 +381,7 @@ func TestHandler_Submit(t *testing.T) {
 				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 				h.Submit(ctx)
 				require.Equal(t, tt.wantCode, w.Code)
-				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
 				require.NoError(t, err)
 
 				res, err := utils.RemoveFieldInSliceResponse(w.Body.Bytes(), "lastUpdated")
@@ -396,7 +396,7 @@ func TestHandler_Submit(t *testing.T) {
 func TestHandler_UnreadInbox(t *testing.T) {
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg)
+	serviceMock := service.New(&cfg, nil, nil)
 	storeMock := store.New()
 	tests := []struct {
 		name             string
@@ -421,7 +421,7 @@ func TestHandler_UnreadInbox(t *testing.T) {
 				h := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
 				h.CountUnreadFeedback(ctx)
 				require.Equal(t, tt.wantCode, w.Code)
-				expRespRaw, err := ioutil.ReadFile(tt.wantResponsePath)
+				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
 				require.NoError(t, err)
 
 				require.JSONEq(t, string(expRespRaw), w.Body.String(), "[Handler.Feedback.CountUnreadFeedback] response mismatched")

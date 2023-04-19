@@ -3,8 +3,9 @@ package view
 import (
 	"time"
 
+	"github.com/dwarvesf/fortress-api/pkg/utils/authutils"
+
 	"github.com/dwarvesf/fortress-api/pkg/model"
-	"github.com/dwarvesf/fortress-api/pkg/utils"
 )
 
 // EmployeeData view for listing data
@@ -116,7 +117,7 @@ func ToEmployeeProjectDetailData(pm *model.ProjectMember, userInfo *model.Curren
 		rs.Status = model.ProjectMemberStatusInactive.String()
 	}
 
-	if utils.HasPermission(userInfo.Permissions, model.PermissionEmployeesReadProjectsFullAccess) {
+	if authutils.HasPermission(userInfo.Permissions, model.PermissionEmployeesReadProjectsFullAccess) {
 		rs.StartDate = pm.StartDate
 		rs.EndDate = pm.EndDate
 		rs.DeploymentType = pm.DeploymentType.String()
@@ -296,14 +297,14 @@ func ToOneEmployeeData(employee *model.Employee, userInfo *model.CurrentLoggedUs
 	for _, pm := range employee.ProjectMembers {
 		// If logged user is working on the same project or user have permission to read active, show the project
 		_, ok := userInfo.Projects[pm.ProjectID]
-		if (ok || utils.HasPermission(userInfo.Permissions, model.PermissionEmployeesReadProjectsReadActive)) &&
+		if (ok || authutils.HasPermission(userInfo.Permissions, model.PermissionEmployeesReadProjectsReadActive)) &&
 			pm.IsActive() && pm.Project.Status == model.ProjectStatusActive {
 			employeeProjects = append(employeeProjects, ToEmployeeProjectDetailData(&pm, userInfo))
 			continue
 		}
 
 		// If logged user have permission to read all projects, show the project
-		if utils.HasPermission(userInfo.Permissions, model.PermissionEmployeesReadProjectsFullAccess) {
+		if authutils.HasPermission(userInfo.Permissions, model.PermissionEmployeesReadProjectsFullAccess) {
 			employeeProjects = append(employeeProjects, ToEmployeeProjectDetailData(&pm, userInfo))
 		}
 	}
@@ -364,7 +365,7 @@ func ToOneEmployeeData(employee *model.Employee, userInfo *model.CurrentLoggedUs
 		Chapters:  ToChapters(employee.EmployeeChapters),
 	}
 
-	if utils.HasPermission(userInfo.Permissions, model.PermissionEmployeesReadGeneralInfoFullAccess) {
+	if authutils.HasPermission(userInfo.Permissions, model.PermissionEmployeesReadGeneralInfoFullAccess) {
 		rs.NotionID = empSocialData.NotionID
 		rs.NotionName = empSocialData.NotionName
 		rs.LinkedInName = empSocialData.LinkedInName
@@ -375,7 +376,7 @@ func ToOneEmployeeData(employee *model.Employee, userInfo *model.CurrentLoggedUs
 		rs.ReferredBy = referrer
 	}
 
-	if utils.HasPermission(userInfo.Permissions, model.PermissionEmployeesReadPersonalInfoFullAccess) {
+	if authutils.HasPermission(userInfo.Permissions, model.PermissionEmployeesReadPersonalInfoFullAccess) {
 		rs.MBTI = employee.MBTI
 		rs.PersonalEmail = employee.PersonalEmail
 		rs.Address = employee.Address
@@ -387,7 +388,7 @@ func ToOneEmployeeData(employee *model.Employee, userInfo *model.CurrentLoggedUs
 	if len(employee.Mentees) > 0 {
 		mentees := make([]*MenteeInfo, 0)
 		for _, v := range employee.Mentees {
-			mentees = append(mentees, toMenteeInfo(v))
+			mentees = append(mentees, toMenteeInfo(*v))
 		}
 
 		rs.Mentees = mentees
@@ -401,7 +402,7 @@ func ToOneEmployeeData(employee *model.Employee, userInfo *model.CurrentLoggedUs
 }
 
 func ToEmployeeData(employee *model.Employee) *EmployeeData {
-	employeeProjects := make([]EmployeeProjectData, 0, len(employee.ProjectMembers))
+	employeeProjects := make([]EmployeeProjectData, 0)
 	for _, v := range employee.ProjectMembers {
 		employeeProjects = append(employeeProjects, ToEmployeeProjectData(&v))
 	}
@@ -458,7 +459,7 @@ func ToEmployeeData(employee *model.Employee) *EmployeeData {
 	if len(employee.Mentees) > 0 {
 		mentees := make([]*MenteeInfo, 0)
 		for _, v := range employee.Mentees {
-			mentees = append(mentees, toMenteeInfo(v))
+			mentees = append(mentees, toMenteeInfo(*v))
 		}
 
 		rs.Mentees = mentees
@@ -488,7 +489,7 @@ type EmployeeContentDataResponse struct {
 	Data *EmployeeContentData `json:"data"`
 }
 
-func ToContentData(url string) *EmployeeContentData {
+func ToEmployeeContentData(url string) *EmployeeContentData {
 	return &EmployeeContentData{
 		Url: url,
 	}

@@ -1,8 +1,11 @@
 package employee
 
 import (
-	"github.com/dwarvesf/fortress-api/pkg/model"
+	"time"
+
 	"gorm.io/gorm"
+
+	"github.com/dwarvesf/fortress-api/pkg/model"
 )
 
 func getByWhereConditions(query *gorm.DB, filter EmployeeFilter) *gorm.DB {
@@ -57,21 +60,25 @@ func getByWhereConditions(query *gorm.DB, filter EmployeeFilter) *gorm.DB {
 	if len(filter.Projects) > 0 {
 		if len(filter.Projects) == 1 {
 			if filter.Projects[0] == "-" {
-				query = query.Joins(`LEFT JOIN project_members pm ON employees.id = pm.employee_id`).Where("pm.id IS NULL")
+				query = query.Where(`employees.id NOT IN (SELECT DISTINCT employee_id FROM project_members WHERE 
+					deleted_at IS NULL AND start_date <= now() AND (end_date IS NULL OR end_date > now()))`)
 			} else {
 				query = query.Joins(`JOIN project_members pm ON employees.id = pm.employee_id`).Joins(`JOIN projects p ON pm.project_id = p.id`).
-					Where("p.code = ? AND pm.deleted_at IS NULL AND pm.status = 'active'", filter.Projects[0])
+					Where("p.code = ? AND pm.deleted_at IS NULL AND pm.start_date <= now() AND (pm.end_date IS NULL OR pm.end_date > now())", filter.Projects[0])
 			}
 		}
 		if len(filter.Projects) > 1 {
 			if filter.Projects[0] == "-" {
 				query = query.Joins(`LEFT JOIN project_members pm ON employees.id = pm.employee_id`).
 					Joins(`LEFT JOIN projects p ON pm.project_id = p.id`).
-					Where(`pm.id IS NULL OR (p.code IN ? AND pm.deleted_at IS NULL AND pm.status = 'active')`, filter.Projects[1:])
+					Where(`(p.code IN ? AND pm.deleted_at IS NULL AND pm.start_date <= now() AND 
+							(pm.end_date IS NULL OR pm.end_date > now())) OR 
+							(employees.id NOT IN (SELECT DISTINCT employee_id FROM project_members WHERE deleted_at IS NULL AND
+							start_date <= now() AND (end_date IS NULL OR end_date > now())))`, filter.Projects[1:])
 			} else {
 				query = query.Joins(`JOIN project_members pm ON employees.id = pm.employee_id`).
 					Joins(`JOIN projects p ON pm.project_id = p.id`).
-					Where(`p.code IN ? AND pm.deleted_at IS NULL AND pm.status = 'active'`, filter.Projects)
+					Where(`p.code IN ? AND pm.deleted_at IS NULL AND pm.start_date <= now() AND (pm.end_date IS NULL OR pm.end_date > now())`, filter.Projects)
 			}
 		}
 	}
@@ -90,7 +97,6 @@ func getByWhereConditions(query *gorm.DB, filter EmployeeFilter) *gorm.DB {
 				query = query.Where("employees.line_manager_id IN ?", filter.LineManagers)
 			}
 		}
-
 	}
 
 	if len(filter.Chapters) > 0 {
@@ -122,10 +128,22 @@ func getByWhereConditions(query *gorm.DB, filter EmployeeFilter) *gorm.DB {
 
 	if len(filter.Organizations) > 0 {
 		if filter.Organizations[0] == "-" {
-			query = query.Joins(`LEFT JOIN employee_organizations ON employees.id = employee_organizations.employee_id AND employee_organizations.id IS NULL`)
+			query = query.Where(`employees.id NOT IN (SELECT DISTINCT employee_id FROM employee_organizations)`)
 		} else {
-			query = query.Joins(`LEFT JOIN employee_organizations ON employees.id = employee_organizations.employee_id LEFT JOIN organizations ON employee_organizations.organization_id = organizations.id AND organizations.code IN ?`,
+			query = query.Joins(`JOIN employee_organizations ON employees.id = employee_organizations.employee_id JOIN organizations ON employee_organizations.organization_id = organizations.id AND organizations.code IN ?`,
 				filter.Organizations)
+		}
+	}
+
+	if filter.IsLeft != nil {
+		if *filter.IsLeft {
+			query = query.Where("employees.left_date IS NOT NULL")
+		} else {
+			from := time.Now()
+			if filter.BatchDate != nil {
+				from = *filter.BatchDate
+			}
+			query = query.Where("(employees.left_date IS NULL OR employees.left_date > ?)", from)
 		}
 	}
 

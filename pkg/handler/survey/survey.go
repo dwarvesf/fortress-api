@@ -19,7 +19,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/store/employeeeventtopic"
 	"github.com/dwarvesf/fortress-api/pkg/store/project"
-	"github.com/dwarvesf/fortress-api/pkg/utils"
+	"github.com/dwarvesf/fortress-api/pkg/utils/authutils"
 	"github.com/dwarvesf/fortress-api/pkg/view"
 )
 
@@ -158,6 +158,9 @@ func (h *handler) getQuestionDomainCountsByEvent(db *gorm.DB, eventID string) ([
 // @Param id path string true "Feedback Event ID"
 // @Param page query string false "Page"
 // @Param size query string false "Size"
+// @Param keyword query string false "Keyword"
+// @Param status query string false "Status"
+// @Param projects query []string false "Projects"
 // @Success 200 {object} view.ListSurveyDetailResponse
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 404 {object} view.ErrorResponse
@@ -200,10 +203,12 @@ func (h *handler) GetSurveyDetail(c *gin.Context) {
 
 	topics, total, err := h.store.EmployeeEventTopic.All(h.repo.DB(),
 		employeeeventtopic.GetByEventIDInput{
-			EventID: input.EventID,
-			Keyword: input.Query.Keyword,
-			Preload: true,
-			Paging:  true,
+			EventID:  input.EventID,
+			Keyword:  input.Query.Keyword,
+			Status:   input.Query.Status,
+			Projects: input.Query.Projects,
+			Preload:  true,
+			Paging:   true,
 		},
 		&input.Query.Pagination)
 	if err != nil {
@@ -233,7 +238,7 @@ func (h *handler) GetSurveyDetail(c *gin.Context) {
 // @Router /surveys [post]
 func (h *handler) CreateSurvey(c *gin.Context) {
 	// 1. parse request
-	userID, err := utils.GetUserIDFromContext(c, h.config)
+	userID, err := authutils.GetUserIDFromContext(c, h.config)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return

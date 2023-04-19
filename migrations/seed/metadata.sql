@@ -204,7 +204,7 @@ INSERT INTO public.organizations (id, deleted_at, created_at, updated_at, name, 
 ('e4725383-943a-468a-b0cd-ce249c573cf7', NULL, '2023-01-19 11:13:13.487168', '2023-01-19 11:13:13.487168', 'Console Labs', 'console-labs', 'https://storage.googleapis.com/fortress-dev/projects/cab8e2ec-f78b-4290-8083-1e1d64c49165/images/a42dca5e-830c-47c1-9415-0d723fe54bea.png');
 
 INSERT INTO public.clients (id, deleted_at, created_at, updated_at, name, description, registration_number, address, country, industry, website, emails) VALUES
-('afb9cf05-9517-4fb9-a4f2-66e6d90ad215', null, '2023-02-07 18:41:35.740901', '2023-02-07 18:41:35.740901', 'Dwarves Client', 'Using For Internal Project', '123455099999999', 'Hado Centrosa', 'Vietnam', 'Technology', 'https://d.foundations', '{benjamin@d.foundation,namnh@d.foundation}');
+('afb9cf05-9517-4fb9-a4f2-66e6d90ad215', null, '2023-02-07 18:41:35.740901', '2023-02-07 18:41:35.740901', 'Lorem Ipsum Inc.', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.', '32320398488', 'Hado Centrosa', 'Vietnam', 'Technology', 'https://d.foundations', '{benjamin@d.foundation,namnh@d.foundation}');
 
 INSERT INTO public.client_contacts (id, deleted_at, created_at, updated_at, name, client_id, role, metadata, emails, is_main_contact) VALUES
 ('0569e64d-3b57-454a-ab88-0482e087eb5f', null, '2023-02-07 19:05:04.354072', '2023-02-07 19:05:04.354072', 'Thanh Pham ', 'afb9cf05-9517-4fb9-a4f2-66e6d90ad215', 'PM', null, '["thanh@d.foundation", "huytq@d.foundation"]', true);
@@ -212,9 +212,9 @@ INSERT INTO public.client_contacts (id, deleted_at, created_at, updated_at, name
 INSERT INTO public.company_infos (id, deleted_at, created_at, updated_at, name, description, registration_number, info) VALUES
 ('2b57ec32-19c2-46f0-8cf5-04623241a464', null, '2023-02-07 18:42:38.328707', '2023-02-07 18:42:38.328707', 'Dwarves Foundation', null, '1245888282', '{"vn": {"phone": "0988999999", "address": "Hado Centrosa"}}');
 
-INSERT INTO public.invoice_number_caching (id, deleted_at, created_at, updated_at, key, number) VALUES
-('25938962-611b-45ad-b6be-c0a1365ea1de', null, '2023-02-07 18:57:47.312554', '2023-02-07 18:57:47.312554', 'year_invoice_2023', 1),
-('10fa5046-199d-4d9a-bbf9-44345127be79', null, '2023-02-07 18:59:45.024935', '2023-02-07 18:59:45.024935', 'project_invoice_fortress_2023', 1);
+-- INSERT INTO public.invoice_number_caching (id, deleted_at, created_at, updated_at, key, number) VALUES
+-- ('25938962-611b-45ad-b6be-c0a1365ea1de', null, '2023-02-07 18:57:47.312554', '2023-02-07 18:57:47.312554', 'year_invoice_2023', 1),
+-- ('10fa5046-199d-4d9a-bbf9-44345127be79', null, '2023-02-07 18:59:45.024935', '2023-02-07 18:59:45.024935', 'project_invoice_fortress_2023', 1);
 
 INSERT INTO public.bank_accounts (id, deleted_at, created_at, updated_at, account_number, bank_name, currency_id, owner_name, address, swift_code, routing_number, name, uk_sort_code) VALUES
 ('fc6b1743-05c5-4152-9340-1d20d96d8fc0', null, '2023-02-07 18:39:35.547782', '2023-02-07 18:39:35.547782', '0999999888', 'ACB', '7037bdb6-584e-4e35-996d-ef28a243f48a', 'Dwarves Foundation', 'Hado Centrosa', 'AVBWFPW', null, 'DF Bank Account', null);

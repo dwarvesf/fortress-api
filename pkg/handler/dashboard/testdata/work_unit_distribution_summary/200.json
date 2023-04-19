@@ -1,8 +1,8 @@
 {
     "data": {
-        "learning": 33.33,
-        "development": 25,
-        "management": 33.33,
-        "training": 8.33
+        "learning": 50,
+        "development": 33.33,
+        "management": 16.67,
+        "training": 0
     }
 }

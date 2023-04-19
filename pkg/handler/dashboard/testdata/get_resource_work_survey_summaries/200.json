@@ -7,7 +7,6 @@
         {
             "type": "workload",
             "dates": [
-                "01/01/2023",
                 "09/01/2023",
                 "23/01/2023",
                 "07/02/2023",
@@ -24,22 +23,6 @@
                         "username": "thanh"
                     },
                     "listAnswers": [
-                        {
-                            "date": "01/01/2023",
-                            "answers": [
-                                {
-                                    "answer": "",
-                                    "project": {
-                                        "id": "8dc3be2e-19a4-4942-8a79-56db391a0b15",
-                                        "name": "Fortress",
-                                        "type": "dwarves",
-                                        "status": "active",
-                                        "code": "fortress",
-                                        "avatar": ""
-                                    }
-                                }
-                            ]
-                        },
                         {
                             "date": "09/01/2023",
                             "answers": [
@@ -149,7 +132,6 @@
         {
             "type": "deadline",
             "dates": [
-                "01/01/2023",
                 "09/01/2023",
                 "23/01/2023",
                 "07/02/2023",
@@ -166,22 +148,6 @@
                         "username": "thanh"
                     },
                     "listAnswers": [
-                        {
-                            "date": "01/01/2023",
-                            "answers": [
-                                {
-                                    "answer": "",
-                                    "project": {
-                                        "id": "8dc3be2e-19a4-4942-8a79-56db391a0b15",
-                                        "name": "Fortress",
-                                        "type": "dwarves",
-                                        "status": "active",
-                                        "code": "fortress",
-                                        "avatar": ""
-                                    }
-                                }
-                            ]
-                        },
                         {
                             "date": "09/01/2023",
                             "answers": [
@@ -291,7 +257,6 @@
         {
             "type": "learning",
             "dates": [
-                "01/01/2023",
                 "09/01/2023",
                 "23/01/2023",
                 "07/02/2023",
@@ -308,22 +273,6 @@
                         "username": "thanh"
                     },
                     "listAnswers": [
-                        {
-                            "date": "01/01/2023",
-                            "answers": [
-                                {
-                                    "answer": "",
-                                    "project": {
-                                        "id": "8dc3be2e-19a4-4942-8a79-56db391a0b15",
-                                        "name": "Fortress",
-                                        "type": "dwarves",
-                                        "status": "active",
-                                        "code": "fortress",
-                                        "avatar": ""
-                                    }
-                                }
-                            ]
-                        },
                         {
                             "date": "09/01/2023",
                             "answers": [

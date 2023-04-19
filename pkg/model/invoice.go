@@ -7,30 +7,25 @@ import (
 	"time"
 )
 
-var (
-	ErrInvoiceAlreadyMarkedAsPaid  = errors.New("invoice has already been marked as paid")
-	ErrInvoiceAlreadyMarkedAsError = errors.New("invoice has already been marked as error")
-)
-
 type InvoiceStatus string
 
 const (
-	InvoiceDraft     InvoiceStatus = "draft"
-	InvoiceSent      InvoiceStatus = "sent"
-	InvoiceOverdue   InvoiceStatus = "overdue"
-	InvoicePaid      InvoiceStatus = "paid"
-	InvoiceError     InvoiceStatus = "error"
-	InvoiceScheduled InvoiceStatus = "scheduled"
+	InvoiceStatusDraft     InvoiceStatus = "draft"
+	InvoiceStatusSent      InvoiceStatus = "sent"
+	InvoiceStatusOverdue   InvoiceStatus = "overdue"
+	InvoiceStatusPaid      InvoiceStatus = "paid"
+	InvoiceStatusError     InvoiceStatus = "error"
+	InvoiceStatusScheduled InvoiceStatus = "scheduled"
 )
 
 func (i InvoiceStatus) IsValid() bool {
 	switch i {
-	case InvoiceDraft,
-		InvoiceSent,
-		InvoiceOverdue,
-		InvoicePaid,
-		InvoiceError,
-		InvoiceScheduled:
+	case InvoiceStatusDraft,
+		InvoiceStatusSent,
+		InvoiceStatusOverdue,
+		InvoiceStatusPaid,
+		InvoiceStatusError,
+		InvoiceStatusScheduled:
 		return true
 	}
 	return false
@@ -40,7 +35,7 @@ func (i InvoiceStatus) String() string {
 	return string(i)
 }
 
-//Invoice contain company information
+// Invoice contain company information
 type Invoice struct {
 	BaseModel
 
@@ -96,7 +91,7 @@ func (i *Invoice) Validate() error {
 }
 
 func GatherAddresses(CCs JSON) (string, error) {
-	ccList := []string{}
+	var ccList []string
 	if err := json.Unmarshal(CCs, &ccList); err != nil {
 		return "", err
 	}
@@ -110,15 +105,15 @@ func GatherAddresses(CCs JSON) (string, error) {
 
 type InvoiceItem struct {
 	Quantity    float64 `json:"quantity"`
-	UnitCost    int64   `json:"unitCost"`
+	UnitCost    int64   `json:"unit_cost"`
 	Discount    int64   `json:"discount"`
 	Cost        int64   `json:"cost"`
 	Description string  `json:"description"`
-	IsExternal  bool    `json:"isExternal"`
+	IsExternal  bool    `json:"is_external"`
 }
 
 func GetInfoItems(lineItems JSON) ([]InvoiceItem, error) {
-	items := []InvoiceItem{}
+	var items []InvoiceItem
 
 	if len(lineItems) == 0 || string(lineItems) == "null" {
 		return items, nil
