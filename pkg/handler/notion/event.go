@@ -1,5 +1,5 @@
-// please edit this file only with approval from hnh
-package event
+// Package notion please edit this file only with approval from hnh
+package notion
 
 import (
 	"net/http"
@@ -7,35 +7,13 @@ import (
 	"time"
 
 	"github.com/dstotijn/go-notion"
-	"github.com/dwarvesf/fortress-api/pkg/config"
-	"github.com/dwarvesf/fortress-api/pkg/logger"
-	"github.com/dwarvesf/fortress-api/pkg/model"
-	"github.com/dwarvesf/fortress-api/pkg/service"
-	"github.com/dwarvesf/fortress-api/pkg/store"
-	"github.com/dwarvesf/fortress-api/pkg/view"
 	"github.com/gin-gonic/gin"
+
+	"github.com/dwarvesf/fortress-api/pkg/model"
+	"github.com/dwarvesf/fortress-api/pkg/view"
 )
 
-type handler struct {
-	store   *store.Store
-	service *service.Service
-	logger  logger.Logger
-	repo    store.DBRepo
-	config  *config.Config
-}
-
-// New returns a handler
-func New(store *store.Store, repo store.DBRepo, service *service.Service, logger logger.Logger, cfg *config.Config) IHandler {
-	return &handler{
-		store:   store,
-		repo:    repo,
-		service: service,
-		logger:  logger,
-		config:  cfg,
-	}
-}
-
-// List godoc
+// ListEvents godoc
 // @Summary Get list events from DF Dwarves Community Events
 // @Description Get list events from DF Dwarves Community Events
 // @Tags events
@@ -43,7 +21,7 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 // @Produce  json
 // @Success 200 {object} []model.Event
 // @Failure 400 {object} view.ErrorResponse
-func (h *handler) List(c *gin.Context) {
+func (h *handler) ListEvents(c *gin.Context) {
 	filter := &notion.DatabaseQueryFilter{}
 
 	nextDays := 7
@@ -89,7 +67,7 @@ func (h *handler) List(c *gin.Context) {
 		return
 	}
 
-	var events = []model.Event{}
+	var events []model.Event
 
 	for _, r := range resp.Results {
 		props := r.Properties.(notion.DatabasePageProperties)
