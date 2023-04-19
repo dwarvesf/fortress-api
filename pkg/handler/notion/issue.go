@@ -1,40 +1,18 @@
-// please edit this file only with approval from hnh
-package issue
+// Package notion please edit this file only with approval from hnh
+package notion
 
 import (
 	"net/http"
 	"time"
 
 	"github.com/dstotijn/go-notion"
-	"github.com/dwarvesf/fortress-api/pkg/config"
-	"github.com/dwarvesf/fortress-api/pkg/logger"
-	"github.com/dwarvesf/fortress-api/pkg/model"
-	"github.com/dwarvesf/fortress-api/pkg/service"
-	"github.com/dwarvesf/fortress-api/pkg/store"
-	"github.com/dwarvesf/fortress-api/pkg/view"
 	"github.com/gin-gonic/gin"
+
+	"github.com/dwarvesf/fortress-api/pkg/model"
+	"github.com/dwarvesf/fortress-api/pkg/view"
 )
 
-type handler struct {
-	store   *store.Store
-	service *service.Service
-	logger  logger.Logger
-	repo    store.DBRepo
-	config  *config.Config
-}
-
-// New returns a handler
-func New(store *store.Store, repo store.DBRepo, service *service.Service, logger logger.Logger, cfg *config.Config) IHandler {
-	return &handler{
-		store:   store,
-		repo:    repo,
-		service: service,
-		logger:  logger,
-		config:  cfg,
-	}
-}
-
-// List godoc
+// ListIssues godoc
 // @Summary Get list issues from DF Issues & Resolution Log
 // @Description Get list issues from DF Issues & Resolution Log
 // @Tags issue
@@ -42,7 +20,7 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 // @Produce  json
 // @Success 200 {object} []model.Issue
 // @Failure 400 {object} view.ErrorResponse
-func (h *handler) List(c *gin.Context) {
+func (h *handler) ListIssues(c *gin.Context) {
 	resp, err := h.service.Notion.GetDatabase(h.config.Notion.Databases.Issue, nil, []notion.DatabaseQuerySort{
 		{
 			Property:  "Incident Date",
@@ -54,7 +32,7 @@ func (h *handler) List(c *gin.Context) {
 		return
 	}
 
-	var issues = []model.Issue{}
+	var issues []model.NotionIssue
 	for _, r := range resp.Results {
 		props := r.Properties.(notion.DatabasePageProperties)
 		if props["Status"].Status == nil || props["Status"].Status.Name == "Done" {
@@ -73,7 +51,7 @@ func (h *handler) List(c *gin.Context) {
 		if len(props["Scope"].MultiSelect) > 0 {
 			scope = props["Scope"].MultiSelect[0].Name
 		}
-		projects := []string{}
+		var projects []string
 		if len(props["Project"].Relation) > 0 {
 			for _, p := range props["Project"].Relation {
 				projects = append(projects, p.ID)
@@ -83,9 +61,9 @@ func (h *handler) List(c *gin.Context) {
 		if len(props["PIC"].People) > 0 {
 			pic = props["PIC"].People[0].Name
 		}
-		prority := ""
+		priority := ""
 		if props["Priority"].Select != nil {
-			prority = props["Priority"].Select.Name
+			priority = props["Priority"].Select.Name
 		}
 		profile := ""
 		if len(props["Profile"].Relation) > 0 {
@@ -103,9 +81,9 @@ func (h *handler) List(c *gin.Context) {
 		if props["Solved Date"].Date != nil {
 			solvedDate = props["Solved Date"].Date.Start.Time
 		}
-		rootcause := ""
+		rootCause := ""
 		if len(props["Rootcause"].RichText) > 0 {
-			rootcause = props["Rootcause"].RichText[0].Text.Content
+			rootCause = props["Rootcause"].RichText[0].Text.Content
 		}
 
 		name := props["Name"].Title[0].Text.Content
@@ -113,19 +91,19 @@ func (h *handler) List(c *gin.Context) {
 			name = *r.Icon.Emoji + " " + props["Name"].Title[0].Text.Content
 		}
 
-		issues = append(issues, model.Issue{
+		issues = append(issues, model.NotionIssue{
 			ID:           r.ID,
 			Name:         name,
 			Status:       props["Status"].Status.Name,
 			Source:       source,
-			Rootcause:    rootcause,
+			RootCause:    rootCause,
 			IncidentDate: &incidentDate,
 			SolvedDate:   &solvedDate,
 			Severity:     serverity,
 			Scope:        scope,
 			Projects:     projects,
 			PIC:          pic,
-			Priority:     prority,
+			Priority:     priority,
 			Profile:      profile,
 			Resolution:   resolution,
 		})

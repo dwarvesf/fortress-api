@@ -1,4 +1,4 @@
-package dfupdate
+package notion
 
 import (
 	"context"
@@ -17,8 +17,19 @@ import (
 	"github.com/sendgrid/sendgrid-go/helpers/mail"
 )
 
-// Send implements IHandler
-func (h *handler) Send(c *gin.Context) {
+type From struct {
+	Email string `json:"email,omitempty"`
+	Name  string `json:"name,omitempty"`
+}
+
+type ProjectChangelog struct {
+	ProjectPageID string `json:"project_page_id,omitempty"`
+	IsPreview     bool   `json:"is_preview"`
+	From          From   `json:"from,omitempty"`
+}
+
+// SendChangeLogs implements IHandler
+func (h *handler) SendChangeLogs(c *gin.Context) {
 	contentID := c.Param("id")
 	isPreview := false
 	if c.Query("preview") == "true" {

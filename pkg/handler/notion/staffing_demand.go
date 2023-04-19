@@ -1,39 +1,17 @@
-// please edit this file only with approval from hnh
-package staffingdemand
+// Package notion please edit this file only with approval from hnh
+package notion
 
 import (
 	"net/http"
 
 	"github.com/dstotijn/go-notion"
-	"github.com/dwarvesf/fortress-api/pkg/config"
-	"github.com/dwarvesf/fortress-api/pkg/logger"
-	"github.com/dwarvesf/fortress-api/pkg/model"
-	"github.com/dwarvesf/fortress-api/pkg/service"
-	"github.com/dwarvesf/fortress-api/pkg/store"
-	"github.com/dwarvesf/fortress-api/pkg/view"
 	"github.com/gin-gonic/gin"
+
+	"github.com/dwarvesf/fortress-api/pkg/model"
+	"github.com/dwarvesf/fortress-api/pkg/view"
 )
 
-type handler struct {
-	store   *store.Store
-	service *service.Service
-	logger  logger.Logger
-	repo    store.DBRepo
-	config  *config.Config
-}
-
-// New returns a handler
-func New(store *store.Store, repo store.DBRepo, service *service.Service, logger logger.Logger, cfg *config.Config) IHandler {
-	return &handler{
-		store:   store,
-		repo:    repo,
-		service: service,
-		logger:  logger,
-		config:  cfg,
-	}
-}
-
-// List godoc
+// ListStaffingDemands godoc
 // @Summary Get list  staffing demands from DF Staffing Demand
 // @Description Get list  staffing demands from DF Staffing Demand
 // @Tags staffing-demands
@@ -41,14 +19,14 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 // @Produce  json
 // @Success 200 {object} []model.StaffingDemand
 // @Failure 400 {object} view.ErrorResponse
-func (h *handler) List(c *gin.Context) {
+func (h *handler) ListStaffingDemands(c *gin.Context) {
 	resp, err := h.service.Notion.GetDatabase(h.config.Notion.Databases.StaffingDemand, nil, nil, 0)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, "can't get staffing demands from notion"))
 		return
 	}
 
-	var staffingDemands = []model.StaffingDemand{}
+	var staffingDemands []model.NotionStaffingDemand
 
 	for _, r := range resp.Results {
 		props := r.Properties.(notion.DatabasePageProperties)
@@ -63,7 +41,7 @@ func (h *handler) List(c *gin.Context) {
 			request = props["Request"].RichText[0].Text.Content
 		}
 
-		staffingDemands = append(staffingDemands, model.StaffingDemand{
+		staffingDemands = append(staffingDemands, model.NotionStaffingDemand{
 			ID:      r.ID,
 			Name:    name,
 			Request: request,

@@ -1,28 +1,27 @@
-package dfupdate
+package notion
 
 import (
-	"github.com/gin-gonic/gin"
-
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/store"
+	"github.com/gin-gonic/gin"
 )
 
-type From struct {
-	Email string `json:"email,omitempty"`
-	Name  string `json:"name,omitempty"`
-}
-
-type ProjectChangelog struct {
-	ProjectPageID string `json:"project_page_id,omitempty"`
-	IsPreview     bool   `json:"is_preview"`
-	From          From   `json:"from,omitempty"`
-}
-
-// IHandler functions of dfupdate handler interface
 type IHandler interface {
-	Send(c *gin.Context)
+	CreateTechRadar(c *gin.Context)
+	ListEarns(c *gin.Context)
+	ListMemos(c *gin.Context)
+	ListTechRadars(c *gin.Context)
+	ListAudiences(c *gin.Context)
+	ListEvents(c *gin.Context)
+	ListDigests(c *gin.Context)
+	ListUpdates(c *gin.Context)
+	ListIssues(c *gin.Context)
+	ListStaffingDemands(c *gin.Context)
+	ListHiringPositions(c *gin.Context)
+	ListProjectMilestones(c *gin.Context)
+	SendChangeLogs(c *gin.Context)
 }
 
 type handler struct {
