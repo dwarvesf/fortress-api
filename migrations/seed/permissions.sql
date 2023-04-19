@@ -77,4 +77,6 @@ INSERT INTO public.permissions (id, deleted_at, created_at, updated_at, name, co
 ('92031f1a-b745-42cf-aac1-a067bbee08e6', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Clients Edit', 'clients.edit'),
 ('7fb332e7-3231-42e6-8f38-a5c8b224d84e', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Clients Delete', 'clients.delete'),
 ('475d8075-aec7-4d75-aa79-dc90c9dd9edb', NULL, '2023-02-20 09:50:25.714604', '2023-02-20 09:50:25.714604', 'Cronjob Execute', 'cronjobs.execute'),
-('93886b0b-6592-4838-b024-1aefb123fed6', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Asset Upload', 'assets.upload');
+('93886b0b-6592-4838-b024-1aefb123fed6', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Asset Upload', 'assets.upload'),
+('f75db77f-e299-4135-81b7-0784b452f7b7', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Notion Read', 'notion.read'),
+('d500ea57-da9a-4b24-b147-59d009f0d7bc', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Notion Write', 'notion.write');;
