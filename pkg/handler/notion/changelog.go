@@ -1,4 +1,4 @@
-package changelog
+package notion
 
 import (
 	"context"
@@ -42,7 +42,7 @@ func (e singleChangelogError) Error() string {
 
 func parseProjectChangelogNotionMessageFromCtx(c *gin.Context) (ProjectChangelog, error) {
 	msg := ProjectChangelog{}
-	err := c.ShouldBindJSON((&msg))
+	err := c.ShouldBindJSON(&msg)
 	if err != nil {
 		return msg, err
 	}
@@ -62,7 +62,7 @@ func (h *handler) GetAvailableProjectsChangelog(c *gin.Context) {
 func (h *handler) SendProjectChangelog(c *gin.Context) {
 	msg, err := parseProjectChangelogNotionMessageFromCtx(c)
 	if err != nil {
-		h.logger.Error(err, "can not parse change log")
+		h.logger.Error(err, "failed to parse project changelog message")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
 	}
@@ -83,7 +83,7 @@ func (h *handler) sendProjectChangelog(changelog ProjectChangelog) error {
 	categories := []string{key, changelog.ProjectPageID}
 	values, err := h.service.Notion.GetProjectInDB(changelog.ProjectPageID)
 	if err != nil {
-		h.logger.Error(err, "download page")
+		h.logger.Errorf(err, "failed to get project in db", "project", changelog.ProjectPageID)
 		return err
 	}
 	return h.sendSingleProjectChangelog(changelog.ProjectPageID, *values, &mail.Email{
@@ -122,7 +122,7 @@ func (h *handler) generateEmailChangelog(
 	isPreview bool,
 ) (*model.Email, *model.ProjectChangelogPage, error) {
 	m := model.Email{From: from, Categories: categories}
-	changelogBlocks := []nt.Block{}
+	var changelogBlocks []nt.Block
 	projectName := ""
 	archiveURL := ""
 	p := model.ProjectChangelogPage{RowID: id}
@@ -160,7 +160,7 @@ func (h *handler) generateEmailChangelog(
 			for _, c := range v.Relation {
 				clientPage, err := h.service.Notion.FindClientPageForChangelog(c.ID)
 				if err != nil {
-					h.logger.Error(err, "download page")
+					h.logger.Errorf(err, "failed to find client page for changelog", "clientPage", c.ID)
 					return nil, nil, singleChangelogError{ProjectName: projectName, Err: err}
 				}
 				props := clientPage.Properties.(nt.DatabasePageProperties)
@@ -191,7 +191,7 @@ func (h *handler) generateEmailChangelog(
 			for _, c := range v.Relation {
 				recipientsPage, err := h.service.Notion.FindClientPageForChangelog(c.ID)
 				if err != nil {
-					h.logger.Error(err, "download page")
+					h.logger.Errorf(err, "failed to find page for changelogs", "clientPage", c.ID)
 					return nil, nil, singleChangelogError{ProjectName: projectName, Err: err}
 				}
 				props := recipientsPage.Properties.(nt.DatabasePageProperties)
@@ -247,7 +247,7 @@ func (h *handler) generateEmailChangelog(
 
 			pageContent, err := h.service.Notion.GetBlockChildren(latestChangelogPage.ID)
 			if err != nil {
-				h.logger.Error(err, "download page")
+				h.logger.Errorf(err, "failed to download page", "pageID", latestChangelogPage.ID)
 				return nil, nil, singleChangelogError{ProjectName: projectName, Err: err}
 			}
 			changelogBlocks = pageContent.Results
@@ -267,7 +267,7 @@ func (h *handler) generateEmailChangelog(
 		if block.HasChildren() {
 			children, err := h.service.Notion.GetBlockChildren(block.ID())
 			if err != nil {
-				h.logger.Error(err, "get block children")
+				h.logger.Error(err, "failed to get block children")
 				return nil, nil, singleChangelogError{ProjectName: projectName, Err: err}
 			}
 
