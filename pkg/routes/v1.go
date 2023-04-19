@@ -169,16 +169,16 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 		valuation.GET("/:year", pmw.WithPerm(model.PermissionValuationRead), h.Valuation.One)
 	}
 
-	notion := v1.Group("/notion")
+	notion := v1.Group("/notion", amw.WithAuth, pmw.WithPerm(model.PermissionCronjobExecute))
 	{
 		earn := notion.Group("/earn")
 		{
 			earn.GET("", h.Notion.ListEarns)
 		}
-		techradar := notion.Group("/tech-radar")
+		techRadar := notion.Group("/tech-radar")
 		{
-			techradar.GET("", h.Notion.ListTechRadars)
-			techradar.POST("", h.Notion.CreateTechRadar)
+			techRadar.GET("", h.Notion.ListTechRadars)
+			techRadar.POST("", h.Notion.CreateTechRadar)
 		}
 		audience := notion.Group("/audiences")
 		{
