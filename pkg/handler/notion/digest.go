@@ -1,39 +1,17 @@
-// please edit this file only with approval from hnh
-package digest
+// Package notion please edit this file only with approval from hnh
+package notion
 
 import (
 	"net/http"
 
 	"github.com/dstotijn/go-notion"
-	"github.com/dwarvesf/fortress-api/pkg/config"
-	"github.com/dwarvesf/fortress-api/pkg/logger"
-	"github.com/dwarvesf/fortress-api/pkg/model"
-	"github.com/dwarvesf/fortress-api/pkg/service"
-	"github.com/dwarvesf/fortress-api/pkg/store"
-	"github.com/dwarvesf/fortress-api/pkg/view"
 	"github.com/gin-gonic/gin"
+
+	"github.com/dwarvesf/fortress-api/pkg/model"
+	"github.com/dwarvesf/fortress-api/pkg/view"
 )
 
-type handler struct {
-	store   *store.Store
-	service *service.Service
-	logger  logger.Logger
-	repo    store.DBRepo
-	config  *config.Config
-}
-
-// New returns a handler
-func New(store *store.Store, repo store.DBRepo, service *service.Service, logger logger.Logger, cfg *config.Config) IHandler {
-	return &handler{
-		store:   store,
-		repo:    repo,
-		service: service,
-		logger:  logger,
-		config:  cfg,
-	}
-}
-
-// List godoc
+// ListDigests godoc
 // @Summary Get list digests from DF Internal Digest
 // @Description Get list digests from DF Internal Digest
 // @Tags digests
@@ -41,7 +19,7 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 // @Produce  json
 // @Success 200 {object} []model.Digest
 // @Failure 400 {object} view.ErrorResponse
-func (h *handler) List(c *gin.Context) {
+func (h *handler) ListDigests(c *gin.Context) {
 	resp, err := h.service.Notion.GetDatabase(h.config.Notion.Databases.Digest, nil, []notion.DatabaseQuerySort{
 		{
 			Property:  "Created at",
@@ -53,7 +31,7 @@ func (h *handler) List(c *gin.Context) {
 		return
 	}
 
-	var digests = []model.Digest{}
+	var digests []model.NotionDigest
 
 	for _, r := range resp.Results {
 		props := r.Properties.(notion.DatabasePageProperties)
@@ -63,7 +41,7 @@ func (h *handler) List(c *gin.Context) {
 			name = *r.Icon.Emoji + " " + props["Name"].Title[0].Text.Content
 		}
 
-		digests = append(digests, model.Digest{
+		digests = append(digests, model.NotionDigest{
 			ID:        r.ID,
 			Name:      name,
 			CreatedAt: props["Created at"].Date.Start.Time,

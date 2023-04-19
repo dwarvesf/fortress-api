@@ -1,4 +1,4 @@
-package dfupdate
+package notion
 
 import (
 	"context"
@@ -17,8 +17,19 @@ import (
 	"github.com/sendgrid/sendgrid-go/helpers/mail"
 )
 
-// Send implements IHandler
-func (h *handler) Send(c *gin.Context) {
+type From struct {
+	Email string `json:"email,omitempty"`
+	Name  string `json:"name,omitempty"`
+}
+
+type ProjectChangelog struct {
+	ProjectPageID string `json:"project_page_id,omitempty"`
+	IsPreview     bool   `json:"is_preview"`
+	From          From   `json:"from,omitempty"`
+}
+
+// SendNewsLetter implements IHandler
+func (h *handler) SendNewsLetter(c *gin.Context) {
 	contentID := c.Param("id")
 	isPreview := false
 	if c.Query("preview") == "true" {
@@ -59,9 +70,9 @@ func (h *handler) Send(c *gin.Context) {
 		}
 	} else {
 		// get subscribers
-		subscribers, _, err := h.getSubcribers(h.config.Notion.Databases.Audience, "Dwarves Updates")
+		subscribers, _, err := h.getSubscribers(h.config.Notion.Databases.Audience, "Dwarves Updates")
 		if err != nil {
-			h.logger.Error(err, "getSubcribers() failed")
+			h.logger.Error(err, "getSubscribers() failed")
 			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 			return
 		}
@@ -100,7 +111,7 @@ func (h *handler) Send(c *gin.Context) {
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))
 }
 
-func (h *handler) getSubcribers(pageID, audience string) ([]*mail.Email, []string, error) {
+func (h *handler) getSubscribers(pageID, audience string) ([]*mail.Email, []string, error) {
 	records, err := h.service.Notion.QueryAudienceDatabase(pageID, audience)
 	if err != nil {
 		h.logger.Error(err, "query audience database")
@@ -151,7 +162,7 @@ func (h *handler) generateEmailNewsletter(id string, from *mail.Email, categorie
 
 	pageContent, err := h.service.Notion.GetBlockChildren(id)
 	if err != nil {
-		h.logger.Error(err, "download page")
+		h.logger.Errorf(err, "failed to download page", "pageID", id)
 		return nil, err
 	}
 	changelogBlocks = pageContent.Results
@@ -161,7 +172,7 @@ func (h *handler) generateEmailNewsletter(id string, from *mail.Email, categorie
 		if block.HasChildren() {
 			children, err := h.service.Notion.GetBlockChildren(block.ID())
 			if err != nil {
-				h.logger.Error(err, "get block children")
+				h.logger.Errorf(err, "failed to get block children", "blockID", block.ID())
 				return nil, err
 			}
 
