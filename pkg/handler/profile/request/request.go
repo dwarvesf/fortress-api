@@ -73,5 +73,4 @@ func (i UpdateInfoInput) MapEmployeeInput(employee *model.Employee) {
 	if strings.TrimSpace(i.WiseCurrency) != "" {
 		employee.WiseCurrency = i.WiseCurrency
 	}
-
 }

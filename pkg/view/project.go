@@ -37,6 +37,8 @@ type ProjectData struct {
 	Client              *BasicClientInfo      `json:"client"`
 	CompanyInfo         *BasicCompanyInfo     `json:"companyInfo"`
 	Organization        *Organization         `json:"organization"`
+	MonthlyChargeRate   decimal.Decimal       `json:"monthlyChargeRate"`
+	Currency            *Currency             `json:"currency"`
 }
 
 type BasicClientInfo struct {
@@ -167,6 +169,12 @@ func ToProjectData(project *model.Project, userInfo *model.CurrentLoggedUserInfo
 		}
 	}
 
+	var projectCurrency *Currency
+	if project.BankAccount != nil {
+		projectCurrency = toCurrency(project.BankAccount.Currency)
+	}
+
+	monthlyChargeRate := decimal.Zero
 	var members = make([]ProjectMember, 0, len(project.ProjectMembers))
 	for _, m := range project.ProjectMembers {
 		member := ProjectMember{
@@ -187,30 +195,38 @@ func ToProjectData(project *model.Project, userInfo *model.CurrentLoggedUserInfo
 			if m.UpsellPerson != nil {
 				member.UpsellPerson = toBasicEmployeeInfo(*m.UpsellPerson)
 			}
+
+			member.Rate = m.Rate
+			member.Currency = projectCurrency
+		}
+
+		if m.DeploymentType == model.MemberDeploymentTypeOfficial {
+			monthlyChargeRate = monthlyChargeRate.Add(m.Rate)
 		}
 
 		members = append(members, member)
 	}
 
 	d := ProjectData{
-		BaseModel:        project.BaseModel,
-		Avatar:           project.Avatar,
-		Name:             project.Name,
-		Type:             project.Type.String(),
-		Status:           project.Status.String(),
-		Stacks:           ToProjectStacks(project.ProjectStacks),
-		StartDate:        project.StartDate,
-		EndDate:          project.EndDate,
-		Members:          members,
-		TechnicalLead:    technicalLeads,
-		DeliveryManagers: deliveryManagers,
-		AccountManagers:  accountManagers,
-		SalePersons:      salePersons,
-		ProjectEmail:     project.ProjectEmail,
-
+		BaseModel:           project.BaseModel,
+		Avatar:              project.Avatar,
+		Name:                project.Name,
+		Type:                project.Type.String(),
+		Status:              project.Status.String(),
+		Stacks:              ToProjectStacks(project.ProjectStacks),
+		StartDate:           project.StartDate,
+		EndDate:             project.EndDate,
+		Members:             members,
+		TechnicalLead:       technicalLeads,
+		DeliveryManagers:    deliveryManagers,
+		AccountManagers:     accountManagers,
+		SalePersons:         salePersons,
+		ProjectEmail:        project.ProjectEmail,
+		MonthlyChargeRate:   monthlyChargeRate,
 		AllowsSendingSurvey: project.AllowsSendingSurvey,
 		Code:                project.Code,
 		Function:            project.Function.String(),
+		Currency:            projectCurrency,
 	}
 
 	var clientEmail []string
@@ -504,8 +520,7 @@ func ToProjectMemberListData(userInfo *model.CurrentLoggedUserInfo, members []*m
 		if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadFullAccess) &&
 			project.BankAccount != nil &&
 			project.BankAccount.Currency != nil {
-			member.Currency = new(Currency)
-			*member.Currency = toCurrency(project.BankAccount.Currency)
+			member.Currency = toCurrency(project.BankAccount.Currency)
 
 			if m.UpsellPerson != nil {
 				member.UpsellPerson = toBasicEmployeeInfo(*m.UpsellPerson)

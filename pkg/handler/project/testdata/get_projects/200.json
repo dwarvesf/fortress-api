@@ -28,7 +28,12 @@
             "code": "lorem-ipsum",
             "function": "",
             "auditNotionID": "",
-            "bankAccount": null,
+            "bankAccount": {
+                "id": "e79eb5b3-e2cb-4d7f-9273-46f4be88cb20",
+                "accountNumber": "1234567891",
+                "bankName": "OCB",
+                "ownerName": "Phạm Văn Đạt"
+            },
             "client": null,
             "companyInfo": null,
             "organization": {
@@ -36,6 +41,14 @@
                 "code": "dwarves-foundation",
                 "name": "Dwarves Foundation",
                 "avatar": ""
+            },
+            "monthlyChargeRate": "0",
+            "currency": {
+                "id": "06a699ed-618b-400b-ac8c-8739956fa8e7",
+                "name": "GBP",
+                "symbol": "£",
+                "locale": "en-gb",
+                "type": "fiat"
             }
         },
         {
@@ -69,11 +82,17 @@
                     "deploymentType": "official",
                     "startDate": null,
                     "endDate": null,
-                    "rate": "0",
+                    "rate": "5000",
                     "discount": "0",
                     "upsellCommissionRate": "0",
                     "leadCommissionRate": "0",
-                    "currency": null,
+                    "currency": {
+                        "id": "06a699ed-618b-400b-ac8c-8739956fa8e7",
+                        "name": "GBP",
+                        "symbol": "£",
+                        "locale": "en-gb",
+                        "type": "fiat"
+                    },
                     "note": "",
                     "seniority": null,
                     "positions": [],
@@ -92,11 +111,17 @@
                     "deploymentType": "shadow",
                     "startDate": null,
                     "endDate": null,
-                    "rate": "0",
+                    "rate": "4000",
                     "discount": "0",
                     "upsellCommissionRate": "0",
                     "leadCommissionRate": "0",
-                    "currency": null,
+                    "currency": {
+                        "id": "06a699ed-618b-400b-ac8c-8739956fa8e7",
+                        "name": "GBP",
+                        "symbol": "£",
+                        "locale": "en-gb",
+                        "type": "fiat"
+                    },
                     "note": "",
                     "seniority": null,
                     "positions": [],
@@ -115,11 +140,17 @@
                     "deploymentType": "official",
                     "startDate": null,
                     "endDate": null,
-                    "rate": "0",
+                    "rate": "3000",
                     "discount": "0",
                     "upsellCommissionRate": "0",
                     "leadCommissionRate": "0",
-                    "currency": null,
+                    "currency": {
+                        "id": "06a699ed-618b-400b-ac8c-8739956fa8e7",
+                        "name": "GBP",
+                        "symbol": "£",
+                        "locale": "en-gb",
+                        "type": "fiat"
+                    },
                     "note": "",
                     "seniority": null,
                     "positions": [],
@@ -138,11 +169,17 @@
                     "deploymentType": "official",
                     "startDate": null,
                     "endDate": null,
-                    "rate": "0",
+                    "rate": "3000",
                     "discount": "0",
                     "upsellCommissionRate": "0",
                     "leadCommissionRate": "0",
-                    "currency": null,
+                    "currency": {
+                        "id": "06a699ed-618b-400b-ac8c-8739956fa8e7",
+                        "name": "GBP",
+                        "symbol": "£",
+                        "locale": "en-gb",
+                        "type": "fiat"
+                    },
                     "note": "",
                     "seniority": null,
                     "positions": [],
@@ -161,11 +198,17 @@
                     "deploymentType": "shadow",
                     "startDate": null,
                     "endDate": null,
-                    "rate": "0",
+                    "rate": "4000",
                     "discount": "0",
                     "upsellCommissionRate": "0",
                     "leadCommissionRate": "0",
-                    "currency": null,
+                    "currency": {
+                        "id": "06a699ed-618b-400b-ac8c-8739956fa8e7",
+                        "name": "GBP",
+                        "symbol": "£",
+                        "locale": "en-gb",
+                        "type": "fiat"
+                    },
                     "note": "",
                     "seniority": null,
                     "positions": [],
@@ -216,7 +259,12 @@
             "code": "fortress",
             "function": "",
             "auditNotionID": "",
-            "bankAccount": null,
+            "bankAccount": {
+                "id": "e79eb5b3-e2cb-4d7f-9273-46f4be88cb20",
+                "accountNumber": "1234567891",
+                "bankName": "OCB",
+                "ownerName": "Phạm Văn Đạt"
+            },
             "client": null,
             "companyInfo": null,
             "organization": {
@@ -224,6 +272,14 @@
                 "code": "dwarves-foundation",
                 "name": "Dwarves Foundation",
                 "avatar": ""
+            },
+            "monthlyChargeRate": "11000",
+            "currency": {
+                "id": "06a699ed-618b-400b-ac8c-8739956fa8e7",
+                "name": "GBP",
+                "symbol": "£",
+                "locale": "en-gb",
+                "type": "fiat"
             }
         }
     ]
