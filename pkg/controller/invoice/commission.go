@@ -193,12 +193,14 @@ func getPICs(invoice *model.Invoice, projectMembers []*model.ProjectMember) *pic
 		}
 
 		if pm.Employee.Referrer != nil {
-			suppliers = append(suppliers, pic{
-				ID:             pm.Employee.Referrer.ID,
-				CommissionRate: decimal.NewFromInt(hiringCommissionRate),
-				ChargeRate:     pm.Rate.InexactFloat64(),
-				Note:           fmt.Sprintf("Hiring - %s", pm.Employee.FullName),
-			})
+			if pm.Employee.Referrer.WorkingStatus != model.WorkingStatusLeft {
+				suppliers = append(suppliers, pic{
+					ID:             pm.Employee.Referrer.ID,
+					CommissionRate: decimal.NewFromInt(hiringCommissionRate),
+					ChargeRate:     pm.Rate.InexactFloat64(),
+					Note:           fmt.Sprintf("Hiring - %s", pm.Employee.FullName),
+				})
+			}
 		}
 	}
 
