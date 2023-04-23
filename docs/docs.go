@@ -8171,21 +8171,31 @@ const docTemplate = `{
         },
         "request.UpdateBaseSalaryInput": {
             "type": "object",
+            "required": [
+                "batch",
+                "currencyCode"
+            ],
             "properties": {
-                "baseSalaryID": {
-                    "type": "string"
+                "batch": {
+                    "type": "integer"
                 },
                 "companyAccountAmount": {
-                    "type": "integer"
+                    "type": "integer",
+                    "minimum": 0
                 },
                 "contractAmount": {
-                    "type": "integer"
+                    "type": "integer",
+                    "minimum": 0
                 },
-                "currencyID": {
+                "currencyCode": {
+                    "type": "string"
+                },
+                "effectiveDate": {
                     "type": "string"
                 },
                 "personalAccountAmount": {
-                    "type": "integer"
+                    "type": "integer",
+                    "minimum": 0
                 }
             }
         },

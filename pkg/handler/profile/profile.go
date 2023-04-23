@@ -168,6 +168,11 @@ func (h *handler) UpdateInfo(c *gin.Context) {
 		"notion_email",
 		"discord_name",
 		"linkedin_name",
+		"wise_recipient_id",
+		"wise_account_number",
+		"wise_recipient_email",
+		"wise_recipient_name",
+		"wise_currency",
 	)
 	if err != nil {
 		l.Error(err, "failed to update employee")

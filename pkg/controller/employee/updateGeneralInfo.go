@@ -12,22 +12,27 @@ import (
 )
 
 type UpdateEmployeeGeneralInfoInput struct {
-	FullName        string       `form:"fullName" json:"fullName" binding:"required,max=99"`
-	Email           string       `form:"email" json:"email" binding:"required,email"`
-	Phone           string       `form:"phone" json:"phone" binding:"required,max=18,min=9"`
-	LineManagerID   model.UUID   `form:"lineManagerID" json:"lineManagerID"`
-	DisplayName     string       `form:"displayName" json:"displayName"`
-	GithubID        string       `form:"githubID" json:"githubID"`
-	NotionID        string       `form:"notionID" json:"notionID"`
-	NotionName      string       `form:"notionName" json:"notionName"`
-	NotionEmail     string       `form:"notionEmail" json:"notionEmail"`
-	DiscordID       string       `form:"discordID" json:"discordID"`
-	DiscordName     string       `form:"discordName" json:"discordName"`
-	LinkedInName    string       `form:"linkedInName" json:"linkedInName"`
-	LeftDate        string       `form:"leftDate" json:"leftDate"`
-	JoinedDate      string       `form:"joinedDate" json:"joinedDate"`
-	OrganizationIDs []model.UUID `form:"organizationIDs" json:"organizationIDs"`
-	ReferredBy      model.UUID   `form:"referredBy" json:"referredBy"`
+	FullName           string
+	Email              string
+	Phone              string
+	LineManagerID      model.UUID
+	DisplayName        string
+	GithubID           string
+	NotionID           string
+	NotionName         string
+	NotionEmail        string
+	DiscordID          string
+	DiscordName        string
+	LinkedInName       string
+	LeftDate           string
+	JoinedDate         string
+	OrganizationIDs    []model.UUID
+	ReferredBy         model.UUID
+	WiseRecipientID    string
+	WiseRecipientEmail string
+	WiseRecipientName  string
+	WiseAccountNumber  string
+	WiseCurrency       string
 }
 
 func (r *controller) UpdateGeneralInfo(l logger.Logger, employeeID string, body UpdateEmployeeGeneralInfoInput) (*model.Employee, error) {
@@ -149,6 +154,25 @@ func (r *controller) UpdateGeneralInfo(l logger.Logger, employeeID string, body 
 
 	emp.LineManagerID = body.LineManagerID
 	emp.ReferredBy = body.ReferredBy
+	if strings.TrimSpace(body.WiseRecipientID) != "" {
+		emp.WiseRecipientID = body.WiseRecipientID
+	}
+
+	if strings.TrimSpace(body.WiseAccountNumber) != "" {
+		emp.WiseAccountNumber = body.WiseAccountNumber
+	}
+
+	if strings.TrimSpace(body.WiseRecipientEmail) != "" {
+		emp.WiseRecipientEmail = body.WiseRecipientEmail
+	}
+
+	if strings.TrimSpace(body.WiseRecipientName) != "" {
+		emp.WiseRecipientName = body.WiseRecipientName
+	}
+
+	if strings.TrimSpace(body.WiseCurrency) != "" {
+		emp.WiseCurrency = body.WiseCurrency
+	}
 
 	if err := r.updateSocialAccounts(tx.DB(), body, emp.ID); err != nil {
 		return nil, done(err)
@@ -170,6 +194,11 @@ func (r *controller) UpdateGeneralInfo(l logger.Logger, employeeID string, body 
 		"joined_date",
 		"left_date",
 		"referred_by",
+		"wise_recipient_id",
+		"wise_account_number",
+		"wise_recipient_email",
+		"wise_recipient_name",
+		"wise_currency",
 	)
 	if err != nil {
 		return nil, done(err)

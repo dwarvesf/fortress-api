@@ -1,4 +1,6 @@
 INSERT INTO public.permissions (id, deleted_at, created_at, updated_at, name, code) VALUES
+                                                                                        ('9be246ac-2e53-4268-814a-dc760afd3758', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Employee Base Salary Read', 'employees.baseSalary.read'),
+                                                                                        ('84aa4653-4bd8-428b-9521-618a67a6be6b', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Employee Base Salary Edit', 'employees.baseSalary.edit');
 ('495c96ae-60f9-4c57-bc96-9504d0fedde6', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Auth Read', 'auth.read'),
 ('5820dd37-a9bd-455e-b49b-b54ad7df180e', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Auth Create', 'auth.create'),
 ('01ed1076-4028-4fdf-9a92-cb57a8e041af', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Employee Read', 'employees.read'),
@@ -6,6 +8,8 @@ INSERT INTO public.permissions (id, deleted_at, created_at, updated_at, name, co
 ('c353c4fd-5915-47f3-a59b-66ae75eae195', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Employee Read Get Active', 'employees.read.readActive'),
 ('dc6fde9f-0b49-46d6-96bb-93be669b502b', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Employee Read Full Personal Info', 'employees.read.personalInfo.fullAccess'),
 ('f75677d6-3e22-45d4-b921-81d6a3645157', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Employee Read Full General Info', 'employees.read.generalInfo.fullAccess'),
+('9be246ac-2e53-4268-814a-dc760afd3758', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Employee Base Salary Read', 'employees.baseSalary.read'),
+('84aa4653-4bd8-428b-9521-618a67a6be6b', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Employee Base Salary Edit', 'employees.baseSalary.edit'),
 ('6add4087-e586-4313-b157-54d416bdc8d5', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Employee Read Full Project Belong to One Employee', 'employees.read.projects.fullAccess'),
 ('911df73b-b860-4319-8944-c274781591ca', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Employee Read Full Project Belong to One Employee', 'employees.read.projects.readActive'),
 ('834ce06a-2797-4974-bbdd-2dfffc431c5f', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Employee Read Filter By All Statuses', 'employees.read.filterByAllStatuses'),

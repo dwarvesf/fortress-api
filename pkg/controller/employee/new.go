@@ -42,4 +42,5 @@ type IController interface {
 	UploadAvatar(uuidUserID model.UUID, file *multipart.FileHeader, params UploadAvatarInput) (filePath string, err error)
 	UpdateRole(userID string, input UpdateRoleInput) (err error)
 	GetLineManagers(userInfo *model.CurrentLoggedUserInfo) (employees []*model.Employee, err error)
+	UpdateBaseSalary(l logger.Logger, employeeID string, body UpdateBaseSalaryInput) (employee *model.BaseSalary, err error)
 }

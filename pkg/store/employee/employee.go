@@ -45,7 +45,8 @@ func (s *store) One(db *gorm.DB, id string, preload bool) (*model.Employee, erro
 			Preload("EmployeeOrganizations.Organization", "deleted_at IS NULL").
 			Preload("Referrer", "deleted_at IS NULL").
 			Preload("Seniority").
-			Preload("LineManager")
+			Preload("LineManager").
+			Preload("BaseSalary")
 	}
 
 	var employee *model.Employee
