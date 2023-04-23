@@ -14,11 +14,12 @@ import (
 // ListEarns godoc
 // @Summary Get list items from DF earn
 // @Description Get list items from DF earn
-// @Tags earn
+// @Tags Notion
 // @Accept  json
 // @Produce  json
-// @Success 200 {object} []model.Earn
+// @Success 200 {object} view.MessageResponse
 // @Failure 400 {object} view.ErrorResponse
+// @Router /notion/earns [get]
 func (h *handler) ListEarns(c *gin.Context) {
 	resp, err := h.service.Notion.GetDatabase(h.config.Notion.Databases.Earn, nil, nil, 0)
 	if err != nil {

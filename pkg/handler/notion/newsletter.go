@@ -28,7 +28,16 @@ type ProjectChangelog struct {
 	From          From   `json:"from,omitempty"`
 }
 
-// SendNewsLetter implements IHandler
+// SendNewsLetter godoc
+// @Summary send project changelog
+// @Description send project changelog
+// @Tags Notion
+// @Accept  json
+// @Produce  json
+// @Param id path string true "id"
+// @Success 200 {object} view.MessageResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Router /notion/df-updates/{id}/send [post]
 func (h *handler) SendNewsLetter(c *gin.Context) {
 	contentID := c.Param("id")
 	isPreview := false
@@ -118,8 +127,8 @@ func (h *handler) getSubscribers(pageID, audience string) ([]*mail.Email, []stri
 		return nil, nil, err
 	}
 
-	mails := []*mail.Email{}
-	subs := []string{}
+	var mails []*mail.Email
+	var subs []string
 	for i := range records {
 		props := records[i].Properties.(nt.DatabasePageProperties)
 		var name string

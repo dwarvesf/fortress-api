@@ -49,6 +49,15 @@ func parseProjectChangelogNotionMessageFromCtx(c *gin.Context) (ProjectChangelog
 	return msg, nil
 }
 
+// GetAvailableProjectsChangelog godoc
+// @Summary get available projects changelog
+// @Description get available projects changelog
+// @Tags Notion
+// @Accept  json
+// @Produce  json
+// @Success 200 {object} view.MessageResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Router /notion/changelogs/projects/available [get]
 func (h *handler) GetAvailableProjectsChangelog(c *gin.Context) {
 	projects, err := h.service.Notion.ListProject()
 	if err != nil {
@@ -58,7 +67,15 @@ func (h *handler) GetAvailableProjectsChangelog(c *gin.Context) {
 	c.JSON(http.StatusOK, view.CreateResponse[any](projects, nil, nil, nil, ""))
 }
 
-// SendProjectChangelog implements IHandler
+// SendProjectChangelog godoc
+// @Summary send project changelog
+// @Description send project changelog
+// @Tags Notion
+// @Accept  json
+// @Produce  json
+// @Success 200 {object} view.MessageResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Router /notion/changelogs/project [post]
 func (h *handler) SendProjectChangelog(c *gin.Context) {
 	msg, err := parseProjectChangelogNotionMessageFromCtx(c)
 	if err != nil {

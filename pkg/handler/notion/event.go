@@ -16,11 +16,12 @@ import (
 // ListEvents godoc
 // @Summary Get list events from DF Dwarves Community Events
 // @Description Get list events from DF Dwarves Community Events
-// @Tags events
+// @Tags Notion
 // @Accept  json
 // @Produce  json
-// @Success 200 {object} []model.Event
+// @Success 200 {object} view.MessageResponse
 // @Failure 400 {object} view.ErrorResponse
+// @Router /notion/events [get]
 func (h *handler) ListEvents(c *gin.Context) {
 	filter := &notion.DatabaseQueryFilter{}
 
@@ -67,7 +68,7 @@ func (h *handler) ListEvents(c *gin.Context) {
 		return
 	}
 
-	var events []model.Event
+	var events []model.NotionEvent
 
 	for _, r := range resp.Results {
 		props := r.Properties.(notion.DatabasePageProperties)
@@ -88,7 +89,7 @@ func (h *handler) ListEvents(c *gin.Context) {
 			date.HasTime = props["Date"].Date.Start.HasTime()
 		}
 
-		events = append(events, model.Event{
+		events = append(events, model.NotionEvent{
 			ID:           r.ID,
 			Name:         name,
 			ActivityType: activityType,

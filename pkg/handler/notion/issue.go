@@ -15,11 +15,12 @@ import (
 // ListIssues godoc
 // @Summary Get list issues from DF Issues & Resolution Log
 // @Description Get list issues from DF Issues & Resolution Log
-// @Tags issue
+// @Tags Notion
 // @Accept  json
 // @Produce  json
-// @Success 200 {object} []model.Issue
+// @Success 200 {object} view.MessageResponse
 // @Failure 400 {object} view.ErrorResponse
+// @Router /notion/issues [get]
 func (h *handler) ListIssues(c *gin.Context) {
 	resp, err := h.service.Notion.GetDatabase(h.config.Notion.Databases.Issue, nil, []notion.DatabaseQuerySort{
 		{

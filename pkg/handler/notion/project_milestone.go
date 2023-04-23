@@ -14,6 +14,15 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/view"
 )
 
+// ListProjectMilestones godoc
+// @Summary Get list  project milestones
+// @Description Get list  project milestones
+// @Tags Notion
+// @Accept  json
+// @Produce  json
+// @Success 200 {object} view.MessageResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Router /notion/projects/milestones [get]
 func (h *handler) ListProjectMilestones(c *gin.Context) {
 	filter := &notion.DatabaseQueryFilter{}
 

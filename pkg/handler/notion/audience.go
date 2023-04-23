@@ -14,11 +14,12 @@ import (
 // ListAudiences godoc
 // @Summary Get list audiences from DF Audience
 // @Description Get list audiences from DF Audience
-// @Tags Audience
+// @Tags Notion
 // @Accept  json
 // @Produce  json
-// @Success 200 {object} []model.Audience
+// @Success 200 {object} view.MessageResponse
 // @Failure 400 {object} view.ErrorResponse
+// @Router /notion/audiences [get]
 func (h *handler) ListAudiences(c *gin.Context) {
 	filter := &notion.DatabaseQueryFilter{}
 

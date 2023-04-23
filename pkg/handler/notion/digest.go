@@ -14,11 +14,12 @@ import (
 // ListDigests godoc
 // @Summary Get list digests from DF Internal Digest
 // @Description Get list digests from DF Internal Digest
-// @Tags digests
+// @Tags Notion
 // @Accept  json
 // @Produce  json
-// @Success 200 {object} []model.Digest
+// @Success 200 {object} view.MessageResponse
 // @Failure 400 {object} view.ErrorResponse
+// @Router /notion/digests [get]
 func (h *handler) ListDigests(c *gin.Context) {
 	resp, err := h.service.Notion.GetDatabase(h.config.Notion.Databases.Digest, nil, []notion.DatabaseQuerySort{
 		{

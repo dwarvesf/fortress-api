@@ -13,11 +13,12 @@ import (
 // ListMemos godoc
 // @Summary Get list memos from DF Memos
 // @Description Get list memos from DF Memos
-// @Tags memos
+// @Tags Notion
 // @Accept  json
 // @Produce  json
-// @Success 200 {object} []model.NotionMemo
+// @Success 200 {object} view.MessageResponse
 // @Failure 400 {object} view.ErrorResponse
+// @Router /notion/memos [get]
 func (h *handler) ListMemos(c *gin.Context) {
 	resp, err := h.service.Notion.GetDatabase(h.config.Notion.Databases.Memo, nil, []notion.DatabaseQuerySort{
 		{

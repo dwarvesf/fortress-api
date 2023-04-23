@@ -18,11 +18,12 @@ import (
 // ListTechRadars godoc
 // @Summary Get list items from DF TechRadar
 // @Description Get list items from DF TechRadar
-// @Tags TechRadar
+// @Tags Notion
 // @Accept  json
 // @Produce  json
-// @Success 200 {object} []model.TechRadar
+// @Success 200 {object} view.MessageResponse
 // @Failure 400 {object} view.ErrorResponse
+// @Router /notion/tech-radars [get]
 func (h *handler) ListTechRadars(c *gin.Context) {
 	filter := &notion.DatabaseQueryFilter{}
 
@@ -121,8 +122,8 @@ func (h *handler) ListTechRadars(c *gin.Context) {
 // @Tags TechRadar
 // @Accept  json
 // @Produce  json
-// @Param body body model.TechRadar true "body for create tech radar item"
-// @Success 200 {object} model.TechRadar
+// @Param body body model.NotionTechRadar true "body for create tech radar item"
+// @Success 200 {object} view.MessageResponse
 // @Failure 400 {object} view.ErrorResponse
 func (h *handler) CreateTechRadar(c *gin.Context) {
 	var input model.NotionTechRadar

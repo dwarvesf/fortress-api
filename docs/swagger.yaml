@@ -15,21 +15,6 @@ definitions:
       name:
         type: string
     type: object
-  model.Audience:
-    properties:
-      created_at:
-        type: string
-      email:
-        type: string
-      full_name:
-        type: string
-      id:
-        type: string
-      source:
-        items:
-          type: string
-        type: array
-    type: object
   model.BankAccount:
     properties:
       accountNumber:
@@ -251,51 +236,6 @@ definitions:
         type: string
       updatedAt:
         type: string
-    type: object
-  model.DateTime:
-    properties:
-      has_time:
-        type: boolean
-      time:
-        type: string
-    type: object
-  model.Digest:
-    properties:
-      created_at:
-        type: string
-      id:
-        type: string
-      name:
-        type: string
-    type: object
-  model.Earn:
-    properties:
-      due_date:
-        type: string
-      function:
-        items:
-          type: string
-        type: array
-      id:
-        type: string
-      name:
-        type: string
-      pics:
-        items:
-          $ref: '#/definitions/model.Employee'
-        type: array
-      priority:
-        type: string
-      progress:
-        type: integer
-      reward:
-        type: integer
-      status:
-        type: string
-      tags:
-        items:
-          type: string
-        type: array
     type: object
   model.Employee:
     properties:
@@ -584,34 +524,6 @@ definitions:
       updatedAt:
         type: string
     type: object
-  model.Event:
-    properties:
-      activity_type:
-        type: string
-      created_at:
-        type: string
-      date:
-        $ref: '#/definitions/model.DateTime'
-      id:
-        type: string
-      name:
-        type: string
-    type: object
-  model.HiringPosition:
-    properties:
-      created_at:
-        type: string
-      id:
-        type: string
-      name:
-        type: string
-      project:
-        items:
-          type: string
-        type: array
-      status:
-        type: string
-    type: object
   model.Invoice:
     properties:
       bank:
@@ -696,39 +608,6 @@ definitions:
       year:
         type: integer
     type: object
-  model.Issue:
-    properties:
-      id:
-        type: string
-      incident_date:
-        type: string
-      name:
-        type: string
-      pic:
-        type: string
-      priority:
-        type: string
-      profile:
-        type: string
-      projects:
-        items:
-          type: string
-        type: array
-      resolution:
-        type: string
-      rootcause:
-        type: string
-      scope:
-        type: string
-      severity:
-        type: string
-      solve_date:
-        type: string
-      source:
-        type: string
-      status:
-        type: string
-    type: object
   model.LikertScaleCount:
     properties:
       agree:
@@ -742,15 +621,21 @@ definitions:
       stronglyDisagree:
         type: integer
     type: object
-  model.Memo:
+  model.NotionTechRadar:
     properties:
-      author:
+      assign:
         type: string
-      created_at:
-        type: string
+      categories:
+        items:
+          type: string
+        type: array
       id:
         type: string
       name:
+        type: string
+      quadrant:
+        type: string
+      ring:
         type: string
       tags:
         items:
@@ -1230,47 +1115,6 @@ definitions:
       name:
         type: string
       updatedAt:
-        type: string
-    type: object
-  model.StaffingDemand:
-    properties:
-      id:
-        type: string
-      name:
-        type: string
-      request:
-        type: string
-    type: object
-  model.TechRadar:
-    properties:
-      assign:
-        type: string
-      categories:
-        items:
-          type: string
-        type: array
-      id:
-        type: string
-      name:
-        type: string
-      quadrant:
-        type: string
-      ring:
-        type: string
-      tags:
-        items:
-          type: string
-        type: array
-    type: object
-  model.Update:
-    properties:
-      audience:
-        type: string
-      created_at:
-        type: string
-      id:
-        type: string
-      name:
         type: string
     type: object
   model.Valuation:
@@ -1810,6 +1654,19 @@ definitions:
     required:
     - answers
     - status
+    type: object
+  request.UpdateBaseSalaryInput:
+    properties:
+      baseSalaryID:
+        type: string
+      companyAccountAmount:
+        type: integer
+      contractAmount:
+        type: integer
+      currencyID:
+        type: string
+      personalAccountAmount:
+        type: integer
     type: object
   request.UpdateClientContactInput:
     properties:
@@ -2356,6 +2213,33 @@ definitions:
       ukSortCode:
         type: string
     type: object
+  view.BaseSalary:
+    properties:
+      batch:
+        type: integer
+      category:
+        type: string
+      company_account_amount:
+        type: integer
+      contract_amount:
+        type: integer
+      currency:
+        $ref: '#/definitions/view.Currency'
+      currency_id:
+        type: string
+      effective_date:
+        type: string
+      employee_id:
+        type: string
+      id:
+        type: string
+      insurance_amount:
+        type: integer
+      personal_account_amount:
+        type: integer
+      type:
+        type: string
+    type: object
   view.BasicBankAccountInfo:
     properties:
       accountNumber:
@@ -2717,6 +2601,8 @@ definitions:
         type: string
       avatar:
         type: string
+      baseSalary:
+        $ref: '#/definitions/view.BaseSalary'
       birthday:
         type: string
       chapters:
@@ -3098,13 +2984,6 @@ definitions:
         type: string
       trend:
         $ref: '#/definitions/view.EngineeringHealthTrend'
-    type: object
-  view.HiringResponse:
-    properties:
-      data:
-        items:
-          $ref: '#/definitions/model.HiringPosition'
-        type: array
     type: object
   view.Invoice:
     properties:
@@ -3830,6 +3709,11 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/view.UnreadFeedbackCountData'
+    type: object
+  view.UpdateBaseSalaryResponse:
+    properties:
+      data:
+        $ref: '#/definitions/view.BaseSalary'
     type: object
   view.UpdateEmployeeStatusResponse:
     properties:
@@ -5153,6 +5037,50 @@ paths:
       summary: Get employee by id
       tags:
       - Employee
+  /employees/{id}/base-salary:
+    put:
+      consumes:
+      - application/json
+      description: Update employee's base salary by employee and base salary id
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Employee ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Body
+        in: body
+        name: Body
+        required: true
+        schema:
+          $ref: '#/definitions/request.UpdateBaseSalaryInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.UpdateBaseSalaryResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Update employee's base salary by employee and base salary id
+      tags:
+      - Employee
   /employees/{id}/employee-status:
     put:
       consumes:
@@ -5618,25 +5546,6 @@ paths:
       summary: Get number of unread inbox for user
       tags:
       - Feedback
-  /hiring-positions:
-    get:
-      consumes:
-      - application/json
-      description: Get list hirings from DF Dwarves Hiring
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/view.HiringResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/view.ErrorResponse'
-      summary: Get list hirings from DF Dwarves Hiring
-      tags:
-      - hiring
   /invoices/{id}/status:
     put:
       consumes:
@@ -6318,6 +6227,278 @@ paths:
       summary: Get list values for working status
       tags:
       - Metadata
+  /notion/audiences:
+    get:
+      consumes:
+      - application/json
+      description: Get list audiences from DF Audience
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get list audiences from DF Audience
+      tags:
+      - Notion
+  /notion/changelogs/project:
+    post:
+      consumes:
+      - application/json
+      description: send project changelog
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: send project changelog
+      tags:
+      - Notion
+  /notion/changelogs/projects/available:
+    get:
+      consumes:
+      - application/json
+      description: get available projects changelog
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: get available projects changelog
+      tags:
+      - Notion
+  /notion/df-updates/{id}/send:
+    post:
+      consumes:
+      - application/json
+      description: send project changelog
+      parameters:
+      - description: id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: send project changelog
+      tags:
+      - Notion
+  /notion/digests:
+    get:
+      consumes:
+      - application/json
+      description: Get list digests from DF Internal Digest
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get list digests from DF Internal Digest
+      tags:
+      - Notion
+  /notion/earns:
+    get:
+      consumes:
+      - application/json
+      description: Get list items from DF earn
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get list items from DF earn
+      tags:
+      - Notion
+  /notion/events:
+    get:
+      consumes:
+      - application/json
+      description: Get list events from DF Dwarves Community Events
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get list events from DF Dwarves Community Events
+      tags:
+      - Notion
+  /notion/hiring-positions:
+    get:
+      consumes:
+      - application/json
+      description: Get list hiring from DF Dwarves Hiring
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get list hiring from DF Dwarves Hiring
+      tags:
+      - Notion
+  /notion/issues:
+    get:
+      consumes:
+      - application/json
+      description: Get list issues from DF Issues & Resolution Log
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get list issues from DF Issues & Resolution Log
+      tags:
+      - Notion
+  /notion/memos:
+    get:
+      consumes:
+      - application/json
+      description: Get list memos from DF Memos
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get list memos from DF Memos
+      tags:
+      - Notion
+  /notion/projects/milestones:
+    get:
+      consumes:
+      - application/json
+      description: Get list  project milestones
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get list  project milestones
+      tags:
+      - Notion
+  /notion/staffing-demands:
+    get:
+      consumes:
+      - application/json
+      description: Get list  staffing demands from DF Staffing Demand
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get list  staffing demands from DF Staffing Demand
+      tags:
+      - Notion
+  /notion/tech-radars:
+    get:
+      consumes:
+      - application/json
+      description: Get list items from DF TechRadar
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get list items from DF TechRadar
+      tags:
+      - Notion
+  /notion/update:
+    get:
+      consumes:
+      - application/json
+      description: Get list updates from DF Updates
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get list updates from DF Updates
+      tags:
+      - Notion
   /profile:
     get:
       consumes:

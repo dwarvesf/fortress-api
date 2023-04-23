@@ -14,11 +14,12 @@ import (
 // ListUpdates godoc
 // @Summary Get list updates from DF Updates
 // @Description Get list updates from DF Updates
-// @Tags updates
+// @Tags Notion
 // @Accept  json
 // @Produce  json
-// @Success 200 {object} []model.NotionUpdate
+// @Success 200 {object} view.MessageResponse
 // @Failure 400 {object} view.ErrorResponse
+// @Router /notion/update [get]
 func (h *handler) ListUpdates(c *gin.Context) {
 	resp, err := h.service.Notion.GetDatabase(h.config.Notion.Databases.Updates, nil, []notion.DatabaseQuerySort{
 		{
