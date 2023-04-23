@@ -28,7 +28,12 @@
             "code": "lorem-ipsum",
             "function": "",
             "auditNotionID": "",
-            "bankAccount": null,
+            "bankAccount": {
+                "id": "e79eb5b3-e2cb-4d7f-9273-46f4be88cb20",
+                "accountNumber": "1234567891",
+                "bankName": "OCB",
+                "ownerName": "Phạm Văn Đạt"
+            },
             "client": null,
             "companyInfo": null,
             "organization": {
@@ -36,6 +41,14 @@
                 "code": "dwarves-foundation",
                 "name": "Dwarves Foundation",
                 "avatar": ""
+            },
+            "monthlyChargeRate": "0",
+            "currency": {
+                "id": "06a699ed-618b-400b-ac8c-8739956fa8e7",
+                "name": "GBP",
+                "symbol": "£",
+                "locale": "en-gb",
+                "type": "fiat"
             }
         }
     ]

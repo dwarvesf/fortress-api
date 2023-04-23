@@ -64,6 +64,8 @@ func (s *store) All(db *gorm.DB, input GetListProjectInput, pagination model.Pag
 		Preload("Organization", "deleted_at IS NULL").
 		Preload("Heads", `deleted_at IS NULL AND (end_date IS NULL OR end_date > now())`).
 		Preload("Heads.Employee").
+		Preload("BankAccount", "deleted_at IS NULL").
+		Preload("BankAccount.Currency", "deleted_at IS NULL").
 		Offset(offset)
 
 	return projects, total, query.Find(&projects).Error
