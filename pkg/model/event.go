@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-type Event struct {
+type NotionEvent struct {
 	ID           string    `json:"id"`
 	Name         string    `json:"name"`
 	Date         DateTime  `json:"date"`

@@ -43,6 +43,14 @@ type UpdateEmployeeGeneralInfoInput struct {
 	ReferredBy      model.UUID   `form:"referredBy" json:"referredBy"`
 }
 
+type UpdateBaseSalaryInput struct {
+	BaseSalaryID          model.UUID `form:"baseSalaryID" json:"baseSalaryID"`
+	ContractAmount        int64      `form:"contractAmount" json:"contractAmount"`
+	CompanyAccountAmount  int64      `form:"companyAccountAmount" json:"companyAccountAmount"`
+	PersonalAccountAmount int64      `form:"personalAccountAmount" json:"personalAccountAmount"`
+	CurrencyID            model.UUID `form:"currencyID" json:"currencyID"`
+}
+
 type AddMenteeInput struct {
 	MenteeID model.UUID `form:"menteeID" json:"menteeID" binding:"required"`
 }

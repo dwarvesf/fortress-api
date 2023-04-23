@@ -15,12 +15,12 @@ import (
 // ListHiringPositions godoc
 // @Summary Get list hiring from DF Dwarves Hiring
 // @Description Get list hiring from DF Dwarves Hiring
-// @Tags hiring
+// @Tags Notion
 // @Accept  json
 // @Produce  json
-// @Success 200 {object} view.HiringResponse
+// @Success 200 {object} view.MessageResponse
 // @Failure 400 {object} view.ErrorResponse
-// @Router /hiring-positions [get]
+// @Router /notion/hiring-positions [get]
 func (h *handler) ListHiringPositions(c *gin.Context) {
 	filter := &notion.DatabaseQueryFilter{}
 

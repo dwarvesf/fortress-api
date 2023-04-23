@@ -14,11 +14,12 @@ import (
 // ListStaffingDemands godoc
 // @Summary Get list  staffing demands from DF Staffing Demand
 // @Description Get list  staffing demands from DF Staffing Demand
-// @Tags staffing-demands
+// @Tags Notion
 // @Accept  json
 // @Produce  json
-// @Success 200 {object} []model.StaffingDemand
+// @Success 200 {object} view.MessageResponse
 // @Failure 400 {object} view.ErrorResponse
+// @Router /notion/staffing-demands [get]
 func (h *handler) ListStaffingDemands(c *gin.Context) {
 	resp, err := h.service.Notion.GetDatabase(h.config.Notion.Databases.StaffingDemand, nil, nil, 0)
 	if err != nil {
