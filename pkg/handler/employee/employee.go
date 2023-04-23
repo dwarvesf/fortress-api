@@ -281,22 +281,27 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 	})
 
 	requestBody := employee.UpdateEmployeeGeneralInfoInput{
-		FullName:        body.FullName,
-		Email:           body.Email,
-		Phone:           body.Phone,
-		LineManagerID:   body.LineManagerID,
-		DisplayName:     body.DisplayName,
-		GithubID:        body.GithubID,
-		NotionID:        body.NotionID,
-		NotionName:      body.NotionName,
-		NotionEmail:     body.NotionEmail,
-		DiscordID:       body.DiscordID,
-		DiscordName:     body.DiscordName,
-		LinkedInName:    body.LinkedInName,
-		LeftDate:        body.LeftDate,
-		JoinedDate:      body.JoinedDate,
-		OrganizationIDs: body.OrganizationIDs,
-		ReferredBy:      body.ReferredBy,
+		FullName:           body.FullName,
+		Email:              body.Email,
+		Phone:              body.Phone,
+		LineManagerID:      body.LineManagerID,
+		DisplayName:        body.DisplayName,
+		GithubID:           body.GithubID,
+		NotionID:           body.NotionID,
+		NotionName:         body.NotionName,
+		NotionEmail:        body.NotionEmail,
+		DiscordID:          body.DiscordID,
+		DiscordName:        body.DiscordName,
+		LinkedInName:       body.LinkedInName,
+		LeftDate:           body.LeftDate,
+		JoinedDate:         body.JoinedDate,
+		OrganizationIDs:    body.OrganizationIDs,
+		ReferredBy:         body.ReferredBy,
+		WiseRecipientID:    body.WiseRecipientID,
+		WiseAccountNumber:  body.WiseAccountNumber,
+		WiseRecipientEmail: body.WiseRecipientEmail,
+		WiseRecipientName:  body.WiseRecipientName,
+		WiseCurrency:       body.WiseCurrency,
 	}
 
 	emp, err := h.controller.Employee.UpdateGeneralInfo(h.logger, employeeID, requestBody)
@@ -663,4 +668,58 @@ func (h *handler) GetLineManagers(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToBasicEmployees(managers), nil, nil, nil, ""))
+}
+
+// UpdateBaseSalary godoc
+// @Summary Update employee's base salary by employee and base salary id
+// @Description Update employee's base salary by employee and base salary id
+// @Tags Employee
+// @Accept  json
+// @Produce  json
+// @Param Authorization header string true "jwt token"
+// @Param id path string true "Employee ID"
+// @Param Body body request.UpdateBaseSalaryInput true "Body"
+// @Success 200 {object} view.UpdateBaseSalaryResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /employees/{id}/base-salary [put]
+func (h *handler) UpdateBaseSalary(c *gin.Context) {
+	employeeID := c.Param("id")
+	if employeeID == "" || !model.IsUUIDFromString(employeeID) {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidEmployeeID, nil, ""))
+		return
+	}
+
+	var req request.UpdateBaseSalaryInput
+	if err := c.ShouldBindJSON(&req); err != nil {
+		if err != nil {
+			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, req, ""))
+			return
+		}
+	}
+
+	l := h.logger.Fields(logger.Fields{
+		"handler": "employee",
+		"method":  "UpdateBaseSalary",
+		"request": req,
+	})
+
+	requestBody := employee.UpdateBaseSalaryInput{
+		ContractAmount:        req.ContractAmount,
+		CompanyAccountAmount:  req.CompanyAccountAmount,
+		PersonalAccountAmount: req.PersonalAccountAmount,
+		CurrencyCode:          req.CurrencyCode,
+		EffectiveDate:         req.EffectiveDate,
+		Batch:                 req.Batch,
+	}
+
+	emp, err := h.controller.Employee.UpdateBaseSalary(h.logger, employeeID, requestBody)
+	if err != nil {
+		l.Error(err, "failed to update base salary")
+		errs.ConvertControllerErr(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToBaseSalary(emp), nil, nil, nil, ""))
 }

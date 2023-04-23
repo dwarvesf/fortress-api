@@ -1657,16 +1657,24 @@ definitions:
     type: object
   request.UpdateBaseSalaryInput:
     properties:
-      baseSalaryID:
-        type: string
+      batch:
+        type: integer
       companyAccountAmount:
+        minimum: 0
         type: integer
       contractAmount:
+        minimum: 0
         type: integer
-      currencyID:
+      currencyCode:
+        type: string
+      effectiveDate:
         type: string
       personalAccountAmount:
+        minimum: 0
         type: integer
+    required:
+    - batch
+    - currencyCode
     type: object
   request.UpdateClientContactInput:
     properties:

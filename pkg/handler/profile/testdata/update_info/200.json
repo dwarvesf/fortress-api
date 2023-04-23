@@ -16,6 +16,11 @@
         "address": "201 Đường 3/2, Quận 10",
         "country": "Vietnam",
         "city": "Hồ Chí Minh",
-        "linkedInName": ""
+        "linkedInName": "",
+        "wiseRecipientID": "012456",
+        "wiseRecipientEmail": "thanhpd@gmail.com",
+        "wiseRecipientName": "Thanh Pham",
+        "wiseAccountNumber": "12531235",
+        "wiseCurrency": "VND"
     }
 }

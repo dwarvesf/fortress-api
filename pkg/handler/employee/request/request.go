@@ -25,30 +25,36 @@ type GetListEmployeeInput struct {
 }
 
 type UpdateEmployeeGeneralInfoInput struct {
-	FullName        string       `form:"fullName" json:"fullName" binding:"required,max=99"`
-	Email           string       `form:"email" json:"email" binding:"required,email"`
-	Phone           string       `form:"phone" json:"phone" binding:"required,max=18,min=9"`
-	LineManagerID   model.UUID   `form:"lineManagerID" json:"lineManagerID"`
-	DisplayName     string       `form:"displayName" json:"displayName"`
-	GithubID        string       `form:"githubID" json:"githubID"`
-	NotionID        string       `form:"notionID" json:"notionID"`
-	NotionName      string       `form:"notionName" json:"notionName"`
-	NotionEmail     string       `form:"notionEmail" json:"notionEmail"`
-	DiscordID       string       `form:"discordID" json:"discordID"`
-	DiscordName     string       `form:"discordName" json:"discordName"`
-	LinkedInName    string       `form:"linkedInName" json:"linkedInName"`
-	LeftDate        string       `form:"leftDate" json:"leftDate"`
-	JoinedDate      string       `form:"joinedDate" json:"joinedDate"`
-	OrganizationIDs []model.UUID `form:"organizationIDs" json:"organizationIDs"`
-	ReferredBy      model.UUID   `form:"referredBy" json:"referredBy"`
+	FullName           string       `form:"fullName" json:"fullName" binding:"required,max=99"`
+	Email              string       `form:"email" json:"email" binding:"required,email"`
+	Phone              string       `form:"phone" json:"phone" binding:"required,max=18,min=9"`
+	LineManagerID      model.UUID   `form:"lineManagerID" json:"lineManagerID"`
+	DisplayName        string       `form:"displayName" json:"displayName"`
+	GithubID           string       `form:"githubID" json:"githubID"`
+	NotionID           string       `form:"notionID" json:"notionID"`
+	NotionName         string       `form:"notionName" json:"notionName"`
+	NotionEmail        string       `form:"notionEmail" json:"notionEmail"`
+	DiscordID          string       `form:"discordID" json:"discordID"`
+	DiscordName        string       `form:"discordName" json:"discordName"`
+	LinkedInName       string       `form:"linkedInName" json:"linkedInName"`
+	LeftDate           string       `form:"leftDate" json:"leftDate"`
+	JoinedDate         string       `form:"joinedDate" json:"joinedDate"`
+	OrganizationIDs    []model.UUID `form:"organizationIDs" json:"organizationIDs"`
+	ReferredBy         model.UUID   `form:"referredBy" json:"referredBy"`
+	WiseRecipientID    string       `form:"wiseRecipientID" json:"wiseRecipientID"`
+	WiseRecipientEmail string       `form:"wiseRecipientEmail" json:"wiseRecipientEmail"`
+	WiseRecipientName  string       `form:"wiseRecipientName" json:"wiseRecipientName"`
+	WiseAccountNumber  string       `form:"wiseAccountNumber" json:"wiseAccountNumber"`
+	WiseCurrency       string       `form:"wiseCurrency" json:"wiseCurrency"`
 }
 
 type UpdateBaseSalaryInput struct {
-	BaseSalaryID          model.UUID `form:"baseSalaryID" json:"baseSalaryID"`
-	ContractAmount        int64      `form:"contractAmount" json:"contractAmount"`
-	CompanyAccountAmount  int64      `form:"companyAccountAmount" json:"companyAccountAmount"`
-	PersonalAccountAmount int64      `form:"personalAccountAmount" json:"personalAccountAmount"`
-	CurrencyID            model.UUID `form:"currencyID" json:"currencyID"`
+	ContractAmount        int64      `form:"contractAmount" json:"contractAmount" binding:"gte=0"`
+	CompanyAccountAmount  int64      `form:"companyAccountAmount" json:"companyAccountAmount" binding:"gte=0"`
+	PersonalAccountAmount int64      `form:"personalAccountAmount" json:"personalAccountAmount" binding:"gte=0"`
+	CurrencyCode          string     `form:"currencyCode" json:"currencyCode" binding:"required"`
+	EffectiveDate         *time.Time `form:"effectiveDate" json:"effectiveDate"`
+	Batch                 int        `form:"batch" json:"batch" binding:"required,eq=1|eq=15"`
 }
 
 type AddMenteeInput struct {
