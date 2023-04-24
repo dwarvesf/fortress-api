@@ -671,3 +671,29 @@ func (h *handler) GetQuestions(c *gin.Context) {
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToListQuestion(rs), nil, nil, nil, ""))
 }
+
+// GetCurrencies godoc
+// @Summary Get list currencies
+// @Description Get list currencies
+// @Tags Metadata
+// @Accept  json
+// @Produce  json
+// @Success 200 {object} view.GetCurrenciesResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /metadata/currencies [get]
+func (h *handler) GetCurrencies(c *gin.Context) {
+	l := h.logger.Fields(logger.Fields{
+		"handler": "metadata",
+		"method":  "GetCurrencies",
+	})
+
+	rs, err := h.store.Currency.GetList(h.repo.DB())
+	if err != nil {
+		l.Error(err, "failed to get question from db")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToCurrencies(rs), nil, nil, nil, ""))
+}
