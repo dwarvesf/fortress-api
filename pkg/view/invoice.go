@@ -11,10 +11,6 @@ type CreateInvoiceResponse struct {
 	Data *model.Invoice `json:"data"`
 }
 
-type GetLatestInvoiceResponse struct {
-	Data *model.Invoice `json:"data"`
-}
-
 type Invoice struct {
 	Number           string        `json:"number"`
 	InvoicedAt       *time.Time    `json:"invoicedAt"`
@@ -246,4 +242,105 @@ func ToInvoiceTemplateResponse(p *model.Project, lastInvoice *model.Invoice, nex
 		BankAccount:   bankAccount,
 		CompanyInfo:   companyInfo,
 	}, nil
+}
+
+type InvoiceData struct {
+	Invoice
+	ProjectName string      `json:"projectName"`
+	BankAccount BankAccount `json:"bankAccount"`
+	CompanyInfo CompanyInfo `json:"companyInfo"`
+	Client      ClientInfo  `json:"client"`
+}
+
+type InvoiceListResponse struct {
+	Data []InvoiceData `json:"data"`
+}
+
+func ToInvoiceListResponse(invoices []*model.Invoice) ([]InvoiceData, error) {
+	rs := make([]InvoiceData, 0)
+
+	for _, invoice := range invoices {
+		iv, err := ToInvoiceInfo(invoice)
+		if err != nil {
+			return nil, err
+		}
+
+		bankAccount := BankAccount{}
+		if invoice.Bank != nil {
+			currency := Currency{}
+			if invoice.Bank.Currency != nil {
+				currency = Currency{
+					ID:     invoice.Bank.Currency.ID.String(),
+					Name:   invoice.Bank.Currency.Name,
+					Symbol: invoice.Bank.Currency.Symbol,
+					Locale: invoice.Bank.Currency.Locale,
+					Type:   invoice.Bank.Currency.Type,
+				}
+			}
+			bankAccount = BankAccount{
+				ID:            invoice.Bank.ID.String(),
+				AccountNumber: invoice.Bank.AccountNumber,
+				BankName:      invoice.Bank.BankName,
+				OwnerName:     invoice.Bank.OwnerName,
+				Address:       invoice.Bank.Address,
+				SwiftCode:     invoice.Bank.SwiftCode,
+				RoutingNumber: invoice.Bank.RoutingNumber,
+				Name:          invoice.Bank.Name,
+				UKSortCode:    invoice.Bank.UKSortCode,
+				CurrencyID:    invoice.Bank.CurrencyID.String(),
+				Currency:      currency,
+			}
+		}
+
+		companyInfo := CompanyInfo{}
+		clientInfo := ClientInfo{}
+		if invoice.Project != nil {
+			if invoice.Project.CompanyInfo != nil {
+				companyContact := make(map[string]model.CompanyContactInfo)
+				_ = json.Unmarshal(invoice.Project.CompanyInfo.Info.Bytes, &companyContact)
+
+				companyInfo = CompanyInfo{
+					ID:                 invoice.Project.CompanyInfo.ID.String(),
+					Name:               invoice.Project.CompanyInfo.Name,
+					Description:        invoice.Project.CompanyInfo.Description,
+					RegistrationNumber: invoice.Project.CompanyInfo.RegistrationNumber,
+					Info:               companyContact,
+				}
+			}
+
+			if invoice.Project.Client != nil {
+				contacts := make([]ClientContactInfo, 0)
+				for _, c := range invoice.Project.Client.Contacts {
+					emails := make([]string, 0)
+					err := json.Unmarshal(c.Emails, &emails)
+					if err != nil {
+						return nil, err
+					}
+
+					contacts = append(contacts, ClientContactInfo{
+						ID:            c.ID.String(),
+						Name:          c.Name,
+						Role:          c.Role,
+						Emails:        emails,
+						IsMainContact: c.IsMainContact,
+					})
+				}
+				clientInfo = ClientInfo{
+					ClientCompany: invoice.Project.Client.Name,
+					ClientAddress: invoice.Project.Client.Address,
+					Contacts:      contacts,
+				}
+			}
+		}
+
+		rs = append(rs, InvoiceData{
+			Invoice:     *iv,
+			ProjectName: invoice.Project.Name,
+			BankAccount: bankAccount,
+			CompanyInfo: companyInfo,
+			Client:      clientInfo,
+		})
+	}
+
+	return rs, nil
 }

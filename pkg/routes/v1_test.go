@@ -649,10 +649,10 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/invoice.IHandler.UpdateStatus-fm",
 			},
 		},
-		"/api/v1/invoices/latest": {
+		"/api/v1/invoices": {
 			"GET": {
 				Method:  "GET",
-				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/invoice.IHandler.GetLatestInvoice-fm",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/invoice.IHandler.List-fm",
 			},
 		},
 		"/api/v1/invoices/template": {
