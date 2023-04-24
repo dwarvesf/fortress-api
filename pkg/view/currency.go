@@ -22,3 +22,15 @@ func toCurrency(c *model.Currency) *Currency {
 		Type:   c.Type,
 	}
 }
+
+func ToCurrencies(c []model.Currency) []Currency {
+	rs := make([]Currency, 0)
+	for i := range c {
+		rs = append(rs, *toCurrency(&c[i]))
+	}
+	return rs
+}
+
+type GetCurrenciesResponse struct {
+	Data []Currency `json:"data"`
+}

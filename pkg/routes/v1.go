@@ -86,6 +86,7 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 	v1.GET("/metadata/roles", h.Metadata.GetRoles)
 	v1.GET("/metadata/positions", h.Metadata.Positions)
 	v1.GET("/metadata/countries", h.Metadata.GetCountries)
+	v1.GET("/metadata/currencies", h.Metadata.GetCurrencies)
 	v1.GET("/metadata/countries/:country_id/cities", h.Metadata.GetCities)
 	v1.GET("/metadata/project-statuses", h.Metadata.ProjectStatuses)
 	v1.GET("/metadata/questions", h.Metadata.GetQuestions)

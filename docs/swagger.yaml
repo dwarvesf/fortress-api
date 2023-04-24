@@ -1770,6 +1770,16 @@ definitions:
         type: string
       referredBy:
         type: string
+      wiseAccountNumber:
+        type: string
+      wiseCurrency:
+        type: string
+      wiseRecipientEmail:
+        type: string
+      wiseRecipientID:
+        type: string
+      wiseRecipientName:
+        type: string
     required:
     - email
     - fullName
@@ -1802,6 +1812,16 @@ definitions:
         minLength: 8
         type: string
       placeOfResidence:
+        type: string
+      wiseAccountNumber:
+        type: string
+      wiseCurrency:
+        type: string
+      wiseRecipientEmail:
+        type: string
+      wiseRecipientID:
+        type: string
+      wiseRecipientName:
         type: string
     required:
     - personalEmail
@@ -2699,6 +2719,16 @@ definitions:
         type: string
       username:
         type: string
+      wiseAccountNumber:
+        type: string
+      wiseCurrency:
+        type: string
+      wiseRecipientEmail:
+        type: string
+      wiseRecipientID:
+        type: string
+      wiseRecipientName:
+        type: string
     type: object
   view.EmployeeListDataResponse:
     properties:
@@ -2898,6 +2928,13 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/view.FeedBackReviewDetail'
+    type: object
+  view.GetCurrenciesResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/view.Currency'
+        type: array
     type: object
   view.GetDashboardResourceUtilizationResponse:
     properties:
@@ -3266,6 +3303,16 @@ definitions:
         type: string
       username:
         type: string
+      wiseAccountNumber:
+        type: string
+      wiseCurrency:
+        type: string
+      wiseRecipientEmail:
+        type: string
+      wiseRecipientID:
+        type: string
+      wiseRecipientName:
+        type: string
     type: object
   view.ProfileDataResponse:
     properties:
@@ -3310,6 +3357,8 @@ definitions:
         $ref: '#/definitions/view.BasicCountryInfo'
       createdAt:
         type: string
+      currency:
+        $ref: '#/definitions/view.Currency'
       deletedAt:
         $ref: '#/definitions/gorm.DeletedAt'
       deliveryManagers:
@@ -3328,6 +3377,8 @@ definitions:
         items:
           $ref: '#/definitions/view.ProjectMember'
         type: array
+      monthlyChargeRate:
+        type: number
       name:
         type: string
       organization:
@@ -3843,6 +3894,16 @@ definitions:
       updatedAt:
         type: string
       username:
+        type: string
+      wiseAccountNumber:
+        type: string
+      wiseCurrency:
+        type: string
+      wiseRecipientEmail:
+        type: string
+      wiseRecipientID:
+        type: string
+      wiseRecipientName:
         type: string
     type: object
   view.UpdateProfileInfoResponse:
@@ -5794,6 +5855,29 @@ paths:
           schema:
             $ref: '#/definitions/view.ErrorResponse'
       summary: Get list cities by country
+      tags:
+      - Metadata
+  /metadata/currencies:
+    get:
+      consumes:
+      - application/json
+      description: Get list currencies
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.GetCurrenciesResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get list currencies
       tags:
       - Metadata
   /metadata/organizations:

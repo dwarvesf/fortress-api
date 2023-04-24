@@ -2506,6 +2506,41 @@ const docTemplate = `{
                 }
             }
         },
+        "/metadata/currencies": {
+            "get": {
+                "description": "Get list currencies",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Metadata"
+                ],
+                "summary": "Get list currencies",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.GetCurrenciesResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/metadata/organizations": {
             "get": {
                 "description": "Get list values for organizations",
@@ -8344,6 +8379,21 @@ const docTemplate = `{
                 },
                 "referredBy": {
                     "type": "string"
+                },
+                "wiseAccountNumber": {
+                    "type": "string"
+                },
+                "wiseCurrency": {
+                    "type": "string"
+                },
+                "wiseRecipientEmail": {
+                    "type": "string"
+                },
+                "wiseRecipientID": {
+                    "type": "string"
+                },
+                "wiseRecipientName": {
+                    "type": "string"
                 }
             }
         },
@@ -8391,6 +8441,21 @@ const docTemplate = `{
                     "minLength": 8
                 },
                 "placeOfResidence": {
+                    "type": "string"
+                },
+                "wiseAccountNumber": {
+                    "type": "string"
+                },
+                "wiseCurrency": {
+                    "type": "string"
+                },
+                "wiseRecipientEmail": {
+                    "type": "string"
+                },
+                "wiseRecipientID": {
+                    "type": "string"
+                },
+                "wiseRecipientName": {
                     "type": "string"
                 }
             }
@@ -9748,6 +9813,21 @@ const docTemplate = `{
                 },
                 "username": {
                     "type": "string"
+                },
+                "wiseAccountNumber": {
+                    "type": "string"
+                },
+                "wiseCurrency": {
+                    "type": "string"
+                },
+                "wiseRecipientEmail": {
+                    "type": "string"
+                },
+                "wiseRecipientID": {
+                    "type": "string"
+                },
+                "wiseRecipientName": {
+                    "type": "string"
                 }
             }
         },
@@ -10055,6 +10135,17 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/view.FeedBackReviewDetail"
+                }
+            }
+        },
+        "view.GetCurrenciesResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.Currency"
+                    }
                 }
             }
         },
@@ -10622,6 +10713,21 @@ const docTemplate = `{
                 },
                 "username": {
                     "type": "string"
+                },
+                "wiseAccountNumber": {
+                    "type": "string"
+                },
+                "wiseCurrency": {
+                    "type": "string"
+                },
+                "wiseRecipientEmail": {
+                    "type": "string"
+                },
+                "wiseRecipientID": {
+                    "type": "string"
+                },
+                "wiseRecipientName": {
+                    "type": "string"
                 }
             }
         },
@@ -10691,6 +10797,9 @@ const docTemplate = `{
                 "createdAt": {
                     "type": "string"
                 },
+                "currency": {
+                    "$ref": "#/definitions/view.Currency"
+                },
                 "deletedAt": {
                     "$ref": "#/definitions/gorm.DeletedAt"
                 },
@@ -10717,6 +10826,9 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/view.ProjectMember"
                     }
+                },
+                "monthlyChargeRate": {
+                    "type": "number"
                 },
                 "name": {
                     "type": "string"
@@ -11507,6 +11619,21 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "username": {
+                    "type": "string"
+                },
+                "wiseAccountNumber": {
+                    "type": "string"
+                },
+                "wiseCurrency": {
+                    "type": "string"
+                },
+                "wiseRecipientEmail": {
+                    "type": "string"
+                },
+                "wiseRecipientID": {
+                    "type": "string"
+                },
+                "wiseRecipientName": {
                     "type": "string"
                 }
             }

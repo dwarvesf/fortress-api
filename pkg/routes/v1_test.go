@@ -313,6 +313,12 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/metadata.IHandler.GetQuestions-fm",
 			},
 		},
+		"/api/v1/metadata/currencies": {
+			"GET": {
+				Method:  "GET",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/metadata.IHandler.GetCurrencies-fm",
+			},
+		},
 		"/api/v1/feedbacks": {
 			"GET": {
 				Method:  "GET",
