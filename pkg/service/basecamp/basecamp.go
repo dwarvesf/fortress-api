@@ -33,17 +33,17 @@ type Service struct {
 	Basecamp *model.Basecamp
 	Client   client.Service
 
-	Comment      comment.Service
-	Todo         todo.Service
-	MsgBoard     messageboard.Service
-	Campfire     campfire.Service
-	Recording    recording.Service
-	Project      project.Service
-	People       people.Service
-	Subscription subscription.Service
-	Schedule     schedule.Service
-	Webhook      webhook.Service
 	Attachment   attachment.Service
+	Campfire     campfire.Service
+	Comment      comment.Service
+	MsgBoard     messageboard.Service
+	People       people.Service
+	Project      project.Service
+	Recording    recording.Service
+	Schedule     schedule.Service
+	Subscription subscription.Service
+	Todo         todo.Service
+	Webhook      webhook.Service
 
 	Wise wise.IService
 }
@@ -62,17 +62,17 @@ func NewService(store *store.Store, repo store.DBRepo, cfg *config.Config, bc *m
 		logger:       logger,
 		Basecamp:     bc,
 		Client:       c,
-		Comment:      comment.NewService(c),
-		Todo:         todo.NewService(c, cfg),
-		MsgBoard:     messageboard.NewService(c),
-		Campfire:     campfire.NewService(c, logger, cfg),
-		Recording:    recording.NewService(c),
-		Project:      project.NewService(c),
-		People:       people.NewService(c),
-		Subscription: subscription.NewService(c),
-		Schedule:     schedule.NewService(c, logger),
-		Webhook:      webhook.NewService(c),
 		Attachment:   attachment.NewService(c),
+		Campfire:     campfire.NewService(c, logger, cfg),
+		Comment:      comment.NewService(c),
+		MsgBoard:     messageboard.NewService(c),
+		People:       people.NewService(c),
+		Project:      project.NewService(c),
+		Recording:    recording.NewService(c),
+		Schedule:     schedule.NewService(c, logger),
+		Subscription: subscription.NewService(c),
+		Todo:         todo.NewService(c, cfg),
+		Webhook:      webhook.NewService(c),
 		Wise:         wise.New(cfg, logger),
 	}
 }

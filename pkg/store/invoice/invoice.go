@@ -53,9 +53,43 @@ func (s *store) GetLatestInvoiceByProject(db *gorm.DB, projectID string) (*model
 }
 
 // All getNext all invoice
-func (s *store) All(db *gorm.DB) ([]*model.Invoice, error) {
-	var invoice []*model.Invoice
-	return invoice, db.Find(&invoice).Error
+func (s *store) All(db *gorm.DB, filter GetInvoicesFilter, pagination model.Pagination) ([]*model.Invoice, int64, error) {
+	var total int64
+	var invoices []*model.Invoice
+	query := db.Table("invoices")
+
+	if len(filter.ProjectIDs) > 0 {
+		query = query.Where("project_id IN (?)", filter.ProjectIDs)
+	}
+
+	if len(filter.Statuses) > 0 {
+		query = query.Where("status IN (?)", filter.Statuses)
+	}
+
+	err := db.Raw("SELECT COUNT(*) FROM (?) res", query).Scan(&total).Error
+	if err != nil {
+		return nil, 0, err
+	}
+
+	if filter.Preload {
+		query = query.
+			Preload("Bank").
+			Preload("Bank.Currency").
+			Preload("Project").
+			Preload("Project.Client", "deleted_at IS NULL").
+			Preload("Project.Client.Contacts", "deleted_at IS NULL").
+			Preload("Project.CompanyInfo", "deleted_at IS NULL")
+	}
+
+	limit, offset := pagination.ToLimitOffset()
+	if pagination.Page > 0 {
+		query = query.Limit(limit)
+	}
+
+	return invoices, total, query.
+		Limit(limit).
+		Offset(offset).
+		Find(&invoices).Error
 }
 
 // Delete delete 1 invoice by id

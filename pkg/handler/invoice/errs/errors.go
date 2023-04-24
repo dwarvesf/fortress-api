@@ -33,6 +33,12 @@ func ConvertControllerErr(c *gin.Context, err error) {
 	case
 		invoice.ErrInvoiceNotFound:
 		status = http.StatusNotFound
+	case invoice.ErrProjectNotFound:
+		status = http.StatusNotFound
+	case invoice.ErrSenderNotFound:
+		status = http.StatusNotFound
+	case invoice.ErrBankAccountNotFound:
+		status = http.StatusNotFound
 	case invoice.ErrInvoiceStatusAlready:
 		status = http.StatusInternalServerError
 

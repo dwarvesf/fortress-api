@@ -3,12 +3,14 @@ package request
 import (
 	"encoding/json"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/handler/invoice/errs"
 	"github.com/dwarvesf/fortress-api/pkg/model"
+	"github.com/dwarvesf/fortress-api/pkg/utils"
 	"github.com/dwarvesf/fortress-api/pkg/utils/mailutils"
 )
 
@@ -27,6 +29,36 @@ func (r *UpdateStatusRequest) Validate() error {
 
 type GetInvoiceInput struct {
 	ProjectID string `json:"projectID" form:"projectID"`
+}
+
+type GetListInvoiceInput struct {
+	model.Pagination
+	ProjectID []string `json:"projectID" form:"projectID"`
+	Status    []string `json:"status" form:"status"`
+}
+
+func (r *GetListInvoiceInput) StandardizeInput() {
+	statuses := utils.RemoveEmptyString(r.Status)
+	projectsIDs := utils.RemoveEmptyString(r.ProjectID)
+	r.Pagination.Standardize()
+	r.Status = statuses
+	r.ProjectID = projectsIDs
+}
+
+func (r *GetListInvoiceInput) Validate() error {
+	for _, status := range r.Status {
+		if !model.InvoiceStatus(status).IsValid() {
+			return errs.ErrInvalidInvoiceStatus
+		}
+	}
+
+	for _, ids := range r.ProjectID {
+		if _, err := model.UUIDFromString(ids); err != nil {
+			return errs.ErrInvalidProjectID
+		}
+	}
+
+	return nil
 }
 
 type SendInvoiceRequest struct {
@@ -113,6 +145,21 @@ func (i *SendInvoiceRequest) ToInvoiceModel() (*model.Invoice, error) {
 		return nil, err
 	}
 
+	dueAt, err := time.Parse("2006-01-02", i.DueDate)
+	if err != nil {
+		return nil, err
+	}
+
+	invoiceAt, err := time.Parse("2006-01-02", i.InvoiceDate)
+	if err != nil {
+		return nil, err
+	}
+
+	defaultStatus := model.InvoiceStatusSent
+	if i.IsDraft {
+		defaultStatus = model.InvoiceStatusDraft
+	}
+
 	cc, err := json.Marshal(i.CC)
 	if err != nil {
 		return nil, err
@@ -132,7 +179,9 @@ func (i *SendInvoiceRequest) ToInvoiceModel() (*model.Invoice, error) {
 		SubTotal:    int64(i.SubTotal),
 		Month:       i.Month + 1,
 		Year:        i.Year,
-		Status:      model.InvoiceStatusSent,
+		Status:      defaultStatus,
 		SentBy:      i.SentByID,
+		DueAt:       &dueAt,
+		InvoicedAt:  &invoiceAt,
 	}, nil
 }
