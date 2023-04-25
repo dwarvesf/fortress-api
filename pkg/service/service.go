@@ -24,16 +24,16 @@ import (
 )
 
 type Service struct {
+	Basecamp    *basecamp.Service
 	Cache       *cache.Cache
+	Currency    currency.IService
 	Discord     discord.IService
 	Google      googleauth.IService
 	GoogleDrive googledrive.Service
 	GoogleMail  googlemail.IService
 	Notion      notion.IService
-	Wise        wise.IService
-	Currency    currency.IService
 	Sendgrid    sendgrid.Service
-	Basecamp    *basecamp.Service
+	Wise        wise.IService
 }
 
 func New(cfg *config.Config, store *store.Store, repo store.DBRepo) *Service {

@@ -2140,7 +2140,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/invoices/latest": {
+        "/invoices": {
             "get": {
                 "description": "Get latest invoice by project id",
                 "consumes": [
@@ -2165,15 +2165,20 @@ const docTemplate = `{
                         "type": "string",
                         "description": "projectID",
                         "name": "projectID",
-                        "in": "query",
-                        "required": true
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "status",
+                        "name": "status",
+                        "in": "query"
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/view.GetLatestInvoiceResponse"
+                            "$ref": "#/definitions/view.InvoiceListResponse"
                         }
                     },
                     "400": {
@@ -6506,132 +6511,6 @@ const docTemplate = `{
                 }
             }
         },
-        "model.Invoice": {
-            "type": "object",
-            "properties": {
-                "bank": {
-                    "$ref": "#/definitions/model.BankAccount"
-                },
-                "bankID": {
-                    "type": "string"
-                },
-                "cc": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                },
-                "conversionAmount": {
-                    "type": "integer"
-                },
-                "conversionRate": {
-                    "type": "number"
-                },
-                "createdAt": {
-                    "type": "string"
-                },
-                "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "discount": {
-                    "type": "integer"
-                },
-                "dueAt": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "errorInvoiceID": {
-                    "type": "string"
-                },
-                "failedAt": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "invoiceFileContent": {
-                    "description": "we not store this in db",
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                },
-                "invoiceFileURL": {
-                    "type": "string"
-                },
-                "invoicedAt": {
-                    "type": "string"
-                },
-                "lineItems": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                },
-                "messageID": {
-                    "type": "string"
-                },
-                "month": {
-                    "type": "integer"
-                },
-                "note": {
-                    "type": "string"
-                },
-                "number": {
-                    "type": "string"
-                },
-                "paidAt": {
-                    "type": "string"
-                },
-                "project": {
-                    "$ref": "#/definitions/model.Project"
-                },
-                "projectID": {
-                    "type": "string"
-                },
-                "references": {
-                    "type": "string"
-                },
-                "scheduledDate": {
-                    "type": "string"
-                },
-                "sender": {
-                    "$ref": "#/definitions/model.Employee"
-                },
-                "sentBy": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "subTotal": {
-                    "type": "integer"
-                },
-                "tax": {
-                    "type": "integer"
-                },
-                "threadID": {
-                    "type": "string"
-                },
-                "todoAttachment": {
-                    "type": "string"
-                },
-                "total": {
-                    "type": "integer"
-                },
-                "updatedAt": {
-                    "type": "string"
-                },
-                "year": {
-                    "type": "integer"
-                }
-            }
-        },
         "model.LikertScaleCount": {
             "type": "object",
             "properties": {
@@ -10190,14 +10069,6 @@ const docTemplate = `{
                 }
             }
         },
-        "view.GetLatestInvoiceResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/model.Invoice"
-                }
-            }
-        },
         "view.GetListClientResponse": {
             "type": "object",
             "properties": {
@@ -10384,6 +10255,107 @@ const docTemplate = `{
                 }
             }
         },
+        "view.InvoiceData": {
+            "type": "object",
+            "properties": {
+                "bankAccount": {
+                    "$ref": "#/definitions/view.BankAccount"
+                },
+                "bankID": {
+                    "type": "string"
+                },
+                "cc": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "client": {
+                    "$ref": "#/definitions/view.ClientInfo"
+                },
+                "companyInfo": {
+                    "$ref": "#/definitions/view.CompanyInfo"
+                },
+                "conversionAmount": {
+                    "type": "integer"
+                },
+                "conversionRate": {
+                    "type": "number"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "discount": {
+                    "type": "integer"
+                },
+                "dueAt": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "errorInvoiceID": {
+                    "type": "string"
+                },
+                "failedAt": {
+                    "type": "string"
+                },
+                "invoiceFileURL": {
+                    "type": "string"
+                },
+                "invoicedAt": {
+                    "type": "string"
+                },
+                "lineItems": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.InvoiceItem"
+                    }
+                },
+                "month": {
+                    "type": "integer"
+                },
+                "note": {
+                    "type": "string"
+                },
+                "number": {
+                    "type": "string"
+                },
+                "paidAt": {
+                    "type": "string"
+                },
+                "projectID": {
+                    "type": "string"
+                },
+                "projectName": {
+                    "type": "string"
+                },
+                "scheduledDate": {
+                    "type": "string"
+                },
+                "sentBy": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "subTotal": {
+                    "type": "integer"
+                },
+                "tax": {
+                    "type": "integer"
+                },
+                "threadID": {
+                    "type": "string"
+                },
+                "total": {
+                    "type": "integer"
+                },
+                "year": {
+                    "type": "integer"
+                }
+            }
+        },
         "view.InvoiceItem": {
             "type": "object",
             "properties": {
@@ -10404,6 +10376,17 @@ const docTemplate = `{
                 },
                 "unitCost": {
                     "type": "integer"
+                }
+            }
+        },
+        "view.InvoiceListResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.InvoiceData"
+                    }
                 }
             }
         },

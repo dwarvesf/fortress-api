@@ -30,8 +30,11 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, worker
 }
 
 type IController interface {
-	UpdateStatus(in UpdateStatusInput) (*model.Invoice, error)
+	GetTemplate(in GetInvoiceInput) (nextInvoiceNumber string, lastInvoice *model.Invoice, p *model.Project, err error)
+	List(in GetListInvoiceInput) ([]*model.Invoice, int64, error)
 	MarkInvoiceAsError(invoice *model.Invoice) (*model.Invoice, error)
 	MarkInvoiceAsPaid(invoice *model.Invoice, sendThankYouEmail bool) (*model.Invoice, error)
 	MarkInvoiceAsPaidByBasecampWebhookMessage(invoice *model.Invoice, msg *model.BasecampWebhookMessage) (*model.Invoice, error)
+	Send(iv *model.Invoice) (*model.Invoice, error)
+	UpdateStatus(in UpdateStatusInput) (*model.Invoice, error)
 }

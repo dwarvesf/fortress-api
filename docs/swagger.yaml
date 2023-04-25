@@ -524,90 +524,6 @@ definitions:
       updatedAt:
         type: string
     type: object
-  model.Invoice:
-    properties:
-      bank:
-        $ref: '#/definitions/model.BankAccount'
-      bankID:
-        type: string
-      cc:
-        items:
-          type: integer
-        type: array
-      conversionAmount:
-        type: integer
-      conversionRate:
-        type: number
-      createdAt:
-        type: string
-      deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
-      description:
-        type: string
-      discount:
-        type: integer
-      dueAt:
-        type: string
-      email:
-        type: string
-      errorInvoiceID:
-        type: string
-      failedAt:
-        type: string
-      id:
-        type: string
-      invoiceFileContent:
-        description: we not store this in db
-        items:
-          type: integer
-        type: array
-      invoiceFileURL:
-        type: string
-      invoicedAt:
-        type: string
-      lineItems:
-        items:
-          type: integer
-        type: array
-      messageID:
-        type: string
-      month:
-        type: integer
-      note:
-        type: string
-      number:
-        type: string
-      paidAt:
-        type: string
-      project:
-        $ref: '#/definitions/model.Project'
-      projectID:
-        type: string
-      references:
-        type: string
-      scheduledDate:
-        type: string
-      sender:
-        $ref: '#/definitions/model.Employee'
-      sentBy:
-        type: string
-      status:
-        type: string
-      subTotal:
-        type: integer
-      tax:
-        type: integer
-      threadID:
-        type: string
-      todoAttachment:
-        type: string
-      total:
-        type: integer
-      updatedAt:
-        type: string
-      year:
-        type: integer
-    type: object
   model.LikertScaleCount:
     properties:
       agree:
@@ -2962,11 +2878,6 @@ definitions:
           $ref: '#/definitions/view.EngagementDashboard'
         type: array
     type: object
-  view.GetLatestInvoiceResponse:
-    properties:
-      data:
-        $ref: '#/definitions/model.Invoice'
-    type: object
   view.GetListClientResponse:
     properties:
       data:
@@ -3089,6 +3000,73 @@ definitions:
       year:
         type: integer
     type: object
+  view.InvoiceData:
+    properties:
+      bankAccount:
+        $ref: '#/definitions/view.BankAccount'
+      bankID:
+        type: string
+      cc:
+        items:
+          type: string
+        type: array
+      client:
+        $ref: '#/definitions/view.ClientInfo'
+      companyInfo:
+        $ref: '#/definitions/view.CompanyInfo'
+      conversionAmount:
+        type: integer
+      conversionRate:
+        type: number
+      description:
+        type: string
+      discount:
+        type: integer
+      dueAt:
+        type: string
+      email:
+        type: string
+      errorInvoiceID:
+        type: string
+      failedAt:
+        type: string
+      invoiceFileURL:
+        type: string
+      invoicedAt:
+        type: string
+      lineItems:
+        items:
+          $ref: '#/definitions/view.InvoiceItem'
+        type: array
+      month:
+        type: integer
+      note:
+        type: string
+      number:
+        type: string
+      paidAt:
+        type: string
+      projectID:
+        type: string
+      projectName:
+        type: string
+      scheduledDate:
+        type: string
+      sentBy:
+        type: string
+      status:
+        type: string
+      subTotal:
+        type: integer
+      tax:
+        type: integer
+      threadID:
+        type: string
+      total:
+        type: integer
+      year:
+        type: integer
+    type: object
   view.InvoiceItem:
     properties:
       cost:
@@ -3103,6 +3081,13 @@ definitions:
         type: number
       unitCost:
         type: integer
+    type: object
+  view.InvoiceListResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/view.InvoiceData'
+        type: array
     type: object
   view.InvoiceTemplateResponse:
     properties:
@@ -5615,6 +5600,47 @@ paths:
       summary: Get number of unread inbox for user
       tags:
       - Feedback
+  /invoices:
+    get:
+      consumes:
+      - application/json
+      description: Get latest invoice by project id
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: projectID
+        in: query
+        name: projectID
+        type: string
+      - description: status
+        in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.InvoiceListResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get latest invoice by project id
+      tags:
+      - Invoice
   /invoices/{id}/status:
     put:
       consumes:
@@ -5646,44 +5672,6 @@ paths:
           schema:
             $ref: '#/definitions/view.ErrorResponse'
       summary: Update status for invoice
-      tags:
-      - Invoice
-  /invoices/latest:
-    get:
-      consumes:
-      - application/json
-      description: Get latest invoice by project id
-      parameters:
-      - description: jwt token
-        in: header
-        name: Authorization
-        required: true
-        type: string
-      - description: projectID
-        in: query
-        name: projectID
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/view.GetLatestInvoiceResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/view.ErrorResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/view.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/view.ErrorResponse'
-      summary: Get latest invoice by project id
       tags:
       - Invoice
   /invoices/send:
