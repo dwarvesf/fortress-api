@@ -273,7 +273,7 @@
                 "name": "Dwarves Foundation",
                 "avatar": ""
             },
-            "monthlyChargeRate": "11000",
+            "monthlyChargeRate": "0",
             "currency": {
                 "id": "06a699ed-618b-400b-ac8c-8739956fa8e7",
                 "name": "GBP",

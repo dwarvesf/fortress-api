@@ -174,7 +174,7 @@ func ToProjectData(project *model.Project, userInfo *model.CurrentLoggedUserInfo
 		projectCurrency = toCurrency(project.BankAccount.Currency)
 	}
 
-	monthlyChargeRate := decimal.Zero
+	monthlyRevenue := decimal.Zero
 	var members = make([]ProjectMember, 0, len(project.ProjectMembers))
 	for _, m := range project.ProjectMembers {
 		member := ProjectMember{
@@ -200,8 +200,8 @@ func ToProjectData(project *model.Project, userInfo *model.CurrentLoggedUserInfo
 			member.Currency = projectCurrency
 		}
 
-		if m.DeploymentType == model.MemberDeploymentTypeOfficial {
-			monthlyChargeRate = monthlyChargeRate.Add(m.Rate)
+		if m.DeploymentType == model.MemberDeploymentTypeOfficial && m.Status == model.ProjectMemberStatusActive {
+			monthlyRevenue = monthlyRevenue.Add(m.Rate)
 		}
 
 		members = append(members, member)
@@ -222,7 +222,6 @@ func ToProjectData(project *model.Project, userInfo *model.CurrentLoggedUserInfo
 		AccountManagers:     accountManagers,
 		SalePersons:         salePersons,
 		ProjectEmail:        project.ProjectEmail,
-		MonthlyChargeRate:   monthlyChargeRate,
 		AllowsSendingSurvey: project.AllowsSendingSurvey,
 		Code:                project.Code,
 		Function:            project.Function.String(),
@@ -241,6 +240,10 @@ func ToProjectData(project *model.Project, userInfo *model.CurrentLoggedUserInfo
 			Name:   project.Organization.Name,
 			Avatar: project.Organization.Avatar,
 		}
+	}
+
+	if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadMonthlyRevenue) {
+		d.MonthlyChargeRate = monthlyRevenue
 	}
 
 	if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadFullAccess) {
