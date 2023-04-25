@@ -1,6 +1,4 @@
 INSERT INTO public.permissions (id, deleted_at, created_at, updated_at, name, code) VALUES
-                                                                                        ('9be246ac-2e53-4268-814a-dc760afd3758', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Employee Base Salary Read', 'employees.baseSalary.read'),
-                                                                                        ('84aa4653-4bd8-428b-9521-618a67a6be6b', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Employee Base Salary Edit', 'employees.baseSalary.edit');
 ('495c96ae-60f9-4c57-bc96-9504d0fedde6', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Auth Read', 'auth.read'),
 ('5820dd37-a9bd-455e-b49b-b54ad7df180e', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Auth Create', 'auth.create'),
 ('01ed1076-4028-4fdf-9a92-cb57a8e041af', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Employee Read', 'employees.read'),
@@ -21,6 +19,7 @@ INSERT INTO public.permissions (id, deleted_at, created_at, updated_at, name, co
 ('09a5fa4c-ad07-4dec-a16d-34e0f567ef1d', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Project Create', 'projects.create'),
 ('35bb795a-0b9f-428c-861d-48c1e8d4e73a', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Project Read', 'projects.read'),
 ('a8299847-4d10-41e9-8327-42e13e0672ae', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Project Read Full Access', 'projects.read.fullAccess'),
+('7bd3d8e3-8b0b-4f3a-8ee7-0b6bec1c8913', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Project Read Monthly Revenue', 'projects.read.monthlyRevenue'),
 ('3c26a977-f4b9-4bc4-8d31-a2dcf075d254', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Project Read Active', 'projects.read.readActive'),
 ('80a2c800-02ea-4264-9289-57b92e911097', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Project Edit', 'projects.edit'),
 ('6118a1da-aa9a-40eb-b664-87a6969c5759', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Project Commission Rate Read', 'projects.commissionRate.read'),

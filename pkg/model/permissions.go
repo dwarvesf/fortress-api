@@ -39,6 +39,7 @@ const (
 	PermissionProjectsCreate                      PermissionCode = "projects.create"
 	PermissionProjectsRead                        PermissionCode = "projects.read"
 	PermissionProjectsReadFullAccess              PermissionCode = "projects.read.fullAccess"
+	PermissionProjectsReadMonthlyRevenue          PermissionCode = "projects.read.monthlyRevenue"
 	PermissionProjectsReadReadActive              PermissionCode = "projects.read.readActive"
 	PermissionProjectsEdit                        PermissionCode = "projects.edit"
 	PermissionProjectsCommissionRateRead          PermissionCode = "projects.commissionRate.read"
