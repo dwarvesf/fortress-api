@@ -31,6 +31,8 @@ const (
 	PermissionEmployeesReadFilterByAllStatuses    PermissionCode = "employees.read.filterByAllStatuses"
 	PermissionEmployeesReadFilterByProject        PermissionCode = "employees.read.filterByProject"
 	PermissionEmployeesReadLineManagerFullAccess  PermissionCode = "employees.read.lineManager.fullAccess"
+	PermissionEmployeesBaseSalaryRead             PermissionCode = "employees.baseSalary.read"
+	PermissionEmployeesBaseSalaryEdit             PermissionCode = "employees.baseSalary.edit"
 	PermissionEmployeesCreate                     PermissionCode = "employees.create"
 	PermissionEmployeesEdit                       PermissionCode = "employees.edit"
 	PermissionEmployeesDelete                     PermissionCode = "employees.delete"
@@ -96,6 +98,9 @@ const (
 	PermissionDashBoardResourcesRead              PermissionCode = "dashboards.resources.read"
 	PermissionDashBoardEngagementRead             PermissionCode = "dashboards.engagement.read"
 	PermissionAssetUpload                         PermissionCode = "assets.upload"
+	PermissionNotionRead                          PermissionCode = "notion.read"
+	PermissionNotionCreate                        PermissionCode = "notion.create"
+	PermissionNotionSend                          PermissionCode = "notion.send"
 )
 
 func (p PermissionCode) String() string {

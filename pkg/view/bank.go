@@ -39,7 +39,7 @@ func ToListBankAccount(accounts []*model.BankAccount) []BankAccount {
 			IntermediaryBankName:    acc.IntermediaryBankName,
 			IntermediaryBankAddress: acc.IntermediaryBankAddress,
 			CurrencyID:              acc.CurrencyID.String(),
-			Currency:                toCurrency(acc.Currency),
+			Currency:                *toCurrency(acc.Currency),
 		})
 	}
 

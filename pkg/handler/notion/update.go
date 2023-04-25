@@ -1,47 +1,26 @@
-// please edit this file only with approval from hnh
-package update
+// Package notion please edit this file only with approval from hnh
+package notion
 
 import (
 	"net/http"
 
 	"github.com/dstotijn/go-notion"
-	"github.com/dwarvesf/fortress-api/pkg/config"
-	"github.com/dwarvesf/fortress-api/pkg/logger"
-	"github.com/dwarvesf/fortress-api/pkg/model"
-	"github.com/dwarvesf/fortress-api/pkg/service"
-	"github.com/dwarvesf/fortress-api/pkg/store"
-	"github.com/dwarvesf/fortress-api/pkg/view"
 	"github.com/gin-gonic/gin"
+
+	"github.com/dwarvesf/fortress-api/pkg/model"
+	"github.com/dwarvesf/fortress-api/pkg/view"
 )
 
-type handler struct {
-	store   *store.Store
-	service *service.Service
-	logger  logger.Logger
-	repo    store.DBRepo
-	config  *config.Config
-}
-
-// New returns a handler
-func New(store *store.Store, repo store.DBRepo, service *service.Service, logger logger.Logger, cfg *config.Config) IHandler {
-	return &handler{
-		store:   store,
-		repo:    repo,
-		service: service,
-		logger:  logger,
-		config:  cfg,
-	}
-}
-
-// List godoc
+// ListUpdates godoc
 // @Summary Get list updates from DF Updates
 // @Description Get list updates from DF Updates
-// @Tags updates
+// @Tags Notion
 // @Accept  json
 // @Produce  json
-// @Success 200 {object} []model.Update
+// @Success 200 {object} view.MessageResponse
 // @Failure 400 {object} view.ErrorResponse
-func (h *handler) List(c *gin.Context) {
+// @Router /notion/update [get]
+func (h *handler) ListUpdates(c *gin.Context) {
 	resp, err := h.service.Notion.GetDatabase(h.config.Notion.Databases.Updates, nil, []notion.DatabaseQuerySort{
 		{
 			Property:  "Created at",
@@ -53,7 +32,7 @@ func (h *handler) List(c *gin.Context) {
 		return
 	}
 
-	var updates = []model.Update{}
+	var updates []model.NotionUpdate
 
 	for _, r := range resp.Results {
 		props := r.Properties.(notion.DatabasePageProperties)
@@ -68,7 +47,7 @@ func (h *handler) List(c *gin.Context) {
 			audience = props["Audience"].MultiSelect[0].Name
 		}
 
-		updates = append(updates, model.Update{
+		updates = append(updates, model.NotionUpdate{
 			ID:        r.ID,
 			Name:      name,
 			CreatedAt: props["Created at"].Date.Start.Time,

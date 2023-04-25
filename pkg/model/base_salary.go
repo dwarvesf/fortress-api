@@ -19,7 +19,7 @@ type BaseSalary struct {
 	Currency   *Currency
 	Batch      int
 
-	EffectiveDate time.Time `json:"effective_date"`
+	EffectiveDate *time.Time `json:"effective_date"`
 }
 
 func (BaseSalary) TableName() string { return "base_salaries" }

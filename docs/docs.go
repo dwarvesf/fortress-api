@@ -1436,6 +1436,72 @@ const docTemplate = `{
                 }
             }
         },
+        "/employees/{id}/base-salary": {
+            "put": {
+                "description": "Update employee's base salary by employee and base salary id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Employee"
+                ],
+                "summary": "Update employee's base salary by employee and base salary id",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Employee ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Body",
+                        "name": "Body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.UpdateBaseSalaryInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.UpdateBaseSalaryResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/employees/{id}/employee-status": {
             "put": {
                 "description": "Update account status by employee id",
@@ -2074,35 +2140,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/hiring-positions": {
-            "get": {
-                "description": "Get list hirings from DF Dwarves Hiring",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "hiring"
-                ],
-                "summary": "Get list hirings from DF Dwarves Hiring",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/view.HiringResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/view.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/invoices/latest": {
             "get": {
                 "description": "Get latest invoice by project id",
@@ -2452,6 +2489,41 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/view.CitiesResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/metadata/currencies": {
+            "get": {
+                "description": "Get list currencies",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Metadata"
+                ],
+                "summary": "Get list currencies",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.GetCurrenciesResponse"
                         }
                     },
                     "400": {
@@ -3124,6 +3196,421 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/notion/audiences": {
+            "get": {
+                "description": "Get list audiences from DF Audience",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Notion"
+                ],
+                "summary": "Get list audiences from DF Audience",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.MessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/notion/changelogs/project": {
+            "post": {
+                "description": "send project changelog",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Notion"
+                ],
+                "summary": "send project changelog",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.MessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/notion/changelogs/projects/available": {
+            "get": {
+                "description": "get available projects changelog",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Notion"
+                ],
+                "summary": "get available projects changelog",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.MessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/notion/df-updates/{id}/send": {
+            "post": {
+                "description": "send project changelog",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Notion"
+                ],
+                "summary": "send project changelog",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.MessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/notion/digests": {
+            "get": {
+                "description": "Get list digests from DF Internal Digest",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Notion"
+                ],
+                "summary": "Get list digests from DF Internal Digest",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.MessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/notion/earns": {
+            "get": {
+                "description": "Get list items from DF earn",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Notion"
+                ],
+                "summary": "Get list items from DF earn",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.MessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/notion/events": {
+            "get": {
+                "description": "Get list events from DF Dwarves Community Events",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Notion"
+                ],
+                "summary": "Get list events from DF Dwarves Community Events",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.MessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/notion/hiring-positions": {
+            "get": {
+                "description": "Get list hiring from DF Dwarves Hiring",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Notion"
+                ],
+                "summary": "Get list hiring from DF Dwarves Hiring",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.MessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/notion/issues": {
+            "get": {
+                "description": "Get list issues from DF Issues \u0026 Resolution Log",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Notion"
+                ],
+                "summary": "Get list issues from DF Issues \u0026 Resolution Log",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.MessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/notion/memos": {
+            "get": {
+                "description": "Get list memos from DF Memos",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Notion"
+                ],
+                "summary": "Get list memos from DF Memos",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.MessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/notion/projects/milestones": {
+            "get": {
+                "description": "Get list  project milestones",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Notion"
+                ],
+                "summary": "Get list  project milestones",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.MessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/notion/staffing-demands": {
+            "get": {
+                "description": "Get list  staffing demands from DF Staffing Demand",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Notion"
+                ],
+                "summary": "Get list  staffing demands from DF Staffing Demand",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.MessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/notion/tech-radars": {
+            "get": {
+                "description": "Get list items from DF TechRadar",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Notion"
+                ],
+                "summary": "Get list items from DF TechRadar",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.MessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/notion/update": {
+            "get": {
+                "description": "Get list updates from DF Updates",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Notion"
+                ],
+                "summary": "Get list updates from DF Updates",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.MessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/view.ErrorResponse"
                         }
@@ -5249,29 +5736,6 @@ const docTemplate = `{
                 }
             }
         },
-        "model.Audience": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "full_name": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "source": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
         "model.BankAccount": {
             "type": "object",
             "properties": {
@@ -5607,75 +6071,6 @@ const docTemplate = `{
                 },
                 "updatedAt": {
                     "type": "string"
-                }
-            }
-        },
-        "model.DateTime": {
-            "type": "object",
-            "properties": {
-                "has_time": {
-                    "type": "boolean"
-                },
-                "time": {
-                    "type": "string"
-                }
-            }
-        },
-        "model.Digest": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "model.Earn": {
-            "type": "object",
-            "properties": {
-                "due_date": {
-                    "type": "string"
-                },
-                "function": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "pics": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.Employee"
-                    }
-                },
-                "priority": {
-                    "type": "string"
-                },
-                "progress": {
-                    "type": "integer"
-                },
-                "reward": {
-                    "type": "integer"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "tags": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
                 }
             }
         },
@@ -6111,49 +6506,6 @@ const docTemplate = `{
                 }
             }
         },
-        "model.Event": {
-            "type": "object",
-            "properties": {
-                "activity_type": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "date": {
-                    "$ref": "#/definitions/model.DateTime"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "model.HiringPosition": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "project": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "status": {
-                    "type": "string"
-                }
-            }
-        },
         "model.Invoice": {
             "type": "object",
             "properties": {
@@ -6280,56 +6632,6 @@ const docTemplate = `{
                 }
             }
         },
-        "model.Issue": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "string"
-                },
-                "incident_date": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "pic": {
-                    "type": "string"
-                },
-                "priority": {
-                    "type": "string"
-                },
-                "profile": {
-                    "type": "string"
-                },
-                "projects": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "resolution": {
-                    "type": "string"
-                },
-                "rootcause": {
-                    "type": "string"
-                },
-                "scope": {
-                    "type": "string"
-                },
-                "severity": {
-                    "type": "string"
-                },
-                "solve_date": {
-                    "type": "string"
-                },
-                "source": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                }
-            }
-        },
         "model.LikertScaleCount": {
             "type": "object",
             "properties": {
@@ -6350,19 +6652,28 @@ const docTemplate = `{
                 }
             }
         },
-        "model.Memo": {
+        "model.NotionTechRadar": {
             "type": "object",
             "properties": {
-                "author": {
+                "assign": {
                     "type": "string"
                 },
-                "created_at": {
-                    "type": "string"
+                "categories": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "id": {
                     "type": "string"
                 },
                 "name": {
+                    "type": "string"
+                },
+                "quadrant": {
+                    "type": "string"
+                },
+                "ring": {
                     "type": "string"
                 },
                 "tags": {
@@ -7088,69 +7399,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "updatedAt": {
-                    "type": "string"
-                }
-            }
-        },
-        "model.StaffingDemand": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "request": {
-                    "type": "string"
-                }
-            }
-        },
-        "model.TechRadar": {
-            "type": "object",
-            "properties": {
-                "assign": {
-                    "type": "string"
-                },
-                "categories": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "quadrant": {
-                    "type": "string"
-                },
-                "ring": {
-                    "type": "string"
-                },
-                "tags": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
-        "model.Update": {
-            "type": "object",
-            "properties": {
-                "audience": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "name": {
                     "type": "string"
                 }
             }
@@ -7956,6 +8204,36 @@ const docTemplate = `{
                 }
             }
         },
+        "request.UpdateBaseSalaryInput": {
+            "type": "object",
+            "required": [
+                "batch",
+                "currencyCode"
+            ],
+            "properties": {
+                "batch": {
+                    "type": "integer"
+                },
+                "companyAccountAmount": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "contractAmount": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "currencyCode": {
+                    "type": "string"
+                },
+                "effectiveDate": {
+                    "type": "string"
+                },
+                "personalAccountAmount": {
+                    "type": "integer",
+                    "minimum": 0
+                }
+            }
+        },
         "request.UpdateClientContactInput": {
             "type": "object",
             "properties": {
@@ -8101,6 +8379,21 @@ const docTemplate = `{
                 },
                 "referredBy": {
                     "type": "string"
+                },
+                "wiseAccountNumber": {
+                    "type": "string"
+                },
+                "wiseCurrency": {
+                    "type": "string"
+                },
+                "wiseRecipientEmail": {
+                    "type": "string"
+                },
+                "wiseRecipientID": {
+                    "type": "string"
+                },
+                "wiseRecipientName": {
+                    "type": "string"
                 }
             }
         },
@@ -8148,6 +8441,21 @@ const docTemplate = `{
                     "minLength": 8
                 },
                 "placeOfResidence": {
+                    "type": "string"
+                },
+                "wiseAccountNumber": {
+                    "type": "string"
+                },
+                "wiseCurrency": {
+                    "type": "string"
+                },
+                "wiseRecipientEmail": {
+                    "type": "string"
+                },
+                "wiseRecipientID": {
+                    "type": "string"
+                },
+                "wiseRecipientName": {
                     "type": "string"
                 }
             }
@@ -8776,6 +9084,47 @@ const docTemplate = `{
                 }
             }
         },
+        "view.BaseSalary": {
+            "type": "object",
+            "properties": {
+                "batch": {
+                    "type": "integer"
+                },
+                "category": {
+                    "type": "string"
+                },
+                "company_account_amount": {
+                    "type": "integer"
+                },
+                "contract_amount": {
+                    "type": "integer"
+                },
+                "currency": {
+                    "$ref": "#/definitions/view.Currency"
+                },
+                "currency_id": {
+                    "type": "string"
+                },
+                "effective_date": {
+                    "type": "string"
+                },
+                "employee_id": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "insurance_amount": {
+                    "type": "integer"
+                },
+                "personal_account_amount": {
+                    "type": "integer"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
         "view.BasicBankAccountInfo": {
             "type": "object",
             "properties": {
@@ -9331,6 +9680,9 @@ const docTemplate = `{
                 "avatar": {
                     "type": "string"
                 },
+                "baseSalary": {
+                    "$ref": "#/definitions/view.BaseSalary"
+                },
                 "birthday": {
                     "type": "string"
                 },
@@ -9460,6 +9812,21 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "username": {
+                    "type": "string"
+                },
+                "wiseAccountNumber": {
+                    "type": "string"
+                },
+                "wiseCurrency": {
+                    "type": "string"
+                },
+                "wiseRecipientEmail": {
+                    "type": "string"
+                },
+                "wiseRecipientID": {
+                    "type": "string"
+                },
+                "wiseRecipientName": {
                     "type": "string"
                 }
             }
@@ -9771,6 +10138,17 @@ const docTemplate = `{
                 }
             }
         },
+        "view.GetCurrenciesResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.Currency"
+                    }
+                }
+            }
+        },
         "view.GetDashboardResourceUtilizationResponse": {
             "type": "object",
             "properties": {
@@ -9914,17 +10292,6 @@ const docTemplate = `{
                 },
                 "trend": {
                     "$ref": "#/definitions/view.EngineeringHealthTrend"
-                }
-            }
-        },
-        "view.HiringResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.HiringPosition"
-                    }
                 }
             }
         },
@@ -10346,6 +10713,21 @@ const docTemplate = `{
                 },
                 "username": {
                     "type": "string"
+                },
+                "wiseAccountNumber": {
+                    "type": "string"
+                },
+                "wiseCurrency": {
+                    "type": "string"
+                },
+                "wiseRecipientEmail": {
+                    "type": "string"
+                },
+                "wiseRecipientID": {
+                    "type": "string"
+                },
+                "wiseRecipientName": {
+                    "type": "string"
                 }
             }
         },
@@ -10415,6 +10797,9 @@ const docTemplate = `{
                 "createdAt": {
                     "type": "string"
                 },
+                "currency": {
+                    "$ref": "#/definitions/view.Currency"
+                },
                 "deletedAt": {
                     "$ref": "#/definitions/gorm.DeletedAt"
                 },
@@ -10441,6 +10826,9 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/view.ProjectMember"
                     }
+                },
+                "monthlyChargeRate": {
+                    "type": "number"
                 },
                 "name": {
                     "type": "string"
@@ -11042,6 +11430,14 @@ const docTemplate = `{
                 }
             }
         },
+        "view.UpdateBaseSalaryResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/view.BaseSalary"
+                }
+            }
+        },
         "view.UpdateEmployeeStatusResponse": {
             "type": "object",
             "properties": {
@@ -11223,6 +11619,21 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "username": {
+                    "type": "string"
+                },
+                "wiseAccountNumber": {
+                    "type": "string"
+                },
+                "wiseCurrency": {
+                    "type": "string"
+                },
+                "wiseRecipientEmail": {
+                    "type": "string"
+                },
+                "wiseRecipientID": {
+                    "type": "string"
+                },
+                "wiseRecipientName": {
                     "type": "string"
                 }
             }

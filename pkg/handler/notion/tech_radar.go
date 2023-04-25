@@ -1,5 +1,5 @@
-// please edit this file only with approval from hnh
-package techradar
+// Package notion please edit this file only with approval from hnh
+package notion
 
 import (
 	"html"
@@ -11,42 +11,20 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/thoas/go-funk"
 
-	"github.com/dwarvesf/fortress-api/pkg/config"
-	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
-	"github.com/dwarvesf/fortress-api/pkg/service"
-	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/view"
 )
 
-type handler struct {
-	store   *store.Store
-	service *service.Service
-	logger  logger.Logger
-	repo    store.DBRepo
-	config  *config.Config
-}
-
-// New returns a handler
-func New(store *store.Store, repo store.DBRepo, service *service.Service, logger logger.Logger, cfg *config.Config) IHandler {
-	return &handler{
-		store:   store,
-		repo:    repo,
-		service: service,
-		logger:  logger,
-		config:  cfg,
-	}
-}
-
-// List godoc
+// ListTechRadars godoc
 // @Summary Get list items from DF TechRadar
 // @Description Get list items from DF TechRadar
-// @Tags TechRadar
+// @Tags Notion
 // @Accept  json
 // @Produce  json
-// @Success 200 {object} []model.TechRadar
+// @Success 200 {object} view.MessageResponse
 // @Failure 400 {object} view.ErrorResponse
-func (h *handler) List(c *gin.Context) {
+// @Router /notion/tech-radars [get]
+func (h *handler) ListTechRadars(c *gin.Context) {
 	filter := &notion.DatabaseQueryFilter{}
 
 	rings := []string{"Adopt", "Trial", "Assess", "Hold"}
@@ -81,7 +59,7 @@ func (h *handler) List(c *gin.Context) {
 		return
 	}
 
-	var techs = []model.TechRadar{}
+	var techs []model.NotionTechRadar
 	for _, r := range resp.Results {
 		props := r.Properties.(notion.DatabasePageProperties)
 
@@ -115,16 +93,16 @@ func (h *handler) List(c *gin.Context) {
 		if props["Status"].Select != nil {
 			ring = props["Status"].Select.Name
 		}
-		categories := []string{}
+		var categories []string
 		for _, c := range props["Categories"].MultiSelect {
 			categories = append(categories, c.Name)
 		}
-		tags := []string{}
+		var tags []string
 		for _, t := range props["Tag"].MultiSelect {
 			tags = append(tags, t.Name)
 		}
 
-		techs = append(techs, model.TechRadar{
+		techs = append(techs, model.NotionTechRadar{
 			ID:         r.ID,
 			Name:       name,
 			Assign:     assign,
@@ -138,17 +116,17 @@ func (h *handler) List(c *gin.Context) {
 	c.JSON(http.StatusOK, view.CreateResponse[any](techs, nil, nil, nil, "get list earn items successfully"))
 }
 
-// create a new tech radar item
+// CreateTechRadar create a new tech radar item
 // @Summary Create a new tech radar item
 // @Description Create a new tech radar item
 // @Tags TechRadar
 // @Accept  json
 // @Produce  json
-// @Param body body model.TechRadar true "body for create tech radar item"
-// @Success 200 {object} model.TechRadar
+// @Param body body model.NotionTechRadar true "body for create tech radar item"
+// @Success 200 {object} view.MessageResponse
 // @Failure 400 {object} view.ErrorResponse
-func (h *handler) Create(c *gin.Context) {
-	var input model.TechRadar
+func (h *handler) CreateTechRadar(c *gin.Context) {
+	var input model.NotionTechRadar
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, "invalid input"))
 		return
@@ -158,7 +136,7 @@ func (h *handler) Create(c *gin.Context) {
 		return
 	}
 
-	// check item is exist
+	// check item is existed
 	var filter = &notion.DatabaseQueryFilter{}
 	filter.And = append(filter.And, notion.DatabaseQueryFilter{
 		Property: "Name",

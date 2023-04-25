@@ -1,49 +1,27 @@
-// please edit this file only with approval from hnh
-package hiring
+// Package notion Package hiring please edit this file only with approval from hnh
+package notion
 
 import (
 	"net/http"
 
 	"github.com/dstotijn/go-notion"
-	"github.com/dwarvesf/fortress-api/pkg/config"
-	"github.com/dwarvesf/fortress-api/pkg/logger"
-	"github.com/dwarvesf/fortress-api/pkg/model"
-	"github.com/dwarvesf/fortress-api/pkg/service"
-	"github.com/dwarvesf/fortress-api/pkg/store"
-	"github.com/dwarvesf/fortress-api/pkg/view"
 	"github.com/gin-gonic/gin"
 	"github.com/thoas/go-funk"
+
+	"github.com/dwarvesf/fortress-api/pkg/model"
+	"github.com/dwarvesf/fortress-api/pkg/view"
 )
 
-type handler struct {
-	store   *store.Store
-	service *service.Service
-	logger  logger.Logger
-	repo    store.DBRepo
-	config  *config.Config
-}
-
-// New returns a handler
-func New(store *store.Store, repo store.DBRepo, service *service.Service, logger logger.Logger, cfg *config.Config) IHandler {
-	return &handler{
-		store:   store,
-		repo:    repo,
-		service: service,
-		logger:  logger,
-		config:  cfg,
-	}
-}
-
-// List godoc
-// @Summary Get list hirings from DF Dwarves Hiring
-// @Description Get list hirings from DF Dwarves Hiring
-// @Tags hiring
+// ListHiringPositions godoc
+// @Summary Get list hiring from DF Dwarves Hiring
+// @Description Get list hiring from DF Dwarves Hiring
+// @Tags Notion
 // @Accept  json
 // @Produce  json
-// @Success 200 {object} view.HiringResponse
+// @Success 200 {object} view.MessageResponse
 // @Failure 400 {object} view.ErrorResponse
-// @Router /hiring-positions [get]
-func (h *handler) List(c *gin.Context) {
+// @Router /notion/hiring-positions [get]
+func (h *handler) ListHiringPositions(c *gin.Context) {
 	filter := &notion.DatabaseQueryFilter{}
 
 	status := "Active"
@@ -74,7 +52,7 @@ func (h *handler) List(c *gin.Context) {
 		return
 	}
 
-	var positions = []model.HiringPosition{}
+	var positions []model.NotionHiringPosition
 
 	for _, r := range resp.Results {
 		props := r.Properties.(notion.DatabasePageProperties)
@@ -95,7 +73,7 @@ func (h *handler) List(c *gin.Context) {
 			}
 		}
 
-		positions = append(positions, model.HiringPosition{
+		positions = append(positions, model.NotionHiringPosition{
 			ID:        r.ID,
 			Name:      name,
 			Status:    props["Status"].Select.Name,

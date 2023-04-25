@@ -59,6 +59,12 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/employee.IHandler.UpdateSkills-fm",
 			},
 		},
+		"/api/v1/employees/:id/base-salary": {
+			"PUT": {
+				Method:  "PUT",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/employee.IHandler.UpdateBaseSalary-fm",
+			},
+		},
 		"/api/v1/line-managers": {
 			"GET": {
 				Method:  "GET",
@@ -307,6 +313,12 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/metadata.IHandler.GetQuestions-fm",
 			},
 		},
+		"/api/v1/metadata/currencies": {
+			"GET": {
+				Method:  "GET",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/metadata.IHandler.GetCurrencies-fm",
+			},
+		},
 		"/api/v1/feedbacks": {
 			"GET": {
 				Method:  "GET",
@@ -440,71 +452,71 @@ func Test_loadV1Routes(t *testing.T) {
 		"/api/v1/notion/earn": {
 			"GET": {
 				Method:  "GET",
-				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/earn.IHandler.List-fm",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/notion.IHandler.ListEarns-fm",
 			},
 		},
 		"/api/v1/notion/tech-radar": {
 			"GET": {
 				Method:  "GET",
-				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/techradar.IHandler.List-fm",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/notion.IHandler.ListTechRadars-fm",
 			},
 			"POST": {
 				Method:  "POST",
-				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/techradar.IHandler.Create-fm",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/notion.IHandler.CreateTechRadar-fm",
 			},
 		},
 		"/api/v1/notion/audiences": {
 			"GET": {
 				Method:  "GET",
-				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/audience.IHandler.List-fm",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/notion.IHandler.ListAudiences-fm",
 			},
 		},
 		"/api/v1/notion/events": {
 			"GET": {
 				Method:  "GET",
-				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/event.IHandler.List-fm",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/notion.IHandler.ListEvents-fm",
 			},
 		},
 		"/api/v1/notion/digests": {
 			"GET": {
 				Method:  "GET",
-				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/digest.IHandler.List-fm",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/notion.IHandler.ListDigests-fm",
 			},
 		},
 		"/api/v1/notion/issues": {
 			"GET": {
 				Method:  "GET",
-				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/issue.IHandler.List-fm",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/notion.IHandler.ListIssues-fm",
 			},
 		},
 		"/api/v1/notion/updates": {
 			"GET": {
 				Method:  "GET",
-				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/update.IHandler.List-fm",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/notion.IHandler.ListUpdates-fm",
 			},
 		},
 		"/api/v1/notion/memos": {
 			"GET": {
 				Method:  "GET",
-				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/memo.IHandler.List-fm",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/notion.IHandler.ListMemos-fm",
 			},
 		},
 		"/api/v1/notion/hiring-positions": {
 			"GET": {
 				Method:  "GET",
-				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/hiring.IHandler.List-fm",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/notion.IHandler.ListHiringPositions-fm",
 			},
 		},
 		"/api/v1/notion/staffing-demands": {
 			"GET": {
 				Method:  "GET",
-				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/staffingdemand.IHandler.List-fm",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/notion.IHandler.ListStaffingDemands-fm",
 			},
 		},
 		"/api/v1/notion/projects/milestones": {
 			"GET": {
 				Method:  "GET",
-				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/project.IHandler.ListMilestones-fm",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/notion.IHandler.ListProjectMilestones-fm",
 			},
 		},
 		"/api/v1/dashboards/projects/action-item-squash": {
@@ -673,22 +685,22 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/client.IHandler.Delete-fm",
 			},
 		},
-		"/api/v1/notion-changelog/projects/available": {
+		"/api/v1/notion/changelogs/projects/available": {
 			"GET": {
 				Method:  "GET",
-				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/changelog.IHandler.GetAvailableProjectsChangelog-fm",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/notion.IHandler.GetAvailableProjectsChangelog-fm",
 			},
 		},
-		"/api/v1/notion-changelog/project": {
+		"/api/v1/notion/changelogs/project": {
 			"POST": {
 				Method:  "POST",
-				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/changelog.IHandler.SendProjectChangelog-fm",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/notion.IHandler.SendProjectChangelog-fm",
 			},
 		},
-		"/api/v1/df-updates/:id/send": {
+		"/api/v1/notion/df-updates/:id/send": {
 			"POST": {
 				Method:  "POST",
-				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/dfupdate.IHandler.Send-fm",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/notion.IHandler.SendNewsLetter-fm",
 			},
 		},
 		"/api/v1/payrolls": {

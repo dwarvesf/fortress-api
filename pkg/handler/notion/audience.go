@@ -1,47 +1,26 @@
-// please edit this file only with approval from hnh
-package audience
+// Package notion please edit this file only with approval from hnh
+package notion
 
 import (
 	"net/http"
 
 	"github.com/dstotijn/go-notion"
-	"github.com/dwarvesf/fortress-api/pkg/config"
-	"github.com/dwarvesf/fortress-api/pkg/logger"
-	"github.com/dwarvesf/fortress-api/pkg/model"
-	"github.com/dwarvesf/fortress-api/pkg/service"
-	"github.com/dwarvesf/fortress-api/pkg/store"
-	"github.com/dwarvesf/fortress-api/pkg/view"
 	"github.com/gin-gonic/gin"
+
+	"github.com/dwarvesf/fortress-api/pkg/model"
+	"github.com/dwarvesf/fortress-api/pkg/view"
 )
 
-type handler struct {
-	store   *store.Store
-	service *service.Service
-	logger  logger.Logger
-	repo    store.DBRepo
-	config  *config.Config
-}
-
-// New returns a handler
-func New(store *store.Store, repo store.DBRepo, service *service.Service, logger logger.Logger, cfg *config.Config) IHandler {
-	return &handler{
-		store:   store,
-		repo:    repo,
-		service: service,
-		logger:  logger,
-		config:  cfg,
-	}
-}
-
-// List godoc
+// ListAudiences godoc
 // @Summary Get list audiences from DF Audience
 // @Description Get list audiences from DF Audience
-// @Tags Audience
+// @Tags Notion
 // @Accept  json
 // @Produce  json
-// @Success 200 {object} []model.Audience
+// @Success 200 {object} view.MessageResponse
 // @Failure 400 {object} view.ErrorResponse
-func (h *handler) List(c *gin.Context) {
+// @Router /notion/audiences [get]
+func (h *handler) ListAudiences(c *gin.Context) {
 	filter := &notion.DatabaseQueryFilter{}
 
 	filterNewSubscriber := true
@@ -69,15 +48,15 @@ func (h *handler) List(c *gin.Context) {
 		return
 	}
 
-	var audiences = []model.Audience{}
+	var audiences []model.NotionAudience
 	for _, r := range resp.Results {
 		props := r.Properties.(notion.DatabasePageProperties)
 
-		fullname := ""
+		fullName := ""
 		if len(props["Full Name"].Title) > 0 {
-			fullname = props["Full Name"].Title[0].Text.Content
+			fullName = props["Full Name"].Title[0].Text.Content
 		}
-		sources := []string{}
+		var sources []string
 		for _, c := range props["Source"].MultiSelect {
 			sources = append(sources, c.Name)
 		}
@@ -86,9 +65,9 @@ func (h *handler) List(c *gin.Context) {
 			email = *props["Email"].Email
 		}
 
-		audiences = append(audiences, model.Audience{
+		audiences = append(audiences, model.NotionAudience{
 			ID:        r.ID,
-			FullName:  fullname,
+			FullName:  fullName,
 			Email:     email,
 			CreatedAt: r.CreatedTime,
 			Sources:   sources,

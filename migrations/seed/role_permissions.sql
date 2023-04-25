@@ -2,6 +2,11 @@
 INSERT INTO public.role_permissions (id, deleted_at, created_at, updated_at, role_id, permission_id) VALUES
 ('35db0910-66e6-4362-9082-9eb800730c74', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '349876e0-4d3b-463a-a9b0-4083b3ebcd83', '475d8075-aec7-4d75-aa79-dc90c9dd9edb');
 
+-- DISCORD FORTRESS
+INSERT INTO public.role_permissions (id, deleted_at, created_at, updated_at, role_id, permission_id) VALUES
+('34a22220-725c-4b9c-817f-abfdd0e9d975', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '3fcf9e36-2501-4f86-8418-cfe3a137b7f9', 'f75db77f-e299-4135-81b7-0784b452f7b7'),
+('4fdd56b0-b85c-463d-85ef-4d192949a6e8', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '3fcf9e36-2501-4f86-8418-cfe3a137b7f9', 'd500ea57-da9a-4b24-b147-59d009f0d7bc');
+
 -- CONTRACTOR
 INSERT INTO public.role_permissions (id, deleted_at, created_at, updated_at, role_id, permission_id) VALUES
 ('8d80717d-34a9-4e40-8981-f179bd444877', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '9f65e480-b591-49c1-9cc2-de31c47ee007', '495c96ae-60f9-4c57-bc96-9504d0fedde6'),
@@ -230,4 +235,12 @@ INSERT INTO public.role_permissions (id, deleted_at, created_at, updated_at, rol
 ('0e81ad40-f5c5-4f32-8352-67bbe512ad40', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', 'c23c1c1c-bfaf-41e6-a4d7-6ef196fd2736', '6118a1da-aa9a-40eb-b664-87a6969c5759'),
 ('8ad125a0-be77-4a51-86d3-8e01fab9ef3f', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', 'c23c1c1c-bfaf-41e6-a4d7-6ef196fd2736', '79b1a377-7b73-4bea-90c2-330bda11b635'),
 ('0f987cdd-1af4-4d54-bd5f-017ce5a6f64d', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', 'c23c1c1c-bfaf-41e6-a4d7-6ef196fd2736', 'e33cc269-3a12-436e-aab7-75f14953388f'),
-('09c991c4-bb65-4088-badb-80f916a51600', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', 'c23c1c1c-bfaf-41e6-a4d7-6ef196fd2736', '2f6c957c-725b-4da4-ad6d-9a23a1e18a98');
+('09c991c4-bb65-4088-badb-80f916a51600', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', 'c23c1c1c-bfaf-41e6-a4d7-6ef196fd2736', '2f6c957c-725b-4da4-ad6d-9a23a1e18a98'),
+('13305903-965d-4174-962f-8799726e330f', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', 'c23c1c1c-bfaf-41e6-a4d7-6ef196fd2736', 'f75db77f-e299-4135-81b7-0784b452f7b7'),
+('e0482950-8e09-4dd5-adac-7274a96cc9b2', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', 'c23c1c1c-bfaf-41e6-a4d7-6ef196fd2736', 'd500ea57-da9a-4b24-b147-59d009f0d7bc'),
+('0f03ebae-15fe-4a0c-bb0b-c2fad0d9a9fb', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', 'c23c1c1c-bfaf-41e6-a4d7-6ef196fd2736', '9be246ac-2e53-4268-814a-dc760afd3758'),
+('fab38772-1430-4a7d-996f-aacb5aa049b0', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', 'c23c1c1c-bfaf-41e6-a4d7-6ef196fd2736', '84aa4653-4bd8-428b-9521-618a67a6be6b');
+
+
+
+

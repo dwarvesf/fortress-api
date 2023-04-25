@@ -34,11 +34,17 @@
                 "deploymentType": "official",
                 "startDate": null,
                 "endDate": null,
-                "rate": "0",
+                "rate": "3000",
                 "discount": "0",
                 "upsellCommissionRate": "0",
                 "leadCommissionRate": "0",
-                "currency": null,
+                "currency": {
+                    "id": "06a699ed-618b-400b-ac8c-8739956fa8e7",
+                    "name": "GBP",
+                    "symbol": "£",
+                    "locale": "en-gb",
+                    "type": "fiat"
+                },
                 "note": "",
                 "seniority": {
                     "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
@@ -76,11 +82,17 @@
                 "deploymentType": "official",
                 "startDate": null,
                 "endDate": null,
-                "rate": "0",
+                "rate": "5000",
                 "discount": "0",
                 "upsellCommissionRate": "0",
                 "leadCommissionRate": "0",
-                "currency": null,
+                "currency": {
+                    "id": "06a699ed-618b-400b-ac8c-8739956fa8e7",
+                    "name": "GBP",
+                    "symbol": "£",
+                    "locale": "en-gb",
+                    "type": "fiat"
+                },
                 "note": "",
                 "seniority": {
                     "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
@@ -118,11 +130,17 @@
                 "deploymentType": "shadow",
                 "startDate": null,
                 "endDate": null,
-                "rate": "0",
+                "rate": "4000",
                 "discount": "0",
                 "upsellCommissionRate": "0",
                 "leadCommissionRate": "0",
-                "currency": null,
+                "currency": {
+                    "id": "06a699ed-618b-400b-ac8c-8739956fa8e7",
+                    "name": "GBP",
+                    "symbol": "£",
+                    "locale": "en-gb",
+                    "type": "fiat"
+                },
                 "note": "",
                 "seniority": {
                     "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
@@ -160,11 +178,17 @@
                 "deploymentType": "official",
                 "startDate": null,
                 "endDate": null,
-                "rate": "0",
+                "rate": "3000",
                 "discount": "0",
                 "upsellCommissionRate": "0",
                 "leadCommissionRate": "0",
-                "currency": null,
+                "currency": {
+                    "id": "06a699ed-618b-400b-ac8c-8739956fa8e7",
+                    "name": "GBP",
+                    "symbol": "£",
+                    "locale": "en-gb",
+                    "type": "fiat"
+                },
                 "note": "",
                 "seniority": {
                     "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
@@ -202,11 +226,17 @@
                 "deploymentType": "shadow",
                 "startDate": null,
                 "endDate": null,
-                "rate": "0",
+                "rate": "4000",
                 "discount": "0",
                 "upsellCommissionRate": "0",
                 "leadCommissionRate": "0",
-                "currency": null,
+                "currency": {
+                    "id": "06a699ed-618b-400b-ac8c-8739956fa8e7",
+                    "name": "GBP",
+                    "symbol": "£",
+                    "locale": "en-gb",
+                    "type": "fiat"
+                },
                 "note": "",
                 "seniority": {
                     "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
@@ -318,6 +348,14 @@
             "code": "dwarves-foundation",
             "name": "Dwarves Foundation",
             "avatar": ""
+        },
+        "monthlyChargeRate": "11000",
+        "currency": {
+            "id": "06a699ed-618b-400b-ac8c-8739956fa8e7",
+            "name": "GBP",
+            "symbol": "£",
+            "locale": "en-gb",
+            "type": "fiat"
         }
     }
 }

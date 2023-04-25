@@ -73,6 +73,7 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 	v1.PUT("/employees/:id/employee-status", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesEdit), h.Employee.UpdateEmployeeStatus)
 	v1.POST("/employees/:id/upload-avatar", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesEdit), h.Employee.UploadAvatar)
 	v1.PUT("/employees/:id/roles", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeeRolesEdit), h.Employee.UpdateRole)
+	v1.PUT("/employees/:id/base-salary", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesBaseSalaryEdit), h.Employee.UpdateBaseSalary)
 
 	v1.GET("/line-managers", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesRead), h.Employee.GetLineManagers)
 
@@ -85,6 +86,7 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 	v1.GET("/metadata/roles", h.Metadata.GetRoles)
 	v1.GET("/metadata/positions", h.Metadata.Positions)
 	v1.GET("/metadata/countries", h.Metadata.GetCountries)
+	v1.GET("/metadata/currencies", h.Metadata.GetCurrencies)
 	v1.GET("/metadata/countries/:country_id/cities", h.Metadata.GetCities)
 	v1.GET("/metadata/project-statuses", h.Metadata.ProjectStatuses)
 	v1.GET("/metadata/questions", h.Metadata.GetQuestions)
@@ -173,46 +175,61 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 	{
 		earn := notion.Group("/earn")
 		{
-			earn.GET("", h.Earn.List)
+			earn.GET("", amw.WithAuth, pmw.WithPerm(model.PermissionNotionRead), h.Notion.ListEarns)
 		}
-		techradar := notion.Group("/tech-radar")
+		techRadar := notion.Group("/tech-radar")
 		{
-			techradar.GET("", h.TechRadar.List)
-			techradar.POST("", h.TechRadar.Create)
+			techRadar.GET("", amw.WithAuth, pmw.WithPerm(model.PermissionNotionRead), h.Notion.ListTechRadars)
+			techRadar.POST("", amw.WithAuth, pmw.WithPerm(model.PermissionNotionCreate), h.Notion.CreateTechRadar)
 		}
 		audience := notion.Group("/audiences")
 		{
-			audience.GET("", h.Audience.List)
+			audience.GET("", amw.WithAuth, pmw.WithPerm(model.PermissionNotionRead), h.Notion.ListAudiences)
 		}
 		event := notion.Group("/events")
 		{
-			event.GET("", h.Event.List)
+			event.GET("", amw.WithAuth, pmw.WithPerm(model.PermissionNotionRead), h.Notion.ListEvents)
 		}
 		digest := notion.Group("/digests")
 		{
-			digest.GET("", h.Digest.List)
+			digest.GET("", amw.WithAuth, pmw.WithPerm(model.PermissionNotionRead), h.Notion.ListDigests)
 		}
 		update := notion.Group("/updates")
 		{
-			update.GET("", h.Update.List)
+			update.GET("", amw.WithAuth, pmw.WithPerm(model.PermissionNotionRead), h.Notion.ListUpdates)
 		}
 		memo := notion.Group("/memos")
 		{
-			memo.GET("", h.Memo.List)
+			memo.GET("", amw.WithAuth, pmw.WithPerm(model.PermissionNotionRead), h.Notion.ListMemos)
 		}
 		issue := notion.Group("/issues")
 		{
-			issue.GET("", h.Issue.List)
+			issue.GET("", amw.WithAuth, pmw.WithPerm(model.PermissionNotionRead), h.Notion.ListIssues)
 		}
 		staffingDemand := notion.Group("/staffing-demands")
 		{
-			staffingDemand.GET("", h.StaffingDemand.List)
+			staffingDemand.GET("", amw.WithAuth, pmw.WithPerm(model.PermissionNotionRead), h.Notion.ListStaffingDemands)
 		}
 		hiring := notion.Group("/hiring-positions")
 		{
-			hiring.GET("", h.Hiring.List)
+			hiring.GET("", amw.WithAuth, pmw.WithPerm(model.PermissionNotionRead), h.Notion.ListHiringPositions)
 		}
-		notion.GET("/projects/milestones", h.Project.ListMilestones)
+
+		projectNotion := notion.Group("/projects")
+		{
+			projectNotion.GET("/milestones", amw.WithAuth, pmw.WithPerm(model.PermissionNotionRead), h.Notion.ListProjectMilestones)
+		}
+
+		dfUpdates := notion.Group("df-updates")
+		{
+			dfUpdates.POST("/:id/send", amw.WithAuth, pmw.WithPerm(model.PermissionNotionSend), h.Notion.SendNewsLetter)
+		}
+
+		notionChangelog := notion.Group("changelogs")
+		{
+			notionChangelog.GET("/projects/available", amw.WithAuth, pmw.WithPerm(model.PermissionNotionRead), h.Notion.GetAvailableProjectsChangelog)
+			notionChangelog.POST("/project", amw.WithAuth, pmw.WithPerm(model.PermissionNotionSend), h.Notion.SendProjectChangelog)
+		}
 	}
 
 	dashboard := v1.Group("/dashboards")
@@ -242,17 +259,6 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 			resourceDashboardGroup.GET("/work-unit-distribution-summary", h.Dashboard.GetWorkUnitDistributionSummary)
 			resourceDashboardGroup.GET("/work-survey-summaries", h.Dashboard.GetResourceWorkSurveySummaries)
 		}
-	}
-
-	notionChangelog := v1.Group("notion-changelog")
-	{
-		notionChangelog.GET("/projects/available", h.Changelog.GetAvailableProjectsChangelog)
-		notionChangelog.POST("/project", h.Changelog.SendProjectChangelog)
-	}
-
-	dfUpdates := v1.Group("df-updates")
-	{
-		dfUpdates.POST("/:id/send", h.DFUpdate.Send)
 	}
 
 	payroll := v1.Group("payrolls")

@@ -22,5 +22,4 @@ type IHandler interface {
 	UnarchiveWorkUnit(c *gin.Context)
 	UpdateSendingSurveyState(c *gin.Context)
 	UploadAvatar(c *gin.Context)
-	ListMilestones(c *gin.Context)
 }

@@ -40,16 +40,22 @@ type EmployeeData struct {
 	JoinedDate    *time.Time          `json:"joinedDate"`
 	LeftDate      *time.Time          `json:"leftDate"`
 
-	Seniority     *model.Seniority      `json:"seniority"`
-	LineManager   *BasicEmployeeInfo    `json:"lineManager"`
-	ReferredBy    *BasicEmployeeInfo    `json:"referredBy"`
-	Organizations []Organization        `json:"organizations"`
-	Positions     []Position            `json:"positions"`
-	Stacks        []Stack               `json:"stacks"`
-	Roles         []Role                `json:"roles"`
-	Projects      []EmployeeProjectData `json:"projects"`
-	Chapters      []Chapter             `json:"chapters"`
-	Mentees       []*MenteeInfo         `json:"mentees"`
+	Seniority          *model.Seniority      `json:"seniority"`
+	LineManager        *BasicEmployeeInfo    `json:"lineManager"`
+	ReferredBy         *BasicEmployeeInfo    `json:"referredBy"`
+	Organizations      []Organization        `json:"organizations"`
+	Positions          []Position            `json:"positions"`
+	Stacks             []Stack               `json:"stacks"`
+	Roles              []Role                `json:"roles"`
+	Projects           []EmployeeProjectData `json:"projects"`
+	Chapters           []Chapter             `json:"chapters"`
+	Mentees            []*MenteeInfo         `json:"mentees"`
+	BaseSalary         *BaseSalary           `json:"baseSalary"`
+	WiseRecipientID    string                `json:"wiseRecipientID"`
+	WiseAccountNumber  string                `json:"wiseAccountNumber"`
+	WiseRecipientEmail string                `json:"wiseRecipientEmail"`
+	WiseRecipientName  string                `json:"wiseRecipientName"`
+	WiseCurrency       string                `json:"wiseCurrency"`
 }
 
 type MenteeInfo struct {
@@ -70,6 +76,21 @@ type SocialAccount struct {
 	DiscordID    string `json:"discordID"`
 	DiscordName  string `json:"discordName"`
 	LinkedInName string `json:"linkedInName"`
+}
+
+type BaseSalary struct {
+	ID                    string            `json:"id"`
+	EmployeeID            string            `json:"employee_id"`
+	ContractAmount        int64             `json:"contract_amount"`
+	CompanyAccountAmount  int64             `json:"company_account_amount"`
+	PersonalAccountAmount int64             `json:"personal_account_amount"`
+	InsuranceAmount       model.VietnamDong `json:"insurance_amount"`
+	Type                  string            `json:"type"`
+	Category              string            `json:"category"`
+	CurrencyID            string            `json:"currency_id"`
+	Currency              *Currency         `json:"currency"`
+	Batch                 int               `json:"batch"`
+	EffectiveDate         *time.Time        `json:"effective_date"`
 }
 
 func toMenteeInfo(employee model.Employee) *MenteeInfo {
@@ -211,6 +232,9 @@ type UpdatePersonalEmployeeResponse struct {
 
 type UpdateGeneralEmployeeResponse struct {
 	Data UpdateGeneralInfoEmployeeData `json:"data"`
+}
+type UpdateBaseSalaryResponse struct {
+	Data BaseSalary `json:"data"`
 }
 
 func ToUpdatePersonalEmployeeData(employee *model.Employee) *UpdatePersonalEmployeeData {
@@ -365,6 +389,12 @@ func ToOneEmployeeData(employee *model.Employee, userInfo *model.CurrentLoggedUs
 		Chapters:  ToChapters(employee.EmployeeChapters),
 	}
 
+	if authutils.HasPermission(userInfo.Permissions, model.PermissionEmployeesBaseSalaryRead) {
+		if !employee.BaseSalary.ID.IsZero() {
+			rs.BaseSalary = ToBaseSalary(&employee.BaseSalary)
+		}
+	}
+
 	if authutils.HasPermission(userInfo.Permissions, model.PermissionEmployeesReadGeneralInfoFullAccess) {
 		rs.NotionID = empSocialData.NotionID
 		rs.NotionName = empSocialData.NotionName
@@ -374,6 +404,11 @@ func ToOneEmployeeData(employee *model.Employee, userInfo *model.CurrentLoggedUs
 		rs.JoinedDate = employee.JoinedDate
 		rs.LeftDate = employee.LeftDate
 		rs.ReferredBy = referrer
+		rs.WiseRecipientID = employee.WiseRecipientID
+		rs.WiseAccountNumber = employee.WiseAccountNumber
+		rs.WiseRecipientEmail = employee.WiseRecipientEmail
+		rs.WiseRecipientName = employee.WiseRecipientName
+		rs.WiseCurrency = employee.WiseCurrency
 	}
 
 	if authutils.HasPermission(userInfo.Permissions, model.PermissionEmployeesReadPersonalInfoFullAccess) {
@@ -518,4 +553,35 @@ func ToBasicEmployees(employees []*model.Employee) []BasicEmployeeInfo {
 	}
 
 	return results
+}
+
+func ToBaseSalary(bs *model.BaseSalary) *BaseSalary {
+	if bs == nil {
+		return nil
+	}
+
+	var currency *Currency
+	if bs.Currency != nil {
+		currency = &Currency{
+			ID:     bs.Currency.ID.String(),
+			Name:   bs.Currency.Name,
+			Symbol: bs.Currency.Symbol,
+			Locale: bs.Currency.Locale,
+			Type:   bs.Currency.Type,
+		}
+	}
+	return &BaseSalary{
+		ID:                    bs.ID.String(),
+		EmployeeID:            bs.EmployeeID.String(),
+		ContractAmount:        bs.ContractAmount,
+		CompanyAccountAmount:  bs.CompanyAccountAmount,
+		PersonalAccountAmount: bs.PersonalAccountAmount,
+		InsuranceAmount:       bs.InsuranceAmount,
+		Type:                  bs.Type,
+		Category:              bs.Category,
+		CurrencyID:            bs.CurrencyID.String(),
+		Currency:              currency,
+		Batch:                 bs.Batch,
+		EffectiveDate:         bs.EffectiveDate,
+	}
 }
