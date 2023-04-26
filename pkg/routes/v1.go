@@ -263,9 +263,9 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 
 	payroll := v1.Group("payrolls")
 	{
-		payroll.PUT("", h.Payroll.MarkPayrollAsPaid)
-		payroll.GET("/detail", h.Payroll.GetPayrollsByMonth)
-		payroll.GET("/bhxh", h.Payroll.GetPayrollsBHXH)
-		payroll.POST("/commit", h.Payroll.CommitPayroll)
+		payroll.PUT("", amw.WithAuth, pmw.WithPerm(model.PermissionPayrollsEdit), h.Payroll.MarkPayrollAsPaid)
+		payroll.GET("/detail", amw.WithAuth, pmw.WithPerm(model.PermissionPayrollsRead), h.Payroll.GetPayrollsByMonth)
+		payroll.GET("/bhxh", amw.WithAuth, pmw.WithPerm(model.PermissionPayrollsRead), h.Payroll.GetPayrollsBHXH)
+		payroll.POST("/commit", amw.WithAuth, pmw.WithPerm(model.PermissionPayrollsCreate), h.Payroll.CommitPayroll)
 	}
 }
