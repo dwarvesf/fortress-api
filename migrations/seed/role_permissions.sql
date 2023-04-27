@@ -11,7 +11,11 @@ INSERT INTO public.role_permissions (id, deleted_at, created_at, updated_at, rol
 -- DISCORD FORTRESS
 INSERT INTO public.role_permissions (id, deleted_at, created_at, updated_at, role_id, permission_id) VALUES
 ('34a22220-725c-4b9c-817f-abfdd0e9d975', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '3fcf9e36-2501-4f86-8418-cfe3a137b7f9', 'f75db77f-e299-4135-81b7-0784b452f7b7'),
-('4fdd56b0-b85c-463d-85ef-4d192949a6e8', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '3fcf9e36-2501-4f86-8418-cfe3a137b7f9', 'd500ea57-da9a-4b24-b147-59d009f0d7bc');
+('4fdd56b0-b85c-463d-85ef-4d192949a6e8', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '3fcf9e36-2501-4f86-8418-cfe3a137b7f9', 'd500ea57-da9a-4b24-b147-59d009f0d7bc'),
+('6daf127e-00e3-41ab-a09b-0c89c453aeab', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '3fcf9e36-2501-4f86-8418-cfe3a137b7f9', 'c604d238-3c43-4825-93eb-db7b01480098'),
+('2e0636b9-bc48-4480-b155-10ea405b95e6', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '3fcf9e36-2501-4f86-8418-cfe3a137b7f9', 'be186320-bef0-48cc-805e-f7b4810a3b30'),
+('82019185-343e-4f76-bd18-85fd7ecada28', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '3fcf9e36-2501-4f86-8418-cfe3a137b7f9', 'f1bef8de-8a6b-4d7d-ae1a-e09ec631fd94'),
+('cd345436-3ae6-4349-948c-dc5fefc30934', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '3fcf9e36-2501-4f86-8418-cfe3a137b7f9', '9be15ffa-3695-4d7f-93aa-ef594a08c36a');
 
 -- CONTRACTOR
 INSERT INTO public.role_permissions (id, deleted_at, created_at, updated_at, role_id, permission_id) VALUES
