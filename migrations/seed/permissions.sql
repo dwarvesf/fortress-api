@@ -83,6 +83,7 @@ INSERT INTO public.permissions (id, deleted_at, created_at, updated_at, name, co
 ('93886b0b-6592-4838-b024-1aefb123fed6', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Asset Upload', 'assets.upload'),
 ('f75db77f-e299-4135-81b7-0784b452f7b7', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Notion Read', 'notion.read'),
 ('d500ea57-da9a-4b24-b147-59d009f0d7bc', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Notion Write', 'notion.write'),
+('c604d238-3c43-4825-93eb-db7b01480098', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Notion Write', 'notion.send'),
 ('be186320-bef0-48cc-805e-f7b4810a3b30', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Payrolls Create', 'payrolls.create'),
 ('f1bef8de-8a6b-4d7d-ae1a-e09ec631fd94', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Payrolls Edit', 'payrolls.edit'),
 ('9be15ffa-3695-4d7f-93aa-ef594a08c36a', NULL, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Payrolls Read', 'payrolls.read');
