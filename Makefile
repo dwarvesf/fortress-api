@@ -57,7 +57,8 @@ air:
 cronjob:
 	go run ./cmd/cronjob/main.go
 
-test: 
+test:
+	golangci-lint run
 	docker rm --volumes -f ${POSTGRES_TEST_CONTAINER}
 	docker-compose up -d ${POSTGRES_TEST_SERVICE}
 	@while ! docker exec $(POSTGRES_TEST_CONTAINER) pg_isready > /dev/null; do \

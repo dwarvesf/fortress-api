@@ -1473,17 +1473,17 @@ definitions:
   request.InvoiceItem:
     properties:
       cost:
-        type: integer
+        type: number
       description:
         type: string
       discount:
-        type: integer
+        type: number
       isExternal:
         type: boolean
       quantity:
         type: number
       unitCost:
-        type: integer
+        type: number
     type: object
   request.ProjectHeadInput:
     properties:
@@ -1504,7 +1504,7 @@ definitions:
         type: string
       discount:
         minimum: 0
-        type: integer
+        type: number
       dueDate:
         type: string
       email:
@@ -1534,13 +1534,13 @@ definitions:
         type: string
       subtotal:
         minimum: 0
-        type: integer
+        type: number
       tax:
         minimum: 0
-        type: integer
+        type: number
       total:
         minimum: 0
-        type: integer
+        type: number
     required:
     - bankID
     - dueDate
@@ -2950,13 +2950,13 @@ definitions:
           type: string
         type: array
       conversionAmount:
-        type: integer
+        type: number
       conversionRate:
         type: number
       description:
         type: string
       discount:
-        type: integer
+        type: number
       dueAt:
         type: string
       email:
@@ -2990,13 +2990,13 @@ definitions:
       status:
         type: string
       subTotal:
-        type: integer
+        type: number
       tax:
-        type: integer
+        type: number
       threadID:
         type: string
       total:
-        type: integer
+        type: number
       year:
         type: integer
     type: object
@@ -3015,13 +3015,13 @@ definitions:
       companyInfo:
         $ref: '#/definitions/view.CompanyInfo'
       conversionAmount:
-        type: integer
+        type: number
       conversionRate:
         type: number
       description:
         type: string
       discount:
-        type: integer
+        type: number
       dueAt:
         type: string
       email:
@@ -3057,30 +3057,30 @@ definitions:
       status:
         type: string
       subTotal:
-        type: integer
+        type: number
       tax:
-        type: integer
+        type: number
       threadID:
         type: string
       total:
-        type: integer
+        type: number
       year:
         type: integer
     type: object
   view.InvoiceItem:
     properties:
       cost:
-        type: integer
+        type: number
       description:
         type: string
       discount:
-        type: integer
+        type: number
       isExternal:
         type: boolean
       quantity:
         type: number
       unitCost:
-        type: integer
+        type: number
     type: object
   view.InvoiceListResponse:
     properties:

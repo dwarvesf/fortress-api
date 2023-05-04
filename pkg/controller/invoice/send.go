@@ -9,7 +9,6 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
-	"strings"
 	"text/template"
 	"time"
 
@@ -22,37 +21,6 @@ import (
 	bcModel "github.com/dwarvesf/fortress-api/pkg/service/basecamp/model"
 	"github.com/dwarvesf/fortress-api/pkg/utils/timeutil"
 )
-
-// InvoiceItem invoice item
-type InvoiceItem struct {
-	Quantity    float64 `json:"quantity"`
-	UnitCost    int64   `json:"unitCost"`
-	Discount    int64   `json:"discount"`
-	Cost        int64   `json:"cost"`
-	Description string  `json:"description"`
-	IsExternal  bool    `json:"isExternal"`
-}
-
-type SendInvoiceInput struct {
-	IsDraft     bool          `json:"isDraft"`
-	ProjectID   model.UUID    `json:"projectID" binding:"required"`
-	BankID      model.UUID    `json:"bankID" binding:"required"`
-	Description string        `json:"description"`
-	Note        string        `json:"note"`
-	CC          []string      `json:"cc"`
-	LineItems   []InvoiceItem `json:"lineItems"`
-	Email       string        `json:"email" binding:"required,email"`
-	Total       int           `json:"total" binding:"gte=0"`
-	Discount    int           `json:"discount" binding:"gte=0"`
-	Tax         int           `json:"tax" binding:"gte=0"`
-	SubTotal    int           `json:"subtotal" binding:"gte=0"`
-	InvoiceDate string        `json:"invoiceDate" binding:"required"`
-	DueDate     string        `json:"dueDate" binding:"required"`
-	Month       int           `json:"invoiceMonth" binding:"gte=0,lte=11"`
-	Year        int           `json:"invoiceYear" binding:"gte=0"`
-	SentByID    *model.UUID
-	Number      string
-}
 
 func (c *controller) Send(iv *model.Invoice) (*model.Invoice, error) {
 	now := time.Now()
@@ -113,13 +81,13 @@ func (c *controller) Send(iv *model.Invoice) (*model.Invoice, error) {
 		return nil, err
 	}
 
-	temp, rate, err := c.service.Wise.Convert(float64(iv.Total), iv.Bank.Currency.Name, "VND")
+	conversionAmount, rate, err := c.service.Wise.Convert(iv.Total, iv.Bank.Currency.Name, "VND")
 	if err != nil {
 		l.Error(err, "failed to convert currency")
 		return nil, err
 	}
-	am := model.NewVietnamDong(int64(temp))
-	iv.ConversionAmount = int64(am)
+	am := model.NewVietnamDong(int64(conversionAmount))
+	iv.ConversionAmount = float64(am)
 	iv.ConversionRate = rate
 
 	savedInvoice, err := c.store.Invoice.Save(c.repo.DB(), iv)
@@ -187,7 +155,7 @@ func (c *controller) Send(iv *model.Invoice) (*model.Invoice, error) {
 			}
 
 			msg := fmt.Sprintf(`#Invoice %v has been sent
-
+	
 			Confirm Command: Paid @Giang #%v`, iv.Number, iv.Number)
 
 			c.worker.Enqueue(bcModel.BasecampCommentMsg, c.service.Basecamp.BuildCommentMessage(bucketID, todoID, msg, ""))
@@ -274,16 +242,11 @@ func (c *controller) generateInvoicePDF(l logger.Logger, invoice *model.Invoice)
 			return timeutil.
 				FormatDatetime(timeutil.LastDayOfMonth(invoice.Month, invoice.Year))
 		},
-		"formatMoney": func(money int64) string {
+		"formatMoney": func(money float64) string {
 			var result string
-			formatted := pound.
-				Multiply(money * int64(math.Pow(10, float64(pound.Currency().Fraction)))).
-				Display()
-			result = formatted
-			parts := strings.Split(formatted, ".00")
-			if len(parts) > 1 {
-				result = parts[0]
-			}
+			tmpValue := money * math.Pow(10, float64(pound.Currency().Fraction))
+			result = pound.Multiply(int64(tmpValue)).Display()
+
 			return result
 		},
 		"haveDescription": func(description string) bool {
