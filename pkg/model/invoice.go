@@ -49,11 +49,11 @@ type Invoice struct {
 	CC               JSON
 	Description      string
 	Note             string
-	SubTotal         int64
-	Tax              int64
-	Discount         int64
-	Total            int64
-	ConversionAmount int64
+	SubTotal         float64
+	Tax              float64
+	Discount         float64
+	Total            float64
+	ConversionAmount float64
 	InvoiceFileURL   string
 	ErrorInvoiceID   *UUID
 	LineItems        JSON
@@ -105,9 +105,9 @@ func GatherAddresses(CCs JSON) (string, error) {
 
 type InvoiceItem struct {
 	Quantity    float64 `json:"quantity"`
-	UnitCost    int64   `json:"unit_cost"`
-	Discount    int64   `json:"discount"`
-	Cost        int64   `json:"cost"`
+	UnitCost    float64 `json:"unit_cost"`
+	Discount    float64 `json:"discount"`
+	Cost        float64 `json:"cost"`
 	Description string  `json:"description"`
 	IsExternal  bool    `json:"is_external"`
 }

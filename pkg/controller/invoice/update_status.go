@@ -238,7 +238,7 @@ func (c *controller) processPaidInvoiceData(l logger.Logger, wg *sync.WaitGroup,
 
 	accountingTxn := &model.AccountingTransaction{
 		Name:             req.Invoice.Number,
-		Amount:           float64(req.Invoice.Total),
+		Amount:           req.Invoice.Total,
 		Date:             &now,
 		ConversionAmount: model.VietnamDong(req.Invoice.ConversionAmount),
 		Organization:     projectOrg,

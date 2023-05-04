@@ -7931,13 +7931,13 @@
             "type": "object",
             "properties": {
                 "cost": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "description": {
                     "type": "string"
                 },
                 "discount": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "isExternal": {
                     "type": "boolean"
@@ -7946,7 +7946,7 @@
                     "type": "number"
                 },
                 "unitCost": {
-                    "type": "integer"
+                    "type": "number"
                 }
             }
         },
@@ -7984,7 +7984,7 @@
                     "type": "string"
                 },
                 "discount": {
-                    "type": "integer",
+                    "type": "number",
                     "minimum": 0
                 },
                 "dueDate": {
@@ -8027,15 +8027,15 @@
                     "type": "string"
                 },
                 "subtotal": {
-                    "type": "integer",
+                    "type": "number",
                     "minimum": 0
                 },
                 "tax": {
-                    "type": "integer",
+                    "type": "number",
                     "minimum": 0
                 },
                 "total": {
-                    "type": "integer",
+                    "type": "number",
                     "minimum": 0
                 }
             }
@@ -10171,7 +10171,7 @@
                     }
                 },
                 "conversionAmount": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "conversionRate": {
                     "type": "number"
@@ -10180,7 +10180,7 @@
                     "type": "string"
                 },
                 "discount": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "dueAt": {
                     "type": "string"
@@ -10231,16 +10231,16 @@
                     "type": "string"
                 },
                 "subTotal": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "tax": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "threadID": {
                     "type": "string"
                 },
                 "total": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "year": {
                     "type": "integer"
@@ -10269,7 +10269,7 @@
                     "$ref": "#/definitions/view.CompanyInfo"
                 },
                 "conversionAmount": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "conversionRate": {
                     "type": "number"
@@ -10278,7 +10278,7 @@
                     "type": "string"
                 },
                 "discount": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "dueAt": {
                     "type": "string"
@@ -10332,16 +10332,16 @@
                     "type": "string"
                 },
                 "subTotal": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "tax": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "threadID": {
                     "type": "string"
                 },
                 "total": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "year": {
                     "type": "integer"
@@ -10352,13 +10352,13 @@
             "type": "object",
             "properties": {
                 "cost": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "description": {
                     "type": "string"
                 },
                 "discount": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "isExternal": {
                     "type": "boolean"
@@ -10367,7 +10367,7 @@
                     "type": "number"
                 },
                 "unitCost": {
-                    "type": "integer"
+                    "type": "number"
                 }
             }
         },
