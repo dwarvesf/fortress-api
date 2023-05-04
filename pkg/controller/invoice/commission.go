@@ -70,7 +70,7 @@ func (c *controller) calculateCommissionFromInvoice(db *gorm.DB, l logger.Logger
 	if len(pics.devLeads) > 0 {
 		commissionRate := commissionConfigMap[model.HeadPositionTechnicalLead.String()]
 		if commissionRate.GreaterThan(decimal.NewFromInt(0)) {
-			c, err := c.calculateHeadCommission(commissionRate, pics.devLeads, invoice, float64(invoice.Total))
+			c, err := c.calculateHeadCommission(commissionRate, pics.devLeads, invoice, invoice.Total)
 			if err != nil {
 				l.Errorf(err, "failed to calculate dev lead commission rate", "projectID", invoice.ProjectID.String())
 				return nil, err
@@ -82,7 +82,7 @@ func (c *controller) calculateCommissionFromInvoice(db *gorm.DB, l logger.Logger
 	if len(pics.accountManagers) > 0 {
 		commissionRate := commissionConfigMap[model.HeadPositionAccountManager.String()]
 		if commissionRate.GreaterThan(decimal.NewFromInt(0)) {
-			c, err := c.calculateHeadCommission(commissionRate, pics.accountManagers, invoice, float64(invoice.Total))
+			c, err := c.calculateHeadCommission(commissionRate, pics.accountManagers, invoice, invoice.Total)
 			if err != nil {
 				l.Errorf(err, "failed to calculate account manager commission rate", "projectID", invoice.ProjectID.String())
 				return nil, err
@@ -94,7 +94,7 @@ func (c *controller) calculateCommissionFromInvoice(db *gorm.DB, l logger.Logger
 	if len(pics.deliveryManagers) > 0 {
 		commissionRate := commissionConfigMap[model.HeadPositionDeliveryManager.String()]
 		if commissionRate.GreaterThan(decimal.NewFromInt(0)) {
-			c, err := c.calculateHeadCommission(commissionRate, pics.deliveryManagers, invoice, float64(invoice.Total))
+			c, err := c.calculateHeadCommission(commissionRate, pics.deliveryManagers, invoice, invoice.Total)
 			if err != nil {
 				l.Errorf(err, "failed to calculate delivery manager commission rate", "projectID", invoice.ProjectID.String())
 				return nil, err
@@ -106,7 +106,7 @@ func (c *controller) calculateCommissionFromInvoice(db *gorm.DB, l logger.Logger
 	if len(pics.sales) > 0 {
 		commissionRate := commissionConfigMap[model.HeadPositionSalePerson.String()]
 		if commissionRate.GreaterThan(decimal.NewFromInt(0)) {
-			c, err := c.calculateHeadCommission(commissionRate, pics.sales, invoice, float64(invoice.Total))
+			c, err := c.calculateHeadCommission(commissionRate, pics.sales, invoice, invoice.Total)
 			if err != nil {
 				l.Errorf(err, "failed to calculate account manager commission rate", "projectID", invoice.ProjectID.String())
 				return nil, err
@@ -151,28 +151,28 @@ func getPICs(invoice *model.Invoice, projectMembers []*model.ProjectMember) *pic
 			devLeads = append(devLeads, pic{
 				ID:             itm.EmployeeID,
 				CommissionRate: itm.CommissionRate,
-				ChargeRate:     float64(invoice.Total),
+				ChargeRate:     invoice.Total,
 				Note:           "Lead",
 			})
 		case model.HeadPositionAccountManager:
 			accountManagers = append(accountManagers, pic{
 				ID:             itm.EmployeeID,
 				CommissionRate: itm.CommissionRate,
-				ChargeRate:     float64(invoice.Total),
+				ChargeRate:     invoice.Total,
 				Note:           "Account Manager",
 			})
 		case model.HeadPositionDeliveryManager:
 			deliveryManagers = append(deliveryManagers, pic{
 				ID:             itm.EmployeeID,
 				CommissionRate: itm.CommissionRate,
-				ChargeRate:     float64(invoice.Total),
+				ChargeRate:     invoice.Total,
 				Note:           "Delivery Manager",
 			})
 		case model.HeadPositionSalePerson:
 			sales = append(sales, pic{
 				ID:             itm.EmployeeID,
 				CommissionRate: itm.CommissionRate,
-				ChargeRate:     float64(invoice.Total),
+				ChargeRate:     invoice.Total,
 				Note:           "Sales",
 			})
 		}

@@ -22,11 +22,11 @@ type Invoice struct {
 	CC               []string      `json:"cc"`
 	Description      string        `json:"description"`
 	Note             string        `json:"note"`
-	SubTotal         int64         `json:"subTotal"`
-	Tax              int64         `json:"tax"`
-	Discount         int64         `json:"discount"`
-	Total            int64         `json:"total"`
-	ConversionAmount int64         `json:"conversionAmount"`
+	SubTotal         float64       `json:"subTotal"`
+	Tax              float64       `json:"tax"`
+	Discount         float64       `json:"discount"`
+	Total            float64       `json:"total"`
+	ConversionAmount float64       `json:"conversionAmount"`
 	InvoiceFileURL   string        `json:"invoiceFileURL"`
 	ErrorInvoiceID   string        `json:"errorInvoiceID"`
 	LineItems        []InvoiceItem `json:"lineItems"`
@@ -64,9 +64,9 @@ type CompanyInfo struct {
 
 type InvoiceItem struct {
 	Quantity    float64 `json:"quantity"`
-	UnitCost    int64   `json:"unitCost"`
-	Discount    int64   `json:"discount"`
-	Cost        int64   `json:"cost"`
+	UnitCost    float64 `json:"unitCost"`
+	Discount    float64 `json:"discount"`
+	Cost        float64 `json:"cost"`
 	Description string  `json:"description"`
 	IsExternal  bool    `json:"isExternal"`
 }

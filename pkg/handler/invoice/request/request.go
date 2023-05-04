@@ -2,6 +2,7 @@ package request
 
 import (
 	"encoding/json"
+	"math"
 	"strings"
 	"time"
 
@@ -70,10 +71,10 @@ type SendInvoiceRequest struct {
 	CC          []string      `json:"cc"`
 	LineItems   []InvoiceItem `json:"lineItems"`
 	Email       string        `json:"email" binding:"required,email"`
-	Total       int           `json:"total" binding:"gte=0"`
-	Discount    int           `json:"discount" binding:"gte=0"`
-	Tax         int           `json:"tax" binding:"gte=0"`
-	SubTotal    int           `json:"subtotal" binding:"gte=0"`
+	Total       float64       `json:"total" binding:"gte=0"`
+	Discount    float64       `json:"discount" binding:"gte=0"`
+	Tax         float64       `json:"tax" binding:"gte=0"`
+	SubTotal    float64       `json:"subtotal" binding:"gte=0"`
 	InvoiceDate string        `json:"invoiceDate" binding:"required"`
 	DueDate     string        `json:"dueDate" binding:"required"`
 	Month       int           `json:"invoiceMonth" binding:"gte=0,lte=11"`
@@ -84,9 +85,9 @@ type SendInvoiceRequest struct {
 
 type InvoiceItem struct {
 	Quantity    float64 `json:"quantity"`
-	UnitCost    int64   `json:"unitCost"`
-	Discount    int64   `json:"discount"`
-	Cost        int64   `json:"cost"`
+	UnitCost    float64 `json:"unitCost"`
+	Discount    float64 `json:"discount"`
+	Cost        float64 `json:"cost"`
 	Description string  `json:"description"`
 	IsExternal  bool    `json:"isExternal"`
 }
@@ -95,10 +96,10 @@ func toInvoiceItemsModel(lineItems []InvoiceItem) []model.InvoiceItem {
 	var items []model.InvoiceItem
 	for _, item := range lineItems {
 		items = append(items, model.InvoiceItem{
-			Quantity:    item.Quantity,
-			UnitCost:    item.UnitCost,
-			Discount:    item.Discount,
-			Cost:        item.Cost,
+			Quantity:    math.Round(item.Quantity*100) / 100,
+			UnitCost:    math.Round(item.UnitCost*100) / 100,
+			Discount:    math.Round(item.Discount*100) / 100,
+			Cost:        math.Round(item.Cost*100) / 100,
 			Description: item.Description,
 			IsExternal:  item.IsExternal,
 		})
@@ -173,10 +174,10 @@ func (i *SendInvoiceRequest) ToInvoiceModel() (*model.Invoice, error) {
 		LineItems:   lineItems,
 		Email:       i.Email,
 		CC:          cc,
-		Total:       int64(i.Total),
-		Discount:    int64(i.Discount),
-		Tax:         int64(i.Tax),
-		SubTotal:    int64(i.SubTotal),
+		Total:       math.Round(i.Total*100) / 100,
+		Discount:    math.Round(i.Discount*100) / 100,
+		Tax:         i.Tax,
+		SubTotal:    math.Round(i.SubTotal*100) / 100,
 		Month:       i.Month + 1,
 		Year:        i.Year,
 		Status:      defaultStatus,

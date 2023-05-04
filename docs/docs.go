@@ -7939,13 +7939,13 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "cost": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "description": {
                     "type": "string"
                 },
                 "discount": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "isExternal": {
                     "type": "boolean"
@@ -7954,7 +7954,7 @@ const docTemplate = `{
                     "type": "number"
                 },
                 "unitCost": {
-                    "type": "integer"
+                    "type": "number"
                 }
             }
         },
@@ -7992,7 +7992,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "discount": {
-                    "type": "integer",
+                    "type": "number",
                     "minimum": 0
                 },
                 "dueDate": {
@@ -8035,15 +8035,15 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "subtotal": {
-                    "type": "integer",
+                    "type": "number",
                     "minimum": 0
                 },
                 "tax": {
-                    "type": "integer",
+                    "type": "number",
                     "minimum": 0
                 },
                 "total": {
-                    "type": "integer",
+                    "type": "number",
                     "minimum": 0
                 }
             }
@@ -10179,7 +10179,7 @@ const docTemplate = `{
                     }
                 },
                 "conversionAmount": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "conversionRate": {
                     "type": "number"
@@ -10188,7 +10188,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "discount": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "dueAt": {
                     "type": "string"
@@ -10239,16 +10239,16 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "subTotal": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "tax": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "threadID": {
                     "type": "string"
                 },
                 "total": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "year": {
                     "type": "integer"
@@ -10277,7 +10277,7 @@ const docTemplate = `{
                     "$ref": "#/definitions/view.CompanyInfo"
                 },
                 "conversionAmount": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "conversionRate": {
                     "type": "number"
@@ -10286,7 +10286,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "discount": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "dueAt": {
                     "type": "string"
@@ -10340,16 +10340,16 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "subTotal": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "tax": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "threadID": {
                     "type": "string"
                 },
                 "total": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "year": {
                     "type": "integer"
@@ -10360,13 +10360,13 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "cost": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "description": {
                     "type": "string"
                 },
                 "discount": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "isExternal": {
                     "type": "boolean"
@@ -10375,7 +10375,7 @@ const docTemplate = `{
                     "type": "number"
                 },
                 "unitCost": {
-                    "type": "integer"
+                    "type": "number"
                 }
             }
         },
