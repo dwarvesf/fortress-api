@@ -936,12 +936,6 @@ func (h *handler) UpdateMember(c *gin.Context) {
 		return
 	}
 
-	// if slot.Status == model.ProjectMemberStatusInactive {
-	// 	l.Info("slot is inactive")
-	// 	c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrSlotIsInactive, body, ""))
-	// 	return
-	// }
-
 	tx, done := h.repo.NewTransaction()
 
 	if !body.EmployeeID.IsZero() {

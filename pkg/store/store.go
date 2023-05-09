@@ -23,6 +23,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/store/country"
 	"github.com/dwarvesf/fortress-api/pkg/store/currency"
 	"github.com/dwarvesf/fortress-api/pkg/store/dashboard"
+	"github.com/dwarvesf/fortress-api/pkg/store/discordtemplate"
 	"github.com/dwarvesf/fortress-api/pkg/store/employee"
 	"github.com/dwarvesf/fortress-api/pkg/store/employeechapter"
 	"github.com/dwarvesf/fortress-api/pkg/store/employeecommission"
@@ -126,6 +127,7 @@ type Store struct {
 	WorkUnitMember          workunitmember.IStore
 	WorkUnitStack           workunitstack.IStore
 	OperationalService      operationalservice.IStore
+	DiscordLogTemplate      discordtemplate.IStore
 }
 
 func New() *Store {
@@ -191,5 +193,6 @@ func New() *Store {
 		WorkUnitMember:          workunitmember.New(),
 		WorkUnitStack:           workunitstack.New(),
 		OperationalService:      operationalservice.New(),
+		DiscordLogTemplate:      discordtemplate.New(),
 	}
 }
