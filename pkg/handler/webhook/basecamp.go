@@ -118,5 +118,13 @@ func (h *handler) markInvoiceAsPaid(msg *model.BasecampWebhookMessage) error {
 		return err
 	}
 
+	// log discord as audit log
+	h.controller.Discord.LogDiscord(model.LogDiscordInput{
+		Type: "invoice_paid",
+		Data: map[string]interface{}{
+			"invoice_number": invoice.Number,
+		},
+	})
+
 	return nil
 }
