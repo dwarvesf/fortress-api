@@ -2,7 +2,6 @@ package employee
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -18,6 +17,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/store"
+	"github.com/dwarvesf/fortress-api/pkg/utils"
 	"github.com/dwarvesf/fortress-api/pkg/utils/authutils"
 	"github.com/dwarvesf/fortress-api/pkg/view"
 )
@@ -742,13 +742,15 @@ func (h *handler) UpdateBaseSalary(c *gin.Context) {
 		return
 	}
 
+	totalBaseSalary := req.PersonalAccountAmount + req.CompanyAccountAmount
+	formattedBaseSalary := utils.FormatMoney(float64(totalBaseSalary), "VND")
 	// update discord as audit log
 	err = h.controller.Discord.Log(model.LogDiscordInput{
 		Type: "employee_update_base_salary",
 		Data: map[string]interface{}{
 			"employee_id":         userID,
 			"updated_employee_id": employeeID,
-			"new_salary":          fmt.Sprintf("%v vnđ", req.PersonalAccountAmount+req.CompanyAccountAmount),
+			"new_salary":          formattedBaseSalary,
 		},
 	})
 	if err != nil {

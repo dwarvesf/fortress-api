@@ -1,4 +1,4 @@
-// please edit this file only with approval from hnh
+// Package payroll please edit this file only with approval from hnh
 package payroll
 
 import (
@@ -16,6 +16,7 @@ import (
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/consts"
+	"github.com/dwarvesf/fortress-api/pkg/controller"
 	"github.com/dwarvesf/fortress-api/pkg/handler/payroll/errs"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
@@ -32,23 +33,25 @@ import (
 )
 
 type handler struct {
-	store   *store.Store
-	service *service.Service
-	logger  logger.Logger
-	worker  *worker.Worker
-	repo    store.DBRepo
-	config  *config.Config
+	controller *controller.Controller
+	store      *store.Store
+	service    *service.Service
+	logger     logger.Logger
+	worker     *worker.Worker
+	repo       store.DBRepo
+	config     *config.Config
 }
 
 // New returns a handler
-func New(store *store.Store, repo store.DBRepo, service *service.Service, worker *worker.Worker, logger logger.Logger, cfg *config.Config) IHandler {
+func New(controller *controller.Controller, store *store.Store, repo store.DBRepo, service *service.Service, worker *worker.Worker, logger logger.Logger, cfg *config.Config) IHandler {
 	return &handler{
-		store:   store,
-		repo:    repo,
-		service: service,
-		worker:  worker,
-		logger:  logger,
-		config:  cfg,
+		controller: controller,
+		store:      store,
+		repo:       repo,
+		service:    service,
+		worker:     worker,
+		logger:     logger,
+		config:     cfg,
 	}
 }
 
@@ -142,7 +145,7 @@ func GetPayrollBHXHHandler(h *handler) (interface{}, error) {
 		AccountNumber string `json:"account_number"`
 		Bank          string `json:"bank"`
 	}
-	res := []payrollBHXHResponse{}
+	var res []payrollBHXHResponse
 
 	isLeft := false
 	for _, b := range []int{int(model.FirstBatch), int(model.SecondBatch)} {
@@ -631,7 +634,12 @@ func (h *handler) GetPayrollsBHXH(c *gin.Context) {
 }
 
 func (h *handler) CommitPayroll(c *gin.Context) {
-	h.logger.Info("Start commit payroll")
+	l := h.logger.Fields(logger.Fields{
+		"handler": "payroll",
+		"method":  "CommitPayroll",
+	})
+
+	l.Info("Start commit payroll")
 
 	year, err := strconv.ParseInt(c.Query("year"), 0, 64)
 	if err != nil || year <= 0 {
@@ -647,28 +655,42 @@ func (h *handler) CommitPayroll(c *gin.Context) {
 	}
 	month, err := strconv.ParseInt(c.Query("month"), 0, 64)
 	if err != nil {
-		h.logger.Error(err, "month")
+		l.Errorf(err, "failed to parse month", "month", month)
 		month = int64(time.Now().Month())
 	}
 
 	batch, err := strconv.ParseInt(c.Query("date"), 0, 64)
 	if err != nil {
+		l.Errorf(err, "failed to parse date", "date", batch)
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrBadRequest, nil, ""))
 		return
 	}
 
 	email := c.Query("email")
 
-	err = commitPayrollHandler(h, int(month), int(year), int(batch), email)
+	err = h.commitPayrollHandler(int(month), int(year), int(batch), email)
 	if err != nil {
+		l.Errorf(err, "failed to parse date", "date", batch)
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
+	}
+
+	err = h.controller.Discord.Log(model.LogDiscordInput{
+		Type: "payroll_commit",
+		Data: map[string]interface{}{
+			"batch_number": strconv.Itoa(int(batch)),
+			"month":        time.Month(month).String(),
+			"year":         year,
+		},
+	})
+	if err != nil {
+		l.Error(err, "failed to logs to discord")
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, ""))
 }
 
-func commitPayrollHandler(h *handler, month, year, batch int, email string) error {
+func (h *handler) commitPayrollHandler(month, year, batch int, email string) error {
 	month, year = timeutil.LastMonthYear(month, year)
 	if month > int(time.Now().Month()) {
 		if month != 12 && time.Now().Month() != 1 {
