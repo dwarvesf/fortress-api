@@ -206,13 +206,16 @@ func (h *handler) Send(c *gin.Context) {
 	}
 
 	// send message to discord channel
-	h.controller.Discord.LogDiscord(model.LogDiscordInput{
+	err = h.controller.Discord.Log(model.LogDiscordInput{
 		Type: "invoice_send",
 		Data: map[string]interface{}{
 			"invoice_number": iv.Number,
-			"employee_id":    senderID,
+			"employee_id":    userID,
 		},
 	})
+	if err != nil {
+		l.Error(err, "failed to log to discord")
+	}
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))
 }
