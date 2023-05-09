@@ -13,6 +13,7 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
+	"github.com/dwarvesf/fortress-api/pkg/controller"
 	"github.com/dwarvesf/fortress-api/pkg/handler/project/errs"
 	"github.com/dwarvesf/fortress-api/pkg/handler/project/request"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
@@ -20,25 +21,28 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/store/project"
+	"github.com/dwarvesf/fortress-api/pkg/utils"
 	"github.com/dwarvesf/fortress-api/pkg/utils/authutils"
 	"github.com/dwarvesf/fortress-api/pkg/view"
 )
 
 type handler struct {
-	store   *store.Store
-	service *service.Service
-	logger  logger.Logger
-	repo    store.DBRepo
-	config  *config.Config
+	store      *store.Store
+	controller *controller.Controller
+	service    *service.Service
+	logger     logger.Logger
+	repo       store.DBRepo
+	config     *config.Config
 }
 
-func New(store *store.Store, repo store.DBRepo, service *service.Service, logger logger.Logger, cfg *config.Config) IHandler {
+func New(controller *controller.Controller, store *store.Store, repo store.DBRepo, service *service.Service, logger logger.Logger, cfg *config.Config) IHandler {
 	return &handler{
-		store:   store,
-		repo:    repo,
-		service: service,
-		logger:  logger,
-		config:  cfg,
+		store:      store,
+		controller: controller,
+		repo:       repo,
+		service:    service,
+		logger:     logger,
+		config:     cfg,
 	}
 }
 
@@ -404,7 +408,7 @@ func (h *handler) Create(c *gin.Context) {
 
 	// assign members to project
 	for _, member := range body.Members {
-		slot, code, err := h.createSlotsAndAssignMembers(tx.DB(), p.ID.String(), member, userInfo)
+		slot, code, err := h.createSlotsAndAssignMembers(tx.DB(), p, member, userInfo)
 		if err != nil {
 			l.Error(err, "failed to assign member to project")
 			c.JSON(code, view.CreateResponse[any](nil, nil, done(err), member, ""))
@@ -879,21 +883,21 @@ func (h *handler) UpdateMember(c *gin.Context) {
 	}
 
 	// check project existence
-	exists, err := h.store.Project.IsExist(h.repo.DB(), projectID)
+	p, err := h.store.Project.One(h.repo.DB(), projectID, false)
 	if err != nil {
-		l.Error(err, "failed to check project existence")
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			l.Error(err, "project not found")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, body, ""))
+			return
+		}
+
+		l.Error(err, "failed to get project")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
 		return
 	}
 
-	if !exists {
-		l.Error(errs.ErrProjectNotFound, "cannot find project by id")
-		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, body, ""))
-		return
-	}
-
 	// check seniority existence
-	exists, err = h.store.Seniority.IsExist(h.repo.DB(), body.SeniorityID.String())
+	exists, err := h.store.Seniority.IsExist(h.repo.DB(), body.SeniorityID.String())
 	if err != nil {
 		l.Error(err, "failed to check seniority existence")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
@@ -939,7 +943,7 @@ func (h *handler) UpdateMember(c *gin.Context) {
 	tx, done := h.repo.NewTransaction()
 
 	if !body.EmployeeID.IsZero() {
-		member, err := h.updateProjectMember(tx.DB(), slot.ID.String(), projectID, body, userInfo)
+		member, err := h.updateProjectMember(tx.DB(), p, slot.ID.String(), projectID, body, userInfo)
 		if err != nil {
 			l.Error(err, "failed to update project member")
 			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
@@ -1030,7 +1034,7 @@ func (h *handler) UpdateMember(c *gin.Context) {
 //		 }
 //
 // --- end ---
-func (h *handler) updateProjectMember(db *gorm.DB, slotID string, projectID string, input request.UpdateMemberInput, userInfo *model.CurrentLoggedUserInfo) (*model.ProjectMember, error) {
+func (h *handler) updateProjectMember(db *gorm.DB, p *model.Project, slotID string, projectID string, input request.UpdateMemberInput, userInfo *model.CurrentLoggedUserInfo) (*model.ProjectMember, error) {
 	var member *model.ProjectMember
 	var err error
 
@@ -1063,18 +1067,27 @@ func (h *handler) updateProjectMember(db *gorm.DB, slotID string, projectID stri
 
 		member.SeniorityID = input.SeniorityID
 		member.DeploymentType = model.DeploymentType(input.DeploymentType)
-		member.Status = model.ProjectMemberStatus(input.Status)
 		member.StartDate = input.GetStartDate()
 		member.EndDate = input.GetEndDate()
 		member.Note = input.Note
 		member.UpsellPersonID = input.UpsellPersonID
 
+		updateStatus := false
+		if member.Status != model.ProjectMemberStatus(input.Status) {
+			member.Status = model.ProjectMemberStatus(input.Status)
+			updateStatus = true
+		}
+
 		if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsCommissionRateEdit) {
 			member.UpsellCommissionRate = input.UpsellCommissionRate
 		}
 
+		updateRate := false
 		if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectMembersRateEdit) {
-			member.Rate = input.Rate
+			if member.Rate != input.Rate {
+				member.Rate = input.Rate
+				updateRate = true
+			}
 			member.Discount = input.Discount
 		}
 
@@ -1093,6 +1106,38 @@ func (h *handler) updateProjectMember(db *gorm.DB, slotID string, projectID stri
 		if err != nil {
 			h.logger.Fields(logger.Fields{"member": member}).Error(err, "failed to update project member")
 			return nil, err
+		}
+
+		if updateStatus {
+			err = h.controller.Discord.Log(model.LogDiscordInput{
+				Type: "project_member_update_status",
+				Data: map[string]interface{}{
+					"employee_id":         userInfo.UserID,
+					"updated_employee_id": member.EmployeeID.String(),
+					"project_name":        p.Name,
+					"status":              member.Status.String(),
+				},
+			})
+			if err != nil {
+				h.logger.Fields(logger.Fields{"member": member}).Error(err, "failed to log project member status update")
+			}
+		}
+
+		if updateRate {
+			charRate, _ := member.Rate.Float64()
+			rate := utils.FormatMoney(charRate, p.BankAccount.Currency.Name)
+			err = h.controller.Discord.Log(model.LogDiscordInput{
+				Type: "project_member_update_charge_rate",
+				Data: map[string]interface{}{
+					"employee_id":         userInfo.UserID,
+					"updated_employee_id": member.EmployeeID.String(),
+					"project_name":        p.Name,
+					"rate":                fmt.Sprintf("%s%s", rate, p.BankAccount.Currency.Name),
+				},
+			})
+			if err != nil {
+				h.logger.Fields(logger.Fields{"member": member}).Error(err, "failed to log project member charge rate update")
+			}
 		}
 	} else {
 		// Update pending slot
@@ -1148,6 +1193,19 @@ func (h *handler) updateProjectMember(db *gorm.DB, slotID string, projectID stri
 			if err := h.store.ProjectMember.Create(db, member); err != nil {
 				h.logger.Fields(logger.Fields{"member": member}).Error(err, "failed to create project member")
 				return nil, err
+			}
+
+			err = h.controller.Discord.Log(model.LogDiscordInput{
+				Type: "project_member_add",
+				Data: map[string]interface{}{
+					"employee_id":         userInfo.UserID,
+					"updated_employee_id": member.EmployeeID.String(),
+					"project_name":        p.Name,
+					"deployment_type":     member.DeploymentType.String(),
+				},
+			})
+			if err != nil {
+				h.logger.Fields(logger.Fields{"member": member}).Error(err, "failed to log project member add")
 			}
 		}
 	}
@@ -1279,16 +1337,15 @@ func (h *handler) AssignMember(c *gin.Context) {
 	// }
 
 	// check project existence
-	exists, err := h.store.Project.IsExist(h.repo.DB(), projectID)
+	p, err := h.store.Project.One(h.repo.DB(), projectID, false)
 	if err != nil {
-		l.Error(err, "failed to check project existence")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
-		return
-	}
-
-	if !exists {
-		l.Error(errs.ErrProjectNotFound, "cannot find project by id")
-		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, body, ""))
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			l.Info("project not found")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, nil, ""))
+			return
+		}
+		l.Error(err, "error query project from db")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
 	}
 
@@ -1297,7 +1354,7 @@ func (h *handler) AssignMember(c *gin.Context) {
 
 	tx, done := h.repo.NewTransaction()
 
-	slot, code, err := h.createSlotsAndAssignMembers(tx.DB(), projectID, body, userInfo)
+	slot, code, err := h.createSlotsAndAssignMembers(tx.DB(), p, body, userInfo)
 	if err != nil {
 		l.Error(err, "failed to assign member to project")
 		c.JSON(code, view.CreateResponse[any](nil, nil, done(err), body, ""))
@@ -1306,7 +1363,7 @@ func (h *handler) AssignMember(c *gin.Context) {
 	c.JSON(http.StatusOK, view.CreateResponse(view.ToCreateMemberData(userInfo, slot), nil, done(nil), nil, ""))
 }
 
-func (h *handler) createSlotsAndAssignMembers(db *gorm.DB, projectID string, req request.AssignMemberInput, userInfo *model.CurrentLoggedUserInfo) (*model.ProjectSlot, int, error) {
+func (h *handler) createSlotsAndAssignMembers(db *gorm.DB, p *model.Project, req request.AssignMemberInput, userInfo *model.CurrentLoggedUserInfo) (*model.ProjectSlot, int, error) {
 	l := h.logger
 
 	// check seniority existence
@@ -1337,7 +1394,7 @@ func (h *handler) createSlotsAndAssignMembers(db *gorm.DB, projectID string, req
 
 	// create project slot
 	slot := &model.ProjectSlot{
-		ProjectID:      model.MustGetUUIDFromString(projectID),
+		ProjectID:      p.ID,
 		DeploymentType: model.DeploymentType(req.DeploymentType),
 		Status:         req.GetStatus(),
 		SeniorityID:    req.SeniorityID,
@@ -1406,7 +1463,7 @@ func (h *handler) createSlotsAndAssignMembers(db *gorm.DB, projectID string, req
 
 		// create project member
 		member := &model.ProjectMember{
-			ProjectID:      model.MustGetUUIDFromString(projectID),
+			ProjectID:      p.ID,
 			EmployeeID:     req.EmployeeID,
 			SeniorityID:    req.SeniorityID,
 			ProjectSlotID:  slot.ID,
@@ -1450,7 +1507,7 @@ func (h *handler) createSlotsAndAssignMembers(db *gorm.DB, projectID string, req
 		slot.ProjectMember.IsLead = req.IsLead
 		if req.IsLead {
 			head := &model.ProjectHead{
-				ProjectID:  model.MustGetUUIDFromString(projectID),
+				ProjectID:  p.ID,
 				EmployeeID: req.EmployeeID,
 				Position:   model.HeadPositionTechnicalLead,
 				StartDate:  *req.GetStartDate(),
@@ -1466,6 +1523,19 @@ func (h *handler) createSlotsAndAssignMembers(db *gorm.DB, projectID string, req
 			}
 
 			slot.ProjectMember.Head = head
+		}
+
+		err = h.controller.Discord.Log(model.LogDiscordInput{
+			Type: "project_member_add",
+			Data: map[string]interface{}{
+				"employee_id":         userInfo.UserID,
+				"updated_employee_id": member.EmployeeID.String(),
+				"project_name":        p.Name,
+				"deployment_type":     member.DeploymentType.String(),
+			},
+		})
+		if err != nil {
+			h.logger.Fields(logger.Fields{"member": member}).Error(err, "failed to log project member add")
 		}
 	}
 

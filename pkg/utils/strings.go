@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"github.com/Rhymond/go-money"
+	"math"
 	"net/url"
 	"regexp"
 	"strconv"
@@ -53,4 +55,10 @@ func HasDomain(str string) bool {
 		return true
 	}
 	return err == nil && u.Scheme != "" && u.Host != "" && regexp.MustCompile(`^[^.]+\.[^.]+(\.[^.]+)*$`).MatchString(u.Host)
+}
+
+func FormatMoney(value float64, currencyCode string) string {
+	pound := money.New(1, currencyCode)
+	tmpValue := value * math.Pow(10, float64(pound.Currency().Fraction))
+	return pound.Multiply(int64(tmpValue)).Display()
 }
