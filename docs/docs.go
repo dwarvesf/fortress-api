@@ -521,6 +521,47 @@ const docTemplate = `{
                 }
             }
         },
+        "/cron-jobs/sync-project-member-status": {
+            "put": {
+                "description": "Sync project member status",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Project"
+                ],
+                "summary": "Sync project member status",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.MessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/cronjobs/audits": {
             "post": {
                 "description": "Sync audit info from Notion to database",
