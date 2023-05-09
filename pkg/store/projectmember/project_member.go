@@ -140,3 +140,11 @@ func (s *store) GetAssignedMembers(db *gorm.DB, projectID string, status string,
 	var members []*model.ProjectMember
 	return members, query.Find(&members).Error
 }
+
+// UpdateExpMemberToInActive just update end_date by projectID
+func (s *store) UpdateExpMemberToInActive(db *gorm.DB) error {
+	return db.Model(&model.ProjectMember{}).
+		Where("status = 'active' AND end_date >= (NOW() at time zone 'ICT')::DATE").
+		Select("status").
+		Updates(model.ProjectMember{Status: model.ProjectMemberStatusInactive}).Error
+}

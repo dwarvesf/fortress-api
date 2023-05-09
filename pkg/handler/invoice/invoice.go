@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/gin-gonic/gin"
+
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/controller"
 	invoiceCtrl "github.com/dwarvesf/fortress-api/pkg/controller/invoice"
@@ -16,7 +18,6 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/utils/authutils"
 	"github.com/dwarvesf/fortress-api/pkg/view"
 	"github.com/dwarvesf/fortress-api/pkg/worker"
-	"github.com/gin-gonic/gin"
 )
 
 type handler struct {
@@ -202,6 +203,18 @@ func (h *handler) Send(c *gin.Context) {
 		l.Error(err, "failed to parse request to invoice model")
 		errs.ConvertControllerErr(c, err)
 		return
+	}
+
+	// send message to discord channel
+	err = h.controller.Discord.Log(model.LogDiscordInput{
+		Type: "invoice_send",
+		Data: map[string]interface{}{
+			"invoice_number": iv.Number,
+			"employee_id":    userID,
+		},
+	})
+	if err != nil {
+		l.Error(err, "failed to log to discord")
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))

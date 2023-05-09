@@ -2,6 +2,7 @@ package employee
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -240,6 +241,20 @@ func (h *handler) UpdateEmployeeStatus(c *gin.Context) {
 		l.Error(err, "failed to get detail employees")
 		errs.ConvertControllerErr(c, err)
 		return
+	}
+
+	userID, _ := authutils.GetUserIDFromContext(c, h.config)
+
+	err = h.controller.Discord.Log(model.LogDiscordInput{
+		Type: "employee_update_working_status",
+		Data: map[string]interface{}{
+			"working_status":      emp.WorkingStatus.String(),
+			"employee_id":         userID,
+			"updated_employee_id": emp.ID.String(),
+		},
+	})
+	if err != nil {
+		l.Error(err, "failed to logs to discord")
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToEmployeeData(emp), nil, nil, nil, ""))
@@ -719,6 +734,25 @@ func (h *handler) UpdateBaseSalary(c *gin.Context) {
 		l.Error(err, "failed to update base salary")
 		errs.ConvertControllerErr(c, err)
 		return
+	}
+
+	userID, err := authutils.GetUserIDFromContext(c, h.config)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	// update discord as audit log
+	err = h.controller.Discord.Log(model.LogDiscordInput{
+		Type: "employee_update_base_salary",
+		Data: map[string]interface{}{
+			"employee_id":         userID,
+			"updated_employee_id": employeeID,
+			"new_salary":          fmt.Sprintf("%v vnđ", req.PersonalAccountAmount+req.CompanyAccountAmount),
+		},
+	})
+	if err != nil {
+		l.Error(err, "failed to logs to discord")
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToBaseSalary(emp), nil, nil, nil, ""))
