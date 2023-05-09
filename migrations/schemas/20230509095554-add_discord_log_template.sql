@@ -7,7 +7,7 @@ create table if not EXISTS discord_log_templates (
 
     type TEXT,
     content TEXT
-)
+);
 
 -- +migrate Down
 drop table discord_log_templates;

@@ -12,7 +12,7 @@ import (
 )
 
 type IController interface {
-	LogDiscord(in model.LogDiscordInput) error
+	Log(in model.LogDiscordInput) error
 }
 
 type controller struct {
@@ -33,7 +33,7 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 	}
 }
 
-func (c *controller) LogDiscord(in model.LogDiscordInput) error {
+func (c *controller) Log(in model.LogDiscordInput) error {
 	// Get discord template
 	template, err := c.store.DiscordLogTemplate.GetTemplateByType(c.repo.DB(), in.Type)
 	if err != nil {
@@ -50,7 +50,7 @@ func (c *controller) LogDiscord(in model.LogDiscordInput) error {
 			c.logger.Field("err", err.Error()).Warn("Get Employee failed")
 			return err
 		}
-		data["employee_id"] = &employee.DiscordName
+		data["employee_id"] = employee.DisplayName
 	}
 
 	if updatedEmployeeID, ok := data["updated_employee_id"]; ok {
@@ -59,7 +59,7 @@ func (c *controller) LogDiscord(in model.LogDiscordInput) error {
 			c.logger.Field("err", err.Error()).Warn("Get Employee failed")
 			return err
 		}
-		data["employee_id"] = &updatedEmployee.DiscordName
+		data["updated_employee_id"] = updatedEmployee.DisplayName
 	}
 
 	// Replace template
@@ -69,9 +69,9 @@ func (c *controller) LogDiscord(in model.LogDiscordInput) error {
 	}
 
 	// log discord
-	_, err = c.service.Discord.SendMessage(c.config.Discord.Webhooks.AuditLog, content)
+	_, err = c.service.Discord.SendMessage(content, c.config.Discord.Webhooks.AuditLog)
 	if err != nil {
-		c.logger.Field("err", err.Error()).Warn("LogDiscord failed")
+		c.logger.Field("err", err.Error()).Warn("Log failed")
 		return err
 	}
 

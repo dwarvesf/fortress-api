@@ -244,18 +244,18 @@ func (h *handler) UpdateEmployeeStatus(c *gin.Context) {
 	}
 
 	userID, _ := authutils.GetUserIDFromContext(c, h.config)
-	senderID, err := model.UUIDFromString(userID)
-	if err != nil {
-		l.Warn("failed to parse sender id")
-	}
 
-	h.controller.Discord.LogDiscord(model.LogDiscordInput{
+	err = h.controller.Discord.Log(model.LogDiscordInput{
 		Type: "employee_update_working_status",
 		Data: map[string]interface{}{
-			"employee_id":         senderID,
-			"updated_employee_id": emp.ID,
+			"working_status":      emp.WorkingStatus.String(),
+			"employee_id":         userID,
+			"updated_employee_id": emp.ID.String(),
 		},
 	})
+	if err != nil {
+		l.Error(err, "failed to logs to discord")
+	}
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToEmployeeData(emp), nil, nil, nil, ""))
 }
@@ -742,21 +742,18 @@ func (h *handler) UpdateBaseSalary(c *gin.Context) {
 		return
 	}
 
-	senderID, err := model.UUIDFromString(userID)
-	if err != nil {
-		l.Error(err, "failed to parse sender id")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req, ""))
-	}
-
 	// update discord as audit log
-	h.controller.Discord.LogDiscord(model.LogDiscordInput{
+	err = h.controller.Discord.Log(model.LogDiscordInput{
 		Type: "employee_update_base_salary",
 		Data: map[string]interface{}{
-			"employee_id":         senderID,
+			"employee_id":         userID,
 			"updated_employee_id": employeeID,
 			"new_salary":          fmt.Sprintf("%v vnđ", req.PersonalAccountAmount+req.CompanyAccountAmount),
 		},
 	})
+	if err != nil {
+		l.Error(err, "failed to logs to discord")
+	}
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToBaseSalary(emp), nil, nil, nil, ""))
 }

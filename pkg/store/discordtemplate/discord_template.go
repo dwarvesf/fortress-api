@@ -14,7 +14,6 @@ func New() IStore {
 }
 
 func (s *store) GetTemplateByType(db *gorm.DB, templateType string) (*model.DiscordLogTemplate, error) {
-
 	var template *model.DiscordLogTemplate
 	return template, db.Where("type = ?", templateType).First(&template).Error
 }
