@@ -2916,3 +2916,30 @@ func (h *handler) UploadAvatar(c *gin.Context) {
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToProjectContentData(filePath), nil, done(nil), nil, ""))
 }
+
+// SyncProjectMemberStatus godoc
+// @Summary Sync project member status
+// @Description Sync project member status
+// @Tags Project
+// @Accept  json
+// @Produce  json
+// @Success 200 {object} view.MessageResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /cron-jobs/sync-project-member-status [put]
+func (h *handler) SyncProjectMemberStatus(c *gin.Context) {
+	l := h.logger.Fields(logger.Fields{
+		"handler": "project",
+		"method":  "UpdateSendingSurveyState",
+	})
+
+	err := h.store.ProjectMember.UpdateExpMemberToInActive(h.repo.DB())
+	if err != nil {
+		l.Error(err, "failed to update project member status to inactive")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))
+}

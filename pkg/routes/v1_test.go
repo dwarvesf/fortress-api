@@ -597,6 +597,12 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/accounting.IHandler.CreateAccountingTodo-fm",
 			},
 		},
+		"/cronjobs/sync-project-member-status": {
+			"PUT": {
+				Method:  "PUT",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/project.IHandler.SyncProjectMemberStatus-fm",
+			},
+		},
 		"/webhooks/n8n": {
 			"POST": {
 				Method:  "POST",
