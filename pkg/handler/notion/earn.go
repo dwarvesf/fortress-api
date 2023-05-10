@@ -28,8 +28,9 @@ func (h *handler) ListEarns(c *gin.Context) {
 		return
 	}
 
-	var earns []model.NotionEarn
-	var parents []model.NotionEarn
+	var earns = make([]model.NotionEarn, 0, len(resp.Results))
+	var parents = make([]model.NotionEarn, 0, len(resp.Results))
+
 	for _, r := range resp.Results {
 		props := r.Properties.(notion.DatabasePageProperties)
 
