@@ -26,16 +26,18 @@ type NotionUpdate struct {
 }
 
 type NotionEarn struct {
-	ID       string     `json:"id"`
-	Name     string     `json:"name"`
-	Reward   int        `json:"reward"`
-	Progress int        `json:"progress"`
-	Priority string     `json:"priority"`
-	Tags     []string   `json:"tags"`
-	PICs     []Employee `json:"pics"`
-	Status   string     `json:"status"`
-	Function []string   `json:"function"`
-	DueDate  *time.Time `json:"due_date"`
+	ID       string       `json:"id"`
+	Name     string       `json:"name"`
+	Reward   int          `json:"reward"`
+	Progress int          `json:"progress"`
+	Priority string       `json:"priority"`
+	Tags     []string     `json:"tags"`
+	PICs     []Employee   `json:"pics"`
+	Status   string       `json:"status"`
+	Function []string     `json:"function"`
+	SubItems []NotionEarn `json:"sub_items"`
+	ParentID string       `json:"-"`
+	DueDate  *time.Time   `json:"due_date"`
 }
 
 type NotionAudience struct {
