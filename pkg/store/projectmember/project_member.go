@@ -141,10 +141,47 @@ func (s *store) GetAssignedMembers(db *gorm.DB, projectID string, status string,
 	return members, query.Find(&members).Error
 }
 
-// UpdateExpMemberToInActive just update end_date by projectID
-func (s *store) UpdateExpMemberToInActive(db *gorm.DB) error {
-	return db.Model(&model.ProjectMember{}).
-		Where("status = 'active' AND end_date >= (NOW() at time zone 'ICT')::DATE").
-		Select("status").
-		Updates(model.ProjectMember{Status: model.ProjectMemberStatusInactive}).Error
+// UpdateEndDateOverdueMemberToInActive just update end_date by projectID
+func (s *store) UpdateEndDateOverdueMemberToInActive(db *gorm.DB) error {
+	sql := `
+		UPDATE project_members
+		SET  status   = 'inactive'
+		WHERE status = 'active' 
+			AND end_date >= (NOW() AT TIME ZONE 'ICT')::DATE;
+	`
+	return db.Exec(sql).Error
+}
+
+// UpdateMemberInClosedProjectToInActive just update if project is closed or paused
+func (s *store) UpdateMemberInClosedProjectToInActive(db *gorm.DB) error {
+	sql := `
+		UPDATE project_members pm
+		SET
+			status = 'inactive',
+			end_date = p.end_date
+		FROM
+			projects p
+		WHERE
+			pm.project_id = p.id
+			AND pm.status <> 'inactive'
+			AND p.status IN ('closed', 'paused');
+	`
+	return db.Exec(sql).Error
+}
+
+// UpdateLeftMemberToInActive just update if employee is left
+func (s *store) UpdateLeftMemberToInActive(db *gorm.DB) error {
+	sql := `
+		UPDATE project_members pm
+		SET
+			status = 'inactive',
+			end_date = e.left_date
+		FROM
+			employees e
+		WHERE
+			pm.employee_id = e.id
+			and pm.status <> 'inactive'
+			AND e.working_status IN ('left');
+	`
+	return db.Exec(sql).Error
 }

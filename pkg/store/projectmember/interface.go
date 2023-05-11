@@ -17,7 +17,9 @@ type IStore interface {
 	OneByID(db *gorm.DB, id string) (*model.ProjectMember, error)
 	OneBySlotID(db *gorm.DB, slotID string) (*model.ProjectMember, error)
 	UpdateEndDateByProjectID(db *gorm.DB, projectID string) error
-	UpdateExpMemberToInActive(db *gorm.DB) error
+	UpdateEndDateOverdueMemberToInActive(db *gorm.DB) error
+	UpdateLeftMemberToInActive(db *gorm.DB) error
+	UpdateMemberInClosedProjectToInActive(db *gorm.DB) error
 	UpdateSelectedFieldByProjectID(db *gorm.DB, projectID string, updateModel model.ProjectMember, updatedField string) error
 	UpdateSelectedFieldsByID(db *gorm.DB, id string, updateModel model.ProjectMember, updatedFields ...string) (*model.ProjectMember, error)
 }

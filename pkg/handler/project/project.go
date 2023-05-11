@@ -2995,12 +2995,26 @@ func (h *handler) UploadAvatar(c *gin.Context) {
 func (h *handler) SyncProjectMemberStatus(c *gin.Context) {
 	l := h.logger.Fields(logger.Fields{
 		"handler": "project",
-		"method":  "UpdateSendingSurveyState",
+		"method":  "SyncProjectMemberStatus",
 	})
 
-	err := h.store.ProjectMember.UpdateExpMemberToInActive(h.repo.DB())
+	err := h.store.ProjectMember.UpdateEndDateOverdueMemberToInActive(h.repo.DB())
 	if err != nil {
-		l.Error(err, "failed to update project member status to inactive")
+		l.Error(err, "failed to update end date overdue member status to inactive")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	err = h.store.ProjectMember.UpdateMemberInClosedProjectToInActive(h.repo.DB())
+	if err != nil {
+		l.Error(err, "failed to update member in closed/paused project status to inactive")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	err = h.store.ProjectMember.UpdateLeftMemberToInActive(h.repo.DB())
+	if err != nil {
+		l.Error(err, "failed to update left member project status to inactive")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
 	}
