@@ -115,6 +115,7 @@ type NotionHiringPosition struct {
 
 type NotionProjectMilestone struct {
 	ID            string                    `json:"id"`
+	Project       string                    `json:"-"`
 	Name          string                    `json:"name"`
 	StartDate     time.Time                 `json:"start_date"`
 	EndDate       time.Time                 `json:"end_date"`
