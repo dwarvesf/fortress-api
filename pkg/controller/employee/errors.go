@@ -11,6 +11,7 @@ var (
 	ErrCouldNotAssignRoleForSameLevelEmployee = errors.New("could not assign role for the same level employee")
 	ErrCouldNotMentorTheirMentor              = errors.New("employee could not be mentor of their mentor")
 	ErrCouldNotMentorThemselves               = errors.New("employee could not be their own mentor")
+	ErrCurrencyNotFound                       = errors.New("currency not found")
 	ErrEmailExisted                           = errors.New("email already exists")
 	ErrEmployeeExisted                        = errors.New("can't create existed employee")
 	ErrEmployeeLeft                           = errors.New("employee is left")

@@ -7687,8 +7687,7 @@ const docTemplate = `{
                 "roles",
                 "salary",
                 "seniorityID",
-                "status",
-                "teamEmail"
+                "status"
             ],
             "properties": {
                 "displayName": {
@@ -7697,6 +7696,9 @@ const docTemplate = `{
                 "fullName": {
                     "type": "string",
                     "maxLength": 100
+                },
+                "joinDate": {
+                    "type": "string"
                 },
                 "personalEmail": {
                     "type": "string"
