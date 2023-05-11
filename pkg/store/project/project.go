@@ -109,6 +109,9 @@ func (s *store) One(db *gorm.DB, id string, preload bool) (*model.Project, error
 		query = db.Where("id = ?", id)
 	}
 
+	query = query.
+		Preload("BankAccount", "deleted_at IS NULL").
+		Preload("BankAccount.Currency", "deleted_at IS NULL")
 	if preload {
 		query = query.
 			Preload("Heads", "deleted_at IS NULL AND (end_date IS NULL OR end_date > now())").
@@ -116,8 +119,6 @@ func (s *store) One(db *gorm.DB, id string, preload bool) (*model.Project, error
 			Preload("ProjectStacks", "deleted_at IS NULL").
 			Preload("ProjectStacks.Stack", "deleted_at IS NULL").
 			Preload("Country", "deleted_at IS NULL").
-			Preload("BankAccount", "deleted_at IS NULL").
-			Preload("BankAccount.Currency", "deleted_at IS NULL").
 			Preload("Client", "deleted_at IS NULL").
 			Preload("Client.Contacts", "deleted_at IS NULL").
 			Preload("CompanyInfo", "deleted_at IS NULL").

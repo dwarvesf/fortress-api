@@ -6,9 +6,10 @@ import (
 	"time"
 
 	"github.com/dstotijn/go-notion"
+	"github.com/gin-gonic/gin"
+
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/view"
-	"github.com/gin-gonic/gin"
 )
 
 // ListEarns godoc
@@ -27,10 +28,25 @@ func (h *handler) ListEarns(c *gin.Context) {
 		return
 	}
 
-	var earns []model.NotionEarn
+	var earns = make([]model.NotionEarn, 0, len(resp.Results))
+	var parents = make([]model.NotionEarn, 0, len(resp.Results))
+
 	for _, r := range resp.Results {
 		props := r.Properties.(notion.DatabasePageProperties)
-		if (props["Status"].Status == nil || props["Status"].Status.Name == "Done") || (props["Reward 🧊"].Number == nil || *props["Reward 🧊"].Number == 0) {
+
+		if props["Status"].Status == nil || props["Status"].Status.Name == "Done" {
+			continue
+		}
+
+		if len(props["Parent item"].Relation) == 0 && (props["Reward 🧊"].Number == nil || *props["Reward 🧊"].Number == 0) {
+			parents = append(parents, model.NotionEarn{
+				ID:   r.ID,
+				Name: props["Name"].Title[0].Text.Content,
+			})
+			continue
+		}
+
+		if props["Reward 🧊"].Number == nil || *props["Reward 🧊"].Number == 0 {
 			continue
 		}
 
@@ -60,6 +76,11 @@ func (h *handler) ListEarns(c *gin.Context) {
 			name = *r.Icon.Emoji + " " + props["Name"].Title[0].Text.Content
 		}
 
+		parentID := ""
+		if len(props["Parent item"].Relation) > 0 {
+			parentID = props["Parent item"].Relation[0].ID
+		}
+
 		earns = append(earns, model.NotionEarn{
 			ID:       r.ID,
 			Name:     name,
@@ -70,8 +91,31 @@ func (h *handler) ListEarns(c *gin.Context) {
 			Status:   props["Status"].Status.Name,
 			Function: functions,
 			DueDate:  dueData,
+			ParentID: parentID,
 		})
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse[any](earns, nil, nil, nil, "get list earn items successfully"))
+	for _, e := range earns {
+		if e.ParentID != "" {
+			continue
+		}
+		parents = append(parents, e)
+	}
+
+	for i, p := range parents {
+		for _, e := range earns {
+			if e.ParentID == p.ID {
+				parents[i].SubItems = append(parents[i].SubItems, e)
+			}
+		}
+	}
+
+	for i := 0; i < len(parents); i++ {
+		if parents[i].Reward == 0 && len(parents[i].SubItems) == 0 {
+			parents = append(parents[:i], parents[i+1:]...)
+			i--
+		}
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](parents, nil, nil, nil, "get list earn items successfully"))
 }
