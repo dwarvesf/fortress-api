@@ -5,7 +5,6 @@ import (
 	"regexp"
 	"sort"
 	"strings"
-	"sync"
 
 	"github.com/dstotijn/go-notion"
 	"github.com/gin-gonic/gin"
@@ -26,14 +25,23 @@ import (
 func (h *handler) ListProjectMilestones(c *gin.Context) {
 	filter := &notion.DatabaseQueryFilter{}
 
-	filter.And = append(filter.And, notion.DatabaseQueryFilter{
-		Property: "Status",
+	filter.And = append(filter.And, []notion.DatabaseQueryFilter{{
+		Property: "Type",
 		DatabaseQueryPropertyFilter: notion.DatabaseQueryPropertyFilter{
 			Select: &notion.SelectDatabaseQueryFilter{
-				Equals: "Active",
+				Equals: "Project",
 			},
 		},
-	})
+	},
+		{
+			Property: "Status",
+			DatabaseQueryPropertyFilter: notion.DatabaseQueryPropertyFilter{
+				Select: &notion.SelectDatabaseQueryFilter{
+					DoesNotEqual: "Done",
+				},
+			},
+		},
+	}...)
 
 	resp, err := h.service.Notion.GetDatabase(h.config.Notion.Databases.Project, filter, nil, 0)
 	if err != nil {
@@ -45,121 +53,68 @@ func (h *handler) ListProjectMilestones(c *gin.Context) {
 		Name       string                         `json:"name"`
 		Milestones []model.NotionProjectMilestone `json:"milestones"`
 	}
-
-	var wg sync.WaitGroup
-	var pmu sync.Mutex
+	var milestones []model.NotionProjectMilestone
 
 	for _, r := range resp.Results {
 		props := r.Properties.(notion.DatabasePageProperties)
 
-		if len(props["Project"].Title) == 0 || len(props["Parent item"].Relation) > 0 {
+		if props["Project"].Select == nil || (props["Project"].Select != nil && props["Project"].Select.Name == "") {
 			continue
 		}
 
 		if c.Query("project_name") != "" {
-			matched, err := regexp.MatchString(".*"+strings.ToLower(c.Query("project_name"))+".*", strings.ToLower(props["Project"].Title[0].Text.Content))
+			matched, err := regexp.MatchString(".*"+strings.ToLower(c.Query("project_name"))+".*", strings.ToLower(props["Project"].Select.Name))
 			if err != nil || !matched {
 				continue
 			}
 		}
 
-		var p = struct {
-			Name       string                         `json:"name"`
-			Milestones []model.NotionProjectMilestone `json:"milestones"`
-		}{}
-		var milestones []model.NotionProjectMilestone
-
-		p.Name = props["Project"].Title[0].Text.Content
-
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-
-			workers := make(chan struct{}, 10) // limit to 10 workers
-
-			var mmilestones = make(map[string]model.NotionProjectMilestone)
-			for _, p := range props["Sub-item"].Relation {
-				workers <- struct{}{}
-				go func(p notion.Relation) {
-					defer func() { <-workers }()
-					if x, found := h.service.Cache.Get(p.ID); found {
-						mmilestones[p.ID] = x.(model.NotionProjectMilestone)
-						return
-					}
-					resp, err := h.service.Notion.GetPage(p.ID)
-					if err != nil {
-						return
-					}
-					props := resp.Properties.(notion.DatabasePageProperties)
-					name := ""
-					if len(props["Project"].Title) > 0 {
-						name = props["Project"].Title[0].Text.Content
-					}
-					m := model.NotionProjectMilestone{
-						ID:            resp.ID,
-						Name:          name,
-						SubMilestones: []*model.NotionProjectMilestone{},
-					}
-					if props["Milestone Date"].Date != nil {
-						m.StartDate = props["Milestone Date"].Date.Start.Time
-						m.EndDate = props["Milestone Date"].Date.End.Time
-					}
-					mmilestones[p.ID] = m
-					h.service.Cache.Set(p.ID, m, 0)
-				}(p)
+		m := model.NotionProjectMilestone{
+			ID:      r.ID,
+			Name:    props["Scope"].Title[0].PlainText,
+			Project: props["Project"].Select.Name,
+		}
+		if props["Date"].Date != nil {
+			m.StartDate = props["Date"].Date.Start.Time
+			if props["Date"].Date.End != nil {
+				m.EndDate = props["Date"].Date.End.Time
 			}
-			for i := 0; i < cap(workers); i++ {
-				workers <- struct{}{}
-			}
-			for _, m := range mmilestones {
-				milestones = append(milestones, m)
-			}
-			sort.Slice(milestones[:], func(i, j int) bool {
-				return milestones[i].StartDate.Before(milestones[j].StartDate)
-			})
-
-			p.Milestones = milestones
-
-			pmu.Lock()
-			projects = append(projects, p)
-			pmu.Unlock()
-		}()
+		}
+		milestones = append(milestones, m)
 	}
-	wg.Wait()
+
+	// group milestones by project name
+	for _, m := range milestones {
+		found := false
+		for i := range projects {
+			if projects[i].Name == m.Project {
+				projects[i].Milestones = append(projects[i].Milestones, m)
+				found = true
+				break
+			}
+		}
+		if !found {
+			p := struct {
+				Name       string                         `json:"name"`
+				Milestones []model.NotionProjectMilestone `json:"milestones"`
+			}{
+				Name:       m.Project,
+				Milestones: []model.NotionProjectMilestone{m},
+			}
+			projects = append(projects, p)
+		}
+	}
+
+	for i := range projects {
+		sort.Slice(projects[i].Milestones[:], func(j, k int) bool {
+			return projects[i].Milestones[j].StartDate.Before(projects[i].Milestones[k].StartDate)
+		})
+	}
+
+	// pp.Println(milestones)
 	sort.Slice(projects[:], func(i, j int) bool {
 		return projects[i].Name < projects[j].Name
 	})
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](projects, nil, nil, nil, "get list milestones successfully"))
 }
-
-// func (h *handler) getMilestones(item *model.ProjectMilestone, subItems []*model.ProjectMilestone) []*model.ProjectMilestone {
-// 	resp, err := h.service.Notion.GetPage(item.ID)
-// 	if err != nil {
-// 		return subItems
-// 	}
-// 	props := resp.Properties.(notion.DatabasePageProperties)
-// 	for _, p := range props["Sub-item"].Relation {
-// 		resp, err := h.service.Notion.GetPage(p.ID)
-// 		if err != nil {
-// 			continue
-// 		}
-// 		props := resp.Properties.(notion.DatabasePageProperties)
-// 		name := ""
-// 		if len(props["Project"].Title) > 0 {
-// 			name = props["Project"].Title[0].Text.Content
-// 		}
-// 		m := &model.ProjectMilestone{
-// 			ID:            resp.ID,
-// 			Name:          name,
-// 			SubMilestones: []*model.ProjectMilestone{},
-// 		}
-// 		if props["Milestone Date"].Date != nil {
-// 			m.StartDate = props["Milestone Date"].Date.Start.Time
-// 			m.EndDate = props["Milestone Date"].Date.End.Time
-// 		}
-// 		subItems = append(subItems, m)
-// 	}
-
-// 	return subItems
-// }
