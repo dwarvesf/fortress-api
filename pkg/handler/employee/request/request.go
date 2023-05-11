@@ -82,14 +82,15 @@ func (e *DeleteMenteeInput) Validate() error {
 type CreateEmployeeInput struct {
 	FullName      string       `json:"fullName" binding:"required,max=100"`
 	DisplayName   string       `json:"displayName"`
-	TeamEmail     string       `json:"teamEmail" binding:"required,email"`
+	TeamEmail     string       `json:"teamEmail"`
 	PersonalEmail string       `json:"personalEmail" binding:"required,email"`
 	Positions     []model.UUID `form:"positions" json:"positions" binding:"required"`
-	Salary        int          `json:"salary" binding:"required"`
+	Salary        int64        `json:"salary" binding:"required"`
 	SeniorityID   model.UUID   `json:"seniorityID" binding:"required"`
 	Roles         []model.UUID `json:"roles" binding:"required"`
 	Status        string       `json:"status" binding:"required"`
 	ReferredBy    model.UUID   `json:"referredBy"`
+	JoinDate      *time.Time   `json:"joinDate"`
 }
 
 type UpdateSkillsInput struct {
@@ -170,7 +171,7 @@ func (input *GetListEmployeeInput) Validate() error {
 }
 
 func (input CreateEmployeeInput) Validate() error {
-	teamEmailRegex := ".+@((dwarvesv\\.com)|(d\\.foundation)|(gmail\\.com))"
+	teamEmailRegex := ".+@((dwarvesv\\.com)|(d\\.foundation))"
 	regex, _ := regexp.Compile(teamEmailRegex)
 	if !regex.MatchString(input.TeamEmail) {
 		return errs.ErrInvalidEmailDomain
