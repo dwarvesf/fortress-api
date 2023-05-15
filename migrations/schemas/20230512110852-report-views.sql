@@ -1,6 +1,6 @@
 -- +migrate Up
 
-CREATE VIEW "vw_idle_employees" AS
+CREATE OR REPLACE VIEW "vw_idle_employees" AS
 SELECT
   DISTINCT emp.*
 FROM
@@ -11,7 +11,7 @@ WHERE
   deployment_type <> 'shadow'
   OR rate = 0;
 
-CREATE VIEW "vw_subscribers_last_7days" AS
+CREATE OR REPLACE VIEW "vw_subscribers_last_7days" AS
 SELECT 
   *
 FROM
