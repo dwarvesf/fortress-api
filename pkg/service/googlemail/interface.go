@@ -15,8 +15,9 @@ var (
 
 // IService interface contain related google calendar method
 type IService interface {
+	SendInvitationMail(invitation *model.InvitationEmail) (err error)
 	SendInvoiceMail(invoice *model.Invoice) (msgID string, err error)
-	SendInvoiceThankYouMail(invoice *model.Invoice) (err error)
 	SendInvoiceOverdueMail(invoice *model.Invoice) (err error)
+	SendInvoiceThankYouMail(invoice *model.Invoice) (err error)
 	SendPayrollPaidMail(p *model.Payroll) (err error)
 }

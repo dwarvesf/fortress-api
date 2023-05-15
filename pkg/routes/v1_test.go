@@ -197,6 +197,12 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/profile.IHandler.UpdateInfo-fm",
 			},
 		},
+		"/api/v1/invite/submit": {
+			"PUT": {
+				Method:  "PUT",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/profile.IHandler.SubmitOnboardingForm-fm",
+			},
+		},
 		"/api/v1/projects": {
 			"GET": {
 				Method:  "GET",
@@ -277,6 +283,12 @@ func Test_loadV1Routes(t *testing.T) {
 			"POST": {
 				Method:  "POST",
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/profile.IHandler.UploadAvatar-fm",
+			},
+		},
+		"/api/v1/profile/upload": {
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/profile.IHandler.Upload-fm",
 			},
 		},
 		"/api/v1/projects/:id/work-units": {

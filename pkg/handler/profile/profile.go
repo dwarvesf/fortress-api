@@ -137,7 +137,7 @@ func (h *handler) UpdateInfo(c *gin.Context) {
 		return
 	}
 
-	input.MapEmployeeInput(employee)
+	input.ToEmployeeModel(employee)
 
 	if isValid := h.validateCountryAndCity(h.repo.DB(), input.Country, input.City); !isValid {
 		l.Info("country or city is invalid")
@@ -148,7 +148,15 @@ func (h *handler) UpdateInfo(c *gin.Context) {
 	tx, done := h.repo.NewTransaction()
 
 	// Update social accounts
-	if err := h.updateSocialAccounts(tx.DB(), input, employee.ID); err != nil {
+	saInput := socialAccountInput{
+		GithubID:     input.GithubID,
+		NotionID:     input.NotionID,
+		NotionName:   input.NotionName,
+		NotionEmail:  input.NotionEmail,
+		DiscordName:  input.DiscordName,
+		LinkedInName: input.LinkedInName,
+	}
+	if err := h.updateSocialAccounts(tx.DB(), saInput, employee.ID); err != nil {
 		l.Error(err, "failed to update employee")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
 		return
@@ -183,7 +191,16 @@ func (h *handler) UpdateInfo(c *gin.Context) {
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToUpdateProfileInfoData(employee), nil, done(nil), nil, ""))
 }
 
-func (h *handler) updateSocialAccounts(db *gorm.DB, input request.UpdateInfoInput, employeeID model.UUID) error {
+type socialAccountInput struct {
+	GithubID     string
+	NotionID     string
+	NotionName   string
+	NotionEmail  string
+	DiscordName  string
+	LinkedInName string
+}
+
+func (h *handler) updateSocialAccounts(db *gorm.DB, input socialAccountInput, employeeID model.UUID) error {
 	l := h.logger.Fields(logger.Fields{
 		"handler": "profile",
 		"method":  "updateSocialAccounts",
@@ -412,4 +429,251 @@ func (h *handler) UploadAvatar(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToContentData(filePath), nil, done(nil), nil, ""))
+}
+
+// Upload godoc
+// @Summary Upload image  by id
+// @Description Upload image  by id
+// @Tags Profile
+// @Accept  json
+// @Produce  json
+// @Param Authorization header string true "jwt token"
+// @Param file formData file true "content upload"
+// @Success 200 {object} view.EmployeeContentDataResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /profile/upload [post]
+func (h *handler) Upload(c *gin.Context) {
+	employeeID, err := authutils.GetUserIDFromContext(c, h.config)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	file, err := c.FormFile("file")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, file, ""))
+		return
+	}
+
+	fDoctype := c.PostForm("documentType")
+
+	// 1.3 prepare the logger
+	l := h.logger.Fields(logger.Fields{
+		"handler": "profile",
+		"method":  "UploadAvatar",
+		"id":      employeeID,
+	})
+
+	docType := model.DocumentType(fDoctype)
+
+	fileName := file.Filename
+	fileExtension := model.ContentExtension(filepath.Ext(fileName))
+	fileSize := file.Size
+	filePath := fmt.Sprintf("https://storage.googleapis.com/%s/employees/%s/images/%s", h.config.Google.GCSBucketName, employeeID, fileName)
+	gcsPath := fmt.Sprintf("employees/%s/images/%s", employeeID, fileName)
+	fileType := "image"
+
+	// 2.1 validate
+	if !docType.Valid() {
+		l.Info("invalid document type")
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrInvalidDocumentType, nil, ""))
+		return
+	}
+	if !fileExtension.ImageValid() {
+		l.Info("invalid file extension")
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrInvalidFileExtension, nil, ""))
+		return
+	}
+
+	if fileSize > model.MaxFileSizeImage {
+		l.Info("invalid file size")
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrInvalidFileSize, nil, ""))
+		return
+	}
+
+	tx, done := h.repo.NewTransaction()
+
+	// 2.2 check file name exist
+	_, err = h.store.Content.OneByPath(tx.DB(), filePath)
+	if err != nil && err != gorm.ErrRecordNotFound {
+		l.Error(err, "error query content from db")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), nil, ""))
+		return
+	}
+	if err == nil {
+		l.Info("file already existed")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(errs.ErrFileAlreadyExisted), nil, ""))
+		return
+	}
+
+	// 2.3 check employee existed
+	existedEmployee, err := h.store.Employee.One(tx.DB(), employeeID, false)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			l.Info("employee not found")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, done(err), nil, ""))
+			return
+		}
+		l.Error(err, "error query employee from db")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), nil, ""))
+		return
+	}
+
+	_, err = h.store.Content.Create(tx.DB(), model.Content{
+		Type:      fileType,
+		Extension: fileExtension.String(),
+		Path:      filePath,
+		TargetID:  existedEmployee.ID,
+		UploadBy:  existedEmployee.ID,
+	})
+	if err != nil {
+		l.Error(err, "error query employee from db")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), nil, ""))
+		return
+	}
+
+	switch docType {
+	case model.DocumentTypeAvatar:
+		_, err = h.store.Employee.UpdateSelectedFieldsByID(tx.DB(), employeeID, model.Employee{
+			Avatar: filePath,
+		}, "avatar")
+		if err != nil {
+			l.Error(err, "error update avatar from db")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), nil, ""))
+			return
+		}
+	case model.DocumentTypeIDPhotoFront:
+		_, err = h.store.Employee.UpdateSelectedFieldsByID(tx.DB(), employeeID, model.Employee{
+			IdentityCardPhotoFront: filePath,
+		}, "avatar")
+		if err != nil {
+			l.Error(err, "error update id card front from db")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), nil, ""))
+			return
+		}
+	case model.DocumentTypeIDPhotoBack:
+		_, err = h.store.Employee.UpdateSelectedFieldsByID(tx.DB(), employeeID, model.Employee{
+			IdentityCardPhotoBack: filePath,
+		}, "avatar")
+		if err != nil {
+			l.Error(err, "error update id card back from db")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), nil, ""))
+			return
+		}
+	}
+	// 3.1 update avatar link
+
+	multipart, err := file.Open()
+	if err != nil {
+		l.Error(err, "error in open file")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), nil, ""))
+		return
+	}
+
+	// 3.2 Upload to GCS
+	err = h.service.Google.UploadContentGCS(multipart, gcsPath)
+	if err != nil {
+		l.Error(err, "error in upload file")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), nil, ""))
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToContentData(filePath), nil, done(nil), nil, ""))
+}
+
+// SubmitOnboardingForm godoc
+// @Summary Update profile info by id
+// @Description Update profile info by id
+// @Tags Profile
+// @Accept  json
+// @Produce  json
+// @Param Authorization header string true "jwt token"
+// @Param id path string true "Employee ID"
+// @Param Body body request.SubmitOnboardingFormRequest true "Body"
+// @Success 200 {object} view.MessageResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /invite/submit [post]
+func (h *handler) SubmitOnboardingForm(c *gin.Context) {
+	employeeID, err := authutils.GetUserIDFromContext(c, h.config)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	input := request.SubmitOnboardingFormRequest{}
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, input, ""))
+		return
+	}
+
+	l := h.logger.Fields(logger.Fields{
+		"handler": "profile",
+		"method":  "SubmitOnboardingForm",
+		"request": input,
+	})
+
+	employee, err := h.store.Employee.One(h.repo.DB(), employeeID, false)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			l.Info("employee not found")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, err, nil, ""))
+			return
+		}
+		l.Error(err, "failed to get employee")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	if isValid := h.validateCountryAndCity(h.repo.DB(), input.Country, input.City); !isValid {
+		l.Info("country or city is invalid")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidCountryOrCity, input, ""))
+		return
+	}
+
+	tx, done := h.repo.NewTransaction()
+
+	input.FullName = employee.FullName
+	employeeData := input.ToEmployeeModel(employee.TeamEmail)
+	// Update employee
+	_, err = h.store.Employee.UpdateSelectedFieldsByID(h.repo.DB(), employeeID, *employeeData,
+		"address",
+		"city",
+		"country",
+		"gender",
+		"horoscope",
+		"local_bank_branch",
+		"local_bank_currency",
+		"local_bank_number",
+		"local_bank_recipient_name",
+		"local_branch_name",
+		"mbti",
+		"phone_number",
+		"place_of_residence",
+		"working_status",
+		"team_email",
+	)
+	if err != nil {
+		l.Error(err, "failed to update employee")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
+		return
+	}
+
+	// Update social accounts
+	saInput := socialAccountInput{
+		GithubID:     input.GithubID,
+		NotionName:   input.NotionName,
+		DiscordName:  input.DiscordName,
+		LinkedInName: input.LinkedInName,
+	}
+	if err := h.updateSocialAccounts(tx.DB(), saInput, employee.ID); err != nil {
+		l.Error(err, "failed to update employee")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, done(nil), nil, "ok"))
 }

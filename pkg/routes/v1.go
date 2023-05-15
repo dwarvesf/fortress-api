@@ -11,14 +11,13 @@ import (
 )
 
 func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store.Store, cfg *config.Config) {
-	v1 := r.Group("/api/v1")
-	cronjob := r.Group("/cronjobs")
-	webhook := r.Group("/webhooks")
-
 	pmw := mw.NewPermissionMiddleware(s, repo, cfg)
 	amw := mw.NewAuthMiddleware(cfg, s, repo)
 
-	// cronjob group
+	/////////////////
+	// Cronjob GROUP
+	/////////////////
+	cronjob := r.Group("/cronjobs")
 	{
 		cronjob.POST("/audits", amw.WithAuth, pmw.WithPerm(model.PermissionCronjobExecute), h.Audit.Sync)
 		cronjob.POST("/birthday", amw.WithAuth, pmw.WithPerm(model.PermissionCronjobExecute), h.Birthday.BirthdayDailyMessage)
@@ -31,6 +30,7 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 	/////////////////
 	// Webhook GROUP
 	/////////////////
+	webhook := r.Group("/webhooks")
 	webhook.POST("/n8n", h.Webhook.N8n)
 	// Basecamp
 	basecampGroup := webhook.Group("/basecamp")
@@ -51,16 +51,20 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 	/////////////////
 	// API GROUP
 	/////////////////
-
+	v1 := r.Group("/api/v1")
 	// auth
 	v1.POST("/auth", h.Auth.Auth)
 	v1.GET("/auth/me", amw.WithAuth, pmw.WithPerm(model.PermissionAuthRead), h.Auth.Me)
 	v1.POST("/auth/api-key", amw.WithAuth, pmw.WithPerm(model.PermissionAuthCreate), h.Auth.CreateAPIKey)
 
 	// user profile
-	v1.GET("/profile", amw.WithAuth, h.Profile.GetProfile)
-	v1.PUT("/profile", amw.WithAuth, h.Profile.UpdateInfo)
-	v1.POST("/profile/upload-avatar", amw.WithAuth, h.Profile.UploadAvatar)
+	profileGroup := v1.Group("/profile")
+	{
+		profileGroup.GET("", amw.WithAuth, h.Profile.GetProfile)
+		profileGroup.PUT("", amw.WithAuth, h.Profile.UpdateInfo)
+		profileGroup.POST("/upload-avatar", amw.WithAuth, h.Profile.UploadAvatar)
+		profileGroup.POST("/upload", amw.WithAuth, h.Profile.Upload)
+	}
 
 	// assets
 	v1.POST("/assets/upload", amw.WithAuth, pmw.WithPerm(model.PermissionAssetUpload), h.Asset.Upload)
@@ -269,5 +273,10 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 		payroll.GET("/detail", amw.WithAuth, pmw.WithPerm(model.PermissionPayrollsRead), h.Payroll.GetPayrollsByMonth)
 		payroll.GET("/bhxh", amw.WithAuth, pmw.WithPerm(model.PermissionPayrollsRead), h.Payroll.GetPayrollsBHXH)
 		payroll.POST("/commit", amw.WithAuth, pmw.WithPerm(model.PermissionPayrollsCreate), h.Payroll.CommitPayroll)
+	}
+
+	invitationGroup := v1.Group("/invite")
+	{
+		invitationGroup.PUT("/submit", amw.WithAuth, h.Profile.SubmitOnboardingForm)
 	}
 }
