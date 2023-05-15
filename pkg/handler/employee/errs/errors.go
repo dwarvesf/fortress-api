@@ -13,6 +13,7 @@ import (
 var (
 	ErrInvalidEmployeeID       = errors.New("invalid employee ID")
 	ErrInvalidEmployeeStatus   = errors.New("invalid value for employee status")
+	ErrInvalidJoinedDate       = errors.New("invalid join date")
 	ErrInvalidPositionCode     = errors.New("invalid position code")
 	ErrInvalidStackCode        = errors.New("invalid stack code")
 	ErrInvalidProjectCode      = errors.New("invalid project code")

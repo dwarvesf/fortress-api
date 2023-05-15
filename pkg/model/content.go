@@ -110,3 +110,26 @@ func (e ContentType) Valid() bool {
 func (e ContentType) String() string {
 	return string(e)
 }
+
+type DocumentType string
+
+const (
+	DocumentTypeAvatar       DocumentType = "avatar"
+	DocumentTypeIDPhotoFront DocumentType = "id_photo_front"
+	DocumentTypeIDPhotoBack  DocumentType = "id_photo_back"
+)
+
+func (e DocumentType) Valid() bool {
+	switch e {
+	case
+		DocumentTypeAvatar,
+		DocumentTypeIDPhotoFront,
+		DocumentTypeIDPhotoBack:
+		return true
+	}
+	return false
+}
+
+func (e DocumentType) String() string {
+	return string(e)
+}

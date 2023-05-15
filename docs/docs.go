@@ -2222,6 +2222,72 @@ const docTemplate = `{
                 }
             }
         },
+        "/invite/submit": {
+            "post": {
+                "description": "Update profile info by id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Profile"
+                ],
+                "summary": "Update profile info by id",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Employee ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Body",
+                        "name": "Body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.SubmitOnboardingFormRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.MessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/invoices": {
             "get": {
                 "description": "Get latest invoice by project id",
@@ -3796,6 +3862,63 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/view.UpdateProfileInfoResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/profile/upload": {
+            "post": {
+                "description": "Upload image  by id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Profile"
+                ],
+                "summary": "Upload image  by id",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "content upload",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.EmployeeContentDataResponse"
                         }
                     },
                     "400": {
@@ -8163,6 +8286,84 @@ const docTemplate = `{
                     }
                 },
                 "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "request.SubmitOnboardingFormRequest": {
+            "type": "object",
+            "required": [
+                "DateOfBirth",
+                "LocalBranchName",
+                "address",
+                "city",
+                "country",
+                "discordName",
+                "gender",
+                "horoscope",
+                "localBankBranch",
+                "localBankCurrency",
+                "localBankNumber",
+                "localBankRecipientName",
+                "mbti",
+                "phoneNumber",
+                "placeOfResidence"
+            ],
+            "properties": {
+                "DateOfBirth": {
+                    "type": "string"
+                },
+                "LocalBranchName": {
+                    "type": "string"
+                },
+                "address": {
+                    "type": "string"
+                },
+                "city": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
+                "discordName": {
+                    "type": "string"
+                },
+                "gender": {
+                    "type": "string"
+                },
+                "githubID": {
+                    "type": "string"
+                },
+                "horoscope": {
+                    "type": "string"
+                },
+                "linkedInName": {
+                    "type": "string"
+                },
+                "localBankBranch": {
+                    "type": "string"
+                },
+                "localBankCurrency": {
+                    "type": "string"
+                },
+                "localBankNumber": {
+                    "type": "string"
+                },
+                "localBankRecipientName": {
+                    "type": "string"
+                },
+                "mbti": {
+                    "type": "string"
+                },
+                "notionName": {
+                    "type": "string"
+                },
+                "phoneNumber": {
+                    "type": "string",
+                    "maxLength": 18,
+                    "minLength": 8
+                },
+                "placeOfResidence": {
                     "type": "string"
                 }
             }

@@ -2,6 +2,7 @@ package employee
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -10,6 +11,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service/currency"
+	"github.com/dwarvesf/fortress-api/pkg/utils/authutils"
 )
 
 type CreateEmployeeInput struct {
@@ -217,6 +219,27 @@ func (r *controller) Create(userID string, input CreateEmployeeInput) (*model.Em
 	if _, err := r.store.EmployeeOrganization.Create(tx.DB(), eo); err != nil {
 		l.Errorf(err, "failed to create employee organization", "employee_organization", eo)
 		return nil, done(err)
+	}
+
+	authenticationInfo := model.AuthenticationInfo{
+		UserID: eml.ID.String(),
+		Avatar: eml.Avatar,
+		Email:  eml.PersonalEmail,
+	}
+
+	jwt, err := authutils.GenerateJWTToken(&authenticationInfo, time.Now().Add(5*time.Minute).Unix(), r.config.JWTSecretKey)
+	if err != nil {
+		return nil, done(err)
+	}
+
+	invitation := model.InvitationEmail{
+		Email:   eml.PersonalEmail,
+		Link:    fmt.Sprintf("%s/onboarding?code=%s", r.config.FortressURL, jwt),
+		Inviter: loggedInUser.FullName,
+	}
+
+	if err := r.service.GoogleMail.SendInvitationMail(&invitation); err != nil {
+		return nil, err
 	}
 
 	return eml, done(nil)

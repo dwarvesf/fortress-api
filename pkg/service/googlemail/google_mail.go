@@ -424,3 +424,31 @@ func (g *googleService) getPaidSuccessfulEmailFuncMap(p *model.Payroll) map[stri
 		},
 	}
 }
+
+// SendInvitationMail ...
+func (g *googleService) SendInvitationMail(invitation *model.InvitationEmail) (err error) {
+	if err := g.ensureToken(g.appConfig.Google.TeamGoogleRefreshToken); err != nil {
+		return err
+	}
+
+	if err := g.prepareService(); err != nil {
+		return err
+	}
+
+	invitation.Link = strings.Replace(invitation.Link, "=", "=3D", -1)
+
+	encodedEmail, err := composeMailContent(g.appConfig,
+		&MailParseInfo{
+			teamEmail,
+			"invitation.tpl",
+			&invitation,
+			map[string]interface{}{},
+		})
+	if err != nil {
+		return err
+	}
+	id := g.appConfig.Google.TeamEmailID
+
+	_, err = g.sendEmail(encodedEmail, id)
+	return err
+}

@@ -380,7 +380,7 @@ func (h *handler) Create(c *gin.Context) {
 		Roles:         input.Roles,
 		Status:        input.Status,
 		ReferredBy:    input.ReferredBy,
-		JoinDate:      input.JoinDate,
+		JoinDate:      input.GetJoinDate(),
 	}
 
 	eml, err := h.controller.Employee.Create(userID, requestBody)
