@@ -39,3 +39,8 @@ func (s *store) GetByType(db *gorm.DB, saType string) ([]*model.SocialAccount, e
 	var accounts []*model.SocialAccount
 	return accounts, db.Where("type = ?", saType).Find(&accounts).Error
 }
+
+func (s *store) GetByDiscordID(db *gorm.DB, discordID string) (*model.SocialAccount, error) {
+	var account model.SocialAccount
+	return &account, db.Where("type = ? and account_id = ?", model.SocialAccountTypeDiscord, discordID).First(&account).Error
+}

@@ -2,6 +2,7 @@ package vault
 
 import (
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -71,13 +72,36 @@ func (h *handler) StoreVaultTransaction(c *gin.Context) {
 		}
 
 		for _, transaction := range res.Data {
-			err := h.store.IcyTransaction.Create(h.repo.DB(), &model.IcyTransaction{
-				Vault:              transaction.VaultName,
-				Amount:             transaction.Amount,
-				Token:              transaction.Token,
-				SenderDiscordId:    transaction.Sender,
-				RecipientAddress:   transaction.ToAddress,
-				RecipientDiscordId: transaction.Target,
+			// skip case trasfer through wallet address
+			if transaction.Target == "" {
+				continue
+			}
+
+			txnTime, err := time.Parse("2006-01-02T15:04:05Z", transaction.CreatedAt)
+			if err != nil {
+				continue
+			}
+
+			srcEmployeeId, err := h.store.SocialAccount.GetByDiscordID(h.repo.DB(), transaction.Sender)
+			if err != nil {
+				l.Error(err, "GetByDiscordID failed")
+				c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+				return
+			}
+
+			destEmployeeId, err := h.store.SocialAccount.GetByDiscordID(h.repo.DB(), transaction.Target)
+			if err != nil {
+				l.Error(err, "GetByDiscordID failed")
+				c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+				return
+			}
+
+			err = h.store.IcyTransaction.Create(h.repo.DB(), &model.IcyTransaction{
+				Category:       strings.ToLower(transaction.VaultName),
+				TxnTime:        txnTime,
+				Amount:         transaction.Amount,
+				SrcEmployeeId:  srcEmployeeId.EmployeeID,
+				DestEmployeeId: destEmployeeId.EmployeeID,
 			})
 			if err != nil {
 				l.Error(err, "Create IcyTransaction failed")

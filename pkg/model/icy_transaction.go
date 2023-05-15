@@ -1,11 +1,15 @@
 package model
 
+import (
+	"time"
+)
+
 type IcyTransaction struct {
 	BaseModel
-	Vault              string `json:"vault"`
-	Amount             string `json:"amount"`
-	Token              string `json:"token"`
-	SenderDiscordId    string `json:"sender_discord_id"`
-	RecipientAddress   string `json:"recipient_address"`
-	RecipientDiscordId string `json:"recipient_discord_id"`
+	Category       string    `json:"category"`
+	TxnTime        time.Time `json:"txn_time"`
+	Amount         string    `json:"amount"`
+	Note           string    `json:"note"`
+	SrcEmployeeId  UUID      `json:"src_employee_id"`
+	DestEmployeeId UUID      `json:"dest_employee_id"`
 }
