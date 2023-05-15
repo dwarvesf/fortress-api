@@ -36,6 +36,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/store/employeestack"
 	"github.com/dwarvesf/fortress-api/pkg/store/expense"
 	"github.com/dwarvesf/fortress-api/pkg/store/feedbackevent"
+	"github.com/dwarvesf/fortress-api/pkg/store/icytransaction"
 	"github.com/dwarvesf/fortress-api/pkg/store/invoice"
 	"github.com/dwarvesf/fortress-api/pkg/store/invoicenumbercaching"
 	"github.com/dwarvesf/fortress-api/pkg/store/operationalservice"
@@ -128,6 +129,7 @@ type Store struct {
 	WorkUnitStack           workunitstack.IStore
 	OperationalService      operationalservice.IStore
 	DiscordLogTemplate      discordtemplate.IStore
+	IcyTransaction          icytransaction.IStore
 }
 
 func New() *Store {
@@ -194,5 +196,6 @@ func New() *Store {
 		WorkUnitStack:           workunitstack.New(),
 		OperationalService:      operationalservice.New(),
 		DiscordLogTemplate:      discordtemplate.New(),
+		IcyTransaction:          icytransaction.New(),
 	}
 }

@@ -24,6 +24,7 @@ type Config struct {
 	Discord       Discord
 	Basecamp      Basecamp
 	CurrencyLayer CurrencyLayer
+	Mochi         Mochi
 
 	Invoice  Invoice
 	Sendgrid Sendgrid
@@ -75,6 +76,10 @@ type Vault struct {
 	Address string
 	Token   string
 	Path    string
+}
+
+type Mochi struct {
+	BaseURL string
 }
 
 type Notion struct {
@@ -224,6 +229,9 @@ func Generate(v ENV) *Config {
 
 		Sendgrid: Sendgrid{
 			APIKey: v.GetString("SENDGRID_API_KEY"),
+		},
+		Mochi: Mochi{
+			BaseURL: v.GetString("MOCHI_BASE_URL"),
 		},
 	}
 }
