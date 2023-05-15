@@ -17,6 +17,7 @@ import (
 	googleauth "github.com/dwarvesf/fortress-api/pkg/service/google"
 	"github.com/dwarvesf/fortress-api/pkg/service/googledrive"
 	"github.com/dwarvesf/fortress-api/pkg/service/googlemail"
+	"github.com/dwarvesf/fortress-api/pkg/service/mochi"
 	"github.com/dwarvesf/fortress-api/pkg/service/notion"
 	"github.com/dwarvesf/fortress-api/pkg/service/sendgrid"
 	"github.com/dwarvesf/fortress-api/pkg/service/wise"
@@ -34,6 +35,7 @@ type Service struct {
 	Notion      notion.IService
 	Sendgrid    sendgrid.Service
 	Wise        wise.IService
+	Mochi       mochi.IService
 }
 
 func New(cfg *config.Config, store *store.Store, repo store.DBRepo) *Service {
@@ -102,5 +104,6 @@ func New(cfg *config.Config, store *store.Store, repo store.DBRepo) *Service {
 			logger.L,
 		),
 		Basecamp: basecamp.NewService(store, repo, cfg, &bc, logger.L),
+		Mochi:    mochi.New(cfg, logger.L),
 	}
 }

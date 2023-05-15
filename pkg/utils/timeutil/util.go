@@ -188,3 +188,49 @@ func CountWeekendDays(from, to time.Time) int {
 	}
 	return weekend
 }
+
+// GetStartDayOfWeek get monday 00:00:00
+// Example: today: 2023-05-12 07:34:21
+// return 2023-05-08 00:00:00
+// weekday value
+// sunday = 0
+// moday = 1
+// tuesday = 2
+// ...
+func GetStartDayOfWeek(tm time.Time) time.Time {
+	weekday := time.Duration(tm.Weekday())
+	if weekday == 0 {
+		weekday = 7
+	}
+	year, month, day := tm.Date()
+	currentStartDay := time.Date(year, month, day, 0, 0, 0, 0, time.Local) // return 2023-05-12 00:00:00
+
+	return currentStartDay.Add(-1 * (weekday - 1) * 24 * time.Hour)
+}
+
+// GetEndDayOfWeek get sunday 23:59:59
+// Example: today: 2023-05-12 07:34:21
+// return 2023-05-14 23:59:59
+// weekday value
+// sunday = 0
+// moday = 1
+// tuesday = 2
+// ...
+func GetEndDayOfWeek(tm time.Time) time.Time {
+	weekday := time.Duration(tm.Weekday())
+	if weekday == 0 {
+		weekday = 7
+	}
+	year, month, day := tm.Date()
+	currentEndDay := time.Date(year, month, day, 23, 59, 59, 0, time.Local) // return 2023-05-12 00:00:00
+	return currentEndDay.Add((7 - weekday) * 24 * time.Hour)
+}
+
+// in curl special character need to be convert to ascii
+// Example: curl --request GET \
+//   --url 'http://localhost:8200/api/v1/vault/55/transaction?start_time=2023-05-08T00%3A00%3A00%2B07%3A00&end_time=2023-05-14T23%3A59%3A59%2B07%3A00'
+func FormatDateForCurl(isoTime string) string {
+	isoTime = strings.ReplaceAll(isoTime, ":", "%3A")
+	isoTime = strings.ReplaceAll(isoTime, "+", "%2B")
+	return isoTime
+}

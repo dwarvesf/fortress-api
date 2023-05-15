@@ -603,6 +603,12 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/project.IHandler.SyncProjectMemberStatus-fm",
 			},
 		},
+		"/cronjobs/store-vault-transaction": {
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/vault.IHandler.StoreVaultTransaction-fm",
+			},
+		},
 		"/webhooks/n8n": {
 			"POST": {
 				Method:  "POST",
