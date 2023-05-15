@@ -19,6 +19,6 @@ func (c currencyService) GetByName(db *gorm.DB, name string) (*model.Currency, e
 }
 
 func (c currencyService) GetList(db *gorm.DB) ([]model.Currency, error) {
-	currencies := []model.Currency{}
+	var currencies []model.Currency
 	return currencies, db.Find(&currencies).Error
 }

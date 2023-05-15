@@ -5,9 +5,11 @@ import (
 	"strings"
 	"time"
 
+	"gorm.io/gorm"
+
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
-	"gorm.io/gorm"
+	"github.com/dwarvesf/fortress-api/pkg/service/currency"
 )
 
 type CreateEmployeeInput struct {
@@ -16,25 +18,26 @@ type CreateEmployeeInput struct {
 	TeamEmail     string
 	PersonalEmail string
 	Positions     []model.UUID
-	Salary        int
+	Salary        int64
 	SeniorityID   model.UUID
 	Roles         []model.UUID
 	Status        string
 	ReferredBy    model.UUID
+	JoinDate      *time.Time
 }
 
 func (r *controller) Create(userID string, input CreateEmployeeInput) (*model.Employee, error) {
+	l := r.logger.Fields(logger.Fields{
+		"controller": "employee",
+		"method":     "Create",
+	})
 	loggedInUser, err := r.store.Employee.One(r.repo.DB(), userID, false)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, ErrEmployeeNotFound
 	}
-
 	if err != nil {
 		return nil, err
 	}
-
-	// 1.2 prepare employee data
-	now := time.Now()
 
 	// Check position existence
 	positions, err := r.store.Position.All(r.repo.DB())
@@ -47,7 +50,7 @@ func (r *controller) Create(userID string, input CreateEmployeeInput) (*model.Em
 	for _, pID := range input.Positions {
 		_, ok := positionMap[pID]
 		if !ok {
-			r.logger.Errorf(ErrPositionNotFound, "position not found with id ", pID.String())
+			l.Errorf(ErrPositionNotFound, "position not found with id ", pID.String())
 			return nil, ErrPositionNotFound
 		}
 
@@ -64,7 +67,7 @@ func (r *controller) Create(userID string, input CreateEmployeeInput) (*model.Em
 
 	roles, err := r.store.Role.GetByIDs(r.repo.DB(), input.Roles)
 	if err != nil {
-		r.logger.Error(err, "failed to get roles by ids")
+		l.Error(err, "failed to get roles by ids")
 		return nil, err
 	}
 
@@ -85,7 +88,7 @@ func (r *controller) Create(userID string, input CreateEmployeeInput) (*model.Em
 		TeamEmail:     input.TeamEmail,
 		PersonalEmail: input.PersonalEmail,
 		WorkingStatus: model.WorkingStatus(input.Status),
-		JoinedDate:    &now,
+		JoinedDate:    input.JoinDate,
 		SeniorityID:   sen.ID,
 		Username:      strings.Split(input.TeamEmail, "@")[0],
 	}
@@ -132,33 +135,70 @@ func (r *controller) Create(userID string, input CreateEmployeeInput) (*model.Em
 	// 2.2 store employee
 	eml, err = r.store.Employee.Create(tx.DB(), eml)
 	if err != nil {
+		l.Errorf(err, "failed to create employee", "employee", eml)
 		return nil, done(err)
 	}
 
 	// 2.3 create employee position
 	for _, p := range positionsReq {
-		_, err = r.store.EmployeePosition.Create(tx.DB(), &model.EmployeePosition{
+		ep := &model.EmployeePosition{
 			EmployeeID: eml.ID,
 			PositionID: p.ID,
-		})
+		}
+		_, err = r.store.EmployeePosition.Create(tx.DB(), ep)
 		if err != nil {
+			l.Errorf(err, "failed to create employee position", "employee_position", ep)
 			return nil, done(err)
 		}
 	}
 
 	// 2.4 create employee roles
 	for _, role := range roles {
+		er := &model.EmployeeRole{
+			EmployeeID: eml.ID,
+			RoleID:     role.ID,
+		}
 		_, err = r.store.EmployeeRole.Create(tx.DB(), &model.EmployeeRole{
 			EmployeeID: eml.ID,
 			RoleID:     role.ID,
 		})
 		if err != nil {
-			r.logger.Fields(logger.Fields{
-				"emlID":  eml.ID,
-				"roleID": role.ID,
-			}).Error(err, "failed to create employee role")
+			l.Errorf(err, "failed to create employee role", "employee_role", er)
 			return nil, done(err)
 		}
+	}
+
+	baseCurrency, err := r.store.Currency.GetByName(tx.DB(), currency.VNDCurrency)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, done(ErrCurrencyNotFound)
+		}
+
+		return nil, done(err)
+	}
+
+	salaryBatch := 1
+	if input.JoinDate.Day() > 1 && input.JoinDate.Day() < 16 {
+		salaryBatch = 15
+	}
+
+	// 2.4 create employee salary
+	ebs := &model.BaseSalary{
+		EmployeeID:            eml.ID,
+		ContractAmount:        0,
+		CompanyAccountAmount:  0,
+		PersonalAccountAmount: input.Salary,
+		InsuranceAmount:       0,
+		Type:                  "",
+		Category:              "",
+		CurrencyID:            baseCurrency.ID,
+		Batch:                 salaryBatch,
+		EffectiveDate:         nil,
+	}
+	err = r.store.BaseSalary.Save(tx.DB(), ebs)
+	if err != nil {
+		l.Errorf(err, "failed to create employee base salary", "employee_base_salary", ebs)
+		return nil, done(err)
 	}
 
 	// Create employee organization
@@ -170,7 +210,12 @@ func (r *controller) Create(userID string, input CreateEmployeeInput) (*model.Em
 		return nil, done(err)
 	}
 
-	if _, err := r.store.EmployeeOrganization.Create(tx.DB(), &model.EmployeeOrganization{EmployeeID: eml.ID, OrganizationID: org.ID}); err != nil {
+	eo := &model.EmployeeOrganization{
+		EmployeeID:     eml.ID,
+		OrganizationID: org.ID,
+	}
+	if _, err := r.store.EmployeeOrganization.Create(tx.DB(), eo); err != nil {
+		l.Errorf(err, "failed to create employee organization", "employee_organization", eo)
 		return nil, done(err)
 	}
 

@@ -43,9 +43,9 @@ func (h *handler) ListProjectMilestones(c *gin.Context) {
 		},
 	}...)
 
-	resp, err := h.service.Notion.GetDatabase(h.config.Notion.Databases.Project, filter, nil, 0)
+	resp, err := h.service.Notion.GetDatabase(h.config.Notion.Databases.Delivery, filter, nil, 0)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, "failed to get projects from notion"))
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, "failed to get milestones from notion"))
 		return
 	}
 

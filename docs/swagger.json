@@ -7679,8 +7679,7 @@
                 "roles",
                 "salary",
                 "seniorityID",
-                "status",
-                "teamEmail"
+                "status"
             ],
             "properties": {
                 "displayName": {
@@ -7689,6 +7688,9 @@
                 "fullName": {
                     "type": "string",
                     "maxLength": 100
+                },
+                "joinDate": {
+                    "type": "string"
                 },
                 "personalEmail": {
                     "type": "string"

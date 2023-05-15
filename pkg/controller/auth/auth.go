@@ -50,6 +50,10 @@ func (r *controller) Auth(in AuthenticationInput) (*model.Employee, string, erro
 		return nil, "", err
 	}
 
+	if employee.WorkingStatus == model.WorkingStatusLeft || employee.WorkingStatus == model.WorkingStatusOnBoarding {
+		return nil, "", ErrUserInactivated
+	}
+
 	// 2.5 generate jwt bearer token
 	authenticationInfo := model.AuthenticationInfo{
 		UserID: employee.ID.String(),

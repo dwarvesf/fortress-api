@@ -1275,6 +1275,8 @@ definitions:
       fullName:
         maxLength: 100
         type: string
+      joinDate:
+        type: string
       personalEmail:
         type: string
       positions:
@@ -1303,7 +1305,6 @@ definitions:
     - salary
     - seniorityID
     - status
-    - teamEmail
     type: object
   request.CreatePositionInput:
     properties:

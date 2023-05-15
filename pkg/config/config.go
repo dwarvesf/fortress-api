@@ -92,6 +92,7 @@ type NotionDatabase struct {
 	Hiring          string
 	StaffingDemand  string
 	Project         string
+	Delivery        string
 	Digest          string
 	Updates         string
 	Memo            string
@@ -194,6 +195,7 @@ func Generate(v ENV) *Config {
 				Hiring:          v.GetString("NOTION_HIRING_DB_ID"),
 				StaffingDemand:  v.GetString("NOTION_STAFFING_DEMAND_DB_ID"),
 				Project:         v.GetString("NOTION_PROJECT_DB_ID"),
+				Delivery:        v.GetString("NOTION_DELIVERY_DB_ID"),
 				Digest:          v.GetString("NOTION_DIGEST_DB_ID"),
 				Updates:         v.GetString("NOTION_UPDATES_DB_ID"),
 				Memo:            v.GetString("NOTION_MEMO_DB_ID"),
