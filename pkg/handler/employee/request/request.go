@@ -173,7 +173,7 @@ func (input *GetListEmployeeInput) Validate() error {
 func (input CreateEmployeeInput) Validate() error {
 	teamEmailRegex := ".+@((dwarvesv\\.com)|(d\\.foundation))"
 	regex, _ := regexp.Compile(teamEmailRegex)
-	if !regex.MatchString(input.TeamEmail) {
+	if input.TeamEmail != "" && !regex.MatchString(input.TeamEmail) {
 		return errs.ErrInvalidEmailDomain
 	}
 
