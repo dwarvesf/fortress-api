@@ -24,6 +24,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/handler/project"
 	"github.com/dwarvesf/fortress-api/pkg/handler/survey"
 	"github.com/dwarvesf/fortress-api/pkg/handler/valuation"
+	"github.com/dwarvesf/fortress-api/pkg/handler/vault"
 	"github.com/dwarvesf/fortress-api/pkg/handler/webhook"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/service"
@@ -53,6 +54,7 @@ type Handler struct {
 	Survey      survey.IHandler
 	Valuation   valuation.IHandler
 	Webhook     webhook.IHandler
+	Vault       vault.IHandler
 }
 
 func New(store *store.Store, repo store.DBRepo, service *service.Service, ctrl *controller.Controller, worker *worker.Worker, logger logger.Logger, cfg *config.Config) *Handler {
@@ -78,5 +80,6 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, ctrl *
 		Survey:      survey.New(store, repo, service, logger, cfg),
 		Valuation:   valuation.New(store, repo, service, logger, cfg),
 		Webhook:     webhook.New(ctrl, store, repo, service, logger, cfg),
+		Vault:       vault.New(store, repo, service, logger, cfg),
 	}
 }
