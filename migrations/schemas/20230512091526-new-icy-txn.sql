@@ -1,6 +1,12 @@
 -- +migrate Up
 
-CREATE TYPE "enum_icy_txn_category" AS ENUM ('learning', 'community', 'delivery', 'tooling');
+-- +migrate StatementBegin
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'enum_icy_txn_category') THEN
+    CREATE TYPE "enum_icy_txn_category" AS ENUM ('learning', 'community', 'delivery', 'tooling');
+  END IF;
+END $$;
+-- +migrate StatementEnd
 
 CREATE TABLE IF NOT EXISTS "icy_transactions" (
   "id" uuid PRIMARY KEY DEFAULT uuid(),
@@ -24,4 +30,4 @@ ADD
 
 DROP TABLE icy_transactions;
 
-DROP TYPE IF EXISTS "enum_team";
+DROP TYPE IF EXISTS "enum_icy_txn_category";
