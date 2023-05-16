@@ -8293,11 +8293,10 @@ const docTemplate = `{
         "request.SubmitOnboardingFormRequest": {
             "type": "object",
             "required": [
-                "DateOfBirth",
-                "LocalBranchName",
                 "address",
                 "city",
                 "country",
+                "dateOfBirth",
                 "discordName",
                 "gender",
                 "horoscope",
@@ -8305,17 +8304,12 @@ const docTemplate = `{
                 "localBankCurrency",
                 "localBankNumber",
                 "localBankRecipientName",
+                "localBranchName",
                 "mbti",
                 "phoneNumber",
                 "placeOfResidence"
             ],
             "properties": {
-                "DateOfBirth": {
-                    "type": "string"
-                },
-                "LocalBranchName": {
-                    "type": "string"
-                },
                 "address": {
                     "type": "string"
                 },
@@ -8323,6 +8317,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "country": {
+                    "type": "string"
+                },
+                "dateOfBirth": {
                     "type": "string"
                 },
                 "discordName": {
@@ -8350,6 +8347,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "localBankRecipientName": {
+                    "type": "string"
+                },
+                "localBranchName": {
                     "type": "string"
                 },
                 "mbti": {

@@ -86,7 +86,7 @@ type SubmitOnboardingFormRequest struct {
 	Address          string     `json:"address" binding:"required"`
 	City             string     `json:"city" binding:"required"`
 	Country          string     `json:"country" binding:"required"`
-	DateOfBirth      *time.Time `json:"DateOfBirth" binding:"required"`
+	DateOfBirth      *time.Time `json:"dateOfBirth" binding:"required"`
 	Gender           string     `json:"gender" binding:"required"`
 	Horoscope        string     `json:"horoscope" binding:"required"`
 	MBTI             string     `json:"mbti" binding:"required"`
@@ -97,7 +97,7 @@ type SubmitOnboardingFormRequest struct {
 	LocalBankCurrency      string `json:"localBankCurrency" binding:"required"`
 	LocalBankNumber        string `json:"localBankNumber" binding:"required"`
 	LocalBankRecipientName string `json:"localBankRecipientName" binding:"required"`
-	LocalBranchName        string `json:"LocalBranchName" binding:"required"`
+	LocalBranchName        string `json:"localBranchName" binding:"required"`
 
 	DiscordName  string `json:"discordName" binding:"required"`
 	GithubID     string `json:"githubID"`

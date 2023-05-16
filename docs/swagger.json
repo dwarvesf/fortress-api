@@ -8285,11 +8285,10 @@
         "request.SubmitOnboardingFormRequest": {
             "type": "object",
             "required": [
-                "DateOfBirth",
-                "LocalBranchName",
                 "address",
                 "city",
                 "country",
+                "dateOfBirth",
                 "discordName",
                 "gender",
                 "horoscope",
@@ -8297,17 +8296,12 @@
                 "localBankCurrency",
                 "localBankNumber",
                 "localBankRecipientName",
+                "localBranchName",
                 "mbti",
                 "phoneNumber",
                 "placeOfResidence"
             ],
             "properties": {
-                "DateOfBirth": {
-                    "type": "string"
-                },
-                "LocalBranchName": {
-                    "type": "string"
-                },
                 "address": {
                     "type": "string"
                 },
@@ -8315,6 +8309,9 @@
                     "type": "string"
                 },
                 "country": {
+                    "type": "string"
+                },
+                "dateOfBirth": {
                     "type": "string"
                 },
                 "discordName": {
@@ -8342,6 +8339,9 @@
                     "type": "string"
                 },
                 "localBankRecipientName": {
+                    "type": "string"
+                },
+                "localBranchName": {
                     "type": "string"
                 },
                 "mbti": {
