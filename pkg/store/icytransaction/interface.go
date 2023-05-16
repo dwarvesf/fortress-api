@@ -7,5 +7,5 @@ import (
 )
 
 type IStore interface {
-	Create(db *gorm.DB, model *model.IcyTransaction) error
+	Create(db *gorm.DB, model []model.IcyTransaction) error
 }
