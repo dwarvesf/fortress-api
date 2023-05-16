@@ -1574,15 +1574,13 @@ definitions:
     type: object
   request.SubmitOnboardingFormRequest:
     properties:
-      DateOfBirth:
-        type: string
-      LocalBranchName:
-        type: string
       address:
         type: string
       city:
         type: string
       country:
+        type: string
+      dateOfBirth:
         type: string
       discordName:
         type: string
@@ -1602,6 +1600,8 @@ definitions:
         type: string
       localBankRecipientName:
         type: string
+      localBranchName:
+        type: string
       mbti:
         type: string
       notionName:
@@ -1613,11 +1613,10 @@ definitions:
       placeOfResidence:
         type: string
     required:
-    - DateOfBirth
-    - LocalBranchName
     - address
     - city
     - country
+    - dateOfBirth
     - discordName
     - gender
     - horoscope
@@ -1625,6 +1624,7 @@ definitions:
     - localBankCurrency
     - localBankNumber
     - localBankRecipientName
+    - localBranchName
     - mbti
     - phoneNumber
     - placeOfResidence
