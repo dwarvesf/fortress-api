@@ -30,6 +30,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/store/employeeeventquestion"
 	"github.com/dwarvesf/fortress-api/pkg/store/employeeeventreviewer"
 	"github.com/dwarvesf/fortress-api/pkg/store/employeeeventtopic"
+	"github.com/dwarvesf/fortress-api/pkg/store/employeeinvitation"
 	"github.com/dwarvesf/fortress-api/pkg/store/employeeorganization"
 	"github.com/dwarvesf/fortress-api/pkg/store/employeeposition"
 	"github.com/dwarvesf/fortress-api/pkg/store/employeerole"
@@ -95,6 +96,7 @@ type Store struct {
 	EmployeeEventQuestion   employeeeventquestion.IStore
 	EmployeeEventReviewer   employeeeventreviewer.IStore
 	EmployeeEventTopic      employeeeventtopic.IStore
+	EmployeeInvitation      employeeinvitation.IStore
 	EmployeeOrganization    employeeorganization.IStore
 	EmployeePosition        employeeposition.IStore
 	EmployeeRole            employeerole.IStore
@@ -162,6 +164,7 @@ func New() *Store {
 		EmployeeEventQuestion:   employeeeventquestion.New(),
 		EmployeeEventReviewer:   employeeeventreviewer.New(),
 		EmployeeEventTopic:      employeeeventtopic.New(),
+		EmployeeInvitation:      employeeinvitation.New(),
 		EmployeeOrganization:    employeeorganization.New(),
 		EmployeePosition:        employeeposition.New(),
 		EmployeeRole:            employeerole.New(),

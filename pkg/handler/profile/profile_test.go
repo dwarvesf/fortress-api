@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
+	"github.com/dwarvesf/fortress-api/pkg/controller"
 	"github.com/dwarvesf/fortress-api/pkg/handler/profile/request"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/service"
@@ -51,7 +52,9 @@ func TestHandler_GetProfile(t *testing.T) {
 				ctx, _ := gin.CreateTestContext(w)
 				ctx.Request = httptest.NewRequest("GET", "/api/v1/profile", nil)
 				ctx.Request.Header.Set("Authorization", testToken)
-				metadataHandler := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+
+				controllerMock := controller.New(storeMock, txRepo, serviceMock, nil, loggerMock, &cfg)
+				metadataHandler := New(controllerMock, storeMock, txRepo, serviceMock, loggerMock, &cfg)
 
 				metadataHandler.GetProfile(ctx)
 
@@ -133,7 +136,9 @@ func TestHandler_UpdateProfileInfo(t *testing.T) {
 				bodyReader := strings.NewReader(string(byteReq))
 				ctx.Request = httptest.NewRequest("PUT", "/api/v1/profile", bodyReader)
 				ctx.Request.Header.Set("Authorization", testToken)
-				metadataHandler := New(storeMock, txRepo, serviceMock, loggerMock, &cfg)
+
+				controllerMock := controller.New(storeMock, txRepo, serviceMock, nil, loggerMock, &cfg)
+				metadataHandler := New(controllerMock, storeMock, txRepo, serviceMock, loggerMock, &cfg)
 
 				metadataHandler.UpdateInfo(ctx)
 

@@ -8334,6 +8334,12 @@ const docTemplate = `{
                 "horoscope": {
                     "type": "string"
                 },
+                "identityCardPhotoBack": {
+                    "type": "string"
+                },
+                "identityCardPhotoFront": {
+                    "type": "string"
+                },
                 "linkedInName": {
                     "type": "string"
                 },
@@ -8356,6 +8362,12 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "notionName": {
+                    "type": "string"
+                },
+                "passportPhotoBack": {
+                    "type": "string"
+                },
+                "passportPhotoFront": {
                     "type": "string"
                 },
                 "phoneNumber": {

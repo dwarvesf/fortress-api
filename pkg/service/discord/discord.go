@@ -7,7 +7,6 @@ import (
 	"net/http"
 
 	"github.com/bwmarrin/discordgo"
-
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 )
@@ -141,4 +140,29 @@ func (d *discordClient) SendMessage(msg, webhookUrl string) (*model.DiscordMessa
 	defer res.Body.Close()
 
 	return &discordMsg, nil
+}
+
+func (d *discordClient) GetMemberByName(discordName string) ([]*discordgo.Member, error) {
+	members := make([]*discordgo.Member, 0)
+	guildMembers, err := d.session.GuildMembersSearch(d.cfg.Discord.IDs.DwarvesGuild, discordName, 1000)
+	if err != nil {
+		return nil, err
+	}
+
+	members = append(members, guildMembers...)
+
+	return members, nil
+}
+
+func (d *discordClient) GetRoles() ([]*discordgo.Role, error) {
+	roles, err := d.session.GuildRoles(d.cfg.Discord.IDs.DwarvesGuild)
+	if err != nil {
+		return nil, err
+	}
+
+	return roles, nil
+}
+
+func (d *discordClient) AssignRole(roleID, userID string) error {
+	return d.session.GuildMemberRoleAdd(d.cfg.Discord.IDs.DwarvesGuild, userID, roleID)
 }

@@ -1590,6 +1590,10 @@ definitions:
         type: string
       horoscope:
         type: string
+      identityCardPhotoBack:
+        type: string
+      identityCardPhotoFront:
+        type: string
       linkedInName:
         type: string
       localBankBranch:
@@ -1605,6 +1609,10 @@ definitions:
       mbti:
         type: string
       notionName:
+        type: string
+      passportPhotoBack:
+        type: string
+      passportPhotoFront:
         type: string
       phoneNumber:
         maxLength: 18

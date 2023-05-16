@@ -20,6 +20,7 @@ require (
 	github.com/golang/mock v1.4.4
 	github.com/google/go-cmp v0.5.9
 	github.com/hashicorp/vault/api v1.8.2
+	github.com/issyl0/go-improvmx v0.17.0
 	github.com/jackc/pgtype v1.12.0
 	github.com/jinzhu/now v1.1.5
 	github.com/joho/godotenv v1.4.0
@@ -70,6 +71,7 @@ require (
 	github.com/go-openapi/swag v0.19.15 // indirect
 	github.com/go-playground/locales v0.14.0 // indirect
 	github.com/go-playground/universal-translator v0.18.0 // indirect
+	github.com/go-resty/resty/v2 v2.7.0 // indirect
 	github.com/go-sql-driver/mysql v1.6.0 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.2 // indirect

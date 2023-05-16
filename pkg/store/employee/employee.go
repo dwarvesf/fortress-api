@@ -58,7 +58,7 @@ func (s *store) One(db *gorm.DB, id string, preload bool) (*model.Employee, erro
 func (s *store) OneByEmail(db *gorm.DB, email string) (*model.Employee, error) {
 	var employee *model.Employee
 
-	return employee, db.Where("team_email = ? OR personal_email = ?", email, email).First(&employee).Error
+	return employee, db.Where("NULLIF(TRIM(team_email), '') = ? OR NULLIF(TRIM(personal_email), '') = ?", email, email).First(&employee).Error
 }
 
 // OneByNotionID get 1 employee by notion id
