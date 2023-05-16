@@ -17,6 +17,7 @@ import (
 	googleauth "github.com/dwarvesf/fortress-api/pkg/service/google"
 	"github.com/dwarvesf/fortress-api/pkg/service/googledrive"
 	"github.com/dwarvesf/fortress-api/pkg/service/googlemail"
+	"github.com/dwarvesf/fortress-api/pkg/service/improvmx"
 	"github.com/dwarvesf/fortress-api/pkg/service/mochi"
 	"github.com/dwarvesf/fortress-api/pkg/service/notion"
 	"github.com/dwarvesf/fortress-api/pkg/service/sendgrid"
@@ -32,10 +33,11 @@ type Service struct {
 	Google      googleauth.IService
 	GoogleDrive googledrive.Service
 	GoogleMail  googlemail.IService
+	ImprovMX    improvmx.IService
+	Mochi       mochi.IService
 	Notion      notion.IService
 	Sendgrid    sendgrid.Service
 	Wise        wise.IService
-	Mochi       mochi.IService
 }
 
 func New(cfg *config.Config, store *store.Store, repo store.DBRepo) *Service {
@@ -86,24 +88,17 @@ func New(cfg *config.Config, store *store.Store, repo store.DBRepo) *Service {
 	Currency := currency.New(cfg)
 
 	return &Service{
+		Basecamp:    basecamp.NewService(store, repo, cfg, &bc, logger.L),
+		Cache:       cch,
+		Currency:    Currency,
+		Discord:     discord.New(cfg),
 		Google:      googleSvc,
 		GoogleDrive: googleDriveSvc,
 		GoogleMail:  googleMailService,
-		Notion: notion.New(
-			cfg.Notion.Secret,
-			cfg.Notion.Databases.Project,
-			logger.L,
-		),
-		Wise:     wise.New(cfg, logger.L),
-		Currency: Currency,
-		Cache:    cch,
-		Discord:  discord.New(cfg),
-		Sendgrid: sendgrid.New(
-			cfg.Sendgrid.APIKey,
-			cfg,
-			logger.L,
-		),
-		Basecamp: basecamp.NewService(store, repo, cfg, &bc, logger.L),
-		Mochi:    mochi.New(cfg, logger.L),
+		ImprovMX:    improvmx.New(cfg.ImprovMX.Token),
+		Mochi:       mochi.New(cfg, logger.L),
+		Notion:      notion.New(cfg.Notion.Secret, cfg.Notion.Databases.Project, logger.L),
+		Sendgrid:    sendgrid.New(cfg.Sendgrid.APIKey, cfg, logger.L),
+		Wise:        wise.New(cfg, logger.L),
 	}
 }

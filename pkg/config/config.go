@@ -25,6 +25,7 @@ type Config struct {
 	Basecamp      Basecamp
 	CurrencyLayer CurrencyLayer
 	Mochi         Mochi
+	ImprovMX      ImprovMX
 
 	Invoice  Invoice
 	Sendgrid Sendgrid
@@ -79,6 +80,10 @@ type Vault struct {
 	Address string
 	Token   string
 	Path    string
+}
+
+type ImprovMX struct {
+	Token string
 }
 
 type Mochi struct {
@@ -240,6 +245,9 @@ func Generate(v ENV) *Config {
 		},
 		Mochi: Mochi{
 			BaseURL: v.GetString("MOCHI_BASE_URL"),
+		},
+		ImprovMX: ImprovMX{
+			Token: v.GetString("IMPROVMX_API_TOKEN"),
 		},
 	}
 }

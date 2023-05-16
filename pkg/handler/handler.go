@@ -75,7 +75,7 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, ctrl *
 		Metadata:    metadata.New(store, repo, service, logger, cfg),
 		Notion:      notion.New(store, repo, service, logger, cfg),
 		Payroll:     payroll.New(ctrl, store, repo, service, worker, logger, cfg),
-		Profile:     profile.New(store, repo, service, logger, cfg),
+		Profile:     profile.New(ctrl, store, repo, service, logger, cfg),
 		Project:     project.New(ctrl, store, repo, service, logger, cfg),
 		Survey:      survey.New(store, repo, service, logger, cfg),
 		Valuation:   valuation.New(store, repo, service, logger, cfg),
