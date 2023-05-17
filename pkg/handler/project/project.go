@@ -1068,9 +1068,14 @@ func (h *handler) updateProjectMember(db *gorm.DB, p *model.Project, slotID stri
 		member.SeniorityID = input.SeniorityID
 		member.DeploymentType = model.DeploymentType(input.DeploymentType)
 		member.StartDate = input.GetStartDate()
-		member.EndDate = input.GetEndDate()
 		member.Note = input.Note
 		member.UpsellPersonID = input.UpsellPersonID
+
+		updateEndDate := false
+		if !member.EndDate.Equal(*input.GetEndDate()) {
+			member.EndDate = input.GetEndDate()
+			updateEndDate = true
+		}
 
 		updateStatus := false
 		if member.Status != model.ProjectMemberStatus(input.Status) {
@@ -1084,7 +1089,7 @@ func (h *handler) updateProjectMember(db *gorm.DB, p *model.Project, slotID stri
 
 		updateRate := false
 		if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectMembersRateEdit) {
-			if member.Rate != input.Rate {
+			if !member.Rate.Equal(input.Rate) {
 				member.Rate = input.Rate
 				updateRate = true
 			}
@@ -1132,11 +1137,26 @@ func (h *handler) updateProjectMember(db *gorm.DB, p *model.Project, slotID stri
 					"employee_id":         userInfo.UserID,
 					"updated_employee_id": member.EmployeeID.String(),
 					"project_name":        p.Name,
-					"rate":                fmt.Sprintf("%s%s", rate, p.BankAccount.Currency.Name),
+					"rate":                fmt.Sprintf("%s %s", rate, p.BankAccount.Currency.Name),
 				},
 			})
 			if err != nil {
 				h.logger.Fields(logger.Fields{"member": member}).Error(err, "failed to log project member charge rate update")
+			}
+		}
+
+		if updateEndDate {
+			err = h.controller.Discord.Log(model.LogDiscordInput{
+				Type: "project_member_update_end_date",
+				Data: map[string]interface{}{
+					"employee_id":         userInfo.UserID,
+					"updated_employee_id": member.EmployeeID.String(),
+					"project_name":        p.Name,
+					"end_date":            member.EndDate.Format("2006-01-02"),
+				},
+			})
+			if err != nil {
+				h.logger.Fields(logger.Fields{"member": member}).Error(err, "failed to log project member end date update")
 			}
 		}
 	} else {
