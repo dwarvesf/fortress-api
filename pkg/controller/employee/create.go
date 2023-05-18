@@ -112,7 +112,7 @@ func (r *controller) Create(userID string, input CreateEmployeeInput) (*model.Em
 	_, err = r.store.Employee.OneByEmail(r.repo.DB(), eml.TeamEmail)
 	if !errors.Is(err, gorm.ErrRecordNotFound) {
 		if err == nil {
-			return nil, ErrEmailExisted
+			return nil, ErrTeamEmailExisted
 		}
 		return nil, err
 	}
@@ -120,7 +120,7 @@ func (r *controller) Create(userID string, input CreateEmployeeInput) (*model.Em
 	_, err = r.store.Employee.OneByEmail(r.repo.DB(), eml.PersonalEmail)
 	if !errors.Is(err, gorm.ErrRecordNotFound) {
 		if err == nil {
-			return nil, ErrEmailExisted
+			return nil, ErrPersonalEmailExisted
 		}
 		return nil, err
 	}

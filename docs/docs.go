@@ -2224,7 +2224,7 @@ const docTemplate = `{
         },
         "/invite/submit": {
             "post": {
-                "description": "Update profile info by id",
+                "description": "Submit Onboarding form",
                 "consumes": [
                     "application/json"
                 ],
@@ -2232,22 +2232,15 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Profile"
+                    "Onboarding"
                 ],
-                "summary": "Update profile info by id",
+                "summary": "Submit onboarding form",
                 "parameters": [
                     {
                         "type": "string",
                         "description": "jwt token",
                         "name": "Authorization",
                         "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Employee ID",
-                        "name": "id",
-                        "in": "path",
                         "required": true
                     },
                     {
@@ -7853,7 +7846,8 @@ const docTemplate = `{
                 "roles",
                 "salary",
                 "seniorityID",
-                "status"
+                "status",
+                "teamEmail"
             ],
             "properties": {
                 "displayName": {

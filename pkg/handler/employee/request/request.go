@@ -82,7 +82,7 @@ func (e *DeleteMenteeInput) Validate() error {
 type CreateEmployeeInput struct {
 	FullName      string       `json:"fullName" binding:"required,max=100"`
 	DisplayName   string       `json:"displayName" binding:"required"`
-	TeamEmail     string       `json:"teamEmail"`
+	TeamEmail     string       `json:"teamEmail" binding:"required"`
 	PersonalEmail string       `json:"personalEmail" binding:"required,email"`
 	Positions     []model.UUID `form:"positions" json:"positions" binding:"required"`
 	Salary        int64        `json:"salary" binding:"required"`

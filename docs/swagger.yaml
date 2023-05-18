@@ -1307,6 +1307,7 @@ definitions:
     - salary
     - seniorityID
     - status
+    - teamEmail
     type: object
   request.CreatePositionInput:
     properties:
@@ -5726,16 +5727,11 @@ paths:
     post:
       consumes:
       - application/json
-      description: Update profile info by id
+      description: Submit Onboarding form
       parameters:
       - description: jwt token
         in: header
         name: Authorization
-        required: true
-        type: string
-      - description: Employee ID
-        in: path
-        name: id
         required: true
         type: string
       - description: Body
@@ -5763,9 +5759,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/view.ErrorResponse'
-      summary: Update profile info by id
+      summary: Submit onboarding form
       tags:
-      - Profile
+      - Onboarding
   /invoices:
     get:
       consumes:
