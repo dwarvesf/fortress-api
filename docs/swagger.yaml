@@ -1275,7 +1275,7 @@ definitions:
       fullName:
         maxLength: 100
         type: string
-      joinDate:
+      joinedDate:
         type: string
       personalEmail:
         type: string
@@ -1300,7 +1300,7 @@ definitions:
     required:
     - displayName
     - fullName
-    - joinDate
+    - joinedDate
     - personalEmail
     - positions
     - roles

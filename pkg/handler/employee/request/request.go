@@ -90,7 +90,7 @@ type CreateEmployeeInput struct {
 	Roles         []model.UUID `json:"roles" binding:"required"`
 	Status        string       `json:"status" binding:"required"`
 	ReferredBy    model.UUID   `json:"referredBy"`
-	JoinDate      string       `json:"joinDate" binding:"required"`
+	JoinedDate    string       `json:"joinedDate" binding:"required"`
 }
 
 type UpdateSkillsInput struct {
@@ -185,17 +185,17 @@ func (i *CreateEmployeeInput) Validate() error {
 		return errs.ErrRoleCannotBeEmpty
 	}
 
-	_, err := time.Parse("2006-01-02", i.JoinDate)
-	if i.JoinDate != "" && err != nil {
+	_, err := time.Parse("2006-01-02", i.JoinedDate)
+	if i.JoinedDate != "" && err != nil {
 		return errs.ErrInvalidJoinedDate
 	}
 
 	return nil
 }
 
-func (i *CreateEmployeeInput) GetJoinDate() *time.Time {
-	date, err := time.Parse("2006-01-02", i.JoinDate)
-	if i.JoinDate == "" || err != nil {
+func (i *CreateEmployeeInput) GetJoinedDate() *time.Time {
+	date, err := time.Parse("2006-01-02", i.JoinedDate)
+	if i.JoinedDate == "" || err != nil {
 		return nil
 	}
 
