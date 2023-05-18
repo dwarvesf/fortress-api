@@ -7847,7 +7847,7 @@ const docTemplate = `{
             "required": [
                 "displayName",
                 "fullName",
-                "joinDate",
+                "joinedDate",
                 "personalEmail",
                 "positions",
                 "roles",
@@ -7863,7 +7863,7 @@ const docTemplate = `{
                     "type": "string",
                     "maxLength": 100
                 },
-                "joinDate": {
+                "joinedDate": {
                     "type": "string"
                 },
                 "personalEmail": {

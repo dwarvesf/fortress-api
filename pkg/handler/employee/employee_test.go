@@ -702,8 +702,8 @@ func Test_Create(t *testing.T) {
 				Roles: []model.UUID{
 					model.MustGetUUIDFromString("d796884d-a8c4-4525-81e7-54a3b6099eac"),
 				},
-				Status:   model.WorkingStatusOnBoarding.String(),
-				JoinDate: time.Now().Format("2006-01-02"),
+				Status:     model.WorkingStatusOnBoarding.String(),
+				JoinedDate: time.Now().Format("2006-01-02"),
 			},
 			id: "2655832e-f009-4b73-a535-64c3a22e558f",
 		},
@@ -723,8 +723,8 @@ func Test_Create(t *testing.T) {
 				Roles: []model.UUID{
 					model.MustGetUUIDFromString("d796884d-a8c4-4525-81e7-54a3b6099eac"),
 				},
-				Status:   model.WorkingStatusOnBoarding.String(),
-				JoinDate: time.Now().Format("2006-01-02"),
+				Status:     model.WorkingStatusOnBoarding.String(),
+				JoinedDate: time.Now().Format("2006-01-02"),
 			},
 			id: "2655832e-f009-4b73-a535-64c3a22e558f",
 		},
@@ -744,8 +744,8 @@ func Test_Create(t *testing.T) {
 				Roles: []model.UUID{
 					model.MustGetUUIDFromString("d796884d-a8c4-4525-81e7-54a3b6099eac"),
 				},
-				Status:   model.WorkingStatusOnBoarding.String(),
-				JoinDate: time.Now().Format("2006-01-02"),
+				Status:     model.WorkingStatusOnBoarding.String(),
+				JoinedDate: time.Now().Format("2006-01-02"),
 			},
 			id: "2655832e-f009-4b73-a535-64c3a22e558f",
 		},
