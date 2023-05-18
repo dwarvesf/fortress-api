@@ -7845,7 +7845,9 @@ const docTemplate = `{
         "request.CreateEmployeeInput": {
             "type": "object",
             "required": [
+                "displayName",
                 "fullName",
+                "joinDate",
                 "personalEmail",
                 "positions",
                 "roles",

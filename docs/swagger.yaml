@@ -1298,7 +1298,9 @@ definitions:
       teamEmail:
         type: string
     required:
+    - displayName
     - fullName
+    - joinDate
     - personalEmail
     - positions
     - roles
