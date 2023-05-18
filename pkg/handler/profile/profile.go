@@ -590,13 +590,12 @@ func (h *handler) Upload(c *gin.Context) {
 }
 
 // SubmitOnboardingForm godoc
-// @Summary Update profile info by id
-// @Description Update profile info by id
-// @Tags Profile
+// @Summary Submit onboarding form
+// @Description Submit Onboarding form
+// @Tags Onboarding
 // @Accept  json
 // @Produce  json
 // @Param Authorization header string true "jwt token"
-// @Param id path string true "Employee ID"
 // @Param Body body request.SubmitOnboardingFormRequest true "Body"
 // @Success 200 {object} view.MessageResponse
 // @Failure 400 {object} view.ErrorResponse
