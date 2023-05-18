@@ -58,6 +58,7 @@ func (h *handler) StoreVaultTransaction(c *gin.Context) {
 	startOfTheWeek := timeutil.FormatDateForCurl(timeutil.GetStartDayOfWeek(time.Now().Local()).Format(time.RFC3339))
 	endOfTheWeek := timeutil.FormatDateForCurl(timeutil.GetEndDayOfWeek(time.Now().Local()).Format(time.RFC3339))
 
+	icyTxs := make([]model.IcyTransaction, 0)
 	for _, vaultId := range supportedVaults {
 		req := &model.VaultTransactionRequest{
 			VaultId:   vaultId,
@@ -95,20 +96,25 @@ func (h *handler) StoreVaultTransaction(c *gin.Context) {
 				c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 				return
 			}
-
-			err = h.store.IcyTransaction.Create(h.repo.DB(), &model.IcyTransaction{
+			icyTxs = append(icyTxs, model.IcyTransaction{
 				Category:       strings.ToLower(transaction.VaultName),
 				TxnTime:        txnTime,
 				Amount:         transaction.Amount,
 				SrcEmployeeId:  srcEmployeeId.EmployeeID,
 				DestEmployeeId: destEmployeeId.EmployeeID,
 			})
-			if err != nil {
-				l.Error(err, "Create IcyTransaction failed")
-				c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
-				return
-			}
 		}
+	}
+
+	tx, done := h.repo.NewTransaction()
+	if err := h.store.IcyTransaction.Create(tx.DB(), icyTxs); err != nil {
+		l.Error(done(err), "Create IcyTransaction failed")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	if err := done(nil); err != nil {
+		l.Error(err, "failed to commit txn")
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))

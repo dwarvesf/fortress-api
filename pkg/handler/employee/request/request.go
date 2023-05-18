@@ -90,7 +90,7 @@ type CreateEmployeeInput struct {
 	Roles         []model.UUID `json:"roles" binding:"required"`
 	Status        string       `json:"status" binding:"required"`
 	ReferredBy    model.UUID   `json:"referredBy"`
-	JoinDate      *time.Time   `json:"joinDate"`
+	JoinDate      string       `json:"joinDate"`
 }
 
 type UpdateSkillsInput struct {
@@ -170,22 +170,36 @@ func (input *GetListEmployeeInput) Validate() error {
 	return nil
 }
 
-func (input CreateEmployeeInput) Validate() error {
+func (i *CreateEmployeeInput) Validate() error {
 	teamEmailRegex := ".+@((dwarvesv\\.com)|(d\\.foundation))"
 	regex, _ := regexp.Compile(teamEmailRegex)
-	if !regex.MatchString(input.TeamEmail) {
+	if i.TeamEmail != "" && !regex.MatchString(i.TeamEmail) {
 		return errs.ErrInvalidEmailDomain
 	}
 
-	if !model.WorkingStatus(input.Status).IsValid() {
+	if !model.WorkingStatus(i.Status).IsValid() {
 		return errs.ErrInvalidEmployeeStatus
 	}
 
-	if len(input.Roles) == 0 {
+	if len(i.Roles) == 0 {
 		return errs.ErrRoleCannotBeEmpty
 	}
 
+	_, err := time.Parse("2006-01-02", i.JoinDate)
+	if i.JoinDate != "" && err != nil {
+		return errs.ErrInvalidJoinedDate
+	}
+
 	return nil
+}
+
+func (i *CreateEmployeeInput) GetJoinDate() *time.Time {
+	date, err := time.Parse("2006-01-02", i.JoinDate)
+	if i.JoinDate == "" || err != nil {
+		return nil
+	}
+
+	return &date
 }
 
 type UpdateRoleBody struct {

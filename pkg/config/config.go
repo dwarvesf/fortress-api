@@ -33,6 +33,7 @@ type Config struct {
 	Debug        bool
 	Env          string
 	JWTSecretKey string
+	FortressURL  string
 }
 
 type DBConnection struct {
@@ -60,6 +61,8 @@ type Google struct {
 	GCPProjectID                 string
 	AccountingGoogleRefreshToken string
 	AccountingEmailID            string
+	TeamGoogleRefreshToken       string
+	TeamEmailID                  string
 }
 
 type Wise struct {
@@ -147,6 +150,7 @@ func Generate(v ENV) *Config {
 		APIKey:       v.GetString("API_KEY"),
 		Env:          v.GetString("ENV"),
 		JWTSecretKey: v.GetString("JWT_SECRET_KEY"),
+		FortressURL:  v.GetString("FORTRESS_URL"),
 
 		ApiServer: ApiServer{
 			Port:           v.GetString("PORT"),
@@ -172,6 +176,8 @@ func Generate(v ENV) *Config {
 			GCSCredentials:               v.GetString("GCS_CREDENTIALS"),
 			AccountingGoogleRefreshToken: v.GetString("ACCOUNTING_GOOGLE_REFRESH_TOKEN"),
 			AccountingEmailID:            v.GetString("ACCOUNTING_EMAIL_ID"),
+			TeamGoogleRefreshToken:       v.GetString("TEAM_GOOGLE_REFRESH_TOKEN"),
+			TeamEmailID:                  v.GetString("TEAM_EMAIL_ID"),
 		},
 
 		Wise: Wise{
