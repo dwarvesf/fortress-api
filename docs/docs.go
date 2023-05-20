@@ -2223,7 +2223,7 @@ const docTemplate = `{
             }
         },
         "/invite/submit": {
-            "post": {
+            "put": {
                 "description": "Submit Onboarding form",
                 "consumes": [
                     "application/json"
