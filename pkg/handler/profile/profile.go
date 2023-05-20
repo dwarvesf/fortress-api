@@ -601,7 +601,7 @@ func (h *handler) Upload(c *gin.Context) {
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 404 {object} view.ErrorResponse
 // @Failure 500 {object} view.ErrorResponse
-// @Router /invite/submit [post]
+// @Router /invite/submit [put]
 func (h *handler) SubmitOnboardingForm(c *gin.Context) {
 	employeeID, err := authutils.GetUserIDFromContext(c, h.config)
 	if err != nil {

@@ -5724,7 +5724,7 @@ paths:
       tags:
       - Feedback
   /invite/submit:
-    post:
+    put:
       consumes:
       - application/json
       description: Submit Onboarding form
