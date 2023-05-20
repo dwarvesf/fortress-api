@@ -108,6 +108,9 @@ func (h *handler) Upload(c *gin.Context) {
 	tx, done := h.repo.NewTransaction()
 
 	if targetType == model.ContentTargetTypeEmployee {
+		if tID == "" {
+			tID = uuidUserID.String()
+		}
 		isExisted, err := h.store.Employee.IsExist(tx.DB(), tID)
 		if err != nil {
 			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, done(err), nil, ""))
@@ -118,6 +121,7 @@ func (h *handler) Upload(c *gin.Context) {
 			return
 		}
 	}
+
 	if targetType == model.ContentTargetTypeProject {
 		isExisted, err := h.store.Project.IsExist(tx.DB(), tID)
 		if err != nil {
