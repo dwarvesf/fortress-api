@@ -2222,6 +2222,56 @@ const docTemplate = `{
                 }
             }
         },
+        "/invite": {
+            "get": {
+                "description": "Submit Get invitation state based on token",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Onboarding"
+                ],
+                "summary": "Get invitation state based on token",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.EmployeeInvitationResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/invite/submit": {
             "put": {
                 "description": "Submit Onboarding form",
@@ -10000,6 +10050,43 @@ const docTemplate = `{
                 },
                 "wiseRecipientName": {
                     "type": "string"
+                }
+            }
+        },
+        "view.EmployeeInvitationData": {
+            "type": "object",
+            "properties": {
+                "employeeID": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "invitedBy": {
+                    "type": "string"
+                },
+                "isBasecampAccountCreated": {
+                    "type": "boolean"
+                },
+                "isCompleted": {
+                    "type": "boolean"
+                },
+                "isDiscordRoleAssigned": {
+                    "type": "boolean"
+                },
+                "isInfoUpdated": {
+                    "type": "boolean"
+                },
+                "isTeamEmailCreated": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "view.EmployeeInvitationResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/view.EmployeeInvitationData"
                 }
             }
         },

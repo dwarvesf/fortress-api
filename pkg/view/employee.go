@@ -585,3 +585,31 @@ func ToBaseSalary(bs *model.BaseSalary) *BaseSalary {
 		EffectiveDate:         bs.EffectiveDate,
 	}
 }
+
+type EmployeeInvitationData struct {
+	ID                       string `json:"id"`
+	EmployeeID               string `json:"employeeID"`
+	InvitedBy                string `json:"invitedBy"`
+	IsCompleted              bool   `json:"isCompleted"`
+	IsInfoUpdated            bool   `json:"isInfoUpdated"`
+	IsDiscordRoleAssigned    bool   `json:"isDiscordRoleAssigned"`
+	IsBasecampAccountCreated bool   `json:"isBasecampAccountCreated"`
+	IsTeamEmailCreated       bool   `json:"isTeamEmailCreated"`
+}
+
+type EmployeeInvitationResponse struct {
+	Data *EmployeeInvitationData `json:"data"`
+}
+
+func ToBasicEmployeeInvitationData(in *model.EmployeeInvitation) *EmployeeInvitationData {
+	return &EmployeeInvitationData{
+		ID:                       in.ID.String(),
+		EmployeeID:               in.EmployeeID.String(),
+		InvitedBy:                in.InvitedBy.String(),
+		IsCompleted:              in.IsCompleted,
+		IsInfoUpdated:            in.IsInfoUpdated,
+		IsDiscordRoleAssigned:    in.IsDiscordRoleAssigned,
+		IsBasecampAccountCreated: in.IsBasecampAccountCreated,
+		IsTeamEmailCreated:       in.IsTeamEmailCreated,
+	}
+}

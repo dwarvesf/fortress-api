@@ -277,6 +277,7 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 
 	invitationGroup := v1.Group("/invite")
 	{
+		invitationGroup.GET("", amw.WithAuth, h.Profile.GetInvitation)
 		invitationGroup.PUT("/submit", amw.WithAuth, h.Profile.SubmitOnboardingForm)
 	}
 }

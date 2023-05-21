@@ -2715,6 +2715,30 @@ definitions:
       wiseRecipientName:
         type: string
     type: object
+  view.EmployeeInvitationData:
+    properties:
+      employeeID:
+        type: string
+      id:
+        type: string
+      invitedBy:
+        type: string
+      isBasecampAccountCreated:
+        type: boolean
+      isCompleted:
+        type: boolean
+      isDiscordRoleAssigned:
+        type: boolean
+      isInfoUpdated:
+        type: boolean
+      isTeamEmailCreated:
+        type: boolean
+    type: object
+  view.EmployeeInvitationResponse:
+    properties:
+      data:
+        $ref: '#/definitions/view.EmployeeInvitationData'
+    type: object
   view.EmployeeListDataResponse:
     properties:
       data:
@@ -5723,6 +5747,39 @@ paths:
       summary: Get number of unread inbox for user
       tags:
       - Feedback
+  /invite:
+    get:
+      consumes:
+      - application/json
+      description: Submit Get invitation state based on token
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.EmployeeInvitationResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get invitation state based on token
+      tags:
+      - Onboarding
   /invite/submit:
     put:
       consumes:
