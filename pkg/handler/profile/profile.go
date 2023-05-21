@@ -589,6 +589,53 @@ func (h *handler) Upload(c *gin.Context) {
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToContentData(filePath), nil, done(nil), nil, ""))
 }
 
+// GetInvitation godoc
+// @Summary Get invitation state based on token
+// @Description Submit Get invitation state based on token
+// @Tags Onboarding
+// @Accept  json
+// @Produce  json
+// @Param Authorization header string true "jwt token"
+// @Success 200 {object} view.EmployeeInvitationResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /invite [get]
+func (h *handler) GetInvitation(c *gin.Context) {
+	employeeID, err := authutils.GetUserIDFromContext(c, h.config)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	input := request.SubmitOnboardingFormRequest{}
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, input, ""))
+		return
+	}
+
+	l := h.logger.Fields(logger.Fields{
+		"handler": "profile",
+		"method":  "GetInvitation",
+		"request": input,
+	})
+
+	employeeInvitation, err := h.store.EmployeeInvitation.OneByEmployeeID(h.repo.DB(), employeeID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			l.Info("employee invitation not found")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, err, nil, ""))
+			return
+		}
+
+		l.Error(err, "failed to get employee invitation")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToBasicEmployeeInvitationData(employeeInvitation), nil, nil, nil, ""))
+}
+
 // SubmitOnboardingForm godoc
 // @Summary Submit onboarding form
 // @Description Submit Onboarding form
@@ -664,21 +711,13 @@ func (h *handler) SubmitOnboardingForm(c *gin.Context) {
 		return
 	}
 
-	tx, done := h.repo.NewTransaction()
-
-	input.FullName = employee.FullName
-	employeeData := input.ToEmployeeModel()
-	// Update employee
-	_, err = h.store.Employee.UpdateSelectedFieldsByID(h.repo.DB(), employeeID, *employeeData,
+	updatedFields := []string{
 		"address",
 		"city",
 		"country",
 		"gender",
 		"horoscope",
-		"passport_photo_front",
-		"passport_photo_back",
-		"identity_card_photo_front",
-		"identity_card_photo_back",
+		"date_of_birth",
 		"local_bank_branch",
 		"local_bank_currency",
 		"local_bank_number",
@@ -688,7 +727,31 @@ func (h *handler) SubmitOnboardingForm(c *gin.Context) {
 		"phone_number",
 		"place_of_residence",
 		"working_status",
-		"team_email",
+	}
+
+	if input.IdentityCardPhotoFront != "" {
+		updatedFields = append(updatedFields, "identity_card_photo_front")
+	}
+
+	if input.IdentityCardPhotoBack != "" {
+		updatedFields = append(updatedFields, "identity_card_photo_back")
+	}
+
+	if input.PassportPhotoFront != "" {
+		updatedFields = append(updatedFields, "passport_photo_front")
+	}
+
+	if input.PassportPhotoBack != "" {
+		updatedFields = append(updatedFields, "passport_photo_back")
+	}
+
+	tx, done := h.repo.NewTransaction()
+
+	input.FullName = employee.FullName
+	employeeData := input.ToEmployeeModel()
+	// Update employee
+	_, err = h.store.Employee.UpdateSelectedFieldsByID(h.repo.DB(), employeeID, *employeeData,
+		updatedFields...,
 	)
 	if err != nil {
 		l.Error(err, "failed to update employee")
@@ -780,6 +843,8 @@ func (h *handler) createBasecampAccount(employee *model.Employee) error {
 		if err != nil {
 			return err
 		}
+
+		return nil
 	}
 
 	email := employee.PersonalEmail
