@@ -8359,6 +8359,9 @@ const docTemplate = `{
                 "address": {
                     "type": "string"
                 },
+                "avatar": {
+                    "type": "string"
+                },
                 "city": {
                     "type": "string"
                 },

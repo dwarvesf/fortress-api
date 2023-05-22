@@ -79,8 +79,7 @@ func (i UpdateInfoInput) ToEmployeeModel(employee *model.Employee) {
 }
 
 type SubmitOnboardingFormRequest struct {
-	FullName string `json:"-"`
-
+	Avatar                 string     `json:"avatar"`
 	Address                string     `json:"address" binding:"required"`
 	City                   string     `json:"city" binding:"required"`
 	Country                string     `json:"country" binding:"required"`
@@ -129,6 +128,7 @@ func (i *SubmitOnboardingFormRequest) Validate() error {
 
 func (i *SubmitOnboardingFormRequest) ToEmployeeModel() *model.Employee {
 	return &model.Employee{
+		Avatar:                 i.Avatar,
 		Address:                i.Address,
 		City:                   i.City,
 		Country:                i.Country,

@@ -608,16 +608,9 @@ func (h *handler) GetInvitation(c *gin.Context) {
 		return
 	}
 
-	input := request.SubmitOnboardingFormRequest{}
-	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, input, ""))
-		return
-	}
-
 	l := h.logger.Fields(logger.Fields{
 		"handler": "profile",
 		"method":  "GetInvitation",
-		"request": input,
 	})
 
 	employeeInvitation, err := h.store.EmployeeInvitation.OneByEmployeeID(h.repo.DB(), employeeID)
@@ -729,6 +722,10 @@ func (h *handler) SubmitOnboardingForm(c *gin.Context) {
 		"working_status",
 	}
 
+	if input.Avatar != "" {
+		updatedFields = append(updatedFields, "avatar")
+	}
+
 	if input.IdentityCardPhotoFront != "" {
 		updatedFields = append(updatedFields, "identity_card_photo_front")
 	}
@@ -745,10 +742,9 @@ func (h *handler) SubmitOnboardingForm(c *gin.Context) {
 		updatedFields = append(updatedFields, "passport_photo_back")
 	}
 
-	tx, done := h.repo.NewTransaction()
-
-	input.FullName = employee.FullName
 	employeeData := input.ToEmployeeModel()
+
+	tx, done := h.repo.NewTransaction()
 	// Update employee
 	_, err = h.store.Employee.UpdateSelectedFieldsByID(h.repo.DB(), employeeID, *employeeData,
 		updatedFields...,
