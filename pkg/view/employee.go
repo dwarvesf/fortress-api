@@ -319,17 +319,19 @@ func ToUpdateGeneralInfoEmployeeData(employee *model.Employee) *UpdateGeneralInf
 func ToOneEmployeeData(employee *model.Employee, userInfo *model.CurrentLoggedUserInfo) *EmployeeData {
 	employeeProjects := make([]EmployeeProjectData, 0, len(employee.ProjectMembers))
 	for _, pm := range employee.ProjectMembers {
-		// If logged user is working on the same project or user have permission to read active, show the project
-		_, ok := userInfo.Projects[pm.ProjectID]
-		if (ok || authutils.HasPermission(userInfo.Permissions, model.PermissionEmployeesReadProjectsReadActive)) &&
-			pm.IsActive() && pm.Project.Status == model.ProjectStatusActive {
-			employeeProjects = append(employeeProjects, ToEmployeeProjectDetailData(&pm, userInfo))
-			continue
-		}
+		if userInfo != nil {
+			// If logged user is working on the same project or user have permission to read active, show the project
+			_, ok := userInfo.Projects[pm.ProjectID]
+			if (ok || authutils.HasPermission(userInfo.Permissions, model.PermissionEmployeesReadProjectsReadActive)) &&
+				pm.IsActive() && pm.Project.Status == model.ProjectStatusActive {
+				employeeProjects = append(employeeProjects, ToEmployeeProjectDetailData(&pm, userInfo))
+				continue
+			}
 
-		// If logged user have permission to read all projects, show the project
-		if authutils.HasPermission(userInfo.Permissions, model.PermissionEmployeesReadProjectsFullAccess) {
-			employeeProjects = append(employeeProjects, ToEmployeeProjectDetailData(&pm, userInfo))
+			// If logged user have permission to read all projects, show the project
+			if authutils.HasPermission(userInfo.Permissions, model.PermissionEmployeesReadProjectsFullAccess) {
+				employeeProjects = append(employeeProjects, ToEmployeeProjectDetailData(&pm, userInfo))
+			}
 		}
 	}
 
@@ -389,13 +391,13 @@ func ToOneEmployeeData(employee *model.Employee, userInfo *model.CurrentLoggedUs
 		Chapters:  ToChapters(employee.EmployeeChapters),
 	}
 
-	if authutils.HasPermission(userInfo.Permissions, model.PermissionEmployeesBaseSalaryRead) {
+	if userInfo != nil && authutils.HasPermission(userInfo.Permissions, model.PermissionEmployeesBaseSalaryRead) {
 		if !employee.BaseSalary.ID.IsZero() {
 			rs.BaseSalary = ToBaseSalary(&employee.BaseSalary)
 		}
 	}
 
-	if authutils.HasPermission(userInfo.Permissions, model.PermissionEmployeesReadGeneralInfoFullAccess) {
+	if userInfo != nil && authutils.HasPermission(userInfo.Permissions, model.PermissionEmployeesReadGeneralInfoFullAccess) {
 		rs.NotionID = empSocialData.NotionID
 		rs.NotionName = empSocialData.NotionName
 		rs.LinkedInName = empSocialData.LinkedInName
@@ -411,7 +413,7 @@ func ToOneEmployeeData(employee *model.Employee, userInfo *model.CurrentLoggedUs
 		rs.WiseCurrency = employee.WiseCurrency
 	}
 
-	if authutils.HasPermission(userInfo.Permissions, model.PermissionEmployeesReadPersonalInfoFullAccess) {
+	if userInfo != nil && authutils.HasPermission(userInfo.Permissions, model.PermissionEmployeesReadPersonalInfoFullAccess) {
 		rs.MBTI = employee.MBTI
 		rs.PersonalEmail = employee.PersonalEmail
 		rs.Address = employee.Address
@@ -587,14 +589,25 @@ func ToBaseSalary(bs *model.BaseSalary) *BaseSalary {
 }
 
 type EmployeeInvitationData struct {
-	ID                       string `json:"id"`
-	EmployeeID               string `json:"employeeID"`
-	InvitedBy                string `json:"invitedBy"`
-	IsCompleted              bool   `json:"isCompleted"`
-	IsInfoUpdated            bool   `json:"isInfoUpdated"`
-	IsDiscordRoleAssigned    bool   `json:"isDiscordRoleAssigned"`
-	IsBasecampAccountCreated bool   `json:"isBasecampAccountCreated"`
-	IsTeamEmailCreated       bool   `json:"isTeamEmailCreated"`
+	ID                       string               `json:"id"`
+	EmployeeID               string               `json:"employeeID"`
+	InvitedBy                string               `json:"invitedBy"`
+	IsCompleted              bool                 `json:"isCompleted"`
+	IsInfoUpdated            bool                 `json:"isInfoUpdated"`
+	IsDiscordRoleAssigned    bool                 `json:"isDiscordRoleAssigned"`
+	IsBasecampAccountCreated bool                 `json:"isBasecampAccountCreated"`
+	IsTeamEmailCreated       bool                 `json:"isTeamEmailCreated"`
+	EmployeeData             *InvitedEmployeeInfo `json:"employee"`
+}
+
+type InvitedEmployeeInfo struct {
+	ID            string `json:"id"`
+	FullName      string `json:"fullName"`
+	DisplayName   string `json:"displayName"`
+	Avatar        string `json:"avatar"`
+	Username      string `json:"username"`
+	TeamEmail     string `json:"teamEmail"`
+	PersonalEmail string `json:"personalEmail"`
 }
 
 type EmployeeInvitationResponse struct {
@@ -602,7 +615,7 @@ type EmployeeInvitationResponse struct {
 }
 
 func ToBasicEmployeeInvitationData(in *model.EmployeeInvitation) *EmployeeInvitationData {
-	return &EmployeeInvitationData{
+	rs := &EmployeeInvitationData{
 		ID:                       in.ID.String(),
 		EmployeeID:               in.EmployeeID.String(),
 		InvitedBy:                in.InvitedBy.String(),
@@ -612,4 +625,18 @@ func ToBasicEmployeeInvitationData(in *model.EmployeeInvitation) *EmployeeInvita
 		IsBasecampAccountCreated: in.IsBasecampAccountCreated,
 		IsTeamEmailCreated:       in.IsTeamEmailCreated,
 	}
+
+	if in.Employee != nil {
+		rs.EmployeeData = &InvitedEmployeeInfo{
+			ID:            in.Employee.ID.String(),
+			FullName:      in.Employee.FullName,
+			DisplayName:   in.Employee.DisplayName,
+			Avatar:        in.Employee.Avatar,
+			Username:      in.Employee.Username,
+			TeamEmail:     in.Employee.TeamEmail,
+			PersonalEmail: in.Employee.PersonalEmail,
+		}
+	}
+
+	return rs
 }

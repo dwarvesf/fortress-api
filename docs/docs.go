@@ -10059,6 +10059,9 @@ const docTemplate = `{
         "view.EmployeeInvitationData": {
             "type": "object",
             "properties": {
+                "employee": {
+                    "$ref": "#/definitions/view.InvitedEmployeeInfo"
+                },
                 "employeeID": {
                     "type": "string"
                 },
@@ -10546,6 +10549,32 @@ const docTemplate = `{
                 },
                 "trend": {
                     "$ref": "#/definitions/view.EngineeringHealthTrend"
+                }
+            }
+        },
+        "view.InvitedEmployeeInfo": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string"
+                },
+                "displayName": {
+                    "type": "string"
+                },
+                "fullName": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "personalEmail": {
+                    "type": "string"
+                },
+                "teamEmail": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
                 }
             }
         },
