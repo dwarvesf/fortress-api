@@ -11,6 +11,7 @@ type EmployeeInvitation struct {
 	IsDiscordRoleAssigned    bool
 	IsBasecampAccountCreated bool
 	IsTeamEmailCreated       bool
+	Employee                 *Employee
 }
 
 type InvitationEmail struct {

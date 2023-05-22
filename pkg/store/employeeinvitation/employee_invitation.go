@@ -20,7 +20,8 @@ func (s *store) Create(db *gorm.DB, employeeInvitation *model.EmployeeInvitation
 // OneByEmployeeID get one by employeeID
 func (s *store) OneByEmployeeID(db *gorm.DB, employeeID string) (*model.EmployeeInvitation, error) {
 	var rs *model.EmployeeInvitation
-	return rs, db.Where("employee_id = ?", employeeID).First(&rs).Error
+	return rs, db.Preload("Employee").
+		Where("employee_id = ?", employeeID).First(&rs).Error
 }
 
 func (s *store) Save(db *gorm.DB, employeeInvitation *model.EmployeeInvitation) error {

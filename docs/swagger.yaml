@@ -2719,6 +2719,8 @@ definitions:
     type: object
   view.EmployeeInvitationData:
     properties:
+      employee:
+        $ref: '#/definitions/view.InvitedEmployeeInfo'
       employeeID:
         type: string
       id:
@@ -3035,6 +3037,23 @@ definitions:
         type: string
       trend:
         $ref: '#/definitions/view.EngineeringHealthTrend'
+    type: object
+  view.InvitedEmployeeInfo:
+    properties:
+      avatar:
+        type: string
+      displayName:
+        type: string
+      fullName:
+        type: string
+      id:
+        type: string
+      personalEmail:
+        type: string
+      teamEmail:
+        type: string
+      username:
+        type: string
     type: object
   view.Invoice:
     properties:
