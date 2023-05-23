@@ -229,6 +229,7 @@ func (r *controller) Create(userID string, input CreateEmployeeInput) (*model.Em
 
 	jwt, err := authutils.GenerateJWTToken(&authenticationInfo, time.Now().Add(24*time.Hour).Unix(), r.config.JWTSecretKey)
 	if err != nil {
+		l.Errorf(err, "failed to generate jwt token", "authenticationInfo", authenticationInfo)
 		return nil, done(err)
 	}
 
@@ -239,6 +240,7 @@ func (r *controller) Create(userID string, input CreateEmployeeInput) (*model.Em
 	}
 
 	if err := r.service.GoogleMail.SendInvitationMail(&invitation); err != nil {
+		l.Errorf(err, "failed to send invitation mail", "invitationInfo", invitation)
 		return nil, done(err)
 	}
 
