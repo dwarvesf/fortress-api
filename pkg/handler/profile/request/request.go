@@ -4,8 +4,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mozillazg/go-unidecode"
-
+	"github.com/dwarvesf/fortress-api/pkg/handler/profile/errs"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 )
 
@@ -80,18 +79,20 @@ func (i UpdateInfoInput) ToEmployeeModel(employee *model.Employee) {
 }
 
 type SubmitOnboardingFormRequest struct {
-	FullName  string `json:"-"`
-	TeamEmail string `json:"-"`
-
-	Address          string     `json:"address" binding:"required"`
-	City             string     `json:"city" binding:"required"`
-	Country          string     `json:"country" binding:"required"`
-	DateOfBirth      *time.Time `json:"dateOfBirth" binding:"required"`
-	Gender           string     `json:"gender" binding:"required"`
-	Horoscope        string     `json:"horoscope" binding:"required"`
-	MBTI             string     `json:"mbti" binding:"required"`
-	PhoneNumber      string     `json:"phoneNumber" binding:"required,max=18,min=8"`
-	PlaceOfResidence string     `json:"placeOfResidence" binding:"required"`
+	Avatar                 string     `json:"avatar"`
+	Address                string     `json:"address" binding:"required"`
+	City                   string     `json:"city" binding:"required"`
+	Country                string     `json:"country" binding:"required"`
+	DateOfBirth            *time.Time `json:"dateOfBirth" binding:"required"`
+	Gender                 string     `json:"gender" binding:"required"`
+	Horoscope              string     `json:"horoscope" binding:"required"`
+	MBTI                   string     `json:"mbti" binding:"required"`
+	PhoneNumber            string     `json:"phoneNumber" binding:"required,max=18,min=8"`
+	PlaceOfResidence       string     `json:"placeOfResidence" binding:"required"`
+	PassportPhotoFront     string     `json:"passportPhotoFront"`
+	PassportPhotoBack      string     `json:"passportPhotoBack"`
+	IdentityCardPhotoFront string     `json:"identityCardPhotoFront"`
+	IdentityCardPhotoBack  string     `json:"identityCardPhotoBack"`
 
 	LocalBankBranch        string `json:"localBankBranch" binding:"required"`
 	LocalBankCurrency      string `json:"localBankCurrency" binding:"required"`
@@ -105,18 +106,39 @@ type SubmitOnboardingFormRequest struct {
 	NotionName   string `json:"notionName"`
 }
 
-func (i *SubmitOnboardingFormRequest) ToEmployeeModel(teamEmail string) *model.Employee {
-	if teamEmail == "" {
-		teamEmail = convertName(i.FullName) + "@d.foundation"
+func (i *SubmitOnboardingFormRequest) Validate() error {
+	if i.DateOfBirth.After(time.Now()) {
+		return errs.ErrInvalidDate
 	}
 
+	if i.PassportPhotoBack == "" || i.PassportPhotoFront == "" {
+		if i.IdentityCardPhotoFront == "" || i.IdentityCardPhotoBack == "" {
+			return errs.ErrMissingDocuments
+		}
+	}
+
+	if i.IdentityCardPhotoFront == "" || i.IdentityCardPhotoBack == "" {
+		if i.PassportPhotoBack == "" || i.PassportPhotoFront == "" {
+			return errs.ErrMissingDocuments
+		}
+	}
+
+	return nil
+}
+
+func (i *SubmitOnboardingFormRequest) ToEmployeeModel() *model.Employee {
 	return &model.Employee{
+		Avatar:                 i.Avatar,
 		Address:                i.Address,
 		City:                   i.City,
 		Country:                i.Country,
 		DateOfBirth:            i.DateOfBirth,
 		Gender:                 i.Gender,
 		Horoscope:              i.Horoscope,
+		PassportPhotoFront:     strings.TrimSpace(i.PassportPhotoFront),
+		PassportPhotoBack:      strings.TrimSpace(i.PassportPhotoBack),
+		IdentityCardPhotoFront: strings.TrimSpace(i.IdentityCardPhotoFront),
+		IdentityCardPhotoBack:  strings.TrimSpace(i.IdentityCardPhotoBack),
 		LocalBranchName:        i.LocalBranchName,
 		LocalBankBranch:        i.LocalBankBranch,
 		LocalBankCurrency:      i.LocalBankCurrency,
@@ -125,30 +147,6 @@ func (i *SubmitOnboardingFormRequest) ToEmployeeModel(teamEmail string) *model.E
 		MBTI:                   i.MBTI,
 		PhoneNumber:            i.PhoneNumber,
 		PlaceOfResidence:       i.PlaceOfResidence,
-		TeamEmail:              teamEmail,
 		WorkingStatus:          model.WorkingStatusProbation,
 	}
-}
-
-func convertName(fullName string) string {
-	fullName = strings.TrimSpace(unidecode.Unidecode(fullName))
-	nameParts := strings.Fields(fullName)
-
-	numNameParts := len(nameParts)
-	if numNameParts == 1 {
-		return strings.ToLower(nameParts[0])
-	}
-
-	firstNameInitial := strings.ToLower(string(nameParts[0][0]))
-
-	var middleNameInitial string
-	if numNameParts > 2 {
-		middleNameInitial = strings.ToLower(string(nameParts[1][0]))
-	} else {
-		middleNameInitial = ""
-	}
-
-	lastName := strings.ToLower(nameParts[numNameParts-1])
-
-	return lastName + firstNameInitial + middleNameInitial
 }

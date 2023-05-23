@@ -702,7 +702,8 @@ func Test_Create(t *testing.T) {
 				Roles: []model.UUID{
 					model.MustGetUUIDFromString("d796884d-a8c4-4525-81e7-54a3b6099eac"),
 				},
-				Status: model.WorkingStatusOnBoarding.String(),
+				Status:     model.WorkingStatusOnBoarding.String(),
+				JoinedDate: time.Now().Format("2006-01-02"),
 			},
 			id: "2655832e-f009-4b73-a535-64c3a22e558f",
 		},
@@ -713,7 +714,7 @@ func Test_Create(t *testing.T) {
 			wantResponsePath: "testdata/create/validation_err.json",
 			body: request.CreateEmployeeInput{
 				FullName:      "Lê Nguyễn Minh Khôi",
-				DisplayName:   "",
+				DisplayName:   "Khoi Le",
 				TeamEmail:     "thanh@d.foundation",
 				PersonalEmail: "khoigmail.com",
 				Positions:     []model.UUID{model.MustGetUUIDFromString("d796884d-a8c4-4525-81e7-54a3b6099eac")},
@@ -722,7 +723,8 @@ func Test_Create(t *testing.T) {
 				Roles: []model.UUID{
 					model.MustGetUUIDFromString("d796884d-a8c4-4525-81e7-54a3b6099eac"),
 				},
-				Status: model.WorkingStatusOnBoarding.String(),
+				Status:     model.WorkingStatusOnBoarding.String(),
+				JoinedDate: time.Now().Format("2006-01-02"),
 			},
 			id: "2655832e-f009-4b73-a535-64c3a22e558f",
 		},
@@ -742,7 +744,8 @@ func Test_Create(t *testing.T) {
 				Roles: []model.UUID{
 					model.MustGetUUIDFromString("d796884d-a8c4-4525-81e7-54a3b6099eac"),
 				},
-				Status: model.WorkingStatusOnBoarding.String(),
+				Status:     model.WorkingStatusOnBoarding.String(),
+				JoinedDate: time.Now().Format("2006-01-02"),
 			},
 			id: "2655832e-f009-4b73-a535-64c3a22e558f",
 		},

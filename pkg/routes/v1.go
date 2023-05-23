@@ -67,7 +67,7 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 	}
 
 	// assets
-	v1.POST("/assets/upload", amw.WithAuth, pmw.WithPerm(model.PermissionAssetUpload), h.Asset.Upload)
+	v1.POST("/assets/upload", amw.WithAuth, h.Asset.Upload)
 
 	// employees
 	v1.POST("/employees", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesCreate), h.Employee.Create)
@@ -277,6 +277,7 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 
 	invitationGroup := v1.Group("/invite")
 	{
+		invitationGroup.GET("", amw.WithAuth, h.Profile.GetInvitation)
 		invitationGroup.PUT("/submit", amw.WithAuth, h.Profile.SubmitOnboardingForm)
 	}
 }

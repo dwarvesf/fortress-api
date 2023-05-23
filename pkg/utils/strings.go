@@ -1,12 +1,13 @@
 package utils
 
 import (
-	"github.com/Rhymond/go-money"
 	"math"
 	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/Rhymond/go-money"
 )
 
 // IsNumber checks if a string is a number

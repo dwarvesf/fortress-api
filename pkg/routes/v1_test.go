@@ -197,6 +197,12 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/profile.IHandler.UpdateInfo-fm",
 			},
 		},
+		"/api/v1/invite": {
+			"GET": {
+				Method:  "GET",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/profile.IHandler.GetInvitation-fm",
+			},
+		},
 		"/api/v1/invite/submit": {
 			"PUT": {
 				Method:  "PUT",

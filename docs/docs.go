@@ -2222,9 +2222,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/invite/submit": {
-            "post": {
-                "description": "Update profile info by id",
+        "/invite": {
+            "get": {
+                "description": "Submit Get invitation state based on token",
                 "consumes": [
                     "application/json"
                 ],
@@ -2232,9 +2232,9 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Profile"
+                    "Onboarding"
                 ],
-                "summary": "Update profile info by id",
+                "summary": "Get invitation state based on token",
                 "parameters": [
                     {
                         "type": "string",
@@ -2242,12 +2242,55 @@ const docTemplate = `{
                         "name": "Authorization",
                         "in": "header",
                         "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.EmployeeInvitationResponse"
+                        }
                     },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/invite/submit": {
+            "put": {
+                "description": "Submit Onboarding form",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Onboarding"
+                ],
+                "summary": "Submit onboarding form",
+                "parameters": [
                     {
                         "type": "string",
-                        "description": "Employee ID",
-                        "name": "id",
-                        "in": "path",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
                         "required": true
                     },
                     {
@@ -7845,13 +7888,16 @@ const docTemplate = `{
         "request.CreateEmployeeInput": {
             "type": "object",
             "required": [
+                "displayName",
                 "fullName",
+                "joinedDate",
                 "personalEmail",
                 "positions",
                 "roles",
                 "salary",
                 "seniorityID",
-                "status"
+                "status",
+                "teamEmail"
             ],
             "properties": {
                 "displayName": {
@@ -7861,7 +7907,7 @@ const docTemplate = `{
                     "type": "string",
                     "maxLength": 100
                 },
-                "joinDate": {
+                "joinedDate": {
                     "type": "string"
                 },
                 "personalEmail": {
@@ -8313,6 +8359,9 @@ const docTemplate = `{
                 "address": {
                     "type": "string"
                 },
+                "avatar": {
+                    "type": "string"
+                },
                 "city": {
                     "type": "string"
                 },
@@ -8332,6 +8381,12 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "horoscope": {
+                    "type": "string"
+                },
+                "identityCardPhotoBack": {
+                    "type": "string"
+                },
+                "identityCardPhotoFront": {
                     "type": "string"
                 },
                 "linkedInName": {
@@ -8356,6 +8411,12 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "notionName": {
+                    "type": "string"
+                },
+                "passportPhotoBack": {
+                    "type": "string"
+                },
+                "passportPhotoFront": {
                     "type": "string"
                 },
                 "phoneNumber": {
@@ -9995,6 +10056,46 @@ const docTemplate = `{
                 }
             }
         },
+        "view.EmployeeInvitationData": {
+            "type": "object",
+            "properties": {
+                "employee": {
+                    "$ref": "#/definitions/view.InvitedEmployeeInfo"
+                },
+                "employeeID": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "invitedBy": {
+                    "type": "string"
+                },
+                "isBasecampAccountCreated": {
+                    "type": "boolean"
+                },
+                "isCompleted": {
+                    "type": "boolean"
+                },
+                "isDiscordRoleAssigned": {
+                    "type": "boolean"
+                },
+                "isInfoUpdated": {
+                    "type": "boolean"
+                },
+                "isTeamEmailCreated": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "view.EmployeeInvitationResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/view.EmployeeInvitationData"
+                }
+            }
+        },
         "view.EmployeeListDataResponse": {
             "type": "object",
             "properties": {
@@ -10448,6 +10549,32 @@ const docTemplate = `{
                 },
                 "trend": {
                     "$ref": "#/definitions/view.EngineeringHealthTrend"
+                }
+            }
+        },
+        "view.InvitedEmployeeInfo": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string"
+                },
+                "displayName": {
+                    "type": "string"
+                },
+                "fullName": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "personalEmail": {
+                    "type": "string"
+                },
+                "teamEmail": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
                 }
             }
         },

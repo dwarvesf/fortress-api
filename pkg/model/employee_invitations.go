@@ -1,14 +1,17 @@
 package model
 
-import "time"
-
 type EmployeeInvitation struct {
 	BaseModel
 
-	EmployeeID UUID
-	InvitedBy  UUID
-	Code       string
-	ExpiredAt  *time.Time
+	EmployeeID               UUID
+	InvitedBy                UUID
+	InvitationCode           string
+	IsCompleted              bool
+	IsInfoUpdated            bool
+	IsDiscordRoleAssigned    bool
+	IsBasecampAccountCreated bool
+	IsTeamEmailCreated       bool
+	Employee                 *Employee
 }
 
 type InvitationEmail struct {

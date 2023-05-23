@@ -1275,7 +1275,7 @@ definitions:
       fullName:
         maxLength: 100
         type: string
-      joinDate:
+      joinedDate:
         type: string
       personalEmail:
         type: string
@@ -1298,13 +1298,16 @@ definitions:
       teamEmail:
         type: string
     required:
+    - displayName
     - fullName
+    - joinedDate
     - personalEmail
     - positions
     - roles
     - salary
     - seniorityID
     - status
+    - teamEmail
     type: object
   request.CreatePositionInput:
     properties:
@@ -1576,6 +1579,8 @@ definitions:
     properties:
       address:
         type: string
+      avatar:
+        type: string
       city:
         type: string
       country:
@@ -1589,6 +1594,10 @@ definitions:
       githubID:
         type: string
       horoscope:
+        type: string
+      identityCardPhotoBack:
+        type: string
+      identityCardPhotoFront:
         type: string
       linkedInName:
         type: string
@@ -1605,6 +1614,10 @@ definitions:
       mbti:
         type: string
       notionName:
+        type: string
+      passportPhotoBack:
+        type: string
+      passportPhotoFront:
         type: string
       phoneNumber:
         maxLength: 18
@@ -2704,6 +2717,32 @@ definitions:
       wiseRecipientName:
         type: string
     type: object
+  view.EmployeeInvitationData:
+    properties:
+      employee:
+        $ref: '#/definitions/view.InvitedEmployeeInfo'
+      employeeID:
+        type: string
+      id:
+        type: string
+      invitedBy:
+        type: string
+      isBasecampAccountCreated:
+        type: boolean
+      isCompleted:
+        type: boolean
+      isDiscordRoleAssigned:
+        type: boolean
+      isInfoUpdated:
+        type: boolean
+      isTeamEmailCreated:
+        type: boolean
+    type: object
+  view.EmployeeInvitationResponse:
+    properties:
+      data:
+        $ref: '#/definitions/view.EmployeeInvitationData'
+    type: object
   view.EmployeeListDataResponse:
     properties:
       data:
@@ -2998,6 +3037,23 @@ definitions:
         type: string
       trend:
         $ref: '#/definitions/view.EngineeringHealthTrend'
+    type: object
+  view.InvitedEmployeeInfo:
+    properties:
+      avatar:
+        type: string
+      displayName:
+        type: string
+      fullName:
+        type: string
+      id:
+        type: string
+      personalEmail:
+        type: string
+      teamEmail:
+        type: string
+      username:
+        type: string
     type: object
   view.Invoice:
     properties:
@@ -5712,20 +5768,48 @@ paths:
       summary: Get number of unread inbox for user
       tags:
       - Feedback
-  /invite/submit:
-    post:
+  /invite:
+    get:
       consumes:
       - application/json
-      description: Update profile info by id
+      description: Submit Get invitation state based on token
       parameters:
       - description: jwt token
         in: header
         name: Authorization
         required: true
         type: string
-      - description: Employee ID
-        in: path
-        name: id
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.EmployeeInvitationResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get invitation state based on token
+      tags:
+      - Onboarding
+  /invite/submit:
+    put:
+      consumes:
+      - application/json
+      description: Submit Onboarding form
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
         required: true
         type: string
       - description: Body
@@ -5753,9 +5837,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/view.ErrorResponse'
-      summary: Update profile info by id
+      summary: Submit onboarding form
       tags:
-      - Profile
+      - Onboarding
   /invoices:
     get:
       consumes:

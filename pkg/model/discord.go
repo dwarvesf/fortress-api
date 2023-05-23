@@ -10,3 +10,13 @@ type DiscordLogTemplate struct {
 	Description string
 	Content     string
 }
+
+type DiscordRole string
+
+func (r DiscordRole) String() string {
+	return string(r)
+}
+
+const (
+	DiscordRolePeeps DiscordRole = "peeps"
+)

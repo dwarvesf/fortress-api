@@ -51,7 +51,9 @@ func ConvertControllerErr(c *gin.Context, err error) {
 		employee.ErrInvalidFileExtension,
 		employee.ErrInvalidFileSize,
 		employee.ErrInvalidAccountRole,
-		employee.ErrEmailExisted:
+		employee.ErrEmailExisted,
+		employee.ErrTeamEmailExisted,
+		employee.ErrPersonalEmailExisted:
 		status = http.StatusBadRequest
 
 	default:

@@ -112,7 +112,7 @@ func (r *controller) Create(userID string, input CreateEmployeeInput) (*model.Em
 	_, err = r.store.Employee.OneByEmail(r.repo.DB(), eml.TeamEmail)
 	if !errors.Is(err, gorm.ErrRecordNotFound) {
 		if err == nil {
-			return nil, ErrEmailExisted
+			return nil, ErrTeamEmailExisted
 		}
 		return nil, err
 	}
@@ -120,7 +120,7 @@ func (r *controller) Create(userID string, input CreateEmployeeInput) (*model.Em
 	_, err = r.store.Employee.OneByEmail(r.repo.DB(), eml.PersonalEmail)
 	if !errors.Is(err, gorm.ErrRecordNotFound) {
 		if err == nil {
-			return nil, ErrEmailExisted
+			return nil, ErrPersonalEmailExisted
 		}
 		return nil, err
 	}
@@ -227,7 +227,7 @@ func (r *controller) Create(userID string, input CreateEmployeeInput) (*model.Em
 		Email:  eml.PersonalEmail,
 	}
 
-	jwt, err := authutils.GenerateJWTToken(&authenticationInfo, time.Now().Add(5*time.Minute).Unix(), r.config.JWTSecretKey)
+	jwt, err := authutils.GenerateJWTToken(&authenticationInfo, time.Now().Add(24*time.Hour).Unix(), r.config.JWTSecretKey)
 	if err != nil {
 		return nil, done(err)
 	}
@@ -239,7 +239,23 @@ func (r *controller) Create(userID string, input CreateEmployeeInput) (*model.Em
 	}
 
 	if err := r.service.GoogleMail.SendInvitationMail(&invitation); err != nil {
-		return nil, err
+		return nil, done(err)
+	}
+
+	ei := model.EmployeeInvitation{
+		EmployeeID:               eml.ID,
+		InvitedBy:                loggedInUser.ID,
+		InvitationCode:           jwt,
+		IsCompleted:              false,
+		IsInfoUpdated:            false,
+		IsDiscordRoleAssigned:    false,
+		IsBasecampAccountCreated: false,
+		IsTeamEmailCreated:       false,
+	}
+
+	if _, err := r.store.EmployeeInvitation.Create(tx.DB(), &ei); err != nil {
+		l.Errorf(err, "failed to create employee invitation", "employee_invitation", ei)
+		return nil, done(err)
 	}
 
 	return eml, done(nil)

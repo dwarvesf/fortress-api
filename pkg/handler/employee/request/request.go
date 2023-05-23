@@ -81,8 +81,8 @@ func (e *DeleteMenteeInput) Validate() error {
 // CreateEmployeeInput view for create new employee
 type CreateEmployeeInput struct {
 	FullName      string       `json:"fullName" binding:"required,max=100"`
-	DisplayName   string       `json:"displayName"`
-	TeamEmail     string       `json:"teamEmail"`
+	DisplayName   string       `json:"displayName" binding:"required"`
+	TeamEmail     string       `json:"teamEmail" binding:"required"`
 	PersonalEmail string       `json:"personalEmail" binding:"required,email"`
 	Positions     []model.UUID `form:"positions" json:"positions" binding:"required"`
 	Salary        int64        `json:"salary" binding:"required"`
@@ -90,7 +90,7 @@ type CreateEmployeeInput struct {
 	Roles         []model.UUID `json:"roles" binding:"required"`
 	Status        string       `json:"status" binding:"required"`
 	ReferredBy    model.UUID   `json:"referredBy"`
-	JoinDate      string       `json:"joinDate"`
+	JoinedDate    string       `json:"joinedDate" binding:"required"`
 }
 
 type UpdateSkillsInput struct {
@@ -185,17 +185,17 @@ func (i *CreateEmployeeInput) Validate() error {
 		return errs.ErrRoleCannotBeEmpty
 	}
 
-	_, err := time.Parse("2006-01-02", i.JoinDate)
-	if i.JoinDate != "" && err != nil {
+	_, err := time.Parse("2006-01-02", i.JoinedDate)
+	if i.JoinedDate != "" && err != nil {
 		return errs.ErrInvalidJoinedDate
 	}
 
 	return nil
 }
 
-func (i *CreateEmployeeInput) GetJoinDate() *time.Time {
-	date, err := time.Parse("2006-01-02", i.JoinDate)
-	if i.JoinDate == "" || err != nil {
+func (i *CreateEmployeeInput) GetJoinedDate() *time.Time {
+	date, err := time.Parse("2006-01-02", i.JoinedDate)
+	if i.JoinedDate == "" || err != nil {
 		return nil
 	}
 

@@ -106,6 +106,12 @@ func (h *handler) StoreVaultTransaction(c *gin.Context) {
 		}
 	}
 
+	// case no tx from mochi
+	if len(icyTxs) == 0 {
+		l.Info("There is no transaction in this week")
+		return
+	}
+
 	tx, done := h.repo.NewTransaction()
 	if err := h.store.IcyTransaction.Create(tx.DB(), icyTxs); err != nil {
 		l.Error(done(err), "Create IcyTransaction failed")

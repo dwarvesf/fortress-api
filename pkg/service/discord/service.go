@@ -9,6 +9,9 @@ import (
 type IService interface {
 	PostBirthdayMsg(msg string) (model.DiscordMessage, error)
 	GetMembers() ([]*discordgo.Member, error)
+	GetMemberByName(discordName string) ([]*discordgo.Member, error)
+	GetRoles() ([]*discordgo.Role, error)
+	AssignRole(roleID, userID string) error
 
 	// CreateEvent create a discord event
 	CreateEvent(event *model.Schedule) (scheduledEvent *discordgo.GuildScheduledEvent, err error)

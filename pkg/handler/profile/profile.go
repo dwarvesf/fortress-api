@@ -5,12 +5,16 @@ import (
 	"fmt"
 	"net/http"
 	"path/filepath"
+	"strings"
 
+	"github.com/bwmarrin/discordgo"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/exp/slices"
 	"gorm.io/gorm"
+	"gorm.io/gorm/utils"
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
+	"github.com/dwarvesf/fortress-api/pkg/controller"
 	"github.com/dwarvesf/fortress-api/pkg/handler/profile/errs"
 	"github.com/dwarvesf/fortress-api/pkg/handler/profile/request"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
@@ -22,21 +26,23 @@ import (
 )
 
 type handler struct {
-	store   *store.Store
-	service *service.Service
-	logger  logger.Logger
-	repo    store.DBRepo
-	config  *config.Config
+	controller *controller.Controller
+	store      *store.Store
+	service    *service.Service
+	logger     logger.Logger
+	repo       store.DBRepo
+	config     *config.Config
 }
 
 // New returns a handler
-func New(store *store.Store, repo store.DBRepo, service *service.Service, logger logger.Logger, cfg *config.Config) IHandler {
+func New(controller *controller.Controller, store *store.Store, repo store.DBRepo, service *service.Service, logger logger.Logger, cfg *config.Config) IHandler {
 	return &handler{
-		store:   store,
-		repo:    repo,
-		service: service,
-		logger:  logger,
-		config:  cfg,
+		controller: controller,
+		store:      store,
+		repo:       repo,
+		service:    service,
+		logger:     logger,
+		config:     cfg,
 	}
 }
 
@@ -583,20 +589,59 @@ func (h *handler) Upload(c *gin.Context) {
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToContentData(filePath), nil, done(nil), nil, ""))
 }
 
-// SubmitOnboardingForm godoc
-// @Summary Update profile info by id
-// @Description Update profile info by id
-// @Tags Profile
+// GetInvitation godoc
+// @Summary Get invitation state based on token
+// @Description Submit Get invitation state based on token
+// @Tags Onboarding
 // @Accept  json
 // @Produce  json
 // @Param Authorization header string true "jwt token"
-// @Param id path string true "Employee ID"
+// @Success 200 {object} view.EmployeeInvitationResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /invite [get]
+func (h *handler) GetInvitation(c *gin.Context) {
+	employeeID, err := authutils.GetUserIDFromContext(c, h.config)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	l := h.logger.Fields(logger.Fields{
+		"handler": "profile",
+		"method":  "GetInvitation",
+	})
+
+	employeeInvitation, err := h.store.EmployeeInvitation.OneByEmployeeID(h.repo.DB(), employeeID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			l.Info("employee invitation not found")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, err, nil, ""))
+			return
+		}
+
+		l.Error(err, "failed to get employee invitation")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToBasicEmployeeInvitationData(employeeInvitation), nil, nil, nil, ""))
+}
+
+// SubmitOnboardingForm godoc
+// @Summary Submit onboarding form
+// @Description Submit Onboarding form
+// @Tags Onboarding
+// @Accept  json
+// @Produce  json
+// @Param Authorization header string true "jwt token"
 // @Param Body body request.SubmitOnboardingFormRequest true "Body"
 // @Success 200 {object} view.MessageResponse
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 404 {object} view.ErrorResponse
 // @Failure 500 {object} view.ErrorResponse
-// @Router /invite/submit [post]
+// @Router /invite/submit [put]
 func (h *handler) SubmitOnboardingForm(c *gin.Context) {
 	employeeID, err := authutils.GetUserIDFromContext(c, h.config)
 	if err != nil {
@@ -616,6 +661,31 @@ func (h *handler) SubmitOnboardingForm(c *gin.Context) {
 		"request": input,
 	})
 
+	employeeInvitation, err := h.store.EmployeeInvitation.OneByEmployeeID(h.repo.DB(), employeeID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			l.Info("employee invitation not found")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, err, nil, ""))
+			return
+		}
+
+		l.Error(err, "failed to get employee invitation")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	if employeeInvitation.IsCompleted {
+		l.Errorf(errs.ErrOnboardingFormAlreadyDone, "employee invitation is expired")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrOnboardingFormAlreadyDone, nil, ""))
+		return
+	}
+
+	if err := input.Validate(); err != nil {
+		l.Error(err, "failed to validate input")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, input, ""))
+		return
+	}
+
 	employee, err := h.store.Employee.One(h.repo.DB(), employeeID, false)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -634,17 +704,13 @@ func (h *handler) SubmitOnboardingForm(c *gin.Context) {
 		return
 	}
 
-	tx, done := h.repo.NewTransaction()
-
-	input.FullName = employee.FullName
-	employeeData := input.ToEmployeeModel(employee.TeamEmail)
-	// Update employee
-	_, err = h.store.Employee.UpdateSelectedFieldsByID(h.repo.DB(), employeeID, *employeeData,
+	updatedFields := []string{
 		"address",
 		"city",
 		"country",
 		"gender",
 		"horoscope",
+		"date_of_birth",
 		"local_bank_branch",
 		"local_bank_currency",
 		"local_bank_number",
@@ -654,7 +720,34 @@ func (h *handler) SubmitOnboardingForm(c *gin.Context) {
 		"phone_number",
 		"place_of_residence",
 		"working_status",
-		"team_email",
+	}
+
+	if input.Avatar != "" {
+		updatedFields = append(updatedFields, "avatar")
+	}
+
+	if input.IdentityCardPhotoFront != "" {
+		updatedFields = append(updatedFields, "identity_card_photo_front")
+	}
+
+	if input.IdentityCardPhotoBack != "" {
+		updatedFields = append(updatedFields, "identity_card_photo_back")
+	}
+
+	if input.PassportPhotoFront != "" {
+		updatedFields = append(updatedFields, "passport_photo_front")
+	}
+
+	if input.PassportPhotoBack != "" {
+		updatedFields = append(updatedFields, "passport_photo_back")
+	}
+
+	employeeData := input.ToEmployeeModel()
+
+	tx, done := h.repo.NewTransaction()
+	// Update employee
+	_, err = h.store.Employee.UpdateSelectedFieldsByID(h.repo.DB(), employeeID, *employeeData,
+		updatedFields...,
 	)
 	if err != nil {
 		l.Error(err, "failed to update employee")
@@ -675,5 +768,162 @@ func (h *handler) SubmitOnboardingForm(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, done(nil), nil, "ok"))
+	// Commit transaction update employee info
+	_ = done(nil)
+	employeeInvitation.IsInfoUpdated = true
+
+	if !employeeInvitation.IsTeamEmailCreated {
+		err = h.createTeamEmail(employee.TeamEmail, employee.PersonalEmail)
+		if err != nil {
+			l.Error(err, "failed to create create team email")
+		}
+		employeeInvitation.IsTeamEmailCreated = true
+	}
+
+	if !employeeInvitation.IsBasecampAccountCreated {
+		err = h.createBasecampAccount(employee)
+		if err != nil {
+			l.Error(err, "failed to create basecamp account")
+		}
+		employeeInvitation.IsBasecampAccountCreated = true
+	}
+
+	if !employeeInvitation.IsDiscordRoleAssigned {
+		err = h.assignDiscordRole(input.DiscordName)
+		if err != nil {
+			l.Error(err, "failed to assign discord role")
+		}
+		employeeInvitation.IsDiscordRoleAssigned = true
+	}
+
+	if employeeInvitation.IsInfoUpdated && employeeInvitation.IsTeamEmailCreated && employeeInvitation.IsBasecampAccountCreated && employeeInvitation.IsDiscordRoleAssigned {
+		employeeInvitation.IsCompleted = true
+	}
+
+	err = h.store.EmployeeInvitation.Save(h.repo.DB(), employeeInvitation)
+	if err != nil {
+		l.Error(err, "failed to update employee invitation")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	err = h.controller.Discord.Log(model.LogDiscordInput{
+		Type: "employee_submit_onboarding_form",
+		Data: map[string]interface{}{
+			"employee_id": employee.ID.String(),
+		},
+	})
+	if err != nil {
+		l.Error(err, "failed to logs to discord")
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))
+}
+
+func (h *handler) createTeamEmail(teamEmail string, personalEmail string) error {
+	if h.config.Env != "prod" {
+		return nil
+	}
+
+	return h.service.ImprovMX.CreateAccount(teamEmail, personalEmail)
+}
+
+func (h *handler) createBasecampAccount(employee *model.Employee) error {
+	if h.config.Env != "prod" {
+		employee.BasecampID = 123456
+		employee.BasecampAttachableSGID = "sample_sg_id"
+		_, err := h.store.Employee.UpdateSelectedFieldsByID(h.repo.DB(), employee.ID.String(), *employee,
+			"basecamp_id",
+			"basecamp_attachable_sgid",
+		)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}
+
+	email := employee.PersonalEmail
+	if employee.TeamEmail != "" {
+		email = employee.TeamEmail
+	}
+	bcID, sgID, err := h.service.Basecamp.People.Create(employee.DisplayName, email, model.OrganizationNameDwarves)
+	if err != nil {
+		return err
+	}
+
+	employee.BasecampID = int(bcID)
+	employee.BasecampAttachableSGID = sgID
+
+	_, err = h.store.Employee.UpdateSelectedFieldsByID(h.repo.DB(), employee.ID.String(), *employee,
+		"basecamp_id",
+		"basecamp_attachable_sgid",
+	)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (h *handler) assignDiscordRole(discordName string) error {
+	if len(discordName) == 0 {
+		return nil
+	}
+
+	if h.config.Env != "prod" {
+		return nil
+	}
+
+	discordNameParts := strings.Split(discordName, "#")
+
+	guildMembers, err := h.service.Discord.GetMemberByName(discordNameParts[0])
+	if err != nil {
+		return err
+	}
+	var discordMember *discordgo.Member
+	for _, m := range guildMembers {
+		if len(discordNameParts) == 1 {
+			if m.User.Username == discordNameParts[0] {
+				discordMember = m
+			}
+			break
+		}
+		if len(discordNameParts) > 1 {
+			if m.User.Username == discordNameParts[0] && m.User.Discriminator == discordNameParts[1] {
+				discordMember = m
+			}
+			break
+		}
+	}
+
+	if discordMember != nil {
+		// Get list discord role
+		dRoles, err := h.service.Discord.GetRoles()
+		if err != nil {
+			return err
+		}
+
+		peepsRoleID := ""
+		for _, r := range dRoles {
+			if r.Name == model.DiscordRolePeeps.String() {
+				peepsRoleID = r.ID
+				break
+			}
+		}
+
+		if peepsRoleID != "" {
+			// Check if user already has peeps role
+			if utils.Contains(discordMember.Roles, peepsRoleID) {
+				return nil
+			}
+
+			err := h.service.Discord.AssignRole(discordMember.User.ID, peepsRoleID)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }

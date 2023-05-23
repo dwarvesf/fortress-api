@@ -13,6 +13,8 @@ var (
 	ErrCouldNotMentorThemselves               = errors.New("employee could not be their own mentor")
 	ErrCurrencyNotFound                       = errors.New("currency not found")
 	ErrEmailExisted                           = errors.New("email already exists")
+	ErrTeamEmailExisted                       = errors.New("team email already exists")
+	ErrPersonalEmailExisted                   = errors.New("personal email already exists")
 	ErrEmployeeExisted                        = errors.New("can't create existed employee")
 	ErrEmployeeLeft                           = errors.New("employee is left")
 	ErrEmployeeMenteeNotFound                 = errors.New("employee mentee not found")

@@ -2,6 +2,7 @@ package model
 
 const (
 	OrganizationCodeDwarves = "dwarves-foundation"
+	OrganizationNameDwarves = "Dwarves Foundation"
 )
 
 type Organization struct {
