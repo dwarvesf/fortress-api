@@ -24,6 +24,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/utils"
 	"github.com/dwarvesf/fortress-api/pkg/utils/authutils"
 	"github.com/dwarvesf/fortress-api/pkg/view"
+	"github.com/k0kubun/pp"
 )
 
 type handler struct {
@@ -1035,6 +1036,7 @@ func (h *handler) UpdateMember(c *gin.Context) {
 //
 // --- end ---
 func (h *handler) updateProjectMember(db *gorm.DB, p *model.Project, slotID string, projectID string, input request.UpdateMemberInput, userInfo *model.CurrentLoggedUserInfo) (*model.ProjectMember, error) {
+	pp.Println("updateProjectMember")
 	var member *model.ProjectMember
 	var err error
 
@@ -1072,9 +1074,24 @@ func (h *handler) updateProjectMember(db *gorm.DB, p *model.Project, slotID stri
 		member.UpsellPersonID = input.UpsellPersonID
 
 		updateEndDate := false
-		if !member.EndDate.Equal(*input.GetEndDate()) {
-			member.EndDate = input.GetEndDate()
+		inputEndDate := input.GetEndDate()
+		pp.Println(inputEndDate)
+		pp.Println(member.EndDate)
+		if member.EndDate != nil && inputEndDate == nil {
+			member.EndDate = nil
 			updateEndDate = true
+		}
+
+		if member.EndDate == nil && inputEndDate != nil {
+			member.EndDate = inputEndDate
+			updateEndDate = true
+		}
+
+		if member.EndDate != nil && inputEndDate != nil {
+			if !member.EndDate.Equal(*inputEndDate) {
+				member.EndDate = inputEndDate
+				updateEndDate = true
+			}
 		}
 
 		updateStatus := false
@@ -1146,13 +1163,18 @@ func (h *handler) updateProjectMember(db *gorm.DB, p *model.Project, slotID stri
 		}
 
 		if updateEndDate {
+			endDateLog := "N/A"
+			if member.EndDate != nil {
+				endDateLog = member.EndDate.Format("2006-01-02")
+			}
+
 			err = h.controller.Discord.Log(model.LogDiscordInput{
 				Type: "project_member_update_end_date",
 				Data: map[string]interface{}{
 					"employee_id":         userInfo.UserID,
 					"updated_employee_id": member.EmployeeID.String(),
 					"project_name":        p.Name,
-					"end_date":            member.EndDate.Format("2006-01-02"),
+					"end_date":            endDateLog,
 				},
 			})
 			if err != nil {
