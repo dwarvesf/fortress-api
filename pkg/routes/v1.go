@@ -11,9 +11,9 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/store"
 )
 
-func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store.Store, cfg *config.Config) {
+func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store.Store, cfg *config.Config, svc *service.Service) {
 	pmw := mw.NewPermissionMiddleware(s, repo, cfg)
-	amw := mw.NewAuthMiddleware(cfg, s, repo)
+	amw := mw.NewAuthMiddleware(cfg, s, repo, svc)
 
 	/////////////////
 	// Cronjob GROUP

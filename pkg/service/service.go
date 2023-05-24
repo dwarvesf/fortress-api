@@ -43,8 +43,6 @@ type Service struct {
 }
 
 func New(cfg *config.Config, store *store.Store, repo store.DBRepo) *Service {
-	cch := cache.New(5*time.Minute, 10*time.Minute)
-
 	authServiceCfg := &oauth2.Config{
 		ClientID:     cfg.Google.ClientID,
 		ClientSecret: cfg.Google.ClientSecret,

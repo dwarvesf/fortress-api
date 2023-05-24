@@ -21,12 +21,16 @@ var noAuthPath = []string{
 
 type AuthMiddleware struct {
 	cfg     *config.Config
+	store   *store.Store
+	repo    store.DBRepo
 	service *service.Service
 }
 
-func NewAuthMiddleware(cfg *config.Config, service *service.Service) *authMiddleware {
-	return &authMiddleware{
+func NewAuthMiddleware(cfg *config.Config, s *store.Store, r store.DBRepo, service *service.Service) *AuthMiddleware {
+	return &AuthMiddleware{
 		cfg:     cfg,
+		store:   s,
+		repo:    r,
 		service: service,
 	}
 }
@@ -88,7 +92,7 @@ func (amw *AuthMiddleware) validateToken(accessToken string) error {
 		return err
 	}
 
-	return mw.validateTokenFromBlackList(accessToken)
+	return amw.validateTokenFromBlackList(accessToken)
 }
 func NewPermissionMiddleware(s *store.Store, r store.DBRepo, cfg *config.Config) *PermMiddleware {
 	return &PermMiddleware{
@@ -118,8 +122,8 @@ func (amw *AuthMiddleware) validateAPIKey(apiKey string) error {
 	return authutils.ValidateHashedKey(rec.SecretKey, key)
 }
 
-func (mw *authMiddleware) validateTokenFromBlackList(token string) error {
-	tokens, err := mw.service.Redis.GetAllBlacklistToken()
+func (amw *AuthMiddleware) validateTokenFromBlackList(token string) error {
+	tokens, err := amw.service.Redis.GetAllBlacklistToken()
 	if err != nil {
 		return err
 	}
@@ -129,6 +133,7 @@ func (mw *authMiddleware) validateTokenFromBlackList(token string) error {
 			return ErrInvalidToken
 		}
 	}
+
 	return nil
 }
 

@@ -34,7 +34,7 @@ services:
     expose:
       - 35432
 
-  cache:
+  redis:
     image: redis:6.2-alpine
     restart: always
     ports:
@@ -42,7 +42,7 @@ services:
     command: '--requirepass redisPassword'
     expose:
       - 16379
-  cache_test:
+  redis_test:
     image: redis:6.2-alpine
     restart: always
     ports:

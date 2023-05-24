@@ -159,12 +159,12 @@ func (h *handler) CreateAPIKey(c *gin.Context) {
 // @Failure 500 {object} view.ErrorResponse
 // @Router /auth/logout [post]
 func (h *handler) Logout(c *gin.Context) {
-	userID, err := utils.GetUserIDFromContext(c, h.config)
+	userID, err := authutils.GetUserIDFromContext(c, h.config)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
 	}
-	token, err := utils.GetTokenFromRequest(c)
+	token, err := authutils.GetTokenFromRequest(c)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
@@ -176,7 +176,7 @@ func (h *handler) Logout(c *gin.Context) {
 		"method":  "Logout",
 	})
 
-	em, err := h.controller.Auth.Logout(c, userID, token)
+	em, err := h.controller.Auth.Logout(userID, token)
 	if err != nil {
 		l.Error(err, "error when logout")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
