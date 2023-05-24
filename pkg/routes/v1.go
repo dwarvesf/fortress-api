@@ -67,8 +67,9 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 	}
 
 	// auth
-	authRoute := v1.Group("/auth", h.Auth.Auth)
+	authRoute := v1.Group("/auth")
 	{
+		authRoute.POST("", h.Auth.Auth)
 		authRoute.GET("/me", amw.WithAuth, pmw.WithPerm(model.PermissionAuthRead), h.Auth.Me)
 		authRoute.POST("/api-key", amw.WithAuth, pmw.WithPerm(model.PermissionAuthCreate), h.Auth.CreateAPIKey)
 	}
