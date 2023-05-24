@@ -32,7 +32,10 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 	// Webhook GROUP
 	/////////////////
 	webhook := r.Group("/webhooks")
-	webhook.POST("/n8n", h.Webhook.N8n)
+	{
+		webhook.POST("/n8n", h.Webhook.N8n)
+	}
+
 	// Basecamp
 	basecampGroup := webhook.Group("/basecamp")
 	{
@@ -53,11 +56,26 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 	// API GROUP
 	/////////////////
 	v1 := r.Group("/api/v1")
+
+	// assets
+
+	assetGroup := v1.Group("/assets")
+	{
+		assetGroup.POST("/upload", amw.WithAuth, h.Asset.Upload)
+	}
+
+	lineManagerGroup := v1.Group("/line-managers")
+	{
+		lineManagerGroup.GET("", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesRead), h.Employee.GetLineManagers)
+	}
+
 	// auth
-	v1.POST("/auth", h.Auth.Auth)
-	v1.GET("/auth/me", amw.WithAuth, pmw.WithPerm(model.PermissionAuthRead), h.Auth.Me)
-	v1.POST("/auth/api-key", amw.WithAuth, pmw.WithPerm(model.PermissionAuthCreate), h.Auth.CreateAPIKey)
-	v1.POST("/auth/logout", amw.WithAuth, h.Auth.Logout)
+	authRoute := v1.Group("/auth", h.Auth.Auth)
+	{
+		authRoute.GET("/me", amw.WithAuth, pmw.WithPerm(model.PermissionAuthRead), h.Auth.Me)
+		authRoute.POST("/api-key", amw.WithAuth, pmw.WithPerm(model.PermissionAuthCreate), h.Auth.CreateAPIKey)
+		authRoute.POST("/logout", amw.WithAuth, h.Auth.Logout)
+	}
 
 	// user profile
 	profileGroup := v1.Group("/profile")
@@ -68,42 +86,43 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 		profileGroup.POST("/upload", amw.WithAuth, h.Profile.Upload)
 	}
 
-	// assets
-	v1.POST("/assets/upload", amw.WithAuth, h.Asset.Upload)
-
 	// employees
-	v1.POST("/employees", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesCreate), h.Employee.Create)
-	v1.POST("/employees/search", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesRead), h.Employee.List)
-	v1.GET("/employees/:id", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesRead), h.Employee.Details)
-	v1.PUT("/employees/:id/general-info", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesEdit), h.Employee.UpdateGeneralInfo)
-	v1.PUT("/employees/:id/personal-info", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesEdit), h.Employee.UpdatePersonalInfo)
-	v1.PUT("/employees/:id/skills", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesEdit), h.Employee.UpdateSkills)
-	v1.PUT("/employees/:id/employee-status", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesEdit), h.Employee.UpdateEmployeeStatus)
-	v1.POST("/employees/:id/upload-avatar", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesEdit), h.Employee.UploadAvatar)
-	v1.PUT("/employees/:id/roles", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeeRolesEdit), h.Employee.UpdateRole)
-	v1.PUT("/employees/:id/base-salary", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesBaseSalaryEdit), h.Employee.UpdateBaseSalary)
-
-	v1.GET("/line-managers", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesRead), h.Employee.GetLineManagers)
+	employeeRoute := v1.Group("/employees")
+	{
+		employeeRoute.POST("", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesCreate), h.Employee.Create)
+		employeeRoute.POST("/search", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesRead), h.Employee.List)
+		employeeRoute.GET("/:id", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesRead), h.Employee.Details)
+		employeeRoute.PUT("/:id/general-info", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesEdit), h.Employee.UpdateGeneralInfo)
+		employeeRoute.PUT("/:id/personal-info", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesEdit), h.Employee.UpdatePersonalInfo)
+		employeeRoute.PUT("/:id/skills", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesEdit), h.Employee.UpdateSkills)
+		employeeRoute.PUT("/:id/employee-status", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesEdit), h.Employee.UpdateEmployeeStatus)
+		employeeRoute.POST("/:id/upload-avatar", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesEdit), h.Employee.UploadAvatar)
+		employeeRoute.PUT("/:id/roles", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeeRolesEdit), h.Employee.UpdateRole)
+		employeeRoute.PUT("/:id/base-salary", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesBaseSalaryEdit), h.Employee.UpdateBaseSalary)
+	}
 
 	// metadata
-	v1.GET("/metadata/working-status", h.Metadata.WorkingStatuses)
-	v1.GET("/metadata/stacks", h.Metadata.Stacks)
-	v1.GET("/metadata/seniorities", h.Metadata.Seniorities)
-	v1.GET("/metadata/chapters", h.Metadata.Chapters)
-	v1.GET("/metadata/organizations", h.Metadata.Organizations)
-	v1.GET("/metadata/roles", h.Metadata.GetRoles)
-	v1.GET("/metadata/positions", h.Metadata.Positions)
-	v1.GET("/metadata/countries", h.Metadata.GetCountries)
-	v1.GET("/metadata/currencies", h.Metadata.GetCurrencies)
-	v1.GET("/metadata/countries/:country_id/cities", h.Metadata.GetCities)
-	v1.GET("/metadata/project-statuses", h.Metadata.ProjectStatuses)
-	v1.GET("/metadata/questions", h.Metadata.GetQuestions)
-	v1.PUT("/metadata/stacks/:id", amw.WithAuth, pmw.WithPerm(model.PermissionMetadataEdit), h.Metadata.UpdateStack)
-	v1.POST("/metadata/stacks", amw.WithAuth, pmw.WithPerm(model.PermissionMetadataCreate), h.Metadata.CreateStack)
-	v1.DELETE("/metadata/stacks/:id", amw.WithAuth, pmw.WithPerm(model.PermissionMetadataDelete), h.Metadata.DeleteStack)
-	v1.PUT("/metadata/positions/:id", amw.WithAuth, pmw.WithPerm(model.PermissionMetadataEdit), h.Metadata.UpdatePosition)
-	v1.POST("/metadata/positions", amw.WithAuth, pmw.WithPerm(model.PermissionMetadataCreate), h.Metadata.CreatePosition)
-	v1.DELETE("/metadata/positions/:id", amw.WithAuth, pmw.WithPerm(model.PermissionMetadataDelete), h.Metadata.DeletePosition)
+	metadataRoute := v1.Group("/metadata")
+	{
+		metadataRoute.GET("/working-status", h.Metadata.WorkingStatuses)
+		metadataRoute.GET("/stacks", h.Metadata.Stacks)
+		metadataRoute.GET("/seniorities", h.Metadata.Seniorities)
+		metadataRoute.GET("/chapters", h.Metadata.Chapters)
+		metadataRoute.GET("/organizations", h.Metadata.Organizations)
+		metadataRoute.GET("/roles", h.Metadata.GetRoles)
+		metadataRoute.GET("/positions", h.Metadata.Positions)
+		metadataRoute.GET("/countries", h.Metadata.GetCountries)
+		metadataRoute.GET("/currencies", h.Metadata.GetCurrencies)
+		metadataRoute.GET("/countries/:country_id/cities", h.Metadata.GetCities)
+		metadataRoute.GET("/project-statuses", h.Metadata.ProjectStatuses)
+		metadataRoute.GET("/questions", h.Metadata.GetQuestions)
+		metadataRoute.PUT("/stacks/:id", amw.WithAuth, pmw.WithPerm(model.PermissionMetadataEdit), h.Metadata.UpdateStack)
+		metadataRoute.POST("/stacks", amw.WithAuth, pmw.WithPerm(model.PermissionMetadataCreate), h.Metadata.CreateStack)
+		metadataRoute.DELETE("/stacks/:id", amw.WithAuth, pmw.WithPerm(model.PermissionMetadataDelete), h.Metadata.DeleteStack)
+		metadataRoute.PUT("/positions/:id", amw.WithAuth, pmw.WithPerm(model.PermissionMetadataEdit), h.Metadata.UpdatePosition)
+		metadataRoute.POST("/positions", amw.WithAuth, pmw.WithPerm(model.PermissionMetadataCreate), h.Metadata.CreatePosition)
+		metadataRoute.DELETE("/positions/:id", amw.WithAuth, pmw.WithPerm(model.PermissionMetadataDelete), h.Metadata.DeletePosition)
+	}
 
 	// projects
 	projectGroup := v1.Group("projects")
