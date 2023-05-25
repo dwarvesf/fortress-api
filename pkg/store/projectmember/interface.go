@@ -1,8 +1,11 @@
 package projectmember
 
 import (
-	"github.com/dwarvesf/fortress-api/pkg/model"
+	"time"
+
 	"gorm.io/gorm"
+	
+	"github.com/dwarvesf/fortress-api/pkg/model"
 )
 
 type IStore interface {
@@ -20,6 +23,7 @@ type IStore interface {
 	UpdateEndDateOverdueMemberToInActive(db *gorm.DB) error
 	UpdateLeftMemberToInActive(db *gorm.DB) error
 	UpdateMemberInClosedProjectToInActive(db *gorm.DB) error
+	UpdateMemberToInActiveByID(db *gorm.DB, id string, endDate *time.Time) error
 	UpdateSelectedFieldByProjectID(db *gorm.DB, projectID string, updateModel model.ProjectMember, updatedField string) error
 	UpdateSelectedFieldsByID(db *gorm.DB, id string, updateModel model.ProjectMember, updatedFields ...string) (*model.ProjectMember, error)
 }

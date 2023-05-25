@@ -7,7 +7,7 @@ import (
 func FormatCurrencyAmount(n int) string {
 	milPart := n / 1000000
 	thouPart := (n % 1000000) / 1000
-	hunPart := (n % 1000)
+	hunPart := n % 1000
 	var res string
 	if milPart != 0 {
 		res = fmt.Sprintf("%d", milPart)

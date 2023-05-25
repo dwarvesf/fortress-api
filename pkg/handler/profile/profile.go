@@ -877,10 +877,11 @@ func (h *handler) assignDiscordRole(discordName string) error {
 
 	discordNameParts := strings.Split(discordName, "#")
 
-	guildMembers, err := h.service.Discord.GetMemberByName(discordNameParts[0])
+	guildMembers, err := h.service.Discord.SearchMember(discordNameParts[0])
 	if err != nil {
 		return err
 	}
+
 	var discordMember *discordgo.Member
 	for _, m := range guildMembers {
 		if len(discordNameParts) == 1 {
@@ -918,7 +919,7 @@ func (h *handler) assignDiscordRole(discordName string) error {
 				return nil
 			}
 
-			err := h.service.Discord.AssignRole(discordMember.User.ID, peepsRoleID)
+			err := h.service.Discord.AddRole(discordMember.User.ID, peepsRoleID)
 			if err != nil {
 				return err
 			}

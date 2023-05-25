@@ -185,3 +185,17 @@ func (s *store) UpdateLeftMemberToInActive(db *gorm.DB) error {
 	`
 	return db.Exec(sql).Error
 }
+
+func (s *store) UpdateMemberToInActiveByID(db *gorm.DB, id string, endDate *time.Time) error {
+	sql := `
+		UPDATE project_members pm
+		SET
+			status = 'inactive',
+			end_date = ?
+		WHERE
+			employee_id = ?
+			AND (status <> 'inactive' OR end_date IS NULL OR end_date > NOW())
+			
+	`
+	return db.Exec(sql, endDate, id).Error
+}
