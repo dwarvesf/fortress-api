@@ -15,5 +15,10 @@ CREATE TABLE IF NOT EXISTS employee_invitations (
     is_team_email_created       BOOLEAN NOT NULL DEFAULT false
 );
 
+ALTER TABLE employee_invitations
+    ADD CONSTRAINT employee_invitations_employee_id_fkey FOREIGN KEY (employee_id) REFERENCES employees (id);
+ALTER TABLE employee_invitations
+    ADD CONSTRAINT employee_invitations_invited_by_fkey FOREIGN KEY (invited_by) REFERENCES employees (id);
+
 -- +migrate Down
 DROP TABLE IF EXISTS employee_invitations;
