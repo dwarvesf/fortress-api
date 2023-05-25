@@ -33,6 +33,7 @@ func (r *controller) Create(userID string, input CreateEmployeeInput) (*model.Em
 		"controller": "employee",
 		"method":     "Create",
 	})
+
 	loggedInUser, err := r.store.Employee.One(r.repo.DB(), userID, false)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, ErrEmployeeNotFound

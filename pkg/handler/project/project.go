@@ -24,7 +24,6 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/utils"
 	"github.com/dwarvesf/fortress-api/pkg/utils/authutils"
 	"github.com/dwarvesf/fortress-api/pkg/view"
-	"github.com/k0kubun/pp"
 )
 
 type handler struct {
@@ -1036,7 +1035,6 @@ func (h *handler) UpdateMember(c *gin.Context) {
 //
 // --- end ---
 func (h *handler) updateProjectMember(db *gorm.DB, p *model.Project, slotID string, projectID string, input request.UpdateMemberInput, userInfo *model.CurrentLoggedUserInfo) (*model.ProjectMember, error) {
-	pp.Println("updateProjectMember")
 	var member *model.ProjectMember
 	var err error
 
@@ -1075,8 +1073,6 @@ func (h *handler) updateProjectMember(db *gorm.DB, p *model.Project, slotID stri
 
 		updateEndDate := false
 		inputEndDate := input.GetEndDate()
-		pp.Println(inputEndDate)
-		pp.Println(member.EndDate)
 		if member.EndDate != nil && inputEndDate == nil {
 			member.EndDate = nil
 			updateEndDate = true

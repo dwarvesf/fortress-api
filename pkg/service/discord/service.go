@@ -9,15 +9,17 @@ import (
 type IService interface {
 	PostBirthdayMsg(msg string) (model.DiscordMessage, error)
 	GetMembers() ([]*discordgo.Member, error)
-	GetMemberByName(discordName string) ([]*discordgo.Member, error)
-	GetRoles() ([]*discordgo.Role, error)
-	AssignRole(roleID, userID string) error
+	GetMember(userID string) (*discordgo.Member, error)
+	SearchMember(discordName string) ([]*discordgo.Member, error)
+	GetRoles() (Roles, error)
+	AddRole(userID, roleID string) error
+	RemoveRole(userID string, roleID string) error
 
 	// CreateEvent create a discord event
 	CreateEvent(event *model.Schedule) (scheduledEvent *discordgo.GuildScheduledEvent, err error)
 	UpdateEvent(event *model.Schedule) (scheduledEvent *discordgo.GuildScheduledEvent, err error)
 	DeleteEvent(event *model.Schedule) error
 
-	// Log discord
+	// SendMessage logs a message to a Discord channel
 	SendMessage(msg, webhookUrl string) (*model.DiscordMessage, error)
 }

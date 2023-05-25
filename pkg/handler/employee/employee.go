@@ -238,7 +238,7 @@ func (h *handler) UpdateEmployeeStatus(c *gin.Context) {
 		EmployeeStatus: body.EmployeeStatus,
 	})
 	if err != nil {
-		l.Error(err, "failed to get detail employees")
+		l.Error(err, "failed to update employee status")
 		errs.ConvertControllerErr(c, err)
 		return
 	}

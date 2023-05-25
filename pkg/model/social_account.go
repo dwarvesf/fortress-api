@@ -42,3 +42,14 @@ func (e SocialAccountType) IsValid() bool {
 func (e SocialAccountType) String() string {
 	return string(e)
 }
+
+type SocialAccounts []SocialAccount
+
+func (e SocialAccounts) GetDiscord() *SocialAccount {
+	for _, account := range e {
+		if account.Type == SocialAccountTypeDiscord {
+			return &account
+		}
+	}
+	return nil
+}
