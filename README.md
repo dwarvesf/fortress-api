@@ -34,15 +34,16 @@ This repository is the official BE service for Fortress
    Create a file `.env` with these values:
 
    ```
-    DB_HOST="127.0.0.1"
-    DB_PORT="25432"
-    DB_USER="postgres"
-    DB_PASS="postgres"
-    DB_NAME="fortress_local"
-    DB_SSL_MODE="disable"
-    ALLOWED_ORIGINS="*"
-    ENV=dev
-    DEBUG=true
+   DB_HOST="127.0.0.1"
+   DB_PORT="25432"
+   DB_USER="postgres"
+   DB_PASS="postgres"
+   DB_NAME="fortress_local"
+   DB_SSL_MODE="disable"
+   ALLOWED_ORIGINS="*"
+   ENV=dev
+   DEBUG=true
+   JWT_SECRET_KEY=JWTSecretKey
    ```
 
 3. Run source
