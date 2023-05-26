@@ -39,7 +39,9 @@ func (r *controller) UpdateEmployeeStatus(employeeID string, body UpdateWorkingS
 	}
 
 	tx, done := r.repo.NewTransaction()
-	defer done(nil)
+	defer func() {
+		_ = done(nil)
+	}()
 
 	_, err = r.store.Employee.UpdateSelectedFieldsByID(tx.DB(), employeeID, *emp, "working_status", "left_date")
 	if err != nil {

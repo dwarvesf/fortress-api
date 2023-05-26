@@ -781,7 +781,7 @@ func (h *handler) commitPayrollHandler(month, year, batch int, email string) err
 }
 
 func markBonusAsDone(h *handler, p *model.Payroll) error {
-	projectBonusExplains := []model.ProjectBonusExplain{}
+	var projectBonusExplains []model.ProjectBonusExplain
 	err := json.Unmarshal(
 		p.ProjectBonusExplain,
 		&projectBonusExplains,
