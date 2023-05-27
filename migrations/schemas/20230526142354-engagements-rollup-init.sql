@@ -5,7 +5,7 @@ CREATE TABLE engagements_rollup
     discord_user_id   TEXT,
     latest_message_id TEXT,
     discord_username  VARCHAR(40),
-    -- Discord's username + number
+    -- Discord's usernames have the form "username#number"
     -- for example: thanhnguyen2187#4183
     -- the username part's maximal length is 32, while the number part's length is 4
     channel_id        TEXT,
