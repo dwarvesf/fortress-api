@@ -14,6 +14,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/handler/dashboard/util"
 	"github.com/dwarvesf/fortress-api/pkg/handler/discord"
 	"github.com/dwarvesf/fortress-api/pkg/handler/employee"
+	"github.com/dwarvesf/fortress-api/pkg/handler/engagement"
 	"github.com/dwarvesf/fortress-api/pkg/handler/feedback"
 	"github.com/dwarvesf/fortress-api/pkg/handler/healthz"
 	"github.com/dwarvesf/fortress-api/pkg/handler/invoice"
@@ -43,6 +44,7 @@ type Handler struct {
 	Dashboard   dashboard.IHandler
 	Discord     discord.IHandler
 	Employee    employee.IHandler
+	Engagement  engagement.IHandler
 	Feedback    feedback.IHandler
 	Healthcheck healthz.IHandler
 	Invoice     invoice.IHandler
@@ -69,6 +71,7 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, ctrl *
 		Dashboard:   dashboard.New(store, repo, service, logger, cfg, util.New()),
 		Discord:     discord.New(store, repo, service, logger, cfg),
 		Employee:    employee.New(ctrl, store, repo, service, logger, cfg),
+		Engagement:  engagement.New(ctrl, store, repo, service, logger, cfg),
 		Feedback:    feedback.New(store, repo, service, logger, cfg),
 		Healthcheck: healthz.New(),
 		Invoice:     invoice.New(ctrl, store, repo, service, worker, logger, cfg),
