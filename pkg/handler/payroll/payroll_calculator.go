@@ -10,7 +10,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	bcModel "github.com/dwarvesf/fortress-api/pkg/service/basecamp/model"
 	"github.com/dwarvesf/fortress-api/pkg/service/currency"
-	commissionStore "github.com/dwarvesf/fortress-api/pkg/store/commission"
+	commissionStore "github.com/dwarvesf/fortress-api/pkg/store/employeecommission"
 	"github.com/dwarvesf/fortress-api/pkg/utils/timeutil"
 )
 
@@ -41,12 +41,12 @@ func calculatePayrolls(h *handler, users []*model.Employee, batchDate time.Time)
 		opsExpenseID = consts.OpsExpenseTodoID
 	}
 
-	opsTodolists, err := h.service.Basecamp.Todo.GetAllInList(opsExpenseID, opsID)
+	opsTodoLists, err := h.service.Basecamp.Todo.GetAllInList(opsExpenseID, opsID)
 	if err != nil {
 		h.logger.Error(err, "can't get ops expense todo")
 		return nil, err
 	}
-	for _, exps := range opsTodolists {
+	for _, exps := range opsTodoLists {
 		isApproved := false
 		cmts, err := h.service.Basecamp.Comment.Gets(opsID, exps.ID)
 		if err != nil {
@@ -122,7 +122,7 @@ func calculatePayrolls(h *handler, users []*model.Employee, batchDate time.Time)
 		// TODO...
 		// try to calculate if user start/end after/before the payroll
 		// fallback to default
-		baseSalary, contract, _ = tryParticalCalculation(batchDate, dueDate, *u.JoinedDate, u.LeftDate, users[i].BaseSalary.PersonalAccountAmount, users[i].BaseSalary.CompanyAccountAmount)
+		baseSalary, contract, _ = tryPartialCalculation(batchDate, dueDate, *u.JoinedDate, u.LeftDate, users[i].BaseSalary.PersonalAccountAmount, users[i].BaseSalary.CompanyAccountAmount)
 
 		var bonus, commission, reimbursementAmount model.VietnamDong
 		var bonusExplains, commissionExplains []model.CommissionExplain
@@ -194,7 +194,7 @@ func calculatePayrolls(h *handler, users []*model.Employee, batchDate time.Time)
 			if dueDate.Sub(*candidates[i].OfferStartDate).Hours()/24 < 15 {
 				continue
 			}
-			baseSalary, contract, _ := tryParticalCalculation(batchDate, dueDate, *candidates[i].OfferStartDate, nil, int64(candidates[i].OfferSalary), 0)
+			baseSalary, contract, _ := tryPartialCalculation(batchDate, dueDate, *candidates[i].OfferStartDate, nil, int64(candidates[i].OfferSalary), 0)
 			total := model.NewVietnamDong(baseSalary)
 
 			p := model.Payroll{
@@ -290,7 +290,7 @@ func getBonus(
 		EmployeeID: u.ID.String(),
 		IsPaid:     false,
 	}
-	userCommissions, err := h.store.Commission.Get(h.repo.DB(), commissionQuery)
+	userCommissions, err := h.store.EmployeeCommission.Get(h.repo.DB(), commissionQuery)
 	if err != nil {
 		return
 	}
@@ -317,7 +317,7 @@ func getBonus(
 	return
 }
 
-func tryParticalCalculation(
+func tryPartialCalculation(
 	batchDate, dueDate, startDate time.Time,
 	leftDate *time.Time,
 	baseSalary, contract int64,
