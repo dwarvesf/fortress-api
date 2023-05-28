@@ -31,12 +31,12 @@ type Service struct {
 	Currency    currency.IService
 	Discord     discord.IService
 	Google      googleauth.IService
-	GoogleDrive googledrive.Service
+	GoogleDrive googledrive.IService
 	GoogleMail  googlemail.IService
 	ImprovMX    improvmx.IService
 	Mochi       mochi.IService
 	Notion      notion.IService
-	Sendgrid    sendgrid.Service
+	Sendgrid    sendgrid.IService
 	Wise        wise.IService
 }
 

@@ -13,18 +13,17 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/store/auditparticipant"
 	"github.com/dwarvesf/fortress-api/pkg/store/bankaccount"
 	"github.com/dwarvesf/fortress-api/pkg/store/basesalary"
-	"github.com/dwarvesf/fortress-api/pkg/store/bonus"
 	"github.com/dwarvesf/fortress-api/pkg/store/cachedpayroll"
 	"github.com/dwarvesf/fortress-api/pkg/store/chapter"
 	"github.com/dwarvesf/fortress-api/pkg/store/client"
 	"github.com/dwarvesf/fortress-api/pkg/store/clientcontact"
-	"github.com/dwarvesf/fortress-api/pkg/store/commission"
 	"github.com/dwarvesf/fortress-api/pkg/store/content"
 	"github.com/dwarvesf/fortress-api/pkg/store/country"
 	"github.com/dwarvesf/fortress-api/pkg/store/currency"
 	"github.com/dwarvesf/fortress-api/pkg/store/dashboard"
 	"github.com/dwarvesf/fortress-api/pkg/store/discordtemplate"
 	"github.com/dwarvesf/fortress-api/pkg/store/employee"
+	"github.com/dwarvesf/fortress-api/pkg/store/employeebonus"
 	"github.com/dwarvesf/fortress-api/pkg/store/employeechapter"
 	"github.com/dwarvesf/fortress-api/pkg/store/employeecommission"
 	"github.com/dwarvesf/fortress-api/pkg/store/employeeeventquestion"
@@ -80,19 +79,18 @@ type Store struct {
 	AuditParticipant        auditparticipant.IStore
 	BankAccount             bankaccount.IStore
 	BaseSalary              basesalary.IStore
-	Bonus                   bonus.IStore
+	Bonus                   employeebonus.IStore
 	CachedPayroll           cachedpayroll.IStore
 	Chapter                 chapter.IStore
 	Client                  client.IStore
 	ClientContact           clientcontact.IStore
-	Commission              commission.IStore
+	EmployeeCommission      employeecommission.IStore
 	Content                 content.IStore
 	Country                 country.IStore
 	Currency                currency.IStore
 	Dashboard               dashboard.IStore
 	Employee                employee.IStore
 	EmployeeChapter         employeechapter.IStore
-	EmployeeCommission      employeecommission.IStore
 	EmployeeEventQuestion   employeeeventquestion.IStore
 	EmployeeEventReviewer   employeeeventreviewer.IStore
 	EmployeeEventTopic      employeeeventtopic.IStore
@@ -148,12 +146,11 @@ func New() *Store {
 		AuditParticipant:        auditparticipant.New(),
 		BankAccount:             bankaccount.New(),
 		BaseSalary:              basesalary.New(),
-		Bonus:                   bonus.New(),
+		Bonus:                   employeebonus.New(),
 		CachedPayroll:           cachedpayroll.New(),
 		Chapter:                 chapter.New(),
 		Client:                  client.New(),
 		ClientContact:           clientcontact.New(),
-		Commission:              commission.New(),
 		Content:                 content.New(),
 		Country:                 country.New(),
 		Currency:                currency.New(),

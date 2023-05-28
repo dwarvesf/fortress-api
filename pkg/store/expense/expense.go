@@ -6,31 +6,31 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/model"
 )
 
-type pgService struct {
+type store struct {
 }
 
 func New() IStore {
-	return &pgService{}
+	return &store{}
 }
 
-func (s *pgService) Create(db *gorm.DB, e *model.Expense) (*model.Expense, error) {
+func (s *store) Create(db *gorm.DB, e *model.Expense) (*model.Expense, error) {
 	return e, db.Create(&e).Error
 }
 
-func (s *pgService) Delete(db *gorm.DB, e *model.Expense) (*model.Expense, error) {
+func (s *store) Delete(db *gorm.DB, e *model.Expense) (*model.Expense, error) {
 	return e, db.Delete(&e).Error
 }
 
-func (s *pgService) Update(db *gorm.DB, e *model.Expense) (*model.Expense, error) {
+func (s *store) Update(db *gorm.DB, e *model.Expense) (*model.Expense, error) {
 	return e, db.Model(&model.Expense{}).Updates(&e).Error
 }
 
-func (s *pgService) GetValuation(db *gorm.DB, y int) (*model.CurrencyView, error) {
+func (s *store) GetValuation(db *gorm.DB, y int) (*model.CurrencyView, error) {
 	res := &model.CurrencyView{}
 	return res, db.Raw("select * from vw_expense where year = ?", y).Find(&res).Error
 }
 
-func (s *pgService) GetByQuery(db *gorm.DB, q *ExpenseQuery) (*model.Expense, error) {
+func (s *store) GetByQuery(db *gorm.DB, q *ExpenseQuery) (*model.Expense, error) {
 	e := &model.Expense{}
 	if q.BasecampID != 0 {
 		db = db.Where("basecamp_id = ?", q.BasecampID)

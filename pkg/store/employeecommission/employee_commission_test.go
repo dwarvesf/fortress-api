@@ -1,4 +1,4 @@
-package commission
+package employeecommission
 
 // func TestCreate(t *testing.T) {
 // 	t.Parallel()
