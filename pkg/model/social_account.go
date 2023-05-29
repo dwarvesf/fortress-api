@@ -53,3 +53,12 @@ func (e SocialAccounts) GetDiscord() *SocialAccount {
 	}
 	return nil
 }
+
+func (e SocialAccounts) GetGithub() *SocialAccount {
+	for _, account := range e {
+		if account.Type == SocialAccountTypeGitHub {
+			return &account
+		}
+	}
+	return nil
+}

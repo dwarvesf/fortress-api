@@ -24,7 +24,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/service/currency"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/store/employee"
-	commissionStore "github.com/dwarvesf/fortress-api/pkg/store/employeecommission"
+	"github.com/dwarvesf/fortress-api/pkg/store/employeecommission"
 	"github.com/dwarvesf/fortress-api/pkg/store/payroll"
 	"github.com/dwarvesf/fortress-api/pkg/utils"
 	"github.com/dwarvesf/fortress-api/pkg/utils/timeutil"
@@ -255,7 +255,7 @@ func GetPayrollDetailHandler(h *handler, month, year, batch int, email string) (
 			// !isForecast
 			if batchDate.Month() <= time.Now().Month() || (batchDate.Month() == 12 && time.Now().Month() == 1) {
 				toDate := batchDate.AddDate(0, 1, 0)
-				commissionQuery := commissionStore.Query{
+				commissionQuery := employeecommission.Query{
 					EmployeeID: payrolls[i].Employee.ID.String(),
 					IsPaid:     isPaid,
 					FromDate:   &batchDate,
