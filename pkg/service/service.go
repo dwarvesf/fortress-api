@@ -3,10 +3,11 @@ package service
 import (
 	"time"
 
-	cache "github.com/patrickmn/go-cache"
+	"github.com/patrickmn/go-cache"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
-	gmail "google.golang.org/api/gmail/v1"
+	admin "google.golang.org/api/admin/directory/v1"
+	"google.golang.org/api/gmail/v1"
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
@@ -14,7 +15,9 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/service/basecamp/model"
 	"github.com/dwarvesf/fortress-api/pkg/service/currency"
 	"github.com/dwarvesf/fortress-api/pkg/service/discord"
+	"github.com/dwarvesf/fortress-api/pkg/service/github"
 	googleauth "github.com/dwarvesf/fortress-api/pkg/service/google"
+	"github.com/dwarvesf/fortress-api/pkg/service/googleadmin"
 	"github.com/dwarvesf/fortress-api/pkg/service/googledrive"
 	"github.com/dwarvesf/fortress-api/pkg/service/googlemail"
 	"github.com/dwarvesf/fortress-api/pkg/service/improvmx"
@@ -30,9 +33,11 @@ type Service struct {
 	Cache       *cache.Cache
 	Currency    currency.IService
 	Discord     discord.IService
+	Github      github.IService
 	Google      googleauth.IService
 	GoogleDrive googledrive.IService
 	GoogleMail  googlemail.IService
+	GoogleAdmin googleadmin.IService
 	ImprovMX    improvmx.IService
 	Mochi       mochi.IService
 	Notion      notion.IService
@@ -69,6 +74,16 @@ func New(cfg *config.Config, store *store.Store, repo store.DBRepo) *Service {
 
 	googleDriveSvc := googledrive.New(driveConfig, cfg)
 
+	googleAdminConfig := &oauth2.Config{
+		ClientID:     cfg.Google.ClientID,
+		ClientSecret: cfg.Google.ClientSecret,
+		Endpoint:     google.Endpoint,
+		Scopes: []string{admin.AdminDirectoryUserScope,
+			admin.AdminDirectoryGroupScope,
+		},
+	}
+	googleAdminSvc := googleadmin.New(googleAdminConfig, cfg)
+
 	mailConfig := &oauth2.Config{
 		ClientID:     cfg.Google.ClientID,
 		ClientSecret: cfg.Google.ClientSecret,
@@ -76,7 +91,7 @@ func New(cfg *config.Config, store *store.Store, repo store.DBRepo) *Service {
 		Scopes:       []string{gmail.MailGoogleComScope},
 	}
 
-	googleMailService := googlemail.New(
+	googleMailSvc := googlemail.New(
 		mailConfig,
 		cfg,
 	)
@@ -88,13 +103,15 @@ func New(cfg *config.Config, store *store.Store, repo store.DBRepo) *Service {
 	Currency := currency.New(cfg)
 
 	return &Service{
-		Basecamp:    basecamp.NewService(store, repo, cfg, &bc, logger.L),
+		Basecamp:    basecamp.New(store, repo, cfg, &bc, logger.L),
 		Cache:       cch,
 		Currency:    Currency,
 		Discord:     discord.New(cfg),
+		Github:      github.New(cfg, logger.L),
 		Google:      googleSvc,
+		GoogleAdmin: googleAdminSvc,
 		GoogleDrive: googleDriveSvc,
-		GoogleMail:  googleMailService,
+		GoogleMail:  googleMailSvc,
 		ImprovMX:    improvmx.New(cfg.ImprovMX.Token),
 		Mochi:       mochi.New(cfg, logger.L),
 		Notion:      notion.New(cfg.Notion.Secret, cfg.Notion.Databases.Project, logger.L),

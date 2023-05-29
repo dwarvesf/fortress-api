@@ -2,10 +2,12 @@ package employee
 
 import (
 	"errors"
+	"time"
+
+	"gorm.io/gorm"
+	
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
-	"gorm.io/gorm"
-	"time"
 )
 
 type UpdateBaseSalaryInput struct {

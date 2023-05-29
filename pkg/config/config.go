@@ -29,6 +29,7 @@ type Config struct {
 
 	Invoice  Invoice
 	Sendgrid Sendgrid
+	Github   Github
 
 	APIKey       string
 	Debug        bool
@@ -61,6 +62,7 @@ type Google struct {
 	GCSCredentials               string
 	GCPProjectID                 string
 	AccountingGoogleRefreshToken string
+	AdminGoogleRefreshToken      string
 	AccountingEmailID            string
 	TeamGoogleRefreshToken       string
 	TeamEmailID                  string
@@ -93,6 +95,10 @@ type Mochi struct {
 type Notion struct {
 	Secret    string
 	Databases NotionDatabase
+}
+
+type Github struct {
+	Token string
 }
 
 type NotionDatabase struct {
@@ -170,19 +176,22 @@ func Generate(v ENV) *Config {
 			Pass:    v.GetString("DB_PASS"),
 			SSLMode: v.GetString("DB_SSL_MODE"),
 		},
-
+		Github: Github{
+			Token: v.GetString("GITHUB_ACCESS_TOKEN"),
+		},
 		Google: Google{
-			ClientSecret:                 v.GetString("GOOGLE_API_CLIENT_SECRET"),
-			ClientID:                     v.GetString("GOOGLE_API_CLIENT_ID"),
+			AccountingEmailID:            v.GetString("ACCOUNTING_EMAIL_ID"),
+			AccountingGoogleRefreshToken: v.GetString("ACCOUNTING_GOOGLE_REFRESH_TOKEN"),
+			AdminGoogleRefreshToken:      v.GetString("ADMIN_GOOGLE_REFRESH_TOKEN"),
 			AppName:                      v.GetString("GOOGLE_API_APP_NAME"),
+			ClientID:                     v.GetString("GOOGLE_API_CLIENT_ID"),
+			ClientSecret:                 v.GetString("GOOGLE_API_CLIENT_SECRET"),
 			GCPProjectID:                 v.GetString("GCP_PROJECT_ID"),
 			GCSBucketName:                v.GetString("GCS_BUCKET_NAME"),
-			GCSProjectID:                 v.GetString("GCS_PROJECT_ID"),
 			GCSCredentials:               v.GetString("GCS_CREDENTIALS"),
-			AccountingGoogleRefreshToken: v.GetString("ACCOUNTING_GOOGLE_REFRESH_TOKEN"),
-			AccountingEmailID:            v.GetString("ACCOUNTING_EMAIL_ID"),
-			TeamGoogleRefreshToken:       v.GetString("TEAM_GOOGLE_REFRESH_TOKEN"),
+			GCSProjectID:                 v.GetString("GCS_PROJECT_ID"),
 			TeamEmailID:                  v.GetString("TEAM_EMAIL_ID"),
+			TeamGoogleRefreshToken:       v.GetString("TEAM_GOOGLE_REFRESH_TOKEN"),
 		},
 
 		Wise: Wise{
@@ -193,7 +202,6 @@ func Generate(v ENV) *Config {
 		CurrencyLayer: CurrencyLayer{
 			APIKey: v.GetString("CURRENCY_LAYER_API_KEY"),
 		},
-
 		Vault: Vault{
 			Address: v.GetString("VAULT_ADDR"),
 			Token:   v.GetString("VAULT_TOKEN"),
