@@ -23,36 +23,36 @@ This repository is the official BE service for Fortress
 
 1. Set up source
 
-   Set up infras, install dependencies, etc.
+Set up infras, install dependencies, etc.
 
-   ```
-   make init
-   ```
+```
+make init
+```
 
 2. Set up env
 
-   Create a file `.env` with these values:
+Create a file `.env` with these values:
 
-   ```
-   DB_HOST="127.0.0.1"
-   DB_PORT="25432"
-   DB_USER="postgres"
-   DB_PASS="postgres"
-   DB_NAME="fortress_local"
-   DB_SSL_MODE="disable"
-   ALLOWED_ORIGINS="*"
-   ENV=dev
-   DEBUG=true
-   JWT_SECRET_KEY=JWTSecretKey
-   ```
+```
+DB_HOST="127.0.0.1"
+DB_PORT="25432"
+DB_USER="postgres"
+DB_PASS="postgres"
+DB_NAME="fortress_local"
+DB_SSL_MODE="disable"
+ALLOWED_ORIGINS="*"
+ENV=dev
+DEBUG=true
+JWT_SECRET_KEY=JWTSecretKey
+```
 
 3. Run source
 
-   ```
-   make dev
-   ```
+```
+make dev
+```
 
-   The service starts with port 8080 as the default
+The service starts with port 8080 as the default
 
 ### How to work on a TODO
 
