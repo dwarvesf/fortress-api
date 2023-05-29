@@ -14,7 +14,9 @@ CREATE TABLE engagements_rollup
     reaction_count    INT,
     deleted_at        TIMESTAMP(6),
     created_at        TIMESTAMP(6),
-    updated_at        TIMESTAMP(6)
+    updated_at        TIMESTAMP(6),
+
+    UNIQUE (discord_user_id, channel_id)
 );
 -- using TEXT instead of BIGINT for discord_user_id
 -- and for                          latest_message_id
