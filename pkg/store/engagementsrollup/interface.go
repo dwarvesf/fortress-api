@@ -7,4 +7,5 @@ import (
 
 type IStore interface {
 	Upsert(db *gorm.DB, record *model.EngagementsRollup) (*model.EngagementsRollup, error)
+	GetLastMessageID(db *gorm.DB, channelID string) (string, error)
 }

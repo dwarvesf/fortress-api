@@ -32,3 +32,10 @@ func (s *store) Upsert(db *gorm.DB, record *model.EngagementsRollup) (*model.Eng
 		Create(record).
 		Error
 }
+
+func (s *store) GetLastMessageID(db *gorm.DB, channelID string) (string, error) {
+	// lastMessageID := ""
+	// err := db.
+	// 	Table("engagements_rollup").
+	return "", nil
+}
