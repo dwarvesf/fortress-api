@@ -80,3 +80,6 @@ func (h *handler) UpsertRollup(c *gin.Context) {
 		view.CreateResponse[any]("success", nil, done(nil), body, ""),
 	)
 }
+
+func (h *handler) GetLastMessageID(c *gin.Context) {
+}
