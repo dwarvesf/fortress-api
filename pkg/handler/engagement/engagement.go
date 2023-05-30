@@ -121,5 +121,25 @@ func (h *handler) UpsertRollup(c *gin.Context) {
 
 func (h *handler) GetLastMessageID(c *gin.Context) {
 	channelID := c.Param("channel-id")
-	h.logger.Info(channelID)
+	l := h.logger.Fields(logger.Fields{
+		"handler":   "engagement",
+		"method":    "GetLastMessageID",
+		"channelID": channelID,
+	})
+
+	tx, done := h.repo.NewTransaction()
+	lastMessageID, err := h.store.EngagementsRollup.GetLastMessageID(tx.DB(), channelID)
+	if err != nil {
+		l.Error(err, "unable to get last message ID")
+		c.JSON(
+			http.StatusInternalServerError,
+			view.CreateResponse[any](nil, nil, done(err), channelID, ""),
+		)
+		return
+	}
+
+	c.JSON(
+		http.StatusOK,
+		view.CreateResponse[any](lastMessageID, nil, done(nil), nil, "success"),
+	)
 }

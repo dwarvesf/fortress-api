@@ -35,8 +35,13 @@ func (s *store) Upsert(db *gorm.DB, record *model.EngagementsRollup) (*model.Eng
 }
 
 func (s *store) GetLastMessageID(db *gorm.DB, channelID string) (string, error) {
-	// lastMessageID := ""
-	// err := db.
-	// 	Table("engagements_rollup").
-	return "", nil
+	lastMessageID := ""
+	err := db.
+		Raw(
+			"SELECT COALESCE(MAX(last_message_id), 0) FROM engagements_rollup WHERE channel_id = ?",
+			channelID,
+		).
+		Scan(&lastMessageID).
+		Error
+	return lastMessageID, err
 }
