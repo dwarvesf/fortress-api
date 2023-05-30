@@ -137,7 +137,7 @@ func (h *handler) UncheckBasecampExpenseHandler(msg model.BasecampWebhookMessage
 	return nil
 }
 
-// h.ExtractExpenseData takes a webhook message and parse it into BasecampExpenseData structure
+// ExtractExpenseData takes a webhook message and parse it into BasecampExpenseData structure
 func (h *handler) ExtractExpenseData(msg model.BasecampWebhookMessage) (*bc.BasecampExpenseData, error) {
 	res := &bc.BasecampExpenseData{BasecampID: msg.Recording.ID}
 
@@ -161,7 +161,7 @@ func (h *handler) ExtractExpenseData(msg model.BasecampWebhookMessage) (*bc.Base
 	res.Amount = amount
 
 	// extract currency type
-	t := strings.ToLower(strings.TrimSpace((parts[2])))
+	t := strings.ToLower(strings.TrimSpace(parts[2]))
 	if t != "vnd" && t != "usd" {
 		return nil, errors.New("invalid format in currency type section (VND or USD) of expense format")
 	}

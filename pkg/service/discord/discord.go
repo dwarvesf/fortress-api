@@ -142,6 +142,27 @@ func (d *discordClient) SendMessage(msg, webhookUrl string) (*model.DiscordMessa
 	return &discordMsg, nil
 }
 
+func (d *discordClient) SearchMember(discordName string) ([]*discordgo.Member, error) {
+	members := make([]*discordgo.Member, 0)
+	guildMembers, err := d.session.GuildMembersSearch(d.cfg.Discord.IDs.DwarvesGuild, discordName, 1000)
+	if err != nil {
+		return nil, err
+	}
+
+	members = append(members, guildMembers...)
+
+	return members, nil
+}
+
+func (d *discordClient) GetMember(userID string) (*discordgo.Member, error) {
+	member, err := d.session.GuildMember(d.cfg.Discord.IDs.DwarvesGuild, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	return member, nil
+}
+
 func (d *discordClient) GetMemberByName(discordName string) ([]*discordgo.Member, error) {
 	members := make([]*discordgo.Member, 0)
 	guildMembers, err := d.session.GuildMembersSearch(d.cfg.Discord.IDs.DwarvesGuild, discordName, 1000)
@@ -154,7 +175,7 @@ func (d *discordClient) GetMemberByName(discordName string) ([]*discordgo.Member
 	return members, nil
 }
 
-func (d *discordClient) GetRoles() ([]*discordgo.Role, error) {
+func (d *discordClient) GetRoles() (Roles, error) {
 	roles, err := d.session.GuildRoles(d.cfg.Discord.IDs.DwarvesGuild)
 	if err != nil {
 		return nil, err
@@ -163,6 +184,64 @@ func (d *discordClient) GetRoles() ([]*discordgo.Role, error) {
 	return roles, nil
 }
 
-func (d *discordClient) AssignRole(roleID, userID string) error {
+func (d *discordClient) AddRole(userID, roleID string) error {
 	return d.session.GuildMemberRoleAdd(d.cfg.Discord.IDs.DwarvesGuild, userID, roleID)
+}
+
+func (d *discordClient) RemoveRole(userID string, roleID string) error {
+	return d.session.GuildMemberRoleRemove(d.cfg.Discord.IDs.DwarvesGuild, userID, roleID)
+}
+
+type Roles discordgo.Roles
+
+func (r Roles) DwarvesRoles() []*discordgo.Role {
+	roleMap := getDwarvesRoleMap()
+
+	dwarvesRoles := make([]*discordgo.Role, 0)
+	for _, dRole := range r {
+		_, ok := roleMap[dRole.Name]
+		if ok {
+			dwarvesRoles = append(dwarvesRoles, dRole)
+		}
+	}
+
+	return dwarvesRoles
+}
+
+func (r Roles) ByCode(code string) *discordgo.Role {
+	for _, dRole := range r {
+		if dRole.Name == code {
+			return dRole
+		}
+	}
+
+	return nil
+}
+
+func getDwarvesRoleMap() map[string]bool {
+	roleMap := make(map[string]bool)
+	var dwarvesRoleCodes = []string{
+		"moderator",
+		"dwarf",
+		"booster",
+		"apprentice",
+		"crafter",
+		"specialist",
+		"principal",
+		"peeps",
+		"learning",
+		"engagement",
+		"delivery",
+		"labs",
+		"baby dwarf",
+		"ladies",
+		"sers",
+		"consultant",
+		"chad",
+	}
+	for _, code := range dwarvesRoleCodes {
+		roleMap[code] = true
+	}
+
+	return roleMap
 }

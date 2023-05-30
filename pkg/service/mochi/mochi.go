@@ -15,19 +15,19 @@ type IService interface {
 	GetVaultTransaction(req *model.VaultTransactionRequest) (*model.VaultTransactionResponse, error)
 }
 
-type mochiClient struct {
+type client struct {
 	cfg *config.Config
 	l   logger.Logger
 }
 
 func New(cfg *config.Config, l logger.Logger) IService {
-	return &mochiClient{
+	return &client{
 		cfg: cfg,
 		l:   l,
 	}
 }
 
-func (m *mochiClient) GetVaultTransaction(req *model.VaultTransactionRequest) (*model.VaultTransactionResponse, error) {
+func (m *client) GetVaultTransaction(req *model.VaultTransactionRequest) (*model.VaultTransactionResponse, error) {
 	var client = &http.Client{}
 	request, err := http.NewRequest("GET", fmt.Sprintf("%s/api/v1/vault/%s/transaction?start_time=%s&end_time=%s", m.cfg.Mochi.BaseURL, req.VaultId, req.StartTime, req.EndTime), nil)
 	if err != nil {

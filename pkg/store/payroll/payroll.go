@@ -18,7 +18,7 @@ func New() IStore {
 }
 
 func (s *store) GetSalary(db *gorm.DB, year int, month int) ([]model.Employee, error) {
-	employees := []model.Employee{}
+	var employees []model.Employee
 
 	return employees, db.Table("employee").
 		Where("status = <> ?", model.WorkingStatusLeft).

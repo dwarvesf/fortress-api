@@ -40,13 +40,13 @@ func main() {
 	log := logger.NewLogrusLogger()
 	log.Infof("Server starting")
 
-	vault, err := vault.New(cfg)
+	v, err := vault.New(cfg)
 	if err != nil {
 		log.Error(err, "failed to init vault")
 	}
 
-	if vault != nil {
-		cfg = config.Generate(vault)
+	if v != nil {
+		cfg = config.Generate(v)
 	}
 
 	s := store.New()

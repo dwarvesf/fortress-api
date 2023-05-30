@@ -10,7 +10,7 @@ import (
 	"github.com/sendgrid/sendgrid-go/helpers/mail"
 )
 
-type Service interface {
+type IService interface {
 	SendEmail(*model.Email) error
 }
 
@@ -20,7 +20,7 @@ type sendgridClient struct {
 	l      logger.Logger
 }
 
-func New(key string, cfg *config.Config, l logger.Logger) Service {
+func New(key string, cfg *config.Config, l logger.Logger) IService {
 	client := sendgrid.NewSendClient(key)
 	return &sendgridClient{
 		client: client,

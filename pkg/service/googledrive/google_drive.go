@@ -26,7 +26,7 @@ type googleService struct {
 }
 
 // New function return Google service
-func New(config *oauth2.Config, appConfig *config.Config) Service {
+func New(config *oauth2.Config, appConfig *config.Config) IService {
 	return &googleService{
 		config:    config,
 		appConfig: appConfig,

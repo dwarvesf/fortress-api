@@ -35,7 +35,7 @@ func (h *handler) BasecampExpenseValidate(c *gin.Context) {
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, ""))
 }
 
-// // BasecampExpense runs expense process in basecamp
+// BasecampExpense runs expense process in basecamp
 func (h *handler) BasecampExpense(c *gin.Context) {
 	msg, err := basecampWebhookMessageFromCtx(c)
 	if err != nil {

@@ -10,7 +10,7 @@ import (
 
 // IStore implement operation method
 type IStore interface {
-	// TODO: rename to GetList
+	// GetSalary TODO: rename to GetList
 	GetSalary(db *gorm.DB, year int, month int) ([]model.Employee, error)
 	Get(db *gorm.DB, userId string, year, month int) (*model.Payroll, error)
 	Create(db *gorm.DB, p *model.Payroll) error

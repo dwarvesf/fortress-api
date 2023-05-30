@@ -1,4 +1,4 @@
-package bonus
+package employeebonus
 
 import (
 	"gorm.io/gorm"
@@ -6,7 +6,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/model"
 )
 
-// Store is an interface that abstract database method for bonus
+// IStore is an interface that abstract database method for bonus
 type IStore interface {
 	GetByUserID(db *gorm.DB, id model.UUID) ([]model.EmployeeBonus, error)
 }

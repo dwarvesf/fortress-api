@@ -1,4 +1,4 @@
-package bonus
+package employeebonus
 
 import (
 	"gorm.io/gorm"
@@ -8,7 +8,7 @@ import (
 
 type store struct{}
 
-// New initilize new store for bonus
+// New initialize new store for bonus
 func New() IStore {
 	return &store{}
 }

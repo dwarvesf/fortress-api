@@ -23,8 +23,8 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/service/currency"
 	"github.com/dwarvesf/fortress-api/pkg/store"
-	commissionStore "github.com/dwarvesf/fortress-api/pkg/store/commission"
 	"github.com/dwarvesf/fortress-api/pkg/store/employee"
+	"github.com/dwarvesf/fortress-api/pkg/store/employeecommission"
 	"github.com/dwarvesf/fortress-api/pkg/store/payroll"
 	"github.com/dwarvesf/fortress-api/pkg/utils"
 	"github.com/dwarvesf/fortress-api/pkg/utils/timeutil"
@@ -255,13 +255,13 @@ func GetPayrollDetailHandler(h *handler, month, year, batch int, email string) (
 			// !isForecast
 			if batchDate.Month() <= time.Now().Month() || (batchDate.Month() == 12 && time.Now().Month() == 1) {
 				toDate := batchDate.AddDate(0, 1, 0)
-				commissionQuery := commissionStore.Query{
+				commissionQuery := employeecommission.Query{
 					EmployeeID: payrolls[i].Employee.ID.String(),
 					IsPaid:     isPaid,
 					FromDate:   &batchDate,
 					ToDate:     &toDate,
 				}
-				userCommissions, err := h.store.Commission.Get(h.repo.DB(), commissionQuery)
+				userCommissions, err := h.store.EmployeeCommission.Get(h.repo.DB(), commissionQuery)
 				if err != nil {
 					return nil, err
 				}
@@ -279,7 +279,7 @@ func GetPayrollDetailHandler(h *handler, month, year, batch int, email string) (
 					notes = append(notes, fmt.Sprintf("%v (%v)", j, utils.FormatCurrencyAmount(duplicate[j])))
 				}
 
-				bonusExplain := []model.CommissionExplain{}
+				var bonusExplain []model.CommissionExplain
 				if len(payrolls[i].ProjectBonusExplain) > 0 {
 					if err := json.Unmarshal(payrolls[i].ProjectBonusExplain, &bonusExplain); err != nil {
 						return nil, errs.ErrCannotReadProjectBonusExplain
@@ -485,7 +485,7 @@ func getCommissionExplains(h *handler, p *model.Payroll, markPaid bool) ([]model
 	}
 	if markPaid {
 		for i := range commissionExplains {
-			err := h.store.Commission.MarkPaid(h.repo.DB(), commissionExplains[i].ID)
+			err := h.store.EmployeeCommission.MarkPaid(h.repo.DB(), commissionExplains[i].ID)
 			if err != nil {
 				return nil, err
 			}
@@ -781,7 +781,7 @@ func (h *handler) commitPayrollHandler(month, year, batch int, email string) err
 }
 
 func markBonusAsDone(h *handler, p *model.Payroll) error {
-	projectBonusExplains := []model.ProjectBonusExplain{}
+	var projectBonusExplains []model.ProjectBonusExplain
 	err := json.Unmarshal(
 		p.ProjectBonusExplain,
 		&projectBonusExplains,
