@@ -330,11 +330,32 @@ func (n *notionService) GetPage(pageID string) (nt.Page, error) {
 	return res, nil
 }
 
+func (n *notionService) GetPages() (clientPages nt.SearchResponse, err error) {
+
+	ctx := context.Background()
+
+	res, err := n.notionClient.Search(ctx, &nt.SearchOpts{
+		Query: "SP Digital",
+		Sort:  nil,
+		Filter: &nt.SearchFilter{
+			Value:    "database",
+			Property: "object",
+		},
+		StartCursor: "",
+		PageSize:    1000,
+	})
+	if err != nil {
+		return nt.SearchResponse{}, err
+	}
+
+	return res, nil
+}
+
 func (n *notionService) CreatePage() error {
 	return nil
 }
 
-// create a record in notion database
+// CreateDatabaseRecord create a record in notion database
 func (n *notionService) CreateDatabaseRecord(databaseID string, properties map[string]interface{}) (string, error) {
 	ctx := context.Background()
 

@@ -7,6 +7,7 @@ import (
 
 type IService interface {
 	GetPage(pageID string) (clientPage nt.Page, err error)
+	GetPages() (clientPages nt.SearchResponse, err error)
 	GetDatabase(databaseID string, filter *nt.DatabaseQueryFilter, sorts []nt.DatabaseQuerySort, pageSize int) (database *nt.DatabaseQueryResponse, err error)
 	GetDatabaseWithStartCursor(databaseID string, startCursor string) (*nt.DatabaseQueryResponse, error)
 	FindClientPageForChangelog(clientID string) (clientPage nt.Page, err error)

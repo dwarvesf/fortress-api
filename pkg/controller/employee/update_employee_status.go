@@ -3,8 +3,8 @@ package employee
 import (
 	"context"
 	"errors"
-	"time"
-
+	"github.com/dstotijn/go-notion"
+	"github.com/k0kubun/pp/v3"
 	"gorm.io/gorm"
 	"gorm.io/gorm/utils"
 
@@ -22,7 +22,7 @@ func (r *controller) UpdateEmployeeStatus(employeeID string, body UpdateWorkingS
 		"method":     "UpdateEmployeeStatus",
 	})
 
-	now := time.Now()
+	//now := time.Now()
 	e, err := r.store.Employee.One(r.repo.DB(), employeeID, true)
 	if err != nil {
 		l.Errorf(err, "failed to get Employee ", employeeID)
@@ -31,30 +31,30 @@ func (r *controller) UpdateEmployeeStatus(employeeID string, body UpdateWorkingS
 		}
 		return nil, err
 	}
-
-	e.WorkingStatus = body.EmployeeStatus
-	e.LeftDate = &now
-
-	if body.EmployeeStatus != model.WorkingStatusLeft {
-		e.LeftDate = nil
-	}
-
-	tx, done := r.repo.NewTransaction()
-	defer func() {
-		_ = done(nil)
-	}()
-
-	_, err = r.store.Employee.UpdateSelectedFieldsByID(tx.DB(), employeeID, *e, "working_status", "left_date")
-	if err != nil {
-		return nil, done(err)
-	}
+	//
+	//e.WorkingStatus = body.EmployeeStatus
+	//e.LeftDate = &now
+	//
+	//if body.EmployeeStatus != model.WorkingStatusLeft {
+	//	e.LeftDate = nil
+	//}
+	//
+	//tx, done := r.repo.NewTransaction()
+	//defer func() {
+	//	_ = done(nil)
+	//}()
+	//
+	//_, err = r.store.Employee.UpdateSelectedFieldsByID(tx.DB(), employeeID, *e, "working_status", "left_date")
+	//if err != nil {
+	//	return nil, done(err)
+	//}
 
 	//If employee working status is left, do off-boarding flow
 	if body.EmployeeStatus == model.WorkingStatusLeft {
-		err = r.store.ProjectMember.UpdateMemberToInActiveByID(tx.DB(), employeeID, &now)
-		if err != nil {
-			return nil, done(err)
-		}
+		//err = r.store.ProjectMember.UpdateMemberToInActiveByID(tx.DB(), employeeID, &now)
+		//if err != nil {
+		//	return nil, done(err)
+		//}
 
 		// Do Off-boarding process
 		r.processOffBoardingEmployee(l, e)
@@ -88,6 +88,11 @@ func (r *controller) processOffBoardingEmployee(l logger.Logger, e *model.Employ
 	}
 
 	err = r.removeGithubFromOrganization(e)
+	if err != nil {
+		l.Errorf(err, "failed to remove github user from organization", "employeeID", e.ID.String())
+	}
+
+	err = r.removeNotionPageAccess(e)
 	if err != nil {
 		l.Errorf(err, "failed to remove github user from organization", "employeeID", e.ID.String())
 	}
@@ -189,5 +194,26 @@ func (r *controller) removeGithubFromOrganization(e *model.Employee) error {
 		}
 	}
 
+	return nil
+}
+
+func (r *controller) removeNotionPageAccess(e *model.Employee) error {
+	//if r.config.Env != "prod" {
+	//	return nil
+	//}
+
+	rs, err := r.service.Notion.GetPages()
+	if err != nil {
+		return err
+	}
+
+	var pages []notion.Database
+
+	for _, itm := range rs.Results {
+		pages = append(pages, itm.(notion.Database))
+	}
+
+	p := pages[0]
+	pp.Println(p)
 	return nil
 }
