@@ -151,6 +151,7 @@ func ToEmployeeMap(employees []*Employee) map[UUID]Employee {
 }
 
 func (e Employee) GetFirstNameFromFullName() string {
+
 	if e.FullName == "" {
 		return ""
 	}

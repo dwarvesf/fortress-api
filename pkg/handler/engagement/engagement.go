@@ -9,6 +9,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/view"
 	"github.com/gin-gonic/gin"
+	"github.com/shopspring/decimal"
 	"net/http"
 )
 
@@ -56,16 +57,53 @@ func (h *handler) UpsertRollup(c *gin.Context) {
 		"body":    body,
 	})
 
+	discordUserID, err := decimal.NewFromString(body.DiscordUserID)
+	if err != nil {
+		l.Error(err, "unable to convert discordUserID to decimal")
+		c.JSON(
+			http.StatusBadRequest,
+			view.CreateResponse[any](nil, nil, err, body, ""),
+		)
+		return
+	}
+	lastMessageID, err := decimal.NewFromString(body.LastMessageID)
+	if err != nil {
+		l.Error(err, "unable to convert lastMessageID to decimal")
+		c.JSON(
+			http.StatusBadRequest,
+			view.CreateResponse[any](nil, nil, err, body, ""),
+		)
+		return
+	}
+	channelID, err := decimal.NewFromString(body.LastMessageID)
+	if err != nil {
+		l.Error(err, "unable to convert channelID to decimal")
+		c.JSON(
+			http.StatusBadRequest,
+			view.CreateResponse[any](nil, nil, err, body, ""),
+		)
+		return
+	}
+	categoryID, err := decimal.NewFromString(body.LastMessageID)
+	if err != nil {
+		l.Error(err, "unable to convert categoryID to decimal")
+		c.JSON(
+			http.StatusBadRequest,
+			view.CreateResponse[any](nil, nil, err, body, ""),
+		)
+		return
+	}
+
 	tx, done := h.repo.NewTransaction()
 	rollup := &model.EngagementsRollup{
-		DiscordUserID:   body.DiscordUserID,
-		LatestMessageID: body.LatestMessageID,
-		ChannelID:       body.ChannelID,
-		CategoryID:      body.CategoryID,
-		MessageCount:    body.MessageCount,
-		ReactionCount:   body.ReactionCount,
+		DiscordUserID: discordUserID,
+		LastMessageID: lastMessageID,
+		ChannelID:     channelID,
+		CategoryID:    categoryID,
+		MessageCount:  body.MessageCount,
+		ReactionCount: body.ReactionCount,
 	}
-	rollup, err := h.store.EngagementsRollup.Upsert(tx.DB(), rollup)
+	rollup, err = h.store.EngagementsRollup.Upsert(tx.DB(), rollup)
 	if err != nil {
 		l.Error(err, "unable to upsert engagements rollup")
 		c.JSON(
@@ -82,4 +120,6 @@ func (h *handler) UpsertRollup(c *gin.Context) {
 }
 
 func (h *handler) GetLastMessageID(c *gin.Context) {
+	channelID := c.Param("channel-id")
+	h.logger.Info(channelID)
 }
