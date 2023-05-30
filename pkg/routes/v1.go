@@ -309,7 +309,7 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 			h.Engagement.UpsertRollup,
 		)
 		engagementsGroup.GET(
-			"/rollup/last-message-id",
+			"/channels/:channel-id/last-message-id",
 			amw.WithAuth,
 			pmw.WithPerm(model.PermissionEngagementMetricsRead),
 			h.Engagement.GetLastMessageID,
