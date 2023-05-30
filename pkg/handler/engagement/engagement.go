@@ -75,7 +75,7 @@ func (h *handler) UpsertRollup(c *gin.Context) {
 		)
 		return
 	}
-	channelID, err := decimal.NewFromString(body.LastMessageID)
+	channelID, err := decimal.NewFromString(body.ChannelID)
 	if err != nil {
 		l.Error(err, "unable to convert channelID to decimal")
 		c.JSON(
@@ -84,7 +84,7 @@ func (h *handler) UpsertRollup(c *gin.Context) {
 		)
 		return
 	}
-	categoryID, err := decimal.NewFromString(body.LastMessageID)
+	categoryID, err := decimal.NewFromString(body.CategoryID)
 	if err != nil {
 		l.Error(err, "unable to convert categoryID to decimal")
 		c.JSON(

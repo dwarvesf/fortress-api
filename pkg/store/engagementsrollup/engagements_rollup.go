@@ -23,8 +23,9 @@ func (s *store) Upsert(db *gorm.DB, record *model.EngagementsRollup) (*model.Eng
 				},
 				DoUpdates: clause.Assignments(
 					map[string]interface{}{
-						"message_count":  gorm.Expr("engagements_rollup.message_count + excluded.message_count"),
-						"reaction_count": gorm.Expr("engagements_rollup.reaction_count + excluded.reaction_count"),
+						"message_count":   gorm.Expr("engagements_rollup.message_count + excluded.message_count"),
+						"reaction_count":  gorm.Expr("engagements_rollup.reaction_count + excluded.reaction_count"),
+						"last_message_id": gorm.Expr("excluded.last_message_id"),
 					},
 				),
 			},
