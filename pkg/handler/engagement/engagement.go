@@ -3,6 +3,7 @@ package engagement
 import (
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/controller"
+	"github.com/dwarvesf/fortress-api/pkg/handler/engagement/request"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service"
@@ -40,9 +41,21 @@ func New(
 	}
 }
 
+// UpsertRollup godoc
+// @Summary Upsert engagement rollup
+// @Description Upsert engagement rollup
+// @Tags Engagement
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "jwt token"
+// @Param Body body request.UpsertRollupRequest true "Body"
+// @Success 200 {object} view.MessageResponse
+// @Success 400 {object} view.ErrorResponse
+// @Success 500 {object} view.ErrorResponse
+// @Router /engagements/rollup [post]
 func (h *handler) UpsertRollup(c *gin.Context) {
 
-	body := UpsertRollupRequest{}
+	body := request.UpsertRollupRequest{}
 	if err := c.ShouldBindJSON(&body); err != nil {
 		c.JSON(
 			http.StatusBadRequest,
@@ -119,6 +132,18 @@ func (h *handler) UpsertRollup(c *gin.Context) {
 	)
 }
 
+// GetLastMessageID godoc
+// @Summary Get local last message ID of a channel
+// @Description Get local last message ID of a channel
+// @Tags Engagement
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "jwt token"
+// @Param channel-id path string true "Discord Channel ID"
+// @Success 200 {object} view.MessageResponse
+// @Success 400 {object} view.ErrorResponse
+// @Success 500 {object} view.ErrorResponse
+// @Router /engagements/channel/:channel-id/last-message-id [get]
 func (h *handler) GetLastMessageID(c *gin.Context) {
 	channelID := c.Param("channel-id")
 	l := h.logger.Fields(logger.Fields{

@@ -1,4 +1,4 @@
-package engagement
+package request
 
 type UpsertRollupRequest struct {
 	DiscordUserID string `json:"discordUserID" binding:"required"`
