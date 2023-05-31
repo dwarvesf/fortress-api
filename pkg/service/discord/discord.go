@@ -195,7 +195,7 @@ func (d *discordClient) RemoveRole(userID string, roleID string) error {
 type Roles discordgo.Roles
 
 func (r Roles) DwarvesRoles() []*discordgo.Role {
-	roleMap := getDwarvesRoleMap()
+	roleMap := getDwarvesRolesMap()
 
 	dwarvesRoles := make([]*discordgo.Role, 0)
 	for _, dRole := range r {
@@ -218,30 +218,24 @@ func (r Roles) ByCode(code string) *discordgo.Role {
 	return nil
 }
 
-func getDwarvesRoleMap() map[string]bool {
-	roleMap := make(map[string]bool)
-	var dwarvesRoleCodes = []string{
-		"moderator",
-		"dwarf",
-		"booster",
-		"apprentice",
-		"crafter",
-		"specialist",
-		"principal",
-		"peeps",
-		"learning",
-		"engagement",
-		"delivery",
-		"labs",
-		"baby dwarf",
-		"ladies",
-		"sers",
-		"consultant",
-		"chad",
+func getDwarvesRolesMap() map[string]bool {
+	return map[string]bool{
+		"moderator":  true,
+		"dwarf":      true,
+		"booster":    true,
+		"apprentice": true,
+		"crafter":    true,
+		"specialist": true,
+		"principal":  true,
+		"peeps":      true,
+		"learning":   true,
+		"engagement": true,
+		"delivery":   true,
+		"labs":       true,
+		"baby dwarf": true,
+		"ladies":     true,
+		"sers":       true,
+		"consultant": true,
+		"chad":       true,
 	}
-	for _, code := range dwarvesRoleCodes {
-		roleMap[code] = true
-	}
-
-	return roleMap
 }
