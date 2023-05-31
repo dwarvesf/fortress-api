@@ -143,6 +143,7 @@ Check out dirs under `/pkg/store`
   - Check if the new route is in a new group or an existing one
     - Implement `interface IHandler` in `pkg/handler/[name]/interface.go`
     - Implement handling functions that takes a `*gin.Context` in `pkg/handler/[name]/[name].go`
+    - Add Swagger doc to handler
     - Add the sub handler to the main handler in `pkg/handler/handler.go`
   - Check if the new route needs authentication
   - Check if the new route needs authorization (permission)
