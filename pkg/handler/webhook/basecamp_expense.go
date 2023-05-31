@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/dwarvesf/fortress-api/pkg/consts"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	bc "github.com/dwarvesf/fortress-api/pkg/service/basecamp"
+	"github.com/dwarvesf/fortress-api/pkg/service/basecamp/consts"
 	bcModel "github.com/dwarvesf/fortress-api/pkg/service/basecamp/model"
 )
 
@@ -149,11 +149,11 @@ func (h *handler) ExtractExpenseData(msg model.BasecampWebhookMessage) (*bc.Base
 
 	// extract reason
 	datetime := fmt.Sprintf(" %s %v", msg.Recording.UpdatedAt.Month().String(), msg.Recording.UpdatedAt.Year())
-	res.Reason = strings.TrimSpace((parts[0]))
+	res.Reason = strings.TrimSpace(parts[0])
 	res.Reason += datetime
 
 	// extract amount
-	amount := h.service.Basecamp.ExtractBasecampExpenseAmount(strings.TrimSpace((parts[1])))
+	amount := h.service.Basecamp.ExtractBasecampExpenseAmount(strings.TrimSpace(parts[1]))
 	if amount == 0 {
 		err := errors.New("invalid amount section of expense format")
 		return nil, err

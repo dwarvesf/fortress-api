@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dwarvesf/fortress-api/pkg/consts"
 	"github.com/dwarvesf/fortress-api/pkg/model"
+	"github.com/dwarvesf/fortress-api/pkg/service/basecamp/consts"
 	bcModel "github.com/dwarvesf/fortress-api/pkg/service/basecamp/model"
 	"github.com/dwarvesf/fortress-api/pkg/service/currency"
 	commissionStore "github.com/dwarvesf/fortress-api/pkg/store/employeecommission"
