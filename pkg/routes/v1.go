@@ -25,7 +25,7 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 		cronjob.POST("/sync-monthly-accounting-todo", amw.WithAuth, pmw.WithPerm(model.PermissionCronjobExecute), h.Accounting.CreateAccountingTodo)
 		cronjob.PUT("/sync-project-member-status", amw.WithAuth, pmw.WithPerm(model.PermissionCronjobExecute), h.Project.SyncProjectMemberStatus)
 		cronjob.POST("/store-vault-transaction", amw.WithAuth, pmw.WithPerm(model.PermissionCronjobExecute), h.Vault.StoreVaultTransaction)
-		cronjob.POST("/index-discord-engagements", amw.WithAuth, pmw.WithPerm(model.PermissionEngagementMetricsWrite), h.Engagement.IndexMessages)
+		cronjob.POST("/index-engagement-messages", amw.WithAuth, pmw.WithPerm(model.PermissionEngagementMetricsWrite), h.Engagement.IndexMessages)
 	}
 
 	/////////////////
