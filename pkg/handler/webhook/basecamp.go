@@ -1,6 +1,7 @@
 package webhook
 
 import (
+	bcModel "github.com/dwarvesf/fortress-api/pkg/service/basecamp/model"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -18,15 +19,15 @@ func basecampWebhookMessageFromCtx(c *gin.Context) (model.BasecampWebhookMessage
 	return msg, nil
 }
 
-// BasecampExpenseValidate dry-run expense request for validation
-func (h *handler) BasecampExpenseValidate(c *gin.Context) {
+// ValidateBasecampExpense dry-run expense request for validation
+func (h *handler) ValidateBasecampExpense(c *gin.Context) {
 	msg, err := basecampWebhookMessageFromCtx(c)
 	if err != nil {
 		c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, ""))
 		return
 	}
 
-	err = h.BasecampExpenseValidateHandler(msg)
+	err = h.basecampExpenseValidate(msg)
 	if err != nil {
 		c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
@@ -35,15 +36,15 @@ func (h *handler) BasecampExpenseValidate(c *gin.Context) {
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, ""))
 }
 
-// BasecampExpense runs expense process in basecamp
-func (h *handler) BasecampExpense(c *gin.Context) {
+// CreateBasecampExpense runs expense process in basecamp
+func (h *handler) CreateBasecampExpense(c *gin.Context) {
 	msg, err := basecampWebhookMessageFromCtx(c)
 	if err != nil {
 		c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, ""))
 		return
 	}
 
-	err = h.BasecampExpenseHandler(msg, msg.Read(c.Request.Body))
+	err = h.createBasecampExpense(msg, msg.Read(c.Request.Body))
 	if err != nil {
 		c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
@@ -105,7 +106,7 @@ func (h *handler) MarkInvoiceAsPaidViaBasecamp(c *gin.Context) {
 func (h *handler) markInvoiceAsPaid(msg *model.BasecampWebhookMessage) error {
 	invoice, err := h.GetInvoiceViaBasecampTitle(msg)
 	if err != nil {
-		h.service.Basecamp.CommentResult(msg.Recording.Bucket.ID, msg.Recording.ID, h.service.Basecamp.BuildFailedComment(err.Error()))
+		h.worker.Enqueue(bcModel.BasecampCommentMsg, h.service.Basecamp.BuildCommentMessage(msg.Recording.Bucket.ID, msg.Recording.ID, err.Error(), bcModel.CommentMsgTypeFailed))
 		return err
 	}
 
@@ -114,7 +115,6 @@ func (h *handler) markInvoiceAsPaid(msg *model.BasecampWebhookMessage) error {
 	}
 
 	if _, err := h.controller.Invoice.MarkInvoiceAsPaidByBasecampWebhookMessage(invoice, msg); err != nil {
-		h.service.Basecamp.CommentResult(msg.Recording.Bucket.ID, msg.Recording.ID, h.service.Basecamp.BuildFailedComment(err.Error()))
 		return err
 	}
 

@@ -6,6 +6,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/store"
+	"github.com/dwarvesf/fortress-api/pkg/worker"
 )
 
 type handler struct {
@@ -15,16 +16,18 @@ type handler struct {
 	logger     logger.Logger
 	repo       store.DBRepo
 	config     *config.Config
+	worker     *worker.Worker
 }
 
 // New returns a handler
-func New(ctrl *controller.Controller, store *store.Store, repo store.DBRepo, service *service.Service, logger logger.Logger, cfg *config.Config) IHandler {
+func New(ctrl *controller.Controller, store *store.Store, repo store.DBRepo, service *service.Service, logger logger.Logger, cfg *config.Config, worker *worker.Worker) IHandler {
 	return &handler{
 		store:      store,
 		repo:       repo,
 		service:    service,
 		logger:     logger,
 		config:     cfg,
+		worker:     worker,
 		controller: ctrl,
 	}
 }

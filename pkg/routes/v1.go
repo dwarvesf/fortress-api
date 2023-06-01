@@ -38,8 +38,8 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 		{
 			expenseGroup := basecampGroup.Group("/expense")
 			{
-				expenseGroup.POST("/validate", h.Webhook.BasecampExpenseValidate)
-				expenseGroup.POST("", h.Webhook.BasecampExpense)
+				expenseGroup.POST("/validate", h.Webhook.ValidateBasecampExpense)
+				expenseGroup.POST("", h.Webhook.CreateBasecampExpense)
 				expenseGroup.DELETE("", h.Webhook.UncheckBasecampExpense)
 			}
 			operationGroup := basecampGroup.Group("/operation")
