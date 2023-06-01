@@ -871,7 +871,7 @@ func (h *handler) assignDiscordRole(discordName string) error {
 		return nil
 	}
 
-	if h.config.Env != "prod" {
+	if !(h.config.Env == "prod" || h.config.Env == "dev") {
 		return nil
 	}
 
