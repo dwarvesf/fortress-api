@@ -1,7 +1,7 @@
 package consts
 
+// Define basecamp resource id
 const (
-	// Basecamp section
 	WoodlandScheduleID             int64 = 1346305137
 	PlaygroundScheduleID           int64 = 1941398077
 	WoodlandID                           = 9403032
@@ -83,6 +83,11 @@ const (
 	GiangThanBasecampID    = 26160802
 	HelenBasecampID        = 40439249
 	ThuongBasecampID       = 38246363
+	NamNguyenBasecampID    = 21581534
+
+	// BucketName
+	BucketNameWoodLand   = "Woodland"
+	BucketNamePlayGround = "Fortress | Playground"
 
 	// OrgChart
 	ManagementLevel = 3

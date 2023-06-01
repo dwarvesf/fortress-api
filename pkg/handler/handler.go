@@ -79,7 +79,7 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, ctrl *
 		Project:     project.New(ctrl, store, repo, service, logger, cfg),
 		Survey:      survey.New(store, repo, service, logger, cfg),
 		Valuation:   valuation.New(store, repo, service, logger, cfg),
-		Webhook:     webhook.New(ctrl, store, repo, service, logger, cfg),
+		Webhook:     webhook.New(ctrl, store, repo, service, logger, cfg, worker),
 		Vault:       vault.New(store, repo, service, logger, cfg),
 	}
 }

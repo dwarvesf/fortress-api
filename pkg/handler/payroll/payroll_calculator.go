@@ -15,7 +15,7 @@ import (
 )
 
 // calculatePayrolls return list of payrolls for all given users in batchDate
-func calculatePayrolls(h *handler, users []*model.Employee, batchDate time.Time) (res []*model.Payroll, err error) {
+func (h *handler) calculatePayrolls(users []*model.Employee, batchDate time.Time) (res []*model.Payroll, err error) {
 	isForecast := false
 	batch := batchDate.Day()
 	// HACK: sneak quang into this
@@ -33,12 +33,14 @@ func calculatePayrolls(h *handler, users []*model.Employee, batchDate time.Time)
 	expenseID := consts.PlaygroundExpenseTodoID
 	opsID := consts.PlaygroundID
 	opsExpenseID := consts.PlaygroundExpenseTodoID
+	approver := consts.NamNguyenBasecampID
 
 	if h.config.Env == "prod" {
 		woodlandID = consts.WoodlandID
 		expenseID = consts.ExpenseTodoID
 		opsID = consts.OperationID
 		opsExpenseID = consts.OpsExpenseTodoID
+		approver = consts.HanBasecampID
 	}
 
 	opsTodoLists, err := h.service.Basecamp.Todo.GetAllInList(opsExpenseID, opsID)
@@ -46,6 +48,7 @@ func calculatePayrolls(h *handler, users []*model.Employee, batchDate time.Time)
 		h.logger.Error(err, "can't get ops expense todo")
 		return nil, err
 	}
+
 	for _, exps := range opsTodoLists {
 		isApproved := false
 		cmts, err := h.service.Basecamp.Comment.Gets(opsID, exps.ID)
@@ -53,12 +56,14 @@ func calculatePayrolls(h *handler, users []*model.Employee, batchDate time.Time)
 			h.logger.Error(err, "can't get basecamp approved message")
 			return nil, err
 		}
+
 		for _, cmt := range cmts {
-			if cmt.Creator.ID == consts.HanBasecampID && strings.Contains(strings.ToLower(cmt.Content), "approve") {
+			if cmt.Creator.ID == approver && strings.Contains(strings.ToLower(cmt.Content), "approve") {
 				isApproved = true
 				break
 			}
 		}
+
 		if isApproved {
 			expenses = append(expenses, exps)
 		}
@@ -70,6 +75,7 @@ func calculatePayrolls(h *handler, users []*model.Employee, batchDate time.Time)
 		h.logger.Error(err, "can't get groups expense")
 		return nil, err
 	}
+
 	for i := range todolists {
 		e, err := h.service.Basecamp.Todo.GetAllInList(todolists[i].ID, woodlandID)
 		if err != nil {
@@ -84,7 +90,7 @@ func calculatePayrolls(h *handler, users []*model.Employee, batchDate time.Time)
 				return nil, err
 			}
 			for k := range cmts {
-				if cmts[k].Creator.ID == consts.HanBasecampID && strings.Contains(strings.ToLower(cmts[k].Content), "approve") {
+				if cmts[k].Creator.ID == approver && strings.Contains(strings.ToLower(cmts[k].Content), "approve") {
 					isApproved = true
 					break
 				}
@@ -95,7 +101,7 @@ func calculatePayrolls(h *handler, users []*model.Employee, batchDate time.Time)
 		}
 	}
 
-	accountingExpenses, err := getAccountingExpense(h, batch)
+	accountingExpenses, err := h.getAccountingExpense(batch)
 	if err != nil {
 		h.logger.Error(err, "can't get accounting todo")
 		return nil, err
@@ -130,7 +136,7 @@ func calculatePayrolls(h *handler, users []*model.Employee, batchDate time.Time)
 		// TODO...
 		// get bonus
 		if !isForecast {
-			bonus, commission, reimbursementAmount, bonusExplains, commissionExplains = getBonus(h, *users[i], batchDate, expenses)
+			bonus, commission, reimbursementAmount, bonusExplains, commissionExplains = h.getBonus(*users[i], batchDate, expenses)
 		}
 
 		commBytes, err := json.Marshal(&commissionExplains)
@@ -223,12 +229,7 @@ func calculatePayrolls(h *handler, users []*model.Employee, batchDate time.Time)
 	return res, nil
 }
 
-func getBonus(
-	h *handler,
-	u model.Employee,
-	batchDate time.Time,
-	expenses []bcModel.Todo,
-) (bonus, commission, reimbursementAmount model.VietnamDong, bonusExplain, commissionExplain []model.CommissionExplain) {
+func (h *handler) getBonus(u model.Employee, batchDate time.Time, expenses []bcModel.Todo) (bonus, commission, reimbursementAmount model.VietnamDong, bonusExplain, commissionExplain []model.CommissionExplain) {
 	h.logger.Info("get bonus")
 	var explanation string
 	bonusRecords, err := h.store.Bonus.GetByUserID(h.repo.DB(), u.ID)
@@ -264,7 +265,7 @@ func getBonus(
 			}
 		}
 		if hasReimbursement {
-			name, amount, err := getReimbursement(h, expenses[i].Title)
+			name, amount, err := h.getReimbursement(expenses[i].Title)
 			if err != nil {
 				return
 			}
@@ -384,7 +385,7 @@ func calculatePartialPayroll(startDate time.Time, endDate time.Time, dueDate tim
 	return total, fmt.Sprintf("Work from %s to %s", startDate.Format("2 Jan"), endDate.Format("2 Jan")), nil
 }
 
-func getReimbursement(h *handler, expense string) (string, model.VietnamDong, error) {
+func (h *handler) getReimbursement(expense string) (string, model.VietnamDong, error) {
 	var amount model.VietnamDong
 	splits := strings.Split(expense, "|")
 	if len(splits) < 3 {
@@ -405,7 +406,7 @@ func getReimbursement(h *handler, expense string) (string, model.VietnamDong, er
 	return strings.TrimSpace(splits[0]), amount.Format(), nil
 }
 
-func getAccountingExpense(h *handler, batch int) (res []bcModel.Todo, err error) {
+func (h *handler) getAccountingExpense(batch int) (res []bcModel.Todo, err error) {
 	accountingID := consts.AccountingID
 	accountingTodoID := consts.AccountingTodoID
 
