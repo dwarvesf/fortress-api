@@ -229,6 +229,17 @@ func AggregateMessages(l logger.Logger, messages []*discordgo.Message) []*model.
 	return records
 }
 
+// IndexMessages godoc
+// @Summary Index messages of provided Discord server
+// @Description Index messages of provided Discord server
+// @Tags Engagement
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "jwt token"
+// @Success 200 {object} view.MessageResponse
+// @Success 400 {object} view.ErrorResponse
+// @Success 500 {object} view.ErrorResponse
+// @Router /cronjobs/index-engagement-messages [post]
 func (h *handler) IndexMessages(c *gin.Context) {
 	l := h.logger.Fields(
 		logger.Fields{

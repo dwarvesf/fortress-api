@@ -4736,6 +4736,35 @@ paths:
       summary: Sync audit info from Notion to database
       tags:
       - Audit
+  /cronjobs/index-engagement-messages:
+    post:
+      consumes:
+      - application/json
+      description: Index messages of provided Discord server
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Index messages of provided Discord server
+      tags:
+      - Engagement
   /dashboards/engagement/detail:
     get:
       consumes:
