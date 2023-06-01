@@ -1,6 +1,8 @@
 package engagement
 
 import (
+	"fmt"
+	"github.com/bwmarrin/discordgo"
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/controller"
 	"github.com/dwarvesf/fortress-api/pkg/handler/engagement/request"
@@ -169,5 +171,119 @@ func (h *handler) GetLastMessageID(c *gin.Context) {
 	)
 }
 
+func AggregateMessages(l logger.Logger, messages []*discordgo.Message) []*model.EngagementsRollup {
+	userIDToRecord := make(map[decimal.Decimal]*model.EngagementsRollup)
+
+	for _, message := range messages {
+		l := l.AddField("messageID", message.ID)
+		if message.Author == nil {
+			l.Warn("missing author")
+			continue
+		}
+
+		userID, err := decimal.NewFromString(message.Author.ID)
+		if err != nil {
+			l := l.AddField("userID", message.Author.ID)
+			l.Error(err, "unable to convert user ID to decimal")
+			continue
+		}
+		messageID, err := decimal.NewFromString(message.ID)
+		if err != nil {
+			l := l.AddField("messageID", message.ID)
+			l.Error(err, "unable to convert message ID to decimal")
+			continue
+		}
+		channelID, err := decimal.NewFromString(message.ChannelID)
+		if err != nil {
+			l := l.AddField("channelID", message.ChannelID)
+			l.Error(err, "unable to convert channel ID to decimal")
+			continue
+		}
+		record, ok := userIDToRecord[userID]
+		if ok {
+			record.MessageCount += 1
+			record.LastMessageID = messageID
+		} else {
+			userIDToRecord[userID] = &model.EngagementsRollup{
+				DiscordUserID:   userID,
+				LastMessageID:   messageID,
+				DiscordUsername: fmt.Sprintf("%s#%s", message.Author.Username, message.Author.Discriminator),
+				ChannelID:       channelID,
+				MessageCount:    1,
+			}
+		}
+	}
+
+	records := make([]*model.EngagementsRollup, 0, len(userIDToRecord))
+	for _, record := range userIDToRecord {
+		records = append(records, record)
+	}
+
+	return records
+}
+
 func (h *handler) IndexMessages(c *gin.Context) {
+	l := h.logger.Fields(
+		logger.Fields{
+			"guildID": h.config.Discord.IDs.DwarvesGuild,
+		},
+	)
+	channels, err := h.service.Discord.GetChannels()
+	if err != nil {
+		l.Error(err, "get channels error")
+		c.JSON(
+			http.StatusInternalServerError,
+			view.CreateResponse[any](nil, nil, err, nil, ""),
+		)
+		return
+	}
+
+	tx, done := h.repo.NewTransaction()
+	for _, channel := range channels {
+		if channel.LastMessageID == "" {
+			continue
+		}
+
+		l := l.AddField("channelID", channel.ID)
+		cursorMessageID, err := h.store.EngagementsRollup.GetLastMessageID(tx.DB(), channel.ID)
+		if err != nil {
+			l.Error(done(err), "get cursor message id error")
+			c.JSON(
+				http.StatusInternalServerError,
+				view.CreateResponse[any](nil, nil, err, nil, ""),
+			)
+			return
+		}
+		messages, err := h.service.Discord.GetMessagesAfterCursor(
+			channel.ID,
+			cursorMessageID,
+			channel.LastMessageID,
+		)
+		if err != nil {
+			l := l.AddField("cursorMessageID", cursorMessageID)
+			l.Error(err, "get messages after cursor error")
+			c.JSON(
+				http.StatusInternalServerError,
+				view.CreateResponse[any](nil, nil, err, nil, ""),
+			)
+			return
+		}
+		records := AggregateMessages(l, messages)
+		for _, record := range records {
+			_, err := h.store.EngagementsRollup.Upsert(tx.DB(), record)
+			if err != nil {
+				l.Error(done(err), "upsert record error")
+				c.JSON(
+					http.StatusInternalServerError,
+					view.CreateResponse[any](nil, nil, err, nil, ""),
+				)
+				return
+			}
+		}
+	}
+
+	c.JSON(
+		http.StatusOK,
+		view.CreateResponse[any]("success", nil, done(nil), nil, ""),
+	)
 }
