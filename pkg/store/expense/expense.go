@@ -22,7 +22,7 @@ func (s *store) Delete(db *gorm.DB, e *model.Expense) (*model.Expense, error) {
 }
 
 func (s *store) Update(db *gorm.DB, e *model.Expense) (*model.Expense, error) {
-	return e, db.Model(&model.Expense{}).Updates(&e).Error
+	return e, db.Model(&model.Expense{}).Where("id = ?", e.ID).Updates(&e).First(&e).Error
 }
 
 func (s *store) GetValuation(db *gorm.DB, y int) (*model.CurrencyView, error) {
