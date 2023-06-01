@@ -89,5 +89,6 @@ ALTER TABLE invoices
 -- +migrate Down
 DROP TABLE IF EXISTS invoices;
 DROP TABLE IF EXISTS bank_accounts;
+DROP TABLE IF EXISTS base_salaries;
 DROP TABLE IF EXISTS currencies;
 DROP TYPE IF EXISTS invoice_statuses;
