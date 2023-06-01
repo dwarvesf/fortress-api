@@ -1,6 +1,9 @@
 -- CRONJOB
 INSERT INTO public.role_permissions (id, deleted_at, created_at, updated_at, role_id, permission_id) VALUES
-('35db0910-66e6-4362-9082-9eb800730c74', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '349876e0-4d3b-463a-a9b0-4083b3ebcd83', '475d8075-aec7-4d75-aa79-dc90c9dd9edb');
+('35db0910-66e6-4362-9082-9eb800730c74', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '349876e0-4d3b-463a-a9b0-4083b3ebcd83', '475d8075-aec7-4d75-aa79-dc90c9dd9edb'),
+('05f97a71-c065-4afd-a1e0-39777a933f0c', NULL, '2023-06-01 13:11:15.699280', '2023-06-01 13:11:15.699280', '349876e0-4d3b-463a-a9b0-4083b3ebcd83', '38a36881-7fb0-4003-9a9f-cbcc7eaa3deb'), -- engagementMetrics.read
+('30d86355-0372-4890-807a-7dc96ca6df49', NULL, '2023-06-01 13:11:32.153745', '2023-06-01 13:11:32.153745', '349876e0-4d3b-463a-a9b0-4083b3ebcd83', '70109d50-6ec3-4475-9e45-757514781daf')  -- engagementMetrics.write
+;
 
 -- FORTRESS BIFROST
 INSERT INTO public.role_permissions (id, deleted_at, created_at, updated_at, role_id, permission_id) VALUES
