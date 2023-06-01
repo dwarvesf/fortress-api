@@ -14,6 +14,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/shopspring/decimal"
 	"net/http"
+	"time"
 )
 
 type handler struct {
@@ -23,6 +24,10 @@ type handler struct {
 	logger     logger.Logger
 	repo       store.DBRepo
 	config     *config.Config
+
+	// isIndexingMessages is used to make sure that there cannot be
+	// a second AggregateMessages invocation if the first one is not done
+	isIndexingMessages bool
 }
 
 func New(
@@ -172,7 +177,7 @@ func (h *handler) GetLastMessageID(c *gin.Context) {
 }
 
 func AggregateMessages(l logger.Logger, messages []*discordgo.Message) []*model.EngagementsRollup {
-	userIDToRecord := make(map[decimal.Decimal]*model.EngagementsRollup)
+	userIDMessageIDToRecord := make(map[string]*model.EngagementsRollup)
 
 	for _, message := range messages {
 		l := l.AddField("messageID", message.ID)
@@ -199,12 +204,14 @@ func AggregateMessages(l logger.Logger, messages []*discordgo.Message) []*model.
 			l.Error(err, "unable to convert channel ID to decimal")
 			continue
 		}
-		record, ok := userIDToRecord[userID]
+
+		key := fmt.Sprintf("%s_%s", userID.String(), channelID.String())
+		record, ok := userIDMessageIDToRecord[key]
 		if ok {
 			record.MessageCount += 1
 			record.LastMessageID = messageID
 		} else {
-			userIDToRecord[userID] = &model.EngagementsRollup{
+			userIDMessageIDToRecord[key] = &model.EngagementsRollup{
 				DiscordUserID:   userID,
 				LastMessageID:   messageID,
 				DiscordUsername: fmt.Sprintf("%s#%s", message.Author.Username, message.Author.Discriminator),
@@ -214,8 +221,8 @@ func AggregateMessages(l logger.Logger, messages []*discordgo.Message) []*model.
 		}
 	}
 
-	records := make([]*model.EngagementsRollup, 0, len(userIDToRecord))
-	for _, record := range userIDToRecord {
+	records := make([]*model.EngagementsRollup, 0, len(userIDMessageIDToRecord))
+	for _, record := range userIDMessageIDToRecord {
 		records = append(records, record)
 	}
 
@@ -224,6 +231,26 @@ func AggregateMessages(l logger.Logger, messages []*discordgo.Message) []*model.
 
 func (h *handler) IndexMessages(c *gin.Context) {
 	l := h.logger.Fields(
+		logger.Fields{
+			"handler": "engagement",
+			"method":  "IndexMessages",
+		},
+	)
+
+	if h.isIndexingMessages {
+		l.Warn("handler is indexing messages")
+		c.JSON(
+			503,
+			view.CreateResponse[any]("handler is indexing messages", nil, nil, nil, ""),
+		)
+		return
+	}
+	h.isIndexingMessages = true
+	defer func() {
+		h.isIndexingMessages = false
+	}()
+
+	l = h.logger.Fields(
 		logger.Fields{
 			"guildID": h.config.Discord.IDs.DwarvesGuild,
 		},
@@ -239,7 +266,9 @@ func (h *handler) IndexMessages(c *gin.Context) {
 	}
 
 	tx, done := h.repo.NewTransaction()
+	allMessages := make([]*discordgo.Message, 0)
 	for _, channel := range channels {
+		// TODO: parallelize the code as each channel can be processed singly
 		if channel.LastMessageID == "" {
 			continue
 		}
@@ -268,18 +297,22 @@ func (h *handler) IndexMessages(c *gin.Context) {
 			)
 			return
 		}
-		records := AggregateMessages(l, messages)
-		for _, record := range records {
-			_, err := h.store.EngagementsRollup.Upsert(tx.DB(), record)
-			if err != nil {
-				l.Error(done(err), "upsert record error")
-				c.JSON(
-					http.StatusInternalServerError,
-					view.CreateResponse[any](nil, nil, err, nil, ""),
-				)
-				return
-			}
+		allMessages = append(allMessages, messages...)
+	}
+
+	records := AggregateMessages(l, allMessages)
+	for _, record := range records {
+		_, err := h.store.EngagementsRollup.Upsert(tx.DB(), record)
+		if err != nil {
+			l.Error(done(err), "upsert record error")
+			c.JSON(
+				http.StatusInternalServerError,
+				view.CreateResponse[any](nil, nil, err, nil, ""),
+			)
+			return
 		}
+		// wait 500ms after each insert to avoid overwhelming the database
+		time.Sleep(500 * time.Millisecond)
 	}
 
 	c.JSON(

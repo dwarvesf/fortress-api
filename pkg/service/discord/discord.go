@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/dwarvesf/fortress-api/pkg/config"
@@ -263,7 +264,7 @@ func (d *discordClient) GetMessagesAfterCursor(
 	for cursorMessageIDUint < lastMessageIDUint {
 		messages, err := d.session.ChannelMessages(
 			channelID,
-			100,
+			100, // 100 is the maximal number allowed
 			"",
 			cursorMessageID,
 			"",
@@ -280,6 +281,8 @@ func (d *discordClient) GetMessagesAfterCursor(
 		if err != nil {
 			return nil, err
 		}
+		// a pause is needed to avoid Discord's rate limiting
+		time.Sleep(500 * time.Millisecond)
 	}
 
 	return allMessages, nil
