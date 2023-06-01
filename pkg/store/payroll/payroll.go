@@ -51,7 +51,7 @@ func (s *store) GetList(db *gorm.DB, q GetListPayrollInput) ([]model.Payroll, er
 		payrollQuery = payrollQuery.Where("payrolls.id = ?", q.ID)
 	}
 	if q.UserID != "" {
-		payrollQuery = payrollQuery.Where("payrolls.user_id = ?", q.UserID)
+		payrollQuery = payrollQuery.Where("payrolls.employee_id = ?", q.UserID)
 	}
 	if q.Month != 0 {
 		payrollQuery = payrollQuery.Where("payrolls.month = ?", q.Month)
