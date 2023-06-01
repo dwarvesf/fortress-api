@@ -168,3 +168,6 @@ func (h *handler) GetLastMessageID(c *gin.Context) {
 		view.CreateResponse[any](lastMessageID, nil, done(nil), nil, "success"),
 	)
 }
+
+func (h *handler) IndexMessages(c *gin.Context) {
+}
