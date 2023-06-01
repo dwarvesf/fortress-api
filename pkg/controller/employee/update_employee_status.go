@@ -94,7 +94,7 @@ func (r *controller) processOffBoardingEmployee(l logger.Logger, e *model.Employ
 }
 
 func (r *controller) updateDiscordRoles(discordUserID string) error {
-	if r.config.Env != "prod" {
+	if !(r.config.Env == "prod" || r.config.Env == "dev") {
 		return nil
 	}
 
