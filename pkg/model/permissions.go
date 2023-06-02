@@ -105,6 +105,7 @@ const (
 	PermissionSurveysEdit                         PermissionCode = "surveys.edit"
 	PermissionSurveysRead                         PermissionCode = "surveys.read"
 	PermissionValuationRead                       PermissionCode = "valuations.read"
+	PermissionIcyDistributionRead                 PermissionCode = "icyDistribution.read"
 )
 
 func (p PermissionCode) String() string {
