@@ -16,12 +16,16 @@ func New() IStore {
 // GetWeekly implements IStore.
 func (*store) GetWeekly(db *gorm.DB) ([]model.IcyDistribution, error) {
 	res := []model.IcyDistribution{}
-	return res, db.Raw(`SELECT v.period, v.team, v.amount
-	FROM vw_icy_earning_by_team_weekly v
-	JOIN (
-	  SELECT team, MAX(period) AS max_period
-	  FROM vw_icy_earning_by_team_weekly
-	  GROUP BY team
-	) t ON v.team = t.team AND v.period = t.max_period
-	ORDER BY v.period DESC;`).Find(&res).Error
+	return res, db.Raw(`SELECT
+	Team,
+	SUM(Amount) AS Total_Amount
+FROM
+	vw_icy_earning_by_team_weekly
+WHERE
+	Period >= to_char(date_trunc('week', CURRENT_DATE), 'yyyy-mm-dd')
+	AND Period <= to_char(date_trunc('week', CURRENT_DATE) + '6 days'::interval, 'yyyy-mm-dd')
+GROUP BY
+	Team
+ORDER BY
+	Total_Amount DESC;`).Find(&res).Error
 }
