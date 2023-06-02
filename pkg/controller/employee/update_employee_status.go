@@ -66,7 +66,7 @@ func (r *controller) UpdateEmployeeStatus(employeeID string, body UpdateWorkingS
 func (r *controller) processOffBoardingEmployee(l logger.Logger, e *model.Employee) {
 	discordInfo := model.SocialAccounts(e.SocialAccounts).GetDiscord()
 	if discordInfo != nil {
-		err := r.updateDiscordRoles(discordInfo.AccountID)
+		err := r.removeDiscordRoles(discordInfo.AccountID)
 		if err != nil {
 			l.Errorf(err, "failed to update discord roles", "employeeID", e.ID.String(), "discordID", discordInfo.AccountID)
 		}
@@ -93,7 +93,7 @@ func (r *controller) processOffBoardingEmployee(l logger.Logger, e *model.Employ
 	}
 }
 
-func (r *controller) updateDiscordRoles(discordUserID string) error {
+func (r *controller) removeDiscordRoles(discordUserID string) error {
 	if !(r.config.Env == "prod" || r.config.Env == "dev") {
 		return nil
 	}
