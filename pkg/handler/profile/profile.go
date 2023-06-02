@@ -883,10 +883,6 @@ func (h *handler) getDiscordInfo(discordName string) (*discordgo.Member, error) 
 		return nil, nil
 	}
 
-	if !(h.config.Env == "prod" || h.config.Env == "dev") {
-		return nil, nil
-	}
-
 	discordNameParts := strings.Split(discordName, "#")
 
 	guildMembers, err := h.service.Discord.SearchMember(discordNameParts[0])
