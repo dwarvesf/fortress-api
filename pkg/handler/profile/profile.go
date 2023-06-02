@@ -3,13 +3,14 @@ package profile
 import (
 	"errors"
 	"fmt"
+	"net/http"
+	"path/filepath"
+
 	"github.com/bwmarrin/discordgo"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/exp/slices"
 	"gorm.io/gorm"
 	"gorm.io/gorm/utils"
-	"net/http"
-	"path/filepath"
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/controller"
@@ -271,6 +272,7 @@ func (h *handler) updateSocialAccounts(db *gorm.DB, input socialAccountInput, em
 			account.Name = input.NotionName
 			account.Email = input.NotionEmail
 		case model.SocialAccountTypeDiscord:
+			account.AccountID = input.DiscordID
 			account.Name = input.DiscordName
 		case model.SocialAccountTypeLinkedIn:
 			account.AccountID = input.LinkedInName
