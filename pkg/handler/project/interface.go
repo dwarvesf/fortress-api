@@ -23,4 +23,5 @@ type IHandler interface {
 	UpdateSendingSurveyState(c *gin.Context)
 	UpdateWorkUnit(c *gin.Context)
 	UploadAvatar(c *gin.Context)
+	IcyWeeklyDistribution(c *gin.Context)
 }
