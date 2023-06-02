@@ -10,6 +10,7 @@ type IService interface {
 	PostBirthdayMsg(msg string) (model.DiscordMessage, error)
 	GetMembers() ([]*discordgo.Member, error)
 	GetMember(userID string) (*discordgo.Member, error)
+	GetMemberByUsername(username string) (*discordgo.Member, error)
 	SearchMember(discordName string) ([]*discordgo.Member, error)
 	GetRoles() (Roles, error)
 	AddRole(userID, roleID string) error
