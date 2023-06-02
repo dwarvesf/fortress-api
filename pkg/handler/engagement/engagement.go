@@ -62,20 +62,30 @@ func New(
 // @Router /engagements/rollup [post]
 func (h *handler) UpsertRollup(c *gin.Context) {
 
+	l := h.logger.Fields(
+		logger.Fields{
+			"handler": "engagement",
+			"method":  "UpsertRollup",
+		},
+	)
 	body := request.UpsertRollupRequest{}
 	if err := c.ShouldBindJSON(&body); err != nil {
+		l.Error(err, "error decoding body")
 		c.JSON(
 			http.StatusBadRequest,
 			view.CreateResponse[any](nil, nil, err, body, ""),
 		)
 		return
 	}
-
-	l := h.logger.Fields(logger.Fields{
-		"handler": "engagement",
-		"method":  "UpsertRollup",
-		"body":    body,
-	})
+	l = l.AddField("body", body)
+	if err := body.Validate(); err != nil {
+		l.Error(err, "error validating data")
+		c.JSON(
+			http.StatusBadRequest,
+			view.CreateResponse[any](nil, nil, err, body, ""),
+		)
+		return
+	}
 
 	discordUserID, err := decimal.NewFromString(body.DiscordUserID)
 	if err != nil {
@@ -155,7 +165,7 @@ func (h *handler) GetLastMessageID(c *gin.Context) {
 	channelID := c.Param("channel-id")
 	l := h.logger.Fields(logger.Fields{
 		"handler":   "engagement",
-		"method":    "GetLastMessageID",
+		"method":    "UpsertRollupRecord",
 		"channelID": channelID,
 	})
 
