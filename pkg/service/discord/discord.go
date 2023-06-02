@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"strings"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/dwarvesf/fortress-api/pkg/config"
@@ -190,6 +191,37 @@ func (d *discordClient) AddRole(userID, roleID string) error {
 
 func (d *discordClient) RemoveRole(userID string, roleID string) error {
 	return d.session.GuildMemberRoleRemove(d.cfg.Discord.IDs.DwarvesGuild, userID, roleID)
+}
+
+func (d *discordClient) GetMemberByUsername(username string) (*discordgo.Member, error) {
+	if len(username) == 0 {
+		return nil, nil
+	}
+
+	discordNameParts := strings.Split(username, "#")
+
+	guildMembers, err := d.SearchMember(discordNameParts[0])
+	if err != nil {
+		return nil, err
+	}
+
+	var discordMember *discordgo.Member
+	for _, m := range guildMembers {
+		if len(discordNameParts) == 1 {
+			if m.User.Username == discordNameParts[0] {
+				discordMember = m
+			}
+			break
+		}
+		if len(discordNameParts) > 1 {
+			if m.User.Username == discordNameParts[0] && m.User.Discriminator == discordNameParts[1] {
+				discordMember = m
+			}
+			break
+		}
+	}
+
+	return discordMember, nil
 }
 
 type Roles discordgo.Roles
