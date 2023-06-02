@@ -29,7 +29,6 @@ type NotionEarn struct {
 	ID       string       `json:"id"`
 	Name     string       `json:"name"`
 	Reward   int          `json:"reward"`
-	Progress int          `json:"progress"`
 	Priority string       `json:"priority"`
 	Tags     []string     `json:"tags"`
 	PICs     []Employee   `json:"pics"`

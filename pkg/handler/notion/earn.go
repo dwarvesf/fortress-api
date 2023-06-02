@@ -85,7 +85,6 @@ func (h *handler) ListEarns(c *gin.Context) {
 			ID:       r.ID,
 			Name:     name,
 			Reward:   int(*props["Reward 🧊"].Number),
-			Progress: int(*props["Progress"].Number * 100),
 			Tags:     tags,
 			PICs:     employees,
 			Status:   props["Status"].Status.Name,
