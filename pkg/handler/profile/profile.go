@@ -3,15 +3,13 @@ package profile
 import (
 	"errors"
 	"fmt"
-	"net/http"
-	"path/filepath"
-	"strings"
-
 	"github.com/bwmarrin/discordgo"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/exp/slices"
 	"gorm.io/gorm"
 	"gorm.io/gorm/utils"
+	"net/http"
+	"path/filepath"
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/controller"
@@ -152,16 +150,30 @@ func (h *handler) UpdateInfo(c *gin.Context) {
 	}
 
 	tx, done := h.repo.NewTransaction()
+	// Get discord info
+	discordMember, err := h.service.Discord.GetMemberByUsername(input.DiscordName)
+	if err != nil {
+		l.Error(err, "failed to get discord info")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
+		return
+	}
+
+	discordID := ""
+	if discordMember != nil {
+		discordID = discordMember.User.ID
+	}
 
 	// Update social accounts
 	saInput := socialAccountInput{
 		GithubID:     input.GithubID,
 		NotionID:     input.NotionID,
+		DiscordID:    discordID,
 		NotionName:   input.NotionName,
 		NotionEmail:  input.NotionEmail,
 		DiscordName:  input.DiscordName,
 		LinkedInName: input.LinkedInName,
 	}
+
 	if err := h.updateSocialAccounts(tx.DB(), saInput, employee.ID); err != nil {
 		l.Error(err, "failed to update employee")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
@@ -758,11 +770,16 @@ func (h *handler) SubmitOnboardingForm(c *gin.Context) {
 	}
 
 	// Get discord info
-	discordMember, err := h.getDiscordInfo(input.DiscordName)
+	discordMember, err := h.service.Discord.GetMemberByUsername(input.DiscordName)
 	if err != nil {
 		l.Error(err, "failed to get discord info")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
 		return
+	}
+
+	discordID := ""
+	if discordMember != nil {
+		discordID = discordMember.User.ID
 	}
 
 	// Update social accounts
@@ -770,7 +787,7 @@ func (h *handler) SubmitOnboardingForm(c *gin.Context) {
 		GithubID:     input.GithubID,
 		NotionName:   input.NotionName,
 		DiscordName:  input.DiscordName,
-		DiscordID:    discordMember.User.ID,
+		DiscordID:    discordID,
 		LinkedInName: input.LinkedInName,
 	}
 
@@ -876,37 +893,6 @@ func (h *handler) createBasecampAccount(employee *model.Employee) error {
 	}
 
 	return nil
-}
-
-func (h *handler) getDiscordInfo(discordName string) (*discordgo.Member, error) {
-	if len(discordName) == 0 {
-		return nil, nil
-	}
-
-	discordNameParts := strings.Split(discordName, "#")
-
-	guildMembers, err := h.service.Discord.SearchMember(discordNameParts[0])
-	if err != nil {
-		return nil, err
-	}
-
-	var discordMember *discordgo.Member
-	for _, m := range guildMembers {
-		if len(discordNameParts) == 1 {
-			if m.User.Username == discordNameParts[0] {
-				discordMember = m
-			}
-			break
-		}
-		if len(discordNameParts) > 1 {
-			if m.User.Username == discordNameParts[0] && m.User.Discriminator == discordNameParts[1] {
-				discordMember = m
-			}
-			break
-		}
-	}
-
-	return discordMember, nil
 }
 
 func (h *handler) assignDiscordRole(discordMember *discordgo.Member) error {
