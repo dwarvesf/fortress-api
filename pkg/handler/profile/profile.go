@@ -783,33 +783,33 @@ func (h *handler) SubmitOnboardingForm(c *gin.Context) {
 	// Commit transaction update employee info
 	_ = done(nil)
 	employeeInvitation.IsInfoUpdated = true
+	employeeInvitation.IsCompleted = true
 
 	if !employeeInvitation.IsTeamEmailCreated {
 		err = h.createTeamEmail(employee.TeamEmail, employee.PersonalEmail)
 		if err != nil {
 			l.Error(err, "failed to create create team email")
+		} else {
+			employeeInvitation.IsTeamEmailCreated = true
 		}
-		employeeInvitation.IsTeamEmailCreated = true
 	}
 
 	if !employeeInvitation.IsBasecampAccountCreated {
 		err = h.createBasecampAccount(employee)
 		if err != nil {
 			l.Error(err, "failed to create basecamp account")
+		} else {
+			employeeInvitation.IsBasecampAccountCreated = true
 		}
-		employeeInvitation.IsBasecampAccountCreated = true
 	}
 
 	if !employeeInvitation.IsDiscordRoleAssigned {
 		err = h.assignDiscordRole(discordMember)
 		if err != nil {
 			l.Error(err, "failed to assign discord role")
+		} else {
+			employeeInvitation.IsDiscordRoleAssigned = true
 		}
-		employeeInvitation.IsDiscordRoleAssigned = true
-	}
-
-	if employeeInvitation.IsInfoUpdated && employeeInvitation.IsTeamEmailCreated && employeeInvitation.IsBasecampAccountCreated && employeeInvitation.IsDiscordRoleAssigned {
-		employeeInvitation.IsCompleted = true
 	}
 
 	err = h.store.EmployeeInvitation.Save(h.repo.DB(), employeeInvitation)
@@ -910,8 +910,8 @@ func (h *handler) getDiscordInfo(discordName string) (*discordgo.Member, error) 
 }
 
 func (h *handler) assignDiscordRole(discordMember *discordgo.Member) error {
-	if discordMember != nil {
-		return nil
+	if discordMember == nil {
+		return errs.ErrInvalidDiscordMemberInfo
 	}
 	// Get list discord role
 	dRoles, err := h.service.Discord.GetRoles()

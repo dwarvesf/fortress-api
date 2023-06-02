@@ -15,4 +15,5 @@ var (
 	ErrOnboardingFormAlreadyDone = errors.New("onboarding form already done")
 	ErrMissingDocuments          = errors.New("missing id/passport documents")
 	ErrInvalidDate               = errors.New("invalid date")
+	ErrInvalidDiscordMemberInfo  = errors.New("invalid discord member info")
 )
