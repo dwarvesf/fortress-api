@@ -47,6 +47,33 @@ func New(controller *controller.Controller, store *store.Store, repo store.DBRep
 	}
 }
 
+// IcyWeeklyDistribution godoc
+// @Summary Get Icy Weekly Distribution
+// @Description Get Icy Weekly Distribution
+// @Tags Project
+// @Accept  json
+// @Produce  json
+// @Param Authorization header string true "jwt token"
+// @PSuccess 200 {object} view.IcyWeeklyDistribution
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /projects/icy-weekly-distribution [get]
+func (h *handler) IcyWeeklyDistribution(c *gin.Context) {
+	l := h.logger.Fields(logger.Fields{
+		"handler": "project",
+		"method":  "IcyWeeklyDistribution",
+	})
+
+	weeklyIcyDistribution, err := h.store.IcyDistribution.GetWeekly(h.repo.DB())
+	if err != nil {
+		l.Error(err, "failed to weekly icy distribution")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, "", "can't get weekly icy distribution"))
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](weeklyIcyDistribution, nil, nil, "", ""))
+}
+
 // List godoc
 // @Summary Get list of project
 // @Description Get list of project
