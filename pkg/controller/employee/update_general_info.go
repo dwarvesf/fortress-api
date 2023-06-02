@@ -114,12 +114,23 @@ func (r *controller) UpdateGeneralInfo(l logger.Logger, employeeID string, body 
 		emp.NotionEmail = body.NotionEmail
 	}
 
-	if strings.TrimSpace(body.DiscordID) != "" {
-		emp.DiscordID = body.DiscordID
+	discordID := ""
+	if strings.TrimSpace(body.DiscordName) != "" {
+		// Get discord info
+		emp.DiscordName = body.DiscordName
+		discordMember, err := r.service.Discord.GetMemberByUsername(body.DiscordName)
+		if err != nil {
+			return nil, err
+		}
+
+		if discordMember != nil {
+			discordID = discordMember.User.ID
+		}
 	}
 
-	if strings.TrimSpace(body.DiscordName) != "" {
-		emp.DiscordName = body.DiscordName
+	if discordID != "" {
+		body.DiscordID = discordID
+		emp.DiscordID = discordID
 	}
 
 	if strings.TrimSpace(body.LinkedInName) != "" {
@@ -299,6 +310,7 @@ func (r *controller) updateSocialAccounts(db *gorm.DB, input UpdateEmployeeGener
 			account.Email = input.NotionEmail
 		case model.SocialAccountTypeDiscord:
 			account.Name = input.DiscordName
+			account.AccountID = input.DiscordID
 		case model.SocialAccountTypeLinkedIn:
 			account.AccountID = input.LinkedInName
 			account.Name = input.LinkedInName
