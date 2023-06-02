@@ -176,7 +176,11 @@ func (h *handler) GetLastMessageID(c *gin.Context) {
 	)
 }
 
-func AggregateMessages(l logger.Logger, messages []*discordgo.Message) []*model.EngagementsRollup {
+func AggregateMessages(
+	l logger.Logger,
+	messages []*discordgo.Message,
+	channelIDToCategoryID map[string]string,
+) []*model.EngagementsRollup {
 	userIDMessageIDToRecord := make(map[string]*model.EngagementsRollup)
 
 	for _, message := range messages {
@@ -204,6 +208,13 @@ func AggregateMessages(l logger.Logger, messages []*discordgo.Message) []*model.
 			l.Error(err, "unable to convert channel ID to decimal")
 			continue
 		}
+		categoryIDStr := channelIDToCategoryID[message.ChannelID]
+		categoryID, err := decimal.NewFromString(categoryIDStr)
+		if err != nil {
+			l := l.AddField("categoryID", categoryIDStr)
+			l.Error(err, "unable to convert category ID to decimal")
+			continue
+		}
 
 		key := fmt.Sprintf("%s_%s", userID.String(), channelID.String())
 		record, ok := userIDMessageIDToRecord[key]
@@ -216,6 +227,7 @@ func AggregateMessages(l logger.Logger, messages []*discordgo.Message) []*model.
 				LastMessageID:   messageID,
 				DiscordUsername: fmt.Sprintf("%s#%s", message.Author.Username, message.Author.Discriminator),
 				ChannelID:       channelID,
+				CategoryID:      categoryID,
 				MessageCount:    1,
 			}
 		}
@@ -311,7 +323,12 @@ func (h *handler) IndexMessages(c *gin.Context) {
 		allMessages = append(allMessages, messages...)
 	}
 
-	records := AggregateMessages(l, allMessages)
+	channelIDToCategoryID := make(map[string]string, len(channels))
+	for _, channel := range channels {
+		channelIDToCategoryID[channel.ID] = channel.ParentID
+	}
+
+	records := AggregateMessages(l, allMessages, channelIDToCategoryID)
 	for _, record := range records {
 		_, err := h.store.EngagementsRollup.Upsert(tx.DB(), record)
 		if err != nil {
