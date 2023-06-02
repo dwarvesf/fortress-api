@@ -40,18 +40,18 @@ func (s *Service) ExtractBasecampExpenseAmount(source string) int {
 	return getAmount(strings.Replace(source, ".", "", -1))
 }
 
-// BasecampExpenseHandler --
-func (s *Service) BasecampExpenseHandler(
+// CreateBasecampExpense --
+func (s *Service) CreateBasecampExpense(
 	data BasecampExpenseData,
 ) error {
 	employee, err := s.store.Employee.OneByEmail(s.repo.DB(), data.CreatorEmail)
 	if err != nil {
-		return errors.New("can't find employee by email: " + data.CreatorEmail)
+		return errors.New("failed to get employee by email: " + data.CreatorEmail)
 	}
 
 	c, err := s.store.Currency.GetByName(s.repo.DB(), data.CurrencyType)
 	if err != nil {
-		return errors.New("can't get currency by name: " + data.CurrencyType)
+		return errors.New("failed to get currency by name: " + data.CurrencyType)
 	}
 
 	date := time.Now()

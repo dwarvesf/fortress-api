@@ -38,8 +38,8 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 		{
 			expenseGroup := basecampGroup.Group("/expense")
 			{
-				expenseGroup.POST("/validate", h.Webhook.BasecampExpenseValidate)
-				expenseGroup.POST("", h.Webhook.BasecampExpense)
+				expenseGroup.POST("/validate", h.Webhook.ValidateBasecampExpense)
+				expenseGroup.POST("", h.Webhook.CreateBasecampExpense)
 				expenseGroup.DELETE("", h.Webhook.UncheckBasecampExpense)
 			}
 			operationGroup := basecampGroup.Group("/operation")
@@ -143,6 +143,7 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 		projectGroup.PUT("/:id/work-units/:workUnitID", amw.WithAuth, pmw.WithPerm(model.PermissionProjectWorkUnitsEdit), h.Project.UpdateWorkUnit)
 		projectGroup.PUT("/:id/work-units/:workUnitID/archive", amw.WithAuth, pmw.WithPerm(model.PermissionProjectWorkUnitsEdit), h.Project.ArchiveWorkUnit)
 		projectGroup.PUT("/:id/work-units/:workUnitID/unarchive", amw.WithAuth, pmw.WithPerm(model.PermissionProjectWorkUnitsEdit), h.Project.UnarchiveWorkUnit)
+		projectGroup.GET("/icy-distribution/weekly", amw.WithAuth, pmw.WithPerm(model.PermissionProjectWorkUnitsEdit), h.Project.IcyWeeklyDistribution)
 	}
 
 	clientGroup := v1.Group("/clients")

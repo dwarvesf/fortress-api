@@ -130,3 +130,12 @@ CREATE TABLE IF NOT EXISTS "cached_payrolls" (
 ALTER TABLE "cached_payrolls" ADD CONSTRAINT "cached_payrolls_month_year_batch_key" UNIQUE ("month", "year", "batch");
 
 -- +migrate Down
+DROP TABLE IF EXISTS "base_salaries";
+DROP TABLE IF EXISTS "accounting_transactions";
+DROP TABLE IF EXISTS "accounting_categories";
+DROP TABLE IF EXISTS "employee_commissions";
+DROP TABLE IF EXISTS "employee_bonuses";
+DROP TABLE IF EXISTS "payrolls";
+DROP TABLE IF EXISTS "project_commission_configs";
+DROP TABLE IF EXISTS "cached_payrolls";
+DROP TABLE IF EXISTS "base_salaries";

@@ -70,7 +70,7 @@ func (h *handler) GetProfile(c *gin.Context) {
 		"method":  "GetProfile",
 	})
 
-	rs, err := h.store.Employee.One(h.repo.DB(), userID, false)
+	rs, err := h.store.Employee.One(h.repo.DB(), userID, true)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Info("employee not found")
@@ -202,6 +202,7 @@ type socialAccountInput struct {
 	NotionID     string
 	NotionName   string
 	NotionEmail  string
+	DiscordID    string
 	DiscordName  string
 	LinkedInName string
 }
@@ -236,6 +237,7 @@ func (h *handler) updateSocialAccounts(db *gorm.DB, input socialAccountInput, em
 		model.SocialAccountTypeDiscord: {
 			Type:       model.SocialAccountTypeDiscord,
 			EmployeeID: employeeID,
+			AccountID:  input.DiscordID,
 			Name:       input.DiscordName,
 		},
 		model.SocialAccountTypeLinkedIn: {
@@ -755,13 +757,23 @@ func (h *handler) SubmitOnboardingForm(c *gin.Context) {
 		return
 	}
 
+	// Get discord info
+	discordMember, err := h.getDiscordInfo(input.DiscordName)
+	if err != nil {
+		l.Error(err, "failed to get discord info")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
+		return
+	}
+
 	// Update social accounts
 	saInput := socialAccountInput{
 		GithubID:     input.GithubID,
 		NotionName:   input.NotionName,
 		DiscordName:  input.DiscordName,
+		DiscordID:    discordMember.User.ID,
 		LinkedInName: input.LinkedInName,
 	}
+
 	if err := h.updateSocialAccounts(tx.DB(), saInput, employee.ID); err != nil {
 		l.Error(err, "failed to update employee")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
@@ -771,33 +783,33 @@ func (h *handler) SubmitOnboardingForm(c *gin.Context) {
 	// Commit transaction update employee info
 	_ = done(nil)
 	employeeInvitation.IsInfoUpdated = true
+	employeeInvitation.IsCompleted = true
 
 	if !employeeInvitation.IsTeamEmailCreated {
 		err = h.createTeamEmail(employee.TeamEmail, employee.PersonalEmail)
 		if err != nil {
 			l.Error(err, "failed to create create team email")
+		} else {
+			employeeInvitation.IsTeamEmailCreated = true
 		}
-		employeeInvitation.IsTeamEmailCreated = true
 	}
 
 	if !employeeInvitation.IsBasecampAccountCreated {
 		err = h.createBasecampAccount(employee)
 		if err != nil {
 			l.Error(err, "failed to create basecamp account")
+		} else {
+			employeeInvitation.IsBasecampAccountCreated = true
 		}
-		employeeInvitation.IsBasecampAccountCreated = true
 	}
 
 	if !employeeInvitation.IsDiscordRoleAssigned {
-		err = h.assignDiscordRole(input.DiscordName)
+		err = h.assignDiscordRole(discordMember)
 		if err != nil {
 			l.Error(err, "failed to assign discord role")
+		} else {
+			employeeInvitation.IsDiscordRoleAssigned = true
 		}
-		employeeInvitation.IsDiscordRoleAssigned = true
-	}
-
-	if employeeInvitation.IsInfoUpdated && employeeInvitation.IsTeamEmailCreated && employeeInvitation.IsBasecampAccountCreated && employeeInvitation.IsDiscordRoleAssigned {
-		employeeInvitation.IsCompleted = true
 	}
 
 	err = h.store.EmployeeInvitation.Save(h.repo.DB(), employeeInvitation)
@@ -866,20 +878,16 @@ func (h *handler) createBasecampAccount(employee *model.Employee) error {
 	return nil
 }
 
-func (h *handler) assignDiscordRole(discordName string) error {
+func (h *handler) getDiscordInfo(discordName string) (*discordgo.Member, error) {
 	if len(discordName) == 0 {
-		return nil
-	}
-
-	if h.config.Env != "prod" {
-		return nil
+		return nil, nil
 	}
 
 	discordNameParts := strings.Split(discordName, "#")
 
 	guildMembers, err := h.service.Discord.SearchMember(discordNameParts[0])
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	var discordMember *discordgo.Member
@@ -898,31 +906,36 @@ func (h *handler) assignDiscordRole(discordName string) error {
 		}
 	}
 
-	if discordMember != nil {
-		// Get list discord role
-		dRoles, err := h.service.Discord.GetRoles()
+	return discordMember, nil
+}
+
+func (h *handler) assignDiscordRole(discordMember *discordgo.Member) error {
+	if discordMember == nil {
+		return errs.ErrInvalidDiscordMemberInfo
+	}
+	// Get list discord role
+	dRoles, err := h.service.Discord.GetRoles()
+	if err != nil {
+		return err
+	}
+
+	peepsRoleID := ""
+	for _, r := range dRoles {
+		if r.Name == model.DiscordRolePeeps.String() {
+			peepsRoleID = r.ID
+			break
+		}
+	}
+
+	if peepsRoleID != "" {
+		// Check if user already has peeps role
+		if utils.Contains(discordMember.Roles, peepsRoleID) {
+			return nil
+		}
+
+		err := h.service.Discord.AddRole(discordMember.User.ID, peepsRoleID)
 		if err != nil {
 			return err
-		}
-
-		peepsRoleID := ""
-		for _, r := range dRoles {
-			if r.Name == model.DiscordRolePeeps.String() {
-				peepsRoleID = r.ID
-				break
-			}
-		}
-
-		if peepsRoleID != "" {
-			// Check if user already has peeps role
-			if utils.Contains(discordMember.Roles, peepsRoleID) {
-				return nil
-			}
-
-			err := h.service.Discord.AddRole(discordMember.User.ID, peepsRoleID)
-			if err != nil {
-				return err
-			}
 		}
 	}
 

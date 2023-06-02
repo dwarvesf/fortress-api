@@ -219,6 +219,12 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/project.IHandler.Create-fm",
 			},
 		},
+		"/api/v1/projects/icy-distribution/weekly": {
+			"GET": {
+				Method:  "GET",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/project.IHandler.IcyWeeklyDistribution-fm",
+			},
+		},
 		"/api/v1/projects/:id": {
 			"GET": {
 				Method:  "GET",
@@ -636,13 +642,13 @@ func Test_loadV1Routes(t *testing.T) {
 		"/webhooks/basecamp/expense/validate": {
 			"POST": {
 				Method:  "POST",
-				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/webhook.IHandler.BasecampExpenseValidate-fm",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/webhook.IHandler.ValidateBasecampExpense-fm",
 			},
 		},
 		"/webhooks/basecamp/expense": {
 			"POST": {
 				Method:  "POST",
-				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/webhook.IHandler.BasecampExpense-fm",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/webhook.IHandler.CreateBasecampExpense-fm",
 			},
 			"DELETE": {
 				Method:  "DELETE",

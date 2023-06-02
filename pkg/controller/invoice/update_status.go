@@ -11,10 +11,9 @@ import (
 
 	"gorm.io/gorm"
 
-	"github.com/dwarvesf/fortress-api/pkg/consts"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
-	bcConst "github.com/dwarvesf/fortress-api/pkg/service/basecamp/consts"
+	"github.com/dwarvesf/fortress-api/pkg/service/basecamp/consts"
 	bcModel "github.com/dwarvesf/fortress-api/pkg/service/basecamp/model"
 	sInvoice "github.com/dwarvesf/fortress-api/pkg/store/invoice"
 	"github.com/dwarvesf/fortress-api/pkg/utils/timeutil"
@@ -192,7 +191,7 @@ func (c *controller) processPaidInvoiceData(l logger.Logger, wg *sync.WaitGroup,
 	// Start Transaction
 	tx, done := c.repo.NewTransaction()
 
-	msg := bcConst.CommentUpdateInvoiceFailed
+	msg := consts.CommentUpdateInvoiceFailed
 	msgType := bcModel.CommentMsgTypeFailed
 	defer func() {
 		wg.Done()
@@ -256,14 +255,14 @@ func (c *controller) processPaidInvoiceData(l logger.Logger, wg *sync.WaitGroup,
 		return done(err)
 	}
 
-	msg = bcConst.CommentUpdateInvoiceSuccessfully
+	msg = consts.CommentUpdateInvoiceSuccessfully
 	msgType = bcModel.CommentMsgTypeCompleted
 
 	return done(nil)
 }
 
 func (c *controller) sendThankYouEmail(l logger.Logger, wg *sync.WaitGroup, req *processPaidInvoiceRequest) {
-	msg := c.service.Basecamp.BuildCommentMessage(req.InvoiceBucketID, req.InvoiceTodoID, bcConst.CommentThankYouEmailSent, bcModel.CommentMsgTypeCompleted)
+	msg := c.service.Basecamp.BuildCommentMessage(req.InvoiceBucketID, req.InvoiceTodoID, consts.CommentThankYouEmailSent, bcModel.CommentMsgTypeCompleted)
 
 	defer func() {
 		c.worker.Enqueue(bcModel.BasecampCommentMsg, msg)
@@ -273,7 +272,7 @@ func (c *controller) sendThankYouEmail(l logger.Logger, wg *sync.WaitGroup, req 
 	err := c.service.GoogleMail.SendInvoiceThankYouMail(req.Invoice)
 	if err != nil {
 		l.Errorf(err, "failed to send invoice thank you mail", "invoice", req.Invoice)
-		msg = c.service.Basecamp.BuildCommentMessage(req.InvoiceBucketID, req.InvoiceTodoID, bcConst.CommentThankYouEmailFailed, bcModel.CommentMsgTypeFailed)
+		msg = c.service.Basecamp.BuildCommentMessage(req.InvoiceBucketID, req.InvoiceTodoID, consts.CommentThankYouEmailFailed, bcModel.CommentMsgTypeFailed)
 		return
 	}
 }

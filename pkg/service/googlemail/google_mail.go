@@ -73,6 +73,7 @@ func (g *googleService) SendInvoiceMail(invoice *model.Invoice) (msgID string, e
 	if err != nil {
 		return "", err
 	}
+
 	funcMap := template.FuncMap{
 		"formatDate": func(t *time.Time) string {
 			return timeutil.FormatDatetime(*t)
@@ -155,6 +156,7 @@ func (g *googleService) SendInvoiceThankYouMail(invoice *model.Invoice) (err err
 	if err != nil {
 		return err
 	}
+
 	funcMap := template.FuncMap{
 		"gatherAddress": func() string {
 			return addresses

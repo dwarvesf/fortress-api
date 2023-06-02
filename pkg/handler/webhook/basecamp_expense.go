@@ -5,17 +5,26 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/dwarvesf/fortress-api/pkg/consts"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	bc "github.com/dwarvesf/fortress-api/pkg/service/basecamp"
+	"github.com/dwarvesf/fortress-api/pkg/service/basecamp/consts"
 	bcModel "github.com/dwarvesf/fortress-api/pkg/service/basecamp/model"
 )
 
-func (h *handler) BasecampExpenseValidateHandler(msg model.BasecampWebhookMessage) error {
-	if msg.Recording.Bucket.Name != "Woodland" {
-		return nil
+func (h *handler) basecampExpenseValidate(msg model.BasecampWebhookMessage) error {
+	recordingBucketName := consts.BucketNameWoodLand
+	assigneeIDs := []int{consts.HanBasecampID}
+	projectID := consts.WoodlandID
+
+	if h.config.Env != "prod" {
+		recordingBucketName = consts.BucketNamePlayGround
+		assigneeIDs = []int{consts.NamNguyenBasecampID}
+		projectID = consts.PlaygroundID
 	}
 
+	if msg.Recording.Bucket.Name != recordingBucketName {
+		return nil
+	}
 	// Todo ref: https://3.basecamp.com/4108948/buckets/9410372/todos/3204666678
 	// Assign HanNgo whenever expense todo was created
 	if msg.Kind == consts.TodoCreate {
@@ -23,12 +32,7 @@ func (h *handler) BasecampExpenseValidateHandler(msg model.BasecampWebhookMessag
 		if err != nil {
 			return err
 		}
-		assigneeIDs := []int{consts.HanBasecampID}
-		projectID := consts.WoodlandID
-		if h.config.Env != "prod" {
-			assigneeIDs = []int{consts.KhanhTruongBasecampID}
-			projectID = consts.PlaygroundID
-		}
+
 		todo.AssigneeIDs = assigneeIDs
 		_, err = h.service.Basecamp.Todo.Update(projectID, *todo)
 		if err != nil {
@@ -36,7 +40,7 @@ func (h *handler) BasecampExpenseValidateHandler(msg model.BasecampWebhookMessag
 		}
 	}
 
-	_, err := h.ExtractExpenseData(msg)
+	_, err := h.extractExpenseData(msg)
 	if err != nil {
 		m, err := h.service.Basecamp.BasecampMention(msg.Creator.ID)
 		if err != nil {
@@ -53,30 +57,29 @@ func (h *handler) BasecampExpenseValidateHandler(msg model.BasecampWebhookMessag
 			Title: Tiền mèo | 400.000 | VND
 			Assign To: Han Ngo, < payee >`, m)
 
-		h.service.Basecamp.CommentResult(msg.Recording.Bucket.ID,
-			msg.Recording.ID,
-			&bcModel.Comment{Content: errMsg},
-		)
+		h.worker.Enqueue(bcModel.BasecampCommentMsg, h.service.Basecamp.BuildCommentMessage(msg.Recording.Bucket.ID, msg.Recording.ID, errMsg, ""))
 		return nil
 	}
-	h.service.Basecamp.CommentResult(msg.Recording.Bucket.ID,
+
+	commentMessage := h.service.Basecamp.BuildCommentMessage(msg.Recording.Bucket.ID,
 		msg.Recording.ID,
-		&bcModel.Comment{Content: `Your format looks good 👍`})
+		"Your format looks good 👍",
+		"",
+	)
+
+	h.worker.Enqueue(bcModel.BasecampCommentMsg, commentMessage)
 
 	return nil
 }
 
-func (h *handler) BasecampExpenseHandler(msg model.BasecampWebhookMessage, rawData []byte) error {
-	var comment func()
+func (h *handler) createBasecampExpense(msg model.BasecampWebhookMessage, rawData []byte) error {
+	commentMessage := h.service.Basecamp.BuildCommentMessage(msg.Recording.Bucket.ID, msg.Recording.ID, model.CommentCreateExpenseFailed, bcModel.CommentMsgTypeFailed)
+
 	defer func() {
-		if comment == nil {
-			h.service.Basecamp.CommentResult(msg.Recording.Bucket.ID, msg.Recording.ID, h.service.Basecamp.BuildFailedComment(model.CommentCreateExpenseFailed))
-			return
-		}
-		comment()
+		h.worker.Enqueue(bcModel.BasecampCommentMsg, commentMessage)
 	}()
 
-	obj, err := h.ExtractExpenseData(msg)
+	obj, err := h.extractExpenseData(msg)
 	if err != nil {
 		return err
 	}
@@ -90,29 +93,24 @@ func (h *handler) BasecampExpenseHandler(msg model.BasecampWebhookMessage, rawDa
 		return err
 	}
 
-	err = h.service.Basecamp.BasecampExpenseHandler(*obj)
+	err = h.service.Basecamp.CreateBasecampExpense(*obj)
 	if err != nil {
 		return err
 	}
 
-	comment = func() {
-		h.service.Basecamp.CommentResult(msg.Recording.Bucket.ID, msg.Recording.ID, h.service.Basecamp.BuildCompletedComment(model.CommentCreateExpenseSuccessfully))
-	}
+	commentMessage = h.service.Basecamp.BuildCommentMessage(msg.Recording.Bucket.ID, msg.Recording.ID, model.CommentCreateExpenseSuccessfully, bcModel.CommentMsgTypeCompleted)
 
 	return nil
 }
 
 func (h *handler) UncheckBasecampExpenseHandler(msg model.BasecampWebhookMessage, rawData []byte) error {
-	var comment func()
+	commentMsg := h.service.Basecamp.BuildCommentMessage(msg.Recording.Bucket.ID, msg.Recording.ID, model.CommentDeleteExpenseFailed, bcModel.CommentMsgTypeFailed)
+
 	defer func() {
-		if comment == nil {
-			h.service.Basecamp.CommentResult(msg.Recording.Bucket.ID, msg.Recording.ID, h.service.Basecamp.BuildFailedComment(model.CommentDeleteExpenseFailed))
-			return
-		}
-		comment()
+		h.worker.Enqueue(bcModel.BasecampCommentMsg, commentMsg)
 	}()
 
-	obj, err := h.ExtractExpenseData(msg)
+	obj, err := h.extractExpenseData(msg)
 	if err != nil {
 		return err
 	}
@@ -130,15 +128,13 @@ func (h *handler) UncheckBasecampExpenseHandler(msg model.BasecampWebhookMessage
 		return err
 	}
 
-	comment = func() {
-		h.service.Basecamp.CommentResult(msg.Recording.Bucket.ID, msg.Recording.ID, h.service.Basecamp.BuildCompletedComment(model.CommentDeleteExpenseSuccessfully))
-	}
+	commentMsg = h.service.Basecamp.BuildCommentMessage(msg.Recording.Bucket.ID, msg.Recording.ID, model.CommentDeleteExpenseSuccessfully, bcModel.CommentMsgTypeCompleted)
 
 	return nil
 }
 
-// ExtractExpenseData takes a webhook message and parse it into BasecampExpenseData structure
-func (h *handler) ExtractExpenseData(msg model.BasecampWebhookMessage) (*bc.BasecampExpenseData, error) {
+// extractExpenseData takes a webhook message and parse it into BasecampExpenseData structure
+func (h *handler) extractExpenseData(msg model.BasecampWebhookMessage) (*bc.BasecampExpenseData, error) {
 	res := &bc.BasecampExpenseData{BasecampID: msg.Recording.ID}
 
 	parts := strings.Split(msg.Recording.Title, "|")
@@ -149,11 +145,11 @@ func (h *handler) ExtractExpenseData(msg model.BasecampWebhookMessage) (*bc.Base
 
 	// extract reason
 	datetime := fmt.Sprintf(" %s %v", msg.Recording.UpdatedAt.Month().String(), msg.Recording.UpdatedAt.Year())
-	res.Reason = strings.TrimSpace((parts[0]))
+	res.Reason = strings.TrimSpace(parts[0])
 	res.Reason += datetime
 
 	// extract amount
-	amount := h.service.Basecamp.ExtractBasecampExpenseAmount(strings.TrimSpace((parts[1])))
+	amount := h.service.Basecamp.ExtractBasecampExpenseAmount(strings.TrimSpace(parts[1]))
 	if amount == 0 {
 		err := errors.New("invalid amount section of expense format")
 		return nil, err

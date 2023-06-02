@@ -15,12 +15,13 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
-	"github.com/dwarvesf/fortress-api/pkg/consts"
 	"github.com/dwarvesf/fortress-api/pkg/controller"
 	"github.com/dwarvesf/fortress-api/pkg/handler/payroll/errs"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service"
+	"github.com/dwarvesf/fortress-api/pkg/service/basecamp/consts"
+	bcModel "github.com/dwarvesf/fortress-api/pkg/service/basecamp/model"
 	"github.com/dwarvesf/fortress-api/pkg/service/currency"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/store/employee"
@@ -69,7 +70,7 @@ func (h *handler) GetPayrollsByMonth(c *gin.Context) {
 	email := q.Get("email")
 
 	if q.Get("next") == "true" {
-		res, err := GetPayrollDetailHandler(h, 0, 0, 0, email)
+		res, err := h.getPayrollDetailHandler(0, 0, 0, email)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 			return
@@ -101,7 +102,7 @@ func (h *handler) GetPayrollsByMonth(c *gin.Context) {
 		month = int64(time.Now().Month())
 	}
 
-	res, err := GetPayrollDetailHandler(h, int(month), int(year), int(batch), email)
+	res, err := h.getPayrollDetailHandler(int(month), int(year), int(batch), email)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
@@ -148,7 +149,7 @@ func GetPayrollBHXHHandler(h *handler) (interface{}, error) {
 	var res []payrollBHXHResponse
 
 	isLeft := false
-	for _, b := range []int{int(model.FirstBatch), int(model.SecondBatch)} {
+	for _, b := range []int{int(model.FirstBatch), model.SecondBatch} {
 		date := time.Date(time.Now().Year(), time.Now().Month(), b, 0, 0, 0, 0, time.Now().Location())
 		us, _, err := h.store.Employee.All(h.repo.DB(), employee.EmployeeFilter{IsLeft: &isLeft, BatchDate: &date, Preload: true}, model.Pagination{Page: 0, Size: 500})
 		if err != nil {
@@ -171,7 +172,7 @@ func GetPayrollBHXHHandler(h *handler) (interface{}, error) {
 	return res, nil
 }
 
-func GetPayrollDetailHandler(h *handler, month, year, batch int, email string) (interface{}, error) {
+func (h *handler) getPayrollDetailHandler(month, year, batch int, email string) (interface{}, error) {
 	tx, done := h.repo.NewTransaction()
 	if month == 0 && year == 0 && batch == 0 {
 		date, err := h.store.Payroll.GetLatestCommitTime(tx.DB())
@@ -183,19 +184,19 @@ func GetPayrollDetailHandler(h *handler, month, year, batch int, email string) (
 		year = date.Year()
 		batch = int(model.FirstBatch)
 		if date.Day() == int(model.FirstBatch) {
-			batch = int(model.SecondBatch)
+			batch = model.SecondBatch
 			month, year = timeutil.LastMonthYear(month, year)
 		}
 	} else {
 		month, year = timeutil.LastMonthYear(month, year)
 	}
 
-	res := []payrollResponse{}
+	var res []payrollResponse
 	isPaid := true
 	var subTotal int64
 	var bonusTotal model.VietnamDong
 
-	for _, b := range []int{int(model.FirstBatch), int(model.SecondBatch)} {
+	for _, b := range []int{int(model.FirstBatch), model.SecondBatch} {
 		if batch != 0 && batch != b {
 			continue
 		}
@@ -232,7 +233,7 @@ func GetPayrollDetailHandler(h *handler, month, year, batch int, email string) (
 			}
 
 			var tempPayrolls []model.Payroll
-			newPayrolls, err := calculatePayrolls(h, us, batchDate)
+			newPayrolls, err := h.calculatePayrolls(us, batchDate)
 			if err != nil {
 				h.logger.Error(err, "can't calculate payroll")
 				return nil, err
@@ -290,7 +291,7 @@ func GetPayrollDetailHandler(h *handler, month, year, batch int, email string) (
 				}
 			}
 
-			bonus, sub, err := preparePayroll(h, c, &payrolls[i], false)
+			bonus, sub, err := h.preparePayroll(c, &payrolls[i], false)
 			if err != nil {
 				return nil, err
 			}
@@ -353,7 +354,7 @@ func GetPayrollDetailHandler(h *handler, month, year, batch int, email string) (
 			res = append(res, r)
 		}
 		if email == "" {
-			err = cachePayroll(h, month, year, batch, payrolls)
+			err = h.cachePayroll(month, year, batch, payrolls)
 			if err != nil {
 				return nil, err
 			}
@@ -369,25 +370,29 @@ func GetPayrollDetailHandler(h *handler, month, year, batch int, email string) (
 	}, nil
 }
 
-func cachePayroll(h *handler, month, year, batch int, payrolls []model.Payroll) error {
+func (h *handler) cachePayroll(month, year, batch int, payrolls []model.Payroll) error {
 	payrollsBytes, err := json.Marshal(&payrolls)
 	if err != nil {
 		return err
 	}
+
 	cPayroll, err := h.store.CachedPayroll.Get(h.repo.DB(), month, year, batch)
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return err
 	}
+
 	cPayroll.Month = month
 	cPayroll.Year = year
 	cPayroll.Batch = batch
 	cPayroll.Payrolls = payrollsBytes
+
 	return h.store.CachedPayroll.Set(h.repo.DB(), cPayroll)
 }
 
-func preparePayroll(h *handler, c string, p *model.Payroll, markPaid bool) (float64, int64, error) {
+func (h *handler) preparePayroll(c string, p *model.Payroll, markPaid bool) (float64, int64, error) {
 	var bonus float64
 	var subTotal int64
+
 	if p.Employee.BaseSalary.Currency.Name != currency.VNDCurrency {
 		c, _, err := h.service.Wise.Convert(float64(p.CommissionAmount), currency.VNDCurrency, p.Employee.BaseSalary.Currency.Name)
 		if err != nil {
@@ -416,21 +421,21 @@ func preparePayroll(h *handler, c string, p *model.Payroll, markPaid bool) (floa
 	}
 	p.ProjectBonusExplains = projectBonusExplains
 
-	commissionExplains, err := getCommissionExplains(h, p, markPaid)
+	commissionExplains, err := h.getCommissionExplains(p, markPaid)
 	if err != nil {
 		return 0, 0, err
 	}
 	p.CommissionExplains = commissionExplains
 
 	for i, v := range p.ProjectBonusExplains {
-		formattedAmount, err := getFormattedAmount(h, p, v.Amount)
+		formattedAmount, err := h.getFormattedAmount(p, v.Amount)
 		if err != nil {
 			return 0, 0, err
 		}
 		p.ProjectBonusExplains[i].FormattedAmount = formattedAmount
 	}
 	for i, v := range p.CommissionExplains {
-		formattedAmount, err := getFormattedAmount(h, p, v.Amount)
+		formattedAmount, err := h.getFormattedAmount(p, v.Amount)
 		if err != nil {
 			return 0, 0, err
 		}
@@ -450,7 +455,7 @@ func preparePayroll(h *handler, c string, p *model.Payroll, markPaid bool) (floa
 }
 
 func getProjectBonusExplains(p *model.Payroll) ([]model.ProjectBonusExplain, error) {
-	projectBonusExplains := []model.ProjectBonusExplain{}
+	projectBonusExplains := make([]model.ProjectBonusExplain, 0)
 	err := json.Unmarshal(
 		p.ProjectBonusExplain,
 		&projectBonusExplains,
@@ -471,11 +476,12 @@ func getProjectBonusExplains(p *model.Payroll) ([]model.ProjectBonusExplain, err
 	for i := range tempBonus {
 		tempBonusExplains = append(tempBonusExplains, *tempBonus[i])
 	}
+
 	return tempBonusExplains, nil
 }
 
-func getCommissionExplains(h *handler, p *model.Payroll, markPaid bool) ([]model.CommissionExplain, error) {
-	commissionExplains := []model.CommissionExplain{}
+func (h *handler) getCommissionExplains(p *model.Payroll, markPaid bool) ([]model.CommissionExplain, error) {
+	commissionExplains := make([]model.CommissionExplain, 0)
 	err := json.Unmarshal(
 		p.CommissionExplain,
 		&commissionExplains,
@@ -510,7 +516,7 @@ func getCommissionExplains(h *handler, p *model.Payroll, markPaid bool) ([]model
 	return tempCommissionExplains, nil
 }
 
-func getFormattedAmount(h *handler, p *model.Payroll, amount model.VietnamDong) (string, error) {
+func (h *handler) getFormattedAmount(p *model.Payroll, amount model.VietnamDong) (string, error) {
 	if p.Employee.BaseSalary.Currency.Name != currency.VNDCurrency {
 		temp, _, err := h.service.Wise.Convert(float64(amount), currency.VNDCurrency, p.Employee.BaseSalary.Currency.Name)
 		if err != nil {
@@ -521,7 +527,7 @@ func getFormattedAmount(h *handler, p *model.Payroll, amount model.VietnamDong) 
 	return amount.String(), nil
 }
 
-func storePayrollTransaction(h *handler, p []model.Payroll, batchDate time.Time) error {
+func (h *handler) storePayrollTransaction(p []model.Payroll, batchDate time.Time) error {
 	var transactions []*model.AccountingTransaction
 	for i := range p {
 		m := model.AccountingMetadata{
@@ -532,7 +538,7 @@ func storePayrollTransaction(h *handler, p []model.Payroll, batchDate time.Time)
 		if err != nil {
 			return err
 		}
-		var organization string = "Dwarves Foundation"
+		var organization = "Dwarves Foundation"
 		now := time.Now()
 
 		// baseSalaryConversionAmount = total - bonus and reimbursement (commission + projectBonus) - contract, cannot use origin baseSalary becauuse it is not converted to VND
@@ -573,7 +579,7 @@ func storePayrollTransaction(h *handler, p []model.Payroll, batchDate time.Time)
 		// bonusConversionAmount = total bonus (commission + projectBonus) - reimbursement  (total - conversionAmount)
 		bonusConversionAmount := p[i].CommissionAmount + p[i].ProjectBonusAmount - (p[i].Total - p[i].ConversionAmount)
 		if bonusConversionAmount != 0 {
-			currency, err := h.store.Currency.GetByName(h.repo.DB(), currency.VNDCurrency)
+			cur, err := h.store.Currency.GetByName(h.repo.DB(), currency.VNDCurrency)
 			if err != nil {
 				return err
 			}
@@ -601,9 +607,9 @@ func storePayrollTransaction(h *handler, p []model.Payroll, batchDate time.Time)
 				ConversionAmount: bonusConversionAmount,
 				Name:             fmt.Sprintf("Bonus - %v %v", p[i].Employee.FullName, batchDate.Format("02 January 2006")),
 				Category:         category,
-				Currency:         currency.Name,
+				Currency:         cur.Name,
 				Date:             &now,
-				CurrencyID:       &currency.ID,
+				CurrencyID:       &cur.ID,
 				Organization:     organization,
 				Metadata:         bonusBytes,
 				ConversionRate:   1,
@@ -613,10 +619,10 @@ func storePayrollTransaction(h *handler, p []model.Payroll, batchDate time.Time)
 		}
 	}
 
-	return StoreMultipleTransaction(h, transactions)
+	return h.storeMultipleTransaction(transactions)
 }
 
-func StoreMultipleTransaction(h *handler, transactions []*model.AccountingTransaction) error {
+func (h *handler) storeMultipleTransaction(transactions []*model.AccountingTransaction) error {
 	if err := h.store.Accounting.CreateMultipleTransaction(h.repo.DB(), transactions); err != nil {
 		return err
 	}
@@ -697,7 +703,7 @@ func (h *handler) commitPayrollHandler(month, year, batch int, email string) err
 			return errors.New("cannot commit payroll too far away")
 		}
 	}
-	for _, b := range []int{int(model.FirstBatch), int(model.SecondBatch)} {
+	for _, b := range []int{int(model.FirstBatch), model.SecondBatch} {
 		if batch != b {
 			continue
 		}
@@ -739,12 +745,12 @@ func (h *handler) commitPayrollHandler(month, year, batch int, email string) err
 
 		for i := range payrolls {
 			payrolls[i].IsPaid = true
-			err = markBonusAsDone(h, &payrolls[i])
+			err = h.markBonusAsDone(&payrolls[i])
 			if err != nil {
 				return err
 			}
 			// hacky way to mark done commission
-			if _, err := getCommissionExplains(h, &payrolls[i], true); err != nil {
+			if _, err := h.getCommissionExplains(&payrolls[i], true); err != nil {
 				return err
 			}
 		}
@@ -759,19 +765,20 @@ func (h *handler) commitPayrollHandler(month, year, batch int, email string) err
 		var wg sync.WaitGroup
 		wg.Add(len(payrolls))
 		c := make(chan *model.Payroll, len(payrolls)+1)
-		for _, payroll := range payrolls {
+		for _, pr := range payrolls {
 			go func(p model.Payroll) {
 				defer wg.Done()
 				if h.config.Env == "prod" || p.Employee.TeamEmail == "quang@d.foundation" || p.Employee.TeamEmail == "huy@d.foundation" {
 					c <- &p
 				}
-			}(payroll)
+			}(pr)
 		}
 		wg.Wait()
-		c <- nil
-		go activateGmailQueue(h, c)
 
-		err = storePayrollTransaction(h, payrolls, batchDate)
+		c <- nil
+		go h.activateGmailQueue(c)
+
+		err = h.storePayrollTransaction(payrolls, batchDate)
 		if err != nil {
 			return err
 		}
@@ -780,7 +787,7 @@ func (h *handler) commitPayrollHandler(month, year, batch int, email string) err
 	return nil
 }
 
-func markBonusAsDone(h *handler, p *model.Payroll) error {
+func (h *handler) markBonusAsDone(p *model.Payroll) error {
 	var projectBonusExplains []model.ProjectBonusExplain
 	err := json.Unmarshal(
 		p.ProjectBonusExplain,
@@ -817,7 +824,7 @@ func markBonusAsDone(h *handler, p *model.Payroll) error {
 				}
 				msg := fmt.Sprintf("Amount has been deposited in your payroll %v", mention)
 				cm := h.service.Basecamp.BuildCommentMessage(projectBonusExplains[i].BasecampBucketID, projectBonusExplains[i].BasecampTodoID, msg, "")
-				h.worker.Enqueue(model.BasecampCommentMsg, cm)
+				h.worker.Enqueue(bcModel.BasecampCommentMsg, cm)
 			}
 		}
 	}
@@ -825,22 +832,22 @@ func markBonusAsDone(h *handler, p *model.Payroll) error {
 }
 
 func (h *handler) MarkPayrollAsPaid(c *gin.Context) {
-	ids := []string{}
+	var ids []string
 	if err := c.Bind(&ids); err != nil {
 		return
 	}
 
-	err := markPayrollAsPaid(h, ids)
+	err := h.markPayrollAsPaid(ids)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 	}
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "marking the payroll as paid was successful"))
 }
 
-// MarkPayrollAsPaid from selected payroll row in database
+// markPayrollAsPaid from selected payroll row in database
 // update the is_paid and is_sent_mail in payroll table
 // send email into the users that marked as paid
-func markPayrollAsPaid(h *handler, ids []string) error {
+func (h *handler) markPayrollAsPaid(ids []string) error {
 	for _, id := range ids {
 		q := payroll.GetListPayrollInput{
 			ID: id,
@@ -867,7 +874,7 @@ func markPayrollAsPaid(h *handler, ids []string) error {
 	return nil
 }
 
-func activateGmailQueue(h *handler, p chan *model.Payroll) {
+func (h *handler) activateGmailQueue(p chan *model.Payroll) {
 	h.logger.Info("gmail queue activated")
 	ticker := time.NewTicker(time.Second)
 	defer ticker.Stop()

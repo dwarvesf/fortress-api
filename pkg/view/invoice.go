@@ -114,9 +114,11 @@ type InvoiceTemplateResponse struct {
 func ToInvoiceInfo(invoice *model.Invoice) (*Invoice, error) {
 	if invoice != nil {
 		cc := make([]string, 0)
-		err := json.Unmarshal(invoice.CC, &cc)
-		if err != nil {
-			return nil, err
+		if invoice.CC != nil {
+			err := json.Unmarshal(invoice.CC, &cc)
+			if err != nil {
+				return nil, err
+			}
 		}
 
 		invoiceItems, err := toInvoiceItem(invoice.LineItems)
