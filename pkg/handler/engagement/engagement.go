@@ -12,8 +12,8 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/view"
 	"github.com/gin-gonic/gin"
-	"github.com/shopspring/decimal"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -87,36 +87,36 @@ func (h *handler) UpsertRollup(c *gin.Context) {
 		return
 	}
 
-	discordUserID, err := decimal.NewFromString(body.DiscordUserID)
+	discordUserID, err := strconv.ParseInt(body.DiscordUserID, 10, 64)
 	if err != nil {
-		l.Error(err, "unable to convert discordUserID to decimal")
+		l.Error(err, "unable to parse discordUserID to int64")
 		c.JSON(
 			http.StatusBadRequest,
 			view.CreateResponse[any](nil, nil, err, body, ""),
 		)
 		return
 	}
-	lastMessageID, err := decimal.NewFromString(body.LastMessageID)
+	lastMessageID, err := strconv.ParseInt(body.LastMessageID, 10, 64)
 	if err != nil {
-		l.Error(err, "unable to convert lastMessageID to decimal")
+		l.Error(err, "unable to parse lastMessageID to int64")
 		c.JSON(
 			http.StatusBadRequest,
 			view.CreateResponse[any](nil, nil, err, body, ""),
 		)
 		return
 	}
-	channelID, err := decimal.NewFromString(body.ChannelID)
+	channelID, err := strconv.ParseInt(body.ChannelID, 10, 64)
 	if err != nil {
-		l.Error(err, "unable to convert channelID to decimal")
+		l.Error(err, "unable to parse channelID to int64")
 		c.JSON(
 			http.StatusBadRequest,
 			view.CreateResponse[any](nil, nil, err, body, ""),
 		)
 		return
 	}
-	categoryID, err := decimal.NewFromString(body.CategoryID)
+	categoryID, err := strconv.ParseInt(body.CategoryID, 10, 64)
 	if err != nil {
-		l.Error(err, "unable to convert categoryID to decimal")
+		l.Error(err, "unable to parse categoryID to int64")
 		c.JSON(
 			http.StatusBadRequest,
 			view.CreateResponse[any](nil, nil, err, body, ""),
@@ -200,33 +200,33 @@ func AggregateMessages(
 			continue
 		}
 
-		userID, err := decimal.NewFromString(message.Author.ID)
+		userID, err := strconv.ParseInt(message.Author.ID, 10, 64)
 		if err != nil {
 			l := l.AddField("userID", message.Author.ID)
-			l.Error(err, "unable to convert user ID to decimal")
+			l.Error(err, "unable to parse user ID to int64")
 			continue
 		}
-		messageID, err := decimal.NewFromString(message.ID)
+		messageID, err := strconv.ParseInt(message.ID, 10, 64)
 		if err != nil {
 			l := l.AddField("messageID", message.ID)
-			l.Error(err, "unable to convert message ID to decimal")
+			l.Error(err, "unable to parse message ID to int64")
 			continue
 		}
-		channelID, err := decimal.NewFromString(message.ChannelID)
+		channelID, err := strconv.ParseInt(message.ChannelID, 10, 64)
 		if err != nil {
 			l := l.AddField("channelID", message.ChannelID)
-			l.Error(err, "unable to convert channel ID to decimal")
+			l.Error(err, "unable to parse channel ID to int64")
 			continue
 		}
 		categoryIDStr := channelIDToCategoryID[message.ChannelID]
-		categoryID, err := decimal.NewFromString(categoryIDStr)
+		categoryID, err := strconv.ParseInt(categoryIDStr, 10, 64)
 		if err != nil {
 			l := l.AddField("categoryID", categoryIDStr)
-			l.Error(err, "unable to convert category ID to decimal")
+			l.Error(err, "unable to parse category ID to int64")
 			continue
 		}
 
-		key := fmt.Sprintf("%s_%s", userID.String(), channelID.String())
+		key := fmt.Sprintf("%d_%d", userID, channelID)
 		record, ok := userIDMessageIDToRecord[key]
 		if ok {
 			record.MessageCount += 1
