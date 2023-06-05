@@ -40,6 +40,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/store/icytransaction"
 	"github.com/dwarvesf/fortress-api/pkg/store/invoice"
 	"github.com/dwarvesf/fortress-api/pkg/store/invoicenumbercaching"
+	"github.com/dwarvesf/fortress-api/pkg/store/onleaverequest"
 	"github.com/dwarvesf/fortress-api/pkg/store/operationalservice"
 	"github.com/dwarvesf/fortress-api/pkg/store/organization"
 	"github.com/dwarvesf/fortress-api/pkg/store/payroll"
@@ -132,6 +133,7 @@ type Store struct {
 	DiscordLogTemplate      discordtemplate.IStore
 	IcyTransaction          icytransaction.IStore
 	IcyDistribution         icydistribution.IStore
+	OnLeaveRequest          onleaverequest.IStore
 }
 
 func New() *Store {
@@ -200,5 +202,6 @@ func New() *Store {
 		DiscordLogTemplate:      discordtemplate.New(),
 		IcyTransaction:          icytransaction.New(),
 		IcyDistribution:         icydistribution.New(),
+		OnLeaveRequest:          onleaverequest.New(),
 	}
 }
