@@ -9,4 +9,6 @@ type IHandler interface {
 	StoreAccountingTransaction(c *gin.Context)
 	UncheckBasecampExpense(c *gin.Context)
 	ValidateBasecampExpense(c *gin.Context)
+	ValidateOnLeaveRequest(c *gin.Context)
+	ApproveOnLeaveRequest(c *gin.Context)
 }
