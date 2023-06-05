@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
@@ -175,6 +176,37 @@ func (d *discordClient) GetMemberByName(discordName string) ([]*discordgo.Member
 	members = append(members, guildMembers...)
 
 	return members, nil
+}
+
+func (d *discordClient) GetMemberByUsername(username string) (*discordgo.Member, error) {
+	if len(username) == 0 {
+		return nil, nil
+	}
+
+	discordNameParts := strings.Split(username, "#")
+
+	guildMembers, err := d.SearchMember(discordNameParts[0])
+	if err != nil {
+		return nil, err
+	}
+
+	var discordMember *discordgo.Member
+	for _, m := range guildMembers {
+		if len(discordNameParts) == 1 {
+			if m.User.Username == discordNameParts[0] {
+				discordMember = m
+			}
+			break
+		}
+		if len(discordNameParts) > 1 {
+			if m.User.Username == discordNameParts[0] && m.User.Discriminator == discordNameParts[1] {
+				discordMember = m
+			}
+			break
+		}
+	}
+
+	return discordMember, nil
 }
 
 func (d *discordClient) GetRoles() (Roles, error) {
