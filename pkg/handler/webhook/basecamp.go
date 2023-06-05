@@ -1,11 +1,13 @@
 package webhook
 
 import (
-	bcModel "github.com/dwarvesf/fortress-api/pkg/service/basecamp/model"
 	"net/http"
+
+	bcModel "github.com/dwarvesf/fortress-api/pkg/service/basecamp/model"
 
 	"github.com/gin-gonic/gin"
 
+	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/view"
 )
@@ -127,4 +129,48 @@ func (h *handler) markInvoiceAsPaid(msg *model.BasecampWebhookMessage) error {
 	})
 
 	return nil
+}
+
+// ValidateOnLeaveRequest validates on-leave request and give feedback comments
+func (h *handler) ValidateOnLeaveRequest(c *gin.Context) {
+	l := h.logger.Fields(logger.Fields{
+		"handler": "onleave",
+		"method":  "ValidateOnLeaveRequest",
+	})
+
+	var msg model.BasecampWebhookMessage
+	err := msg.Decode(msg.Read(c.Request.Body))
+	if err != nil {
+		l.Error(err, "decode Basecamp msg failed")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	err = h.handleOnLeaveValidation(msg)
+	if err != nil {
+		l.Error(err, "onleave validation failed")
+	}
+	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, err, nil, ""))
+}
+
+// ApproveOnLeaveRequest save on-leave request in a database
+func (h *handler) ApproveOnLeaveRequest(c *gin.Context) {
+	l := h.logger.Fields(logger.Fields{
+		"handler": "onleave",
+		"method":  "ApproveOnLeaveRequest",
+	})
+
+	var msg model.BasecampWebhookMessage
+	err := msg.Decode(msg.Read(c.Request.Body))
+	if err != nil {
+		l.Error(err, "decode Basecamp msg failed")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	err = h.handleApproveOnLeaveRequest(msg)
+	if err != nil {
+		l.Error(err, "onleave handler failed")
+	}
+	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, err, nil, ""))
 }

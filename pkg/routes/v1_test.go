@@ -667,6 +667,18 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/webhook.IHandler.MarkInvoiceAsPaidViaBasecamp-fm",
 			},
 		},
+		"/webhooks/basecamp/onleave": {
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/webhook.IHandler.ApproveOnLeaveRequest-fm",
+			},
+		},
+		"/webhooks/basecamp/onleave/validate": {
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/webhook.IHandler.ValidateOnLeaveRequest-fm",
+			},
+		},
 		"/api/v1/bank-accounts": {
 			"GET": {
 				Method:  "GET",
