@@ -275,7 +275,7 @@ func (h *handler) generateEmailChangelog(
 	if isPreview {
 		// m.Bcc = []*mail.Email{mail.NewEmail("Minh Luu", "leo@dwarvesv.com")}
 		m.Categories = []string{}
-		m.To = []*mail.Email{mail.NewEmail("Minh Luu", "leo@dwarvesv.com")}
+		m.To = []*mail.Email{mail.NewEmail("Minh Luu", "leo@d.foundation")}
 	}
 	m.Subject = values[emailSubject].Title[0].Text.Content
 
