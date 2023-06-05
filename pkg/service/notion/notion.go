@@ -115,14 +115,6 @@ func (n *notionService) ToChangelogMJML(blocks []nt.Block, email model.Email) (s
 									%s
 								  </li>`, strings.Join(plainText, " "))
 				resutl = handleNestedBulletText(v, resutl)
-			} else if i == len(blocks)-1 { // if last block
-				resutl = resutl + fmt.Sprintf(`
-								  <li style="margin: 4px 0px;"> 
-									%s
-								  </li>
-							</ul>
-						</mj-text>`, strings.Join(plainText, " "))
-				resutl = handleNestedBulletText(v, resutl)
 			} else { // handle block in between first and last block
 				// if block before this is a bullet list
 				if _, ok := blocks[i-1].(*nt.BulletedListItemBlock); ok {
@@ -143,12 +135,24 @@ func (n *notionService) ToChangelogMJML(blocks []nt.Block, email model.Email) (s
 						resutl = handleNestedBulletText(v, resutl)
 					}
 				} else { // if block before this is not a bullet list
-					resutl = resutl + fmt.Sprintf(`<mj-text padding="0px 0px">
+					// if this is last block
+					if i == len(blocks)-1 {
+						resutl = resutl + fmt.Sprintf(`<mj-text padding="0px 0px">
+							<ul>
+								  <li style="margin: 4px 0px;"> 
+									%s
+								  </li>
+							</ul>
+						</mj-text>`, strings.Join(plainText, " "))
+						resutl = handleNestedBulletText(v, resutl)
+					} else { // if this is not last block
+						resutl = resutl + fmt.Sprintf(`<mj-text padding="0px 0px">
 							<ul>
 								  <li style="margin: 4px 0px;"> 
 									%s
 								  </li>`, strings.Join(plainText, " "))
-					resutl = handleNestedBulletText(v, resutl)
+						resutl = handleNestedBulletText(v, resutl)
+					}
 				}
 			}
 		case *nt.ImageBlock:
