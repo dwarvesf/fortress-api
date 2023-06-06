@@ -61,7 +61,6 @@ func New(
 // @Success 500 {object} view.ErrorResponse
 // @Router /engagements/rollup [post]
 func (h *handler) UpsertRollup(c *gin.Context) {
-
 	l := h.logger.Fields(
 		logger.Fields{
 			"handler": "engagement",
@@ -133,7 +132,7 @@ func (h *handler) UpsertRollup(c *gin.Context) {
 		MessageCount:  body.MessageCount,
 		ReactionCount: body.ReactionCount,
 	}
-	rollup, err = h.store.EngagementsRollup.Upsert(tx.DB(), rollup)
+	_, err = h.store.EngagementsRollup.Upsert(tx.DB(), rollup)
 	if err != nil {
 		l.Error(err, "unable to upsert engagements rollup")
 		c.JSON(

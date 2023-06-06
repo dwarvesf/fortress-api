@@ -301,6 +301,9 @@ func (d *discordClient) GetMessagesAfterCursor(
 			cursorMessageID,
 			"",
 		)
+		if err != nil {
+			return nil, err
+		}
 		// reversal is needed since messages are sorted by newest first
 		for i, j := 0, len(messages)-1; i < j; i, j = i+1, j-1 {
 			messages[i], messages[j] = messages[j], messages[i]
