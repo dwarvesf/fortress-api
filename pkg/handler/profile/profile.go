@@ -165,7 +165,7 @@ func (h *handler) UpdateInfo(c *gin.Context) {
 	}
 
 	// Update social accounts
-	saInput := socialAccountInput{
+	saInput := model.SocialAccountInput{
 		GithubID:     input.GithubID,
 		NotionID:     input.NotionID,
 		DiscordID:    discordID,
@@ -189,12 +189,6 @@ func (h *handler) UpdateInfo(c *gin.Context) {
 		"address",
 		"country",
 		"city",
-		"github_id",
-		"notion_id",
-		"notion_name",
-		"notion_email",
-		"discord_name",
-		"linkedin_name",
 		"wise_recipient_id",
 		"wise_account_number",
 		"wise_recipient_email",
@@ -210,17 +204,7 @@ func (h *handler) UpdateInfo(c *gin.Context) {
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToUpdateProfileInfoData(employee), nil, done(nil), nil, ""))
 }
 
-type socialAccountInput struct {
-	GithubID     string
-	NotionID     string
-	NotionName   string
-	NotionEmail  string
-	DiscordID    string
-	DiscordName  string
-	LinkedInName string
-}
-
-func (h *handler) updateSocialAccounts(db *gorm.DB, input socialAccountInput, employeeID model.UUID) error {
+func (h *handler) updateSocialAccounts(db *gorm.DB, input model.SocialAccountInput, employeeID model.UUID) error {
 	l := h.logger.Fields(logger.Fields{
 		"handler": "profile",
 		"method":  "updateSocialAccounts",
@@ -323,7 +307,7 @@ func (h *handler) validateCountryAndCity(db *gorm.DB, countryName string, city s
 		return false
 	}
 
-	if city != "" && !slices.Contains([]string(country.Cities), city) {
+	if city != "" && !slices.Contains(country.Cities, city) {
 		l.Info("city does not belong to country")
 		return false
 	}
@@ -785,7 +769,7 @@ func (h *handler) SubmitOnboardingForm(c *gin.Context) {
 	}
 
 	// Update social accounts
-	saInput := socialAccountInput{
+	saInput := model.SocialAccountInput{
 		GithubID:     input.GithubID,
 		NotionName:   input.NotionName,
 		DiscordName:  input.DiscordName,

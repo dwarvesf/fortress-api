@@ -67,13 +67,13 @@ func (h *handler) StoreVaultTransaction(c *gin.Context) {
 		}
 		res, err := h.service.Mochi.GetVaultTransaction(req)
 		if err != nil {
-			l.Error(err, "GetVaultTransaction failed")
+			l.Error(err, "failed to get GetVaultTransaction")
 			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 			return
 		}
 
 		for _, transaction := range res.Data {
-			// skip case trasfer through wallet address
+			// skip case transfer through wallet address
 			if transaction.Target == "" {
 				continue
 			}
@@ -85,14 +85,14 @@ func (h *handler) StoreVaultTransaction(c *gin.Context) {
 
 			srcEmployeeId, err := h.store.SocialAccount.GetByDiscordID(h.repo.DB(), transaction.Sender)
 			if err != nil {
-				l.Error(err, "GetByDiscordID failed")
+				l.Error(err, "failed to get GetByDiscordID")
 				c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 				return
 			}
 
 			destEmployeeId, err := h.store.SocialAccount.GetByDiscordID(h.repo.DB(), transaction.Target)
 			if err != nil {
-				l.Error(err, "GetByDiscordID failed")
+				l.Error(err, " failed to get GetByDiscordID")
 				c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 				return
 			}
@@ -114,7 +114,7 @@ func (h *handler) StoreVaultTransaction(c *gin.Context) {
 
 	tx, done := h.repo.NewTransaction()
 	if err := h.store.IcyTransaction.Create(tx.DB(), icyTxs); err != nil {
-		l.Error(done(err), "Create IcyTransaction failed")
+		l.Error(done(err), "failed to Create IcyTransaction")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
 	}
