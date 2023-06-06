@@ -98,45 +98,6 @@ func (r *controller) UpdateGeneralInfo(l logger.Logger, employeeID string, body 
 		emp.PhoneNumber = body.Phone
 	}
 
-	if strings.TrimSpace(body.GithubID) != "" {
-		emp.GithubID = body.GithubID
-	}
-
-	if strings.TrimSpace(body.NotionID) != "" {
-		emp.NotionID = body.NotionID
-	}
-
-	if strings.TrimSpace(body.NotionName) != "" {
-		emp.NotionName = body.NotionName
-	}
-
-	if strings.TrimSpace(body.NotionEmail) != "" {
-		emp.NotionEmail = body.NotionEmail
-	}
-
-	discordID := ""
-	if strings.TrimSpace(body.DiscordName) != "" {
-		// Get discord info
-		emp.DiscordName = body.DiscordName
-		discordMember, err := r.service.Discord.GetMemberByUsername(body.DiscordName)
-		if err != nil {
-			return nil, err
-		}
-
-		if discordMember != nil {
-			discordID = discordMember.User.ID
-		}
-	}
-
-	if discordID != "" {
-		body.DiscordID = discordID
-		emp.DiscordID = discordID
-	}
-
-	if strings.TrimSpace(body.LinkedInName) != "" {
-		emp.LinkedInName = body.LinkedInName
-	}
-
 	if strings.TrimSpace(body.DisplayName) != "" {
 		emp.DisplayName = body.DisplayName
 	}
@@ -185,7 +146,35 @@ func (r *controller) UpdateGeneralInfo(l logger.Logger, employeeID string, body 
 		emp.WiseCurrency = body.WiseCurrency
 	}
 
-	if err := r.updateSocialAccounts(tx.DB(), body, emp.ID); err != nil {
+	discordID := ""
+	if strings.TrimSpace(body.DiscordName) != "" {
+		// Get discord info
+		discordMember, err := r.service.Discord.GetMemberByUsername(body.DiscordName)
+		if err != nil {
+			return nil, done(err)
+		}
+
+		if discordMember != nil {
+			discordID = discordMember.User.ID
+		}
+	}
+
+	if discordID != "" {
+		body.DiscordID = discordID
+	}
+
+	// Update social accounts
+	saInput := model.SocialAccountInput{
+		GithubID:     body.GithubID,
+		NotionID:     body.NotionID,
+		DiscordID:    discordID,
+		NotionName:   body.NotionName,
+		NotionEmail:  body.NotionEmail,
+		DiscordName:  body.DiscordName,
+		LinkedInName: body.LinkedInName,
+	}
+
+	if err := r.updateSocialAccounts(tx.DB(), saInput, emp.ID); err != nil {
 		return nil, done(err)
 	}
 
@@ -194,13 +183,6 @@ func (r *controller) UpdateGeneralInfo(l logger.Logger, employeeID string, body 
 		"team_email",
 		"phone_number",
 		"line_manager_id",
-		"discord_id",
-		"discord_name",
-		"github_id",
-		"notion_id",
-		"notion_name",
-		"notion_email",
-		"linkedin_name",
 		"display_name",
 		"joined_date",
 		"left_date",
@@ -256,7 +238,7 @@ func (r *controller) UpdateGeneralInfo(l logger.Logger, employeeID string, body 
 	return emp, done(nil)
 }
 
-func (r *controller) updateSocialAccounts(db *gorm.DB, input UpdateEmployeeGeneralInfoInput, employeeID model.UUID) error {
+func (r *controller) updateSocialAccounts(db *gorm.DB, input model.SocialAccountInput, employeeID model.UUID) error {
 	l := r.logger.Fields(logger.Fields{
 		"handler":    "employee",
 		"method":     "updateSocialAccounts",

@@ -78,23 +78,34 @@ func ToUpdateProfileInfoData(employee *model.Employee) *UpdateProfileInfoData {
 		},
 		TeamEmail:          employee.TeamEmail,
 		PhoneNumber:        employee.PhoneNumber,
-		GithubID:           employee.GithubID,
-		NotionID:           employee.NotionID,
-		NotionName:         employee.NotionName,
-		NotionEmail:        employee.NotionEmail,
-		DiscordID:          employee.DiscordID,
-		DiscordName:        employee.DiscordName,
 		Username:           employee.Username,
 		PlaceOfResidence:   employee.PlaceOfResidence,
 		Address:            employee.Address,
 		Country:            employee.Country,
 		City:               employee.City,
-		LinkedInName:       employee.LinkedInName,
 		WiseRecipientID:    employee.WiseRecipientID,
 		WiseAccountNumber:  employee.WiseAccountNumber,
 		WiseRecipientEmail: employee.WiseRecipientEmail,
 		WiseRecipientName:  employee.WiseRecipientName,
 		WiseCurrency:       employee.WiseCurrency,
+	}
+
+	if len(employee.SocialAccounts) > 0 {
+		for _, sa := range employee.SocialAccounts {
+			switch sa.Type {
+			case model.SocialAccountTypeGitHub:
+				rs.GithubID = sa.AccountID
+			case model.SocialAccountTypeNotion:
+				rs.NotionID = sa.AccountID
+				rs.NotionName = sa.Name
+			case model.SocialAccountTypeDiscord:
+				rs.DiscordID = sa.AccountID
+				rs.DiscordName = sa.Name
+			case model.SocialAccountTypeLinkedIn:
+				rs.LinkedInName = sa.Name
+			}
+
+		}
 	}
 
 	return rs

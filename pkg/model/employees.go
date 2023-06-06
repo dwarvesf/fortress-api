@@ -97,14 +97,6 @@ type Employee struct {
 	// social services
 	BasecampID             int    `gorm:"default:null"`
 	BasecampAttachableSGID string `gorm:"column:basecamp_attachable_sgid;default:null"`
-	GitlabID               string `gorm:"default:null"`
-	GithubID               string `gorm:"default:null"`
-	NotionID               string `gorm:"default:null"`
-	NotionName             string `gorm:"default:null"`
-	NotionEmail            string `gorm:"default:null"`
-	DiscordID              string `gorm:"default:null"`
-	DiscordName            string `gorm:"default:null"`
-	LinkedInName           string `gorm:"column:linkedin_name;default:null"`
 
 	// payroll info
 	WiseRecipientEmail string `gorm:"default:null"`

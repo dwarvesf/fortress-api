@@ -37,30 +37,6 @@ func (i UpdateInfoInput) ToEmployeeModel(employee *model.Employee) {
 	employee.City = i.City
 	employee.Country = i.Country
 
-	if i.GithubID != "" {
-		employee.GithubID = i.GithubID
-	}
-
-	if i.NotionID != "" {
-		employee.NotionID = i.NotionID
-	}
-
-	if i.NotionName != "" {
-		employee.NotionName = i.NotionName
-	}
-
-	if i.NotionEmail != "" {
-		employee.NotionEmail = i.NotionEmail
-	}
-
-	if i.DiscordName != "" {
-		employee.DiscordName = i.DiscordName
-	}
-
-	if i.LinkedInName != "" {
-		employee.LinkedInName = i.LinkedInName
-	}
-
 	if strings.TrimSpace(i.WiseRecipientID) != "" {
 		employee.WiseRecipientID = i.WiseRecipientID
 	}
