@@ -14,6 +14,6 @@ type OnLeaveRequest struct {
 	Title       string
 	Description string
 	CreatorID   UUID
-	ApprovedID  UUID
-	AssigneeIDs []string
+	ApproverID  UUID
+	AssigneeIDs JSONArrayString
 }
