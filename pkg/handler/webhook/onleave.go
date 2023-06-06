@@ -105,9 +105,9 @@ func (h *handler) validateOnLeaveData(msg model.BasecampWebhookMessage) error {
 	}
 
 	// Validate if request belongs to the onLeave group
-	onLeaveID := consts.OnleaveID
-	if h.config.Env == "local" {
-		onLeaveID = consts.OnleavePlaygroundID
+	onLeaveID := consts.OnleavePlaygroundID
+	if h.config.Env == "prod" {
+		onLeaveID = consts.OnleaveID
 	}
 
 	if data.ParentID != int64(onLeaveID) {
