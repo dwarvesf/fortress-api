@@ -76,11 +76,18 @@ func (b *birthday) BirthdayDailyMessage(c *gin.Context) {
 	var names string
 	var birthDateNames []string
 	todayDate := time.Now().Format("01/02")
-	for _, employee := range employees {
+	for _, e := range employees {
 		now := time.Now()
-		if now.Day() == employee.DateOfBirth.Day() && now.Month() == employee.DateOfBirth.Month() {
-			names += fmt.Sprintf("<@%s>, ", employee.DiscordID)
-			birthDateNames = append(birthDateNames, employee.FullName)
+		if now.Day() == e.DateOfBirth.Day() && now.Month() == e.DateOfBirth.Month() {
+			sa := model.SocialAccounts(e.SocialAccounts).GetDiscord()
+			if sa != nil {
+				if sa.AccountID != "" {
+					discordID := sa.AccountID
+					names += fmt.Sprintf("<@%s>, ", discordID)
+					birthDateNames = append(birthDateNames, e.FullName)
+				}
+
+			}
 		}
 	}
 
