@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS "on_leave_requests" (
     description         TEXT,
     creator_id          UUID NOT NULL,
     approver_id         UUID NOT NULL,
-    assignee_ids        TEXT[]
+    assignee_ids        JSONB
 );
 
 ALTER TABLE on_leave_requests
