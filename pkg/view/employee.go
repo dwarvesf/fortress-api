@@ -311,7 +311,6 @@ func ToUpdateGeneralInfoEmployeeData(employee *model.Employee) *UpdateGeneralInf
 			case model.SocialAccountTypeLinkedIn:
 				rs.LinkedInName = sa.Name
 			}
-
 		}
 	}
 
@@ -512,7 +511,6 @@ func ToEmployeeData(employee *model.Employee) *EmployeeData {
 			case model.SocialAccountTypeLinkedIn:
 				rs.LinkedInName = sa.Name
 			}
-
 		}
 	}
 

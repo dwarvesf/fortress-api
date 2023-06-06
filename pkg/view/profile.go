@@ -104,7 +104,6 @@ func ToUpdateProfileInfoData(employee *model.Employee) *UpdateProfileInfoData {
 			case model.SocialAccountTypeLinkedIn:
 				rs.LinkedInName = sa.Name
 			}
-
 		}
 	}
 
