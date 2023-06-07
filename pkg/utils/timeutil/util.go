@@ -1,7 +1,9 @@
 package timeutil
 
 import (
+	"errors"
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -227,10 +229,61 @@ func GetEndDayOfWeek(tm time.Time) time.Time {
 }
 
 // in curl special character need to be convert to ascii
-// Example: curl --request GET \
-//   --url 'http://localhost:8200/api/v1/vault/55/transaction?start_time=2023-05-08T00%3A00%3A00%2B07%3A00&end_time=2023-05-14T23%3A59%3A59%2B07%3A00'
+//
+//	Example: curl --request GET \
+//	  --url 'http://localhost:8200/api/v1/vault/55/transaction?start_time=2023-05-08T00%3A00%3A00%2B07%3A00&end_time=2023-05-14T23%3A59%3A59%2B07%3A00'
 func FormatDateForCurl(isoTime string) string {
 	isoTime = strings.ReplaceAll(isoTime, ":", "%3A")
 	isoTime = strings.ReplaceAll(isoTime, "+", "%2B")
 	return isoTime
+}
+
+// GetTimeRange parses the time range from a string
+// Example time range format: 13/01/2020 - 17/01/2020
+// Returns err if failed to parse
+func GetTimeRange(timeString string) ([]*time.Time, error) {
+	var startDate, endDate *time.Time
+
+	// string input is not a time range
+	if !isTimeRange(timeString) {
+		startDate = tryParseTime(timeString)
+		if startDate != nil {
+			return []*time.Time{startDate}, nil
+		}
+		return nil, errors.New("cannot parse time")
+	}
+
+	// If in time range format
+	ranges := strings.Split(timeString, "-")
+	if len(ranges) < 2 {
+		return nil, errors.New("cannot parse wrong time range format")
+	}
+	startDate = tryParseTime(ranges[0])
+	endDate = tryParseTime(ranges[1])
+
+	if startDate == nil || endDate == nil {
+		return nil, errors.New("cannot parse time")
+	}
+
+	return []*time.Time{startDate, endDate}, nil
+}
+
+func isTimeRange(s string) bool {
+	// This regexp will validate whether s string input is a time range
+	// Example time range format: 13/01/2020 - 17/01/2020
+	// Explain regexp:
+	// (0[1-9] | [1-9] | [1-2][0-9] | 3[0-1]) / (0[1-9] | [1-9] | 1[0-2]) / (20[0-9]{2})
+	// (01->09 OR 1->9 OR 10->29 OR 30->31) / 01->09 OR 1->9 OR 10->12 / 20(00->99)
+	// (day) / (month) / (year)
+	timeRangeRegexp := regexp.MustCompile(`(0[1-9]|[1-9]|[1-2][0-9]|3[0-1])/(0[1-9]|[1-9]|1[0-2])/(20[0-9]{2}) - (0[1-9]|[1-9]|[1-2][0-9]|3[0-1])/(0[1-9]|[1-9]|1[0-2])/(20[0-9]{2})`)
+	return timeRangeRegexp.FindStringSubmatch(s) != nil
+}
+
+func tryParseTime(timeString string) *time.Time {
+	timeString = strings.TrimSpace(timeString)
+	time, err := time.Parse("2/1/2006", timeString)
+	if err != nil {
+		return nil
+	}
+	return &time
 }

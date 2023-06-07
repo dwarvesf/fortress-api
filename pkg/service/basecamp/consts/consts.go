@@ -48,7 +48,7 @@ const (
 	FortressCampfireID                   = 1347531395
 	HiringCampfireID                     = 1974612188
 	FortressID                           = 9410372
-	OnleaveID                            = 1998275183
+	OnleaveID                            = 5669914253
 	OnleavePlaygroundID                  = 2243342506
 	WarehouseID                          = 15921521
 	PlaygroundHRTodoID                   = 2475678340

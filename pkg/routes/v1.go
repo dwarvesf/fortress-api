@@ -47,6 +47,11 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 				operationGroup.POST("/accounting-transaction", h.Webhook.StoreAccountingTransaction)
 				operationGroup.PUT("/invoice", h.Webhook.MarkInvoiceAsPaidViaBasecamp)
 			}
+			onLeaveGroup := basecampGroup.Group("/onleave")
+			{
+				onLeaveGroup.POST("/validate", h.Webhook.ValidateOnLeaveRequest)
+				onLeaveGroup.POST("", h.Webhook.ApproveOnLeaveRequest)
+			}
 		}
 	}
 

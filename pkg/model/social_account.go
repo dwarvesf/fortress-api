@@ -62,3 +62,13 @@ func (e SocialAccounts) GetGithub() *SocialAccount {
 	}
 	return nil
 }
+
+type SocialAccountInput struct {
+	GithubID     string
+	NotionID     string
+	NotionName   string
+	NotionEmail  string
+	DiscordID    string
+	DiscordName  string
+	LinkedInName string
+}

@@ -223,3 +223,9 @@ func (s *store) GetMenteesByID(db *gorm.DB, employeeID string) ([]*model.Employe
 		Preload("Seniority").
 		Find(&employees).Error
 }
+
+func (s *store) GetByEmails(db *gorm.DB, emails []string) ([]*model.Employee, error) {
+	var employees []*model.Employee
+
+	return employees, db.Where("NULLIF(TRIM(team_email), '') IN ? OR NULLIF(TRIM(personal_email), '') IN ?", emails, emails).Find(&employees).Error
+}

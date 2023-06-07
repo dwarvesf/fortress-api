@@ -172,7 +172,7 @@ type UpdateGeneralInfoEmployeeData struct {
 	NotionID      string             `json:"notionID"`
 	NotionName    string             `json:"notionName"`
 	NotionEmail   string             `json:"notionEmail"`
-	LinkedinName  string             `json:"linkedInName"`
+	LinkedInName  string             `json:"linkedInName"`
 	DiscordID     string             `json:"discordID"`
 	DiscordName   string             `json:"discordName"`
 	DisplayName   string             `json:"displayName"`
@@ -293,15 +293,25 @@ func ToUpdateGeneralInfoEmployeeData(employee *model.Employee) *UpdateGeneralInf
 		FullName:      employee.FullName,
 		TeamEmail:     employee.TeamEmail,
 		PhoneNumber:   employee.PhoneNumber,
-		GithubID:      employee.GithubID,
-		NotionID:      employee.NotionID,
-		NotionName:    employee.NotionName,
-		NotionEmail:   employee.NotionEmail,
-		DiscordID:     employee.DiscordID,
-		DiscordName:   employee.DiscordName,
-		LinkedinName:  employee.LinkedInName,
 		DisplayName:   employee.DisplayName,
 		Organizations: ToOrganizations(employee.EmployeeOrganizations),
+	}
+
+	if len(employee.SocialAccounts) > 0 {
+		for _, sa := range employee.SocialAccounts {
+			switch sa.Type {
+			case model.SocialAccountTypeGitHub:
+				rs.GithubID = sa.AccountID
+			case model.SocialAccountTypeNotion:
+				rs.NotionID = sa.AccountID
+				rs.NotionName = sa.Name
+			case model.SocialAccountTypeDiscord:
+				rs.DiscordID = sa.AccountID
+				rs.DiscordName = sa.Name
+			case model.SocialAccountTypeLinkedIn:
+				rs.LinkedInName = sa.Name
+			}
+		}
 	}
 
 	if employee.LineManager != nil {
@@ -470,13 +480,7 @@ func ToEmployeeData(employee *model.Employee) *EmployeeData {
 		Gender:           employee.Gender,
 		Horoscope:        employee.Horoscope,
 		DateOfBirth:      employee.DateOfBirth,
-		GithubID:         employee.GithubID,
-		NotionID:         employee.NotionID,
-		NotionName:       employee.NotionName,
-		DiscordID:        employee.DiscordID,
-		DiscordName:      employee.DiscordName,
 		Username:         employee.Username,
-		LinkedInName:     employee.LinkedInName,
 		WorkingStatus:    employee.WorkingStatus,
 		Seniority:        employee.Seniority,
 		JoinedDate:       employee.JoinedDate,
@@ -491,6 +495,23 @@ func ToEmployeeData(employee *model.Employee) *EmployeeData {
 		Positions:        ToEmployeePositions(employee.EmployeePositions),
 		Stacks:           ToEmployeeStacks(employee.EmployeeStacks),
 		Chapters:         ToChapters(employee.EmployeeChapters),
+	}
+
+	if len(employee.SocialAccounts) > 0 {
+		for _, sa := range employee.SocialAccounts {
+			switch sa.Type {
+			case model.SocialAccountTypeGitHub:
+				rs.GithubID = sa.AccountID
+			case model.SocialAccountTypeNotion:
+				rs.NotionID = sa.AccountID
+				rs.NotionName = sa.Name
+			case model.SocialAccountTypeDiscord:
+				rs.DiscordID = sa.AccountID
+				rs.DiscordName = sa.Name
+			case model.SocialAccountTypeLinkedIn:
+				rs.LinkedInName = sa.Name
+			}
+		}
 	}
 
 	if len(employee.Mentees) > 0 {
