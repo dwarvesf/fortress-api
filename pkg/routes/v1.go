@@ -306,7 +306,7 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 		engagementsGroup.POST(
 			"/rollup",
 			amw.WithAuth,
-			pmw.WithPerm(model.PermissionEngagementMetricsRead),
+			pmw.WithPerm(model.PermissionEngagementMetricsWrite),
 			h.Engagement.UpsertRollup,
 		)
 		engagementsGroup.GET(
