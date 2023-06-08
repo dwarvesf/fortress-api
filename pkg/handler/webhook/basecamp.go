@@ -134,7 +134,7 @@ func (h *handler) markInvoiceAsPaid(msg *model.BasecampWebhookMessage) error {
 // ValidateOnLeaveRequest validates on-leave request and give feedback comments
 func (h *handler) ValidateOnLeaveRequest(c *gin.Context) {
 	l := h.logger.Fields(logger.Fields{
-		"handler": "onleave",
+		"handler": "basecamp",
 		"method":  "ValidateOnLeaveRequest",
 	})
 
@@ -156,7 +156,7 @@ func (h *handler) ValidateOnLeaveRequest(c *gin.Context) {
 // ApproveOnLeaveRequest saves on-leave request in a database
 func (h *handler) ApproveOnLeaveRequest(c *gin.Context) {
 	l := h.logger.Fields(logger.Fields{
-		"handler": "onleave",
+		"handler": "basecamp",
 		"method":  "ApproveOnLeaveRequest",
 	})
 
