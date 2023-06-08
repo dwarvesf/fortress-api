@@ -8,6 +8,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service/basecamp/consts"
 	bcModel "github.com/dwarvesf/fortress-api/pkg/service/basecamp/model"
+	"github.com/dwarvesf/fortress-api/pkg/utils/mailutils"
 	"github.com/dwarvesf/fortress-api/pkg/utils/timeutil"
 )
 
@@ -173,7 +174,7 @@ func (h *handler) handleApproveOnLeaveRequest(msg model.BasecampWebhookMessage) 
 
 	// assign assignees id
 	for _, assignee := range todo.Assignees {
-		data.AssigneeEmails = append(data.AssigneeEmails, assignee.EmailAddress)
+		data.AssigneeEmails = append(data.AssigneeEmails, mailutils.TransformToNewDomainEmail(assignee.EmailAddress))
 	}
 
 	assignees, err := h.store.Employee.GetByEmails(h.repo.DB(), data.AssigneeEmails)
@@ -186,14 +187,14 @@ func (h *handler) handleApproveOnLeaveRequest(msg model.BasecampWebhookMessage) 
 	}
 
 	// assign creator id
-	creator, err := h.store.Employee.OneByEmail(h.repo.DB(), data.CreatorEmail)
+	creator, err := h.store.Employee.OneByEmail(h.repo.DB(), mailutils.TransformToNewDomainEmail(data.CreatorEmail))
 	if err != nil {
 		return fmt.Errorf("cannot get creator with email %v: %v", data.CreatorEmail, err.Error())
 	}
 	r.CreatorID = creator.ID
 
 	// assign appprover id
-	approver, err := h.store.Employee.OneByEmail(h.repo.DB(), data.ApproverEmail)
+	approver, err := h.store.Employee.OneByEmail(h.repo.DB(), mailutils.TransformToNewDomainEmail(data.ApproverEmail))
 	if err != nil {
 		return fmt.Errorf("cannot get approver with email %v: %v", data.ApproverEmail, err.Error())
 	}
