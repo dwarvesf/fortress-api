@@ -229,3 +229,9 @@ func (s *store) GetByEmails(db *gorm.DB, emails []string) ([]*model.Employee, er
 
 	return employees, db.Where("NULLIF(TRIM(team_email), '') IN ? OR NULLIF(TRIM(personal_email), '') IN ?", emails, emails).Find(&employees).Error
 }
+
+func (s *store) GetByBasecampIDs(db *gorm.DB, basecampIDs []int) ([]*model.Employee, error) {
+	var employees []*model.Employee
+
+	return employees, db.Where("basecamp_id IN ?", basecampIDs).Find(&employees).Error
+}
