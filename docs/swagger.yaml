@@ -260,10 +260,6 @@ definitions:
         type: string
       deletedAt:
         $ref: '#/definitions/gorm.DeletedAt'
-      discordID:
-        type: string
-      discordName:
-        type: string
       displayName:
         type: string
       employee_salary:
@@ -293,10 +289,6 @@ definitions:
         type: string
       gender:
         type: string
-      githubID:
-        type: string
-      gitlabID:
-        type: string
       heads:
         items:
           $ref: '#/definitions/model.ProjectHead'
@@ -317,8 +309,6 @@ definitions:
         $ref: '#/definitions/model.Employee'
       lineManagerID:
         type: string
-      linkedInName:
-        type: string
       localBankBranch:
         type: string
       localBankCurrency:
@@ -335,12 +325,6 @@ definitions:
         items:
           $ref: '#/definitions/model.Employee'
         type: array
-      notionEmail:
-        type: string
-      notionID:
-        type: string
-      notionName:
-        type: string
       organizations:
         items:
           $ref: '#/definitions/model.Organization'
@@ -4667,7 +4651,7 @@ paths:
       tags:
       - Vault
   /cron-jobs/sync-project-member-status:
-    put:
+    post:
       consumes:
       - application/json
       description: Sync project member status

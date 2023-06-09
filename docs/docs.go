@@ -563,7 +563,7 @@ const docTemplate = `{
             }
         },
         "/cron-jobs/sync-project-member-status": {
-            "put": {
+            "post": {
                 "description": "Sync project member status",
                 "consumes": [
                     "application/json"
@@ -6399,12 +6399,6 @@ const docTemplate = `{
                 "deletedAt": {
                     "$ref": "#/definitions/gorm.DeletedAt"
                 },
-                "discordID": {
-                    "type": "string"
-                },
-                "discordName": {
-                    "type": "string"
-                },
                 "displayName": {
                     "type": "string"
                 },
@@ -6448,12 +6442,6 @@ const docTemplate = `{
                 "gender": {
                     "type": "string"
                 },
-                "githubID": {
-                    "type": "string"
-                },
-                "gitlabID": {
-                    "type": "string"
-                },
                 "heads": {
                     "type": "array",
                     "items": {
@@ -6484,9 +6472,6 @@ const docTemplate = `{
                 "lineManagerID": {
                     "type": "string"
                 },
-                "linkedInName": {
-                    "type": "string"
-                },
                 "localBankBranch": {
                     "type": "string"
                 },
@@ -6510,15 +6495,6 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/model.Employee"
                     }
-                },
-                "notionEmail": {
-                    "type": "string"
-                },
-                "notionID": {
-                    "type": "string"
-                },
-                "notionName": {
-                    "type": "string"
                 },
                 "organizations": {
                     "type": "array",

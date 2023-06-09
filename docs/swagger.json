@@ -555,7 +555,7 @@
             }
         },
         "/cron-jobs/sync-project-member-status": {
-            "put": {
+            "post": {
                 "description": "Sync project member status",
                 "consumes": [
                     "application/json"
@@ -6391,12 +6391,6 @@
                 "deletedAt": {
                     "$ref": "#/definitions/gorm.DeletedAt"
                 },
-                "discordID": {
-                    "type": "string"
-                },
-                "discordName": {
-                    "type": "string"
-                },
                 "displayName": {
                     "type": "string"
                 },
@@ -6440,12 +6434,6 @@
                 "gender": {
                     "type": "string"
                 },
-                "githubID": {
-                    "type": "string"
-                },
-                "gitlabID": {
-                    "type": "string"
-                },
                 "heads": {
                     "type": "array",
                     "items": {
@@ -6476,9 +6464,6 @@
                 "lineManagerID": {
                     "type": "string"
                 },
-                "linkedInName": {
-                    "type": "string"
-                },
                 "localBankBranch": {
                     "type": "string"
                 },
@@ -6502,15 +6487,6 @@
                     "items": {
                         "$ref": "#/definitions/model.Employee"
                     }
-                },
-                "notionEmail": {
-                    "type": "string"
-                },
-                "notionID": {
-                    "type": "string"
-                },
-                "notionName": {
-                    "type": "string"
                 },
                 "organizations": {
                     "type": "array",
