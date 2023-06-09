@@ -16,6 +16,7 @@ type IStore interface {
 	OneByBasecampID(db *gorm.DB, basecampID int) (employee *model.Employee, err error)
 	GetByIDs(db *gorm.DB, ids []model.UUID) (employees []*model.Employee, err error)
 	GetByEmails(db *gorm.DB, emails []string) (employees []*model.Employee, err error)
+	GetByBasecampIDs(db *gorm.DB, basecampIDs []int) (employees []*model.Employee, err error)
 	GetByWorkingStatus(db *gorm.DB, workingStatus model.WorkingStatus) ([]*model.Employee, error)
 	GetLineManagers(db *gorm.DB) ([]*model.Employee, error)
 	GetLineManagersOfPeers(db *gorm.DB, employeeID string) ([]*model.Employee, error)
