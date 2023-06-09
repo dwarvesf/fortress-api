@@ -8,21 +8,20 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service/basecamp/consts"
 	bcModel "github.com/dwarvesf/fortress-api/pkg/service/basecamp/model"
-	"github.com/dwarvesf/fortress-api/pkg/utils/mailutils"
 	"github.com/dwarvesf/fortress-api/pkg/utils/timeutil"
 )
 
 type OnLeaveData struct {
-	ParentID       int64
-	Name           string
-	Type           string
-	StartDate      time.Time
-	EndDate        time.Time
-	Shift          string
-	Title          string
-	CreatorEmail   string
-	ApproverEmail  string
-	AssigneeEmails []string
+	ParentID            int64
+	Name                string
+	Type                string
+	StartDate           time.Time
+	EndDate             time.Time
+	Shift               string
+	Title               string
+	CreatorBasecampID   int
+	ApproverBasecampID  int
+	AssigneeBasecampIDs []int
 }
 
 func parseOnLeaveDataFromMessage(msg model.BasecampWebhookMessage) (OnLeaveData, error) {
@@ -57,8 +56,8 @@ func parseOnLeaveDataFromMessage(msg model.BasecampWebhookMessage) (OnLeaveData,
 	}
 
 	// set email infos
-	data.CreatorEmail = msg.Recording.Creator.Email
-	data.ApproverEmail = msg.Creator.Email
+	data.CreatorBasecampID = msg.Recording.Creator.ID
+	data.ApproverBasecampID = msg.Creator.ID
 
 	return data, nil
 }
@@ -174,12 +173,12 @@ func (h *handler) handleApproveOnLeaveRequest(msg model.BasecampWebhookMessage) 
 
 	// assign assignees id
 	for _, assignee := range todo.Assignees {
-		data.AssigneeEmails = append(data.AssigneeEmails, mailutils.TransformToNewDomainEmail(assignee.EmailAddress))
+		data.AssigneeBasecampIDs = append(data.AssigneeBasecampIDs, assignee.ID)
 	}
 
-	assignees, err := h.store.Employee.GetByEmails(h.repo.DB(), data.AssigneeEmails)
+	assignees, err := h.store.Employee.GetByBasecampIDs(h.repo.DB(), data.AssigneeBasecampIDs)
 	if err != nil {
-		return fmt.Errorf("cannot get assignees with email %v: %v", data.AssigneeEmails, err.Error())
+		return fmt.Errorf("cannot get assignees with basecamp_ids %v: %v", data.AssigneeBasecampIDs, err.Error())
 	}
 
 	for _, assignee := range assignees {
@@ -187,16 +186,16 @@ func (h *handler) handleApproveOnLeaveRequest(msg model.BasecampWebhookMessage) 
 	}
 
 	// assign creator id
-	creator, err := h.store.Employee.OneByEmail(h.repo.DB(), mailutils.TransformToNewDomainEmail(data.CreatorEmail))
+	creator, err := h.store.Employee.OneByBasecampID(h.repo.DB(), data.CreatorBasecampID)
 	if err != nil {
-		return fmt.Errorf("cannot get creator with email %v: %v", data.CreatorEmail, err.Error())
+		return fmt.Errorf("cannot get creator with basecamp_id %v: %v", data.CreatorBasecampID, err.Error())
 	}
 	r.CreatorID = creator.ID
 
 	// assign appprover id
-	approver, err := h.store.Employee.OneByEmail(h.repo.DB(), mailutils.TransformToNewDomainEmail(data.ApproverEmail))
+	approver, err := h.store.Employee.OneByBasecampID(h.repo.DB(), data.ApproverBasecampID)
 	if err != nil {
-		return fmt.Errorf("cannot get approver with email %v: %v", data.ApproverEmail, err.Error())
+		return fmt.Errorf("cannot get approver with basecamp_id %v: %v", data.ApproverBasecampID, err.Error())
 	}
 	r.ApproverID = approver.ID
 
