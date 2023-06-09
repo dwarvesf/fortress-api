@@ -2,6 +2,7 @@ package discord
 
 import (
 	"fmt"
+	"github.com/k0kubun/pp/v3"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -40,6 +41,8 @@ func (h *handler) SyncDiscordInfo(c *gin.Context) {
 		return
 	}
 
+	pp.Println(discordMembers)
+
 	socialAccounts, err := h.store.SocialAccount.GetByType(h.repo.DB(), model.SocialAccountTypeDiscord.String())
 	if err != nil {
 		h.logger.Error(err, "failed to get discord accounts")
@@ -51,7 +54,11 @@ func (h *handler) SyncDiscordInfo(c *gin.Context) {
 	discordUsernameMap := make(map[string]string)
 
 	for _, member := range discordMembers {
-		username := fmt.Sprintf("%s#%s", member.User.Username, member.User.Discriminator)
+		username := member.User.Username
+		if member.User.Discriminator != "0" {
+			username = fmt.Sprintf("%s#%s", member.User.Username, member.User.Discriminator)
+		}
+
 		discordIDMap[member.User.ID] = username
 		discordUsernameMap[username] = member.User.ID
 	}
