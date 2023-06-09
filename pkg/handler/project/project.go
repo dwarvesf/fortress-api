@@ -3057,7 +3057,7 @@ func (h *handler) UploadAvatar(c *gin.Context) {
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 404 {object} view.ErrorResponse
 // @Failure 500 {object} view.ErrorResponse
-// @Router /cron-jobs/sync-project-member-status [put]
+// @Router /cron-jobs/sync-project-member-status [post]
 func (h *handler) SyncProjectMemberStatus(c *gin.Context) {
 	l := h.logger.Fields(logger.Fields{
 		"handler": "project",
