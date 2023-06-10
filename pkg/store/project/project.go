@@ -59,16 +59,15 @@ func (s *store) All(db *gorm.DB, input GetListProjectInput, pagination model.Pag
 		Joins("LEFT JOIN currencies on bank_accounts.currency_id = currencies.id").
 		Joins(`
 			LEFT JOIN (
-					SELECT *
-                    FROM (
-						VALUES 
-							('USD', 'USD', 1),
-							('USD', 'CAD', 1.33420),
-							('USD', 'GBP', 0.79488),
-							('USD', 'EUR', 0.93030),
-							('USD', 'VND', 23480),
-							('USD', 'SGD', 1.34325)
-					) AS rates(src_cur, dest_cur, exchange_rate)
+				SELECT *
+				FROM (
+					VALUES 
+						('USD', 'USD', 1),
+						('USD', 'CAD', 1.33420),
+						('USD', 'GBP', 0.79488),
+						('USD', 'EUR', 0.93030),
+						('USD', 'VND', 23480),
+						('USD', 'SGD', 1.34325)) AS rates(src_cur, dest_cur, exchange_rate)
 			) as currency_exchanges ON currencies.name = currency_exchanges.dest_cur
 		`).
 		Group(`
