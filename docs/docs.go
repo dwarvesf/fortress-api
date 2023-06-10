@@ -6974,6 +6974,9 @@ const docTemplate = `{
         "model.Project": {
             "type": "object",
             "properties": {
+                "accountRating": {
+                    "type": "integer"
+                },
                 "allowsSendingSurvey": {
                     "type": "boolean"
                 },
@@ -7016,6 +7019,9 @@ const docTemplate = `{
                 "deletedAt": {
                     "$ref": "#/definitions/gorm.DeletedAt"
                 },
+                "deliveryRating": {
+                    "type": "integer"
+                },
                 "endDate": {
                     "type": "string"
                 },
@@ -7030,6 +7036,12 @@ const docTemplate = `{
                 },
                 "id": {
                     "type": "string"
+                },
+                "importantLevel": {
+                    "type": "string"
+                },
+                "leadRating": {
+                    "type": "integer"
                 },
                 "name": {
                     "type": "string"
@@ -8810,11 +8822,20 @@ const docTemplate = `{
         "request.UpdateProjectGeneralInfoInput": {
             "type": "object",
             "required": [
+                "accountRating",
                 "countryID",
+                "deliveryRating",
                 "function",
+                "importantLevel",
+                "leadRating",
                 "name"
             ],
             "properties": {
+                "accountRating": {
+                    "type": "integer",
+                    "maximum": 5,
+                    "minimum": 1
+                },
                 "auditNotionID": {
                     "type": "string"
                 },
@@ -8827,8 +8848,21 @@ const docTemplate = `{
                 "countryID": {
                     "type": "string"
                 },
+                "deliveryRating": {
+                    "type": "integer",
+                    "maximum": 5,
+                    "minimum": 1
+                },
                 "function": {
                     "type": "string"
+                },
+                "importantLevel": {
+                    "type": "string"
+                },
+                "leadRating": {
+                    "type": "integer",
+                    "maximum": 5,
+                    "minimum": 1
                 },
                 "name": {
                     "type": "string"
@@ -11173,6 +11207,9 @@ const docTemplate = `{
                         "$ref": "#/definitions/view.ProjectHead"
                     }
                 },
+                "accountRating": {
+                    "type": "integer"
+                },
                 "allowsSendingSurvey": {
                     "type": "boolean"
                 },
@@ -11218,6 +11255,9 @@ const docTemplate = `{
                         "$ref": "#/definitions/view.ProjectHead"
                     }
                 },
+                "deliveryRating": {
+                    "type": "integer"
+                },
                 "endDate": {
                     "type": "string"
                 },
@@ -11227,8 +11267,14 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
+                "importantLevel": {
+                    "type": "string"
+                },
                 "industry": {
                     "type": "string"
+                },
+                "leadRating": {
+                    "type": "integer"
                 },
                 "members": {
                     "type": "array",

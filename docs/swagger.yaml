@@ -642,6 +642,8 @@ definitions:
     type: object
   model.Project:
     properties:
+      accountRating:
+        type: integer
       allowsSendingSurvey:
         type: boolean
       avatar:
@@ -670,6 +672,8 @@ definitions:
         type: string
       deletedAt:
         $ref: '#/definitions/gorm.DeletedAt'
+      deliveryRating:
+        type: integer
       endDate:
         type: string
       function:
@@ -680,6 +684,10 @@ definitions:
         type: array
       id:
         type: string
+      importantLevel:
+        type: string
+      leadRating:
+        type: integer
       name:
         type: string
       organization:
@@ -1875,6 +1883,10 @@ definitions:
     type: object
   request.UpdateProjectGeneralInfoInput:
     properties:
+      accountRating:
+        maximum: 5
+        minimum: 1
+        type: integer
       auditNotionID:
         type: string
       bankAccountID:
@@ -1883,8 +1895,18 @@ definitions:
         type: string
       countryID:
         type: string
+      deliveryRating:
+        maximum: 5
+        minimum: 1
+        type: integer
       function:
         type: string
+      importantLevel:
+        type: string
+      leadRating:
+        maximum: 5
+        minimum: 1
+        type: integer
       name:
         type: string
       organizationID:
@@ -1896,8 +1918,12 @@ definitions:
       startDate:
         type: string
     required:
+    - accountRating
     - countryID
+    - deliveryRating
     - function
+    - importantLevel
+    - leadRating
     - name
     type: object
   request.UpdateSkillsInput:
@@ -3418,6 +3444,8 @@ definitions:
         items:
           $ref: '#/definitions/view.ProjectHead'
         type: array
+      accountRating:
+        type: integer
       allowsSendingSurvey:
         type: boolean
       auditNotionID:
@@ -3448,14 +3476,20 @@ definitions:
         items:
           $ref: '#/definitions/view.ProjectHead'
         type: array
+      deliveryRating:
+        type: integer
       endDate:
         type: string
       function:
         type: string
       id:
         type: string
+      importantLevel:
+        type: string
       industry:
         type: string
+      leadRating:
+        type: integer
       members:
         items:
           $ref: '#/definitions/view.ProjectMember'

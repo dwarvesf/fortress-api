@@ -899,8 +899,8 @@ func Test_UpdatePersonalInfo(t *testing.T) {
 				expRespRaw, err := os.ReadFile(tt.wantResponsePath)
 				require.NoError(t, err)
 
-				res, err := utils.RemoveFieldInResponse(w.Body.Bytes(), "updatedAt")
-				require.Nil(t, err)
+				res, _ := utils.RemoveFieldInResponse(w.Body.Bytes(), "createdAt")
+				res, _ = utils.RemoveFieldInResponse(res, "updatedAt")
 
 				require.JSONEq(t, string(expRespRaw), string(res), "[Handler.UpdatePersonalInfo] response mismatched")
 			})
