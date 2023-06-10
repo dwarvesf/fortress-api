@@ -33,6 +33,10 @@ type ProjectData struct {
 	Code                string                `json:"code"`
 	Function            string                `json:"function"`
 	AuditNotionID       string                `json:"auditNotionID"`
+	AccountRating       int                   `json:"accountRating"`
+	DeliveryRating      int                   `json:"deliveryRating"`
+	LeadRating          int                   `json:"leadRating"`
+	ImportantLevel      string                `json:"importantLevel"`
 	BankAccount         *BasicBankAccountInfo `json:"bankAccount"`
 	Client              *BasicClientInfo      `json:"client"`
 	CompanyInfo         *BasicCompanyInfo     `json:"companyInfo"`
@@ -148,12 +152,12 @@ func ToUpdateProjectStatusResponse(p *model.Project) UpdatedProject {
 	}
 }
 
-func ToProjectData(project *model.Project, userInfo *model.CurrentLoggedUserInfo) ProjectData {
+func ToProjectData(in *model.Project, userInfo *model.CurrentLoggedUserInfo) ProjectData {
 	leadMap := map[string]bool{}
-	var technicalLeads = make([]ProjectHead, 0, len(project.Heads))
+	var technicalLeads = make([]ProjectHead, 0, len(in.Heads))
 	var accountManagers, salePersons, deliveryManagers []ProjectHead
 
-	for _, h := range project.Heads {
+	for _, h := range in.Heads {
 		head := ToProjectHead(userInfo, h)
 
 		switch h.Position {
@@ -170,13 +174,13 @@ func ToProjectData(project *model.Project, userInfo *model.CurrentLoggedUserInfo
 	}
 
 	var projectCurrency *Currency
-	if project.BankAccount != nil {
-		projectCurrency = toCurrency(project.BankAccount.Currency)
+	if in.BankAccount != nil {
+		projectCurrency = toCurrency(in.BankAccount.Currency)
 	}
 
 	monthlyRevenue := decimal.Zero
-	var members = make([]ProjectMember, 0, len(project.ProjectMembers))
-	for _, m := range project.ProjectMembers {
+	var members = make([]ProjectMember, 0, len(in.ProjectMembers))
+	for _, m := range in.ProjectMembers {
 		member := ProjectMember{
 			Status:      m.Status.String(),
 			EmployeeID:  m.EmployeeID.String(),
@@ -207,79 +211,84 @@ func ToProjectData(project *model.Project, userInfo *model.CurrentLoggedUserInfo
 		members = append(members, member)
 	}
 
-	d := ProjectData{
-		BaseModel:           project.BaseModel,
-		Avatar:              project.Avatar,
-		Name:                project.Name,
-		Type:                project.Type.String(),
-		Status:              project.Status.String(),
-		Stacks:              ToProjectStacks(project.ProjectStacks),
-		StartDate:           project.StartDate,
-		EndDate:             project.EndDate,
+	projectData := ProjectData{
+		BaseModel:           in.BaseModel,
+		Avatar:              in.Avatar,
+		Name:                in.Name,
+		Type:                in.Type.String(),
+		Status:              in.Status.String(),
+		Stacks:              ToProjectStacks(in.ProjectStacks),
+		StartDate:           in.StartDate,
+		EndDate:             in.EndDate,
 		Members:             members,
 		TechnicalLead:       technicalLeads,
 		DeliveryManagers:    deliveryManagers,
 		AccountManagers:     accountManagers,
 		SalePersons:         salePersons,
-		ProjectEmail:        project.ProjectEmail,
-		AllowsSendingSurvey: project.AllowsSendingSurvey,
-		Code:                project.Code,
-		Function:            project.Function.String(),
+		ProjectEmail:        in.ProjectEmail,
+		AllowsSendingSurvey: in.AllowsSendingSurvey,
+		Code:                in.Code,
+		Function:            in.Function.String(),
 		Currency:            projectCurrency,
 	}
 
 	var clientEmail []string
-	if project.ClientEmail != "" {
-		clientEmail = strings.Split(project.ClientEmail, ",")
+	if in.ClientEmail != "" {
+		clientEmail = strings.Split(in.ClientEmail, ",")
 	}
 
-	if project.Organization != nil {
-		d.Organization = &Organization{
-			ID:     project.Organization.ID.String(),
-			Code:   project.Organization.Code,
-			Name:   project.Organization.Name,
-			Avatar: project.Organization.Avatar,
+	if in.Organization != nil {
+		projectData.Organization = &Organization{
+			ID:     in.Organization.ID.String(),
+			Code:   in.Organization.Code,
+			Name:   in.Organization.Name,
+			Avatar: in.Organization.Avatar,
 		}
 	}
 
 	if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadMonthlyRevenue) {
-		d.MonthlyChargeRate = monthlyRevenue
+		projectData.MonthlyChargeRate = monthlyRevenue
 	}
 
 	if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadFullAccess) {
-		if project.ProjectNotion != nil && !project.ProjectNotion.AuditNotionID.IsZero() {
-			d.AuditNotionID = project.ProjectNotion.AuditNotionID.String()
+		if in.ProjectNotion != nil && !in.ProjectNotion.AuditNotionID.IsZero() {
+			projectData.AuditNotionID = in.ProjectNotion.AuditNotionID.String()
 		}
 
-		d.ClientEmail = clientEmail
+		projectData.ClientEmail = clientEmail
 
-		if project.BankAccount != nil {
-			d.BankAccount = &BasicBankAccountInfo{
-				ID:            project.BankAccount.ID.String(),
-				AccountNumber: project.BankAccount.AccountNumber,
-				BankName:      project.BankAccount.BankName,
-				OwnerName:     project.BankAccount.OwnerName,
+		if in.BankAccount != nil {
+			projectData.BankAccount = &BasicBankAccountInfo{
+				ID:            in.BankAccount.ID.String(),
+				AccountNumber: in.BankAccount.AccountNumber,
+				BankName:      in.BankAccount.BankName,
+				OwnerName:     in.BankAccount.OwnerName,
 			}
 		}
 
-		if project.Client != nil {
-			d.Client = ToBasicClientInfo(project.Client)
+		if in.Client != nil {
+			projectData.Client = ToBasicClientInfo(in.Client)
 		}
 
-		if project.CompanyInfo != nil {
-			d.CompanyInfo = ToBasicCompanyInfo(project.CompanyInfo)
+		if in.CompanyInfo != nil {
+			projectData.CompanyInfo = ToBasicCompanyInfo(in.CompanyInfo)
+		}
+
+		projectData.AccountRating = in.AccountRating
+		projectData.DeliveryRating = in.DeliveryRating
+		projectData.LeadRating = in.LeadRating
+		projectData.ImportantLevel = in.ImportantLevel.String()
+	}
+
+	if in.Country != nil {
+		projectData.Country = &BasicCountryInfo{
+			ID:   in.Country.ID,
+			Name: in.Country.Name,
+			Code: in.Country.Code,
 		}
 	}
 
-	if project.Country != nil {
-		d.Country = &BasicCountryInfo{
-			ID:   project.Country.ID,
-			Name: project.Country.Name,
-			Code: project.Country.Code,
-		}
-	}
-
-	return d
+	return projectData
 }
 
 func ToProjectsData(projects []*model.Project, userInfo *model.CurrentLoggedUserInfo) []ProjectData {

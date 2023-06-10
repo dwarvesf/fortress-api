@@ -523,7 +523,7 @@ func (h *handler) validateCountryAndCity(db *gorm.DB, countryName string, city s
 		return false
 	}
 
-	if city != "" && !slices.Contains([]string(country.Cities), city) {
+	if city != "" && !slices.Contains(country.Cities, city) {
 		return false
 	}
 

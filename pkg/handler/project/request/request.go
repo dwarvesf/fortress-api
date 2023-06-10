@@ -32,6 +32,10 @@ type UpdateProjectGeneralInfoInput struct {
 	BankAccountID  model.UUID   `form:"bankAccountID" json:"bankAccountID"`
 	ClientID       model.UUID   `form:"clientID" json:"clientID"`
 	OrganizationID model.UUID   `form:"organizationID" json:"organizationID"`
+	AccountRating  int          `form:"accountRating" json:"accountRating" binding:"required,min=1,max=5"`
+	DeliveryRating int          `form:"deliveryRating" json:"deliveryRating" binding:"required,min=1,max=5"`
+	LeadRating     int          `form:"leadRating" json:"leadRating" binding:"required,min=1,max=5"`
+	ImportantLevel string       `form:"importantLevel" json:"importantLevel" binding:"required"`
 }
 
 func (i UpdateProjectGeneralInfoInput) GetStartDate() *time.Time {
@@ -46,6 +50,10 @@ func (i UpdateProjectGeneralInfoInput) GetStartDate() *time.Time {
 func (i UpdateProjectGeneralInfoInput) Validate() error {
 	if !model.ProjectFunction(i.Function).IsValid() {
 		return errs.ErrInvalidProjectFunction
+	}
+
+	if !model.ProjectImportantLevel(i.ImportantLevel).IsValid() {
+		return errs.ErrInvalidProjectImportantLevel
 	}
 
 	return nil
