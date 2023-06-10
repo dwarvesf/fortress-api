@@ -70,3 +70,16 @@ func ToListQuestion(questions []*model.Question) []*Question {
 
 	return rs
 }
+
+func ToRoles(roles []*model.Role) []*Role {
+	var rs []*Role
+	for _, r := range roles {
+		rs = append(rs, &Role{
+			ID:   r.ID.String(),
+			Code: r.Code,
+			Name: toRoleName(r),
+		})
+	}
+
+	return rs
+}
