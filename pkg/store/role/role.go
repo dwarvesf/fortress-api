@@ -15,13 +15,13 @@ func New() IStore {
 // All get all positions
 func (s *store) All(db *gorm.DB) ([]*model.Role, error) {
 	var roles []*model.Role
-	return roles, db.Find(&roles).Order("level").Error
+	return roles, db.Where("is_show IS TRUE").Order("level").Find(&roles).Error
 }
 
 // GetByLevel get by input level
 func (s *store) GetByLevel(db *gorm.DB, level int64) ([]*model.Role, error) {
 	var roles []*model.Role
-	return roles, db.Where("level >= ?", level).Find(&roles).Error
+	return roles, db.Where("level >= ? AND is_show IS TRUE", level).Find(&roles).Error
 }
 
 func (s *store) GetByIDs(db *gorm.DB, ids []model.UUID) ([]*model.Role, error) {

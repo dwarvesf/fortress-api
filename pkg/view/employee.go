@@ -395,7 +395,7 @@ func ToOneEmployeeData(employee *model.Employee, userInfo *model.CurrentLoggedUs
 		DiscordName: empSocialData.DiscordName,
 		GithubID:    empSocialData.GithubID,
 
-		Roles:     ToRoles(employee.EmployeeRoles),
+		Roles:     ToEmployeeRoles(employee.EmployeeRoles),
 		Positions: ToEmployeePositions(employee.EmployeePositions),
 		Stacks:    ToEmployeeStacks(employee.EmployeeStacks),
 		Chapters:  ToChapters(employee.EmployeeChapters),
@@ -491,7 +491,7 @@ func ToEmployeeData(employee *model.Employee) *EmployeeData {
 		ReferredBy:       referrer,
 		Country:          employee.Country,
 		City:             employee.City,
-		Roles:            ToRoles(employee.EmployeeRoles),
+		Roles:            ToEmployeeRoles(employee.EmployeeRoles),
 		Positions:        ToEmployeePositions(employee.EmployeePositions),
 		Stacks:           ToEmployeeStacks(employee.EmployeeStacks),
 		Chapters:         ToChapters(employee.EmployeeChapters),

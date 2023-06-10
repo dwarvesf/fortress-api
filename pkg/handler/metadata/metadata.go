@@ -188,7 +188,7 @@ func (h *handler) GetRoles(c *gin.Context) {
 	}
 
 	// 3 return array of roles
-	c.JSON(http.StatusOK, view.CreateResponse[any](roles, nil, nil, nil, ""))
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToRoles(roles), nil, nil, nil, ""))
 }
 
 // ProjectStatuses godoc

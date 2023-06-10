@@ -154,6 +154,6 @@ func ToProfileData(employee *model.Employee) *ProfileData {
 		DiscordID:          empSocialData.DiscordID,
 		DiscordName:        empSocialData.DiscordName,
 		LinkedInName:       empSocialData.LinkedInName,
-		Roles:              ToRoles(employee.EmployeeRoles),
+		Roles:              ToEmployeeRoles(employee.EmployeeRoles),
 	}
 }
