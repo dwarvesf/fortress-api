@@ -3,12 +3,13 @@ package project
 import (
 	"bytes"
 	"fmt"
-	"github.com/dwarvesf/fortress-api/pkg/controller"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/dwarvesf/fortress-api/pkg/controller"
 
 	"github.com/dwarvesf/fortress-api/pkg/handler/project/request"
 	"github.com/dwarvesf/fortress-api/pkg/model"
@@ -120,12 +121,13 @@ func TestHandler_List(t *testing.T) {
 			name:             "happy_case",
 			wantCode:         http.StatusOK,
 			wantResponsePath: "testdata/get_projects/200.json",
+			query:            "sort=-updatedAt",
 		},
 		{
 			name:             "happy_case_with_pagination",
 			wantCode:         http.StatusOK,
 			wantResponsePath: "testdata/get_projects/200_with_paging.json",
-			query:            "page=1&size=1",
+			query:            "page=1&size=1&sort=-updatedAt",
 		},
 		{
 			name:             "invalid_project_type",
