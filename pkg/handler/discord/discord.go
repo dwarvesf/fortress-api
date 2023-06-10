@@ -2,7 +2,6 @@ package discord
 
 import (
 	"fmt"
-	"github.com/k0kubun/pp/v3"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -40,8 +39,6 @@ func (h *handler) SyncDiscordInfo(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
 	}
-
-	pp.Println(discordMembers)
 
 	socialAccounts, err := h.store.SocialAccount.GetByType(h.repo.DB(), model.SocialAccountTypeDiscord.String())
 	if err != nil {
