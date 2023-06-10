@@ -1,31 +1,215 @@
 {
     "page": 1,
     "size": 1,
-    "sort": "",
+    "sort": "updatedAt DESC",
     "total": 2,
     "data": [
         {
-            "id": "dfa182fc-1d2d-49f6-a877-c01da9ce4207",
+            "id": "8dc3be2e-19a4-4942-8a79-56db391a0b15",
             "createdAt": "2022-11-11T18:06:56.362902Z",
             "updatedAt": "2022-11-11T18:06:56.362902Z",
-            "name": "Lorem ipsum",
+            "name": "Fortress",
             "avatar": "",
-            "type": "time-material",
+            "type": "dwarves",
             "status": "active",
-            "projectEmail": "",
-            "clientEmail": null,
+            "projectEmail": "fortress@d.foundation",
+            "clientEmail": [
+                "team@d.foundation"
+            ],
             "industry": "",
             "allowsSendingSurvey": false,
             "country": null,
-            "startDate": "2022-07-06T00:00:00Z",
+            "startDate": "2022-11-01T00:00:00Z",
             "endDate": null,
-            "members": [],
-            "technicalLeads": [],
-            "accountManagers": null,
-            "deliveryManagers": null,
-            "salePersons": null,
+            "members": [
+                {
+                    "projectMemberID": "",
+                    "projectSlotID": "",
+                    "employeeID": "2655832e-f009-4b73-a535-64c3a22e558f",
+                    "fullName": "Phạm Đức Thành",
+                    "displayName": "Thanh Pham",
+                    "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
+                    "username": "thanh",
+                    "status": "active",
+                    "isLead": false,
+                    "deploymentType": "official",
+                    "startDate": null,
+                    "endDate": null,
+                    "rate": "5000",
+                    "discount": "0",
+                    "upsellCommissionRate": "0",
+                    "leadCommissionRate": "0",
+                    "currency": {
+                        "id": "06a699ed-618b-400b-ac8c-8739956fa8e7",
+                        "name": "GBP",
+                        "symbol": "£",
+                        "locale": "en-gb",
+                        "type": "fiat"
+                    },
+                    "note": "",
+                    "seniority": null,
+                    "positions": [],
+                    "upsellPerson": null
+                },
+                {
+                    "projectMemberID": "",
+                    "projectSlotID": "",
+                    "employeeID": "ecea9d15-05ba-4a4e-9787-54210e3b98ce",
+                    "fullName": "Nguyễn Hoàng Huy",
+                    "displayName": "Huy Nguyen",
+                    "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/2830497479497502617.png",
+                    "username": "huynh",
+                    "status": "active",
+                    "isLead": false,
+                    "deploymentType": "shadow",
+                    "startDate": null,
+                    "endDate": null,
+                    "rate": "4000",
+                    "discount": "0",
+                    "upsellCommissionRate": "0",
+                    "leadCommissionRate": "0",
+                    "currency": {
+                        "id": "06a699ed-618b-400b-ac8c-8739956fa8e7",
+                        "name": "GBP",
+                        "symbol": "£",
+                        "locale": "en-gb",
+                        "type": "fiat"
+                    },
+                    "note": "",
+                    "seniority": null,
+                    "positions": [],
+                    "upsellPerson": null
+                },
+                {
+                    "projectMemberID": "",
+                    "projectSlotID": "",
+                    "employeeID": "8d7c99c0-3253-4286-93a9-e7554cb327ef",
+                    "fullName": "Nguyễn Hải Nam",
+                    "displayName": "Nam Nguyen",
+                    "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/8399103964540935617.png",
+                    "username": "benjamin",
+                    "status": "active",
+                    "isLead": true,
+                    "deploymentType": "official",
+                    "startDate": null,
+                    "endDate": null,
+                    "rate": "3000",
+                    "discount": "0",
+                    "upsellCommissionRate": "0",
+                    "leadCommissionRate": "0",
+                    "currency": {
+                        "id": "06a699ed-618b-400b-ac8c-8739956fa8e7",
+                        "name": "GBP",
+                        "symbol": "£",
+                        "locale": "en-gb",
+                        "type": "fiat"
+                    },
+                    "note": "",
+                    "seniority": null,
+                    "positions": [],
+                    "upsellPerson": null
+                },
+                {
+                    "projectMemberID": "",
+                    "projectSlotID": "",
+                    "employeeID": "eeae589a-94e3-49ac-a94c-fcfb084152b2",
+                    "fullName": "Nguyễn Ngô Lập",
+                    "displayName": "Lap Nguyen",
+                    "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/2870969541970972723.png",
+                    "username": "alan",
+                    "status": "active",
+                    "isLead": false,
+                    "deploymentType": "official",
+                    "startDate": null,
+                    "endDate": null,
+                    "rate": "3000",
+                    "discount": "0",
+                    "upsellCommissionRate": "0",
+                    "leadCommissionRate": "0",
+                    "currency": {
+                        "id": "06a699ed-618b-400b-ac8c-8739956fa8e7",
+                        "name": "GBP",
+                        "symbol": "£",
+                        "locale": "en-gb",
+                        "type": "fiat"
+                    },
+                    "note": "",
+                    "seniority": null,
+                    "positions": [],
+                    "upsellPerson": null
+                },
+                {
+                    "projectMemberID": "",
+                    "projectSlotID": "",
+                    "employeeID": "608ea227-45a5-4c8a-af43-6c7280d96340",
+                    "fullName": "Tiêu Quang Huy",
+                    "displayName": "Huy Tieu",
+                    "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/3c420751-bb9a-4878-896e-2f10f3a633d6_avatar2535921977139052349.png",
+                    "username": "huytq",
+                    "status": "active",
+                    "isLead": false,
+                    "deploymentType": "shadow",
+                    "startDate": null,
+                    "endDate": null,
+                    "rate": "4000",
+                    "discount": "0",
+                    "upsellCommissionRate": "0",
+                    "leadCommissionRate": "0",
+                    "currency": {
+                        "id": "06a699ed-618b-400b-ac8c-8739956fa8e7",
+                        "name": "GBP",
+                        "symbol": "£",
+                        "locale": "en-gb",
+                        "type": "fiat"
+                    },
+                    "note": "",
+                    "seniority": null,
+                    "positions": [],
+                    "upsellPerson": null
+                }
+            ],
+            "technicalLeads": [
+                {
+                    "employeeID": "8d7c99c0-3253-4286-93a9-e7554cb327ef",
+                    "fullName": "Nguyễn Hải Nam",
+                    "displayName": "Nam Nguyen",
+                    "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/8399103964540935617.png",
+                    "username": "benjamin",
+                    "commissionRate": "1"
+                }
+            ],
+            "accountManagers": [
+                {
+                    "employeeID": "2655832e-f009-4b73-a535-64c3a22e558f",
+                    "fullName": "Phạm Đức Thành",
+                    "displayName": "Thanh Pham",
+                    "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
+                    "username": "thanh",
+                    "commissionRate": "1"
+                }
+            ],
+            "deliveryManagers": [
+                {
+                    "employeeID": "2655832e-f009-4b73-a535-64c3a22e558f",
+                    "fullName": "Phạm Đức Thành",
+                    "displayName": "Thanh Pham",
+                    "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
+                    "username": "thanh",
+                    "commissionRate": "0.5"
+                }
+            ],
+            "salePersons": [
+                {
+                    "employeeID": "608ea227-45a5-4c8a-af43-6c7280d96340",
+                    "fullName": "Tiêu Quang Huy",
+                    "displayName": "Huy Tieu",
+                    "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/3c420751-bb9a-4878-896e-2f10f3a633d6_avatar2535921977139052349.png",
+                    "username": "huytq",
+                    "commissionRate": "2"
+                }
+            ],
             "stacks": [],
-            "code": "lorem-ipsum",
+            "code": "fortress",
             "function": "",
             "auditNotionID": "",
             "bankAccount": {

@@ -622,8 +622,8 @@ func Test_loadV1Routes(t *testing.T) {
 			},
 		},
 		"/cronjobs/sync-project-member-status": {
-			"PUT": {
-				Method:  "PUT",
+			"POST": {
+				Method:  "POST",
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/project.IHandler.SyncProjectMemberStatus-fm",
 			},
 		},

@@ -43,11 +43,6 @@ func (s *store) All(db *gorm.DB, input GetListProjectInput, pagination model.Pag
 
 	query = query.Count(&total)
 
-	limit, offset := pagination.ToLimitOffset()
-	if pagination.Page > 0 {
-		query = query.Limit(limit)
-	}
-
 	query = query.
 		Select("projects.*, COALESCE(SUM(project_members.rate)/currency_exchanges.exchange_rate, 0) as converted_monthly_revenue").
 		Joins(`LEFT JOIN project_members ON project_members.project_id = projects.id
@@ -68,8 +63,7 @@ func (s *store) All(db *gorm.DB, input GetListProjectInput, pagination model.Pag
 						('USD', 'EUR', 0.93030),
 						('USD', 'VND', 23480),
 						('USD', 'SGD', 1.34325)) AS rates(src_cur, dest_cur, exchange_rate)
-			) as currency_exchanges ON currencies.name = currency_exchanges.dest_cur
-		`).
+			) as currency_exchanges ON currencies.name = currency_exchanges.dest_cur`).
 		Group(`
 			projects.id,
 			projects.deleted_at,
@@ -91,13 +85,18 @@ func (s *store) All(db *gorm.DB, input GetListProjectInput, pagination model.Pag
 			projects.company_info_id,
 			projects.organization_id,
 			currencies.name,
-         	currency_exchanges.exchange_rate
+			currency_exchanges.exchange_rate
 		`)
 
 	if pagination.Sort != "" {
 		query = query.Order(s.sortFieldMapping(pagination.Sort))
 	} else {
 		query = query.Order("converted_monthly_revenue DESC")
+	}
+
+	limit, offset := pagination.ToLimitOffset()
+	if pagination.Page > 0 {
+		query = query.Limit(limit)
 	}
 
 	query = query.Preload("ProjectMembers", func(db *gorm.DB) *gorm.DB {
@@ -230,7 +229,9 @@ func (s *store) sortFieldMapping(field string) string {
 	switch sortField[0] {
 	case "monthlyChargeRate":
 		return fmt.Sprintf("%v %v", "converted_monthly_revenue", sortField[1])
+	case "updatedAt":
+		return fmt.Sprintf("%v %v", "projects.updated_at", sortField[1])
 	}
 
-	return field
+	return fmt.Sprintf("%v %v", "converted_monthly_revenue", "DESC")
 }
