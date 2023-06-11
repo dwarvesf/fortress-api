@@ -8,11 +8,10 @@ import (
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
-	"github.com/dwarvesf/fortress-api/pkg/model"
 )
 
 type IService interface {
-	GetVaultTransaction(req *model.VaultTransactionRequest) (*model.VaultTransactionResponse, error)
+	GetVaultTransaction(req *VaultTransactionRequest) (*VaultTransactionResponse, error)
 }
 
 type client struct {
@@ -27,9 +26,9 @@ func New(cfg *config.Config, l logger.Logger) IService {
 	}
 }
 
-func (m *client) GetVaultTransaction(req *model.VaultTransactionRequest) (*model.VaultTransactionResponse, error) {
+func (m *client) GetVaultTransaction(req *VaultTransactionRequest) (*VaultTransactionResponse, error) {
 	var client = &http.Client{}
-	request, err := http.NewRequest("GET", fmt.Sprintf("%s/api/v1/vault/%s/transaction?start_time=%s&end_time=%s", m.cfg.Mochi.BaseURL, req.VaultId, req.StartTime, req.EndTime), nil)
+	request, err := http.NewRequest("GET", fmt.Sprintf("%s/api/v1/vault/%s/transaction?start_time=%s&end_time=%s", m.cfg.Mochi.BaseURL, req.VaultID, req.StartTime, req.EndTime), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -45,10 +44,11 @@ func (m *client) GetVaultTransaction(req *model.VaultTransactionRequest) (*model
 		return nil, err
 	}
 
-	res := &model.VaultTransactionResponse{}
+	res := &VaultTransactionResponse{}
 	err = json.Unmarshal(resBody, res)
 	if err != nil {
 		return nil, err
 	}
+
 	return res, nil
 }
