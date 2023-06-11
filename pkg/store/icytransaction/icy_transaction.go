@@ -16,8 +16,8 @@ func New() IStore {
 func (s *store) Create(db *gorm.DB, model []model.IcyTransaction) error {
 	return db.Clauses(clause.OnConflict{
 		Columns: []clause.Column{
-			{Name: "src_employee_id"},
-			{Name: "dest_employee_id"},
+			{Name: "sender"},
+			{Name: "target"},
 			{Name: "category"},
 			{Name: "amount"},
 			{Name: "txn_time"},
