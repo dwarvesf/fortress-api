@@ -16,4 +16,7 @@ type OnLeaveRequest struct {
 	CreatorID   UUID
 	ApproverID  UUID
 	AssigneeIDs JSONArrayString
+
+	Creator  *Employee
+	Approver *Employee
 }
