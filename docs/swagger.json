@@ -6966,6 +6966,9 @@
         "model.Project": {
             "type": "object",
             "properties": {
+                "accountRating": {
+                    "type": "integer"
+                },
                 "allowsSendingSurvey": {
                     "type": "boolean"
                 },
@@ -7008,6 +7011,9 @@
                 "deletedAt": {
                     "$ref": "#/definitions/gorm.DeletedAt"
                 },
+                "deliveryRating": {
+                    "type": "integer"
+                },
                 "endDate": {
                     "type": "string"
                 },
@@ -7022,6 +7028,12 @@
                 },
                 "id": {
                     "type": "string"
+                },
+                "importantLevel": {
+                    "type": "string"
+                },
+                "leadRating": {
+                    "type": "integer"
                 },
                 "name": {
                     "type": "string"
@@ -8802,11 +8814,20 @@
         "request.UpdateProjectGeneralInfoInput": {
             "type": "object",
             "required": [
+                "accountRating",
                 "countryID",
+                "deliveryRating",
                 "function",
+                "importantLevel",
+                "leadRating",
                 "name"
             ],
             "properties": {
+                "accountRating": {
+                    "type": "integer",
+                    "maximum": 5,
+                    "minimum": 1
+                },
                 "auditNotionID": {
                     "type": "string"
                 },
@@ -8819,8 +8840,21 @@
                 "countryID": {
                     "type": "string"
                 },
+                "deliveryRating": {
+                    "type": "integer",
+                    "maximum": 5,
+                    "minimum": 1
+                },
                 "function": {
                     "type": "string"
+                },
+                "importantLevel": {
+                    "type": "string"
+                },
+                "leadRating": {
+                    "type": "integer",
+                    "maximum": 5,
+                    "minimum": 1
                 },
                 "name": {
                     "type": "string"
@@ -11165,6 +11199,9 @@
                         "$ref": "#/definitions/view.ProjectHead"
                     }
                 },
+                "accountRating": {
+                    "type": "integer"
+                },
                 "allowsSendingSurvey": {
                     "type": "boolean"
                 },
@@ -11210,6 +11247,9 @@
                         "$ref": "#/definitions/view.ProjectHead"
                     }
                 },
+                "deliveryRating": {
+                    "type": "integer"
+                },
                 "endDate": {
                     "type": "string"
                 },
@@ -11219,8 +11259,14 @@
                 "id": {
                     "type": "string"
                 },
+                "importantLevel": {
+                    "type": "string"
+                },
                 "industry": {
                     "type": "string"
+                },
+                "leadRating": {
+                    "type": "integer"
                 },
                 "members": {
                     "type": "array",

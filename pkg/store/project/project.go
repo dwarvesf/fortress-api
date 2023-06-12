@@ -84,6 +84,10 @@ func (s *store) All(db *gorm.DB, input GetListProjectInput, pagination model.Pag
 			projects.client_id,
 			projects.company_info_id,
 			projects.organization_id,
+			account_rating,
+			delivery_rating,
+			lead_rating,
+			important_level,
 			currencies.name,
 			currency_exchanges.exchange_rate
 		`)

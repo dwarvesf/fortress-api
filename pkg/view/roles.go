@@ -8,16 +8,32 @@ type Role struct {
 	Name string `json:"name"`
 }
 
-func ToRoles(roles []model.EmployeeRole) []Role {
+func ToEmployeeRoles(roles []model.EmployeeRole) []Role {
 	rs := make([]Role, 0, len(roles))
 	for _, v := range roles {
 		r := Role{
 			ID:   v.Role.ID.String(),
 			Code: v.Role.Code,
-			Name: v.Role.Name,
+			Name: toRoleName(&v.Role),
 		}
 		rs = append(rs, r)
 	}
 
 	return rs
+}
+
+func toRoleName(role *model.Role) string {
+	roleName := ""
+	switch role.Color {
+	case "red":
+		roleName = "🔴 " + role.Name
+	case "yellow":
+		roleName = "🟡 " + role.Name
+	case "green":
+		roleName = "🟢 " + role.Name
+	default:
+		roleName = "⚪️ " + role.Name
+	}
+
+	return roleName
 }

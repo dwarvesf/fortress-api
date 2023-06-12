@@ -27,6 +27,10 @@ type Project struct {
 	CompanyInfoID       UUID            `gorm:"default:null"`
 	ClientID            UUID            `gorm:"default:null"`
 	OrganizationID      UUID            `gorm:"default:null"`
+	AccountRating       int
+	DeliveryRating      int
+	LeadRating          int
+	ImportantLevel      ProjectImportantLevel
 
 	ProjectNotion  *ProjectNotion `gorm:"foreignKey:project_id"`
 	Organization   *Organization
@@ -135,6 +139,34 @@ func (e ProjectMemberStatus) IsValid() bool {
 }
 
 func (e ProjectMemberStatus) String() string {
+	return string(e)
+}
+
+type ProjectImportantLevel string
+
+const (
+	ProjectImportantLevelLow        ProjectImportantLevel = "low"
+	ProjectImportantLevelMediumLow  ProjectImportantLevel = "medium-"
+	ProjectImportantLevelMedium     ProjectImportantLevel = "medium"
+	ProjectImportantLevelMediumHigh ProjectImportantLevel = "medium+"
+	ProjectImportantLevelHigh       ProjectImportantLevel = "high"
+)
+
+func (e ProjectImportantLevel) IsValid() bool {
+	switch e {
+	case
+		ProjectImportantLevelLow,
+		ProjectImportantLevelMediumLow,
+		ProjectImportantLevelMedium,
+		ProjectImportantLevelMediumHigh,
+		ProjectImportantLevelHigh:
+		return true
+	}
+
+	return false
+}
+
+func (e ProjectImportantLevel) String() string {
 	return string(e)
 }
 

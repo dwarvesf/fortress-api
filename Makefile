@@ -57,7 +57,10 @@ air:
 cronjob:
 	go run ./cmd/cronjob/main.go
 
-test:
+test: setup-test
+	@PROJECT_PATH=$(shell pwd) go test -cover ./... -count=1 -p=1
+
+setup-test:
 	docker rm --volumes -f ${POSTGRES_TEST_CONTAINER}
 	docker-compose up -d ${POSTGRES_TEST_SERVICE}
 	@while ! docker exec $(POSTGRES_TEST_CONTAINER) pg_isready > /dev/null; do \
@@ -65,9 +68,6 @@ test:
 	done
 	make migrate-test
 	make seed-test
-
-	@PROJECT_PATH=$(shell pwd) go test -cover ./... -count=1 -p=1
-
 migrate-test:
 	${APP_ENVIRONMENT} sql-migrate up -env=test
 

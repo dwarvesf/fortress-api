@@ -325,6 +325,10 @@
         "code": "fortress",
         "function": "",
         "auditNotionID": "",
+        "accountRating": 0,
+        "deliveryRating": 0,
+        "leadRating": 0,
+        "importantLevel": "",
         "bankAccount": {
             "id": "e79eb5b3-e2cb-4d7f-9273-46f4be88cb20",
             "accountNumber": "1234567891",

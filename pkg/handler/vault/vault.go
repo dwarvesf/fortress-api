@@ -1,16 +1,19 @@
 package vault
 
 import (
+	"errors"
 	"net/http"
 	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service"
+	"github.com/dwarvesf/fortress-api/pkg/service/mochi"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/utils/timeutil"
 	"github.com/dwarvesf/fortress-api/pkg/view"
@@ -59,9 +62,9 @@ func (h *handler) StoreVaultTransaction(c *gin.Context) {
 	endOfTheWeek := timeutil.FormatDateForCurl(timeutil.GetEndDayOfWeek(time.Now().Local()).Format(time.RFC3339))
 
 	icyTxs := make([]model.IcyTransaction, 0)
-	for _, vaultId := range supportedVaults {
-		req := &model.VaultTransactionRequest{
-			VaultId:   vaultId,
+	for _, vaultID := range supportedVaults {
+		req := &mochi.VaultTransactionRequest{
+			VaultID:   vaultID,
 			StartTime: startOfTheWeek,
 			EndTime:   endOfTheWeek,
 		}
@@ -83,26 +86,37 @@ func (h *handler) StoreVaultTransaction(c *gin.Context) {
 				continue
 			}
 
-			srcEmployeeId, err := h.store.SocialAccount.GetByDiscordID(h.repo.DB(), transaction.Sender)
-			if err != nil {
+			srcSocialAccount, err := h.store.SocialAccount.GetByDiscordID(h.repo.DB(), transaction.Sender)
+			if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 				l.Error(err, "failed to get GetByDiscordID")
 				c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 				return
 			}
 
-			destEmployeeId, err := h.store.SocialAccount.GetByDiscordID(h.repo.DB(), transaction.Target)
-			if err != nil {
+			destSocialAccount, err := h.store.SocialAccount.GetByDiscordID(h.repo.DB(), transaction.Target)
+			if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 				l.Error(err, " failed to get GetByDiscordID")
 				c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 				return
 			}
-			icyTxs = append(icyTxs, model.IcyTransaction{
-				Category:       strings.ToLower(transaction.VaultName),
-				TxnTime:        txnTime,
-				Amount:         transaction.Amount,
-				SrcEmployeeId:  srcEmployeeId.EmployeeID,
-				DestEmployeeId: destEmployeeId.EmployeeID,
-			})
+
+			icyTx := model.IcyTransaction{
+				Category: strings.ToLower(transaction.VaultName),
+				TxnTime:  txnTime,
+				Amount:   transaction.Amount,
+				Sender:   transaction.Sender,
+				Target:   transaction.Target,
+			}
+
+			if srcSocialAccount != nil {
+				icyTx.SrcEmployeeID = srcSocialAccount.EmployeeID
+			}
+
+			if destSocialAccount != nil {
+				icyTx.DestEmployeeID = destSocialAccount.EmployeeID
+			}
+
+			icyTxs = append(icyTxs, icyTx)
 		}
 	}
 

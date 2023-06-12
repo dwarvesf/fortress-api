@@ -359,17 +359,18 @@ func (h *handler) Create(c *gin.Context) {
 	}
 
 	p := &model.Project{
-		Name:         body.Name,
-		CountryID:    body.CountryID,
-		Type:         model.ProjectType(body.Type),
-		Status:       model.ProjectStatus(body.Status),
-		StartDate:    body.GetStartDate(),
-		ProjectEmail: body.ProjectEmail,
-		ClientEmail:  strings.Join(body.ClientEmail, ","),
-		Country:      country,
-		Code:         body.Code,
-		Function:     model.ProjectFunction(body.Function),
-		ClientID:     body.ClientID,
+		Name:           body.Name,
+		CountryID:      body.CountryID,
+		Type:           model.ProjectType(body.Type),
+		Status:         model.ProjectStatus(body.Status),
+		StartDate:      body.GetStartDate(),
+		ProjectEmail:   body.ProjectEmail,
+		ClientEmail:    strings.Join(body.ClientEmail, ","),
+		Country:        country,
+		Code:           body.Code,
+		Function:       model.ProjectFunction(body.Function),
+		ClientID:       body.ClientID,
+		ImportantLevel: model.ProjectImportantLevelMedium,
 	}
 
 	if body.OrganizationID.IsZero() {
@@ -1834,6 +1835,10 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 	p.BankAccountID = body.BankAccountID
 	p.ClientID = body.ClientID
 	p.OrganizationID = body.OrganizationID
+	p.AccountRating = body.AccountRating
+	p.DeliveryRating = body.DeliveryRating
+	p.LeadRating = body.LeadRating
+	p.ImportantLevel = model.ProjectImportantLevel(body.ImportantLevel)
 
 	projectNotion, err := h.store.ProjectNotion.OneByProjectID(tx.DB(), p.ID.String())
 
@@ -1873,6 +1878,10 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 		"bank_account_id",
 		// "client_id",
 		"organization_id",
+		"account_rating",
+		"delivery_rating",
+		"lead_rating",
+		"important_level",
 	)
 
 	if err != nil {

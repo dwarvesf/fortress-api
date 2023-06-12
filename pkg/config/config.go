@@ -273,9 +273,7 @@ func DefaultConfigLoaders() []Loader {
 func LoadConfig(loaders []Loader) *Config {
 	v := viper.New()
 	v.SetDefault("PORT", "8080")
-	v.SetDefault("GRPC_PORT", "8081")
 	v.SetDefault("ENV", "local")
-	v.SetDefault("FTM_RPC", "https://rpc.fantom.network")
 	v.SetDefault("ALLOWED_ORIGINS", "*")
 
 	for idx := range loaders {

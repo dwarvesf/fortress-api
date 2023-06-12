@@ -45,7 +45,7 @@ func (r *controller) UpdatePersonalInfo(employeeID string, body UpdatePersonalIn
 	emp.Country = body.Country
 	emp.City = body.City
 
-	emp, err = r.store.Employee.Update(r.repo.DB(), emp)
+	emp, err = r.store.Employee.UpdateSelectedFieldsByID(r.repo.DB(), employeeID, *emp, "date_of_birth", "gender", "address", "place_of_residence", "personal_email", "country", "city")
 	if err != nil {
 		return nil, err
 	}
