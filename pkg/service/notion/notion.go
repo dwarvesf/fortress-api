@@ -174,13 +174,14 @@ func handleNestedBulletText(v *nt.BulletedListItemBlock, resutl string) string {
 			for _, textChild := range child.RichText {
 				plainTextChild = append(plainTextChild, textChild.PlainText)
 			}
-			resutl = resutl + fmt.Sprintf(`<mj-text padding-bottom="0px" padding-top="0px" padding-left="45px">
+			resutl = resutl + fmt.Sprintf(`<mj-text>
 			<ul>
 			  <li> 
 				%s
 			  </li>
+			  %s
 			</ul>
-	</mj-text>`, strings.Join(plainTextChild, " "))
+	</mj-text>`, strings.Join(plainTextChild, " "), handleNestedBulletText(child, ""))
 		}
 	}
 	return resutl
