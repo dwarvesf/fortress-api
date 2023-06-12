@@ -123,19 +123,16 @@ func (h *handler) StoreVaultTransaction(c *gin.Context) {
 	// case no tx from mochi
 	if len(icyTxs) == 0 {
 		l.Info("There is no transaction in this week")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, nil, nil, "there is no transaction in this week"))
 		return
 	}
 
 	tx, done := h.repo.NewTransaction()
 	if err := h.store.IcyTransaction.Create(tx.DB(), icyTxs); err != nil {
 		l.Error(done(err), "failed to Create IcyTransaction")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), nil, ""))
 		return
 	}
 
-	if err := done(nil); err != nil {
-		l.Error(err, "failed to commit txn")
-	}
-
-	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))
+	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, done(nil), nil, "ok"))
 }
