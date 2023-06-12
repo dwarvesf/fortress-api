@@ -234,5 +234,6 @@ func (h *handler) OnLeaveMessage(c *gin.Context) {
 		return
 	}
 
+	h.logger.Infof("Discord message sent: %s", msg)
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))
 }
