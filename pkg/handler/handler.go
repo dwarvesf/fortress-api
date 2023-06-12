@@ -8,7 +8,6 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/handler/audit"
 	"github.com/dwarvesf/fortress-api/pkg/handler/auth"
 	"github.com/dwarvesf/fortress-api/pkg/handler/bankaccount"
-	"github.com/dwarvesf/fortress-api/pkg/handler/birthday"
 	"github.com/dwarvesf/fortress-api/pkg/handler/client"
 	"github.com/dwarvesf/fortress-api/pkg/handler/dashboard"
 	"github.com/dwarvesf/fortress-api/pkg/handler/dashboard/util"
@@ -38,7 +37,6 @@ type Handler struct {
 	Audit       audit.IHandler
 	Auth        auth.IHandler
 	BankAccount bankaccount.IHandler
-	Birthday    birthday.IHandler
 	Client      client.IHandler
 	Dashboard   dashboard.IHandler
 	Discord     discord.IHandler
@@ -64,7 +62,6 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, ctrl *
 		Audit:       audit.New(store, repo, service, logger, cfg),
 		Auth:        auth.New(ctrl, logger, cfg),
 		BankAccount: bankaccount.New(store, repo, service, logger, cfg),
-		Birthday:    birthday.New(store, repo, service, logger, cfg),
 		Client:      client.New(ctrl, store, repo, service, logger, cfg),
 		Dashboard:   dashboard.New(store, repo, service, logger, cfg, util.New()),
 		Discord:     discord.New(store, repo, service, logger, cfg),

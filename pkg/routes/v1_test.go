@@ -600,7 +600,13 @@ func Test_loadV1Routes(t *testing.T) {
 		"/cronjobs/birthday": {
 			"POST": {
 				Method:  "POST",
-				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/birthday.IHandler.BirthdayDailyMessage-fm",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/discord.IHandler.BirthdayDailyMessage-fm",
+			},
+		},
+		"/cronjobs/on-leaves": {
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/discord.IHandler.OnLeaveMessage-fm",
 			},
 		},
 		"/cronjobs/audits": {
