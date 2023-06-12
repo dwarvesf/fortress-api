@@ -280,21 +280,9 @@ func (h *handler) generateEmailChangelog(
 	m.Subject = values[emailSubject].Title[0].Text.Content
 
 	// Get children blocks of changelogBlocks
-	for _, block := range changelogBlocks {
-		if block.HasChildren() {
-			children, err := h.service.Notion.GetBlockChildren(block.ID())
-			if err != nil {
-				h.logger.Error(err, "failed to get block children")
-				return nil, nil, singleChangelogError{ProjectName: projectName, Err: err}
-			}
-
-			switch v := block.(type) {
-			case *nt.BulletedListItemBlock:
-				v.Children = children.Results
-			default:
-				continue
-			}
-		}
+	if err := h.getChildrenBlocks(changelogBlocks); err != nil {
+		h.logger.Error(err, "failed to get block children")
+		return nil, nil, singleChangelogError{ProjectName: projectName, Err: err}
 	}
 
 	// upload temp image from notion s3 to gcs
@@ -353,4 +341,27 @@ func (h *handler) generateEmailChangelog(
 	}
 
 	return &m, &p, nil
+}
+
+func (h *handler) getChildrenBlocks(blocks []nt.Block) error {
+	for _, block := range blocks {
+		if block.HasChildren() {
+			switch v := block.(type) {
+			case *nt.BulletedListItemBlock:
+				children, err := h.service.Notion.GetBlockChildren(block.ID())
+				if err != nil {
+					return err
+				}
+
+				v.Children = children.Results
+				if err := h.getChildrenBlocks(v.Children); err != nil {
+					return err
+				}
+			default:
+				continue
+			}
+		}
+	}
+
+	return nil
 }
