@@ -1999,6 +1999,28 @@ definitions:
       workUnitID:
         type: string
     type: object
+  request.UpsertRollupRequest:
+    properties:
+      categoryID:
+        type: string
+      channelID:
+        type: string
+      discordUserID:
+        type: string
+      lastMessageID:
+        type: string
+      messageCount:
+        type: integer
+      reactionCount:
+        type: integer
+    required:
+    - categoryID
+    - channelID
+    - discordUserID
+    - lastMessageID
+    - messageCount
+    - reactionCount
+    type: object
   view.APIKeyData:
     properties:
       key:
@@ -4732,6 +4754,35 @@ paths:
       summary: Sync audit info from Notion to database
       tags:
       - Audit
+  /cronjobs/index-engagement-messages:
+    post:
+      consumes:
+      - application/json
+      description: Index messages of provided Discord server
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Index messages of provided Discord server
+      tags:
+      - Engagement
   /dashboards/engagement/detail:
     get:
       consumes:
@@ -5624,6 +5675,75 @@ paths:
       summary: Get the list of employees
       tags:
       - Employee
+  /engagements/channel/:channel-id/last-message-id:
+    get:
+      consumes:
+      - application/json
+      description: Get local last message ID of a channel
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Discord Channel ID
+        in: path
+        name: channel-id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get local last message ID of a channel
+      tags:
+      - Engagement
+  /engagements/rollup:
+    post:
+      consumes:
+      - application/json
+      description: Upsert engagement rollup
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Body
+        in: body
+        name: Body
+        required: true
+        schema:
+          $ref: '#/definitions/request.UpsertRollupRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Upsert engagement rollup
+      tags:
+      - Engagement
   /feedbacks:
     get:
       consumes:

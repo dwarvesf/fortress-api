@@ -105,6 +105,8 @@ const (
 	PermissionSurveysEdit                         PermissionCode = "surveys.edit"
 	PermissionSurveysRead                         PermissionCode = "surveys.read"
 	PermissionValuationRead                       PermissionCode = "valuations.read"
+	PermissionEngagementMetricsWrite              PermissionCode = "engagementMetrics.write"
+	PermissionEngagementMetricsRead               PermissionCode = "engagementMetrics.read"
 	PermissionIcyDistributionRead                 PermissionCode = "icyDistribution.read"
 )
 

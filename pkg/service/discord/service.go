@@ -23,4 +23,7 @@ type IService interface {
 
 	// SendMessage logs a message to a Discord channel
 	SendMessage(msg, webhookUrl string) (*model.DiscordMessage, error)
+
+	GetChannels() ([]*discordgo.Channel, error)
+	GetMessagesAfterCursor(channelID string, cursorMessageID string, lastMessageID string) ([]*discordgo.Message, error)
 }

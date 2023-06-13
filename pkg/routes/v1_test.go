@@ -639,6 +639,12 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/vault.IHandler.StoreVaultTransaction-fm",
 			},
 		},
+		"/cronjobs/index-engagement-messages": {
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/engagement.IHandler.IndexMessages-fm",
+			},
+		},
 		"/webhooks/n8n": {
 			"POST": {
 				Method:  "POST",
@@ -779,6 +785,18 @@ func Test_loadV1Routes(t *testing.T) {
 			"POST": {
 				Method:  "POST",
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/payroll.IHandler.CommitPayroll-fm",
+			},
+		},
+		"/api/v1/engagements/rollup": {
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/engagement.IHandler.UpsertRollup-fm",
+			},
+		},
+		"/api/v1/engagements/channels/:channel-id/last-message-id": {
+			"GET": {
+				Method:  "GET",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/engagement.IHandler.GetLastMessageID-fm",
 			},
 		},
 	}
