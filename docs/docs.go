@@ -635,6 +635,50 @@ const docTemplate = `{
                 }
             }
         },
+        "/cronjobs/index-engagement-messages": {
+            "post": {
+                "description": "Index messages of provided Discord server",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Engagement"
+                ],
+                "summary": "Index messages of provided Discord server",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.MessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/dashboards/engagement/detail": {
             "get": {
                 "description": "Get engagement dashboard",
@@ -1966,6 +2010,110 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/engagements/channel/:channel-id/last-message-id": {
+            "get": {
+                "description": "Get local last message ID of a channel",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Engagement"
+                ],
+                "summary": "Get local last message ID of a channel",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Discord Channel ID",
+                        "name": "channel-id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.MessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/engagements/rollup": {
+            "post": {
+                "description": "Upsert engagement rollup",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Engagement"
+                ],
+                "summary": "Upsert engagement rollup",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "Body",
+                        "name": "Body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.UpsertRollupRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.MessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/view.ErrorResponse"
                         }
@@ -8987,6 +9135,37 @@ const docTemplate = `{
                 },
                 "workUnitID": {
                     "type": "string"
+                }
+            }
+        },
+        "request.UpsertRollupRequest": {
+            "type": "object",
+            "required": [
+                "categoryID",
+                "channelID",
+                "discordUserID",
+                "lastMessageID",
+                "messageCount",
+                "reactionCount"
+            ],
+            "properties": {
+                "categoryID": {
+                    "type": "string"
+                },
+                "channelID": {
+                    "type": "string"
+                },
+                "discordUserID": {
+                    "type": "string"
+                },
+                "lastMessageID": {
+                    "type": "string"
+                },
+                "messageCount": {
+                    "type": "integer"
+                },
+                "reactionCount": {
+                    "type": "integer"
                 }
             }
         },

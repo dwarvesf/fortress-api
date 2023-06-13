@@ -34,6 +34,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/store/employeeposition"
 	"github.com/dwarvesf/fortress-api/pkg/store/employeerole"
 	"github.com/dwarvesf/fortress-api/pkg/store/employeestack"
+	"github.com/dwarvesf/fortress-api/pkg/store/engagementsrollup"
 	"github.com/dwarvesf/fortress-api/pkg/store/expense"
 	"github.com/dwarvesf/fortress-api/pkg/store/feedbackevent"
 	"github.com/dwarvesf/fortress-api/pkg/store/icydistribution"
@@ -101,6 +102,7 @@ type Store struct {
 	EmployeePosition        employeeposition.IStore
 	EmployeeRole            employeerole.IStore
 	EmployeeStack           employeestack.IStore
+	EngagementsRollup       engagementsrollup.IStore
 	Expense                 expense.IStore
 	FeedbackEvent           feedbackevent.IStore
 	Invoice                 invoice.IStore
@@ -170,6 +172,7 @@ func New() *Store {
 		EmployeePosition:        employeeposition.New(),
 		EmployeeRole:            employeerole.New(),
 		EmployeeStack:           employeestack.New(),
+		EngagementsRollup:       engagementsrollup.New(),
 		Expense:                 expense.New(),
 		FeedbackEvent:           feedbackevent.New(),
 		Invoice:                 invoice.New(),

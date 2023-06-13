@@ -23,35 +23,36 @@ This repository is the official BE service for Fortress
 
 1. Set up source
 
-   Set up infras, install dependencies, etc.
+Set up infras, install dependencies, etc.
 
-   ```
-   make init
-   ```
+```
+make init
+```
 
 2. Set up env
 
-   Create a file `.env` with these values:
+Create a file `.env` with these values:
 
-   ```
-    DB_HOST="127.0.0.1"
-    DB_PORT="25432"
-    DB_USER="postgres"
-    DB_PASS="postgres"
-    DB_NAME="fortress_local"
-    DB_SSL_MODE="disable"
-    ALLOWED_ORIGINS="*"
-    ENV=dev
-    DEBUG=true
-   ```
+```
+DB_HOST="127.0.0.1"
+DB_PORT="25432"
+DB_USER="postgres"
+DB_PASS="postgres"
+DB_NAME="fortress_local"
+DB_SSL_MODE="disable"
+ALLOWED_ORIGINS="*"
+ENV=dev
+DEBUG=true
+JWT_SECRET_KEY=JWTSecretKey
+```
 
 3. Run source
 
-   ```
-   make dev
-   ```
+```
+make dev
+```
 
-   The service starts with port 8080 as the default
+The service starts with port 8080 as the default
 
 ### How to work on a TODO
 
@@ -112,32 +113,55 @@ This repository is the official BE service for Fortress
 
 ### Sample usecases
 
-   1. Create new API
-      - Check out file `/pkg/routes/v1.go` and explore the code flow to see how to create and handle an API
-      - Remember to annotate handler functions with [swaggo](https://github.com/swaggo/swag). Then run `make gen-swagger` to generate Swagger documentations
+1. Create new API
 
-   2. New DB migration
+- Check out file `/pkg/routes/v1.go` and explore the code flow to see how to create and handle an API
+- Remember to annotate handler functions with [swaggo](https://github.com/swaggo/swag). Then run `make gen-swagger` to generate Swagger documentations
 
-      Check out `.sql` files under `/migrations` to write a valid schema migration / seed file
+2. New DB migration
 
-      - To apply new migration files, run `make migrate-up`
-      - To apply seed files, run `make seed-db`
-      - To apply new migration files for test DB, run `make migrate-test`
+Check out `.sql` files under `/migrations` to write a valid schema migration / seed file
 
-      **Note:** remember to run these 2 every time you pulling new code
+- To apply new migration files, run `make migrate-up`
+- To apply seed files, run `make seed-db`
+- To apply new migration files for test DB, run `make migrate-test`
 
-      ```
-      make migrate-up
-      make migrate-test
-      ```
+**Note:** remember to run these 2 every time you pulling new code
 
-   3. DB repositories
+```shell
+make migrate-up
+make migrate-test
+```
 
-      Check out dirs under `/pkg/store`
+3. DB repositories
+
+Check out dirs under `/pkg/store`
+
+4. New API Implementation Steps
+
+- Add the new route to `/pkg/routes/v1.go`
+  - Check if the new route is in a new group or an existing one
+    - Implement `interface IHandler` in `pkg/handler/[name]/interface.go`
+    - Implement handling functions that takes a `*gin.Context` in `pkg/handler/[name]/[name].go`
+    - Add Swagger doc to handler
+    - Add the sub handler to the main handler in `pkg/handler/handler.go`
+  - Check if the new route needs authentication
+  - Check if the new route needs authorization (permission)
+    - If a new permission is needed then define it in `pkg/model/permissions.go`
+- Add the new table
+  - Create new migration by `make migrate-new`
+  - Add seed file to `migrations/seed`
+  - Include the new seed file in `migrations/seed/seed.sql`
+  - Check if existing seed data needs modification (`roles.sql`, `permisions.sql`, etc.)
+  - Implement the model in `pkg/model`
+  - After the model is defined, implement the CRUD functions in `pkg/store`
+    - Implement `interface IStore` in `pkg/store/[name]/interface.go`
+    - Implement the details in `pkg/store/[name]/[name].go`
+    - Add the sub store to the main store in `pkg/store/store.go`
+- Glue the implemented handler and the implemented store
 
 ## :pray: Credits
 
-A big thank to all who contributed to this project!
+A big thanks to all who contributed to this project!
 
 If you'd like to contribute, please contact us.
-

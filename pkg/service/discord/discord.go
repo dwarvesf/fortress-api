@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/dwarvesf/fortress-api/pkg/config"
@@ -176,23 +178,6 @@ func (d *discordClient) GetMemberByName(discordName string) ([]*discordgo.Member
 	return members, nil
 }
 
-func (d *discordClient) GetRoles() (Roles, error) {
-	roles, err := d.session.GuildRoles(d.cfg.Discord.IDs.DwarvesGuild)
-	if err != nil {
-		return nil, err
-	}
-
-	return roles, nil
-}
-
-func (d *discordClient) AddRole(userID, roleID string) error {
-	return d.session.GuildMemberRoleAdd(d.cfg.Discord.IDs.DwarvesGuild, userID, roleID)
-}
-
-func (d *discordClient) RemoveRole(userID string, roleID string) error {
-	return d.session.GuildMemberRoleRemove(d.cfg.Discord.IDs.DwarvesGuild, userID, roleID)
-}
-
 func (d *discordClient) GetMemberByUsername(username string) (*discordgo.Member, error) {
 	if len(username) == 0 {
 		return nil, nil
@@ -222,6 +207,23 @@ func (d *discordClient) GetMemberByUsername(username string) (*discordgo.Member,
 	}
 
 	return discordMember, nil
+}
+
+func (d *discordClient) GetRoles() (Roles, error) {
+	roles, err := d.session.GuildRoles(d.cfg.Discord.IDs.DwarvesGuild)
+	if err != nil {
+		return nil, err
+	}
+
+	return roles, nil
+}
+
+func (d *discordClient) AddRole(userID, roleID string) error {
+	return d.session.GuildMemberRoleAdd(d.cfg.Discord.IDs.DwarvesGuild, userID, roleID)
+}
+
+func (d *discordClient) RemoveRole(userID string, roleID string) error {
+	return d.session.GuildMemberRoleRemove(d.cfg.Discord.IDs.DwarvesGuild, userID, roleID)
 }
 
 type Roles discordgo.Roles
@@ -270,4 +272,53 @@ func getDwarvesRolesMap() map[string]bool {
 		"consultant": true,
 		"chad":       true,
 	}
+}
+
+func (d *discordClient) GetChannels() ([]*discordgo.Channel, error) {
+	return d.session.GuildChannels(d.cfg.Discord.IDs.DwarvesGuild)
+}
+
+func (d *discordClient) GetMessagesAfterCursor(
+	channelID string,
+	cursorMessageID string,
+	lastMessageID string,
+) ([]*discordgo.Message, error) {
+	cursorMessageIDUint, err := strconv.ParseUint(cursorMessageID, 10, 64)
+	if err != nil {
+		return nil, err
+	}
+	lastMessageIDUint, err := strconv.ParseUint(lastMessageID, 10, 64)
+	if err != nil {
+		return nil, err
+	}
+
+	allMessages := make([]*discordgo.Message, 0)
+	for cursorMessageIDUint < lastMessageIDUint {
+		messages, err := d.session.ChannelMessages(
+			channelID,
+			100, // 100 is the maximal number allowed
+			"",
+			cursorMessageID,
+			"",
+		)
+		if err != nil {
+			return nil, err
+		}
+		// reversal is needed since messages are sorted by newest first
+		for i, j := 0, len(messages)-1; i < j; i, j = i+1, j-1 {
+			messages[i], messages[j] = messages[j], messages[i]
+		}
+
+		allMessages = append(allMessages, messages...)
+		newestMessage := messages[len(messages)-1]
+		cursorMessageID = newestMessage.ID
+		cursorMessageIDUint, err = strconv.ParseUint(cursorMessageID, 10, 64)
+		if err != nil {
+			return nil, err
+		}
+		// a pause is needed to avoid Discord's rate limiting
+		time.Sleep(500 * time.Millisecond)
+	}
+
+	return allMessages, nil
 }
