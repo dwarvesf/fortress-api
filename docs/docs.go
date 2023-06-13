@@ -7149,6 +7149,12 @@ const docTemplate = `{
                 "code": {
                     "type": "string"
                 },
+                "commissionConfigs": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.ProjectCommissionConfig"
+                    }
+                },
                 "companyInfo": {
                     "$ref": "#/definitions/model.CompanyInfo"
                 },
@@ -7264,6 +7270,32 @@ const docTemplate = `{
                 },
                 "year": {
                     "type": "integer"
+                }
+            }
+        },
+        "model.ProjectCommissionConfig": {
+            "type": "object",
+            "properties": {
+                "commissionRate": {
+                    "type": "number"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "deletedAt": {
+                    "$ref": "#/definitions/gorm.DeletedAt"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "position": {
+                    "type": "string"
+                },
+                "projectID": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
                 }
             }
         },
@@ -7600,6 +7632,9 @@ const docTemplate = `{
                 "code": {
                     "type": "string"
                 },
+                "color": {
+                    "type": "string"
+                },
                 "createdAt": {
                     "type": "string"
                 },
@@ -7608,6 +7643,9 @@ const docTemplate = `{
                 },
                 "id": {
                     "type": "string"
+                },
+                "isShow": {
+                    "type": "boolean"
                 },
                 "level": {
                     "type": "integer"
@@ -9144,9 +9182,7 @@ const docTemplate = `{
                 "categoryID",
                 "channelID",
                 "discordUserID",
-                "lastMessageID",
-                "messageCount",
-                "reactionCount"
+                "lastMessageID"
             ],
             "properties": {
                 "categoryID": {
@@ -11527,6 +11563,9 @@ const docTemplate = `{
                 },
                 "employeeID": {
                     "type": "string"
+                },
+                "finalCommissionRate": {
+                    "type": "number"
                 },
                 "fullName": {
                     "type": "string"

@@ -116,6 +116,7 @@ func (s *store) All(db *gorm.DB, input GetListProjectInput, pagination model.Pag
 		Preload("Heads.Employee").
 		Preload("BankAccount", "deleted_at IS NULL").
 		Preload("BankAccount.Currency", "deleted_at IS NULL").
+		Preload("CommissionConfigs", "deleted_at IS NULL").
 		Offset(offset)
 
 	return projects, total, query.Find(&projects).Error
@@ -192,7 +193,8 @@ func (s *store) One(db *gorm.DB, id string, preload bool) (*model.Project, error
 			Preload("ProjectMembers.ProjectMemberPositions", "deleted_at IS NULL").
 			Preload("ProjectMembers.ProjectMemberPositions.Position", "deleted_at IS NULL").
 			Preload("ProjectMembers.Seniority", "deleted_at IS NULL").
-			Preload("ProjectMembers.UpsellPerson", "deleted_at IS NULL")
+			Preload("ProjectMembers.UpsellPerson", "deleted_at IS NULL").
+			Preload("CommissionConfigs", "deleted_at IS NULL")
 	}
 
 	var project *model.Project
