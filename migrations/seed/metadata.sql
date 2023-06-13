@@ -212,13 +212,12 @@ INSERT INTO public.client_contacts (id, deleted_at, created_at, updated_at, name
 INSERT INTO public.company_infos (id, deleted_at, created_at, updated_at, name, description, registration_number, info) VALUES
 ('2b57ec32-19c2-46f0-8cf5-04623241a464', null, '2023-02-07 18:42:38.328707', '2023-02-07 18:42:38.328707', 'Dwarves Foundation', null, '1245888282', '{"vn": {"phone": "0988999999", "address": "Hado Centrosa"}}');
 
--- INSERT INTO public.invoice_number_caching (id, deleted_at, created_at, updated_at, key, number) VALUES
--- ('25938962-611b-45ad-b6be-c0a1365ea1de', null, '2023-02-07 18:57:47.312554', '2023-02-07 18:57:47.312554', 'year_invoice_2023', 1),
--- ('10fa5046-199d-4d9a-bbf9-44345127be79', null, '2023-02-07 18:59:45.024935', '2023-02-07 18:59:45.024935', 'project_invoice_fortress_2023', 1);
-
 INSERT INTO public.bank_accounts (id, deleted_at, created_at, updated_at, account_number, bank_name, currency_id, owner_name, address, swift_code, routing_number, name, uk_sort_code, intermediary_bank_address, intermediary_bank_name) VALUES
-('e447d23b-2786-4463-82e1-bbe139dd939f', null, '2023-02-07 18:39:35.547782', '2023-02-07 18:39:35.547782', '0394882818', 'Bank of America', 'f00498e4-7a4c-4f61-b126-b84b5faeee06', 'Lorem Ipsum Inc', '3629 Riverside Drive, Menlo, GA, 30731', 'DAKJFKSJD', '98149281', 'Lorem Ipsum Inc', '198249-231', 'Intermediary Bank Address', 'Intermediary Bank Name'),
-('fc6b1743-05c5-4152-9340-1d20d96d8fc0', null, '2023-02-07 18:39:35.547782', '2023-02-07 18:39:35.547782', '0999999888', 'ACB', 'bf256e69-28b0-4d9f-bf48-3662854157a9', 'Dwarves Foundation', 'Hado Centrosa', 'AVBWFPW', null, 'DF Bank Account', null, 'Intermediary Bank Address', 'Intermediary Bank Name');
+('e447d23b-2786-4463-82e1-bbe139dd939f', null, '2023-02-07 18:39:35.547782', '2023-02-07 18:39:35.547782', '0394882818', 'Bank of American', 'f00498e4-7a4c-4f61-b126-b84b5faeee06', 'Lorem Ipsum US', '3629 Riverside Drive, Menlo, GA, 30731', 'DAKJFKSJD', '98149281', 'DWARVES FOUNDATION US CO., LTD', '198249-231', 'Intermediary Bank Address', 'Intermediary Bank Name'),
+('1263d98a-59a8-425d-85a6-daaf784131bd', null, '2023-02-07 18:39:35.547782', '2023-02-07 18:39:35.547782', '0927175722', 'Bank of United Kingdom', '06a699ed-618b-400b-ac8c-8739956fa8e7', 'Lorem Ipsum UK', '71 Cherry Court SOUTHAMPTON SO53 5PD UK', 'AWWDXXXA', '98149281', 'DWARVES FOUNDATION UK CO., LTD', '198249-231', 'Bank Of UK Address', 'John Doe'),
+('fc6b1743-05c5-4152-9340-1d20d96d8fc0', null, '2023-02-07 18:39:35.547782', '2023-02-07 18:39:35.547782', '0999999888', 'Bank of Vietnam', '7037bdb6-584e-4e35-996d-ef28a243f48a', 'Dwarves Foundation', 'Hado Centrosa 3 thang 2, District 10, HCMC 790000', 'XJKAJDJD', null, 'DWARVES FOUNDATION VN CO., LTD', null, 'Intermediary Bank Address', 'Intermediary Bank Name'),
+('ab910977-ba34-48ac-bca1-b7ffa7241573', null, '2023-02-07 18:39:35.547782', '2023-02-07 18:39:35.547782', '1849285888', 'Bank of Singapore', 'bf256e69-28b0-4d9f-bf48-3662854157a9', 'Lorem Ipsum UK', '133 New Bridge Road #18-08 Chinatown Point, Singapore', 'JFKAJD', '98149281', 'DWARVES FOUNDATION SG CO., LTD', '198249-231', 'Bank of Singapore Address', 'John Doe');
+
 
 
 

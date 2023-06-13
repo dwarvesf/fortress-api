@@ -113,15 +113,16 @@ type ProjectMember struct {
 }
 
 type ProjectHead struct {
-	EmployeeID     string          `json:"employeeID"`
-	FullName       string          `json:"fullName"`
-	DisplayName    string          `json:"displayName"`
-	Avatar         string          `json:"avatar"`
-	Username       string          `json:"username"`
-	CommissionRate decimal.Decimal `json:"commissionRate"`
+	EmployeeID          string          `json:"employeeID"`
+	FullName            string          `json:"fullName"`
+	DisplayName         string          `json:"displayName"`
+	Avatar              string          `json:"avatar"`
+	Username            string          `json:"username"`
+	CommissionRate      decimal.Decimal `json:"commissionRate"`
+	FinalCommissionRate decimal.Decimal `json:"finalCommissionRate"`
 }
 
-func ToProjectHead(userInfo *model.CurrentLoggedUserInfo, head *model.ProjectHead) ProjectHead {
+func ToProjectHead(userInfo *model.CurrentLoggedUserInfo, head *model.ProjectHead, commissionConfig map[string]decimal.Decimal) ProjectHead {
 	res := ProjectHead{
 		EmployeeID:  head.EmployeeID.String(),
 		FullName:    head.Employee.FullName,
@@ -132,6 +133,12 @@ func ToProjectHead(userInfo *model.CurrentLoggedUserInfo, head *model.ProjectHea
 
 	if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsCommissionRateRead) {
 		res.CommissionRate = head.CommissionRate
+		rate := decimal.Zero
+		v, ok := commissionConfig[head.Position.String()]
+		if ok {
+			rate = v.Mul(head.CommissionRate).Div(decimal.NewFromInt(100))
+		}
+		res.FinalCommissionRate = rate
 	}
 
 	return res
@@ -156,9 +163,9 @@ func ToProjectData(in *model.Project, userInfo *model.CurrentLoggedUserInfo) Pro
 	leadMap := map[string]bool{}
 	var technicalLeads = make([]ProjectHead, 0, len(in.Heads))
 	var accountManagers, salePersons, deliveryManagers []ProjectHead
-
+	commissionConfig := in.CommissionConfigs.ToMap()
 	for _, h := range in.Heads {
-		head := ToProjectHead(userInfo, h)
+		head := ToProjectHead(userInfo, h, commissionConfig)
 
 		switch h.Position {
 		case model.HeadPositionTechnicalLead:
@@ -468,14 +475,16 @@ func ToCreateProjectDataResponse(userInfo *model.CurrentLoggedUserInfo, project 
 		result.StartDate = project.StartDate.Format("2006-01-02")
 	}
 
+	commisionRate := project.CommissionConfigs.ToMap()
+
 	for _, head := range project.Heads {
 		switch head.Position {
 		case model.HeadPositionAccountManager:
-			result.AccountManagers = append(result.AccountManagers, ToProjectHead(userInfo, head))
+			result.AccountManagers = append(result.AccountManagers, ToProjectHead(userInfo, head, commisionRate))
 		case model.HeadPositionDeliveryManager:
-			result.DeliveryManagers = append(result.DeliveryManagers, ToProjectHead(userInfo, head))
+			result.DeliveryManagers = append(result.DeliveryManagers, ToProjectHead(userInfo, head, commisionRate))
 		case model.HeadPositionSalePerson:
-			result.SalePersons = append(result.SalePersons, ToProjectHead(userInfo, head))
+			result.SalePersons = append(result.SalePersons, ToProjectHead(userInfo, head, commisionRate))
 		}
 	}
 

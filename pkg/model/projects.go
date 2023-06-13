@@ -32,16 +32,17 @@ type Project struct {
 	LeadRating          int
 	ImportantLevel      ProjectImportantLevel
 
-	ProjectNotion  *ProjectNotion `gorm:"foreignKey:project_id"`
-	Organization   *Organization
-	BankAccount    *BankAccount
-	Country        *Country
-	Client         *Client
-	CompanyInfo    *CompanyInfo
-	Slots          []ProjectSlot
-	Heads          []*ProjectHead
-	ProjectMembers []ProjectMember
-	ProjectStacks  []ProjectStack
+	ProjectNotion     *ProjectNotion `gorm:"foreignKey:project_id"`
+	Organization      *Organization
+	BankAccount       *BankAccount
+	Country           *Country
+	Client            *Client
+	CompanyInfo       *CompanyInfo
+	Slots             []ProjectSlot
+	Heads             []*ProjectHead
+	ProjectMembers    []ProjectMember
+	ProjectStacks     []ProjectStack
+	CommissionConfigs ProjectCommissionConfigs
 
 	ProjectInfo *ProjectInfo `json:"-" gorm:"foreignkey:ProjectID;association_foreignkey:ID"`
 }
