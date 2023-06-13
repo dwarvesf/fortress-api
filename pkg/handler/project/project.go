@@ -1832,13 +1832,19 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 	p.StartDate = body.GetStartDate()
 	p.CountryID = body.CountryID
 	p.Function = model.ProjectFunction(body.Function)
-	p.BankAccountID = body.BankAccountID
-	p.ClientID = body.ClientID
 	p.OrganizationID = body.OrganizationID
 	p.AccountRating = body.AccountRating
 	p.DeliveryRating = body.DeliveryRating
 	p.LeadRating = body.LeadRating
 	p.ImportantLevel = model.ProjectImportantLevel(body.ImportantLevel)
+
+	if !body.BankAccountID.IsZero() {
+		p.BankAccountID = body.BankAccountID
+	}
+
+	if !body.ClientID.IsZero() {
+		p.ClientID = body.ClientID
+	}
 
 	projectNotion, err := h.store.ProjectNotion.OneByProjectID(tx.DB(), p.ID.String())
 
@@ -1876,7 +1882,7 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 		"country_id",
 		"function",
 		"bank_account_id",
-		// "client_id",
+		"client_id",
 		"organization_id",
 		"account_rating",
 		"delivery_rating",

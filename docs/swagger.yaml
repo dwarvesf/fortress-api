@@ -660,6 +660,10 @@ definitions:
         type: string
       code:
         type: string
+      commissionConfigs:
+        items:
+          $ref: '#/definitions/model.ProjectCommissionConfig'
+        type: array
       companyInfo:
         $ref: '#/definitions/model.CompanyInfo'
       companyInfoID:
@@ -737,6 +741,23 @@ definitions:
         type: integer
       year:
         type: integer
+    type: object
+  model.ProjectCommissionConfig:
+    properties:
+      commissionRate:
+        type: number
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      id:
+        type: string
+      position:
+        type: string
+      projectID:
+        type: string
+      updatedAt:
+        type: string
     type: object
   model.ProjectHead:
     properties:
@@ -957,12 +978,16 @@ definitions:
     properties:
       code:
         type: string
+      color:
+        type: string
       createdAt:
         type: string
       deletedAt:
         $ref: '#/definitions/gorm.DeletedAt'
       id:
         type: string
+      isShow:
+        type: boolean
       level:
         type: integer
       name:
@@ -2018,8 +2043,6 @@ definitions:
     - channelID
     - discordUserID
     - lastMessageID
-    - messageCount
-    - reactionCount
     type: object
   view.APIKeyData:
     properties:
@@ -3560,6 +3583,8 @@ definitions:
         type: string
       employeeID:
         type: string
+      finalCommissionRate:
+        type: number
       fullName:
         type: string
       username:
