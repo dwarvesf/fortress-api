@@ -230,16 +230,25 @@ func (s *store) GetProjectByAlias(db *gorm.DB, alias string) (*model.Project, er
 	return &res, db.Where("alias = ?", alias).Preload("ProjectInfo").Find(&res).Error
 }
 
-func (s *store) sortFieldMapping(field string) string {
-	sortField := strings.Split(field, " ")
-	switch sortField[0] {
-	case "monthlyChargeRate":
-		return fmt.Sprintf("%v %v", "converted_monthly_revenue", sortField[1])
-	case "importantLevel":
-		return fmt.Sprintf("%v %v", "projects.important_level", sortField[1])
-	case "updatedAt":
-		return fmt.Sprintf("%v %v", "projects.updated_at", sortField[1])
+func (s *store) sortFieldMapping(fields string) string {
+	sortFields := strings.Split(fields, ",")
+
+	sortString := ""
+	for _, field := range sortFields {
+		sortField := strings.Split(field, " ")
+		switch sortField[0] {
+		case "monthlyChargeRate":
+			sortString += fmt.Sprintf("%v %v, ", "converted_monthly_revenue", sortField[1])
+		case "importantLevel":
+			sortString += fmt.Sprintf("%v %v, ", "projects.important_level", sortField[1])
+		case "updatedAt":
+			sortString += fmt.Sprintf("%v %v, ", "projects.updated_at", sortField[1])
+		}
 	}
 
-	return fmt.Sprintf("%v %v", "converted_monthly_revenue", "DESC")
+	if sortString == "" {
+		return fmt.Sprintf("%v %v", "converted_monthly_revenue", "DESC")
+	}
+
+	return strings.TrimSuffix(sortString, ", ")
 }
