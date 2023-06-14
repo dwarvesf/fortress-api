@@ -61,12 +61,12 @@ func HasDomain(str string) bool {
 func FormatMoney(value float64, currencyCode string) string {
 	var result string
 
-	pound := money.New(1, currencyCode)
-	tmpValue := value * math.Pow(10, float64(pound.Currency().Fraction))
+	currency := money.New(1, currencyCode)
+	tmpValue := value * math.Pow(10, float64(currency.Currency().Fraction))
 
-	formatted := pound.Multiply(int64(tmpValue)).Display()
+	formatted := currency.Multiply(int64(tmpValue)).Display()
 	parts := strings.Split(formatted, ".00")
-	if len(parts) > 1 {
+	if len(parts) > 0 {
 		result = parts[0]
 	}
 
