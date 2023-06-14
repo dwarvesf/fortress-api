@@ -50,7 +50,14 @@ func (c *controller) Log(in model.LogDiscordInput) error {
 			c.logger.Field("err", err.Error()).Warn("Get Employee failed")
 			return err
 		}
-		data["employee_id"] = employee.DisplayName
+
+		discordAccount := model.SocialAccounts(employee.SocialAccounts).GetDiscord()
+		accountID := employee.DisplayName
+		if discordAccount != nil && discordAccount.AccountID != "" {
+			accountID = fmt.Sprintf("<@%s>", discordAccount.AccountID)
+		}
+
+		data["employee_id"] = accountID
 	}
 
 	if updatedEmployeeID, ok := data["updated_employee_id"]; ok {
@@ -59,7 +66,14 @@ func (c *controller) Log(in model.LogDiscordInput) error {
 			c.logger.Field("err", err.Error()).Warn("Get Employee failed")
 			return err
 		}
-		data["updated_employee_id"] = updatedEmployee.DisplayName
+
+		discordAccount := model.SocialAccounts(updatedEmployee.SocialAccounts).GetDiscord()
+		accountID := updatedEmployee.DisplayName
+		if discordAccount != nil && discordAccount.AccountID != "" {
+			accountID = fmt.Sprintf("<@%s>", discordAccount.AccountID)
+		}
+
+		data["updated_employee_id"] = accountID
 	}
 
 	// Replace template
