@@ -235,6 +235,8 @@ func (s *store) sortFieldMapping(field string) string {
 	switch sortField[0] {
 	case "monthlyChargeRate":
 		return fmt.Sprintf("%v %v", "converted_monthly_revenue", sortField[1])
+	case "importantLevel":
+		return fmt.Sprintf("%v %v", "projects.important_level", sortField[1])
 	case "updatedAt":
 		return fmt.Sprintf("%v %v", "projects.updated_at", sortField[1])
 	}
