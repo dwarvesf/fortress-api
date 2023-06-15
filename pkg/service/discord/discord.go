@@ -301,6 +301,10 @@ func (d *discordClient) GetMessagesAfterCursor(
 			cursorMessageID,
 			"",
 		)
+		if len(messages) == 0 {
+			// early break to avoid index out of bound error
+			break
+		}
 		if err != nil {
 			return nil, err
 		}
