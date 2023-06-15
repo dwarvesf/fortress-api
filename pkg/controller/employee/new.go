@@ -29,9 +29,6 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 }
 
 type IController interface {
-	// Auth(in AuthenticationInput) (employee *model.Employee, jwt string, err error)
-	// Me(userID string) (employee *model.Employee, perms []*model.Permission, err error)
-
 	List(workingStatuses []string, body GetListEmployeeInput, userInfo *model.CurrentLoggedUserInfo) (employees []*model.Employee, tptal int64, err error)
 	Details(id string, userInfo *model.CurrentLoggedUserInfo) (employee *model.Employee, err error)
 	UpdateEmployeeStatus(employeeID string, body UpdateWorkingStatusInput) (employee *model.Employee, err error)
