@@ -745,6 +745,7 @@ func (h *handler) UpdateBaseSalary(c *gin.Context) {
 
 	totalBaseSalary := req.PersonalAccountAmount + req.CompanyAccountAmount
 	formattedBaseSalary := utils.FormatMoney(float64(totalBaseSalary), "VND")
+
 	// update discord as audit log
 	err = h.controller.Discord.Log(model.LogDiscordInput{
 		Type: "employee_update_base_salary",
