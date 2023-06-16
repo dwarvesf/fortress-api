@@ -146,12 +146,23 @@ func (n *notionService) ToChangelogMJML(blocks []nt.Block, email model.Email) (s
 						</mj-text>`, strings.Join(plainText, " "))
 						resutl = handleNestedBulletText(v, resutl)
 					} else { // if this is not last block
-						resutl = resutl + fmt.Sprintf(`<mj-text padding="0px 0px">
+						if _, ok := blocks[i+1].(*nt.BulletedListItemBlock); ok { // and block after this is a bullet list
+							resutl = resutl + fmt.Sprintf(`<mj-text padding="0px 0px">
 							<ul>
 								  <li style="margin: 4px 0px;"> 
 									%s
 								  </li>`, strings.Join(plainText, " "))
-						resutl = handleNestedBulletText(v, resutl)
+							resutl = handleNestedBulletText(v, resutl)
+						} else {
+							resutl = resutl + fmt.Sprintf(`<mj-text padding="0px 0px">
+							<ul>
+								  <li style="margin: 4px 0px;"> 
+									%s
+								  </li>
+							</ul>
+						</mj-text>`, strings.Join(plainText, " "))
+							resutl = handleNestedBulletText(v, resutl)
+						}
 					}
 				}
 			}
@@ -174,9 +185,9 @@ func handleNestedBulletText(v *nt.BulletedListItemBlock, resutl string) string {
 			for _, textChild := range child.RichText {
 				plainTextChild = append(plainTextChild, textChild.PlainText)
 			}
-			resutl = resutl + fmt.Sprintf(`<mj-text>
+			resutl = resutl + fmt.Sprintf(`<mj-text padding="0px 0px">
 			<ul>
-			  <li> 
+			  <li style="margin: 4px 0px;"> 
 				%s
 			  </li>
 			  %s
