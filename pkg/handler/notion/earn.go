@@ -52,27 +52,24 @@ func (h *handler) ListEarns(c *gin.Context) {
 		},
 	)
 
-	resp, err := h.service.Notion.GetDatabase(h.config.Notion.Databases.Earn, filter, nil, 0)
+	resp, err := h.service.Notion.GetDatabase(h.config.Notion.Databases.Earn, filter, []notion.DatabaseQuerySort{
+		{
+			Property:  "Reward 🧊",
+			Direction: notion.SortDirAsc,
+		},
+	}, 0)
+
 	if err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, "can't get items earn from notion"))
 		return
 	}
 
 	var earns = make([]model.NotionEarn, 0, len(resp.Results))
-	var parents = make([]model.NotionEarn, 0, len(resp.Results))
 
 	for _, r := range resp.Results {
 		props := r.Properties.(notion.DatabasePageProperties)
 
-		if props["Status"].Status == nil || props["Status"].Status.Name == "Done" {
-			continue
-		}
-
-		if len(props["Parent item"].Relation) == 0 && (props["Reward 🧊"].Number == nil || *props["Reward 🧊"].Number == 0) {
-			parents = append(parents, model.NotionEarn{
-				ID:   r.ID,
-				Name: props["Name"].Title[0].Text.Content,
-			})
+		if props["Status"].Status == nil {
 			continue
 		}
 
@@ -84,12 +81,18 @@ func (h *handler) ListEarns(c *gin.Context) {
 		for _, tag := range props["Tags"].MultiSelect {
 			tags = append(tags, tag.Name)
 		}
+
 		var functions []string
 		for _, f := range props["Function"].MultiSelect {
 			functions = append(functions, f.Name)
 		}
+
 		var employees []model.Employee
 		for _, e := range props["PICs"].People {
+			if e.Person == nil {
+				continue
+			}
+
 			employees = append(employees, model.Employee{
 				FullName:      e.Name,
 				PersonalEmail: e.Person.Email,
@@ -124,27 +127,5 @@ func (h *handler) ListEarns(c *gin.Context) {
 		})
 	}
 
-	for _, e := range earns {
-		if e.ParentID != "" {
-			continue
-		}
-		parents = append(parents, e)
-	}
-
-	for i, p := range parents {
-		for _, e := range earns {
-			if e.ParentID == p.ID {
-				parents[i].SubItems = append(parents[i].SubItems, e)
-			}
-		}
-	}
-
-	for i := 0; i < len(parents); i++ {
-		if parents[i].Reward == 0 && len(parents[i].SubItems) == 0 {
-			parents = append(parents[:i], parents[i+1:]...)
-			i--
-		}
-	}
-
-	c.JSON(http.StatusOK, view.CreateResponse[any](parents, nil, nil, nil, "get list earn items successfully"))
+	c.JSON(http.StatusOK, view.CreateResponse[any](earns, nil, nil, nil, "get list earn items successfully"))
 }
