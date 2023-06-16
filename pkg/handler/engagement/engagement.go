@@ -272,7 +272,7 @@ func (h *handler) IndexMessages(c *gin.Context) {
 	if h.isIndexingMessages {
 		l.Warn("handler is indexing messages")
 		c.JSON(
-			http.StatusInternalServerError,
+			http.StatusAccepted,
 			view.CreateResponse[any]("handler is indexing messages", nil, nil, nil, ""),
 		)
 		return
