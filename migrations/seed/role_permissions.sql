@@ -2,8 +2,7 @@
 INSERT INTO public.role_permissions (id, deleted_at, created_at, updated_at, role_id, permission_id) VALUES
 ('35db0910-66e6-4362-9082-9eb800730c74', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '349876e0-4d3b-463a-a9b0-4083b3ebcd83', '475d8075-aec7-4d75-aa79-dc90c9dd9edb'),
 ('05f97a71-c065-4afd-a1e0-39777a933f0c', NULL, '2023-06-01 13:11:15.699280', '2023-06-01 13:11:15.699280', '349876e0-4d3b-463a-a9b0-4083b3ebcd83', '38a36881-7fb0-4003-9a9f-cbcc7eaa3deb'), -- engagementMetrics.read
-('30d86355-0372-4890-807a-7dc96ca6df49', NULL, '2023-06-01 13:11:32.153745', '2023-06-01 13:11:32.153745', '349876e0-4d3b-463a-a9b0-4083b3ebcd83', '70109d50-6ec3-4475-9e45-757514781daf')  -- engagementMetrics.write
-;
+('30d86355-0372-4890-807a-7dc96ca6df49', NULL, '2023-06-01 13:11:32.153745', '2023-06-01 13:11:32.153745', '349876e0-4d3b-463a-a9b0-4083b3ebcd83', '70109d50-6ec3-4475-9e45-757514781daf'); -- engagementMetrics.write
 
 -- FORTRESS BIFROST
 INSERT INTO public.role_permissions (id, deleted_at, created_at, updated_at, role_id, permission_id) VALUES
@@ -20,9 +19,8 @@ INSERT INTO public.role_permissions (id, deleted_at, created_at, updated_at, rol
 ('82019185-343e-4f76-bd18-85fd7ecada28', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '3fcf9e36-2501-4f86-8418-cfe3a137b7f9', 'f1bef8de-8a6b-4d7d-ae1a-e09ec631fd94'),
 ('40e8b32a-f0aa-4e69-bd6f-e75b3c17a2cd', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '3fcf9e36-2501-4f86-8418-cfe3a137b7f9', 'a1ee5039-69e9-4977-be39-b9008c8a791b'),
 ('cd345436-3ae6-4349-948c-dc5fefc30934', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '3fcf9e36-2501-4f86-8418-cfe3a137b7f9', '9be15ffa-3695-4d7f-93aa-ef594a08c36a'),
-('63e4610b-87db-457e-a61f-5a2def006eae', NULL, '2023-06-04 11:17:06.279025', '2023-06-04 11:17:06.279025', '3fcf9e36-2501-4f86-8418-cfe3a137b7f9', '9be15ffa-3695-4d7f-93aa-ef594a08c36a'), -- engagementMetrics.read
-('8c0db283-d1e0-4f45-abb8-660212c13404', NULL, '2023-06-04 11:17:20.603667', '2023-06-04 11:17:20.603667', '3fcf9e36-2501-4f86-8418-cfe3a137b7f9', '9be15ffa-3695-4d7f-93aa-ef594a08c36a')  -- engagementMetrics.write
-;
+('63e4610b-87db-457e-a61f-5a2def006eae', NULL, '2023-06-04 11:17:06.279025', '2023-06-04 11:17:06.279025', '3fcf9e36-2501-4f86-8418-cfe3a137b7f9', '38a36881-7fb0-4003-9a9f-cbcc7eaa3deb'), -- engagementMetrics.read
+('8c0db283-d1e0-4f45-abb8-660212c13404', NULL, '2023-06-04 11:17:20.603667', '2023-06-04 11:17:20.603667', '3fcf9e36-2501-4f86-8418-cfe3a137b7f9', '70109d50-6ec3-4475-9e45-757514781daf'); -- engagementMetrics.write
 
 -- CONTRACTOR
 INSERT INTO public.role_permissions (id, deleted_at, created_at, updated_at, role_id, permission_id) VALUES
@@ -264,5 +262,4 @@ INSERT INTO public.role_permissions (id, deleted_at, created_at, updated_at, rol
 ('24f5b8d4-43b3-42bf-8632-bc8f71dc48b6', null, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', 'c23c1c1c-bfaf-41e6-a4d7-6ef196fd2736', 'a1ee5039-69e9-4977-be39-b9008c8a791b'),
 ('6846c003-6219-42ef-9bd8-b88ea8ddea76', null, '2023-01-10 05:19:48.256921', '2023-01-10 05:19:48.256921', 'c23c1c1c-bfaf-41e6-a4d7-6ef196fd2736', '78d617f8-b155-4051-b128-7f2d00ca31fd'),
 ('2ea832a2-7eaa-4db6-9b11-1d1027b5713d', null, '2023-06-04 11:15:07.549995', '2023-06-04 11:15:07.549995', 'c23c1c1c-bfaf-41e6-a4d7-6ef196fd2736', '38a36881-7fb0-4003-9a9f-cbcc7eaa3deb'), -- engagementMetrics.read
-('2bf409ad-46e3-47b9-b746-571735b69c92', null, '2023-06-04 11:15:12.249251', '2023-06-04 11:15:12.249251', 'c23c1c1c-bfaf-41e6-a4d7-6ef196fd2736', '70109d50-6ec3-4475-9e45-757514781daf')  -- engagementMetrics.write
-;
+('2bf409ad-46e3-47b9-b746-571735b69c92', null, '2023-06-04 11:15:12.249251', '2023-06-04 11:15:12.249251', 'c23c1c1c-bfaf-41e6-a4d7-6ef196fd2736', '70109d50-6ec3-4475-9e45-757514781daf'); -- engagementMetrics.write
