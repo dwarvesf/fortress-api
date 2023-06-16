@@ -22,7 +22,37 @@ import (
 // @Failure 400 {object} view.ErrorResponse
 // @Router /notion/earns [get]
 func (h *handler) ListEarns(c *gin.Context) {
-	resp, err := h.service.Notion.GetDatabase(h.config.Notion.Databases.Earn, nil, nil, 0)
+	filter := &notion.DatabaseQueryFilter{}
+	rewardFilter := 0
+
+	filter.And = append(filter.And,
+		notion.DatabaseQueryFilter{
+			Property: "Reward 🧊",
+			DatabaseQueryPropertyFilter: notion.DatabaseQueryPropertyFilter{
+				Number: &notion.NumberDatabaseQueryFilter{
+					GreaterThan: &rewardFilter,
+				},
+			},
+		},
+		notion.DatabaseQueryFilter{
+			Property: "Status",
+			DatabaseQueryPropertyFilter: notion.DatabaseQueryPropertyFilter{
+				Status: &notion.StatusDatabaseQueryFilter{
+					Equals: "Open",
+				},
+			},
+		},
+		notion.DatabaseQueryFilter{
+			Property: "PICs",
+			DatabaseQueryPropertyFilter: notion.DatabaseQueryPropertyFilter{
+				People: &notion.PeopleDatabaseQueryFilter{
+					IsEmpty: true,
+				},
+			},
+		},
+	)
+
+	resp, err := h.service.Notion.GetDatabase(h.config.Notion.Databases.Earn, filter, nil, 0)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, "can't get items earn from notion"))
 		return
