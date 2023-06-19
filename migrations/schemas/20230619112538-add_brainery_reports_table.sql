@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS brainery_logs (
     url             TEXT NOT NULL,
     github_id       TEXT NOT NULL,
     discord_id      TEXT NOT NULL,
-    employee_id     UUID,
+    employee_id     UUID DEFAULT NULL,
     tags            JSONB,
     published_date  DATE NOT NULL,
     reward          DECIMAL
