@@ -305,7 +305,6 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 		NotionID:           body.NotionID,
 		NotionName:         body.NotionName,
 		NotionEmail:        body.NotionEmail,
-		DiscordID:          body.DiscordID,
 		DiscordName:        body.DiscordName,
 		LinkedInName:       body.LinkedInName,
 		LeftDate:           body.LeftDate,

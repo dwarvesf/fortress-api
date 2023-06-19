@@ -237,3 +237,8 @@ func (s *store) GetByBasecampIDs(db *gorm.DB, basecampIDs []int) ([]*model.Emplo
 
 	return employees, db.Where("basecamp_id IN ?", basecampIDs).Find(&employees).Error
 }
+
+func (s *store) GetByDiscordAccountID(db *gorm.DB, discordAccountID string) ([]*model.Employee, error) {
+	var employees []*model.Employee
+	return employees, db.Where("discord_account_id = ?", discordAccountID).Order("created_at").Find(&employees).Error
+}

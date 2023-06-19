@@ -21,7 +21,6 @@ type UpdateEmployeeGeneralInfoInput struct {
 	NotionID           string
 	NotionName         string
 	NotionEmail        string
-	DiscordID          string
 	DiscordName        string
 	LinkedInName       string
 	LeftDate           string
@@ -154,23 +153,57 @@ func (r *controller) UpdateGeneralInfo(l logger.Logger, employeeID string, body 
 			return nil, done(err)
 		}
 
-		if discordMember != nil {
-			discordID = discordMember.User.ID
+		if discordMember == nil {
+			return nil, done(ErrCouldNotFoundDiscordMemberInGuild)
+		}
+
+		discordID = discordMember.User.ID
+	}
+
+	discordAccount, err := r.store.DiscordAccount.OneByDiscordID(tx.DB(), discordID)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, done(err)
+	}
+
+	accountInUsed := false
+	if !errors.Is(err, gorm.ErrRecordNotFound) {
+		tmpE, err := r.store.Employee.GetByDiscordAccountID(tx.DB(), discordAccount.ID.String())
+		if err != nil {
+			return nil, done(err)
+		}
+
+		if len(tmpE) > 0 {
+			for _, e := range tmpE {
+				if e.ID != emp.ID {
+					accountInUsed = true
+					break
+				}
+			}
 		}
 	}
 
-	if discordID != "" {
-		body.DiscordID = discordID
+	if accountInUsed {
+		return nil, done(ErrDiscordAccountAlreadyUsedByAnotherEmployee)
 	}
+
+	discordAccountInput := &model.DiscordAccount{
+		DiscordID: discordID,
+		Username:  body.DiscordName,
+	}
+
+	discordAccount, err = r.store.DiscordAccount.Upsert(tx.DB(), discordAccountInput)
+	if err != nil {
+		return nil, done(err)
+	}
+
+	emp.DiscordAccountID = discordAccount.ID
 
 	// Update social accounts
 	saInput := model.SocialAccountInput{
 		GithubID:     body.GithubID,
 		NotionID:     body.NotionID,
-		DiscordID:    discordID,
 		NotionName:   body.NotionName,
 		NotionEmail:  body.NotionEmail,
-		DiscordName:  body.DiscordName,
 		LinkedInName: body.LinkedInName,
 	}
 
@@ -192,6 +225,7 @@ func (r *controller) UpdateGeneralInfo(l logger.Logger, employeeID string, body 
 		"wise_recipient_email",
 		"wise_recipient_name",
 		"wise_currency",
+		"discord_account_id",
 	)
 	if err != nil {
 		return nil, done(err)
@@ -266,12 +300,6 @@ func (r *controller) updateSocialAccounts(db *gorm.DB, input model.SocialAccount
 			Name:       input.NotionName,
 			Email:      input.NotionEmail,
 		},
-		model.SocialAccountTypeDiscord: {
-			Type:       model.SocialAccountTypeDiscord,
-			EmployeeID: employeeID,
-			AccountID:  input.DiscordID,
-			Name:       input.DiscordName,
-		},
 		model.SocialAccountTypeLinkedIn: {
 			Type:       model.SocialAccountTypeLinkedIn,
 			EmployeeID: employeeID,
@@ -290,9 +318,6 @@ func (r *controller) updateSocialAccounts(db *gorm.DB, input model.SocialAccount
 		case model.SocialAccountTypeNotion:
 			account.Name = input.NotionName
 			account.Email = input.NotionEmail
-		case model.SocialAccountTypeDiscord:
-			account.Name = input.DiscordName
-			account.AccountID = input.DiscordID
 		case model.SocialAccountTypeLinkedIn:
 			account.AccountID = input.LinkedInName
 			account.Name = input.LinkedInName

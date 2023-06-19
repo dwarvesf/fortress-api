@@ -86,18 +86,38 @@ func (h *handler) StoreVaultTransaction(c *gin.Context) {
 				continue
 			}
 
-			srcSocialAccount, err := h.store.SocialAccount.GetByDiscordID(h.repo.DB(), transaction.Sender)
+			srcDiscordAccount, err := h.store.DiscordAccount.OneByDiscordID(h.repo.DB(), transaction.Sender)
 			if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-				l.Error(err, "failed to get GetByDiscordID")
+				l.Error(err, "failed to get src discord account")
 				c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 				return
 			}
 
-			destSocialAccount, err := h.store.SocialAccount.GetByDiscordID(h.repo.DB(), transaction.Target)
+			srcEmployee := make([]*model.Employee, 0)
+			if !errors.Is(err, gorm.ErrRecordNotFound) {
+				srcEmployee, err = h.store.Employee.GetByDiscordAccountID(h.repo.DB(), srcDiscordAccount.ID.String())
+				if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+					l.Error(err, "failed to get src employee by discord account ID")
+					c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+					return
+				}
+			}
+
+			destDiscordAccount, err := h.store.DiscordAccount.OneByDiscordID(h.repo.DB(), transaction.Target)
 			if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-				l.Error(err, " failed to get GetByDiscordID")
+				l.Error(err, " failed to get dest discord account")
 				c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 				return
+			}
+
+			destEmployee := make([]*model.Employee, 0)
+			if !errors.Is(err, gorm.ErrRecordNotFound) {
+				destEmployee, err = h.store.Employee.GetByDiscordAccountID(h.repo.DB(), destDiscordAccount.ID.String())
+				if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+					l.Error(err, "failed to get dest employee by discord account ID")
+					c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+					return
+				}
 			}
 
 			icyTx := model.IcyTransaction{
@@ -108,12 +128,12 @@ func (h *handler) StoreVaultTransaction(c *gin.Context) {
 				Target:   transaction.Target,
 			}
 
-			if srcSocialAccount != nil {
-				icyTx.SrcEmployeeID = srcSocialAccount.EmployeeID
+			if len(srcEmployee) > 0 {
+				icyTx.SrcEmployeeID = srcEmployee[0].ID
 			}
 
-			if destSocialAccount != nil {
-				icyTx.DestEmployeeID = destSocialAccount.EmployeeID
+			if len(destEmployee) > 0 {
+				icyTx.DestEmployeeID = destEmployee[0].ID
 			}
 
 			icyTxs = append(icyTxs, icyTx)

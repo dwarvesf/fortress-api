@@ -47,7 +47,7 @@ func (h *handler) SyncDiscordInfo(c *gin.Context) {
 		return
 	}
 
-	socialAccounts, err := h.store.SocialAccount.GetByType(h.repo.DB(), model.SocialAccountTypeDiscord.String())
+	discordAccounts, err := h.store.DiscordAccount.All(h.repo.DB())
 	if err != nil {
 		h.logger.Error(err, "failed to get discord accounts")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
@@ -69,40 +69,40 @@ func (h *handler) SyncDiscordInfo(c *gin.Context) {
 
 	tx, done := h.repo.NewTransaction()
 
-	for _, sa := range socialAccounts {
-		if sa.AccountID == "" && sa.Name == "" {
+	for _, da := range discordAccounts {
+		if da.DiscordID == "" && da.Username == "" {
 			continue
 		}
 
 		// Update discord_id from username
-		if sa.AccountID == "" {
-			accountID, ok := discordUsernameMap[sa.Name]
+		if da.DiscordID == "" {
+			discordID, ok := discordUsernameMap[da.Username]
 			if !ok {
-				h.logger.AddField("username", sa.Name).Info("username does not exist in guild")
+				h.logger.AddField("username", da.Username).Info("username does not exist in guild")
 				continue
 			}
 
-			sa.AccountID = accountID
-			_, err := h.store.SocialAccount.UpdateSelectedFieldsByID(tx.DB(), sa.ID.String(), *sa, "account_id")
+			da.DiscordID = discordID
+			_, err := h.store.DiscordAccount.UpdateSelectedFieldsByID(tx.DB(), da.ID.String(), *da, "discord_id")
 			if err != nil {
-				h.logger.AddField("id", sa.ID).Error(err, "failed to update account_id")
+				h.logger.AddField("id", da.ID).Error(err, "failed to update discord_id")
 			}
 
 			continue
 		}
 
 		// Update username from discord_id
-		username, ok := discordIDMap[sa.AccountID]
+		username, ok := discordIDMap[da.DiscordID]
 		if !ok {
-			h.logger.Field("account_id", sa.AccountID).Info("discord id does not exist in guild")
+			h.logger.Field("discord_id", da.DiscordID).Info("discord id does not exist in guild")
 			continue
 		}
 
-		if sa.Name != username {
-			sa.Name = username
-			_, err := h.store.SocialAccount.UpdateSelectedFieldsByID(tx.DB(), sa.ID.String(), *sa, "name")
+		if da.Username != username {
+			da.Username = username
+			_, err := h.store.DiscordAccount.UpdateSelectedFieldsByID(tx.DB(), da.ID.String(), *da, "username")
 			if err != nil {
-				h.logger.AddField("id", sa.ID).Error(err, "failed to update name of social account")
+				h.logger.AddField("id", da.ID).Error(err, "failed to update username of discord account")
 			}
 		}
 	}
@@ -160,9 +160,8 @@ func (h *handler) BirthdayDailyMessage(c *gin.Context) {
 	for _, e := range employees {
 		now := time.Now()
 		if now.Day() == e.DateOfBirth.Day() && now.Month() == e.DateOfBirth.Month() {
-			sa := model.SocialAccounts(e.SocialAccounts).GetDiscord()
-			if sa != nil && sa.AccountID != "" {
-				discordID := sa.AccountID
+			if e.DiscordAccount != nil && e.DiscordAccount.DiscordID != "" {
+				discordID := e.DiscordAccount.DiscordID
 				names += fmt.Sprintf("<@%s>, ", discordID)
 				birthDateNames = append(birthDateNames, e.FullName)
 			}
@@ -221,8 +220,7 @@ func (h *handler) OnLeaveMessage(c *gin.Context) {
 
 	var names string
 	for _, e := range onLeaveData {
-		discordInfo := model.SocialAccounts(e.Creator.SocialAccounts).GetDiscord()
-		names += fmt.Sprintf("<@%s>, ", discordInfo.AccountID)
+		names += fmt.Sprintf("<@%s>, ", e.Creator.DiscordAccount.DiscordID)
 	}
 
 	msg := fmt.Sprintf("Please be notified that %s will be absent today", strings.TrimSuffix(names, ", "))
