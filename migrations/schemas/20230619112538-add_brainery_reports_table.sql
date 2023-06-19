@@ -1,5 +1,5 @@
 -- +migrate Up
-CREATE TABLE IF NOT EXISTS “brainery_logs” (
+CREATE TABLE IF NOT EXISTS brainery_logs (
     id              UUID PRIMARY KEY DEFAULT (UUID()),
     deleted_at      TIMESTAMP(6),
     created_at      TIMESTAMP(6) DEFAULT (now()),
