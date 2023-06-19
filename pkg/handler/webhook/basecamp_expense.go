@@ -73,7 +73,7 @@ func (h *handler) basecampExpenseValidate(msg model.BasecampWebhookMessage) erro
 }
 
 func (h *handler) createBasecampExpense(msg model.BasecampWebhookMessage, rawData []byte) error {
-	commentMessage := h.service.Basecamp.BuildCommentMessage(msg.Recording.Bucket.ID, msg.Recording.ID, model.CommentCreateExpenseFailed, bcModel.CommentMsgTypeFailed)
+	commentMessage := h.service.Basecamp.BuildCommentMessage(msg.Recording.Bucket.ID, msg.Recording.ID, consts.CommentCreateExpenseFailed, bcModel.CommentMsgTypeFailed)
 
 	defer func() {
 		h.worker.Enqueue(bcModel.BasecampCommentMsg, commentMessage)
@@ -98,13 +98,13 @@ func (h *handler) createBasecampExpense(msg model.BasecampWebhookMessage, rawDat
 		return err
 	}
 
-	commentMessage = h.service.Basecamp.BuildCommentMessage(msg.Recording.Bucket.ID, msg.Recording.ID, model.CommentCreateExpenseSuccessfully, bcModel.CommentMsgTypeCompleted)
+	commentMessage = h.service.Basecamp.BuildCommentMessage(msg.Recording.Bucket.ID, msg.Recording.ID, consts.CommentCreateExpenseSuccessfully, bcModel.CommentMsgTypeCompleted)
 
 	return nil
 }
 
 func (h *handler) UncheckBasecampExpenseHandler(msg model.BasecampWebhookMessage, rawData []byte) error {
-	commentMsg := h.service.Basecamp.BuildCommentMessage(msg.Recording.Bucket.ID, msg.Recording.ID, model.CommentDeleteExpenseFailed, bcModel.CommentMsgTypeFailed)
+	commentMsg := h.service.Basecamp.BuildCommentMessage(msg.Recording.Bucket.ID, msg.Recording.ID, consts.CommentDeleteExpenseFailed, bcModel.CommentMsgTypeFailed)
 
 	defer func() {
 		h.worker.Enqueue(bcModel.BasecampCommentMsg, commentMsg)
@@ -128,7 +128,7 @@ func (h *handler) UncheckBasecampExpenseHandler(msg model.BasecampWebhookMessage
 		return err
 	}
 
-	commentMsg = h.service.Basecamp.BuildCommentMessage(msg.Recording.Bucket.ID, msg.Recording.ID, model.CommentDeleteExpenseSuccessfully, bcModel.CommentMsgTypeCompleted)
+	commentMsg = h.service.Basecamp.BuildCommentMessage(msg.Recording.Bucket.ID, msg.Recording.ID, consts.CommentDeleteExpenseSuccessfully, bcModel.CommentMsgTypeCompleted)
 
 	return nil
 }
