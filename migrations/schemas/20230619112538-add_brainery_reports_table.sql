@@ -1,18 +1,18 @@
 -- +migrate Up
-CREATE TABLE IF NOT EXISTS brainery_logs (
-    id              UUID PRIMARY KEY DEFAULT (UUID()),
-    deleted_at      TIMESTAMP(6),
-    created_at      TIMESTAMP(6)     DEFAULT (now()),
-    updated_at      TIMESTAMP(6)     DEFAULT (now()),
+CREATE TABLE IF NOT EXISTS “brainery_logs” (
+    id                 	UUID PRIMARY KEY DEFAULT (UUID()),
+    deleted_at         	TIMESTAMP(6),
+    created_at         	TIMESTAMP(6)     DEFAULT (now()),
+    updated_at        	TIMESTAMP(6)     DEFAULT (now()),
 
-    title           TEXT NOT NULL,
-    url             TEXT NOT NULL,
-    github_id       TEXT NOT NULL,
-    discord_id      TEXT NOT NULL,
-    employee_id     UUID DEFAULT NULL,
-    tags            JSONB,
-    published_date  DATE NOT NULL,
-    reward          DECIMAL
+	title				TEXT NOT NULL,
+	url       			TEXT NOT NULL,
+	github_id 			TEXT,
+	discord_id			TEXT NOT NULL,
+	employee_id 		UUID,
+	tags				JSONB,
+	published_at		TIMESTAMP(6) NOT NULL,
+	reward				NUMERIC
 );
 
 ALTER TABLE brainery_logs

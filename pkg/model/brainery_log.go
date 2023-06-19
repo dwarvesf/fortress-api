@@ -9,12 +9,12 @@ import (
 type BraineryLog struct {
 	BaseModel
 
-	Title         string
-	URL           string
-	GithubID      string
-	DiscordID     string
-	EmployeeID    UUID
-	Tags          JSONArrayString
-	PublishedDate *time.Time
-	Reward        decimal.Decimal
+	Title       string
+	URL         string
+	GithubID    string
+	DiscordID   string
+	EmployeeID  UUID
+	Tags        JSONArrayString
+	PublishedAt *time.Time
+	Reward      decimal.Decimal
 }
