@@ -2,8 +2,8 @@
 CREATE TABLE IF NOT EXISTS “brainery_logs” (
     id              UUID PRIMARY KEY DEFAULT (UUID()),
     deleted_at      TIMESTAMP(6),
-    created_at     	TIMESTAMP(6)    DEFAULT (now()),
-    updated_at      TIMESTAMP(6)    DEFAULT (now()),
+    created_at      TIMESTAMP(6) DEFAULT (now()),
+    updated_at      TIMESTAMP(6) DEFAULT (now()),
 
     title           TEXT NOT NULL,
     url             TEXT NOT NULL,
