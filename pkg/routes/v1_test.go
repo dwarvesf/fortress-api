@@ -799,6 +799,12 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/engagement.IHandler.GetLastMessageID-fm",
 			},
 		},
+		"/api/v1/brainery-logs": {
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/brainerylogs.IHandler.Create-fm",
+			},
+		},
 	}
 
 	l := logger.NewLogrusLogger()
