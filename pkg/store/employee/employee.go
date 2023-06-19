@@ -27,7 +27,8 @@ func (s *store) One(db *gorm.DB, id string, preload bool) (*model.Employee, erro
 			Order("roles.level")
 	}).
 		Preload("EmployeeRoles.Role", "deleted_at IS NULL").
-		Preload("SocialAccounts", "deleted_at IS NULL")
+		Preload("SocialAccounts", "deleted_at IS NULL").
+		Preload("DiscordAccount", "deleted_at IS NULL")
 
 	if preload {
 		query = query.
@@ -91,7 +92,8 @@ func (s *store) All(db *gorm.DB, filter EmployeeFilter, pagination model.Paginat
 	}
 
 	query = getByFieldSort(db, query, "employees.joined_date", filter.JoinedDateSort).
-		Preload("SocialAccounts", "deleted_at IS NULL")
+		Preload("SocialAccounts", "deleted_at IS NULL").
+		Preload("DiscordAccount", "deleted_at IS NULL")
 
 	if filter.Preload {
 		query = query.
