@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS brainery_logs (
 	employee_id 		UUID,
 	tags				JSONB,
 	published_date		DATE NOT NULL,
-	reward				NUMERIC
+	reward				DECIMAL
 );
 
 ALTER TABLE brainery_logs

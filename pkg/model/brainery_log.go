@@ -2,6 +2,8 @@ package model
 
 import (
 	"time"
+
+	"github.com/shopspring/decimal"
 )
 
 type BraineryLog struct {
@@ -14,5 +16,5 @@ type BraineryLog struct {
 	EmployeeID    UUID
 	Tags          JSONArrayString
 	PublishedDate *time.Time
-	Reward        float64
+	Reward        decimal.Decimal
 }
