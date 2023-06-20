@@ -151,27 +151,12 @@ func (h *handler) UpdateInfo(c *gin.Context) {
 	}
 
 	tx, done := h.repo.NewTransaction()
-	// Get discord info
-	discordMember, err := h.service.Discord.GetMemberByUsername(input.DiscordName)
-	if err != nil {
-		l.Error(err, "failed to get discord info")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
-		return
-	}
-
-	discordID := ""
-	if discordMember != nil {
-		discordID = discordMember.User.ID
-	}
-
 	// Update social accounts
 	saInput := model.SocialAccountInput{
 		GithubID:     input.GithubID,
 		NotionID:     input.NotionID,
-		DiscordID:    discordID,
 		NotionName:   input.NotionName,
 		NotionEmail:  input.NotionEmail,
-		DiscordName:  input.DiscordName,
 		LinkedInName: input.LinkedInName,
 	}
 
@@ -181,8 +166,50 @@ func (h *handler) UpdateInfo(c *gin.Context) {
 		return
 	}
 
+	// Get discord info
+	discordID := ""
+	discordMember, err := h.service.Discord.GetMemberByUsername(input.DiscordName)
+	if err != nil {
+		l.Error(err, "failed to get discord info")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
+		return
+	}
+	if discordMember == nil {
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(errs.ErrCouldNotFoundDiscordMemberInGuild), input, ""))
+		return
+	}
+
+	discordID = discordMember.User.ID
+
+	tmpE, err := h.store.Employee.GetByDiscordID(tx.DB(), discordID)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		l.Errorf(err, "failed to get employee by discordID", "discordID", discordID)
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
+		return
+	}
+
+	if !errors.Is(err, gorm.ErrRecordNotFound) {
+		if tmpE.ID != employee.ID {
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(errs.ErrDiscordAccountAlreadyUsedByAnotherEmployee), input, ""))
+			return
+		}
+	}
+
+	discordAccountInput := &model.DiscordAccount{
+		DiscordID: discordID,
+		Username:  input.DiscordName,
+	}
+
+	discordAccount, err := h.store.DiscordAccount.Upsert(tx.DB(), discordAccountInput)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
+		return
+	}
+
+	employee.DiscordAccountID = discordAccount.ID
+
 	// Update employee
-	_, err = h.store.Employee.UpdateSelectedFieldsByID(h.repo.DB(), employeeID, *employee,
+	_, err = h.store.Employee.UpdateSelectedFieldsByID(tx.DB(), employeeID, *employee,
 		"personal_email",
 		"phone_number",
 		"place_of_residence",
@@ -194,6 +221,7 @@ func (h *handler) UpdateInfo(c *gin.Context) {
 		"wise_recipient_email",
 		"wise_recipient_name",
 		"wise_currency",
+		"discord_account_id",
 	)
 	if err != nil {
 		l.Error(err, "failed to update employee")
@@ -231,12 +259,6 @@ func (h *handler) updateSocialAccounts(db *gorm.DB, input model.SocialAccountInp
 			Name:       input.NotionName,
 			Email:      input.NotionEmail,
 		},
-		model.SocialAccountTypeDiscord: {
-			Type:       model.SocialAccountTypeDiscord,
-			EmployeeID: employeeID,
-			AccountID:  input.DiscordID,
-			Name:       input.DiscordName,
-		},
 		model.SocialAccountTypeLinkedIn: {
 			EmployeeID: employeeID,
 			Type:       model.SocialAccountTypeLinkedIn,
@@ -255,9 +277,6 @@ func (h *handler) updateSocialAccounts(db *gorm.DB, input model.SocialAccountInp
 		case model.SocialAccountTypeNotion:
 			account.Name = input.NotionName
 			account.Email = input.NotionEmail
-		case model.SocialAccountTypeDiscord:
-			account.AccountID = input.DiscordID
-			account.Name = input.DiscordName
 		case model.SocialAccountTypeLinkedIn:
 			account.AccountID = input.LinkedInName
 			account.Name = input.LinkedInName
@@ -720,6 +739,7 @@ func (h *handler) SubmitOnboardingForm(c *gin.Context) {
 		"phone_number",
 		"place_of_residence",
 		"working_status",
+		"discord_account_id",
 	}
 
 	if input.Avatar != "" {
@@ -745,8 +765,50 @@ func (h *handler) SubmitOnboardingForm(c *gin.Context) {
 	employeeData := input.ToEmployeeModel()
 
 	tx, done := h.repo.NewTransaction()
+	// Get discord info
+	discordMember, err := h.service.Discord.GetMemberByUsername(input.DiscordName)
+	if err != nil {
+		l.Errorf(err, "failed to get discord info", "discordName", input.DiscordName)
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
+		return
+	}
+
+	discordID := ""
+	if discordMember == nil {
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(errs.ErrCouldNotFoundDiscordMemberInGuild), input, ""))
+		return
+	}
+
+	discordID = discordMember.User.ID
+
+	tmpE, err := h.store.Employee.GetByDiscordID(tx.DB(), discordID)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
+		return
+	}
+
+	if !errors.Is(err, gorm.ErrRecordNotFound) {
+		if tmpE.ID != employee.ID {
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(errs.ErrDiscordAccountAlreadyUsedByAnotherEmployee), input, ""))
+			return
+		}
+	}
+
+	discordAccountInput := &model.DiscordAccount{
+		DiscordID: discordID,
+		Username:  input.DiscordName,
+	}
+
+	discordAccount, err := h.store.DiscordAccount.Upsert(tx.DB(), discordAccountInput)
+	if err != nil {
+		l.Error(err, "failed to get discord info")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
+	}
+
+	employeeData.DiscordAccountID = discordAccount.ID
+
 	// Update employee
-	_, err = h.store.Employee.UpdateSelectedFieldsByID(h.repo.DB(), employeeID, *employeeData,
+	_, err = h.store.Employee.UpdateSelectedFieldsByID(tx.DB(), employeeID, *employeeData,
 		updatedFields...,
 	)
 	if err != nil {
@@ -755,25 +817,10 @@ func (h *handler) SubmitOnboardingForm(c *gin.Context) {
 		return
 	}
 
-	// Get discord info
-	discordMember, err := h.service.Discord.GetMemberByUsername(input.DiscordName)
-	if err != nil {
-		l.Error(err, "failed to get discord info")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
-		return
-	}
-
-	discordID := ""
-	if discordMember != nil {
-		discordID = discordMember.User.ID
-	}
-
 	// Update social accounts
 	saInput := model.SocialAccountInput{
 		GithubID:     input.GithubID,
 		NotionName:   input.NotionName,
-		DiscordName:  input.DiscordName,
-		DiscordID:    discordID,
 		LinkedInName: input.LinkedInName,
 	}
 

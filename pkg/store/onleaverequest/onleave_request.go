@@ -25,9 +25,9 @@ func (s *store) All(db *gorm.DB, input GetOnLeaveInput) ([]*model.OnLeaveRequest
 	var chapters []*model.OnLeaveRequest
 	query := db.
 		Preload("Creator").
-		Preload("Creator.SocialAccounts").
+		Preload("Creator.DiscordAccount").
 		Preload("Approver").
-		Preload("Approver.SocialAccounts")
+		Preload("Approver.DiscordAccount")
 
 	if input.Date != "" {
 		query = query.Where("start_date <= ? AND ? <= end_date", input.Date, input.Date)

@@ -237,6 +237,21 @@ definitions:
       updatedAt:
         type: string
     type: object
+  model.DiscordAccount:
+    properties:
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      discordID:
+        type: string
+      id:
+        type: string
+      updatedAt:
+        type: string
+      username:
+        type: string
+    type: object
   model.Employee:
     properties:
       address:
@@ -260,6 +275,10 @@ definitions:
         type: string
       deletedAt:
         $ref: '#/definitions/gorm.DeletedAt'
+      discordAccount:
+        $ref: '#/definitions/model.DiscordAccount'
+      discordAccountID:
+        type: string
       displayName:
         type: string
       employee_salary:
@@ -2040,7 +2059,6 @@ definitions:
         type: integer
     required:
     - categoryID
-    - channelID
     - discordUserID
     - lastMessageID
     type: object

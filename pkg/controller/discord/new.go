@@ -51,10 +51,9 @@ func (c *controller) Log(in model.LogDiscordInput) error {
 			return err
 		}
 
-		discordAccount := model.SocialAccounts(employee.SocialAccounts).GetDiscord()
 		accountID := employee.DisplayName
-		if discordAccount != nil && discordAccount.AccountID != "" {
-			accountID = fmt.Sprintf("<@%s>", discordAccount.AccountID)
+		if employee.DiscordAccount != nil && employee.DiscordAccount.DiscordID != "" {
+			accountID = fmt.Sprintf("<@%s>", employee.DiscordAccount.DiscordID)
 		}
 
 		data["employee_id"] = accountID
@@ -67,10 +66,9 @@ func (c *controller) Log(in model.LogDiscordInput) error {
 			return err
 		}
 
-		discordAccount := model.SocialAccounts(updatedEmployee.SocialAccounts).GetDiscord()
 		accountID := updatedEmployee.DisplayName
-		if discordAccount != nil && discordAccount.AccountID != "" {
-			accountID = fmt.Sprintf("<@%s>", discordAccount.AccountID)
+		if updatedEmployee.DiscordAccount != nil && updatedEmployee.DiscordAccount.DiscordID != "" {
+			accountID = fmt.Sprintf("<@%s>", updatedEmployee.DiscordAccount.DiscordID)
 		}
 
 		data["updated_employee_id"] = accountID

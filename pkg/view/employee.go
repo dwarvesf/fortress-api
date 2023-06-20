@@ -73,8 +73,6 @@ type SocialAccount struct {
 	NotionID     string `json:"notionID"`
 	NotionName   string `json:"notionName"`
 	NotionEmail  string `json:"notionEmail"`
-	DiscordID    string `json:"discordID"`
-	DiscordName  string `json:"discordName"`
 	LinkedInName string `json:"linkedInName"`
 }
 
@@ -305,13 +303,15 @@ func ToUpdateGeneralInfoEmployeeData(employee *model.Employee) *UpdateGeneralInf
 			case model.SocialAccountTypeNotion:
 				rs.NotionID = sa.AccountID
 				rs.NotionName = sa.Name
-			case model.SocialAccountTypeDiscord:
-				rs.DiscordID = sa.AccountID
-				rs.DiscordName = sa.Name
 			case model.SocialAccountTypeLinkedIn:
 				rs.LinkedInName = sa.Name
 			}
 		}
+	}
+
+	if employee.DiscordAccount != nil {
+		rs.DiscordID = employee.DiscordAccount.DiscordID
+		rs.DiscordName = employee.DiscordAccount.Username
 	}
 
 	if employee.LineManager != nil {
@@ -356,9 +356,6 @@ func ToOneEmployeeData(employee *model.Employee, userInfo *model.CurrentLoggedUs
 	empSocialData := SocialAccount{}
 	for _, sa := range employee.SocialAccounts {
 		switch sa.Type {
-		case model.SocialAccountTypeDiscord:
-			empSocialData.DiscordID = sa.AccountID
-			empSocialData.DiscordName = sa.Name
 		case model.SocialAccountTypeGitHub:
 			empSocialData.GithubID = sa.AccountID
 		case model.SocialAccountTypeNotion:
@@ -392,13 +389,17 @@ func ToOneEmployeeData(employee *model.Employee, userInfo *model.CurrentLoggedUs
 		LineManager:   lineManager,
 		Organizations: ToOrganizations(employee.EmployeeOrganizations),
 
-		DiscordName: empSocialData.DiscordName,
-		GithubID:    empSocialData.GithubID,
+		GithubID: empSocialData.GithubID,
 
 		Roles:     ToEmployeeRoles(employee.EmployeeRoles),
 		Positions: ToEmployeePositions(employee.EmployeePositions),
 		Stacks:    ToEmployeeStacks(employee.EmployeeStacks),
 		Chapters:  ToChapters(employee.EmployeeChapters),
+	}
+
+	if employee.DiscordAccount != nil {
+		rs.DiscordID = employee.DiscordAccount.DiscordID
+		rs.DiscordName = employee.DiscordAccount.Username
 	}
 
 	if userInfo != nil && authutils.HasPermission(userInfo.Permissions, model.PermissionEmployeesBaseSalaryRead) {
@@ -411,7 +412,6 @@ func ToOneEmployeeData(employee *model.Employee, userInfo *model.CurrentLoggedUs
 		rs.NotionID = empSocialData.NotionID
 		rs.NotionName = empSocialData.NotionName
 		rs.LinkedInName = empSocialData.LinkedInName
-		rs.DiscordID = empSocialData.DiscordID
 		rs.PhoneNumber = employee.PhoneNumber
 		rs.JoinedDate = employee.JoinedDate
 		rs.LeftDate = employee.LeftDate
@@ -505,13 +505,15 @@ func ToEmployeeData(employee *model.Employee) *EmployeeData {
 			case model.SocialAccountTypeNotion:
 				rs.NotionID = sa.AccountID
 				rs.NotionName = sa.Name
-			case model.SocialAccountTypeDiscord:
-				rs.DiscordID = sa.AccountID
-				rs.DiscordName = sa.Name
 			case model.SocialAccountTypeLinkedIn:
 				rs.LinkedInName = sa.Name
 			}
 		}
+	}
+
+	if employee.DiscordAccount != nil {
+		rs.DiscordID = employee.DiscordAccount.DiscordID
+		rs.DiscordName = employee.DiscordAccount.Username
 	}
 
 	if len(employee.Mentees) > 0 {

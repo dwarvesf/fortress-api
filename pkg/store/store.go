@@ -21,6 +21,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/store/country"
 	"github.com/dwarvesf/fortress-api/pkg/store/currency"
 	"github.com/dwarvesf/fortress-api/pkg/store/dashboard"
+	"github.com/dwarvesf/fortress-api/pkg/store/discordaccount"
 	"github.com/dwarvesf/fortress-api/pkg/store/discordtemplate"
 	"github.com/dwarvesf/fortress-api/pkg/store/employee"
 	"github.com/dwarvesf/fortress-api/pkg/store/employeebonus"
@@ -70,11 +71,11 @@ import (
 )
 
 type Store struct {
+	APIKey                  apikey.IStore
+	APIKeyRole              apikeyrole.IStore
 	Accounting              accounting.IStore
 	ActionItem              actionitem.IStore
 	ActionItemSnapshot      actionitemsnapshot.IStore
-	APIKey                  apikey.IStore
-	APIKeyRole              apikeyrole.IStore
 	Audit                   audit.IStore
 	AuditActionItem         auditactionitem.IStore
 	AuditCycle              auditcycle.IStore
@@ -87,13 +88,15 @@ type Store struct {
 	Chapter                 chapter.IStore
 	Client                  client.IStore
 	ClientContact           clientcontact.IStore
-	EmployeeCommission      employeecommission.IStore
 	Content                 content.IStore
 	Country                 country.IStore
 	Currency                currency.IStore
 	Dashboard               dashboard.IStore
+	DiscordAccount          discordaccount.IStore
+	DiscordLogTemplate      discordtemplate.IStore
 	Employee                employee.IStore
 	EmployeeChapter         employeechapter.IStore
+	EmployeeCommission      employeecommission.IStore
 	EmployeeEventQuestion   employeeeventquestion.IStore
 	EmployeeEventReviewer   employeeeventreviewer.IStore
 	EmployeeEventTopic      employeeeventtopic.IStore
@@ -105,8 +108,12 @@ type Store struct {
 	EngagementsRollup       engagementsrollup.IStore
 	Expense                 expense.IStore
 	FeedbackEvent           feedbackevent.IStore
+	IcyDistribution         icydistribution.IStore
+	IcyTransaction          icytransaction.IStore
 	Invoice                 invoice.IStore
 	InvoiceNumberCaching    invoicenumbercaching.IStore
+	OnLeaveRequest          onleaverequest.IStore
+	OperationalService      operationalservice.IStore
 	Organization            organization.IStore
 	Payroll                 payroll.IStore
 	Permission              permission.IStore
@@ -131,20 +138,15 @@ type Store struct {
 	WorkUnit                workunit.IStore
 	WorkUnitMember          workunitmember.IStore
 	WorkUnitStack           workunitstack.IStore
-	OperationalService      operationalservice.IStore
-	DiscordLogTemplate      discordtemplate.IStore
-	IcyTransaction          icytransaction.IStore
-	IcyDistribution         icydistribution.IStore
-	OnLeaveRequest          onleaverequest.IStore
 }
 
 func New() *Store {
 	return &Store{
+		APIKey:                  apikey.New(),
+		APIKeyRole:              apikeyrole.New(),
 		Accounting:              accounting.New(),
 		ActionItem:              actionitem.New(),
 		ActionItemSnapshot:      actionitemsnapshot.New(),
-		APIKey:                  apikey.New(),
-		APIKeyRole:              apikeyrole.New(),
 		Audit:                   audit.New(),
 		AuditActionItem:         auditactionitem.New(),
 		AuditCycle:              auditcycle.New(),
@@ -161,6 +163,8 @@ func New() *Store {
 		Country:                 country.New(),
 		Currency:                currency.New(),
 		Dashboard:               dashboard.New(),
+		DiscordAccount:          discordaccount.New(),
+		DiscordLogTemplate:      discordtemplate.New(),
 		Employee:                employee.New(),
 		EmployeeChapter:         employeechapter.New(),
 		EmployeeCommission:      employeecommission.New(),
@@ -175,8 +179,12 @@ func New() *Store {
 		EngagementsRollup:       engagementsrollup.New(),
 		Expense:                 expense.New(),
 		FeedbackEvent:           feedbackevent.New(),
+		IcyDistribution:         icydistribution.New(),
+		IcyTransaction:          icytransaction.New(),
 		Invoice:                 invoice.New(),
 		InvoiceNumberCaching:    invoicenumbercaching.New(),
+		OnLeaveRequest:          onleaverequest.New(),
+		OperationalService:      operationalservice.New(),
 		Organization:            organization.New(),
 		Payroll:                 payroll.New(),
 		Permission:              permission.New(),
@@ -201,10 +209,5 @@ func New() *Store {
 		WorkUnit:                workunit.New(),
 		WorkUnitMember:          workunitmember.New(),
 		WorkUnitStack:           workunitstack.New(),
-		OperationalService:      operationalservice.New(),
-		DiscordLogTemplate:      discordtemplate.New(),
-		IcyTransaction:          icytransaction.New(),
-		IcyDistribution:         icydistribution.New(),
-		OnLeaveRequest:          onleaverequest.New(),
 	}
 }

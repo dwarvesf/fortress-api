@@ -6513,6 +6513,29 @@ const docTemplate = `{
                 }
             }
         },
+        "model.DiscordAccount": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "deletedAt": {
+                    "$ref": "#/definitions/gorm.DeletedAt"
+                },
+                "discordID": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
         "model.Employee": {
             "type": "object",
             "properties": {
@@ -6546,6 +6569,12 @@ const docTemplate = `{
                 },
                 "deletedAt": {
                     "$ref": "#/definitions/gorm.DeletedAt"
+                },
+                "discordAccount": {
+                    "$ref": "#/definitions/model.DiscordAccount"
+                },
+                "discordAccountID": {
+                    "type": "string"
                 },
                 "displayName": {
                     "type": "string"
@@ -9180,7 +9209,6 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "categoryID",
-                "channelID",
                 "discordUserID",
                 "lastMessageID"
             ],
