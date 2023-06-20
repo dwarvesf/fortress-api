@@ -14,6 +14,7 @@ ALTER TABLE employees ADD COLUMN discord_account_id UUID DEFAULT NULL;
 ALTER TABLE employees
     ADD CONSTRAINT employees_discord_account_id_fkey FOREIGN KEY (discord_account_id) REFERENCES discord_accounts (id);
 
+ALTER TABLE discord_accounts ADD UNIQUE (discord_id);
 -- +migrate Down
 ALTER TABLE employees DROP COLUMN discord_account_id;
 
