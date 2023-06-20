@@ -167,14 +167,13 @@ func (h *handler) UpdateInfo(c *gin.Context) {
 	}
 
 	// Get discord info
+	discordID := ""
 	discordMember, err := h.service.Discord.GetMemberByUsername(input.DiscordName)
 	if err != nil {
 		l.Error(err, "failed to get discord info")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
 		return
 	}
-
-	discordID := ""
 	if discordMember == nil {
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(errs.ErrCouldNotFoundDiscordMemberInGuild), input, ""))
 		return
@@ -182,33 +181,18 @@ func (h *handler) UpdateInfo(c *gin.Context) {
 
 	discordID = discordMember.User.ID
 
-	discordAccount, err := h.store.DiscordAccount.OneByDiscordID(tx.DB(), discordID)
+	tmpE, err := h.store.Employee.GetByDiscordID(tx.DB(), discordID)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		l.Errorf(err, "failed to get employee by discordID", "discordID", discordID)
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
 		return
 	}
 
-	accountInUsed := false
 	if !errors.Is(err, gorm.ErrRecordNotFound) {
-		tmpE, err := h.store.Employee.GetByDiscordAccountID(tx.DB(), discordAccount.ID.String())
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
+		if tmpE.ID != employee.ID {
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(errs.ErrDiscordAccountAlreadyUsedByAnotherEmployee), input, ""))
 			return
 		}
-
-		if len(tmpE) > 0 {
-			for _, e := range tmpE {
-				if e.ID != employee.ID {
-					accountInUsed = true
-					break
-				}
-			}
-		}
-	}
-
-	if accountInUsed {
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(errs.ErrDiscordAccountAlreadyUsedByAnotherEmployee), input, ""))
-		return
 	}
 
 	discordAccountInput := &model.DiscordAccount{
@@ -216,7 +200,7 @@ func (h *handler) UpdateInfo(c *gin.Context) {
 		Username:  input.DiscordName,
 	}
 
-	discordAccount, err = h.store.DiscordAccount.Upsert(tx.DB(), discordAccountInput)
+	discordAccount, err := h.store.DiscordAccount.Upsert(tx.DB(), discordAccountInput)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
 		return
@@ -784,7 +768,7 @@ func (h *handler) SubmitOnboardingForm(c *gin.Context) {
 	// Get discord info
 	discordMember, err := h.service.Discord.GetMemberByUsername(input.DiscordName)
 	if err != nil {
-		l.Error(err, "failed to get discord info")
+		l.Errorf(err, "failed to get discord info", "discordName", input.DiscordName)
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
 		return
 	}
@@ -797,33 +781,17 @@ func (h *handler) SubmitOnboardingForm(c *gin.Context) {
 
 	discordID = discordMember.User.ID
 
-	discordAccount, err := h.store.DiscordAccount.OneByDiscordID(tx.DB(), discordID)
+	tmpE, err := h.store.Employee.GetByDiscordID(tx.DB(), discordID)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
 		return
 	}
 
-	accountInUsed := false
 	if !errors.Is(err, gorm.ErrRecordNotFound) {
-		tmpE, err := h.store.Employee.GetByDiscordAccountID(tx.DB(), discordAccount.ID.String())
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
+		if tmpE.ID != employee.ID {
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(errs.ErrDiscordAccountAlreadyUsedByAnotherEmployee), input, ""))
 			return
 		}
-
-		if len(tmpE) > 0 {
-			for _, e := range tmpE {
-				if e.ID != employee.ID {
-					accountInUsed = true
-					break
-				}
-			}
-		}
-	}
-
-	if accountInUsed {
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(errs.ErrDiscordAccountAlreadyUsedByAnotherEmployee), input, ""))
-		return
 	}
 
 	discordAccountInput := &model.DiscordAccount{
@@ -831,7 +799,7 @@ func (h *handler) SubmitOnboardingForm(c *gin.Context) {
 		Username:  input.DiscordName,
 	}
 
-	discordAccount, err = h.store.DiscordAccount.Upsert(tx.DB(), discordAccountInput)
+	discordAccount, err := h.store.DiscordAccount.Upsert(tx.DB(), discordAccountInput)
 	if err != nil {
 		l.Error(err, "failed to get discord info")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))

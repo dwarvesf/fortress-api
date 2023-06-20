@@ -32,7 +32,7 @@ type IController interface {
 	List(workingStatuses []string, body GetListEmployeeInput, userInfo *model.CurrentLoggedUserInfo) (employees []*model.Employee, tptal int64, err error)
 	Details(id string, userInfo *model.CurrentLoggedUserInfo) (employee *model.Employee, err error)
 	UpdateEmployeeStatus(employeeID string, body UpdateWorkingStatusInput) (employee *model.Employee, err error)
-	UpdateGeneralInfo(l logger.Logger, employeeID string, body UpdateEmployeeGeneralInfoInput) (employee *model.Employee, err error)
+	UpdateGeneralInfo(employeeID string, body UpdateEmployeeGeneralInfoInput) (employee *model.Employee, err error)
 	Create(userID string, body CreateEmployeeInput) (employee *model.Employee, err error)
 	UpdateSkills(l logger.Logger, employeeID string, body UpdateSkillsInput) (employee *model.Employee, err error)
 	UpdatePersonalInfo(employeeID string, body UpdatePersonalInfoInput) (employee *model.Employee, err error)

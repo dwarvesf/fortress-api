@@ -34,13 +34,19 @@ type UpdateEmployeeGeneralInfoInput struct {
 	WiseCurrency       string
 }
 
-func (r *controller) UpdateGeneralInfo(l logger.Logger, employeeID string, body UpdateEmployeeGeneralInfoInput) (*model.Employee, error) {
+func (r *controller) UpdateGeneralInfo(employeeID string, body UpdateEmployeeGeneralInfoInput) (*model.Employee, error) {
+	l := r.logger.Fields(logger.Fields{
+		"controller": "employee",
+		"method":     "UpdateGeneralInfo",
+	})
+
 	tx, done := r.repo.NewTransaction()
 
 	// check line manager existence
 	if !body.LineManagerID.IsZero() {
 		exist, err := r.store.Employee.IsExist(tx.DB(), body.LineManagerID.String())
 		if err != nil {
+			l.Errorf(err, "failed to check line manager existence")
 			return nil, done(err)
 		}
 
@@ -53,6 +59,7 @@ func (r *controller) UpdateGeneralInfo(l logger.Logger, employeeID string, body 
 	if !body.ReferredBy.IsZero() {
 		exist, err := r.store.Employee.IsExist(tx.DB(), body.ReferredBy.String())
 		if err != nil {
+			l.Errorf(err, "failed to check referer existence")
 			return nil, done(err)
 		}
 
@@ -67,6 +74,7 @@ func (r *controller) UpdateGeneralInfo(l logger.Logger, employeeID string, body 
 
 	emp, err := r.store.Employee.One(tx.DB(), employeeID, true)
 	if err != nil {
+		l.Errorf(err, "failed to get employee")
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, done(ErrEmployeeNotFound)
 		}
@@ -150,6 +158,7 @@ func (r *controller) UpdateGeneralInfo(l logger.Logger, employeeID string, body 
 		// Get discord info
 		discordMember, err := r.service.Discord.GetMemberByUsername(body.DiscordName)
 		if err != nil {
+			l.Errorf(err, "failed to discord member member by discord name", "discordName", body.DiscordName)
 			return nil, done(err)
 		}
 
@@ -160,25 +169,16 @@ func (r *controller) UpdateGeneralInfo(l logger.Logger, employeeID string, body 
 		discordID = discordMember.User.ID
 	}
 
-	discordAccount, err := r.store.DiscordAccount.OneByDiscordID(tx.DB(), discordID)
+	accountInUsed := false
+	tmpE, err := r.store.Employee.GetByDiscordID(tx.DB(), discordID)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		l.Errorf(err, "failed to get employee by discord id", "discordID", discordID)
 		return nil, done(err)
 	}
 
-	accountInUsed := false
 	if !errors.Is(err, gorm.ErrRecordNotFound) {
-		tmpE, err := r.store.Employee.GetByDiscordAccountID(tx.DB(), discordAccount.ID.String())
-		if err != nil {
-			return nil, done(err)
-		}
-
-		if len(tmpE) > 0 {
-			for _, e := range tmpE {
-				if e.ID != emp.ID {
-					accountInUsed = true
-					break
-				}
-			}
+		if tmpE.ID != emp.ID {
+			accountInUsed = true
 		}
 	}
 
@@ -191,8 +191,9 @@ func (r *controller) UpdateGeneralInfo(l logger.Logger, employeeID string, body 
 		Username:  body.DiscordName,
 	}
 
-	discordAccount, err = r.store.DiscordAccount.Upsert(tx.DB(), discordAccountInput)
+	discordAccount, err := r.store.DiscordAccount.Upsert(tx.DB(), discordAccountInput)
 	if err != nil {
+		l.Errorf(err, "failed to upsert discord account", "discordAccount", discordAccountInput)
 		return nil, done(err)
 	}
 
@@ -208,6 +209,7 @@ func (r *controller) UpdateGeneralInfo(l logger.Logger, employeeID string, body 
 	}
 
 	if err := r.updateSocialAccounts(tx.DB(), saInput, emp.ID); err != nil {
+		l.Errorf(err, "failed to update social account", "socialAccount", saInput)
 		return nil, done(err)
 	}
 
