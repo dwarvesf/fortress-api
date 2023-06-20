@@ -321,4 +321,9 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 			h.Engagement.GetLastMessageID,
 		)
 	}
+
+	braineryGroup := v1.Group("/brainery-logs")
+	{
+		braineryGroup.POST("", amw.WithAuth, pmw.WithPerm(model.PermissionBraineryLogsWrite), h.BraineryLog.Create)
+	}
 }

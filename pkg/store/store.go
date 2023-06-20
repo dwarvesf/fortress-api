@@ -13,6 +13,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/store/auditparticipant"
 	"github.com/dwarvesf/fortress-api/pkg/store/bankaccount"
 	"github.com/dwarvesf/fortress-api/pkg/store/basesalary"
+	"github.com/dwarvesf/fortress-api/pkg/store/brainerylog"
 	"github.com/dwarvesf/fortress-api/pkg/store/cachedpayroll"
 	"github.com/dwarvesf/fortress-api/pkg/store/chapter"
 	"github.com/dwarvesf/fortress-api/pkg/store/client"
@@ -84,6 +85,7 @@ type Store struct {
 	BankAccount             bankaccount.IStore
 	BaseSalary              basesalary.IStore
 	Bonus                   employeebonus.IStore
+	BraineryLog             brainerylog.IStore
 	CachedPayroll           cachedpayroll.IStore
 	Chapter                 chapter.IStore
 	Client                  client.IStore
@@ -155,6 +157,7 @@ func New() *Store {
 		BankAccount:             bankaccount.New(),
 		BaseSalary:              basesalary.New(),
 		Bonus:                   employeebonus.New(),
+		BraineryLog:             brainerylog.New(),
 		CachedPayroll:           cachedpayroll.New(),
 		Chapter:                 chapter.New(),
 		Client:                  client.New(),
