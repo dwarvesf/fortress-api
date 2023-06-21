@@ -3,8 +3,9 @@ package request
 import (
 	"time"
 
-	"github.com/dwarvesf/fortress-api/pkg/handler/brainerylogs/errs"
 	"github.com/shopspring/decimal"
+
+	"github.com/dwarvesf/fortress-api/pkg/handler/brainerylogs/errs"
 )
 
 type CreateBraineryLogRequest struct {

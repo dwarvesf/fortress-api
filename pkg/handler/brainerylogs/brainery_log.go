@@ -14,6 +14,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/store"
+	"github.com/dwarvesf/fortress-api/pkg/utils/timeutil"
 	"github.com/dwarvesf/fortress-api/pkg/view"
 )
 
@@ -43,7 +44,7 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 // @Accept  json
 // @Produce  json
 // @Param Authorization header string true "jwt token"
-// @PSuccess 200 {object} view.Create
+// @Success 200 {object} view.MessageResponse
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 500 {object} view.ErrorResponse
 // @Router /brainery-logs [post]
@@ -98,4 +99,51 @@ func (h *handler) Create(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse[any]("success", nil, nil, body, ""))
+}
+
+// GetMetric godoc
+// @Summary Get brainery metric
+// @Description Get brainery metric
+// @Tags Project
+// @Accept  json
+// @Produce  json
+// @Param Authorization header string true "jwt token"
+// @Param view query string false "Time view"
+// @Success 200 {object} view.BraineryMetric
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /brainery-logs/metrics [get]
+func (h *handler) GetMetrics(c *gin.Context) {
+	l := h.logger.Fields(
+		logger.Fields{
+			"handler": "brainerylogs",
+			"method":  "GetMetric",
+		},
+	)
+
+	queryView := c.DefaultQuery("view", "weekly")
+
+	// default is weekly
+	end := time.Now()
+	start := timeutil.GetStartDayOfWeek(end)
+	if queryView == "monthly" {
+		start = timeutil.FirstDayOfMonth(int(end.Month()), end.Year())
+	}
+
+	logs, err := h.store.BraineryLog.GetByTimeRange(h.repo.DB(), &start, &end)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		l.Errorf(err, "failed to get logs by time range", "start", start, "end", end)
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	// ncids = new contributor discord IDs
+	ncids, err := h.store.BraineryLog.GetNewContributorDiscordIDs(h.repo.DB(), &start, &end)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		l.Errorf(err, "failed to get new contributor discord IDs by time range", "start", start, "end", end)
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToBraineryMetric(logs, ncids), nil, nil, nil, ""))
 }
