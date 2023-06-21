@@ -98,13 +98,15 @@ func ToUpdateProfileInfoData(employee *model.Employee) *UpdateProfileInfoData {
 			case model.SocialAccountTypeNotion:
 				rs.NotionID = sa.AccountID
 				rs.NotionName = sa.Name
-			case model.SocialAccountTypeDiscord:
-				rs.DiscordID = sa.AccountID
-				rs.DiscordName = sa.Name
 			case model.SocialAccountTypeLinkedIn:
 				rs.LinkedInName = sa.Name
 			}
 		}
+	}
+
+	if employee.DiscordAccount != nil {
+		rs.DiscordID = employee.DiscordAccount.DiscordID
+		rs.DiscordName = employee.DiscordAccount.Username
 	}
 
 	return rs
@@ -114,9 +116,6 @@ func ToProfileData(employee *model.Employee) *ProfileData {
 	empSocialData := SocialAccount{}
 	for _, sa := range employee.SocialAccounts {
 		switch sa.Type {
-		case model.SocialAccountTypeDiscord:
-			empSocialData.DiscordID = sa.AccountID
-			empSocialData.DiscordName = sa.Name
 		case model.SocialAccountTypeGitHub:
 			empSocialData.GithubID = sa.AccountID
 		case model.SocialAccountTypeNotion:
@@ -127,7 +126,7 @@ func ToProfileData(employee *model.Employee) *ProfileData {
 		}
 	}
 
-	return &ProfileData{
+	rs := &ProfileData{
 		ID:                 employee.ID,
 		FullName:           employee.FullName,
 		DisplayName:        employee.DisplayName,
@@ -151,9 +150,14 @@ func ToProfileData(employee *model.Employee) *ProfileData {
 		NotionID:           empSocialData.NotionID,
 		NotionName:         empSocialData.NotionName,
 		NotionEmail:        empSocialData.NotionEmail,
-		DiscordID:          empSocialData.DiscordID,
-		DiscordName:        empSocialData.DiscordName,
 		LinkedInName:       empSocialData.LinkedInName,
 		Roles:              ToEmployeeRoles(employee.EmployeeRoles),
 	}
+
+	if employee.DiscordAccount != nil {
+		rs.DiscordID = employee.DiscordAccount.DiscordID
+		rs.DiscordName = employee.DiscordAccount.Username
+	}
+
+	return rs
 }

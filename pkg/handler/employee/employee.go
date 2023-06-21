@@ -305,7 +305,6 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 		NotionID:           body.NotionID,
 		NotionName:         body.NotionName,
 		NotionEmail:        body.NotionEmail,
-		DiscordID:          body.DiscordID,
 		DiscordName:        body.DiscordName,
 		LinkedInName:       body.LinkedInName,
 		LeftDate:           body.LeftDate,
@@ -319,7 +318,7 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 		WiseCurrency:       body.WiseCurrency,
 	}
 
-	emp, err := h.controller.Employee.UpdateGeneralInfo(h.logger, employeeID, requestBody)
+	emp, err := h.controller.Employee.UpdateGeneralInfo(employeeID, requestBody)
 	if err != nil {
 		l.Error(err, "failed to update general info for employee")
 		errs.ConvertControllerErr(c, err)

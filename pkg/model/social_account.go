@@ -18,7 +18,6 @@ const (
 	SocialAccountTypeGitHub   SocialAccountType = "github"
 	SocialAccountTypeGitLab   SocialAccountType = "gitlab"
 	SocialAccountTypeNotion   SocialAccountType = "notion"
-	SocialAccountTypeDiscord  SocialAccountType = "discord"
 	SocialAccountTypeLinkedIn SocialAccountType = "linkedin"
 	SocialAccountTypeTwitter  SocialAccountType = "twitter"
 )
@@ -30,7 +29,6 @@ func (e SocialAccountType) IsValid() bool {
 		SocialAccountTypeGitHub,
 		SocialAccountTypeGitLab,
 		SocialAccountTypeNotion,
-		SocialAccountTypeDiscord,
 		SocialAccountTypeLinkedIn,
 		SocialAccountTypeTwitter:
 		return true
@@ -44,15 +42,6 @@ func (e SocialAccountType) String() string {
 }
 
 type SocialAccounts []SocialAccount
-
-func (e SocialAccounts) GetDiscord() *SocialAccount {
-	for _, account := range e {
-		if account.Type == SocialAccountTypeDiscord {
-			return &account
-		}
-	}
-	return nil
-}
 
 func (e SocialAccounts) GetGithub() *SocialAccount {
 	for _, account := range e {
@@ -68,7 +57,5 @@ type SocialAccountInput struct {
 	NotionID     string
 	NotionName   string
 	NotionEmail  string
-	DiscordID    string
-	DiscordName  string
 	LinkedInName string
 }

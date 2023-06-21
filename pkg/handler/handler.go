@@ -8,6 +8,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/handler/audit"
 	"github.com/dwarvesf/fortress-api/pkg/handler/auth"
 	"github.com/dwarvesf/fortress-api/pkg/handler/bankaccount"
+	"github.com/dwarvesf/fortress-api/pkg/handler/brainerylogs"
 	"github.com/dwarvesf/fortress-api/pkg/handler/client"
 	"github.com/dwarvesf/fortress-api/pkg/handler/dashboard"
 	"github.com/dwarvesf/fortress-api/pkg/handler/dashboard/util"
@@ -55,6 +56,7 @@ type Handler struct {
 	Valuation   valuation.IHandler
 	Webhook     webhook.IHandler
 	Vault       vault.IHandler
+	BraineryLog brainerylogs.IHandler
 }
 
 func New(store *store.Store, repo store.DBRepo, service *service.Service, ctrl *controller.Controller, worker *worker.Worker, logger logger.Logger, cfg *config.Config) *Handler {
@@ -81,5 +83,6 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, ctrl *
 		Valuation:   valuation.New(store, repo, service, logger, cfg),
 		Webhook:     webhook.New(ctrl, store, repo, service, logger, cfg, worker),
 		Vault:       vault.New(store, repo, service, logger, cfg),
+		BraineryLog: brainerylogs.New(store, repo, service, logger, cfg),
 	}
 }

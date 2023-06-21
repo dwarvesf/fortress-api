@@ -27,7 +27,8 @@ func (s *store) One(db *gorm.DB, id string, preload bool) (*model.Employee, erro
 			Order("roles.level")
 	}).
 		Preload("EmployeeRoles.Role", "deleted_at IS NULL").
-		Preload("SocialAccounts", "deleted_at IS NULL")
+		Preload("SocialAccounts", "deleted_at IS NULL").
+		Preload("DiscordAccount", "deleted_at IS NULL")
 
 	if preload {
 		query = query.
@@ -91,7 +92,8 @@ func (s *store) All(db *gorm.DB, filter EmployeeFilter, pagination model.Paginat
 	}
 
 	query = getByFieldSort(db, query, "employees.joined_date", filter.JoinedDateSort).
-		Preload("SocialAccounts", "deleted_at IS NULL")
+		Preload("SocialAccounts", "deleted_at IS NULL").
+		Preload("DiscordAccount", "deleted_at IS NULL")
 
 	if filter.Preload {
 		query = query.
@@ -234,4 +236,9 @@ func (s *store) GetByBasecampIDs(db *gorm.DB, basecampIDs []int) ([]*model.Emplo
 	var employees []*model.Employee
 
 	return employees, db.Where("basecamp_id IN ?", basecampIDs).Find(&employees).Error
+}
+
+func (s *store) GetByDiscordID(db *gorm.DB, discordID string) (*model.Employee, error) {
+	var employee *model.Employee
+	return employee, db.Joins("JOIN discord_accounts ON discord_accounts.id = employees.discord_account_id AND discord_accounts.discord_id = ?", discordID).Order("created_at").First(&employee).Error
 }

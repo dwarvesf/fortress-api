@@ -97,6 +97,7 @@ type Employee struct {
 	// social services
 	BasecampID             int    `gorm:"default:null"`
 	BasecampAttachableSGID string `gorm:"column:basecamp_attachable_sgid;default:null"`
+	DiscordAccountID       UUID   `gorm:"default:null"`
 
 	// payroll info
 	WiseRecipientEmail string `gorm:"default:null"`
@@ -130,6 +131,8 @@ type Employee struct {
 
 	EmployeeSalary *EmployeeSalary `json:"employee_salary"`
 	BaseSalary     BaseSalary      `json:"base_salary"`
+
+	DiscordAccount *DiscordAccount
 }
 
 // ToEmployeeMap create map from employees

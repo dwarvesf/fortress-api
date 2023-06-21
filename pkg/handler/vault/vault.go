@@ -86,20 +86,6 @@ func (h *handler) StoreVaultTransaction(c *gin.Context) {
 				continue
 			}
 
-			srcSocialAccount, err := h.store.SocialAccount.GetByDiscordID(h.repo.DB(), transaction.Sender)
-			if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-				l.Error(err, "failed to get GetByDiscordID")
-				c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
-				return
-			}
-
-			destSocialAccount, err := h.store.SocialAccount.GetByDiscordID(h.repo.DB(), transaction.Target)
-			if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-				l.Error(err, " failed to get GetByDiscordID")
-				c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
-				return
-			}
-
 			icyTx := model.IcyTransaction{
 				Category: strings.ToLower(transaction.VaultName),
 				TxnTime:  txnTime,
@@ -108,12 +94,26 @@ func (h *handler) StoreVaultTransaction(c *gin.Context) {
 				Target:   transaction.Target,
 			}
 
-			if srcSocialAccount != nil {
-				icyTx.SrcEmployeeID = srcSocialAccount.EmployeeID
+			srcEmployee, err := h.store.Employee.GetByDiscordID(h.repo.DB(), transaction.Sender)
+			if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+				l.Error(err, "failed to get src employee by discord account ID")
+				c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+				return
 			}
 
-			if destSocialAccount != nil {
-				icyTx.DestEmployeeID = destSocialAccount.EmployeeID
+			if !errors.Is(err, gorm.ErrRecordNotFound) {
+				icyTx.SrcEmployeeID = srcEmployee.ID
+			}
+
+			destEmployee, err := h.store.Employee.GetByDiscordID(h.repo.DB(), transaction.Target)
+			if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+				l.Error(err, "failed to get dest employee by discord account ID")
+				c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+				return
+			}
+
+			if !errors.Is(err, gorm.ErrRecordNotFound) {
+				icyTx.DestEmployeeID = destEmployee.ID
 			}
 
 			icyTxs = append(icyTxs, icyTx)

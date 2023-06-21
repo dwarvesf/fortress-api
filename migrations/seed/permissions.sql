@@ -1,6 +1,4 @@
 INSERT INTO public.permissions (id, deleted_at, created_at, updated_at, name, code) VALUES
-('38a36881-7fb0-4003-9a9f-cbcc7eaa3deb', null, '2023-06-04 11:18:47.869309', '2023-06-04 11:18:47.869309', 'Engagement Metrics Read', 'engagementMetrics.read'),
-('70109d50-6ec3-4475-9e45-757514781daf', null, '2023-06-04 11:19:08.204248', '2023-06-04 11:19:08.204248', 'Engagement Metrics Write', 'engagementMetrics.write');
 ('93886b0b-6592-4838-b024-1aefb123fed6', null, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Asset Upload', 'assets.upload'),
 ('5820dd37-a9bd-455e-b49b-b54ad7df180e', null, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Auth Create', 'auth.create'),
 ('495c96ae-60f9-4c57-bc96-9504d0fedde6', null, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Auth Read', 'auth.read'),
@@ -91,4 +89,6 @@ INSERT INTO public.permissions (id, deleted_at, created_at, updated_at, name, co
 ('78d617f8-b155-4051-b128-7f2d00ca31fd', null, '2023-01-10 05:19:00.330571', '2023-01-10 05:19:00.330571', 'Valuation Read', 'valuations.read'),
 ('a1ee5039-69e9-4977-be39-b9008c8a791b', null, '2023-01-10 05:19:00.330571', '2023-01-10 05:19:00.330571', 'Icy Distribution Read', 'icyDistribution.read'),
 ('38a36881-7fb0-4003-9a9f-cbcc7eaa3deb', null, '2023-06-04 11:18:47.869309', '2023-06-04 11:18:47.869309', 'Engagement Metrics Read', 'engagementMetrics.read'),
-('70109d50-6ec3-4475-9e45-757514781daf', null, '2023-06-04 11:19:08.204248', '2023-06-04 11:19:08.204248', 'Engagement Metrics Write', 'engagementMetrics.write');
+('70109d50-6ec3-4475-9e45-757514781daf', null, '2023-06-04 11:19:08.204248', '2023-06-04 11:19:08.204248', 'Engagement Metrics Write', 'engagementMetrics.write'),
+('8dd29797-e5fb-45ce-b9ef-8fbcfc3961bd', null, '2023-06-20 16:35:12.475872', '2023-06-20 16:35:12.475872', 'Brainery Logs Read', 'braineryLogs.read'),
+('fa85ee6a-c335-4edb-8100-6aa840a0e520', null, '2023-06-20 16:35:12.475872', '2023-06-20 16:35:12.475872', 'Brainery Logs Write', 'braineryLogs.write');
