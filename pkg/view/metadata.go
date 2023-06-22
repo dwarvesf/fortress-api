@@ -1,7 +1,6 @@
 package view
 
 import (
-	"encoding/json"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 )
 
@@ -100,20 +99,16 @@ type City struct {
 	Long string `json:"long"`
 }
 
-func ToCountryView(country []*model.Country) ([]Country, error) {
+func ToCountryView(countries []*model.Country) ([]Country, error) {
 	var rs []Country
-	for _, c := range country {
-		var cities []City
-		err := json.Unmarshal(c.Cities, &cities)
-		if err != nil {
-			return nil, err
-		}
-		for _, c := range cities {
-			cities = append(cities, City{
-				Name: c.Name,
-				Lat:  c.Lat,
-				Long: c.Long,
-			})
+	for _, c := range countries {
+		cities := make([]City, len(c.Cities))
+		for i, city := range c.Cities {
+			cities[i] = City{
+				Name: city.Name,
+				Lat:  city.Lat,
+				Long: city.Long,
+			}
 		}
 
 		rs = append(rs, Country{
@@ -123,5 +118,6 @@ func ToCountryView(country []*model.Country) ([]Country, error) {
 			Cities: cities,
 		})
 	}
+
 	return rs, nil
 }

@@ -1,7 +1,6 @@
 package employee
 
 import (
-	"encoding/json"
 	"errors"
 	"net/http"
 
@@ -517,14 +516,7 @@ func (h *handler) validateAndMappingCity(db *gorm.DB, countryName string, cityNa
 		return nil, err
 	}
 
-	var cities model.Cities
-
-	err = json.Unmarshal(country.Cities, &cities)
-	if err != nil {
-		return nil, err
-	}
-
-	city := cities.GetCity(cityName)
+	city := country.Cities.GetCity(cityName)
 	if city == nil {
 		return nil, errs.ErrCityDoesNotBelongToCountry
 	}
