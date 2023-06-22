@@ -14,8 +14,10 @@ type UpdateInfoInput struct {
 	PhoneNumber        string `form:"phoneNumber" json:"phoneNumber" binding:"required,max=18,min=8"`
 	PlaceOfResidence   string `form:"placeOfResidence" json:"placeOfResidence" binding:"required"`
 	Address            string `form:"address" json:"address"`
-	Country            string `form:"country" json:"country"`
-	City               string `form:"city" json:"city"`
+	Country            string `form:"country" json:"country" binding:"required"`
+	City               string `form:"city" json:"city" binding:"required"`
+	Lat                string `form:"lat" json:"lat"`
+	Long               string `form:"long" json:"long"`
 	GithubID           string `form:"githubID" json:"githubID"`
 	NotionID           string `form:"notionID" json:"notionID"`
 	NotionName         string `form:"notionName" json:"notionName"`
@@ -36,6 +38,8 @@ func (i UpdateInfoInput) ToEmployeeModel(employee *model.Employee) {
 	employee.Address = i.Address
 	employee.City = i.City
 	employee.Country = i.Country
+	employee.Lat = i.Lat
+	employee.Long = i.Long
 
 	if strings.TrimSpace(i.WiseRecipientID) != "" {
 		employee.WiseRecipientID = i.WiseRecipientID
@@ -59,6 +63,8 @@ type SubmitOnboardingFormRequest struct {
 	Address                string     `json:"address" binding:"required"`
 	City                   string     `json:"city" binding:"required"`
 	Country                string     `json:"country" binding:"required"`
+	Lat                    string     `json:"lat"`
+	Long                   string     `json:"long"`
 	DateOfBirth            *time.Time `json:"dateOfBirth" binding:"required"`
 	Gender                 string     `json:"gender" binding:"required"`
 	Horoscope              string     `json:"horoscope" binding:"required"`
@@ -106,6 +112,8 @@ func (i *SubmitOnboardingFormRequest) ToEmployeeModel() *model.Employee {
 	return &model.Employee{
 		Avatar:                 i.Avatar,
 		Address:                i.Address,
+		Lat:                    i.Lat,
+		Long:                   i.Long,
 		City:                   i.City,
 		Country:                i.Country,
 		DateOfBirth:            i.DateOfBirth,

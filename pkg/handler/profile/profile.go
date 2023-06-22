@@ -1,6 +1,7 @@
 package profile
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -8,7 +9,6 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/gin-gonic/gin"
-	"golang.org/x/exp/slices"
 	"gorm.io/gorm"
 	"gorm.io/gorm/utils"
 
@@ -117,38 +117,42 @@ func (h *handler) UpdateInfo(c *gin.Context) {
 		"request": input,
 	})
 
-	employee, err := h.store.Employee.One(h.repo.DB(), employeeID, false)
+	emp, err := h.store.Employee.One(h.repo.DB(), employeeID, false)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			l.Info("employee not found")
+			l.Info("emp not found")
 			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, err, nil, ""))
 			return
 		}
-		l.Error(err, "failed to get employee")
+		l.Error(err, "failed to get emp")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
 	}
 
 	// validate personal email
 	_, err = h.store.Employee.OneByEmail(h.repo.DB(), input.PersonalEmail)
-	if employee.PersonalEmail != input.PersonalEmail && input.PersonalEmail != "" && !errors.Is(err, gorm.ErrRecordNotFound) {
+	if emp.PersonalEmail != input.PersonalEmail && input.PersonalEmail != "" && !errors.Is(err, gorm.ErrRecordNotFound) {
 		if err == nil {
 			l.Error(err, "personal email exists")
 			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrEmailExisted, input, ""))
 			return
 		}
-		l.Error(err, "failed to get employee by email")
+		l.Error(err, "failed to get emp by email")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input, ""))
 		return
 	}
 
-	input.ToEmployeeModel(employee)
-
-	if isValid := h.validateCountryAndCity(h.repo.DB(), input.Country, input.City); !isValid {
+	city, err := h.validateAndMappingCity(h.repo.DB(), input.Country, input.City)
+	if err != nil {
 		l.Info("country or city is invalid")
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidCountryOrCity, input, ""))
 		return
 	}
+
+	input.Lat = city.Lat
+	input.Long = city.Long
+
+	input.ToEmployeeModel(emp)
 
 	tx, done := h.repo.NewTransaction()
 	// Update social accounts
@@ -160,8 +164,8 @@ func (h *handler) UpdateInfo(c *gin.Context) {
 		LinkedInName: input.LinkedInName,
 	}
 
-	if err := h.updateSocialAccounts(tx.DB(), saInput, employee.ID); err != nil {
-		l.Error(err, "failed to update employee")
+	if err := h.updateSocialAccounts(tx.DB(), saInput, emp.ID); err != nil {
+		l.Error(err, "failed to update emp")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
 		return
 	}
@@ -183,13 +187,13 @@ func (h *handler) UpdateInfo(c *gin.Context) {
 
 	tmpE, err := h.store.Employee.GetByDiscordID(tx.DB(), discordID)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		l.Errorf(err, "failed to get employee by discordID", "discordID", discordID)
+		l.Errorf(err, "failed to get emp by discordID", "discordID", discordID)
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
 		return
 	}
 
 	if !errors.Is(err, gorm.ErrRecordNotFound) {
-		if tmpE.ID != employee.ID {
+		if tmpE.ID != emp.ID {
 			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(errs.ErrDiscordAccountAlreadyUsedByAnotherEmployee), input, ""))
 			return
 		}
@@ -206,16 +210,18 @@ func (h *handler) UpdateInfo(c *gin.Context) {
 		return
 	}
 
-	employee.DiscordAccountID = discordAccount.ID
+	emp.DiscordAccountID = discordAccount.ID
 
-	// Update employee
-	_, err = h.store.Employee.UpdateSelectedFieldsByID(tx.DB(), employeeID, *employee,
+	// Update emp
+	_, err = h.store.Employee.UpdateSelectedFieldsByID(tx.DB(), employeeID, *emp,
 		"personal_email",
 		"phone_number",
 		"place_of_residence",
 		"address",
 		"country",
 		"city",
+		"lat",
+		"long",
 		"wise_recipient_id",
 		"wise_account_number",
 		"wise_recipient_email",
@@ -224,12 +230,12 @@ func (h *handler) UpdateInfo(c *gin.Context) {
 		"discord_account_id",
 	)
 	if err != nil {
-		l.Error(err, "failed to update employee")
+		l.Error(err, "failed to update emp")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
 		return
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToUpdateProfileInfoData(employee), nil, done(nil), nil, ""))
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToUpdateProfileInfoData(emp), nil, done(nil), nil, ""))
 }
 
 func (h *handler) updateSocialAccounts(db *gorm.DB, input model.SocialAccountInput, employeeID model.UUID) error {
@@ -300,38 +306,28 @@ func (h *handler) updateSocialAccounts(db *gorm.DB, input model.SocialAccountInp
 	return nil
 }
 
-func (h *handler) validateCountryAndCity(db *gorm.DB, countryName string, city string) bool {
-	if countryName == "" && city == "" {
-		return true
-	}
-
-	if countryName == "" && city != "" {
-		return false
-	}
-
-	l := h.logger.Fields(logger.Fields{
-		"handler":     "profile",
-		"method":      "validateCountryAndCity",
-		"countryName": countryName,
-		"city":        city,
-	})
-
+func (h *handler) validateAndMappingCity(db *gorm.DB, countryName string, cityName string) (*model.City, error) {
 	country, err := h.store.Country.OneByName(db, countryName)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			l.Info("country not found")
-			return false
+			return nil, errs.ErrCountryNotFound
 		}
-		l.Error(err, "failed to get country by code")
-		return false
+		return nil, err
 	}
 
-	if city != "" && !slices.Contains(country.Cities, city) {
-		l.Info("city does not belong to country")
-		return false
+	var cities model.Cities
+
+	err = json.Unmarshal(country.Cities, &cities)
+	if err != nil {
+		return nil, err
 	}
 
-	return true
+	city := cities.GetCity(cityName)
+	if city == nil {
+		return nil, errs.ErrCityDoesNotBelongToCountry
+	}
+
+	return city, nil
 }
 
 // UploadAvatar godoc
@@ -680,6 +676,12 @@ func (h *handler) SubmitOnboardingForm(c *gin.Context) {
 		"request": input,
 	})
 
+	if err := input.Validate(); err != nil {
+		l.Error(err, "failed to validate input")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, input, ""))
+		return
+	}
+
 	employeeInvitation, err := h.store.EmployeeInvitation.OneByEmployeeID(h.repo.DB(), employeeID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -699,11 +701,15 @@ func (h *handler) SubmitOnboardingForm(c *gin.Context) {
 		return
 	}
 
-	if err := input.Validate(); err != nil {
-		l.Error(err, "failed to validate input")
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, input, ""))
+	city, err := h.validateAndMappingCity(h.repo.DB(), input.Country, input.City)
+	if err != nil {
+		l.Info("country or city is invalid")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidCountryOrCity, input, ""))
 		return
 	}
+
+	input.Lat = city.Lat
+	input.Long = city.Long
 
 	employee, err := h.store.Employee.One(h.repo.DB(), employeeID, false)
 	if err != nil {
@@ -717,15 +723,11 @@ func (h *handler) SubmitOnboardingForm(c *gin.Context) {
 		return
 	}
 
-	if isValid := h.validateCountryAndCity(h.repo.DB(), input.Country, input.City); !isValid {
-		l.Info("country or city is invalid")
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidCountryOrCity, input, ""))
-		return
-	}
-
 	updatedFields := []string{
 		"address",
 		"city",
+		"lat",
+		"long",
 		"country",
 		"gender",
 		"horoscope",

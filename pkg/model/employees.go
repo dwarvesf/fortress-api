@@ -85,6 +85,8 @@ type Employee struct {
 	DateOfBirth            *time.Time `gorm:"default:null"`
 	Country                string     `gorm:"default:null"`
 	City                   string     `gorm:"default:null"`
+	Lat                    string     `gorm:"default:null"`
+	Long                   string     `gorm:"default:null"`
 
 	// working info
 	WorkingStatus WorkingStatus `gorm:"default:null"`

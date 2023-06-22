@@ -7,8 +7,8 @@ var ErrInvalidCount = errors.New("message count or reaction count should be >0")
 type UpsertRollupRequest struct {
 	DiscordUserID string `json:"discordUserID" binding:"required"`
 	LastMessageID string `json:"lastMessageID" binding:"required"`
-	ChannelID     string `json:"channelID"`
-	CategoryID    string `json:"categoryID" binding:"required"`
+	ChannelID     string `json:"channelID" binding:"required"`
+	CategoryID    string `json:"categoryID"`
 	MessageCount  int    `json:"messageCount"`
 	ReactionCount int    `json:"reactionCount"`
 }

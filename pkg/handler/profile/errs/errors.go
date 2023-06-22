@@ -18,4 +18,5 @@ var (
 	ErrInvalidDiscordMemberInfo                   = errors.New("invalid discord member info")
 	ErrDiscordAccountAlreadyUsedByAnotherEmployee = errors.New("discord account already used by another employee")
 	ErrCouldNotFoundDiscordMemberInGuild          = errors.New("could not found discord member in the guild")
+	ErrCityDoesNotBelongToCountry                 = errors.New("city does not belong to country")
 )

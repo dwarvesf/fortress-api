@@ -1,4 +1,4 @@
 {
     "data": null,
-    "error": "invalid country or city"
+    "error": "city does not belong to country"
 }

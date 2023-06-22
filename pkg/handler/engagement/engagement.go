@@ -113,14 +113,19 @@ func (h *handler) UpsertRollup(c *gin.Context) {
 		)
 		return
 	}
-	categoryID, err := strconv.ParseInt(body.CategoryID, 10, 64)
-	if err != nil {
-		l.Error(err, "unable to parse categoryID to int64")
-		c.JSON(
-			http.StatusBadRequest,
-			view.CreateResponse[any](nil, nil, err, body, ""),
-		)
-		return
+	categoryID := int64(0)
+	if body.CategoryID == "" {
+		categoryID = -1
+	} else {
+		categoryID, err = strconv.ParseInt(body.CategoryID, 10, 64)
+		if err != nil {
+			l.Error(err, "unable to parse categoryID to int64")
+			c.JSON(
+				http.StatusBadRequest,
+				view.CreateResponse[any](nil, nil, err, body, ""),
+			)
+			return
+		}
 	}
 
 	tx, done := h.repo.NewTransaction()
