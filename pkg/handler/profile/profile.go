@@ -220,6 +220,8 @@ func (h *handler) UpdateInfo(c *gin.Context) {
 		"address",
 		"country",
 		"city",
+		"lat",
+		"long",
 		"wise_recipient_id",
 		"wise_account_number",
 		"wise_recipient_email",
@@ -706,13 +708,8 @@ func (h *handler) SubmitOnboardingForm(c *gin.Context) {
 		return
 	}
 
-	if input.Lat == "" {
-		input.Lat = city.Lat
-
-	}
-	if input.Long == "" {
-		input.Long = city.Long
-	}
+	input.Lat = city.Lat
+	input.Long = city.Long
 
 	employee, err := h.store.Employee.One(h.repo.DB(), employeeID, false)
 	if err != nil {
