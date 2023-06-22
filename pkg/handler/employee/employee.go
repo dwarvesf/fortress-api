@@ -480,6 +480,12 @@ func (h *handler) UpdatePersonalInfo(c *gin.Context) {
 		"request": body,
 	})
 
+	city, err := h.validateAndMappingCity(h.repo.DB(), body.Country, body.City)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
 	requestBody := employee.UpdatePersonalInfoInput{
 		DoB:              body.DoB,
 		Gender:           body.Gender,
@@ -488,11 +494,8 @@ func (h *handler) UpdatePersonalInfo(c *gin.Context) {
 		PersonalEmail:    body.PersonalEmail,
 		Country:          body.Country,
 		City:             body.City,
-	}
-
-	if isValid := h.validateCountryAndCity(h.repo.DB(), body.Country, body.City); !isValid {
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidCountryOrCity, nil, ""))
-		return
+		Lat:              city.Lat,
+		Long:             city.Long,
 	}
 
 	emp, err := h.controller.Employee.UpdatePersonalInfo(employeeID, requestBody)
@@ -505,37 +508,28 @@ func (h *handler) UpdatePersonalInfo(c *gin.Context) {
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToUpdatePersonalEmployeeData(emp), nil, nil, nil, ""))
 }
 
-func (h *handler) validateCountryAndCity(db *gorm.DB, countryName string, city string) bool {
-	if countryName == "" && city == "" {
-		return true
-	}
-
-	if countryName == "" && city != "" {
-		return false
-	}
-
+func (h *handler) validateAndMappingCity(db *gorm.DB, countryName string, cityName string) (*model.City, error) {
 	country, err := h.store.Country.OneByName(db, countryName)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return false
+			return nil, errs.ErrCountryNotFound
 		}
-		return false
+		return nil, err
 	}
 
-	if city != "" {
-		var cities model.Cities
+	var cities model.Cities
 
-		err = json.Unmarshal([]byte(country.Cities), &cities)
-		if err != nil {
-			return false
-		}
-		if !cities.Contains(city) {
-			return false
-		}
-		return true
+	err = json.Unmarshal(country.Cities, &cities)
+	if err != nil {
+		return nil, err
 	}
 
-	return true
+	city := cities.GetCity(cityName)
+	if city == nil {
+		return nil, errs.ErrCityDoesNotBelongToCountry
+	}
+
+	return city, nil
 }
 
 // UploadAvatar godoc

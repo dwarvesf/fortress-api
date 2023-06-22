@@ -17,6 +17,8 @@ type UpdatePersonalInfoInput struct {
 	PersonalEmail    string
 	Country          string
 	City             string
+	Lat              string
+	Long             string
 }
 
 func (r *controller) UpdatePersonalInfo(employeeID string, body UpdatePersonalInfoInput) (*model.Employee, error) {
@@ -44,8 +46,23 @@ func (r *controller) UpdatePersonalInfo(employeeID string, body UpdatePersonalIn
 	emp.PersonalEmail = body.PersonalEmail
 	emp.Country = body.Country
 	emp.City = body.City
+	emp.Lat = body.Lat
+	emp.Long = body.Long
 
-	emp, err = r.store.Employee.UpdateSelectedFieldsByID(r.repo.DB(), employeeID, *emp, "date_of_birth", "gender", "address", "place_of_residence", "personal_email", "country", "city")
+	updatedField := []string{
+		"date_of_birth",
+		"gender",
+		"address",
+		"place_of_residence",
+		"personal_email",
+		"country",
+		"city",
+		"lat",
+		"long",
+	}
+
+	emp,
+		err = r.store.Employee.UpdateSelectedFieldsByID(r.repo.DB(), employeeID, *emp, updatedField...)
 	if err != nil {
 		return nil, err
 	}

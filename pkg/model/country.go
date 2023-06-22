@@ -16,12 +16,12 @@ type City struct {
 
 type Cities []City
 
-func (c Cities) Contains(city string) bool {
+func (c Cities) GetCity(city string) *City {
 	for _, itm := range c {
 		if itm.Name == city {
-			return true
+			return &itm
 		}
 	}
 
-	return false
+	return nil
 }

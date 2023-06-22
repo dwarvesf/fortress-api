@@ -107,8 +107,8 @@ type UpdatePersonalInfoInput struct {
 	PlaceOfResidence string     `form:"placeOfResidence" json:"placeOfResidence"`
 	Address          string     `form:"address" json:"address" binding:"required,max=200"`
 	PersonalEmail    string     `form:"personalEmail" json:"personalEmail" binding:"required,email"`
-	Country          string     `form:"country" json:"country"`
-	City             string     `form:"city" json:"city"`
+	Country          string     `form:"country" json:"country" binding:"required"`
+	City             string     `form:"city" json:"city" binding:"required"`
 }
 
 type UpdateWorkingStatusInput struct {
