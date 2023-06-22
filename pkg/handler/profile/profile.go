@@ -1,6 +1,7 @@
 package profile
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -8,7 +9,6 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/gin-gonic/gin"
-	"golang.org/x/exp/slices"
 	"gorm.io/gorm"
 	"gorm.io/gorm/utils"
 
@@ -326,9 +326,19 @@ func (h *handler) validateCountryAndCity(db *gorm.DB, countryName string, city s
 		return false
 	}
 
-	if city != "" && !slices.Contains(country.Cities, city) {
-		l.Info("city does not belong to country")
-		return false
+	if city != "" {
+		var cities model.Cities
+
+		err = json.Unmarshal([]byte(country.Cities), &cities)
+		if err != nil {
+			l.Error(err, "failed to unmarshal cities")
+			return false
+		}
+		if !cities.Contains(city) {
+			l.Info("city does not belong to country")
+			return false
+		}
+		return true
 	}
 
 	return true

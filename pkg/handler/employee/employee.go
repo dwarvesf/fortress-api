@@ -1,11 +1,11 @@
 package employee
 
 import (
+	"encoding/json"
 	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"golang.org/x/exp/slices"
 	"gorm.io/gorm"
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
@@ -522,8 +522,17 @@ func (h *handler) validateCountryAndCity(db *gorm.DB, countryName string, city s
 		return false
 	}
 
-	if city != "" && !slices.Contains(country.Cities, city) {
-		return false
+	if city != "" {
+		var cities model.Cities
+
+		err = json.Unmarshal([]byte(country.Cities), &cities)
+		if err != nil {
+			return false
+		}
+		if !cities.Contains(city) {
+			return false
+		}
+		return true
 	}
 
 	return true
