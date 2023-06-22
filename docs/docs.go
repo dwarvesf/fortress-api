@@ -283,6 +283,44 @@ const docTemplate = `{
                 }
             }
         },
+        "/brainery-logs": {
+            "post": {
+                "description": "Create brainery logs",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Project"
+                ],
+                "summary": "Create brainery logs",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/clients": {
             "get": {
                 "description": "Get all clients",
@@ -6461,7 +6499,7 @@ const docTemplate = `{
                 "cities": {
                     "type": "array",
                     "items": {
-                        "type": "string"
+                        "type": "integer"
                     }
                 },
                 "code": {
@@ -6640,6 +6678,9 @@ const docTemplate = `{
                 "joinedDate": {
                     "type": "string"
                 },
+                "lat": {
+                    "type": "string"
+                },
                 "leftDate": {
                     "type": "string"
                 },
@@ -6662,6 +6703,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "localBranchName": {
+                    "type": "string"
+                },
+                "long": {
                     "type": "string"
                 },
                 "mbti": {
@@ -8630,6 +8674,9 @@ const docTemplate = `{
                 "identityCardPhotoFront": {
                     "type": "string"
                 },
+                "lat": {
+                    "type": "string"
+                },
                 "linkedInName": {
                     "type": "string"
                 },
@@ -8646,6 +8693,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "localBranchName": {
+                    "type": "string"
+                },
+                "long": {
                     "type": "string"
                 },
                 "mbti": {
@@ -8866,6 +8916,8 @@ const docTemplate = `{
         "request.UpdateInfoInput": {
             "type": "object",
             "required": [
+                "city",
+                "country",
                 "personalEmail",
                 "phoneNumber",
                 "placeOfResidence"
@@ -8886,7 +8938,13 @@ const docTemplate = `{
                 "githubID": {
                     "type": "string"
                 },
+                "lat": {
+                    "type": "string"
+                },
                 "linkedInName": {
+                    "type": "string"
+                },
+                "long": {
                     "type": "string"
                 },
                 "notionEmail": {
@@ -8994,6 +9052,8 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "address",
+                "city",
+                "country",
                 "dob",
                 "gender",
                 "personalEmail"
@@ -9208,7 +9268,7 @@ const docTemplate = `{
         "request.UpsertRollupRequest": {
             "type": "object",
             "required": [
-                "categoryID",
+                "channelID",
                 "discordUserID",
                 "lastMessageID"
             ],
@@ -9834,6 +9894,20 @@ const docTemplate = `{
                 }
             }
         },
+        "view.City": {
+            "type": "object",
+            "properties": {
+                "lat": {
+                    "type": "string"
+                },
+                "long": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "view.Client": {
             "type": "object",
             "properties": {
@@ -9974,8 +10048,28 @@ const docTemplate = `{
                 "data": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/model.Country"
+                        "$ref": "#/definitions/view.Country"
                     }
+                }
+            }
+        },
+        "view.Country": {
+            "type": "object",
+            "properties": {
+                "cities": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.City"
+                    }
+                },
+                "code": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
                 }
             }
         },

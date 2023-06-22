@@ -203,7 +203,7 @@ definitions:
     properties:
       cities:
         items:
-          type: string
+          type: integer
         type: array
       code:
         type: string
@@ -322,6 +322,8 @@ definitions:
         type: string
       joinedDate:
         type: string
+      lat:
+        type: string
       leftDate:
         type: string
       lineManager:
@@ -337,6 +339,8 @@ definitions:
       localBankRecipientName:
         type: string
       localBranchName:
+        type: string
+      long:
         type: string
       mbti:
         type: string
@@ -1635,6 +1639,8 @@ definitions:
         type: string
       identityCardPhotoFront:
         type: string
+      lat:
+        type: string
       linkedInName:
         type: string
       localBankBranch:
@@ -1646,6 +1652,8 @@ definitions:
       localBankRecipientName:
         type: string
       localBranchName:
+        type: string
+      long:
         type: string
       mbti:
         type: string
@@ -1820,7 +1828,11 @@ definitions:
         type: string
       githubID:
         type: string
+      lat:
+        type: string
       linkedInName:
+        type: string
+      long:
         type: string
       notionEmail:
         type: string
@@ -1847,6 +1859,8 @@ definitions:
       wiseRecipientName:
         type: string
     required:
+    - city
+    - country
     - personalEmail
     - phoneNumber
     - placeOfResidence
@@ -1914,6 +1928,8 @@ definitions:
         type: string
     required:
     - address
+    - city
+    - country
     - dob
     - gender
     - personalEmail
@@ -2058,7 +2074,7 @@ definitions:
       reactionCount:
         type: integer
     required:
-    - categoryID
+    - channelID
     - discordUserID
     - lastMessageID
     type: object
@@ -2453,6 +2469,15 @@ definitions:
           type: string
         type: array
     type: object
+  view.City:
+    properties:
+      lat:
+        type: string
+      long:
+        type: string
+      name:
+        type: string
+    type: object
   view.Client:
     properties:
       address:
@@ -2544,8 +2569,21 @@ definitions:
     properties:
       data:
         items:
-          $ref: '#/definitions/model.Country'
+          $ref: '#/definitions/view.Country'
         type: array
+    type: object
+  view.Country:
+    properties:
+      cities:
+        items:
+          $ref: '#/definitions/view.City'
+        type: array
+      code:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
     type: object
   view.CreateClientResponse:
     properties:
@@ -4564,6 +4602,31 @@ paths:
       summary: Get all bank accounts
       tags:
       - Bank
+  /brainery-logs:
+    post:
+      consumes:
+      - application/json
+      description: Create brainery logs
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Create brainery logs
+      tags:
+      - Project
   /clients:
     get:
       consumes:

@@ -277,7 +277,13 @@ func (h *handler) GetCountries(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse(countries, nil, nil, nil, ""))
+	rs, err := view.ToCountryView(countries)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse(rs, nil, nil, nil, ""))
 }
 
 // GetCities godoc

@@ -1,6 +1,9 @@
 package view
 
-import "github.com/dwarvesf/fortress-api/pkg/model"
+import (
+	"encoding/json"
+	"github.com/dwarvesf/fortress-api/pkg/model"
+)
 
 type MetaData struct {
 	ID   string `json:"id"`
@@ -29,7 +32,7 @@ type PositionResponse struct {
 }
 
 type CountriesResponse struct {
-	Data []model.Country `json:"data"`
+	Data []Country `json:"data"`
 }
 
 type CitiesResponse struct {
@@ -82,4 +85,43 @@ func ToRoles(roles []*model.Role) []*Role {
 	}
 
 	return rs
+}
+
+type Country struct {
+	ID     string `json:"id"`
+	Name   string `json:"name"`
+	Code   string `json:"code"`
+	Cities []City `json:"cities"`
+}
+
+type City struct {
+	Name string `json:"name"`
+	Lat  string `json:"lat"`
+	Long string `json:"long"`
+}
+
+func ToCountryView(country []*model.Country) ([]Country, error) {
+	var rs []Country
+	for _, c := range country {
+		var cities []City
+		err := json.Unmarshal(c.Cities, &cities)
+		if err != nil {
+			return nil, err
+		}
+		for _, c := range cities {
+			cities = append(cities, City{
+				Name: c.Name,
+				Lat:  c.Lat,
+				Long: c.Long,
+			})
+		}
+
+		rs = append(rs, Country{
+			ID:     c.ID.String(),
+			Name:   c.Name,
+			Code:   c.Code,
+			Cities: cities,
+		})
+	}
+	return rs, nil
 }
