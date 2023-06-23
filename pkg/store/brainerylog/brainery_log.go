@@ -15,7 +15,7 @@ func New() IStore {
 }
 
 // Create creates a brainery log record in the database
-func (s *store) Create(db *gorm.DB, b *model.BraineryLog) (braineryLog *model.BraineryLog, err error) {
+func (s *store) Create(db *gorm.DB, b []model.BraineryLog) (braineryLog []model.BraineryLog, err error) {
 	return b, db.Create(b).Error
 }
 

@@ -24,3 +24,8 @@ func (r CreateBraineryLogRequest) Validate() error {
 	}
 	return nil
 }
+
+type SyncBraineryLogs struct {
+	StartMessageID string `json:"startMessageID"`
+	EndMessageID   string `json:"endMessageID"`
+}

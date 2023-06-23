@@ -9,7 +9,7 @@ import (
 )
 
 type IStore interface {
-	Create(db *gorm.DB, b *model.BraineryLog) (*model.BraineryLog, error)
+	Create(db *gorm.DB, b []model.BraineryLog) ([]model.BraineryLog, error)
 	GetByTimeRange(db *gorm.DB, start, end *time.Time) ([]*model.BraineryLog, error)
 	GetNewContributorDiscordIDs(db *gorm.DB, start, end *time.Time) ([]string, error)
 }

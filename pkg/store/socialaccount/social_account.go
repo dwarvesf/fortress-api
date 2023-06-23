@@ -35,7 +35,7 @@ func (s *store) UpdateSelectedFieldsByID(db *gorm.DB, id string, updateModel mod
 }
 
 // GetByType get social account by type
-func (s *store) GetByType(db *gorm.DB, saType string) ([]*model.SocialAccount, error) {
-	var accounts []*model.SocialAccount
+func (s *store) GetByType(db *gorm.DB, saType string) ([]model.SocialAccount, error) {
+	var accounts []model.SocialAccount
 	return accounts, db.Where("type = ?", saType).Find(&accounts).Error
 }
