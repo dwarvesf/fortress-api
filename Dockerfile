@@ -7,7 +7,7 @@ COPY . .
 
 ENV GOOS=linux GOARCH=amd64 CGO_ENABLED=0
 RUN go install -v ./...
-RUN go install -v github.com/rubenv/sql-migrate/sql-migrate@latest
+RUN go install -v github.com/rubenv/sql-migrate/sql-migrate@v1.4.0
 
 FROM alpine:3.17.3
 
