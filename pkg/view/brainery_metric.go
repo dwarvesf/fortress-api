@@ -35,16 +35,12 @@ func ToPost(l model.BraineryLog) Post {
 }
 
 // ToBraineryMetric parse BraineryLog logs to BraineryMetric
-func ToBraineryMetric(logs []*model.BraineryLog, ncids []string) BraineryMetric {
+func ToBraineryMetric(latestPosts, logs []*model.BraineryLog, ncids []string) BraineryMetric {
 	metric := BraineryMetric{}
 
 	// latest posts
-	pCount := 10
-	if len(logs) < pCount {
-		pCount = len(logs)
-	}
-	for i := 0; i < pCount; i++ {
-		metric.LatestPosts = append(metric.LatestPosts, ToPost(*logs[i]))
+	for _, post := range latestPosts {
+		metric.LatestPosts = append(metric.LatestPosts, ToPost(*post))
 	}
 
 	// tags

@@ -139,7 +139,16 @@ func (h *handler) GetMetrics(c *gin.Context) {
 		start = timeutil.FirstDayOfMonth(int(end.Month()), end.Year())
 	}
 
-	logs, err := h.store.BraineryLog.GetByTimeRange(h.repo.DB(), &start, &end)
+	// latest 10 posts
+	latestPosts, err := h.store.BraineryLog.GetLimitByTimeRange(h.repo.DB(), &time.Time{}, &end, 10)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		l.Errorf(err, "failed to get latest posts by time range", "start", start, "end", end)
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	// weekly or monthly posts
+	logs, err := h.store.BraineryLog.GetLimitByTimeRange(h.repo.DB(), &start, &end, 1000)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		l.Errorf(err, "failed to get logs by time range", "start", start, "end", end)
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
@@ -154,7 +163,7 @@ func (h *handler) GetMetrics(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToBraineryMetric(logs, ncids), nil, nil, nil, ""))
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToBraineryMetric(latestPosts, logs, ncids), nil, nil, nil, ""))
 }
 
 func (h *handler) Sync(c *gin.Context) {

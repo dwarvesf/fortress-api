@@ -10,6 +10,6 @@ import (
 
 type IStore interface {
 	Create(db *gorm.DB, b []model.BraineryLog) ([]model.BraineryLog, error)
-	GetByTimeRange(db *gorm.DB, start, end *time.Time) ([]*model.BraineryLog, error)
+	GetLimitByTimeRange(db *gorm.DB, start, end *time.Time, limit int) ([]*model.BraineryLog, error)
 	GetNewContributorDiscordIDs(db *gorm.DB, start, end *time.Time) ([]string, error)
 }
