@@ -19,10 +19,10 @@ func (s *store) Create(db *gorm.DB, b []model.BraineryLog) (braineryLog []model.
 	return b, db.Create(b).Error
 }
 
-// GetByTimeRange gets brainery logs in a specific time range
-func (s *store) GetByTimeRange(db *gorm.DB, start, end *time.Time) ([]*model.BraineryLog, error) {
+// GetLimitByTimeRange gets brainery logs in a specific time range, with limit
+func (s *store) GetLimitByTimeRange(db *gorm.DB, start, end *time.Time, limit int) ([]*model.BraineryLog, error) {
 	var logs []*model.BraineryLog
-	return logs, db.Where("published_at BETWEEN ? AND ?", start, end).Order("published_at DESC").Find(&logs).Error
+	return logs, db.Where("published_at BETWEEN ? AND ?", start, end).Limit(limit).Order("published_at DESC").Find(&logs).Error
 }
 
 // GetNewContributorDiscordIDs gets list of discord IDs from new contributors in a specific time range
