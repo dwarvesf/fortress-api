@@ -3,8 +3,9 @@ package request
 import (
 	"time"
 
-	"github.com/dwarvesf/fortress-api/pkg/handler/brainerylogs/errs"
 	"github.com/shopspring/decimal"
+
+	"github.com/dwarvesf/fortress-api/pkg/handler/brainerylogs/errs"
 )
 
 type CreateBraineryLogRequest struct {
@@ -22,4 +23,9 @@ func (r CreateBraineryLogRequest) Validate() error {
 		return errs.ErrInvalidPublishedAt
 	}
 	return nil
+}
+
+type SyncBraineryLogs struct {
+	StartMessageID string `json:"startMessageID"`
+	EndMessageID   string `json:"endMessageID"`
 }
