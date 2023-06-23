@@ -811,6 +811,12 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/brainerylogs.IHandler.GetMetrics-fm",
 			},
 		},
+		"/api/v1/brainery-logs/sync": {
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/brainerylogs.IHandler.Sync-fm",
+			},
+		},
 	}
 
 	l := logger.NewLogrusLogger()

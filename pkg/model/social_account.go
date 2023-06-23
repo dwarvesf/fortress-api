@@ -52,6 +52,19 @@ func (e SocialAccounts) GetGithub() *SocialAccount {
 	return nil
 }
 
+func (e SocialAccounts) ToMap() (map[string]string, map[string]string) {
+	m := make(map[string]string)
+	rm := make(map[string]string)
+	for _, account := range e {
+		if account.AccountID != "" {
+			m[account.AccountID] = account.EmployeeID.String()
+		}
+		rm[account.EmployeeID.String()] = account.AccountID
+	}
+
+	return m, rm
+}
+
 type SocialAccountInput struct {
 	GithubID     string
 	NotionID     string
