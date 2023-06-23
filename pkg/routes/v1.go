@@ -325,5 +325,6 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 	braineryGroup := v1.Group("/brainery-logs")
 	{
 		braineryGroup.POST("", amw.WithAuth, pmw.WithPerm(model.PermissionBraineryLogsWrite), h.BraineryLog.Create)
+		braineryGroup.GET("/metrics", amw.WithAuth, pmw.WithPerm(model.PermissionBraineryLogsRead), h.BraineryLog.GetMetrics)
 	}
 }
