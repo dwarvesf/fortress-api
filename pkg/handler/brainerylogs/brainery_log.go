@@ -248,7 +248,10 @@ func (h *handler) Sync(c *gin.Context) {
 
 	githubEmployeeIDMap, empIDGithubMap := model.SocialAccounts(socialAccounts).ToMap()
 
-	employees, _, err := h.store.Employee.All(h.repo.DB(), employee.EmployeeFilter{}, model.Pagination{})
+	employees, _, err := h.store.Employee.All(h.repo.DB(), employee.EmployeeFilter{}, model.Pagination{
+		Page: 0,
+		Size: 1000,
+	})
 	if err != nil {
 		l.Errorf(err, "failed to get employees")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
