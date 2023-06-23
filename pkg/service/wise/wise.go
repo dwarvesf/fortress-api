@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"strings"
 	"sync"
@@ -209,7 +208,7 @@ func (w *wiseService) GetPayrollQuotes(sourceCurrency, targetCurrency string, ta
 	defer resp.Body.Close()
 	body := resp.Body
 
-	res, _ := ioutil.ReadAll(body)
+	res, _ := io.ReadAll(body)
 
 	return q, json.Unmarshal(res, &q)
 }

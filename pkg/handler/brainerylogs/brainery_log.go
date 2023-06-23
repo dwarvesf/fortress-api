@@ -369,6 +369,7 @@ func (h *handler) Sync(c *gin.Context) {
 
 	if len(braineryLogs) == 0 {
 		c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))
+		return
 	}
 
 	_, err = h.store.BraineryLog.Create(h.repo.DB(), braineryLogs)

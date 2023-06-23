@@ -3,7 +3,6 @@ package model
 import (
 	"encoding/json"
 	"io"
-	"io/ioutil"
 	"strings"
 )
 
@@ -20,7 +19,7 @@ func (msg *BasecampWebhookMessage) Decode(body []byte) error {
 
 func (msg *BasecampWebhookMessage) Read(rc io.ReadCloser) []byte {
 	defer rc.Close()
-	body, _ := ioutil.ReadAll(rc)
+	body, _ := io.ReadAll(rc)
 	return body
 }
 
