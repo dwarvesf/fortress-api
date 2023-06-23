@@ -7,18 +7,19 @@ COPY . .
 
 ENV GOOS=linux GOARCH=amd64 CGO_ENABLED=0
 RUN go install -v ./...
-RUN go install -v github.com/rubenv/sql-migrate/sql-migrate@latest
+RUN go install -v github.com/rubenv/sql-migrate/sql-migrate@v1.4.0
 
 FROM alpine:3.17.3
 
 RUN echo http://dl-cdn.alpinelinux.org/alpine/edge/community >> /etc/apk/repositories && \
-    echo http://dl-cdn.alpinelinux.org/alpine/edge/main >> /etc/apk/repositories && \
-    echo http://dl-cdn.alpinelinux.org/alpine/v3.8/main >> /etc/apk/repositories
+  echo http://dl-cdn.alpinelinux.org/alpine/edge/main >> /etc/apk/repositories && \
+  echo http://dl-cdn.alpinelinux.org/alpine/v3.8/main >> /etc/apk/repositories
 
 RUN apk update && \
-    apk add --no-cache \
-      bash \
-      openssl-dev
+  apk add --no-cache \
+  bash \
+  openssl-dev \
+  tzdata
 
 RUN apk add --no-cache \
   libstdc++ \

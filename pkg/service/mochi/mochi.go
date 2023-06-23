@@ -3,7 +3,7 @@ package mochi
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
@@ -39,7 +39,7 @@ func (m *client) GetVaultTransaction(req *VaultTransactionRequest) (*VaultTransa
 	}
 
 	defer response.Body.Close()
-	resBody, err := ioutil.ReadAll(response.Body)
+	resBody, err := io.ReadAll(response.Body)
 	if err != nil {
 		return nil, err
 	}
