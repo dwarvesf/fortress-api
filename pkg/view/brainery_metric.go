@@ -1,6 +1,7 @@
 package view
 
 import (
+	"sort"
 	"time"
 
 	"github.com/shopspring/decimal"
@@ -53,6 +54,8 @@ func ToBraineryMetric(latestPosts, logs []*model.BraineryLog, ncids []string) Br
 	for tag := range tagMap {
 		metric.Tags = append(metric.Tags, tag)
 	}
+
+	sort.Strings(metric.Tags)
 
 	ncidsMap := make(map[string]struct{}, len(ncids))
 	for _, id := range ncids {
