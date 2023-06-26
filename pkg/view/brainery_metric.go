@@ -63,7 +63,11 @@ func ToBraineryMetric(latestPosts, logs []*model.BraineryLog, ncids []string, qu
 	}
 
 	// get 10 top tags
-	for i := 0; i < 10; i++ {
+	l := len(tagMap)
+	if len(tagMap) > 10 {
+		l = 10
+	}
+	for i := 0; i < l; i++ {
 		var topCount int
 		var topTag string
 		for tag, count := range tagMap {
