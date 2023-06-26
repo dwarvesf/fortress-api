@@ -133,10 +133,12 @@ func (h *handler) GetMetrics(c *gin.Context) {
 	queryView := c.DefaultQuery("view", "weekly")
 
 	// default is weekly
-	end := time.Now()
-	start := timeutil.GetStartDayOfWeek(end)
+	now := time.Now()
+	end := timeutil.GetEndDayOfWeek(now)
+	start := timeutil.GetStartDayOfWeek(now)
 	if queryView == "monthly" {
-		start = timeutil.FirstDayOfMonth(int(end.Month()), end.Year())
+		start = timeutil.FirstDayOfMonth(int(now.Month()), now.Year())
+		end = timeutil.LastDayOfMonth(int(now.Month()), now.Year())
 	}
 
 	// latest 10 posts
@@ -163,7 +165,7 @@ func (h *handler) GetMetrics(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToBraineryMetric(latestPosts, logs, ncids), nil, nil, nil, ""))
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToBraineryMetric(latestPosts, logs, ncids, queryView), nil, nil, nil, ""))
 }
 
 func (h *handler) Sync(c *gin.Context) {
