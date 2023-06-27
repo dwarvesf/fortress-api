@@ -102,6 +102,15 @@ definitions:
       updatedAt:
         type: string
     type: object
+  model.City:
+    properties:
+      lat:
+        type: string
+      long:
+        type: string
+      name:
+        type: string
+    type: object
   model.Client:
     properties:
       address:
@@ -203,7 +212,7 @@ definitions:
     properties:
       cities:
         items:
-          type: integer
+          $ref: '#/definitions/model.City'
         type: array
       code:
         type: string
@@ -2444,6 +2453,29 @@ definitions:
       type:
         type: string
     type: object
+  view.BraineryMetric:
+    properties:
+      contributors:
+        items:
+          $ref: '#/definitions/view.Post'
+        type: array
+      latestPosts:
+        items:
+          $ref: '#/definitions/view.Post'
+        type: array
+      newContributors:
+        items:
+          $ref: '#/definitions/view.Post'
+        type: array
+      tags:
+        items:
+          type: string
+        type: array
+      topContributors:
+        items:
+          $ref: '#/definitions/view.TopContributor'
+        type: array
+    type: object
   view.Chapter:
     properties:
       code:
@@ -2711,6 +2743,19 @@ definitions:
       name:
         type: string
     type: object
+  view.EmployeeAddress:
+    properties:
+      address:
+        type: string
+      city:
+        type: string
+      country:
+        type: string
+      lat:
+        type: string
+      long:
+        type: string
+    type: object
   view.EmployeeContentData:
     properties:
       url:
@@ -2859,6 +2904,30 @@ definitions:
       data:
         items:
           $ref: '#/definitions/view.EmployeeData'
+        type: array
+    type: object
+  view.EmployeeLocation:
+    properties:
+      address:
+        $ref: '#/definitions/view.EmployeeAddress'
+      avatar:
+        type: string
+      chapters:
+        items:
+          $ref: '#/definitions/view.Chapter'
+        type: array
+      discordID:
+        type: string
+      displayName:
+        type: string
+      fullName:
+        type: string
+    type: object
+  view.EmployeeLocationListResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/view.EmployeeLocation'
         type: array
     type: object
   view.EmployeeProjectData:
@@ -3465,6 +3534,19 @@ definitions:
           $ref: '#/definitions/model.Position'
         type: array
     type: object
+  view.Post:
+    properties:
+      discordID:
+        type: string
+      publishedAt:
+        type: string
+      reward:
+        type: number
+      title:
+        type: string
+      url:
+        type: string
+    type: object
   view.ProfileData:
     properties:
       address:
@@ -3932,6 +4014,15 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/view.SurveyTopicDetail'
+    type: object
+  view.TopContributor:
+    properties:
+      count:
+        type: integer
+      discordID:
+        type: string
+      ranking:
+        type: integer
     type: object
   view.Topic:
     properties:
@@ -4616,6 +4707,10 @@ paths:
       produces:
       - application/json
       responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.MessageResponse'
         "400":
           description: Bad Request
           schema:
@@ -4625,6 +4720,39 @@ paths:
           schema:
             $ref: '#/definitions/view.ErrorResponse'
       summary: Create brainery logs
+      tags:
+      - Project
+  /brainery-logs/metrics:
+    get:
+      consumes:
+      - application/json
+      description: Get brainery metric
+      parameters:
+      - description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Time view
+        in: query
+        name: view
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.BraineryMetric'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get brainery metric
       tags:
       - Project
   /clients:
@@ -8071,6 +8199,33 @@ paths:
       summary: Get Icy Weekly Distribution
       tags:
       - Project
+  /public/employees:
+    get:
+      consumes:
+      - application/json
+      description: Get employees list with location
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.EmployeeLocationListResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/view.ErrorResponse'
+      summary: Get employees list with location
+      tags:
+      - Employee
   /surveys:
     get:
       consumes:

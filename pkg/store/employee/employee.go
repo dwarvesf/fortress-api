@@ -249,7 +249,9 @@ func (s *store) SimpleList(db *gorm.DB) ([]*model.Employee, error) {
 
 	query := db.Where("deleted_at IS NULL AND working_status <> ?", model.WorkingStatusLeft).
 		Order("created_at").
-		Preload("DiscordAccount", "deleted_at IS NULL")
+		Preload("DiscordAccount", "deleted_at IS NULL").
+		Preload("EmployeeChapters", "deleted_at IS NULL").
+		Preload("EmployeeChapters.Chapter", "deleted_at IS NULL")
 
 	return employees, query.Find(&employees).Error
 }

@@ -673,6 +673,7 @@ type EmployeeLocation struct {
 	FullName    string          `json:"fullName"`
 	DisplayName string          `json:"displayName"`
 	Avatar      string          `json:"avatar"`
+	Chapters    []Chapter       `json:"chapters"`
 	Address     EmployeeAddress `json:"address"`
 }
 type EmployeeAddress struct {
@@ -695,6 +696,7 @@ func ToEmployeesWithLocation(in []*model.Employee) []EmployeeLocation {
 			FullName:    v.FullName,
 			DisplayName: v.DisplayName,
 			Avatar:      v.Avatar,
+			Chapters:    ToChapters(v.EmployeeChapters),
 			Address: EmployeeAddress{
 				Address: v.City + ", " + v.Country,
 				Country: v.Country,

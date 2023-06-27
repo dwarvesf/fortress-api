@@ -761,9 +761,7 @@ func (h *handler) UpdateBaseSalary(c *gin.Context) {
 // @Tags Employee
 // @Accept  json
 // @Produce  json
-// @Param Authorization header string true "jwt token"
-// @Param Body body request.UpdateBaseSalaryInput true "Body"
-// @Success 200 {object} view.UpdateBaseSalaryResponse
+// @Success 200 {object} view.EmployeeLocationListResponse
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 404 {object} view.ErrorResponse
 // @Failure 500 {object} view.ErrorResponse
