@@ -1,13 +1,16 @@
 package discord
 
 import (
+	"errors"
 	"fmt"
 	"math/rand"
 	"net/http"
 	"strings"
 	"time"
 
+	"github.com/bwmarrin/discordgo"
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
@@ -18,6 +21,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/store/employee"
 	"github.com/dwarvesf/fortress-api/pkg/store/onleaverequest"
+	"github.com/dwarvesf/fortress-api/pkg/utils/timeutil"
 	"github.com/dwarvesf/fortress-api/pkg/view"
 )
 
@@ -233,5 +237,57 @@ func (h *handler) OnLeaveMessage(c *gin.Context) {
 	}
 
 	h.logger.Infof("Discord message sent: %s", msg)
+	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))
+}
+
+// ReportBraineryMetrics reports brainery metrics
+func (h *handler) ReportBraineryMetrics(c *gin.Context) {
+
+	queryView := c.DefaultQuery("view", "weekly")
+	channelID := c.DefaultQuery("channelID", "810481888619135046")
+
+	// default is weekly
+	now := time.Now()
+	end := timeutil.GetEndDayOfWeek(now)
+	start := timeutil.GetStartDayOfWeek(now)
+	if queryView == "monthly" {
+		start = timeutil.FirstDayOfMonth(int(now.Month()), now.Year())
+		end = timeutil.LastDayOfMonth(int(now.Month()), now.Year())
+	}
+
+	// latest 10 posts
+	latestPosts, err := h.store.BraineryLog.GetLimitByTimeRange(h.repo.DB(), &time.Time{}, &end, 10)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		h.logger.Errorf(err, "failed to get latest posts by time range", "start", start, "end", end)
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	// weekly posts
+	logs, err := h.store.BraineryLog.GetLimitByTimeRange(h.repo.DB(), &start, &end, 1000)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		h.logger.Errorf(err, "failed to get logs by time range", "start", start, "end", end)
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	// ncids = new contributor discord IDs
+	ncids, err := h.store.BraineryLog.GetNewContributorDiscordIDs(h.repo.DB(), &start, &end)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		h.logger.Errorf(err, "failed to get new contributor discord IDs by time range", "start", start, "end", end)
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	//send message to Discord channel
+	var discordMsg *discordgo.Message
+	metric := view.ToBraineryMetric(latestPosts, logs, ncids, queryView)
+	discordMsg, err = h.service.Discord.ReportBraineryMetrics(queryView, &metric, channelID)
+	if err != nil {
+		h.logger.Error(err, "failed to report brainery metrics discord message")
+		c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, err, discordMsg, ""))
+		return
+	}
+
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))
 }
