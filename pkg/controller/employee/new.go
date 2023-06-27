@@ -40,4 +40,5 @@ type IController interface {
 	UpdateRole(userID string, input UpdateRoleInput) (err error)
 	GetLineManagers(userInfo *model.CurrentLoggedUserInfo) (employees []*model.Employee, err error)
 	UpdateBaseSalary(l logger.Logger, employeeID string, body UpdateBaseSalaryInput) (employee *model.BaseSalary, err error)
+	ListWithLocation() (employees []*model.Employee, err error)
 }

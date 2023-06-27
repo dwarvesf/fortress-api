@@ -242,3 +242,14 @@ func (s *store) GetByDiscordID(db *gorm.DB, discordID string) (*model.Employee, 
 	var employee *model.Employee
 	return employee, db.Joins("JOIN discord_accounts ON discord_accounts.id = employees.discord_account_id AND discord_accounts.discord_id = ?", discordID).Order("created_at").First(&employee).Error
 }
+
+// SimpleList get employees by query and pagination
+func (s *store) SimpleList(db *gorm.DB) ([]*model.Employee, error) {
+	var employees []*model.Employee
+
+	query := db.Where("deleted_at IS NULL AND working_status <> ?", model.WorkingStatusLeft).
+		Order("created_at").
+		Preload("DiscordAccount", "deleted_at IS NULL")
+
+	return employees, query.Find(&employees).Error
+}
