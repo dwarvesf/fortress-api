@@ -1,7 +1,6 @@
 package discord
 
 import (
-	"errors"
 	"fmt"
 	"math/rand"
 	"net/http"
@@ -10,9 +9,10 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
+	"github.com/dwarvesf/fortress-api/pkg/controller"
+	"github.com/dwarvesf/fortress-api/pkg/handler/discord/request"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service"
@@ -21,25 +21,26 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/store/employee"
 	"github.com/dwarvesf/fortress-api/pkg/store/onleaverequest"
-	"github.com/dwarvesf/fortress-api/pkg/utils/timeutil"
 	"github.com/dwarvesf/fortress-api/pkg/view"
 )
 
 type handler struct {
-	store   *store.Store
-	service *service.Service
-	logger  logger.Logger
-	repo    store.DBRepo
-	config  *config.Config
+	controller *controller.Controller
+	store      *store.Store
+	service    *service.Service
+	logger     logger.Logger
+	repo       store.DBRepo
+	config     *config.Config
 }
 
-func New(store *store.Store, repo store.DBRepo, service *service.Service, logger logger.Logger, cfg *config.Config) IHandler {
+func New(controller *controller.Controller, store *store.Store, repo store.DBRepo, service *service.Service, logger logger.Logger, cfg *config.Config) IHandler {
 	return &handler{
-		store:   store,
-		repo:    repo,
-		service: service,
-		logger:  logger,
-		config:  cfg,
+		controller: controller,
+		store:      store,
+		repo:       repo,
+		service:    service,
+		logger:     logger,
+		config:     cfg,
 	}
 }
 
@@ -240,49 +241,32 @@ func (h *handler) OnLeaveMessage(c *gin.Context) {
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))
 }
 
-// ReportBraineryMetrics reports brainery metrics
+// ReportBraineryMetrics reports brainery metrics to a channel
 func (h *handler) ReportBraineryMetrics(c *gin.Context) {
-
-	queryView := c.DefaultQuery("view", "weekly")
-	channelID := c.DefaultQuery("channelID", "810481888619135046")
-
-	// default is weekly
-	now := time.Now()
-	end := timeutil.GetEndDayOfWeek(now)
-	start := timeutil.GetStartDayOfWeek(now)
-	if queryView == "monthly" {
-		start = timeutil.FirstDayOfMonth(int(now.Month()), now.Year())
-		end = timeutil.LastDayOfMonth(int(now.Month()), now.Year())
+	body := request.BraineryReportInput{}
+	if err := c.ShouldBindJSON(&body); err != nil {
+		h.logger.Error(err, "failed to decode body")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, body, ""))
+		return
 	}
-
-	// latest 10 posts
-	latestPosts, err := h.store.BraineryLog.GetLimitByTimeRange(h.repo.DB(), &time.Time{}, &end, 10)
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		h.logger.Errorf(err, "failed to get latest posts by time range", "start", start, "end", end)
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+	if err := body.Validate(); err != nil {
+		h.logger.Errorf(err, "failed to validate data", "body", body)
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, body, ""))
 		return
 	}
 
-	// weekly posts
-	logs, err := h.store.BraineryLog.GetLimitByTimeRange(h.repo.DB(), &start, &end, 1000)
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		h.logger.Errorf(err, "failed to get logs by time range", "start", start, "end", end)
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+	latestPosts, logs, ncids, err := h.controller.BraineryLog.GetMetrics(body.View)
+	if err != nil {
+		h.logger.Error(err, "failed to get brainery metrics")
+		c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
 	}
 
-	// ncids = new contributor discord IDs
-	ncids, err := h.store.BraineryLog.GetNewContributorDiscordIDs(h.repo.DB(), &start, &end)
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		h.logger.Errorf(err, "failed to get new contributor discord IDs by time range", "start", start, "end", end)
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
-		return
-	}
+	metrics := view.ToBraineryMetric(latestPosts, logs, ncids, body.View)
 
 	//send message to Discord channel
 	var discordMsg *discordgo.Message
-	metric := view.ToBraineryMetric(latestPosts, logs, ncids, queryView)
-	discordMsg, err = h.service.Discord.ReportBraineryMetrics(queryView, &metric, channelID)
+	discordMsg, err = h.service.Discord.ReportBraineryMetrics(body.View, &metrics, body.ChannelID)
 	if err != nil {
 		h.logger.Error(err, "failed to report brainery metrics discord message")
 		c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, err, discordMsg, ""))

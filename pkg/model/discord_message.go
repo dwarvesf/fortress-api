@@ -1,5 +1,7 @@
 package model
 
+import "github.com/bwmarrin/discordgo"
+
 type DiscordMessage struct {
 	AvatarURL  string                     `json:"avatar_url"`
 	Content    string                     `json:"content"`
@@ -53,4 +55,13 @@ type DiscordMessageComponent struct {
 	Style    int64       `json:"style"`
 	Type     int64       `json:"type"`
 	URL      interface{} `json:"url"`
+}
+
+type OriginalDiscordMessage struct {
+	RawContent  string
+	ContentArgs []string
+	ChannelId   string
+	GuildId     string
+	Author      *discordgo.User
+	Roles       []string
 }

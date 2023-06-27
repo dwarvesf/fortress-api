@@ -28,5 +28,5 @@ type IService interface {
 	GetChannels() ([]*discordgo.Channel, error)
 	GetMessagesAfterCursor(channelID string, cursorMessageID string, lastMessageID string) ([]*discordgo.Message, error)
 	ReportBraineryMetrics(queryView string, braineryMetric *view.BraineryMetric, channelID string) (*discordgo.Message, error)
-	SendEmbededMessageWithChannel(embed *discordgo.MessageEmbed, channelId string) (*discordgo.Message, error)
+	SendEmbeddedMessageWithChannel(original *model.OriginalDiscordMessage, embed *discordgo.MessageEmbed, channelId string) (*discordgo.Message, error)
 }
