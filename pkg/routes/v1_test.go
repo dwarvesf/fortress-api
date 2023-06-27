@@ -645,6 +645,12 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/engagement.IHandler.IndexMessages-fm",
 			},
 		},
+		"/cronjobs/brainery-reports": {
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/discord.IHandler.ReportBraineryMetrics-fm",
+			},
+		},
 		"/webhooks/n8n": {
 			"POST": {
 				Method:  "POST",
