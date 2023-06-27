@@ -663,3 +663,46 @@ func ToBasicEmployeeInvitationData(in *model.EmployeeInvitation) *EmployeeInvita
 
 	return rs
 }
+
+type EmployeeLocationListResponse struct {
+	Data []EmployeeLocation `json:"data"`
+}
+
+type EmployeeLocation struct {
+	DiscordID   string          `json:"discordID"`
+	FullName    string          `json:"fullName"`
+	DisplayName string          `json:"displayName"`
+	Avatar      string          `json:"avatar"`
+	Address     EmployeeAddress `json:"address"`
+}
+type EmployeeAddress struct {
+	Address string `json:"address"`
+	Country string `json:"country"`
+	City    string `json:"city"`
+	Lat     string `json:"lat"`
+	Long    string `json:"long"`
+}
+
+func ToEmployeesWithLocation(in []*model.Employee) []EmployeeLocation {
+	rs := make([]EmployeeLocation, len(in))
+	for i, v := range in {
+		discordID := ""
+		if v.DiscordAccount != nil {
+			discordID = v.DiscordAccount.DiscordID
+		}
+		rs[i] = EmployeeLocation{
+			DiscordID:   discordID,
+			FullName:    v.FullName,
+			DisplayName: v.DisplayName,
+			Avatar:      v.Avatar,
+			Address: EmployeeAddress{
+				Address: v.City + ", " + v.Country,
+				Country: v.Country,
+				City:    v.City,
+				Lat:     v.Lat,
+				Long:    v.Long,
+			},
+		}
+	}
+	return rs
+}

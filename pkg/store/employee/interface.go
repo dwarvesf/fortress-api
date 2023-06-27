@@ -22,6 +22,7 @@ type IStore interface {
 	GetLineManagersOfPeers(db *gorm.DB, employeeID string) ([]*model.Employee, error)
 	GetMenteesByID(db *gorm.DB, employeeID string) ([]*model.Employee, error)
 	GetByDiscordID(db *gorm.DB, discordID string) (*model.Employee, error)
+	SimpleList(db *gorm.DB) ([]*model.Employee, error)
 
 	IsExist(db *gorm.DB, id string) (bool, error)
 

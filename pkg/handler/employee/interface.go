@@ -7,6 +7,7 @@ type IHandler interface {
 	Details(c *gin.Context)
 	GetLineManagers(c *gin.Context)
 	List(c *gin.Context)
+	ListWithLocation(c *gin.Context)
 	UpdateEmployeeStatus(c *gin.Context)
 	UpdateGeneralInfo(c *gin.Context)
 	UpdateSkills(c *gin.Context)
