@@ -6,4 +6,5 @@ type IHandler interface {
 	SyncDiscordInfo(c *gin.Context)
 	BirthdayDailyMessage(c *gin.Context)
 	OnLeaveMessage(c *gin.Context)
+	ReportBraineryMetrics(c *gin.Context)
 }

@@ -754,3 +754,30 @@ func (h *handler) UpdateBaseSalary(c *gin.Context) {
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToBaseSalary(emp), nil, nil, nil, ""))
 }
+
+// ListWithLocation godoc
+// @Summary Get employees list with location
+// @Description Get employees list with location
+// @Tags Employee
+// @Accept  json
+// @Produce  json
+// @Success 200 {object} view.EmployeeLocationListResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /public/employees [get]
+func (h *handler) ListWithLocation(c *gin.Context) {
+	l := h.logger.Fields(logger.Fields{
+		"handler": "employee",
+		"method":  "ListWithLocation",
+	})
+
+	employees, err := h.controller.Employee.ListWithLocation()
+	if err != nil {
+		l.Error(err, "failed to list employees")
+		errs.ConvertControllerErr(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToEmployeesWithLocation(employees), nil, nil, nil, ""))
+}

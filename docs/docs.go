@@ -306,6 +306,62 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.MessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/brainery-logs/metrics": {
+            "get": {
+                "description": "Get brainery metric",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Project"
+                ],
+                "summary": "Get brainery metric",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "jwt token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Time view",
+                        "name": "view",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.BraineryMetric"
+                        }
+                    },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
@@ -5508,6 +5564,47 @@ const docTemplate = `{
                 }
             }
         },
+        "/public/employees": {
+            "get": {
+                "description": "Get employees list with location",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Employee"
+                ],
+                "summary": "Get employees list with location",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/view.EmployeeLocationListResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/view.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/surveys": {
             "get": {
                 "description": "Get list event",
@@ -6345,6 +6442,20 @@ const docTemplate = `{
                 }
             }
         },
+        "model.City": {
+            "type": "object",
+            "properties": {
+                "lat": {
+                    "type": "string"
+                },
+                "long": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "model.Client": {
             "type": "object",
             "properties": {
@@ -6499,7 +6610,7 @@ const docTemplate = `{
                 "cities": {
                     "type": "array",
                     "items": {
-                        "type": "integer"
+                        "$ref": "#/definitions/model.City"
                     }
                 },
                 "code": {
@@ -9855,6 +9966,41 @@ const docTemplate = `{
                 }
             }
         },
+        "view.BraineryMetric": {
+            "type": "object",
+            "properties": {
+                "contributors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.Post"
+                    }
+                },
+                "latestPosts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.Post"
+                    }
+                },
+                "newContributors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.Post"
+                    }
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "topContributors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.TopContributor"
+                    }
+                }
+            }
+        },
         "view.Chapter": {
             "type": "object",
             "properties": {
@@ -10265,6 +10411,26 @@ const docTemplate = `{
                 }
             }
         },
+        "view.EmployeeAddress": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "city": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
+                "lat": {
+                    "type": "string"
+                },
+                "long": {
+                    "type": "string"
+                }
+            }
+        },
         "view.EmployeeContentData": {
             "type": "object",
             "properties": {
@@ -10488,6 +10654,43 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/view.EmployeeData"
+                    }
+                }
+            }
+        },
+        "view.EmployeeLocation": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "$ref": "#/definitions/view.EmployeeAddress"
+                },
+                "avatar": {
+                    "type": "string"
+                },
+                "chapters": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.Chapter"
+                    }
+                },
+                "discordID": {
+                    "type": "string"
+                },
+                "displayName": {
+                    "type": "string"
+                },
+                "fullName": {
+                    "type": "string"
+                }
+            }
+        },
+        "view.EmployeeLocationListResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.EmployeeLocation"
                     }
                 }
             }
@@ -11422,6 +11625,26 @@ const docTemplate = `{
                 }
             }
         },
+        "view.Post": {
+            "type": "object",
+            "properties": {
+                "discordID": {
+                    "type": "string"
+                },
+                "publishedAt": {
+                    "type": "string"
+                },
+                "reward": {
+                    "type": "number"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
         "view.ProfileData": {
             "type": "object",
             "properties": {
@@ -12136,6 +12359,20 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/view.SurveyTopicDetail"
+                }
+            }
+        },
+        "view.TopContributor": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "discordID": {
+                    "type": "string"
+                },
+                "ranking": {
+                    "type": "integer"
                 }
             }
         },

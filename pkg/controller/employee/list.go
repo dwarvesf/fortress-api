@@ -57,3 +57,12 @@ func (r *controller) List(workingStatuses []string, body GetListEmployeeInput, u
 
 	return employees, total, nil
 }
+
+func (r *controller) ListWithLocation() ([]*model.Employee, error) {
+	employees, err := r.store.Employee.SimpleList(r.repo.DB())
+	if err != nil {
+		return nil, err
+	}
+
+	return employees, nil
+}

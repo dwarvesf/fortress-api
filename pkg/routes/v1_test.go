@@ -645,6 +645,12 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/engagement.IHandler.IndexMessages-fm",
 			},
 		},
+		"/cronjobs/brainery-reports": {
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/discord.IHandler.ReportBraineryMetrics-fm",
+			},
+		},
 		"/webhooks/n8n": {
 			"POST": {
 				Method:  "POST",
@@ -815,6 +821,12 @@ func Test_loadV1Routes(t *testing.T) {
 			"POST": {
 				Method:  "POST",
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/brainerylogs.IHandler.Sync-fm",
+			},
+		},
+		"/api/v1/public/employees": {
+			"GET": {
+				Method:  "GET",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/employee.IHandler.ListWithLocation-fm",
 			},
 		},
 	}

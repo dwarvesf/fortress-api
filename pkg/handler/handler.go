@@ -39,6 +39,7 @@ type Handler struct {
 	Audit       audit.IHandler
 	Auth        auth.IHandler
 	BankAccount bankaccount.IHandler
+	BraineryLog brainerylogs.IHandler
 	Client      client.IHandler
 	Dashboard   dashboard.IHandler
 	Discord     discord.IHandler
@@ -56,7 +57,6 @@ type Handler struct {
 	Valuation   valuation.IHandler
 	Webhook     webhook.IHandler
 	Vault       vault.IHandler
-	BraineryLog brainerylogs.IHandler
 }
 
 func New(store *store.Store, repo store.DBRepo, service *service.Service, ctrl *controller.Controller, worker *worker.Worker, logger logger.Logger, cfg *config.Config) *Handler {
@@ -66,9 +66,10 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, ctrl *
 		Audit:       audit.New(store, repo, service, logger, cfg),
 		Auth:        auth.New(ctrl, logger, cfg),
 		BankAccount: bankaccount.New(store, repo, service, logger, cfg),
+		BraineryLog: brainerylogs.New(ctrl, store, repo, service, logger, cfg),
 		Client:      client.New(ctrl, store, repo, service, logger, cfg),
 		Dashboard:   dashboard.New(store, repo, service, logger, cfg, util.New()),
-		Discord:     discord.New(store, repo, service, logger, cfg),
+		Discord:     discord.New(ctrl, store, repo, service, logger, cfg),
 		Employee:    employee.New(ctrl, store, repo, service, logger, cfg),
 		Engagement:  engagement.New(ctrl, store, repo, service, logger, cfg),
 		Feedback:    feedback.New(store, repo, service, logger, cfg),
@@ -83,6 +84,5 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, ctrl *
 		Valuation:   valuation.New(store, repo, service, logger, cfg),
 		Webhook:     webhook.New(ctrl, store, repo, service, logger, cfg, worker),
 		Vault:       vault.New(store, repo, service, logger, cfg),
-		BraineryLog: brainerylogs.New(store, repo, service, logger, cfg),
 	}
 }
