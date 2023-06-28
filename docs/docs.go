@@ -12,9 +12,9 @@ const docTemplate = `{
         "title": "{{.Title}}",
         "termsOfService": "http://swagger.io/terms/",
         "contact": {
-            "name": "API Support",
-            "url": "http://www.swagger.io/support",
-            "email": "support@swagger.io"
+            "name": "Nam Nguyen",
+            "url": "https://d.foundation",
+            "email": "benjamin@d.foundation"
         },
         "license": {
             "name": "Apache 2.0",
@@ -13132,12 +13132,12 @@ const docTemplate = `{
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "1.0",
+	Version:          "v0.1.36",
 	Host:             "",
 	BasePath:         "/api/v1",
 	Schemes:          []string{},
-	Title:            "Swagger Example API",
-	Description:      "This is a sample server celler server.",
+	Title:            "FORTRESS API DOCUMENT",
+	Description:      "This is api document for fortress project.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 }

@@ -1,19 +1,19 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "This is a sample server celler server.",
-        "title": "Swagger Example API",
+        "description": "This is api document for fortress project.",
+        "title": "FORTRESS API DOCUMENT",
         "termsOfService": "http://swagger.io/terms/",
         "contact": {
-            "name": "API Support",
-            "url": "http://www.swagger.io/support",
-            "email": "support@swagger.io"
+            "name": "Nam Nguyen",
+            "url": "https://d.foundation",
+            "email": "benjamin@d.foundation"
         },
         "license": {
             "name": "Apache 2.0",
             "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
         },
-        "version": "1.0"
+        "version": "v0.1.36"
     },
     "basePath": "/api/v1",
     "paths": {
