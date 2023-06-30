@@ -129,3 +129,14 @@ INSERT INTO public.social_accounts (id, deleted_at, created_at, updated_at, empl
 ('338f9f5c-fa3b-442a-a72f-c33b9040c9f3', NULL, '2023-02-01 23:35:58.650083', '2023-02-01 23:35:58.650083', '02c7c4d7-a4f6-47cd-8111-570e4a4a4fb7', 'linkedin', 'Hien Le', NULL, 'Hien Le'),
 ('df704e6d-23c8-4e81-bcf3-aa7793eb767c', NULL, '2023-02-01 23:35:58.650083', '2023-02-01 23:35:58.650083', 'bc075c77-788f-4577-a322-f4db31249530', 'linkedin', 'Hoang Nguyen', NULL, 'Hoang Nguyen'),
 ('25a22d62-afa6-4629-aa2f-1f41e6045d76', NULL, '2023-02-01 23:35:58.650083', '2023-02-01 23:35:58.650083', '347745af-3523-43e2-bb08-1ad5a433cc9e', 'linkedin', 'Nam Nguyen', NULL, 'Nam Nguyen');
+
+INSERT INTO discord_accounts (id, deleted_at, created_at, updated_at, discord_id, username)
+SELECT id, deleted_at, created_at, updated_at, account_id, name
+FROM social_accounts
+WHERE type = 'discord';
+
+UPDATE employees e
+SET discord_account_id = da.id
+    FROM discord_accounts da
+JOIN social_accounts sa ON da.discord_id = sa.account_id
+WHERE sa.type = 'discord' and e.id = sa.employee_id;

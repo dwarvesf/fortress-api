@@ -1,5 +1,4 @@
 -- +migrate Up
-
 -- +migrate StatementBegin
 DO $$ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'enum_icy_txn_category') THEN
@@ -20,12 +19,6 @@ CREATE TABLE IF NOT EXISTS "icy_transactions" (
   "amount" numeric NOT NULL DEFAULT 0,
   "note" text
 );
-
-ALTER TABLE
-  audiences
-ADD
-  column unsub_at TIMESTAMP default null;
-
 -- +migrate Down
 
 DROP TABLE icy_transactions;

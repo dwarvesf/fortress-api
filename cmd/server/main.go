@@ -20,14 +20,14 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/worker"
 )
 
-// @title           Swagger Example API
-// @version         1.0
-// @description     This is a sample server celler server.
+// @title           FORTRESS API DOCUMENT
+// @version         v0.1.36
+// @description     This is api document for fortress project.
 // @termsOfService  http://swagger.io/terms/
 
-// @contact.name   API Support
-// @contact.url    http://www.swagger.io/support
-// @contact.email  support@swagger.io
+// @contact.name   Nam Nguyen
+// @contact.url    https://d.foundation
+// @contact.email  benjamin@d.foundation
 
 // @license.name  Apache 2.0
 // @license.url   http://www.apache.org/licenses/LICENSE-2.0.html
