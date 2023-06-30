@@ -6,11 +6,6 @@
         "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
         "gender": "Male",
         "birthday": "1990-01-02T00:00:00Z",
-        "wiseRecipientID": "",
-        "wiseRecipientEmail": "",
-        "wiseRecipientName": "",
-        "wiseAccountNumber": "",
-        "wiseCurrency": "",
         "teamEmail": "thanh@d.foundation",
         "personalEmail": "thanhpham123@gmail.com",
         "phoneNumber": "0123456788",
@@ -18,8 +13,8 @@
         "notionID": "39523061",
         "notionName": "notionName",
         "notionEmail": "",
-        "discordID": "100000000000000006",
-        "discordName": "discordName",
+        "discordID": "",
+        "discordName": "",
         "username": "thanh",
         "placeOfResidence": "",
         "address": "Tan Binh District, Ho Chi Minh, Vietnam",
@@ -32,6 +27,11 @@
                 "code": "admin",
                 "name": "⚪️ Admin"
             }
-        ]
+        ],
+        "wiseRecipientID": "",
+        "wiseAccountNumber": "",
+        "wiseRecipientEmail": "",
+        "wiseRecipientName": "",
+        "wiseCurrency": ""
     }
 }
