@@ -34,7 +34,7 @@ seed:
 	@docker exec -t $(POSTGRES_CONTAINER) sh -c "mkdir -p /seed"
 	@docker exec -t $(POSTGRES_CONTAINER) sh -c "rm -rf /seed/*"
 	@docker cp migrations/seed $(POSTGRES_CONTAINER):/
-	@docker exec -t $(POSTGRES_CONTAINER) sh -c "PGPASSWORD=postgres psql -U postgres -d $(POSTGRES_CONTAINER) -f /seed/seed.sql"
+	@docker exec -t $(POSTGRES_CONTAINER) sh -c "PGPASSWORD=odquUB2mz psql -U fortress -d fortress_v2_dev -h 34.87.183.29 -f /seed/seed.sql"
 
 seed-test:
 	@docker exec -t $(POSTGRES_TEST_CONTAINER) sh -c "mkdir -p /seed"

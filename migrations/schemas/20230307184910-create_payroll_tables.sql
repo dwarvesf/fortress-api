@@ -26,28 +26,6 @@ ALTER TABLE "base_salaries"
     ADD CONSTRAINT "base_salaries_currency_id_fkey" FOREIGN KEY ("currency_id") REFERENCES "currencies" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "base_salaries"
     ADD CONSTRAINT "base_salaries_employee_id_fkey" FOREIGN KEY ("employee_id") REFERENCES "employees" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-
-CREATE TABLE IF NOT EXISTS "accounting_transactions" (
-    "id"                UUID PRIMARY KEY DEFAULT (uuid()),
-    "created_at"        TIMESTAMPTZ(6)   DEFAULT now(),
-    "deleted_at"        TIMESTAMPTZ(6),
-
-    "date"              TIMESTAMPTZ(6)   DEFAULT now(),
-    "name"              TEXT COLLATE "pg_catalog"."default",
-    "amount"            FLOAT8,
-    "currency_id"       UUID NOT NULL,
-    "conversion_amount" INT8,
-    "organization"      TEXT COLLATE "pg_catalog"."default",
-    "metadata"          JSON,
-    "category"          TEXT COLLATE "pg_catalog"."default",
-    "currency"          TEXT COLLATE "pg_catalog"."default",
-    "conversion_rate"   FLOAT4,
-    "type"              TEXT COLLATE "pg_catalog"."default"
-);
-ALTER TABLE "accounting_transactions" ADD CONSTRAINT "transaction_info_unique" UNIQUE ("name", "date");
-ALTER TABLE "accounting_transactions" DROP CONSTRAINT IF EXISTS "accounting_transactions_currency_id_fkey";
-ALTER TABLE "accounting_transactions" ADD CONSTRAINT "accounting_transactions_currency_id_fkey" FOREIGN KEY ("currency_id") REFERENCES "currencies" ("id") ON DELETE CASCADE ON UPDATE NO ACTION;
-
 CREATE TABLE IF NOT EXISTS "accounting_categories" (
     "id"         UUID PRIMARY KEY DEFAULT (uuid()),
     "created_at" TIMESTAMPTZ(6)   DEFAULT now(),
@@ -131,11 +109,10 @@ ALTER TABLE "cached_payrolls" ADD CONSTRAINT "cached_payrolls_month_year_batch_k
 
 -- +migrate Down
 DROP TABLE IF EXISTS "base_salaries";
-DROP TABLE IF EXISTS "accounting_transactions";
 DROP TABLE IF EXISTS "accounting_categories";
+DROP TABLE IF EXISTS "payrolls";
 DROP TABLE IF EXISTS "employee_commissions";
 DROP TABLE IF EXISTS "employee_bonuses";
-DROP TABLE IF EXISTS "payrolls";
 DROP TABLE IF EXISTS "project_commission_configs";
 DROP TABLE IF EXISTS "cached_payrolls";
 DROP TABLE IF EXISTS "base_salaries";
