@@ -68,8 +68,6 @@ UPDATE
             unnest(to_tsvector(fn_remove_vietnamese_accents(LOWER(COALESCE(c. "full_name", '') || ' ' || COALESCE(c. "team_email", '') || ' ' || COALESCE(c. "discord_id", '') || ' ' || COALESCE(c. "notion_id", '') || ' ' || COALESCE(c. "github_id", '') || ' ' || COALESCE(c. "notion_name", '') || ' ' || COALESCE(c. "discord_name", ''))))),
             generate_series(1, length(lexeme)) len));
 
-
-
 -- +migrate Down
 DROP TRIGGER IF EXISTS trig_insert_keyword_vector ON employees;
 DROP FUNCTION fn_insert_keyword_vector;

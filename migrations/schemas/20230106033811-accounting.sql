@@ -1,52 +1,54 @@
 -- +migrate Up
+CREATE TABLE IF NOT EXISTS "accounting_transactions" (
+    "id"                UUID NOT NULL DEFAULT UUID(),
+    "created_at"        TIMESTAMP(6)  DEFAULT NOW(),
+    "deleted_at"        TIMESTAMP(6),
 
-CREATE TABLE if not exists "accounting_transactions" (
-    "id" uuid NOT NULL DEFAULT uuid(),
-    "created_at" timestamp(8) DEFAULT now(),
-    "deleted_at" timestamp(8),
-    "date" timestamp(8) DEFAULT now(),
-    "name" text,
-    "amount" float8,
-    "currency_id" uuid NOT NULL,
-    "conversion_amount" int8,
-    "organization" text,
-    "metadata" json,
-    "category" text,
-    "currency" text,
-    "conversion_rate" float4,
-    "type" text,
-    CONSTRAINT "accounting_transactions_currency_id_fkey" FOREIGN KEY ("currency_id") REFERENCES "currencies"("id") ON DELETE CASCADE,
+    "date"              TIMESTAMP(6)  DEFAULT NOW(),
+    "name"              TEXT,
+    "amount"            FLOAT8,
+    "currency_id"       UUID NOT NULL,
+    "conversion_amount" INT8,
+    "organization"      TEXT,
+    "metadata"          JSON,
+    "category"          TEXT,
+    "currency"          TEXT,
+    "conversion_rate"   FLOAT8,
+    "type"              TEXT,
     PRIMARY KEY ("id")
 );
 
-create table if not exists "assets" (
-    "id" uuid primary key NOT NULL DEFAULT uuid(),
-    "created_at" timestamp(8) DEFAULT now(),
-    "deleted_at" timestamp(8),
-    "name" text,
-    "quantity" text,
-    "price" int8,
-    "currency_id" uuid,
-    "location" text,
-    "used_by" uuid,
+ALTER TABLE "accounting_transactions" ADD CONSTRAINT "accounting_transactions_currency_id_fkey" FOREIGN KEY ("currency_id") REFERENCES "currencies" ("id") ON DELETE CASCADE ON UPDATE NO ACTION;
+ALTER TABLE "accounting_transactions" ADD CONSTRAINT "transaction_info_unique" UNIQUE ("name", "date");
+
+CREATE TABLE IF NOT EXISTS "assets" (
+    "id"           UUID PRIMARY KEY NOT NULL DEFAULT UUID(),
+    "created_at"   TIMESTAMP(6)              DEFAULT NOW(),
+    "deleted_at"   TIMESTAMP(6),
+    "name"         TEXT,
+    "quantity"     TEXT,
+    "price"        INT8,
+    "currency_id"  UUID,
+    "location"     TEXT,
+    "used_by"      UUID,
     "purchased_at" date,
-    "note" text,
-    CONSTRAINT "assets_currency_id_fkey" FOREIGN KEY ("currency_id") REFERENCES "currencies"("id") ON DELETE CASCADE,
-    CONSTRAINT "assets_used_by_fkey" FOREIGN KEY ("used_by") REFERENCES "employees"("id") ON DELETE CASCADE
+    "note"         TEXT,
+    CONSTRAINT "assets_currency_id_fkey" FOREIGN KEY ("currency_id") REFERENCES "currencies" ("id") ON DELETE CASCADE,
+    CONSTRAINT "assets_used_by_fkey" FOREIGN KEY ("used_by") REFERENCES "employees" ("id") ON DELETE CASCADE
 );
 
-create table if not exists "liabilities" (
-    "id" uuid primary key NOT NULL DEFAULT uuid(),
-    "created_at" timestamp(8) DEFAULT now(),
-    "deleted_at" timestamp(8),
-    "paid_at" timestamp(8),
-    "name" text,
-    "total" float8,
-    "currency_id" uuid,
-    CONSTRAINT "liabilities_currency_id_fkey" FOREIGN KEY ("currency_id") REFERENCES "currencies"("id") ON DELETE CASCADE
+CREATE TABLE IF NOT EXISTS "liabilities" (
+    "id"          UUID PRIMARY KEY NOT NULL DEFAULT UUID(),
+    "created_at"  TIMESTAMP(6)              DEFAULT NOW(),
+    "deleted_at"  TIMESTAMP(6),
+    "paid_at"     TIMESTAMP(6),
+    "name"        TEXT,
+    "total"       FLOAT8,
+    "currency_id" UUID,
+    CONSTRAINT "liabilities_currency_id_fkey" FOREIGN KEY ("currency_id") REFERENCES "currencies" ("id") ON DELETE CASCADE
 );
 
 -- +migrate Down
-drop table "accounting_transactions";
-drop table "assets";
-drop table "liabilities";
+DROP TABLE "accounting_transactions";
+DROP TABLE "assets";
+DROP TABLE "liabilities";

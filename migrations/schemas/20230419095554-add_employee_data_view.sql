@@ -50,5 +50,4 @@ CREATE OR REPLACE VIEW vw_employees_project_charge_rates AS
 
 -- +migrate Down
 DROP VIEW vw_employee_count_by_chapter;
-DROP VIEW vw_employees_recently_joined;
 DROP VIEW vw_employees_project_charge_rates;

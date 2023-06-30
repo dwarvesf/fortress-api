@@ -17,4 +17,3 @@ ALTER TABLE "employees" DROP COLUMN "notion_email";
 ALTER TABLE "employees" DROP COLUMN "linkedin_name";
 
 ALTER TABLE "employees" ALTER COLUMN "gender" SET NOT NULL;
-ALTER TABLE "employees" ALTER COLUMN "avatar" SET NOT NULL;

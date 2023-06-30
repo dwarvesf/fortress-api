@@ -479,11 +479,13 @@ func TestHandler_GetEngagementInfo(t *testing.T) {
 		wantErr          error
 		wantResponsePath string
 		query            string
+		dataSeeding      bool
 	}{
 		{
 			name:             "happy_case",
 			wantCode:         http.StatusOK,
 			wantResponsePath: "testdata/engagement_info/200.json",
+			dataSeeding:      true,
 		},
 		{
 			name:             "no_record",
@@ -494,7 +496,9 @@ func TestHandler_GetEngagementInfo(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
-				testhelper.LoadTestSQLFile(t, txRepo, fmt.Sprintf("./testdata/engagement_info/%s.sql", tt.name))
+				if tt.dataSeeding {
+					testhelper.LoadTestSQLFile(t, txRepo, fmt.Sprintf("./testdata/engagement_info/%s.sql", tt.name))
+				}
 				w := httptest.NewRecorder()
 				ctx, _ := gin.CreateTestContext(w)
 				ctx.Request = httptest.NewRequest(http.MethodGet, "/api/v1/dashboards/enagagement/info", nil)
@@ -552,7 +556,7 @@ func TestHandler_GetEngagementInfoDetail(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			testhelper.TestWithTxDB(t, func(txRepo store.DBRepo) {
 				if tt.wantCode == http.StatusOK {
-					testhelper.LoadTestSQLFile(t, txRepo, fmt.Sprintf("./testdata/engagement_info/%s.sql", tt.name))
+					testhelper.LoadTestSQLFile(t, txRepo, fmt.Sprintf("./testdata/engagement_info_detail/%s.sql", tt.name))
 				}
 				w := httptest.NewRecorder()
 				ctx, _ := gin.CreateTestContext(w)

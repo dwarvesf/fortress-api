@@ -16,7 +16,12 @@
         {
           "field": "Staff",
           "startDate": "2022-10-01T00:00:00Z",
-          "point": 2.87
+          "point": 3.14
+        },
+        {
+          "field": "Fresher",
+          "startDate": "2022-10-01T00:00:00Z",
+          "point": 3.5
         },
         {
           "field": "Junior",
@@ -29,6 +34,11 @@
       "questionID": "41db6b66-6942-43b3-b1fc-568ba4579762",
       "stats": [
         {
+          "field": "Junior",
+          "startDate": "2022-10-01T00:00:00Z",
+          "point": 3
+        },
+        {
           "field": "Mid",
           "startDate": "2022-10-01T00:00:00Z",
           "point": 3
@@ -41,12 +51,12 @@
         {
           "field": "Staff",
           "startDate": "2022-10-01T00:00:00Z",
-          "point": 3.25
+          "point": 3.14
         },
         {
-          "field": "Junior",
+          "field": "Fresher",
           "startDate": "2022-10-01T00:00:00Z",
-          "point": 3.66
+          "point": 5
         }
       ]
     },
@@ -59,9 +69,14 @@
           "point": 2.33
         },
         {
+          "field": "Fresher",
+          "startDate": "2022-10-01T00:00:00Z",
+          "point": 3
+        },
+        {
           "field": "Junior",
           "startDate": "2022-10-01T00:00:00Z",
-          "point": 2.83
+          "point": 3
         },
         {
           "field": "Mid",
@@ -71,7 +86,7 @@
         {
           "field": "Staff",
           "startDate": "2022-10-01T00:00:00Z",
-          "point": 3.12
+          "point": 3
         }
       ]
     },
@@ -79,19 +94,24 @@
       "questionID": "6c6bf3d6-46cd-46d3-9ea6-f382a5052588",
       "stats": [
         {
+          "field": "Junior",
+          "startDate": "2022-10-01T00:00:00Z",
+          "point": 1
+        },
+        {
+          "field": "Staff",
+          "startDate": "2022-10-01T00:00:00Z",
+          "point": 1.85
+        },
+        {
           "field": "Mid",
           "startDate": "2022-10-01T00:00:00Z",
           "point": 2
         },
         {
-          "field": "Staff",
+          "field": "Fresher",
           "startDate": "2022-10-01T00:00:00Z",
-          "point": 2
-        },
-        {
-          "field": "Junior",
-          "startDate": "2022-10-01T00:00:00Z",
-          "point": 2.16
+          "point": 2.5
         },
         {
           "field": "Senior",
@@ -104,9 +124,9 @@
       "questionID": "729cf731-ba4c-4b62-8aa6-8f4a9f4507b8",
       "stats": [
         {
-          "field": "Junior",
+          "field": "Fresher",
           "startDate": "2022-10-01T00:00:00Z",
-          "point": 1.83
+          "point": 2
         },
         {
           "field": "Mid",
@@ -114,14 +134,19 @@
           "point": 2.33
         },
         {
-          "field": "Staff",
+          "field": "Junior",
           "startDate": "2022-10-01T00:00:00Z",
-          "point": 2.87
+          "point": 2.5
         },
         {
           "field": "Senior",
           "startDate": "2022-10-01T00:00:00Z",
           "point": 3
+        },
+        {
+          "field": "Staff",
+          "startDate": "2022-10-01T00:00:00Z",
+          "point": 3.14
         }
       ]
     },
@@ -141,23 +166,23 @@
         {
           "field": "Junior",
           "startDate": "2022-10-01T00:00:00Z",
-          "point": 2.66
+          "point": 2.5
         },
         {
           "field": "Mid",
           "startDate": "2022-10-01T00:00:00Z",
           "point": 2.66
+        },
+        {
+          "field": "Fresher",
+          "startDate": "2022-10-01T00:00:00Z",
+          "point": 3.5
         }
       ]
     },
     {
       "questionID": "8d5f0723-e867-430e-82fc-26f8809140b2",
       "stats": [
-        {
-          "field": "Staff",
-          "startDate": "2022-10-01T00:00:00Z",
-          "point": 2.5
-        },
         {
           "field": "Mid",
           "startDate": "2022-10-01T00:00:00Z",
@@ -169,9 +194,19 @@
           "point": 2.66
         },
         {
+          "field": "Staff",
+          "startDate": "2022-10-01T00:00:00Z",
+          "point": 3
+        },
+        {
           "field": "Junior",
           "startDate": "2022-10-01T00:00:00Z",
-          "point": 3.83
+          "point": 3.5
+        },
+        {
+          "field": "Fresher",
+          "startDate": "2022-10-01T00:00:00Z",
+          "point": 5
         }
       ]
     },
@@ -186,12 +221,17 @@
         {
           "field": "Staff",
           "startDate": "2022-10-01T00:00:00Z",
-          "point": 2.62
+          "point": 2.42
         },
         {
           "field": "Junior",
           "startDate": "2022-10-01T00:00:00Z",
-          "point": 3.33
+          "point": 3
+        },
+        {
+          "field": "Fresher",
+          "startDate": "2022-10-01T00:00:00Z",
+          "point": 4
         },
         {
           "field": "Senior",
@@ -211,23 +251,38 @@
         {
           "field": "Staff",
           "startDate": "2022-10-01T00:00:00Z",
-          "point": 3.12
+          "point": 2.42
         },
         {
           "field": "Junior",
           "startDate": "2022-10-01T00:00:00Z",
-          "point": 3.16
+          "point": 2.5
         },
         {
           "field": "Mid",
           "startDate": "2022-10-01T00:00:00Z",
           "point": 3.33
+        },
+        {
+          "field": "Fresher",
+          "startDate": "2022-10-01T00:00:00Z",
+          "point": 4.5
         }
       ]
     },
     {
       "questionID": "c7f2081a-11e6-4a2e-9e0c-852faaaf3d16",
       "stats": [
+        {
+          "field": "Junior",
+          "startDate": "2022-10-01T00:00:00Z",
+          "point": 2
+        },
+        {
+          "field": "Fresher",
+          "startDate": "2022-10-01T00:00:00Z",
+          "point": 2.5
+        },
         {
           "field": "Mid",
           "startDate": "2022-10-01T00:00:00Z",
@@ -236,12 +291,7 @@
         {
           "field": "Staff",
           "startDate": "2022-10-01T00:00:00Z",
-          "point": 2.75
-        },
-        {
-          "field": "Junior",
-          "startDate": "2022-10-01T00:00:00Z",
-          "point": 3
+          "point": 2.71
         },
         {
           "field": "Senior",
@@ -254,14 +304,19 @@
       "questionID": "edb5f946-1d2b-4029-9b1f-57483e92be60",
       "stats": [
         {
+          "field": "Junior",
+          "startDate": "2022-10-01T00:00:00Z",
+          "point": 1.5
+        },
+        {
           "field": "Senior",
           "startDate": "2022-10-01T00:00:00Z",
           "point": 2.33
         },
         {
-          "field": "Junior",
+          "field": "Staff",
           "startDate": "2022-10-01T00:00:00Z",
-          "point": 2.5
+          "point": 2.71
         },
         {
           "field": "Mid",
@@ -269,9 +324,9 @@
           "point": 3
         },
         {
-          "field": "Staff",
+          "field": "Fresher",
           "startDate": "2022-10-01T00:00:00Z",
-          "point": 3
+          "point": 4
         }
       ]
     },
@@ -284,14 +339,19 @@
           "point": 2
         },
         {
-          "field": "Junior",
-          "startDate": "2022-10-01T00:00:00Z",
-          "point": 2.66
-        },
-        {
           "field": "Staff",
           "startDate": "2022-10-01T00:00:00Z",
-          "point": 2.75
+          "point": 2.57
+        },
+        {
+          "field": "Fresher",
+          "startDate": "2022-10-01T00:00:00Z",
+          "point": 3
+        },
+        {
+          "field": "Junior",
+          "startDate": "2022-10-01T00:00:00Z",
+          "point": 3
         },
         {
           "field": "Senior",
