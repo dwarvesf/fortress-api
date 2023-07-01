@@ -1,6 +1,9 @@
 package view
 
-import "github.com/dwarvesf/fortress-api/pkg/model"
+import (
+	"github.com/dwarvesf/fortress-api/pkg/model"
+	"strconv"
+)
 
 type CreateClientResponse struct {
 	Data *model.Client `json:"data"`
@@ -43,4 +46,55 @@ func toClient(client *model.Client) *Client {
 		Website:            client.Website,
 		Contacts:           contacts,
 	}
+}
+
+type Address struct {
+	Address string `json:"address"`
+	Country string `json:"country"`
+	City    string `json:"city"`
+	Lat     string `json:"lat"`
+	Long    string `json:"long"`
+}
+
+type PublicClient struct {
+	ID           string   `json:"id"`
+	Address      Address  `json:"address"`
+	Stack        []string `json:"stacks"`
+	Industry     string   `json:"industry"`
+	CompanySize  string   `json:"companySize"`
+	SolutionType string   `json:"solutionType"`
+}
+
+type PublicClientListResponse struct {
+	Data []PublicClient `json:"data"`
+}
+
+func ToPublicClientListResponse(clients []*model.Client) []PublicClient {
+	rs := make([]PublicClient, 0, len(clients))
+	for _, client := range clients {
+		stacks := make([]string, 0)
+
+		for _, p := range client.Projects {
+			for _, s := range p.ProjectStacks {
+				stacks = append(stacks, s.Stack.Name)
+			}
+		}
+
+		rs = append(rs, PublicClient{
+			ID: client.ID.String(),
+			Address: Address{
+				Address: client.City + ", " + client.Country,
+				City:    client.City,
+				Country: client.Country,
+				Lat:     client.Lat,
+				Long:    client.Long,
+			},
+			Stack:        stacks,
+			Industry:     client.Industry,
+			CompanySize:  strconv.Itoa(client.CompanySize),
+			SolutionType: client.SolutionType,
+		})
+	}
+
+	return rs
 }

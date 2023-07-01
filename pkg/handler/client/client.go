@@ -80,7 +80,6 @@ func (h *handler) Create(c *gin.Context) {
 // @Accept  json
 // @Produce  json
 // @Param Authorization header string true "jwt token"
-// @Param Body body request.CreateClientInput true "Body"
 // @Success 200 {object} view.GetListClientResponse
 // @Failure 500 {object} view.ErrorResponse
 // @Router /clients [get]
@@ -213,4 +212,30 @@ func (h *handler) Delete(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))
+}
+
+// PublicList godoc
+// @Summary Get all clients
+// @Description Get all clients
+// @Tags Client
+// @Accept  json
+// @Produce  json
+// @Param Authorization header string true "jwt token"
+// @Success 200 {object} view.PublicClientListResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /clients [get]
+func (h *handler) PublicList(c *gin.Context) {
+	l := h.logger.Fields(logger.Fields{
+		"handler": "client",
+		"method":  "PublicList",
+	})
+
+	clients, err := h.controller.Client.PublicList(c)
+	if err != nil {
+		l.Error(err, "failed to get client list")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToPublicClientListResponse(clients), nil, nil, nil, ""))
 }
