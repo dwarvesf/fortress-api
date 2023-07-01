@@ -10,12 +10,12 @@ ALTER TABLE employees DROP COLUMN notion_name;
 ALTER TABLE employees DROP COLUMN notion_email;
 ALTER TABLE employees DROP COLUMN linkedin_name;
 
--- +migrate StatementBegin
 CREATE OR REPLACE VIEW vw_employees_recently_joined AS
 SELECT *
 FROM employees
 WHERE joined_date BETWEEN CURRENT_DATE - INTERVAL '7 days' AND CURRENT_DATE;
 
+-- +migrate StatementBegin
 CREATE OR REPLACE FUNCTION public.fn_insert_keyword_vector ()
 	RETURNS TRIGGER
 	LANGUAGE plpgsql
@@ -51,7 +51,7 @@ SET "keyword_vector" = array_to_tsvector ((
                     )
             ),
         generate_series(1, length(lexeme)) len))
-WHERE 1 = 1;
+WHERE TRUE;
 
 -- +migrate Down
 ALTER TABLE employees ADD COLUMN gitlab_id TEXT;
@@ -99,4 +99,5 @@ SET
                                 )
                         )
                 ),
-            generate_series(1, length(lexeme)) len));
+            generate_series(1, length(lexeme)) len))
+WHERE TRUE;
