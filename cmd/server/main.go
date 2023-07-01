@@ -21,7 +21,7 @@ import (
 )
 
 // @title           FORTRESS API DOCUMENT
-// @version         v0.1.36
+// @version         v0.1.39
 // @description     This is api document for fortress project.
 // @termsOfService  http://swagger.io/terms/
 
