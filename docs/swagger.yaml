@@ -4573,7 +4573,7 @@ info:
     url: http://www.apache.org/licenses/LICENSE-2.0.html
   termsOfService: http://swagger.io/terms/
   title: FORTRESS API DOCUMENT
-  version: v0.1.36
+  version: v0.1.39
 paths:
   /assets/upload:
     post:
