@@ -8,4 +8,6 @@ type IHandler interface {
 	Detail(c *gin.Context)
 	Update(c *gin.Context)
 	Delete(c *gin.Context)
+
+	PublicList(c *gin.Context)
 }

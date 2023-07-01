@@ -8,6 +8,8 @@
         "RegistrationNumber": "456",
         "Address": "CA",
         "Country": "USA",
+        "Lat": "",
+        "Long": "",
         "Industry": "education",
         "Website": "b.com",
         "Contacts": [

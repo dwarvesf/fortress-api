@@ -397,22 +397,13 @@ const docTemplate = `{
                         "name": "Authorization",
                         "in": "header",
                         "required": true
-                    },
-                    {
-                        "description": "Body",
-                        "name": "Body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/request.CreateClientInput"
-                        }
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/view.GetListClientResponse"
+                            "$ref": "#/definitions/view.PublicClientListResponse"
                         }
                     },
                     "500": {
@@ -6462,6 +6453,12 @@ const docTemplate = `{
                 "address": {
                     "type": "string"
                 },
+                "city": {
+                    "type": "string"
+                },
+                "companySize": {
+                    "type": "integer"
+                },
                 "contacts": {
                     "type": "array",
                     "items": {
@@ -6486,10 +6483,28 @@ const docTemplate = `{
                 "industry": {
                     "type": "string"
                 },
+                "isPublic": {
+                    "type": "boolean"
+                },
+                "lat": {
+                    "type": "string"
+                },
+                "long": {
+                    "type": "string"
+                },
                 "name": {
                     "type": "string"
                 },
+                "projects": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Project"
+                    }
+                },
                 "registrationNumber": {
+                    "type": "string"
+                },
+                "solutionType": {
                     "type": "string"
                 },
                 "updatedAt": {
@@ -9496,6 +9511,26 @@ const docTemplate = `{
                 }
             }
         },
+        "view.Address": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "city": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
+                "lat": {
+                    "type": "string"
+                },
+                "long": {
+                    "type": "string"
+                }
+            }
+        },
         "view.ApiError": {
             "description": "validation error details",
             "type": "object",
@@ -12046,6 +12081,43 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/model.ProjectSize"
+                    }
+                }
+            }
+        },
+        "view.PublicClient": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "$ref": "#/definitions/view.Address"
+                },
+                "companySize": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "industry": {
+                    "type": "string"
+                },
+                "solutionType": {
+                    "type": "string"
+                },
+                "stacks": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "view.PublicClientListResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/view.PublicClient"
                     }
                 }
             }

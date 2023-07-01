@@ -115,6 +115,10 @@ definitions:
     properties:
       address:
         type: string
+      city:
+        type: string
+      companySize:
+        type: integer
       contacts:
         items:
           $ref: '#/definitions/model.ClientContact'
@@ -131,9 +135,21 @@ definitions:
         type: string
       industry:
         type: string
+      isPublic:
+        type: boolean
+      lat:
+        type: string
+      long:
+        type: string
       name:
         type: string
+      projects:
+        items:
+          $ref: '#/definitions/model.Project'
+        type: array
       registrationNumber:
+        type: string
+      solutionType:
         type: string
       updatedAt:
         type: string
@@ -2146,6 +2162,19 @@ definitions:
       medium:
         type: number
     type: object
+  view.Address:
+    properties:
+      address:
+        type: string
+      city:
+        type: string
+      country:
+        type: string
+      lat:
+        type: string
+      long:
+        type: string
+    type: object
   view.ApiError:
     description: validation error details
     properties:
@@ -3813,6 +3842,30 @@ definitions:
           $ref: '#/definitions/model.ProjectSize'
         type: array
     type: object
+  view.PublicClient:
+    properties:
+      address:
+        $ref: '#/definitions/view.Address'
+      companySize:
+        type: string
+      id:
+        type: string
+      industry:
+        type: string
+      solutionType:
+        type: string
+      stacks:
+        items:
+          type: string
+        type: array
+    type: object
+  view.PublicClientListResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/view.PublicClient'
+        type: array
+    type: object
   view.Question:
     properties:
       category:
@@ -4766,19 +4819,13 @@ paths:
         name: Authorization
         required: true
         type: string
-      - description: Body
-        in: body
-        name: Body
-        required: true
-        schema:
-          $ref: '#/definitions/request.CreateClientInput'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/view.GetListClientResponse'
+            $ref: '#/definitions/view.PublicClientListResponse'
         "500":
           description: Internal Server Error
           schema:
