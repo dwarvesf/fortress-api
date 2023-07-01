@@ -31,9 +31,23 @@ func (s *store) IsExist(db *gorm.DB, id string) (bool, error) {
 }
 
 // All get all client
-func (s *store) All(db *gorm.DB) ([]*model.Client, error) {
+func (s *store) All(db *gorm.DB, public bool, preload bool) ([]*model.Client, error) {
 	var client []*model.Client
-	return client, db.Preload("Contacts", "deleted_at IS NULL").Find(&client).Error
+
+	query := db.Preload("Contacts", "deleted_at IS NULL")
+
+	if preload {
+		query = query.
+			Preload("Projects").
+			Preload("Projects.ProjectStacks").
+			Preload("Projects.ProjectStacks.Stack")
+	}
+
+	if public {
+		query = query.Where("is_public = ?", true)
+	}
+
+	return client, query.Find(&client).Error
 }
 
 // Delete delete 1 client by id

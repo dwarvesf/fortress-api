@@ -7,7 +7,16 @@ import (
 )
 
 func (r *controller) List(c *gin.Context) ([]*model.Client, error) {
-	clients, err := r.store.Client.All(r.repo.DB())
+	clients, err := r.store.Client.All(r.repo.DB(), false, false)
+	if err != nil {
+		return nil, err
+	}
+
+	return clients, nil
+}
+
+func (r *controller) PublicList(c *gin.Context) ([]*model.Client, error) {
+	clients, err := r.store.Client.All(r.repo.DB(), true, true)
 	if err != nil {
 		return nil, err
 	}

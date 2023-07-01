@@ -9,7 +9,15 @@ type Client struct {
 	RegistrationNumber string
 	Address            string
 	Country            string
+	City               string
 	Industry           string
 	Website            string
-	Contacts           []ClientContact
+	IsPublic           bool
+	Lat                string
+	Long               string
+	CompanySize        int
+	SolutionType       string
+
+	Contacts []ClientContact
+	Projects []Project
 }

@@ -35,4 +35,5 @@ type IController interface {
 	Detail(c *gin.Context, clientID string) (client *model.Client, err error)
 	Update(c *gin.Context, clientID string, input request.UpdateClientInput) (errCode int, err error)
 	Delete(c *gin.Context, clientID string) (errCode int, err error)
+	PublicList(c *gin.Context) (client []*model.Client, err error)
 }
