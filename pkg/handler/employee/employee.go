@@ -755,10 +755,10 @@ func (h *handler) UpdateBaseSalary(c *gin.Context) {
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToBaseSalary(emp), nil, nil, nil, ""))
 }
 
-// ListWithLocation godoc
-// @Summary Get employees list with location
-// @Description Get employees list with location
-// @Tags Employee
+// PublicList godoc
+// @Summary Get public employees list
+// @Description Get public employees list
+// @Tags Public
 // @Accept  json
 // @Produce  json
 // @Success 200 {object} view.EmployeeLocationListResponse
@@ -766,10 +766,10 @@ func (h *handler) UpdateBaseSalary(c *gin.Context) {
 // @Failure 404 {object} view.ErrorResponse
 // @Failure 500 {object} view.ErrorResponse
 // @Router /public/employees [get]
-func (h *handler) ListWithLocation(c *gin.Context) {
+func (h *handler) PublicList(c *gin.Context) {
 	l := h.logger.Fields(logger.Fields{
 		"handler": "employee",
-		"method":  "ListWithLocation",
+		"method":  "PublicList",
 	})
 
 	employees, err := h.controller.Employee.ListWithLocation()

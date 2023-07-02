@@ -826,7 +826,7 @@ func Test_loadV1Routes(t *testing.T) {
 		"/api/v1/public/employees": {
 			"GET": {
 				Method:  "GET",
-				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/employee.IHandler.ListWithLocation-fm",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/employee.IHandler.PublicList-fm",
 			},
 		},
 		"/api/v1/public/clients": {

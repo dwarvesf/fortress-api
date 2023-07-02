@@ -387,7 +387,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Client"
+                    "Public"
                 ],
                 "summary": "Get all clients",
                 "parameters": [
@@ -5557,7 +5557,7 @@ const docTemplate = `{
         },
         "/public/employees": {
             "get": {
-                "description": "Get employees list with location",
+                "description": "Get public employees list",
                 "consumes": [
                     "application/json"
                 ],
@@ -5565,9 +5565,9 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Employee"
+                    "Public"
                 ],
-                "summary": "Get employees list with location",
+                "summary": "Get public employees list",
                 "responses": {
                     "200": {
                         "description": "OK",

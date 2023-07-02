@@ -4832,7 +4832,7 @@ paths:
             $ref: '#/definitions/view.ErrorResponse'
       summary: Get all clients
       tags:
-      - Client
+      - Public
     post:
       consumes:
       - application/json
@@ -8250,7 +8250,7 @@ paths:
     get:
       consumes:
       - application/json
-      description: Get employees list with location
+      description: Get public employees list
       produces:
       - application/json
       responses:
@@ -8270,9 +8270,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/view.ErrorResponse'
-      summary: Get employees list with location
+      summary: Get public employees list
       tags:
-      - Employee
+      - Public
   /surveys:
     get:
       consumes:

@@ -217,7 +217,7 @@ func (h *handler) Delete(c *gin.Context) {
 // PublicList godoc
 // @Summary Get all clients
 // @Description Get all clients
-// @Tags Client
+// @Tags Public
 // @Accept  json
 // @Produce  json
 // @Param Authorization header string true "jwt token"
