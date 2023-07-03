@@ -1,8 +1,10 @@
 package view
 
 import (
-	"github.com/dwarvesf/fortress-api/pkg/model"
 	"strconv"
+	"strings"
+
+	"github.com/dwarvesf/fortress-api/pkg/model"
 )
 
 type CreateClientResponse struct {
@@ -58,6 +60,7 @@ type Address struct {
 
 type PublicClient struct {
 	ID           string   `json:"id"`
+	Name         string   `json:"name"`
 	Address      Address  `json:"address"`
 	Stack        []string `json:"stacks"`
 	Industry     string   `json:"industry"`
@@ -80,10 +83,16 @@ func ToPublicClientListResponse(clients []*model.Client) []PublicClient {
 			}
 		}
 
+		clientAddress := client.Country
+		if strings.TrimSpace(client.City) != "" {
+			clientAddress = client.City + ", " + clientAddress
+		}
+
 		rs = append(rs, PublicClient{
-			ID: client.ID.String(),
+			ID:   client.ID.String(),
+			Name: client.Name,
 			Address: Address{
-				Address: client.City + ", " + client.Country,
+				Address: clientAddress,
 				City:    client.City,
 				Country: client.Country,
 				Lat:     client.Lat,
