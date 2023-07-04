@@ -26,7 +26,7 @@ type handler struct {
 	config     *config.Config
 
 	// isIndexingMessages is used to make sure that there cannot be
-	// a second AggregateMessages invocation if the first one is not done
+	// a second IndexMessages invocation if the first one is not done
 	isIndexingMessages bool
 }
 
