@@ -222,12 +222,17 @@ func AggregateMessages(
 			l.Error(err, "unable to parse channel ID to int64")
 			continue
 		}
+		categoryID := int64(0)
 		categoryIDStr := channelIDToCategoryID[message.ChannelID]
-		categoryID, err := strconv.ParseInt(categoryIDStr, 10, 64)
-		if err != nil {
-			l := l.AddField("categoryID", categoryIDStr)
-			l.Error(err, "unable to parse category ID to int64")
-			continue
+		if categoryIDStr == "" {
+			categoryID = -1
+		} else {
+			categoryID, err = strconv.ParseInt(categoryIDStr, 10, 64)
+			if err != nil {
+				l := l.AddField("categoryIDStr", categoryIDStr)
+				l.Error(err, "unable to parse category ID to int64")
+				continue
+			}
 		}
 
 		key := fmt.Sprintf("%d_%d", userID, channelID)
