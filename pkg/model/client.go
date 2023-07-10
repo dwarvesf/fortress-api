@@ -7,6 +7,7 @@ type Client struct {
 	Name               string
 	Description        string
 	RegistrationNumber string
+	Avatar             string
 	Address            string
 	Country            string
 	City               string
@@ -15,7 +16,7 @@ type Client struct {
 	IsPublic           bool
 	Lat                string
 	Long               string
-	CompanySize        int
+	CompanySize        string
 	SolutionType       string
 
 	Contacts []ClientContact

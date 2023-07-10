@@ -1,7 +1,6 @@
 package view
 
 import (
-	"strconv"
 	"strings"
 
 	"github.com/dwarvesf/fortress-api/pkg/model"
@@ -61,6 +60,7 @@ type Address struct {
 type PublicClient struct {
 	ID           string   `json:"id"`
 	Name         string   `json:"name"`
+	Avatar       string   `json:"avatar"`
 	Address      Address  `json:"address"`
 	Stack        []string `json:"stacks"`
 	Industry     string   `json:"industry"`
@@ -89,8 +89,9 @@ func ToPublicClientListResponse(clients []*model.Client) []PublicClient {
 		}
 
 		rs = append(rs, PublicClient{
-			ID:   client.ID.String(),
-			Name: client.Name,
+			ID:     client.ID.String(),
+			Name:   client.Name,
+			Avatar: client.Avatar,
 			Address: Address{
 				Address: clientAddress,
 				City:    client.City,
@@ -100,7 +101,7 @@ func ToPublicClientListResponse(clients []*model.Client) []PublicClient {
 			},
 			Stack:        stacks,
 			Industry:     client.Industry,
-			CompanySize:  strconv.Itoa(client.CompanySize),
+			CompanySize:  client.CompanySize,
 			SolutionType: client.SolutionType,
 		})
 	}
