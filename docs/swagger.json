@@ -6445,11 +6445,14 @@
                 "address": {
                     "type": "string"
                 },
+                "avatar": {
+                    "type": "string"
+                },
                 "city": {
                     "type": "string"
                 },
                 "companySize": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "contacts": {
                     "type": "array",
@@ -12083,6 +12086,9 @@
                 "address": {
                     "$ref": "#/definitions/view.Address"
                 },
+                "avatar": {
+                    "type": "string"
+                },
                 "companySize": {
                     "type": "string"
                 },
@@ -12090,6 +12096,9 @@
                     "type": "string"
                 },
                 "industry": {
+                    "type": "string"
+                },
+                "name": {
                     "type": "string"
                 },
                 "solutionType": {

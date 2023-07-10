@@ -6453,11 +6453,14 @@ const docTemplate = `{
                 "address": {
                     "type": "string"
                 },
+                "avatar": {
+                    "type": "string"
+                },
                 "city": {
                     "type": "string"
                 },
                 "companySize": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "contacts": {
                     "type": "array",
@@ -12091,6 +12094,9 @@ const docTemplate = `{
                 "address": {
                     "$ref": "#/definitions/view.Address"
                 },
+                "avatar": {
+                    "type": "string"
+                },
                 "companySize": {
                     "type": "string"
                 },
@@ -12098,6 +12104,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "industry": {
+                    "type": "string"
+                },
+                "name": {
                     "type": "string"
                 },
                 "solutionType": {

@@ -115,10 +115,12 @@ definitions:
     properties:
       address:
         type: string
+      avatar:
+        type: string
       city:
         type: string
       companySize:
-        type: integer
+        type: string
       contacts:
         items:
           $ref: '#/definitions/model.ClientContact'
@@ -3846,11 +3848,15 @@ definitions:
     properties:
       address:
         $ref: '#/definitions/view.Address'
+      avatar:
+        type: string
       companySize:
         type: string
       id:
         type: string
       industry:
+        type: string
+      name:
         type: string
       solutionType:
         type: string
