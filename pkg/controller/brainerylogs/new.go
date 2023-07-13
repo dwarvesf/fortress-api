@@ -6,6 +6,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/store"
+	"time"
 )
 
 type controller struct {
@@ -28,5 +29,5 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 
 type IController interface {
 	Create(log model.BraineryLog) (model.BraineryLog, error)
-	GetMetrics(queryView string) (latestPosts []*model.BraineryLog, logs []*model.BraineryLog, ncids []string, err error)
+	GetMetrics(selectedDate time.Time, queryView string) (latestPosts []*model.BraineryLog, logs []*model.BraineryLog, ncids []string, err error)
 }

@@ -12,19 +12,17 @@ import (
 )
 
 // GetMetrics returns brainery metrics
-func (c *controller) GetMetrics(queryView string) (latestPosts []*model.BraineryLog, logs []*model.BraineryLog, ncids []string, err error) {
+func (c *controller) GetMetrics(selectedDate time.Time, queryView string) (latestPosts []*model.BraineryLog, logs []*model.BraineryLog, ncids []string, err error) {
 	l := c.logger.Fields(logger.Fields{
 		"controller": "brainerylogs",
 		"method":     "GetBraineryMetrics",
 	})
 
-	// default is weekly
-	now := time.Now()
-	end := timeutil.GetEndDayOfWeek(now)
-	start := timeutil.GetStartDayOfWeek(now)
+	end := timeutil.GetEndDayOfWeek(selectedDate)
+	start := timeutil.GetStartDayOfWeek(selectedDate)
 	if queryView == "monthly" {
-		start = timeutil.FirstDayOfMonth(int(now.Month()), now.Year())
-		end = timeutil.LastDayOfMonth(int(now.Month()), now.Year())
+		start = timeutil.FirstDayOfMonth(int(selectedDate.Month()), selectedDate.Year())
+		end = timeutil.LastDayOfMonth(int(selectedDate.Month()), selectedDate.Year())
 	}
 
 	// latest 10 posts
