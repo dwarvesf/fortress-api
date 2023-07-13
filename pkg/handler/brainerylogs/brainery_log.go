@@ -121,7 +121,8 @@ func (h *handler) GetMetrics(c *gin.Context) {
 
 	queryView := c.DefaultQuery("view", "weekly")
 
-	latestPosts, logs, ncids, err := h.controller.BraineryLog.GetMetrics(queryView)
+	now := time.Now()
+	latestPosts, logs, ncids, err := h.controller.BraineryLog.GetMetrics(now, queryView)
 	if err != nil {
 		l.Error(err, "failed to get brainery metrics")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))

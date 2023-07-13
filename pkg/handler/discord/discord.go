@@ -254,8 +254,12 @@ func (h *handler) ReportBraineryMetrics(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, body, ""))
 		return
 	}
+	now := time.Now()
+	if body.View == "monthly" {
+		now = now.Add(-24 * time.Hour)
+	}
 
-	latestPosts, logs, ncids, err := h.controller.BraineryLog.GetMetrics(body.View)
+	latestPosts, logs, ncids, err := h.controller.BraineryLog.GetMetrics(now, body.View)
 	if err != nil {
 		h.logger.Error(err, "failed to get brainery metrics")
 		c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, err, nil, ""))
