@@ -31,7 +31,7 @@ const MJMLChangelogTemplate = ` <mjml> <mj-head> <mj-title>Changelog Email</mj-t
             line-height: 14px;
             color: #222222;
             margin-top: 10px;
-            margin-bottom: 10px;">Copyright © 2021 Dwarves,
+            margin-bottom: 10px;">Copyright © 2023 Dwarves,
                 LLC, All rights reserved.</p>
               <p style="font-family: arial, helvetica, sans-serif;
             font-style: normal;
@@ -112,7 +112,7 @@ const MJMLDFUpdateTemplate = ` <mjml> <mj-head> <mj-title>Changelog Email</mj-ti
             line-height: 14px;
             color: #222222;
             margin-top: 10px;
-            margin-bottom: 10px;">Copyright © 2021 Dwarves,
+            margin-bottom: 10px;">Copyright © 2023 Dwarves,
                 LLC, All rights reserved.</p>
               <p style="font-family: arial, helvetica, sans-serif;
             font-style: normal;

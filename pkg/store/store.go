@@ -22,6 +22,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/store/country"
 	"github.com/dwarvesf/fortress-api/pkg/store/currency"
 	"github.com/dwarvesf/fortress-api/pkg/store/dashboard"
+	"github.com/dwarvesf/fortress-api/pkg/store/deliverymetric"
 	"github.com/dwarvesf/fortress-api/pkg/store/discordaccount"
 	"github.com/dwarvesf/fortress-api/pkg/store/discordtemplate"
 	"github.com/dwarvesf/fortress-api/pkg/store/employee"
@@ -94,6 +95,7 @@ type Store struct {
 	Country                 country.IStore
 	Currency                currency.IStore
 	Dashboard               dashboard.IStore
+	DeliveryMetric          deliverymetric.IStore
 	DiscordAccount          discordaccount.IStore
 	DiscordLogTemplate      discordtemplate.IStore
 	Employee                employee.IStore
@@ -166,6 +168,7 @@ func New() *Store {
 		Country:                 country.New(),
 		Currency:                currency.New(),
 		Dashboard:               dashboard.New(),
+		DeliveryMetric:          deliverymetric.New(),
 		DiscordAccount:          discordaccount.New(),
 		DiscordLogTemplate:      discordtemplate.New(),
 		Employee:                employee.New(),
