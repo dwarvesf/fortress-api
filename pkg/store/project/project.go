@@ -252,3 +252,9 @@ func (s *store) sortFieldMapping(fields string) string {
 
 	return strings.TrimSuffix(sortString, ", ")
 }
+
+func (s *store) GetRawList(db *gorm.DB) ([]model.Project, error) {
+	var projects []model.Project
+
+	return projects, db.Find(&projects).Error
+}

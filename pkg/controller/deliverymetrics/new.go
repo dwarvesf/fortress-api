@@ -9,6 +9,7 @@ import (
 
 type IController interface {
 	GetWeeklyReport() (*WeeklyReport, error)
+	Sync() error
 }
 
 type controller struct {

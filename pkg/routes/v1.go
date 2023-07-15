@@ -28,6 +28,7 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 		cronjob.POST("/store-vault-transaction", amw.WithAuth, pmw.WithPerm(model.PermissionCronjobExecute), h.Vault.StoreVaultTransaction)
 		cronjob.POST("/index-engagement-messages", amw.WithAuth, pmw.WithPerm(model.PermissionCronjobExecute), h.Engagement.IndexMessages)
 		cronjob.POST("/brainery-reports", amw.WithAuth, pmw.WithPerm(model.PermissionCronjobExecute), h.Discord.ReportBraineryMetrics)
+		cronjob.POST("/sync-delivery-metrics", amw.WithAuth, pmw.WithPerm(model.PermissionCronjobExecute), h.DeliveryMetric.Sync)
 	}
 
 	/////////////////
@@ -333,7 +334,7 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 	// Delivery metrics
 	{
 		deliveryGroup := v1.Group("/delivery-metrics")
-		deliveryGroup.GET("/weekly-report", amw.WithAuth, pmw.WithPerm(model.PermissionDeliveryMetricsRead), h.Delivery.GetWeeklyReport)
+		deliveryGroup.GET("/weekly-report", amw.WithAuth, pmw.WithPerm(model.PermissionDeliveryMetricsRead), h.DeliveryMetric.GetWeeklyReport)
 	}
 
 	/////////////////

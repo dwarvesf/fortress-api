@@ -15,4 +15,5 @@ type IStore interface {
 	UpdateSelectedFieldsByID(db *gorm.DB, id string, updateModel model.Project, updatedFields ...string) (*model.Project, error)
 	GetByEmployeeID(db *gorm.DB, employeeID string) ([]*model.Project, error)
 	GetProjectByAlias(db *gorm.DB, alias string) (*model.Project, error)
+	GetRawList(db *gorm.DB) ([]model.Project, error)
 }

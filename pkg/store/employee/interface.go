@@ -23,6 +23,7 @@ type IStore interface {
 	GetMenteesByID(db *gorm.DB, employeeID string) ([]*model.Employee, error)
 	GetByDiscordID(db *gorm.DB, discordID string) (*model.Employee, error)
 	SimpleList(db *gorm.DB) ([]*model.Employee, error)
+	GetRawList(db *gorm.DB, filter EmployeeFilter) ([]model.Employee, error)
 
 	IsExist(db *gorm.DB, id string) (bool, error)
 
