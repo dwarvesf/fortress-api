@@ -23,6 +23,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/store/currency"
 	"github.com/dwarvesf/fortress-api/pkg/store/dashboard"
 	"github.com/dwarvesf/fortress-api/pkg/store/deliverymetric"
+	"github.com/dwarvesf/fortress-api/pkg/store/deliverymetricweekly"
 	"github.com/dwarvesf/fortress-api/pkg/store/discordaccount"
 	"github.com/dwarvesf/fortress-api/pkg/store/discordtemplate"
 	"github.com/dwarvesf/fortress-api/pkg/store/employee"
@@ -139,6 +140,7 @@ type Store struct {
 	SocialAccount           socialaccount.IStore
 	Stack                   stack.IStore
 	Valuation               valuation.IStore
+	WeeklyDeliveryMetric    deliverymetricweekly.IStore
 	WorkUnit                workunit.IStore
 	WorkUnitMember          workunitmember.IStore
 	WorkUnitStack           workunitstack.IStore
@@ -212,6 +214,7 @@ func New() *Store {
 		SocialAccount:           socialaccount.New(),
 		Stack:                   stack.New(),
 		Valuation:               valuation.New(),
+		WeeklyDeliveryMetric:    deliverymetricweekly.New(),
 		WorkUnit:                workunit.New(),
 		WorkUnitMember:          workunitmember.New(),
 		WorkUnitStack:           workunitstack.New(),

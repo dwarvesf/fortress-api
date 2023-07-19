@@ -12,6 +12,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/handler/client"
 	"github.com/dwarvesf/fortress-api/pkg/handler/dashboard"
 	"github.com/dwarvesf/fortress-api/pkg/handler/dashboard/util"
+	"github.com/dwarvesf/fortress-api/pkg/handler/delivery"
 	"github.com/dwarvesf/fortress-api/pkg/handler/discord"
 	"github.com/dwarvesf/fortress-api/pkg/handler/employee"
 	"github.com/dwarvesf/fortress-api/pkg/handler/engagement"
@@ -42,6 +43,7 @@ type Handler struct {
 	BraineryLog brainerylogs.IHandler
 	Client      client.IHandler
 	Dashboard   dashboard.IHandler
+	Delivery    delivery.IHandler
 	Discord     discord.IHandler
 	Employee    employee.IHandler
 	Engagement  engagement.IHandler
@@ -69,6 +71,7 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, ctrl *
 		BraineryLog: brainerylogs.New(ctrl, store, repo, service, logger, cfg),
 		Client:      client.New(ctrl, store, repo, service, logger, cfg),
 		Dashboard:   dashboard.New(store, repo, service, logger, cfg, util.New()),
+		Delivery:    delivery.New(ctrl, store, repo, service, logger, cfg),
 		Discord:     discord.New(ctrl, store, repo, service, logger, cfg),
 		Employee:    employee.New(ctrl, store, repo, service, logger, cfg),
 		Engagement:  engagement.New(ctrl, store, repo, service, logger, cfg),

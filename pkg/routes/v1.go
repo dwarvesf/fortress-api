@@ -330,6 +330,12 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 		braineryGroup.POST("/sync", amw.WithAuth, pmw.WithPerm(model.PermissionCronjobExecute), h.BraineryLog.Sync)
 	}
 
+	// Delivery metrics
+	{
+		deliveryGroup := v1.Group("/delivery-metrics")
+		deliveryGroup.GET("/weekly-report", amw.WithAuth, pmw.WithPerm(model.PermissionDeliveryMetricsRead), h.Delivery.GetWeeklyReport)
+	}
+
 	/////////////////
 	// PUBLIC API GROUP
 	/////////////////
