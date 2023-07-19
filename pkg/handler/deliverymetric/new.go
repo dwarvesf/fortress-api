@@ -1,4 +1,4 @@
-package delivery
+package deliverymetric
 
 import (
 	"github.com/dwarvesf/fortress-api/pkg/config"
@@ -17,6 +17,7 @@ type handler struct {
 	config     *config.Config
 }
 
+// New returns a handler
 func New(controller *controller.Controller, store *store.Store, repo store.DBRepo, service *service.Service, logger logger.Logger, cfg *config.Config) IHandler {
 	return &handler{
 		controller: controller,

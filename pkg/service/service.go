@@ -1,6 +1,9 @@
 package service
 
 import (
+	"github.com/dwarvesf/fortress-api/pkg/service/googledrive"
+	"github.com/dwarvesf/fortress-api/pkg/service/googlesheet"
+	"google.golang.org/api/sheets/v4"
 	"time"
 
 	"github.com/patrickmn/go-cache"
@@ -18,7 +21,6 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/service/github"
 	googleauth "github.com/dwarvesf/fortress-api/pkg/service/google"
 	"github.com/dwarvesf/fortress-api/pkg/service/googleadmin"
-	"github.com/dwarvesf/fortress-api/pkg/service/googledrive"
 	"github.com/dwarvesf/fortress-api/pkg/service/googlemail"
 	"github.com/dwarvesf/fortress-api/pkg/service/improvmx"
 	"github.com/dwarvesf/fortress-api/pkg/service/mochi"
@@ -35,9 +37,10 @@ type Service struct {
 	Discord     discord.IService
 	Github      github.IService
 	Google      googleauth.IService
+	GoogleAdmin googleadmin.IService
 	GoogleDrive googledrive.IService
 	GoogleMail  googlemail.IService
-	GoogleAdmin googleadmin.IService
+	GoogleSheet googlesheet.IService
 	ImprovMX    improvmx.IService
 	Mochi       mochi.IService
 	Notion      notion.IService
@@ -96,10 +99,29 @@ func New(cfg *config.Config, store *store.Store, repo store.DBRepo) *Service {
 		cfg,
 	)
 
+	gSheetConfig := &oauth2.Config{
+		ClientID:     cfg.Google.ClientID,
+		ClientSecret: cfg.Google.ClientSecret,
+		Endpoint:     google.Endpoint,
+		Scopes: []string{
+			sheets.DriveScope,
+			sheets.DriveFileScope,
+			sheets.DriveReadonlyScope,
+			sheets.SpreadsheetsScope,
+			sheets.SpreadsheetsReadonlyScope,
+		},
+	}
+
+	gSheetSvc := googlesheet.New(
+		gSheetConfig,
+		cfg,
+	)
+
 	bc := model.Basecamp{
 		ClientID:     cfg.Basecamp.ClientID,
 		ClientSecret: cfg.Basecamp.ClientSecret,
 	}
+
 	Currency := currency.New(cfg)
 
 	return &Service{
@@ -112,6 +134,7 @@ func New(cfg *config.Config, store *store.Store, repo store.DBRepo) *Service {
 		GoogleAdmin: googleAdminSvc,
 		GoogleDrive: googleDriveSvc,
 		GoogleMail:  googleMailSvc,
+		GoogleSheet: gSheetSvc,
 		ImprovMX:    improvmx.New(cfg.ImprovMX.Token),
 		Mochi:       mochi.New(cfg, logger.L),
 		Notion:      notion.New(cfg.Notion.Secret, cfg.Notion.Databases.Project, logger.L),

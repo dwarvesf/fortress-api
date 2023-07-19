@@ -255,3 +255,14 @@ func (s *store) SimpleList(db *gorm.DB) ([]*model.Employee, error) {
 
 	return employees, query.Find(&employees).Error
 }
+
+func (s *store) GetRawList(db *gorm.DB, filter EmployeeFilter) ([]model.Employee, error) {
+	var employees []model.Employee
+
+	query := db
+	if filter.WorkingStatuses != nil {
+		query = query.Where("working_status IN ?", filter.WorkingStatuses)
+	}
+
+	return employees, query.Find(&employees).Error
+}

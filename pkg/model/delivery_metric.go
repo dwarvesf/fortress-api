@@ -1,8 +1,9 @@
 package model
 
 import (
-	"github.com/shopspring/decimal"
 	"time"
+
+	"github.com/shopspring/decimal"
 )
 
 type DeliveryMetric struct {
@@ -16,3 +17,5 @@ type DeliveryMetric struct {
 	Date          *time.Time
 	Ref           int
 }
+
+type DeliveryMetrics []DeliveryMetric
