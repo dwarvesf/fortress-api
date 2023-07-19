@@ -110,6 +110,7 @@ const (
 	PermissionIcyDistributionRead                 PermissionCode = "icyDistribution.read"
 	PermissionBraineryLogsWrite                   PermissionCode = "braineryLogs.write"
 	PermissionBraineryLogsRead                    PermissionCode = "braineryLogs.read"
+	PermissionDeliveryMetricsRead                 PermissionCode = "deliveryMetrics.read"
 )
 
 func (p PermissionCode) String() string {
