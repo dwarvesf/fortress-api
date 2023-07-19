@@ -3,6 +3,7 @@ package deliverymetrics
 import (
 	"errors"
 	"math"
+	"time"
 
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/shopspring/decimal"
@@ -20,10 +21,11 @@ type WeeklyReport struct {
 }
 
 type WeekReport struct {
-	TotalPoints float32 `json:"total_points"`
-	Effort      float32 `json:"effort"`
-	AvgPoint    float32 `json:"avg_point"`
-	AvgEffort   float32 `json:"avg_effort"`
+	Date        *time.Time `json:"date"`
+	TotalPoints float32    `json:"total_points"`
+	Effort      float32    `json:"effort"`
+	AvgPoint    float32    `json:"avg_point"`
+	AvgEffort   float32    `json:"avg_effort"`
 }
 
 func (c controller) GetWeeklyReport() (*WeeklyReport, error) {
@@ -45,10 +47,12 @@ func GetWeeklyReport(s *store.Store, db *gorm.DB) (*WeeklyReport, error) {
 
 	report := &WeeklyReport{
 		LastWeek: WeekReport{
+			Date:        lastWeekReport.Date,
 			TotalPoints: decimalToRoundedFloat32(lastWeekReport.SumWeight),
 			Effort:      decimalToRoundedFloat32(lastWeekReport.SumEffort),
 		},
 		CurrentWeek: WeekReport{
+			Date:        currentReport.Date,
 			TotalPoints: decimalToRoundedFloat32(currentReport.SumWeight),
 			Effort:      decimalToRoundedFloat32(currentReport.SumEffort),
 		},
