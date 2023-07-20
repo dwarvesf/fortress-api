@@ -16,3 +16,9 @@ type AvgWeeklyDeliveryMetric struct {
 	Weight decimal.Decimal
 	Effort decimal.Decimal
 }
+
+type AvgMonthWeeklyDeliveryMetric struct {
+	Date   *time.Time
+	Weight decimal.Decimal
+	Effort decimal.Decimal
+}

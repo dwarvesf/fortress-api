@@ -1,6 +1,8 @@
 package deliverymetricweekly
 
 import (
+	"time"
+
 	"gorm.io/gorm"
 
 	"github.com/dwarvesf/fortress-api/pkg/model"
@@ -36,6 +38,18 @@ func (s *store) AvgWithoutLatestWeek(db *gorm.DB) (model.AvgWeeklyDeliveryMetric
 											AVG(sum_effort) AS effort
 										FROM vw_weekly_delivery_metrics
 										WHERE date != (SELECT MAX(date) FROM delivery_metrics);`).Scan(&rs).Error
+}
+
+func (s *store) AvgByMonth(db *gorm.DB, month time.Time) ([]model.AvgMonthWeeklyDeliveryMetric, error) {
+	var rs []model.AvgMonthWeeklyDeliveryMetric
+	return rs, db.Raw(`SELECT 
+											DATE_TRUNC('month', date) AS "month",
+											AVG(sum_weight) AS "weight",
+											AVG(sum_effort) AS "effort"
+										FROM vw_weekly_delivery_metrics
+										GROUP BY DATE_TRUNC('month', date)
+										HAVING DATE_TRUNC('month', date) = ?
+										ORDER BY "month" DESC;`, month).Scan(&rs).Error
 }
 
 // Create creates a new delivery metric
