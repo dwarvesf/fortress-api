@@ -19,3 +19,20 @@ func (input BraineryReportInput) Validate() error {
 	}
 	return nil
 }
+
+type DeliveryMetricReportInput struct {
+	View      string `json:"view" binding:"required"`
+	ChannelID string `json:"channelID" binding:"required"`
+	Sync      bool   `json:"sync"`
+}
+
+func (input DeliveryMetricReportInput) Validate() error {
+	if len(input.View) == 0 {
+		return errs.ErrEmptyReportView
+	}
+
+	if len(input.ChannelID) == 0 {
+		return errs.ErrEmptyChannelID
+	}
+	return nil
+}
