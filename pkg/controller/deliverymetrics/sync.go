@@ -78,7 +78,7 @@ func (c controller) Sync() error {
 
 		projectName := row.Project
 		if row.Project == "Internal" {
-			projectName = "Fortress"
+			projectName = "Fortress v2.0"
 		}
 
 		projectID := projectMap[projectName]
