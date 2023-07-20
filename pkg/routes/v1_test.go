@@ -651,6 +651,18 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/discord.IHandler.ReportBraineryMetrics-fm",
 			},
 		},
+		"/cronjobs/delivery-metric-reports": {
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/discord.IHandler.DeliveryMetricsReport-fm",
+			},
+		},
+		"/cronjobs/sync-delivery-metrics": {
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/deliverymetric.IHandler.Sync-fm",
+			},
+		},
 		"/webhooks/n8n": {
 			"POST": {
 				Method:  "POST",
@@ -829,6 +841,19 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/employee.IHandler.PublicList-fm",
 			},
 		},
+		"/api/v1/delivery-metrics/report/weekly": {
+			"GET": {
+				Method:  "GET",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/deliverymetric.IHandler.GetWeeklyReport-fm",
+			},
+		},
+		"/api/v1/delivery-metrics/report/monthly": {
+			"GET": {
+				Method:  "GET",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/deliverymetric.IHandler.GetMonthlyReport-fm",
+			},
+		},
+
 		"/api/v1/public/clients": {
 			"GET": {
 				Method:  "GET",

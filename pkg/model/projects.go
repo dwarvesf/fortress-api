@@ -356,3 +356,13 @@ func (p Project) GetCompanyContactInfo() (*CompanyContactInfo, error) {
 
 	return &res, nil
 }
+
+type Projects []Project
+
+func (p Projects) ToNameIDMap() map[string]UUID {
+	rs := map[string]UUID{}
+	for _, itm := range p {
+		rs[itm.Name] = itm.ID
+	}
+	return rs
+}

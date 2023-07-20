@@ -9,8 +9,9 @@ CREATE TABLE IF NOT EXISTS delivery_metrics (
     effort        DECIMAL NOT NULL DEFAULT 0,
     effectiveness DECIMAL NOT NULL DEFAULT 0,
     date          DATE    NOT NULL,
-    employee_id   UUID    NOT NULL,
-    project_id    UUID    NOT NULL
+    employee_id   UUID    NULL     DEFAULT NULL,
+    project_id    UUID    NULL     DEFAULT NULL,
+    ref           INT     NOT NULL DEFAULT 0
 );
 
 ALTER TABLE delivery_metrics

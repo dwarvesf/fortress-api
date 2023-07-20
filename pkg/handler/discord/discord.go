@@ -279,3 +279,69 @@ func (h *handler) ReportBraineryMetrics(c *gin.Context) {
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))
 }
+
+func (h *handler) DeliveryMetricsReport(c *gin.Context) {
+	l := h.logger.Fields(
+		logger.Fields{
+			"handler": "discord",
+			"method":  "DeliveryMetricsReport",
+		},
+	)
+
+	in := request.DeliveryMetricReportInput{}
+	if err := c.ShouldBindJSON(&in); err != nil {
+		l.Error(err, "failed to decode body")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, in, ""))
+		return
+	}
+
+	if err := in.Validate(); err != nil {
+		l.Errorf(err, "failed to validate data", "body", in)
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, in, ""))
+		return
+	}
+
+	if in.Sync {
+		err := h.controller.DeliveryMetric.Sync()
+		l.Errorf(err, "failed sync latest data", "body", in)
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, in, ""))
+		return
+	}
+
+	report, err := h.controller.DeliveryMetric.GetWeeklyReport()
+	if err != nil {
+		l.Errorf(err, "failed to get delivery metric weekly report", "body", in)
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, in, ""))
+		return
+	}
+
+	vw := &view.DeliveryMetricWeeklyReport{
+		LastWeek: view.DeliveryMetricWeekReport{
+			Date:        report.LastWeek.Date,
+			TotalPoints: report.LastWeek.TotalPoints,
+			Effort:      report.LastWeek.Effort,
+			AvgPoint:    report.LastWeek.AvgPoint,
+			AvgEffort:   report.LastWeek.AvgEffort,
+		},
+		CurrentWeek: view.DeliveryMetricWeekReport{
+			Date:        report.CurrentWeek.Date,
+			TotalPoints: report.CurrentWeek.TotalPoints,
+			Effort:      report.CurrentWeek.Effort,
+			AvgPoint:    report.CurrentWeek.AvgPoint,
+			AvgEffort:   report.CurrentWeek.AvgEffort,
+		},
+		TotalPointChangePercentage: report.TotalPointChangePercentage,
+		EffortChangePercentage:     report.EffortChangePercentage,
+		AvgPointChangePercentage:   report.AvgPointChangePercentage,
+		AvgEffortChangePercentage:  report.AvgEffortChangePercentage,
+	}
+
+	discordMsg, err := h.service.Discord.DeliveryMetricWeeklyReport(vw, in.ChannelID)
+	if err != nil {
+		h.logger.Error(err, "failed to post Discord message")
+		c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, err, discordMsg, ""))
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))
+}

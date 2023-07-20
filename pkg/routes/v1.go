@@ -28,6 +28,8 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 		cronjob.POST("/store-vault-transaction", amw.WithAuth, pmw.WithPerm(model.PermissionCronjobExecute), h.Vault.StoreVaultTransaction)
 		cronjob.POST("/index-engagement-messages", amw.WithAuth, pmw.WithPerm(model.PermissionCronjobExecute), h.Engagement.IndexMessages)
 		cronjob.POST("/brainery-reports", amw.WithAuth, pmw.WithPerm(model.PermissionCronjobExecute), h.Discord.ReportBraineryMetrics)
+		cronjob.POST("/delivery-metric-reports", amw.WithAuth, pmw.WithPerm(model.PermissionCronjobExecute), h.Discord.DeliveryMetricsReport)
+		cronjob.POST("/sync-delivery-metrics", amw.WithAuth, pmw.WithPerm(model.PermissionCronjobExecute), h.DeliveryMetric.Sync)
 	}
 
 	/////////////////
@@ -328,6 +330,13 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 		braineryGroup.POST("", amw.WithAuth, pmw.WithPerm(model.PermissionBraineryLogsWrite), h.BraineryLog.Create)
 		braineryGroup.GET("/metrics", amw.WithAuth, pmw.WithPerm(model.PermissionBraineryLogsRead), h.BraineryLog.GetMetrics)
 		braineryGroup.POST("/sync", amw.WithAuth, pmw.WithPerm(model.PermissionCronjobExecute), h.BraineryLog.Sync)
+	}
+
+	// Delivery metrics
+	{
+		deliveryGroup := v1.Group("/delivery-metrics")
+		deliveryGroup.GET("/report/weekly", amw.WithAuth, pmw.WithPerm(model.PermissionDeliveryMetricsRead), h.DeliveryMetric.GetWeeklyReport)
+		deliveryGroup.GET("/report/monthly", amw.WithAuth, pmw.WithPerm(model.PermissionDeliveryMetricsRead), h.DeliveryMetric.GetMonthlyReport)
 	}
 
 	/////////////////

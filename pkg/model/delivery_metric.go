@@ -1,6 +1,8 @@
 package model
 
 import (
+	"time"
+
 	"github.com/shopspring/decimal"
 )
 
@@ -12,4 +14,8 @@ type DeliveryMetric struct {
 	Effectiveness decimal.Decimal
 	EmployeeID    UUID
 	ProjectID     UUID
+	Date          *time.Time
+	Ref           int
 }
+
+type DeliveryMetrics []DeliveryMetric

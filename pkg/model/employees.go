@@ -154,3 +154,14 @@ func (e Employee) GetFirstNameFromFullName() string {
 	s := strings.Split(e.FullName, " ")
 	return s[len(s)-1]
 }
+
+type Employees []Employee
+
+func (e Employees) ToTeamEmailIDMap() map[string]UUID {
+	rs := map[string]UUID{}
+	for _, e := range e {
+		rs[e.TeamEmail] = e.ID
+	}
+
+	return rs
+}

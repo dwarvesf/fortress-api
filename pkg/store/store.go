@@ -23,6 +23,8 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/store/currency"
 	"github.com/dwarvesf/fortress-api/pkg/store/dashboard"
 	"github.com/dwarvesf/fortress-api/pkg/store/deliverymetric"
+	"github.com/dwarvesf/fortress-api/pkg/store/deliverymetricmonthly"
+	"github.com/dwarvesf/fortress-api/pkg/store/deliverymetricweekly"
 	"github.com/dwarvesf/fortress-api/pkg/store/discordaccount"
 	"github.com/dwarvesf/fortress-api/pkg/store/discordtemplate"
 	"github.com/dwarvesf/fortress-api/pkg/store/employee"
@@ -73,11 +75,11 @@ import (
 )
 
 type Store struct {
-	APIKey                  apikey.IStore
-	APIKeyRole              apikeyrole.IStore
 	Accounting              accounting.IStore
 	ActionItem              actionitem.IStore
 	ActionItemSnapshot      actionitemsnapshot.IStore
+	APIKey                  apikey.IStore
+	APIKeyRole              apikeyrole.IStore
 	Audit                   audit.IStore
 	AuditActionItem         auditactionitem.IStore
 	AuditCycle              auditcycle.IStore
@@ -116,6 +118,7 @@ type Store struct {
 	IcyTransaction          icytransaction.IStore
 	Invoice                 invoice.IStore
 	InvoiceNumberCaching    invoicenumbercaching.IStore
+	MonthlyDeliveryMetric   deliverymetricmonthly.IStore
 	OnLeaveRequest          onleaverequest.IStore
 	OperationalService      operationalservice.IStore
 	Organization            organization.IStore
@@ -139,6 +142,7 @@ type Store struct {
 	SocialAccount           socialaccount.IStore
 	Stack                   stack.IStore
 	Valuation               valuation.IStore
+	WeeklyDeliveryMetric    deliverymetricweekly.IStore
 	WorkUnit                workunit.IStore
 	WorkUnitMember          workunitmember.IStore
 	WorkUnitStack           workunitstack.IStore
@@ -146,11 +150,11 @@ type Store struct {
 
 func New() *Store {
 	return &Store{
-		APIKey:                  apikey.New(),
-		APIKeyRole:              apikeyrole.New(),
 		Accounting:              accounting.New(),
 		ActionItem:              actionitem.New(),
 		ActionItemSnapshot:      actionitemsnapshot.New(),
+		APIKey:                  apikey.New(),
+		APIKeyRole:              apikeyrole.New(),
 		Audit:                   audit.New(),
 		AuditActionItem:         auditactionitem.New(),
 		AuditCycle:              auditcycle.New(),
@@ -189,6 +193,7 @@ func New() *Store {
 		IcyTransaction:          icytransaction.New(),
 		Invoice:                 invoice.New(),
 		InvoiceNumberCaching:    invoicenumbercaching.New(),
+		MonthlyDeliveryMetric:   deliverymetricmonthly.New(),
 		OnLeaveRequest:          onleaverequest.New(),
 		OperationalService:      operationalservice.New(),
 		Organization:            organization.New(),
@@ -212,6 +217,7 @@ func New() *Store {
 		SocialAccount:           socialaccount.New(),
 		Stack:                   stack.New(),
 		Valuation:               valuation.New(),
+		WeeklyDeliveryMetric:    deliverymetricweekly.New(),
 		WorkUnit:                workunit.New(),
 		WorkUnitMember:          workunitmember.New(),
 		WorkUnitStack:           workunitstack.New(),
