@@ -38,6 +38,11 @@ func (r *store) All(db *gorm.DB) ([]*model.DiscordAccount, error) {
 	return res, db.Find(&res).Error
 }
 
+func (r *store) One(db *gorm.DB, id string) (*model.DiscordAccount, error) {
+	res := model.DiscordAccount{}
+	return &res, db.Where("id = ?", id).First(&res).Error
+}
+
 func (r *store) OneByDiscordID(db *gorm.DB, discordID string) (*model.DiscordAccount, error) {
 	res := model.DiscordAccount{}
 	return &res, db.Where("discord_id = ?", discordID).First(&res).Error
