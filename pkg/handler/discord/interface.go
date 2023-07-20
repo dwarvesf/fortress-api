@@ -7,4 +7,5 @@ type IHandler interface {
 	BirthdayDailyMessage(c *gin.Context)
 	OnLeaveMessage(c *gin.Context)
 	ReportBraineryMetrics(c *gin.Context)
+	DeliveryMetricsReport(c *gin.Context)
 }

@@ -478,33 +478,63 @@ func calculateTopContributor(topContributors []view.TopContributor) string {
 
 	return topContributor
 }
+func (d *discordClient) DeliveryMetricWeeklyReport(deliveryMetric *view.DeliveryMetricWeeklyReport, channelID string) (*discordgo.Message, error) {
+	var messageEmbed []*discordgo.MessageEmbedField
+	content := "\n"
+
+	previousWeek := fmt.Sprintf("**Previous Week - %v**\n", deliveryMetric.LastWeek.Date.Format("02 Jan 2006"))
+	previousWeek += fmt.Sprintf("`Total Point. %vpts`\n", deliveryMetric.LastWeek.TotalPoints)
+	previousWeek += fmt.Sprintf("`Effort. %vhrs`\n", deliveryMetric.LastWeek.Effort)
+	previousWeek += fmt.Sprintf("`AVG Weekly Point. %vpts`\n", deliveryMetric.LastWeek.AvgPoint)
+	previousWeek += fmt.Sprintf("`AVG Weekly Effort. %vhrs`\n", deliveryMetric.LastWeek.AvgEffort)
+
+	content += previousWeek
+
+	emojiUp := ":arrow_up~1:"
+	emojiDown := ":arrowdown~1:"
+
+	pointChange := fmt.Sprintf("%v %v%%", emojiUp, deliveryMetric.TotalPointChangePercentage)
+	if deliveryMetric.TotalPointChangePercentage < 0 {
+		pointChange = fmt.Sprintf("%v %v%%", emojiDown, deliveryMetric.TotalPointChangePercentage)
+	}
+
+	effortChange := fmt.Sprintf("%v %v%%", emojiUp, deliveryMetric.EffortChangePercentage)
+	if deliveryMetric.EffortChangePercentage < 0 {
+		effortChange = fmt.Sprintf("%v %v%%", emojiDown, deliveryMetric.EffortChangePercentage)
+	}
+
+	avgPointChange := fmt.Sprintf("%v %v%%", emojiUp, deliveryMetric.AvgPointChangePercentage)
+	if deliveryMetric.AvgPointChangePercentage < 0 {
+		avgPointChange = fmt.Sprintf("%v %v%%", emojiDown, deliveryMetric.AvgPointChangePercentage)
+	}
+
+	avgEffortChange := fmt.Sprintf("%v %v%%", emojiUp, deliveryMetric.AvgEffortChangePercentage)
+	if deliveryMetric.AvgEffortChangePercentage < 0 {
+		avgEffortChange = fmt.Sprintf("%v %v%%", emojiDown, deliveryMetric.AvgEffortChangePercentage)
+	}
+
+	currentWeek := fmt.Sprintf("\n**Current Week - %v**\n", deliveryMetric.CurrentWeek.Date.Format("02 Jan 2006"))
+	currentWeek += fmt.Sprintf("`Total Point. %vpts` (%v)\n", deliveryMetric.CurrentWeek.TotalPoints, pointChange)
+	currentWeek += fmt.Sprintf("`Effort. %vhrs` (%v)\n", deliveryMetric.CurrentWeek.Effort, effortChange)
+	currentWeek += fmt.Sprintf("`AVG Weekly Point. %vpts` (%v)\n", deliveryMetric.CurrentWeek.AvgPoint, avgPointChange)
+	currentWeek += fmt.Sprintf("`AVG Weekly Effort. %vhrs` (%v)\n", deliveryMetric.CurrentWeek.AvgEffort, avgEffortChange)
+
+	content += currentWeek
+
+	msg := &discordgo.MessageEmbed{
+		Title:       "**DELIVERY METRIC WEEKLY REPORT**",
+		Fields:      messageEmbed,
+		Description: content,
+		Footer: &discordgo.MessageEmbedFooter{
+			IconURL: "https://cdn.discordapp.com/avatars/564764617545482251/9c9bd4aaba164fc0b92f13f052405b4d.webp?size=160",
+			Text:    "?help to see all commands",
+		},
+	}
+
+	return d.SendEmbeddedMessageWithChannel(nil, msg, channelID)
+}
 
 func (d *discordClient) SendEmbeddedMessageWithChannel(original *model.OriginalDiscordMessage, embed *discordgo.MessageEmbed, channelId string) (*discordgo.Message, error) {
 	msg, err := d.session.ChannelMessageSendEmbed(channelId, normalize(original, embed))
 	return msg, err
-}
-
-// normalize add some default to embedded message if not set
-func normalize(original *model.OriginalDiscordMessage, response *discordgo.MessageEmbed) *discordgo.MessageEmbed {
-	if response.Timestamp == "" {
-		response.Timestamp = time.Now().Format(time.RFC3339)
-	}
-
-	// I did something tricky here, if timestamp is custom, we don't want to show it, because in case of user want to add a custom date time format in the footer
-	// instead of automatically add it, we don't want to show it twice.
-	if response.Timestamp == "custom" {
-		response.Timestamp = ""
-	}
-
-	if response.Color == 0 {
-		// default df color #D14960
-		response.Color = 13715808
-	}
-	if response.Footer == nil {
-		response.Footer = &discordgo.MessageEmbedFooter{
-			IconURL: "https://cdn.discordapp.com/avatars/564764617545482251/9c9bd4aaba164fc0b92f13f052405b4d.webp?size=160",
-			Text:    "?help to see all commands",
-		}
-	}
-	return response
 }
