@@ -303,9 +303,11 @@ func (h *handler) DeliveryMetricsReport(c *gin.Context) {
 
 	if in.Sync {
 		err := h.controller.DeliveryMetric.Sync()
-		l.Errorf(err, "failed sync latest data", "body", in)
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, in, ""))
-		return
+		if err != nil {
+			l.Errorf(err, "failed sync latest data", "body", in)
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, in, ""))
+			return
+		}
 	}
 
 	report, err := h.controller.DeliveryMetric.GetWeeklyReport()
