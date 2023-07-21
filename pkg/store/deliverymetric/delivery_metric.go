@@ -30,9 +30,29 @@ func (s *store) GetLatestWeek(db *gorm.DB) (*time.Time, error) {
 	return rs, db.Model(&model.DeliveryMetric{}).Select("date").Order("date DESC").Limit(1).First(&rs).Error
 }
 
+func (s *store) GetLatestMonth(db *gorm.DB) (*time.Time, error) {
+	var rs *time.Time
+	return rs, db.Model(&model.DeliveryMetric{}).Select("DATE_TRUNC('month', date)").Order("date DESC").Limit(1).First(&rs).Error
+}
+
 func (s *store) GetTopWeighMetrics(db *gorm.DB, w *time.Time, limit int) ([]model.DeliveryMetric, error) {
 	var rs []model.DeliveryMetric
 	return rs, db.Where("date = ?", w).Order("weight DESC, effectiveness DESC").Limit(limit).Find(&rs).Error
+}
+
+func (s *store) GetTopMonthlyWeighMetrics(db *gorm.DB, month *time.Time, limit int) ([]model.DeliveryMetric, error) {
+	var rs []model.DeliveryMetric
+	return rs, db.Raw(`SELECT 
+											DATE_TRUNC('month', m.date) AS "date",
+											m.employee_id, 
+											SUM(m.weight) AS "weight",
+											SUM(m.effort) AS "effort",
+											AVG(m.effectiveness) AS "effectiveness"
+										FROM delivery_metrics m
+										WHERE DATE_TRUNC('month', m.date) = ?
+										GROUP BY employee_id, DATE_TRUNC('month', m.date)
+										ORDER BY "date" DESC, "weight" DESC, "effort" DESC
+										LIMIT ?;`, month, limit).Find(&rs).Error
 }
 
 // UpdateSelectedFieldsByID just update selected fields by id

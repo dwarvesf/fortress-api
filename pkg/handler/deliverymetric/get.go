@@ -2,6 +2,7 @@ package deliverymetric
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/dwarvesf/fortress-api/pkg/view"
 	"github.com/gin-gonic/gin"
@@ -56,6 +57,35 @@ func (h *handler) GetWeeklyLeaderBoard(c *gin.Context) {
 	if err != nil {
 		l.Error(err, "failed to get weekly leaderboard")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, "failed to get weekly leaderboard"))
+		return
+	}
+
+	// Return data
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToDeliveryMetricLeaderBoard(report), nil, nil, nil, ""))
+}
+
+func (h *handler) GetMonthlyLeaderBoard(c *gin.Context) {
+	l := h.logger.Fields(logger.Fields{
+		"handler": "delivery",
+		"method":  "GetMonthlyLeaderBoard",
+	})
+
+	var month *time.Time
+	if c.Query("month") != "" {
+		m, err := time.Parse(time.RFC3339, c.Query("month"))
+		if err != nil {
+			l.Error(err, "failed to parse month")
+			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, "failed to parse month"))
+			return
+		}
+		month = &m
+	}
+
+	// Get data of current month
+	report, err := h.controller.DeliveryMetric.GetMonthlyLeaderBoard(month)
+	if err != nil {
+		l.Error(err, "failed to get monthly leaderboard")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, "failed to get monthly leaderboard"))
 		return
 	}
 
