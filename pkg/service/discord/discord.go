@@ -478,9 +478,16 @@ func calculateTopContributor(topContributors []view.TopContributor) string {
 
 	return topContributor
 }
-func (d *discordClient) DeliveryMetricWeeklyReport(deliveryMetric *view.DeliveryMetricWeeklyReport, channelID string) (*discordgo.Message, error) {
+
+func (d *discordClient) DeliveryMetricWeeklyReport(deliveryMetric *view.DeliveryMetricWeeklyReport, leaderBoard *view.WeeklyLeaderBoard, channelID string) (*discordgo.Message, error) {
 	var messageEmbed []*discordgo.MessageEmbedField
-	content := "\n"
+	content := "\n\n"
+
+	if leaderBoard != nil {
+		leaderBoardStr := getLeaderboardAsString(leaderBoard.Items)
+		content += leaderBoardStr
+		content += "\n\n"
+	}
 
 	previousWeek := fmt.Sprintf("**Previous Week - %v**\n", deliveryMetric.LastWeek.Date.Format("02 Jan 2006"))
 	previousWeek += fmt.Sprintf("`Total Point. %vpts`\n", deliveryMetric.LastWeek.TotalPoints)
@@ -490,27 +497,27 @@ func (d *discordClient) DeliveryMetricWeeklyReport(deliveryMetric *view.Delivery
 
 	content += previousWeek
 
-	emojiUp := ":arrow_up_animated:"
-	emojiDown := ":arrow_down_animated:"
+	emojiUp := getEmoji("ARROW_UP_ANIMATED")
+	emojiDown := getEmoji("ARROW_DOWN_ANIMATED")
 
 	pointChange := fmt.Sprintf("%v %v%%", emojiUp, deliveryMetric.TotalPointChangePercentage)
 	if deliveryMetric.TotalPointChangePercentage < 0 {
-		pointChange = fmt.Sprintf("%v %v%%", emojiDown, deliveryMetric.TotalPointChangePercentage)
+		pointChange = fmt.Sprintf("%v%v%%", emojiDown, deliveryMetric.TotalPointChangePercentage)
 	}
 
-	effortChange := fmt.Sprintf("%v %v%%", emojiUp, deliveryMetric.EffortChangePercentage)
+	effortChange := fmt.Sprintf("%v%v%%", emojiUp, deliveryMetric.EffortChangePercentage)
 	if deliveryMetric.EffortChangePercentage < 0 {
-		effortChange = fmt.Sprintf("%v %v%%", emojiDown, deliveryMetric.EffortChangePercentage)
+		effortChange = fmt.Sprintf("%v%v%%", emojiDown, deliveryMetric.EffortChangePercentage)
 	}
 
-	avgPointChange := fmt.Sprintf("%v %v%%", emojiUp, deliveryMetric.AvgPointChangePercentage)
+	avgPointChange := fmt.Sprintf("%v%v%%", emojiUp, deliveryMetric.AvgPointChangePercentage)
 	if deliveryMetric.AvgPointChangePercentage < 0 {
-		avgPointChange = fmt.Sprintf("%v %v%%", emojiDown, deliveryMetric.AvgPointChangePercentage)
+		avgPointChange = fmt.Sprintf("%v%v%%", emojiDown, deliveryMetric.AvgPointChangePercentage)
 	}
 
 	avgEffortChange := fmt.Sprintf("%v %v%%", emojiUp, deliveryMetric.AvgEffortChangePercentage)
 	if deliveryMetric.AvgEffortChangePercentage < 0 {
-		avgEffortChange = fmt.Sprintf("%v %v%%", emojiDown, deliveryMetric.AvgEffortChangePercentage)
+		avgEffortChange = fmt.Sprintf("%v%v%%", emojiDown, deliveryMetric.AvgEffortChangePercentage)
 	}
 
 	currentWeek := fmt.Sprintf("\n**Current Week - %v**\n", deliveryMetric.CurrentWeek.Date.Format("02 Jan 2006"))
@@ -522,7 +529,7 @@ func (d *discordClient) DeliveryMetricWeeklyReport(deliveryMetric *view.Delivery
 	content += currentWeek
 
 	msg := &discordgo.MessageEmbed{
-		Title:       "**DELIVERY METRIC WEEKLY REPORT**",
+		Title:       "**🏆 DELIVERY WEEKLY REPORT 🏆**",
 		Fields:      messageEmbed,
 		Description: content,
 		Footer: &discordgo.MessageEmbedFooter{
@@ -534,6 +541,31 @@ func (d *discordClient) DeliveryMetricWeeklyReport(deliveryMetric *view.Delivery
 	return d.SendEmbeddedMessageWithChannel(nil, msg, channelID)
 }
 
+func getLeaderboardAsString(data []view.LeaderBoardItem) string {
+	emojiMap := map[int]string{
+		1: getEmoji("BADGE1"),
+		2: getEmoji("BADGE2"),
+		3: getEmoji("BADGE3"),
+		4: getEmoji("BADGE5"),
+		5: getEmoji("BADGE5"),
+	}
+	// Sort the data by rank in ascending order
+	var currentRank int
+	var leaderboardString strings.Builder
+	for _, employee := range data {
+		if employee.Rank != currentRank {
+			if currentRank > 0 {
+				leaderboardString.WriteString("\n")
+			}
+			currentRank = employee.Rank
+			leaderboardString.WriteString(fmt.Sprintf("%v ", emojiMap[currentRank]))
+		}
+
+		leaderboardString.WriteString(fmt.Sprintf("<@%v> ", employee.DiscordID))
+	}
+
+	return leaderboardString.String()
+}
 func (d *discordClient) SendEmbeddedMessageWithChannel(original *model.OriginalDiscordMessage, embed *discordgo.MessageEmbed, channelId string) (*discordgo.Message, error) {
 	msg, err := d.session.ChannelMessageSendEmbed(channelId, normalize(original, embed))
 	return msg, err
