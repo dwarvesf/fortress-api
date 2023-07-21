@@ -92,4 +92,5 @@ INSERT INTO public.permissions (id, deleted_at, created_at, updated_at, name, co
 ('70109d50-6ec3-4475-9e45-757514781daf', null, '2023-06-04 11:19:08.204248', '2023-06-04 11:19:08.204248', 'Engagement Metrics Write', 'engagementMetrics.write'),
 ('8dd29797-e5fb-45ce-b9ef-8fbcfc3961bd', null, '2023-06-20 16:35:12.475872', '2023-06-20 16:35:12.475872', 'Brainery Logs Read', 'braineryLogs.read'),
 ('fa85ee6a-c335-4edb-8100-6aa840a0e520', null, '2023-06-20 16:35:12.475872', '2023-06-20 16:35:12.475872', 'Brainery Logs Write', 'braineryLogs.write'),
-('e5a515aa-6f4f-4ac8-8eac-490a9a358833', null, '2023-07-19 16:35:12.475872', '2023-06-20 16:35:12.475872', 'Delivery Metrics Read', 'deliveryMetrics.read');
+('e5a515aa-6f4f-4ac8-8eac-490a9a358833', null, '2023-07-19 16:35:12.475872', '2023-06-20 16:35:12.475872', 'Delivery Metrics Read', 'deliveryMetrics.read'),
+('51a3ec4a-6bae-4f02-9d9b-89ba539346da', null, '2023-07-20 16:35:12.475872', '2023-06-20 16:35:12.475872', 'Delivery Metrics Leader Board Read', 'deliveryMetrics.leaderBoard.read');

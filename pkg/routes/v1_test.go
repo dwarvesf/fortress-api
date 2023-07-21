@@ -853,6 +853,12 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/deliverymetric.IHandler.GetMonthlyReport-fm",
 			},
 		},
+		"/api/v1/delivery-metrics/leader-board/weekly": {
+			"GET": {
+				Method:  "GET",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/deliverymetric.IHandler.GetWeeklyLeaderBoard-fm",
+			},
+		},
 
 		"/api/v1/public/clients": {
 			"GET": {

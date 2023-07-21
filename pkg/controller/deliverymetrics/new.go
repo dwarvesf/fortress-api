@@ -10,6 +10,8 @@ import (
 type IController interface {
 	GetWeeklyReport() (*WeeklyReport, error)
 	GetMonthlyReport() (*MonthlyReport, error)
+	GetWeeklyLeaderBoard() (*WeeklyLeaderBoard, error)
+
 	Sync() error
 }
 
