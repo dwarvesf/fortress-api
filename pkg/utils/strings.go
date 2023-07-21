@@ -72,3 +72,8 @@ func FormatMoney(value float64, currencyCode string) string {
 
 	return result
 }
+
+func FloatToString(value float64) string {
+	roundedNumber := int(math.Round(value))
+	return strconv.Itoa(roundedNumber)
+}
