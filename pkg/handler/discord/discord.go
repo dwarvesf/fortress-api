@@ -344,14 +344,22 @@ func (h *handler) DeliveryMetricsReport(c *gin.Context) {
 			return
 		}
 
-		leaderBoard, err := h.controller.DeliveryMetric.GetWeeklyLeaderBoard()
+		currentMonthReport := report.Reports[0]
+		previousMonthReport := report.Reports[1]
+
+		if in.OnlyCompletedMonth {
+			currentMonthReport = report.Reports[1]
+			previousMonthReport = report.Reports[2]
+		}
+
+		leaderBoard, err := h.controller.DeliveryMetric.GetMonthlyLeaderBoard(currentMonthReport.Month)
 		if err != nil {
 			l.Errorf(err, "failed to get delivery metric weekly report", "body", in)
 			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, in, ""))
 			return
 		}
 
-		reportView := view.ToDeliveryMetricMonthlyReport(report)
+		reportView := view.ToDeliveryMetricMonthlyReport(currentMonthReport, previousMonthReport)
 		leaderBoardView := view.ToDeliveryMetricLeaderBoard(leaderBoard)
 
 		discordMsg, err := h.service.Discord.DeliveryMetricMonthlyReport(reportView, leaderBoardView, in.ChannelID)

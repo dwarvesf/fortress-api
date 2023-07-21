@@ -89,8 +89,34 @@ func ToDeliveryMetricWeeklyReport(in *model.WeeklyReport) *DeliveryMetricWeeklyR
 	}
 }
 
-func ToDeliveryMetricMonthlyReport(in *model.MonthlyReport) *DeliveryMetricMonthlyReport {
-	return &DeliveryMetricMonthlyReport{}
+func ToDeliveryMetricMonthlyReport(current model.MonthReport, prev model.MonthReport) *DeliveryMetricMonthlyReport {
+	return &DeliveryMetricMonthlyReport{
+		CurrentMonth: DeliveryMetricMonthlyReportItem{
+			Month:           current.Month,
+			TotalWeight:     current.TotalWeight,
+			Effort:          current.Effort,
+			AvgWeight:       current.AvgWeight,
+			AvgEffort:       current.AvgEffort,
+			AvgWeeklyWeight: current.AvgWeeklyWeight,
+			AvgWeeklyEffort: current.AvgWeeklyEffort,
+		},
+		LastMonth: DeliveryMetricMonthlyReportItem{
+			Month:           prev.Month,
+			TotalWeight:     prev.TotalWeight,
+			Effort:          prev.Effort,
+			AvgWeight:       prev.AvgWeight,
+			AvgEffort:       prev.AvgEffort,
+			AvgWeeklyWeight: prev.AvgWeeklyWeight,
+			AvgWeeklyEffort: prev.AvgWeeklyEffort,
+		},
+
+		TotalPointChangePercentage:      current.TotalPointChangePercentage,
+		EffortChangePercentage:          current.EffortChangePercentage,
+		AvgWeightChangePercentage:       current.AvgWeightChangePercentage,
+		AvgEffortChangePercentage:       current.AvgEffortChangePercentage,
+		AvgWeeklyPointChangePercentage:  current.AvgWeeklyPointChangePercentage,
+		AvgWeeklyEffortChangePercentage: current.AvgWeeklyEffortChangePercentage,
+	}
 }
 
 type DeliveryMetricMonthlyReport struct {
@@ -99,6 +125,8 @@ type DeliveryMetricMonthlyReport struct {
 
 	TotalPointChangePercentage      float32 `json:"total_point_change_percentage"`
 	EffortChangePercentage          float32 `json:"effort_change_percentage"`
+	AvgWeightChangePercentage       float32 `json:"avg_weight_change_percentage"`
+	AvgEffortChangePercentage       float32 `json:"avg_effort_change_percentage"`
 	AvgWeeklyPointChangePercentage  float32 `json:"avg_weekly_point_change_percentage"`
 	AvgWeeklyEffortChangePercentage float32 `json:"avg_weekly_effort_change_percentage"`
 }

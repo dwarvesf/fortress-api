@@ -546,8 +546,70 @@ func (d *discordClient) DeliveryMetricWeeklyReport(deliveryMetric *view.Delivery
 
 func (d *discordClient) DeliveryMetricMonthlyReport(deliveryMetric *view.DeliveryMetricMonthlyReport, leaderBoard *view.WeeklyLeaderBoard, channelID string) (*discordgo.Message, error) {
 	content := "*Track software team's performance. Encourages competition and collaboration. Optimizes project delivery. Promotes accountability.*\n\n"
+
+	if leaderBoard != nil {
+		leaderBoardStr := getLeaderboardAsString(leaderBoard.Items)
+		content += "**Leaderboard**\n"
+		content += leaderBoardStr
+		content += "\n\n"
+	}
+
+	previousMonth := fmt.Sprintf("**Previous Month - %v**\n", deliveryMetric.LastMonth.Month.Format("Jan 2006"))
+	previousMonth += fmt.Sprintf("%v`Total Point.       %v pts`\n", getEmoji("STAR_ANIMATED"), utils.FloatToString(float64(deliveryMetric.LastMonth.TotalWeight)))
+	previousMonth += fmt.Sprintf("%v`Effort.            %v hrs`\n", getEmoji("CLOCK_NEW"), utils.FloatToString(float64(deliveryMetric.LastMonth.Effort)))
+	previousMonth += fmt.Sprintf("%v`AVG Point.         %v pts`\n", getEmoji("INCREASING_ANIMATED"), utils.FloatToString(float64(deliveryMetric.LastMonth.AvgWeight)))
+	previousMonth += fmt.Sprintf("%v`AVG Effort.        %v hrs`\n", getEmoji("CLOCK_NEW"), utils.FloatToString(float64(deliveryMetric.LastMonth.AvgEffort)))
+	previousMonth += fmt.Sprintf("%v`AVG Weekly Point.  %v pts`\n", getEmoji("INCREASING_ANIMATED"), utils.FloatToString(float64(deliveryMetric.LastMonth.AvgWeeklyWeight)))
+	previousMonth += fmt.Sprintf("%v`AVG Weekly Effort. %v hrs`\n", getEmoji("CLOCK_NEW"), utils.FloatToString(float64(deliveryMetric.LastMonth.AvgWeeklyEffort)))
+
+	content += previousMonth
+
+	emojiUp := getEmoji("ARROW_UP_ANIMATED")
+	emojiDown := getEmoji("ARROW_DOWN_ANIMATED")
+
+	pointChange := fmt.Sprintf("%v %v%%", emojiUp, deliveryMetric.TotalPointChangePercentage)
+	if deliveryMetric.TotalPointChangePercentage < 0 {
+		pointChange = fmt.Sprintf("%v%v%%", emojiDown, deliveryMetric.TotalPointChangePercentage)
+	}
+
+	effortChange := fmt.Sprintf("%v%v%%", emojiUp, deliveryMetric.EffortChangePercentage)
+	if deliveryMetric.EffortChangePercentage < 0 {
+		effortChange = fmt.Sprintf("%v%v%%", emojiDown, deliveryMetric.EffortChangePercentage)
+	}
+
+	avgPointChange := fmt.Sprintf("%v%v%%", emojiUp, deliveryMetric.AvgWeightChangePercentage)
+	if deliveryMetric.AvgWeightChangePercentage < 0 {
+		avgPointChange = fmt.Sprintf("%v%v%%", emojiDown, deliveryMetric.AvgWeightChangePercentage)
+	}
+
+	avgEffortChange := fmt.Sprintf("%v %v%%", emojiUp, deliveryMetric.AvgEffortChangePercentage)
+	if deliveryMetric.AvgEffortChangePercentage < 0 {
+		avgEffortChange = fmt.Sprintf("%v%v%%", emojiDown, deliveryMetric.AvgEffortChangePercentage)
+	}
+
+	avgWeeklyPointChange := fmt.Sprintf("%v%v%%", emojiUp, deliveryMetric.AvgWeeklyPointChangePercentage)
+	if deliveryMetric.AvgWeeklyPointChangePercentage < 0 {
+		avgWeeklyPointChange = fmt.Sprintf("%v%v%%", emojiDown, deliveryMetric.AvgWeeklyPointChangePercentage)
+	}
+
+	avgWeeklyEffortChange := fmt.Sprintf("%v %v%%", emojiUp, deliveryMetric.AvgWeeklyEffortChangePercentage)
+	if deliveryMetric.AvgWeeklyEffortChangePercentage < 0 {
+		avgWeeklyEffortChange = fmt.Sprintf("%v%v%%", emojiDown, deliveryMetric.AvgWeeklyEffortChangePercentage)
+	}
+
+	currentMonth := fmt.Sprintf("\n**Current Month - %v**\n", deliveryMetric.CurrentMonth.Month.Format("Jan 2006"))
+	currentMonth += fmt.Sprintf("%v`Total Point.       %v pts` (%v)\n", getEmoji("STAR_ANIMATED"), utils.FloatToString(float64(deliveryMetric.CurrentMonth.TotalWeight)), pointChange)
+	currentMonth += fmt.Sprintf("%v`Effort.            %v hrs` (%v)\n", getEmoji("CLOCK_NEW"), utils.FloatToString(float64(deliveryMetric.CurrentMonth.Effort)), effortChange)
+	currentMonth += fmt.Sprintf("%v`AVG Point.         %v pts` (%v)\n", getEmoji("INCREASING_ANIMATED"), utils.FloatToString(float64(deliveryMetric.CurrentMonth.AvgWeight)), avgPointChange)
+	currentMonth += fmt.Sprintf("%v`AVG Effort.        %v hrs` (%v)\n", getEmoji("CLOCK_NEW"), utils.FloatToString(float64(deliveryMetric.CurrentMonth.AvgEffort)), avgEffortChange)
+	currentMonth += fmt.Sprintf("%v`AVG Weekly Point.  %v pts` (%v)\n", getEmoji("INCREASING_ANIMATED"), utils.FloatToString(float64(deliveryMetric.CurrentMonth.AvgWeeklyWeight)), avgWeeklyPointChange)
+	currentMonth += fmt.Sprintf("%v`AVG Weekly Effort. %v hrs` (%v)\n", getEmoji("CLOCK_NEW"), utils.FloatToString(float64(deliveryMetric.CurrentMonth.AvgWeeklyEffort)), avgWeeklyEffortChange)
+
+	content += currentMonth
+
+	month := deliveryMetric.CurrentMonth.Month.Format("Jan 2006")
 	msg := &discordgo.MessageEmbed{
-		Title:       "**🏆 DELIVERY MONTHLY REPORT 🏆**" + " - " + strings.ToUpper("DATE"),
+		Title:       "**🏆 DELIVERY MONTHLY REPORT 🏆**" + " - " + strings.ToUpper(month),
 		Description: content,
 		Footer: &discordgo.MessageEmbedFooter{
 			IconURL: "https://cdn.discordapp.com/avatars/564764617545482251/9c9bd4aaba164fc0b92f13f052405b4d.webp?size=160",
@@ -570,7 +632,14 @@ func getLeaderboardAsString(data []view.LeaderBoardItem) string {
 	var currentRank int
 	var leaderboardString strings.Builder
 	for _, employee := range data {
-		if employee.Rank != currentRank {
+		rank := employee.Rank
+		if rank > 5 {
+			break
+		}
+		if rank == 5 {
+			rank = 4
+		}
+		if rank != currentRank {
 			if currentRank > 0 {
 				leaderboardString.WriteString("\n")
 			}
