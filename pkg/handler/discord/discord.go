@@ -310,46 +310,56 @@ func (h *handler) DeliveryMetricsReport(c *gin.Context) {
 		}
 	}
 
-	report, err := h.controller.DeliveryMetric.GetWeeklyReport()
-	if err != nil {
-		l.Errorf(err, "failed to get delivery metric weekly report", "body", in)
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, in, ""))
-		return
+	if in.View == "weekly" {
+		report, err := h.controller.DeliveryMetric.GetWeeklyReport()
+		if err != nil {
+			l.Errorf(err, "failed to get delivery metric weekly report", "body", in)
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, in, ""))
+			return
+		}
+
+		leaderBoard, err := h.controller.DeliveryMetric.GetWeeklyLeaderBoard()
+		if err != nil {
+			l.Errorf(err, "failed to get delivery metric weekly report", "body", in)
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, in, ""))
+			return
+		}
+
+		reportView := view.ToDeliveryMetricWeeklyReport(report)
+		leaderBoardView := view.ToDeliveryMetricLeaderBoard(leaderBoard)
+
+		discordMsg, err := h.service.Discord.DeliveryMetricWeeklyReport(reportView, leaderBoardView, in.ChannelID)
+		if err != nil {
+			h.logger.Error(err, "failed to post Discord message")
+			c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, err, discordMsg, ""))
+			return
+		}
 	}
 
-	leaderBoard, err := h.controller.DeliveryMetric.GetWeeklyLeaderBoard()
-	if err != nil {
-		l.Errorf(err, "failed to get delivery metric weekly report", "body", in)
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, in, ""))
-		return
-	}
+	if in.View == "monthly" {
+		report, err := h.controller.DeliveryMetric.GetMonthlyReport()
+		if err != nil {
+			l.Errorf(err, "failed to get delivery metric weekly report", "body", in)
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, in, ""))
+			return
+		}
 
-	vw := &view.DeliveryMetricWeeklyReport{
-		LastWeek: view.DeliveryMetricWeekReport{
-			Date:        report.LastWeek.Date,
-			TotalPoints: report.LastWeek.TotalPoints,
-			Effort:      report.LastWeek.Effort,
-			AvgPoint:    report.LastWeek.AvgPoint,
-			AvgEffort:   report.LastWeek.AvgEffort,
-		},
-		CurrentWeek: view.DeliveryMetricWeekReport{
-			Date:        report.CurrentWeek.Date,
-			TotalPoints: report.CurrentWeek.TotalPoints,
-			Effort:      report.CurrentWeek.Effort,
-			AvgPoint:    report.CurrentWeek.AvgPoint,
-			AvgEffort:   report.CurrentWeek.AvgEffort,
-		},
-		TotalPointChangePercentage: report.TotalPointChangePercentage,
-		EffortChangePercentage:     report.EffortChangePercentage,
-		AvgPointChangePercentage:   report.AvgPointChangePercentage,
-		AvgEffortChangePercentage:  report.AvgEffortChangePercentage,
-	}
+		leaderBoard, err := h.controller.DeliveryMetric.GetWeeklyLeaderBoard()
+		if err != nil {
+			l.Errorf(err, "failed to get delivery metric weekly report", "body", in)
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, in, ""))
+			return
+		}
 
-	discordMsg, err := h.service.Discord.DeliveryMetricWeeklyReport(vw, view.ToDeliveryMetricLeaderBoard(leaderBoard), in.ChannelID)
-	if err != nil {
-		h.logger.Error(err, "failed to post Discord message")
-		c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, err, discordMsg, ""))
-		return
+		reportView := view.ToDeliveryMetricMonthlyReport(report)
+		leaderBoardView := view.ToDeliveryMetricLeaderBoard(leaderBoard)
+
+		discordMsg, err := h.service.Discord.DeliveryMetricMonthlyReport(reportView, leaderBoardView, in.ChannelID)
+		if err != nil {
+			h.logger.Error(err, "failed to post Discord message")
+			c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, err, discordMsg, ""))
+			return
+		}
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))

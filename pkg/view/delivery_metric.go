@@ -65,3 +65,56 @@ func ToDeliveryMetricLeaderBoard(board *model.WeeklyLeaderBoard) *WeeklyLeaderBo
 		Items: items,
 	}
 }
+
+func ToDeliveryMetricWeeklyReport(in *model.WeeklyReport) *DeliveryMetricWeeklyReport {
+	return &DeliveryMetricWeeklyReport{
+		LastWeek: DeliveryMetricWeekReport{
+			Date:        in.LastWeek.Date,
+			TotalPoints: in.LastWeek.TotalPoints,
+			Effort:      in.LastWeek.Effort,
+			AvgPoint:    in.LastWeek.AvgPoint,
+			AvgEffort:   in.LastWeek.AvgEffort,
+		},
+		CurrentWeek: DeliveryMetricWeekReport{
+			Date:        in.CurrentWeek.Date,
+			TotalPoints: in.CurrentWeek.TotalPoints,
+			Effort:      in.CurrentWeek.Effort,
+			AvgPoint:    in.CurrentWeek.AvgPoint,
+			AvgEffort:   in.CurrentWeek.AvgEffort,
+		},
+		TotalPointChangePercentage: in.TotalPointChangePercentage,
+		EffortChangePercentage:     in.EffortChangePercentage,
+		AvgPointChangePercentage:   in.AvgPointChangePercentage,
+		AvgEffortChangePercentage:  in.AvgEffortChangePercentage,
+	}
+}
+
+func ToDeliveryMetricMonthlyReport(in *model.MonthlyReport) *DeliveryMetricMonthlyReport {
+	return &DeliveryMetricMonthlyReport{}
+}
+
+type DeliveryMetricMonthlyReport struct {
+	CurrentMonth DeliveryMetricMonthlyReportItem `json:"current_month"`
+	LastMonth    DeliveryMetricMonthlyReportItem `json:"last_month"`
+
+	TotalPointChangePercentage      float32 `json:"total_point_change_percentage"`
+	EffortChangePercentage          float32 `json:"effort_change_percentage"`
+	AvgWeeklyPointChangePercentage  float32 `json:"avg_weekly_point_change_percentage"`
+	AvgWeeklyEffortChangePercentage float32 `json:"avg_weekly_effort_change_percentage"`
+}
+
+type DeliveryMetricMonthlyReportItem struct {
+	Month       *time.Time `json:"date"`
+	TotalWeight float32    `json:"total_weight"`
+	Effort      float32    `json:"effort"`
+
+	AvgWeight       float32 `json:"avg_weight"`
+	AvgEffort       float32 `json:"avg_effort"`
+	AvgWeeklyWeight float32 `json:"avg_weekly_weight"`
+	AvgWeeklyEffort float32 `json:"avg_weekly_effort"`
+}
+
+type MonthlyLeaderBoard struct {
+	Date  *time.Time        `json:"date"`
+	Items []LeaderBoardItem `json:"items"`
+}

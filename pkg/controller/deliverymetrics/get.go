@@ -2,37 +2,19 @@ package deliverymetrics
 
 import (
 	"errors"
-	"math"
-	"time"
-
-	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/shopspring/decimal"
 	"gorm.io/gorm"
+	"math"
+
+	"github.com/dwarvesf/fortress-api/pkg/model"
+	"github.com/dwarvesf/fortress-api/pkg/store"
 )
 
-type WeeklyReport struct {
-	LastWeek    WeekReport `json:"last_week"`
-	CurrentWeek WeekReport `json:"current_week"`
-
-	TotalPointChangePercentage float32 `json:"total_point_change_percentage"`
-	EffortChangePercentage     float32 `json:"effort_change_percentage"`
-	AvgPointChangePercentage   float32 `json:"avg_point_change_percentage"`
-	AvgEffortChangePercentage  float32 `json:"avg_effort_change_percentage"`
-}
-
-type WeekReport struct {
-	Date        *time.Time `json:"date"`
-	TotalPoints float32    `json:"total_points"`
-	Effort      float32    `json:"effort"`
-	AvgPoint    float32    `json:"avg_point"`
-	AvgEffort   float32    `json:"avg_effort"`
-}
-
-func (c controller) GetWeeklyReport() (*WeeklyReport, error) {
+func (c controller) GetWeeklyReport() (*model.WeeklyReport, error) {
 	return GetWeeklyReport(c.store, c.repo.DB())
 }
 
-func GetWeeklyReport(s *store.Store, db *gorm.DB) (*WeeklyReport, error) {
+func GetWeeklyReport(s *store.Store, db *gorm.DB) (*model.WeeklyReport, error) {
 	// Get data of latest week
 	metrics, err := s.WeeklyDeliveryMetric.GetLast(db, 2)
 	if err != nil {
@@ -45,13 +27,13 @@ func GetWeeklyReport(s *store.Store, db *gorm.DB) (*WeeklyReport, error) {
 	currentReport := metrics[0]
 	lastWeekReport := metrics[1]
 
-	report := &WeeklyReport{
-		LastWeek: WeekReport{
+	report := &model.WeeklyReport{
+		LastWeek: model.WeekReport{
 			Date:        lastWeekReport.Date,
 			TotalPoints: decimalToRoundedFloat32(lastWeekReport.SumWeight),
 			Effort:      decimalToRoundedFloat32(lastWeekReport.SumEffort),
 		},
-		CurrentWeek: WeekReport{
+		CurrentWeek: model.WeekReport{
 			Date:        currentReport.Date,
 			TotalPoints: decimalToRoundedFloat32(currentReport.SumWeight),
 			Effort:      decimalToRoundedFloat32(currentReport.SumEffort),
@@ -86,32 +68,12 @@ func GetWeeklyReport(s *store.Store, db *gorm.DB) (*WeeklyReport, error) {
 	return report, nil
 }
 
-type MonthlyReport struct {
-	Reports []MonthReport `json:"reports"`
-}
-
-type MonthReport struct {
-	Month       *time.Time `json:"date"`
-	TotalWeight float32    `json:"total_weight"`
-	Effort      float32    `json:"effort"`
-
-	AvgWeight       float32 `json:"avg_weight"`
-	AvgEffort       float32 `json:"avg_effort"`
-	AvgWeeklyWeight float32 `json:"avg_weekly_weight"`
-	AvgWeeklyEffort float32 `json:"avg_weekly_effort"`
-
-	TotalPointChangePercentage      float32 `json:"total_point_change_percentage"`
-	EffortChangePercentage          float32 `json:"effort_change_percentage"`
-	AvgWeeklyPointChangePercentage  float32 `json:"avg_weekly_point_change_percentage"`
-	AvgWeeklyEffortChangePercentage float32 `json:"avg_weekly_effort_change_percentage"`
-}
-
-func (c controller) GetMonthlyReport() (*MonthlyReport, error) {
+func (c controller) GetMonthlyReport() (*model.MonthlyReport, error) {
 	return GetMonthlyReport(c.store, c.repo.DB(), 2) // 2 latest months
 }
 
-func GetMonthlyReport(s *store.Store, db *gorm.DB, monthNumToTake int) (*MonthlyReport, error) {
-	// Get data of latest month
+func GetMonthlyReport(s *store.Store, db *gorm.DB, monthNumToTake int) (*model.MonthlyReport, error) {
+	// Get data of the latest month
 	metrics, err := s.MonthlyDeliveryMetric.GetLast(db, monthNumToTake)
 	if err != nil {
 		return nil, err
@@ -120,9 +82,9 @@ func GetMonthlyReport(s *store.Store, db *gorm.DB, monthNumToTake int) (*Monthly
 		return nil, errors.New("not enough data")
 	}
 
-	reports := make([]MonthReport, 0, monthNumToTake)
+	reports := make([]model.MonthReport, 0, monthNumToTake)
 	for _, m := range metrics {
-		r := MonthReport{
+		r := model.MonthReport{
 			Month:       m.Month,
 			TotalWeight: decimalToRoundedFloat32(m.SumWeight),
 			Effort:      decimalToRoundedFloat32(m.SumEffort),
@@ -170,7 +132,7 @@ func GetMonthlyReport(s *store.Store, db *gorm.DB, monthNumToTake int) (*Monthly
 		reports[i] = currentReport
 	}
 
-	return &MonthlyReport{
+	return &model.MonthlyReport{
 		Reports: reports,
 	}, nil
 }

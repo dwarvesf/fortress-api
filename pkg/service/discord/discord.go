@@ -544,6 +544,20 @@ func (d *discordClient) DeliveryMetricWeeklyReport(deliveryMetric *view.Delivery
 	return d.SendEmbeddedMessageWithChannel(nil, msg, channelID)
 }
 
+func (d *discordClient) DeliveryMetricMonthlyReport(deliveryMetric *view.DeliveryMetricMonthlyReport, leaderBoard *view.WeeklyLeaderBoard, channelID string) (*discordgo.Message, error) {
+	content := "*Track software team's performance. Encourages competition and collaboration. Optimizes project delivery. Promotes accountability.*\n\n"
+	msg := &discordgo.MessageEmbed{
+		Title:       "**🏆 DELIVERY MONTHLY REPORT 🏆**" + " - " + strings.ToUpper("DATE"),
+		Description: content,
+		Footer: &discordgo.MessageEmbedFooter{
+			IconURL: "https://cdn.discordapp.com/avatars/564764617545482251/9c9bd4aaba164fc0b92f13f052405b4d.webp?size=160",
+			Text:    "?help to see all commands",
+		},
+	}
+
+	return d.SendEmbeddedMessageWithChannel(nil, msg, channelID)
+}
+
 func getLeaderboardAsString(data []view.LeaderBoardItem) string {
 	emojiMap := map[int]string{
 		1: getEmoji("BADGE1"),

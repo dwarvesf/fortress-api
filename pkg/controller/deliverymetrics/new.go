@@ -9,8 +9,8 @@ import (
 )
 
 type IController interface {
-	GetWeeklyReport() (*WeeklyReport, error)
-	GetMonthlyReport() (*MonthlyReport, error)
+	GetWeeklyReport() (*model.WeeklyReport, error)
+	GetMonthlyReport() (*model.MonthlyReport, error)
 	GetWeeklyLeaderBoard() (*model.WeeklyLeaderBoard, error)
 
 	Sync() error
