@@ -15,6 +15,16 @@ func (h *handler) GetWeeklyReport(c *gin.Context) {
 		"method":  "GetWeeklyReport",
 	})
 
+	sync := c.Query("sync")
+	if sync == "true" {
+		err := h.controller.DeliveryMetric.Sync()
+		if err != nil {
+			l.Error(err, "failed to sync new data")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, "failed to sync new data"))
+			return
+		}
+	}
+
 	// Get data of current week
 	report, err := h.controller.DeliveryMetric.GetWeeklyReport()
 	if err != nil {
@@ -32,6 +42,16 @@ func (h *handler) GetMonthlyReport(c *gin.Context) {
 		"handler": "delivery",
 		"method":  "GetMonthlyReport",
 	})
+
+	sync := c.Query("sync")
+	if sync == "true" {
+		err := h.controller.DeliveryMetric.Sync()
+		if err != nil {
+			l.Error(err, "failed to sync new data")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, "failed to sync new data"))
+			return
+		}
+	}
 
 	// Get data of current month
 	report, err := h.controller.DeliveryMetric.GetMonthlyReport()
