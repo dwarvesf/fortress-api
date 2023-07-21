@@ -20,7 +20,12 @@ type DeliveryMetric struct {
 
 type DeliveryMetrics []DeliveryMetric
 
-type WeeklyLeaderBoard struct {
+type LeaderBoard struct {
+	Date  *time.Time
+	Items []LeaderBoardItem
+}
+
+type MonthlyLeaderBoard struct {
 	Date  *time.Time
 	Items []LeaderBoardItem
 }
