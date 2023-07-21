@@ -32,7 +32,7 @@ func (s *store) GetLatestWeek(db *gorm.DB) (*time.Time, error) {
 
 func (s *store) GetTopWeighMetrics(db *gorm.DB, w *time.Time, limit int) ([]model.DeliveryMetric, error) {
 	var rs []model.DeliveryMetric
-	return rs, db.Where("date = ?", w).Order("weight DESC").Limit(limit).Find(&rs).Error
+	return rs, db.Where("date = ?", w).Order("weight DESC, effectiveness DESC").Limit(limit).Find(&rs).Error
 }
 
 // UpdateSelectedFieldsByID just update selected fields by id

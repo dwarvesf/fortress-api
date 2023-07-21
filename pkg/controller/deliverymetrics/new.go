@@ -3,6 +3,7 @@ package deliverymetrics
 import (
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
+	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 )
@@ -10,7 +11,7 @@ import (
 type IController interface {
 	GetWeeklyReport() (*WeeklyReport, error)
 	GetMonthlyReport() (*MonthlyReport, error)
-	GetWeeklyLeaderBoard() (*WeeklyLeaderBoard, error)
+	GetWeeklyLeaderBoard() (*model.WeeklyLeaderBoard, error)
 
 	Sync() error
 }

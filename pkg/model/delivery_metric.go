@@ -19,3 +19,18 @@ type DeliveryMetric struct {
 }
 
 type DeliveryMetrics []DeliveryMetric
+
+type WeeklyLeaderBoard struct {
+	Date  *time.Time
+	Items []LeaderBoardItem
+}
+
+type LeaderBoardItem struct {
+	EmployeeID      string
+	EmployeeName    string
+	Points          decimal.Decimal
+	Effectiveness   decimal.Decimal
+	DiscordID       string
+	DiscordUsername string
+	Rank            int
+}
