@@ -490,27 +490,27 @@ func (d *discordClient) DeliveryMetricWeeklyReport(deliveryMetric *view.Delivery
 
 	content += previousWeek
 
-	emojiUp := ":arrow_up_animated:"
-	emojiDown := ":arrow_down_animated:"
+	emojiUp := "<a:arrow_up_animated:1131789319644921936>"
+	emojiDown := "<a:arrow_down_animated:1131789144759214171>"
 
 	pointChange := fmt.Sprintf("%v %v%%", emojiUp, deliveryMetric.TotalPointChangePercentage)
 	if deliveryMetric.TotalPointChangePercentage < 0 {
-		pointChange = fmt.Sprintf("%v %v%%", emojiDown, deliveryMetric.TotalPointChangePercentage)
+		pointChange = fmt.Sprintf("%v%v%%", emojiDown, deliveryMetric.TotalPointChangePercentage)
 	}
 
-	effortChange := fmt.Sprintf("%v %v%%", emojiUp, deliveryMetric.EffortChangePercentage)
+	effortChange := fmt.Sprintf("%v%v%%", emojiUp, deliveryMetric.EffortChangePercentage)
 	if deliveryMetric.EffortChangePercentage < 0 {
-		effortChange = fmt.Sprintf("%v %v%%", emojiDown, deliveryMetric.EffortChangePercentage)
+		effortChange = fmt.Sprintf("%v%v%%", emojiDown, deliveryMetric.EffortChangePercentage)
 	}
 
-	avgPointChange := fmt.Sprintf("%v %v%%", emojiUp, deliveryMetric.AvgPointChangePercentage)
+	avgPointChange := fmt.Sprintf("%v%v%%", emojiUp, deliveryMetric.AvgPointChangePercentage)
 	if deliveryMetric.AvgPointChangePercentage < 0 {
-		avgPointChange = fmt.Sprintf("%v %v%%", emojiDown, deliveryMetric.AvgPointChangePercentage)
+		avgPointChange = fmt.Sprintf("%v%v%%", emojiDown, deliveryMetric.AvgPointChangePercentage)
 	}
 
 	avgEffortChange := fmt.Sprintf("%v %v%%", emojiUp, deliveryMetric.AvgEffortChangePercentage)
 	if deliveryMetric.AvgEffortChangePercentage < 0 {
-		avgEffortChange = fmt.Sprintf("%v %v%%", emojiDown, deliveryMetric.AvgEffortChangePercentage)
+		avgEffortChange = fmt.Sprintf("%v%v%%", emojiDown, deliveryMetric.AvgEffortChangePercentage)
 	}
 
 	currentWeek := fmt.Sprintf("\n**Current Week - %v**\n", deliveryMetric.CurrentWeek.Date.Format("02 Jan 2006"))
