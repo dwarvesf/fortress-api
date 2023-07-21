@@ -490,8 +490,8 @@ func (d *discordClient) DeliveryMetricWeeklyReport(deliveryMetric *view.Delivery
 
 	content += previousWeek
 
-	emojiUp := ":arrow_up~1:"
-	emojiDown := ":arrowdown~1:"
+	emojiUp := ":arrow_up_animated:"
+	emojiDown := ":arrow_down_animated:"
 
 	pointChange := fmt.Sprintf("%v %v%%", emojiUp, deliveryMetric.TotalPointChangePercentage)
 	if deliveryMetric.TotalPointChangePercentage < 0 {
