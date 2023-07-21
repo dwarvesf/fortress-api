@@ -21,9 +21,10 @@ func (input BraineryReportInput) Validate() error {
 }
 
 type DeliveryMetricReportInput struct {
-	View      string `json:"view" binding:"required"`
-	ChannelID string `json:"channelID" binding:"required"`
-	Sync      bool   `json:"sync"`
+	View               string `json:"view" binding:"required"`
+	ChannelID          string `json:"channelID" binding:"required"`
+	OnlyCompletedMonth bool   `json:"onlyCompletedMonth"`
+	Sync               bool   `json:"sync"`
 }
 
 func (input DeliveryMetricReportInput) Validate() error {
