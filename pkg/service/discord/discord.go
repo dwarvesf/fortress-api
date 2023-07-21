@@ -481,7 +481,7 @@ func calculateTopContributor(topContributors []view.TopContributor) string {
 
 func (d *discordClient) DeliveryMetricWeeklyReport(deliveryMetric *view.DeliveryMetricWeeklyReport, leaderBoard *view.WeeklyLeaderBoard, channelID string) (*discordgo.Message, error) {
 	var messageEmbed []*discordgo.MessageEmbedField
-	content := "\n\n"
+	content := "*Track software team's performance. Encourages competition and collaboration. Optimizes project delivery. Promotes accountability.*\n\n"
 
 	if leaderBoard != nil {
 		leaderBoardStr := getLeaderboardAsString(leaderBoard.Items)
@@ -520,6 +520,7 @@ func (d *discordClient) DeliveryMetricWeeklyReport(deliveryMetric *view.Delivery
 		avgEffortChange = fmt.Sprintf("%v%v%%", emojiDown, deliveryMetric.AvgEffortChangePercentage)
 	}
 
+	date := deliveryMetric.CurrentWeek.Date.Format("02 Jan 2006")
 	currentWeek := fmt.Sprintf("\n**Current Week - %v**\n", deliveryMetric.CurrentWeek.Date.Format("02 Jan 2006"))
 	currentWeek += fmt.Sprintf("%v`Total Point.       %vpts` (%v)\n", getEmoji("STAR_ANIMATED"), deliveryMetric.CurrentWeek.TotalPoints, pointChange)
 	currentWeek += fmt.Sprintf("%v`Effort.            %vhrs` (%v)\n", getEmoji("CLOCK_NEW"), deliveryMetric.CurrentWeek.Effort, effortChange)
@@ -529,7 +530,7 @@ func (d *discordClient) DeliveryMetricWeeklyReport(deliveryMetric *view.Delivery
 	content += currentWeek
 
 	msg := &discordgo.MessageEmbed{
-		Title:       "**🏆 DELIVERY WEEKLY REPORT 🏆**",
+		Title:       "**🏆 DELIVERY WEEKLY REPORT 🏆**" + " - " + strings.ToUpper(date),
 		Fields:      messageEmbed,
 		Description: content,
 		Footer: &discordgo.MessageEmbedFooter{
