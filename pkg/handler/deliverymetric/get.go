@@ -60,5 +60,5 @@ func (h *handler) GetWeeklyLeaderBoard(c *gin.Context) {
 	}
 
 	// Return data
-	c.JSON(http.StatusOK, view.CreateResponse[any](report, nil, nil, nil, ""))
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToDeliveryMetricLeaderBoard(report), nil, nil, nil, ""))
 }
