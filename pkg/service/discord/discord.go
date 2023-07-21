@@ -492,10 +492,10 @@ func (d *discordClient) DeliveryMetricWeeklyReport(deliveryMetric *view.Delivery
 	}
 
 	previousWeek := fmt.Sprintf("**Previous Week - %v**\n", deliveryMetric.LastWeek.Date.Format("02 Jan 2006"))
-	previousWeek += fmt.Sprintf("%v`Total Point.       %vpts`\n", getEmoji("STAR_ANIMATED"), utils.FloatToString(float64(deliveryMetric.LastWeek.TotalPoints)))
-	previousWeek += fmt.Sprintf("%v`Effort.            %vhrs`\n", getEmoji("CLOCK_NEW"), utils.FloatToString(float64(deliveryMetric.LastWeek.Effort)))
-	previousWeek += fmt.Sprintf("%v`AVG Weekly Point.  %vpts`\n", getEmoji("INCREASING_ANIMATED"), utils.FloatToString(float64(deliveryMetric.LastWeek.AvgPoint)))
-	previousWeek += fmt.Sprintf("%v`AVG Weekly Effort. %vhrs`\n", getEmoji("CLOCK_NEW"), utils.FloatToString(float64(deliveryMetric.LastWeek.AvgEffort)))
+	previousWeek += fmt.Sprintf("%v`Total Point.       %v pts`\n", getEmoji("STAR_ANIMATED"), utils.FloatToString(float64(deliveryMetric.LastWeek.TotalPoints)))
+	previousWeek += fmt.Sprintf("%v`Effort.            %v hrs`\n", getEmoji("CLOCK_NEW"), utils.FloatToString(float64(deliveryMetric.LastWeek.Effort)))
+	previousWeek += fmt.Sprintf("%v`AVG Weekly Point.  %v pts`\n", getEmoji("INCREASING_ANIMATED"), utils.FloatToString(float64(deliveryMetric.LastWeek.AvgPoint)))
+	previousWeek += fmt.Sprintf("%v`AVG Weekly Effort. %v hrs`\n", getEmoji("CLOCK_NEW"), utils.FloatToString(float64(deliveryMetric.LastWeek.AvgEffort)))
 
 	content += previousWeek
 
@@ -524,10 +524,10 @@ func (d *discordClient) DeliveryMetricWeeklyReport(deliveryMetric *view.Delivery
 
 	date := deliveryMetric.CurrentWeek.Date.Format("02 Jan 2006")
 	currentWeek := fmt.Sprintf("\n**Current Week - %v**\n", deliveryMetric.CurrentWeek.Date.Format("02 Jan 2006"))
-	currentWeek += fmt.Sprintf("%v`Total Point.       %vpts` (%v)\n", getEmoji("STAR_ANIMATED"), utils.FloatToString(float64(deliveryMetric.CurrentWeek.TotalPoints)), pointChange)
-	currentWeek += fmt.Sprintf("%v`Effort.            %vhrs` (%v)\n", getEmoji("CLOCK_NEW"), utils.FloatToString(float64(deliveryMetric.CurrentWeek.Effort)), effortChange)
-	currentWeek += fmt.Sprintf("%v`AVG Weekly Point.  %vpts` (%v)\n", getEmoji("INCREASING_ANIMATED"), utils.FloatToString(float64(deliveryMetric.CurrentWeek.AvgPoint)), avgPointChange)
-	currentWeek += fmt.Sprintf("%v`AVG Weekly Effort. %vhrs` (%v)\n", getEmoji("CLOCK_NEW"), utils.FloatToString(float64(deliveryMetric.CurrentWeek.AvgEffort)), avgEffortChange)
+	currentWeek += fmt.Sprintf("%v`Total Point.       %v pts` (%v)\n", getEmoji("STAR_ANIMATED"), utils.FloatToString(float64(deliveryMetric.CurrentWeek.TotalPoints)), pointChange)
+	currentWeek += fmt.Sprintf("%v`Effort.            %v hrs` (%v)\n", getEmoji("CLOCK_NEW"), utils.FloatToString(float64(deliveryMetric.CurrentWeek.Effort)), effortChange)
+	currentWeek += fmt.Sprintf("%v`AVG Weekly Point.  %v pts` (%v)\n", getEmoji("INCREASING_ANIMATED"), utils.FloatToString(float64(deliveryMetric.CurrentWeek.AvgPoint)), avgPointChange)
+	currentWeek += fmt.Sprintf("%v`AVG Weekly Effort. %v hrs` (%v)\n", getEmoji("CLOCK_NEW"), utils.FloatToString(float64(deliveryMetric.CurrentWeek.AvgEffort)), avgEffortChange)
 
 	content += currentWeek
 
