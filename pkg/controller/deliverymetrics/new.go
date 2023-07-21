@@ -1,6 +1,8 @@
 package deliverymetrics
 
 import (
+	"time"
+
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
@@ -9,9 +11,10 @@ import (
 )
 
 type IController interface {
-	GetWeeklyReport() (*WeeklyReport, error)
-	GetMonthlyReport() (*MonthlyReport, error)
-	GetWeeklyLeaderBoard() (*model.WeeklyLeaderBoard, error)
+	GetWeeklyReport() (*model.WeeklyReport, error)
+	GetMonthlyReport() (*model.MonthlyReport, error)
+	GetWeeklyLeaderBoard() (*model.LeaderBoard, error)
+	GetMonthlyLeaderBoard(month *time.Time) (*model.LeaderBoard, error)
 
 	Sync() error
 }

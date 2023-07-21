@@ -1,6 +1,8 @@
 package deliverymetricmonthly
 
 import (
+	"time"
+
 	"gorm.io/gorm"
 
 	"github.com/dwarvesf/fortress-api/pkg/model"
@@ -8,6 +10,5 @@ import (
 
 type IStore interface {
 	GetLast(db *gorm.DB, num int) ([]model.MonthlyDeliveryMetric, error)
-	Avg(db *gorm.DB) (model.AvgMonthlyDeliveryMetric, error)
-	AvgWithoutLatestMonth(db *gorm.DB) (model.AvgMonthlyDeliveryMetric, error)
+	AvgTo(db *gorm.DB, maxMonth *time.Time) (model.AvgMonthlyDeliveryMetric, error)
 }

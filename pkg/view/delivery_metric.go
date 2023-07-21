@@ -45,7 +45,7 @@ type LeaderBoardItem struct {
 	Rank            int             `json:"rank"`
 }
 
-func ToDeliveryMetricLeaderBoard(board *model.WeeklyLeaderBoard) *WeeklyLeaderBoard {
+func ToDeliveryMetricLeaderBoard(board *model.LeaderBoard) *WeeklyLeaderBoard {
 	items := make([]LeaderBoardItem, 0, len(board.Items))
 	// Get user info
 	for _, m := range board.Items {
@@ -64,4 +64,85 @@ func ToDeliveryMetricLeaderBoard(board *model.WeeklyLeaderBoard) *WeeklyLeaderBo
 		Date:  board.Date,
 		Items: items,
 	}
+}
+
+func ToDeliveryMetricWeeklyReport(in *model.WeeklyReport) *DeliveryMetricWeeklyReport {
+	return &DeliveryMetricWeeklyReport{
+		LastWeek: DeliveryMetricWeekReport{
+			Date:        in.LastWeek.Date,
+			TotalPoints: in.LastWeek.TotalPoints,
+			Effort:      in.LastWeek.Effort,
+			AvgPoint:    in.LastWeek.AvgPoint,
+			AvgEffort:   in.LastWeek.AvgEffort,
+		},
+		CurrentWeek: DeliveryMetricWeekReport{
+			Date:        in.CurrentWeek.Date,
+			TotalPoints: in.CurrentWeek.TotalPoints,
+			Effort:      in.CurrentWeek.Effort,
+			AvgPoint:    in.CurrentWeek.AvgPoint,
+			AvgEffort:   in.CurrentWeek.AvgEffort,
+		},
+		TotalPointChangePercentage: in.TotalPointChangePercentage,
+		EffortChangePercentage:     in.EffortChangePercentage,
+		AvgPointChangePercentage:   in.AvgPointChangePercentage,
+		AvgEffortChangePercentage:  in.AvgEffortChangePercentage,
+	}
+}
+
+func ToDeliveryMetricMonthlyReport(current model.MonthReport, prev model.MonthReport) *DeliveryMetricMonthlyReport {
+	return &DeliveryMetricMonthlyReport{
+		CurrentMonth: DeliveryMetricMonthlyReportItem{
+			Month:           current.Month,
+			TotalWeight:     current.TotalWeight,
+			Effort:          current.Effort,
+			AvgWeight:       current.AvgWeight,
+			AvgEffort:       current.AvgEffort,
+			AvgWeeklyWeight: current.AvgWeeklyWeight,
+			AvgWeeklyEffort: current.AvgWeeklyEffort,
+		},
+		LastMonth: DeliveryMetricMonthlyReportItem{
+			Month:           prev.Month,
+			TotalWeight:     prev.TotalWeight,
+			Effort:          prev.Effort,
+			AvgWeight:       prev.AvgWeight,
+			AvgEffort:       prev.AvgEffort,
+			AvgWeeklyWeight: prev.AvgWeeklyWeight,
+			AvgWeeklyEffort: prev.AvgWeeklyEffort,
+		},
+
+		TotalPointChangePercentage:      current.TotalPointChangePercentage,
+		EffortChangePercentage:          current.EffortChangePercentage,
+		AvgWeightChangePercentage:       current.AvgWeightChangePercentage,
+		AvgEffortChangePercentage:       current.AvgEffortChangePercentage,
+		AvgWeeklyPointChangePercentage:  current.AvgWeeklyPointChangePercentage,
+		AvgWeeklyEffortChangePercentage: current.AvgWeeklyEffortChangePercentage,
+	}
+}
+
+type DeliveryMetricMonthlyReport struct {
+	CurrentMonth DeliveryMetricMonthlyReportItem `json:"current_month"`
+	LastMonth    DeliveryMetricMonthlyReportItem `json:"last_month"`
+
+	TotalPointChangePercentage      float32 `json:"total_point_change_percentage"`
+	EffortChangePercentage          float32 `json:"effort_change_percentage"`
+	AvgWeightChangePercentage       float32 `json:"avg_weight_change_percentage"`
+	AvgEffortChangePercentage       float32 `json:"avg_effort_change_percentage"`
+	AvgWeeklyPointChangePercentage  float32 `json:"avg_weekly_point_change_percentage"`
+	AvgWeeklyEffortChangePercentage float32 `json:"avg_weekly_effort_change_percentage"`
+}
+
+type DeliveryMetricMonthlyReportItem struct {
+	Month       *time.Time `json:"date"`
+	TotalWeight float32    `json:"total_weight"`
+	Effort      float32    `json:"effort"`
+
+	AvgWeight       float32 `json:"avg_weight"`
+	AvgEffort       float32 `json:"avg_effort"`
+	AvgWeeklyWeight float32 `json:"avg_weekly_weight"`
+	AvgWeeklyEffort float32 `json:"avg_weekly_effort"`
+}
+
+type MonthlyLeaderBoard struct {
+	Date  *time.Time        `json:"date"`
+	Items []LeaderBoardItem `json:"items"`
 }
