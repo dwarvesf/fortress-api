@@ -317,6 +317,13 @@ func (h *handler) DeliveryMetricsReport(c *gin.Context) {
 		return
 	}
 
+	leaderBoard, err := h.controller.DeliveryMetric.GetWeeklyLeaderBoard()
+	if err != nil {
+		l.Errorf(err, "failed to get delivery metric weekly report", "body", in)
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, in, ""))
+		return
+	}
+
 	vw := &view.DeliveryMetricWeeklyReport{
 		LastWeek: view.DeliveryMetricWeekReport{
 			Date:        report.LastWeek.Date,
@@ -338,7 +345,7 @@ func (h *handler) DeliveryMetricsReport(c *gin.Context) {
 		AvgEffortChangePercentage:  report.AvgEffortChangePercentage,
 	}
 
-	discordMsg, err := h.service.Discord.DeliveryMetricWeeklyReport(vw, in.ChannelID)
+	discordMsg, err := h.service.Discord.DeliveryMetricWeeklyReport(vw, view.ToDeliveryMetricLeaderBoard(leaderBoard), in.ChannelID)
 	if err != nil {
 		h.logger.Error(err, "failed to post Discord message")
 		c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, err, discordMsg, ""))

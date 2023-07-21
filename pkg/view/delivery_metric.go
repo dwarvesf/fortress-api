@@ -45,7 +45,7 @@ type LeaderBoardItem struct {
 	Rank            int             `json:"rank"`
 }
 
-func ToDeliveryMetricLeaderBoard(board *model.WeeklyLeaderBoard) WeeklyLeaderBoard {
+func ToDeliveryMetricLeaderBoard(board *model.WeeklyLeaderBoard) *WeeklyLeaderBoard {
 	items := make([]LeaderBoardItem, 0, len(board.Items))
 	// Get user info
 	for _, m := range board.Items {
@@ -60,7 +60,7 @@ func ToDeliveryMetricLeaderBoard(board *model.WeeklyLeaderBoard) WeeklyLeaderBoa
 		})
 	}
 
-	return WeeklyLeaderBoard{
+	return &WeeklyLeaderBoard{
 		Date:  board.Date,
 		Items: items,
 	}
