@@ -74,6 +74,8 @@ type MonthReport struct {
 
 	TotalPointChangePercentage      float32 `json:"total_point_change_percentage"`
 	EffortChangePercentage          float32 `json:"effort_change_percentage"`
+	AvgWeightChangePercentage       float32 `json:"avg_weight_change_percentage"`
+	AvgEffortChangePercentage       float32 `json:"avg_effort_change_percentage"`
 	AvgWeeklyPointChangePercentage  float32 `json:"avg_weekly_point_change_percentage"`
 	AvgWeeklyEffortChangePercentage float32 `json:"avg_weekly_effort_change_percentage"`
 }

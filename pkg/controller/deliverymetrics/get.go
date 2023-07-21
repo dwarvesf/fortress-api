@@ -2,9 +2,10 @@ package deliverymetrics
 
 import (
 	"errors"
+	"math"
+
 	"github.com/shopspring/decimal"
 	"gorm.io/gorm"
-	"math"
 
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/store"
@@ -69,7 +70,7 @@ func GetWeeklyReport(s *store.Store, db *gorm.DB) (*model.WeeklyReport, error) {
 }
 
 func (c controller) GetMonthlyReport() (*model.MonthlyReport, error) {
-	return GetMonthlyReport(c.store, c.repo.DB(), 2) // 2 latest months
+	return GetMonthlyReport(c.store, c.repo.DB(), 3) // 1 current month could be not completed yet
 }
 
 func GetMonthlyReport(s *store.Store, db *gorm.DB, monthNumToTake int) (*model.MonthlyReport, error) {
@@ -91,7 +92,7 @@ func GetMonthlyReport(s *store.Store, db *gorm.DB, monthNumToTake int) (*model.M
 		}
 
 		// Avg monthly
-		avgMetric, err := s.MonthlyDeliveryMetric.Avg(db)
+		avgMetric, err := s.MonthlyDeliveryMetric.AvgTo(db, m.Month)
 		if err != nil {
 			return nil, err
 		}
@@ -123,6 +124,12 @@ func GetMonthlyReport(s *store.Store, db *gorm.DB, monthNumToTake int) (*model.M
 			(currentReport.TotalWeight - prevMonthReport.TotalWeight) / prevMonthReport.TotalWeight * 100)
 		currentReport.EffortChangePercentage = roundFloat32To2Decimals(
 			(currentReport.Effort - prevMonthReport.Effort) / prevMonthReport.Effort * 100)
+
+		currentReport.AvgWeightChangePercentage = roundFloat32To2Decimals(
+			(currentReport.AvgWeight - prevMonthReport.AvgWeight) / prevMonthReport.AvgWeight * 100)
+		currentReport.AvgEffortChangePercentage = roundFloat32To2Decimals(
+			(currentReport.AvgEffort - prevMonthReport.AvgEffort) / prevMonthReport.AvgEffort * 100)
+
 		currentReport.AvgWeeklyPointChangePercentage = roundFloat32To2Decimals(
 			(currentReport.AvgWeeklyWeight - prevMonthReport.AvgWeeklyWeight) / prevMonthReport.AvgWeeklyWeight * 100)
 		currentReport.AvgWeeklyEffortChangePercentage = roundFloat32To2Decimals(
