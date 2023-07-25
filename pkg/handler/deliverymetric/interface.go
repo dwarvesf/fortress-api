@@ -8,5 +8,8 @@ type IHandler interface {
 	GetWeeklyLeaderBoard(c *gin.Context)
 	GetMonthlyLeaderBoard(c *gin.Context)
 
+	GetWeeklyReportDiscordMsg(c *gin.Context)
+	GetMonthlyReportDiscordMsg(c *gin.Context)
+
 	Sync(c *gin.Context)
 }

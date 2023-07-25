@@ -480,12 +480,12 @@ func calculateTopContributor(topContributors []view.TopContributor) string {
 	return topContributor
 }
 
-func (d *discordClient) DeliveryMetricWeeklyReport(deliveryMetric *view.DeliveryMetricWeeklyReport, leaderBoard *view.WeeklyLeaderBoard, channelID string) (*discordgo.Message, error) {
+func CreateDeliveryMetricWeeklyReportMessage(deliveryMetric *view.DeliveryMetricWeeklyReport, leaderBoard *view.WeeklyLeaderBoard) *discordgo.MessageEmbed {
 	var messageEmbed []*discordgo.MessageEmbedField
 	content := "*Track software team's performance. Encourages competition and collaboration. Optimizes project delivery. Promotes accountability.*\n\n"
 
 	if leaderBoard != nil {
-		leaderBoardStr := getLeaderboardAsString(leaderBoard.Items)
+		leaderBoardStr := getLeaderBoardAsString(leaderBoard.Items)
 		content += "**Leaderboard**\n"
 		content += leaderBoardStr
 		content += "\n\n"
@@ -541,14 +541,19 @@ func (d *discordClient) DeliveryMetricWeeklyReport(deliveryMetric *view.Delivery
 		},
 	}
 
+	return msg
+}
+
+func (d *discordClient) DeliveryMetricWeeklyReport(deliveryMetric *view.DeliveryMetricWeeklyReport, leaderBoard *view.WeeklyLeaderBoard, channelID string) (*discordgo.Message, error) {
+	msg := CreateDeliveryMetricWeeklyReportMessage(deliveryMetric, leaderBoard)
 	return d.SendEmbeddedMessageWithChannel(nil, msg, channelID)
 }
 
-func (d *discordClient) DeliveryMetricMonthlyReport(deliveryMetric *view.DeliveryMetricMonthlyReport, leaderBoard *view.WeeklyLeaderBoard, channelID string) (*discordgo.Message, error) {
+func CreateDeliveryMetricMonthlyReportMessage(deliveryMetric *view.DeliveryMetricMonthlyReport, leaderBoard *view.WeeklyLeaderBoard) *discordgo.MessageEmbed {
 	content := "*Track software team's performance. Encourages competition and collaboration. Optimizes project delivery. Promotes accountability.*\n\n"
 
 	if leaderBoard != nil {
-		leaderBoardStr := getLeaderboardAsString(leaderBoard.Items)
+		leaderBoardStr := getLeaderBoardAsString(leaderBoard.Items)
 		content += "**Leaderboard**\n"
 		content += leaderBoardStr
 		content += "\n\n"
@@ -617,10 +622,15 @@ func (d *discordClient) DeliveryMetricMonthlyReport(deliveryMetric *view.Deliver
 		},
 	}
 
+	return msg
+}
+
+func (d *discordClient) DeliveryMetricMonthlyReport(deliveryMetric *view.DeliveryMetricMonthlyReport, leaderBoard *view.WeeklyLeaderBoard, channelID string) (*discordgo.Message, error) {
+	msg := CreateDeliveryMetricMonthlyReportMessage(deliveryMetric, leaderBoard)
 	return d.SendEmbeddedMessageWithChannel(nil, msg, channelID)
 }
 
-func getLeaderboardAsString(data []view.LeaderBoardItem) string {
+func getLeaderBoardAsString(data []view.LeaderBoardItem) string {
 	emojiMap := map[int]string{
 		1: getEmoji("BADGE1"),
 		2: getEmoji("BADGE2"),
@@ -630,7 +640,7 @@ func getLeaderboardAsString(data []view.LeaderBoardItem) string {
 	}
 	// Sort the data by rank in ascending order
 	var currentRank int
-	var leaderboardString strings.Builder
+	var leaderBoardString strings.Builder
 	for _, employee := range data {
 		rank := employee.Rank
 		if rank > 5 {
@@ -641,16 +651,16 @@ func getLeaderboardAsString(data []view.LeaderBoardItem) string {
 		}
 		if rank != currentRank {
 			if currentRank > 0 {
-				leaderboardString.WriteString("\n")
+				leaderBoardString.WriteString("\n")
 			}
 			currentRank = employee.Rank
-			leaderboardString.WriteString(fmt.Sprintf("%v ", emojiMap[currentRank]))
+			leaderBoardString.WriteString(fmt.Sprintf("%v ", emojiMap[currentRank]))
 		}
 
-		leaderboardString.WriteString(fmt.Sprintf("<@%v> ", employee.DiscordID))
+		leaderBoardString.WriteString(fmt.Sprintf("<@%v> ", employee.DiscordID))
 	}
 
-	return leaderboardString.String()
+	return leaderBoardString.String()
 }
 func (d *discordClient) SendEmbeddedMessageWithChannel(original *model.OriginalDiscordMessage, embed *discordgo.MessageEmbed, channelId string) (*discordgo.Message, error) {
 	msg, err := d.session.ChannelMessageSendEmbed(channelId, normalize(original, embed))
