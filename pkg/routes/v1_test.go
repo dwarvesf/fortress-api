@@ -865,6 +865,18 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/deliverymetric.IHandler.GetMonthlyLeaderBoard-fm",
 			},
 		},
+		"/api/v1/delivery-metrics/report/weekly/discord-msg": {
+			"GET": {
+				Method:  "GET",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/deliverymetric.IHandler.GetWeeklyReportDiscordMsg-fm",
+			},
+		},
+		"/api/v1/delivery-metrics/report/monthly/discord-msg": {
+			"GET": {
+				Method:  "GET",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/deliverymetric.IHandler.GetMonthlyReportDiscordMsg-fm",
+			},
+		},
 
 		"/api/v1/public/clients": {
 			"GET": {
