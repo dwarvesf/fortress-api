@@ -35,9 +35,18 @@ func (s *store) GetLatestMonth(db *gorm.DB) (*time.Time, error) {
 	return rs, db.Model(&model.DeliveryMetric{}).Select("DATE_TRUNC('month', date)").Order("date DESC").Limit(1).First(&rs).Error
 }
 
-func (s *store) GetTopWeighMetrics(db *gorm.DB, w *time.Time, limit int) ([]model.DeliveryMetric, error) {
-	var rs []model.DeliveryMetric
-	return rs, db.Where("date = ?", w).Order("weight DESC, effectiveness DESC").Limit(limit).Find(&rs).Error
+func (s *store) GetTopWeighMetrics(db *gorm.DB, w *time.Time, limit int) ([]model.TopWeightMetric, error) {
+	var rs []model.TopWeightMetric
+	return rs, db.Raw(`SELECT 
+											employee_id,
+											"date",
+											SUM(weight) AS sum_weight,
+											SUM(effort) AS sum_effort
+										FROM delivery_metrics
+										WHERE "date" = ?
+										GROUP BY employee_id, "date"
+										ORDER BY sum_weight DESC, sum_effort ASC
+										LIMIT ?;`, w, limit).Find(&rs).Error
 }
 
 func (s *store) GetTopMonthlyWeighMetrics(db *gorm.DB, month *time.Time, limit int) ([]model.DeliveryMetric, error) {

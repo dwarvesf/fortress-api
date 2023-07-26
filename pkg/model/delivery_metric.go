@@ -18,6 +18,12 @@ type DeliveryMetric struct {
 	Ref           int
 }
 
+type TopWeightMetric struct {
+	EmployeeID UUID
+	SumWeight  decimal.Decimal
+	SumEffort  decimal.Decimal
+}
+
 type DeliveryMetrics []DeliveryMetric
 
 type LeaderBoard struct {
