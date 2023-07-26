@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"github.com/shopspring/decimal"
 
 	"github.com/dwarvesf/fortress-api/pkg/model"
 )
@@ -34,14 +35,20 @@ func (c controller) GetWeeklyLeaderBoard() (*model.LeaderBoard, error) {
 			return nil, errors.Wrap(err, "failed to get discord account "+e.DiscordAccountID.String()+" of employee "+e.ID.String())
 		}
 
-		items = append(items, model.LeaderBoardItem{
+		item := model.LeaderBoardItem{
 			EmployeeID:      e.ID.String(),
 			EmployeeName:    e.DisplayName,
-			Points:          m.Weight,
-			Effectiveness:   m.Effectiveness,
+			Points:          m.SumWeight,
 			DiscordID:       d.DiscordID,
 			DiscordUsername: d.Username,
-		})
+		}
+		if m.SumEffort.IsZero() {
+			item.Effectiveness = decimal.NewFromFloat(0)
+		} else {
+			item.Effectiveness = m.SumWeight.DivRound(m.SumEffort, 2)
+		}
+
+		items = append(items, item)
 	}
 
 	return &model.LeaderBoard{
