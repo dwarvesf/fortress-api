@@ -335,6 +335,8 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 	// Delivery metrics
 	{
 		deliveryGroup := v1.Group("/delivery-metrics")
+		deliveryGroup.POST("/report/sync", amw.WithAuth, pmw.WithPerm(model.PermissionDeliveryMetricsSync), h.DeliveryMetric.Sync)
+
 		deliveryGroup.GET("/report/weekly", amw.WithAuth, pmw.WithPerm(model.PermissionDeliveryMetricsRead), h.DeliveryMetric.GetWeeklyReport)
 		deliveryGroup.GET("/report/monthly", amw.WithAuth, pmw.WithPerm(model.PermissionDeliveryMetricsRead), h.DeliveryMetric.GetMonthlyReport)
 		deliveryGroup.GET("/leader-board/weekly", amw.WithAuth, pmw.WithPerm(model.PermissionDeliveryMetricsLeaderBoardRead), h.DeliveryMetric.GetWeeklyLeaderBoard)
