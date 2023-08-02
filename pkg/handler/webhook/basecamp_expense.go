@@ -175,6 +175,7 @@ func (h *handler) extractExpenseData(msg model.BasecampWebhookMessage) (*bc.Base
 	msg.Recording.Parent.Title = list.Parent.Title
 	if msg.IsExpenseComplete() {
 		res.CreatorEmail = msg.Recording.Creator.Email
+		res.CreatorID = msg.Recording.Creator.ID
 	}
 	if msg.IsOperationComplete() {
 		res.CreatorEmail = msg.Creator.Email
