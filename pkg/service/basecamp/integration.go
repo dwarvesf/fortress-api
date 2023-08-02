@@ -33,6 +33,7 @@ type BasecampExpenseData struct {
 	InvoiceImageURL string
 	MetaData        datatypes.JSON
 	BasecampID      int
+	CreatorID       int
 }
 
 // ExtractBasecampExpenseAmount --
@@ -44,7 +45,7 @@ func (s *Service) ExtractBasecampExpenseAmount(source string) int {
 func (s *Service) CreateBasecampExpense(
 	data BasecampExpenseData,
 ) error {
-	employee, err := s.store.Employee.OneByBasecampID(s.repo.DB(), data.BasecampID)
+	employee, err := s.store.Employee.OneByBasecampID(s.repo.DB(), data.CreatorID)
 	if err != nil {
 		return errors.New("failed to get employee by basecampID: " + strconv.Itoa(data.BasecampID))
 	}
