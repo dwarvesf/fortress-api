@@ -9,6 +9,7 @@ import (
 	"golang.org/x/oauth2"
 	"google.golang.org/api/option"
 	"google.golang.org/api/sheets/v4"
+	"strings"
 )
 
 const SpreedSheetReadOnlyScope = "https://www.googleapis.com/auth/spreadsheets.readonly\t"
@@ -89,30 +90,39 @@ func (g *googleService) FetchSheetContent(fromIdx int) ([]DeliveryMetricRawData,
 
 	for idx := fromIdx - 1; idx < len(sheetData.Values); idx++ {
 		itm := sheetData.Values[idx]
-		if itm[4] == "" || itm[5] == "" || itm[6] == "" {
+
+		c0 := strings.TrimSpace(itm[0])
+		c1 := strings.TrimSpace(itm[1])
+		c2 := strings.TrimSpace(itm[2])
+		c3 := strings.TrimSpace(itm[3])
+		c4 := strings.TrimSpace(itm[4])
+		c5 := strings.TrimSpace(itm[5])
+		c6 := strings.TrimSpace(itm[6])
+
+		if c4 == "" || c5 == "" || c6 == "" {
 			continue
 		}
 
-		if itm[1] == "" {
-			itm[1] = "0"
+		if c1 == "" {
+			c1 = "0"
 		}
 
-		if itm[2] == "" {
-			itm[2] = "0"
+		if c2 == "" {
+			c2 = "0"
 		}
-		
-		if itm[3] == "" {
-			itm[3] = "0"
+
+		if c3 == "" {
+			c3 = "0"
 		}
 
 		tmp := DeliveryMetricRawData{
-			Person:        itm[0],
-			Weight:        itm[1],
-			Effort:        itm[2],
-			Effectiveness: itm[3],
-			Date:          itm[4],
-			Project:       itm[5],
-			Email:         itm[6],
+			Person:        c0,
+			Weight:        c1,
+			Effort:        c2,
+			Effectiveness: c3,
+			Date:          c4,
+			Project:       c5,
+			Email:         c6,
 		}
 
 		deliveryMetricRawData = append(deliveryMetricRawData, tmp)
