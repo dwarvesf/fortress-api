@@ -120,14 +120,17 @@ func ToBraineryMetric(latestPosts, logs []*model.BraineryLog, ncids []string, qu
 			return metric.TopContributors[i].Count > metric.TopContributors[j].Count
 		})
 
-		metric.TopContributors[0].Ranking = 1
-		for i := 1; i < len(metric.TopContributors); i++ {
-			if metric.TopContributors[i].Count == metric.TopContributors[i-1].Count {
-				metric.TopContributors[i].Ranking = metric.TopContributors[i-1].Ranking
-			} else {
-				metric.TopContributors[i].Ranking = metric.TopContributors[i-1].Ranking + 1
+		if len(metric.TopContributors) > 0 {
+			metric.TopContributors[0].Ranking = 1
+			for i := 1; i < len(metric.TopContributors); i++ {
+				if metric.TopContributors[i].Count == metric.TopContributors[i-1].Count {
+					metric.TopContributors[i].Ranking = metric.TopContributors[i-1].Ranking
+				} else {
+					metric.TopContributors[i].Ranking = metric.TopContributors[i-1].Ranking + 1
+				}
 			}
 		}
+
 	}
 
 	return metric
