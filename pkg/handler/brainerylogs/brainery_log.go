@@ -11,6 +11,7 @@ import (
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/controller"
+	"github.com/dwarvesf/fortress-api/pkg/handler/brainerylogs/errs"
 	"github.com/dwarvesf/fortress-api/pkg/handler/brainerylogs/request"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
@@ -107,6 +108,7 @@ func (h *handler) Create(c *gin.Context) {
 // @Produce  json
 // @Param Authorization header string true "jwt token"
 // @Param view query string false "Time view"
+// @Param date query string false "Date"
 // @Success 200 {object} view.BraineryMetric
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 500 {object} view.ErrorResponse
@@ -120,9 +122,21 @@ func (h *handler) GetMetrics(c *gin.Context) {
 	)
 
 	queryView := c.DefaultQuery("view", "weekly")
+	date := c.Query("date")
+	selectedDate := time.Now()
 
-	now := time.Now()
-	latestPosts, logs, ncids, err := h.controller.BraineryLog.GetMetrics(now, queryView)
+	if date != "" {
+		t, err := time.Parse("2006-01-02", date)
+		if err != nil {
+			l.Error(err, "failed to parse date")
+			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidDateFormat, nil, ""))
+			return
+		}
+
+		selectedDate = t
+	}
+
+	latestPosts, logs, ncids, err := h.controller.BraineryLog.GetMetrics(selectedDate, queryView)
 	if err != nil {
 		l.Error(err, "failed to get brainery metrics")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
