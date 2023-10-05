@@ -781,3 +781,32 @@ func (h *handler) PublicList(c *gin.Context) {
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToEmployeesWithLocation(employees), nil, nil, nil, ""))
 }
+
+func (h *handler) DetailByDiscord(c *gin.Context) {
+	// 0. Get current logged in user data
+	userInfo, err := authutils.GetLoggedInUserInfo(c, h.store, h.repo.DB(), h.config)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, userInfo.UserID, ""))
+		return
+	}
+
+	// 1. parse id from uri, validate id
+	id := c.Param("id")
+
+	// 1.1 prepare the logger
+	l := h.logger.Fields(logger.Fields{
+		"handler": "employee",
+		"method":  "DetailByDiscord",
+		"id":      id,
+	})
+
+	rs, err := h.controller.Employee.DetailByDiscord(id, userInfo)
+	if err != nil {
+		l.Error(err, "failed to get detail employees")
+		errs.ConvertControllerErr(c, err)
+		return
+	}
+
+	// 3. return employee
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToDiscordEmployeeDetail(rs, userInfo), nil, nil, nil, ""))
+}

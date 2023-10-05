@@ -94,7 +94,7 @@ func (h *handler) StoreVaultTransaction(c *gin.Context) {
 				Target:   transaction.Target,
 			}
 
-			srcEmployee, err := h.store.Employee.GetByDiscordID(h.repo.DB(), transaction.Sender)
+			srcEmployee, err := h.store.Employee.GetByDiscordID(h.repo.DB(), transaction.Sender, false)
 			if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 				l.Error(err, "failed to get src employee by discord account ID")
 				c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
@@ -105,7 +105,7 @@ func (h *handler) StoreVaultTransaction(c *gin.Context) {
 				icyTx.SrcEmployeeID = srcEmployee.ID
 			}
 
-			destEmployee, err := h.store.Employee.GetByDiscordID(h.repo.DB(), transaction.Target)
+			destEmployee, err := h.store.Employee.GetByDiscordID(h.repo.DB(), transaction.Target, false)
 			if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 				l.Error(err, "failed to get dest employee by discord account ID")
 				c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))

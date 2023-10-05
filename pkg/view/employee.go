@@ -3,9 +3,10 @@ package view
 import (
 	"time"
 
-	"github.com/dwarvesf/fortress-api/pkg/utils/authutils"
+	"github.com/shopspring/decimal"
 
 	"github.com/dwarvesf/fortress-api/pkg/model"
+	"github.com/dwarvesf/fortress-api/pkg/utils/authutils"
 )
 
 // EmployeeData view for listing data
@@ -45,9 +46,9 @@ type EmployeeData struct {
 	ReferredBy         *BasicEmployeeInfo    `json:"referredBy"`
 	Organizations      []Organization        `json:"organizations"`
 	Positions          []Position            `json:"positions"`
+	Projects           []EmployeeProjectData `json:"projects"`
 	Stacks             []Stack               `json:"stacks"`
 	Roles              []Role                `json:"roles"`
-	Projects           []EmployeeProjectData `json:"projects"`
 	Chapters           []Chapter             `json:"chapters"`
 	Mentees            []*MenteeInfo         `json:"mentees"`
 	BaseSalary         *BaseSalary           `json:"baseSalary"`
@@ -56,6 +57,13 @@ type EmployeeData struct {
 	WiseRecipientEmail string                `json:"wiseRecipientEmail"`
 	WiseRecipientName  string                `json:"wiseRecipientName"`
 	WiseCurrency       string                `json:"wiseCurrency"`
+}
+
+type MMAScore struct {
+	MasteryScore  decimal.Decimal `json:"masteryScore"`
+	AutonomyScore decimal.Decimal `json:"autonomyScore"`
+	MeaningScore  decimal.Decimal `json:"meaningScore"`
+	RatedAt       *time.Time      `json:"ratedAt"`
 }
 
 type MenteeInfo struct {
@@ -706,5 +714,131 @@ func ToEmployeesWithLocation(in []*model.Employee) []EmployeeLocation {
 			},
 		}
 	}
+	return rs
+}
+
+// DiscordEmployeeData view for listing data
+type DiscordEmployeeData struct {
+	model.BaseModel
+
+	// basic info
+	FullName         string     `json:"fullName"`
+	DisplayName      string     `json:"displayName"`
+	TeamEmail        string     `json:"teamEmail"`
+	PersonalEmail    string     `json:"personalEmail"`
+	Avatar           string     `json:"avatar"`
+	PhoneNumber      string     `json:"phoneNumber"`
+	Address          string     `json:"address"`
+	PlaceOfResidence string     `json:"placeOfResidence"`
+	Country          string     `json:"country"`
+	City             string     `json:"city"`
+	MBTI             string     `json:"mbti"`
+	Gender           string     `json:"gender"`
+	Horoscope        string     `json:"horoscope"`
+	DateOfBirth      *time.Time `json:"birthday"`
+	Username         string     `json:"username"`
+	GithubID         string     `json:"githubID"`
+	NotionID         string     `json:"notionID"`
+	NotionName       string     `json:"notionName"`
+	DiscordID        string     `json:"discordID"`
+	DiscordName      string     `json:"discordName"`
+	LinkedInName     string     `json:"linkedInName"`
+
+	// working info
+	WorkingStatus model.WorkingStatus `json:"status"`
+	JoinedDate    *time.Time          `json:"joinedDate"`
+	LeftDate      *time.Time          `json:"leftDate"`
+
+	Seniority *model.Seniority      `json:"seniority"`
+	Positions []Position            `json:"positions"`
+	Stacks    []Stack               `json:"stacks"`
+	Projects  []EmployeeProjectData `json:"projects"`
+
+	MMAScore *MMAScore `json:"mmaScore"`
+}
+
+func ToDiscordEmployeeDetail(employee *model.Employee, userInfo *model.CurrentLoggedUserInfo) *DiscordEmployeeData {
+	employeeProjects := make([]EmployeeProjectData, 0, len(employee.ProjectMembers))
+	for _, pm := range employee.ProjectMembers {
+		if userInfo != nil {
+			// If logged user is working on the same project or user have permission to read active, show the project
+			if pm.IsActive() && pm.Project.Status == model.ProjectStatusActive {
+				employeeProjects = append(employeeProjects, ToEmployeeProjectDetailData(&pm, userInfo))
+				continue
+			}
+		}
+	}
+
+	empSocialData := SocialAccount{}
+	for _, sa := range employee.SocialAccounts {
+		switch sa.Type {
+		case model.SocialAccountTypeGitHub:
+			empSocialData.GithubID = sa.AccountID
+		case model.SocialAccountTypeNotion:
+			empSocialData.NotionID = sa.AccountID
+			empSocialData.NotionName = sa.Name
+		case model.SocialAccountTypeLinkedIn:
+			empSocialData.LinkedInName = sa.AccountID
+		}
+	}
+
+	rs := &DiscordEmployeeData{
+		BaseModel: model.BaseModel{
+			ID:        employee.ID,
+			CreatedAt: employee.CreatedAt,
+			UpdatedAt: employee.UpdatedAt,
+		},
+
+		FullName:    employee.FullName,
+		DisplayName: employee.DisplayName,
+		TeamEmail:   employee.TeamEmail,
+		Avatar:      employee.Avatar,
+
+		Gender:      employee.Gender,
+		Horoscope:   employee.Horoscope,
+		DateOfBirth: employee.DateOfBirth,
+
+		Username:      employee.Username,
+		WorkingStatus: employee.WorkingStatus,
+		Seniority:     employee.Seniority,
+		Projects:      employeeProjects,
+
+		GithubID: empSocialData.GithubID,
+
+		Positions: ToEmployeePositions(employee.EmployeePositions),
+		Stacks:    ToEmployeeStacks(employee.EmployeeStacks),
+	}
+
+	if employee.DiscordAccount != nil {
+		rs.DiscordID = employee.DiscordAccount.DiscordID
+		rs.DiscordName = employee.DiscordAccount.Username
+	}
+
+	rs.NotionID = empSocialData.NotionID
+	rs.NotionName = empSocialData.NotionName
+	rs.LinkedInName = empSocialData.LinkedInName
+	rs.PhoneNumber = employee.PhoneNumber
+	rs.JoinedDate = employee.JoinedDate
+
+	rs.MBTI = employee.MBTI
+	rs.PersonalEmail = employee.PersonalEmail
+	rs.Address = employee.Address
+	rs.PlaceOfResidence = employee.PlaceOfResidence
+	rs.City = employee.City
+	rs.Country = employee.Country
+
+	if employee.Seniority != nil {
+		rs.Seniority = employee.Seniority
+	}
+
+	if len(employee.EmployeeMMAScores) > 0 {
+		rs.MMAScore = &MMAScore{
+			MasteryScore:  employee.EmployeeMMAScores[0].MasteryScore,
+			AutonomyScore: employee.EmployeeMMAScores[0].AutonomyScore,
+			MeaningScore:  employee.EmployeeMMAScores[0].MeaningScore,
+			RatedAt:       employee.EmployeeMMAScores[0].RatedAt,
+		}
+	}
+
 	return rs
 }

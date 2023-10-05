@@ -184,7 +184,7 @@ func (h *handler) UpdateInfo(c *gin.Context) {
 
 	discordID = discordMember.User.ID
 
-	tmpE, err := h.store.Employee.GetByDiscordID(tx.DB(), discordID)
+	tmpE, err := h.store.Employee.GetByDiscordID(tx.DB(), discordID, false)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		l.Errorf(err, "failed to get emp by discordID", "discordID", discordID)
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
@@ -775,7 +775,7 @@ func (h *handler) SubmitOnboardingForm(c *gin.Context) {
 
 	discordID = discordMember.User.ID
 
-	tmpE, err := h.store.Employee.GetByDiscordID(tx.DB(), discordID)
+	tmpE, err := h.store.Employee.GetByDiscordID(tx.DB(), discordID, false)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
 		return

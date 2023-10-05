@@ -5,8 +5,7 @@ POSTGRES_TEST_CONTAINER?=fortress_local_test
 POSTGRES_CONTAINER?=fortress_local
 TOOLS_IMAGE=dwarvesv/fortress-tools:latest
 APP_ENVIRONMENT=docker run --rm -v ${PWD}:/${APP_NAME} -w /${APP_NAME} --net=host ${TOOLS_IMAGE}
-gen-swagger:
-	${APP_ENVIRONMENT} swag init --parseDependency -g ./cmd/server/main.go
+
 .PHONY: setup init build dev test migrate-up migrate-down ci
 
 setup:
