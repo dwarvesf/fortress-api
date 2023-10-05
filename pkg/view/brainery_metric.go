@@ -130,7 +130,6 @@ func ToBraineryMetric(latestPosts, logs []*model.BraineryLog, ncids []string, qu
 				}
 			}
 		}
-
 	}
 
 	return metric

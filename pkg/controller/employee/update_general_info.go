@@ -170,7 +170,7 @@ func (r *controller) UpdateGeneralInfo(employeeID string, body UpdateEmployeeGen
 	}
 
 	accountInUsed := false
-	tmpE, err := r.store.Employee.GetByDiscordID(tx.DB(), discordID)
+	tmpE, err := r.store.Employee.GetByDiscordID(tx.DB(), discordID, false)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		l.Errorf(err, "failed to get employee by discord id", "discordID", discordID)
 		return nil, done(err)

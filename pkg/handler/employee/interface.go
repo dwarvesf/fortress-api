@@ -5,6 +5,7 @@ import "github.com/gin-gonic/gin"
 type IHandler interface {
 	Create(c *gin.Context)
 	Details(c *gin.Context)
+	DetailByDiscord(c *gin.Context)
 	GetLineManagers(c *gin.Context)
 	List(c *gin.Context)
 	UpdateEmployeeStatus(c *gin.Context)

@@ -41,4 +41,5 @@ type IController interface {
 	GetLineManagers(userInfo *model.CurrentLoggedUserInfo) (employees []*model.Employee, err error)
 	UpdateBaseSalary(l logger.Logger, employeeID string, body UpdateBaseSalaryInput) (employee *model.BaseSalary, err error)
 	ListWithLocation() (employees []*model.Employee, err error)
+	DetailByDiscord(id string, userInfo *model.CurrentLoggedUserInfo) (*model.Employee, error)
 }
