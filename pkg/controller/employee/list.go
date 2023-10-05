@@ -66,3 +66,12 @@ func (r *controller) ListWithLocation() ([]*model.Employee, error) {
 
 	return employees, nil
 }
+
+func (r *controller) ListWithMMAScore() (employees []model.EmployeeMMAScoreData, err error) {
+	rs, err := r.store.Employee.ListWithMMAScore(r.repo.DB())
+	if err != nil {
+		return nil, err
+	}
+
+	return rs, nil
+}

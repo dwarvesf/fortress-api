@@ -810,3 +810,20 @@ func (h *handler) DetailByDiscord(c *gin.Context) {
 	// 3. return employee
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToDiscordEmployeeDetail(rs, userInfo), nil, nil, nil, ""))
 }
+
+func (h *handler) ListWithMMAScore(c *gin.Context) {
+	l := h.logger.Fields(logger.Fields{
+		"handler": "employee",
+		"method":  "DetailByDiscord",
+	})
+
+	rs, err := h.controller.Employee.ListWithMMAScore()
+	if err != nil {
+		l.Error(err, "failed to get employees with mma scores")
+		errs.ConvertControllerErr(c, err)
+		return
+	}
+
+	// 3. return employee
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToEmployeesWithMMAScore(rs), nil, nil, nil, ""))
+}
