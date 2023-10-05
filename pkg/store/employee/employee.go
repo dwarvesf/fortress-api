@@ -238,9 +238,25 @@ func (s *store) GetByBasecampIDs(db *gorm.DB, basecampIDs []int) ([]*model.Emplo
 	return employees, db.Where("basecamp_id IN ?", basecampIDs).Find(&employees).Error
 }
 
-func (s *store) GetByDiscordID(db *gorm.DB, discordID string) (*model.Employee, error) {
+func (s *store) GetByDiscordID(db *gorm.DB, discordID string, preload bool) (*model.Employee, error) {
 	var employee *model.Employee
-	return employee, db.Joins("JOIN discord_accounts ON discord_accounts.id = employees.discord_account_id AND discord_accounts.discord_id = ?", discordID).Order("created_at").First(&employee).Error
+	query := db.Joins("JOIN discord_accounts ON discord_accounts.id = employees.discord_account_id AND discord_accounts.discord_id = ?", discordID)
+	if preload {
+		query = query.
+			Preload("SocialAccounts", "deleted_at IS NULL").
+			Preload("DiscordAccount", "deleted_at IS NULL").
+			Preload("ProjectMembers", "deleted_at IS NULL").
+			Preload("ProjectMembers.Project", "deleted_at IS NULL").
+			Preload("EmployeePositions", "deleted_at IS NULL").
+			Preload("EmployeePositions.Position", "deleted_at IS NULL").
+			Preload("EmployeeStacks", "deleted_at IS NULL").
+			Preload("EmployeeStacks.Stack", "deleted_at IS NULL").
+			Preload("EmployeeMMAScores", func(db *gorm.DB) *gorm.DB {
+				return db.Order("rated_at DESC").Limit(1)
+			}).
+			Preload("Seniority")
+	}
+	return employee, query.First(&employee).Error
 }
 
 // SimpleList get employees by query and pagination

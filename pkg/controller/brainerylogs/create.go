@@ -9,7 +9,7 @@ import (
 
 // Create creates a new brainery log
 func (c *controller) Create(log model.BraineryLog) (model.BraineryLog, error) {
-	emp, err := c.store.Employee.GetByDiscordID(c.repo.DB(), log.DiscordID)
+	emp, err := c.store.Employee.GetByDiscordID(c.repo.DB(), log.DiscordID, false)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		c.logger.Errorf(err, "failed to get employee by discordID", "discordID", log.DiscordID)
 		return model.BraineryLog{}, err

@@ -126,6 +126,7 @@ type Employee struct {
 	EmployeeOrganizations []EmployeeOrganization
 	EmployeeStacks        []EmployeeStack
 	EmployeeChapters      []EmployeeChapter
+	EmployeeMMAScores     []EmployeeMMAScore
 	SocialAccounts        []SocialAccount
 	Mentees               []*Employee `gorm:"references:ID;foreignKey:LineManagerID"`
 	WorkUnitMembers       []WorkUnitMember

@@ -347,6 +347,11 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 		deliveryGroup.GET("/report/monthly/discord-msg", amw.WithAuth, pmw.WithPerm(model.PermissionDeliveryMetricsRead), h.DeliveryMetric.GetMonthlyReportDiscordMsg)
 	}
 
+	discordGroup := v1.Group("/discord")
+	{
+		discordGroup.GET("/:id", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesDiscordRead), h.Employee.DetailByDiscord)
+	}
+
 	/////////////////
 	// PUBLIC API GROUP
 	/////////////////
