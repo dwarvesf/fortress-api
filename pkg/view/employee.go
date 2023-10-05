@@ -842,3 +842,30 @@ func ToDiscordEmployeeDetail(employee *model.Employee, userInfo *model.CurrentLo
 
 	return rs
 }
+
+type EmployeeMMAScore struct {
+	EmployeeID    string          `json:"employeeID"`
+	FullName      string          `json:"fullName"`
+	MMAID         string          `json:"mmaID"`
+	MasteryScore  decimal.Decimal `json:"masteryScore"`
+	AutonomyScore decimal.Decimal `json:"autonomyScore"`
+	MeaningScore  decimal.Decimal `json:"meaningScore"`
+	RatedAt       *time.Time      `json:"ratedAt"`
+}
+
+func ToEmployeesWithMMAScore(in []model.EmployeeMMAScoreData) []EmployeeMMAScore {
+	rs := make([]EmployeeMMAScore, len(in))
+	for i, v := range in {
+		rs[i] = EmployeeMMAScore{
+			EmployeeID:    v.EmployeeID.String(),
+			FullName:      v.FullName,
+			MMAID:         v.MMAID.String(),
+			MasteryScore:  v.MasteryScore,
+			AutonomyScore: v.AutonomyScore,
+			MeaningScore:  v.MeaningScore,
+			RatedAt:       v.RatedAt,
+		}
+	}
+
+	return rs
+}

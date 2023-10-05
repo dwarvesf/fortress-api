@@ -16,3 +16,13 @@ type EmployeeMMAScore struct {
 	MeaningScore  decimal.Decimal
 	RatedAt       *time.Time
 }
+
+type EmployeeMMAScoreData struct {
+	EmployeeID    UUID
+	FullName      string
+	MMAID         UUID
+	MasteryScore  decimal.Decimal
+	AutonomyScore decimal.Decimal
+	MeaningScore  decimal.Decimal
+	RatedAt       *time.Time
+}

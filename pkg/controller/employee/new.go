@@ -42,4 +42,5 @@ type IController interface {
 	UpdateBaseSalary(l logger.Logger, employeeID string, body UpdateBaseSalaryInput) (employee *model.BaseSalary, err error)
 	ListWithLocation() (employees []*model.Employee, err error)
 	DetailByDiscord(id string, userInfo *model.CurrentLoggedUserInfo) (*model.Employee, error)
+	ListWithMMAScore() (employees []model.EmployeeMMAScoreData, err error)
 }

@@ -282,3 +282,24 @@ func (s *store) GetRawList(db *gorm.DB, filter EmployeeFilter) ([]model.Employee
 
 	return employees, query.Find(&employees).Error
 }
+
+// ListWithMMAScore get employees with latest mma score
+func (s *store) ListWithMMAScore(db *gorm.DB) ([]model.EmployeeMMAScoreData, error) {
+	var employees []model.EmployeeMMAScoreData
+	query := `
+		SELECT e.id AS employee_id, e.full_name, m.id AS mma_id, m.mastery_score, m.autonomy_score, m.meaning_score, m.rated_at
+		FROM employees e
+		LEFT JOIN (
+			SELECT id, employee_id, mastery_score, autonomy_score, meaning_score, rated_at
+			FROM employee_mma_scores
+			WHERE (employee_id, rated_at) IN (
+				SELECT employee_id, MAX(rated_at) AS rated_at
+				FROM employee_mma_scores
+				GROUP BY employee_id
+			)
+		) m ON e.id = m.employee_id
+		WHERE e.deleted_at IS NULL AND e.working_status <> ?
+	`
+
+	return employees, db.Raw(query, model.WorkingStatusLeft).Scan(&employees).Error
+}
