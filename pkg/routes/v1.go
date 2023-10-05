@@ -350,6 +350,7 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 	discordGroup := v1.Group("/discord")
 	{
 		discordGroup.GET("/:id", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesDiscordRead), h.Employee.DetailByDiscord)
+		discordGroup.GET("/mma-scores", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesDiscordRead), h.Employee.ListWithMMAScore)
 	}
 
 	/////////////////

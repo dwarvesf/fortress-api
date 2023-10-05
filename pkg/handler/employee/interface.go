@@ -8,6 +8,7 @@ type IHandler interface {
 	DetailByDiscord(c *gin.Context)
 	GetLineManagers(c *gin.Context)
 	List(c *gin.Context)
+	ListWithMMAScore(c *gin.Context)
 	UpdateEmployeeStatus(c *gin.Context)
 	UpdateGeneralInfo(c *gin.Context)
 	UpdateSkills(c *gin.Context)
