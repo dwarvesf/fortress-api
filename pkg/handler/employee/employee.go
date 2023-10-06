@@ -782,7 +782,7 @@ func (h *handler) PublicList(c *gin.Context) {
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToEmployeesWithLocation(employees), nil, nil, nil, ""))
 }
 
-func (h *handler) DetailByDiscord(c *gin.Context) {
+func (h *handler) ListByDiscordRequest(c *gin.Context) {
 	// 0. Get current logged in user data
 	userInfo, err := authutils.GetLoggedInUserInfo(c, h.store, h.repo.DB(), h.config)
 	if err != nil {
@@ -791,16 +791,17 @@ func (h *handler) DetailByDiscord(c *gin.Context) {
 	}
 
 	// 1. parse id from uri, validate id
-	id := c.Param("id")
+	discordID := c.Query("discord_id")
+	email := c.Query("email")
+	key := c.Query("key")
 
 	// 1.1 prepare the logger
 	l := h.logger.Fields(logger.Fields{
 		"handler": "employee",
-		"method":  "DetailByDiscord",
-		"id":      id,
+		"method":  "ListByDiscordRequest",
 	})
 
-	rs, err := h.controller.Employee.DetailByDiscord(id, userInfo)
+	rs, err := h.controller.Employee.ListByDiscordRequest(discordID, email, key, userInfo)
 	if err != nil {
 		l.Error(err, "failed to get detail employees")
 		errs.ConvertControllerErr(c, err)
@@ -808,7 +809,7 @@ func (h *handler) DetailByDiscord(c *gin.Context) {
 	}
 
 	// 3. return employee
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToDiscordEmployeeDetail(rs, userInfo), nil, nil, nil, ""))
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToDiscordEmployeeListData(rs, userInfo), nil, nil, nil, ""))
 }
 
 func (h *handler) ListWithMMAScore(c *gin.Context) {

@@ -347,9 +347,9 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 		deliveryGroup.GET("/report/monthly/discord-msg", amw.WithAuth, pmw.WithPerm(model.PermissionDeliveryMetricsRead), h.DeliveryMetric.GetMonthlyReportDiscordMsg)
 	}
 
-	discordGroup := v1.Group("/discord")
+	discordGroup := v1.Group("/discords")
 	{
-		discordGroup.GET("/:id", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesDiscordRead), h.Employee.DetailByDiscord)
+		discordGroup.GET("", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesDiscordRead), h.Employee.ListByDiscordRequest)
 		discordGroup.GET("/mma-scores", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesDiscordRead), h.Employee.ListWithMMAScore)
 	}
 

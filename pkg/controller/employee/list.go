@@ -1,6 +1,9 @@
 package employee
 
 import (
+	errors "errors"
+	"gorm.io/gorm"
+
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/store/employee"
 	"github.com/dwarvesf/fortress-api/pkg/utils/authutils"
@@ -74,4 +77,46 @@ func (r *controller) ListWithMMAScore() (employees []model.EmployeeMMAScoreData,
 	}
 
 	return rs, nil
+}
+
+func (r *controller) ListByDiscordRequest(discordID, email, key string, userInfo *model.CurrentLoggedUserInfo) ([]model.Employee, error) {
+	in := employee.DiscordRequestFilter{
+		Email: email,
+	}
+
+	discordIDs := make([]string, 0)
+	if discordID != "" {
+		discordIDs = append(discordIDs, discordID)
+	}
+
+	if key != "" {
+		dt, err := r.service.Discord.SearchMember(key)
+		if err != nil {
+			return nil, err
+		}
+
+		if len(dt) <= 0 {
+			in.Github = key
+		} else {
+			for _, d := range dt {
+				discordIDs = append(discordIDs, d.User.ID)
+			}
+		}
+	}
+
+	in.DiscordID = discordIDs
+
+	if len(in.DiscordID) > 0 || in.Email != "" || in.Github != "" {
+		rs, err := r.store.Employee.ListByDiscordRequest(r.repo.DB(), in, true)
+		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return nil, ErrEmployeeNotFound
+			}
+			return nil, err
+		}
+
+		return rs, nil
+	}
+
+	return nil, ErrEmployeeNotFound
 }

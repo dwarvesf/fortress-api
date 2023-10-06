@@ -240,7 +240,9 @@ func (s *store) GetByBasecampIDs(db *gorm.DB, basecampIDs []int) ([]*model.Emplo
 
 func (s *store) GetByDiscordID(db *gorm.DB, discordID string, preload bool) (*model.Employee, error) {
 	var employee *model.Employee
-	query := db.Joins("JOIN discord_accounts ON discord_accounts.id = employees.discord_account_id AND discord_accounts.discord_id = ?", discordID)
+	query := db.Joins("JOIN discord_accounts ON discord_accounts.id = employees.discord_account_id AND discord_accounts.discord_id = ?", discordID).
+		Where("employees.deleted_at IS NULL AND employees.working_status <> ?", model.WorkingStatusLeft)
+
 	if preload {
 		query = query.
 			Preload("SocialAccounts", "deleted_at IS NULL").
@@ -257,6 +259,44 @@ func (s *store) GetByDiscordID(db *gorm.DB, discordID string, preload bool) (*mo
 			Preload("Seniority")
 	}
 	return employee, query.First(&employee).Error
+}
+
+func (s *store) ListByDiscordRequest(db *gorm.DB, in DiscordRequestFilter, preload bool) ([]model.Employee, error) {
+	var employee []model.Employee
+	query := db.Where("employees.deleted_at IS NULL AND employees.working_status <> ?", model.WorkingStatusLeft)
+	if len(in.DiscordID) > 0 {
+		query = query.Joins("JOIN discord_accounts ON discord_accounts.id = employees.discord_account_id AND discord_accounts.discord_id IN (?)", in.DiscordID)
+	}
+
+	if in.Email != "" {
+		query = query.Where("employees.team_email = ? OR employees.personal_email = ?", in.Email, in.Email)
+	}
+
+	if in.Github != "" {
+		query = query.Where(`employees.id IN (
+			SELECT sa.employee_id
+			FROM social_accounts sa
+			WHERE sa.account_id = ? AND sa.type = ?)
+		`, in.Github, model.SocialAccountTypeGitHub)
+	}
+
+	if preload {
+		query = query.
+			Preload("SocialAccounts", "deleted_at IS NULL").
+			Preload("DiscordAccount", "deleted_at IS NULL").
+			Preload("ProjectMembers", "deleted_at IS NULL").
+			Preload("ProjectMembers.Project", "deleted_at IS NULL").
+			Preload("EmployeePositions", "deleted_at IS NULL").
+			Preload("EmployeePositions.Position", "deleted_at IS NULL").
+			Preload("EmployeeStacks", "deleted_at IS NULL").
+			Preload("EmployeeStacks.Stack", "deleted_at IS NULL").
+			Preload("EmployeeMMAScores", func(db *gorm.DB) *gorm.DB {
+				return db.Order("rated_at DESC").Limit(1)
+			}).
+			Preload("Seniority")
+	}
+
+	return employee, query.Find(&employee).Error
 }
 
 // SimpleList get employees by query and pagination
