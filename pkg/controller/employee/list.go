@@ -96,7 +96,7 @@ func (r *controller) ListByDiscordRequest(discordID, email, key string, userInfo
 		}
 
 		if len(dt) <= 0 {
-			in.Github = key
+			in.Keyword = key
 		} else {
 			for _, d := range dt {
 				discordIDs = append(discordIDs, d.User.ID)
@@ -106,7 +106,7 @@ func (r *controller) ListByDiscordRequest(discordID, email, key string, userInfo
 
 	in.DiscordID = discordIDs
 
-	if len(in.DiscordID) > 0 || in.Email != "" || in.Github != "" {
+	if len(in.DiscordID) > 0 || in.Email != "" || in.Keyword != "" {
 		rs, err := r.store.Employee.ListByDiscordRequest(r.repo.DB(), in, true)
 		if err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -114,7 +114,6 @@ func (r *controller) ListByDiscordRequest(discordID, email, key string, userInfo
 			}
 			return nil, err
 		}
-
 		return rs, nil
 	}
 
