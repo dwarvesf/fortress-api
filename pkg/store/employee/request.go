@@ -26,5 +26,5 @@ type EmployeeFilter struct {
 type DiscordRequestFilter struct {
 	DiscordID []string
 	Email     string
-	Github    string
+	Keyword   string
 }

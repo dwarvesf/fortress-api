@@ -272,12 +272,13 @@ func (s *store) ListByDiscordRequest(db *gorm.DB, in DiscordRequestFilter, prelo
 		query = query.Where("employees.team_email = ? OR employees.personal_email = ?", in.Email, in.Email)
 	}
 
-	if in.Github != "" {
-		query = query.Where(`employees.id IN (
-			SELECT sa.employee_id
-			FROM social_accounts sa
-			WHERE sa.account_id = ? AND sa.type = ?)
-		`, in.Github, model.SocialAccountTypeGitHub)
+	if in.Keyword != "" {
+		query = query.Where(`employees.keyword_vector @@ plainto_tsquery('english_nostop', fn_remove_vietnamese_accents(LOWER(?))) OR 
+			employees.id IN (
+				SELECT sa.employee_id
+				FROM social_accounts sa
+				WHERE sa.account_id = ? AND sa.type = ?)
+		`, in.Keyword, in.Keyword, model.SocialAccountTypeGitHub)
 	}
 
 	if preload {
