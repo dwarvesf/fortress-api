@@ -890,13 +890,13 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/client.IHandler.PublicList-fm",
 			},
 		},
-		"/api/v1/discord/:id": {
+		"/api/v1/discords": {
 			"GET": {
 				Method:  "GET",
-				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/employee.IHandler.DetailByDiscord-fm",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/employee.IHandler.ListByDiscordRequest-fm",
 			},
 		},
-		"/api/v1/discord/mma-scores": {
+		"/api/v1/discords/mma-scores": {
 			"GET": {
 				Method:  "GET",
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/employee.IHandler.ListWithMMAScore-fm",

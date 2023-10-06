@@ -33,19 +33,3 @@ func (r *controller) Details(id string, userInfo *model.CurrentLoggedUserInfo) (
 
 	return rs, nil
 }
-
-func (r *controller) DetailByDiscord(id string, userInfo *model.CurrentLoggedUserInfo) (*model.Employee, error) {
-	rs, err := r.store.Employee.GetByDiscordID(r.repo.DB(), id, true)
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, ErrEmployeeNotFound
-		}
-		return nil, err
-	}
-
-	if rs.WorkingStatus == model.WorkingStatusLeft && !authutils.HasPermission(userInfo.Permissions, model.PermissionEmployeesReadFullAccess) {
-		return nil, ErrEmployeeNotFound
-	}
-
-	return rs, nil
-}

@@ -757,7 +757,19 @@ type DiscordEmployeeData struct {
 	MMAScore *MMAScore `json:"mmaScore"`
 }
 
+func ToDiscordEmployeeListData(employees []model.Employee, userInfo *model.CurrentLoggedUserInfo) []DiscordEmployeeData {
+	rs := make([]DiscordEmployeeData, 0, len(employees))
+	for _, emp := range employees {
+		empRes := ToDiscordEmployeeDetail(&emp, userInfo)
+		rs = append(rs, *empRes)
+	}
+	return rs
+}
 func ToDiscordEmployeeDetail(employee *model.Employee, userInfo *model.CurrentLoggedUserInfo) *DiscordEmployeeData {
+	if employee == nil {
+		return nil
+	}
+
 	employeeProjects := make([]EmployeeProjectData, 0, len(employee.ProjectMembers))
 	for _, pm := range employee.ProjectMembers {
 		if userInfo != nil {

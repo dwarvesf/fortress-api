@@ -22,3 +22,9 @@ type EmployeeFilter struct {
 	//field sort
 	JoinedDateSort model.SortOrder
 }
+
+type DiscordRequestFilter struct {
+	DiscordID []string
+	Email     string
+	Github    string
+}
