@@ -45,13 +45,13 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 // @Tags Feedback
 // @Accept json
 // @Produce json
-// @Param Authorization header string true "jwt token"
+// @Security BearerAuth
 // @Param status query string false "Status"
 // @Param page query string false "Page"
 // @Param size query string false "Size"
 // @Success 200 {object} view.ListFeedbackResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /feedbacks [get]
 func (h *handler) List(c *gin.Context) {
 	userID, err := authutils.GetUserIDFromContext(c, h.config)
@@ -100,13 +100,13 @@ func (h *handler) List(c *gin.Context) {
 // @Tags Feedback
 // @Accept json
 // @Produce json
-// @Param Authorization header string true "jwt token"
+// @Security BearerAuth
 // @Param id path string true "Feedback Event ID"
 // @Param topicID path string true "Employee Event Topic ID"
 // @Success 200 {object} view.FeedbackDetailResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /feedbacks/{id}/topics/{topicID} [get]
 func (h *handler) Detail(c *gin.Context) {
 	userID, err := authutils.GetUserIDFromContext(c, h.config)
@@ -223,14 +223,14 @@ func (h *handler) Detail(c *gin.Context) {
 // @Tags Feedback
 // @Accept json
 // @Produce json
-// @Param Authorization header string true "jwt token"
+// @Security BearerAuth
 // @Param id path string true "Feedback Event ID"
 // @Param topicID path string true "Employee Event Topic ID"
 // @Param Body body request.SubmitBody true "Body"
 // @Success 200 {object} view.SubmitFeedbackResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /feedbacks/{id}/topics/{topicID}/submit [post]
 func (h *handler) Submit(c *gin.Context) {
 	userID, err := authutils.GetUserIDFromContext(c, h.config)
@@ -401,10 +401,10 @@ func (h *handler) Submit(c *gin.Context) {
 // @Tags Feedback
 // @Accept json
 // @Produce json
-// @Param Authorization header string true "jwt token"
+// @Security BearerAuth
 // @Success 200 {object} view.UnreadFeedbackCountResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /feedbacks/unreads [get]
 func (h *handler) CountUnreadFeedback(c *gin.Context) {
 	userID, err := authutils.GetUserIDFromContext(c, h.config)

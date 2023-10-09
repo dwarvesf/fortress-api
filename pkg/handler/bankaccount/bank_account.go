@@ -38,7 +38,7 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 // @Accept  json
 // @Produce  json
 // @Success 200 {object} []view.ListBankAccountResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /bank-accounts [get]
 func (h *handler) List(c *gin.Context) {
 	l := h.logger.Fields(logger.Fields{

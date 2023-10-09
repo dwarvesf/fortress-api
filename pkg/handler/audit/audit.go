@@ -49,8 +49,8 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 // @Tags Audit
 // @Accept  json
 // @Produce  json
-// @Param Authorization header string true "jwt token"
-// @Success 200 {object} view.MessageResponse
+// @Security BearerAuth
+// @Success 200 {object} MessageResponse
 // @Router /cronjobs/audits [post]
 func (h *handler) Sync(c *gin.Context) {
 	h.SyncAuditCycle()

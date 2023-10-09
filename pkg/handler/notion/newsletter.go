@@ -35,8 +35,8 @@ type ProjectChangelog struct {
 // @Accept  json
 // @Produce  json
 // @Param id path string true "id"
-// @Success 200 {object} view.MessageResponse
-// @Failure 400 {object} view.ErrorResponse
+// @Success 200 {object} MessageResponse
+// @Failure 400 {object} ErrorResponse
 // @Router /notion/df-updates/{id}/send [post]
 func (h *handler) SendNewsLetter(c *gin.Context) {
 	contentID := c.Param("id")

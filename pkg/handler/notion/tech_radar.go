@@ -21,8 +21,8 @@ import (
 // @Tags Notion
 // @Accept  json
 // @Produce  json
-// @Success 200 {object} view.MessageResponse
-// @Failure 400 {object} view.ErrorResponse
+// @Success 200 {object} MessageResponse
+// @Failure 400 {object} ErrorResponse
 // @Router /notion/tech-radars [get]
 func (h *handler) ListTechRadars(c *gin.Context) {
 	filter := &notion.DatabaseQueryFilter{}
@@ -123,8 +123,8 @@ func (h *handler) ListTechRadars(c *gin.Context) {
 // @Accept  json
 // @Produce  json
 // @Param body body model.NotionTechRadar true "body for create tech radar item"
-// @Success 200 {object} view.MessageResponse
-// @Failure 400 {object} view.ErrorResponse
+// @Success 200 {object} MessageResponse
+// @Failure 400 {object} ErrorResponse
 func (h *handler) CreateTechRadar(c *gin.Context) {
 	var input model.NotionTechRadar
 	if err := c.ShouldBindJSON(&input); err != nil {

@@ -53,10 +53,10 @@ const (
 // @Tags Project
 // @Accept  json
 // @Produce  json
-// @Param Authorization header string true "jwt token"
-// @Success 200 {object} view.MessageResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Security BearerAuth
+// @Success 200 {object} MessageResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /brainery-logs [post]
 func (h *handler) Create(c *gin.Context) {
 	l := h.logger.Fields(
@@ -106,12 +106,12 @@ func (h *handler) Create(c *gin.Context) {
 // @Tags Project
 // @Accept  json
 // @Produce  json
-// @Param Authorization header string true "jwt token"
+// @Security BearerAuth
 // @Param view query string false "Time view"
 // @Param date query string false "Date"
 // @Success 200 {object} view.BraineryMetric
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /brainery-logs/metrics [get]
 func (h *handler) GetMetrics(c *gin.Context) {
 	l := h.logger.Fields(

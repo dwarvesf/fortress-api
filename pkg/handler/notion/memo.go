@@ -16,8 +16,8 @@ import (
 // @Tags Notion
 // @Accept  json
 // @Produce  json
-// @Success 200 {object} view.MessageResponse
-// @Failure 400 {object} view.ErrorResponse
+// @Success 200 {object} MessageResponse
+// @Failure 400 {object} ErrorResponse
 // @Router /notion/memos [get]
 func (h *handler) ListMemos(c *gin.Context) {
 	resp, err := h.service.Notion.GetDatabase(h.config.Notion.Databases.Memo, nil, []notion.DatabaseQuerySort{
