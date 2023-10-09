@@ -34,7 +34,9 @@ import (
 
 // @BasePath  /api/v1
 
-// @securityDefinitions.basic  BasicAuth
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
 func main() {
 	cfg := config.LoadConfig(config.DefaultConfigLoaders())
 	log := logger.NewLogrusLogger()

@@ -63,7 +63,7 @@ func New(controller *controller.Controller, store *store.Store, repo store.DBRep
 // @Accept  json
 // @Produce  json
 // @Success 200 {object} []model.Payroll
-// @Failure 400 {object} view.ErrorResponse
+// @Failure 400 {object} ErrorResponse
 func (h *handler) GetPayrollsByMonth(c *gin.Context) {
 	q := c.Request.URL.Query()
 

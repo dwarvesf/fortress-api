@@ -53,10 +53,10 @@ func New(controller *controller.Controller, store *store.Store, repo store.DBRep
 // @Tags Project
 // @Accept  json
 // @Produce  json
-// @Param Authorization header string true "jwt token"
+// @Security BearerAuth
 // @PSuccess 200 {object} view.IcyWeeklyDistribution
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /projects/icy-weekly-distribution [get]
 func (h *handler) IcyWeeklyDistribution(c *gin.Context) {
 	l := h.logger.Fields(logger.Fields{
@@ -80,15 +80,15 @@ func (h *handler) IcyWeeklyDistribution(c *gin.Context) {
 // @Tags Project
 // @Accept  json
 // @Produce  json
-// @Param Authorization header string true "jwt token"
+// @Security BearerAuth
 // @Param status query  []string false  "Project status"
 // @Param name   query  string false  "Project name"
 // @Param type   query  string false  "Project type"
 // @Param page   query  string false  "Page"
 // @Param size   query  string false  "Size"
 // @Success 200 {object} view.ProjectListDataResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /projects [get]
 func (h *handler) List(c *gin.Context) {
 	// 0. Get current logged in user data
@@ -139,13 +139,13 @@ func (h *handler) List(c *gin.Context) {
 // @Tags Project
 // @Accept  json
 // @Produce  json
-// @Param Authorization header string true "jwt token"
+// @Security BearerAuth
 // @Param id path string true "Project ID"
 // @Param status body model.ProjectStatus true "Project Status"
 // @Success 200 {object} view.UpdateProjectStatusResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /projects/{id}/status [put]
 func (h *handler) UpdateProjectStatus(c *gin.Context) {
 	projectID := c.Param("id")
@@ -249,11 +249,11 @@ func (h *handler) UpdateProjectStatus(c *gin.Context) {
 // @Tags Project
 // @Accept json
 // @Produce json
-// @Param Authorization header string true "jwt token"
+// @Security BearerAuth
 // @Param Body body request.CreateProjectInput true "body"
 // @Success 200 {object} view.CreateProjectData
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /projects [post]
 func (h *handler) Create(c *gin.Context) {
 	userInfo, err := authutils.GetLoggedInUserInfo(c, h.store, h.repo.DB(), h.config)
@@ -484,7 +484,7 @@ func (h *handler) createProjectHeads(db *gorm.DB, projectID model.UUID, position
 // @Tags Project
 // @Accept  json
 // @Produce  json
-// @Param Authorization header string true "jwt token"
+// @Security BearerAuth
 // @Param id path string false "Project ID"
 // @Param status query string false "Status"
 // @Param preload query bool false "Preload data with default value is true"
@@ -493,9 +493,9 @@ func (h *handler) createProjectHeads(db *gorm.DB, projectID model.UUID, position
 // @Param sort query string false "Sort"
 // @Param distinct query bool false "Distinct"
 // @Success 200 {object} view.ProjectMemberListResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /projects/{id}/members [get]
 func (h *handler) GetMembers(c *gin.Context) {
 	userInfo, err := authutils.GetLoggedInUserInfo(c, h.store, h.repo.DB(), h.config)
@@ -625,13 +625,13 @@ func (h *handler) mergeSlotAndMembers(db *gorm.DB, slots []*model.ProjectSlot, m
 // @Tags Project
 // @Accept  json
 // @Produce  json
-// @Param Authorization header string true "jwt token"
+// @Security BearerAuth
 // @Param id path string true "Project ID"
 // @Param memberID path string true "Project Member ID"
-// @Success 200 {object} view.MessageResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Success 200 {object} MessageResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /project/{id}/members/{memberID} [delete]
 func (h *handler) DeleteMember(c *gin.Context) {
 	input := request.DeleteMemberInput{
@@ -716,13 +716,13 @@ func (h *handler) DeleteMember(c *gin.Context) {
 // @Tags Project
 // @Accept  json
 // @Produce  json
-// @Param Authorization header string true "jwt token"
+// @Security BearerAuth
 // @Param id path string true "Project ID"
 // @Param slotID path string true "Slot ID"
-// @Success 200 {object} view.MessageResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Success 200 {object} MessageResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /project/{id}/slot/{slotID} [delete]
 func (h *handler) DeleteSlot(c *gin.Context) {
 	input := request.DeleteSlotInput{
@@ -771,13 +771,13 @@ func (h *handler) DeleteSlot(c *gin.Context) {
 // @Tags Project
 // @Accept  json
 // @Produce  json
-// @Param Authorization header string true "jwt token"
+// @Security BearerAuth
 // @Param id path string true "Project ID"
 // @Param memberID path string true "Employee ID"
-// @Success 200 {object} view.MessageResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Success 200 {object} MessageResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /project/{id}/members/{memberID} [put]
 func (h *handler) UnassignMember(c *gin.Context) {
 	input := request.UnassignMemberInput{
@@ -870,13 +870,13 @@ func (h *handler) UnassignMember(c *gin.Context) {
 // @Tags Project
 // @Accept json
 // @Produce json
-// @Param Authorization header string true "jwt token"
+// @Security BearerAuth
 // @Param id path string true "Project ID"
 // @Param Body body request.UpdateMemberInput true "Body"
 // @Success 200 {object} view.CreateMemberDataResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /projects/{id}/members [put]
 func (h *handler) UpdateMember(c *gin.Context) {
 	userInfo, err := authutils.GetLoggedInUserInfo(c, h.store, h.repo.DB(), h.config)
@@ -1342,13 +1342,13 @@ func (h *handler) updateProjectMember(db *gorm.DB, p *model.Project, slotID stri
 // @Tags Project
 // @Accept json
 // @Produce json
-// @Param Authorization header string true "jwt token"
+// @Security BearerAuth
 // @Param id path string true "Project ID"
 // @Param Body body request.AssignMemberInput true "Body"
 // @Success 200 {object} view.CreateMemberDataResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /projects/{id}/members [post]
 func (h *handler) AssignMember(c *gin.Context) {
 	userInfo, err := authutils.GetLoggedInUserInfo(c, h.store, h.repo.DB(), h.config)
@@ -1615,12 +1615,12 @@ func (h *handler) createSlotsAndAssignMembers(db *gorm.DB, p *model.Project, req
 // @Tags Project
 // @Accept  json
 // @Produce  json
-// @Param Authorization header string true "jwt token"
+// @Security BearerAuth
 // @Param id path string true "Project ID"
 // @Success 200 {object} view.ProjectDataResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /projects/{id} [get]
 func (h *handler) Details(c *gin.Context) {
 	// 0. Get current logged in user data
@@ -1676,13 +1676,13 @@ func (h *handler) Details(c *gin.Context) {
 // @Tags Project
 // @Accept  json
 // @Produce  json
-// @Param Authorization header string true "jwt token"
+// @Security BearerAuth
 // @Param id path string true "Project ID"
 // @Param Body body request.UpdateProjectGeneralInfoInput true "Body"
 // @Success 200 {object} view.UpdateProjectGeneralInfoResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /projects/{id}/general-info [put]
 func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 	projectID := c.Param("id")
@@ -1905,13 +1905,13 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 // @Tags Project
 // @Accept  json
 // @Produce  json
-// @Param Authorization header string true "jwt token"
+// @Security BearerAuth
 // @Param id path string true "Project ID"
 // @Param Body body request.UpdateContactInfoInput true "Body"
 // @Success 200 {object} view.UpdateProjectContactInfoResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /projects/{id}/contact-info [put]
 func (h *handler) UpdateContactInfo(c *gin.Context) {
 	userInfo, err := authutils.GetLoggedInUserInfo(c, h.store, h.repo.DB(), h.config)
@@ -2143,13 +2143,13 @@ func (h *handler) updateProjectLead(db *gorm.DB, projectID string, employeeID mo
 // @Tags Project
 // @Accept  json
 // @Produce  json
-// @Param Authorization header string true "jwt token"
+// @Security BearerAuth
 // @Param id path string true "Project ID"
 // @Param status query  model.WorkUnitStatus false "status"
 // @Success 200 {object} view.ListWorkUnitResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /projects/{id}/work-units [get]
 func (h *handler) GetWorkUnits(c *gin.Context) {
 	// 0. Get current logged in user data
@@ -2218,13 +2218,13 @@ func (h *handler) GetWorkUnits(c *gin.Context) {
 // @Tags Project
 // @Accept  json
 // @Produce  json
-// @Param Authorization header string true "jwt token"
+// @Security BearerAuth
 // @Param id path string true "Project ID"
 // @Param body body request.CreateWorkUnitBody true "Body"
 // @Success 200 {object} view.WorkUnitResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /projects/{id}/work-units [post]
 func (h *handler) CreateWorkUnit(c *gin.Context) {
 	// 0. Get current logged in user data
@@ -2370,14 +2370,14 @@ func (h *handler) CreateWorkUnit(c *gin.Context) {
 // @Tags Project
 // @Accept  json
 // @Produce  json
-// @Param Authorization header string true "jwt token"
+// @Security BearerAuth
 // @Param id path string true "Project ID"
 // @Param workUnitID path string true "Work Unit ID"
 // @Param Body body request.UpdateWorkUnitInput true "Body"
-// @Success 200 {object} view.MessageResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Success 200 {object} MessageResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /projects/{id}/work-units/{workUnitID} [put]
 func (h *handler) UpdateWorkUnit(c *gin.Context) {
 	// 0. Get current logged in user data
@@ -2655,13 +2655,13 @@ func (h *handler) createWorkUnit(db *gorm.DB, projectID string, workUnitID strin
 // @Tags Project
 // @Accept  json
 // @Produce  json
-// @Param Authorization header string true "jwt token"
+// @Security BearerAuth
 // @Param id path string true "Project ID"
 // @Param workUnitID path string true  "Work Unit ID"
-// @Success 200 {object} view.MessageResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Success 200 {object} MessageResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /projects/{id}/work-units/{workUnitID}/archive [put]
 func (h *handler) ArchiveWorkUnit(c *gin.Context) {
 	// 0. Get current logged in user data
@@ -2776,13 +2776,13 @@ func (h *handler) ArchiveWorkUnit(c *gin.Context) {
 // @Tags Project
 // @Accept  json
 // @Produce  json
-// @Param Authorization header string true "jwt token"
+// @Security BearerAuth
 // @Param id path string true "Project ID"
 // @Param workUnitID path string true "Work Unit ID"
-// @Success 200 {object} view.MessageResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Success 200 {object} MessageResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /projects/{id}/work-units/{workUnitID}/unarchive [put]
 func (h *handler) UnarchiveWorkUnit(c *gin.Context) {
 	// 0. Get current logged in user data
@@ -2909,13 +2909,13 @@ func (h *handler) UnarchiveWorkUnit(c *gin.Context) {
 // @Tags Project
 // @Accept  json
 // @Produce  json
-// @Param Authorization header string true "jwt token"
+// @Security BearerAuth
 // @Param id path string true "Project ID"
 // @Param allowsSendingSurvey query bool false "Allows sending survey"
-// @Success 200 {object} view.MessageResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Success 200 {object} MessageResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /projects/{id}/sending-survey-state [put]
 func (h *handler) UpdateSendingSurveyState(c *gin.Context) {
 	projectID := c.Param("id")
@@ -2967,12 +2967,12 @@ func (h *handler) UpdateSendingSurveyState(c *gin.Context) {
 // @Accept  json
 // @Produce  json
 // @Param id path string true "Project ID"
-// @Param Authorization header string true "jwt token"
+// @Security BearerAuth
 // @Param file formData file true "avatar upload"
 // @Success 200 {object} view.ProjectContentDataResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /projects/{id}/upload-avatar [post]
 func (h *handler) UploadAvatar(c *gin.Context) {
 	// 1.1 parse id from uri, validate id
@@ -3068,10 +3068,10 @@ func (h *handler) UploadAvatar(c *gin.Context) {
 // @Tags Project
 // @Accept  json
 // @Produce  json
-// @Success 200 {object} view.MessageResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Success 200 {object} MessageResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /cron-jobs/sync-project-member-status [post]
 func (h *handler) SyncProjectMemberStatus(c *gin.Context) {
 	l := h.logger.Fields(logger.Fields{

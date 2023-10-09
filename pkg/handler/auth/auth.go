@@ -38,9 +38,9 @@ func New(controller *controller.Controller, logger logger.Logger, cfg *config.Co
 // @Param code body string true "Google login code"
 // @Param redirectUrl body string true "Google redirect url"
 // @Success 200 {object} view.AuthData
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /auth [post]
 func (h *handler) Auth(c *gin.Context) {
 	// 1. parse code, redirectUrl from body
@@ -81,11 +81,11 @@ func (h *handler) Auth(c *gin.Context) {
 // @Tags Auth
 // @Accept  json
 // @Produce  json
-// @Param Authorization header string true "jwt token"
+// @Security BearerAuth
 // @Success 200 {object} view.AuthUserResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /auth/me [get]
 func (h *handler) Me(c *gin.Context) {
 	userID, err := authutils.GetUserIDFromContext(c, h.config)
@@ -115,11 +115,11 @@ func (h *handler) Me(c *gin.Context) {
 // @Tags Auth
 // @Accept  json
 // @Produce  json
-// @Param Authorization header string true "jwt token"
+// @Security BearerAuth
 // @Success 200 {object} view.APIKeyResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /auth/api-key [post]
 func (h *handler) CreateAPIKey(c *gin.Context) {
 	var body request.CreateAPIKeyInput

@@ -17,8 +17,8 @@ import (
 // @Tags Notion
 // @Accept  json
 // @Produce  json
-// @Success 200 {object} view.MessageResponse
-// @Failure 400 {object} view.ErrorResponse
+// @Success 200 {object} MessageResponse
+// @Failure 400 {object} ErrorResponse
 // @Router /notion/digests [get]
 func (h *handler) ListDigests(c *gin.Context) {
 	resp, err := h.service.Notion.GetDatabase(h.config.Notion.Databases.Digest, nil, []notion.DatabaseQuerySort{

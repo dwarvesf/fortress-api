@@ -39,16 +39,17 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 // Upload godoc
 // @Summary Upload the content
 // @Description Upload the content
+// @id upload
 // @Tags Asset
 // @Accept json
 // @Produce json
-// @Param Authorization header string true "jwt token"
+// @Security BearerAuth
 // @Param file formData file true "content upload"
 // @Param type formData string true "image/doc"
 // @Param targetType formData string true "employees/projects/change-logs/invoices"
 // @Param targetID formData string false "employeeID/projectID"
-// @Success 200 {object} view.ContentDataResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Success 200 {object} ContentDataResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /assets/upload [post]
 func (h *handler) Upload(c *gin.Context) {
 	// 1.1 get userID

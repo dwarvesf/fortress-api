@@ -48,13 +48,13 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 // @Tags Survey
 // @Accept json
 // @Produce json
-// @Param Authorization header string true "jwt token"
+// @Security BearerAuth
 // @Param subtype query string true "Event Subtype"
 // @Param page query string false "Page"
 // @Param size query string false "Size"
 // @Success 200 {object} view.ListSurveyResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /surveys [get]
 func (h *handler) ListSurvey(c *gin.Context) {
 	input := request.GetListSurveyInput{}
@@ -154,7 +154,7 @@ func (h *handler) getQuestionDomainCountsByEvent(db *gorm.DB, eventID string) ([
 // @Tags Survey
 // @Accept json
 // @Produce json
-// @Param Authorization header string true "jwt token"
+// @Security BearerAuth
 // @Param id path string true "Feedback Event ID"
 // @Param page query string false "Page"
 // @Param size query string false "Size"
@@ -162,9 +162,9 @@ func (h *handler) getQuestionDomainCountsByEvent(db *gorm.DB, eventID string) ([
 // @Param status query string false "Status"
 // @Param projects query []string false "Projects"
 // @Success 200 {object} view.ListSurveyDetailResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /surveys/{id} [get]
 func (h *handler) GetSurveyDetail(c *gin.Context) {
 	input := request.GetSurveyDetailInput{
@@ -230,11 +230,11 @@ func (h *handler) GetSurveyDetail(c *gin.Context) {
 // @Accept  json
 // @Produce  json
 // @Param Body body request.CreateSurveyFeedbackInput true "Body"
-// @Param Authorization header string true "jwt token"
-// @Success 200 {object} view.MessageResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Security BearerAuth
+// @Success 200 {object} MessageResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /surveys [post]
 func (h *handler) CreateSurvey(c *gin.Context) {
 	// 1. parse request
@@ -892,13 +892,13 @@ func (h *handler) createWorkEvent(db *gorm.DB, req request.CreateSurveyFeedbackI
 // @Tags Survey
 // @Accept json
 // @Produce json
-// @Param Authorization header string true "jwt token"
+// @Security BearerAuth
 // @Param id path string true "Feedback Event ID"
 // @Param Body body request.SendSurveyInput true "Body"
-// @Success 200 {object} view.MessageResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Success 200 {object} MessageResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /surveys/{id}/send [post]
 func (h *handler) SendSurvey(c *gin.Context) {
 	eventID := c.Param("id")
@@ -1030,12 +1030,12 @@ func (h *handler) updateEventReviewer(db *gorm.DB, l logger.Logger, topicID mode
 // @Tags Survey
 // @Accept json
 // @Produce json
-// @Param Authorization header string true "jwt token"
+// @Security BearerAuth
 // @Param id path string true "Feedback Event ID"
-// @Success 200 {object} view.MessageResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Success 200 {object} MessageResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /surveys/{id} [delete]
 func (h *handler) DeleteSurvey(c *gin.Context) {
 	eventID := c.Param("id")
@@ -1108,11 +1108,11 @@ func (h *handler) doSurveyDelete(db *gorm.DB, eventID string) (int, error) {
 // @Tags Survey
 // @Accept  json
 // @Produce  json
-// @Param Authorization header string true "jwt token"
+// @Security BearerAuth
 // @Success 200 {object} view.FeedbackReviewDetailResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /surveys/{id}/topics/{topicID}/reviews/{reviewID} [get]
 func (h *handler) GetSurveyReviewDetail(c *gin.Context) {
 	eventID := c.Param("id")
@@ -1200,11 +1200,11 @@ func (h *handler) GetSurveyReviewDetail(c *gin.Context) {
 // @Tags Survey
 // @Accept  json
 // @Produce  json
-// @Param Authorization header string true "jwt token"
-// @Success 200 {object} view.MessageResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Security BearerAuth
+// @Success 200 {object} MessageResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /surveys/{id}/topics/{topicID} [delete]
 func (h *handler) DeleteSurveyTopic(c *gin.Context) {
 	eventID := c.Param("id")
@@ -1294,13 +1294,13 @@ func (h *handler) DeleteSurveyTopic(c *gin.Context) {
 // @Tags Survey
 // @Accept json
 // @Produce json
-// @Param Authorization header string true "jwt token"
+// @Security BearerAuth
 // @Param id path string true "Feedback Event ID"
 // @Param topicID path string true "Employee Event Topic ID"
 // @Success 200 {object} view.SurveyTopicDetailResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /surveys/{id}/topics/{topicID} [get]
 func (h *handler) GetSurveyTopicDetail(c *gin.Context) {
 	input := request.PeerReviewDetailInput{
@@ -1342,12 +1342,12 @@ func (h *handler) GetSurveyTopicDetail(c *gin.Context) {
 // @Tags Survey
 // @Accept json
 // @Produce json
-// @Param Authorization header string true "jwt token"
+// @Security BearerAuth
 // @Param Body body request.UpdateTopicReviewersBody true "Body"
-// @Success 200 {object} view.MessageResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Success 200 {object} MessageResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /surveys/{id}/topics/{topicID}/employees [put]
 func (h *handler) UpdateTopicReviewers(c *gin.Context) {
 	input := request.UpdateTopicReviewersInput{
@@ -1550,12 +1550,12 @@ func (h *handler) createEventQuestions(db *gorm.DB, eventType model.EventType, e
 // @Tags Survey
 // @Accept json
 // @Produce json
-// @Param Authorization header string true "jwt token"
+// @Security BearerAuth
 // @Param id path string true "Feedback Event ID"
-// @Success 200 {object} view.MessageResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Success 200 {object} MessageResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /surveys/{id}/done [put]
 func (h *handler) MarkDone(c *gin.Context) {
 	eventID := c.Param("id")
@@ -1670,14 +1670,14 @@ func (h *handler) forceEventReviewersToDone(db *gorm.DB, l logger.Logger, topicI
 // @Tags Survey
 // @Accept json
 // @Produce json
-// @Param Authorization header string true "jwt token"
+// @Security BearerAuth
 // @Param id path string true "Feedback Event ID"
 // @Param topicID path string true "Employee Event Topic ID"
 // @Param Body body request.DeleteTopicReviewersBody true "Body"
-// @Success 200 {object} view.MessageResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Success 200 {object} MessageResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /surveys/{id}/topics/{topicID}/employees [delete]
 func (h *handler) DeleteTopicReviewers(c *gin.Context) {
 	input := request.DeleteTopicReviewersInput{

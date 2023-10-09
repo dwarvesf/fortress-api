@@ -18,8 +18,8 @@ import (
 // @Tags Notion
 // @Accept  json
 // @Produce  json
-// @Success 200 {object} view.MessageResponse
-// @Failure 400 {object} view.ErrorResponse
+// @Success 200 {object} MessageResponse
+// @Failure 400 {object} ErrorResponse
 // @Router /notion/hiring-positions [get]
 func (h *handler) ListHiringPositions(c *gin.Context) {
 	filter := &notion.DatabaseQueryFilter{}

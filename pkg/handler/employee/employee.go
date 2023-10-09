@@ -48,12 +48,12 @@ func New(controller *controller.Controller, store *store.Store, repo store.DBRep
 // @Tags Employee
 // @Accept  json
 // @Produce  json
-// @Param Authorization header string true "jwt token"
+// @Security BearerAuth
 // @Param Body body request.GetListEmployeeInput true "Body"
 // @Success 200 {object} view.EmployeeListDataResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /employees/search [post]
 func (h *handler) List(c *gin.Context) {
 	// 0. Get current logged in user data
@@ -158,12 +158,12 @@ func (h *handler) getWorkingStatusInput(input []string, userInfo *model.CurrentL
 // @Tags Employee
 // @Accept  json
 // @Produce  json
-// @Param Authorization header string true "jwt token"
+// @Security BearerAuth
 // @Param id path string true "Employee ID"
 // @Success 200 {object} view.EmployeeData
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /employees/{id} [get]
 func (h *handler) Details(c *gin.Context) {
 	// 0. Get current logged in user data
@@ -200,13 +200,13 @@ func (h *handler) Details(c *gin.Context) {
 // @Tags Employee
 // @Accept  json
 // @Produce  json
-// @Param Authorization header string true "jwt token"
+// @Security BearerAuth
 // @Param id path string true "Employee ID"
 // @Param employeeStatus body model.WorkingStatus true "Employee Status"
 // @Success 200 {object} view.UpdateEmployeeStatusResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /employees/{id}/employee-status [put]
 func (h *handler) UpdateEmployeeStatus(c *gin.Context) {
 	employeeID := c.Param("id")
@@ -265,13 +265,13 @@ func (h *handler) UpdateEmployeeStatus(c *gin.Context) {
 // @Tags Employee
 // @Accept  json
 // @Produce  json
-// @Param Authorization header string true "jwt token"
+// @Security BearerAuth
 // @Param id path string true "Employee ID"
 // @Param Body body request.UpdateEmployeeGeneralInfoInput true "Body"
 // @Success 200 {object} view.UpdateGeneralEmployeeResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /employees/{id}/general-info [put]
 func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 	employeeID := c.Param("id")
@@ -334,11 +334,11 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 // @Accept  json
 // @Produce  json
 // @Param Body body request.CreateEmployeeInput true "Body"
-// @Param Authorization header string true "jwt token"
+// @Security BearerAuth
 // @Success 200 {object} view.EmployeeData
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /employees [post]
 func (h *handler) Create(c *gin.Context) {
 	userID, err := authutils.GetUserIDFromContext(c, h.config)
@@ -400,11 +400,11 @@ func (h *handler) Create(c *gin.Context) {
 // @Produce  json
 // @Param id path string true "Employee ID"
 // @Param Body body request.UpdateSkillsInput true "Body"
-// @Param Authorization header string true "jwt token"
+// @Security BearerAuth
 // @Success 200 {object} view.UpdateSkillsEmployeeResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /employees/{id}/skills [put]
 func (h *handler) UpdateSkills(c *gin.Context) {
 	employeeID := c.Param("id")
@@ -450,13 +450,13 @@ func (h *handler) UpdateSkills(c *gin.Context) {
 // @Tags Employee
 // @Accept  json
 // @Produce  json
-// @Param Authorization header string true "jwt token"
+// @Security BearerAuth
 // @Param id path string true "Employee ID"
 // @Param Body body request.UpdatePersonalInfoInput true "Body"
 // @Success 200 {object} view.UpdatePersonalEmployeeResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /employees/{id}/personal-info [put]
 func (h *handler) UpdatePersonalInfo(c *gin.Context) {
 	employeeID := c.Param("id")
@@ -531,12 +531,12 @@ func (h *handler) validateAndMappingCity(db *gorm.DB, countryName string, cityNa
 // @Accept  json
 // @Produce  json
 // @Param id path string true "Employee ID"
-// @Param Authorization header string true "jwt token"
+// @Security BearerAuth
 // @Param file formData file true "avatar upload"
 // @Success 200 {object} view.EmployeeContentDataResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /employees/{id}/upload-avatar [post]
 func (h *handler) UploadAvatar(c *gin.Context) {
 	// 1.1 get userID
@@ -595,13 +595,13 @@ func (h *handler) UploadAvatar(c *gin.Context) {
 // @Tags Employee
 // @Accept  json
 // @Produce  json
-// @Param Authorization header string true "jwt token"
+// @Security BearerAuth
 // @Param id path string true "Employee ID"
 // @Param roleID body model.UUID true "Account role ID"
-// @Success 200 {object} view.MessageResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Success 200 {object} MessageResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /employees/{id}/roles [put]
 func (h *handler) UpdateRole(c *gin.Context) {
 	userID, err := authutils.GetUserIDFromContext(c, h.config)
@@ -653,9 +653,9 @@ func (h *handler) UpdateRole(c *gin.Context) {
 // @Tags Employee
 // @Accept  json
 // @Produce  json
-// @Param Authorization header string true "jwt token"
+// @Security BearerAuth
 // @Success 200 {object} view.LineManagersResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /line-managers [get]
 func (h *handler) GetLineManagers(c *gin.Context) {
 	userInfo, err := authutils.GetLoggedInUserInfo(c, h.store, h.repo.DB(), h.config)
@@ -686,13 +686,13 @@ func (h *handler) GetLineManagers(c *gin.Context) {
 // @Tags Employee
 // @Accept  json
 // @Produce  json
-// @Param Authorization header string true "jwt token"
+// @Security BearerAuth
 // @Param id path string true "Employee ID"
 // @Param Body body request.UpdateBaseSalaryInput true "Body"
 // @Success 200 {object} view.UpdateBaseSalaryResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /employees/{id}/base-salary [put]
 func (h *handler) UpdateBaseSalary(c *gin.Context) {
 	employeeID := c.Param("id")
@@ -762,9 +762,9 @@ func (h *handler) UpdateBaseSalary(c *gin.Context) {
 // @Accept  json
 // @Produce  json
 // @Success 200 {object} view.EmployeeLocationListResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /public/employees [get]
 func (h *handler) PublicList(c *gin.Context) {
 	l := h.logger.Fields(logger.Fields{

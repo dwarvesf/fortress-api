@@ -45,10 +45,10 @@ func New(controller *controller.Controller, store *store.Store, repo store.DBRep
 // @Tags Client
 // @Accept  json
 // @Produce  json
-// @Param Authorization header string true "jwt token"
+// @Security BearerAuth
 // @Param Body body request.CreateClientInput true "Body"
 // @Success 200 {object} view.CreateClientResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /clients [post]
 func (h *handler) Create(c *gin.Context) {
 	input := request.CreateClientInput{}
@@ -79,9 +79,9 @@ func (h *handler) Create(c *gin.Context) {
 // @Tags Client
 // @Accept  json
 // @Produce  json
-// @Param Authorization header string true "jwt token"
+// @Security BearerAuth
 // @Success 200 {object} view.GetListClientResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /clients [get]
 func (h *handler) List(c *gin.Context) {
 	l := h.logger.Fields(logger.Fields{
@@ -105,11 +105,11 @@ func (h *handler) List(c *gin.Context) {
 // @Tags Client
 // @Accept  json
 // @Produce  json
-// @Param Authorization header string true "jwt token"
+// @Security BearerAuth
 // @Success 200 {object} view.GetDetailClientResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /clients/{id} [get]
 func (h *handler) Detail(c *gin.Context) {
 	clientID := c.Param("id")
@@ -144,12 +144,12 @@ func (h *handler) Detail(c *gin.Context) {
 // @Tags Client
 // @Accept  json
 // @Produce  json
-// @Param Authorization header string true "jwt token"
+// @Security BearerAuth
 // @Param Body body request.UpdateClientInput true "Body"
-// @Success 200 {object} view.MessageResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Success 200 {object} MessageResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /clients/{id} [put]
 func (h *handler) Update(c *gin.Context) {
 	clientID := c.Param("id")
@@ -186,10 +186,10 @@ func (h *handler) Update(c *gin.Context) {
 // @Tags Client
 // @Accept  json
 // @Produce  json
-// @Success 200 {object} view.MessageResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Success 200 {object} MessageResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /clients/{id} [delete]
 func (h *handler) Delete(c *gin.Context) {
 	clientID := c.Param("id")
@@ -220,9 +220,9 @@ func (h *handler) Delete(c *gin.Context) {
 // @Tags Public
 // @Accept  json
 // @Produce  json
-// @Param Authorization header string true "jwt token"
+// @Security BearerAuth
 // @Success 200 {object} view.PublicClientListResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /clients [get]
 func (h *handler) PublicList(c *gin.Context) {
 	l := h.logger.Fields(logger.Fields{
