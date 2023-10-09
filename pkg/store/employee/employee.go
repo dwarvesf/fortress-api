@@ -263,7 +263,7 @@ func (s *store) GetByDiscordID(db *gorm.DB, discordID string, preload bool) (*mo
 
 func (s *store) ListByDiscordRequest(db *gorm.DB, in DiscordRequestFilter, preload bool) ([]model.Employee, error) {
 	var employee []model.Employee
-	query := db.Where("employees.deleted_at IS NULL AND employees.working_status <> ?", model.WorkingStatusLeft)
+	query := db.Where("employees.deleted_at IS NULL AND employees.working_status <> ?", model.WorkingStatusLeft).Order("employees.joined_date DESC")
 	if len(in.DiscordID) > 0 {
 		query = query.Joins("JOIN discord_accounts ON discord_accounts.id = employees.discord_account_id AND discord_accounts.discord_id IN (?)", in.DiscordID)
 	}
@@ -340,6 +340,7 @@ func (s *store) ListWithMMAScore(db *gorm.DB) ([]model.EmployeeMMAScoreData, err
 			)
 		) m ON e.id = m.employee_id
 		WHERE e.deleted_at IS NULL AND e.working_status <> ?
+		ORDER BY e.joined_date DESC 
 	`
 
 	return employees, db.Raw(query, model.WorkingStatusLeft).Scan(&employees).Error
