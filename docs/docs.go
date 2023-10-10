@@ -101,6 +101,7 @@ const docTemplate = `{
                     "Auth"
                 ],
                 "summary": "Authorize user when login",
+                "operationId": "auth",
                 "parameters": [
                     {
                         "description": "Google login code",
@@ -125,7 +126,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.AuthData"
+                            "$ref": "#/definitions/AuthData"
                         }
                     },
                     "400": {
@@ -167,11 +168,12 @@ const docTemplate = `{
                     "Auth"
                 ],
                 "summary": "Create API key",
+                "operationId": "createApiKey",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.APIKeyResponse"
+                            "$ref": "#/definitions/APIKeyResponse"
                         }
                     },
                     "400": {
@@ -213,11 +215,12 @@ const docTemplate = `{
                     "Auth"
                 ],
                 "summary": "Get logged-in user data",
+                "operationId": "me",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.AuthUserResponse"
+                            "$ref": "#/definitions/AuthUserResponse"
                         }
                     },
                     "400": {
@@ -254,14 +257,12 @@ const docTemplate = `{
                     "Bank"
                 ],
                 "summary": "Get all bank accounts",
+                "operationId": "listBankAccounts",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.ListBankAccountResponse"
-                            }
+                            "$ref": "#/definitions/ListBankAccountResponse"
                         }
                     },
                     "500": {
@@ -291,6 +292,18 @@ const docTemplate = `{
                     "Project"
                 ],
                 "summary": "Create brainery logs",
+                "operationId": "createBraineryLog",
+                "parameters": [
+                    {
+                        "description": "Body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/CreateBraineryLogRequest"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -331,6 +344,7 @@ const docTemplate = `{
                     "Project"
                 ],
                 "summary": "Get brainery metric",
+                "operationId": "getBraineryMetric",
                 "parameters": [
                     {
                         "type": "string",
@@ -340,6 +354,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
+                        "format": "date",
                         "description": "Date",
                         "name": "date",
                         "in": "query"
@@ -349,7 +364,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.BraineryMetric"
+                            "$ref": "#/definitions/BraineryMetricResponse"
                         }
                     },
                     "400": {
@@ -385,11 +400,12 @@ const docTemplate = `{
                     "Public"
                 ],
                 "summary": "Get all clients",
+                "operationId": "getListPublicClients",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.PublicClientListResponse"
+                            "$ref": "#/definitions/PublicClientListResponse"
                         }
                     },
                     "500": {
@@ -417,6 +433,7 @@ const docTemplate = `{
                     "Client"
                 ],
                 "summary": "Create new client",
+                "operationId": "createClient",
                 "parameters": [
                     {
                         "description": "Body",
@@ -424,7 +441,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_handler_client_request.CreateClientInput"
+                            "$ref": "#/definitions/CreateClientRequest"
                         }
                     }
                 ],
@@ -432,7 +449,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.CreateClientResponse"
+                            "$ref": "#/definitions/CreateClientResponse"
                         }
                     },
                     "500": {
@@ -462,11 +479,21 @@ const docTemplate = `{
                     "Client"
                 ],
                 "summary": "Get client detail by id",
+                "operationId": "getClientDetail",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.GetDetailClientResponse"
+                            "$ref": "#/definitions/GetDetailClientResponse"
                         }
                     },
                     "400": {
@@ -506,14 +533,22 @@ const docTemplate = `{
                     "Client"
                 ],
                 "summary": "Update client by id",
+                "operationId": "updateClient",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
                     {
                         "description": "Body",
                         "name": "Body",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_handler_client_request.UpdateClientInput"
+                            "$ref": "#/definitions/UpdateClientInput"
                         }
                     }
                 ],
@@ -556,6 +591,16 @@ const docTemplate = `{
                     "Client"
                 ],
                 "summary": "Delete client by id",
+                "operationId": "deleteClient",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -684,6 +729,7 @@ const docTemplate = `{
                     "Audit"
                 ],
                 "summary": "Sync audit info from Notion to database",
+                "operationId": "syncAudit",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -1435,7 +1481,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.EmployeeData"
+                            "$ref": "#/definitions/EmployeeData"
                         }
                     },
                     "400": {
@@ -1547,7 +1593,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.EmployeeData"
+                            "$ref": "#/definitions/EmployeeData"
                         }
                     },
                     "400": {
@@ -6102,37 +6148,196 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "ContentDataResponse": {
+        "APIKeyData": {
+            "type": "object",
+            "properties": {
+                "key": {
+                    "type": "string"
+                }
+            }
+        },
+        "APIKeyResponse": {
             "type": "object",
             "properties": {
                 "data": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.ContentData"
+                    "$ref": "#/definitions/APIKeyData"
                 }
             }
         },
-        "ErrorResponse": {
+        "Address": {
             "type": "object",
             "properties": {
-                "error": {
+                "address": {
                     "type": "string"
                 },
-                "errors": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.ApiError"
-                    }
-                }
-            }
-        },
-        "MessageResponse": {
-            "type": "object",
-            "properties": {
-                "message": {
+                "city": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
+                "lat": {
+                    "type": "string"
+                },
+                "long": {
                     "type": "string"
                 }
             }
         },
-        "github_com_dwarvesf_fortress-api_pkg_handler_client_request.CreateClientContactInput": {
+        "AuthData": {
+            "type": "object",
+            "properties": {
+                "accessToken": {
+                    "type": "string"
+                },
+                "employee": {
+                    "$ref": "#/definitions/EmployeeData"
+                }
+            }
+        },
+        "AuthUserResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/LoggedInUserData"
+                }
+            }
+        },
+        "BankAccount": {
+            "type": "object",
+            "properties": {
+                "accountNumber": {
+                    "type": "string"
+                },
+                "address": {
+                    "type": "string"
+                },
+                "bankName": {
+                    "type": "string"
+                },
+                "currency": {
+                    "$ref": "#/definitions/pkg_view.Currency"
+                },
+                "currencyID": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "intermediaryBankAddress": {
+                    "type": "string"
+                },
+                "intermediaryBankName": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "ownerName": {
+                    "type": "string"
+                },
+                "routingNumber": {
+                    "type": "string"
+                },
+                "swiftCode": {
+                    "type": "string"
+                },
+                "ukSortCode": {
+                    "type": "string"
+                }
+            }
+        },
+        "BraineryMetricResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.BraineryMetric"
+                }
+            }
+        },
+        "City": {
+            "type": "object",
+            "properties": {
+                "lat": {
+                    "type": "string"
+                },
+                "long": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "Client": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "avatar": {
+                    "type": "string"
+                },
+                "city": {
+                    "type": "string"
+                },
+                "companySize": {
+                    "type": "string"
+                },
+                "contacts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ClientContact"
+                    }
+                },
+                "country": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "industry": {
+                    "type": "string"
+                },
+                "isPublic": {
+                    "type": "boolean"
+                },
+                "lat": {
+                    "type": "string"
+                },
+                "long": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "projects": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Project"
+                    }
+                },
+                "registrationNumber": {
+                    "type": "string"
+                },
+                "solutionType": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                },
+                "website": {
+                    "type": "string"
+                }
+            }
+        },
+        "ClientContact": {
             "type": "object",
             "properties": {
                 "emails": {
@@ -6140,6 +6345,9 @@ const docTemplate = `{
                     "items": {
                         "type": "string"
                     }
+                },
+                "id": {
+                    "type": "string"
                 },
                 "isMainContact": {
                     "type": "boolean"
@@ -6152,7 +6360,72 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_dwarvesf_fortress-api_pkg_handler_client_request.CreateClientInput": {
+        "ContentDataResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/pkg_view.ContentData"
+                }
+            }
+        },
+        "Country": {
+            "type": "object",
+            "properties": {
+                "cities": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/City"
+                    }
+                },
+                "code": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "CreateBraineryLogRequest": {
+            "type": "object",
+            "required": [
+                "discordID",
+                "publishedAt",
+                "reward",
+                "tags",
+                "title",
+                "url"
+            ],
+            "properties": {
+                "discordID": {
+                    "type": "string"
+                },
+                "githubID": {
+                    "type": "string"
+                },
+                "publishedAt": {
+                    "type": "string"
+                },
+                "reward": {
+                    "type": "number"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "title": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "CreateClientRequest": {
             "type": "object",
             "properties": {
                 "address": {
@@ -6161,7 +6434,7 @@ const docTemplate = `{
                 "contacts": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_handler_client_request.CreateClientContactInput"
+                        "$ref": "#/definitions/pkg_handler_client_request.CreateClientContactInput"
                     }
                 },
                 "country": {
@@ -6184,27 +6457,710 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_dwarvesf_fortress-api_pkg_handler_client_request.UpdateClientContactInput": {
+        "CreateClientResponse": {
             "type": "object",
             "properties": {
-                "emails": {
+                "data": {
+                    "$ref": "#/definitions/Client"
+                }
+            }
+        },
+        "EmployeeData": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "avatar": {
+                    "type": "string"
+                },
+                "baseSalary": {
+                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.BaseSalary"
+                },
+                "birthday": {
+                    "type": "string"
+                },
+                "chapters": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.Chapter"
+                    }
+                },
+                "city": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "deletedAt": {
+                    "$ref": "#/definitions/gorm.DeletedAt"
+                },
+                "discordID": {
+                    "type": "string"
+                },
+                "discordName": {
+                    "type": "string"
+                },
+                "displayName": {
+                    "type": "string"
+                },
+                "fullName": {
+                    "description": "basic info",
+                    "type": "string"
+                },
+                "gender": {
+                    "type": "string"
+                },
+                "githubID": {
+                    "type": "string"
+                },
+                "horoscope": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "joinedDate": {
+                    "type": "string"
+                },
+                "leftDate": {
+                    "type": "string"
+                },
+                "lineManager": {
+                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.BasicEmployeeInfo"
+                },
+                "linkedInName": {
+                    "type": "string"
+                },
+                "mbti": {
+                    "type": "string"
+                },
+                "mentees": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.MenteeInfo"
+                    }
+                },
+                "notionID": {
+                    "type": "string"
+                },
+                "notionName": {
+                    "type": "string"
+                },
+                "organizations": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Organization"
+                    }
+                },
+                "personalEmail": {
+                    "type": "string"
+                },
+                "phoneNumber": {
+                    "type": "string"
+                },
+                "placeOfResidence": {
+                    "type": "string"
+                },
+                "positions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Position"
+                    }
+                },
+                "projects": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.EmployeeProjectData"
+                    }
+                },
+                "referredBy": {
+                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.BasicEmployeeInfo"
+                },
+                "roles": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.Role"
+                    }
+                },
+                "seniority": {
+                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Seniority"
+                },
+                "stacks": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Stack"
+                    }
+                },
+                "status": {
+                    "description": "working info",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.WorkingStatus"
+                        }
+                    ]
+                },
+                "teamEmail": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                },
+                "wiseAccountNumber": {
+                    "type": "string"
+                },
+                "wiseCurrency": {
+                    "type": "string"
+                },
+                "wiseRecipientEmail": {
+                    "type": "string"
+                },
+                "wiseRecipientID": {
+                    "type": "string"
+                },
+                "wiseRecipientName": {
+                    "type": "string"
+                }
+            }
+        },
+        "ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "errors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/pkg_view.ApiError"
+                    }
+                }
+            }
+        },
+        "GetDetailClientResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/Client"
+                }
+            }
+        },
+        "GetListClientResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Client"
+                    }
+                }
+            }
+        },
+        "ListBankAccountResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/BankAccount"
+                    }
+                }
+            }
+        },
+        "LoggedInUserData": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string"
+                },
+                "displayName": {
+                    "type": "string"
+                },
+                "fullName": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "permissions": {
                     "type": "array",
                     "items": {
                         "type": "string"
                     }
                 },
-                "isMainContact": {
-                    "type": "boolean"
-                },
-                "name": {
+                "role": {
                     "type": "string"
                 },
-                "role": {
+                "teamEmail": {
                     "type": "string"
                 }
             }
         },
-        "github_com_dwarvesf_fortress-api_pkg_handler_client_request.UpdateClientInput": {
+        "MessageResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "Organization": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string"
+                },
+                "code": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "Position": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "Project": {
+            "type": "object",
+            "properties": {
+                "accountRating": {
+                    "type": "integer"
+                },
+                "allowsSendingSurvey": {
+                    "type": "boolean"
+                },
+                "avatar": {
+                    "type": "string"
+                },
+                "bankAccount": {
+                    "$ref": "#/definitions/BankAccount"
+                },
+                "bankAccountID": {
+                    "type": "string"
+                },
+                "client": {
+                    "$ref": "#/definitions/Client"
+                },
+                "clientEmail": {
+                    "type": "string"
+                },
+                "clientID": {
+                    "type": "string"
+                },
+                "code": {
+                    "type": "string"
+                },
+                "commissionConfigs": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ProjectCommissionConfig"
+                    }
+                },
+                "companyInfo": {
+                    "$ref": "#/definitions/pkg_view.CompanyInfo"
+                },
+                "companyInfoID": {
+                    "type": "string"
+                },
+                "country": {
+                    "$ref": "#/definitions/Country"
+                },
+                "countryID": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "deliveryRating": {
+                    "type": "integer"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "function": {
+                    "type": "string"
+                },
+                "heads": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/pkg_view.ProjectHead"
+                    }
+                },
+                "id": {
+                    "type": "string"
+                },
+                "importantLevel": {
+                    "type": "string"
+                },
+                "leadRating": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "organization": {
+                    "$ref": "#/definitions/Organization"
+                },
+                "organizationID": {
+                    "type": "string"
+                },
+                "projectEmail": {
+                    "type": "string"
+                },
+                "projectInfo": {
+                    "$ref": "#/definitions/ProjectInfo"
+                },
+                "projectMembers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ProjectMember"
+                    }
+                },
+                "projectNotion": {
+                    "$ref": "#/definitions/ProjectNotion"
+                },
+                "projectStacks": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Stack"
+                    }
+                },
+                "slots": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ProjectSlot"
+                    }
+                },
+                "startDate": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "ProjectCommissionConfig": {
+            "type": "object",
+            "properties": {
+                "commissionRate": {
+                    "type": "number"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "position": {
+                    "type": "string"
+                },
+                "projectID": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "ProjectInfo": {
+            "type": "object",
+            "properties": {
+                "basecampBucketID": {
+                    "type": "integer"
+                },
+                "basecampCampfireID": {
+                    "type": "integer"
+                },
+                "basecampMessageBoardID": {
+                    "type": "integer"
+                },
+                "basecampScheduleID": {
+                    "type": "integer"
+                },
+                "basecampSentryID": {
+                    "type": "integer"
+                },
+                "basecampTodolistID": {
+                    "type": "integer"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "gitlabID": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "project": {
+                    "$ref": "#/definitions/Project"
+                },
+                "projectID": {
+                    "type": "string"
+                },
+                "repositories": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "ProjectMember": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string"
+                },
+                "currency": {
+                    "$ref": "#/definitions/pkg_view.Currency"
+                },
+                "deploymentType": {
+                    "type": "string"
+                },
+                "discount": {
+                    "type": "number"
+                },
+                "displayName": {
+                    "type": "string"
+                },
+                "employeeID": {
+                    "type": "string"
+                },
+                "endDate": {
+                    "type": "string"
+                },
+                "fullName": {
+                    "type": "string"
+                },
+                "isLead": {
+                    "type": "boolean"
+                },
+                "leadCommissionRate": {
+                    "type": "number"
+                },
+                "note": {
+                    "type": "string"
+                },
+                "positions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Position"
+                    }
+                },
+                "projectMemberID": {
+                    "type": "string"
+                },
+                "projectSlotID": {
+                    "type": "string"
+                },
+                "rate": {
+                    "type": "number"
+                },
+                "seniority": {
+                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Seniority"
+                },
+                "startDate": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "upsellCommissionRate": {
+                    "type": "number"
+                },
+                "upsellPerson": {
+                    "$ref": "#/definitions/pkg_view.BasicEmployeeInfo"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "ProjectNotion": {
+            "type": "object",
+            "properties": {
+                "auditNotionID": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "project": {
+                    "$ref": "#/definitions/Project"
+                },
+                "projectID": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "ProjectSlot": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "deploymentType": {
+                    "type": "string"
+                },
+                "discount": {
+                    "type": "number"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "note": {
+                    "type": "string"
+                },
+                "project": {
+                    "$ref": "#/definitions/Project"
+                },
+                "projectID": {
+                    "type": "string"
+                },
+                "projectMember": {
+                    "$ref": "#/definitions/ProjectMember"
+                },
+                "projectSlotPositions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Position"
+                    }
+                },
+                "rate": {
+                    "type": "number"
+                },
+                "seniority": {
+                    "$ref": "#/definitions/Seniority"
+                },
+                "seniorityID": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                },
+                "upsellPerson": {
+                    "$ref": "#/definitions/EmployeeData"
+                },
+                "upsellPersonID": {
+                    "type": "string"
+                }
+            }
+        },
+        "PublicClient": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "$ref": "#/definitions/Address"
+                },
+                "avatar": {
+                    "type": "string"
+                },
+                "companySize": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "industry": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "solutionType": {
+                    "type": "string"
+                },
+                "stacks": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "PublicClientListResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/PublicClient"
+                    }
+                }
+            }
+        },
+        "Seniority": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "Stack": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string"
+                },
+                "code": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "UpdateClientInput": {
             "type": "object",
             "properties": {
                 "address": {
@@ -6213,7 +7169,7 @@ const docTemplate = `{
                 "contacts": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_handler_client_request.UpdateClientContactInput"
+                        "$ref": "#/definitions/pkg_handler_client_request.UpdateClientContactInput"
                     }
                 },
                 "country": {
@@ -7392,112 +8348,6 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_dwarvesf_fortress-api_pkg_model.BankAccount": {
-            "type": "object",
-            "properties": {
-                "accountNumber": {
-                    "type": "string"
-                },
-                "address": {
-                    "type": "string"
-                },
-                "bankName": {
-                    "type": "string"
-                },
-                "createdAt": {
-                    "type": "string"
-                },
-                "currency": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Currency"
-                },
-                "currencyID": {
-                    "type": "string"
-                },
-                "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "intermediaryBankAddress": {
-                    "type": "string"
-                },
-                "intermediaryBankName": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "ownerName": {
-                    "type": "string"
-                },
-                "routingNumber": {
-                    "type": "string"
-                },
-                "swiftCode": {
-                    "type": "string"
-                },
-                "uksortCode": {
-                    "type": "string"
-                },
-                "updatedAt": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_model.BaseSalary": {
-            "type": "object",
-            "properties": {
-                "batch": {
-                    "type": "integer"
-                },
-                "category": {
-                    "type": "string"
-                },
-                "company_account_amount": {
-                    "type": "integer"
-                },
-                "contract_amount": {
-                    "type": "integer"
-                },
-                "createdAt": {
-                    "type": "string"
-                },
-                "currency": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Currency"
-                },
-                "currency_id": {
-                    "type": "string"
-                },
-                "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
-                },
-                "effective_date": {
-                    "type": "string"
-                },
-                "employee": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Employee"
-                },
-                "employee_id": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "insurance_amount": {
-                    "type": "integer"
-                },
-                "personal_account_amount": {
-                    "type": "integer"
-                },
-                "type": {
-                    "type": "string"
-                },
-                "updatedAt": {
-                    "type": "string"
-                }
-            }
-        },
         "github_com_dwarvesf_fortress-api_pkg_model.Chapter": {
             "type": "object",
             "properties": {
@@ -7524,155 +8374,6 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_dwarvesf_fortress-api_pkg_model.City": {
-            "type": "object",
-            "properties": {
-                "lat": {
-                    "type": "string"
-                },
-                "long": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_model.Client": {
-            "type": "object",
-            "properties": {
-                "address": {
-                    "type": "string"
-                },
-                "avatar": {
-                    "type": "string"
-                },
-                "city": {
-                    "type": "string"
-                },
-                "companySize": {
-                    "type": "string"
-                },
-                "contacts": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.ClientContact"
-                    }
-                },
-                "country": {
-                    "type": "string"
-                },
-                "createdAt": {
-                    "type": "string"
-                },
-                "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "industry": {
-                    "type": "string"
-                },
-                "isPublic": {
-                    "type": "boolean"
-                },
-                "lat": {
-                    "type": "string"
-                },
-                "long": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "projects": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Project"
-                    }
-                },
-                "registrationNumber": {
-                    "type": "string"
-                },
-                "solutionType": {
-                    "type": "string"
-                },
-                "updatedAt": {
-                    "type": "string"
-                },
-                "website": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_model.ClientContact": {
-            "type": "object",
-            "properties": {
-                "clientID": {
-                    "type": "string"
-                },
-                "createdAt": {
-                    "type": "string"
-                },
-                "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
-                },
-                "emails": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                },
-                "id": {
-                    "type": "string"
-                },
-                "isMainContact": {
-                    "type": "boolean"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "role": {
-                    "type": "string"
-                },
-                "updatedAt": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_model.CommissionExplain": {
-            "type": "object",
-            "properties": {
-                "amount": {
-                    "type": "integer"
-                },
-                "bucket_id": {
-                    "type": "integer"
-                },
-                "formatted_amount": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "month": {
-                    "type": "integer"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "todo_id": {
-                    "type": "integer"
-                },
-                "year": {
-                    "type": "integer"
-                }
-            }
-        },
         "github_com_dwarvesf_fortress-api_pkg_model.CompanyContactInfo": {
             "type": "object",
             "properties": {
@@ -7680,591 +8381,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "phone": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_model.CompanyInfo": {
-            "type": "object",
-            "properties": {
-                "createdAt": {
-                    "type": "string"
-                },
-                "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "info": {
-                    "$ref": "#/definitions/pgtype.JSONB"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "registrationNumber": {
-                    "type": "string"
-                },
-                "updatedAt": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_model.Country": {
-            "type": "object",
-            "properties": {
-                "cities": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.City"
-                    }
-                },
-                "code": {
-                    "type": "string"
-                },
-                "createdAt": {
-                    "type": "string"
-                },
-                "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "updatedAt": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_model.Currency": {
-            "type": "object",
-            "properties": {
-                "createdAt": {
-                    "type": "string"
-                },
-                "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "locale": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "symbol": {
-                    "type": "string"
-                },
-                "type": {
-                    "type": "string"
-                },
-                "updatedAt": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_model.DeploymentType": {
-            "type": "string",
-            "enum": [
-                "official",
-                "shadow",
-                "part-time"
-            ],
-            "x-enum-varnames": [
-                "MemberDeploymentTypeOfficial",
-                "MemberDeploymentTypeShadow",
-                "MemberDeploymentTypePartTime"
-            ]
-        },
-        "github_com_dwarvesf_fortress-api_pkg_model.DiscordAccount": {
-            "type": "object",
-            "properties": {
-                "createdAt": {
-                    "type": "string"
-                },
-                "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
-                },
-                "discordID": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "updatedAt": {
-                    "type": "string"
-                },
-                "username": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_model.Employee": {
-            "type": "object",
-            "properties": {
-                "address": {
-                    "type": "string"
-                },
-                "avatar": {
-                    "type": "string"
-                },
-                "base_salary": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.BaseSalary"
-                },
-                "basecampAttachableSGID": {
-                    "type": "string"
-                },
-                "basecampID": {
-                    "description": "social services",
-                    "type": "integer"
-                },
-                "city": {
-                    "type": "string"
-                },
-                "country": {
-                    "type": "string"
-                },
-                "createdAt": {
-                    "type": "string"
-                },
-                "dateOfBirth": {
-                    "type": "string"
-                },
-                "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
-                },
-                "discordAccount": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.DiscordAccount"
-                },
-                "discordAccountID": {
-                    "type": "string"
-                },
-                "displayName": {
-                    "type": "string"
-                },
-                "employeeChapters": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.EmployeeChapter"
-                    }
-                },
-                "employeeMMAScores": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.EmployeeMMAScore"
-                    }
-                },
-                "employeeOrganizations": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.EmployeeOrganization"
-                    }
-                },
-                "employeePositions": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.EmployeePosition"
-                    }
-                },
-                "employeeRoles": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.EmployeeRole"
-                    }
-                },
-                "employeeStacks": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.EmployeeStack"
-                    }
-                },
-                "employee_salary": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.EmployeeSalary"
-                },
-                "fullName": {
-                    "description": "basic info",
-                    "type": "string"
-                },
-                "gender": {
-                    "type": "string"
-                },
-                "heads": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.ProjectHead"
-                    }
-                },
-                "horoscope": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "identityCardPhotoBack": {
-                    "type": "string"
-                },
-                "identityCardPhotoFront": {
-                    "type": "string"
-                },
-                "joinedDate": {
-                    "type": "string"
-                },
-                "lat": {
-                    "type": "string"
-                },
-                "leftDate": {
-                    "type": "string"
-                },
-                "lineManager": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Employee"
-                },
-                "lineManagerID": {
-                    "type": "string"
-                },
-                "localBankBranch": {
-                    "type": "string"
-                },
-                "localBankCurrency": {
-                    "type": "string"
-                },
-                "localBankNumber": {
-                    "type": "string"
-                },
-                "localBankRecipientName": {
-                    "type": "string"
-                },
-                "localBranchName": {
-                    "type": "string"
-                },
-                "long": {
-                    "type": "string"
-                },
-                "mbti": {
-                    "type": "string"
-                },
-                "mentees": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Employee"
-                    }
-                },
-                "organizations": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Organization"
-                    }
-                },
-                "passportPhotoBack": {
-                    "type": "string"
-                },
-                "passportPhotoFront": {
-                    "type": "string"
-                },
-                "personalEmail": {
-                    "type": "string"
-                },
-                "phoneNumber": {
-                    "type": "string"
-                },
-                "placeOfResidence": {
-                    "type": "string"
-                },
-                "positions": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Position"
-                    }
-                },
-                "projectMembers": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.ProjectMember"
-                    }
-                },
-                "referredBy": {
-                    "type": "string"
-                },
-                "referrer": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Employee"
-                },
-                "roles": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Role"
-                    }
-                },
-                "seniority": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Seniority"
-                },
-                "seniorityID": {
-                    "type": "string"
-                },
-                "socialAccounts": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.SocialAccount"
-                    }
-                },
-                "teamEmail": {
-                    "type": "string"
-                },
-                "updatedAt": {
-                    "type": "string"
-                },
-                "username": {
-                    "type": "string"
-                },
-                "wiseAccountNumber": {
-                    "type": "string"
-                },
-                "wiseCurrency": {
-                    "type": "string"
-                },
-                "wiseRecipientEmail": {
-                    "description": "payroll info",
-                    "type": "string"
-                },
-                "wiseRecipientID": {
-                    "type": "string"
-                },
-                "wiseRecipientName": {
-                    "type": "string"
-                },
-                "workUnitMembers": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.WorkUnitMember"
-                    }
-                },
-                "workingStatus": {
-                    "description": "working info",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.WorkingStatus"
-                        }
-                    ]
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_model.EmployeeChapter": {
-            "type": "object",
-            "properties": {
-                "chapter": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Chapter"
-                },
-                "chapterID": {
-                    "type": "string"
-                },
-                "createdAt": {
-                    "type": "string"
-                },
-                "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
-                },
-                "employeeID": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "updatedAt": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_model.EmployeeMMAScore": {
-            "type": "object",
-            "properties": {
-                "autonomyScore": {
-                    "type": "number"
-                },
-                "createdAt": {
-                    "type": "string"
-                },
-                "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
-                },
-                "employeeID": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "masteryScore": {
-                    "type": "number"
-                },
-                "meaningScore": {
-                    "type": "number"
-                },
-                "ratedAt": {
-                    "type": "string"
-                },
-                "updatedAt": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_model.EmployeeOrganization": {
-            "type": "object",
-            "properties": {
-                "createdAt": {
-                    "type": "string"
-                },
-                "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
-                },
-                "employeeID": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "organization": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Organization"
-                },
-                "organizationID": {
-                    "type": "string"
-                },
-                "updatedAt": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_model.EmployeePosition": {
-            "type": "object",
-            "properties": {
-                "createdAt": {
-                    "type": "string"
-                },
-                "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
-                },
-                "employeeID": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "position": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Position"
-                },
-                "positionID": {
-                    "type": "string"
-                },
-                "updatedAt": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_model.EmployeeRole": {
-            "type": "object",
-            "properties": {
-                "createdAt": {
-                    "type": "string"
-                },
-                "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
-                },
-                "employeeID": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "role": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Role"
-                },
-                "roleID": {
-                    "type": "string"
-                },
-                "updatedAt": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_model.EmployeeSalary": {
-            "type": "object",
-            "properties": {
-                "actual_pay_day": {
-                    "type": "integer"
-                },
-                "bonus_amount": {
-                    "type": "integer"
-                },
-                "bonus_detail": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                },
-                "commission_amount": {
-                    "type": "integer"
-                },
-                "commission_detail": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                },
-                "employee_id": {
-                    "type": "string"
-                },
-                "is_done": {
-                    "type": "boolean"
-                },
-                "month": {
-                    "type": "integer"
-                },
-                "plan_pay_day": {
-                    "type": "integer"
-                },
-                "reimbursement_amount": {
-                    "type": "integer"
-                },
-                "reimbursement_detail": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                },
-                "total_amount": {
-                    "type": "integer"
-                },
-                "year": {
-                    "type": "integer"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_model.EmployeeStack": {
-            "type": "object",
-            "properties": {
-                "createdAt": {
-                    "type": "string"
-                },
-                "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
-                },
-                "employeeID": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "stack": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Stack"
-                },
-                "stackID": {
-                    "type": "string"
-                },
-                "updatedAt": {
                     "type": "string"
                 }
             }
@@ -8377,103 +8493,6 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_dwarvesf_fortress-api_pkg_model.Payroll": {
-            "type": "object",
-            "properties": {
-                "base_salary_amount": {
-                    "type": "integer"
-                },
-                "commission_amount": {
-                    "type": "integer"
-                },
-                "commission_explain": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                },
-                "commission_explains": {
-                    "description": "CommissionExplains is commission explains in email template",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.CommissionExplain"
-                    }
-                },
-                "contract_amount": {
-                    "type": "integer"
-                },
-                "conversion_amount": {
-                    "type": "integer"
-                },
-                "due_date": {
-                    "type": "string"
-                },
-                "employee": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Employee"
-                },
-                "employee_id": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "is_paid": {
-                    "type": "boolean"
-                },
-                "month": {
-                    "type": "integer"
-                },
-                "project_bonus": {
-                    "type": "integer"
-                },
-                "project_bonus_explain": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                },
-                "project_bonus_explains": {
-                    "description": "ProjectBonusExplains is project bonus explains in email template",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.ProjectBonusExplain"
-                    }
-                },
-                "total": {
-                    "type": "integer"
-                },
-                "total_allowance": {
-                    "description": "TotalAllowance is amount of allowance in email template",
-                    "type": "number"
-                },
-                "total_explain": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                },
-                "twAmount": {
-                    "description": "TotalAllowance is amount of allowance in email template",
-                    "type": "number"
-                },
-                "twFee": {
-                    "type": "number"
-                },
-                "twRate": {
-                    "description": "TWRate is rate of allowance in email template",
-                    "type": "number"
-                },
-                "user_rank_snapshot": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                },
-                "year": {
-                    "type": "integer"
-                }
-            }
-        },
         "github_com_dwarvesf_fortress-api_pkg_model.Position": {
             "type": "object",
             "properties": {
@@ -8497,186 +8516,6 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_dwarvesf_fortress-api_pkg_model.Project": {
-            "type": "object",
-            "properties": {
-                "accountRating": {
-                    "type": "integer"
-                },
-                "allowsSendingSurvey": {
-                    "type": "boolean"
-                },
-                "avatar": {
-                    "type": "string"
-                },
-                "bankAccount": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.BankAccount"
-                },
-                "bankAccountID": {
-                    "type": "string"
-                },
-                "client": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Client"
-                },
-                "clientEmail": {
-                    "type": "string"
-                },
-                "clientID": {
-                    "type": "string"
-                },
-                "code": {
-                    "type": "string"
-                },
-                "commissionConfigs": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.ProjectCommissionConfig"
-                    }
-                },
-                "companyInfo": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.CompanyInfo"
-                },
-                "companyInfoID": {
-                    "type": "string"
-                },
-                "country": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Country"
-                },
-                "countryID": {
-                    "type": "string"
-                },
-                "createdAt": {
-                    "type": "string"
-                },
-                "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
-                },
-                "deliveryRating": {
-                    "type": "integer"
-                },
-                "endDate": {
-                    "type": "string"
-                },
-                "function": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.ProjectFunction"
-                },
-                "heads": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.ProjectHead"
-                    }
-                },
-                "id": {
-                    "type": "string"
-                },
-                "importantLevel": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.ProjectImportantLevel"
-                },
-                "leadRating": {
-                    "type": "integer"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "organization": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Organization"
-                },
-                "organizationID": {
-                    "type": "string"
-                },
-                "projectEmail": {
-                    "type": "string"
-                },
-                "projectMembers": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.ProjectMember"
-                    }
-                },
-                "projectNotion": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.ProjectNotion"
-                },
-                "projectStacks": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.ProjectStack"
-                    }
-                },
-                "slots": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.ProjectSlot"
-                    }
-                },
-                "startDate": {
-                    "type": "string"
-                },
-                "status": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.ProjectStatus"
-                },
-                "type": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.ProjectType"
-                },
-                "updatedAt": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_model.ProjectBonusExplain": {
-            "type": "object",
-            "properties": {
-                "amount": {
-                    "type": "integer"
-                },
-                "bucket_id": {
-                    "type": "integer"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "formatted_amount": {
-                    "type": "string"
-                },
-                "month": {
-                    "type": "integer"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "todo_id": {
-                    "type": "integer"
-                },
-                "year": {
-                    "type": "integer"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_model.ProjectCommissionConfig": {
-            "type": "object",
-            "properties": {
-                "commissionRate": {
-                    "type": "number"
-                },
-                "createdAt": {
-                    "type": "string"
-                },
-                "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "position": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.HeadPosition"
-                },
-                "projectID": {
-                    "type": "string"
-                },
-                "updatedAt": {
-                    "type": "string"
-                }
-            }
-        },
         "github_com_dwarvesf_fortress-api_pkg_model.ProjectFunction": {
             "type": "string",
             "enum": [
@@ -8691,217 +8530,6 @@ const docTemplate = `{
                 "ProjectFunctionTraining",
                 "ProjectFunctionManagement"
             ]
-        },
-        "github_com_dwarvesf_fortress-api_pkg_model.ProjectHead": {
-            "type": "object",
-            "properties": {
-                "commissionRate": {
-                    "type": "number"
-                },
-                "createdAt": {
-                    "type": "string"
-                },
-                "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
-                },
-                "employee": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Employee"
-                },
-                "employeeID": {
-                    "type": "string"
-                },
-                "endDate": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "position": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.HeadPosition"
-                },
-                "project": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Project"
-                },
-                "projectID": {
-                    "type": "string"
-                },
-                "startDate": {
-                    "type": "string"
-                },
-                "updatedAt": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_model.ProjectImportantLevel": {
-            "type": "string",
-            "enum": [
-                "low",
-                "medium-",
-                "medium",
-                "medium+",
-                "high"
-            ],
-            "x-enum-varnames": [
-                "ProjectImportantLevelLow",
-                "ProjectImportantLevelMediumLow",
-                "ProjectImportantLevelMedium",
-                "ProjectImportantLevelMediumHigh",
-                "ProjectImportantLevelHigh"
-            ]
-        },
-        "github_com_dwarvesf_fortress-api_pkg_model.ProjectMember": {
-            "type": "object",
-            "properties": {
-                "createdAt": {
-                    "type": "string"
-                },
-                "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
-                },
-                "deploymentType": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.DeploymentType"
-                },
-                "discount": {
-                    "type": "number"
-                },
-                "employee": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Employee"
-                },
-                "employeeID": {
-                    "type": "string"
-                },
-                "endDate": {
-                    "type": "string"
-                },
-                "head": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.ProjectHead"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "isLead": {
-                    "type": "boolean"
-                },
-                "note": {
-                    "type": "string"
-                },
-                "positions": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Position"
-                    }
-                },
-                "project": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Project"
-                },
-                "projectID": {
-                    "type": "string"
-                },
-                "projectMemberPositions": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.ProjectMemberPosition"
-                    }
-                },
-                "projectSlotID": {
-                    "type": "string"
-                },
-                "rate": {
-                    "type": "number"
-                },
-                "seniority": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Seniority"
-                },
-                "seniorityID": {
-                    "type": "string"
-                },
-                "startDate": {
-                    "type": "string"
-                },
-                "status": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.ProjectMemberStatus"
-                },
-                "updatedAt": {
-                    "type": "string"
-                },
-                "upsellCommissionRate": {
-                    "type": "number"
-                },
-                "upsellPerson": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Employee"
-                },
-                "upsellPersonID": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_model.ProjectMemberPosition": {
-            "type": "object",
-            "properties": {
-                "createdAt": {
-                    "type": "string"
-                },
-                "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "position": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Position"
-                },
-                "positionID": {
-                    "type": "string"
-                },
-                "projectMemberID": {
-                    "type": "string"
-                },
-                "updatedAt": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_model.ProjectMemberStatus": {
-            "type": "string",
-            "enum": [
-                "pending",
-                "on-boarding",
-                "active",
-                "inactive"
-            ],
-            "x-enum-varnames": [
-                "ProjectMemberStatusPending",
-                "ProjectMemberStatusOnBoarding",
-                "ProjectMemberStatusActive",
-                "ProjectMemberStatusInactive"
-            ]
-        },
-        "github_com_dwarvesf_fortress-api_pkg_model.ProjectNotion": {
-            "type": "object",
-            "properties": {
-                "auditNotionID": {
-                    "type": "string"
-                },
-                "createdAt": {
-                    "type": "string"
-                },
-                "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "project": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Project"
-                },
-                "projectID": {
-                    "type": "string"
-                },
-                "updatedAt": {
-                    "type": "string"
-                }
-            }
         },
         "github_com_dwarvesf_fortress-api_pkg_model.ProjectSize": {
             "type": "object",
@@ -8922,145 +8550,6 @@ const docTemplate = `{
                     "type": "integer"
                 }
             }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_model.ProjectSlot": {
-            "type": "object",
-            "properties": {
-                "createdAt": {
-                    "type": "string"
-                },
-                "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
-                },
-                "deploymentType": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.DeploymentType"
-                },
-                "discount": {
-                    "type": "number"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "note": {
-                    "type": "string"
-                },
-                "project": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Project"
-                },
-                "projectID": {
-                    "type": "string"
-                },
-                "projectMember": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.ProjectMember"
-                },
-                "projectSlotPositions": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.ProjectSlotPosition"
-                    }
-                },
-                "rate": {
-                    "type": "number"
-                },
-                "seniority": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Seniority"
-                },
-                "seniorityID": {
-                    "type": "string"
-                },
-                "status": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.ProjectMemberStatus"
-                },
-                "updatedAt": {
-                    "type": "string"
-                },
-                "upsellPerson": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Employee"
-                },
-                "upsellPersonID": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_model.ProjectSlotPosition": {
-            "type": "object",
-            "properties": {
-                "createdAt": {
-                    "type": "string"
-                },
-                "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "position": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Position"
-                },
-                "positionID": {
-                    "type": "string"
-                },
-                "projectSlotID": {
-                    "type": "string"
-                },
-                "updatedAt": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_model.ProjectStack": {
-            "type": "object",
-            "properties": {
-                "createdAt": {
-                    "type": "string"
-                },
-                "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "projectID": {
-                    "type": "string"
-                },
-                "stack": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Stack"
-                },
-                "stackID": {
-                    "type": "string"
-                },
-                "updatedAt": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_model.ProjectStatus": {
-            "type": "string",
-            "enum": [
-                "on-boarding",
-                "active",
-                "paused",
-                "closed"
-            ],
-            "x-enum-varnames": [
-                "ProjectStatusOnBoarding",
-                "ProjectStatusActive",
-                "ProjectStatusPaused",
-                "ProjectStatusClosed"
-            ]
-        },
-        "github_com_dwarvesf_fortress-api_pkg_model.ProjectType": {
-            "type": "string",
-            "enum": [
-                "dwarves",
-                "fixed-cost",
-                "time-material"
-            ],
-            "x-enum-varnames": [
-                "ProjectTypeDwarves",
-                "ProjectTypeFixedCost",
-                "ProjectTypeTimeMaterial"
-            ]
         },
         "github_com_dwarvesf_fortress-api_pkg_model.QuestionDomain": {
             "type": "string",
@@ -9166,55 +8655,6 @@ const docTemplate = `{
                     "type": "string"
                 }
             }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_model.SocialAccount": {
-            "type": "object",
-            "properties": {
-                "accountID": {
-                    "type": "string"
-                },
-                "createdAt": {
-                    "type": "string"
-                },
-                "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "employeeID": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "type": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.SocialAccountType"
-                },
-                "updatedAt": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_model.SocialAccountType": {
-            "type": "string",
-            "enum": [
-                "github",
-                "gitlab",
-                "notion",
-                "linkedin",
-                "twitter"
-            ],
-            "x-enum-varnames": [
-                "SocialAccountTypeGitHub",
-                "SocialAccountTypeGitLab",
-                "SocialAccountTypeNotion",
-                "SocialAccountTypeLinkedIn",
-                "SocialAccountTypeTwitter"
-            ]
         },
         "github_com_dwarvesf_fortress-api_pkg_model.Stack": {
             "type": "object",
@@ -9337,137 +8777,6 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_dwarvesf_fortress-api_pkg_model.WorkUnit": {
-            "type": "object",
-            "properties": {
-                "createdAt": {
-                    "type": "string"
-                },
-                "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "project": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Project"
-                },
-                "projectID": {
-                    "type": "string"
-                },
-                "sourceMetadata": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                },
-                "sourceURL": {
-                    "type": "string"
-                },
-                "status": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.WorkUnitStatus"
-                },
-                "type": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.WorkUnitType"
-                },
-                "updatedAt": {
-                    "type": "string"
-                },
-                "workUnitMembers": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.WorkUnitMember"
-                    }
-                },
-                "workUnitStacks": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.WorkUnitStack"
-                    }
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_model.WorkUnitMember": {
-            "type": "object",
-            "properties": {
-                "createdAt": {
-                    "type": "string"
-                },
-                "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
-                },
-                "employee": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Employee"
-                },
-                "employeeID": {
-                    "type": "string"
-                },
-                "endDate": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "projectID": {
-                    "type": "string"
-                },
-                "startDate": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "updatedAt": {
-                    "type": "string"
-                },
-                "workUnit": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.WorkUnit"
-                },
-                "workUnitID": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_model.WorkUnitStack": {
-            "type": "object",
-            "properties": {
-                "createdAt": {
-                    "type": "string"
-                },
-                "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "stack": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Stack"
-                },
-                "stackID": {
-                    "type": "string"
-                },
-                "updatedAt": {
-                    "type": "string"
-                },
-                "workUnitID": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_model.WorkUnitStatus": {
-            "type": "string",
-            "enum": [
-                "active",
-                "archived"
-            ],
-            "x-enum-varnames": [
-                "WorkUnitStatusActive",
-                "WorkUnitStatusArchived"
-            ]
-        },
         "github_com_dwarvesf_fortress-api_pkg_model.WorkUnitType": {
             "type": "string",
             "enum": [
@@ -9499,22 +8808,6 @@ const docTemplate = `{
                 "WorkingStatusFullTime",
                 "WorkingStatusContractor"
             ]
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.APIKeyData": {
-            "type": "object",
-            "properties": {
-                "key": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.APIKeyResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.APIKeyData"
-                }
-            }
         },
         "github_com_dwarvesf_fortress-api_pkg_view.ActionItemReportResponse": {
             "type": "object",
@@ -9589,47 +8882,6 @@ const docTemplate = `{
                 },
                 "medium": {
                     "type": "number"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.Address": {
-            "type": "object",
-            "properties": {
-                "address": {
-                    "type": "string"
-                },
-                "city": {
-                    "type": "string"
-                },
-                "country": {
-                    "type": "string"
-                },
-                "lat": {
-                    "type": "string"
-                },
-                "long": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.ApiError": {
-            "description": "validation error details",
-            "type": "object",
-            "properties": {
-                "enums": {
-                    "description": "available options incase of field's payload is enums",
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "field": {
-                    "description": "the field cause the error",
-                    "type": "string"
-                },
-                "msg": {
-                    "description": "error message",
-                    "type": "string"
                 }
             }
         },
@@ -9754,25 +9006,6 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_dwarvesf_fortress-api_pkg_view.AuthData": {
-            "type": "object",
-            "properties": {
-                "accessToken": {
-                    "type": "string"
-                },
-                "employee": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.EmployeeData"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.AuthUserResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.LoggedInUserData"
-                }
-            }
-        },
         "github_com_dwarvesf_fortress-api_pkg_view.AvailableEmployee": {
             "type": "object",
             "properties": {
@@ -9791,7 +9024,7 @@ const docTemplate = `{
                 "positions": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.Position"
+                        "$ref": "#/definitions/Position"
                     }
                 },
                 "projects": {
@@ -9801,12 +9034,12 @@ const docTemplate = `{
                     }
                 },
                 "seniority": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.Seniority"
+                    "$ref": "#/definitions/Seniority"
                 },
                 "stacks": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.Stack"
+                        "$ref": "#/definitions/Stack"
                     }
                 },
                 "username": {
@@ -9829,60 +9062,16 @@ const docTemplate = `{
                 "positions": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.Position"
+                        "$ref": "#/definitions/Position"
                     }
                 },
                 "project": {
                     "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.BasicProjectInfo"
                 },
                 "seniority": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.Seniority"
+                    "$ref": "#/definitions/Seniority"
                 },
                 "type": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.BankAccount": {
-            "type": "object",
-            "properties": {
-                "accountNumber": {
-                    "type": "string"
-                },
-                "address": {
-                    "type": "string"
-                },
-                "bankName": {
-                    "type": "string"
-                },
-                "currency": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.Currency"
-                },
-                "currencyID": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "intermediaryBankAddress": {
-                    "type": "string"
-                },
-                "intermediaryBankName": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "ownerName": {
-                    "type": "string"
-                },
-                "routingNumber": {
-                    "type": "string"
-                },
-                "swiftCode": {
-                    "type": "string"
-                },
-                "ukSortCode": {
                     "type": "string"
                 }
             }
@@ -10156,78 +9345,6 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_dwarvesf_fortress-api_pkg_view.City": {
-            "type": "object",
-            "properties": {
-                "lat": {
-                    "type": "string"
-                },
-                "long": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.Client": {
-            "type": "object",
-            "properties": {
-                "address": {
-                    "type": "string"
-                },
-                "contacts": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.ClientContact"
-                    }
-                },
-                "country": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "industry": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "registrationNumber": {
-                    "type": "string"
-                },
-                "website": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.ClientContact": {
-            "type": "object",
-            "properties": {
-                "emails": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "id": {
-                    "type": "string"
-                },
-                "isMainContact": {
-                    "type": "boolean"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "role": {
-                    "type": "string"
-                }
-            }
-        },
         "github_com_dwarvesf_fortress-api_pkg_view.ClientContactInfo": {
             "type": "object",
             "properties": {
@@ -10288,50 +9405,14 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_dwarvesf_fortress-api_pkg_view.ContentData": {
-            "type": "object",
-            "properties": {
-                "url": {
-                    "type": "string"
-                }
-            }
-        },
         "github_com_dwarvesf_fortress-api_pkg_view.CountriesResponse": {
             "type": "object",
             "properties": {
                 "data": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.Country"
+                        "$ref": "#/definitions/Country"
                     }
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.Country": {
-            "type": "object",
-            "properties": {
-                "cities": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.City"
-                    }
-                },
-                "code": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.CreateClientResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Client"
                 }
             }
         },
@@ -10368,7 +9449,7 @@ const docTemplate = `{
                 "positions": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.Position"
+                        "$ref": "#/definitions/Position"
                     }
                 },
                 "projectMemberID": {
@@ -10418,7 +9499,7 @@ const docTemplate = `{
                     "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.BasicBankAccountInfo"
                 },
                 "client": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.Client"
+                    "$ref": "#/definitions/Client"
                 },
                 "clientEmail": {
                     "type": "array",
@@ -10460,7 +9541,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "organization": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.Organization"
+                    "$ref": "#/definitions/Organization"
                 },
                 "projectEmail": {
                     "type": "string"
@@ -10555,170 +9636,6 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_dwarvesf_fortress-api_pkg_view.EmployeeData": {
-            "type": "object",
-            "properties": {
-                "address": {
-                    "type": "string"
-                },
-                "avatar": {
-                    "type": "string"
-                },
-                "baseSalary": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.BaseSalary"
-                },
-                "birthday": {
-                    "type": "string"
-                },
-                "chapters": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.Chapter"
-                    }
-                },
-                "city": {
-                    "type": "string"
-                },
-                "country": {
-                    "type": "string"
-                },
-                "createdAt": {
-                    "type": "string"
-                },
-                "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
-                },
-                "discordID": {
-                    "type": "string"
-                },
-                "discordName": {
-                    "type": "string"
-                },
-                "displayName": {
-                    "type": "string"
-                },
-                "fullName": {
-                    "description": "basic info",
-                    "type": "string"
-                },
-                "gender": {
-                    "type": "string"
-                },
-                "githubID": {
-                    "type": "string"
-                },
-                "horoscope": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "joinedDate": {
-                    "type": "string"
-                },
-                "leftDate": {
-                    "type": "string"
-                },
-                "lineManager": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.BasicEmployeeInfo"
-                },
-                "linkedInName": {
-                    "type": "string"
-                },
-                "mbti": {
-                    "type": "string"
-                },
-                "mentees": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.MenteeInfo"
-                    }
-                },
-                "notionID": {
-                    "type": "string"
-                },
-                "notionName": {
-                    "type": "string"
-                },
-                "organizations": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.Organization"
-                    }
-                },
-                "personalEmail": {
-                    "type": "string"
-                },
-                "phoneNumber": {
-                    "type": "string"
-                },
-                "placeOfResidence": {
-                    "type": "string"
-                },
-                "positions": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.Position"
-                    }
-                },
-                "projects": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.EmployeeProjectData"
-                    }
-                },
-                "referredBy": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.BasicEmployeeInfo"
-                },
-                "roles": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.Role"
-                    }
-                },
-                "seniority": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Seniority"
-                },
-                "stacks": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.Stack"
-                    }
-                },
-                "status": {
-                    "description": "working info",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.WorkingStatus"
-                        }
-                    ]
-                },
-                "teamEmail": {
-                    "type": "string"
-                },
-                "updatedAt": {
-                    "type": "string"
-                },
-                "username": {
-                    "type": "string"
-                },
-                "wiseAccountNumber": {
-                    "type": "string"
-                },
-                "wiseCurrency": {
-                    "type": "string"
-                },
-                "wiseRecipientEmail": {
-                    "type": "string"
-                },
-                "wiseRecipientID": {
-                    "type": "string"
-                },
-                "wiseRecipientName": {
-                    "type": "string"
-                }
-            }
-        },
         "github_com_dwarvesf_fortress-api_pkg_view.EmployeeInvitationData": {
             "type": "object",
             "properties": {
@@ -10765,7 +9682,7 @@ const docTemplate = `{
                 "data": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.EmployeeData"
+                        "$ref": "#/definitions/EmployeeData"
                     }
                 }
             }
@@ -10831,7 +9748,7 @@ const docTemplate = `{
                 "positions": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.Position"
+                        "$ref": "#/definitions/Position"
                     }
                 },
                 "startDate": {
@@ -11111,14 +10028,6 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_dwarvesf_fortress-api_pkg_view.GetDetailClientResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Client"
-                }
-            }
-        },
         "github_com_dwarvesf_fortress-api_pkg_view.GetEngagementDashboardDetailResponse": {
             "type": "object",
             "properties": {
@@ -11137,17 +10046,6 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.EngagementDashboard"
-                    }
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.GetListClientResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Client"
                     }
                 }
             }
@@ -11357,7 +10255,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "bankAccount": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.BankAccount"
+                    "$ref": "#/definitions/BankAccount"
                 },
                 "bankID": {
                     "type": "string"
@@ -11518,17 +10416,6 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_dwarvesf_fortress-api_pkg_view.ListBankAccountResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.BankAccount"
-                    }
-                }
-            }
-        },
         "github_com_dwarvesf_fortress-api_pkg_view.ListFeedbackResponse": {
             "type": "object",
             "properties": {
@@ -11567,35 +10454,6 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.WorkUnit"
                     }
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.LoggedInUserData": {
-            "type": "object",
-            "properties": {
-                "avatar": {
-                    "type": "string"
-                },
-                "displayName": {
-                    "type": "string"
-                },
-                "fullName": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "permissions": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "role": {
-                    "type": "string"
-                },
-                "teamEmail": {
-                    "type": "string"
                 }
             }
         },
@@ -11642,23 +10500,6 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_dwarvesf_fortress-api_pkg_view.Organization": {
-            "type": "object",
-            "properties": {
-                "avatar": {
-                    "type": "string"
-                },
-                "code": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
         "github_com_dwarvesf_fortress-api_pkg_view.OrganizationsResponse": {
             "type": "object",
             "properties": {
@@ -11687,20 +10528,6 @@ const docTemplate = `{
                 },
                 "status": {
                     "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.EventReviewerStatus"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.Position": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
                 }
             }
         },
@@ -11929,7 +10756,7 @@ const docTemplate = `{
                 "members": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.ProjectMember"
+                        "$ref": "#/definitions/ProjectMember"
                     }
                 },
                 "monthlyChargeRate": {
@@ -11939,7 +10766,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "organization": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.Organization"
+                    "$ref": "#/definitions/Organization"
                 },
                 "projectEmail": {
                     "type": "string"
@@ -11953,7 +10780,7 @@ const docTemplate = `{
                 "stacks": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.Stack"
+                        "$ref": "#/definitions/Stack"
                     }
                 },
                 "startDate": {
@@ -12014,7 +10841,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "bankAccount": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.BankAccount"
+                    "$ref": "#/definitions/BankAccount"
                 },
                 "client": {
                     "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.ClientInfo"
@@ -12047,84 +10874,13 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_dwarvesf_fortress-api_pkg_view.ProjectMember": {
-            "type": "object",
-            "properties": {
-                "avatar": {
-                    "type": "string"
-                },
-                "currency": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.Currency"
-                },
-                "deploymentType": {
-                    "type": "string"
-                },
-                "discount": {
-                    "type": "number"
-                },
-                "displayName": {
-                    "type": "string"
-                },
-                "employeeID": {
-                    "type": "string"
-                },
-                "endDate": {
-                    "type": "string"
-                },
-                "fullName": {
-                    "type": "string"
-                },
-                "isLead": {
-                    "type": "boolean"
-                },
-                "leadCommissionRate": {
-                    "type": "number"
-                },
-                "note": {
-                    "type": "string"
-                },
-                "positions": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.Position"
-                    }
-                },
-                "projectMemberID": {
-                    "type": "string"
-                },
-                "projectSlotID": {
-                    "type": "string"
-                },
-                "rate": {
-                    "type": "number"
-                },
-                "seniority": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Seniority"
-                },
-                "startDate": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "upsellCommissionRate": {
-                    "type": "number"
-                },
-                "upsellPerson": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.BasicEmployeeInfo"
-                },
-                "username": {
-                    "type": "string"
-                }
-            }
-        },
         "github_com_dwarvesf_fortress-api_pkg_view.ProjectMemberListResponse": {
             "type": "object",
             "properties": {
                 "data": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.ProjectMember"
+                        "$ref": "#/definitions/ProjectMember"
                     }
                 }
             }
@@ -12136,49 +10892,6 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.ProjectSize"
-                    }
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.PublicClient": {
-            "type": "object",
-            "properties": {
-                "address": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.Address"
-                },
-                "avatar": {
-                    "type": "string"
-                },
-                "companySize": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "industry": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "solutionType": {
-                    "type": "string"
-                },
-                "stacks": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.PublicClientListResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.PublicClient"
                     }
                 }
             }
@@ -12282,20 +10995,6 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_dwarvesf_fortress-api_pkg_view.Seniority": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
         "github_com_dwarvesf_fortress-api_pkg_view.SeniorityResponse": {
             "type": "object",
             "properties": {
@@ -12304,23 +11003,6 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Seniority"
                     }
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.Stack": {
-            "type": "object",
-            "properties": {
-                "avatar": {
-                    "type": "string"
-                },
-                "code": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
                 }
             }
         },
@@ -12607,7 +11289,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "data": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.EmployeeData"
+                    "$ref": "#/definitions/EmployeeData"
                 }
             }
         },
@@ -12665,7 +11347,7 @@ const docTemplate = `{
                 "organizations": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.Organization"
+                        "$ref": "#/definitions/Organization"
                     }
                 },
                 "phoneNumber": {
@@ -12849,7 +11531,7 @@ const docTemplate = `{
                     "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.BasicBankAccountInfo"
                 },
                 "client": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.Client"
+                    "$ref": "#/definitions/Client"
                 },
                 "country": {
                     "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.BasicCountryInfo"
@@ -12861,7 +11543,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "organization": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.Organization"
+                    "$ref": "#/definitions/Organization"
                 },
                 "stacks": {
                     "type": "array",
@@ -13104,7 +11786,7 @@ const docTemplate = `{
                 "stacks": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.Stack"
+                        "$ref": "#/definitions/Stack"
                     }
                 },
                 "status": {
@@ -13267,32 +11949,299 @@ const docTemplate = `{
                 }
             }
         },
-        "pgtype.JSONB": {
+        "pkg_handler_client_request.CreateClientContactInput": {
             "type": "object",
             "properties": {
-                "bytes": {
+                "emails": {
                     "type": "array",
                     "items": {
-                        "type": "integer"
+                        "type": "string"
                     }
                 },
-                "status": {
-                    "$ref": "#/definitions/pgtype.Status"
+                "isMainContact": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "role": {
+                    "type": "string"
                 }
             }
         },
-        "pgtype.Status": {
-            "type": "integer",
-            "enum": [
-                0,
-                1,
-                2
-            ],
-            "x-enum-varnames": [
-                "Undefined",
-                "Null",
-                "Present"
-            ]
+        "pkg_handler_client_request.UpdateClientContactInput": {
+            "type": "object",
+            "properties": {
+                "emails": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "isMainContact": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "role": {
+                    "type": "string"
+                }
+            }
+        },
+        "pkg_view.ApiError": {
+            "description": "validation error details",
+            "type": "object",
+            "properties": {
+                "enums": {
+                    "description": "available options incase of field's payload is enums",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "field": {
+                    "description": "the field cause the error",
+                    "type": "string"
+                },
+                "msg": {
+                    "description": "error message",
+                    "type": "string"
+                }
+            }
+        },
+        "pkg_view.BaseSalary": {
+            "type": "object",
+            "properties": {
+                "batch": {
+                    "type": "integer"
+                },
+                "category": {
+                    "type": "string"
+                },
+                "company_account_amount": {
+                    "type": "integer"
+                },
+                "contract_amount": {
+                    "type": "integer"
+                },
+                "currency": {
+                    "$ref": "#/definitions/pkg_view.Currency"
+                },
+                "currency_id": {
+                    "type": "string"
+                },
+                "effective_date": {
+                    "type": "string"
+                },
+                "employee_id": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "insurance_amount": {
+                    "type": "integer"
+                },
+                "personal_account_amount": {
+                    "type": "integer"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "pkg_view.BasicEmployeeInfo": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string"
+                },
+                "displayName": {
+                    "type": "string"
+                },
+                "fullName": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "pkg_view.Chapter": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "leadID": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "pkg_view.CompanyInfo": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "info": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.CompanyContactInfo"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                },
+                "registrationNumber": {
+                    "type": "string"
+                }
+            }
+        },
+        "pkg_view.ContentData": {
+            "type": "object",
+            "properties": {
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "pkg_view.Currency": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "locale": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "symbol": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "pkg_view.EmployeeProjectData": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string"
+                },
+                "code": {
+                    "type": "string"
+                },
+                "deploymentType": {
+                    "type": "string"
+                },
+                "endDate": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "positions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Position"
+                    }
+                },
+                "startDate": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "pkg_view.MenteeInfo": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string"
+                },
+                "displayName": {
+                    "type": "string"
+                },
+                "fullName": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "positions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Position"
+                    }
+                },
+                "seniority": {
+                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Seniority"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "pkg_view.ProjectHead": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string"
+                },
+                "commissionRate": {
+                    "type": "number"
+                },
+                "displayName": {
+                    "type": "string"
+                },
+                "employeeID": {
+                    "type": "string"
+                },
+                "finalCommissionRate": {
+                    "type": "number"
+                },
+                "fullName": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "pkg_view.Role": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
         }
     },
     "securityDefinitions": {

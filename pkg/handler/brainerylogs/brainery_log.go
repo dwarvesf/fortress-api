@@ -50,10 +50,12 @@ const (
 // Create godoc
 // @Summary Create brainery logs
 // @Description Create brainery logs
+// @id createBraineryLog
 // @Tags Project
 // @Accept  json
 // @Produce  json
 // @Security BearerAuth
+// @Param body body CreateBraineryLogRequest true "Body"
 // @Success 200 {object} MessageResponse
 // @Failure 400 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
@@ -103,13 +105,14 @@ func (h *handler) Create(c *gin.Context) {
 // GetMetrics godoc
 // @Summary Get brainery metric
 // @Description Get brainery metric
+// @id getBraineryMetric
 // @Tags Project
 // @Accept  json
 // @Produce  json
 // @Security BearerAuth
 // @Param view query string false "Time view"
-// @Param date query string false "Date"
-// @Success 200 {object} view.BraineryMetric
+// @Param date query string false "Date" Format(date)
+// @Success 200 {object} BraineryMetricResponse
 // @Failure 400 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
 // @Router /brainery-logs/metrics [get]

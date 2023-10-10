@@ -1,6 +1,6 @@
 package request
 
-type CreateClientInput struct {
+type CreateClientRequest struct {
 	Name               string                      `json:"name"`
 	Description        string                      `json:"description"`
 	RegistrationNumber string                      `json:"registrationNumber"`
@@ -9,7 +9,7 @@ type CreateClientInput struct {
 	Industry           string                      `json:"industry"`
 	Website            string                      `json:"website"`
 	Contacts           []*CreateClientContactInput `json:"contacts"`
-}
+} // @name CreateClientRequest
 
 type CreateClientContactInput struct {
 	Name          string   `json:"name"`
@@ -27,7 +27,7 @@ type UpdateClientInput struct {
 	Industry           string                      `json:"industry"`
 	Website            string                      `json:"website"`
 	Contacts           []*UpdateClientContactInput `json:"contacts"`
-}
+} // @name UpdateClientInput
 
 type UpdateClientContactInput struct {
 	Name          string   `json:"name"`

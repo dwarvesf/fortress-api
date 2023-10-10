@@ -42,6 +42,10 @@ func ToPost(l model.BraineryLog) Post {
 	}
 }
 
+type BraineryMetricResponse struct {
+	Data BraineryMetric `json:"data"`
+} // @name BraineryMetricResponse
+
 // ToBraineryMetric parse BraineryLog logs to BraineryMetric
 func ToBraineryMetric(latestPosts, logs []*model.BraineryLog, ncids []string, queryView string) BraineryMetric {
 	metric := BraineryMetric{}

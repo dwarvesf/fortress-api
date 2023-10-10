@@ -16,7 +16,7 @@ type CreateBraineryLogRequest struct {
 	Tags        []string        `json:"tags" binding:"required"`
 	PublishedAt string          `json:"publishedAt" binding:"required"`
 	Reward      decimal.Decimal `json:"reward" binding:"required"`
-}
+} // @name CreateBraineryLogRequest
 
 func (r CreateBraineryLogRequest) Validate() error {
 	if _, err := time.Parse(time.RFC3339Nano, r.PublishedAt); err != nil {

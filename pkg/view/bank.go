@@ -4,7 +4,7 @@ import "github.com/dwarvesf/fortress-api/pkg/model"
 
 type ListBankAccountResponse struct {
 	Data []BankAccount `json:"data"`
-}
+} // @name ListBankAccountResponse
 
 type BankAccount struct {
 	ID                      string   `json:"id"`
@@ -20,6 +20,24 @@ type BankAccount struct {
 	UKSortCode              string   `json:"ukSortCode"`
 	CurrencyID              string   `json:"currencyID"`
 	Currency                Currency `json:"currency"`
+} // @name BankAccount
+
+func ToBankAccount(account *model.BankAccount) *BankAccount {
+	return &BankAccount{
+		ID:                      account.ID.String(),
+		AccountNumber:           account.AccountNumber,
+		BankName:                account.BankName,
+		OwnerName:               account.OwnerName,
+		Address:                 account.Address,
+		SwiftCode:               account.SwiftCode,
+		RoutingNumber:           account.RoutingNumber,
+		Name:                    account.Name,
+		UKSortCode:              account.UKSortCode,
+		IntermediaryBankName:    account.IntermediaryBankName,
+		IntermediaryBankAddress: account.IntermediaryBankAddress,
+		CurrencyID:              account.CurrencyID.String(),
+		Currency:                *toCurrency(account.Currency),
+	}
 }
 
 func ToListBankAccount(accounts []*model.BankAccount) []BankAccount {

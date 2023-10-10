@@ -1,88 +1,101 @@
 {
     "data": {
-        "id": "",
-        "createdAt": "",
-        "updatedAt": "",
-        "name": "Project1",
-        "type": "dwarves",
-        "status": "on-boarding",
-        "startDate": "2022-11-14",
         "accountManagers": [
             {
-                "employeeID": "ecea9d15-05ba-4a4e-9787-54210e3b98ce",
-                "fullName": "Nguyễn Hoàng Huy",
-                "displayName": "Huy Nguyen",
                 "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/2830497479497502617.png",
-                "username": "huynh",
                 "commissionRate": "100",
-                "finalCommissionRate": "0"
+                "displayName": "Huy Nguyen",
+                "employeeID": "ecea9d15-05ba-4a4e-9787-54210e3b98ce",
+                "finalCommissionRate": "0",
+                "fullName": "Nguyễn Hoàng Huy",
+                "username": "huynh"
             }
         ],
-        "deliveryManagers": [
-            {
-                "employeeID": "2655832e-f009-4b73-a535-64c3a22e558f",
-                "fullName": "Phạm Đức Thành",
-                "displayName": "Thanh Pham",
-                "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
-                "username": "thanh",
-                "commissionRate": "100",
-                "finalCommissionRate": "0"
-            }
-        ],
-        "salePersons": [
-            {
-                "employeeID": "2655832e-f009-4b73-a535-64c3a22e558f",
-                "fullName": "Phạm Đức Thành",
-                "displayName": "Thanh Pham",
-                "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
-                "username": "thanh",
-                "commissionRate": "100",
-                "finalCommissionRate": "0"
-            }
-        ],
-        "members": [],
-        "clientEmail": ["b@gmail.com", "c@gmail.com"],
-        "projectEmail": "a@gmail.com",
-        "country": {
-            "id": "4ef64490-c906-4192-a7f9-d2221dadfe4c",
-            "name": "Vietnam",
-            "code": "+84"
-        },
-        "code": "project1",
-        "function": "learning",
         "bankAccount": {
-            "id": "e79eb5b3-e2cb-4d7f-9273-46f4be88cb20",
             "accountNumber": "1234567891",
             "bankName": "OCB",
+            "id": "e79eb5b3-e2cb-4d7f-9273-46f4be88cb20",
             "ownerName": "Phạm Văn Đạt"
         },
         "client": {
-            "id": "afb9cf05-9517-4fb9-a4f2-66e6d90ad215",
-            "name": "Lorem Ipsum Inc.",
-            "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-            "registrationNumber": "32320398488",
             "address": "Hado Centrosa",
-            "country": "Vietnam",
-            "industry": "Technology",
-            "website": "https://d.foundations",
+            "avatar": "",
+            "city": "",
+            "companySize": "",
             "contacts": [
                 {
-                    "id": "0569e64d-3b57-454a-ab88-0482e087eb5f",
-                    "name": "Thanh Pham ",
-                    "role": "PM",
                     "emails": [
                         "thanh@d.foundation",
                         "huytq@d.foundation"
                     ],
-                    "isMainContact": true
+                    "id": "0569e64d-3b57-454a-ab88-0482e087eb5f",
+                    "isMainContact": true,
+                    "name": "Thanh Pham ",
+                    "role": "PM"
                 }
-            ]
+            ],
+            "country": "Vietnam",
+            "createdAt": "2023-02-07T18:41:35.740901Z",
+            "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+            "id": "afb9cf05-9517-4fb9-a4f2-66e6d90ad215",
+            "industry": "Technology",
+            "isPublic": false,
+            "lat": "",
+            "long": "",
+            "name": "Lorem Ipsum Inc.",
+            "projects": [],
+            "registrationNumber": "32320398488",
+            "solutionType": "",
+            "updatedAt": "2023-02-07T18:41:35.740901Z",
+            "website": "https://d.foundations"
         },
+        "clientEmail": [
+            "b@gmail.com",
+            "c@gmail.com"
+        ],
+        "code": "project1",
+        "country": {
+            "code": "+84",
+            "id": "4ef64490-c906-4192-a7f9-d2221dadfe4c",
+            "name": "Vietnam"
+        },
+        "createdAt": "",
+        "deliveryManagers": [
+            {
+                "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
+                "commissionRate": "100",
+                "displayName": "Thanh Pham",
+                "employeeID": "2655832e-f009-4b73-a535-64c3a22e558f",
+                "finalCommissionRate": "0",
+                "fullName": "Phạm Đức Thành",
+                "username": "thanh"
+            }
+        ],
+        "function": "learning",
+        "id": "",
+        "members": [],
+        "name": "Project1",
         "organization": {
-            "id": "31fdf38f-77c0-4c06-b530-e2be8bc297e0",
+            "avatar": "",
             "code": "dwarves-foundation",
-            "name": "Dwarves Foundation",
-            "avatar": ""
-        }
+            "id": "31fdf38f-77c0-4c06-b530-e2be8bc297e0",
+            "name": "Dwarves Foundation"
+        },
+        "projectEmail": "a@gmail.com",
+        "salePersons": [
+            {
+                "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
+                "commissionRate": "100",
+                "displayName": "Thanh Pham",
+                "employeeID": "2655832e-f009-4b73-a535-64c3a22e558f",
+                "finalCommissionRate": "0",
+                "fullName": "Phạm Đức Thành",
+                "username": "thanh"
+            }
+        ],
+        "startDate": "2022-11-14",
+        "status": "on-boarding",
+        "type": "dwarves",
+        "updatedAt": ""
     }
 }

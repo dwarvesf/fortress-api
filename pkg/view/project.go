@@ -10,6 +10,268 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/utils/authutils"
 )
 
+type Project struct {
+	ID                  string                   `json:"id"`
+	CreatedAt           time.Time                `json:"createdAt"`
+	UpdatedAt           *time.Time               `json:"updatedAt"`
+	Name                string                   `json:"name"`
+	CountryID           string                   `json:"countryID"`
+	Type                string                   `json:"type"`
+	StartDate           *time.Time               `json:"startDate"`
+	EndDate             *time.Time               `json:"end_date"`
+	Status              string                   `json:"status"`
+	ProjectEmail        string                   `json:"projectEmail"`
+	ClientEmail         string                   `json:"clientEmail"`
+	Avatar              string                   `json:"avatar"`
+	AllowsSendingSurvey bool                     `json:"allowsSendingSurvey"`
+	Code                string                   `json:"code"`
+	Function            string                   `json:"function"`
+	BankAccountID       string                   `json:"bankAccountID"`
+	CompanyInfoID       string                   `json:"companyInfoID"`
+	ClientID            string                   `json:"clientID"`
+	OrganizationID      string                   `json:"organizationID"`
+	AccountRating       int                      `json:"accountRating"`
+	DeliveryRating      int                      `json:"deliveryRating"`
+	LeadRating          int                      `json:"leadRating"`
+	ImportantLevel      string                   `json:"importantLevel"`
+	ProjectNotion       *ProjectNotion           `json:"projectNotion"`
+	Organization        *Organization            `json:"organization"`
+	BankAccount         *BankAccount             `json:"bankAccount"`
+	Country             *Country                 `json:"country"`
+	Client              *Client                  `json:"client"`
+	CompanyInfo         *CompanyInfo             `json:"companyInfo"`
+	Slots               []ProjectSlot            `json:"slots"`
+	Heads               []*ProjectHead           `json:"heads"`
+	ProjectMembers      []ProjectMember          `json:"projectMembers"`
+	ProjectStacks       []Stack                  `json:"projectStacks"`
+	CommissionConfigs   ProjectCommissionConfigs `json:"commissionConfigs"`
+	ProjectInfo         *ProjectInfo             `json:"projectInfo"`
+} // @name Project
+
+func ToProjects(projects []model.Project) []Project {
+	rs := make([]Project, 0, len(projects))
+	for _, project := range projects {
+		rs = append(rs, *ToProject(&project))
+	}
+
+	return rs
+}
+
+func ToProject(project *model.Project) *Project {
+	if project == nil {
+		return nil
+	}
+
+	return &Project{
+		ID:                  project.ID.String(),
+		CreatedAt:           project.CreatedAt,
+		UpdatedAt:           project.UpdatedAt,
+		Name:                project.Name,
+		CountryID:           project.CountryID.String(),
+		Type:                project.Type.String(),
+		StartDate:           project.StartDate,
+		EndDate:             project.EndDate,
+		Status:              project.Status.String(),
+		ProjectEmail:        project.ProjectEmail,
+		ClientEmail:         project.ClientEmail,
+		Avatar:              project.Avatar,
+		AllowsSendingSurvey: project.AllowsSendingSurvey,
+		Code:                project.Code,
+		Function:            project.Function.String(),
+		BankAccountID:       project.BankAccountID.String(),
+		CompanyInfoID:       project.CompanyInfoID.String(),
+		ClientID:            project.ClientID.String(),
+		OrganizationID:      project.OrganizationID.String(),
+		AccountRating:       project.AccountRating,
+		DeliveryRating:      project.DeliveryRating,
+		LeadRating:          project.LeadRating,
+		ImportantLevel:      project.ImportantLevel.String(),
+		ProjectNotion:       ToProjectNotion(project.ProjectNotion),
+		Organization:        ToOrganization(project.Organization),
+		BankAccount:         ToBankAccount(project.BankAccount),
+		Country:             ToCountry(project.Country),
+		Client:              ToClient(project.Client),
+		CompanyInfo:         ToCompanyInfo(project.CompanyInfo),
+		Slots:               ToProjectSlotList(project.Slots),
+		Heads:               ToProjectHeads(project.Heads),
+		ProjectMembers:      ToProjectMembers(project.ProjectMembers),
+		ProjectStacks:       ToProjectStacks(project.ProjectStacks),
+		CommissionConfigs:   ToProjectCommissionConfigs(project.CommissionConfigs),
+		ProjectInfo:         ToProjectInfo(project.ProjectInfo),
+	}
+}
+
+type ProjectInfo struct {
+	ID                     string     `json:"id"`
+	CreatedAt              time.Time  `json:"createdAt"`
+	UpdatedAt              *time.Time `json:"updatedAt"`
+	ProjectID              *string    `json:"projectID"`
+	BasecampBucketID       int64      `json:"basecampBucketID"`
+	BasecampScheduleID     int64      `json:"basecampScheduleID"`
+	BasecampCampfireID     int64      `json:"basecampCampfireID"`
+	BasecampTodolistID     int64      `json:"basecampTodolistID"`
+	BasecampMessageBoardID int64      `json:"basecampMessageBoardID"`
+	BasecampSentryID       int64      `json:"basecampSentryID"`
+	GitlabID               int64      `json:"gitlabID"`
+	Repositories           []byte     `json:"repositories"`
+	Project                *Project   `json:"project"`
+} // @name ProjectInfo
+
+func ToProjectInfo(projectInfo *model.ProjectInfo) *ProjectInfo {
+	if projectInfo == nil {
+		return nil
+	}
+
+	var projectID *string
+	if projectInfo.ProjectID != nil {
+		id := projectInfo.ProjectID.String()
+		projectID = &id
+	}
+
+	return &ProjectInfo{
+		ID:                     projectInfo.ID.String(),
+		CreatedAt:              projectInfo.CreatedAt,
+		UpdatedAt:              projectInfo.UpdatedAt,
+		ProjectID:              projectID,
+		BasecampBucketID:       projectInfo.BasecampBucketID,
+		BasecampScheduleID:     projectInfo.BasecampScheduleID,
+		BasecampCampfireID:     projectInfo.BasecampCampfireID,
+		BasecampTodolistID:     projectInfo.BasecampTodolistID,
+		BasecampMessageBoardID: projectInfo.BasecampMessageBoardID,
+		BasecampSentryID:       projectInfo.BasecampSentryID,
+		GitlabID:               projectInfo.GitlabID,
+		Repositories:           projectInfo.Repositories,
+		Project:                ToProject(projectInfo.Project),
+	}
+}
+
+type ProjectCommissionConfigs []ProjectCommissionConfig // @name ProjectCommissionConfigs
+
+func ToProjectCommissionConfigs(configs []model.ProjectCommissionConfig) ProjectCommissionConfigs {
+	rs := make(ProjectCommissionConfigs, 0, len(configs))
+	for _, config := range configs {
+		rs = append(rs, ToProjectCommissionConfig(&config))
+	}
+
+	return rs
+}
+
+type ProjectCommissionConfig struct {
+	ID             string          `json:"id"`
+	CreatedAt      time.Time       `json:"createdAt"`
+	UpdatedAt      *time.Time      `json:"updatedAt"`
+	ProjectID      string          `json:"projectID"`
+	Position       string          `json:"position"`
+	CommissionRate decimal.Decimal `json:"commissionRate"`
+} // @name ProjectCommissionConfig
+
+func ToProjectCommissionConfig(config *model.ProjectCommissionConfig) ProjectCommissionConfig {
+	if config == nil {
+		return ProjectCommissionConfig{}
+	}
+
+	return ProjectCommissionConfig{
+		ID:             config.ID.String(),
+		CreatedAt:      config.CreatedAt,
+		UpdatedAt:      config.UpdatedAt,
+		ProjectID:      config.ProjectID.String(),
+		Position:       config.Position.String(),
+		CommissionRate: config.CommissionRate,
+	}
+}
+
+type ProjectNotion struct {
+	ID            string     `json:"id"`
+	CreatedAt     time.Time  `json:"createdAt"`
+	UpdatedAt     *time.Time `json:"updatedAt"`
+	ProjectID     string     `json:"projectID"`
+	AuditNotionID string     `json:"auditNotionID"`
+	Project       *Project   `json:"project"`
+} // @name ProjectNotion
+
+func ToProjectNotion(p *model.ProjectNotion) *ProjectNotion {
+	if p == nil {
+		return nil
+	}
+
+	return &ProjectNotion{
+		ID:            p.ID.String(),
+		CreatedAt:     p.CreatedAt,
+		UpdatedAt:     p.UpdatedAt,
+		ProjectID:     p.ProjectID.String(),
+		AuditNotionID: p.AuditNotionID.String(),
+		Project:       ToProject(p.Project),
+	}
+}
+
+type ProjectSlot struct {
+	ID                   string          `json:"id"`
+	CreatedAt            time.Time       `json:"createdAt"`
+	UpdatedAt            *time.Time      `json:"updatedAt"`
+	ProjectID            string          `json:"projectID"`
+	SeniorityID          string          `json:"seniorityID"`
+	UpsellPersonID       string          `json:"upsellPersonID"`
+	DeploymentType       string          `json:"deploymentType"`
+	Status               string          `json:"status"`
+	Rate                 decimal.Decimal `json:"rate"`
+	Discount             decimal.Decimal `json:"discount"`
+	Note                 string          `json:"note"`
+	Seniority            Seniority       `json:"seniority"`
+	Project              Project         `json:"project"`
+	ProjectMember        ProjectMember   `json:"projectMember"`
+	ProjectSlotPositions []Position      `json:"projectSlotPositions"`
+	UpsellPerson         *EmployeeData   `json:"upsellPerson"`
+} // @name ProjectSlot
+
+func ToProjectSlot(slot *model.ProjectSlot) *ProjectSlot {
+	if slot == nil {
+		return nil
+	}
+
+	project := ToProject(&slot.Project)
+	if project == nil {
+		// make sure project is not nil
+		project = &Project{}
+	}
+
+	projectMember := ToProjectMember(&slot.ProjectMember)
+	if projectMember == nil {
+		// make sure project member is not nil
+		projectMember = &ProjectMember{}
+	}
+
+	return &ProjectSlot{
+		ID:                   slot.ID.String(),
+		CreatedAt:            slot.CreatedAt,
+		UpdatedAt:            slot.UpdatedAt,
+		ProjectID:            slot.ProjectID.String(),
+		SeniorityID:          slot.SeniorityID.String(),
+		UpsellPersonID:       slot.UpsellPersonID.String(),
+		DeploymentType:       slot.DeploymentType.String(),
+		Status:               slot.Status.String(),
+		Rate:                 slot.Rate,
+		Discount:             slot.Discount,
+		Note:                 slot.Note,
+		Seniority:            ToSeniority(slot.Seniority),
+		Project:              *project,
+		ProjectMember:        *projectMember,
+		ProjectSlotPositions: ToProjectSlotPositions(slot.ProjectSlotPositions),
+		UpsellPerson:         ToEmployeeData(slot.UpsellPerson),
+	}
+}
+
+func ToProjectSlotList(slots []model.ProjectSlot) []ProjectSlot {
+	rs := make([]ProjectSlot, 0, len(slots))
+	for _, slot := range slots {
+		projectSlot := ToProjectSlot(&slot)
+		if projectSlot != nil {
+			rs = append(rs, *projectSlot)
+		}
+	}
+
+	return rs
+}
+
 type ProjectData struct {
 	model.BaseModel
 
@@ -53,6 +315,10 @@ type BasicClientInfo struct {
 }
 
 func ToBasicClientInfo(client *model.Client) *BasicClientInfo {
+	if client == nil {
+		return nil
+	}
+
 	return &BasicClientInfo{
 		ID:                 client.ID.String(),
 		Name:               client.Name,
@@ -110,6 +376,39 @@ type ProjectMember struct {
 	Seniority    *model.Seniority   `json:"seniority"`
 	Positions    []Position         `json:"positions"`
 	UpsellPerson *BasicEmployeeInfo `json:"upsellPerson"`
+} // @name ProjectMember
+
+func ToProjectMembers(members []model.ProjectMember) []ProjectMember {
+	res := make([]ProjectMember, 0, len(members))
+	for _, m := range members {
+		res = append(res, *ToProjectMember(&m))
+	}
+
+	return res
+}
+
+func ToProjectMember(member *model.ProjectMember) *ProjectMember {
+	return &ProjectMember{
+		ProjectMemberID:      member.ID.String(),
+		ProjectSlotID:        member.ProjectSlotID.String(),
+		EmployeeID:           member.EmployeeID.String(),
+		FullName:             member.Employee.FullName,
+		DisplayName:          member.Employee.DisplayName,
+		Avatar:               member.Employee.Avatar,
+		Username:             member.Employee.Username,
+		Status:               member.Status.String(),
+		IsLead:               member.IsLead,
+		DeploymentType:       member.DeploymentType.String(),
+		StartDate:            member.StartDate,
+		EndDate:              member.EndDate,
+		Rate:                 member.Rate,
+		Discount:             member.Discount,
+		UpsellCommissionRate: member.UpsellCommissionRate,
+		Note:                 member.Note,
+		Seniority:            member.Seniority,
+		Positions:            ToProjectMemberPositions(member.ProjectMemberPositions),
+		UpsellPerson:         toBasicEmployeeInfo(*member.UpsellPerson),
+	}
 }
 
 type ProjectHead struct {
@@ -120,6 +419,16 @@ type ProjectHead struct {
 	Username            string          `json:"username"`
 	CommissionRate      decimal.Decimal `json:"commissionRate"`
 	FinalCommissionRate decimal.Decimal `json:"finalCommissionRate"`
+}
+
+func ToProjectHeads(heads []*model.ProjectHead) []*ProjectHead {
+	res := make([]*ProjectHead, 0, len(heads))
+	for _, h := range heads {
+		ph := ToProjectHead(nil, h, nil)
+		res = append(res, &ph)
+	}
+
+	return res
 }
 
 func ToProjectHead(userInfo *model.CurrentLoggedUserInfo, head *model.ProjectHead, commissionConfig map[string]decimal.Decimal) ProjectHead {
@@ -468,7 +777,7 @@ func ToCreateProjectDataResponse(userInfo *model.CurrentLoggedUserInfo, project 
 	}
 
 	if project.Client != nil {
-		result.Client = toClient(project.Client)
+		result.Client = ToClient(project.Client)
 	}
 
 	if project.StartDate != nil {
@@ -652,7 +961,7 @@ func ToUpdateProjectGeneralInfo(project *model.Project) UpdateProjectGeneralInfo
 	}
 
 	if project.Client != nil {
-		rs.Client = toClient(project.Client)
+		rs.Client = ToClient(project.Client)
 	}
 
 	return rs

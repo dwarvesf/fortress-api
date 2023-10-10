@@ -42,16 +42,17 @@ func New(controller *controller.Controller, store *store.Store, repo store.DBRep
 // Create godoc
 // @Summary Create new client
 // @Description Create new client
+// @id createClient
 // @Tags Client
 // @Accept  json
 // @Produce  json
 // @Security BearerAuth
-// @Param Body body request.CreateClientInput true "Body"
-// @Success 200 {object} view.CreateClientResponse
+// @Param Body body CreateClientRequest true "Body"
+// @Success 200 {object} CreateClientResponse
 // @Failure 500 {object} ErrorResponse
 // @Router /clients [post]
 func (h *handler) Create(c *gin.Context) {
-	input := request.CreateClientInput{}
+	input := request.CreateClientRequest{}
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, input, ""))
 		return
@@ -70,17 +71,18 @@ func (h *handler) Create(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse[any](client, nil, nil, nil, ""))
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToClient(client), nil, nil, nil, ""))
 }
 
 // List godoc
 // @Summary Get all clients
 // @Description Get all clients
+// @id getListClients
 // @Tags Client
 // @Accept  json
 // @Produce  json
 // @Security BearerAuth
-// @Success 200 {object} view.GetListClientResponse
+// @Success 200 {object} GetListClientResponse
 // @Failure 500 {object} ErrorResponse
 // @Router /clients [get]
 func (h *handler) List(c *gin.Context) {
@@ -96,17 +98,19 @@ func (h *handler) List(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse[any](clients, nil, nil, nil, ""))
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToClients(clients), nil, nil, nil, ""))
 }
 
 // Detail godoc
 // @Summary Get client detail by id
 // @Description Get client detail by id
+// @id getClientDetail
 // @Tags Client
 // @Accept  json
 // @Produce  json
 // @Security BearerAuth
-// @Success 200 {object} view.GetDetailClientResponse
+// @Param id path string true "Client ID"
+// @Success 200 {object} GetDetailClientResponse
 // @Failure 400 {object} ErrorResponse
 // @Failure 404 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
@@ -135,17 +139,19 @@ func (h *handler) Detail(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse[any](client, nil, nil, nil, ""))
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToClient(client), nil, nil, nil, ""))
 }
 
 // Update godoc
 // @Summary Update client by id
 // @Description Update client by id
+// @id updateClient
 // @Tags Client
 // @Accept  json
 // @Produce  json
 // @Security BearerAuth
-// @Param Body body request.UpdateClientInput true "Body"
+// @Param id path string true "Client ID"
+// @Param Body body UpdateClientInput true "Body"
 // @Success 200 {object} MessageResponse
 // @Failure 400 {object} ErrorResponse
 // @Failure 404 {object} ErrorResponse
@@ -183,9 +189,11 @@ func (h *handler) Update(c *gin.Context) {
 // Delete godoc
 // @Summary Delete client by id
 // @Description Delete client by id
+// @id deleteClient
 // @Tags Client
 // @Accept  json
 // @Produce  json
+// @Param id path string true "Client ID"
 // @Success 200 {object} MessageResponse
 // @Failure 400 {object} ErrorResponse
 // @Failure 404 {object} ErrorResponse
@@ -217,11 +225,12 @@ func (h *handler) Delete(c *gin.Context) {
 // PublicList godoc
 // @Summary Get all clients
 // @Description Get all clients
+// @id getAllPublicClients
 // @Tags Public
 // @Accept  json
 // @Produce  json
 // @Security BearerAuth
-// @Success 200 {object} view.PublicClientListResponse
+// @Success 200 {object} PublicClientListResponse
 // @Failure 500 {object} ErrorResponse
 // @Router /clients [get]
 func (h *handler) PublicList(c *gin.Context) {

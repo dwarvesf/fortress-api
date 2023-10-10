@@ -32,12 +32,13 @@ func New(controller *controller.Controller, logger logger.Logger, cfg *config.Co
 // Auth godoc
 // @Summary Authorize user when login
 // @Description Authorize user when login
+// @id auth
 // @Tags Auth
 // @Accept  json
 // @Produce  json
 // @Param code body string true "Google login code"
 // @Param redirectUrl body string true "Google redirect url"
-// @Success 200 {object} view.AuthData
+// @Success 200 {object} AuthData
 // @Failure 400 {object} ErrorResponse
 // @Failure 404 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
@@ -78,11 +79,12 @@ func (h *handler) Auth(c *gin.Context) {
 // Me godoc
 // @Summary Get logged-in user data
 // @Description Get logged-in user data
+// @id me
 // @Tags Auth
 // @Accept  json
 // @Produce  json
 // @Security BearerAuth
-// @Success 200 {object} view.AuthUserResponse
+// @Success 200 {object} AuthUserResponse
 // @Failure 400 {object} ErrorResponse
 // @Failure 404 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
@@ -112,11 +114,12 @@ func (h *handler) Me(c *gin.Context) {
 // CreateAPIKey godoc
 // @Summary Create API key
 // @Description Create API key
+// @id createApiKey
 // @Tags Auth
 // @Accept  json
 // @Produce  json
 // @Security BearerAuth
-// @Success 200 {object} view.APIKeyResponse
+// @Success 200 {object} APIKeyResponse
 // @Failure 400 {object} ErrorResponse
 // @Failure 404 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse

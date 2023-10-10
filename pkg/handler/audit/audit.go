@@ -46,6 +46,7 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 // Sync godoc
 // @Summary Sync audit info from Notion to database
 // @Description Sync audit info from Notion to database
+// @id syncAudit
 // @Tags Audit
 // @Accept  json
 // @Produce  json

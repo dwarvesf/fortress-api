@@ -91,12 +91,34 @@ type Country struct {
 	Name   string `json:"name"`
 	Code   string `json:"code"`
 	Cities []City `json:"cities"`
-}
+} // @name Country
 
 type City struct {
 	Name string `json:"name"`
 	Lat  string `json:"lat"`
 	Long string `json:"long"`
+} // @name City
+
+func ToCountry(c *model.Country) *Country {
+	if c == nil {
+		return nil
+	}
+
+	cities := make([]City, len(c.Cities))
+	for i, city := range c.Cities {
+		cities[i] = City{
+			Name: city.Name,
+			Lat:  city.Lat,
+			Long: city.Long,
+		}
+	}
+
+	return &Country{
+		ID:     c.ID.String(),
+		Name:   c.Name,
+		Code:   c.Code,
+		Cities: cities,
+	}
 }
 
 func ToCountryView(countries []*model.Country) ([]Country, error) {
