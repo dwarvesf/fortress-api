@@ -8,7 +8,7 @@ type Currency struct {
 	Symbol string `json:"symbol"`
 	Locale string `json:"locale"`
 	Type   string `json:"type"`
-}
+} // @name Currency
 
 func toCurrency(c *model.Currency) *Currency {
 	if c == nil {

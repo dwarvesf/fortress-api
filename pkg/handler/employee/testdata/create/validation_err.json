@@ -1,6 +1,6 @@
 {
     "data": null,
-    "error": "Key: 'CreateEmployeeInput.PersonalEmail' Error:Field validation for 'PersonalEmail' failed on the 'email' tag",
+    "error": "Key: 'CreateEmployeeRequest.PersonalEmail' Error:Field validation for 'PersonalEmail' failed on the 'email' tag",
     "errors": [
         {
             "field": "PersonalEmail",
