@@ -29,11 +29,8 @@
     "leftDate": null,
     "seniority": {
       "id": "01fb6322-d727-47e3-a242-5039ea4732fd",
-      "createdAt": "2022-11-07T09:50:25.714604Z",
-      "updatedAt": "2022-11-07T09:50:25.714604Z",
-      "name": "Staff",
       "code": "staff",
-      "level": 5
+      "name": "Staff"
     },
     "lineManager": null,
     "referredBy": null,
@@ -60,6 +57,25 @@
         "name": "Blockchain"
       }
     ],
+    "projects": [
+      {
+        "id": "8dc3be2e-19a4-4942-8a79-56db391a0b15",
+        "name": "Fortress",
+        "deploymentType": "official",
+        "status": "active",
+        "positions": [
+          {
+            "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
+            "code": "frontend",
+            "name": "Frontend"
+          }
+        ],
+        "code": "",
+        "avatar": "",
+        "startDate": "2022-11-01T00:00:00Z",
+        "endDate": null
+      }
+    ],
     "stacks": [
       {
         "id": "0ecf47c8-cca4-4c30-94bb-054b1124c44f",
@@ -81,25 +97,6 @@
         "name": "⚪️ Admin"
       }
     ],
-    "projects": [
-      {
-        "id": "8dc3be2e-19a4-4942-8a79-56db391a0b15",
-        "name": "Fortress",
-        "deploymentType": "official",
-        "status": "active",
-        "positions": [
-          {
-            "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
-            "code": "frontend",
-            "name": "Frontend"
-          }
-        ],
-        "code": "",
-        "avatar": "",
-        "startDate": "2022-11-01T00:00:00Z",
-        "endDate": null
-      }
-    ],
     "chapters": [],
     "mentees": [
       {
@@ -110,11 +107,8 @@
         "username": "ducnv",
         "seniority": {
           "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
-          "createdAt": "2022-11-07T09:50:25.714604Z",
-          "updatedAt": "2022-11-07T09:50:25.714604Z",
-          "name": "Junior",
           "code": "junior",
-          "level": 2
+          "name": "Junior"
         },
         "positions": []
       },
@@ -126,11 +120,8 @@
         "username": "truongnx",
         "seniority": {
           "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
-          "createdAt": "2022-11-07T09:50:25.714604Z",
-          "updatedAt": "2022-11-07T09:50:25.714604Z",
-          "name": "Fresher",
           "code": "fresher",
-          "level": 1
+          "name": "Fresher"
         },
         "positions": []
       },
@@ -142,19 +133,14 @@
         "username": "quynhlv",
         "seniority": {
           "id": "01fb6322-d727-47e3-a242-5039ea4732fc",
-          "createdAt": "2022-11-07T09:50:25.714604Z",
-          "updatedAt": "2022-11-07T09:50:25.714604Z",
-          "name": "Senior",
           "code": "senior",
-          "level": 4
+          "name": "Senior"
         },
         "positions": [
           {
             "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
-            "createdAt": "2022-11-07T09:50:25.714604Z",
-            "updatedAt": "2022-11-07T09:50:25.714604Z",
-            "name": "Devops",
-            "code": "devops"
+            "code": "devops",
+            "name": "Devops"
           }
         ]
       },
@@ -166,11 +152,8 @@
         "username": "nguyennh",
         "seniority": {
           "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
-          "createdAt": "2022-11-07T09:50:25.714604Z",
-          "updatedAt": "2022-11-07T09:50:25.714604Z",
-          "name": "Fresher",
           "code": "fresher",
-          "level": 1
+          "name": "Fresher"
         },
         "positions": []
       },
@@ -182,40 +165,29 @@
         "username": "huynh",
         "seniority": {
           "id": "01fb6322-d727-47e3-a242-5039ea4732fd",
-          "createdAt": "2022-11-07T09:50:25.714604Z",
-          "updatedAt": "2022-11-07T09:50:25.714604Z",
-          "name": "Staff",
           "code": "staff",
-          "level": 5
+          "name": "Staff"
         },
         "positions": [
           {
             "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
-            "createdAt": "2022-11-07T09:50:25.714604Z",
-            "updatedAt": "2022-11-07T09:50:25.714604Z",
-            "name": "Devops",
-            "code": "devops"
+            "code": "devops",
+            "name": "Devops"
           },
           {
             "id": "01fb6322-d727-47e3-a242-5039ea4732fc",
-            "createdAt": "2022-11-07T09:50:25.714604Z",
-            "updatedAt": "2022-11-07T09:50:25.714604Z",
-            "name": "Blockchain",
-            "code": "blockchain"
+            "code": "blockchain",
+            "name": "Blockchain"
           },
           {
             "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
-            "createdAt": "2022-11-07T09:50:25.714604Z",
-            "updatedAt": "2022-11-07T09:50:25.714604Z",
-            "name": "Frontend",
-            "code": "frontend"
+            "code": "frontend",
+            "name": "Frontend"
           },
           {
             "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
-            "createdAt": "2022-11-07T09:50:25.714604Z",
-            "updatedAt": "2022-11-07T09:50:25.714604Z",
-            "name": "Backend",
-            "code": "backend"
+            "code": "backend",
+            "name": "Backend"
           }
         ]
       },
@@ -227,40 +199,29 @@
         "username": "huytq",
         "seniority": {
           "id": "01fb6322-d727-47e3-a242-5039ea4732fd",
-          "createdAt": "2022-11-07T09:50:25.714604Z",
-          "updatedAt": "2022-11-07T09:50:25.714604Z",
-          "name": "Staff",
           "code": "staff",
-          "level": 5
+          "name": "Staff"
         },
         "positions": [
           {
             "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
-            "createdAt": "2022-11-07T09:50:25.714604Z",
-            "updatedAt": "2022-11-07T09:50:25.714604Z",
-            "name": "Frontend",
-            "code": "frontend"
+            "code": "frontend",
+            "name": "Frontend"
           },
           {
             "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
-            "createdAt": "2022-11-07T09:50:25.714604Z",
-            "updatedAt": "2022-11-07T09:50:25.714604Z",
-            "name": "Backend",
-            "code": "backend"
+            "code": "backend",
+            "name": "Backend"
           },
           {
             "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
-            "createdAt": "2022-11-07T09:50:25.714604Z",
-            "updatedAt": "2022-11-07T09:50:25.714604Z",
-            "name": "Devops",
-            "code": "devops"
+            "code": "devops",
+            "name": "Devops"
           },
           {
             "id": "01fb6322-d727-47e3-a242-5039ea4732fc",
-            "createdAt": "2022-11-07T09:50:25.714604Z",
-            "updatedAt": "2022-11-07T09:50:25.714604Z",
-            "name": "Blockchain",
-            "code": "blockchain"
+            "code": "blockchain",
+            "name": "Blockchain"
           }
         ]
       },
@@ -272,40 +233,29 @@
         "username": "huy",
         "seniority": {
           "id": "01fb6322-d727-47e3-a242-5039ea4732fd",
-          "createdAt": "2022-11-07T09:50:25.714604Z",
-          "updatedAt": "2022-11-07T09:50:25.714604Z",
-          "name": "Staff",
           "code": "staff",
-          "level": 5
+          "name": "Staff"
         },
         "positions": [
           {
             "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
-            "createdAt": "2022-11-07T09:50:25.714604Z",
-            "updatedAt": "2022-11-07T09:50:25.714604Z",
-            "name": "Frontend",
-            "code": "frontend"
+            "code": "frontend",
+            "name": "Frontend"
           },
           {
             "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
-            "createdAt": "2022-11-07T09:50:25.714604Z",
-            "updatedAt": "2022-11-07T09:50:25.714604Z",
-            "name": "Backend",
-            "code": "backend"
+            "code": "backend",
+            "name": "Backend"
           },
           {
             "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
-            "createdAt": "2022-11-07T09:50:25.714604Z",
-            "updatedAt": "2022-11-07T09:50:25.714604Z",
-            "name": "Devops",
-            "code": "devops"
+            "code": "devops",
+            "name": "Devops"
           },
           {
             "id": "01fb6322-d727-47e3-a242-5039ea4732fc",
-            "createdAt": "2022-11-07T09:50:25.714604Z",
-            "updatedAt": "2022-11-07T09:50:25.714604Z",
-            "name": "Blockchain",
-            "code": "blockchain"
+            "code": "blockchain",
+            "name": "Blockchain"
           }
         ]
       },
@@ -317,19 +267,14 @@
         "username": "thuongptt",
         "seniority": {
           "id": "01fb6322-d727-47e3-a242-5039ea4732fc",
-          "createdAt": "2022-11-07T09:50:25.714604Z",
-          "updatedAt": "2022-11-07T09:50:25.714604Z",
-          "name": "Senior",
           "code": "senior",
-          "level": 4
+          "name": "Senior"
         },
         "positions": [
           {
             "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
-            "createdAt": "2022-11-07T09:50:25.714604Z",
-            "updatedAt": "2022-11-07T09:50:25.714604Z",
-            "name": "Devops",
-            "code": "devops"
+            "code": "devops",
+            "name": "Devops"
           }
         ]
       },
@@ -341,19 +286,14 @@
         "username": "thaontm",
         "seniority": {
           "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
-          "createdAt": "2022-11-07T09:50:25.714604Z",
-          "updatedAt": "2022-11-07T09:50:25.714604Z",
-          "name": "Mid",
           "code": "mid",
-          "level": 3
+          "name": "Mid"
         },
         "positions": [
           {
             "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
-            "createdAt": "2022-11-07T09:50:25.714604Z",
-            "updatedAt": "2022-11-07T09:50:25.714604Z",
-            "name": "Devops",
-            "code": "devops"
+            "code": "devops",
+            "name": "Devops"
           }
         ]
       },
@@ -365,19 +305,14 @@
         "username": "cody",
         "seniority": {
           "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
-          "createdAt": "2022-11-07T09:50:25.714604Z",
-          "updatedAt": "2022-11-07T09:50:25.714604Z",
-          "name": "Mid",
           "code": "mid",
-          "level": 3
+          "name": "Mid"
         },
         "positions": [
           {
             "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
-            "createdAt": "2022-11-07T09:50:25.714604Z",
-            "updatedAt": "2022-11-07T09:50:25.714604Z",
-            "name": "Devops",
-            "code": "devops"
+            "code": "devops",
+            "name": "Devops"
           }
         ]
       },
@@ -389,19 +324,14 @@
         "username": "bean",
         "seniority": {
           "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
-          "createdAt": "2022-11-07T09:50:25.714604Z",
-          "updatedAt": "2022-11-07T09:50:25.714604Z",
-          "name": "Mid",
           "code": "mid",
-          "level": 3
+          "name": "Mid"
         },
         "positions": [
           {
             "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
-            "createdAt": "2022-11-07T09:50:25.714604Z",
-            "updatedAt": "2022-11-07T09:50:25.714604Z",
-            "name": "Devops",
-            "code": "devops"
+            "code": "devops",
+            "name": "Devops"
           }
         ]
       },
@@ -413,11 +343,8 @@
         "username": "anhnh",
         "seniority": {
           "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
-          "createdAt": "2022-11-07T09:50:25.714604Z",
-          "updatedAt": "2022-11-07T09:50:25.714604Z",
-          "name": "Junior",
           "code": "junior",
-          "level": 2
+          "name": "Junior"
         },
         "positions": []
       },
@@ -429,11 +356,8 @@
         "username": "hungvt",
         "seniority": {
           "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
-          "createdAt": "2022-11-07T09:50:25.714604Z",
-          "updatedAt": "2022-11-07T09:50:25.714604Z",
-          "name": "Junior",
           "code": "junior",
-          "level": 2
+          "name": "Junior"
         },
         "positions": []
       },
@@ -445,11 +369,8 @@
         "username": "khanglna",
         "seniority": {
           "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
-          "createdAt": "2022-11-07T09:50:25.714604Z",
-          "updatedAt": "2022-11-07T09:50:25.714604Z",
-          "name": "Fresher",
           "code": "fresher",
-          "level": 1
+          "name": "Fresher"
         },
         "positions": []
       },
@@ -461,40 +382,29 @@
         "username": "benjamin",
         "seniority": {
           "id": "01fb6322-d727-47e3-a242-5039ea4732fd",
-          "createdAt": "2022-11-07T09:50:25.714604Z",
-          "updatedAt": "2022-11-07T09:50:25.714604Z",
-          "name": "Staff",
           "code": "staff",
-          "level": 5
+          "name": "Staff"
         },
         "positions": [
           {
             "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
-            "createdAt": "2022-11-07T09:50:25.714604Z",
-            "updatedAt": "2022-11-07T09:50:25.714604Z",
-            "name": "Frontend",
-            "code": "frontend"
+            "code": "frontend",
+            "name": "Frontend"
           },
           {
             "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
-            "createdAt": "2022-11-07T09:50:25.714604Z",
-            "updatedAt": "2022-11-07T09:50:25.714604Z",
-            "name": "Backend",
-            "code": "backend"
+            "code": "backend",
+            "name": "Backend"
           },
           {
             "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
-            "createdAt": "2022-11-07T09:50:25.714604Z",
-            "updatedAt": "2022-11-07T09:50:25.714604Z",
-            "name": "Devops",
-            "code": "devops"
+            "code": "devops",
+            "name": "Devops"
           },
           {
             "id": "01fb6322-d727-47e3-a242-5039ea4732fc",
-            "createdAt": "2022-11-07T09:50:25.714604Z",
-            "updatedAt": "2022-11-07T09:50:25.714604Z",
-            "name": "Blockchain",
-            "code": "blockchain"
+            "code": "blockchain",
+            "name": "Blockchain"
           }
         ]
       },
@@ -506,40 +416,29 @@
         "username": "alan",
         "seniority": {
           "id": "01fb6322-d727-47e3-a242-5039ea4732fd",
-          "createdAt": "2022-11-07T09:50:25.714604Z",
-          "updatedAt": "2022-11-07T09:50:25.714604Z",
-          "name": "Staff",
           "code": "staff",
-          "level": 5
+          "name": "Staff"
         },
         "positions": [
           {
             "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
-            "createdAt": "2022-11-07T09:50:25.714604Z",
-            "updatedAt": "2022-11-07T09:50:25.714604Z",
-            "name": "Frontend",
-            "code": "frontend"
+            "code": "frontend",
+            "name": "Frontend"
           },
           {
             "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
-            "createdAt": "2022-11-07T09:50:25.714604Z",
-            "updatedAt": "2022-11-07T09:50:25.714604Z",
-            "name": "Backend",
-            "code": "backend"
+            "code": "backend",
+            "name": "Backend"
           },
           {
             "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
-            "createdAt": "2022-11-07T09:50:25.714604Z",
-            "updatedAt": "2022-11-07T09:50:25.714604Z",
-            "name": "Devops",
-            "code": "devops"
+            "code": "devops",
+            "name": "Devops"
           },
           {
             "id": "01fb6322-d727-47e3-a242-5039ea4732fc",
-            "createdAt": "2022-11-07T09:50:25.714604Z",
-            "updatedAt": "2022-11-07T09:50:25.714604Z",
-            "name": "Blockchain",
-            "code": "blockchain"
+            "code": "blockchain",
+            "name": "Blockchain"
           }
         ]
       },
@@ -551,19 +450,14 @@
         "username": "duc",
         "seniority": {
           "id": "01fb6322-d727-47e3-a242-5039ea4732fc",
-          "createdAt": "2022-11-07T09:50:25.714604Z",
-          "updatedAt": "2022-11-07T09:50:25.714604Z",
-          "name": "Senior",
           "code": "senior",
-          "level": 4
+          "name": "Senior"
         },
         "positions": [
           {
             "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
-            "createdAt": "2022-11-07T09:50:25.714604Z",
-            "updatedAt": "2022-11-07T09:50:25.714604Z",
-            "name": "Devops",
-            "code": "devops"
+            "code": "devops",
+            "name": "Devops"
           }
         ]
       },
@@ -575,19 +469,14 @@
         "username": "mia",
         "seniority": {
           "id": "01fb6322-d727-47e3-a242-5039ea4732fc",
-          "createdAt": "2022-11-07T09:50:25.714604Z",
-          "updatedAt": "2022-11-07T09:50:25.714604Z",
-          "name": "Senior",
           "code": "senior",
-          "level": 4
+          "name": "Senior"
         },
         "positions": [
           {
             "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
-            "createdAt": "2022-11-07T09:50:25.714604Z",
-            "updatedAt": "2022-11-07T09:50:25.714604Z",
-            "name": "Devops",
-            "code": "devops"
+            "code": "devops",
+            "name": "Devops"
           }
         ]
       }
