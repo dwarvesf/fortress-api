@@ -47,17 +47,6 @@ func New(controller *controller.Controller, store *store.Store, repo store.DBRep
 	}
 }
 
-// IcyWeeklyDistribution godoc
-// @Summary Get Icy Weekly Distribution
-// @Description Get Icy Weekly Distribution
-// @Tags Project
-// @Accept  json
-// @Produce  json
-// @Security BearerAuth
-// @PSuccess 200 {object} view.IcyWeeklyDistribution
-// @Failure 400 {object} ErrorResponse
-// @Failure 500 {object} ErrorResponse
-// @Router /projects/icy-weekly-distribution [get]
 func (h *handler) IcyWeeklyDistribution(c *gin.Context) {
 	l := h.logger.Fields(logger.Fields{
 		"handler": "project",
@@ -77,6 +66,7 @@ func (h *handler) IcyWeeklyDistribution(c *gin.Context) {
 // List godoc
 // @Summary Get list of project
 // @Description Get list of project
+// @id getProjectList
 // @Tags Project
 // @Accept  json
 // @Produce  json
@@ -86,7 +76,7 @@ func (h *handler) IcyWeeklyDistribution(c *gin.Context) {
 // @Param type   query  string false  "Project type"
 // @Param page   query  string false  "Page"
 // @Param size   query  string false  "Size"
-// @Success 200 {object} view.ProjectListDataResponse
+// @Success 200 {object} ProjectListDataResponse
 // @Failure 400 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
 // @Router /projects [get]
@@ -136,13 +126,14 @@ func (h *handler) List(c *gin.Context) {
 // UpdateProjectStatus godoc
 // @Summary Update status for project by id
 // @Description Update status for project by id
+// @id updateProjectStatus
 // @Tags Project
 // @Accept  json
 // @Produce  json
 // @Security BearerAuth
 // @Param id path string true "Project ID"
-// @Param status body model.ProjectStatus true "Project Status"
-// @Success 200 {object} view.UpdateProjectStatusResponse
+// @Param status body UpdateProjectStatusBody true "Project Status"
+// @Success 200 {object} UpdateProjectStatusResponse
 // @Failure 400 {object} ErrorResponse
 // @Failure 404 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
@@ -154,7 +145,7 @@ func (h *handler) UpdateProjectStatus(c *gin.Context) {
 		return
 	}
 
-	var body request.UpdateAccountStatusBody
+	var body request.UpdateProjectStatusBody
 	if err := c.ShouldBindJSON(&body); err != nil {
 		if err != nil {
 			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, body, ""))
@@ -189,10 +180,10 @@ func (h *handler) UpdateProjectStatus(c *gin.Context) {
 
 	tx, done := h.repo.NewTransaction()
 
-	p.Status = body.ProjectStatus
+	p.Status = model.ProjectStatus(body.ProjectStatus)
 	p.EndDate = nil
 
-	if body.ProjectStatus == model.ProjectStatusClosed {
+	if p.Status == model.ProjectStatusClosed {
 		p.EndDate = new(time.Time)
 		*p.EndDate = time.Now()
 	}
@@ -246,12 +237,13 @@ func (h *handler) UpdateProjectStatus(c *gin.Context) {
 // Create godoc
 // @Summary	Create new project
 // @Description	Create new project
+// @id createProject
 // @Tags Project
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Param Body body request.CreateProjectInput true "body"
-// @Success 200 {object} view.CreateProjectData
+// @Param Body body CreateProjectRequest true "body"
+// @Success 200 {object} CreateProjectRestponse
 // @Failure 400 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
 // @Router /projects [post]
@@ -262,7 +254,7 @@ func (h *handler) Create(c *gin.Context) {
 		return
 	}
 
-	body := request.CreateProjectInput{}
+	body := request.CreateProjectRequest{}
 	if err := c.ShouldBindJSON(&body); err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, body, ""))
 		return
@@ -360,7 +352,7 @@ func (h *handler) Create(c *gin.Context) {
 
 	p := &model.Project{
 		Name:           body.Name,
-		CountryID:      body.CountryID,
+		CountryID:      model.UUID(body.CountryID),
 		Type:           model.ProjectType(body.Type),
 		Status:         model.ProjectStatus(body.Status),
 		StartDate:      body.GetStartDate(),
@@ -369,23 +361,23 @@ func (h *handler) Create(c *gin.Context) {
 		Country:        country,
 		Code:           body.Code,
 		Function:       model.ProjectFunction(body.Function),
-		ClientID:       body.ClientID,
+		ClientID:       model.UUID(body.ClientID),
 		ImportantLevel: model.ProjectImportantLevelMedium,
 	}
 
 	if body.OrganizationID.IsZero() {
 		p.OrganizationID = org.ID
 	} else {
-		p.OrganizationID = body.OrganizationID
+		p.OrganizationID = model.UUID(body.OrganizationID)
 	}
 
 	if !body.BankAccountID.IsZero() {
-		p.BankAccountID = body.BankAccountID
+		p.BankAccountID = model.UUID(body.BankAccountID)
 		p.BankAccount = bankAccount
 	}
 
 	if !body.OrganizationID.IsZero() {
-		p.OrganizationID = body.OrganizationID
+		p.OrganizationID = model.UUID(body.OrganizationID)
 		p.Organization = organization
 	}
 
@@ -401,7 +393,7 @@ func (h *handler) Create(c *gin.Context) {
 
 	// Create audit notion id
 	if !body.AuditNotionID.IsZero() {
-		if _, err := h.store.ProjectNotion.Create(tx.DB(), &model.ProjectNotion{ProjectID: p.ID, AuditNotionID: body.AuditNotionID}); err != nil {
+		if _, err := h.store.ProjectNotion.Create(tx.DB(), &model.ProjectNotion{ProjectID: p.ID, AuditNotionID: model.UUID(body.AuditNotionID)}); err != nil {
 			l.Error(err, "failed to create project notion")
 			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), body, ""))
 			return
@@ -450,7 +442,7 @@ func (h *handler) Create(c *gin.Context) {
 	c.JSON(http.StatusOK, view.CreateResponse(view.ToCreateProjectDataResponse(userInfo, p), nil, done(nil), nil, ""))
 }
 
-func (h *handler) createProjectHeads(db *gorm.DB, projectID model.UUID, position model.HeadPosition, req []request.ProjectHeadInput) ([]*model.ProjectHead, error) {
+func (h *handler) createProjectHeads(db *gorm.DB, projectID model.UUID, position model.HeadPosition, req []request.ProjectHeadRequest) ([]*model.ProjectHead, error) {
 	var heads []*model.ProjectHead
 	for _, head := range req {
 		emp, err := h.store.Employee.One(db, head.EmployeeID.String(), false)
@@ -461,7 +453,7 @@ func (h *handler) createProjectHeads(db *gorm.DB, projectID model.UUID, position
 
 		head := &model.ProjectHead{
 			ProjectID:      projectID,
-			EmployeeID:     head.EmployeeID,
+			EmployeeID:     model.UUID(head.EmployeeID),
 			CommissionRate: head.CommissionRate,
 			Position:       position,
 		}
@@ -481,6 +473,7 @@ func (h *handler) createProjectHeads(db *gorm.DB, projectID model.UUID, position
 // GetMembers godoc
 // @Summary Get list members of project
 // @Description Get list members of project
+// @id getProjectMemberList
 // @Tags Project
 // @Accept  json
 // @Produce  json
@@ -492,7 +485,7 @@ func (h *handler) createProjectHeads(db *gorm.DB, projectID model.UUID, position
 // @Param size query string false "Size"
 // @Param sort query string false "Sort"
 // @Param distinct query bool false "Distinct"
-// @Success 200 {object} view.ProjectMemberListResponse
+// @Success 200 {object} ProjectMemberListResponse
 // @Failure 400 {object} ErrorResponse
 // @Failure 404 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
@@ -622,6 +615,7 @@ func (h *handler) mergeSlotAndMembers(db *gorm.DB, slots []*model.ProjectSlot, m
 // DeleteMember godoc
 // @Summary Delete member in a project
 // @Description Delete member in a project
+// @id deleteProjectMember
 // @Tags Project
 // @Accept  json
 // @Produce  json
@@ -713,6 +707,7 @@ func (h *handler) DeleteMember(c *gin.Context) {
 // DeleteSlot godoc
 // @Summary Delete slot in a project
 // @Description Delete slot in a project
+// @id deleteProjectSlot
 // @Tags Project
 // @Accept  json
 // @Produce  json
@@ -768,6 +763,7 @@ func (h *handler) DeleteSlot(c *gin.Context) {
 // UnassignMember godoc
 // @Summary Unassign member in a project
 // @Description Unassign member in a project
+// @id unassignProjectMember
 // @Tags Project
 // @Accept  json
 // @Produce  json
@@ -867,13 +863,14 @@ func (h *handler) UnassignMember(c *gin.Context) {
 // UpdateMember godoc
 // @Summary Update member in an existing project
 // @Description Update member in an existing project
+// @id updateProjectMember
 // @Tags Project
 // @Accept json
 // @Produce json
 // @Security BearerAuth
 // @Param id path string true "Project ID"
-// @Param Body body request.UpdateMemberInput true "Body"
-// @Success 200 {object} view.CreateMemberDataResponse
+// @Param Body body UpdateMemberRequest true "Body"
+// @Success 200 {object} CreateMemberDataResponse
 // @Failure 400 {object} ErrorResponse
 // @Failure 404 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
@@ -885,7 +882,7 @@ func (h *handler) UpdateMember(c *gin.Context) {
 		return
 	}
 
-	var body request.UpdateMemberInput
+	var body request.UpdateMemberRequest
 	if err := c.ShouldBindJSON(&body); err != nil {
 		if err != nil {
 			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, body, ""))
@@ -949,7 +946,7 @@ func (h *handler) UpdateMember(c *gin.Context) {
 
 	positionMap := model.ToPositionMap(positions)
 	for _, pID := range body.Positions {
-		if _, ok := positionMap[pID]; !ok {
+		if _, ok := positionMap[model.UUID(pID)]; !ok {
 			l.Error(errs.ErrPositionNotFoundWithID(pID.String()), "position not found")
 			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrPositionNotFoundWithID(pID.String()), body, ""))
 			return
@@ -983,7 +980,7 @@ func (h *handler) UpdateMember(c *gin.Context) {
 	}
 
 	// update project slot
-	slot.SeniorityID = body.SeniorityID
+	slot.SeniorityID = model.UUID(body.SeniorityID)
 	slot.DeploymentType = model.DeploymentType(body.DeploymentType)
 	slot.Status = model.ProjectMemberStatus(body.Status)
 	slot.Note = body.Note
@@ -1018,7 +1015,7 @@ func (h *handler) UpdateMember(c *gin.Context) {
 	for _, v := range body.Positions {
 		slotPos = append(slotPos, model.ProjectSlotPosition{
 			ProjectSlotID: slot.ID,
-			PositionID:    v,
+			PositionID:    model.UUID(v),
 		})
 	}
 
@@ -1063,7 +1060,7 @@ func (h *handler) UpdateMember(c *gin.Context) {
 //		 }
 //
 // --- end ---
-func (h *handler) updateProjectMember(db *gorm.DB, p *model.Project, slotID string, projectID string, input request.UpdateMemberInput, userInfo *model.CurrentLoggedUserInfo) (*model.ProjectMember, error) {
+func (h *handler) updateProjectMember(db *gorm.DB, p *model.Project, slotID string, projectID string, input request.UpdateMemberRequest, userInfo *model.CurrentLoggedUserInfo) (*model.ProjectMember, error) {
 	var member *model.ProjectMember
 	var err error
 
@@ -1094,11 +1091,11 @@ func (h *handler) updateProjectMember(db *gorm.DB, p *model.Project, slotID stri
 			return nil, err
 		}
 
-		member.SeniorityID = input.SeniorityID
+		member.SeniorityID = model.UUID(input.SeniorityID)
 		member.DeploymentType = model.DeploymentType(input.DeploymentType)
 		member.StartDate = input.GetStartDate()
 		member.Note = input.Note
-		member.UpsellPersonID = input.UpsellPersonID
+		member.UpsellPersonID = model.UUID(input.UpsellPersonID)
 
 		updateEndDate := false
 		inputEndDate := input.GetEndDate()
@@ -1216,7 +1213,7 @@ func (h *handler) updateProjectMember(db *gorm.DB, p *model.Project, slotID stri
 			return nil, err
 		}
 
-		if member != nil && !member.EmployeeID.IsZero() && member.EmployeeID != input.EmployeeID {
+		if member != nil && !member.EmployeeID.IsZero() && member.EmployeeID != model.UUID(input.EmployeeID) {
 			h.logger.
 				Fields(logger.Fields{"member": member}).
 				Error(errs.ErrSlotAlreadyContainsAnotherMember, "slot already contains another member")
@@ -1237,15 +1234,15 @@ func (h *handler) updateProjectMember(db *gorm.DB, p *model.Project, slotID stri
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			member = &model.ProjectMember{
 				ProjectID:      model.MustGetUUIDFromString(projectID),
-				EmployeeID:     input.EmployeeID,
-				SeniorityID:    input.SeniorityID,
+				EmployeeID:     model.UUID(input.EmployeeID),
+				SeniorityID:    model.UUID(input.SeniorityID),
 				ProjectSlotID:  model.MustGetUUIDFromString(slotID),
 				DeploymentType: model.DeploymentType(input.DeploymentType),
 				Status:         model.ProjectMemberStatus(input.Status),
 				StartDate:      input.GetStartDate(),
 				EndDate:        input.GetEndDate(),
 				Note:           input.Note,
-				UpsellPersonID: input.UpsellPersonID,
+				UpsellPersonID: model.UUID(input.UpsellPersonID),
 			}
 
 			if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsCommissionRateEdit) {
@@ -1287,7 +1284,7 @@ func (h *handler) updateProjectMember(db *gorm.DB, p *model.Project, slotID stri
 	for _, v := range input.Positions {
 		memberPos = append(memberPos, model.ProjectMemberPosition{
 			ProjectMemberID: member.ID,
-			PositionID:      v,
+			PositionID:      model.UUID(v),
 		})
 	}
 
@@ -1323,7 +1320,7 @@ func (h *handler) updateProjectMember(db *gorm.DB, p *model.Project, slotID stri
 		}
 	} else {
 		// Start of lead time or update lead time
-		_, err := h.updateProjectLead(db, projectID, input.EmployeeID, input.GetStartDate(), input.GetEndDate(), input.LeadCommissionRate, userInfo)
+		_, err := h.updateProjectLead(db, projectID, model.UUID(input.EmployeeID), input.GetStartDate(), input.GetEndDate(), input.LeadCommissionRate, userInfo)
 		if err != nil {
 			h.logger.Fields(logger.Fields{
 				"projectID":  projectID,
@@ -1339,13 +1336,14 @@ func (h *handler) updateProjectMember(db *gorm.DB, p *model.Project, slotID stri
 // AssignMember godoc
 // @Summary Assign member into an existing project
 // @Description Assign member in an existing project
+// @id assignProjectMember
 // @Tags Project
 // @Accept json
 // @Produce json
 // @Security BearerAuth
 // @Param id path string true "Project ID"
-// @Param Body body request.AssignMemberInput true "Body"
-// @Success 200 {object} view.CreateMemberDataResponse
+// @Param Body body AssignMemberRequest true "Body"
+// @Success 200 {object} CreateMemberDataResponse
 // @Failure 400 {object} ErrorResponse
 // @Failure 404 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
@@ -1357,7 +1355,7 @@ func (h *handler) AssignMember(c *gin.Context) {
 		return
 	}
 
-	var body request.AssignMemberInput
+	var body request.AssignMemberRequest
 	if err := c.ShouldBindJSON(&body); err != nil {
 		if err != nil {
 			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, body, ""))
@@ -1430,11 +1428,11 @@ func (h *handler) AssignMember(c *gin.Context) {
 	c.JSON(http.StatusOK, view.CreateResponse(view.ToCreateMemberData(userInfo, slot), nil, done(nil), nil, ""))
 }
 
-func (h *handler) createSlotsAndAssignMembers(db *gorm.DB, p *model.Project, req request.AssignMemberInput, userInfo *model.CurrentLoggedUserInfo) (*model.ProjectSlot, int, error) {
+func (h *handler) createSlotsAndAssignMembers(db *gorm.DB, p *model.Project, req request.AssignMemberRequest, userInfo *model.CurrentLoggedUserInfo) (*model.ProjectSlot, int, error) {
 	l := h.logger
 
 	// check seniority existence
-	seniority, err := h.store.Seniority.One(db, req.SeniorityID)
+	seniority, err := h.store.Seniority.One(db, model.UUID(req.SeniorityID))
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Error(errs.ErrSeniorityNotFound, "cannot find seniority by id")
@@ -1453,7 +1451,7 @@ func (h *handler) createSlotsAndAssignMembers(db *gorm.DB, p *model.Project, req
 
 	positionMap := model.ToPositionMap(positions)
 	for _, pID := range req.Positions {
-		if _, ok := positionMap[pID]; !ok {
+		if _, ok := positionMap[model.UUID(pID)]; !ok {
 			l.Error(errs.ErrPositionNotFoundWithID(pID.String()), "position not found")
 			return nil, http.StatusNotFound, errs.ErrPositionNotFoundWithID(pID.String())
 		}
@@ -1464,7 +1462,7 @@ func (h *handler) createSlotsAndAssignMembers(db *gorm.DB, p *model.Project, req
 		ProjectID:      p.ID,
 		DeploymentType: model.DeploymentType(req.DeploymentType),
 		Status:         req.GetStatus(),
-		SeniorityID:    req.SeniorityID,
+		SeniorityID:    model.UUID(req.SeniorityID),
 		Note:           req.Note,
 	}
 
@@ -1485,7 +1483,7 @@ func (h *handler) createSlotsAndAssignMembers(db *gorm.DB, p *model.Project, req
 	for _, v := range req.Positions {
 		slotPos = append(slotPos, model.ProjectSlotPosition{
 			ProjectSlotID: slot.ID,
-			PositionID:    v,
+			PositionID:    model.UUID(v),
 		})
 	}
 
@@ -1531,15 +1529,15 @@ func (h *handler) createSlotsAndAssignMembers(db *gorm.DB, p *model.Project, req
 		// create project member
 		member := &model.ProjectMember{
 			ProjectID:      p.ID,
-			EmployeeID:     req.EmployeeID,
-			SeniorityID:    req.SeniorityID,
+			EmployeeID:     model.UUID(req.EmployeeID),
+			SeniorityID:    model.UUID(req.SeniorityID),
 			ProjectSlotID:  slot.ID,
 			DeploymentType: model.DeploymentType(req.DeploymentType),
 			Status:         req.GetStatus(),
 			StartDate:      req.GetStartDate(),
 			EndDate:        req.GetEndDate(),
 			Note:           req.Note,
-			UpsellPersonID: req.UpsellPersonID,
+			UpsellPersonID: model.UUID(req.UpsellPersonID),
 		}
 
 		if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsCommissionRateEdit) {
@@ -1563,7 +1561,7 @@ func (h *handler) createSlotsAndAssignMembers(db *gorm.DB, p *model.Project, req
 		for _, v := range req.Positions {
 			if err := h.store.ProjectMemberPosition.Create(db, model.ProjectMemberPosition{
 				ProjectMemberID: member.ID,
-				PositionID:      v,
+				PositionID:      model.UUID(v),
 			}); err != nil {
 				l.Error(err, "failed to create project member positions")
 				return nil, http.StatusInternalServerError, err
@@ -1575,7 +1573,7 @@ func (h *handler) createSlotsAndAssignMembers(db *gorm.DB, p *model.Project, req
 		if req.IsLead {
 			head := &model.ProjectHead{
 				ProjectID:  p.ID,
-				EmployeeID: req.EmployeeID,
+				EmployeeID: model.UUID(req.EmployeeID),
 				Position:   model.HeadPositionTechnicalLead,
 				StartDate:  *req.GetStartDate(),
 			}
@@ -1612,12 +1610,13 @@ func (h *handler) createSlotsAndAssignMembers(db *gorm.DB, p *model.Project, req
 // Details godoc
 // @Summary Get details of a project
 // @Description Get details of a project
+// @id getProjectDetails
 // @Tags Project
 // @Accept  json
 // @Produce  json
 // @Security BearerAuth
 // @Param id path string true "Project ID"
-// @Success 200 {object} view.ProjectDataResponse
+// @Success 200 {object} ProjectDataResponse
 // @Failure 400 {object} ErrorResponse
 // @Failure 404 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
@@ -1673,13 +1672,14 @@ func (h *handler) Details(c *gin.Context) {
 // UpdateGeneralInfo godoc
 // @Summary Update general info of the project by id
 // @Description Update general info of the project by id
+// @id updateProjectGeneralInfo
 // @Tags Project
 // @Accept  json
 // @Produce  json
 // @Security BearerAuth
 // @Param id path string true "Project ID"
-// @Param Body body request.UpdateProjectGeneralInfoInput true "Body"
-// @Success 200 {object} view.UpdateProjectGeneralInfoResponse
+// @Param Body body UpdateProjectGeneralInfoRequest true "Body"
+// @Success 200 {object} UpdateProjectGeneralInfoResponse
 // @Failure 400 {object} ErrorResponse
 // @Failure 404 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
@@ -1691,7 +1691,7 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 		return
 	}
 
-	var body request.UpdateProjectGeneralInfoInput
+	var body request.UpdateProjectGeneralInfoRequest
 	if err := c.ShouldBindJSON(&body); err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, body, ""))
 		return
@@ -1779,7 +1779,7 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 
 	stackMap := model.ToStackMap(stacks)
 	for _, sID := range body.Stacks {
-		_, ok := stackMap[sID]
+		_, ok := stackMap[model.UUID(sID)]
 		if !ok {
 			l.Error(errs.ErrStackNotFoundWithID(sID.String()), "stack not found")
 			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrStackNotFoundWithID(sID.String()), body, ""))
@@ -1819,7 +1819,7 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 	for _, stackID := range body.Stacks {
 		_, err := h.store.ProjectStack.Create(tx.DB(), &model.ProjectStack{
 			ProjectID: model.MustGetUUIDFromString(projectID),
-			StackID:   stackID,
+			StackID:   model.UUID(stackID),
 		})
 		if err != nil {
 			l.Error(err, "failed to create project stack")
@@ -1830,20 +1830,20 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 
 	p.Name = body.Name
 	p.StartDate = body.GetStartDate()
-	p.CountryID = body.CountryID
+	p.CountryID = model.UUID(body.CountryID)
 	p.Function = model.ProjectFunction(body.Function)
-	p.OrganizationID = body.OrganizationID
+	p.OrganizationID = model.UUID(body.OrganizationID)
 	p.AccountRating = body.AccountRating
 	p.DeliveryRating = body.DeliveryRating
 	p.LeadRating = body.LeadRating
 	p.ImportantLevel = model.ProjectImportantLevel(body.ImportantLevel)
 
 	if !body.BankAccountID.IsZero() {
-		p.BankAccountID = body.BankAccountID
+		p.BankAccountID = model.UUID(body.BankAccountID)
 	}
 
 	if !body.ClientID.IsZero() {
-		p.ClientID = body.ClientID
+		p.ClientID = model.UUID(body.ClientID)
 	}
 
 	projectNotion, err := h.store.ProjectNotion.OneByProjectID(tx.DB(), p.ID.String())
@@ -1857,7 +1857,7 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 			// create new project notion
 			_, err := h.store.ProjectNotion.Create(tx.DB(), &model.ProjectNotion{
 				ProjectID:     p.ID,
-				AuditNotionID: body.AuditNotionID,
+				AuditNotionID: model.UUID(body.AuditNotionID),
 			})
 			if err != nil {
 				l.Error(err, "failed to create project notion")
@@ -1866,7 +1866,7 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 			}
 		}
 	} else {
-		projectNotion.AuditNotionID = body.AuditNotionID
+		projectNotion.AuditNotionID = model.UUID(body.AuditNotionID)
 		// update audit notion id
 		if _, err := h.store.ProjectNotion.UpdateSelectedFieldsByID(tx.DB(), projectNotion.ID.String(), *projectNotion); err != nil {
 			l.Error(err, "failed to create project notion")
@@ -1902,13 +1902,14 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 // UpdateContactInfo godoc
 // @Summary Update contact info of the project by id
 // @Description Update contact info of the project by id
+// @id updateProjectContactInfo
 // @Tags Project
 // @Accept  json
 // @Produce  json
 // @Security BearerAuth
 // @Param id path string true "Project ID"
-// @Param Body body request.UpdateContactInfoInput true "Body"
-// @Success 200 {object} view.UpdateProjectContactInfoResponse
+// @Param Body body UpdateContactInfoRequest true "Body"
+// @Success 200 {object} UpdateProjectContactInfoResponse
 // @Failure 400 {object} ErrorResponse
 // @Failure 404 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
@@ -1926,7 +1927,7 @@ func (h *handler) UpdateContactInfo(c *gin.Context) {
 		return
 	}
 
-	var body request.UpdateContactInfoInput
+	var body request.UpdateContactInfoRequest
 	if err := c.ShouldBindJSON(&body); err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, body, ""))
 		return
@@ -2007,7 +2008,7 @@ func (h *handler) UpdateContactInfo(c *gin.Context) {
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToUpdateProjectContactInfo(p, userInfo), nil, done(nil), nil, ""))
 }
 
-func (h *handler) updateProjectHeads(db *gorm.DB, projectID string, position model.HeadPosition, headsInput []request.ProjectHeadInput, userInfo *model.CurrentLoggedUserInfo) error {
+func (h *handler) updateProjectHeads(db *gorm.DB, projectID string, position model.HeadPosition, headsInput []request.ProjectHeadRequest, userInfo *model.CurrentLoggedUserInfo) error {
 	heads, err := h.store.ProjectHead.GetByProjectIDAndPosition(db, projectID, position)
 	if err != nil {
 		h.logger.Fields(logger.Fields{
@@ -2031,7 +2032,7 @@ func (h *handler) updateProjectHeads(db *gorm.DB, projectID string, position mod
 			return errs.ErrEmployeeNotFound
 		}
 
-		headInputMap[head.EmployeeID] = head.CommissionRate
+		headInputMap[model.UUID(head.EmployeeID)] = head.CommissionRate
 	}
 
 	// update/delete exist heads
@@ -2140,13 +2141,14 @@ func (h *handler) updateProjectLead(db *gorm.DB, projectID string, employeeID mo
 // GetWorkUnits godoc
 // @Summary Get list work units of a project
 // @Description Get list work units of a project
+// @id getProjectWorkUnitList
 // @Tags Project
 // @Accept  json
 // @Produce  json
 // @Security BearerAuth
 // @Param id path string true "Project ID"
-// @Param status query  model.WorkUnitStatus false "status"
-// @Success 200 {object} view.ListWorkUnitResponse
+// @Param status query  WorkUnitStatus false "status"
+// @Success 200 {object} ListWorkUnitResponse
 // @Failure 400 {object} ErrorResponse
 // @Failure 404 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
@@ -2202,7 +2204,7 @@ func (h *handler) GetWorkUnits(c *gin.Context) {
 		}
 	}
 
-	workUnits, err := h.store.WorkUnit.GetByProjectID(h.repo.DB(), input.ProjectID, input.Query.Status)
+	workUnits, err := h.store.WorkUnit.GetByProjectID(h.repo.DB(), input.ProjectID, model.WorkUnitStatus(input.Query.Status))
 	if err != nil {
 		l.Error(err, "failed to get work units")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, input.ProjectID, ""))
@@ -2215,13 +2217,14 @@ func (h *handler) GetWorkUnits(c *gin.Context) {
 // CreateWorkUnit godoc
 // @Summary Create work unit of a project
 // @Description Get work unit of a project
+// @id createProjectWorkUnit
 // @Tags Project
 // @Accept  json
 // @Produce  json
 // @Security BearerAuth
 // @Param id path string true "Project ID"
-// @Param body body request.CreateWorkUnitBody true "Body"
-// @Success 200 {object} view.WorkUnitResponse
+// @Param body body CreateWorkUnitRequest true "Body"
+// @Success 200 {object} WorkUnitResponse
 // @Failure 400 {object} ErrorResponse
 // @Failure 404 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
@@ -2305,7 +2308,7 @@ func (h *handler) CreateWorkUnit(c *gin.Context) {
 		return
 	}
 
-	stacks, err := h.store.Stack.GetByIDs(tx.DB(), input.Body.Stacks)
+	stacks, err := h.store.Stack.GetByIDs(tx.DB(), view.ToModelUUIDs(input.Body.Stacks))
 	if err != nil {
 		l.Error(err, "failed to get stacks")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
@@ -2328,7 +2331,7 @@ func (h *handler) CreateWorkUnit(c *gin.Context) {
 		workUnit.WorkUnitStacks = append(workUnit.WorkUnitStacks, &wuStack)
 	}
 
-	employees, err := h.store.Employee.GetByIDs(tx.DB(), input.Body.Members)
+	employees, err := h.store.Employee.GetByIDs(tx.DB(), view.ToModelUUIDs(input.Body.Members))
 	if err != nil {
 		l.Error(err, "failed to get employees")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
@@ -2367,13 +2370,14 @@ func (h *handler) CreateWorkUnit(c *gin.Context) {
 // UpdateWorkUnit godoc
 // @Summary Update work unit info
 // @Description Update work unit info
+// @id updateProjectWorkUnit
 // @Tags Project
 // @Accept  json
 // @Produce  json
 // @Security BearerAuth
 // @Param id path string true "Project ID"
 // @Param workUnitID path string true "Work Unit ID"
-// @Param Body body request.UpdateWorkUnitInput true "Body"
+// @Param Body body UpdateWorkUnitRequest true "Body"
 // @Success 200 {object} MessageResponse
 // @Failure 400 {object} ErrorResponse
 // @Failure 404 {object} ErrorResponse
@@ -2456,7 +2460,7 @@ func (h *handler) UpdateWorkUnit(c *gin.Context) {
 
 	workUnit := &model.WorkUnit{
 		Name:      input.Body.Name,
-		Type:      input.Body.Type,
+		Type:      model.WorkUnitType(input.Body.Type),
 		SourceURL: input.Body.URL,
 		ProjectID: model.MustGetUUIDFromString(input.ProjectID),
 	}
@@ -2469,7 +2473,7 @@ func (h *handler) UpdateWorkUnit(c *gin.Context) {
 	}
 
 	// Update work unit stack
-	if err := h.updateWorkUnitStack(tx.DB(), input.WorkUnitID, input.Body.Stacks); err != nil {
+	if err := h.updateWorkUnitStack(tx.DB(), input.WorkUnitID, view.ToModelUUIDs(input.Body.Stacks)); err != nil {
 		l.Error(err, "failed to update work unit stack")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), input, ""))
 		return
@@ -2492,7 +2496,7 @@ func (h *handler) UpdateWorkUnit(c *gin.Context) {
 	// Get map for employee in work unit member
 	inputMemberIDs := map[model.UUID]string{}
 	for _, member := range input.Body.Members {
-		inputMemberIDs[member] = member.String()
+		inputMemberIDs[model.UUID(member)] = member.String()
 	}
 
 	// Get delete member id list
@@ -2560,7 +2564,7 @@ func (h *handler) checkExitsInUpdateWorkUnitInput(db *gorm.DB, input request.Upd
 
 	stackMap := model.ToStackMap(stacks)
 	for _, sID := range input.Body.Stacks {
-		_, ok := stackMap[sID]
+		_, ok := stackMap[model.UUID(sID)]
 		if !ok {
 			return http.StatusNotFound, errs.ErrStackNotFoundWithID(sID.String())
 		}
@@ -2652,6 +2656,7 @@ func (h *handler) createWorkUnit(db *gorm.DB, projectID string, workUnitID strin
 // ArchiveWorkUnit godoc
 // @Summary Archive an active work unit of a project
 // @Description Archive an active work unit of a project
+// @id archiveProjectWorkUnit
 // @Tags Project
 // @Accept  json
 // @Produce  json
@@ -2773,6 +2778,7 @@ func (h *handler) ArchiveWorkUnit(c *gin.Context) {
 // UnarchiveWorkUnit godoc
 // @Summary Unarchive an archive work unit of a project
 // @Description Unarchive an archive work unit of a project
+// @id unarchiveProjectWorkUnit
 // @Tags Project
 // @Accept  json
 // @Produce  json
@@ -2906,6 +2912,7 @@ func (h *handler) UnarchiveWorkUnit(c *gin.Context) {
 // UpdateSendingSurveyState godoc
 // @Summary Update allows sending survey for project by id
 // @Description Update allows sending survey for project by id
+// @id updateProjectSendingSurveyState
 // @Tags Project
 // @Accept  json
 // @Produce  json
@@ -2963,13 +2970,14 @@ func (h *handler) UpdateSendingSurveyState(c *gin.Context) {
 // UploadAvatar godoc
 // @Summary Upload avatar of project by id
 // @Description Upload avatar of project by id
+// @id uploadProjectAvatar
 // @Tags Project
 // @Accept  json
 // @Produce  json
 // @Param id path string true "Project ID"
 // @Security BearerAuth
 // @Param file formData file true "avatar upload"
-// @Success 200 {object} view.ProjectContentDataResponse
+// @Success 200 {object} ProjectContentDataResponse
 // @Failure 400 {object} ErrorResponse
 // @Failure 404 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
@@ -3065,6 +3073,7 @@ func (h *handler) UploadAvatar(c *gin.Context) {
 // SyncProjectMemberStatus godoc
 // @Summary Sync project member status
 // @Description Sync project member status
+// @id syncProjectMemberStatus
 // @Tags Project
 // @Accept  json
 // @Produce  json

@@ -10,7 +10,7 @@ type BasicMember struct {
 	DisplayName string `json:"displayName"`
 	Avatar      string `json:"avatar"`
 	Userame     string `json:"username"`
-}
+} // @name BasicMember
 
 func toBasicMember(employee model.Employee) *BasicMember {
 	return &BasicMember{
@@ -32,7 +32,7 @@ type WorkUnit struct {
 	Status    string        `json:"status"`
 	ProjectID string        `json:"projectID"`
 	Code      string        `json:"code"`
-}
+} // @name WorkUnit
 
 func ToWorkUnit(workUnit *model.WorkUnit, projectCode string) WorkUnit {
 	rs := WorkUnit{
@@ -68,11 +68,11 @@ func ToWorkUnit(workUnit *model.WorkUnit, projectCode string) WorkUnit {
 
 type ListWorkUnitResponse struct {
 	Data []WorkUnit `json:"data"`
-}
+} // @name ListWorkUnitResponse
 
 type WorkUnitResponse struct {
 	Data WorkUnit `json:"data"`
-}
+} // @name WorkUnitResponse
 
 func ToWorkUnitList(workUnits []*model.WorkUnit, projectID string, projectCode string) []*WorkUnit {
 	var rs []*WorkUnit
