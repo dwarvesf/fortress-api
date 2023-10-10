@@ -24,6 +24,9 @@ var (
 	ErrRoleCannotBeEmpty          = errors.New("role cannot be empty")
 	ErrCountryNotFound            = errors.New("country not found")
 	ErrCityDoesNotBelongToCountry = errors.New("city does not belong to country")
+	ErrInvalidLineManagerID       = errors.New("invalid line manager ID")
+	ErrInvalidOrganizationID      = errors.New("invalid organization ID")
+	ErrInvalidReferredBy          = errors.New("invalid referred by")
 )
 
 func ConvertControllerErr(c *gin.Context, err error) {

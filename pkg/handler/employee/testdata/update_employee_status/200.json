@@ -1,112 +1,109 @@
 {
   "data": {
-    "id": "2655832e-f009-4b73-a535-64c3a22e558f",
-    "createdAt": "2022-11-02T09:52:34.586566Z",
-    "updatedAt": "",
-    "fullName": "Phạm Đức Thành",
-    "displayName": "Thanh Pham",
-    "teamEmail": "thanh@d.foundation",
-    "personalEmail": "thanhpham123@gmail.com",
-    "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
-    "phoneNumber": "0123456788",
     "address": "Tan Binh District, Ho Chi Minh, Vietnam",
-    "placeOfResidence": "",
-    "country": "",
-    "city": "",
-    "mbti": "ISFJ-A",
-    "gender": "Male",
-    "horoscope": "Aquaman",
+    "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
+    "baseSalary": null,
     "birthday": "1990-01-02T00:00:00Z",
-    "username": "thanh",
-    "githubID": "thanhpham",
-    "notionID": "39523061",
-    "notionName": "notionName",
+    "chapters": [],
+    "city": "",
+    "country": "",
+    "createdAt": "2022-11-02T09:52:34.586566Z",
     "discordID": "",
     "discordName": "",
-    "linkedInName": "",
-    "status": "contractor",
+    "displayName": "Thanh Pham",
+    "fullName": "Phạm Đức Thành",
+    "gender": "Male",
+    "githubID": "thanhpham",
+    "horoscope": "Aquaman",
+    "id": "2655832e-f009-4b73-a535-64c3a22e558f",
     "joinedDate": "2018-09-01T00:00:00Z",
     "leftDate": null,
-    "seniority": {
-      "id": "01fb6322-d727-47e3-a242-5039ea4732fd",
-      "createdAt": "2022-11-07T09:50:25.714604Z",
-      "updatedAt": "2022-11-07T09:50:25.714604Z",
-      "name": "Staff",
-      "code": "staff",
-      "level": 5
-    },
     "lineManager": null,
-    "referredBy": null,
+    "linkedInName": "",
+    "mbti": "ISFJ-A",
+    "mentees": null,
+    "notionID": "39523061",
+    "notionName": "notionName",
     "organizations": [],
+    "personalEmail": "thanhpham123@gmail.com",
+    "phoneNumber": "0123456788",
+    "placeOfResidence": "",
     "positions": [
       {
-        "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
         "code": "frontend",
+        "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
         "name": "Frontend"
       },
       {
-        "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
         "code": "backend",
+        "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
         "name": "Backend"
       },
       {
-        "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
         "code": "devops",
+        "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
         "name": "Devops"
       },
       {
-        "id": "01fb6322-d727-47e3-a242-5039ea4732fc",
         "code": "blockchain",
+        "id": "01fb6322-d727-47e3-a242-5039ea4732fc",
         "name": "Blockchain"
-      }
-    ],
-    "stacks": [
-      {
-        "id": "0ecf47c8-cca4-4c30-94bb-054b1124c44f",
-        "name": "Golang",
-        "code": "golang",
-        "avatar": ""
-      },
-      {
-        "id": "b403ef95-4269-4830-bbb6-8e56e5ec0af4",
-        "name": "Google Cloud",
-        "code": "gcloud",
-        "avatar": ""
-      }
-    ],
-    "roles": [
-      {
-        "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
-        "code": "admin",
-        "name": "⚪️ Admin"
       }
     ],
     "projects": [
       {
+        "avatar": "",
+        "code": "",
+        "deploymentType": "official",
+        "endDate": null,
         "id": "8dc3be2e-19a4-4942-8a79-56db391a0b15",
         "name": "Fortress",
-        "deploymentType": "official",
-        "status": "active",
         "positions": [
           {
-            "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
             "code": "frontend",
+            "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
             "name": "Frontend"
           }
         ],
-        "code": "",
-        "avatar": "",
         "startDate": "2022-11-01T00:00:00Z",
-        "endDate": null
+        "status": "active"
       }
     ],
-    "chapters": [],
-    "mentees": null,
-    "baseSalary": null,
-    "wiseRecipientID": "",
+    "referredBy": null,
+    "roles": [
+      {
+        "code": "admin",
+        "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
+        "name": "⚪️ Admin"
+      }
+    ],
+    "seniority": {
+      "code": "staff",
+      "id": "01fb6322-d727-47e3-a242-5039ea4732fd",
+      "name": "Staff"
+    },
+    "stacks": [
+      {
+        "avatar": "",
+        "code": "golang",
+        "id": "0ecf47c8-cca4-4c30-94bb-054b1124c44f",
+        "name": "Golang"
+      },
+      {
+        "avatar": "",
+        "code": "gcloud",
+        "id": "b403ef95-4269-4830-bbb6-8e56e5ec0af4",
+        "name": "Google Cloud"
+      }
+    ],
+    "status": "contractor",
+    "teamEmail": "thanh@d.foundation",
+    "updatedAt": "",
+    "username": "thanh",
     "wiseAccountNumber": "",
+    "wiseCurrency": "",
     "wiseRecipientEmail": "",
-    "wiseRecipientName": "",
-    "wiseCurrency": ""
+    "wiseRecipientID": "",
+    "wiseRecipientName": ""
   }
 }

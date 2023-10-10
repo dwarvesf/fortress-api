@@ -11,7 +11,9 @@ import (
 
 // EmployeeData view for listing data
 type EmployeeData struct {
-	model.BaseModel
+	ID        string     `json:"id"`
+	CreatedAt time.Time  `json:"createdAt"`
+	UpdatedAt *time.Time `json:"updatedAt"`
 
 	// basic info
 	FullName         string     `json:"fullName"`
@@ -37,11 +39,11 @@ type EmployeeData struct {
 	LinkedInName     string     `json:"linkedInName"`
 
 	// working info
-	WorkingStatus model.WorkingStatus `json:"status"`
-	JoinedDate    *time.Time          `json:"joinedDate"`
-	LeftDate      *time.Time          `json:"leftDate"`
+	WorkingStatus WorkingStatus `json:"status"`
+	JoinedDate    *time.Time    `json:"joinedDate"`
+	LeftDate      *time.Time    `json:"leftDate"`
 
-	Seniority          *model.Seniority      `json:"seniority"`
+	Seniority          *Seniority            `json:"seniority"`
 	LineManager        *BasicEmployeeInfo    `json:"lineManager"`
 	ReferredBy         *BasicEmployeeInfo    `json:"referredBy"`
 	Organizations      []Organization        `json:"organizations"`
@@ -59,6 +61,8 @@ type EmployeeData struct {
 	WiseCurrency       string                `json:"wiseCurrency"`
 } // @name EmployeeData
 
+type WorkingStatus string // @name WorkingStatus
+
 type MMAScore struct {
 	MasteryScore  decimal.Decimal `json:"masteryScore"`
 	AutonomyScore decimal.Decimal `json:"autonomyScore"`
@@ -67,14 +71,14 @@ type MMAScore struct {
 }
 
 type MenteeInfo struct {
-	ID          string           `json:"id"`
-	FullName    string           `json:"fullName"`
-	DisplayName string           `json:"displayName"`
-	Avatar      string           `json:"avatar"`
-	Username    string           `json:"username"`
-	Seniority   *model.Seniority `json:"seniority"`
-	Positions   []model.Position `json:"positions"`
-}
+	ID          string     `json:"id"`
+	FullName    string     `json:"fullName"`
+	DisplayName string     `json:"displayName"`
+	Avatar      string     `json:"avatar"`
+	Username    string     `json:"username"`
+	Seniority   *Seniority `json:"seniority"`
+	Positions   []Position `json:"positions"`
+} // @name MenteeInfo
 
 type SocialAccount struct {
 	GithubID     string `json:"githubID"`
@@ -85,35 +89,38 @@ type SocialAccount struct {
 }
 
 type BaseSalary struct {
-	ID                    string            `json:"id"`
-	EmployeeID            string            `json:"employee_id"`
-	ContractAmount        int64             `json:"contract_amount"`
-	CompanyAccountAmount  int64             `json:"company_account_amount"`
-	PersonalAccountAmount int64             `json:"personal_account_amount"`
-	InsuranceAmount       model.VietnamDong `json:"insurance_amount"`
-	Type                  string            `json:"type"`
-	Category              string            `json:"category"`
-	CurrencyID            string            `json:"currency_id"`
-	Currency              *Currency         `json:"currency"`
-	Batch                 int               `json:"batch"`
-	EffectiveDate         *time.Time        `json:"effective_date"`
-}
+	ID                    string      `json:"id"`
+	EmployeeID            string      `json:"employee_id"`
+	ContractAmount        int64       `json:"contract_amount"`
+	CompanyAccountAmount  int64       `json:"company_account_amount"`
+	PersonalAccountAmount int64       `json:"personal_account_amount"`
+	InsuranceAmount       VietnamDong `json:"insurance_amount"`
+	Type                  string      `json:"type"`
+	Category              string      `json:"category"`
+	CurrencyID            string      `json:"currency_id"`
+	Currency              *Currency   `json:"currency"`
+	Batch                 int         `json:"batch"`
+	EffectiveDate         *time.Time  `json:"effective_date"`
+} // @name BaseSalary
+
+type VietnamDong int64 // @name VietnamDong
 
 func toMenteeInfo(employee model.Employee) *MenteeInfo {
-	positions := make([]model.Position, 0, len(employee.EmployeePositions))
-	for _, v := range employee.EmployeePositions {
-		positions = append(positions, v.Position)
-	}
-
-	return &MenteeInfo{
+	rs := &MenteeInfo{
 		ID:          employee.ID.String(),
 		FullName:    employee.FullName,
 		DisplayName: employee.DisplayName,
 		Avatar:      employee.Avatar,
 		Username:    employee.Username,
-		Seniority:   employee.Seniority,
-		Positions:   positions,
+		Positions:   ToEmployeePositions(employee.EmployeePositions),
 	}
+
+	if employee.Seniority != nil {
+		s := ToSeniority(*employee.Seniority)
+		rs.Seniority = &s
+	}
+
+	return rs
 }
 
 type EmployeeProjectData struct {
@@ -126,7 +133,7 @@ type EmployeeProjectData struct {
 	Avatar         string     `json:"avatar"`
 	StartDate      *time.Time `json:"startDate"`
 	EndDate        *time.Time `json:"endDate"`
-}
+} // @name EmployeeProjectData
 
 func ToEmployeeProjectDetailData(pm *model.ProjectMember, userInfo *model.CurrentLoggedUserInfo) EmployeeProjectData {
 	rs := EmployeeProjectData{
@@ -168,7 +175,9 @@ func ToEmployeeProjectData(pm *model.ProjectMember) EmployeeProjectData {
 }
 
 type UpdateGeneralInfoEmployeeData struct {
-	model.BaseModel
+	ID        string     `json:"id"`
+	CreatedAt time.Time  `json:"createdAt"`
+	UpdatedAt *time.Time `json:"updatedAt"`
 
 	// basic info
 	FullName      string             `json:"fullName"`
@@ -185,19 +194,23 @@ type UpdateGeneralInfoEmployeeData struct {
 	Organizations []Organization     `json:"organizations"`
 	LineManager   *BasicEmployeeInfo `json:"lineManager"`
 	ReferredBy    *BasicEmployeeInfo `json:"referredBy"`
-}
+} // @name UpdateGeneralInfoEmployeeData
 
 type UpdateSkillEmployeeData struct {
-	model.BaseModel
+	ID        string     `json:"id"`
+	CreatedAt time.Time  `json:"createdAt"`
+	UpdatedAt *time.Time `json:"updatedAt"`
 
-	Seniority *model.Seniority `json:"seniority"`
-	Positions []model.Position `json:"positions"`
-	Stacks    []model.Stack    `json:"stacks"`
-	Chapters  []model.Chapter  `json:"chapters"`
-}
+	Seniority *Seniority `json:"seniority"`
+	Positions []Position `json:"positions"`
+	Stacks    []Stack    `json:"stacks"`
+	Chapters  []Chapter  `json:"chapters"`
+} // @name UpdateSkillEmployeeData
 
 type UpdatePersonalEmployeeData struct {
-	model.BaseModel
+	ID        string     `json:"id"`
+	CreatedAt time.Time  `json:"createdAt"`
+	UpdatedAt *time.Time `json:"updatedAt"`
 
 	PersonalEmail    string     `json:"personalEmail"`
 	Address          string     `json:"address"`
@@ -206,7 +219,7 @@ type UpdatePersonalEmployeeData struct {
 	DateOfBirth      *time.Time `json:"birthday"`
 	Country          string     `json:"country"`
 	City             string     `json:"city"`
-}
+} // @name UpdatePersonalEmployeeData
 
 type BasicEmployeeInfo struct {
 	ID          string `json:"id"`
@@ -218,11 +231,11 @@ type BasicEmployeeInfo struct {
 
 type UpdateEmployeeStatusResponse struct {
 	Data EmployeeData `json:"data"`
-}
+} // @name UpdateEmployeeStatusResponse
 
 type EmployeeListDataResponse struct {
 	Data []EmployeeData `json:"data"`
-}
+} // @name EmployeeListDataResponse
 
 type UpdataEmployeeStatusResponse struct {
 	Data EmployeeData `json:"data"`
@@ -230,26 +243,25 @@ type UpdataEmployeeStatusResponse struct {
 
 type UpdateSkillsEmployeeResponse struct {
 	Data UpdateSkillEmployeeData `json:"data"`
-}
+} // @name UpdateSkillsEmployeeResponse
 
 type UpdatePersonalEmployeeResponse struct {
 	Data UpdatePersonalEmployeeData `json:"data"`
-}
+} // @name UpdatePersonalEmployeeResponse
 
 type UpdateGeneralEmployeeResponse struct {
 	Data UpdateGeneralInfoEmployeeData `json:"data"`
-}
+} // @name UpdateGeneralEmployeeResponse
+
 type UpdateBaseSalaryResponse struct {
 	Data BaseSalary `json:"data"`
-}
+} // @name UpdateBaseSalaryResponse
 
 func ToUpdatePersonalEmployeeData(employee *model.Employee) *UpdatePersonalEmployeeData {
 	return &UpdatePersonalEmployeeData{
-		BaseModel: model.BaseModel{
-			ID:        employee.ID,
-			CreatedAt: employee.CreatedAt,
-			UpdatedAt: employee.UpdatedAt,
-		},
+		ID:               employee.ID.String(),
+		CreatedAt:        employee.CreatedAt,
+		UpdatedAt:        employee.UpdatedAt,
 		DateOfBirth:      employee.DateOfBirth,
 		Gender:           employee.Gender,
 		Address:          employee.Address,
@@ -266,36 +278,28 @@ func ToUpdateSkillEmployeeData(employee *model.Employee) *UpdateSkillEmployeeDat
 		positions = append(positions, v.Position)
 	}
 
-	stacks := make([]model.Stack, 0, len(employee.EmployeeStacks))
-	for _, v := range employee.EmployeeStacks {
-		stacks = append(stacks, v.Stack)
+	rs := &UpdateSkillEmployeeData{
+		ID:        employee.ID.String(),
+		CreatedAt: employee.CreatedAt,
+		UpdatedAt: employee.UpdatedAt,
+		Positions: ToPositions(positions),
+		Stacks:    ToEmployeeStacks(employee.EmployeeStacks),
+		Chapters:  ToChapters(employee.EmployeeChapters),
 	}
 
-	chapters := make([]model.Chapter, 0, len(employee.EmployeeChapters))
-	for _, v := range employee.EmployeeChapters {
-		chapters = append(chapters, v.Chapter)
+	if employee.Seniority != nil {
+		s := ToSeniority(*employee.Seniority)
+		rs.Seniority = &s
 	}
 
-	return &UpdateSkillEmployeeData{
-		BaseModel: model.BaseModel{
-			ID:        employee.ID,
-			CreatedAt: employee.CreatedAt,
-			UpdatedAt: employee.UpdatedAt,
-		},
-		Seniority: employee.Seniority,
-		Positions: positions,
-		Stacks:    stacks,
-		Chapters:  chapters,
-	}
+	return rs
 }
 
 func ToUpdateGeneralInfoEmployeeData(employee *model.Employee) *UpdateGeneralInfoEmployeeData {
 	rs := &UpdateGeneralInfoEmployeeData{
-		BaseModel: model.BaseModel{
-			ID:        employee.ID,
-			CreatedAt: employee.CreatedAt,
-			UpdatedAt: employee.UpdatedAt,
-		},
+		ID:            employee.ID.String(),
+		CreatedAt:     employee.CreatedAt,
+		UpdatedAt:     employee.UpdatedAt,
 		FullName:      employee.FullName,
 		TeamEmail:     employee.TeamEmail,
 		PhoneNumber:   employee.PhoneNumber,
@@ -332,6 +336,10 @@ func ToUpdateGeneralInfoEmployeeData(employee *model.Employee) *UpdateGeneralInf
 
 	return rs
 }
+
+type EmployeeDataResponse struct {
+	Data *EmployeeData `json:"data"`
+} // @name EmployeeDataResponse
 
 // ToOneEmployeeData parse employee date to response data
 func ToOneEmployeeData(employee *model.Employee, userInfo *model.CurrentLoggedUserInfo) *EmployeeData {
@@ -375,12 +383,9 @@ func ToOneEmployeeData(employee *model.Employee, userInfo *model.CurrentLoggedUs
 	}
 
 	rs := &EmployeeData{
-		BaseModel: model.BaseModel{
-			ID:        employee.ID,
-			CreatedAt: employee.CreatedAt,
-			UpdatedAt: employee.UpdatedAt,
-		},
-
+		ID:          employee.ID.String(),
+		CreatedAt:   employee.CreatedAt,
+		UpdatedAt:   employee.UpdatedAt,
 		FullName:    employee.FullName,
 		DisplayName: employee.DisplayName,
 		TeamEmail:   employee.TeamEmail,
@@ -391,8 +396,7 @@ func ToOneEmployeeData(employee *model.Employee, userInfo *model.CurrentLoggedUs
 		DateOfBirth: employee.DateOfBirth,
 
 		Username:      employee.Username,
-		WorkingStatus: employee.WorkingStatus,
-		Seniority:     employee.Seniority,
+		WorkingStatus: WorkingStatus(employee.WorkingStatus.String()),
 		Projects:      employeeProjects,
 		LineManager:   lineManager,
 		Organizations: ToOrganizations(employee.EmployeeOrganizations),
@@ -450,7 +454,8 @@ func ToOneEmployeeData(employee *model.Employee, userInfo *model.CurrentLoggedUs
 	}
 
 	if employee.Seniority != nil {
-		rs.Seniority = employee.Seniority
+		s := ToSeniority(*employee.Seniority)
+		rs.Seniority = &s
 	}
 
 	return rs
@@ -471,11 +476,9 @@ func ToEmployeeData(employee *model.Employee) *EmployeeData {
 	}
 
 	rs := &EmployeeData{
-		BaseModel: model.BaseModel{
-			ID:        employee.ID,
-			CreatedAt: employee.CreatedAt,
-			UpdatedAt: employee.UpdatedAt,
-		},
+		ID:               employee.ID.String(),
+		CreatedAt:        employee.CreatedAt,
+		UpdatedAt:        employee.UpdatedAt,
 		FullName:         employee.FullName,
 		DisplayName:      employee.DisplayName,
 		TeamEmail:        employee.TeamEmail,
@@ -489,8 +492,7 @@ func ToEmployeeData(employee *model.Employee) *EmployeeData {
 		Horoscope:        employee.Horoscope,
 		DateOfBirth:      employee.DateOfBirth,
 		Username:         employee.Username,
-		WorkingStatus:    employee.WorkingStatus,
-		Seniority:        employee.Seniority,
+		WorkingStatus:    WorkingStatus(employee.WorkingStatus.String()),
 		JoinedDate:       employee.JoinedDate,
 		LeftDate:         employee.LeftDate,
 		Organizations:    ToOrganizations(employee.EmployeeOrganizations),
@@ -534,7 +536,8 @@ func ToEmployeeData(employee *model.Employee) *EmployeeData {
 	}
 
 	if employee.Seniority != nil {
-		rs.Seniority = employee.Seniority
+		s := ToSeniority(*employee.Seniority)
+		rs.Seniority = &s
 	}
 
 	return rs
@@ -551,11 +554,11 @@ func ToEmployeeListData(employees []*model.Employee, userInfo *model.CurrentLogg
 
 type EmployeeContentData struct {
 	Url string `json:"url"`
-}
+} // @name EmployeeContentData
 
 type EmployeeContentDataResponse struct {
 	Data *EmployeeContentData `json:"data"`
-}
+} // @name EmployeeContentDataResponse
 
 func ToEmployeeContentData(url string) *EmployeeContentData {
 	return &EmployeeContentData{
@@ -575,7 +578,7 @@ func toBasicEmployeeInfo(employee model.Employee) *BasicEmployeeInfo {
 
 type LineManagersResponse struct {
 	Data []BasicEmployeeInfo `json:"data"`
-}
+} // @name LineManagersResponse
 
 func ToBasicEmployees(employees []*model.Employee) []BasicEmployeeInfo {
 	results := make([]BasicEmployeeInfo, 0, len(employees))
@@ -609,7 +612,7 @@ func ToBaseSalary(bs *model.BaseSalary) *BaseSalary {
 		ContractAmount:        bs.ContractAmount,
 		CompanyAccountAmount:  bs.CompanyAccountAmount,
 		PersonalAccountAmount: bs.PersonalAccountAmount,
-		InsuranceAmount:       bs.InsuranceAmount,
+		InsuranceAmount:       VietnamDong(bs.InsuranceAmount),
 		Type:                  bs.Type,
 		Category:              bs.Category,
 		CurrencyID:            bs.CurrencyID.String(),
@@ -674,7 +677,7 @@ func ToBasicEmployeeInvitationData(in *model.EmployeeInvitation) *EmployeeInvita
 
 type EmployeeLocationListResponse struct {
 	Data []EmployeeLocation `json:"data"`
-}
+} // @name EmployeeLocationListResponse
 
 type EmployeeLocation struct {
 	DiscordID   string          `json:"discordID"`
@@ -683,14 +686,15 @@ type EmployeeLocation struct {
 	Avatar      string          `json:"avatar"`
 	Chapters    []Chapter       `json:"chapters"`
 	Address     EmployeeAddress `json:"address"`
-}
+} // @name EmployeeLocation
+
 type EmployeeAddress struct {
 	Address string `json:"address"`
 	Country string `json:"country"`
 	City    string `json:"city"`
 	Lat     string `json:"lat"`
 	Long    string `json:"long"`
-}
+} // @name EmployeeAddress
 
 func ToEmployeesWithLocation(in []*model.Employee) []EmployeeLocation {
 	rs := make([]EmployeeLocation, len(in))
@@ -719,7 +723,9 @@ func ToEmployeesWithLocation(in []*model.Employee) []EmployeeLocation {
 
 // DiscordEmployeeData view for listing data
 type DiscordEmployeeData struct {
-	model.BaseModel
+	ID        string     `json:"id"`
+	CreatedAt time.Time  `json:"createdAt"`
+	UpdatedAt *time.Time `json:"updatedAt"`
 
 	// basic info
 	FullName         string     `json:"fullName"`
@@ -795,11 +801,9 @@ func ToDiscordEmployeeDetail(employee *model.Employee, userInfo *model.CurrentLo
 	}
 
 	rs := &DiscordEmployeeData{
-		BaseModel: model.BaseModel{
-			ID:        employee.ID,
-			CreatedAt: employee.CreatedAt,
-			UpdatedAt: employee.UpdatedAt,
-		},
+		ID:        employee.ID.String(),
+		CreatedAt: employee.CreatedAt,
+		UpdatedAt: employee.UpdatedAt,
 
 		FullName:    employee.FullName,
 		DisplayName: employee.DisplayName,

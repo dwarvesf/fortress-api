@@ -32,7 +32,7 @@ type UpdateEmployeeGeneralInfoInput struct {
 	WiseRecipientName  string
 	WiseAccountNumber  string
 	WiseCurrency       string
-}
+} // @name UpdateEmployeeGeneralInfoInput
 
 func (r *controller) UpdateGeneralInfo(employeeID string, body UpdateEmployeeGeneralInfoInput) (*model.Employee, error) {
 	l := r.logger.Fields(logger.Fields{

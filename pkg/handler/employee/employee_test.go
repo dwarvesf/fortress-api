@@ -24,6 +24,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/utils"
 	"github.com/dwarvesf/fortress-api/pkg/utils/testhelper"
+	"github.com/dwarvesf/fortress-api/pkg/view"
 	"github.com/dwarvesf/fortress-api/pkg/worker"
 )
 
@@ -39,7 +40,7 @@ func TestHandler_List(t *testing.T) {
 
 	tests := []struct {
 		name             string
-		body             request.GetListEmployeeInput
+		body             request.GetListEmployeeQuery
 		wantCode         int
 		wantErr          error
 		wantResponsePath string
@@ -51,7 +52,7 @@ func TestHandler_List(t *testing.T) {
 		},
 		{
 			name: "have_workingStatus_and_no_pagination",
-			body: request.GetListEmployeeInput{
+			body: request.GetListEmployeeQuery{
 				WorkingStatuses: []string{"contractor"},
 			},
 			wantCode:         http.StatusOK,
@@ -59,8 +60,8 @@ func TestHandler_List(t *testing.T) {
 		},
 		{
 			name: "have_workingStatuses_and_pagination",
-			body: request.GetListEmployeeInput{
-				Pagination: model.Pagination{
+			body: request.GetListEmployeeQuery{
+				Pagination: view.Pagination{
 					Page: 1,
 					Size: 5,
 				},
@@ -71,8 +72,8 @@ func TestHandler_List(t *testing.T) {
 		},
 		{
 			name: "out_of_content",
-			body: request.GetListEmployeeInput{
-				Pagination: model.Pagination{
+			body: request.GetListEmployeeQuery{
+				Pagination: view.Pagination{
 					Page: 5,
 					Size: 5,
 				},
@@ -83,7 +84,7 @@ func TestHandler_List(t *testing.T) {
 		},
 		{
 			name: "with_preload_false",
-			body: request.GetListEmployeeInput{
+			body: request.GetListEmployeeQuery{
 				Preload:         false,
 				WorkingStatuses: []string{"probation"},
 			},
@@ -92,7 +93,7 @@ func TestHandler_List(t *testing.T) {
 		},
 		{
 			name: "without_preload",
-			body: request.GetListEmployeeInput{
+			body: request.GetListEmployeeQuery{
 				Preload:         false,
 				WorkingStatuses: []string{"probation"},
 			},
@@ -101,7 +102,7 @@ func TestHandler_List(t *testing.T) {
 		},
 		{
 			name: "with_keyword",
-			body: request.GetListEmployeeInput{
+			body: request.GetListEmployeeQuery{
 				Preload: false,
 				Keyword: "thanh",
 			},
@@ -110,7 +111,7 @@ func TestHandler_List(t *testing.T) {
 		},
 		{
 			name: "with_stack_code",
-			body: request.GetListEmployeeInput{
+			body: request.GetListEmployeeQuery{
 				Preload: false,
 				Stacks:  []string{"golang"},
 			},
@@ -119,7 +120,7 @@ func TestHandler_List(t *testing.T) {
 		},
 		{
 			name: "with_project_code_and_position_code",
-			body: request.GetListEmployeeInput{
+			body: request.GetListEmployeeQuery{
 				Preload:   false,
 				Projects:  []string{"fortress"},
 				Positions: []string{"blockchain"},
@@ -129,7 +130,7 @@ func TestHandler_List(t *testing.T) {
 		},
 		{
 			name: "with_list_working_status",
-			body: request.GetListEmployeeInput{
+			body: request.GetListEmployeeQuery{
 				Preload:         false,
 				WorkingStatuses: []string{"contractor", "probation"},
 			},
@@ -138,7 +139,7 @@ func TestHandler_List(t *testing.T) {
 		},
 		{
 			name: "invalid_position_code",
-			body: request.GetListEmployeeInput{
+			body: request.GetListEmployeeQuery{
 				Positions: []string{""},
 			},
 			wantCode:         http.StatusBadRequest,
@@ -146,7 +147,7 @@ func TestHandler_List(t *testing.T) {
 		},
 		{
 			name: "invalid_chapter_code",
-			body: request.GetListEmployeeInput{
+			body: request.GetListEmployeeQuery{
 				Chapters: []string{""},
 			},
 			wantCode:         http.StatusBadRequest,
@@ -154,7 +155,7 @@ func TestHandler_List(t *testing.T) {
 		},
 		{
 			name: "invalid_organization_code",
-			body: request.GetListEmployeeInput{
+			body: request.GetListEmployeeQuery{
 				Organizations: []string{""},
 			},
 			wantCode:         http.StatusBadRequest,
@@ -162,7 +163,7 @@ func TestHandler_List(t *testing.T) {
 		},
 		{
 			name: "invalid_project_code",
-			body: request.GetListEmployeeInput{
+			body: request.GetListEmployeeQuery{
 				Projects: []string{""},
 			},
 			wantCode:         http.StatusBadRequest,
@@ -170,7 +171,7 @@ func TestHandler_List(t *testing.T) {
 		},
 		{
 			name: "invalid_seniority_code",
-			body: request.GetListEmployeeInput{
+			body: request.GetListEmployeeQuery{
 				Seniorities: []string{""},
 			},
 			wantCode:         http.StatusBadRequest,
@@ -178,7 +179,7 @@ func TestHandler_List(t *testing.T) {
 		},
 		{
 			name: "invalid_stack_code",
-			body: request.GetListEmployeeInput{
+			body: request.GetListEmployeeQuery{
 				Stacks: []string{""},
 			},
 			wantCode:         http.StatusBadRequest,
@@ -186,7 +187,7 @@ func TestHandler_List(t *testing.T) {
 		},
 		{
 			name: "with_multiple_stacks",
-			body: request.GetListEmployeeInput{
+			body: request.GetListEmployeeQuery{
 				Stacks: []string{"golang", "react"},
 			},
 			wantCode:         http.StatusOK,
@@ -292,14 +293,14 @@ func TestHandler_UpdateEmployeeStatus(t *testing.T) {
 		name             string
 		wantCode         int
 		id               string
-		body             request.UpdateWorkingStatusInput
+		body             request.UpdateWorkingStatusRequest
 		wantResponsePath string
 	}{
 		{
 			name:     "ok_update_employee_status",
 			wantCode: http.StatusOK,
 			id:       "2655832e-f009-4b73-a535-64c3a22e558f",
-			body: request.UpdateWorkingStatusInput{
+			body: request.UpdateWorkingStatusRequest{
 				EmployeeStatus: "contractor",
 			},
 			wantResponsePath: "testdata/update_employee_status/200.json",
@@ -308,7 +309,7 @@ func TestHandler_UpdateEmployeeStatus(t *testing.T) {
 			name:     "empty_employee_id",
 			wantCode: http.StatusBadRequest,
 			id:       "",
-			body: request.UpdateWorkingStatusInput{
+			body: request.UpdateWorkingStatusRequest{
 				EmployeeStatus: "contractor",
 			},
 			wantResponsePath: "testdata/update_employee_status/400.json",
@@ -317,7 +318,7 @@ func TestHandler_UpdateEmployeeStatus(t *testing.T) {
 			name:     "wrong_format_employee_id",
 			wantCode: http.StatusBadRequest,
 			id:       "2655832e-f009-4b73-a535-64c3a22e558fa",
-			body: request.UpdateWorkingStatusInput{
+			body: request.UpdateWorkingStatusRequest{
 				EmployeeStatus: "contractor",
 			},
 			wantResponsePath: "testdata/update_employee_status/400.json",
@@ -326,7 +327,7 @@ func TestHandler_UpdateEmployeeStatus(t *testing.T) {
 			name:     "invalid_employee_status",
 			wantCode: http.StatusBadRequest,
 			id:       "2655832e-f009-4b73-a535-64c3a22e558f",
-			body: request.UpdateWorkingStatusInput{
+			body: request.UpdateWorkingStatusRequest{
 				EmployeeStatus: "contractorr",
 			},
 			wantResponsePath: "testdata/update_employee_status/invalid_employee_status.json",
@@ -335,7 +336,7 @@ func TestHandler_UpdateEmployeeStatus(t *testing.T) {
 			name:     "employee_not_found",
 			wantCode: http.StatusNotFound,
 			id:       "2655832e-f009-4b73-a535-64c3a22e558d",
-			body: request.UpdateWorkingStatusInput{
+			body: request.UpdateWorkingStatusRequest{
 				EmployeeStatus: "contractor",
 			},
 			wantResponsePath: "testdata/update_employee_status/404.json",
@@ -524,7 +525,7 @@ func Test_UpdateSkill(t *testing.T) {
 		wantCode         int
 		wantErr          bool
 		wantResponsePath string
-		body             request.UpdateSkillsInput
+		body             request.UpdateSkillsRequest
 		id               string
 	}{
 		{
@@ -532,7 +533,7 @@ func Test_UpdateSkill(t *testing.T) {
 			wantCode:         http.StatusOK,
 			wantErr:          false,
 			wantResponsePath: "testdata/update_skills/200.json",
-			body: request.UpdateSkillsInput{
+			body: request.UpdateSkillsRequest{
 				Positions: []model.UUID{
 					model.MustGetUUIDFromString("11ccffea-2cc9-4e98-9bef-3464dfe4dec8"),
 					model.MustGetUUIDFromString("d796884d-a8c4-4525-81e7-54a3b6099eac"),
@@ -554,7 +555,7 @@ func Test_UpdateSkill(t *testing.T) {
 			wantCode:         http.StatusNotFound,
 			wantErr:          true,
 			wantResponsePath: "testdata/update_skills/404.json",
-			body: request.UpdateSkillsInput{
+			body: request.UpdateSkillsRequest{
 				Positions: []model.UUID{
 					model.MustGetUUIDFromString("11ccffea-2cc9-4e98-9bef-3464dfe4dec8"),
 					model.MustGetUUIDFromString("d796884d-a8c4-4525-81e7-54a3b6099eac"),
@@ -576,7 +577,7 @@ func Test_UpdateSkill(t *testing.T) {
 			wantCode:         http.StatusBadRequest,
 			wantErr:          true,
 			wantResponsePath: "testdata/update_skills/400.json",
-			body: request.UpdateSkillsInput{
+			body: request.UpdateSkillsRequest{
 				Positions: []model.UUID{
 					model.MustGetUUIDFromString("11ccffea-2cc9-4e98-9bef-3464dfe4dec8"),
 					model.MustGetUUIDFromString("d796884d-a8c4-4525-81e7-54a3b6099eac"),
@@ -598,7 +599,7 @@ func Test_UpdateSkill(t *testing.T) {
 			wantCode:         http.StatusBadRequest,
 			wantErr:          true,
 			wantResponsePath: "testdata/update_skills/400.json",
-			body: request.UpdateSkillsInput{
+			body: request.UpdateSkillsRequest{
 				Positions: []model.UUID{
 					model.MustGetUUIDFromString("11ccffea-2cc9-4e98-9bef-3464dfe4dec8"),
 					model.MustGetUUIDFromString("d796884d-a8c4-4525-81e7-54a3b6099eac"),
@@ -620,7 +621,7 @@ func Test_UpdateSkill(t *testing.T) {
 			wantCode:         http.StatusNotFound,
 			wantErr:          true,
 			wantResponsePath: "testdata/update_skills/stack_not_found.json",
-			body: request.UpdateSkillsInput{
+			body: request.UpdateSkillsRequest{
 				Positions: []model.UUID{
 					model.MustGetUUIDFromString("11ccffea-2cc9-4e98-9bef-3464dfe4dec8"),
 					model.MustGetUUIDFromString("d796884d-a8c4-4525-81e7-54a3b6099eac"),
@@ -683,7 +684,7 @@ func Test_Create(t *testing.T) {
 		wantCode         int
 		wantErr          bool
 		wantResponsePath string
-		body             request.CreateEmployeeInput
+		body             request.CreateEmployeeRequest
 		id               string
 	}{
 		{
@@ -691,7 +692,7 @@ func Test_Create(t *testing.T) {
 			wantCode:         400,
 			wantErr:          true,
 			wantResponsePath: "testdata/create/existed_user.json",
-			body: request.CreateEmployeeInput{
+			body: request.CreateEmployeeRequest{
 				FullName:      "Lê Nguyễn Minh Khôi",
 				DisplayName:   "Khoi Le",
 				TeamEmail:     "thanh@d.foundation",
@@ -712,7 +713,7 @@ func Test_Create(t *testing.T) {
 			wantCode:         400,
 			wantErr:          true,
 			wantResponsePath: "testdata/create/validation_err.json",
-			body: request.CreateEmployeeInput{
+			body: request.CreateEmployeeRequest{
 				FullName:      "Lê Nguyễn Minh Khôi",
 				DisplayName:   "Khoi Le",
 				TeamEmail:     "thanh@d.foundation",
@@ -733,7 +734,7 @@ func Test_Create(t *testing.T) {
 			wantCode:         404,
 			wantErr:          true,
 			wantResponsePath: "testdata/create/invalid_uuid.json",
-			body: request.CreateEmployeeInput{
+			body: request.CreateEmployeeRequest{
 				FullName:      "Lê Nguyễn Minh Khôi",
 				DisplayName:   "Khoi Le",
 				TeamEmail:     "thanh@d.foundation",
@@ -797,7 +798,7 @@ func Test_UpdatePersonalInfo(t *testing.T) {
 		wantCode         int
 		wantErr          bool
 		wantResponsePath string
-		body             request.UpdatePersonalInfoInput
+		body             request.UpdatePersonalInfoRequest
 		id               string
 	}{
 		{
@@ -805,7 +806,7 @@ func Test_UpdatePersonalInfo(t *testing.T) {
 			wantCode:         http.StatusOK,
 			wantErr:          false,
 			wantResponsePath: "testdata/update_personal_info/200.json",
-			body: request.UpdatePersonalInfoInput{
+			body: request.UpdatePersonalInfoRequest{
 				DoB:           &dob,
 				Gender:        "Male",
 				Address:       "Phan Huy Ich, Tan Binh District, Ho Chi Minh, Vietnam",
@@ -820,7 +821,7 @@ func Test_UpdatePersonalInfo(t *testing.T) {
 			wantCode:         http.StatusNotFound,
 			wantErr:          true,
 			wantResponsePath: "testdata/update_personal_info/404.json",
-			body: request.UpdatePersonalInfoInput{
+			body: request.UpdatePersonalInfoRequest{
 				DoB:           &dob,
 				Gender:        "Male",
 				Address:       "Phan Huy Ich, Tan Binh District, Ho Chi Minh, Vietnam",
@@ -835,7 +836,7 @@ func Test_UpdatePersonalInfo(t *testing.T) {
 			wantCode:         http.StatusBadRequest,
 			wantErr:          true,
 			wantResponsePath: "testdata/update_personal_info/400.json",
-			body: request.UpdatePersonalInfoInput{
+			body: request.UpdatePersonalInfoRequest{
 				DoB:           &dob,
 				Gender:        "Male",
 				Address:       "Phan Huy Ich, Tan Binh District, Ho Chi Minh, Vietnam",
@@ -850,7 +851,7 @@ func Test_UpdatePersonalInfo(t *testing.T) {
 			wantCode:         http.StatusBadRequest,
 			wantErr:          true,
 			wantResponsePath: "testdata/update_personal_info/400.json",
-			body: request.UpdatePersonalInfoInput{
+			body: request.UpdatePersonalInfoRequest{
 				DoB:           &dob,
 				Gender:        "Male",
 				Address:       "Phan Huy Ich, Tan Binh District, Ho Chi Minh, Vietnam",
@@ -865,7 +866,7 @@ func Test_UpdatePersonalInfo(t *testing.T) {
 			wantCode:         http.StatusBadRequest,
 			wantErr:          true,
 			wantResponsePath: "testdata/update_personal_info/invalid_country.json",
-			body: request.UpdatePersonalInfoInput{
+			body: request.UpdatePersonalInfoRequest{
 				DoB:           &dob,
 				Gender:        "Male",
 				Address:       "Phan Huy Ich, Tan Binh District, Ho Chi Minh, Vietnam",
