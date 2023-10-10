@@ -400,7 +400,7 @@ const docTemplate = `{
                     "Public"
                 ],
                 "summary": "Get all clients",
-                "operationId": "getListPublicClients",
+                "operationId": "getAllPublicClients",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -798,6 +798,7 @@ const docTemplate = `{
                     "Dashboard"
                 ],
                 "summary": "Get engagement dashboard",
+                "operationId": "getEngagementInfoDetail",
                 "parameters": [
                     {
                         "type": "string",
@@ -818,7 +819,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.GetEngagementDashboardDetailResponse"
+                            "$ref": "#/definitions/GetEngagementDashboardDetailResponse"
                         }
                     },
                     "500": {
@@ -848,11 +849,12 @@ const docTemplate = `{
                     "Dashboard"
                 ],
                 "summary": "Get engagement dashboard",
+                "operationId": "getEngagementInfo",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.GetEngagementDashboardResponse"
+                            "$ref": "#/definitions/GetEngagementDashboardResponse"
                         }
                     },
                     "500": {
@@ -882,6 +884,7 @@ const docTemplate = `{
                     "Dashboard"
                 ],
                 "summary": "Get Action items squash report for dashboard",
+                "operationId": "getActionItemSquashReportList",
                 "parameters": [
                     {
                         "type": "string",
@@ -894,7 +897,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.ActionItemSquashReportResponse"
+                            "$ref": "#/definitions/ActionItemSquashReportResponse"
                         }
                     },
                     "400": {
@@ -936,6 +939,7 @@ const docTemplate = `{
                     "Dashboard"
                 ],
                 "summary": "Get Action items report for dashboard",
+                "operationId": "getActionItemReportList",
                 "parameters": [
                     {
                         "type": "string",
@@ -948,7 +952,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.ActionItemReportResponse"
+                            "$ref": "#/definitions/ActionItemReportResponse"
                         }
                     },
                     "400": {
@@ -990,6 +994,7 @@ const docTemplate = `{
                     "Dashboard"
                 ],
                 "summary": "Get Audit information for dashboard",
+                "operationId": "getAuditList",
                 "parameters": [
                     {
                         "type": "string",
@@ -1002,7 +1007,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.AuditResponse"
+                            "$ref": "#/definitions/AuditResponse"
                         }
                     },
                     "400": {
@@ -1044,6 +1049,7 @@ const docTemplate = `{
                     "Dashboard"
                 ],
                 "summary": "Get Engineering health information for dashboard",
+                "operationId": "getEngineeringHealth",
                 "parameters": [
                     {
                         "type": "string",
@@ -1056,7 +1062,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.EngineeringHealthResponse"
+                            "$ref": "#/definitions/EngineeringHealthResponse"
                         }
                     },
                     "400": {
@@ -1098,11 +1104,12 @@ const docTemplate = `{
                     "Dashboard"
                 ],
                 "summary": "Get the total number of active member in each project",
+                "operationId": "getProjectSizeList",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.ProjectSizeResponse"
+                            "$ref": "#/definitions/ProjectSizeResponse"
                         }
                     },
                     "500": {
@@ -1132,11 +1139,12 @@ const docTemplate = `{
                     "Dashboard"
                 ],
                 "summary": "Get the summary audit info for projects",
+                "operationId": "getProjectSummary",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.AuditSummariesResponse"
+                            "$ref": "#/definitions/AuditSummariesResponse"
                         }
                     },
                     "400": {
@@ -1178,6 +1186,7 @@ const docTemplate = `{
                     "Dashboard"
                 ],
                 "summary": "Get Work Surveys data for dashboard",
+                "operationId": "getWorkSurveyList",
                 "parameters": [
                     {
                         "type": "string",
@@ -1190,7 +1199,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.WorkSurveyResponse"
+                            "$ref": "#/definitions/WorkSurveyResponse"
                         }
                     },
                     "400": {
@@ -1232,11 +1241,12 @@ const docTemplate = `{
                     "Dashboard"
                 ],
                 "summary": "Get resources availability",
+                "operationId": "getResourcesAvailability",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.ResourceAvailabilityResponse"
+                            "$ref": "#/definitions/ResourceAvailabilityResponse"
                         }
                     },
                     "500": {
@@ -1266,11 +1276,12 @@ const docTemplate = `{
                     "Dashboard"
                 ],
                 "summary": "Get dashboard resource utilization",
+                "operationId": "getResourceUtilization",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.GetDashboardResourceUtilizationResponse"
+                            "$ref": "#/definitions/GetDashboardResourceUtilizationResponse"
                         }
                     },
                     "500": {
@@ -1300,6 +1311,7 @@ const docTemplate = `{
                     "Dashboard"
                 ],
                 "summary": "Get resource work summaries for dashboard",
+                "operationId": "getResourceWorkSurveySummaryList",
                 "parameters": [
                     {
                         "type": "string",
@@ -1324,7 +1336,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.WorkSurveySummaryResponse"
+                            "$ref": "#/definitions/WorkSurveySummaryResponse"
                         }
                     },
                     "400": {
@@ -1366,6 +1378,7 @@ const docTemplate = `{
                     "Dashboard"
                 ],
                 "summary": "Get work unit distribution data for dashboard",
+                "operationId": "getWorkUnitDistribution",
                 "parameters": [
                     {
                         "type": "string",
@@ -1390,7 +1403,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.WorkUnitDistributionsResponse"
+                            "$ref": "#/definitions/WorkUnitDistributionsResponse"
                         }
                     },
                     "400": {
@@ -1432,11 +1445,12 @@ const docTemplate = `{
                     "Dashboard"
                 ],
                 "summary": "Get summary for workunit distribution dashboard",
+                "operationId": "getWorkUnitDistributionSummary",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.SummaryWorkUnitDistributionResponse"
+                            "$ref": "#/definitions/SummaryWorkUnitDistributionResponse"
                         }
                     },
                     "500": {
@@ -6164,6 +6178,82 @@ const docTemplate = `{
                 }
             }
         },
+        "ActionItemReportResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/AuditActionItemReport"
+                    }
+                }
+            }
+        },
+        "ActionItemSquash": {
+            "type": "object",
+            "properties": {
+                "snapDate": {
+                    "type": "string"
+                },
+                "trend": {
+                    "type": "number"
+                },
+                "value": {
+                    "type": "integer"
+                }
+            }
+        },
+        "ActionItemSquashReport": {
+            "type": "object",
+            "properties": {
+                "all": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ActionItemSquash"
+                    }
+                },
+                "high": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ActionItemSquash"
+                    }
+                },
+                "low": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ActionItemSquash"
+                    }
+                },
+                "medium": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ActionItemSquash"
+                    }
+                }
+            }
+        },
+        "ActionItemSquashReportResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/ActionItemSquashReport"
+                }
+            }
+        },
+        "ActionItemTrend": {
+            "type": "object",
+            "properties": {
+                "high": {
+                    "type": "number"
+                },
+                "low": {
+                    "type": "number"
+                },
+                "medium": {
+                    "type": "number"
+                }
+            }
+        },
         "Address": {
             "type": "object",
             "properties": {
@@ -6184,6 +6274,127 @@ const docTemplate = `{
                 }
             }
         },
+        "Audit": {
+            "type": "object",
+            "properties": {
+                "avg": {
+                    "type": "number"
+                },
+                "quarter": {
+                    "type": "string"
+                },
+                "trend": {
+                    "type": "number"
+                }
+            }
+        },
+        "AuditActionItemReport": {
+            "type": "object",
+            "properties": {
+                "high": {
+                    "type": "integer"
+                },
+                "low": {
+                    "type": "integer"
+                },
+                "medium": {
+                    "type": "integer"
+                },
+                "quarter": {
+                    "type": "string"
+                },
+                "trend": {
+                    "$ref": "#/definitions/ActionItemTrend"
+                }
+            }
+        },
+        "AuditData": {
+            "type": "object",
+            "properties": {
+                "average": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Audit"
+                    }
+                },
+                "groups": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/GroupAudit"
+                    }
+                }
+            }
+        },
+        "AuditResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/AuditData"
+                }
+            }
+        },
+        "AuditSummaries": {
+            "type": "object",
+            "properties": {
+                "summary": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/AuditSummary"
+                    }
+                }
+            }
+        },
+        "AuditSummariesResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/AuditSummaries"
+                }
+            }
+        },
+        "AuditSummary": {
+            "type": "object",
+            "properties": {
+                "audit": {
+                    "$ref": "#/definitions/AuditValue"
+                },
+                "avatar": {
+                    "type": "string"
+                },
+                "code": {
+                    "type": "string"
+                },
+                "health": {
+                    "$ref": "#/definitions/AuditValue"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "newItem": {
+                    "$ref": "#/definitions/ItemValue"
+                },
+                "resolvedItem": {
+                    "$ref": "#/definitions/ItemValue"
+                },
+                "size": {
+                    "$ref": "#/definitions/ItemValue"
+                }
+            }
+        },
+        "AuditValue": {
+            "type": "object",
+            "properties": {
+                "trend": {
+                    "type": "number"
+                },
+                "value": {
+                    "type": "number"
+                }
+            }
+        },
         "AuthData": {
             "type": "object",
             "properties": {
@@ -6200,6 +6411,76 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/LoggedInUserData"
+                }
+            }
+        },
+        "AvailableEmployee": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string"
+                },
+                "displayName": {
+                    "type": "string"
+                },
+                "fullName": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "positions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Position"
+                    }
+                },
+                "projects": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/BasicProjectInfo"
+                    }
+                },
+                "seniority": {
+                    "$ref": "#/definitions/Seniority"
+                },
+                "stacks": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Stack"
+                    }
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "AvailableSlot": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "note": {
+                    "type": "string"
+                },
+                "positions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Position"
+                    }
+                },
+                "project": {
+                    "$ref": "#/definitions/BasicProjectInfo"
+                },
+                "seniority": {
+                    "$ref": "#/definitions/Seniority"
+                },
+                "type": {
+                    "type": "string"
                 }
             }
         },
@@ -6243,6 +6524,49 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "ukSortCode": {
+                    "type": "string"
+                }
+            }
+        },
+        "BasicEmployeeInfo": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string"
+                },
+                "displayName": {
+                    "type": "string"
+                },
+                "fullName": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "BasicProjectInfo": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string"
+                },
+                "code": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "type": {
                     "type": "string"
                 }
             }
@@ -6530,7 +6854,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "lineManager": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.BasicEmployeeInfo"
+                    "$ref": "#/definitions/BasicEmployeeInfo"
                 },
                 "linkedInName": {
                     "type": "string"
@@ -6578,7 +6902,7 @@ const docTemplate = `{
                     }
                 },
                 "referredBy": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.BasicEmployeeInfo"
+                    "$ref": "#/definitions/BasicEmployeeInfo"
                 },
                 "roles": {
                     "type": "array",
@@ -6629,6 +6953,121 @@ const docTemplate = `{
                 }
             }
         },
+        "EngagementDashboard": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "questionID": {
+                    "type": "string"
+                },
+                "stats": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/EngagementDashboardQuestionStat"
+                    }
+                }
+            }
+        },
+        "EngagementDashboardDetail": {
+            "type": "object",
+            "properties": {
+                "questionID": {
+                    "type": "string"
+                },
+                "stats": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/EngagementDashboardQuestionDetailStat"
+                    }
+                }
+            }
+        },
+        "EngagementDashboardQuestionDetailStat": {
+            "type": "object",
+            "properties": {
+                "field": {
+                    "type": "string"
+                },
+                "point": {
+                    "type": "number"
+                },
+                "startDate": {
+                    "type": "string"
+                }
+            }
+        },
+        "EngagementDashboardQuestionStat": {
+            "type": "object",
+            "properties": {
+                "point": {
+                    "type": "number"
+                },
+                "startDate": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "EngineeringHealth": {
+            "type": "object",
+            "properties": {
+                "avg": {
+                    "type": "number"
+                },
+                "quarter": {
+                    "type": "string"
+                },
+                "trend": {
+                    "type": "number"
+                }
+            }
+        },
+        "EngineeringHealthData": {
+            "type": "object",
+            "properties": {
+                "average": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/EngineeringHealth"
+                    }
+                },
+                "groups": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/GroupEngineeringHealth"
+                    }
+                }
+            }
+        },
+        "EngineeringHealthResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/EngineeringHealthData"
+                }
+            }
+        },
+        "EngineeringHealthTrend": {
+            "type": "object",
+            "properties": {
+                "collaboration": {
+                    "type": "number"
+                },
+                "delivery": {
+                    "type": "number"
+                },
+                "feedback": {
+                    "type": "number"
+                },
+                "quality": {
+                    "type": "number"
+                }
+            }
+        },
         "ErrorResponse": {
             "type": "object",
             "properties": {
@@ -6643,11 +7082,44 @@ const docTemplate = `{
                 }
             }
         },
+        "GetDashboardResourceUtilizationResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ResourceUtilization"
+                    }
+                }
+            }
+        },
         "GetDetailClientResponse": {
             "type": "object",
             "properties": {
                 "data": {
                     "$ref": "#/definitions/Client"
+                }
+            }
+        },
+        "GetEngagementDashboardDetailResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/EngagementDashboardDetail"
+                    }
+                }
+            }
+        },
+        "GetEngagementDashboardResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/EngagementDashboard"
+                    }
                 }
             }
         },
@@ -6659,6 +7131,92 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/Client"
                     }
+                }
+            }
+        },
+        "GroupAudit": {
+            "type": "object",
+            "properties": {
+                "backend": {
+                    "type": "number"
+                },
+                "blockchain": {
+                    "type": "number"
+                },
+                "frontend": {
+                    "type": "number"
+                },
+                "mobile": {
+                    "type": "number"
+                },
+                "process": {
+                    "type": "number"
+                },
+                "quarter": {
+                    "type": "string"
+                },
+                "system": {
+                    "type": "number"
+                },
+                "trend": {
+                    "$ref": "#/definitions/GroupAuditTrend"
+                }
+            }
+        },
+        "GroupAuditTrend": {
+            "type": "object",
+            "properties": {
+                "backend": {
+                    "type": "number"
+                },
+                "blockchain": {
+                    "type": "number"
+                },
+                "frontend": {
+                    "type": "number"
+                },
+                "mobile": {
+                    "type": "number"
+                },
+                "process": {
+                    "type": "number"
+                },
+                "system": {
+                    "type": "number"
+                }
+            }
+        },
+        "GroupEngineeringHealth": {
+            "type": "object",
+            "properties": {
+                "collaboration": {
+                    "type": "number"
+                },
+                "delivery": {
+                    "type": "number"
+                },
+                "feedback": {
+                    "type": "number"
+                },
+                "quality": {
+                    "type": "number"
+                },
+                "quarter": {
+                    "type": "string"
+                },
+                "trend": {
+                    "$ref": "#/definitions/EngineeringHealthTrend"
+                }
+            }
+        },
+        "ItemValue": {
+            "type": "object",
+            "properties": {
+                "trend": {
+                    "type": "number"
+                },
+                "value": {
+                    "type": "integer"
                 }
             }
         },
@@ -6778,7 +7336,7 @@ const docTemplate = `{
                     }
                 },
                 "companyInfo": {
-                    "$ref": "#/definitions/pkg_view.CompanyInfo"
+                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.CompanyInfo"
                 },
                 "companyInfoID": {
                     "type": "string"
@@ -6804,7 +7362,7 @@ const docTemplate = `{
                 "heads": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/pkg_view.ProjectHead"
+                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.ProjectHead"
                     }
                 },
                 "id": {
@@ -6943,7 +7501,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "currency": {
-                    "$ref": "#/definitions/pkg_view.Currency"
+                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.Currency"
                 },
                 "deploymentType": {
                     "type": "string"
@@ -7000,7 +7558,7 @@ const docTemplate = `{
                     "type": "number"
                 },
                 "upsellPerson": {
-                    "$ref": "#/definitions/pkg_view.BasicEmployeeInfo"
+                    "$ref": "#/definitions/BasicEmployeeInfo"
                 },
                 "username": {
                     "type": "string"
@@ -7027,6 +7585,17 @@ const docTemplate = `{
                 },
                 "updatedAt": {
                     "type": "string"
+                }
+            }
+        },
+        "ProjectSizeResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.ProjectSize"
+                    }
                 }
             }
         },
@@ -7129,6 +7698,48 @@ const docTemplate = `{
                 }
             }
         },
+        "ResourceAvailability": {
+            "type": "object",
+            "properties": {
+                "employees": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/AvailableEmployee"
+                    }
+                },
+                "slots": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/AvailableSlot"
+                    }
+                }
+            }
+        },
+        "ResourceAvailabilityResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/ResourceAvailability"
+                }
+            }
+        },
+        "ResourceUtilization": {
+            "type": "object",
+            "properties": {
+                "available": {
+                    "type": "integer"
+                },
+                "date": {
+                    "type": "string"
+                },
+                "internal": {
+                    "type": "integer"
+                },
+                "staffed": {
+                    "type": "integer"
+                }
+            }
+        },
         "Seniority": {
             "type": "object",
             "properties": {
@@ -7157,6 +7768,45 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string"
+                }
+            }
+        },
+        "SummaryWorkUnitDistributionData": {
+            "type": "object",
+            "properties": {
+                "development": {
+                    "type": "number"
+                },
+                "learning": {
+                    "type": "number"
+                },
+                "management": {
+                    "type": "number"
+                },
+                "training": {
+                    "type": "number"
+                }
+            }
+        },
+        "SummaryWorkUnitDistributionResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/SummaryWorkUnitDistributionData"
+                }
+            }
+        },
+        "Trend": {
+            "type": "object",
+            "properties": {
+                "deadline": {
+                    "type": "number"
+                },
+                "learning": {
+                    "type": "number"
+                },
+                "workload": {
+                    "type": "number"
                 }
             }
         },
@@ -7189,6 +7839,247 @@ const docTemplate = `{
                 },
                 "website": {
                     "type": "string"
+                }
+            }
+        },
+        "WorkSurvey": {
+            "type": "object",
+            "properties": {
+                "deadline": {
+                    "type": "number"
+                },
+                "endDate": {
+                    "type": "string"
+                },
+                "learning": {
+                    "type": "number"
+                },
+                "trend": {
+                    "$ref": "#/definitions/Trend"
+                },
+                "workload": {
+                    "type": "number"
+                }
+            }
+        },
+        "WorkSurveyResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/WorkSurveysData"
+                }
+            }
+        },
+        "WorkSurveySummary": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/WorkSurveySummaryEmployee"
+                    }
+                },
+                "dates": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "WorkSurveySummaryAnswer": {
+            "type": "object",
+            "properties": {
+                "answer": {
+                    "type": "string"
+                },
+                "project": {
+                    "$ref": "#/definitions/BasicProjectInfo"
+                }
+            }
+        },
+        "WorkSurveySummaryEmployee": {
+            "type": "object",
+            "properties": {
+                "listAnswers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/WorkSurveySummaryListAnswer"
+                    }
+                },
+                "reviewer": {
+                    "$ref": "#/definitions/BasicEmployeeInfo"
+                }
+            }
+        },
+        "WorkSurveySummaryListAnswer": {
+            "type": "object",
+            "properties": {
+                "answers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/WorkSurveySummaryAnswer"
+                    }
+                },
+                "date": {
+                    "type": "string"
+                }
+            }
+        },
+        "WorkSurveySummaryResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/WorkSurveySummary"
+                    }
+                }
+            }
+        },
+        "WorkSurveysData": {
+            "type": "object",
+            "properties": {
+                "project": {
+                    "$ref": "#/definitions/BasicProjectInfo"
+                },
+                "workSurveys": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/WorkSurvey"
+                    }
+                }
+            }
+        },
+        "WorkUnitDistribution": {
+            "type": "object",
+            "properties": {
+                "development": {
+                    "$ref": "#/definitions/WorkUnitDistributionDevelopment"
+                },
+                "employee": {
+                    "$ref": "#/definitions/BasicEmployeeInfo"
+                },
+                "learning": {
+                    "$ref": "#/definitions/WorkUnitDistributionLearning"
+                },
+                "management": {
+                    "$ref": "#/definitions/WorkUnitDistributionManagement"
+                },
+                "training": {
+                    "$ref": "#/definitions/WorkUnitDistributionTraining"
+                }
+            }
+        },
+        "WorkUnitDistributionData": {
+            "type": "object",
+            "properties": {
+                "workUnitDistributions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/WorkUnitDistribution"
+                    }
+                }
+            }
+        },
+        "WorkUnitDistributionDevelopment": {
+            "type": "object",
+            "properties": {
+                "total": {
+                    "type": "integer"
+                },
+                "workUnits": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/WorkUnitDistributionWU"
+                    }
+                }
+            }
+        },
+        "WorkUnitDistributionLearning": {
+            "type": "object",
+            "properties": {
+                "total": {
+                    "type": "integer"
+                },
+                "workUnits": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/WorkUnitDistributionWU"
+                    }
+                }
+            }
+        },
+        "WorkUnitDistributionManagement": {
+            "type": "object",
+            "properties": {
+                "projectHeads": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/WorkUnitDistributionWUProjectHead"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                },
+                "workUnits": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/WorkUnitDistributionWU"
+                    }
+                }
+            }
+        },
+        "WorkUnitDistributionTraining": {
+            "type": "object",
+            "properties": {
+                "mentees": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/BasicEmployeeInfo"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                },
+                "workUnits": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/WorkUnitDistributionWU"
+                    }
+                }
+            }
+        },
+        "WorkUnitDistributionWU": {
+            "type": "object",
+            "properties": {
+                "project": {
+                    "$ref": "#/definitions/BasicProjectInfo"
+                },
+                "workUnitName": {
+                    "type": "string"
+                }
+            }
+        },
+        "WorkUnitDistributionWUProjectHead": {
+            "type": "object",
+            "properties": {
+                "position": {
+                    "type": "string"
+                },
+                "project": {
+                    "$ref": "#/definitions/BasicProjectInfo"
+                }
+            }
+        },
+        "WorkUnitDistributionsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/WorkUnitDistributionData"
                 }
             }
         },
@@ -8581,23 +9472,6 @@ const docTemplate = `{
                 "RelationshipSelf"
             ]
         },
-        "github_com_dwarvesf_fortress-api_pkg_model.ResourceUtilization": {
-            "type": "object",
-            "properties": {
-                "available": {
-                    "type": "integer"
-                },
-                "date": {
-                    "type": "string"
-                },
-                "internal": {
-                    "type": "integer"
-                },
-                "staffed": {
-                    "type": "integer"
-                }
-            }
-        },
         "github_com_dwarvesf_fortress-api_pkg_model.Role": {
             "type": "object",
             "properties": {
@@ -8809,273 +9683,6 @@ const docTemplate = `{
                 "WorkingStatusContractor"
             ]
         },
-        "github_com_dwarvesf_fortress-api_pkg_view.ActionItemReportResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.AuditActionItemReport"
-                    }
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.ActionItemSquash": {
-            "type": "object",
-            "properties": {
-                "snapDate": {
-                    "type": "string"
-                },
-                "trend": {
-                    "type": "number"
-                },
-                "value": {
-                    "type": "integer"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.ActionItemSquashReport": {
-            "type": "object",
-            "properties": {
-                "all": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.ActionItemSquash"
-                    }
-                },
-                "high": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.ActionItemSquash"
-                    }
-                },
-                "low": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.ActionItemSquash"
-                    }
-                },
-                "medium": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.ActionItemSquash"
-                    }
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.ActionItemSquashReportResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.ActionItemSquashReport"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.ActionItemTrend": {
-            "type": "object",
-            "properties": {
-                "high": {
-                    "type": "number"
-                },
-                "low": {
-                    "type": "number"
-                },
-                "medium": {
-                    "type": "number"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.Audit": {
-            "type": "object",
-            "properties": {
-                "avg": {
-                    "type": "number"
-                },
-                "quarter": {
-                    "type": "string"
-                },
-                "trend": {
-                    "type": "number"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.AuditActionItemReport": {
-            "type": "object",
-            "properties": {
-                "high": {
-                    "type": "integer"
-                },
-                "low": {
-                    "type": "integer"
-                },
-                "medium": {
-                    "type": "integer"
-                },
-                "quarter": {
-                    "type": "string"
-                },
-                "trend": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.ActionItemTrend"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.AuditData": {
-            "type": "object",
-            "properties": {
-                "average": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.Audit"
-                    }
-                },
-                "groups": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.GroupAudit"
-                    }
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.AuditResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.AuditData"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.AuditSummaries": {
-            "type": "object",
-            "properties": {
-                "summary": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.AuditSummary"
-                    }
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.AuditSummariesResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.AuditSummaries"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.AuditSummary": {
-            "type": "object",
-            "properties": {
-                "audit": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.AuditValue"
-                },
-                "avatar": {
-                    "type": "string"
-                },
-                "code": {
-                    "type": "string"
-                },
-                "health": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.AuditValue"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "newItem": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.ItemValue"
-                },
-                "resolvedItem": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.ItemValue"
-                },
-                "size": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.ItemValue"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.AuditValue": {
-            "type": "object",
-            "properties": {
-                "trend": {
-                    "type": "number"
-                },
-                "value": {
-                    "type": "number"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.AvailableEmployee": {
-            "type": "object",
-            "properties": {
-                "avatar": {
-                    "type": "string"
-                },
-                "displayName": {
-                    "type": "string"
-                },
-                "fullName": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "positions": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/Position"
-                    }
-                },
-                "projects": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.BasicProjectInfo"
-                    }
-                },
-                "seniority": {
-                    "$ref": "#/definitions/Seniority"
-                },
-                "stacks": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/Stack"
-                    }
-                },
-                "username": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.AvailableSlot": {
-            "type": "object",
-            "properties": {
-                "createdAt": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "note": {
-                    "type": "string"
-                },
-                "positions": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/Position"
-                    }
-                },
-                "project": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.BasicProjectInfo"
-                },
-                "seniority": {
-                    "$ref": "#/definitions/Seniority"
-                },
-                "type": {
-                    "type": "string"
-                }
-            }
-        },
         "github_com_dwarvesf_fortress-api_pkg_view.BaseSalary": {
             "type": "object",
             "properties": {
@@ -9182,26 +9789,6 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_dwarvesf_fortress-api_pkg_view.BasicEmployeeInfo": {
-            "type": "object",
-            "properties": {
-                "avatar": {
-                    "type": "string"
-                },
-                "displayName": {
-                    "type": "string"
-                },
-                "fullName": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "username": {
-                    "type": "string"
-                }
-            }
-        },
         "github_com_dwarvesf_fortress-api_pkg_view.BasicMember": {
             "type": "object",
             "properties": {
@@ -9244,29 +9831,6 @@ const docTemplate = `{
                     "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.HeadPosition"
                 },
                 "username": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.BasicProjectInfo": {
-            "type": "object",
-            "properties": {
-                "avatar": {
-                    "type": "string"
-                },
-                "code": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "type": {
                     "type": "string"
                 }
             }
@@ -9471,7 +10035,7 @@ const docTemplate = `{
                     "type": "number"
                 },
                 "upsellPerson": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.BasicEmployeeInfo"
+                    "$ref": "#/definitions/BasicEmployeeInfo"
                 },
                 "username": {
                     "type": "string"
@@ -9759,129 +10323,14 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_dwarvesf_fortress-api_pkg_view.EngagementDashboard": {
-            "type": "object",
-            "properties": {
-                "content": {
-                    "type": "string"
-                },
-                "questionID": {
-                    "type": "string"
-                },
-                "stats": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.EngagementDashboardQuestionStat"
-                    }
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.EngagementDashboardDetail": {
-            "type": "object",
-            "properties": {
-                "questionID": {
-                    "type": "string"
-                },
-                "stats": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.EngagementDashboardQuestionDetailStat"
-                    }
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.EngagementDashboardQuestionDetailStat": {
-            "type": "object",
-            "properties": {
-                "field": {
-                    "type": "string"
-                },
-                "point": {
-                    "type": "number"
-                },
-                "startDate": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.EngagementDashboardQuestionStat": {
-            "type": "object",
-            "properties": {
-                "point": {
-                    "type": "number"
-                },
-                "startDate": {
-                    "type": "string"
-                },
-                "title": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.EngineeringHealth": {
-            "type": "object",
-            "properties": {
-                "avg": {
-                    "type": "number"
-                },
-                "quarter": {
-                    "type": "string"
-                },
-                "trend": {
-                    "type": "number"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.EngineeringHealthData": {
-            "type": "object",
-            "properties": {
-                "average": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.EngineeringHealth"
-                    }
-                },
-                "groups": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.GroupEngineeringHealth"
-                    }
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.EngineeringHealthResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.EngineeringHealthData"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.EngineeringHealthTrend": {
-            "type": "object",
-            "properties": {
-                "collaboration": {
-                    "type": "number"
-                },
-                "delivery": {
-                    "type": "number"
-                },
-                "feedback": {
-                    "type": "number"
-                },
-                "quality": {
-                    "type": "number"
-                }
-            }
-        },
         "github_com_dwarvesf_fortress-api_pkg_view.FeedBackReviewDetail": {
             "type": "object",
             "properties": {
                 "employee": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.BasicEmployeeInfo"
+                    "$ref": "#/definitions/BasicEmployeeInfo"
                 },
                 "project": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.BasicProjectInfo"
+                    "$ref": "#/definitions/BasicProjectInfo"
                 },
                 "questions": {
                     "type": "array",
@@ -9893,7 +10342,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "reviewer": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.BasicEmployeeInfo"
+                    "$ref": "#/definitions/BasicEmployeeInfo"
                 },
                 "topicName": {
                     "type": "string"
@@ -9904,7 +10353,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "author": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.BasicEmployeeInfo"
+                    "$ref": "#/definitions/BasicEmployeeInfo"
                 },
                 "employeeID": {
                     "type": "string"
@@ -9971,13 +10420,13 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "project": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.BasicProjectInfo"
+                    "$ref": "#/definitions/BasicProjectInfo"
                 },
                 "relationship": {
                     "type": "string"
                 },
                 "reviewer": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.BasicEmployeeInfo"
+                    "$ref": "#/definitions/BasicEmployeeInfo"
                 },
                 "status": {
                     "type": "string"
@@ -10017,39 +10466,6 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_dwarvesf_fortress-api_pkg_view.GetDashboardResourceUtilizationResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.ResourceUtilization"
-                    }
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.GetEngagementDashboardDetailResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.EngagementDashboardDetail"
-                    }
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.GetEngagementDashboardResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.EngagementDashboard"
-                    }
-                }
-            }
-        },
         "github_com_dwarvesf_fortress-api_pkg_view.GetQuestionResponse": {
             "type": "object",
             "properties": {
@@ -10058,81 +10474,6 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.Question"
                     }
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.GroupAudit": {
-            "type": "object",
-            "properties": {
-                "backend": {
-                    "type": "number"
-                },
-                "blockchain": {
-                    "type": "number"
-                },
-                "frontend": {
-                    "type": "number"
-                },
-                "mobile": {
-                    "type": "number"
-                },
-                "process": {
-                    "type": "number"
-                },
-                "quarter": {
-                    "type": "string"
-                },
-                "system": {
-                    "type": "number"
-                },
-                "trend": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.GroupAuditTrend"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.GroupAuditTrend": {
-            "type": "object",
-            "properties": {
-                "backend": {
-                    "type": "number"
-                },
-                "blockchain": {
-                    "type": "number"
-                },
-                "frontend": {
-                    "type": "number"
-                },
-                "mobile": {
-                    "type": "number"
-                },
-                "process": {
-                    "type": "number"
-                },
-                "system": {
-                    "type": "number"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.GroupEngineeringHealth": {
-            "type": "object",
-            "properties": {
-                "collaboration": {
-                    "type": "number"
-                },
-                "delivery": {
-                    "type": "number"
-                },
-                "feedback": {
-                    "type": "number"
-                },
-                "quality": {
-                    "type": "number"
-                },
-                "quarter": {
-                    "type": "string"
-                },
-                "trend": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.EngineeringHealthTrend"
                 }
             }
         },
@@ -10394,24 +10735,13 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_dwarvesf_fortress-api_pkg_view.ItemValue": {
-            "type": "object",
-            "properties": {
-                "trend": {
-                    "type": "number"
-                },
-                "value": {
-                    "type": "integer"
-                }
-            }
-        },
         "github_com_dwarvesf_fortress-api_pkg_view.LineManagersResponse": {
             "type": "object",
             "properties": {
                 "data": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.BasicEmployeeInfo"
+                        "$ref": "#/definitions/BasicEmployeeInfo"
                     }
                 }
             }
@@ -10524,7 +10854,7 @@ const docTemplate = `{
                     "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Relationship"
                 },
                 "reviewer": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.BasicEmployeeInfo"
+                    "$ref": "#/definitions/BasicEmployeeInfo"
                 },
                 "status": {
                     "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.EventReviewerStatus"
@@ -10885,17 +11215,6 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_dwarvesf_fortress-api_pkg_view.ProjectSizeResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.ProjectSize"
-                    }
-                }
-            }
-        },
         "github_com_dwarvesf_fortress-api_pkg_view.Question": {
             "type": "object",
             "properties": {
@@ -10942,31 +11261,6 @@ const docTemplate = `{
                 },
                 "type": {
                     "type": "string"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.ResourceAvailability": {
-            "type": "object",
-            "properties": {
-                "employees": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.AvailableEmployee"
-                    }
-                },
-                "slots": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.AvailableSlot"
-                    }
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.ResourceAvailabilityResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.ResourceAvailability"
                 }
             }
         },
@@ -11033,7 +11327,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "reviewer": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.BasicEmployeeInfo"
+                    "$ref": "#/definitions/BasicEmployeeInfo"
                 },
                 "status": {
                     "type": "string"
@@ -11051,31 +11345,6 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.SubmitFeedback"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.SummaryWorkUnitDistributionData": {
-            "type": "object",
-            "properties": {
-                "development": {
-                    "type": "number"
-                },
-                "learning": {
-                    "type": "number"
-                },
-                "management": {
-                    "type": "number"
-                },
-                "training": {
-                    "type": "number"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.SummaryWorkUnitDistributionResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.SummaryWorkUnitDistributionData"
                 }
             }
         },
@@ -11118,7 +11387,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "author": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.BasicEmployeeInfo"
+                    "$ref": "#/definitions/BasicEmployeeInfo"
                 },
                 "endDate": {
                     "type": "string"
@@ -11153,7 +11422,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "employee": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.BasicEmployeeInfo"
+                    "$ref": "#/definitions/BasicEmployeeInfo"
                 },
                 "participants": {
                     "type": "array",
@@ -11207,7 +11476,7 @@ const docTemplate = `{
                     }
                 },
                 "employee": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.BasicEmployeeInfo"
+                    "$ref": "#/definitions/BasicEmployeeInfo"
                 },
                 "eventID": {
                     "type": "string"
@@ -11221,11 +11490,11 @@ const docTemplate = `{
                 "participants": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.BasicEmployeeInfo"
+                        "$ref": "#/definitions/BasicEmployeeInfo"
                     }
                 },
                 "project": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.BasicProjectInfo"
+                    "$ref": "#/definitions/BasicProjectInfo"
                 },
                 "reviewID": {
                     "type": "string"
@@ -11241,20 +11510,6 @@ const docTemplate = `{
                 },
                 "type": {
                     "type": "string"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.Trend": {
-            "type": "object",
-            "properties": {
-                "deadline": {
-                    "type": "number"
-                },
-                "learning": {
-                    "type": "number"
-                },
-                "workload": {
-                    "type": "number"
                 }
             }
         },
@@ -11330,7 +11585,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "lineManager": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.BasicEmployeeInfo"
+                    "$ref": "#/definitions/BasicEmployeeInfo"
                 },
                 "linkedInName": {
                     "type": "string"
@@ -11354,7 +11609,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "referredBy": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.BasicEmployeeInfo"
+                    "$ref": "#/definitions/BasicEmployeeInfo"
                 },
                 "teamEmail": {
                     "type": "string"
@@ -11650,118 +11905,6 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_dwarvesf_fortress-api_pkg_view.WorkSurvey": {
-            "type": "object",
-            "properties": {
-                "deadline": {
-                    "type": "number"
-                },
-                "endDate": {
-                    "type": "string"
-                },
-                "learning": {
-                    "type": "number"
-                },
-                "trend": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.Trend"
-                },
-                "workload": {
-                    "type": "number"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.WorkSurveyResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.WorkSurveysData"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.WorkSurveySummary": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.WorkSurveySummaryEmployee"
-                    }
-                },
-                "dates": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "type": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.WorkSurveySummaryAnswer": {
-            "type": "object",
-            "properties": {
-                "answer": {
-                    "type": "string"
-                },
-                "project": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.BasicProjectInfo"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.WorkSurveySummaryEmployee": {
-            "type": "object",
-            "properties": {
-                "listAnswers": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.WorkSurveySummaryListAnswer"
-                    }
-                },
-                "reviewer": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.BasicEmployeeInfo"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.WorkSurveySummaryListAnswer": {
-            "type": "object",
-            "properties": {
-                "answers": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.WorkSurveySummaryAnswer"
-                    }
-                },
-                "date": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.WorkSurveySummaryResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.WorkSurveySummary"
-                    }
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.WorkSurveysData": {
-            "type": "object",
-            "properties": {
-                "project": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.BasicProjectInfo"
-                },
-                "workSurveys": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.WorkSurvey"
-                    }
-                }
-            }
-        },
         "github_com_dwarvesf_fortress-api_pkg_view.WorkUnit": {
             "type": "object",
             "properties": {
@@ -11797,135 +11940,6 @@ const docTemplate = `{
                 },
                 "url": {
                     "type": "string"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.WorkUnitDistribution": {
-            "type": "object",
-            "properties": {
-                "development": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.WorkUnitDistributionDevelopment"
-                },
-                "employee": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.BasicEmployeeInfo"
-                },
-                "learning": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.WorkUnitDistributionLearning"
-                },
-                "management": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.WorkUnitDistributionManagement"
-                },
-                "training": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.WorkUnitDistributionTraining"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.WorkUnitDistributionData": {
-            "type": "object",
-            "properties": {
-                "workUnitDistributions": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.WorkUnitDistribution"
-                    }
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.WorkUnitDistributionDevelopment": {
-            "type": "object",
-            "properties": {
-                "total": {
-                    "type": "integer"
-                },
-                "workUnits": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.WorkUnitDistributionWU"
-                    }
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.WorkUnitDistributionLearning": {
-            "type": "object",
-            "properties": {
-                "total": {
-                    "type": "integer"
-                },
-                "workUnits": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.WorkUnitDistributionWU"
-                    }
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.WorkUnitDistributionManagement": {
-            "type": "object",
-            "properties": {
-                "projectHeads": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.WorkUnitDistributionWUProjectHead"
-                    }
-                },
-                "total": {
-                    "type": "integer"
-                },
-                "workUnits": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.WorkUnitDistributionWU"
-                    }
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.WorkUnitDistributionTraining": {
-            "type": "object",
-            "properties": {
-                "mentees": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.BasicEmployeeInfo"
-                    }
-                },
-                "total": {
-                    "type": "integer"
-                },
-                "workUnits": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.WorkUnitDistributionWU"
-                    }
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.WorkUnitDistributionWU": {
-            "type": "object",
-            "properties": {
-                "project": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.BasicProjectInfo"
-                },
-                "workUnitName": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.WorkUnitDistributionWUProjectHead": {
-            "type": "object",
-            "properties": {
-                "position": {
-                    "type": "string"
-                },
-                "project": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.BasicProjectInfo"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.WorkUnitDistributionsResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.WorkUnitDistributionData"
                 }
             }
         },
@@ -12051,26 +12065,6 @@ const docTemplate = `{
                 }
             }
         },
-        "pkg_view.BasicEmployeeInfo": {
-            "type": "object",
-            "properties": {
-                "avatar": {
-                    "type": "string"
-                },
-                "displayName": {
-                    "type": "string"
-                },
-                "fullName": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "username": {
-                    "type": "string"
-                }
-            }
-        },
         "pkg_view.Chapter": {
             "type": "object",
             "properties": {
@@ -12084,29 +12078,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "pkg_view.CompanyInfo": {
-            "type": "object",
-            "properties": {
-                "description": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "info": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.CompanyContactInfo"
-                    }
-                },
-                "name": {
-                    "type": "string"
-                },
-                "registrationNumber": {
                     "type": "string"
                 }
             }
@@ -12197,32 +12168,6 @@ const docTemplate = `{
                 },
                 "seniority": {
                     "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Seniority"
-                },
-                "username": {
-                    "type": "string"
-                }
-            }
-        },
-        "pkg_view.ProjectHead": {
-            "type": "object",
-            "properties": {
-                "avatar": {
-                    "type": "string"
-                },
-                "commissionRate": {
-                    "type": "number"
-                },
-                "displayName": {
-                    "type": "string"
-                },
-                "employeeID": {
-                    "type": "string"
-                },
-                "finalCommissionRate": {
-                    "type": "number"
-                },
-                "fullName": {
-                    "type": "string"
                 },
                 "username": {
                     "type": "string"
