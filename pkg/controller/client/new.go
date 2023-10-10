@@ -30,7 +30,7 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 }
 
 type IController interface {
-	Create(c *gin.Context, input request.CreateClientInput) (client *model.Client, err error)
+	Create(c *gin.Context, input request.CreateClientRequest) (client *model.Client, err error)
 	List(c *gin.Context) (client []*model.Client, err error)
 	Detail(c *gin.Context, clientID string) (client *model.Client, err error)
 	Update(c *gin.Context, clientID string, input request.UpdateClientInput) (errCode int, err error)

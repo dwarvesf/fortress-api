@@ -57,7 +57,7 @@ type EmployeeData struct {
 	WiseRecipientEmail string                `json:"wiseRecipientEmail"`
 	WiseRecipientName  string                `json:"wiseRecipientName"`
 	WiseCurrency       string                `json:"wiseCurrency"`
-}
+} // @name EmployeeData
 
 type MMAScore struct {
 	MasteryScore  decimal.Decimal `json:"masteryScore"`

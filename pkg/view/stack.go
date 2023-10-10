@@ -7,7 +7,7 @@ type Stack struct {
 	Name   string `json:"name"`
 	Code   string `json:"code"`
 	Avatar string `json:"avatar"`
-}
+} // @name Stack
 
 func ToEmployeeStacks(stacks []model.EmployeeStack) []Stack {
 	rs := make([]Stack, 0, len(stacks))

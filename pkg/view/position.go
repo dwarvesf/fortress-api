@@ -6,6 +6,18 @@ type Position struct {
 	ID   string `json:"id"`
 	Code string `json:"code"`
 	Name string `json:"name"`
+} // @name Position
+
+func ToPosition(pos *model.Position) *Position {
+	if pos == nil {
+		return nil
+	}
+
+	return &Position{
+		ID:   pos.ID.String(),
+		Code: pos.Code,
+		Name: pos.Name,
+	}
 }
 
 func ToPositions(pos []model.Position) []Position {

@@ -10,7 +10,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/model"
 )
 
-func (r *controller) Create(c *gin.Context, input request.CreateClientInput) (*model.Client, error) {
+func (r *controller) Create(c *gin.Context, input request.CreateClientRequest) (*model.Client, error) {
 	tx, done := r.repo.NewTransaction()
 
 	// Create client

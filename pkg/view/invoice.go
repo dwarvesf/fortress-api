@@ -62,6 +62,26 @@ type CompanyInfo struct {
 	Info               map[string]model.CompanyContactInfo `json:"info"`
 }
 
+func ToCompanyInfo(c *model.CompanyInfo) *CompanyInfo {
+	if c == nil {
+		return nil
+	}
+
+	companyContact := make(map[string]model.CompanyContactInfo)
+	err := json.Unmarshal(c.Info.Bytes, &companyContact)
+	if err != nil {
+		return nil
+	}
+
+	return &CompanyInfo{
+		ID:                 c.ID.String(),
+		Name:               c.Name,
+		Description:        c.Description,
+		RegistrationNumber: c.RegistrationNumber,
+		Info:               companyContact,
+	}
+}
+
 type InvoiceItem struct {
 	Quantity    float64 `json:"quantity"`
 	UnitCost    float64 `json:"unitCost"`
