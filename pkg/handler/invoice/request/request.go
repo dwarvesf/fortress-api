@@ -13,6 +13,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/utils"
 	"github.com/dwarvesf/fortress-api/pkg/utils/mailutils"
+	"github.com/dwarvesf/fortress-api/pkg/view"
 )
 
 type UpdateStatusRequest struct {
@@ -33,17 +34,25 @@ type GetInvoiceInput struct {
 }
 
 type GetListInvoiceInput struct {
-	model.Pagination
+	view.Pagination
 	ProjectID []string `json:"projectID" form:"projectID"`
 	Status    []string `json:"status" form:"status"`
 }
 
-func (r *GetListInvoiceInput) StandardizeInput() {
+func (r *GetListInvoiceInput) StandardizeInput() model.Pagination {
 	statuses := utils.RemoveEmptyString(r.Status)
 	projectsIDs := utils.RemoveEmptyString(r.ProjectID)
-	r.Pagination.Standardize()
+
+	pagination := model.Pagination{
+		Page: r.Page,
+		Size: r.Size,
+		Sort: r.Sort,
+	}
+	pagination.Standardize()
 	r.Status = statuses
 	r.ProjectID = projectsIDs
+
+	return pagination
 }
 
 func (r *GetListInvoiceInput) Validate() error {
@@ -64,8 +73,8 @@ func (r *GetListInvoiceInput) Validate() error {
 
 type SendInvoiceRequest struct {
 	IsDraft     bool          `json:"isDraft"`
-	ProjectID   model.UUID    `json:"projectID" binding:"required"`
-	BankID      model.UUID    `json:"bankID" binding:"required"`
+	ProjectID   view.UUID     `json:"projectID" binding:"required"`
+	BankID      view.UUID     `json:"bankID" binding:"required"`
 	Description string        `json:"description"`
 	Note        string        `json:"note"`
 	CC          []string      `json:"cc"`
@@ -79,9 +88,8 @@ type SendInvoiceRequest struct {
 	DueDate     string        `json:"dueDate" binding:"required"`
 	Month       int           `json:"invoiceMonth" binding:"gte=0,lte=11"`
 	Year        int           `json:"invoiceYear" binding:"gte=0"`
-	SentByID    *model.UUID
 	Number      string
-}
+} // @name SendInvoiceRequest
 
 type InvoiceItem struct {
 	Quantity    float64 `json:"quantity"`
@@ -90,7 +98,7 @@ type InvoiceItem struct {
 	Cost        float64 `json:"cost"`
 	Description string  `json:"description"`
 	IsExternal  bool    `json:"isExternal"`
-}
+} // @name InvoiceItem
 
 func toInvoiceItemsModel(lineItems []InvoiceItem) []model.InvoiceItem {
 	var items []model.InvoiceItem
@@ -140,7 +148,7 @@ func (i *SendInvoiceRequest) ValidateAndMappingRequest(c *gin.Context, cfg *conf
 	return nil
 }
 
-func (i *SendInvoiceRequest) ToInvoiceModel() (*model.Invoice, error) {
+func (i *SendInvoiceRequest) ToInvoiceModel(sentByID string) (*model.Invoice, error) {
 	lineItems, err := json.Marshal(toInvoiceItemsModel(i.LineItems))
 	if err != nil {
 		return nil, err
@@ -166,9 +174,18 @@ func (i *SendInvoiceRequest) ToInvoiceModel() (*model.Invoice, error) {
 		return nil, err
 	}
 
+	var senderID *model.UUID
+	if sentByID != "" {
+		s, err := model.UUIDFromString(sentByID)
+		if err != nil {
+			return nil, err
+		}
+		senderID = &s
+	}
+
 	return &model.Invoice{
-		ProjectID:   i.ProjectID,
-		BankID:      i.BankID,
+		ProjectID:   model.UUID(i.ProjectID),
+		BankID:      model.UUID(i.BankID),
 		Description: i.Description,
 		Note:        i.Note,
 		LineItems:   lineItems,
@@ -181,7 +198,7 @@ func (i *SendInvoiceRequest) ToInvoiceModel() (*model.Invoice, error) {
 		Month:       i.Month + 1,
 		Year:        i.Year,
 		Status:      defaultStatus,
-		SentBy:      i.SentByID,
+		SentBy:      senderID,
 		DueAt:       &dueAt,
 		InvoicedAt:  &invoiceAt,
 	}, nil

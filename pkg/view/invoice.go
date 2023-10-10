@@ -38,13 +38,13 @@ type Invoice struct {
 	ConversionRate   float64       `json:"conversionRate"`
 	BankID           string        `json:"bankID"`
 	ProjectID        string        `json:"projectID"`
-}
+} // @name Invoice
 
 type ClientInfo struct {
 	ClientCompany string              `json:"clientCompany"`
 	ClientAddress string              `json:"clientAddress"`
 	Contacts      []ClientContactInfo `json:"contacts"`
-}
+} // @name ClientInfo
 
 type ClientContactInfo struct {
 	ID            string   `json:"id"`
@@ -52,7 +52,7 @@ type ClientContactInfo struct {
 	Role          string   `json:"-"`
 	Emails        []string `json:"emails"`
 	IsMainContact bool     `json:"isMainContact"`
-}
+} // @name ClientContactInfo
 
 type CompanyInfo struct {
 	ID                 string                              `json:"id"`
@@ -60,7 +60,7 @@ type CompanyInfo struct {
 	Description        string                              `json:"description"`
 	RegistrationNumber string                              `json:"registrationNumber"`
 	Info               map[string]model.CompanyContactInfo `json:"info"`
-}
+} // @name CompanyInfo
 
 func ToCompanyInfo(c *model.CompanyInfo) *CompanyInfo {
 	if c == nil {
@@ -89,7 +89,7 @@ type InvoiceItem struct {
 	Cost        float64 `json:"cost"`
 	Description string  `json:"description"`
 	IsExternal  bool    `json:"isExternal"`
-}
+} // @name InvoiceItem
 
 func toInvoiceItem(lineItems model.JSON) ([]InvoiceItem, error) {
 	var items []InvoiceItem
@@ -125,11 +125,11 @@ type ProjectInvoiceTemplate struct {
 	Client        ClientInfo  `json:"client"`
 	BankAccount   BankAccount `json:"bankAccount"`
 	CompanyInfo   CompanyInfo `json:"companyInfo"`
-}
+} // @name ProjectInvoiceTemplate
 
 type InvoiceTemplateResponse struct {
 	Data ProjectInvoiceTemplate `json:"data"`
-}
+} // @name InvoiceTemplateResponse
 
 func ToInvoiceInfo(invoice *model.Invoice) (*Invoice, error) {
 	if invoice != nil {
@@ -272,11 +272,15 @@ type InvoiceData struct {
 	BankAccount BankAccount `json:"bankAccount"`
 	CompanyInfo CompanyInfo `json:"companyInfo"`
 	Client      ClientInfo  `json:"client"`
-}
+} // @name InvoiceData
 
 type InvoiceListResponse struct {
-	Data []InvoiceData `json:"data"`
-}
+	Total int64         `json:"total"`
+	Page  int64         `json:"page"`
+	Size  int64         `json:"size"`
+	Sort  string        `json:"sort"`
+	Data  []InvoiceData `json:"data"`
+} // @name InvoiceListResponse
 
 func ToInvoiceListResponse(invoices []*model.Invoice) ([]InvoiceData, error) {
 	rs := make([]InvoiceData, 0)

@@ -42,6 +42,7 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 // List godoc
 // @Summary Get list feedbacks
 // @Description Get list feedbacks
+// @id getFeedbackList
 // @Tags Feedback
 // @Accept json
 // @Produce json
@@ -49,7 +50,8 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 // @Param status query string false "Status"
 // @Param page query string false "Page"
 // @Param size query string false "Size"
-// @Success 200 {object} view.ListFeedbackResponse
+// @Param sort query string false "Sort"
+// @Success 200 {object} ListFeedbackResponse
 // @Failure 400 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
 // @Router /feedbacks [get]
@@ -71,7 +73,12 @@ func (h *handler) List(c *gin.Context) {
 		return
 	}
 
-	input.Standardize()
+	pagination := model.Pagination{
+		Page: input.Page,
+		Size: input.Size,
+		Sort: input.Sort,
+	}
+	pagination.Standardize()
 
 	l := h.logger.Fields(logger.Fields{
 		"handler": "feedback",
@@ -83,7 +90,7 @@ func (h *handler) List(c *gin.Context) {
 	rs, total, err := h.store.EmployeeEventTopic.GetByEmployeeID(h.repo.DB(),
 		userID,
 		employeeeventtopic.GetByEmployeeIDInput{Status: input.Status},
-		input.Pagination)
+		pagination)
 	if err != nil {
 		l.Error(err, "failed to get employee event topic by employeeID")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
@@ -91,19 +98,20 @@ func (h *handler) List(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToListFeedback(rs),
-		&view.PaginationResponse{Pagination: input.Pagination, Total: total}, nil, nil, ""))
+		&view.PaginationResponse{Pagination: pagination, Total: total}, nil, nil, ""))
 }
 
 // Detail godoc
 // @Summary Get feedback detail for logged-in users
 // @Description Get feedback detail for logged-in users
+// @id getFeedbackDetail
 // @Tags Feedback
 // @Accept json
 // @Produce json
 // @Security BearerAuth
 // @Param id path string true "Feedback Event ID"
 // @Param topicID path string true "Employee Event Topic ID"
-// @Success 200 {object} view.FeedbackDetailResponse
+// @Success 200 {object} FeedbackDetailResponse
 // @Failure 400 {object} ErrorResponse
 // @Failure 404 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
@@ -220,14 +228,15 @@ func (h *handler) Detail(c *gin.Context) {
 // Submit godoc
 // @Summary Submit the draft or done answers
 // @Description Submit the draft or done answers
+// @id submitFeedback
 // @Tags Feedback
 // @Accept json
 // @Produce json
 // @Security BearerAuth
 // @Param id path string true "Feedback Event ID"
 // @Param topicID path string true "Employee Event Topic ID"
-// @Param Body body request.SubmitBody true "Body"
-// @Success 200 {object} view.SubmitFeedbackResponse
+// @Param Body body SubmitFeedbackRequest true "Body"
+// @Success 200 {object} SubmitFeedbackResponse
 // @Failure 400 {object} ErrorResponse
 // @Failure 404 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
@@ -398,11 +407,12 @@ func (h *handler) Submit(c *gin.Context) {
 // CountUnreadFeedback godoc
 // @Summary Get number of unread inbox for user
 // @Description Get number of unread inbox for user
+// @id countUnreadFeedback
 // @Tags Feedback
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {object} view.UnreadFeedbackCountResponse
+// @Success 200 {object} UnreadFeedbackCountResponse
 // @Failure 400 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
 // @Router /feedbacks/unreads [get]

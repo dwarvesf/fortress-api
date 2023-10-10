@@ -24,7 +24,7 @@ type Feedback struct {
 	IsRead          bool               `json:"isRead"`
 	LastUpdated     *time.Time         `json:"lastUpdated"`
 	Author          *BasicEmployeeInfo `json:"author"`
-}
+} // @name Feedback
 
 func ToListFeedback(eTopics []*model.EmployeeEventTopic) []Feedback {
 	var results = make([]Feedback, 0, len(eTopics))
@@ -61,7 +61,7 @@ func ToListFeedback(eTopics []*model.EmployeeEventTopic) []Feedback {
 
 type ListFeedbackResponse struct {
 	Data []Feedback `json:"data"`
-}
+} // @name ListFeedbackResponse
 
 type QuestionAnswer struct {
 	EventQuestionID string               `json:"eventQuestionID"`
@@ -71,7 +71,7 @@ type QuestionAnswer struct {
 	Type            string               `json:"type"`
 	Order           int64                `json:"order"`
 	Domain          model.QuestionDomain `json:"domain"`
-}
+} // @name QuestionAnswer
 
 type FeedBackReviewDetail struct {
 	Questions    []QuestionAnswer  `json:"questions"`
@@ -92,11 +92,11 @@ type FeedbackDetail struct {
 	Title        string            `json:"title"`
 	Relationship string            `json:"relationship"`
 	Project      *BasicProjectInfo `json:"project"`
-}
+} // @name FeedbackDetail
 
 type FeedbackDetailResponse struct {
 	Data FeedbackDetail `json:"data"`
-}
+} // @name FeedbackDetailResponse
 
 type FeedbackDetailInfo struct {
 	Status       model.EventReviewerStatus
@@ -152,11 +152,11 @@ type SubmitFeedback struct {
 	Status     string            `json:"status"`
 	Reviewer   BasicEmployeeInfo `json:"reviewer"`
 	Answers    []*QuestionAnswer `json:"answers"`
-}
+} // @name SubmitFeedback
 
 type SubmitFeedbackResponse struct {
 	Data SubmitFeedback `json:"data"`
-}
+} // @name SubmitFeedbackResponse
 
 func ToListSubmitFeedback(questions []*model.EmployeeEventQuestion, detailInfo FeedbackDetailInfo) SubmitFeedback {
 	var rs SubmitFeedback
@@ -236,12 +236,12 @@ func ToFeedbackReviewDetail(questions []*model.EmployeeEventQuestion, topic *mod
 
 type UnreadFeedbackCountResponse struct {
 	Data UnreadFeedbackCountData `json:"data"`
-}
+} // @name UnreadFeedbackCountResponse
 
 type UnreadFeedbackCountData struct {
 	Count      int64  `json:"count"`
 	ReviewerID string `json:"reviewerID"`
-}
+} // @name UnreadFeedbackCountData
 
 func ToUnreadFeedbackCountData(reviewerID string, count int64) UnreadFeedbackCountData {
 	return UnreadFeedbackCountData{

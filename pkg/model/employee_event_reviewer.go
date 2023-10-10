@@ -21,7 +21,7 @@ type EmployeeEventReviewer struct {
 }
 
 // EventReviewerStatus event_reviewer_status for table employee event reviewer
-type EventReviewerStatus string
+type EventReviewerStatus string // @name EventReviewerStatus
 
 // EventReviewerStatus values
 const (

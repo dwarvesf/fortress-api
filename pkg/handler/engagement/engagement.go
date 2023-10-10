@@ -52,11 +52,12 @@ func New(
 // UpsertRollup godoc
 // @Summary Upsert engagement rollup
 // @Description Upsert engagement rollup
+// @id upsertEngagementRollup
 // @Tags Engagement
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Param Body body request.UpsertRollupRequest true "Body"
+// @Param Body body UpsertRollupRequest true "Body"
 // @Success 200 {object} MessageResponse
 // @Success 400 {object} ErrorResponse
 // @Success 500 {object} ErrorResponse
@@ -157,6 +158,7 @@ func (h *handler) UpsertRollup(c *gin.Context) {
 // GetLastMessageID godoc
 // @Summary Get local last message ID of a channel
 // @Description Get local last message ID of a channel
+// @id getLastMessageID
 // @Tags Engagement
 // @Accept json
 // @Produce json
@@ -264,6 +266,7 @@ func AggregateMessages(
 // IndexMessages godoc
 // @Summary Index messages of provided Discord server
 // @Description Index messages of provided Discord server
+// @id indexEngagementMessages
 // @Tags Engagement
 // @Accept json
 // @Produce json

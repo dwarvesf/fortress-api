@@ -150,7 +150,7 @@ func TestHandler_Submit(t *testing.T) {
 	storeMock := store.New()
 	tests := []struct {
 		name             string
-		body             request.SubmitBody
+		body             request.SubmitFeedbackRequest
 		wantCode         int
 		wantResponsePath string
 		topicID          string
@@ -160,8 +160,8 @@ func TestHandler_Submit(t *testing.T) {
 			name:             "failed_unanswer_question",
 			wantCode:         http.StatusBadRequest,
 			wantResponsePath: "testdata/submit/400_unanswer_question.json",
-			body: request.SubmitBody{
-				Answers: []request.BasicEventQuestionInput{
+			body: request.SubmitFeedbackRequest{
+				Answers: []request.BasicEventQuestionRequest{
 					{
 						EventQuestionID: model.MustGetUUIDFromString("7a94c0f4-81cf-4736-8628-710e25cfc4e7"),
 						Answer:          "ok",
@@ -200,8 +200,8 @@ func TestHandler_Submit(t *testing.T) {
 			name:             "ok_draft",
 			wantCode:         http.StatusOK,
 			wantResponsePath: "testdata/submit/200.json",
-			body: request.SubmitBody{
-				Answers: []request.BasicEventQuestionInput{
+			body: request.SubmitFeedbackRequest{
+				Answers: []request.BasicEventQuestionRequest{
 					{
 						EventQuestionID: model.MustGetUUIDFromString("7a94c0f4-81cf-4736-8628-710e25cfc4e7"),
 						Answer:          "ok",
@@ -240,8 +240,8 @@ func TestHandler_Submit(t *testing.T) {
 			name:             "draft_not_found_topicID",
 			wantCode:         http.StatusNotFound,
 			wantResponsePath: "testdata/submit/404.json",
-			body: request.SubmitBody{
-				Answers: []request.BasicEventQuestionInput{
+			body: request.SubmitFeedbackRequest{
+				Answers: []request.BasicEventQuestionRequest{
 					{
 						EventQuestionID: model.MustGetUUIDFromString("7a94c0f4-81cf-4736-8628-710e25cfc4e7"),
 						Answer:          "ok",
@@ -280,8 +280,8 @@ func TestHandler_Submit(t *testing.T) {
 			name:             "ok_draft_engagement",
 			wantCode:         http.StatusOK,
 			wantResponsePath: "testdata/submit/200_engagement.json",
-			body: request.SubmitBody{
-				Answers: []request.BasicEventQuestionInput{
+			body: request.SubmitFeedbackRequest{
+				Answers: []request.BasicEventQuestionRequest{
 					{
 						EventQuestionID: model.MustGetUUIDFromString("a9b63a36-0134-4aa3-9a9a-edb5a1d52645"),
 						Answer:          "agree",
@@ -342,8 +342,8 @@ func TestHandler_Submit(t *testing.T) {
 			name:             "ok_work",
 			wantCode:         http.StatusOK,
 			wantResponsePath: "testdata/submit/200_work.json",
-			body: request.SubmitBody{
-				Answers: []request.BasicEventQuestionInput{
+			body: request.SubmitFeedbackRequest{
+				Answers: []request.BasicEventQuestionRequest{
 					{
 						EventQuestionID: model.MustGetUUIDFromString("3784e437-c7d6-4142-9007-82a7f18f7d50"),
 						Answer:          model.AgreementLevelMixed.String(),

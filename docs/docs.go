@@ -758,6 +758,7 @@ const docTemplate = `{
                     "Engagement"
                 ],
                 "summary": "Index messages of provided Discord server",
+                "operationId": "indexEngagementMessages",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -2105,6 +2106,7 @@ const docTemplate = `{
                     "Engagement"
                 ],
                 "summary": "Get local last message ID of a channel",
+                "operationId": "getLastMessageID",
                 "parameters": [
                     {
                         "type": "string",
@@ -2154,6 +2156,7 @@ const docTemplate = `{
                     "Engagement"
                 ],
                 "summary": "Upsert engagement rollup",
+                "operationId": "upsertEngagementRollup",
                 "parameters": [
                     {
                         "description": "Body",
@@ -2161,7 +2164,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_handler_engagement_request.UpsertRollupRequest"
+                            "$ref": "#/definitions/UpsertRollupRequest"
                         }
                     }
                 ],
@@ -2205,6 +2208,7 @@ const docTemplate = `{
                     "Feedback"
                 ],
                 "summary": "Get list feedbacks",
+                "operationId": "getFeedbackList",
                 "parameters": [
                     {
                         "type": "string",
@@ -2223,13 +2227,19 @@ const docTemplate = `{
                         "description": "Size",
                         "name": "size",
                         "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Sort",
+                        "name": "sort",
+                        "in": "query"
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.ListFeedbackResponse"
+                            "$ref": "#/definitions/ListFeedbackResponse"
                         }
                     },
                     "400": {
@@ -2265,11 +2275,12 @@ const docTemplate = `{
                     "Feedback"
                 ],
                 "summary": "Get number of unread inbox for user",
+                "operationId": "countUnreadFeedback",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.UnreadFeedbackCountResponse"
+                            "$ref": "#/definitions/UnreadFeedbackCountResponse"
                         }
                     },
                     "400": {
@@ -2305,6 +2316,7 @@ const docTemplate = `{
                     "Feedback"
                 ],
                 "summary": "Get feedback detail for logged-in users",
+                "operationId": "getFeedbackDetail",
                 "parameters": [
                     {
                         "type": "string",
@@ -2325,7 +2337,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.FeedbackDetailResponse"
+                            "$ref": "#/definitions/FeedbackDetailResponse"
                         }
                     },
                     "400": {
@@ -2367,6 +2379,7 @@ const docTemplate = `{
                     "Feedback"
                 ],
                 "summary": "Submit the draft or done answers",
+                "operationId": "submitFeedback",
                 "parameters": [
                     {
                         "type": "string",
@@ -2388,7 +2401,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_handler_feedback_request.SubmitBody"
+                            "$ref": "#/definitions/SubmitFeedbackRequest"
                         }
                     }
                 ],
@@ -2396,7 +2409,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.SubmitFeedbackResponse"
+                            "$ref": "#/definitions/SubmitFeedbackResponse"
                         }
                     },
                     "400": {
@@ -2541,6 +2554,7 @@ const docTemplate = `{
                     "Invoice"
                 ],
                 "summary": "Get latest invoice by project id",
+                "operationId": "getInvoiceList",
                 "parameters": [
                     {
                         "type": "string",
@@ -2553,13 +2567,31 @@ const docTemplate = `{
                         "description": "status",
                         "name": "status",
                         "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "page",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "size",
+                        "name": "size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "sort",
+                        "name": "sort",
+                        "in": "query"
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.InvoiceListResponse"
+                            "$ref": "#/definitions/InvoiceListResponse"
                         }
                     },
                     "400": {
@@ -2590,7 +2622,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Create new invoice and send to clientm",
+                "description": "Create new invoice and send to client",
                 "consumes": [
                     "application/json"
                 ],
@@ -2601,6 +2633,7 @@ const docTemplate = `{
                     "Invoice"
                 ],
                 "summary": "Create new invoice and send to client",
+                "operationId": "sendInvoice",
                 "parameters": [
                     {
                         "description": "body",
@@ -2608,7 +2641,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_handler_invoice_request.SendInvoiceRequest"
+                            "$ref": "#/definitions/SendInvoiceRequest"
                         }
                     }
                 ],
@@ -2658,6 +2691,7 @@ const docTemplate = `{
                     "Invoice"
                 ],
                 "summary": "Get the latest invoice by project id",
+                "operationId": "getInvoiceTemplate",
                 "parameters": [
                     {
                         "type": "string",
@@ -2671,7 +2705,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.InvoiceTemplateResponse"
+                            "$ref": "#/definitions/InvoiceTemplateResponse"
                         }
                     },
                     "400": {
@@ -6601,6 +6635,23 @@ const docTemplate = `{
                 }
             }
         },
+        "BasicEventQuestionRequest": {
+            "type": "object",
+            "required": [
+                "eventQuestionID"
+            ],
+            "properties": {
+                "answer": {
+                    "type": "string"
+                },
+                "eventQuestionID": {
+                    "type": "string"
+                },
+                "note": {
+                    "type": "string"
+                }
+            }
+        },
         "BasicProjectInfo": {
             "type": "object",
             "properties": {
@@ -6754,11 +6805,82 @@ const docTemplate = `{
                 }
             }
         },
+        "ClientContactInfo": {
+            "type": "object",
+            "properties": {
+                "emails": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "id": {
+                    "type": "string"
+                },
+                "isMainContact": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "ClientInfo": {
+            "type": "object",
+            "properties": {
+                "clientAddress": {
+                    "type": "string"
+                },
+                "clientCompany": {
+                    "type": "string"
+                },
+                "contacts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ClientContactInfo"
+                    }
+                }
+            }
+        },
+        "CompanyContactInfo": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                }
+            }
+        },
+        "CompanyInfo": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "info": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/CompanyContactInfo"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                },
+                "registrationNumber": {
+                    "type": "string"
+                }
+            }
+        },
         "ContentDataResponse": {
             "type": "object",
             "properties": {
                 "data": {
-                    "$ref": "#/definitions/pkg_view.ContentData"
+                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.ContentData"
                 }
             }
         },
@@ -6828,7 +6950,7 @@ const docTemplate = `{
                 "contacts": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_handler_client_request.CreateClientContactInput"
+                        "$ref": "#/definitions/pkg_handler_client_request.CreateClientContactInput"
                     }
                 },
                 "country": {
@@ -7087,7 +7209,7 @@ const docTemplate = `{
                 "roles": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/pkg_view.Role"
+                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.Role"
                     }
                 },
                 "seniority": {
@@ -7349,6 +7471,105 @@ const docTemplate = `{
                 }
             }
         },
+        "EventReviewerStatus": {
+            "type": "string",
+            "enum": [
+                "none",
+                "new",
+                "draft",
+                "done"
+            ],
+            "x-enum-varnames": [
+                "EventReviewerStatusNone",
+                "EventReviewerStatusNew",
+                "EventReviewerStatusDraft",
+                "EventReviewerStatusDone"
+            ]
+        },
+        "Feedback": {
+            "type": "object",
+            "properties": {
+                "author": {
+                    "$ref": "#/definitions/BasicEmployeeInfo"
+                },
+                "employeeID": {
+                    "type": "string"
+                },
+                "eventID": {
+                    "type": "string"
+                },
+                "eventReviewerID": {
+                    "type": "string"
+                },
+                "isRead": {
+                    "type": "boolean"
+                },
+                "lastUpdated": {
+                    "type": "string"
+                },
+                "projectID": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "subtype": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "topicID": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "FeedbackDetail": {
+            "type": "object",
+            "properties": {
+                "answers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/QuestionAnswer"
+                    }
+                },
+                "employeeID": {
+                    "type": "string"
+                },
+                "eventID": {
+                    "type": "string"
+                },
+                "project": {
+                    "$ref": "#/definitions/BasicProjectInfo"
+                },
+                "relationship": {
+                    "type": "string"
+                },
+                "reviewer": {
+                    "$ref": "#/definitions/BasicEmployeeInfo"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "topicID": {
+                    "type": "string"
+                }
+            }
+        },
+        "FeedbackDetailResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/FeedbackDetail"
+                }
+            }
+        },
         "GetDashboardResourceUtilizationResponse": {
             "type": "object",
             "properties": {
@@ -7543,6 +7764,250 @@ const docTemplate = `{
                 }
             }
         },
+        "Invoice": {
+            "type": "object",
+            "properties": {
+                "bankID": {
+                    "type": "string"
+                },
+                "cc": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "conversionAmount": {
+                    "type": "number"
+                },
+                "conversionRate": {
+                    "type": "number"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "discount": {
+                    "type": "number"
+                },
+                "dueAt": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "errorInvoiceID": {
+                    "type": "string"
+                },
+                "failedAt": {
+                    "type": "string"
+                },
+                "invoiceFileURL": {
+                    "type": "string"
+                },
+                "invoicedAt": {
+                    "type": "string"
+                },
+                "lineItems": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/InvoiceItem"
+                    }
+                },
+                "month": {
+                    "type": "integer"
+                },
+                "note": {
+                    "type": "string"
+                },
+                "number": {
+                    "type": "string"
+                },
+                "paidAt": {
+                    "type": "string"
+                },
+                "projectID": {
+                    "type": "string"
+                },
+                "scheduledDate": {
+                    "type": "string"
+                },
+                "sentBy": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "subTotal": {
+                    "type": "number"
+                },
+                "tax": {
+                    "type": "number"
+                },
+                "threadID": {
+                    "type": "string"
+                },
+                "total": {
+                    "type": "number"
+                },
+                "year": {
+                    "type": "integer"
+                }
+            }
+        },
+        "InvoiceData": {
+            "type": "object",
+            "properties": {
+                "bankAccount": {
+                    "$ref": "#/definitions/BankAccount"
+                },
+                "bankID": {
+                    "type": "string"
+                },
+                "cc": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "client": {
+                    "$ref": "#/definitions/ClientInfo"
+                },
+                "companyInfo": {
+                    "$ref": "#/definitions/CompanyInfo"
+                },
+                "conversionAmount": {
+                    "type": "number"
+                },
+                "conversionRate": {
+                    "type": "number"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "discount": {
+                    "type": "number"
+                },
+                "dueAt": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "errorInvoiceID": {
+                    "type": "string"
+                },
+                "failedAt": {
+                    "type": "string"
+                },
+                "invoiceFileURL": {
+                    "type": "string"
+                },
+                "invoicedAt": {
+                    "type": "string"
+                },
+                "lineItems": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/InvoiceItem"
+                    }
+                },
+                "month": {
+                    "type": "integer"
+                },
+                "note": {
+                    "type": "string"
+                },
+                "number": {
+                    "type": "string"
+                },
+                "paidAt": {
+                    "type": "string"
+                },
+                "projectID": {
+                    "type": "string"
+                },
+                "projectName": {
+                    "type": "string"
+                },
+                "scheduledDate": {
+                    "type": "string"
+                },
+                "sentBy": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "subTotal": {
+                    "type": "number"
+                },
+                "tax": {
+                    "type": "number"
+                },
+                "threadID": {
+                    "type": "string"
+                },
+                "total": {
+                    "type": "number"
+                },
+                "year": {
+                    "type": "integer"
+                }
+            }
+        },
+        "InvoiceItem": {
+            "type": "object",
+            "properties": {
+                "cost": {
+                    "type": "number"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "discount": {
+                    "type": "number"
+                },
+                "isExternal": {
+                    "type": "boolean"
+                },
+                "quantity": {
+                    "type": "number"
+                },
+                "unitCost": {
+                    "type": "number"
+                }
+            }
+        },
+        "InvoiceListResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/InvoiceData"
+                    }
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "size": {
+                    "type": "integer"
+                },
+                "sort": {
+                    "type": "string"
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "InvoiceTemplateResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/ProjectInvoiceTemplate"
+                }
+            }
+        },
         "ItemValue": {
             "type": "object",
             "properties": {
@@ -7572,6 +8037,17 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/BankAccount"
+                    }
+                }
+            }
+        },
+        "ListFeedbackResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Feedback"
                     }
                 }
             }
@@ -7710,7 +8186,7 @@ const docTemplate = `{
                     }
                 },
                 "companyInfo": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.CompanyInfo"
+                    "$ref": "#/definitions/CompanyInfo"
                 },
                 "companyInfoID": {
                     "type": "string"
@@ -7864,6 +8340,32 @@ const docTemplate = `{
                     }
                 },
                 "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "ProjectInvoiceTemplate": {
+            "type": "object",
+            "properties": {
+                "bankAccount": {
+                    "$ref": "#/definitions/BankAccount"
+                },
+                "client": {
+                    "$ref": "#/definitions/ClientInfo"
+                },
+                "companyInfo": {
+                    "$ref": "#/definitions/CompanyInfo"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "invoiceNumber": {
+                    "type": "string"
+                },
+                "lastInvoice": {
+                    "$ref": "#/definitions/Invoice"
+                },
+                "name": {
                     "type": "string"
                 }
             }
@@ -8072,6 +8574,32 @@ const docTemplate = `{
                 }
             }
         },
+        "QuestionAnswer": {
+            "type": "object",
+            "properties": {
+                "answer": {
+                    "type": "string"
+                },
+                "content": {
+                    "type": "string"
+                },
+                "domain": {
+                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.QuestionDomain"
+                },
+                "eventQuestionID": {
+                    "type": "string"
+                },
+                "note": {
+                    "type": "string"
+                },
+                "order": {
+                    "type": "integer"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
         "ResourceAvailability": {
             "type": "object",
             "properties": {
@@ -8114,6 +8642,82 @@ const docTemplate = `{
                 }
             }
         },
+        "SendInvoiceRequest": {
+            "type": "object",
+            "required": [
+                "bankID",
+                "dueDate",
+                "email",
+                "invoiceDate",
+                "projectID"
+            ],
+            "properties": {
+                "bankID": {
+                    "type": "string"
+                },
+                "cc": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "description": {
+                    "type": "string"
+                },
+                "discount": {
+                    "type": "number",
+                    "minimum": 0
+                },
+                "dueDate": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "invoiceDate": {
+                    "type": "string"
+                },
+                "invoiceMonth": {
+                    "type": "integer",
+                    "maximum": 11,
+                    "minimum": 0
+                },
+                "invoiceYear": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "isDraft": {
+                    "type": "boolean"
+                },
+                "lineItems": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/InvoiceItem"
+                    }
+                },
+                "note": {
+                    "type": "string"
+                },
+                "number": {
+                    "type": "string"
+                },
+                "projectID": {
+                    "type": "string"
+                },
+                "subtotal": {
+                    "type": "number",
+                    "minimum": 0
+                },
+                "tax": {
+                    "type": "number",
+                    "minimum": 0
+                },
+                "total": {
+                    "type": "number",
+                    "minimum": 0
+                }
+            }
+        },
         "Seniority": {
             "type": "object",
             "properties": {
@@ -8142,6 +8746,61 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string"
+                }
+            }
+        },
+        "SubmitFeedback": {
+            "type": "object",
+            "properties": {
+                "answers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/QuestionAnswer"
+                    }
+                },
+                "employeeID": {
+                    "type": "string"
+                },
+                "eventID": {
+                    "type": "string"
+                },
+                "reviewer": {
+                    "$ref": "#/definitions/BasicEmployeeInfo"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "topicID": {
+                    "type": "string"
+                }
+            }
+        },
+        "SubmitFeedbackRequest": {
+            "type": "object",
+            "required": [
+                "answers",
+                "status"
+            ],
+            "properties": {
+                "answers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/BasicEventQuestionRequest"
+                    }
+                },
+                "status": {
+                    "$ref": "#/definitions/EventReviewerStatus"
+                }
+            }
+        },
+        "SubmitFeedbackResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/SubmitFeedback"
                 }
             }
         },
@@ -8181,6 +8840,25 @@ const docTemplate = `{
                 },
                 "workload": {
                     "type": "number"
+                }
+            }
+        },
+        "UnreadFeedbackCountData": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "reviewerID": {
+                    "type": "string"
+                }
+            }
+        },
+        "UnreadFeedbackCountResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/UnreadFeedbackCountData"
                 }
             }
         },
@@ -8231,7 +8909,7 @@ const docTemplate = `{
                 "contacts": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_handler_client_request.UpdateClientContactInput"
+                        "$ref": "#/definitions/pkg_handler_client_request.UpdateClientContactInput"
                     }
                 },
                 "country": {
@@ -8590,6 +9268,34 @@ const docTemplate = `{
                 }
             }
         },
+        "UpsertRollupRequest": {
+            "type": "object",
+            "required": [
+                "channelID",
+                "discordUserID",
+                "lastMessageID"
+            ],
+            "properties": {
+                "categoryID": {
+                    "type": "string"
+                },
+                "channelID": {
+                    "type": "string"
+                },
+                "discordUserID": {
+                    "type": "string"
+                },
+                "lastMessageID": {
+                    "type": "string"
+                },
+                "messageCount": {
+                    "type": "integer"
+                },
+                "reactionCount": {
+                    "type": "integer"
+                }
+            }
+        },
         "WorkSurvey": {
             "type": "object",
             "properties": {
@@ -8828,211 +9534,6 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/WorkUnitDistributionData"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_handler_client_request.CreateClientContactInput": {
-            "type": "object",
-            "properties": {
-                "emails": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "isMainContact": {
-                    "type": "boolean"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "role": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_handler_client_request.UpdateClientContactInput": {
-            "type": "object",
-            "properties": {
-                "emails": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "isMainContact": {
-                    "type": "boolean"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "role": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_handler_engagement_request.UpsertRollupRequest": {
-            "type": "object",
-            "required": [
-                "channelID",
-                "discordUserID",
-                "lastMessageID"
-            ],
-            "properties": {
-                "categoryID": {
-                    "type": "string"
-                },
-                "channelID": {
-                    "type": "string"
-                },
-                "discordUserID": {
-                    "type": "string"
-                },
-                "lastMessageID": {
-                    "type": "string"
-                },
-                "messageCount": {
-                    "type": "integer"
-                },
-                "reactionCount": {
-                    "type": "integer"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_handler_feedback_request.BasicEventQuestionInput": {
-            "type": "object",
-            "required": [
-                "eventQuestionID"
-            ],
-            "properties": {
-                "answer": {
-                    "type": "string"
-                },
-                "eventQuestionID": {
-                    "type": "string"
-                },
-                "note": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_handler_feedback_request.SubmitBody": {
-            "type": "object",
-            "required": [
-                "answers",
-                "status"
-            ],
-            "properties": {
-                "answers": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_handler_feedback_request.BasicEventQuestionInput"
-                    }
-                },
-                "status": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.EventReviewerStatus"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_handler_invoice_request.InvoiceItem": {
-            "type": "object",
-            "properties": {
-                "cost": {
-                    "type": "number"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "discount": {
-                    "type": "number"
-                },
-                "isExternal": {
-                    "type": "boolean"
-                },
-                "quantity": {
-                    "type": "number"
-                },
-                "unitCost": {
-                    "type": "number"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_handler_invoice_request.SendInvoiceRequest": {
-            "type": "object",
-            "required": [
-                "bankID",
-                "dueDate",
-                "email",
-                "invoiceDate",
-                "projectID"
-            ],
-            "properties": {
-                "bankID": {
-                    "type": "string"
-                },
-                "cc": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "description": {
-                    "type": "string"
-                },
-                "discount": {
-                    "type": "number",
-                    "minimum": 0
-                },
-                "dueDate": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "invoiceDate": {
-                    "type": "string"
-                },
-                "invoiceMonth": {
-                    "type": "integer",
-                    "maximum": 11,
-                    "minimum": 0
-                },
-                "invoiceYear": {
-                    "type": "integer",
-                    "minimum": 0
-                },
-                "isDraft": {
-                    "type": "boolean"
-                },
-                "lineItems": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_handler_invoice_request.InvoiceItem"
-                    }
-                },
-                "note": {
-                    "type": "string"
-                },
-                "number": {
-                    "type": "string"
-                },
-                "projectID": {
-                    "type": "string"
-                },
-                "sentByID": {
-                    "type": "string"
-                },
-                "subtotal": {
-                    "type": "number",
-                    "minimum": 0
-                },
-                "tax": {
-                    "type": "number",
-                    "minimum": 0
-                },
-                "total": {
-                    "type": "number",
-                    "minimum": 0
                 }
             }
         },
@@ -9747,32 +10248,6 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_dwarvesf_fortress-api_pkg_model.CompanyContactInfo": {
-            "type": "object",
-            "properties": {
-                "address": {
-                    "type": "string"
-                },
-                "phone": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_model.EventReviewerStatus": {
-            "type": "string",
-            "enum": [
-                "none",
-                "new",
-                "draft",
-                "done"
-            ],
-            "x-enum-varnames": [
-                "EventReviewerStatusNone",
-                "EventReviewerStatusNew",
-                "EventReviewerStatusDraft",
-                "EventReviewerStatusDone"
-            ]
-        },
         "github_com_dwarvesf_fortress-api_pkg_model.HeadPosition": {
             "type": "string",
             "enum": [
@@ -10281,62 +10756,10 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_dwarvesf_fortress-api_pkg_view.ClientContactInfo": {
+        "github_com_dwarvesf_fortress-api_pkg_view.ContentData": {
             "type": "object",
             "properties": {
-                "emails": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "id": {
-                    "type": "string"
-                },
-                "isMainContact": {
-                    "type": "boolean"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.ClientInfo": {
-            "type": "object",
-            "properties": {
-                "clientAddress": {
-                    "type": "string"
-                },
-                "clientCompany": {
-                    "type": "string"
-                },
-                "contacts": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.ClientContactInfo"
-                    }
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.CompanyInfo": {
-            "type": "object",
-            "properties": {
-                "description": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "info": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.CompanyContactInfo"
-                    }
-                },
-                "name": {
-                    "type": "string"
-                },
-                "registrationNumber": {
+                "url": {
                     "type": "string"
                 }
             }
@@ -10568,7 +10991,7 @@ const docTemplate = `{
                 "questions": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.QuestionAnswer"
+                        "$ref": "#/definitions/QuestionAnswer"
                     }
                 },
                 "relationship": {
@@ -10578,47 +11001,6 @@ const docTemplate = `{
                     "$ref": "#/definitions/BasicEmployeeInfo"
                 },
                 "topicName": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.Feedback": {
-            "type": "object",
-            "properties": {
-                "author": {
-                    "$ref": "#/definitions/BasicEmployeeInfo"
-                },
-                "employeeID": {
-                    "type": "string"
-                },
-                "eventID": {
-                    "type": "string"
-                },
-                "eventReviewerID": {
-                    "type": "string"
-                },
-                "isRead": {
-                    "type": "boolean"
-                },
-                "lastUpdated": {
-                    "type": "string"
-                },
-                "projectID": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "subtype": {
-                    "type": "string"
-                },
-                "title": {
-                    "type": "string"
-                },
-                "topicID": {
-                    "type": "string"
-                },
-                "type": {
                     "type": "string"
                 }
             }
@@ -10634,49 +11016,6 @@ const docTemplate = `{
                 },
                 "total": {
                     "type": "integer"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.FeedbackDetail": {
-            "type": "object",
-            "properties": {
-                "answers": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.QuestionAnswer"
-                    }
-                },
-                "employeeID": {
-                    "type": "string"
-                },
-                "eventID": {
-                    "type": "string"
-                },
-                "project": {
-                    "$ref": "#/definitions/BasicProjectInfo"
-                },
-                "relationship": {
-                    "type": "string"
-                },
-                "reviewer": {
-                    "$ref": "#/definitions/BasicEmployeeInfo"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "title": {
-                    "type": "string"
-                },
-                "topicID": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.FeedbackDetailResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.FeedbackDetail"
                 }
             }
         },
@@ -10733,249 +11072,6 @@ const docTemplate = `{
                 },
                 "username": {
                     "type": "string"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.Invoice": {
-            "type": "object",
-            "properties": {
-                "bankID": {
-                    "type": "string"
-                },
-                "cc": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "conversionAmount": {
-                    "type": "number"
-                },
-                "conversionRate": {
-                    "type": "number"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "discount": {
-                    "type": "number"
-                },
-                "dueAt": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "errorInvoiceID": {
-                    "type": "string"
-                },
-                "failedAt": {
-                    "type": "string"
-                },
-                "invoiceFileURL": {
-                    "type": "string"
-                },
-                "invoicedAt": {
-                    "type": "string"
-                },
-                "lineItems": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.InvoiceItem"
-                    }
-                },
-                "month": {
-                    "type": "integer"
-                },
-                "note": {
-                    "type": "string"
-                },
-                "number": {
-                    "type": "string"
-                },
-                "paidAt": {
-                    "type": "string"
-                },
-                "projectID": {
-                    "type": "string"
-                },
-                "scheduledDate": {
-                    "type": "string"
-                },
-                "sentBy": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "subTotal": {
-                    "type": "number"
-                },
-                "tax": {
-                    "type": "number"
-                },
-                "threadID": {
-                    "type": "string"
-                },
-                "total": {
-                    "type": "number"
-                },
-                "year": {
-                    "type": "integer"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.InvoiceData": {
-            "type": "object",
-            "properties": {
-                "bankAccount": {
-                    "$ref": "#/definitions/BankAccount"
-                },
-                "bankID": {
-                    "type": "string"
-                },
-                "cc": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "client": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.ClientInfo"
-                },
-                "companyInfo": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.CompanyInfo"
-                },
-                "conversionAmount": {
-                    "type": "number"
-                },
-                "conversionRate": {
-                    "type": "number"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "discount": {
-                    "type": "number"
-                },
-                "dueAt": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "errorInvoiceID": {
-                    "type": "string"
-                },
-                "failedAt": {
-                    "type": "string"
-                },
-                "invoiceFileURL": {
-                    "type": "string"
-                },
-                "invoicedAt": {
-                    "type": "string"
-                },
-                "lineItems": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.InvoiceItem"
-                    }
-                },
-                "month": {
-                    "type": "integer"
-                },
-                "note": {
-                    "type": "string"
-                },
-                "number": {
-                    "type": "string"
-                },
-                "paidAt": {
-                    "type": "string"
-                },
-                "projectID": {
-                    "type": "string"
-                },
-                "projectName": {
-                    "type": "string"
-                },
-                "scheduledDate": {
-                    "type": "string"
-                },
-                "sentBy": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "subTotal": {
-                    "type": "number"
-                },
-                "tax": {
-                    "type": "number"
-                },
-                "threadID": {
-                    "type": "string"
-                },
-                "total": {
-                    "type": "number"
-                },
-                "year": {
-                    "type": "integer"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.InvoiceItem": {
-            "type": "object",
-            "properties": {
-                "cost": {
-                    "type": "number"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "discount": {
-                    "type": "number"
-                },
-                "isExternal": {
-                    "type": "boolean"
-                },
-                "quantity": {
-                    "type": "number"
-                },
-                "unitCost": {
-                    "type": "number"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.InvoiceListResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.InvoiceData"
-                    }
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.InvoiceTemplateResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.ProjectInvoiceTemplate"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.ListFeedbackResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.Feedback"
-                    }
                 }
             }
         },
@@ -11050,7 +11146,7 @@ const docTemplate = `{
                     "$ref": "#/definitions/BasicEmployeeInfo"
                 },
                 "status": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.EventReviewerStatus"
+                    "$ref": "#/definitions/EventReviewerStatus"
                 }
             }
         },
@@ -11340,32 +11436,6 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_dwarvesf_fortress-api_pkg_view.ProjectInvoiceTemplate": {
-            "type": "object",
-            "properties": {
-                "bankAccount": {
-                    "$ref": "#/definitions/BankAccount"
-                },
-                "client": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.ClientInfo"
-                },
-                "companyInfo": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.CompanyInfo"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "invoiceNumber": {
-                    "type": "string"
-                },
-                "lastInvoice": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.Invoice"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
         "github_com_dwarvesf_fortress-api_pkg_view.ProjectListDataResponse": {
             "type": "object",
             "properties": {
@@ -11405,32 +11475,6 @@ const docTemplate = `{
                 },
                 "subcategory": {
                     "type": "string"
-                },
-                "type": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.QuestionAnswer": {
-            "type": "object",
-            "properties": {
-                "answer": {
-                    "type": "string"
-                },
-                "content": {
-                    "type": "string"
-                },
-                "domain": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.QuestionDomain"
-                },
-                "eventQuestionID": {
-                    "type": "string"
-                },
-                "note": {
-                    "type": "string"
-                },
-                "order": {
-                    "type": "integer"
                 },
                 "type": {
                     "type": "string"
@@ -11481,43 +11525,6 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Stack"
                     }
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.SubmitFeedback": {
-            "type": "object",
-            "properties": {
-                "answers": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.QuestionAnswer"
-                    }
-                },
-                "employeeID": {
-                    "type": "string"
-                },
-                "eventID": {
-                    "type": "string"
-                },
-                "reviewer": {
-                    "$ref": "#/definitions/BasicEmployeeInfo"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "title": {
-                    "type": "string"
-                },
-                "topicID": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.SubmitFeedbackResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.SubmitFeedback"
                 }
             }
         },
@@ -11669,25 +11676,6 @@ const docTemplate = `{
                 },
                 "type": {
                     "type": "string"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.UnreadFeedbackCountData": {
-            "type": "object",
-            "properties": {
-                "count": {
-                    "type": "integer"
-                },
-                "reviewerID": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.UnreadFeedbackCountResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.UnreadFeedbackCountData"
                 }
             }
         },
@@ -11943,6 +11931,46 @@ const docTemplate = `{
                 }
             }
         },
+        "pkg_handler_client_request.CreateClientContactInput": {
+            "type": "object",
+            "properties": {
+                "emails": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "isMainContact": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "role": {
+                    "type": "string"
+                }
+            }
+        },
+        "pkg_handler_client_request.UpdateClientContactInput": {
+            "type": "object",
+            "properties": {
+                "emails": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "isMainContact": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "role": {
+                    "type": "string"
+                }
+            }
+        },
         "pkg_view.ApiError": {
             "description": "validation error details",
             "type": "object",
@@ -11999,14 +12027,6 @@ const docTemplate = `{
                 }
             }
         },
-        "pkg_view.ContentData": {
-            "type": "object",
-            "properties": {
-                "url": {
-                    "type": "string"
-                }
-            }
-        },
         "pkg_view.Post": {
             "type": "object",
             "properties": {
@@ -12023,20 +12043,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "url": {
-                    "type": "string"
-                }
-            }
-        },
-        "pkg_view.Role": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "name": {
                     "type": "string"
                 }
             }
