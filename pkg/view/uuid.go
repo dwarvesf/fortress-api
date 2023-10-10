@@ -75,3 +75,8 @@ func (u UUID) Value() (driver.Value, error) {
 	}
 	return uuid.UUID(u).String(), nil
 }
+
+func UUIDFromString(s string) (UUID, error) {
+	id, err := uuid.FromString(s)
+	return UUID(id), err
+}

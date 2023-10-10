@@ -8,39 +8,43 @@ type MetaData struct {
 	ID   string `json:"id"`
 	Code string `json:"code"`
 	Name string `json:"name"`
-}
+} // @name MetaData
+
+type MetadataResponse struct {
+	Data []MetaData `json:"data"`
+} // @name MetaDataResponse
 
 type SeniorityResponse struct {
 	Data []model.Seniority `json:"data"`
-}
+} // @name SeniorityResponse
 
 type ChapterResponse struct {
 	Data []model.Chapter `json:"data"`
-}
+} // @name ChapterResponse
 
 type StackResponse struct {
 	Data []model.Stack `json:"data"`
-}
+} // @name StackResponse
 
 type RolesResponse struct {
 	Data []model.Role `json:"data"`
-}
+} // @name RolesResponse
 
 type PositionResponse struct {
 	Data []model.Position `json:"data"`
-}
+} // @name PositionResponse
 
 type CountriesResponse struct {
 	Data []Country `json:"data"`
-}
+} // @name CountriesResponse
 
 type CitiesResponse struct {
 	Data []string `json:"data"`
-}
+} // @name CitiesResponse
 
 type OrganizationsResponse struct {
 	Data []model.Organization `json:"data"`
-}
+} // @name OrganizationsResponse
 
 // Question model question for get list question api
 type Question struct {
@@ -55,7 +59,7 @@ type Question struct {
 // GetQuestionResponse response for get question api
 type GetQuestionResponse struct {
 	Data []Question `json:"data"`
-}
+} // @name GetQuestionResponse
 
 func ToListQuestion(questions []*model.Question) []*Question {
 	var rs []*Question

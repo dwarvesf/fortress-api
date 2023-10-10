@@ -632,7 +632,7 @@ type EmployeeInvitationData struct {
 	IsBasecampAccountCreated bool                 `json:"isBasecampAccountCreated"`
 	IsTeamEmailCreated       bool                 `json:"isTeamEmailCreated"`
 	EmployeeData             *InvitedEmployeeInfo `json:"employee"`
-}
+} // @name EmployeeInvitationData
 
 type InvitedEmployeeInfo struct {
 	ID            string `json:"id"`
@@ -642,11 +642,11 @@ type InvitedEmployeeInfo struct {
 	Username      string `json:"username"`
 	TeamEmail     string `json:"teamEmail"`
 	PersonalEmail string `json:"personalEmail"`
-}
+} // @name InvitedEmployeeInfo
 
 type EmployeeInvitationResponse struct {
 	Data *EmployeeInvitationData `json:"data"`
-}
+} // @name EmployeeInvitationResponse
 
 func ToBasicEmployeeInvitationData(in *model.EmployeeInvitation) *EmployeeInvitationData {
 	rs := &EmployeeInvitationData{
