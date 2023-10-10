@@ -214,7 +214,7 @@ type BasicEmployeeInfo struct {
 	DisplayName string `json:"displayName"`
 	Avatar      string `json:"avatar"`
 	Username    string `json:"username"`
-}
+} // @name BasicEmployeeInfo
 
 type UpdateEmployeeStatusResponse struct {
 	Data EmployeeData `json:"data"`

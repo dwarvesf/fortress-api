@@ -43,11 +43,12 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 // GetProjectSizes godoc
 // @Summary Get the total number of active member in each project
 // @Description Get the total number of active member in each project
+// @id getProjectSizeList
 // @Tags Dashboard
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {object} view.ProjectSizeResponse
+// @Success 200 {object} ProjectSizeResponse
 // @Failure 500 {object} ErrorResponse
 // @Router /dashboards/projects/sizes [get]
 func (h *handler) GetProjectSizes(c *gin.Context) {
@@ -63,18 +64,19 @@ func (h *handler) GetProjectSizes(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse[any](res, nil, nil, nil, ""))
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToProjectSizes(res), nil, nil, nil, ""))
 }
 
 // GetWorkSurveys godoc
 // @Summary Get Work Surveys data for dashboard
 // @Description Get Work Surveys data for dashboard
+// @id getWorkSurveyList
 // @Tags Dashboard
 // @Accept json
 // @Produce json
 // @Security BearerAuth
 // @Param projectID   query  string false  "Project ID"
-// @Success 200 {object} view.WorkSurveyResponse
+// @Success 200 {object} WorkSurveyResponse
 // @Failure 400 {object} ErrorResponse
 // @Failure 404 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
@@ -138,12 +140,13 @@ func (h *handler) GetWorkSurveys(c *gin.Context) {
 // GetActionItemReports godoc
 // @Summary Get Action items report for dashboard
 // @Description Get Action items report for dashboard
+// @id getActionItemReportList
 // @Tags Dashboard
 // @Accept json
 // @Produce json
 // @Security BearerAuth
 // @Param projectID   query  string false  "Project ID"
-// @Success 200 {object} view.ActionItemReportResponse
+// @Success 200 {object} ActionItemReportResponse
 // @Failure 400 {object} ErrorResponse
 // @Failure 404 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
@@ -219,12 +222,13 @@ func (h *handler) GetActionItemReports(c *gin.Context) {
 // GetEngineeringHealth godoc
 // @Summary Get Engineering health information for dashboard
 // @Description Get Engineering health information for dashboard
+// @id getEngineeringHealth
 // @Tags Dashboard
 // @Accept json
 // @Produce json
 // @Security BearerAuth
 // @Param projectID   query  string false  "Project ID"
-// @Success 200 {object} view.EngineeringHealthResponse
+// @Success 200 {object} EngineeringHealthResponse
 // @Failure 400 {object} ErrorResponse
 // @Failure 404 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
@@ -314,12 +318,13 @@ func (h *handler) GetEngineeringHealth(c *gin.Context) {
 // GetAudits godoc
 // @Summary Get Audit information for dashboard
 // @Description Get Audit information for dashboard
+// @id getAuditList
 // @Tags Dashboard
 // @Accept json
 // @Produce json
 // @Security BearerAuth
 // @Param projectID   query  string false  "Project ID"
-// @Success 200 {object} view.AuditResponse
+// @Success 200 {object} AuditResponse
 // @Failure 400 {object} ErrorResponse
 // @Failure 404 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
@@ -409,12 +414,13 @@ func (h *handler) GetAudits(c *gin.Context) {
 // GetActionItemSquashReports godoc
 // @Summary Get Action items squash report for dashboard
 // @Description Get Action items squash report for dashboard
+// @id getActionItemSquashReportList
 // @Tags Dashboard
 // @Accept json
 // @Produce json
 // @Security BearerAuth
 // @Param projectID   query  string false  "Project ID"
-// @Success 200 {object} view.ActionItemSquashReportResponse
+// @Success 200 {object} ActionItemSquashReportResponse
 // @Failure 400 {object} ErrorResponse
 // @Failure 404 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
@@ -476,11 +482,12 @@ func (h *handler) GetActionItemSquashReports(c *gin.Context) {
 // GetSummary godoc
 // @Summary Get the summary audit info for projects
 // @Description Get the summary audit info for projects
+// @id getProjectSummary
 // @Tags Dashboard
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {object} view.AuditSummariesResponse
+// @Success 200 {object} AuditSummariesResponse
 // @Failure 400 {object} ErrorResponse
 // @Failure 404 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
@@ -539,11 +546,12 @@ func (h *handler) GetSummary(c *gin.Context) {
 // GetResourcesAvailability godoc
 // @Summary Get resources availability
 // @Description Get resources availability
+// @id getResourcesAvailability
 // @Tags Dashboard
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {object} view.ResourceAvailabilityResponse
+// @Success 200 {object} ResourceAvailabilityResponse
 // @Failure 500 {object} ErrorResponse
 // @Router /dashboards/resources/availabilities [get]
 func (h *handler) GetResourcesAvailability(c *gin.Context) {
@@ -572,11 +580,12 @@ func (h *handler) GetResourcesAvailability(c *gin.Context) {
 // GetEngagementInfo godoc
 // @Summary Get engagement dashboard
 // @Description Get engagement dashboard
+// @id getEngagementInfo
 // @Tags Dashboard
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {object} view.GetEngagementDashboardResponse
+// @Success 200 {object} GetEngagementDashboardResponse
 // @Failure 500 {object} ErrorResponse
 // @Router /dashboards/engagement/info [get]
 func (h *handler) GetEngagementInfo(c *gin.Context) {
@@ -610,13 +619,14 @@ func (h *handler) GetEngagementInfo(c *gin.Context) {
 // GetEngagementInfoDetail godoc
 // @Summary Get engagement dashboard
 // @Description Get engagement dashboard
+// @id getEngagementInfoDetailList
 // @Tags Dashboard
 // @Accept json
 // @Produce json
 // @Security BearerAuth
 // @Param filter  query  string true  "chapter/seniority/project"
 // @Param startDate  query  string true  "startDate"
-// @Success 200 {object} view.GetEngagementDashboardDetailResponse
+// @Success 200 {object} GetEngagementDashboardDetailResponse
 // @Failure 500 {object} ErrorResponse
 // @Router /dashboards/engagement/detail [get]
 func (h *handler) GetEngagementInfoDetail(c *gin.Context) {
@@ -656,11 +666,12 @@ func (h *handler) GetEngagementInfoDetail(c *gin.Context) {
 // GetResourceUtilization godoc
 // @Summary Get dashboard resource utilization
 // @Description Get dashboard resource utilization
+// @id getResourceUtilizationList
 // @Tags Dashboard
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {object} view.GetDashboardResourceUtilizationResponse
+// @Success 200 {object} GetDashboardResourceUtilizationResponse
 // @Failure 500 {object} ErrorResponse
 // @Router /dashboards/resources/utilization [get]
 func (h *handler) GetResourceUtilization(c *gin.Context) {
@@ -676,17 +687,18 @@ func (h *handler) GetResourceUtilization(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse[any](res, nil, nil, nil, ""))
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToReSourceUtilizations(res), nil, nil, nil, ""))
 }
 
 // GetWorkUnitDistributionSummary godoc
 // @Summary Get summary for workunit distribution dashboard
 // @Description Get summary for workunit distribution dashboard
+// @id getWorkUnitDistributionSummary
 // @Tags Dashboard
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {object} view.SummaryWorkUnitDistributionResponse
+// @Success 200 {object} SummaryWorkUnitDistributionResponse
 // @Failure 500 {object} ErrorResponse
 // @Router /dashboards/resources/work-unit-distribution-summary [get]
 func (h *handler) GetWorkUnitDistributionSummary(c *gin.Context) {
@@ -709,6 +721,7 @@ func (h *handler) GetWorkUnitDistributionSummary(c *gin.Context) {
 // GetWorkUnitDistribution godoc
 // @Summary Get work unit distribution data for dashboard
 // @Description Get work unit distribution data for dashboard
+// @id getWorkUnitDistributionList
 // @Tags Dashboard
 // @Accept json
 // @Produce json
@@ -716,7 +729,7 @@ func (h *handler) GetWorkUnitDistributionSummary(c *gin.Context) {
 // @Param name   query  string false  "employee name for filter"
 // @Param sort   query  string false  "sort required"
 // @Param type   query  string false  "work unit type for filter"
-// @Success 200 {object} view.WorkUnitDistributionsResponse
+// @Success 200 {object} WorkUnitDistributionsResponse
 // @Failure 400 {object} ErrorResponse
 // @Failure 404 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
@@ -760,6 +773,7 @@ func (h *handler) GetWorkUnitDistribution(c *gin.Context) {
 // GetResourceWorkSurveySummaries godoc
 // @Summary Get resource work summaries for dashboard
 // @Description Get resource work summaries for dashboard
+// @id getResourceWorkSurveySummaryList
 // @Tags Dashboard
 // @Accept json
 // @Produce json
@@ -767,7 +781,7 @@ func (h *handler) GetWorkUnitDistribution(c *gin.Context) {
 // @Param keyword query string false "Keyword"
 // @Param page query string false "Page"
 // @Param size query string false "Size"
-// @Success 200 {object} view.WorkSurveySummaryResponse
+// @Success 200 {object} WorkSurveySummaryResponse
 // @Failure 400 {object} ErrorResponse
 // @Failure 404 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse

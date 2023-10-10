@@ -1025,7 +1025,7 @@ type BasicProjectInfo struct {
 	Status string `json:"status"`
 	Code   string `json:"code"`
 	Avatar string `json:"avatar"`
-}
+} // @name BasicProjectInfo
 
 func toBasicProjectInfo(project model.Project) *BasicProjectInfo {
 	return &BasicProjectInfo{
