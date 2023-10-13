@@ -1,7 +1,7 @@
 package employee
 
 import (
-	errors "errors"
+	"errors"
 	"gorm.io/gorm"
 
 	"github.com/dwarvesf/fortress-api/pkg/model"
@@ -94,7 +94,6 @@ func (r *controller) ListByDiscordRequest(discordID, email, key string, userInfo
 		if err != nil {
 			return nil, err
 		}
-
 		if len(dt) <= 0 {
 			in.Keyword = key
 		} else {

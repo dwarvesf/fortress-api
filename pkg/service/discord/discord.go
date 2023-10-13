@@ -184,30 +184,19 @@ func (d *discordClient) GetMemberByName(discordName string) ([]*discordgo.Member
 }
 
 func (d *discordClient) GetMemberByUsername(username string) (*discordgo.Member, error) {
-	if len(username) == 0 {
+	if username == "" {
 		return nil, nil
 	}
 
-	discordNameParts := strings.Split(username, "#")
-
-	guildMembers, err := d.SearchMember(discordNameParts[0])
+	guildMembers, err := d.SearchMember(username)
 	if err != nil {
 		return nil, err
 	}
 
 	var discordMember *discordgo.Member
 	for _, m := range guildMembers {
-		if len(discordNameParts) == 1 {
-			if m.User.Username == discordNameParts[0] {
-				discordMember = m
-			}
-			break
-		}
-		if len(discordNameParts) > 1 {
-			if m.User.Username == discordNameParts[0] && m.User.Discriminator == discordNameParts[1] {
-				discordMember = m
-			}
-			break
+		if m.User.Username == username {
+			discordMember = m
 		}
 	}
 
