@@ -277,6 +277,17 @@ definitions:
       username:
         type: string
     type: object
+  BasicEventQuestionRequest:
+    properties:
+      answer:
+        type: string
+      eventQuestionID:
+        type: string
+      note:
+        type: string
+    required:
+    - eventQuestionID
+    type: object
   BasicProjectInfo:
     properties:
       avatar:
@@ -377,10 +388,56 @@ definitions:
       role:
         type: string
     type: object
+  ClientContactInfo:
+    properties:
+      emails:
+        items:
+          type: string
+        type: array
+      id:
+        type: string
+      isMainContact:
+        type: boolean
+      name:
+        type: string
+    type: object
+  ClientInfo:
+    properties:
+      clientAddress:
+        type: string
+      clientCompany:
+        type: string
+      contacts:
+        items:
+          $ref: '#/definitions/ClientContactInfo'
+        type: array
+    type: object
+  CompanyContactInfo:
+    properties:
+      address:
+        type: string
+      phone:
+        type: string
+    type: object
+  CompanyInfo:
+    properties:
+      description:
+        type: string
+      id:
+        type: string
+      info:
+        additionalProperties:
+          $ref: '#/definitions/CompanyContactInfo'
+        type: object
+      name:
+        type: string
+      registrationNumber:
+        type: string
+    type: object
   ContentDataResponse:
     properties:
       data:
-        $ref: '#/definitions/pkg_view.ContentData'
+        $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.ContentData'
     type: object
   Country:
     properties:
@@ -427,7 +484,7 @@ definitions:
         type: string
       contacts:
         items:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_handler_client_request.CreateClientContactInput'
+          $ref: '#/definitions/pkg_handler_client_request.CreateClientContactInput'
         type: array
       country:
         type: string
@@ -601,7 +658,7 @@ definitions:
         $ref: '#/definitions/BasicEmployeeInfo'
       roles:
         items:
-          $ref: '#/definitions/pkg_view.Role'
+          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.Role'
         type: array
       seniority:
         $ref: '#/definitions/Seniority'
@@ -771,6 +828,73 @@ definitions:
           $ref: '#/definitions/pkg_view.ApiError'
         type: array
     type: object
+  EventReviewerStatus:
+    enum:
+    - none
+    - new
+    - draft
+    - done
+    type: string
+    x-enum-varnames:
+    - EventReviewerStatusNone
+    - EventReviewerStatusNew
+    - EventReviewerStatusDraft
+    - EventReviewerStatusDone
+  Feedback:
+    properties:
+      author:
+        $ref: '#/definitions/BasicEmployeeInfo'
+      employeeID:
+        type: string
+      eventID:
+        type: string
+      eventReviewerID:
+        type: string
+      isRead:
+        type: boolean
+      lastUpdated:
+        type: string
+      projectID:
+        type: string
+      status:
+        type: string
+      subtype:
+        type: string
+      title:
+        type: string
+      topicID:
+        type: string
+      type:
+        type: string
+    type: object
+  FeedbackDetail:
+    properties:
+      answers:
+        items:
+          $ref: '#/definitions/QuestionAnswer'
+        type: array
+      employeeID:
+        type: string
+      eventID:
+        type: string
+      project:
+        $ref: '#/definitions/BasicProjectInfo'
+      relationship:
+        type: string
+      reviewer:
+        $ref: '#/definitions/BasicEmployeeInfo'
+      status:
+        type: string
+      title:
+        type: string
+      topicID:
+        type: string
+    type: object
+  FeedbackDetailResponse:
+    properties:
+      data:
+        $ref: '#/definitions/FeedbackDetail'
+    type: object
   GetDashboardResourceUtilizationResponse:
     properties:
       data:
@@ -898,6 +1022,167 @@ definitions:
       trend:
         $ref: '#/definitions/EngineeringHealthTrend'
     type: object
+  Invoice:
+    properties:
+      bankID:
+        type: string
+      cc:
+        items:
+          type: string
+        type: array
+      conversionAmount:
+        type: number
+      conversionRate:
+        type: number
+      description:
+        type: string
+      discount:
+        type: number
+      dueAt:
+        type: string
+      email:
+        type: string
+      errorInvoiceID:
+        type: string
+      failedAt:
+        type: string
+      invoiceFileURL:
+        type: string
+      invoicedAt:
+        type: string
+      lineItems:
+        items:
+          $ref: '#/definitions/InvoiceItem'
+        type: array
+      month:
+        type: integer
+      note:
+        type: string
+      number:
+        type: string
+      paidAt:
+        type: string
+      projectID:
+        type: string
+      scheduledDate:
+        type: string
+      sentBy:
+        type: string
+      status:
+        type: string
+      subTotal:
+        type: number
+      tax:
+        type: number
+      threadID:
+        type: string
+      total:
+        type: number
+      year:
+        type: integer
+    type: object
+  InvoiceData:
+    properties:
+      bankAccount:
+        $ref: '#/definitions/BankAccount'
+      bankID:
+        type: string
+      cc:
+        items:
+          type: string
+        type: array
+      client:
+        $ref: '#/definitions/ClientInfo'
+      companyInfo:
+        $ref: '#/definitions/CompanyInfo'
+      conversionAmount:
+        type: number
+      conversionRate:
+        type: number
+      description:
+        type: string
+      discount:
+        type: number
+      dueAt:
+        type: string
+      email:
+        type: string
+      errorInvoiceID:
+        type: string
+      failedAt:
+        type: string
+      invoiceFileURL:
+        type: string
+      invoicedAt:
+        type: string
+      lineItems:
+        items:
+          $ref: '#/definitions/InvoiceItem'
+        type: array
+      month:
+        type: integer
+      note:
+        type: string
+      number:
+        type: string
+      paidAt:
+        type: string
+      projectID:
+        type: string
+      projectName:
+        type: string
+      scheduledDate:
+        type: string
+      sentBy:
+        type: string
+      status:
+        type: string
+      subTotal:
+        type: number
+      tax:
+        type: number
+      threadID:
+        type: string
+      total:
+        type: number
+      year:
+        type: integer
+    type: object
+  InvoiceItem:
+    properties:
+      cost:
+        type: number
+      description:
+        type: string
+      discount:
+        type: number
+      isExternal:
+        type: boolean
+      quantity:
+        type: number
+      unitCost:
+        type: number
+    type: object
+  InvoiceListResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/InvoiceData'
+        type: array
+      page:
+        type: integer
+      size:
+        type: integer
+      sort:
+        type: string
+      total:
+        type: integer
+    type: object
+  InvoiceTemplateResponse:
+    properties:
+      data:
+        $ref: '#/definitions/ProjectInvoiceTemplate'
+    type: object
   ItemValue:
     properties:
       trend:
@@ -917,6 +1202,13 @@ definitions:
       data:
         items:
           $ref: '#/definitions/BankAccount'
+        type: array
+    type: object
+  ListFeedbackResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/Feedback'
         type: array
     type: object
   LoggedInUserData:
@@ -1007,7 +1299,7 @@ definitions:
           $ref: '#/definitions/ProjectCommissionConfig'
         type: array
       companyInfo:
-        $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.CompanyInfo'
+        $ref: '#/definitions/CompanyInfo'
       companyInfoID:
         type: string
       country:
@@ -1109,6 +1401,23 @@ definitions:
           type: integer
         type: array
       updatedAt:
+        type: string
+    type: object
+  ProjectInvoiceTemplate:
+    properties:
+      bankAccount:
+        $ref: '#/definitions/BankAccount'
+      client:
+        $ref: '#/definitions/ClientInfo'
+      companyInfo:
+        $ref: '#/definitions/CompanyInfo'
+      id:
+        type: string
+      invoiceNumber:
+        type: string
+      lastInvoice:
+        $ref: '#/definitions/Invoice'
+      name:
         type: string
     type: object
   ProjectMember:
@@ -1245,6 +1554,23 @@ definitions:
           $ref: '#/definitions/PublicClient'
         type: array
     type: object
+  QuestionAnswer:
+    properties:
+      answer:
+        type: string
+      content:
+        type: string
+      domain:
+        $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.QuestionDomain'
+      eventQuestionID:
+        type: string
+      note:
+        type: string
+      order:
+        type: integer
+      type:
+        type: string
+    type: object
   ResourceAvailability:
     properties:
       employees:
@@ -1272,6 +1598,60 @@ definitions:
       staffed:
         type: integer
     type: object
+  SendInvoiceRequest:
+    properties:
+      bankID:
+        type: string
+      cc:
+        items:
+          type: string
+        type: array
+      description:
+        type: string
+      discount:
+        minimum: 0
+        type: number
+      dueDate:
+        type: string
+      email:
+        type: string
+      invoiceDate:
+        type: string
+      invoiceMonth:
+        maximum: 11
+        minimum: 0
+        type: integer
+      invoiceYear:
+        minimum: 0
+        type: integer
+      isDraft:
+        type: boolean
+      lineItems:
+        items:
+          $ref: '#/definitions/InvoiceItem'
+        type: array
+      note:
+        type: string
+      number:
+        type: string
+      projectID:
+        type: string
+      subtotal:
+        minimum: 0
+        type: number
+      tax:
+        minimum: 0
+        type: number
+      total:
+        minimum: 0
+        type: number
+    required:
+    - bankID
+    - dueDate
+    - email
+    - invoiceDate
+    - projectID
+    type: object
   Seniority:
     properties:
       code:
@@ -1291,6 +1671,42 @@ definitions:
         type: string
       name:
         type: string
+    type: object
+  SubmitFeedback:
+    properties:
+      answers:
+        items:
+          $ref: '#/definitions/QuestionAnswer'
+        type: array
+      employeeID:
+        type: string
+      eventID:
+        type: string
+      reviewer:
+        $ref: '#/definitions/BasicEmployeeInfo'
+      status:
+        type: string
+      title:
+        type: string
+      topicID:
+        type: string
+    type: object
+  SubmitFeedbackRequest:
+    properties:
+      answers:
+        items:
+          $ref: '#/definitions/BasicEventQuestionRequest'
+        type: array
+      status:
+        $ref: '#/definitions/EventReviewerStatus'
+    required:
+    - answers
+    - status
+    type: object
+  SubmitFeedbackResponse:
+    properties:
+      data:
+        $ref: '#/definitions/SubmitFeedback'
     type: object
   SummaryWorkUnitDistributionData:
     properties:
@@ -1316,6 +1732,18 @@ definitions:
         type: number
       workload:
         type: number
+    type: object
+  UnreadFeedbackCountData:
+    properties:
+      count:
+        type: integer
+      reviewerID:
+        type: string
+    type: object
+  UnreadFeedbackCountResponse:
+    properties:
+      data:
+        $ref: '#/definitions/UnreadFeedbackCountData'
     type: object
   UpdateBaseSalaryRequest:
     properties:
@@ -1349,7 +1777,7 @@ definitions:
         type: string
       contacts:
         items:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_handler_client_request.UpdateClientContactInput'
+          $ref: '#/definitions/pkg_handler_client_request.UpdateClientContactInput'
         type: array
       country:
         type: string
@@ -1589,6 +2017,25 @@ definitions:
       employeeStatus:
         type: string
     type: object
+  UpsertRollupRequest:
+    properties:
+      categoryID:
+        type: string
+      channelID:
+        type: string
+      discordUserID:
+        type: string
+      lastMessageID:
+        type: string
+      messageCount:
+        type: integer
+      reactionCount:
+        type: integer
+    required:
+    - channelID
+    - discordUserID
+    - lastMessageID
+    type: object
   WorkSurvey:
     properties:
       deadline:
@@ -1743,145 +2190,6 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/WorkUnitDistributionData'
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_handler_client_request.CreateClientContactInput:
-    properties:
-      emails:
-        items:
-          type: string
-        type: array
-      isMainContact:
-        type: boolean
-      name:
-        type: string
-      role:
-        type: string
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_handler_client_request.UpdateClientContactInput:
-    properties:
-      emails:
-        items:
-          type: string
-        type: array
-      isMainContact:
-        type: boolean
-      name:
-        type: string
-      role:
-        type: string
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_handler_engagement_request.UpsertRollupRequest:
-    properties:
-      categoryID:
-        type: string
-      channelID:
-        type: string
-      discordUserID:
-        type: string
-      lastMessageID:
-        type: string
-      messageCount:
-        type: integer
-      reactionCount:
-        type: integer
-    required:
-    - channelID
-    - discordUserID
-    - lastMessageID
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_handler_feedback_request.BasicEventQuestionInput:
-    properties:
-      answer:
-        type: string
-      eventQuestionID:
-        type: string
-      note:
-        type: string
-    required:
-    - eventQuestionID
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_handler_feedback_request.SubmitBody:
-    properties:
-      answers:
-        items:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_handler_feedback_request.BasicEventQuestionInput'
-        type: array
-      status:
-        $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.EventReviewerStatus'
-    required:
-    - answers
-    - status
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_handler_invoice_request.InvoiceItem:
-    properties:
-      cost:
-        type: number
-      description:
-        type: string
-      discount:
-        type: number
-      isExternal:
-        type: boolean
-      quantity:
-        type: number
-      unitCost:
-        type: number
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_handler_invoice_request.SendInvoiceRequest:
-    properties:
-      bankID:
-        type: string
-      cc:
-        items:
-          type: string
-        type: array
-      description:
-        type: string
-      discount:
-        minimum: 0
-        type: number
-      dueDate:
-        type: string
-      email:
-        type: string
-      invoiceDate:
-        type: string
-      invoiceMonth:
-        maximum: 11
-        minimum: 0
-        type: integer
-      invoiceYear:
-        minimum: 0
-        type: integer
-      isDraft:
-        type: boolean
-      lineItems:
-        items:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_handler_invoice_request.InvoiceItem'
-        type: array
-      note:
-        type: string
-      number:
-        type: string
-      projectID:
-        type: string
-      sentByID:
-        type: string
-      subtotal:
-        minimum: 0
-        type: number
-      tax:
-        minimum: 0
-        type: number
-      total:
-        minimum: 0
-        type: number
-    required:
-    - bankID
-    - dueDate
-    - email
-    - invoiceDate
-    - projectID
     type: object
   github_com_dwarvesf_fortress-api_pkg_handler_metadata_request.CreatePositionInput:
     properties:
@@ -2368,25 +2676,6 @@ definitions:
       updatedAt:
         type: string
     type: object
-  github_com_dwarvesf_fortress-api_pkg_model.CompanyContactInfo:
-    properties:
-      address:
-        type: string
-      phone:
-        type: string
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_model.EventReviewerStatus:
-    enum:
-    - none
-    - new
-    - draft
-    - done
-    type: string
-    x-enum-varnames:
-    - EventReviewerStatusNone
-    - EventReviewerStatusNew
-    - EventReviewerStatusDraft
-    - EventReviewerStatusDone
   github_com_dwarvesf_fortress-api_pkg_model.HeadPosition:
     enum:
     - technical-lead
@@ -2730,43 +3019,9 @@ definitions:
           type: string
         type: array
     type: object
-  github_com_dwarvesf_fortress-api_pkg_view.ClientContactInfo:
+  github_com_dwarvesf_fortress-api_pkg_view.ContentData:
     properties:
-      emails:
-        items:
-          type: string
-        type: array
-      id:
-        type: string
-      isMainContact:
-        type: boolean
-      name:
-        type: string
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_view.ClientInfo:
-    properties:
-      clientAddress:
-        type: string
-      clientCompany:
-        type: string
-      contacts:
-        items:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.ClientContactInfo'
-        type: array
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_view.CompanyInfo:
-    properties:
-      description:
-        type: string
-      id:
-        type: string
-      info:
-        additionalProperties:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.CompanyContactInfo'
-        type: object
-      name:
-        type: string
-      registrationNumber:
+      url:
         type: string
     type: object
   github_com_dwarvesf_fortress-api_pkg_view.CountriesResponse:
@@ -2918,40 +3173,13 @@ definitions:
         $ref: '#/definitions/BasicProjectInfo'
       questions:
         items:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.QuestionAnswer'
+          $ref: '#/definitions/QuestionAnswer'
         type: array
       relationship:
         type: string
       reviewer:
         $ref: '#/definitions/BasicEmployeeInfo'
       topicName:
-        type: string
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_view.Feedback:
-    properties:
-      author:
-        $ref: '#/definitions/BasicEmployeeInfo'
-      employeeID:
-        type: string
-      eventID:
-        type: string
-      eventReviewerID:
-        type: string
-      isRead:
-        type: boolean
-      lastUpdated:
-        type: string
-      projectID:
-        type: string
-      status:
-        type: string
-      subtype:
-        type: string
-      title:
-        type: string
-      topicID:
-        type: string
-      type:
         type: string
     type: object
   github_com_dwarvesf_fortress-api_pkg_view.FeedbackCount:
@@ -2962,34 +3190,6 @@ definitions:
         type: integer
       total:
         type: integer
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_view.FeedbackDetail:
-    properties:
-      answers:
-        items:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.QuestionAnswer'
-        type: array
-      employeeID:
-        type: string
-      eventID:
-        type: string
-      project:
-        $ref: '#/definitions/BasicProjectInfo'
-      relationship:
-        type: string
-      reviewer:
-        $ref: '#/definitions/BasicEmployeeInfo'
-      status:
-        type: string
-      title:
-        type: string
-      topicID:
-        type: string
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_view.FeedbackDetailResponse:
-    properties:
-      data:
-        $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.FeedbackDetail'
     type: object
   github_com_dwarvesf_fortress-api_pkg_view.FeedbackReviewDetailResponse:
     properties:
@@ -3026,166 +3226,6 @@ definitions:
         type: string
       username:
         type: string
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_view.Invoice:
-    properties:
-      bankID:
-        type: string
-      cc:
-        items:
-          type: string
-        type: array
-      conversionAmount:
-        type: number
-      conversionRate:
-        type: number
-      description:
-        type: string
-      discount:
-        type: number
-      dueAt:
-        type: string
-      email:
-        type: string
-      errorInvoiceID:
-        type: string
-      failedAt:
-        type: string
-      invoiceFileURL:
-        type: string
-      invoicedAt:
-        type: string
-      lineItems:
-        items:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.InvoiceItem'
-        type: array
-      month:
-        type: integer
-      note:
-        type: string
-      number:
-        type: string
-      paidAt:
-        type: string
-      projectID:
-        type: string
-      scheduledDate:
-        type: string
-      sentBy:
-        type: string
-      status:
-        type: string
-      subTotal:
-        type: number
-      tax:
-        type: number
-      threadID:
-        type: string
-      total:
-        type: number
-      year:
-        type: integer
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_view.InvoiceData:
-    properties:
-      bankAccount:
-        $ref: '#/definitions/BankAccount'
-      bankID:
-        type: string
-      cc:
-        items:
-          type: string
-        type: array
-      client:
-        $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.ClientInfo'
-      companyInfo:
-        $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.CompanyInfo'
-      conversionAmount:
-        type: number
-      conversionRate:
-        type: number
-      description:
-        type: string
-      discount:
-        type: number
-      dueAt:
-        type: string
-      email:
-        type: string
-      errorInvoiceID:
-        type: string
-      failedAt:
-        type: string
-      invoiceFileURL:
-        type: string
-      invoicedAt:
-        type: string
-      lineItems:
-        items:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.InvoiceItem'
-        type: array
-      month:
-        type: integer
-      note:
-        type: string
-      number:
-        type: string
-      paidAt:
-        type: string
-      projectID:
-        type: string
-      projectName:
-        type: string
-      scheduledDate:
-        type: string
-      sentBy:
-        type: string
-      status:
-        type: string
-      subTotal:
-        type: number
-      tax:
-        type: number
-      threadID:
-        type: string
-      total:
-        type: number
-      year:
-        type: integer
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_view.InvoiceItem:
-    properties:
-      cost:
-        type: number
-      description:
-        type: string
-      discount:
-        type: number
-      isExternal:
-        type: boolean
-      quantity:
-        type: number
-      unitCost:
-        type: number
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_view.InvoiceListResponse:
-    properties:
-      data:
-        items:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.InvoiceData'
-        type: array
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_view.InvoiceTemplateResponse:
-    properties:
-      data:
-        $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.ProjectInvoiceTemplate'
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_view.ListFeedbackResponse:
-    properties:
-      data:
-        items:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.Feedback'
-        type: array
     type: object
   github_com_dwarvesf_fortress-api_pkg_view.ListSurveyDetailResponse:
     properties:
@@ -3233,7 +3273,7 @@ definitions:
       reviewer:
         $ref: '#/definitions/BasicEmployeeInfo'
       status:
-        $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.EventReviewerStatus'
+        $ref: '#/definitions/EventReviewerStatus'
     type: object
   github_com_dwarvesf_fortress-api_pkg_view.PositionResponse:
     properties:
@@ -3423,23 +3463,6 @@ definitions:
       username:
         type: string
     type: object
-  github_com_dwarvesf_fortress-api_pkg_view.ProjectInvoiceTemplate:
-    properties:
-      bankAccount:
-        $ref: '#/definitions/BankAccount'
-      client:
-        $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.ClientInfo'
-      companyInfo:
-        $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.CompanyInfo'
-      id:
-        type: string
-      invoiceNumber:
-        type: string
-      lastInvoice:
-        $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.Invoice'
-      name:
-        type: string
-    type: object
   github_com_dwarvesf_fortress-api_pkg_view.ProjectListDataResponse:
     properties:
       data:
@@ -3466,23 +3489,6 @@ definitions:
         type: integer
       subcategory:
         type: string
-      type:
-        type: string
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_view.QuestionAnswer:
-    properties:
-      answer:
-        type: string
-      content:
-        type: string
-      domain:
-        $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.QuestionDomain'
-      eventQuestionID:
-        type: string
-      note:
-        type: string
-      order:
-        type: integer
       type:
         type: string
     type: object
@@ -3515,30 +3521,6 @@ definitions:
         items:
           $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Stack'
         type: array
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_view.SubmitFeedback:
-    properties:
-      answers:
-        items:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.QuestionAnswer'
-        type: array
-      employeeID:
-        type: string
-      eventID:
-        type: string
-      reviewer:
-        $ref: '#/definitions/BasicEmployeeInfo'
-      status:
-        type: string
-      title:
-        type: string
-      topicID:
-        type: string
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_view.SubmitFeedbackResponse:
-    properties:
-      data:
-        $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.SubmitFeedback'
     type: object
   github_com_dwarvesf_fortress-api_pkg_view.Survey:
     properties:
@@ -3638,18 +3620,6 @@ definitions:
         type: string
       type:
         type: string
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_view.UnreadFeedbackCountData:
-    properties:
-      count:
-        type: integer
-      reviewerID:
-        type: string
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_view.UnreadFeedbackCountResponse:
-    properties:
-      data:
-        $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.UnreadFeedbackCountData'
     type: object
   github_com_dwarvesf_fortress-api_pkg_view.UpdateProfileInfoData:
     properties:
@@ -3816,6 +3786,32 @@ definitions:
         description: Valid is true if Time is not NULL
         type: boolean
     type: object
+  pkg_handler_client_request.CreateClientContactInput:
+    properties:
+      emails:
+        items:
+          type: string
+        type: array
+      isMainContact:
+        type: boolean
+      name:
+        type: string
+      role:
+        type: string
+    type: object
+  pkg_handler_client_request.UpdateClientContactInput:
+    properties:
+      emails:
+        items:
+          type: string
+        type: array
+      isMainContact:
+        type: boolean
+      name:
+        type: string
+      role:
+        type: string
+    type: object
   pkg_view.ApiError:
     description: validation error details
     properties:
@@ -3854,11 +3850,6 @@ definitions:
           $ref: '#/definitions/pkg_view.TopContributor'
         type: array
     type: object
-  pkg_view.ContentData:
-    properties:
-      url:
-        type: string
-    type: object
   pkg_view.Post:
     properties:
       discordID:
@@ -3870,15 +3861,6 @@ definitions:
       title:
         type: string
       url:
-        type: string
-    type: object
-  pkg_view.Role:
-    properties:
-      code:
-        type: string
-      id:
-        type: string
-      name:
         type: string
     type: object
   pkg_view.TopContributor:
@@ -4372,6 +4354,7 @@ paths:
       consumes:
       - application/json
       description: Index messages of provided Discord server
+      operationId: indexEngagementMessages
       produces:
       - application/json
       responses:
@@ -5234,6 +5217,7 @@ paths:
       consumes:
       - application/json
       description: Get local last message ID of a channel
+      operationId: getLastMessageID
       parameters:
       - description: Discord Channel ID
         in: path
@@ -5265,13 +5249,14 @@ paths:
       consumes:
       - application/json
       description: Upsert engagement rollup
+      operationId: upsertEngagementRollup
       parameters:
       - description: Body
         in: body
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_handler_engagement_request.UpsertRollupRequest'
+          $ref: '#/definitions/UpsertRollupRequest'
       produces:
       - application/json
       responses:
@@ -5297,6 +5282,7 @@ paths:
       consumes:
       - application/json
       description: Get list feedbacks
+      operationId: getFeedbackList
       parameters:
       - description: Status
         in: query
@@ -5310,13 +5296,17 @@ paths:
         in: query
         name: size
         type: string
+      - description: Sort
+        in: query
+        name: sort
+        type: string
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.ListFeedbackResponse'
+            $ref: '#/definitions/ListFeedbackResponse'
         "400":
           description: Bad Request
           schema:
@@ -5335,6 +5325,7 @@ paths:
       consumes:
       - application/json
       description: Get feedback detail for logged-in users
+      operationId: getFeedbackDetail
       parameters:
       - description: Feedback Event ID
         in: path
@@ -5352,7 +5343,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.FeedbackDetailResponse'
+            $ref: '#/definitions/FeedbackDetailResponse'
         "400":
           description: Bad Request
           schema:
@@ -5375,6 +5366,7 @@ paths:
       consumes:
       - application/json
       description: Submit the draft or done answers
+      operationId: submitFeedback
       parameters:
       - description: Feedback Event ID
         in: path
@@ -5391,14 +5383,14 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_handler_feedback_request.SubmitBody'
+          $ref: '#/definitions/SubmitFeedbackRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.SubmitFeedbackResponse'
+            $ref: '#/definitions/SubmitFeedbackResponse'
         "400":
           description: Bad Request
           schema:
@@ -5421,13 +5413,14 @@ paths:
       consumes:
       - application/json
       description: Get number of unread inbox for user
+      operationId: countUnreadFeedback
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.UnreadFeedbackCountResponse'
+            $ref: '#/definitions/UnreadFeedbackCountResponse'
         "400":
           description: Bad Request
           schema:
@@ -5511,6 +5504,7 @@ paths:
       consumes:
       - application/json
       description: Get latest invoice by project id
+      operationId: getInvoiceList
       parameters:
       - description: projectID
         in: query
@@ -5520,13 +5514,25 @@ paths:
         in: query
         name: status
         type: string
+      - description: page
+        in: query
+        name: page
+        type: integer
+      - description: size
+        in: query
+        name: size
+        type: integer
+      - description: sort
+        in: query
+        name: sort
+        type: string
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.InvoiceListResponse'
+            $ref: '#/definitions/InvoiceListResponse'
         "400":
           description: Bad Request
           schema:
@@ -5577,14 +5583,15 @@ paths:
     post:
       consumes:
       - application/json
-      description: Create new invoice and send to clientm
+      description: Create new invoice and send to client
+      operationId: sendInvoice
       parameters:
       - description: body
         in: body
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_handler_invoice_request.SendInvoiceRequest'
+          $ref: '#/definitions/SendInvoiceRequest'
       produces:
       - application/json
       responses:
@@ -5614,6 +5621,7 @@ paths:
       consumes:
       - application/json
       description: Get the latest invoice by project id
+      operationId: getInvoiceTemplate
       parameters:
       - description: projectID
         in: query
@@ -5626,7 +5634,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.InvoiceTemplateResponse'
+            $ref: '#/definitions/InvoiceTemplateResponse'
         "400":
           description: Bad Request
           schema:

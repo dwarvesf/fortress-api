@@ -46,13 +46,17 @@ func New(ctrl *controller.Controller, store *store.Store, repo store.DBRepo, ser
 // List godoc
 // @Summary Get latest invoice by project id
 // @Description Get latest invoice by project id
+// @id getInvoiceList
 // @Tags Invoice
 // @Accept json
 // @Produce json
 // @Security BearerAuth
 // @Param projectID query string false "projectID"
 // @Param status query string false "status"
-// @Success 200 {object} view.InvoiceListResponse
+// @Param page query int false "page"
+// @Param size query int false "size"
+// @Param sort query string false "sort"
+// @Success 200 {object} InvoiceListResponse
 // @Failure 400 {object} ErrorResponse
 // @Failure 404 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
@@ -70,7 +74,7 @@ func (h *handler) List(c *gin.Context) {
 		"query":   query,
 	})
 
-	query.StandardizeInput()
+	pagination := query.StandardizeInput()
 
 	if err := query.Validate(); err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, query, ""))
@@ -78,7 +82,7 @@ func (h *handler) List(c *gin.Context) {
 	}
 
 	invoices, total, err := h.controller.Invoice.List(invoiceCtrl.GetListInvoiceInput{
-		Pagination: query.Pagination,
+		Pagination: pagination,
 		ProjectIDs: query.ProjectID,
 		Statuses:   query.Status,
 	})
@@ -95,18 +99,19 @@ func (h *handler) List(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse[any](rs, &view.PaginationResponse{Total: total, Pagination: query.Pagination}, nil, nil, ""))
+	c.JSON(http.StatusOK, view.CreateResponse[any](rs, &view.PaginationResponse{Total: total, Pagination: pagination}, nil, nil, ""))
 }
 
 // GetTemplate godoc
 // @Summary Get the latest invoice by project id
 // @Description Get the latest invoice by project id
+// @id getInvoiceTemplate
 // @Tags Invoice
 // @Accept json
 // @Produce json
 // @Security BearerAuth
 // @Param projectID query string true "projectID"
-// @Success 200 {object} view.InvoiceTemplateResponse
+// @Success 200 {object} InvoiceTemplateResponse
 // @Failure 400 {object} ErrorResponse
 // @Failure 404 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
@@ -152,12 +157,13 @@ func (h *handler) GetTemplate(c *gin.Context) {
 
 // Send godoc
 // @Summary Create new invoice and send to client
-// @Description Create new invoice and send to clientm
+// @Description Create new invoice and send to client
+// @id sendInvoice
 // @Tags Invoice
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Param Body body request.SendInvoiceRequest true "body"
+// @Param Body body SendInvoiceRequest true "body"
 // @Success 200 {object} MessageResponse
 // @Failure 404 {object} ErrorResponse
 // @Failure 400 {object} ErrorResponse
@@ -183,15 +189,7 @@ func (h *handler) Send(c *gin.Context) {
 		return
 	}
 
-	senderID, err := model.UUIDFromString(userID)
-	if err != nil {
-		l.Error(err, "failed to parse sender id")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req, ""))
-	}
-
-	req.SentByID = &senderID
-
-	iv, err := req.ToInvoiceModel()
+	iv, err := req.ToInvoiceModel(userID)
 	if err != nil {
 		l.Error(err, "failed to parse request to invoice model")
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, req, ""))
