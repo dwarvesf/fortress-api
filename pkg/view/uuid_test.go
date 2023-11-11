@@ -2,11 +2,69 @@ package view
 
 import (
 	"database/sql/driver"
+	"errors"
 	"reflect"
 	"testing"
 
 	uuid "github.com/satori/go.uuid"
 )
+
+func TestUUIDFromString(t *testing.T) {
+	type args struct {
+		s string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    UUID
+		wantErr error
+	}{
+		{
+			name:    "correct uuid",
+			args:    args{"a98484cb-cc66-4687-8e66-837e5997c427"},
+			want:    UUID(uuid.Must(uuid.FromString("a98484cb-cc66-4687-8e66-837e5997c427"))),
+			wantErr: nil,
+		},
+		{
+			name:    "correct uuid zero value",
+			args:    args{"00000000-0000-0000-0000-000000000000"},
+			want:    UUID(uuid.Must(uuid.FromString("00000000-0000-0000-0000-000000000000"))),
+			wantErr: nil,
+		},
+		{
+			name:    "incorrect uuid by wrong character",
+			args:    args{"a98484cb-cc66-4687-8e66-837e5997c42l"},
+			wantErr: errors.New("encoding/hex: invalid byte: U+006C 'l'"),
+		},
+		{
+			name:    "incorrect uuid by invalid length",
+			args:    args{"a98484cb-cc66-4687-8e66-837e5997c42"},
+			wantErr: errors.New("uuid: incorrect UUID length: a98484cb-cc66-4687-8e66-837e5997c42"),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := UUIDFromString(tt.args.s)
+			if err != nil {
+				if tt.wantErr == nil {
+					t.Errorf("UUIDFromString() error = %v, wantErr %v", err, tt.wantErr)
+					return
+				}
+
+				if tt.wantErr.Error() != err.Error() {
+					t.Errorf("UUIDFromString() error = %v, wantErr %v", err, tt.wantErr)
+					return
+				}
+
+				return
+			}
+
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("UUIDFromString() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
 
 func TestUUID_IsZero(t *testing.T) {
 	tests := []struct {

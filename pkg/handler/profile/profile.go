@@ -47,11 +47,12 @@ func New(controller *controller.Controller, store *store.Store, repo store.DBRep
 // GetProfile godoc
 // @Summary Get profile information of employee
 // @Description Get profile information of employee
+// @id getPofile
 // @Tags Profile
 // @Accept  json
 // @Produce  json
 // @Security BearerAuth
-// @Success 200 {object} view.ProfileDataResponse
+// @Success 200 {object} ProfileDataResponse
 // @Failure 400 {object} ErrorResponse
 // @Failure 404 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
@@ -86,13 +87,14 @@ func (h *handler) GetProfile(c *gin.Context) {
 // UpdateInfo godoc
 // @Summary Update profile info by id
 // @Description Update profile info by id
+// @id updateProfileInfo
 // @Tags Profile
 // @Accept  json
 // @Produce  json
 // @Security BearerAuth
 // @Param id path string true "Employee ID"
-// @Param Body body request.UpdateInfoInput true "Body"
-// @Success 200 {object} view.UpdateProfileInfoResponse
+// @Param Body body UpdateInfoInput true "Body"
+// @Success 200 {object} UpdateProfileInfoResponse
 // @Failure 400 {object} ErrorResponse
 // @Failure 404 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
@@ -325,12 +327,13 @@ func (h *handler) validateAndMappingCity(db *gorm.DB, countryName string, cityNa
 // UploadAvatar godoc
 // @Summary Upload avatar  by id
 // @Description Upload avatar  by id
+// @id uploadProfileAvatar
 // @Tags Profile
 // @Accept  json
 // @Produce  json
 // @Security BearerAuth
 // @Param file formData file true "content upload"
-// @Success 200 {object} view.EmployeeContentDataResponse
+// @Success 200 {object} EmployeeContentDataResponse
 // @Failure 400 {object} ErrorResponse
 // @Failure 404 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
@@ -447,12 +450,13 @@ func (h *handler) UploadAvatar(c *gin.Context) {
 // Upload godoc
 // @Summary Upload image  by id
 // @Description Upload image  by id
+// @id uploadImage
 // @Tags Profile
 // @Accept  json
 // @Produce  json
 // @Security BearerAuth
 // @Param file formData file true "content upload"
-// @Success 200 {object} view.EmployeeContentDataResponse
+// @Success 200 {object} EmployeeContentDataResponse
 // @Failure 400 {object} ErrorResponse
 // @Failure 404 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
@@ -599,11 +603,12 @@ func (h *handler) Upload(c *gin.Context) {
 // GetInvitation godoc
 // @Summary Get invitation state based on token
 // @Description Submit Get invitation state based on token
+// @id getInvitation
 // @Tags Onboarding
 // @Accept  json
 // @Produce  json
 // @Security BearerAuth
-// @Success 200 {object} view.EmployeeInvitationResponse
+// @Success 200 {object} EmployeeInvitationResponse
 // @Failure 400 {object} ErrorResponse
 // @Failure 404 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
@@ -639,11 +644,12 @@ func (h *handler) GetInvitation(c *gin.Context) {
 // SubmitOnboardingForm godoc
 // @Summary Submit onboarding form
 // @Description Submit Onboarding form
+// @id submitOnboardingForm
 // @Tags Onboarding
 // @Accept  json
 // @Produce  json
 // @Security BearerAuth
-// @Param Body body request.SubmitOnboardingFormRequest true "Body"
+// @Param Body body SubmitOnboardingFormRequest true "Body"
 // @Success 200 {object} MessageResponse
 // @Failure 400 {object} ErrorResponse
 // @Failure 404 {object} ErrorResponse

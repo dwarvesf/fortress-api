@@ -6,7 +6,7 @@ type Role struct {
 	ID   string `json:"id"`
 	Code string `json:"code"`
 	Name string `json:"name"`
-}
+} // @name Role
 
 func ToEmployeeRoles(roles []model.EmployeeRole) []Role {
 	rs := make([]Role, 0, len(roles))

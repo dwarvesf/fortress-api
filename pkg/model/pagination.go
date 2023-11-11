@@ -15,7 +15,7 @@ type Pagination struct {
 	Size         int64  `json:"size" form:"size"`                      // page size
 	Sort         string `json:"sort" form:"sort" swaggerignore:"true"` // sort by field
 	Standardized bool   `json:"-" form:"-" swaggerignore:"true"`
-}
+} // @name Pagination
 
 const (
 	SortOrderASC  SortOrder = "asc"

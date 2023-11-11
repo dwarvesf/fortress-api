@@ -7,7 +7,7 @@ import (
 )
 
 type ProfileData struct {
-	ID                 model.UUID `json:"id"`
+	ID                 string     `json:"id"`
 	FullName           string     `json:"fullName"`
 	DisplayName        string     `json:"displayName"`
 	Avatar             string     `json:"avatar"`
@@ -34,10 +34,12 @@ type ProfileData struct {
 	WiseRecipientEmail string     `json:"wiseRecipientEmail"`
 	WiseRecipientName  string     `json:"wiseRecipientName"`
 	WiseCurrency       string     `json:"wiseCurrency"`
-}
+} // @name ProfileData
 
 type UpdateProfileInfoData struct {
-	model.BaseModel
+	ID        string     `json:"id"`
+	CreatedAt time.Time  `json:"createdAt"`
+	UpdatedAt *time.Time `json:"updatedAt"`
 
 	// basic info
 	TeamEmail          string `json:"teamEmail"`
@@ -59,23 +61,21 @@ type UpdateProfileInfoData struct {
 	WiseRecipientEmail string `json:"wiseRecipientEmail"`
 	WiseRecipientName  string `json:"wiseRecipientName"`
 	WiseCurrency       string `json:"wiseCurrency"`
-}
+} // @name UpdateProfileInfoData
 
 type ProfileDataResponse struct {
 	Data ProfileData `json:"data"`
-}
+} // @name ProfileDataResponse
 
 type UpdateProfileInfoResponse struct {
 	Data UpdateProfileInfoData `json:"data"`
-}
+} // @name UpdateProfileInfoResponse
 
 func ToUpdateProfileInfoData(employee *model.Employee) *UpdateProfileInfoData {
 	rs := &UpdateProfileInfoData{
-		BaseModel: model.BaseModel{
-			ID:        employee.ID,
-			CreatedAt: employee.CreatedAt,
-			UpdatedAt: employee.UpdatedAt,
-		},
+		ID:                 employee.ID.String(),
+		CreatedAt:          employee.CreatedAt,
+		UpdatedAt:          employee.UpdatedAt,
 		TeamEmail:          employee.TeamEmail,
 		PhoneNumber:        employee.PhoneNumber,
 		Username:           employee.Username,
@@ -127,7 +127,7 @@ func ToProfileData(employee *model.Employee) *ProfileData {
 	}
 
 	rs := &ProfileData{
-		ID:                 employee.ID,
+		ID:                 employee.ID.String(),
 		FullName:           employee.FullName,
 		DisplayName:        employee.DisplayName,
 		Avatar:             employee.Avatar,

@@ -48,7 +48,6 @@ type UpdateEmployeeGeneralInfoRequest struct {
 	WiseAccountNumber  string      `form:"wiseAccountNumber" json:"wiseAccountNumber"`
 	WiseCurrency       string      `form:"wiseCurrency" json:"wiseCurrency"`
 } // @name UpdateEmployeeGeneralInfoRequest
-
 type UpdateBaseSalaryRequest struct {
 	ContractAmount        int64      `form:"contractAmount" json:"contractAmount" binding:"gte=0"`
 	CompanyAccountAmount  int64      `form:"companyAccountAmount" json:"companyAccountAmount" binding:"gte=0"`

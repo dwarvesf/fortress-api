@@ -33,4 +33,4 @@ func ToCurrencies(c []model.Currency) []Currency {
 
 type GetCurrenciesResponse struct {
 	Data []Currency `json:"data"`
-}
+} // @name GetCurrenciesResponse

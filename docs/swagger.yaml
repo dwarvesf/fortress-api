@@ -306,7 +306,7 @@ definitions:
   BraineryMetricResponse:
     properties:
       data:
-        $ref: '#/definitions/pkg_view.BraineryMetric'
+        $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.BraineryMetric'
     type: object
   Chapter:
     properties:
@@ -318,6 +318,20 @@ definitions:
         type: string
       name:
         type: string
+    type: object
+  ChapterResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Chapter'
+        type: array
+    type: object
+  CitiesResponse:
+    properties:
+      data:
+        items:
+          type: string
+        type: array
     type: object
   City:
     properties:
@@ -439,6 +453,13 @@ definitions:
       data:
         $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.ContentData'
     type: object
+  CountriesResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/Country'
+        type: array
+    type: object
   Country:
     properties:
       cities:
@@ -484,7 +505,7 @@ definitions:
         type: string
       contacts:
         items:
-          $ref: '#/definitions/pkg_handler_client_request.CreateClientContactInput'
+          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_handler_client_request.CreateClientContactInput'
         type: array
       country:
         type: string
@@ -544,6 +565,28 @@ definitions:
     - seniorityID
     - status
     - teamEmail
+    type: object
+  CreatePositionInput:
+    properties:
+      code:
+        type: string
+      name:
+        type: string
+    required:
+    - code
+    - name
+    type: object
+  CreateStackInput:
+    properties:
+      avatar:
+        type: string
+      code:
+        type: string
+      name:
+        type: string
+    required:
+    - code
+    - name
     type: object
   Currency:
     properties:
@@ -658,7 +701,7 @@ definitions:
         $ref: '#/definitions/BasicEmployeeInfo'
       roles:
         items:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.Role'
+          $ref: '#/definitions/Role'
         type: array
       seniority:
         $ref: '#/definitions/Seniority'
@@ -690,6 +733,32 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/EmployeeData'
+    type: object
+  EmployeeInvitationData:
+    properties:
+      employee:
+        $ref: '#/definitions/InvitedEmployeeInfo'
+      employeeID:
+        type: string
+      id:
+        type: string
+      invitedBy:
+        type: string
+      isBasecampAccountCreated:
+        type: boolean
+      isCompleted:
+        type: boolean
+      isDiscordRoleAssigned:
+        type: boolean
+      isInfoUpdated:
+        type: boolean
+      isTeamEmailCreated:
+        type: boolean
+    type: object
+  EmployeeInvitationResponse:
+    properties:
+      data:
+        $ref: '#/definitions/EmployeeInvitationData'
     type: object
   EmployeeListDataResponse:
     properties:
@@ -825,7 +894,7 @@ definitions:
         type: string
       errors:
         items:
-          $ref: '#/definitions/pkg_view.ApiError'
+          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.ApiError'
         type: array
     type: object
   EventReviewerStatus:
@@ -894,6 +963,13 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/FeedbackDetail'
+    type: object
+  GetCurrenciesResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/Currency'
+        type: array
     type: object
   GetDashboardResourceUtilizationResponse:
     properties:
@@ -973,6 +1049,13 @@ definitions:
           type: string
         type: array
     type: object
+  GetQuestionResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/pkg_view.Question'
+        type: array
+    type: object
   GroupAudit:
     properties:
       backend:
@@ -1021,6 +1104,23 @@ definitions:
         type: string
       trend:
         $ref: '#/definitions/EngineeringHealthTrend'
+    type: object
+  InvitedEmployeeInfo:
+    properties:
+      avatar:
+        type: string
+      displayName:
+        type: string
+      fullName:
+        type: string
+      id:
+        type: string
+      personalEmail:
+        type: string
+      teamEmail:
+        type: string
+      username:
+        type: string
     type: object
   Invoice:
     properties:
@@ -1254,6 +1354,22 @@ definitions:
       message:
         type: string
     type: object
+  MetaData:
+    properties:
+      code:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  MetaDataResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/MetaData'
+        type: array
+    type: object
   Organization:
     properties:
       avatar:
@@ -1265,6 +1381,13 @@ definitions:
       name:
         type: string
     type: object
+  OrganizationsResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Organization'
+        type: array
+    type: object
   Position:
     properties:
       code:
@@ -1273,6 +1396,77 @@ definitions:
         type: string
       name:
         type: string
+    type: object
+  PositionResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Position'
+        type: array
+    type: object
+  ProfileData:
+    properties:
+      address:
+        type: string
+      avatar:
+        type: string
+      birthday:
+        type: string
+      city:
+        type: string
+      country:
+        type: string
+      discordID:
+        type: string
+      discordName:
+        type: string
+      displayName:
+        type: string
+      fullName:
+        type: string
+      gender:
+        type: string
+      githubID:
+        type: string
+      id:
+        type: string
+      linkedInName:
+        type: string
+      notionEmail:
+        type: string
+      notionID:
+        type: string
+      notionName:
+        type: string
+      personalEmail:
+        type: string
+      phoneNumber:
+        type: string
+      placeOfResidence:
+        type: string
+      roles:
+        items:
+          $ref: '#/definitions/Role'
+        type: array
+      teamEmail:
+        type: string
+      username:
+        type: string
+      wiseAccountNumber:
+        type: string
+      wiseCurrency:
+        type: string
+      wiseRecipientEmail:
+        type: string
+      wiseRecipientID:
+        type: string
+      wiseRecipientName:
+        type: string
+    type: object
+  ProfileDataResponse:
+    properties:
+      data:
+        $ref: '#/definitions/ProfileData'
     type: object
   Project:
     properties:
@@ -1598,6 +1792,22 @@ definitions:
       staffed:
         type: integer
     type: object
+  Role:
+    properties:
+      code:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  RolesResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Role'
+        type: array
+    type: object
   SendInvoiceRequest:
     properties:
       bankID:
@@ -1661,6 +1871,13 @@ definitions:
       name:
         type: string
     type: object
+  SeniorityResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Seniority'
+        type: array
+    type: object
   Stack:
     properties:
       avatar:
@@ -1671,6 +1888,13 @@ definitions:
         type: string
       name:
         type: string
+    type: object
+  StackResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Stack'
+        type: array
     type: object
   SubmitFeedback:
     properties:
@@ -1707,6 +1931,77 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/SubmitFeedback'
+    type: object
+  SubmitOnboardingFormRequest:
+    properties:
+      address:
+        type: string
+      avatar:
+        type: string
+      city:
+        type: string
+      country:
+        type: string
+      dateOfBirth:
+        type: string
+      discordName:
+        type: string
+      gender:
+        type: string
+      githubID:
+        type: string
+      horoscope:
+        type: string
+      identityCardPhotoBack:
+        type: string
+      identityCardPhotoFront:
+        type: string
+      lat:
+        type: string
+      linkedInName:
+        type: string
+      localBankBranch:
+        type: string
+      localBankCurrency:
+        type: string
+      localBankNumber:
+        type: string
+      localBankRecipientName:
+        type: string
+      localBranchName:
+        type: string
+      long:
+        type: string
+      mbti:
+        type: string
+      notionName:
+        type: string
+      passportPhotoBack:
+        type: string
+      passportPhotoFront:
+        type: string
+      phoneNumber:
+        maxLength: 18
+        minLength: 8
+        type: string
+      placeOfResidence:
+        type: string
+    required:
+    - address
+    - city
+    - country
+    - dateOfBirth
+    - discordName
+    - gender
+    - horoscope
+    - localBankBranch
+    - localBankCurrency
+    - localBankNumber
+    - localBankRecipientName
+    - localBranchName
+    - mbti
+    - phoneNumber
+    - placeOfResidence
     type: object
   SummaryWorkUnitDistributionData:
     properties:
@@ -1777,7 +2072,7 @@ definitions:
         type: string
       contacts:
         items:
-          $ref: '#/definitions/pkg_handler_client_request.UpdateClientContactInput'
+          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_handler_client_request.UpdateClientContactInput'
         type: array
       country:
         type: string
@@ -1896,6 +2191,55 @@ definitions:
       updatedAt:
         type: string
     type: object
+  UpdateInfoInput:
+    properties:
+      address:
+        type: string
+      city:
+        type: string
+      country:
+        type: string
+      discordName:
+        type: string
+      githubID:
+        type: string
+      lat:
+        type: string
+      linkedInName:
+        type: string
+      long:
+        type: string
+      notionEmail:
+        type: string
+      notionID:
+        type: string
+      notionName:
+        type: string
+      personalEmail:
+        type: string
+      phoneNumber:
+        maxLength: 18
+        minLength: 8
+        type: string
+      placeOfResidence:
+        type: string
+      wiseAccountNumber:
+        type: string
+      wiseCurrency:
+        type: string
+      wiseRecipientEmail:
+        type: string
+      wiseRecipientID:
+        type: string
+      wiseRecipientName:
+        type: string
+    required:
+    - city
+    - country
+    - personalEmail
+    - phoneNumber
+    - placeOfResidence
+    type: object
   UpdatePersonalEmployeeData:
     properties:
       address:
@@ -1948,6 +2292,66 @@ definitions:
     - dob
     - gender
     - personalEmail
+    type: object
+  UpdatePositionBody:
+    properties:
+      code:
+        type: string
+      name:
+        type: string
+    type: object
+  UpdateProfileInfoData:
+    properties:
+      address:
+        type: string
+      city:
+        type: string
+      country:
+        type: string
+      createdAt:
+        type: string
+      discordID:
+        type: string
+      discordName:
+        type: string
+      githubID:
+        type: string
+      id:
+        type: string
+      linkedInName:
+        type: string
+      notionEmail:
+        type: string
+      notionID:
+        type: string
+      notionName:
+        type: string
+      phoneNumber:
+        type: string
+      placeOfResidence:
+        type: string
+      teamEmail:
+        description: basic info
+        type: string
+      updatedAt:
+        type: string
+      username:
+        type: string
+      wiseAccountNumber:
+        type: string
+      wiseCurrency:
+        type: string
+      wiseRecipientEmail:
+        type: string
+      wiseRecipientID:
+        type: string
+      wiseRecipientName:
+        type: string
+    type: object
+  UpdateProfileInfoResponse:
+    properties:
+      data:
+        $ref: '#/definitions/UpdateProfileInfoData'
     type: object
   UpdateRoleRequest:
     properties:
@@ -2011,6 +2415,15 @@ definitions:
     - positions
     - seniority
     - stacks
+    type: object
+  UpdateStackBody:
+    properties:
+      avatar:
+        type: string
+      code:
+        type: string
+      name:
+        type: string
     type: object
   UpdateWorkingStatusRequest:
     properties:
@@ -2191,163 +2604,31 @@ definitions:
       data:
         $ref: '#/definitions/WorkUnitDistributionData'
     type: object
-  github_com_dwarvesf_fortress-api_pkg_handler_metadata_request.CreatePositionInput:
+  github_com_dwarvesf_fortress-api_pkg_handler_client_request.CreateClientContactInput:
     properties:
-      code:
-        type: string
+      emails:
+        items:
+          type: string
+        type: array
+      isMainContact:
+        type: boolean
       name:
         type: string
-    required:
-    - code
-    - name
+      role:
+        type: string
     type: object
-  github_com_dwarvesf_fortress-api_pkg_handler_metadata_request.CreateStackInput:
+  github_com_dwarvesf_fortress-api_pkg_handler_client_request.UpdateClientContactInput:
     properties:
-      avatar:
-        type: string
-      code:
-        type: string
+      emails:
+        items:
+          type: string
+        type: array
+      isMainContact:
+        type: boolean
       name:
         type: string
-    required:
-    - code
-    - name
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_handler_metadata_request.UpdatePositionBody:
-    properties:
-      code:
+      role:
         type: string
-      name:
-        type: string
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_handler_metadata_request.UpdateStackBody:
-    properties:
-      avatar:
-        type: string
-      code:
-        type: string
-      name:
-        type: string
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_handler_profile_request.SubmitOnboardingFormRequest:
-    properties:
-      address:
-        type: string
-      avatar:
-        type: string
-      city:
-        type: string
-      country:
-        type: string
-      dateOfBirth:
-        type: string
-      discordName:
-        type: string
-      gender:
-        type: string
-      githubID:
-        type: string
-      horoscope:
-        type: string
-      identityCardPhotoBack:
-        type: string
-      identityCardPhotoFront:
-        type: string
-      lat:
-        type: string
-      linkedInName:
-        type: string
-      localBankBranch:
-        type: string
-      localBankCurrency:
-        type: string
-      localBankNumber:
-        type: string
-      localBankRecipientName:
-        type: string
-      localBranchName:
-        type: string
-      long:
-        type: string
-      mbti:
-        type: string
-      notionName:
-        type: string
-      passportPhotoBack:
-        type: string
-      passportPhotoFront:
-        type: string
-      phoneNumber:
-        maxLength: 18
-        minLength: 8
-        type: string
-      placeOfResidence:
-        type: string
-    required:
-    - address
-    - city
-    - country
-    - dateOfBirth
-    - discordName
-    - gender
-    - horoscope
-    - localBankBranch
-    - localBankCurrency
-    - localBankNumber
-    - localBankRecipientName
-    - localBranchName
-    - mbti
-    - phoneNumber
-    - placeOfResidence
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_handler_profile_request.UpdateInfoInput:
-    properties:
-      address:
-        type: string
-      city:
-        type: string
-      country:
-        type: string
-      discordName:
-        type: string
-      githubID:
-        type: string
-      lat:
-        type: string
-      linkedInName:
-        type: string
-      long:
-        type: string
-      notionEmail:
-        type: string
-      notionID:
-        type: string
-      notionName:
-        type: string
-      personalEmail:
-        type: string
-      phoneNumber:
-        maxLength: 18
-        minLength: 8
-        type: string
-      placeOfResidence:
-        type: string
-      wiseAccountNumber:
-        type: string
-      wiseCurrency:
-        type: string
-      wiseRecipientEmail:
-        type: string
-      wiseRecipientID:
-        type: string
-      wiseRecipientName:
-        type: string
-    required:
-    - city
-    - country
-    - personalEmail
-    - phoneNumber
-    - placeOfResidence
     type: object
   github_com_dwarvesf_fortress-api_pkg_handler_project_request.AssignMemberInput:
     properties:
@@ -2933,6 +3214,21 @@ definitions:
     - WorkUnitTypeManagement
     - WorkUnitTypeTraining
     - WorkUnitTypeLearning
+  github_com_dwarvesf_fortress-api_pkg_view.ApiError:
+    description: validation error details
+    properties:
+      enums:
+        description: available options incase of field's payload is enums
+        items:
+          type: string
+        type: array
+      field:
+        description: the field cause the error
+        type: string
+      msg:
+        description: error message
+        type: string
+    type: object
   github_com_dwarvesf_fortress-api_pkg_view.BasicBankAccountInfo:
     properties:
       accountNumber:
@@ -3005,31 +3301,33 @@ definitions:
       username:
         type: string
     type: object
-  github_com_dwarvesf_fortress-api_pkg_view.ChapterResponse:
+  github_com_dwarvesf_fortress-api_pkg_view.BraineryMetric:
     properties:
-      data:
+      contributors:
         items:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Chapter'
+          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.Post'
         type: array
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_view.CitiesResponse:
-    properties:
-      data:
+      latestPosts:
+        items:
+          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.Post'
+        type: array
+      newContributors:
+        items:
+          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.Post'
+        type: array
+      tags:
         items:
           type: string
+        type: array
+      topContributors:
+        items:
+          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.TopContributor'
         type: array
     type: object
   github_com_dwarvesf_fortress-api_pkg_view.ContentData:
     properties:
       url:
         type: string
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_view.CountriesResponse:
-    properties:
-      data:
-        items:
-          $ref: '#/definitions/Country'
-        type: array
     type: object
   github_com_dwarvesf_fortress-api_pkg_view.CreateMemberData:
     properties:
@@ -3139,32 +3437,6 @@ definitions:
       name:
         type: string
     type: object
-  github_com_dwarvesf_fortress-api_pkg_view.EmployeeInvitationData:
-    properties:
-      employee:
-        $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.InvitedEmployeeInfo'
-      employeeID:
-        type: string
-      id:
-        type: string
-      invitedBy:
-        type: string
-      isBasecampAccountCreated:
-        type: boolean
-      isCompleted:
-        type: boolean
-      isDiscordRoleAssigned:
-        type: boolean
-      isInfoUpdated:
-        type: boolean
-      isTeamEmailCreated:
-        type: boolean
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_view.EmployeeInvitationResponse:
-    properties:
-      data:
-        $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.EmployeeInvitationData'
-    type: object
   github_com_dwarvesf_fortress-api_pkg_view.FeedBackReviewDetail:
     properties:
       employee:
@@ -3196,37 +3468,6 @@ definitions:
       data:
         $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.FeedBackReviewDetail'
     type: object
-  github_com_dwarvesf_fortress-api_pkg_view.GetCurrenciesResponse:
-    properties:
-      data:
-        items:
-          $ref: '#/definitions/Currency'
-        type: array
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_view.GetQuestionResponse:
-    properties:
-      data:
-        items:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.Question'
-        type: array
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_view.InvitedEmployeeInfo:
-    properties:
-      avatar:
-        type: string
-      displayName:
-        type: string
-      fullName:
-        type: string
-      id:
-        type: string
-      personalEmail:
-        type: string
-      teamEmail:
-        type: string
-      username:
-        type: string
-    type: object
   github_com_dwarvesf_fortress-api_pkg_view.ListSurveyDetailResponse:
     properties:
       data:
@@ -3246,22 +3487,6 @@ definitions:
           $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.WorkUnit'
         type: array
     type: object
-  github_com_dwarvesf_fortress-api_pkg_view.MetaData:
-    properties:
-      code:
-        type: string
-      id:
-        type: string
-      name:
-        type: string
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_view.OrganizationsResponse:
-    properties:
-      data:
-        items:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Organization'
-        type: array
-    type: object
   github_com_dwarvesf_fortress-api_pkg_view.PeerReviewer:
     properties:
       eventReviewerID:
@@ -3275,76 +3500,18 @@ definitions:
       status:
         $ref: '#/definitions/EventReviewerStatus'
     type: object
-  github_com_dwarvesf_fortress-api_pkg_view.PositionResponse:
+  github_com_dwarvesf_fortress-api_pkg_view.Post:
     properties:
-      data:
-        items:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Position'
-        type: array
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_view.ProfileData:
-    properties:
-      address:
-        type: string
-      avatar:
-        type: string
-      birthday:
-        type: string
-      city:
-        type: string
-      country:
-        type: string
       discordID:
         type: string
-      discordName:
+      publishedAt:
         type: string
-      displayName:
+      reward:
+        type: number
+      title:
         type: string
-      fullName:
+      url:
         type: string
-      gender:
-        type: string
-      githubID:
-        type: string
-      id:
-        type: string
-      linkedInName:
-        type: string
-      notionEmail:
-        type: string
-      notionID:
-        type: string
-      notionName:
-        type: string
-      personalEmail:
-        type: string
-      phoneNumber:
-        type: string
-      placeOfResidence:
-        type: string
-      roles:
-        items:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.Role'
-        type: array
-      teamEmail:
-        type: string
-      username:
-        type: string
-      wiseAccountNumber:
-        type: string
-      wiseCurrency:
-        type: string
-      wiseRecipientEmail:
-        type: string
-      wiseRecipientID:
-        type: string
-      wiseRecipientName:
-        type: string
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_view.ProfileDataResponse:
-    properties:
-      data:
-        $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.ProfileData'
     type: object
   github_com_dwarvesf_fortress-api_pkg_view.ProjectContentData:
     properties:
@@ -3477,51 +3644,6 @@ definitions:
           $ref: '#/definitions/ProjectMember'
         type: array
     type: object
-  github_com_dwarvesf_fortress-api_pkg_view.Question:
-    properties:
-      category:
-        type: string
-      content:
-        type: string
-      id:
-        type: string
-      order:
-        type: integer
-      subcategory:
-        type: string
-      type:
-        type: string
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_view.Role:
-    properties:
-      code:
-        type: string
-      id:
-        type: string
-      name:
-        type: string
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_view.RolesResponse:
-    properties:
-      data:
-        items:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Role'
-        type: array
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_view.SeniorityResponse:
-    properties:
-      data:
-        items:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Seniority'
-        type: array
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_view.StackResponse:
-    properties:
-      data:
-        items:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Stack'
-        type: array
-    type: object
   github_com_dwarvesf_fortress-api_pkg_view.Survey:
     properties:
       count:
@@ -3586,6 +3708,15 @@ definitions:
       data:
         $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.SurveyTopicDetail'
     type: object
+  github_com_dwarvesf_fortress-api_pkg_view.TopContributor:
+    properties:
+      count:
+        type: integer
+      discordID:
+        type: string
+      ranking:
+        type: integer
+    type: object
   github_com_dwarvesf_fortress-api_pkg_view.Topic:
     properties:
       comments:
@@ -3620,61 +3751,6 @@ definitions:
         type: string
       type:
         type: string
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_view.UpdateProfileInfoData:
-    properties:
-      address:
-        type: string
-      city:
-        type: string
-      country:
-        type: string
-      createdAt:
-        type: string
-      deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
-      discordID:
-        type: string
-      discordName:
-        type: string
-      githubID:
-        type: string
-      id:
-        type: string
-      linkedInName:
-        type: string
-      notionEmail:
-        type: string
-      notionID:
-        type: string
-      notionName:
-        type: string
-      phoneNumber:
-        type: string
-      placeOfResidence:
-        type: string
-      teamEmail:
-        description: basic info
-        type: string
-      updatedAt:
-        type: string
-      username:
-        type: string
-      wiseAccountNumber:
-        type: string
-      wiseCurrency:
-        type: string
-      wiseRecipientEmail:
-        type: string
-      wiseRecipientID:
-        type: string
-      wiseRecipientName:
-        type: string
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_view.UpdateProfileInfoResponse:
-    properties:
-      data:
-        $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.UpdateProfileInfoData'
     type: object
   github_com_dwarvesf_fortress-api_pkg_view.UpdateProjectContactInfo:
     properties:
@@ -3786,91 +3862,20 @@ definitions:
         description: Valid is true if Time is not NULL
         type: boolean
     type: object
-  pkg_handler_client_request.CreateClientContactInput:
+  pkg_view.Question:
     properties:
-      emails:
-        items:
-          type: string
-        type: array
-      isMainContact:
-        type: boolean
-      name:
+      category:
         type: string
-      role:
+      content:
         type: string
-    type: object
-  pkg_handler_client_request.UpdateClientContactInput:
-    properties:
-      emails:
-        items:
-          type: string
-        type: array
-      isMainContact:
-        type: boolean
-      name:
+      id:
         type: string
-      role:
-        type: string
-    type: object
-  pkg_view.ApiError:
-    description: validation error details
-    properties:
-      enums:
-        description: available options incase of field's payload is enums
-        items:
-          type: string
-        type: array
-      field:
-        description: the field cause the error
-        type: string
-      msg:
-        description: error message
-        type: string
-    type: object
-  pkg_view.BraineryMetric:
-    properties:
-      contributors:
-        items:
-          $ref: '#/definitions/pkg_view.Post'
-        type: array
-      latestPosts:
-        items:
-          $ref: '#/definitions/pkg_view.Post'
-        type: array
-      newContributors:
-        items:
-          $ref: '#/definitions/pkg_view.Post'
-        type: array
-      tags:
-        items:
-          type: string
-        type: array
-      topContributors:
-        items:
-          $ref: '#/definitions/pkg_view.TopContributor'
-        type: array
-    type: object
-  pkg_view.Post:
-    properties:
-      discordID:
-        type: string
-      publishedAt:
-        type: string
-      reward:
-        type: number
-      title:
-        type: string
-      url:
-        type: string
-    type: object
-  pkg_view.TopContributor:
-    properties:
-      count:
+      order:
         type: integer
-      discordID:
+      subcategory:
         type: string
-      ranking:
-        type: integer
+      type:
+        type: string
     type: object
 info:
   contact:
@@ -5439,13 +5444,14 @@ paths:
       consumes:
       - application/json
       description: Submit Get invitation state based on token
+      operationId: getInvitation
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.EmployeeInvitationResponse'
+            $ref: '#/definitions/EmployeeInvitationResponse'
         "400":
           description: Bad Request
           schema:
@@ -5468,13 +5474,14 @@ paths:
       consumes:
       - application/json
       description: Submit Onboarding form
+      operationId: submitOnboardingForm
       parameters:
       - description: Body
         in: body
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_handler_profile_request.SubmitOnboardingFormRequest'
+          $ref: '#/definitions/SubmitOnboardingFormRequest'
       produces:
       - application/json
       responses:
@@ -5679,13 +5686,14 @@ paths:
       consumes:
       - application/json
       description: Get list values for chapters
+      operationId: getChaptersList
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.ChapterResponse'
+            $ref: '#/definitions/ChapterResponse'
         "400":
           description: Bad Request
           schema:
@@ -5702,13 +5710,14 @@ paths:
       consumes:
       - application/json
       description: Get all countries
+      operationId: getCountriesList
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.CountriesResponse'
+            $ref: '#/definitions/CountriesResponse'
         "400":
           description: Bad Request
           schema:
@@ -5725,13 +5734,14 @@ paths:
       consumes:
       - application/json
       description: Get list cities by country
+      operationId: getCitiesList
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.CitiesResponse'
+            $ref: '#/definitions/CitiesResponse'
         "400":
           description: Bad Request
           schema:
@@ -5748,13 +5758,14 @@ paths:
       consumes:
       - application/json
       description: Get list currencies
+      operationId: getCurrenciesList
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.GetCurrenciesResponse'
+            $ref: '#/definitions/GetCurrenciesResponse'
         "400":
           description: Bad Request
           schema:
@@ -5771,13 +5782,14 @@ paths:
       consumes:
       - application/json
       description: Get list values for organizations
+      operationId: getOrganizationsList
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.OrganizationsResponse'
+            $ref: '#/definitions/OrganizationsResponse'
         "400":
           description: Bad Request
           schema:
@@ -5794,13 +5806,14 @@ paths:
       consumes:
       - application/json
       description: Get list values for positions
+      operationId: getPositionsList
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.PositionResponse'
+            $ref: '#/definitions/PositionResponse'
         "400":
           description: Bad Request
           schema:
@@ -5816,13 +5829,14 @@ paths:
       consumes:
       - application/json
       description: Create new position
+      operationId: createPosition
       parameters:
       - description: Body
         in: body
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_handler_metadata_request.CreatePositionInput'
+          $ref: '#/definitions/CreatePositionInput'
       produces:
       - application/json
       responses:
@@ -5852,6 +5866,7 @@ paths:
       consumes:
       - application/json
       description: Delete position by ID
+      operationId: deletePosition
       parameters:
       - description: Position ID
         in: path
@@ -5886,6 +5901,7 @@ paths:
       consumes:
       - application/json
       description: Update position information by ID
+      operationId: updatePosition
       parameters:
       - description: Position ID
         in: path
@@ -5897,7 +5913,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_handler_metadata_request.UpdatePositionBody'
+          $ref: '#/definitions/UpdatePositionBody'
       produces:
       - application/json
       responses:
@@ -5927,15 +5943,14 @@ paths:
       consumes:
       - application/json
       description: Get list values for project statuses
+      operationId: getProjectStatusesList
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.MetaData'
-            type: array
+            $ref: '#/definitions/MetaDataResponse'
         "400":
           description: Bad Request
           schema:
@@ -5952,6 +5967,7 @@ paths:
       consumes:
       - application/json
       description: Get list question by category and subcategory
+      operationId: getQuestionsList
       parameters:
       - description: Category
         enum:
@@ -5978,7 +5994,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.GetQuestionResponse'
+            $ref: '#/definitions/GetQuestionResponse'
         "400":
           description: Bad Request
           schema:
@@ -5995,13 +6011,14 @@ paths:
       consumes:
       - application/json
       description: Get list roles
+      operationId: getRolesList
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.RolesResponse'
+            $ref: '#/definitions/RolesResponse'
         "400":
           description: Bad Request
           schema:
@@ -6018,13 +6035,14 @@ paths:
       consumes:
       - application/json
       description: Get list values for sentitorities
+      operationId: getSenioritiesList
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.SeniorityResponse'
+            $ref: '#/definitions/SeniorityResponse'
         "400":
           description: Bad Request
           schema:
@@ -6041,6 +6059,7 @@ paths:
       consumes:
       - application/json
       description: Get list values for stacks
+      operationId: getStacksList
       parameters:
       - description: Keyword
         in: query
@@ -6060,7 +6079,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.StackResponse'
+            $ref: '#/definitions/StackResponse'
         "400":
           description: Bad Request
           schema:
@@ -6076,13 +6095,14 @@ paths:
       consumes:
       - application/json
       description: Create new stack
+      operationId: createStack
       parameters:
       - description: Body
         in: body
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_handler_metadata_request.CreateStackInput'
+          $ref: '#/definitions/CreateStackInput'
       produces:
       - application/json
       responses:
@@ -6112,6 +6132,7 @@ paths:
       consumes:
       - application/json
       description: Delete stack by ID
+      operationId: deleteStack
       parameters:
       - description: Stack ID
         in: path
@@ -6146,6 +6167,7 @@ paths:
       consumes:
       - application/json
       description: Update stack information by ID
+      operationId: updateStack
       parameters:
       - description: Stack ID
         in: path
@@ -6157,7 +6179,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_handler_metadata_request.UpdateStackBody'
+          $ref: '#/definitions/UpdateStackBody'
       produces:
       - application/json
       responses:
@@ -6187,15 +6209,14 @@ paths:
       consumes:
       - application/json
       description: Get list values for working status
+      operationId: getWorkingStatusList
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.MetaData'
-            type: array
+            $ref: '#/definitions/MetaDataResponse'
         "400":
           description: Bad Request
           schema:
@@ -6484,13 +6505,14 @@ paths:
       consumes:
       - application/json
       description: Get profile information of employee
+      operationId: getPofile
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.ProfileDataResponse'
+            $ref: '#/definitions/ProfileDataResponse'
         "400":
           description: Bad Request
           schema:
@@ -6512,6 +6534,7 @@ paths:
       consumes:
       - application/json
       description: Update profile info by id
+      operationId: updateProfileInfo
       parameters:
       - description: Employee ID
         in: path
@@ -6523,14 +6546,14 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_handler_profile_request.UpdateInfoInput'
+          $ref: '#/definitions/UpdateInfoInput'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.UpdateProfileInfoResponse'
+            $ref: '#/definitions/UpdateProfileInfoResponse'
         "400":
           description: Bad Request
           schema:
@@ -6553,6 +6576,7 @@ paths:
       consumes:
       - application/json
       description: Upload image  by id
+      operationId: uploadImage
       parameters:
       - description: content upload
         in: formData
@@ -6588,6 +6612,7 @@ paths:
       consumes:
       - application/json
       description: Upload avatar  by id
+      operationId: uploadProfileAvatar
       parameters:
       - description: content upload
         in: formData
