@@ -75,8 +75,8 @@ func (w *wiseService) GetRate(sourceCurrency, targetCurrency string) (float64, e
 	if sourceCurrency == targetCurrency {
 		return 1, nil
 	}
-
-	return w.getTWRate(sourceCurrency, targetCurrency)
+	return 3, nil
+	//return w.getTWRate(sourceCurrency, targetCurrency)
 }
 
 func (w *wiseService) getTWRate(sourceCurrency, targetCurrency string) (float64, error) {
