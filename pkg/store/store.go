@@ -19,6 +19,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/store/client"
 	"github.com/dwarvesf/fortress-api/pkg/store/clientcontact"
 	"github.com/dwarvesf/fortress-api/pkg/store/content"
+	"github.com/dwarvesf/fortress-api/pkg/store/conversionrate"
 	"github.com/dwarvesf/fortress-api/pkg/store/country"
 	"github.com/dwarvesf/fortress-api/pkg/store/currency"
 	"github.com/dwarvesf/fortress-api/pkg/store/dashboard"
@@ -94,6 +95,7 @@ type Store struct {
 	Client                  client.IStore
 	ClientContact           clientcontact.IStore
 	Content                 content.IStore
+	ConversionRate          conversionrate.IStore
 	Country                 country.IStore
 	Currency                currency.IStore
 	Dashboard               dashboard.IStore
@@ -169,6 +171,7 @@ func New() *Store {
 		Client:                  client.New(),
 		ClientContact:           clientcontact.New(),
 		Content:                 content.New(),
+		ConversionRate:          conversionrate.New(),
 		Country:                 country.New(),
 		Currency:                currency.New(),
 		Dashboard:               dashboard.New(),

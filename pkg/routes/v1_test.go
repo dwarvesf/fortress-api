@@ -663,6 +663,12 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/deliverymetric.IHandler.Sync-fm",
 			},
 		},
+		"/cronjobs/sync-conversion-rates": {
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/conversionrate.IHandler.Sync-fm",
+			},
+		},
 		"/webhooks/n8n": {
 			"POST": {
 				Method:  "POST",
@@ -900,6 +906,12 @@ func Test_loadV1Routes(t *testing.T) {
 			"GET": {
 				Method:  "GET",
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/employee.IHandler.ListWithMMAScore-fm",
+			},
+		},
+		"/api/v1/conversion-rates": {
+			"GET": {
+				Method:  "GET",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/conversionrate.IHandler.List-fm",
 			},
 		},
 	}
