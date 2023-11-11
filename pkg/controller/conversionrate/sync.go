@@ -5,7 +5,7 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-var srcCurrencies = []string{"USD", "VND"}
+var destCurrencies = []string{"USD", "VND"}
 
 func (r *controller) Sync(c *gin.Context) error {
 	tx, done := r.repo.NewTransaction()
@@ -18,17 +18,13 @@ func (r *controller) Sync(c *gin.Context) error {
 
 	currencyRateMap := make(map[string]float64)
 	for _, conversionRate := range conversionRates {
-		for _, srcCurrency := range srcCurrencies {
-			if conversionRate.Currency.Name == srcCurrency {
-				continue
-			}
-
-			// Get rate
-			rate, err := r.service.Wise.GetRate(srcCurrency, conversionRate.Currency.Name)
+		srcCurrency := conversionRate.Currency.Name
+		for _, destCurrency := range destCurrencies {
+			rate, err := r.service.Wise.GetRate(srcCurrency, destCurrency)
 			if err != nil {
 				return done(err)
 			}
-			currencyRateMap[conversionRate.Currency.Name] = rate
+			currencyRateMap[destCurrency] = rate
 		}
 
 		for k, v := range currencyRateMap {
