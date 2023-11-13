@@ -17,7 +17,7 @@ func (s store) FindOperationByMonth(db *gorm.DB, month time.Month) ([]*model.Ope
 	var res []*model.OperationalService
 	query := db.Table("operational_services").
 		Preload("Currency").
-		Where("is_active is true and date_part('month',register_date) = ?", month)
+		Where("is_active is true and type = 'monthly'")
 
 	err := query.Find(&res).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
