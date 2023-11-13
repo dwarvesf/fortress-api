@@ -7,6 +7,19 @@ type Organization struct {
 	Code   string `json:"code"`
 	Name   string `json:"name"`
 	Avatar string `json:"avatar"`
+} // @name Organization
+
+func ToOrganization(org *model.Organization) *Organization {
+	if org == nil {
+		return nil
+	}
+
+	return &Organization{
+		ID:     org.ID.String(),
+		Code:   org.Code,
+		Name:   org.Name,
+		Avatar: org.Avatar,
+	}
 }
 
 func ToOrganizations(orgs []model.EmployeeOrganization) []Organization {

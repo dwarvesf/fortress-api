@@ -45,15 +45,16 @@ func New(controller *controller.Controller, store *store.Store, repo store.DBRep
 // List godoc
 // @Summary Get the list of employees
 // @Description Get the list of employees with pagination and workingStatus
+// @id getEmployeeList
 // @Tags Employee
 // @Accept  json
 // @Produce  json
-// @Param Authorization header string true "jwt token"
-// @Param Body body request.GetListEmployeeInput true "Body"
-// @Success 200 {object} view.EmployeeListDataResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Security BearerAuth
+// @Param Body body GetListEmployeeQuery true "Body"
+// @Success 200 {object} EmployeeListDataResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /employees/search [post]
 func (h *handler) List(c *gin.Context) {
 	// 0. Get current logged in user data
@@ -63,7 +64,7 @@ func (h *handler) List(c *gin.Context) {
 		return
 	}
 
-	var body request.GetListEmployeeInput
+	var body request.GetListEmployeeQuery
 
 	if err := c.ShouldBindJSON(&body); err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, body, ""))
@@ -74,8 +75,6 @@ func (h *handler) List(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, body, ""))
 		return
 	}
-
-	body.Standardize()
 
 	l := h.logger.Fields(logger.Fields{
 		"handler": "employee",
@@ -89,8 +88,14 @@ func (h *handler) List(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 	}
 
+	pagination := model.Pagination{
+		Page: body.Pagination.Page,
+		Size: body.Pagination.Size,
+	}
+	pagination.Standardize()
+
 	requestBody := employee.GetListEmployeeInput{
-		Pagination: body.Pagination,
+		Pagination: pagination,
 
 		WorkingStatuses: body.WorkingStatuses,
 		Preload:         body.Preload,
@@ -112,7 +117,7 @@ func (h *handler) List(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse(view.ToEmployeeListData(employees, userInfo),
-		&view.PaginationResponse{Pagination: body.Pagination, Total: total}, nil, nil, ""))
+		&view.PaginationResponse{Pagination: pagination, Total: total}, nil, nil, ""))
 }
 
 func (h *handler) getWorkingStatusInput(input []string, userInfo *model.CurrentLoggedUserInfo) ([]string, error) {
@@ -155,15 +160,16 @@ func (h *handler) getWorkingStatusInput(input []string, userInfo *model.CurrentL
 // Details godoc
 // @Summary Get employee by id
 // @Description Get employee by id
+// @id getEmployeeDetails
 // @Tags Employee
 // @Accept  json
 // @Produce  json
-// @Param Authorization header string true "jwt token"
+// @Security BearerAuth
 // @Param id path string true "Employee ID"
-// @Success 200 {object} view.EmployeeData
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Success 200 {object} EmployeeDataResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /employees/{id} [get]
 func (h *handler) Details(c *gin.Context) {
 	// 0. Get current logged in user data
@@ -197,16 +203,17 @@ func (h *handler) Details(c *gin.Context) {
 // UpdateEmployeeStatus godoc
 // @Summary Update account status by employee id
 // @Description Update account status by employee id
+// @id updateEmployeeStatus
 // @Tags Employee
 // @Accept  json
 // @Produce  json
-// @Param Authorization header string true "jwt token"
+// @Security BearerAuth
 // @Param id path string true "Employee ID"
-// @Param employeeStatus body model.WorkingStatus true "Employee Status"
-// @Success 200 {object} view.UpdateEmployeeStatusResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Param employeeStatus body UpdateWorkingStatusRequest true "Employee Status"
+// @Success 200 {object} UpdateEmployeeStatusResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /employees/{id}/employee-status [put]
 func (h *handler) UpdateEmployeeStatus(c *gin.Context) {
 	employeeID := c.Param("id")
@@ -215,7 +222,7 @@ func (h *handler) UpdateEmployeeStatus(c *gin.Context) {
 		return
 	}
 
-	var body request.UpdateWorkingStatusInput
+	var body request.UpdateWorkingStatusRequest
 	if err := c.ShouldBindJSON(&body); err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, body, ""))
 		return
@@ -234,7 +241,7 @@ func (h *handler) UpdateEmployeeStatus(c *gin.Context) {
 	}
 
 	emp, err := h.controller.Employee.UpdateEmployeeStatus(employeeID, employee.UpdateWorkingStatusInput{
-		EmployeeStatus: body.EmployeeStatus,
+		EmployeeStatus: model.WorkingStatus(body.EmployeeStatus),
 	})
 	if err != nil {
 		l.Error(err, "failed to update employee status")
@@ -262,16 +269,17 @@ func (h *handler) UpdateEmployeeStatus(c *gin.Context) {
 // UpdateGeneralInfo godoc
 // @Summary Update general info of the employee by id
 // @Description Update general info of the employee by id
+// @id updateGeneralInfo
 // @Tags Employee
 // @Accept  json
 // @Produce  json
-// @Param Authorization header string true "jwt token"
+// @Security BearerAuth
 // @Param id path string true "Employee ID"
-// @Param Body body request.UpdateEmployeeGeneralInfoInput true "Body"
-// @Success 200 {object} view.UpdateGeneralEmployeeResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Param Body body UpdateEmployeeGeneralInfoRequest true "Body"
+// @Success 200 {object} UpdateGeneralEmployeeResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /employees/{id}/general-info [put]
 func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 	employeeID := c.Param("id")
@@ -280,7 +288,7 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 		return
 	}
 
-	var body request.UpdateEmployeeGeneralInfoInput
+	var body request.UpdateEmployeeGeneralInfoRequest
 	if err := c.ShouldBindJSON(&body); err != nil {
 		if err != nil {
 			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, body, ""))
@@ -298,7 +306,7 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 		FullName:           body.FullName,
 		Email:              body.Email,
 		Phone:              body.Phone,
-		LineManagerID:      body.LineManagerID,
+		LineManagerID:      model.UUID(body.LineManagerID),
 		DisplayName:        body.DisplayName,
 		GithubID:           body.GithubID,
 		NotionID:           body.NotionID,
@@ -308,8 +316,8 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 		LinkedInName:       body.LinkedInName,
 		LeftDate:           body.LeftDate,
 		JoinedDate:         body.JoinedDate,
-		OrganizationIDs:    body.OrganizationIDs,
-		ReferredBy:         body.ReferredBy,
+		OrganizationIDs:    view.ToModelUUIDs(body.OrganizationIDs),
+		ReferredBy:         model.UUID(body.ReferredBy),
 		WiseRecipientID:    body.WiseRecipientID,
 		WiseAccountNumber:  body.WiseAccountNumber,
 		WiseRecipientEmail: body.WiseRecipientEmail,
@@ -330,15 +338,16 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 // Create godoc
 // @Summary Create new employee
 // @Description Create new employee
+// @id createEmployee
 // @Tags Employee
 // @Accept  json
 // @Produce  json
-// @Param Body body request.CreateEmployeeInput true "Body"
-// @Param Authorization header string true "jwt token"
-// @Success 200 {object} view.EmployeeData
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Security BearerAuth
+// @Param Body body CreateEmployeeRequest true "Body"
+// @Success 200 {object} EmployeeDataResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /employees [post]
 func (h *handler) Create(c *gin.Context) {
 	userID, err := authutils.GetUserIDFromContext(c, h.config)
@@ -348,7 +357,7 @@ func (h *handler) Create(c *gin.Context) {
 	}
 
 	// 1. parse eml data from body
-	var input request.CreateEmployeeInput
+	var input request.CreateEmployeeRequest
 
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, input, ""))
@@ -395,16 +404,17 @@ func (h *handler) Create(c *gin.Context) {
 // UpdateSkills godoc
 // @Summary Update Skill for employee by id
 // @Description Update Skill for employee by id
+// @id updateSkill
 // @Tags Employee
 // @Accept  json
 // @Produce  json
 // @Param id path string true "Employee ID"
-// @Param Body body request.UpdateSkillsInput true "Body"
-// @Param Authorization header string true "jwt token"
-// @Success 200 {object} view.UpdateSkillsEmployeeResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Security BearerAuth
+// @Param Body body UpdateSkillsRequest true "Body"
+// @Success 200 {object} UpdateSkillsEmployeeResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /employees/{id}/skills [put]
 func (h *handler) UpdateSkills(c *gin.Context) {
 	employeeID := c.Param("id")
@@ -413,7 +423,7 @@ func (h *handler) UpdateSkills(c *gin.Context) {
 		return
 	}
 
-	var body request.UpdateSkillsInput
+	var body request.UpdateSkillsRequest
 	if err := c.ShouldBindJSON(&body); err != nil {
 		if err != nil {
 			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, body, ""))
@@ -434,6 +444,7 @@ func (h *handler) UpdateSkills(c *gin.Context) {
 		Seniority:       body.Seniority,
 		Stacks:          body.Stacks,
 	}
+
 	emp, err := h.controller.Employee.UpdateSkills(h.logger, employeeID, requestBody)
 	if err != nil {
 		l.Error(err, "failed to update skills")
@@ -447,16 +458,17 @@ func (h *handler) UpdateSkills(c *gin.Context) {
 // UpdatePersonalInfo godoc
 // @Summary Update personal info of the employee by id
 // @Description Update personal info of the employee by id
+// @id updatePersonalInfo
 // @Tags Employee
 // @Accept  json
 // @Produce  json
-// @Param Authorization header string true "jwt token"
+// @Security BearerAuth
 // @Param id path string true "Employee ID"
-// @Param Body body request.UpdatePersonalInfoInput true "Body"
-// @Success 200 {object} view.UpdatePersonalEmployeeResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Param Body body UpdatePersonalInfoRequest true "Body"
+// @Success 200 {object} UpdatePersonalEmployeeResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /employees/{id}/personal-info [put]
 func (h *handler) UpdatePersonalInfo(c *gin.Context) {
 	employeeID := c.Param("id")
@@ -465,7 +477,7 @@ func (h *handler) UpdatePersonalInfo(c *gin.Context) {
 		return
 	}
 
-	var body request.UpdatePersonalInfoInput
+	var body request.UpdatePersonalInfoRequest
 	if err := c.ShouldBindJSON(&body); err != nil {
 		if err != nil {
 			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, body, ""))
@@ -527,16 +539,17 @@ func (h *handler) validateAndMappingCity(db *gorm.DB, countryName string, cityNa
 // UploadAvatar godoc
 // @Summary Upload avatar of employee by id
 // @Description Upload avatar of employee by id
+// @id uploadAvatar
 // @Tags Employee
 // @Accept  json
 // @Produce  json
 // @Param id path string true "Employee ID"
-// @Param Authorization header string true "jwt token"
+// @Security BearerAuth
 // @Param file formData file true "avatar upload"
-// @Success 200 {object} view.EmployeeContentDataResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Success 200 {object} EmployeeContentDataResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /employees/{id}/upload-avatar [post]
 func (h *handler) UploadAvatar(c *gin.Context) {
 	// 1.1 get userID
@@ -592,16 +605,17 @@ func (h *handler) UploadAvatar(c *gin.Context) {
 // UpdateRole godoc
 // @Summary Update role by employee id
 // @Description Update role by employee id
+// @id updateRole
 // @Tags Employee
 // @Accept  json
 // @Produce  json
-// @Param Authorization header string true "jwt token"
+// @Security BearerAuth
 // @Param id path string true "Employee ID"
-// @Param roleID body model.UUID true "Account role ID"
-// @Success 200 {object} view.MessageResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Param Body body UpdateRoleRequest true "body"
+// @Success 200 {object} MessageResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /employees/{id}/roles [put]
 func (h *handler) UpdateRole(c *gin.Context) {
 	userID, err := authutils.GetUserIDFromContext(c, h.config)
@@ -650,12 +664,13 @@ func (h *handler) UpdateRole(c *gin.Context) {
 // GetLineManagers godoc
 // @Summary Get the list of line managers
 // @Description Get the list of line managers
+// @id getLineManagerList
 // @Tags Employee
 // @Accept  json
 // @Produce  json
-// @Param Authorization header string true "jwt token"
-// @Success 200 {object} view.LineManagersResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Security BearerAuth
+// @Success 200 {object} LineManagersResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /line-managers [get]
 func (h *handler) GetLineManagers(c *gin.Context) {
 	userInfo, err := authutils.GetLoggedInUserInfo(c, h.store, h.repo.DB(), h.config)
@@ -683,16 +698,17 @@ func (h *handler) GetLineManagers(c *gin.Context) {
 // UpdateBaseSalary godoc
 // @Summary Update employee's base salary by employee and base salary id
 // @Description Update employee's base salary by employee and base salary id
+// @id updateBaseSalary
 // @Tags Employee
 // @Accept  json
 // @Produce  json
-// @Param Authorization header string true "jwt token"
+// @Security BearerAuth
 // @Param id path string true "Employee ID"
-// @Param Body body request.UpdateBaseSalaryInput true "Body"
-// @Success 200 {object} view.UpdateBaseSalaryResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Param Body body UpdateBaseSalaryRequest true "Body"
+// @Success 200 {object} UpdateBaseSalaryResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /employees/{id}/base-salary [put]
 func (h *handler) UpdateBaseSalary(c *gin.Context) {
 	employeeID := c.Param("id")
@@ -701,7 +717,7 @@ func (h *handler) UpdateBaseSalary(c *gin.Context) {
 		return
 	}
 
-	var req request.UpdateBaseSalaryInput
+	var req request.UpdateBaseSalaryRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		if err != nil {
 			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, req, ""))
@@ -758,13 +774,14 @@ func (h *handler) UpdateBaseSalary(c *gin.Context) {
 // PublicList godoc
 // @Summary Get public employees list
 // @Description Get public employees list
+// @id getPublicEmployeeList
 // @Tags Public
 // @Accept  json
 // @Produce  json
-// @Success 200 {object} view.EmployeeLocationListResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Success 200 {object} EmployeeLocationListResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /public/employees [get]
 func (h *handler) PublicList(c *gin.Context) {
 	l := h.logger.Fields(logger.Fields{

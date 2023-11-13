@@ -41,7 +41,7 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 // @Produce  json
 // @Param year path int true "Year"
 // @Success 200 {object} model.Valuation
-// @Failure 400 {object} view.ErrorResponse
+// @Failure 400 {object} ErrorResponse
 func (h *handler) One(c *gin.Context) {
 	// parse params & prepare logger
 	year := c.Param("year")

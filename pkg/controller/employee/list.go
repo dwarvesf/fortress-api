@@ -2,11 +2,11 @@ package employee
 
 import (
 	"errors"
-	"gorm.io/gorm"
 
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/store/employee"
 	"github.com/dwarvesf/fortress-api/pkg/utils/authutils"
+	"gorm.io/gorm"
 )
 
 type GetListEmployeeInput struct {

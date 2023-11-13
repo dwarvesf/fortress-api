@@ -29,7 +29,7 @@ type UpdateInfoInput struct {
 	WiseRecipientName  string `form:"wiseRecipientName" json:"wiseRecipientName"`
 	WiseAccountNumber  string `form:"wiseAccountNumber" json:"wiseAccountNumber"`
 	WiseCurrency       string `form:"wiseCurrency" json:"wiseCurrency"`
-}
+} // @name UpdateInfoInput
 
 func (i UpdateInfoInput) ToEmployeeModel(employee *model.Employee) {
 	employee.PersonalEmail = i.PersonalEmail
@@ -86,7 +86,7 @@ type SubmitOnboardingFormRequest struct {
 	GithubID     string `json:"githubID"`
 	LinkedInName string `json:"linkedInName"`
 	NotionName   string `json:"notionName"`
-}
+} // @name SubmitOnboardingFormRequest
 
 func (i *SubmitOnboardingFormRequest) Validate() error {
 	if i.DateOfBirth.After(time.Now()) {

@@ -39,12 +39,13 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 // WorkingStatuses godoc
 // @Summary Get list values for working status
 // @Description Get list values for working status
+// @id getWorkingStatusList
 // @Tags Metadata
 // @Accept  json
 // @Produce  json
-// @Success 200 {object} []view.MetaData
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Success 200 {object} MetaDataResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /metadata/working-status [get]
 func (h *handler) WorkingStatuses(c *gin.Context) {
 	// return list values for working status
@@ -78,12 +79,13 @@ func (h *handler) WorkingStatuses(c *gin.Context) {
 // Seniorities godoc
 // @Summary Get list values for sentitorities
 // @Description Get list values for sentitorities
+// @id getSenioritiesList
 // @Tags Metadata
 // @Accept  json
 // @Produce  json
-// @Success 200 {object} view.SeniorityResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Success 200 {object} SeniorityResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /metadata/seniorities [get]
 func (h *handler) Seniorities(c *gin.Context) {
 	// 1 prepare the logger
@@ -107,12 +109,13 @@ func (h *handler) Seniorities(c *gin.Context) {
 // Chapters godoc
 // @Summary Get list values for chapters
 // @Description Get list values for chapters
+// @id getChaptersList
 // @Tags Metadata
 // @Accept  json
 // @Produce  json
-// @Success 200 {object} view.ChapterResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Success 200 {object} ChapterResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /metadata/chapters [get]
 func (h *handler) Chapters(c *gin.Context) {
 	// 1 prepare the logger
@@ -137,12 +140,13 @@ func (h *handler) Chapters(c *gin.Context) {
 // Organizations godoc
 // @Summary Get list values for organizations
 // @Description Get list values for organizations
+// @id getOrganizationsList
 // @Tags Metadata
 // @Accept  json
 // @Produce  json
-// @Success 200 {object} view.OrganizationsResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Success 200 {object} OrganizationsResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /metadata/organizations [get]
 func (h *handler) Organizations(c *gin.Context) {
 	// 1 prepare the logger
@@ -166,12 +170,13 @@ func (h *handler) Organizations(c *gin.Context) {
 // GetRoles godoc
 // @Summary Get list roles
 // @Description Get list roles
+// @id getRolesList
 // @Tags Metadata
 // @Accept  json
 // @Produce  json
-// @Success 200 {object} view.RolesResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Success 200 {object} RolesResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /metadata/roles [get]
 func (h *handler) GetRoles(c *gin.Context) {
 	l := h.logger.Fields(logger.Fields{
@@ -194,12 +199,13 @@ func (h *handler) GetRoles(c *gin.Context) {
 // ProjectStatuses godoc
 // @Summary Get list values for project statuses
 // @Description Get list values for project statuses
+// @id getProjectStatusesList
 // @Tags Metadata
 // @Accept  json
 // @Produce  json
-// @Success 200 {object} []view.MetaData
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Success 200 {object} MetaDataResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /metadata/project-statuses [get]
 func (h *handler) ProjectStatuses(c *gin.Context) {
 	// return list values for project statuses
@@ -229,12 +235,13 @@ func (h *handler) ProjectStatuses(c *gin.Context) {
 // Positions godoc
 // @Summary Get list values for positions
 // @Description Get list values for positions
+// @id getPositionsList
 // @Tags Metadata
 // @Accept  json
 // @Produce  json
-// @Success 200 {object} view.PositionResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Success 200 {object} PositionResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /metadata/positions [get]
 func (h *handler) Positions(c *gin.Context) {
 	// 1 prepare the logger
@@ -259,12 +266,13 @@ func (h *handler) Positions(c *gin.Context) {
 // GetCountries godoc
 // @Summary Get all countries
 // @Description Get all countries
+// @id getCountriesList
 // @Tags Metadata
 // @Accept  json
 // @Produce  json
-// @Success 200 {object} view.CountriesResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Success 200 {object} CountriesResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /metadata/countries [get]
 func (h *handler) GetCountries(c *gin.Context) {
 	countries, err := h.store.Country.All(h.repo.DB())
@@ -289,12 +297,13 @@ func (h *handler) GetCountries(c *gin.Context) {
 // GetCities godoc
 // @Summary Get list cities by country
 // @Description Get list cities by country
+// @id getCitiesList
 // @Tags Metadata
 // @Accept  json
 // @Produce  json
-// @Success 200 {object} view.CitiesResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Success 200 {object} CitiesResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /metadata/countries/{country_id}/cities [get]
 func (h *handler) GetCities(c *gin.Context) {
 	l := h.logger.Fields(logger.Fields{
@@ -322,15 +331,16 @@ func (h *handler) GetCities(c *gin.Context) {
 // Stacks godoc
 // @Summary Get list values for stacks
 // @Description Get list values for stacks
+// @id getStacksList
 // @Tags Metadata
 // @Accept  json
 // @Produce  json
 // @Param keyword query string false "Keyword"
 // @Param page query string false "Page"
 // @Param size query string false "Size"
-// @Success 200 {object} view.StackResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Success 200 {object} StackResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /metadata/stacks [get]
 func (h *handler) Stacks(c *gin.Context) {
 	var input request.GetStacksInput
@@ -359,16 +369,17 @@ func (h *handler) Stacks(c *gin.Context) {
 // UpdateStack godoc
 // @Summary Update stack information by ID
 // @Description Update stack information by ID
+// @id updateStack
 // @Tags Metadata
 // @Accept  json
 // @Produce  json
-// @Param Authorization header string true "jwt token"
+// @Security BearerAuth
 // @Param id path string true "Stack ID"
-// @Param Body body request.UpdateStackBody true "Body"
-// @Success 200 {object} view.MessageResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Param Body body UpdateStackBody true "Body"
+// @Success 200 {object} MessageResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /metadata/stacks/{id} [put]
 func (h *handler) UpdateStack(c *gin.Context) {
 	var input request.UpdateStackInput
@@ -421,15 +432,16 @@ func (h *handler) UpdateStack(c *gin.Context) {
 // CreateStack godoc
 // @Summary Create new stack
 // @Description Create new stack
+// @id createStack
 // @Tags Metadata
 // @Accept  json
 // @Produce  json
-// @Param Authorization header string true "jwt token"
-// @Param Body body request.CreateStackInput true "Body"
-// @Success 200 {object} view.MessageResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Security BearerAuth
+// @Param Body body CreateStackInput true "Body"
+// @Success 200 {object} MessageResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /metadata/stacks [post]
 func (h *handler) CreateStack(c *gin.Context) {
 	var input request.CreateStackInput
@@ -465,15 +477,16 @@ func (h *handler) CreateStack(c *gin.Context) {
 // DeleteStack godoc
 // @Summary Delete stack by ID
 // @Description Delete stack by ID
+// @id deleteStack
 // @Tags Metadata
 // @Accept  json
 // @Produce  json
-// @Param Authorization header string true "jwt token"
+// @Security BearerAuth
 // @Param id path string true "Stack ID"
-// @Success 200 {object} view.MessageResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Success 200 {object} MessageResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /metadata/stacks/{id} [delete]
 func (h *handler) DeleteStack(c *gin.Context) {
 	stackID := c.Param("id")
@@ -502,16 +515,17 @@ func (h *handler) DeleteStack(c *gin.Context) {
 // UpdatePosition godoc
 // @Summary Update position information by ID
 // @Description Update position information by ID
+// @id updatePosition
 // @Tags Metadata
 // @Accept  json
 // @Produce  json
-// @Param Authorization header string true "jwt token"
+// @Security BearerAuth
 // @Param id path string true "Position ID"
-// @Param Body body request.UpdatePositionBody true "Body"
-// @Success 200 {object} view.MessageResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Param Body body UpdatePositionBody true "Body"
+// @Success 200 {object} MessageResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /metadata/positions/{id} [put]
 func (h *handler) UpdatePosition(c *gin.Context) {
 	var input request.UpdatePositionInput
@@ -562,15 +576,16 @@ func (h *handler) UpdatePosition(c *gin.Context) {
 // CreatePosition godoc
 // @Summary Create new position
 // @Description Create new position
+// @id createPosition
 // @Tags Metadata
 // @Accept  json
 // @Produce  json
-// @Param Authorization header string true "jwt token"
-// @Param Body body request.CreatePositionInput true "Body"
-// @Success 200 {object} view.MessageResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Security BearerAuth
+// @Param Body body CreatePositionInput true "Body"
+// @Success 200 {object} MessageResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /metadata/positions [post]
 func (h *handler) CreatePosition(c *gin.Context) {
 	var input request.CreatePositionInput
@@ -604,15 +619,16 @@ func (h *handler) CreatePosition(c *gin.Context) {
 // DeletePosition godoc
 // @Summary Delete position by ID
 // @Description Delete position by ID
+// @id deletePosition
 // @Tags Metadata
 // @Accept  json
 // @Produce  json
-// @Param Authorization header string true "jwt token"
+// @Security BearerAuth
 // @Param id path string true "Position ID"
-// @Success 200 {object} view.MessageResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Success 200 {object} MessageResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /metadata/positions/{id} [delete]
 func (h *handler) DeletePosition(c *gin.Context) {
 	positionID := c.Param("id")
@@ -640,14 +656,15 @@ func (h *handler) DeletePosition(c *gin.Context) {
 // GetQuestions godoc
 // @Summary Get list question by category and subcategory
 // @Description Get list question by category and subcategory
+// @id getQuestionsList
 // @Tags Metadata
 // @Accept  json
 // @Produce  json
-// @Param category query model.EventType true "Category"
-// @Param subcategory query model.EventSubtype true "Subcategory"
-// @Success 200 {object} view.GetQuestionResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Param category query EventType true "Category"
+// @Param subcategory query EventSubtype true "Subcategory"
+// @Success 200 {object} GetQuestionResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /metadata/questions [get]
 func (h *handler) GetQuestions(c *gin.Context) {
 	var input GetQuestionsInput
@@ -668,7 +685,7 @@ func (h *handler) GetQuestions(c *gin.Context) {
 		"input":   input,
 	})
 
-	rs, err := h.store.Question.AllByCategory(h.repo.DB(), input.Category, input.Subcategory)
+	rs, err := h.store.Question.AllByCategory(h.repo.DB(), model.EventType(input.Category), model.EventSubtype(input.Subcategory))
 	if err != nil {
 		l.Error(err, "failed to get question from db")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
@@ -681,12 +698,13 @@ func (h *handler) GetQuestions(c *gin.Context) {
 // GetCurrencies godoc
 // @Summary Get list currencies
 // @Description Get list currencies
+// @id getCurrenciesList
 // @Tags Metadata
 // @Accept  json
 // @Produce  json
-// @Success 200 {object} view.GetCurrenciesResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Success 200 {object} GetCurrenciesResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /metadata/currencies [get]
 func (h *handler) GetCurrencies(c *gin.Context) {
 	l := h.logger.Fields(logger.Fields{

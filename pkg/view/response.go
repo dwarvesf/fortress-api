@@ -27,15 +27,15 @@ type Response[T any] struct {
 type ErrorResponse struct {
 	Error        string     `json:"error"`
 	ErrorDetails []ApiError `json:"errors"`
-}
+} // @name ErrorResponse
 
 type MessageResponse struct {
 	Message string `json:"message"`
-}
+} // @name MessageResponse
 
 type ResponseString struct {
 	Data string `json:"data"`
-}
+} // @name ResponseString
 
 func CreateResponse[T any](data T, paging *PaginationResponse, err error, payload any, message string) Response[T] {
 	resp := Response[T]{

@@ -14,37 +14,60 @@ type EngagementDashboardQuestionStat struct {
 	Title     string     `json:"title"`
 	StartDate *time.Time `json:"startDate"`
 	Point     float64    `json:"point"`
-}
+} // @name EngagementDashboardQuestionStat
 type EngagementDashboard struct {
 	Content    string                            `json:"content"`
 	QuestionID string                            `json:"questionID"`
 	Stats      []EngagementDashboardQuestionStat `json:"stats"`
-}
+} // @name EngagementDashboard
 
 type EngagementDashboardQuestionDetailStat struct {
 	Field     string     `json:"field"`
 	StartDate *time.Time `json:"startDate"`
 	Point     float64    `json:"point"`
-}
+} // @name EngagementDashboardQuestionDetailStat
 
 type EngagementDashboardDetail struct {
 	QuestionID string                                  `json:"questionID"`
 	Stats      []EngagementDashboardQuestionDetailStat `json:"stats"`
-}
+} // @name EngagementDashboardDetail
 
 type ProjectSizeResponse struct {
 	Data []*model.ProjectSize `json:"data"`
+} // @name ProjectSizeResponse
+
+type ProjectSize struct {
+	ID     string `json:"id"`
+	Name   string `json:"name"`
+	Code   string `json:"code"`
+	Avatar string `json:"avatar"`
+	Size   int64  `json:"size"`
+} // @name ProjectSize
+
+func ToProjectSizes(projects []*model.ProjectSize) []*ProjectSize {
+	var rs []*ProjectSize
+	for _, p := range projects {
+		rs = append(rs, &ProjectSize{
+			ID:     p.ID.String(),
+			Name:   p.Name,
+			Code:   p.Code,
+			Avatar: p.Avatar,
+			Size:   p.Size,
+		})
+	}
+
+	return rs
 }
 
 type WorkSurveyResponse struct {
 	Data WorkSurveysData `json:"data"`
-}
+} // @name WorkSurveyResponse
 
 type Trend struct {
 	Workload float64 `json:"workload"`
 	Deadline float64 `json:"deadline"`
 	Learning float64 `json:"learning"`
-}
+} // @name Trend
 
 type WorkSurvey struct {
 	EndDate  string  `json:"endDate"`
@@ -52,13 +75,13 @@ type WorkSurvey struct {
 	Deadline float64 `json:"deadline"`
 	Learning float64 `json:"learning"`
 	Trend    Trend   `json:"trend"`
-}
+} // @name WorkSurvey
 
 type ActionItemTrend struct {
 	High   float64 `json:"high"`
 	Medium float64 `json:"medium"`
 	Low    float64 `json:"low"`
-}
+} // @name ActionItemTrend
 
 type AuditActionItemReport struct {
 	Quarter string          `json:"quarter"`
@@ -66,16 +89,16 @@ type AuditActionItemReport struct {
 	Medium  int64           `json:"medium"`
 	Low     int64           `json:"low"`
 	Trend   ActionItemTrend `json:"trend"`
-}
+} // @name AuditActionItemReport
 
 type WorkSurveysData struct {
 	Project     *BasicProjectInfo `json:"project"`
 	WorkSurveys []*WorkSurvey     `json:"workSurveys"`
-}
+} // @name WorkSurveysData
 
 type ActionItemReportResponse struct {
 	AuditActionItemReports []*AuditActionItemReport `json:"data"`
-}
+} // @name ActionItemReportResponse
 
 func ToWorkSurveyData(project *model.Project, workSurveys []*model.WorkSurvey) *WorkSurveysData {
 	rs := &WorkSurveysData{}
@@ -180,18 +203,18 @@ func calculateActionItemReportTrend(previous *model.ActionItemReport, current *m
 
 type EngineeringHealthResponse struct {
 	Data EngineeringHealthData `json:"data"`
-}
+} // @name EngineeringHealthResponse
 
 type EngineeringHealthData struct {
 	Average []*EngineeringHealth      `json:"average"`
 	Groups  []*GroupEngineeringHealth `json:"groups"`
-}
+} // @name EngineeringHealthData
 
 type EngineeringHealth struct {
 	Quarter string  `json:"quarter"`
 	Value   float64 `json:"avg"`
 	Trend   float64 `json:"trend"`
-}
+} // @name EngineeringHealth
 
 type GroupEngineeringHealth struct {
 	Quarter       string                 `json:"quarter"`
@@ -200,14 +223,14 @@ type GroupEngineeringHealth struct {
 	Collaboration float64                `json:"collaboration"`
 	Feedback      float64                `json:"feedback"`
 	Trend         EngineeringHealthTrend `json:"trend"`
-}
+} // @name GroupEngineeringHealth
 
 type EngineeringHealthTrend struct {
 	Delivery      float64 `json:"delivery"`
 	Quality       float64 `json:"quality"`
 	Collaboration float64 `json:"collaboration"`
 	Feedback      float64 `json:"feedback"`
-}
+} // @name EngineeringHealthTrend
 
 func ToEngineeringHealthData(average []*model.AverageEngineeringHealth, groups []*model.GroupEngineeringHealth) *EngineeringHealthData {
 	rs := &EngineeringHealthData{}
@@ -305,18 +328,18 @@ func calculateEngineeringHealthTrend(previous *EngineeringHealth, current *Engin
 
 type AuditResponse struct {
 	Data AuditData `json:"data"`
-}
+} // @name AuditResponse
 
 type AuditData struct {
 	Average []*Audit      `json:"average"`
 	Groups  []*GroupAudit `json:"groups"`
-}
+} // @name AuditData
 
 type Audit struct {
 	Quarter string  `json:"quarter"`
 	Value   float64 `json:"avg"`
 	Trend   float64 `json:"trend"`
-}
+} // @name Audit
 
 type GroupAudit struct {
 	Quarter    string          `json:"quarter"`
@@ -327,7 +350,7 @@ type GroupAudit struct {
 	Mobile     float64         `json:"mobile"`
 	Blockchain float64         `json:"blockchain"`
 	Trend      GroupAuditTrend `json:"trend"`
-}
+} // @name GroupAudit
 
 type GroupAuditTrend struct {
 	Frontend   float64 `json:"frontend"`
@@ -336,7 +359,7 @@ type GroupAuditTrend struct {
 	Process    float64 `json:"process"`
 	Mobile     float64 `json:"mobile"`
 	Blockchain float64 `json:"blockchain"`
-}
+} // @name GroupAuditTrend
 
 func ToAuditData(average []*model.AverageAudit, groups []*model.GroupAudit) *AuditData {
 	rs := &AuditData{}
@@ -414,18 +437,17 @@ type ActionItemSquash struct {
 	SnapDate string  `json:"snapDate"`
 	Value    int64   `json:"value"`
 	Trend    float64 `json:"trend"`
-}
-
+} // @name ActionItemSquash
 type ActionItemSquashReport struct {
 	All    []*ActionItemSquash `json:"all"`
 	High   []*ActionItemSquash `json:"high"`
 	Medium []*ActionItemSquash `json:"medium"`
 	Low    []*ActionItemSquash `json:"low"`
-}
+} // @name ActionItemSquashReport
 
 type ActionItemSquashReportResponse struct {
 	Data *ActionItemSquashReport `json:"data"`
-}
+} // @name ActionItemSquashReportResponse
 
 func ToActionItemSquashReportData(actionItemReports []*model.ActionItemSquashReport) *ActionItemSquashReport {
 	rs := &ActionItemSquashReport{}
@@ -479,12 +501,12 @@ func calculateTrendForActionItemSquash(items []*ActionItemSquash) {
 type AuditValue struct {
 	Value float64 `json:"value"`
 	Trend float64 `json:"trend"`
-}
+} // @name AuditValue
 
 type ItemValue struct {
 	Value int64   `json:"value"`
 	Trend float64 `json:"trend"`
-}
+} // @name ItemValue
 
 type AuditSummary struct {
 	ID           model.UUID `json:"id"`
@@ -496,15 +518,15 @@ type AuditSummary struct {
 	Audit        AuditValue `json:"audit"`
 	NewItem      ItemValue  `json:"newItem"`
 	ResolvedItem ItemValue  `json:"resolvedItem"`
-}
+} // @name AuditSummary
 
 type AuditSummaries struct {
 	Summary []*AuditSummary `json:"summary"`
-}
+} // @name AuditSummaries
 
 type AuditSummariesResponse struct {
 	Data *AuditSummaries `json:"data"`
-}
+} // @name AuditSummariesResponse
 
 func ToAuditSummary(summary []*model.AuditSummary, previousSize int) *AuditSummary {
 	rs := &AuditSummary{
@@ -601,7 +623,7 @@ type AvailableSlot struct {
 	Seniority Seniority        `json:"seniority"`
 	Project   BasicProjectInfo `json:"project"`
 	Positions []Position       `json:"positions"`
-}
+} // @name AvailableSlot
 
 type AvailableEmployee struct {
 	ID          string             `json:"id"`
@@ -613,16 +635,16 @@ type AvailableEmployee struct {
 	Positions   []Position         `json:"positions"`
 	Stacks      []Stack            `json:"stacks"`
 	Projects    []BasicProjectInfo `json:"projects"`
-}
+} // @name AvailableEmployee
 
 type ResourceAvailability struct {
 	Slots     []AvailableSlot     `json:"slots"`
 	Employees []AvailableEmployee `json:"employees"`
-}
+} // @name ResourceAvailability
 
 type ResourceAvailabilityResponse struct {
 	Data ResourceAvailability `json:"data"`
-}
+} // @name ResourceAvailabilityResponse
 
 func ToResourceAvailability(slots []*model.ProjectSlot, employees []*model.Employee) ResourceAvailability {
 	var res ResourceAvailability
@@ -724,15 +746,15 @@ func ToEngagementDashboardDetails(statistic []*model.StatisticEngagementDashboar
 
 type GetEngagementDashboardResponse struct {
 	Data []EngagementDashboard `json:"data"`
-}
+} // @name GetEngagementDashboardResponse
 
 type GetEngagementDashboardDetailResponse struct {
 	Data []EngagementDashboardDetail `json:"data"`
-}
+} // @name GetEngagementDashboardDetailResponse
 
 type GetDashboardResourceUtilizationResponse struct {
-	Data []model.ResourceUtilization `json:"data"`
-}
+	Data []ResourceUtilization `json:"data"`
+} // @name GetDashboardResourceUtilizationResponse
 
 type WorkUnitDistribution struct {
 	Employee    BasicEmployeeInfo               `json:"employee"`
@@ -740,7 +762,7 @@ type WorkUnitDistribution struct {
 	Development WorkUnitDistributionDevelopment `json:"development"`
 	Management  WorkUnitDistributionManagement  `json:"management"`
 	Training    WorkUnitDistributionTraining    `json:"training"`
-}
+} // @name WorkUnitDistribution
 
 func ManagementInfoToProjectHead(managementInfo *model.ManagementInfo) *WorkUnitDistributionWUProjectHead {
 	return &WorkUnitDistributionWUProjectHead{
@@ -766,38 +788,38 @@ func ToWorkUnitDistributionWU(workUnit *model.WorkUnit) *WorkUnitDistributionWU 
 type WorkUnitDistributionLearning struct {
 	Total     int                       `json:"total"`
 	WorkUnits []*WorkUnitDistributionWU `json:"workUnits"`
-}
+} // @name WorkUnitDistributionLearning
 
 type WorkUnitDistributionDevelopment struct {
 	Total     int                       `json:"total"`
 	WorkUnits []*WorkUnitDistributionWU `json:"workUnits"`
-}
+} // @name WorkUnitDistributionDevelopment
 
 type WorkUnitDistributionManagement struct {
 	Total        int                                  `json:"total"`
 	WorkUnits    []*WorkUnitDistributionWU            `json:"workUnits"`
 	ProjectHeads []*WorkUnitDistributionWUProjectHead `json:"projectHeads"`
-}
+} // @name WorkUnitDistributionManagement
 
 type WorkUnitDistributionTraining struct {
 	Total     int                       `json:"total"`
 	WorkUnits []*WorkUnitDistributionWU `json:"workUnits"`
 	Mentees   []BasicEmployeeInfo       `json:"mentees"`
-}
+} // @name WorkUnitDistributionTraining
 
 type WorkUnitDistributionWU struct {
 	Project      BasicProjectInfo `json:"project"`
 	WorkUnitName string           `json:"workUnitName"`
-}
+} // @name WorkUnitDistributionWU
 
 type WorkUnitDistributionWUProjectHead struct {
 	Project  BasicProjectInfo `json:"project"`
 	Position string           `json:"position"`
-}
+} // @name WorkUnitDistributionWUProjectHead
 
 type WorkUnitDistributionData struct {
 	WorkUnitDistributions []*WorkUnitDistribution `json:"workUnitDistributions"`
-}
+} // @name WorkUnitDistributionData
 
 func toWorkUnitDistributionWUProjectHeads(projectHeads []model.ProjectHead) []*WorkUnitDistributionWUProjectHead {
 	rs := make([]*WorkUnitDistributionWUProjectHead, 0)
@@ -875,11 +897,11 @@ type SummaryWorkUnitDistributionData struct {
 	Development float64 `json:"development"`
 	Management  float64 `json:"management"`
 	Training    float64 `json:"training"`
-}
+} // @name SummaryWorkUnitDistributionData
 
 type SummaryWorkUnitDistributionResponse struct {
 	Data *SummaryWorkUnitDistributionData `json:"data"`
-}
+} // @name SummaryWorkUnitDistributionResponse
 
 func ToSummaryWorkUnitDistributionData(data *model.TotalWorkUnitDistribution) *SummaryWorkUnitDistributionData {
 	total := data.TotalLineManagerCount + data.TotalProjectHead + data.TotalLearning + data.TotalDevelopment + data.TotalManagement + data.TotalTraining
@@ -895,32 +917,32 @@ func ToSummaryWorkUnitDistributionData(data *model.TotalWorkUnitDistribution) *S
 
 type WorkUnitDistributionsResponse struct {
 	Data *WorkUnitDistributionData `json:"data"`
-}
+} // @name WorkUnitDistributionsResponse
 
 type WorkSurveySummaryAnswer struct {
 	Answer  string           `json:"answer"`
 	Project BasicProjectInfo `json:"project"`
-}
+} // @name WorkSurveySummaryAnswer
 
 type WorkSurveySummaryListAnswer struct {
 	Date    string                    `json:"date"`
 	Answers []WorkSurveySummaryAnswer `json:"answers"`
-}
+} // @name WorkSurveySummaryListAnswer
 
 type WorkSurveySummaryEmployee struct {
 	Reviewer    BasicEmployeeInfo             `json:"reviewer"`
 	ListAnswers []WorkSurveySummaryListAnswer `json:"listAnswers"`
-}
+} // @name WorkSurveySummaryEmployee
 
 type WorkSurveySummary struct {
 	Type  string                      `json:"type"`
 	Dates []string                    `json:"dates"`
 	Data  []WorkSurveySummaryEmployee `json:"data"`
-}
+} // @name WorkSurveySummary
 
 type WorkSurveySummaryResponse struct {
 	Data []WorkSurveySummary `json:"data"`
-}
+} // @name WorkSurveySummaryResponse
 
 func ToWorkSummaries(eers []*model.EmployeeEventReviewer) []WorkSurveySummary {
 	rs := []WorkSurveySummary{
@@ -994,6 +1016,28 @@ func ToWorkSummaries(eers []*model.EmployeeEventReviewer) []WorkSurveySummary {
 
 			domainMap[domain].Data = append(domainMap[domain].Data, employee)
 		}
+	}
+
+	return rs
+}
+
+type ResourceUtilization struct {
+	Date      time.Time `json:"date"`
+	Staffed   int       `json:"staffed"`
+	Internal  int       `json:"internal"`
+	Available int       `json:"available"`
+} // @name ResourceUtilization
+
+func ToReSourceUtilizations(data []*model.ResourceUtilization) []ResourceUtilization {
+	rs := make([]ResourceUtilization, 0, len(data))
+
+	for _, v := range data {
+		rs = append(rs, ResourceUtilization{
+			Date:      v.Date,
+			Staffed:   v.Staffed,
+			Internal:  v.Internal,
+			Available: v.Available,
+		})
 	}
 
 	return rs

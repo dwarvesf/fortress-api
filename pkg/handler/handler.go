@@ -10,6 +10,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/handler/bankaccount"
 	"github.com/dwarvesf/fortress-api/pkg/handler/brainerylogs"
 	"github.com/dwarvesf/fortress-api/pkg/handler/client"
+	"github.com/dwarvesf/fortress-api/pkg/handler/conversionrate"
 	"github.com/dwarvesf/fortress-api/pkg/handler/dashboard"
 	"github.com/dwarvesf/fortress-api/pkg/handler/dashboard/util"
 	"github.com/dwarvesf/fortress-api/pkg/handler/deliverymetric"
@@ -42,6 +43,7 @@ type Handler struct {
 	BankAccount    bankaccount.IHandler
 	BraineryLog    brainerylogs.IHandler
 	Client         client.IHandler
+	ConversionRate conversionrate.IHandler
 	Dashboard      dashboard.IHandler
 	DeliveryMetric deliverymetric.IHandler
 	Discord        discord.IHandler
@@ -70,6 +72,7 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, ctrl *
 		BankAccount:    bankaccount.New(store, repo, service, logger, cfg),
 		BraineryLog:    brainerylogs.New(ctrl, store, repo, service, logger, cfg),
 		Client:         client.New(ctrl, store, repo, service, logger, cfg),
+		ConversionRate: conversionrate.New(ctrl, store, repo, service, logger, cfg),
 		Dashboard:      dashboard.New(store, repo, service, logger, cfg, util.New()),
 		DeliveryMetric: deliverymetric.New(ctrl, store, repo, service, logger, cfg),
 		Discord:        discord.New(ctrl, store, repo, service, logger, cfg),

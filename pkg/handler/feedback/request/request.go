@@ -3,10 +3,11 @@ package request
 import (
 	"github.com/dwarvesf/fortress-api/pkg/handler/feedback/errs"
 	"github.com/dwarvesf/fortress-api/pkg/model"
+	"github.com/dwarvesf/fortress-api/pkg/view"
 )
 
 type GetListFeedbackInput struct {
-	model.Pagination
+	view.Pagination
 
 	Status string `json:"status" form:"status"`
 }
@@ -36,18 +37,18 @@ func (i *DetailInput) Validate() error {
 	return nil
 }
 
-type BasicEventQuestionInput struct {
+type BasicEventQuestionRequest struct {
 	EventQuestionID model.UUID `json:"eventQuestionID" form:"eventQuestionID" binding:"required"`
 	Answer          string     `json:"answer" form:"answer"`
 	Note            string     `json:"note" form:"note"`
-}
+} // @name BasicEventQuestionRequest
 
-type SubmitBody struct {
-	Answers []BasicEventQuestionInput `json:"answers" form:"answers" binding:"required"`
-	Status  model.EventReviewerStatus `json:"status" form:"status" binding:"required"`
-}
+type SubmitFeedbackRequest struct {
+	Answers []BasicEventQuestionRequest `json:"answers" form:"answers" binding:"required"`
+	Status  model.EventReviewerStatus   `json:"status" form:"status" binding:"required"`
+} // @name SubmitFeedbackRequest
 
-func (i *SubmitBody) Validate() error {
+func (i *SubmitFeedbackRequest) Validate() error {
 	if !i.Status.IsValid() {
 		return errs.ErrInvalidReviewerStatus
 	}
@@ -56,7 +57,7 @@ func (i *SubmitBody) Validate() error {
 }
 
 type SubmitInput struct {
-	Body    SubmitBody
+	Body    SubmitFeedbackRequest
 	EventID string
 	TopicID string
 }

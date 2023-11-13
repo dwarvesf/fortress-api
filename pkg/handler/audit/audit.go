@@ -46,11 +46,12 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 // Sync godoc
 // @Summary Sync audit info from Notion to database
 // @Description Sync audit info from Notion to database
+// @id syncAudit
 // @Tags Audit
 // @Accept  json
 // @Produce  json
-// @Param Authorization header string true "jwt token"
-// @Success 200 {object} view.MessageResponse
+// @Security BearerAuth
+// @Success 200 {object} MessageResponse
 // @Router /cronjobs/audits [post]
 func (h *handler) Sync(c *gin.Context) {
 	h.SyncAuditCycle()

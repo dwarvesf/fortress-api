@@ -34,11 +34,12 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 // List godoc
 // @Summary Get all bank accounts
 // @Description Get all bank accounts
+// @id listBankAccounts
 // @Tags Bank
 // @Accept  json
 // @Produce  json
-// @Success 200 {object} []view.ListBankAccountResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Success 200 {object} ListBankAccountResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /bank-accounts [get]
 func (h *handler) List(c *gin.Context) {
 	l := h.logger.Fields(logger.Fields{

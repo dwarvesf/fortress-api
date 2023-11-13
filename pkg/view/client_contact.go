@@ -13,7 +13,7 @@ type ClientContact struct {
 	Role          string   `json:"role"`
 	Emails        []string `json:"emails"`
 	IsMainContact bool     `json:"isMainContact"`
-}
+} // @name ClientContact
 
 func toClientContact(cc *model.ClientContact) *ClientContact {
 	emails := []string{}

@@ -50,13 +50,15 @@ const (
 // Create godoc
 // @Summary Create brainery logs
 // @Description Create brainery logs
+// @id createBraineryLog
 // @Tags Project
 // @Accept  json
 // @Produce  json
-// @Param Authorization header string true "jwt token"
-// @Success 200 {object} view.MessageResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Security BearerAuth
+// @Param body body CreateBraineryLogRequest true "Body"
+// @Success 200 {object} MessageResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /brainery-logs [post]
 func (h *handler) Create(c *gin.Context) {
 	l := h.logger.Fields(
@@ -103,15 +105,16 @@ func (h *handler) Create(c *gin.Context) {
 // GetMetrics godoc
 // @Summary Get brainery metric
 // @Description Get brainery metric
+// @id getBraineryMetric
 // @Tags Project
 // @Accept  json
 // @Produce  json
-// @Param Authorization header string true "jwt token"
+// @Security BearerAuth
 // @Param view query string false "Time view"
-// @Param date query string false "Date"
-// @Success 200 {object} view.BraineryMetric
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Param date query string false "Date" Format(date)
+// @Success 200 {object} BraineryMetricResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /brainery-logs/metrics [get]
 func (h *handler) GetMetrics(c *gin.Context) {
 	l := h.logger.Fields(

@@ -56,14 +56,6 @@ func New(controller *controller.Controller, store *store.Store, repo store.DBRep
 	}
 }
 
-// GetPayrollsByMonth godoc
-// @Summary  Get payrolls by month
-// @Description Get payrolls by month
-// @Tags payrolls
-// @Accept  json
-// @Produce  json
-// @Success 200 {object} []model.Payroll
-// @Failure 400 {object} view.ErrorResponse
 func (h *handler) GetPayrollsByMonth(c *gin.Context) {
 	q := c.Request.URL.Query()
 

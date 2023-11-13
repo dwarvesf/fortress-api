@@ -9,7 +9,7 @@ type Chapter struct {
 	Code   string `json:"code"`
 	Name   string `json:"name"`
 	LeadID string `json:"leadID"`
-}
+} // @name Chapter
 
 func ToChapters(employeeChapters []model.EmployeeChapter) []Chapter {
 	rs := make([]Chapter, 0, len(employeeChapters))

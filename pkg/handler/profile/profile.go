@@ -47,14 +47,15 @@ func New(controller *controller.Controller, store *store.Store, repo store.DBRep
 // GetProfile godoc
 // @Summary Get profile information of employee
 // @Description Get profile information of employee
+// @id getPofile
 // @Tags Profile
 // @Accept  json
 // @Produce  json
-// @Param Authorization header string true "jwt token"
-// @Success 200 {object} view.ProfileDataResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Security BearerAuth
+// @Success 200 {object} ProfileDataResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /profile [get]
 func (h *handler) GetProfile(c *gin.Context) {
 	userID, err := authutils.GetUserIDFromContext(c, h.config)
@@ -86,16 +87,17 @@ func (h *handler) GetProfile(c *gin.Context) {
 // UpdateInfo godoc
 // @Summary Update profile info by id
 // @Description Update profile info by id
+// @id updateProfileInfo
 // @Tags Profile
 // @Accept  json
 // @Produce  json
-// @Param Authorization header string true "jwt token"
+// @Security BearerAuth
 // @Param id path string true "Employee ID"
-// @Param Body body request.UpdateInfoInput true "Body"
-// @Success 200 {object} view.UpdateProfileInfoResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Param Body body UpdateInfoInput true "Body"
+// @Success 200 {object} UpdateProfileInfoResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /profile [put]
 func (h *handler) UpdateInfo(c *gin.Context) {
 	employeeID, err := authutils.GetUserIDFromContext(c, h.config)
@@ -325,15 +327,16 @@ func (h *handler) validateAndMappingCity(db *gorm.DB, countryName string, cityNa
 // UploadAvatar godoc
 // @Summary Upload avatar  by id
 // @Description Upload avatar  by id
+// @id uploadProfileAvatar
 // @Tags Profile
 // @Accept  json
 // @Produce  json
-// @Param Authorization header string true "jwt token"
+// @Security BearerAuth
 // @Param file formData file true "content upload"
-// @Success 200 {object} view.EmployeeContentDataResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Success 200 {object} EmployeeContentDataResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /profile/upload-avatar [post]
 func (h *handler) UploadAvatar(c *gin.Context) {
 	employeeID, err := authutils.GetUserIDFromContext(c, h.config)
@@ -447,15 +450,16 @@ func (h *handler) UploadAvatar(c *gin.Context) {
 // Upload godoc
 // @Summary Upload image  by id
 // @Description Upload image  by id
+// @id uploadImage
 // @Tags Profile
 // @Accept  json
 // @Produce  json
-// @Param Authorization header string true "jwt token"
+// @Security BearerAuth
 // @Param file formData file true "content upload"
-// @Success 200 {object} view.EmployeeContentDataResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Success 200 {object} EmployeeContentDataResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /profile/upload [post]
 func (h *handler) Upload(c *gin.Context) {
 	employeeID, err := authutils.GetUserIDFromContext(c, h.config)
@@ -599,14 +603,15 @@ func (h *handler) Upload(c *gin.Context) {
 // GetInvitation godoc
 // @Summary Get invitation state based on token
 // @Description Submit Get invitation state based on token
+// @id getInvitation
 // @Tags Onboarding
 // @Accept  json
 // @Produce  json
-// @Param Authorization header string true "jwt token"
-// @Success 200 {object} view.EmployeeInvitationResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Security BearerAuth
+// @Success 200 {object} EmployeeInvitationResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /invite [get]
 func (h *handler) GetInvitation(c *gin.Context) {
 	employeeID, err := authutils.GetUserIDFromContext(c, h.config)
@@ -639,15 +644,16 @@ func (h *handler) GetInvitation(c *gin.Context) {
 // SubmitOnboardingForm godoc
 // @Summary Submit onboarding form
 // @Description Submit Onboarding form
+// @id submitOnboardingForm
 // @Tags Onboarding
 // @Accept  json
 // @Produce  json
-// @Param Authorization header string true "jwt token"
-// @Param Body body request.SubmitOnboardingFormRequest true "Body"
-// @Success 200 {object} view.MessageResponse
-// @Failure 400 {object} view.ErrorResponse
-// @Failure 404 {object} view.ErrorResponse
-// @Failure 500 {object} view.ErrorResponse
+// @Security BearerAuth
+// @Param Body body SubmitOnboardingFormRequest true "Body"
+// @Success 200 {object} MessageResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /invite/submit [put]
 func (h *handler) SubmitOnboardingForm(c *gin.Context) {
 	employeeID, err := authutils.GetUserIDFromContext(c, h.config)

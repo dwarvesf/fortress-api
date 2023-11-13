@@ -1,64 +1,49 @@
 {
     "data": {
-        "id": "2655832e-f009-4b73-a535-64c3a22e558f",
+        "chapters": [],
         "createdAt": "2022-11-02T09:52:34.586566Z",
-        "updatedAt": "",
-        "seniority": {
-            "id": "01fb6322-d727-47e3-a242-5039ea4732fd",
-            "createdAt": "2022-11-07T09:50:25.714604Z",
-            "updatedAt": "2022-11-07T09:50:25.714604Z",
-            "name": "Staff",
-            "code": "staff",
-            "level": 5
-        },
+        "id": "2655832e-f009-4b73-a535-64c3a22e558f",
         "positions": [
             {
+                "code": "frontend",
                 "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
-                "createdAt": "2022-11-07T09:50:25.714604Z",
-                "updatedAt": "2022-11-07T09:50:25.714604Z",
-                "name": "Frontend",
-                "code": "frontend"
+                "name": "Frontend"
             },
             {
+                "code": "backend",
                 "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
-                "createdAt": "2022-11-07T09:50:25.714604Z",
-                "updatedAt": "2022-11-07T09:50:25.714604Z",
-                "name": "Backend",
-                "code": "backend"
+                "name": "Backend"
             },
             {
+                "code": "devops",
                 "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
-                "createdAt": "2022-11-07T09:50:25.714604Z",
-                "updatedAt": "2022-11-07T09:50:25.714604Z",
-                "name": "Devops",
-                "code": "devops"
+                "name": "Devops"
             },
             {
+                "code": "blockchain",
                 "id": "01fb6322-d727-47e3-a242-5039ea4732fc",
-                "createdAt": "2022-11-07T09:50:25.714604Z",
-                "updatedAt": "2022-11-07T09:50:25.714604Z",
-                "name": "Blockchain",
-                "code": "blockchain"
+                "name": "Blockchain"
             }
         ],
+        "seniority": {
+            "code": "staff",
+            "id": "01fb6322-d727-47e3-a242-5039ea4732fd",
+            "name": "Staff"
+        },
         "stacks": [
             {
-                "id": "0ecf47c8-cca4-4c30-94bb-054b1124c44f",
-                "createdAt": "2022-11-11T18:38:46.266725Z",
-                "updatedAt": "2022-11-11T18:38:46.266725Z",
-                "name": "Golang",
+                "avatar": "",
                 "code": "golang",
-                "avatar": ""
+                "id": "0ecf47c8-cca4-4c30-94bb-054b1124c44f",
+                "name": "Golang"
             },
             {
-                "id": "b403ef95-4269-4830-bbb6-8e56e5ec0af4",
-                "createdAt": "2022-11-11T18:38:46.266725Z",
-                "updatedAt": "2022-11-11T18:38:46.266725Z",
-                "name": "Google Cloud",
+                "avatar": "",
                 "code": "gcloud",
-                "avatar": ""
+                "id": "b403ef95-4269-4830-bbb6-8e56e5ec0af4",
+                "name": "Google Cloud"
             }
         ],
-        "chapters": []
+        "updatedAt": ""
     }
 }

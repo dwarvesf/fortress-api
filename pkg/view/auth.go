@@ -7,11 +7,11 @@ import (
 type AuthData struct {
 	Employee    EmployeeData `json:"employee"`
 	AccessToken string       `json:"accessToken"`
-}
+} // @name AuthData
 
 type APIKeyData struct {
 	Key string `json:"key"`
-}
+} // @name APIKeyData
 
 func ToAuthData(accessToken string, employee *model.Employee) *AuthData {
 	return &AuthData{
@@ -28,7 +28,7 @@ type LoggedInUserData struct {
 	TeamEmail   string     `json:"teamEmail"`
 	Role        string     `json:"role"`
 	Permissions []string   `json:"permissions"`
-}
+} // @name LoggedInUserData
 
 func ToAuthorizedUserData(employee *model.Employee, perms []*model.Permission) *LoggedInUserData {
 	permissions := make([]string, len(perms))
@@ -49,8 +49,8 @@ func ToAuthorizedUserData(employee *model.Employee, perms []*model.Permission) *
 
 type AuthUserResponse struct {
 	Data LoggedInUserData `json:"data"`
-}
+} // @name AuthUserResponse
 
 type APIKeyResponse struct {
 	Data APIKeyData `json:"data"`
-}
+} // @name APIKeyResponse

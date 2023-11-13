@@ -2,6 +2,10 @@ package engagement
 
 import (
 	"fmt"
+	"net/http"
+	"strconv"
+	"time"
+
 	"github.com/bwmarrin/discordgo"
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/controller"
@@ -12,9 +16,6 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/view"
 	"github.com/gin-gonic/gin"
-	"net/http"
-	"strconv"
-	"time"
 )
 
 type handler struct {
@@ -51,14 +52,15 @@ func New(
 // UpsertRollup godoc
 // @Summary Upsert engagement rollup
 // @Description Upsert engagement rollup
+// @id upsertEngagementRollup
 // @Tags Engagement
 // @Accept json
 // @Produce json
-// @Param Authorization header string true "jwt token"
-// @Param Body body request.UpsertRollupRequest true "Body"
-// @Success 200 {object} view.MessageResponse
-// @Success 400 {object} view.ErrorResponse
-// @Success 500 {object} view.ErrorResponse
+// @Security BearerAuth
+// @Param Body body UpsertRollupRequest true "Body"
+// @Success 200 {object} MessageResponse
+// @Success 400 {object} ErrorResponse
+// @Success 500 {object} ErrorResponse
 // @Router /engagements/rollup [post]
 func (h *handler) UpsertRollup(c *gin.Context) {
 	l := h.logger.Fields(
@@ -156,14 +158,15 @@ func (h *handler) UpsertRollup(c *gin.Context) {
 // GetLastMessageID godoc
 // @Summary Get local last message ID of a channel
 // @Description Get local last message ID of a channel
+// @id getLastMessageID
 // @Tags Engagement
 // @Accept json
 // @Produce json
-// @Param Authorization header string true "jwt token"
+// @Security BearerAuth
 // @Param channel-id path string true "Discord Channel ID"
-// @Success 200 {object} view.MessageResponse
-// @Success 400 {object} view.ErrorResponse
-// @Success 500 {object} view.ErrorResponse
+// @Success 200 {object} MessageResponse
+// @Success 400 {object} ErrorResponse
+// @Success 500 {object} ErrorResponse
 // @Router /engagements/channel/:channel-id/last-message-id [get]
 func (h *handler) GetLastMessageID(c *gin.Context) {
 	channelID := c.Param("channel-id")
@@ -263,13 +266,14 @@ func AggregateMessages(
 // IndexMessages godoc
 // @Summary Index messages of provided Discord server
 // @Description Index messages of provided Discord server
+// @id indexEngagementMessages
 // @Tags Engagement
 // @Accept json
 // @Produce json
-// @Param Authorization header string true "jwt token"
-// @Success 200 {object} view.MessageResponse
-// @Success 400 {object} view.ErrorResponse
-// @Success 500 {object} view.ErrorResponse
+// @Security BearerAuth
+// @Success 200 {object} MessageResponse
+// @Success 400 {object} ErrorResponse
+// @Success 500 {object} ErrorResponse
 // @Router /cronjobs/index-engagement-messages [post]
 func (h *handler) IndexMessages(c *gin.Context) {
 	l := h.logger.Fields(

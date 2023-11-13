@@ -9,12 +9,12 @@ type UpdateStackBody struct {
 	Name   string `json:"name"`
 	Code   string `json:"code"`
 	Avatar string `json:"avatar"`
-}
+} // @name UpdateStackBody
 
 type UpdateStackInput struct {
 	ID   string
 	Body UpdateStackBody
-}
+} // @name UpdateStackInput
 
 func (i UpdateStackInput) Validate() error {
 	if i.ID == "" || !model.IsUUIDFromString(i.ID) {
@@ -28,17 +28,17 @@ type CreateStackInput struct {
 	Name   string `json:"name" binding:"required"`
 	Code   string `json:"code" binding:"required"`
 	Avatar string `json:"avatar"`
-}
+} // @name CreateStackInput
 
 type UpdatePositionBody struct {
 	Name string `json:"name"`
 	Code string `json:"code"`
-}
+} // @name UpdatePositionBody
 
 type UpdatePositionInput struct {
 	ID   string
 	Body UpdatePositionBody
-}
+} // @name UpdatePositionInput
 
 func (i UpdatePositionInput) Validate() error {
 	if i.ID == "" || !model.IsUUIDFromString(i.ID) {
@@ -51,7 +51,7 @@ func (i UpdatePositionInput) Validate() error {
 type CreatePositionInput struct {
 	Name string `json:"name" binding:"required"`
 	Code string `json:"code" binding:"required"`
-}
+} // @name CreatePositionInput
 
 type GetStacksInput struct {
 	model.Pagination

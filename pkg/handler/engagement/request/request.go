@@ -11,7 +11,7 @@ type UpsertRollupRequest struct {
 	CategoryID    string `json:"categoryID"`
 	MessageCount  int    `json:"messageCount"`
 	ReactionCount int    `json:"reactionCount"`
-}
+} // @name UpsertRollupRequest
 
 func (r UpsertRollupRequest) Validate() error {
 	if r.MessageCount == 0 && r.ReactionCount == 0 {
