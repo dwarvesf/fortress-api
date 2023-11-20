@@ -18,6 +18,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/store/chapter"
 	"github.com/dwarvesf/fortress-api/pkg/store/client"
 	"github.com/dwarvesf/fortress-api/pkg/store/clientcontact"
+	"github.com/dwarvesf/fortress-api/pkg/store/config"
 	"github.com/dwarvesf/fortress-api/pkg/store/content"
 	"github.com/dwarvesf/fortress-api/pkg/store/conversionrate"
 	"github.com/dwarvesf/fortress-api/pkg/store/country"
@@ -65,6 +66,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/store/question"
 	"github.com/dwarvesf/fortress-api/pkg/store/recruitment"
 	"github.com/dwarvesf/fortress-api/pkg/store/role"
+	"github.com/dwarvesf/fortress-api/pkg/store/salaryadvance"
 	"github.com/dwarvesf/fortress-api/pkg/store/schedule"
 	"github.com/dwarvesf/fortress-api/pkg/store/seniority"
 	"github.com/dwarvesf/fortress-api/pkg/store/socialaccount"
@@ -86,6 +88,7 @@ type Store struct {
 	AuditCycle              auditcycle.IStore
 	AuditItem               audititem.IStore
 	AuditParticipant        auditparticipant.IStore
+	SalaryAdvance           salaryadvance.IStore
 	BankAccount             bankaccount.IStore
 	BaseSalary              basesalary.IStore
 	Bonus                   employeebonus.IStore
@@ -98,6 +101,7 @@ type Store struct {
 	ConversionRate          conversionrate.IStore
 	Country                 country.IStore
 	Currency                currency.IStore
+	Config                  config.IStore
 	Dashboard               dashboard.IStore
 	DeliveryMetric          deliverymetric.IStore
 	DiscordAccount          discordaccount.IStore
@@ -162,6 +166,7 @@ func New() *Store {
 		AuditCycle:              auditcycle.New(),
 		AuditItem:               audititem.New(),
 		AuditParticipant:        auditparticipant.New(),
+		SalaryAdvance:           salaryadvance.New(),
 		BankAccount:             bankaccount.New(),
 		BaseSalary:              basesalary.New(),
 		Bonus:                   employeebonus.New(),
@@ -174,6 +179,7 @@ func New() *Store {
 		ConversionRate:          conversionrate.New(),
 		Country:                 country.New(),
 		Currency:                currency.New(),
+		Config:                  config.New(),
 		Dashboard:               dashboard.New(),
 		DeliveryMetric:          deliverymetric.New(),
 		DiscordAccount:          discordaccount.New(),

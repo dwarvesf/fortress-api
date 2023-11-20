@@ -1,6 +1,6 @@
 FROM surnet/alpine-wkhtmltopdf:3.17.0-0.12.6-full as wkhtmltopdf
 
-FROM golang:1.19-alpine as builder
+FROM golang:1.21-alpine as builder
 RUN mkdir /build
 WORKDIR /build
 COPY . .

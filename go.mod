@@ -1,6 +1,6 @@
 module github.com/dwarvesf/fortress-api
 
-go 1.19
+go 1.21
 
 require (
 	cloud.google.com/go/storage v1.30.1
@@ -9,6 +9,7 @@ require (
 	github.com/SebastiaanKlippert/go-wkhtmltopdf v1.9.0
 	github.com/antchfx/htmlquery v1.3.0
 	github.com/bwmarrin/discordgo v0.27.1
+	github.com/consolelabs/mochi-go-sdk v0.0.7
 	github.com/dstotijn/go-notion v0.11.0
 	github.com/gin-contrib/cors v1.4.0
 	github.com/gin-contrib/pprof v1.4.0
@@ -29,6 +30,7 @@ require (
 	github.com/lib/pq v1.10.9
 	github.com/matoous/go-nanoid v1.5.0
 	github.com/patrickmn/go-cache v2.1.0+incompatible
+	github.com/pkg/errors v0.9.1
 	github.com/satori/go.uuid v1.2.0
 	github.com/sendgrid/sendgrid-go v3.12.0+incompatible
 	github.com/shopspring/decimal v1.3.1
@@ -119,7 +121,6 @@ require (
 	github.com/paulmach/orb v0.9.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.8 // indirect
 	github.com/pierrec/lz4/v4 v4.1.17 // indirect
-	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/ryanuber/go-glob v1.0.0 // indirect
 	github.com/segmentio/asm v1.2.0 // indirect

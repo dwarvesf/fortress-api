@@ -22,6 +22,7 @@
 \ir social_accounts.sql
 \ir accounting_categories.sql
 \ir discord_log_templates.sql
+\ir configs.sql
 -- \ir feedback_events.sql
 -- \ir employee_event_topics.sql
 -- \ir employee_event_reviewers.sql

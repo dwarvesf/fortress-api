@@ -36,28 +36,30 @@ func ConvertControllerErr(c *gin.Context, err error) {
 
 	var status int
 
-	switch err {
-	case employee.ErrEmployeeNotFound,
-		employee.ErrLineManagerNotFound,
-		employee.ErrRoleNotfound,
-		employee.ErrSeniorityNotfound,
-		employee.ErrReferrerNotFound,
-		employee.ErrOrganizationNotFound,
-		employee.ErrStackNotFound,
-		employee.ErrPositionNotFound:
+	switch {
+	case errors.Is(err, employee.ErrEmployeeNotFound),
+		errors.Is(err, employee.ErrLineManagerNotFound),
+		errors.Is(err, employee.ErrRoleNotfound),
+		errors.Is(err, employee.ErrSeniorityNotfound),
+		errors.Is(err, employee.ErrReferrerNotFound),
+		errors.Is(err, employee.ErrOrganizationNotFound),
+		errors.Is(err, employee.ErrStackNotFound),
+		errors.Is(err, employee.ErrPositionNotFound):
 		status = http.StatusNotFound
 
-	case employee.ErrInvalidJoinedDate,
-		employee.ErrInvalidLeftDate,
-		employee.ErrLeftDateBeforeJoinedDate,
-		employee.ErrEmployeeExisted,
-		employee.ErrInvalidCountryOrCity,
-		employee.ErrInvalidFileExtension,
-		employee.ErrInvalidFileSize,
-		employee.ErrInvalidAccountRole,
-		employee.ErrEmailExisted,
-		employee.ErrTeamEmailExisted,
-		employee.ErrPersonalEmailExisted:
+	case errors.Is(err, employee.ErrInvalidJoinedDate),
+		errors.Is(err, employee.ErrInvalidLeftDate),
+		errors.Is(err, employee.ErrLeftDateBeforeJoinedDate),
+		errors.Is(err, employee.ErrEmployeeExisted),
+		errors.Is(err, employee.ErrInvalidCountryOrCity),
+		errors.Is(err, employee.ErrInvalidFileExtension),
+		errors.Is(err, employee.ErrInvalidFileSize),
+		errors.Is(err, employee.ErrInvalidAccountRole),
+		errors.Is(err, employee.ErrEmailExisted),
+		errors.Is(err, employee.ErrTeamEmailExisted),
+		errors.Is(err, employee.ErrSalaryAdvanceExceedAmount),
+		errors.Is(err, employee.ErrEmployeeNotFullTime),
+		errors.Is(err, employee.ErrPersonalEmailExisted):
 		status = http.StatusBadRequest
 
 	default:

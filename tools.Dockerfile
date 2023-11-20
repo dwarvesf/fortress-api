@@ -1,4 +1,4 @@
-FROM golang:1.19-alpine
+FROM golang:1.21-alpine
 RUN mkdir /build
 WORKDIR /build
 COPY . .
@@ -11,7 +11,7 @@ RUN go install -v github.com/vektra/mockery/v2@v2.15.0
 RUN go install -v github.com/swaggo/swag/cmd/swag@v1.8.7
 RUN go install -v github.com/cosmtrek/air@latest
 
-FROM golang:1.19-alpine
+FROM golang:1.21-alpine
 RUN apk --no-cache add ca-certificates
 RUN ln -fs /usr/share/zoneinfo/Asia/Ho_Chi_Minh /etc/localtime
 

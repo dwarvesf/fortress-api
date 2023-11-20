@@ -39,6 +39,7 @@ Content-Transfer-Encoding: quoted-printable
 		</li>
 		{{end}}
 
+		<li>Advance Salary Amount: <b>{{currency}} {{formattedSalaryAdvance}}</b></li>
 		<li>Total Allowance: <b>{{currency}} {{formattedTotalAllowance}}</b></li>
 		<li>TransferWise amount: <b>{{.TWAmount}} USD</b></li>
 		<li>TransferWise conversion rate: <b>{{.TWRate}} USD/{{currencyName}}</b></li>

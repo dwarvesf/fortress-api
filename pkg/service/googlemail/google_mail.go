@@ -409,6 +409,9 @@ func (g *googleService) getPaidSuccessfulEmailFuncMap(p *model.Payroll) map[stri
 		"formattedTotalAllowance": func() string {
 			return utils.FormatNumber(int64(p.TotalAllowance))
 		},
+		"formattedSalaryAdvance": func() string {
+			return utils.FormatNumber(int64(p.SalaryAdvanceAmount))
+		},
 		"haveBonusOrCommission": func() bool {
 			return len(p.CommissionExplains) > 0 || len(p.ProjectBonusExplains) > 0
 		},

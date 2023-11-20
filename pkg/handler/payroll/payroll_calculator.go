@@ -17,7 +17,6 @@ import (
 
 // calculatePayrolls return list of payrolls for all given users in batchDate
 func (h *handler) calculatePayrolls(users []*model.Employee, batchDate time.Time) (res []*model.Payroll, err error) {
-	isForecast := false
 	batch := batchDate.Day()
 	// HACK: sneak quang into this
 	if batch == 1 {
@@ -134,11 +133,7 @@ func (h *handler) calculatePayrolls(users []*model.Employee, batchDate time.Time
 		var bonus, commission, reimbursementAmount model.VietnamDong
 		var bonusExplains, commissionExplains []model.CommissionExplain
 
-		// TODO...
-		// get bonus
-		if !isForecast {
-			bonus, commission, reimbursementAmount, bonusExplains, commissionExplains = h.getBonus(*users[i], batchDate, expenses)
-		}
+		bonus, commission, reimbursementAmount, bonusExplains, commissionExplains = h.getBonus(*users[i], batchDate, expenses)
 
 		commBytes, err := json.Marshal(&commissionExplains)
 		if err != nil {
@@ -173,11 +168,28 @@ func (h *handler) calculatePayrolls(users []*model.Employee, batchDate time.Time
 			continue
 		}
 
+		// get advance salary
+		advanceAmountUSD := 0.0
+		advanceSalaries, err := h.store.SalaryAdvance.ListNotPayBackByEmployeeID(h.repo.DB(), u.ID.String())
+		if err != nil {
+			return nil, err
+		}
+		for _, as := range advanceSalaries {
+			advanceAmountUSD += as.AmountUSD
+		}
+		advanceAmountVND, _, err := h.service.Wise.Convert(advanceAmountUSD, currency.USDCurrency, currency.VNDCurrency)
+		if err != nil {
+			return nil, err
+		}
+		// calculate total minus advance salary
+		total = model.NewVietnamDong(int64(float64(total) - advanceAmountVND))
+
 		p := model.Payroll{
 			EmployeeID:          users[i].ID,
 			Total:               total.Format(),
 			BaseSalaryAmount:    baseSalary,
 			ConversionAmount:    total.Format() - reimbursementAmount,
+			SalaryAdvanceAmount: advanceAmountVND,
 			DueDate:             &dueDate,
 			Month:               int64(batchDate.Month()),
 			Year:                int64(batchDate.Year()),
@@ -190,41 +202,6 @@ func (h *handler) calculatePayrolls(users []*model.Employee, batchDate time.Time
 		}
 
 		res = append(res, &p)
-	}
-
-	if isForecast {
-		candidates, err := h.store.Recruitment.GetOffered(h.repo.DB(), batchDate, dueDate)
-		if err != nil {
-			return nil, err
-		}
-		for i := range candidates {
-			if dueDate.Sub(*candidates[i].OfferStartDate).Hours()/24 < 15 {
-				continue
-			}
-			baseSalary, contract, _ := tryPartialCalculation(batchDate, dueDate, *candidates[i].OfferStartDate, nil, int64(candidates[i].OfferSalary), 0)
-			total := model.NewVietnamDong(baseSalary)
-
-			p := model.Payroll{
-				Total:            total.Format(),
-				BaseSalaryAmount: int64(total.Format()),
-				ConversionAmount: total.Format(),
-				DueDate:          &dueDate,
-				Month:            int64(batchDate.Month()),
-				Year:             int64(batchDate.Year()),
-				Employee: model.Employee{
-					FullName: candidates[i].Name,
-					BaseSalary: model.BaseSalary{
-						Batch: batchDate.Day(),
-						Currency: &model.Currency{
-							Name: "VND", // assume the stored offer salary is always VND
-						},
-					},
-				},
-				ContractAmount: contract,
-			}
-
-			res = append(res, &p)
-		}
 	}
 
 	return res, nil
