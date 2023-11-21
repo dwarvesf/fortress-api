@@ -3,12 +3,11 @@ package webhook
 import (
 	"net/http"
 
-	"github.com/dwarvesf/fortress-api/pkg/logger"
-	bcModel "github.com/dwarvesf/fortress-api/pkg/service/basecamp/model"
-
 	"github.com/gin-gonic/gin"
 
+	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
+	bcModel "github.com/dwarvesf/fortress-api/pkg/service/basecamp/model"
 	"github.com/dwarvesf/fortress-api/pkg/view"
 )
 
@@ -163,14 +162,14 @@ func (h *handler) ApproveOnLeaveRequest(c *gin.Context) {
 	var msg model.BasecampWebhookMessage
 	err := msg.Decode(msg.Read(c.Request.Body))
 	if err != nil {
-		l.Error(err, "decode Basecamp msg failed")
+		l.Error(err, "failed to decode basecamp message")
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
 	}
 
 	err = h.handleApproveOnLeaveRequest(msg)
 	if err != nil {
-		l.Error(err, "onleave handler failed")
+		l.Error(err, "failed to handle approve on leave request")
 	}
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, err, nil, ""))
 }

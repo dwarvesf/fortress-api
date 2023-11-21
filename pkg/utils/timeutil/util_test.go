@@ -1,6 +1,7 @@
 package timeutil
 
 import (
+	"reflect"
 	"testing"
 	"time"
 )
@@ -125,5 +126,42 @@ func TestCountWeekendDays(t *testing.T) {
 				t.Errorf("timeutil.CountWeekendDays() want output: %v, got output: %v", tc.wantDay, days)
 			}
 		})
+	}
+}
+
+func TestChunkDateRange(t *testing.T) {
+	// Set the time zone for the test
+	utc := time.UTC
+
+	startDate := time.Date(2023, time.January, 1, 0, 0, 0, 0, utc)
+	endDate := time.Date(2023, time.January, 31, 0, 0, 0, 0, utc)
+
+	expectedWeeks := [][2]time.Time{
+		{
+			time.Date(2023, time.January, 2, 0, 0, 0, 0, utc),
+			time.Date(2023, time.January, 6, 0, 0, 0, 0, utc),
+		},
+		{
+			time.Date(2023, time.January, 9, 0, 0, 0, 0, utc),
+			time.Date(2023, time.January, 13, 0, 0, 0, 0, utc),
+		},
+		{
+			time.Date(2023, time.January, 16, 0, 0, 0, 0, utc),
+			time.Date(2023, time.January, 20, 0, 0, 0, 0, utc),
+		},
+		{
+			time.Date(2023, time.January, 23, 0, 0, 0, 0, utc),
+			time.Date(2023, time.January, 27, 0, 0, 0, 0, utc),
+		},
+		{
+			time.Date(2023, time.January, 30, 0, 0, 0, 0, utc),
+			time.Date(2023, time.January, 31, 0, 0, 0, 0, utc),
+		},
+	}
+
+	resultWeeks := ChunkDateRange(startDate, endDate)
+
+	if !reflect.DeepEqual(resultWeeks, expectedWeeks) {
+		t.Errorf("Result weeks do not match expected weeks.\nExpected: %v\nGot: %v", expectedWeeks, resultWeeks)
 	}
 }

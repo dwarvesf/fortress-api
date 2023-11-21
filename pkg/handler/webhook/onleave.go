@@ -12,19 +12,22 @@ import (
 )
 
 type OnLeaveData struct {
-	ParentID            int64
-	Name                string
-	Type                string
-	StartDate           time.Time
-	EndDate             time.Time
-	Shift               string
-	Title               string
-	CreatorBasecampID   int
-	ApproverBasecampID  int
-	AssigneeBasecampIDs []int
+	ParentID                int64
+	Name                    string
+	Type                    string
+	StartDate               time.Time
+	EndDate                 time.Time
+	Shift                   string
+	Title                   string
+	Description             string
+	AssigneeIDs             []int
+	CreatorBasecampID       int
+	ApproverBasecampID      int
+	AssigneeBasecampIDs     []int
+	CompletionSubscriberIDs []int
 }
 
-func parseOnLeaveDataFromMessage(msg model.BasecampWebhookMessage) (OnLeaveData, error) {
+func parseOnLeaveDataFromMessage(todo *bcModel.Todo, msg model.BasecampWebhookMessage) (OnLeaveData, error) {
 	data := OnLeaveData{}
 	data.ParentID = msg.Recording.Parent.ID
 	data.Title = msg.Recording.Title
@@ -59,6 +62,23 @@ func parseOnLeaveDataFromMessage(msg model.BasecampWebhookMessage) (OnLeaveData,
 	data.CreatorBasecampID = msg.Recording.Creator.ID
 	data.ApproverBasecampID = msg.Creator.ID
 
+	assigneeIds := []int{
+		msg.Creator.ID,
+		msg.Recording.Creator.ID,
+		consts.AutoBotID,
+	}
+
+	if todo != nil {
+		data.Description = strings.TrimSuffix(strings.TrimPrefix(todo.Description, "<div>"), "</div>")
+		data.CompletionSubscriberIDs = getSubscriberIDs(todo.CompletionSubscribers)
+
+		for _, v := range todo.Assignees {
+			assigneeIds = append(assigneeIds, v.ID)
+		}
+	}
+
+	data.AssigneeIDs = assigneeIds
+
 	return data, nil
 }
 
@@ -82,13 +102,11 @@ func (h *handler) handleOnLeaveValidation(msg model.BasecampWebhookMessage) erro
 		errMsg := fmt.Sprintf(
 			`   Your request has encountered an error: %v
     
-                I'm not smart enough to understand your on-leave request. Please ensure the following fortmat before handing it to someone 😊
-    
-                Your Name | Off/Remote | Date (in range, format dd/mm/yyyy) | Shift (if any)
+                Your Name | Off | Date (in range, format dd/mm/yyyy) | Shift (if any)
     
                 e.g:
                 Huy Nguyen | Off | 29/01/2019 | Morning
-                Minh Luu | Remote | 29/01/2019`, err.Error())
+                Nam Nguyen | Off | 29/01/2019 - 01/02/2020`, err.Error())
 
 		commentMsg = h.service.Basecamp.BuildCommentMessage(projectID, recordingID, errMsg, "")
 		return err
@@ -99,7 +117,7 @@ func (h *handler) handleOnLeaveValidation(msg model.BasecampWebhookMessage) erro
 }
 
 func (h *handler) validateOnLeaveData(msg model.BasecampWebhookMessage) error {
-	data, err := parseOnLeaveDataFromMessage(msg)
+	data, err := parseOnLeaveDataFromMessage(nil, msg)
 	if err != nil {
 		return err
 	}
@@ -145,31 +163,26 @@ func (h *handler) validateOnLeaveData(msg model.BasecampWebhookMessage) error {
 }
 
 func (h *handler) handleApproveOnLeaveRequest(msg model.BasecampWebhookMessage) error {
-	if h.config.Env == "prod" {
-		if msg.Recording.Bucket.Name != "Woodland" {
-			return nil
-		}
+
+	todo, err := h.service.Basecamp.Todo.Get(msg.Recording.URL)
+	if err != nil {
+		h.logger.Errorf(err, "failed to get basecamp todo: %v", err.Error())
+		return fmt.Errorf("failed to get basecamp todo: %v", err.Error())
 	}
 
-	data, err := parseOnLeaveDataFromMessage(msg)
+	data, err := parseOnLeaveDataFromMessage(todo, msg)
 	if err != nil {
 		return err
 	}
 
 	r := model.OnLeaveRequest{
-		Type:      data.Type,
-		StartDate: &data.StartDate,
-		EndDate:   &data.EndDate,
-		Shift:     data.Shift,
-		Title:     data.Title,
+		Type:        data.Type,
+		StartDate:   &data.StartDate,
+		EndDate:     &data.EndDate,
+		Shift:       data.Shift,
+		Title:       data.Title,
+		Description: data.Description,
 	}
-
-	todo, err := h.service.Basecamp.Todo.Get(msg.Recording.URL)
-	if err != nil {
-		return fmt.Errorf("cannot get todo: %v", err.Error())
-	}
-
-	r.Description = strings.TrimSuffix(strings.TrimPrefix(todo.Description, "<div>"), "</div>")
 
 	// assign assignees id
 	for _, assignee := range todo.Assignees {
@@ -178,7 +191,8 @@ func (h *handler) handleApproveOnLeaveRequest(msg model.BasecampWebhookMessage) 
 
 	assignees, err := h.store.Employee.GetByBasecampIDs(h.repo.DB(), data.AssigneeBasecampIDs)
 	if err != nil {
-		return fmt.Errorf("cannot get assignees with basecamp_ids %v: %v", data.AssigneeBasecampIDs, err.Error())
+		h.logger.Errorf(err, "failed to get assignees with basecamp_ids", err.Error())
+		return fmt.Errorf("failed to get assignees with basecamp_ids %v: %v", data.AssigneeBasecampIDs, err.Error())
 	}
 
 	for _, assignee := range assignees {
@@ -188,21 +202,81 @@ func (h *handler) handleApproveOnLeaveRequest(msg model.BasecampWebhookMessage) 
 	// assign creator id
 	creator, err := h.store.Employee.OneByBasecampID(h.repo.DB(), data.CreatorBasecampID)
 	if err != nil {
-		return fmt.Errorf("cannot get creator with basecamp_id %v: %v", data.CreatorBasecampID, err.Error())
+		h.logger.Errorf(err, "failed to get creator with basecamp_id", err.Error())
+		return fmt.Errorf("failed to get creator with basecamp_id %v: %v", data.CreatorBasecampID, err.Error())
 	}
 	r.CreatorID = creator.ID
 
-	// assign appprover id
+	// assign approver id
 	approver, err := h.store.Employee.OneByBasecampID(h.repo.DB(), data.ApproverBasecampID)
 	if err != nil {
-		return fmt.Errorf("cannot get approver with basecamp_id %v: %v", data.ApproverBasecampID, err.Error())
+		h.logger.Errorf(err, "failed to get approver with basecamp_id", err.Error())
+		return fmt.Errorf("failed to get approver with basecamp_id %v: %v", data.ApproverBasecampID, err.Error())
 	}
 	r.ApproverID = approver.ID
 
 	_, err = h.store.OnLeaveRequest.Create(h.repo.DB(), &r)
 	if err != nil {
-		return fmt.Errorf("cannot create onLeaveRequest: %v", err.Error())
+		h.logger.Errorf(err, "failed to create onLeaveRequest", err.Error())
+		return fmt.Errorf("failed to create onLeaveRequest: %v", err.Error())
+	}
+
+	dateChunks := timeutil.ChunkDateRange(data.StartDate, data.EndDate)
+	for _, dateChunk := range dateChunks {
+		startDate := dateChunk[0]
+		endDate := dateChunk[1]
+
+		basecampSchedule := bcModel.ScheduleEntry{
+			Summary:     fmt.Sprintf("⚠️ %s", data.Title),
+			StartsAt:    startDate.Format(time.RFC3339),
+			EndsAt:      endDate.Format(time.RFC3339),
+			AllDay:      true,
+			Description: r.Description,
+		}
+
+		woodlandID := consts.PlaygroundID
+		woodlandScheduleID := consts.PlaygroundScheduleID
+
+		opsTeamIDs := []int{consts.NamNguyenBasecampID}
+		if h.config.Env == "prod" {
+			woodlandID = consts.WoodlandID
+			woodlandScheduleID = consts.WoodlandScheduleID
+			opsTeamIDs = []int{consts.HuyNguyenBasecampID, consts.GiangThanBasecampID}
+			if msg.Recording.Bucket.Name != "Woodland" {
+				return nil
+			}
+		}
+		var subscriberIDs []int
+		subscriberIDs = append(subscriberIDs, data.AssigneeIDs...)
+		subscriberIDs = append(subscriberIDs, data.CompletionSubscriberIDs...)
+		subscriberIDs = append(subscriberIDs, opsTeamIDs...)
+
+		se, err := h.service.Basecamp.Schedule.CreateScheduleEntry(int64(woodlandID), woodlandScheduleID, basecampSchedule)
+		if err != nil {
+			h.logger.Errorf(err, "failed to  create basecamp schedule", err.Error())
+			return fmt.Errorf("failed to create basecamp schedule: %v", err.Error())
+		}
+
+		if len(data.AssigneeIDs) > 0 {
+			err = h.service.Basecamp.Subscription.Subscribe(
+				se.SubscriptionUrl,
+				&bcModel.SubscriptionList{Subscriptions: subscriberIDs},
+			)
+			if err != nil {
+				h.logger.Errorf(err, "failed to set basecamp event subscriber", err.Error())
+				return err
+			}
+		}
 	}
 
 	return nil
+}
+
+// Get list IDs from list subscribers
+func getSubscriberIDs(list []bcModel.Subscriber) []int {
+	res := make([]int, len(list))
+	for i := range list {
+		res[i] = list[i].ID
+	}
+	return res
 }

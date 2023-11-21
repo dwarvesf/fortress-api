@@ -287,3 +287,24 @@ func tryParseTime(timeString string) *time.Time {
 	}
 	return &time
 }
+
+func ChunkDateRange(start, end time.Time) [][2]time.Time {
+	var weeks [][2]time.Time
+
+	currentDate := start
+	for currentDate.Before(end) || currentDate.Equal(end) {
+		if currentDate.Weekday() >= time.Monday && currentDate.Weekday() <= time.Friday {
+			weekStart := currentDate
+			for currentDate.Weekday() >= time.Monday && currentDate.Weekday() <= time.Friday && (currentDate.Before(end) || currentDate.Equal(end)) {
+				currentDate = currentDate.AddDate(0, 0, 1)
+			}
+			weekEnd := currentDate.AddDate(0, 0, -1)
+
+			weeks = append(weeks, [2]time.Time{weekStart, weekEnd})
+		} else {
+			currentDate = currentDate.AddDate(0, 0, 1)
+		}
+	}
+
+	return weeks
+}
