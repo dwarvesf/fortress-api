@@ -106,6 +106,7 @@ func (h *handler) GetPayrollsByMonth(c *gin.Context) {
 type payrollResponse struct {
 	DisplayName          string            `json:"display_name"`
 	BaseSalary           int64             `json:"base_salary"`
+	SalaryAdvanceAmount  float64           `json:"salary_advance_amount"`
 	Bonus                float64           `json:"bonus"`
 	TotalWithoutContract float64           `json:"total_without_contract"`
 	TotalWithContract    model.VietnamDong `json:"total_with_contract"`
@@ -317,6 +318,7 @@ func (h *handler) getPayrollDetailHandler(month, year, batch int, email string) 
 			r := payrollResponse{
 				DisplayName:          payrolls[i].Employee.FullName,
 				BaseSalary:           payrolls[i].BaseSalaryAmount,
+				SalaryAdvanceAmount:  payrolls[i].SalaryAdvanceAmount,
 				Bonus:                bonus,
 				TotalWithContract:    payrolls[i].Total,
 				TotalWithoutContract: payrolls[i].TotalAllowance,
@@ -744,6 +746,23 @@ func (h *handler) commitPayrollHandler(month, year, batch int, email string) err
 			// hacky way to mark done commission
 			if _, err := h.getCommissionExplains(&payrolls[i], true); err != nil {
 				return err
+			}
+
+			// update is_pay_back to true if the employee has payback
+			if payrolls[i].SalaryAdvanceAmount != 0 {
+				salaryAdvances, err := h.store.SalaryAdvance.ListNotPayBackByEmployeeID(h.repo.DB(), payrolls[i].Employee.ID.String())
+				if err != nil {
+					return err
+				}
+				for _, salaryAdvance := range salaryAdvances {
+					var as = salaryAdvance
+					as.IsPaidBack = true
+
+					err = h.store.SalaryAdvance.Save(h.repo.DB(), &as)
+					if err != nil {
+						return err
+					}
+				}
 			}
 		}
 

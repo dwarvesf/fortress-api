@@ -914,6 +914,18 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/conversionrate.IHandler.List-fm",
 			},
 		},
+		"/api/v1/discords/advance-salary": {
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/employee.IHandler.SalaryAdvance-fm",
+			},
+		},
+		"/api/v1/discords/check-advance-salary": {
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/employee.IHandler.CheckSalaryAdvance-fm",
+			},
+		},
 	}
 
 	l := logger.NewLogrusLogger()

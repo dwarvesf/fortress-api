@@ -89,7 +89,10 @@ type ImprovMX struct {
 }
 
 type Mochi struct {
-	BaseURL string
+	BaseURL         string
+	ApplicationID   string
+	ApplicationName string
+	APIKey          string
 }
 
 type Notion struct {
@@ -252,7 +255,10 @@ func Generate(v ENV) *Config {
 			APIKey: v.GetString("SENDGRID_API_KEY"),
 		},
 		Mochi: Mochi{
-			BaseURL: v.GetString("MOCHI_BASE_URL"),
+			BaseURL:         v.GetString("MOCHI_BASE_URL"),
+			ApplicationID:   v.GetString("MOCHI_APPLICATION_ID"),
+			ApplicationName: v.GetString("MOCHI_APPLICATION_NAME"),
+			APIKey:          v.GetString("MOCHI_API_KEY"),
 		},
 		ImprovMX: ImprovMX{
 			Token: v.GetString("IMPROVMX_API_TOKEN"),
