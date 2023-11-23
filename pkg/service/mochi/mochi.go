@@ -5,25 +5,64 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
+	"time"
 
+	mochisdk "github.com/consolelabs/mochi-go-sdk/mochi"
+	mochiconfig "github.com/consolelabs/mochi-go-sdk/mochi/config"
+	"github.com/consolelabs/mochi-go-sdk/mochi/model"
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 )
 
 type IService interface {
 	GetVaultTransaction(req *VaultTransactionRequest) (*VaultTransactionResponse, error)
+	SendFromAccountToUser(amount int, discordID string) ([]model.Transaction, error)
 }
 
 type client struct {
-	cfg *config.Config
-	l   logger.Logger
+	cfg         *config.Config
+	l           logger.Logger
+	mochiClient mochisdk.APIClient
 }
 
 func New(cfg *config.Config, l logger.Logger) IService {
-	return &client{
-		cfg: cfg,
-		l:   l,
+	config := &mochiconfig.Config{
+		MochiPay: mochiconfig.MochiPay{
+			ApplicationID:   cfg.Mochi.ApplicationID,
+			ApplicationName: cfg.Mochi.ApplicationName,
+			APIKey:          cfg.Mochi.APIKey,
+		},
 	}
+
+	mochiClient := mochisdk.NewClient(config)
+	return &client{
+		cfg:         cfg,
+		l:           l,
+		mochiClient: mochiClient,
+	}
+}
+
+// SendFromAccountToUser implements IService.
+func (c *client) SendFromAccountToUser(amount int, discordID string) ([]model.Transaction, error) {
+	currentMonth := time.Now().Month()
+	profile, err := c.mochiClient.GetByDiscordID(discordID)
+	if err != nil {
+		return nil, err
+	}
+
+	txs, err := c.mochiClient.Transfer(&model.TransferRequest{
+		RecipientIDs: []string{profile.ID},
+		Amounts:      []string{strconv.Itoa(amount)},
+		TokenID:      "941f0fb1-00da-49dc-a538-5e81fc874cb4",
+		Description:  fmt.Sprintf("%s Addvance Salary in %s", discordID, currentMonth.String()),
+		References:   "Advance Salary",
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return txs, nil
 }
 
 func (m *client) GetVaultTransaction(req *VaultTransactionRequest) (*VaultTransactionResponse, error) {

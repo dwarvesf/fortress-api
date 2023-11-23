@@ -163,7 +163,6 @@ func (h *handler) validateOnLeaveData(msg model.BasecampWebhookMessage) error {
 }
 
 func (h *handler) handleApproveOnLeaveRequest(msg model.BasecampWebhookMessage) error {
-
 	todo, err := h.service.Basecamp.Todo.Get(msg.Recording.URL)
 	if err != nil {
 		h.logger.Errorf(err, "failed to get basecamp todo: %v", err.Error())

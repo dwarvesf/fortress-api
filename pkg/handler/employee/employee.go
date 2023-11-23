@@ -2,7 +2,9 @@ package employee
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -844,4 +846,87 @@ func (h *handler) ListWithMMAScore(c *gin.Context) {
 
 	// 3. return employee
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToEmployeesWithMMAScore(rs), nil, nil, nil, ""))
+}
+
+// SalaryAdvance godoc
+// @Summary Advance salary by discord id
+// @Description Update account status by employee id
+// @id updateEmployeeStatus
+// @Tags Employee
+// @Accept  json
+// @Produce  json
+// @Security BearerAuth
+// @Param salaryAdvanceRequest body SalaryAdvanceRequest true "Salary Advance Request"
+// @Success 200 {object} SalaryAdvanceResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /employees/advance-salary [post]
+func (h *handler) SalaryAdvance(c *gin.Context) {
+	// 1.1 prepare the logger
+	l := h.logger.Fields(logger.Fields{
+		"handler": "employee",
+		"method":  "SalaryAdvance",
+	})
+
+	body := request.SalaryAdvanceRequest{}
+	if err := c.ShouldBindJSON(&body); err != nil {
+		l.Error(err, "failed to decode body")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, body, ""))
+		return
+	}
+
+	amount, err := strconv.Atoi(body.Amount)
+	if err != nil {
+		l.Error(err, "failed to parse amount")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	response, err := h.controller.Employee.SalaryAdvance(body.DiscordID, int64(amount))
+	if err != nil {
+		l.Error(err, "failed to advance salary")
+		errs.ConvertControllerErr(c, err)
+		return
+	}
+
+	err = h.controller.Discord.Log(model.LogDiscordInput{
+		Type: "employee_advance_salary",
+		Data: map[string]interface{}{
+			"employee_id": response.EmployeeID,
+			"amount":      fmt.Sprintf("%v ICY($%v)", response.AmountIcy, response.AmountUSD),
+		},
+	})
+	if err != nil {
+		l.Error(err, "failed to create discord log")
+	}
+
+	// 3. return employee
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToSalaryAdvance(response.AmountIcy, response.AmountUSD, response.TransactionID, response.TransactionHash), nil, nil, nil, "ok"))
+}
+
+func (h *handler) CheckSalaryAdvance(c *gin.Context) {
+	l := h.logger.Fields(
+		logger.Fields{
+			"handler": "employee",
+			"method":  "CheckSalaryAdvance",
+		},
+	)
+
+	body := request.SalaryAdvanceRequest{}
+	if err := c.ShouldBindJSON(&body); err != nil {
+		l.Error(err, "failed to decode body")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, body, ""))
+		return
+	}
+
+	amountIcy, amountUSD, err := h.controller.Employee.CheckSalaryAdvance(body.DiscordID)
+	if err != nil {
+		l.Error(err, "failed to check advance salary")
+		errs.ConvertControllerErr(c, err)
+		return
+	}
+
+	// 3. return employee
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToCheckSalaryAdvance(amountIcy, amountUSD), nil, nil, nil, "ok"))
 }

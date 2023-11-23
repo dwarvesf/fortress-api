@@ -16,6 +16,8 @@ type IHandler interface {
 	UploadAvatar(c *gin.Context)
 	UpdateRole(c *gin.Context)
 	UpdateBaseSalary(c *gin.Context)
+	SalaryAdvance(c *gin.Context)
+	CheckSalaryAdvance(c *gin.Context)
 
 	PublicList(c *gin.Context)
 }

@@ -178,7 +178,7 @@ func (h *handler) BirthdayDailyMessage(c *gin.Context) {
 		return
 	}
 
-	rand.Seed(time.Now().Unix())
+	rand.New(rand.NewSource(time.Now().Unix()))
 	msg := fmt.Sprintf(pool[rand.Intn(len(pool))], strings.TrimSuffix(names, ", "))
 
 	//send message to Discord channel

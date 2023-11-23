@@ -245,6 +245,7 @@ func (s *store) GetByDiscordID(db *gorm.DB, discordID string, preload bool) (*mo
 
 	if preload {
 		query = query.
+			Preload("Roles").
 			Preload("SocialAccounts", "deleted_at IS NULL").
 			Preload("DiscordAccount", "deleted_at IS NULL").
 			Preload("ProjectMembers", "deleted_at IS NULL").

@@ -24,6 +24,11 @@ func (s *store) GetByLevel(db *gorm.DB, level int64) ([]*model.Role, error) {
 	return roles, db.Where("level >= ? AND is_show IS TRUE", level).Find(&roles).Error
 }
 
+func (s *store) GetByCode(db *gorm.DB, code string) (*model.Role, error) {
+	var role *model.Role
+	return role, db.Where("code = ?", code).First(&role).Error
+}
+
 func (s *store) GetByIDs(db *gorm.DB, ids []model.UUID) ([]*model.Role, error) {
 	var roles []*model.Role
 	return roles, db.Where("id IN ?", ids).Find(&roles).Error

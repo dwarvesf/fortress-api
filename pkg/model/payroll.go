@@ -25,6 +25,7 @@ type Payroll struct {
 	ProjectBonusExplain datatypes.JSON `json:"project_bonus_explain"`
 	DueDate             *time.Time     `json:"due_date"`
 	IsPaid              bool           `json:"is_paid"`
+	SalaryAdvanceAmount float64
 
 	Employee Employee `json:"employee"`
 
