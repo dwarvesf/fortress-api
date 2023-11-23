@@ -2,6 +2,7 @@ package employee
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -855,9 +856,8 @@ func (h *handler) ListWithMMAScore(c *gin.Context) {
 // @Accept  json
 // @Produce  json
 // @Security BearerAuth
-// @Param id path string true "Employee ID"
-// @Param employeeStatus body UpdateWorkingStatusRequest true "Employee Status"
-// @Success 200 {object} UpdateEmployeeStatusResponse
+// @Param salaryAdvanceRequest body SalaryAdvanceRequest true "Salary Advance Request"
+// @Success 200 {object} SalaryAdvanceResponse
 // @Failure 400 {object} ErrorResponse
 // @Failure 404 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
@@ -888,6 +888,17 @@ func (h *handler) SalaryAdvance(c *gin.Context) {
 		l.Error(err, "failed to advance salary")
 		errs.ConvertControllerErr(c, err)
 		return
+	}
+
+	err = h.controller.Discord.Log(model.LogDiscordInput{
+		Type: "employee_advance_salary",
+		Data: map[string]interface{}{
+			"employee_id": response.EmployeeID,
+			"amount":      fmt.Sprintf("%v ICY($%v)", response.AmountIcy, response.AmountUSD),
+		},
+	})
+	if err != nil {
+		l.Error(err, "failed to create discord log")
 	}
 
 	// 3. return employee

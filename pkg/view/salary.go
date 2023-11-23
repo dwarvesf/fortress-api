@@ -17,7 +17,7 @@ type SalaryAdvance struct {
 	AmountUsd       string `json:"amount_usd"`
 	TransactionID   string `json:"transaction_id"`
 	TransactionHash string `json:"transaction_hash"`
-}
+} // @name SalaryAdvance
 
 func ToSalaryAdvance(amountIcy, amountUSD, transactionID, transactionHash string) *SalaryAdvance {
 	return &SalaryAdvance{
@@ -27,3 +27,7 @@ func ToSalaryAdvance(amountIcy, amountUSD, transactionID, transactionHash string
 		TransactionHash: transactionHash,
 	}
 }
+
+type SalaryAdvanceResponse struct {
+	Data SalaryAdvance `json:"data"`
+} // @name SalaryAdvanceResponse

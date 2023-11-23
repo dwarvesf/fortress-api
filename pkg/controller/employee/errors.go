@@ -60,4 +60,5 @@ var (
 	ErrDiscordAccountAlreadyUsedByAnotherEmployee = errors.New("discord account already used by another employee")
 	ErrCouldNotFoundDiscordMemberInGuild          = errors.New("could not found discord member in the guild")
 	ErrEmployeeNotFullTime                        = errors.New("employee is not full time")
+	ErrNoTransactionFound                         = errors.New("no transaction found")
 )

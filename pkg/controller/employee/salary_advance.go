@@ -13,6 +13,7 @@ import (
 )
 
 type SalaryAdvanceResponse struct {
+	EmployeeID      string `json:"employee_id"`
 	AmountIcy       string `json:"amount_icy"`
 	AmountUSD       string `json:"amount_usd"`
 	TransactionID   string `json:"transaction_id"`
@@ -38,19 +39,19 @@ func (r *controller) SalaryAdvance(discordID string, amount int64) (*SalaryAdvan
 		return nil, err
 	}
 
-	err = r.checkFulltimeRole(employee)
+	err = r.checkFullTimeRole(employee)
 	if err != nil {
 		return nil, err
 	}
 
-	salaryAdavances, err := r.store.SalaryAdvance.ListNotPayBackByEmployeeID(r.repo.DB(), employee.ID.String())
+	salaryAdvances, err := r.store.SalaryAdvance.ListNotPayBackByEmployeeID(r.repo.DB(), employee.ID.String())
 	if err != nil {
 		return nil, err
 	}
 
 	// calculate number of not paid back advance salary
 	var notPaidBackAmount int64
-	for _, salaryAdvance := range salaryAdavances {
+	for _, salaryAdvance := range salaryAdvances {
 		if !salaryAdvance.IsPaidBack {
 			notPaidBackAmount = notPaidBackAmount + salaryAdvance.AmountIcy
 		}
@@ -80,7 +81,7 @@ func (r *controller) SalaryAdvance(discordID string, amount int64) (*SalaryAdvan
 		return nil, err
 	}
 
-	tx := r.repo.DB().Begin()
+	tx, done := r.repo.NewTransaction()
 	salaryAdvance := &model.SalaryAdvance{
 		EmployeeID:     employee.ID,
 		AmountIcy:      amount,
@@ -89,33 +90,29 @@ func (r *controller) SalaryAdvance(discordID string, amount int64) (*SalaryAdvan
 		ConversionRate: rate,
 		CurrencyID:     salary.CurrencyID,
 	}
-	if err := r.store.SalaryAdvance.Save(tx, salaryAdvance); err != nil {
-		tx.Rollback()
-		return nil, err
+	if err := r.store.SalaryAdvance.Save(tx.DB(), salaryAdvance); err != nil {
+		return nil, done(err)
 	}
 
 	// Make advance salary request
 	txs, err := r.service.Mochi.SendFromAccountToUser(int(amount), discordID)
 	if err != nil {
-		tx.Rollback()
-		return nil, err
+		return nil, done(err)
 	}
 
 	if len(txs) == 0 {
-		tx.Rollback()
-		return nil, errors.New("no transaction found")
+		return nil, done(ErrNoTransactionFound)
 	}
 
 	response := &SalaryAdvanceResponse{
+		EmployeeID:      employee.ID.String(),
 		AmountIcy:       utils.FormatNumber(amount),
 		AmountUSD:       utils.FormatMoney(amountUSD, money.USD),
 		TransactionID:   strconv.Itoa(int(txs[0].TransactionID)),
 		TransactionHash: txs[0].RecipientID,
 	}
 
-	tx.Commit()
-
-	return response, nil
+	return response, done(nil)
 }
 
 func (r *controller) CheckSalaryAdvance(discordID string) (amountIcy string, amountUSD string, error error) {
@@ -137,7 +134,7 @@ func (r *controller) CheckSalaryAdvance(discordID string) (amountIcy string, amo
 		return "", "", err
 	}
 
-	err = r.checkFulltimeRole(employee)
+	err = r.checkFullTimeRole(employee)
 	if err != nil {
 		return "", "", err
 	}
@@ -174,8 +171,8 @@ func (r *controller) CheckSalaryAdvance(discordID string) (amountIcy string, amo
 		nil
 }
 
-func (r *controller) checkFulltimeRole(employee *model.Employee) error {
-	fulltimeRole, err := r.store.Role.GetByCode(r.repo.DB(), model.RoleFullTimeCode)
+func (r *controller) checkFullTimeRole(employee *model.Employee) error {
+	fullTimeRole, err := r.store.Role.GetByCode(r.repo.DB(), model.RoleFullTimeCode)
 	if err != nil {
 		return err
 	}
@@ -188,7 +185,7 @@ func (r *controller) checkFulltimeRole(employee *model.Employee) error {
 	}
 
 	// check if employee is full time or higher
-	if highestEmployeeLevel > fulltimeRole.Level {
+	if highestEmployeeLevel > fullTimeRole.Level {
 		return ErrEmployeeNotFullTime
 	}
 	return nil

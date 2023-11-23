@@ -254,4 +254,4 @@ func (i UpdateRoleInput) Validate() error {
 type SalaryAdvanceRequest struct {
 	DiscordID string `json:"discord_id"`
 	Amount    string `json:"amount"`
-} // @name AdavanceSalaryRequest
+} // @name SalaryAdvanceRequest
