@@ -205,10 +205,11 @@ func (r *controller) calculateMaxAdvanceAmountIcy(salary *model.BaseSalary, icyU
 	}
 
 	var advanceAmountUSD float64
+	advanceableAmount := float64(salary.ContractAmount+salary.PersonalAccountAmount) * (float64(maxCap) / 100)
 	if salary.Currency.Name == "USD" {
-		advanceAmountUSD = float64(salary.ContractAmount) * (float64(maxCap) / 100)
+		advanceAmountUSD = advanceableAmount
 	} else {
-		convertedValue, _, err := r.service.Wise.Convert(float64(salary.ContractAmount)*(float64(maxCap)/100), salary.Currency.Name, "USD")
+		convertedValue, _, err := r.service.Wise.Convert(advanceableAmount, salary.Currency.Name, "USD")
 		if err != nil {
 			return 0, err
 		}
