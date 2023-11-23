@@ -81,7 +81,15 @@ func (w *wiseService) GetRate(sourceCurrency, targetCurrency string) (float64, e
 func (w *wiseService) getTWRate(sourceCurrency, targetCurrency string) (float64, error) {
 	// if run_mode is non-prod, we use mock data
 	if w.cfg.Env != "prod" {
-		return getLocalRate(targetCurrency)
+		sourceRate, err := getLocalRate(sourceCurrency)
+		if err != nil {
+			return 0, err
+		}
+		targetRate, err := getLocalRate(targetCurrency)
+		if err != nil {
+			return 0, err
+		}
+		return targetRate / sourceRate, nil
 	}
 
 	var conversionRate []model.WiseConversionRate
