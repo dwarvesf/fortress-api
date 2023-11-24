@@ -108,7 +108,7 @@ func (c *controller) PublicAdvanceSalaryLog(in model.LogDiscordInput) error {
 		Title:       "💸 New ICY Payment 💸",
 		URL:         "",
 		Description: desc,
-		Color:       1752220,
+		Color:       3447003,
 		Fields:      nil,
 		Thumbnail:   model.DiscordMessageImage{},
 		Image:       model.DiscordMessageImage{},
