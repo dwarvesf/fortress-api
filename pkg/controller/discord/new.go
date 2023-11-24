@@ -100,7 +100,7 @@ func (c *controller) PublicAdvanceSalaryLog(in model.LogDiscordInput) error {
 	icyAmount := data["icy_amount"]
 	usdAmount := data["usd_amount"]
 
-	desc := fmt.Sprintf("🧊 %v ICY ($%v) has been sent to an anonymous peep as a salary advance.\n", icyAmount, usdAmount)
+	desc := fmt.Sprintf("🧊 %v ICY (%v) has been sent to an anonymous peep as a salary advance.\n", icyAmount, usdAmount)
 	desc += "\nFull-time peeps can use `?salary advance` to take a short-term credit benefit."
 
 	embedMessage := model.DiscordMessageEmbed{
