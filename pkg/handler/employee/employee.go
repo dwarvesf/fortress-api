@@ -863,7 +863,6 @@ func (h *handler) ListWithMMAScore(c *gin.Context) {
 // @Failure 500 {object} ErrorResponse
 // @Router /employees/advance-salary [post]
 func (h *handler) SalaryAdvance(c *gin.Context) {
-	// 1.1 prepare the logger
 	l := h.logger.Fields(logger.Fields{
 		"handler": "employee",
 		"method":  "SalaryAdvance",
@@ -901,7 +900,16 @@ func (h *handler) SalaryAdvance(c *gin.Context) {
 		l.Error(err, "failed to create discord log")
 	}
 
-	// 3. return employee
+	err = h.controller.Discord.PublicAdvanceSalaryLog(model.LogDiscordInput{
+		Data: map[string]interface{}{
+			"icy_amount": "50",
+			"usd_amount": "5000",
+		},
+	})
+	if err != nil {
+		l.Error(err, "failed to create discord public log")
+	}
+
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToSalaryAdvance(response.AmountIcy, response.AmountUSD, response.TransactionID, response.TransactionHash), nil, nil, nil, "ok"))
 }
 

@@ -128,8 +128,9 @@ type Discord struct {
 }
 
 type DiscordWebhook struct {
-	Campfire string
-	AuditLog string
+	Campfire     string
+	AuditLog     string
+	ICYPublicLog string
 }
 
 type DiscordID struct {
@@ -231,8 +232,9 @@ func Generate(v ENV) *Config {
 		},
 		Discord: Discord{
 			Webhooks: DiscordWebhook{
-				Campfire: v.GetString("DISCORD_WEBHOOK_CAMPFIRE"),
-				AuditLog: v.GetString("DISCORD_WEBHOOK_AUDIT"),
+				Campfire:     v.GetString("DISCORD_WEBHOOK_CAMPFIRE"),
+				AuditLog:     v.GetString("DISCORD_WEBHOOK_AUDIT"),
+				ICYPublicLog: v.GetString("DISCORD_WEBHOOK_ICY_PUBLIC_LOG"),
 			},
 			SecretToken: v.GetString("DISCORD_SECRET_TOKEN"),
 			IDs: DiscordID{
