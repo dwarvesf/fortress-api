@@ -23,7 +23,7 @@ type IService interface {
 	DeleteEvent(event *model.Schedule) error
 
 	// SendMessage logs a message to a Discord channel
-	SendMessage(msg, webhookUrl string) (*model.DiscordMessage, error)
+	SendMessage(discordMsg model.DiscordMessage, webhookUrl string) (*model.DiscordMessage, error)
 
 	GetChannels() ([]*discordgo.Channel, error)
 	GetMessagesAfterCursor(channelID string, cursorMessageID string, lastMessageID string) ([]*discordgo.Message, error)

@@ -19,6 +19,7 @@ type DiscordMessageEmbed struct {
 	Thumbnail   DiscordMessageImage   `json:"thumbnail"`
 	Image       DiscordMessageImage   `json:"image"`
 	Footer      DiscordMessageFooter  `json:"footer"`
+	Timestamp   string                `json:"timestamp"`
 }
 
 type DiscordMessageAuthor struct {
