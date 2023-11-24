@@ -230,7 +230,9 @@ func (h *handler) OnLeaveMessage(c *gin.Context) {
 
 	msg := fmt.Sprintf("Please be notified that %s will be absent today", strings.TrimSuffix(names, ", "))
 
-	discordMsg, err := h.service.Discord.SendMessage(msg, h.config.Discord.Webhooks.AuditLog)
+	discordMsg, err := h.service.Discord.SendMessage(model.DiscordMessage{
+		Content: msg,
+	}, h.config.Discord.Webhooks.AuditLog)
 	if err != nil {
 		h.logger.Error(err, "failed to post Discord message")
 		c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, err, discordMsg, ""))

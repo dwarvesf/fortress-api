@@ -3,6 +3,7 @@ package discord
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
@@ -13,6 +14,7 @@ import (
 
 type IController interface {
 	Log(in model.LogDiscordInput) error
+	PublicAdvanceSalaryLog(in model.LogDiscordInput) error
 }
 
 type controller struct {
@@ -81,7 +83,46 @@ func (c *controller) Log(in model.LogDiscordInput) error {
 	}
 
 	// log discord
-	_, err = c.service.Discord.SendMessage(content, c.config.Discord.Webhooks.AuditLog)
+	_, err = c.service.Discord.SendMessage(model.DiscordMessage{
+		Content: content,
+	}, c.config.Discord.Webhooks.AuditLog)
+	if err != nil {
+		c.logger.Field("err", err.Error()).Warn("Log failed")
+		return err
+	}
+
+	return nil
+}
+
+func (c *controller) PublicAdvanceSalaryLog(in model.LogDiscordInput) error {
+	data := in.Data.(map[string]interface{})
+
+	icyAmount := data["icy_amount"]
+	usdAmount := data["usd_amount"]
+
+	desc := fmt.Sprintf("🧊 %v ICY ($%v) has been sent to an anonymous peep as a salary advance.\n", icyAmount, usdAmount)
+	desc += "\nFull-time peeps can use `?salary advance` to take a short-term credit benefit."
+
+	embedMessage := model.DiscordMessageEmbed{
+		Author:      model.DiscordMessageAuthor{},
+		Title:       "💸 New ICY Payment 💸",
+		URL:         "",
+		Description: desc,
+		Color:       1752220,
+		Fields:      nil,
+		Thumbnail:   model.DiscordMessageImage{},
+		Image:       model.DiscordMessageImage{},
+		Footer: model.DiscordMessageFooter{
+			IconURL: "https://cdn.discordapp.com/avatars/564764617545482251/9c9bd4aaba164fc0b92f13f052405b4d.webp?size=160",
+			Text:    "?help to see all commands",
+		},
+		Timestamp: time.Now().Format("2006-01-02T15:04:05.000+07:00"),
+	}
+
+	// log discord
+	_, err := c.service.Discord.SendMessage(model.DiscordMessage{
+		Embeds: []model.DiscordMessageEmbed{embedMessage},
+	}, c.config.Discord.Webhooks.ICYPublicLog)
 	if err != nil {
 		c.logger.Field("err", err.Error()).Warn("Log failed")
 		return err
