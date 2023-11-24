@@ -902,8 +902,8 @@ func (h *handler) SalaryAdvance(c *gin.Context) {
 
 	err = h.controller.Discord.PublicAdvanceSalaryLog(model.LogDiscordInput{
 		Data: map[string]interface{}{
-			"icy_amount": "50",
-			"usd_amount": "5000",
+			"icy_amount": response.AmountIcy,
+			"usd_amount": response.AmountUSD,
 		},
 	})
 	if err != nil {
