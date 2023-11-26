@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jackc/numfmt"
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
@@ -16,7 +17,6 @@ import (
 	bcModel "github.com/dwarvesf/fortress-api/pkg/service/basecamp/model"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/store/project"
-	"github.com/dwarvesf/fortress-api/pkg/utils"
 	"github.com/dwarvesf/fortress-api/pkg/utils/timeutil"
 	"github.com/dwarvesf/fortress-api/pkg/view"
 )
@@ -127,7 +127,7 @@ func (h handler) createTodoInOutGroup(outGroupID int, projectID int, outTodoTemp
 
 		// Create CBRE management fee from `Office Rental` template
 		if strings.Contains(v.Name, "Office Rental") {
-			partment := strings.Replace(v.Name, "Office Rental ", "", 1)
+			partment := strings.Replace(v.Name, "Office Rental", "", 1)
 			extraMsg = fmt.Sprintf("Hado Office Rental %s %v/%v", partment, month, year)
 
 			s := v.Name
@@ -144,8 +144,13 @@ func (h handler) createTodoInOutGroup(outGroupID int, projectID int, outTodoTemp
 			}
 		}
 
+		f := &numfmt.Formatter{
+			NegativeTemplate: "(n)",
+			MinDecimalPlaces: 0,
+		}
+
 		todo := bcModel.Todo{
-			Content:     fmt.Sprintf("%s | %s | %s", v.Name, utils.FormatCurrencyAmount(v.Amount), v.Currency.Name), //nolint:govet
+			Content:     fmt.Sprintf("%s | %s | %s", v.Name, strings.Replace(f.Format(v.Amount), ",", ".", -1), v.Currency.Name), //nolint:govet
 			DueOn:       fmt.Sprintf("%v-%v-%v", timeutil.LastDayOfMonth(month, year).Day(), month, year),
 			AssigneeIDs: []int{consts.QuangBasecampID},
 			Description: extraMsg,
