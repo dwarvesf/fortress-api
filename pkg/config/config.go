@@ -26,6 +26,7 @@ type Config struct {
 	CurrencyLayer CurrencyLayer
 	Mochi         Mochi
 	MochiPay      MochiPay
+	MochiProfile  MochiProfile
 	ImprovMX      ImprovMX
 
 	Invoice  Invoice
@@ -97,6 +98,10 @@ type Mochi struct {
 }
 
 type MochiPay struct {
+	BaseURL string
+}
+
+type MochiProfile struct {
 	BaseURL string
 }
 
@@ -269,6 +274,9 @@ func Generate(v ENV) *Config {
 		},
 		MochiPay: MochiPay{
 			BaseURL: v.GetString("MOCHI_PAY_BASE_URL"),
+		},
+		MochiProfile: MochiProfile{
+			BaseURL: v.GetString("MOCHI_PROFILE_BASE_URL"),
 		},
 		ImprovMX: ImprovMX{
 			Token: v.GetString("IMPROVMX_API_TOKEN"),
