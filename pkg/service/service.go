@@ -3,16 +3,16 @@ package service
 import (
 	"time"
 
-	"github.com/dwarvesf/fortress-api/pkg/service/googledrive"
-	"github.com/dwarvesf/fortress-api/pkg/service/googlesheet"
 	"google.golang.org/api/sheets/v4"
-
 	"github.com/patrickmn/go-cache"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	admin "google.golang.org/api/admin/directory/v1"
 	"google.golang.org/api/gmail/v1"
 
+	"github.com/dwarvesf/fortress-api/pkg/service/googledrive"
+	"github.com/dwarvesf/fortress-api/pkg/service/googlesheet"
+	"github.com/dwarvesf/fortress-api/pkg/service/mochipay"
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/service/basecamp"
@@ -44,6 +44,7 @@ type Service struct {
 	GoogleSheet googlesheet.IService
 	ImprovMX    improvmx.IService
 	Mochi       mochi.IService
+	MochiPay mochipay.IService
 	Notion      notion.IService
 	Sendgrid    sendgrid.IService
 	Wise        wise.IService
@@ -138,6 +139,7 @@ func New(cfg *config.Config, store *store.Store, repo store.DBRepo) *Service {
 		GoogleSheet: gSheetSvc,
 		ImprovMX:    improvmx.New(cfg.ImprovMX.Token),
 		Mochi:       mochi.New(cfg, logger.L),
+		MochiPay:       mochipay.New(cfg, logger.L),
 		Notion:      notion.New(cfg.Notion.Secret, cfg.Notion.Databases.Project, logger.L),
 		Sendgrid:    sendgrid.New(cfg.Sendgrid.APIKey, cfg, logger.L),
 		Wise:        wise.New(cfg, logger.L),
