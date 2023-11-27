@@ -38,10 +38,10 @@ func New(controller *controller.Controller, logger logger.Logger, cfg *config.Co
 // @Produce  json
 // @Param code body string true "Google login code"
 // @Param redirectUrl body string true "Google redirect url"
-// @Success 200 {object} AuthData
-// @Failure 400 {object} ErrorResponse
-// @Failure 404 {object} ErrorResponse
-// @Failure 500 {object} ErrorResponse
+// @Success 200 {object} view.AuthData
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
 // @Router /auth [post]
 func (h *handler) Auth(c *gin.Context) {
 	// 1. parse code, redirectUrl from body
@@ -84,10 +84,10 @@ func (h *handler) Auth(c *gin.Context) {
 // @Accept  json
 // @Produce  json
 // @Security BearerAuth
-// @Success 200 {object} AuthUserResponse
-// @Failure 400 {object} ErrorResponse
-// @Failure 404 {object} ErrorResponse
-// @Failure 500 {object} ErrorResponse
+// @Success 200 {object} view.AuthUserResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
 // @Router /auth/me [get]
 func (h *handler) Me(c *gin.Context) {
 	userID, err := authutils.GetUserIDFromContext(c, h.config)
@@ -119,10 +119,10 @@ func (h *handler) Me(c *gin.Context) {
 // @Accept  json
 // @Produce  json
 // @Security BearerAuth
-// @Success 200 {object} APIKeyResponse
-// @Failure 400 {object} ErrorResponse
-// @Failure 404 {object} ErrorResponse
-// @Failure 500 {object} ErrorResponse
+// @Success 200 {object} view.APIKeyResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
 // @Router /auth/api-key [post]
 func (h *handler) CreateAPIKey(c *gin.Context) {
 	var body request.CreateAPIKeyInput

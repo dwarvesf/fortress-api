@@ -55,10 +55,10 @@ const (
 // @Accept  json
 // @Produce  json
 // @Security BearerAuth
-// @Param body body CreateBraineryLogRequest true "Body"
-// @Success 200 {object} MessageResponse
-// @Failure 400 {object} ErrorResponse
-// @Failure 500 {object} ErrorResponse
+// @Param body body request.CreateBraineryLogRequest true "Body"
+// @Success 200 {object} view.MessageResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
 // @Router /brainery-logs [post]
 func (h *handler) Create(c *gin.Context) {
 	l := h.logger.Fields(
@@ -112,9 +112,9 @@ func (h *handler) Create(c *gin.Context) {
 // @Security BearerAuth
 // @Param view query string false "Time view"
 // @Param date query string false "Date" Format(date)
-// @Success 200 {object} BraineryMetricResponse
-// @Failure 400 {object} ErrorResponse
-// @Failure 500 {object} ErrorResponse
+// @Success 200 {object} view.BraineryMetricResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
 // @Router /brainery-logs/metrics [get]
 func (h *handler) GetMetrics(c *gin.Context) {
 	l := h.logger.Fields(

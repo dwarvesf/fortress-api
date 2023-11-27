@@ -44,10 +44,10 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 // @Tags Vault
 // @Accept  json
 // @Produce  json
-// @Success 200 {object} MessageResponse
-// @Failure 400 {object} ErrorResponse
-// @Failure 404 {object} ErrorResponse
-// @Failure 500 {object} ErrorResponse
+// @Success 200 {object} view.MessageResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
 // @Router /cron-jobs/store-vault-transaction [post]
 func (h *handler) StoreVaultTransaction(c *gin.Context) {
 	l := h.logger.Fields(logger.Fields{

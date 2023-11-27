@@ -47,9 +47,9 @@ func New(controller *controller.Controller, store *store.Store, repo store.DBRep
 // @Accept  json
 // @Produce  json
 // @Security BearerAuth
-// @Param Body body CreateClientRequest true "Body"
-// @Success 200 {object} CreateClientResponse
-// @Failure 500 {object} ErrorResponse
+// @Param body body request.CreateClientRequest true "Body"
+// @Success 200 {object} view.CreateClientResponse
+// @Failure 500 {object} view.ErrorResponse
 // @Router /clients [post]
 func (h *handler) Create(c *gin.Context) {
 	input := request.CreateClientRequest{}
@@ -82,8 +82,8 @@ func (h *handler) Create(c *gin.Context) {
 // @Accept  json
 // @Produce  json
 // @Security BearerAuth
-// @Success 200 {object} GetListClientResponse
-// @Failure 500 {object} ErrorResponse
+// @Success 200 {object} view.GetListClientResponse
+// @Failure 500 {object} view.ErrorResponse
 // @Router /clients [get]
 func (h *handler) List(c *gin.Context) {
 	l := h.logger.Fields(logger.Fields{
@@ -110,10 +110,10 @@ func (h *handler) List(c *gin.Context) {
 // @Produce  json
 // @Security BearerAuth
 // @Param id path string true "Client ID"
-// @Success 200 {object} GetDetailClientResponse
-// @Failure 400 {object} ErrorResponse
-// @Failure 404 {object} ErrorResponse
-// @Failure 500 {object} ErrorResponse
+// @Success 200 {object} view.GetDetailClientResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
 // @Router /clients/{id} [get]
 func (h *handler) Detail(c *gin.Context) {
 	clientID := c.Param("id")
@@ -151,11 +151,11 @@ func (h *handler) Detail(c *gin.Context) {
 // @Produce  json
 // @Security BearerAuth
 // @Param id path string true "Client ID"
-// @Param Body body UpdateClientInput true "Body"
-// @Success 200 {object} MessageResponse
-// @Failure 400 {object} ErrorResponse
-// @Failure 404 {object} ErrorResponse
-// @Failure 500 {object} ErrorResponse
+// @Param body body request.UpdateClientInput true "Body"
+// @Success 200 {object} view.MessageResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
 // @Router /clients/{id} [put]
 func (h *handler) Update(c *gin.Context) {
 	clientID := c.Param("id")
@@ -194,10 +194,10 @@ func (h *handler) Update(c *gin.Context) {
 // @Accept  json
 // @Produce  json
 // @Param id path string true "Client ID"
-// @Success 200 {object} MessageResponse
-// @Failure 400 {object} ErrorResponse
-// @Failure 404 {object} ErrorResponse
-// @Failure 500 {object} ErrorResponse
+// @Success 200 {object} view.MessageResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
 // @Router /clients/{id} [delete]
 func (h *handler) Delete(c *gin.Context) {
 	clientID := c.Param("id")
@@ -230,8 +230,8 @@ func (h *handler) Delete(c *gin.Context) {
 // @Accept  json
 // @Produce  json
 // @Security BearerAuth
-// @Success 200 {object} PublicClientListResponse
-// @Failure 500 {object} ErrorResponse
+// @Success 200 {object} view.PublicClientListResponse
+// @Failure 500 {object} view.ErrorResponse
 // @Router /clients [get]
 func (h *handler) PublicList(c *gin.Context) {
 	l := h.logger.Fields(logger.Fields{

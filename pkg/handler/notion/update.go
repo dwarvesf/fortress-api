@@ -17,8 +17,8 @@ import (
 // @Tags Notion
 // @Accept  json
 // @Produce  json
-// @Success 200 {object} MessageResponse
-// @Failure 400 {object} ErrorResponse
+// @Success 200 {object} view.MessageResponse
+// @Failure 400 {object} view.ErrorResponse
 // @Router /notion/update [get]
 func (h *handler) ListUpdates(c *gin.Context) {
 	resp, err := h.service.Notion.GetDatabase(h.config.Notion.Databases.Updates, nil, []notion.DatabaseQuerySort{

@@ -48,8 +48,8 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {object} ProjectSizeResponse
-// @Failure 500 {object} ErrorResponse
+// @Success 200 {object} view.ProjectSizeResponse
+// @Failure 500 {object} view.ErrorResponse
 // @Router /dashboards/projects/sizes [get]
 func (h *handler) GetProjectSizes(c *gin.Context) {
 	l := h.logger.Fields(logger.Fields{
@@ -76,10 +76,10 @@ func (h *handler) GetProjectSizes(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param projectID   query  string false  "Project ID"
-// @Success 200 {object} WorkSurveyResponse
-// @Failure 400 {object} ErrorResponse
-// @Failure 404 {object} ErrorResponse
-// @Failure 500 {object} ErrorResponse
+// @Success 200 {object} view.WorkSurveyResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
 // @Router /dashboards/projects/work-surveys [get]
 func (h *handler) GetWorkSurveys(c *gin.Context) {
 	input := request.WorkSurveysInput{}
@@ -146,10 +146,10 @@ func (h *handler) GetWorkSurveys(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param projectID   query  string false  "Project ID"
-// @Success 200 {object} ActionItemReportResponse
-// @Failure 400 {object} ErrorResponse
-// @Failure 404 {object} ErrorResponse
-// @Failure 500 {object} ErrorResponse
+// @Success 200 {object} view.ActionItemReportResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
 // @Router /dashboards/projects/action-items [get]
 func (h *handler) GetActionItemReports(c *gin.Context) {
 	input := request.ActionItemInput{}
@@ -228,10 +228,10 @@ func (h *handler) GetActionItemReports(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param projectID   query  string false  "Project ID"
-// @Success 200 {object} EngineeringHealthResponse
-// @Failure 400 {object} ErrorResponse
-// @Failure 404 {object} ErrorResponse
-// @Failure 500 {object} ErrorResponse
+// @Success 200 {object} view.EngineeringHealthResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
 // @Router /dashboards/projects/engineering-healths [get]
 func (h *handler) GetEngineeringHealth(c *gin.Context) {
 	input := request.WorkSurveysInput{}
@@ -324,10 +324,10 @@ func (h *handler) GetEngineeringHealth(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param projectID   query  string false  "Project ID"
-// @Success 200 {object} AuditResponse
-// @Failure 400 {object} ErrorResponse
-// @Failure 404 {object} ErrorResponse
-// @Failure 500 {object} ErrorResponse
+// @Success 200 {object} view.AuditResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
 // @Router /dashboards/projects/audits [get]
 func (h *handler) GetAudits(c *gin.Context) {
 	input := request.WorkSurveysInput{}
@@ -420,10 +420,10 @@ func (h *handler) GetAudits(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param projectID   query  string false  "Project ID"
-// @Success 200 {object} ActionItemSquashReportResponse
-// @Failure 400 {object} ErrorResponse
-// @Failure 404 {object} ErrorResponse
-// @Failure 500 {object} ErrorResponse
+// @Success 200 {object} view.ActionItemSquashReportResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
 // @Router /dashboards/projects/action-item-squash [get]
 func (h *handler) GetActionItemSquashReports(c *gin.Context) {
 	input := request.ActionItemInput{}
@@ -487,10 +487,10 @@ func (h *handler) GetActionItemSquashReports(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {object} AuditSummariesResponse
-// @Failure 400 {object} ErrorResponse
-// @Failure 404 {object} ErrorResponse
-// @Failure 500 {object} ErrorResponse
+// @Success 200 {object} view.AuditSummariesResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
 // @Router /dashboards/projects/summary [get]
 func (h *handler) GetSummary(c *gin.Context) {
 	l := h.logger.Fields(logger.Fields{
@@ -551,8 +551,8 @@ func (h *handler) GetSummary(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {object} ResourceAvailabilityResponse
-// @Failure 500 {object} ErrorResponse
+// @Success 200 {object} view.ResourceAvailabilityResponse
+// @Failure 500 {object} view.ErrorResponse
 // @Router /dashboards/resources/availabilities [get]
 func (h *handler) GetResourcesAvailability(c *gin.Context) {
 	l := h.logger.Fields(logger.Fields{
@@ -585,8 +585,8 @@ func (h *handler) GetResourcesAvailability(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {object} GetEngagementDashboardResponse
-// @Failure 500 {object} ErrorResponse
+// @Success 200 {object} view.GetEngagementDashboardResponse
+// @Failure 500 {object} view.ErrorResponse
 // @Router /dashboards/engagement/info [get]
 func (h *handler) GetEngagementInfo(c *gin.Context) {
 	l := h.logger.Fields(logger.Fields{
@@ -626,8 +626,8 @@ func (h *handler) GetEngagementInfo(c *gin.Context) {
 // @Security BearerAuth
 // @Param filter  query  string true  "chapter/seniority/project"
 // @Param startDate  query  string true  "startDate"
-// @Success 200 {object} GetEngagementDashboardDetailResponse
-// @Failure 500 {object} ErrorResponse
+// @Success 200 {object} view.GetEngagementDashboardDetailResponse
+// @Failure 500 {object} view.ErrorResponse
 // @Router /dashboards/engagement/detail [get]
 func (h *handler) GetEngagementInfoDetail(c *gin.Context) {
 	query := request.GetEngagementDashboardDetailRequest{}
@@ -671,8 +671,8 @@ func (h *handler) GetEngagementInfoDetail(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {object} GetDashboardResourceUtilizationResponse
-// @Failure 500 {object} ErrorResponse
+// @Success 200 {object} view.GetDashboardResourceUtilizationResponse
+// @Failure 500 {object} view.ErrorResponse
 // @Router /dashboards/resources/utilization [get]
 func (h *handler) GetResourceUtilization(c *gin.Context) {
 	l := h.logger.Fields(logger.Fields{
@@ -698,8 +698,8 @@ func (h *handler) GetResourceUtilization(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {object} SummaryWorkUnitDistributionResponse
-// @Failure 500 {object} ErrorResponse
+// @Success 200 {object} view.SummaryWorkUnitDistributionResponse
+// @Failure 500 {object} view.ErrorResponse
 // @Router /dashboards/resources/work-unit-distribution-summary [get]
 func (h *handler) GetWorkUnitDistributionSummary(c *gin.Context) {
 	l := h.logger.Fields(logger.Fields{
@@ -729,10 +729,10 @@ func (h *handler) GetWorkUnitDistributionSummary(c *gin.Context) {
 // @Param name   query  string false  "employee name for filter"
 // @Param sort   query  string false  "sort required"
 // @Param type   query  string false  "work unit type for filter"
-// @Success 200 {object} WorkUnitDistributionsResponse
-// @Failure 400 {object} ErrorResponse
-// @Failure 404 {object} ErrorResponse
-// @Failure 500 {object} ErrorResponse
+// @Success 200 {object} view.WorkUnitDistributionsResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
 // @Router /dashboards/resources/work-unit-distribution [get]
 func (h *handler) GetWorkUnitDistribution(c *gin.Context) {
 	input := request.WorkUnitDistributionInput{}
@@ -781,10 +781,10 @@ func (h *handler) GetWorkUnitDistribution(c *gin.Context) {
 // @Param keyword query string false "Keyword"
 // @Param page query string false "Page"
 // @Param size query string false "Size"
-// @Success 200 {object} WorkSurveySummaryResponse
-// @Failure 400 {object} ErrorResponse
-// @Failure 404 {object} ErrorResponse
-// @Failure 500 {object} ErrorResponse
+// @Success 200 {object} view.WorkSurveySummaryResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
 // @Router /dashboards/resources/work-survey-summaries [get]
 func (h *handler) GetResourceWorkSurveySummaries(c *gin.Context) {
 	input := request.GetResourceWorkSurveySummariesInput{}

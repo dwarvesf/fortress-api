@@ -55,8 +55,8 @@ func parseProjectChangelogNotionMessageFromCtx(c *gin.Context) (ProjectChangelog
 // @Tags Notion
 // @Accept  json
 // @Produce  json
-// @Success 200 {object} MessageResponse
-// @Failure 400 {object} ErrorResponse
+// @Success 200 {object} view.MessageResponse
+// @Failure 400 {object} view.ErrorResponse
 // @Router /notion/changelogs/projects/available [get]
 func (h *handler) GetAvailableProjectsChangelog(c *gin.Context) {
 	projects, err := h.service.Notion.ListProject()
@@ -73,8 +73,8 @@ func (h *handler) GetAvailableProjectsChangelog(c *gin.Context) {
 // @Tags Notion
 // @Accept  json
 // @Produce  json
-// @Success 200 {object} MessageResponse
-// @Failure 400 {object} ErrorResponse
+// @Success 200 {object} view.MessageResponse
+// @Failure 400 {object} view.ErrorResponse
 // @Router /notion/changelogs/project [post]
 func (h *handler) SendProjectChangelog(c *gin.Context) {
 	msg, err := parseProjectChangelogNotionMessageFromCtx(c)

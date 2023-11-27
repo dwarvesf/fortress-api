@@ -48,8 +48,8 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 // @Param type formData string true "image/doc"
 // @Param targetType formData string true "employees/projects/change-logs/invoices"
 // @Param targetID formData string false "employeeID/projectID"
-// @Success 200 {object} ContentDataResponse
-// @Failure 500 {object} ErrorResponse
+// @Success 200 {object} view.ContentDataResponse
+// @Failure 500 {object} view.ErrorResponse
 // @Router /assets/upload [post]
 func (h *handler) Upload(c *gin.Context) {
 	// 1.1 get userID

@@ -52,10 +52,10 @@ func New(controller *controller.Controller, store *store.Store, repo store.DBRep
 // @Accept  json
 // @Produce  json
 // @Security BearerAuth
-// @Success 200 {object} ProfileDataResponse
-// @Failure 400 {object} ErrorResponse
-// @Failure 404 {object} ErrorResponse
-// @Failure 500 {object} ErrorResponse
+// @Success 200 {object} view.ProfileDataResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
 // @Router /profile [get]
 func (h *handler) GetProfile(c *gin.Context) {
 	userID, err := authutils.GetUserIDFromContext(c, h.config)
@@ -93,11 +93,11 @@ func (h *handler) GetProfile(c *gin.Context) {
 // @Produce  json
 // @Security BearerAuth
 // @Param id path string true "Employee ID"
-// @Param Body body UpdateInfoInput true "Body"
-// @Success 200 {object} UpdateProfileInfoResponse
-// @Failure 400 {object} ErrorResponse
-// @Failure 404 {object} ErrorResponse
-// @Failure 500 {object} ErrorResponse
+// @Param body body request.UpdateInfoInput true "Body"
+// @Success 200 {object} view.UpdateProfileInfoResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
 // @Router /profile [put]
 func (h *handler) UpdateInfo(c *gin.Context) {
 	employeeID, err := authutils.GetUserIDFromContext(c, h.config)
@@ -333,10 +333,10 @@ func (h *handler) validateAndMappingCity(db *gorm.DB, countryName string, cityNa
 // @Produce  json
 // @Security BearerAuth
 // @Param file formData file true "content upload"
-// @Success 200 {object} EmployeeContentDataResponse
-// @Failure 400 {object} ErrorResponse
-// @Failure 404 {object} ErrorResponse
-// @Failure 500 {object} ErrorResponse
+// @Success 200 {object} view.EmployeeContentDataResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
 // @Router /profile/upload-avatar [post]
 func (h *handler) UploadAvatar(c *gin.Context) {
 	employeeID, err := authutils.GetUserIDFromContext(c, h.config)
@@ -456,10 +456,10 @@ func (h *handler) UploadAvatar(c *gin.Context) {
 // @Produce  json
 // @Security BearerAuth
 // @Param file formData file true "content upload"
-// @Success 200 {object} EmployeeContentDataResponse
-// @Failure 400 {object} ErrorResponse
-// @Failure 404 {object} ErrorResponse
-// @Failure 500 {object} ErrorResponse
+// @Success 200 {object} view.EmployeeContentDataResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
 // @Router /profile/upload [post]
 func (h *handler) Upload(c *gin.Context) {
 	employeeID, err := authutils.GetUserIDFromContext(c, h.config)
@@ -608,10 +608,10 @@ func (h *handler) Upload(c *gin.Context) {
 // @Accept  json
 // @Produce  json
 // @Security BearerAuth
-// @Success 200 {object} EmployeeInvitationResponse
-// @Failure 400 {object} ErrorResponse
-// @Failure 404 {object} ErrorResponse
-// @Failure 500 {object} ErrorResponse
+// @Success 200 {object} view.EmployeeInvitationResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
 // @Router /invite [get]
 func (h *handler) GetInvitation(c *gin.Context) {
 	employeeID, err := authutils.GetUserIDFromContext(c, h.config)
@@ -649,11 +649,11 @@ func (h *handler) GetInvitation(c *gin.Context) {
 // @Accept  json
 // @Produce  json
 // @Security BearerAuth
-// @Param Body body SubmitOnboardingFormRequest true "Body"
-// @Success 200 {object} MessageResponse
-// @Failure 400 {object} ErrorResponse
-// @Failure 404 {object} ErrorResponse
-// @Failure 500 {object} ErrorResponse
+// @Param body body request.SubmitOnboardingFormRequest true "Body"
+// @Success 200 {object} view.MessageResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
 // @Router /invite/submit [put]
 func (h *handler) SubmitOnboardingForm(c *gin.Context) {
 	employeeID, err := authutils.GetUserIDFromContext(c, h.config)

@@ -51,7 +51,7 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 // @Accept  json
 // @Produce  json
 // @Security BearerAuth
-// @Success 200 {object} MessageResponse
+// @Success 200 {object} view.MessageResponse
 // @Router /cronjobs/audits [post]
 func (h *handler) Sync(c *gin.Context) {
 	h.SyncAuditCycle()

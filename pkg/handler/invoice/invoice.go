@@ -56,10 +56,10 @@ func New(ctrl *controller.Controller, store *store.Store, repo store.DBRepo, ser
 // @Param page query int false "page"
 // @Param size query int false "size"
 // @Param sort query string false "sort"
-// @Success 200 {object} InvoiceListResponse
-// @Failure 400 {object} ErrorResponse
-// @Failure 404 {object} ErrorResponse
-// @Failure 500 {object} ErrorResponse
+// @Success 200 {object} view.InvoiceListResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
 // @Router /invoices [get]
 func (h *handler) List(c *gin.Context) {
 	var query request.GetListInvoiceInput
@@ -111,10 +111,10 @@ func (h *handler) List(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param projectID query string true "projectID"
-// @Success 200 {object} InvoiceTemplateResponse
-// @Failure 400 {object} ErrorResponse
-// @Failure 404 {object} ErrorResponse
-// @Failure 500 {object} ErrorResponse
+// @Success 200 {object} view.InvoiceTemplateResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
 // @Router /invoices/template [get]
 func (h *handler) GetTemplate(c *gin.Context) {
 	now := time.Now()
@@ -163,11 +163,11 @@ func (h *handler) GetTemplate(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Param Body body SendInvoiceRequest true "body"
-// @Success 200 {object} MessageResponse
-// @Failure 404 {object} ErrorResponse
-// @Failure 400 {object} ErrorResponse
-// @Failure 500 {object} ErrorResponse
+// @Param body body request.SendInvoiceRequest true "body"
+// @Success 200 {object} view.MessageResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
 // @Router /invoices/send [post]
 func (h *handler) Send(c *gin.Context) {
 	userID, err := authutils.GetUserIDFromContext(c, h.config)
@@ -225,10 +225,10 @@ func (h *handler) Send(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {object} MessageResponse
-// @Failure 404 {object} ErrorResponse
-// @Failure 400 {object} ErrorResponse
-// @Failure 500 {object} ErrorResponse
+// @Success 200 {object} view.MessageResponse
+// @Failure 404 {object} view.ErrorResponse
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
 // @Router /invoices/{id}/status [put]
 func (h *handler) UpdateStatus(c *gin.Context) {
 	invoiceID := c.Param("id")

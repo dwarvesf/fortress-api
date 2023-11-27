@@ -57,10 +57,10 @@ func New(
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Param Body body UpsertRollupRequest true "Body"
-// @Success 200 {object} MessageResponse
-// @Success 400 {object} ErrorResponse
-// @Success 500 {object} ErrorResponse
+// @Param body body request.UpsertRollupRequest true "Body"
+// @Success 200 {object} view.MessageResponse
+// @Success 400 {object} view.ErrorResponse
+// @Success 500 {object} view.ErrorResponse
 // @Router /engagements/rollup [post]
 func (h *handler) UpsertRollup(c *gin.Context) {
 	l := h.logger.Fields(
@@ -164,9 +164,9 @@ func (h *handler) UpsertRollup(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param channel-id path string true "Discord Channel ID"
-// @Success 200 {object} MessageResponse
-// @Success 400 {object} ErrorResponse
-// @Success 500 {object} ErrorResponse
+// @Success 200 {object} view.MessageResponse
+// @Success 400 {object} view.ErrorResponse
+// @Success 500 {object} view.ErrorResponse
 // @Router /engagements/channel/:channel-id/last-message-id [get]
 func (h *handler) GetLastMessageID(c *gin.Context) {
 	channelID := c.Param("channel-id")
@@ -271,9 +271,9 @@ func AggregateMessages(
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {object} MessageResponse
-// @Success 400 {object} ErrorResponse
-// @Success 500 {object} ErrorResponse
+// @Success 200 {object} view.MessageResponse
+// @Success 400 {object} view.ErrorResponse
+// @Success 500 {object} view.ErrorResponse
 // @Router /cronjobs/index-engagement-messages [post]
 func (h *handler) IndexMessages(c *gin.Context) {
 	l := h.logger.Fields(
