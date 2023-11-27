@@ -59,7 +59,6 @@ func (m *client) GetListTransactions(req ListTransactionsRequest) (*ListTransact
 	}
 
 	url := fmt.Sprintf("%s/api/v1/transactions?", m.cfg.MochiPay.BaseURL) + queryParams.Encode()
-	fmt.Println("request url: ", url)
 	r, err := client.Get(url)
 	if err != nil {
 		m.l.Errorf(err, "[mochipay.GetListTransaction] client.Get failed")
