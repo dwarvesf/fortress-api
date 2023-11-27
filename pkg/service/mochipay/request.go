@@ -19,7 +19,7 @@ const (
 	TransactionStatusSuccess   TransactionStatus = "success"
 	TransactionStatusFailed    TransactionStatus = "failed"
 	TransactionStatusExpired   TransactionStatus = "expired"
-	TransactionStatusCancelled TransactionStatus = "cancelled"
+	TransactionStatusCancelled TransactionStatus = "cancelled" //nolint:all
 )
 
 type TransactionAction string
