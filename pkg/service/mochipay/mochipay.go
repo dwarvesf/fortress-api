@@ -59,7 +59,7 @@ func (m *client) GetListTransactions(req ListTransactionsRequest) (*ListTransact
 	}
 
 	mochiapyURL := "https://api.mochi-pay.console.so"
-	url := fmt.Sprintf("%s/api/v1/transactions?", mochiapyURL) + queryParams.Encode()
+	url := fmt.Sprintf("%s/api/v1/transactions?", m.cfg.MochiPay.BaseURL) + queryParams.Encode()
 	fmt.Println("request url: ", url)
 	r, err := client.Get(url)
 	if err != nil {
