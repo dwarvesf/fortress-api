@@ -20,7 +20,7 @@ import (
 type IController interface {
 	Log(in model.LogDiscordInput) error
 	PublicAdvanceSalaryLog(in model.LogDiscordInput) error
-	PublishIcyActivityLog(in model.LogDiscordInput) error
+	PublishIcyActivityLog() error
 }
 
 type controller struct {
@@ -137,7 +137,7 @@ func (c *controller) PublicAdvanceSalaryLog(in model.LogDiscordInput) error {
 	return nil
 }
 
-func (c *controller) PublishIcyActivityLog(in model.LogDiscordInput) error {
+func (c *controller) PublishIcyActivityLog() error {
 	logger := c.logger.Field("method", "PublishIcyActivityLog")
 
 	resp, err := c.service.MochiPay.GetListTransactions(mochipay.ListTransactionsRequest{
@@ -173,6 +173,12 @@ func (c *controller) PublishIcyActivityLog(in model.LogDiscordInput) error {
 
 		if txMetadata.VaultRequest == nil {
 			logger.Info("Skip transaction without vault request")
+			continue
+		}
+
+		if !strings.EqualFold(txMetadata.VaultRequest.TokenInfo.Address, mochipay.ICYAddress) ||
+			txMetadata.VaultRequest.TokenInfo.ChainID != mochipay.POLYGONChainID {
+			logger.Info("Skip transaction without ICY token")
 			continue
 		}
 
