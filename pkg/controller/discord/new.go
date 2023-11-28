@@ -215,11 +215,13 @@ func (c *controller) PublishIcyActivityLog() error {
 		tokenAmountUSD := big.NewFloat(0).Mul(tokenAmountDec, big.NewFloat(1.5))
 
 		transferReason := txMetadata.Message
-		_ = transferReason
+		if strings.EqualFold(transferReason, mochipay.RewardDefaultMsg) {
+			transferReason = fmt.Sprintf("Reward from **%s** vault", txMetadata.VaultRequest.Name)
+		}
 
 		desc := `
 <:badge5:1058304281775710229> **Receiver:** <@` + receiverDiscordID + `>
-<:money:1080757975649624094> **Amount:** <:ICY:1049620715374133288>	` + tokenAmountDec.String() + ` ($` + tokenAmountUSD.String() + `)
+<:money:1080757975649624094> **Amount:** <:ICY:1049620715374133288> ` + tokenAmountDec.String() + ` ($` + tokenAmountUSD.String() + `)
 <:pepetrade:885513214538952765> **Reason:** ` + transferReason + `
 
 Head to [earn.d.foundation](https://earn.d.foundation) to see list of open quests and r&d topics
