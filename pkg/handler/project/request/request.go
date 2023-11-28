@@ -6,6 +6,7 @@ import (
 
 	"github.com/dwarvesf/fortress-api/pkg/utils"
 	"github.com/dwarvesf/fortress-api/pkg/utils/authutils"
+	"github.com/dwarvesf/fortress-api/pkg/view"
 
 	"github.com/dwarvesf/fortress-api/pkg/handler/project/errs"
 	"github.com/dwarvesf/fortress-api/pkg/model"
@@ -22,23 +23,23 @@ type GetListProjectInput struct {
 	Type   string   `form:"type" json:"type"`
 }
 
-type UpdateProjectGeneralInfoInput struct {
-	Name           string       `form:"name" json:"name" binding:"required"`
-	StartDate      string       `form:"startDate" json:"startDate"`
-	CountryID      model.UUID   `form:"countryID" json:"countryID" binding:"required"`
-	Function       string       `form:"function" json:"function" binding:"required"`
-	AuditNotionID  model.UUID   `form:"auditNotionID" json:"auditNotionID"`
-	Stacks         []model.UUID `form:"stacks" json:"stacks"`
-	BankAccountID  model.UUID   `form:"bankAccountID" json:"bankAccountID"`
-	ClientID       model.UUID   `form:"clientID" json:"clientID"`
-	OrganizationID model.UUID   `form:"organizationID" json:"organizationID"`
-	AccountRating  int          `form:"accountRating" json:"accountRating" binding:"required,min=1,max=5"`
-	DeliveryRating int          `form:"deliveryRating" json:"deliveryRating" binding:"required,min=1,max=5"`
-	LeadRating     int          `form:"leadRating" json:"leadRating" binding:"required,min=1,max=5"`
-	ImportantLevel string       `form:"importantLevel" json:"importantLevel" binding:"required"`
-}
+type UpdateProjectGeneralInfoRequest struct {
+	Name           string      `form:"name" json:"name" binding:"required"`
+	StartDate      string      `form:"startDate" json:"startDate"`
+	CountryID      view.UUID   `form:"countryID" json:"countryID" binding:"required"`
+	Function       string      `form:"function" json:"function" binding:"required"`
+	AuditNotionID  view.UUID   `form:"auditNotionID" json:"auditNotionID"`
+	Stacks         []view.UUID `form:"stacks" json:"stacks"`
+	BankAccountID  view.UUID   `form:"bankAccountID" json:"bankAccountID"`
+	ClientID       view.UUID   `form:"clientID" json:"clientID"`
+	OrganizationID view.UUID   `form:"organizationID" json:"organizationID"`
+	AccountRating  int         `form:"accountRating" json:"accountRating" binding:"required,min=1,max=5"`
+	DeliveryRating int         `form:"deliveryRating" json:"deliveryRating" binding:"required,min=1,max=5"`
+	LeadRating     int         `form:"leadRating" json:"leadRating" binding:"required,min=1,max=5"`
+	ImportantLevel string      `form:"importantLevel" json:"importantLevel" binding:"required"`
+} // @name UpdateProjectGeneralInfoRequest
 
-func (i UpdateProjectGeneralInfoInput) GetStartDate() *time.Time {
+func (i UpdateProjectGeneralInfoRequest) GetStartDate() *time.Time {
 	startDate, err := time.Parse("2006-01-02", i.StartDate)
 	if i.StartDate == "" || err != nil {
 		return nil
@@ -47,7 +48,7 @@ func (i UpdateProjectGeneralInfoInput) GetStartDate() *time.Time {
 	return &startDate
 }
 
-func (i UpdateProjectGeneralInfoInput) Validate() error {
+func (i UpdateProjectGeneralInfoRequest) Validate() error {
 	if !model.ProjectFunction(i.Function).IsValid() {
 		return errs.ErrInvalidProjectFunction
 	}
@@ -59,8 +60,33 @@ func (i UpdateProjectGeneralInfoInput) Validate() error {
 	return nil
 }
 
-type UpdateAccountStatusBody struct {
-	ProjectStatus model.ProjectStatus `json:"status"`
+type UpdateProjectStatusBody struct {
+	ProjectStatus ProjectStatus `json:"status"`
+} // @name UpdateProjectStatusBody
+
+type ProjectStatus string // @name ProjectStatus
+
+const (
+	ProjectStatusOnBoarding ProjectStatus = "on-boarding"
+	ProjectStatusActive     ProjectStatus = "active"
+	ProjectStatusPaused     ProjectStatus = "paused"
+	ProjectStatusClosed     ProjectStatus = "closed"
+)
+
+func (e ProjectStatus) IsValid() bool {
+	switch e {
+	case
+		ProjectStatusOnBoarding,
+		ProjectStatusActive,
+		ProjectStatusPaused,
+		ProjectStatusClosed:
+		return true
+	}
+	return false
+}
+
+func (e ProjectStatus) String() string {
+	return string(e)
 }
 
 func (i *GetListProjectInput) StandardizeInput() {
@@ -84,27 +110,27 @@ func (i *GetListProjectInput) Validate() error {
 	return nil
 }
 
-type CreateProjectInput struct {
-	Name             string              `form:"name" json:"name" binding:"required"`
-	Status           string              `form:"status" json:"status" binding:"required"`
-	Type             string              `form:"type" json:"type"`
-	AccountManagers  []ProjectHeadInput  `form:"accountManagers" json:"accountManagers"`
-	DeliveryManagers []ProjectHeadInput  `form:"deliveryManagers" json:"deliveryManagers"`
-	SalePersons      []ProjectHeadInput  `form:"salePersons" json:"salePersons"`
-	CountryID        model.UUID          `form:"countryID" json:"countryID" binding:"required"`
-	StartDate        string              `form:"startDate" json:"startDate"`
-	Members          []AssignMemberInput `form:"members" json:"members"`
-	ClientEmail      []string            `form:"clientEmail" json:"clientEmail"`
-	ProjectEmail     string              `form:"projectEmail" json:"projectEmail"`
-	Code             string              `form:"code" json:"code"`
-	Function         string              `form:"function" json:"function" binding:"required"`
-	AuditNotionID    model.UUID          `form:"auditNotionID" json:"auditNotionID"`
-	BankAccountID    model.UUID          `form:"bankAccountID" json:"bankAccountID"`
-	ClientID         model.UUID          `form:"clientID" json:"clientID"`
-	OrganizationID   model.UUID          `form:"organizationID" json:"organizationID"`
-}
+type CreateProjectRequest struct {
+	Name             string                `form:"name" json:"name" binding:"required"`
+	Status           string                `form:"status" json:"status" binding:"required"`
+	Type             string                `form:"type" json:"type"`
+	AccountManagers  []ProjectHeadRequest  `form:"accountManagers" json:"accountManagers"`
+	DeliveryManagers []ProjectHeadRequest  `form:"deliveryManagers" json:"deliveryManagers"`
+	SalePersons      []ProjectHeadRequest  `form:"salePersons" json:"salePersons"`
+	CountryID        view.UUID             `form:"countryID" json:"countryID" binding:"required"`
+	StartDate        string                `form:"startDate" json:"startDate"`
+	Members          []AssignMemberRequest `form:"members" json:"members"`
+	ClientEmail      []string              `form:"clientEmail" json:"clientEmail"`
+	ProjectEmail     string                `form:"projectEmail" json:"projectEmail"`
+	Code             string                `form:"code" json:"code"`
+	Function         string                `form:"function" json:"function" binding:"required"`
+	AuditNotionID    view.UUID             `form:"auditNotionID" json:"auditNotionID"`
+	BankAccountID    view.UUID             `form:"bankAccountID" json:"bankAccountID"`
+	ClientID         view.UUID             `form:"clientID" json:"clientID"`
+	OrganizationID   view.UUID             `form:"organizationID" json:"organizationID"`
+} // @name CreateProjectRequest
 
-func (i *CreateProjectInput) Validate() error {
+func (i *CreateProjectRequest) Validate() error {
 	if i.Type == "" {
 		i.Type = model.ProjectTypeDwarves.String()
 	}
@@ -150,7 +176,7 @@ func (i *CreateProjectInput) Validate() error {
 	return nil
 }
 
-func (i *CreateProjectInput) GetStartDate() *time.Time {
+func (i *CreateProjectRequest) GetStartDate() *time.Time {
 	startDate, err := time.Parse("2006-01-02", i.StartDate)
 	if i.StartDate == "" || err != nil {
 		return nil
@@ -174,15 +200,15 @@ func (i *GetListStaffInput) Validate() error {
 	return nil
 }
 
-type UpdateMemberInput struct {
-	ProjectSlotID        model.UUID      `from:"projectSlotID" json:"projectSlotID" binding:"required"`
-	ProjectMemberID      model.UUID      `from:"projectMemberID" json:"projectMemberID"`
-	EmployeeID           model.UUID      `form:"employeeID" json:"employeeID"`
-	SeniorityID          model.UUID      `form:"seniorityID" json:"seniorityID" binding:"required"`
-	UpsellPersonID       model.UUID      `form:"upsellPersonID" json:"upsellPersonID"`
+type UpdateMemberRequest struct {
+	ProjectSlotID        view.UUID       `from:"projectSlotID" json:"projectSlotID" binding:"required"`
+	ProjectMemberID      view.UUID       `from:"projectMemberID" json:"projectMemberID"`
+	EmployeeID           view.UUID       `form:"employeeID" json:"employeeID"`
+	SeniorityID          view.UUID       `form:"seniorityID" json:"seniorityID" binding:"required"`
+	UpsellPersonID       view.UUID       `form:"upsellPersonID" json:"upsellPersonID"`
 	UpsellCommissionRate decimal.Decimal `form:"upsellCommissionRate" json:"upsellCommissionRate"`
 	LeadCommissionRate   decimal.Decimal `form:"leadCommissionRate" json:"leadCommissionRate"`
-	Positions            []model.UUID    `form:"positions" json:"positions" binding:"required"`
+	Positions            []view.UUID     `form:"positions" json:"positions" binding:"required"`
 	DeploymentType       string          `form:"deploymentType" json:"deploymentType" binding:"required"`
 	Status               string          `form:"status" json:"status" binding:"required"`
 	StartDate            string          `form:"startDate" json:"startDate"`
@@ -191,9 +217,9 @@ type UpdateMemberInput struct {
 	Discount             decimal.Decimal `form:"discount" json:"discount"`
 	IsLead               bool            `form:"isLead" json:"isLead"`
 	Note                 string          `form:"note" json:"note"`
-}
+} // @name UpdateMemberRequest
 
-func (i *UpdateMemberInput) Validate() error {
+func (i *UpdateMemberRequest) Validate() error {
 	if i.DeploymentType != "" && !model.DeploymentType(i.DeploymentType).IsValid() {
 		return errs.ErrInvalidDeploymentType
 	}
@@ -225,7 +251,7 @@ func (i *UpdateMemberInput) Validate() error {
 	return nil
 }
 
-func (i *UpdateMemberInput) GetStartDate() *time.Time {
+func (i *UpdateMemberRequest) GetStartDate() *time.Time {
 	date, err := time.Parse("2006-01-02", i.StartDate)
 	if i.StartDate == "" || err != nil {
 		return nil
@@ -234,7 +260,7 @@ func (i *UpdateMemberInput) GetStartDate() *time.Time {
 	return &date
 }
 
-func (i *UpdateMemberInput) GetEndDate() *time.Time {
+func (i *UpdateMemberRequest) GetEndDate() *time.Time {
 	date, err := time.Parse("2006-01-02", i.EndDate)
 	if i.EndDate == "" || err != nil {
 		return nil
@@ -243,10 +269,10 @@ func (i *UpdateMemberInput) GetEndDate() *time.Time {
 	return &date
 }
 
-type AssignMemberInput struct {
-	EmployeeID           model.UUID      `form:"employeeID" json:"employeeID"`
-	SeniorityID          model.UUID      `form:"seniorityID" json:"seniorityID" binding:"required"`
-	Positions            []model.UUID    `form:"positions" json:"positions" binding:"required"`
+type AssignMemberRequest struct {
+	EmployeeID           view.UUID       `form:"employeeID" json:"employeeID"`
+	SeniorityID          view.UUID       `form:"seniorityID" json:"seniorityID" binding:"required"`
+	Positions            []view.UUID     `form:"positions" json:"positions" binding:"required"`
 	DeploymentType       string          `form:"deploymentType" json:"deploymentType" binding:"required"`
 	Status               string          `form:"status" json:"status" binding:"required"`
 	StartDate            string          `form:"startDate" json:"startDate"`
@@ -255,12 +281,12 @@ type AssignMemberInput struct {
 	Discount             decimal.Decimal `form:"discount" json:"discount"`
 	LeadCommissionRate   decimal.Decimal `form:"leadCommissionRate" json:"leadCommissionRate"`
 	IsLead               bool            `form:"isLead" json:"isLead"`
-	UpsellPersonID       model.UUID      `form:"upsellPersonID" json:"upsellPersonID"`
+	UpsellPersonID       view.UUID       `form:"upsellPersonID" json:"upsellPersonID"`
 	UpsellCommissionRate decimal.Decimal `form:"upsellCommissionRate" json:"upsellCommissionRate"`
 	Note                 string          `form:"note" json:"note"`
-}
+} // @name AssignMemberRequest
 
-func (i *AssignMemberInput) Validate() error {
+func (i *AssignMemberRequest) Validate() error {
 	if i.DeploymentType == "" || !model.DeploymentType(i.DeploymentType).IsValid() {
 		return errs.ErrInvalidDeploymentType
 	}
@@ -292,7 +318,7 @@ func (i *AssignMemberInput) Validate() error {
 	return nil
 }
 
-func (i *AssignMemberInput) GetStartDate() *time.Time {
+func (i *AssignMemberRequest) GetStartDate() *time.Time {
 	date, err := time.Parse("2006-01-02", i.StartDate)
 	if i.StartDate == "" || err != nil {
 		return nil
@@ -301,7 +327,7 @@ func (i *AssignMemberInput) GetStartDate() *time.Time {
 	return &date
 }
 
-func (i *AssignMemberInput) GetEndDate() *time.Time {
+func (i *AssignMemberRequest) GetEndDate() *time.Time {
 	date, err := time.Parse("2006-01-02", i.EndDate)
 	if i.EndDate == "" || err != nil {
 		return nil
@@ -310,7 +336,7 @@ func (i *AssignMemberInput) GetEndDate() *time.Time {
 	return &date
 }
 
-func (i *AssignMemberInput) GetStatus() model.ProjectMemberStatus {
+func (i *AssignMemberRequest) GetStatus() model.ProjectMemberStatus {
 	if i.EmployeeID.IsZero() {
 		return model.ProjectMemberStatusPending
 	}
@@ -322,7 +348,7 @@ func (i *AssignMemberInput) GetStatus() model.ProjectMemberStatus {
 	return model.ProjectMemberStatus(i.Status)
 }
 
-func (i *AssignMemberInput) RestrictPermission(userInfo *model.CurrentLoggedUserInfo) {
+func (i *AssignMemberRequest) RestrictPermission(userInfo *model.CurrentLoggedUserInfo) {
 	if !authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsCommissionRateEdit) {
 		i.LeadCommissionRate = decimal.Zero
 	}
@@ -367,20 +393,20 @@ func (input DeleteSlotInput) Validate() error {
 	return nil
 }
 
-type ProjectHeadInput struct {
-	EmployeeID     model.UUID      `json:"employeeID" form:"employeeID"`
+type ProjectHeadRequest struct {
+	EmployeeID     view.UUID       `json:"employeeID" form:"employeeID"`
 	CommissionRate decimal.Decimal `json:"commissionRate" form:"commissionRate"`
-}
+} // @name ProjectHeadRequest
 
-type UpdateContactInfoInput struct {
-	ClientEmail      []string           `form:"clientEmail" json:"clientEmail"`
-	ProjectEmail     string             `form:"projectEmail" json:"projectEmail"`
-	AccountManagers  []ProjectHeadInput `form:"accountManagers" json:"accountManagers"`
-	DeliveryManagers []ProjectHeadInput `form:"deliveryManagers" json:"deliveryManagers"`
-	SalePersons      []ProjectHeadInput `form:"salePersons" json:"salePersons"`
-}
+type UpdateContactInfoRequest struct {
+	ClientEmail      []string             `form:"clientEmail" json:"clientEmail"`
+	ProjectEmail     string               `form:"projectEmail" json:"projectEmail"`
+	AccountManagers  []ProjectHeadRequest `form:"accountManagers" json:"accountManagers"`
+	DeliveryManagers []ProjectHeadRequest `form:"deliveryManagers" json:"deliveryManagers"`
+	SalePersons      []ProjectHeadRequest `form:"salePersons" json:"salePersons"`
+} // @name UpdateContactInfoRequest
 
-func (i UpdateContactInfoInput) Validate() error {
+func (i UpdateContactInfoRequest) Validate() error {
 	regex, _ := regexp.Compile(emailRegex)
 	for _, v := range i.ClientEmail {
 		if !regex.MatchString(v) {
@@ -418,17 +444,17 @@ func (input UnassignMemberInput) Validate() error {
 
 type CreateWorkUnitInput struct {
 	ProjectID string
-	Body      CreateWorkUnitBody
+	Body      CreateWorkUnitRequest
 }
 
-type CreateWorkUnitBody struct {
-	Name    string       `json:"name" form:"name" binding:"required"`
-	Type    string       `json:"type" form:"type" binding:"required"`
-	Status  string       `json:"status" form:"status" binding:"required"`
-	Members []model.UUID `json:"members" form:"members"`
-	Stacks  []model.UUID `json:"stacks" form:"stacks" binding:"required"`
-	URL     string       `json:"url" form:"url"`
-}
+type CreateWorkUnitRequest struct {
+	Name    string      `json:"name" form:"name" binding:"required"`
+	Type    string      `json:"type" form:"type" binding:"required"`
+	Status  string      `json:"status" form:"status" binding:"required"`
+	Members []view.UUID `json:"members" form:"members"`
+	Stacks  []view.UUID `json:"stacks" form:"stacks" binding:"required"`
+	URL     string      `json:"url" form:"url"`
+} // @name CreateWorkUnitRequest
 
 func (i *CreateWorkUnitInput) Validate() error {
 	if i.ProjectID == "" || !model.IsUUIDFromString(i.ProjectID) {
@@ -438,7 +464,7 @@ func (i *CreateWorkUnitInput) Validate() error {
 	return i.Body.Validate()
 }
 
-func (i *CreateWorkUnitBody) Validate() error {
+func (i *CreateWorkUnitRequest) Validate() error {
 	if i.Type == "" || !model.WorkUnitType(i.Type).IsValid() {
 		return errs.ErrInvalidWorkUnitType
 	}
@@ -457,16 +483,16 @@ func (i *CreateWorkUnitBody) Validate() error {
 type UpdateWorkUnitInput struct {
 	ProjectID  string
 	WorkUnitID string
-	Body       UpdateWorkUnitBody
+	Body       UpdateWorkUnitRequest
 }
 
-type UpdateWorkUnitBody struct {
-	Name    string             `form:"name" json:"name" binding:"required,max=100"`
-	Type    model.WorkUnitType `form:"type" json:"type" binding:"required"`
-	Members []model.UUID       `form:"members" json:"members"`
-	Stacks  []model.UUID       `form:"stacks" json:"stacks" binding:"required"`
-	URL     string             `form:"url" json:"url"`
-}
+type UpdateWorkUnitRequest struct {
+	Name    string            `form:"name" json:"name" binding:"required,max=100"`
+	Type    view.WorkUnitType `form:"type" json:"type" binding:"required"`
+	Members []view.UUID       `form:"members" json:"members"`
+	Stacks  []view.UUID       `form:"stacks" json:"stacks" binding:"required"`
+	URL     string            `form:"url" json:"url"`
+} // @name UpdateWorkUnitRequest
 
 func (i *UpdateWorkUnitInput) Validate() error {
 	if i.ProjectID == "" || !model.IsUUIDFromString(i.ProjectID) {
@@ -480,7 +506,7 @@ func (i *UpdateWorkUnitInput) Validate() error {
 	return i.Body.Validate()
 }
 
-func (i *UpdateWorkUnitBody) Validate() error {
+func (i *UpdateWorkUnitRequest) Validate() error {
 	if !i.Type.IsValid() {
 		return errs.ErrInvalidWorkUnitType
 	}
@@ -512,10 +538,31 @@ func (i *ArchiveWorkUnitInput) Validate() error {
 type GetListWorkUnitInput struct {
 	ProjectID string
 	Query     GetListWorkUnitQuery
-}
+} // @name GetListWorkUnitInput
 
 type GetListWorkUnitQuery struct {
-	Status model.WorkUnitStatus `form:"status" json:"status"`
+	Status WorkUnitStatus `form:"status" json:"status"`
+} // @name GetListWorkUnitQuery
+
+type WorkUnitStatus string // @name WorkUnitStatus
+
+const (
+	WorkUnitStatusActive   WorkUnitStatus = "active"
+	WorkUnitStatusArchived WorkUnitStatus = "archived"
+)
+
+func (e WorkUnitStatus) IsValid() bool {
+	switch e {
+	case
+		WorkUnitStatusActive,
+		WorkUnitStatusArchived:
+		return true
+	}
+	return false
+}
+
+func (e WorkUnitStatus) String() string {
+	return string(e)
 }
 
 func (i GetListWorkUnitInput) Validate() error {

@@ -80,3 +80,11 @@ func UUIDFromString(s string) (UUID, error) {
 	id, err := uuid.FromString(s)
 	return UUID(id), err
 }
+
+func MustGetUUIDFromString(s string) UUID {
+	id, err := uuid.FromString(s)
+	if err != nil {
+		panic(err)
+	}
+	return UUID(id)
+}

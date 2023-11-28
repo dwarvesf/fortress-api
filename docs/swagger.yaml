@@ -72,6 +72,45 @@ definitions:
       long:
         type: string
     type: object
+  AssignMemberRequest:
+    properties:
+      deploymentType:
+        type: string
+      discount:
+        type: number
+      employeeID:
+        type: string
+      endDate:
+        type: string
+      isLead:
+        type: boolean
+      leadCommissionRate:
+        type: number
+      note:
+        type: string
+      positions:
+        items:
+          type: string
+        type: array
+      rate:
+        type: number
+      seniorityID:
+        type: string
+      startDate:
+        type: string
+      status:
+        type: string
+      upsellCommissionRate:
+        type: number
+      upsellPersonID:
+        type: string
+    required:
+    - deploymentType
+    - positions
+    - rate
+    - seniorityID
+    - status
+    type: object
   Audit:
     properties:
       avg:
@@ -264,6 +303,48 @@ definitions:
       type:
         type: string
     type: object
+  BasicBankAccountInfo:
+    properties:
+      accountNumber:
+        type: string
+      bankName:
+        type: string
+      id:
+        type: string
+      ownerName:
+        type: string
+    type: object
+  BasicClientInfo:
+    properties:
+      description:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      registrationNumber:
+        type: string
+    type: object
+  BasicCompanyInfo:
+    properties:
+      description:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      registrationNumber:
+        type: string
+    type: object
+  BasicCountryInfo:
+    properties:
+      code:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+    type: object
   BasicEmployeeInfo:
     properties:
       avatar:
@@ -288,6 +369,36 @@ definitions:
     required:
     - eventQuestionID
     type: object
+  BasicMember:
+    properties:
+      avatar:
+        type: string
+      displayName:
+        type: string
+      employeeID:
+        type: string
+      fullName:
+        type: string
+      username:
+        type: string
+    type: object
+  BasicProjectHeadInfo:
+    properties:
+      avatar:
+        type: string
+      commissionRate:
+        type: number
+      displayName:
+        type: string
+      employeeID:
+        type: string
+      fullName:
+        type: string
+      position:
+        type: string
+      username:
+        type: string
+    type: object
   BasicProjectInfo:
     properties:
       avatar:
@@ -306,7 +417,7 @@ definitions:
   BraineryMetricResponse:
     properties:
       data:
-        $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.BraineryMetric'
+        $ref: '#/definitions/pkg_view.BraineryMetric'
     type: object
   Chapter:
     properties:
@@ -451,7 +562,7 @@ definitions:
   ContentDataResponse:
     properties:
       data:
-        $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.ContentData'
+        $ref: '#/definitions/pkg_view.ContentData'
     type: object
   CountriesResponse:
     properties:
@@ -566,6 +677,52 @@ definitions:
     - status
     - teamEmail
     type: object
+  CreateMemberData:
+    properties:
+      avatar:
+        type: string
+      deploymentType:
+        type: string
+      discount:
+        type: number
+      displayName:
+        type: string
+      employeeID:
+        type: string
+      fullName:
+        type: string
+      isLead:
+        type: boolean
+      leadCommissionRate:
+        type: number
+      note:
+        type: string
+      positions:
+        items:
+          $ref: '#/definitions/Position'
+        type: array
+      projectMemberID:
+        type: string
+      projectSlotID:
+        type: string
+      rate:
+        type: number
+      seniority:
+        $ref: '#/definitions/Seniority'
+      status:
+        type: string
+      upsellCommissionRate:
+        type: number
+      upsellPerson:
+        $ref: '#/definitions/BasicEmployeeInfo'
+      username:
+        type: string
+    type: object
+  CreateMemberDataResponse:
+    properties:
+      data:
+        $ref: '#/definitions/CreateMemberData'
+    type: object
   CreatePositionInput:
     properties:
       code:
@@ -575,6 +732,109 @@ definitions:
     required:
     - code
     - name
+    type: object
+  CreateProjectRequest:
+    properties:
+      accountManagers:
+        items:
+          $ref: '#/definitions/ProjectHeadRequest'
+        type: array
+      auditNotionID:
+        type: string
+      bankAccountID:
+        type: string
+      clientEmail:
+        items:
+          type: string
+        type: array
+      clientID:
+        type: string
+      code:
+        type: string
+      countryID:
+        type: string
+      deliveryManagers:
+        items:
+          $ref: '#/definitions/ProjectHeadRequest'
+        type: array
+      function:
+        type: string
+      members:
+        items:
+          $ref: '#/definitions/AssignMemberRequest'
+        type: array
+      name:
+        type: string
+      organizationID:
+        type: string
+      projectEmail:
+        type: string
+      salePersons:
+        items:
+          $ref: '#/definitions/ProjectHeadRequest'
+        type: array
+      startDate:
+        type: string
+      status:
+        type: string
+      type:
+        type: string
+    required:
+    - countryID
+    - function
+    - name
+    - status
+    type: object
+  CreateProjectRestponse:
+    properties:
+      accountManagers:
+        items:
+          $ref: '#/definitions/ProjectHead'
+        type: array
+      bankAccount:
+        $ref: '#/definitions/BasicBankAccountInfo'
+      client:
+        $ref: '#/definitions/Client'
+      clientEmail:
+        items:
+          type: string
+        type: array
+      code:
+        type: string
+      country:
+        $ref: '#/definitions/BasicCountryInfo'
+      createdAt:
+        type: string
+      deliveryManagers:
+        items:
+          $ref: '#/definitions/ProjectHead'
+        type: array
+      function:
+        type: string
+      id:
+        type: string
+      members:
+        items:
+          $ref: '#/definitions/CreateMemberData'
+        type: array
+      name:
+        type: string
+      organization:
+        $ref: '#/definitions/Organization'
+      projectEmail:
+        type: string
+      salePersons:
+        items:
+          $ref: '#/definitions/ProjectHead'
+        type: array
+      startDate:
+        type: string
+      status:
+        type: string
+      type:
+        type: string
+      updatedAt:
+        type: string
     type: object
   CreateStackInput:
     properties:
@@ -587,6 +847,30 @@ definitions:
     required:
     - code
     - name
+    type: object
+  CreateWorkUnitRequest:
+    properties:
+      members:
+        items:
+          type: string
+        type: array
+      name:
+        type: string
+      stacks:
+        items:
+          type: string
+        type: array
+      status:
+        type: string
+      type:
+        type: string
+      url:
+        type: string
+    required:
+    - name
+    - stacks
+    - status
+    - type
     type: object
   Currency:
     properties:
@@ -1311,6 +1595,13 @@ definitions:
           $ref: '#/definitions/Feedback'
         type: array
     type: object
+  ListWorkUnitResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/WorkUnit'
+        type: array
+    type: object
   LoggedInUserData:
     properties:
       avatar:
@@ -1510,7 +1801,7 @@ definitions:
         type: string
       heads:
         items:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.ProjectHead'
+          $ref: '#/definitions/ProjectHead'
         type: array
       id:
         type: string
@@ -1566,6 +1857,128 @@ definitions:
       updatedAt:
         type: string
     type: object
+  ProjectContentData:
+    properties:
+      url:
+        type: string
+    type: object
+  ProjectContentDataResponse:
+    properties:
+      data:
+        $ref: '#/definitions/ProjectContentData'
+    type: object
+  ProjectData:
+    properties:
+      accountManagers:
+        items:
+          $ref: '#/definitions/ProjectHead'
+        type: array
+      accountRating:
+        type: integer
+      allowsSendingSurvey:
+        type: boolean
+      auditNotionID:
+        type: string
+      avatar:
+        type: string
+      bankAccount:
+        $ref: '#/definitions/BasicBankAccountInfo'
+      client:
+        $ref: '#/definitions/BasicClientInfo'
+      clientEmail:
+        items:
+          type: string
+        type: array
+      code:
+        type: string
+      companyInfo:
+        $ref: '#/definitions/BasicCompanyInfo'
+      country:
+        $ref: '#/definitions/BasicCountryInfo'
+      createdAt:
+        type: string
+      currency:
+        $ref: '#/definitions/Currency'
+      deliveryManagers:
+        items:
+          $ref: '#/definitions/ProjectHead'
+        type: array
+      deliveryRating:
+        type: integer
+      endDate:
+        type: string
+      function:
+        type: string
+      id:
+        type: string
+      importantLevel:
+        type: string
+      industry:
+        type: string
+      leadRating:
+        type: integer
+      members:
+        items:
+          $ref: '#/definitions/ProjectMember'
+        type: array
+      monthlyChargeRate:
+        type: number
+      name:
+        type: string
+      organization:
+        $ref: '#/definitions/Organization'
+      projectEmail:
+        type: string
+      salePersons:
+        items:
+          $ref: '#/definitions/ProjectHead'
+        type: array
+      stacks:
+        items:
+          $ref: '#/definitions/Stack'
+        type: array
+      startDate:
+        type: string
+      status:
+        type: string
+      technicalLeads:
+        items:
+          $ref: '#/definitions/ProjectHead'
+        type: array
+      type:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  ProjectDataResponse:
+    properties:
+      data:
+        $ref: '#/definitions/ProjectData'
+    type: object
+  ProjectHead:
+    properties:
+      avatar:
+        type: string
+      commissionRate:
+        type: number
+      displayName:
+        type: string
+      employeeID:
+        type: string
+      finalCommissionRate:
+        type: number
+      fullName:
+        type: string
+      username:
+        type: string
+    type: object
+  ProjectHeadRequest:
+    properties:
+      commissionRate:
+        type: number
+      employeeID:
+        type: string
+    type: object
   ProjectInfo:
     properties:
       basecampBucketID:
@@ -1614,6 +2027,13 @@ definitions:
       name:
         type: string
     type: object
+  ProjectListDataResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/ProjectData'
+        type: array
+    type: object
   ProjectMember:
     properties:
       avatar:
@@ -1649,7 +2069,7 @@ definitions:
       rate:
         type: number
       seniority:
-        $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Seniority'
+        $ref: '#/definitions/Seniority'
       startDate:
         type: string
       status:
@@ -1660,6 +2080,13 @@ definitions:
         $ref: '#/definitions/BasicEmployeeInfo'
       username:
         type: string
+    type: object
+  ProjectMemberListResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/ProjectMember'
+        type: array
     type: object
   ProjectNotion:
     properties:
@@ -1720,6 +2147,18 @@ definitions:
       upsellPersonID:
         type: string
     type: object
+  ProjectStatus:
+    enum:
+    - on-boarding
+    - active
+    - paused
+    - closed
+    type: string
+    x-enum-varnames:
+    - ProjectStatusOnBoarding
+    - ProjectStatusActive
+    - ProjectStatusPaused
+    - ProjectStatusClosed
   PublicClient:
     properties:
       address:
@@ -1807,6 +2246,29 @@ definitions:
         items:
           $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Role'
         type: array
+    type: object
+  SalaryAdvance:
+    properties:
+      amount_icy:
+        type: string
+      amount_usd:
+        type: string
+      transaction_hash:
+        type: string
+      transaction_id:
+        type: string
+    type: object
+  SalaryAdvanceRequest:
+    properties:
+      amount:
+        type: string
+      discord_id:
+        type: string
+    type: object
+  SalaryAdvanceResponse:
+    properties:
+      data:
+        $ref: '#/definitions/SalaryAdvance'
     type: object
   SendInvoiceRequest:
     properties:
@@ -2087,6 +2549,27 @@ definitions:
       website:
         type: string
     type: object
+  UpdateContactInfoRequest:
+    properties:
+      accountManagers:
+        items:
+          $ref: '#/definitions/ProjectHeadRequest'
+        type: array
+      clientEmail:
+        items:
+          type: string
+        type: array
+      deliveryManagers:
+        items:
+          $ref: '#/definitions/ProjectHeadRequest'
+        type: array
+      projectEmail:
+        type: string
+      salePersons:
+        items:
+          $ref: '#/definitions/ProjectHeadRequest'
+        type: array
+    type: object
   UpdateEmployeeGeneralInfoRequest:
     properties:
       discordID:
@@ -2240,6 +2723,50 @@ definitions:
     - phoneNumber
     - placeOfResidence
     type: object
+  UpdateMemberRequest:
+    properties:
+      deploymentType:
+        type: string
+      discount:
+        type: number
+      employeeID:
+        type: string
+      endDate:
+        type: string
+      isLead:
+        type: boolean
+      leadCommissionRate:
+        type: number
+      note:
+        type: string
+      positions:
+        items:
+          type: string
+        type: array
+      projectMemberID:
+        type: string
+      projectSlotID:
+        type: string
+      rate:
+        type: number
+      seniorityID:
+        type: string
+      startDate:
+        type: string
+      status:
+        type: string
+      upsellCommissionRate:
+        type: number
+      upsellPersonID:
+        type: string
+    required:
+    - deploymentType
+    - positions
+    - projectSlotID
+    - rate
+    - seniorityID
+    - status
+    type: object
   UpdatePersonalEmployeeData:
     properties:
       address:
@@ -2353,6 +2880,107 @@ definitions:
       data:
         $ref: '#/definitions/UpdateProfileInfoData'
     type: object
+  UpdateProjectContactInfo:
+    properties:
+      clientEmail:
+        items:
+          type: string
+        type: array
+      projectEmail:
+        type: string
+      projectHead:
+        items:
+          $ref: '#/definitions/BasicProjectHeadInfo'
+        type: array
+    type: object
+  UpdateProjectContactInfoResponse:
+    properties:
+      data:
+        $ref: '#/definitions/UpdateProjectContactInfo'
+    type: object
+  UpdateProjectGeneralInfo:
+    properties:
+      auditNotionID:
+        type: string
+      bankAccount:
+        $ref: '#/definitions/BasicBankAccountInfo'
+      client:
+        $ref: '#/definitions/Client'
+      country:
+        $ref: '#/definitions/BasicCountryInfo'
+      function:
+        $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.ProjectFunction'
+      name:
+        type: string
+      organization:
+        $ref: '#/definitions/Organization'
+      stacks:
+        items:
+          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Stack'
+        type: array
+      startDate:
+        type: string
+    type: object
+  UpdateProjectGeneralInfoRequest:
+    properties:
+      accountRating:
+        maximum: 5
+        minimum: 1
+        type: integer
+      auditNotionID:
+        type: string
+      bankAccountID:
+        type: string
+      clientID:
+        type: string
+      countryID:
+        type: string
+      deliveryRating:
+        maximum: 5
+        minimum: 1
+        type: integer
+      function:
+        type: string
+      importantLevel:
+        type: string
+      leadRating:
+        maximum: 5
+        minimum: 1
+        type: integer
+      name:
+        type: string
+      organizationID:
+        type: string
+      stacks:
+        items:
+          type: string
+        type: array
+      startDate:
+        type: string
+    required:
+    - accountRating
+    - countryID
+    - deliveryRating
+    - function
+    - importantLevel
+    - leadRating
+    - name
+    type: object
+  UpdateProjectGeneralInfoResponse:
+    properties:
+      data:
+        $ref: '#/definitions/UpdateProjectGeneralInfo'
+    type: object
+  UpdateProjectStatusBody:
+    properties:
+      status:
+        $ref: '#/definitions/ProjectStatus'
+    type: object
+  UpdateProjectStatusResponse:
+    properties:
+      data:
+        $ref: '#/definitions/UpdatedProject'
+    type: object
   UpdateRoleRequest:
     properties:
       roles:
@@ -2425,9 +3053,50 @@ definitions:
       name:
         type: string
     type: object
+  UpdateWorkUnitRequest:
+    properties:
+      members:
+        items:
+          type: string
+        type: array
+      name:
+        maxLength: 100
+        type: string
+      stacks:
+        items:
+          type: string
+        type: array
+      type:
+        $ref: '#/definitions/WorkUnitType'
+      url:
+        type: string
+    required:
+    - name
+    - stacks
+    - type
+    type: object
   UpdateWorkingStatusRequest:
     properties:
       employeeStatus:
+        type: string
+    type: object
+  UpdatedProject:
+    properties:
+      createdAt:
+        type: string
+      endDate:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      startDate:
+        type: string
+      status:
+        type: string
+      type:
+        type: string
+      updatedAt:
         type: string
     type: object
   UpsertRollupRequest:
@@ -2521,6 +3190,31 @@ definitions:
           $ref: '#/definitions/WorkSurvey'
         type: array
     type: object
+  WorkUnit:
+    properties:
+      code:
+        type: string
+      id:
+        type: string
+      members:
+        items:
+          $ref: '#/definitions/BasicMember'
+        type: array
+      name:
+        type: string
+      projectID:
+        type: string
+      stacks:
+        items:
+          $ref: '#/definitions/Stack'
+        type: array
+      status:
+        type: string
+      type:
+        type: string
+      url:
+        type: string
+    type: object
   WorkUnitDistribution:
     properties:
       development:
@@ -2604,6 +3298,23 @@ definitions:
       data:
         $ref: '#/definitions/WorkUnitDistributionData'
     type: object
+  WorkUnitResponse:
+    properties:
+      data:
+        $ref: '#/definitions/WorkUnit'
+    type: object
+  WorkUnitType:
+    enum:
+    - development
+    - management
+    - training
+    - learning
+    type: string
+    x-enum-varnames:
+    - WorkUnitTypeDevelopment
+    - WorkUnitTypeManagement
+    - WorkUnitTypeTraining
+    - WorkUnitTypeLearning
   github_com_dwarvesf_fortress-api_pkg_handler_client_request.CreateClientContactInput:
     properties:
       emails:
@@ -2628,269 +3339,6 @@ definitions:
       name:
         type: string
       role:
-        type: string
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_handler_project_request.AssignMemberInput:
-    properties:
-      deploymentType:
-        type: string
-      discount:
-        type: number
-      employeeID:
-        type: string
-      endDate:
-        type: string
-      isLead:
-        type: boolean
-      leadCommissionRate:
-        type: number
-      note:
-        type: string
-      positions:
-        items:
-          type: string
-        type: array
-      rate:
-        type: number
-      seniorityID:
-        type: string
-      startDate:
-        type: string
-      status:
-        type: string
-      upsellCommissionRate:
-        type: number
-      upsellPersonID:
-        type: string
-    required:
-    - deploymentType
-    - positions
-    - rate
-    - seniorityID
-    - status
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_handler_project_request.CreateProjectInput:
-    properties:
-      accountManagers:
-        items:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_handler_project_request.ProjectHeadInput'
-        type: array
-      auditNotionID:
-        type: string
-      bankAccountID:
-        type: string
-      clientEmail:
-        items:
-          type: string
-        type: array
-      clientID:
-        type: string
-      code:
-        type: string
-      countryID:
-        type: string
-      deliveryManagers:
-        items:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_handler_project_request.ProjectHeadInput'
-        type: array
-      function:
-        type: string
-      members:
-        items:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_handler_project_request.AssignMemberInput'
-        type: array
-      name:
-        type: string
-      organizationID:
-        type: string
-      projectEmail:
-        type: string
-      salePersons:
-        items:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_handler_project_request.ProjectHeadInput'
-        type: array
-      startDate:
-        type: string
-      status:
-        type: string
-      type:
-        type: string
-    required:
-    - countryID
-    - function
-    - name
-    - status
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_handler_project_request.CreateWorkUnitBody:
-    properties:
-      members:
-        items:
-          type: string
-        type: array
-      name:
-        type: string
-      stacks:
-        items:
-          type: string
-        type: array
-      status:
-        type: string
-      type:
-        type: string
-      url:
-        type: string
-    required:
-    - name
-    - stacks
-    - status
-    - type
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_handler_project_request.ProjectHeadInput:
-    properties:
-      commissionRate:
-        type: number
-      employeeID:
-        type: string
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_handler_project_request.UpdateContactInfoInput:
-    properties:
-      accountManagers:
-        items:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_handler_project_request.ProjectHeadInput'
-        type: array
-      clientEmail:
-        items:
-          type: string
-        type: array
-      deliveryManagers:
-        items:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_handler_project_request.ProjectHeadInput'
-        type: array
-      projectEmail:
-        type: string
-      salePersons:
-        items:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_handler_project_request.ProjectHeadInput'
-        type: array
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_handler_project_request.UpdateMemberInput:
-    properties:
-      deploymentType:
-        type: string
-      discount:
-        type: number
-      employeeID:
-        type: string
-      endDate:
-        type: string
-      isLead:
-        type: boolean
-      leadCommissionRate:
-        type: number
-      note:
-        type: string
-      positions:
-        items:
-          type: string
-        type: array
-      projectMemberID:
-        type: string
-      projectSlotID:
-        type: string
-      rate:
-        type: number
-      seniorityID:
-        type: string
-      startDate:
-        type: string
-      status:
-        type: string
-      upsellCommissionRate:
-        type: number
-      upsellPersonID:
-        type: string
-    required:
-    - deploymentType
-    - positions
-    - projectSlotID
-    - rate
-    - seniorityID
-    - status
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_handler_project_request.UpdateProjectGeneralInfoInput:
-    properties:
-      accountRating:
-        maximum: 5
-        minimum: 1
-        type: integer
-      auditNotionID:
-        type: string
-      bankAccountID:
-        type: string
-      clientID:
-        type: string
-      countryID:
-        type: string
-      deliveryRating:
-        maximum: 5
-        minimum: 1
-        type: integer
-      function:
-        type: string
-      importantLevel:
-        type: string
-      leadRating:
-        maximum: 5
-        minimum: 1
-        type: integer
-      name:
-        type: string
-      organizationID:
-        type: string
-      stacks:
-        items:
-          type: string
-        type: array
-      startDate:
-        type: string
-    required:
-    - accountRating
-    - countryID
-    - deliveryRating
-    - function
-    - importantLevel
-    - leadRating
-    - name
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_handler_project_request.UpdateWorkUnitBody:
-    properties:
-      members:
-        items:
-          type: string
-        type: array
-      name:
-        maxLength: 100
-        type: string
-      stacks:
-        items:
-          type: string
-        type: array
-      type:
-        $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.WorkUnitType'
-      url:
-        type: string
-    required:
-    - name
-    - stacks
-    - type
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_handler_project_request.UpdateWorkUnitInput:
-    properties:
-      body:
-        $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_handler_project_request.UpdateWorkUnitBody'
-      projectID:
-        type: string
-      workUnitID:
         type: string
     type: object
   github_com_dwarvesf_fortress-api_pkg_handler_survey_request.CreateSurveyFeedbackInput:
@@ -2957,18 +3405,325 @@ definitions:
       updatedAt:
         type: string
     type: object
-  github_com_dwarvesf_fortress-api_pkg_model.HeadPosition:
-    enum:
-    - technical-lead
-    - delivery-manager
-    - account-manager
-    - sale-person
-    type: string
-    x-enum-varnames:
-    - HeadPositionTechnicalLead
-    - HeadPositionDeliveryManager
-    - HeadPositionAccountManager
-    - HeadPositionSalePerson
+  github_com_dwarvesf_fortress-api_pkg_model.DiscordAccount:
+    properties:
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      discordID:
+        type: string
+      id:
+        type: string
+      updatedAt:
+        type: string
+      username:
+        type: string
+    type: object
+  github_com_dwarvesf_fortress-api_pkg_model.Employee:
+    properties:
+      address:
+        type: string
+      avatar:
+        type: string
+      base_salary:
+        $ref: '#/definitions/BaseSalary'
+      basecampAttachableSGID:
+        type: string
+      basecampID:
+        description: social services
+        type: integer
+      city:
+        type: string
+      country:
+        type: string
+      createdAt:
+        type: string
+      dateOfBirth:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      discordAccount:
+        $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.DiscordAccount'
+      discordAccountID:
+        type: string
+      displayName:
+        type: string
+      employee_salary:
+        $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.EmployeeSalary'
+      employeeChapters:
+        items:
+          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.EmployeeChapter'
+        type: array
+      employeeMMAScores:
+        items:
+          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.EmployeeMMAScore'
+        type: array
+      employeeOrganizations:
+        items:
+          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.EmployeeOrganization'
+        type: array
+      employeePositions:
+        items:
+          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.EmployeePosition'
+        type: array
+      employeeRoles:
+        items:
+          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.EmployeeRole'
+        type: array
+      employeeStacks:
+        items:
+          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.EmployeeStack'
+        type: array
+      fullName:
+        description: basic info
+        type: string
+      gender:
+        type: string
+      heads:
+        items:
+          $ref: '#/definitions/ProjectHead'
+        type: array
+      horoscope:
+        type: string
+      id:
+        type: string
+      identityCardPhotoBack:
+        type: string
+      identityCardPhotoFront:
+        type: string
+      joinedDate:
+        type: string
+      lat:
+        type: string
+      leftDate:
+        type: string
+      lineManager:
+        $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Employee'
+      lineManagerID:
+        type: string
+      localBankBranch:
+        type: string
+      localBankCurrency:
+        type: string
+      localBankNumber:
+        type: string
+      localBankRecipientName:
+        type: string
+      localBranchName:
+        type: string
+      long:
+        type: string
+      mbti:
+        type: string
+      mentees:
+        items:
+          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Employee'
+        type: array
+      organizations:
+        items:
+          $ref: '#/definitions/Organization'
+        type: array
+      passportPhotoBack:
+        type: string
+      passportPhotoFront:
+        type: string
+      personalEmail:
+        type: string
+      phoneNumber:
+        type: string
+      placeOfResidence:
+        type: string
+      positions:
+        items:
+          $ref: '#/definitions/Position'
+        type: array
+      projectMembers:
+        items:
+          $ref: '#/definitions/ProjectMember'
+        type: array
+      referredBy:
+        type: string
+      referrer:
+        $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Employee'
+      roles:
+        items:
+          $ref: '#/definitions/Role'
+        type: array
+      seniority:
+        $ref: '#/definitions/Seniority'
+      seniorityID:
+        type: string
+      socialAccounts:
+        items:
+          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.SocialAccount'
+        type: array
+      teamEmail:
+        type: string
+      updatedAt:
+        type: string
+      username:
+        type: string
+      wiseAccountNumber:
+        type: string
+      wiseCurrency:
+        type: string
+      wiseRecipientEmail:
+        description: payroll info
+        type: string
+      wiseRecipientID:
+        type: string
+      wiseRecipientName:
+        type: string
+      workUnitMembers:
+        items:
+          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.WorkUnitMember'
+        type: array
+      workingStatus:
+        description: working info
+        type: string
+    type: object
+  github_com_dwarvesf_fortress-api_pkg_model.EmployeeChapter:
+    properties:
+      chapter:
+        $ref: '#/definitions/Chapter'
+      chapterID:
+        type: string
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      employeeID:
+        type: string
+      id:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  github_com_dwarvesf_fortress-api_pkg_model.EmployeeMMAScore:
+    properties:
+      autonomyScore:
+        type: number
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      employeeID:
+        type: string
+      id:
+        type: string
+      masteryScore:
+        type: number
+      meaningScore:
+        type: number
+      ratedAt:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  github_com_dwarvesf_fortress-api_pkg_model.EmployeeOrganization:
+    properties:
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      employeeID:
+        type: string
+      id:
+        type: string
+      organization:
+        $ref: '#/definitions/Organization'
+      organizationID:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  github_com_dwarvesf_fortress-api_pkg_model.EmployeePosition:
+    properties:
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      employeeID:
+        type: string
+      id:
+        type: string
+      position:
+        $ref: '#/definitions/Position'
+      positionID:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  github_com_dwarvesf_fortress-api_pkg_model.EmployeeRole:
+    properties:
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      employeeID:
+        type: string
+      id:
+        type: string
+      role:
+        $ref: '#/definitions/Role'
+      roleID:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  github_com_dwarvesf_fortress-api_pkg_model.EmployeeSalary:
+    properties:
+      actual_pay_day:
+        type: integer
+      bonus_amount:
+        type: integer
+      bonus_detail:
+        items:
+          type: integer
+        type: array
+      commission_amount:
+        type: integer
+      commission_detail:
+        items:
+          type: integer
+        type: array
+      employee_id:
+        type: string
+      is_done:
+        type: boolean
+      month:
+        type: integer
+      plan_pay_day:
+        type: integer
+      reimbursement_amount:
+        type: integer
+      reimbursement_detail:
+        items:
+          type: integer
+        type: array
+      total_amount:
+        type: integer
+      year:
+        type: integer
+    type: object
+  github_com_dwarvesf_fortress-api_pkg_model.EmployeeStack:
+    properties:
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      employeeID:
+        type: string
+      id:
+        type: string
+      stack:
+        $ref: '#/definitions/Stack'
+      stackID:
+        type: string
+      updatedAt:
+        type: string
+    type: object
   github_com_dwarvesf_fortress-api_pkg_model.LikertScaleCount:
     properties:
       agree:
@@ -3094,6 +3849,10 @@ definitions:
         type: string
       deletedAt:
         $ref: '#/definitions/gorm.DeletedAt'
+      employees:
+        items:
+          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Employee'
+        type: array
       id:
         type: string
       isShow:
@@ -3122,6 +3881,41 @@ definitions:
       updatedAt:
         type: string
     type: object
+  github_com_dwarvesf_fortress-api_pkg_model.SocialAccount:
+    properties:
+      accountID:
+        type: string
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      email:
+        type: string
+      employeeID:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      type:
+        $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.SocialAccountType'
+      updatedAt:
+        type: string
+    type: object
+  github_com_dwarvesf_fortress-api_pkg_model.SocialAccountType:
+    enum:
+    - github
+    - gitlab
+    - notion
+    - linkedin
+    - twitter
+    type: string
+    x-enum-varnames:
+    - SocialAccountTypeGitHub
+    - SocialAccountTypeGitLab
+    - SocialAccountTypeNotion
+    - SocialAccountTypeLinkedIn
+    - SocialAccountTypeTwitter
   github_com_dwarvesf_fortress-api_pkg_model.Stack:
     properties:
       avatar:
@@ -3202,18 +3996,33 @@ definitions:
         description: basic info
         type: string
     type: object
-  github_com_dwarvesf_fortress-api_pkg_model.WorkUnitType:
-    enum:
-    - development
-    - management
-    - training
-    - learning
-    type: string
-    x-enum-varnames:
-    - WorkUnitTypeDevelopment
-    - WorkUnitTypeManagement
-    - WorkUnitTypeTraining
-    - WorkUnitTypeLearning
+  github_com_dwarvesf_fortress-api_pkg_model.WorkUnitMember:
+    properties:
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      employee:
+        $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Employee'
+      employeeID:
+        type: string
+      endDate:
+        type: string
+      id:
+        type: string
+      projectID:
+        type: string
+      startDate:
+        type: string
+      status:
+        type: string
+      updatedAt:
+        type: string
+      workUnit:
+        $ref: '#/definitions/WorkUnit'
+      workUnitID:
+        type: string
+    type: object
   github_com_dwarvesf_fortress-api_pkg_view.ApiError:
     description: validation error details
     properties:
@@ -3227,205 +4036,6 @@ definitions:
         type: string
       msg:
         description: error message
-        type: string
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_view.BasicBankAccountInfo:
-    properties:
-      accountNumber:
-        type: string
-      bankName:
-        type: string
-      id:
-        type: string
-      ownerName:
-        type: string
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_view.BasicClientInfo:
-    properties:
-      description:
-        type: string
-      id:
-        type: string
-      name:
-        type: string
-      registrationNumber:
-        type: string
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_view.BasicCompanyInfo:
-    properties:
-      description:
-        type: string
-      id:
-        type: string
-      name:
-        type: string
-      registrationNumber:
-        type: string
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_view.BasicCountryInfo:
-    properties:
-      code:
-        type: string
-      id:
-        type: string
-      name:
-        type: string
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_view.BasicMember:
-    properties:
-      avatar:
-        type: string
-      displayName:
-        type: string
-      employeeID:
-        type: string
-      fullName:
-        type: string
-      username:
-        type: string
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_view.BasicProjectHeadInfo:
-    properties:
-      avatar:
-        type: string
-      commissionRate:
-        type: number
-      displayName:
-        type: string
-      employeeID:
-        type: string
-      fullName:
-        type: string
-      position:
-        $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.HeadPosition'
-      username:
-        type: string
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_view.BraineryMetric:
-    properties:
-      contributors:
-        items:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.Post'
-        type: array
-      latestPosts:
-        items:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.Post'
-        type: array
-      newContributors:
-        items:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.Post'
-        type: array
-      tags:
-        items:
-          type: string
-        type: array
-      topContributors:
-        items:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.TopContributor'
-        type: array
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_view.ContentData:
-    properties:
-      url:
-        type: string
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_view.CreateMemberData:
-    properties:
-      avatar:
-        type: string
-      deploymentType:
-        type: string
-      discount:
-        type: number
-      displayName:
-        type: string
-      employeeID:
-        type: string
-      fullName:
-        type: string
-      isLead:
-        type: boolean
-      leadCommissionRate:
-        type: number
-      note:
-        type: string
-      positions:
-        items:
-          $ref: '#/definitions/Position'
-        type: array
-      projectMemberID:
-        type: string
-      projectSlotID:
-        type: string
-      rate:
-        type: number
-      seniority:
-        $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Seniority'
-      status:
-        type: string
-      upsellCommissionRate:
-        type: number
-      upsellPerson:
-        $ref: '#/definitions/BasicEmployeeInfo'
-      username:
-        type: string
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_view.CreateMemberDataResponse:
-    properties:
-      data:
-        $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.CreateMemberData'
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_view.CreateProjectData:
-    properties:
-      accountManagers:
-        items:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.ProjectHead'
-        type: array
-      bankAccount:
-        $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.BasicBankAccountInfo'
-      client:
-        $ref: '#/definitions/Client'
-      clientEmail:
-        items:
-          type: string
-        type: array
-      code:
-        type: string
-      country:
-        $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.BasicCountryInfo'
-      createdAt:
-        type: string
-      deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
-      deliveryManagers:
-        items:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.ProjectHead'
-        type: array
-      function:
-        type: string
-      id:
-        type: string
-      members:
-        items:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.CreateMemberData'
-        type: array
-      name:
-        type: string
-      organization:
-        $ref: '#/definitions/Organization'
-      projectEmail:
-        type: string
-      salePersons:
-        items:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.ProjectHead'
-        type: array
-      startDate:
-        type: string
-      status:
-        type: string
-      type:
-        type: string
-      updatedAt:
         type: string
     type: object
   github_com_dwarvesf_fortress-api_pkg_view.Domain:
@@ -3480,13 +4090,6 @@ definitions:
           $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.Survey'
         type: array
     type: object
-  github_com_dwarvesf_fortress-api_pkg_view.ListWorkUnitResponse:
-    properties:
-      data:
-        items:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.WorkUnit'
-        type: array
-    type: object
   github_com_dwarvesf_fortress-api_pkg_view.PeerReviewer:
     properties:
       eventReviewerID:
@@ -3499,150 +4102,6 @@ definitions:
         $ref: '#/definitions/BasicEmployeeInfo'
       status:
         $ref: '#/definitions/EventReviewerStatus'
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_view.Post:
-    properties:
-      discordID:
-        type: string
-      publishedAt:
-        type: string
-      reward:
-        type: number
-      title:
-        type: string
-      url:
-        type: string
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_view.ProjectContentData:
-    properties:
-      url:
-        type: string
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_view.ProjectContentDataResponse:
-    properties:
-      data:
-        $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.ProjectContentData'
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_view.ProjectData:
-    properties:
-      accountManagers:
-        items:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.ProjectHead'
-        type: array
-      accountRating:
-        type: integer
-      allowsSendingSurvey:
-        type: boolean
-      auditNotionID:
-        type: string
-      avatar:
-        type: string
-      bankAccount:
-        $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.BasicBankAccountInfo'
-      client:
-        $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.BasicClientInfo'
-      clientEmail:
-        items:
-          type: string
-        type: array
-      code:
-        type: string
-      companyInfo:
-        $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.BasicCompanyInfo'
-      country:
-        $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.BasicCountryInfo'
-      createdAt:
-        type: string
-      currency:
-        $ref: '#/definitions/Currency'
-      deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
-      deliveryManagers:
-        items:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.ProjectHead'
-        type: array
-      deliveryRating:
-        type: integer
-      endDate:
-        type: string
-      function:
-        type: string
-      id:
-        type: string
-      importantLevel:
-        type: string
-      industry:
-        type: string
-      leadRating:
-        type: integer
-      members:
-        items:
-          $ref: '#/definitions/ProjectMember'
-        type: array
-      monthlyChargeRate:
-        type: number
-      name:
-        type: string
-      organization:
-        $ref: '#/definitions/Organization'
-      projectEmail:
-        type: string
-      salePersons:
-        items:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.ProjectHead'
-        type: array
-      stacks:
-        items:
-          $ref: '#/definitions/Stack'
-        type: array
-      startDate:
-        type: string
-      status:
-        type: string
-      technicalLeads:
-        items:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.ProjectHead'
-        type: array
-      type:
-        type: string
-      updatedAt:
-        type: string
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_view.ProjectDataResponse:
-    properties:
-      data:
-        $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.ProjectData'
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_view.ProjectHead:
-    properties:
-      avatar:
-        type: string
-      commissionRate:
-        type: number
-      displayName:
-        type: string
-      employeeID:
-        type: string
-      finalCommissionRate:
-        type: number
-      fullName:
-        type: string
-      username:
-        type: string
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_view.ProjectListDataResponse:
-    properties:
-      data:
-        items:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.ProjectData'
-        type: array
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_view.ProjectMemberListResponse:
-    properties:
-      data:
-        items:
-          $ref: '#/definitions/ProjectMember'
-        type: array
     type: object
   github_com_dwarvesf_fortress-api_pkg_view.Survey:
     properties:
@@ -3708,15 +4167,6 @@ definitions:
       data:
         $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.SurveyTopicDetail'
     type: object
-  github_com_dwarvesf_fortress-api_pkg_view.TopContributor:
-    properties:
-      count:
-        type: integer
-      discordID:
-        type: string
-      ranking:
-        type: integer
-    type: object
   github_com_dwarvesf_fortress-api_pkg_view.Topic:
     properties:
       comments:
@@ -3752,108 +4202,6 @@ definitions:
       type:
         type: string
     type: object
-  github_com_dwarvesf_fortress-api_pkg_view.UpdateProjectContactInfo:
-    properties:
-      clientEmail:
-        items:
-          type: string
-        type: array
-      projectEmail:
-        type: string
-      projectHead:
-        items:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.BasicProjectHeadInfo'
-        type: array
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_view.UpdateProjectContactInfoResponse:
-    properties:
-      data:
-        $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.UpdateProjectContactInfo'
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_view.UpdateProjectGeneralInfo:
-    properties:
-      auditNotionID:
-        type: string
-      bankAccount:
-        $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.BasicBankAccountInfo'
-      client:
-        $ref: '#/definitions/Client'
-      country:
-        $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.BasicCountryInfo'
-      function:
-        $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.ProjectFunction'
-      name:
-        type: string
-      organization:
-        $ref: '#/definitions/Organization'
-      stacks:
-        items:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Stack'
-        type: array
-      startDate:
-        type: string
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_view.UpdateProjectGeneralInfoResponse:
-    properties:
-      data:
-        $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.UpdateProjectGeneralInfo'
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_view.UpdateProjectStatusResponse:
-    properties:
-      data:
-        $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.UpdatedProject'
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_view.UpdatedProject:
-    properties:
-      createdAt:
-        type: string
-      deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
-      endDate:
-        type: string
-      id:
-        type: string
-      name:
-        type: string
-      startDate:
-        type: string
-      status:
-        type: string
-      type:
-        type: string
-      updatedAt:
-        type: string
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_view.WorkUnit:
-    properties:
-      code:
-        type: string
-      id:
-        type: string
-      members:
-        items:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.BasicMember'
-        type: array
-      name:
-        type: string
-      projectID:
-        type: string
-      stacks:
-        items:
-          $ref: '#/definitions/Stack'
-        type: array
-      status:
-        type: string
-      type:
-        type: string
-      url:
-        type: string
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_view.WorkUnitResponse:
-    properties:
-      data:
-        $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.WorkUnit'
-    type: object
   gorm.DeletedAt:
     properties:
       time:
@@ -3861,6 +4209,47 @@ definitions:
       valid:
         description: Valid is true if Time is not NULL
         type: boolean
+    type: object
+  pkg_view.BraineryMetric:
+    properties:
+      contributors:
+        items:
+          $ref: '#/definitions/pkg_view.Post'
+        type: array
+      latestPosts:
+        items:
+          $ref: '#/definitions/pkg_view.Post'
+        type: array
+      newContributors:
+        items:
+          $ref: '#/definitions/pkg_view.Post'
+        type: array
+      tags:
+        items:
+          type: string
+        type: array
+      topContributors:
+        items:
+          $ref: '#/definitions/pkg_view.TopContributor'
+        type: array
+    type: object
+  pkg_view.ContentData:
+    properties:
+      url:
+        type: string
+    type: object
+  pkg_view.Post:
+    properties:
+      discordID:
+        type: string
+      publishedAt:
+        type: string
+      reward:
+        type: number
+      title:
+        type: string
+      url:
+        type: string
     type: object
   pkg_view.Question:
     properties:
@@ -3876,6 +4265,15 @@ definitions:
         type: string
       type:
         type: string
+    type: object
+  pkg_view.TopContributor:
+    properties:
+      count:
+        type: integer
+      discordID:
+        type: string
+      ranking:
+        type: integer
     type: object
 info:
   contact:
@@ -4314,6 +4712,7 @@ paths:
       consumes:
       - application/json
       description: Sync project member status
+      operationId: syncProjectMemberStatus
       produces:
       - application/json
       responses:
@@ -5178,6 +5577,43 @@ paths:
       security:
       - BearerAuth: []
       summary: Upload avatar of employee by id
+      tags:
+      - Employee
+  /employees/advance-salary:
+    post:
+      consumes:
+      - application/json
+      description: Update account status by employee id
+      operationId: advanceSalary
+      parameters:
+      - description: Salary Advance Request
+        in: body
+        name: salaryAdvanceRequest
+        required: true
+        schema:
+          $ref: '#/definitions/SalaryAdvanceRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/SalaryAdvanceResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Advance salary by discord id
       tags:
       - Employee
   /employees/search:
@@ -6648,6 +7084,7 @@ paths:
       consumes:
       - application/json
       description: Delete member in a project
+      operationId: deleteProjectMember
       parameters:
       - description: Project ID
         in: path
@@ -6687,6 +7124,7 @@ paths:
       consumes:
       - application/json
       description: Unassign member in a project
+      operationId: unassignProjectMember
       parameters:
       - description: Project ID
         in: path
@@ -6727,6 +7165,7 @@ paths:
       consumes:
       - application/json
       description: Delete slot in a project
+      operationId: deleteProjectSlot
       parameters:
       - description: Project ID
         in: path
@@ -6767,6 +7206,7 @@ paths:
       consumes:
       - application/json
       description: Get list of project
+      operationId: getProjectList
       parameters:
       - collectionFormat: csv
         description: Project status
@@ -6797,7 +7237,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.ProjectListDataResponse'
+            $ref: '#/definitions/ProjectListDataResponse'
         "400":
           description: Bad Request
           schema:
@@ -6815,20 +7255,21 @@ paths:
       consumes:
       - application/json
       description: Create new project
+      operationId: createProject
       parameters:
       - description: body
         in: body
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_handler_project_request.CreateProjectInput'
+          $ref: '#/definitions/CreateProjectRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.CreateProjectData'
+            $ref: '#/definitions/CreateProjectRestponse'
         "400":
           description: Bad Request
           schema:
@@ -6847,6 +7288,7 @@ paths:
       consumes:
       - application/json
       description: Get details of a project
+      operationId: getProjectDetails
       parameters:
       - description: Project ID
         in: path
@@ -6859,7 +7301,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.ProjectDataResponse'
+            $ref: '#/definitions/ProjectDataResponse'
         "400":
           description: Bad Request
           schema:
@@ -6882,6 +7324,7 @@ paths:
       consumes:
       - application/json
       description: Update contact info of the project by id
+      operationId: updateProjectContactInfo
       parameters:
       - description: Project ID
         in: path
@@ -6893,14 +7336,14 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_handler_project_request.UpdateContactInfoInput'
+          $ref: '#/definitions/UpdateContactInfoRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.UpdateProjectContactInfoResponse'
+            $ref: '#/definitions/UpdateProjectContactInfoResponse'
         "400":
           description: Bad Request
           schema:
@@ -6923,6 +7366,7 @@ paths:
       consumes:
       - application/json
       description: Update general info of the project by id
+      operationId: updateProjectGeneralInfo
       parameters:
       - description: Project ID
         in: path
@@ -6934,14 +7378,14 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_handler_project_request.UpdateProjectGeneralInfoInput'
+          $ref: '#/definitions/UpdateProjectGeneralInfoRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.UpdateProjectGeneralInfoResponse'
+            $ref: '#/definitions/UpdateProjectGeneralInfoResponse'
         "400":
           description: Bad Request
           schema:
@@ -6964,6 +7408,7 @@ paths:
       consumes:
       - application/json
       description: Get list members of project
+      operationId: getProjectMemberList
       parameters:
       - description: Project ID
         in: path
@@ -6999,7 +7444,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.ProjectMemberListResponse'
+            $ref: '#/definitions/ProjectMemberListResponse'
         "400":
           description: Bad Request
           schema:
@@ -7021,6 +7466,7 @@ paths:
       consumes:
       - application/json
       description: Assign member in an existing project
+      operationId: assignProjectMember
       parameters:
       - description: Project ID
         in: path
@@ -7032,14 +7478,14 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_handler_project_request.AssignMemberInput'
+          $ref: '#/definitions/AssignMemberRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.CreateMemberDataResponse'
+            $ref: '#/definitions/CreateMemberDataResponse'
         "400":
           description: Bad Request
           schema:
@@ -7061,6 +7507,7 @@ paths:
       consumes:
       - application/json
       description: Update member in an existing project
+      operationId: updateProjectMember
       parameters:
       - description: Project ID
         in: path
@@ -7072,14 +7519,14 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_handler_project_request.UpdateMemberInput'
+          $ref: '#/definitions/UpdateMemberRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.CreateMemberDataResponse'
+            $ref: '#/definitions/CreateMemberDataResponse'
         "400":
           description: Bad Request
           schema:
@@ -7102,6 +7549,7 @@ paths:
       consumes:
       - application/json
       description: Update allows sending survey for project by id
+      operationId: updateProjectSendingSurveyState
       parameters:
       - description: Project ID
         in: path
@@ -7141,6 +7589,7 @@ paths:
       consumes:
       - application/json
       description: Update status for project by id
+      operationId: updateProjectStatus
       parameters:
       - description: Project ID
         in: path
@@ -7152,14 +7601,14 @@ paths:
         name: status
         required: true
         schema:
-          type: string
+          $ref: '#/definitions/UpdateProjectStatusBody'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.UpdateProjectStatusResponse'
+            $ref: '#/definitions/UpdateProjectStatusResponse'
         "400":
           description: Bad Request
           schema:
@@ -7182,6 +7631,7 @@ paths:
       consumes:
       - application/json
       description: Upload avatar of project by id
+      operationId: uploadProjectAvatar
       parameters:
       - description: Project ID
         in: path
@@ -7199,7 +7649,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.ProjectContentDataResponse'
+            $ref: '#/definitions/ProjectContentDataResponse'
         "400":
           description: Bad Request
           schema:
@@ -7222,6 +7672,7 @@ paths:
       consumes:
       - application/json
       description: Get list work units of a project
+      operationId: getProjectWorkUnitList
       parameters:
       - description: Project ID
         in: path
@@ -7241,7 +7692,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.ListWorkUnitResponse'
+            $ref: '#/definitions/ListWorkUnitResponse'
         "400":
           description: Bad Request
           schema:
@@ -7263,6 +7714,7 @@ paths:
       consumes:
       - application/json
       description: Get work unit of a project
+      operationId: createProjectWorkUnit
       parameters:
       - description: Project ID
         in: path
@@ -7274,14 +7726,14 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_handler_project_request.CreateWorkUnitBody'
+          $ref: '#/definitions/CreateWorkUnitRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.WorkUnitResponse'
+            $ref: '#/definitions/WorkUnitResponse'
         "400":
           description: Bad Request
           schema:
@@ -7304,6 +7756,7 @@ paths:
       consumes:
       - application/json
       description: Update work unit info
+      operationId: updateProjectWorkUnit
       parameters:
       - description: Project ID
         in: path
@@ -7320,7 +7773,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_handler_project_request.UpdateWorkUnitInput'
+          $ref: '#/definitions/UpdateWorkUnitRequest'
       produces:
       - application/json
       responses:
@@ -7350,6 +7803,7 @@ paths:
       consumes:
       - application/json
       description: Archive an active work unit of a project
+      operationId: archiveProjectWorkUnit
       parameters:
       - description: Project ID
         in: path
@@ -7390,6 +7844,7 @@ paths:
       consumes:
       - application/json
       description: Unarchive an archive work unit of a project
+      operationId: unarchiveProjectWorkUnit
       parameters:
       - description: Project ID
         in: path
@@ -7423,27 +7878,6 @@ paths:
       security:
       - BearerAuth: []
       summary: Unarchive an archive work unit of a project
-      tags:
-      - Project
-  /projects/icy-weekly-distribution:
-    get:
-      consumes:
-      - application/json
-      description: Get Icy Weekly Distribution
-      produces:
-      - application/json
-      responses:
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Get Icy Weekly Distribution
       tags:
       - Project
   /public/employees:

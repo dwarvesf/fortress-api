@@ -273,7 +273,9 @@ func ToProjectSlotList(slots []model.ProjectSlot) []ProjectSlot {
 }
 
 type ProjectData struct {
-	model.BaseModel
+	ID        string     `json:"id"`
+	CreatedAt time.Time  `json:"createdAt"`
+	UpdatedAt *time.Time `json:"updatedAt"`
 
 	Name                string                `json:"name"`
 	Avatar              string                `json:"avatar"`
@@ -305,14 +307,14 @@ type ProjectData struct {
 	Organization        *Organization         `json:"organization"`
 	MonthlyChargeRate   decimal.Decimal       `json:"monthlyChargeRate"`
 	Currency            *Currency             `json:"currency"`
-}
+} // @name ProjectData
 
 type BasicClientInfo struct {
 	ID                 string `json:"id"`
 	Name               string `json:"name"`
 	Description        string `json:"description"`
 	RegistrationNumber string `json:"registrationNumber"`
-}
+} // @name BasicClientInfo
 
 func ToBasicClientInfo(client *model.Client) *BasicClientInfo {
 	if client == nil {
@@ -332,7 +334,7 @@ type BasicCompanyInfo struct {
 	Name               string `json:"name"`
 	Description        string `json:"description"`
 	RegistrationNumber string `json:"registrationNumber"`
-}
+} // @name BasicCompanyInfo
 
 func ToBasicCompanyInfo(company *model.CompanyInfo) *BasicCompanyInfo {
 	return &BasicCompanyInfo{
@@ -344,14 +346,16 @@ func ToBasicCompanyInfo(company *model.CompanyInfo) *BasicCompanyInfo {
 }
 
 type UpdatedProject struct {
-	model.BaseModel
+	ID        string     `json:"id"`
+	CreatedAt time.Time  `json:"createdAt"`
+	UpdatedAt *time.Time `json:"updatedAt"`
 
 	Name      string     `json:"name"`
 	Type      string     `json:"type"`
 	Status    string     `json:"status"`
 	StartDate *time.Time `json:"startDate"`
 	EndDate   *time.Time `json:"endDate"`
-}
+} // @name UpdatedProject
 
 type ProjectMember struct {
 	ProjectMemberID      string          `json:"projectMemberID"`
@@ -373,7 +377,7 @@ type ProjectMember struct {
 	Currency             *Currency       `json:"currency"`
 	Note                 string          `json:"note"`
 
-	Seniority    *model.Seniority   `json:"seniority"`
+	Seniority    *Seniority         `json:"seniority"`
 	Positions    []Position         `json:"positions"`
 	UpsellPerson *BasicEmployeeInfo `json:"upsellPerson"`
 } // @name ProjectMember
@@ -388,6 +392,12 @@ func ToProjectMembers(members []model.ProjectMember) []ProjectMember {
 }
 
 func ToProjectMember(member *model.ProjectMember) *ProjectMember {
+	var seniority *Seniority
+	if member.Seniority != nil {
+		s := ToSeniority(*member.Seniority)
+		seniority = &s
+	}
+
 	return &ProjectMember{
 		ProjectMemberID:      member.ID.String(),
 		ProjectSlotID:        member.ProjectSlotID.String(),
@@ -405,7 +415,7 @@ func ToProjectMember(member *model.ProjectMember) *ProjectMember {
 		Discount:             member.Discount,
 		UpsellCommissionRate: member.UpsellCommissionRate,
 		Note:                 member.Note,
-		Seniority:            member.Seniority,
+		Seniority:            seniority,
 		Positions:            ToProjectMemberPositions(member.ProjectMemberPositions),
 		UpsellPerson:         toBasicEmployeeInfo(*member.UpsellPerson),
 	}
@@ -419,7 +429,7 @@ type ProjectHead struct {
 	Username            string          `json:"username"`
 	CommissionRate      decimal.Decimal `json:"commissionRate"`
 	FinalCommissionRate decimal.Decimal `json:"finalCommissionRate"`
-}
+} // @name ProjectHead
 
 func ToProjectHeads(heads []*model.ProjectHead) []*ProjectHead {
 	res := make([]*ProjectHead, 0, len(heads))
@@ -455,11 +465,14 @@ func ToProjectHead(userInfo *model.CurrentLoggedUserInfo, head *model.ProjectHea
 
 type UpdateProjectStatusResponse struct {
 	Data UpdatedProject `json:"data"`
-}
+} // @name UpdateProjectStatusResponse
 
 func ToUpdateProjectStatusResponse(p *model.Project) UpdatedProject {
 	return UpdatedProject{
-		BaseModel: p.BaseModel,
+		ID:        p.ID.String(),
+		CreatedAt: p.CreatedAt,
+		UpdatedAt: p.UpdatedAt,
+
 		Name:      p.Name,
 		Type:      p.Type.String(),
 		Status:    p.Status.String(),
@@ -497,6 +510,12 @@ func ToProjectData(in *model.Project, userInfo *model.CurrentLoggedUserInfo) Pro
 	monthlyRevenue := decimal.Zero
 	var members = make([]ProjectMember, 0, len(in.ProjectMembers))
 	for _, m := range in.ProjectMembers {
+		var seniority *Seniority
+		if m.Seniority != nil {
+			s := ToSeniority(*m.Seniority)
+			seniority = &s
+		}
+
 		member := ProjectMember{
 			Status:      m.Status.String(),
 			EmployeeID:  m.EmployeeID.String(),
@@ -504,7 +523,7 @@ func ToProjectData(in *model.Project, userInfo *model.CurrentLoggedUserInfo) Pro
 			DisplayName: m.Employee.DisplayName,
 			Avatar:      m.Employee.Avatar,
 			Username:    m.Employee.Username,
-			Seniority:   m.Seniority,
+			Seniority:   seniority,
 			IsLead:      leadMap[m.EmployeeID.String()],
 			Positions:   ToProjectMemberPositions(m.ProjectMemberPositions),
 		}
@@ -528,7 +547,9 @@ func ToProjectData(in *model.Project, userInfo *model.CurrentLoggedUserInfo) Pro
 	}
 
 	projectData := ProjectData{
-		BaseModel:           in.BaseModel,
+		ID:                  in.ID.String(),
+		CreatedAt:           in.CreatedAt,
+		UpdatedAt:           in.UpdatedAt,
 		Avatar:              in.Avatar,
 		Name:                in.Name,
 		Type:                in.Type.String(),
@@ -598,7 +619,7 @@ func ToProjectData(in *model.Project, userInfo *model.CurrentLoggedUserInfo) Pro
 
 	if in.Country != nil {
 		projectData.Country = &BasicCountryInfo{
-			ID:   in.Country.ID,
+			ID:   UUID(in.Country.ID),
 			Name: in.Country.Name,
 			Code: in.Country.Code,
 		}
@@ -632,11 +653,11 @@ func ToProjectsData(projects []*model.Project, userInfo *model.CurrentLoggedUser
 
 type ProjectListDataResponse struct {
 	Data []ProjectData `json:"data"`
-}
+} // @name ProjectListDataResponse
 
 type ProjectDataResponse struct {
 	Data ProjectData `json:"data"`
-}
+} // @name ProjectDataResponse
 
 type CreateMemberData struct {
 	ProjectSlotID        string             `json:"projectSlotID"`
@@ -649,7 +670,7 @@ type CreateMemberData struct {
 	DeploymentType       string             `json:"deploymentType"`
 	Status               string             `json:"status"`
 	IsLead               bool               `json:"isLead"`
-	Seniority            model.Seniority    `json:"seniority"`
+	Seniority            Seniority          `json:"seniority"`
 	Username             string             `json:"username"`
 	Rate                 decimal.Decimal    `json:"rate"`
 	Discount             decimal.Decimal    `json:"discount"`
@@ -657,11 +678,11 @@ type CreateMemberData struct {
 	UpsellCommissionRate decimal.Decimal    `json:"upsellCommissionRate"`
 	LeadCommissionRate   decimal.Decimal    `json:"leadCommissionRate"`
 	Note                 string             `json:"note"`
-}
+} // @name CreateMemberData
 
 type CreateMemberDataResponse struct {
 	Data CreateMemberData `json:"data"`
-}
+} // @name CreateMemberDataResponse
 
 func ToCreateMemberData(userInfo *model.CurrentLoggedUserInfo, slot *model.ProjectSlot) CreateMemberData {
 	rs := CreateMemberData{
@@ -674,7 +695,7 @@ func ToCreateMemberData(userInfo *model.CurrentLoggedUserInfo, slot *model.Proje
 		Status:         slot.Status.String(),
 		Positions:      ToProjectSlotPositions(slot.ProjectSlotPositions),
 		IsLead:         slot.ProjectMember.IsLead,
-		Seniority:      slot.Seniority,
+		Seniority:      ToSeniority(slot.Seniority),
 		Note:           slot.Note,
 	}
 
@@ -705,8 +726,10 @@ func ToCreateMemberData(userInfo *model.CurrentLoggedUserInfo, slot *model.Proje
 	return rs
 }
 
-type CreateProjectData struct {
-	model.BaseModel
+type CreateProjectRestponse struct {
+	ID        UUID       `json:"id"`
+	CreatedAt time.Time  `json:"createdAt"`
+	UpdatedAt *time.Time `json:"updatedAt"`
 
 	Name             string                `json:"name"`
 	Type             string                `json:"type"`
@@ -724,23 +747,25 @@ type CreateProjectData struct {
 	BankAccount      *BasicBankAccountInfo `json:"bankAccount"`
 	Client           *Client               `json:"client"`
 	Organization     *Organization         `json:"organization"`
-}
+} // @name CreateProjectRestponse
 
 type BasicBankAccountInfo struct {
 	ID            string `json:"id"`
 	AccountNumber string `json:"accountNumber"`
 	BankName      string `json:"bankName"`
 	OwnerName     string `json:"ownerName"`
-}
+} // @name BasicBankAccountInfo
 
-func ToCreateProjectDataResponse(userInfo *model.CurrentLoggedUserInfo, project *model.Project) CreateProjectData {
+func ToCreateProjectDataResponse(userInfo *model.CurrentLoggedUserInfo, project *model.Project) CreateProjectRestponse {
 	var clientEmail []string
 	if project.ClientEmail != "" {
 		clientEmail = strings.Split(project.ClientEmail, ",")
 	}
 
-	result := CreateProjectData{
-		BaseModel:    project.BaseModel,
+	result := CreateProjectRestponse{
+		ID:           UUID(project.ID),
+		CreatedAt:    project.CreatedAt,
+		UpdatedAt:    project.UpdatedAt,
 		Name:         project.Name,
 		Type:         project.Type.String(),
 		Status:       project.Status.String(),
@@ -752,7 +777,7 @@ func ToCreateProjectDataResponse(userInfo *model.CurrentLoggedUserInfo, project 
 
 	if project.Country != nil {
 		result.Country = &BasicCountryInfo{
-			ID:   project.Country.ID,
+			ID:   UUID(project.Country.ID),
 			Name: project.Country.Name,
 			Code: project.Country.Code,
 		}
@@ -817,13 +842,18 @@ func ToProjectMemberListData(userInfo *model.CurrentLoggedUserInfo, members []*m
 
 	for _, m := range members {
 		var member ProjectMember
+		var seniority *Seniority
+		if m.Seniority != nil {
+			s := ToSeniority(*m.Seniority)
+			seniority = &s
+		}
 
 		if m.ID.IsZero() {
 			member = ProjectMember{
 				ProjectSlotID:  m.ProjectSlotID.String(),
 				Status:         m.Status.String(),
 				DeploymentType: m.DeploymentType.String(),
-				Seniority:      m.Seniority,
+				Seniority:      seniority,
 				Note:           m.Note,
 				Positions:      ToPositions(m.Positions),
 			}
@@ -841,7 +871,7 @@ func ToProjectMemberListData(userInfo *model.CurrentLoggedUserInfo, members []*m
 				IsLead:          leadMap[m.EmployeeID.String()] != nil,
 				Status:          m.Status.String(),
 				DeploymentType:  m.DeploymentType.String(),
-				Seniority:       m.Seniority,
+				Seniority:       seniority,
 				Note:            m.Note,
 				Positions:       ToProjectMemberPositions(m.ProjectMemberPositions),
 			}
@@ -893,13 +923,13 @@ func ToProjectMemberListData(userInfo *model.CurrentLoggedUserInfo, members []*m
 
 type ProjectMemberListResponse struct {
 	Data []ProjectMember `json:"data"`
-}
+} // @name ProjectMemberListResponse
 
 type BasicCountryInfo struct {
-	ID   model.UUID `json:"id"`
-	Name string     `json:"name"`
-	Code string     `json:"code"`
-}
+	ID   UUID   `json:"id"`
+	Name string `json:"name"`
+	Code string `json:"code"`
+} // @name BasicCountryInfo
 
 type UpdateProjectGeneralInfo struct {
 	Name          string                `json:"name"`
@@ -911,11 +941,11 @@ type UpdateProjectGeneralInfo struct {
 	BankAccount   *BasicBankAccountInfo `json:"bankAccount"`
 	Client        *Client               `json:"client"`
 	Organization  *Organization         `json:"organization"`
-}
+} // @name UpdateProjectGeneralInfo
 
 type UpdateProjectGeneralInfoResponse struct {
 	Data UpdateProjectGeneralInfo `json:"data"`
-}
+} // @name UpdateProjectGeneralInfoResponse
 
 func ToUpdateProjectGeneralInfo(project *model.Project) UpdateProjectGeneralInfo {
 	stacks := make([]model.Stack, 0, len(project.ProjectStacks))
@@ -936,7 +966,7 @@ func ToUpdateProjectGeneralInfo(project *model.Project) UpdateProjectGeneralInfo
 
 	if project.Country != nil {
 		rs.Country = &BasicCountryInfo{
-			ID:   project.Country.ID,
+			ID:   UUID(project.Country.ID),
 			Name: project.Country.Name,
 			Code: project.Country.Code,
 		}
@@ -967,25 +997,52 @@ func ToUpdateProjectGeneralInfo(project *model.Project) UpdateProjectGeneralInfo
 	return rs
 }
 
-type BasicProjectHeadInfo struct {
-	EmployeeID     string             `json:"employeeID"`
-	FullName       string             `json:"fullName"`
-	DisplayName    string             `json:"displayName"`
-	Avatar         string             `json:"avatar"`
-	Position       model.HeadPosition `json:"position"`
-	Username       string             `json:"username"`
-	CommissionRate decimal.Decimal    `json:"commissionRate"`
+type WorkUnitType string // @name WorkUnitType
+
+const (
+	WorkUnitTypeDevelopment WorkUnitType = "development"
+	WorkUnitTypeManagement  WorkUnitType = "management"
+	WorkUnitTypeTraining    WorkUnitType = "training"
+	WorkUnitTypeLearning    WorkUnitType = "learning"
+)
+
+func (e WorkUnitType) IsValid() bool {
+	switch e {
+	case
+		WorkUnitTypeDevelopment,
+		WorkUnitTypeManagement,
+		WorkUnitTypeTraining,
+		WorkUnitTypeLearning:
+		return true
+	}
+	return false
 }
+
+func (e WorkUnitType) String() string {
+	return string(e)
+}
+
+type BasicProjectHeadInfo struct {
+	EmployeeID     string          `json:"employeeID"`
+	FullName       string          `json:"fullName"`
+	DisplayName    string          `json:"displayName"`
+	Avatar         string          `json:"avatar"`
+	Position       HeadPosition    `json:"position"`
+	Username       string          `json:"username"`
+	CommissionRate decimal.Decimal `json:"commissionRate"`
+} // @name BasicProjectHeadInfo
+
+type HeadPosition string // @name HeadPosition
 
 type UpdateProjectContactInfo struct {
 	ClientEmail  []string               `json:"clientEmail"`
 	ProjectEmail string                 `json:"projectEmail"`
 	ProjectHead  []BasicProjectHeadInfo `json:"projectHead"`
-}
+} // @name UpdateProjectContactInfo
 
 type UpdateProjectContactInfoResponse struct {
 	Data UpdateProjectContactInfo `json:"data"`
-}
+} // @name UpdateProjectContactInfoResponse
 
 func ToUpdateProjectContactInfo(project *model.Project, userInfo *model.CurrentLoggedUserInfo) UpdateProjectContactInfo {
 	projectHeads := make([]BasicProjectHeadInfo, 0, len(project.Heads))
@@ -995,7 +1052,7 @@ func ToUpdateProjectContactInfo(project *model.Project, userInfo *model.CurrentL
 			FullName:    v.Employee.FullName,
 			Avatar:      v.Employee.Avatar,
 			DisplayName: v.Employee.DisplayName,
-			Position:    v.Position,
+			Position:    HeadPosition(v.Position),
 			Username:    v.Employee.Username,
 		}
 
@@ -1040,11 +1097,11 @@ func toBasicProjectInfo(project model.Project) *BasicProjectInfo {
 
 type ProjectContentData struct {
 	Url string `json:"url"`
-}
+} // @name ProjectContentData
 
 type ProjectContentDataResponse struct {
 	Data *ProjectContentData `json:"data"`
-}
+} // @name ProjectContentDataResponse
 
 func ToProjectContentData(url string) *ProjectContentData {
 	return &ProjectContentData{

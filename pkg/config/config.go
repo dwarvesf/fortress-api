@@ -25,6 +25,8 @@ type Config struct {
 	Basecamp      Basecamp
 	CurrencyLayer CurrencyLayer
 	Mochi         Mochi
+	MochiPay      MochiPay
+	MochiProfile  MochiProfile
 	ImprovMX      ImprovMX
 
 	Invoice  Invoice
@@ -93,6 +95,14 @@ type Mochi struct {
 	ApplicationID   string
 	ApplicationName string
 	APIKey          string
+}
+
+type MochiPay struct {
+	BaseURL string
+}
+
+type MochiProfile struct {
+	BaseURL string
 }
 
 type Notion struct {
@@ -261,6 +271,12 @@ func Generate(v ENV) *Config {
 			ApplicationID:   v.GetString("MOCHI_APPLICATION_ID"),
 			ApplicationName: v.GetString("MOCHI_APPLICATION_NAME"),
 			APIKey:          v.GetString("MOCHI_API_KEY"),
+		},
+		MochiPay: MochiPay{
+			BaseURL: v.GetString("MOCHI_PAY_BASE_URL"),
+		},
+		MochiProfile: MochiProfile{
+			BaseURL: v.GetString("MOCHI_PROFILE_BASE_URL"),
 		},
 		ImprovMX: ImprovMX{
 			Token: v.GetString("IMPROVMX_API_TOKEN"),

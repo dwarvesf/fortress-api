@@ -1,7 +1,9 @@
 package discord
 
 import (
+	"encoding/json"
 	"fmt"
+	"math/big"
 	"strings"
 	"time"
 
@@ -9,12 +11,16 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service"
+	"github.com/dwarvesf/fortress-api/pkg/service/mochipay"
+	"github.com/dwarvesf/fortress-api/pkg/service/mochiprofile"
 	"github.com/dwarvesf/fortress-api/pkg/store"
+	"github.com/dwarvesf/fortress-api/pkg/utils"
 )
 
 type IController interface {
 	Log(in model.LogDiscordInput) error
 	PublicAdvanceSalaryLog(in model.LogDiscordInput) error
+	PublishIcyActivityLog(in model.LogDiscordInput) error
 }
 
 type controller struct {
@@ -126,6 +132,115 @@ func (c *controller) PublicAdvanceSalaryLog(in model.LogDiscordInput) error {
 	if err != nil {
 		c.logger.Field("err", err.Error()).Warn("Log failed")
 		return err
+	}
+
+	return nil
+}
+
+func (c *controller) PublishIcyActivityLog(in model.LogDiscordInput) error {
+	logger := c.logger.Field("method", "PublishIcyActivityLog")
+
+	resp, err := c.service.MochiPay.GetListTransactions(mochipay.ListTransactionsRequest{
+		Status: mochipay.TransactionStatusSuccess,
+		ActionList: []mochipay.TransactionAction{
+			mochipay.TransactionActionVaultTransfer,
+		},
+	})
+	if err != nil {
+		logger.Error(err, "GetListTransactions failed")
+		return err
+	}
+
+	now := time.Now()
+
+	for _, transaction := range resp.Data {
+		// Just publish transaction in 3 minutes
+		if transaction.CreatedAt.Before(now.Add(-3 * time.Minute)) {
+			continue
+		}
+
+		txRawMetadata, err := json.Marshal(transaction.Metadata)
+		if err != nil {
+			logger.Error(err, "Marshal metadata failed")
+			continue
+		}
+
+		var txMetadata mochipay.TransactionMetadata
+		if err := json.Unmarshal(txRawMetadata, &txMetadata); err != nil {
+			logger.Error(err, "Unmarshal transaction metadata failed")
+			continue
+		}
+
+		if txMetadata.VaultRequest == nil {
+			logger.Info("Skip transaction without vault request")
+			continue
+		}
+
+		receiverProfileID := txMetadata.VaultRequest.Receiver
+		receiverProfile, err := c.service.MochiProfile.GetProfile(receiverProfileID)
+		if err != nil {
+			logger.Error(err, "GetProfile failed")
+			continue
+		}
+
+		var receiverDiscordID string
+		for _, assoc := range receiverProfile.AssociatedAccounts {
+			if assoc.Platform == mochiprofile.ProfilePlatformDiscord {
+				receiverDiscordID = assoc.PlatformIdentifier
+				break
+			}
+		}
+
+		if receiverDiscordID == "" {
+			logger.Info("Skip transaction has profile without discord account")
+			continue
+		}
+
+		tokenAmount := txMetadata.VaultRequest.Amount
+
+		if txMetadata.VaultRequest.TokenInfo == nil {
+			logger.Info("Skip transaction without token info")
+			continue
+		}
+
+		tokenDecimal := txMetadata.VaultRequest.TokenInfo.Decimal
+
+		tokenAmountDec := utils.ConvertFromString(tokenAmount, int64(tokenDecimal))
+		tokenAmountUSD := big.NewFloat(0).Mul(tokenAmountDec, big.NewFloat(1.5))
+
+		transferReason := txMetadata.Message
+		_ = transferReason
+
+		desc := `
+			<:badge5:1058304281775710229> **Receiver:** <@` + receiverDiscordID + `>
+			<:money:1080757975649624094> **Amount:** <:ICY:1049620715374133288>	` + tokenAmountDec.String() + ` ($` + tokenAmountUSD.String() + `)
+			<:pepetrade:885513214538952765> **Reason:** ` + transferReason + `
+
+			Head to [earn.d.foundation](https://earn.d.foundation) to see list of open quests and r&d topics
+		`
+
+		embedMessage := model.DiscordMessageEmbed{
+			Author:      model.DiscordMessageAuthor{},
+			Title:       "💸 ICY Reward 💸",
+			Description: desc,
+			URL:         "",
+			Color:       3447003,
+			Fields:      nil,
+			Thumbnail:   model.DiscordMessageImage{},
+			Image:       model.DiscordMessageImage{},
+			Timestamp:   time.Now().Format("2006-01-02T15:04:05.000+07:00"),
+		}
+
+		_, err = c.service.Discord.SendMessage(model.DiscordMessage{
+			Embeds: []model.DiscordMessageEmbed{embedMessage},
+		}, c.config.Discord.Webhooks.Campfire)
+		if err != nil {
+			logger.Error(err, "Send ICY log activity failed")
+			return err
+		}
+
+		// Sleep 2 seconds each time
+		time.Sleep(2 * time.Second)
 	}
 
 	return nil

@@ -851,7 +851,7 @@ func (h *handler) ListWithMMAScore(c *gin.Context) {
 // SalaryAdvance godoc
 // @Summary Advance salary by discord id
 // @Description Update account status by employee id
-// @id updateEmployeeStatus
+// @id advanceSalary
 // @Tags Employee
 // @Accept  json
 // @Produce  json

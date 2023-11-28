@@ -66,6 +66,40 @@ func TestUUIDFromString(t *testing.T) {
 	}
 }
 
+func TestMustGetUUIDFromString(t *testing.T) {
+	type args struct {
+		s string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    UUID
+		wantErr error
+	}{
+		{
+			name:    "correct uuid",
+			args:    args{"a98484cb-cc66-4687-8e66-837e5997c427"},
+			want:    UUID(uuid.Must(uuid.FromString("a98484cb-cc66-4687-8e66-837e5997c427"))),
+			wantErr: nil,
+		},
+		{
+			name:    "correct uuid zero value",
+			args:    args{"00000000-0000-0000-0000-000000000000"},
+			want:    UUID(uuid.Must(uuid.FromString("00000000-0000-0000-0000-000000000000"))),
+			wantErr: nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := MustGetUUIDFromString(tt.args.s)
+
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("UUIDFromString() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestUUID_IsZero(t *testing.T) {
 	tests := []struct {
 		name string

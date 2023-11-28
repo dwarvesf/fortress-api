@@ -3,15 +3,12 @@ package service
 import (
 	"time"
 
-	"github.com/dwarvesf/fortress-api/pkg/service/googledrive"
-	"github.com/dwarvesf/fortress-api/pkg/service/googlesheet"
-	"google.golang.org/api/sheets/v4"
-
 	"github.com/patrickmn/go-cache"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	admin "google.golang.org/api/admin/directory/v1"
 	"google.golang.org/api/gmail/v1"
+	"google.golang.org/api/sheets/v4"
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
@@ -22,9 +19,13 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/service/github"
 	googleauth "github.com/dwarvesf/fortress-api/pkg/service/google"
 	"github.com/dwarvesf/fortress-api/pkg/service/googleadmin"
+	"github.com/dwarvesf/fortress-api/pkg/service/googledrive"
 	"github.com/dwarvesf/fortress-api/pkg/service/googlemail"
+	"github.com/dwarvesf/fortress-api/pkg/service/googlesheet"
 	"github.com/dwarvesf/fortress-api/pkg/service/improvmx"
 	"github.com/dwarvesf/fortress-api/pkg/service/mochi"
+	"github.com/dwarvesf/fortress-api/pkg/service/mochipay"
+	"github.com/dwarvesf/fortress-api/pkg/service/mochiprofile"
 	"github.com/dwarvesf/fortress-api/pkg/service/notion"
 	"github.com/dwarvesf/fortress-api/pkg/service/sendgrid"
 	"github.com/dwarvesf/fortress-api/pkg/service/wise"
@@ -32,21 +33,23 @@ import (
 )
 
 type Service struct {
-	Basecamp    *basecamp.Service
-	Cache       *cache.Cache
-	Currency    currency.IService
-	Discord     discord.IService
-	Github      github.IService
-	Google      googleauth.IService
-	GoogleAdmin googleadmin.IService
-	GoogleDrive googledrive.IService
-	GoogleMail  googlemail.IService
-	GoogleSheet googlesheet.IService
-	ImprovMX    improvmx.IService
-	Mochi       mochi.IService
-	Notion      notion.IService
-	Sendgrid    sendgrid.IService
-	Wise        wise.IService
+	Basecamp     *basecamp.Service
+	Cache        *cache.Cache
+	Currency     currency.IService
+	Discord      discord.IService
+	Github       github.IService
+	Google       googleauth.IService
+	GoogleAdmin  googleadmin.IService
+	GoogleDrive  googledrive.IService
+	GoogleMail   googlemail.IService
+	GoogleSheet  googlesheet.IService
+	ImprovMX     improvmx.IService
+	Mochi        mochi.IService
+	MochiPay     mochipay.IService
+	MochiProfile mochiprofile.IService
+	Notion       notion.IService
+	Sendgrid     sendgrid.IService
+	Wise         wise.IService
 }
 
 func New(cfg *config.Config, store *store.Store, repo store.DBRepo) *Service {
@@ -126,20 +129,22 @@ func New(cfg *config.Config, store *store.Store, repo store.DBRepo) *Service {
 	Currency := currency.New(cfg)
 
 	return &Service{
-		Basecamp:    basecamp.New(store, repo, cfg, &bc, logger.L),
-		Cache:       cch,
-		Currency:    Currency,
-		Discord:     discord.New(cfg),
-		Github:      github.New(cfg, logger.L),
-		Google:      googleSvc,
-		GoogleAdmin: googleAdminSvc,
-		GoogleDrive: googleDriveSvc,
-		GoogleMail:  googleMailSvc,
-		GoogleSheet: gSheetSvc,
-		ImprovMX:    improvmx.New(cfg.ImprovMX.Token),
-		Mochi:       mochi.New(cfg, logger.L),
-		Notion:      notion.New(cfg.Notion.Secret, cfg.Notion.Databases.Project, logger.L),
-		Sendgrid:    sendgrid.New(cfg.Sendgrid.APIKey, cfg, logger.L),
-		Wise:        wise.New(cfg, logger.L),
+		Basecamp:     basecamp.New(store, repo, cfg, &bc, logger.L),
+		Cache:        cch,
+		Currency:     Currency,
+		Discord:      discord.New(cfg),
+		Github:       github.New(cfg, logger.L),
+		Google:       googleSvc,
+		GoogleAdmin:  googleAdminSvc,
+		GoogleDrive:  googleDriveSvc,
+		GoogleMail:   googleMailSvc,
+		GoogleSheet:  gSheetSvc,
+		ImprovMX:     improvmx.New(cfg.ImprovMX.Token),
+		Mochi:        mochi.New(cfg, logger.L),
+		MochiPay:     mochipay.New(cfg, logger.L),
+		MochiProfile: mochiprofile.New(cfg, logger.L),
+		Notion:       notion.New(cfg.Notion.Secret, cfg.Notion.Databases.Project, logger.L),
+		Sendgrid:     sendgrid.New(cfg.Sendgrid.APIKey, cfg, logger.L),
+		Wise:         wise.New(cfg, logger.L),
 	}
 }
