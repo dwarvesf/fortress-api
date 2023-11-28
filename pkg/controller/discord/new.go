@@ -218,11 +218,11 @@ func (c *controller) PublishIcyActivityLog() error {
 		_ = transferReason
 
 		desc := `
-			<:badge5:1058304281775710229> **Receiver:** <@` + receiverDiscordID + `>
-			<:money:1080757975649624094> **Amount:** <:ICY:1049620715374133288>	` + tokenAmountDec.String() + ` ($` + tokenAmountUSD.String() + `)
-			<:pepetrade:885513214538952765> **Reason:** ` + transferReason + `
+<:badge5:1058304281775710229> **Receiver:** <@` + receiverDiscordID + `>
+<:money:1080757975649624094> **Amount:** <:ICY:1049620715374133288>	` + tokenAmountDec.String() + ` ($` + tokenAmountUSD.String() + `)
+<:pepetrade:885513214538952765> **Reason:** ` + transferReason + `
 
-			Head to [earn.d.foundation](https://earn.d.foundation) to see list of open quests and r&d topics
+Head to [earn.d.foundation](https://earn.d.foundation) to see list of open quests and r&d topics
 		`
 
 		embedMessage := model.DiscordMessageEmbed{
@@ -239,7 +239,7 @@ func (c *controller) PublishIcyActivityLog() error {
 
 		_, err = c.service.Discord.SendMessage(model.DiscordMessage{
 			Embeds: []model.DiscordMessageEmbed{embedMessage},
-		}, c.config.Discord.Webhooks.Campfire)
+		}, c.config.Discord.Webhooks.ICYPublicLog)
 		if err != nil {
 			logger.Error(err, "Send ICY log activity failed")
 			return err
