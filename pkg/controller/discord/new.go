@@ -222,14 +222,14 @@ func (c *controller) PublishIcyActivityLog() error {
 		desc := `
 <:badge5:1058304281775710229> **Receiver:** <@` + receiverDiscordID + `>
 <:money:1080757975649624094> **Amount:** <:ICY:1049620715374133288> ` + tokenAmountDec.String() + ` ($` + tokenAmountUSD.String() + `)
-<:pepetrade:885513214538952765> **Reason:** ` + transferReason + `
+<:pepenote:885515949673951282> **Reason:** ` + transferReason + `
 
 Head to [earn.d.foundation](https://earn.d.foundation) to see list of open quests and r&d topics
 		`
 
 		embedMessage := model.DiscordMessageEmbed{
 			Author:      model.DiscordMessageAuthor{},
-			Title:       "💸 ICY Reward 💸",
+			Title:       "<a:money:1049621199468105758> ICY Reward <a:money:1049621199468105758>",
 			Description: desc,
 			URL:         "",
 			Color:       3447003,
