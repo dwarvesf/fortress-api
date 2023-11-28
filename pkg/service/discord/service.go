@@ -9,6 +9,7 @@ import (
 
 type IService interface {
 	PostBirthdayMsg(msg string) (model.DiscordMessage, error)
+	PostIcyActivityLog(msg string) (model.DiscordMessage, error)
 	GetMembers() ([]*discordgo.Member, error)
 	GetMember(userID string) (*discordgo.Member, error)
 	GetMemberByUsername(username string) (*discordgo.Member, error)

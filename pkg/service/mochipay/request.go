@@ -155,3 +155,45 @@ type AmountEachProfiles struct {
 	Amount    string  `json:"amount"`
 	UsdAmount float64 `json:"usd_amount"`
 }
+
+type TokenInfo struct {
+	Address     string `json:"address"`
+	Chain       *Chain `json:"chain"`
+	ChainID     string `json:"chain_id"`
+	CoinGeckoID string `json:"coin_gecko_id"`
+	Decimal     int    `json:"decimal"`
+	Icon        string `json:"icon"`
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	Native      bool   `json:"native"`
+	Price       int    `json:"price"`
+	Symbol      string `json:"symbol"`
+}
+
+type VaultRequest struct {
+	Amount     string     `json:"amount"`
+	Chain      string     `json:"chain"`
+	ListNotify []string   `json:"list_notify"`
+	Message    string     `json:"message"`
+	Name       string     `json:"name"`
+	Platform   string     `json:"platform"`
+	PrivateKey string     `json:"private_key"`
+	ProfileID  string     `json:"profile_id"`
+	Receiver   string     `json:"receiver"`
+	RequestID  int        `json:"request_id"`
+	To         string     `json:"to"`
+	Token      string     `json:"token"`
+	TokenID    string     `json:"token_id"`
+	TokenInfo  *TokenInfo `json:"token_info"`
+	VaultID    int        `json:"vault_id"`
+}
+
+type TransactionMetadata struct {
+	Message              string        `json:"message"`
+	RecipientProfileType string        `json:"recipient_profile_type"`
+	RequestID            int           `json:"request_id"`
+	SenderProfileType    string        `json:"sender_profile_type"`
+	TransferType         string        `json:"transfer_type"`
+	TxHash               string        `json:"tx_hash"`
+	VaultRequest         *VaultRequest `json:"vault_request"`
+}

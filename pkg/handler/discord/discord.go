@@ -374,3 +374,20 @@ func (h *handler) DeliveryMetricsReport(c *gin.Context) {
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))
 }
+
+func (h *handler) PublishIcyActivityLog(c *gin.Context) {
+	l := h.logger.Fields(
+		logger.Fields{
+			"handler": "discord",
+			"method":  "TrackIcyActivity",
+		},
+	)
+
+	if err := h.controller.Discord.PublishIcyActivityLog(model.LogDiscordInput{}); err != nil {
+		l.Error(err, "failed to track icy activity")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))
+}
