@@ -1,40 +1,37 @@
 {
     "data": {
-        "projectSlotID": "",
-        "projectMemberID": "",
+        "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
+        "deploymentType": "official",
+        "discount": "0",
+        "displayName": "Thanh Pham",
         "employeeID": "2655832e-f009-4b73-a535-64c3a22e558f",
         "fullName": "Phạm Đức Thành",
-        "displayName": "Thanh Pham",
-        "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
-        "username": "thanh",
-        "rate": "5000",
-        "discount": "0",
+        "isLead": true,
+        "leadCommissionRate": "0",
+        "note": "",
         "positions": [
             {
-                "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
                 "code": "frontend",
+                "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
                 "name": "Frontend"
             },
             {
-                "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
                 "code": "backend",
+                "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
                 "name": "Backend"
             }
         ],
-        "deploymentType": "official",
-        "status": "active",
-        "isLead": true,
-        "leadCommissionRate": "0",
+        "projectMemberID": "",
+        "projectSlotID": "",
+        "rate": "5000",
         "seniority": {
-            "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
-            "createdAt": "2022-11-07T09:50:25.714604Z",
-            "updatedAt": "2022-11-07T09:50:25.714604Z",
-            "name": "Mid",
             "code": "mid",
-            "level": 3
+            "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
+            "name": "Mid"
         },
-        "upsellPerson": null,
+        "status": "active",
         "upsellCommissionRate": "0",
-        "note": ""
+        "upsellPerson": null,
+        "username": "thanh"
     }
 }

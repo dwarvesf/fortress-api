@@ -1,248 +1,233 @@
 {
+    "data": [
+        {
+            "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/8399103964540935617.png",
+            "currency": {
+                "id": "7037bdb6-584e-4e35-996d-ef28a243f48a",
+                "locale": "vi-vn",
+                "name": "VND",
+                "symbol": "đ",
+                "type": "fiat"
+            },
+            "deploymentType": "official",
+            "discount": "3",
+            "displayName": "Nam Nguyen",
+            "employeeID": "8d7c99c0-3253-4286-93a9-e7554cb327ef",
+            "endDate": null,
+            "fullName": "Nguyễn Hải Nam",
+            "isLead": true,
+            "leadCommissionRate": "1",
+            "note": "",
+            "positions": [
+                {
+                    "code": "frontend",
+                    "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
+                    "name": "Frontend"
+                }
+            ],
+            "projectMemberID": "35149aab-0506-4eb3-9300-c706ccbf2bde",
+            "projectSlotID": "1406fcce-6f90-4e0f-bea1-c373e2b2b5b1",
+            "rate": "3000",
+            "seniority": {
+                "code": "mid",
+                "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
+                "name": "Mid"
+            },
+            "startDate": "2022-11-01T00:00:00Z",
+            "status": "active",
+            "upsellCommissionRate": "0",
+            "upsellPerson": {
+                "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/3c420751-bb9a-4878-896e-2f10f3a633d6_avatar2535921977139052349.png",
+                "displayName": "Huy Tieu",
+                "fullName": "Tiêu Quang Huy",
+                "id": "608ea227-45a5-4c8a-af43-6c7280d96340",
+                "username": "huytq"
+            },
+            "username": "benjamin"
+        },
+        {
+            "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
+            "currency": {
+                "id": "7037bdb6-584e-4e35-996d-ef28a243f48a",
+                "locale": "vi-vn",
+                "name": "VND",
+                "symbol": "đ",
+                "type": "fiat"
+            },
+            "deploymentType": "official",
+            "discount": "0",
+            "displayName": "Thanh Pham",
+            "employeeID": "2655832e-f009-4b73-a535-64c3a22e558f",
+            "endDate": null,
+            "fullName": "Phạm Đức Thành",
+            "isLead": false,
+            "leadCommissionRate": "0",
+            "note": "",
+            "positions": [
+                {
+                    "code": "frontend",
+                    "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
+                    "name": "Frontend"
+                }
+            ],
+            "projectMemberID": "cb889a9c-b20c-47ee-83b8-44b6d1721aca",
+            "projectSlotID": "f32d08ca-8863-4ab3-8c84-a11849451eb7",
+            "rate": "5000",
+            "seniority": {
+                "code": "mid",
+                "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
+                "name": "Mid"
+            },
+            "startDate": "2022-11-01T00:00:00Z",
+            "status": "active",
+            "upsellCommissionRate": "0",
+            "upsellPerson": {
+                "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/3c420751-bb9a-4878-896e-2f10f3a633d6_avatar2535921977139052349.png",
+                "displayName": "Huy Tieu",
+                "fullName": "Tiêu Quang Huy",
+                "id": "608ea227-45a5-4c8a-af43-6c7280d96340",
+                "username": "huytq"
+            },
+            "username": "thanh"
+        },
+        {
+            "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
+            "currency": {
+                "id": "7037bdb6-584e-4e35-996d-ef28a243f48a",
+                "locale": "vi-vn",
+                "name": "VND",
+                "symbol": "đ",
+                "type": "fiat"
+            },
+            "deploymentType": "shadow",
+            "discount": "0",
+            "displayName": "Thanh Pham",
+            "employeeID": "2655832e-f009-4b73-a535-64c3a22e558f",
+            "endDate": null,
+            "fullName": "Phạm Đức Thành",
+            "isLead": false,
+            "leadCommissionRate": "0",
+            "note": "",
+            "positions": [
+                {
+                    "code": "frontend",
+                    "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
+                    "name": "Frontend"
+                }
+            ],
+            "projectMemberID": "7310b51a-3855-498b-99ab-41aa82934269",
+            "projectSlotID": "bdc64b18-4c5f-4025-827a-f5b91d599dc7",
+            "rate": "4000",
+            "seniority": {
+                "code": "mid",
+                "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
+                "name": "Mid"
+            },
+            "startDate": "2022-11-01T00:00:00Z",
+            "status": "active",
+            "upsellCommissionRate": "0",
+            "upsellPerson": {
+                "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/3c420751-bb9a-4878-896e-2f10f3a633d6_avatar2535921977139052349.png",
+                "displayName": "Huy Tieu",
+                "fullName": "Tiêu Quang Huy",
+                "id": "608ea227-45a5-4c8a-af43-6c7280d96340",
+                "username": "huytq"
+            },
+            "username": "thanh"
+        },
+        {
+            "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/2870969541970972723.png",
+            "currency": {
+                "id": "7037bdb6-584e-4e35-996d-ef28a243f48a",
+                "locale": "vi-vn",
+                "name": "VND",
+                "symbol": "đ",
+                "type": "fiat"
+            },
+            "deploymentType": "official",
+            "discount": "3",
+            "displayName": "Lap Nguyen",
+            "employeeID": "eeae589a-94e3-49ac-a94c-fcfb084152b2",
+            "endDate": null,
+            "fullName": "Nguyễn Ngô Lập",
+            "isLead": false,
+            "leadCommissionRate": "0",
+            "note": "",
+            "positions": [
+                {
+                    "code": "backend",
+                    "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
+                    "name": "Backend"
+                }
+            ],
+            "projectMemberID": "5a9a07aa-e8f3-4b62-b9ad-0f057866dc6c",
+            "projectSlotID": "b25bd3fa-eb6d-49d5-b278-7aacf4594f79",
+            "rate": "3000",
+            "seniority": {
+                "code": "mid",
+                "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
+                "name": "Mid"
+            },
+            "startDate": "2022-11-01T00:00:00Z",
+            "status": "active",
+            "upsellCommissionRate": "0",
+            "upsellPerson": {
+                "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/3c420751-bb9a-4878-896e-2f10f3a633d6_avatar2535921977139052349.png",
+                "displayName": "Huy Tieu",
+                "fullName": "Tiêu Quang Huy",
+                "id": "608ea227-45a5-4c8a-af43-6c7280d96340",
+                "username": "huytq"
+            },
+            "username": "alan"
+        },
+        {
+            "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/3c420751-bb9a-4878-896e-2f10f3a633d6_avatar2535921977139052349.png",
+            "currency": {
+                "id": "7037bdb6-584e-4e35-996d-ef28a243f48a",
+                "locale": "vi-vn",
+                "name": "VND",
+                "symbol": "đ",
+                "type": "fiat"
+            },
+            "deploymentType": "shadow",
+            "discount": "0",
+            "displayName": "Huy Tieu",
+            "employeeID": "608ea227-45a5-4c8a-af43-6c7280d96340",
+            "endDate": null,
+            "fullName": "Tiêu Quang Huy",
+            "isLead": false,
+            "leadCommissionRate": "0",
+            "note": "",
+            "positions": [
+                {
+                    "code": "backend",
+                    "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
+                    "name": "Backend"
+                }
+            ],
+            "projectMemberID": "fcd5c16f-40fd-48b6-9649-410691373eea",
+            "projectSlotID": "ce379dc0-95be-471a-9227-8e045a5630af",
+            "rate": "4000",
+            "seniority": {
+                "code": "mid",
+                "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
+                "name": "Mid"
+            },
+            "startDate": "2022-11-01T00:00:00Z",
+            "status": "active",
+            "upsellCommissionRate": "0",
+            "upsellPerson": {
+                "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/3c420751-bb9a-4878-896e-2f10f3a633d6_avatar2535921977139052349.png",
+                "displayName": "Huy Tieu",
+                "fullName": "Tiêu Quang Huy",
+                "id": "608ea227-45a5-4c8a-af43-6c7280d96340",
+                "username": "huytq"
+            },
+            "username": "huytq"
+        }
+    ],
     "page": 0,
     "size": 999,
     "sort": "",
-    "total": 5,
-    "data": [
-        {
-            "projectMemberID": "35149aab-0506-4eb3-9300-c706ccbf2bde",
-            "projectSlotID": "1406fcce-6f90-4e0f-bea1-c373e2b2b5b1",
-            "employeeID": "8d7c99c0-3253-4286-93a9-e7554cb327ef",
-            "fullName": "Nguyễn Hải Nam",
-            "displayName": "Nam Nguyen",
-            "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/8399103964540935617.png",
-            "username": "benjamin",
-            "status": "active",
-            "isLead": true,
-            "deploymentType": "official",
-            "startDate": "2022-11-01T00:00:00Z",
-            "endDate": null,
-            "rate": "3000",
-            "discount": "3",
-            "upsellCommissionRate": "0",
-            "leadCommissionRate": "1",
-            "currency": {
-                "id": "7037bdb6-584e-4e35-996d-ef28a243f48a",
-                "name": "VND",
-                "symbol": "đ",
-                "locale": "vi-vn",
-                "type": "fiat"
-            },
-            "note": "",
-            "seniority": {
-                "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
-                "createdAt": "2022-11-07T09:50:25.714604Z",
-                "updatedAt": "2022-11-07T09:50:25.714604Z",
-                "name": "Mid",
-                "code": "mid",
-                "level": 3
-            },
-            "positions": [
-                {
-                    "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
-                    "code": "frontend",
-                    "name": "Frontend"
-                }
-            ],
-            "upsellPerson": {
-                "id": "608ea227-45a5-4c8a-af43-6c7280d96340",
-                "fullName": "Tiêu Quang Huy",
-                "displayName": "Huy Tieu",
-                "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/3c420751-bb9a-4878-896e-2f10f3a633d6_avatar2535921977139052349.png",
-                "username": "huytq"
-            }
-        },
-        {
-            "projectMemberID": "cb889a9c-b20c-47ee-83b8-44b6d1721aca",
-            "projectSlotID": "f32d08ca-8863-4ab3-8c84-a11849451eb7",
-            "employeeID": "2655832e-f009-4b73-a535-64c3a22e558f",
-            "fullName": "Phạm Đức Thành",
-            "displayName": "Thanh Pham",
-            "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
-            "username": "thanh",
-            "status": "active",
-            "isLead": false,
-            "deploymentType": "official",
-            "startDate": "2022-11-01T00:00:00Z",
-            "endDate": null,
-            "rate": "5000",
-            "discount": "0",
-            "upsellCommissionRate": "0",
-            "leadCommissionRate": "0",
-            "currency": {
-                "id": "7037bdb6-584e-4e35-996d-ef28a243f48a",
-                "name": "VND",
-                "symbol": "đ",
-                "locale": "vi-vn",
-                "type": "fiat"
-            },
-            "note": "",
-            "seniority": {
-                "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
-                "createdAt": "2022-11-07T09:50:25.714604Z",
-                "updatedAt": "2022-11-07T09:50:25.714604Z",
-                "name": "Mid",
-                "code": "mid",
-                "level": 3
-            },
-            "positions": [
-                {
-                    "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
-                    "code": "frontend",
-                    "name": "Frontend"
-                }
-            ],
-            "upsellPerson": {
-                "id": "608ea227-45a5-4c8a-af43-6c7280d96340",
-                "fullName": "Tiêu Quang Huy",
-                "displayName": "Huy Tieu",
-                "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/3c420751-bb9a-4878-896e-2f10f3a633d6_avatar2535921977139052349.png",
-                "username": "huytq"
-            }
-        },
-        {
-            "projectMemberID": "7310b51a-3855-498b-99ab-41aa82934269",
-            "projectSlotID": "bdc64b18-4c5f-4025-827a-f5b91d599dc7",
-            "employeeID": "2655832e-f009-4b73-a535-64c3a22e558f",
-            "fullName": "Phạm Đức Thành",
-            "displayName": "Thanh Pham",
-            "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
-            "username": "thanh",
-            "status": "active",
-            "isLead": false,
-            "deploymentType": "shadow",
-            "startDate": "2022-11-01T00:00:00Z",
-            "endDate": null,
-            "rate": "4000",
-            "discount": "0",
-            "upsellCommissionRate": "0",
-            "leadCommissionRate": "0",
-            "currency": {
-                "id": "7037bdb6-584e-4e35-996d-ef28a243f48a",
-                "name": "VND",
-                "symbol": "đ",
-                "locale": "vi-vn",
-                "type": "fiat"
-            },
-            "note": "",
-            "seniority": {
-                "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
-                "createdAt": "2022-11-07T09:50:25.714604Z",
-                "updatedAt": "2022-11-07T09:50:25.714604Z",
-                "name": "Mid",
-                "code": "mid",
-                "level": 3
-            },
-            "positions": [
-                {
-                    "id": "11ccffea-2cc9-4e98-9bef-3464dfe4dec8",
-                    "code": "frontend",
-                    "name": "Frontend"
-                }
-            ],
-            "upsellPerson": {
-                "id": "608ea227-45a5-4c8a-af43-6c7280d96340",
-                "fullName": "Tiêu Quang Huy",
-                "displayName": "Huy Tieu",
-                "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/3c420751-bb9a-4878-896e-2f10f3a633d6_avatar2535921977139052349.png",
-                "username": "huytq"
-            }
-        },
-        {
-            "projectMemberID": "5a9a07aa-e8f3-4b62-b9ad-0f057866dc6c",
-            "projectSlotID": "b25bd3fa-eb6d-49d5-b278-7aacf4594f79",
-            "employeeID": "eeae589a-94e3-49ac-a94c-fcfb084152b2",
-            "fullName": "Nguyễn Ngô Lập",
-            "displayName": "Lap Nguyen",
-            "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/2870969541970972723.png",
-            "username": "alan",
-            "status": "active",
-            "isLead": false,
-            "deploymentType": "official",
-            "startDate": "2022-11-01T00:00:00Z",
-            "endDate": null,
-            "rate": "3000",
-            "discount": "3",
-            "upsellCommissionRate": "0",
-            "leadCommissionRate": "0",
-            "currency": {
-                "id": "7037bdb6-584e-4e35-996d-ef28a243f48a",
-                "name": "VND",
-                "symbol": "đ",
-                "locale": "vi-vn",
-                "type": "fiat"
-            },
-            "note": "",
-            "seniority": {
-                "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
-                "createdAt": "2022-11-07T09:50:25.714604Z",
-                "updatedAt": "2022-11-07T09:50:25.714604Z",
-                "name": "Mid",
-                "code": "mid",
-                "level": 3
-            },
-            "positions": [
-                {
-                    "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
-                    "code": "backend",
-                    "name": "Backend"
-                }
-            ],
-            "upsellPerson": {
-                "id": "608ea227-45a5-4c8a-af43-6c7280d96340",
-                "fullName": "Tiêu Quang Huy",
-                "displayName": "Huy Tieu",
-                "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/3c420751-bb9a-4878-896e-2f10f3a633d6_avatar2535921977139052349.png",
-                "username": "huytq"
-            }
-        },
-        {
-            "projectMemberID": "fcd5c16f-40fd-48b6-9649-410691373eea",
-            "projectSlotID": "ce379dc0-95be-471a-9227-8e045a5630af",
-            "employeeID": "608ea227-45a5-4c8a-af43-6c7280d96340",
-            "fullName": "Tiêu Quang Huy",
-            "displayName": "Huy Tieu",
-            "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/3c420751-bb9a-4878-896e-2f10f3a633d6_avatar2535921977139052349.png",
-            "username": "huytq",
-            "status": "active",
-            "isLead": false,
-            "deploymentType": "shadow",
-            "startDate": "2022-11-01T00:00:00Z",
-            "endDate": null,
-            "rate": "4000",
-            "discount": "0",
-            "upsellCommissionRate": "0",
-            "leadCommissionRate": "0",
-            "currency": {
-                "id": "7037bdb6-584e-4e35-996d-ef28a243f48a",
-                "name": "VND",
-                "symbol": "đ",
-                "locale": "vi-vn",
-                "type": "fiat"
-            },
-            "note": "",
-            "seniority": {
-                "id": "dac16ce6-9e5a-4ff3-9ea2-fdea4853925e",
-                "createdAt": "2022-11-07T09:50:25.714604Z",
-                "updatedAt": "2022-11-07T09:50:25.714604Z",
-                "name": "Mid",
-                "code": "mid",
-                "level": 3
-            },
-            "positions": [
-                {
-                    "id": "d796884d-a8c4-4525-81e7-54a3b6099eac",
-                    "code": "backend",
-                    "name": "Backend"
-                }
-            ],
-            "upsellPerson": {
-                "id": "608ea227-45a5-4c8a-af43-6c7280d96340",
-                "fullName": "Tiêu Quang Huy",
-                "displayName": "Huy Tieu",
-                "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/3c420751-bb9a-4878-896e-2f10f3a633d6_avatar2535921977139052349.png",
-                "username": "huytq"
-            }
-        }
-    ]
+    "total": 5
 }

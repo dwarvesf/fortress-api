@@ -1,6 +1,6 @@
 {
     "data": null,
-    "error": "Key: 'CreateProjectInput.Status' Error:Field validation for 'Status' failed on the 'required' tag",
+    "error": "Key: 'CreateProjectRequest.Status' Error:Field validation for 'Status' failed on the 'required' tag",
     "errors": [
         {
             "field": "Status",
