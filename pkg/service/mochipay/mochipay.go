@@ -12,8 +12,9 @@ import (
 )
 
 const (
-	ICYAddress     = "0x8D57d71B02d71e1e449a0E459DE40473Eb8f4a90"
-	POLYGONChainID = "137"
+	ICYAddress       = "0x8D57d71B02d71e1e449a0E459DE40473Eb8f4a90"
+	POLYGONChainID   = "137"
+	RewardDefaultMsg = "Send money to treasurer"
 )
 
 type IService interface {
