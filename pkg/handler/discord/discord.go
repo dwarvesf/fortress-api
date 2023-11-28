@@ -383,7 +383,7 @@ func (h *handler) PublishIcyActivityLog(c *gin.Context) {
 		},
 	)
 
-	if err := h.controller.Discord.PublishIcyActivityLog(model.LogDiscordInput{}); err != nil {
+	if err := h.controller.Discord.PublishIcyActivityLog(); err != nil {
 		l.Error(err, "failed to track icy activity")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
