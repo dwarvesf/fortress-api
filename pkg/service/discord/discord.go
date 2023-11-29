@@ -50,20 +50,6 @@ func (d *discordClient) PostBirthdayMsg(msg string) (model.DiscordMessage, error
 	return discordMsg, nil
 }
 
-func (d *discordClient) PostIcyActivityLog(msg string) (model.DiscordMessage, error) {
-	discordMsg := model.DiscordMessage{Content: msg}
-	reqByte, err := json.Marshal(discordMsg)
-	if err != nil {
-		return discordMsg, err
-	}
-
-	payload := bytes.NewReader(reqByte)
-	if _, err := d.newRequest(http.MethodPost, d.cfg.Discord.Webhooks.Campfire, payload); err != nil {
-		return discordMsg, err
-	}
-	return discordMsg, nil
-}
-
 func (d *discordClient) CreateEvent(event *model.Schedule) (*discordgo.GuildScheduledEvent, error) {
 	discordEvent := &discordgo.GuildScheduledEventParams{
 		Name:               event.Name,
