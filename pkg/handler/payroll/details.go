@@ -283,20 +283,24 @@ func (h *handler) preparePayroll(c string, p model.Payroll, markPaid bool) (*mod
 		if err != nil {
 			return nil, 0, 0, err
 		}
+
 		b, _, err := h.service.Wise.Convert(float64(p.ProjectBonusAmount), currency.VNDCurrency, p.Employee.BaseSalary.Currency.Name)
 		if err != nil {
 			return nil, 0, 0, err
 		}
-		p.TotalAllowance = float64(p.BaseSalaryAmount) + c + b
+
 		bonus = b + c
+
+		p.TotalAllowance = float64(p.BaseSalaryAmount) + bonus - p.SalaryAdvanceAmount
+
 		base, _, err := h.service.Wise.Convert(float64(p.BaseSalaryAmount), p.Employee.BaseSalary.Currency.Name, currency.VNDCurrency)
 		if err != nil {
 			return nil, 0, 0, err
 		}
 		subTotal += int64(base)
 	} else {
-		p.TotalAllowance = float64(p.BaseSalaryAmount) + float64(p.CommissionAmount+p.ProjectBonusAmount) - p.SalaryAdvanceAmount
 		bonus = float64(p.CommissionAmount + p.ProjectBonusAmount)
+		p.TotalAllowance = float64(p.BaseSalaryAmount) + bonus - p.SalaryAdvanceAmount
 		subTotal += p.BaseSalaryAmount
 	}
 
