@@ -224,7 +224,7 @@ func (c *controller) PublishIcyActivityLog() error {
 <:money:1080757975649624094> **Amount:** <:ICY:1049620715374133288> ` + tokenAmountDec.String() + ` ($` + tokenAmountUSD.String() + `)
 <:pepenote:885515949673951282> **Reason:** ` + transferReason + `
 
-Head to [earn.d.foundation](https://earn.d.foundation) to see list of open quests and r&d topics
+Head to [note.d.foundation/earn](https://note.d.foundation/earn) to see list of open quests and r&d topics
 		`
 
 		embedMessage := model.DiscordMessageEmbed{
