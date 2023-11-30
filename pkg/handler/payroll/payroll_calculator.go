@@ -174,6 +174,7 @@ func (h *handler) calculatePayrolls(users []*model.Employee, batchDate time.Time
 		if err != nil {
 			return nil, err
 		}
+
 		for _, as := range advanceSalaries {
 			advanceAmountUSD += as.AmountUSD
 		}
@@ -182,6 +183,7 @@ func (h *handler) calculatePayrolls(users []*model.Employee, batchDate time.Time
 			return nil, err
 		}
 		// calculate total minus advance salary
+
 		total = model.NewVietnamDong(int64(float64(total) - advanceAmountVND))
 
 		p := model.Payroll{

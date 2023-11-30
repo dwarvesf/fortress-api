@@ -49,6 +49,24 @@ func (g *googleService) prepareService() error {
 	return nil
 }
 
+func (g *googleService) ensureToken(refreshToken string) error {
+	token := &oauth2.Token{
+		RefreshToken: refreshToken,
+	}
+
+	if !g.token.Valid() {
+		tks := g.config.TokenSource(context.Background(), token)
+		tok, err := tks.Token()
+		if err != nil {
+			return err
+		}
+
+		g.token = tok
+	}
+
+	return nil
+}
+
 // SendInvoiceMail function to send invoice email
 func (g *googleService) SendInvoiceMail(invoice *model.Invoice) (msgID string, err error) {
 	err = g.filterReceiver(invoice)
@@ -242,24 +260,6 @@ func (g *googleService) SendInvoiceOverdueMail(invoice *model.Invoice) error {
 	return err
 }
 
-func (g *googleService) ensureToken(refreshToken string) error {
-	token := &oauth2.Token{
-		RefreshToken: refreshToken,
-	}
-
-	if !g.token.Valid() {
-		tks := g.config.TokenSource(context.Background(), token)
-		tok, err := tks.Token()
-		if err != nil {
-			return err
-		}
-
-		g.token = tok
-	}
-
-	return nil
-}
-
 func (g *googleService) sendEmail(encodedEmail, id string) (msgID string, err error) {
 	rs, err := g.service.Users.Messages.Send(id, &gmail.Message{
 		Raw: encodedEmail,
@@ -342,7 +342,7 @@ func (g *googleService) filterReceiver(i *model.Invoice) error {
 // we have been paid their payroll
 func (g *googleService) SendPayrollPaidMail(p *model.Payroll) (err error) {
 	if g.appConfig.Env == "local" {
-		p.Employee.TeamEmail = "quang@d.foundation"
+		p.Employee.TeamEmail = "benjamin@d.foundation"
 	}
 
 	if err := g.ensureToken(g.appConfig.Google.AccountingGoogleRefreshToken); err != nil {

@@ -16,7 +16,7 @@ type SalaryAdvance struct {
 	BaseAmount     float64    `json:"base_amount"`
 	ConversionRate float64    `json:"conversion_rate"`
 	IsPaidBack     bool       `json:"is_paid_back"`
-	PaidAt         *time.Time `json:"paidAt"`
+	PaidAt         *time.Time `json:"paid_at"`
 }
 
 func (SalaryAdvance) TableName() string { return "salary_advance_histories" }

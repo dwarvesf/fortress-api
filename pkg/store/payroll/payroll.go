@@ -107,11 +107,11 @@ func (s *store) InsertList(db *gorm.DB, payrolls []model.Payroll) error {
 		return fmt.Errorf("payrolls cannot be empty")
 	}
 
-	valueStrings := []string{}
-	valueArgs := []interface{}{}
+	var valueStrings []string
+	var valueArgs []interface{}
 
 	for _, payroll := range payrolls {
-		valueStrings = append(valueStrings, "(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")
+		valueStrings = append(valueStrings, "(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")
 
 		valueArgs = append(valueArgs, model.NewUUID())
 		valueArgs = append(valueArgs, payroll.EmployeeID)
@@ -129,9 +129,10 @@ func (s *store) InsertList(db *gorm.DB, payrolls []model.Payroll) error {
 		valueArgs = append(valueArgs, payroll.ConversionAmount)
 		valueArgs = append(valueArgs, payroll.BaseSalaryAmount)
 		valueArgs = append(valueArgs, payroll.ContractAmount)
+		valueArgs = append(valueArgs, payroll.SalaryAdvanceAmount)
 	}
 
-	smt := `INSERT INTO payrolls(id, employee_id, total, month, year, commission_amount, commission_explain, employee_rank_snapshot, total_explain, project_bonus_amount, due_date, project_bonus_explain, is_paid, conversion_amount, base_salary_amount, contract_amount) VALUES %s`
+	smt := `INSERT INTO payrolls(id, employee_id, total, month, year, commission_amount, commission_explain, employee_rank_snapshot, total_explain, project_bonus_amount, due_date, project_bonus_explain, is_paid, conversion_amount, base_salary_amount, contract_amount, salary_advance_amount) VALUES %s`
 	smt = fmt.Sprintf(smt, strings.Join(valueStrings, ","))
 
 	tx := db.Begin()

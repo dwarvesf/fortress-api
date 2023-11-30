@@ -25,7 +25,7 @@ type Payroll struct {
 	ProjectBonusExplain datatypes.JSON `json:"project_bonus_explain"`
 	DueDate             *time.Time     `json:"due_date"`
 	IsPaid              bool           `json:"is_paid"`
-	SalaryAdvanceAmount float64
+	SalaryAdvanceAmount float64        `json:"salary_advance_amount"`
 
 	Employee Employee `json:"employee"`
 
@@ -80,5 +80,5 @@ const (
 	FirstBatch Batch = 1
 
 	// SecondBatch represent payroll batch that due date in date: 15th of a month
-	SecondBatch = 15
+	SecondBatch Batch = 15
 )
