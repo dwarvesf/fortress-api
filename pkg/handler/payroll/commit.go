@@ -61,7 +61,7 @@ func (h *handler) CommitPayroll(c *gin.Context) {
 
 	err = h.commitPayrollHandler(int(month), int(year), int(batch), email)
 	if err != nil {
-		l.Errorf(err, "failed to parse date", "date", batch)
+		l.Errorf(err, "failed to process commit payroll for batch date", "date", batch)
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
 	}
