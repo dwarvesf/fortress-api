@@ -255,3 +255,10 @@ type SalaryAdvanceRequest struct {
 	DiscordID string `json:"discordID"`
 	Amount    string `json:"amount"`
 } // @name SalaryAdvanceRequest
+
+type SalaryAdvanceReportRequest struct {
+	view.Pagination
+	model.SortOrder `json:"sortOrder" form:"sortOrder"`
+
+	IsPaid *bool `json:"isPaid" form:"isPaid"`
+} // @name SalaryAdvanceReportRequest

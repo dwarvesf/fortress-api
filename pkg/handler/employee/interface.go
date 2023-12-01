@@ -18,6 +18,7 @@ type IHandler interface {
 	UpdateBaseSalary(c *gin.Context)
 	SalaryAdvance(c *gin.Context)
 	CheckSalaryAdvance(c *gin.Context)
+	SalaryAdvanceReport(c *gin.Context)
 
 	PublicList(c *gin.Context)
 }
