@@ -9,7 +9,7 @@ type BasicMember struct {
 	FullName    string `json:"fullName"`
 	DisplayName string `json:"displayName"`
 	Avatar      string `json:"avatar"`
-	Userame     string `json:"username"`
+	Username    string `json:"username"`
 } // @name BasicMember
 
 func toBasicMember(employee model.Employee) *BasicMember {
@@ -18,7 +18,7 @@ func toBasicMember(employee model.Employee) *BasicMember {
 		FullName:    employee.FullName,
 		DisplayName: employee.DisplayName,
 		Avatar:      employee.Avatar,
-		Userame:     employee.Username,
+		Username:    employee.Username,
 	}
 }
 

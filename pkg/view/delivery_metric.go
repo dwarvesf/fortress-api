@@ -9,21 +9,21 @@ import (
 )
 
 type DeliveryMetricWeeklyReport struct {
-	LastWeek    DeliveryMetricWeekReport `json:"last_week"`
-	CurrentWeek DeliveryMetricWeekReport `json:"current_week"`
+	LastWeek    DeliveryMetricWeekReport `json:"lastWeek"`
+	CurrentWeek DeliveryMetricWeekReport `json:"currentWeek"`
 
-	TotalPointChangePercentage float32 `json:"total_point_change_percentage"`
-	EffortChangePercentage     float32 `json:"effort_change_percentage"`
-	AvgPointChangePercentage   float32 `json:"avg_point_change_percentage"`
-	AvgEffortChangePercentage  float32 `json:"avg_effort_change_percentage"`
+	TotalPointChangePercentage float32 `json:"totalPointChangePercentage"`
+	EffortChangePercentage     float32 `json:"effortChangePercentage"`
+	AvgPointChangePercentage   float32 `json:"avgPointChangePercentage"`
+	AvgEffortChangePercentage  float32 `json:"avgEffortChangePercentage"`
 }
 
 type DeliveryMetricWeekReport struct {
 	Date        *time.Time `json:"date"`
-	TotalPoints float32    `json:"total_points"`
+	TotalPoints float32    `json:"totalPoints"`
 	Effort      float32    `json:"effort"`
-	AvgPoint    float32    `json:"avg_point"`
-	AvgEffort   float32    `json:"avg_effort"`
+	AvgPoint    float32    `json:"avgPoint"`
+	AvgEffort   float32    `json:"avgEffort"`
 }
 
 type DeliveryLeaderBoardResponse struct {
@@ -36,12 +36,12 @@ type WeeklyLeaderBoard struct {
 }
 
 type LeaderBoardItem struct {
-	EmployeeID      string          `json:"employee_id"`
-	EmployeeName    string          `json:"employee_name"`
+	EmployeeID      string          `json:"employeeID"`
+	EmployeeName    string          `json:"employeeName"`
 	Points          decimal.Decimal `json:"points"`
 	Effectiveness   decimal.Decimal `json:"effectiveness"`
-	DiscordID       string          `json:"discord_id"`
-	DiscordUsername string          `json:"discord_username"`
+	DiscordID       string          `json:"discordID"`
+	DiscordUsername string          `json:"discordUsername"`
 	Rank            int             `json:"rank"`
 }
 
@@ -120,26 +120,26 @@ func ToDeliveryMetricMonthlyReport(current model.MonthReport, prev model.MonthRe
 }
 
 type DeliveryMetricMonthlyReport struct {
-	CurrentMonth DeliveryMetricMonthlyReportItem `json:"current_month"`
-	LastMonth    DeliveryMetricMonthlyReportItem `json:"last_month"`
+	CurrentMonth DeliveryMetricMonthlyReportItem `json:"currentMonth"`
+	LastMonth    DeliveryMetricMonthlyReportItem `json:"lastMonth"`
 
-	TotalPointChangePercentage      float32 `json:"total_point_change_percentage"`
-	EffortChangePercentage          float32 `json:"effort_change_percentage"`
-	AvgWeightChangePercentage       float32 `json:"avg_weight_change_percentage"`
-	AvgEffortChangePercentage       float32 `json:"avg_effort_change_percentage"`
-	AvgWeeklyPointChangePercentage  float32 `json:"avg_weekly_point_change_percentage"`
-	AvgWeeklyEffortChangePercentage float32 `json:"avg_weekly_effort_change_percentage"`
+	TotalPointChangePercentage      float32 `json:"totalPointChangePercentage"`
+	EffortChangePercentage          float32 `json:"effortChangePercentage"`
+	AvgWeightChangePercentage       float32 `json:"avgWeightChangePercentage"`
+	AvgEffortChangePercentage       float32 `json:"avgEffortChangePercentage"`
+	AvgWeeklyPointChangePercentage  float32 `json:"avgWeeklyPointChangePercentage"`
+	AvgWeeklyEffortChangePercentage float32 `json:"avgWeeklyEffortChangePercentage"`
 }
 
 type DeliveryMetricMonthlyReportItem struct {
 	Month       *time.Time `json:"date"`
-	TotalWeight float32    `json:"total_weight"`
+	TotalWeight float32    `json:"totalWeight"`
 	Effort      float32    `json:"effort"`
 
-	AvgWeight       float32 `json:"avg_weight"`
-	AvgEffort       float32 `json:"avg_effort"`
-	AvgWeeklyWeight float32 `json:"avg_weekly_weight"`
-	AvgWeeklyEffort float32 `json:"avg_weekly_effort"`
+	AvgWeight       float32 `json:"avgWeight"`
+	AvgEffort       float32 `json:"avgEffort"`
+	AvgWeeklyWeight float32 `json:"avgWeeklyWeight"`
+	AvgWeeklyEffort float32 `json:"avgWeeklyEffort"`
 }
 
 type MonthlyLeaderBoard struct {
