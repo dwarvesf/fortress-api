@@ -15,4 +15,4 @@ type CompanyInfo struct {
 type CompanyContactInfo struct {
 	Address string `json:"address"`
 	Phone   string `json:"phone"`
-} // @name CompanyContactInfo
+}
