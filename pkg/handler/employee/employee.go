@@ -849,9 +849,9 @@ func (h *handler) ListWithMMAScore(c *gin.Context) {
 }
 
 // SalaryAdvance godoc
-// @Summary Advance salary by discord id
-// @Description Update account status by employee id
-// @id advanceSalary
+// @Summary Salary advance by discord id
+// @Description Salary advance by discord id
+// @id salaryAdvance
 // @Tags Employee
 // @Accept  json
 // @Produce  json
@@ -893,7 +893,7 @@ func (h *handler) SalaryAdvance(c *gin.Context) {
 		Type: "employee_advance_salary",
 		Data: map[string]interface{}{
 			"employee_id": response.EmployeeID,
-			"amount":      fmt.Sprintf("%v ICY($%v)", response.AmountIcy, response.AmountUSD),
+			"amount":      fmt.Sprintf("%v ICY($%v)", response.AmountICY, response.AmountUSD),
 		},
 	})
 	if err != nil {
@@ -902,7 +902,7 @@ func (h *handler) SalaryAdvance(c *gin.Context) {
 
 	err = h.controller.Discord.PublicAdvanceSalaryLog(model.LogDiscordInput{
 		Data: map[string]interface{}{
-			"icy_amount": response.AmountIcy,
+			"icy_amount": response.AmountICY,
 			"usd_amount": response.AmountUSD,
 		},
 	})
@@ -910,9 +910,23 @@ func (h *handler) SalaryAdvance(c *gin.Context) {
 		l.Error(err, "failed to create discord public log")
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToSalaryAdvance(response.AmountIcy, response.AmountUSD, response.TransactionID, response.TransactionHash), nil, nil, nil, "ok"))
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToSalaryAdvance(response.AmountICY, response.AmountUSD, response.TransactionID, response.TransactionHash), nil, nil, nil, ""))
 }
 
+// CheckSalaryAdvance godoc
+// @Summary Check salary advance by discord id
+// @Description Check salary advance by discord id
+// @id checkSalaryAdvance
+// @Tags Employee
+// @Accept  json
+// @Produce  json
+// @Security BearerAuth
+// @Param checkSalaryAdvanceRequest body SalaryAdvanceRequest true "Check Salary Advance Request"
+// @Success 200 {object} CheckSalaryAdvanceResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /employees/check-advance-salary [post]
 func (h *handler) CheckSalaryAdvance(c *gin.Context) {
 	l := h.logger.Fields(
 		logger.Fields{
@@ -928,7 +942,7 @@ func (h *handler) CheckSalaryAdvance(c *gin.Context) {
 		return
 	}
 
-	amountIcy, amountUSD, err := h.controller.Employee.CheckSalaryAdvance(body.DiscordID)
+	amountICY, amountUSD, err := h.controller.Employee.CheckSalaryAdvance(body.DiscordID)
 	if err != nil {
 		l.Error(err, "failed to check advance salary")
 		errs.ConvertControllerErr(c, err)
@@ -936,5 +950,5 @@ func (h *handler) CheckSalaryAdvance(c *gin.Context) {
 	}
 
 	// 3. return employee
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToCheckSalaryAdvance(amountIcy, amountUSD), nil, nil, nil, "ok"))
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToCheckSalaryAdvance(amountICY, amountUSD), nil, nil, nil, "ok"))
 }

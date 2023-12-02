@@ -13,11 +13,11 @@ import (
 )
 
 type SalaryAdvanceResponse struct {
-	EmployeeID      string `json:"employee_id"`
-	AmountIcy       string `json:"amount_icy"`
-	AmountUSD       string `json:"amount_usd"`
-	TransactionID   string `json:"transaction_id"`
-	TransactionHash string `json:"transaction_hash"`
+	EmployeeID      string
+	AmountICY       string
+	AmountUSD       string
+	TransactionID   string
+	TransactionHash string
 }
 
 func (r *controller) SalaryAdvance(discordID string, amount int64) (*SalaryAdvanceResponse, error) {
@@ -106,7 +106,7 @@ func (r *controller) SalaryAdvance(discordID string, amount int64) (*SalaryAdvan
 
 	response := &SalaryAdvanceResponse{
 		EmployeeID:      employee.ID.String(),
-		AmountIcy:       utils.FormatNumber(amount),
+		AmountICY:       utils.FormatNumber(amount),
 		AmountUSD:       utils.FormatMoney(amountUSD, money.USD),
 		TransactionID:   strconv.Itoa(int(txs[0].TransactionID)),
 		TransactionHash: txs[0].RecipientID,

@@ -1,33 +1,37 @@
 package view
 
 type CheckSalaryAdvance struct {
-	AmountIcy string `json:"amount_icy"`
-	AmountUsd string `json:"amount_usd"`
+	AmountICY string `json:"amountICY"`
+	AmountUSD string `json:"amountUSD"`
 }
+
+type CheckSalaryAdvanceResponse struct {
+	Data CheckSalaryAdvance `json:"data"`
+} // @name CheckSalaryAdvanceResponse
 
 func ToCheckSalaryAdvance(amountIcy, amountUSD string) *CheckSalaryAdvance {
 	return &CheckSalaryAdvance{
-		AmountIcy: amountIcy,
-		AmountUsd: amountUSD,
+		AmountICY: amountIcy,
+		AmountUSD: amountUSD,
 	}
 }
 
 type SalaryAdvance struct {
-	AmountIcy       string `json:"amount_icy"`
-	AmountUsd       string `json:"amount_usd"`
-	TransactionID   string `json:"transaction_id"`
-	TransactionHash string `json:"transaction_hash"`
+	AmountICY       string `json:"amountICY"`
+	AmountUSD       string `json:"amountUSD"`
+	TransactionID   string `json:"transactionID"`
+	TransactionHash string `json:"transactionHash"`
 } // @name SalaryAdvance
-
-func ToSalaryAdvance(amountIcy, amountUSD, transactionID, transactionHash string) *SalaryAdvance {
-	return &SalaryAdvance{
-		AmountIcy:       amountIcy,
-		AmountUsd:       amountUSD,
-		TransactionID:   transactionID,
-		TransactionHash: transactionHash,
-	}
-}
 
 type SalaryAdvanceResponse struct {
 	Data SalaryAdvance `json:"data"`
 } // @name SalaryAdvanceResponse
+
+func ToSalaryAdvance(amountIcy, amountUSD, transactionID, transactionHash string) *SalaryAdvance {
+	return &SalaryAdvance{
+		AmountICY:       amountIcy,
+		AmountUSD:       amountUSD,
+		TransactionID:   transactionID,
+		TransactionHash: transactionHash,
+	}
+}
