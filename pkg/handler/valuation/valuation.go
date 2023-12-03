@@ -40,7 +40,7 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 // @Accept  json
 // @Produce  json
 // @Param year path int true "Year"
-// @Success 200 {object} model.Valuation
+// @Success 200 {object} Valuation
 // @Failure 400 {object} ErrorResponse
 func (h *handler) One(c *gin.Context) {
 	// parse params & prepare logger
@@ -125,7 +125,7 @@ func (h *handler) One(c *gin.Context) {
 	}
 
 	// build up response
-	var valuation model.Valuation
+	var valuation view.Valuation
 
 	valuation.Year = year
 	valuation.Currency = convertTo
@@ -134,7 +134,14 @@ func (h *handler) One(c *gin.Context) {
 	// we temporary doesn't need to return detail item for this rn
 	valuation.AccountReceivable.Total = h.convertCurrency(receivable, convertTo)
 	valuation.Liabilities.Total = h.convertCurrency(amount, convertTo)
-	valuation.Liabilities.Items = items
+	viewItems := make([]view.AccountingItem, 0)
+	for _, item := range items {
+		viewItems = append(viewItems, view.AccountingItem{
+			Name:   item.Name,
+			Amount: h.convertCurrency(&model.CurrencyView{VND: item.Amount}, convertTo),
+		})
+	}
+	valuation.Liabilities.Items = viewItems
 
 	valuation.Income.Total = h.convertCurrency(revenue, convertTo)
 

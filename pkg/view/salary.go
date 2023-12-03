@@ -3,7 +3,7 @@ package view
 type CheckSalaryAdvance struct {
 	AmountICY string `json:"amountICY"`
 	AmountUSD string `json:"amountUSD"`
-}
+} // @name CheckSalaryAdvance
 
 type CheckSalaryAdvanceResponse struct {
 	Data CheckSalaryAdvance `json:"data"`

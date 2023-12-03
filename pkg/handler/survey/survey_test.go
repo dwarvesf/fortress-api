@@ -21,6 +21,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/utils/testhelper"
+	"github.com/dwarvesf/fortress-api/pkg/view"
 )
 
 const testToken = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjk1ODMzMzA5NDUsImlkIjoiMjY1NTgzMmUtZjAwOS00YjczLWE1MzUtNjRjM2EyMmU1NThmIiwiYXZhdGFyIjoiaHR0cHM6Ly9zMy1hcC1zb3V0aGVhc3QtMS5hbWF6b25hd3MuY29tL2ZvcnRyZXNzLWltYWdlcy81MTUzNTc0Njk1NjYzOTU1OTQ0LnBuZyIsImVtYWlsIjoidGhhbmhAZC5mb3VuZGF0aW9uIn0.oIdlwWGBy4E1CbSoEX6r2B6NQLbew_J-RttpAcg6w8M"
@@ -161,8 +162,8 @@ func TestHandler_SendPerformanceReview(t *testing.T) {
 			wantCode:         http.StatusOK,
 			wantResponsePath: "testdata/send_survey/200_performance_review.json",
 			body: request.SendSurveyInput{
-				TopicIDs: []model.UUID{
-					model.MustGetUUIDFromString("e4a33adc-2495-43cf-b816-32feb8d5250d"),
+				TopicIDs: []view.UUID{
+					view.MustGetUUIDFromString("e4a33adc-2495-43cf-b816-32feb8d5250d"),
 				},
 				Type: model.EventSubtypePeerReview.String(),
 			},
@@ -182,8 +183,8 @@ func TestHandler_SendPerformanceReview(t *testing.T) {
 			wantCode:         http.StatusNotFound,
 			wantResponsePath: "testdata/send_survey/404.json",
 			body: request.SendSurveyInput{
-				TopicIDs: []model.UUID{
-					model.MustGetUUIDFromString("e4a33adc-2495-43cf-b816-32feb8d5250d"),
+				TopicIDs: []view.UUID{
+					view.MustGetUUIDFromString("e4a33adc-2495-43cf-b816-32feb8d5250d"),
 				},
 				Type: model.EventSubtypePeerReview.String(),
 			},
@@ -206,8 +207,8 @@ func TestHandler_SendPerformanceReview(t *testing.T) {
 			wantCode:         http.StatusBadRequest,
 			wantResponsePath: "testdata/send_survey/invalid_subtype.json",
 			body: request.SendSurveyInput{
-				TopicIDs: []model.UUID{
-					model.MustGetUUIDFromString("e4a33adc-2495-43cf-b816-32feb8d5250d"),
+				TopicIDs: []view.UUID{
+					view.MustGetUUIDFromString("e4a33adc-2495-43cf-b816-32feb8d5250d"),
 				},
 				Type: "a",
 			},
@@ -398,14 +399,14 @@ func TestHandler_UpdateTopicReviewers(t *testing.T) {
 				EventID: "8a5bfedb-6e11-4f5c-82d9-2635cfcce3e2",
 				TopicID: "e4a33adc-2495-43cf-b816-32feb8d5250d",
 				Body: request.UpdateTopicReviewersBody{
-					ReviewerIDs: []model.UUID{
-						model.MustGetUUIDFromString("d42a6fca-d3b8-4a48-80f7-a95772abda56"),
-						model.MustGetUUIDFromString("dcfee24b-306d-4609-9c24-a4021639a11b"),
-						model.MustGetUUIDFromString("3f705527-0455-4e67-a585-6c1f23726fff"),
-						model.MustGetUUIDFromString("a1f25e3e-cf40-4d97-a4d5-c27ee566b8c5"),
-						model.MustGetUUIDFromString("498d5805-dd64-4643-902d-95067d6e5ab5"),
-						model.MustGetUUIDFromString("f6ce0d0f-5794-463b-ad0b-8240ab9c49be"),
-						model.MustGetUUIDFromString("7bcf4b45-0279-4da2-84e4-eec5d9d05ba3"),
+					ReviewerIDs: []view.UUID{
+						view.MustGetUUIDFromString("d42a6fca-d3b8-4a48-80f7-a95772abda56"),
+						view.MustGetUUIDFromString("dcfee24b-306d-4609-9c24-a4021639a11b"),
+						view.MustGetUUIDFromString("3f705527-0455-4e67-a585-6c1f23726fff"),
+						view.MustGetUUIDFromString("a1f25e3e-cf40-4d97-a4d5-c27ee566b8c5"),
+						view.MustGetUUIDFromString("498d5805-dd64-4643-902d-95067d6e5ab5"),
+						view.MustGetUUIDFromString("f6ce0d0f-5794-463b-ad0b-8240ab9c49be"),
+						view.MustGetUUIDFromString("7bcf4b45-0279-4da2-84e4-eec5d9d05ba3"),
 					},
 				},
 			},
@@ -418,13 +419,13 @@ func TestHandler_UpdateTopicReviewers(t *testing.T) {
 				EventID: "8a5bfedb-6e11-4f5c-82d9-2635cfcce3e2",
 				TopicID: "e4a33adc-2495-43cf-b816-32feb8d5250d",
 				Body: request.UpdateTopicReviewersBody{
-					ReviewerIDs: []model.UUID{
-						model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
-						model.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
-						model.MustGetUUIDFromString("d389d35e-c548-42cf-9f29-2a599969a8f2"),
-						model.MustGetUUIDFromString("f7c6016b-85b5-47f7-8027-23c2db482197"),
-						model.MustGetUUIDFromString("d42a6fca-d3b8-4a48-80f7-a95772abda56"),
-						model.MustGetUUIDFromString("dcfee24b-306d-4609-9c24-a4021639a11b"),
+					ReviewerIDs: []view.UUID{
+						view.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
+						view.MustGetUUIDFromString("2655832e-f009-4b73-a535-64c3a22e558f"),
+						view.MustGetUUIDFromString("d389d35e-c548-42cf-9f29-2a599969a8f2"),
+						view.MustGetUUIDFromString("f7c6016b-85b5-47f7-8027-23c2db482197"),
+						view.MustGetUUIDFromString("d42a6fca-d3b8-4a48-80f7-a95772abda56"),
+						view.MustGetUUIDFromString("dcfee24b-306d-4609-9c24-a4021639a11b"),
 					},
 				},
 			},
@@ -573,8 +574,8 @@ func TestHandler_DeleteTopicReviewers(t *testing.T) {
 				EventID: "53546ea4-1d9d-4216-96b2-75f84ec6d750",
 				TopicID: "11121775-118f-4896-8246-d88023b22c7a",
 				Body: request.DeleteTopicReviewersBody{
-					ReviewerIDs: []model.UUID{
-						model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
+					ReviewerIDs: []view.UUID{
+						view.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98ce"),
 					},
 				},
 			},
@@ -587,8 +588,8 @@ func TestHandler_DeleteTopicReviewers(t *testing.T) {
 				EventID: "53546ea4-1d9d-4216-96b2-75f84ec6d750",
 				TopicID: "11121775-118f-4896-8246-d88023b22c7a",
 				Body: request.DeleteTopicReviewersBody{
-					ReviewerIDs: []model.UUID{
-						model.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98cd"),
+					ReviewerIDs: []view.UUID{
+						view.MustGetUUIDFromString("ecea9d15-05ba-4a4e-9787-54210e3b98cd"),
 					},
 				},
 			},

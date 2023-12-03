@@ -33,7 +33,7 @@ type EngagementDashboardDetail struct {
 } // @name EngagementDashboardDetail
 
 type ProjectSizeResponse struct {
-	Data []*model.ProjectSize `json:"data"`
+	Data []*ProjectSize `json:"data"`
 } // @name ProjectSizeResponse
 
 type ProjectSize struct {

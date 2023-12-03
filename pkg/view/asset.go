@@ -2,7 +2,7 @@ package view
 
 type ContentData struct {
 	Url string `json:"url"`
-}
+} // @name ContentData
 
 // ContentDataResponse represent the content data
 type ContentDataResponse struct {
