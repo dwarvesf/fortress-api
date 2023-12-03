@@ -8141,6 +8141,17 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/EmployeeData"
                     }
+                },
+                "page": {
+                    "description": "page index",
+                    "type": "integer"
+                },
+                "size": {
+                    "description": "page size",
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
                 }
             }
         },
@@ -9039,6 +9050,17 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/Feedback"
                     }
+                },
+                "page": {
+                    "description": "page index",
+                    "type": "integer"
+                },
+                "size": {
+                    "description": "page size",
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
                 }
             }
         },
@@ -9047,6 +9069,17 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/SurveyDetail"
+                },
+                "page": {
+                    "description": "page index",
+                    "type": "integer"
+                },
+                "size": {
+                    "description": "page size",
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
                 }
             }
         },
@@ -9058,6 +9091,17 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/Survey"
                     }
+                },
+                "page": {
+                    "description": "page index",
+                    "type": "integer"
+                },
+                "size": {
+                    "description": "page size",
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
                 }
             }
         },
@@ -9815,6 +9859,17 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/ProjectData"
                     }
+                },
+                "page": {
+                    "description": "page index",
+                    "type": "integer"
+                },
+                "size": {
+                    "description": "page size",
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
                 }
             }
         },
@@ -9897,6 +9952,17 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/ProjectMember"
                     }
+                },
+                "page": {
+                    "description": "page index",
+                    "type": "integer"
+                },
+                "size": {
+                    "description": "page size",
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
                 }
             }
         },
@@ -10393,6 +10459,17 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/Stack"
                     }
+                },
+                "page": {
+                    "description": "page index",
+                    "type": "integer"
+                },
+                "size": {
+                    "description": "page size",
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
                 }
             }
         },
@@ -11910,6 +11987,17 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/WorkSurveySummary"
                     }
+                },
+                "page": {
+                    "description": "page index",
+                    "type": "integer"
+                },
+                "size": {
+                    "description": "page size",
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
                 }
             }
         },

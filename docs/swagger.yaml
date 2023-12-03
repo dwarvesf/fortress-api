@@ -1156,6 +1156,14 @@ definitions:
         items:
           $ref: '#/definitions/EmployeeData'
         type: array
+      page:
+        description: page index
+        type: integer
+      size:
+        description: page size
+        type: integer
+      total:
+        type: integer
     type: object
   EmployeeLocation:
     properties:
@@ -1744,11 +1752,27 @@ definitions:
         items:
           $ref: '#/definitions/Feedback'
         type: array
+      page:
+        description: page index
+        type: integer
+      size:
+        description: page size
+        type: integer
+      total:
+        type: integer
     type: object
   ListSurveyDetailResponse:
     properties:
       data:
         $ref: '#/definitions/SurveyDetail'
+      page:
+        description: page index
+        type: integer
+      size:
+        description: page size
+        type: integer
+      total:
+        type: integer
     type: object
   ListSurveyResponse:
     properties:
@@ -1756,6 +1780,14 @@ definitions:
         items:
           $ref: '#/definitions/Survey'
         type: array
+      page:
+        description: page index
+        type: integer
+      size:
+        description: page size
+        type: integer
+      total:
+        type: integer
     type: object
   ListWorkUnitResponse:
     properties:
@@ -2254,6 +2286,14 @@ definitions:
         items:
           $ref: '#/definitions/ProjectData'
         type: array
+      page:
+        description: page index
+        type: integer
+      size:
+        description: page size
+        type: integer
+      total:
+        type: integer
     type: object
   ProjectMember:
     properties:
@@ -2308,6 +2348,14 @@ definitions:
         items:
           $ref: '#/definitions/ProjectMember'
         type: array
+      page:
+        description: page index
+        type: integer
+      size:
+        description: page size
+        type: integer
+      total:
+        type: integer
     type: object
   ProjectNotion:
     properties:
@@ -2641,6 +2689,14 @@ definitions:
         items:
           $ref: '#/definitions/Stack'
         type: array
+      page:
+        description: page index
+        type: integer
+      size:
+        description: page size
+        type: integer
+      total:
+        type: integer
     type: object
   SubmitFeedback:
     properties:
@@ -3655,6 +3711,14 @@ definitions:
         items:
           $ref: '#/definitions/WorkSurveySummary'
         type: array
+      page:
+        description: page index
+        type: integer
+      size:
+        description: page size
+        type: integer
+      total:
+        type: integer
     type: object
   WorkSurveysData:
     properties:

@@ -652,6 +652,7 @@ func ToProjectsData(projects []*model.Project, userInfo *model.CurrentLoggedUser
 }
 
 type ProjectListDataResponse struct {
+	PaginationResponse
 	Data []ProjectData `json:"data"`
 } // @name ProjectListDataResponse
 
@@ -922,6 +923,7 @@ func ToProjectMemberListData(userInfo *model.CurrentLoggedUserInfo, members []*m
 }
 
 type ProjectMemberListResponse struct {
+	PaginationResponse
 	Data []ProjectMember `json:"data"`
 } // @name ProjectMemberListResponse
 

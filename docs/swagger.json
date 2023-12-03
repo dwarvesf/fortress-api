@@ -8134,6 +8134,17 @@
                     "items": {
                         "$ref": "#/definitions/EmployeeData"
                     }
+                },
+                "page": {
+                    "description": "page index",
+                    "type": "integer"
+                },
+                "size": {
+                    "description": "page size",
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
                 }
             }
         },
@@ -9032,6 +9043,17 @@
                     "items": {
                         "$ref": "#/definitions/Feedback"
                     }
+                },
+                "page": {
+                    "description": "page index",
+                    "type": "integer"
+                },
+                "size": {
+                    "description": "page size",
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
                 }
             }
         },
@@ -9040,6 +9062,17 @@
             "properties": {
                 "data": {
                     "$ref": "#/definitions/SurveyDetail"
+                },
+                "page": {
+                    "description": "page index",
+                    "type": "integer"
+                },
+                "size": {
+                    "description": "page size",
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
                 }
             }
         },
@@ -9051,6 +9084,17 @@
                     "items": {
                         "$ref": "#/definitions/Survey"
                     }
+                },
+                "page": {
+                    "description": "page index",
+                    "type": "integer"
+                },
+                "size": {
+                    "description": "page size",
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
                 }
             }
         },
@@ -9808,6 +9852,17 @@
                     "items": {
                         "$ref": "#/definitions/ProjectData"
                     }
+                },
+                "page": {
+                    "description": "page index",
+                    "type": "integer"
+                },
+                "size": {
+                    "description": "page size",
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
                 }
             }
         },
@@ -9890,6 +9945,17 @@
                     "items": {
                         "$ref": "#/definitions/ProjectMember"
                     }
+                },
+                "page": {
+                    "description": "page index",
+                    "type": "integer"
+                },
+                "size": {
+                    "description": "page size",
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
                 }
             }
         },
@@ -10386,6 +10452,17 @@
                     "items": {
                         "$ref": "#/definitions/Stack"
                     }
+                },
+                "page": {
+                    "description": "page index",
+                    "type": "integer"
+                },
+                "size": {
+                    "description": "page size",
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
                 }
             }
         },
@@ -11903,6 +11980,17 @@
                     "items": {
                         "$ref": "#/definitions/WorkSurveySummary"
                     }
+                },
+                "page": {
+                    "description": "page index",
+                    "type": "integer"
+                },
+                "size": {
+                    "description": "page size",
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
                 }
             }
         },

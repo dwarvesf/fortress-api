@@ -60,6 +60,7 @@ func ToListFeedback(eTopics []*model.EmployeeEventTopic) []Feedback {
 }
 
 type ListFeedbackResponse struct {
+	PaginationResponse
 	Data []Feedback `json:"data"`
 } // @name ListFeedbackResponse
 
