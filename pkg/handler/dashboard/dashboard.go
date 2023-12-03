@@ -809,5 +809,5 @@ func (h *handler) GetResourceWorkSurveySummaries(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToWorkSummaries(reviews),
-		&view.PaginationResponse{Pagination: input.Pagination}, nil, nil, ""))
+		&view.PaginationResponse{Pagination: view.Pagination{Page: input.Pagination.Page, Size: input.Pagination.Size, Sort: input.Pagination.Sort}}, nil, nil, ""))
 }

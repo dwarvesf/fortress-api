@@ -14,7 +14,7 @@ type ApiError struct {
 	Field string   `json:"field"`           // the field cause the error
 	Msg   string   `json:"msg"`             // error message
 	Enums []string `json:"enums,omitempty"` // available options incase of field's payload is enums
-}
+} // @name ApiError
 
 type Response[T any] struct {
 	*PaginationResponse `json:",omitempty"`

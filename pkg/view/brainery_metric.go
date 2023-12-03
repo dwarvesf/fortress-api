@@ -15,7 +15,7 @@ type Post struct {
 	Reward      decimal.Decimal `json:"reward"`
 	PublishedAt string          `json:"publishedAt"`
 	DiscordID   string          `json:"discordID"`
-}
+} // @name Post
 
 type BraineryMetric struct {
 	LatestPosts     []Post           `json:"latestPosts"`
@@ -23,13 +23,13 @@ type BraineryMetric struct {
 	Contributors    []Post           `json:"contributors"`
 	NewContributors []Post           `json:"newContributors"`
 	TopContributors []TopContributor `json:"topContributors"`
-}
+} // @name BraineryMetric
 
 type TopContributor struct {
 	Count     int
 	Ranking   int
 	DiscordID string
-}
+} // @name TopContributor
 
 // ToPost parse BraineryLog model to Post
 func ToPost(l model.BraineryLog) Post {

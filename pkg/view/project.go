@@ -935,29 +935,60 @@ type UpdateProjectGeneralInfo struct {
 	Name          string                `json:"name"`
 	StartDate     *time.Time            `json:"startDate"`
 	Country       *BasicCountryInfo     `json:"country"`
-	Stacks        []model.Stack         `json:"stacks"`
-	Function      model.ProjectFunction `json:"function"`
+	Stacks        []Stack               `json:"stacks"`
+	Function      ProjectFunction       `json:"function"`
 	AuditNotionID string                `json:"auditNotionID"`
 	BankAccount   *BasicBankAccountInfo `json:"bankAccount"`
 	Client        *Client               `json:"client"`
 	Organization  *Organization         `json:"organization"`
 } // @name UpdateProjectGeneralInfo
 
+type ProjectFunction string // @name ProjectFunction
+
+const (
+	ProjectFunctionDevelopment ProjectFunction = "development"
+	ProjectFunctionLearning    ProjectFunction = "learning"
+	ProjectFunctionTraining    ProjectFunction = "training"
+	ProjectFunctionManagement  ProjectFunction = "management"
+)
+
+func (e ProjectFunction) IsValid() bool {
+	switch e {
+	case
+		ProjectFunctionDevelopment,
+		ProjectFunctionLearning,
+		ProjectFunctionTraining,
+		ProjectFunctionManagement:
+		return true
+	}
+	return false
+}
+
+func (e ProjectFunction) String() string {
+	return string(e)
+}
+
 type UpdateProjectGeneralInfoResponse struct {
 	Data UpdateProjectGeneralInfo `json:"data"`
 } // @name UpdateProjectGeneralInfoResponse
 
 func ToUpdateProjectGeneralInfo(project *model.Project) UpdateProjectGeneralInfo {
-	stacks := make([]model.Stack, 0, len(project.ProjectStacks))
+	stacks := make([]Stack, 0, len(project.ProjectStacks))
 	for _, v := range project.ProjectStacks {
-		stacks = append(stacks, v.Stack)
+		s := Stack{
+			ID:     v.Stack.ID.String(),
+			Name:   v.Stack.Name,
+			Code:   v.Stack.Code,
+			Avatar: v.Stack.Avatar,
+		}
+		stacks = append(stacks, s)
 	}
 
 	rs := UpdateProjectGeneralInfo{
 		Name:      project.Name,
 		StartDate: project.StartDate,
 		Stacks:    stacks,
-		Function:  project.Function,
+		Function:  ProjectFunction(project.Function),
 	}
 
 	if project.ProjectNotion != nil && !project.ProjectNotion.AuditNotionID.IsZero() {

@@ -95,6 +95,12 @@ func (h *handler) List(c *gin.Context) {
 	}
 
 	query.StandardizeInput()
+	pagination := model.Pagination{
+		Page:         query.Page,
+		Size:         query.Size,
+		Sort:         query.Sort,
+		Standardized: true,
+	}
 
 	l := h.logger.Fields(logger.Fields{
 		"handler": "project",
@@ -112,7 +118,7 @@ func (h *handler) List(c *gin.Context) {
 		Statuses: query.Status,
 		Name:     query.Name,
 		Type:     query.Type,
-	}, query.Pagination)
+	}, pagination)
 	if err != nil {
 		l.Error(err, "error query project from db")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
@@ -120,7 +126,7 @@ func (h *handler) List(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse(view.ToProjectsData(projects, userInfo),
-		&view.PaginationResponse{Pagination: query.Pagination, Total: total}, nil, nil, ""))
+		&view.PaginationResponse{Pagination: view.Pagination{Page: pagination.Page, Size: pagination.Size, Sort: pagination.Sort}, Total: total}, nil, nil, ""))
 }
 
 // UpdateProjectStatus godoc
@@ -502,7 +508,13 @@ func (h *handler) GetMembers(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, query, ""))
 		return
 	}
-	query.Standardize()
+
+	pagination := model.Pagination{
+		Page: query.Page,
+		Size: query.Size,
+		Sort: query.Sort,
+	}
+	pagination.Standardize()
 
 	projectID := c.Param("id")
 	if projectID == "" || !model.IsUUIDFromString(projectID) {
@@ -559,7 +571,7 @@ func (h *handler) GetMembers(c *gin.Context) {
 	}
 
 	// Merge pending slots and assigned members into a slice
-	total, members := h.mergeSlotAndMembers(h.repo.DB(), pendingSlots, assignedMembers, query.Pagination)
+	total, members := h.mergeSlotAndMembers(h.repo.DB(), pendingSlots, assignedMembers, pagination)
 
 	heads, err := h.store.ProjectHead.GetActiveLeadsByProjectID(h.repo.DB(), projectID)
 	if err != nil {
@@ -569,7 +581,7 @@ func (h *handler) GetMembers(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse(view.ToProjectMemberListData(userInfo, members, heads, project, query.Distinct),
-		&view.PaginationResponse{Pagination: query.Pagination, Total: total}, nil, nil, ""))
+		&view.PaginationResponse{Pagination: view.Pagination{Page: pagination.Page, Size: pagination.Size, Sort: pagination.Sort}, Total: total}, nil, nil, ""))
 }
 
 func (h *handler) mergeSlotAndMembers(db *gorm.DB, slots []*model.ProjectSlot, members []*model.ProjectMember, pagination model.Pagination) (int64, []*model.ProjectMember) {

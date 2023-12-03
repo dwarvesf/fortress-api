@@ -119,7 +119,7 @@ func (h *handler) List(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse(view.ToEmployeeListData(employees, userInfo),
-		&view.PaginationResponse{Pagination: pagination, Total: total}, nil, nil, ""))
+		&view.PaginationResponse{Pagination: view.Pagination{Page: pagination.Page, Size: pagination.Size, Sort: pagination.Sort}, Total: total}, nil, nil, ""))
 }
 
 func (h *handler) getWorkingStatusInput(input []string, userInfo *model.CurrentLoggedUserInfo) ([]string, error) {
