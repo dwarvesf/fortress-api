@@ -952,3 +952,71 @@ func (h *handler) CheckSalaryAdvance(c *gin.Context) {
 	// 3. return employee
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToCheckSalaryAdvance(amountICY, amountUSD), nil, nil, nil, "ok"))
 }
+
+// SalaryAdvanceReport godoc
+// @Summary List salary advance aggregated by employee
+// @Description List salary advance aggregated by employee
+// @id SalaryAdvanceReport
+// @Tags Employee
+// @Accept  json
+// @Produce  json
+// @Security BearerAuth
+// @Param SalaryAdvanceReportRequest body SalaryAdvanceReportRequest true "Get List Aggregated Salary Advance Request"
+// @Success 200 {object} SalaryAdvanceReportResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /discords/salary-advance-report [get]
+func (h *handler) SalaryAdvanceReport(c *gin.Context) {
+	l := h.logger.Fields(
+		logger.Fields{
+			"handler": "employee",
+			"method":  "ListSalaryAdvance",
+		},
+	)
+
+	input := request.SalaryAdvanceReportRequest{}
+	if err := c.ShouldBindQuery(&input); err != nil {
+		l.Error(err, "failed to decode body")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, input, ""))
+		return
+	}
+
+	// default size is 10
+	if input.Pagination.Size == 0 {
+		input.Pagination.Size = 10
+	}
+
+	// default sort by amount_icy
+	if input.Pagination.Sort == "" {
+		input.Pagination.Sort = "amount_icy"
+	}
+
+	// default sort is DESC
+	if input.SortOrder == "" {
+		input.SortOrder = model.SortOrderDESC
+	}
+
+	if !input.SortOrder.IsValid() {
+		l.Error(errs.ErrInvalidSortType, "invalid sort type")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidSortType, nil, ""))
+		return
+	}
+
+	result, err := h.controller.Employee.ListAggregatedSalaryAdvance(employee.ListAggregatedSalaryAdvanceInput{
+		Pagination: model.Pagination{
+			Page: input.Pagination.Page,
+			Size: input.Pagination.Size,
+			Sort: input.Pagination.Sort,
+		},
+		SortOrder: input.SortOrder,
+		IsPaid:    input.IsPaid,
+	})
+	if err != nil {
+		l.Error(err, "failed to list advance salary")
+		errs.ConvertControllerErr(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse(view.ToSalaryAdvanceReport(*result), &view.PaginationResponse{Pagination: input.Pagination, Total: result.Count}, nil, nil, ""))
+}

@@ -932,6 +932,12 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/discord.IHandler.PublishIcyActivityLog-fm",
 			},
 		},
+		"/api/v1/discords/salary-advance-report": {
+			"GET": {
+				Method:  "GET",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/employee.IHandler.SalaryAdvanceReport-fm",
+			},
+		},
 	}
 
 	l := logger.NewLogrusLogger()

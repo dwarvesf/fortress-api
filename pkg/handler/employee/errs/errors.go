@@ -27,6 +27,7 @@ var (
 	ErrInvalidLineManagerID       = errors.New("invalid line manager ID")
 	ErrInvalidOrganizationID      = errors.New("invalid organization ID")
 	ErrInvalidReferredBy          = errors.New("invalid referred by")
+	ErrInvalidSortType            = errors.New("invalid sort type")
 )
 
 func ConvertControllerErr(c *gin.Context, err error) {
