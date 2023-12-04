@@ -79,6 +79,19 @@ definitions:
       long:
         type: string
     type: object
+  AggregatedSalaryAdvance:
+    properties:
+      amountICY:
+        type: integer
+      amountUSD:
+        type: number
+      discordID:
+        type: string
+      discordUsername:
+        type: string
+      employeeID:
+        type: string
+    type: object
   ApiError:
     description: validation error details
     properties:
@@ -1100,8 +1113,9 @@ definitions:
           $ref: '#/definitions/Stack'
         type: array
       status:
+        allOf:
+        - $ref: '#/definitions/WorkingStatus'
         description: working info
-        type: string
       teamEmail:
         type: string
       updatedAt:
@@ -2579,6 +2593,43 @@ definitions:
       transactionID:
         type: string
     type: object
+  SalaryAdvanceReport:
+    properties:
+      salaryAdvances:
+        items:
+          $ref: '#/definitions/AggregatedSalaryAdvance'
+        type: array
+      totalICY:
+        type: integer
+      totalUSD:
+        type: number
+    type: object
+  SalaryAdvanceReportRequest:
+    properties:
+      isPaid:
+        type: boolean
+      page:
+        description: page index
+        type: integer
+      size:
+        description: page size
+        type: integer
+      sortOrder:
+        $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.SortOrder'
+    type: object
+  SalaryAdvanceReportResponse:
+    properties:
+      data:
+        $ref: '#/definitions/SalaryAdvanceReport'
+      page:
+        description: page index
+        type: integer
+      size:
+        description: page size
+        type: integer
+      total:
+        type: integer
+    type: object
   SalaryAdvanceRequest:
     properties:
       amount:
@@ -3546,7 +3597,7 @@ definitions:
   UpdateWorkingStatusRequest:
     properties:
       employeeStatus:
-        type: string
+        $ref: '#/definitions/WorkingStatus'
     type: object
   UpdatedProject:
     properties:
@@ -3854,6 +3905,28 @@ definitions:
     - WorkUnitTypeManagement
     - WorkUnitTypeTraining
     - WorkUnitTypeLearning
+  WorkingStatus:
+    enum:
+    - on-boarding
+    - left
+    - probation
+    - full-time
+    - contractor
+    type: string
+    x-enum-varnames:
+    - WorkingStatusOnBoarding
+    - WorkingStatusLeft
+    - WorkingStatusProbation
+    - WorkingStatusFullTime
+    - WorkingStatusContractor
+  github_com_dwarvesf_fortress-api_pkg_model.SortOrder:
+    enum:
+    - asc
+    - desc
+    type: string
+    x-enum-varnames:
+    - SortOrderASC
+    - SortOrderDESC
 info:
   contact:
     email: benjamin@d.foundation
@@ -4792,6 +4865,43 @@ paths:
       summary: Get summary for workunit distribution dashboard
       tags:
       - Dashboard
+  /discords/salary-advance-report:
+    get:
+      consumes:
+      - application/json
+      description: List salary advance aggregated by employee
+      operationId: SalaryAdvanceReport
+      parameters:
+      - description: Get List Aggregated Salary Advance Request
+        in: body
+        name: SalaryAdvanceReportRequest
+        required: true
+        schema:
+          $ref: '#/definitions/SalaryAdvanceReportRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/SalaryAdvanceReportResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List salary advance aggregated by employee
+      tags:
+      - Employee
   /employees:
     post:
       consumes:

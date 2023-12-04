@@ -49,13 +49,13 @@ type AggregatedSalaryAdvance struct {
 	DiscordUsername string  `json:"discordUsername"`
 	AmountICY       int64   `json:"amountICY"`
 	AmountUSD       float64 `json:"amountUSD"`
-}
+} // @name AggregatedSalaryAdvance
 
 type SalaryAdvanceReport struct {
 	SalaryAdvances []AggregatedSalaryAdvance `json:"salaryAdvances"`
 	TotalICY       int64                     `json:"totalICY"`
 	TotalUSD       float64                   `json:"totalUSD"`
-}
+} // @name SalaryAdvanceReport
 
 func ToSalaryAdvanceReport(result model.SalaryAdvanceReport) *SalaryAdvanceReport {
 	var salaryAdvances []AggregatedSalaryAdvance

@@ -1464,6 +1464,64 @@ const docTemplate = `{
                 }
             }
         },
+        "/discords/salary-advance-report": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "List salary advance aggregated by employee",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Employee"
+                ],
+                "summary": "List salary advance aggregated by employee",
+                "operationId": "SalaryAdvanceReport",
+                "parameters": [
+                    {
+                        "description": "Get List Aggregated Salary Advance Request",
+                        "name": "SalaryAdvanceReportRequest",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/SalaryAdvanceReportRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/SalaryAdvanceReportResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/employees": {
             "post": {
                 "security": [
@@ -6510,6 +6568,26 @@ const docTemplate = `{
                 }
             }
         },
+        "AggregatedSalaryAdvance": {
+            "type": "object",
+            "properties": {
+                "amountICY": {
+                    "type": "integer"
+                },
+                "amountUSD": {
+                    "type": "number"
+                },
+                "discordID": {
+                    "type": "string"
+                },
+                "discordUsername": {
+                    "type": "string"
+                },
+                "employeeID": {
+                    "type": "string"
+                }
+            }
+        },
         "ApiError": {
             "description": "validation error details",
             "type": "object",
@@ -8057,7 +8135,11 @@ const docTemplate = `{
                 },
                 "status": {
                     "description": "working info",
-                    "type": "string"
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/WorkingStatus"
+                        }
+                    ]
                 },
                 "teamEmail": {
                     "type": "string"
@@ -10297,6 +10379,61 @@ const docTemplate = `{
                 }
             }
         },
+        "SalaryAdvanceReport": {
+            "type": "object",
+            "properties": {
+                "salaryAdvances": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/AggregatedSalaryAdvance"
+                    }
+                },
+                "totalICY": {
+                    "type": "integer"
+                },
+                "totalUSD": {
+                    "type": "number"
+                }
+            }
+        },
+        "SalaryAdvanceReportRequest": {
+            "type": "object",
+            "properties": {
+                "isPaid": {
+                    "type": "boolean"
+                },
+                "page": {
+                    "description": "page index",
+                    "type": "integer"
+                },
+                "size": {
+                    "description": "page size",
+                    "type": "integer"
+                },
+                "sortOrder": {
+                    "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_model.SortOrder"
+                }
+            }
+        },
+        "SalaryAdvanceReportResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/SalaryAdvanceReport"
+                },
+                "page": {
+                    "description": "page index",
+                    "type": "integer"
+                },
+                "size": {
+                    "description": "page size",
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
         "SalaryAdvanceRequest": {
             "type": "object",
             "properties": {
@@ -11736,7 +11873,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "employeeStatus": {
-                    "type": "string"
+                    "$ref": "#/definitions/WorkingStatus"
                 }
             }
         },
@@ -12203,6 +12340,34 @@ const docTemplate = `{
                 "WorkUnitTypeManagement",
                 "WorkUnitTypeTraining",
                 "WorkUnitTypeLearning"
+            ]
+        },
+        "WorkingStatus": {
+            "type": "string",
+            "enum": [
+                "on-boarding",
+                "left",
+                "probation",
+                "full-time",
+                "contractor"
+            ],
+            "x-enum-varnames": [
+                "WorkingStatusOnBoarding",
+                "WorkingStatusLeft",
+                "WorkingStatusProbation",
+                "WorkingStatusFullTime",
+                "WorkingStatusContractor"
+            ]
+        },
+        "github_com_dwarvesf_fortress-api_pkg_model.SortOrder": {
+            "type": "string",
+            "enum": [
+                "asc",
+                "desc"
+            ],
+            "x-enum-varnames": [
+                "SortOrderASC",
+                "SortOrderDESC"
             ]
         }
     },
