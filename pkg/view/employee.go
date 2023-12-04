@@ -234,6 +234,7 @@ type UpdateEmployeeStatusResponse struct {
 } // @name UpdateEmployeeStatusResponse
 
 type EmployeeListDataResponse struct {
+	PaginationResponse
 	Data []EmployeeData `json:"data"`
 } // @name EmployeeListDataResponse
 

@@ -23,6 +23,7 @@ type ChapterResponse struct {
 } // @name ChapterResponse
 
 type StackResponse struct {
+	PaginationResponse
 	Data []Stack `json:"data"`
 } // @name StackResponse
 

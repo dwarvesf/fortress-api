@@ -122,6 +122,7 @@ func ToListSurvey(events []*model.FeedbackEvent) []Survey {
 }
 
 type ListSurveyResponse struct {
+	PaginationResponse
 	Data []Survey `json:"data"`
 } // @name ListSurveyResponse
 
@@ -360,6 +361,7 @@ func ToPeerReviewDetail(topic *model.EmployeeEventTopic) SurveyTopicDetail {
 }
 
 type ListSurveyDetailResponse struct {
+	PaginationResponse
 	Data SurveyDetail `json:"data"`
 } // @name ListSurveyDetailResponse
 

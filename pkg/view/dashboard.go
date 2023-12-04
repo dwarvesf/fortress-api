@@ -941,6 +941,7 @@ type WorkSurveySummary struct {
 } // @name WorkSurveySummary
 
 type WorkSurveySummaryResponse struct {
+	PaginationResponse
 	Data []WorkSurveySummary `json:"data"`
 } // @name WorkSurveySummaryResponse
 
