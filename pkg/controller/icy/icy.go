@@ -42,7 +42,6 @@ func (c *controller) Accounting() (*model.IcyAccounting, error) {
 	icy := c.icy()
 	usdt := c.usdt()
 	icySwap := c.icySwap()
-	icyAddress := common.HexToAddress(icy.Address)
 
 	// 1.Get current conversion rate from icyswap contract
 	conversionRate, err := c.service.IcySwap.ConversionRate()
