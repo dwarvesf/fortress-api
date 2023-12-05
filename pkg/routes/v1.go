@@ -362,6 +362,12 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 		conversionRateGroup.GET("", amw.WithAuth, h.ConversionRate.List)
 	}
 
+	icyGroup := v1.Group("/icy")
+	{
+		// icyGroup.GET("/accounting", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesDiscordRead), h.Icy.Accounting)
+		icyGroup.GET("/accounting", h.Icy.Accounting)
+	}
+
 	/////////////////
 	// PUBLIC API GROUP
 	/////////////////
