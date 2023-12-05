@@ -2,6 +2,7 @@ package icy
 
 import (
 	"math/big"
+	"sync"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/math"
@@ -41,6 +42,7 @@ func (c *controller) Accounting() (*model.IcyAccounting, error) {
 	icy := c.icy()
 	usdt := c.usdt()
 	icySwap := c.icySwap()
+	icyAddress := common.HexToAddress(icy.Address)
 
 	// 1.Get current conversion rate from icyswap contract
 	conversionRate, err := c.service.IcySwap.ConversionRate()
@@ -65,30 +67,11 @@ func (c *controller) Accounting() (*model.IcyAccounting, error) {
 	icyTotalSupply, _ := new(big.Int).SetString(icy.TotalSupply, 10)
 
 	// 3.2 Get total locked icy amount
-	lockedIcyAmount := big.NewInt(0)
-	oldIcySwapContractAddr := common.HexToAddress("0xd327b6d878bcd9d5ec6a5bc99445985d75f0d6e5")
-	oldIcySwapIcyBal, err := c.service.PolygonClient.ERC20Balance(common.HexToAddress(icy.Address), oldIcySwapContractAddr)
+	lockedIcyAmount, err := c.getLockedIcy()
 	if err != nil {
-		l.Error(err, "failed to get icy bal in old icyswap contract")
+		c.logger.Error(err, "failed to get locked icy amount")
 		return nil, err
 	}
-	lockedIcyAmount = new(big.Int).Add(lockedIcyAmount, oldIcySwapIcyBal)
-
-	icySwapIcyBal, err := c.service.PolygonClient.ERC20Balance(common.HexToAddress(icy.Address), common.HexToAddress(icyswap.IcySwapAddress))
-	if err != nil {
-		l.Error(err, "failed to get icy bal in icyswap contract")
-		return nil, err
-	}
-	lockedIcyAmount = new(big.Int).Add(lockedIcyAmount, icySwapIcyBal)
-
-	teamIcyBal, _ := new(big.Int).SetString("1000000000000000000", 10)
-	lockedIcyAmount = new(big.Int).Add(lockedIcyAmount, teamIcyBal)
-
-	mochiIcyBal, _ := new(big.Int).SetString("1000000000000000000", 10)
-	lockedIcyAmount = new(big.Int).Add(lockedIcyAmount, mochiIcyBal)
-
-	vaultIcyBal, _ := new(big.Int).SetString("1000000000000000000", 10)
-	lockedIcyAmount = new(big.Int).Add(lockedIcyAmount, vaultIcyBal)
 
 	// 3.3 Calculate circulating icy amount
 	circulatingIcy := new(big.Int).Sub(icyTotalSupply, lockedIcyAmount)
@@ -114,6 +97,51 @@ func (c *controller) Accounting() (*model.IcyAccounting, error) {
 	}
 
 	return accounting, nil
+}
+
+func (c *controller) getLockedIcy() (*big.Int, error) {
+	icyAddress := common.HexToAddress(c.icy().Address)
+	oldIcySwapContractAddr := common.HexToAddress("0xd327b6d878bcd9d5ec6a5bc99445985d75f0d6e5")
+	icyswapAddr := common.HexToAddress(icyswap.IcySwapAddress)
+	teamAddr := common.HexToAddress("0x0762c4b40c9cb21Af95192a3Dc3EDd3043CF3d41")
+	icyLockedAddrs := []common.Address{oldIcySwapContractAddr, icyswapAddr, teamAddr}
+
+	type FetchResult struct {
+		amount *big.Int
+		err    error
+	}
+	fetchIcyResults := make(chan FetchResult)
+
+	wg := sync.WaitGroup{}
+	wg.Add(len(icyLockedAddrs))
+	go func() {
+		wg.Wait()
+		close(fetchIcyResults)
+	}()
+
+	for _, lockedAddr := range icyLockedAddrs {
+		go func(ownerAddr common.Address) {
+			amount, err := c.service.PolygonClient.ERC20Balance(icyAddress, ownerAddr)
+			fetchIcyResults <- FetchResult{
+				amount: amount,
+				err:    err,
+			}
+			wg.Done()
+		}(lockedAddr)
+	}
+
+	lockedIcyAmount := big.NewInt(0)
+	for res := range fetchIcyResults {
+		if res.err != nil {
+			return nil, res.err
+		}
+		lockedIcyAmount = new(big.Int).Add(lockedIcyAmount, res.amount)
+	}
+
+	vaultIcyBal, _ := new(big.Int).SetString("1000000000000000000", 10)
+	lockedIcyAmount = new(big.Int).Add(lockedIcyAmount, vaultIcyBal)
+
+	return lockedIcyAmount, nil
 }
 
 func (c *controller) icy() model.TokenInfo {
