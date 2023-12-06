@@ -10,6 +10,13 @@ definitions:
       data:
         $ref: '#/definitions/APIKeyData'
     type: object
+  AccountingItem:
+    properties:
+      amount:
+        type: number
+      name:
+        type: string
+    type: object
   ActionItemReportResponse:
     properties:
       data:
@@ -72,6 +79,58 @@ definitions:
       long:
         type: string
     type: object
+  AggregatedSalaryAdvance:
+    properties:
+      amountICY:
+        type: integer
+      amountUSD:
+        type: number
+      discordID:
+        type: string
+      discordUsername:
+        type: string
+      employeeID:
+        type: string
+    type: object
+  AmountEachProfiles:
+    properties:
+      amount:
+        type: string
+      profileID:
+        type: string
+      usdAmount:
+        type: number
+    type: object
+  ApiError:
+    description: validation error details
+    properties:
+      enums:
+        description: available options incase of field's payload is enums
+        items:
+          type: string
+        type: array
+      field:
+        description: the field cause the error
+        type: string
+      msg:
+        description: error message
+        type: string
+    type: object
+  Application:
+    properties:
+      active:
+        type: boolean
+      applicationProfileID:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      ownerProfileID:
+        type: string
+      serviceFee:
+        type: number
+    type: object
   AssignMemberRequest:
     properties:
       deploymentType:
@@ -110,6 +169,24 @@ definitions:
     - rate
     - seniorityID
     - status
+    type: object
+  AssociatedAccounts:
+    properties:
+      createdAt:
+        type: string
+      id:
+        type: string
+      isGuildMember:
+        type: boolean
+      platform:
+        type: string
+      platformIdentifier:
+        type: string
+      platformMetadata: {}
+      profileID:
+        type: string
+      updatedAt:
+        type: string
     type: object
   Audit:
     properties:
@@ -414,10 +491,52 @@ definitions:
       type:
         type: string
     type: object
+  BraineryMetric:
+    properties:
+      contributors:
+        items:
+          $ref: '#/definitions/Post'
+        type: array
+      latestPosts:
+        items:
+          $ref: '#/definitions/Post'
+        type: array
+      newContributors:
+        items:
+          $ref: '#/definitions/Post'
+        type: array
+      tags:
+        items:
+          type: string
+        type: array
+      topContributors:
+        items:
+          $ref: '#/definitions/TopContributor'
+        type: array
+    type: object
   BraineryMetricResponse:
     properties:
       data:
-        $ref: '#/definitions/pkg_view.BraineryMetric'
+        $ref: '#/definitions/BraineryMetric'
+    type: object
+  Chain:
+    properties:
+      chainID:
+        type: string
+      explorer:
+        type: string
+      icon:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      rpc:
+        type: string
+      symbol:
+        type: string
+      type:
+        type: string
     type: object
   Chapter:
     properties:
@@ -434,8 +553,20 @@ definitions:
     properties:
       data:
         items:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Chapter'
+          $ref: '#/definitions/Chapter'
         type: array
+    type: object
+  CheckSalaryAdvance:
+    properties:
+      amountICY:
+        type: string
+      amountUSD:
+        type: string
+    type: object
+  CheckSalaryAdvanceResponse:
+    properties:
+      data:
+        $ref: '#/definitions/CheckSalaryAdvance'
     type: object
   CitiesResponse:
     properties:
@@ -559,10 +690,15 @@ definitions:
       registrationNumber:
         type: string
     type: object
+  ContentData:
+    properties:
+      url:
+        type: string
+    type: object
   ContentDataResponse:
     properties:
       data:
-        $ref: '#/definitions/pkg_view.ContentData'
+        $ref: '#/definitions/ContentData'
     type: object
   CountriesResponse:
     properties:
@@ -610,13 +746,26 @@ definitions:
     - title
     - url
     type: object
+  CreateClientContactInput:
+    properties:
+      emails:
+        items:
+          type: string
+        type: array
+      isMainContact:
+        type: boolean
+      name:
+        type: string
+      role:
+        type: string
+    type: object
   CreateClientRequest:
     properties:
       address:
         type: string
       contacts:
         items:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_handler_client_request.CreateClientContactInput'
+          $ref: '#/definitions/CreateClientContactInput'
         type: array
       country:
         type: string
@@ -848,6 +997,21 @@ definitions:
     - code
     - name
     type: object
+  CreateSurveyFeedbackInput:
+    properties:
+      fromDate:
+        type: string
+      quarter:
+        type: string
+      toDate:
+        type: string
+      type:
+        type: string
+      year:
+        type: integer
+    required:
+    - type
+    type: object
   CreateWorkUnitRequest:
     properties:
       members:
@@ -883,6 +1047,22 @@ definitions:
       symbol:
         type: string
       type:
+        type: string
+    type: object
+  DeleteTopicReviewersBody:
+    properties:
+      reviewerIDs:
+        items:
+          type: string
+        type: array
+    type: object
+  Domain:
+    properties:
+      average:
+        type: number
+      count:
+        $ref: '#/definitions/LikertScaleCount'
+      name:
         type: string
     type: object
   EmployeeAddress:
@@ -1050,6 +1230,14 @@ definitions:
         items:
           $ref: '#/definitions/EmployeeData'
         type: array
+      page:
+        description: page index
+        type: integer
+      size:
+        description: page size
+        type: integer
+      total:
+        type: integer
     type: object
   EmployeeLocation:
     properties:
@@ -1097,6 +1285,13 @@ definitions:
         type: string
       status:
         type: string
+    type: object
+  EmployeeTotalEarn:
+    properties:
+      totalEarnsICY:
+        type: string
+      totalEarnsUSD:
+        type: number
     type: object
   EngagementDashboard:
     properties:
@@ -1178,7 +1373,7 @@ definitions:
         type: string
       errors:
         items:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.ApiError'
+          $ref: '#/definitions/ApiError'
         type: array
     type: object
   EventReviewerStatus:
@@ -1193,6 +1388,23 @@ definitions:
     - EventReviewerStatusNew
     - EventReviewerStatusDraft
     - EventReviewerStatusDone
+  FeedBackReviewDetail:
+    properties:
+      employee:
+        $ref: '#/definitions/BasicEmployeeInfo'
+      project:
+        $ref: '#/definitions/BasicProjectInfo'
+      questions:
+        items:
+          $ref: '#/definitions/QuestionAnswer'
+        type: array
+      relationship:
+        type: string
+      reviewer:
+        $ref: '#/definitions/BasicEmployeeInfo'
+      topicName:
+        type: string
+    type: object
   Feedback:
     properties:
       author:
@@ -1219,6 +1431,15 @@ definitions:
         type: string
       type:
         type: string
+    type: object
+  FeedbackCount:
+    properties:
+      done:
+        type: integer
+      sent:
+        type: integer
+      total:
+        type: integer
     type: object
   FeedbackDetail:
     properties:
@@ -1248,6 +1469,11 @@ definitions:
       data:
         $ref: '#/definitions/FeedbackDetail'
     type: object
+  FeedbackReviewDetailResponse:
+    properties:
+      data:
+        $ref: '#/definitions/FeedBackReviewDetail'
+    type: object
   GetCurrenciesResponse:
     properties:
       data:
@@ -1266,6 +1492,26 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/Client'
+    type: object
+  GetEmployeeEarnTransactionsResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/MochiTransaction'
+        type: array
+      page:
+        description: page index
+        type: integer
+      size:
+        description: page size
+        type: integer
+      total:
+        type: integer
+    type: object
+  GetEmployeeTotalEarnResponse:
+    properties:
+      data:
+        $ref: '#/definitions/EmployeeTotalEarn'
     type: object
   GetEngagementDashboardDetailResponse:
     properties:
@@ -1337,7 +1583,7 @@ definitions:
     properties:
       data:
         items:
-          $ref: '#/definitions/pkg_view.Question'
+          $ref: '#/definitions/Question'
         type: array
     type: object
   GroupAudit:
@@ -1574,6 +1820,19 @@ definitions:
       value:
         type: integer
     type: object
+  LikertScaleCount:
+    properties:
+      agree:
+        type: integer
+      disagree:
+        type: integer
+      mixed:
+        type: integer
+      stronglyAgree:
+        type: integer
+      stronglyDisagree:
+        type: integer
+    type: object
   LineManagersResponse:
     properties:
       data:
@@ -1594,6 +1853,42 @@ definitions:
         items:
           $ref: '#/definitions/Feedback'
         type: array
+      page:
+        description: page index
+        type: integer
+      size:
+        description: page size
+        type: integer
+      total:
+        type: integer
+    type: object
+  ListSurveyDetailResponse:
+    properties:
+      data:
+        $ref: '#/definitions/SurveyDetail'
+      page:
+        description: page index
+        type: integer
+      size:
+        description: page size
+        type: integer
+      total:
+        type: integer
+    type: object
+  ListSurveyResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/Survey'
+        type: array
+      page:
+        description: page index
+        type: integer
+      size:
+        description: page size
+        type: integer
+      total:
+        type: integer
     type: object
   ListWorkUnitResponse:
     properties:
@@ -1661,6 +1956,128 @@ definitions:
           $ref: '#/definitions/MetaData'
         type: array
     type: object
+  MochiProfile:
+    properties:
+      application:
+        $ref: '#/definitions/Application'
+      associatedAccounts:
+        items:
+          $ref: '#/definitions/AssociatedAccounts'
+        type: array
+      avatar:
+        type: string
+      createdAt:
+        type: string
+      id:
+        type: string
+      profileName:
+        type: string
+      type:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  MochiTransaction:
+    properties:
+      action:
+        type: string
+      amount:
+        type: string
+      amountEachProfiles:
+        items:
+          $ref: '#/definitions/AmountEachProfiles'
+        type: array
+      chainID:
+        type: string
+      createdAt:
+        type: string
+      expiredAt:
+        type: string
+      externalID:
+        type: string
+      fromAmount:
+        type: string
+      fromProfile:
+        $ref: '#/definitions/MochiProfile'
+      fromProfileID:
+        type: string
+      fromProfileSource:
+        type: string
+      fromToken:
+        $ref: '#/definitions/Token'
+      fromTokenId:
+        type: string
+      id:
+        type: string
+      internalID:
+        type: integer
+      metadata:
+        additionalProperties: true
+        type: object
+      onchainTxHash:
+        type: string
+      originalTxID:
+        type: string
+      otherProfile:
+        $ref: '#/definitions/MochiProfile'
+      otherProfileID:
+        type: string
+      otherProfileIds:
+        items:
+          type: string
+        type: array
+      otherProfileSource:
+        type: string
+      otherProfiles:
+        items:
+          $ref: '#/definitions/MochiProfile'
+        type: array
+      settledAt:
+        type: string
+      sourcePlatform:
+        type: string
+      status:
+        type: string
+      toAmount:
+        type: string
+      toToken:
+        $ref: '#/definitions/Token'
+      toTokenId:
+        type: string
+      token:
+        $ref: '#/definitions/Token'
+      tokenID:
+        type: string
+      totalAmount:
+        type: string
+      type:
+        type: string
+      updatedAt:
+        type: string
+      usdAmount:
+        type: number
+    type: object
+  NotionTechRadar:
+    properties:
+      assign:
+        type: string
+      categories:
+        items:
+          type: string
+        type: array
+      id:
+        type: string
+      name:
+        type: string
+      quadrant:
+        type: string
+      ring:
+        type: string
+      tags:
+        items:
+          type: string
+        type: array
+    type: object
   Organization:
     properties:
       avatar:
@@ -1676,8 +2093,21 @@ definitions:
     properties:
       data:
         items:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Organization'
+          $ref: '#/definitions/Organization'
         type: array
+    type: object
+  PeerReviewer:
+    properties:
+      eventReviewerID:
+        type: string
+      isForcedDone:
+        type: boolean
+      relationship:
+        $ref: '#/definitions/Relationship'
+      reviewer:
+        $ref: '#/definitions/BasicEmployeeInfo'
+      status:
+        $ref: '#/definitions/EventReviewerStatus'
     type: object
   Position:
     properties:
@@ -1692,8 +2122,21 @@ definitions:
     properties:
       data:
         items:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Position'
+          $ref: '#/definitions/Position'
         type: array
+    type: object
+  Post:
+    properties:
+      discordID:
+        type: string
+      publishedAt:
+        type: string
+      reward:
+        type: number
+      title:
+        type: string
+      url:
+        type: string
     type: object
   ProfileData:
     properties:
@@ -1955,6 +2398,18 @@ definitions:
       data:
         $ref: '#/definitions/ProjectData'
     type: object
+  ProjectFunction:
+    enum:
+    - development
+    - learning
+    - training
+    - management
+    type: string
+    x-enum-varnames:
+    - ProjectFunctionDevelopment
+    - ProjectFunctionLearning
+    - ProjectFunctionTraining
+    - ProjectFunctionManagement
   ProjectHead:
     properties:
       avatar:
@@ -2033,6 +2488,14 @@ definitions:
         items:
           $ref: '#/definitions/ProjectData'
         type: array
+      page:
+        description: page index
+        type: integer
+      size:
+        description: page size
+        type: integer
+      total:
+        type: integer
     type: object
   ProjectMember:
     properties:
@@ -2087,6 +2550,14 @@ definitions:
         items:
           $ref: '#/definitions/ProjectMember'
         type: array
+      page:
+        description: page index
+        type: integer
+      size:
+        description: page size
+        type: integer
+      total:
+        type: integer
     type: object
   ProjectNotion:
     properties:
@@ -2103,11 +2574,24 @@ definitions:
       updatedAt:
         type: string
     type: object
+  ProjectSize:
+    properties:
+      avatar:
+        type: string
+      code:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      size:
+        type: integer
+    type: object
   ProjectSizeResponse:
     properties:
       data:
         items:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.ProjectSize'
+          $ref: '#/definitions/ProjectSize'
         type: array
     type: object
   ProjectSlot:
@@ -2187,6 +2671,21 @@ definitions:
           $ref: '#/definitions/PublicClient'
         type: array
     type: object
+  Question:
+    properties:
+      category:
+        type: string
+      content:
+        type: string
+      id:
+        type: string
+      order:
+        type: integer
+      subcategory:
+        type: string
+      type:
+        type: string
+    type: object
   QuestionAnswer:
     properties:
       answer:
@@ -2194,7 +2693,7 @@ definitions:
       content:
         type: string
       domain:
-        $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.QuestionDomain'
+        $ref: '#/definitions/QuestionDomain'
       eventQuestionID:
         type: string
       note:
@@ -2204,6 +2703,30 @@ definitions:
       type:
         type: string
     type: object
+  QuestionDomain:
+    enum:
+    - engagement
+    - workload
+    - deadline
+    - learning
+    type: string
+    x-enum-varnames:
+    - QuestionDomainEngagement
+    - QuestionDomainWorkload
+    - QuestionDomainDeadline
+    - QuestionDomainLearning
+  Relationship:
+    enum:
+    - peer
+    - line-manager
+    - chapter-lead
+    - self
+    type: string
+    x-enum-varnames:
+    - RelationshipPeer
+    - RelationshipLineManager
+    - RelationshipChapterLead
+    - RelationshipSelf
   ResourceAvailability:
     properties:
       employees:
@@ -2244,25 +2767,62 @@ definitions:
     properties:
       data:
         items:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Role'
+          $ref: '#/definitions/Role'
         type: array
     type: object
   SalaryAdvance:
     properties:
-      amount_icy:
+      amountICY:
         type: string
-      amount_usd:
+      amountUSD:
         type: string
-      transaction_hash:
+      transactionHash:
         type: string
-      transaction_id:
+      transactionID:
         type: string
+    type: object
+  SalaryAdvanceReport:
+    properties:
+      salaryAdvances:
+        items:
+          $ref: '#/definitions/AggregatedSalaryAdvance'
+        type: array
+      totalICY:
+        type: integer
+      totalUSD:
+        type: number
+    type: object
+  SalaryAdvanceReportRequest:
+    properties:
+      isPaid:
+        type: boolean
+      page:
+        description: page index
+        type: integer
+      size:
+        description: page size
+        type: integer
+      sortOrder:
+        $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.SortOrder'
+    type: object
+  SalaryAdvanceReportResponse:
+    properties:
+      data:
+        $ref: '#/definitions/SalaryAdvanceReport'
+      page:
+        description: page index
+        type: integer
+      size:
+        description: page size
+        type: integer
+      total:
+        type: integer
     type: object
   SalaryAdvanceRequest:
     properties:
       amount:
         type: string
-      discord_id:
+      discordID:
         type: string
     type: object
   SalaryAdvanceResponse:
@@ -2324,6 +2884,17 @@ definitions:
     - invoiceDate
     - projectID
     type: object
+  SendSurveyInput:
+    properties:
+      topicIDs:
+        items:
+          type: string
+        type: array
+      type:
+        type: string
+    required:
+    - type
+    type: object
   Seniority:
     properties:
       code:
@@ -2337,7 +2908,7 @@ definitions:
     properties:
       data:
         items:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Seniority'
+          $ref: '#/definitions/Seniority'
         type: array
     type: object
   Stack:
@@ -2355,8 +2926,16 @@ definitions:
     properties:
       data:
         items:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Stack'
+          $ref: '#/definitions/Stack'
         type: array
+      page:
+        description: page index
+        type: integer
+      size:
+        description: page size
+        type: integer
+      total:
+        type: integer
     type: object
   SubmitFeedback:
     properties:
@@ -2481,6 +3060,139 @@ definitions:
       data:
         $ref: '#/definitions/SummaryWorkUnitDistributionData'
     type: object
+  Survey:
+    properties:
+      count:
+        $ref: '#/definitions/FeedbackCount'
+      domains:
+        items:
+          $ref: '#/definitions/Domain'
+        type: array
+      endDate:
+        type: string
+      id:
+        type: string
+      startDate:
+        type: string
+      status:
+        type: string
+      subtype:
+        type: string
+      title:
+        type: string
+      type:
+        type: string
+    type: object
+  SurveyDetail:
+    properties:
+      author:
+        $ref: '#/definitions/BasicEmployeeInfo'
+      endDate:
+        type: string
+      eventID:
+        type: string
+      startDate:
+        type: string
+      status:
+        type: string
+      subtype:
+        type: string
+      title:
+        type: string
+      topics:
+        items:
+          $ref: '#/definitions/Topic'
+        type: array
+      type:
+        type: string
+    type: object
+  SurveyTopicDetail:
+    properties:
+      employee:
+        $ref: '#/definitions/BasicEmployeeInfo'
+      participants:
+        items:
+          $ref: '#/definitions/PeerReviewer'
+        type: array
+      title:
+        type: string
+      topicID:
+        type: string
+    type: object
+  SurveyTopicDetailResponse:
+    properties:
+      data:
+        $ref: '#/definitions/SurveyTopicDetail'
+    type: object
+  Token:
+    properties:
+      address:
+        type: string
+      chain:
+        $ref: '#/definitions/Chain'
+      chainID:
+        type: string
+      coinGeckoID:
+        type: string
+      decimal:
+        type: integer
+      icon:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      native:
+        type: boolean
+      price:
+        type: number
+      symbol:
+        type: string
+    type: object
+  TopContributor:
+    properties:
+      count:
+        type: integer
+      discordID:
+        type: string
+      ranking:
+        type: integer
+    type: object
+  Topic:
+    properties:
+      comments:
+        type: integer
+      count:
+        $ref: '#/definitions/FeedbackCount'
+      domains:
+        items:
+          $ref: '#/definitions/Domain'
+        type: array
+      employee:
+        $ref: '#/definitions/BasicEmployeeInfo'
+      eventID:
+        type: string
+      id:
+        type: string
+      isForcedDone:
+        type: boolean
+      participants:
+        items:
+          $ref: '#/definitions/BasicEmployeeInfo'
+        type: array
+      project:
+        $ref: '#/definitions/BasicProjectInfo'
+      reviewID:
+        type: string
+      status:
+        type: string
+      subtype:
+        type: string
+      title:
+        type: string
+      type:
+        type: string
+    type: object
   Trend:
     properties:
       deadline:
@@ -2528,13 +3240,26 @@ definitions:
       data:
         $ref: '#/definitions/BaseSalary'
     type: object
+  UpdateClientContactInput:
+    properties:
+      emails:
+        items:
+          type: string
+        type: array
+      isMainContact:
+        type: boolean
+      name:
+        type: string
+      role:
+        type: string
+    type: object
   UpdateClientInput:
     properties:
       address:
         type: string
       contacts:
         items:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_handler_client_request.UpdateClientContactInput'
+          $ref: '#/definitions/UpdateClientContactInput'
         type: array
       country:
         type: string
@@ -2909,14 +3634,14 @@ definitions:
       country:
         $ref: '#/definitions/BasicCountryInfo'
       function:
-        $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.ProjectFunction'
+        $ref: '#/definitions/ProjectFunction'
       name:
         type: string
       organization:
         $ref: '#/definitions/Organization'
       stacks:
         items:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Stack'
+          $ref: '#/definitions/Stack'
         type: array
       startDate:
         type: string
@@ -3053,6 +3778,13 @@ definitions:
       name:
         type: string
     type: object
+  UpdateTopicReviewersBody:
+    properties:
+      reviewerIDs:
+        items:
+          type: string
+        type: array
+    type: object
   UpdateWorkUnitRequest:
     properties:
       members:
@@ -3118,6 +3850,69 @@ definitions:
     - discordUserID
     - lastMessageID
     type: object
+  Valuation:
+    properties:
+      accountReceivable:
+        description: money that company will receive in the future
+        properties:
+          items:
+            items:
+              $ref: '#/definitions/AccountingItem'
+            type: array
+          total:
+            type: number
+        type: object
+      assets:
+        description: valuation info
+        type: number
+      currency:
+        type: string
+      income:
+        description: Total paid invoice, investment & bank interest
+        properties:
+          detail:
+            properties:
+              consultantService:
+                type: number
+              interest:
+                type: number
+              investment:
+                type: number
+            type: object
+          total:
+            type: number
+        type: object
+      liabilities:
+        description: money that company will pay in the future
+        properties:
+          items:
+            items:
+              $ref: '#/definitions/AccountingItem'
+            type: array
+          total:
+            type: number
+        type: object
+      outcome:
+        description: Sum of Expenses and payroll
+        properties:
+          detail:
+            properties:
+              expense:
+                type: number
+              investment:
+                type: number
+              payroll:
+                type: number
+            type: object
+          total:
+            type: number
+        type: object
+      rate:
+        type: number
+      year:
+        description: basic info
+        type: string
+    type: object
   WorkSurvey:
     properties:
       deadline:
@@ -3180,6 +3975,14 @@ definitions:
         items:
           $ref: '#/definitions/WorkSurveySummary'
         type: array
+      page:
+        description: page index
+        type: integer
+      size:
+        description: page size
+        type: integer
+      total:
+        type: integer
     type: object
   WorkSurveysData:
     properties:
@@ -3315,966 +4118,14 @@ definitions:
     - WorkUnitTypeManagement
     - WorkUnitTypeTraining
     - WorkUnitTypeLearning
-  github_com_dwarvesf_fortress-api_pkg_handler_client_request.CreateClientContactInput:
-    properties:
-      emails:
-        items:
-          type: string
-        type: array
-      isMainContact:
-        type: boolean
-      name:
-        type: string
-      role:
-        type: string
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_handler_client_request.UpdateClientContactInput:
-    properties:
-      emails:
-        items:
-          type: string
-        type: array
-      isMainContact:
-        type: boolean
-      name:
-        type: string
-      role:
-        type: string
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_handler_survey_request.CreateSurveyFeedbackInput:
-    properties:
-      fromDate:
-        type: string
-      quarter:
-        type: string
-      toDate:
-        type: string
-      type:
-        type: string
-      year:
-        type: integer
-    required:
-    - type
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_handler_survey_request.DeleteTopicReviewersBody:
-    properties:
-      reviewerIDs:
-        items:
-          type: string
-        type: array
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_handler_survey_request.SendSurveyInput:
-    properties:
-      topicIDs:
-        items:
-          type: string
-        type: array
-      type:
-        type: string
-    required:
-    - type
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_handler_survey_request.UpdateTopicReviewersBody:
-    properties:
-      reviewerIDs:
-        items:
-          type: string
-        type: array
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_model.AccountingItem:
-    properties:
-      amount:
-        type: number
-      name:
-        type: string
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_model.Chapter:
-    properties:
-      code:
-        type: string
-      createdAt:
-        type: string
-      deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
-      id:
-        type: string
-      lead_id:
-        type: string
-      name:
-        type: string
-      updatedAt:
-        type: string
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_model.DiscordAccount:
-    properties:
-      createdAt:
-        type: string
-      deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
-      discordID:
-        type: string
-      id:
-        type: string
-      updatedAt:
-        type: string
-      username:
-        type: string
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_model.Employee:
-    properties:
-      address:
-        type: string
-      avatar:
-        type: string
-      base_salary:
-        $ref: '#/definitions/BaseSalary'
-      basecampAttachableSGID:
-        type: string
-      basecampID:
-        description: social services
-        type: integer
-      city:
-        type: string
-      country:
-        type: string
-      createdAt:
-        type: string
-      dateOfBirth:
-        type: string
-      deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
-      discordAccount:
-        $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.DiscordAccount'
-      discordAccountID:
-        type: string
-      displayName:
-        type: string
-      employee_salary:
-        $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.EmployeeSalary'
-      employeeChapters:
-        items:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.EmployeeChapter'
-        type: array
-      employeeMMAScores:
-        items:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.EmployeeMMAScore'
-        type: array
-      employeeOrganizations:
-        items:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.EmployeeOrganization'
-        type: array
-      employeePositions:
-        items:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.EmployeePosition'
-        type: array
-      employeeRoles:
-        items:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.EmployeeRole'
-        type: array
-      employeeStacks:
-        items:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.EmployeeStack'
-        type: array
-      fullName:
-        description: basic info
-        type: string
-      gender:
-        type: string
-      heads:
-        items:
-          $ref: '#/definitions/ProjectHead'
-        type: array
-      horoscope:
-        type: string
-      id:
-        type: string
-      identityCardPhotoBack:
-        type: string
-      identityCardPhotoFront:
-        type: string
-      joinedDate:
-        type: string
-      lat:
-        type: string
-      leftDate:
-        type: string
-      lineManager:
-        $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Employee'
-      lineManagerID:
-        type: string
-      localBankBranch:
-        type: string
-      localBankCurrency:
-        type: string
-      localBankNumber:
-        type: string
-      localBankRecipientName:
-        type: string
-      localBranchName:
-        type: string
-      long:
-        type: string
-      mbti:
-        type: string
-      mentees:
-        items:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Employee'
-        type: array
-      organizations:
-        items:
-          $ref: '#/definitions/Organization'
-        type: array
-      passportPhotoBack:
-        type: string
-      passportPhotoFront:
-        type: string
-      personalEmail:
-        type: string
-      phoneNumber:
-        type: string
-      placeOfResidence:
-        type: string
-      positions:
-        items:
-          $ref: '#/definitions/Position'
-        type: array
-      projectMembers:
-        items:
-          $ref: '#/definitions/ProjectMember'
-        type: array
-      referredBy:
-        type: string
-      referrer:
-        $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Employee'
-      roles:
-        items:
-          $ref: '#/definitions/Role'
-        type: array
-      seniority:
-        $ref: '#/definitions/Seniority'
-      seniorityID:
-        type: string
-      socialAccounts:
-        items:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.SocialAccount'
-        type: array
-      teamEmail:
-        type: string
-      updatedAt:
-        type: string
-      username:
-        type: string
-      wiseAccountNumber:
-        type: string
-      wiseCurrency:
-        type: string
-      wiseRecipientEmail:
-        description: payroll info
-        type: string
-      wiseRecipientID:
-        type: string
-      wiseRecipientName:
-        type: string
-      workUnitMembers:
-        items:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.WorkUnitMember'
-        type: array
-      workingStatus:
-        description: working info
-        type: string
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_model.EmployeeChapter:
-    properties:
-      chapter:
-        $ref: '#/definitions/Chapter'
-      chapterID:
-        type: string
-      createdAt:
-        type: string
-      deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
-      employeeID:
-        type: string
-      id:
-        type: string
-      updatedAt:
-        type: string
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_model.EmployeeMMAScore:
-    properties:
-      autonomyScore:
-        type: number
-      createdAt:
-        type: string
-      deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
-      employeeID:
-        type: string
-      id:
-        type: string
-      masteryScore:
-        type: number
-      meaningScore:
-        type: number
-      ratedAt:
-        type: string
-      updatedAt:
-        type: string
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_model.EmployeeOrganization:
-    properties:
-      createdAt:
-        type: string
-      deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
-      employeeID:
-        type: string
-      id:
-        type: string
-      organization:
-        $ref: '#/definitions/Organization'
-      organizationID:
-        type: string
-      updatedAt:
-        type: string
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_model.EmployeePosition:
-    properties:
-      createdAt:
-        type: string
-      deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
-      employeeID:
-        type: string
-      id:
-        type: string
-      position:
-        $ref: '#/definitions/Position'
-      positionID:
-        type: string
-      updatedAt:
-        type: string
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_model.EmployeeRole:
-    properties:
-      createdAt:
-        type: string
-      deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
-      employeeID:
-        type: string
-      id:
-        type: string
-      role:
-        $ref: '#/definitions/Role'
-      roleID:
-        type: string
-      updatedAt:
-        type: string
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_model.EmployeeSalary:
-    properties:
-      actual_pay_day:
-        type: integer
-      bonus_amount:
-        type: integer
-      bonus_detail:
-        items:
-          type: integer
-        type: array
-      commission_amount:
-        type: integer
-      commission_detail:
-        items:
-          type: integer
-        type: array
-      employee_id:
-        type: string
-      is_done:
-        type: boolean
-      month:
-        type: integer
-      plan_pay_day:
-        type: integer
-      reimbursement_amount:
-        type: integer
-      reimbursement_detail:
-        items:
-          type: integer
-        type: array
-      total_amount:
-        type: integer
-      year:
-        type: integer
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_model.EmployeeStack:
-    properties:
-      createdAt:
-        type: string
-      deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
-      employeeID:
-        type: string
-      id:
-        type: string
-      stack:
-        $ref: '#/definitions/Stack'
-      stackID:
-        type: string
-      updatedAt:
-        type: string
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_model.LikertScaleCount:
-    properties:
-      agree:
-        type: integer
-      disagree:
-        type: integer
-      mixed:
-        type: integer
-      stronglyAgree:
-        type: integer
-      stronglyDisagree:
-        type: integer
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_model.NotionTechRadar:
-    properties:
-      assign:
-        type: string
-      categories:
-        items:
-          type: string
-        type: array
-      id:
-        type: string
-      name:
-        type: string
-      quadrant:
-        type: string
-      ring:
-        type: string
-      tags:
-        items:
-          type: string
-        type: array
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_model.Organization:
-    properties:
-      avatar:
-        type: string
-      code:
-        type: string
-      createdAt:
-        type: string
-      deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
-      id:
-        type: string
-      name:
-        type: string
-      updatedAt:
-        type: string
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_model.Position:
-    properties:
-      code:
-        type: string
-      createdAt:
-        type: string
-      deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
-      id:
-        type: string
-      name:
-        type: string
-      updatedAt:
-        type: string
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_model.ProjectFunction:
+  github_com_dwarvesf_fortress-api_pkg_model.SortOrder:
     enum:
-    - development
-    - learning
-    - training
-    - management
+    - asc
+    - desc
     type: string
     x-enum-varnames:
-    - ProjectFunctionDevelopment
-    - ProjectFunctionLearning
-    - ProjectFunctionTraining
-    - ProjectFunctionManagement
-  github_com_dwarvesf_fortress-api_pkg_model.ProjectSize:
-    properties:
-      avatar:
-        type: string
-      code:
-        type: string
-      id:
-        type: string
-      name:
-        type: string
-      size:
-        type: integer
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_model.QuestionDomain:
-    enum:
-    - engagement
-    - workload
-    - deadline
-    - learning
-    type: string
-    x-enum-varnames:
-    - QuestionDomainEngagement
-    - QuestionDomainWorkload
-    - QuestionDomainDeadline
-    - QuestionDomainLearning
-  github_com_dwarvesf_fortress-api_pkg_model.Relationship:
-    enum:
-    - peer
-    - line-manager
-    - chapter-lead
-    - self
-    type: string
-    x-enum-varnames:
-    - RelationshipPeer
-    - RelationshipLineManager
-    - RelationshipChapterLead
-    - RelationshipSelf
-  github_com_dwarvesf_fortress-api_pkg_model.Role:
-    properties:
-      code:
-        type: string
-      color:
-        type: string
-      createdAt:
-        type: string
-      deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
-      employees:
-        items:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Employee'
-        type: array
-      id:
-        type: string
-      isShow:
-        type: boolean
-      level:
-        type: integer
-      name:
-        type: string
-      updatedAt:
-        type: string
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_model.Seniority:
-    properties:
-      code:
-        type: string
-      createdAt:
-        type: string
-      deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
-      id:
-        type: string
-      level:
-        type: integer
-      name:
-        type: string
-      updatedAt:
-        type: string
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_model.SocialAccount:
-    properties:
-      accountID:
-        type: string
-      createdAt:
-        type: string
-      deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
-      email:
-        type: string
-      employeeID:
-        type: string
-      id:
-        type: string
-      name:
-        type: string
-      type:
-        $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.SocialAccountType'
-      updatedAt:
-        type: string
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_model.SocialAccountType:
-    enum:
-    - github
-    - gitlab
-    - notion
-    - linkedin
-    - twitter
-    type: string
-    x-enum-varnames:
-    - SocialAccountTypeGitHub
-    - SocialAccountTypeGitLab
-    - SocialAccountTypeNotion
-    - SocialAccountTypeLinkedIn
-    - SocialAccountTypeTwitter
-  github_com_dwarvesf_fortress-api_pkg_model.Stack:
-    properties:
-      avatar:
-        type: string
-      code:
-        type: string
-      createdAt:
-        type: string
-      deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
-      id:
-        type: string
-      name:
-        type: string
-      updatedAt:
-        type: string
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_model.Valuation:
-    properties:
-      accountReceivable:
-        description: money that company will receive in the future
-        properties:
-          items:
-            items:
-              $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.AccountingItem'
-            type: array
-          total:
-            type: number
-        type: object
-      assets:
-        description: valuation info
-        type: number
-      currency:
-        type: string
-      income:
-        description: Total paid invoice, investment & bank interest
-        properties:
-          detail:
-            properties:
-              consultantService:
-                type: number
-              interest:
-                type: number
-              investment:
-                type: number
-            type: object
-          total:
-            type: number
-        type: object
-      liabilities:
-        description: money that company will pay in the future
-        properties:
-          items:
-            items:
-              $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.AccountingItem'
-            type: array
-          total:
-            type: number
-        type: object
-      outcome:
-        description: Sum of Expenses and payroll
-        properties:
-          detail:
-            properties:
-              expense:
-                type: number
-              investment:
-                type: number
-              payroll:
-                type: number
-            type: object
-          total:
-            type: number
-        type: object
-      rate:
-        type: number
-      year:
-        description: basic info
-        type: string
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_model.WorkUnitMember:
-    properties:
-      createdAt:
-        type: string
-      deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
-      employee:
-        $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Employee'
-      employeeID:
-        type: string
-      endDate:
-        type: string
-      id:
-        type: string
-      projectID:
-        type: string
-      startDate:
-        type: string
-      status:
-        type: string
-      updatedAt:
-        type: string
-      workUnit:
-        $ref: '#/definitions/WorkUnit'
-      workUnitID:
-        type: string
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_view.ApiError:
-    description: validation error details
-    properties:
-      enums:
-        description: available options incase of field's payload is enums
-        items:
-          type: string
-        type: array
-      field:
-        description: the field cause the error
-        type: string
-      msg:
-        description: error message
-        type: string
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_view.Domain:
-    properties:
-      average:
-        type: number
-      count:
-        $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.LikertScaleCount'
-      name:
-        type: string
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_view.FeedBackReviewDetail:
-    properties:
-      employee:
-        $ref: '#/definitions/BasicEmployeeInfo'
-      project:
-        $ref: '#/definitions/BasicProjectInfo'
-      questions:
-        items:
-          $ref: '#/definitions/QuestionAnswer'
-        type: array
-      relationship:
-        type: string
-      reviewer:
-        $ref: '#/definitions/BasicEmployeeInfo'
-      topicName:
-        type: string
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_view.FeedbackCount:
-    properties:
-      done:
-        type: integer
-      sent:
-        type: integer
-      total:
-        type: integer
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_view.FeedbackReviewDetailResponse:
-    properties:
-      data:
-        $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.FeedBackReviewDetail'
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_view.ListSurveyDetailResponse:
-    properties:
-      data:
-        $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.SurveyDetail'
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_view.ListSurveyResponse:
-    properties:
-      data:
-        items:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.Survey'
-        type: array
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_view.PeerReviewer:
-    properties:
-      eventReviewerID:
-        type: string
-      isForcedDone:
-        type: boolean
-      relationship:
-        $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_model.Relationship'
-      reviewer:
-        $ref: '#/definitions/BasicEmployeeInfo'
-      status:
-        $ref: '#/definitions/EventReviewerStatus'
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_view.Survey:
-    properties:
-      count:
-        $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.FeedbackCount'
-      domains:
-        items:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.Domain'
-        type: array
-      endDate:
-        type: string
-      id:
-        type: string
-      startDate:
-        type: string
-      status:
-        type: string
-      subtype:
-        type: string
-      title:
-        type: string
-      type:
-        type: string
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_view.SurveyDetail:
-    properties:
-      author:
-        $ref: '#/definitions/BasicEmployeeInfo'
-      endDate:
-        type: string
-      eventID:
-        type: string
-      startDate:
-        type: string
-      status:
-        type: string
-      subtype:
-        type: string
-      title:
-        type: string
-      topics:
-        items:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.Topic'
-        type: array
-      type:
-        type: string
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_view.SurveyTopicDetail:
-    properties:
-      employee:
-        $ref: '#/definitions/BasicEmployeeInfo'
-      participants:
-        items:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.PeerReviewer'
-        type: array
-      title:
-        type: string
-      topicID:
-        type: string
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_view.SurveyTopicDetailResponse:
-    properties:
-      data:
-        $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.SurveyTopicDetail'
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_view.Topic:
-    properties:
-      comments:
-        type: integer
-      count:
-        $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.FeedbackCount'
-      domains:
-        items:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.Domain'
-        type: array
-      employee:
-        $ref: '#/definitions/BasicEmployeeInfo'
-      eventID:
-        type: string
-      id:
-        type: string
-      isForcedDone:
-        type: boolean
-      participants:
-        items:
-          $ref: '#/definitions/BasicEmployeeInfo'
-        type: array
-      project:
-        $ref: '#/definitions/BasicProjectInfo'
-      reviewID:
-        type: string
-      status:
-        type: string
-      subtype:
-        type: string
-      title:
-        type: string
-      type:
-        type: string
-    type: object
-  gorm.DeletedAt:
-    properties:
-      time:
-        type: string
-      valid:
-        description: Valid is true if Time is not NULL
-        type: boolean
-    type: object
-  pkg_view.BraineryMetric:
-    properties:
-      contributors:
-        items:
-          $ref: '#/definitions/pkg_view.Post'
-        type: array
-      latestPosts:
-        items:
-          $ref: '#/definitions/pkg_view.Post'
-        type: array
-      newContributors:
-        items:
-          $ref: '#/definitions/pkg_view.Post'
-        type: array
-      tags:
-        items:
-          type: string
-        type: array
-      topContributors:
-        items:
-          $ref: '#/definitions/pkg_view.TopContributor'
-        type: array
-    type: object
-  pkg_view.ContentData:
-    properties:
-      url:
-        type: string
-    type: object
-  pkg_view.Post:
-    properties:
-      discordID:
-        type: string
-      publishedAt:
-        type: string
-      reward:
-        type: number
-      title:
-        type: string
-      url:
-        type: string
-    type: object
-  pkg_view.Question:
-    properties:
-      category:
-        type: string
-      content:
-        type: string
-      id:
-        type: string
-      order:
-        type: integer
-      subcategory:
-        type: string
-      type:
-        type: string
-    type: object
-  pkg_view.TopContributor:
-    properties:
-      count:
-        type: integer
-      discordID:
-        type: string
-      ranking:
-        type: integer
-    type: object
+    - SortOrderASC
+    - SortOrderDESC
 info:
   contact:
     email: benjamin@d.foundation
@@ -4525,14 +4376,14 @@ paths:
       consumes:
       - application/json
       description: Get all clients
-      operationId: getAllPublicClients
+      operationId: getListClients
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/PublicClientListResponse'
+            $ref: '#/definitions/GetListClientResponse'
         "500":
           description: Internal Server Error
           schema:
@@ -4541,7 +4392,7 @@ paths:
       - BearerAuth: []
       summary: Get all clients
       tags:
-      - Public
+      - Client
     post:
       consumes:
       - application/json
@@ -5213,6 +5064,123 @@ paths:
       summary: Get summary for workunit distribution dashboard
       tags:
       - Dashboard
+  /discords/{discord_id}/earns/total:
+    get:
+      consumes:
+      - application/json
+      description: Get total earn of employee
+      operationId: GetEmployeeTotalEarn
+      parameters:
+      - description: Employee Discord ID
+        in: path
+        name: discord_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/GetEmployeeTotalEarnResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get total earn of employee
+      tags:
+      - Employee
+  /discords/{discord_id}/earns/transactions:
+    get:
+      consumes:
+      - application/json
+      description: List earn transactions of employee
+      operationId: GetEmployeeEarnTransactions
+      parameters:
+      - description: Employee Discord ID
+        in: path
+        name: discord_id
+        required: true
+        type: string
+      - description: Page
+        in: query
+        name: page
+        type: integer
+      - description: Size
+        in: query
+        name: size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/GetEmployeeEarnTransactionsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List earn transactions of employee
+      tags:
+      - Employee
+  /discords/salary-advance-report:
+    get:
+      consumes:
+      - application/json
+      description: List salary advance aggregated by employee
+      operationId: SalaryAdvanceReport
+      parameters:
+      - description: Get List Aggregated Salary Advance Request
+        in: body
+        name: SalaryAdvanceReportRequest
+        required: true
+        schema:
+          $ref: '#/definitions/SalaryAdvanceReportRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/SalaryAdvanceReportResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List salary advance aggregated by employee
+      tags:
+      - Employee
   /employees:
     post:
       consumes:
@@ -5583,8 +5551,8 @@ paths:
     post:
       consumes:
       - application/json
-      description: Update account status by employee id
-      operationId: advanceSalary
+      description: Salary advance by discord id
+      operationId: salaryAdvance
       parameters:
       - description: Salary Advance Request
         in: body
@@ -5613,7 +5581,44 @@ paths:
             $ref: '#/definitions/ErrorResponse'
       security:
       - BearerAuth: []
-      summary: Advance salary by discord id
+      summary: Salary advance by discord id
+      tags:
+      - Employee
+  /employees/check-advance-salary:
+    post:
+      consumes:
+      - application/json
+      description: Check salary advance by discord id
+      operationId: checkSalaryAdvance
+      parameters:
+      - description: Check Salary Advance Request
+        in: body
+        name: checkSalaryAdvanceRequest
+        required: true
+        schema:
+          $ref: '#/definitions/SalaryAdvanceRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/CheckSalaryAdvanceResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Check salary advance by discord id
       tags:
       - Employee
   /employees/search:
@@ -7880,6 +7885,28 @@ paths:
       summary: Unarchive an archive work unit of a project
       tags:
       - Project
+  /public/clients:
+    get:
+      consumes:
+      - application/json
+      description: Get all clients
+      operationId: getAllPublicClients
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/PublicClientListResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get all clients
+      tags:
+      - Public
   /public/employees:
     get:
       consumes:
@@ -7913,6 +7940,7 @@ paths:
       consumes:
       - application/json
       description: Get list event
+      operationId: ListSurvey
       parameters:
       - description: Event Subtype
         in: query
@@ -7927,13 +7955,22 @@ paths:
         in: query
         name: size
         type: string
+      - description: Sort
+        in: query
+        name: sort
+        type: string
+      - description: Event Subtype
+        in: query
+        name: subtype
+        required: true
+        type: string
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.ListSurveyResponse'
+            $ref: '#/definitions/ListSurveyResponse'
         "400":
           description: Bad Request
           schema:
@@ -7951,13 +7988,14 @@ paths:
       consumes:
       - application/json
       description: Create new survey
+      operationId: CreateSurvey
       parameters:
       - description: Body
         in: body
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_handler_survey_request.CreateSurveyFeedbackInput'
+          $ref: '#/definitions/CreateSurveyFeedbackInput'
       produces:
       - application/json
       responses:
@@ -7987,6 +8025,7 @@ paths:
       consumes:
       - application/json
       description: Delete survey by id
+      operationId: DeleteSurvey
       parameters:
       - description: Feedback Event ID
         in: path
@@ -8021,6 +8060,7 @@ paths:
       consumes:
       - application/json
       description: Get survey detail
+      operationId: GetSurveyDetail
       parameters:
       - description: Feedback Event ID
         in: path
@@ -8056,7 +8096,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.ListSurveyDetailResponse'
+            $ref: '#/definitions/ListSurveyDetailResponse'
         "400":
           description: Bad Request
           schema:
@@ -8079,6 +8119,7 @@ paths:
       consumes:
       - application/json
       description: Mark done feedback event
+      operationId: MarkDone
       parameters:
       - description: Feedback Event ID
         in: path
@@ -8114,6 +8155,7 @@ paths:
       consumes:
       - application/json
       description: Send the survey
+      operationId: SendSurvey
       parameters:
       - description: Feedback Event ID
         in: path
@@ -8125,7 +8167,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_handler_survey_request.SendSurveyInput'
+          $ref: '#/definitions/SendSurveyInput'
       produces:
       - application/json
       responses:
@@ -8155,6 +8197,7 @@ paths:
       consumes:
       - application/json
       description: delete survey topic
+      operationId: DeleteSurveyTopic
       produces:
       - application/json
       responses:
@@ -8183,6 +8226,7 @@ paths:
       consumes:
       - application/json
       description: Get detail for peer review
+      operationId: GetSurveyTopicDetail
       parameters:
       - description: Feedback Event ID
         in: path
@@ -8200,7 +8244,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.SurveyTopicDetailResponse'
+            $ref: '#/definitions/SurveyTopicDetailResponse'
         "400":
           description: Bad Request
           schema:
@@ -8223,6 +8267,7 @@ paths:
       consumes:
       - application/json
       description: Delete reviewers in a topic
+      operationId: DeleteTopicReviewers
       parameters:
       - description: Feedback Event ID
         in: path
@@ -8239,7 +8284,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_handler_survey_request.DeleteTopicReviewersBody'
+          $ref: '#/definitions/DeleteTopicReviewersBody'
       produces:
       - application/json
       responses:
@@ -8268,13 +8313,14 @@ paths:
       consumes:
       - application/json
       description: Update reviewers in a topic
+      operationId: UpdateTopicReviewers
       parameters:
       - description: Body
         in: body
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_handler_survey_request.UpdateTopicReviewersBody'
+          $ref: '#/definitions/UpdateTopicReviewersBody'
       produces:
       - application/json
       responses:
@@ -8304,13 +8350,14 @@ paths:
       consumes:
       - application/json
       description: Get survey review detail
+      operationId: GetSurveyReviewDetail
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.FeedbackReviewDetailResponse'
+            $ref: '#/definitions/FeedbackReviewDetailResponse'
         "400":
           description: Bad Request
           schema:

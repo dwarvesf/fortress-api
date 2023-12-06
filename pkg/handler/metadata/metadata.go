@@ -363,7 +363,7 @@ func (h *handler) Stacks(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](stacks,
-		&view.PaginationResponse{Pagination: input.Pagination, Total: total}, nil, nil, ""))
+		&view.PaginationResponse{Pagination: view.Pagination{Page: input.Pagination.Page, Size: input.Pagination.Size, Sort: input.Pagination.Sort}, Total: total}, nil, nil, ""))
 }
 
 // UpdateStack godoc

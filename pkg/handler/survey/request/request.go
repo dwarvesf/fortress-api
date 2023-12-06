@@ -5,13 +5,14 @@ import (
 
 	"github.com/dwarvesf/fortress-api/pkg/handler/survey/errs"
 	"github.com/dwarvesf/fortress-api/pkg/model"
+	"github.com/dwarvesf/fortress-api/pkg/view"
 )
 
 type GetListSurveyInput struct {
-	model.Pagination
+	view.Pagination
 
 	Subtype string `json:"subtype" form:"subtype" binding:"required"`
-}
+} // @name GetListSurveyInput
 
 func (i *GetListSurveyInput) Validate() error {
 	if i.Subtype == "" || !model.EventSubtype(i.Subtype).IsSurveyValid() {
@@ -22,11 +23,11 @@ func (i *GetListSurveyInput) Validate() error {
 }
 
 type GetSurveyDetailQuery struct {
-	model.Pagination
+	view.Pagination
 	Keyword  string   `json:"keyword" form:"keyword"`
 	Status   string   `json:"status" form:"status"`
 	Projects []string `json:"projects" form:"projects"`
-}
+} // @name GetSurveyDetailQuery
 
 type GetSurveyDetailInput struct {
 	EventID string
@@ -50,9 +51,9 @@ func (i *GetSurveyDetailInput) Validate() error {
 }
 
 type SendSurveyInput struct {
-	Type     string       `json:"type" form:"type" binding:"required"`
-	TopicIDs []model.UUID `json:"topicIDs" form:"topicIDs"`
-}
+	Type     string      `json:"type" form:"type" binding:"required"`
+	TopicIDs []view.UUID `json:"topicIDs" form:"topicIDs"`
+} // @name SendSurveyInput
 
 // CreateSurveyFeedbackInput view for create survey feedback
 type CreateSurveyFeedbackInput struct {
@@ -61,7 +62,7 @@ type CreateSurveyFeedbackInput struct {
 	Type     string `json:"type" binding:"required"`
 	FromDate string `json:"fromDate"`
 	ToDate   string `json:"toDate"`
-}
+} // @name CreateSurveyFeedbackInput
 
 // Validate input for create survey feedback
 func (i *CreateSurveyFeedbackInput) Validate() error {
@@ -107,8 +108,8 @@ func (i *PeerReviewDetailInput) Validate() error {
 
 // UpdateTopicReviewersBody view for update topic reviewers
 type UpdateTopicReviewersBody struct {
-	ReviewerIDs []model.UUID `json:"reviewerIDs"`
-}
+	ReviewerIDs []view.UUID `json:"reviewerIDs"`
+} // @name UpdateTopicReviewersBody
 
 // UpdateTopicReviewersInput input of update topic reviewers request
 type UpdateTopicReviewersInput struct {
@@ -131,8 +132,8 @@ func (i *UpdateTopicReviewersInput) Validate() error {
 
 // DeleteTopicReviewersBody view for update topic reviewers
 type DeleteTopicReviewersBody struct {
-	ReviewerIDs []model.UUID `json:"reviewerIDs"`
-}
+	ReviewerIDs []view.UUID `json:"reviewerIDs"`
+} // @name DeleteTopicReviewersBody
 
 // DeleteTopicReviewersInput input of update topic reviewers request
 type DeleteTopicReviewersInput struct {

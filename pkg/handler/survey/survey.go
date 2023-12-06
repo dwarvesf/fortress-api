@@ -45,6 +45,7 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 // ListSurvey godoc
 // @Summary Get list event
 // @Description Get list event
+// @id ListSurvey
 // @Tags Survey
 // @Accept json
 // @Produce json
@@ -52,7 +53,9 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 // @Param subtype query string true "Event Subtype"
 // @Param page query string false "Page"
 // @Param size query string false "Size"
-// @Success 200 {object} view.ListSurveyResponse
+// @Param sort query string false "Sort"
+// @Param subtype query string true "Event Subtype"
+// @Success 200 {object} ListSurveyResponse
 // @Failure 400 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
 // @Router /surveys [get]
@@ -68,15 +71,21 @@ func (h *handler) ListSurvey(c *gin.Context) {
 		return
 	}
 
-	input.Standardize()
+	pagination := model.Pagination{
+		Page: input.Page,
+		Size: input.Size,
+		Sort: input.Sort,
+	}
+
+	pagination.Standardize()
 
 	l := h.logger.Fields(logger.Fields{
 		"handler": "survey",
 		"method":  "ListSurvey",
-		"input":   input,
+		"input":   pagination,
 	})
 
-	events, total, err := h.store.FeedbackEvent.GetBySubtype(h.repo.DB(), input.Subtype, input.Pagination)
+	events, total, err := h.store.FeedbackEvent.GetBySubtype(h.repo.DB(), input.Subtype, pagination)
 	if err != nil {
 		l.Error(err, "failed to get feedback events by subtype")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
@@ -98,7 +107,7 @@ func (h *handler) ListSurvey(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToListSurvey(events),
-		&view.PaginationResponse{Pagination: input.Pagination, Total: total}, nil, nil, ""))
+		&view.PaginationResponse{Pagination: view.Pagination{Size: pagination.Size, Page: pagination.Page, Sort: pagination.Sort}, Total: total}, nil, nil, ""))
 }
 
 func (h *handler) getQuestionDomainCountsByEvent(db *gorm.DB, eventID string) ([]model.QuestionDomainCount, error) {
@@ -151,6 +160,7 @@ func (h *handler) getQuestionDomainCountsByEvent(db *gorm.DB, eventID string) ([
 // GetSurveyDetail godoc
 // @Summary Get survey detail
 // @Description Get survey detail
+// @id GetSurveyDetail
 // @Tags Survey
 // @Accept json
 // @Produce json
@@ -161,7 +171,7 @@ func (h *handler) getQuestionDomainCountsByEvent(db *gorm.DB, eventID string) ([
 // @Param keyword query string false "Keyword"
 // @Param status query string false "Status"
 // @Param projects query []string false "Projects"
-// @Success 200 {object} view.ListSurveyDetailResponse
+// @Success 200 {object} ListSurveyDetailResponse
 // @Failure 400 {object} ErrorResponse
 // @Failure 404 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
@@ -180,7 +190,13 @@ func (h *handler) GetSurveyDetail(c *gin.Context) {
 		return
 	}
 
-	input.Query.Standardize()
+	pagination := model.Pagination{
+		Page: input.Query.Page,
+		Size: input.Query.Size,
+		Sort: input.Query.Sort,
+	}
+
+	pagination.Standardize()
 
 	l := h.logger.Fields(logger.Fields{
 		"handler": "survey",
@@ -210,7 +226,7 @@ func (h *handler) GetSurveyDetail(c *gin.Context) {
 			Preload:  true,
 			Paging:   true,
 		},
-		&input.Query.Pagination)
+		&pagination)
 	if err != nil {
 		l.Error(err, "failed to get employee event topic by eventID")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
@@ -220,12 +236,13 @@ func (h *handler) GetSurveyDetail(c *gin.Context) {
 	event.Topics = topics
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToSurveyDetail(event),
-		&view.PaginationResponse{Pagination: input.Query.Pagination, Total: total}, nil, nil, ""))
+		&view.PaginationResponse{Pagination: view.Pagination{Size: pagination.Size, Page: pagination.Page, Sort: pagination.Sort}, Total: total}, nil, nil, ""))
 }
 
 // CreateSurvey godoc
 // @Summary Create new survey
 // @Description Create new survey
+// @id CreateSurvey
 // @Tags Survey
 // @Accept  json
 // @Produce  json
@@ -889,12 +906,13 @@ func (h *handler) createWorkEvent(db *gorm.DB, req request.CreateSurveyFeedbackI
 // SendSurvey godoc
 // @Summary Send the survey
 // @Description Send the survey
+// @id SendSurvey
 // @Tags Survey
 // @Accept json
 // @Produce json
 // @Security BearerAuth
 // @Param id path string true "Feedback Event ID"
-// @Param Body body request.SendSurveyInput true "Body"
+// @Param Body body SendSurveyInput true "Body"
 // @Success 200 {object} MessageResponse
 // @Failure 400 {object} ErrorResponse
 // @Failure 404 {object} ErrorResponse
@@ -959,7 +977,7 @@ func (h *handler) SendSurvey(c *gin.Context) {
 
 	default:
 		for _, data := range input.TopicIDs {
-			errCode, err := h.updateEventReviewer(tx.DB(), l, data, eventID)
+			errCode, err := h.updateEventReviewer(tx.DB(), l, model.UUID(data), eventID)
 			if err != nil {
 				l.Error(err, "error when running function updateEventReviewer")
 				c.JSON(errCode, view.CreateResponse[any](nil, nil, done(err), input, ""))
@@ -1027,6 +1045,7 @@ func (h *handler) updateEventReviewer(db *gorm.DB, l logger.Logger, topicID mode
 // DeleteSurvey godoc
 // @Summary Delete survey by id
 // @Description Delete survey by id
+// @id DeleteSurvey
 // @Tags Survey
 // @Accept json
 // @Produce json
@@ -1105,11 +1124,12 @@ func (h *handler) doSurveyDelete(db *gorm.DB, eventID string) (int, error) {
 // GetSurveyReviewDetail godoc
 // @Summary Get survey review detail
 // @Description Get survey review detail
+// @id GetSurveyReviewDetail
 // @Tags Survey
 // @Accept  json
 // @Produce  json
 // @Security BearerAuth
-// @Success 200 {object} view.FeedbackReviewDetailResponse
+// @Success 200 {object} FeedbackReviewDetailResponse
 // @Failure 400 {object} ErrorResponse
 // @Failure 404 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
@@ -1197,6 +1217,7 @@ func (h *handler) GetSurveyReviewDetail(c *gin.Context) {
 // DeleteSurveyTopic godoc
 // @Summary delete survey topic
 // @Description delete survey topic
+// @id DeleteSurveyTopic
 // @Tags Survey
 // @Accept  json
 // @Produce  json
@@ -1291,6 +1312,7 @@ func (h *handler) DeleteSurveyTopic(c *gin.Context) {
 // GetSurveyTopicDetail godoc
 // @Summary Get detail for peer review
 // @Description Get detail for peer review
+// @id GetSurveyTopicDetail
 // @Tags Survey
 // @Accept json
 // @Produce json
@@ -1339,11 +1361,12 @@ func (h *handler) GetSurveyTopicDetail(c *gin.Context) {
 // UpdateTopicReviewers godoc
 // @Summary Update reviewers in a topic
 // @Description Update reviewers in a topic
+// @id UpdateTopicReviewers
 // @Tags Survey
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Param Body body request.UpdateTopicReviewersBody true "Body"
+// @Param Body body UpdateTopicReviewersBody true "Body"
 // @Success 200 {object} MessageResponse
 // @Failure 400 {object} ErrorResponse
 // @Failure 404 {object} ErrorResponse
@@ -1426,12 +1449,12 @@ func (h *handler) updateTopicReviewer(db *gorm.DB, eventID string, topicID strin
 	employeeMap := model.ToEmployeeMap(employees)
 	mustCreateReviewerIDMap := map[model.UUID]bool{}
 	for _, reviewerID := range body.ReviewerIDs {
-		if _, ok := employeeMap[reviewerID]; !ok {
+		if _, ok := employeeMap[model.UUID(reviewerID)]; !ok {
 			l.Errorf(errs.ErrEmployeeNotReady, "employee %v not ready", reviewerID)
 			return http.StatusBadRequest, errs.ErrEmployeeNotReady
 		}
 
-		mustCreateReviewerIDMap[reviewerID] = true
+		mustCreateReviewerIDMap[model.UUID(reviewerID)] = true
 	}
 
 	// delete event question and event topic if reviewerID is not exists in request
@@ -1547,6 +1570,7 @@ func (h *handler) createEventQuestions(db *gorm.DB, eventType model.EventType, e
 // MarkDone godoc
 // @Summary Mark done feedback event
 // @Description Mark done feedback event
+// @id MarkDone
 // @Tags Survey
 // @Accept json
 // @Produce json
@@ -1667,13 +1691,14 @@ func (h *handler) forceEventReviewersToDone(db *gorm.DB, l logger.Logger, topicI
 // DeleteTopicReviewers godoc
 // @Summary Delete reviewers in a topic
 // @Description Delete reviewers in a topic
+// @id DeleteTopicReviewers
 // @Tags Survey
 // @Accept json
 // @Produce json
 // @Security BearerAuth
 // @Param id path string true "Feedback Event ID"
 // @Param topicID path string true "Employee Event Topic ID"
-// @Param Body body request.DeleteTopicReviewersBody true "Body"
+// @Param Body body DeleteTopicReviewersBody true "Body"
 // @Success 200 {object} MessageResponse
 // @Failure 400 {object} ErrorResponse
 // @Failure 404 {object} ErrorResponse
@@ -1716,8 +1741,12 @@ func (h *handler) DeleteTopicReviewers(c *gin.Context) {
 	}
 
 	tx, done := h.repo.NewTransaction()
+	reviewerIDs := make([]model.UUID, 0)
+	for _, id := range input.Body.ReviewerIDs {
+		reviewerIDs = append(reviewerIDs, model.UUID(id))
+	}
 
-	if code, err := h.deleteTopicReviewer(tx.DB(), input.EventID, input.TopicID, input.Body.ReviewerIDs); err != nil {
+	if code, err := h.deleteTopicReviewer(tx.DB(), input.EventID, input.TopicID, reviewerIDs); err != nil {
 		l.Error(err, "failed to delete topic reviewers")
 		c.JSON(code, view.CreateResponse[any](nil, nil, done(err), input, ""))
 		return

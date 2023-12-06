@@ -16,19 +16,27 @@ type Survey struct {
 	EndDate   *time.Time    `json:"endDate"`
 	Count     FeedbackCount `json:"count"`
 	Domains   []Domain      `json:"domains"`
-}
+} // @name Survey
 
 type FeedbackCount struct {
 	Total int `json:"total"`
 	Sent  int `json:"sent"`
 	Done  int `json:"done"`
-}
+} // @name FeedbackCount
 
 type Domain struct {
-	Name    string                 `json:"name"`
-	Average float32                `json:"average"`
-	Count   model.LikertScaleCount `json:"count"`
-}
+	Name    string           `json:"name"`
+	Average float32          `json:"average"`
+	Count   LikertScaleCount `json:"count"`
+} // @name Domain
+
+type LikertScaleCount struct {
+	StronglyDisagree int `json:"stronglyDisagree" gorm:"column:strongly_disagree"`
+	Disagree         int `json:"disagree" gorm:"column:disagree"`
+	Mixed            int `json:"mixed" gorm:"column:mixed"`
+	Agree            int `json:"agree" gorm:"column:agree"`
+	StronglyAgree    int `json:"stronglyAgree" gorm:"column:strongly_agree"`
+} // @name LikertScaleCount
 
 func ToListSurvey(events []*model.FeedbackEvent) []Survey {
 	var results = make([]Survey, 0, len(events))
@@ -82,7 +90,13 @@ func ToListSurvey(events []*model.FeedbackEvent) []Survey {
 				domains = append(domains, Domain{
 					Name:    count.Domain.String(),
 					Average: average,
-					Count:   count.LikertScaleCount,
+					Count: LikertScaleCount{
+						StronglyDisagree: count.StronglyDisagree,
+						Disagree:         count.Disagree,
+						Mixed:            count.Mixed,
+						Agree:            count.Agree,
+						StronglyAgree:    count.StronglyAgree,
+					},
 				})
 			}
 		}
@@ -108,8 +122,9 @@ func ToListSurvey(events []*model.FeedbackEvent) []Survey {
 }
 
 type ListSurveyResponse struct {
+	PaginationResponse
 	Data []Survey `json:"data"`
-}
+} // @name ListSurveyResponse
 
 type SurveyDetail struct {
 	EventID   string             `json:"eventID"`
@@ -121,7 +136,7 @@ type SurveyDetail struct {
 	EndDate   *time.Time         `json:"endDate"`
 	Author    *BasicEmployeeInfo `json:"author"`
 	Topics    []Topic            `json:"topics"`
-}
+} // @name SurveyDetail
 
 type Topic struct {
 	ID           string              `json:"id"`
@@ -138,7 +153,7 @@ type Topic struct {
 	Domains      []Domain            `json:"domains"`
 	Comments     int                 `json:"comments"`
 	Project      *BasicProjectInfo   `json:"project"`
-}
+} // @name Topic
 
 type SurveyResult struct {
 	StronglyDisagree int `json:"stronglyDisagree"`
@@ -244,11 +259,69 @@ func ToSurveyDetail(event *model.FeedbackEvent) SurveyDetail {
 }
 
 type PeerReviewer struct {
-	EventReviewerID string                    `json:"eventReviewerID"`
-	Reviewer        *BasicEmployeeInfo        `json:"reviewer"`
-	Status          model.EventReviewerStatus `json:"status"`
-	Relationship    model.Relationship        `json:"relationship"`
-	IsForcedDone    bool                      `json:"isForcedDone"`
+	EventReviewerID string              `json:"eventReviewerID"`
+	Reviewer        *BasicEmployeeInfo  `json:"reviewer"`
+	Status          EventReviewerStatus `json:"status"`
+	Relationship    Relationship        `json:"relationship"`
+	IsForcedDone    bool                `json:"isForcedDone"`
+} // @name PeerReviewer
+
+// EventReviewerStatus event_reviewer_status for table employee event reviewer
+type EventReviewerStatus string // @name EventReviewerStatus
+
+// EventReviewerStatus values
+const (
+	EventReviewerStatusNone  EventReviewerStatus = "none"
+	EventReviewerStatusNew   EventReviewerStatus = "new"
+	EventReviewerStatusDraft EventReviewerStatus = "draft"
+	EventReviewerStatusDone  EventReviewerStatus = "done"
+)
+
+// IsValid validation for EventReviewerStatus
+func (e EventReviewerStatus) IsValid() bool {
+	switch e {
+	case
+		EventReviewerStatusNone,
+		EventReviewerStatusDraft,
+		EventReviewerStatusDone,
+		EventReviewerStatusNew:
+		return true
+	}
+	return false
+}
+
+// String returns the string type from the EventReviewerStatus type
+func (e EventReviewerStatus) String() string {
+	return string(e)
+}
+
+// Relationship relationships for table employee_event_topics
+type Relationship string // @name Relationship
+
+// values for Relationship
+const (
+	RelationshipPeer        Relationship = "peer"
+	RelationshipLineManager Relationship = "line-manager"
+	RelationshipChapterLead Relationship = "chapter-lead"
+	RelationshipSelf        Relationship = "self"
+)
+
+// IsValid validation for Relationship
+func (e Relationship) IsValid() bool {
+	switch e {
+	case
+		RelationshipPeer,
+		RelationshipLineManager,
+		RelationshipChapterLead,
+		RelationshipSelf:
+		return true
+	}
+	return false
+}
+
+// IsValid validation for Relationship
+func (e Relationship) String() string {
+	return string(e)
 }
 
 type SurveyTopicDetail struct {
@@ -256,11 +329,11 @@ type SurveyTopicDetail struct {
 	Title        string             `json:"title"`
 	Employee     *BasicEmployeeInfo `json:"employee"`
 	Participants []PeerReviewer     `json:"participants"`
-}
+} // @name SurveyTopicDetail
 
 type SurveyTopicDetailResponse struct {
 	Data SurveyTopicDetail `json:"data"`
-}
+} // @name SurveyTopicDetailResponse
 
 func ToPeerReviewDetail(topic *model.EmployeeEventTopic) SurveyTopicDetail {
 	rs := SurveyTopicDetail{
@@ -272,8 +345,8 @@ func ToPeerReviewDetail(topic *model.EmployeeEventTopic) SurveyTopicDetail {
 	for _, eventReviewer := range topic.EmployeeEventReviewers {
 		participant := PeerReviewer{
 			EventReviewerID: eventReviewer.ID.String(),
-			Status:          model.EventReviewerStatus(eventReviewer.AuthorStatus),
-			Relationship:    eventReviewer.Relationship,
+			Status:          EventReviewerStatus(eventReviewer.AuthorStatus),
+			Relationship:    Relationship(eventReviewer.Relationship),
 			IsForcedDone:    eventReviewer.IsForcedDone,
 		}
 
@@ -288,8 +361,9 @@ func ToPeerReviewDetail(topic *model.EmployeeEventTopic) SurveyTopicDetail {
 }
 
 type ListSurveyDetailResponse struct {
+	PaginationResponse
 	Data SurveyDetail `json:"data"`
-}
+} // @name ListSurveyDetailResponse
 
 func toDomains(questions []model.EmployeeEventQuestion) []Domain {
 	domainMap := make(map[string]map[string]int)
@@ -327,17 +401,35 @@ func toDomains(questions []model.EmployeeEventQuestion) []Domain {
 	wlDomain := Domain{
 		Name:    model.QuestionDomainWorkload.String(),
 		Average: countLikertScaleAverage(wlCount),
-		Count:   wlCount,
+		Count: LikertScaleCount{
+			StronglyDisagree: wlCount.StronglyDisagree,
+			Disagree:         wlCount.Disagree,
+			Mixed:            wlCount.Mixed,
+			Agree:            wlCount.Agree,
+			StronglyAgree:    wlCount.StronglyAgree,
+		},
 	}
 	dlDomain := Domain{
 		Name:    model.QuestionDomainDeadline.String(),
 		Average: countLikertScaleAverage(dlCount),
-		Count:   dlCount,
+		Count: LikertScaleCount{
+			StronglyDisagree: dlCount.StronglyDisagree,
+			Disagree:         dlCount.Disagree,
+			Mixed:            dlCount.Mixed,
+			Agree:            dlCount.Agree,
+			StronglyAgree:    dlCount.StronglyAgree,
+		},
 	}
 	lnDomain := Domain{
 		Name:    model.QuestionDomainLearning.String(),
 		Average: countLikertScaleAverage(lnCount),
-		Count:   lnCount,
+		Count: LikertScaleCount{
+			StronglyDisagree: lnCount.StronglyDisagree,
+			Disagree:         lnCount.Disagree,
+			Mixed:            lnCount.Mixed,
+			Agree:            lnCount.Agree,
+			StronglyAgree:    lnCount.StronglyAgree,
+		},
 	}
 
 	return []Domain{wlDomain, dlDomain, lnDomain}

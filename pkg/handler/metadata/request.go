@@ -29,7 +29,7 @@ func (e EventType) String() string {
 	return string(e)
 }
 
-type EventSubtype string
+type EventSubtype string // @name EventSubtype
 
 const (
 	EventSubtypePeerReview   EventSubtype = "peer-review"

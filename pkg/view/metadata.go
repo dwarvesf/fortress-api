@@ -15,23 +15,24 @@ type MetadataResponse struct {
 } // @name MetaDataResponse
 
 type SeniorityResponse struct {
-	Data []model.Seniority `json:"data"`
+	Data []Seniority `json:"data"`
 } // @name SeniorityResponse
 
 type ChapterResponse struct {
-	Data []model.Chapter `json:"data"`
+	Data []Chapter `json:"data"`
 } // @name ChapterResponse
 
 type StackResponse struct {
-	Data []model.Stack `json:"data"`
+	PaginationResponse
+	Data []Stack `json:"data"`
 } // @name StackResponse
 
 type RolesResponse struct {
-	Data []model.Role `json:"data"`
+	Data []Role `json:"data"`
 } // @name RolesResponse
 
 type PositionResponse struct {
-	Data []model.Position `json:"data"`
+	Data []Position `json:"data"`
 } // @name PositionResponse
 
 type CountriesResponse struct {
@@ -43,7 +44,7 @@ type CitiesResponse struct {
 } // @name CitiesResponse
 
 type OrganizationsResponse struct {
-	Data []model.Organization `json:"data"`
+	Data []Organization `json:"data"`
 } // @name OrganizationsResponse
 
 // Question model question for get list question api
@@ -54,7 +55,7 @@ type Question struct {
 	Subcategory string `json:"subcategory"`
 	Content     string `json:"content"`
 	Order       int64  `json:"order"`
-}
+} // @name Question
 
 // GetQuestionResponse response for get question api
 type GetQuestionResponse struct {

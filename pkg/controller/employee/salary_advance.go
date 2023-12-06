@@ -220,3 +220,40 @@ func (r *controller) calculateMaxAdvanceAmountIcy(salary *model.BaseSalary, icyU
 
 	return int64(math.Round(advanceAmountIcy/10) * 10), nil
 }
+
+type ListAggregatedSalaryAdvanceInput struct {
+	model.Pagination
+	model.SortOrder
+
+	IsPaid *bool
+}
+
+func (r *controller) ListAggregatedSalaryAdvance(input ListAggregatedSalaryAdvanceInput) (*model.SalaryAdvanceReport, error) {
+	list, err := r.store.SalaryAdvance.ListAggregatedSalaryAdvance(r.repo.DB(), input.IsPaid, input.Pagination, input.SortOrder)
+	if err != nil {
+		return nil, err
+	}
+
+	for i, row := range list {
+		employee, err := r.store.Employee.One(r.repo.DB(), row.EmployeeID, false)
+		if err != nil {
+			return nil, err
+		}
+
+		list[i].Employee = employee
+	}
+
+	count, totalICY, totalUSD, err := r.store.SalaryAdvance.TotalAggregatedSalaryAdvance(r.repo.DB(), input.IsPaid)
+	if err != nil {
+		return nil, err
+	}
+
+	report := &model.SalaryAdvanceReport{
+		SalaryAdvances: list,
+		TotalICY:       totalICY,
+		TotalUSD:       totalUSD,
+		Count:          count,
+	}
+
+	return report, nil
+}
