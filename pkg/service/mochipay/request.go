@@ -4,6 +4,11 @@ import (
 	"time"
 )
 
+const (
+	PolygonChainID     = "137"
+	ICYContractAddress = "0x8D57d71B02d71e1e449a0E459DE40473Eb8f4a90"
+)
+
 type TransactionType string
 
 const (
@@ -33,12 +38,22 @@ const (
 	TransactionActionVaultTransfer TransactionAction = "vault_transfer"
 )
 
+type TransactionPlatform string
+
+const (
+	TransactionPlatformDiscord TransactionPlatform = "discord"
+)
+
 type ListTransactionsRequest struct {
-	Type       TransactionType     `json:"type"`
-	Status     TransactionStatus   `json:"status"`
-	ActionList []TransactionAction `json:"action_list"`
-	Page       int64               `json:"page"`
-	Size       int64               `json:"size"`
+	Type         TransactionType     `json:"type"`
+	Status       TransactionStatus   `json:"status"`
+	ActionList   []TransactionAction `json:"action_list"`
+	TokenAddress string              `json:"token_address"`
+	Participant  string              `json:"participant"`
+	Platform     TransactionPlatform `json:"platform"`
+	ChainID      string              `json:"chain_id"`
+	Page         int64               `json:"page"`
+	Size         int64               `json:"size"`
 }
 
 type ListTransactionsResponse struct {

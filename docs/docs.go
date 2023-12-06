@@ -1522,6 +1522,130 @@ const docTemplate = `{
                 }
             }
         },
+        "/discords/{discord_id}/earns/total": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get total earn of employee",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Employee"
+                ],
+                "summary": "Get total earn of employee",
+                "operationId": "GetEmployeeTotalEarn",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Employee Discord ID",
+                        "name": "discord_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/GetEmployeeTotalEarnResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/discords/{discord_id}/earns/transactions": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "List earn transactions of employee",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Employee"
+                ],
+                "summary": "List earn transactions of employee",
+                "operationId": "GetEmployeeEarnTransactions",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Employee Discord ID",
+                        "name": "discord_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Size",
+                        "name": "size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/GetEmployeeEarnTransactionsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/employees": {
             "post": {
                 "security": [
@@ -6588,6 +6712,20 @@ const docTemplate = `{
                 }
             }
         },
+        "AmountEachProfiles": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "string"
+                },
+                "profileID": {
+                    "type": "string"
+                },
+                "usdAmount": {
+                    "type": "number"
+                }
+            }
+        },
         "ApiError": {
             "description": "validation error details",
             "type": "object",
@@ -6606,6 +6744,29 @@ const docTemplate = `{
                 "msg": {
                     "description": "error message",
                     "type": "string"
+                }
+            }
+        },
+        "Application": {
+            "type": "object",
+            "properties": {
+                "active": {
+                    "type": "boolean"
+                },
+                "applicationProfileID": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "ownerProfileID": {
+                    "type": "string"
+                },
+                "serviceFee": {
+                    "type": "number"
                 }
             }
         },
@@ -6662,6 +6823,33 @@ const docTemplate = `{
                     "type": "number"
                 },
                 "upsellPersonID": {
+                    "type": "string"
+                }
+            }
+        },
+        "AssociatedAccounts": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "isGuildMember": {
+                    "type": "boolean"
+                },
+                "platform": {
+                    "type": "string"
+                },
+                "platformIdentifier": {
+                    "type": "string"
+                },
+                "platformMetadata": {},
+                "profileID": {
+                    "type": "string"
+                },
+                "updatedAt": {
                     "type": "string"
                 }
             }
@@ -7172,6 +7360,35 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/BraineryMetric"
+                }
+            }
+        },
+        "Chain": {
+            "type": "object",
+            "properties": {
+                "chainID": {
+                    "type": "string"
+                },
+                "explorer": {
+                    "type": "string"
+                },
+                "icon": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "rpc": {
+                    "type": "string"
+                },
+                "symbol": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
                 }
             }
         },
@@ -8135,11 +8352,7 @@ const docTemplate = `{
                 },
                 "status": {
                     "description": "working info",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/WorkingStatus"
-                        }
-                    ]
+                    "type": "string"
                 },
                 "teamEmail": {
                     "type": "string"
@@ -8306,6 +8519,17 @@ const docTemplate = `{
                 },
                 "status": {
                     "type": "string"
+                }
+            }
+        },
+        "EmployeeTotalEarn": {
+            "type": "object",
+            "properties": {
+                "totalEarnsICY": {
+                    "type": "string"
+                },
+                "totalEarnsUSD": {
+                    "type": "number"
                 }
             }
         },
@@ -8612,6 +8836,36 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/Client"
+                }
+            }
+        },
+        "GetEmployeeEarnTransactionsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/MochiTransaction"
+                    }
+                },
+                "page": {
+                    "description": "page index",
+                    "type": "integer"
+                },
+                "size": {
+                    "description": "page size",
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "GetEmployeeTotalEarnResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/EmployeeTotalEarn"
                 }
             }
         },
@@ -9286,6 +9540,158 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/MetaData"
                     }
+                }
+            }
+        },
+        "MochiProfile": {
+            "type": "object",
+            "properties": {
+                "application": {
+                    "$ref": "#/definitions/Application"
+                },
+                "associatedAccounts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/AssociatedAccounts"
+                    }
+                },
+                "avatar": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "profileName": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "MochiTransaction": {
+            "type": "object",
+            "properties": {
+                "action": {
+                    "type": "string"
+                },
+                "amount": {
+                    "type": "string"
+                },
+                "amountEachProfiles": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/AmountEachProfiles"
+                    }
+                },
+                "chainID": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "expiredAt": {
+                    "type": "string"
+                },
+                "externalID": {
+                    "type": "string"
+                },
+                "fromAmount": {
+                    "type": "string"
+                },
+                "fromProfile": {
+                    "$ref": "#/definitions/MochiProfile"
+                },
+                "fromProfileID": {
+                    "type": "string"
+                },
+                "fromProfileSource": {
+                    "type": "string"
+                },
+                "fromToken": {
+                    "$ref": "#/definitions/Token"
+                },
+                "fromTokenId": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "internalID": {
+                    "type": "integer"
+                },
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "onchainTxHash": {
+                    "type": "string"
+                },
+                "originalTxID": {
+                    "type": "string"
+                },
+                "otherProfile": {
+                    "$ref": "#/definitions/MochiProfile"
+                },
+                "otherProfileID": {
+                    "type": "string"
+                },
+                "otherProfileIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "otherProfileSource": {
+                    "type": "string"
+                },
+                "otherProfiles": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/MochiProfile"
+                    }
+                },
+                "settledAt": {
+                    "type": "string"
+                },
+                "sourcePlatform": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "toAmount": {
+                    "type": "string"
+                },
+                "toToken": {
+                    "$ref": "#/definitions/Token"
+                },
+                "toTokenId": {
+                    "type": "string"
+                },
+                "token": {
+                    "$ref": "#/definitions/Token"
+                },
+                "tokenID": {
+                    "type": "string"
+                },
+                "totalAmount": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                },
+                "usdAmount": {
+                    "type": "number"
                 }
             }
         },
@@ -10887,6 +11293,44 @@ const docTemplate = `{
                 }
             }
         },
+        "Token": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "chain": {
+                    "$ref": "#/definitions/Chain"
+                },
+                "chainID": {
+                    "type": "string"
+                },
+                "coinGeckoID": {
+                    "type": "string"
+                },
+                "decimal": {
+                    "type": "integer"
+                },
+                "icon": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "native": {
+                    "type": "boolean"
+                },
+                "price": {
+                    "type": "number"
+                },
+                "symbol": {
+                    "type": "string"
+                }
+            }
+        },
         "TopContributor": {
             "type": "object",
             "properties": {
@@ -11873,7 +12317,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "employeeStatus": {
-                    "$ref": "#/definitions/WorkingStatus"
+                    "type": "string"
                 }
             }
         },
@@ -12340,23 +12784,6 @@ const docTemplate = `{
                 "WorkUnitTypeManagement",
                 "WorkUnitTypeTraining",
                 "WorkUnitTypeLearning"
-            ]
-        },
-        "WorkingStatus": {
-            "type": "string",
-            "enum": [
-                "on-boarding",
-                "left",
-                "probation",
-                "full-time",
-                "contractor"
-            ],
-            "x-enum-varnames": [
-                "WorkingStatusOnBoarding",
-                "WorkingStatusLeft",
-                "WorkingStatusProbation",
-                "WorkingStatusFullTime",
-                "WorkingStatusContractor"
             ]
         },
         "github_com_dwarvesf_fortress-api_pkg_model.SortOrder": {

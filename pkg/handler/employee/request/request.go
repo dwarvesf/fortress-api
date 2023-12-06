@@ -262,3 +262,7 @@ type SalaryAdvanceReportRequest struct {
 
 	IsPaid *bool `json:"isPaid" form:"isPaid"`
 } // @name SalaryAdvanceReportRequest
+
+type GetEmployeeEarnTransactionsRequest struct {
+	view.Pagination
+} // @name GetEmployeeEarnTransactionsRequest
