@@ -46,4 +46,6 @@ type IController interface {
 	CheckSalaryAdvance(discordID string) (string, string, error)
 	ListWithMMAScore() (employees []model.EmployeeMMAScoreData, err error)
 	ListAggregatedSalaryAdvance(input ListAggregatedSalaryAdvanceInput) (*model.SalaryAdvanceReport, error)
+	GetEmployeeEarnTransactions(discordID string, input GetEmployeeEarnTransactionsInput) (model.EmployeeEarnTransactions, int64, error)
+	GetEmployeeTotalEarn(discordID string) (string, float64, error)
 }

@@ -92,6 +92,15 @@ definitions:
       employeeID:
         type: string
     type: object
+  AmountEachProfiles:
+    properties:
+      amount:
+        type: string
+      profileID:
+        type: string
+      usdAmount:
+        type: number
+    type: object
   ApiError:
     description: validation error details
     properties:
@@ -106,6 +115,21 @@ definitions:
       msg:
         description: error message
         type: string
+    type: object
+  Application:
+    properties:
+      active:
+        type: boolean
+      applicationProfileID:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      ownerProfileID:
+        type: string
+      serviceFee:
+        type: number
     type: object
   AssignMemberRequest:
     properties:
@@ -145,6 +169,24 @@ definitions:
     - rate
     - seniorityID
     - status
+    type: object
+  AssociatedAccounts:
+    properties:
+      createdAt:
+        type: string
+      id:
+        type: string
+      isGuildMember:
+        type: boolean
+      platform:
+        type: string
+      platformIdentifier:
+        type: string
+      platformMetadata: {}
+      profileID:
+        type: string
+      updatedAt:
+        type: string
     type: object
   Audit:
     properties:
@@ -476,6 +518,25 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/BraineryMetric'
+    type: object
+  Chain:
+    properties:
+      chainID:
+        type: string
+      explorer:
+        type: string
+      icon:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      rpc:
+        type: string
+      symbol:
+        type: string
+      type:
+        type: string
     type: object
   Chapter:
     properties:
@@ -1113,9 +1174,8 @@ definitions:
           $ref: '#/definitions/Stack'
         type: array
       status:
-        allOf:
-        - $ref: '#/definitions/WorkingStatus'
         description: working info
+        type: string
       teamEmail:
         type: string
       updatedAt:
@@ -1225,6 +1285,13 @@ definitions:
         type: string
       status:
         type: string
+    type: object
+  EmployeeTotalEarn:
+    properties:
+      totalEarnsICY:
+        type: string
+      totalEarnsUSD:
+        type: number
     type: object
   EngagementDashboard:
     properties:
@@ -1425,6 +1492,26 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/Client'
+    type: object
+  GetEmployeeEarnTransactionsResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/MochiTransaction'
+        type: array
+      page:
+        description: page index
+        type: integer
+      size:
+        description: page size
+        type: integer
+      total:
+        type: integer
+    type: object
+  GetEmployeeTotalEarnResponse:
+    properties:
+      data:
+        $ref: '#/definitions/EmployeeTotalEarn'
     type: object
   GetEngagementDashboardDetailResponse:
     properties:
@@ -1868,6 +1955,107 @@ definitions:
         items:
           $ref: '#/definitions/MetaData'
         type: array
+    type: object
+  MochiProfile:
+    properties:
+      application:
+        $ref: '#/definitions/Application'
+      associatedAccounts:
+        items:
+          $ref: '#/definitions/AssociatedAccounts'
+        type: array
+      avatar:
+        type: string
+      createdAt:
+        type: string
+      id:
+        type: string
+      profileName:
+        type: string
+      type:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  MochiTransaction:
+    properties:
+      action:
+        type: string
+      amount:
+        type: string
+      amountEachProfiles:
+        items:
+          $ref: '#/definitions/AmountEachProfiles'
+        type: array
+      chainID:
+        type: string
+      createdAt:
+        type: string
+      expiredAt:
+        type: string
+      externalID:
+        type: string
+      fromAmount:
+        type: string
+      fromProfile:
+        $ref: '#/definitions/MochiProfile'
+      fromProfileID:
+        type: string
+      fromProfileSource:
+        type: string
+      fromToken:
+        $ref: '#/definitions/Token'
+      fromTokenId:
+        type: string
+      id:
+        type: string
+      internalID:
+        type: integer
+      metadata:
+        additionalProperties: true
+        type: object
+      onchainTxHash:
+        type: string
+      originalTxID:
+        type: string
+      otherProfile:
+        $ref: '#/definitions/MochiProfile'
+      otherProfileID:
+        type: string
+      otherProfileIds:
+        items:
+          type: string
+        type: array
+      otherProfileSource:
+        type: string
+      otherProfiles:
+        items:
+          $ref: '#/definitions/MochiProfile'
+        type: array
+      settledAt:
+        type: string
+      sourcePlatform:
+        type: string
+      status:
+        type: string
+      toAmount:
+        type: string
+      toToken:
+        $ref: '#/definitions/Token'
+      toTokenId:
+        type: string
+      token:
+        $ref: '#/definitions/Token'
+      tokenID:
+        type: string
+      totalAmount:
+        type: string
+      type:
+        type: string
+      updatedAt:
+        type: string
+      usdAmount:
+        type: number
     type: object
   NotionTechRadar:
     properties:
@@ -2936,6 +3124,31 @@ definitions:
       data:
         $ref: '#/definitions/SurveyTopicDetail'
     type: object
+  Token:
+    properties:
+      address:
+        type: string
+      chain:
+        $ref: '#/definitions/Chain'
+      chainID:
+        type: string
+      coinGeckoID:
+        type: string
+      decimal:
+        type: integer
+      icon:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      native:
+        type: boolean
+      price:
+        type: number
+      symbol:
+        type: string
+    type: object
   TopContributor:
     properties:
       count:
@@ -3597,7 +3810,7 @@ definitions:
   UpdateWorkingStatusRequest:
     properties:
       employeeStatus:
-        $ref: '#/definitions/WorkingStatus'
+        type: string
     type: object
   UpdatedProject:
     properties:
@@ -3905,20 +4118,6 @@ definitions:
     - WorkUnitTypeManagement
     - WorkUnitTypeTraining
     - WorkUnitTypeLearning
-  WorkingStatus:
-    enum:
-    - on-boarding
-    - left
-    - probation
-    - full-time
-    - contractor
-    type: string
-    x-enum-varnames:
-    - WorkingStatusOnBoarding
-    - WorkingStatusLeft
-    - WorkingStatusProbation
-    - WorkingStatusFullTime
-    - WorkingStatusContractor
   github_com_dwarvesf_fortress-api_pkg_model.SortOrder:
     enum:
     - asc
@@ -4865,6 +5064,86 @@ paths:
       summary: Get summary for workunit distribution dashboard
       tags:
       - Dashboard
+  /discords/{discord_id}/earns/total:
+    get:
+      consumes:
+      - application/json
+      description: Get total earn of employee
+      operationId: GetEmployeeTotalEarn
+      parameters:
+      - description: Employee Discord ID
+        in: path
+        name: discord_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/GetEmployeeTotalEarnResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get total earn of employee
+      tags:
+      - Employee
+  /discords/{discord_id}/earns/transactions:
+    get:
+      consumes:
+      - application/json
+      description: List earn transactions of employee
+      operationId: GetEmployeeEarnTransactions
+      parameters:
+      - description: Employee Discord ID
+        in: path
+        name: discord_id
+        required: true
+        type: string
+      - description: Page
+        in: query
+        name: page
+        type: integer
+      - description: Size
+        in: query
+        name: size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/GetEmployeeEarnTransactionsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List earn transactions of employee
+      tags:
+      - Employee
   /discords/salary-advance-report:
     get:
       consumes:
