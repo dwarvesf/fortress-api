@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/cenkalti/backoff/v4"
+
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
@@ -140,20 +142,41 @@ func (c *controller) PublicAdvanceSalaryLog(in model.LogDiscordInput) error {
 func (c *controller) PublishIcyActivityLog() error {
 	logger := c.logger.Field("method", "PublishIcyActivityLog")
 
-	resp, err := c.service.MochiPay.GetListTransactions(mochipay.ListTransactionsRequest{
-		Status: mochipay.TransactionStatusSuccess,
-		ActionList: []mochipay.TransactionAction{
-			mochipay.TransactionActionVaultTransfer,
-		},
-	})
-	if err != nil {
-		logger.Error(err, "GetListTransactions failed")
+	txns := make([]mochipay.TransactionData, 0)
+
+	operation := func() error {
+		resp, err := c.service.MochiPay.GetListTransactions(mochipay.ListTransactionsRequest{
+			Size:       20,
+			Status:     mochipay.TransactionStatusSuccess,
+			ActionList: []mochipay.TransactionAction{mochipay.TransactionActionVaultTransfer},
+		})
+		if err != nil {
+			logger.Error(err, "GetListTransactions failed")
+			return err
+		}
+
+		// reverse txns to send notification from oldest to newest
+		for i := len(resp.Data) - 1; i >= 0; i-- {
+			txns = append(txns, resp.Data[i])
+		}
+
+		return nil
+	}
+
+	// Configure backoff parameters
+	expBackoff := backoff.NewExponentialBackOff()
+	expBackoff.InitialInterval = 2 * time.Second // Initial sleep interval after an error
+	expBackoff.Multiplier = 2                    // Next interval multiplier
+	expBackoff.MaxElapsedTime = 30 * time.Second // Maximum cumulative time for retries, retry 4 times = 2 + 4 + 8 + 16 = 30 seconds
+
+	if err := backoff.Retry(operation, expBackoff); err != nil {
+		logger.Error(err, "GetListTransactions failed after all retry")
 		return err
 	}
 
 	now := time.Now()
 
-	for _, transaction := range resp.Data {
+	for _, transaction := range txns {
 		// Just publish transaction in 3 minutes
 		if transaction.CreatedAt.Before(now.Add(-3 * time.Minute)) {
 			continue
