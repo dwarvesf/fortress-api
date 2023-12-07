@@ -55,19 +55,24 @@ type ClientContactInfo struct {
 } // @name ClientContactInfo
 
 type CompanyInfo struct {
-	ID                 string                              `json:"id"`
-	Name               string                              `json:"name"`
-	Description        string                              `json:"description"`
-	RegistrationNumber string                              `json:"registrationNumber"`
-	Info               map[string]model.CompanyContactInfo `json:"info"`
+	ID                 string                        `json:"id"`
+	Name               string                        `json:"name"`
+	Description        string                        `json:"description"`
+	RegistrationNumber string                        `json:"registrationNumber"`
+	Info               map[string]CompanyContactInfo `json:"info"`
 } // @name CompanyInfo
+
+type CompanyContactInfo struct {
+	Address string `json:"address"`
+	Phone   string `json:"phone"`
+} // @name CompanyContactInfo
 
 func ToCompanyInfo(c *model.CompanyInfo) *CompanyInfo {
 	if c == nil {
 		return nil
 	}
 
-	companyContact := make(map[string]model.CompanyContactInfo)
+	companyContact := make(map[string]CompanyContactInfo)
 	err := json.Unmarshal(c.Info.Bytes, &companyContact)
 	if err != nil {
 		return nil
@@ -190,7 +195,7 @@ func ToInvoiceInfo(invoice *model.Invoice) (*Invoice, error) {
 func ToInvoiceTemplateResponse(p *model.Project, lastInvoice *model.Invoice, nextInvoiceNUmber string) (*ProjectInvoiceTemplate, error) {
 	companyInfo := CompanyInfo{}
 	if p.CompanyInfo != nil {
-		companyContact := make(map[string]model.CompanyContactInfo)
+		companyContact := make(map[string]CompanyContactInfo)
 		_ = json.Unmarshal(p.CompanyInfo.Info.Bytes, &companyContact)
 
 		companyInfo = CompanyInfo{
@@ -322,7 +327,7 @@ func ToInvoiceListResponse(invoices []*model.Invoice) ([]InvoiceData, error) {
 		clientInfo := ClientInfo{}
 		if invoice.Project != nil {
 			if invoice.Project.CompanyInfo != nil {
-				companyContact := make(map[string]model.CompanyContactInfo)
+				companyContact := make(map[string]CompanyContactInfo)
 				_ = json.Unmarshal(invoice.Project.CompanyInfo.Info.Bytes, &companyContact)
 
 				companyInfo = CompanyInfo{

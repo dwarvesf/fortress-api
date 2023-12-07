@@ -252,6 +252,17 @@ func (i UpdateRoleInput) Validate() error {
 }
 
 type SalaryAdvanceRequest struct {
-	DiscordID string `json:"discord_id"`
+	DiscordID string `json:"discordID"`
 	Amount    string `json:"amount"`
 } // @name SalaryAdvanceRequest
+
+type SalaryAdvanceReportRequest struct {
+	view.Pagination
+	model.SortOrder `json:"sortOrder" form:"sortOrder"`
+
+	IsPaid *bool `json:"isPaid" form:"isPaid"`
+} // @name SalaryAdvanceReportRequest
+
+type GetEmployeeEarnTransactionsRequest struct {
+	view.Pagination
+} // @name GetEmployeeEarnTransactionsRequest

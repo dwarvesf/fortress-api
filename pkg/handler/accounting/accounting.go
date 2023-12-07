@@ -127,20 +127,22 @@ func (h handler) createTodoInOutGroup(outGroupID int, projectID int, outTodoTemp
 
 		// Create CBRE management fee from `Office Rental` template
 		if strings.Contains(v.Name, "Office Rental") {
-			partment := strings.Replace(v.Name, "Office Rental", "", 1)
-			extraMsg = fmt.Sprintf("Hado Office Rental %s %v/%v", partment, month, year)
+			extraMsg = fmt.Sprintf("Hado Office Rental %v/%v", month, year)
 
 			s := v.Name
-			contentElectric := strings.Replace(s, "Office Rental", "Tiền điện", 1)
-			todo := bcModel.Todo{
-				Content:     fmt.Sprintf("%s %v/%v", contentElectric, month, year),
-				DueOn:       fmt.Sprintf("%v-%v-%v", timeutil.LastDayOfMonth(month, year).Day(), month, year),
-				AssigneeIDs: []int{consts.QuangBasecampID},
-			}
-			_, err := h.service.Basecamp.Todo.Create(projectID, outGroupID, todo)
-			if err != nil {
-				l.Error(err, "Fail when try to create CBRE management fee")
-				return err
+			for _, v := range []string{"Tiền điện", "CBRE"} {
+				content := strings.Replace(s, "Office Rental", v, 1)
+				todo := bcModel.Todo{
+					Content:     fmt.Sprintf("%s %v/%v", content, month, year),
+					Description: fmt.Sprintf("I3.18.08 thanh toan %s %v/%v", v, month, year),
+					DueOn:       fmt.Sprintf("%v-%v-%v", timeutil.LastDayOfMonth(month, year).Day(), month, year),
+					AssigneeIDs: []int{consts.QuangBasecampID},
+				}
+				_, err := h.service.Basecamp.Todo.Create(projectID, outGroupID, todo)
+				if err != nil {
+					l.Error(err, "Fail when try to create CBRE management fee")
+					return err
+				}
 			}
 		}
 

@@ -60,18 +60,44 @@ func ToListFeedback(eTopics []*model.EmployeeEventTopic) []Feedback {
 }
 
 type ListFeedbackResponse struct {
+	PaginationResponse
 	Data []Feedback `json:"data"`
 } // @name ListFeedbackResponse
 
 type QuestionAnswer struct {
-	EventQuestionID string               `json:"eventQuestionID"`
-	Content         string               `json:"content"`
-	Answer          string               `json:"answer"`
-	Note            string               `json:"note"`
-	Type            string               `json:"type"`
-	Order           int64                `json:"order"`
-	Domain          model.QuestionDomain `json:"domain"`
+	EventQuestionID string         `json:"eventQuestionID"`
+	Content         string         `json:"content"`
+	Answer          string         `json:"answer"`
+	Note            string         `json:"note"`
+	Type            string         `json:"type"`
+	Order           int64          `json:"order"`
+	Domain          QuestionDomain `json:"domain"`
 } // @name QuestionAnswer
+
+type QuestionDomain string // @name QuestionDomain
+
+const (
+	QuestionDomainEngagement QuestionDomain = "engagement"
+	QuestionDomainWorkload   QuestionDomain = "workload"
+	QuestionDomainDeadline   QuestionDomain = "deadline"
+	QuestionDomainLearning   QuestionDomain = "learning"
+)
+
+func (e QuestionDomain) IsValid() bool {
+	switch e {
+	case
+		QuestionDomainWorkload,
+		QuestionDomainDeadline,
+		QuestionDomainLearning:
+		return true
+	}
+	return false
+}
+
+// String returns the string type from the QuestionDomain type
+func (e QuestionDomain) String() string {
+	return string(e)
+}
 
 type FeedBackReviewDetail struct {
 	Questions    []QuestionAnswer  `json:"questions"`
@@ -80,7 +106,7 @@ type FeedBackReviewDetail struct {
 	Employee     BasicEmployeeInfo `json:"employee"`
 	Reviewer     BasicEmployeeInfo `json:"reviewer"`
 	Project      *BasicProjectInfo `json:"project"`
-}
+} // @name FeedBackReviewDetail
 
 type FeedbackDetail struct {
 	Answers      []*QuestionAnswer `json:"answers"`
@@ -124,7 +150,7 @@ func ToListFeedbackDetails(questions []*model.EmployeeEventQuestion, detailInfo 
 			Note:            q.Note,
 			Type:            q.Type,
 			Order:           q.Order,
-			Domain:          q.Domain,
+			Domain:          QuestionDomain(q.Domain),
 		})
 	}
 
@@ -173,7 +199,7 @@ func ToListSubmitFeedback(questions []*model.EmployeeEventQuestion, detailInfo F
 			Note:            q.Note,
 			Type:            q.Type,
 			Order:           q.Order,
-			Domain:          q.Domain,
+			Domain:          QuestionDomain(q.Domain),
 		})
 	}
 
@@ -192,7 +218,7 @@ func ToListSubmitFeedback(questions []*model.EmployeeEventQuestion, detailInfo F
 
 type FeedbackReviewDetailResponse struct {
 	Data *FeedBackReviewDetail `json:"data"`
-}
+} // @name FeedbackReviewDetailResponse
 
 func ToFeedbackReviewDetail(questions []*model.EmployeeEventQuestion, topic *model.EmployeeEventTopic, reviewer *model.EmployeeEventReviewer, project *model.Project) FeedBackReviewDetail {
 	var qs []QuestionAnswer
@@ -209,7 +235,7 @@ func ToFeedbackReviewDetail(questions []*model.EmployeeEventQuestion, topic *mod
 			Note:            q.Note,
 			Type:            q.Type,
 			Order:           q.Order,
-			Domain:          q.Domain,
+			Domain:          QuestionDomain(q.Domain),
 		})
 	}
 

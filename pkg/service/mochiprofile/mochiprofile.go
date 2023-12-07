@@ -14,6 +14,7 @@ import (
 type IService interface {
 	GetProfile(id string) (*MochiProfile, error)
 	GetListProfiles(req ListProfilesRequest) (*GetMochiProfilesResponse, error)
+	GetProfileByDiscordID(discordID string) (*MochiProfile, error)
 }
 
 type client struct {
@@ -56,7 +57,37 @@ func (m *client) GetProfile(id string) (*MochiProfile, error) {
 		return nil, fmt.Errorf("more than 1 profile")
 	}
 
-	return &res.Data[0], nil
+	return &res.Data[0], handleErrorStatusCode("Get Mochi profile", r.StatusCode)
+}
+
+func (m *client) GetProfileByDiscordID(discordID string) (*MochiProfile, error) {
+	var client = &http.Client{
+		Timeout: 10 * time.Second,
+	}
+
+	url := fmt.Sprintf("%s/api/v1/profiles/get-by-discord/%s", m.cfg.MochiProfile.BaseURL, discordID)
+	r, err := client.Get(url)
+	if err != nil {
+		m.l.Errorf(err, "[mochipay.GetListTransaction] client.Get failed")
+		return nil, err
+	}
+	defer r.Body.Close()
+
+	res := &MochiProfile{}
+	if err := json.NewDecoder(r.Body).Decode(&res); err != nil {
+		m.l.Errorf(err, "[mochipay.GetListTransaction] decoder.Decode failed")
+		return nil, err
+	}
+
+	return res, handleErrorStatusCode("Get Mochi profile by discord ID", r.StatusCode)
+}
+
+func handleErrorStatusCode(method string, statusCode int) error {
+	if statusCode >= 200 && statusCode < 300 {
+		return nil
+	}
+
+	return fmt.Errorf("%s status code: %d", method, statusCode)
 }
 
 func (m *client) GetListProfiles(req ListProfilesRequest) (*GetMochiProfilesResponse, error) {

@@ -119,7 +119,7 @@ func (h *handler) List(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse(view.ToEmployeeListData(employees, userInfo),
-		&view.PaginationResponse{Pagination: pagination, Total: total}, nil, nil, ""))
+		&view.PaginationResponse{Pagination: view.Pagination{Page: pagination.Page, Size: pagination.Size, Sort: pagination.Sort}, Total: total}, nil, nil, ""))
 }
 
 func (h *handler) getWorkingStatusInput(input []string, userInfo *model.CurrentLoggedUserInfo) ([]string, error) {
@@ -849,9 +849,9 @@ func (h *handler) ListWithMMAScore(c *gin.Context) {
 }
 
 // SalaryAdvance godoc
-// @Summary Advance salary by discord id
-// @Description Update account status by employee id
-// @id advanceSalary
+// @Summary Salary advance by discord id
+// @Description Salary advance by discord id
+// @id salaryAdvance
 // @Tags Employee
 // @Accept  json
 // @Produce  json
@@ -893,7 +893,7 @@ func (h *handler) SalaryAdvance(c *gin.Context) {
 		Type: "employee_advance_salary",
 		Data: map[string]interface{}{
 			"employee_id": response.EmployeeID,
-			"amount":      fmt.Sprintf("%v ICY($%v)", response.AmountIcy, response.AmountUSD),
+			"amount":      fmt.Sprintf("%v ICY($%v)", response.AmountICY, response.AmountUSD),
 		},
 	})
 	if err != nil {
@@ -902,7 +902,7 @@ func (h *handler) SalaryAdvance(c *gin.Context) {
 
 	err = h.controller.Discord.PublicAdvanceSalaryLog(model.LogDiscordInput{
 		Data: map[string]interface{}{
-			"icy_amount": response.AmountIcy,
+			"icy_amount": response.AmountICY,
 			"usd_amount": response.AmountUSD,
 		},
 	})
@@ -910,9 +910,23 @@ func (h *handler) SalaryAdvance(c *gin.Context) {
 		l.Error(err, "failed to create discord public log")
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToSalaryAdvance(response.AmountIcy, response.AmountUSD, response.TransactionID, response.TransactionHash), nil, nil, nil, "ok"))
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToSalaryAdvance(response.AmountICY, response.AmountUSD, response.TransactionID, response.TransactionHash), nil, nil, nil, ""))
 }
 
+// CheckSalaryAdvance godoc
+// @Summary Check salary advance by discord id
+// @Description Check salary advance by discord id
+// @id checkSalaryAdvance
+// @Tags Employee
+// @Accept  json
+// @Produce  json
+// @Security BearerAuth
+// @Param checkSalaryAdvanceRequest body SalaryAdvanceRequest true "Check Salary Advance Request"
+// @Success 200 {object} CheckSalaryAdvanceResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /employees/check-advance-salary [post]
 func (h *handler) CheckSalaryAdvance(c *gin.Context) {
 	l := h.logger.Fields(
 		logger.Fields{
@@ -928,7 +942,7 @@ func (h *handler) CheckSalaryAdvance(c *gin.Context) {
 		return
 	}
 
-	amountIcy, amountUSD, err := h.controller.Employee.CheckSalaryAdvance(body.DiscordID)
+	amountICY, amountUSD, err := h.controller.Employee.CheckSalaryAdvance(body.DiscordID)
 	if err != nil {
 		l.Error(err, "failed to check advance salary")
 		errs.ConvertControllerErr(c, err)
@@ -936,5 +950,173 @@ func (h *handler) CheckSalaryAdvance(c *gin.Context) {
 	}
 
 	// 3. return employee
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToCheckSalaryAdvance(amountIcy, amountUSD), nil, nil, nil, "ok"))
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToCheckSalaryAdvance(amountICY, amountUSD), nil, nil, nil, "ok"))
+}
+
+// SalaryAdvanceReport godoc
+// @Summary List salary advance aggregated by employee
+// @Description List salary advance aggregated by employee
+// @id SalaryAdvanceReport
+// @Tags Employee
+// @Accept  json
+// @Produce  json
+// @Security BearerAuth
+// @Param SalaryAdvanceReportRequest body SalaryAdvanceReportRequest true "Get List Aggregated Salary Advance Request"
+// @Success 200 {object} SalaryAdvanceReportResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /discords/salary-advance-report [get]
+func (h *handler) SalaryAdvanceReport(c *gin.Context) {
+	l := h.logger.Fields(
+		logger.Fields{
+			"handler": "employee",
+			"method":  "ListSalaryAdvance",
+		},
+	)
+
+	input := request.SalaryAdvanceReportRequest{}
+	if err := c.ShouldBindQuery(&input); err != nil {
+		l.Error(err, "failed to decode body")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, input, ""))
+		return
+	}
+
+	// default size is 10
+	if input.Pagination.Size == 0 {
+		input.Pagination.Size = 10
+	}
+
+	// default sort by amount_icy
+	if input.Pagination.Sort == "" {
+		input.Pagination.Sort = "amount_icy"
+	}
+
+	// default sort is DESC
+	if input.SortOrder == "" {
+		input.SortOrder = model.SortOrderDESC
+	}
+
+	if !input.SortOrder.IsValid() {
+		l.Error(errs.ErrInvalidSortType, "invalid sort type")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidSortType, nil, ""))
+		return
+	}
+
+	result, err := h.controller.Employee.ListAggregatedSalaryAdvance(employee.ListAggregatedSalaryAdvanceInput{
+		Pagination: model.Pagination{
+			Page: input.Pagination.Page,
+			Size: input.Pagination.Size,
+			Sort: input.Pagination.Sort,
+		},
+		SortOrder: input.SortOrder,
+		IsPaid:    input.IsPaid,
+	})
+	if err != nil {
+		l.Error(err, "failed to list advance salary")
+		errs.ConvertControllerErr(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse(view.ToSalaryAdvanceReport(*result), &view.PaginationResponse{Pagination: input.Pagination, Total: result.Count}, nil, nil, ""))
+}
+
+// GetEmployeeEarnTransactions godoc
+// @Summary List earn transactions of employee
+// @Description List earn transactions of employee
+// @id GetEmployeeEarnTransactions
+// @Tags Employee
+// @Accept  json
+// @Produce  json
+// @Security BearerAuth
+// @Param discord_id path string true "Employee Discord ID"
+// @Param page query int false "Page"
+// @Param size query int false "Size"
+// @Success 200 {object} GetEmployeeEarnTransactionsResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /discords/{discord_id}/earns/transactions [get]
+func (h *handler) GetEmployeeEarnTransactions(c *gin.Context) {
+	l := h.logger.Fields(
+		logger.Fields{
+			"handler": "employee",
+			"method":  "GetEmployeeEarnTransactions",
+		},
+	)
+
+	discordID := c.Param("discord_id")
+
+	input := request.GetEmployeeEarnTransactionsRequest{}
+	if err := c.ShouldBindQuery(&input); err != nil {
+		l.Error(err, "failed to decode body")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, input, ""))
+		return
+	}
+
+	// default size is 10
+	if input.Pagination.Size == 0 {
+		input.Pagination.Size = 10
+	}
+
+	result, total, err := h.controller.Employee.GetEmployeeEarnTransactions(discordID, employee.GetEmployeeEarnTransactionsInput{
+		Pagination: model.Pagination{
+			Page: input.Pagination.Page,
+			Size: input.Pagination.Size,
+			Sort: input.Pagination.Sort,
+		},
+	})
+	if err != nil {
+		l.Error(err, "failed to get employee earn transactions")
+		errs.ConvertControllerErr(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse(
+		view.ToEmployeeEarnsTransactions(result),
+		&view.PaginationResponse{
+			Pagination: view.Pagination{
+				Page: input.Pagination.Page,
+				Size: input.Pagination.Size,
+				Sort: input.Pagination.Sort,
+			},
+			Total: total,
+		}, nil, nil, ""))
+}
+
+// GetEmployeeTotalEarn godoc
+// @Summary Get total earn of employee
+// @Description Get total earn of employee
+// @id GetEmployeeTotalEarn
+// @Tags Employee
+// @Accept  json
+// @Produce  json
+// @Security BearerAuth
+// @Param discord_id path string true "Employee Discord ID"
+// @Success 200 {object} GetEmployeeTotalEarnResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /discords/{discord_id}/earns/total [get]
+func (h *handler) GetEmployeeTotalEarn(c *gin.Context) {
+	l := h.logger.Fields(
+		logger.Fields{
+			"handler": "employee",
+			"method":  "GetEmployeeTotalEarn",
+		},
+	)
+
+	discordID := c.Param("discord_id")
+
+	earnsICY, earnsUSD, err := h.controller.Employee.GetEmployeeTotalEarn(discordID)
+	if err != nil {
+		l.Error(err, "failed to get employee total earn")
+		errs.ConvertControllerErr(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse(view.EmployeeTotalEarn{
+		TotalEarnsICY: earnsICY,
+		TotalEarnsUSD: earnsUSD,
+	}, nil, nil, nil, ""))
 }

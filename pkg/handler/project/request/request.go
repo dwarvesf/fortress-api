@@ -16,12 +16,12 @@ import (
 const emailRegex = ".+@.+\\..+"
 
 type GetListProjectInput struct {
-	model.Pagination
+	view.Pagination
 
 	Name   string   `form:"name" json:"name"`
 	Status []string `form:"status" json:"status"`
 	Type   string   `form:"type" json:"type"`
-}
+} // @name GetListProjectInput
 
 type UpdateProjectGeneralInfoRequest struct {
 	Name           string      `form:"name" json:"name" binding:"required"`
@@ -91,7 +91,15 @@ func (e ProjectStatus) String() string {
 
 func (i *GetListProjectInput) StandardizeInput() {
 	statuses := utils.RemoveEmptyString(i.Status)
-	i.Pagination.Standardize()
+	pagination := model.Pagination{
+		Page: i.Page,
+		Size: i.Size,
+		Sort: i.Sort,
+	}
+	pagination.Standardize()
+	i.Page = pagination.Page
+	i.Size = pagination.Size
+	i.Sort = pagination.Sort
 	i.Status = statuses
 }
 
@@ -186,7 +194,7 @@ func (i *CreateProjectRequest) GetStartDate() *time.Time {
 }
 
 type GetListStaffInput struct {
-	model.Pagination
+	view.Pagination
 
 	Status   string `form:"status" json:"status"`
 	Preload  bool   `json:"preload" form:"preload,default=true"`

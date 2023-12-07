@@ -99,7 +99,7 @@ func (h *handler) List(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse[any](rs, &view.PaginationResponse{Total: total, Pagination: pagination}, nil, nil, ""))
+	c.JSON(http.StatusOK, view.CreateResponse[any](rs, &view.PaginationResponse{Total: total, Pagination: view.Pagination{Page: pagination.Page, Size: pagination.Size, Sort: pagination.Sort}}, nil, nil, ""))
 }
 
 // GetTemplate godoc

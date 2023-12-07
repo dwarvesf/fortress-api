@@ -13,11 +13,11 @@ import (
 )
 
 type SalaryAdvanceResponse struct {
-	EmployeeID      string `json:"employee_id"`
-	AmountIcy       string `json:"amount_icy"`
-	AmountUSD       string `json:"amount_usd"`
-	TransactionID   string `json:"transaction_id"`
-	TransactionHash string `json:"transaction_hash"`
+	EmployeeID      string
+	AmountICY       string
+	AmountUSD       string
+	TransactionID   string
+	TransactionHash string
 }
 
 func (r *controller) SalaryAdvance(discordID string, amount int64) (*SalaryAdvanceResponse, error) {
@@ -106,7 +106,7 @@ func (r *controller) SalaryAdvance(discordID string, amount int64) (*SalaryAdvan
 
 	response := &SalaryAdvanceResponse{
 		EmployeeID:      employee.ID.String(),
-		AmountIcy:       utils.FormatNumber(amount),
+		AmountICY:       utils.FormatNumber(amount),
 		AmountUSD:       utils.FormatMoney(amountUSD, money.USD),
 		TransactionID:   strconv.Itoa(int(txs[0].TransactionID)),
 		TransactionHash: txs[0].RecipientID,
@@ -219,4 +219,41 @@ func (r *controller) calculateMaxAdvanceAmountIcy(salary *model.BaseSalary, icyU
 	advanceAmountIcy := advanceAmountUSD / icyUsdRate
 
 	return int64(math.Round(advanceAmountIcy/10) * 10), nil
+}
+
+type ListAggregatedSalaryAdvanceInput struct {
+	model.Pagination
+	model.SortOrder
+
+	IsPaid *bool
+}
+
+func (r *controller) ListAggregatedSalaryAdvance(input ListAggregatedSalaryAdvanceInput) (*model.SalaryAdvanceReport, error) {
+	list, err := r.store.SalaryAdvance.ListAggregatedSalaryAdvance(r.repo.DB(), input.IsPaid, input.Pagination, input.SortOrder)
+	if err != nil {
+		return nil, err
+	}
+
+	for i, row := range list {
+		employee, err := r.store.Employee.One(r.repo.DB(), row.EmployeeID, false)
+		if err != nil {
+			return nil, err
+		}
+
+		list[i].Employee = employee
+	}
+
+	count, totalICY, totalUSD, err := r.store.SalaryAdvance.TotalAggregatedSalaryAdvance(r.repo.DB(), input.IsPaid)
+	if err != nil {
+		return nil, err
+	}
+
+	report := &model.SalaryAdvanceReport{
+		SalaryAdvances: list,
+		TotalICY:       totalICY,
+		TotalUSD:       totalUSD,
+		Count:          count,
+	}
+
+	return report, nil
 }

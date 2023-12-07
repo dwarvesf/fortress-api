@@ -55,7 +55,7 @@ type NotionTechRadar struct {
 	Tags       []string `json:"tags"`
 	Quadrant   string   `json:"quadrant"`
 	Ring       string   `json:"ring"`
-}
+} // @name NotionTechRadar
 
 type NotionDigest struct {
 	ID        string    `json:"id"`

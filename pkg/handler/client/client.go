@@ -232,7 +232,7 @@ func (h *handler) Delete(c *gin.Context) {
 // @Security BearerAuth
 // @Success 200 {object} PublicClientListResponse
 // @Failure 500 {object} ErrorResponse
-// @Router /clients [get]
+// @Router /public/clients [get]
 func (h *handler) PublicList(c *gin.Context) {
 	l := h.logger.Fields(logger.Fields{
 		"handler": "client",

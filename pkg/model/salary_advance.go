@@ -20,3 +20,18 @@ type SalaryAdvance struct {
 }
 
 func (SalaryAdvance) TableName() string { return "salary_advance_histories" }
+
+type AggregatedSalaryAdvance struct {
+	EmployeeID string
+	Employee   *Employee
+
+	AmountICY int64
+	AmountUSD float64
+}
+
+type SalaryAdvanceReport struct {
+	SalaryAdvances []AggregatedSalaryAdvance
+	TotalICY       int64
+	TotalUSD       float64
+	Count          int64
+}

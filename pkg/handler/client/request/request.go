@@ -16,7 +16,7 @@ type CreateClientContactInput struct {
 	Role          string   `json:"role"`
 	Emails        []string `json:"emails"`
 	IsMainContact bool     `json:"isMainContact"`
-}
+} // @name CreateClientContactInput
 
 type UpdateClientInput struct {
 	Name               string                      `json:"name"`
@@ -34,4 +34,4 @@ type UpdateClientContactInput struct {
 	Role          string   `json:"role"`
 	Emails        []string `json:"emails"`
 	IsMainContact bool     `json:"isMainContact"`
-}
+} // @name UpdateClientContactInput

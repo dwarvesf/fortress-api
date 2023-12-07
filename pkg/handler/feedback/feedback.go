@@ -98,7 +98,7 @@ func (h *handler) List(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToListFeedback(rs),
-		&view.PaginationResponse{Pagination: pagination, Total: total}, nil, nil, ""))
+		&view.PaginationResponse{Pagination: view.Pagination{Page: pagination.Page, Size: pagination.Size, Sort: pagination.Sort}, Total: total}, nil, nil, ""))
 }
 
 // Detail godoc
