@@ -17,7 +17,7 @@ type TokenInfo struct {
 	Address     string `json:"address"`
 	Decimals    int    `json:"decimals"`
 	Chain       string `json:"chain"`
-	ChainID     string `json:"chain_id"`
+	ChainID     string `json:"chainId"`
 	TotalSupply string `json:"totalSupply"`
 }
 
