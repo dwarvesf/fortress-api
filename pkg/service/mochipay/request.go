@@ -197,3 +197,15 @@ type TransactionMetadata struct {
 	TxHash               string        `json:"tx_hash"`
 	VaultRequest         *VaultRequest `json:"vault_request"`
 }
+
+type BatchBalancesResponse struct {
+	Data []BatchBalancesData `json:"data"`
+}
+
+type BatchBalancesData struct {
+	Id        string `json:"id"`
+	ProfileID string `json:"profile_id"`
+	TokenID   string `json:"token_id"`
+	Amount    string `json:"amount"`
+	Token     Token  `json:"token"`
+}

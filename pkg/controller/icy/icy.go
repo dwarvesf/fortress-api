@@ -2,6 +2,7 @@ package icy
 
 import (
 	"math/big"
+	"strings"
 	"sync"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -12,6 +13,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/service/icyswap"
+	"github.com/dwarvesf/fortress-api/pkg/service/mochiprofile"
 )
 
 type IController interface {
@@ -66,7 +68,7 @@ func (c *controller) Accounting() (*model.IcyAccounting, error) {
 	icyTotalSupply, _ := new(big.Int).SetString(icy.TotalSupply, 10)
 
 	// 3.2 Get total locked icy amount
-	lockedIcyAmount, err := c.getLockedIcy()
+	lockedIcyAmount, err := c.lockedIcyAmount()
 	if err != nil {
 		c.logger.Error(err, "failed to get locked icy amount")
 		return nil, err
@@ -98,7 +100,30 @@ func (c *controller) Accounting() (*model.IcyAccounting, error) {
 	return accounting, nil
 }
 
-func (c *controller) getLockedIcy() (*big.Int, error) {
+func (c *controller) lockedIcyAmount() (*big.Int, error) {
+	lockedIcyAmount := big.NewInt(0)
+
+	// 0. fetch onchain locked icy amount
+	onchainLockedAmount, err := c.onchainLockedIcyAmount()
+	if err != nil {
+		c.logger.Error(err, "failed to get onchain locked icy amount")
+		return nil, err
+	}
+	lockedIcyAmount = new(big.Int).Add(lockedIcyAmount, onchainLockedAmount)
+
+	// 1. fetch offchain locked icy amount
+	offchainLockedAmount, err := c.offchainLockedIcyAmount()
+	if err != nil {
+		c.logger.Error(err, "failed to get offchain locked icy amount")
+		return nil, err
+	}
+	lockedIcyAmount = new(big.Int).Add(lockedIcyAmount, offchainLockedAmount)
+
+	// 2. return result
+	return lockedIcyAmount, nil
+}
+
+func (c *controller) onchainLockedIcyAmount() (*big.Int, error) {
 	icyAddress := common.HexToAddress(c.icy().Address)
 	oldIcySwapContractAddr := common.HexToAddress("0xd327b6d878bcd9d5ec6a5bc99445985d75f0d6e5")
 	icyswapAddr := common.HexToAddress(icyswap.IcySwapAddress)
@@ -137,10 +162,54 @@ func (c *controller) getLockedIcy() (*big.Int, error) {
 		lockedIcyAmount = new(big.Int).Add(lockedIcyAmount, res.amount)
 	}
 
-	vaultIcyBal, _ := new(big.Int).SetString("1000000000000000000", 10)
-	lockedIcyAmount = new(big.Int).Add(lockedIcyAmount, vaultIcyBal)
-
 	return lockedIcyAmount, nil
+}
+
+func (c *controller) offchainLockedIcyAmount() (*big.Int, error) {
+	// 0. get all profile, which type is vault or app
+	profileIds := make([]string, 0)
+	const pageSize int64 = 50
+	var page int64 = 0
+	for {
+		res, err := c.service.MochiProfile.GetListProfiles(mochiprofile.ListProfilesRequest{
+			Types: []mochiprofile.ProfileType{
+				mochiprofile.ProfileTypeApplication,
+				mochiprofile.ProfileTypeVault,
+			},
+			Page: page,
+			Size: pageSize,
+		})
+		if err != nil {
+			return nil, err
+		}
+		for _, p := range res.Data {
+			profileIds = append(profileIds, p.Id)
+		}
+
+		hasNext := res.Pagination.Total/pageSize-page > 0
+		if !hasNext {
+			break
+		}
+		page += 1
+	}
+
+	// 1. get balance of all profiles
+	balRes, err := c.service.MochiPay.GetBatchBalances(profileIds)
+	if err != nil {
+		return nil, err
+	}
+
+	total := big.NewInt(0)
+	icy := c.icy()
+	for _, b := range balRes.Data {
+		// filter token icy
+		if strings.EqualFold(b.Token.Address, icy.Address) && strings.EqualFold(b.Token.ChainId, icy.ChainID) {
+			amount, _ := new(big.Int).SetString(b.Amount, 10)
+			total = new(big.Int).Add(total, amount)
+		}
+	}
+
+	return total, nil
 }
 
 func (c *controller) icy() model.TokenInfo {
@@ -150,6 +219,7 @@ func (c *controller) icy() model.TokenInfo {
 		Address:     "0x8D57d71B02d71e1e449a0E459DE40473Eb8f4a90",
 		Decimals:    18,
 		Chain:       "Polygon",
+		ChainID:     "137",
 		TotalSupply: "100000000000000000000000",
 	}
 }
@@ -161,6 +231,7 @@ func (c *controller) usdt() model.TokenInfo {
 		Address:  "0xc2132D05D31c914a87C6611C10748AEb04B58e8F",
 		Decimals: 6,
 		Chain:    "Polygon",
+		ChainID:  "137",
 	}
 }
 

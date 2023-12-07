@@ -355,16 +355,13 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 		discordGroup.GET("/mma-scores", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesDiscordRead), h.Employee.ListWithMMAScore)
 		discordGroup.POST("/advance-salary", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesDiscordRead), h.Employee.SalaryAdvance)
 		discordGroup.POST("/check-advance-salary", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesDiscordRead), h.Employee.CheckSalaryAdvance)
+
+		discordGroup.GET("/icy-accounting", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesDiscordRead), h.Icy.Accounting)
 	}
 
 	conversionRateGroup := v1.Group("/conversion-rates")
 	{
 		conversionRateGroup.GET("", amw.WithAuth, h.ConversionRate.List)
-	}
-
-	icyGroup := v1.Group("/icy")
-	{
-		icyGroup.GET("/accounting", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesDiscordRead), h.Icy.Accounting)
 	}
 
 	/////////////////
