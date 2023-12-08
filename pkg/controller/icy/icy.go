@@ -87,7 +87,7 @@ func (c *controller) Accounting() (*model.IcyAccounting, error) {
 	offsetUsdt := new(big.Int).Sub(circulatingIcyInUsdt, icyswapUsdtBal)
 
 	// 5. Return accounting result
-	accounting := &model.IcyAccounting{
+	return &model.IcyAccounting{
 		Icy:                icy,
 		Usdt:               usdt,
 		IcySwap:            icySwap,
@@ -95,9 +95,7 @@ func (c *controller) Accounting() (*model.IcyAccounting, error) {
 		ContractFundInUsdt: icyswapUsdtBal.String(),
 		CirculatingIcy:     circulatingIcy.String(),
 		OffsetUSDT:         offsetUsdt.String(),
-	}
-
-	return accounting, nil
+	}, nil
 }
 
 func (c *controller) lockedIcyAmount() (*big.Int, error) {
