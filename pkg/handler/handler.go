@@ -19,6 +19,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/handler/engagement"
 	"github.com/dwarvesf/fortress-api/pkg/handler/feedback"
 	"github.com/dwarvesf/fortress-api/pkg/handler/healthz"
+	"github.com/dwarvesf/fortress-api/pkg/handler/icy"
 	"github.com/dwarvesf/fortress-api/pkg/handler/invoice"
 	"github.com/dwarvesf/fortress-api/pkg/handler/metadata"
 	"github.com/dwarvesf/fortress-api/pkg/handler/notion"
@@ -61,6 +62,7 @@ type Handler struct {
 	Valuation      valuation.IHandler
 	Webhook        webhook.IHandler
 	Vault          vault.IHandler
+	Icy            icy.IHandler
 }
 
 func New(store *store.Store, repo store.DBRepo, service *service.Service, ctrl *controller.Controller, worker *worker.Worker, logger logger.Logger, cfg *config.Config) *Handler {
@@ -90,5 +92,6 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, ctrl *
 		Valuation:      valuation.New(store, repo, service, logger, cfg),
 		Webhook:        webhook.New(ctrl, store, repo, service, logger, cfg, worker),
 		Vault:          vault.New(store, repo, service, logger, cfg),
+		Icy:            icy.New(ctrl, logger),
 	}
 }

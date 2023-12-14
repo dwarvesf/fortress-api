@@ -1,6 +1,7 @@
 package mochipay
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -19,6 +20,7 @@ const (
 
 type IService interface {
 	GetListTransactions(req ListTransactionsRequest) (*ListTransactionsResponse, error)
+	GetBatchBalances(profileIds []string) (*BatchBalancesResponse, error)
 }
 
 type client struct {
@@ -95,6 +97,35 @@ func (m *client) GetListTransactions(req ListTransactionsRequest) (*ListTransact
 	res := &ListTransactionsResponse{}
 	if err := json.NewDecoder(r.Body).Decode(&res); err != nil {
 		m.l.Errorf(err, "[mochipay.GetListTransaction] decoder.Decode failed")
+		return nil, err
+	}
+
+	return res, nil
+}
+
+func (m *client) GetBatchBalances(profileIds []string) (*BatchBalancesResponse, error) {
+	var client = &http.Client{
+		Timeout: 10 * time.Second,
+	}
+
+	url := fmt.Sprintf("%s/api/v1/mochi-wallet/balances/multiple", m.cfg.MochiPay.BaseURL)
+	body, err := json.Marshal(struct {
+		ProfileIDs []string `json:"profile_ids"`
+	}{ProfileIDs: profileIds})
+	if err != nil {
+		m.l.Errorf(err, "[mochipay.GetchBatchbalances] json.Marshal failed")
+		return nil, err
+	}
+	r, err := client.Post(url, "application/json", bytes.NewBuffer(body))
+	if err != nil {
+		m.l.Errorf(err, "[mochipay.GetBatchBalances] client.Get failed")
+		return nil, err
+	}
+	defer r.Body.Close()
+
+	res := &BatchBalancesResponse{}
+	if err := json.NewDecoder(r.Body).Decode(res); err != nil {
+		m.l.Errorf(err, "[mochipay.GetBatchBalances] decoder.Decode failed")
 		return nil, err
 	}
 

@@ -11,6 +11,7 @@ import (
 	mochisdk "github.com/consolelabs/mochi-go-sdk/mochi"
 	mochiconfig "github.com/consolelabs/mochi-go-sdk/mochi/config"
 	"github.com/consolelabs/mochi-go-sdk/mochi/model"
+
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 )
