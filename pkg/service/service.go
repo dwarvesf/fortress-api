@@ -16,12 +16,14 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/service/basecamp/model"
 	"github.com/dwarvesf/fortress-api/pkg/service/currency"
 	"github.com/dwarvesf/fortress-api/pkg/service/discord"
+	"github.com/dwarvesf/fortress-api/pkg/service/evm"
 	"github.com/dwarvesf/fortress-api/pkg/service/github"
 	googleauth "github.com/dwarvesf/fortress-api/pkg/service/google"
 	"github.com/dwarvesf/fortress-api/pkg/service/googleadmin"
 	"github.com/dwarvesf/fortress-api/pkg/service/googledrive"
 	"github.com/dwarvesf/fortress-api/pkg/service/googlemail"
 	"github.com/dwarvesf/fortress-api/pkg/service/googlesheet"
+	"github.com/dwarvesf/fortress-api/pkg/service/icyswap"
 	"github.com/dwarvesf/fortress-api/pkg/service/improvmx"
 	"github.com/dwarvesf/fortress-api/pkg/service/mochi"
 	"github.com/dwarvesf/fortress-api/pkg/service/mochipay"
@@ -33,23 +35,25 @@ import (
 )
 
 type Service struct {
-	Basecamp     *basecamp.Service
-	Cache        *cache.Cache
-	Currency     currency.IService
-	Discord      discord.IService
-	Github       github.IService
-	Google       googleauth.IService
-	GoogleAdmin  googleadmin.IService
-	GoogleDrive  googledrive.IService
-	GoogleMail   googlemail.IService
-	GoogleSheet  googlesheet.IService
-	ImprovMX     improvmx.IService
-	Mochi        mochi.IService
-	MochiPay     mochipay.IService
-	MochiProfile mochiprofile.IService
-	Notion       notion.IService
-	Sendgrid     sendgrid.IService
-	Wise         wise.IService
+	Basecamp      *basecamp.Service
+	Cache         *cache.Cache
+	Currency      currency.IService
+	Discord       discord.IService
+	Github        github.IService
+	Google        googleauth.IService
+	GoogleAdmin   googleadmin.IService
+	GoogleDrive   googledrive.IService
+	GoogleMail    googlemail.IService
+	GoogleSheet   googlesheet.IService
+	ImprovMX      improvmx.IService
+	Mochi         mochi.IService
+	MochiPay      mochipay.IService
+	MochiProfile  mochiprofile.IService
+	Notion        notion.IService
+	Sendgrid      sendgrid.IService
+	Wise          wise.IService
+	PolygonClient evm.IService
+	IcySwap       icyswap.IService
 }
 
 func New(cfg *config.Config, store *store.Store, repo store.DBRepo) *Service {
@@ -128,23 +132,34 @@ func New(cfg *config.Config, store *store.Store, repo store.DBRepo) *Service {
 
 	Currency := currency.New(cfg)
 
+	polygonClient, err := evm.New(evm.DefaultPolygonClient, cfg, logger.L)
+	if err != nil {
+		logger.L.Error(err, "failed to init polygon client service")
+	}
+	icySwap, err := icyswap.New(polygonClient, cfg, logger.L)
+	if err != nil {
+		logger.L.Error(err, "failed to init icyswap service")
+	}
+
 	return &Service{
-		Basecamp:     basecamp.New(store, repo, cfg, &bc, logger.L),
-		Cache:        cch,
-		Currency:     Currency,
-		Discord:      discord.New(cfg),
-		Github:       github.New(cfg, logger.L),
-		Google:       googleSvc,
-		GoogleAdmin:  googleAdminSvc,
-		GoogleDrive:  googleDriveSvc,
-		GoogleMail:   googleMailSvc,
-		GoogleSheet:  gSheetSvc,
-		ImprovMX:     improvmx.New(cfg.ImprovMX.Token),
-		Mochi:        mochi.New(cfg, logger.L),
-		MochiPay:     mochipay.New(cfg, logger.L),
-		MochiProfile: mochiprofile.New(cfg, logger.L),
-		Notion:       notion.New(cfg.Notion.Secret, cfg.Notion.Databases.Project, logger.L),
-		Sendgrid:     sendgrid.New(cfg.Sendgrid.APIKey, cfg, logger.L),
-		Wise:         wise.New(cfg, logger.L),
+		Basecamp:      basecamp.New(store, repo, cfg, &bc, logger.L),
+		Cache:         cch,
+		Currency:      Currency,
+		Discord:       discord.New(cfg),
+		Github:        github.New(cfg, logger.L),
+		Google:        googleSvc,
+		GoogleAdmin:   googleAdminSvc,
+		GoogleDrive:   googleDriveSvc,
+		GoogleMail:    googleMailSvc,
+		GoogleSheet:   gSheetSvc,
+		ImprovMX:      improvmx.New(cfg.ImprovMX.Token),
+		Mochi:         mochi.New(cfg, logger.L),
+		MochiPay:      mochipay.New(cfg, logger.L),
+		MochiProfile:  mochiprofile.New(cfg, logger.L),
+		Notion:        notion.New(cfg.Notion.Secret, cfg.Notion.Databases.Project, logger.L),
+		Sendgrid:      sendgrid.New(cfg.Sendgrid.APIKey, cfg, logger.L),
+		Wise:          wise.New(cfg, logger.L),
+		PolygonClient: polygonClient,
+		IcySwap:       icySwap,
 	}
 }

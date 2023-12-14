@@ -950,6 +950,12 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/employee.IHandler.GetEmployeeTotalEarn-fm",
 			},
 		},
+		"/api/v1/discords/icy-accounting": {
+			"GET": {
+				Method:  "GET",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/icy.IHandler.Accounting-fm",
+			},
+		},
 	}
 
 	l := logger.NewLogrusLogger()
