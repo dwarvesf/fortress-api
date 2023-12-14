@@ -88,12 +88,12 @@ func (c *controller) Accounting() (*model.IcyAccounting, error) {
 
 	// 5. Return accounting result
 	return &model.IcyAccounting{
-		Icy:                icy,
-		Usdt:               usdt,
-		IcySwap:            icySwap,
+		ICY:                &icy,
+		USDT:               &usdt,
+		IcySwap:            &icySwap,
 		ConversionRate:     conversionRateFloat,
-		ContractFundInUsdt: icyswapUsdtBal.String(),
-		CirculatingIcy:     circulatingIcy.String(),
+		ContractFundInUSDT: icyswapUsdtBal.String(),
+		CirculatingICY:     circulatingIcy.String(),
 		OffsetUSDT:         offsetUsdt.String(),
 	}, nil
 }

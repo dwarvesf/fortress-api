@@ -38,5 +38,5 @@ func (h *handler) Accounting(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse[any](accounting, nil, nil, nil, ""))
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToIcyAccounting(accounting), nil, nil, nil, ""))
 }

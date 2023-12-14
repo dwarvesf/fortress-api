@@ -1,14 +1,14 @@
 package model
 
 type IcyAccounting struct {
-	Icy     TokenInfo    `json:"icy"`
-	Usdt    TokenInfo    `json:"usdt"`
-	IcySwap ContractInfo `json:"icySwap"`
+	ICY     *TokenInfo    `json:"icy"`
+	USDT    *TokenInfo    `json:"usdt"`
+	IcySwap *ContractInfo `json:"icy_swap"`
 
-	ConversionRate     float32 `json:"conversionRate"`
-	CirculatingIcy     string  `json:"circulatingIcy"`
-	ContractFundInUsdt string  `json:"contractFundInUsdt"`
-	OffsetUSDT         string  `json:"offsetUsdt"` // how many usdt left need to be issued
+	ConversionRate     float32 `json:"conversion_rate"`
+	CirculatingICY     string  `json:"circulating_icy"`
+	ContractFundInUSDT string  `json:"contract_fund_in_usdt"`
+	OffsetUSDT         string  `json:"offset_usdt"` // how many usdt left need to be issued
 }
 
 type TokenInfo struct {
@@ -17,8 +17,8 @@ type TokenInfo struct {
 	Address     string `json:"address"`
 	Decimals    int    `json:"decimals"`
 	Chain       string `json:"chain"`
-	ChainID     string `json:"chainId"`
-	TotalSupply string `json:"totalSupply"`
+	ChainID     string `json:"chain_id"`
+	TotalSupply string `json:"total_supply"`
 }
 
 type ContractInfo struct {
