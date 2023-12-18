@@ -428,16 +428,6 @@ func (h *handler) getAccountingExpense(batch int) (res []bcModel.Todo, err error
 					// find expense in list of todos
 					for k := range todos {
 						if len(todos[k].Assignees) == 1 && todos[k].Assignees[0].ID != consts.HanBasecampID {
-							// HACK: some todo is specific batch only
-							if strings.Contains(todos[k].Title, "Tiền điện") {
-								if batch != 1 {
-									continue
-								}
-							} else if strings.Contains(todos[k].Title, "Office Rental") || strings.Contains(todos[k].Title, "CBRE") {
-								if batch != 15 {
-									continue
-								}
-							}
 							mu.Lock()
 							res = append(res, todos[k])
 							mu.Unlock()
