@@ -18,7 +18,7 @@ type GetMochiProfilesResponse struct {
 }
 
 type MochiProfile struct {
-	Id                 string               `json:"id"`
+	ID                 string               `json:"id"`
 	CreatedAt          string               `json:"created_at"`
 	UpdatedAt          string               `json:"updated_at"`
 	ProfileName        string               `json:"profile_name"`
