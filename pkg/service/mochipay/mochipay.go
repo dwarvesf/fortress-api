@@ -70,10 +70,6 @@ func (m *client) GetListTransactions(req ListTransactionsRequest) (*ListTransact
 		queryParams.Add("token_address", req.TokenAddress)
 	}
 
-	if req.Participant != "" {
-		queryParams.Add("chain_id", req.ChainID)
-	}
-
 	if req.Platform != "" {
 		queryParams.Add("platform", string(req.Platform))
 	}
@@ -82,8 +78,8 @@ func (m *client) GetListTransactions(req ListTransactionsRequest) (*ListTransact
 		queryParams.Add("chain_id", req.ChainID)
 	}
 
-	if req.Participant != "" {
-		queryParams.Add("participant", req.Participant)
+	if req.ProfileID != "" {
+		queryParams.Add("profile_id", req.ProfileID)
 	}
 
 	url := fmt.Sprintf("%s/api/v1/transactions?", m.cfg.MochiPay.BaseURL) + queryParams.Encode()

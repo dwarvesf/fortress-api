@@ -181,7 +181,7 @@ func (c *controller) offchainLockedIcyAmount() (*big.Int, error) {
 			return nil, err
 		}
 		for _, p := range res.Data {
-			profileIds = append(profileIds, p.Id)
+			profileIds = append(profileIds, p.ID)
 		}
 
 		hasNext := res.Pagination.Total/pageSize-page > 0
