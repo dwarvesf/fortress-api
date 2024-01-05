@@ -49,7 +49,7 @@ type ListTransactionsRequest struct {
 	Status       TransactionStatus   `json:"status"`
 	ActionList   []TransactionAction `json:"action_list"`
 	TokenAddress string              `json:"token_address"`
-	Participant  string              `json:"participant"`
+	ProfileID    string              `json:"profile_id"`
 	Platform     TransactionPlatform `json:"platform"`
 	ChainID      string              `json:"chain_id"`
 	Page         int64               `json:"page"`

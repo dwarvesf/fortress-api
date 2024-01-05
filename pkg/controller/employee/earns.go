@@ -25,7 +25,7 @@ func (r *controller) GetEmployeeEarnTransactions(discordID string, input GetEmpl
 		Status:       mochipay.TransactionStatusSuccess,
 		TokenAddress: mochipay.ICYAddress,
 		ChainID:      mochipay.POLYGONChainID,
-		Participant:  profile.Id,
+		ProfileID:    profile.ID,
 		Platform:     mochipay.TransactionPlatformDiscord,
 		Page:         input.Page,
 		Size:         input.Size,
@@ -45,7 +45,7 @@ func (r *controller) GetEmployeeTotalEarn(discordID string) (string, float64, er
 		Status:       mochipay.TransactionStatusSuccess,
 		TokenAddress: mochipay.ICYAddress,
 		ChainID:      mochipay.POLYGONChainID,
-		Participant:  profile.Id,
+		ProfileID:    profile.ID,
 		Platform:     mochipay.TransactionPlatformDiscord,
 		Size:         math.MaxInt64,
 	})
