@@ -38,6 +38,9 @@ type Config struct {
 	Env          string
 	JWTSecretKey string
 	FortressURL  string
+
+	// Mochi App
+	MochiWithdraw Mochi
 }
 
 type DBConnection struct {
@@ -95,6 +98,7 @@ type Mochi struct {
 	ApplicationID   string
 	ApplicationName string
 	APIKey          string
+	DefaultTokenID  string
 }
 
 type MochiPay struct {
@@ -272,6 +276,13 @@ func Generate(v ENV) *Config {
 			ApplicationName: v.GetString("MOCHI_APPLICATION_NAME"),
 			APIKey:          v.GetString("MOCHI_API_KEY"),
 		},
+		MochiWithdraw: Mochi{
+			BaseURL:         v.GetString("MOCHI_WITHDRAW_BASE_URL"),
+			ApplicationID:   v.GetString("MOCHI_WITHDRAW_ID"),
+			ApplicationName: v.GetString("MOCHI_WITHDRAW_NAME"),
+			APIKey:          v.GetString("MOCHI_WITHDRAW_API_KEY"),
+		},
+
 		MochiPay: MochiPay{
 			BaseURL: v.GetString("MOCHI_PAY_BASE_URL"),
 		},

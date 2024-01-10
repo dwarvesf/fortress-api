@@ -1819,7 +1819,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Check salary advance by discord id",
+                "description": "Check withdraw condition by discord id",
                 "consumes": [
                     "application/json"
                 ],
@@ -1827,26 +1827,23 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Employee"
+                    "Withdraw"
                 ],
-                "summary": "Check salary advance by discord id",
-                "operationId": "checkSalaryAdvance",
+                "summary": "Check withdraw condition by discord id",
+                "operationId": "checkWithdrawCondition",
                 "parameters": [
                     {
-                        "description": "Check Salary Advance Request",
-                        "name": "checkSalaryAdvanceRequest",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/SalaryAdvanceRequest"
-                        }
+                        "type": "string",
+                        "description": "DiscordID",
+                        "name": "discordID",
+                        "in": "query"
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/CheckSalaryAdvanceResponse"
+                            "$ref": "#/definitions/CheckWithdrawConditionResponse"
                         }
                     },
                     "400": {
@@ -7515,6 +7512,28 @@ const docTemplate = `{
                 }
             }
         },
+        "CheckWithdrawCondition": {
+            "type": "object",
+            "properties": {
+                "icyAmount": {
+                    "type": "number"
+                },
+                "icyVNDRate": {
+                    "type": "number"
+                },
+                "vndAmount": {
+                    "type": "number"
+                }
+            }
+        },
+        "CheckWithdrawConditionResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/CheckWithdrawCondition"
+                }
+            }
+        },
         "CitiesResponse": {
             "type": "object",
             "properties": {
@@ -8428,7 +8447,11 @@ const docTemplate = `{
                 },
                 "status": {
                     "description": "working info",
-                    "type": "string"
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/WorkingStatus"
+                        }
+                    ]
                 },
                 "teamEmail": {
                     "type": "string"
@@ -12404,7 +12427,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "employeeStatus": {
-                    "type": "string"
+                    "$ref": "#/definitions/WorkingStatus"
                 }
             }
         },
@@ -12871,6 +12894,23 @@ const docTemplate = `{
                 "WorkUnitTypeManagement",
                 "WorkUnitTypeTraining",
                 "WorkUnitTypeLearning"
+            ]
+        },
+        "WorkingStatus": {
+            "type": "string",
+            "enum": [
+                "on-boarding",
+                "left",
+                "probation",
+                "full-time",
+                "contractor"
+            ],
+            "x-enum-varnames": [
+                "WorkingStatusOnBoarding",
+                "WorkingStatusLeft",
+                "WorkingStatusProbation",
+                "WorkingStatusFullTime",
+                "WorkingStatusContractor"
             ]
         },
         "github_com_dwarvesf_fortress-api_pkg_model.SortOrder": {

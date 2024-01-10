@@ -10,7 +10,7 @@ require (
 	github.com/antchfx/htmlquery v1.3.0
 	github.com/bwmarrin/discordgo v0.27.1
 	github.com/cenkalti/backoff/v4 v4.2.1
-	github.com/consolelabs/mochi-go-sdk v0.0.7
+	github.com/consolelabs/mochi-go-sdk v0.0.8
 	github.com/dstotijn/go-notion v0.11.0
 	github.com/ethereum/go-ethereum v1.13.5
 	github.com/gin-contrib/cors v1.4.0
