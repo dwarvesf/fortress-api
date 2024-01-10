@@ -71,6 +71,12 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/employee.IHandler.GetLineManagers-fm",
 			},
 		},
+		"/api/v1/metadata/banks": {
+			"GET": {
+				Method:  "GET",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/metadata.IHandler.Banks-fm",
+			},
+		},
 		"/api/v1/metadata/working-status": {
 			"GET": {
 				Method:  "GET",

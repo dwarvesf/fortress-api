@@ -3,6 +3,7 @@ package metadata
 import "github.com/gin-gonic/gin"
 
 type IHandler interface {
+	Banks(c *gin.Context)
 	Chapters(c *gin.Context)
 	CreatePosition(c *gin.Context)
 	CreateStack(c *gin.Context)

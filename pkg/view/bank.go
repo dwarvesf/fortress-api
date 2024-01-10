@@ -2,63 +2,37 @@ package view
 
 import "github.com/dwarvesf/fortress-api/pkg/model"
 
-type ListBankAccountResponse struct {
-	Data []BankAccount `json:"data"`
-} // @name ListBankAccountResponse
+type ListBankResponse struct {
+	Data []Bank `json:"data"`
+} // @name ListBankResponse
 
-type BankAccount struct {
-	ID                      string   `json:"id"`
-	AccountNumber           string   `json:"accountNumber"`
-	BankName                string   `json:"bankName"`
-	OwnerName               string   `json:"ownerName"`
-	Address                 *string  `json:"address"`
-	SwiftCode               string   `json:"swiftCode"`
-	IntermediaryBankAddress string   `json:"intermediaryBankAddress"`
-	IntermediaryBankName    string   `json:"intermediaryBankName"`
-	RoutingNumber           string   `json:"routingNumber"`
-	Name                    string   `json:"name"`
-	UKSortCode              string   `json:"ukSortCode"`
-	CurrencyID              string   `json:"currencyID"`
-	Currency                Currency `json:"currency"`
-} // @name BankAccount
+type Bank struct {
+	ID        string `json:"id"`
+	Name      string `json:"name"`
+	Code      string `json:"code"`
+	Bin       string `json:"bin"`
+	ShortName string `json:"shortName"`
+	Logo      string `json:"logo"`
+	SwiftCode string `json:"swiftCode"`
+} // @name Bank
 
-func ToBankAccount(account *model.BankAccount) *BankAccount {
-	return &BankAccount{
-		ID:                      account.ID.String(),
-		AccountNumber:           account.AccountNumber,
-		BankName:                account.BankName,
-		OwnerName:               account.OwnerName,
-		Address:                 account.Address,
-		SwiftCode:               account.SwiftCode,
-		RoutingNumber:           account.RoutingNumber,
-		Name:                    account.Name,
-		UKSortCode:              account.UKSortCode,
-		IntermediaryBankName:    account.IntermediaryBankName,
-		IntermediaryBankAddress: account.IntermediaryBankAddress,
-		CurrencyID:              account.CurrencyID.String(),
-		Currency:                *toCurrency(account.Currency),
+func ToBank(in *model.Bank) *Bank {
+	return &Bank{
+		ID:        in.ID.String(),
+		Name:      in.Name,
+		Code:      in.Code,
+		Bin:       in.Bin,
+		ShortName: in.ShortName,
+		Logo:      in.Logo,
+		SwiftCode: in.SwiftCode,
 	}
 }
 
-func ToListBankAccount(accounts []*model.BankAccount) []BankAccount {
-	res := make([]BankAccount, 0)
-
-	for _, acc := range accounts {
-		res = append(res, BankAccount{
-			ID:                      acc.ID.String(),
-			AccountNumber:           acc.AccountNumber,
-			BankName:                acc.BankName,
-			OwnerName:               acc.OwnerName,
-			Address:                 acc.Address,
-			SwiftCode:               acc.SwiftCode,
-			RoutingNumber:           acc.RoutingNumber,
-			Name:                    acc.Name,
-			UKSortCode:              acc.UKSortCode,
-			IntermediaryBankName:    acc.IntermediaryBankName,
-			IntermediaryBankAddress: acc.IntermediaryBankAddress,
-			CurrencyID:              acc.CurrencyID.String(),
-			Currency:                *toCurrency(acc.Currency),
-		})
+func ToListBank(banks []*model.Bank) []Bank {
+	res := make([]Bank, 0)
+	for _, bank := range banks {
+		b := ToBank(bank)
+		res = append(res, *b)
 	}
 
 	return res
