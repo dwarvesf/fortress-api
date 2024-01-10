@@ -30,6 +30,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/handler/valuation"
 	"github.com/dwarvesf/fortress-api/pkg/handler/vault"
 	"github.com/dwarvesf/fortress-api/pkg/handler/webhook"
+	"github.com/dwarvesf/fortress-api/pkg/handler/withdrawal"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/store"
@@ -63,6 +64,7 @@ type Handler struct {
 	Webhook        webhook.IHandler
 	Vault          vault.IHandler
 	Icy            icy.IHandler
+	Withdrawal     withdrawal.IHandler
 }
 
 func New(store *store.Store, repo store.DBRepo, service *service.Service, ctrl *controller.Controller, worker *worker.Worker, logger logger.Logger, cfg *config.Config) *Handler {
@@ -93,5 +95,6 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, ctrl *
 		Webhook:        webhook.New(ctrl, store, repo, service, logger, cfg, worker),
 		Vault:          vault.New(store, repo, service, logger, cfg),
 		Icy:            icy.New(ctrl, logger),
+		Withdrawal:     withdrawal.New(ctrl, logger),
 	}
 }

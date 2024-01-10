@@ -274,6 +274,56 @@ const docTemplate = `{
                 }
             }
         },
+        "/banks": {
+            "get": {
+                "description": "Get all bank by given filter params",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Metadata"
+                ],
+                "summary": "Get all banks",
+                "operationId": "getBanksList",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bank ID",
+                        "name": "id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Bin",
+                        "name": "bin",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Swift SwiftCode",
+                        "name": "swiftCode",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ListBankResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/brainery-logs": {
             "post": {
                 "security": [
@@ -1769,7 +1819,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Check salary advance by discord id",
+                "description": "Check withdraw condition by discord id",
                 "consumes": [
                     "application/json"
                 ],
@@ -1777,26 +1827,23 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Employee"
+                    "Withdraw"
                 ],
-                "summary": "Check salary advance by discord id",
-                "operationId": "checkSalaryAdvance",
+                "summary": "Check withdraw condition by discord id",
+                "operationId": "checkWithdrawCondition",
                 "parameters": [
                     {
-                        "description": "Check Salary Advance Request",
-                        "name": "checkSalaryAdvanceRequest",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/SalaryAdvanceRequest"
-                        }
+                        "type": "string",
+                        "description": "DiscordID",
+                        "name": "discordID",
+                        "in": "query"
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/CheckSalaryAdvanceResponse"
+                            "$ref": "#/definitions/CheckWithdrawConditionResponse"
                         }
                     },
                     "400": {
@@ -7064,6 +7111,32 @@ const docTemplate = `{
                 }
             }
         },
+        "Bank": {
+            "type": "object",
+            "properties": {
+                "bin": {
+                    "type": "string"
+                },
+                "code": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "logo": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "shortName": {
+                    "type": "string"
+                },
+                "swiftCode": {
+                    "type": "string"
+                }
+            }
+        },
         "BankAccount": {
             "type": "object",
             "properties": {
@@ -7436,6 +7509,28 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/CheckSalaryAdvance"
+                }
+            }
+        },
+        "CheckWithdrawCondition": {
+            "type": "object",
+            "properties": {
+                "icyAmount": {
+                    "type": "number"
+                },
+                "icyVNDRate": {
+                    "type": "number"
+                },
+                "vndAmount": {
+                    "type": "number"
+                }
+            }
+        },
+        "CheckWithdrawConditionResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/CheckWithdrawCondition"
                 }
             }
         },
@@ -8352,7 +8447,11 @@ const docTemplate = `{
                 },
                 "status": {
                     "description": "working info",
-                    "type": "string"
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/WorkingStatus"
+                        }
+                    ]
                 },
                 "teamEmail": {
                     "type": "string"
@@ -9374,6 +9473,17 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/BankAccount"
+                    }
+                }
+            }
+        },
+        "ListBankResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Bank"
                     }
                 }
             }
@@ -12317,7 +12427,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "employeeStatus": {
-                    "type": "string"
+                    "$ref": "#/definitions/WorkingStatus"
                 }
             }
         },
@@ -12784,6 +12894,23 @@ const docTemplate = `{
                 "WorkUnitTypeManagement",
                 "WorkUnitTypeTraining",
                 "WorkUnitTypeLearning"
+            ]
+        },
+        "WorkingStatus": {
+            "type": "string",
+            "enum": [
+                "on-boarding",
+                "left",
+                "probation",
+                "full-time",
+                "contractor"
+            ],
+            "x-enum-varnames": [
+                "WorkingStatusOnBoarding",
+                "WorkingStatusLeft",
+                "WorkingStatusProbation",
+                "WorkingStatusFullTime",
+                "WorkingStatusContractor"
             ]
         },
         "github_com_dwarvesf_fortress-api_pkg_model.SortOrder": {

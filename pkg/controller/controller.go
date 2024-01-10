@@ -11,6 +11,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/controller/employee"
 	"github.com/dwarvesf/fortress-api/pkg/controller/icy"
 	"github.com/dwarvesf/fortress-api/pkg/controller/invoice"
+	"github.com/dwarvesf/fortress-api/pkg/controller/withdrawal"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/store"
@@ -27,6 +28,7 @@ type Controller struct {
 	Invoice        invoice.IController
 	Discord        discord.IController
 	Icy            icy.IController
+	Withdrawal     withdrawal.IController
 }
 
 func New(store *store.Store, repo store.DBRepo, service *service.Service, worker *worker.Worker, logger logger.Logger, cfg *config.Config) *Controller {
@@ -40,5 +42,6 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, worker
 		Invoice:        invoice.New(store, repo, service, worker, logger, cfg),
 		Discord:        discord.New(store, repo, service, logger, cfg),
 		Icy:            icy.New(service, logger, cfg),
+		Withdrawal:     withdrawal.New(service, logger, cfg),
 	}
 }

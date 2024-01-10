@@ -324,6 +324,23 @@ definitions:
       type:
         type: string
     type: object
+  Bank:
+    properties:
+      bin:
+        type: string
+      code:
+        type: string
+      id:
+        type: string
+      logo:
+        type: string
+      name:
+        type: string
+      shortName:
+        type: string
+      swiftCode:
+        type: string
+    type: object
   BankAccount:
     properties:
       accountNumber:
@@ -567,6 +584,20 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/CheckSalaryAdvance'
+    type: object
+  CheckWithdrawCondition:
+    properties:
+      icyAmount:
+        type: number
+      icyVNDRate:
+        type: number
+      vndAmount:
+        type: number
+    type: object
+  CheckWithdrawConditionResponse:
+    properties:
+      data:
+        $ref: '#/definitions/CheckWithdrawCondition'
     type: object
   CitiesResponse:
     properties:
@@ -1174,8 +1205,9 @@ definitions:
           $ref: '#/definitions/Stack'
         type: array
       status:
+        allOf:
+        - $ref: '#/definitions/WorkingStatus'
         description: working info
-        type: string
       teamEmail:
         type: string
       updatedAt:
@@ -1845,6 +1877,13 @@ definitions:
       data:
         items:
           $ref: '#/definitions/BankAccount'
+        type: array
+    type: object
+  ListBankResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/Bank'
         type: array
     type: object
   ListFeedbackResponse:
@@ -3810,7 +3849,7 @@ definitions:
   UpdateWorkingStatusRequest:
     properties:
       employeeStatus:
-        type: string
+        $ref: '#/definitions/WorkingStatus'
     type: object
   UpdatedProject:
     properties:
@@ -4118,6 +4157,20 @@ definitions:
     - WorkUnitTypeManagement
     - WorkUnitTypeTraining
     - WorkUnitTypeLearning
+  WorkingStatus:
+    enum:
+    - on-boarding
+    - left
+    - probation
+    - full-time
+    - contractor
+    type: string
+    x-enum-varnames:
+    - WorkingStatusOnBoarding
+    - WorkingStatusLeft
+    - WorkingStatusProbation
+    - WorkingStatusFullTime
+    - WorkingStatusContractor
   github_com_dwarvesf_fortress-api_pkg_model.SortOrder:
     enum:
     - asc
@@ -4302,6 +4355,39 @@ paths:
       summary: Get all bank accounts
       tags:
       - Bank
+  /banks:
+    get:
+      consumes:
+      - application/json
+      description: Get all bank by given filter params
+      operationId: getBanksList
+      parameters:
+      - description: Bank ID
+        in: query
+        name: id
+        type: string
+      - description: Bin
+        in: query
+        name: bin
+        type: string
+      - description: Swift SwiftCode
+        in: query
+        name: swiftCode
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ListBankResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Get all banks
+      tags:
+      - Metadata
   /brainery-logs:
     post:
       consumes:
@@ -5588,22 +5674,20 @@ paths:
     post:
       consumes:
       - application/json
-      description: Check salary advance by discord id
-      operationId: checkSalaryAdvance
+      description: Check withdraw condition by discord id
+      operationId: checkWithdrawCondition
       parameters:
-      - description: Check Salary Advance Request
-        in: body
-        name: checkSalaryAdvanceRequest
-        required: true
-        schema:
-          $ref: '#/definitions/SalaryAdvanceRequest'
+      - description: DiscordID
+        in: query
+        name: discordID
+        type: string
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/CheckSalaryAdvanceResponse'
+            $ref: '#/definitions/CheckWithdrawConditionResponse'
         "400":
           description: Bad Request
           schema:
@@ -5618,9 +5702,9 @@ paths:
             $ref: '#/definitions/ErrorResponse'
       security:
       - BearerAuth: []
-      summary: Check salary advance by discord id
+      summary: Check withdraw condition by discord id
       tags:
-      - Employee
+      - Withdraw
   /employees/search:
     post:
       consumes:
