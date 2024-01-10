@@ -11,6 +11,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/store/auditcycle"
 	"github.com/dwarvesf/fortress-api/pkg/store/audititem"
 	"github.com/dwarvesf/fortress-api/pkg/store/auditparticipant"
+	"github.com/dwarvesf/fortress-api/pkg/store/bank"
 	"github.com/dwarvesf/fortress-api/pkg/store/bankaccount"
 	"github.com/dwarvesf/fortress-api/pkg/store/basesalary"
 	"github.com/dwarvesf/fortress-api/pkg/store/brainerylog"
@@ -89,6 +90,7 @@ type Store struct {
 	AuditItem               audititem.IStore
 	AuditParticipant        auditparticipant.IStore
 	SalaryAdvance           salaryadvance.IStore
+	Bank                    bank.IStore
 	BankAccount             bankaccount.IStore
 	BaseSalary              basesalary.IStore
 	Bonus                   employeebonus.IStore
@@ -167,6 +169,7 @@ func New() *Store {
 		AuditItem:               audititem.New(),
 		AuditParticipant:        auditparticipant.New(),
 		SalaryAdvance:           salaryadvance.New(),
+		Bank:                    bank.New(),
 		BankAccount:             bankaccount.New(),
 		BaseSalary:              basesalary.New(),
 		Bonus:                   employeebonus.New(),

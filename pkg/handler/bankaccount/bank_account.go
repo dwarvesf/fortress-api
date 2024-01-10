@@ -43,7 +43,7 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 // @Router /bank-accounts [get]
 func (h *handler) List(c *gin.Context) {
 	l := h.logger.Fields(logger.Fields{
-		"handler": "bank",
+		"handler": "bankaccount",
 		"method":  "List",
 	})
 
