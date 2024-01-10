@@ -324,6 +324,23 @@ definitions:
       type:
         type: string
     type: object
+  Bank:
+    properties:
+      bin:
+        type: string
+      code:
+        type: string
+      id:
+        type: string
+      logo:
+        type: string
+      name:
+        type: string
+      shortName:
+        type: string
+      swiftCode:
+        type: string
+    type: object
   BankAccount:
     properties:
       accountNumber:
@@ -1845,6 +1862,13 @@ definitions:
       data:
         items:
           $ref: '#/definitions/BankAccount'
+        type: array
+    type: object
+  ListBankResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/Bank'
         type: array
     type: object
   ListFeedbackResponse:
@@ -4302,6 +4326,39 @@ paths:
       summary: Get all bank accounts
       tags:
       - Bank
+  /banks:
+    get:
+      consumes:
+      - application/json
+      description: Get all bank by given filter params
+      operationId: getBanksList
+      parameters:
+      - description: Bank ID
+        in: query
+        name: id
+        type: string
+      - description: Bin
+        in: query
+        name: bin
+        type: string
+      - description: Swift SwiftCode
+        in: query
+        name: swiftCode
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ListBankResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Get all banks
+      tags:
+      - Metadata
   /brainery-logs:
     post:
       consumes:

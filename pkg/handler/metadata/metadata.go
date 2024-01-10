@@ -11,10 +11,12 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/handler/metadata/errs"
 	"github.com/dwarvesf/fortress-api/pkg/handler/metadata/request"
+
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/store"
+	bankRepo "github.com/dwarvesf/fortress-api/pkg/store/bank"
 	"github.com/dwarvesf/fortress-api/pkg/view"
 )
 
@@ -720,4 +722,43 @@ func (h *handler) GetCurrencies(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToCurrencies(rs), nil, nil, nil, ""))
+}
+
+// Banks godoc
+// @Summary Get all banks
+// @Description Get all bank by given filter params
+// @id getBanksList
+// @Tags Metadata
+// @Accept  json
+// @Produce  json
+// @Param id query string false "Bank ID"
+// @Param bin query string false "Bin"
+// @Param swiftCode query string false "Swift SwiftCode"
+// @Success 200 {object} ListBankResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /banks [get]
+func (h *handler) Banks(c *gin.Context) {
+	l := h.logger.Fields(logger.Fields{
+		"handler": "bank",
+		"method":  "List",
+	})
+
+	query := request.GetBankRequest{}
+	if err := c.ShouldBindQuery(&query); err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, query, ""))
+		return
+	}
+
+	res, err := h.store.Bank.All(h.repo.DB(), bankRepo.GetBanksInput{
+		ID:        query.ID,
+		Bin:       query.Bin,
+		SwiftCode: query.SwiftCode,
+	})
+	if err != nil {
+		l.Error(err, "failed to get all banks")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToListBank(res), nil, nil, nil, ""))
 }

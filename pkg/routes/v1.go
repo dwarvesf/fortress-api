@@ -114,6 +114,7 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 	metadataRoute := v1.Group("/metadata")
 	{
 		metadataRoute.GET("/working-status", h.Metadata.WorkingStatuses)
+		metadataRoute.GET("/banks", h.Metadata.Banks)
 		metadataRoute.GET("/stacks", h.Metadata.Stacks)
 		metadataRoute.GET("/seniorities", h.Metadata.Seniorities)
 		metadataRoute.GET("/chapters", h.Metadata.Chapters)

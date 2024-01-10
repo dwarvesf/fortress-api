@@ -57,3 +57,9 @@ type GetStacksInput struct {
 	model.Pagination
 	Keyword string `json:"keyword" form:"keyword"`
 }
+
+type GetBankRequest struct {
+	ID        string `json:"id" form:"id" `
+	Bin       string `json:"bin" form:"bin"`
+	SwiftCode string `json:"swiftCode" form:"swiftCode"`
+}
