@@ -274,6 +274,56 @@ const docTemplate = `{
                 }
             }
         },
+        "/banks": {
+            "get": {
+                "description": "Get all bank by given filter params",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Metadata"
+                ],
+                "summary": "Get all banks",
+                "operationId": "getBanksList",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bank ID",
+                        "name": "id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Bin",
+                        "name": "bin",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Swift SwiftCode",
+                        "name": "swiftCode",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ListBankResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/brainery-logs": {
             "post": {
                 "security": [
@@ -7064,6 +7114,32 @@ const docTemplate = `{
                 }
             }
         },
+        "Bank": {
+            "type": "object",
+            "properties": {
+                "bin": {
+                    "type": "string"
+                },
+                "code": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "logo": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "shortName": {
+                    "type": "string"
+                },
+                "swiftCode": {
+                    "type": "string"
+                }
+            }
+        },
         "BankAccount": {
             "type": "object",
             "properties": {
@@ -9374,6 +9450,17 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/BankAccount"
+                    }
+                }
+            }
+        },
+        "ListBankResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Bank"
                     }
                 }
             }
