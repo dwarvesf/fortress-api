@@ -40,7 +40,7 @@ func New(
 // @Failure 400 {object} ErrorResponse
 // @Failure 404 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
-// @Router /employees/check-advance-salary [post]
+// @Router /discords/withdraw/check [get]
 func (h *handler) CheckWithdrawCondition(c *gin.Context) {
 	l := h.logger.Fields(logger.Fields{
 		"handler": "icy",
@@ -65,17 +65,32 @@ func (h *handler) CheckWithdrawCondition(c *gin.Context) {
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToCheckWithdrawCondition(rs), nil, nil, nil, ""))
 }
 
-//
-//func (h *handler) WithdrawMoney(c *gin.Context) {
-//	l := h.logger.Fields(logger.Fields{
-//		"handler": "icy",
-//		"method":  "Withdraw",
-//	})
-//
-//	var req request.WithdrawMoneyRequest
-//	if err := c.ShouldBindJSON(&req); err != nil {
-//		l.Error(err, "failed to bind json")
-//		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, "failed to bind json"))
-//		return
-//	}
-//}
+// ICYPaymentRequest means send to user request to send ICY to vault
+// @Summary send to user request to send ICY to vault
+// @Description send to user request to send ICY to vault
+// @id icyPaymentRequest
+// @Tags Withdraw
+// @Accept  json
+// @Produce  json
+// @Security BearerAuth
+// @Param Body body PaymentRequestInput true "Body"
+// @Success 200 {object} CheckWithdrawConditionResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /discords/withdraw/request-payment [post]
+func (h *handler) ICYPaymentRequest(c *gin.Context) {
+	l := h.logger.Fields(logger.Fields{
+		"handler": "withdrawal",
+		"method":  "ICYPaymentRequest",
+	})
+
+	var req request.PaymentRequestInput
+	if err := c.ShouldBindJSON(&req); err != nil {
+		l.Error(err, "failed to bind json")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, "failed to bind json"))
+		return
+	}
+
+	return
+}

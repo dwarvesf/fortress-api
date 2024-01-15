@@ -28,7 +28,7 @@ type GetBanksInput struct {
 func (s *store) All(db *gorm.DB, in GetBanksInput) ([]*model.Bank, error) {
 	var banks []*model.Bank
 
-	query := db.Where("deleted_at IS NULL")
+	query := db.Where("is_active IS TRUE")
 	if in.ID != "" {
 		query = query.Where("id = ?", in.ID)
 	}
