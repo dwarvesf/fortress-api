@@ -146,9 +146,13 @@ func (c *controller) PublishIcyActivityLog() error {
 
 	operation := func() error {
 		resp, err := c.service.MochiPay.GetListTransactions(mochipay.ListTransactionsRequest{
-			Size:       20,
-			Status:     mochipay.TransactionStatusSuccess,
-			ActionList: []mochipay.TransactionAction{mochipay.TransactionActionVaultTransfer},
+			Size:         20,
+			Status:       mochipay.TransactionStatusSuccess,
+			ActionList:   []mochipay.TransactionAction{mochipay.TransactionActionVaultTransfer},
+			Type:         mochipay.TransactionTypeReceive,
+			TokenAddress: mochipay.ICYAddress,
+			ChainIDs:     []string{mochipay.POLYGONChainID},
+			SortBy:       "created_at-", // sort by created_at desc
 		})
 		if err != nil {
 			logger.Error(err, "GetListTransactions failed")

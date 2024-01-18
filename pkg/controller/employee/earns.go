@@ -19,16 +19,19 @@ func (r *controller) GetEmployeeEarnTransactions(discordID string, input GetEmpl
 		return nil, 0, err
 	}
 
+	isSender := false
+
 	txns, err := r.service.MochiPay.GetListTransactions(mochipay.ListTransactionsRequest{
 		Type:         mochipay.TransactionTypeReceive,
 		ActionList:   []mochipay.TransactionAction{mochipay.TransactionActionVaultTransfer},
 		Status:       mochipay.TransactionStatusSuccess,
 		TokenAddress: mochipay.ICYAddress,
-		ChainID:      mochipay.POLYGONChainID,
+		ChainIDs:     []string{mochipay.POLYGONChainID},
 		ProfileID:    profile.ID,
-		Platform:     mochipay.TransactionPlatformDiscord,
 		Page:         input.Page,
 		Size:         input.Size,
+		IsSender:     &isSender,
+		SortBy:       "created_at-",
 	})
 	return txns.Data, txns.Pagination.Total, err
 }
@@ -39,15 +42,18 @@ func (r *controller) GetEmployeeTotalEarn(discordID string) (string, float64, er
 		return "", 0, err
 	}
 
+	isSender := false
+
 	txns, err := r.service.MochiPay.GetListTransactions(mochipay.ListTransactionsRequest{
 		Type:         mochipay.TransactionTypeReceive,
 		ActionList:   []mochipay.TransactionAction{mochipay.TransactionActionVaultTransfer},
 		Status:       mochipay.TransactionStatusSuccess,
 		TokenAddress: mochipay.ICYAddress,
-		ChainID:      mochipay.POLYGONChainID,
+		ChainIDs:     []string{mochipay.POLYGONChainID},
 		ProfileID:    profile.ID,
-		Platform:     mochipay.TransactionPlatformDiscord,
 		Size:         math.MaxInt64,
+		IsSender:     &isSender,
+		SortBy:       "created_at-",
 	})
 	if err != nil {
 		return "", 0, err
