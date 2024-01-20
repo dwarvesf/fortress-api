@@ -45,15 +45,17 @@ const (
 )
 
 type ListTransactionsRequest struct {
-	Type         TransactionType     `json:"type"`
-	Status       TransactionStatus   `json:"status"`
-	ActionList   []TransactionAction `json:"action_list"`
-	TokenAddress string              `json:"token_address"`
-	ProfileID    string              `json:"profile_id"`
-	Platform     TransactionPlatform `json:"platform"`
-	ChainID      string              `json:"chain_id"`
-	Page         int64               `json:"page"`
-	Size         int64               `json:"size"`
+	Type         TransactionType       `json:"type"`
+	Status       TransactionStatus     `json:"status"`
+	ActionList   []TransactionAction   `json:"action_list"`
+	TokenAddress string                `json:"token_address"`
+	ProfileID    string                `json:"profile_id"`
+	Platforms    []TransactionPlatform `json:"platforms"`
+	ChainIDs     []string              `json:"chain_ids"`
+	Page         int64                 `json:"page"`
+	Size         int64                 `json:"size"`
+	IsSender     *bool                 `json:"is_sender"`
+	SortBy       string                `json:"sort_by"`
 }
 
 type ListTransactionsResponse struct {

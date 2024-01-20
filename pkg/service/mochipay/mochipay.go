@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
@@ -70,16 +71,29 @@ func (m *client) GetListTransactions(req ListTransactionsRequest) (*ListTransact
 		queryParams.Add("token_address", req.TokenAddress)
 	}
 
-	if req.Platform != "" {
-		queryParams.Add("platform", string(req.Platform))
+	if len(req.Platforms) != 0 {
+		platforms := make([]string, 0)
+		for _, p := range req.Platforms {
+			platforms = append(platforms, string(p))
+		}
+
+		queryParams.Add("platforms", strings.Join(platforms, "|"))
 	}
 
-	if req.ChainID != "" {
-		queryParams.Add("chain_id", req.ChainID)
+	if len(req.ChainIDs) != 0 {
+		queryParams.Add("chain_ids", strings.Join(req.ChainIDs, "|"))
 	}
 
 	if req.ProfileID != "" {
 		queryParams.Add("profile_id", req.ProfileID)
+	}
+
+	if req.IsSender != nil {
+		queryParams.Add("is_sender", fmt.Sprintf("%v", *req.IsSender))
+	}
+
+	if req.SortBy != "" {
+		queryParams.Add("sort_by", req.SortBy)
 	}
 
 	url := fmt.Sprintf("%s/api/v1/transactions?", m.cfg.MochiPay.BaseURL) + queryParams.Encode()
