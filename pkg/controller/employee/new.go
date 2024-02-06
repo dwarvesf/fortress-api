@@ -2,6 +2,7 @@ package employee
 
 import (
 	"mime/multipart"
+	"time"
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
@@ -47,5 +48,6 @@ type IController interface {
 	ListWithMMAScore() (employees []model.EmployeeMMAScoreData, err error)
 	ListAggregatedSalaryAdvance(input ListAggregatedSalaryAdvanceInput) (*model.SalaryAdvanceReport, error)
 	GetEmployeeEarnTransactions(discordID string, input GetEmployeeEarnTransactionsInput) (model.EmployeeEarnTransactions, int64, error)
-	GetEmployeeTotalEarn(discordID string) (string, float64, error)
+	GetEmployeeTotalEarn(discordID string) (string, string, error)
+	GetTotalEarn(from, to time.Time) (string, string, error)
 }

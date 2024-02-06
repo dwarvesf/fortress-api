@@ -360,6 +360,7 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 		discordGroup.GET("/salary-advance-report", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesDiscordRead), h.Employee.SalaryAdvanceReport)
 		discordGroup.GET("/:discord_id/earns/transactions", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesDiscordRead), h.Employee.GetEmployeeEarnTransactions)
 		discordGroup.GET("/:discord_id/earns/total", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesDiscordRead), h.Employee.GetEmployeeTotalEarn)
+		discordGroup.GET("/earns/total", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesDiscordRead), h.Employee.GetTotalEarn)
 
 		discordGroup.GET("/icy-accounting", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesDiscordRead), h.Icy.Accounting)
 	}
