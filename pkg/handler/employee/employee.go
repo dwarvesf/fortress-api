@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -1111,6 +1112,47 @@ func (h *handler) GetEmployeeTotalEarn(c *gin.Context) {
 	earnsICY, earnsUSD, err := h.controller.Employee.GetEmployeeTotalEarn(discordID)
 	if err != nil {
 		l.Error(err, "failed to get employee total earn")
+		errs.ConvertControllerErr(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse(view.EmployeeTotalEarn{
+		TotalEarnsICY: earnsICY,
+		TotalEarnsUSD: earnsUSD,
+	}, nil, nil, nil, ""))
+}
+
+func (h *handler) GetTotalEarn(c *gin.Context) {
+	l := h.logger.Fields(
+		logger.Fields{
+			"handler": "employee",
+			"method":  "GetTotalEarn",
+		},
+	)
+
+	var err error
+	to := time.Now()
+	from := to.AddDate(0, 0, -30)
+	if c.Query("from") != "" {
+		from, err = time.Parse("2006-01-02", c.Query("from"))
+		if err != nil {
+			l.Error(err, "failed to parse from date")
+			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, "invalid from date"))
+			return
+		}
+	}
+	if c.Query("to") != "" {
+		to, err = time.Parse("2006-01-02", c.Query("to"))
+		if err != nil {
+			l.Error(err, "failed to parse to date")
+			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, "invalid to date"))
+			return
+		}
+	}
+
+	earnsICY, earnsUSD, err := h.controller.Employee.GetTotalEarn(from, to)
+	if err != nil {
+		l.Error(err, "failed to get total earn")
 		errs.ConvertControllerErr(c, err)
 		return
 	}

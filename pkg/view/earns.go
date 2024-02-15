@@ -268,8 +268,8 @@ type GetEmployeeEarnTransactionsResponse struct {
 } // @name GetEmployeeEarnTransactionsResponse
 
 type EmployeeTotalEarn struct {
-	TotalEarnsICY string  `json:"totalEarnsICY"`
-	TotalEarnsUSD float64 `json:"totalEarnsUSD"`
+	TotalEarnsICY string `json:"totalEarnsICY"`
+	TotalEarnsUSD string `json:"totalEarnsUSD"`
 } // @name EmployeeTotalEarn
 
 type GetEmployeeTotalEarnResponse struct {

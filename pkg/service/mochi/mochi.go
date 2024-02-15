@@ -19,6 +19,7 @@ import (
 type IService interface {
 	GetVaultTransaction(req *VaultTransactionRequest) (*VaultTransactionResponse, error)
 	SendFromAccountToUser(amount int, discordID string) ([]model.Transaction, error)
+	GetListVaults(noFetchAmount bool) ([]Vault, error)
 }
 
 type client struct {
@@ -91,4 +92,32 @@ func (m *client) GetVaultTransaction(req *VaultTransactionRequest) (*VaultTransa
 	}
 
 	return res, nil
+}
+
+// GetListVaults call to mochi-api to get all vaults
+func (m *client) GetListVaults(noFetchAmount bool) ([]Vault, error) {
+	var client = &http.Client{}
+	request, err := http.NewRequest("GET", fmt.Sprintf("%s/api/v1/vault?no_fetch_amount=%v", m.cfg.Mochi.BaseURL, noFetchAmount), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	response, err := client.Do(request)
+	if err != nil {
+		return nil, err
+	}
+
+	defer response.Body.Close()
+	resBody, err := io.ReadAll(response.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	res := &GetListVaultsResponse{}
+	err = json.Unmarshal(resBody, res)
+	if err != nil {
+		return nil, err
+	}
+
+	return res.Data, nil
 }
