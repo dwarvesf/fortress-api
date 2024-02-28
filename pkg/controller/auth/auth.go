@@ -16,7 +16,6 @@ type AuthenticationInput struct {
 }
 
 func (r *controller) Auth(in AuthenticationInput) (*model.Employee, string, error) {
-	// 2.1 get access token from req code and redirect url
 	accessToken, err := r.service.Google.GetAccessToken(in.Code, in.RedirectURL)
 	if err != nil {
 		return nil, "", err

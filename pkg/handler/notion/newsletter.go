@@ -217,7 +217,7 @@ func (h *handler) generateEmailNewsletter(id string, from *mail.Email, categorie
 
 			defer response.Body.Close()
 
-			if err := h.service.Google.UploadContentGCS(response.Body, gcsPath); err != nil {
+			if err := h.service.GoogleStorage.UploadContentGCS(response.Body, gcsPath); err != nil {
 				return nil, err
 			}
 			changelogBlocks[i].(*nt.ImageBlock).File.URL = fPath + extension

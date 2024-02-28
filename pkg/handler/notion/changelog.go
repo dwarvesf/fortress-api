@@ -317,7 +317,7 @@ func (h *handler) generateEmailChangelog(
 
 			defer response.Body.Close()
 
-			if err := h.service.Google.UploadContentGCS(response.Body, gcsPath); err != nil {
+			if err := h.service.GoogleStorage.UploadContentGCS(response.Body, gcsPath); err != nil {
 				return nil, nil, singleChangelogError{ProjectName: projectName, Err: err}
 			}
 			if isExternalFile {

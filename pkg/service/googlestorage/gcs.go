@@ -1,4 +1,4 @@
-package google
+package googlestorage
 
 import (
 	"cloud.google.com/go/storage"

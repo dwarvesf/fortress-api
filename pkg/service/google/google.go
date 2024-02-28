@@ -2,17 +2,11 @@ package google
 
 import (
 	"context"
-	"encoding/base64"
 	"encoding/json"
-	"fmt"
+	"golang.org/x/oauth2"
 	"io"
 	"net/http"
 	"strings"
-	"time"
-
-	"cloud.google.com/go/storage"
-	"golang.org/x/oauth2"
-	"google.golang.org/api/option"
 )
 
 const (
@@ -23,28 +17,12 @@ const (
 
 type googleService struct {
 	config *oauth2.Config
-	gcs    *CloudStorage
 }
 
 // New function return Google service
-func New(config *oauth2.Config, BucketName string, GCSProjectID string, GCSCredentials string) (IService, error) {
-	decoded, err := base64.StdEncoding.DecodeString(GCSCredentials)
-	if err != nil {
-		return nil, fmt.Errorf("failed to decode gcs credentials: %v", err)
-	}
-
-	client, err := storage.NewClient(context.Background(), option.WithCredentialsJSON(decoded))
-	if err != nil {
-		return nil, fmt.Errorf("failed to create client: %v", err)
-	}
-
+func New(config *oauth2.Config) (IService, error) {
 	return &googleService{
 		config: config,
-		gcs: &CloudStorage{
-			client:     client,
-			projectID:  GCSProjectID,
-			bucketName: BucketName,
-		},
 	}, nil
 }
 
@@ -137,22 +115,4 @@ func (g *googleService) GetGoogleEmail(accessToken string) (email string, err er
 	}
 
 	return primaryEmail, nil
-}
-
-func (g *googleService) UploadContentGCS(file io.Reader, filePath string) error {
-	ctx := context.Background()
-
-	ctx, cancel := context.WithTimeout(ctx, time.Second*50)
-	defer cancel()
-
-	// Upload an object with storage.Writer.
-	wc := g.gcs.client.Bucket(g.gcs.bucketName).Object(filePath).NewWriter(ctx)
-	if _, err := io.Copy(wc, file); err != nil {
-		return fmt.Errorf("io.Copy: %v", err)
-	}
-	if err := wc.Close(); err != nil {
-		return fmt.Errorf("Writer.Close: %v", err)
-	}
-
-	return nil
 }

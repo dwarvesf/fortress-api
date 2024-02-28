@@ -77,3 +77,15 @@ func FloatToString(value float64) string {
 	roundedNumber := int(math.Round(value))
 	return strconv.Itoa(roundedNumber)
 }
+
+func ProcessString(input string) string {
+	input = strings.ReplaceAll(input, " ", "")
+
+	input = strings.ToLower(input)
+
+	if len(input) <= 5 {
+		return input
+	}
+
+	return input[:5]
+}

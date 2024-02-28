@@ -66,7 +66,7 @@ func (r *controller) UploadAvatar(uuidUserID model.UUID, file *multipart.FileHea
 			return "", done(err)
 		}
 
-		err = r.service.Google.UploadContentGCS(multipart, gcsPath)
+		err = r.service.GoogleStorage.UploadContentGCS(multipart, gcsPath)
 		if err != nil {
 			return "", done(err)
 		}
