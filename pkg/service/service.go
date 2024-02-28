@@ -1,6 +1,7 @@
 package service
 
 import (
+	"github.com/dwarvesf/fortress-api/pkg/service/googlestorage"
 	"time"
 
 	"github.com/patrickmn/go-cache"
@@ -41,6 +42,7 @@ type Service struct {
 	Discord       discord.IService
 	Github        github.IService
 	Google        googleauth.IService
+	GoogleStorage googlestorage.IService
 	GoogleAdmin   googleadmin.IService
 	GoogleDrive   googledrive.IService
 	GoogleMail    googlemail.IService
@@ -66,14 +68,20 @@ func New(cfg *config.Config, store *store.Store, repo store.DBRepo) *Service {
 		Scopes:       []string{"email", "profile"},
 	}
 
-	googleSvc, err := googleauth.New(
-		authServiceCfg,
+	gcsSvc, err := googlestorage.New(
 		cfg.Google.GCSBucketName,
 		cfg.Google.GCSProjectID,
 		cfg.Google.GCSCredentials,
 	)
 	if err != nil {
-		logger.L.Error(err, "failed to init google service")
+		logger.L.Error(err, "failed to init gcs")
+	}
+
+	googleAuthSvc, err := googleauth.New(
+		authServiceCfg,
+	)
+	if err != nil {
+		logger.L.Error(err, "failed to init google auth")
 	}
 
 	driveConfig := &oauth2.Config{
@@ -147,7 +155,8 @@ func New(cfg *config.Config, store *store.Store, repo store.DBRepo) *Service {
 		Currency:      Currency,
 		Discord:       discord.New(cfg),
 		Github:        github.New(cfg, logger.L),
-		Google:        googleSvc,
+		Google:        googleAuthSvc,
+		GoogleStorage: gcsSvc,
 		GoogleAdmin:   googleAdminSvc,
 		GoogleDrive:   googleDriveSvc,
 		GoogleMail:    googleMailSvc,

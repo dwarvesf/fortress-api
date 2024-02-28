@@ -437,7 +437,7 @@ func (h *handler) UploadAvatar(c *gin.Context) {
 	}
 
 	// 3.2 Upload to GCS
-	err = h.service.Google.UploadContentGCS(multipart, gcsPath)
+	err = h.service.GoogleStorage.UploadContentGCS(multipart, gcsPath)
 	if err != nil {
 		l.Error(err, "error in upload file")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), nil, ""))
@@ -590,7 +590,7 @@ func (h *handler) Upload(c *gin.Context) {
 	}
 
 	// 3.2 Upload to GCS
-	err = h.service.Google.UploadContentGCS(multipart, gcsPath)
+	err = h.service.GoogleStorage.UploadContentGCS(multipart, gcsPath)
 	if err != nil {
 		l.Error(err, "error in upload file")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, done(err), nil, ""))
