@@ -66,17 +66,17 @@ func (h *handler) CommitPayroll(c *gin.Context) {
 		return
 	}
 
-	//err = h.controller.Discord.Log(model.LogDiscordInput{
-	//	Type: "payroll_commit",
-	//	Data: map[string]interface{}{
-	//		"batch_number": strconv.Itoa(int(batch)),
-	//		"month":        time.Month(month).String(),
-	//		"year":         year,
-	//	},
-	//})
-	//if err != nil {
-	//	l.Error(err, "failed to logs to discord")
-	//}
+	err = h.controller.Discord.Log(model.LogDiscordInput{
+		Type: "payroll_commit",
+		Data: map[string]interface{}{
+			"batch_number": strconv.Itoa(int(batch)),
+			"month":        time.Month(month).String(),
+			"year":         year,
+		},
+	})
+	if err != nil {
+		l.Error(err, "failed to logs to discord")
+	}
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, ""))
 }

@@ -68,6 +68,13 @@ func New(cfg *config.Config, store *store.Store, repo store.DBRepo) *Service {
 		Scopes:       []string{"email", "profile"},
 	}
 
+	googleAuthSvc, err := googleauth.New(
+		authServiceCfg,
+	)
+	if err != nil {
+		logger.L.Error(err, "failed to init google auth")
+	}
+
 	gcsSvc, err := googlestorage.New(
 		cfg.Google.GCSBucketName,
 		cfg.Google.GCSProjectID,
@@ -75,13 +82,6 @@ func New(cfg *config.Config, store *store.Store, repo store.DBRepo) *Service {
 	)
 	if err != nil {
 		logger.L.Error(err, "failed to init gcs")
-	}
-
-	googleAuthSvc, err := googleauth.New(
-		authServiceCfg,
-	)
-	if err != nil {
-		logger.L.Error(err, "failed to init google auth")
 	}
 
 	driveConfig := &oauth2.Config{
