@@ -65,12 +65,11 @@ func (c *controller) calculateCommissionFromInvoice(db *gorm.DB, l logger.Logger
 
 	// Get list of project head who will get the commission from this invoice
 	pics := getPICs(invoice, projectMembers)
-
 	var res []model.EmployeeCommission
 	if len(pics.devLeads) > 0 {
 		commissionRate := commissionConfigMap[model.HeadPositionTechnicalLead.String()]
 		if commissionRate.GreaterThan(decimal.NewFromInt(0)) {
-			c, err := c.calculateHeadCommission(commissionRate, pics.devLeads, invoice, invoice.Total)
+			c, err := c.calculateHeadCommission(commissionRate, pics.devLeads, invoice, invoice.TotalWithoutBonus)
 			if err != nil {
 				l.Errorf(err, "failed to calculate dev lead commission rate", "projectID", invoice.ProjectID.String())
 				return nil, err
@@ -82,7 +81,7 @@ func (c *controller) calculateCommissionFromInvoice(db *gorm.DB, l logger.Logger
 	if len(pics.accountManagers) > 0 {
 		commissionRate := commissionConfigMap[model.HeadPositionAccountManager.String()]
 		if commissionRate.GreaterThan(decimal.NewFromInt(0)) {
-			c, err := c.calculateHeadCommission(commissionRate, pics.accountManagers, invoice, invoice.Total)
+			c, err := c.calculateHeadCommission(commissionRate, pics.accountManagers, invoice, invoice.TotalWithoutBonus)
 			if err != nil {
 				l.Errorf(err, "failed to calculate account manager commission rate", "projectID", invoice.ProjectID.String())
 				return nil, err
@@ -94,7 +93,7 @@ func (c *controller) calculateCommissionFromInvoice(db *gorm.DB, l logger.Logger
 	if len(pics.deliveryManagers) > 0 {
 		commissionRate := commissionConfigMap[model.HeadPositionDeliveryManager.String()]
 		if commissionRate.GreaterThan(decimal.NewFromInt(0)) {
-			c, err := c.calculateHeadCommission(commissionRate, pics.deliveryManagers, invoice, invoice.Total)
+			c, err := c.calculateHeadCommission(commissionRate, pics.deliveryManagers, invoice, invoice.TotalWithoutBonus)
 			if err != nil {
 				l.Errorf(err, "failed to calculate delivery manager commission rate", "projectID", invoice.ProjectID.String())
 				return nil, err
@@ -106,9 +105,9 @@ func (c *controller) calculateCommissionFromInvoice(db *gorm.DB, l logger.Logger
 	if len(pics.sales) > 0 {
 		commissionRate := commissionConfigMap[model.HeadPositionSalePerson.String()]
 		if commissionRate.GreaterThan(decimal.NewFromInt(0)) {
-			c, err := c.calculateHeadCommission(commissionRate, pics.sales, invoice, invoice.Total)
+			c, err := c.calculateHeadCommission(commissionRate, pics.sales, invoice, invoice.TotalWithoutBonus)
 			if err != nil {
-				l.Errorf(err, "failed to calculate account manager commission rate", "projectID", invoice.ProjectID.String())
+				l.Errorf(err, "failed to calculate sales commission rate", "projectID", invoice.ProjectID.String())
 				return nil, err
 			}
 			res = append(res, c...)
@@ -118,15 +117,16 @@ func (c *controller) calculateCommissionFromInvoice(db *gorm.DB, l logger.Logger
 	if len(pics.upsells) > 0 {
 		c, err := c.calculateRefBonusCommission(pics.upsells, invoice)
 		if err != nil {
-			l.Errorf(err, "failed to calculate account manager commission rate", "projectID", invoice.ProjectID.String())
+			l.Errorf(err, "failed to calculate upsells commission rate", "projectID", invoice.ProjectID.String())
 			return nil, err
 		}
 		res = append(res, c...)
 	}
+
 	if len(pics.suppliers) > 0 {
 		c, err := c.calculateRefBonusCommission(pics.suppliers, invoice)
 		if err != nil {
-			l.Errorf(err, "failed to calculate account manager commission rate", "projectID", invoice.ProjectID.String())
+			l.Errorf(err, "failed to calculate supplier commission rate", "projectID", invoice.ProjectID.String())
 			return nil, err
 		}
 		res = append(res, c...)
@@ -230,10 +230,10 @@ func (c *controller) movePaidInvoiceGDrive(l logger.Logger, wg *sync.WaitGroup, 
 	}
 }
 
-func (c *controller) calculateHeadCommission(projectCommissionRate decimal.Decimal, beneficiaries []pic, invoice *model.Invoice, invoiceTotalPrice float64) ([]model.EmployeeCommission, error) {
+func (c *controller) calculateHeadCommission(projectCommissionRate decimal.Decimal, beneficiaries []pic, invoice *model.Invoice, invoiceTotal float64) ([]model.EmployeeCommission, error) {
 	// conversionRate by percentage
 	pcrPercentage := projectCommissionRate.Div(decimal.NewFromInt(100))
-	projectCommissionValue, _ := pcrPercentage.Mul(decimal.NewFromFloat(invoiceTotalPrice)).Float64()
+	projectCommissionValue, _ := pcrPercentage.Mul(decimal.NewFromFloat(invoiceTotal)).Float64()
 	convertedValue, rate, err := c.service.Wise.Convert(projectCommissionValue, invoice.Project.BankAccount.Currency.Name, "VND")
 	if err != nil {
 		return nil, err
@@ -251,7 +251,7 @@ func (c *controller) calculateHeadCommission(projectCommissionRate decimal.Decim
 				Project:        invoice.Project.Name,
 				ConversionRate: rate,
 				InvoiceID:      invoice.ID,
-				Formula:        fmt.Sprintf("%v%%(PCR) * %v%%(SCR) * %v(IV) * %v(RATE)", projectCommissionRate, beneficiary.CommissionRate, invoiceTotalPrice, rate),
+				Formula:        fmt.Sprintf("%v%%(PCR) * %v%%(SCR) * %v(IV) * %v(RATE)", projectCommissionRate, beneficiary.CommissionRate, invoiceTotal, rate),
 				Note:           beneficiary.Note,
 			})
 		}

@@ -1,7 +1,6 @@
 package service
 
 import (
-	"github.com/dwarvesf/fortress-api/pkg/service/googlestorage"
 	"time"
 
 	"github.com/patrickmn/go-cache"
@@ -24,6 +23,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/service/googledrive"
 	"github.com/dwarvesf/fortress-api/pkg/service/googlemail"
 	"github.com/dwarvesf/fortress-api/pkg/service/googlesheet"
+	"github.com/dwarvesf/fortress-api/pkg/service/googlestorage"
 	"github.com/dwarvesf/fortress-api/pkg/service/icyswap"
 	"github.com/dwarvesf/fortress-api/pkg/service/improvmx"
 	"github.com/dwarvesf/fortress-api/pkg/service/mochi"

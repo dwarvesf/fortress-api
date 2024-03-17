@@ -39,31 +39,33 @@ func (i InvoiceStatus) String() string {
 type Invoice struct {
 	BaseModel
 
-	Number           string
-	InvoicedAt       *time.Time
-	DueAt            *time.Time
-	PaidAt           *time.Time
-	FailedAt         *time.Time
-	Status           InvoiceStatus
-	Email            string
-	CC               JSON
-	Description      string
-	Note             string
-	SubTotal         float64
-	Tax              float64
-	Discount         float64
-	Total            float64
-	ConversionAmount float64
-	InvoiceFileURL   string
-	ErrorInvoiceID   *UUID
-	LineItems        JSON
-	Month            int
-	Year             int
-	SentBy           *UUID
-	Sender           *Employee `gorm:"foreignKey:sent_by;"`
-	ThreadID         string
-	ScheduledDate    *time.Time
-	ConversionRate   float64
+	Number            string
+	InvoicedAt        *time.Time
+	DueAt             *time.Time
+	PaidAt            *time.Time
+	FailedAt          *time.Time
+	Status            InvoiceStatus
+	Email             string
+	CC                JSON
+	Description       string
+	Note              string
+	SubTotal          float64
+	Tax               float64
+	Discount          float64
+	Total             float64
+	ConversionAmount  float64
+	InvoiceFileURL    string
+	ErrorInvoiceID    *UUID
+	LineItems         JSON
+	Month             int
+	Year              int
+	SentBy            *UUID
+	Sender            *Employee `gorm:"foreignKey:sent_by;"`
+	ThreadID          string
+	ScheduledDate     *time.Time
+	ConversionRate    float64
+	Bonus             float64
+	TotalWithoutBonus float64
 
 	BankID UUID
 	Bank   *BankAccount
