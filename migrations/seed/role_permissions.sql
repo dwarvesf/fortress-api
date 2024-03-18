@@ -28,6 +28,9 @@ INSERT INTO public.role_permissions (id, deleted_at, created_at, updated_at, rol
 ('df6f9d87-a1be-42dd-be96-f085245bf039', NULL, '2023-07-26 16:35:12.475872', '2023-07-26 16:35:12.475872', '3fcf9e36-2501-4f86-8418-cfe3a137b7f9', 'fea2497c-694d-43d7-82cd-764d622a6706'), -- deliveryMetrics.leaderBoard.sync
 ('fdded785-6cc8-41e9-9fe4-5130b40584f9', NULL, '2023-07-26 16:35:12.475872', '2023-07-26 16:35:12.475872', '3fcf9e36-2501-4f86-8418-cfe3a137b7f9', 'b4edad19-3e30-4e86-bd6e-07f535011aaf'); -- employees.discord.read
 
+-- FORTRESS VALUATION
+INSERT INTO public.role_permissions (id, deleted_at, created_at, updated_at, role_id, permission_id) VALUES
+('c5e03c9f-410c-4b03-8780-1665b0daadb7', null, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '4cb29e06-7df2-43b2-bdde-fd09b2e2025b', '78d617f8-b155-4051-b128-7f2d00ca31fd');
 -- CONTRACTOR
 INSERT INTO public.role_permissions (id, deleted_at, created_at, updated_at, role_id, permission_id) VALUES
 ('8d80717d-34a9-4e40-8981-f179bd444877', NULL, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '9f65e480-b591-49c1-9cc2-de31c47ee007', '495c96ae-60f9-4c57-bc96-9504d0fedde6'),
@@ -178,7 +181,6 @@ INSERT INTO public.role_permissions (id, deleted_at, created_at, updated_at, rol
 
 -- ADMIN
 INSERT INTO public.role_permissions (id, deleted_at, created_at, updated_at, role_id, permission_id) VALUES
-('bf4a2d78-da1c-447e-bd4e-a6f4a3997e4a', NULL, '2023-07-20 16:35:12.475872', '2023-07-20 16:35:12.475872', 'c23c1c1c-bfaf-41e6-a4d7-6ef196fd2736', '51a3ec4a-6bae-4f02-9d9b-89ba539346da'); -- deliveryMetrics.leaderBoard.read
 ('3dc8e4ab-8402-4655-9795-0c1ade988e64', null, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', 'c23c1c1c-bfaf-41e6-a4d7-6ef196fd2736', '93886b0b-6592-4838-b024-1aefb123fed6'),
 ('19f61ff9-003e-4ea2-8ede-fea5f671530b', null, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', 'c23c1c1c-bfaf-41e6-a4d7-6ef196fd2736', '5820dd37-a9bd-455e-b49b-b54ad7df180e'),
 ('8bfac1eb-3d44-49f3-a4cd-69126605448b', null, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', 'c23c1c1c-bfaf-41e6-a4d7-6ef196fd2736', '495c96ae-60f9-4c57-bc96-9504d0fedde6'),
