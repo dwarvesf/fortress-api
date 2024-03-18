@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"text/template"
 	"time"
 
@@ -76,7 +77,16 @@ func (c *controller) Send(iv *model.Invoice) (*model.Invoice, error) {
 	}
 	iv.Number = *nextInvoiceNumber
 
-	if err := c.generateInvoicePDF(l, iv); err != nil {
+	invoiceItems, err := model.GetInfoItems(iv.LineItems)
+	if err != nil {
+		l.Errorf(err, "failed to get info items", "invoice-lineItems", iv.LineItems)
+		return nil, err
+	}
+
+	iv.Bonus = c.getInvoiceBonus(invoiceItems)
+	iv.TotalWithoutBonus = iv.Total - iv.Bonus
+
+	if err := c.generateInvoicePDF(l, iv, invoiceItems); err != nil {
 		l.Error(err, "failed to generate Invoice PDF")
 		return nil, err
 	}
@@ -86,6 +96,7 @@ func (c *controller) Send(iv *model.Invoice) (*model.Invoice, error) {
 		l.Error(err, "failed to convert currency")
 		return nil, err
 	}
+
 	am := model.NewVietnamDong(int64(conversionAmount))
 	iv.ConversionAmount = float64(am)
 	iv.ConversionRate = rate
@@ -180,14 +191,8 @@ func (c *controller) Send(iv *model.Invoice) (*model.Invoice, error) {
 	return iv, nil
 }
 
-func (c *controller) generateInvoicePDF(l logger.Logger, invoice *model.Invoice) error {
+func (c *controller) generateInvoicePDF(l logger.Logger, invoice *model.Invoice, items []model.InvoiceItem) error {
 	pound := money.New(1, invoice.Project.BankAccount.Currency.Name)
-
-	items, err := model.GetInfoItems(invoice.LineItems)
-	if err != nil {
-		l.Errorf(err, "failed to get info items", "invoice-lineItems", invoice.LineItems)
-		return err
-	}
 
 	companyInfo, err := invoice.Project.GetCompanyContactInfo()
 	if err != nil {
@@ -300,4 +305,14 @@ func (c *controller) generateInvoicePDF(l logger.Logger, invoice *model.Invoice)
 	invoice.InvoiceFileContent = pdfg.Buffer().Bytes()
 
 	return nil
+}
+
+func (c *controller) getInvoiceBonus(items []model.InvoiceItem) float64 {
+	var bonus float64
+	for _, item := range items {
+		if strings.Contains(strings.ToLower(item.Description), "bonus") {
+			bonus += item.Cost
+		}
+	}
+	return bonus
 }

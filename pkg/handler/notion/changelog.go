@@ -147,7 +147,7 @@ func (h *handler) generateEmailChangelog(
 	defer func() {
 		if r := recover(); r != nil {
 			fmt.Println("stacktrace from panic: \n" + string(debug.Stack()))
-			h.logger.Error(fmt.Errorf("%v", r), "Recoverd "+projectName)
+			h.logger.Error(fmt.Errorf("%v", r), "Recovered "+projectName)
 		}
 	}()
 
