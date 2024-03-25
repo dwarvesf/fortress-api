@@ -13,7 +13,7 @@ import (
 
 type IService interface {
 	ConversionRate() (*big.Int, error)
-	UsdtFund() (*big.Int, error)
+	UsdcFund() (*big.Int, error)
 }
 
 type icyswap struct {
@@ -24,12 +24,12 @@ type icyswap struct {
 }
 
 const (
-	IcySwapAddress = "0x8De345A73625237223dEDf8c93dfE79A999C17FB"
-	UsdtAddress    = "0xc2132D05D31c914a87C6611C10748AEb04B58e8F"
+	ICYSwapAddress = "0x982d2c5A654E4f7CC65ACDCa4ECc649fE4F4DAa4"
+	USDCAddress    = "0xd9aAEc86B65D86f6A7B5B1b0c42FFA531710b6CA"
 )
 
 func New(evm evm.IService, cfg *config.Config, l logger.Logger) (IService, error) {
-	instance, err := icyswapabi.NewIcySwap(common.HexToAddress(IcySwapAddress), evm.Client())
+	instance, err := icyswapabi.NewIcySwap(common.HexToAddress(ICYSwapAddress), evm.Client())
 	if err != nil {
 		return nil, err
 	}
@@ -50,8 +50,8 @@ func (i *icyswap) ConversionRate() (*big.Int, error) {
 	return rate, nil
 }
 
-func (i *icyswap) UsdtFund() (*big.Int, error) {
-	balance, err := i.evm.ERC20Balance(common.HexToAddress(UsdtAddress), common.HexToAddress(IcySwapAddress))
+func (i *icyswap) UsdcFund() (*big.Int, error) {
+	balance, err := i.evm.ERC20Balance(common.HexToAddress(USDCAddress), common.HexToAddress(ICYSwapAddress))
 	if err != nil {
 		return nil, err
 	}
