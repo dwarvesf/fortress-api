@@ -4,11 +4,6 @@ import (
 	"time"
 )
 
-const (
-	PolygonChainID     = "137"
-	ICYContractAddress = "0x8D57d71B02d71e1e449a0E459DE40473Eb8f4a90"
-)
-
 type TransactionType string
 
 const (

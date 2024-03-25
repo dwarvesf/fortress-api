@@ -140,7 +140,7 @@ func New(cfg *config.Config, store *store.Store, repo store.DBRepo) *Service {
 
 	Currency := currency.New(cfg)
 
-	polygonClient, err := evm.New(evm.DefaultPolygonClient, cfg, logger.L)
+	polygonClient, err := evm.New(evm.DefaultBASEClient, cfg, logger.L)
 	if err != nil {
 		logger.L.Error(err, "failed to init polygon client service")
 	}

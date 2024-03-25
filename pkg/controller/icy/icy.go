@@ -13,6 +13,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/service/icyswap"
+	"github.com/dwarvesf/fortress-api/pkg/service/mochipay"
 	"github.com/dwarvesf/fortress-api/pkg/service/mochiprofile"
 )
 
@@ -42,7 +43,7 @@ func (c *controller) Accounting() (*model.IcyAccounting, error) {
 
 	// 0.Prepare token and swap contract data
 	icy := c.icy()
-	usdt := c.usdt()
+	usdt := c.usdc()
 	icySwap := c.icySwap()
 
 	// 1.Get current conversion rate from icyswap contract
@@ -55,7 +56,7 @@ func (c *controller) Accounting() (*model.IcyAccounting, error) {
 	conversionRateFloat, _ := new(big.Float).Quo(new(big.Float).SetInt(conversionRate), usdtDecimals).Float32()
 
 	// 2. Get current usdt fund in icyswap contract
-	icyswapUsdtBal, err := c.service.IcySwap.UsdtFund()
+	icyswapUsdtBal, err := c.service.IcySwap.UsdcFund()
 	if err != nil {
 		l.Error(err, "failed to get usdt fund in icyswap contract")
 		return nil, err
@@ -124,7 +125,7 @@ func (c *controller) lockedIcyAmount() (*big.Int, error) {
 func (c *controller) onchainLockedIcyAmount() (*big.Int, error) {
 	icyAddress := common.HexToAddress(c.icy().Address)
 	oldIcySwapContractAddr := common.HexToAddress("0xd327b6d878bcd9d5ec6a5bc99445985d75f0d6e5")
-	icyswapAddr := common.HexToAddress(icyswap.IcySwapAddress)
+	icyswapAddr := common.HexToAddress(icyswap.ICYSwapAddress)
 	teamAddr := common.HexToAddress("0x0762c4b40c9cb21Af95192a3Dc3EDd3043CF3d41")
 	icyLockedAddrs := []common.Address{oldIcySwapContractAddr, icyswapAddr, teamAddr}
 
@@ -214,29 +215,29 @@ func (c *controller) icy() model.TokenInfo {
 	return model.TokenInfo{
 		Name:        "Icy",
 		Symbol:      "ICY",
-		Address:     "0x8D57d71B02d71e1e449a0E459DE40473Eb8f4a90",
+		Address:     mochipay.ICYAddress,
 		Decimals:    18,
-		Chain:       "Polygon",
-		ChainID:     "137",
+		Chain:       mochipay.BASEChainID,
+		ChainID:     mochipay.BASEChainID,
 		TotalSupply: "100000000000000000000000",
 	}
 }
 
-func (c *controller) usdt() model.TokenInfo {
+func (c *controller) usdc() model.TokenInfo {
 	return model.TokenInfo{
-		Name:     "Usdt",
-		Symbol:   "USDT",
-		Address:  "0xc2132D05D31c914a87C6611C10748AEb04B58e8F",
+		Name:     "USD Base Coin",
+		Symbol:   "USDbC",
+		Address:  icyswap.USDCAddress,
 		Decimals: 6,
-		Chain:    "Polygon",
-		ChainID:  "137",
+		Chain:    mochipay.BaseChainName,
+		ChainID:  mochipay.BASEChainID,
 	}
 }
 
 func (c *controller) icySwap() model.ContractInfo {
 	return model.ContractInfo{
 		Name:    "IcySwap",
-		Address: icyswap.IcySwapAddress,
-		Chain:   "Polygon",
+		Address: icyswap.ICYSwapAddress,
+		Chain:   mochipay.BaseChainName,
 	}
 }
