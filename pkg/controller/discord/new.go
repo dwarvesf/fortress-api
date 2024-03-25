@@ -151,7 +151,7 @@ func (c *controller) PublishIcyActivityLog() error {
 			ActionList:   []mochipay.TransactionAction{mochipay.TransactionActionVaultTransfer},
 			Type:         mochipay.TransactionTypeReceive,
 			TokenAddress: mochipay.ICYAddress,
-			ChainIDs:     []string{mochipay.POLYGONChainID},
+			ChainIDs:     []string{mochipay.BASEChainID},
 			SortBy:       "created_at-", // sort by created_at desc
 		})
 		if err != nil {
@@ -204,7 +204,7 @@ func (c *controller) PublishIcyActivityLog() error {
 		}
 
 		if !strings.EqualFold(txMetadata.VaultRequest.TokenInfo.Address, mochipay.ICYAddress) ||
-			txMetadata.VaultRequest.TokenInfo.ChainID != mochipay.POLYGONChainID {
+			txMetadata.VaultRequest.TokenInfo.ChainID != mochipay.BASEChainID {
 			logger.Info("Skip transaction without ICY token")
 			continue
 		}

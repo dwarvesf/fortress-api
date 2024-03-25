@@ -5,5 +5,5 @@ type RpcClient struct {
 }
 
 var (
-	DefaultPolygonClient = RpcClient{Url: "https://rpc.ankr.com/polygon"}
+	DefaultBASEClient = RpcClient{Url: "https://mainnet.base.org"}
 )

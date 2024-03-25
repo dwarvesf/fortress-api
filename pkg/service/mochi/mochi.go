@@ -14,6 +14,7 @@ import (
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
+	"github.com/dwarvesf/fortress-api/pkg/service/mochipay"
 )
 
 type IService interface {
@@ -56,7 +57,7 @@ func (c *client) SendFromAccountToUser(amount int, discordID string) ([]model.Tr
 	txs, err := c.mochiClient.Transfer(&model.TransferRequest{
 		RecipientIDs: []string{profile.ID},
 		Amounts:      []string{strconv.Itoa(amount)},
-		TokenID:      "941f0fb1-00da-49dc-a538-5e81fc874cb4",
+		TokenID:      mochipay.ICYTokenMochiID,
 		Description:  fmt.Sprintf("%s Addvance Salary in %s", discordID, currentMonth.String()),
 		References:   "Advance Salary",
 	})
