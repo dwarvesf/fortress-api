@@ -20,7 +20,7 @@ type GetListProjectInput struct {
 
 	Name   string   `form:"name" json:"name"`
 	Status []string `form:"status" json:"status"`
-	Type   string   `form:"type" json:"type"`
+	Type   []string `form:"type" json:"type"`
 } // @name GetListProjectInput
 
 type UpdateProjectGeneralInfoRequest struct {
@@ -104,8 +104,12 @@ func (i *GetListProjectInput) StandardizeInput() {
 }
 
 func (i *GetListProjectInput) Validate() error {
-	if i.Type != "" && !model.ProjectType(i.Type).IsValid() {
-		return errs.ErrInvalidProjectType
+	if len(i.Type) > 0 {
+		for _, projectType := range i.Type {
+			if utils.RemoveAllSpace(projectType) != "" && !model.ProjectType(projectType).IsValid() {
+				return errs.ErrInvalidProjectType
+			}
+		}
 	}
 	if len(i.Status) > 0 {
 		for _, status := range i.Status {
