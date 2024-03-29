@@ -117,7 +117,7 @@ func (h *handler) List(c *gin.Context) {
 	projects, total, err := h.store.Project.All(h.repo.DB(), project.GetListProjectInput{
 		Statuses: query.Status,
 		Name:     query.Name,
-		Type:     query.Type,
+		Types:    query.Type,
 	}, pagination)
 	if err != nil {
 		l.Error(err, "error query project from db")
