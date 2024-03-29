@@ -33,8 +33,8 @@ func (s *store) All(db *gorm.DB, input GetListProjectInput, pagination model.Pag
 		query = query.Where("projects.status IN ?", input.Statuses)
 	}
 
-	if input.Type != "" {
-		query = query.Where("projects.type = ?", input.Type)
+	if len(input.Types) > 0 {
+		query = query.Where("projects.type IN ?", input.Types)
 	}
 
 	if input.AllowsSendingSurvey {
