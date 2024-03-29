@@ -114,10 +114,17 @@ func (h *handler) List(c *gin.Context) {
 		return
 	}
 
+	projectTypes := make([]string, 0)
+	for _, t := range query.Type {
+		if strings.TrimSpace(t) != "" {
+			projectTypes = append(projectTypes, t)
+		}
+	}
+
 	projects, total, err := h.store.Project.All(h.repo.DB(), project.GetListProjectInput{
 		Statuses: query.Status,
 		Name:     query.Name,
-		Types:    query.Type,
+		Types:    projectTypes,
 	}, pagination)
 	if err != nil {
 		l.Error(err, "error query project from db")
