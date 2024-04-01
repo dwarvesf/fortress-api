@@ -8,5 +8,4 @@ type IHandler interface {
 	OnLeaveMessage(c *gin.Context)
 	ReportBraineryMetrics(c *gin.Context)
 	DeliveryMetricsReport(c *gin.Context)
-	PublishIcyActivityLog(c *gin.Context)
 }
