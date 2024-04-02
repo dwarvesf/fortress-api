@@ -31,7 +31,6 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 		cronjob.POST("/delivery-metric-reports", amw.WithAuth, pmw.WithPerm(model.PermissionCronjobExecute), h.Discord.DeliveryMetricsReport)
 		cronjob.POST("/sync-delivery-metrics", amw.WithAuth, pmw.WithPerm(model.PermissionCronjobExecute), h.DeliveryMetric.Sync)
 		cronjob.POST("/sync-conversion-rates", amw.WithAuth, pmw.WithPerm(model.PermissionCronjobExecute), h.ConversionRate.Sync)
-		cronjob.POST("/publish-icy-activity-log", amw.WithAuth, pmw.WithPerm(model.PermissionCronjobExecute), h.Discord.PublishIcyActivityLog)
 	}
 
 	/////////////////
