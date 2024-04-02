@@ -61,15 +61,13 @@ type Service struct {
 func New(cfg *config.Config, store *store.Store, repo store.DBRepo) *Service {
 	cch := cache.New(5*time.Minute, 10*time.Minute)
 
-	authServiceCfg := &oauth2.Config{
-		ClientID:     cfg.Google.ClientID,
-		ClientSecret: cfg.Google.ClientSecret,
-		Endpoint:     google.Endpoint,
-		Scopes:       []string{"email", "profile"},
-	}
-
 	googleAuthSvc, err := googleauth.New(
-		authServiceCfg,
+		&oauth2.Config{
+			ClientID:     cfg.Google.ClientID,
+			ClientSecret: cfg.Google.ClientSecret,
+			Endpoint:     google.Endpoint,
+			Scopes:       []string{"email", "profile"},
+		},
 	)
 	if err != nil {
 		logger.L.Error(err, "failed to init google auth")

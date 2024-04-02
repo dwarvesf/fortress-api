@@ -8,8 +8,8 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/model"
 )
 
-func (r *controller) Me(userID string) (*model.Employee, []*model.Permission, error) {
-	e, err := r.store.Employee.One(r.repo.DB(), userID, false)
+func (c *controller) Me(userID string) (*model.Employee, []*model.Permission, error) {
+	e, err := c.store.Employee.One(c.repo.DB(), userID, false)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil, ErrUserNotFound
@@ -18,7 +18,7 @@ func (r *controller) Me(userID string) (*model.Employee, []*model.Permission, er
 		return nil, nil, err
 	}
 
-	perms, err := r.store.Permission.GetByEmployeeID(r.repo.DB(), userID)
+	perms, err := c.store.Permission.GetByEmployeeID(c.repo.DB(), userID)
 	if err != nil {
 		return nil, nil, err
 	}
