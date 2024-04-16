@@ -192,24 +192,24 @@ func (h *handler) Sync(c *gin.Context) {
 				continue
 			}
 
-			validatedAuthor, found := whitelistedUsers[author]
+			discordID, found := whitelistedUsers[author]
 			if !found {
 				continue
 			}
 
-			dt, found := authorsMap[validatedAuthor]
+			dt, found := authorsMap[discordID]
 			if found {
 				memoAuthors = append(memoAuthors, dt)
 				continue
 			}
 
-			empl, err := h.store.Employee.GetByDiscordUsername(h.repo.DB(), validatedAuthor)
+			empl, err := h.store.Employee.GetByDiscordID(h.repo.DB(), discordID, true)
 			if err != nil {
-				l.Error(err, fmt.Sprintf("[memologs.Sync] failed to get employee with discord username %v", validatedAuthor))
+				l.Error(err, fmt.Sprintf("[memologs.Sync] failed to get employee with discord username %v", discordID))
 			}
 
 			github := ""
-			discord := validatedAuthor
+			discord := discordID
 			employeeID := ""
 			if empl != nil {
 				employeeID = empl.ID.String()
@@ -229,7 +229,7 @@ func (h *handler) Sync(c *gin.Context) {
 					DiscordID:  discord,
 					EmployeeID: employeeID,
 				}
-				authorsMap[validatedAuthor] = memoAuthor
+				authorsMap[discordID] = memoAuthor
 				memoAuthors = append(memoAuthors, memoAuthor)
 			}
 		}
