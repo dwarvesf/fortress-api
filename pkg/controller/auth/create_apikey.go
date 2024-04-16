@@ -10,7 +10,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/utils/authutils"
 )
 
-func (r *controller) CreateAPIKey(roleID string) (string, error) {
+func (c *controller) CreateAPIKey(roleID string) (string, error) {
 	clientID, err := authutils.GenerateUniqueNanoID(authutils.ClientIDLength)
 	if err != nil {
 		return "", err
@@ -30,9 +30,9 @@ func (r *controller) CreateAPIKey(roleID string) (string, error) {
 		return "", err
 	}
 
-	tx, done := r.repo.NewTransaction()
+	tx, done := c.repo.NewTransaction()
 
-	role, err := r.store.Role.One(tx.DB(), roleIDUUID)
+	role, err := c.store.Role.One(tx.DB(), roleIDUUID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return "", done(ErrRoleNotfound)
@@ -40,7 +40,7 @@ func (r *controller) CreateAPIKey(roleID string) (string, error) {
 		return "", done(err)
 	}
 
-	apikey, err := r.store.APIKey.Create(tx.DB(), &model.APIKey{
+	apikey, err := c.store.APIKey.Create(tx.DB(), &model.APIKey{
 		ClientID:  clientID,
 		SecretKey: hashedKey,
 		Status:    model.ApikeyStatusValid,
@@ -49,7 +49,7 @@ func (r *controller) CreateAPIKey(roleID string) (string, error) {
 		return "", done(err)
 	}
 
-	_, err = r.store.APIKeyRole.Create(tx.DB(), &model.APIKeyRole{
+	_, err = c.store.APIKeyRole.Create(tx.DB(), &model.APIKeyRole{
 		APIKeyID: apikey.ID,
 		RoleID:   role.ID,
 	})

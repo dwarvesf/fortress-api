@@ -6,6 +6,7 @@ import (
 
 	"gorm.io/gorm"
 
+	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/utils/authutils"
 )
@@ -15,22 +16,30 @@ type AuthenticationInput struct {
 	RedirectURL string
 }
 
-func (r *controller) Auth(in AuthenticationInput) (*model.Employee, string, error) {
-	accessToken, err := r.service.Google.GetAccessToken(in.Code, in.RedirectURL)
+func (c *controller) Auth(in AuthenticationInput) (*model.Employee, string, error) {
+	l := c.logger.Fields(logger.Fields{
+		"controller": "auth",
+		"method":     "Auth",
+	})
+
+	accessToken, err := c.service.Google.GetAccessToken(in.Code, in.RedirectURL)
 	if err != nil {
+		l.Errorf(err, "failed to get access token")
 		return nil, "", err
 	}
 
 	// 2.2 get login user email from access token
 	primaryEmail := ""
-	if r.config.Env == "prod" {
-		primaryEmail, err = r.service.Google.GetGoogleEmailLegacy(accessToken)
+	if c.config.Env == "prod" {
+		primaryEmail, err = c.service.Google.GetGoogleEmailLegacy(accessToken)
 		if err != nil {
+			l.Errorf(err, "failed to get google email legacy")
 			return nil, "", err
 		}
 	} else {
-		primaryEmail, err = r.service.Google.GetGoogleEmail(accessToken)
+		primaryEmail, err = c.service.Google.GetGoogleEmail(accessToken)
 		if err != nil {
+			l.Errorf(err, "failed to get google email")
 			return nil, "", err
 		}
 	}
@@ -41,8 +50,9 @@ func (r *controller) Auth(in AuthenticationInput) (*model.Employee, string, erro
 	}
 
 	// 2.4 check user is active
-	employee, err := r.store.Employee.OneByEmail(r.repo.DB(), primaryEmail)
+	employee, err := c.store.Employee.OneByEmail(c.repo.DB(), primaryEmail)
 	if err != nil {
+		l.Errorf(err, "failed to employee by email")
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, "", ErrUserInactivated
 		}
@@ -60,8 +70,9 @@ func (r *controller) Auth(in AuthenticationInput) (*model.Employee, string, erro
 		Email:  primaryEmail,
 	}
 
-	jwt, err := authutils.GenerateJWTToken(&authenticationInfo, time.Now().Add(24*365*time.Hour).Unix(), r.config.JWTSecretKey)
+	jwt, err := authutils.GenerateJWTToken(&authenticationInfo, time.Now().Add(24*365*time.Hour).Unix(), c.config.JWTSecretKey)
 	if err != nil {
+		l.Errorf(err, "failed to generate jwt token")
 		return nil, "", err
 	}
 

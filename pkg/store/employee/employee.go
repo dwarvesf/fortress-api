@@ -262,6 +262,19 @@ func (s *store) GetByDiscordID(db *gorm.DB, discordID string, preload bool) (*mo
 	return employee, query.First(&employee).Error
 }
 
+func (s *store) GetByDiscordUsername(db *gorm.DB, discordUsername string) (*model.Employee, error) {
+	var employee *model.Employee
+	query := db.Joins("JOIN discord_accounts ON discord_accounts.id = employees.discord_account_id AND discord_accounts.username = ?", discordUsername).
+		Where("employees.deleted_at IS NULL AND employees.working_status <> ?", model.WorkingStatusLeft).
+		Preload("SocialAccounts", "deleted_at IS NULL").
+		Preload("DiscordAccount", "deleted_at IS NULL")
+	err := query.First(&employee).Error
+	if err != nil {
+		return nil, err
+	}
+	return employee, nil
+}
+
 func (s *store) ListByDiscordRequest(db *gorm.DB, in DiscordRequestFilter, preload bool) ([]model.Employee, error) {
 	var employee []model.Employee
 	query := db.Where("employees.deleted_at IS NULL AND employees.working_status <> ?", model.WorkingStatusLeft).Order("employees.joined_date DESC")

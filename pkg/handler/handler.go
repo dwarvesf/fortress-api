@@ -21,6 +21,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/handler/healthz"
 	"github.com/dwarvesf/fortress-api/pkg/handler/icy"
 	"github.com/dwarvesf/fortress-api/pkg/handler/invoice"
+	"github.com/dwarvesf/fortress-api/pkg/handler/memologs"
 	"github.com/dwarvesf/fortress-api/pkg/handler/metadata"
 	"github.com/dwarvesf/fortress-api/pkg/handler/notion"
 	"github.com/dwarvesf/fortress-api/pkg/handler/payroll"
@@ -53,6 +54,7 @@ type Handler struct {
 	Feedback       feedback.IHandler
 	Healthcheck    healthz.IHandler
 	Invoice        invoice.IHandler
+	MemoLog        memologs.IHandler
 	Metadata       metadata.IHandler
 	Notion         notion.IHandler
 	Payroll        payroll.IHandler
@@ -83,6 +85,7 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, ctrl *
 		Feedback:       feedback.New(store, repo, service, logger, cfg),
 		Healthcheck:    healthz.New(),
 		Invoice:        invoice.New(ctrl, store, repo, service, worker, logger, cfg),
+		MemoLog:        memologs.New(ctrl, store, repo, service, logger, cfg),
 		Metadata:       metadata.New(store, repo, service, logger, cfg),
 		Notion:         notion.New(store, repo, service, logger, cfg),
 		Payroll:        payroll.New(ctrl, store, repo, service, worker, logger, cfg),

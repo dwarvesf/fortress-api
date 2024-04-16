@@ -49,6 +49,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/store/icytransaction"
 	"github.com/dwarvesf/fortress-api/pkg/store/invoice"
 	"github.com/dwarvesf/fortress-api/pkg/store/invoicenumbercaching"
+	"github.com/dwarvesf/fortress-api/pkg/store/memolog"
 	"github.com/dwarvesf/fortress-api/pkg/store/onleaverequest"
 	"github.com/dwarvesf/fortress-api/pkg/store/operationalservice"
 	"github.com/dwarvesf/fortress-api/pkg/store/organization"
@@ -126,6 +127,7 @@ type Store struct {
 	IcyTransaction          icytransaction.IStore
 	Invoice                 invoice.IStore
 	InvoiceNumberCaching    invoicenumbercaching.IStore
+	MemoLog                 memolog.IStore
 	MonthlyDeliveryMetric   deliverymetricmonthly.IStore
 	OnLeaveRequest          onleaverequest.IStore
 	OperationalService      operationalservice.IStore
@@ -205,6 +207,7 @@ func New() *Store {
 		IcyTransaction:          icytransaction.New(),
 		Invoice:                 invoice.New(),
 		InvoiceNumberCaching:    invoicenumbercaching.New(),
+		MemoLog:                 memolog.New(),
 		MonthlyDeliveryMetric:   deliverymetricmonthly.New(),
 		OnLeaveRequest:          onleaverequest.New(),
 		OperationalService:      operationalservice.New(),

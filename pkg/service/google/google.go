@@ -3,10 +3,12 @@ package google
 import (
 	"context"
 	"encoding/json"
-	"golang.org/x/oauth2"
+	"fmt"
 	"io"
 	"net/http"
 	"strings"
+
+	"golang.org/x/oauth2"
 )
 
 const (
@@ -37,7 +39,7 @@ func (g *googleService) GetAccessToken(code string, redirectURL string) (string,
 	g.config.RedirectURL = redirectURL
 	token, err := g.config.Exchange(context.Background(), code)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to exchange code for token. err: %v, client: %v", err, g.config.ClientID)
 	}
 	return token.AccessToken, nil
 }
