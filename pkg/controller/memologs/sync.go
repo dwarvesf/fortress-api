@@ -159,6 +159,8 @@ var whitelistedUsers = map[string]string{
 	"innno_":       "753995829559165044",
 	"dudaka":       "282500790692741121",
 	"tom":          "184354519726030850",
+	"minh":         "1093434004159594496",
+	"jack":         "398384659521863702",
 }
 
 type Rss struct {
