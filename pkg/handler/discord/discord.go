@@ -8,8 +8,6 @@ import (
 	"time"
 
 	"github.com/bwmarrin/discordgo"
-	"github.com/gin-gonic/gin"
-
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/controller"
 	"github.com/dwarvesf/fortress-api/pkg/handler/discord/request"
@@ -22,6 +20,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/store/employee"
 	"github.com/dwarvesf/fortress-api/pkg/store/onleaverequest"
 	"github.com/dwarvesf/fortress-api/pkg/view"
+	"github.com/gin-gonic/gin"
 )
 
 type handler struct {
@@ -43,6 +42,11 @@ func New(controller *controller.Controller, store *store.Store, repo store.DBRep
 		config:     cfg,
 	}
 }
+
+const (
+	DiscordReadingChannel           = "1225085624260759622"
+	DiscordPlayGroundReadingChannel = "1119171172198797393"
+)
 
 func (h *handler) SyncDiscordInfo(c *gin.Context) {
 	discordMembers, err := h.service.Discord.GetMembers()
@@ -370,6 +374,30 @@ func (h *handler) DeliveryMetricsReport(c *gin.Context) {
 			c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, err, discordMsg, ""))
 			return
 		}
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))
+}
+
+// SyncMemo check if today is birthday of any employee in the system
+func (h *handler) SyncMemo(c *gin.Context) {
+	targetChannelID := DiscordPlayGroundReadingChannel
+	if h.config.Env == "prod" {
+		targetChannelID = DiscordReadingChannel
+	}
+
+	memos, err := h.controller.MemoLog.Sync()
+	if err != nil {
+		h.logger.Error(err, "failed to sync memologs")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	_, err = h.service.Discord.SendNewMemoMessage(h.config.Discord.IDs.DwarvesGuild, memos, targetChannelID)
+	if err != nil {
+		h.logger.Error(err, "failed to send new memo message")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))

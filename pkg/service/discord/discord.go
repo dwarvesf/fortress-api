@@ -654,3 +654,52 @@ func (d *discordClient) SendEmbeddedMessageWithChannel(original *model.OriginalD
 	msg, err := d.session.ChannelMessageSendEmbed(channelId, normalize(original, embed))
 	return msg, err
 }
+
+func (d *discordClient) SendNewMemoMessage(guildID string, memos []model.MemoLog, channelID string) (*discordgo.Message, error) {
+	for i, content := range memos {
+		if i <= 10 {
+			var textMessage string
+
+			authorField := ""
+			avatar := ""
+			for _, author := range content.Authors {
+				if avatar == "" {
+					discordMember, err := d.session.GuildMember(guildID, content.Authors[0].DiscordID)
+					if err != nil {
+						return nil, err
+					}
+
+					avatar = fmt.Sprintf("https://cdn.discordapp.com/avatars/%v/%v.webp?size=240", discordMember.User.ID, discordMember.User.Avatar)
+					if discordMember.Avatar != "" {
+						avatar = fmt.Sprintf("https://cdn.discordapp.com/guilds/%v/users/%v/avatars/%v.webp?size=240", guildID, discordMember.User.ID, discordMember.Avatar)
+					}
+				}
+
+				authorField += fmt.Sprintf(" <@%s> ", author.DiscordID)
+			}
+
+			author := ""
+			if authorField != "" {
+				author = "from" + authorField
+			}
+
+			textMessage += fmt.Sprintf("New memo post %v \n [%s](%s)\n", author, content.Title, content.URL)
+
+			msg := &discordgo.Message{
+				Content: textMessage,
+			}
+
+			err := d.SendDiscordMessageWithChannel(d.session, msg, channelID)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	return nil, nil
+}
+
+func (d *discordClient) SendDiscordMessageWithChannel(ses *discordgo.Session, msg *discordgo.Message, channelId string) error {
+	_, err := ses.ChannelMessageSend(channelId, msg.Content)
+	return err
+}

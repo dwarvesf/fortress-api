@@ -21,18 +21,19 @@ type IService interface {
 	UpdateEvent(event *model.Schedule) (scheduledEvent *discordgo.GuildScheduledEvent, err error)
 	DeleteEvent(event *model.Schedule) error
 
-	SendEmbeddedMessageWithChannel(original *model.OriginalDiscordMessage, embed *discordgo.MessageEmbed, channelId string) (*discordgo.Message, error)
 	GetChannels() ([]*discordgo.Channel, error)
 	GetMessagesAfterCursor(channelID string, cursorMessageID string, lastMessageID string) ([]*discordgo.Message, error)
 
 	ReportBraineryMetrics(queryView string, braineryMetric *view.BraineryMetric, channelID string) (*discordgo.Message, error)
 	DeliveryMetricWeeklyReport(deliveryMetrics *view.DeliveryMetricWeeklyReport, leaderBoard *view.WeeklyLeaderBoard, channelID string) (*discordgo.Message, error)
 	DeliveryMetricMonthlyReport(deliveryMetrics *view.DeliveryMetricMonthlyReport, leaderBoard *view.WeeklyLeaderBoard, channelID string) (*discordgo.Message, error)
-
+	SendNewMemoMessage(guildID string, memos []model.MemoLog, channelID string) (*discordgo.Message, error)
 	/*
 		WEBHOOK
 	*/
 
 	// SendMessage logs a message to a Discord channel through a webhook
 	SendMessage(discordMsg model.DiscordMessage, webhookUrl string) (*model.DiscordMessage, error)
+	SendEmbeddedMessageWithChannel(original *model.OriginalDiscordMessage, embed *discordgo.MessageEmbed, channelId string) (*discordgo.Message, error)
+	SendDiscordMessageWithChannel(ses *discordgo.Session, msg *discordgo.Message, channelId string) error
 }
