@@ -44,8 +44,8 @@ func New(controller *controller.Controller, store *store.Store, repo store.DBRep
 }
 
 const (
-	DiscordReadingChannel           = "1072722777687199744"
-	DiscordPlayGroundReadingChannel = "1119171172198797393"
+	discordReadingChannel           = "1225085624260759622"
+	discordPlayGroundReadingChannel = "1119171172198797393"
 )
 
 func (h *handler) SyncDiscordInfo(c *gin.Context) {
@@ -381,9 +381,9 @@ func (h *handler) DeliveryMetricsReport(c *gin.Context) {
 
 // SyncMemo check if today is birthday of any employee in the system
 func (h *handler) SyncMemo(c *gin.Context) {
-	targetChannelID := DiscordPlayGroundReadingChannel
+	targetChannelID := discordPlayGroundReadingChannel
 	if h.config.Env == "prod" {
-		targetChannelID = DiscordReadingChannel
+		targetChannelID = discordReadingChannel
 	}
 
 	memos, err := h.controller.MemoLog.Sync()
