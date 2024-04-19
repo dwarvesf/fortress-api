@@ -393,6 +393,11 @@ func (h *handler) SyncMemo(c *gin.Context) {
 		return
 	}
 
+	if len(memos) == 0 {
+		c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "no new memo"))
+		return
+	}
+
 	_, err = h.service.Discord.SendNewMemoMessage(h.config.Discord.IDs.DwarvesGuild, memos, targetChannelID)
 	if err != nil {
 		h.logger.Error(err, "failed to send new memo message")
