@@ -44,7 +44,7 @@ func New(controller *controller.Controller, store *store.Store, repo store.DBRep
 }
 
 const (
-	DiscordReadingChannel           = "1225085624260759622"
+	DiscordReadingChannel           = "1072722777687199744"
 	DiscordPlayGroundReadingChannel = "1119171172198797393"
 )
 
