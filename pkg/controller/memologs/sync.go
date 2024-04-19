@@ -116,7 +116,7 @@ func (c *controller) Sync() ([]model.MemoLog, error) {
 			l.Error(err, fmt.Sprintf("failed to parse date %v", item.PubDate))
 		}
 
-		if timeutil.IsSameDay(publishedAt, time.Now()) {
+		if !timeutil.IsSameDay(publishedAt, time.Now()) {
 			continue
 		}
 
