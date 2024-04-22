@@ -15,6 +15,7 @@ type IService interface {
 	GetProfile(id string) (*MochiProfile, error)
 	GetListProfiles(req ListProfilesRequest) (*GetMochiProfilesResponse, error)
 	GetProfileByDiscordID(discordID string) (*MochiProfile, error)
+	GetProfileByEvmAddress(address string) (*MochiProfile, error)
 }
 
 type client struct {
@@ -82,12 +83,26 @@ func (m *client) GetProfileByDiscordID(discordID string) (*MochiProfile, error) 
 	return res, handleErrorStatusCode("Get Mochi profile by discord ID", r.StatusCode)
 }
 
-func handleErrorStatusCode(method string, statusCode int) error {
-	if statusCode >= 200 && statusCode < 300 {
-		return nil
+func (m *client) GetProfileByEvmAddress(address string) (*MochiProfile, error) {
+	var client = &http.Client{
+		Timeout: 10 * time.Second,
 	}
 
-	return fmt.Errorf("%s status code: %d", method, statusCode)
+	url := fmt.Sprintf("%s/api/v1/profiles/get-by-evm/%s", m.cfg.MochiProfile.BaseURL, address)
+	r, err := client.Get(url)
+	if err != nil {
+		m.l.Errorf(err, "[mochiprofile.GetProfileByEvmAddress] client.Get failed")
+		return nil, err
+	}
+	defer r.Body.Close()
+
+	res := &MochiProfile{}
+	if err := json.NewDecoder(r.Body).Decode(&res); err != nil {
+		m.l.Errorf(err, "[mochiprofile.GetProfileByEvmAddress] decoder.Decode failed")
+		return nil, err
+	}
+
+	return res, handleErrorStatusCode("Get Mochi profile by evm address", r.StatusCode)
 }
 
 func (m *client) GetListProfiles(req ListProfilesRequest) (*GetMochiProfilesResponse, error) {
@@ -128,6 +143,14 @@ func (m *client) GetListProfiles(req ListProfilesRequest) (*GetMochiProfilesResp
 	}
 
 	return res, nil
+}
+
+func handleErrorStatusCode(method string, statusCode int) error {
+	if statusCode >= 200 && statusCode < 300 {
+		return nil
+	}
+
+	return fmt.Errorf("%s status code: %d", method, statusCode)
 }
 
 func getListParams[T fmt.Stringer](data []T) string {
