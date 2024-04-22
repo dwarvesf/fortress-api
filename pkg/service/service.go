@@ -14,6 +14,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/service/basecamp"
 	"github.com/dwarvesf/fortress-api/pkg/service/basecamp/model"
+	"github.com/dwarvesf/fortress-api/pkg/service/communitynft"
 	"github.com/dwarvesf/fortress-api/pkg/service/currency"
 	"github.com/dwarvesf/fortress-api/pkg/service/discord"
 	"github.com/dwarvesf/fortress-api/pkg/service/evm"
@@ -31,6 +32,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/service/mochiprofile"
 	"github.com/dwarvesf/fortress-api/pkg/service/notion"
 	"github.com/dwarvesf/fortress-api/pkg/service/sendgrid"
+	"github.com/dwarvesf/fortress-api/pkg/service/tono"
 	"github.com/dwarvesf/fortress-api/pkg/service/wise"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 )
@@ -54,8 +56,10 @@ type Service struct {
 	Notion        notion.IService
 	Sendgrid      sendgrid.IService
 	Wise          wise.IService
-	PolygonClient evm.IService
+	BaseClient    evm.IService
 	IcySwap       icyswap.IService
+	CommunityNft  communitynft.IService
+	Tono          tono.IService
 }
 
 func New(cfg *config.Config, store *store.Store, repo store.DBRepo) *Service {
@@ -138,13 +142,18 @@ func New(cfg *config.Config, store *store.Store, repo store.DBRepo) *Service {
 
 	Currency := currency.New(cfg)
 
-	polygonClient, err := evm.New(evm.DefaultBASEClient, cfg, logger.L)
+	baseClient, err := evm.New(evm.DefaultBASEClient, cfg, logger.L)
 	if err != nil {
-		logger.L.Error(err, "failed to init polygon client service")
+		logger.L.Error(err, "failed to init base client service")
 	}
-	icySwap, err := icyswap.New(polygonClient, cfg, logger.L)
+	icySwap, err := icyswap.New(baseClient, cfg, logger.L)
 	if err != nil {
 		logger.L.Error(err, "failed to init icyswap service")
+	}
+
+	communityNft, err := communitynft.New(baseClient, cfg, logger.L)
+	if err != nil {
+		logger.L.Error(err, "failed to init community nft service")
 	}
 
 	return &Service{
@@ -166,7 +175,9 @@ func New(cfg *config.Config, store *store.Store, repo store.DBRepo) *Service {
 		Notion:        notion.New(cfg.Notion.Secret, cfg.Notion.Databases.Project, logger.L),
 		Sendgrid:      sendgrid.New(cfg.Sendgrid.APIKey, cfg, logger.L),
 		Wise:          wise.New(cfg, logger.L),
-		PolygonClient: polygonClient,
+		BaseClient:    baseClient,
 		IcySwap:       icySwap,
+		CommunityNft:  communityNft,
+		Tono:          tono.New(cfg, logger.L),
 	}
 }
