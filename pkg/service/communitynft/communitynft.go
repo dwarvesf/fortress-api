@@ -23,11 +23,15 @@ type nft struct {
 }
 
 const (
-	CommunityNftContractAddress = "0x888C825C1642aC592a6cCf101542F794480f8803"
+	DefaultCommunityNftContractAddress = "0x3150825A8b9990567790B22a4F987b6A82d89d54"
 )
 
 func New(evm evm.IService, cfg *config.Config, l logger.Logger) (IService, error) {
-	instance, err := erc721abi.NewERC721(common.HexToAddress(CommunityNftContractAddress), evm.Client())
+	addr := cfg.CommunityNft.ContractAddress
+	if addr == "" {
+		addr = DefaultCommunityNftContractAddress
+	}
+	instance, err := erc721abi.NewERC721(common.HexToAddress(addr), evm.Client())
 	if err != nil {
 		return nil, err
 	}
