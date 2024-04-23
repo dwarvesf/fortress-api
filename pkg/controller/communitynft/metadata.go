@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"text/template"
 	"time"
 
@@ -60,6 +61,10 @@ func (c *controller) GetNftMetadata(tokenId int) (*model.NftMetadata, error) {
 	if !ok {
 		discordUsername = "unknown"
 	}
+	displayName := profile.ProfileName
+	if displayName == "" {
+		displayName = strings.ToTitle(fmt.Sprintf("%s", discordUsername))
+	}
 	joinedDate := profile.CreatedAt.Format("May 02, 2006")
 	userAvatar, err := c.userAvatarBase64(profile.Avatar)
 	if err != nil {
@@ -75,12 +80,12 @@ func (c *controller) GetNftMetadata(tokenId int) (*model.NftMetadata, error) {
 
 	// 2.3 get user discord roles
 	// TODO: get user discord roles
-	roles := []role{{Name: "dwarf"}}
+	roles := []role{{Name: "peeps"}}
 
 	// 2.4 compose nft embed data
 	embedData := nftEmbedData{
 		TokenId:      fmt.Sprintf("#%d", tokenId),
-		DisplayName:  profile.ProfileName,
+		DisplayName:  displayName,
 		Username:     fmt.Sprintf("@%s", discordUsername),
 		JoinedDate:   joinedDate,
 		GlobalXP:     guildProfile.GuildXP,
@@ -98,9 +103,10 @@ func (c *controller) GetNftMetadata(tokenId int) (*model.NftMetadata, error) {
 
 	// 4. Compose metadata
 	metadata := &model.NftMetadata{
-		Name:        embedData.DisplayName,
-		Description: "Dwarves Foundation NFT",
-		Image:       img,
+		Name:            embedData.DisplayName,
+		Description:     "Dwarves Foundation NFT",
+		Image:           img,
+		BackgroundColor: "F0F4FC",
 		Attributes: []model.NftAttribute{
 			{
 				TraitType: "Global XP",

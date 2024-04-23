@@ -7,10 +7,11 @@ type GetNftMetadataResponse struct {
 } // @name GetNftMetadataResponse
 
 type NftMetadata struct {
-	Name        string      `json:"name"`
-	Description string      `json:"description"`
-	Image       string      `json:"image"`
-	Attributes  []attribute `json:"attributes"`
+	Name            string      `json:"name"`
+	Description     string      `json:"description"`
+	Image           string      `json:"image"`
+	BackgroundColor string      `json:"background_color"`
+	Attributes      []attribute `json:"attributes"`
 } // @name NftInfo
 
 type attribute struct {
@@ -27,9 +28,10 @@ func ToNftMetadata(nft *model.NftMetadata) *NftMetadata {
 		})
 	}
 	return &NftMetadata{
-		Name:        nft.Name,
-		Description: nft.Description,
-		Image:       nft.Image,
-		Attributes:  attributes,
+		Name:            nft.Name,
+		Description:     nft.Description,
+		Image:           nft.Image,
+		BackgroundColor: nft.BackgroundColor,
+		Attributes:      attributes,
 	}
 }
