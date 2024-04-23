@@ -78,5 +78,5 @@ func (h *handler) GetNftMetadata(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToNftMetadata(nftMetadata), nil, nil, nil, ""))
+	c.JSON(http.StatusOK, view.ToNftMetadata(nftMetadata))
 }
