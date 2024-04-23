@@ -29,6 +29,7 @@ type Config struct {
 	MochiProfile  MochiProfile
 	Tono          Tono
 	ImprovMX      ImprovMX
+	CommunityNft  CommunityNft
 
 	Invoice  Invoice
 	Sendgrid Sendgrid
@@ -108,6 +109,10 @@ type MochiProfile struct {
 
 type Tono struct {
 	BaseURL string
+}
+
+type CommunityNft struct {
+	ContractAddress string
 }
 
 type Notion struct {
@@ -288,6 +293,9 @@ func Generate(v ENV) *Config {
 		},
 		ImprovMX: ImprovMX{
 			Token: v.GetString("IMPROVMX_API_TOKEN"),
+		},
+		CommunityNft: CommunityNft{
+			ContractAddress: v.GetString("COMMUNITY_NFT_CONTRACT_ADDRESS"),
 		},
 	}
 }
