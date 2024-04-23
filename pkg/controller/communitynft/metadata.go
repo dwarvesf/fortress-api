@@ -40,14 +40,14 @@ func (c *controller) GetNftMetadata(tokenId int) (*model.NftMetadata, error) {
 	// 1 Get owner of an NFT
 	addr, err := c.service.CommunityNft.OwnerOf(tokenId)
 	if err != nil {
-		return nil, err
+		return nil, ErrTokenNotFound
 	}
 
 	// 2 Get nft needed data
 	// 2.1 get mochi profile of nft owner
 	profile, err := c.service.MochiProfile.GetProfileByEvmAddress(addr)
 	if err != nil {
-		return nil, err
+		return nil, ErrMochiProfileNotFound
 	}
 	var discordProfile mochiprofile.AssociatedAccounts
 	for _, acc := range profile.AssociatedAccounts {
@@ -73,7 +73,11 @@ func (c *controller) GetNftMetadata(tokenId int) (*model.NftMetadata, error) {
 		return nil, err
 	}
 
-	// 3 Get embed data from the mochi profile
+	// 2.3 get user discord roles
+	// TODO: get user discord roles
+	roles := []role{{Name: "dwarf"}}
+
+	// 2.4 compose nft embed data
 	embedData := nftEmbedData{
 		TokenId:      fmt.Sprintf("#%d", tokenId),
 		DisplayName:  profile.ProfileName,
@@ -82,19 +86,17 @@ func (c *controller) GetNftMetadata(tokenId int) (*model.NftMetadata, error) {
 		GlobalXP:     guildProfile.GuildXP,
 		ChatActivity: guildProfile.NrOfActions,
 		Level:        guildProfile.CurrentLevel.Level,
-		Roles: []role{
-			{Name: "dwarf"},
-		},
+		Roles:        roles,
 		AvatarBase64: userAvatar,
 	}
 
-	// 4. Generate image from embed data
+	// 3. Generate image from embed data
 	img, err := c.nftImage(embedData)
 	if err != nil {
 		return nil, err
 	}
 
-	// 5. Compose metadata
+	// 4. Compose metadata
 	metadata := &model.NftMetadata{
 		Name:        embedData.DisplayName,
 		Description: "Dwarves Foundation NFT",

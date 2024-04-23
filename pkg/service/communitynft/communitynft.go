@@ -23,7 +23,7 @@ type nft struct {
 }
 
 const (
-	CommunityNftContractAddress = "0x888C825C1642aC592a6cCf101542F794480f8803"
+	CommunityNftContractAddress = "0x5233E10cc24736F107fEda42ff0157e91Cf1F8b6"
 )
 
 func New(evm evm.IService, cfg *config.Config, l logger.Logger) (IService, error) {

@@ -8,6 +8,7 @@ import (
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/controller"
+	ctrl "github.com/dwarvesf/fortress-api/pkg/controller/communitynft"
 	"github.com/dwarvesf/fortress-api/pkg/handler/communitynft/errs"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/service"
@@ -67,6 +68,10 @@ func (h *handler) GetNftMetadata(c *gin.Context) {
 	})
 
 	nftMetadata, err := h.controller.CommunityNft.GetNftMetadata(tid)
+	if err == ctrl.ErrTokenNotFound {
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrTokenNotFound, nil, ""))
+		return
+	}
 	if err != nil {
 		l.Error(err, "failed to get nft metadata")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
