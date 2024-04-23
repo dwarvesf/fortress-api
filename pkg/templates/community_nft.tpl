@@ -33,10 +33,10 @@
 <text fill="#5926EE" xml:space="preserve" style="white-space: pre" font-family="Inter" font-size="20" font-weight="bold" letter-spacing="0em"><tspan x="347.833" y="256.273"> {{.Level}}</tspan></text>
 <text fill="#5926EE" xml:space="preserve" style="white-space: pre" font-family="Inter" font-size="11" font-weight="600" letter-spacing="0.06px"><tspan x="345.833" y="273.41">Level</tspan></text>
 </g>
-<text fill="#1F242F" xml:space="preserve" style="white-space: pre" font-family="Inter" font-size="16" font-weight="600" letter-spacing="0em"><tspan x="117" y="194.6"> {{.DisplayName}}</tspan></text>
-<text fill="#6B7387" xml:space="preserve" style="white-space: pre" font-family="Inter" font-size="12" font-weight="500" letter-spacing="0em"><tspan x="117" y="213.364"> {{.Username}}</tspan></text>
+<text fill="#1F242F" xml:space="preserve" style="white-space: pre" font-family="Inter" font-size="16" font-weight="600" letter-spacing="0em"><tspan x="117" y="194.6">{{.DisplayName}}</tspan></text>
+<text fill="#6B7387" xml:space="preserve" style="white-space: pre" font-family="Inter" font-size="12" font-weight="500" letter-spacing="0em"><tspan x="117" y="213.364">{{.Username}}</tspan></text>
 <circle cx="187" cy="209" r="2" fill="#D9D9D9"/>
-<text fill="#AFB7CD" xml:space="preserve" style="white-space: pre" font-family="Inter" font-size="12" font-weight="500" letter-spacing="0em"><tspan x="194" y="213.364"> {{.JoinedDate}}</tspan></text>
+<text fill="#AFB7CD" xml:space="preserve" style="white-space: pre" font-family="Inter" font-size="12" font-weight="500" letter-spacing="0em"><tspan x="194" y="213.364">{{.JoinedDate}}</tspan></text>
 
 <!-- roles -->
 {{range .Roles}}
