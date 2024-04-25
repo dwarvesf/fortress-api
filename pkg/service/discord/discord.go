@@ -90,6 +90,10 @@ func (d *discordClient) DeleteEvent(event *model.Schedule) error {
 	return d.session.GuildScheduledEventDelete(d.cfg.Discord.IDs.DwarvesGuild, event.DiscordEvent.DiscordEventID)
 }
 
+func (d *discordClient) ListEvents() ([]*discordgo.GuildScheduledEvent, error) {
+	return d.session.GuildScheduledEvents(d.cfg.Discord.IDs.DwarvesGuild, false)
+}
+
 func (d *discordClient) newRequest(method string, url string, payload io.Reader) ([]byte, error) {
 	req, err := http.NewRequest(method, url, payload)
 	if err != nil {

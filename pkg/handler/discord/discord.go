@@ -8,6 +8,10 @@ import (
 	"time"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/gin-gonic/gin"
+	"github.com/k0kubun/pp"
+	"github.com/thoas/go-funk"
+
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/controller"
 	"github.com/dwarvesf/fortress-api/pkg/handler/discord/request"
@@ -20,7 +24,6 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/store/employee"
 	"github.com/dwarvesf/fortress-api/pkg/store/onleaverequest"
 	"github.com/dwarvesf/fortress-api/pkg/view"
-	"github.com/gin-gonic/gin"
 )
 
 type handler struct {
@@ -404,6 +407,43 @@ func (h *handler) SyncMemo(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
 	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))
+}
+
+func (h *handler) SyncEventOGIF(c *gin.Context) {
+	events, err := h.service.Discord.ListEvents()
+	if err != nil {
+		h.logger.Error(err, "failed to fetch scheduled events from discord")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	pp.Println(events)
+	for _, event := range events {
+		if !strings.Contains(strings.ToLower(event.Name), "ogif") {
+			continue
+		}
+		var presenters []string
+		// preprocess the description
+		event.Description = strings.ReplaceAll(event.Description, ":", "")
+		// split the description into words
+		words := strings.Fields(event.Description)
+		// try to find presenter that include "@"
+		for _, word := range words {
+			if strings.Contains(word, "@") && !funk.Contains(presenters, word) {
+				presenters = append(presenters, word)
+			}
+		}
+		// remove the @
+		for i, p := range presenters {
+			presenters[i] = strings.ReplaceAll(p, "@", "")
+		}
+
+		// remove the @
+		pp.Println("words", words)
+	}
+	h.logger.Infof("fetched scheduled events from discord: %v", events)
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))
 }

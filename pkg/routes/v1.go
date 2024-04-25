@@ -34,6 +34,8 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 		cronjob.POST("/sync-memo", amw.WithAuth, pmw.WithPerm(model.PermissionCronjobExecute), h.Discord.SyncMemo)
 	}
 
+	r.GET("/events", h.Discord.SyncEventOGIF)
+
 	/////////////////
 	// Webhook GROUP
 	/////////////////

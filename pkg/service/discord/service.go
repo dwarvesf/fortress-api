@@ -20,6 +20,7 @@ type IService interface {
 	CreateEvent(event *model.Schedule) (scheduledEvent *discordgo.GuildScheduledEvent, err error)
 	UpdateEvent(event *model.Schedule) (scheduledEvent *discordgo.GuildScheduledEvent, err error)
 	DeleteEvent(event *model.Schedule) error
+	ListEvents() ([]*discordgo.GuildScheduledEvent, error)
 
 	GetChannels() ([]*discordgo.Channel, error)
 	GetMessagesAfterCursor(channelID string, cursorMessageID string, lastMessageID string) ([]*discordgo.Message, error)
