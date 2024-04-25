@@ -144,7 +144,7 @@ func (c *controller) onchainLockedIcyAmount() (*big.Int, error) {
 
 	for _, lockedAddr := range icyLockedAddrs {
 		go func(ownerAddr common.Address) {
-			amount, err := c.service.PolygonClient.ERC20Balance(icyAddress, ownerAddr)
+			amount, err := c.service.BaseClient.ERC20Balance(icyAddress, ownerAddr)
 			fetchIcyResults <- FetchResult{
 				amount: amount,
 				err:    err,

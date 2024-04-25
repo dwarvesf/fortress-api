@@ -5,6 +5,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/controller/auth"
 	"github.com/dwarvesf/fortress-api/pkg/controller/brainerylogs"
 	"github.com/dwarvesf/fortress-api/pkg/controller/client"
+	"github.com/dwarvesf/fortress-api/pkg/controller/communitynft"
 	"github.com/dwarvesf/fortress-api/pkg/controller/conversionrate"
 	"github.com/dwarvesf/fortress-api/pkg/controller/deliverymetrics"
 	"github.com/dwarvesf/fortress-api/pkg/controller/discord"
@@ -29,6 +30,7 @@ type Controller struct {
 	Discord        discord.IController
 	Icy            icy.IController
 	MemoLog        memologs.IController
+	CommunityNft   communitynft.IController
 }
 
 func New(store *store.Store, repo store.DBRepo, service *service.Service, worker *worker.Worker, logger logger.Logger, cfg *config.Config) *Controller {
@@ -43,5 +45,6 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, worker
 		Discord:        discord.New(store, repo, service, logger, cfg),
 		Icy:            icy.New(service, logger, cfg),
 		MemoLog:        memologs.New(store, repo, service, logger, cfg),
+		CommunityNft:   communitynft.New(store, repo, service, logger, cfg),
 	}
 }

@@ -10,6 +10,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/handler/bankaccount"
 	"github.com/dwarvesf/fortress-api/pkg/handler/brainerylogs"
 	"github.com/dwarvesf/fortress-api/pkg/handler/client"
+	"github.com/dwarvesf/fortress-api/pkg/handler/communitynft"
 	"github.com/dwarvesf/fortress-api/pkg/handler/conversionrate"
 	"github.com/dwarvesf/fortress-api/pkg/handler/dashboard"
 	"github.com/dwarvesf/fortress-api/pkg/handler/dashboard/util"
@@ -65,6 +66,7 @@ type Handler struct {
 	Webhook        webhook.IHandler
 	Vault          vault.IHandler
 	Icy            icy.IHandler
+	CommunityNft   communitynft.IHandler
 }
 
 func New(store *store.Store, repo store.DBRepo, service *service.Service, ctrl *controller.Controller, worker *worker.Worker, logger logger.Logger, cfg *config.Config) *Handler {
@@ -96,5 +98,6 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, ctrl *
 		Webhook:        webhook.New(ctrl, store, repo, service, logger, cfg, worker),
 		Vault:          vault.New(store, repo, service, logger, cfg),
 		Icy:            icy.New(ctrl, logger),
+		CommunityNft:   communitynft.New(ctrl, store, repo, service, logger, cfg),
 	}
 }
