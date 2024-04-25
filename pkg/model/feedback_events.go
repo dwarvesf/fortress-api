@@ -10,8 +10,10 @@ type EventStatus string
 
 // values for EventType
 const (
-	EventTypeFeedback EventType = "feedback"
-	EventTypeSurvey   EventType = "survey"
+	EventTypeFeedback    EventType = "feedback"
+	EventTypeSurvey      EventType = "survey"
+	EventTypeDiscordOGIF EventType = "OGIF"
+	EventTypeDiscordDemo EventType = "DEMO"
 )
 
 const (

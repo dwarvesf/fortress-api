@@ -371,6 +371,13 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 		discordGroup.GET("/earns/total", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesDiscordRead), h.Employee.GetTotalEarn)
 
 		discordGroup.GET("/icy-accounting", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesDiscordRead), h.Icy.Accounting)
+
+		scheduledEventGroup := discordGroup.Group("/scheduled-events")
+		{
+			scheduledEventGroup.GET("", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesDiscordRead), h.Discord.ListScheduledEvent)
+			scheduledEventGroup.POST("", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesDiscordRead), h.Discord.CreateScheduledEvent)
+			scheduledEventGroup.PUT("/:id/speakers", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesDiscordRead), h.Discord.SetScheduledEventSpeakers)
+		}
 	}
 
 	conversionRateGroup := v1.Group("/conversion-rates")

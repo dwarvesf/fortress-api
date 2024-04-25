@@ -20,9 +20,12 @@ type IService interface {
 	CreateEvent(event *model.Schedule) (scheduledEvent *discordgo.GuildScheduledEvent, err error)
 	UpdateEvent(event *model.Schedule) (scheduledEvent *discordgo.GuildScheduledEvent, err error)
 	DeleteEvent(event *model.Schedule) error
+	ListEvents() ([]*discordgo.GuildScheduledEvent, error)
 
 	GetChannels() ([]*discordgo.Channel, error)
 	GetMessagesAfterCursor(channelID string, cursorMessageID string, lastMessageID string) ([]*discordgo.Message, error)
+	GetChannelMessages(channelID string, limit int) ([]*discordgo.Message, error)
+	GetEventByID(eventID string) (*discordgo.GuildScheduledEvent, error)
 
 	ReportBraineryMetrics(queryView string, braineryMetric *view.BraineryMetric, channelID string) (*discordgo.Message, error)
 	DeliveryMetricWeeklyReport(deliveryMetrics *view.DeliveryMetricWeeklyReport, leaderBoard *view.WeeklyLeaderBoard, channelID string) (*discordgo.Message, error)
