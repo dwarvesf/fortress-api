@@ -707,3 +707,11 @@ func (d *discordClient) SendDiscordMessageWithChannel(ses *discordgo.Session, ms
 	_, err := ses.ChannelMessageSend(channelId, msg.Content)
 	return err
 }
+
+func (d *discordClient) GetChannelMessages(channelID string, limit int) ([]*discordgo.Message, error) {
+	return d.session.ChannelMessages(channelID, limit, "", "", "")
+}
+
+func (d *discordClient) GetEventByID(eventID string) (*discordgo.GuildScheduledEvent, error) {
+	return d.session.GuildScheduledEvent(d.cfg.Discord.IDs.DwarvesGuild, eventID, false)
+}

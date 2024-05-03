@@ -9,10 +9,9 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/gin-gonic/gin"
-	"github.com/k0kubun/pp"
-	"github.com/thoas/go-funk"
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
+	"github.com/dwarvesf/fortress-api/pkg/constant"
 	"github.com/dwarvesf/fortress-api/pkg/controller"
 	"github.com/dwarvesf/fortress-api/pkg/handler/discord/request"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
@@ -21,8 +20,10 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/service/basecamp/consts"
 	bcModel "github.com/dwarvesf/fortress-api/pkg/service/basecamp/model"
 	"github.com/dwarvesf/fortress-api/pkg/store"
+	"github.com/dwarvesf/fortress-api/pkg/store/discordevent"
 	"github.com/dwarvesf/fortress-api/pkg/store/employee"
 	"github.com/dwarvesf/fortress-api/pkg/store/onleaverequest"
+	"github.com/dwarvesf/fortress-api/pkg/utils/stringutils"
 	"github.com/dwarvesf/fortress-api/pkg/view"
 )
 
@@ -411,39 +412,107 @@ func (h *handler) SyncMemo(c *gin.Context) {
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))
 }
 
-func (h *handler) SyncEventOGIF(c *gin.Context) {
-	events, err := h.service.Discord.ListEvents()
+// this function will sync ogif events from red alert channel to store in db
+// this will be used to sync other events from discord in the future if any
+func (h *handler) SyncEvent(c *gin.Context) {
+	// channel that posts ogif events
+	// e.g. red alert: 915941020968046612
+	msgs, err := h.service.Discord.GetChannelMessages(h.config.Discord.IDs.EventsChannel, 1)
 	if err != nil {
-		h.logger.Error(err, "failed to fetch scheduled events from discord")
+		h.logger.Error(err, "failed to fetch msgs from discord")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
 	}
 
-	pp.Println(events)
-	for _, event := range events {
-		if !strings.Contains(strings.ToLower(event.Name), "ogif") {
+	for _, msg := range msgs {
+		if !strings.Contains(strings.ToLower(msg.Content), "ogif") {
 			continue
 		}
-		var presenters []string
-		// preprocess the description
-		event.Description = strings.ReplaceAll(event.Description, ":", "")
-		// split the description into words
-		words := strings.Fields(event.Description)
-		// try to find presenter that include "@"
-		for _, word := range words {
-			if strings.Contains(word, "@") && !funk.Contains(presenters, word) {
-				presenters = append(presenters, word)
-			}
-		}
-		// remove the @
-		for i, p := range presenters {
-			presenters[i] = strings.ReplaceAll(p, "@", "")
+
+		// check if event already exists
+		if e, _ := h.store.DiscordEvent.
+			One(h.repo.DB(),
+				&discordevent.Query{MsgURL: fmt.Sprintf("https://discord.com/channels/%v/%v/%v", msg.GuildID, msg.ChannelID, msg.ID)}); e != nil {
+			continue
 		}
 
-		// remove the @
-		pp.Println("words", words)
+		// extract event url from msg content
+		eventURL := stringutils.ExtractPattern(msg.Content, constant.RegexPatternUrl)
+		evURL := ""
+		evTitle := ""
+		// extract event id from event url
+		if len(eventURL) != 0 {
+			evURL = eventURL[0]
+			eInfo := strings.Split(evURL, "=")
+			if len(eInfo) == 2 {
+				ev, err := h.service.Discord.GetEventByID(eInfo[1])
+				if err != nil {
+					h.logger.Error(err, "failed to get event by id")
+				}
+				evTitle = ev.Name
+			}
+		}
+		var event = model.DiscordEvent{
+			Title:            evTitle,
+			Description:      msg.Content,
+			Date:             msg.Timestamp,
+			EventURL:         evURL,
+			MsgURL:           fmt.Sprintf("https://discord.com/channels/%v/%v/%v", msg.GuildID, msg.ChannelID, msg.ID),
+			DiscordEventType: model.DiscordEventTypeOGIF,
+		}
+		e, err := h.store.DiscordEvent.Create(h.repo.DB(), &event)
+		if err != nil {
+			h.logger.Error(err, "failed to create event")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+			return
+		}
+
+		// find speakers in the event msg content
+		speakers := stringutils.ExtractPattern(msg.Content, constant.RegexPatternDiscordID)
+		lines := strings.Split(msg.Content, "\n")
+		for _, speaker := range speakers {
+			// check and create speaker if not exists
+			spk, err := h.store.DiscordAccount.OneByDiscordID(h.repo.DB(), speaker)
+			if err != nil {
+				h.logger.Error(err, "failed to get discord account")
+				member, err := h.service.Discord.GetMember(speaker)
+				if err != nil {
+					h.logger.Error(err, "failed to get member")
+					continue
+				}
+				spk, err = h.store.DiscordAccount.Upsert(h.repo.DB(), &model.DiscordAccount{
+					DiscordID: member.User.ID,
+					Username:  member.User.Username,
+				})
+				if err != nil {
+					h.logger.Error(err, "failed to create discord account")
+					continue
+				}
+			}
+			// get topic of speaker
+			topic := ""
+			for _, line := range lines {
+				if strings.Contains(line, speaker) {
+					spkName := strings.Split(line, ":")
+					if len(spkName) == 2 {
+						topic = spkName[1]
+					}
+				}
+			}
+			// create event speaker
+			var eventSpeaker = model.EventSpeaker{
+				DiscordEventID:   e.ID,
+				DiscordAccountID: spk.ID,
+				Topic:            strings.TrimSpace(topic),
+			}
+			_, err = h.store.EventSpeaker.Create(h.repo.DB(), &eventSpeaker)
+			if err != nil {
+				h.logger.Error(err, "failed to create event speaker")
+				c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+				continue
+			}
+		}
 	}
-	h.logger.Infof("fetched scheduled events from discord: %v", events)
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))
 }

@@ -29,6 +29,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/store/deliverymetricmonthly"
 	"github.com/dwarvesf/fortress-api/pkg/store/deliverymetricweekly"
 	"github.com/dwarvesf/fortress-api/pkg/store/discordaccount"
+	"github.com/dwarvesf/fortress-api/pkg/store/discordevent"
 	"github.com/dwarvesf/fortress-api/pkg/store/discordtemplate"
 	"github.com/dwarvesf/fortress-api/pkg/store/employee"
 	"github.com/dwarvesf/fortress-api/pkg/store/employeebonus"
@@ -43,6 +44,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/store/employeerole"
 	"github.com/dwarvesf/fortress-api/pkg/store/employeestack"
 	"github.com/dwarvesf/fortress-api/pkg/store/engagementsrollup"
+	"github.com/dwarvesf/fortress-api/pkg/store/eventspeaker"
 	"github.com/dwarvesf/fortress-api/pkg/store/expense"
 	"github.com/dwarvesf/fortress-api/pkg/store/feedbackevent"
 	"github.com/dwarvesf/fortress-api/pkg/store/icydistribution"
@@ -108,6 +110,7 @@ type Store struct {
 	Dashboard               dashboard.IStore
 	DeliveryMetric          deliverymetric.IStore
 	DiscordAccount          discordaccount.IStore
+	DiscordEvent            discordevent.IStore
 	DiscordLogTemplate      discordtemplate.IStore
 	Employee                employee.IStore
 	EmployeeChapter         employeechapter.IStore
@@ -120,6 +123,7 @@ type Store struct {
 	EmployeePosition        employeeposition.IStore
 	EmployeeRole            employeerole.IStore
 	EmployeeStack           employeestack.IStore
+	EventSpeaker            eventspeaker.IStore
 	EngagementsRollup       engagementsrollup.IStore
 	Expense                 expense.IStore
 	FeedbackEvent           feedbackevent.IStore
@@ -188,6 +192,7 @@ func New() *Store {
 		Dashboard:               dashboard.New(),
 		DeliveryMetric:          deliverymetric.New(),
 		DiscordAccount:          discordaccount.New(),
+		DiscordEvent:            discordevent.New(),
 		DiscordLogTemplate:      discordtemplate.New(),
 		Employee:                employee.New(),
 		EmployeeChapter:         employeechapter.New(),
@@ -201,6 +206,7 @@ func New() *Store {
 		EmployeeRole:            employeerole.New(),
 		EmployeeStack:           employeestack.New(),
 		EngagementsRollup:       engagementsrollup.New(),
+		EventSpeaker:            eventspeaker.New(),
 		Expense:                 expense.New(),
 		FeedbackEvent:           feedbackevent.New(),
 		IcyDistribution:         icydistribution.New(),

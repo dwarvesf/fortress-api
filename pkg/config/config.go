@@ -154,7 +154,8 @@ type DiscordWebhook struct {
 }
 
 type DiscordID struct {
-	DwarvesGuild string
+	DwarvesGuild  string
+	EventsChannel string
 }
 
 type Invoice struct {
@@ -258,7 +259,8 @@ func Generate(v ENV) *Config {
 			},
 			SecretToken: v.GetString("DISCORD_SECRET_TOKEN"),
 			IDs: DiscordID{
-				DwarvesGuild: v.GetString("DISCORD_DWARVES_GUILD_ID"),
+				DwarvesGuild:  v.GetString("DISCORD_DWARVES_GUILD_ID"),
+				EventsChannel: v.GetString("DISCORD_EVENTS_CHANNEL_ID"),
 			},
 		},
 		Basecamp: Basecamp{
