@@ -452,13 +452,13 @@ func (h *handler) SyncEvent(c *gin.Context) {
 				evTitle = ev.Name
 			}
 		}
-		var event = model.DiscordEvent{
-			Title:            evTitle,
-			Description:      msg.Content,
-			Date:             msg.Timestamp,
-			EventURL:         evURL,
-			MsgURL:           fmt.Sprintf("https://discord.com/channels/%v/%v/%v", msg.GuildID, msg.ChannelID, msg.ID),
-			DiscordEventType: model.DiscordEventTypeOGIF,
+		var event = model.Event{
+			Title:       evTitle,
+			Description: msg.Content,
+			Date:        msg.Timestamp,
+			EventURL:    evURL,
+			MsgURL:      fmt.Sprintf("https://discord.com/channels/%v/%v/%v", msg.GuildID, msg.ChannelID, msg.ID),
+			EventType:   model.EventTypeDiscordOGIF,
 		}
 		e, err := h.store.DiscordEvent.Create(h.repo.DB(), &event)
 		if err != nil {
@@ -501,7 +501,7 @@ func (h *handler) SyncEvent(c *gin.Context) {
 			}
 			// create event speaker
 			var eventSpeaker = model.EventSpeaker{
-				DiscordEventID:   e.ID,
+				EventID:          e.ID,
 				DiscordAccountID: spk.ID,
 				Topic:            strings.TrimSpace(topic),
 			}

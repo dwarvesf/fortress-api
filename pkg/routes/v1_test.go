@@ -681,6 +681,12 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/discord.IHandler.SyncMemo-fm",
 			},
 		},
+		"/cronjobs/sync-discord-events": {
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/discord.IHandler.SyncEvent-fm",
+			},
+		},
 		"/webhooks/n8n": {
 			"POST": {
 				Method:  "POST",
