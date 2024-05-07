@@ -32,7 +32,6 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 		cronjob.POST("/sync-delivery-metrics", amw.WithAuth, pmw.WithPerm(model.PermissionCronjobExecute), h.DeliveryMetric.Sync)
 		cronjob.POST("/sync-conversion-rates", amw.WithAuth, pmw.WithPerm(model.PermissionCronjobExecute), h.ConversionRate.Sync)
 		cronjob.POST("/sync-memo", amw.WithAuth, pmw.WithPerm(model.PermissionCronjobExecute), h.Discord.SyncMemo)
-		cronjob.POST("/sync-discord-events", amw.WithAuth, pmw.WithPerm(model.PermissionCronjobExecute), h.Discord.SyncEvent)
 	}
 
 	/////////////////
@@ -371,6 +370,7 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 		discordGroup.GET("/earns/total", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesDiscordRead), h.Employee.GetTotalEarn)
 
 		discordGroup.GET("/icy-accounting", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesDiscordRead), h.Icy.Accounting)
+		discordGroup.POST("/scheduled-events", amw.WithAuth, pmw.WithPerm(model.PermissionCronjobExecute), h.Discord.CreateScheduledEvent)
 	}
 
 	conversionRateGroup := v1.Group("/conversion-rates")

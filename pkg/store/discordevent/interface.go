@@ -14,8 +14,7 @@ type IStore interface {
 
 // Query present invoice query from user
 type Query struct {
-	ID         string
-	EventURL   string
-	MsgURL     string
-	EventTypes []model.EventType
+	ID             string
+	DiscordEventID string
+	EventTypes     []model.EventType
 }

@@ -681,12 +681,6 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/discord.IHandler.SyncMemo-fm",
 			},
 		},
-		"/cronjobs/sync-discord-events": {
-			"POST": {
-				Method:  "POST",
-				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/discord.IHandler.SyncEvent-fm",
-			},
-		},
 		"/webhooks/n8n": {
 			"POST": {
 				Method:  "POST",
@@ -972,6 +966,12 @@ func Test_loadV1Routes(t *testing.T) {
 			"GET": {
 				Method:  "GET",
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/employee.IHandler.GetTotalEarn-fm",
+			},
+		},
+		"/api/v1/discords/scheduled-events": {
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/discord.IHandler.CreateScheduledEvent-fm",
 			},
 		},
 		"/api/v1/memos": {

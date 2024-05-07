@@ -1,11 +1,13 @@
 -- +migrate Up
 CREATE TABLE events (
     id uuid PRIMARY KEY DEFAULT (uuid()),
-    title TEXT NOT NULL,
+    name TEXT NOT NULL,
     description TEXT,
     date TIMESTAMP(6),
-    event_url TEXT,
-    msg_url TEXT,
+    discord_event_id VARCHAR,
+    discord_channel_id VARCHAR,
+    discord_message_id VARCHAR,
+    discord_creator_id VARCHAR,
     event_type VARCHAR,
     created_at TIMESTAMP(6) DEFAULT (now()),
     updated_at TIMESTAMP(6) DEFAULT (now()),

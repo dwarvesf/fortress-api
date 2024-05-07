@@ -18,11 +18,8 @@ func (s *store) One(db *gorm.DB, query *Query) (*model.Event, error) {
 	if query.ID != "" {
 		db = db.Where("id = ?", query.ID)
 	}
-	if query.EventURL != "" {
-		db = db.Where("event_url = ?", query.EventURL)
-	}
-	if query.MsgURL != "" {
-		db = db.Where("msg_url = ?", query.MsgURL)
+	if query.DiscordEventID != "" {
+		db = db.Where("discord_event_id = ?", query.DiscordEventID)
 	}
 	return e, db.Preload("EventSpeakers").First(&e).Error
 }

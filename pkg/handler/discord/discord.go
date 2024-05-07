@@ -1,6 +1,7 @@
 package discord
 
 import (
+	"errors"
 	"fmt"
 	"math/rand"
 	"net/http"
@@ -9,9 +10,9 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
-	"github.com/dwarvesf/fortress-api/pkg/constant"
 	"github.com/dwarvesf/fortress-api/pkg/controller"
 	"github.com/dwarvesf/fortress-api/pkg/handler/discord/request"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
@@ -23,7 +24,6 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/store/discordevent"
 	"github.com/dwarvesf/fortress-api/pkg/store/employee"
 	"github.com/dwarvesf/fortress-api/pkg/store/onleaverequest"
-	"github.com/dwarvesf/fortress-api/pkg/utils/stringutils"
 	"github.com/dwarvesf/fortress-api/pkg/view"
 )
 
@@ -412,106 +412,57 @@ func (h *handler) SyncMemo(c *gin.Context) {
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))
 }
 
-// this function will sync ogif events from red alert channel to store in db
-// this will be used to sync other events from discord in the future if any
-func (h *handler) SyncEvent(c *gin.Context) {
-	// channel that posts ogif events
-	// e.g. red alert: 915941020968046612
-	msgs, err := h.service.Discord.GetChannelMessages(h.config.Discord.IDs.EventsChannel, 1)
-	if err != nil {
-		h.logger.Error(err, "failed to fetch msgs from discord")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+// this will be used to create discord events
+func (h *handler) CreateScheduledEvent(c *gin.Context) {
+	l := h.logger.Fields(
+		logger.Fields{
+			"handler": "discord",
+			"method":  "CreateScheduledEvent",
+		},
+	)
+
+	in := request.DiscordEventInput{}
+	if err := c.ShouldBindJSON(&in); err != nil {
+		l.Error(err, "failed to decode body")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, in, ""))
 		return
 	}
 
-	for _, msg := range msgs {
-		if !strings.Contains(strings.ToLower(msg.Content), "ogif") {
-			continue
-		}
+	if err := in.Validate(); err != nil {
+		l.Errorf(err, "failed to validate data", "body", in)
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, in, ""))
+		return
+	}
 
-		// check if event already exists
-		if e, _ := h.store.DiscordEvent.
-			One(h.repo.DB(),
-				&discordevent.Query{MsgURL: fmt.Sprintf("https://discord.com/channels/%v/%v/%v", msg.GuildID, msg.ChannelID, msg.ID)}); e != nil {
-			continue
-		}
+	// check if event already exists
+	if _, err := h.store.DiscordEvent.
+		One(h.repo.DB(),
+			&discordevent.Query{DiscordEventID: in.ID}); !errors.Is(err, gorm.ErrRecordNotFound) {
+		l.Errorf(err, "cannot find discord event", "body", in)
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, in, ""))
+		return
+	}
 
-		// extract event url from msg content
-		eventURL := stringutils.ExtractPattern(msg.Content, constant.RegexPatternUrl)
-		evURL := ""
-		evTitle := ""
-		// extract event id from event url
-		if len(eventURL) != 0 {
-			evURL = eventURL[0]
-			eInfo := strings.Split(evURL, "=")
-			if len(eInfo) == 2 {
-				ev, err := h.service.Discord.GetEventByID(eInfo[1])
-				if err != nil {
-					h.logger.Error(err, "failed to get event by id")
-				}
-				evTitle = ev.Name
-			}
-		}
-		var event = model.Event{
-			Title:       evTitle,
-			Description: msg.Content,
-			Date:        msg.Timestamp,
-			EventURL:    evURL,
-			MsgURL:      fmt.Sprintf("https://discord.com/channels/%v/%v/%v", msg.GuildID, msg.ChannelID, msg.ID),
-			EventType:   model.EventTypeDiscordOGIF,
-		}
-		e, err := h.store.DiscordEvent.Create(h.repo.DB(), &event)
-		if err != nil {
-			h.logger.Error(err, "failed to create event")
-			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
-			return
-		}
+	if err := in.SetEventType(); err != nil {
+		l.Errorf(err, "failed to set event type", "body", in)
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, in, ""))
+		return
+	}
 
-		// find speakers in the event msg content
-		speakers := stringutils.ExtractPattern(msg.Content, constant.RegexPatternDiscordID)
-		lines := strings.Split(msg.Content, "\n")
-		for _, speaker := range speakers {
-			// check and create speaker if not exists
-			spk, err := h.store.DiscordAccount.OneByDiscordID(h.repo.DB(), speaker)
-			if err != nil {
-				h.logger.Error(err, "failed to get discord account")
-				member, err := h.service.Discord.GetMember(speaker)
-				if err != nil {
-					h.logger.Error(err, "failed to get member")
-					continue
-				}
-				spk, err = h.store.DiscordAccount.Upsert(h.repo.DB(), &model.DiscordAccount{
-					DiscordID: member.User.ID,
-					Username:  member.User.Username,
-				})
-				if err != nil {
-					h.logger.Error(err, "failed to create discord account")
-					continue
-				}
-			}
-			// get topic of speaker
-			topic := ""
-			for _, line := range lines {
-				if strings.Contains(line, speaker) {
-					spkName := strings.Split(line, ":")
-					if len(spkName) == 2 {
-						topic = spkName[1]
-					}
-				}
-			}
-			// create event speaker
-			var eventSpeaker = model.EventSpeaker{
-				EventID:          e.ID,
-				DiscordAccountID: spk.ID,
-				Topic:            strings.TrimSpace(topic),
-			}
-			_, err = h.store.EventSpeaker.Create(h.repo.DB(), &eventSpeaker)
-			if err != nil {
-				h.logger.Error(err, "failed to create event speaker")
-				c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
-				continue
-			}
-		}
+	// create event
+	_, err := h.store.DiscordEvent.Create(h.repo.DB(), &model.Event{
+		DiscordEventID:   in.ID,
+		DiscordChannelID: in.ChannelID,
+		DiscordCreatorID: in.CreatorID,
+		Name:             in.Name,
+		Description:      in.Description,
+		Date:             *in.Date,
+		EventType:        in.EventType,
+	})
+	if err != nil {
+		h.logger.Error(err, "failed to create event")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))

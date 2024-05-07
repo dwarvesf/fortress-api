@@ -7,13 +7,15 @@ import (
 // Event struct
 type Event struct {
 	BaseModel
-	Title         string         `json:"title"`
-	Description   string         `json:"description"`
-	Date          time.Time      `json:"date"`
-	EventURL      string         `json:"event_url"`
-	MsgURL        string         `json:"msg_url"`
-	EventType     EventType      `json:"type"`
-	EventSpeakers []EventSpeaker `json:"event_speakers"`
+	Name             string         `json:"name"`
+	Description      string         `json:"description"`
+	Date             time.Time      `json:"date"`
+	DiscordEventID   string         `json:"discord_event_id"`
+	DiscordChannelID string         `json:"discord_channel_id"`
+	DiscordMessageID string         `json:"discord_message_id"`
+	DiscordCreatorID string         `json:"discord_creator_id"`
+	EventType        EventType      `json:"type"`
+	EventSpeakers    []EventSpeaker `json:"event_speakers"`
 }
 
 // EventSpeaker struct
