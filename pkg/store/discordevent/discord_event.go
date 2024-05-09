@@ -71,22 +71,3 @@ func (s *store) SetSpeakers(db *gorm.DB, e *model.Event) error {
 	}
 	return nil
 }
-
-// func (r *store) Upsert(db *gorm.DB, da *model.DiscordAccount) (*model.DiscordAccount, error) {
-// 	return da, db.
-// 		Table("discord_accounts").
-// 		Clauses(
-// 			clause.OnConflict{
-// 				Columns: []clause.Column{
-// 					{Name: "discord_id"},
-// 				},
-// 				DoUpdates: clause.Assignments(
-// 					map[string]interface{}{
-// 						"username": da.Username,
-// 					},
-// 				),
-// 			},
-// 		).
-// 		Create(da).
-// 		Error
-// }
