@@ -9,4 +9,6 @@ var (
 	ErrEmptyCreatorID  = errors.New("creatorID is empty")
 	ErrEmptyName       = errors.New("name is empty")
 	ErrEmptyDate       = errors.New("date is nil")
+	ErrEmptyID         = errors.New("discord user id is nil")
+	ErrEmptyTopic      = errors.New("topic is nil")
 )

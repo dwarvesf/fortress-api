@@ -15,14 +15,14 @@ CREATE TABLE events (
 );
 
 CREATE TABLE event_speakers (
-    discord_event_id UUID NOT NULL,
+    event_id UUID NOT NULL,
     discord_account_id UUID NOT NULL,
     topic TEXT,
     UNIQUE (discord_event_id, discord_account_id)
 );
 
 ALTER TABLE event_speakers
-    ADD CONSTRAINT event_speakers_discord_event_id_fkey FOREIGN KEY (discord_event_id) REFERENCES events (id);
+    ADD CONSTRAINT event_speakers_discord_event_id_fkey FOREIGN KEY (event_id) REFERENCES events (id);
 
 ALTER TABLE event_speakers
     ADD CONSTRAINT event_speakers_discord_account_id_fkey FOREIGN KEY (discord_account_id) REFERENCES discord_accounts (id);

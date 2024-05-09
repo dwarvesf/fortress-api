@@ -81,3 +81,18 @@ func (in *DiscordEventInput) SetEventType() error {
 	}
 	return nil
 }
+
+type DiscordEventSpeakerInput struct {
+	ID    string `json:"id"`
+	Topic string `json:"topic"`
+}
+
+func (input DiscordEventSpeakerInput) Validate() error {
+	if len(input.ID) == 0 {
+		return errs.ErrEmptyID
+	}
+	if len(input.Topic) == 0 {
+		return errs.ErrEmptyTopic
+	}
+	return nil
+}

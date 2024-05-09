@@ -2,6 +2,7 @@ package discordevent
 
 import (
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 
 	"github.com/dwarvesf/fortress-api/pkg/model"
 )
@@ -25,15 +26,67 @@ func (s *store) One(db *gorm.DB, query *Query) (*model.Event, error) {
 }
 
 // All get all client
-func (s *store) All(db *gorm.DB, public bool, preload bool) ([]*model.Event, error) {
+func (s *store) All(db *gorm.DB, q *Query, preload bool) ([]*model.Event, error) {
 	var e []*model.Event
 
-	query := db.Preload("EventSpeakers", "deleted_at IS NULL")
+	if q.Limit == 0 {
+		q.Limit = 10
+	}
 
-	return e, query.Find(&e).Error
+	query := db.Order("date desc").Limit(q.Limit)
+
+	if !preload {
+		return e, query.Find(&e).Error
+	}
+
+	return e, query.Preload("EventSpeakers", "deleted_at IS NULL").Find(&e).Error
 }
 
 // Create creates a new e
 func (s *store) Create(db *gorm.DB, e *model.Event) (*model.Event, error) {
 	return e, db.Create(e).Error
 }
+
+func (s *store) SetSpeakers(db *gorm.DB, e *model.Event) error {
+	for _, es := range e.EventSpeakers {
+		if es.DiscordAccountID.String() == "" {
+			continue
+		}
+		// upsert speaker
+		if err := db.Clauses(
+			clause.OnConflict{
+				Columns: []clause.Column{
+					{Name: "discord_account_id"},
+					{Name: "event_id"},
+				},
+				DoUpdates: clause.Assignments(
+					map[string]interface{}{
+						"topic": es.Topic,
+					},
+				),
+			},
+		).Create(es).Error; err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// func (r *store) Upsert(db *gorm.DB, da *model.DiscordAccount) (*model.DiscordAccount, error) {
+// 	return da, db.
+// 		Table("discord_accounts").
+// 		Clauses(
+// 			clause.OnConflict{
+// 				Columns: []clause.Column{
+// 					{Name: "discord_id"},
+// 				},
+// 				DoUpdates: clause.Assignments(
+// 					map[string]interface{}{
+// 						"username": da.Username,
+// 					},
+// 				),
+// 			},
+// 		).
+// 		Create(da).
+// 		Error
+// }

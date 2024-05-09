@@ -969,9 +969,19 @@ func Test_loadV1Routes(t *testing.T) {
 			},
 		},
 		"/api/v1/discords/scheduled-events": {
+			"GET": {
+				Method:  "GET",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/discord.IHandler.ListScheduledEvent-fm",
+			},
 			"POST": {
 				Method:  "POST",
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/discord.IHandler.CreateScheduledEvent-fm",
+			},
+		},
+		"/api/v1/discords/scheduled-events/:id/speakers": {
+			"PUT": {
+				Method:  "PUT",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/discord.IHandler.SetScheduledEventSpeakers-fm",
 			},
 		},
 		"/api/v1/memos": {
