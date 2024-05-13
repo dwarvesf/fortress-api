@@ -2,10 +2,8 @@ package memologs
 
 import (
 	"encoding/xml"
-	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -13,8 +11,34 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/utils/timeutil"
-	"github.com/shopspring/decimal"
 )
+
+const (
+	dfMemoRssURL = "https://memo.d.foundation/index.xml"
+)
+
+// retrieveLatestMemoFeed call to memo.d.foundation to get the rss feed
+func retrieveLatestMemoFeed(l logger.Logger) (Rss, error) {
+	resp, err := http.Get(dfMemoRssURL)
+	if err != nil {
+		l.Errorf(err, "failed to get rss feed from %s, status code: %d", dfMemoRssURL, resp.StatusCode)
+		return Rss{}, err
+	}
+	defer resp.Body.Close()
+
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		l.Error(err, "failed to read rss feed from response body")
+		return Rss{}, err
+	}
+
+	d := Rss{}
+	if err := xml.Unmarshal(data, &d); err != nil {
+		l.Errorf(err, "failed to unmarshal rss feed with content: %s", string(data))
+	}
+
+	return d, nil
+}
 
 func (c *controller) Sync() ([]model.MemoLog, error) {
 	l := c.logger.Fields(logger.Fields{
@@ -22,145 +46,92 @@ func (c *controller) Sync() ([]model.MemoLog, error) {
 		"method":     "Sync",
 	})
 
-	list, err := c.store.MemoLog.List(c.repo.DB())
+	// TODO: need optimize this, for example just only get synced memos today
+	syncedMemos, err := c.store.MemoLog.List(c.repo.DB())
 	if err != nil {
-		l.Error(err, "failed to get memo logs")
+		l.Errorf(err, "failed to get synced memos")
 		return nil, err
 	}
 
-	mapMemo := make(map[string]bool)
-	for _, memo := range list {
-		mapMemo[memo.URL] = true
+	mapSyncedMemos := make(map[string]model.MemoLog)
+	for _, memo := range syncedMemos {
+		mapSyncedMemos[memo.URL] = memo
 	}
 
-	url := "https://memo.d.foundation/index.xml"
-	response, err := http.Get(url)
+	latestMemoFeed, err := retrieveLatestMemoFeed(l)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
-	defer response.Body.Close()
+	newMemos := make([]model.MemoLog, 0)
+	for _, item := range latestMemoFeed.Channel.Item {
+		l.Infof("Syncing memo: %s", item.Link)
 
-	data, err := io.ReadAll(response.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	d := Rss{}
-	err = xml.Unmarshal(data, &d)
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	authorsMap := make(map[string]model.MemoLogAuthor)
-	memoLogs := make([]model.MemoLog, 0)
-	for _, item := range d.Channel.Item {
-		if mapMemo[item.Link] {
+		// Ignore if memo is already synced
+		if _, ok := mapSyncedMemos[item.Link]; ok {
+			l.Infof("Memo is already synced: %s", item.Link)
 			continue
 		}
 
-		authorStrList := strings.Split(item.Author, ",")
-		memoAuthors := make([]model.MemoLogAuthor, 0)
-		for _, author := range authorStrList {
-			author = strings.TrimSpace(author)
-			if author == "" {
-				continue
-			}
-
-			discordID, found := whitelistedUsers[author]
-			if !found {
-				continue
-			}
-
-			dt, found := authorsMap[discordID]
-			if found {
-				memoAuthors = append(memoAuthors, dt)
-				continue
-			}
-
-			empl, err := c.store.Employee.GetByDiscordID(c.repo.DB(), discordID, true)
-			if err != nil {
-				l.Error(err, fmt.Sprintf("failed to get employee with discord username %v", discordID))
-			}
-
-			github := ""
-			discord := discordID
-			employeeID := ""
-			if empl != nil {
-				employeeID = empl.ID.String()
-				githubSA := model.SocialAccounts(empl.SocialAccounts).GetGithub()
-				if githubSA != nil {
-					github = githubSA.AccountID
-				}
-
-				if empl.DiscordAccount != nil {
-					discord = empl.DiscordAccount.DiscordID
-				}
-			}
-
-			if github != "" || discord != "" || employeeID != "" {
-				memoAuthor := model.MemoLogAuthor{
-					GithubID:   github,
-					DiscordID:  discord,
-					EmployeeID: employeeID,
-				}
-				authorsMap[discordID] = memoAuthor
-				memoAuthors = append(memoAuthors, memoAuthor)
-			}
-		}
-
-		layout := "Mon, 02 Jan 2006 15:04:05 -0700"
-		publishedAt, err := time.Parse(layout, item.PubDate)
+		// Ignore if memo is not published today
+		publishedAt, err := time.Parse(time.RFC1123Z, item.PubDate)
 		if err != nil {
 			l.Error(err, fmt.Sprintf("failed to parse date %v", item.PubDate))
+			continue
 		}
-
 		if !timeutil.IsSameDay(publishedAt, time.Now()) {
 			continue
 		}
 
-		memoLogs = append(memoLogs, model.MemoLog{
+		// Ignore if memo have no author
+		if strings.TrimSpace(item.Author) == "" {
+			continue
+		}
+
+		// This should be author discord username
+		authorUsernames := strings.Split(strings.TrimSpace(item.Author), ",")
+		if len(authorUsernames) == 0 {
+			continue
+		}
+
+		// Get author by discord usernames, ignore any author if not found
+		// Expect that we do not have huge number of memo each day, so do not need to fear this loop spam get authors
+		authors, err := c.store.CommunityMember.ListByUsernames(c.repo.DB(), authorUsernames)
+		if err != nil {
+			l.Errorf(err, "failed to get authors by discord usernames: %v", authorUsernames)
+			continue
+		}
+
+		// Temporary ignore if no author found
+		if len(authors) == 0 {
+			continue
+		}
+
+		// Create memo log
+		memo := model.MemoLog{
 			Title:       item.Title,
 			URL:         item.Link,
-			Authors:     memoAuthors,
 			Description: item.Description,
 			PublishedAt: &publishedAt,
-			Reward:      decimal.Decimal{},
-		})
+			Authors:     authors,
+		}
+
+		newMemos = append(newMemos, memo)
 	}
 
-	if len(memoLogs) == 0 {
+	if len(newMemos) == 0 {
+		l.Info("No new memo is published today")
 		return nil, nil
 	}
 
-	results, err := c.store.MemoLog.Create(c.repo.DB(), memoLogs)
+	// Create new memos
+	results, err := c.store.MemoLog.Create(c.repo.DB(), newMemos)
 	if err != nil {
-		return nil, errors.New("failed to create new memo")
+		l.Errorf(err, "failed to create new memos")
+		return nil, err
 	}
 
 	return results, nil
-}
-
-var whitelistedUsers = map[string]string{
-	"thanh":        "790170208228212766",
-	"giangthan":    "797051426437595136",
-	"nikki":        "796991130184187944",
-	"anna":         "575525326181105674",
-	"monotykamary": "184354519726030850",
-	"vhbien":       "421992793582469130",
-	"minhcloud":    "1007496699511570503",
-	"mickwan1234":  "383793994271948803",
-	"hnh":          "567326528216760320",
-	"duy":          "788351441097195520",
-	"huytq":        "361172853326086144",
-	"han":          "151497832853929986",
-	"namtran":      "785756392363524106",
-	"innno_":       "753995829559165044",
-	"dudaka":       "282500790692741121",
-	"tom":          "184354519726030850",
-	"minh":         "1093434004159594496",
-	"jack":         "398384659521863702",
 }
 
 type Rss struct {

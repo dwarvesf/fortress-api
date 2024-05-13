@@ -16,7 +16,7 @@ func New() IStore {
 
 // Create creates a memo log record in the database
 func (s *store) Create(db *gorm.DB, b []model.MemoLog) ([]model.MemoLog, error) {
-	return b, db.Create(b).Error
+	return b, db.Table("memo_logs").Create(b).Error
 }
 
 // GetLimitByTimeRange gets memo logs in a specific time range, with limit

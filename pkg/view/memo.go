@@ -34,13 +34,19 @@ func ToMemoLog(memoLogs []model.MemoLog) []MemoLog {
 	for _, memoLog := range memoLogs {
 		authors := make([]MemoLogAuthor, 0)
 		for _, author := range memoLog.Authors {
+			var employeeID string
+			if author.EmployeeID != nil {
+				employeeID = author.EmployeeID.String()
+			}
+
 			authors = append(authors, MemoLogAuthor{
-				EmployeeID: author.EmployeeID,
-				GithubID:   author.GithubID,
+				EmployeeID: employeeID,
+				GithubID:   author.GithubUsername,
 				DiscordID:  author.DiscordID,
 			})
 		}
 
+		// TODO: change response following the new model
 		rs = append(rs, MemoLog{
 			ID:          memoLog.ID.String(),
 			Title:       memoLog.Title,
