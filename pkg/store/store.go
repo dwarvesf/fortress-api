@@ -19,6 +19,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/store/chapter"
 	"github.com/dwarvesf/fortress-api/pkg/store/client"
 	"github.com/dwarvesf/fortress-api/pkg/store/clientcontact"
+	"github.com/dwarvesf/fortress-api/pkg/store/communitymember"
 	"github.com/dwarvesf/fortress-api/pkg/store/config"
 	"github.com/dwarvesf/fortress-api/pkg/store/content"
 	"github.com/dwarvesf/fortress-api/pkg/store/conversionrate"
@@ -156,6 +157,7 @@ type Store struct {
 	WorkUnit                workunit.IStore
 	WorkUnitMember          workunitmember.IStore
 	WorkUnitStack           workunitstack.IStore
+	CommunityMember         communitymember.IStore
 }
 
 func New() *Store {
@@ -236,5 +238,6 @@ func New() *Store {
 		WorkUnit:                workunit.New(),
 		WorkUnitMember:          workunitmember.New(),
 		WorkUnitStack:           workunitstack.New(),
+		CommunityMember:         communitymember.New(),
 	}
 }
