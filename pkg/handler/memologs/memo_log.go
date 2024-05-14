@@ -4,12 +4,14 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/bwmarrin/discordgo"
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/controller"
 	"github.com/dwarvesf/fortress-api/pkg/handler/memologs/request"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service"
+	"github.com/dwarvesf/fortress-api/pkg/service/mochiprofile"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/view"
 	"github.com/gin-gonic/gin"
@@ -55,12 +57,76 @@ func (h *handler) Create(c *gin.Context) {
 	for _, b := range body {
 		publishedAt, _ := time.Parse(time.RFC3339Nano, b.PublishedAt)
 
-		// TODO: enrich author info and add to `community_members` if not exist
+		existedAuthors, err := h.store.CommunityMember.ListByUsernames(h.repo.DB(), b.Authors)
+		if err != nil {
+			l.Errorf(err, "[memologs.Create] failed to get authors", "authors", b.Authors)
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, b, ""))
+			return
+		}
+
+		authors := make([]model.CommunityMember, 0)
+
+		mapExistedAuthors := make(map[string]model.CommunityMember)
+		for _, author := range existedAuthors {
+			mapExistedAuthors[author.DiscordUsername] = author
+		}
+
+		for _, authorDiscordUsername := range b.Authors {
+			if a, ok := mapExistedAuthors[authorDiscordUsername]; ok {
+				authors = append(authors, a)
+				continue
+			}
+
+			// Build new author aka new community member
+			var newAuthor model.CommunityMember
+
+			// Get discord user by discord username
+			discordMembers, err := h.service.Discord.SearchMember(authorDiscordUsername)
+			if err != nil {
+				l.Errorf(err, "[memologs.Create] failed to get discord user", "discord username", authorDiscordUsername)
+			}
+
+			var discordMember discordgo.Member
+			if len(discordMembers) == 1 && discordMembers[0] != nil {
+				discordMember = *discordMembers[0]
+			}
+
+			newAuthor.DiscordUsername = authorDiscordUsername
+			newAuthor.DiscordID = discordMember.User.ID
+
+			// Get employee by discord ID
+			employee, err := h.store.Employee.GetByDiscordUsername(h.repo.DB(), authorDiscordUsername)
+			if err != nil {
+				l.Errorf(err, "[memologs.Create] failed to get employee", "discord username", authorDiscordUsername)
+			}
+
+			if employee != nil {
+				newAuthor.EmployeeID = &employee.ID
+				newAuthor.PersonalEmail = employee.PersonalEmail
+			}
+
+			// Get profile by discord ID
+			profile, err := h.service.MochiProfile.GetProfileByDiscordID(discordMember.User.ID)
+			if err != nil {
+				l.Errorf(err, "[memologs.Create] failed to get profile", "discord username", authorDiscordUsername)
+			}
+
+			if profile != nil {
+				for _, assocAccount := range profile.AssociatedAccounts {
+					if assocAccount.Platform == mochiprofile.ProfilePlatformGithub {
+						newAuthor.GithubUsername = assocAccount.PlatformIdentifier
+						break
+					}
+				}
+			}
+
+			authors = append(authors, newAuthor)
+		}
 
 		b := model.MemoLog{
-			Title: b.Title,
-			URL:   b.URL,
-			// Authors:     authors, // TODO: change to new authors with community member
+			Title:       b.Title,
+			URL:         b.URL,
+			Authors:     authors,
 			Tags:        b.Tags,
 			PublishedAt: &publishedAt,
 			Description: b.Description,

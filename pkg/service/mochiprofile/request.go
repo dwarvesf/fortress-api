@@ -6,6 +6,7 @@ type ProfilePlatform string
 
 const (
 	ProfilePlatformDiscord ProfilePlatform = "discord"
+	ProfilePlatformGithub  ProfilePlatform = "github"
 )
 
 type Pagination struct {
