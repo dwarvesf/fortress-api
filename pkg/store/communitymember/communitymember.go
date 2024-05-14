@@ -23,8 +23,8 @@ func (s *store) ListByUsernames(db *gorm.DB, usernames []string) ([]model.Commun
 
 // Insert inserts a community member on conflict discord_id or discord_username do nothing
 func (s *store) Insert(db *gorm.DB, cm *model.CommunityMember) error {
-	return db.Clauses(clause.OnConflict{
-		Columns:   []clause.Column{{Name: "discord_id"}, {Name: "discord_username"}},
+	return db.Table("community_members").Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "discord_id"}},
 		DoNothing: true,
 	}).Create(cm).Error
 }

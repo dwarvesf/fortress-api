@@ -106,6 +106,7 @@ type Store struct {
 	Country                 country.IStore
 	Currency                currency.IStore
 	Config                  config.IStore
+	CommunityMember         communitymember.IStore
 	Dashboard               dashboard.IStore
 	DeliveryMetric          deliverymetric.IStore
 	DiscordAccount          discordaccount.IStore
@@ -157,7 +158,6 @@ type Store struct {
 	WorkUnit                workunit.IStore
 	WorkUnitMember          workunitmember.IStore
 	WorkUnitStack           workunitstack.IStore
-	CommunityMember         communitymember.IStore
 }
 
 func New() *Store {
@@ -187,6 +187,7 @@ func New() *Store {
 		Country:                 country.New(),
 		Currency:                currency.New(),
 		Config:                  config.New(),
+		CommunityMember:         communitymember.New(),
 		Dashboard:               dashboard.New(),
 		DeliveryMetric:          deliverymetric.New(),
 		DiscordAccount:          discordaccount.New(),
@@ -238,6 +239,5 @@ func New() *Store {
 		WorkUnit:                workunit.New(),
 		WorkUnitMember:          workunitmember.New(),
 		WorkUnitStack:           workunitstack.New(),
-		CommunityMember:         communitymember.New(),
 	}
 }

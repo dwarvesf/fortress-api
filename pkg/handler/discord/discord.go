@@ -16,6 +16,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/service/basecamp/consts"
 	bcModel "github.com/dwarvesf/fortress-api/pkg/service/basecamp/model"
+	"github.com/dwarvesf/fortress-api/pkg/service/mochiprofile"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/store/employee"
 	"github.com/dwarvesf/fortress-api/pkg/store/onleaverequest"
@@ -406,4 +407,59 @@ func (h *handler) SyncMemo(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))
+}
+
+func (h *handler) SyncCommunityMembers(c *gin.Context) {
+	guildMembers, err := h.service.Discord.GetMembers()
+	if err != nil {
+		h.logger.Error(err, "failed to get guild members")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	communityMembers := make([]model.CommunityMember, 0)
+	for _, member := range guildMembers {
+		if member.User.Bot {
+			continue
+		}
+		empl, err := h.store.Employee.GetByDiscordID(h.repo.DB(), member.User.ID, true)
+		if err != nil {
+			continue
+		}
+		emplRoles := make([]string, 0)
+		for _, role := range empl.Roles {
+			emplRoles = append(emplRoles, role.Name)
+		}
+		communityProfile := model.CommunityMember{
+			EmployeeID:      &empl.ID,
+			DiscordID:       member.User.ID,
+			PersonalEmail:   member.User.Email,
+			DiscordUsername: member.User.Username,
+			Roles:           emplRoles,
+		}
+
+		profile, err := h.service.MochiProfile.GetProfileByDiscordID(member.User.ID)
+		if err != nil {
+			h.logger.Debugf("failed to get mochi profile for user %s", member.User.Username)
+			continue
+		}
+
+		for _, account := range profile.AssociatedAccounts {
+			if account.Platform == mochiprofile.ProfilePlatformGithub {
+				communityProfile.GithubUsername = fmt.Sprintf("%v", account.PlatformMetadata["username"])
+			}
+		}
+
+		communityMembers = append(communityMembers, communityProfile)
+	}
+
+	tx, done := h.repo.NewTransaction()
+	for _, cm := range communityMembers {
+		err := h.store.CommunityMember.Insert(tx.DB(), &cm)
+		if err != nil {
+			h.logger.AddField("discord_id", cm.DiscordID).Error(err, "failed to insert discord_id")
+		}
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, done(nil), nil, "ok"))
 }
