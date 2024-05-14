@@ -417,44 +417,43 @@ func (h *handler) SyncCommunityMembers(c *gin.Context) {
 		return
 	}
 
-	communityMembers := make([]model.CommunityMember, 0)
+	records := make([]model.CommunityMember, 0)
 	for _, member := range guildMembers {
 		if member.User.Bot {
 			continue
 		}
-		empl, err := h.store.Employee.GetByDiscordID(h.repo.DB(), member.User.ID, true)
-		if err != nil {
-			continue
-		}
-		emplRoles := make([]string, 0)
-		for _, role := range empl.Roles {
-			emplRoles = append(emplRoles, role.Name)
-		}
+
 		communityProfile := model.CommunityMember{
-			EmployeeID:      &empl.ID,
 			DiscordID:       member.User.ID,
 			PersonalEmail:   member.User.Email,
 			DiscordUsername: member.User.Username,
-			Roles:           emplRoles,
 		}
 
-		profile, err := h.service.MochiProfile.GetProfileByDiscordID(member.User.ID)
-		if err != nil {
-			h.logger.Debugf("failed to get mochi profile for user %s", member.User.Username)
-			continue
+		// skip if cannot get employee info
+		empl, err := h.store.Employee.GetByDiscordID(h.repo.DB(), member.User.ID, true)
+		if err == nil {
+			emplRoles := make([]string, 0)
+			for _, role := range empl.Roles {
+				emplRoles = append(emplRoles, role.Name)
+			}
+			communityProfile.EmployeeID = &empl.ID
+			communityProfile.Roles = emplRoles
 		}
 
-		for _, account := range profile.AssociatedAccounts {
-			if account.Platform == mochiprofile.ProfilePlatformGithub {
-				communityProfile.GithubUsername = fmt.Sprintf("%v", account.PlatformMetadata["username"])
+		// skip if cannot get mochi profile
+		mochiPrf, err := h.service.MochiProfile.GetProfileByDiscordID(member.User.ID)
+		if err == nil {
+			for _, account := range mochiPrf.AssociatedAccounts {
+				if account.Platform == mochiprofile.ProfilePlatformGithub {
+					communityProfile.GithubUsername = fmt.Sprintf("%v", account.PlatformMetadata["username"])
+				}
 			}
 		}
-
-		communityMembers = append(communityMembers, communityProfile)
+		records = append(records, communityProfile)
 	}
 
 	tx, done := h.repo.NewTransaction()
-	for _, cm := range communityMembers {
+	for _, cm := range records {
 		err := h.store.CommunityMember.Insert(tx.DB(), &cm)
 		if err != nil {
 			h.logger.AddField("discord_id", cm.DiscordID).Error(err, "failed to insert discord_id")
