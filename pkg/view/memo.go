@@ -19,9 +19,12 @@ type MemoLog struct {
 
 // MemoLogAuthor is the author of the memo log
 type MemoLogAuthor struct {
-	EmployeeID string `json:"employeeID"`
-	GithubID   string `json:"githubID"`
-	DiscordID  string `json:"discordID"`
+	EmployeeID      string `json:"employeeID"`
+	GithubUsername  string `json:"githubUsername"`
+	DiscordID       string `json:"discordID"`
+	DiscordUsername string `json:"discordUsername"`
+	PersonalEmail   string `json:"personalEmail"`
+	MemoUsername    string `json:"memoUsername"`
 }
 
 // MemoLogsResponse response for memo logs
@@ -34,10 +37,18 @@ func ToMemoLog(memoLogs []model.MemoLog) []MemoLog {
 	for _, memoLog := range memoLogs {
 		authors := make([]MemoLogAuthor, 0)
 		for _, author := range memoLog.Authors {
+			var employeeID string
+			if author.Employee != nil {
+				employeeID = author.Employee.ID.String()
+			}
+
 			authors = append(authors, MemoLogAuthor{
-				EmployeeID: author.EmployeeID,
-				GithubID:   author.GithubID,
-				DiscordID:  author.DiscordID,
+				EmployeeID:      employeeID,
+				GithubUsername:  author.GithubUsername,
+				DiscordID:       author.DiscordID,
+				PersonalEmail:   author.PersonalEmail,
+				DiscordUsername: author.DiscordUsername,
+				MemoUsername:    author.MemoUsername,
 			})
 		}
 

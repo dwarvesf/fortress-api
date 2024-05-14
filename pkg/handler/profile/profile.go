@@ -201,8 +201,8 @@ func (h *handler) UpdateInfo(c *gin.Context) {
 	}
 
 	discordAccountInput := &model.DiscordAccount{
-		DiscordID: discordID,
-		Username:  input.DiscordName,
+		DiscordID:       discordID,
+		DiscordUsername: input.DiscordName,
 	}
 
 	discordAccount, err := h.store.DiscordAccount.Upsert(tx.DB(), discordAccountInput)
@@ -795,8 +795,8 @@ func (h *handler) SubmitOnboardingForm(c *gin.Context) {
 	}
 
 	discordAccountInput := &model.DiscordAccount{
-		DiscordID: discordID,
-		Username:  input.DiscordName,
+		DiscordID:       discordID,
+		DiscordUsername: input.DiscordName,
 	}
 
 	discordAccount, err := h.store.DiscordAccount.Upsert(tx.DB(), discordAccountInput)

@@ -109,3 +109,13 @@ func (s githubService) RemoveFromOrganizationByUsername(ctx context.Context, use
 
 	return nil
 }
+
+func (s githubService) RetrieveUsernameByID(ctx context.Context, id int64) (string, error) {
+	user, _, err := s.Client.Users.GetByID(ctx, id)
+	if err != nil {
+		s.log.Errorf(err, "[RetrieveUsernameByID] fail to get user by id", "id", id)
+		return "", err
+	}
+
+	return user.GetLogin(), nil
+}

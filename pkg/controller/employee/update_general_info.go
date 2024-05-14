@@ -187,8 +187,8 @@ func (r *controller) UpdateGeneralInfo(employeeID string, body UpdateEmployeeGen
 	}
 
 	discordAccountInput := &model.DiscordAccount{
-		DiscordID: discordID,
-		Username:  body.DiscordName,
+		DiscordID:       discordID,
+		DiscordUsername: body.DiscordName,
 	}
 
 	discordAccount, err := r.store.DiscordAccount.Upsert(tx.DB(), discordAccountInput)
