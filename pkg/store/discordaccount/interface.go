@@ -16,6 +16,4 @@ type IStore interface {
 
 	// ListByMemoUsername gets a list of discord accounts by memo usernames
 	ListByMemoUsername(db *gorm.DB, usernames []string) ([]model.DiscordAccount, error)
-	// Insert inserts a discord account
-	Insert(db *gorm.DB, cm *model.DiscordAccount) error
 }
