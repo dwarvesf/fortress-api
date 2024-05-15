@@ -16,6 +16,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/service/basecamp/consts"
 	bcModel "github.com/dwarvesf/fortress-api/pkg/service/basecamp/model"
+	"github.com/dwarvesf/fortress-api/pkg/service/mochiprofile"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/store/employee"
 	"github.com/dwarvesf/fortress-api/pkg/store/onleaverequest"
@@ -406,4 +407,54 @@ func (h *handler) SyncMemo(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))
+}
+
+func (h *handler) SyncCommunityMembers(c *gin.Context) {
+	guildMembers, err := h.service.Discord.GetMembers()
+	if err != nil {
+		h.logger.Error(err, "failed to get guild members")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	records := make([]model.DiscordAccount, 0)
+	for _, member := range guildMembers {
+		if member.User.Bot {
+			continue
+		}
+
+		communityProfile := model.DiscordAccount{
+			DiscordID:       member.User.ID,
+			PersonalEmail:   member.User.Email,
+			DiscordUsername: member.User.Username,
+			Roles:           member.Roles, // currenly an array of Discord role_id(s)
+		}
+
+		// skip if cannot get employee info
+		empl, err := h.store.Employee.GetByDiscordID(h.repo.DB(), member.User.ID, true)
+		if err == nil {
+			communityProfile.Employee = empl
+		}
+
+		// skip if cannot get mochi profile
+		mochiPrf, err := h.service.MochiProfile.GetProfileByDiscordID(member.User.ID)
+		if err == nil {
+			for _, account := range mochiPrf.AssociatedAccounts {
+				if account.Platform == mochiprofile.ProfilePlatformGithub {
+					communityProfile.GithubUsername = fmt.Sprintf("%v", account.PlatformMetadata["username"])
+				}
+			}
+		}
+		records = append(records, communityProfile)
+	}
+
+	tx, done := h.repo.NewTransaction()
+	for _, cm := range records {
+		err := h.store.DiscordAccount.Insert(tx.DB(), &cm)
+		if err != nil {
+			h.logger.AddField("discord_id", cm.DiscordID).Error(err, "failed to insert discord_id")
+		}
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, done(nil), nil, "ok"))
 }
