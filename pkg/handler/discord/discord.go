@@ -57,7 +57,7 @@ func (h *handler) SyncDiscordInfo(c *gin.Context) {
 		return
 	}
 
-  for _, member := range guildMembers {
+	for _, member := range guildMembers {
 		if member.User.Bot {
 			continue
 		}
