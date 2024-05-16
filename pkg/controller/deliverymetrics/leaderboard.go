@@ -40,7 +40,7 @@ func (c controller) GetWeeklyLeaderBoard() (*model.LeaderBoard, error) {
 			EmployeeName:    e.DisplayName,
 			Points:          m.SumWeight,
 			DiscordID:       d.DiscordID,
-			DiscordUsername: d.Username,
+			DiscordUsername: d.DiscordUsername,
 		}
 		if m.SumEffort.IsZero() {
 			item.Effectiveness = decimal.NewFromFloat(0)
@@ -96,7 +96,7 @@ func (c controller) GetMonthlyLeaderBoard(month *time.Time) (*model.LeaderBoard,
 			}
 			if d != nil {
 				item.DiscordID = d.DiscordID
-				item.DiscordUsername = d.Username
+				item.DiscordUsername = d.DiscordUsername
 			}
 		}
 

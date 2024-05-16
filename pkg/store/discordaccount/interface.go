@@ -13,4 +13,9 @@ type IStore interface {
 
 	Upsert(db *gorm.DB, da *model.DiscordAccount) (*model.DiscordAccount, error)
 	UpdateSelectedFieldsByID(db *gorm.DB, id string, client model.DiscordAccount, updatedFields ...string) (a *model.DiscordAccount, err error)
+
+	// ListByMemoUsername gets a list of discord accounts by memo usernames
+	ListByMemoUsername(db *gorm.DB, usernames []string) ([]model.DiscordAccount, error)
+	// Insert inserts a discord account
+	Insert(db *gorm.DB, cm *model.DiscordAccount) error
 }

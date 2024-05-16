@@ -79,15 +79,15 @@ func (h *handler) SyncDiscordInfo(c *gin.Context) {
 	tx, done := h.repo.NewTransaction()
 
 	for _, da := range discordAccounts {
-		if da.DiscordID == "" && da.Username == "" {
+		if da.DiscordID == "" && da.DiscordUsername == "" {
 			continue
 		}
 
 		// Update discord_id from username
 		if da.DiscordID == "" {
-			discordID, ok := discordUsernameMap[da.Username]
+			discordID, ok := discordUsernameMap[da.DiscordUsername]
 			if !ok {
-				h.logger.AddField("username", da.Username).Info("username does not exist in guild")
+				h.logger.AddField("username", da.DiscordUsername).Info("username does not exist in guild")
 				continue
 			}
 
@@ -107,9 +107,9 @@ func (h *handler) SyncDiscordInfo(c *gin.Context) {
 			continue
 		}
 
-		if da.Username != username {
-			da.Username = username
-			_, err := h.store.DiscordAccount.UpdateSelectedFieldsByID(tx.DB(), da.ID.String(), *da, "username")
+		if da.DiscordUsername != username {
+			da.DiscordUsername = username
+			_, err := h.store.DiscordAccount.UpdateSelectedFieldsByID(tx.DB(), da.ID.String(), *da, "discord_username")
 			if err != nil {
 				h.logger.AddField("id", da.ID).Error(err, "failed to update username of discord account")
 			}

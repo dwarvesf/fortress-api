@@ -324,7 +324,7 @@ func ToUpdateGeneralInfoEmployeeData(employee *model.Employee) *UpdateGeneralInf
 
 	if employee.DiscordAccount != nil {
 		rs.DiscordID = employee.DiscordAccount.DiscordID
-		rs.DiscordName = employee.DiscordAccount.Username
+		rs.DiscordName = employee.DiscordAccount.DiscordUsername
 	}
 
 	if employee.LineManager != nil {
@@ -412,7 +412,7 @@ func ToOneEmployeeData(employee *model.Employee, userInfo *model.CurrentLoggedUs
 
 	if employee.DiscordAccount != nil {
 		rs.DiscordID = employee.DiscordAccount.DiscordID
-		rs.DiscordName = employee.DiscordAccount.Username
+		rs.DiscordName = employee.DiscordAccount.DiscordUsername
 	}
 
 	if userInfo != nil && authutils.HasPermission(userInfo.Permissions, model.PermissionEmployeesBaseSalaryRead) {
@@ -524,7 +524,7 @@ func ToEmployeeData(employee *model.Employee) *EmployeeData {
 
 	if employee.DiscordAccount != nil {
 		rs.DiscordID = employee.DiscordAccount.DiscordID
-		rs.DiscordName = employee.DiscordAccount.Username
+		rs.DiscordName = employee.DiscordAccount.DiscordUsername
 	}
 
 	if len(employee.Mentees) > 0 {
@@ -828,7 +828,7 @@ func ToDiscordEmployeeDetail(employee *model.Employee, userInfo *model.CurrentLo
 
 	if employee.DiscordAccount != nil {
 		rs.DiscordID = employee.DiscordAccount.DiscordID
-		rs.DiscordName = employee.DiscordAccount.Username
+		rs.DiscordName = employee.DiscordAccount.DiscordUsername
 	}
 
 	rs.NotionID = empSocialData.NotionID

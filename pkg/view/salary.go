@@ -63,7 +63,7 @@ func ToSalaryAdvanceReport(result model.SalaryAdvanceReport) *SalaryAdvanceRepor
 		salaryAdvances = append(salaryAdvances, AggregatedSalaryAdvance{
 			EmployeeID:      v.EmployeeID,
 			DiscordID:       v.Employee.DiscordAccount.DiscordID,
-			DiscordUsername: v.Employee.DiscordAccount.Username,
+			DiscordUsername: v.Employee.DiscordAccount.DiscordUsername,
 			AmountICY:       v.AmountICY,
 			AmountUSD:       v.AmountUSD,
 		})

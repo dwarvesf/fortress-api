@@ -106,7 +106,7 @@ func ToUpdateProfileInfoData(employee *model.Employee) *UpdateProfileInfoData {
 
 	if employee.DiscordAccount != nil {
 		rs.DiscordID = employee.DiscordAccount.DiscordID
-		rs.DiscordName = employee.DiscordAccount.Username
+		rs.DiscordName = employee.DiscordAccount.DiscordUsername
 	}
 
 	return rs
@@ -156,7 +156,7 @@ func ToProfileData(employee *model.Employee) *ProfileData {
 
 	if employee.DiscordAccount != nil {
 		rs.DiscordID = employee.DiscordAccount.DiscordID
-		rs.DiscordName = employee.DiscordAccount.Username
+		rs.DiscordName = employee.DiscordAccount.DiscordUsername
 	}
 
 	return rs
