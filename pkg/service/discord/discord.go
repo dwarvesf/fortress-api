@@ -699,6 +699,50 @@ func (d *discordClient) SendNewMemoMessage(guildID string, memos []model.MemoLog
 	return nil, nil
 }
 
+func (d *discordClient) SendWeeklyMemosMessage(guildID string, memos []model.MemoLog, weekRangeStr, channelID string) (*discordgo.Message, error) {
+	bagde1Emoji := getEmoji("BADGE1")
+	bagde5Emoji := getEmoji("BADGE5")
+	pepeNoteEmoji := getEmoji("PEPE_NOTE")
+	authorMap := make(map[string]int)
+
+	var content strings.Builder
+	var memolistString strings.Builder
+
+	content.WriteString("*What is going on with our memo this week?*\n\n")
+	content.WriteString("**Overview**\n")
+	content.WriteString(fmt.Sprintf("%v `Total publication.` **%v** posts\n", bagde5Emoji, len(memos)))
+	memolistString.WriteString("**Publication list**\n")
+
+	for idx, mem := range memos {
+		authorField := ""
+		for i, author := range mem.Authors {
+			authorMap[author.DiscordID] += 1
+			if i == (len(mem.Authors) - 1) {
+				authorField += fmt.Sprintf("<@%s>", author.DiscordID)
+			} else {
+				authorField += fmt.Sprintf("<@%s>, ", author.DiscordID)
+			}
+		}
+		memolistString.WriteString(fmt.Sprintf("[[%v](%s)] %s - %v \n", idx+1, mem.URL, mem.Title, authorField))
+	}
+
+	// update author count based on finally updated value
+	content.WriteString(fmt.Sprintf("%v `Total author.` **%v** authors\n\n", pepeNoteEmoji, len(authorMap)))
+	content.WriteString(memolistString.String())
+
+	msg := &discordgo.MessageEmbed{
+		Title:       fmt.Sprintf("%v WEEKLY MEMO REPORT (%v) %v", bagde1Emoji, weekRangeStr, bagde1Emoji),
+		Description: content.String(),
+	}
+
+	_, err := d.SendEmbeddedMessageWithChannel(nil, msg, channelID)
+	if err != nil {
+		return nil, err
+	}
+
+	return nil, nil
+}
+
 func (d *discordClient) SendDiscordMessageWithChannel(ses *discordgo.Session, msg *discordgo.Message, channelId string) error {
 	_, err := ses.ChannelMessageSend(channelId, msg.Content)
 	return err

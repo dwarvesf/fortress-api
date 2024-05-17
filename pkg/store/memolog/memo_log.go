@@ -22,7 +22,7 @@ func (s *store) Create(db *gorm.DB, b []model.MemoLog) ([]model.MemoLog, error) 
 // GetLimitByTimeRange gets memo logs in a specific time range, with limit
 func (s *store) GetLimitByTimeRange(db *gorm.DB, start, end *time.Time, limit int) ([]model.MemoLog, error) {
 	var logs []model.MemoLog
-	return logs, db.Where("published_at BETWEEN ? AND ?", start, end).Limit(limit).Order("published_at DESC").Find(&logs).Error
+	return logs, db.Preload("Authors").Preload("Authors.Employee").Where("published_at BETWEEN ? AND ?", start, end).Limit(limit).Order("published_at DESC").Find(&logs).Error
 }
 
 // List gets all memo logs

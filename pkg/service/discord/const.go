@@ -13,6 +13,7 @@ var mapEmoji = map[string]string{
 	"STAR_ANIMATED":       "<a:star_animated:1131862886592024586>",
 	"INCREASING_ANIMATED": "<a:increasing_animated:1131862879319097394>",
 	"CLOCK_NEW":           "<:clock_new:1131863089185292428>",
+	"PEPE_NOTE":           "<:pepenote:885515949673951282>",
 }
 
 func getEmoji(emoji string) string {
@@ -33,4 +34,5 @@ var mapEmojiDev = map[string]string{
 	"STAR_ANIMATED":       "<a:star_animated:1133460443550195832>",
 	"INCREASING_ANIMATED": "<a:increasing_animated:1133460451091550289>",
 	"CLOCK_NEW":           "<:clock:1133460445257281658>",
+	"PEPE_NOTE":           "<:pepenote:1240695189622755530>",
 }
