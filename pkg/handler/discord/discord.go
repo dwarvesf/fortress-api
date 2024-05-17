@@ -16,6 +16,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/service/basecamp/consts"
 	bcModel "github.com/dwarvesf/fortress-api/pkg/service/basecamp/model"
+	"github.com/dwarvesf/fortress-api/pkg/service/mochiprofile"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/store/employee"
 	"github.com/dwarvesf/fortress-api/pkg/store/onleaverequest"
@@ -49,74 +50,42 @@ const (
 )
 
 func (h *handler) SyncDiscordInfo(c *gin.Context) {
-	discordMembers, err := h.service.Discord.GetMembers()
+	guildMembers, err := h.service.Discord.GetMembers()
 	if err != nil {
-		h.logger.Error(err, "failed to get members from discord")
+		h.logger.Error(err, "failed to get guild members")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
 	}
 
-	discordAccounts, err := h.store.DiscordAccount.All(h.repo.DB())
-	if err != nil {
-		h.logger.Error(err, "failed to get discord accounts")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
-		return
-	}
-
-	discordIDMap := make(map[string]string)
-	discordUsernameMap := make(map[string]string)
-
-	for _, member := range discordMembers {
-		username := member.User.Username
-		if member.User.Discriminator != "0" {
-			username = fmt.Sprintf("%s#%s", member.User.Username, member.User.Discriminator)
-		}
-
-		discordIDMap[member.User.ID] = username
-		discordUsernameMap[username] = member.User.ID
-	}
-
-	tx, done := h.repo.NewTransaction()
-
-	for _, da := range discordAccounts {
-		if da.DiscordID == "" && da.DiscordUsername == "" {
+	for _, member := range guildMembers {
+		if member.User.Bot {
 			continue
 		}
 
-		// Update discord_id from username
-		if da.DiscordID == "" {
-			discordID, ok := discordUsernameMap[da.DiscordUsername]
-			if !ok {
-				h.logger.AddField("username", da.DiscordUsername).Info("username does not exist in guild")
-				continue
-			}
-
-			da.DiscordID = discordID
-			_, err := h.store.DiscordAccount.UpdateSelectedFieldsByID(tx.DB(), da.ID.String(), *da, "discord_id")
-			if err != nil {
-				h.logger.AddField("id", da.ID).Error(err, "failed to update discord_id")
-			}
-
-			continue
+		communityProfile := model.DiscordAccount{
+			DiscordID:       member.User.ID,
+			PersonalEmail:   member.User.Email,
+			DiscordUsername: member.User.Username,
+			Roles:           member.Roles,         // currently an array of Discord role_id(s)
+			MemoUsername:    member.User.Username, // default memo username is discord username
 		}
 
-		// Update username from discord_id
-		username, ok := discordIDMap[da.DiscordID]
-		if !ok {
-			h.logger.Field("discord_id", da.DiscordID).Info("discord id does not exist in guild")
-			continue
+		mochiPrf, err := h.service.MochiProfile.GetProfileByDiscordID(member.User.ID)
+		if err == nil {
+			for _, account := range mochiPrf.AssociatedAccounts {
+				if account.Platform == mochiprofile.ProfilePlatformGithub {
+					communityProfile.GithubUsername = fmt.Sprintf("%v", account.PlatformMetadata["username"])
+				}
+			}
 		}
 
-		if da.DiscordUsername != username {
-			da.DiscordUsername = username
-			_, err := h.store.DiscordAccount.UpdateSelectedFieldsByID(tx.DB(), da.ID.String(), *da, "discord_username")
-			if err != nil {
-				h.logger.AddField("id", da.ID).Error(err, "failed to update username of discord account")
-			}
+		_, err = h.store.DiscordAccount.Upsert(h.repo.DB(), &communityProfile)
+		if err != nil {
+			h.logger.Error(err, "failed to upsert discord account")
 		}
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, done(nil), nil, "ok"))
+	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))
 }
 
 // BirthdayDailyMessage check if today is birthday of any employee in the system

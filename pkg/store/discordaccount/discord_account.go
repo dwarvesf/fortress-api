@@ -25,6 +25,9 @@ func (r *store) Upsert(db *gorm.DB, da *model.DiscordAccount) (*model.DiscordAcc
 				DoUpdates: clause.Assignments(
 					map[string]interface{}{
 						"discord_username": da.DiscordUsername,
+						"roles":            da.Roles,
+						"github_username":  da.GithubUsername,
+						"personal_email":   da.PersonalEmail,
 					},
 				),
 			},
@@ -58,12 +61,4 @@ func (r *store) ListByMemoUsername(db *gorm.DB, usernames []string) ([]model.Dis
 	var cms []model.DiscordAccount
 	err := db.Where("memo_username IN (?)", usernames).Find(&cms).Error
 	return cms, err
-}
-
-// Insert inserts a new discord account
-func (r *store) Insert(db *gorm.DB, cm *model.DiscordAccount) error {
-	return db.Clauses(clause.OnConflict{
-		Columns:   []clause.Column{{Name: "discord_id"}, {Name: "discord_username"}},
-		DoNothing: true,
-	}).Create(cm).Error
 }
