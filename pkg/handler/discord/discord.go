@@ -381,7 +381,7 @@ func (h *handler) SyncMemo(c *gin.Context) {
 func (h *handler) NotifyWeeklyMemos(c *gin.Context) {
 	start := timeutil.GetStartDayOfWeek(time.Now())
 	end := timeutil.GetEndDayOfWeek(time.Now())
-	weekRangeStr := "12 - 18 APR"
+	var weekRangeStr string
 
 	// parse week range to string format
 	// eg. 13 - 17 APR or 27 APR - 2 MAY
