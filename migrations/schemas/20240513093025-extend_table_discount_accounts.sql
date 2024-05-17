@@ -2,6 +2,9 @@
 ALTER TABLE discord_accounts
 RENAME COLUMN username TO discord_username;
 
+UPDATE discord_accounts 
+SET discord_username = '' WHERE discord_username IS NULL;
+
 ALTER TABLE discord_accounts  
 ALTER COLUMN discord_username SET NOT NULL,
 ALTER COLUMN discord_username SET DEFAULT '';
@@ -22,6 +25,9 @@ DROP COLUMN personal_email;
 ALTER TABLE discord_accounts
 ALTER COLUMN discord_username DROP DEFAULT,
 ALTER COLUMN discord_username DROP NOT NULL;
+
+UPDATE discord_accounts
+SET discord_username = NULL WHERE discord_username = '';
 
 ALTER TABLE discord_accounts
 RENAME COLUMN discord_username TO username;
