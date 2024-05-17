@@ -20,6 +20,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/store/employee"
 	"github.com/dwarvesf/fortress-api/pkg/store/onleaverequest"
+	"github.com/dwarvesf/fortress-api/pkg/utils/timeutil"
 	"github.com/dwarvesf/fortress-api/pkg/view"
 	"github.com/gin-gonic/gin"
 )
@@ -370,6 +371,50 @@ func (h *handler) SyncMemo(c *gin.Context) {
 	_, err = h.service.Discord.SendNewMemoMessage(h.config.Discord.IDs.DwarvesGuild, memos, targetChannelID)
 	if err != nil {
 		h.logger.Error(err, "failed to send new memo message")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))
+}
+
+func (h *handler) NotifyWeeklyMemos(c *gin.Context) {
+	start := timeutil.GetStartDayOfWeek(time.Now())
+	end := timeutil.GetEndDayOfWeek(time.Now())
+	var weekRangeStr string
+
+	// parse week range to string format
+	// eg. 13 - 17 APR or 27 APR - 2 MAY
+	startDay := start.Day()
+	endDay := end.Day()
+	startMonth := strings.ToUpper(start.Month().String())
+	endMonth := strings.ToUpper(end.Month().String())
+	if startMonth == endMonth {
+		weekRangeStr = fmt.Sprintf("%v - %v %v", startDay, endDay, startMonth)
+	} else {
+		weekRangeStr = fmt.Sprintf("%v %v - %v %v", startDay, startMonth, endDay, endMonth)
+	}
+
+	memos, err := h.store.MemoLog.GetLimitByTimeRange(h.repo.DB(), &start, &end, 1000)
+	if err != nil {
+		h.logger.Error(err, "failed to retrieve weekly memos")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	if len(memos) == 0 {
+		c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "no new memos in this week"))
+		return
+	}
+
+	targetChannelID := discordPlayGroundReadingChannel
+	if h.config.Env == "prod" {
+		targetChannelID = discordReadingChannel
+	}
+
+	_, err = h.service.Discord.SendWeeklyMemosMessage(h.config.Discord.IDs.DwarvesGuild, memos, weekRangeStr, targetChannelID)
+	if err != nil {
+		h.logger.Error(err, "failed to send weekly memos report")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
 	}

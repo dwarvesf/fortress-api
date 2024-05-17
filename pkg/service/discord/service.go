@@ -28,6 +28,7 @@ type IService interface {
 	DeliveryMetricWeeklyReport(deliveryMetrics *view.DeliveryMetricWeeklyReport, leaderBoard *view.WeeklyLeaderBoard, channelID string) (*discordgo.Message, error)
 	DeliveryMetricMonthlyReport(deliveryMetrics *view.DeliveryMetricMonthlyReport, leaderBoard *view.WeeklyLeaderBoard, channelID string) (*discordgo.Message, error)
 	SendNewMemoMessage(guildID string, memos []model.MemoLog, channelID string) (*discordgo.Message, error)
+	SendWeeklyMemosMessage(guildID string, memos []model.MemoLog, weekRangeStr, channelID string) (*discordgo.Message, error)
 	/*
 		WEBHOOK
 	*/
