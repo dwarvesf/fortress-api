@@ -24,7 +24,10 @@ func (r *store) Upsert(db *gorm.DB, da *model.DiscordAccount) (*model.DiscordAcc
 				},
 				DoUpdates: clause.Assignments(
 					map[string]interface{}{
-						"username": da.Username,
+						"discord_username": da.DiscordUsername,
+						"roles":            da.Roles,
+						"github_username":  da.GithubUsername,
+						"personal_email":   da.PersonalEmail,
 					},
 				),
 			},
@@ -51,4 +54,11 @@ func (r *store) OneByDiscordID(db *gorm.DB, discordID string) (*model.DiscordAcc
 func (r *store) UpdateSelectedFieldsByID(db *gorm.DB, id string, updateModel model.DiscordAccount, updatedFields ...string) (a *model.DiscordAccount, err error) {
 	discordAccount := model.DiscordAccount{}
 	return &discordAccount, db.Model(&discordAccount).Where("id = ?", id).Select(updatedFields).Updates(updateModel).Error
+}
+
+// ListByMemoUsername gets a list of discord accounts by memo usernames
+func (r *store) ListByMemoUsername(db *gorm.DB, usernames []string) ([]model.DiscordAccount, error) {
+	var cms []model.DiscordAccount
+	err := db.Where("memo_username IN (?)", usernames).Find(&cms).Error
+	return cms, err
 }

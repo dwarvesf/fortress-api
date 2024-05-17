@@ -1,18 +1,23 @@
 package memologs
 
 import (
+	"context"
 	"net/http"
+	"strconv"
 	"time"
 
+	"github.com/bwmarrin/discordgo"
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/controller"
 	"github.com/dwarvesf/fortress-api/pkg/handler/memologs/request"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service"
+	"github.com/dwarvesf/fortress-api/pkg/service/mochiprofile"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/view"
 	"github.com/gin-gonic/gin"
+	"github.com/k0kubun/pp/v3"
 )
 
 type handler struct {
@@ -54,41 +59,77 @@ func (h *handler) Create(c *gin.Context) {
 	memologs := make([]model.MemoLog, 0)
 	for _, b := range body {
 		publishedAt, _ := time.Parse(time.RFC3339Nano, b.PublishedAt)
-		authors := make([]model.MemoLogAuthor, 0)
-		for _, author := range b.Authors {
-			discordID, found := whitelistedUsers[author]
-			if !found {
-				discordMember, err := h.service.Discord.GetMemberByUsername(author)
-				if err != nil {
-					l.Errorf(err, "[memologs.Create] failed to get discord member", "author", author)
-					continue
-				}
-				discordID = discordMember.User.ID
+
+		existedAuthors, err := h.store.DiscordAccount.ListByMemoUsername(h.repo.DB(), b.Authors)
+		if err != nil {
+			l.Errorf(err, "[memologs.Create] failed to get authors", "authors", b.Authors)
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, b, ""))
+			return
+		}
+
+		authors := make([]model.DiscordAccount, 0)
+
+		// If author does not exist, we will create new author, use memo username as discord username to query discord member
+		mapExistedAuthors := make(map[string]model.DiscordAccount)
+		for _, author := range existedAuthors {
+			mapExistedAuthors[author.MemoUsername] = author
+		}
+
+		for _, authorMemoUsername := range b.Authors {
+			if a, ok := mapExistedAuthors[authorMemoUsername]; ok {
+				authors = append(authors, a)
+				continue
 			}
 
-			github := ""
-			employeeID := ""
+			// Build new author aka new community member
+			var newAuthor model.DiscordAccount
 
-			if discordID != "" {
-				empl, err := h.store.Employee.GetByDiscordID(h.repo.DB(), discordID, true)
-				if err != nil {
-					l.Errorf(err, "[brainerylogs.Create] failed to get employee with discord id %v", discordID)
-				}
+			// Search discord user by memo username
+			discordMembers, err := h.service.Discord.SearchMember(authorMemoUsername)
+			if err != nil {
+				l.Errorf(err, "[memologs.Create] failed to get discord user", "discord username", authorMemoUsername)
+			}
 
-				if empl != nil {
-					employeeID = empl.ID.String()
-					githubSA := model.SocialAccounts(empl.SocialAccounts).GetGithub()
-					if githubSA != nil {
-						github = githubSA.AccountID
+			pp.Println(discordMembers)
+
+			var discordMember discordgo.Member
+			if len(discordMembers) == 1 && discordMembers[0] != nil {
+				discordMember = *discordMembers[0]
+			}
+
+			newAuthor.MemoUsername = authorMemoUsername
+			newAuthor.DiscordUsername = discordMember.User.Username
+			newAuthor.DiscordID = discordMember.User.ID
+			newAuthor.PersonalEmail = discordMember.User.Email
+			newAuthor.Roles = discordMember.Roles
+
+			// Get profile by discord ID
+			profile, err := h.service.MochiProfile.GetProfileByDiscordID(discordMember.User.ID)
+			if err != nil {
+				l.Errorf(err, "[memologs.Create] failed to get profile", "discord id", discordMember.User.ID)
+			}
+
+			if profile != nil {
+				for _, assocAccount := range profile.AssociatedAccounts {
+					if assocAccount.Platform == mochiprofile.ProfilePlatformGithub {
+						githubIDInt, err := strconv.ParseInt(assocAccount.PlatformIdentifier, 10, 64)
+						if err != nil {
+							l.Errorf(err, "[memologs.Create] failed to parse github ID %d", assocAccount.PlatformIdentifier)
+							continue
+						}
+
+						newAuthor.GithubUsername, err = h.service.Github.RetrieveUsernameByID(context.Background(), githubIDInt)
+						if err != nil {
+							l.Errorf(err, "[memologs.Create] failed to get github username with ID %d", githubIDInt)
+							continue
+						}
+
+						break
 					}
 				}
 			}
 
-			authors = append(authors, model.MemoLogAuthor{
-				DiscordID:  discordID,
-				GithubID:   github,
-				EmployeeID: employeeID,
-			})
+			authors = append(authors, newAuthor)
 		}
 
 		b := model.MemoLog{
@@ -147,25 +188,4 @@ func (h *handler) Sync(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToMemoLog(results), nil, nil, nil, "ok"))
-}
-
-var whitelistedUsers = map[string]string{
-	"thanh":        "790170208228212766",
-	"giangthan":    "797051426437595136",
-	"nikki":        "796991130184187944",
-	"anna":         "575525326181105674",
-	"monotykamary": "184354519726030850",
-	"vhbien":       "421992793582469130",
-	"minhcloud":    "1007496699511570503",
-	"mickwan1234":  "383793994271948803",
-	"hnh":          "567326528216760320",
-	"duy":          "788351441097195520",
-	"huytq":        "361172853326086144",
-	"han":          "151497832853929986",
-	"namtran":      "785756392363524106",
-	"innno_":       "753995829559165044",
-	"dudaka":       "282500790692741121",
-	"tom":          "184354519726030850",
-	"minh":         "1093434004159594496",
-	"jack":         "398384659521863702",
 }
