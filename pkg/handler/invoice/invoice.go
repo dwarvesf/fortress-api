@@ -198,7 +198,7 @@ func (h *handler) Send(c *gin.Context) {
 
 	_, err = h.controller.Invoice.Send(iv)
 	if err != nil {
-		l.Error(err, "failed to parse request to invoice model")
+		l.Error(err, "failed to send invoice")
 		errs.ConvertControllerErr(c, err)
 		return
 	}
