@@ -18,7 +18,7 @@ CREATE TABLE event_speakers (
     event_id UUID NOT NULL,
     discord_account_id UUID NOT NULL,
     topic TEXT,
-    UNIQUE (discord_event_id, discord_account_id)
+    UNIQUE (event_id, discord_account_id)
 );
 
 ALTER TABLE event_speakers

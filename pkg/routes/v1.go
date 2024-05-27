@@ -373,9 +373,9 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 
 		scheduledEventGroup := discordGroup.Group("/scheduled-events")
 		{
-			scheduledEventGroup.GET("", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesDiscordRead), h.Discord.ListScheduledEvent)
-			scheduledEventGroup.POST("", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesDiscordRead), h.Discord.CreateScheduledEvent)
-			scheduledEventGroup.PUT("/:id/speakers", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesDiscordRead), h.Discord.SetScheduledEventSpeakers)
+			scheduledEventGroup.GET("", h.Discord.ListScheduledEvent)
+			scheduledEventGroup.POST("", h.Discord.CreateScheduledEvent)
+			scheduledEventGroup.PUT("/:id/speakers", h.Discord.SetScheduledEventSpeakers)
 		}
 	}
 
