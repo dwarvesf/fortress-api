@@ -1,6 +1,8 @@
 package discordevent
 
 import (
+	"time"
+
 	"gorm.io/gorm"
 
 	"github.com/dwarvesf/fortress-api/pkg/model"
@@ -20,4 +22,5 @@ type Query struct {
 	EventTypes     []model.EventType
 	Limit          int
 	Offset         int
+	After          *time.Time
 }

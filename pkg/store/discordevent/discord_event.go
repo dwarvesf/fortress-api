@@ -35,6 +35,10 @@ func (s *store) All(db *gorm.DB, q *Query, preload bool) ([]*model.Event, error)
 
 	query := db.Order("date desc").Limit(q.Limit)
 
+	if q.After != nil {
+		query = query.Where("date > ?", q.After)
+	}
+
 	if !preload {
 		return e, query.Find(&e).Error
 	}

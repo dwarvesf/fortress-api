@@ -9,7 +9,6 @@ require (
 	github.com/SebastiaanKlippert/go-wkhtmltopdf v1.9.0
 	github.com/antchfx/htmlquery v1.3.0
 	github.com/bwmarrin/discordgo v0.27.1
-	github.com/cenkalti/backoff/v4 v4.2.1
 	github.com/consolelabs/mochi-go-sdk v0.0.7
 	github.com/dstotijn/go-notion v0.11.0
 	github.com/ethereum/go-ethereum v1.13.5
@@ -29,7 +28,6 @@ require (
 	github.com/jackc/pgtype v1.14.0
 	github.com/jinzhu/now v1.1.5
 	github.com/joho/godotenv v1.5.1
-	github.com/k0kubun/pp/v3 v3.2.0
 	github.com/lib/pq v1.10.9
 	github.com/matoous/go-nanoid v1.5.0
 	github.com/patrickmn/go-cache v2.1.0+incompatible
@@ -121,13 +119,11 @@ require (
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
-	github.com/k0kubun/pp v3.0.1+incompatible // indirect
 	github.com/klauspost/compress v1.16.5 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.4 // indirect
 	github.com/leodido/go-urn v1.2.4 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
-	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.19 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect

@@ -44,42 +44,42 @@ func (input DeliveryMetricReportInput) Validate() error {
 }
 
 type DiscordEventInput struct {
-	ID          string          `json:"id"`
-	Name        string          `json:"title"`
-	Description string          `json:"description"`
-	Date        *time.Time      `json:"date"`
-	ChannelID   string          `json:"channel_id"`
-	CreatorID   string          `json:"creator_id"`
-	MessageID   string          `json:"message_id"`
-	EventType   model.EventType `json:"event_type"`
+	ID               string    `json:"id"`
+	Name             string    `json:"name"`
+	Description      string    `json:"description"`
+	Date             time.Time `json:"date"`
+	DiscordEventID   string    `json:"discord_event_id"`
+	DiscordChannelID string    `json:"discord_channel_id"`
+	DiscordCreatorID string    `json:"discord_creator_id"`
+	DiscordMessageID string    `json:"discord_message_id"`
 }
 
 func (input DiscordEventInput) Validate() error {
 	if len(input.Name) == 0 {
 		return errs.ErrEmptyName
 	}
-	if len(input.ChannelID) == 0 {
+	if len(input.DiscordChannelID) == 0 {
 		return errs.ErrEmptyChannelID
 	}
-	if len(input.CreatorID) == 0 {
+	if len(input.DiscordCreatorID) == 0 {
 		return errs.ErrEmptyCreatorID
-	}
-	if input.Date == nil {
-		return errs.ErrEmptyDate
 	}
 	return nil
 }
 
-func (in *DiscordEventInput) SetEventType() error {
+func (in DiscordEventInput) EventType() (model.DiscordScheduledEventType, error) {
 	switch {
-	case (strings.Contains(strings.ToLower(in.Description), "demo") || strings.Contains(strings.ToLower(in.Name), "demo")) || (strings.Contains(strings.ToLower(in.Description), "showcase") || strings.Contains(strings.ToLower(in.Name), "showcase")):
-		in.EventType = model.EventTypeDiscordDemo
-	case strings.Contains(strings.ToLower(in.Description), "ogif") || strings.Contains(strings.ToLower(in.Name), "ogif"):
-		in.EventType = model.EventTypeDiscordOGIF
+	case strings.Contains(strings.ToLower(in.Description), "demo"),
+		strings.Contains(strings.ToLower(in.Name), "demo"),
+		strings.Contains(strings.ToLower(in.Description), "showcase"),
+		strings.Contains(strings.ToLower(in.Name), "showcase"):
+		return model.DiscordScheduledEventTypeDemo, nil
+	case strings.Contains(strings.ToLower(in.Description), "ogif"),
+		strings.Contains(strings.ToLower(in.Name), "ogif"):
+		return model.DiscordScheduledEventTypeOGIF, nil
 	default:
-		return errors.New("event type not found")
+		return model.DiscordScheduledEventType(""), errors.New("invalid event type")
 	}
-	return nil
 }
 
 type DiscordEventSpeakerInput struct {

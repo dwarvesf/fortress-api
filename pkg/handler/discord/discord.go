@@ -427,7 +427,7 @@ func (h *handler) NotifyWeeklyMemos(c *gin.Context) {
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))
 }
 
-// this will be used to create discord events
+// CreateScheduledEvent create new DF guild discord event
 func (h *handler) CreateScheduledEvent(c *gin.Context) {
 	l := h.logger.Fields(
 		logger.Fields{
@@ -458,21 +458,22 @@ func (h *handler) CreateScheduledEvent(c *gin.Context) {
 		return
 	}
 
-	if err := in.SetEventType(); err != nil {
+	evtType, err := in.EventType()
+	if err != nil {
 		l.Errorf(err, "failed to set event type", "body", in)
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, in, ""))
 		return
 	}
 
 	// create event
-	_, err := h.store.DiscordEvent.Create(h.repo.DB(), &model.Event{
+	_, err = h.store.DiscordEvent.Create(h.repo.DB(), &model.Event{
 		DiscordEventID:   in.ID,
-		DiscordChannelID: in.ChannelID,
-		DiscordCreatorID: in.CreatorID,
+		DiscordChannelID: in.DiscordChannelID,
+		DiscordCreatorID: in.DiscordCreatorID,
 		Name:             in.Name,
 		Description:      in.Description,
-		Date:             *in.Date,
-		EventType:        in.EventType,
+		Date:             in.Date,
+		EventType:        evtType,
 	})
 	if err != nil {
 		h.logger.Error(err, "failed to create event")
@@ -483,7 +484,7 @@ func (h *handler) CreateScheduledEvent(c *gin.Context) {
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))
 }
 
-// this will be used to list discord events
+// ListScheduledEvent returns list of scheduled events
 func (h *handler) ListScheduledEvent(c *gin.Context) {
 	l := h.logger.Fields(
 		logger.Fields{
@@ -492,7 +493,22 @@ func (h *handler) ListScheduledEvent(c *gin.Context) {
 		},
 	)
 
-	events, err := h.store.DiscordEvent.All(h.repo.DB(), &discordevent.Query{}, false)
+	var err error
+	after := time.Now().UTC()
+
+	afterStr := c.Query("after")
+	if strings.TrimSpace(afterStr) != "" {
+		after, err = time.Parse(time.RFC3339, afterStr)
+		if err != nil {
+			l.Error(err, "failed to parse query after to datetime")
+			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
+			return
+		}
+	}
+
+	events, err := h.store.DiscordEvent.All(h.repo.DB(), &discordevent.Query{
+		After: &after,
+	}, false)
 	if err != nil {
 		l.Error(err, "failed to get events")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
@@ -502,7 +518,7 @@ func (h *handler) ListScheduledEvent(c *gin.Context) {
 	c.JSON(http.StatusOK, view.CreateResponse[any](events, nil, nil, nil, "ok"))
 }
 
-// this will be used to set speakers for discord event
+// SetScheduledEventSpeakers sets speakers for a scheduled event
 func (h *handler) SetScheduledEventSpeakers(c *gin.Context) {
 	l := h.logger.Fields(
 		logger.Fields{
@@ -527,13 +543,22 @@ func (h *handler) SetScheduledEventSpeakers(c *gin.Context) {
 	}
 
 	// get event
-	eventID := c.Param("id")
-	event, err := h.store.DiscordEvent.One(h.repo.DB(), &discordevent.Query{DiscordEventID: eventID})
+	discordEventID := c.Param("id")
+	event, err := h.store.DiscordEvent.One(h.repo.DB(), &discordevent.Query{DiscordEventID: discordEventID})
 	if err != nil {
 		l.Errorf(err, "failed to get event", "body", in)
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, in, ""))
 		return
 	}
+
+	// delete all speakers
+	if err = h.store.EventSpeaker.DeleteAllByEventID(h.repo.DB(), event.ID.String()); err != nil {
+		l.Errorf(err, "failed to delete all speakers", "body", in)
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, in, ""))
+		return
+	}
+
+	event.EventSpeakers = make([]model.EventSpeaker, 0)
 
 	// get speakers
 	for _, i := range in {
@@ -545,22 +570,24 @@ func (h *handler) SetScheduledEventSpeakers(c *gin.Context) {
 				c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, in, ""))
 				return
 			}
+
 			speaker = &model.DiscordAccount{
-				DiscordID: i.ID,
-				Username:  discordUser.User.Username,
+				DiscordID:       i.ID,
+				DiscordUsername: discordUser.User.Username,
 			}
-			speaker, err = h.store.DiscordAccount.Upsert(h.repo.DB(), speaker)
+
+			_, err = h.store.DiscordAccount.Upsert(h.repo.DB(), speaker)
 			if err != nil {
 				l.Errorf(err, "failed to upsert speaker", "body", in)
 				c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, in, ""))
 				return
 			}
-			return
 		} else if err != nil {
 			l.Errorf(err, "failed to get speaker", "body", in)
 			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, in, ""))
 			return
 		}
+
 		event.EventSpeakers = append(event.EventSpeakers, model.EventSpeaker{
 			EventID:          event.ID,
 			DiscordAccountID: speaker.ID,
@@ -576,5 +603,5 @@ func (h *handler) SetScheduledEventSpeakers(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToDiscordEvent(*event), nil, nil, nil, ""))
 }
