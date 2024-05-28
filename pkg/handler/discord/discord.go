@@ -47,6 +47,7 @@ func New(controller *controller.Controller, store *store.Store, repo store.DBRep
 
 const (
 	discordReadingChannel           = "1225085624260759622"
+	discordRandomChannel            = "788084358991970337"
 	discordPlayGroundReadingChannel = "1119171172198797393"
 )
 
@@ -349,11 +350,11 @@ func (h *handler) DeliveryMetricsReport(c *gin.Context) {
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))
 }
 
-// SyncMemo check if today is birthday of any employee in the system
+// SyncMemo syncs memologs from the source memo.d.foundation
 func (h *handler) SyncMemo(c *gin.Context) {
 	targetChannelID := discordPlayGroundReadingChannel
 	if h.config.Env == "prod" {
-		targetChannelID = discordReadingChannel
+		targetChannelID = discordRandomChannel
 	}
 
 	memos, err := h.controller.MemoLog.Sync()
@@ -409,7 +410,7 @@ func (h *handler) NotifyWeeklyMemos(c *gin.Context) {
 
 	targetChannelID := discordPlayGroundReadingChannel
 	if h.config.Env == "prod" {
-		targetChannelID = discordReadingChannel
+		targetChannelID = discordRandomChannel
 	}
 
 	_, err = h.service.Discord.SendWeeklyMemosMessage(h.config.Discord.IDs.DwarvesGuild, memos, weekRangeStr, targetChannelID)
