@@ -111,7 +111,6 @@ func (h *handler) ListProjectMilestones(c *gin.Context) {
 		})
 	}
 
-	// pp.Println(milestones)
 	sort.Slice(projects[:], func(i, j int) bool {
 		return projects[i].Name < projects[j].Name
 	})

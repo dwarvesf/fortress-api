@@ -90,6 +90,10 @@ func (d *discordClient) DeleteEvent(event *model.Schedule) error {
 	return d.session.GuildScheduledEventDelete(d.cfg.Discord.IDs.DwarvesGuild, event.DiscordEvent.DiscordEventID)
 }
 
+func (d *discordClient) ListEvents() ([]*discordgo.GuildScheduledEvent, error) {
+	return d.session.GuildScheduledEvents(d.cfg.Discord.IDs.DwarvesGuild, false)
+}
+
 func (d *discordClient) newRequest(method string, url string, payload io.Reader) ([]byte, error) {
 	req, err := http.NewRequest(method, url, payload)
 	if err != nil {
@@ -746,4 +750,12 @@ func (d *discordClient) SendWeeklyMemosMessage(guildID string, memos []model.Mem
 func (d *discordClient) SendDiscordMessageWithChannel(ses *discordgo.Session, msg *discordgo.Message, channelId string) error {
 	_, err := ses.ChannelMessageSend(channelId, msg.Content)
 	return err
+}
+
+func (d *discordClient) GetChannelMessages(channelID string, limit int) ([]*discordgo.Message, error) {
+	return d.session.ChannelMessages(channelID, limit, "", "", "")
+}
+
+func (d *discordClient) GetEventByID(eventID string) (*discordgo.GuildScheduledEvent, error) {
+	return d.session.GuildScheduledEvent(d.cfg.Discord.IDs.DwarvesGuild, eventID, false)
 }

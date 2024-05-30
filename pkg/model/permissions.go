@@ -49,6 +49,8 @@ const (
 	PermissionEmployeesBaseSalaryRead             PermissionCode = "employees.baseSalary.read"
 	PermissionEmployeesCreate                     PermissionCode = "employees.create"
 	PermissionEmployeesDiscordRead                PermissionCode = "employees.discord.read"
+	PermissionEmployeesDiscordEdit                PermissionCode = "employees.discord.edit"
+	PermissionEmployeesDiscordCreate              PermissionCode = "employees.discord.create"
 	PermissionEmployeesDelete                     PermissionCode = "employees.delete"
 	PermissionEmployeesEdit                       PermissionCode = "employees.edit"
 	PermissionEmployeesRead                       PermissionCode = "employees.read"

@@ -17,7 +17,6 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/view"
 	"github.com/gin-gonic/gin"
-	"github.com/k0kubun/pp/v3"
 )
 
 type handler struct {
@@ -89,8 +88,6 @@ func (h *handler) Create(c *gin.Context) {
 			if err != nil {
 				l.Errorf(err, "[memologs.Create] failed to get discord user", "discord username", authorMemoUsername)
 			}
-
-			pp.Println(discordMembers)
 
 			var discordMember discordgo.Member
 			if len(discordMembers) == 1 && discordMembers[0] != nil {

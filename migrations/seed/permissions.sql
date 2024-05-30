@@ -95,4 +95,6 @@ INSERT INTO public.permissions (id, deleted_at, created_at, updated_at, name, co
 ('e5a515aa-6f4f-4ac8-8eac-490a9a358833', null, '2023-07-19 16:35:12.475872', '2023-06-20 16:35:12.475872', 'Delivery Metrics Read', 'deliveryMetrics.read'),
 ('51a3ec4a-6bae-4f02-9d9b-89ba539346da', null, '2023-07-20 16:35:12.475872', '2023-06-20 16:35:12.475872', 'Delivery Metrics Leader Board Read', 'deliveryMetrics.leaderBoard.read'),
 ('fea2497c-694d-43d7-82cd-764d622a6706', null, '2023-07-26 16:35:12.475872', '2023-07-26 16:35:12.475872', 'Delivery Metrics Sync', 'deliveryMetrics.sync'),
-('b4edad19-3e30-4e86-bd6e-07f535011aaf', null, '2023-07-26 16:35:12.475872', '2023-07-26 16:35:12.475872', 'Employee Discord Read', 'employees.discord.read');
+('b4edad19-3e30-4e86-bd6e-07f535011aaf', null, '2023-07-26 16:35:12.475872', '2023-07-26 16:35:12.475872', 'Employee Discord Read', 'employees.discord.read'),
+('1641106e-9a94-42fa-80e0-9d6978cd3596', null, '2024-05-29 15:41:12.475872', '2024-05-29 15:41:12.475872', 'Employee Discord Edit','employees.discord.edit'),
+('b069e35c-1144-4554-9854-ff529506d4e5', null, '2024-05-29 15:41:12.475872', '2024-05-29 15:41:12.475872', 'Employee Discord Create','employees.discord.create');
