@@ -10,4 +10,7 @@ type IHandler interface {
 	DeliveryMetricsReport(c *gin.Context)
 	SyncMemo(c *gin.Context)
 	NotifyWeeklyMemos(c *gin.Context)
+	CreateScheduledEvent(c *gin.Context)
+	ListScheduledEvent(c *gin.Context)
+	SetScheduledEventSpeakers(c *gin.Context)
 }

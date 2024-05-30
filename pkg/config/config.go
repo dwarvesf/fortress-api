@@ -154,7 +154,8 @@ type DiscordWebhook struct {
 }
 
 type DiscordID struct {
-	DwarvesGuild string
+	DwarvesGuild  string
+	EventsChannel string
 }
 
 type Invoice struct {

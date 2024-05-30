@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/k0kubun/pp/v3"
 	"github.com/shopspring/decimal"
 	"gorm.io/gorm"
 
@@ -3128,6 +3127,5 @@ func (h *handler) SyncProjectMemberStatus(c *gin.Context) {
 		return
 	}
 
-	pp.Println("synced project member status")
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))
 }
