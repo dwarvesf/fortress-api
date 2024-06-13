@@ -15,7 +15,7 @@ shell:
 	@devbox shell
 	
 colima-start:
-	@export PATH=${PATH}:/usr/bin && colima start
+	colima start --cpu 1 --memory 2 --disk 30
 	
 colima-stop:
 	@colima stop 

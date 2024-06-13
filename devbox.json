@@ -2,22 +2,24 @@
   "$schema": "https://raw.githubusercontent.com/jetify-com/devbox/0.10.7/.schema/devbox.schema.json",
   "packages": [
     "docker@latest",
-    "go@1.21.3",
     "docker-compose@latest",
     "git@latest",
     "qemu@latest",
     "vim@latest",
-    "vscode@latest",
-    "colima@latest"
+    "colima@latest",
+    "air@latest",
+    "go@1.21",
+    "go-swag@1.8.4"
   ],
   "shell": {
-    "init_hook": [
-      "echo 'Welcome to devbox!' > /dev/null"
-    ],
     "scripts": {
       "test": [
         "echo \"Error: no test specified\" && exit 1"
       ]
     }
+  },
+  "env": {
+    "PATH":   "/usr/bin:$PWD/.devbox/nix/profile/default/bin:$PATH",
+    "GOPATH": "$PWD/.devbox/nix/profile/default/share/go"
   }
 }
