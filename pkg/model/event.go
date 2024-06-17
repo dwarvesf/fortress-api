@@ -16,6 +16,7 @@ type Event struct {
 	DiscordCreatorID string                    `json:"discord_creator_id"`
 	EventType        DiscordScheduledEventType `json:"type"`
 	EventSpeakers    []EventSpeaker            `json:"event_speakers"`
+	IsOver           bool                      `json:"is_over" gorm:"-"`
 }
 
 // EventSpeaker struct
