@@ -39,6 +39,10 @@ func (s *store) All(db *gorm.DB, q *Query, preload bool) ([]*model.Event, error)
 		query = query.Where("date > ?", q.After)
 	}
 
+	if len(q.DiscordEventIDs) > 0 {
+		query = query.Where("discord_event_id IN (?)", q.DiscordEventIDs)
+	}
+
 	if !preload {
 		return e, query.Find(&e).Error
 	}

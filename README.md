@@ -14,10 +14,31 @@ This repository is the official BE service for Fortress
 
 ## How to contribute
 
-### Prerequisites
+### Setup local development environment (pick one of following ways)
 
-1. Go installed
-2. Docker installed
+#### Using DEVBOX
+
+1. Create isolated shell using devbox
+
+```
+make shell
+```
+
+2. Start Colima as container runtime 
+
+```
+make colima-start
+```
+
+Related issue when initiating development environment first time using colima
+- [docker-credential-desktop not installed or not available in PATH](https://stackoverflow.com/questions/67642620/docker-credential-desktop-not-installed-or-not-available-in-path/72888813#72888813)
+  - tltr: Cheating by removing `credsStore` in the `~/.docker/config.json`. Or installing `osxkeychain`
+
+####  Using your machine environment
+
+1. Install Golang
+
+2. Install Docker
 
 ### How to run source code locally
 

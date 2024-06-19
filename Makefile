@@ -7,7 +7,18 @@ TOOLS_IMAGE=dwarvesv/fortress-tools:latest
 APP_ENVIRONMENT=docker run --rm -v ${PWD}:/${APP_NAME} -w /${APP_NAME} --net=host ${TOOLS_IMAGE}
 SWAGGER_VERSION = v1.16.1
 
-.PHONY: setup init build dev test migrate-up migrate-down ci
+.PHONY: setup shel colima-start colima-stop init build dev test migrate-up migrate-down ci
+
+shell:
+	@if ! command -v devbox >/dev/null 2>&1; then curl -fsSL https://get.jetpack.io/devbox | bash; fi
+	@devbox install
+	@devbox shell
+	
+colima-start:
+	colima start --cpu 1 --memory 2 --disk 30
+	
+colima-stop:
+	@colima stop 
 
 setup:
 	docker pull ${TOOLS_IMAGE}
