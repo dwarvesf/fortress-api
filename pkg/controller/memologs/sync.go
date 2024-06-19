@@ -10,6 +10,7 @@ import (
 
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
+	"github.com/dwarvesf/fortress-api/pkg/store/memolog"
 	"github.com/dwarvesf/fortress-api/pkg/utils/timeutil"
 )
 
@@ -47,7 +48,7 @@ func (c *controller) Sync() ([]model.MemoLog, error) {
 	})
 
 	// TODO: need optimize this, for example just only get synced memos today
-	syncedMemos, err := c.store.MemoLog.List(c.repo.DB())
+	syncedMemos, err := c.store.MemoLog.List(c.repo.DB(), memolog.ListFilter{})
 	if err != nil {
 		l.Errorf(err, "failed to get synced memos")
 		return nil, err
