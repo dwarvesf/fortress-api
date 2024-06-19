@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 	"net/http"
+	"sort"
 	"strings"
 	"time"
 
@@ -494,26 +495,61 @@ func (h *handler) ListScheduledEvent(c *gin.Context) {
 	)
 
 	var err error
-	after := time.Now().UTC()
 
-	afterStr := c.Query("after")
-	if strings.TrimSpace(afterStr) != "" {
-		after, err = time.Parse(time.RFC3339, afterStr)
-		if err != nil {
-			l.Error(err, "failed to parse query after to datetime")
-			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
-			return
-		}
+	// get scheduled events from discord
+	discordScheduledEvents, err := h.service.Discord.ListEvents()
+	if err != nil {
+		l.Error(err, "failed to get scheduled events")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
 	}
 
+	eventIDs := make([]string, 0)
+	for _, e := range discordScheduledEvents {
+		eventIDs = append(eventIDs, e.ID)
+	}
+
+	// Get future events
+	now := time.Now()
 	events, err := h.store.DiscordEvent.All(h.repo.DB(), &discordevent.Query{
-		After: &after,
+		DiscordEventIDs: eventIDs,
 	}, false)
 	if err != nil {
 		l.Error(err, "failed to get events")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
 	}
+
+	mapUpcomingEvents := make(map[string]bool)
+	for _, e := range events {
+		mapUpcomingEvents[e.DiscordEventID] = true
+	}
+
+	// Get completed events in the last 7 days, sometimes we need to update these events
+	// If the event has date in the future, but cannot be found in discord, it means it has been done earlier
+	after := now.AddDate(0, 0, -7)
+	completedEvents, err := h.store.DiscordEvent.All(h.repo.DB(), &discordevent.Query{
+		After: &after,
+	}, false)
+	if err != nil {
+		l.Error(err, "failed to get completed events")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	for i := range completedEvents {
+		event := completedEvents[i]
+		if _, ok := mapUpcomingEvents[event.DiscordEventID]; ok {
+			continue
+		}
+
+		event.IsOver = true
+		events = append(events, event)
+	}
+
+	sort.Slice(events, func(i, j int) bool {
+		return events[i].Date.After(events[j].Date)
+	})
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](events, nil, nil, nil, "ok"))
 }

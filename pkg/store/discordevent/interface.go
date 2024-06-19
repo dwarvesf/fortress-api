@@ -17,10 +17,11 @@ type IStore interface {
 
 // Query present invoice query from user
 type Query struct {
-	ID             string
-	DiscordEventID string
-	EventTypes     []model.EventType
-	Limit          int
-	Offset         int
-	After          *time.Time
+	ID              string
+	DiscordEventID  string   // For querying by single ID
+	DiscordEventIDs []string // For filter by multiple IDs
+	EventTypes      []model.EventType
+	Limit           int
+	Offset          int
+	After           *time.Time
 }
