@@ -25,8 +25,22 @@ func (s *store) GetLimitByTimeRange(db *gorm.DB, start, end *time.Time, limit in
 	return logs, db.Preload("Authors").Preload("Authors.Employee").Where("published_at BETWEEN ? AND ?", start, end).Limit(limit).Order("published_at DESC").Find(&logs).Error
 }
 
+// ListFilter is a filter for List function
+type ListFilter struct {
+	From *time.Time
+	To   *time.Time
+}
+
 // List gets all memo logs
-func (s *store) List(db *gorm.DB) ([]model.MemoLog, error) {
+func (s *store) List(db *gorm.DB, filter ListFilter) ([]model.MemoLog, error) {
 	var logs []model.MemoLog
-	return logs, db.Preload("Authors").Preload("Authors.Employee").Order("published_at DESC").Find(&logs).Error
+	query := db.Preload("Authors").Preload("Authors.Employee").Order("published_at DESC")
+	if filter.From != nil {
+		query = query.Where("published_at >= ?", *filter.From)
+	}
+	if filter.To != nil {
+		query = query.Where("published_at <= ?", *filter.To)
+	}
+
+	return logs, query.Find(&logs).Error
 }
