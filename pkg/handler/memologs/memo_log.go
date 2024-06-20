@@ -15,6 +15,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/service/mochiprofile"
 	"github.com/dwarvesf/fortress-api/pkg/store"
+	"github.com/dwarvesf/fortress-api/pkg/store/memolog"
 	"github.com/dwarvesf/fortress-api/pkg/view"
 	"github.com/gin-gonic/gin"
 )
@@ -159,7 +160,36 @@ func (h *handler) List(c *gin.Context) {
 		},
 	)
 
-	memoLogs, err := h.store.MemoLog.List(h.repo.DB())
+	var fromPtr, toPtr *time.Time
+
+	fromStr := c.Query("from")
+	if fromStr != "" {
+		from, err := time.Parse(time.RFC3339, fromStr)
+		if err != nil {
+			l.Error(err, "failed to parse from time")
+			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
+			return
+		}
+
+		fromPtr = &from
+	}
+
+	toStr := c.Query("to")
+	if toStr != "" {
+		to, err := time.Parse(time.RFC3339, toStr)
+		if err != nil {
+			l.Error(err, "failed to parse to time")
+			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
+			return
+		}
+
+		toPtr = &to
+	}
+
+	memoLogs, err := h.store.MemoLog.List(h.repo.DB(), memolog.ListFilter{
+		From: fromPtr,
+		To:   toPtr,
+	})
 	if err != nil {
 		l.Error(err, "failed to get memologs")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
