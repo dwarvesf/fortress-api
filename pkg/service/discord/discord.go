@@ -770,7 +770,8 @@ func (d *discordClient) SendWeeklyMemosMessage(guildID string, memos []model.Mem
 				authorField = "**@unknown-user**"
 			}
 
-			memolistString.WriteString(fmt.Sprintf("[[%v](%s)] %s - %v \n", idx+1, mem.URL, mem.Title, authorField))
+			memolistString.WriteString(fmt.Sprintf("[[%v](%s)] %s - %v ", idx+1, mem.URL, mem.Title, authorField))
+			memolistString.WriteString("\n")
 		}
 
 		memolistString.WriteString("\n")
