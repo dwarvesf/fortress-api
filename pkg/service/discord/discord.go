@@ -20,7 +20,14 @@ import (
 )
 
 var (
-	client = http.DefaultClient
+	client           = http.DefaultClient
+	memoCategoryList = []string{memoCategoryFleeting, memoCategoryLiterature, memoCategoryOthers}
+)
+
+const (
+	memoCategoryFleeting   = "00_fleeting"
+	memoCategoryLiterature = "01_literature"
+	memoCategoryOthers     = "others"
 )
 
 type discordClient struct {
@@ -718,17 +725,30 @@ func (d *discordClient) SendWeeklyMemosMessage(guildID string, memos []model.Mem
 	memolistString.WriteString("**PUBLICATIONS**\n")
 
 	//Group by category
-	memosByCategory := make(map[string][]model.MemoLog)
-	for _, mem := range memos {
-		if len(mem.Category) > 0 {
-			memosByCategory[mem.Category[len(mem.Category)-1]] = append(memosByCategory[mem.Category[len(mem.Category)-1]], mem)
-			continue
-		}
-
-		memosByCategory["others"] = append(memosByCategory["others"], mem)
+	memosByCategory := map[string][]model.MemoLog{
+		memoCategoryFleeting:   make([]model.MemoLog, 0),
+		memoCategoryLiterature: make([]model.MemoLog, 0),
+		memoCategoryOthers:     make([]model.MemoLog, 0),
 	}
 
-	for category, memos := range memosByCategory {
+	for _, mem := range memos {
+		isMapped := false
+		for _, category := range mem.Category {
+			if strings.EqualFold(category, memoCategoryFleeting) || strings.EqualFold(category, memoCategoryLiterature) {
+				memosByCategory[category] = append(memosByCategory[category], mem)
+				isMapped = true
+				break
+			}
+		}
+
+		if !isMapped {
+			memosByCategory[memoCategoryOthers] = append(memosByCategory[memoCategoryOthers], mem)
+		}
+	}
+
+	for _, category := range memoCategoryList {
+		memos := memosByCategory[category]
+
 		// Category
 		memolistString.WriteString(fmt.Sprintf("🔹 **%s** - %v posts\n", strings.ToUpper(category), len(memos)))
 

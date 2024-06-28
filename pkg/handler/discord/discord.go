@@ -26,7 +26,6 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/store/discordevent"
 	"github.com/dwarvesf/fortress-api/pkg/store/employee"
 	"github.com/dwarvesf/fortress-api/pkg/store/onleaverequest"
-	"github.com/dwarvesf/fortress-api/pkg/utils/timeutil"
 	"github.com/dwarvesf/fortress-api/pkg/view"
 )
 
@@ -385,12 +384,11 @@ func (h *handler) SyncMemo(c *gin.Context) {
 }
 
 func (h *handler) NotifyWeeklyMemos(c *gin.Context) {
-	start := timeutil.GetStartDayOfWeek(time.Now())
-	end := timeutil.GetEndDayOfWeek(time.Now())
-	var weekRangeStr string
+	// get last 7 days
+	end := time.Now()
+	start := end.AddDate(0, 0, -7)
 
-	// parse week range to string format
-	// eg. 13 - 17 APR or 27 APR - 2 MAY
+	var weekRangeStr string
 	startDay := start.Day()
 	endDay := end.Day()
 	startMonth := strings.ToUpper(start.Month().String())
