@@ -665,21 +665,21 @@ func (d *discordClient) SendNewMemoMessage(guildID string, memos []model.MemoLog
 			var textMessage string
 
 			authorField := ""
-			avatar := ""
 			for _, author := range content.Authors {
-				if avatar == "" {
-					discordMember, err := d.session.GuildMember(guildID, content.Authors[0].DiscordID)
-					if err != nil {
-						return nil, err
-					}
-
-					avatar = fmt.Sprintf("https://cdn.discordapp.com/avatars/%v/%v.webp?size=240", discordMember.User.ID, discordMember.User.Avatar)
-					if discordMember.Avatar != "" {
-						avatar = fmt.Sprintf("https://cdn.discordapp.com/guilds/%v/users/%v/avatars/%v.webp?size=240", guildID, discordMember.User.ID, discordMember.Avatar)
-					}
+				if author.DiscordID != "" {
+					authorField += fmt.Sprintf(" <@%s> ", author.DiscordID)
+				} else if author.DiscordUsername != "" {
+					authorField += fmt.Sprintf(" @%s ", author.DiscordUsername)
+				} else {
+					authorField += " **@unknown-user**"
 				}
+			}
 
-				authorField += fmt.Sprintf(" <@%s> ", author.DiscordID)
+			// Use memo username if discord username is not available
+			if authorField == "" {
+				for _, author := range content.AuthorMemoUsernames {
+					authorField += fmt.Sprintf(" **%s** ", author)
+				}
 			}
 
 			author := ""
@@ -713,21 +713,47 @@ func (d *discordClient) SendWeeklyMemosMessage(guildID string, memos []model.Mem
 	var memolistString strings.Builder
 
 	content.WriteString("*What is going on with our memo this week?*\n\n")
-	content.WriteString("**Overview**\n")
+	content.WriteString("**OVERVIEW**\n")
 	content.WriteString(fmt.Sprintf("%v `Total publication.` **%v** posts\n", bagde5Emoji, len(memos)))
-	memolistString.WriteString("**Publication list**\n")
+	memolistString.WriteString("**PUBLICATIONS**\n")
 
-	for idx, mem := range memos {
-		authorField := ""
-		for i, author := range mem.Authors {
-			authorMap[author.DiscordID] += 1
-			if i == (len(mem.Authors) - 1) {
-				authorField += fmt.Sprintf("<@%s>", author.DiscordID)
-			} else {
-				authorField += fmt.Sprintf("<@%s>, ", author.DiscordID)
-			}
+	//Group by category
+	memosByCategory := make(map[string][]model.MemoLog)
+	for _, mem := range memos {
+		if len(mem.Category) > 0 {
+			memosByCategory[mem.Category[len(mem.Category)-1]] = append(memosByCategory[mem.Category[len(mem.Category)-1]], mem)
+			continue
 		}
-		memolistString.WriteString(fmt.Sprintf("[[%v](%s)] %s - %v \n", idx+1, mem.URL, mem.Title, authorField))
+
+		memosByCategory["others"] = append(memosByCategory["others"], mem)
+	}
+
+	for category, memos := range memosByCategory {
+		// Category
+		memolistString.WriteString(fmt.Sprintf("🔹 **%s** - %v posts\n", strings.ToUpper(category), len(memos)))
+
+		for idx, mem := range memos {
+			authorField := ""
+			for _, author := range mem.Authors {
+				authorMap[author.DiscordID] += 1
+
+				if author.DiscordID != "" {
+					authorField += fmt.Sprintf(" <@%s> ", author.DiscordID)
+				} else if author.DiscordUsername != "" {
+					authorField += fmt.Sprintf(" @%s ", author.DiscordUsername)
+				} else {
+					authorField += " **@unknown-user**"
+				}
+			}
+
+			if authorField == "" {
+				authorField = "**@unknown-user**"
+			}
+
+			memolistString.WriteString(fmt.Sprintf("[[%v](%s)] %s - %v \n", idx+1, mem.URL, mem.Title, authorField))
+		}
+
+		memolistString.WriteString("\n")
 	}
 
 	// update author count based on finally updated value

@@ -44,3 +44,9 @@ func (s *store) List(db *gorm.DB, filter ListFilter) ([]model.MemoLog, error) {
 
 	return logs, query.Find(&logs).Error
 }
+
+// Latest gets the latest memo log
+func (s *store) Latest(db *gorm.DB) (model.MemoLog, error) {
+	var log model.MemoLog
+	return log, db.Table("memo_logs").Order("published_at DESC, title ASC").First(&log).Error
+}
