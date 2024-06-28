@@ -15,6 +15,7 @@ type MemoLog struct {
 	Description string          `json:"description"`
 	PublishedAt *time.Time      `json:"publishedAt"`
 	Reward      decimal.Decimal `json:"reward"`
+	Category    []string        `json:"category"`
 } // @name MemoLog
 
 // MemoLogAuthor is the author of the memo log
@@ -60,6 +61,7 @@ func ToMemoLog(memoLogs []model.MemoLog) []MemoLog {
 			Description: memoLog.Description,
 			PublishedAt: memoLog.PublishedAt,
 			Reward:      memoLog.Reward,
+			Category:    memoLog.Category,
 		})
 	}
 
