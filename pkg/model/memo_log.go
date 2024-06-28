@@ -18,6 +18,9 @@ type MemoLog struct {
 	Reward      decimal.Decimal
 
 	Authors []DiscordAccount `json:"authors" gorm:"many2many:memo_authors;"`
+
+	// This field is used to make sure response always contains authors
+	AuthorMemoUsernames []string `json:"-" gorm:"-"`
 }
 
 func (MemoLog) BeforeCreate(db *gorm.DB) error {

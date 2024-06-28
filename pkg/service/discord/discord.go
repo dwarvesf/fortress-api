@@ -665,21 +665,21 @@ func (d *discordClient) SendNewMemoMessage(guildID string, memos []model.MemoLog
 			var textMessage string
 
 			authorField := ""
-			avatar := ""
 			for _, author := range content.Authors {
-				if avatar == "" {
-					discordMember, err := d.session.GuildMember(guildID, content.Authors[0].DiscordID)
-					if err != nil {
-						return nil, err
-					}
-
-					avatar = fmt.Sprintf("https://cdn.discordapp.com/avatars/%v/%v.webp?size=240", discordMember.User.ID, discordMember.User.Avatar)
-					if discordMember.Avatar != "" {
-						avatar = fmt.Sprintf("https://cdn.discordapp.com/guilds/%v/users/%v/avatars/%v.webp?size=240", guildID, discordMember.User.ID, discordMember.Avatar)
-					}
+				if author.DiscordID != "" {
+					authorField += fmt.Sprintf(" <@%s> ", author.DiscordID)
+				} else if author.DiscordUsername != "" {
+					authorField += fmt.Sprintf(" @%s ", author.DiscordUsername)
+				} else {
+					authorField += " **@unknown-user**"
 				}
+			}
 
-				authorField += fmt.Sprintf(" <@%s> ", author.DiscordID)
+			// Use memo username if discord username is not available
+			if authorField == "" {
+				for _, author := range content.AuthorMemoUsernames {
+					authorField += fmt.Sprintf(" **%s** ", author)
+				}
 			}
 
 			author := ""

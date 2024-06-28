@@ -12,4 +12,5 @@ type IStore interface {
 	Create(db *gorm.DB, b []model.MemoLog) ([]model.MemoLog, error)
 	GetLimitByTimeRange(db *gorm.DB, start, end *time.Time, limit int) ([]model.MemoLog, error)
 	List(db *gorm.DB, filter ListFilter) ([]model.MemoLog, error)
+	Latest(db *gorm.DB) (model.MemoLog, error)
 }
