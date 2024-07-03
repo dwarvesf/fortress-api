@@ -31,6 +31,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/service/mochipay"
 	"github.com/dwarvesf/fortress-api/pkg/service/mochiprofile"
 	"github.com/dwarvesf/fortress-api/pkg/service/notion"
+	"github.com/dwarvesf/fortress-api/pkg/service/reddit"
 	"github.com/dwarvesf/fortress-api/pkg/service/sendgrid"
 	"github.com/dwarvesf/fortress-api/pkg/service/tono"
 	"github.com/dwarvesf/fortress-api/pkg/service/wise"
@@ -60,6 +61,7 @@ type Service struct {
 	IcySwap       icyswap.IService
 	CommunityNft  communitynft.IService
 	Tono          tono.IService
+	Reddit        reddit.IService
 }
 
 func New(cfg *config.Config, store *store.Store, repo store.DBRepo) *Service {
@@ -156,6 +158,11 @@ func New(cfg *config.Config, store *store.Store, repo store.DBRepo) *Service {
 		logger.L.Error(err, "failed to init community nft service")
 	}
 
+	reddit, err := reddit.New()
+	if err != nil {
+		logger.L.Error(err, "failed to init reddit service")
+	}
+
 	return &Service{
 		Basecamp:      basecamp.New(store, repo, cfg, &bc, logger.L),
 		Cache:         cch,
@@ -179,5 +186,6 @@ func New(cfg *config.Config, store *store.Store, repo store.DBRepo) *Service {
 		IcySwap:       icySwap,
 		CommunityNft:  communityNft,
 		Tono:          tono.New(cfg, logger.L),
+		Reddit:        reddit,
 	}
 }

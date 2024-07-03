@@ -13,6 +13,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/controller/icy"
 	"github.com/dwarvesf/fortress-api/pkg/controller/invoice"
 	"github.com/dwarvesf/fortress-api/pkg/controller/memologs"
+	"github.com/dwarvesf/fortress-api/pkg/controller/reddit"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/store"
@@ -31,6 +32,7 @@ type Controller struct {
 	Icy            icy.IController
 	MemoLog        memologs.IController
 	CommunityNft   communitynft.IController
+	Reddit         reddit.IController
 }
 
 func New(store *store.Store, repo store.DBRepo, service *service.Service, worker *worker.Worker, logger logger.Logger, cfg *config.Config) *Controller {
@@ -46,5 +48,6 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, worker
 		Icy:            icy.New(service, logger, cfg),
 		MemoLog:        memologs.New(store, repo, service, logger, cfg),
 		CommunityNft:   communitynft.New(store, repo, service, logger, cfg),
+		Reddit:         reddit.New(store, service, logger, cfg),
 	}
 }
