@@ -12,6 +12,7 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/shopspring/decimal"
+	"github.com/vartanbeno/go-reddit/v2/reddit"
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/model"
@@ -28,6 +29,7 @@ const (
 	memoCategoryFleeting   = "00_fleeting"
 	memoCategoryLiterature = "01_literature"
 	memoCategoryOthers     = "others"
+	discordEmbedMaxLen     = 4096
 )
 
 type discordClient struct {
@@ -770,7 +772,7 @@ func (d *discordClient) SendWeeklyMemosMessage(guildID string, memos []model.Mem
 				authorField = "**@unknown-user**"
 			}
 
-			memolistString.WriteString(fmt.Sprintf("[[%v](%s)] %s - %v \n", idx+1, mem.URL, mem.Title, authorField))
+			memolistString.WriteString(fmt.Sprintf("[[%v](%s)] %s - %v\n", idx+1, mem.URL, mem.Title, authorField))
 		}
 
 		memolistString.WriteString("\n")
@@ -804,4 +806,66 @@ func (d *discordClient) GetChannelMessages(channelID string, limit int) ([]*disc
 
 func (d *discordClient) GetEventByID(eventID string) (*discordgo.GuildScheduledEvent, error) {
 	return d.session.GuildScheduledEvent(d.cfg.Discord.IDs.DwarvesGuild, eventID, false)
+}
+
+// SendGolangNewsMessage sends golang news message to discord
+func (d *discordClient) SendGolangNewsMessage(channelID string, emerging, popular []reddit.Post) error {
+	content := make([]string, 0)
+
+	title := "<:golang:811989243080474664> **Reddit Go BUZZ** <:golang:811989243080474664>"
+
+	if len(popular) > 0 {
+		content = append(content, "<:pepestonk:850050324135673937> **POPULAR**")
+		for i, post := range popular {
+			content = append(content, fmt.Sprintf("[[%v](%s)] %s - 💬 %v", i+1, "https://www.reddit.com"+post.Permalink, post.Title, post.NumberOfComments))
+		}
+	}
+
+	content = append(content, "[See more...](https://www.reddit.com/r/golang/rising/)")
+
+	// Separate popular and emerging
+	content = append(content, "")
+
+	if len(emerging) > 0 {
+		content = append(content, "<:aww:819507963236057099> **EMERGING**")
+		for i, post := range emerging {
+			content = append(content, fmt.Sprintf("[[%v](%s)] %s - %s", i+1, "https://www.reddit.com"+post.Permalink, post.Title, timeAgo(post.Created.Time)))
+		}
+	}
+
+	content = append(content, "[See more...](https://www.reddit.com/r/golang/new/)")
+
+	msg := &discordgo.MessageEmbed{
+		Title:       title,
+		Description: strings.Join(content, "\n"),
+	}
+
+	_, err := d.SendEmbeddedMessageWithChannel(nil, msg, channelID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// timeAgo converts a time to a string representation of how long ago it was.
+func timeAgo(t time.Time) string {
+	now := time.Now()
+	duration := now.Sub(t)
+
+	if duration.Hours() >= 1 {
+		hours := int(duration.Hours())
+		return fmt.Sprintf("%d hour%s ago", hours, pluralize(hours))
+	} else {
+		minutes := int(duration.Minutes())
+		return fmt.Sprintf("%d minute%s ago", minutes, pluralize(minutes))
+	}
+}
+
+// Helper function to add 's' for pluralization.
+func pluralize(count int) string {
+	if count != 1 {
+		return "s"
+	}
+	return ""
 }

@@ -1,6 +1,7 @@
 package discord
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"math/rand"
@@ -638,4 +639,13 @@ func (h *handler) SetScheduledEventSpeakers(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToDiscordEvent(*event), nil, nil, nil, ""))
+}
+
+// PostGolangNews fetches Golang news from social platform and post to golang channel
+func (h *handler) PostGolangNews(c *gin.Context) {
+	if err := h.controller.Reddit.SyncGolangNews(context.Background()); err != nil {
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))
 }
