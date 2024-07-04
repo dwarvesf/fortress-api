@@ -7,9 +7,11 @@ import (
 	"strings"
 	"time"
 
+	"gorm.io/gorm"
+
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
-	"gorm.io/gorm"
+	"github.com/dwarvesf/fortress-api/pkg/store/memolog"
 )
 
 const (
@@ -22,10 +24,18 @@ func (c *controller) Sync() ([]model.MemoLog, error) {
 		"method":     "Sync",
 	})
 
-	latestMemo, err := c.store.MemoLog.Latest(c.repo.DB())
+	last7days := time.Now().AddDate(0, 0, -7)
+	latestMemos, err := c.store.MemoLog.List(c.repo.DB(), memolog.ListFilter{
+		From: &last7days,
+	})
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		l.Errorf(err, "failed to get latest memo")
 		return nil, err
+	}
+
+	latestMemosMap := make(map[string]model.MemoLog)
+	for _, memo := range latestMemos {
+		latestMemosMap[memo.URL] = memo
 	}
 
 	resp, err := http.Get(dfMemoRssURL)
@@ -41,7 +51,8 @@ func (c *controller) Sync() ([]model.MemoLog, error) {
 	currentElem := ""
 	item := Item{}
 	newMemos := make([]model.MemoLog, 0)
-	for latestMemo.Title != item.Title || item.Title == "" {
+	stop := false
+	for !stop {
 		token, err := decoder.Token()
 		if err != nil {
 			break
@@ -58,11 +69,16 @@ func (c *controller) Sync() ([]model.MemoLog, error) {
 			if se.Name.Local == "item" {
 				inItem = false
 
-				if latestMemo.Title == item.Title {
-					break
+				if _, ok := latestMemosMap[item.Link]; ok {
+					continue
 				}
 
 				pubDate, _ := time.Parse(time.RFC1123Z, item.PubDate)
+				if pubDate.Before(last7days) {
+					stop = true
+					break
+				}
+
 				authorUsernames := make([]string, 0)
 				for _, s := range strings.Split(strings.TrimSpace(item.Author), ",") {
 					if s != "" {
