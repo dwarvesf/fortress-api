@@ -42,6 +42,7 @@ require (
 	github.com/swaggo/gin-swagger v1.6.0
 	github.com/swaggo/swag v1.16.1
 	github.com/thoas/go-funk v0.9.3
+	github.com/vartanbeno/go-reddit/v2 v2.0.1
 	golang.org/x/crypto v0.16.0
 	golang.org/x/exp v0.0.0-20231110203233-9a3e6036ecaa
 	golang.org/x/oauth2 v0.10.0
