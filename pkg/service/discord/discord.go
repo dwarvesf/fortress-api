@@ -22,12 +22,13 @@ import (
 
 var (
 	client           = http.DefaultClient
-	memoCategoryList = []string{memoCategoryFleeting, memoCategoryLiterature, memoCategoryOthers}
+	memoCategoryList = []string{memoCategoryFleeting, memoCategoryLiterature, memoCategoryEarn, memoCategoryOthers}
 )
 
 const (
 	memoCategoryFleeting   = "00_fleeting"
 	memoCategoryLiterature = "01_literature"
+	memoCategoryEarn       = "earn"
 	memoCategoryOthers     = "others"
 	discordEmbedMaxLen     = 4096
 )
@@ -730,13 +731,16 @@ func (d *discordClient) SendWeeklyMemosMessage(guildID string, memos []model.Mem
 	memosByCategory := map[string][]model.MemoLog{
 		memoCategoryFleeting:   make([]model.MemoLog, 0),
 		memoCategoryLiterature: make([]model.MemoLog, 0),
+		memoCategoryEarn:       make([]model.MemoLog, 0),
 		memoCategoryOthers:     make([]model.MemoLog, 0),
 	}
 
 	for _, mem := range memos {
 		isMapped := false
 		for _, category := range mem.Category {
-			if strings.EqualFold(category, memoCategoryFleeting) || strings.EqualFold(category, memoCategoryLiterature) {
+			if strings.EqualFold(category, memoCategoryFleeting) ||
+				strings.EqualFold(category, memoCategoryLiterature) ||
+				strings.EqualFold(category, memoCategoryEarn) {
 				memosByCategory[category] = append(memosByCategory[category], mem)
 				isMapped = true
 				break
