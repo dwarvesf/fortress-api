@@ -125,6 +125,10 @@ func (c *controller) Sync() ([]model.MemoLog, error) {
 		}
 	}
 
+	if len(newMemos) == 0 {
+		return nil, nil
+	}
+
 	// Create new memos
 	results, err := c.store.MemoLog.Create(c.repo.DB(), newMemos)
 	if err != nil {
