@@ -30,6 +30,7 @@ type Config struct {
 	Tono          Tono
 	ImprovMX      ImprovMX
 	CommunityNft  CommunityNft
+	Reddit        Reddit
 
 	Invoice  Invoice
 	Sendgrid Sendgrid
@@ -181,6 +182,13 @@ type ENV interface {
 	GetString(string) string
 }
 
+type Reddit struct {
+	ClientID     string
+	ClientSecret string
+	Username     string
+	Password     string
+}
+
 func Generate(v ENV) *Config {
 	return &Config{
 		Debug:        v.GetBool("DEBUG"),
@@ -299,6 +307,12 @@ func Generate(v ENV) *Config {
 		},
 		CommunityNft: CommunityNft{
 			ContractAddress: v.GetString("COMMUNITY_NFT_CONTRACT_ADDRESS"),
+		},
+		Reddit: Reddit{
+			ClientID:     v.GetString("REDDIT_CLIENT_ID"),
+			ClientSecret: v.GetString("REDDIT_CLIENT_SECRET"),
+			Username:     v.GetString("REDDIT_USERNAME"),
+			Password:     v.GetString("REDDIT_PASSWORD"),
 		},
 	}
 }
