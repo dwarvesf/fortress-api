@@ -158,7 +158,7 @@ func New(cfg *config.Config, store *store.Store, repo store.DBRepo) *Service {
 		logger.L.Error(err, "failed to init community nft service")
 	}
 
-	reddit, err := reddit.New()
+	reddit, err := reddit.New(cfg, logger.L)
 	if err != nil {
 		logger.L.Error(err, "failed to init reddit service")
 	}
