@@ -119,3 +119,22 @@ func (s githubService) RetrieveUsernameByID(ctx context.Context, id int64) (stri
 
 	return user.GetLogin(), nil
 }
+
+func (s githubService) FetchOpenPullRequest(ctx context.Context, repo string) (prs []*github.PullRequest, err error) {
+	opts := &github.PullRequestListOptions{
+		State:     "open",
+		Sort:      "created",
+		Direction: "desc",
+		ListOptions: github.ListOptions{
+			Page:    0,
+			PerPage: 15,
+		},
+	}
+	prs, _, err = s.Client.PullRequests.List(ctx, dwarvesFoundationOrg, repo, opts)
+	if err != nil {
+		s.log.Errorf(err, "[FetchOpenPullRequest] fail to fetch pull request", "repo", repo)
+		return prs, err
+	}
+
+	return prs, nil
+}
