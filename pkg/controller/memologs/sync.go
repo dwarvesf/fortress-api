@@ -73,6 +73,11 @@ func (c *controller) Sync() ([]model.MemoLog, error) {
 					continue
 				}
 
+				// Ignore folder is built as an item
+				if item.Description == "" && item.Author == "" {
+					continue
+				}
+
 				pubDate, _ := time.Parse(time.RFC1123Z, item.PubDate)
 				if pubDate.Before(last7days) {
 					stop = true
