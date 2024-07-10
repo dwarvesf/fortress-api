@@ -5,10 +5,10 @@ import (
 )
 
 type MemoPullRequest struct {
-	Number         int
-	Title          string
-	DiscordId      string
-	GithubUserName string
-	Url            string
-	Timestamp      time.Time
+	Number         int       `json:"number"`
+	Title          string    `json:"title"`
+	DiscordId      string    `json:"discord_id"`
+	GithubUserName string    `json:"github_user_name"`
+	Url            string    `json:"url"`
+	Timestamp      time.Time `json:"timestamp"`
 }
