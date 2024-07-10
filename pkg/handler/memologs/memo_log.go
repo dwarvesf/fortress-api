@@ -216,3 +216,21 @@ func (h *handler) Sync(c *gin.Context) {
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToMemoLog(results), nil, nil, nil, "ok"))
 }
+
+func (h *handler) ListOpenPullRequest(c *gin.Context) {
+	l := h.logger.Fields(
+		logger.Fields{
+			"handler": "memologs",
+			"method":  "ListOpenPullRequest",
+		},
+	)
+
+	memoprs, err := h.controller.MemoLog.ListOpenPullRequest()
+	if err != nil {
+		l.Error(err, "failed to list open pull request")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](memoprs, nil, nil, nil, "ok"))
+}
