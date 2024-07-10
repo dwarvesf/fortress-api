@@ -342,6 +342,7 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 		memoGroup.POST("", amw.WithAuth, h.MemoLog.Create)
 		memoGroup.POST("/sync", amw.WithAuth, h.MemoLog.Sync)
 		memoGroup.GET("", amw.WithAuth, h.MemoLog.List)
+		memoGroup.GET("/prs", amw.WithAuth, h.MemoLog.ListOpenPullRequest)
 	}
 
 	// Delivery metrics

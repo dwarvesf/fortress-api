@@ -6,4 +6,5 @@ type IHandler interface {
 	Create(c *gin.Context)
 	List(c *gin.Context)
 	Sync(c *gin.Context)
+	ListOpenPullRequest(c *gin.Context)
 }
