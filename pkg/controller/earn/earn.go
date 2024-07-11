@@ -38,9 +38,9 @@ func (c *controller) ListEarn(ctx context.Context) ([]model.Earn, error) {
 
 	picDiscordIDMap := make(map[string]string)
 	for _, pic := range pics {
-		key := pic.MemoUsername
+		key := pic.DiscordUsername
 		if key == "" {
-			key = pic.DiscordUsername
+			key = pic.MemoUsername
 		}
 
 		picDiscordIDMap[key] = pic.DiscordID
