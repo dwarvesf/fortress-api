@@ -1024,6 +1024,12 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/communitynft.IHandler.GetNftMetadata-fm",
 			},
 		},
+		"/api/v1/earns": {
+			"GET": {
+				Method:  "GET",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/earn.IHandler.ListEarn-fm",
+			},
+		},
 	}
 
 	l := logger.NewLogrusLogger()
