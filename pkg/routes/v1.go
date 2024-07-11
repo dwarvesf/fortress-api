@@ -344,6 +344,11 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 		memoGroup.GET("", amw.WithAuth, h.MemoLog.List)
 	}
 
+	earnGroup := v1.Group("/earns")
+	{
+		earnGroup.GET("", amw.WithAuth, h.Earn.ListEarn)
+	}
+
 	// Delivery metrics
 	{
 		deliveryGroup := v1.Group("/delivery-metrics")

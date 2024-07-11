@@ -9,6 +9,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/controller/conversionrate"
 	"github.com/dwarvesf/fortress-api/pkg/controller/deliverymetrics"
 	"github.com/dwarvesf/fortress-api/pkg/controller/discord"
+	"github.com/dwarvesf/fortress-api/pkg/controller/earn"
 	"github.com/dwarvesf/fortress-api/pkg/controller/employee"
 	"github.com/dwarvesf/fortress-api/pkg/controller/icy"
 	"github.com/dwarvesf/fortress-api/pkg/controller/invoice"
@@ -33,6 +34,7 @@ type Controller struct {
 	MemoLog        memologs.IController
 	CommunityNft   communitynft.IController
 	Reddit         reddit.IController
+	Earn           earn.IController
 }
 
 func New(store *store.Store, repo store.DBRepo, service *service.Service, worker *worker.Worker, logger logger.Logger, cfg *config.Config) *Controller {
@@ -49,5 +51,6 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, worker
 		MemoLog:        memologs.New(store, repo, service, logger, cfg),
 		CommunityNft:   communitynft.New(store, repo, service, logger, cfg),
 		Reddit:         reddit.New(store, service, logger, cfg),
+		Earn:           earn.New(store, repo, service, logger, cfg),
 	}
 }
