@@ -1,0 +1,11 @@
+package news
+
+import (
+	"context"
+
+	"github.com/dwarvesf/fortress-api/pkg/model"
+)
+
+type IController interface {
+	FetchLobstersNews(ctx context.Context, tag string) ([]model.News, []model.News, error)
+}

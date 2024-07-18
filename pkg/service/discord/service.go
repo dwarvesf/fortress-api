@@ -2,7 +2,6 @@ package discord
 
 import (
 	"github.com/bwmarrin/discordgo"
-	"github.com/vartanbeno/go-reddit/v2/reddit"
 
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/view"
@@ -41,8 +40,6 @@ type IService interface {
 	SendMessage(discordMsg model.DiscordMessage, webhookUrl string) (*model.DiscordMessage, error)
 	SendEmbeddedMessageWithChannel(original *model.OriginalDiscordMessage, embed *discordgo.MessageEmbed, channelId string) (*discordgo.Message, error)
 	SendDiscordMessageWithChannel(ses *discordgo.Session, msg *discordgo.Message, channelId string) error
-	// SendGolangNewsMessage sends golang news message to discord
-	SendGolangNewsMessage(channelID string, emerging, popular []reddit.Post) error
 
 	ListActiveThreadsByChannelID(guildID, channelID string) ([]discordgo.Channel, error)
 }
