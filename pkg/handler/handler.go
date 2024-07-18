@@ -25,6 +25,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/handler/invoice"
 	"github.com/dwarvesf/fortress-api/pkg/handler/memologs"
 	"github.com/dwarvesf/fortress-api/pkg/handler/metadata"
+	"github.com/dwarvesf/fortress-api/pkg/handler/news"
 	"github.com/dwarvesf/fortress-api/pkg/handler/notion"
 	"github.com/dwarvesf/fortress-api/pkg/handler/payroll"
 	"github.com/dwarvesf/fortress-api/pkg/handler/profile"
@@ -69,6 +70,7 @@ type Handler struct {
 	Icy            icy.IHandler
 	CommunityNft   communitynft.IHandler
 	Earn           earn.IHandler
+	News           news.IHandler
 }
 
 func New(store *store.Store, repo store.DBRepo, service *service.Service, ctrl *controller.Controller, worker *worker.Worker, logger logger.Logger, cfg *config.Config) *Handler {
@@ -102,5 +104,6 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, ctrl *
 		Icy:            icy.New(ctrl, logger),
 		CommunityNft:   communitynft.New(ctrl, store, repo, service, logger, cfg),
 		Earn:           earn.New(ctrl, store, repo, service, logger, cfg),
+		News:           news.New(store, repo, ctrl, logger, cfg),
 	}
 }

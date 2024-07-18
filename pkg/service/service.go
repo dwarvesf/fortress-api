@@ -27,6 +27,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/service/googlestorage"
 	"github.com/dwarvesf/fortress-api/pkg/service/icyswap"
 	"github.com/dwarvesf/fortress-api/pkg/service/improvmx"
+	"github.com/dwarvesf/fortress-api/pkg/service/lobsters"
 	"github.com/dwarvesf/fortress-api/pkg/service/mochi"
 	"github.com/dwarvesf/fortress-api/pkg/service/mochipay"
 	"github.com/dwarvesf/fortress-api/pkg/service/mochiprofile"
@@ -62,6 +63,7 @@ type Service struct {
 	CommunityNft  communitynft.IService
 	Tono          tono.IService
 	Reddit        reddit.IService
+	Lobsters      lobsters.IService
 }
 
 func New(cfg *config.Config, store *store.Store, repo store.DBRepo) *Service {
@@ -187,5 +189,6 @@ func New(cfg *config.Config, store *store.Store, repo store.DBRepo) *Service {
 		CommunityNft:  communityNft,
 		Tono:          tono.New(cfg, logger.L),
 		Reddit:        reddit,
+		Lobsters:      lobsters.New(),
 	}
 }
