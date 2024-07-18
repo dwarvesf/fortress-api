@@ -1,4 +1,4 @@
-package reddit
+package news
 
 import (
 	"github.com/dwarvesf/fortress-api/pkg/config"
