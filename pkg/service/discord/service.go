@@ -25,7 +25,7 @@ type IService interface {
 
 	GetChannels() ([]*discordgo.Channel, error)
 	GetMessagesAfterCursor(channelID string, cursorMessageID string, lastMessageID string) ([]*discordgo.Message, error)
-	GetChannelMessages(channelID string, limit int) ([]*discordgo.Message, error)
+	GetChannelMessages(channelID, before, after string, limit int) ([]*discordgo.Message, error)
 	GetEventByID(eventID string) (*discordgo.GuildScheduledEvent, error)
 
 	ReportBraineryMetrics(queryView string, braineryMetric *view.BraineryMetric, channelID string) (*discordgo.Message, error)
@@ -43,4 +43,6 @@ type IService interface {
 	SendDiscordMessageWithChannel(ses *discordgo.Session, msg *discordgo.Message, channelId string) error
 	// SendGolangNewsMessage sends golang news message to discord
 	SendGolangNewsMessage(channelID string, emerging, popular []reddit.Post) error
+
+	ListActiveThreadsByChannelID(guildID, channelID string) ([]discordgo.Channel, error)
 }
