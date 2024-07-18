@@ -14,4 +14,5 @@ type IHandler interface {
 	ListScheduledEvent(c *gin.Context)
 	SetScheduledEventSpeakers(c *gin.Context)
 	PostGolangNews(c *gin.Context)
+	ListDiscordResearchTopics(c *gin.Context)
 }

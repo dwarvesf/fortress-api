@@ -804,8 +804,8 @@ func (d *discordClient) SendDiscordMessageWithChannel(ses *discordgo.Session, ms
 	return err
 }
 
-func (d *discordClient) GetChannelMessages(channelID string, limit int) ([]*discordgo.Message, error) {
-	return d.session.ChannelMessages(channelID, limit, "", "", "")
+func (d *discordClient) GetChannelMessages(channelID, before, after string, limit int) ([]*discordgo.Message, error) {
+	return d.session.ChannelMessages(channelID, limit, before, after, "")
 }
 
 func (d *discordClient) GetEventByID(eventID string) (*discordgo.GuildScheduledEvent, error) {
@@ -872,4 +872,20 @@ func pluralize(count int) string {
 		return "s"
 	}
 	return ""
+}
+
+func (d *discordClient) ListActiveThreadsByChannelID(guildID, channelID string) ([]discordgo.Channel, error) {
+	threadsList, err := d.session.GuildThreadsActive(guildID)
+	if err != nil {
+		return nil, err
+	}
+
+	result := make([]discordgo.Channel, 0)
+	for _, thread := range threadsList.Threads {
+		if thread.ParentID == channelID {
+			result = append(result, *thread)
+		}
+	}
+
+	return result, nil
 }

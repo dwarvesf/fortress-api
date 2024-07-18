@@ -649,3 +649,43 @@ func (h *handler) PostGolangNews(c *gin.Context) {
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))
 }
+
+// ListDiscordResearchTopics godoc
+// @Summary Get list of research topics on discord
+// @Description Get list of research topics on discord
+// @id ListDiscordResearchTopics
+// @Tags Discord
+// @Accept  json
+// @Produce  json
+// @Param page query string false "Page"
+// @Param size query string false "Size"
+// @Success 200 {object} ListResearchTopicResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /discords/research-topics [get]
+func (h *handler) ListDiscordResearchTopics(c *gin.Context) {
+	var query model.Pagination
+	if err := c.ShouldBindQuery(&query); err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, query, ""))
+		return
+	}
+	query.Standardize()
+
+	limit, offset := query.ToLimitOffset()
+
+	topics, total, err := h.controller.Discord.ListDiscordResearchTopics(context.Background(), limit, offset)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse(view.ToListResearchTopicResponse(topics),
+		&view.PaginationResponse{
+			Pagination: view.Pagination{
+				Page: query.Page,
+				Size: query.Size,
+			},
+			Total: total,
+		}, nil, nil, ""))
+}

@@ -1,7 +1,9 @@
 package discord
 
 import (
+	"context"
 	"fmt"
+	"sort"
 	"strings"
 	"time"
 
@@ -15,6 +17,7 @@ import (
 type IController interface {
 	Log(in model.LogDiscordInput) error
 	PublicAdvanceSalaryLog(in model.LogDiscordInput) error
+	ListDiscordResearchTopics(ctx context.Context, limit, offset int) ([]model.DiscordResearchTopic, int64, error)
 }
 
 type controller struct {
@@ -129,4 +132,87 @@ func (c *controller) PublicAdvanceSalaryLog(in model.LogDiscordInput) error {
 	}
 
 	return nil
+}
+
+func (c *controller) ListDiscordResearchTopics(ctx context.Context, limit, offset int) ([]model.DiscordResearchTopic, int64, error) {
+	topics, err := c.service.Discord.ListActiveThreadsByChannelID(c.config.Discord.IDs.DwarvesGuild, c.config.Discord.IDs.ResearchChannel)
+	if err != nil {
+		c.logger.Error(err, "List Research Topics failed")
+		return nil, 0, err
+	}
+
+	total := int64(len(topics))
+
+	// Apply pagination
+	if int64(offset) >= total {
+		return []model.DiscordResearchTopic{}, total, nil
+	}
+	end := offset + limit
+	if end > len(topics) {
+		end = len(topics)
+	}
+	topics = topics[offset:end]
+
+	result := make([]model.DiscordResearchTopic, 0)
+	for _, topic := range topics {
+		totalMsgCount, topUsers, err := c.topicPopularity(topic.ID)
+		if err != nil {
+			c.logger.Error(err, "List Research Topics failed")
+			return nil, 0, err
+		}
+
+		result = append(result, model.DiscordResearchTopic{
+			Name:              topic.Name,
+			URL:               fmt.Sprintf("https://discord.com/channels/%s/%s", c.config.Discord.IDs.DwarvesGuild, topic.ID),
+			MsgCount:          totalMsgCount,
+			SortedActiveUsers: topUsers,
+		})
+	}
+
+	return result, total, nil
+}
+
+func (c *controller) topicPopularity(topicID string) (int64, []model.DiscordTopicActiveUser, error) {
+	userMessageCount := make(map[string]int64)
+	var totalMessages int64
+	var beforeID string
+	limit := 100
+
+	for {
+		messages, err := c.service.Discord.GetChannelMessages(topicID, beforeID, "", limit)
+		if err != nil {
+			return 0, nil, err
+		}
+		if len(messages) == 0 {
+			break
+		}
+
+		for _, msg := range messages {
+			userMessageCount[msg.Author.ID]++
+		}
+
+		totalMessages += int64(len(messages))
+
+		if len(messages) < limit {
+			break
+		}
+
+		beforeID = messages[len(messages)-1].ID
+	}
+
+	var userCounts []model.DiscordTopicActiveUser
+	for userID, count := range userMessageCount {
+		userCounts = append(userCounts, model.DiscordTopicActiveUser{UserID: userID, MsgCount: count})
+	}
+
+	sort.Slice(userCounts, func(i, j int) bool {
+		return userCounts[i].MsgCount > userCounts[j].MsgCount
+	})
+
+	var result []model.DiscordTopicActiveUser
+	for i := 0; i < 3 && i < len(userCounts); i++ {
+		result = append(result, userCounts[i])
+	}
+
+	return totalMessages, result, nil
 }
