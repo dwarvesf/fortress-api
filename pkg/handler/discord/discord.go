@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"net/http"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -658,14 +659,24 @@ func (h *handler) SetScheduledEventSpeakers(c *gin.Context) {
 func (h *handler) ListDiscordResearchTopics(c *gin.Context) {
 	var query model.Pagination
 	if err := c.ShouldBindQuery(&query); err != nil {
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, query, ""))
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, query, "bind query failed"))
 		return
 	}
 	query.Standardize()
 
 	limit, offset := query.ToLimitOffset()
 
-	topics, total, err := h.controller.Discord.ListDiscordResearchTopics(context.Background(), limit, offset)
+	// Default by last 7 days, 0 is get all
+	inputDays := c.Query("days")
+	if inputDays == "" {
+		inputDays = "7"
+	}
+	days, err := strconv.Atoi(inputDays)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, query, "invalid days query"))
+	}
+
+	topics, total, err := h.controller.Discord.ListDiscordResearchTopics(context.Background(), days, limit, offset)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
