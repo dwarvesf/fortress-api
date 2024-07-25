@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
@@ -17,7 +18,7 @@ import (
 type IController interface {
 	Log(in model.LogDiscordInput) error
 	PublicAdvanceSalaryLog(in model.LogDiscordInput) error
-	ListDiscordResearchTopics(ctx context.Context, limit, offset int) ([]model.DiscordResearchTopic, int64, error)
+	ListDiscordResearchTopics(ctx context.Context, days, limit, offset int) ([]model.DiscordResearchTopic, int64, error)
 }
 
 type controller struct {
@@ -134,64 +135,119 @@ func (c *controller) PublicAdvanceSalaryLog(in model.LogDiscordInput) error {
 	return nil
 }
 
-func (c *controller) ListDiscordResearchTopics(ctx context.Context, limit, offset int) ([]model.DiscordResearchTopic, int64, error) {
+func (c *controller) ListDiscordResearchTopics(ctx context.Context, days, limit, offset int) ([]model.DiscordResearchTopic, int64, error) {
 	topics, err := c.service.Discord.ListActiveThreadsByChannelID(c.config.Discord.IDs.DwarvesGuild, c.config.Discord.IDs.ResearchChannel)
 	if err != nil {
-		c.logger.Error(err, "List Research Topics failed")
+		c.logger.Error(err, "Fetch list research topics failed")
 		return nil, 0, err
 	}
 
-	total := int64(len(topics))
+	type result struct {
+		topic model.DiscordResearchTopic
+		err   error
+	}
+
+	topicCh := make(chan string, len(topics))
+	resultCh := make(chan result, len(topics))
+	workers := 5
+
+	var wg sync.WaitGroup
+	for i := 0; i < workers; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for topicID := range topicCh {
+				totalMsgCount, topUsers, lastActiveTime, err := c.topicPopularity(topicID, days)
+				if err != nil {
+					c.logger.Error(err, "Build research topic model failed")
+					resultCh <- result{err: err}
+					continue
+				}
+				if totalMsgCount == 0 {
+					continue
+				}
+
+				resultCh <- result{
+					topic: model.DiscordResearchTopic{
+						Name:              topicID, // Assume topic.Name is topicID for this example
+						URL:               fmt.Sprintf("https://discord.com/channels/%s/%s", c.config.Discord.IDs.DwarvesGuild, topicID),
+						MsgCount:          totalMsgCount,
+						SortedActiveUsers: topUsers,
+						LastActiveTime:    lastActiveTime,
+					},
+				}
+			}
+		}()
+	}
+
+	for _, topic := range topics {
+		topicCh <- topic.ID
+	}
+	close(topicCh)
+
+	go func() {
+		wg.Wait()
+		close(resultCh)
+	}()
+
+	finalResults := make([]model.DiscordResearchTopic, 0)
+	for res := range resultCh {
+		if res.err != nil {
+			return nil, 0, res.err
+		}
+		finalResults = append(finalResults, res.topic)
+	}
+
+	sort.Slice(finalResults, func(i, j int) bool {
+		return finalResults[i].MsgCount > finalResults[j].MsgCount
+	})
+
+	total := int64(len(finalResults))
 
 	// Apply pagination
 	if int64(offset) >= total {
 		return []model.DiscordResearchTopic{}, total, nil
 	}
 	end := offset + limit
-	if end > len(topics) {
-		end = len(topics)
-	}
-	topics = topics[offset:end]
-
-	result := make([]model.DiscordResearchTopic, 0)
-	for _, topic := range topics {
-		totalMsgCount, topUsers, err := c.topicPopularity(topic.ID)
-		if err != nil {
-			c.logger.Error(err, "List Research Topics failed")
-			return nil, 0, err
-		}
-
-		result = append(result, model.DiscordResearchTopic{
-			Name:              topic.Name,
-			URL:               fmt.Sprintf("https://discord.com/channels/%s/%s", c.config.Discord.IDs.DwarvesGuild, topic.ID),
-			MsgCount:          totalMsgCount,
-			SortedActiveUsers: topUsers,
-		})
+	if end > len(finalResults) {
+		end = len(finalResults)
 	}
 
-	return result, total, nil
+	finalResults = finalResults[offset:end]
+
+	return finalResults, total, nil
 }
 
-func (c *controller) topicPopularity(topicID string) (int64, []model.DiscordTopicActiveUser, error) {
-	userMessageCount := make(map[string]int64)
+func (c *controller) topicPopularity(topicID string, days int) (int64, []model.DiscordTopicActiveUser, time.Time, error) {
 	var totalMessages int64
 	var beforeID string
+	var lastActiveTime time.Time
+
+	lastNDays := time.Now().AddDate(0, 0, -days)
+	userMessageCount := make(map[string]int64)
 	limit := 100
 
 	for {
 		messages, err := c.service.Discord.GetChannelMessages(topicID, beforeID, "", limit)
 		if err != nil {
-			return 0, nil, err
+			return 0, nil, time.Now(), err
 		}
 		if len(messages) == 0 {
 			break
 		}
 
-		for _, msg := range messages {
-			userMessageCount[msg.Author.ID]++
+		if beforeID == "" {
+			lastActiveTime = messages[0].Timestamp
 		}
 
-		totalMessages += int64(len(messages))
+		for _, msg := range messages {
+			if days != 0 && msg.Timestamp.Before(lastNDays) {
+				break
+			}
+
+			userMessageCount[msg.Author.ID]++
+			totalMessages++
+		}
 
 		if len(messages) < limit {
 			break
@@ -214,5 +270,5 @@ func (c *controller) topicPopularity(topicID string) (int64, []model.DiscordTopi
 		result = append(result, userCounts[i])
 	}
 
-	return totalMessages, result, nil
+	return totalMessages, result, lastActiveTime, nil
 }
