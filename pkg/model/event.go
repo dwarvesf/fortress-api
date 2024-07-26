@@ -10,6 +10,7 @@ type Event struct {
 	Name             string                    `json:"name"`
 	Description      string                    `json:"description"`
 	Date             time.Time                 `json:"date"`
+	Image            string                    `json:"image" gorm:"-"`
 	DiscordEventID   string                    `json:"discord_event_id"`
 	DiscordChannelID string                    `json:"discord_channel_id"`
 	DiscordMessageID string                    `json:"discord_message_id"`
