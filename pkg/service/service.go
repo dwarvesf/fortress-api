@@ -9,6 +9,7 @@ import (
 	admin "google.golang.org/api/admin/directory/v1"
 	"google.golang.org/api/gmail/v1"
 	"google.golang.org/api/sheets/v4"
+	"google.golang.org/api/youtube/v3"
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
@@ -36,6 +37,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/service/sendgrid"
 	"github.com/dwarvesf/fortress-api/pkg/service/tono"
 	"github.com/dwarvesf/fortress-api/pkg/service/wise"
+	yt "github.com/dwarvesf/fortress-api/pkg/service/youtube"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 )
 
@@ -64,6 +66,7 @@ type Service struct {
 	Tono          tono.IService
 	Reddit        reddit.IService
 	Lobsters      lobsters.IService
+	Youtube       yt.IService
 }
 
 func New(cfg *config.Config, store *store.Store, repo store.DBRepo) *Service {
@@ -120,6 +123,13 @@ func New(cfg *config.Config, store *store.Store, repo store.DBRepo) *Service {
 		mailConfig,
 		cfg,
 	)
+
+	youtubeSvc := yt.New(&oauth2.Config{
+		ClientID:     cfg.Youtube.ClientID,
+		ClientSecret: cfg.Youtube.ClientSecret,
+		Endpoint:     google.Endpoint,
+		Scopes:       []string{youtube.YoutubeForceSslScope},
+	}, cfg)
 
 	gSheetConfig := &oauth2.Config{
 		ClientID:     cfg.Google.ClientID,
@@ -190,5 +200,6 @@ func New(cfg *config.Config, store *store.Store, repo store.DBRepo) *Service {
 		Tono:          tono.New(cfg, logger.L),
 		Reddit:        reddit,
 		Lobsters:      lobsters.New(),
+		Youtube:       youtubeSvc,
 	}
 }

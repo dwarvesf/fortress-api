@@ -31,6 +31,7 @@ type Config struct {
 	ImprovMX      ImprovMX
 	CommunityNft  CommunityNft
 	Reddit        Reddit
+	Youtube       Youtube
 
 	Invoice  Invoice
 	Sendgrid Sendgrid
@@ -71,6 +72,12 @@ type Google struct {
 	AccountingEmailID            string
 	TeamGoogleRefreshToken       string
 	TeamEmailID                  string
+}
+
+type Youtube struct {
+	ClientSecret string
+	ClientID     string
+	RefreshToken string
 }
 
 type Wise struct {
@@ -227,6 +234,11 @@ func Generate(v ENV) *Config {
 			GCSProjectID:                 v.GetString("GCS_PROJECT_ID"),
 			TeamEmailID:                  v.GetString("TEAM_EMAIL_ID"),
 			TeamGoogleRefreshToken:       v.GetString("TEAM_GOOGLE_REFRESH_TOKEN"),
+		},
+		Youtube: Youtube{
+			ClientID:     v.GetString("YOUTUBE_API_CLIENT_ID"),
+			ClientSecret: v.GetString("YOUTUBE_API_CLIENT_SECRET"),
+			RefreshToken: v.GetString("YOUTUBE_REFRESH_TOKEN"),
 		},
 
 		Wise: Wise{
