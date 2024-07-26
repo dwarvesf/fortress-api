@@ -467,7 +467,7 @@ func (h *handler) CreateScheduledEvent(c *gin.Context) {
 	}
 
 	// create event
-	_, err = h.store.DiscordEvent.Create(h.repo.DB(), &model.Event{
+	e := &model.Event{
 		DiscordEventID:   in.ID,
 		DiscordChannelID: in.DiscordChannelID,
 		DiscordCreatorID: in.DiscordCreatorID,
@@ -475,11 +475,22 @@ func (h *handler) CreateScheduledEvent(c *gin.Context) {
 		Description:      in.Description,
 		Date:             in.Date,
 		EventType:        evtType,
-	})
+	}
+	_, err = h.store.DiscordEvent.Create(h.repo.DB(), e)
 	if err != nil {
 		h.logger.Error(err, "failed to create event")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
+	}
+
+	// create youtube broadcast
+	if evtType == model.DiscordScheduledEventTypeOGIF {
+		err = h.service.Youtube.CreateBroadcast(e)
+		if err != nil {
+			h.logger.Error(err, "failed to create youtube broadcast")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+			return
+		}
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))
