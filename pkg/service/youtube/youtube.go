@@ -106,6 +106,10 @@ func (yt *youtubeService) insertBroadcast(e *model.Event, startTime time.Time) e
 		return err
 	}
 
+	if e.Image == "" {
+		return nil
+	}
+
 	// download by url and open the image file
 	imgPath := fmt.Sprintf("/tmp/%v.png", e.Image)
 	err = yt.downloadImage(fmt.Sprintf("https://cdn.discordapp.com/guild-events/%v/%v.png?size=4096", e.DiscordEventID, e.Image), imgPath)
