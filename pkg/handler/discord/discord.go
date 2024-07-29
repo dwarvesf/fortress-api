@@ -475,6 +475,7 @@ func (h *handler) CreateScheduledEvent(c *gin.Context) {
 		Description:      in.Description,
 		Date:             in.Date,
 		EventType:        evtType,
+		Image:            in.Image,
 	}
 	_, err = h.store.DiscordEvent.Create(h.repo.DB(), e)
 	if err != nil {

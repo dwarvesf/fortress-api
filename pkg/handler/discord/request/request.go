@@ -48,6 +48,7 @@ type DiscordEventInput struct {
 	Name             string    `json:"name"`
 	Description      string    `json:"description"`
 	Date             time.Time `json:"date"`
+	Image            string    `json:"image"`
 	DiscordEventID   string    `json:"discord_event_id"`
 	DiscordChannelID string    `json:"discord_channel_id"`
 	DiscordCreatorID string    `json:"discord_creator_id"`
