@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	repoMemos            = []string{"brainery", "brain", "playbook"}
+	repoMemos            = []string{"brainery", "playground", "playbook"}
 	dwarvesFoundationOrg = "dwarvesf"
 )
 
