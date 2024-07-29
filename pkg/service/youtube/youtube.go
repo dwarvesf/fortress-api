@@ -3,6 +3,10 @@ package youtube
 import (
 	"context"
 	"errors"
+	"fmt"
+	"io"
+	"net/http"
+	"os"
 	"time"
 
 	"golang.org/x/oauth2"
@@ -82,7 +86,46 @@ func (yt *youtubeService) CreateBroadcast(e *model.Event) (err error) {
 	}
 
 	// Insert broadcast
-	_, err = yt.insertBroadcast(e.Name, e.Description, t)
+	return yt.insertBroadcast(e, t)
+}
+
+func (yt *youtubeService) insertBroadcast(e *model.Event, startTime time.Time) error {
+	liveBroadcast := &youtube.LiveBroadcast{
+		Snippet: &youtube.LiveBroadcastSnippet{
+			Title:              e.Name,
+			Description:        e.Description,
+			ScheduledStartTime: startTime.Format(time.RFC3339),
+		},
+		Status: &youtube.LiveBroadcastStatus{
+			PrivacyStatus: "unlisted",
+		},
+	}
+
+	lbc, err := yt.service.LiveBroadcasts.Insert([]string{"snippet", "status"}, liveBroadcast).Do()
+	if err != nil {
+		return err
+	}
+
+	if e.Image == "" {
+		return nil
+	}
+
+	// download by url and open the image file
+	imgPath := fmt.Sprintf("/tmp/%v.png", e.Image)
+	err = yt.downloadImage(fmt.Sprintf("https://cdn.discordapp.com/guild-events/%v/%v.png?size=4096", e.DiscordEventID, e.Image), imgPath)
+	if err != nil {
+		return err
+	}
+
+	// Upload a thumbnail
+	file, err := os.Open(imgPath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	thumbnailCall := yt.service.Thumbnails.Set(lbc.Id)
+	_, err = thumbnailCall.Media(file).Do()
 	if err != nil {
 		return err
 	}
@@ -90,16 +133,26 @@ func (yt *youtubeService) CreateBroadcast(e *model.Event) (err error) {
 	return nil
 }
 
-func (yt *youtubeService) insertBroadcast(title string, description string, startTime time.Time) (*youtube.LiveBroadcast, error) {
-	liveBroadcast := &youtube.LiveBroadcast{
-		Snippet: &youtube.LiveBroadcastSnippet{
-			Title:              title,
-			Description:        description,
-			ScheduledStartTime: startTime.Format(time.RFC3339),
-		},
-		Status: &youtube.LiveBroadcastStatus{
-			PrivacyStatus: "unlisted",
-		},
+func (yt *youtubeService) downloadImage(url, filepath string) error {
+	// Get the data
+	resp, err := http.Get(url)
+	if err != nil {
+		return fmt.Errorf("error downloading image: %w", err)
 	}
-	return yt.service.LiveBroadcasts.Insert([]string{"snippet", "status"}, liveBroadcast).Do()
+	defer resp.Body.Close()
+
+	// Create the file
+	out, err := os.Create(filepath)
+	if err != nil {
+		return fmt.Errorf("error creating file: %w", err)
+	}
+	defer out.Close()
+
+	// Write the body to file
+	_, err = io.Copy(out, resp.Body)
+	if err != nil {
+		return fmt.Errorf("error saving image: %w", err)
+	}
+
+	return nil
 }
