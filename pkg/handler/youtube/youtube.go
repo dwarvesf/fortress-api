@@ -77,7 +77,11 @@ func (h *handler) TranscribeBroadcast(c *gin.Context) {
 	// walk through the directory to get the latest file
 	// if the file is not exist, create the first file
 	if _, err := os.Stat(path); os.IsNotExist(err) {
-		os.MkdirAll(path, os.ModePerm)
+		if err := os.MkdirAll(path, os.ModePerm); err != nil {
+			h.logger.Error(err, "failed to create directory")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+			return
+		}
 	} else {
 		files, err := os.ReadDir(path)
 		if err != nil {
