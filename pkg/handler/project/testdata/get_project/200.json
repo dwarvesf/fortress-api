@@ -25,7 +25,20 @@
             "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
             "id": "afb9cf05-9517-4fb9-a4f2-66e6d90ad215",
             "name": "Lorem Ipsum Inc.",
-            "registrationNumber": "32320398488"
+            "registrationNumber": "32320398488",
+            "address": "Hado Centrosa",
+            "contacts": [
+                {
+                    "id": "0569e64d-3b57-454a-ab88-0482e087eb5f",
+                    "name": "Thanh Pham ",
+                    "role": "PM",
+                    "emails": [
+                        "thanh@d.foundation",
+                        "huytq@d.foundation"
+                    ],
+                    "isMainContact": false
+                }
+            ]
         },
         "clientEmail": [
             "team@d.foundation"

@@ -410,6 +410,12 @@ definitions:
     type: object
   BasicClientInfo:
     properties:
+      address:
+        type: string
+      contacts:
+        items:
+          $ref: '#/definitions/ClientContact'
+        type: array
       description:
         type: string
       id:
@@ -1191,8 +1197,9 @@ definitions:
           $ref: '#/definitions/Stack'
         type: array
       status:
+        allOf:
+        - $ref: '#/definitions/WorkingStatus'
         description: working info
-        type: string
       teamEmail:
         type: string
       updatedAt:
@@ -1308,7 +1315,7 @@ definitions:
       totalEarnsICY:
         type: string
       totalEarnsUSD:
-        type: number
+        type: string
     type: object
   EngagementDashboard:
     properties:
@@ -1596,6 +1603,11 @@ definitions:
           type: string
         type: array
     type: object
+  GetNftMetadataResponse:
+    properties:
+      data:
+        $ref: '#/definitions/NftInfo'
+    type: object
   GetQuestionResponse:
     properties:
       data:
@@ -1871,11 +1883,33 @@ definitions:
           $ref: '#/definitions/Bank'
         type: array
     type: object
+  ListEarnResponse:
+    properties:
+      earns:
+        items:
+          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.Earn'
+        type: array
+    type: object
   ListFeedbackResponse:
     properties:
       data:
         items:
           $ref: '#/definitions/Feedback'
+        type: array
+      page:
+        description: page index
+        type: integer
+      size:
+        description: page size
+        type: integer
+      total:
+        type: integer
+    type: object
+  ListResearchTopicResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/pkg_view.DiscordResearchTopic'
         type: array
       page:
         description: page index
@@ -2080,6 +2114,21 @@ definitions:
         type: string
       usdAmount:
         type: number
+    type: object
+  NftInfo:
+    properties:
+      attributes:
+        items:
+          $ref: '#/definitions/pkg_view.attribute'
+        type: array
+      background_color:
+        type: string
+      description:
+        type: string
+      image:
+        type: string
+      name:
+        type: string
     type: object
   NotionTechRadar:
     properties:
@@ -3682,6 +3731,8 @@ definitions:
         type: string
       clientID:
         type: string
+      companyInfoID:
+        type: string
       countryID:
         type: string
       deliveryRating:
@@ -3834,7 +3885,7 @@ definitions:
   UpdateWorkingStatusRequest:
     properties:
       employeeStatus:
-        type: string
+        $ref: '#/definitions/WorkingStatus'
     type: object
   UpdatedProject:
     properties:
@@ -4142,6 +4193,20 @@ definitions:
     - WorkUnitTypeManagement
     - WorkUnitTypeTraining
     - WorkUnitTypeLearning
+  WorkingStatus:
+    enum:
+    - on-boarding
+    - left
+    - probation
+    - full-time
+    - contractor
+    type: string
+    x-enum-varnames:
+    - WorkingStatusOnBoarding
+    - WorkingStatusLeft
+    - WorkingStatusProbation
+    - WorkingStatusFullTime
+    - WorkingStatusContractor
   github_com_dwarvesf_fortress-api_pkg_model.SortOrder:
     enum:
     - asc
@@ -4150,6 +4215,57 @@ definitions:
     x-enum-varnames:
     - SortOrderASC
     - SortOrderDESC
+  github_com_dwarvesf_fortress-api_pkg_view.Earn:
+    properties:
+      bounty:
+        type: string
+      function:
+        type: string
+      pics:
+        items:
+          type: string
+        type: array
+      status:
+        type: string
+      title:
+        type: string
+      url:
+        type: string
+    type: object
+  github_com_dwarvesf_fortress-api_pkg_view.GetListCompanyInfoResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/CompanyInfo'
+        type: array
+    type: object
+  pkg_view.DiscordResearchTopic:
+    properties:
+      msgCount:
+        type: integer
+      name:
+        type: string
+      sortedActiveUsers:
+        items:
+          $ref: '#/definitions/pkg_view.DiscordTopicActiveUser'
+        type: array
+      url:
+        type: string
+    type: object
+  pkg_view.DiscordTopicActiveUser:
+    properties:
+      msgCount:
+        type: integer
+      userID:
+        type: string
+    type: object
+  pkg_view.attribute:
+    properties:
+      trait_type:
+        type: string
+      value:
+        type: string
+    type: object
 info:
   contact:
     email: benjamin@d.foundation
@@ -4586,6 +4702,62 @@ paths:
       security:
       - BearerAuth: []
       summary: Update client by id
+      tags:
+      - Client
+  /community-nfts/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get metadata of a nft
+      operationId: getNftMetadata
+      parameters:
+      - description: NFT ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/GetNftMetadataResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Get metadata of a nft
+      tags:
+      - CommunityNft
+  /company-infos:
+    get:
+      consumes:
+      - application/json
+      description: Get all company info
+      operationId: get list of company info
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.GetListCompanyInfoResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get all company info
       tags:
       - Client
   /cron-jobs/store-vault-transaction:
@@ -5201,6 +5373,43 @@ paths:
       summary: List earn transactions of employee
       tags:
       - Employee
+  /discords/research-topics:
+    get:
+      consumes:
+      - application/json
+      description: Get list of research topics on discord
+      operationId: ListDiscordResearchTopics
+      parameters:
+      - description: Page
+        in: query
+        name: page
+        type: string
+      - description: Size
+        in: query
+        name: size
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ListResearchTopicResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Get list of research topics on discord
+      tags:
+      - Discord
   /discords/salary-advance-report:
     get:
       consumes:
@@ -5238,6 +5447,33 @@ paths:
       summary: List salary advance aggregated by employee
       tags:
       - Employee
+  /earn:
+    get:
+      consumes:
+      - application/json
+      description: List of earns from memo
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ListEarnResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: List of earns from memo
+      tags:
+      - Earn
   /employees:
     post:
       consumes:

@@ -1,6 +1,7 @@
 package view
 
 import (
+	"encoding/json"
 	"strings"
 	"time"
 
@@ -310,10 +311,12 @@ type ProjectData struct {
 } // @name ProjectData
 
 type BasicClientInfo struct {
-	ID                 string `json:"id"`
-	Name               string `json:"name"`
-	Description        string `json:"description"`
-	RegistrationNumber string `json:"registrationNumber"`
+	ID                 string          `json:"id"`
+	Name               string          `json:"name"`
+	Description        string          `json:"description"`
+	RegistrationNumber string          `json:"registrationNumber"`
+	Address            string          `json:"address"`
+	Contacts           []ClientContact `json:"contacts"`
 } // @name BasicClientInfo
 
 func ToBasicClientInfo(client *model.Client) *BasicClientInfo {
@@ -321,11 +324,26 @@ func ToBasicClientInfo(client *model.Client) *BasicClientInfo {
 		return nil
 	}
 
+	clientContacts := make([]ClientContact, 0, len(client.Contacts))
+	for _, contact := range client.Contacts {
+		emails := make([]string, 0)
+		_ = json.Unmarshal(contact.Emails, &emails)
+
+		clientContacts = append(clientContacts, ClientContact{
+			ID:     contact.ID.String(),
+			Name:   contact.Name,
+			Role:   contact.Role,
+			Emails: emails,
+		})
+	}
+
 	return &BasicClientInfo{
 		ID:                 client.ID.String(),
 		Name:               client.Name,
 		Description:        client.Description,
 		RegistrationNumber: client.RegistrationNumber,
+		Address:            client.Address,
+		Contacts:           clientContacts,
 	}
 }
 

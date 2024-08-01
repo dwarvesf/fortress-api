@@ -32,6 +32,7 @@ type UpdateProjectGeneralInfoRequest struct {
 	Stacks         []view.UUID `form:"stacks" json:"stacks"`
 	BankAccountID  view.UUID   `form:"bankAccountID" json:"bankAccountID"`
 	ClientID       view.UUID   `form:"clientID" json:"clientID"`
+	CompanyInfoID  view.UUID   `form:"companyInfoID" json:"companyInfoID"`
 	OrganizationID view.UUID   `form:"organizationID" json:"organizationID"`
 	AccountRating  int         `form:"accountRating" json:"accountRating" binding:"required,min=1,max=5"`
 	DeliveryRating int         `form:"deliveryRating" json:"deliveryRating" binding:"required,min=1,max=5"`
