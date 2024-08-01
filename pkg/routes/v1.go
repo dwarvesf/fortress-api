@@ -33,6 +33,7 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 		cronjob.POST("/sync-conversion-rates", amw.WithAuth, pmw.WithPerm(model.PermissionCronjobExecute), h.ConversionRate.Sync)
 		cronjob.POST("/sync-memo", amw.WithAuth, pmw.WithPerm(model.PermissionCronjobExecute), h.Discord.SyncMemo)
 		cronjob.POST("/notify-weekly-memos", amw.WithAuth, pmw.WithPerm(model.PermissionCronjobExecute), h.Discord.NotifyWeeklyMemos)
+		cronjob.POST("/transcribe-youtube-broadcast", amw.WithAuth, pmw.WithPerm(model.PermissionCronjobExecute), h.Youtube.TranscribeBroadcast)
 	}
 
 	/////////////////

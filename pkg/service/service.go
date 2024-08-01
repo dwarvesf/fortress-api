@@ -33,6 +33,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/service/mochipay"
 	"github.com/dwarvesf/fortress-api/pkg/service/mochiprofile"
 	"github.com/dwarvesf/fortress-api/pkg/service/notion"
+	"github.com/dwarvesf/fortress-api/pkg/service/ogifmemosummarizer"
 	"github.com/dwarvesf/fortress-api/pkg/service/reddit"
 	"github.com/dwarvesf/fortress-api/pkg/service/sendgrid"
 	"github.com/dwarvesf/fortress-api/pkg/service/tono"
@@ -67,6 +68,7 @@ type Service struct {
 	Reddit        reddit.IService
 	Lobsters      lobsters.IService
 	Youtube       yt.IService
+	Dify          ogifmemosummarizer.IService
 }
 
 func New(cfg *config.Config, store *store.Store, repo store.DBRepo) *Service {
@@ -175,6 +177,8 @@ func New(cfg *config.Config, store *store.Store, repo store.DBRepo) *Service {
 		logger.L.Error(err, "failed to init reddit service")
 	}
 
+	difySvc := ogifmemosummarizer.New(cfg)
+
 	return &Service{
 		Basecamp:      basecamp.New(store, repo, cfg, &bc, logger.L),
 		Cache:         cch,
@@ -201,5 +205,6 @@ func New(cfg *config.Config, store *store.Store, repo store.DBRepo) *Service {
 		Reddit:        reddit,
 		Lobsters:      lobsters.New(),
 		Youtube:       youtubeSvc,
+		Dify:          difySvc,
 	}
 }

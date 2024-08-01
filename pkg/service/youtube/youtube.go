@@ -64,14 +64,6 @@ func (yt *youtubeService) ensureToken(refreshToken string) error {
 
 // CreateBroadcast function create broadcast on youtube
 func (yt *youtubeService) CreateBroadcast(e *model.Event) (err error) {
-	if err := yt.ensureToken(yt.appConfig.Youtube.RefreshToken); err != nil {
-		return err
-	}
-
-	if err := yt.prepareService(); err != nil {
-		return err
-	}
-
 	// Load the Vietnam timezone location
 	location, err := time.LoadLocation("Asia/Ho_Chi_Minh")
 	if err != nil {
@@ -90,6 +82,14 @@ func (yt *youtubeService) CreateBroadcast(e *model.Event) (err error) {
 }
 
 func (yt *youtubeService) insertBroadcast(e *model.Event, startTime time.Time) error {
+	if err := yt.ensureToken(yt.appConfig.Youtube.RefreshToken); err != nil {
+		return err
+	}
+
+	if err := yt.prepareService(); err != nil {
+		return err
+	}
+
 	liveBroadcast := &youtube.LiveBroadcast{
 		Snippet: &youtube.LiveBroadcastSnippet{
 			Title:              e.Name,
@@ -155,4 +155,45 @@ func (yt *youtubeService) downloadImage(url, filepath string) error {
 	}
 
 	return nil
+}
+
+// get the latest broadcast
+func (yt *youtubeService) GetLatestBroadcast() (*youtube.LiveBroadcast, error) {
+	if err := yt.ensureToken(yt.appConfig.Youtube.RefreshToken); err != nil {
+		return nil, err
+	}
+
+	if err := yt.prepareService(); err != nil {
+		return nil, err
+	}
+
+	broadcasts, err := yt.listBroadcasts("completed")
+	if err != nil {
+		return nil, err
+	}
+
+	if len(broadcasts) == 0 {
+		return nil, nil
+	}
+
+	return broadcasts[0], nil
+}
+
+// listBroadcasts function list all broadcasts on youtube
+// status: all, active, completed, upcoming
+func (yt *youtubeService) listBroadcasts(status string) ([]*youtube.LiveBroadcast, error) {
+	if err := yt.ensureToken(yt.appConfig.Youtube.RefreshToken); err != nil {
+		return nil, err
+	}
+
+	if err := yt.prepareService(); err != nil {
+		return nil, err
+	}
+
+	broadcasts, err := yt.service.LiveBroadcasts.List([]string{"id", "snippet", "status"}).BroadcastStatus(status).Do()
+	if err != nil {
+		return nil, err
+	}
+
+	return broadcasts.Items, nil
 }

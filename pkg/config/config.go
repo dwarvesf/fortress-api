@@ -1,6 +1,8 @@
 package config
 
 import (
+	"strings"
+
 	"github.com/spf13/viper"
 )
 
@@ -32,6 +34,7 @@ type Config struct {
 	CommunityNft  CommunityNft
 	Reddit        Reddit
 	Youtube       Youtube
+	Dify          Dify
 
 	Invoice  Invoice
 	Sendgrid Sendgrid
@@ -78,6 +81,11 @@ type Youtube struct {
 	ClientSecret string
 	ClientID     string
 	RefreshToken string
+}
+
+type Dify struct {
+	URL   string
+	Token string
 }
 
 type Wise struct {
@@ -129,7 +137,8 @@ type Notion struct {
 }
 
 type Github struct {
-	Token string
+	Token             string
+	BraineryReviewers []string
 }
 
 type NotionDatabase struct {
@@ -219,7 +228,8 @@ func Generate(v ENV) *Config {
 			SSLMode: v.GetString("DB_SSL_MODE"),
 		},
 		Github: Github{
-			Token: v.GetString("GITHUB_ACCESS_TOKEN"),
+			Token:             v.GetString("GITHUB_ACCESS_TOKEN"),
+			BraineryReviewers: strings.Split(v.GetString("BRAINERY_REVIEWERS"), ","),
 		},
 		Google: Google{
 			AccountingEmailID:            v.GetString("ACCOUNTING_EMAIL_ID"),
@@ -327,6 +337,10 @@ func Generate(v ENV) *Config {
 			ClientSecret: v.GetString("REDDIT_CLIENT_SECRET"),
 			Username:     v.GetString("REDDIT_USERNAME"),
 			Password:     v.GetString("REDDIT_PASSWORD"),
+		},
+		Dify: Dify{
+			URL:   v.GetString("DIFY_URL"),
+			Token: v.GetString("DIFY_TOKEN"),
 		},
 	}
 }
