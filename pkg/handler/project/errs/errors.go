@@ -38,6 +38,7 @@ var (
 	ErrClientNotFound          = errors.New("client not found")
 	ErrOrganizationNotFound    = errors.New("organization not found")
 	ErrProjectNotExisted       = errors.New("project not existed")
+	ErrCompanyInfoNotFound     = errors.New("company info not found")
 
 	ErrMemberIsInactive                 = errors.New("member is inactive")
 	ErrEmployeeWorkedOnTheProject       = errors.New("employee worked on the project")

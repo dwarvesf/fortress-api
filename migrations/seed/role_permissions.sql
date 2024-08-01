@@ -179,7 +179,8 @@ INSERT INTO public.role_permissions (id, deleted_at, created_at, updated_at, rol
 ('3f8e359e-610f-430a-be64-355ae8c15161', null, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '11ccffea-2cc9-4e98-9bef-3464dfe4dec8', 'd5c1142a-86a6-4347-bdef-2ad41492b738'),
 ('d1b42bd7-32f1-4f14-8dcc-009375ae196f', null, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '11ccffea-2cc9-4e98-9bef-3464dfe4dec8', 'dfc32d81-abfa-49ce-a8f6-cdc83c8da78b'),
 ('263e57fc-f171-4a6f-a285-2b7d538ecec6', null, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '11ccffea-2cc9-4e98-9bef-3464dfe4dec8', 'f5906795-60d1-4e5f-88f2-e15f2fae2327'),
-('f949284f-5c23-40c9-bdc9-5987e5301c50', null, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '11ccffea-2cc9-4e98-9bef-3464dfe4dec8', 'ef32d604-42ec-40f8-9c34-08431d2c20d8');
+('f949284f-5c23-40c9-bdc9-5987e5301c50', null, '2022-11-11 18:35:27.069944', '2022-11-11 18:35:27.069944', '11ccffea-2cc9-4e98-9bef-3464dfe4dec8', 'ef32d604-42ec-40f8-9c34-08431d2c20d8'),
+('389e2559-ab9b-4b1f-8f29-b2ea52474479', NULL, '2023-07-26 16:35:12.475872', '2023-07-26 16:35:12.475872', '11ccffea-2cc9-4e98-9bef-3464dfe4dec8', '1991c441-39bc-4b0f-9afa-491bebb1c965');
 
 -- ADMIN
 INSERT INTO public.role_permissions (id, deleted_at, created_at, updated_at, role_id, permission_id) VALUES
@@ -278,4 +279,5 @@ INSERT INTO public.role_permissions (id, deleted_at, created_at, updated_at, rol
 ('10b6dedf-b939-4a5a-9f02-b1b0db917058', NULL, '2023-06-20 16:35:12.475872', '2023-06-20 16:35:12.475872', 'c23c1c1c-bfaf-41e6-a4d7-6ef196fd2736', 'fa85ee6a-c335-4edb-8100-6aa840a0e520'), -- braineryLogs.write
 ('1f26de44-0546-44f3-8d68-9fd437ffb369', NULL, '2023-07-19 16:35:12.475872', '2023-06-20 16:35:12.475872', 'c23c1c1c-bfaf-41e6-a4d7-6ef196fd2736', 'e5a515aa-6f4f-4ac8-8eac-490a9a358833'), -- deliveryMetrics.read
 ('bf4a2d78-da1c-447e-bd4e-a6f4a3997e4a', NULL, '2023-07-20 16:35:12.475872', '2023-07-20 16:35:12.475872', 'c23c1c1c-bfaf-41e6-a4d7-6ef196fd2736', '51a3ec4a-6bae-4f02-9d9b-89ba539346da'), -- deliveryMetrics.leaderBoard.read
-('556e5273-630a-499c-8f69-0cda68c6ebda', NULL, '2023-07-26 16:35:12.475872', '2023-07-26 16:35:12.475872', 'c23c1c1c-bfaf-41e6-a4d7-6ef196fd2736', 'fea2497c-694d-43d7-82cd-764d622a6706'); -- deliveryMetrics.leaderBoard.sync
+('556e5273-630a-499c-8f69-0cda68c6ebda', NULL, '2023-07-26 16:35:12.475872', '2023-07-26 16:35:12.475872', 'c23c1c1c-bfaf-41e6-a4d7-6ef196fd2736', 'fea2497c-694d-43d7-82cd-764d622a6706'), -- deliveryMetrics.leaderBoard.sync
+('27700990-ae6c-4a93-a9aa-5e9e71d8ac56', NULL, '2023-07-26 16:35:12.475872', '2023-07-26 16:35:12.475872', 'c23c1c1c-bfaf-41e6-a4d7-6ef196fd2736', '1991c441-39bc-4b0f-9afa-491bebb1c965');

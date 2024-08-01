@@ -6,6 +6,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/controller/brainerylogs"
 	"github.com/dwarvesf/fortress-api/pkg/controller/client"
 	"github.com/dwarvesf/fortress-api/pkg/controller/communitynft"
+	"github.com/dwarvesf/fortress-api/pkg/controller/companyinfo"
 	"github.com/dwarvesf/fortress-api/pkg/controller/conversionrate"
 	"github.com/dwarvesf/fortress-api/pkg/controller/deliverymetrics"
 	"github.com/dwarvesf/fortress-api/pkg/controller/discord"
@@ -25,6 +26,7 @@ type Controller struct {
 	Auth           auth.IController
 	BraineryLog    brainerylogs.IController
 	Client         client.IController
+	CompanyInfo    companyinfo.IController
 	ConversionRate conversionrate.IController
 	DeliveryMetric deliverymetrics.IController
 	Employee       employee.IController
@@ -42,6 +44,7 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, worker
 		Auth:           auth.New(store, repo, service, logger, cfg),
 		BraineryLog:    brainerylogs.New(store, repo, service, logger, cfg),
 		Client:         client.New(store, repo, service, logger, cfg),
+		CompanyInfo:    companyinfo.New(store, repo, service, logger, cfg),
 		ConversionRate: conversionrate.New(store, repo, service, logger, cfg),
 		DeliveryMetric: deliverymetrics.New(store, repo, service, logger, cfg),
 		Employee:       employee.New(store, repo, service, logger, cfg),
