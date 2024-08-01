@@ -140,5 +140,10 @@ func (h *handler) TranscribeBroadcast(c *gin.Context) {
 		return
 	}
 
+	// remove the directory after finish
+	if err := os.RemoveAll(gitSvc.Dest()); err != nil {
+		h.logger.Error(err, "failed to remove directory")
+	}
+
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))
 }
