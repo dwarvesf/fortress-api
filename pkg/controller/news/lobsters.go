@@ -33,10 +33,13 @@ func (c *controller) FetchLobstersNews(ctx context.Context, tag string) ([]model
 		}
 
 		normalized = append(normalized, model.News{
-			Title:      n.Title,
-			URL:        url,
-			Popularity: int64(n.Score),
-			CreatedAt:  n.CreatedAt,
+			Title:        n.Title,
+			URL:          url,
+			Popularity:   int64(n.Score),
+			CommentCount: int64(n.CommentCount),
+			Description:  n.Description,
+			Tags:         n.Tags,
+			CreatedAt:    n.CreatedAt,
 		})
 	}
 
