@@ -1787,6 +1787,21 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 		}
 	}
 
+	if !body.CompanyInfoID.IsZero() {
+		exist, err := h.store.CompanyInfo.IsExist(h.repo.DB(), body.CompanyInfoID.String())
+		if err != nil {
+			l.Error(err, "error check existence of company info")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, body, ""))
+			return
+		}
+
+		if !exist {
+			l.Error(err, "company info not found")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrCompanyInfoNotFound, body, ""))
+			return
+		}
+	}
+
 	// Check valid stack id
 	_, stacks, err := h.store.Stack.All(h.repo.DB(), "", nil)
 	if err != nil {
@@ -1821,6 +1836,7 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 		}
 
 		p.Client = client
+		p.ClientID = client.ID
 	}
 
 	// Begin transaction
@@ -1858,10 +1874,6 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 
 	if !body.BankAccountID.IsZero() {
 		p.BankAccountID = model.UUID(body.BankAccountID)
-	}
-
-	if !body.ClientID.IsZero() {
-		p.ClientID = model.UUID(body.ClientID)
 	}
 
 	projectNotion, err := h.store.ProjectNotion.OneByProjectID(tx.DB(), p.ID.String())
@@ -1906,6 +1918,7 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 		"delivery_rating",
 		"lead_rating",
 		"important_level",
+		"company_info_id",
 	)
 
 	if err != nil {

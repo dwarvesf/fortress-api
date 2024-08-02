@@ -197,6 +197,11 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 		bankGroup.GET("", pmw.WithPerm(model.PermissionBankAccountRead), h.BankAccount.List)
 	}
 
+	companyInfoGroup := v1.Group("/company-infos")
+	{
+		companyInfoGroup.GET("", pmw.WithPerm(model.PermissionCompanyInfoRead), h.CompanyInfo.List)
+	}
+
 	invoiceGroup := v1.Group("/invoices")
 	{
 		invoiceGroup.GET("", amw.WithAuth, pmw.WithPerm(model.PermissionInvoiceRead), h.Invoice.List)
@@ -409,5 +414,6 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 		publicGroup.GET("/employees", h.Employee.PublicList)
 		publicGroup.GET("/clients", h.Client.PublicList)
 		publicGroup.GET("/community-nfts/:id", h.CommunityNft.GetNftMetadata)
+		publicGroup.GET("/youtube/broadcast", h.Youtube.LatestBroadcast)
 	}
 }

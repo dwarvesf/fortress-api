@@ -19,6 +19,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/store/chapter"
 	"github.com/dwarvesf/fortress-api/pkg/store/client"
 	"github.com/dwarvesf/fortress-api/pkg/store/clientcontact"
+	"github.com/dwarvesf/fortress-api/pkg/store/companyinfo"
 	"github.com/dwarvesf/fortress-api/pkg/store/config"
 	"github.com/dwarvesf/fortress-api/pkg/store/content"
 	"github.com/dwarvesf/fortress-api/pkg/store/conversionrate"
@@ -102,6 +103,7 @@ type Store struct {
 	Chapter                 chapter.IStore
 	Client                  client.IStore
 	ClientContact           clientcontact.IStore
+	CompanyInfo             companyinfo.IStore
 	Content                 content.IStore
 	ConversionRate          conversionrate.IStore
 	Country                 country.IStore
@@ -184,6 +186,7 @@ func New() *Store {
 		Chapter:                 chapter.New(),
 		Client:                  client.New(),
 		ClientContact:           clientcontact.New(),
+		CompanyInfo:             companyinfo.New(),
 		Content:                 content.New(),
 		ConversionRate:          conversionrate.New(),
 		Country:                 country.New(),

@@ -7,6 +7,7 @@ INSERT INTO public.permissions (id, deleted_at, created_at, updated_at, name, co
 ('7fb332e7-3231-42e6-8f38-a5c8b224d84e', null, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Clients Delete', 'clients.delete'),
 ('92031f1a-b745-42cf-aac1-a067bbee08e6', null, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Clients Edit', 'clients.edit'),
 ('97a02a4d-b8fb-486d-af1a-25139014b375', null, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Clients Read', 'clients.read'),
+('1991c441-39bc-4b0f-9afa-491bebb1c965', null, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'CompanyInfo Read', 'companyInfos.read'),
 ('475d8075-aec7-4d75-aa79-dc90c9dd9edb', null, '2023-02-20 09:50:25.714604', '2023-02-20 09:50:25.714604', 'Cronjob Execute', 'cronjobs.execute'),
 ('4be48741-f8b2-4562-964e-65c081fec7a9', null, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Dashboard Create', 'dashboards.create'),
 ('d93ede75-8fd5-4f88-b119-07493b757f4b', null, '2022-11-11 18:34:14.743263', '2022-11-11 18:34:14.743263', 'Dashboard Delete', 'dashboards.delete'),

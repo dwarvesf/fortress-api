@@ -679,6 +679,92 @@ const docTemplate = `{
                 }
             }
         },
+        "/community-nfts/{id}": {
+            "get": {
+                "description": "Get metadata of a nft",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CommunityNft"
+                ],
+                "summary": "Get metadata of a nft",
+                "operationId": "getNftMetadata",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "NFT ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/GetNftMetadataResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/company-infos": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get all company info",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Client"
+                ],
+                "summary": "Get all company info",
+                "operationId": "get list of company info",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.GetListCompanyInfoResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/cron-jobs/store-vault-transaction": {
             "post": {
                 "description": "Store vault tx as icy tx from Mochi service",
@@ -1514,6 +1600,62 @@ const docTemplate = `{
                 }
             }
         },
+        "/discords/research-topics": {
+            "get": {
+                "description": "Get list of research topics on discord",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Discord"
+                ],
+                "summary": "Get list of research topics on discord",
+                "operationId": "ListDiscordResearchTopics",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Page",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Size",
+                        "name": "size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ListResearchTopicResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/discords/salary-advance-report": {
             "get": {
                 "security": [
@@ -1673,6 +1815,47 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/GetEmployeeEarnTransactionsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/earn": {
+            "get": {
+                "description": "List of earns from memo",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Earn"
+                ],
+                "summary": "List of earns from memo",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ListEarnResponse"
                         }
                     },
                     "400": {
@@ -7245,6 +7428,15 @@ const docTemplate = `{
         "BasicClientInfo": {
             "type": "object",
             "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "contacts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ClientContact"
+                    }
+                },
                 "description": {
                     "type": "string"
                 },
@@ -8428,7 +8620,11 @@ const docTemplate = `{
                 },
                 "status": {
                     "description": "working info",
-                    "type": "string"
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/WorkingStatus"
+                        }
+                    ]
                 },
                 "teamEmail": {
                     "type": "string"
@@ -8605,7 +8801,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "totalEarnsUSD": {
-                    "type": "number"
+                    "type": "string"
                 }
             }
         },
@@ -9045,6 +9241,14 @@ const docTemplate = `{
                 }
             }
         },
+        "GetNftMetadataResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/NftInfo"
+                }
+            }
+        },
         "GetQuestionResponse": {
             "type": "object",
             "properties": {
@@ -9465,6 +9669,17 @@ const docTemplate = `{
                 }
             }
         },
+        "ListEarnResponse": {
+            "type": "object",
+            "properties": {
+                "earns": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.Earn"
+                    }
+                }
+            }
+        },
         "ListFeedbackResponse": {
             "type": "object",
             "properties": {
@@ -9472,6 +9687,28 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/Feedback"
+                    }
+                },
+                "page": {
+                    "description": "page index",
+                    "type": "integer"
+                },
+                "size": {
+                    "description": "page size",
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "ListResearchTopicResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/pkg_view.DiscordResearchTopic"
                     }
                 },
                 "page": {
@@ -9779,6 +10016,29 @@ const docTemplate = `{
                 },
                 "usdAmount": {
                     "type": "number"
+                }
+            }
+        },
+        "NftInfo": {
+            "type": "object",
+            "properties": {
+                "attributes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/pkg_view.attribute"
+                    }
+                },
+                "background_color": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "image": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
                 }
             }
         },
@@ -12188,6 +12448,9 @@ const docTemplate = `{
                 "clientID": {
                     "type": "string"
                 },
+                "companyInfoID": {
+                    "type": "string"
+                },
                 "countryID": {
                     "type": "string"
                 },
@@ -12404,7 +12667,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "employeeStatus": {
-                    "type": "string"
+                    "$ref": "#/definitions/WorkingStatus"
                 }
             }
         },
@@ -12873,6 +13136,23 @@ const docTemplate = `{
                 "WorkUnitTypeLearning"
             ]
         },
+        "WorkingStatus": {
+            "type": "string",
+            "enum": [
+                "on-boarding",
+                "left",
+                "probation",
+                "full-time",
+                "contractor"
+            ],
+            "x-enum-varnames": [
+                "WorkingStatusOnBoarding",
+                "WorkingStatusLeft",
+                "WorkingStatusProbation",
+                "WorkingStatusFullTime",
+                "WorkingStatusContractor"
+            ]
+        },
         "github_com_dwarvesf_fortress-api_pkg_model.SortOrder": {
             "type": "string",
             "enum": [
@@ -12883,6 +13163,85 @@ const docTemplate = `{
                 "SortOrderASC",
                 "SortOrderDESC"
             ]
+        },
+        "github_com_dwarvesf_fortress-api_pkg_view.Earn": {
+            "type": "object",
+            "properties": {
+                "bounty": {
+                    "type": "string"
+                },
+                "function": {
+                    "type": "string"
+                },
+                "pics": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "status": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_dwarvesf_fortress-api_pkg_view.GetListCompanyInfoResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/CompanyInfo"
+                    }
+                }
+            }
+        },
+        "pkg_view.DiscordResearchTopic": {
+            "type": "object",
+            "properties": {
+                "msgCount": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "sortedActiveUsers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/pkg_view.DiscordTopicActiveUser"
+                    }
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "pkg_view.DiscordTopicActiveUser": {
+            "type": "object",
+            "properties": {
+                "msgCount": {
+                    "type": "integer"
+                },
+                "userID": {
+                    "type": "string"
+                }
+            }
+        },
+        "pkg_view.attribute": {
+            "type": "object",
+            "properties": {
+                "trait_type": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "string"
+                }
+            }
         }
     },
     "securityDefinitions": {
