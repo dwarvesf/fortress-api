@@ -28,7 +28,8 @@ func (s *store) One(db *gorm.DB, id string, preload bool) (*model.Employee, erro
 	}).
 		Preload("EmployeeRoles.Role", "deleted_at IS NULL").
 		Preload("SocialAccounts", "deleted_at IS NULL").
-		Preload("DiscordAccount", "deleted_at IS NULL")
+		Preload("DiscordAccount", "deleted_at IS NULL").
+		Preload("Referrer", "deleted_at IS NULL")
 
 	if preload {
 		query = query.
@@ -44,7 +45,6 @@ func (s *store) One(db *gorm.DB, id string, preload bool) (*model.Employee, erro
 			Preload("EmployeeChapters.Chapter", "deleted_at IS NULL").
 			Preload("EmployeeOrganizations", "deleted_at IS NULL").
 			Preload("EmployeeOrganizations.Organization", "deleted_at IS NULL").
-			Preload("Referrer", "deleted_at IS NULL").
 			Preload("Seniority").
 			Preload("LineManager").
 			Preload("BaseSalary").

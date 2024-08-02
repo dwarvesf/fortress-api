@@ -16,3 +16,14 @@ func ToPositionMap(positions []*Position) map[UUID]Position {
 
 	return rs
 }
+
+type Positions []Position
+
+func (p Positions) IsSales() bool {
+	for _, position := range p {
+		if position.Code == "sales" {
+			return true
+		}
+	}
+	return false
+}
