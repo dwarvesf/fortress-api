@@ -414,5 +414,6 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 		publicGroup.GET("/employees", h.Employee.PublicList)
 		publicGroup.GET("/clients", h.Client.PublicList)
 		publicGroup.GET("/community-nfts/:id", h.CommunityNft.GetNftMetadata)
+		publicGroup.GET("/youtube/broadcast", h.Youtube.LatestBroadcast)
 	}
 }
