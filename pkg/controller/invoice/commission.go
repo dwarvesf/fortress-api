@@ -13,7 +13,10 @@ import (
 	bcModel "github.com/dwarvesf/fortress-api/pkg/service/basecamp/model"
 )
 
-const hiringCommissionRate int64 = 2
+const (
+	hiringCommissionRate       int64 = 2
+	saleReferralCommissionRate int64 = 10
+)
 
 type pic struct {
 	ID             model.UUID
@@ -29,6 +32,8 @@ type pics struct {
 	sales            []pic
 	suppliers        []pic
 	upsells          []pic
+	saleReferers     []pic
+	upsellReferers   []pic
 }
 
 func (c *controller) storeCommission(db *gorm.DB, l logger.Logger, invoice *model.Invoice) ([]model.EmployeeCommission, error) {
@@ -37,7 +42,7 @@ func (c *controller) storeCommission(db *gorm.DB, l logger.Logger, invoice *mode
 	}
 	employeeCommissions, err := c.calculateCommissionFromInvoice(db, l, invoice)
 	if err != nil {
-		l.Errorf(err, "failed to create commission", "invoice", invoice)
+		l.Errorf(err, "failed to create commission for invoice(%s)", invoice.ID.String())
 		return nil, err
 	}
 
@@ -52,26 +57,26 @@ func (c *controller) calculateCommissionFromInvoice(db *gorm.DB, l logger.Logger
 	// Get project commission configs
 	commissionConfigs, err := c.store.ProjectCommissionConfig.GetByProjectID(db, invoice.ProjectID.String())
 	if err != nil {
-		l.Errorf(err, "failed to get project commission config", "projectID", invoice.ProjectID.String())
+		l.Errorf(err, "failed to get project commission config for project(%s)", invoice.ProjectID.String())
 		return nil, err
 	}
 	commissionConfigMap := commissionConfigs.ToMap()
 
 	projectMembers, err := c.store.ProjectMember.GetAssignedMembers(db, invoice.ProjectID.String(), model.ProjectMemberStatusActive.String(), true)
 	if err != nil {
-		l.Errorf(err, "failed to calculate account manager commission rate", "projectID", invoice.ProjectID.String())
+		l.Errorf(err, "failed to calculate account manager commission rate for project(%s)", invoice.ProjectID.String())
 		return nil, err
 	}
 
 	// Get list of project head who will get the commission from this invoice
-	pics := getPICs(invoice, projectMembers)
+	pics := c.getPICs(invoice, projectMembers)
 	var res []model.EmployeeCommission
 	if len(pics.devLeads) > 0 {
 		commissionRate := commissionConfigMap[model.HeadPositionTechnicalLead.String()]
 		if commissionRate.GreaterThan(decimal.NewFromInt(0)) {
 			c, err := c.calculateHeadCommission(commissionRate, pics.devLeads, invoice, invoice.TotalWithoutBonus)
 			if err != nil {
-				l.Errorf(err, "failed to calculate dev lead commission rate", "projectID", invoice.ProjectID.String())
+				l.Errorf(err, "failed to calculate dev lead commission rate for project(%s)", invoice.ProjectID.String())
 				return nil, err
 			}
 			res = append(res, c...)
@@ -83,7 +88,7 @@ func (c *controller) calculateCommissionFromInvoice(db *gorm.DB, l logger.Logger
 		if commissionRate.GreaterThan(decimal.NewFromInt(0)) {
 			c, err := c.calculateHeadCommission(commissionRate, pics.accountManagers, invoice, invoice.TotalWithoutBonus)
 			if err != nil {
-				l.Errorf(err, "failed to calculate account manager commission rate", "projectID", invoice.ProjectID.String())
+				l.Errorf(err, "failed to calculate account manager commission rate for project(%s)", invoice.ProjectID.String())
 				return nil, err
 			}
 			res = append(res, c...)
@@ -95,7 +100,7 @@ func (c *controller) calculateCommissionFromInvoice(db *gorm.DB, l logger.Logger
 		if commissionRate.GreaterThan(decimal.NewFromInt(0)) {
 			c, err := c.calculateHeadCommission(commissionRate, pics.deliveryManagers, invoice, invoice.TotalWithoutBonus)
 			if err != nil {
-				l.Errorf(err, "failed to calculate delivery manager commission rate", "projectID", invoice.ProjectID.String())
+				l.Errorf(err, "failed to calculate delivery manager commission rate for project(%s)", invoice.ProjectID.String())
 				return nil, err
 			}
 			res = append(res, c...)
@@ -107,9 +112,10 @@ func (c *controller) calculateCommissionFromInvoice(db *gorm.DB, l logger.Logger
 		if commissionRate.GreaterThan(decimal.NewFromInt(0)) {
 			c, err := c.calculateHeadCommission(commissionRate, pics.sales, invoice, invoice.TotalWithoutBonus)
 			if err != nil {
-				l.Errorf(err, "failed to calculate sales commission rate", "projectID", invoice.ProjectID.String())
+				l.Errorf(err, "failed to calculate sales commission rate for project(%s)", invoice.ProjectID.String())
 				return nil, err
 			}
+
 			res = append(res, c...)
 		}
 	}
@@ -117,7 +123,7 @@ func (c *controller) calculateCommissionFromInvoice(db *gorm.DB, l logger.Logger
 	if len(pics.upsells) > 0 {
 		c, err := c.calculateRefBonusCommission(pics.upsells, invoice)
 		if err != nil {
-			l.Errorf(err, "failed to calculate upsells commission rate", "projectID", invoice.ProjectID.String())
+			l.Errorf(err, "failed to calculate upsells commission rate for project(%s)", invoice.ProjectID.String())
 			return nil, err
 		}
 		res = append(res, c...)
@@ -126,7 +132,26 @@ func (c *controller) calculateCommissionFromInvoice(db *gorm.DB, l logger.Logger
 	if len(pics.suppliers) > 0 {
 		c, err := c.calculateRefBonusCommission(pics.suppliers, invoice)
 		if err != nil {
-			l.Errorf(err, "failed to calculate supplier commission rate", "projectID", invoice.ProjectID.String())
+			l.Errorf(err, "failed to calculate supplier commission rate for project(%s)", invoice.ProjectID.String())
+			return nil, err
+		}
+		res = append(res, c...)
+	}
+
+	if len(pics.saleReferers) > 0 {
+		commissionRate := commissionConfigMap[model.HeadPositionSalePerson.String()]
+		c, err := c.calculateSaleRefBonusCommission(commissionRate, pics.saleReferers, invoice)
+		if err != nil {
+			l.Errorf(err, "failed to calculate sale refereral commission rate for project(%s)", invoice.ProjectID.String())
+			return nil, err
+		}
+		res = append(res, c...)
+	}
+
+	if len(pics.upsellReferers) > 0 {
+		c, err := c.calculateUpsellRefBonusCommission(pics.upsellReferers, invoice)
+		if err != nil {
+			l.Errorf(err, "failed to calculate upsell refereral commission rate for project(%s)", invoice.ProjectID.String())
 			return nil, err
 		}
 		res = append(res, c...)
@@ -135,7 +160,7 @@ func (c *controller) calculateCommissionFromInvoice(db *gorm.DB, l logger.Logger
 	return res, nil
 }
 
-func getPICs(invoice *model.Invoice, projectMembers []*model.ProjectMember) *pics {
+func (c *controller) getPICs(invoice *model.Invoice, projectMembers []*model.ProjectMember) *pics {
 	var (
 		devLeads         []pic
 		accountManagers  []pic
@@ -143,6 +168,8 @@ func getPICs(invoice *model.Invoice, projectMembers []*model.ProjectMember) *pic
 		sales            []pic
 		upsells          []pic
 		suppliers        []pic
+		saleReferers     []pic
+		upsellReferers   []pic
 	)
 
 	for _, itm := range invoice.Project.Heads {
@@ -175,6 +202,21 @@ func getPICs(invoice *model.Invoice, projectMembers []*model.ProjectMember) *pic
 				ChargeRate:     invoice.Total,
 				Note:           "Sales",
 			})
+
+			// UPDATE:
+			// If sale person earn commission from project. The person who refer the sale person will earn commission too.
+			// The commission rate is 10% of the sale person commission rate.
+			salePersonDetail, err := c.store.Employee.One(c.repo.DB(), itm.EmployeeID.String(), false)
+			if err != nil {
+				continue
+			}
+
+			saleReferers = append(saleReferers, pic{
+				ID:             salePersonDetail.Referrer.ID,
+				CommissionRate: decimal.NewFromInt(saleReferralCommissionRate),
+				ChargeRate:     decimal.NewFromFloat(invoice.Total).Mul(itm.CommissionRate).Div(decimal.NewFromInt(100)).InexactFloat64(),
+				Note:           fmt.Sprintf("Sale Referral - %s", salePersonDetail.FullName),
+			})
 		}
 	}
 
@@ -190,6 +232,20 @@ func getPICs(invoice *model.Invoice, projectMembers []*model.ProjectMember) *pic
 				ChargeRate:     pm.Rate.InexactFloat64(),
 				Note:           "Upsell",
 			})
+
+			upsellPersonDetail, err := c.store.Employee.One(c.repo.DB(), pm.UpsellPersonID.String(), false)
+			if err != nil {
+				continue
+			}
+
+			if upsellPersonDetail.Referrer != nil {
+				upsellReferers = append(upsellReferers, pic{
+					ID:             upsellPersonDetail.Referrer.ID,
+					CommissionRate: decimal.NewFromInt(saleReferralCommissionRate),
+					ChargeRate:     decimal.NewFromFloat(pm.Rate.InexactFloat64()).Mul(pm.UpsellCommissionRate).Div(decimal.NewFromInt(100)).InexactFloat64(),
+					Note:           fmt.Sprintf("Sale Referral - Upsell %s", upsellPersonDetail.FullName),
+				})
+			}
 		}
 
 		if pm.Employee.Referrer != nil {
@@ -211,6 +267,8 @@ func getPICs(invoice *model.Invoice, projectMembers []*model.ProjectMember) *pic
 		sales:            sales,
 		upsells:          upsells,
 		suppliers:        suppliers,
+		saleReferers:     saleReferers,
+		upsellReferers:   upsellReferers,
 	}
 }
 
@@ -231,6 +289,14 @@ func (c *controller) movePaidInvoiceGDrive(l logger.Logger, wg *sync.WaitGroup, 
 }
 
 func (c *controller) calculateHeadCommission(projectCommissionRate decimal.Decimal, beneficiaries []pic, invoice *model.Invoice, invoiceTotal float64) ([]model.EmployeeCommission, error) {
+	// NOTE:
+	// PCR is Project Commission Rate
+	// SCR is Share Commission Rate
+	// IV is Invoice Value
+	// RATE is Conversion Rate
+	// RCR is Referral Commission Rate
+	// CR/VAL is Charge Rate the value before the commission
+
 	// conversionRate by percentage
 	pcrPercentage := projectCommissionRate.Div(decimal.NewFromInt(100))
 	projectCommissionValue, _ := pcrPercentage.Mul(decimal.NewFromFloat(invoiceTotal)).Float64()
@@ -278,6 +344,56 @@ func (c *controller) calculateRefBonusCommission(pics []pic, invoice *model.Invo
 			ConversionRate: rate,
 			InvoiceID:      invoice.ID,
 			Formula:        fmt.Sprintf("%v%%(RCR) * %v(CR) * %v(RATE)", pic.CommissionRate, pic.ChargeRate, rate),
+			Note:           pic.Note,
+		})
+	}
+
+	return rs, nil
+}
+
+func (c *controller) calculateSaleRefBonusCommission(projectCommissionRate decimal.Decimal, pics []pic, invoice *model.Invoice) ([]model.EmployeeCommission, error) {
+	// conversionRate by percentage
+	var rs []model.EmployeeCommission
+	for _, pic := range pics {
+		percentage := pic.CommissionRate.Div(decimal.NewFromInt(100))
+		commissionValue, _ := percentage.Mul(decimal.NewFromFloat(pic.ChargeRate)).Mul(projectCommissionRate).Div(decimal.NewFromInt(100)).Float64()
+		convertedValue, rate, err := c.service.Wise.Convert(commissionValue, invoice.Project.BankAccount.Currency.Name, "VND")
+		if err != nil {
+			return nil, err
+		}
+
+		rs = append(rs, model.EmployeeCommission{
+			EmployeeID:     pic.ID,
+			Amount:         model.NewVietnamDong(int64(convertedValue)),
+			Project:        invoice.Project.Name,
+			ConversionRate: rate,
+			InvoiceID:      invoice.ID,
+			Formula:        fmt.Sprintf("%v%%(RCR) * %v(VAL) * %v(RATE)", pic.CommissionRate, commissionValue, rate),
+			Note:           pic.Note,
+		})
+	}
+
+	return rs, nil
+}
+
+func (c *controller) calculateUpsellRefBonusCommission(pics []pic, invoice *model.Invoice) ([]model.EmployeeCommission, error) {
+	// conversionRate by percentage
+	var rs []model.EmployeeCommission
+	for _, pic := range pics {
+		percentage := pic.CommissionRate.Div(decimal.NewFromInt(100))
+		commissionValue, _ := percentage.Mul(decimal.NewFromFloat(pic.ChargeRate)).Float64()
+		convertedValue, rate, err := c.service.Wise.Convert(commissionValue, invoice.Project.BankAccount.Currency.Name, "VND")
+		if err != nil {
+			return nil, err
+		}
+
+		rs = append(rs, model.EmployeeCommission{
+			EmployeeID:     pic.ID,
+			Amount:         model.NewVietnamDong(int64(convertedValue)),
+			Project:        invoice.Project.Name,
+			ConversionRate: rate,
+			InvoiceID:      invoice.ID,
+			Formula:        fmt.Sprintf("%v%%(RCR) * %v(VAL) * %v(RATE)", pic.CommissionRate, commissionValue, rate),
 			Note:           pic.Note,
 		})
 	}
