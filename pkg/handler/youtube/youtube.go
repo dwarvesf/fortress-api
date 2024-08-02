@@ -39,6 +39,16 @@ func New(controller *controller.Controller, store *store.Store, repo store.DBRep
 	}
 }
 
+func (h *handler) LatestBroadcast(c *gin.Context) {
+	broadcast, err := h.service.Youtube.GetLatestBroadcast()
+	if err != nil {
+		h.logger.Error(err, "failed to get latest broadcast")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+	c.JSON(http.StatusOK, view.CreateResponse[any](broadcast, nil, nil, nil, ""))
+}
+
 func (h *handler) TranscribeBroadcast(c *gin.Context) {
 	broadcast, err := h.service.Youtube.GetLatestBroadcast()
 	if err != nil {
