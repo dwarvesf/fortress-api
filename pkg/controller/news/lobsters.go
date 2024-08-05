@@ -9,7 +9,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/model"
 )
 
-func (c *controller) FetchLobstersNews(ctx context.Context, tag string) ([]model.News, []model.News, error) {
+func (c *controller) FetchLobstersNews(ctx context.Context, tag string) ([]model.News, error) {
 	logger := c.logger.Fields(logger.Fields{
 		"controller": "news",
 		"method":     "FetchLobstersNews",
@@ -19,7 +19,7 @@ func (c *controller) FetchLobstersNews(ctx context.Context, tag string) ([]model
 	news, err := c.service.Lobsters.FetchNews(tag)
 	if err != nil {
 		logger.Error(err, "failed to fetch news from lobsters")
-		return nil, nil, err
+		return nil, err
 	}
 
 	normalized := make([]model.News, 0, len(news))
@@ -43,32 +43,36 @@ func (c *controller) FetchLobstersNews(ctx context.Context, tag string) ([]model
 		})
 	}
 
+	// Sort by creation time (descending) and then by popularity (descending)
 	sort.Slice(normalized, func(i, j int) bool {
-		return normalized[i].Popularity > normalized[j].Popularity
+		if normalized[i].CreatedAt.Equal(normalized[j].CreatedAt) {
+			return normalized[i].Popularity > normalized[j].Popularity
+		}
+		return normalized[i].CreatedAt.After(normalized[j].CreatedAt)
 	})
 
-	var popular, emerging []model.News
+	// Filter for posts within the last 24 hours
+	emerging := make([]model.News, 0)
 	for _, n := range normalized {
-		if isIn24Hours(n.CreatedAt) {
-			if len(emerging) >= 10 {
-				continue
-			}
+		if time.Since(n.CreatedAt) <= 24*time.Hour {
 			emerging = append(emerging, n)
-		} else {
-			if len(popular) >= 10 {
-				continue
-			}
-			popular = append(popular, n)
 		}
 	}
 
-	sort.Slice(emerging, func(i, j int) bool {
-		return emerging[i].CreatedAt.After(emerging[j].CreatedAt)
-	})
+	// If more than 10 posts in 24 hours, truncate to 10
+	if len(emerging) > 10 {
+		emerging = emerging[:10]
+	} else if len(emerging) < 10 {
+		// If less than 10 posts in 24 hours, add more posts without time check
+		for _, n := range normalized {
+			if len(emerging) == 10 {
+				break
+			}
+			if time.Since(n.CreatedAt) > 24*time.Hour {
+				emerging = append(emerging, n)
+			}
+		}
+	}
 
-	return popular, emerging, nil
-}
-
-func isIn24Hours(t time.Time) bool {
-	return t.After(time.Now().Add(-24 * time.Hour))
+	return emerging, nil
 }

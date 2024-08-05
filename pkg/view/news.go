@@ -17,20 +17,12 @@ type News struct {
 	CreatedAt    time.Time `json:"timestamp"`
 }
 
-type ListNews struct {
-	Popular  []News `json:"popular"`
-	Emerging []News `json:"emerging"`
-}
-
 type FetchNewsResponse struct {
-	Data ListNews `json:"data"`
+	Data []News `json:"data"`
 } // @name FetchNewsResponse
 
-func ToFetchNewsResponse(popular, emerging []model.News) ListNews {
-	return ListNews{
-		Popular:  ToListNews(popular),
-		Emerging: ToListNews(emerging),
-	}
+func ToFetchNewsResponse(emerging []model.News) []News {
+	return ToListNews(emerging)
 }
 
 func ToListNews(news []model.News) []News {

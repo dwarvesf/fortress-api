@@ -2,6 +2,11 @@ package model
 
 import "time"
 
+const (
+	RedditPlatform   = "reddit"
+	LobstersPlatform = "lobsters"
+)
+
 type News struct {
 	Title        string
 	URL          string

@@ -32,17 +32,24 @@ func (h *handler) Fetch(c *gin.Context) {
 		return
 	}
 
-	var popular, emerging []model.News
+	var posts []model.News
 	var err error
 	switch platform {
-	case "lobsters":
-		popular, emerging, err = h.controller.News.FetchLobstersNews(c.Request.Context(), topic)
+	case model.LobstersPlatform:
+		posts, err = h.controller.News.FetchLobstersNews(c.Request.Context(), topic)
 		if err != nil {
 			l.Error(err, "failed to fetch lobsters news")
 			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 			return
 		}
+	case model.RedditPlatform:
+		posts, err = h.controller.News.FetchRedditNews(c.Request.Context(), topic)
+		if err != nil {
+			l.Error(err, "failed to fetch reddit news")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+			return
+		}
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse(view.ToFetchNewsResponse(popular, emerging), nil, nil, nil, ""))
+	c.JSON(http.StatusOK, view.CreateResponse(view.ToFetchNewsResponse(posts), nil, nil, nil, ""))
 }
