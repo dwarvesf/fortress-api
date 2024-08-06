@@ -16,39 +16,26 @@
         "auditNotionID": "",
         "avatar": "",
         "bankAccount": {
-            "accountNumber": "1234567891",
+            "accountNumber": "",
             "bankName": "OCB",
             "id": "e79eb5b3-e2cb-4d7f-9273-46f4be88cb20",
-            "ownerName": "Phạm Văn Đạt"
+            "ownerName": ""
         },
         "client": {
-            "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+            "description": "",
             "id": "afb9cf05-9517-4fb9-a4f2-66e6d90ad215",
             "name": "Lorem Ipsum Inc.",
-            "registrationNumber": "32320398488",
+            "registrationNumber": "",
             "address": "Hado Centrosa",
-            "contacts": [
-                {
-                    "id": "0569e64d-3b57-454a-ab88-0482e087eb5f",
-                    "name": "Thanh Pham ",
-                    "role": "PM",
-                    "emails": [
-                        "thanh@d.foundation",
-                        "huytq@d.foundation"
-                    ],
-                    "isMainContact": false
-                }
-            ]
+            "contacts": null
         },
         "clientEmail": [
             "team@d.foundation"
         ],
         "code": "fortress",
         "companyInfo": {
-            "description": "description",
             "id": "ed8bebd2-e6be-4e84-b86b-b3983db0447d",
-            "name": "company A",
-            "registrationNumber": "0123123123"
+            "name": "company A"
         },
         "country": {
             "code": "+84",
