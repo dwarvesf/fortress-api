@@ -8,5 +8,5 @@ import (
 
 type IService interface {
 	// FetchGolangNews fetches the latest Golang news posts and filters the rising posts from the new posts.
-	FetchGolangNews(ctx context.Context) ([]reddit.Post, []reddit.Post, error)
+	FetchGolangNews(ctx context.Context) ([]*reddit.Post, error)
 }
