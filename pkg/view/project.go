@@ -1,7 +1,6 @@
 package view
 
 import (
-	"encoding/json"
 	"strings"
 	"time"
 
@@ -324,42 +323,42 @@ func ToBasicClientInfo(client *model.Client) *BasicClientInfo {
 		return nil
 	}
 
-	clientContacts := make([]ClientContact, 0, len(client.Contacts))
-	for _, contact := range client.Contacts {
-		emails := make([]string, 0)
-		_ = json.Unmarshal(contact.Emails, &emails)
-
-		clientContacts = append(clientContacts, ClientContact{
-			ID:     contact.ID.String(),
-			Name:   contact.Name,
-			Role:   contact.Role,
-			Emails: emails,
-		})
-	}
+	//clientContacts := make([]ClientContact, 0, len(client.Contacts))
+	//for _, contact := range client.Contacts {
+	//	emails := make([]string, 0)
+	//	_ = json.Unmarshal(contact.Emails, &emails)
+	//
+	//	clientContacts = append(clientContacts, ClientContact{
+	//		ID:     contact.ID.String(),
+	//		Name:   contact.Name,
+	//		Role:   contact.Role,
+	//		Emails: emails,
+	//	})
+	//}
 
 	return &BasicClientInfo{
-		ID:                 client.ID.String(),
-		Name:               client.Name,
-		Description:        client.Description,
-		RegistrationNumber: client.RegistrationNumber,
-		Address:            client.Address,
-		Contacts:           clientContacts,
+		ID:   client.ID.String(),
+		Name: client.Name,
+		//Description:        client.Description,
+		//RegistrationNumber: client.RegistrationNumber,
+		Address: client.Address,
+		//Contacts:           clientContacts,
 	}
 }
 
 type BasicCompanyInfo struct {
-	ID                 string `json:"id"`
-	Name               string `json:"name"`
-	Description        string `json:"description"`
-	RegistrationNumber string `json:"registrationNumber"`
+	ID   string `json:"id"`
+	Name string `json:"name"`
+	//Description        string `json:"description"`
+	//RegistrationNumber string `json:"registrationNumber"`
 } // @name BasicCompanyInfo
 
 func ToBasicCompanyInfo(company *model.CompanyInfo) *BasicCompanyInfo {
 	return &BasicCompanyInfo{
-		ID:                 company.ID.String(),
-		Name:               company.Name,
-		Description:        company.Description,
-		RegistrationNumber: company.RegistrationNumber,
+		ID:   company.ID.String(),
+		Name: company.Name,
+		//Description:        company.Description,
+		//RegistrationNumber: company.RegistrationNumber,
 	}
 }
 
@@ -614,10 +613,8 @@ func ToProjectData(in *model.Project, userInfo *model.CurrentLoggedUserInfo) Pro
 
 		if in.BankAccount != nil {
 			projectData.BankAccount = &BasicBankAccountInfo{
-				ID:            in.BankAccount.ID.String(),
-				AccountNumber: in.BankAccount.AccountNumber,
-				BankName:      in.BankAccount.BankName,
-				OwnerName:     in.BankAccount.OwnerName,
+				ID:       in.BankAccount.ID.String(),
+				BankName: in.BankAccount.BankName,
 			}
 		}
 

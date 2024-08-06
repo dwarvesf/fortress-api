@@ -7,5 +7,6 @@ import (
 )
 
 type IController interface {
-	FetchLobstersNews(ctx context.Context, tag string) ([]model.News, []model.News, error)
+	FetchLobstersNews(ctx context.Context, tag string) ([]model.News, error)
+	FetchRedditNews(ctx context.Context, tag string) ([]model.News, error)
 }

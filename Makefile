@@ -29,7 +29,7 @@ init:
 	fi
 
 	make remove-infras
-	docker-compose up -d
+	docker compose up -d
 	@echo "Waiting for database connection..."
 	@while ! docker exec ${POSTGRES_CONTAINER} pg_isready > /dev/null; do \
 		sleep 1; \
@@ -55,7 +55,7 @@ seed-test:
 	@docker exec -t $(POSTGRES_TEST_CONTAINER) sh -c "PGPASSWORD=postgres psql -U postgres -d $(POSTGRES_TEST_CONTAINER) -f /test_seed/seed.sql"
 
 remove-infras:
-	docker-compose down --remove-orphans --volumes
+	docker compose down --remove-orphans --volumes
 
 build:
 	env GOOS=darwin GOARCH=amd64 go build -o bin ./...
@@ -74,7 +74,7 @@ test: setup-test
 
 setup-test:
 	docker rm --volumes -f ${POSTGRES_TEST_CONTAINER}
-	docker-compose up -d ${POSTGRES_TEST_SERVICE}
+	docker compose up -d ${POSTGRES_TEST_SERVICE}
 	@while ! docker exec $(POSTGRES_TEST_CONTAINER) pg_isready > /dev/null; do \
 		sleep 1; \
 	done
