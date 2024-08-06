@@ -241,7 +241,8 @@
                 "symbol": "£",
                 "locale": "en-gb",
                 "type": "fiat"
-            }
+            },
+            "commissionModels": []
         },
         {
             "id": "dfa182fc-1d2d-49f6-a877-c01da9ce4207",
@@ -292,7 +293,8 @@
                 "symbol": "£",
                 "locale": "en-gb",
                 "type": "fiat"
-            }
+            },
+            "commissionModels": []
         }
     ]
 }

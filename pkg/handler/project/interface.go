@@ -2,6 +2,10 @@ package project
 
 import "github.com/gin-gonic/gin"
 
+const (
+	saleReferralCommissionRate int64 = 10
+)
+
 type IHandler interface {
 	ArchiveWorkUnit(c *gin.Context)
 	AssignMember(c *gin.Context)
