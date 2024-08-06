@@ -753,7 +753,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.GetListCompanyInfoResponse"
+                            "$ref": "#/definitions/GetListCompanyInfoResponse"
                         }
                     },
                     "500": {
@@ -7087,6 +7087,17 @@ const docTemplate = `{
                 }
             }
         },
+        "Attribute": {
+            "type": "object",
+            "properties": {
+                "trait_type": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "string"
+                }
+            }
+        },
         "Audit": {
             "type": "object",
             "properties": {
@@ -7454,16 +7465,10 @@ const docTemplate = `{
         "BasicCompanyInfo": {
             "type": "object",
             "properties": {
-                "description": {
-                    "type": "string"
-                },
                 "id": {
                     "type": "string"
                 },
                 "name": {
-                    "type": "string"
-                },
-                "registrationNumber": {
                     "type": "string"
                 }
             }
@@ -8455,6 +8460,32 @@ const docTemplate = `{
                 }
             }
         },
+        "Earn": {
+            "type": "object",
+            "properties": {
+                "bounty": {
+                    "type": "string"
+                },
+                "function": {
+                    "type": "string"
+                },
+                "pics": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "status": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
         "EmployeeAddress": {
             "type": "object",
             "properties": {
@@ -8620,11 +8651,7 @@ const docTemplate = `{
                 },
                 "status": {
                     "description": "working info",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/WorkingStatus"
-                        }
-                    ]
+                    "type": "string"
                 },
                 "teamEmail": {
                     "type": "string"
@@ -9174,6 +9201,17 @@ const docTemplate = `{
                 }
             }
         },
+        "GetListCompanyInfoResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/CompanyInfo"
+                    }
+                }
+            }
+        },
         "GetListEmployeeQuery": {
             "type": "object",
             "properties": {
@@ -9675,7 +9713,7 @@ const docTemplate = `{
                 "earns": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.Earn"
+                        "$ref": "#/definitions/Earn"
                     }
                 }
             }
@@ -10025,7 +10063,7 @@ const docTemplate = `{
                 "attributes": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/pkg_view.attribute"
+                        "$ref": "#/definitions/Attribute"
                     }
                 },
                 "background_color": {
@@ -12667,7 +12705,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "employeeStatus": {
-                    "$ref": "#/definitions/WorkingStatus"
+                    "type": "string"
                 }
             }
         },
@@ -13136,23 +13174,6 @@ const docTemplate = `{
                 "WorkUnitTypeLearning"
             ]
         },
-        "WorkingStatus": {
-            "type": "string",
-            "enum": [
-                "on-boarding",
-                "left",
-                "probation",
-                "full-time",
-                "contractor"
-            ],
-            "x-enum-varnames": [
-                "WorkingStatusOnBoarding",
-                "WorkingStatusLeft",
-                "WorkingStatusProbation",
-                "WorkingStatusFullTime",
-                "WorkingStatusContractor"
-            ]
-        },
         "github_com_dwarvesf_fortress-api_pkg_model.SortOrder": {
             "type": "string",
             "enum": [
@@ -13163,43 +13184,6 @@ const docTemplate = `{
                 "SortOrderASC",
                 "SortOrderDESC"
             ]
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.Earn": {
-            "type": "object",
-            "properties": {
-                "bounty": {
-                    "type": "string"
-                },
-                "function": {
-                    "type": "string"
-                },
-                "pics": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "status": {
-                    "type": "string"
-                },
-                "title": {
-                    "type": "string"
-                },
-                "url": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_dwarvesf_fortress-api_pkg_view.GetListCompanyInfoResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/CompanyInfo"
-                    }
-                }
-            }
         },
         "pkg_view.DiscordResearchTopic": {
             "type": "object",
@@ -13228,17 +13212,6 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "userID": {
-                    "type": "string"
-                }
-            }
-        },
-        "pkg_view.attribute": {
-            "type": "object",
-            "properties": {
-                "trait_type": {
-                    "type": "string"
-                },
-                "value": {
                     "type": "string"
                 }
             }

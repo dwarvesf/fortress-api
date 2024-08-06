@@ -11,18 +11,18 @@ type NftMetadata struct {
 	Description     string      `json:"description"`
 	Image           string      `json:"image"`
 	BackgroundColor string      `json:"background_color"`
-	Attributes      []attribute `json:"attributes"`
+	Attributes      []Attribute `json:"attributes"`
 } // @name NftInfo
 
-type attribute struct {
+type Attribute struct {
 	TraitType string `json:"trait_type"`
 	Value     string `json:"value"`
-}
+} // @name Attribute
 
 func ToNftMetadata(nft *model.NftMetadata) *NftMetadata {
-	attributes := make([]attribute, 0)
+	attributes := make([]Attribute, 0)
 	for _, attr := range nft.Attributes {
-		attributes = append(attributes, attribute{
+		attributes = append(attributes, Attribute{
 			TraitType: attr.TraitType,
 			Value:     attr.Value,
 		})
