@@ -255,6 +255,12 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/project.IHandler.UpdateProjectStatus-fm",
 			},
 		},
+		"/api/v1/projects/:id/commission-models": {
+			"PUT": {
+				Method:  "GET",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/project.IHandler.CommissionModels-fm",
+			},
+		},
 		"/api/v1/projects/:id/members": {
 			"POST": {
 				Method:  "POST",

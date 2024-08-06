@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"path/filepath"
+	"slices"
 	"strings"
 	"time"
 
@@ -1659,7 +1660,7 @@ func (h *handler) Details(c *gin.Context) {
 		"id":      projectID,
 	})
 
-	rs, err := h.store.Project.One(h.repo.DB(), projectID, true)
+	projectData, err := h.store.Project.One(h.repo.DB(), projectID, true)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			l.Info("project not found")
@@ -1672,19 +1673,135 @@ func (h *handler) Details(c *gin.Context) {
 	}
 
 	if !authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadFullAccess) && !authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadReadActive) {
-		_, ok := userInfo.Projects[rs.ID]
-		if !ok || !model.IsUserActiveInProject(userInfo.UserID, rs.ProjectMembers) {
+		_, ok := userInfo.Projects[projectData.ID]
+		if !ok || !model.IsUserActiveInProject(userInfo.UserID, projectData.ProjectMembers) {
 			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, nil, ""))
 			return
 		}
 	}
 
-	if rs.Status == model.ProjectStatusClosed && !authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadFullAccess) {
+	if projectData.Status == model.ProjectStatusClosed && !authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadFullAccess) {
 		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, nil, ""))
 		return
 	}
 
-	c.JSON(http.StatusOK, view.CreateResponse(view.ToProjectData(rs, userInfo), nil, nil, nil, ""))
+	projectCommissionModel := make([]model.CommissionModel, 0)
+	if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsCommissionRateRead) {
+		projectCommissionModel, err = h.aggregateCommissionModel(projectData)
+		if err != nil {
+			l.Error(err, "failed to aggregate commission model")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+			return
+		}
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse(view.ToProjectData(projectData, userInfo, projectCommissionModel), nil, nil, nil, ""))
+}
+
+func (h *handler) aggregateCommissionModel(projectData *model.Project) ([]model.CommissionModel, error) {
+	employeeIDs := make([]model.UUID, 0)
+	var commissionModel = make([]model.CommissionModel, 0)
+	for _, h := range projectData.Heads {
+		commissionType := ""
+		description := ""
+		switch h.Position {
+		case model.HeadPositionTechnicalLead:
+			commissionType = "technical-lead"
+			description = "Technical Lead"
+		case model.HeadPositionAccountManager:
+			commissionType = "account-manager"
+			description = "Account Manager"
+		case model.HeadPositionDeliveryManager:
+			commissionType = "delivery-manager"
+			description = "Delivery Manager"
+		case model.HeadPositionSalePerson:
+			commissionType = "sale-person"
+			description = "Sale Person"
+			if !slices.Contains(employeeIDs, h.Employee.ReferredBy) {
+				employeeIDs = append(employeeIDs, h.Employee.ReferredBy)
+			}
+		}
+		if h.CommissionRate.IsZero() {
+			continue
+		}
+
+		commissionModel = append(commissionModel, model.CommissionModel{
+			Beneficiary: model.BasicEmployeeInfo{
+				ID:          h.Employee.ID.String(),
+				FullName:    h.Employee.FullName,
+				DisplayName: h.Employee.DisplayName,
+				Avatar:      h.Employee.Avatar,
+				Username:    h.Employee.Username,
+				ReferredBy:  h.Employee.ReferredBy.String(),
+			},
+			CommissionType: commissionType,
+			CommissionRate: h.CommissionRate,
+			Description:    description,
+		})
+	}
+	for _, pm := range projectData.ProjectMembers {
+		if pm.UpsellPerson != nil {
+			if pm.UpsellCommissionRate.IsZero() {
+				continue
+			}
+
+			commissionModel = append(commissionModel, model.CommissionModel{
+				Beneficiary: model.BasicEmployeeInfo{
+					ID:          pm.UpsellPerson.ID.String(),
+					FullName:    pm.UpsellPerson.FullName,
+					DisplayName: pm.UpsellPerson.DisplayName,
+					Avatar:      pm.UpsellPerson.Avatar,
+					Username:    pm.UpsellPerson.Username,
+					ReferredBy:  pm.UpsellPerson.ReferredBy.String(),
+				},
+				CommissionType: "upsell",
+				CommissionRate: pm.UpsellCommissionRate,
+				Description:    fmt.Sprintf("Upsell for %s", pm.Employee.FullName),
+			})
+
+			if !slices.Contains(employeeIDs, pm.UpsellPerson.ReferredBy) {
+				employeeIDs = append(employeeIDs, pm.UpsellPerson.ReferredBy)
+			}
+		}
+	}
+
+	refEmployees, err := h.store.Employee.GetByIDs(h.repo.DB(), employeeIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	refEmployeeMap := make(map[string]model.Employee)
+	for _, ref := range refEmployees {
+		refEmployeeMap[ref.ID.String()] = *ref
+	}
+
+	finalCommissionModel := make([]model.CommissionModel, 0)
+	for _, cm := range commissionModel {
+		if cm.CommissionType == "upsell" || cm.CommissionType == "sale-person" {
+			if ref, ok := refEmployeeMap[cm.Beneficiary.ReferredBy]; ok {
+				description := fmt.Sprintf("Sale Referral from %s", cm.Beneficiary.FullName)
+				if cm.CommissionType == "upsell" {
+					description = fmt.Sprintf("Sale Referral (Upsell) from %s", cm.Beneficiary.FullName)
+				}
+				cm.Sub = &model.CommissionModel{
+					Beneficiary: model.BasicEmployeeInfo{
+						ID:          ref.ID.String(),
+						FullName:    ref.FullName,
+						DisplayName: ref.DisplayName,
+						Avatar:      ref.Avatar,
+						Username:    ref.Username,
+						ReferredBy:  ref.ReferredBy.String(),
+					},
+					CommissionType: "sale-referral",
+					CommissionRate: decimal.NewFromInt(saleReferralCommissionRate),
+					Description:    description,
+				}
+			}
+		}
+		finalCommissionModel = append(finalCommissionModel, cm)
+	}
+
+	return finalCommissionModel, nil
 }
 
 // UpdateGeneralInfo godoc
@@ -3148,4 +3265,63 @@ func (h *handler) SyncProjectMemberStatus(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))
+}
+
+// CommissionModels godoc
+// @Summary Get commission models of a project
+// @Description Get commission models of a project
+// @id getProjectCommissionModels
+// @Tags Project
+// @Accept  json
+// @Produce  json
+// @Security BearerAuth
+// @Param id path string true "Project ID"
+// @Success 200 {object} ProjectCommissionModelsResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /projects/{id}/commission-models [get]
+func (h *handler) CommissionModels(c *gin.Context) {
+	// 0. Get current logged in user data
+	userInfo, err := authutils.GetLoggedInUserInfo(c, h.store, h.repo.DB(), h.config)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, userInfo.UserID, ""))
+		return
+	}
+
+	projectID := c.Param("id")
+	if projectID == "" {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidProjectID, nil, ""))
+		return
+	}
+
+	l := h.logger.Fields(logger.Fields{
+		"handler": "project",
+		"method":  "CommissionModels",
+		"id":      projectID,
+	})
+
+	projectData, err := h.store.Project.One(h.repo.DB(), projectID, true)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			l.Info("project not found")
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, errs.ErrProjectNotFound, nil, ""))
+			return
+		}
+		l.Error(err, "error query project from db")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	projectCommissionModel := make([]model.CommissionModel, 0)
+	if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsCommissionRateRead) {
+		projectCommissionModel, err = h.aggregateCommissionModel(projectData)
+		if err != nil {
+			l.Error(err, "failed to aggregate commission model")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+			return
+		}
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse(view.ToCommissionModelData(projectCommissionModel), nil, nil, nil, ""))
 }

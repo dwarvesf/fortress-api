@@ -350,6 +350,60 @@
             }
         ],
         "type": "dwarves",
-        "updatedAt": ""
+        "updatedAt": "",
+        "commissionModels": [
+            {
+                "beneficiary": {
+                    "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
+                    "displayName": "Thanh Pham",
+                    "id": "2655832e-f009-4b73-a535-64c3a22e558f",
+                    "fullName": "Phạm Đức Thành",
+                    "username": "thanh"
+                },
+                "commissionRate": "1",
+                "description": "Account Manager",
+                "type": "account-manager",
+                "sub": null
+            },
+            {
+                "beneficiary": {
+                    "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/8399103964540935617.png",
+                    "displayName": "Nam Nguyen",
+                    "id": "8d7c99c0-3253-4286-93a9-e7554cb327ef",
+                    "fullName": "Nguyễn Hải Nam",
+                    "username": "benjamin"
+                },
+                "commissionRate": "1",
+                "description": "Technical Lead",
+                "type": "technical-lead",
+                "sub": null
+            },
+            {
+                "beneficiary": {
+                    "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/3c420751-bb9a-4878-896e-2f10f3a633d6_avatar2535921977139052349.png",
+                    "displayName": "Huy Tieu",
+                    "id": "608ea227-45a5-4c8a-af43-6c7280d96340",
+                    "fullName": "Tiêu Quang Huy",
+                    "username": "huytq"
+                },
+                "commissionRate": "2",
+                "description": "Sale Person",
+                "type": "sale-person",
+                "sub": null
+            },
+            {
+                "beneficiary": {
+                    "avatar": "https://s3-ap-southeast-1.amazonaws.com/fortress-images/5153574695663955944.png",
+                    "displayName": "Thanh Pham",
+                    "id": "2655832e-f009-4b73-a535-64c3a22e558f",
+                    "fullName": "Phạm Đức Thành",
+                    "username": "thanh"
+                },
+                "commissionRate": "0.5",
+                "description": "Delivery Manager",
+                "type": "delivery-manager",
+                "sub": null
+            }
+        ]
     }
 }
