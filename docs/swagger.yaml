@@ -188,6 +188,13 @@ definitions:
       updatedAt:
         type: string
     type: object
+  Attribute:
+    properties:
+      trait_type:
+        type: string
+      value:
+        type: string
+    type: object
   Audit:
     properties:
       avg:
@@ -427,13 +434,9 @@ definitions:
     type: object
   BasicCompanyInfo:
     properties:
-      description:
-        type: string
       id:
         type: string
       name:
-        type: string
-      registrationNumber:
         type: string
     type: object
   BasicCountryInfo:
@@ -1088,6 +1091,23 @@ definitions:
       name:
         type: string
     type: object
+  Earn:
+    properties:
+      bounty:
+        type: string
+      function:
+        type: string
+      pics:
+        items:
+          type: string
+        type: array
+      status:
+        type: string
+      title:
+        type: string
+      url:
+        type: string
+    type: object
   EmployeeAddress:
     properties:
       address:
@@ -1197,9 +1217,8 @@ definitions:
           $ref: '#/definitions/Stack'
         type: array
       status:
-        allOf:
-        - $ref: '#/definitions/WorkingStatus'
         description: working info
+        type: string
       teamEmail:
         type: string
       updatedAt:
@@ -1558,6 +1577,13 @@ definitions:
           $ref: '#/definitions/Client'
         type: array
     type: object
+  GetListCompanyInfoResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/CompanyInfo'
+        type: array
+    type: object
   GetListEmployeeQuery:
     properties:
       chapters:
@@ -1887,7 +1913,7 @@ definitions:
     properties:
       earns:
         items:
-          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.Earn'
+          $ref: '#/definitions/Earn'
         type: array
     type: object
   ListFeedbackResponse:
@@ -2119,7 +2145,7 @@ definitions:
     properties:
       attributes:
         items:
-          $ref: '#/definitions/pkg_view.attribute'
+          $ref: '#/definitions/Attribute'
         type: array
       background_color:
         type: string
@@ -3885,7 +3911,7 @@ definitions:
   UpdateWorkingStatusRequest:
     properties:
       employeeStatus:
-        $ref: '#/definitions/WorkingStatus'
+        type: string
     type: object
   UpdatedProject:
     properties:
@@ -4193,20 +4219,6 @@ definitions:
     - WorkUnitTypeManagement
     - WorkUnitTypeTraining
     - WorkUnitTypeLearning
-  WorkingStatus:
-    enum:
-    - on-boarding
-    - left
-    - probation
-    - full-time
-    - contractor
-    type: string
-    x-enum-varnames:
-    - WorkingStatusOnBoarding
-    - WorkingStatusLeft
-    - WorkingStatusProbation
-    - WorkingStatusFullTime
-    - WorkingStatusContractor
   github_com_dwarvesf_fortress-api_pkg_model.SortOrder:
     enum:
     - asc
@@ -4215,30 +4227,6 @@ definitions:
     x-enum-varnames:
     - SortOrderASC
     - SortOrderDESC
-  github_com_dwarvesf_fortress-api_pkg_view.Earn:
-    properties:
-      bounty:
-        type: string
-      function:
-        type: string
-      pics:
-        items:
-          type: string
-        type: array
-      status:
-        type: string
-      title:
-        type: string
-      url:
-        type: string
-    type: object
-  github_com_dwarvesf_fortress-api_pkg_view.GetListCompanyInfoResponse:
-    properties:
-      data:
-        items:
-          $ref: '#/definitions/CompanyInfo'
-        type: array
-    type: object
   pkg_view.DiscordResearchTopic:
     properties:
       msgCount:
@@ -4257,13 +4245,6 @@ definitions:
       msgCount:
         type: integer
       userID:
-        type: string
-    type: object
-  pkg_view.attribute:
-    properties:
-      trait_type:
-        type: string
-      value:
         type: string
     type: object
 info:
@@ -4750,7 +4731,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.GetListCompanyInfoResponse'
+            $ref: '#/definitions/GetListCompanyInfoResponse'
         "500":
           description: Internal Server Error
           schema:

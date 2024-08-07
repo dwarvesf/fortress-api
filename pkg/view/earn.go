@@ -10,7 +10,7 @@ type Earn struct {
 	PICs     []string `json:"pics"`
 	Function string   `json:"function"`
 	URL      string   `json:"url"`
-}
+} // @name Earn
 
 type ListEarnResponse struct {
 	Data []Earn `json:"earns"`

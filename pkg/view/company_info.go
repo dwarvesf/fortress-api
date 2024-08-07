@@ -16,4 +16,4 @@ func ToCompanyInfos(companies []*model.CompanyInfo) []CompanyInfo {
 
 type GetListCompanyInfoResponse struct {
 	Data []*CompanyInfo `json:"data"`
-} // @GetListCompanyInfoResponse
+} // @name GetListCompanyInfoResponse
