@@ -8,13 +8,13 @@ type DiscordResearchTopic struct {
 	URL               string
 	MsgCount          int64
 	SortedActiveUsers []DiscordTopicActiveUser
-}
+} // @name DiscordResearchTopic
 
 // DiscordTopicActiveUser represents active users who send most messages in topic
 type DiscordTopicActiveUser struct {
 	UserID   string
 	MsgCount int64
-}
+} // @name DiscordTopicActiveUser
 
 // ListResearchTopicResponse represents list of research topic
 type ListResearchTopicResponse struct {

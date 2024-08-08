@@ -1876,6 +1876,10 @@ func (h *handler) UpdateGeneralInfo(c *gin.Context) {
 		p.BankAccountID = model.UUID(body.BankAccountID)
 	}
 
+	if !body.CompanyInfoID.IsZero() {
+		p.CompanyInfoID = model.UUID(body.CompanyInfoID)
+	}
+
 	projectNotion, err := h.store.ProjectNotion.OneByProjectID(tx.DB(), p.ID.String())
 
 	if err != nil {
