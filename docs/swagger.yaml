@@ -423,6 +423,8 @@ definitions:
         items:
           $ref: '#/definitions/ClientContact'
         type: array
+      country:
+        type: string
       description:
         type: string
       id:
@@ -1217,8 +1219,9 @@ definitions:
           $ref: '#/definitions/Stack'
         type: array
       status:
+        allOf:
+        - $ref: '#/definitions/WorkingStatus'
         description: working info
-        type: string
       teamEmail:
         type: string
       updatedAt:
@@ -1935,7 +1938,7 @@ definitions:
     properties:
       data:
         items:
-          $ref: '#/definitions/pkg_view.DiscordResearchTopic'
+          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.DiscordResearchTopic'
         type: array
       page:
         description: page index
@@ -3911,7 +3914,7 @@ definitions:
   UpdateWorkingStatusRequest:
     properties:
       employeeStatus:
-        type: string
+        $ref: '#/definitions/WorkingStatus'
     type: object
   UpdatedProject:
     properties:
@@ -4219,6 +4222,20 @@ definitions:
     - WorkUnitTypeManagement
     - WorkUnitTypeTraining
     - WorkUnitTypeLearning
+  WorkingStatus:
+    enum:
+    - on-boarding
+    - left
+    - probation
+    - full-time
+    - contractor
+    type: string
+    x-enum-varnames:
+    - WorkingStatusOnBoarding
+    - WorkingStatusLeft
+    - WorkingStatusProbation
+    - WorkingStatusFullTime
+    - WorkingStatusContractor
   github_com_dwarvesf_fortress-api_pkg_model.SortOrder:
     enum:
     - asc
@@ -4227,7 +4244,7 @@ definitions:
     x-enum-varnames:
     - SortOrderASC
     - SortOrderDESC
-  pkg_view.DiscordResearchTopic:
+  github_com_dwarvesf_fortress-api_pkg_view.DiscordResearchTopic:
     properties:
       msgCount:
         type: integer
@@ -4235,12 +4252,12 @@ definitions:
         type: string
       sortedActiveUsers:
         items:
-          $ref: '#/definitions/pkg_view.DiscordTopicActiveUser'
+          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_view.DiscordTopicActiveUser'
         type: array
       url:
         type: string
     type: object
-  pkg_view.DiscordTopicActiveUser:
+  github_com_dwarvesf_fortress-api_pkg_view.DiscordTopicActiveUser:
     properties:
       msgCount:
         type: integer

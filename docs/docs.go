@@ -7448,6 +7448,9 @@ const docTemplate = `{
                         "$ref": "#/definitions/ClientContact"
                     }
                 },
+                "country": {
+                    "type": "string"
+                },
                 "description": {
                     "type": "string"
                 },
@@ -8651,7 +8654,11 @@ const docTemplate = `{
                 },
                 "status": {
                     "description": "working info",
-                    "type": "string"
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/WorkingStatus"
+                        }
+                    ]
                 },
                 "teamEmail": {
                     "type": "string"
@@ -9746,7 +9753,7 @@ const docTemplate = `{
                 "data": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/pkg_view.DiscordResearchTopic"
+                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.DiscordResearchTopic"
                     }
                 },
                 "page": {
@@ -12705,7 +12712,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "employeeStatus": {
-                    "type": "string"
+                    "$ref": "#/definitions/WorkingStatus"
                 }
             }
         },
@@ -13174,6 +13181,23 @@ const docTemplate = `{
                 "WorkUnitTypeLearning"
             ]
         },
+        "WorkingStatus": {
+            "type": "string",
+            "enum": [
+                "on-boarding",
+                "left",
+                "probation",
+                "full-time",
+                "contractor"
+            ],
+            "x-enum-varnames": [
+                "WorkingStatusOnBoarding",
+                "WorkingStatusLeft",
+                "WorkingStatusProbation",
+                "WorkingStatusFullTime",
+                "WorkingStatusContractor"
+            ]
+        },
         "github_com_dwarvesf_fortress-api_pkg_model.SortOrder": {
             "type": "string",
             "enum": [
@@ -13185,7 +13209,7 @@ const docTemplate = `{
                 "SortOrderDESC"
             ]
         },
-        "pkg_view.DiscordResearchTopic": {
+        "github_com_dwarvesf_fortress-api_pkg_view.DiscordResearchTopic": {
             "type": "object",
             "properties": {
                 "msgCount": {
@@ -13197,7 +13221,7 @@ const docTemplate = `{
                 "sortedActiveUsers": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/pkg_view.DiscordTopicActiveUser"
+                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_view.DiscordTopicActiveUser"
                     }
                 },
                 "url": {
@@ -13205,7 +13229,7 @@ const docTemplate = `{
                 }
             }
         },
-        "pkg_view.DiscordTopicActiveUser": {
+        "github_com_dwarvesf_fortress-api_pkg_view.DiscordTopicActiveUser": {
             "type": "object",
             "properties": {
                 "msgCount": {
