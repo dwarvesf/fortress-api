@@ -8,6 +8,7 @@ import (
 	"os/signal"
 
 	_ "github.com/lib/pq"
+	"github.com/gorilla/mux"
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
@@ -18,6 +19,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/service/vault"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/worker"
+	"github.com/dwarvesf/fortress-api/cmd/invoice-email"
 )
 
 // @title           FORTRESS API DOCUMENT
@@ -67,8 +69,35 @@ func main() {
 		}
 	}()
 
+	// Initialize invoice email processing components
+	emailListener := invoiceemail.NewEmailListener()
+	invoiceDetector := invoiceemail.NewInvoiceDetector()
+	db, err := invoiceemail.NewDatabase(cfg.DB.URL)
+	if err != nil {
+		log.Fatal(err, "failed to connect to database")
+	}
+	defer db.Close()
+
+	go func() {
+		emailListener.Start()
+	}()
+
+	// Initialize invoice email handler
+	invoiceEmailHandler := &invoiceemail.InvoiceEmailHandler{
+		DB:              db,
+		InvoiceDetector: invoiceDetector,
+	}
+
 	router := routes.NewRoutes(cfg, svc, s, repo, w, log)
 	request.RegisCustomValidators(router)
+
+	// Add invoice email API routes
+	apiRouter := router.PathPrefix("/api/v1").Subrouter()
+	apiRouter.HandleFunc("/invoice-emails", invoiceEmailHandler.GetInvoiceEmails).Methods("GET")
+	apiRouter.HandleFunc("/invoice-emails/{id}", invoiceEmailHandler.GetInvoiceEmail).Methods("GET")
+	apiRouter.HandleFunc("/invoice-emails", invoiceEmailHandler.CreateInvoiceEmail).Methods("POST")
+	apiRouter.HandleFunc("/invoice-emails/{id}", invoiceEmailHandler.UpdateInvoiceEmail).Methods("PUT")
+	apiRouter.HandleFunc("/invoice-emails/{id}", invoiceEmailHandler.DeleteInvoiceEmail).Methods("DELETE")
 
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%s", cfg.ApiServer.Port),
