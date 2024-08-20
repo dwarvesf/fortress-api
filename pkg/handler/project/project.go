@@ -2040,18 +2040,12 @@ func (h *handler) UpdateContactInfo(c *gin.Context) {
 }
 
 func (h *handler) updateProjectHeads(db *gorm.DB, projectID string, position model.HeadPosition, headsInput []request.ProjectHeadRequest, userInfo *model.CurrentLoggedUserInfo) error {
-	heads, err := h.store.ProjectHead.GetByProjectIDAndPosition(db, projectID, position)
-	if err != nil {
-		h.logger.Fields(logger.Fields{
-			"projectID": projectID,
-			"position":  position,
-		}).Error(err, "failed to get heads")
-		return err
-	}
-
 	// create input map
 	headInputMap := map[model.UUID]decimal.Decimal{}
 	for _, head := range headsInput {
+		if head.EmployeeID.IsZero() {
+			continue
+		}
 		exists, err := h.store.Employee.IsExist(db, head.EmployeeID.String())
 		if err != nil {
 			h.logger.Error(err, "failed to check employee existence")
@@ -2064,6 +2058,15 @@ func (h *handler) updateProjectHeads(db *gorm.DB, projectID string, position mod
 		}
 
 		headInputMap[model.UUID(head.EmployeeID)] = head.CommissionRate
+	}
+
+	heads, err := h.store.ProjectHead.GetByProjectIDAndPosition(db, projectID, position)
+	if err != nil {
+		h.logger.Fields(logger.Fields{
+			"projectID": projectID,
+			"position":  position,
+		}).Error(err, "failed to get heads")
+		return err
 	}
 
 	// update/delete exist heads
@@ -2125,7 +2128,7 @@ func (h *handler) updateProjectLead(db *gorm.DB, projectID string, employeeID mo
 		h.logger.Fields(logger.Fields{
 			"projectID":  projectID,
 			"employeeID": employeeID,
-		}).Error(err, "failed to get tecihnical lead")
+		}).Error(err, "failed to get technical lead")
 		return nil, err
 	}
 
