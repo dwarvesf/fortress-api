@@ -7448,6 +7448,9 @@ const docTemplate = `{
                         "$ref": "#/definitions/ClientContact"
                     }
                 },
+                "country": {
+                    "type": "string"
+                },
                 "description": {
                     "type": "string"
                 },
@@ -8446,6 +8449,37 @@ const docTemplate = `{
                 }
             }
         },
+        "DiscordResearchTopic": {
+            "type": "object",
+            "properties": {
+                "msgCount": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "sortedActiveUsers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DiscordTopicActiveUser"
+                    }
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "DiscordTopicActiveUser": {
+            "type": "object",
+            "properties": {
+                "msgCount": {
+                    "type": "integer"
+                },
+                "userID": {
+                    "type": "string"
+                }
+            }
+        },
         "Domain": {
             "type": "object",
             "properties": {
@@ -8651,7 +8685,11 @@ const docTemplate = `{
                 },
                 "status": {
                     "description": "working info",
-                    "type": "string"
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/WorkingStatus"
+                        }
+                    ]
                 },
                 "teamEmail": {
                     "type": "string"
@@ -9746,7 +9784,7 @@ const docTemplate = `{
                 "data": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/pkg_view.DiscordResearchTopic"
+                        "$ref": "#/definitions/DiscordResearchTopic"
                     }
                 },
                 "page": {
@@ -12705,7 +12743,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "employeeStatus": {
-                    "type": "string"
+                    "$ref": "#/definitions/WorkingStatus"
                 }
             }
         },
@@ -13174,6 +13212,23 @@ const docTemplate = `{
                 "WorkUnitTypeLearning"
             ]
         },
+        "WorkingStatus": {
+            "type": "string",
+            "enum": [
+                "on-boarding",
+                "left",
+                "probation",
+                "full-time",
+                "contractor"
+            ],
+            "x-enum-varnames": [
+                "WorkingStatusOnBoarding",
+                "WorkingStatusLeft",
+                "WorkingStatusProbation",
+                "WorkingStatusFullTime",
+                "WorkingStatusContractor"
+            ]
+        },
         "github_com_dwarvesf_fortress-api_pkg_model.SortOrder": {
             "type": "string",
             "enum": [
@@ -13184,37 +13239,6 @@ const docTemplate = `{
                 "SortOrderASC",
                 "SortOrderDESC"
             ]
-        },
-        "pkg_view.DiscordResearchTopic": {
-            "type": "object",
-            "properties": {
-                "msgCount": {
-                    "type": "integer"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "sortedActiveUsers": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/pkg_view.DiscordTopicActiveUser"
-                    }
-                },
-                "url": {
-                    "type": "string"
-                }
-            }
-        },
-        "pkg_view.DiscordTopicActiveUser": {
-            "type": "object",
-            "properties": {
-                "msgCount": {
-                    "type": "integer"
-                },
-                "userID": {
-                    "type": "string"
-                }
-            }
         }
     },
     "securityDefinitions": {
