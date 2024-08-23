@@ -423,6 +423,8 @@ definitions:
         items:
           $ref: '#/definitions/ClientContact'
         type: array
+      country:
+        type: string
       description:
         type: string
       id:
@@ -1082,6 +1084,26 @@ definitions:
           type: string
         type: array
     type: object
+  DiscordResearchTopic:
+    properties:
+      msgCount:
+        type: integer
+      name:
+        type: string
+      sortedActiveUsers:
+        items:
+          $ref: '#/definitions/DiscordTopicActiveUser'
+        type: array
+      url:
+        type: string
+    type: object
+  DiscordTopicActiveUser:
+    properties:
+      msgCount:
+        type: integer
+      userID:
+        type: string
+    type: object
   Domain:
     properties:
       average:
@@ -1217,8 +1239,9 @@ definitions:
           $ref: '#/definitions/Stack'
         type: array
       status:
+        allOf:
+        - $ref: '#/definitions/WorkingStatus'
         description: working info
-        type: string
       teamEmail:
         type: string
       updatedAt:
@@ -1935,7 +1958,7 @@ definitions:
     properties:
       data:
         items:
-          $ref: '#/definitions/pkg_view.DiscordResearchTopic'
+          $ref: '#/definitions/DiscordResearchTopic'
         type: array
       page:
         description: page index
@@ -3911,7 +3934,7 @@ definitions:
   UpdateWorkingStatusRequest:
     properties:
       employeeStatus:
-        type: string
+        $ref: '#/definitions/WorkingStatus'
     type: object
   UpdatedProject:
     properties:
@@ -4219,6 +4242,20 @@ definitions:
     - WorkUnitTypeManagement
     - WorkUnitTypeTraining
     - WorkUnitTypeLearning
+  WorkingStatus:
+    enum:
+    - on-boarding
+    - left
+    - probation
+    - full-time
+    - contractor
+    type: string
+    x-enum-varnames:
+    - WorkingStatusOnBoarding
+    - WorkingStatusLeft
+    - WorkingStatusProbation
+    - WorkingStatusFullTime
+    - WorkingStatusContractor
   github_com_dwarvesf_fortress-api_pkg_model.SortOrder:
     enum:
     - asc
@@ -4227,26 +4264,6 @@ definitions:
     x-enum-varnames:
     - SortOrderASC
     - SortOrderDESC
-  pkg_view.DiscordResearchTopic:
-    properties:
-      msgCount:
-        type: integer
-      name:
-        type: string
-      sortedActiveUsers:
-        items:
-          $ref: '#/definitions/pkg_view.DiscordTopicActiveUser'
-        type: array
-      url:
-        type: string
-    type: object
-  pkg_view.DiscordTopicActiveUser:
-    properties:
-      msgCount:
-        type: integer
-      userID:
-        type: string
-    type: object
 info:
   contact:
     email: benjamin@d.foundation

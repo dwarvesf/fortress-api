@@ -27,7 +27,8 @@
             "name": "Lorem Ipsum Inc.",
             "registrationNumber": "",
             "address": "Hado Centrosa",
-            "contacts": null
+            "contacts": null,
+            "country": "Vietnam"
         },
         "clientEmail": [
             "team@d.foundation"

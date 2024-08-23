@@ -315,6 +315,7 @@ type BasicClientInfo struct {
 	Description        string          `json:"description"`
 	RegistrationNumber string          `json:"registrationNumber"`
 	Address            string          `json:"address"`
+	Country            string          `json:"country"`
 	Contacts           []ClientContact `json:"contacts"`
 } // @name BasicClientInfo
 
@@ -342,6 +343,7 @@ func ToBasicClientInfo(client *model.Client) *BasicClientInfo {
 		//Description:        client.Description,
 		//RegistrationNumber: client.RegistrationNumber,
 		Address: client.Address,
+		Country: client.Country,
 		//Contacts:           clientContacts,
 	}
 }

@@ -37,6 +37,7 @@ func (g *googleService) GetLoginURL() string {
 // GetAccessToken return google access token
 func (g *googleService) GetAccessToken(code string, redirectURL string) (string, error) {
 	g.config.RedirectURL = redirectURL
+	fmt.Println("GetAccessToken: ", g.config.ClientID)
 	token, err := g.config.Exchange(context.Background(), code)
 	if err != nil {
 		return "", fmt.Errorf("failed to exchange code for token. err: %v, client: %v", err, g.config.ClientID)
