@@ -25,6 +25,12 @@ type MemoLog struct {
 	AuthorMemoUsernames []string `json:"-" gorm:"-"`
 }
 
+type DiscordAccountMemoRank struct {
+	DiscordID  string
+	TotalMemos int
+	Rank       int
+}
+
 func (MemoLog) BeforeCreate(db *gorm.DB) error {
 	return db.SetupJoinTable(&MemoLog{}, "Authors", &MemoAuthor{})
 }

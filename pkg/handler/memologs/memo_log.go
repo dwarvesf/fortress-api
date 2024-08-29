@@ -2,6 +2,7 @@ package memologs
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"strconv"
 	"time"
@@ -233,4 +234,38 @@ func (h *handler) ListOpenPullRequest(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](memoprs, nil, nil, nil, "ok"))
+}
+
+func (h *handler) ListByDiscordID(c *gin.Context) {
+	l := h.logger.Fields(
+		logger.Fields{
+			"handler": "memologs",
+			"method":  "ListByDiscordID",
+		},
+	)
+
+	discordID := c.Query("discordID")
+	if discordID == "" {
+		l.Error(errors.New("discordID is required"), "discordID is required")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, nil, nil, "discordID is required"))
+		return
+	}
+
+	memoLogs, err := h.store.MemoLog.List(h.repo.DB(), memolog.ListFilter{
+		DiscordID: discordID,
+	})
+	if err != nil {
+		l.Error(err, "failed to get memologs")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	discordMemoRank, err := h.store.MemoLog.GetRankByDiscordID(h.repo.DB(), discordID)
+	if err != nil {
+		l.Error(err, "failed to get rank by discord id")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToMemoLogByDiscordID(memoLogs, discordMemoRank), nil, nil, nil, ""))
 }

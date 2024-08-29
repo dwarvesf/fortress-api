@@ -1030,6 +1030,12 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/memologs.IHandler.ListOpenPullRequest-fm",
 			},
 		},
+		"/api/v1/memos/discords": {
+			"GET": {
+				Method:  "GET",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/memologs.IHandler.ListByDiscordID-fm",
+			},
+		},
 		"/api/v1/public/community-nfts/:id": {
 			"GET": {
 				Method:  "GET",
