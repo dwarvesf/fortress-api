@@ -111,7 +111,6 @@ func ToMemoLogByDiscordID(memoLogs []model.MemoLog, discordMemoRank *model.Disco
 				DiscordUsername: author.DiscordUsername,
 				MemoUsername:    author.MemoUsername,
 			})
-
 		}
 
 		rs = append(rs, MemoLog{
