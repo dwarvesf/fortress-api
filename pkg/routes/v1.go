@@ -404,6 +404,11 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 		newsGroup.GET("", amw.WithAuth, h.News.Fetch)
 	}
 
+	ogifGroup := v1.Group("/ogif")
+	{
+		ogifGroup.GET("", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesDiscordRead), h.Discord.UserOgifStats)
+	}
+
 	/////////////////
 	// PUBLIC API GROUP
 	/////////////////

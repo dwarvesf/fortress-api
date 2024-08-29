@@ -19,6 +19,7 @@ type IController interface {
 	Log(in model.LogDiscordInput) error
 	PublicAdvanceSalaryLog(in model.LogDiscordInput) error
 	ListDiscordResearchTopics(ctx context.Context, days, limit, offset int) ([]model.DiscordResearchTopic, int64, error)
+	UserOgifStats(ctx context.Context, discordID string, after time.Time) (OgifStats, error)
 }
 
 type controller struct {
@@ -271,4 +272,52 @@ func (c *controller) topicPopularity(topicID string, days int) (int64, []model.D
 	}
 
 	return totalMessages, result, lastActiveTime, nil
+}
+
+// OgifStats contains list of ogif and some stats
+type OgifStats struct {
+	OgifList               []model.EventSpeaker `json:"ogifList"`
+	UserAllTimeSpeaksCount int64                `json:"userAllTimeSpeaksCount"`
+	UserAllTimeRank        int64                `json:"userAllTimeRank"`
+	UserCurrentSpeaksCount int64                `json:"userCurrentSpeaksCount"`
+	UserCurrentRank        int64                `json:"userCurrentRank"`
+	TotalSpeakCount        int64                `json:"totalSpeakCount"`
+	CurrentSpeakCount      int64                `json:"currentSpeakCount"`
+}
+
+// UserOgifStats returns list ogif with some stats
+func (c *controller) UserOgifStats(ctx context.Context, discordID string, after time.Time) (OgifStats, error) {
+	logger := c.logger.AddField("discordID", discordID).AddField("after", after)
+
+	ogftList, err := c.store.EventSpeaker.List(c.repo.DB(), discordID, &after, "ogif")
+	if err != nil {
+		logger.Error(err, "error when retrieving list event speaker")
+		return OgifStats{}, err
+	}
+
+	ogifStats, err := c.store.EventSpeaker.GetSpeakerStats(c.repo.DB(), discordID, &after, "ogif")
+	if err != nil {
+		logger.Error(err, "error when retrieving speaker stats")
+	}
+
+	allTimeOgifStats, err := c.store.EventSpeaker.GetSpeakerStats(c.repo.DB(), discordID, nil, "ogif")
+	if err != nil {
+		logger.Error(err, "error when retrieving all time speaker stats")
+		return OgifStats{}, err
+	}
+
+	allTimeTotalCount, err := c.store.EventSpeaker.Count(c.repo.DB(), "", nil, "ogif")
+	if err != nil {
+		logger.Error(err, "error when counting all time total speak")
+	}
+
+	return OgifStats{
+		OgifList:               ogftList,
+		UserAllTimeSpeaksCount: allTimeOgifStats.TotalSpeakCount,
+		UserAllTimeRank:        allTimeOgifStats.SpeakRank,
+		UserCurrentSpeaksCount: ogifStats.TotalSpeakCount,
+		UserCurrentRank:        ogifStats.SpeakRank,
+		TotalSpeakCount:        allTimeTotalCount,
+		CurrentSpeakCount:      int64(len(ogftList)),
+	}, nil
 }

@@ -1060,6 +1060,12 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/youtube.IHandler.LatestBroadcast-fm",
 			},
 		},
+		"/api/v1/ogif": {
+			"GET": {
+				Method:  "GET",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/discord.IHandler.UserOgifStats-fm",
+			},
+		},
 	}
 
 	l := logger.NewLogrusLogger()
