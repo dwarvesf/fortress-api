@@ -7,4 +7,5 @@ type IHandler interface {
 	List(c *gin.Context)
 	Sync(c *gin.Context)
 	ListOpenPullRequest(c *gin.Context)
+	ListByDiscordID(c *gin.Context)
 }
