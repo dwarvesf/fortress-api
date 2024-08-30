@@ -703,3 +703,30 @@ func (h *handler) ListDiscordResearchTopics(c *gin.Context) {
 			Total: total,
 		}, nil, nil, ""))
 }
+
+func (h *handler) UserOgifStats(c *gin.Context) {
+	discordID := c.Query("discordID")
+	if discordID == "" {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errors.New("discord_id is required"), nil, ""))
+		return
+	}
+
+	var afterTime time.Time
+	after := c.Query("after")
+	if after != "" {
+		var err error
+		afterTime, err = time.Parse(time.RFC3339, after)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errors.New("invalid after time format"), nil, ""))
+			return
+		}
+	}
+
+	stats, err := h.controller.Discord.UserOgifStats(c.Request.Context(), discordID, afterTime)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, errors.New("discord_id is required"), nil, ""))
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse(stats, nil, nil, nil, ""))
+}

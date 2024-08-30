@@ -11,20 +11,22 @@ type Event struct {
 	Description      string                    `json:"description"`
 	Date             time.Time                 `json:"date"`
 	Image            string                    `json:"image" gorm:"-"`
-	DiscordEventID   string                    `json:"discord_event_id"`
-	DiscordChannelID string                    `json:"discord_channel_id"`
-	DiscordMessageID string                    `json:"discord_message_id"`
-	DiscordCreatorID string                    `json:"discord_creator_id"`
+	DiscordEventID   string                    `json:"discordEventId"`
+	DiscordChannelID string                    `json:"discordChannelId"`
+	DiscordMessageID string                    `json:"discordMessageId"`
+	DiscordCreatorID string                    `json:"discordCreatorId"`
 	EventType        DiscordScheduledEventType `json:"type"`
-	EventSpeakers    []EventSpeaker            `json:"event_speakers"`
-	IsOver           bool                      `json:"is_over" gorm:"-"`
+	EventSpeakers    []EventSpeaker            `json:"eventSpeakers"`
+	IsOver           bool                      `json:"isOver" gorm:"-"`
 }
 
 // EventSpeaker struct
 type EventSpeaker struct {
-	EventID          UUID   `json:"event_id"`
-	DiscordAccountID UUID   `json:"discord_account_id"`
+	EventID          UUID   `json:"eventId"`
+	DiscordAccountID UUID   `json:"discordAccountId"`
 	Topic            string `json:"topic,omitempty"`
+
+	Event *Event `json:"event"`
 }
 
 type DiscordScheduledEventType string
