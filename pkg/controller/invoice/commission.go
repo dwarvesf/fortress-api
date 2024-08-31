@@ -190,6 +190,9 @@ func (c *controller) getPICs(invoice *model.Invoice, projectMembers []*model.Pro
 				continue
 			}
 
+			if salePersonDetail.Referrer == nil {
+				continue
+			}
 			saleReferers = append(saleReferers, pic{
 				ID:             salePersonDetail.Referrer.ID,
 				CommissionRate: decimal.NewFromInt(saleReferralCommissionRate),
