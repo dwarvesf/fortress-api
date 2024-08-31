@@ -88,22 +88,22 @@ type SpeakerStats struct {
 func (s *store) GetSpeakerStats(db *gorm.DB, discordID string, after *time.Time, topic string) (SpeakerStats, error) {
 	var stats SpeakerStats
 
-	subQuery := db.Table("event_speakers").
-		Select("discord_accounts.discord_id, COUNT(event_speakers.topic) as total_speak_count").
+	query := db.Table("event_speakers").
+		Select("discord_accounts.discord_id, COUNT(event_speakers.topic) as total_speak_count, RANK() OVER (ORDER BY COUNT(event_speakers.topic) DESC) as speak_rank").
 		Joins("JOIN discord_accounts ON event_speakers.discord_account_id = discord_accounts.id").
 		Joins("JOIN events ON events.id = event_speakers.event_id")
 
 	if after != nil {
-		subQuery = subQuery.Where("events.date > ?", after)
+		query = query.Where("events.date > ?", after)
 	}
 	if topic != "" {
-		subQuery = subQuery.Where("LOWER(event_speakers.topic) LIKE LOWER(?)", "%"+topic+"%")
+		query = query.Where("LOWER(event_speakers.topic) LIKE LOWER(?)", "%"+topic+"%")
 	}
 
-	subQuery = subQuery.Group("discord_accounts.discord_id")
+	query = query.Group("discord_accounts.discord_id")
 
-	err := db.Table("(?) as subquery", subQuery).
-		Select("total_speak_count, RANK() OVER (ORDER BY total_speak_count DESC) as speak_rank").
+	err := db.Table("(?) as speaker_counts", query).
+		Select("total_speak_count, speak_rank").
 		Where("discord_id = ?", discordID).
 		Scan(&stats).Error
 
