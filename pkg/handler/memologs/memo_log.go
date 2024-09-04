@@ -42,6 +42,7 @@ func New(controller *controller.Controller, store *store.Store, repo store.DBRep
 	}
 }
 
+// Create create memo logs
 func (h *handler) Create(c *gin.Context) {
 	l := h.logger.Fields(
 		logger.Fields{
@@ -153,6 +154,7 @@ func (h *handler) Create(c *gin.Context) {
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToMemoLog(logs), nil, nil, body, ""))
 }
 
+// List list memo logs
 func (h *handler) List(c *gin.Context) {
 	l := h.logger.Fields(
 		logger.Fields{
@@ -200,6 +202,7 @@ func (h *handler) List(c *gin.Context) {
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToMemoLog(memoLogs), nil, nil, nil, ""))
 }
 
+// Sync sync memo logs
 func (h *handler) Sync(c *gin.Context) {
 	l := h.logger.Fields(
 		logger.Fields{
@@ -218,6 +221,7 @@ func (h *handler) Sync(c *gin.Context) {
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToMemoLog(results), nil, nil, nil, "ok"))
 }
 
+// ListOpenPullRequest list open pull request
 func (h *handler) ListOpenPullRequest(c *gin.Context) {
 	l := h.logger.Fields(
 		logger.Fields{
@@ -236,6 +240,7 @@ func (h *handler) ListOpenPullRequest(c *gin.Context) {
 	c.JSON(http.StatusOK, view.CreateResponse[any](memoprs, nil, nil, nil, "ok"))
 }
 
+// ListByDiscordID list memo logs by discord id
 func (h *handler) ListByDiscordID(c *gin.Context) {
 	l := h.logger.Fields(
 		logger.Fields{
@@ -268,4 +273,22 @@ func (h *handler) ListByDiscordID(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToMemoLogByDiscordID(memoLogs, discordMemoRank), nil, nil, nil, ""))
+}
+
+func (h *handler) GetTopAuthors(c *gin.Context) {
+	l := h.logger.Fields(
+		logger.Fields{
+			"handler": "memologs",
+			"method":  "GetTopAuthors",
+		},
+	)
+
+	topAuthors, err := h.store.MemoLog.GetTopAuthors(h.repo.DB(), 10)
+	if err != nil {
+		l.Error(err, "failed to get top authors")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToMemoTopAuthors(topAuthors), nil, nil, nil, ""))
 }

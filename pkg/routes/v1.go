@@ -350,6 +350,7 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 		memoGroup.GET("", amw.WithAuth, h.MemoLog.List)
 		memoGroup.GET("/discords", amw.WithAuth, h.MemoLog.ListByDiscordID)
 		memoGroup.GET("/prs", amw.WithAuth, h.MemoLog.ListOpenPullRequest)
+		memoGroup.GET("/top-authors", amw.WithAuth, h.MemoLog.GetTopAuthors)
 	}
 
 	earnGroup := v1.Group("/earns")

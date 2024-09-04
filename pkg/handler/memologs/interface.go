@@ -8,4 +8,5 @@ type IHandler interface {
 	Sync(c *gin.Context)
 	ListOpenPullRequest(c *gin.Context)
 	ListByDiscordID(c *gin.Context)
+	GetTopAuthors(c *gin.Context)
 }

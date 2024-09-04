@@ -139,3 +139,28 @@ func ToMemoLogByDiscordID(memoLogs []model.MemoLog, discordMemoRank *model.Disco
 		Rank:     authorRank,
 	}
 }
+
+type DiscordAccountMemoRank struct {
+	DiscordID  string `json:"discordID"`
+	TotalMemos int    `json:"totalMemos"`
+	Rank       int    `json:"rank"`
+} // @name DiscordAccountMemoRank
+
+// MemoTopAuthorsResponse response for memo top authors
+type MemoTopAuthorsResponse struct {
+	Data []DiscordAccountMemoRank `json:"data"`
+} // @name MemoTopAuthorsResponse
+
+// ToMemoTopAuthors ...
+func ToMemoTopAuthors(discordMemoRank []model.DiscordAccountMemoRank) []DiscordAccountMemoRank {
+	rs := make([]DiscordAccountMemoRank, 0)
+	for _, rank := range discordMemoRank {
+		rs = append(rs, DiscordAccountMemoRank{
+			DiscordID:  rank.DiscordID,
+			TotalMemos: rank.TotalMemos,
+			Rank:       rank.Rank,
+		})
+	}
+
+	return rs
+}

@@ -120,6 +120,39 @@ func (s *store) GetRankByDiscordID(db *gorm.DB, discordID string) (*model.Discor
 	return &memoRank, nil
 }
 
+// CreateMemoAuthor creates a memo author record in the database
 func (s *store) CreateMemoAuthor(db *gorm.DB, memoAuthor *model.MemoAuthor) error {
 	return db.Create(memoAuthor).Error
+}
+
+// GetTopAuthors gets the top authors by memo count
+func (s *store) GetTopAuthors(db *gorm.DB, limit int) ([]model.DiscordAccountMemoRank, error) {
+	query := `
+		WITH memo_count AS (
+    SELECT
+        da.discord_id,
+        COUNT(ml.id) AS total_memos
+    FROM
+        public.memo_authors ma
+    JOIN
+        public.memo_logs ml ON ma.memo_log_id = ml.id
+    JOIN
+        public.discord_accounts da ON ma.discord_account_id = da.id
+    WHERE
+        ml.deleted_at IS NULL -- Exclude deleted memos if necessary
+    GROUP BY
+        da.discord_id, da.discord_username
+		)
+		SELECT
+			discord_id,
+			total_memos,
+			RANK() OVER (ORDER BY total_memos DESC) AS rank
+		FROM
+			memo_count
+		ORDER BY
+			total_memos DESC
+		LIMIT ?;
+	`
+	var topAuthors []model.DiscordAccountMemoRank
+	return topAuthors, db.Raw(query, limit).Scan(&topAuthors).Error
 }
