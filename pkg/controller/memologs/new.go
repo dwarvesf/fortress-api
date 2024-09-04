@@ -28,5 +28,6 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 
 type IController interface {
 	Sync() ([]model.MemoLog, error)
+	Sweep() error
 	ListOpenPullRequest() (map[string][]model.MemoPullRequest, error)
 }

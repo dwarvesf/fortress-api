@@ -52,6 +52,26 @@ func (s *store) List(db *gorm.DB, filter ListFilter) ([]model.MemoLog, error) {
 	return logs, query.Find(&logs).Error
 }
 
+// ListNonAuthor gets all memo logs that have no author info
+func (s *store) ListNonAuthor(db *gorm.DB) ([]model.MemoLog, error) {
+	var logs []model.MemoLog
+	query := `
+		SELECT 
+			memo_logs.*
+		FROM 
+			memo_logs
+		LEFT JOIN 
+			memo_authors ON memo_authors.memo_log_id = memo_logs.id
+		GROUP BY 
+			memo_logs.id
+		HAVING 
+			STRING_AGG(memo_authors.discord_account_id::text, ', ') IS NULL OR 
+			STRING_AGG(memo_authors.discord_account_id::text, ', ') = ''
+	`
+
+	return logs, db.Raw(query).Scan(&logs).Error
+}
+
 func (s *store) GetRankByDiscordID(db *gorm.DB, discordID string) (*model.DiscordAccountMemoRank, error) {
 	query := `
 		WITH memo_count AS (
@@ -98,4 +118,8 @@ func (s *store) GetRankByDiscordID(db *gorm.DB, discordID string) (*model.Discor
 	}
 
 	return &memoRank, nil
+}
+
+func (s *store) CreateMemoAuthor(db *gorm.DB, memoAuthor *model.MemoAuthor) error {
+	return db.Create(memoAuthor).Error
 }
