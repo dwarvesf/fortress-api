@@ -9,6 +9,7 @@ type IHandler interface {
 	ReportBraineryMetrics(c *gin.Context)
 	DeliveryMetricsReport(c *gin.Context)
 	SyncMemo(c *gin.Context)
+	SweepMemo(c *gin.Context)
 	NotifyWeeklyMemos(c *gin.Context)
 	CreateScheduledEvent(c *gin.Context)
 	ListScheduledEvent(c *gin.Context)

@@ -385,6 +385,18 @@ func (h *handler) SyncMemo(c *gin.Context) {
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))
 }
 
+// SweepMemo sweeps memologs
+func (h *handler) SweepMemo(c *gin.Context) {
+	err := h.controller.MemoLog.Sweep()
+	if err != nil {
+		h.logger.Error(err, "failed to sweep memologs")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))
+}
+
 func (h *handler) NotifyWeeklyMemos(c *gin.Context) {
 	// get last 7 days
 	end := time.Now()

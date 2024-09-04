@@ -1072,6 +1072,12 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/discord.IHandler.UserOgifStats-fm",
 			},
 		},
+		"/cronjobs/sweep-memo": {
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/discord.IHandler.SweepMemo-fm",
+			},
+		},
 	}
 
 	l := logger.NewLogrusLogger()
