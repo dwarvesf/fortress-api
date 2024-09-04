@@ -15,4 +15,5 @@ type IStore interface {
 	GetRankByDiscordID(db *gorm.DB, discordID string) (*model.DiscordAccountMemoRank, error)
 	ListNonAuthor(db *gorm.DB) ([]model.MemoLog, error)
 	CreateMemoAuthor(db *gorm.DB, memoAuthor *model.MemoAuthor) error
+	GetTopAuthors(db *gorm.DB, limit int) ([]model.DiscordAccountMemoRank, error)
 }
