@@ -1084,6 +1084,12 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/discord.IHandler.SweepMemo-fm",
 			},
 		},
+		"/api/v1/ogif/leaderboard": {
+			"GET": {
+				Method:  "GET",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/discord.IHandler.OgifLeaderboard-fm",
+			},
+		},
 	}
 
 	l := logger.NewLogrusLogger()

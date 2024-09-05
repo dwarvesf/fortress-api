@@ -14,4 +14,5 @@ type IStore interface {
 	List(db *gorm.DB, discordID string, after *time.Time, topic string) ([]model.EventSpeaker, error)
 	GetSpeakerStats(db *gorm.DB, discordID string, after *time.Time, topic string) (SpeakerStats, error)
 	Count(db *gorm.DB, discordID string, after *time.Time, topic string) (int64, error)
+	GetLeaderboard(db *gorm.DB, after *time.Time, limit int, topic string) ([]model.OgifLeaderboardRecord, error)
 }

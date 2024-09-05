@@ -410,6 +410,7 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 	ogifGroup := v1.Group("/ogif")
 	{
 		ogifGroup.GET("", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesDiscordRead), h.Discord.UserOgifStats)
+		ogifGroup.GET("/leaderboard", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesDiscordRead), h.Discord.OgifLeaderboard)
 	}
 
 	/////////////////
