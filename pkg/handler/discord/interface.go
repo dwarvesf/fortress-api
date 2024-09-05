@@ -16,4 +16,5 @@ type IHandler interface {
 	SetScheduledEventSpeakers(c *gin.Context)
 	ListDiscordResearchTopics(c *gin.Context)
 	UserOgifStats(c *gin.Context)
+	OgifLeaderboard(c *gin.Context)
 }
