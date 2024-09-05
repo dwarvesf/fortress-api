@@ -113,3 +113,30 @@ func (s *store) GetSpeakerStats(db *gorm.DB, discordID string, after *time.Time,
 
 	return stats, nil
 }
+
+// GetLeaderboard returns the top speakers ordered by the count of events with a topic containing 'ogif' (case insensitive)
+func (s *store) GetLeaderboard(db *gorm.DB, after *time.Time, limit int, topic string) ([]model.OgifLeaderboardRecord, error) {
+	leaderboard := make([]model.OgifLeaderboardRecord, 0)
+
+	query := db.Table("event_speakers").
+		Select("discord_accounts.discord_id, COUNT(DISTINCT event_speakers.event_id) as speak_count").
+		Joins("JOIN discord_accounts ON event_speakers.discord_account_id = discord_accounts.id").
+		Joins("JOIN events ON events.id = event_speakers.event_id").
+		Joins("LEFT JOIN employees ON employees.discord_account_id = discord_accounts.id").
+		Where("LOWER(event_speakers.topic) LIKE LOWER(?)", "%"+topic+"%")
+
+	if after != nil {
+		query = query.Where("events.date > ?", after)
+	}
+
+	err := query.Group("discord_accounts.discord_id").
+		Order("speak_count DESC").
+		Limit(limit).
+		Scan(&leaderboard).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return leaderboard, nil
+}

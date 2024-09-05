@@ -51,3 +51,9 @@ func (e DiscordScheduledEventType) IsValid() bool {
 func (e DiscordScheduledEventType) String() string {
 	return string(e)
 }
+
+// OgifLeaderboardRecord represents an element in the OGIF leaderboard
+type OgifLeaderboardRecord struct {
+	DiscordID  string `json:"discordID"`
+	SpeakCount int64  `json:"speakCount"`
+}

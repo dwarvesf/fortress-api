@@ -20,6 +20,7 @@ type IController interface {
 	PublicAdvanceSalaryLog(in model.LogDiscordInput) error
 	ListDiscordResearchTopics(ctx context.Context, days, limit, offset int) ([]model.DiscordResearchTopic, int64, error)
 	UserOgifStats(ctx context.Context, discordID string, after time.Time) (OgifStats, error)
+	GetOgifLeaderboard(ctx context.Context, after time.Time, limit int) ([]model.OgifLeaderboardRecord, error)
 }
 
 type controller struct {
@@ -320,4 +321,17 @@ func (c *controller) UserOgifStats(ctx context.Context, discordID string, after 
 		TotalSpeakCount:        allTimeTotalCount,
 		CurrentSpeakCount:      int64(len(ogftList)),
 	}, nil
+}
+
+// GetOgifLeaderboard returns the OGIF leaderboard
+func (c *controller) GetOgifLeaderboard(ctx context.Context, after time.Time, limit int) ([]model.OgifLeaderboardRecord, error) {
+	logger := c.logger.AddField("after", after).AddField("limit", limit)
+
+	leaderboard, err := c.store.EventSpeaker.GetLeaderboard(c.repo.DB(), &after, limit, "ogif")
+	if err != nil {
+		logger.Error(err, "error when retrieving OGIF leaderboard")
+		return nil, err
+	}
+
+	return leaderboard, nil
 }

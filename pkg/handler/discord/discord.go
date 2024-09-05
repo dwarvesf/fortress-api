@@ -742,3 +742,26 @@ func (h *handler) UserOgifStats(c *gin.Context) {
 
 	c.JSON(http.StatusOK, view.CreateResponse(stats, nil, nil, nil, ""))
 }
+
+func (h *handler) OgifLeaderboard(c *gin.Context) {
+	var afterTime time.Time
+	after := c.Query("after")
+	if after != "" {
+		var err error
+		afterTime, err = time.Parse(time.RFC3339, after)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errors.New("invalid after time format"), nil, ""))
+			return
+		}
+	}
+
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
+
+	leaderboard, err := h.controller.Discord.GetOgifLeaderboard(c.Request.Context(), afterTime, limit)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse(leaderboard, nil, nil, nil, ""))
+}
