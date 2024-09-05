@@ -28,13 +28,6 @@ type MemoLogAuthor struct {
 	MemoUsername    string `json:"memoUsername"`
 }
 
-// AuthorRanking is the rank of the discord account
-type AuthorRanking struct {
-	DiscordID  string `json:"discordID"`
-	TotalMemos int    `json:"totalMemos"`
-	Rank       int    `json:"rank"`
-}
-
 // MemoLogsResponse response for memo logs
 type MemoLogsResponse struct {
 	Data []MemoLog `json:"data"`
@@ -140,25 +133,29 @@ func ToMemoLogByDiscordID(memoLogs []model.MemoLog, discordMemoRank *model.Disco
 	}
 }
 
-type DiscordAccountMemoRank struct {
-	DiscordID  string `json:"discordID"`
-	TotalMemos int    `json:"totalMemos"`
-	Rank       int    `json:"rank"`
-} // @name DiscordAccountMemoRank
+type AuthorRanking struct {
+	DiscordID       string `json:"discordID"`
+	DiscordUsername string `json:"discordUsername"`
+	MemoUsername    string `json:"memoUsername"`
+	TotalMemos      int    `json:"totalMemos"`
+	Rank            int    `json:"rank"`
+} // @name AuthorRanking
 
 // MemoTopAuthorsResponse response for memo top authors
 type MemoTopAuthorsResponse struct {
-	Data []DiscordAccountMemoRank `json:"data"`
+	Data []AuthorRanking `json:"data"`
 } // @name MemoTopAuthorsResponse
 
 // ToMemoTopAuthors ...
-func ToMemoTopAuthors(discordMemoRank []model.DiscordAccountMemoRank) []DiscordAccountMemoRank {
-	rs := make([]DiscordAccountMemoRank, 0)
+func ToMemoTopAuthors(discordMemoRank []model.DiscordAccountMemoRank) []AuthorRanking {
+	rs := make([]AuthorRanking, 0)
 	for _, rank := range discordMemoRank {
-		rs = append(rs, DiscordAccountMemoRank{
-			DiscordID:  rank.DiscordID,
-			TotalMemos: rank.TotalMemos,
-			Rank:       rank.Rank,
+		rs = append(rs, AuthorRanking{
+			DiscordID:       rank.DiscordID,
+			DiscordUsername: rank.DiscordUsername,
+			MemoUsername:    rank.MemoUsername,
+			TotalMemos:      rank.TotalMemos,
+			Rank:            rank.Rank,
 		})
 	}
 

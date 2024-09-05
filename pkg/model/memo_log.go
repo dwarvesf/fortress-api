@@ -26,9 +26,11 @@ type MemoLog struct {
 }
 
 type DiscordAccountMemoRank struct {
-	DiscordID  string
-	TotalMemos int
-	Rank       int
+	DiscordID       string
+	DiscordUsername string
+	MemoUsername    string
+	TotalMemos      int
+	Rank            int
 }
 
 func (MemoLog) BeforeCreate(db *gorm.DB) error {
