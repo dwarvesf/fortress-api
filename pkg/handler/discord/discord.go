@@ -765,3 +765,14 @@ func (h *handler) OgifLeaderboard(c *gin.Context) {
 
 	c.JSON(http.StatusOK, view.CreateResponse(leaderboard, nil, nil, nil, ""))
 }
+
+func (h *handler) SweepOgifEvent(c *gin.Context) {
+	err := h.controller.Event.SweepOgifEvent(c.Request.Context())
+	if err != nil {
+		h.logger.Error(err, "failed to sweep events")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "events swept successfully"))
+}

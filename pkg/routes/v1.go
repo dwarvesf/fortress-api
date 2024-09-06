@@ -35,6 +35,7 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 		cronjob.POST("/sweep-memo", amw.WithAuth, pmw.WithPerm(model.PermissionCronjobExecute), h.Discord.SweepMemo)
 		cronjob.POST("/notify-weekly-memos", amw.WithAuth, pmw.WithPerm(model.PermissionCronjobExecute), h.Discord.NotifyWeeklyMemos)
 		cronjob.POST("/transcribe-youtube-broadcast", amw.WithAuth, pmw.WithPerm(model.PermissionCronjobExecute), h.Youtube.TranscribeBroadcast)
+		cronjob.POST("/sweep-ogif-event", amw.WithAuth, pmw.WithPerm(model.PermissionCronjobExecute), h.Discord.SweepOgifEvent)
 	}
 
 	/////////////////

@@ -47,7 +47,7 @@ func (s *store) All(db *gorm.DB, q *Query, preload bool) ([]*model.Event, error)
 		return e, query.Find(&e).Error
 	}
 
-	return e, query.Preload("EventSpeakers", "deleted_at IS NULL").Find(&e).Error
+	return e, query.Preload("EventSpeakers").Find(&e).Order("date desc").Error
 }
 
 // Create creates a new e
