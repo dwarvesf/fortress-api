@@ -12,6 +12,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/controller/discord"
 	"github.com/dwarvesf/fortress-api/pkg/controller/earn"
 	"github.com/dwarvesf/fortress-api/pkg/controller/employee"
+	"github.com/dwarvesf/fortress-api/pkg/controller/event"
 	"github.com/dwarvesf/fortress-api/pkg/controller/icy"
 	"github.com/dwarvesf/fortress-api/pkg/controller/invoice"
 	"github.com/dwarvesf/fortress-api/pkg/controller/memologs"
@@ -37,6 +38,7 @@ type Controller struct {
 	CommunityNft   communitynft.IController
 	Earn           earn.IController
 	News           news.IController
+	Event          event.IController
 }
 
 func New(store *store.Store, repo store.DBRepo, service *service.Service, worker *worker.Worker, logger logger.Logger, cfg *config.Config) *Controller {
@@ -55,5 +57,6 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, worker
 		CommunityNft:   communitynft.New(store, repo, service, logger, cfg),
 		Earn:           earn.New(store, repo, service, logger, cfg),
 		News:           news.New(store, service, logger, cfg),
+		Event:          event.New(store, repo, service, logger, cfg),
 	}
 }
