@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 
 	"github.com/dwarvesf/fortress-api/pkg/model"
 )
@@ -16,7 +17,12 @@ func New() IStore {
 
 // Create creates a new e
 func (s *store) Create(db *gorm.DB, e *model.EventSpeaker) (*model.EventSpeaker, error) {
-	return e, db.Create(e).Error
+	return e, db.Clauses(
+		clause.OnConflict{
+			Columns:   []clause.Column{{Name: "topic"}},
+			DoNothing: true,
+		},
+	).Create(e).Error
 }
 
 // DeleteAllByEventID deletes all event speakers by event id

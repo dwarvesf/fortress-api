@@ -17,4 +17,5 @@ type IHandler interface {
 	ListDiscordResearchTopics(c *gin.Context)
 	UserOgifStats(c *gin.Context)
 	OgifLeaderboard(c *gin.Context)
+	SweepOgifEvent(c *gin.Context)
 }
