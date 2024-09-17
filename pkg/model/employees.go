@@ -114,6 +114,12 @@ type Employee struct {
 	LocalBranchName        string `gorm:"default:null"`
 	LocalBankRecipientName string `gorm:"default:null"`
 
+	BeneficiaryBankName      string `gorm:"default:null"`
+	BeneficiaryBankPostcode  string `gorm:"default:null"`
+	BeneficiaryBankAddress   string `gorm:"default:null"`
+	BeneficiaryBankCity      string `gorm:"default:null"`
+	BeneficiaryRoutingNumber string `gorm:"default:null"`
+
 	Seniority             *Seniority
 	LineManager           *Employee
 	Referrer              *Employee `gorm:"foreignKey:referred_by;"`

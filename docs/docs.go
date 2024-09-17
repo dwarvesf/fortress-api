@@ -8568,6 +8568,21 @@ const docTemplate = `{
                 "baseSalary": {
                     "$ref": "#/definitions/BaseSalary"
                 },
+                "beneficiaryBankAddress": {
+                    "type": "string"
+                },
+                "beneficiaryBankCity": {
+                    "type": "string"
+                },
+                "beneficiaryBankName": {
+                    "type": "string"
+                },
+                "beneficiaryBankPostcode": {
+                    "type": "string"
+                },
+                "beneficiaryRoutingNumber": {
+                    "type": "string"
+                },
                 "birthday": {
                     "type": "string"
                 },

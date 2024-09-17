@@ -47,7 +47,12 @@
       "wiseAccountNumber": "",
       "wiseRecipientEmail": "",
       "wiseRecipientName": "",
-      "wiseCurrency": ""
+      "wiseCurrency": "",
+      "beneficiaryBankName": "",
+      "beneficiaryBankPostcode": "",
+      "beneficiaryBankAddress": "",
+      "beneficiaryBankCity": "",
+      "beneficiaryRoutingNumber": ""
     }
   ]
 }
