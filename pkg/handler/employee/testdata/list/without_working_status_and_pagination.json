@@ -47,7 +47,12 @@
       "wiseAccountNumber": "",
       "wiseRecipientEmail": "",
       "wiseRecipientName": "",
-      "wiseCurrency": ""
+      "wiseCurrency": "",
+      "beneficiaryBankName": "",
+      "beneficiaryBankPostcode": "",
+      "beneficiaryBankAddress": "",
+      "beneficiaryBankCity": "",
+      "beneficiaryRoutingNumber": ""
     },
     {
       "id": "38a00d4a-bc45-41de-965a-adc674ab82c9",
@@ -92,7 +97,12 @@
       "wiseAccountNumber": "",
       "wiseRecipientEmail": "",
       "wiseRecipientName": "",
-      "wiseCurrency": ""
+      "wiseCurrency": "",
+      "beneficiaryBankName": "",
+      "beneficiaryBankPostcode": "",
+      "beneficiaryBankAddress": "",
+      "beneficiaryBankCity": "",
+      "beneficiaryRoutingNumber": ""
     },
     {
       "id": "7fbfb59b-e00e-46b2-85cd-64f9f9942daa",
@@ -137,7 +147,12 @@
       "wiseAccountNumber": "",
       "wiseRecipientEmail": "",
       "wiseRecipientName": "",
-      "wiseCurrency": ""
+      "wiseCurrency": "",
+      "beneficiaryBankName": "",
+      "beneficiaryBankPostcode": "",
+      "beneficiaryBankAddress": "",
+      "beneficiaryBankCity": "",
+      "beneficiaryRoutingNumber": ""
     },
     {
       "id": "ac318f73-0c8e-43ed-b00e-d230670dc400",
@@ -182,7 +197,12 @@
       "wiseAccountNumber": "",
       "wiseRecipientEmail": "",
       "wiseRecipientName": "",
-      "wiseCurrency": ""
+      "wiseCurrency": "",
+      "beneficiaryBankName": "",
+      "beneficiaryBankPostcode": "",
+      "beneficiaryBankAddress": "",
+      "beneficiaryBankCity": "",
+      "beneficiaryRoutingNumber": ""
     },
     {
       "id": "d42a6fca-d3b8-4a48-80f7-a95772abda56",
@@ -227,7 +247,12 @@
       "wiseAccountNumber": "",
       "wiseRecipientEmail": "",
       "wiseRecipientName": "",
-      "wiseCurrency": ""
+      "wiseCurrency": "",
+      "beneficiaryBankName": "",
+      "beneficiaryBankPostcode": "",
+      "beneficiaryBankAddress": "",
+      "beneficiaryBankCity": "",
+      "beneficiaryRoutingNumber": ""
     },
     {
       "id": "d675dfc5-acbe-4566-acde-f7cb132c0206",
@@ -272,7 +297,12 @@
       "wiseAccountNumber": "",
       "wiseRecipientEmail": "",
       "wiseRecipientName": "",
-      "wiseCurrency": ""
+      "wiseCurrency": "",
+      "beneficiaryBankName": "",
+      "beneficiaryBankPostcode": "",
+      "beneficiaryBankAddress": "",
+      "beneficiaryBankCity": "",
+      "beneficiaryRoutingNumber": ""
     },
     {
       "id": "f6ce0d0f-5794-463b-ad0b-8240ab9c49be",
@@ -317,7 +347,12 @@
       "wiseAccountNumber": "",
       "wiseRecipientEmail": "",
       "wiseRecipientName": "",
-      "wiseCurrency": ""
+      "wiseCurrency": "",
+      "beneficiaryBankName": "",
+      "beneficiaryBankPostcode": "",
+      "beneficiaryBankAddress": "",
+      "beneficiaryBankCity": "",
+      "beneficiaryRoutingNumber": ""
     },
     {
       "id": "f7c6016b-85b5-47f7-8027-23c2db482197",
@@ -362,7 +397,12 @@
       "wiseAccountNumber": "",
       "wiseRecipientEmail": "",
       "wiseRecipientName": "",
-      "wiseCurrency": ""
+      "wiseCurrency": "",
+      "beneficiaryBankName": "",
+      "beneficiaryBankPostcode": "",
+      "beneficiaryBankAddress": "",
+      "beneficiaryBankCity": "",
+      "beneficiaryRoutingNumber": ""
     },
     {
       "id": "061820c0-bf6c-4b4a-9753-875f75d71a2c",
@@ -407,7 +447,12 @@
       "wiseAccountNumber": "",
       "wiseRecipientEmail": "",
       "wiseRecipientName": "",
-      "wiseCurrency": ""
+      "wiseCurrency": "",
+      "beneficiaryBankName": "",
+      "beneficiaryBankPostcode": "",
+      "beneficiaryBankAddress": "",
+      "beneficiaryBankCity": "",
+      "beneficiaryRoutingNumber": ""
     },
     {
       "id": "dcfee24b-306d-4609-9c24-a4021639a11b",
@@ -452,7 +497,12 @@
       "wiseAccountNumber": "",
       "wiseRecipientEmail": "",
       "wiseRecipientName": "",
-      "wiseCurrency": ""
+      "wiseCurrency": "",
+      "beneficiaryBankName": "",
+      "beneficiaryBankPostcode": "",
+      "beneficiaryBankAddress": "",
+      "beneficiaryBankCity": "",
+      "beneficiaryRoutingNumber": ""
     },
     {
       "id": "d1b1dcbe-f4ed-49cc-a16b-56c9a3145c14",
@@ -497,7 +547,12 @@
       "wiseAccountNumber": "",
       "wiseRecipientEmail": "",
       "wiseRecipientName": "",
-      "wiseCurrency": ""
+      "wiseCurrency": "",
+      "beneficiaryBankName": "",
+      "beneficiaryBankPostcode": "",
+      "beneficiaryBankAddress": "",
+      "beneficiaryBankCity": "",
+      "beneficiaryRoutingNumber": ""
     },
     {
       "id": "498d5805-dd64-4643-902d-95067d6e5ab5",
@@ -542,7 +597,12 @@
       "wiseAccountNumber": "",
       "wiseRecipientEmail": "",
       "wiseRecipientName": "",
-      "wiseCurrency": ""
+      "wiseCurrency": "",
+      "beneficiaryBankName": "",
+      "beneficiaryBankPostcode": "",
+      "beneficiaryBankAddress": "",
+      "beneficiaryBankCity": "",
+      "beneficiaryRoutingNumber": ""
     },
     {
       "id": "d389d35e-c548-42cf-9f29-2a599969a8f2",
@@ -587,7 +647,12 @@
       "wiseAccountNumber": "",
       "wiseRecipientEmail": "",
       "wiseRecipientName": "",
-      "wiseCurrency": ""
+      "wiseCurrency": "",
+      "beneficiaryBankName": "",
+      "beneficiaryBankPostcode": "",
+      "beneficiaryBankAddress": "",
+      "beneficiaryBankCity": "",
+      "beneficiaryRoutingNumber": ""
     },
     {
       "id": "7bcf4b45-0279-4da2-84e4-eec5d9d05ba3",
@@ -632,7 +697,12 @@
       "wiseAccountNumber": "",
       "wiseRecipientEmail": "",
       "wiseRecipientName": "",
-      "wiseCurrency": ""
+      "wiseCurrency": "",
+      "beneficiaryBankName": "",
+      "beneficiaryBankPostcode": "",
+      "beneficiaryBankAddress": "",
+      "beneficiaryBankCity": "",
+      "beneficiaryRoutingNumber": ""
     },
     {
       "id": "a1f25e3e-cf40-4d97-a4d5-c27ee566b8c5",
@@ -677,7 +747,12 @@
       "wiseAccountNumber": "",
       "wiseRecipientEmail": "",
       "wiseRecipientName": "",
-      "wiseCurrency": ""
+      "wiseCurrency": "",
+      "beneficiaryBankName": "",
+      "beneficiaryBankPostcode": "",
+      "beneficiaryBankAddress": "",
+      "beneficiaryBankCity": "",
+      "beneficiaryRoutingNumber": ""
     },
     {
       "id": "37e00d47-de69-4ac8-991b-cf3e39565c00",
@@ -722,7 +797,12 @@
       "wiseAccountNumber": "",
       "wiseRecipientEmail": "",
       "wiseRecipientName": "",
-      "wiseCurrency": ""
+      "wiseCurrency": "",
+      "beneficiaryBankName": "",
+      "beneficiaryBankPostcode": "",
+      "beneficiaryBankAddress": "",
+      "beneficiaryBankCity": "",
+      "beneficiaryRoutingNumber": ""
     },
     {
       "id": "eeae589a-94e3-49ac-a94c-fcfb084152b2",
@@ -767,7 +847,12 @@
       "wiseAccountNumber": "",
       "wiseRecipientEmail": "",
       "wiseRecipientName": "",
-      "wiseCurrency": ""
+      "wiseCurrency": "",
+      "beneficiaryBankName": "",
+      "beneficiaryBankPostcode": "",
+      "beneficiaryBankAddress": "",
+      "beneficiaryBankCity": "",
+      "beneficiaryRoutingNumber": ""
     },
     {
       "id": "2655832e-f009-4b73-a535-64c3a22e558f",
@@ -812,7 +897,12 @@
       "wiseAccountNumber": "",
       "wiseRecipientEmail": "",
       "wiseRecipientName": "",
-      "wiseCurrency": ""
+      "wiseCurrency": "",
+      "beneficiaryBankName": "",
+      "beneficiaryBankPostcode": "",
+      "beneficiaryBankAddress": "",
+      "beneficiaryBankCity": "",
+      "beneficiaryRoutingNumber": ""
     },
     {
       "id": "ecea9d15-05ba-4a4e-9787-54210e3b98ce",
@@ -857,7 +947,12 @@
       "wiseAccountNumber": "",
       "wiseRecipientEmail": "",
       "wiseRecipientName": "",
-      "wiseCurrency": ""
+      "wiseCurrency": "",
+      "beneficiaryBankName": "",
+      "beneficiaryBankPostcode": "",
+      "beneficiaryBankAddress": "",
+      "beneficiaryBankCity": "",
+      "beneficiaryRoutingNumber": ""
     },
     {
       "id": "3f705527-0455-4e67-a585-6c1f23726fff",
@@ -902,7 +997,12 @@
       "wiseAccountNumber": "",
       "wiseRecipientEmail": "",
       "wiseRecipientName": "",
-      "wiseCurrency": ""
+      "wiseCurrency": "",
+      "beneficiaryBankName": "",
+      "beneficiaryBankPostcode": "",
+      "beneficiaryBankAddress": "",
+      "beneficiaryBankCity": "",
+      "beneficiaryRoutingNumber": ""
     },
     {
       "id": "608ea227-45a5-4c8a-af43-6c7280d96340",
@@ -947,7 +1047,12 @@
       "wiseAccountNumber": "",
       "wiseRecipientEmail": "",
       "wiseRecipientName": "",
-      "wiseCurrency": ""
+      "wiseCurrency": "",
+      "beneficiaryBankName": "",
+      "beneficiaryBankPostcode": "",
+      "beneficiaryBankAddress": "",
+      "beneficiaryBankCity": "",
+      "beneficiaryRoutingNumber": ""
     },
     {
       "id": "8d7c99c0-3253-4286-93a9-e7554cb327ef",
@@ -992,7 +1097,12 @@
       "wiseAccountNumber": "",
       "wiseRecipientEmail": "",
       "wiseRecipientName": "",
-      "wiseCurrency": ""
+      "wiseCurrency": "",
+      "beneficiaryBankName": "",
+      "beneficiaryBankPostcode": "",
+      "beneficiaryBankAddress": "",
+      "beneficiaryBankCity": "",
+      "beneficiaryRoutingNumber": ""
     }
   ]
 }

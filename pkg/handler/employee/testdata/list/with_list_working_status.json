@@ -47,7 +47,12 @@
       "wiseAccountNumber": "",
       "wiseRecipientEmail": "",
       "wiseRecipientName": "",
-      "wiseCurrency": ""
+      "wiseCurrency": "",
+      "beneficiaryBankName": "",
+      "beneficiaryBankPostcode": "",
+      "beneficiaryBankAddress": "",
+      "beneficiaryBankCity": "",
+      "beneficiaryRoutingNumber": ""
     },
     {
       "id": "38a00d4a-bc45-41de-965a-adc674ab82c9",
@@ -92,7 +97,12 @@
       "wiseAccountNumber": "",
       "wiseRecipientEmail": "",
       "wiseRecipientName": "",
-      "wiseCurrency": ""
+      "wiseCurrency": "",
+      "beneficiaryBankName": "",
+      "beneficiaryBankPostcode": "",
+      "beneficiaryBankAddress": "",
+      "beneficiaryBankCity": "",
+      "beneficiaryRoutingNumber": ""
     },
     {
       "id": "d675dfc5-acbe-4566-acde-f7cb132c0206",
@@ -137,7 +147,12 @@
       "wiseAccountNumber": "",
       "wiseRecipientEmail": "",
       "wiseRecipientName": "",
-      "wiseCurrency": ""
+      "wiseCurrency": "",
+      "beneficiaryBankName": "",
+      "beneficiaryBankPostcode": "",
+      "beneficiaryBankAddress": "",
+      "beneficiaryBankCity": "",
+      "beneficiaryRoutingNumber": ""
     },
     {
       "id": "f7c6016b-85b5-47f7-8027-23c2db482197",
@@ -182,7 +197,12 @@
       "wiseAccountNumber": "",
       "wiseRecipientEmail": "",
       "wiseRecipientName": "",
-      "wiseCurrency": ""
+      "wiseCurrency": "",
+      "beneficiaryBankName": "",
+      "beneficiaryBankPostcode": "",
+      "beneficiaryBankAddress": "",
+      "beneficiaryBankCity": "",
+      "beneficiaryRoutingNumber": ""
     },
     {
       "id": "d1b1dcbe-f4ed-49cc-a16b-56c9a3145c14",
@@ -227,7 +247,12 @@
       "wiseAccountNumber": "",
       "wiseRecipientEmail": "",
       "wiseRecipientName": "",
-      "wiseCurrency": ""
+      "wiseCurrency": "",
+      "beneficiaryBankName": "",
+      "beneficiaryBankPostcode": "",
+      "beneficiaryBankAddress": "",
+      "beneficiaryBankCity": "",
+      "beneficiaryRoutingNumber": ""
     },
     {
       "id": "8d7c99c0-3253-4286-93a9-e7554cb327ef",
@@ -272,7 +297,12 @@
       "wiseAccountNumber": "",
       "wiseRecipientEmail": "",
       "wiseRecipientName": "",
-      "wiseCurrency": ""
+      "wiseCurrency": "",
+      "beneficiaryBankName": "",
+      "beneficiaryBankPostcode": "",
+      "beneficiaryBankAddress": "",
+      "beneficiaryBankCity": "",
+      "beneficiaryRoutingNumber": ""
     },
     {
       "id": "eeae589a-94e3-49ac-a94c-fcfb084152b2",
@@ -317,7 +347,12 @@
       "wiseAccountNumber": "",
       "wiseRecipientEmail": "",
       "wiseRecipientName": "",
-      "wiseCurrency": ""
+      "wiseCurrency": "",
+      "beneficiaryBankName": "",
+      "beneficiaryBankPostcode": "",
+      "beneficiaryBankAddress": "",
+      "beneficiaryBankCity": "",
+      "beneficiaryRoutingNumber": ""
     },
     {
       "id": "2655832e-f009-4b73-a535-64c3a22e558f",
@@ -362,7 +397,12 @@
       "wiseAccountNumber": "",
       "wiseRecipientEmail": "",
       "wiseRecipientName": "",
-      "wiseCurrency": ""
+      "wiseCurrency": "",
+      "beneficiaryBankName": "",
+      "beneficiaryBankPostcode": "",
+      "beneficiaryBankAddress": "",
+      "beneficiaryBankCity": "",
+      "beneficiaryRoutingNumber": ""
     },
     {
       "id": "ecea9d15-05ba-4a4e-9787-54210e3b98ce",
@@ -407,7 +447,12 @@
       "wiseAccountNumber": "",
       "wiseRecipientEmail": "",
       "wiseRecipientName": "",
-      "wiseCurrency": ""
+      "wiseCurrency": "",
+      "beneficiaryBankName": "",
+      "beneficiaryBankPostcode": "",
+      "beneficiaryBankAddress": "",
+      "beneficiaryBankCity": "",
+      "beneficiaryRoutingNumber": ""
     },
     {
       "id": "608ea227-45a5-4c8a-af43-6c7280d96340",
@@ -452,7 +497,12 @@
       "wiseAccountNumber": "",
       "wiseRecipientEmail": "",
       "wiseRecipientName": "",
-      "wiseCurrency": ""
+      "wiseCurrency": "",
+      "beneficiaryBankName": "",
+      "beneficiaryBankPostcode": "",
+      "beneficiaryBankAddress": "",
+      "beneficiaryBankCity": "",
+      "beneficiaryRoutingNumber": ""
     }
   ]
 }

@@ -104,6 +104,11 @@
     "wiseCurrency": "",
     "wiseRecipientEmail": "",
     "wiseRecipientID": "",
-    "wiseRecipientName": ""
+    "wiseRecipientName": "",
+    "beneficiaryBankName": "",
+    "beneficiaryBankPostcode": "",
+    "beneficiaryBankAddress": "",
+    "beneficiaryBankCity": "",
+    "beneficiaryRoutingNumber": ""
   }
 }
