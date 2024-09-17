@@ -47,7 +47,12 @@
       "wiseAccountNumber": "",
       "wiseRecipientEmail": "",
       "wiseRecipientName": "",
-      "wiseCurrency": ""
+      "wiseCurrency": "",
+      "beneficiaryBankName": "",
+      "beneficiaryBankPostcode": "",
+      "beneficiaryBankAddress": "",
+      "beneficiaryBankCity": "",
+      "beneficiaryRoutingNumber": ""
     },
     {
       "id": "608ea227-45a5-4c8a-af43-6c7280d96340",
@@ -92,7 +97,12 @@
       "wiseAccountNumber": "",
       "wiseRecipientEmail": "",
       "wiseRecipientName": "",
-      "wiseCurrency": ""
+      "wiseCurrency": "",
+      "beneficiaryBankName": "",
+      "beneficiaryBankPostcode": "",
+      "beneficiaryBankAddress": "",
+      "beneficiaryBankCity": "",
+      "beneficiaryRoutingNumber": ""
     }
   ]
 }

@@ -1,6 +1,6 @@
 package model
 
-// employeeBonus represents employeeBonus table
+// EmployeeBonus represents employeeBonus table
 // save the commission when invoice is paid for an employee
 type EmployeeBonus struct {
 	ID         UUID        `json:"id"`

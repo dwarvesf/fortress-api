@@ -59,6 +59,12 @@ type EmployeeData struct {
 	WiseRecipientEmail string                `json:"wiseRecipientEmail"`
 	WiseRecipientName  string                `json:"wiseRecipientName"`
 	WiseCurrency       string                `json:"wiseCurrency"`
+
+	BeneficiaryBankName      string `json:"beneficiaryBankName"`
+	BeneficiaryBankPostcode  string `json:"beneficiaryBankPostcode"`
+	BeneficiaryBankAddress   string `json:"beneficiaryBankAddress"`
+	BeneficiaryBankCity      string `json:"beneficiaryBankCity"`
+	BeneficiaryRoutingNumber string `json:"beneficiaryRoutingNumber"`
 } // @name EmployeeData
 
 type WorkingStatus string // @name WorkingStatus
@@ -434,6 +440,11 @@ func ToOneEmployeeData(employee *model.Employee, userInfo *model.CurrentLoggedUs
 		rs.WiseRecipientEmail = employee.WiseRecipientEmail
 		rs.WiseRecipientName = employee.WiseRecipientName
 		rs.WiseCurrency = employee.WiseCurrency
+		rs.BeneficiaryBankName = employee.BeneficiaryBankName
+		rs.BeneficiaryBankPostcode = employee.BeneficiaryBankPostcode
+		rs.BeneficiaryBankAddress = employee.BeneficiaryBankAddress
+		rs.BeneficiaryBankCity = employee.BeneficiaryBankCity
+		rs.BeneficiaryRoutingNumber = employee.BeneficiaryRoutingNumber
 	}
 
 	if userInfo != nil && authutils.HasPermission(userInfo.Permissions, model.PermissionEmployeesReadPersonalInfoFullAccess) {
