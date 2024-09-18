@@ -1162,3 +1162,69 @@ func (h *handler) GetTotalEarn(c *gin.Context) {
 		TotalEarnsUSD: earnsUSD,
 	}, nil, nil, nil, ""))
 }
+
+// CheckIn
+// @Summary CheckIn for employee
+// @Description CheckIn for employee
+// @id CheckIn
+// @Tags Employee
+// @Accept  json
+// @Produce  json
+// @Security BearerAuth
+// @Param Body body CheckInRequest true "CheckIn Request"
+// @Success 200 {object} CheckInResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /employees/checkin [post]
+func (h *handler) CheckIn(c *gin.Context) {
+	l := h.logger.Fields(
+		logger.Fields{
+			"handler": "employee",
+			"method":  "CheckIn",
+		},
+	)
+
+	var req request.CheckInRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		l.Error(err, "failed to decode body")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, req, ""))
+		return
+	}
+
+	icyAmount := 0.01
+	// Get the current date without time
+	currentDate := time.Now().Truncate(24 * time.Hour)
+	var resp []view.CheckInResponse
+	for _, v := range req.CheckIns {
+		// Truncate the givenTime to remove the time part
+		givenDate := v.Time.Truncate(24 * time.Hour)
+		// check v.Time
+		if currentDate.After(givenDate) || currentDate.Before(givenDate) {
+			resp = append(resp, view.CheckInResponse{
+				DiscordID: v.DiscordID,
+				Err:       "invalid time",
+			})
+			continue
+		}
+
+		data := view.CheckInResponse{
+			DiscordID: v.DiscordID,
+		}
+
+		r, err := h.controller.Employee.CheckIn(v.DiscordID, v.Time, icyAmount)
+		if err != nil {
+			l.Error(err, "failed to checkin")
+			data.Err = err.Error()
+			resp = append(resp, data)
+			continue
+		}
+
+		data.IcyAmount = r.IcyAmount
+		data.TransactionID = r.TransactionID
+		data.TransactionHash = r.TransactionHash
+		resp = append(resp, data)
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](resp, nil, nil, nil, ""))
+}

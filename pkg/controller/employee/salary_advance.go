@@ -2,8 +2,10 @@ package employee
 
 import (
 	"errors"
+	"fmt"
 	"math"
 	"strconv"
+	"time"
 
 	"github.com/Rhymond/go-money"
 	"gorm.io/gorm"
@@ -95,7 +97,10 @@ func (r *controller) SalaryAdvance(discordID string, amount int64) (*SalaryAdvan
 	}
 
 	// Make advance salary request
-	txs, err := r.service.Mochi.SendFromAccountToUser(int(amount), discordID)
+	currentMonth := time.Now().Month()
+	description := fmt.Sprintf("%s Addvance Salary in %s", discordID, currentMonth.String())
+	references := "Advance Salary"
+	txs, err := r.service.Mochi.SendFromAccountToUser(float64(amount), discordID, description, references)
 	if err != nil {
 		return nil, done(err)
 	}

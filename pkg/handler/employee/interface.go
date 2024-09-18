@@ -22,6 +22,7 @@ type IHandler interface {
 	GetEmployeeEarnTransactions(c *gin.Context)
 	GetEmployeeTotalEarn(c *gin.Context)
 	GetTotalEarn(c *gin.Context)
+	CheckIn(c *gin.Context)
 
 	PublicList(c *gin.Context)
 }

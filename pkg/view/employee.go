@@ -897,3 +897,11 @@ func ToEmployeesWithMMAScore(in []model.EmployeeMMAScoreData) []EmployeeMMAScore
 
 	return rs
 }
+
+type CheckInResponse struct {
+	DiscordID       string  `json:"discordID"`
+	IcyAmount       float64 `json:"icyAmount"`
+	TransactionID   string  `json:"transactionID"`
+	TransactionHash string  `json:"transactionHash"`
+	Err             string  `json:"err"`
+}

@@ -6,7 +6,6 @@ import (
 	"io"
 	"net/http"
 	"strconv"
-	"time"
 
 	mochisdk "github.com/consolelabs/mochi-go-sdk/mochi"
 	mochiconfig "github.com/consolelabs/mochi-go-sdk/mochi/config"
@@ -19,7 +18,7 @@ import (
 
 type IService interface {
 	GetVaultTransaction(req *VaultTransactionRequest) (*VaultTransactionResponse, error)
-	SendFromAccountToUser(amount int, discordID string) ([]model.Transaction, error)
+	SendFromAccountToUser(amount float64, discordID, description, references string) ([]model.Transaction, error)
 	GetListVaults(noFetchAmount bool) ([]Vault, error)
 }
 
@@ -47,8 +46,7 @@ func New(cfg *config.Config, l logger.Logger) IService {
 }
 
 // SendFromAccountToUser implements IService.
-func (c *client) SendFromAccountToUser(amount int, discordID string) ([]model.Transaction, error) {
-	currentMonth := time.Now().Month()
+func (c *client) SendFromAccountToUser(amount float64, discordID, description, references string) ([]model.Transaction, error) {
 	profile, err := c.mochiClient.GetByDiscordID(discordID)
 	if err != nil {
 		return nil, err
@@ -56,10 +54,10 @@ func (c *client) SendFromAccountToUser(amount int, discordID string) ([]model.Tr
 
 	txs, err := c.mochiClient.Transfer(&model.TransferRequest{
 		RecipientIDs: []string{profile.ID},
-		Amounts:      []string{strconv.Itoa(amount)},
+		Amounts:      []string{strconv.FormatFloat(amount, 'f', -1, 64)},
 		TokenID:      mochipay.ICYTokenMochiID,
-		Description:  fmt.Sprintf("%s Addvance Salary in %s", discordID, currentMonth.String()),
-		References:   "Advance Salary",
+		Description:  description,
+		References:   references,
 	})
 	if err != nil {
 		return nil, err

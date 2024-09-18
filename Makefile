@@ -37,10 +37,10 @@ init:
 	@while ! docker exec $(POSTGRES_TEST_CONTAINER) pg_isready > /dev/null; do \
 		sleep 1; \
 	done
-	make migrate-up
-	make migrate-test
-	make seed
-	make seed-test
+	# make migrate-up
+	# make migrate-test
+	# make seed
+	# make seed-test
 
 seed:
 	@docker exec -t $(POSTGRES_CONTAINER) sh -c "mkdir -p /seed"
