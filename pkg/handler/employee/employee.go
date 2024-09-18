@@ -1212,7 +1212,7 @@ func (h *handler) CheckIn(c *gin.Context) {
 			DiscordID: v.DiscordID,
 		}
 
-		r, err := h.controller.Employee.CheckIn(v.DiscordID, v.Time, icyAmount)
+		r, err := h.controller.Employee.CheckIn(v.DiscordID, v.Time, float64(icyAmount))
 		if err != nil {
 			l.Error(err, "failed to checkin")
 			data.Err = err.Error()

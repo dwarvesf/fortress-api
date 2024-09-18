@@ -35,7 +35,7 @@ func (r *controller) CheckIn(discordID string, t time.Time, amount float64) (*Ch
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, err
 	}
-	if epc != nil {
+	if epc.ID != 0 {
 		return nil, ErrAlreadyCheckedIn
 	}
 
@@ -64,6 +64,11 @@ func (r *controller) CheckIn(discordID string, t time.Time, amount float64) (*Ch
 
 	if len(txs) == 0 {
 		return nil, done(ErrNoTransactionFound)
+	}
+
+	pc.MochiTxID = txs[0].TransactionID
+	if err := r.store.PhysicalCheckin.Save(tx.DB(), pc); err != nil {
+		return nil, done(err)
 	}
 
 	response := &CheckinResponse{

@@ -17,7 +17,8 @@ func (s *store) Save(db *gorm.DB, tx *model.PhysicalCheckinTransaction) error {
 	return db.Clauses(clause.OnConflict{
 		Columns: []clause.Column{{Name: "employee_id"}, {Name: "date"}},
 		DoUpdates: clause.Assignments(map[string]interface{}{
-			"icy_amount": tx.IcyAmount,
+			"icy_amount":  tx.IcyAmount,
+			"mochi_tx_id": tx.MochiTxID,
 		}),
 	}).Create(tx).Error
 }
