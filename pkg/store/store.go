@@ -58,6 +58,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/store/organization"
 	"github.com/dwarvesf/fortress-api/pkg/store/payroll"
 	"github.com/dwarvesf/fortress-api/pkg/store/permission"
+	"github.com/dwarvesf/fortress-api/pkg/store/physicalcheckin"
 	"github.com/dwarvesf/fortress-api/pkg/store/position"
 	"github.com/dwarvesf/fortress-api/pkg/store/project"
 	"github.com/dwarvesf/fortress-api/pkg/store/projectcommissionconfig"
@@ -150,6 +151,7 @@ type Store struct {
 	ProjectSlot             projectslot.IStore
 	ProjectSlotPosition     projectslotposition.IStore
 	ProjectStack            projectstack.IStore
+	PhysicalCheckin         physicalcheckin.IStore
 	Question                question.IStore
 	Recruitment             recruitment.IStore
 	Role                    role.IStore
@@ -233,6 +235,7 @@ func New() *Store {
 		ProjectSlot:             projectslot.New(),
 		ProjectSlotPosition:     projectslotposition.New(),
 		ProjectStack:            projectstack.New(),
+		PhysicalCheckin:         physicalcheckin.New(),
 		Question:                question.New(),
 		Recruitment:             recruitment.New(),
 		Role:                    role.New(),

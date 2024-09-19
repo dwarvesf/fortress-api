@@ -98,4 +98,5 @@ INSERT INTO public.permissions (id, deleted_at, created_at, updated_at, name, co
 ('fea2497c-694d-43d7-82cd-764d622a6706', null, '2023-07-26 16:35:12.475872', '2023-07-26 16:35:12.475872', 'Delivery Metrics Sync', 'deliveryMetrics.sync'),
 ('b4edad19-3e30-4e86-bd6e-07f535011aaf', null, '2023-07-26 16:35:12.475872', '2023-07-26 16:35:12.475872', 'Employee Discord Read', 'employees.discord.read'),
 ('1641106e-9a94-42fa-80e0-9d6978cd3596', null, '2024-05-29 15:41:12.475872', '2024-05-29 15:41:12.475872', 'Employee Discord Edit','employees.discord.edit'),
-('b069e35c-1144-4554-9854-ff529506d4e5', null, '2024-05-29 15:41:12.475872', '2024-05-29 15:41:12.475872', 'Employee Discord Create','employees.discord.create');
+('b069e35c-1144-4554-9854-ff529506d4e5', null, '2024-05-29 15:41:12.475872', '2024-05-29 15:41:12.475872', 'Employee Discord Create','employees.discord.create'),
+('f84e4e32-b104-4e9c-9694-b1a86e90ec25', null, '2024-09-19 15:41:12.475872', '2024-09-19 15:41:12.475872', 'Transfer Check-in Icy','employees.transferCheckinIcy.fullAccess');
