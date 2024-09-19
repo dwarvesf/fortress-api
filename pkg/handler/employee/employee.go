@@ -1163,25 +1163,25 @@ func (h *handler) GetTotalEarn(c *gin.Context) {
 	}, nil, nil, nil, ""))
 }
 
-// CheckIn
-// @Summary CheckIn for employee
-// @Description CheckIn for employee
-// @id CheckIn
+// OfficeCheckIn
+// @Summary OfficeCheckIn for employee
+// @Description OfficeCheckIn for employee
+// @id OfficeCheckIn
 // @Tags Employee
 // @Accept  json
 // @Produce  json
 // @Security BearerAuth
-// @Param Body body CheckInRequest true "CheckIn Request"
+// @Param Body body CheckInRequest true "OfficeCheckIn Request"
 // @Success 200 {object} CheckInResponse
 // @Failure 400 {object} ErrorResponse
 // @Failure 404 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
-// @Router /employees/checkin [post]
-func (h *handler) CheckIn(c *gin.Context) {
+// @Router /discords/office-checkin [post]
+func (h *handler) OfficeCheckIn(c *gin.Context) {
 	l := h.logger.Fields(
 		logger.Fields{
 			"handler": "employee",
-			"method":  "CheckIn",
+			"method":  "OfficeCheckIn",
 		},
 	)
 
@@ -1199,7 +1199,7 @@ func (h *handler) CheckIn(c *gin.Context) {
 	for _, v := range req.CheckIns {
 		// Truncate the givenTime to remove the time part
 		givenDate := v.Time.Truncate(24 * time.Hour)
-		// check v.Time
+		// check givenDate does not equal currentDate
 		if currentDate.After(givenDate) || currentDate.Before(givenDate) {
 			resp = append(resp, view.CheckInResponse{
 				DiscordID: v.DiscordID,

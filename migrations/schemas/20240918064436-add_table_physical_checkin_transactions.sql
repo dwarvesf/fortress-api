@@ -1,7 +1,7 @@
 
 -- +migrate Up
 CREATE TABLE physical_checkin_transactions (
-    id SERIAL PRIMARY KEY,
+    id uuid PRIMARY KEY DEFAULT (uuid()),
     employee_id UUID REFERENCES employees(id) NOT NULL,
     date DATE NOT NULL,
     icy_amount FLOAT8 DEFAULT 0.0,

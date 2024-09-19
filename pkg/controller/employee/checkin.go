@@ -8,6 +8,7 @@ import (
 
 	"gorm.io/gorm"
 
+	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 )
 
@@ -19,9 +20,15 @@ type CheckinResponse struct {
 }
 
 func (r *controller) CheckIn(discordID string, t time.Time, amount float64) (*CheckinResponse, error) {
+	l := r.logger.Fields(logger.Fields{
+		"controller": "employee",
+		"method":     "CheckIn",
+	})
+
 	// Get employee by discord id
 	employee, err := r.store.Employee.GetByDiscordID(r.repo.DB(), discordID, true)
 	if err != nil {
+		l.Error(err, "failed to get employee by discord id")
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, ErrEmployeeNotFound
 		}
@@ -33,24 +40,28 @@ func (r *controller) CheckIn(discordID string, t time.Time, amount float64) (*Ch
 	// check if record already exists
 	epc, err := r.store.PhysicalCheckin.GetByEmployeeIDAndDate(r.repo.DB(), employee.ID.String(), checkinDate)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		l.Error(err, "failed to get physical checkin by employee id and date")
 		return nil, err
 	}
-	if epc.ID != 0 {
+	if !epc.ID.IsZero() {
 		return nil, ErrAlreadyCheckedIn
 	}
 
 	err = r.checkFullTimeRole(employee)
 	if err != nil {
+		l.Error(err, "failed to check full time role")
 		return nil, err
 	}
 
 	tx, done := r.repo.NewTransaction()
 	pc := &model.PhysicalCheckinTransaction{
+		ID:         model.NewUUID(),
 		EmployeeID: employee.ID,
 		IcyAmount:  amount,
 		Date:       t,
 	}
 	if err := r.store.PhysicalCheckin.Save(tx.DB(), pc); err != nil {
+		l.Error(err, "failed to save physical checkin")
 		return nil, done(err)
 	}
 
@@ -59,6 +70,7 @@ func (r *controller) CheckIn(discordID string, t time.Time, amount float64) (*Ch
 	references := "Physical Checkin"
 	txs, err := r.service.Mochi.SendFromAccountToUser(amount, discordID, description, references)
 	if err != nil {
+		l.Error(err, "failed to request to mochi")
 		return nil, done(err)
 	}
 
@@ -68,6 +80,7 @@ func (r *controller) CheckIn(discordID string, t time.Time, amount float64) (*Ch
 
 	pc.MochiTxID = txs[0].TransactionID
 	if err := r.store.PhysicalCheckin.Save(tx.DB(), pc); err != nil {
+		l.Error(err, "failed to save physical checkin")
 		return nil, done(err)
 	}
 

@@ -117,6 +117,7 @@ const (
 	PermissionDeliveryMetricsRead                 PermissionCode = "deliveryMetrics.read"
 	PermissionDeliveryMetricsLeaderBoardRead      PermissionCode = "deliveryMetrics.leaderBoard.read"
 	PermissionDeliveryMetricsSync                 PermissionCode = "deliveryMetrics.sync"
+	PermissionTransferCheckinIcy                  PermissionCode = "employees.transferCheckinIcy.fullAccess"
 )
 
 func (p PermissionCode) String() string {
