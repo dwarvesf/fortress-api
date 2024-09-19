@@ -50,4 +50,5 @@ type IController interface {
 	GetEmployeeEarnTransactions(discordID string, input GetEmployeeEarnTransactionsInput) (model.EmployeeEarnTransactions, int64, error)
 	GetEmployeeTotalEarn(discordID string) (string, string, error)
 	GetTotalEarn(from, to time.Time) (string, string, error)
+	CheckIn(discordID string, t time.Time, amount float64) (*CheckinResponse, error)
 }

@@ -266,3 +266,12 @@ type SalaryAdvanceReportRequest struct {
 type GetEmployeeEarnTransactionsRequest struct {
 	view.Pagination
 } // @name GetEmployeeEarnTransactionsRequest
+
+type CheckInRequest struct {
+	CheckIns []CheckIn `json:"check_ins" binding:"required,dive,required"`
+} // @name CheckInRequest
+
+type CheckIn struct {
+	DiscordID string    `json:"discord_id" binding:"required"`
+	Time      time.Time `json:"time" binding:"required"`
+}

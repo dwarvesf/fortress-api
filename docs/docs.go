@@ -1600,6 +1600,64 @@ const docTemplate = `{
                 }
             }
         },
+        "/discords/office-checkin": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "OfficeCheckIn for employee",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Employee"
+                ],
+                "summary": "OfficeCheckIn for employee",
+                "operationId": "OfficeCheckIn",
+                "parameters": [
+                    {
+                        "description": "OfficeCheckIn Request",
+                        "name": "Body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/CheckInRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/CheckInResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/discords/research-topics": {
             "get": {
                 "description": "Get list of research topics on discord",
@@ -7696,6 +7754,40 @@ const docTemplate = `{
                 }
             }
         },
+        "CheckInRequest": {
+            "type": "object",
+            "required": [
+                "check_ins"
+            ],
+            "properties": {
+                "check_ins": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_dwarvesf_fortress-api_pkg_handler_employee_request.CheckIn"
+                    }
+                }
+            }
+        },
+        "CheckInResponse": {
+            "type": "object",
+            "properties": {
+                "discordID": {
+                    "type": "string"
+                },
+                "err": {
+                    "type": "string"
+                },
+                "icyAmount": {
+                    "type": "number"
+                },
+                "transactionHash": {
+                    "type": "string"
+                },
+                "transactionID": {
+                    "type": "string"
+                }
+            }
+        },
         "CheckSalaryAdvance": {
             "type": "object",
             "properties": {
@@ -13243,6 +13335,21 @@ const docTemplate = `{
                 "WorkingStatusFullTime",
                 "WorkingStatusContractor"
             ]
+        },
+        "github_com_dwarvesf_fortress-api_pkg_handler_employee_request.CheckIn": {
+            "type": "object",
+            "required": [
+                "discord_id",
+                "time"
+            ],
+            "properties": {
+                "discord_id": {
+                    "type": "string"
+                },
+                "time": {
+                    "type": "string"
+                }
+            }
         },
         "github_com_dwarvesf_fortress-api_pkg_model.SortOrder": {
             "type": "string",

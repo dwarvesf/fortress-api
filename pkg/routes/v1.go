@@ -385,6 +385,7 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 		discordGroup.GET("/:discord_id/earns/transactions", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesDiscordRead), h.Employee.GetEmployeeEarnTransactions)
 		discordGroup.GET("/:discord_id/earns/total", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesDiscordRead), h.Employee.GetEmployeeTotalEarn)
 		discordGroup.GET("/earns/total", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesDiscordRead), h.Employee.GetTotalEarn)
+		discordGroup.POST("/office-checkin", h.Employee.OfficeCheckIn)
 
 		discordGroup.GET("/icy-accounting", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesDiscordRead), h.Icy.Accounting)
 

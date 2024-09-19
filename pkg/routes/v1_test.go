@@ -992,6 +992,12 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/employee.IHandler.GetTotalEarn-fm",
 			},
 		},
+		"/api/v1/discords/office-checkin": {
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/employee.IHandler.OfficeCheckIn-fm",
+			},
+		},
 		"/api/v1/discords/scheduled-events": {
 			"GET": {
 				Method:  "GET",

@@ -584,6 +584,28 @@ definitions:
           $ref: '#/definitions/Chapter'
         type: array
     type: object
+  CheckInRequest:
+    properties:
+      check_ins:
+        items:
+          $ref: '#/definitions/github_com_dwarvesf_fortress-api_pkg_handler_employee_request.CheckIn'
+        type: array
+    required:
+    - check_ins
+    type: object
+  CheckInResponse:
+    properties:
+      discordID:
+        type: string
+      err:
+        type: string
+      icyAmount:
+        type: number
+      transactionHash:
+        type: string
+      transactionID:
+        type: string
+    type: object
   CheckSalaryAdvance:
     properties:
       amountICY:
@@ -4266,6 +4288,16 @@ definitions:
     - WorkingStatusProbation
     - WorkingStatusFullTime
     - WorkingStatusContractor
+  github_com_dwarvesf_fortress-api_pkg_handler_employee_request.CheckIn:
+    properties:
+      discord_id:
+        type: string
+      time:
+        type: string
+    required:
+    - discord_id
+    - time
+    type: object
   github_com_dwarvesf_fortress-api_pkg_model.SortOrder:
     enum:
     - asc
@@ -5379,6 +5411,43 @@ paths:
       security:
       - BearerAuth: []
       summary: List earn transactions of employee
+      tags:
+      - Employee
+  /discords/office-checkin:
+    post:
+      consumes:
+      - application/json
+      description: OfficeCheckIn for employee
+      operationId: OfficeCheckIn
+      parameters:
+      - description: OfficeCheckIn Request
+        in: body
+        name: Body
+        required: true
+        schema:
+          $ref: '#/definitions/CheckInRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/CheckInResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: OfficeCheckIn for employee
       tags:
       - Employee
   /discords/research-topics:

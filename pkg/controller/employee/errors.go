@@ -61,4 +61,5 @@ var (
 	ErrCouldNotFoundDiscordMemberInGuild          = errors.New("could not found discord member in the guild")
 	ErrEmployeeNotFullTime                        = errors.New("employee is not full time")
 	ErrNoTransactionFound                         = errors.New("no transaction found")
+	ErrAlreadyCheckedIn                           = errors.New("already checked in")
 )

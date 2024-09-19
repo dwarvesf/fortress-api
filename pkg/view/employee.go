@@ -773,7 +773,7 @@ type DiscordEmployeeData struct {
 	Projects  []EmployeeProjectData `json:"projects"`
 
 	MMAScore *MMAScore `json:"mmaScore"`
-}
+} // @name DiscordEmployeeData
 
 func ToDiscordEmployeeListData(employees []model.Employee, userInfo *model.CurrentLoggedUserInfo) []DiscordEmployeeData {
 	rs := make([]DiscordEmployeeData, 0, len(employees))
@@ -879,7 +879,7 @@ type EmployeeMMAScore struct {
 	AutonomyScore decimal.Decimal `json:"autonomyScore"`
 	MeaningScore  decimal.Decimal `json:"meaningScore"`
 	RatedAt       *time.Time      `json:"ratedAt"`
-}
+} // @name EmployeeMMAScore
 
 func ToEmployeesWithMMAScore(in []model.EmployeeMMAScoreData) []EmployeeMMAScore {
 	rs := make([]EmployeeMMAScore, len(in))
@@ -897,3 +897,11 @@ func ToEmployeesWithMMAScore(in []model.EmployeeMMAScoreData) []EmployeeMMAScore
 
 	return rs
 }
+
+type CheckInResponse struct {
+	DiscordID       string  `json:"discordID"`
+	IcyAmount       float64 `json:"icyAmount"`
+	TransactionID   string  `json:"transactionID"`
+	TransactionHash string  `json:"transactionHash"`
+	Err             string  `json:"err"`
+} // @name CheckInResponse
