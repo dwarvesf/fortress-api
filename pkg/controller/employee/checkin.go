@@ -47,11 +47,18 @@ func (r *controller) CheckIn(discordID string, t time.Time, amount float64) (*Ch
 		return nil, ErrAlreadyCheckedIn
 	}
 
-	err = r.checkFullTimeRole(employee)
-	if err != nil {
-		l.Error(err, "failed to check full time role")
-		return nil, err
+	// Check if employee is whitelisted
+	isWhitelisted := r.isEmployeeWhitelisted(employee.ID)
+
+	// If not whitelisted, check for full-time role
+	if !isWhitelisted {
+		err = r.checkFullTimeRole(employee)
+		if err != nil {
+			l.Error(err, "failed to check full time role")
+			return nil, err
+		}
 	}
+	l.AddField("name", employee.FullName).Info("Employee is whitelisted or full-time role")
 
 	tx, done := r.repo.NewTransaction()
 	pc := &model.PhysicalCheckinTransaction{
@@ -92,4 +99,14 @@ func (r *controller) CheckIn(discordID string, t time.Time, amount float64) (*Ch
 	}
 
 	return response, done(nil)
+}
+
+// isEmployeeWhitelisted checks if an employee is whitelisted for check-in
+func (r *controller) isEmployeeWhitelisted(employeeID model.UUID) bool {
+	for _, id := range r.config.CheckIn.WhitelistedEmployeeIDs {
+		if id == employeeID.String() {
+			return true
+		}
+	}
+	return false
 }
