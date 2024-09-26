@@ -39,6 +39,7 @@ type Config struct {
 	Invoice  Invoice
 	Sendgrid Sendgrid
 	Github   Github
+	CheckIn  CheckIn
 
 	APIKey       string
 	Debug        bool
@@ -206,6 +207,10 @@ type Reddit struct {
 	Password     string
 }
 
+type CheckIn struct {
+	WhitelistedEmployeeIDs []string
+}
+
 func Generate(v ENV) *Config {
 	return &Config{
 		Debug:        v.GetBool("DEBUG"),
@@ -341,6 +346,9 @@ func Generate(v ENV) *Config {
 		Dify: Dify{
 			URL:   v.GetString("DIFY_URL"),
 			Token: v.GetString("DIFY_TOKEN"),
+		},
+		CheckIn: CheckIn{
+			WhitelistedEmployeeIDs: strings.Split(v.GetString("CHECKIN_WHITELISTED_EMPLOYEE_IDS"), ","),
 		},
 	}
 }
