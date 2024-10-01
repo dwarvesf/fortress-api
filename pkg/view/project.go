@@ -307,7 +307,16 @@ type ProjectData struct {
 	Organization        *Organization         `json:"organization"`
 	MonthlyChargeRate   decimal.Decimal       `json:"monthlyChargeRate"`
 	Currency            *Currency             `json:"currency"`
+	CommissionModels    []CommissionModel     `json:"commissionModels"`
 } // @name ProjectData
+
+type CommissionModel struct {
+	Beneficiary    BasicEmployeeInfo `json:"beneficiary"`
+	CommissionType string            `json:"type"`
+	CommissionRate decimal.Decimal   `json:"commissionRate"`
+	Description    string            `json:"description"`
+	Sub            *CommissionModel  `json:"sub"`
+} // @name CommissionModel
 
 type BasicClientInfo struct {
 	ID                 string          `json:"id"`
@@ -500,10 +509,11 @@ func ToUpdateProjectStatusResponse(p *model.Project) UpdatedProject {
 	}
 }
 
-func ToProjectData(in *model.Project, userInfo *model.CurrentLoggedUserInfo) ProjectData {
+func ToProjectData(in *model.Project, userInfo *model.CurrentLoggedUserInfo, commissionModel []model.CommissionModel) ProjectData {
 	leadMap := map[string]bool{}
 	var technicalLeads = make([]ProjectHead, 0, len(in.Heads))
 	var accountManagers, salePersons, deliveryManagers []ProjectHead
+
 	commissionConfig := in.CommissionConfigs.ToMap()
 	for _, h := range in.Heads {
 		head := ToProjectHead(userInfo, h, commissionConfig)
@@ -565,6 +575,7 @@ func ToProjectData(in *model.Project, userInfo *model.CurrentLoggedUserInfo) Pro
 		members = append(members, member)
 	}
 
+	commissionModelData := ToCommissionModelData(commissionModel)
 	projectData := ProjectData{
 		ID:                  in.ID.String(),
 		CreatedAt:           in.CreatedAt,
@@ -586,6 +597,7 @@ func ToProjectData(in *model.Project, userInfo *model.CurrentLoggedUserInfo) Pro
 		Code:                in.Code,
 		Function:            in.Function.String(),
 		Currency:            projectCurrency,
+		CommissionModels:    commissionModelData,
 	}
 
 	var clientEmail []string
@@ -645,6 +657,49 @@ func ToProjectData(in *model.Project, userInfo *model.CurrentLoggedUserInfo) Pro
 	return projectData
 }
 
+func ToCommissionModelData(commissionModels []model.CommissionModel) []CommissionModel {
+	var results = make([]CommissionModel, 0, len(commissionModels))
+	for _, c := range commissionModels {
+		results = append(results, toCommissionModel(c))
+	}
+
+	return results
+}
+
+func toCommissionModel(commissionModel model.CommissionModel) CommissionModel {
+	rs := CommissionModel{
+		Beneficiary:    toBeneficiaryInfo(commissionModel.Beneficiary),
+		CommissionType: commissionModel.CommissionType,
+		CommissionRate: commissionModel.CommissionRate,
+		Description:    commissionModel.Description,
+	}
+	if commissionModel.Sub != nil {
+		sub := toCommissionModel(*commissionModel.Sub)
+		rs.Sub = &sub
+	}
+
+	return rs
+}
+
+type Beneficiary struct {
+	ID          string `json:"id"`
+	FullName    string `json:"fullName"`
+	DisplayName string `json:"displayName"`
+	Avatar      string `json:"avatar"`
+	Username    string `json:"username"`
+	ReferredBy  string `json:"referredBy"`
+} // @name Beneficiary
+
+func toBeneficiaryInfo(employee model.BasicEmployeeInfo) BasicEmployeeInfo {
+	return BasicEmployeeInfo{
+		ID:          employee.ID,
+		FullName:    employee.FullName,
+		DisplayName: employee.DisplayName,
+		Avatar:      employee.Avatar,
+		Username:    employee.Username,
+	}
+}
+
 func ToProjectsData(projects []*model.Project, userInfo *model.CurrentLoggedUserInfo) []ProjectData {
 	var results = make([]ProjectData, 0, len(projects))
 
@@ -652,7 +707,7 @@ func ToProjectsData(projects []*model.Project, userInfo *model.CurrentLoggedUser
 		// If the project belongs user, append it in the list
 		_, ok := userInfo.Projects[p.ID]
 		if ok && p.Status == model.ProjectStatusActive && model.IsUserActiveInProject(userInfo.UserID, p.ProjectMembers) {
-			results = append(results, ToProjectData(p, userInfo))
+			results = append(results, ToProjectData(p, userInfo, nil))
 			continue
 		}
 
@@ -660,7 +715,7 @@ func ToProjectsData(projects []*model.Project, userInfo *model.CurrentLoggedUser
 		if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadFullAccess) ||
 			(authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsReadReadActive) &&
 				p.Status == model.ProjectStatusActive) {
-			results = append(results, ToProjectData(p, userInfo))
+			results = append(results, ToProjectData(p, userInfo, nil))
 			continue
 		}
 	}
@@ -1158,3 +1213,7 @@ func ToProjectContentData(url string) *ProjectContentData {
 		Url: url,
 	}
 }
+
+type ProjectCommissionModelsResponse struct {
+	Data []CommissionModel `json:"data"`
+} // @name ProjectCommissionModelsResponse

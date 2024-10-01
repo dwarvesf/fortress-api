@@ -104,6 +104,7 @@ const (
 	PermissionProjectsReadFullAccess              PermissionCode = "projects.read.fullAccess"
 	PermissionProjectsReadMonthlyRevenue          PermissionCode = "projects.read.monthlyRevenue"
 	PermissionProjectsReadReadActive              PermissionCode = "projects.read.readActive"
+	PermissionProjectsCommissionModelsRead        PermissionCode = "projects.commissionModels.read"
 	PermissionSurveysCreate                       PermissionCode = "surveys.create"
 	PermissionSurveysDelete                       PermissionCode = "surveys.delete"
 	PermissionSurveysEdit                         PermissionCode = "surveys.edit"
