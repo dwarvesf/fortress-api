@@ -241,7 +241,8 @@
                 "symbol": "£",
                 "locale": "en-gb",
                 "type": "fiat"
-            }
+            },
+            "commissionModels": []
         }
     ]
 }

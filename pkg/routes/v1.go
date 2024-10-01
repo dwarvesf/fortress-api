@@ -159,6 +159,7 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 		projectGroup.PUT("/:id/work-units/:workUnitID", amw.WithAuth, pmw.WithPerm(model.PermissionProjectWorkUnitsEdit), h.Project.UpdateWorkUnit)
 		projectGroup.PUT("/:id/work-units/:workUnitID/archive", amw.WithAuth, pmw.WithPerm(model.PermissionProjectWorkUnitsEdit), h.Project.ArchiveWorkUnit)
 		projectGroup.PUT("/:id/work-units/:workUnitID/unarchive", amw.WithAuth, pmw.WithPerm(model.PermissionProjectWorkUnitsEdit), h.Project.UnarchiveWorkUnit)
+		projectGroup.GET("/:id/commission-models", amw.WithAuth, pmw.WithPerm(model.PermissionProjectsCommissionModelsRead), h.Project.CommissionModels)
 		projectGroup.GET("/icy-distribution/weekly", amw.WithAuth, pmw.WithPerm(model.PermissionIcyDistributionRead), h.Project.IcyWeeklyDistribution)
 	}
 

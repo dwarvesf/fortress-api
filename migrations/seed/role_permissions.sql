@@ -29,7 +29,8 @@ INSERT INTO public.role_permissions (id, deleted_at, created_at, updated_at, rol
 ('fdded785-6cc8-41e9-9fe4-5130b40584f9', NULL, '2023-07-26 16:35:12.475872', '2023-07-26 16:35:12.475872', '3fcf9e36-2501-4f86-8418-cfe3a137b7f9', 'b4edad19-3e30-4e86-bd6e-07f535011aaf'), -- employees.discord.read
 ('ae57f72a-1b48-4fdf-a76d-a0c796dc0943', NULL, '2023-07-26 16:35:12.475872', '2023-07-26 16:35:12.475872', '3fcf9e36-2501-4f86-8418-cfe3a137b7f9', '1641106e-9a94-42fa-80e0-9d6978cd3596'), -- employees.discord.edit
 ('81e3fd29-8bf4-408e-99db-42d27ca0b816', NULL, '2023-07-26 16:35:12.475872', '2023-07-26 16:35:12.475872', '3fcf9e36-2501-4f86-8418-cfe3a137b7f9', 'b069e35c-1144-4554-9854-ff529506d4e5'), -- employees.discord.create
-('c5bb09ee-7f71-42e1-93b8-138cd2af2969', NULL, '2023-07-26 16:35:12.475872', '2023-07-26 16:35:12.475872', '3fcf9e36-2501-4f86-8418-cfe3a137b7f9', 'f84e4e32-b104-4e9c-9694-b1a86e90ec25'); -- employees.transferCheckinIcy.fullAccess
+('c5bb09ee-7f71-42e1-93b8-138cd2af2969', NULL, '2023-07-26 16:35:12.475872', '2023-07-26 16:35:12.475872', '3fcf9e36-2501-4f86-8418-cfe3a137b7f9', 'f84e4e32-b104-4e9c-9694-b1a86e90ec25'), -- employees.transferCheckinIcy.fullAccess
+('47826756-c795-473b-ab3c-f85b7ca3cf68', NULL, '2023-07-26 16:35:12.475872', '2023-07-26 16:35:12.475872', '3fcf9e36-2501-4f86-8418-cfe3a137b7f9', '8fe4de41-15e8-4027-a769-e9344cd04415');
 
 -- FORTRESS VALUATION
 INSERT INTO public.role_permissions (id, deleted_at, created_at, updated_at, role_id, permission_id) VALUES
@@ -282,4 +283,5 @@ INSERT INTO public.role_permissions (id, deleted_at, created_at, updated_at, rol
 ('bf4a2d78-da1c-447e-bd4e-a6f4a3997e4a', NULL, '2023-07-20 16:35:12.475872', '2023-07-20 16:35:12.475872', 'c23c1c1c-bfaf-41e6-a4d7-6ef196fd2736', '51a3ec4a-6bae-4f02-9d9b-89ba539346da'), -- deliveryMetrics.leaderBoard.read
 ('556e5273-630a-499c-8f69-0cda68c6ebda', NULL, '2023-07-26 16:35:12.475872', '2023-07-26 16:35:12.475872', 'c23c1c1c-bfaf-41e6-a4d7-6ef196fd2736', 'fea2497c-694d-43d7-82cd-764d622a6706'), -- deliveryMetrics.leaderBoard.sync
 ('27700990-ae6c-4a93-a9aa-5e9e71d8ac56', NULL, '2023-07-26 16:35:12.475872', '2023-07-26 16:35:12.475872', 'c23c1c1c-bfaf-41e6-a4d7-6ef196fd2736', '1991c441-39bc-4b0f-9afa-491bebb1c965'),
-('67c5a96e-9e89-4e29-90f9-661b47e43c65', NULL, '2023-07-26 16:35:12.475872', '2023-07-26 16:35:12.475872', 'c23c1c1c-bfaf-41e6-a4d7-6ef196fd2736', 'f84e4e32-b104-4e9c-9694-b1a86e90ec25'); -- employees.transferCheckinIcy.fullAccess
+('67c5a96e-9e89-4e29-90f9-661b47e43c65', NULL, '2023-07-26 16:35:12.475872', '2023-07-26 16:35:12.475872', 'c23c1c1c-bfaf-41e6-a4d7-6ef196fd2736', 'f84e4e32-b104-4e9c-9694-b1a86e90ec25'), -- employees.transferCheckinIcy.fullAccess
+('b97c2450-63d5-4a6a-9f8d-9ac9541e0163', NULL, '2023-07-26 16:35:12.475872', '2023-07-26 16:35:12.475872', 'c23c1c1c-bfaf-41e6-a4d7-6ef196fd2736', '8fe4de41-15e8-4027-a769-e9344cd04415');
