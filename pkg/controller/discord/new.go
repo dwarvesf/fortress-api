@@ -360,22 +360,21 @@ func (c *controller) ListDiscordChannelMessageLogs(ctx context.Context, channelI
 
 	messageLogs := make([]model.DiscordTextMessageLog, 0)
 
-	for _, thread := range threads {
-		messages, err := c.service.Discord.GetChannelMessagesInDateRange(thread.ID, 100, startTime, endTime)
+	for _, channnelID := range channelIDs {
+		messages, err := c.service.Discord.GetChannelMessagesInDateRange(channnelID, 100, startTime, endTime)
 		if err != nil {
 			return nil, err
 		}
 
 		for _, msg := range messages {
 			messageLogs = append(messageLogs, model.DiscordTextMessageLog{
-				ID:          msg.ID,
-				Content:     msg.Content,
-				AuthorName:  msg.Author.Username,
-				AuthorID:    msg.Author.ID,
-				ChannelID:   msg.ChannelID,
-				ChannelName: thread.Name,
-				GuildID:     msg.GuildID,
-				Timestamp:   msg.Timestamp,
+				ID:         msg.ID,
+				Content:    msg.Content,
+				AuthorName: msg.Author.Username,
+				AuthorID:   msg.Author.ID,
+				ChannelID:  msg.ChannelID,
+				GuildID:    msg.GuildID,
+				Timestamp:  msg.Timestamp,
 			})
 		}
 	}

@@ -72,12 +72,11 @@ type OriginalDiscordMessage struct {
 }
 
 type DiscordTextMessageLog struct {
-	ID          string    `json:"id"`
-	Content     string    `json:"content"`
-	AuthorName  string    `json:"author_name"`
-	AuthorID    string    `json:"author_id"`
-	ChannelID   string    `json:"channel_id"`
-	ChannelName string    `json:"channel_name"`
-	GuildID     string    `json:"guild_id"`
-	Timestamp   time.Time `json:"timestamp"`
+	ID         string    `json:"id"`
+	Content    string    `json:"content"`
+	AuthorName string    `json:"author_name"`
+	AuthorID   string    `json:"author_id"`
+	ChannelID  string    `json:"channel_id"`
+	GuildID    string    `json:"guild_id"`
+	Timestamp  time.Time `json:"timestamp"`
 }
