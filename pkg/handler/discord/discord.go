@@ -811,7 +811,7 @@ func (h *handler) ListChannelMessageLogs(c *gin.Context) {
 	endDate := input.GetEndDate()
 
 	// maximum 1 month messages
-	oneMonth := time.Hour * 24 * 30
+	oneMonth := time.Hour * 24 * 365
 	if endDate.Sub(*startDate) > oneMonth {
 		newEndDate := startDate.Add(oneMonth)
 		endDate = &newEndDate
