@@ -1,6 +1,8 @@
 package discord
 
 import (
+	"time"
+
 	"github.com/bwmarrin/discordgo"
 
 	"github.com/dwarvesf/fortress-api/pkg/model"
@@ -42,4 +44,5 @@ type IService interface {
 	SendDiscordMessageWithChannel(ses *discordgo.Session, msg *discordgo.Message, channelId string) error
 
 	ListActiveThreadsByChannelID(guildID, channelID string) ([]discordgo.Channel, error)
+	GetChannelMessagesInDateRange(channelID string, limit int, startDate, endDate *time.Time) ([]*discordgo.Message, error)
 }

@@ -390,6 +390,8 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 
 		discordGroup.GET("/icy-accounting", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesDiscordRead), h.Icy.Accounting)
 
+		discordGroup.GET("/:discord_channel_id/message-logs", pmw.WithPerm(model.PermissionEmployeesDiscordRead), h.Discord.ListChannelMessageLogs)
+
 		scheduledEventGroup := discordGroup.Group("/scheduled-events")
 		{
 			scheduledEventGroup.GET("", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesDiscordRead), h.Discord.ListScheduledEvent)

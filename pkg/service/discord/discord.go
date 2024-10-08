@@ -826,3 +826,31 @@ func (d *discordClient) ListActiveThreadsByChannelID(guildID, channelID string) 
 
 	return result, nil
 }
+
+func (d *discordClient) GetChannelMessagesInDateRange(channelID string, limit int, startDate, endDate *time.Time) ([]*discordgo.Message, error) {
+	before := ""
+	messages := make([]*discordgo.Message, 0)
+	for {
+		discordMessages, err := d.session.ChannelMessages(channelID, limit, before, "", "")
+		if err != nil {
+			return nil, err
+		}
+
+		if len(discordMessages) == 0 {
+			break
+		}
+
+		before = discordMessages[len(discordMessages)-1].ID
+
+		for _, msg := range discordMessages {
+			markedTime := msg.Timestamp
+			if markedTime.Before(*startDate) {
+				return messages, nil
+			}
+			if markedTime.After(*startDate) && markedTime.Before(*endDate) {
+				messages = append(messages, msg)
+			}
+		}
+	}
+	return messages, nil
+}

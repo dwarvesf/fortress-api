@@ -776,3 +776,52 @@ func (h *handler) SweepOgifEvent(c *gin.Context) {
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "events swept successfully"))
 }
+
+// ListChannelMessageLogs godoc
+// @Summary Get list of messages in channel and its thread
+// @Description Get list of messages in channel and its thread
+// @id ListChannelMessageLogs
+// @Tags Discord
+// @Accept  json
+// @Produce  json
+// @Param discord_channel_id path string true "Channel Discord ID"
+// @Param startDate query string true "Start Date"
+// @Param endDate query string true "End Date"
+// @Success 200 {object} ListResearchTopicResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /discords/{discord_channel_id}/message-logs [get]
+func (h *handler) ListChannelMessageLogs(c *gin.Context) {
+	var input = request.GetChannelMessagesInput{
+		DiscordChannelID: c.Param("discord_channel_id"),
+	}
+
+	if err := c.ShouldBindQuery(&input); err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, input, "bind query failed"))
+		return
+	}
+
+	if err := input.Validate(); err != nil {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, input, ""))
+		return
+	}
+
+	startDate := input.GetStartDate()
+	endDate := input.GetEndDate()
+
+	// maximum 3 month messages
+	threeMonths := time.Hour * 24 * 90
+	if endDate.Sub(*startDate) > threeMonths {
+		newEndDate := startDate.Add(threeMonths)
+		endDate = &newEndDate
+	}
+
+	messages, err := h.controller.Discord.ListDiscordChannelMessageLogs(c, input.DiscordChannelID, startDate, endDate)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+	c.JSON(http.StatusOK, view.CreateResponse(messages, nil, nil, nil, ""))
+
+}

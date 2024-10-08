@@ -21,6 +21,7 @@ type IController interface {
 	ListDiscordResearchTopics(ctx context.Context, days, limit, offset int) ([]model.DiscordResearchTopic, int64, error)
 	UserOgifStats(ctx context.Context, discordID string, after time.Time) (OgifStats, error)
 	GetOgifLeaderboard(ctx context.Context, after time.Time, limit int) ([]model.OgifLeaderboardRecord, error)
+	ListDiscordChannelMessageLogs(ctx context.Context, channelID string, startTime *time.Time, endTime *time.Time) ([]model.DiscordTextMessageLog, error)
 }
 
 type controller struct {
@@ -334,4 +335,62 @@ func (c *controller) GetOgifLeaderboard(ctx context.Context, after time.Time, li
 	}
 
 	return leaderboard, nil
+}
+
+func (c *controller) ListDiscordChannelMessageLogs(ctx context.Context, channelID string, startTime *time.Time, endTime *time.Time) ([]model.DiscordTextMessageLog, error) {
+	threads, err := c.service.Discord.ListActiveThreadsByChannelID(c.config.Discord.IDs.DwarvesGuild, channelID)
+	if err != nil {
+		return nil, err
+	}
+	channelIDs := make([]string, 0)
+	channelIDs = append(channelIDs, channelID)
+	for _, thread := range threads {
+		channelIDs = append(channelIDs, thread.ID)
+	}
+
+	members, err := c.service.Discord.GetMembers()
+	if err != nil {
+		return nil, err
+	}
+
+	membersMap := make(map[string]string)
+	for _, mem := range members {
+		membersMap[fmt.Sprintf("<@%s>", mem.User.ID)] = fmt.Sprintf("@%s", mem.User.Username)
+	}
+
+	messageLogs := make([]model.DiscordTextMessageLog, 0)
+
+	for _, thread := range threads {
+		messages, err := c.service.Discord.GetChannelMessagesInDateRange(thread.ID, 100, startTime, endTime)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, msg := range messages {
+			messageLogs = append(messageLogs, model.DiscordTextMessageLog{
+				ID:          msg.ID,
+				Content:     msg.Content,
+				AuthorName:  msg.Author.Username,
+				AuthorID:    msg.Author.ID,
+				ChannelID:   msg.ChannelID,
+				ChannelName: thread.Name,
+				GuildID:     msg.GuildID,
+				Timestamp:   msg.Timestamp,
+			})
+		}
+	}
+
+	for _, msg := range messageLogs {
+		content := msg.Content
+		for id, mem := range membersMap {
+			if strings.Contains(content, id) {
+				content = strings.ReplaceAll(content, id, mem)
+			}
+		}
+	}
+
+	sort.Slice(messageLogs, func(i, j int) bool {
+		return messageLogs[i].Timestamp.Before(messageLogs[j].Timestamp)
+	})
+	return messageLogs, nil
 }
