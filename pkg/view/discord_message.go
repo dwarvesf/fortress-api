@@ -16,6 +16,10 @@ type DiscordTextMessageLog struct {
 	Timestamp  time.Time `json:"timestamp"`
 }
 
+type ListDiscordTextMessageLog struct {
+	Data []DiscordTextMessageLog `json:"data"`
+} // @name ListDiscordTextMessageLog
+
 func ToDiscordTextMessageLog(message model.DiscordTextMessageLog) DiscordTextMessageLog {
 	return DiscordTextMessageLog{
 		ID:         message.ID,

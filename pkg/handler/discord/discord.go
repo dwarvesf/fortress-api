@@ -787,11 +787,11 @@ func (h *handler) SweepOgifEvent(c *gin.Context) {
 // @Param discord_channel_id path string true "Channel Discord ID"
 // @Param startDate query string true "Start Date"
 // @Param endDate query string true "End Date"
-// @Success 200 {object} ListResearchTopicResponse
+// @Success 200 {object} ListDiscordTextMessageLog
 // @Failure 400 {object} ErrorResponse
 // @Failure 404 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
-// @Router /discords/{discord_channel_id}/message-logs [get]
+// @Router /discords/channels/{discord_channel_id}/message-logs [get]
 func (h *handler) ListChannelMessageLogs(c *gin.Context) {
 	var input = request.GetChannelMessagesInput{
 		DiscordChannelID: c.Param("discord_channel_id"),
