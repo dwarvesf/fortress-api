@@ -822,6 +822,5 @@ func (h *handler) ListChannelMessageLogs(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
 	}
-	c.JSON(http.StatusOK, view.CreateResponse(messages, nil, nil, nil, ""))
-
+	c.JSON(http.StatusOK, view.CreateResponse(view.ToListDiscordTextMessageLog(messages), nil, nil, nil, ""))
 }
