@@ -3313,14 +3313,11 @@ func (h *handler) CommissionModels(c *gin.Context) {
 		return
 	}
 
-	projectCommissionModel := make([]model.CommissionModel, 0)
-	if authutils.HasPermission(userInfo.Permissions, model.PermissionProjectsCommissionRateRead) {
-		projectCommissionModel, err = h.aggregateCommissionModel(projectData)
-		if err != nil {
-			l.Error(err, "failed to aggregate commission model")
-			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
-			return
-		}
+	projectCommissionModel, err := h.aggregateCommissionModel(projectData)
+	if err != nil {
+		l.Error(err, "failed to aggregate commission model")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse(view.ToCommissionModelData(projectCommissionModel), nil, nil, nil, ""))
