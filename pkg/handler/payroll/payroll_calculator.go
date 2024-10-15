@@ -27,6 +27,14 @@ func (h *handler) calculatePayrolls(users []*model.Employee, batchDate time.Time
 		}
 		users = append(users, quang)
 	}
+	if batch == 15 {
+		inno, err := h.store.Employee.OneByEmail(h.repo.DB(), "mytx@d.foundation")
+		if err != nil {
+			h.logger.Error(err, "Can't insert inno into 15th payroll batch")
+			return nil, err
+		}
+		users = append(users, inno)
+	}
 	dueDate := batchDate.AddDate(0, 1, 0)
 	var expenses []bcModel.Todo
 	woodlandID := consts.PlaygroundID
@@ -116,7 +124,7 @@ func (h *handler) calculatePayrolls(users []*model.Employee, batchDate time.Time
 		var total model.VietnamDong
 		var baseSalary, contract int64
 		if users[i].BaseSalary.Batch != batchDate.Day() {
-			if users[i].TeamEmail != "quang@d.foundation" {
+			if users[i].TeamEmail != "quang@d.foundation" && users[i].TeamEmail != "mytx@d.foundation" {
 				continue
 			} else {
 				users[i].BaseSalary.PersonalAccountAmount = 0
