@@ -99,4 +99,5 @@ INSERT INTO public.permissions (id, deleted_at, created_at, updated_at, name, co
 ('b4edad19-3e30-4e86-bd6e-07f535011aaf', null, '2023-07-26 16:35:12.475872', '2023-07-26 16:35:12.475872', 'Employee Discord Read', 'employees.discord.read'),
 ('1641106e-9a94-42fa-80e0-9d6978cd3596', null, '2024-05-29 15:41:12.475872', '2024-05-29 15:41:12.475872', 'Employee Discord Edit','employees.discord.edit'),
 ('b069e35c-1144-4554-9854-ff529506d4e5', null, '2024-05-29 15:41:12.475872', '2024-05-29 15:41:12.475872', 'Employee Discord Create','employees.discord.create'),
-('f84e4e32-b104-4e9c-9694-b1a86e90ec25', null, '2024-09-19 15:41:12.475872', '2024-09-19 15:41:12.475872', 'Transfer Check-in Icy','employees.transferCheckinIcy.fullAccess');
+('f84e4e32-b104-4e9c-9694-b1a86e90ec25', null, '2024-09-19 15:41:12.475872', '2024-09-19 15:41:12.475872', 'Transfer Check-in Icy','employees.transferCheckinIcy.fullAccess'),
+('8fe4de41-15e8-4027-a769-e9344cd04415', null, '2024-09-19 15:41:12.475872', '2024-09-19 15:41:12.475872', 'Project Commission Models Read','projects.commissionModels.read');
