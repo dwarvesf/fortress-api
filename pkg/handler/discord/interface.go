@@ -18,4 +18,5 @@ type IHandler interface {
 	UserOgifStats(c *gin.Context)
 	OgifLeaderboard(c *gin.Context)
 	SweepOgifEvent(c *gin.Context)
+	ListChannelMessageLogs(c *gin.Context)
 }
