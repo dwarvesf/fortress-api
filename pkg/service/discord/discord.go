@@ -258,6 +258,16 @@ func (r Roles) ByCode(code string) *discordgo.Role {
 	return nil
 }
 
+func (r Roles) ByID(id string) *discordgo.Role {
+	for _, dRole := range r {
+		if dRole.ID == id {
+			return dRole
+		}
+	}
+
+	return nil
+}
+
 func getDwarvesRolesMap() map[string]bool {
 	return map[string]bool{
 		"moderator":  true,

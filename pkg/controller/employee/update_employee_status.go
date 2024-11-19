@@ -128,13 +128,13 @@ func (r *controller) removeDiscordRoles(e *model.Employee) error {
 	// Assign role based on IsKeepFwdEmail
 	var targetRole string
 	if e.IsKeepFwdEmail {
-		targetRole = "veteran"
+		targetRole = "1300823319511171082" // "veteran"
 	} else {
-		targetRole = "alumni"
+		targetRole = "811268653517373540" // "alumni"
 	}
 
 	// Find the role by code and add it
-	roleToAdd := roles.ByCode(targetRole)
+	roleToAdd := roles.ByID(targetRole)
 	if roleToAdd == nil {
 		return fmt.Errorf("role %s not found", targetRole)
 	}

@@ -8773,13 +8773,13 @@ func (r *controller) removeDiscordRoles(e *model.Employee) error {
 	// Assign role based on IsKeepFwdEmail
 	var targetRole string
 	if e.IsKeepFwdEmail {
-		targetRole = "veteran"
+		targetRole = "1300823319511171082" // "veteran"
 	} else {
-		targetRole = "alumni"
+		targetRole = "811268653517373540" // "alumni"
 	}
 
 	// Find the role by code and add it
-	roleToAdd := roles.ByCode(targetRole)
+	roleToAdd := roles.ByID(targetRole)
 	if roleToAdd == nil {
 		return fmt.Errorf("role %s not found", targetRole)
 	}
@@ -46752,12 +46752,35 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
-	"github.com/dwarvesf/fortress-api/pkg/config"
-	"github.com/dwarvesf/fortress-api/pkg/store"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/require"
+
+	"github.com/dwarvesf/fortress-api/pkg/config"
+	"github.com/dwarvesf/fortress-api/pkg/model"
+	"github.com/dwarvesf/fortress-api/pkg/store"
+	"github.com/dwarvesf/fortress-api/pkg/utils/authutils"
 )
+
+func generateTestToken(cfg *config.Config) string {
+	claims := &model.AuthenticationInfo{
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: time.Now().Add(24 * time.Hour).Unix(),
+		},
+		UserID:  "26558326e-f009-4b73-a535-64c3a22e558f",
+		Avatar:  "https://s3-ap-southeast-1.amazonaws.com/fortress-images/515357469566395594.png",
+		Email:   "thanh@d.foundation",
+	}
+
+	token, err := authutils.GenerateJWTToken(claims, claims.ExpiresAt, cfg.JWTSecretKey)
+	if err != nil {
+		panic(fmt.Sprintf("Failed to generate test token: %v", err))
+	}
+
+	return token
+}
 
 func TestWithAuth(t *testing.T) {
 	type args struct {
@@ -46767,12 +46790,16 @@ func TestWithAuth(t *testing.T) {
 		expectedHTTPCode int
 		expectedError    error
 	}
+	
+	cfg := config.LoadTestConfig()
+	testToken := generateTestToken(&cfg)
+
 	tcs := map[string]args{
 		"authorization header valid": {
 			testURL:          "/sample-routes",
 			expectedHTTPCode: http.StatusOK,
 			testTokenType:    "Bearer",
-			testAccessToken:  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MzA4OTAyNjIsIlVzZXJJRCI6IjI2NTU4MzJlLWYwMDktNGI3My1hNTM1LTY0YzNhMjJlNTU4ZiIsImF2YXRhciI6Imh0dHBzOi8vczMtYXAtc291dGhlYXN0LTEuYW1hem9uYXdzLmNvbS9mb3J0cmVzcy1pbWFnZXMvNTE1MzU3NDY5NTY2Mzk1NTk0NC5wbmciLCJlbWFpbCI6InRoYW5oQGQuZm91bmRhdGlvbiIsInBlcm1pc3Npb25zIjpbImVtcGxveWVlcy5yZWFkIl0sInVzZXJfaW5mbyI6bnVsbH0.MDHMPBJC8BPY4ZJNg5j0xn2jUvVDg-05M6AKqrTwdSM",
+			testAccessToken:  testToken,
 		},
 		"authorization header invalid": {
 			testURL:          "/sample-routes",
@@ -46819,7 +46846,7 @@ func TestWithAuth(t *testing.T) {
 	}
 	for desc, tc := range tcs {
 		t.Run(desc, func(t *testing.T) {
-			r := prepareTestDefaultRoutes()
+			r := prepareTestDefaultRoutes(&cfg)
 			req, _ := http.NewRequest("GET", tc.testURL, nil)
 			req.Header.Set("Authorization", fmt.Sprintf("%s %s", tc.testTokenType, tc.testAccessToken))
 
@@ -46836,10 +46863,9 @@ func TestWithAuth(t *testing.T) {
 	}
 }
 
-func prepareTestDefaultRoutes() *gin.Engine {
-	cfg := config.LoadTestConfig()
+func prepareTestDefaultRoutes(cfg *config.Config) *gin.Engine {
 	storeMock := store.New()
-	amw := NewAuthMiddleware(&cfg, storeMock, nil)
+	amw := NewAuthMiddleware(cfg, storeMock, nil)
 
 	r := gin.Default()
 	r.GET("/sample-routes", amw.WithAuth)
@@ -52115,6 +52141,16 @@ func (r Roles) DwarvesRoles() []*discordgo.Role {
 func (r Roles) ByCode(code string) *discordgo.Role {
 	for _, dRole := range r {
 		if dRole.Name == code {
+			return dRole
+		}
+	}
+
+	return nil
+}
+
+func (r Roles) ByID(id string) *discordgo.Role {
+	for _, dRole := range r {
+		if dRole.ID == id {
 			return dRole
 		}
 	}
