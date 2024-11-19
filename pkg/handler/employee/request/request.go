@@ -113,6 +113,7 @@ type UpdatePersonalInfoRequest struct {
 
 type UpdateWorkingStatusRequest struct {
 	EmployeeStatus WorkingStatus `json:"employeeStatus"`
+	IsKeepFwdEmail bool          `json:"isKeepFwdEmail"`
 } // @name UpdateWorkingStatusRequest
 
 type WorkingStatus string // @name WorkingStatus

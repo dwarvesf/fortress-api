@@ -14,6 +14,7 @@ import (
 
 type UpdateWorkingStatusInput struct {
 	EmployeeStatus model.WorkingStatus
+	IsKeepFwdEmail bool
 }
 
 func (r *controller) UpdateEmployeeStatus(employeeID string, body UpdateWorkingStatusInput) (*model.Employee, error) {
@@ -33,6 +34,7 @@ func (r *controller) UpdateEmployeeStatus(employeeID string, body UpdateWorkingS
 	}
 
 	e.WorkingStatus = body.EmployeeStatus
+	e.IsKeepFwdEmail = body.IsKeepFwdEmail
 	e.LeftDate = &now
 
 	if body.EmployeeStatus != model.WorkingStatusLeft {
@@ -76,9 +78,11 @@ func (r *controller) processOffBoardingEmployee(l logger.Logger, e *model.Employ
 		l.Errorf(err, "failed to remove basecamp access", "employeeID", e.ID.String(), "basecampID", e.BasecampID)
 	}
 
-	err = r.removeTeamEmailForward(e.TeamEmail)
-	if err != nil {
-		l.Errorf(err, "failed to remove team email forward", "employeeID", e.ID.String(), "email", e.TeamEmail)
+	if !e.IsKeepFwdEmail {
+		err = r.removeTeamEmailForward(e.TeamEmail)
+		if err != nil {
+			l.Errorf(err, "failed to remove team email forward", "employeeID", e.ID.String(), "email", e.TeamEmail)
+		}
 	}
 
 	err = r.removeTeamEmail(e.TeamEmail)
