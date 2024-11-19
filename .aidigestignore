@@ -1,5 +1,6 @@
 Dockerfile
 tools.Dockerfile
+.env
 go.*
 devbox.*
 .golangci.yml

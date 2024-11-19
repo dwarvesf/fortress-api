@@ -3,6 +3,7 @@ package employee
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"gorm.io/gorm"
@@ -67,7 +68,7 @@ func (r *controller) UpdateEmployeeStatus(employeeID string, body UpdateWorkingS
 
 func (r *controller) processOffBoardingEmployee(l logger.Logger, e *model.Employee) {
 	if e.DiscordAccount != nil {
-		err := r.removeDiscordRoles(e.DiscordAccount.DiscordID)
+		err := r.removeDiscordRoles(e)
 		if err != nil {
 			l.Errorf(err, "failed to update discord roles", "employeeID", e.ID.String(), "discordID", e.DiscordAccount.DiscordID)
 		}
@@ -96,10 +97,12 @@ func (r *controller) processOffBoardingEmployee(l logger.Logger, e *model.Employ
 	}
 }
 
-func (r *controller) removeDiscordRoles(discordUserID string) error {
-	if discordUserID == "" {
+func (r *controller) removeDiscordRoles(e *model.Employee) error {
+	if e.DiscordAccount == nil || e.DiscordAccount.DiscordID == "" {
 		return nil
 	}
+
+	discordUserID := e.DiscordAccount.DiscordID
 
 	roles, err := r.service.Discord.GetRoles()
 	if err != nil {
@@ -122,9 +125,21 @@ func (r *controller) removeDiscordRoles(discordUserID string) error {
 		}
 	}
 
-	// Assign alumni role
-	alumniRole := roles.ByCode("alumni")
-	err = r.service.Discord.AddRole(discordUserID, alumniRole.ID)
+	// Assign role based on IsKeepFwdEmail
+	var targetRole string
+	if e.IsKeepFwdEmail {
+		targetRole = "veteran"
+	} else {
+		targetRole = "alumni"
+	}
+
+	// Find the role by code and add it
+	roleToAdd := roles.ByCode(targetRole)
+	if roleToAdd == nil {
+		return fmt.Errorf("role %s not found", targetRole)
+	}
+
+	err = r.service.Discord.AddRole(discordUserID, roleToAdd.ID)
 	if err != nil {
 		return err
 	}
