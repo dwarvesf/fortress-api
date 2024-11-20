@@ -26,6 +26,7 @@
     "notionName": "notionName",
     "organizations": [],
     "personalEmail": "thanhpham123@gmail.com",
+    "isKeepFwdEmail": false,
     "phoneNumber": "0123456788",
     "placeOfResidence": "",
     "positions": [

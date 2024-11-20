@@ -20,6 +20,7 @@ type EmployeeData struct {
 	DisplayName      string     `json:"displayName"`
 	TeamEmail        string     `json:"teamEmail"`
 	PersonalEmail    string     `json:"personalEmail"`
+	IsKeepFwdEmail   bool       `json:"isKeepFwdEmail"`
 	Avatar           string     `json:"avatar"`
 	PhoneNumber      string     `json:"phoneNumber"`
 	Address          string     `json:"address"`
@@ -495,6 +496,7 @@ func ToEmployeeData(employee *model.Employee) *EmployeeData {
 		DisplayName:      employee.DisplayName,
 		TeamEmail:        employee.TeamEmail,
 		PersonalEmail:    employee.PersonalEmail,
+		IsKeepFwdEmail:   employee.IsKeepFwdEmail,
 		Avatar:           employee.Avatar,
 		PhoneNumber:      employee.PhoneNumber,
 		Address:          employee.Address,

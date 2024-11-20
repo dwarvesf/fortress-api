@@ -3,6 +3,7 @@ package employee
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"gorm.io/gorm"
@@ -14,6 +15,7 @@ import (
 
 type UpdateWorkingStatusInput struct {
 	EmployeeStatus model.WorkingStatus
+	IsKeepFwdEmail bool
 }
 
 func (r *controller) UpdateEmployeeStatus(employeeID string, body UpdateWorkingStatusInput) (*model.Employee, error) {
@@ -33,6 +35,7 @@ func (r *controller) UpdateEmployeeStatus(employeeID string, body UpdateWorkingS
 	}
 
 	e.WorkingStatus = body.EmployeeStatus
+	e.IsKeepFwdEmail = body.IsKeepFwdEmail
 	e.LeftDate = &now
 
 	if body.EmployeeStatus != model.WorkingStatusLeft {
@@ -44,7 +47,7 @@ func (r *controller) UpdateEmployeeStatus(employeeID string, body UpdateWorkingS
 		_ = done(nil)
 	}()
 
-	_, err = r.store.Employee.UpdateSelectedFieldsByID(tx.DB(), employeeID, *e, "working_status", "left_date")
+	_, err = r.store.Employee.UpdateSelectedFieldsByID(tx.DB(), employeeID, *e, "working_status", "left_date", "is_keep_fwd_email")
 	if err != nil {
 		return nil, done(err)
 	}
@@ -65,7 +68,7 @@ func (r *controller) UpdateEmployeeStatus(employeeID string, body UpdateWorkingS
 
 func (r *controller) processOffBoardingEmployee(l logger.Logger, e *model.Employee) {
 	if e.DiscordAccount != nil {
-		err := r.removeDiscordRoles(e.DiscordAccount.DiscordID)
+		err := r.removeDiscordRoles(e)
 		if err != nil {
 			l.Errorf(err, "failed to update discord roles", "employeeID", e.ID.String(), "discordID", e.DiscordAccount.DiscordID)
 		}
@@ -76,9 +79,11 @@ func (r *controller) processOffBoardingEmployee(l logger.Logger, e *model.Employ
 		l.Errorf(err, "failed to remove basecamp access", "employeeID", e.ID.String(), "basecampID", e.BasecampID)
 	}
 
-	err = r.removeTeamEmailForward(e.TeamEmail)
-	if err != nil {
-		l.Errorf(err, "failed to remove team email forward", "employeeID", e.ID.String(), "email", e.TeamEmail)
+	if !e.IsKeepFwdEmail {
+		err = r.removeTeamEmailForward(e.TeamEmail)
+		if err != nil {
+			l.Errorf(err, "failed to remove team email forward", "employeeID", e.ID.String(), "email", e.TeamEmail)
+		}
 	}
 
 	err = r.removeTeamEmail(e.TeamEmail)
@@ -92,10 +97,12 @@ func (r *controller) processOffBoardingEmployee(l logger.Logger, e *model.Employ
 	}
 }
 
-func (r *controller) removeDiscordRoles(discordUserID string) error {
-	if discordUserID == "" {
+func (r *controller) removeDiscordRoles(e *model.Employee) error {
+	if e.DiscordAccount == nil || e.DiscordAccount.DiscordID == "" {
 		return nil
 	}
+
+	discordUserID := e.DiscordAccount.DiscordID
 
 	roles, err := r.service.Discord.GetRoles()
 	if err != nil {
@@ -118,9 +125,21 @@ func (r *controller) removeDiscordRoles(discordUserID string) error {
 		}
 	}
 
-	// Assign alumni role
-	alumniRole := roles.ByCode("alumni")
-	err = r.service.Discord.AddRole(discordUserID, alumniRole.ID)
+	// Assign role based on IsKeepFwdEmail
+	var targetRole string
+	if e.IsKeepFwdEmail {
+		targetRole = "1300823319511171082" // "veteran"
+	} else {
+		targetRole = "811268653517373540" // "alumni"
+	}
+
+	// Find the role by code and add it
+	roleToAdd := roles.ByID(targetRole)
+	if roleToAdd == nil {
+		return fmt.Errorf("role %s not found", targetRole)
+	}
+
+	err = r.service.Discord.AddRole(discordUserID, roleToAdd.ID)
 	if err != nil {
 		return err
 	}
