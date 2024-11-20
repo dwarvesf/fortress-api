@@ -47,7 +47,7 @@ func (r *controller) UpdateEmployeeStatus(employeeID string, body UpdateWorkingS
 		_ = done(nil)
 	}()
 
-	_, err = r.store.Employee.UpdateSelectedFieldsByID(tx.DB(), employeeID, *e, "working_status", "left_date")
+	_, err = r.store.Employee.UpdateSelectedFieldsByID(tx.DB(), employeeID, *e, "working_status", "left_date", "is_keep_fwd_email")
 	if err != nil {
 		return nil, done(err)
 	}
