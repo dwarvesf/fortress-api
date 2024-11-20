@@ -33,3 +33,10 @@ linters:
 
 run:
   timeout: 5m
+
+issues:
+  exclude-rules:
+    # Exclude some `staticcheck` messages.
+    - linters:
+        - staticcheck
+      text: "SA1019:"

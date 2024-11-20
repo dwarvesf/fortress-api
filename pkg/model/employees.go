@@ -71,6 +71,7 @@ type Employee struct {
 	Username               string     `gorm:"default:null"`
 	TeamEmail              string     `gorm:"default:null"`
 	PersonalEmail          string     `gorm:"default:null"`
+	IsKeepFwdEmail         bool       `gorm:"-"`
 	Avatar                 string     `gorm:"default:null"`
 	PhoneNumber            string     `gorm:"default:null"`
 	Address                string     `gorm:"default:null"`

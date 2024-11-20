@@ -245,6 +245,7 @@ func (h *handler) UpdateEmployeeStatus(c *gin.Context) {
 
 	emp, err := h.controller.Employee.UpdateEmployeeStatus(employeeID, employee.UpdateWorkingStatusInput{
 		EmployeeStatus: model.WorkingStatus(body.EmployeeStatus),
+		IsKeepFwdEmail: body.IsKeepFwdEmail,
 	})
 	if err != nil {
 		l.Error(err, "failed to update employee status")

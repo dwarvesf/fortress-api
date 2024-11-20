@@ -1,5 +1,20 @@
 
 -- +migrate Up
+DROP TYPE IF EXISTS "public"."cost_types";
+CREATE TYPE "public"."cost_types" AS ENUM ('individual', 'sum');
+DROP TYPE IF EXISTS "public"."amount_types";
+CREATE TYPE "public"."amount_types" AS ENUM ('percentage', 'flat');
+
+-- Table Definition
+CREATE TABLE "public"."cost_projections" (
+    "id" uuid NOT NULL DEFAULT uuid(),
+    "name" varchar(255) NOT NULL,
+    "type" "public"."cost_types" NOT NULL,
+    "amount_type" "public"."amount_types" NOT NULL,
+    "amount" float8 NOT NULL,
+    PRIMARY KEY ("id")
+);
+
 CREATE OR REPLACE VIEW vw_project_cost_and_revenue AS
 WITH project_data AS (
     -- Summarize project salary and charge rate
@@ -76,3 +91,4 @@ LEFT JOIN cost_projection_calculations cpc ON cpc.project_id = pd.project_id;
 
 -- +migrate Down
 DROP VIEW IF EXISTS "vw_project_cost_and_revenue";
+DROP TABLE IF EXISTS "cost_projections";
