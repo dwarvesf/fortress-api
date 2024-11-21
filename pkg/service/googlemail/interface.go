@@ -20,4 +20,5 @@ type IService interface {
 	SendInvoiceOverdueMail(invoice *model.Invoice) (err error)
 	SendInvoiceThankYouMail(invoice *model.Invoice) (err error)
 	SendPayrollPaidMail(p *model.Payroll) (err error)
+	SendOffboardingMail(offboarding *model.OffboardingEmail) (err error)
 }

@@ -173,3 +173,9 @@ func (e Employees) ToTeamEmailIDMap() map[string]UUID {
 
 	return rs
 }
+
+type OffboardingEmail struct {
+	Name          string `json:"name"`
+	PersonalEmail string `json:"personalEmail"`
+	TeamEmail     string `json:"teamEmail"`
+}
