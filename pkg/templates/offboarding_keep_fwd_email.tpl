@@ -14,12 +14,12 @@ Content-Transfer-Encoding: quoted-printable
 				<div><br></div>
 				<div>
 					We appreciate the efforts you put into your role at Dwarves Foundation. 
-					While your journey with DF has concluded, we'd like to offer a small way to stay connected: you can retain your DF email alias [{{.TeamEmail}}].
+					While your journey with DF has concluded, we'd like to offer a small way to stay connected: you can retain your DF email alias {{.TeamEmail}}.
 				</div>
 				<div><br></div>
 				<div><br></div>
 				<div>
-					This alias will forward incoming messages to your personal email [{{.PersonalEmail}}], 
+					This alias will forward incoming messages to your personal email {{.PersonalEmail}}, 
 					ensuring continuity and a professional touch for your correspondence.</div><br>
 					<div><br></div>
 				</div>
