@@ -63,12 +63,12 @@ func (r *controller) UpdateEmployeeStatus(employeeID string, body UpdateWorkingS
 		// Do Off-boarding process
 		r.processOffBoardingEmployee(l, e)
 		if e.IsKeepFwdEmail {
-			firstName := e.FullName
+			name := e.FullName
 			if e.DisplayName != "" {
-				firstName = strings.Split(e.DisplayName, " ")[0]
+				name = strings.Split(e.DisplayName, " ")[0]
 			}
 			offboardingEmail := model.OffboardingEmail{
-				Name:          firstName,
+				Name:          name,
 				TeamEmail:     e.TeamEmail,
 				PersonalEmail: e.PersonalEmail,
 			}

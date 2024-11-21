@@ -1,5 +1,5 @@
 Mime-Version: 1.0
-From: "Team @ Dwarves Ventures" <team@dwarvesv.com>
+From: "Team @ Dwarves Foundation" <team@d.foundation>
 To: {{.PersonalEmail}}
 Subject: Continue Using Your DF Email
 Content-Type: multipart/mixed; boundary=main
