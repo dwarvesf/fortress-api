@@ -457,3 +457,29 @@ func (g *googleService) SendInvitationMail(invitation *model.InvitationEmail) (e
 	_, err = g.sendEmail(encodedEmail, id)
 	return err
 }
+
+// SendOffboardingMail ...
+func (g *googleService) SendOffboardingMail(offboarding *model.OffboardingEmail) (err error) {
+	if err := g.ensureToken(g.appConfig.Google.TeamGoogleRefreshToken); err != nil {
+		return err
+	}
+
+	if err := g.prepareService(); err != nil {
+		return err
+	}
+
+	encodedEmail, err := composeMailContent(g.appConfig,
+		&MailParseInfo{
+			teamEmail,
+			"offboarding_keep_fwd_email.tpl",
+			&offboarding,
+			map[string]interface{}{},
+		})
+	if err != nil {
+		return err
+	}
+	id := g.appConfig.Google.TeamEmailID
+
+	_, err = g.sendEmail(encodedEmail, id)
+	return err
+}

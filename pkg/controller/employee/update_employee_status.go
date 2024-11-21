@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"gorm.io/gorm"
@@ -61,6 +62,22 @@ func (r *controller) UpdateEmployeeStatus(employeeID string, body UpdateWorkingS
 
 		// Do Off-boarding process
 		r.processOffBoardingEmployee(l, e)
+		if e.IsKeepFwdEmail {
+			name := e.FullName
+			if e.DisplayName != "" {
+				name = strings.Split(e.DisplayName, " ")[0]
+			}
+			offboardingEmail := model.OffboardingEmail{
+				Name:          name,
+				TeamEmail:     e.TeamEmail,
+				PersonalEmail: e.PersonalEmail,
+			}
+
+			if err := r.service.GoogleMail.SendOffboardingMail(&offboardingEmail); err != nil {
+				l.Errorf(err, "failed to send offboard mail", "employeeID", e.ID.String())
+				return nil, done(err)
+			}
+		}
 	}
 
 	return e, err

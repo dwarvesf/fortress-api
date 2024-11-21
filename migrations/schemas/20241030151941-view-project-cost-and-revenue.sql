@@ -1,11 +1,15 @@
-
 -- +migrate Up
+-- Drop dependent objects first
+DROP VIEW IF EXISTS "public"."vw_project_cost_and_revenue";
+DROP TABLE IF EXISTS "public"."cost_projections";
+
+-- Now drop and recreate the types
 DROP TYPE IF EXISTS "public"."cost_types";
 CREATE TYPE "public"."cost_types" AS ENUM ('individual', 'sum');
 DROP TYPE IF EXISTS "public"."amount_types";
 CREATE TYPE "public"."amount_types" AS ENUM ('percentage', 'flat');
 
--- Table Definition
+-- Recreate the table with the new type
 CREATE TABLE "public"."cost_projections" (
     "id" uuid NOT NULL DEFAULT uuid(),
     "name" varchar(255) NOT NULL,
@@ -15,6 +19,7 @@ CREATE TABLE "public"."cost_projections" (
     PRIMARY KEY ("id")
 );
 
+-- Recreate the view
 CREATE OR REPLACE VIEW vw_project_cost_and_revenue AS
 WITH project_data AS (
     -- Summarize project salary and charge rate
@@ -88,7 +93,8 @@ SELECT
 FROM project_data pd
 LEFT JOIN cost_projection_calculations cpc ON cpc.project_id = pd.project_id;
 
-
 -- +migrate Down
-DROP VIEW IF EXISTS "vw_project_cost_and_revenue";
-DROP TABLE IF EXISTS "cost_projections";
+DROP VIEW IF EXISTS "public"."vw_project_cost_and_revenue";
+DROP TABLE IF EXISTS "public"."cost_projections";
+DROP TYPE IF EXISTS "public"."cost_types";
+DROP TYPE IF EXISTS "public"."amount_types";
