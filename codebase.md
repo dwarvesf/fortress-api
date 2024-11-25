@@ -1,7 +1,7 @@
 # .aidigestignore
 
 ```
-Dockerfile tools.Dockerfile .env go.* devbox.* .golangci.yml .gitignore .air.toml CODEOWNERS docker-compose.yml Makefile .github/* docs/* migrations/seed/* migrations/test_seed/* **_test.go pkg/templates/* pkg/contracts/* pkg/view/* pkg/logger/* pkg/handler/dashboard/util/mocks/* pkg/handler/survey/testdata/* pkg/handler/project/testdata/* pkg/handler/dashboard/testdata/* pkg/handler/profile/testdata/* pkg/handler/feedback/testdata/* pkg/handler/metadata/testdata/* pkg/handler/invoice/testdata/* pkg/handler/employee/testdata/* pkg/handler/bankaccount/testdata/* pkg/handler/client/testdata/*
+Dockerfile tools.Dockerfile .env go.* devbox.* .golangci.yml .gitignore .air.toml CODEOWNERS docker-compose.yml Makefile .github/* docs/* migrations/seed/* migrations/test_seed/* **_test.go pkg/templates/* pkg/contracts/* pkg/view/* pkg/logger/* pkg/handler/dashboard/util/mocks/* **/testdata/*
 ```
 
 # cmd/server/main.go

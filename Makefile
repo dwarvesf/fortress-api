@@ -122,4 +122,4 @@ lint:
 
 .PHONY: digest
 digest:
-	npx ai-digest --whitespace-removal
+	npx ai-digest --show-output-files --whitespace-removal
