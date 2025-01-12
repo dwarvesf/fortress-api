@@ -97,3 +97,51 @@ func (input DiscordEventSpeakerInput) Validate() error {
 	}
 	return nil
 }
+
+type GetChannelMessagesInput struct {
+	DiscordChannelID string
+	StartDate        string `json:"startDate" form:"startDate"`
+	EndDate          string `json:"endDate" form:"endDate"`
+}
+
+func (input GetChannelMessagesInput) Validate() error {
+	if len(input.DiscordChannelID) == 0 {
+		return errs.ErrEmptyChannelID
+	}
+	if (len(input.StartDate) == 0) || (len(input.EndDate) == 0) {
+		return errs.ErrEmptyDate
+	}
+
+	sTime, err := time.Parse("2006-01-02", input.StartDate)
+	if err != nil {
+		return errs.ErrInvalidDate
+	}
+	eTime, err := time.Parse("2006-01-02", input.EndDate)
+	if err != nil {
+		return errs.ErrInvalidDate
+	}
+
+	if sTime.After(eTime) {
+		return errs.ErrInvalidTimeRange
+	}
+
+	return nil
+}
+
+func (input GetChannelMessagesInput) GetStartDate() *time.Time {
+	date, err := time.Parse("2006-01-02", input.StartDate)
+	if err != nil {
+		return nil
+	}
+
+	return &date
+}
+
+func (input GetChannelMessagesInput) GetEndDate() *time.Time {
+	date, err := time.Parse("2006-01-02", input.EndDate)
+	if err != nil {
+		return nil
+	}
+
+	return &date
+}

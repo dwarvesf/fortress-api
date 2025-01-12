@@ -1,6 +1,10 @@
 package model
 
-import "github.com/bwmarrin/discordgo"
+import (
+	"time"
+
+	"github.com/bwmarrin/discordgo"
+)
 
 type DiscordMessage struct {
 	AvatarURL  string                     `json:"avatar_url"`
@@ -65,4 +69,14 @@ type OriginalDiscordMessage struct {
 	GuildId     string
 	Author      *discordgo.User
 	Roles       []string
+}
+
+type DiscordTextMessageLog struct {
+	ID         string
+	Content    string
+	AuthorName string
+	AuthorID   string
+	ChannelID  string
+	GuildID    string
+	Timestamp  time.Time
 }
