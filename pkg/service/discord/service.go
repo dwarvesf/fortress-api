@@ -30,8 +30,19 @@ type IService interface {
 	ReportBraineryMetrics(queryView string, braineryMetric *view.BraineryMetric, channelID string) (*discordgo.Message, error)
 	DeliveryMetricWeeklyReport(deliveryMetrics *view.DeliveryMetricWeeklyReport, leaderBoard *view.WeeklyLeaderBoard, channelID string) (*discordgo.Message, error)
 	DeliveryMetricMonthlyReport(deliveryMetrics *view.DeliveryMetricMonthlyReport, leaderBoard *view.WeeklyLeaderBoard, channelID string) (*discordgo.Message, error)
-	SendNewMemoMessage(guildID string, memos []model.MemoLog, channelID string) (*discordgo.Message, error)
-	SendWeeklyMemosMessage(guildID string, memos []model.MemoLog, weekRangeStr, channelID string) (*discordgo.Message, error)
+	SendNewMemoMessage(
+		guildID string,
+		memos []model.MemoLog,
+		channelID string,
+		getDiscordAccountByID func(discordAccountID string) (*model.DiscordAccount, error),
+	) (*discordgo.Message, error)
+	SendWeeklyMemosMessage(
+		guildID string,
+		memos []model.MemoLog,
+		weekRangeStr,
+		channelID string,
+		getDiscordAccountByID func(discordAccountID string) (*model.DiscordAccount, error),
+	) (*discordgo.Message, error)
 	/*
 		WEBHOOK
 	*/

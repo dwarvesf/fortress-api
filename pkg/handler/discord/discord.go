@@ -54,7 +54,7 @@ func New(controller *controller.Controller, store *store.Store, repo store.DBRep
 const (
 	discordReadingChannel           = "1225085624260759622"
 	discordRandomChannel            = "788084358991970337"
-	discordPlayGroundReadingChannel = "1119171172198797393"
+	discordPlayGroundReadingChannel = "1064460652720160808" // quang's channel
 )
 
 func (h *handler) SyncDiscordInfo(c *gin.Context) {
@@ -375,7 +375,14 @@ func (h *handler) SyncMemo(c *gin.Context) {
 		return
 	}
 
-	_, err = h.service.Discord.SendNewMemoMessage(h.config.Discord.IDs.DwarvesGuild, memos, targetChannelID)
+	_, err = h.service.Discord.SendNewMemoMessage(
+		h.config.Discord.IDs.DwarvesGuild,
+		memos,
+		targetChannelID,
+		func(discordAccountID string) (*model.DiscordAccount, error) {
+			return h.store.DiscordAccount.One(h.repo.DB(), discordAccountID)
+		},
+	)
 	if err != nil {
 		h.logger.Error(err, "failed to send new memo message")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
@@ -390,6 +397,61 @@ func (h *handler) SweepMemo(c *gin.Context) {
 	err := h.controller.MemoLog.Sweep()
 	if err != nil {
 		h.logger.Error(err, "failed to sweep memologs")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))
+}
+func (h *handler) NotifyTopMemoAuthors(c *gin.Context) {
+	in := request.TopMemoAuthorsInput{}
+	if err := c.ShouldBindJSON(&in); err != nil {
+		h.logger.Error(err, "failed to decode body")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, in, ""))
+		return
+	}
+
+	if err := in.Validate(); err != nil {
+		h.logger.Error(err, "failed to validate input")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, in, ""))
+		return
+	}
+
+	now := time.Now()
+	end := time.Date(now.Year(), now.Month(), now.Day(), 23, 59, 59, 999999999, now.Location())
+	start := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location()).AddDate(0, 0, -in.Days+1)
+
+	topAuthors, err := h.store.MemoLog.GetTopAuthors(h.repo.DB(), in.Limit, &start, &end)
+	if err != nil {
+		h.logger.Error(err, "failed to retrieve top memo authors")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	if len(topAuthors) == 0 {
+		c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "no memo authors found"))
+		return
+	}
+
+	var topAuthorsStr string
+	for i, author := range topAuthors {
+		topAuthorsStr += fmt.Sprintf("%d. <@%s> (%d memos)\n", i+1, author.DiscordID, author.TotalMemos)
+	}
+
+	targetChannelID := discordPlayGroundReadingChannel
+	if h.config.Env == "prod" {
+		targetChannelID = discordRandomChannel
+	}
+
+	title := fmt.Sprintf("Top %d Memo Authors (Last %d Days)", in.Limit, in.Days)
+	msg := &discordgo.MessageEmbed{
+		Title:       title,
+		Description: topAuthorsStr,
+	}
+
+	_, err = h.service.Discord.SendEmbeddedMessageWithChannel(nil, msg, targetChannelID)
+	if err != nil {
+		h.logger.Error(err, "failed to send top memo authors message")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
 	}
@@ -430,7 +492,15 @@ func (h *handler) NotifyWeeklyMemos(c *gin.Context) {
 		targetChannelID = discordRandomChannel
 	}
 
-	_, err = h.service.Discord.SendWeeklyMemosMessage(h.config.Discord.IDs.DwarvesGuild, memos, weekRangeStr, targetChannelID)
+	_, err = h.service.Discord.SendWeeklyMemosMessage(
+		h.config.Discord.IDs.DwarvesGuild,
+		memos,
+		weekRangeStr,
+		targetChannelID,
+		func(discordAccountID string) (*model.DiscordAccount, error) {
+			return h.store.DiscordAccount.One(h.repo.DB(), discordAccountID)
+		},
+	)
 	if err != nil {
 		h.logger.Error(err, "failed to send weekly memos report")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))

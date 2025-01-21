@@ -678,17 +678,30 @@ func (d *discordClient) SendEmbeddedMessageWithChannel(original *model.OriginalD
 	return msg, err
 }
 
-func (d *discordClient) SendNewMemoMessage(guildID string, memos []model.MemoLog, channelID string) (*discordgo.Message, error) {
+func (d *discordClient) SendNewMemoMessage(
+	guildID string,
+	memos []model.MemoLog,
+	channelID string,
+	getDiscordAccountByID func(discordAccountID string) (*model.DiscordAccount, error),
+) (*discordgo.Message, error) {
 	for i, content := range memos {
 		if i <= 10 {
 			var textMessage string
 
 			authorField := ""
-			for _, author := range content.Authors {
-				if author.DiscordID != "" {
-					authorField += fmt.Sprintf(" <@%s> ", author.DiscordID)
-				} else if author.DiscordUsername != "" {
-					authorField += fmt.Sprintf(" @%s ", author.DiscordUsername)
+			for _, discordAccountID := range content.DiscordAccountIDs {
+				// Fetch discord account details for the ID
+				discordAccount, err := getDiscordAccountByID(discordAccountID)
+				if err != nil {
+					// If fetching fails, use the ID as a fallback
+					authorField += fmt.Sprintf(" <@%s> ", discordAccountID)
+					continue
+				}
+
+				if discordAccount.DiscordID != "" {
+					authorField += fmt.Sprintf(" <@%s> ", discordAccount.DiscordID)
+				} else if discordAccount.DiscordUsername != "" {
+					authorField += fmt.Sprintf(" @%s ", discordAccount.DiscordUsername)
 				} else {
 					authorField += " **@unknown-user**"
 				}
@@ -722,7 +735,13 @@ func (d *discordClient) SendNewMemoMessage(guildID string, memos []model.MemoLog
 	return nil, nil
 }
 
-func (d *discordClient) SendWeeklyMemosMessage(guildID string, memos []model.MemoLog, weekRangeStr, channelID string) (*discordgo.Message, error) {
+func (d *discordClient) SendWeeklyMemosMessage(
+	guildID string,
+	memos []model.MemoLog,
+	weekRangeStr,
+	channelID string,
+	getDiscordAccountByID func(discordAccountID string) (*model.DiscordAccount, error),
+) (*discordgo.Message, error) {
 	bagde1Emoji := getEmoji("BADGE1")
 	bagde5Emoji := getEmoji("BADGE5")
 	pepeNoteEmoji := getEmoji("PEPE_NOTE")
@@ -769,13 +788,21 @@ func (d *discordClient) SendWeeklyMemosMessage(guildID string, memos []model.Mem
 
 		for idx, mem := range memos {
 			authorField := ""
-			for _, author := range mem.Authors {
-				authorMap[author.DiscordID] += 1
+			for _, discordAccountID := range mem.DiscordAccountIDs {
+				// Fetch discord account details for the ID
+				discordAccount, err := getDiscordAccountByID(discordAccountID)
+				if err != nil {
+					// If fetching fails, use the ID as a fallback
+					authorField += fmt.Sprintf(" <@%s> ", discordAccountID)
+					continue
+				}
 
-				if author.DiscordID != "" {
-					authorField += fmt.Sprintf(" <@%s> ", author.DiscordID)
-				} else if author.DiscordUsername != "" {
-					authorField += fmt.Sprintf(" @%s ", author.DiscordUsername)
+				authorMap[discordAccount.DiscordID] += 1
+
+				if discordAccount.DiscordID != "" {
+					authorField += fmt.Sprintf(" <@%s> ", discordAccount.DiscordID)
+				} else if discordAccount.DiscordUsername != "" {
+					authorField += fmt.Sprintf(" @%s ", discordAccount.DiscordUsername)
 				} else {
 					authorField += " **@unknown-user**"
 				}

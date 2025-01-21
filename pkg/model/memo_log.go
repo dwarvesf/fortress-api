@@ -5,7 +5,6 @@ import (
 
 	"github.com/lib/pq"
 	"github.com/shopspring/decimal"
-	"gorm.io/gorm"
 )
 
 type MemoLog struct {
@@ -19,7 +18,7 @@ type MemoLog struct {
 	Reward      decimal.Decimal
 	Category    pq.StringArray `json:"value" gorm:"type:text[]"`
 
-	Authors []DiscordAccount `json:"authors" gorm:"many2many:memo_authors;"`
+	DiscordAccountIDs JSONArrayString `json:"discord_account_ids" gorm:"type:jsonb;column:discord_account_ids"`
 
 	// This field is used to make sure response always contains authors
 	AuthorMemoUsernames []string `json:"-" gorm:"-"`
@@ -33,6 +32,4 @@ type DiscordAccountMemoRank struct {
 	Rank            int
 }
 
-func (MemoLog) BeforeCreate(db *gorm.DB) error {
-	return db.SetupJoinTable(&MemoLog{}, "Authors", &MemoAuthor{})
-}
+// Remove BeforeCreate method as we no longer use many-to-many join table
