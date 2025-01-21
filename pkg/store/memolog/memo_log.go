@@ -23,7 +23,7 @@ func (s *store) Create(db *gorm.DB, b []model.MemoLog) ([]model.MemoLog, error) 
 // GetLimitByTimeRange gets memo logs in a specific time range, with limit
 func (s *store) GetLimitByTimeRange(db *gorm.DB, start, end *time.Time, limit int) ([]model.MemoLog, error) {
 	var logs []model.MemoLog
-	return logs, db.Preload("Authors").Preload("Authors.Employee").Where("published_at BETWEEN ? AND ?", start, end).Limit(limit).Order("published_at DESC").Find(&logs).Error
+	return logs, db.Where("published_at BETWEEN ? AND ?", start, end).Limit(limit).Order("published_at DESC").Find(&logs).Error
 }
 
 // ListFilter is a filter for List function
@@ -36,7 +36,7 @@ type ListFilter struct {
 // List gets all memo logs
 func (s *store) List(db *gorm.DB, filter ListFilter) ([]model.MemoLog, error) {
 	var logs []model.MemoLog
-	query := db.Preload("Authors").Preload("Authors.Employee").Order("published_at DESC")
+	query := db.Order("published_at DESC")
 	if filter.From != nil {
 		query = query.Where("published_at >= ?", *filter.From)
 	}
@@ -45,8 +45,7 @@ func (s *store) List(db *gorm.DB, filter ListFilter) ([]model.MemoLog, error) {
 	}
 
 	if filter.DiscordID != "" {
-		query = query.Joins("JOIN memo_authors ma ON ma.memo_log_id = memo_logs.id").
-			Joins("JOIN discord_accounts da ON da.id = ma.discord_account_id AND da.discord_id = ?", filter.DiscordID)
+		query = query.Where("? = ANY(discord_account_ids)", filter.DiscordID)
 	}
 
 	return logs, query.Find(&logs).Error
@@ -60,13 +59,9 @@ func (s *store) ListNonAuthor(db *gorm.DB) ([]model.MemoLog, error) {
 			memo_logs.*
 		FROM 
 			memo_logs
-		LEFT JOIN 
-			memo_authors ON memo_authors.memo_log_id = memo_logs.id
-		GROUP BY 
-			memo_logs.id
-		HAVING 
-			STRING_AGG(memo_authors.discord_account_id::text, ', ') IS NULL OR 
-			STRING_AGG(memo_authors.discord_account_id::text, ', ') = ''
+		WHERE 
+			discord_account_ids IS NULL OR 
+			jsonb_array_length(discord_account_ids) = 0
 	`
 
 	return logs, db.Raw(query).Scan(&logs).Error
@@ -74,18 +69,24 @@ func (s *store) ListNonAuthor(db *gorm.DB) ([]model.MemoLog, error) {
 
 func (s *store) GetRankByDiscordID(db *gorm.DB, discordID string) (*model.DiscordAccountMemoRank, error) {
 	query := `
-		WITH memo_count AS (
+		WITH discord_account AS (
+			SELECT id 
+			FROM public.discord_accounts 
+			WHERE discord_id = ?
+		),
+		memo_count AS (
 			SELECT
 				da.discord_id,
-				COUNT(ml.id) AS total_memos
+				COUNT(DISTINCT ml.id) AS total_memos
 			FROM
-				public.memo_authors ma
-			JOIN
-				public.memo_logs ml ON ma.memo_log_id = ml.id
-			JOIN
-				public.discord_accounts da ON ma.discord_account_id = da.id
+				public.memo_logs ml,
+				discord_account da_id,
+				public.discord_accounts da,
+				jsonb_array_elements_text(ml.discord_account_ids) AS account_id
 			WHERE
-				ml.deleted_at IS NULL
+				ml.deleted_at IS NULL AND
+				da.id = da_id.id AND
+				da.id::text = account_id
 			GROUP BY
 				da.discord_id
 		),
@@ -93,7 +94,7 @@ func (s *store) GetRankByDiscordID(db *gorm.DB, discordID string) (*model.Discor
 			SELECT
 				discord_id,
 				total_memos,
-				RANK() OVER (ORDER BY total_memos DESC) AS rank
+				DENSE_RANK() OVER (ORDER BY total_memos DESC) AS rank
 			FROM
 				memo_count
 		)
@@ -103,8 +104,6 @@ func (s *store) GetRankByDiscordID(db *gorm.DB, discordID string) (*model.Discor
 			rm.rank
 		FROM
 			ranked_memos rm
-		WHERE
-			rm.discord_id = ?
 	`
 	var memoRank model.DiscordAccountMemoRank
 	result := db.Raw(query, discordID).Scan(&memoRank)
@@ -122,7 +121,7 @@ func (s *store) GetRankByDiscordID(db *gorm.DB, discordID string) (*model.Discor
 
 // CreateMemoAuthor creates a memo author record in the database
 func (s *store) CreateMemoAuthor(db *gorm.DB, memoAuthor *model.MemoAuthor) error {
-	return db.Create(memoAuthor).Error
+	return fmt.Errorf("memo_authors table no longer exists")
 }
 
 // GetTopAuthors gets the top authors by memo count
@@ -133,15 +132,14 @@ func (s *store) GetTopAuthors(db *gorm.DB, limit int) ([]model.DiscordAccountMem
 				da.discord_id,
 				da.discord_username,
 				da.memo_username,
-				COUNT(ml.id) AS total_memos
+				COUNT(DISTINCT ml.id) AS total_memos
 			FROM
-				public.memo_authors ma
-			JOIN
-				public.memo_logs ml ON ma.memo_log_id = ml.id
-			JOIN
-				public.discord_accounts da ON ma.discord_account_id = da.id
+				public.memo_logs ml,
+				public.discord_accounts da,
+				jsonb_array_elements_text(ml.discord_account_ids) AS account_id
 			WHERE
-				ml.deleted_at IS NULL -- Exclude deleted memos if necessary
+				ml.deleted_at IS NULL AND
+				da.id::text = account_id
 			GROUP BY
 				da.discord_id, 
 				da.discord_username,
@@ -152,7 +150,7 @@ func (s *store) GetTopAuthors(db *gorm.DB, limit int) ([]model.DiscordAccountMem
 			discord_username,
 			memo_username,
 			total_memos,
-			RANK() OVER (ORDER BY total_memos DESC) AS rank
+			DENSE_RANK() OVER (ORDER BY total_memos DESC) AS rank
 		FROM
 			memo_count
 		ORDER BY

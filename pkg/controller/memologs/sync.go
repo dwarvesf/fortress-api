@@ -97,12 +97,17 @@ func (c *controller) Sync() ([]model.MemoLog, error) {
 					continue
 				}
 
+				discordAccountIDs := make([]string, 0, len(authors))
+				for _, author := range authors {
+					discordAccountIDs = append(discordAccountIDs, author.ID.String())
+				}
+
 				newMemos = append(newMemos, model.MemoLog{
 					Title:               item.Title,
 					URL:                 item.Link,
 					Description:         item.Description,
 					PublishedAt:         &pubDate,
-					Authors:             authors,
+					DiscordAccountIDs:   discordAccountIDs,
 					AuthorMemoUsernames: authorUsernames,
 					Category:            extractMemoCategory(item.Link),
 				})

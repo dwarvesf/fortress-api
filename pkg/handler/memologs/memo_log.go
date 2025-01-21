@@ -8,6 +8,8 @@ import (
 	"time"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/gin-gonic/gin"
+
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/controller"
 	"github.com/dwarvesf/fortress-api/pkg/handler/memologs/request"
@@ -18,7 +20,6 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/store/memolog"
 	"github.com/dwarvesf/fortress-api/pkg/view"
-	"github.com/gin-gonic/gin"
 )
 
 type handler struct {
@@ -132,14 +133,19 @@ func (h *handler) Create(c *gin.Context) {
 			authors = append(authors, newAuthor)
 		}
 
+		discordAccountIDs := make([]string, 0, len(authors))
+		for _, author := range authors {
+			discordAccountIDs = append(discordAccountIDs, author.ID.String())
+		}
+
 		b := model.MemoLog{
-			Title:       b.Title,
-			URL:         b.URL,
-			Authors:     authors,
-			Tags:        b.Tags,
-			PublishedAt: &publishedAt,
-			Description: b.Description,
-			Reward:      b.Reward,
+			Title:             b.Title,
+			URL:               b.URL,
+			DiscordAccountIDs: discordAccountIDs,
+			Tags:              b.Tags,
+			PublishedAt:       &publishedAt,
+			Description:       b.Description,
+			Reward:            b.Reward,
 		}
 		memologs = append(memologs, b)
 	}

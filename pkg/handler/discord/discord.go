@@ -375,7 +375,14 @@ func (h *handler) SyncMemo(c *gin.Context) {
 		return
 	}
 
-	_, err = h.service.Discord.SendNewMemoMessage(h.config.Discord.IDs.DwarvesGuild, memos, targetChannelID)
+	_, err = h.service.Discord.SendNewMemoMessage(
+		h.config.Discord.IDs.DwarvesGuild,
+		memos,
+		targetChannelID,
+		func(discordAccountID string) (*model.DiscordAccount, error) {
+			return h.store.DiscordAccount.One(h.repo.DB(), discordAccountID)
+		},
+	)
 	if err != nil {
 		h.logger.Error(err, "failed to send new memo message")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
@@ -430,7 +437,15 @@ func (h *handler) NotifyWeeklyMemos(c *gin.Context) {
 		targetChannelID = discordRandomChannel
 	}
 
-	_, err = h.service.Discord.SendWeeklyMemosMessage(h.config.Discord.IDs.DwarvesGuild, memos, weekRangeStr, targetChannelID)
+	_, err = h.service.Discord.SendWeeklyMemosMessage(
+		h.config.Discord.IDs.DwarvesGuild,
+		memos,
+		weekRangeStr,
+		targetChannelID,
+		func(discordAccountID string) (*model.DiscordAccount, error) {
+			return h.store.DiscordAccount.One(h.repo.DB(), discordAccountID)
+		},
+	)
 	if err != nil {
 		h.logger.Error(err, "failed to send weekly memos report")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
