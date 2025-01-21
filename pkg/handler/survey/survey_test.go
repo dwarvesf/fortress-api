@@ -825,6 +825,7 @@ func TestHandler_GetSurveyReviewDetail(t *testing.T) {
 	}
 }
 
+// year in test case should be changed to the current year
 func TestHandler_CreateSurvey(t *testing.T) {
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
@@ -844,10 +845,10 @@ func TestHandler_CreateSurvey(t *testing.T) {
 			wantResponsePath: "testdata/create_survey/200_work.json",
 			body: request.CreateSurveyFeedbackInput{
 				Quarter:  "q3,q4",
-				Year:     2023,
+				Year:     2025,
 				Type:     "peer-review",
-				FromDate: "2023-11-28",
-				ToDate:   "2023-11-29",
+				FromDate: "2025-11-28",
+				ToDate:   "2025-11-29",
 			},
 		},
 		{
@@ -856,10 +857,10 @@ func TestHandler_CreateSurvey(t *testing.T) {
 			wantResponsePath: "testdata/create_survey/400.json",
 			body: request.CreateSurveyFeedbackInput{
 				Quarter:  "q3,q4",
-				Year:     2023,
+				Year:     2025,
 				Type:     "work",
-				FromDate: "2023-11-30",
-				ToDate:   "2023-11-29",
+				FromDate: "2025-11-30",
+				ToDate:   "2025-11-29",
 			},
 		},
 		{
@@ -868,10 +869,10 @@ func TestHandler_CreateSurvey(t *testing.T) {
 			wantResponsePath: "testdata/create_survey/invalid_subtype.json",
 			body: request.CreateSurveyFeedbackInput{
 				Quarter:  "q3,q4",
-				Year:     2023,
+				Year:     2025,
 				Type:     "peer-revieww",
-				FromDate: "2023-11-28",
-				ToDate:   "2023-11-29",
+				FromDate: "2025-11-28",
+				ToDate:   "2025-11-29",
 			},
 		},
 		{

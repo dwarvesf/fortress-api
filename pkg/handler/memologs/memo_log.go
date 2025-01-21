@@ -8,9 +8,11 @@ import (
 	"time"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/gin-gonic/gin"
+
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/controller"
-	"github.com/dwarvesf/fortress-api/pkg/handler/memologs/request"
+	memologRequest "github.com/dwarvesf/fortress-api/pkg/handler/memologs/request"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service"
@@ -18,7 +20,6 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/store/memolog"
 	"github.com/dwarvesf/fortress-api/pkg/view"
-	"github.com/gin-gonic/gin"
 )
 
 type handler struct {
@@ -51,7 +52,7 @@ func (h *handler) Create(c *gin.Context) {
 		},
 	)
 
-	body := request.CreateMemoLogsRequest{}
+	body := memologRequest.CreateMemoLogsRequest{}
 	if err := c.ShouldBindJSON(&body); err != nil {
 		l.Error(err, "[memologs.Create] failed to decode body")
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, body, ""))
@@ -132,14 +133,19 @@ func (h *handler) Create(c *gin.Context) {
 			authors = append(authors, newAuthor)
 		}
 
+		discordAccountIDs := make([]string, 0, len(authors))
+		for _, author := range authors {
+			discordAccountIDs = append(discordAccountIDs, author.ID.String())
+		}
+
 		b := model.MemoLog{
-			Title:       b.Title,
-			URL:         b.URL,
-			Authors:     authors,
-			Tags:        b.Tags,
-			PublishedAt: &publishedAt,
-			Description: b.Description,
-			Reward:      b.Reward,
+			Title:             b.Title,
+			URL:               b.URL,
+			DiscordAccountIDs: discordAccountIDs,
+			Tags:              b.Tags,
+			PublishedAt:       &publishedAt,
+			Description:       b.Description,
+			Reward:            b.Reward,
 		}
 		memologs = append(memologs, b)
 	}
@@ -283,7 +289,26 @@ func (h *handler) GetTopAuthors(c *gin.Context) {
 		},
 	)
 
-	topAuthors, err := h.store.MemoLog.GetTopAuthors(h.repo.DB(), 10)
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
+	days, _ := strconv.Atoi(c.DefaultQuery("days", "30"))
+
+	if limit <= 0 {
+		l.Error(errors.New("limit must be greater than 0"), "invalid limit")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errors.New("limit must be greater than 0"), nil, ""))
+		return
+	}
+
+	if days <= 0 {
+		l.Error(errors.New("days must be greater than 0"), "invalid days")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errors.New("days must be greater than 0"), nil, ""))
+		return
+	}
+
+	now := time.Now()
+	end := time.Date(now.Year(), now.Month(), now.Day(), 23, 59, 59, 999999999, now.Location())
+	start := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location()).AddDate(0, 0, -days+1)
+
+	topAuthors, err := h.store.MemoLog.GetTopAuthors(h.repo.DB(), limit, &start, &end)
 	if err != nil {
 		l.Error(err, "failed to get top authors")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))

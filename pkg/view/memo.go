@@ -3,8 +3,9 @@ package view
 import (
 	"time"
 
-	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/shopspring/decimal"
+
+	"github.com/dwarvesf/fortress-api/pkg/model"
 )
 
 type MemoLog struct {
@@ -35,9 +36,30 @@ type MemoLogsResponse struct {
 
 func ToMemoLog(memoLogs []model.MemoLog) []MemoLog {
 	rs := make([]MemoLog, 0)
+
+	// Fetch all unique discord account IDs
+	discordAccountIDs := make(map[string]bool)
+	for _, memoLog := range memoLogs {
+		for _, discordAccountID := range memoLog.DiscordAccountIDs {
+			discordAccountIDs[discordAccountID] = true
+		}
+	}
+
+	// Fetch discord accounts for these IDs (this would typically be done via a database query)
+	// For now, we'll leave this as a placeholder
+	discordAccounts := make(map[string]model.DiscordAccount)
+
 	for _, memoLog := range memoLogs {
 		authors := make([]MemoLogAuthor, 0)
-		for _, author := range memoLog.Authors {
+		for _, discordAccountID := range memoLog.DiscordAccountIDs {
+			author, ok := discordAccounts[discordAccountID]
+			if !ok {
+				// If the account is not found, create a minimal representation
+				author = model.DiscordAccount{
+					DiscordID: discordAccountID,
+				}
+			}
+
 			var employeeID string
 			if author.Employee != nil {
 				employeeID = author.Employee.ID.String()
@@ -46,7 +68,7 @@ func ToMemoLog(memoLogs []model.MemoLog) []MemoLog {
 			authors = append(authors, MemoLogAuthor{
 				EmployeeID:      employeeID,
 				GithubUsername:  author.GithubUsername,
-				DiscordID:       author.DiscordID,
+				DiscordID:       discordAccountID,
 				PersonalEmail:   author.PersonalEmail,
 				DiscordUsername: author.DiscordUsername,
 				MemoUsername:    author.MemoUsername,
@@ -81,25 +103,39 @@ type MemoLogsByDiscordID struct {
 // ToMemoLogByDiscordID ...
 func ToMemoLogByDiscordID(memoLogs []model.MemoLog, discordMemoRank *model.DiscordAccountMemoRank) MemoLogsByDiscordID {
 	rs := make([]MemoLog, 0)
+
+	// Fetch all unique discord account IDs
+	discordAccountIDs := make(map[string]bool)
+	for _, memoLog := range memoLogs {
+		for _, discordAccountID := range memoLog.DiscordAccountIDs {
+			discordAccountIDs[discordAccountID] = true
+		}
+	}
+
+	// Fetch discord accounts for these IDs (this would typically be done via a database query)
+	// For now, we'll leave this as a placeholder
+	discordAccounts := make(map[string]model.DiscordAccount)
+
 	for _, memoLog := range memoLogs {
 		authors := make([]MemoLogAuthor, 0)
-		for _, author := range memoLog.Authors {
+		for _, discordAccountID := range memoLog.DiscordAccountIDs {
+			author, ok := discordAccounts[discordAccountID]
+			if !ok {
+				// If the account is not found, create a minimal representation
+				author = model.DiscordAccount{
+					DiscordID: discordAccountID,
+				}
+			}
+
 			var employeeID string
 			if author.Employee != nil {
 				employeeID = author.Employee.ID.String()
 			}
 
-			rank := &AuthorRanking{}
-			if discordMemoRank != nil {
-				rank.DiscordID = discordMemoRank.DiscordID
-				rank.TotalMemos = discordMemoRank.TotalMemos
-				rank.Rank = discordMemoRank.Rank
-			}
-
 			authors = append(authors, MemoLogAuthor{
 				EmployeeID:      employeeID,
 				GithubUsername:  author.GithubUsername,
-				DiscordID:       author.DiscordID,
+				DiscordID:       discordAccountID,
 				PersonalEmail:   author.PersonalEmail,
 				DiscordUsername: author.DiscordUsername,
 				MemoUsername:    author.MemoUsername,

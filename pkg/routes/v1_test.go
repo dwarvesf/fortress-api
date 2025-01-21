@@ -693,6 +693,12 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/discord.IHandler.NotifyWeeklyMemos-fm",
 			},
 		},
+		"/cronjobs/notify-top-memo-authors": {
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/discord.IHandler.NotifyTopMemoAuthors-fm",
+			},
+		},
 		"/cronjobs/transcribe-youtube-broadcast": {
 			"POST": {
 				Method:  "POST",

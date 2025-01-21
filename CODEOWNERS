@@ -1,7 +1,7 @@
 # Default reviewers for every PR
-*           @huynguyenh @namnhce @lmquang
-.github/    @huynguyenh @namnhce @lmquang
-cmd/        @huynguyenh @namnhce @lmquang
-docs/       @huynguyenh @namnhce @lmquang
-migrations/ @huynguyenh @namnhce @lmquang
-pkg/        @huynguyenh @namnhce @lmquang
+*           @huynguyenh @lmquang
+.github/    @huynguyenh @lmquang
+cmd/        @huynguyenh @lmquang
+docs/       @huynguyenh @lmquang
+migrations/ @huynguyenh @lmquang
+pkg/        @huynguyenh @lmquang
