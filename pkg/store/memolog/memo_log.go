@@ -124,8 +124,8 @@ func (s *store) CreateMemoAuthor(db *gorm.DB, memoAuthor *model.MemoAuthor) erro
 	return fmt.Errorf("memo_authors table no longer exists")
 }
 
-// GetTopAuthors gets the top authors by memo count
-func (s *store) GetTopAuthors(db *gorm.DB, limit int) ([]model.DiscordAccountMemoRank, error) {
+// GetTopAuthors gets the top authors by memo count within a time range
+func (s *store) GetTopAuthors(db *gorm.DB, limit int, from, to *time.Time) ([]model.DiscordAccountMemoRank, error) {
 	query := `
 		WITH memo_count AS (
 			SELECT
@@ -139,7 +139,8 @@ func (s *store) GetTopAuthors(db *gorm.DB, limit int) ([]model.DiscordAccountMem
 				jsonb_array_elements_text(ml.discord_account_ids) AS account_id
 			WHERE
 				ml.deleted_at IS NULL AND
-				da.id::text = account_id
+				da.id::text = account_id AND
+				ml.published_at BETWEEN ? AND ?
 			GROUP BY
 				da.discord_id, 
 				da.discord_username,
@@ -158,5 +159,5 @@ func (s *store) GetTopAuthors(db *gorm.DB, limit int) ([]model.DiscordAccountMem
 		LIMIT ?;
 	`
 	var topAuthors []model.DiscordAccountMemoRank
-	return topAuthors, db.Raw(query, limit).Scan(&topAuthors).Error
+	return topAuthors, db.Raw(query, from, to, limit).Scan(&topAuthors).Error
 }

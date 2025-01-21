@@ -417,7 +417,11 @@ func (h *handler) NotifyTopMemoAuthors(c *gin.Context) {
 		return
 	}
 
-	topAuthors, err := h.store.MemoLog.GetTopAuthors(h.repo.DB(), in.Limit)
+	now := time.Now()
+	end := time.Date(now.Year(), now.Month(), now.Day(), 23, 59, 59, 999999999, now.Location())
+	start := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location()).AddDate(0, 0, -in.Days+1)
+
+	topAuthors, err := h.store.MemoLog.GetTopAuthors(h.repo.DB(), in.Limit, &start, &end)
 	if err != nil {
 		h.logger.Error(err, "failed to retrieve top memo authors")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
@@ -439,8 +443,9 @@ func (h *handler) NotifyTopMemoAuthors(c *gin.Context) {
 		targetChannelID = discordRandomChannel
 	}
 
+	title := fmt.Sprintf("Top %d Memo Authors (Last %d Days)", in.Limit, in.Days)
 	msg := &discordgo.MessageEmbed{
-		Title:       "Top Memo Authors",
+		Title:       title,
 		Description: topAuthorsStr,
 	}
 

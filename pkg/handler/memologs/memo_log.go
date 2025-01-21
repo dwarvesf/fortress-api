@@ -289,7 +289,14 @@ func (h *handler) GetTopAuthors(c *gin.Context) {
 		},
 	)
 
-	topAuthors, err := h.store.MemoLog.GetTopAuthors(h.repo.DB(), 10)
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
+	days, _ := strconv.Atoi(c.DefaultQuery("days", "30"))
+
+	now := time.Now()
+	end := time.Date(now.Year(), now.Month(), now.Day(), 23, 59, 59, 999999999, now.Location())
+	start := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location()).AddDate(0, 0, -days+1)
+
+	topAuthors, err := h.store.MemoLog.GetTopAuthors(h.repo.DB(), limit, &start, &end)
 	if err != nil {
 		l.Error(err, "failed to get top authors")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
