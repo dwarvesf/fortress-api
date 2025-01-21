@@ -54,7 +54,7 @@ func New(controller *controller.Controller, store *store.Store, repo store.DBRep
 const (
 	discordReadingChannel           = "1225085624260759622"
 	discordRandomChannel            = "788084358991970337"
-	discordPlayGroundReadingChannel = "1119171172198797393"
+	discordPlayGroundReadingChannel = "1064460652720160808" // quang's channel
 )
 
 func (h *handler) SyncDiscordInfo(c *gin.Context) {
@@ -397,6 +397,56 @@ func (h *handler) SweepMemo(c *gin.Context) {
 	err := h.controller.MemoLog.Sweep()
 	if err != nil {
 		h.logger.Error(err, "failed to sweep memologs")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))
+}
+func (h *handler) NotifyTopMemoAuthors(c *gin.Context) {
+	in := request.TopMemoAuthorsInput{}
+	if err := c.ShouldBindJSON(&in); err != nil {
+		h.logger.Error(err, "failed to decode body")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, in, ""))
+		return
+	}
+
+	if err := in.Validate(); err != nil {
+		h.logger.Error(err, "failed to validate input")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, in, ""))
+		return
+	}
+
+	topAuthors, err := h.store.MemoLog.GetTopAuthors(h.repo.DB(), in.Limit)
+	if err != nil {
+		h.logger.Error(err, "failed to retrieve top memo authors")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	if len(topAuthors) == 0 {
+		c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "no memo authors found"))
+		return
+	}
+
+	var topAuthorsStr string
+	for i, author := range topAuthors {
+		topAuthorsStr += fmt.Sprintf("%d. <@%s> (%d memos)\n", i+1, author.DiscordID, author.TotalMemos)
+	}
+
+	targetChannelID := discordPlayGroundReadingChannel
+	if h.config.Env == "prod" {
+		targetChannelID = discordRandomChannel
+	}
+
+	msg := &discordgo.MessageEmbed{
+		Title:       "Top Memo Authors",
+		Description: topAuthorsStr,
+	}
+
+	_, err = h.service.Discord.SendEmbeddedMessageWithChannel(nil, msg, targetChannelID)
+	if err != nil {
+		h.logger.Error(err, "failed to send top memo authors message")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
 	}
