@@ -12,7 +12,7 @@ import (
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/controller"
-	"github.com/dwarvesf/fortress-api/pkg/handler/memologs/request"
+	memologRequest "github.com/dwarvesf/fortress-api/pkg/handler/memologs/request"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service"
@@ -52,7 +52,7 @@ func (h *handler) Create(c *gin.Context) {
 		},
 	)
 
-	body := request.CreateMemoLogsRequest{}
+	body := memologRequest.CreateMemoLogsRequest{}
 	if err := c.ShouldBindJSON(&body); err != nil {
 		l.Error(err, "[memologs.Create] failed to decode body")
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, body, ""))
@@ -291,6 +291,18 @@ func (h *handler) GetTopAuthors(c *gin.Context) {
 
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
 	days, _ := strconv.Atoi(c.DefaultQuery("days", "30"))
+
+	if limit <= 0 {
+		l.Error(errors.New("limit must be greater than 0"), "invalid limit")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errors.New("limit must be greater than 0"), nil, ""))
+		return
+	}
+
+	if days <= 0 {
+		l.Error(errors.New("days must be greater than 0"), "invalid days")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errors.New("days must be greater than 0"), nil, ""))
+		return
+	}
 
 	now := time.Now()
 	end := time.Date(now.Year(), now.Month(), now.Day(), 23, 59, 59, 999999999, now.Location())
