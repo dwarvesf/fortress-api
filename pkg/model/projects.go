@@ -32,6 +32,8 @@ type Project struct {
 	LeadRating          int
 	ImportantLevel      ProjectImportantLevel
 	ArtifactLink        string `gorm:"default:null"`
+	SourceLink          string `gorm:"default:null"`
+	DocLink             string `gorm:"default:null"`
 
 	ProjectNotion     *ProjectNotion `gorm:"foreignKey:project_id"`
 	Organization      *Organization
