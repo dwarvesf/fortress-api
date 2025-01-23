@@ -288,6 +288,7 @@ type ProjectData struct {
 	Country             *BasicCountryInfo     `json:"country"`
 	StartDate           *time.Time            `json:"startDate"`
 	EndDate             *time.Time            `json:"endDate"`
+	ArtifactLink        string                `json:"artifactLink"`
 	Members             []ProjectMember       `json:"members"`
 	TechnicalLead       []ProjectHead         `json:"technicalLeads"`
 	AccountManagers     []ProjectHead         `json:"accountManagers"`
@@ -587,6 +588,7 @@ func ToProjectData(in *model.Project, userInfo *model.CurrentLoggedUserInfo, com
 		Stacks:              ToProjectStacks(in.ProjectStacks),
 		StartDate:           in.StartDate,
 		EndDate:             in.EndDate,
+		ArtifactLink:        in.ArtifactLink,
 		Members:             members,
 		TechnicalLead:       technicalLeads,
 		DeliveryManagers:    deliveryManagers,
