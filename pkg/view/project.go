@@ -34,6 +34,9 @@ type Project struct {
 	DeliveryRating      int                      `json:"deliveryRating"`
 	LeadRating          int                      `json:"leadRating"`
 	ImportantLevel      string                   `json:"importantLevel"`
+	ArtifactLink        string                   `json:"artifactLink"`
+	SourceLink          string                   `json:"sourceLink"`
+	DocLink             string                   `json:"docLink"`
 	ProjectNotion       *ProjectNotion           `json:"projectNotion"`
 	Organization        *Organization            `json:"organization"`
 	BankAccount         *BankAccount             `json:"bankAccount"`
@@ -74,6 +77,9 @@ func ToProject(project *model.Project) *Project {
 		Status:              project.Status.String(),
 		ProjectEmail:        project.ProjectEmail,
 		ClientEmail:         project.ClientEmail,
+		ArtifactLink:        project.ArtifactLink,
+		SourceLink:          project.SourceLink,
+		DocLink:             project.DocLink,
 		Avatar:              project.Avatar,
 		AllowsSendingSurvey: project.AllowsSendingSurvey,
 		Code:                project.Code,
@@ -289,6 +295,8 @@ type ProjectData struct {
 	StartDate           *time.Time            `json:"startDate"`
 	EndDate             *time.Time            `json:"endDate"`
 	ArtifactLink        string                `json:"artifactLink"`
+	SourceLink          string                `json:"sourceLink"`
+	DocLink             string                `json:"docLink"`
 	Members             []ProjectMember       `json:"members"`
 	TechnicalLead       []ProjectHead         `json:"technicalLeads"`
 	AccountManagers     []ProjectHead         `json:"accountManagers"`
@@ -589,6 +597,8 @@ func ToProjectData(in *model.Project, userInfo *model.CurrentLoggedUserInfo, com
 		StartDate:           in.StartDate,
 		EndDate:             in.EndDate,
 		ArtifactLink:        in.ArtifactLink,
+		SourceLink:          in.SourceLink,
+		DocLink:             in.DocLink,
 		Members:             members,
 		TechnicalLead:       technicalLeads,
 		DeliveryManagers:    deliveryManagers,
