@@ -417,6 +417,12 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 		ogifGroup.GET("/leaderboard", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesDiscordRead), h.Discord.OgifLeaderboard)
 	}
 
+	// dynamic events
+	subscribeMemoGroup := v1.Group("/dynamic-events")
+	{
+		subscribeMemoGroup.POST("", h.DynamicEvents.Events)
+	}
+
 	/////////////////
 	// PUBLIC API GROUP
 	/////////////////

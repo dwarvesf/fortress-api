@@ -21,10 +21,11 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/worker"
+	"github.com/dwarvesf/fortress-api/pkg/controller/dynamicevents"
 )
 
 type Controller struct {
-	Auth           auth.IController
+	Auth           auth.IController	
 	BraineryLog    brainerylogs.IController
 	Client         client.IController
 	CompanyInfo    companyinfo.IController
@@ -39,6 +40,7 @@ type Controller struct {
 	Earn           earn.IController
 	News           news.IController
 	Event          event.IController
+	DynamicEvents  dynamicevents.IController
 }
 
 func New(store *store.Store, repo store.DBRepo, service *service.Service, worker *worker.Worker, logger logger.Logger, cfg *config.Config) *Controller {
@@ -58,5 +60,6 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, worker
 		Earn:           earn.New(store, repo, service, logger, cfg),
 		News:           news.New(store, service, logger, cfg),
 		Event:          event.New(store, repo, service, logger, cfg),
+		DynamicEvents:  dynamicevents.New(store, service, logger, cfg),
 	}
 }
