@@ -38,6 +38,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/service/sendgrid"
 	"github.com/dwarvesf/fortress-api/pkg/service/tono"
 	"github.com/dwarvesf/fortress-api/pkg/service/wise"
+	"github.com/dwarvesf/fortress-api/pkg/service/landingzone"
 	yt "github.com/dwarvesf/fortress-api/pkg/service/youtube"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 )
@@ -69,6 +70,7 @@ type Service struct {
 	Lobsters      lobsters.IService
 	Youtube       yt.IService
 	Dify          ogifmemosummarizer.IService
+	LandingZone   landingzone.IService
 }
 
 func New(cfg *config.Config, store *store.Store, repo store.DBRepo) *Service {
@@ -93,6 +95,14 @@ func New(cfg *config.Config, store *store.Store, repo store.DBRepo) *Service {
 	)
 	if err != nil {
 		logger.L.Error(err, "failed to init gcs")
+	}
+
+
+	landingZoneSvc, err := landingzone.New(
+		cfg.Google.GCSLandingZoneCredentials,
+	)
+	if err != nil {
+		logger.L.Error(err, "failed to init landing zone service")
 	}
 
 	driveConfig := &oauth2.Config{
@@ -206,5 +216,6 @@ func New(cfg *config.Config, store *store.Store, repo store.DBRepo) *Service {
 		Lobsters:      lobsters.New(),
 		Youtube:       youtubeSvc,
 		Dify:          difySvc,
+		LandingZone:   landingZoneSvc,
 	}
 }
