@@ -14,23 +14,29 @@ import (
 
 func (c *controller) CreateEvents(ctx context.Context, input model.DynamicEvent) error {
 	// Setup GCS client
-	gcsCredentials := c.config.Google.GCSLandingZoneCredentials
-	decodedCreds, err := base64.StdEncoding.DecodeString(gcsCredentials)
-	if err != nil {
-		decodedCreds = []byte(gcsCredentials)
+	var client *storage.Client
+	var err error
+
+	if gcsCredentials := c.config.Google.GCSLandingZoneCredentials; gcsCredentials != "" {
+		decodedCreds, decodeErr := base64.StdEncoding.DecodeString(gcsCredentials)
+		if decodeErr != nil {
+			decodedCreds = []byte(gcsCredentials)
+		}
+
+		var credJSON map[string]interface{}
+		if err = json.Unmarshal(decodedCreds, &credJSON); err != nil {
+			return fmt.Errorf("invalid GCP credentials JSON: %w", err)
+		}
+
+		client, err = storage.NewClient(ctx, option.WithCredentialsJSON(decodedCreds))
+	} else {
+		client, err = storage.NewClient(ctx)
 	}
 
-	var credJSON map[string]interface{}
-	if err := json.Unmarshal(decodedCreds, &credJSON); err != nil {
-		return fmt.Errorf("invalid GCP credentials JSON: %w", err)
-	}
-
-	client, err := storage.NewClient(ctx, option.WithCredentialsJSON(decodedCreds))
 	if err != nil {
 		return fmt.Errorf("failed to create GCP client: %w", err)
 	}
 	defer client.Close()
-
 	bucket := client.Bucket("df-landing-zone")
 
 	// First, try to read existing events file
