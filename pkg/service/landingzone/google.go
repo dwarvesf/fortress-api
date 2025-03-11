@@ -22,6 +22,18 @@ type service struct {
 
 // New function return Google service
 func New(GCSCredentials string) (IService, error) {
+	if GCSCredentials == "" {
+		client, err := storage.NewClient(context.Background())
+		if err != nil {
+			return nil, fmt.Errorf("failed to create client: %v", err)
+		}
+		return &service{
+			gcs: &CloudStorage{
+				client: client,
+			},
+		}, nil
+	}
+
 	decoded, err := base64.StdEncoding.DecodeString(GCSCredentials)
 	if err != nil {
 		return nil, fmt.Errorf("failed to decode gcs credentials: %v", err)
