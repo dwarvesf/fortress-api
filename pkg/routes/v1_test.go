@@ -1114,6 +1114,12 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/discord.IHandler.SweepOgifEvent-fm",
 			},
 		},
+		"/api/v1/dynamic-events": {
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/dynamicevents.IHandler.Events-fm",
+			},
+		},
 	}
 
 	l := logger.NewLogrusLogger()

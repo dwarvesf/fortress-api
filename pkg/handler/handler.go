@@ -40,6 +40,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/worker"
+	"github.com/dwarvesf/fortress-api/pkg/handler/dynamicevents"
 )
 
 type Handler struct {
@@ -75,6 +76,7 @@ type Handler struct {
 	Earn           earn.IHandler
 	News           news.IHandler
 	Youtube        yt.IHandler
+	DynamicEvents  dynamicevents.IHandler
 }
 
 func New(store *store.Store, repo store.DBRepo, service *service.Service, ctrl *controller.Controller, worker *worker.Worker, logger logger.Logger, cfg *config.Config) *Handler {
@@ -111,5 +113,6 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, ctrl *
 		Earn:           earn.New(ctrl, store, repo, service, logger, cfg),
 		News:           news.New(store, repo, ctrl, logger, cfg),
 		Youtube:        yt.New(ctrl, store, repo, service, logger, cfg),
+		DynamicEvents:  dynamicevents.New(store, repo, ctrl, logger, cfg, service),
 	}
 }

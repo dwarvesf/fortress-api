@@ -404,6 +404,9 @@
                 "type": "delivery-manager",
                 "sub": null
             }
-        ]
+        ],
+        "artifactLink": "",
+        "docLink": "",
+        "sourceLink": ""
     }
 }
