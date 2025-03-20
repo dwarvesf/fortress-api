@@ -10,6 +10,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/controller/conversionrate"
 	"github.com/dwarvesf/fortress-api/pkg/controller/deliverymetrics"
 	"github.com/dwarvesf/fortress-api/pkg/controller/discord"
+	"github.com/dwarvesf/fortress-api/pkg/controller/dynamicevents"
 	"github.com/dwarvesf/fortress-api/pkg/controller/earn"
 	"github.com/dwarvesf/fortress-api/pkg/controller/employee"
 	"github.com/dwarvesf/fortress-api/pkg/controller/event"
@@ -21,11 +22,10 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/worker"
-	"github.com/dwarvesf/fortress-api/pkg/controller/dynamicevents"
 )
 
 type Controller struct {
-	Auth           auth.IController	
+	Auth           auth.IController
 	BraineryLog    brainerylogs.IController
 	Client         client.IController
 	CompanyInfo    companyinfo.IController

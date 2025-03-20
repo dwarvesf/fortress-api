@@ -62,7 +62,7 @@ type ERC721Filterer struct {
 // ERC721Session is an auto generated Go binding around an Ethereum contract,
 // with pre-set call and transact options.
 type ERC721Session struct {
-	Contract     *ERC721             // Generic contract binding to set the session for
+	Contract     *ERC721           // Generic contract binding to set the session for
 	CallOpts     bind.CallOpts     // Call options to use throughout this session
 	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
 }
@@ -70,14 +70,14 @@ type ERC721Session struct {
 // ERC721CallerSession is an auto generated read-only Go binding around an Ethereum contract,
 // with pre-set call options.
 type ERC721CallerSession struct {
-	Contract *ERC721Caller   // Generic contract caller binding to set the session for
+	Contract *ERC721Caller // Generic contract caller binding to set the session for
 	CallOpts bind.CallOpts // Call options to use throughout this session
 }
 
 // ERC721TransactorSession is an auto generated write-only Go binding around an Ethereum contract,
 // with pre-set transact options.
 type ERC721TransactorSession struct {
-	Contract     *ERC721Transactor   // Generic contract transactor binding to set the session for
+	Contract     *ERC721Transactor // Generic contract transactor binding to set the session for
 	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
 }
 

@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/bwmarrin/discordgo"
-	
+
 	"github.com/dwarvesf/fortress-api/pkg/model"
 )
 

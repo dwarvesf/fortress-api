@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"gorm.io/gorm"
-	
+
 	"github.com/dwarvesf/fortress-api/pkg/model"
 )
 

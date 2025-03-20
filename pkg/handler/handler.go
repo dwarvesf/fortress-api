@@ -17,6 +17,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/handler/dashboard/util"
 	"github.com/dwarvesf/fortress-api/pkg/handler/deliverymetric"
 	"github.com/dwarvesf/fortress-api/pkg/handler/discord"
+	"github.com/dwarvesf/fortress-api/pkg/handler/dynamicevents"
 	"github.com/dwarvesf/fortress-api/pkg/handler/earn"
 	"github.com/dwarvesf/fortress-api/pkg/handler/employee"
 	"github.com/dwarvesf/fortress-api/pkg/handler/engagement"
@@ -40,7 +41,6 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/worker"
-	"github.com/dwarvesf/fortress-api/pkg/handler/dynamicevents"
 )
 
 type Handler struct {
