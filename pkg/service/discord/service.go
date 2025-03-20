@@ -51,6 +51,6 @@ type IService interface {
 	SendMessage(discordMsg model.DiscordMessage, webhookUrl string) (*model.DiscordMessage, error)
 	SendEmbeddedMessageWithChannel(original *model.OriginalDiscordMessage, embed *discordgo.MessageEmbed, channelId string) (*discordgo.Message, error)
 	SendDiscordMessageWithChannel(ses *discordgo.Session, msg *discordgo.Message, channelId string) error
-
+	SendDmMessage(userID string, embed *discordgo.MessageEmbed) error
 	ListActiveThreadsByChannelID(guildID, channelID string) ([]discordgo.Channel, error)
 }

@@ -3,6 +3,7 @@ package discord
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -160,6 +161,58 @@ func (d *discordClient) SendMessage(discordMsg model.DiscordMessage, webhookUrl 
 	defer res.Body.Close()
 
 	return &discordMsg, nil
+}
+
+func (d *discordClient) SendDmMessage(userID string, embed *discordgo.MessageEmbed) error {
+	// Create a DM channel with the user
+	channel, err := d.session.UserChannelCreate(userID)
+	if err != nil {
+		return fmt.Errorf("failed to create DM channel: %w", err)
+	}
+
+	if embed == nil {
+		return errors.New("embed is empty")
+	}
+
+	// Create the message data
+	messageData := &discordgo.MessageSend{}
+
+	normalizedEmbed := d.Normalize(embed)
+	messageData.Embed = normalizedEmbed
+
+	// Send the message to the DM channel
+	_, err = d.session.ChannelMessageSendComplex(channel.ID, messageData)
+	if err != nil {
+		return fmt.Errorf("failed to send DM message: %w", err)
+	}
+
+	return nil
+}
+
+// Normalize function to maintain consistency with the reference code
+func (d *discordClient) Normalize(response *discordgo.MessageEmbed) *discordgo.MessageEmbed {
+	if response.Timestamp == "" {
+		response.Timestamp = time.Now().Format(time.RFC3339)
+	}
+
+	// If timestamp is custom, we don't want to show it
+	if response.Timestamp == "custom" {
+		response.Timestamp = ""
+	}
+
+	if response.Color == 0 {
+		// default df color #D14960
+		response.Color = 13715808
+	}
+
+	if response.Footer == nil {
+		response.Footer = &discordgo.MessageEmbedFooter{
+			IconURL: "https://cdn.discordapp.com/avatars/564764617545482251/9c9bd4aaba164fc0b92f13f052405b4d.webp?size=160",
+			Text:    "?help to see all commands",
+		}
+	}
+
+	return response
 }
 
 func (d *discordClient) SearchMember(discordName string) ([]*discordgo.Member, error) {

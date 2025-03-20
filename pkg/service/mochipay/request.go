@@ -221,3 +221,75 @@ type BatchBalancesData struct {
 	Amount    string `json:"amount"`
 	Token     Token  `json:"token"`
 }
+
+type TransferFromVaultRequest struct {
+	RecipientIDs []string `json:"recipient_ids"`
+	Amounts      []string `json:"amounts"`
+	TokenID      string   `json:"token_id"`
+	VaultID      string   `json:"vault_id"`
+	References   string   `json:"references"`
+	Description  string   `json:"description"`
+}
+
+type TransactionFromVaultResponse struct {
+	Data []VaultTransaction `json:"data"`
+}
+
+type VaultTransaction struct {
+	Timestamp    int64  `json:"timestamp"`
+	TxId         int64  `json:"tx_id"`
+	RecipientId  string `json:"recipient_id"`
+	Amount       string `json:"amount"`
+	Status       string `json:"status"`
+	References   string `json:"references"`
+	TokenId      string `json:"token_id"`
+	TxFee        string `json:"tx_fee"`
+	TxFeePercent string `json:"tx_fee_percent"`
+}
+
+type Metadata map[string]interface{}
+
+type WithdrawFromVaultRequest struct {
+	Address  string   `json:"address"`
+	Amount   string   `json:"amount"`
+	Metadata Metadata `json:"metadata,omitempty"`
+	Platform string   `json:"platform"`
+	TokenID  string   `json:"token_id"`
+	VaultID  string   `json:"vault_id"`
+}
+
+type WithdrawFromVaultResponse struct {
+	Message string `json:"message"`
+}
+
+type DepositToVaultRequest struct {
+	Platform string `json:"platform"`
+	Token    string `json:"token"`
+	VaultID  string `json:"vault_id"`
+}
+
+type Contract struct {
+	Address     string    `json:"address"`
+	Chain       *Chain    `json:"chain"`
+	ChainID     string    `json:"chain_id"`
+	CreatedAt   time.Time `json:"created_at"`
+	ID          string    `json:"id"`
+	LastSweepAt time.Time `json:"last_sweep_at"`
+}
+
+type DepositToVault struct {
+	ChainID        string     `json:"chain_id"`
+	Contract       Contract   `json:"contract"`
+	ContractID     string     `json:"contract_id"`
+	CreatedAt      time.Time  `json:"created_at"`
+	ExpiredAt      time.Time  `json:"expired_at"`
+	Platform       string     `json:"platform"`
+	PlatformUserID string     `json:"platform_user_id"`
+	ProfileID      string     `json:"profile_id"`
+	Token          *TokenInfo `json:"token"`
+	TokenID        string     `json:"token_id"`
+}
+
+type DepositToVaultResponse struct {
+	Data []DepositToVault `json:"data"`
+}

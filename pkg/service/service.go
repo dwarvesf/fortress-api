@@ -26,8 +26,10 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/service/googlemail"
 	"github.com/dwarvesf/fortress-api/pkg/service/googlesheet"
 	"github.com/dwarvesf/fortress-api/pkg/service/googlestorage"
+	"github.com/dwarvesf/fortress-api/pkg/service/icybackend"
 	"github.com/dwarvesf/fortress-api/pkg/service/icyswap"
 	"github.com/dwarvesf/fortress-api/pkg/service/improvmx"
+	"github.com/dwarvesf/fortress-api/pkg/service/landingzone"
 	"github.com/dwarvesf/fortress-api/pkg/service/lobsters"
 	"github.com/dwarvesf/fortress-api/pkg/service/mochi"
 	"github.com/dwarvesf/fortress-api/pkg/service/mochipay"
@@ -38,7 +40,6 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/service/sendgrid"
 	"github.com/dwarvesf/fortress-api/pkg/service/tono"
 	"github.com/dwarvesf/fortress-api/pkg/service/wise"
-	"github.com/dwarvesf/fortress-api/pkg/service/landingzone"
 	yt "github.com/dwarvesf/fortress-api/pkg/service/youtube"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 )
@@ -59,6 +60,7 @@ type Service struct {
 	Mochi         mochi.IService
 	MochiPay      mochipay.IService
 	MochiProfile  mochiprofile.IService
+	IcyBackend    icybackend.IService
 	Notion        notion.IService
 	Sendgrid      sendgrid.IService
 	Wise          wise.IService
@@ -96,7 +98,6 @@ func New(cfg *config.Config, store *store.Store, repo store.DBRepo) *Service {
 	if err != nil {
 		logger.L.Error(err, "failed to init gcs")
 	}
-
 
 	landingZoneSvc, err := landingzone.New(
 		cfg.Google.GCSLandingZoneCredentials,
@@ -177,6 +178,11 @@ func New(cfg *config.Config, store *store.Store, repo store.DBRepo) *Service {
 		logger.L.Error(err, "failed to init icyswap service")
 	}
 
+	icyBackend, err := icybackend.New(baseClient, cfg, logger.L)
+	if err != nil {
+		logger.L.Error(err, "failed to init icyBackend service")
+	}
+
 	communityNft, err := communitynft.New(baseClient, cfg, logger.L)
 	if err != nil {
 		logger.L.Error(err, "failed to init community nft service")
@@ -205,6 +211,7 @@ func New(cfg *config.Config, store *store.Store, repo store.DBRepo) *Service {
 		Mochi:         mochi.New(cfg, logger.L),
 		MochiPay:      mochipay.New(cfg, logger.L),
 		MochiProfile:  mochiprofile.New(cfg, logger.L),
+		IcyBackend:    icyBackend,
 		Notion:        notion.New(cfg.Notion.Secret, cfg.Notion.Databases.Project, logger.L),
 		Sendgrid:      sendgrid.New(cfg.Sendgrid.APIKey, cfg, logger.L),
 		Wise:          wise.New(cfg, logger.L),

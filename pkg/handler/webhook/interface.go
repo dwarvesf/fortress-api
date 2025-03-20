@@ -11,4 +11,5 @@ type IHandler interface {
 	ValidateBasecampExpense(c *gin.Context)
 	ValidateOnLeaveRequest(c *gin.Context)
 	ApproveOnLeaveRequest(c *gin.Context)
+	TransferRequest(c *gin.Context)
 }

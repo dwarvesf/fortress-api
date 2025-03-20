@@ -2,10 +2,13 @@ package mochipay
 
 import (
 	"bytes"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"golang.org/x/crypto/ed25519"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
@@ -19,11 +22,15 @@ const (
 	RewardDefaultMsg = "Send money to treasurer"
 	ICYTokenMochiID  = "9d25232e-add3-4bd8-b7c6-be6c14debc58"
 	BaseChainName    = "BASE"
+	IcySymbol        = "ICY"
 )
 
 type IService interface {
 	GetListTransactions(req ListTransactionsRequest) (*ListTransactionsResponse, error)
 	GetBatchBalances(profileIds []string) (*BatchBalancesResponse, error)
+	TransferFromVaultToUser(profileOwnerId string, req *TransferFromVaultRequest) ([]VaultTransaction, error)
+	WithdrawFromVault(req *WithdrawFromVaultRequest) (*WithdrawFromVaultResponse, error)
+	DepositToVault(req *DepositToVaultRequest) ([]DepositToVault, error)
 }
 
 type client struct {
@@ -142,4 +149,196 @@ func (m *client) GetBatchBalances(profileIds []string) (*BatchBalancesResponse, 
 	}
 
 	return res, nil
+}
+
+func (c *client) TransferFromVaultToUser(profileOwnerId string, req *TransferFromVaultRequest) ([]VaultTransaction, error) {
+	var client = &http.Client{
+		Timeout: 60 * time.Second,
+	}
+
+	url := fmt.Sprintf("%s/api/v1/profiles/%s/applications/%s/transfer", c.cfg.MochiPay.BaseURL, profileOwnerId, c.cfg.MochiPay.ApplicationId)
+
+	if req.VaultID == "" {
+		req.VaultID = c.cfg.MochiPay.ApplicationVaultId
+	}
+	requestBody, err := json.Marshal(req)
+	if err != nil {
+		c.l.Errorf(err, "[mochipay.TransferFromVaultToUser] json.Marshal failed")
+		return nil, err
+	}
+
+	// Create request
+	httpReq, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(requestBody))
+	if err != nil {
+		c.l.Errorf(err, "[mochipay.TransferFromVaultToUser] http.NewRequest failed")
+		return nil, err
+	}
+
+	messageHeader := strconv.FormatInt(time.Now().Unix(), 10)
+	privateKey, err := hex.DecodeString(c.cfg.MochiPay.ApplicationPrivateKey)
+	if err != nil {
+		return nil, err
+	}
+	signature := ed25519.Sign(privateKey, []byte(messageHeader))
+
+	// Set headers
+	httpReq.Header.Set("Content-Type", "application/json")
+	httpReq.Header.Set("X-Message", messageHeader)
+	httpReq.Header.Set("X-Signature", hex.EncodeToString(signature))
+	httpReq.Header.Set("X-Application", c.cfg.MochiPay.ApplicationName)
+
+	// Send request
+	resp, err := client.Do(httpReq)
+	if err != nil {
+		c.l.Errorf(err, "[mochipay.TransferFromVaultToUser] client.Do failed")
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	// Check status code
+	if resp.StatusCode != http.StatusOK {
+		c.l.Error(nil, "[mochipay.TransferFromVaultToUser] received non-OK status code")
+		return nil, fmt.Errorf("invalid call, code %d", resp.StatusCode)
+	}
+
+	// Decode response
+	respData := &TransactionFromVaultResponse{}
+	if err := json.NewDecoder(resp.Body).Decode(respData); err != nil {
+		c.l.Errorf(err, "[mochipay.TransferFromVaultToUser] decoder.Decode failed")
+		return nil, err
+	}
+
+	return respData.Data, nil
+}
+
+func (c *client) WithdrawFromVault(req *WithdrawFromVaultRequest) (*WithdrawFromVaultResponse, error) {
+	var client = &http.Client{
+		Timeout: 60 * time.Second,
+	}
+
+	url := fmt.Sprintf("%s/api/v1/profiles/%s/applications/%s/withdraw", c.cfg.MochiPay.BaseURL, c.cfg.MochiPay.ApplicationOwnerId, c.cfg.MochiPay.ApplicationId)
+
+	if req.VaultID == "" {
+		req.VaultID = c.cfg.MochiPay.ApplicationVaultId
+	}
+	if req.Address == "" {
+		req.Address = c.cfg.MochiPay.IcyPoolPublicKey
+	}
+	if req.Platform == "" {
+		req.Platform = "discord"
+	}
+	requestBody, err := json.Marshal(req)
+	if err != nil {
+		c.l.Errorf(err, "[mochipay.WithdrawFromVault] json.Marshal failed")
+		return nil, err
+	}
+
+	// Create request
+	httpReq, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(requestBody))
+	if err != nil {
+		c.l.Errorf(err, "[mochipay.WithdrawFromVault] http.NewRequest failed")
+		return nil, err
+	}
+
+	messageHeader := strconv.FormatInt(time.Now().Unix(), 10)
+	privateKey, err := hex.DecodeString(c.cfg.MochiPay.ApplicationPrivateKey)
+	if err != nil {
+		return nil, err
+	}
+	signature := ed25519.Sign(privateKey, []byte(messageHeader))
+
+	// Set headers
+	httpReq.Header.Set("Content-Type", "application/json")
+	httpReq.Header.Set("X-Message", messageHeader)
+	httpReq.Header.Set("X-Signature", hex.EncodeToString(signature))
+	httpReq.Header.Set("X-Application", c.cfg.MochiPay.ApplicationName)
+
+	// Send request
+	resp, err := client.Do(httpReq)
+	if err != nil {
+		c.l.Errorf(err, "[mochipay.WithdrawFromVault] client.Do failed")
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	// Check status code
+	if resp.StatusCode != http.StatusOK {
+		c.l.Error(nil, "[mochipay.WithdrawFromVault] received non-OK status code")
+		return nil, fmt.Errorf("invalid call, code %d", resp.StatusCode)
+	}
+
+	// Decode response
+	respData := &WithdrawFromVaultResponse{}
+	if err := json.NewDecoder(resp.Body).Decode(respData); err != nil {
+		c.l.Errorf(err, "[mochipay.WithdrawFromVault] decoder.Decode failed")
+		return nil, err
+	}
+
+	return respData, nil
+}
+
+func (c *client) DepositToVault(req *DepositToVaultRequest) ([]DepositToVault, error) {
+	var client = &http.Client{
+		Timeout: 60 * time.Second,
+	}
+
+	url := fmt.Sprintf("%s/api/v1/profiles/%s/applications/%s/deposit", c.cfg.MochiPay.BaseURL, c.cfg.MochiPay.ApplicationOwnerId, c.cfg.MochiPay.ApplicationId)
+
+	if req.Token == "" {
+		req.Token = IcySymbol
+	}
+	if req.VaultID == "" {
+		req.VaultID = c.cfg.MochiPay.ApplicationVaultId
+	}
+	if req.Platform == "" {
+		req.Platform = "discord"
+	}
+	requestBody, err := json.Marshal(req)
+	if err != nil {
+		c.l.Errorf(err, "[mochipay.DepositToVault] json.Marshal failed")
+		return nil, err
+	}
+
+	// Create request
+	httpReq, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(requestBody))
+	if err != nil {
+		c.l.Errorf(err, "[mochipay.DepositToVault] http.NewRequest failed")
+		return nil, err
+	}
+
+	messageHeader := strconv.FormatInt(time.Now().Unix(), 10)
+	privateKey, err := hex.DecodeString(c.cfg.MochiPay.ApplicationPrivateKey)
+	if err != nil {
+		return nil, err
+	}
+	signature := ed25519.Sign(privateKey, []byte(messageHeader))
+
+	// Set headers
+	httpReq.Header.Set("Content-Type", "application/json")
+	httpReq.Header.Set("X-Message", messageHeader)
+	httpReq.Header.Set("X-Signature", hex.EncodeToString(signature))
+	httpReq.Header.Set("X-Application", c.cfg.MochiPay.ApplicationName)
+
+	// Send request
+	resp, err := client.Do(httpReq)
+	if err != nil {
+		c.l.Errorf(err, "[mochipay.DepositToVault] client.Do failed")
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	// Check status code
+	if resp.StatusCode != http.StatusOK {
+		c.l.Error(nil, "[mochipay.DepositToVault] received non-OK status code")
+		return nil, fmt.Errorf("invalid call, code %d", resp.StatusCode)
+	}
+
+	// Decode response
+	respData := &DepositToVaultResponse{}
+	if err := json.NewDecoder(resp.Body).Decode(respData); err != nil {
+		c.l.Errorf(err, "[mochipay.WithdrawFromVault] decoder.Decode failed")
+		return nil, err
+	}
+
+	return respData.Data, nil
 }

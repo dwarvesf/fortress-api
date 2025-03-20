@@ -10,10 +10,12 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/controller/conversionrate"
 	"github.com/dwarvesf/fortress-api/pkg/controller/deliverymetrics"
 	"github.com/dwarvesf/fortress-api/pkg/controller/discord"
+	"github.com/dwarvesf/fortress-api/pkg/controller/dynamicevents"
 	"github.com/dwarvesf/fortress-api/pkg/controller/earn"
 	"github.com/dwarvesf/fortress-api/pkg/controller/employee"
 	"github.com/dwarvesf/fortress-api/pkg/controller/event"
 	"github.com/dwarvesf/fortress-api/pkg/controller/icy"
+	"github.com/dwarvesf/fortress-api/pkg/controller/icyswapbtc"
 	"github.com/dwarvesf/fortress-api/pkg/controller/invoice"
 	"github.com/dwarvesf/fortress-api/pkg/controller/memologs"
 	"github.com/dwarvesf/fortress-api/pkg/controller/news"
@@ -21,11 +23,10 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/worker"
-	"github.com/dwarvesf/fortress-api/pkg/controller/dynamicevents"
 )
 
 type Controller struct {
-	Auth           auth.IController	
+	Auth           auth.IController
 	BraineryLog    brainerylogs.IController
 	Client         client.IController
 	CompanyInfo    companyinfo.IController
@@ -41,6 +42,7 @@ type Controller struct {
 	News           news.IController
 	Event          event.IController
 	DynamicEvents  dynamicevents.IController
+	Swap           icyswapbtc.IController
 }
 
 func New(store *store.Store, repo store.DBRepo, service *service.Service, worker *worker.Worker, logger logger.Logger, cfg *config.Config) *Controller {
@@ -61,5 +63,6 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, worker
 		News:           news.New(store, service, logger, cfg),
 		Event:          event.New(store, repo, service, logger, cfg),
 		DynamicEvents:  dynamicevents.New(store, service, logger, cfg),
+		Swap:           icyswapbtc.New(store, service, logger, cfg),
 	}
 }

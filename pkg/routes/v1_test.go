@@ -717,6 +717,12 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/webhook.IHandler.N8n-fm",
 			},
 		},
+		"/webhooks/transfer-request": {
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/webhook.IHandler.TransferRequest-fm",
+			},
+		},
 		"/webhooks/basecamp/expense/validate": {
 			"POST": {
 				Method:  "POST",
