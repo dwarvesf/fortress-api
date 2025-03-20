@@ -29,6 +29,7 @@ type Config struct {
 	Mochi         Mochi
 	MochiPay      MochiPay
 	MochiProfile  MochiProfile
+	IcyBackend    IcyBackend
 	Tono          Tono
 	ImprovMX      ImprovMX
 	CommunityNft  CommunityNft
@@ -118,11 +119,20 @@ type Mochi struct {
 }
 
 type MochiPay struct {
-	BaseURL string
+	BaseURL               string
+	ApplicationName       string
+	ApplicationPrivateKey string
+	ApplicationId         string
+	ApplicationVaultId    string
 }
 
 type MochiProfile struct {
 	BaseURL string
+}
+
+type IcyBackend struct {
+	BaseURL    string
+	PrivateKey string
 }
 
 type Tono struct {
@@ -325,10 +335,18 @@ func Generate(v ENV) *Config {
 			APIKey:          v.GetString("MOCHI_API_KEY"),
 		},
 		MochiPay: MochiPay{
-			BaseURL: v.GetString("MOCHI_PAY_BASE_URL"),
+			BaseURL:               v.GetString("MOCHI_PAY_BASE_URL"),
+			ApplicationName:       v.GetString("MOCHI_PAY_APPLICATION_NAME"),
+			ApplicationPrivateKey: v.GetString("MOCHI_PAY_APPLICATION_PRIVATE_KEY"),
+			ApplicationId:         v.GetString("MOCHI_PAY_APPLICATION_ID"),
+			ApplicationVaultId:    v.GetString("MOCHI_PAY_APPLICATION_VAULT_ID"),
 		},
 		MochiProfile: MochiProfile{
 			BaseURL: v.GetString("MOCHI_PROFILE_BASE_URL"),
+		},
+		IcyBackend: IcyBackend{
+			BaseURL:    v.GetString("ICY_BACKEND_BASE_URL"),
+			PrivateKey: v.GetString("ICY_BACKEND_PRIVATE_KEY"),
 		},
 		Tono: Tono{
 			BaseURL: v.GetString("TONO_BASE_URL"),

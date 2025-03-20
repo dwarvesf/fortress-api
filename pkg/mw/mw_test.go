@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang-jwt/jwt/v4"
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/stretchr/testify/require"
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
@@ -23,9 +23,9 @@ func generateTestToken(cfg *config.Config) string {
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(24 * time.Hour).Unix(),
 		},
-		UserID:  "26558326e-f009-4b73-a535-64c3a22e558f",
-		Avatar:  "https://s3-ap-southeast-1.amazonaws.com/fortress-images/515357469566395594.png",
-		Email:   "thanh@d.foundation",
+		UserID: "26558326e-f009-4b73-a535-64c3a22e558f",
+		Avatar: "https://s3-ap-southeast-1.amazonaws.com/fortress-images/515357469566395594.png",
+		Email:  "thanh@d.foundation",
 	}
 
 	token, err := authutils.GenerateJWTToken(claims, claims.ExpiresAt, cfg.JWTSecretKey)
@@ -44,7 +44,7 @@ func TestWithAuth(t *testing.T) {
 		expectedHTTPCode int
 		expectedError    error
 	}
-	
+
 	cfg := config.LoadTestConfig()
 	testToken := generateTestToken(&cfg)
 

@@ -45,7 +45,7 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 	webhook := r.Group("/webhooks")
 	{
 		webhook.POST("/n8n", h.Webhook.N8n)
-
+		webhook.POST("/transfer-request", h.Webhook.TransferRequest)
 		basecampGroup := webhook.Group("/basecamp")
 		{
 			expenseGroup := basecampGroup.Group("/expense")

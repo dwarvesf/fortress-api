@@ -2,10 +2,13 @@ package mochipay
 
 import (
 	"bytes"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"golang.org/x/crypto/ed25519"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
@@ -24,6 +27,7 @@ const (
 type IService interface {
 	GetListTransactions(req ListTransactionsRequest) (*ListTransactionsResponse, error)
 	GetBatchBalances(profileIds []string) (*BatchBalancesResponse, error)
+	TransferFromVaultToUser(profileOwnerId string, req *TransferFromVaultRequest) ([]VaultTransaction, error)
 }
 
 type client struct {
@@ -142,4 +146,64 @@ func (m *client) GetBatchBalances(profileIds []string) (*BatchBalancesResponse, 
 	}
 
 	return res, nil
+}
+
+func (c *client) TransferFromVaultToUser(profileOwnerId string, req *TransferFromVaultRequest) ([]VaultTransaction, error) {
+	var client = &http.Client{
+		Timeout: 20 * time.Second,
+	}
+
+	url := fmt.Sprintf("%s/api/v1/profiles/%s/applications/%s/transfer", c.cfg.MochiPay.BaseURL, profileOwnerId, c.cfg.MochiPay.ApplicationId)
+
+	if req.VaultID == "" {
+		req.VaultID = c.cfg.MochiPay.ApplicationVaultId
+	}
+	requestBody, err := json.Marshal(req)
+	if err != nil {
+		c.l.Errorf(err, "[mochipay.TransferFromVaultToUser] json.Marshal failed")
+		return nil, err
+	}
+
+	// Create request
+	httpReq, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(requestBody))
+	if err != nil {
+		c.l.Errorf(err, "[mochipay.TransferFromVaultToUser] http.NewRequest failed")
+		return nil, err
+	}
+
+	messageHeader := strconv.FormatInt(time.Now().Unix(), 10)
+	privateKey, err := hex.DecodeString(c.cfg.MochiPay.ApplicationPrivateKey)
+	if err != nil {
+		return nil, err
+	}
+	signature := ed25519.Sign(privateKey, []byte(messageHeader))
+
+	// Set headers
+	httpReq.Header.Set("Content-Type", "application/json")
+	httpReq.Header.Set("X-Message", messageHeader)
+	httpReq.Header.Set("X-Signature", hex.EncodeToString(signature))
+	httpReq.Header.Set("X-Application", c.cfg.MochiPay.ApplicationName)
+
+	// Send request
+	resp, err := client.Do(httpReq)
+	if err != nil {
+		c.l.Errorf(err, "[mochipay.TransferFromVaultToUser] client.Do failed")
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	// Check status code
+	if resp.StatusCode != http.StatusOK {
+		c.l.Error(nil, "[mochipay.TransferFromVaultToUser] received non-OK status code")
+		return nil, fmt.Errorf("invalid call, code %d", resp.StatusCode)
+	}
+
+	// Decode response
+	respData := &TransactionFromVaultResponse{}
+	if err := json.NewDecoder(resp.Body).Decode(respData); err != nil {
+		c.l.Errorf(err, "[mochipay.TransferFromVaultToUser] decoder.Decode failed")
+		return nil, err
+	}
+
+	return respData.Data, nil
 }
