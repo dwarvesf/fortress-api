@@ -38,3 +38,15 @@ type n8nEvent struct {
 	CalendarData      *n8nCalendarEvent `json:"calendarData"`
 	ShouldSyncDiscord string            `json:"shouldSyncDiscord"`
 }
+
+type TransactionRequestEvent struct {
+	ProfileID   string `json:"profile_id"`
+	RequestCode string `json:"request_code"`
+	Status      string `json:"status"`
+	TxID        int    `json:"tx_id"`
+	Description string `json:"description"`
+	Timestamp   int64  `json:"timestamp"`
+	Amount      string `json:"amount"`
+	TokenName   string `json:"token_name"`
+	TokenID     string `json:"token_id"`
+}
