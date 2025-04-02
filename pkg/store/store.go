@@ -49,6 +49,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/store/expense"
 	"github.com/dwarvesf/fortress-api/pkg/store/feedbackevent"
 	"github.com/dwarvesf/fortress-api/pkg/store/icydistribution"
+	"github.com/dwarvesf/fortress-api/pkg/store/icyswapbtc"
 	"github.com/dwarvesf/fortress-api/pkg/store/icytransaction"
 	"github.com/dwarvesf/fortress-api/pkg/store/invoice"
 	"github.com/dwarvesf/fortress-api/pkg/store/invoicenumbercaching"
@@ -164,6 +165,7 @@ type Store struct {
 	WorkUnit                workunit.IStore
 	WorkUnitMember          workunitmember.IStore
 	WorkUnitStack           workunitstack.IStore
+	IcySwapBtcRequest       icyswapbtc.IStore
 }
 
 func New() *Store {
@@ -248,5 +250,6 @@ func New() *Store {
 		WorkUnit:                workunit.New(),
 		WorkUnitMember:          workunitmember.New(),
 		WorkUnitStack:           workunitstack.New(),
+		IcySwapBtcRequest:       icyswapbtc.New(),
 	}
 }
