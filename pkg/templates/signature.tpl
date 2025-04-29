@@ -41,7 +41,7 @@
 											style=3D"text-decoration:none;color:rgb(103,103,131)" target=3D"_blank">dwarves.foundation</a>
 									</p>
 									<p style=3D"color:rgb(103,105,131);font-size:11px;line-height:15px;margin:4px 0px 10px 3px"><b
-											style=3D"color:rgb(212,46,96)">A:</b>=C2=A0Hado Centrosa, 200 3/2 Street, D. 10, HCMC Vietnam
+											style=3D"color:rgb(212,46,96)">A:</b>=C2=A0222 Dien Bien Phu, D. 3, HCMC Vietnam
 										700000</p>
 								</td>
 							</tr>

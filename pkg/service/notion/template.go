@@ -55,19 +55,13 @@ const MJMLChangelogTemplate = ` <mjml> <mj-head> <mj-title>Changelog Email</mj-t
             font-weight: 400;
             font-size: 11px;
             line-height: 14px;
-            color: #222222;">Hado Centrosa Garden</p>
+            color: #222222;">222 Dien Bien Phu</p>
               <p style="font-family: Helvetica;
             font-style: normal;
             font-weight: 400;
             font-size: 11px;
             line-height: 14px;
-            color: #222222;">200 3/2 street</p>
-              <p style="font-family: Helvetica;
-            font-style: normal;
-            font-weight: 400;
-            font-size: 11px;
-            line-height: 14px;
-            color: #222222;">District 10</p>
+            color: #222222;">District 3</p>
               <p style="font-family: Helvetica;
             font-style: normal;
             font-weight: 400;
