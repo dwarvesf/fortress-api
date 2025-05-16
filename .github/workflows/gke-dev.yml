@@ -9,9 +9,10 @@ on:
 # Environment variables available to all jobs and steps in this workflow
 env:
   GITHUB_SHA: ${{ github.sha }}
-  REGISTRY_HOSTNAME: gcr.io
+  REGISTRY_HOSTNAME: asia-southeast1-docker.pkg.dev
   GKE_PROJECT: df-infrastructure
-  IMAGE: fortress/api
+  REPOSITORY: fortress
+  IMAGE: api
   K8S_ENVIRONMENT: dev
 
 jobs:
@@ -33,13 +34,13 @@ jobs:
 
       - name: Setup Docker
         run: |
-          gcloud auth configure-docker gcr.io
+          gcloud auth configure-docker $REGISTRY_HOSTNAME --quiet
 
       # Build & Push the Docker image
       - name: Build & Push
         run: |
-          docker build -t $REGISTRY_HOSTNAME/$GKE_PROJECT/$IMAGE:${GITHUB_SHA} .   
-          docker push $REGISTRY_HOSTNAME/$GKE_PROJECT/$IMAGE:${GITHUB_SHA}
+          docker build -t $REGISTRY_HOSTNAME/$GKE_PROJECT/$REPOSITORY/$IMAGE:${GITHUB_SHA} .   
+          docker push $REGISTRY_HOSTNAME/$GKE_PROJECT/$REPOSITORY/$IMAGE:${GITHUB_SHA}
       # Setup kustomize
       - name: Setup kustomize
         run: |
@@ -58,6 +59,6 @@ jobs:
           cd ./infrastructure/fortress/fortress-api/$K8S_ENVIRONMENT
           git config user.name lmquang
           git config user.email quanglm.ops@gmail.com
-          /tmp/kustomize edit set image $REGISTRY_HOSTNAME/$GKE_PROJECT/$IMAGE=$REGISTRY_HOSTNAME/$GKE_PROJECT/$IMAGE:${GITHUB_SHA}
+          /tmp/kustomize edit set image $REGISTRY_HOSTNAME/$GKE_PROJECT/$REPOSITORY/$IMAGE=$REGISTRY_HOSTNAME/$GKE_PROJECT/$REPOSITORY/$IMAGE:${GITHUB_SHA}
           git commit -am "[skip ci] fortress-api ${K8S_ENVIRONMENT} image update"
           git push origin main
