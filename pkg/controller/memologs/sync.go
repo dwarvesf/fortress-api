@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"gorm.io/gorm"
 
 	"github.com/dwarvesf/fortress-api/pkg/logger"
@@ -25,9 +27,7 @@ func (c *controller) Sync() ([]model.MemoLog, error) {
 	})
 
 	last7days := time.Now().AddDate(0, 0, -7)
-	latestMemos, err := c.store.MemoLog.List(c.repo.DB(), memolog.ListFilter{
-		From: &last7days,
-	})
+	latestMemos, err := c.store.MemoLog.List(c.repo.DB(), memolog.ListFilter{})
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		l.Errorf(err, "failed to get latest memo")
 		return nil, err
@@ -69,52 +69,91 @@ func (c *controller) Sync() ([]model.MemoLog, error) {
 			if se.Name.Local == "item" {
 				inItem = false
 
+				if item.Link == "" {
+					continue
+				}
+
 				if _, ok := latestMemosMap[item.Link]; ok {
 					continue
 				}
 
-				// Ignore folder is built as an item
-				if item.Description == "" && item.Author == "" {
-					continue
+				title := strings.TrimSpace(item.Title)
+				title = strings.TrimPrefix(title, "<![CDATA[")
+				title = strings.TrimSuffix(title, "]]>")
+				title = strings.TrimSpace(title)
+				if title == "null" || title == "" {
+					// Extract from link - just get the final part
+					if item.Link != "" {
+						parts := strings.Split(item.Link, "/")
+						if len(parts) > 0 {
+							lastPart := parts[len(parts)-1]
+							// Convert kebab-case to Title Case
+							words := strings.Split(lastPart, "-")
+							for i, word := range words {
+								words[i] = cases.Title(language.English).String(word)
+							}
+							title = strings.Join(words, " ")
+						}
+					}
 				}
 
-				pubDate, _ := time.Parse(time.RFC1123Z, item.PubDate)
+				pubDateStr := strings.TrimSpace(item.PubDate)
+				pubDate, err := time.Parse(time.RFC1123, pubDateStr)
+				if err != nil {
+					pubDate = time.Now()
+				}
 				if pubDate.Before(last7days) {
 					stop = true
 					break
 				}
 
-				authorUsernames := make([]string, 0)
-				for _, s := range strings.Split(strings.TrimSpace(item.Author), ",") {
-					if s != "" {
-						authorUsernames = append(authorUsernames, strings.TrimSpace(s))
+				description := strings.TrimSpace(item.Description)
+				description = strings.TrimPrefix(description, "<![CDATA[")
+				description = strings.TrimSuffix(description, "]]>")
+				description = strings.TrimSpace(description)
+
+				content := strings.TrimSpace(item.Content)
+				content = strings.TrimPrefix(content, "<![CDATA[")
+				content = strings.TrimSuffix(content, "]]>")
+				content = strings.TrimSpace(content)
+
+				// Use content if description is empty or null
+				if description == "" || description == "null" {
+					if content != "" {
+						// Try to extract first paragraph from content as description
+						lines := strings.Split(content, "\n")
+						for _, line := range lines {
+							line = strings.TrimSpace(line)
+							if line != "" && !strings.HasPrefix(line, "#") {
+								description = line
+								break
+							}
+						}
 					}
 				}
 
-				authors, err := c.store.DiscordAccount.ListByMemoUsername(c.repo.DB(), authorUsernames)
-				if err != nil {
-					l.Errorf(err, "failed to get authors by discord usernames: %v", authorUsernames)
-					continue
-				}
-
-				discordAccountIDs := make([]string, 0, len(authors))
-				for _, author := range authors {
-					discordAccountIDs = append(discordAccountIDs, author.ID.String())
-				}
+				// Clean up CDATA sections and handle null values
+				creator := strings.TrimSpace(item.Creator)
+				creator = strings.TrimPrefix(creator, "<![CDATA[")
+				creator = strings.TrimSuffix(creator, "]]>")
+				creator = strings.TrimSpace(creator)
 
 				newMemos = append(newMemos, model.MemoLog{
-					Title:               item.Title,
-					URL:                 item.Link,
-					Description:         item.Description,
-					PublishedAt:         &pubDate,
-					DiscordAccountIDs:   discordAccountIDs,
-					AuthorMemoUsernames: authorUsernames,
-					Category:            extractMemoCategory(item.Link),
+					Title:             title,
+					URL:               item.Link,
+					Description:       description,
+					PublishedAt:       &pubDate,
+					DiscordAccountIDs: []string{creator},
+					Category:          extractMemoCategory(item.Link),
+					Tags:              extractMemoCategory(item.Link),
 				})
 			}
 		case xml.CharData:
 			if inItem {
-				data := string(se)
+				data := strings.TrimSpace(string(se))
+				if data == "" {
+					continue
+				}
 				switch currentElem {
 				case "title":
 					item.Title = data
@@ -122,14 +161,12 @@ func (c *controller) Sync() ([]model.MemoLog, error) {
 					item.Link = data
 				case "pubDate":
 					item.PubDate = data
-				case "author":
-					item.Author = data
-				case "guid":
-					item.Guid = data
+				case "creator":
+					item.Creator = data
 				case "description":
 					item.Description = data
-				case "draft":
-					item.Draft = data
+				case "encoded":
+					item.Content = data
 				}
 			}
 		}
@@ -142,7 +179,7 @@ func (c *controller) Sync() ([]model.MemoLog, error) {
 	// Create new memos
 	results, err := c.store.MemoLog.Create(c.repo.DB(), newMemos)
 	if err != nil {
-		l.Errorf(err, "failed to create new memos")
+		c.logger.Errorf(err, "failed to create new memos")
 		return nil, err
 	}
 
@@ -153,10 +190,10 @@ type Item struct {
 	Title       string `xml:"title"`
 	Link        string `xml:"link"`
 	PubDate     string `xml:"pubDate"`
-	Author      string `xml:"author"`
+	Creator     string `xml:"dc:creator"`
 	Guid        string `xml:"guid"`
 	Description string `xml:"description"`
-	Draft       string `xml:"draft"`
+	Content     string `xml:"content:encoded"`
 }
 
 // extractMemoCategory extracts memo category from link

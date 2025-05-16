@@ -686,46 +686,24 @@ func (d *discordClient) SendNewMemoMessage(
 ) (*discordgo.Message, error) {
 	for i, content := range memos {
 		if i <= 10 {
-			var textMessage string
-
-			authorField := ""
-			for _, discordAccountID := range content.DiscordAccountIDs {
-				// Fetch discord account details for the ID
-				discordAccount, err := getDiscordAccountByID(discordAccountID)
-				if err != nil {
-					// If fetching fails, use the ID as a fallback
-					authorField += fmt.Sprintf(" <@%s> ", discordAccountID)
-					continue
-				}
-
-				if discordAccount.DiscordID != "" {
-					authorField += fmt.Sprintf(" <@%s> ", discordAccount.DiscordID)
-				} else if discordAccount.DiscordUsername != "" {
-					authorField += fmt.Sprintf(" @%s ", discordAccount.DiscordUsername)
-				} else {
-					authorField += " **@unknown-user**"
-				}
+			description := content.Description
+			if len(description) > 300 {
+				description = description[0:300] + "..."
+			}
+			// Create an embedded message with a gift-like format
+			embed := &discordgo.MessageEmbed{
+				Description: fmt.Sprintf("Mew memo is published! Check it out [%s](%s) \n\n%s",
+					content.Title,
+					content.URL,
+					description,
+				),
+				Color: 0xFF69B4, // Pink color for the embed
+				Thumbnail: &discordgo.MessageEmbedThumbnail{
+					URL: "https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExNWJ0ZzA4aHJ1Nm02aDZhNXFpY3pnMGR3aDNibGNseTcyOG9xc2d1cCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/TjBUgaxEO98wFkLStc/giphy.gif",
+				},
 			}
 
-			// Use memo username if discord username is not available
-			if authorField == "" {
-				for _, author := range content.AuthorMemoUsernames {
-					authorField += fmt.Sprintf(" **%s** ", author)
-				}
-			}
-
-			author := ""
-			if authorField != "" {
-				author = "from" + authorField
-			}
-
-			textMessage += fmt.Sprintf("New memo post %v \n [%s](%s)\n", author, content.Title, content.URL)
-
-			msg := &discordgo.Message{
-				Content: textMessage,
-			}
-
-			err := d.SendDiscordMessageWithChannel(d.session, msg, channelID)
+			_, err := d.SendEmbeddedMessageWithChannel(nil, embed, channelID)
 			if err != nil {
 				return nil, err
 			}

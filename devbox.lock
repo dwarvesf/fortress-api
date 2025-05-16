@@ -265,6 +265,10 @@
         }
       }
     },
+    "github:NixOS/nixpkgs/nixpkgs-unstable": {
+      "last_modified": "2025-05-12T23:16:24Z",
+      "resolved": "github:NixOS/nixpkgs/2e1da60850ce8159db9654a969c2c683f41c18b5?lastModified=1747091784&narHash=sha256-%2F2jlDI5%2BDfAbxdluamyRsORHueBYUiQh%2BaK%2FkshSvmE%3D"
+    },
     "go-swag@1.8.4": {
       "last_modified": "2022-08-27T08:52:24Z",
       "resolved": "github:NixOS/nixpkgs/ed0fab06cc1ca9799e6dda30529c963b95c4dc2a#go-swag",
