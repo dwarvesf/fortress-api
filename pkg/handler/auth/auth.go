@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/k0kubun/pp/v3"
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/controller"
@@ -145,7 +144,6 @@ func (h *handler) CreateAPIKey(c *gin.Context) {
 		return
 	}
 
-	pp.Println("key created")
 	c.JSON(http.StatusOK, view.CreateResponse[any](&view.APIKeyData{
 		Key: key,
 	}, nil, nil, nil, ""))
