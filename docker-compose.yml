@@ -9,7 +9,7 @@ services:
 #    expose:
 #      - 8201
   postgres:
-    image: postgres:13
+    image: postgres:16-alpine
     restart: always
     environment:
       POSTGRES_DB: fortress_local
@@ -22,7 +22,7 @@ services:
       - 25432
 
   postgres_test:
-    image: postgres:13
+    image: postgres:16-alpine
     restart: always
     environment:
       POSTGRES_DB: fortress_local_test
