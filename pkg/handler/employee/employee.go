@@ -1193,7 +1193,7 @@ func (h *handler) OfficeCheckIn(c *gin.Context) {
 		return
 	}
 
-	icyAmount := 3
+	icyAmount := 2
 	// Get the current date without time
 	currentDate := time.Now().Truncate(24 * time.Hour)
 	var resp []view.CheckInResponse
