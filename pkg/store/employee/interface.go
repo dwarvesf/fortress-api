@@ -32,4 +32,6 @@ type IStore interface {
 
 	Update(db *gorm.DB, employee *model.Employee) (*model.Employee, error)
 	UpdateSelectedFieldsByID(db *gorm.DB, id string, updateModel model.Employee, updatedFields ...string) (*model.Employee, error)
+
+	OneByDisplayName(db *gorm.DB, displayName string) (*model.Employee, error)
 }

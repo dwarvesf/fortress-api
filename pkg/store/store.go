@@ -50,6 +50,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/store/feedbackevent"
 	"github.com/dwarvesf/fortress-api/pkg/store/icydistribution"
 	"github.com/dwarvesf/fortress-api/pkg/store/icytransaction"
+	"github.com/dwarvesf/fortress-api/pkg/store/inboundfundtransaction"
 	"github.com/dwarvesf/fortress-api/pkg/store/invoice"
 	"github.com/dwarvesf/fortress-api/pkg/store/invoicenumbercaching"
 	"github.com/dwarvesf/fortress-api/pkg/store/memolog"
@@ -132,6 +133,7 @@ type Store struct {
 	FeedbackEvent           feedbackevent.IStore
 	IcyDistribution         icydistribution.IStore
 	IcyTransaction          icytransaction.IStore
+	InboundFundTransaction  inboundfundtransaction.IStore
 	Invoice                 invoice.IStore
 	InvoiceNumberCaching    invoicenumbercaching.IStore
 	MemoLog                 memolog.IStore
@@ -216,6 +218,7 @@ func New() *Store {
 		FeedbackEvent:           feedbackevent.New(),
 		IcyDistribution:         icydistribution.New(),
 		IcyTransaction:          icytransaction.New(),
+		InboundFundTransaction:  inboundfundtransaction.New(),
 		Invoice:                 invoice.New(),
 		InvoiceNumberCaching:    invoicenumbercaching.New(),
 		MemoLog:                 memolog.New(),

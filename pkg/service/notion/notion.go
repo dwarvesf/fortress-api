@@ -10,6 +10,8 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/utils"
+
+	"github.com/k0kubun/pp/v3"
 )
 
 type notionService struct {
@@ -542,4 +544,48 @@ func (n *notionService) QueryAudienceDatabase(audienceDBId, audience string) (re
 	}
 	n.l.Info("finish querying audience database")
 	return records, nil
+}
+
+// GetProjectHeadDisplayNames fetches the display names for sales person, tech lead, and account managers for a given Notion project pageID.
+func (n *notionService) GetProjectHeadDisplayNames(pageID string) (salePersonName, techLeadName, accountManagerNames string, err error) {
+	notionProps, err := n.GetProjectInDB(pageID)
+	if err != nil {
+		return "", "", "", fmt.Errorf("failed to get Notion page properties for pageID %s: %w", pageID, err)
+	}
+	if notionProps == nil {
+		return "", "", "", fmt.Errorf("Notion page properties are nil for pageID %s", pageID)
+	}
+	pp.Println(notionProps)
+
+	salePersonName = extractTextFromNotionProperty(*notionProps, "Source")
+	techLeadName = extractTextFromNotionProperty(*notionProps, "PM/Delivery")
+	accountManagerNames = extractTextFromNotionProperty(*notionProps, "Closing")
+
+	return salePersonName, techLeadName, accountManagerNames, nil
+}
+
+// extractTextFromNotionProperty safely extracts plain text from a Notion property.
+func extractTextFromNotionProperty(pageProps nt.DatabasePageProperties, propName string) string {
+	prop, ok := pageProps[propName]
+	if !ok {
+		return ""
+	}
+
+	var sb strings.Builder
+
+	switch prop.Type {
+	case nt.DBPropTypeRichText:
+		for _, rt := range prop.RichText {
+			sb.WriteString(rt.PlainText)
+		}
+	case nt.DBPropTypeTitle:
+		for _, rt := range prop.Title {
+			sb.WriteString(rt.PlainText)
+		}
+	// Add other property types if needed, e.g., People, Select
+	default:
+		// n.l.Warnf("unhandled Notion property type '%s' for property '%s'", prop.Type, propName)
+		return ""
+	}
+	return strings.TrimSpace(sb.String())
 }

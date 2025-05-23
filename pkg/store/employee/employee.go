@@ -359,3 +359,12 @@ func (s *store) ListWithMMAScore(db *gorm.DB) ([]model.EmployeeMMAScoreData, err
 
 	return employees, db.Raw(query, model.WorkingStatusLeft).Scan(&employees).Error
 }
+
+// OneByDisplayName get 1 employee by display name
+func (s *store) OneByDisplayName(db *gorm.DB, displayName string) (*model.Employee, error) {
+	var employee *model.Employee
+	return employee, db.Where("display_name = ?", displayName).First(&employee).Error
+}
+
+// GetWithMMAScore returns list of employees with their latest MMAScore
+// ... existing code ...

@@ -14,8 +14,9 @@ import (
 )
 
 const (
-	hiringCommissionRate       int64 = 2
-	saleReferralCommissionRate int64 = 10
+	hiringCommissionRate       int64   = 2
+	saleReferralCommissionRate int64   = 10
+	inboundFundCommissionRate  float64 = 0.05 // 5%
 )
 
 type pic struct {
@@ -40,6 +41,42 @@ func (c *controller) storeCommission(db *gorm.DB, l logger.Logger, invoice *mode
 	if invoice.Project.Type != model.ProjectTypeTimeMaterial {
 		return nil, nil
 	}
+
+	// Check for project head salesperson and apply inbound fund logic
+	foundSalesPerson := false
+	for _, head := range invoice.Project.Heads {
+		if head.Position == model.HeadPositionSalePerson {
+			foundSalesPerson = true
+			break
+		}
+	}
+
+	originalInvoiceTotal := invoice.Total // Store original total before modification
+	if !foundSalesPerson {
+		inboundAmount := originalInvoiceTotal * inboundFundCommissionRate
+		invoice.InboundFundAmount = inboundAmount
+
+		ift := &model.InboundFundTransaction{
+			InvoiceID: invoice.ID,
+			Amount:    inboundAmount,
+			Notes:     fmt.Sprintf("5%% of invoice %s (%.2f) for project %s (ID: %s) with no sales head", invoice.Number, originalInvoiceTotal, invoice.Project.Name, invoice.ProjectID.String()),
+		}
+		_, err := c.store.InboundFundTransaction.Create(db, ift)
+		if err != nil {
+			l.Errorf(err, "failed to create inbound fund transaction for invoice(%s)", invoice.ID.String())
+			return nil, err
+		}
+
+		// Update the invoice in DB with InboundFundAmount and adjusted TotalWithoutBonus
+		updatedFields := []string{"InboundFundAmount"}
+		// If InboundFundAmount was already non-zero, this might indicate a re-processing.
+		// For simplicity, we're overwriting. Consider adding a check if this isn't desired.
+		if _, err := c.store.Invoice.UpdateSelectedFieldsByID(db, invoice.ID.String(), *invoice, updatedFields...); err != nil {
+			l.Errorf(err, "failed to update invoice with inbound fund details for invoice ID: %s", invoice.ID.String())
+			return nil, err
+		}
+	}
+
 	employeeCommissions, err := c.calculateCommissionFromInvoice(db, l, invoice)
 	if err != nil {
 		l.Errorf(err, "failed to create commission for invoice(%s)", invoice.ID.String())
@@ -60,11 +97,13 @@ func (c *controller) calculateCommissionFromInvoice(db *gorm.DB, l logger.Logger
 		return nil, err
 	}
 
+	invoiceWithoutInbound := invoice.TotalWithoutBonus - invoice.InboundFundAmount
+
 	// Get list of project head who will get the commission from this invoice
 	pics := c.getPICs(invoice, projectMembers)
 	var res []model.EmployeeCommission
 	if len(pics.devLeads) > 0 {
-		c, err := c.calculateHeadCommission(pics.devLeads, invoice, invoice.TotalWithoutBonus)
+		c, err := c.calculateHeadCommission(pics.devLeads, invoice, invoiceWithoutInbound)
 		if err != nil {
 			l.Errorf(err, "failed to calculate dev lead commission rate for project(%s)", invoice.ProjectID.String())
 			return nil, err
@@ -73,7 +112,7 @@ func (c *controller) calculateCommissionFromInvoice(db *gorm.DB, l logger.Logger
 	}
 
 	if len(pics.accountManagers) > 0 {
-		c, err := c.calculateHeadCommission(pics.accountManagers, invoice, invoice.TotalWithoutBonus)
+		c, err := c.calculateHeadCommission(pics.accountManagers, invoice, invoiceWithoutInbound)
 		if err != nil {
 			l.Errorf(err, "failed to calculate account manager commission rate for project(%s)", invoice.ProjectID.String())
 			return nil, err
@@ -82,7 +121,7 @@ func (c *controller) calculateCommissionFromInvoice(db *gorm.DB, l logger.Logger
 	}
 
 	if len(pics.deliveryManagers) > 0 {
-		c, err := c.calculateHeadCommission(pics.deliveryManagers, invoice, invoice.TotalWithoutBonus)
+		c, err := c.calculateHeadCommission(pics.deliveryManagers, invoice, invoiceWithoutInbound)
 		if err != nil {
 			l.Errorf(err, "failed to calculate delivery manager commission rate for project(%s)", invoice.ProjectID.String())
 			return nil, err
@@ -91,7 +130,7 @@ func (c *controller) calculateCommissionFromInvoice(db *gorm.DB, l logger.Logger
 	}
 
 	if len(pics.sales) > 0 {
-		c, err := c.calculateHeadCommission(pics.sales, invoice, invoice.TotalWithoutBonus)
+		c, err := c.calculateHeadCommission(pics.sales, invoice, invoiceWithoutInbound)
 		if err != nil {
 			l.Errorf(err, "failed to calculate sales commission rate for project(%s)", invoice.ProjectID.String())
 			return nil, err

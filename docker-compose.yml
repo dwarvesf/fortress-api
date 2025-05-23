@@ -1,13 +1,13 @@
 version: "3"
 services:
-#  api:
-#    build:
-#      context: .
-#    env_file: .env.docker
-#    ports:
-#      - "8201:8200"
-#    expose:
-#      - 8201
+  #  api:
+  #    build:
+  #      context: .
+  #    env_file: .env.docker
+  #    ports:
+  #      - "8201:8200"
+  #    expose:
+  #      - 8201
   postgres:
     image: postgres:16-alpine
     restart: always
@@ -33,3 +33,16 @@ services:
       - "35432:5432"
     expose:
       - 35432
+
+  postgres_dev:
+    image: postgres:16-alpine
+    restart: always
+    environment:
+      POSTGRES_DB: fortress_local
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    container_name: fortress_dev
+    ports:
+      - "25433:5432"
+    expose:
+      - 25433
