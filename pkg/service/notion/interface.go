@@ -23,4 +23,7 @@ type IService interface {
 	ToChangelogMJML(blocks []nt.Block, email model.Email) (string, error)
 
 	QueryAudienceDatabase(audienceDBId, audience string) (records []nt.Page, err error)
+
+	// GetProjectHeadDisplayNames fetches the display names for sales person, tech lead, and account managers for a given Notion project pageID.
+	GetProjectHeadDisplayNames(pageID string) (salePersonName, techLeadName, accountManagerNames string, err error)
 }

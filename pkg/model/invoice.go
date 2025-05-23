@@ -66,6 +66,7 @@ type Invoice struct {
 	ConversionRate    float64
 	Bonus             float64
 	TotalWithoutBonus float64
+	InboundFundAmount float64
 
 	BankID UUID
 	Bank   *BankAccount

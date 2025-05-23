@@ -3322,3 +3322,181 @@ func (h *handler) CommissionModels(c *gin.Context) {
 
 	c.JSON(http.StatusOK, view.CreateResponse(view.ToCommissionModelData(projectCommissionModel), nil, nil, nil, ""))
 }
+
+func (h *handler) SyncProjectHeadsFromNotion(c *gin.Context) {
+	l := h.logger.Fields(logger.Fields{"handler": "project", "method": "SyncProjectHeadsFromNotion"})
+	// userInfo, err := authutils.GetLoggedInUserInfo(c, h.store, h.repo.DB(), h.config)
+	userInfo := &model.CurrentLoggedUserInfo{
+		UserID:      "123",                                                                          // This should be replaced with actual user ID in production
+		Permissions: map[string]string{model.PermissionProjectsCommissionRateEdit.String(): "true"}, // Grant permission for testing
+	}
+	// if err != nil {
+	// 	l.Error(err, "failed to get user metadata")
+	// 	c.JSON(http.StatusUnauthorized, view.CreateResponse[any](nil, nil, err, nil, ""))
+	// 	return
+	// }
+
+	// dbCtx := h.repo.DB().WithContext(c.Request.Context())
+	dbCtx := h.repo.DB()
+
+	notionProjects, err := h.service.Notion.ListProject()
+	if err != nil {
+		l.Error(err, "failed to fetch projects from Notion")
+		// c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, "Failed to fetch projects from Notion"))
+		return
+	}
+
+	// Fetch all projects from the local database
+	dbProjects, _, err := h.store.Project.All(dbCtx, project.GetListProjectInput{}, model.Pagination{Page: 1, Size: 10000}) // Removed All: true
+	if err != nil {
+		l.Error(err, "failed to fetch projects from database")
+		// c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, "Failed to fetch projects from database"))
+		return
+	}
+
+	dbProjectMap := make(map[string]*model.Project)
+	for _, p := range dbProjects {
+		dbProjectMap[p.Name] = p
+	}
+
+	processedProjectCount := 0
+	var errorMessages []string
+
+	for _, np := range notionProjects {
+		l.Infof("Processing Notion project: %s (Notion RowID: %s)", np.Name, np.RowID)
+
+		dbProject, ok := dbProjectMap[np.Name]
+		if !ok {
+			errMsg := fmt.Sprintf("project with name '%s' from Notion not found in the database, skipping", np.Name)
+			l.Warn(errMsg)
+			errorMessages = append(errorMessages, errMsg)
+			continue
+		}
+
+		// Project found in DB, now use dbProject.ID.
+		// Fetch head display names using the Notion project's RowID (which is the page ID for Notion)
+		l.Infof("Found matching DB project %s (ID: %s). Fetching heads from Notion page ID: %s", dbProject.Name, dbProject.ID.String(), np.RowID)
+
+		salePersonName, techLeadName, accountManagerNamesStr, err := h.service.Notion.GetProjectHeadDisplayNames(np.RowID)
+		l.Infof("salePersonName: %s, techLeadName: %s, accountManagerNamesStr: %s", salePersonName, techLeadName, accountManagerNamesStr)
+		if err != nil {
+			errMsg := fmt.Sprintf("failed to get Notion page properties for project %s (DB ID: %s, Notion PageID: %s): %v", dbProject.Name, dbProject.ID.String(), np.RowID, err)
+			l.Error(err, errMsg)
+			errorMessages = append(errorMessages, errMsg)
+			continue
+		}
+
+		tx, done := h.repo.NewTransaction()
+
+		// Sale Person
+		var salePersonRequests []request.ProjectHeadRequest
+		if salePersonName != "" {
+			emp, err := h.store.Employee.OneByDisplayName(tx.DB(), salePersonName)
+			if err != nil {
+				if errors.Is(err, gorm.ErrRecordNotFound) {
+					l.Warnf("Sale person with display name '%s' (for DB project '%s') not found in DB", salePersonName, dbProject.Name)
+				} else {
+					l.Errorf(err, "failed to find employee by display name '%s' for DB project '%s'", salePersonName, dbProject.Name)
+				}
+			} else {
+				salePersonRequests = append(salePersonRequests, request.ProjectHeadRequest{
+					EmployeeID:     view.UUID(emp.ID),
+					CommissionRate: decimal.NewFromInt(5),
+				})
+			}
+		}
+		if err := h.updateProjectHeads(tx.DB(), dbProject.ID.String(), model.HeadPositionSalePerson, salePersonRequests, userInfo); err != nil {
+			errMsg := fmt.Sprintf("failed to update sale persons for project %s (DB ID: %s): %v", dbProject.Name, dbProject.ID.String(), err)
+			l.Error(err, errMsg)
+			errorMessages = append(errorMessages, errMsg)
+			done(err)
+			continue
+		}
+
+		// Technical Lead
+		var techLeadRequests []request.ProjectHeadRequest
+		if techLeadName != "" {
+			emp, err := h.store.Employee.OneByDisplayName(tx.DB(), techLeadName)
+			if err != nil {
+				if errors.Is(err, gorm.ErrRecordNotFound) {
+					l.Warnf("Technical lead with display name '%s' (for DB project '%s') not found in DB", techLeadName, dbProject.Name)
+				} else {
+					l.Errorf(err, "failed to find employee by display name '%s' for DB project '%s'", techLeadName, dbProject.Name)
+				}
+			} else {
+				techLeadRequests = append(techLeadRequests, request.ProjectHeadRequest{
+					EmployeeID:     view.UUID(emp.ID),
+					CommissionRate: decimal.NewFromInt(2),
+				})
+			}
+		}
+		if err := h.updateProjectHeads(tx.DB(), dbProject.ID.String(), model.HeadPositionTechnicalLead, techLeadRequests, userInfo); err != nil {
+			errMsg := fmt.Sprintf("failed to update technical leads for project %s (DB ID: %s): %v", dbProject.Name, dbProject.ID.String(), err)
+			l.Error(err, errMsg)
+			errorMessages = append(errorMessages, errMsg)
+			done(err)
+			continue
+		}
+
+		// Account Managers
+		var accountManagerRequests []request.ProjectHeadRequest
+		var validAccountManagers []*model.Employee
+		if accountManagerNamesStr != "" {
+			accountManagerNames := strings.FieldsFunc(accountManagerNamesStr, func(r rune) bool { return r == ',' || r == '\n' })
+			for _, amName := range accountManagerNames {
+				trimmedName := strings.TrimSpace(amName)
+				if trimmedName == "" {
+					continue
+				}
+				emp, err := h.store.Employee.OneByDisplayName(tx.DB(), trimmedName)
+				if err != nil {
+					if errors.Is(err, gorm.ErrRecordNotFound) {
+						l.Warnf("Account manager with display name '%s' (for DB project '%s') not found in DB", trimmedName, dbProject.Name)
+					} else {
+						l.Errorf(err, "failed to find employee by display name '%s' for DB project '%s'", trimmedName, dbProject.Name)
+					}
+				} else {
+					validAccountManagers = append(validAccountManagers, emp)
+				}
+			}
+		}
+
+		if len(validAccountManagers) > 0 {
+			commissionRateAM := decimal.NewFromFloat(2.0 / float64(len(validAccountManagers)))
+			for _, empAM := range validAccountManagers {
+				accountManagerRequests = append(accountManagerRequests, request.ProjectHeadRequest{
+					EmployeeID:     view.UUID(empAM.ID),
+					CommissionRate: commissionRateAM,
+				})
+			}
+		}
+		if err := h.updateProjectHeads(tx.DB(), dbProject.ID.String(), model.HeadPositionAccountManager, accountManagerRequests, userInfo); err != nil {
+			errMsg := fmt.Sprintf("failed to update account managers for project %s (DB ID: %s): %v", dbProject.Name, dbProject.ID.String(), err)
+			l.Error(err, errMsg)
+			errorMessages = append(errorMessages, errMsg)
+			done(err)
+			continue
+		}
+
+		if err := done(nil); err != nil {
+			errMsg := fmt.Sprintf("failed to commit transaction for project %s (DB ID: %s): %v", dbProject.Name, dbProject.ID.String(), err)
+			l.Error(err, errMsg)
+			errorMessages = append(errorMessages, errMsg)
+			continue
+		}
+
+		processedProjectCount++
+	}
+
+	if len(errorMessages) > 0 {
+		finalErrorMsg := strings.Join(errorMessages, "; ")
+		l.Error(errors.New(finalErrorMsg), "SyncProjectHeadsFromNotion completed with errors")
+		// c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, errors.New(finalErrorMsg), nil, fmt.Sprintf("Processed %d projects with some errors.", processedProjectCount)))
+		return
+	}
+
+	l.Infof("Successfully synced project heads from Notion for %d projects.", processedProjectCount)
+	// c.JSON(http.StatusOK, view.CreateResponse[any](fmt.Sprintf("Successfully synced project heads from Notion for %d projects.", processedProjectCount), nil, nil, nil, ""))
+}
+
+// extractTextFromNotionProperty is now in pkg/service/notion/notion.go
