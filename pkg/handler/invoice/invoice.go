@@ -1,6 +1,7 @@
 package invoice
 
 import (
+	"errors"
 	"net/http"
 	"time"
 
@@ -268,4 +269,67 @@ func (h *handler) UpdateStatus(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))
+}
+
+// CalculateCommissions godoc
+// @Summary Calculate commissions for an invoice
+// @Description Calculate commissions for an invoice, with optional dry run
+// @Tags Invoice
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "Invoice ID"
+// @Param dry_run query bool false "Dry run (do not save, just return calculation)"
+// @Success 200 {object} []model.EmployeeCommission
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /invoices/{id}/calculate-commissions [post]
+func (h *handler) CalculateCommissions(c *gin.Context) {
+	invoiceID := c.Param("id")
+	if invoiceID == "" {
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errors.New("missing invoice id"), nil, ""))
+		return
+	}
+	dryRun := c.DefaultQuery("dry_run", "false") == "true"
+
+	var invoice model.Invoice
+	if err := h.repo.DB().Where("id = ?", invoiceID).Preload("Project").First(&invoice).Error; err != nil {
+		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	commissions, err := h.controller.Invoice.CalculateCommissionFromInvoice(h.repo, h.logger, &invoice)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	if dryRun {
+		c.JSON(http.StatusOK, view.CreateResponse[any](commissions, nil, nil, nil, ""))
+		return
+	}
+
+	tx := h.repo.DB().Begin()
+	if tx.Error != nil {
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, tx.Error, nil, ""))
+		return
+	}
+	if err := tx.Where("invoice_id = ? AND deleted_at IS NULL", invoiceID).Delete(&model.EmployeeCommission{}).Error; err != nil {
+		tx.Rollback()
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+	for _, commission := range commissions {
+		if err := tx.Create(&commission).Error; err != nil {
+			tx.Rollback()
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+			return
+		}
+	}
+	if err := tx.Commit().Error; err != nil {
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+	c.JSON(http.StatusOK, view.CreateResponse[any](commissions, nil, nil, nil, ""))
 }

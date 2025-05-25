@@ -3377,7 +3377,7 @@ func (h *handler) SyncProjectHeadsFromNotion(c *gin.Context) {
 		// Fetch head display names using the Notion project's RowID (which is the page ID for Notion)
 		l.Infof("Found matching DB project %s (ID: %s). Fetching heads from Notion page ID: %s", dbProject.Name, dbProject.ID.String(), np.RowID)
 
-		salePersonName, techLeadName, accountManagerNamesStr, err := h.service.Notion.GetProjectHeadDisplayNames(np.RowID)
+		salePersonName, techLeadName, accountManagerNamesStr, dealClosingEmails, err := h.service.Notion.GetProjectHeadDisplayNames(np.RowID)
 		l.Infof("salePersonName: %s, techLeadName: %s, accountManagerNamesStr: %s", salePersonName, techLeadName, accountManagerNamesStr)
 		if err != nil {
 			errMsg := fmt.Sprintf("failed to get Notion page properties for project %s (DB ID: %s, Notion PageID: %s): %v", dbProject.Name, dbProject.ID.String(), np.RowID, err)
@@ -3476,6 +3476,41 @@ func (h *handler) SyncProjectHeadsFromNotion(c *gin.Context) {
 			errorMessages = append(errorMessages, errMsg)
 			done(err)
 			continue
+		}
+
+		// Deal Closing
+		var dealClosingRequests []request.ProjectHeadRequest
+		if dealClosingEmails != "" {
+			dealClosingEmailList := strings.Split(dealClosingEmails, ",")
+			commissionRateDC := decimal.NewFromFloat(2.0 / float64(len(dealClosingEmailList)))
+			for _, email := range dealClosingEmailList {
+				email = strings.TrimSpace(email)
+				if email == "" {
+					continue
+				}
+				emp, err := h.store.Employee.OneByEmail(tx.DB(), email)
+				if err != nil {
+					if errors.Is(err, gorm.ErrRecordNotFound) {
+						l.Warnf("Deal closing employee with email '%s' (for DB project '%s') not found in DB", email, dbProject.Name)
+					} else {
+						l.Errorf(err, "failed to find employee by email '%s' for DB project '%s'", email, dbProject.Name)
+					}
+					continue
+				}
+				dealClosingRequests = append(dealClosingRequests, request.ProjectHeadRequest{
+					EmployeeID:     view.UUID(emp.ID),
+					CommissionRate: commissionRateDC,
+				})
+			}
+		}
+		if len(dealClosingRequests) > 0 {
+			if err := h.updateProjectHeads(tx.DB(), dbProject.ID.String(), model.HeadPositionDealClosing, dealClosingRequests, userInfo); err != nil {
+				errMsg := fmt.Sprintf("failed to update deal-closing heads for project %s (DB ID: %s): %v", dbProject.Name, dbProject.ID.String(), err)
+				l.Error(err, errMsg)
+				errorMessages = append(errorMessages, errMsg)
+				done(err)
+				continue
+			}
 		}
 
 		if err := done(nil); err != nil {

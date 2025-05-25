@@ -24,6 +24,6 @@ type IService interface {
 
 	QueryAudienceDatabase(audienceDBId, audience string) (records []nt.Page, err error)
 
-	// GetProjectHeadDisplayNames fetches the display names for sales person, tech lead, and account managers for a given Notion project pageID.
-	GetProjectHeadDisplayNames(pageID string) (salePersonName, techLeadName, accountManagerNames string, err error)
+	// GetProjectHeadDisplayNames fetches the display names for sales person, tech lead, account managers, and deal closing for a given Notion project pageID.
+	GetProjectHeadDisplayNames(pageID string) (salePersonName, techLeadName, accountManagerNames, dealClosingEmails string, err error)
 }

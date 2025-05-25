@@ -37,4 +37,11 @@ type IController interface {
 	MarkInvoiceAsPaidByBasecampWebhookMessage(invoice *model.Invoice, msg *model.BasecampWebhookMessage) (*model.Invoice, error)
 	Send(iv *model.Invoice) (*model.Invoice, error)
 	UpdateStatus(in UpdateStatusInput) (*model.Invoice, error)
+
+	// Calculate commissions for an invoice
+	CalculateCommissionFromInvoice(db store.DBRepo, l logger.Logger, invoice *model.Invoice) ([]model.EmployeeCommission, error)
+}
+
+func (c *controller) CalculateCommissionFromInvoice(db store.DBRepo, l logger.Logger, invoice *model.Invoice) ([]model.EmployeeCommission, error) {
+	return c.calculateCommissionFromInvoice(db.DB(), l, invoice)
 }

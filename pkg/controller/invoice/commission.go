@@ -38,7 +38,7 @@ type pics struct {
 }
 
 func (c *controller) storeCommission(db *gorm.DB, l logger.Logger, invoice *model.Invoice) ([]model.EmployeeCommission, error) {
-	if invoice.Project.Type != model.ProjectTypeTimeMaterial {
+	if invoice.Project.Type == model.ProjectTypeDwarves {
 		return nil, nil
 	}
 
@@ -173,6 +173,35 @@ func (c *controller) calculateCommissionFromInvoice(db *gorm.DB, l logger.Logger
 			return nil, err
 		}
 		res = append(res, c...)
+	}
+
+	// --- Deal Closing Commission Logic ---
+	var dealClosingHeads []model.ProjectHead
+	if err := db.Where("project_id = ? AND position = ? AND deleted_at IS NULL", invoice.ProjectID, model.HeadPositionDealClosing).Find(&dealClosingHeads).Error; err != nil {
+		l.Errorf(err, "failed to fetch deal-closing heads for project(%s)", invoice.ProjectID.String())
+		return nil, err
+	}
+	if len(dealClosingHeads) > 0 {
+		commissionRate := 2.0 / float64(len(dealClosingHeads))
+		for _, head := range dealClosingHeads {
+			amount := invoiceWithoutInbound * commissionRate / 100.0
+			convertedValue, rate, err := c.service.Wise.Convert(amount, invoice.Project.BankAccount.Currency.Name, "VND")
+			if err != nil {
+				l.Errorf(err, "failed to convert deal-closing commission for employee(%s)", head.EmployeeID.String())
+				return nil, err
+			}
+			if convertedValue > 0 {
+				res = append(res, model.EmployeeCommission{
+					EmployeeID:     head.EmployeeID,
+					Amount:         model.NewVietnamDong(int64(convertedValue)),
+					Project:        invoice.Project.Name,
+					ConversionRate: rate,
+					InvoiceID:      invoice.ID,
+					Formula:        fmt.Sprintf("2/len(dealClosing) * %.2f * %v", invoiceWithoutInbound, rate),
+					Note:           "Deal Closing Commission",
+				})
+			}
+		}
 	}
 
 	return res, nil

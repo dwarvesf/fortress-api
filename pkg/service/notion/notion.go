@@ -2,29 +2,31 @@ package notion
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"os"
+	"regexp"
 	"strings"
 
 	nt "github.com/dstotijn/go-notion"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/utils"
+	"gorm.io/gorm"
 )
 
 type notionService struct {
 	notionClient *nt.Client
 	projectsDBID string
 	l            logger.Logger
+	db           *gorm.DB
 }
 
-func New(secret, projectID string, l logger.Logger) IService {
+func New(secret, projectID string, l logger.Logger, db *gorm.DB) IService {
 	return &notionService{
 		notionClient: nt.NewClient(secret),
 		projectsDBID: projectID,
 		l:            l,
+		db:           db,
 	}
 }
 
@@ -546,32 +548,80 @@ func (n *notionService) QueryAudienceDatabase(audienceDBId, audience string) (re
 	return records, nil
 }
 
-// GetProjectHeadDisplayNames fetches the display names for sales person, tech lead, and account managers for a given Notion project pageID.
-func (n *notionService) GetProjectHeadDisplayNames(pageID string) (salePersonName, techLeadName, accountManagerNames string, err error) {
+// extractEmailFromOptionName extracts an email from a string like "Name (email@example.com)".
+func extractEmailFromOptionName(optionName string) string {
+	r := regexp.MustCompile(`\(([^)]+)\)`)
+	matches := r.FindStringSubmatch(optionName)
+	if len(matches) > 1 {
+		emailCandidate := matches[1]
+		if strings.Contains(emailCandidate, "@") {
+			return strings.TrimSpace(emailCandidate)
+		}
+	}
+	return ""
+}
+
+// GetProjectHeadDisplayNames fetches the display names for sales person, tech lead, account managers, and deal closing for a given Notion project pageID.
+func (n *notionService) GetProjectHeadDisplayNames(pageID string) (salePersonName, techLeadName, accountManagerNames, dealClosingEmails string, err error) {
 	notionProps, err := n.GetProjectInDB(pageID)
 	if err != nil {
-		return "", "", "", fmt.Errorf("failed to get Notion page properties for pageID %s: %w", pageID, err)
+		return "", "", "", "", err
 	}
 	if notionProps == nil {
-		return "", "", "", fmt.Errorf("Notion page properties are nil for pageID %s", pageID)
-	}
-	file, err := os.Create("notion_props.txt")
-	if err != nil {
-		return "", "", "", fmt.Errorf("failed to create file: %w", err)
-	}
-	defer file.Close()
-
-	encoder := json.NewEncoder(file)
-	encoder.SetIndent("", "  ")
-	if err := encoder.Encode(notionProps); err != nil {
-		return "", "", "", fmt.Errorf("failed to write to file: %w", err)
+		return "", "", "", "", nil
 	}
 
 	salePersonName = extractTextFromNotionProperty(*notionProps, "Source")
 	techLeadName = extractTextFromNotionProperty(*notionProps, "PM/Delivery")
 	accountManagerNames = extractTextFromNotionProperty(*notionProps, "Closing")
 
-	return salePersonName, techLeadName, accountManagerNames, nil
+	// Handle Deal Closing
+	dealClosingProp, ok := (*notionProps)["Deal Closing"]
+	var extractedEmails []string
+	if ok && dealClosingProp.Type == nt.DBPropTypeMultiSelect {
+		for _, option := range dealClosingProp.MultiSelect {
+			email := extractEmailFromOptionName(option.Name)
+			if email != "" {
+				extractedEmails = append(extractedEmails, email)
+			}
+		}
+	}
+	dealClosingEmails = strings.Join(extractedEmails, ", ")
+
+	// Sync Deal Closing to database
+	if n.db != nil {
+		project := model.Project{}
+		if err := n.db.Where("id = ?", pageID).First(&project).Error; err == nil {
+			tx := n.db.Begin()
+			if tx.Error != nil {
+				return salePersonName, techLeadName, accountManagerNames, dealClosingEmails, tx.Error
+			}
+			// Soft delete existing deal-closing heads for this project
+			if err := tx.Where("project_id = ? AND position = ?", project.ID, model.HeadPositionDealClosing).Delete(&model.ProjectHead{}).Error; err != nil {
+				tx.Rollback()
+				return salePersonName, techLeadName, accountManagerNames, dealClosingEmails, err
+			}
+			for _, email := range extractedEmails {
+				employee := model.Employee{}
+				if err := tx.Where("company_email = ? OR personal_email = ?", email, email).First(&employee).Error; err == nil {
+					projectHead := model.ProjectHead{
+						ProjectID:  project.ID,
+						EmployeeID: employee.ID,
+						Position:   model.HeadPositionDealClosing,
+					}
+					if err := tx.Create(&projectHead).Error; err != nil {
+						tx.Rollback()
+						return salePersonName, techLeadName, accountManagerNames, dealClosingEmails, err
+					}
+				}
+			}
+			if err := tx.Commit().Error; err != nil {
+				return salePersonName, techLeadName, accountManagerNames, dealClosingEmails, err
+			}
+		}
+	}
+
+	return salePersonName, techLeadName, accountManagerNames, dealClosingEmails, nil
 }
 
 // extractTextFromNotionProperty safely extracts plain text from a Notion property.

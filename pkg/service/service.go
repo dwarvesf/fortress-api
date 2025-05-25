@@ -28,6 +28,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/service/googlestorage"
 	"github.com/dwarvesf/fortress-api/pkg/service/icyswap"
 	"github.com/dwarvesf/fortress-api/pkg/service/improvmx"
+	"github.com/dwarvesf/fortress-api/pkg/service/landingzone"
 	"github.com/dwarvesf/fortress-api/pkg/service/lobsters"
 	"github.com/dwarvesf/fortress-api/pkg/service/mochi"
 	"github.com/dwarvesf/fortress-api/pkg/service/mochipay"
@@ -38,7 +39,6 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/service/sendgrid"
 	"github.com/dwarvesf/fortress-api/pkg/service/tono"
 	"github.com/dwarvesf/fortress-api/pkg/service/wise"
-	"github.com/dwarvesf/fortress-api/pkg/service/landingzone"
 	yt "github.com/dwarvesf/fortress-api/pkg/service/youtube"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 )
@@ -96,7 +96,6 @@ func New(cfg *config.Config, store *store.Store, repo store.DBRepo) *Service {
 	if err != nil {
 		logger.L.Error(err, "failed to init gcs")
 	}
-
 
 	landingZoneSvc, err := landingzone.New(
 		cfg.Google.GCSLandingZoneCredentials,
@@ -205,7 +204,7 @@ func New(cfg *config.Config, store *store.Store, repo store.DBRepo) *Service {
 		Mochi:         mochi.New(cfg, logger.L),
 		MochiPay:      mochipay.New(cfg, logger.L),
 		MochiProfile:  mochiprofile.New(cfg, logger.L),
-		Notion:        notion.New(cfg.Notion.Secret, cfg.Notion.Databases.Project, logger.L),
+		Notion:        notion.New(cfg.Notion.Secret, cfg.Notion.Databases.Project, logger.L, repo.DB()),
 		Sendgrid:      sendgrid.New(cfg.Sendgrid.APIKey, cfg, logger.L),
 		Wise:          wise.New(cfg, logger.L),
 		BaseClient:    baseClient,
