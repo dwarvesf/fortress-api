@@ -2,16 +2,16 @@ package notion
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
 	"strings"
 
 	nt "github.com/dstotijn/go-notion"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/utils"
-
-	"github.com/k0kubun/pp/v3"
 )
 
 type notionService struct {
@@ -555,7 +555,17 @@ func (n *notionService) GetProjectHeadDisplayNames(pageID string) (salePersonNam
 	if notionProps == nil {
 		return "", "", "", fmt.Errorf("Notion page properties are nil for pageID %s", pageID)
 	}
-	pp.Println(notionProps)
+	file, err := os.Create("notion_props.txt")
+	if err != nil {
+		return "", "", "", fmt.Errorf("failed to create file: %w", err)
+	}
+	defer file.Close()
+
+	encoder := json.NewEncoder(file)
+	encoder.SetIndent("", "  ")
+	if err := encoder.Encode(notionProps); err != nil {
+		return "", "", "", fmt.Errorf("failed to write to file: %w", err)
+	}
 
 	salePersonName = extractTextFromNotionProperty(*notionProps, "Source")
 	techLeadName = extractTextFromNotionProperty(*notionProps, "PM/Delivery")
