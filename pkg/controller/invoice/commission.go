@@ -35,6 +35,7 @@ type pics struct {
 	upsells          []pic
 	saleReferers     []pic
 	upsellReferers   []pic
+	dealClosing      []pic
 }
 
 func (c *controller) storeCommission(db *gorm.DB, l logger.Logger, invoice *model.Invoice) ([]model.EmployeeCommission, error) {
@@ -175,34 +176,43 @@ func (c *controller) calculateCommissionFromInvoice(db *gorm.DB, l logger.Logger
 		res = append(res, c...)
 	}
 
-	// --- Deal Closing Commission Logic ---
-	var dealClosingHeads []model.ProjectHead
-	if err := db.Where("project_id = ? AND position = ? AND deleted_at IS NULL", invoice.ProjectID, model.HeadPositionDealClosing).Find(&dealClosingHeads).Error; err != nil {
-		l.Errorf(err, "failed to fetch deal-closing heads for project(%s)", invoice.ProjectID.String())
-		return nil, err
-	}
-	if len(dealClosingHeads) > 0 {
-		commissionRate := 2.0 / float64(len(dealClosingHeads))
-		for _, head := range dealClosingHeads {
-			amount := invoiceWithoutInbound * commissionRate / 100.0
-			convertedValue, rate, err := c.service.Wise.Convert(amount, invoice.Project.BankAccount.Currency.Name, "VND")
-			if err != nil {
-				l.Errorf(err, "failed to convert deal-closing commission for employee(%s)", head.EmployeeID.String())
-				return nil, err
-			}
-			if convertedValue > 0 {
-				res = append(res, model.EmployeeCommission{
-					EmployeeID:     head.EmployeeID,
-					Amount:         model.NewVietnamDong(int64(convertedValue)),
-					Project:        invoice.Project.Name,
-					ConversionRate: rate,
-					InvoiceID:      invoice.ID,
-					Formula:        fmt.Sprintf("2/len(dealClosing) * %.2f * %v", invoiceWithoutInbound, rate),
-					Note:           "Deal Closing Commission",
-				})
-			}
+	if len(pics.dealClosing) > 0 {
+		c, err := c.calculateDealClosingCommission(pics.dealClosing, invoice)
+		if err != nil {
+			l.Errorf(err, "failed to calculate deal closing commission rate for project(%s)", invoice.ProjectID.String())
+			return nil, err
 		}
+		res = append(res, c...)
 	}
+
+	// 	// --- Deal Closing Commission Logic ---
+	// var dealClosingHeads []model.ProjectHead
+	// if err := db.Where("project_id = ? AND position = ? AND deleted_at IS NULL", invoice.ProjectID, model.HeadPositionDealClosing).Find(&dealClosingHeads).Error; err != nil {
+	// 	l.Errorf(err, "failed to fetch deal-closing heads for project(%s)", invoice.ProjectID.String())
+	// 	return nil, err
+	// }
+	// if len(dealClosingHeads) > 0 {
+	// 	commissionRate := 2.0 / float64(len(dealClosingHeads))
+	// 	for _, head := range dealClosingHeads {
+	// 		amount := invoiceWithoutInbound * commissionRate / 100.0
+	// 		convertedValue, rate, err := c.service.Wise.Convert(amount, invoice.Project.BankAccount.Currency.Name, "VND")
+	// 		if err != nil {
+	// 			l.Errorf(err, "failed to convert deal-closing commission for employee(%s)", head.EmployeeID.String())
+	// 			return nil, err
+	// 		}
+	// 		if convertedValue > 0 {
+	// 			res = append(res, model.EmployeeCommission{
+	// 				EmployeeID:     head.EmployeeID,
+	// 				Amount:         model.NewVietnamDong(int64(convertedValue)),
+	// 				Project:        invoice.Project.Name,
+	// 				ConversionRate: rate,
+	// 				InvoiceID:      invoice.ID,
+	// 				Formula:        fmt.Sprintf("2/len(dealClosing) * %.2f * %v", invoiceWithoutInbound, rate),
+	// 				Note:           "Deal Closing Commission",
+	// 			})
+	// 		}
+	// 	}
+	// }
 
 	return res, nil
 }
@@ -217,6 +227,7 @@ func (c *controller) getPICs(invoice *model.Invoice, projectMembers []*model.Pro
 		suppliers        []pic
 		saleReferers     []pic
 		upsellReferers   []pic
+		dealClosing      []pic
 	)
 
 	for _, itm := range invoice.Project.Heads {
@@ -266,6 +277,13 @@ func (c *controller) getPICs(invoice *model.Invoice, projectMembers []*model.Pro
 				CommissionRate: decimal.NewFromInt(saleReferralCommissionRate),
 				ChargeRate:     decimal.NewFromFloat(invoice.Total).Mul(itm.CommissionRate).Div(decimal.NewFromInt(100)).InexactFloat64(),
 				Note:           fmt.Sprintf("Sale Referral - %s", salePersonDetail.FullName),
+			})
+		case model.HeadPositionDealClosing:
+			dealClosing = append(dealClosing, pic{
+				ID:             itm.EmployeeID,
+				CommissionRate: itm.CommissionRate,
+				ChargeRate:     invoice.Total,
+				Note:           fmt.Sprintf("Deal Closing - %s", itm.Employee.FullName),
 			})
 		}
 	}
@@ -319,6 +337,7 @@ func (c *controller) getPICs(invoice *model.Invoice, projectMembers []*model.Pro
 		suppliers:        suppliers,
 		saleReferers:     saleReferers,
 		upsellReferers:   upsellReferers,
+		dealClosing:      dealClosing,
 	}
 }
 
@@ -444,6 +463,32 @@ func (c *controller) calculateUpsellSaleReferralCommission(pics []pic, invoice *
 			Formula:        fmt.Sprintf("%v%%(RCR) * %v(VAL) * %v(RATE)", pic.CommissionRate, commissionValue, rate),
 			Note:           pic.Note,
 		})
+	}
+
+	return rs, nil
+}
+
+func (c *controller) calculateDealClosingCommission(pics []pic, invoice *model.Invoice) ([]model.EmployeeCommission, error) {
+	var rs []model.EmployeeCommission
+	for _, pic := range pics {
+		percentage := pic.CommissionRate.Div(decimal.NewFromInt(100))
+		commissionValue, _ := percentage.Mul(decimal.NewFromFloat(pic.ChargeRate)).Float64()
+		convertedValue, rate, err := c.service.Wise.Convert(commissionValue, invoice.Project.BankAccount.Currency.Name, "VND")
+		if err != nil {
+			return nil, err
+		}
+
+		if convertedValue > 0 {
+			rs = append(rs, model.EmployeeCommission{
+				EmployeeID:     pic.ID,
+				Amount:         model.NewVietnamDong(int64(convertedValue)),
+				Project:        invoice.Project.Name,
+				ConversionRate: rate,
+				InvoiceID:      invoice.ID,
+				Formula:        fmt.Sprintf("%v%%(RCR) * %v(VAL) * %v(RATE)", pic.CommissionRate, commissionValue, rate),
+				Note:           pic.Note,
+			})
+		}
 	}
 
 	return rs, nil

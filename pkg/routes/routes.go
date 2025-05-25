@@ -49,7 +49,7 @@ func NewRoutes(cfg *config.Config, svc *service.Service, s *store.Store, repo st
 	ctrl := controller.New(s, repo, svc, worker, logger, cfg)
 	h := handler.New(s, repo, svc, ctrl, worker, logger, cfg)
 
-	h.Project.SyncProjectHeadsFromNotion(nil)
+	// h.Project.SyncProjectHeadsFromNotion(nil)
 
 	r.Use(
 		gin.LoggerWithWriter(gin.DefaultWriter, "/healthz"),

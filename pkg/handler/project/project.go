@@ -3339,7 +3339,7 @@ func (h *handler) SyncProjectHeadsFromNotion(c *gin.Context) {
 	// dbCtx := h.repo.DB().WithContext(c.Request.Context())
 	dbCtx := h.repo.DB()
 
-	notionProjects, err := h.service.Notion.ListProject()
+	notionProjects, err := h.service.Notion.ListProjects()
 	if err != nil {
 		l.Error(err, "failed to fetch projects from Notion")
 		// c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, "Failed to fetch projects from Notion"))
@@ -3362,6 +3362,7 @@ func (h *handler) SyncProjectHeadsFromNotion(c *gin.Context) {
 	processedProjectCount := 0
 	var errorMessages []string
 
+	l.Infof(`Starting to sync project heads from Notion, total %d projects`, len(notionProjects))
 	for _, np := range notionProjects {
 		l.Infof("Processing Notion project: %s (Notion RowID: %s)", np.Name, np.RowID)
 

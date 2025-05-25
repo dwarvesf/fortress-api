@@ -8,10 +8,11 @@ import (
 	"strings"
 
 	nt "github.com/dstotijn/go-notion"
+	"gorm.io/gorm"
+
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/utils"
-	"gorm.io/gorm"
 )
 
 type notionService struct {
@@ -411,7 +412,36 @@ func convertMapToProperties(properties map[string]interface{}) (nt.DatabasePageP
 	return props, nil
 }
 
-func (n *notionService) ListProject() ([]model.ProjectChangelogPage, error) {
+func (n *notionService) ListProjects() ([]model.NotionProject, error) {
+	ctx := context.Background()
+	prjs, err := n.notionClient.QueryDatabase(ctx, n.projectsDBID, &nt.DatabaseQuery{
+		Filter: &nt.DatabaseQueryFilter{
+			Property: "Status",
+			DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+				Select: &nt.SelectDatabaseQueryFilter{
+					Equals: "Active",
+				},
+			},
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	res := []model.NotionProject{}
+	for _, r := range prjs.Results {
+		p := r.Properties.(nt.DatabasePageProperties)
+		if len(p["Project"].Title) != 0 {
+			res = append(res, model.NotionProject{
+				RowID: r.ID,
+				Name:  p["Project"].Title[0].Text.Content,
+			})
+		}
+	}
+
+	return res, nil
+}
+func (n *notionService) ListProjectsWithChangelog() ([]model.ProjectChangelogPage, error) {
 	ctx := context.Background()
 	prjs, err := n.notionClient.QueryDatabase(ctx, n.projectsDBID, &nt.DatabaseQuery{
 		Filter: &nt.DatabaseQueryFilter{

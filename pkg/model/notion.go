@@ -10,6 +10,12 @@ type ProjectChangelogPage struct {
 	ChangelogURL string `json:"changelog_url"`
 }
 
+// NotionProject -- notion project changelog page
+type NotionProject struct {
+	RowID string `json:"row_id"`
+	Name  string `json:"name"`
+}
+
 type NotionMemo struct {
 	ID        string    `json:"id"`
 	Name      string    `json:"name"`

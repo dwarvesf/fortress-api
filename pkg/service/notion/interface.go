@@ -2,6 +2,7 @@ package notion
 
 import (
 	nt "github.com/dstotijn/go-notion"
+
 	"github.com/dwarvesf/fortress-api/pkg/model"
 )
 
@@ -14,7 +15,8 @@ type IService interface {
 	GetProjectsInDB(pageIDs []string, projectPageID string) (projects map[string]nt.DatabasePageProperties, err error)
 	GetBlockChildren(pageID string) (blockChildrenResponse *nt.BlockChildrenResponse, err error)
 	GetBlock(pageID string) (blockResponse nt.Block, err error)
-	ListProject() ([]model.ProjectChangelogPage, error)
+	ListProjects() ([]model.NotionProject, error)
+	ListProjectsWithChangelog() ([]model.ProjectChangelogPage, error)
 	GetPagePropByID(pageID, propID string, query *nt.PaginationQuery) (*nt.PagePropResponse, error)
 
 	// CreatePage create a page in notion
