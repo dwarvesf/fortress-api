@@ -2,6 +2,7 @@ package invoice
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -286,50 +287,74 @@ func (h *handler) UpdateStatus(c *gin.Context) {
 // @Failure 500 {object} ErrorResponse
 // @Router /invoices/{id}/calculate-commissions [post]
 func (h *handler) CalculateCommissions(c *gin.Context) {
+	fmt.Println("Getting invoice ID from request params")
 	invoiceID := c.Param("id")
 	if invoiceID == "" {
+		fmt.Println("Invoice ID is missing from request")
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errors.New("missing invoice id"), nil, ""))
 		return
 	}
-	dryRun := c.DefaultQuery("dry_run", "false") == "true"
 
+	fmt.Println("Checking if dry run mode is enabled")
+	dryRun := c.DefaultQuery("dry_run", "false") == "true"
+	fmt.Println("Dry run mode is enabled:", dryRun, "dry_run:", c.Query("dry_run"))
+
+	fmt.Println("Fetching invoice from database")
 	var invoice model.Invoice
-	if err := h.repo.DB().Where("id = ?", invoiceID).Preload("Project").First(&invoice).Error; err != nil {
+	if err := h.repo.DB().Where("id = ?", invoiceID).Preload("Project").Preload("Project.Heads").Preload("Project.BankAccount").Preload("Project.BankAccount.Currency").First(&invoice).Error; err != nil {
+		fmt.Printf("Failed to find invoice in database: %v\n", err)
 		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
 	}
 
+	fmt.Println("Calculating commissions for invoice")
 	commissions, err := h.controller.Invoice.CalculateCommissionFromInvoice(h.repo, h.logger, &invoice)
 	if err != nil {
+		fmt.Printf("Failed to calculate commissions: %v\n", err)
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
 	}
+	fmt.Println("Commissions:", commissions)
 
 	if dryRun {
+		fmt.Println("Dry run mode - returning calculated commissions without saving")
 		c.JSON(http.StatusOK, view.CreateResponse[any](commissions, nil, nil, nil, ""))
 		return
 	}
 
+	fmt.Println("Starting database transaction to save commissions")
 	tx := h.repo.DB().Begin()
 	if tx.Error != nil {
+		fmt.Printf("Failed to begin database transaction: %v\n", tx.Error)
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, tx.Error, nil, ""))
 		return
 	}
+
+	fmt.Println("Deleting existing commissions for this invoice")
 	if err := tx.Where("invoice_id = ? AND deleted_at IS NULL", invoiceID).Delete(&model.EmployeeCommission{}).Error; err != nil {
+		fmt.Printf("Failed to delete existing commissions: %v\n", err)
 		tx.Rollback()
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
 	}
+
+	fmt.Println("Creating new commission records")
 	for _, commission := range commissions {
 		if err := tx.Create(&commission).Error; err != nil {
+			fmt.Printf("Failed to create commission record: %v\n", err)
 			tx.Rollback()
 			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 			return
 		}
 	}
+
+	fmt.Println("Committing transaction")
 	if err := tx.Commit().Error; err != nil {
+		fmt.Printf("Failed to commit transaction: %v\n", err)
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
 	}
+
+	fmt.Println("Successfully saved commissions")
 	c.JSON(http.StatusOK, view.CreateResponse[any](commissions, nil, nil, nil, ""))
 }
