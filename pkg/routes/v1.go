@@ -11,6 +11,10 @@ import (
 )
 
 func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store.Store, cfg *config.Config) {
+	// if r == nil || h == nil || repo == nil || s == nil || cfg == nil {
+	// 	return
+	// }
+
 	pmw := mw.NewPermissionMiddleware(s, repo, cfg)
 	amw := mw.NewAuthMiddleware(cfg, s, repo)
 
