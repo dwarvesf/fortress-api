@@ -4,9 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 
 	nt "github.com/dstotijn/go-notion"
+	"gorm.io/gorm"
+
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/utils"
@@ -16,13 +19,15 @@ type notionService struct {
 	notionClient *nt.Client
 	projectsDBID string
 	l            logger.Logger
+	db           *gorm.DB
 }
 
-func New(secret, projectID string, l logger.Logger) IService {
+func New(secret, projectID string, l logger.Logger, db *gorm.DB) IService {
 	return &notionService{
 		notionClient: nt.NewClient(secret),
 		projectsDBID: projectID,
 		l:            l,
+		db:           db,
 	}
 }
 
@@ -274,12 +279,18 @@ func (n *notionService) GetProjectInDB(pageID string) (*nt.DatabasePagePropertie
 	// 2. loop through all projects to find the project by page id
 	for _, r := range res.Results {
 		if strings.ReplaceAll(r.ID, "-", "") == strings.ReplaceAll(pageID, "-", "") {
-			p := r.Properties.(nt.DatabasePageProperties)
-			if len(p["Project"].Title) != 0 && p["Changelog"].URL != nil {
-				if *p["Changelog"].URL == "" {
-					continue
-				}
-				clID := strings.Split(strings.Split(*p["Changelog"].URL, "/")[len(strings.Split(*p["Changelog"].URL, "/"))-1], "?")[0]
+			p, ok := r.Properties.(nt.DatabasePageProperties)
+			if !ok {
+				n.l.Errorf(nil, "failed to cast database page properties for project", r.ID)
+				continue // Skip this result if casting fails
+			}
+
+			// Safely access required properties and their contents
+			projectProp, projectOk := p["Project"]
+			changelogProp, changelogOk := p["Changelog"]
+
+			if projectOk && len(projectProp.Title) > 0 && changelogOk && changelogProp.URL != nil && *changelogProp.URL != "" {
+				clID := strings.Split(strings.Split(*changelogProp.URL, "/")[len(strings.Split(*changelogProp.URL, "/"))-1], "?")[0]
 				cls, err := n.notionClient.QueryDatabase(ctx, clID, &nt.DatabaseQuery{
 					Sorts: []nt.DatabaseQuerySort{
 						{
@@ -289,27 +300,33 @@ func (n *notionService) GetProjectInDB(pageID string) (*nt.DatabasePagePropertie
 					},
 				})
 				if err != nil {
-					n.l.Errorf(err, "query project change log err", clID, p["Project"].Title[0].Text.Content)
+					n.l.Errorf(err, "query project change log err", clID, projectProp.Title[0].Text.Content)
 					continue
 				}
 
-				if len(cls.Results) != 0 && len(cls.Results[0].Properties.(nt.DatabasePageProperties)["Title"].Title) != 0 {
-					p["EmailSubject"] = nt.DatabasePageProperty{
-						Title: []nt.RichText{
-							{
-								Type:      nt.RichTextTypeText,
-								Text:      &nt.Text{Content: cls.Results[0].Properties.(nt.DatabasePageProperties)["Title"].Title[0].Text.Content},
-								PlainText: cls.Results[0].Properties.(nt.DatabasePageProperties)["Title"].Title[0].Text.Content,
+				if len(cls.Results) != 0 {
+					// Safely access title property from changelog result
+					changelogTitleProp, changelogTitleOk := cls.Results[0].Properties.(nt.DatabasePageProperties)["Title"]
+					if changelogTitleOk && len(changelogTitleProp.Title) > 0 {
+						p["EmailSubject"] = nt.DatabasePageProperty{
+							Title: []nt.RichText{
+								{
+									Type:      nt.RichTextTypeText,
+									Text:      &nt.Text{Content: changelogTitleProp.Title[0].Text.Content},
+									PlainText: changelogTitleProp.Title[0].Text.Content,
+								},
 							},
-						},
+						}
+					} else {
+						n.l.Warnf("missing title property or title content for changelog ID %s in project %s", clID, projectProp.Title[0].Text.Content)
 					}
 				}
 			}
-			return &p, nil
+			return &p, nil // Return the found project properties
 		}
 	}
 
-	return nil, errors.New("page not found")
+	return nil, errors.New("page not found") // Return error if project not found after loop
 }
 
 func (n *notionService) GetProjectsInDB(pageIDs []string, projectPageID string) (map[string]nt.DatabasePageProperties, error) {
@@ -407,7 +424,37 @@ func convertMapToProperties(properties map[string]interface{}) (nt.DatabasePageP
 	return props, nil
 }
 
-func (n *notionService) ListProject() ([]model.ProjectChangelogPage, error) {
+func (n *notionService) ListProjects() ([]model.NotionProject, error) {
+	ctx := context.Background()
+	prjs, err := n.notionClient.QueryDatabase(ctx, n.projectsDBID, &nt.DatabaseQuery{
+		Filter: &nt.DatabaseQueryFilter{
+			Property: "Status",
+			DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+				Select: &nt.SelectDatabaseQueryFilter{
+					Equals: "Active",
+				},
+			},
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	res := []model.NotionProject{}
+	for _, r := range prjs.Results {
+		p := r.Properties.(nt.DatabasePageProperties)
+		if len(p["Project"].Title) != 0 {
+			res = append(res, model.NotionProject{
+				RowID: r.ID,
+				Name:  p["Project"].Title[0].Text.Content,
+			})
+		}
+	}
+
+	return res, nil
+}
+
+func (n *notionService) ListProjectsWithChangelog() ([]model.ProjectChangelogPage, error) {
 	ctx := context.Background()
 	prjs, err := n.notionClient.QueryDatabase(ctx, n.projectsDBID, &nt.DatabaseQuery{
 		Filter: &nt.DatabaseQueryFilter{
@@ -425,12 +472,18 @@ func (n *notionService) ListProject() ([]model.ProjectChangelogPage, error) {
 
 	res := []model.ProjectChangelogPage{}
 	for _, r := range prjs.Results {
-		p := r.Properties.(nt.DatabasePageProperties)
-		if len(p["Project"].Title) != 0 && p["Changelog"].URL != nil {
-			if *p["Changelog"].URL == "" {
-				continue
-			}
-			clID := strings.Split(strings.Split(*p["Changelog"].URL, "/")[len(strings.Split(*p["Changelog"].URL, "/"))-1], "?")[0]
+		p, ok := r.Properties.(nt.DatabasePageProperties)
+		if !ok {
+			n.l.Errorf(nil, "failed to cast database page properties for project listing", r.ID)
+			continue // Skip this result if casting fails
+		}
+
+		// Safely access required properties and their contents
+		projectProp, projectOk := p["Project"]
+		changelogProp, changelogOk := p["Changelog"]
+
+		if projectOk && len(projectProp.Title) > 0 && changelogOk && changelogProp.URL != nil && *changelogProp.URL != "" {
+			clID := strings.Split(strings.Split(*changelogProp.URL, "/")[len(strings.Split(*changelogProp.URL, "/"))-1], "?")[0]
 			cls, err := n.notionClient.QueryDatabase(ctx, clID, &nt.DatabaseQuery{
 				Sorts: []nt.DatabaseQuerySort{
 					{
@@ -440,16 +493,23 @@ func (n *notionService) ListProject() ([]model.ProjectChangelogPage, error) {
 				},
 			})
 			if err != nil {
-				n.l.Errorf(err, "query project change log err", clID, p["Project"].Title[0].Text.Content)
+				n.l.Errorf(err, "query project change log err", clID, projectProp.Title[0].Text.Content)
 				continue
 			}
-			if len(cls.Results) != 0 && len(cls.Results[0].Properties.(nt.DatabasePageProperties)["Title"].Title) != 0 {
-				res = append(res, model.ProjectChangelogPage{
-					RowID:        r.ID,
-					Name:         p["Project"].Title[0].Text.Content,
-					Title:        cls.Results[0].Properties.(nt.DatabasePageProperties)["Title"].Title[0].Text.Content,
-					ChangelogURL: cls.Results[0].URL,
-				})
+
+			if len(cls.Results) != 0 {
+				// Safely access title property from changelog result
+				changelogTitleProp, changelogTitleOk := cls.Results[0].Properties.(nt.DatabasePageProperties)["Title"]
+				if changelogTitleOk && len(changelogTitleProp.Title) > 0 {
+					res = append(res, model.ProjectChangelogPage{
+						RowID:        r.ID,
+						Name:         projectProp.Title[0].Text.Content,
+						Title:        changelogTitleProp.Title[0].Text.Content,
+						ChangelogURL: cls.Results[0].URL,
+					})
+				} else {
+					n.l.Warnf("missing title property or title content for changelog ID %s in project %s", clID, projectProp.Title[0].Text.Content)
+				}
 			}
 		}
 	}
@@ -542,4 +602,119 @@ func (n *notionService) QueryAudienceDatabase(audienceDBId, audience string) (re
 	}
 	n.l.Info("finish querying audience database")
 	return records, nil
+}
+
+// extractEmailFromOptionName extracts an email from a string like "Name (email@example.com)".
+func extractEmailFromOptionName(optionName string) string {
+	r := regexp.MustCompile(`\(([^)]+)\)`)
+	matches := r.FindStringSubmatch(optionName)
+	if len(matches) > 1 {
+		emailCandidate := matches[1]
+		if strings.Contains(emailCandidate, "@") {
+			return strings.TrimSpace(emailCandidate)
+		}
+	}
+	return ""
+}
+
+// GetProjectHeadEmails fetches the email addresses for sales person, tech lead, account managers, and deal closing for a given Notion project pageID.
+func (n *notionService) GetProjectHeadEmails(pageID string) (salePersonEmail, techLeadEmail, accountManagerEmails, dealClosingEmails string, err error) {
+	notionProps, err := n.GetProjectInDB(pageID)
+	if err != nil {
+		return "", "", "", "", err
+	}
+	if notionProps == nil {
+		return "", "", "", "", nil
+	}
+
+	// Attempt to extract email for Sales Person (Source property)
+	salePersonProp, ok := (*notionProps)["Source"]
+	if ok && salePersonProp.Type == nt.DBPropTypeMultiSelect {
+		var extractedEmails []string
+		for _, option := range salePersonProp.MultiSelect {
+			email := extractEmailFromOptionName(option.Name)
+			if email != "" {
+				extractedEmails = append(extractedEmails, email)
+			}
+		}
+		salePersonEmail = strings.Join(extractedEmails, ", ")
+	}
+
+	// Attempt to extract email for Tech Lead (PM/Delivery property)
+	techLeadProp, ok := (*notionProps)["PM/Delivery"]
+	if ok && techLeadProp.Type == nt.DBPropTypeMultiSelect {
+		var extractedEmails []string
+		for _, option := range techLeadProp.MultiSelect {
+			email := extractEmailFromOptionName(option.Name)
+			if email != "" {
+				extractedEmails = append(extractedEmails, email)
+			}
+		}
+		techLeadEmail = strings.Join(extractedEmails, ", ")
+	}
+
+	// Attempt to extract email for Account Managers (Closing property)
+	accountManagerProp, ok := (*notionProps)["Closing"]
+	if ok && accountManagerProp.Type == nt.DBPropTypeMultiSelect {
+		var extractedEmails []string
+		for _, option := range accountManagerProp.MultiSelect {
+			email := extractEmailFromOptionName(option.Name)
+			if email != "" {
+				extractedEmails = append(extractedEmails, email)
+			}
+		}
+		accountManagerEmails = strings.Join(extractedEmails, ", ")
+	}
+
+	// Handle Deal Closing (existing logic)
+	dealClosingProp, ok := (*notionProps)["Deal Closing"]
+	var extractedEmails []string
+	if ok && dealClosingProp.Type == nt.DBPropTypeMultiSelect {
+		for _, option := range dealClosingProp.MultiSelect {
+			email := extractEmailFromOptionName(option.Name)
+			if email != "" {
+				extractedEmails = append(extractedEmails, email)
+			}
+		}
+	}
+	dealClosingEmails = strings.Join(extractedEmails, ", ")
+
+	// Sync Deal Closing to database
+	if n.db != nil {
+		project := model.Project{}
+		if err := n.db.Where("id = ?", pageID).First(&project).Error; err == nil {
+			tx := n.db.Begin()
+			if tx.Error != nil {
+				return salePersonEmail, techLeadEmail, accountManagerEmails, dealClosingEmails, tx.Error
+			}
+			// Soft delete existing deal-closing heads for this project
+			if err := tx.Where("project_id = ? AND position = ?", project.ID, model.HeadPositionDealClosing).Delete(&model.ProjectHead{}).Error; err != nil {
+				tx.Rollback()
+				return salePersonEmail, techLeadEmail, accountManagerEmails, dealClosingEmails, err
+			}
+			for _, email := range extractedEmails {
+				employee := model.Employee{}
+				if err := tx.Where("company_email = ? OR personal_email = ?", email, email).First(&employee).Error; err == nil {
+					projectHead := model.ProjectHead{
+						ProjectID:  project.ID,
+						EmployeeID: employee.ID,
+						Position:   model.HeadPositionDealClosing,
+					}
+					if err := tx.Create(&projectHead).Error; err != nil {
+						tx.Rollback()
+						return salePersonEmail, techLeadEmail, accountManagerEmails, dealClosingEmails, err
+					}
+				} else if err != gorm.ErrRecordNotFound {
+					n.l.Errorf(err, "find employee by email err", email)
+				}
+			}
+			if err := tx.Commit().Error; err != nil {
+				return salePersonEmail, techLeadEmail, accountManagerEmails, dealClosingEmails, err
+			}
+		} else if err != gorm.ErrRecordNotFound {
+			n.l.Errorf(err, "find project by id err", pageID)
+		}
+	}
+
+	return salePersonEmail, techLeadEmail, accountManagerEmails, dealClosingEmails, nil
 }

@@ -7,4 +7,5 @@ type IHandler interface {
 	List(c *gin.Context)
 	Send(c *gin.Context)
 	UpdateStatus(c *gin.Context)
+	CalculateCommissions(c *gin.Context)
 }

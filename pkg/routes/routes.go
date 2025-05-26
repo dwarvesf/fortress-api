@@ -42,6 +42,7 @@ func NewRoutes(cfg *config.Config, svc *service.Service, s *store.Store, repo st
 	docs.SwaggerInfo.Description = "This is a swagger for API."
 	docs.SwaggerInfo.Version = "1.0"
 	docs.SwaggerInfo.Schemes = []string{"https", "http"}
+	gin.SetMode(gin.ReleaseMode)
 	r := gin.New()
 	pprof.Register(r)
 

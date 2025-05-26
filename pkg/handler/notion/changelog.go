@@ -13,11 +13,12 @@ import (
 
 	"github.com/Boostport/mjml-go"
 	nt "github.com/dstotijn/go-notion"
+	"github.com/gin-gonic/gin"
+	"github.com/sendgrid/sendgrid-go/helpers/mail"
+
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service/notion"
 	"github.com/dwarvesf/fortress-api/pkg/view"
-	"github.com/gin-gonic/gin"
-	"github.com/sendgrid/sendgrid-go/helpers/mail"
 )
 
 const (
@@ -59,7 +60,7 @@ func parseProjectChangelogNotionMessageFromCtx(c *gin.Context) (ProjectChangelog
 // @Failure 400 {object} ErrorResponse
 // @Router /notion/changelogs/projects/available [get]
 func (h *handler) GetAvailableProjectsChangelog(c *gin.Context) {
-	projects, err := h.service.Notion.ListProject()
+	projects, err := h.service.Notion.ListProjectsWithChangelog()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return

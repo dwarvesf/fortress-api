@@ -29,7 +29,7 @@ const testToken = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjk1ODMzM
 func TestHandler_ListSurvey(t *testing.T) {
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg, nil, nil)
+	serviceMock := service.NewForTest()
 	storeMock := store.New()
 
 	tests := []struct {
@@ -75,7 +75,7 @@ func TestHandler_ListSurvey(t *testing.T) {
 func TestHandler_GetSurveyDetail(t *testing.T) {
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg, nil, nil)
+	serviceMock := service.NewForTest()
 	storeMock := store.New()
 
 	tests := []struct {
@@ -146,7 +146,7 @@ func TestHandler_GetSurveyDetail(t *testing.T) {
 func TestHandler_SendPerformanceReview(t *testing.T) {
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg, nil, nil)
+	serviceMock := service.NewForTest()
 	storeMock := store.New()
 
 	tests := []struct {
@@ -241,7 +241,7 @@ func TestHandler_SendPerformanceReview(t *testing.T) {
 func TestHandler_DeleteSurvey(t *testing.T) {
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg, nil, nil)
+	serviceMock := service.NewForTest()
 	storeMock := store.New()
 
 	tests := []struct {
@@ -300,7 +300,7 @@ func TestHandler_DeleteSurvey(t *testing.T) {
 func TestHandler_GetPeerReviewDetail(t *testing.T) {
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg, nil, nil)
+	serviceMock := service.NewForTest()
 	storeMock := store.New()
 	tests := []struct {
 		name             string
@@ -384,7 +384,7 @@ func TestHandler_GetPeerReviewDetail(t *testing.T) {
 func TestHandler_UpdateTopicReviewers(t *testing.T) {
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg, nil, nil)
+	serviceMock := service.NewForTest()
 	storeMock := store.New()
 
 	tests := []struct {
@@ -500,7 +500,7 @@ func TestHandler_UpdateTopicReviewers(t *testing.T) {
 func TestHandler_MarkDone(t *testing.T) {
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg, nil, nil)
+	serviceMock := service.NewForTest()
 	storeMock := store.New()
 
 	tests := []struct {
@@ -559,7 +559,7 @@ func TestHandler_MarkDone(t *testing.T) {
 func TestHandler_DeleteTopicReviewers(t *testing.T) {
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg, nil, nil)
+	serviceMock := service.NewForTest()
 	storeMock := store.New()
 
 	tests := []struct {
@@ -629,7 +629,7 @@ func TestHandler_DeleteTopicReviewers(t *testing.T) {
 func TestHandler_DeleteSurveyTopic(t *testing.T) {
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg, nil, nil)
+	serviceMock := service.NewForTest()
 	storeMock := store.New()
 
 	tests := []struct {
@@ -716,7 +716,7 @@ func TestHandler_DeleteSurveyTopic(t *testing.T) {
 func TestHandler_GetSurveyReviewDetail(t *testing.T) {
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg, nil, nil)
+	serviceMock := service.NewForTest()
 	storeMock := store.New()
 
 	tests := []struct {
@@ -829,7 +829,7 @@ func TestHandler_GetSurveyReviewDetail(t *testing.T) {
 func TestHandler_CreateSurvey(t *testing.T) {
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg, nil, nil)
+	serviceMock := service.NewForTest()
 	storeMock := store.New()
 
 	tests := []struct {

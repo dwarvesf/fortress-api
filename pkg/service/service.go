@@ -28,6 +28,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/service/googlestorage"
 	"github.com/dwarvesf/fortress-api/pkg/service/icyswap"
 	"github.com/dwarvesf/fortress-api/pkg/service/improvmx"
+	"github.com/dwarvesf/fortress-api/pkg/service/landingzone"
 	"github.com/dwarvesf/fortress-api/pkg/service/lobsters"
 	"github.com/dwarvesf/fortress-api/pkg/service/mochi"
 	"github.com/dwarvesf/fortress-api/pkg/service/mochipay"
@@ -38,7 +39,6 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/service/sendgrid"
 	"github.com/dwarvesf/fortress-api/pkg/service/tono"
 	"github.com/dwarvesf/fortress-api/pkg/service/wise"
-	"github.com/dwarvesf/fortress-api/pkg/service/landingzone"
 	yt "github.com/dwarvesf/fortress-api/pkg/service/youtube"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 )
@@ -73,7 +73,7 @@ type Service struct {
 	LandingZone   landingzone.IService
 }
 
-func New(cfg *config.Config, store *store.Store, repo store.DBRepo) *Service {
+func New(cfg *config.Config, store *store.Store, repo store.DBRepo) (*Service, error) {
 	cch := cache.New(5*time.Minute, 10*time.Minute)
 
 	googleAuthSvc, err := googleauth.New(
@@ -85,7 +85,7 @@ func New(cfg *config.Config, store *store.Store, repo store.DBRepo) *Service {
 		},
 	)
 	if err != nil {
-		logger.L.Error(err, "failed to init google auth")
+		return nil, err
 	}
 
 	gcsSvc, err := googlestorage.New(
@@ -94,15 +94,14 @@ func New(cfg *config.Config, store *store.Store, repo store.DBRepo) *Service {
 		cfg.Google.GCSCredentials,
 	)
 	if err != nil {
-		logger.L.Error(err, "failed to init gcs")
+		return nil, err
 	}
-
 
 	landingZoneSvc, err := landingzone.New(
 		cfg.Google.GCSLandingZoneCredentials,
 	)
 	if err != nil {
-		logger.L.Error(err, "failed to init landing zone service")
+		return nil, err
 	}
 
 	driveConfig := &oauth2.Config{
@@ -170,21 +169,21 @@ func New(cfg *config.Config, store *store.Store, repo store.DBRepo) *Service {
 
 	baseClient, err := evm.New(evm.DefaultBASEClient, cfg, logger.L)
 	if err != nil {
-		logger.L.Error(err, "failed to init base client service")
+		return nil, err
 	}
 	icySwap, err := icyswap.New(baseClient, cfg, logger.L)
 	if err != nil {
-		logger.L.Error(err, "failed to init icyswap service")
+		return nil, err
 	}
 
 	communityNft, err := communitynft.New(baseClient, cfg, logger.L)
 	if err != nil {
-		logger.L.Error(err, "failed to init community nft service")
+		return nil, err
 	}
 
 	reddit, err := reddit.New(cfg, logger.L)
 	if err != nil {
-		logger.L.Error(err, "failed to init reddit service")
+		return nil, err
 	}
 
 	difySvc := ogifmemosummarizer.New(cfg)
@@ -205,7 +204,7 @@ func New(cfg *config.Config, store *store.Store, repo store.DBRepo) *Service {
 		Mochi:         mochi.New(cfg, logger.L),
 		MochiPay:      mochipay.New(cfg, logger.L),
 		MochiProfile:  mochiprofile.New(cfg, logger.L),
-		Notion:        notion.New(cfg.Notion.Secret, cfg.Notion.Databases.Project, logger.L),
+		Notion:        notion.New(cfg.Notion.Secret, cfg.Notion.Databases.Project, logger.L, repo.DB()),
 		Sendgrid:      sendgrid.New(cfg.Sendgrid.APIKey, cfg, logger.L),
 		Wise:          wise.New(cfg, logger.L),
 		BaseClient:    baseClient,
@@ -217,5 +216,12 @@ func New(cfg *config.Config, store *store.Store, repo store.DBRepo) *Service {
 		Youtube:       youtubeSvc,
 		Dify:          difySvc,
 		LandingZone:   landingZoneSvc,
+	}, nil
+}
+
+// NewForTest returns a Service with all external services set to nil or mocked for testing purposes.
+func NewForTest() *Service {
+	return &Service{
+		Cache: cache.New(5*time.Minute, 10*time.Minute),
 	}
 }

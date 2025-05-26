@@ -775,6 +775,12 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/invoice.IHandler.UpdateStatus-fm",
 			},
 		},
+		"/api/v1/invoices/:id/calculate-commissions": {
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/invoice.IHandler.CalculateCommissions-fm",
+			},
+		},
 		"/api/v1/invoices": {
 			"GET": {
 				Method:  "GET",
@@ -1120,6 +1126,12 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/dynamicevents.IHandler.Events-fm",
 			},
 		},
+		"/cronjobs/sync-project-heads": {
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/project.IHandler.SyncProjectHeadsFromNotion-fm",
+			},
+		},
 	}
 
 	l := logger.NewLogrusLogger()
@@ -1127,7 +1139,7 @@ func Test_loadV1Routes(t *testing.T) {
 	h := handler.New(nil, nil, nil, nil, nil, l, cfg)
 
 	router := gin.New()
-	loadV1Routes(router, h, nil, nil, nil)
+	loadV1Routes(router, h, nil, nil, cfg)
 
 	routeInfo := router.Routes()
 

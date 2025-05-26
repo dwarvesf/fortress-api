@@ -55,7 +55,11 @@ func main() {
 	repo := store.NewPostgresStore(cfg)
 
 	ctx, cancel := context.WithCancel(context.Background())
-	svc := service.New(cfg, s, repo)
+	svc, err := service.New(cfg, s, repo)
+	if err != nil {
+		logger.L.Error(err, "failed to initialize service")
+		os.Exit(1)
+	}
 
 	queue := make(chan model.WorkerMessage, 1000)
 	w := worker.New(ctx, queue, svc, log)
