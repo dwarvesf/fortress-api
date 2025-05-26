@@ -591,8 +591,8 @@ func extractEmailFromOptionName(optionName string) string {
 	return ""
 }
 
-// GetProjectHeadDisplayNames fetches the display names for sales person, tech lead, account managers, and deal closing for a given Notion project pageID.
-func (n *notionService) GetProjectHeadDisplayNames(pageID string) (salePersonName, techLeadName, accountManagerNames, dealClosingEmails string, err error) {
+// GetProjectHeadEmails fetches the email addresses for sales person, tech lead, account managers, and deal closing for a given Notion project pageID.
+func (n *notionService) GetProjectHeadEmails(pageID string) (salePersonEmail, techLeadEmail, accountManagerEmails, dealClosingEmails string, err error) {
 	notionProps, err := n.GetProjectInDB(pageID)
 	if err != nil {
 		return "", "", "", "", err
@@ -601,11 +601,46 @@ func (n *notionService) GetProjectHeadDisplayNames(pageID string) (salePersonNam
 		return "", "", "", "", nil
 	}
 
-	salePersonName = extractTextFromNotionProperty(*notionProps, "Source")
-	techLeadName = extractTextFromNotionProperty(*notionProps, "PM/Delivery")
-	accountManagerNames = extractTextFromNotionProperty(*notionProps, "Closing")
+	// Attempt to extract email for Sales Person (Source property)
+	salePersonProp, ok := (*notionProps)["Source"]
+	if ok && salePersonProp.Type == nt.DBPropTypeMultiSelect {
+		var extractedEmails []string
+		for _, option := range salePersonProp.MultiSelect {
+			email := extractEmailFromOptionName(option.Name)
+			if email != "" {
+				extractedEmails = append(extractedEmails, email)
+			}
+		}
+		salePersonEmail = strings.Join(extractedEmails, ", ")
+	}
 
-	// Handle Deal Closing
+	// Attempt to extract email for Tech Lead (PM/Delivery property)
+	techLeadProp, ok := (*notionProps)["PM/Delivery"]
+	if ok && techLeadProp.Type == nt.DBPropTypeMultiSelect {
+		var extractedEmails []string
+		for _, option := range techLeadProp.MultiSelect {
+			email := extractEmailFromOptionName(option.Name)
+			if email != "" {
+				extractedEmails = append(extractedEmails, email)
+			}
+		}
+		techLeadEmail = strings.Join(extractedEmails, ", ")
+	}
+
+	// Attempt to extract email for Account Managers (Closing property)
+	accountManagerProp, ok := (*notionProps)["Closing"]
+	if ok && accountManagerProp.Type == nt.DBPropTypeMultiSelect {
+		var extractedEmails []string
+		for _, option := range accountManagerProp.MultiSelect {
+			email := extractEmailFromOptionName(option.Name)
+			if email != "" {
+				extractedEmails = append(extractedEmails, email)
+			}
+		}
+		accountManagerEmails = strings.Join(extractedEmails, ", ")
+	}
+
+	// Handle Deal Closing (existing logic)
 	dealClosingProp, ok := (*notionProps)["Deal Closing"]
 	var extractedEmails []string
 	if ok && dealClosingProp.Type == nt.DBPropTypeMultiSelect {
@@ -624,12 +659,12 @@ func (n *notionService) GetProjectHeadDisplayNames(pageID string) (salePersonNam
 		if err := n.db.Where("id = ?", pageID).First(&project).Error; err == nil {
 			tx := n.db.Begin()
 			if tx.Error != nil {
-				return salePersonName, techLeadName, accountManagerNames, dealClosingEmails, tx.Error
+				return salePersonEmail, techLeadEmail, accountManagerEmails, dealClosingEmails, tx.Error
 			}
 			// Soft delete existing deal-closing heads for this project
 			if err := tx.Where("project_id = ? AND position = ?", project.ID, model.HeadPositionDealClosing).Delete(&model.ProjectHead{}).Error; err != nil {
 				tx.Rollback()
-				return salePersonName, techLeadName, accountManagerNames, dealClosingEmails, err
+				return salePersonEmail, techLeadEmail, accountManagerEmails, dealClosingEmails, err
 			}
 			for _, email := range extractedEmails {
 				employee := model.Employee{}
@@ -641,17 +676,17 @@ func (n *notionService) GetProjectHeadDisplayNames(pageID string) (salePersonNam
 					}
 					if err := tx.Create(&projectHead).Error; err != nil {
 						tx.Rollback()
-						return salePersonName, techLeadName, accountManagerNames, dealClosingEmails, err
+						return salePersonEmail, techLeadEmail, accountManagerEmails, dealClosingEmails, err
 					}
 				}
 			}
 			if err := tx.Commit().Error; err != nil {
-				return salePersonName, techLeadName, accountManagerNames, dealClosingEmails, err
+				return salePersonEmail, techLeadEmail, accountManagerEmails, dealClosingEmails, err
 			}
 		}
 	}
 
-	return salePersonName, techLeadName, accountManagerNames, dealClosingEmails, nil
+	return salePersonEmail, techLeadEmail, accountManagerEmails, dealClosingEmails, nil
 }
 
 // extractTextFromNotionProperty safely extracts plain text from a Notion property.

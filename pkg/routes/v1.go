@@ -211,7 +211,7 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 	{
 		invoiceGroup.GET("", amw.WithAuth, pmw.WithPerm(model.PermissionInvoiceRead), h.Invoice.List)
 		invoiceGroup.PUT("/:id/status", amw.WithAuth, pmw.WithPerm(model.PermissionInvoiceEdit), h.Invoice.UpdateStatus)
-		invoiceGroup.POST("/:id/calculate-commissions", h.Invoice.CalculateCommissions)
+		invoiceGroup.POST("/:id/calculate-commissions", amw.WithAuth, pmw.WithPerm(model.PermissionProjectsCommissionRateEdit), h.Invoice.CalculateCommissions)
 		invoiceGroup.GET("/template", amw.WithAuth, pmw.WithPerm(model.PermissionInvoiceRead), h.Invoice.GetTemplate)
 		invoiceGroup.POST("/send", amw.WithAuth, pmw.WithPerm(model.PermissionInvoiceRead), h.Invoice.Send)
 	}

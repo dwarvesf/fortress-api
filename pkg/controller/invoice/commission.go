@@ -185,35 +185,6 @@ func (c *controller) calculateCommissionFromInvoice(db *gorm.DB, l logger.Logger
 		res = append(res, c...)
 	}
 
-	// 	// --- Deal Closing Commission Logic ---
-	// var dealClosingHeads []model.ProjectHead
-	// if err := db.Where("project_id = ? AND position = ? AND deleted_at IS NULL", invoice.ProjectID, model.HeadPositionDealClosing).Find(&dealClosingHeads).Error; err != nil {
-	// 	l.Errorf(err, "failed to fetch deal-closing heads for project(%s)", invoice.ProjectID.String())
-	// 	return nil, err
-	// }
-	// if len(dealClosingHeads) > 0 {
-	// 	commissionRate := 2.0 / float64(len(dealClosingHeads))
-	// 	for _, head := range dealClosingHeads {
-	// 		amount := invoiceWithoutInbound * commissionRate / 100.0
-	// 		convertedValue, rate, err := c.service.Wise.Convert(amount, invoice.Project.BankAccount.Currency.Name, "VND")
-	// 		if err != nil {
-	// 			l.Errorf(err, "failed to convert deal-closing commission for employee(%s)", head.EmployeeID.String())
-	// 			return nil, err
-	// 		}
-	// 		if convertedValue > 0 {
-	// 			res = append(res, model.EmployeeCommission{
-	// 				EmployeeID:     head.EmployeeID,
-	// 				Amount:         model.NewVietnamDong(int64(convertedValue)),
-	// 				Project:        invoice.Project.Name,
-	// 				ConversionRate: rate,
-	// 				InvoiceID:      invoice.ID,
-	// 				Formula:        fmt.Sprintf("2/len(dealClosing) * %.2f * %v", invoiceWithoutInbound, rate),
-	// 				Note:           "Deal Closing Commission",
-	// 			})
-	// 		}
-	// 	}
-	// }
-
 	return res, nil
 }
 
@@ -233,11 +204,15 @@ func (c *controller) getPICs(invoice *model.Invoice, projectMembers []*model.Pro
 	for _, itm := range invoice.Project.Heads {
 		switch itm.Position {
 		case model.HeadPositionTechnicalLead:
+			devLeadPersonDetail, err := c.store.Employee.One(c.repo.DB(), itm.EmployeeID.String(), false)
+			if err != nil {
+				continue
+			}
 			devLeads = append(devLeads, pic{
 				ID:             itm.EmployeeID,
 				CommissionRate: itm.CommissionRate,
 				ChargeRate:     invoice.Total,
-				Note:           "Lead",
+				Note:           fmt.Sprintf("Lead - %s", devLeadPersonDetail.FullName),
 			})
 		case model.HeadPositionAccountManager:
 			accountManagers = append(accountManagers, pic{
@@ -279,11 +254,15 @@ func (c *controller) getPICs(invoice *model.Invoice, projectMembers []*model.Pro
 				Note:           fmt.Sprintf("Sale Referral - %s", salePersonDetail.FullName),
 			})
 		case model.HeadPositionDealClosing:
+			dealClosingPersonDetail, err := c.store.Employee.One(c.repo.DB(), itm.EmployeeID.String(), false)
+			if err != nil {
+				continue
+			}
 			dealClosing = append(dealClosing, pic{
 				ID:             itm.EmployeeID,
 				CommissionRate: itm.CommissionRate,
 				ChargeRate:     invoice.Total,
-				Note:           fmt.Sprintf("Deal Closing - %s", itm.Employee.FullName),
+				Note:           fmt.Sprintf("Deal Closing - %s", dealClosingPersonDetail.FullName),
 			})
 		}
 	}
