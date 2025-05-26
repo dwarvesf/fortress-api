@@ -3337,7 +3337,6 @@ func (h *handler) SyncProjectHeadsFromNotion(c *gin.Context) {
 	// 	Permissions: map[string]string{model.PermissionProjectsCommissionRateEdit.String(): "true"}, // Grant permission for testing
 	// }
 
-	// dbCtx := h.repo.DB().WithContext(c.Request.Context())
 	dbCtx := h.repo.DB()
 
 	notionProjects, err := h.service.Notion.ListProjects()
