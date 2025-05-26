@@ -27,7 +27,7 @@ func TestHandler_GetWorkingStatus(t *testing.T) {
 	// load env and test data
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg, nil, nil)
+	serviceMock := service.NewForTest()
 	storeMock := &store.Store{}
 
 	tests := []struct {
@@ -67,7 +67,7 @@ func TestHandler_GetSeniority(t *testing.T) {
 	// load env and test data
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg, nil, nil)
+	serviceMock := service.NewForTest()
 	storeMock := store.New()
 
 	tests := []struct {
@@ -108,7 +108,7 @@ func TestHandler_GetChapters(t *testing.T) {
 	// load env and test data
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg, nil, nil)
+	serviceMock := service.NewForTest()
 	storeMock := store.New()
 
 	tests := []struct {
@@ -149,7 +149,7 @@ func TestHandler_GetProjectStatuses(t *testing.T) {
 	// load env and test data
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg, nil, nil)
+	serviceMock := service.NewForTest()
 	storeMock := store.New()
 
 	tests := []struct {
@@ -190,7 +190,7 @@ func TestHandler_GetPositions(t *testing.T) {
 	// load env and test data
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg, nil, nil)
+	serviceMock := service.NewForTest()
 	storeMock := store.New()
 
 	tests := []struct {
@@ -231,7 +231,7 @@ func TestHandler_GetTechStacks(t *testing.T) {
 	// load env and test data
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg, nil, nil)
+	serviceMock := service.NewForTest()
 	storeMock := store.New()
 
 	tests := []struct {
@@ -272,7 +272,7 @@ func TestHandler_GetQuestion(t *testing.T) {
 	// load env and test data
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg, nil, nil)
+	serviceMock := service.NewForTest()
 	storeMock := store.New()
 
 	tests := []struct {
@@ -320,7 +320,7 @@ func TestHandler_CreateStack(t *testing.T) {
 	// load env and test data
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg, nil, nil)
+	serviceMock := service.NewForTest()
 	storeMock := store.New()
 
 	tests := []struct {
@@ -370,7 +370,7 @@ func TestHandler_UpdateStack(t *testing.T) {
 	// load env and test data
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg, nil, nil)
+	serviceMock := service.NewForTest()
 	storeMock := store.New()
 
 	tests := []struct {
@@ -434,7 +434,7 @@ func TestHandler_DeleteStack(t *testing.T) {
 	// load env and test data
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg, nil, nil)
+	serviceMock := service.NewForTest()
 	storeMock := store.New()
 
 	tests := []struct {
@@ -478,7 +478,7 @@ func TestHandler_CreatePosition(t *testing.T) {
 	// load env and test data
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg, nil, nil)
+	serviceMock := service.NewForTest()
 	storeMock := store.New()
 
 	tests := []struct {
@@ -527,7 +527,7 @@ func TestHandler_UpdatePosition(t *testing.T) {
 	// load env and test data
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg, nil, nil)
+	serviceMock := service.NewForTest()
 	storeMock := store.New()
 
 	tests := []struct {
@@ -589,7 +589,7 @@ func TestHandler_DeletePosition(t *testing.T) {
 	// load env and test data
 	cfg := config.LoadTestConfig()
 	loggerMock := logger.NewLogrusLogger()
-	serviceMock := service.New(&cfg, nil, nil)
+	serviceMock := service.NewForTest()
 	storeMock := store.New()
 
 	tests := []struct {

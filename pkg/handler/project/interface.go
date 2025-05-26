@@ -29,4 +29,5 @@ type IHandler interface {
 	UploadAvatar(c *gin.Context)
 	IcyWeeklyDistribution(c *gin.Context)
 	CommissionModels(c *gin.Context)
+	SyncProjectHeadsFromNotion(c *gin.Context)
 }

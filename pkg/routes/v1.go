@@ -11,32 +11,53 @@ import (
 )
 
 func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store.Store, cfg *config.Config) {
+	// if r == nil || h == nil || repo == nil || s == nil || cfg == nil {
+	// 	return
+	// }
+
 	pmw := mw.NewPermissionMiddleware(s, repo, cfg)
 	amw := mw.NewAuthMiddleware(cfg, s, repo)
+
+	// Define conditional middleware based on environment
+	var conditionalAuthMW gin.HandlerFunc
+	var conditionalPermMW func(model.PermissionCode) gin.HandlerFunc
+
+	if cfg.Env == "local" {
+		// Bypass middleware in local environment
+		conditionalAuthMW = func(c *gin.Context) { c.Next() }
+		conditionalPermMW = func(_ model.PermissionCode) gin.HandlerFunc { return func(c *gin.Context) { c.Next() } }
+	} else {
+		// Use actual middleware in other environments
+		conditionalAuthMW = amw.WithAuth
+		conditionalPermMW = func(perm model.PermissionCode) gin.HandlerFunc {
+			return pmw.WithPerm(perm)
+		}
+	}
 
 	/////////////////
 	// Cronjob GROUP
 	/////////////////
 	cronjob := r.Group("/cronjobs")
 	{
-		cronjob.POST("/audits", amw.WithAuth, pmw.WithPerm(model.PermissionCronjobExecute), h.Audit.Sync)
-		cronjob.POST("/birthday", amw.WithAuth, pmw.WithPerm(model.PermissionCronjobExecute), h.Discord.BirthdayDailyMessage)
-		cronjob.POST("/on-leaves", amw.WithAuth, pmw.WithPerm(model.PermissionCronjobExecute), h.Discord.OnLeaveMessage)
-		cronjob.POST("/sync-discord-info", amw.WithAuth, pmw.WithPerm(model.PermissionCronjobExecute), h.Discord.SyncDiscordInfo)
-		cronjob.POST("/sync-monthly-accounting-todo", amw.WithAuth, pmw.WithPerm(model.PermissionCronjobExecute), h.Accounting.CreateAccountingTodo)
-		cronjob.POST("/sync-project-member-status", amw.WithAuth, pmw.WithPerm(model.PermissionCronjobExecute), h.Project.SyncProjectMemberStatus)
-		cronjob.POST("/store-vault-transaction", amw.WithAuth, pmw.WithPerm(model.PermissionCronjobExecute), h.Vault.StoreVaultTransaction)
-		cronjob.POST("/index-engagement-messages", amw.WithAuth, pmw.WithPerm(model.PermissionCronjobExecute), h.Engagement.IndexMessages)
-		cronjob.POST("/brainery-reports", amw.WithAuth, pmw.WithPerm(model.PermissionCronjobExecute), h.Discord.ReportBraineryMetrics)
-		cronjob.POST("/delivery-metric-reports", amw.WithAuth, pmw.WithPerm(model.PermissionCronjobExecute), h.Discord.DeliveryMetricsReport)
-		cronjob.POST("/sync-delivery-metrics", amw.WithAuth, pmw.WithPerm(model.PermissionCronjobExecute), h.DeliveryMetric.Sync)
-		cronjob.POST("/sync-conversion-rates", amw.WithAuth, pmw.WithPerm(model.PermissionCronjobExecute), h.ConversionRate.Sync)
-		cronjob.POST("/sync-memo", amw.WithAuth, pmw.WithPerm(model.PermissionCronjobExecute), h.Discord.SyncMemo)
-		cronjob.POST("/sweep-memo", amw.WithAuth, pmw.WithPerm(model.PermissionCronjobExecute), h.Discord.SweepMemo)
-		cronjob.POST("/notify-weekly-memos", amw.WithAuth, pmw.WithPerm(model.PermissionCronjobExecute), h.Discord.NotifyWeeklyMemos)
-		cronjob.POST("/notify-top-memo-authors", amw.WithAuth, pmw.WithPerm(model.PermissionCronjobExecute), h.Discord.NotifyTopMemoAuthors)
-		cronjob.POST("/transcribe-youtube-broadcast", amw.WithAuth, pmw.WithPerm(model.PermissionCronjobExecute), h.Youtube.TranscribeBroadcast)
-		cronjob.POST("/sweep-ogif-event", amw.WithAuth, pmw.WithPerm(model.PermissionCronjobExecute), h.Discord.SweepOgifEvent)
+		cronjob.POST("/audits", conditionalAuthMW, conditionalPermMW(model.PermissionCronjobExecute), h.Audit.Sync)
+		cronjob.POST("/birthday", conditionalAuthMW, conditionalPermMW(model.PermissionCronjobExecute), h.Discord.BirthdayDailyMessage)
+		cronjob.POST("/on-leaves", conditionalAuthMW, conditionalPermMW(model.PermissionCronjobExecute), h.Discord.OnLeaveMessage)
+		cronjob.POST("/sync-discord-info", conditionalAuthMW, conditionalPermMW(model.PermissionCronjobExecute), h.Discord.SyncDiscordInfo)
+		cronjob.POST("/sync-monthly-accounting-todo", conditionalAuthMW, conditionalPermMW(model.PermissionCronjobExecute), h.Accounting.CreateAccountingTodo)
+		cronjob.POST("/sync-project-member-status", conditionalAuthMW, conditionalPermMW(model.PermissionCronjobExecute), h.Project.SyncProjectMemberStatus)
+		cronjob.POST("/store-vault-transaction", conditionalAuthMW, conditionalPermMW(model.PermissionCronjobExecute), h.Vault.StoreVaultTransaction)
+		cronjob.POST("/index-engagement-messages", conditionalAuthMW, conditionalPermMW(model.PermissionCronjobExecute), h.Engagement.IndexMessages)
+		cronjob.POST("/brainery-reports", conditionalAuthMW, conditionalPermMW(model.PermissionCronjobExecute), h.Discord.ReportBraineryMetrics)
+		cronjob.POST("/delivery-metric-reports", conditionalAuthMW, conditionalPermMW(model.PermissionCronjobExecute), h.Discord.DeliveryMetricsReport)
+		cronjob.POST("/sync-delivery-metrics", conditionalAuthMW, conditionalPermMW(model.PermissionDeliveryMetricsSync), h.DeliveryMetric.Sync)
+		cronjob.POST("/sync-conversion-rates", conditionalAuthMW, conditionalPermMW(model.PermissionCronjobExecute), h.ConversionRate.Sync)
+		cronjob.POST("/sync-memo", conditionalAuthMW, conditionalPermMW(model.PermissionCronjobExecute), h.Discord.SyncMemo)
+		cronjob.POST("/sweep-memo", conditionalAuthMW, conditionalPermMW(model.PermissionCronjobExecute), h.Discord.SweepMemo)
+		cronjob.POST("/notify-weekly-memos", conditionalAuthMW, conditionalPermMW(model.PermissionCronjobExecute), h.Discord.NotifyWeeklyMemos)
+		cronjob.POST("/notify-top-memo-authors", conditionalAuthMW, conditionalPermMW(model.PermissionCronjobExecute), h.Discord.NotifyTopMemoAuthors)
+		cronjob.POST("/transcribe-youtube-broadcast", conditionalAuthMW, conditionalPermMW(model.PermissionCronjobExecute), h.Youtube.TranscribeBroadcast)
+		cronjob.POST("/sweep-ogif-event", conditionalAuthMW, conditionalPermMW(model.PermissionCronjobExecute), h.Discord.SweepOgifEvent)
+		cronjob.POST("/sync-project-heads", conditionalAuthMW, conditionalPermMW(model.PermissionCronjobExecute), h.Project.SyncProjectHeadsFromNotion)
 	}
 
 	/////////////////
@@ -75,44 +96,44 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 	// assets
 	assetGroup := v1.Group("/assets")
 	{
-		assetGroup.POST("/upload", amw.WithAuth, h.Asset.Upload)
+		assetGroup.POST("/upload", conditionalAuthMW, h.Asset.Upload)
 	}
 
 	lineManagerGroup := v1.Group("/line-managers")
 	{
-		lineManagerGroup.GET("", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesRead), h.Employee.GetLineManagers)
+		lineManagerGroup.GET("", conditionalAuthMW, conditionalPermMW(model.PermissionEmployeesRead), h.Employee.GetLineManagers)
 	}
 
 	// auth
 	authRoute := v1.Group("/auth")
 	{
 		authRoute.POST("", h.Auth.Auth)
-		authRoute.GET("/me", amw.WithAuth, pmw.WithPerm(model.PermissionAuthRead), h.Auth.Me)
-		authRoute.POST("/api-key", amw.WithAuth, pmw.WithPerm(model.PermissionAuthCreate), h.Auth.CreateAPIKey)
+		authRoute.GET("/me", conditionalAuthMW, conditionalPermMW(model.PermissionAuthRead), h.Auth.Me)
+		authRoute.POST("/api-key", conditionalAuthMW, conditionalPermMW(model.PermissionAuthCreate), h.Auth.CreateAPIKey)
 	}
 
 	// user profile
 	profileGroup := v1.Group("/profile")
 	{
-		profileGroup.GET("", amw.WithAuth, h.Profile.GetProfile)
-		profileGroup.PUT("", amw.WithAuth, h.Profile.UpdateInfo)
-		profileGroup.POST("/upload-avatar", amw.WithAuth, h.Profile.UploadAvatar)
-		profileGroup.POST("/upload", amw.WithAuth, h.Profile.Upload)
+		profileGroup.GET("", conditionalAuthMW, h.Profile.GetProfile)
+		profileGroup.PUT("", conditionalAuthMW, h.Profile.UpdateInfo)
+		profileGroup.POST("/upload-avatar", conditionalAuthMW, h.Profile.UploadAvatar)
+		profileGroup.POST("/upload", conditionalAuthMW, h.Profile.Upload)
 	}
 
 	// employees
 	employeeRoute := v1.Group("/employees")
 	{
-		employeeRoute.POST("", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesCreate), h.Employee.Create)
-		employeeRoute.POST("/search", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesRead), h.Employee.List)
-		employeeRoute.GET("/:id", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesRead), h.Employee.Details)
-		employeeRoute.PUT("/:id/general-info", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesEdit), h.Employee.UpdateGeneralInfo)
-		employeeRoute.PUT("/:id/personal-info", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesEdit), h.Employee.UpdatePersonalInfo)
-		employeeRoute.PUT("/:id/skills", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesEdit), h.Employee.UpdateSkills)
-		employeeRoute.PUT("/:id/employee-status", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesEdit), h.Employee.UpdateEmployeeStatus)
-		employeeRoute.POST("/:id/upload-avatar", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesEdit), h.Employee.UploadAvatar)
-		employeeRoute.PUT("/:id/roles", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeeRolesEdit), h.Employee.UpdateRole)
-		employeeRoute.PUT("/:id/base-salary", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesBaseSalaryEdit), h.Employee.UpdateBaseSalary)
+		employeeRoute.POST("", conditionalAuthMW, conditionalPermMW(model.PermissionEmployeesCreate), h.Employee.Create)
+		employeeRoute.POST("/search", conditionalAuthMW, conditionalPermMW(model.PermissionEmployeesRead), h.Employee.List)
+		employeeRoute.GET("/:id", conditionalAuthMW, conditionalPermMW(model.PermissionEmployeesRead), h.Employee.Details)
+		employeeRoute.PUT("/:id/general-info", conditionalAuthMW, conditionalPermMW(model.PermissionEmployeesEdit), h.Employee.UpdateGeneralInfo)
+		employeeRoute.PUT("/:id/personal-info", conditionalAuthMW, conditionalPermMW(model.PermissionEmployeesEdit), h.Employee.UpdatePersonalInfo)
+		employeeRoute.PUT("/:id/skills", conditionalAuthMW, conditionalPermMW(model.PermissionEmployeesEdit), h.Employee.UpdateSkills)
+		employeeRoute.PUT("/:id/employee-status", conditionalAuthMW, conditionalPermMW(model.PermissionEmployeesEdit), h.Employee.UpdateEmployeeStatus)
+		employeeRoute.POST("/:id/upload-avatar", conditionalAuthMW, conditionalPermMW(model.PermissionEmployeesEdit), h.Employee.UploadAvatar)
+		employeeRoute.PUT("/:id/roles", conditionalAuthMW, conditionalPermMW(model.PermissionEmployeeRolesEdit), h.Employee.UpdateRole)
+		employeeRoute.PUT("/:id/base-salary", conditionalAuthMW, conditionalPermMW(model.PermissionEmployeesBaseSalaryEdit), h.Employee.UpdateBaseSalary)
 	}
 
 	// metadata
@@ -131,164 +152,165 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 		metadataRoute.GET("/countries/:country_id/cities", h.Metadata.GetCities)
 		metadataRoute.GET("/project-statuses", h.Metadata.ProjectStatuses)
 		metadataRoute.GET("/questions", h.Metadata.GetQuestions)
-		metadataRoute.PUT("/stacks/:id", amw.WithAuth, pmw.WithPerm(model.PermissionMetadataEdit), h.Metadata.UpdateStack)
-		metadataRoute.POST("/stacks", amw.WithAuth, pmw.WithPerm(model.PermissionMetadataCreate), h.Metadata.CreateStack)
-		metadataRoute.DELETE("/stacks/:id", amw.WithAuth, pmw.WithPerm(model.PermissionMetadataDelete), h.Metadata.DeleteStack)
-		metadataRoute.PUT("/positions/:id", amw.WithAuth, pmw.WithPerm(model.PermissionMetadataEdit), h.Metadata.UpdatePosition)
-		metadataRoute.POST("/positions", amw.WithAuth, pmw.WithPerm(model.PermissionMetadataCreate), h.Metadata.CreatePosition)
-		metadataRoute.DELETE("/positions/:id", amw.WithAuth, pmw.WithPerm(model.PermissionMetadataDelete), h.Metadata.DeletePosition)
+		metadataRoute.PUT("/stacks/:id", conditionalAuthMW, conditionalPermMW(model.PermissionMetadataEdit), h.Metadata.UpdateStack)
+		metadataRoute.POST("/stacks", conditionalAuthMW, conditionalPermMW(model.PermissionMetadataCreate), h.Metadata.CreateStack)
+		metadataRoute.DELETE("/stacks/:id", conditionalAuthMW, conditionalPermMW(model.PermissionMetadataDelete), h.Metadata.DeleteStack)
+		metadataRoute.PUT("/positions/:id", conditionalAuthMW, conditionalPermMW(model.PermissionMetadataEdit), h.Metadata.UpdatePosition)
+		metadataRoute.POST("/positions", conditionalAuthMW, conditionalPermMW(model.PermissionMetadataCreate), h.Metadata.CreatePosition)
+		metadataRoute.DELETE("/positions/:id", conditionalAuthMW, conditionalPermMW(model.PermissionMetadataDelete), h.Metadata.DeletePosition)
 	}
 
 	// projects
 	projectGroup := v1.Group("projects")
 	{
-		projectGroup.POST("", amw.WithAuth, pmw.WithPerm(model.PermissionProjectsCreate), h.Project.Create)
-		projectGroup.GET("", amw.WithAuth, pmw.WithPerm(model.PermissionProjectsRead), h.Project.List)
-		projectGroup.GET("/:id", amw.WithAuth, pmw.WithPerm(model.PermissionProjectsRead), h.Project.Details)
-		projectGroup.PUT("/:id/sending-survey-state", amw.WithAuth, pmw.WithPerm(model.PermissionProjectsEdit), h.Project.UpdateSendingSurveyState)
-		projectGroup.POST("/:id/upload-avatar", amw.WithAuth, pmw.WithPerm(model.PermissionProjectsEdit), h.Project.UploadAvatar)
-		projectGroup.PUT("/:id/status", amw.WithAuth, pmw.WithPerm(model.PermissionProjectsEdit), h.Project.UpdateProjectStatus)
-		projectGroup.POST("/:id/members", amw.WithAuth, pmw.WithPerm(model.PermissionProjectMembersCreate), h.Project.AssignMember)
-		projectGroup.GET("/:id/members", amw.WithAuth, pmw.WithPerm(model.PermissionProjectMembersRead), h.Project.GetMembers)
-		projectGroup.PUT("/:id/members", amw.WithAuth, pmw.WithPerm(model.PermissionProjectMembersEdit), h.Project.UpdateMember)
-		projectGroup.DELETE("/:id/members/:memberID", amw.WithAuth, pmw.WithPerm(model.PermissionProjectMembersDelete), h.Project.DeleteMember)
-		projectGroup.DELETE("/:id/slots/:slotID", amw.WithAuth, pmw.WithPerm(model.PermissionProjectMembersDelete), h.Project.DeleteSlot)
-		projectGroup.PUT("/:id/general-info", amw.WithAuth, pmw.WithPerm(model.PermissionProjectsEdit), h.Project.UpdateGeneralInfo)
-		projectGroup.PUT("/:id/contact-info", amw.WithAuth, pmw.WithPerm(model.PermissionProjectsEdit), h.Project.UpdateContactInfo)
-		projectGroup.GET("/:id/work-units", amw.WithAuth, pmw.WithPerm(model.PermissionProjectWorkUnitsRead), h.Project.GetWorkUnits)
-		projectGroup.POST("/:id/work-units", amw.WithAuth, pmw.WithPerm(model.PermissionProjectWorkUnitsCreate), h.Project.CreateWorkUnit)
-		projectGroup.PUT("/:id/work-units/:workUnitID", amw.WithAuth, pmw.WithPerm(model.PermissionProjectWorkUnitsEdit), h.Project.UpdateWorkUnit)
-		projectGroup.PUT("/:id/work-units/:workUnitID/archive", amw.WithAuth, pmw.WithPerm(model.PermissionProjectWorkUnitsEdit), h.Project.ArchiveWorkUnit)
-		projectGroup.PUT("/:id/work-units/:workUnitID/unarchive", amw.WithAuth, pmw.WithPerm(model.PermissionProjectWorkUnitsEdit), h.Project.UnarchiveWorkUnit)
-		projectGroup.GET("/:id/commission-models", amw.WithAuth, pmw.WithPerm(model.PermissionProjectsCommissionModelsRead), h.Project.CommissionModels)
-		projectGroup.GET("/icy-distribution/weekly", amw.WithAuth, pmw.WithPerm(model.PermissionIcyDistributionRead), h.Project.IcyWeeklyDistribution)
+		projectGroup.POST("", conditionalAuthMW, conditionalPermMW(model.PermissionProjectsCreate), h.Project.Create)
+		projectGroup.GET("", conditionalAuthMW, conditionalPermMW(model.PermissionProjectsRead), h.Project.List)
+		projectGroup.GET("/:id", conditionalAuthMW, conditionalPermMW(model.PermissionProjectsRead), h.Project.Details)
+		projectGroup.PUT("/:id/sending-survey-state", conditionalAuthMW, conditionalPermMW(model.PermissionProjectsEdit), h.Project.UpdateSendingSurveyState)
+		projectGroup.POST("/:id/upload-avatar", conditionalAuthMW, conditionalPermMW(model.PermissionProjectsEdit), h.Project.UploadAvatar)
+		projectGroup.PUT("/:id/status", conditionalAuthMW, conditionalPermMW(model.PermissionProjectsEdit), h.Project.UpdateProjectStatus)
+		projectGroup.POST("/:id/members", conditionalAuthMW, conditionalPermMW(model.PermissionProjectMembersCreate), h.Project.AssignMember)
+		projectGroup.GET("/:id/members", conditionalAuthMW, conditionalPermMW(model.PermissionProjectMembersRead), h.Project.GetMembers)
+		projectGroup.PUT("/:id/members", conditionalAuthMW, conditionalPermMW(model.PermissionProjectMembersEdit), h.Project.UpdateMember)
+		projectGroup.DELETE("/:id/members/:memberID", conditionalAuthMW, conditionalPermMW(model.PermissionProjectMembersDelete), h.Project.DeleteMember)
+		projectGroup.DELETE("/:id/slots/:slotID", conditionalAuthMW, conditionalPermMW(model.PermissionProjectMembersDelete), h.Project.DeleteSlot)
+		projectGroup.PUT("/:id/general-info", conditionalAuthMW, conditionalPermMW(model.PermissionProjectsEdit), h.Project.UpdateGeneralInfo)
+		projectGroup.PUT("/:id/contact-info", conditionalAuthMW, conditionalPermMW(model.PermissionProjectsEdit), h.Project.UpdateContactInfo)
+		projectGroup.GET("/:id/work-units", conditionalAuthMW, conditionalPermMW(model.PermissionProjectWorkUnitsRead), h.Project.GetWorkUnits)
+		projectGroup.POST("/:id/work-units", conditionalAuthMW, conditionalPermMW(model.PermissionProjectWorkUnitsCreate), h.Project.CreateWorkUnit)
+		projectGroup.PUT("/:id/work-units/:workUnitID", conditionalAuthMW, conditionalPermMW(model.PermissionProjectWorkUnitsEdit), h.Project.UpdateWorkUnit)
+		projectGroup.PUT("/:id/work-units/:workUnitID/archive", conditionalAuthMW, conditionalPermMW(model.PermissionProjectWorkUnitsEdit), h.Project.ArchiveWorkUnit)
+		projectGroup.PUT("/:id/work-units/:workUnitID/unarchive", conditionalAuthMW, conditionalPermMW(model.PermissionProjectWorkUnitsEdit), h.Project.UnarchiveWorkUnit)
+		projectGroup.GET("/:id/commission-models", conditionalAuthMW, conditionalPermMW(model.PermissionProjectsCommissionModelsRead), h.Project.CommissionModels)
+		projectGroup.GET("/icy-distribution/weekly", conditionalAuthMW, conditionalPermMW(model.PermissionIcyDistributionRead), h.Project.IcyWeeklyDistribution)
 	}
 
 	clientGroup := v1.Group("/clients")
 	{
-		clientGroup.POST("", amw.WithAuth, pmw.WithPerm(model.PermissionClientCreate), h.Client.Create)
-		clientGroup.GET("", amw.WithAuth, pmw.WithPerm(model.PermissionClientRead), h.Client.List)
-		clientGroup.GET("/:id", amw.WithAuth, pmw.WithPerm(model.PermissionClientEdit), h.Client.Detail)
-		clientGroup.PUT("/:id", amw.WithAuth, pmw.WithPerm(model.PermissionClientRead), h.Client.Update)
-		clientGroup.DELETE("/:id", amw.WithAuth, pmw.WithPerm(model.PermissionClientDelete), h.Client.Delete)
+		clientGroup.POST("", conditionalAuthMW, conditionalPermMW(model.PermissionClientCreate), h.Client.Create)
+		clientGroup.GET("", conditionalAuthMW, conditionalPermMW(model.PermissionClientRead), h.Client.List)
+		clientGroup.GET("/:id", conditionalAuthMW, conditionalPermMW(model.PermissionClientEdit), h.Client.Detail)
+		clientGroup.PUT("/:id", conditionalAuthMW, conditionalPermMW(model.PermissionClientRead), h.Client.Update)
+		clientGroup.DELETE("/:id", conditionalAuthMW, conditionalPermMW(model.PermissionClientDelete), h.Client.Delete)
 	}
 
 	feedbackGroup := v1.Group("/feedbacks")
 	{
-		feedbackGroup.GET("", amw.WithAuth, pmw.WithPerm(model.PermissionFeedbacksRead), h.Feedback.List)
-		feedbackGroup.GET("/:id/topics/:topicID", amw.WithAuth, pmw.WithPerm(model.PermissionFeedbacksRead), h.Feedback.Detail)
-		feedbackGroup.POST("/:id/topics/:topicID/submit", amw.WithAuth, pmw.WithPerm(model.PermissionFeedbacksCreate), h.Feedback.Submit)
-		feedbackGroup.GET("/unreads", amw.WithAuth, pmw.WithPerm(model.PermissionFeedbacksRead), h.Feedback.CountUnreadFeedback)
+		feedbackGroup.GET("", conditionalAuthMW, conditionalPermMW(model.PermissionFeedbacksRead), h.Feedback.List)
+		feedbackGroup.GET("/:id/topics/:topicID", conditionalAuthMW, conditionalPermMW(model.PermissionFeedbacksRead), h.Feedback.Detail)
+		feedbackGroup.POST("/:id/topics/:topicID/submit", conditionalAuthMW, conditionalPermMW(model.PermissionFeedbacksCreate), h.Feedback.Submit)
+		feedbackGroup.GET("/unreads", conditionalAuthMW, conditionalPermMW(model.PermissionFeedbacksRead), h.Feedback.CountUnreadFeedback)
 	}
 
 	surveyGroup := v1.Group("/surveys")
 	{
-		surveyGroup.POST("", amw.WithAuth, pmw.WithPerm(model.PermissionSurveysCreate), h.Survey.CreateSurvey)
-		surveyGroup.GET("", amw.WithAuth, pmw.WithPerm(model.PermissionSurveysRead), h.Survey.ListSurvey)
-		surveyGroup.GET("/:id", amw.WithAuth, pmw.WithPerm(model.PermissionSurveysRead), h.Survey.GetSurveyDetail)
-		surveyGroup.DELETE("/:id", amw.WithAuth, pmw.WithPerm(model.PermissionSurveysDelete), h.Survey.DeleteSurvey)
-		surveyGroup.POST("/:id/send", amw.WithAuth, pmw.WithPerm(model.PermissionSurveysCreate), h.Survey.SendSurvey)
-		surveyGroup.GET("/:id/topics/:topicID/reviews/:reviewID", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeeEventQuestionsRead), h.Survey.GetSurveyReviewDetail)
-		surveyGroup.DELETE("/:id/topics/:topicID", amw.WithAuth, pmw.WithPerm(model.PermissionSurveysDelete), h.Survey.DeleteSurveyTopic)
-		surveyGroup.GET("/:id/topics/:topicID", amw.WithAuth, pmw.WithPerm(model.PermissionSurveysRead), h.Survey.GetSurveyTopicDetail)
-		surveyGroup.PUT("/:id/topics/:topicID/employees", amw.WithAuth, pmw.WithPerm(model.PermissionSurveysEdit), h.Survey.UpdateTopicReviewers)
-		surveyGroup.PUT("/:id/done", amw.WithAuth, pmw.WithPerm(model.PermissionSurveysEdit), h.Survey.MarkDone)
-		surveyGroup.DELETE("/:id/topics/:topicID/employees", amw.WithAuth, pmw.WithPerm(model.PermissionSurveysEdit), h.Survey.DeleteTopicReviewers)
+		surveyGroup.POST("", conditionalAuthMW, conditionalPermMW(model.PermissionSurveysCreate), h.Survey.CreateSurvey)
+		surveyGroup.GET("", conditionalAuthMW, conditionalPermMW(model.PermissionSurveysRead), h.Survey.ListSurvey)
+		surveyGroup.GET("/:id", conditionalAuthMW, conditionalPermMW(model.PermissionSurveysRead), h.Survey.GetSurveyDetail)
+		surveyGroup.DELETE("/:id", conditionalAuthMW, conditionalPermMW(model.PermissionSurveysDelete), h.Survey.DeleteSurvey)
+		surveyGroup.POST("/:id/send", conditionalAuthMW, conditionalPermMW(model.PermissionSurveysCreate), h.Survey.SendSurvey)
+		surveyGroup.GET("/:id/topics/:topicID/reviews/:reviewID", conditionalAuthMW, conditionalPermMW(model.PermissionEmployeeEventQuestionsRead), h.Survey.GetSurveyReviewDetail)
+		surveyGroup.DELETE("/:id/topics/:topicID", conditionalAuthMW, conditionalPermMW(model.PermissionSurveysDelete), h.Survey.DeleteSurveyTopic)
+		surveyGroup.GET("/:id/topics/:topicID", conditionalAuthMW, conditionalPermMW(model.PermissionSurveysRead), h.Survey.GetSurveyTopicDetail)
+		surveyGroup.PUT("/:id/topics/:topicID/employees", conditionalAuthMW, conditionalPermMW(model.PermissionSurveysEdit), h.Survey.UpdateTopicReviewers)
+		surveyGroup.PUT("/:id/done", conditionalAuthMW, conditionalPermMW(model.PermissionSurveysEdit), h.Survey.MarkDone)
+		surveyGroup.DELETE("/:id/topics/:topicID/employees", conditionalAuthMW, conditionalPermMW(model.PermissionSurveysEdit), h.Survey.DeleteTopicReviewers)
 	}
 
 	bankGroup := v1.Group("/bank-accounts")
 	{
-		bankGroup.GET("", pmw.WithPerm(model.PermissionBankAccountRead), h.BankAccount.List)
+		bankGroup.GET("", conditionalPermMW(model.PermissionBankAccountRead), h.BankAccount.List)
 	}
 
 	companyInfoGroup := v1.Group("/company-infos")
 	{
-		companyInfoGroup.GET("", pmw.WithPerm(model.PermissionCompanyInfoRead), h.CompanyInfo.List)
+		companyInfoGroup.GET("", conditionalPermMW(model.PermissionCompanyInfoRead), h.CompanyInfo.List)
 	}
 
 	invoiceGroup := v1.Group("/invoices")
 	{
-		invoiceGroup.GET("", amw.WithAuth, pmw.WithPerm(model.PermissionInvoiceRead), h.Invoice.List)
-		invoiceGroup.PUT("/:id/status", amw.WithAuth, pmw.WithPerm(model.PermissionInvoiceEdit), h.Invoice.UpdateStatus)
-		invoiceGroup.GET("/template", amw.WithAuth, pmw.WithPerm(model.PermissionInvoiceRead), h.Invoice.GetTemplate)
-		invoiceGroup.POST("/send", amw.WithAuth, pmw.WithPerm(model.PermissionInvoiceRead), h.Invoice.Send)
+		invoiceGroup.GET("", conditionalAuthMW, conditionalPermMW(model.PermissionInvoiceRead), h.Invoice.List)
+		invoiceGroup.PUT("/:id/status", conditionalAuthMW, conditionalPermMW(model.PermissionInvoiceEdit), h.Invoice.UpdateStatus)
+		invoiceGroup.POST("/:id/calculate-commissions", conditionalAuthMW, conditionalPermMW(model.PermissionProjectsCommissionRateEdit), h.Invoice.CalculateCommissions)
+		invoiceGroup.GET("/template", conditionalAuthMW, conditionalPermMW(model.PermissionInvoiceRead), h.Invoice.GetTemplate)
+		invoiceGroup.POST("/send", conditionalAuthMW, conditionalPermMW(model.PermissionInvoiceRead), h.Invoice.Send)
 	}
 
 	valuation := v1.Group("/valuation")
 	{
-		valuation.GET("/:year", pmw.WithPerm(model.PermissionValuationRead), h.Valuation.One)
+		valuation.GET("/:year", conditionalPermMW(model.PermissionValuationRead), h.Valuation.One)
 	}
 
 	notion := v1.Group("/notion")
 	{
 		earn := notion.Group("/earn")
 		{
-			earn.GET("", amw.WithAuth, pmw.WithPerm(model.PermissionNotionRead), h.Notion.ListEarns)
+			earn.GET("", conditionalAuthMW, conditionalPermMW(model.PermissionNotionRead), h.Notion.ListEarns)
 		}
 		techRadar := notion.Group("/tech-radar")
 		{
-			techRadar.GET("", amw.WithAuth, pmw.WithPerm(model.PermissionNotionRead), h.Notion.ListTechRadars)
-			techRadar.POST("", amw.WithAuth, pmw.WithPerm(model.PermissionNotionCreate), h.Notion.CreateTechRadar)
+			techRadar.GET("", conditionalAuthMW, conditionalPermMW(model.PermissionNotionRead), h.Notion.ListTechRadars)
+			techRadar.POST("", conditionalAuthMW, conditionalPermMW(model.PermissionNotionCreate), h.Notion.CreateTechRadar)
 		}
 		audience := notion.Group("/audiences")
 		{
-			audience.GET("", amw.WithAuth, pmw.WithPerm(model.PermissionNotionRead), h.Notion.ListAudiences)
+			audience.GET("", conditionalAuthMW, conditionalPermMW(model.PermissionNotionRead), h.Notion.ListAudiences)
 		}
 		event := notion.Group("/events")
 		{
-			event.GET("", amw.WithAuth, pmw.WithPerm(model.PermissionNotionRead), h.Notion.ListEvents)
+			event.GET("", conditionalAuthMW, conditionalPermMW(model.PermissionNotionRead), h.Notion.ListEvents)
 		}
 		digest := notion.Group("/digests")
 		{
-			digest.GET("", amw.WithAuth, pmw.WithPerm(model.PermissionNotionRead), h.Notion.ListDigests)
+			digest.GET("", conditionalAuthMW, conditionalPermMW(model.PermissionNotionRead), h.Notion.ListDigests)
 		}
 		update := notion.Group("/updates")
 		{
-			update.GET("", amw.WithAuth, pmw.WithPerm(model.PermissionNotionRead), h.Notion.ListUpdates)
+			update.GET("", conditionalAuthMW, conditionalPermMW(model.PermissionNotionRead), h.Notion.ListUpdates)
 		}
 		memo := notion.Group("/memos")
 		{
-			memo.GET("", amw.WithAuth, pmw.WithPerm(model.PermissionNotionRead), h.Notion.ListMemos)
+			memo.GET("", conditionalAuthMW, conditionalPermMW(model.PermissionNotionRead), h.Notion.ListMemos)
 		}
 		issue := notion.Group("/issues")
 		{
-			issue.GET("", amw.WithAuth, pmw.WithPerm(model.PermissionNotionRead), h.Notion.ListIssues)
+			issue.GET("", conditionalAuthMW, conditionalPermMW(model.PermissionNotionRead), h.Notion.ListIssues)
 		}
 		staffingDemand := notion.Group("/staffing-demands")
 		{
-			staffingDemand.GET("", amw.WithAuth, pmw.WithPerm(model.PermissionNotionRead), h.Notion.ListStaffingDemands)
+			staffingDemand.GET("", conditionalAuthMW, conditionalPermMW(model.PermissionNotionRead), h.Notion.ListStaffingDemands)
 		}
 		hiring := notion.Group("/hiring-positions")
 		{
-			hiring.GET("", amw.WithAuth, pmw.WithPerm(model.PermissionNotionRead), h.Notion.ListHiringPositions)
+			hiring.GET("", conditionalAuthMW, conditionalPermMW(model.PermissionNotionRead), h.Notion.ListHiringPositions)
 		}
 
 		projectNotion := notion.Group("/projects")
 		{
-			projectNotion.GET("/milestones", amw.WithAuth, pmw.WithPerm(model.PermissionNotionRead), h.Notion.ListProjectMilestones)
+			projectNotion.GET("/milestones", conditionalAuthMW, conditionalPermMW(model.PermissionNotionRead), h.Notion.ListProjectMilestones)
 		}
 
 		dfUpdates := notion.Group("df-updates")
 		{
-			dfUpdates.POST("/:id/send", amw.WithAuth, pmw.WithPerm(model.PermissionNotionSend), h.Notion.SendNewsLetter)
+			dfUpdates.POST("/:id/send", conditionalAuthMW, conditionalPermMW(model.PermissionNotionSend), h.Notion.SendNewsLetter)
 		}
 
 		notionChangelog := notion.Group("changelogs")
 		{
-			notionChangelog.GET("/projects/available", amw.WithAuth, pmw.WithPerm(model.PermissionNotionRead), h.Notion.GetAvailableProjectsChangelog)
-			notionChangelog.POST("/project", amw.WithAuth, pmw.WithPerm(model.PermissionNotionSend), h.Notion.SendProjectChangelog)
+			notionChangelog.GET("/projects/available", conditionalAuthMW, conditionalPermMW(model.PermissionNotionRead), h.Notion.GetAvailableProjectsChangelog)
+			notionChangelog.POST("/project", conditionalAuthMW, conditionalPermMW(model.PermissionNotionSend), h.Notion.SendProjectChangelog)
 		}
 	}
 
 	dashboard := v1.Group("/dashboards")
 	{
-		engagementDashboardGroup := dashboard.Group("/engagement", amw.WithAuth, pmw.WithPerm(model.PermissionDashBoardEngagementRead))
+		engagementDashboardGroup := dashboard.Group("/engagement", conditionalAuthMW, conditionalPermMW(model.PermissionDashBoardEngagementRead))
 		{
 			engagementDashboardGroup.GET("/info", h.Dashboard.GetEngagementInfo)
 			engagementDashboardGroup.GET("/detail", h.Dashboard.GetEngagementInfoDetail)
 		}
 
-		projectDashboardGroup := dashboard.Group("/projects", amw.WithAuth, pmw.WithPerm(model.PermissionDashBoardProjectsRead))
+		projectDashboardGroup := dashboard.Group("/projects", conditionalAuthMW, conditionalPermMW(model.PermissionDashBoardProjectsRead))
 		{
 			projectDashboardGroup.GET("/sizes", h.Dashboard.GetProjectSizes)
 			projectDashboardGroup.GET("/work-surveys", h.Dashboard.GetWorkSurveys)
@@ -299,7 +321,7 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 			projectDashboardGroup.GET("/summary", h.Dashboard.GetSummary)
 		}
 
-		resourceDashboardGroup := dashboard.Group("/resources", amw.WithAuth, pmw.WithPerm(model.PermissionDashBoardResourcesRead))
+		resourceDashboardGroup := dashboard.Group("/resources", conditionalAuthMW, conditionalPermMW(model.PermissionDashBoardResourcesRead))
 		{
 			resourceDashboardGroup.GET("/availabilities", h.Dashboard.GetResourcesAvailability)
 			resourceDashboardGroup.GET("/utilization", h.Dashboard.GetResourceUtilization)
@@ -311,110 +333,110 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 
 	payroll := v1.Group("payrolls")
 	{
-		payroll.PUT("", amw.WithAuth, pmw.WithPerm(model.PermissionPayrollsEdit), h.Payroll.MarkPayrollAsPaid)
-		payroll.GET("/detail", amw.WithAuth, pmw.WithPerm(model.PermissionPayrollsRead), h.Payroll.GetPayrollsByMonth)
-		payroll.GET("/bhxh", amw.WithAuth, pmw.WithPerm(model.PermissionPayrollsRead), h.Payroll.GetPayrollsBHXH)
-		payroll.POST("/commit", amw.WithAuth, pmw.WithPerm(model.PermissionPayrollsCreate), h.Payroll.CommitPayroll)
+		payroll.PUT("", conditionalAuthMW, conditionalPermMW(model.PermissionPayrollsEdit), h.Payroll.MarkPayrollAsPaid)
+		payroll.GET("/detail", conditionalAuthMW, conditionalPermMW(model.PermissionPayrollsRead), h.Payroll.GetPayrollsByMonth)
+		payroll.GET("/bhxh", conditionalAuthMW, conditionalPermMW(model.PermissionPayrollsRead), h.Payroll.GetPayrollsBHXH)
+		payroll.POST("/commit", conditionalAuthMW, conditionalPermMW(model.PermissionPayrollsCreate), h.Payroll.CommitPayroll)
 	}
 
 	invitationGroup := v1.Group("/invite")
 	{
-		invitationGroup.GET("", amw.WithAuth, h.Profile.GetInvitation)
-		invitationGroup.PUT("/submit", amw.WithAuth, h.Profile.SubmitOnboardingForm)
+		invitationGroup.GET("", conditionalAuthMW, h.Profile.GetInvitation)
+		invitationGroup.PUT("/submit", conditionalAuthMW, h.Profile.SubmitOnboardingForm)
 	}
 
 	engagementsGroup := v1.Group("/engagements")
 	{
 		engagementsGroup.POST(
 			"/rollup",
-			amw.WithAuth,
-			pmw.WithPerm(model.PermissionEngagementMetricsWrite),
+			conditionalAuthMW,
+			conditionalPermMW(model.PermissionEngagementMetricsWrite),
 			h.Engagement.UpsertRollup,
 		)
 		engagementsGroup.GET(
 			"/channels/:channel-id/last-message-id",
-			amw.WithAuth,
-			pmw.WithPerm(model.PermissionEngagementMetricsRead),
+			conditionalAuthMW,
+			conditionalPermMW(model.PermissionEngagementMetricsRead),
 			h.Engagement.GetLastMessageID,
 		)
 	}
 
 	braineryGroup := v1.Group("/brainery-logs")
 	{
-		braineryGroup.POST("", amw.WithAuth, pmw.WithPerm(model.PermissionBraineryLogsWrite), h.BraineryLog.Create)
-		braineryGroup.GET("/metrics", amw.WithAuth, pmw.WithPerm(model.PermissionBraineryLogsRead), h.BraineryLog.GetMetrics)
-		braineryGroup.POST("/sync", amw.WithAuth, pmw.WithPerm(model.PermissionCronjobExecute), h.BraineryLog.Sync)
+		braineryGroup.POST("", conditionalAuthMW, conditionalPermMW(model.PermissionBraineryLogsWrite), h.BraineryLog.Create)
+		braineryGroup.GET("/metrics", conditionalAuthMW, conditionalPermMW(model.PermissionBraineryLogsRead), h.BraineryLog.GetMetrics)
+		braineryGroup.POST("/sync", conditionalAuthMW, conditionalPermMW(model.PermissionCronjobExecute), h.BraineryLog.Sync)
 	}
 
 	memoGroup := v1.Group("/memos")
 	{
-		memoGroup.POST("", amw.WithAuth, h.MemoLog.Create)
-		memoGroup.POST("/sync", amw.WithAuth, h.MemoLog.Sync)
-		memoGroup.GET("", amw.WithAuth, h.MemoLog.List)
-		memoGroup.GET("/discords", amw.WithAuth, h.MemoLog.ListByDiscordID)
-		memoGroup.GET("/prs", amw.WithAuth, h.MemoLog.ListOpenPullRequest)
-		memoGroup.GET("/top-authors", amw.WithAuth, h.MemoLog.GetTopAuthors)
+		memoGroup.POST("", conditionalAuthMW, h.MemoLog.Create)
+		memoGroup.POST("/sync", conditionalAuthMW, h.MemoLog.Sync)
+		memoGroup.GET("", conditionalAuthMW, h.MemoLog.List)
+		memoGroup.GET("/discords", conditionalAuthMW, h.MemoLog.ListByDiscordID)
+		memoGroup.GET("/prs", conditionalAuthMW, h.MemoLog.ListOpenPullRequest)
+		memoGroup.GET("/top-authors", conditionalAuthMW, h.MemoLog.GetTopAuthors)
 	}
 
 	earnGroup := v1.Group("/earns")
 	{
-		earnGroup.GET("", amw.WithAuth, h.Earn.ListEarn)
+		earnGroup.GET("", conditionalAuthMW, h.Earn.ListEarn)
 	}
 
 	// Delivery metrics
 	{
 		deliveryGroup := v1.Group("/delivery-metrics")
-		deliveryGroup.POST("/report/sync", amw.WithAuth, pmw.WithPerm(model.PermissionDeliveryMetricsSync), h.DeliveryMetric.Sync)
+		deliveryGroup.POST("/report/sync", conditionalAuthMW, conditionalPermMW(model.PermissionDeliveryMetricsSync), h.DeliveryMetric.Sync)
 
-		deliveryGroup.GET("/report/weekly", amw.WithAuth, pmw.WithPerm(model.PermissionDeliveryMetricsRead), h.DeliveryMetric.GetWeeklyReport)
-		deliveryGroup.GET("/report/monthly", amw.WithAuth, pmw.WithPerm(model.PermissionDeliveryMetricsRead), h.DeliveryMetric.GetMonthlyReport)
-		deliveryGroup.GET("/leader-board/weekly", amw.WithAuth, pmw.WithPerm(model.PermissionDeliveryMetricsLeaderBoardRead), h.DeliveryMetric.GetWeeklyLeaderBoard)
-		deliveryGroup.GET("/leader-board/monthly", amw.WithAuth, pmw.WithPerm(model.PermissionDeliveryMetricsLeaderBoardRead), h.DeliveryMetric.GetMonthlyLeaderBoard)
+		deliveryGroup.GET("/report/weekly", conditionalAuthMW, conditionalPermMW(model.PermissionDeliveryMetricsRead), h.DeliveryMetric.GetWeeklyReport)
+		deliveryGroup.GET("/report/monthly", conditionalAuthMW, conditionalPermMW(model.PermissionDeliveryMetricsRead), h.DeliveryMetric.GetMonthlyReport)
+		deliveryGroup.GET("/leader-board/weekly", conditionalAuthMW, conditionalPermMW(model.PermissionDeliveryMetricsLeaderBoardRead), h.DeliveryMetric.GetWeeklyLeaderBoard)
+		deliveryGroup.GET("/leader-board/monthly", conditionalAuthMW, conditionalPermMW(model.PermissionDeliveryMetricsLeaderBoardRead), h.DeliveryMetric.GetMonthlyLeaderBoard)
 
 		// API for fortress-discord
-		deliveryGroup.GET("/report/weekly/discord-msg", amw.WithAuth, pmw.WithPerm(model.PermissionDeliveryMetricsRead), h.DeliveryMetric.GetWeeklyReportDiscordMsg)
-		deliveryGroup.GET("/report/monthly/discord-msg", amw.WithAuth, pmw.WithPerm(model.PermissionDeliveryMetricsRead), h.DeliveryMetric.GetMonthlyReportDiscordMsg)
+		deliveryGroup.GET("/report/weekly/discord-msg", conditionalAuthMW, conditionalPermMW(model.PermissionDeliveryMetricsRead), h.DeliveryMetric.GetWeeklyReportDiscordMsg)
+		deliveryGroup.GET("/report/monthly/discord-msg", conditionalAuthMW, conditionalPermMW(model.PermissionDeliveryMetricsRead), h.DeliveryMetric.GetMonthlyReportDiscordMsg)
 	}
 
 	discordGroup := v1.Group("/discords")
 	{
-		discordGroup.GET("", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesDiscordRead), h.Employee.ListByDiscordRequest)
-		discordGroup.GET("/mma-scores", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesDiscordRead), h.Employee.ListWithMMAScore)
-		discordGroup.POST("/advance-salary", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesDiscordRead), h.Employee.SalaryAdvance)
-		discordGroup.POST("/check-advance-salary", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesDiscordRead), h.Employee.CheckSalaryAdvance)
+		discordGroup.GET("", conditionalAuthMW, conditionalPermMW(model.PermissionEmployeesDiscordRead), h.Employee.ListByDiscordRequest)
+		discordGroup.GET("/mma-scores", conditionalAuthMW, conditionalPermMW(model.PermissionEmployeesDiscordRead), h.Employee.ListWithMMAScore)
+		discordGroup.POST("/advance-salary", conditionalAuthMW, conditionalPermMW(model.PermissionEmployeesDiscordRead), h.Employee.SalaryAdvance)
+		discordGroup.POST("/check-advance-salary", conditionalAuthMW, conditionalPermMW(model.PermissionEmployeesDiscordRead), h.Employee.CheckSalaryAdvance)
 
-		discordGroup.GET("/salary-advance-report", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesDiscordRead), h.Employee.SalaryAdvanceReport)
-		discordGroup.GET("/:discord_id/earns/transactions", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesDiscordRead), h.Employee.GetEmployeeEarnTransactions)
-		discordGroup.GET("/:discord_id/earns/total", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesDiscordRead), h.Employee.GetEmployeeTotalEarn)
-		discordGroup.GET("/earns/total", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesDiscordRead), h.Employee.GetTotalEarn)
-		discordGroup.POST("/office-checkin", amw.WithAuth, pmw.WithPerm(model.PermissionTransferCheckinIcy), h.Employee.OfficeCheckIn)
+		discordGroup.GET("/salary-advance-report", conditionalAuthMW, conditionalPermMW(model.PermissionEmployeesDiscordRead), h.Employee.SalaryAdvanceReport)
+		discordGroup.GET("/:discord_id/earns/transactions", conditionalAuthMW, conditionalPermMW(model.PermissionEmployeesDiscordRead), h.Employee.GetEmployeeEarnTransactions)
+		discordGroup.GET("/:discord_id/earns/total", conditionalAuthMW, conditionalPermMW(model.PermissionEmployeesDiscordRead), h.Employee.GetEmployeeTotalEarn)
+		discordGroup.GET("/earns/total", conditionalAuthMW, conditionalPermMW(model.PermissionEmployeesDiscordRead), h.Employee.GetTotalEarn)
+		discordGroup.POST("/office-checkin", conditionalAuthMW, conditionalPermMW(model.PermissionTransferCheckinIcy), h.Employee.OfficeCheckIn)
 
-		discordGroup.GET("/icy-accounting", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesDiscordRead), h.Icy.Accounting)
+		discordGroup.GET("/icy-accounting", conditionalAuthMW, conditionalPermMW(model.PermissionEmployeesDiscordRead), h.Icy.Accounting)
 
 		scheduledEventGroup := discordGroup.Group("/scheduled-events")
 		{
-			scheduledEventGroup.GET("", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesDiscordRead), h.Discord.ListScheduledEvent)
-			scheduledEventGroup.POST("", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesDiscordCreate), h.Discord.CreateScheduledEvent)
-			scheduledEventGroup.PUT("/:id/speakers", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesDiscordEdit), h.Discord.SetScheduledEventSpeakers)
+			scheduledEventGroup.GET("", conditionalAuthMW, conditionalPermMW(model.PermissionEmployeesDiscordRead), h.Discord.ListScheduledEvent)
+			scheduledEventGroup.POST("", conditionalAuthMW, conditionalPermMW(model.PermissionEmployeesDiscordCreate), h.Discord.CreateScheduledEvent)
+			scheduledEventGroup.PUT("/:id/speakers", conditionalAuthMW, conditionalPermMW(model.PermissionEmployeesDiscordEdit), h.Discord.SetScheduledEventSpeakers)
 		}
 
-		discordGroup.GET("/research-topics", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesDiscordRead), h.Discord.ListDiscordResearchTopics)
+		discordGroup.GET("/research-topics", conditionalAuthMW, conditionalPermMW(model.PermissionEmployeesDiscordRead), h.Discord.ListDiscordResearchTopics)
 	}
 
 	conversionRateGroup := v1.Group("/conversion-rates")
 	{
-		conversionRateGroup.GET("", amw.WithAuth, h.ConversionRate.List)
+		conversionRateGroup.GET("", conditionalAuthMW, h.ConversionRate.List)
 	}
 
 	newsGroup := v1.Group("/news")
 	{
-		newsGroup.GET("", amw.WithAuth, h.News.Fetch)
+		newsGroup.GET("", conditionalAuthMW, h.News.Fetch)
 	}
 
 	ogifGroup := v1.Group("/ogif")
 	{
-		ogifGroup.GET("", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesDiscordRead), h.Discord.UserOgifStats)
-		ogifGroup.GET("/leaderboard", amw.WithAuth, pmw.WithPerm(model.PermissionEmployeesDiscordRead), h.Discord.OgifLeaderboard)
+		ogifGroup.GET("", conditionalAuthMW, conditionalPermMW(model.PermissionEmployeesDiscordRead), h.Discord.UserOgifStats)
+		ogifGroup.GET("/leaderboard", conditionalAuthMW, conditionalPermMW(model.PermissionEmployeesDiscordRead), h.Discord.OgifLeaderboard)
 	}
 
 	// dynamic events

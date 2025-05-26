@@ -124,7 +124,7 @@ func (s *service) getRate(target string) (float64, error) {
 		case "EUR":
 			return 0.89795, nil
 		case "VND":
-			return 23416, nil
+			return 25900, nil
 		}
 	}
 

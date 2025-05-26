@@ -228,6 +228,7 @@ const (
 	HeadPositionDeliveryManager HeadPosition = "delivery-manager"
 	HeadPositionAccountManager  HeadPosition = "account-manager"
 	HeadPositionSalePerson      HeadPosition = "sale-person"
+	HeadPositionDealClosing     HeadPosition = "deal-closing"
 )
 
 func (e HeadPosition) IsValid() bool {
@@ -236,7 +237,8 @@ func (e HeadPosition) IsValid() bool {
 		HeadPositionTechnicalLead,
 		HeadPositionDeliveryManager,
 		HeadPositionAccountManager,
-		HeadPositionSalePerson:
+		HeadPositionSalePerson,
+		HeadPositionDealClosing:
 		return true
 	}
 	return false
