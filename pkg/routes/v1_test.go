@@ -775,6 +775,12 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/invoice.IHandler.UpdateStatus-fm",
 			},
 		},
+		"/api/v1/invoices/:id/calculate-commissions": {
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/invoice.IHandler.CalculateCommissions-fm",
+			},
+		},
 		"/api/v1/invoices": {
 			"GET": {
 				Method:  "GET",
