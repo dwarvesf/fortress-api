@@ -2,6 +2,7 @@ package invoice
 
 import (
 	"fmt"
+	"strings"
 	"sync"
 
 	"github.com/shopspring/decimal"
@@ -11,6 +12,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	bcConst "github.com/dwarvesf/fortress-api/pkg/service/basecamp/consts"
 	bcModel "github.com/dwarvesf/fortress-api/pkg/service/basecamp/model"
+	"github.com/dwarvesf/fortress-api/pkg/store"
 )
 
 const (
@@ -38,44 +40,13 @@ type pics struct {
 	dealClosing      []pic
 }
 
+func (c *controller) CalculateCommissionFromInvoice(db store.DBRepo, l logger.Logger, invoice *model.Invoice) ([]model.EmployeeCommission, error) {
+	return c.calculateCommissionFromInvoice(db.DB(), l, invoice)
+}
+
 func (c *controller) storeCommission(db *gorm.DB, l logger.Logger, invoice *model.Invoice) ([]model.EmployeeCommission, error) {
 	if invoice.Project.Type == model.ProjectTypeDwarves {
 		return nil, nil
-	}
-
-	// Check for project head salesperson and apply inbound fund logic
-	foundSalesPerson := false
-	for _, head := range invoice.Project.Heads {
-		if head.Position == model.HeadPositionSalePerson {
-			foundSalesPerson = true
-			break
-		}
-	}
-
-	originalInvoiceTotal := invoice.Total // Store original total before modification
-	if !foundSalesPerson {
-		inboundAmount := originalInvoiceTotal * inboundFundCommissionRate
-		invoice.InboundFundAmount = inboundAmount
-
-		ift := &model.InboundFundTransaction{
-			InvoiceID: invoice.ID,
-			Amount:    inboundAmount,
-			Notes:     fmt.Sprintf("5%% of invoice %s (%.2f) for project %s (ID: %s) with no sales head", invoice.Number, originalInvoiceTotal, invoice.Project.Name, invoice.ProjectID.String()),
-		}
-		_, err := c.store.InboundFundTransaction.Create(db, ift)
-		if err != nil {
-			l.Errorf(err, "failed to create inbound fund transaction for invoice(%s)", invoice.ID.String())
-			return nil, err
-		}
-
-		// Update the invoice in DB with InboundFundAmount and adjusted TotalWithoutBonus
-		updatedFields := []string{"InboundFundAmount"}
-		// If InboundFundAmount was already non-zero, this might indicate a re-processing.
-		// For simplicity, we're overwriting. Consider adding a check if this isn't desired.
-		if _, err := c.store.Invoice.UpdateSelectedFieldsByID(db, invoice.ID.String(), *invoice, updatedFields...); err != nil {
-			l.Errorf(err, "failed to update invoice with inbound fund details for invoice ID: %s", invoice.ID.String())
-			return nil, err
-		}
 	}
 
 	employeeCommissions, err := c.calculateCommissionFromInvoice(db, l, invoice)
@@ -88,7 +59,34 @@ func (c *controller) storeCommission(db *gorm.DB, l logger.Logger, invoice *mode
 		return []model.EmployeeCommission{}, nil
 	}
 
+	for _, commission := range employeeCommissions {
+		if strings.Contains(commission.Note, "Inbound Fund") {
+			_, err := c.store.InboundFundTransaction.Create(db, &model.InboundFundTransaction{
+				InvoiceID:      invoice.ID,
+				Amount:         commission.Amount,
+				ConversionRate: commission.ConversionRate,
+				Notes:          fmt.Sprintf("%v - %v", commission.Formula, commission.Note),
+			})
+			if err != nil {
+				l.Errorf(err, "failed to create inbound fund transaction for invoice(%s)", invoice.ID.String())
+				return nil, err
+			}
+		}
+	}
+	// remove inbound fund commission from employee commissions
+	employeeCommissions = c.RemoveInboundFundCommission(employeeCommissions)
+
 	return c.store.EmployeeCommission.Create(db, employeeCommissions)
+}
+
+func (c *controller) RemoveInboundFundCommission(employeeCommissions []model.EmployeeCommission) []model.EmployeeCommission {
+	rs := []model.EmployeeCommission{}
+	for _, commission := range employeeCommissions {
+		if !strings.Contains(commission.Note, "Inbound Fund") {
+			rs = append(rs, commission)
+		}
+	}
+	return rs
 }
 
 func (c *controller) calculateCommissionFromInvoice(db *gorm.DB, l logger.Logger, invoice *model.Invoice) ([]model.EmployeeCommission, error) {
@@ -98,13 +96,11 @@ func (c *controller) calculateCommissionFromInvoice(db *gorm.DB, l logger.Logger
 		return nil, err
 	}
 
-	invoiceWithoutInbound := invoice.TotalWithoutBonus - invoice.InboundFundAmount
-
 	// Get list of project head who will get the commission from this invoice
 	pics := c.getPICs(invoice, projectMembers)
 	var res []model.EmployeeCommission
 	if len(pics.devLeads) > 0 {
-		c, err := c.calculateHeadCommission(pics.devLeads, invoice, invoiceWithoutInbound)
+		c, err := c.calculateHeadCommission(pics.devLeads, invoice, invoice.TotalWithoutBonus)
 		if err != nil {
 			l.Errorf(err, "failed to calculate dev lead commission rate for project(%s)", invoice.ProjectID.String())
 			return nil, err
@@ -113,7 +109,7 @@ func (c *controller) calculateCommissionFromInvoice(db *gorm.DB, l logger.Logger
 	}
 
 	if len(pics.accountManagers) > 0 {
-		c, err := c.calculateHeadCommission(pics.accountManagers, invoice, invoiceWithoutInbound)
+		c, err := c.calculateHeadCommission(pics.accountManagers, invoice, invoice.TotalWithoutBonus)
 		if err != nil {
 			l.Errorf(err, "failed to calculate account manager commission rate for project(%s)", invoice.ProjectID.String())
 			return nil, err
@@ -122,7 +118,7 @@ func (c *controller) calculateCommissionFromInvoice(db *gorm.DB, l logger.Logger
 	}
 
 	if len(pics.deliveryManagers) > 0 {
-		c, err := c.calculateHeadCommission(pics.deliveryManagers, invoice, invoiceWithoutInbound)
+		c, err := c.calculateHeadCommission(pics.deliveryManagers, invoice, invoice.TotalWithoutBonus)
 		if err != nil {
 			l.Errorf(err, "failed to calculate delivery manager commission rate for project(%s)", invoice.ProjectID.String())
 			return nil, err
@@ -131,12 +127,29 @@ func (c *controller) calculateCommissionFromInvoice(db *gorm.DB, l logger.Logger
 	}
 
 	if len(pics.sales) > 0 {
-		c, err := c.calculateHeadCommission(pics.sales, invoice, invoiceWithoutInbound)
+		c, err := c.calculateHeadCommission(pics.sales, invoice, invoice.TotalWithoutBonus)
 		if err != nil {
 			l.Errorf(err, "failed to calculate sales commission rate for project(%s)", invoice.ProjectID.String())
 			return nil, err
 		}
 
+		res = append(res, c...)
+	} else {
+		// calculate commission for inbound
+		c, err := c.calculateInboundFundCommission(invoice)
+		if err != nil {
+			l.Errorf(err, "failed to calculate inbound fund commission rate for project(%s)", invoice.ProjectID.String())
+			return nil, err
+		}
+		res = append(res, c...)
+	}
+
+	if len(pics.dealClosing) > 0 {
+		c, err := c.calculateHeadCommission(pics.dealClosing, invoice, invoice.TotalWithoutBonus)
+		if err != nil {
+			l.Errorf(err, "failed to calculate deal closing commission rate for project(%s)", invoice.ProjectID.String())
+			return nil, err
+		}
 		res = append(res, c...)
 	}
 
@@ -171,15 +184,6 @@ func (c *controller) calculateCommissionFromInvoice(db *gorm.DB, l logger.Logger
 		c, err := c.calculateUpsellSaleReferralCommission(pics.upsellReferers, invoice)
 		if err != nil {
 			l.Errorf(err, "failed to calculate upsell refereral commission rate for project(%s)", invoice.ProjectID.String())
-			return nil, err
-		}
-		res = append(res, c...)
-	}
-
-	if len(pics.dealClosing) > 0 {
-		c, err := c.calculateDealClosingCommission(pics.dealClosing, invoice)
-		if err != nil {
-			l.Errorf(err, "failed to calculate deal closing commission rate for project(%s)", invoice.ProjectID.String())
 			return nil, err
 		}
 		res = append(res, c...)
@@ -221,6 +225,17 @@ func (c *controller) getPICs(invoice *model.Invoice, projectMembers []*model.Pro
 				ChargeRate:     invoice.Total,
 				Note:           "Account Manager",
 			})
+		case model.HeadPositionDealClosing:
+			dealClosingPersonDetail, err := c.store.Employee.One(c.repo.DB(), itm.EmployeeID.String(), false)
+			if err != nil {
+				continue
+			}
+			dealClosing = append(dealClosing, pic{
+				ID:             itm.EmployeeID,
+				CommissionRate: itm.CommissionRate,
+				ChargeRate:     invoice.Total,
+				Note:           fmt.Sprintf("Deal Closing - %s", dealClosingPersonDetail.FullName),
+			})
 		case model.HeadPositionDeliveryManager:
 			deliveryManagers = append(deliveryManagers, pic{
 				ID:             itm.EmployeeID,
@@ -252,17 +267,6 @@ func (c *controller) getPICs(invoice *model.Invoice, projectMembers []*model.Pro
 				CommissionRate: decimal.NewFromInt(saleReferralCommissionRate),
 				ChargeRate:     decimal.NewFromFloat(invoice.Total).Mul(itm.CommissionRate).Div(decimal.NewFromInt(100)).InexactFloat64(),
 				Note:           fmt.Sprintf("Sale Referral - %s", salePersonDetail.FullName),
-			})
-		case model.HeadPositionDealClosing:
-			dealClosingPersonDetail, err := c.store.Employee.One(c.repo.DB(), itm.EmployeeID.String(), false)
-			if err != nil {
-				continue
-			}
-			dealClosing = append(dealClosing, pic{
-				ID:             itm.EmployeeID,
-				CommissionRate: itm.CommissionRate,
-				ChargeRate:     invoice.Total,
-				Note:           fmt.Sprintf("Deal Closing - %s", dealClosingPersonDetail.FullName),
 			})
 		}
 	}
@@ -373,6 +377,29 @@ func (c *controller) calculateHeadCommission(beneficiaries []pic, invoice *model
 	return rs, nil
 }
 
+func (c *controller) calculateInboundFundCommission(invoice *model.Invoice) ([]model.EmployeeCommission, error) {
+	originalInvoiceTotal := invoice.Total // Store original total before modification
+	commissionValue, _ := decimal.NewFromFloat(inboundFundCommissionRate).Mul(decimal.NewFromFloat(originalInvoiceTotal)).Float64()
+	convertedValue, rate, err := c.service.Wise.Convert(commissionValue, invoice.Project.BankAccount.Currency.Name, "VND")
+	if err != nil {
+		return nil, err
+	}
+
+	rs := []model.EmployeeCommission{
+		{
+			EmployeeID:     model.UUID{},
+			Amount:         model.NewVietnamDong(int64(convertedValue)),
+			Project:        invoice.Project.Name,
+			InvoiceID:      invoice.ID,
+			ConversionRate: rate,
+			Formula:        fmt.Sprintf("%v%%(CR) * %v(IV) * %v(RATE)", inboundFundCommissionRate*100, originalInvoiceTotal, rate),
+			Note:           fmt.Sprintf("Inbound Fund - %s", invoice.Number),
+		},
+	}
+
+	return rs, nil
+}
+
 func (c *controller) calculateRefBonusCommission(pics []pic, invoice *model.Invoice) ([]model.EmployeeCommission, error) {
 	// conversionRate by percentage
 	var rs []model.EmployeeCommission
@@ -442,32 +469,6 @@ func (c *controller) calculateUpsellSaleReferralCommission(pics []pic, invoice *
 			Formula:        fmt.Sprintf("%v%%(RCR) * %v(VAL) * %v(RATE)", pic.CommissionRate, commissionValue, rate),
 			Note:           pic.Note,
 		})
-	}
-
-	return rs, nil
-}
-
-func (c *controller) calculateDealClosingCommission(pics []pic, invoice *model.Invoice) ([]model.EmployeeCommission, error) {
-	var rs []model.EmployeeCommission
-	for _, pic := range pics {
-		percentage := pic.CommissionRate.Div(decimal.NewFromInt(100))
-		commissionValue, _ := percentage.Mul(decimal.NewFromFloat(pic.ChargeRate)).Float64()
-		convertedValue, rate, err := c.service.Wise.Convert(commissionValue, invoice.Project.BankAccount.Currency.Name, "VND")
-		if err != nil {
-			return nil, err
-		}
-
-		if convertedValue > 0 {
-			rs = append(rs, model.EmployeeCommission{
-				EmployeeID:     pic.ID,
-				Amount:         model.NewVietnamDong(int64(convertedValue)),
-				Project:        invoice.Project.Name,
-				ConversionRate: rate,
-				InvoiceID:      invoice.ID,
-				Formula:        fmt.Sprintf("%v%%(RCR) * %v(VAL) * %v(RATE)", pic.CommissionRate, commissionValue, rate),
-				Note:           pic.Note,
-			})
-		}
 	}
 
 	return rs, nil

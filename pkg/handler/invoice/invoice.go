@@ -2,7 +2,9 @@ package invoice
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -332,6 +334,31 @@ func (h *handler) CalculateCommissions(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
 	}
+	if err := tx.Where("invoice_id = ? AND deleted_at IS NULL", invoiceID).Delete(&model.InboundFundTransaction{}).Error; err != nil {
+		tx.Rollback()
+		l.Error(err, "failed to delete existing inbound fund transactions")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	// create inbound fund transaction, these transactions are not included in the employee commissions
+	for _, commission := range commissions {
+		if strings.Contains(commission.Note, "Inbound Fund") {
+			_, err := h.store.InboundFundTransaction.Create(tx, &model.InboundFundTransaction{
+				InvoiceID:      invoice.ID,
+				Amount:         commission.Amount,
+				ConversionRate: commission.ConversionRate,
+				Notes:          fmt.Sprintf("%v - %v", commission.Formula, commission.Note),
+			})
+			if err != nil {
+				l.Errorf(err, "failed to create inbound fund transaction for invoice(%s)", invoice.ID.String())
+				continue
+			}
+		}
+	}
+
+	// remove inbound fund commission from employee commissions
+	commissions = h.controller.Invoice.RemoveInboundFundCommission(commissions)
 
 	for _, commission := range commissions {
 		if err := tx.Create(&commission).Error; err != nil {

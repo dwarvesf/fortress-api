@@ -1,7 +1,4 @@
 -- +migrate Up
-ALTER TABLE "invoices"
-ADD COLUMN "inbound_fund_amount" DECIMAL DEFAULT 0;
-
 CREATE TABLE
     IF NOT EXISTS inbound_fund_transactions (
         id uuid PRIMARY KEY DEFAULT (uuid ()),
@@ -11,6 +8,8 @@ CREATE TABLE
         invoice_id uuid NOT NULL,
         amount DECIMAL NOT NULL,
         notes TEXT,
+        conversion_rate DECIMAL,
+        paid_at TIMESTAMP(6),
         CONSTRAINT fk_invoices_inbound_fund_transactions FOREIGN KEY (invoice_id) REFERENCES invoices (id)
     );
 
