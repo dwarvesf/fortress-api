@@ -3411,7 +3411,9 @@ func (h *handler) SyncProjectHeadsFromNotion(c *gin.Context) {
 			errMsg := fmt.Sprintf("failed to update sale persons for project %s (DB ID: %s): %v", dbProject.Name, dbProject.ID.String(), err)
 			l.Error(err, errMsg)
 			errorMessages = append(errorMessages, errMsg)
-			done(err)
+			if err := done(err); err != nil {
+				l.Error(err, "failed to finalize transaction")
+			}
 			continue
 		}
 
@@ -3436,7 +3438,9 @@ func (h *handler) SyncProjectHeadsFromNotion(c *gin.Context) {
 			errMsg := fmt.Sprintf("failed to update technical leads for project %s (DB ID: %s): %v", dbProject.Name, dbProject.ID.String(), err)
 			l.Error(err, errMsg)
 			errorMessages = append(errorMessages, errMsg)
-			done(err)
+			if err := done(err); err != nil {
+				l.Error(err, "failed to finalize transaction")
+			}
 			continue
 		}
 
@@ -3476,7 +3480,9 @@ func (h *handler) SyncProjectHeadsFromNotion(c *gin.Context) {
 			errMsg := fmt.Sprintf("failed to update account managers for project %s (DB ID: %s): %v", dbProject.Name, dbProject.ID.String(), err)
 			l.Error(err, errMsg)
 			errorMessages = append(errorMessages, errMsg)
-			done(err)
+			if err := done(err); err != nil {
+				l.Error(err, "failed to finalize transaction")
+			}
 			continue
 		}
 
@@ -3510,7 +3516,9 @@ func (h *handler) SyncProjectHeadsFromNotion(c *gin.Context) {
 				errMsg := fmt.Sprintf("failed to update deal-closing heads for project %s (DB ID: %s): %v", dbProject.Name, dbProject.ID.String(), err)
 				l.Error(err, errMsg)
 				errorMessages = append(errorMessages, errMsg)
-				done(err)
+				if err := done(err); err != nil {
+					l.Error(err, "failed to finalize transaction")
+				}
 				continue
 			}
 		}
@@ -3519,6 +3527,9 @@ func (h *handler) SyncProjectHeadsFromNotion(c *gin.Context) {
 			errMsg := fmt.Sprintf("failed to commit transaction for project %s (DB ID: %s): %v", dbProject.Name, dbProject.ID.String(), err)
 			l.Error(err, errMsg)
 			errorMessages = append(errorMessages, errMsg)
+			if err := done(err); err != nil {
+				l.Error(err, "failed to finalize transaction")
+			}
 			continue
 		}
 
