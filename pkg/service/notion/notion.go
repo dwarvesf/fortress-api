@@ -279,12 +279,18 @@ func (n *notionService) GetProjectInDB(pageID string) (*nt.DatabasePagePropertie
 	// 2. loop through all projects to find the project by page id
 	for _, r := range res.Results {
 		if strings.ReplaceAll(r.ID, "-", "") == strings.ReplaceAll(pageID, "-", "") {
-			p := r.Properties.(nt.DatabasePageProperties)
-			if len(p["Project"].Title) != 0 && p["Changelog"].URL != nil {
-				if *p["Changelog"].URL == "" {
-					continue
-				}
-				clID := strings.Split(strings.Split(*p["Changelog"].URL, "/")[len(strings.Split(*p["Changelog"].URL, "/"))-1], "?")[0]
+			p, ok := r.Properties.(nt.DatabasePageProperties)
+			if !ok {
+				n.l.Errorf(nil, "failed to cast database page properties for project", r.ID)
+				continue // Skip this result if casting fails
+			}
+
+			// Safely access required properties and their contents
+			projectProp, projectOk := p["Project"]
+			changelogProp, changelogOk := p["Changelog"]
+
+			if projectOk && len(projectProp.Title) > 0 && changelogOk && changelogProp.URL != nil && *changelogProp.URL != "" {
+				clID := strings.Split(strings.Split(*changelogProp.URL, "/")[len(strings.Split(*changelogProp.URL, "/"))-1], "?")[0]
 				cls, err := n.notionClient.QueryDatabase(ctx, clID, &nt.DatabaseQuery{
 					Sorts: []nt.DatabaseQuerySort{
 						{
@@ -294,27 +300,33 @@ func (n *notionService) GetProjectInDB(pageID string) (*nt.DatabasePagePropertie
 					},
 				})
 				if err != nil {
-					n.l.Errorf(err, "query project change log err", clID, p["Project"].Title[0].Text.Content)
+					n.l.Errorf(err, "query project change log err", clID, projectProp.Title[0].Text.Content)
 					continue
 				}
 
-				if len(cls.Results) != 0 && len(cls.Results[0].Properties.(nt.DatabasePageProperties)["Title"].Title) != 0 {
-					p["EmailSubject"] = nt.DatabasePageProperty{
-						Title: []nt.RichText{
-							{
-								Type:      nt.RichTextTypeText,
-								Text:      &nt.Text{Content: cls.Results[0].Properties.(nt.DatabasePageProperties)["Title"].Title[0].Text.Content},
-								PlainText: cls.Results[0].Properties.(nt.DatabasePageProperties)["Title"].Title[0].Text.Content,
+				if len(cls.Results) != 0 {
+					// Safely access title property from changelog result
+					changelogTitleProp, changelogTitleOk := cls.Results[0].Properties.(nt.DatabasePageProperties)["Title"]
+					if changelogTitleOk && len(changelogTitleProp.Title) > 0 {
+						p["EmailSubject"] = nt.DatabasePageProperty{
+							Title: []nt.RichText{
+								{
+									Type:      nt.RichTextTypeText,
+									Text:      &nt.Text{Content: changelogTitleProp.Title[0].Text.Content},
+									PlainText: changelogTitleProp.Title[0].Text.Content,
+								},
 							},
-						},
+						}
+					} else {
+						n.l.Warnf("missing title property or title content for changelog ID %s in project %s", clID, projectProp.Title[0].Text.Content)
 					}
 				}
 			}
-			return &p, nil
+			return &p, nil // Return the found project properties
 		}
 	}
 
-	return nil, errors.New("page not found")
+	return nil, errors.New("page not found") // Return error if project not found after loop
 }
 
 func (n *notionService) GetProjectsInDB(pageIDs []string, projectPageID string) (map[string]nt.DatabasePageProperties, error) {
@@ -441,6 +453,7 @@ func (n *notionService) ListProjects() ([]model.NotionProject, error) {
 
 	return res, nil
 }
+
 func (n *notionService) ListProjectsWithChangelog() ([]model.ProjectChangelogPage, error) {
 	ctx := context.Background()
 	prjs, err := n.notionClient.QueryDatabase(ctx, n.projectsDBID, &nt.DatabaseQuery{
@@ -459,12 +472,18 @@ func (n *notionService) ListProjectsWithChangelog() ([]model.ProjectChangelogPag
 
 	res := []model.ProjectChangelogPage{}
 	for _, r := range prjs.Results {
-		p := r.Properties.(nt.DatabasePageProperties)
-		if len(p["Project"].Title) != 0 && p["Changelog"].URL != nil {
-			if *p["Changelog"].URL == "" {
-				continue
-			}
-			clID := strings.Split(strings.Split(*p["Changelog"].URL, "/")[len(strings.Split(*p["Changelog"].URL, "/"))-1], "?")[0]
+		p, ok := r.Properties.(nt.DatabasePageProperties)
+		if !ok {
+			n.l.Errorf(nil, "failed to cast database page properties for project listing", r.ID)
+			continue // Skip this result if casting fails
+		}
+
+		// Safely access required properties and their contents
+		projectProp, projectOk := p["Project"]
+		changelogProp, changelogOk := p["Changelog"]
+
+		if projectOk && len(projectProp.Title) > 0 && changelogOk && changelogProp.URL != nil && *changelogProp.URL != "" {
+			clID := strings.Split(strings.Split(*changelogProp.URL, "/")[len(strings.Split(*changelogProp.URL, "/"))-1], "?")[0]
 			cls, err := n.notionClient.QueryDatabase(ctx, clID, &nt.DatabaseQuery{
 				Sorts: []nt.DatabaseQuerySort{
 					{
@@ -474,16 +493,23 @@ func (n *notionService) ListProjectsWithChangelog() ([]model.ProjectChangelogPag
 				},
 			})
 			if err != nil {
-				n.l.Errorf(err, "query project change log err", clID, p["Project"].Title[0].Text.Content)
+				n.l.Errorf(err, "query project change log err", clID, projectProp.Title[0].Text.Content)
 				continue
 			}
-			if len(cls.Results) != 0 && len(cls.Results[0].Properties.(nt.DatabasePageProperties)["Title"].Title) != 0 {
-				res = append(res, model.ProjectChangelogPage{
-					RowID:        r.ID,
-					Name:         p["Project"].Title[0].Text.Content,
-					Title:        cls.Results[0].Properties.(nt.DatabasePageProperties)["Title"].Title[0].Text.Content,
-					ChangelogURL: cls.Results[0].URL,
-				})
+
+			if len(cls.Results) != 0 {
+				// Safely access title property from changelog result
+				changelogTitleProp, changelogTitleOk := cls.Results[0].Properties.(nt.DatabasePageProperties)["Title"]
+				if changelogTitleOk && len(changelogTitleProp.Title) > 0 {
+					res = append(res, model.ProjectChangelogPage{
+						RowID:        r.ID,
+						Name:         projectProp.Title[0].Text.Content,
+						Title:        changelogTitleProp.Title[0].Text.Content,
+						ChangelogURL: cls.Results[0].URL,
+					})
+				} else {
+					n.l.Warnf("missing title property or title content for changelog ID %s in project %s", clID, projectProp.Title[0].Text.Content)
+				}
 			}
 		}
 	}
@@ -678,39 +704,17 @@ func (n *notionService) GetProjectHeadEmails(pageID string) (salePersonEmail, te
 						tx.Rollback()
 						return salePersonEmail, techLeadEmail, accountManagerEmails, dealClosingEmails, err
 					}
+				} else if err != gorm.ErrRecordNotFound {
+					n.l.Errorf(err, "find employee by email err", email)
 				}
 			}
 			if err := tx.Commit().Error; err != nil {
 				return salePersonEmail, techLeadEmail, accountManagerEmails, dealClosingEmails, err
 			}
+		} else if err != gorm.ErrRecordNotFound {
+			n.l.Errorf(err, "find project by id err", pageID)
 		}
 	}
 
 	return salePersonEmail, techLeadEmail, accountManagerEmails, dealClosingEmails, nil
-}
-
-// extractTextFromNotionProperty safely extracts plain text from a Notion property.
-func extractTextFromNotionProperty(pageProps nt.DatabasePageProperties, propName string) string {
-	prop, ok := pageProps[propName]
-	if !ok {
-		return ""
-	}
-
-	var sb strings.Builder
-
-	switch prop.Type {
-	case nt.DBPropTypeRichText:
-		for _, rt := range prop.RichText {
-			sb.WriteString(rt.PlainText)
-		}
-	case nt.DBPropTypeTitle:
-		for _, rt := range prop.Title {
-			sb.WriteString(rt.PlainText)
-		}
-	// Add other property types if needed, e.g., People, Select
-	default:
-		// n.l.Warnf("unhandled Notion property type '%s' for property '%s'", prop.Type, propName)
-		return ""
-	}
-	return strings.TrimSpace(sb.String())
 }
