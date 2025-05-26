@@ -1126,6 +1126,12 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/dynamicevents.IHandler.Events-fm",
 			},
 		},
+		"/cronjobs/sync-project-heads": {
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/project.IHandler.SyncProjectHeadsFromNotion-fm",
+			},
+		},
 	}
 
 	l := logger.NewLogrusLogger()
