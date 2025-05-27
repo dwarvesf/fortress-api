@@ -3326,16 +3326,20 @@ func (h *handler) CommissionModels(c *gin.Context) {
 func (h *handler) SyncProjectHeadsFromNotion(c *gin.Context) {
 	l := h.logger.Fields(logger.Fields{"handler": "project", "method": "SyncProjectHeadsFromNotion"})
 
-	userInfo, err := authutils.GetLoggedInUserInfo(c, h.store, h.repo.DB(), h.config)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, "Failed to get user info"))
-		return
+	var userInfo *model.CurrentLoggedUserInfo
+	if h.config.Env == "local" {
+		userInfo = &model.CurrentLoggedUserInfo{
+			UserID:      "123",                                                                          // This should be replaced with actual user ID in production
+			Permissions: map[string]string{model.PermissionProjectsCommissionRateEdit.String(): "true"}, // Grant permission for testing
+		}
+	} else {
+		var err error
+		userInfo, err = authutils.GetLoggedInUserInfo(c, h.store, h.repo.DB(), h.config)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, "Failed to get user info"))
+			return
+		}
 	}
-
-	// userInfo := &model.CurrentLoggedUserInfo{
-	// 	UserID:      "123",                                                                          // This should be replaced with actual user ID in production
-	// 	Permissions: map[string]string{model.PermissionProjectsCommissionRateEdit.String(): "true"}, // Grant permission for testing
-	// }
 
 	dbCtx := h.repo.DB()
 
@@ -3444,9 +3448,10 @@ func (h *handler) SyncProjectHeadsFromNotion(c *gin.Context) {
 		}
 
 		// Account Managers: DEPRECATED
+		// We don't use account managers anymore, so we set it to empty string. We will use deal closing instead.
 		var accountManagerRequests []request.ProjectHeadRequest
 		var validAccountManagers []*model.Employee
-		accountManagerEmailsStr = "" // We don't use account managers anymore, so we set it to empty string. We will use deal closing instead.
+		accountManagerEmailsStr = ""
 		if accountManagerEmailsStr != "" {
 			accountManagerEmails := strings.FieldsFunc(accountManagerEmailsStr, func(r rune) bool { return r == ',' || r == '\n' })
 			for _, amEmail := range accountManagerEmails {
