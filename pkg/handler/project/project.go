@@ -3382,8 +3382,8 @@ func (h *handler) SyncProjectHeadsFromNotion(c *gin.Context) {
 		// Fetch head display names using the Notion project's RowID (which is the page ID for Notion)
 		l.Infof("Found matching DB project %s (ID: %s). Fetching heads from Notion page ID: %s", dbProject.Name, dbProject.ID.String(), np.RowID)
 
-		salePersonEmail, techLeadEmail, accountManagerEmailsStr, dealClosingEmails, err := h.service.Notion.GetProjectHeadEmails(np.RowID)
-		l.Infof("salePersonEmail: %s, techLeadEmail: %s, accountManagerEmailsStr: %s", salePersonEmail, techLeadEmail, accountManagerEmailsStr)
+		salePersonEmails, techLeadEmails, accountManagerEmails, dealClosingEmails, err := h.service.Notion.GetProjectHeadEmails(np.RowID)
+		l.Infof("salePersonEmails: %s | techLeadEmails: %s | accountManagerEmails: %s | dealClosingEmails: %s", salePersonEmails, techLeadEmails, accountManagerEmails, dealClosingEmails)
 		if err != nil {
 			errMsg := fmt.Sprintf("failed to get Notion page properties for project %s (DB ID: %s, Notion PageID: %s): %v", dbProject.Name, dbProject.ID.String(), np.RowID, err)
 			l.Error(err, errMsg)
@@ -3395,19 +3395,27 @@ func (h *handler) SyncProjectHeadsFromNotion(c *gin.Context) {
 
 		// Sale Person
 		var salePersonRequests []request.ProjectHeadRequest
-		if salePersonEmail != "" {
-			emp, err := h.store.Employee.OneByEmail(tx.DB(), salePersonEmail)
-			if err != nil {
-				if errors.Is(err, gorm.ErrRecordNotFound) {
-					l.Warnf("Sale person with email '%s' (for DB project '%s') not found in DB", salePersonEmail, dbProject.Name)
-				} else {
-					l.Errorf(err, "failed to find employee by email '%s' for DB project '%s'", salePersonEmail, dbProject.Name)
+		if salePersonEmails != "" {
+			salePersonEmailList := strings.Split(salePersonEmails, ",")
+			commissionRateSP := decimal.NewFromFloat(5.0 / float64(len(salePersonEmailList)))
+			for _, email := range salePersonEmailList {
+				email = strings.TrimSpace(email)
+				if email == "" {
+					continue
 				}
-			} else {
-				salePersonRequests = append(salePersonRequests, request.ProjectHeadRequest{
-					EmployeeID:     view.UUID(emp.ID),
-					CommissionRate: decimal.NewFromInt(5),
-				})
+				emp, err := h.store.Employee.OneByEmail(tx.DB(), email)
+				if err != nil {
+					if errors.Is(err, gorm.ErrRecordNotFound) {
+						l.Warnf("Sale person with email '%s' (for DB project '%s') not found in DB", salePersonEmails, dbProject.Name)
+					} else {
+						l.Errorf(err, "failed to find employee by email '%s' for DB project '%s'", salePersonEmails, dbProject.Name)
+					}
+				} else {
+					salePersonRequests = append(salePersonRequests, request.ProjectHeadRequest{
+						EmployeeID:     view.UUID(emp.ID),
+						CommissionRate: commissionRateSP,
+					})
+				}
 			}
 		}
 		if err := h.updateProjectHeads(tx.DB(), dbProject.ID.String(), model.HeadPositionSalePerson, salePersonRequests, userInfo); err != nil {
@@ -3422,19 +3430,27 @@ func (h *handler) SyncProjectHeadsFromNotion(c *gin.Context) {
 
 		// Technical Lead
 		var techLeadRequests []request.ProjectHeadRequest
-		if techLeadEmail != "" {
-			emp, err := h.store.Employee.OneByEmail(tx.DB(), techLeadEmail)
-			if err != nil {
-				if errors.Is(err, gorm.ErrRecordNotFound) {
-					l.Warnf("Technical lead with email '%s' (for DB project '%s') not found in DB", techLeadEmail, dbProject.Name)
-				} else {
-					l.Errorf(err, "failed to find employee by email '%s' for DB project '%s'", techLeadEmail, dbProject.Name)
+		if techLeadEmails != "" {
+			techLeadEmailList := strings.Split(techLeadEmails, ",")
+			commissionRateTL := decimal.NewFromFloat(2.0 / float64(len(techLeadEmailList)))
+			for _, email := range techLeadEmailList {
+				email = strings.TrimSpace(email)
+				if email == "" {
+					continue
 				}
-			} else {
-				techLeadRequests = append(techLeadRequests, request.ProjectHeadRequest{
-					EmployeeID:     view.UUID(emp.ID),
-					CommissionRate: decimal.NewFromInt(2),
-				})
+				emp, err := h.store.Employee.OneByEmail(tx.DB(), email)
+				if err != nil {
+					if errors.Is(err, gorm.ErrRecordNotFound) {
+						l.Warnf("Technical lead with email '%s' (for DB project '%s') not found in DB", techLeadEmails, dbProject.Name)
+					} else {
+						l.Errorf(err, "failed to find employee by email '%s' for DB project '%s'", techLeadEmails, dbProject.Name)
+					}
+				} else {
+					techLeadRequests = append(techLeadRequests, request.ProjectHeadRequest{
+						EmployeeID:     view.UUID(emp.ID),
+						CommissionRate: commissionRateTL,
+					})
+				}
 			}
 		}
 		if err := h.updateProjectHeads(tx.DB(), dbProject.ID.String(), model.HeadPositionTechnicalLead, techLeadRequests, userInfo); err != nil {
@@ -3451,9 +3467,9 @@ func (h *handler) SyncProjectHeadsFromNotion(c *gin.Context) {
 		// We don't use account managers anymore, so we set it to empty string. We will use deal closing instead.
 		var accountManagerRequests []request.ProjectHeadRequest
 		var validAccountManagers []*model.Employee
-		accountManagerEmailsStr = ""
-		if accountManagerEmailsStr != "" {
-			accountManagerEmails := strings.FieldsFunc(accountManagerEmailsStr, func(r rune) bool { return r == ',' || r == '\n' })
+		accountManagerEmails = ""
+		if accountManagerEmails != "" {
+			accountManagerEmails := strings.FieldsFunc(accountManagerEmails, func(r rune) bool { return r == ',' || r == '\n' })
 			for _, amEmail := range accountManagerEmails {
 				trimmedEmail := strings.TrimSpace(amEmail)
 				if trimmedEmail == "" {
