@@ -618,7 +618,7 @@ func extractEmailFromOptionName(optionName string) string {
 }
 
 // GetProjectHeadEmails fetches the email addresses for sales person, tech lead, account managers, and deal closing for a given Notion project pageID.
-func (n *notionService) GetProjectHeadEmails(pageID string) (salePersonEmail, techLeadEmail, accountManagerEmails, dealClosingEmails string, err error) {
+func (n *notionService) GetProjectHeadEmails(pageID string) (salePersonEmails, techLeadEmails, accountManagerEmails, dealClosingEmails string, err error) {
 	notionProps, err := n.GetProjectInDB(pageID)
 	if err != nil {
 		return "", "", "", "", err
@@ -637,7 +637,7 @@ func (n *notionService) GetProjectHeadEmails(pageID string) (salePersonEmail, te
 				extractedEmails = append(extractedEmails, email)
 			}
 		}
-		salePersonEmail = strings.Join(extractedEmails, ", ")
+		salePersonEmails = strings.Join(extractedEmails, ", ")
 	}
 
 	// Attempt to extract email for Tech Lead (PM/Delivery property)
@@ -650,7 +650,7 @@ func (n *notionService) GetProjectHeadEmails(pageID string) (salePersonEmail, te
 				extractedEmails = append(extractedEmails, email)
 			}
 		}
-		techLeadEmail = strings.Join(extractedEmails, ", ")
+		techLeadEmails = strings.Join(extractedEmails, ", ")
 	}
 
 	// Attempt to extract email for Account Managers (Closing property)
@@ -680,41 +680,41 @@ func (n *notionService) GetProjectHeadEmails(pageID string) (salePersonEmail, te
 	dealClosingEmails = strings.Join(extractedEmails, ", ")
 
 	// Sync Deal Closing to database
-	if n.db != nil {
-		project := model.Project{}
-		if err := n.db.Where("id = ?", pageID).First(&project).Error; err == nil {
-			tx := n.db.Begin()
-			if tx.Error != nil {
-				return salePersonEmail, techLeadEmail, accountManagerEmails, dealClosingEmails, tx.Error
-			}
-			// Soft delete existing deal-closing heads for this project
-			if err := tx.Where("project_id = ? AND position = ?", project.ID, model.HeadPositionDealClosing).Delete(&model.ProjectHead{}).Error; err != nil {
-				tx.Rollback()
-				return salePersonEmail, techLeadEmail, accountManagerEmails, dealClosingEmails, err
-			}
-			for _, email := range extractedEmails {
-				employee := model.Employee{}
-				if err := tx.Where("company_email = ? OR personal_email = ?", email, email).First(&employee).Error; err == nil {
-					projectHead := model.ProjectHead{
-						ProjectID:  project.ID,
-						EmployeeID: employee.ID,
-						Position:   model.HeadPositionDealClosing,
-					}
-					if err := tx.Create(&projectHead).Error; err != nil {
-						tx.Rollback()
-						return salePersonEmail, techLeadEmail, accountManagerEmails, dealClosingEmails, err
-					}
-				} else if err != gorm.ErrRecordNotFound {
-					n.l.Errorf(err, "find employee by email err", email)
-				}
-			}
-			if err := tx.Commit().Error; err != nil {
-				return salePersonEmail, techLeadEmail, accountManagerEmails, dealClosingEmails, err
-			}
-		} else if err != gorm.ErrRecordNotFound {
-			n.l.Errorf(err, "find project by id err", pageID)
-		}
-	}
+	// if n.db != nil {
+	// 	project := model.Project{}
+	// 	if err := n.db.Where("id = ?", pageID).First(&project).Error; err == nil {
+	// 		tx := n.db.Begin()
+	// 		if tx.Error != nil {
+	// 			return salePersonEmail, techLeadEmail, accountManagerEmails, dealClosingEmails, tx.Error
+	// 		}
+	// 		// Soft delete existing deal-closing heads for this project
+	// 		if err := tx.Where("project_id = ? AND position = ?", project.ID, model.HeadPositionDealClosing).Delete(&model.ProjectHead{}).Error; err != nil {
+	// 			tx.Rollback()
+	// 			return salePersonEmail, techLeadEmail, accountManagerEmails, dealClosingEmails, err
+	// 		}
+	// 		for _, email := range extractedEmails {
+	// 			employee := model.Employee{}
+	// 			if err := tx.Where("company_email = ? OR personal_email = ?", email, email).First(&employee).Error; err == nil {
+	// 				projectHead := model.ProjectHead{
+	// 					ProjectID:  project.ID,
+	// 					EmployeeID: employee.ID,
+	// 					Position:   model.HeadPositionDealClosing,
+	// 				}
+	// 				if err := tx.Create(&projectHead).Error; err != nil {
+	// 					tx.Rollback()
+	// 					return salePersonEmail, techLeadEmail, accountManagerEmails, dealClosingEmails, err
+	// 				}
+	// 			} else if err != gorm.ErrRecordNotFound {
+	// 				n.l.Errorf(err, "find employee by email err", email)
+	// 			}
+	// 		}
+	// 		if err := tx.Commit().Error; err != nil {
+	// 			return salePersonEmail, techLeadEmail, accountManagerEmails, dealClosingEmails, err
+	// 		}
+	// 	} else if err != gorm.ErrRecordNotFound {
+	// 		n.l.Errorf(err, "find project by id err", pageID)
+	// 	}
+	// }
 
-	return salePersonEmail, techLeadEmail, accountManagerEmails, dealClosingEmails, nil
+	return salePersonEmails, techLeadEmails, accountManagerEmails, dealClosingEmails, nil
 }

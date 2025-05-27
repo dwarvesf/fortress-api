@@ -244,13 +244,6 @@ func (c *controller) getPICs(invoice *model.Invoice, projectMembers []*model.Pro
 				Note:           "Delivery Manager",
 			})
 		case model.HeadPositionSalePerson:
-			sales = append(sales, pic{
-				ID:             itm.EmployeeID,
-				CommissionRate: itm.CommissionRate,
-				ChargeRate:     invoice.Total,
-				Note:           "Sales",
-			})
-
 			// UPDATE:
 			// If sale person earn commission from project. The person who refer the sale person will earn commission too.
 			// The commission rate is 10% of the sale person commission rate.
@@ -258,6 +251,13 @@ func (c *controller) getPICs(invoice *model.Invoice, projectMembers []*model.Pro
 			if err != nil {
 				continue
 			}
+
+			sales = append(sales, pic{
+				ID:             itm.EmployeeID,
+				CommissionRate: itm.CommissionRate,
+				ChargeRate:     invoice.Total,
+				Note:           fmt.Sprintf("Sales - %s", salePersonDetail.FullName),
+			})
 
 			if salePersonDetail.Referrer == nil {
 				continue
