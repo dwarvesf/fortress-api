@@ -41,3 +41,8 @@ func (s *store) MarkPaid(db *gorm.DB, id model.UUID) error {
 	}
 	return db.Model(&cms).Updates(map[string]interface{}{"is_paid": true, "paid_at": time.Now()}).Error
 }
+
+// DeleteUnpaidByInvoiceID delete all commissions which is not paid and by invoice id
+func (s *store) DeleteUnpaidByInvoiceID(db *gorm.DB, invoiceID string) error {
+	return db.Where("invoice_id = ? AND deleted_at IS NULL AND (is_paid = ? OR is_paid IS NULL)", invoiceID, false).Delete(&model.EmployeeCommission{}).Error
+}
