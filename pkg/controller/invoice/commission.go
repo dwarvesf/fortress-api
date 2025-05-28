@@ -13,6 +13,7 @@ import (
 	bcConst "github.com/dwarvesf/fortress-api/pkg/service/basecamp/consts"
 	bcModel "github.com/dwarvesf/fortress-api/pkg/service/basecamp/model"
 	"github.com/dwarvesf/fortress-api/pkg/store"
+	storeinvoice "github.com/dwarvesf/fortress-api/pkg/store/invoice"
 )
 
 const (
@@ -136,7 +137,7 @@ func (c *controller) calculateCommissionFromInvoice(db *gorm.DB, l logger.Logger
 		res = append(res, c...)
 	} else {
 		// calculate commission for inbound
-		c, err := c.calculateInboundFundCommission(invoice)
+		c, err := c.calculateInboundFundCommission(invoice, invoice.TotalWithoutBonus)
 		if err != nil {
 			l.Errorf(err, "failed to calculate inbound fund commission rate for project(%s)", invoice.ProjectID.String())
 			return nil, err
@@ -377,9 +378,8 @@ func (c *controller) calculateHeadCommission(beneficiaries []pic, invoice *model
 	return rs, nil
 }
 
-func (c *controller) calculateInboundFundCommission(invoice *model.Invoice) ([]model.EmployeeCommission, error) {
-	originalInvoiceTotal := invoice.Total // Store original total before modification
-	commissionValue, _ := decimal.NewFromFloat(inboundFundCommissionRate).Mul(decimal.NewFromFloat(originalInvoiceTotal)).Float64()
+func (c *controller) calculateInboundFundCommission(invoice *model.Invoice, invoiceTotal float64) ([]model.EmployeeCommission, error) {
+	commissionValue, _ := decimal.NewFromFloat(inboundFundCommissionRate).Mul(decimal.NewFromFloat(invoiceTotal)).Float64()
 	convertedValue, rate, err := c.service.Wise.Convert(commissionValue, invoice.Project.BankAccount.Currency.Name, "VND")
 	if err != nil {
 		return nil, err
@@ -392,7 +392,7 @@ func (c *controller) calculateInboundFundCommission(invoice *model.Invoice) ([]m
 			Project:        invoice.Project.Name,
 			InvoiceID:      invoice.ID,
 			ConversionRate: rate,
-			Formula:        fmt.Sprintf("%v%%(CR) * %v(IV) * %v(RATE)", inboundFundCommissionRate*100, originalInvoiceTotal, rate),
+			Formula:        fmt.Sprintf("%v%%(CR) * %v(IV) * %v(RATE)", inboundFundCommissionRate*100, invoiceTotal, rate),
 			Note:           fmt.Sprintf("Inbound Fund - %s", invoice.Number),
 		},
 	}
@@ -472,4 +472,81 @@ func (c *controller) calculateUpsellSaleReferralCommission(pics []pic, invoice *
 	}
 
 	return rs, nil
+}
+
+// ProcessCommissions calculates and (optionally) saves commissions for an invoice in a transaction-safe way.
+func (c *controller) ProcessCommissions(invoiceID string, dryRun bool, l logger.Logger) ([]model.EmployeeCommission, error) {
+	db := c.repo.DB()
+	tx := db.Begin()
+	if tx.Error != nil {
+		l.Error(tx.Error, "failed to begin database transaction")
+		return nil, tx.Error
+	}
+
+	// Fetch invoice with all required preloads
+	invoice, err := c.store.Invoice.One(tx, &storeinvoice.Query{ID: invoiceID})
+	if err != nil {
+		tx.Rollback()
+		l.Error(err, "failed to find invoice in database")
+		return nil, err
+	}
+
+	commissions, err := c.CalculateCommissionFromInvoice(c.repo, l, invoice)
+	if err != nil {
+		tx.Rollback()
+		l.Error(err, "failed to calculate commissions")
+		return nil, err
+	}
+
+	if dryRun {
+		tx.Rollback()
+		return commissions, nil
+	}
+
+	// Delete existing commissions and inbound fund transactions
+	if err := c.store.EmployeeCommission.DeleteUnpaidByInvoiceID(tx, invoiceID); err != nil {
+		tx.Rollback()
+		l.Error(err, "failed to delete existing commissions")
+		return nil, err
+	}
+	if err := c.store.InboundFundTransaction.DeleteUnpaidByInvoiceID(tx, invoiceID); err != nil {
+		tx.Rollback()
+		l.Error(err, "failed to delete existing inbound fund transactions")
+		return nil, err
+	}
+
+	// Create inbound fund transactions
+	for _, commission := range commissions {
+		if commission.EmployeeID.IsZero() {
+			_, err := c.store.InboundFundTransaction.Create(tx, &model.InboundFundTransaction{
+				InvoiceID:      invoice.ID,
+				Amount:         commission.Amount,
+				ConversionRate: commission.ConversionRate,
+				Notes:          fmt.Sprintf("%v - %v", commission.Formula, commission.Note),
+			})
+			if err != nil {
+				tx.Rollback()
+				l.Errorf(err, "failed to create inbound fund transaction for invoice(%s)", invoice.ID.String())
+				return nil, err
+			}
+		}
+	}
+
+	// Remove inbound fund commissions from employee commissions
+	filtered := c.RemoveInboundFundCommission(commissions)
+	if len(filtered) > 0 {
+		_, err := c.store.EmployeeCommission.Create(tx, filtered)
+		if err != nil {
+			tx.Rollback()
+			l.Error(err, "failed to create commission record")
+			return nil, err
+		}
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		l.Error(err, "failed to commit transaction")
+		return nil, err
+	}
+
+	return filtered, nil
 }

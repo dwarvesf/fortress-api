@@ -278,7 +278,6 @@ func (n *notionService) GetProjectInDB(pageID string) (*nt.DatabasePagePropertie
 
 	// 2. loop through all projects to find the project by page id
 	for _, r := range res.Results {
-
 		if strings.ReplaceAll(r.ID, "-", "") == strings.ReplaceAll(pageID, "-", "") {
 			p, ok := r.Properties.(nt.DatabasePageProperties)
 			if !ok {

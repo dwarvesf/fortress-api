@@ -2,7 +2,6 @@ package invoice
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -302,75 +301,12 @@ func (h *handler) CalculateCommissions(c *gin.Context) {
 
 	dryRun := c.DefaultQuery("dry_run", "false") == "true"
 
-	var invoice model.Invoice
-	if err := h.repo.DB().Where("id = ?", invoiceID).Preload("Project").Preload("Project.Heads").Preload("Project.BankAccount").Preload("Project.BankAccount.Currency").First(&invoice).Error; err != nil {
-		l.Error(err, "failed to find invoice in database")
-		c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, err, nil, ""))
-		return
-	}
-
-	commissions, err := h.controller.Invoice.CalculateCommissionFromInvoice(h.repo, h.logger, &invoice)
+	commissions, err := h.controller.Invoice.ProcessCommissions(invoiceID, dryRun, l)
 	if err != nil {
-		l.Error(err, "failed to calculate commissions")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
-		return
-	}
-
-	if dryRun {
-		c.JSON(http.StatusOK, view.CreateResponse[any](commissions, nil, nil, nil, ""))
-		return
-	}
-
-	tx := h.repo.DB().Begin()
-	if tx.Error != nil {
-		l.Error(tx.Error, "failed to begin database transaction")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, tx.Error, nil, ""))
-		return
-	}
-
-	if err := tx.Where("invoice_id = ? AND deleted_at IS NULL", invoiceID).Delete(&model.EmployeeCommission{}).Error; err != nil {
-		tx.Rollback()
-		l.Error(err, "failed to delete existing commissions")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
-		return
-	}
-	if err := tx.Where("invoice_id = ? AND deleted_at IS NULL", invoiceID).Delete(&model.InboundFundTransaction{}).Error; err != nil {
-		tx.Rollback()
-		l.Error(err, "failed to delete existing inbound fund transactions")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
-		return
-	}
-
-	// create inbound fund transaction, these transactions are not included in the employee commissions
-	for _, commission := range commissions {
-		if strings.Contains(commission.Note, "Inbound Fund") {
-			_, err := h.store.InboundFundTransaction.Create(tx, &model.InboundFundTransaction{
-				InvoiceID:      invoice.ID,
-				Amount:         commission.Amount,
-				ConversionRate: commission.ConversionRate,
-				Notes:          fmt.Sprintf("%v - %v", commission.Formula, commission.Note),
-			})
-			if err != nil {
-				l.Errorf(err, "failed to create inbound fund transaction for invoice(%s)", invoice.ID.String())
-				continue
-			}
-		}
-	}
-
-	// remove inbound fund commission from employee commissions
-	commissions = h.controller.Invoice.RemoveInboundFundCommission(commissions)
-
-	for _, commission := range commissions {
-		if err := tx.Create(&commission).Error; err != nil {
-			tx.Rollback()
-			l.Error(err, "failed to create commission record")
-			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		if strings.Contains(err.Error(), "not found") {
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, err, nil, ""))
 			return
 		}
-	}
-
-	if err := tx.Commit().Error; err != nil {
-		l.Error(err, "failed to commit transaction")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
 	}
