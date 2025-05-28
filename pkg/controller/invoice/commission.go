@@ -136,7 +136,7 @@ func (c *controller) calculateCommissionFromInvoice(db *gorm.DB, l logger.Logger
 		res = append(res, c...)
 	} else {
 		// calculate commission for inbound
-		c, err := c.calculateInboundFundCommission(invoice)
+		c, err := c.calculateInboundFundCommission(invoice, invoice.TotalWithoutBonus)
 		if err != nil {
 			l.Errorf(err, "failed to calculate inbound fund commission rate for project(%s)", invoice.ProjectID.String())
 			return nil, err
@@ -377,9 +377,8 @@ func (c *controller) calculateHeadCommission(beneficiaries []pic, invoice *model
 	return rs, nil
 }
 
-func (c *controller) calculateInboundFundCommission(invoice *model.Invoice) ([]model.EmployeeCommission, error) {
-	originalInvoiceTotal := invoice.Total // Store original total before modification
-	commissionValue, _ := decimal.NewFromFloat(inboundFundCommissionRate).Mul(decimal.NewFromFloat(originalInvoiceTotal)).Float64()
+func (c *controller) calculateInboundFundCommission(invoice *model.Invoice, invoiceTotal float64) ([]model.EmployeeCommission, error) {
+	commissionValue, _ := decimal.NewFromFloat(inboundFundCommissionRate).Mul(decimal.NewFromFloat(invoiceTotal)).Float64()
 	convertedValue, rate, err := c.service.Wise.Convert(commissionValue, invoice.Project.BankAccount.Currency.Name, "VND")
 	if err != nil {
 		return nil, err
@@ -392,7 +391,7 @@ func (c *controller) calculateInboundFundCommission(invoice *model.Invoice) ([]m
 			Project:        invoice.Project.Name,
 			InvoiceID:      invoice.ID,
 			ConversionRate: rate,
-			Formula:        fmt.Sprintf("%v%%(CR) * %v(IV) * %v(RATE)", inboundFundCommissionRate*100, originalInvoiceTotal, rate),
+			Formula:        fmt.Sprintf("%v%%(CR) * %v(IV) * %v(RATE)", inboundFundCommissionRate*100, invoiceTotal, rate),
 			Note:           fmt.Sprintf("Inbound Fund - %s", invoice.Number),
 		},
 	}
