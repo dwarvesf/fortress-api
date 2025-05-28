@@ -387,7 +387,7 @@ func (c *controller) calculateInboundFundCommission(invoice *model.Invoice, invo
 
 	rs := []model.EmployeeCommission{
 		{
-			EmployeeID:     model.MustGetUUIDFromString("00000000-0000-0000-0000-000000000000"),
+			EmployeeID:     model.UUID{},
 			Amount:         model.NewVietnamDong(int64(convertedValue)),
 			Project:        invoice.Project.Name,
 			InvoiceID:      invoice.ID,
