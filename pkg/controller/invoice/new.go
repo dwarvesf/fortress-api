@@ -41,4 +41,5 @@ type IController interface {
 	// Calculate commissions for an invoice
 	CalculateCommissionFromInvoice(db store.DBRepo, l logger.Logger, invoice *model.Invoice) ([]model.EmployeeCommission, error)
 	RemoveInboundFundCommission(employeeCommissions []model.EmployeeCommission) []model.EmployeeCommission
+	ProcessCommissions(invoiceID string, dryRun bool, l logger.Logger) ([]model.EmployeeCommission, error)
 }

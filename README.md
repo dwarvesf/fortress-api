@@ -12,6 +12,54 @@
 
 This repository is the official BE service for Fortress
 
+### Project structure
+
+```
+.
+├── cmd
+│   └── server
+├── docs
+│   ├── adr
+│   ├── changelog
+│   ├── diagram
+│   ├── specs
+│   ├── docs.go
+│   ├── swagger.json
+│   └── swagger.yaml
+├── migrations
+│   ├── schemas
+│   ├── seed
+│   └── test_seed
+├── pkg
+│   ├── config
+│   ├── constant
+│   ├── contracts
+│   ├── controller
+│   ├── handler
+│   ├── logger
+│   ├── model
+│   ├── mw
+│   ├── request
+│   ├── routes
+│   ├── service
+│   ├── store
+│   ├── templates
+│   ├── utils
+│   ├── view
+│   └── worker
+├── CODEOWNERS
+├── dbconfig.yml
+├── devbox.json
+├── devbox.lock
+├── docker-compose.yml
+├── Dockerfile
+├── go.mod
+├── go.sum
+├── Makefile
+├── README.md
+└── tools.Dockerfile
+```
+
 ## How to contribute
 
 ### Setup local development environment (pick one of following ways)

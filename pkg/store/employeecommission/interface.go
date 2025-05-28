@@ -15,6 +15,7 @@ type IStore interface {
 	Create(db *gorm.DB, employeeCommissions []model.EmployeeCommission) ([]model.EmployeeCommission, error)
 	Get(db *gorm.DB, q Query) ([]model.EmployeeCommission, error)
 	MarkPaid(db *gorm.DB, ids model.UUID) error
+	DeleteUnpaidByInvoiceID(db *gorm.DB, invoiceID string) error
 }
 
 type Query struct {
