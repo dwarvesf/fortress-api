@@ -3463,7 +3463,7 @@ func (h *handler) SyncProjectHeadsFromNotion(c *gin.Context) {
 			continue
 		}
 
-		// Deal Closing
+		// Deal Closing is a term in Notion in column "Deal Closing", but it's actually the account manager in the DB, dealClosingRequests will use type HeadPositionAccountManager
 		var dealClosingRequests []request.ProjectHeadRequest
 		if dealClosingEmails != "" {
 			dealClosingEmailList := strings.Split(dealClosingEmails, ",")
@@ -3489,7 +3489,7 @@ func (h *handler) SyncProjectHeadsFromNotion(c *gin.Context) {
 			}
 		}
 		if len(dealClosingRequests) > 0 {
-			if err := h.updateProjectHeads(tx.DB(), dbProject.ID.String(), model.HeadPositionDealClosing, dealClosingRequests, userInfo); err != nil {
+			if err := h.updateProjectHeads(tx.DB(), dbProject.ID.String(), model.HeadPositionAccountManager, dealClosingRequests, userInfo); err != nil {
 				errMsg := fmt.Sprintf("failed to update deal-closing heads for project %s (DB ID: %s): %v", dbProject.Name, dbProject.ID.String(), err)
 				l.Error(err, errMsg)
 				errorMessages = append(errorMessages, errMsg)
