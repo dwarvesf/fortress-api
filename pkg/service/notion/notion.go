@@ -617,13 +617,13 @@ func extractEmailFromOptionName(optionName string) string {
 }
 
 // GetProjectHeadEmails fetches the email addresses for sales person, delivery manager, account managers, and deal closing for a given Notion project pageID.
-func (n *notionService) GetProjectHeadEmails(pageID string) (salePersonEmails, deliveryManagerEmails, accountManagerEmails, dealClosingEmails string, err error) {
+func (n *notionService) GetProjectHeadEmails(pageID string) (salePersonEmails, deliveryManagerEmails, dealClosingEmails string, err error) {
 	notionProps, err := n.GetProjectInDB(pageID)
 	if err != nil {
-		return "", "", "", "", err
+		return "", "", "", err
 	}
 	if notionProps == nil {
-		return "", "", "", "", nil
+		return "", "", "", nil
 	}
 
 	// Attempt to extract email for Sales Person (Source property)
@@ -665,5 +665,5 @@ func (n *notionService) GetProjectHeadEmails(pageID string) (salePersonEmails, d
 	}
 	dealClosingEmails = strings.Join(extractedEmails, ", ")
 
-	return salePersonEmails, deliveryManagerEmails, accountManagerEmails, dealClosingEmails, nil
+	return salePersonEmails, deliveryManagerEmails, dealClosingEmails, nil
 }
