@@ -640,7 +640,7 @@ func (n *notionService) GetProjectHeadEmails(pageID string) (salePersonEmails, d
 	}
 
 	// Attempt to extract email for Tech Lead (PM/Delivery property)
-	deliveryManagerProp, ok := (*notionProps)["PM/Delivery"]
+	deliveryManagerProp, ok := (*notionProps)["PM/Delivery (Technical Lead)"]
 	if ok && deliveryManagerProp.Type == nt.DBPropTypeMultiSelect {
 		var extractedEmails []string
 		for _, option := range deliveryManagerProp.MultiSelect {
@@ -652,21 +652,8 @@ func (n *notionService) GetProjectHeadEmails(pageID string) (salePersonEmails, d
 		deliveryManagerEmails = strings.Join(extractedEmails, ", ")
 	}
 
-	// Attempt to extract email for Account Managers (Closing property)
-	accountManagerProp, ok := (*notionProps)["Closing"]
-	if ok && accountManagerProp.Type == nt.DBPropTypeMultiSelect {
-		var extractedEmails []string
-		for _, option := range accountManagerProp.MultiSelect {
-			email := extractEmailFromOptionName(option.Name)
-			if email != "" {
-				extractedEmails = append(extractedEmails, email)
-			}
-		}
-		accountManagerEmails = strings.Join(extractedEmails, ", ")
-	}
-
 	// Handle Deal Closing (existing logic)
-	dealClosingProp, ok := (*notionProps)["Deal Closing"]
+	dealClosingProp, ok := (*notionProps)["Deal Closing (Account Manager)"]
 	var extractedEmails []string
 	if ok && dealClosingProp.Type == nt.DBPropTypeMultiSelect {
 		for _, option := range dealClosingProp.MultiSelect {

@@ -3515,9 +3515,8 @@ func (h *handler) SyncProjectHeadsFromNotion(c *gin.Context) {
 
 	if len(errorMessages) > 0 {
 		finalErrorMsg := strings.Join(errorMessages, "; ")
+		// just log the error, don't return it to the client
 		l.Error(errors.New(finalErrorMsg), "SyncProjectHeadsFromNotion completed with errors")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, errors.New(finalErrorMsg), nil, fmt.Sprintf("Processed %d projects with some errors.", processedProjectCount)))
-		return
 	}
 
 	l.Infof("Successfully synced project heads from Notion for %d projects.", processedProjectCount)
