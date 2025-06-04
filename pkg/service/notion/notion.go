@@ -617,13 +617,13 @@ func extractEmailFromOptionName(optionName string) string {
 }
 
 // GetProjectHeadEmails fetches the email addresses for sales person, delivery manager, account managers, and deal closing for a given Notion project pageID.
-func (n *notionService) GetProjectHeadEmails(pageID string) (salePersonEmails, deliveryManagerEmails, accountManagerEmails, dealClosingEmails string, err error) {
+func (n *notionService) GetProjectHeadEmails(pageID string) (salePersonEmails, deliveryManagerEmails, dealClosingEmails string, err error) {
 	notionProps, err := n.GetProjectInDB(pageID)
 	if err != nil {
-		return "", "", "", "", err
+		return "", "", "", err
 	}
 	if notionProps == nil {
-		return "", "", "", "", nil
+		return "", "", "", nil
 	}
 
 	// Attempt to extract email for Sales Person (Source property)
@@ -640,7 +640,7 @@ func (n *notionService) GetProjectHeadEmails(pageID string) (salePersonEmails, d
 	}
 
 	// Attempt to extract email for Tech Lead (PM/Delivery property)
-	deliveryManagerProp, ok := (*notionProps)["PM/Delivery"]
+	deliveryManagerProp, ok := (*notionProps)["PM/Delivery (Technical Lead)"]
 	if ok && deliveryManagerProp.Type == nt.DBPropTypeMultiSelect {
 		var extractedEmails []string
 		for _, option := range deliveryManagerProp.MultiSelect {
@@ -652,21 +652,8 @@ func (n *notionService) GetProjectHeadEmails(pageID string) (salePersonEmails, d
 		deliveryManagerEmails = strings.Join(extractedEmails, ", ")
 	}
 
-	// Attempt to extract email for Account Managers (Closing property)
-	accountManagerProp, ok := (*notionProps)["Closing"]
-	if ok && accountManagerProp.Type == nt.DBPropTypeMultiSelect {
-		var extractedEmails []string
-		for _, option := range accountManagerProp.MultiSelect {
-			email := extractEmailFromOptionName(option.Name)
-			if email != "" {
-				extractedEmails = append(extractedEmails, email)
-			}
-		}
-		accountManagerEmails = strings.Join(extractedEmails, ", ")
-	}
-
 	// Handle Deal Closing (existing logic)
-	dealClosingProp, ok := (*notionProps)["Deal Closing"]
+	dealClosingProp, ok := (*notionProps)["Deal Closing (Account Manager)"]
 	var extractedEmails []string
 	if ok && dealClosingProp.Type == nt.DBPropTypeMultiSelect {
 		for _, option := range dealClosingProp.MultiSelect {
@@ -678,5 +665,5 @@ func (n *notionService) GetProjectHeadEmails(pageID string) (salePersonEmails, d
 	}
 	dealClosingEmails = strings.Join(extractedEmails, ", ")
 
-	return salePersonEmails, deliveryManagerEmails, accountManagerEmails, dealClosingEmails, nil
+	return salePersonEmails, deliveryManagerEmails, dealClosingEmails, nil
 }

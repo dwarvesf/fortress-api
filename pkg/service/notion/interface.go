@@ -46,5 +46,5 @@ type IService interface {
 	ListProjects() ([]model.NotionProject, error)
 	ListProjectsWithChangelog() ([]model.ProjectChangelogPage, error)
 	QueryAudienceDatabase(audienceDBId, audience string) (records []nt.Page, err error)
-	GetProjectHeadEmails(pageID string) (salePersonEmail, techLeadEmail, accountManagerEmails, dealClosingEmails string, err error)
+	GetProjectHeadEmails(pageID string) (salePersonEmail, techLeadEmail, dealClosingEmails string, err error)
 }
