@@ -19,7 +19,7 @@ import (
 const (
 	hiringCommissionRate       int64   = 2
 	saleReferralCommissionRate int64   = 10
-	inboundFundCommissionRate  float64 = 0.05 // 5%
+	inboundFundCommissionRate  float64 = 0.04 // 4%
 )
 
 type pic struct {

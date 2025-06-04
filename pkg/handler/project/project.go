@@ -3382,8 +3382,8 @@ func (h *handler) SyncProjectHeadsFromNotion(c *gin.Context) {
 		// Fetch head display names using the Notion project's RowID (which is the page ID for Notion)
 		l.Infof("Found matching DB project %s (ID: %s). Fetching heads from Notion page ID: %s", dbProject.Name, dbProject.ID.String(), np.RowID)
 
-		salePersonEmails, deliveryManagerEmails, accountManagerEmails, dealClosingEmails, err := h.service.Notion.GetProjectHeadEmails(np.RowID)
-		l.Infof("salePersonEmails: %s | deliveryManagerEmails: %s | accountManagerEmails: %s | dealClosingEmails: %s", salePersonEmails, deliveryManagerEmails, accountManagerEmails, dealClosingEmails)
+		salePersonEmails, techLeadEmails, dealClosingEmails, err := h.service.Notion.GetProjectHeadEmails(np.RowID)
+		l.Infof("salePersonEmails: %s | techLeadEmails: %s | dealClosingEmails: %s", salePersonEmails, techLeadEmails, dealClosingEmails)
 		if err != nil {
 			errMsg := fmt.Sprintf("failed to get Notion page properties for project %s (DB ID: %s, Notion PageID: %s): %v", dbProject.Name, dbProject.ID.String(), np.RowID, err)
 			l.Error(err, errMsg)
@@ -3411,6 +3411,15 @@ func (h *handler) SyncProjectHeadsFromNotion(c *gin.Context) {
 						l.Errorf(err, "failed to find employee by email '%s' for DB project '%s'", salePersonEmails, dbProject.Name)
 					}
 				} else {
+					ph, err := h.store.ProjectHead.One(tx.DB(), dbProject.ID.String(), emp.ID.String(), model.HeadPositionSalePerson)
+					if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+						l.Errorf(err, "failed to find project head by employee ID '%s' for DB project '%s'", emp.ID.String(), dbProject.Name)
+						continue
+					} else if err == nil && ph != nil {
+						// if the project head already exists, we should not update the commission rate
+						l.Warnf("Sale person with email '%s' (for DB project '%s') already exists in DB", salePersonEmails, dbProject.Name)
+						commissionRateSP = ph.CommissionRate
+					}
 					salePersonRequests = append(salePersonRequests, request.ProjectHeadRequest{
 						EmployeeID:     view.UUID(emp.ID),
 						CommissionRate: commissionRateSP,
@@ -3429,11 +3438,11 @@ func (h *handler) SyncProjectHeadsFromNotion(c *gin.Context) {
 		}
 
 		// Delivery Manager
-		var deliveryManagerRequests []request.ProjectHeadRequest
-		if deliveryManagerEmails != "" {
-			deliveryManagerEmailList := strings.Split(deliveryManagerEmails, ",")
-			commissionRateTL := decimal.NewFromFloat(2.0 / float64(len(deliveryManagerEmailList)))
-			for _, email := range deliveryManagerEmailList {
+		var techLeadRequests []request.ProjectHeadRequest
+		if techLeadEmails != "" {
+			techLeadEmailList := strings.Split(techLeadEmails, ",")
+			commissionRateTL := decimal.NewFromFloat(2.0 / float64(len(techLeadEmailList)))
+			for _, email := range techLeadEmailList {
 				email = strings.TrimSpace(email)
 				if email == "" {
 					continue
@@ -3441,20 +3450,29 @@ func (h *handler) SyncProjectHeadsFromNotion(c *gin.Context) {
 				emp, err := h.store.Employee.OneByEmail(tx.DB(), email)
 				if err != nil {
 					if errors.Is(err, gorm.ErrRecordNotFound) {
-						l.Warnf("Delivery manager with email '%s' (for DB project '%s') not found in DB", deliveryManagerEmails, dbProject.Name)
+						l.Warnf("Technical lead with email '%s' (for DB project '%s') not found in DB", techLeadEmails, dbProject.Name)
 					} else {
-						l.Errorf(err, "failed to find employee by email '%s' for DB project '%s'", deliveryManagerEmails, dbProject.Name)
+						l.Errorf(err, "failed to find employee by email '%s' for DB project '%s'", techLeadEmails, dbProject.Name)
 					}
 				} else {
-					deliveryManagerRequests = append(deliveryManagerRequests, request.ProjectHeadRequest{
+					ph, err := h.store.ProjectHead.One(tx.DB(), dbProject.ID.String(), emp.ID.String(), model.HeadPositionTechnicalLead)
+					if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+						l.Errorf(err, "failed to find project head by employee ID '%s' for DB project '%s'", emp.ID.String(), dbProject.Name)
+						continue
+					} else if err == nil && ph != nil {
+						// if the project head already exists, we should not update the commission rate
+						l.Warnf("Technical lead with email '%s' (for DB project '%s') already exists in DB", techLeadEmails, dbProject.Name)
+						commissionRateTL = ph.CommissionRate
+					}
+					techLeadRequests = append(techLeadRequests, request.ProjectHeadRequest{
 						EmployeeID:     view.UUID(emp.ID),
 						CommissionRate: commissionRateTL,
 					})
 				}
 			}
 		}
-		if err := h.updateProjectHeads(tx.DB(), dbProject.ID.String(), model.HeadPositionDeliveryManager, deliveryManagerRequests, userInfo); err != nil {
-			errMsg := fmt.Sprintf("failed to update delivery managers for project %s (DB ID: %s): %v", dbProject.Name, dbProject.ID.String(), err)
+		if err := h.updateProjectHeads(tx.DB(), dbProject.ID.String(), model.HeadPositionTechnicalLead, techLeadRequests, userInfo); err != nil {
+			errMsg := fmt.Sprintf("failed to update technical leads for project %s (DB ID: %s): %v", dbProject.Name, dbProject.ID.String(), err)
 			l.Error(err, errMsg)
 			errorMessages = append(errorMessages, errMsg)
 			if err := done(err); err != nil {
@@ -3482,22 +3500,29 @@ func (h *handler) SyncProjectHeadsFromNotion(c *gin.Context) {
 					}
 					continue
 				}
+				ph, err := h.store.ProjectHead.One(tx.DB(), dbProject.ID.String(), emp.ID.String(), model.HeadPositionAccountManager)
+				if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+					l.Errorf(err, "failed to find project head by employee ID '%s' for DB project '%s'", emp.ID.String(), dbProject.Name)
+					continue
+				} else if err == nil && ph != nil {
+					// if the project head already exists, we should not update the commission rate
+					l.Warnf("Deal closing employee with email '%s' (for DB project '%s') already exists in DB", email, dbProject.Name)
+					commissionRateDC = ph.CommissionRate
+				}
 				dealClosingRequests = append(dealClosingRequests, request.ProjectHeadRequest{
 					EmployeeID:     view.UUID(emp.ID),
 					CommissionRate: commissionRateDC,
 				})
 			}
 		}
-		if len(dealClosingRequests) > 0 {
-			if err := h.updateProjectHeads(tx.DB(), dbProject.ID.String(), model.HeadPositionAccountManager, dealClosingRequests, userInfo); err != nil {
-				errMsg := fmt.Sprintf("failed to update deal-closing heads for project %s (DB ID: %s): %v", dbProject.Name, dbProject.ID.String(), err)
-				l.Error(err, errMsg)
-				errorMessages = append(errorMessages, errMsg)
-				if err := done(err); err != nil {
-					l.Error(err, "failed to finalize transaction")
-				}
-				continue
+		if err := h.updateProjectHeads(tx.DB(), dbProject.ID.String(), model.HeadPositionAccountManager, dealClosingRequests, userInfo); err != nil {
+			errMsg := fmt.Sprintf("failed to update deal-closing heads for project %s (DB ID: %s): %v", dbProject.Name, dbProject.ID.String(), err)
+			l.Error(err, errMsg)
+			errorMessages = append(errorMessages, errMsg)
+			if err := done(err); err != nil {
+				l.Error(err, "failed to finalize transaction")
 			}
+			continue
 		}
 
 		if err := done(nil); err != nil {
@@ -3516,8 +3541,6 @@ func (h *handler) SyncProjectHeadsFromNotion(c *gin.Context) {
 	if len(errorMessages) > 0 {
 		finalErrorMsg := strings.Join(errorMessages, "; ")
 		l.Error(errors.New(finalErrorMsg), "SyncProjectHeadsFromNotion completed with errors")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, errors.New(finalErrorMsg), nil, fmt.Sprintf("Processed %d projects with some errors.", processedProjectCount)))
-		return
 	}
 
 	l.Infof("Successfully synced project heads from Notion for %d projects.", processedProjectCount)
