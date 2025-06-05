@@ -24,6 +24,9 @@ func (s *store) Get(db *gorm.DB, q Query) ([]model.EmployeeCommission, error) {
 	if q.EmployeeID != "" {
 		db = db.Where("employee_id = ?", q.EmployeeID)
 	}
+	if q.InvoiceID != "" {
+		db = db.Where("invoice_id = ?", q.InvoiceID)
+	}
 	if q.FromDate != nil {
 		db = db.Where("created_at > ?", q.FromDate)
 	}
@@ -44,5 +47,5 @@ func (s *store) MarkPaid(db *gorm.DB, id model.UUID) error {
 
 // DeleteUnpaidByInvoiceID delete all commissions which is not paid and by invoice id
 func (s *store) DeleteUnpaidByInvoiceID(db *gorm.DB, invoiceID string) error {
-	return db.Where("invoice_id = ? AND deleted_at IS NULL AND (is_paid = ? OR is_paid IS NULL)", invoiceID, false).Delete(&model.EmployeeCommission{}).Error
+	return db.Where("invoice_id = ? AND (is_paid = ? OR is_paid IS NULL)", invoiceID, false).Delete(&model.EmployeeCommission{}).Error
 }

@@ -20,6 +20,7 @@ type IStore interface {
 
 type Query struct {
 	EmployeeID string
+	InvoiceID  string
 	FromDate   *time.Time
 	ToDate     *time.Time
 	IsPaid     bool

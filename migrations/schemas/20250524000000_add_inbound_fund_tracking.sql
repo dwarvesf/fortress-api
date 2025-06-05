@@ -6,7 +6,7 @@ CREATE TABLE
         created_at TIMESTAMP(6) DEFAULT (now ()),
         updated_at TIMESTAMP(6) DEFAULT (now ()),
         invoice_id uuid NOT NULL,
-        amount DECIMAL NOT NULL,
+        amount INT8 NOT NULL,
         notes TEXT,
         conversion_rate DECIMAL,
         paid_at TIMESTAMP(6),
