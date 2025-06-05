@@ -28,3 +28,14 @@ func (s *store) GetByInvoiceID(db *gorm.DB, invoiceID string) (*model.InboundFun
 	}
 	return &ift, nil
 }
+
+func (s *store) Get(db *gorm.DB, q Query) ([]model.InboundFundTransaction, error) {
+	var res []model.InboundFundTransaction
+	db = db.Where("invoice_id = ?", q.InvoiceID)
+	if q.IsPaid {
+		db = db.Where("paid_at IS NOT NULL")
+	} else {
+		db = db.Where("paid_at IS NULL")
+	}
+	return res, db.Find(&res).Error
+}

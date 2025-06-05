@@ -13,6 +13,7 @@ import (
 	bcConst "github.com/dwarvesf/fortress-api/pkg/service/basecamp/consts"
 	bcModel "github.com/dwarvesf/fortress-api/pkg/service/basecamp/model"
 	"github.com/dwarvesf/fortress-api/pkg/store"
+	storeemployeecommission "github.com/dwarvesf/fortress-api/pkg/store/employeecommission"
 	storeinvoice "github.com/dwarvesf/fortress-api/pkg/store/invoice"
 )
 
@@ -51,6 +52,7 @@ func (c *controller) storeCommission(db *gorm.DB, l logger.Logger, invoice *mode
 	}
 
 	employeeCommissions, err := c.calculateCommissionFromInvoice(db, l, invoice)
+	// employeeCommissions, err := c.calculateCommissionFromInvoice(db, l, invoice)
 	if err != nil {
 		l.Errorf(err, "failed to create commission for invoice(%s)", invoice.ID.String())
 		return nil, err
@@ -503,7 +505,7 @@ func (c *controller) ProcessCommissions(invoiceID string, dryRun bool, l logger.
 		return commissions, nil
 	}
 
-	// Delete existing commissions and inbound fund transactions
+	// Only delete and create if there are unpaid records
 	if err := c.store.EmployeeCommission.DeleteUnpaidByInvoiceID(tx, invoiceID); err != nil {
 		tx.Rollback()
 		l.Error(err, "failed to delete existing commissions")
@@ -517,18 +519,12 @@ func (c *controller) ProcessCommissions(invoiceID string, dryRun bool, l logger.
 
 	// Create inbound fund transactions
 	for _, commission := range commissions {
-		// check if this commission is already created and paid
-		inboundFunCommission, err := c.store.InboundFundTransaction.GetByInvoiceID(tx, invoiceID)
-		if err != nil {
-			tx.Rollback()
-			l.Error(err, "failed to get inbound fund commission by invoice id")
-			return nil, err
-		}
-		if inboundFunCommission.PaidAt != nil {
-			continue
-		}
 		if commission.EmployeeID.IsZero() {
-			_, err := c.store.InboundFundTransaction.Create(tx, &model.InboundFundTransaction{
+			inboundFunCommission, err := c.store.InboundFundTransaction.GetByInvoiceID(tx, invoiceID)
+			if err == nil && inboundFunCommission.PaidAt != nil {
+				continue // already paid, skip creation
+			}
+			_, err = c.store.InboundFundTransaction.Create(tx, &model.InboundFundTransaction{
 				InvoiceID:      invoice.ID,
 				Amount:         commission.Amount,
 				ConversionRate: commission.ConversionRate,
@@ -545,11 +541,26 @@ func (c *controller) ProcessCommissions(invoiceID string, dryRun bool, l logger.
 	// Remove inbound fund commissions from employee commissions
 	filtered := c.RemoveInboundFundCommission(commissions)
 	if len(filtered) > 0 {
-		_, err := c.store.EmployeeCommission.Create(tx, filtered)
-		if err != nil {
-			tx.Rollback()
-			l.Error(err, "failed to create commission record")
-			return nil, err
+		for _, commission := range filtered {
+			isPaidCommission, err := c.store.EmployeeCommission.Get(tx, storeemployeecommission.Query{
+				InvoiceID:  commission.InvoiceID.String(),
+				EmployeeID: commission.EmployeeID.String(),
+				IsPaid:     true,
+			})
+			if err != nil {
+				tx.Rollback()
+				l.Error(err, "failed to check if commission is already paid")
+				continue
+			}
+			if len(isPaidCommission) > 0 {
+				l.Infof("Commission for invoice %s and employee %s is already paid, skipping creation", commission.InvoiceID, commission.EmployeeID)
+				continue // already paid, skip creation
+			}
+			if _, err := c.store.EmployeeCommission.Create(tx, []model.EmployeeCommission{commission}); err != nil {
+				tx.Rollback()
+				l.Error(err, "failed to create commission record")
+				return nil, err
+			}
 		}
 	}
 
