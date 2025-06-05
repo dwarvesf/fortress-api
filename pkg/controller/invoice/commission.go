@@ -517,6 +517,16 @@ func (c *controller) ProcessCommissions(invoiceID string, dryRun bool, l logger.
 
 	// Create inbound fund transactions
 	for _, commission := range commissions {
+		// check if this commission is already created and paid
+		inboundFunCommission, err := c.store.InboundFundTransaction.GetByInvoiceID(tx, invoiceID)
+		if err != nil {
+			tx.Rollback()
+			l.Error(err, "failed to get inbound fund commission by invoice id")
+			return nil, err
+		}
+		if inboundFunCommission.PaidAt != nil {
+			continue
+		}
 		if commission.EmployeeID.IsZero() {
 			_, err := c.store.InboundFundTransaction.Create(tx, &model.InboundFundTransaction{
 				InvoiceID:      invoice.ID,
