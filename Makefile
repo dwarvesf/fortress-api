@@ -63,6 +63,9 @@ build:
 dev:
 	go run ./cmd/server/main.go
 
+dev-mcp:
+	go run ./cmd/mcp-server/main.go
+
 air:
 	air -c .air.toml
 
