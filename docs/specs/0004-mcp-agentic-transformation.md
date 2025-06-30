@@ -11,6 +11,7 @@
 ## Current Implementation Status
 
 ### ✅ Completed Components
+
 - **MCP Server Infrastructure**: Fully operational MCP server with mark3labs/mcp-go v0.32.0
 - **Database Schema**: Agent API keys, action logs, and workflow tracking tables
 - **Authentication System**: API key validation, hashing, and permission management
@@ -18,11 +19,13 @@
 - **Audit & Logging**: Comprehensive action logging with performance metrics
 
 ### ✅ Phase 1 Complete
+
 - **All Tool Categories**: 100% implemented and integrated
 
 ### 📊 Progress Metrics
+
 - **Overall Phase 1 Progress**: 100% (16/16 core tools) ✅ COMPLETE
-- **Infrastructure**: 100% complete 
+- **Infrastructure**: 100% complete
 - **Employee Tools**: 100% complete (4/4)
 - **Project Tools**: 100% complete (5/5)
 - **Invoice Tools**: 100% complete (4/4) ✅ NEW
@@ -37,12 +40,14 @@ This document outlines the technical specifications for transforming the fortres
 ## 2. Architecture Overview
 
 ### 2.1. Current System
+
 - **Framework**: Go with Gin web framework
 - **Architecture**: Layered (Routes → Controllers → Services → Stores → Database)
 - **Database**: PostgreSQL with GORM ORM
 - **Authentication**: JWT with permission-based authorization
 
 ### 2.2. Target Agentic Architecture
+
 - **Hybrid Approach**: Maintain existing REST API + Add MCP server
 - **Shared Infrastructure**: Same database, services, and business logic
 - **Transport**: MCP over Streamable HTTP (gRPC-like)
@@ -53,12 +58,14 @@ This document outlines the technical specifications for transforming the fortres
 ### 3.1. Phase 1: Basic MCP Server Implementation ✅ COMPLETED (2024-06-30)
 
 #### 3.1.1. Dependencies ✅ COMPLETED
+
 ```go
 // Added to go.mod
 github.com/mark3labs/mcp-go v0.32.0  // Implemented using mark3labs SDK
 ```
 
 #### 3.1.2. Project Structure Changes ✅ COMPLETED
+
 ```
 fortress-api/
 ├── cmd/
@@ -88,12 +95,14 @@ fortress-api/
 #### 3.1.3. Core Tools Implementation Status
 
 **Employee Management Tools:** ✅ COMPLETED (4/4 tools)
+
 - ✅ `get_employee` - Retrieve employee details by ID
 - ✅ `list_available_employees` - Find employees by role and availability
 - ✅ `update_employee_status` - Change employee working status  
 - ✅ `get_employee_skills` - Retrieve employee technology stacks
 
 **Project Management Tools:** ✅ COMPLETED (5/5 tools)
+
 - ✅ `create_project` - Create new project with basic information
 - ✅ `get_project_details` - Retrieve comprehensive project information
 - ✅ `assign_project_member` - Assign employee to project role
@@ -101,12 +110,14 @@ fortress-api/
 - ✅ `update_project_status` - Change project status
 
 **Invoice Management Tools:** ✅ COMPLETED (4/4 tools)
+
 - ✅ `generate_invoice` - Create invoice for project/client
 - ✅ `get_invoice_status` - Check invoice payment status
 - ✅ `update_invoice_status` - Mark invoice as paid/pending
 - ✅ `calculate_commission` - Compute commission amounts
 
 **Payroll Tools:** ✅ COMPLETED (3/3 tools)
+
 - ✅ `calculate_payroll` - Compute employee payroll
 - ✅ `process_salary_advance` - Handle advance salary requests
 - ✅ `get_payroll_summary` - Retrieve payroll calculations
@@ -114,6 +125,7 @@ fortress-api/
 #### 3.1.4. Implementation Details ✅ COMPLETED
 
 **Technical Achievements:**
+
 - ✅ MCP server builds and runs successfully
 - ✅ Authentication service with API key validation and hashing
 - ✅ Action logging with performance metrics and error tracking
@@ -123,6 +135,7 @@ fortress-api/
 - ✅ Structured logging following fortress-api conventions
 
 **Code Quality:**
+
 - ✅ Follows fortress-api architectural patterns (layered design)
 - ✅ Proper error handling with descriptive MCP error responses
 - ✅ Type safety with GORM models and UUID handling
@@ -132,6 +145,7 @@ fortress-api/
 ### 3.2. Phase 2: Workflow-Level Operations (3-6 months)
 
 #### 3.2.1. High-Level Workflow Service
+
 ```go
 // pkg/service/workflow/workflow.go
 type WorkflowService struct {
@@ -152,19 +166,50 @@ func (s *WorkflowService) StaffNewProject(ctx context.Context, params StaffProje
 ```
 
 #### 3.2.2. Workflow Tools
-- `staff_new_project` - Complete project creation and staffing workflow
-- `process_project_completion` - Handle project closure, invoice generation, commission calculation
-- `onboard_new_employee` - Complete employee onboarding workflow
-- `calculate_monthly_payroll` - Process entire monthly payroll cycle
+
+**✅ IMPLEMENTED (Phase 2.1):**
+- ✅ `calculate_monthly_payroll` - Process entire monthly payroll cycle workflow
+
+**DEFERRED (Future Phases):**
+- `staff_new_project` - Complete project creation and staffing workflow // TODO: Future implementation
+- `process_project_completion` - Handle project closure, invoice generation, commission calculation // TODO: Future implementation  
+- `onboard_new_employee` - Complete employee onboarding workflow // TODO: Future implementation
+
+#### 3.2.3. Phase 2.1 Implementation Details ✅ COMPLETED (2025-06-30)
+
+**Workflow Service Infrastructure (`pkg/service/workflow/`):**
+- Complete workflow orchestration service with status tracking
+- Agent workflow database store with JSON data handling
+- Transaction management and rollback capabilities
+- Integration with existing fortress-api patterns
+
+**`calculate_monthly_payroll` Tool Features:**
+- **Dry-run by default**: Safe preview before database updates
+- **Comprehensive calculation sheets**: Detailed employee payroll breakdowns
+- **Multi-currency support**: Automatic currency conversion integration
+- **Commission processing**: Unpaid commission aggregation and marking
+- **Salary advance handling**: Outstanding advance deduction processing
+- **Employee filtering**: Single employee or full batch processing
+- **Idempotency protection**: Prevents duplicate payroll processing
+- **Audit trails**: Complete workflow tracking in agent_workflows table
+
+**Technical Quality:**
+- MCP server builds successfully with workflow tools registered
+- Type-safe JSON handling using GORM datatypes
+- Comprehensive error handling and validation
+- Authentication wrapper integration for all workflow tools
+- Follows fortress-api layered architecture patterns
 
 ### 3.3. Phase 3: Advanced Integration (6+ months)
 
 #### 3.3.1. Event-Driven Extensions
+
 - Webhook endpoints for agent-initiated long-running operations
 - Background job processing with status tracking
 - Real-time notifications for agent actions
 
 #### 3.3.2. Enhanced Capabilities
+
 - Multi-step workflow orchestration
 - Approval workflows for sensitive operations
 - Audit trails for all agent actions
@@ -175,6 +220,7 @@ func (s *WorkflowService) StaffNewProject(ctx context.Context, params StaffProje
 ### 4.1. Agent Authentication
 
 #### 4.1.1. New Table: `agent_api_keys`
+
 ```sql
 CREATE TABLE agent_api_keys (
     id         uuid PRIMARY KEY DEFAULT (uuid()),
@@ -191,6 +237,7 @@ CREATE TABLE agent_api_keys (
 ```
 
 #### 4.1.2. New Table: `agent_action_logs`
+
 ```sql
 CREATE TABLE agent_action_logs (
     id         uuid PRIMARY KEY DEFAULT (uuid()),
@@ -208,6 +255,7 @@ CREATE TABLE agent_action_logs (
 ### 4.2. Workflow State Tracking
 
 #### 4.2.1. New Table: `agent_workflows`
+
 ```sql
 CREATE TABLE agent_workflows (
     id         uuid PRIMARY KEY DEFAULT (uuid()),
@@ -228,6 +276,7 @@ CREATE TABLE agent_workflows (
 ## 5. Service Layer Modifications
 
 ### 5.1. Agent Authentication Service
+
 ```go
 // pkg/service/agent/auth.go
 type AuthService struct {
@@ -240,6 +289,7 @@ func (s *AuthService) RevokeAPIKey(ctx context.Context, keyID string) error
 ```
 
 ### 5.2. Enhanced Existing Services
+
 - Add context parameter to all service methods for agent tracking
 - Implement transaction support for workflow operations
 - Add idempotency key handling for reliable agent operations
@@ -247,6 +297,7 @@ func (s *AuthService) RevokeAPIKey(ctx context.Context, keyID string) error
 ## 6. MCP Server Implementation
 
 ### 6.1. Main Server Configuration
+
 ```go
 // cmd/mcp-server/main.go
 func main() {
@@ -272,6 +323,7 @@ func main() {
 ```
 
 ### 6.2. Tool Registration Pattern
+
 ```go
 // pkg/mcp/tools/employee.go
 func RegisterEmployeeTools(server *mcp.Server, employeeService *employee.Service) {
@@ -289,17 +341,20 @@ func RegisterEmployeeTools(server *mcp.Server, employeeService *employee.Service
 ## 7. Security Considerations
 
 ### 7.1. Authentication & Authorization
+
 - Agent-specific API keys with scoped permissions
 - Rate limiting per agent key (default: 1000 requests/hour)
 - Key expiration and rotation capabilities
 - Audit logging for all agent actions
 
 ### 7.2. Input Validation
+
 - Strict JSON schema validation for all tool inputs
 - SQL injection protection (inherited from existing GORM usage)
 - Input sanitization for external service calls
 
 ### 7.3. Operation Safety
+
 - Idempotency keys for creation operations
 - Dry-run mode for destructive operations
 - Transaction rollback for failed workflow operations
@@ -308,16 +363,19 @@ func RegisterEmployeeTools(server *mcp.Server, employeeService *employee.Service
 ## 8. Testing Strategy
 
 ### 8.1. Unit Tests
+
 - MCP tool wrapper functions
 - Agent authentication service
 - Workflow orchestration logic
 
 ### 8.2. Integration Tests
+
 - End-to-end MCP client-server communication
 - Tool execution with real database transactions
 - Agent authentication flow
 
 ### 8.3. Load Tests
+
 - Concurrent agent tool execution
 - Rate limiting enforcement
 - Database connection pooling under agent load
@@ -325,11 +383,13 @@ func RegisterEmployeeTools(server *mcp.Server, employeeService *employee.Service
 ## 9. Deployment Strategy
 
 ### 9.1. Development Environment
+
 - Docker Compose extension to include MCP server
 - Shared database and configuration with HTTP API
 - Local testing with Claude Desktop or custom MCP client
 
 ### 9.2. Production Deployment
+
 - Separate binary deployment (`fortress-mcp-server`)
 - Shared infrastructure (database, Redis, etc.)
 - Load balancer configuration for both HTTP and MCP endpoints
@@ -338,6 +398,7 @@ func RegisterEmployeeTools(server *mcp.Server, employeeService *employee.Service
 ## 10. Migration Plan
 
 ### 10.1. Database Migrations
+
 ```bash
 make migrate-new name=add_agent_api_keys_table
 make migrate-new name=add_agent_action_logs_table
@@ -345,6 +406,7 @@ make migrate-new name=add_agent_workflows_table
 ```
 
 ### 10.2. Code Changes
+
 1. Add MCP SDK dependency
 2. Implement agent authentication middleware
 3. Create MCP server binary and tool wrappers
@@ -354,15 +416,17 @@ make migrate-new name=add_agent_workflows_table
 ## 11. Success Criteria
 
 ### 11.1. Phase 1 Success Metrics
+
 - 🔄 MCP server successfully exposes 15+ core business operations (Currently: 4/16 tools completed - 25%)
 - ✅ Agent can authenticate and execute tools
 - ✅ All existing REST API functionality remains unchanged
 - ✅ Agent actions are properly logged and audited
 
 **Phase 1 Progress Summary:**
+
 - **COMPLETED**: All tool categories implemented ✅
   - Employee management tools (4/4)
-  - Project management tools (5/5) 
+  - Project management tools (5/5)
   - Invoice management tools (4/4)
   - Payroll tools (3/3)
   - **TOTAL**: 16/16 tools (100% complete)
@@ -370,12 +434,14 @@ make migrate-new name=add_agent_workflows_table
 - **READY FOR**: Phase 2 workflow-level operations
 
 ### 11.2. Phase 2 Success Metrics
+
 - ✅ Complex workflow operations execute atomically
 - ✅ Agent can handle multi-step business processes
 - ✅ Error handling and rollback mechanisms work correctly
 - ✅ Performance impact on existing system is minimal
 
 ### 11.3. Phase 3 Success Metrics
+
 - ✅ Agent can handle long-running asynchronous operations
 - ✅ Real-time status updates and notifications work
 - ✅ System scales to support multiple concurrent agents
@@ -384,6 +450,7 @@ make migrate-new name=add_agent_workflows_table
 ## 12. Risk Assessment
 
 ### 12.1. Technical Risks
+
 - **MCP SDK Stability**: Using third-party SDK before official stable release
   - *Mitigation*: Use mature alternatives (mark3labs/mcp-go or paulsmith/mcp-go)
 - **Performance Impact**: Additional complexity affecting existing API
@@ -392,6 +459,7 @@ make migrate-new name=add_agent_workflows_table
   - *Mitigation*: Comprehensive authentication, authorization, and audit logging
 
 ### 12.2. Operational Risks  
+
 - **Deployment Complexity**: Managing two service binaries
   - *Mitigation*: Shared infrastructure, unified monitoring, staged rollout
 - **Monitoring Gap**: Insufficient observability into agent operations

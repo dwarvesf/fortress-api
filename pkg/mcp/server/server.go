@@ -16,6 +16,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/mcp/tools/invoice"
 	"github.com/dwarvesf/fortress-api/pkg/mcp/tools/payroll"
 	"github.com/dwarvesf/fortress-api/pkg/mcp/tools/project"
+	"github.com/dwarvesf/fortress-api/pkg/mcp/tools/workflow"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/store"
@@ -96,6 +97,11 @@ func (s *MCPServer) RegisterTools() error {
 		return fmt.Errorf("failed to register payroll tools: %w", err)
 	}
 
+	// Register workflow tools
+	if err := s.registerWorkflowTools(); err != nil {
+		return fmt.Errorf("failed to register workflow tools: %w", err)
+	}
+
 	return nil
 }
 
@@ -126,15 +132,13 @@ func (s *MCPServer) wrapToolWithAuth(toolName string, handler func(context.Conte
 	return func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		startTime := time.Now()
 
-		// For now, we'll skip authentication in the MCP context since it's typically
-		// handled at the transport level. In a production setup, you might want to
-		// implement a different authentication mechanism for MCP.
-
-		// Create a dummy agent for logging purposes
-		// In a real implementation, you'd extract this from the MCP session context
+		// For now, use the existing test agent key for MCP context
+		// In production, implement proper MCP authentication mechanism
+		
+		// Use the existing test agent key ID from database
 		agentKey := &model.AgentAPIKey{
-			BaseModel: model.BaseModel{ID: model.NewUUID()},
-			Name:      "mcp-client",
+			BaseModel: model.BaseModel{ID: model.MustGetUUIDFromString("5dc80b39-9203-46c9-87ab-40a0f9c752cc")},
+			Name:      "test-mcp-agent",
 		}
 
 		// Add agent to context
@@ -292,5 +296,18 @@ func (s *MCPServer) registerPayrollTools() error {
 	s.server.AddTool(getPayrollSummaryTool, getPayrollSummaryHandler)
 	
 	s.logger.Info("Payroll tools registered successfully")
+	return nil
+}
+
+func (s *MCPServer) registerWorkflowTools() error {
+	// Create workflow tools instance
+	workflowTools := workflow.New(s.store, s.repo)
+	
+	// Register calculate_monthly_payroll tool
+	calculateMonthlyPayrollTool := workflowTools.CalculateMonthlyPayrollTool()
+	calculateMonthlyPayrollHandler := s.wrapToolWithAuth("calculate_monthly_payroll", workflowTools.CalculateMonthlyPayrollHandler)
+	s.server.AddTool(calculateMonthlyPayrollTool, calculateMonthlyPayrollHandler)
+	
+	s.logger.Info("Workflow tools registered successfully")
 	return nil
 }
