@@ -301,7 +301,7 @@ func (s *MCPServer) registerPayrollTools() error {
 
 func (s *MCPServer) registerWorkflowTools() error {
 	// Create workflow tools instance
-	workflowTools := workflow.New(s.store, s.repo)
+	workflowTools := workflow.New(s.cfg, s.store, s.repo, s.services.Wise)
 	
 	// Register calculate_monthly_payroll tool
 	calculateMonthlyPayrollTool := workflowTools.CalculateMonthlyPayrollTool()

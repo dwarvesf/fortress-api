@@ -11,6 +11,7 @@ log
 *.out.*
 *.test
 build
+mcp-server
 .env
 .env.dev
 .env.docker

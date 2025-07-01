@@ -8,6 +8,7 @@ import (
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/shopspring/decimal"
 
+	"github.com/dwarvesf/fortress-api/pkg/mcp/view"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 )
@@ -158,21 +159,21 @@ func (t *Tools) GetProjectDetailsHandler(ctx context.Context, req mcp.CallToolRe
 	}
 
 	result := map[string]interface{}{
-		"id":            project.ID,
-		"name":          project.Name,
-		"code":          project.Code,
-		"type":          project.Type,
-		"function":      project.Function,
-		"status":        project.Status,
-		"client_email":  project.ClientEmail,
-		"start_date":    project.StartDate,
-		"end_date":      project.EndDate,
-		"organization":  project.Organization,
-		"company_info":  project.CompanyInfo,
-		"bank_account":  project.BankAccount,
-		"account_rating": project.AccountRating,
+		"id":              project.ID,
+		"name":            project.Name,
+		"code":            project.Code,
+		"type":            project.Type,
+		"function":        project.Function,
+		"status":          project.Status,
+		"client_email":    project.ClientEmail,
+		"start_date":      project.StartDate,
+		"end_date":        project.EndDate,
+		"organization":    project.Organization,
+		"company_info":    project.CompanyInfo,
+		"bank_account":    project.BankAccount,
+		"account_rating":  project.AccountRating,
 		"delivery_rating": project.DeliveryRating,
-		"lead_rating":   project.LeadRating,
+		"lead_rating":     project.LeadRating,
 	}
 
 	if includeMembers {
@@ -180,7 +181,7 @@ func (t *Tools) GetProjectDetailsHandler(ctx context.Context, req mcp.CallToolRe
 		result["heads"] = project.Heads
 	}
 
-	return mcp.NewToolResultText(fmt.Sprintf("Project details: %+v", result)), nil
+	return view.FormatJSONResponse(result)
 }
 
 // AssignProjectMemberTool returns the MCP tool for assigning an employee to a project
@@ -209,7 +210,6 @@ func (t *Tools) AssignProjectMemberHandler(ctx context.Context, req mcp.CallTool
 	if err != nil {
 		return mcp.NewToolResultError(err.Error()), nil
 	}
-
 
 	deploymentType := req.GetString("deployment_type", "official")
 	status := req.GetString("status", "pending")
@@ -342,14 +342,7 @@ func (t *Tools) GetProjectMembersHandler(ctx context.Context, req mcp.CallToolRe
 		}
 	}
 
-	result := map[string]interface{}{
-		"project_id":     project.ID,
-		"project_name":   project.Name,
-		"members_count":  len(filteredMembers),
-		"members":        filteredMembers,
-	}
-
-	return mcp.NewToolResultText(fmt.Sprintf("Project members for %s: %+v", project.Name, result)), nil
+	return view.FormatJSONResponse(project)
 }
 
 // UpdateProjectStatusTool returns the MCP tool for updating project status

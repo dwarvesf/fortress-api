@@ -6,6 +6,7 @@ import (
 
 	"github.com/mark3labs/mcp-go/mcp"
 
+	"github.com/dwarvesf/fortress-api/pkg/mcp/view"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/store/employee"
@@ -94,7 +95,8 @@ func (t *Tools) ListAvailableEmployeesHandler(ctx context.Context, req mcp.CallT
 		}
 	}
 
-	return mcp.NewToolResultText(fmt.Sprintf("Found %d available employees", len(filteredEmployees))), nil
+	// Format and return result using utility function
+	return view.FormatJSONResponse(filteredEmployees)
 }
 
 // UpdateEmployeeStatusTool returns the MCP tool for updating employee status

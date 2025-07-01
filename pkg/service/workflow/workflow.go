@@ -12,19 +12,22 @@ import (
 
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/store"
+	"github.com/dwarvesf/fortress-api/pkg/service/wise"
 )
 
 // Service represents the workflow service
 type Service struct {
-	store *store.Store
-	repo  store.DBRepo
+	store       *store.Store
+	repo        store.DBRepo
+	wiseService wise.IService
 }
 
 // New creates a new workflow service
-func New(store *store.Store, repo store.DBRepo) *Service {
+func New(store *store.Store, repo store.DBRepo, wiseService wise.IService) *Service {
 	return &Service{
-		store: store,
-		repo:  repo,
+		store:       store,
+		repo:        repo,
+		wiseService: wiseService,
 	}
 }
 
@@ -92,6 +95,9 @@ type BaseSalaryInfo struct {
 	ConvertedVND    float64 `json:"converted_vnd"`
 	ConversionRate  float64 `json:"conversion_rate"`
 	PartialPeriod   bool    `json:"partial_period"`
+	EmployeeBatch   int     `json:"employee_batch"`   // Employee's assigned batch (1 or 15)
+	RequestedBatch  int     `json:"requested_batch"`  // Requested payroll batch
+	BatchMatched    bool    `json:"batch_matched"`    // Whether batches match
 }
 
 // CommissionInfo represents commission calculation details
@@ -249,6 +255,15 @@ func (s *Service) CheckPayrollExists(ctx context.Context, month, year, batch int
 		return false, fmt.Errorf("failed to check payroll existence: %w", err)
 	}
 	return true, nil
+}
+
+// GetUSDToVNDRate gets the current USD to VND exchange rate using the Wise API
+func (s *Service) GetUSDToVNDRate() (float64, error) {
+	rate, err := s.wiseService.GetRate("USD", "VND")
+	if err != nil {
+		return 0, fmt.Errorf("failed to get USD to VND exchange rate from Wise API: %w", err)
+	}
+	return rate, nil
 }
 
 // Helper function to convert data to JSON

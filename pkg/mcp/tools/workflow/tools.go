@@ -2,32 +2,37 @@ package workflow
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"time"
 
 	"github.com/mark3labs/mcp-go/mcp"
 
+	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/mcp/auth"
+	"github.com/dwarvesf/fortress-api/pkg/mcp/view"
 	"github.com/dwarvesf/fortress-api/pkg/model"
+	"github.com/dwarvesf/fortress-api/pkg/service/wise"
 	"github.com/dwarvesf/fortress-api/pkg/service/workflow"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/store/employee"
+	"github.com/dwarvesf/fortress-api/pkg/store/employeecommission"
 )
 
 // Tools represents workflow-related MCP tools
 type Tools struct {
+	cfg             *config.Config
 	store           *store.Store
 	repo            store.DBRepo
 	workflowService *workflow.Service
 }
 
 // New creates a new workflow tools instance
-func New(store *store.Store, repo store.DBRepo) *Tools {
+func New(cfg *config.Config, store *store.Store, repo store.DBRepo, wiseService wise.IService) *Tools {
 	return &Tools{
+		cfg:             cfg,
 		store:           store,
 		repo:            repo,
-		workflowService: workflow.New(store, repo),
+		workflowService: workflow.New(store, repo, wiseService),
 	}
 }
 
@@ -105,17 +110,8 @@ func (t *Tools) CalculateMonthlyPayrollHandler(ctx context.Context, req mcp.Call
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to update workflow status: %v", err)), nil
 	}
 
-	// Format and return result
-	resultJSON, err := json.MarshalIndent(result, "", "  ")
-	if err != nil {
-		return mcp.NewToolResultError(fmt.Sprintf("Failed to format result: %v", err)), nil
-	}
-
-	if params.DryRun {
-		return mcp.NewToolResultText(fmt.Sprintf("Monthly Payroll Calculation (DRY RUN) - %d/%d Batch %d:\n\n%s", params.Month, params.Year, params.Batch, string(resultJSON))), nil
-	} else {
-		return mcp.NewToolResultText(fmt.Sprintf("Monthly Payroll Calculation EXECUTED - %d/%d Batch %d:\n\n%s", params.Month, params.Year, params.Batch, string(resultJSON))), nil
-	}
+	// Format and return result using utility function
+	return view.FormatJSONResponse(result)
 }
 
 // executeMonthlyPayrollCalculation performs the actual payroll calculation
@@ -160,9 +156,9 @@ func (t *Tools) executeMonthlyPayrollCalculation(ctx context.Context, params *wo
 		EmployeeCalculations: employeeCalculations,
 		WorkflowMetadata: &workflow.WorkflowMetadata{
 			CalculationDate:  startTime,
-			DryRun:          params.DryRun,
+			DryRun:           params.DryRun,
 			ProcessingTimeMS: time.Since(startTime).Milliseconds(),
-			WorkflowID:      workflowID,
+			WorkflowID:       workflowID,
 		},
 	}
 
@@ -190,73 +186,168 @@ func (t *Tools) getActiveEmployees(ctx context.Context, params *workflow.Monthly
 	// Otherwise get all active employees using database filtering
 	// Use the same approach as list_available_employees for consistency
 	pagination := model.Pagination{Size: 1000} // Set explicit size to avoid LIMIT 0
-	employees, _, err := t.store.Employee.All(t.repo.DB(), employee.EmployeeFilter{
+	allEmployees, _, err := t.store.Employee.All(t.repo.DB(), employee.EmployeeFilter{
 		WorkingStatuses: []string{"full-time"},
+		Preload:         true, // Enable preloading of BaseSalary and other relationships
 	}, pagination)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get employees: %w", err)
 	}
 
-	return employees, nil
+	// Filter employees by batch - only include those whose BaseSalary.Batch matches params.Batch
+	// This follows the same logic as the existing payroll calculator
+	var filteredEmployees []*model.Employee
+	for _, emp := range allEmployees {
+		// Skip employees without base salary
+		if emp.BaseSalary.ID.IsZero() {
+			continue
+		}
+
+		// Only include employees whose batch matches the requested batch
+		if emp.BaseSalary.Batch == params.Batch {
+			filteredEmployees = append(filteredEmployees, emp)
+		}
+	}
+
+	return filteredEmployees, nil
 }
 
-// calculateEmployeePayroll calculates payroll for a single employee
+// calculateEmployeePayroll calculates payroll for a single employee using real database data
 func (t *Tools) calculateEmployeePayroll(ctx context.Context, emp *model.Employee, params *workflow.MonthlyPayrollParams) (*workflow.EmployeeCalculation, error) {
-	// This is a mock implementation
-	// Real implementation would integrate with existing payroll calculator logic
+	// 1. Calculate base salary
+	// Note: Employee filtering ensures all employees have matching batch, so we can safely calculate salary
+	var baseSalaryVND, contractAmount float64
+	// Get USD to VND conversion rate from Wise API
+	var conversionRate float64 = 25000
 
-	// Mock base salary calculation
+	if t.cfg.Env != "prod" {
+		var err error
+		conversionRate, err = t.workflowService.GetUSDToVNDRate()
+		if err != nil {
+			return nil, fmt.Errorf("failed to get USD to VND conversion rate: %w", err)
+		}
+	}
+	var currency string = "VND"
+
+	if !emp.BaseSalary.ID.IsZero() {
+		contractAmount = float64(emp.BaseSalary.ContractAmount)
+		if emp.BaseSalary.Currency != nil {
+			currency = emp.BaseSalary.Currency.Name
+		}
+
+		// Calculate salary amount (employees are pre-filtered by batch)
+		baseSalaryVND = float64(emp.BaseSalary.PersonalAccountAmount + emp.BaseSalary.CompanyAccountAmount)
+		// Convert to VND if needed
+		if currency != "VND" {
+			baseSalaryVND = baseSalaryVND * conversionRate
+		}
+	}
+
+	// Get employee batch safely (all employees are pre-filtered by batch so this will always match)
+	var employeeBatch int
+	if !emp.BaseSalary.ID.IsZero() {
+		employeeBatch = emp.BaseSalary.Batch
+	}
+
 	baseSalary := &workflow.BaseSalaryInfo{
-		ContractAmount:  3000.0, // Mock USD amount
-		Currency:        "USD",
-		ConvertedVND:    75000000, // Mock conversion
-		ConversionRate:  25000,
-		PartialPeriod:   false,
+		ContractAmount: contractAmount,
+		Currency:       currency,
+		ConvertedVND:   baseSalaryVND,
+		ConversionRate: conversionRate,
+		PartialPeriod:  false,
+		EmployeeBatch:  employeeBatch,
+		RequestedBatch: params.Batch,
+		BatchMatched:   true, // Always true since employees are pre-filtered by batch
 	}
 
-	// Mock commission calculation
+	// 2. Calculate unpaid commissions
+	var totalCommissionVND float64
+	var unpaidCommissions []*workflow.UnpaidCommission
+
+	userCommissions, err := t.store.EmployeeCommission.Get(t.repo.DB(), employeecommission.Query{
+		EmployeeID: emp.ID.String(),
+		IsPaid:     false,
+	})
+	if err == nil {
+		for _, comm := range userCommissions {
+			totalCommissionVND += float64(comm.Amount)
+
+			projectName := "Unknown Project"
+			if comm.Invoice != nil {
+				projectName = comm.Invoice.Number
+			}
+
+			unpaidCommissions = append(unpaidCommissions, &workflow.UnpaidCommission{
+				InvoiceID: comm.InvoiceID,
+				AmountVND: float64(comm.Amount),
+				Project:   projectName,
+			})
+		}
+	}
+
 	commissions := &workflow.CommissionInfo{
-		TotalVND: 5000000, // Mock commission
-		UnpaidCommissions: []*workflow.UnpaidCommission{
-			{
-				InvoiceID:  model.NewUUID(),
-				AmountVND:  5000000,
-				Project:    "Mock Project A",
-			},
-		},
+		TotalVND:          totalCommissionVND,
+		UnpaidCommissions: unpaidCommissions,
 	}
 
-	// Mock bonus calculation
+	// 3. Calculate bonuses
+	var totalBonusVND float64
+	var projectBonuses []*workflow.ProjectBonus
+
+	if params.IncludeBonuses {
+		bonusRecords, err := t.store.Bonus.GetByUserID(t.repo.DB(), emp.ID)
+		if err == nil {
+			for _, bonus := range bonusRecords {
+				if bonus.IsActive {
+					totalBonusVND += float64(bonus.Amount)
+					projectBonuses = append(projectBonuses, &workflow.ProjectBonus{
+						Reason:    bonus.Name,
+						AmountVND: float64(bonus.Amount),
+					})
+				}
+			}
+		}
+	}
+
 	bonuses := &workflow.BonusInfo{
-		TotalVND: 2000000,
-		ProjectBonuses: []*workflow.ProjectBonus{
-			{
-				Reason:    "Performance bonus",
-				AmountVND: 2000000,
-			},
-		},
-		ApprovedExpenses: []*workflow.ApprovedExpense{},
+		TotalVND:         totalBonusVND,
+		ProjectBonuses:   projectBonuses,
+		ApprovedExpenses: []*workflow.ApprovedExpense{}, // TODO: Implement expense logic if needed
 	}
 
-	// Mock deduction calculation
+	// 4. Calculate salary advance deductions
+	var totalAdvanceVND float64
+	var salaryAdvances []*workflow.SalaryAdvanceDeduction
+
+	if params.IncludeAdvances {
+		advanceSalaries, err := t.store.SalaryAdvance.ListNotPayBackByEmployeeID(t.repo.DB(), emp.ID.String())
+		if err == nil {
+			for _, advance := range advanceSalaries {
+				// Convert USD advances to VND
+				advanceVND := advance.AmountUSD * conversionRate
+				totalAdvanceVND += advanceVND
+
+				salaryAdvances = append(salaryAdvances, &workflow.SalaryAdvanceDeduction{
+					AdvanceID:        advance.ID,
+					AmountVND:        advanceVND,
+					RemainingBalance: 0, // All will be deducted
+				})
+			}
+		}
+	}
+
 	deductions := &workflow.DeductionInfo{
-		TotalDeductionsVND: 3000000,
-		SalaryAdvances: []*workflow.SalaryAdvanceDeduction{
-			{
-				AdvanceID:        model.NewUUID(),
-				AmountVND:        3000000,
-				RemainingBalance: 0,
-			},
-		},
+		TotalDeductionsVND: totalAdvanceVND,
+		SalaryAdvances:     salaryAdvances,
 	}
 
-	// Calculate final amounts
-	grossAmount := baseSalary.ConvertedVND + commissions.TotalVND + bonuses.TotalVND
-	netAmount := grossAmount - deductions.TotalDeductionsVND
+	// 5. Calculate final amounts
+	grossAmount := baseSalaryVND + totalCommissionVND + totalBonusVND
+	netAmount := grossAmount - totalAdvanceVND
 
 	finalCalc := &workflow.FinalCalculation{
 		GrossAmountVND:     grossAmount,
-		TotalDeductionsVND: deductions.TotalDeductionsVND,
+		TotalDeductionsVND: totalAdvanceVND,
 		NetAmountVND:       netAmount,
 	}
 
