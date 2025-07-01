@@ -308,6 +308,11 @@ func (s *MCPServer) registerWorkflowTools() error {
 	calculateMonthlyPayrollHandler := s.wrapToolWithAuth("calculate_monthly_payroll", workflowTools.CalculateMonthlyPayrollHandler)
 	s.server.AddTool(calculateMonthlyPayrollTool, calculateMonthlyPayrollHandler)
 	
+	// Register generate_financial_report tool
+	generateFinancialReportTool := workflowTools.GenerateFinancialReportTool()
+	generateFinancialReportHandler := s.wrapToolWithAuth("generate_financial_report", workflowTools.GenerateFinancialReportHandler)
+	s.server.AddTool(generateFinancialReportTool, generateFinancialReportHandler)
+	
 	s.logger.Info("Workflow tools registered successfully")
 	return nil
 }

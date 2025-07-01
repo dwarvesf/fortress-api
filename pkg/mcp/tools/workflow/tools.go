@@ -52,6 +52,17 @@ func (t *Tools) CalculateMonthlyPayrollTool() mcp.Tool {
 	)
 }
 
+// GenerateFinancialReportTool returns the MCP tool for generating financial reports
+func (t *Tools) GenerateFinancialReportTool() mcp.Tool {
+	return mcp.NewTool(
+		"generate_financial_report",
+		mcp.WithDescription("Generate comprehensive financial report with revenue metrics, projections, income summary, and employee statistics"),
+		mcp.WithNumber("month", mcp.Required(), mcp.Description("Report month (1-12)")),
+		mcp.WithNumber("year", mcp.Required(), mcp.Description("Report year (e.g., 2025)")),
+		mcp.WithNumber("currency_conversion_rate", mcp.Description("VND to USD conversion rate (optional, defaults to Wise API rate or 25900)")),
+	)
+}
+
 // CalculateMonthlyPayrollHandler handles the calculate_monthly_payroll tool execution
 func (t *Tools) CalculateMonthlyPayrollHandler(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	startTime := time.Now()
@@ -104,6 +115,58 @@ func (t *Tools) CalculateMonthlyPayrollHandler(ctx context.Context, req mcp.Call
 		t.workflowService.UpdateWorkflowStatus(ctx, workflowRecord.ID, workflow.WorkflowStatusFailed, nil, err.Error())
 		return mcp.NewToolResultError(fmt.Sprintf("Payroll calculation failed: %v", err)), nil
 	}
+
+	// Update workflow status to completed
+	if err := t.workflowService.UpdateWorkflowStatus(ctx, workflowRecord.ID, workflow.WorkflowStatusCompleted, result, ""); err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("Failed to update workflow status: %v", err)), nil
+	}
+
+	// Format and return result using utility function
+	return view.FormatJSONResponse(result)
+}
+
+// GenerateFinancialReportHandler handles the generate_financial_report tool execution
+func (t *Tools) GenerateFinancialReportHandler(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	// Extract and validate parameters
+	month := int(req.GetFloat("month", 0))
+	year := int(req.GetFloat("year", 0))
+	conversionRate := req.GetFloat("currency_conversion_rate", 0)
+
+	params := workflow.FinancialReportParams{
+		Month:                  month,
+		Year:                   year,
+		CurrencyConversionRate: conversionRate,
+	}
+
+	// Validate parameters
+	if month < 1 || month > 12 {
+		return mcp.NewToolResultError("Month must be between 1 and 12"), nil
+	}
+	if year < 2020 || year > 2030 {
+		return mcp.NewToolResultError("Year must be between 2020 and 2030"), nil
+	}
+
+	// Create workflow tracking record
+	agentKeyID := getAgentKeyIDFromContext(ctx)
+	workflowRecord, err := t.workflowService.CreateWorkflow(ctx, "generate_financial_report", params, agentKeyID)
+	if err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("Failed to create workflow: %v", err)), nil
+	}
+
+	// Update workflow status to in_progress
+	if err := t.workflowService.UpdateWorkflowStatus(ctx, workflowRecord.ID, workflow.WorkflowStatusInProgress, nil, ""); err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("Failed to update workflow status: %v", err)), nil
+	}
+
+	// Execute financial report generation
+	result, err := t.workflowService.GenerateFinancialReport(ctx, params)
+	if err != nil {
+		t.workflowService.UpdateWorkflowStatus(ctx, workflowRecord.ID, workflow.WorkflowStatusFailed, nil, err.Error())
+		return mcp.NewToolResultError(fmt.Sprintf("Financial report generation failed: %v", err)), nil
+	}
+
+	// Set workflow ID in metadata
+	result.WorkflowMetadata.WorkflowID = workflowRecord.ID
 
 	// Update workflow status to completed
 	if err := t.workflowService.UpdateWorkflowStatus(ctx, workflowRecord.ID, workflow.WorkflowStatusCompleted, result, ""); err != nil {
