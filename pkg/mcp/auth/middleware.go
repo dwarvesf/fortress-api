@@ -37,9 +37,7 @@ func (s *Service) ValidateAPIKey(ctx context.Context, apiKey string) (*model.Age
 	}
 
 	// Remove "Bearer " prefix if present
-	if strings.HasPrefix(apiKey, "Bearer ") {
-		apiKey = strings.TrimPrefix(apiKey, "Bearer ")
-	}
+	apiKey = strings.TrimPrefix(apiKey, "Bearer ")
 
 	// Hash the API key for lookup (assuming we store hashed keys)
 	hashedKey := s.hashAPIKey(apiKey)

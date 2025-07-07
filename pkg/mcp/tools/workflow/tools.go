@@ -100,11 +100,17 @@ func (t *Tools) CalculateMonthlyPayrollHandler(ctx context.Context, req mcp.Call
 	if !params.DryRun {
 		exists, err := t.workflowService.CheckPayrollExists(ctx, params.Month, params.Year, params.Batch)
 		if err != nil {
-			t.workflowService.UpdateWorkflowStatus(ctx, workflowRecord.ID, workflow.WorkflowStatusFailed, nil, err.Error())
+			if updateErr := t.workflowService.UpdateWorkflowStatus(ctx, workflowRecord.ID, workflow.WorkflowStatusFailed, nil, err.Error()); updateErr != nil {
+				// Log the error but don't fail the original operation
+				fmt.Printf("Failed to update workflow status: %v\n", updateErr)
+			}
 			return mcp.NewToolResultError(fmt.Sprintf("Failed to check payroll existence: %v", err)), nil
 		}
 		if exists {
-			t.workflowService.UpdateWorkflowStatus(ctx, workflowRecord.ID, workflow.WorkflowStatusFailed, nil, "Payroll already exists")
+			if updateErr := t.workflowService.UpdateWorkflowStatus(ctx, workflowRecord.ID, workflow.WorkflowStatusFailed, nil, "Payroll already exists"); updateErr != nil {
+				// Log the error but don't fail the original operation
+				fmt.Printf("Failed to update workflow status: %v\n", updateErr)
+			}
 			return mcp.NewToolResultError(fmt.Sprintf("Payroll already exists for month %d, year %d, batch %d", params.Month, params.Year, params.Batch)), nil
 		}
 	}
@@ -112,7 +118,10 @@ func (t *Tools) CalculateMonthlyPayrollHandler(ctx context.Context, req mcp.Call
 	// Execute payroll calculation workflow
 	result, err := t.executeMonthlyPayrollCalculation(ctx, params, workflowRecord.ID, startTime)
 	if err != nil {
-		t.workflowService.UpdateWorkflowStatus(ctx, workflowRecord.ID, workflow.WorkflowStatusFailed, nil, err.Error())
+		if updateErr := t.workflowService.UpdateWorkflowStatus(ctx, workflowRecord.ID, workflow.WorkflowStatusFailed, nil, err.Error()); updateErr != nil {
+			// Log the error but don't fail the original operation
+			fmt.Printf("Failed to update workflow status: %v\n", updateErr)
+		}
 		return mcp.NewToolResultError(fmt.Sprintf("Payroll calculation failed: %v", err)), nil
 	}
 
@@ -161,7 +170,10 @@ func (t *Tools) GenerateFinancialReportHandler(ctx context.Context, req mcp.Call
 	// Execute financial report generation
 	result, err := t.workflowService.GenerateFinancialReport(ctx, params)
 	if err != nil {
-		t.workflowService.UpdateWorkflowStatus(ctx, workflowRecord.ID, workflow.WorkflowStatusFailed, nil, err.Error())
+		if updateErr := t.workflowService.UpdateWorkflowStatus(ctx, workflowRecord.ID, workflow.WorkflowStatusFailed, nil, err.Error()); updateErr != nil {
+			// Log the error but don't fail the original operation
+			fmt.Printf("Failed to update workflow status: %v\n", updateErr)
+		}
 		return mcp.NewToolResultError(fmt.Sprintf("Financial report generation failed: %v", err)), nil
 	}
 

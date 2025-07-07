@@ -315,9 +315,3 @@ func parseDate(dateStr string) (time.Time, error) {
 	return parsedTime, nil
 }
 
-func formatDatePtr(datePtr *time.Time) string {
-	if datePtr == nil {
-		return ""
-	}
-	return datePtr.Format("2006-01-02")
-}
