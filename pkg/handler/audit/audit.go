@@ -301,7 +301,7 @@ func (h *handler) syncActionItemPage(db *gorm.DB, databaseID string, withStartCu
 		pic := &model.Employee{}
 		picID := model.UUID{}
 
-		if actionItempProperties["PIC"].People != nil && len(actionItempProperties["PIC"].People) > 0 {
+		if len(actionItempProperties["PIC"].People) > 0 {
 			pic, err = h.store.Employee.OneByNotionID(db, actionItempProperties["PIC"].People[0].ID)
 			if err != nil {
 				l.Error(err, "failed to get pic from notion id")
@@ -693,7 +693,7 @@ func (h *handler) createAudit(db *gorm.DB, page *notion.Page, row notion.Page, p
 	}
 
 	projectID := ""
-	if properties["Project"].Relation != nil && len(properties["Project"].Relation) > 0 {
+	if len(properties["Project"].Relation) > 0 {
 		projectID = properties["Project"].Relation[0].ID
 	}
 

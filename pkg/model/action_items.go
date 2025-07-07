@@ -91,7 +91,7 @@ func NewActionItemFromNotionPage(page notion.Page, picID UUID, notionDB string) 
 		// TODO:Description:
 	}
 
-	if properties["Project"].Relation != nil && len(properties["Project"].Relation) > 0 {
+	if len(properties["Project"].Relation) > 0 {
 		rs.ProjectID = MustGetUUIDFromString(properties["Project"].Relation[0].ID)
 	}
 
@@ -103,7 +103,7 @@ func NewActionItemFromNotionPage(page notion.Page, picID UUID, notionDB string) 
 		rs.NeedHelp = *properties["NEED HELP???"].Checkbox
 	}
 
-	if properties["Name"].Title != nil && len(properties["Name"].Title) > 0 {
+	if len(properties["Name"].Title) > 0 {
 		rs.Name = properties["Name"].Title[0].PlainText
 	}
 

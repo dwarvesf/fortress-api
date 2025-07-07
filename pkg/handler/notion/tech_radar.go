@@ -63,7 +63,7 @@ func (h *handler) ListTechRadars(c *gin.Context) {
 	for _, r := range resp.Results {
 		props := r.Properties.(notion.DatabasePageProperties)
 
-		if props["Name"].Title == nil || len(props["Name"].Title) == 0 {
+		if len(props["Name"].Title) == 0 {
 			continue
 		}
 

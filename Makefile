@@ -63,6 +63,9 @@ build:
 dev:
 	go run ./cmd/server/main.go
 
+dev-mcp:
+	go run ./cmd/mcp-server/main.go
+
 air:
 	air -c .air.toml
 
@@ -71,6 +74,9 @@ cronjob:
 
 test: setup-test
 	@PROJECT_PATH=$(shell pwd) go test -cover ./... -count=1 -p=1
+
+test-workflow:
+	@PROJECT_PATH=$(shell pwd) go test ./pkg/service/workflow -v
 
 setup-test:
 	docker rm --volumes -f ${POSTGRES_TEST_CONTAINER}
@@ -118,7 +124,7 @@ ci: init
 
 WD := $(shell pwd)
 lint:
-	docker run -t --rm -v $(WD):/app -w /app golangci/golangci-lint:v1.52.2 golangci-lint run -v
+	docker run -t --rm -v $(WD):/app -w /app golangci/golangci-lint:v1.62.2 golangci-lint run -v
 
 .PHONY: digest
 digest:
