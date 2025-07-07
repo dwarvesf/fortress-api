@@ -7,6 +7,7 @@ import (
 
 	"github.com/mark3labs/mcp-go/mcp"
 
+	"github.com/dwarvesf/fortress-api/pkg/mcp/validation"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/store/invoice"
@@ -49,17 +50,25 @@ func (t *Tools) GenerateInvoiceHandler(ctx context.Context, req mcp.CallToolRequ
 	}
 
 	subtotal := req.GetFloat("subtotal", 0.0)
-	if subtotal <= 0 {
-		return mcp.NewToolResultError("subtotal must be greater than 0"), nil
-	}
-
 	tax := req.GetFloat("tax", 0.0)
 	discount := req.GetFloat("discount", 0.0)
 	dueDateStr := req.GetString("due_date", "")
 	note := req.GetString("note", "")
-	_ = req.GetString("send_to_email", "") // TODO: implement email functionality
+	sendToEmail := req.GetString("send_to_email", "")
 
-	// Validate UUID
+	// Validate inputs using validation package
+	if err := validation.ValidateUUID(projectIDStr, "project_id"); err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+	if err := validation.ValidatePositiveNumber(subtotal, "subtotal"); err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+	if sendToEmail != "" {
+		if err := validation.ValidateEmail(sendToEmail, "send_to_email"); err != nil {
+			return mcp.NewToolResultError(err.Error()), nil
+		}
+	}
+
 	projectID, err := model.UUIDFromString(projectIDStr)
 	if err != nil {
 		return mcp.NewToolResultError(fmt.Sprintf("invalid project_id format: %v", err)), nil
@@ -148,7 +157,11 @@ func (t *Tools) GetInvoiceStatusHandler(ctx context.Context, req mcp.CallToolReq
 		return mcp.NewToolResultError(err.Error()), nil
 	}
 
-	// Validate UUID
+	// Validate invoice_id using validation package
+	if err := validation.ValidateUUID(invoiceIDStr, "invoice_id"); err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+
 	invoiceID, err := model.UUIDFromString(invoiceIDStr)
 	if err != nil {
 		return mcp.NewToolResultError(fmt.Sprintf("invalid invoice_id format: %v", err)), nil
@@ -192,16 +205,20 @@ func (t *Tools) UpdateInvoiceStatusHandler(ctx context.Context, req mcp.CallTool
 
 	paidDateStr := req.GetString("paid_date", "")
 
-	// Validate UUID
+	// Validate invoice_id using validation package
+	if err := validation.ValidateUUID(invoiceIDStr, "invoice_id"); err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+
 	invoiceID, err := model.UUIDFromString(invoiceIDStr)
 	if err != nil {
 		return mcp.NewToolResultError(fmt.Sprintf("invalid invoice_id format: %v", err)), nil
 	}
 
-	// Validate status
+	// Validate status using validation package
 	validStatuses := []string{"draft", "sent", "overdue", "paid", "error", "scheduled"}
-	if !contains(validStatuses, status) {
-		return mcp.NewToolResultError(fmt.Sprintf("invalid status: %s. Valid statuses: %v", status, validStatuses)), nil
+	if err := validation.ValidateInSlice(status, validStatuses, "status"); err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
 	}
 
 	// Get current invoice
@@ -263,7 +280,11 @@ func (t *Tools) CalculateCommissionHandler(ctx context.Context, req mcp.CallTool
 	dryRunStr := req.GetString("dry_run", "true")
 	dryRun := dryRunStr == "true"
 
-	// Validate UUID
+	// Validate invoice_id using validation package
+	if err := validation.ValidateUUID(invoiceIDStr, "invoice_id"); err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+
 	invoiceID, err := model.UUIDFromString(invoiceIDStr)
 	if err != nil {
 		return mcp.NewToolResultError(fmt.Sprintf("invalid invoice_id format: %v", err)), nil
@@ -296,15 +317,6 @@ func (t *Tools) CalculateCommissionHandler(ctx context.Context, req mcp.CallTool
 }
 
 // Helper functions
-
-func contains(slice []string, item string) bool {
-	for _, s := range slice {
-		if s == item {
-			return true
-		}
-	}
-	return false
-}
 
 func parseDate(dateStr string) (time.Time, error) {
 	// Parse date in YYYY-MM-DD format

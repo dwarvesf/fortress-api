@@ -6,6 +6,8 @@ import (
 
 	"github.com/mark3labs/mcp-go/mcp"
 
+	"github.com/dwarvesf/fortress-api/pkg/mcp/errors"
+	"github.com/dwarvesf/fortress-api/pkg/mcp/validation"
 	"github.com/dwarvesf/fortress-api/pkg/mcp/view"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/store"
@@ -39,17 +41,22 @@ func (t *Tools) GetEmployeeTool() mcp.Tool {
 func (t *Tools) GetEmployeeHandler(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	employeeIDStr, err := req.RequireString("employee_id")
 	if err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
+		return errors.NewValidationError("employee_id parameter is required", err.Error()), nil
+	}
+
+	// Validate employee_id using validation package
+	if err := validation.ValidateUUID(employeeIDStr, "employee_id"); err != nil {
+		return errors.NewValidationError(err.Error()), nil
 	}
 
 	employeeID, err := model.UUIDFromString(employeeIDStr)
 	if err != nil {
-		return mcp.NewToolResultError(fmt.Sprintf("invalid employee_id format: %v", err)), nil
+		return errors.NewValidationError("Invalid employee ID format", err.Error()), nil
 	}
 
 	employee, err := t.store.Employee.One(t.repo.DB(), employeeID.String(), false)
 	if err != nil {
-		return mcp.NewToolResultError(fmt.Sprintf("failed to get employee: %v", err)), nil
+		return errors.NewNotFoundError("employee", employeeIDStr), nil
 	}
 
 	return mcp.NewToolResultText(fmt.Sprintf("Employee: %s (%s)", employee.FullName, employee.ID)), nil
@@ -81,7 +88,7 @@ func (t *Tools) ListAvailableEmployeesHandler(ctx context.Context, req mcp.CallT
 	// Get employees from store
 	employees, _, err := t.store.Employee.All(t.repo.DB(), filter, model.Pagination{Page: 1, Size: int64(limit)})
 	if err != nil {
-		return mcp.NewToolResultError(fmt.Sprintf("failed to list employees: %v", err)), nil
+		return errors.NewDatabaseError("list employees", err), nil
 	}
 
 	// Apply role filter if specified (client-side filtering for now)
@@ -113,36 +120,33 @@ func (t *Tools) UpdateEmployeeStatusTool() mcp.Tool {
 func (t *Tools) UpdateEmployeeStatusHandler(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	employeeIDStr, err := req.RequireString("employee_id")
 	if err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
+		return errors.NewValidationError("employee_id parameter is required", err.Error()), nil
 	}
 
 	status, err := req.RequireString("status")
 	if err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
+		return errors.NewValidationError("status parameter is required", err.Error()), nil
+	}
+
+	// Validate inputs using validation package
+	if err := validation.ValidateUUID(employeeIDStr, "employee_id"); err != nil {
+		return errors.NewValidationError(err.Error()), nil
+	}
+
+	validStatuses := []string{"full-time", "part-time", "contractor", "probation", "left", "on-boarding"}
+	if err := validation.ValidateInSlice(status, validStatuses, "status"); err != nil {
+		return errors.NewValidationError(err.Error()), nil
 	}
 
 	employeeID, err := model.UUIDFromString(employeeIDStr)
 	if err != nil {
-		return mcp.NewToolResultError(fmt.Sprintf("invalid employee_id format: %v", err)), nil
-	}
-
-	// Validate status
-	validStatuses := []string{"full-time", "part-time", "contractor", "probation", "left", "on-boarding"}
-	isValid := false
-	for _, validStatus := range validStatuses {
-		if status == validStatus {
-			isValid = true
-			break
-		}
-	}
-	if !isValid {
-		return mcp.NewToolResultError(fmt.Sprintf("invalid status: %s. Valid statuses: %v", status, validStatuses)), nil
+		return errors.NewValidationError("Invalid employee ID format", err.Error()), nil
 	}
 
 	// Get current employee
 	employee, err := t.store.Employee.One(t.repo.DB(), employeeID.String(), false)
 	if err != nil {
-		return mcp.NewToolResultError(fmt.Sprintf("failed to get employee: %v", err)), nil
+		return errors.NewNotFoundError("employee", employeeIDStr), nil
 	}
 
 	// Update status
@@ -151,7 +155,7 @@ func (t *Tools) UpdateEmployeeStatusHandler(ctx context.Context, req mcp.CallToo
 	// Save changes
 	updatedEmployee, err := t.store.Employee.Update(t.repo.DB(), employee)
 	if err != nil {
-		return mcp.NewToolResultError(fmt.Sprintf("failed to update employee status: %v", err)), nil
+		return errors.NewDatabaseError("update employee status", err), nil
 	}
 
 	return mcp.NewToolResultText(fmt.Sprintf("Employee status updated to %s for %s", status, updatedEmployee.FullName)), nil
@@ -170,18 +174,23 @@ func (t *Tools) GetEmployeeSkillsTool() mcp.Tool {
 func (t *Tools) GetEmployeeSkillsHandler(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	employeeIDStr, err := req.RequireString("employee_id")
 	if err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
+		return errors.NewValidationError("employee_id parameter is required", err.Error()), nil
+	}
+
+	// Validate employee_id using validation package
+	if err := validation.ValidateUUID(employeeIDStr, "employee_id"); err != nil {
+		return errors.NewValidationError(err.Error()), nil
 	}
 
 	employeeID, err := model.UUIDFromString(employeeIDStr)
 	if err != nil {
-		return mcp.NewToolResultError(fmt.Sprintf("invalid employee_id format: %v", err)), nil
+		return errors.NewValidationError("Invalid employee ID format", err.Error()), nil
 	}
 
 	// Get employee with stacks
 	employee, err := t.store.Employee.One(t.repo.DB(), employeeID.String(), true) // true to include stacks
 	if err != nil {
-		return mcp.NewToolResultError(fmt.Sprintf("failed to get employee: %v", err)), nil
+		return errors.NewNotFoundError("employee", employeeIDStr), nil
 	}
 
 	result := map[string]interface{}{

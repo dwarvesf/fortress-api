@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/mark3labs/mcp-go/mcp"
+	"gorm.io/datatypes"
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/mcp/auth"
@@ -66,6 +67,10 @@ func (t *Tools) GenerateFinancialReportTool() mcp.Tool {
 // CalculateMonthlyPayrollHandler handles the calculate_monthly_payroll tool execution
 func (t *Tools) CalculateMonthlyPayrollHandler(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	startTime := time.Now()
+
+	// Add timeout context for long-running payroll operations (10 minutes)
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Minute)
+	defer cancel()
 
 	// Extract and validate parameters
 	params := &workflow.MonthlyPayrollParams{
@@ -136,6 +141,10 @@ func (t *Tools) CalculateMonthlyPayrollHandler(ctx context.Context, req mcp.Call
 
 // GenerateFinancialReportHandler handles the generate_financial_report tool execution
 func (t *Tools) GenerateFinancialReportHandler(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	// Add timeout context for long-running financial report operations (5 minutes)
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Minute)
+	defer cancel()
+
 	// Extract and validate parameters
 	month := int(req.GetFloat("month", 0))
 	year := int(req.GetFloat("year", 0))
@@ -205,6 +214,13 @@ func (t *Tools) executeMonthlyPayrollCalculation(ctx context.Context, params *wo
 	var totalAmountVND float64
 
 	for _, emp := range employees {
+		// Check for context cancellation during intensive operations
+		select {
+		case <-ctx.Done():
+			return nil, fmt.Errorf("payroll calculation canceled: %w", ctx.Err())
+		default:
+		}
+
 		calc, err := t.calculateEmployeePayroll(ctx, emp, params)
 		if err != nil {
 			return nil, fmt.Errorf("failed to calculate payroll for employee %s: %w", emp.TeamEmail, err)
@@ -442,15 +458,35 @@ func (t *Tools) calculateEmployeePayroll(ctx context.Context, emp *model.Employe
 
 // commitPayrollChanges commits payroll changes to database (when not dry run)
 func (t *Tools) commitPayrollChanges(ctx context.Context, params *workflow.MonthlyPayrollParams, result *workflow.MonthlyPayrollResult) error {
-	// This would implement the actual database updates:
-	// 1. Create cached_payroll record
-	// 2. Mark commissions as paid
-	// 3. Update salary advance status
-	// 4. Create audit trail
-
-	// For now, this is a placeholder
-	// Real implementation would use database transactions
-	return nil
+	// Start database transaction for atomic payroll operations
+	tx, done := t.repo.NewTransaction()
+	
+	// Create cached_payroll record for audit and history tracking
+	// This follows the existing pattern in the codebase
+	cachedPayroll := &model.CachedPayroll{
+		Month:    params.Month,
+		Year:     params.Year,
+		Batch:    params.Batch,
+		Payrolls: datatypes.JSON("{}"), // Simplified payload for now
+	}
+	
+	// Create cached payroll record in transaction
+	// Use direct database operations since store methods may not exist
+	if err := tx.DB().Create(cachedPayroll).Error; err != nil {
+		return done(fmt.Errorf("failed to create cached payroll record: %w", err))
+	}
+	
+	// TODO: In production, this would also:
+	// 1. Mark specific employee commissions as paid
+	// 2. Update salary advance statuses  
+	// 3. Create audit trail entries
+	// 4. Update project commission tracking
+	//
+	// For now, we keep it simple and just create the cached payroll record
+	// The transaction ensures atomicity for future enhancements
+	
+	// Commit transaction - all operations succeed or all rollback
+	return done(nil)
 }
 
 // Helper functions

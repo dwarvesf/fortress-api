@@ -8,6 +8,7 @@ import (
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/shopspring/decimal"
 
+	"github.com/dwarvesf/fortress-api/pkg/mcp/validation"
 	"github.com/dwarvesf/fortress-api/pkg/mcp/view"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/store"
@@ -70,22 +71,34 @@ func (t *Tools) CreateProjectHandler(ctx context.Context, req mcp.CallToolReques
 	startDate := req.GetString("start_date", "")
 	endDate := req.GetString("end_date", "")
 
-	// Validate project type
+	// Validate inputs using validation package
+	if err := validation.ValidateRequired(name, "name"); err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+	if err := validation.ValidateRequired(code, "code"); err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+
 	validTypes := []string{"dwarves", "fixed-cost", "time-material"}
-	if !contains(validTypes, projectType) {
-		return mcp.NewToolResultError(fmt.Sprintf("invalid project type: %s. Valid types: %v", projectType, validTypes)), nil
+	if err := validation.ValidateInSlice(projectType, validTypes, "type"); err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
 	}
 
-	// Validate project function
 	validFunctions := []string{"development", "learning", "training", "management"}
-	if !contains(validFunctions, function) {
-		return mcp.NewToolResultError(fmt.Sprintf("invalid project function: %s. Valid functions: %v", function, validFunctions)), nil
+	if err := validation.ValidateInSlice(function, validFunctions, "function"); err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
 	}
 
-	// Validate project status
 	validStatuses := []string{"on-boarding", "active", "paused", "closed"}
-	if !contains(validStatuses, status) {
-		return mcp.NewToolResultError(fmt.Sprintf("invalid project status: %s. Valid statuses: %v", status, validStatuses)), nil
+	if err := validation.ValidateInSlice(status, validStatuses, "status"); err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+
+	// Validate email if provided
+	if clientEmail != "" {
+		if err := validation.ValidateEmail(clientEmail, "client_email"); err != nil {
+			return mcp.NewToolResultError(err.Error()), nil
+		}
 	}
 
 	// Check if project code already exists
@@ -217,7 +230,31 @@ func (t *Tools) AssignProjectMemberHandler(ctx context.Context, req mcp.CallTool
 	startDate := req.GetString("start_date", "")
 	endDate := req.GetString("end_date", "")
 
-	// Validate UUIDs
+	// Validate inputs using validation package
+	if err := validation.ValidateUUID(projectIDStr, "project_id"); err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+	if err := validation.ValidateUUID(employeeIDStr, "employee_id"); err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+
+	validDeploymentTypes := []string{"official", "shadow", "part-time"}
+	if err := validation.ValidateInSlice(deploymentType, validDeploymentTypes, "deployment_type"); err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+
+	validStatuses := []string{"pending", "on-boarding", "active", "inactive"}
+	if err := validation.ValidateInSlice(status, validStatuses, "status"); err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+
+	if rate > 0 {
+		if err := validation.ValidatePositiveNumber(rate, "rate"); err != nil {
+			return mcp.NewToolResultError(err.Error()), nil
+		}
+	}
+
+	// Convert validated UUIDs
 	projectID, err := model.UUIDFromString(projectIDStr)
 	if err != nil {
 		return mcp.NewToolResultError(fmt.Sprintf("invalid project_id format: %v", err)), nil
@@ -226,18 +263,6 @@ func (t *Tools) AssignProjectMemberHandler(ctx context.Context, req mcp.CallTool
 	employeeID, err := model.UUIDFromString(employeeIDStr)
 	if err != nil {
 		return mcp.NewToolResultError(fmt.Sprintf("invalid employee_id format: %v", err)), nil
-	}
-
-	// Validate deployment type
-	validDeploymentTypes := []string{"official", "shadow", "part-time"}
-	if !contains(validDeploymentTypes, deploymentType) {
-		return mcp.NewToolResultError(fmt.Sprintf("invalid deployment_type: %s. Valid types: %v", deploymentType, validDeploymentTypes)), nil
-	}
-
-	// Validate status
-	validStatuses := []string{"pending", "on-boarding", "active", "inactive"}
-	if !contains(validStatuses, status) {
-		return mcp.NewToolResultError(fmt.Sprintf("invalid status: %s. Valid statuses: %v", status, validStatuses)), nil
 	}
 
 	// Verify project exists
@@ -310,7 +335,11 @@ func (t *Tools) GetProjectMembersHandler(ctx context.Context, req mcp.CallToolRe
 	status := req.GetString("status", "")
 	limit := int(req.GetFloat("limit", 50.0))
 
-	// Validate UUID
+	// Validate project_id using validation package
+	if err := validation.ValidateUUID(projectIDStr, "project_id"); err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+
 	projectID, err := model.UUIDFromString(projectIDStr)
 	if err != nil {
 		return mcp.NewToolResultError(fmt.Sprintf("invalid project_id format: %v", err)), nil
@@ -367,16 +396,19 @@ func (t *Tools) UpdateProjectStatusHandler(ctx context.Context, req mcp.CallTool
 		return mcp.NewToolResultError(err.Error()), nil
 	}
 
-	// Validate UUID
+	// Validate inputs using validation package
+	if err := validation.ValidateUUID(projectIDStr, "project_id"); err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+
+	validStatuses := []string{"on-boarding", "active", "paused", "closed"}
+	if err := validation.ValidateInSlice(status, validStatuses, "status"); err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+
 	projectID, err := model.UUIDFromString(projectIDStr)
 	if err != nil {
 		return mcp.NewToolResultError(fmt.Sprintf("invalid project_id format: %v", err)), nil
-	}
-
-	// Validate status
-	validStatuses := []string{"on-boarding", "active", "paused", "closed"}
-	if !contains(validStatuses, status) {
-		return mcp.NewToolResultError(fmt.Sprintf("invalid status: %s. Valid statuses: %v", status, validStatuses)), nil
 	}
 
 	// Get current project
@@ -397,15 +429,6 @@ func (t *Tools) UpdateProjectStatusHandler(ctx context.Context, req mcp.CallTool
 }
 
 // Helper functions
-
-func contains(slice []string, item string) bool {
-	for _, s := range slice {
-		if s == item {
-			return true
-		}
-	}
-	return false
-}
 
 func parseDate(dateStr string) (time.Time, error) {
 	// Parse date in YYYY-MM-DD format
