@@ -218,10 +218,10 @@ func (d *discordClient) GetMemberByUsername(username string) (*discordgo.Member,
 func (d *discordClient) GetRoles() (Roles, error) {
 	roles, err := d.session.GuildRoles(d.cfg.Discord.IDs.DwarvesGuild)
 	if err != nil {
-		return nil, err
+		return Roles{}, err
 	}
 
-	return roles, nil
+	return Roles(roles), nil
 }
 
 func (d *discordClient) AddRole(userID, roleID string) error {

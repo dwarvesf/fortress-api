@@ -18,7 +18,7 @@ linters:
     - unused # Checks Go code for unused constants, variables, functions and types
 
   # customize
-    - execinquery # execinquery is a linter about query string checker in Query function which reads your Go src files and warning it finds
+    # - execinquery # execinquery is deprecated since v1.58.0
     # - errorlint # errorlint is a linter for that can be used to find code that will cause problems with the error wrapping scheme introduced in Go 1.13.
     - bodyclose # checks whether HTTP response body is closed successfully
     - errname # Checks that sentinel errors are prefixed with the Err and error types are suffixed with the Error.
