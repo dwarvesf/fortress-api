@@ -34,7 +34,7 @@ const (
 )
 
 type wiseService struct {
-	sync.Mutex
+	mu       sync.Mutex
 	cacheMap map[string]float64
 	profile  string
 	cfg      *config.Config
@@ -56,9 +56,9 @@ func (w *wiseService) janitor() {
 	t := time.NewTicker(5 * time.Minute)
 	for {
 		<-t.C
-		w.Lock()
+		w.mu.Lock()
 		w.cacheMap = map[string]float64{}
-		w.Unlock()
+		w.mu.Unlock()
 	}
 }
 
@@ -154,8 +154,8 @@ func (w *wiseService) getCache(key string) float64 {
 }
 
 func (w *wiseService) setCache(key string, val float64) {
-	w.Lock()
-	defer w.Unlock()
+	w.mu.Lock()
+	defer w.mu.Unlock()
 	w.cacheMap[key] = val
 }
 

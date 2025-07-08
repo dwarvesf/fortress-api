@@ -122,7 +122,7 @@ func NewAuditCycleFromNotionPage(page *notion.Page, notionDBID string) *AuditCyc
 		rs.Quarter = fmt.Sprintf("%d/Q%d", date.Year(), (date.Month()-1)/3+1)
 	}
 
-	if properties["Project"].Relation != nil && len(properties["Project"].Relation) > 0 {
+	if len(properties["Project"].Relation) > 0 {
 		rs.ProjectID = MustGetUUIDFromString(properties["Project"].Relation[0].ID)
 	}
 

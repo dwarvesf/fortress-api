@@ -92,7 +92,7 @@ func (c *CampfireService) BotReply(callbackURL string, message string) error {
 		return err
 	}
 	if resp.StatusCode/100 > 2 {
-		err = fmt.Errorf(string(data))
+		err = fmt.Errorf("request failed: %s", string(data))
 		c.logger.Fields(logger.Fields{"code": resp.StatusCode}).Error(err, "request failed")
 		return err
 	}
