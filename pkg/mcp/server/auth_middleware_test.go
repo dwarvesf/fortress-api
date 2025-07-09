@@ -131,7 +131,9 @@ func TestHTTPAuthMiddleware(t *testing.T) {
 					contextAgent = agent
 				}
 				w.WriteHeader(http.StatusOK)
-				w.Write([]byte("OK"))
+				if _, err := w.Write([]byte("OK")); err != nil {
+					t.Errorf("Failed to write response: %v", err)
+				}
 			}))
 
 			// Create test request
@@ -269,7 +271,9 @@ func TestAuthMiddlewareIntegration(t *testing.T) {
 		
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"agent_id":"` + agent.ID.String() + `","agent_name":"` + agent.Name + `"}`))
+		if _, err := w.Write([]byte(`{"agent_id":"` + agent.ID.String() + `","agent_name":"` + agent.Name + `"}`)); err != nil {
+			t.Errorf("Failed to write response: %v", err)
+		}
 	}))
 
 	// Test successful authentication

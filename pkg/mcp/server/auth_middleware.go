@@ -93,5 +93,8 @@ func writeAuthError(w http.ResponseWriter, err error) {
 		message = "authentication failed"
 	}
 	
-	w.Write([]byte(`{"error":"` + message + `"}`))
+	if _, writeErr := w.Write([]byte(`{"error":"` + message + `"}`)); writeErr != nil {
+		// Log error but don't return as response is already being written
+		return
+	}
 }
