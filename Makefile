@@ -75,8 +75,8 @@ cronjob:
 test: setup-test
 	@PROJECT_PATH=$(shell pwd) go test -cover ./... -count=1 -p=1
 
-test-workflow:
-	@PROJECT_PATH=$(shell pwd) go test ./pkg/service/workflow -v
+test-mcp:
+	@PROJECT_PATH=$(shell pwd) go test ./pkg/mcp/... -v
 
 setup-test:
 	docker rm --volumes -f ${POSTGRES_TEST_CONTAINER}

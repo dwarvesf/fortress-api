@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/mark3labs/mcp-go/mcp"
@@ -117,8 +118,10 @@ func (s *MCPServer) Serve() error {
 	s.logger.Info("MCP tools registered successfully")
 	s.logger.Info("MCP server ready to accept connections")
 
-	// Serve using stdio transport
-	httpServer := server.NewStreamableHTTPServer(s.server)
+	// Create HTTP server with authentication middleware
+	httpServer := server.NewStreamableHTTPServer(s.server,
+		server.WithHTTPContextFunc(s.httpContextWithAuth),
+	)
 	s.logger.Info("HTTP server listening on :8080/mcp")
 	if err := httpServer.Start(":8080"); err != nil {
 		return fmt.Errorf("failed to start MCP server: %w", err)
@@ -127,22 +130,90 @@ func (s *MCPServer) Serve() error {
 	return nil
 }
 
+// httpContextWithAuth handles HTTP-level authentication for MCP requests
+func (s *MCPServer) httpContextWithAuth(ctx context.Context, r *http.Request) context.Context {
+	// Extract Bearer token from Authorization header
+	authHeader := r.Header.Get("Authorization")
+	token, err := ExtractBearerToken(authHeader)
+	if err != nil {
+		s.logger.Error(err, "Authentication failed")
+		// Return original context without agent on auth failure
+		// The MCP framework will handle the error appropriately
+		return ctx
+	}
+
+	// Validate the API key using the auth service
+	agent, err := s.authService.ValidateAPIKey(ctx, token)
+	if err != nil {
+		s.logger.Error(err, "API key validation failed")
+		// Return original context without agent on auth failure
+		return ctx
+	}
+
+	s.logger.Info("Agent authenticated successfully")
+
+	// Set the agent in the request context
+	return auth.SetAgentInContext(ctx, agent)
+}
+
 // wrapToolWithAuth wraps a tool handler with authentication and logging
 func (s *MCPServer) wrapToolWithAuth(toolName string, handler func(context.Context, mcp.CallToolRequest) (*mcp.CallToolResult, error)) func(context.Context, mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	return func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		startTime := time.Now()
 
-		// For now, use the existing test agent key for MCP context
-		// In production, implement proper MCP authentication mechanism
-		
-		// Use the existing test agent key ID from database
-		agentKey := &model.AgentAPIKey{
-			BaseModel: model.BaseModel{ID: model.MustGetUUIDFromString("5dc80b39-9203-46c9-87ab-40a0f9c752cc")},
-			Name:      "test-mcp-agent",
+		// Extract authenticated agent from context
+		agentKey, exists := auth.GetAgentFromContext(ctx)
+		if !exists {
+			// This should not happen if authentication is properly configured
+			s.logger.Error(fmt.Errorf("no authenticated agent found"), "Tool execution failed - missing agent")
+			return nil, fmt.Errorf("authentication required: no valid agent found in request context")
 		}
 
-		// Add agent to context
-		ctx = auth.SetAgentInContext(ctx, agentKey)
+		// Validate tool permissions
+		allowed, err := s.authService.ValidateToolPermission(ctx, agentKey, toolName)
+		if err != nil {
+			// Log permission validation failure
+			s.logger.Error(err, "Tool execution denied - agent validation failed")
+			
+			// Create action log for denied access
+			actionLog := &model.AgentActionLog{
+				AgentKeyID:   agentKey.ID,
+				ToolName:     toolName,
+				Status:       model.AgentActionLogStatusError,
+				DurationMs:   func() *int { d := int(time.Since(startTime).Milliseconds()); return &d }(),
+				ErrorMessage: func() *string { msg := err.Error(); return &msg }(),
+			}
+			
+			// Save the log (ignore errors to not break the tool execution)
+			if _, logErr := s.actionLogStore.Create(context.Background(), actionLog); logErr != nil {
+				s.logger.Error(logErr, "Failed to create action log")
+			}
+			
+			return nil, err
+		}
+
+		if !allowed {
+			// This should not happen if ValidateToolPermission is working correctly
+			// but included for safety
+			err := fmt.Errorf("permission denied for tool: %s", toolName)
+			s.logger.Error(err, "Tool execution denied - insufficient permissions")
+			
+			// Create action log for denied access
+			actionLog := &model.AgentActionLog{
+				AgentKeyID:   agentKey.ID,
+				ToolName:     toolName,
+				Status:       model.AgentActionLogStatusError,
+				DurationMs:   func() *int { d := int(time.Since(startTime).Milliseconds()); return &d }(),
+				ErrorMessage: func() *string { msg := err.Error(); return &msg }(),
+			}
+			
+			// Save the log (ignore errors to not break the tool execution)
+			if _, logErr := s.actionLogStore.Create(context.Background(), actionLog); logErr != nil {
+				s.logger.Error(logErr, "Failed to create action log")
+			}
+			
+			return nil, err
+		}
 
 		// Execute the tool
 		result, err := handler(ctx, req)
