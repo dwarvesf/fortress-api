@@ -124,7 +124,7 @@ ci: init
 
 WD := $(shell pwd)
 lint:
-	docker run -t --rm -v $(WD):/app -w /app golangci/golangci-lint:v1.62.2 golangci-lint run -v
+	docker run -t --rm -v $(WD):/app -w /app golangci/golangci-lint:v2.1.0 golangci-lint run -v
 
 .PHONY: digest
 digest:
