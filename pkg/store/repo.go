@@ -4,6 +4,8 @@ import (
 	"errors"
 
 	"gorm.io/gorm"
+
+	"github.com/dwarvesf/fortress-api/pkg/metrics"
 )
 
 // FinallyFunc function to finish a transaction
@@ -37,6 +39,8 @@ func (s *repo) NewTransaction() (newRepo DBRepo, finallyFn FinallyFunc) {
 	finallyFn = func(err error) error {
 		if err != nil {
 			nErr := newDB.Rollback().Error
+			// Track rollback metric
+			metrics.DatabaseTransactions.WithLabelValues("rollback").Inc()
 			if nErr != nil {
 				return errors.New(nErr.Error())
 			}
@@ -45,8 +49,12 @@ func (s *repo) NewTransaction() (newRepo DBRepo, finallyFn FinallyFunc) {
 
 		cErr := newDB.Commit().Error
 		if cErr != nil {
+			// Track rollback metric for failed commits
+			metrics.DatabaseTransactions.WithLabelValues("rollback").Inc()
 			return errors.New(cErr.Error())
 		}
+		// Track successful commit metric
+		metrics.DatabaseTransactions.WithLabelValues("commit").Inc()
 		return nil
 	}
 
