@@ -32,10 +32,10 @@ func registerCustomDatabaseCallbacks(db *gorm.DB, cfg *monitoring.DatabaseMonito
 	}
 
 	// Before callbacks - capture start time and context
-	db.Callback().Create().Before("gorm:create").Register("metrics:before_create", beforeCallback("create"))
-	db.Callback().Query().Before("gorm:query").Register("metrics:before_query", beforeCallback("select"))
-	db.Callback().Update().Before("gorm:update").Register("metrics:before_update", beforeCallback("update"))
-	db.Callback().Delete().Before("gorm:delete").Register("metrics:before_delete", beforeCallback("delete"))
+	_ = db.Callback().Create().Before("gorm:create").Register("metrics:before_create", beforeCallback("create"))
+	_ = db.Callback().Query().Before("gorm:query").Register("metrics:before_query", beforeCallback("select"))
+	_ = db.Callback().Update().Before("gorm:update").Register("metrics:before_update", beforeCallback("update"))
+	_ = db.Callback().Delete().Before("gorm:delete").Register("metrics:before_delete", beforeCallback("delete"))
 
 	// After callbacks - record metrics
 	db.Callback().Create().After("gorm:create").Register("metrics:after_create", afterCallback("create", cfg))

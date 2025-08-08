@@ -159,7 +159,7 @@ func TestSecurityMonitoringConfigEdgeCases(t *testing.T) {
 	var config *SecurityMonitoringConfig
 	assert.NotPanics(t, func() {
 		if config != nil {
-			config.Validate()
+			_ = config.Validate()
 		}
 	})
 

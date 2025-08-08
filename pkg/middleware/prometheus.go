@@ -70,7 +70,7 @@ func (p *PrometheusMiddleware) Handler() gin.HandlerFunc {
 			}
 			
 			// Record request completion metrics
-			p.recordMetrics(c, start, int64(c.Request.ContentLength), rw.Size())
+			p.recordMetrics(c, start, c.Request.ContentLength, rw.Size())
 		}()
 		
 		// Continue to next handler
