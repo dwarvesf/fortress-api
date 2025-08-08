@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"math/rand"
 	"net/http/httptest"
 	"strings"
 	"sync"
@@ -23,7 +22,7 @@ func setupTestMetrics() {
 	// Reset Prometheus registry for testing
 	registry := prometheus.NewRegistry()
 	prometheus.DefaultRegisterer = registry
-	metrics.InitHTTPMetrics(registry)
+	_ = metrics.InitHTTPMetrics(registry)
 }
 
 func TestNewPrometheusMiddleware_DefaultConfig(t *testing.T) {
@@ -61,7 +60,7 @@ func TestPrometheusHandler_Enabled_Success(t *testing.T) {
 	// Clean setup
 	registry := prometheus.NewRegistry()
 	prometheus.DefaultRegisterer = registry
-	metrics.InitHTTPMetrics(registry)
+	_ = metrics.InitHTTPMetrics(registry)
 	
 	config := &monitoring.PrometheusConfig{
 		Enabled:        true,
@@ -127,7 +126,7 @@ func TestPrometheusHandler_ExcludedPaths(t *testing.T) {
 	// Clean setup
 	registry := prometheus.NewRegistry()
 	prometheus.DefaultRegisterer = registry
-	metrics.InitHTTPMetrics(registry)
+	_ = metrics.InitHTTPMetrics(registry)
 	
 	config := &monitoring.PrometheusConfig{
 		Enabled:        true,
@@ -180,8 +179,7 @@ func TestPrometheusHandler_SamplingRate(t *testing.T) {
 	prometheus.DefaultRegisterer = prometheus.NewRegistry()
 	setupTestMetrics()
 	
-	// Set seed for deterministic testing
-	rand.Seed(12345)
+	// Note: This test relies on Go's default random number generator for sampling
 	
 	config := &monitoring.PrometheusConfig{
 		Enabled:    true,
@@ -353,7 +351,7 @@ func TestInFlightRequests_Tracking(t *testing.T) {
 	// Clean setup
 	registry := prometheus.NewRegistry()
 	prometheus.DefaultRegisterer = registry
-	metrics.InitHTTPMetrics(registry)
+	_ = metrics.InitHTTPMetrics(registry)
 	
 	config := &monitoring.PrometheusConfig{
 		Enabled:        true,
@@ -403,7 +401,7 @@ func TestInFlightRequests_ConcurrentRequests(t *testing.T) {
 	// Clean setup
 	registry := prometheus.NewRegistry()
 	prometheus.DefaultRegisterer = registry
-	metrics.InitHTTPMetrics(registry)
+	_ = metrics.InitHTTPMetrics(registry)
 	
 	config := &monitoring.PrometheusConfig{
 		Enabled:        true,
@@ -467,7 +465,7 @@ func TestRecordMetrics_ResponseSize(t *testing.T) {
 	// Clean setup
 	registry := prometheus.NewRegistry()
 	prometheus.DefaultRegisterer = registry
-	metrics.InitHTTPMetrics(registry)
+	_ = metrics.InitHTTPMetrics(registry)
 	
 	config := &monitoring.PrometheusConfig{
 		Enabled:        true,

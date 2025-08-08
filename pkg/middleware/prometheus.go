@@ -25,7 +25,7 @@ func NewPrometheusMiddleware(config *monitoring.PrometheusConfig) *PrometheusMid
 	}
 	
 	// Validate configuration and apply defaults for invalid values
-	config.Validate()
+	_ = config.Validate()
 	
 	return &PrometheusMiddleware{
 		config: config,
@@ -105,6 +105,7 @@ func (p *PrometheusMiddleware) recordMetrics(c *gin.Context, startTime time.Time
 		if r := recover(); r != nil {
 			// Log error but don't fail the request
 			// In production, this would use the application's logger
+			_ = r // Acknowledge that we're intentionally ignoring the recovery value
 		}
 	}()
 	
