@@ -1,0 +1,219 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: fortress-api-alerts
+  namespace: monitoring
+  labels:
+    app: fortress-api
+    component: alerting
+    release: glp
+spec:
+  groups:
+    - name: fortress-api-slo
+      interval: 30s
+      rules:
+        # SLO: 99.9% availability
+        - alert: FortressAPIHighErrorRate
+          expr: |
+            (
+              sum(rate(fortress_http_requests_total{namespace="fortress-prod", status=~"5.."}[5m])) 
+              / 
+              sum(rate(fortress_http_requests_total{namespace="fortress-prod"}[5m]))
+            ) > 0.001
+          for: 2m
+          labels:
+            severity: critical
+            service: fortress-api
+            slo: availability
+          annotations:
+            summary: "Fortress API error rate is above SLO threshold"
+            description: "Error rate is {{ $value | humanizePercentage }} for the last 5 minutes, which exceeds the 0.1% SLO threshold"
+            runbook_url: "https://runbook.company.com/fortress-api-errors"
+
+        # SLO: 95% of requests under 200ms
+        - alert: FortressAPIHighLatency
+          expr: |
+            histogram_quantile(0.95, 
+              sum(rate(fortress_http_request_duration_seconds_bucket{namespace="fortress-prod"}[5m])) by (le)
+            ) > 0.2
+          for: 5m
+          labels:
+            severity: warning
+            service: fortress-api
+            slo: latency
+          annotations:
+            summary: "Fortress API P95 latency is above SLO threshold"
+            description: "P95 latency is {{ $value | humanizeDuration }} which exceeds the 200ms SLO threshold"
+            runbook_url: "https://runbook.company.com/fortress-api-performance"
+
+    - name: fortress-api-security
+      interval: 30s
+      rules:
+        # Security: Brute force attack detection
+        - alert: FortressAPIBruteForceAttack
+          expr: |
+            increase(fortress_security_suspicious_activity_total{namespace="fortress-prod", event_type="brute_force"}[5m]) > 0
+          for: 0m  # Alert immediately
+          labels:
+            severity: critical
+            service: fortress-api
+            category: security
+          annotations:
+            summary: "Fortress API is under brute force attack"
+            description: "{{ $value }} brute force attempts detected in the last 5 minutes"
+            runbook_url: "https://runbook.company.com/security-incidents"
+
+        # Security: High authentication failure rate
+        - alert: FortressAPIHighAuthFailureRate
+          expr: |
+            (
+              sum(rate(fortress_auth_attempts_total{namespace="fortress-prod", result="failure"}[5m]))
+              /
+              sum(rate(fortress_auth_attempts_total{namespace="fortress-prod"}[5m]))
+            ) > 0.1
+          for: 3m
+          labels:
+            severity: warning
+            service: fortress-api
+            category: security
+          annotations:
+            summary: "Fortress API has high authentication failure rate"
+            description: "Authentication failure rate is {{ $value | humanizePercentage }} for the last 5 minutes"
+            runbook_url: "https://runbook.company.com/auth-failures"
+
+        # Security: Suspicious activity spike
+        - alert: FortressAPISecurityEventSpike
+          expr: |
+            sum(rate(fortress_security_suspicious_activity_total{namespace="fortress-prod"}[5m])) > 0.1
+          for: 2m
+          labels:
+            severity: warning
+            service: fortress-api
+            category: security
+          annotations:
+            summary: "Fortress API security events are spiking"
+            description: "{{ $value }} security events per second detected"
+            runbook_url: "https://runbook.company.com/security-monitoring"
+
+    - name: fortress-api-business
+      interval: 60s
+      rules:
+        # Business: Database transaction failure rate
+        - alert: FortressAPIHighTransactionFailureRate
+          expr: |
+            (
+              sum(rate(fortress_database_transactions_total{namespace="fortress-prod", result="rollback"}[10m]))
+              /
+              sum(rate(fortress_database_transactions_total{namespace="fortress-prod"}[10m]))
+            ) > 0.05
+          for: 5m
+          labels:
+            severity: warning
+            service: fortress-api
+            category: business
+          annotations:
+            summary: "Fortress API has high database transaction failure rate"
+            description: "Transaction rollback rate is {{ $value | humanizePercentage }} for the last 10 minutes"
+            runbook_url: "https://runbook.company.com/database-issues"
+
+        # Business: Critical endpoint availability (example: payroll)
+        - alert: FortressAPIPayrollEndpointDown
+          expr: |
+            sum(rate(fortress_http_requests_total{namespace="fortress-prod", endpoint=~".*payroll.*", status=~"5.."}[5m])) > 0
+          for: 1m
+          labels:
+            severity: critical
+            service: fortress-api
+            category: business
+            endpoint: payroll
+          annotations:
+            summary: "Fortress API payroll endpoint is returning errors"
+            description: "Payroll endpoint is returning {{ $value }} errors per second"
+            runbook_url: "https://runbook.company.com/critical-endpoints"
+
+    - name: fortress-api-infrastructure
+      interval: 30s
+      rules:
+        # Infrastructure: Service down
+        - alert: FortressAPIServiceDown
+          expr: |
+            up{namespace="fortress-prod", job="fortress-api"} == 0
+          for: 1m
+          labels:
+            severity: critical
+            service: fortress-api
+            category: infrastructure
+          annotations:
+            summary: "Fortress API service is down"
+            description: "Fortress API has been down for more than 1 minute"
+            runbook_url: "https://runbook.company.com/service-outage"
+
+        # Infrastructure: High memory usage
+        - alert: FortressAPIHighMemoryUsage
+          expr: |
+            go_memstats_heap_alloc_bytes{namespace="fortress-prod", job="api"} / go_memstats_heap_sys_bytes{namespace="fortress-prod", job="api"} > 0.9
+          for: 5m
+          labels:
+            severity: warning
+            service: fortress-api
+            category: infrastructure
+          annotations:
+            summary: "Fortress API memory usage is high"
+            description: "Memory usage is {{ $value | humanizePercentage }} of allocated heap"
+            runbook_url: "https://runbook.company.com/memory-issues"
+
+        # Infrastructure: Too many goroutines
+        - alert: FortressAPIHighGoroutineCount
+          expr: |
+            go_goroutines{namespace="fortress-prod", job="api"} > 1000
+          for: 10m
+          labels:
+            severity: warning
+            service: fortress-api
+            category: infrastructure
+          annotations:
+            summary: "Fortress API has too many goroutines"
+            description: "Goroutine count is {{ $value }}, which may indicate a goroutine leak"
+            runbook_url: "https://runbook.company.com/goroutine-leaks"
+
+    - name: fortress-api-performance
+      interval: 30s
+      rules:
+        # Performance: Request rate anomaly
+        - alert: FortressAPIRequestRateAnomaly
+          expr: |
+            (
+              sum(rate(fortress_http_requests_total{namespace="fortress-prod"}[5m]))
+              /
+              sum(rate(fortress_http_requests_total{namespace="fortress-prod"}[1h] offset 1h))
+            ) > 5 or
+            (
+              sum(rate(fortress_http_requests_total{namespace="fortress-prod"}[5m]))
+              /
+              sum(rate(fortress_http_requests_total{namespace="fortress-prod"}[1h] offset 1h))
+            ) < 0.2
+          for: 10m
+          labels:
+            severity: warning
+            service: fortress-api
+            category: performance
+          annotations:
+            summary: "Fortress API request rate is anomalous"
+            description: "Request rate has changed by {{ $value }}x compared to the same time last hour"
+            runbook_url: "https://runbook.company.com/traffic-anomalies"
+
+        # Performance: Slow endpoint detection
+        - alert: FortressAPISlowEndpoint
+          expr: |
+            histogram_quantile(0.95, 
+              sum(rate(fortress_http_request_duration_seconds_bucket{namespace="fortress-prod"}[5m])) by (le, endpoint)
+            ) > 1
+          for: 5m
+          labels:
+            severity: warning
+            service: fortress-api
+            category: performance
+          annotations:
+            summary: "Fortress API endpoint {{ $labels.endpoint }} is slow"
+            description: "P95 latency for {{ $labels.endpoint }} is {{ $value | humanizeDuration }}"
+            runbook_url: "https://runbook.company.com/slow-endpoints"
