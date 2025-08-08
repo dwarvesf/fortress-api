@@ -1,11 +1,5 @@
 version: "2"
 
-linters-settings:
-  misspell:
-    locale: US
-  lll:
-    line-length: 140
-
 # https://golangci-lint.run/usage/linters/
 linters:
   default: none
@@ -31,12 +25,18 @@ linters:
     # - usestdlibvars # A linter that detect the possibility to use variables/constants from the Go standard library.
     # - revive
 
+  settings:
+    misspell:
+      locale: US
+    lll:
+      line-length: 140
+
+  exclusions:
+    rules:
+      # Exclude some `staticcheck` messages.
+      - linters:
+          - staticcheck
+        text: "SA1019:"
+
 run:
   timeout: 5m
-
-issues:
-  exclude-rules:
-    # Exclude some `staticcheck` messages.
-    - linters:
-        - staticcheck
-      text: "SA1019:"
