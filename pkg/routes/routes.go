@@ -14,6 +14,8 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/controller"
 	"github.com/dwarvesf/fortress-api/pkg/handler"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
+	"github.com/dwarvesf/fortress-api/pkg/middleware"
+	"github.com/dwarvesf/fortress-api/pkg/monitoring"
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/worker"
@@ -49,14 +51,30 @@ func NewRoutes(cfg *config.Config, svc *service.Service, s *store.Store, repo st
 	ctrl := controller.New(s, repo, svc, worker, logger, cfg)
 	h := handler.New(s, repo, svc, ctrl, worker, logger, cfg)
 
+	// Setup Prometheus monitoring middleware
+	prometheusConfig := &monitoring.PrometheusConfig{
+		Enabled:        cfg.Env != "test", // Disable in test environment
+		SampleRate:     1.0,                // Monitor all requests in production
+		NormalizePaths: true,               // Normalize paths like /users/:id
+		MaxEndpoints:   200,                // Allow up to 200 unique endpoints
+		ExcludePaths: []string{
+			"/healthz",
+			"/swagger",
+			"/debug",
+		},
+	}
+	prometheusMiddleware := middleware.NewPrometheusMiddleware(prometheusConfig)
+
 	r.Use(
 		gin.LoggerWithWriter(gin.DefaultWriter, "/healthz"),
 		gin.Recovery(),
+		prometheusMiddleware.Handler(), // Add Prometheus monitoring
 	)
 	// config CORS
 	setupCORS(r, cfg)
 
 	r.GET("/healthz", h.Healthcheck.Healthz)
+	r.GET("/metrics", h.Metrics.Metrics) // Prometheus metrics endpoint
 
 	// use ginSwagger middleware to serve the API docs
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
