@@ -10,6 +10,7 @@ import (
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
+	"github.com/dwarvesf/fortress-api/pkg/monitoring"
 	gormlogger "gorm.io/gorm/logger"
 )
 
@@ -41,6 +42,15 @@ func NewPostgresStore(cfg *config.Config) DBRepo {
 
 	if cfg.Debug {
 		db.Logger = gormlogger.Default.LogMode(gormlogger.Info)
+	}
+
+	// Setup database monitoring if not in test environment
+	if cfg.Env != "test" {
+		dbConfig := monitoring.DefaultDatabaseConfig()
+		if err := SetupDatabaseMonitoring(db, dbConfig, cfg.Env); err != nil {
+			// Log warning but don't fail startup
+			logger.L.Warnf("Failed to setup database monitoring: %v", err)
+		}
 	}
 
 	return &repo{Database: db}
