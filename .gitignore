@@ -21,3 +21,6 @@ mcp-server
 vendor
 tmp
 server
+
+#claude
+.mcp.json

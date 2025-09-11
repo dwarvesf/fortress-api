@@ -264,7 +264,7 @@ func (s *store) GetByDiscordID(db *gorm.DB, discordID string, preload bool) (*mo
 
 func (s *store) GetByDiscordUsername(db *gorm.DB, discordUsername string) (*model.Employee, error) {
 	var employee *model.Employee
-	query := db.Joins("JOIN discord_accounts ON discord_accounts.id = employees.discord_account_id AND discord_accounts.username = ?", discordUsername).
+	query := db.Joins("JOIN discord_accounts ON discord_accounts.id = employees.discord_account_id AND (discord_accounts.discord_username = ? OR discord_accounts.github_username = ?)", discordUsername, discordUsername).
 		Where("employees.deleted_at IS NULL AND employees.working_status <> ?", model.WorkingStatusLeft).
 		Preload("SocialAccounts", "deleted_at IS NULL").
 		Preload("DiscordAccount", "deleted_at IS NULL")

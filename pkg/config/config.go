@@ -35,6 +35,7 @@ type Config struct {
 	Reddit        Reddit
 	Youtube       Youtube
 	Dify          Dify
+	Parquet       Parquet
 
 	Invoice  Invoice
 	Sendgrid Sendgrid
@@ -88,6 +89,15 @@ type Youtube struct {
 type Dify struct {
 	URL   string
 	Token string
+}
+
+type Parquet struct {
+	LocalFilePath   string
+	SyncInterval    string
+	RemoteURL       string
+	QuickTimeout    string
+	ExtendedTimeout string
+	EnableCaching   bool
 }
 
 type Wise struct {
@@ -352,6 +362,14 @@ func Generate(v ENV) *Config {
 		CheckIn: CheckIn{
 			WhitelistedEmployeeIDs: strings.Split(v.GetString("CHECKIN_WHITELISTED_EMPLOYEE_IDS"), ","),
 		},
+		Parquet: Parquet{
+			LocalFilePath:   v.GetString("PARQUET_LOCAL_FILE_PATH"),
+			SyncInterval:    v.GetString("PARQUET_SYNC_INTERVAL"),
+			RemoteURL:       v.GetString("PARQUET_REMOTE_URL"),
+			QuickTimeout:    v.GetString("PARQUET_QUICK_TIMEOUT"),
+			ExtendedTimeout: v.GetString("PARQUET_EXTENDED_TIMEOUT"),
+			EnableCaching:   v.GetBool("PARQUET_ENABLE_CACHING"),
+		},
 	}
 }
 
@@ -370,6 +388,14 @@ func LoadConfig(loaders []Loader) *Config {
 	v.SetDefault("PORT", "8080")
 	v.SetDefault("ENV", "local")
 	v.SetDefault("ALLOWED_ORIGINS", "*")
+
+	// Parquet sync service defaults
+	v.SetDefault("PARQUET_LOCAL_FILE_PATH", "/tmp/vault.parquet")
+	v.SetDefault("PARQUET_SYNC_INTERVAL", "1h")
+	v.SetDefault("PARQUET_REMOTE_URL", "https://raw.githubusercontent.com/dwarvesf/memo.d.foundation/refs/heads/main/db/vault.parquet")
+	v.SetDefault("PARQUET_QUICK_TIMEOUT", "2s")
+	v.SetDefault("PARQUET_EXTENDED_TIMEOUT", "60s")
+	v.SetDefault("PARQUET_ENABLE_CACHING", true)
 
 	for idx := range loaders {
 		newV, err := loaders[idx].Load(*v)

@@ -15,6 +15,7 @@ import (
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/model"
+	"github.com/dwarvesf/fortress-api/pkg/service/discord/helpers"
 	"github.com/dwarvesf/fortress-api/pkg/utils"
 	"github.com/dwarvesf/fortress-api/pkg/view"
 )
@@ -33,15 +34,54 @@ const (
 )
 
 type discordClient struct {
-	cfg     *config.Config
-	session *discordgo.Session
+	cfg                *config.Config
+	session            *discordgo.Session
+	breakdownDetector  helpers.BreakdownDetector
+	leaderboardBuilder helpers.LeaderboardBuilder
+	messageFormatter   helpers.MessageFormatter
+	timeCalculator     helpers.TimeCalculator
 }
 
 func New(cfg *config.Config) IService {
 	ses, _ := discordgo.New("Bot " + cfg.Discord.SecretToken)
+
+	// Initialize helper functions with default configurations
+	breakdownDetector := helpers.NewBreakdownDetector(helpers.BreakdownDetectionConfig{
+		TitleKeywords:          []string{"breakdown", "weekly", "summary", "report"},
+		TagKeywords:            []string{"breakdown", "weekly-report", "summary"},
+		CaseSensitive:          false,
+		RequireBothTitleAndTag: false,
+	})
+
+	timeCalculator := helpers.NewTimeCalculator(helpers.TimeCalculatorConfig{
+		WeekStartDay:  time.Monday,
+		MonthStartDay: 1,
+		DateFormat:    "2-Jan",
+		RangeFormat:   "%s-%s",
+		TimeZone:      "UTC",
+	})
+
+	messageFormatter := helpers.NewMessageFormatter(helpers.MessageFormattingConfig{
+		MaxFieldLength:   1024,
+		MaxEmbedFields:   25,
+		TruncationSuffix: "...",
+		DateFormat:       "2 Jan 2006",
+	})
+
+	// For now, pass nil for AuthorResolver - will be updated when implementing remaining helpers
+	leaderboardBuilder := helpers.NewLeaderboardBuilder(nil, helpers.LeaderboardConfig{
+		MaxEntries:     10,
+		ShowZeroScores: false,
+		SortDescending: true,
+	})
+
 	return &discordClient{
-		cfg:     cfg,
-		session: ses,
+		cfg:                cfg,
+		session:            ses,
+		breakdownDetector:  breakdownDetector,
+		leaderboardBuilder: leaderboardBuilder,
+		messageFormatter:   messageFormatter,
+		timeCalculator:     timeCalculator,
 	}
 }
 
@@ -719,98 +759,255 @@ func (d *discordClient) SendWeeklyMemosMessage(
 	weekRangeStr,
 	channelID string,
 	getDiscordAccountByID func(discordAccountID string) (*model.DiscordAccount, error),
+	newAuthors []string,
+	resolveAuthorsByTitle func(title string) ([]string, error),
+	getDiscordIDByUsername func(username string) (string, error),
 ) (*discordgo.Message, error) {
-	bagde1Emoji := getEmoji("BADGE1")
-	bagde5Emoji := getEmoji("BADGE5")
-	pepeNoteEmoji := getEmoji("PEPE_NOTE")
-	authorMap := make(map[string]int)
+	// Helper function to format Discord mention from username
+	formatDiscordMention := func(username string) string {
+		if discordID, err := getDiscordIDByUsername(username); err == nil && discordID != "" {
+			// Successfully found Discord ID - use proper mention format
+			return fmt.Sprintf("<@%s>", discordID)
+		}
+		// Fallback to plain text if Discord ID not found (expected in dev environment)
+		return "@" + username
+	}
 
+	// 1. Detect breakdown posts for leaderboard (not filtering all posts)
+	breakdowns := d.breakdownDetector.DetectBreakdowns(memos)
+	breakdownCount := len(breakdowns)
+
+	// 2. Build author mappings for Discord mentions
+	authorMap := make(map[string]int)
+	authorMappings := make(map[string]string)
+
+	// Build author mapping and count from all posts
+	for _, memo := range memos {
+		for _, discordAccountID := range memo.DiscordAccountIDs {
+			discordAccount, err := getDiscordAccountByID(discordAccountID)
+			if err != nil {
+				// If fetching fails, use the ID as a fallback
+				authorMappings[discordAccountID] = discordAccountID
+				authorMap[discordAccountID] += 1
+				continue
+			}
+
+			if discordAccount.DiscordID != "" {
+				authorMappings[discordAccount.DiscordUsername] = discordAccount.DiscordID
+				authorMap[discordAccount.DiscordID] += 1
+			}
+		}
+	}
+
+	// 3. Build breakdown leaderboard using helper
+	leaderboard := d.leaderboardBuilder.BuildFromBreakdowns(breakdowns)
+
+	// 4. Build content using new simplified format
 	var content strings.Builder
 	var memolistString strings.Builder
 
-	content.WriteString("*What is going on with our memo this week?*\n\n")
-	content.WriteString("**OVERVIEW**\n")
-	content.WriteString(fmt.Sprintf("%v `Total publication.` **%v** posts\n", bagde5Emoji, len(memos)))
-	memolistString.WriteString("**PUBLICATIONS**\n")
+	content.WriteString("What is going on with our memo this week?\n\n")
+	content.WriteString("**📊 Overview**\n\n")
+	content.WriteString(fmt.Sprintf("- Total publication. %v posts\n", len(memos)))
 
-	//Group by category
-	memosByCategory := map[string][]model.MemoLog{
-		memoCategoryFleeting:   make([]model.MemoLog, 0),
-		memoCategoryLiterature: make([]model.MemoLog, 0),
-		memoCategoryEarn:       make([]model.MemoLog, 0),
-		memoCategoryOthers:     make([]model.MemoLog, 0),
+	// Add new authors section if there are any
+	if len(newAuthors) > 0 {
+		content.WriteString("- New authors. ")
+		for i, author := range newAuthors {
+			if i > 0 {
+				content.WriteString(", ")
+			}
+			content.WriteString(formatDiscordMention(author))
+		}
+		content.WriteString("\n")
 	}
 
-	for _, mem := range memos {
-		isMapped := false
-		for _, category := range mem.Category {
-			if strings.EqualFold(category, memoCategoryFleeting) ||
-				strings.EqualFold(category, memoCategoryLiterature) ||
-				strings.EqualFold(category, memoCategoryEarn) {
-				memosByCategory[category] = append(memosByCategory[category], mem)
-				isMapped = true
+	content.WriteString(fmt.Sprintf("- New breakdowns. %v posts\n\n", breakdownCount))
+
+	// Add leaderboard if we have breakdowns
+	if len(leaderboard) > 0 {
+		content.WriteString("**🏆 Breakdown leaderboard**\n\n")
+		for i, entry := range leaderboard {
+			if i >= 5 { // Show top 5
 				break
 			}
-		}
 
-		if !isMapped {
-			memosByCategory[memoCategoryOthers] = append(memosByCategory[memoCategoryOthers], mem)
-		}
-	}
-
-	for _, category := range memoCategoryList {
-		memos := memosByCategory[category]
-
-		// Category
-		memolistString.WriteString(fmt.Sprintf("🔹 **%s** - %v posts\n", strings.ToUpper(category), len(memos)))
-
-		for idx, mem := range memos {
-			authorField := ""
-			for _, discordAccountID := range mem.DiscordAccountIDs {
-				// Fetch discord account details for the ID
-				discordAccount, err := getDiscordAccountByID(discordAccountID)
-				if err != nil {
-					// If fetching fails, use the ID as a fallback
-					authorField += fmt.Sprintf(" <@%s> ", discordAccountID)
-					continue
-				}
-
-				authorMap[discordAccount.DiscordID] += 1
-
-				if discordAccount.DiscordID != "" {
-					authorField += fmt.Sprintf(" <@%s> ", discordAccount.DiscordID)
-				} else if discordAccount.DiscordUsername != "" {
-					authorField += fmt.Sprintf(" @%s ", discordAccount.DiscordUsername)
-				} else {
-					authorField += " **@unknown-user**"
-				}
+			// Format with Discord mentions when available
+			var displayName string
+			if entry.DiscordID != "" {
+				displayName = fmt.Sprintf("<@%s>", entry.DiscordID)
+			} else if entry.Username != "" {
+				displayName = formatDiscordMention(entry.Username)
+			} else {
+				displayName = "Unknown"
 			}
 
-			if authorField == "" {
-				authorField = "**@unknown-user**"
-			}
-
-			memolistString.WriteString(fmt.Sprintf("[[%v](%s)] %s - %v\n", idx+1, mem.URL, mem.Title, authorField))
+			content.WriteString(fmt.Sprintf("%d. %s %d\n", entry.Rank, displayName, entry.BreakdownCount))
 		}
-
-		memolistString.WriteString("\n")
+		content.WriteString("\n")
 	}
 
-	// update author count based on finally updated value
-	content.WriteString(fmt.Sprintf("%v `Total author.` **%v** authors\n\n", pepeNoteEmoji, len(authorMap)))
+	memolistString.WriteString("**📖 Publications**\n\n")
+
+	// Simple numbered list format: "1. Title - @username"
+	for idx, mem := range memos {
+		authorField := ""
+		for _, discordAccountID := range mem.DiscordAccountIDs {
+			discordAccount, err := getDiscordAccountByID(discordAccountID)
+			if err != nil {
+				// If fetching fails, use the ID as fallback
+				if authorField != "" {
+					authorField += ", "
+				}
+				authorField += fmt.Sprintf("@%s", discordAccountID)
+				continue
+			}
+
+			if authorField != "" {
+				authorField += ", "
+			}
+
+			// Use Discord ID for proper mentions if available, otherwise fallback to username
+			if discordAccount.DiscordID != "" {
+				authorField += fmt.Sprintf("<@%s>", discordAccount.DiscordID)
+			} else if discordAccount.DiscordUsername != "" {
+				authorField += fmt.Sprintf("@%s", discordAccount.DiscordUsername)
+			} else {
+				authorField += fmt.Sprintf("@%s", discordAccountID)
+			}
+		}
+
+		// If no valid authors found through Discord accounts, try parquet resolution by title
+		if authorField == "" {
+			if parquetAuthors, err := resolveAuthorsByTitle(mem.Title); err == nil && len(parquetAuthors) > 0 {
+				for i, author := range parquetAuthors {
+					if i > 0 {
+						authorField += ", "
+					}
+					authorField += fmt.Sprintf("@%s", author)
+				}
+			}
+		}
+
+		// Final fallback
+		if authorField == "" {
+			authorField = "@unknown-user"
+		}
+
+		memolistString.WriteString(fmt.Sprintf("%d. %s - %s\n", idx+1, mem.Title, authorField))
+	}
+
 	content.WriteString(memolistString.String())
 
+	// 5. Create and send Discord embed
 	msg := &discordgo.MessageEmbed{
-		Title:       fmt.Sprintf("%v WEEKLY MEMO REPORT (%v) %v", bagde1Emoji, weekRangeStr, bagde1Emoji),
+		Title:       fmt.Sprintf("**Weekly memo report (%v)**", weekRangeStr),
 		Description: content.String(),
 	}
 
-	_, err := d.SendEmbeddedMessageWithChannel(nil, msg, channelID)
-	if err != nil {
-		return nil, err
+	return d.SendEmbeddedMessageWithChannel(nil, msg, channelID)
+}
+
+func (d *discordClient) SendMonthlyMemosMessage(
+	guildID string,
+	memos []model.MemoLog,
+	monthRangeStr,
+	channelID string,
+	getDiscordAccountByID func(discordAccountID string) (*model.DiscordAccount, error),
+	getDiscordIDByUsername func(username string) (string, error),
+) (*discordgo.Message, error) {
+	// 1. Detect breakdown posts for ICY calculation
+	breakdowns := d.breakdownDetector.DetectBreakdowns(memos)
+
+	// 2. Build breakdown leaderboard using helper
+	leaderboard := d.leaderboardBuilder.BuildFromBreakdowns(breakdowns)
+
+	// 3. Calculate ICY rewards (only for breakdowns)
+	totalICY := len(breakdowns) * 25
+
+	// 4. Extract unique authors from all posts
+	uniqueAuthors := make(map[string]bool)
+	for _, memo := range memos {
+		for _, username := range memo.AuthorMemoUsernames {
+			if username != "" {
+				uniqueAuthors[username] = true
+			}
+		}
 	}
 
-	return nil, nil
+	// Convert to slice for new authors list
+	var allAuthors []string
+	for author := range uniqueAuthors {
+		allAuthors = append(allAuthors, author)
+	}
+
+	// Helper function to format Discord mention from username
+	formatDiscordMention := func(username string) string {
+		if discordID, err := getDiscordIDByUsername(username); err == nil && discordID != "" {
+			// Successfully found Discord ID - use proper mention format
+			return fmt.Sprintf("<@%s>", discordID)
+		}
+		// Fallback to plain text if Discord ID not found (expected in dev environment)
+		return "@" + username
+	}
+
+	// 5. Build simple content format
+	var content strings.Builder
+
+	content.WriteString("What is going on with our memo this month?\n\n")
+	content.WriteString("**📊 Overview**\n\n")
+	content.WriteString(fmt.Sprintf("- Total publication. %d posts\n", len(memos)))
+
+	// Add new authors if any (this would need to be detected from current vs previous month)
+	// For now, showing first 2 authors as "new" as an example
+	if len(allAuthors) > 0 {
+		newAuthors := ""
+		maxNew := 2
+		if len(allAuthors) < maxNew {
+			maxNew = len(allAuthors)
+		}
+		for i := 0; i < maxNew; i++ {
+			if i > 0 {
+				newAuthors += ", "
+			}
+			newAuthors += formatDiscordMention(allAuthors[i])
+		}
+		content.WriteString(fmt.Sprintf("- New authors. %s\n", newAuthors))
+	}
+
+	content.WriteString(fmt.Sprintf("- New breakdowns. %d posts\n\n", len(breakdowns)))
+
+	// Publications list
+	content.WriteString("**📖 Publications**\n\n")
+	for idx, memo := range memos {
+		// Get first author
+		author := "unknown"
+		if len(memo.AuthorMemoUsernames) > 0 {
+			author = formatDiscordMention(memo.AuthorMemoUsernames[0])
+		}
+		content.WriteString(fmt.Sprintf("%d. %s - %s\n", idx+1, memo.Title, author))
+	}
+
+	// Breakdown leaderboard
+	if len(leaderboard) > 0 {
+		content.WriteString("\n**🏆 Breakdown leaderboard**\n\n")
+		for idx, entry := range leaderboard {
+			if idx >= 5 { // Show top 5 for monthly
+				break
+			}
+			content.WriteString(fmt.Sprintf("%d. %s %d\n", idx+1, formatDiscordMention(entry.Username), entry.BreakdownCount))
+		}
+	}
+
+	content.WriteString(fmt.Sprintf("\n**💰 Total ICY reward: %d ICY**", totalICY))
+
+	// 6. Create and send Discord embed
+	msg := &discordgo.MessageEmbed{
+		Title:       fmt.Sprintf("Monthly memo report (%s)", monthRangeStr),
+		Description: content.String(),
+	}
+
+	return d.SendEmbeddedMessageWithChannel(nil, msg, channelID)
 }
 
 func (d *discordClient) SendDiscordMessageWithChannel(ses *discordgo.Session, msg *discordgo.Message, channelId string) error {
