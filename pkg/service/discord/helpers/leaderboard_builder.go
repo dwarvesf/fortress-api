@@ -95,8 +95,9 @@ func (b *leaderboardBuilder) BuildWithCustomScoring(memos []model.MemoLog, scori
 	if len(usernames) > 0 && b.authorResolver != nil {
 		discordIDs, err := b.authorResolver.ResolveAuthorsToDiscordIDs(usernames)
 		if err != nil {
-			// Log error but continue with usernames
-			// (AuthorResolver handles fallback formatting)
+			// Continue with usernames if resolution fails - AuthorResolver handles fallback formatting
+			// No additional action needed as error is handled internally by AuthorResolver
+			discordIDs = nil
 		}
 		
 		// Create a mapping from username to Discord ID
@@ -138,8 +139,9 @@ func (b *leaderboardBuilder) sortEntries(entries []LeaderboardEntry, config Lead
 		
 		// Tie breaking
 		if config.TieBreaking.UseTimestamp {
-			// Would need timestamp in LeaderboardEntry for this
-			// For now, skip to alphabetical
+			// TODO: Implement timestamp-based tie breaking when timestamp is available in LeaderboardEntry
+			// For now, fall through to alphabetical sorting
+			return false // Skip timestamp comparison for now
 		}
 		
 		if config.TieBreaking.UseAlphabetical {

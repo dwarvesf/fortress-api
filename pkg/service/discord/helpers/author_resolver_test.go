@@ -471,7 +471,7 @@ func TestAuthorResolver_WarmCache(t *testing.T) {
 func TestAuthorResolver_WarmCache_ContextCancellation(t *testing.T) {
 	_, _, resolver := setupAuthorResolverTest()
 	
-	// Create cancelled context
+	// Create canceled context
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel() // Cancel immediately
 	

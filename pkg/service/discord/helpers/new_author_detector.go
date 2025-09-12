@@ -70,9 +70,10 @@ func (n *newAuthorDetector) DetectNewAuthors(currentMemos []model.MemoLog, perio
 	// Update statistics
 	n.mu.Lock()
 	n.stats.LastDetectionTime = time.Now()
-	if period == "weekly" {
+	switch period {
+	case "weekly":
 		n.stats.WeeklyNewAuthors = len(newAuthors)
-	} else if period == "monthly" {
+	case "monthly":
 		n.stats.MonthlyNewAuthors = len(newAuthors)
 	}
 	n.stats.HistoricalCacheSize = len(n.historicalCache)
@@ -190,34 +191,6 @@ func (n *newAuthorDetector) copyAuthorSet(original map[string]bool) map[string]b
 	return copy
 }
 
-// validateMemos validates that memos have proper data for analysis
-func (n *newAuthorDetector) validateMemos(memos []model.MemoLog) error {
-	if len(memos) == 0 {
-		return fmt.Errorf("no memos provided for analysis")
-	}
-	
-	// Check if memos have authors
-	hasAuthors := false
-	for _, memo := range memos {
-		if len(memo.AuthorMemoUsernames) > 0 {
-			for _, author := range memo.AuthorMemoUsernames {
-				if strings.TrimSpace(author) != "" {
-					hasAuthors = true
-					break
-				}
-			}
-			if hasAuthors {
-				break
-			}
-		}
-	}
-	
-	if !hasAuthors {
-		return fmt.Errorf("no valid authors found in provided memos")
-	}
-	
-	return nil
-}
 
 // GetNewAuthorsByTimeRange is a utility method to get new authors for a specific time range
 func (n *newAuthorDetector) GetNewAuthorsByTimeRange(currentStart, currentEnd time.Time, period string) ([]string, error) {

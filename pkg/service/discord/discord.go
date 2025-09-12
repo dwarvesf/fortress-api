@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/bwmarrin/discordgo"
-	"github.com/k0kubun/pp"
 	"github.com/shopspring/decimal"
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
@@ -22,8 +21,7 @@ import (
 )
 
 var (
-	client           = http.DefaultClient
-	memoCategoryList = []string{memoCategoryFleeting, memoCategoryLiterature, memoCategoryEarn, memoCategoryOthers}
+	client = http.DefaultClient
 )
 
 const (
@@ -895,7 +893,6 @@ func (d *discordClient) SendWeeklyMemosMessage(
 			authorField = "@unknown-user"
 		}
 
-		pp.Println("mem", mem)
 		// Format with clickable link if URL exists, otherwise plain text
 		if mem.URL != "" {
 			memolistString.WriteString(fmt.Sprintf("%d. [%s](%s) - %s\n", idx+1, mem.Title, mem.URL, authorField))

@@ -203,13 +203,17 @@ func (s *syncService) performSync(ctx context.Context) error {
 	// Download to temporary file first (atomic operation)
 	tempFile := s.config.LocalFilePath + ".tmp"
 	if err := s.downloadFile(ctx, tempFile); err != nil {
-		os.Remove(tempFile) // Clean up on failure
+		if removeErr := os.Remove(tempFile); removeErr != nil {
+			s.logger.Warnf("Failed to clean up temp file %s: %v", tempFile, removeErr)
+		}
 		return fmt.Errorf("failed to download file: %w", err)
 	}
 
 	// Atomic rename
 	if err := os.Rename(tempFile, s.config.LocalFilePath); err != nil {
-		os.Remove(tempFile) // Clean up on failure
+		if removeErr := os.Remove(tempFile); removeErr != nil {
+			s.logger.Warnf("Failed to clean up temp file %s: %v", tempFile, removeErr)
+		}
 		return fmt.Errorf("failed to move file to final location: %w", err)
 	}
 
