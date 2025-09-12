@@ -17,6 +17,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/service/discord/helpers"
 	"github.com/dwarvesf/fortress-api/pkg/service/duckdb"
+	"github.com/dwarvesf/fortress-api/pkg/service/parquet"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/store/memolog"
 )
@@ -110,11 +111,58 @@ func (m *mockDBRepo) SetNewDB(db *gorm.DB) {
 	m.Called(db)
 }
 
+// Mock ParquetSync service for testing
+type mockParquetSyncService struct {
+	mock.Mock
+}
+
+func (m *mockParquetSyncService) StartBackgroundSync(ctx context.Context) error {
+	args := m.Called(ctx)
+	return args.Error(0)
+}
+
+func (m *mockParquetSyncService) StopBackgroundSync() error {
+	args := m.Called()
+	return args.Error(0)
+}
+
+func (m *mockParquetSyncService) SyncNow(ctx context.Context) error {
+	args := m.Called(ctx)
+	return args.Error(0)
+}
+
+func (m *mockParquetSyncService) GetLocalFilePath() string {
+	args := m.Called()
+	return args.String(0)
+}
+
+func (m *mockParquetSyncService) IsLocalFileReady() bool {
+	args := m.Called()
+	return args.Bool(0)
+}
+
+func (m *mockParquetSyncService) GetSyncStatus() parquet.SyncStatus {
+	args := m.Called()
+	return args.Get(0).(parquet.SyncStatus)
+}
+
+func (m *mockParquetSyncService) GetRemoteURL() string {
+	args := m.Called()
+	return args.String(0)
+}
+
+// setupBasicParquetSyncExpectations sets up common ParquetSync mock expectations
+func setupBasicParquetSyncExpectations(mockParquetSync *mockParquetSyncService) {
+	mockParquetSync.On("IsLocalFileReady").Return(false)
+	mockParquetSync.On("GetRemoteURL").Return("https://github.com/dwarvesf/memo.d.foundation/raw/refs/heads/main/db/vault.parquet")
+}
+
 // Setup test handler with mocked dependencies
-func setupDuckDBIntegrationTest() (*handler, *mockDuckDBService, *mockMemoLogStore, *mockDBRepo) {
+func setupDuckDBIntegrationTest() (*handler, *mockDuckDBService, *mockParquetSyncService, *mockMemoLogStore, *mockDBRepo) {
 	mockDuckDB := &mockDuckDBService{}
 	mockMemoLogStore := &mockMemoLogStore{}
 	mockDBRepo := &mockDBRepo{}
+	mockParquetSync := &mockParquetSyncService{}
 
 	// Mock stores
 	mockStore := &store.Store{
@@ -123,7 +171,8 @@ func setupDuckDBIntegrationTest() (*handler, *mockDuckDBService, *mockMemoLogSto
 
 	// Mock services
 	mockService := &service.Service{
-		DuckDB: mockDuckDB,
+		DuckDB:      mockDuckDB,
+		ParquetSync: mockParquetSync,
 	}
 
 	// Create handler
@@ -136,33 +185,37 @@ func setupDuckDBIntegrationTest() (*handler, *mockDuckDBService, *mockMemoLogSto
 		&config.Config{},
 	)
 
-	return h.(*handler), mockDuckDB, mockMemoLogStore, mockDBRepo
+	return h.(*handler), mockDuckDB, mockParquetSync, mockMemoLogStore, mockDBRepo
 }
 
 func TestHandler_getMemosFromParquet_Success(t *testing.T) {
-	h, mockDuckDB, _, _ := setupDuckDBIntegrationTest()
+	h, mockDuckDB, mockParquetSync, _, _ := setupDuckDBIntegrationTest()
 
 	// Test parameters
 	start := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
 	end := time.Date(2024, 1, 7, 0, 0, 0, 0, time.UTC)
 
+	// Mock ParquetSync expectations
+	mockParquetSync.On("IsLocalFileReady").Return(false)
+	mockParquetSync.On("GetRemoteURL").Return("https://github.com/dwarvesf/memo.d.foundation/raw/refs/heads/main/db/vault.parquet")
+
 	// Mock successful parquet query response
 	parquetData := []map[string]interface{}{
 		{
-			"date":    "2024-01-03",
-			"title":   "Test Memo 1",
-			"authors": []interface{}{"author1", "author2"},
-			"tags":    []interface{}{"tag1", "tag2"},
-			"url":     "https://example.com/memo1",
-			"content": "This is test content 1",
+			"date":      "2024-01-03",
+			"title":     "Test Memo 1",
+			"authors":   []interface{}{"author1", "author2"},
+			"tags":      []interface{}{"tag1", "tag2"},
+			"file_path": "test/memo-1.md",
+			"content":   "This is test content 1",
 		},
 		{
-			"date":    "2024-01-05",
-			"title":   "Test Memo 2",
-			"authors": []interface{}{"author3"},
-			"tags":    []interface{}{"tag3"},
-			"url":     "https://example.com/memo2",
-			"content": "This is test content 2",
+			"date":      "2024-01-05",
+			"title":     "Test Memo 2",
+			"authors":   []interface{}{"author3"},
+			"tags":      []interface{}{"tag3"},
+			"file_path": "test/memo-2.md",
+			"content":   "This is test content 2",
 		},
 	}
 
@@ -174,7 +227,8 @@ func TestHandler_getMemosFromParquet_Success(t *testing.T) {
 			{Column: "date", Operator: "<=", Value: "2024-01-07"},
 		},
 		OrderBy: []string{"date DESC"},
-		Limit:   1000,
+		Limit:   100,
+		Offset:  0,
 	}
 
 	mockDuckDB.On("QueryParquetWithFilters", mock.AnythingOfType("*context.timerCtx"), expectedURL, expectedOptions).Return(parquetData, nil)
@@ -191,13 +245,15 @@ func TestHandler_getMemosFromParquet_Success(t *testing.T) {
 	assert.Equal(t, []string{"author1", "author2"}, result[0].AuthorMemoUsernames)
 	assert.Contains(t, []string(result[0].Tags), "tag1")
 	assert.Contains(t, []string(result[0].Tags), "tag2")
-	assert.Equal(t, "https://example.com/memo1", result[0].URL)
+	assert.Equal(t, "https://memo.d.foundation/test/memo-1/", result[0].URL)
 	assert.Equal(t, "This is test content 1", result[0].Description)
 
 	// Verify second memo
 	assert.Equal(t, "Test Memo 2", result[1].Title)
 	assert.Equal(t, []string{"author3"}, result[1].AuthorMemoUsernames)
 	assert.Contains(t, []string(result[1].Tags), "tag3")
+	assert.Equal(t, "https://memo.d.foundation/test/memo-2/", result[1].URL)
+	assert.Equal(t, "This is test content 2", result[1].Description)
 
 	// Verify mock was called
 	mockDuckDB.AssertExpectations(t)
@@ -257,11 +313,14 @@ func TestHandler_getMemosFromParquet_DuckDBServiceUnavailable(t *testing.T) {
 }
 
 func TestHandler_getMemosFromParquet_DuckDBQueryError(t *testing.T) {
-	h, mockDuckDB, mockMemoLogStore, mockDBRepo := setupDuckDBIntegrationTest()
+	h, mockDuckDB, mockParquetSync, mockMemoLogStore, mockDBRepo := setupDuckDBIntegrationTest()
 
 	// Test parameters
 	start := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
 	end := time.Date(2024, 1, 7, 0, 0, 0, 0, time.UTC)
+
+	// Setup ParquetSync expectations
+	setupBasicParquetSyncExpectations(mockParquetSync)
 
 	// Mock DuckDB failure
 	mockDuckDB.On("QueryParquetWithFilters", mock.Anything, mock.Anything, mock.Anything).Return([]map[string]interface{}{}, errors.New("DuckDB connection failed"))
@@ -294,11 +353,14 @@ func TestHandler_getMemosFromParquet_DuckDBQueryError(t *testing.T) {
 }
 
 func TestHandler_getMemosFromParquet_DataTransformationError(t *testing.T) {
-	h, mockDuckDB, mockMemoLogStore, mockDBRepo := setupDuckDBIntegrationTest()
+	h, mockDuckDB, mockParquetSync, mockMemoLogStore, mockDBRepo := setupDuckDBIntegrationTest()
 
 	// Test parameters
 	start := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
 	end := time.Date(2024, 1, 7, 0, 0, 0, 0, time.UTC)
+	
+	// Setup ParquetSync expectations
+	setupBasicParquetSyncExpectations(mockParquetSync)
 
 	// Mock parquet data with invalid format that will cause transformation error
 	invalidParquetData := []map[string]interface{}{
@@ -340,7 +402,10 @@ func TestHandler_getMemosFromParquet_DataTransformationError(t *testing.T) {
 }
 
 func TestHandler_getMemosFromParquet_EmptyParquetData(t *testing.T) {
-	h, mockDuckDB, _, _ := setupDuckDBIntegrationTest()
+	h, mockDuckDB, mockParquetSync, _, _ := setupDuckDBIntegrationTest()
+
+	// Setup ParquetSync expectations
+	setupBasicParquetSyncExpectations(mockParquetSync)
 
 	// Test parameters
 	start := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
@@ -362,7 +427,10 @@ func TestHandler_getMemosFromParquet_EmptyParquetData(t *testing.T) {
 }
 
 func TestHandler_getMemosFromParquet_SingleAuthorAndTag(t *testing.T) {
-	h, mockDuckDB, _, _ := setupDuckDBIntegrationTest()
+	h, mockDuckDB, mockParquetSync, _, _ := setupDuckDBIntegrationTest()
+
+	// Setup ParquetSync expectations
+	setupBasicParquetSyncExpectations(mockParquetSync)
 
 	// Test parameters
 	start := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
@@ -397,7 +465,10 @@ func TestHandler_getMemosFromParquet_SingleAuthorAndTag(t *testing.T) {
 }
 
 func TestHandler_getMemosFromParquet_DateFiltering(t *testing.T) {
-	h, mockDuckDB, _, _ := setupDuckDBIntegrationTest()
+	h, mockDuckDB, mockParquetSync, _, _ := setupDuckDBIntegrationTest()
+
+	// Setup ParquetSync expectations
+	setupBasicParquetSyncExpectations(mockParquetSync)
 
 	// Test parameters - narrow date range
 	start := time.Date(2024, 1, 3, 0, 0, 0, 0, time.UTC)
@@ -444,7 +515,10 @@ func TestHandler_getMemosFromParquet_DateFiltering(t *testing.T) {
 }
 
 func TestHandler_getMemosFromParquet_ComplexDataTypes(t *testing.T) {
-	h, mockDuckDB, _, _ := setupDuckDBIntegrationTest()
+	h, mockDuckDB, mockParquetSync, _, _ := setupDuckDBIntegrationTest()
+
+	// Setup ParquetSync expectations
+	setupBasicParquetSyncExpectations(mockParquetSync)
 
 	// Test parameters
 	start := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
@@ -503,7 +577,10 @@ func TestHandler_getMemosFromParquet_ComplexDataTypes(t *testing.T) {
 }
 
 func TestHandler_getMemosFromParquet_TimeoutHandling(t *testing.T) {
-	h, mockDuckDB, mockMemoLogStore, mockDBRepo := setupDuckDBIntegrationTest()
+	h, mockDuckDB, mockParquetSync, mockMemoLogStore, mockDBRepo := setupDuckDBIntegrationTest()
+
+	// Setup ParquetSync expectations
+	setupBasicParquetSyncExpectations(mockParquetSync)
 
 	// Test parameters
 	start := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
@@ -542,7 +619,10 @@ func TestHandler_getMemosFromParquet_TimeoutHandling(t *testing.T) {
 }
 
 func TestHandler_getMemosFromParquet_DataTransformerConfiguration(t *testing.T) {
-	h, mockDuckDB, _, _ := setupDuckDBIntegrationTest()
+	h, mockDuckDB, mockParquetSync, _, _ := setupDuckDBIntegrationTest()
+
+	// Setup ParquetSync expectations
+	setupBasicParquetSyncExpectations(mockParquetSync)
 
 	// Verify that data transformer is configured correctly
 	transformer := h.dataTransformer

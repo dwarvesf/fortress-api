@@ -321,13 +321,21 @@ func TestAuthorResolver_ResolveAllAuthors_EmptyMemos(t *testing.T) {
 }
 
 func TestAuthorResolver_ResolveAllAuthors_NoAuthors(t *testing.T) {
-	_, _, resolver := setupAuthorResolverTest()
+	mockStore, dbRepo, resolver := setupAuthorResolverTest()
+	
+	// Mock database responses
+	mockDB := &gorm.DB{}
+	dbRepo.On("DB").Return(mockDB)
+	
+	// Mock potential database calls for empty strings (should be filtered but just in case)
+	mockStore.DiscordAccount.On("ListByMemoUsername", mockDB, mock.Anything).Return([]model.DiscordAccount{}, nil).Maybe()
 
-	// Test memos without authors
+	// Test memos without authors - all should result in empty strings after trimming
 	memos := []model.MemoLog{
 		{AuthorMemoUsernames: []string{}},
 		{AuthorMemoUsernames: []string{""}},
 		{AuthorMemoUsernames: []string{"  "}},
+		{AuthorMemoUsernames: []string{" \t \n "}},
 	}
 	
 	authorMap, err := resolver.ResolveAllAuthors(memos)
