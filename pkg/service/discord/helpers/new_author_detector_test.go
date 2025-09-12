@@ -10,6 +10,7 @@ import (
 
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/store"
+	"github.com/dwarvesf/fortress-api/pkg/store/memolog"
 )
 
 // Mock implementations for NewAuthorDetector testing
@@ -17,9 +18,39 @@ type mockMemoLogStoreForDetector struct {
 	mock.Mock
 }
 
+func (m *mockMemoLogStoreForDetector) Create(db *gorm.DB, b []model.MemoLog) ([]model.MemoLog, error) {
+	args := m.Called(db, b)
+	return args.Get(0).([]model.MemoLog), args.Error(1)
+}
+
 func (m *mockMemoLogStoreForDetector) GetLimitByTimeRange(db *gorm.DB, start, end *time.Time, limit int) ([]model.MemoLog, error) {
 	args := m.Called(db, start, end, limit)
 	return args.Get(0).([]model.MemoLog), args.Error(1)
+}
+
+func (m *mockMemoLogStoreForDetector) List(db *gorm.DB, filter memolog.ListFilter) ([]model.MemoLog, error) {
+	args := m.Called(db, filter)
+	return args.Get(0).([]model.MemoLog), args.Error(1)
+}
+
+func (m *mockMemoLogStoreForDetector) GetRankByDiscordID(db *gorm.DB, discordID string) (*model.DiscordAccountMemoRank, error) {
+	args := m.Called(db, discordID)
+	return args.Get(0).(*model.DiscordAccountMemoRank), args.Error(1)
+}
+
+func (m *mockMemoLogStoreForDetector) ListNonAuthor(db *gorm.DB) ([]model.MemoLog, error) {
+	args := m.Called(db)
+	return args.Get(0).([]model.MemoLog), args.Error(1)
+}
+
+func (m *mockMemoLogStoreForDetector) CreateMemoAuthor(db *gorm.DB, memoAuthor *model.MemoAuthor) error {
+	args := m.Called(db, memoAuthor)
+	return args.Error(0)
+}
+
+func (m *mockMemoLogStoreForDetector) GetTopAuthors(db *gorm.DB, limit int, from, to *time.Time) ([]model.DiscordAccountMemoRank, error) {
+	args := m.Called(db, limit, from, to)
+	return args.Get(0).([]model.DiscordAccountMemoRank), args.Error(1)
 }
 
 type mockDBRepoForDetector struct {
@@ -29,6 +60,15 @@ type mockDBRepoForDetector struct {
 func (m *mockDBRepoForDetector) DB() *gorm.DB {
 	args := m.Called()
 	return args.Get(0).(*gorm.DB)
+}
+
+func (m *mockDBRepoForDetector) NewTransaction() (store.DBRepo, store.FinallyFunc) {
+	args := m.Called()
+	return args.Get(0).(store.DBRepo), args.Get(1).(store.FinallyFunc)
+}
+
+func (m *mockDBRepoForDetector) SetNewDB(db *gorm.DB) {
+	m.Called(db)
 }
 
 func setupNewAuthorDetectorTest() (*mockMemoLogStoreForDetector, *mockDBRepoForDetector, NewAuthorDetector) {
@@ -330,11 +370,8 @@ func TestNewAuthorDetector_ExtractUniqueAuthors_CaseInsensitive(t *testing.T) {
 		{AuthorMemoUsernames: []string{"  author2  ", "author4"}}, // Whitespace should be trimmed
 	}
 	
-	// Access internal method through new author detection
-	_, _, detector2 := setupNewAuthorDetectorTest()
-	
 	// Use the detector as a struct to access internal methods for testing
-	detectorImpl := detector2.(*newAuthorDetector)
+	detectorImpl := detector.(*newAuthorDetector)
 	authors := detectorImpl.extractUniqueAuthors(memos)
 	
 	// Should have 4 unique authors (case-insensitive)
@@ -385,15 +422,21 @@ func TestNewAuthorDetector_GetAuthorFirstAppearance(t *testing.T) {
 	baseTime := time.Now().AddDate(0, 0, -100)
 	memos := []model.MemoLog{
 		{
-			Date:    baseTime.AddDate(0, 0, 10),
+			BaseModel: model.BaseModel{
+				CreatedAt: baseTime.AddDate(0, 0, 10),
+			},
 			AuthorMemoUsernames: []string{"targetauthor", "other1"},
 		},
 		{
-			Date:    baseTime.AddDate(0, 0, 5), // Earlier appearance
+			BaseModel: model.BaseModel{
+				CreatedAt: baseTime.AddDate(0, 0, 5), // Earlier appearance
+			},
 			AuthorMemoUsernames: []string{"targetauthor", "other2"},
 		},
 		{
-			Date:    baseTime.AddDate(0, 0, 20),
+			BaseModel: model.BaseModel{
+				CreatedAt: baseTime.AddDate(0, 0, 20),
+			},
 			AuthorMemoUsernames: []string{"other3"},
 		},
 	}

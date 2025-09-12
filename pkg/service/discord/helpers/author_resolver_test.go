@@ -12,6 +12,7 @@ import (
 
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/store"
+	"github.com/dwarvesf/fortress-api/pkg/store/memolog"
 )
 
 // Mock implementations for testing
@@ -63,6 +64,31 @@ func (m *mockMemoLogStore) Create(db *gorm.DB, memos []model.MemoLog) ([]model.M
 	return args.Get(0).([]model.MemoLog), args.Error(1)
 }
 
+func (m *mockMemoLogStore) CreateMemoAuthor(db *gorm.DB, memoAuthor *model.MemoAuthor) error {
+	args := m.Called(db, memoAuthor)
+	return args.Error(0)
+}
+
+func (m *mockMemoLogStore) List(db *gorm.DB, filter memolog.ListFilter) ([]model.MemoLog, error) {
+	args := m.Called(db, filter)
+	return args.Get(0).([]model.MemoLog), args.Error(1)
+}
+
+func (m *mockMemoLogStore) GetRankByDiscordID(db *gorm.DB, discordID string) (*model.DiscordAccountMemoRank, error) {
+	args := m.Called(db, discordID)
+	return args.Get(0).(*model.DiscordAccountMemoRank), args.Error(1)
+}
+
+func (m *mockMemoLogStore) ListNonAuthor(db *gorm.DB) ([]model.MemoLog, error) {
+	args := m.Called(db)
+	return args.Get(0).([]model.MemoLog), args.Error(1)
+}
+
+func (m *mockMemoLogStore) GetTopAuthors(db *gorm.DB, limit int, from, to *time.Time) ([]model.DiscordAccountMemoRank, error) {
+	args := m.Called(db, limit, from, to)
+	return args.Get(0).([]model.DiscordAccountMemoRank), args.Error(1)
+}
+
 type mockStore struct {
 	DiscordAccount *mockDiscordAccountStore
 	MemoLog        *mockMemoLogStore
@@ -77,9 +103,13 @@ func (m *mockDBRepo) DB() *gorm.DB {
 	return args.Get(0).(*gorm.DB)
 }
 
-func (m *mockDBRepo) NewTransaction() store.DBRepo {
+func (m *mockDBRepo) NewTransaction() (store.DBRepo, store.FinallyFunc) {
 	args := m.Called()
-	return args.Get(0).(store.DBRepo)
+	return args.Get(0).(store.DBRepo), args.Get(1).(store.FinallyFunc)
+}
+
+func (m *mockDBRepo) SetNewDB(db *gorm.DB) {
+	m.Called(db)
 }
 
 func setupAuthorResolverTest() (*mockStore, *mockDBRepo, AuthorResolver) {
@@ -478,7 +508,7 @@ func TestAuthorResolver_ClearCache(t *testing.T) {
 }
 
 func TestAuthorResolver_GetMetrics(t *testing.T) {
-	mockStore, dbRepo, resolver := setupAuthorResolverTest()
+	_, _, resolver := setupAuthorResolverTest()
 	
 	// Get initial metrics
 	metrics := resolver.GetMetrics()
