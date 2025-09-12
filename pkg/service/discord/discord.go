@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/k0kubun/pp"
 	"github.com/shopspring/decimal"
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
@@ -842,7 +843,7 @@ func (d *discordClient) SendWeeklyMemosMessage(
 				displayName = "Unknown"
 			}
 
-			content.WriteString(fmt.Sprintf("%d. %s %d\n", entry.Rank, displayName, entry.BreakdownCount))
+			content.WriteString(fmt.Sprintf("%d. %s x%d\n", entry.Rank, displayName, entry.BreakdownCount))
 		}
 		content.WriteString("\n")
 	}
@@ -894,7 +895,13 @@ func (d *discordClient) SendWeeklyMemosMessage(
 			authorField = "@unknown-user"
 		}
 
-		memolistString.WriteString(fmt.Sprintf("%d. %s - %s\n", idx+1, mem.Title, authorField))
+		pp.Println("mem", mem)
+		// Format with clickable link if URL exists, otherwise plain text
+		if mem.URL != "" {
+			memolistString.WriteString(fmt.Sprintf("%d. [%s](%s) - %s\n", idx+1, mem.Title, mem.URL, authorField))
+		} else {
+			memolistString.WriteString(fmt.Sprintf("%d. %s - %s\n", idx+1, mem.Title, authorField))
+		}
 	}
 
 	content.WriteString(memolistString.String())
@@ -977,6 +984,18 @@ func (d *discordClient) SendMonthlyMemosMessage(
 
 	content.WriteString(fmt.Sprintf("- New breakdowns. %d posts\n\n", len(breakdowns)))
 
+	// Breakdown leaderboard
+	if len(leaderboard) > 0 {
+		content.WriteString("**🏆 Breakdown leaderboard**\n\n")
+		for idx, entry := range leaderboard {
+			if idx >= 5 { // Show top 5 for monthly
+				break
+			}
+			content.WriteString(fmt.Sprintf("%d. %s x%d\n", idx+1, formatDiscordMention(entry.Username), entry.BreakdownCount))
+		}
+		content.WriteString("\n")
+	}
+
 	// Publications list
 	content.WriteString("**📖 Publications**\n\n")
 	for idx, memo := range memos {
@@ -985,17 +1004,11 @@ func (d *discordClient) SendMonthlyMemosMessage(
 		if len(memo.AuthorMemoUsernames) > 0 {
 			author = formatDiscordMention(memo.AuthorMemoUsernames[0])
 		}
-		content.WriteString(fmt.Sprintf("%d. %s - %s\n", idx+1, memo.Title, author))
-	}
-
-	// Breakdown leaderboard
-	if len(leaderboard) > 0 {
-		content.WriteString("\n**🏆 Breakdown leaderboard**\n\n")
-		for idx, entry := range leaderboard {
-			if idx >= 5 { // Show top 5 for monthly
-				break
-			}
-			content.WriteString(fmt.Sprintf("%d. %s %d\n", idx+1, formatDiscordMention(entry.Username), entry.BreakdownCount))
+		// Format with clickable link if URL exists, otherwise plain text
+		if memo.URL != "" {
+			content.WriteString(fmt.Sprintf("%d. [%s](%s) - %s\n", idx+1, memo.Title, memo.URL, author))
+		} else {
+			content.WriteString(fmt.Sprintf("%d. %s - %s\n", idx+1, memo.Title, author))
 		}
 	}
 

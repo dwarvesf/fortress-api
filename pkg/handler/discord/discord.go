@@ -752,10 +752,13 @@ func (h *handler) getMemosFromParquet(start, end time.Time, period string) ([]mo
 			}
 		}
 		
-		// Extract URL
-		if urlVal, ok := row["url"]; ok {
-			if urlStr, ok := urlVal.(string); ok {
-				record.URL = urlStr
+		// Extract URL from file_path
+		if filePathVal, ok := row["file_path"]; ok {
+			if filePath, ok := filePathVal.(string); ok && filePath != "" {
+				// Convert file_path like "consulting/navigate/social-proof.md" to URL
+				// Remove .md extension and construct full URL
+				urlPath := strings.TrimSuffix(filePath, ".md")
+				record.URL = fmt.Sprintf("https://memo.d.foundation/%s/", urlPath)
 			}
 		}
 		
