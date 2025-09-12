@@ -52,7 +52,16 @@ type IService interface {
 		monthRangeStr,
 		channelID string,
 		getDiscordAccountByID func(discordAccountID string) (*model.DiscordAccount, error),
+		newAuthors []string,
 		getDiscordIDByUsername func(username string) (string, error),
+	) (*discordgo.Message, error)
+	SendLeaderboardMessage(
+		guildID string,
+		period string, // "weekly" or "monthly"
+		channelID string,
+		getDiscordAccountByID func(discordAccountID string) (*model.DiscordAccount, error),
+		getDiscordIDByUsername func(username string) (string, error),
+		getAllTimeMemos func() ([]model.MemoLog, error), // Function to fetch all-time memos since July 2025
 	) (*discordgo.Message, error)
 	/*
 		WEBHOOK

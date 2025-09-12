@@ -1,6 +1,7 @@
 package helpers
 
 import (
+	"fmt"
 	"sort"
 	"sync"
 
@@ -47,18 +48,19 @@ func (b *leaderboardBuilder) BuildWithCustomScoring(memos []model.MemoLog, scori
 	b.mutex.RLock()
 	config := b.config
 	b.mutex.RUnlock()
-	
+
 	// Aggregate scores by author
 	authorScores := make(map[string]*LeaderboardEntry)
-	
+
 	for _, memo := range memos {
+		fmt.Println("Processing memo:", memo.Title, "by authors:", memo.AuthorMemoUsernames)
 		score := scoringFunc(memo)
-		
+
 		for _, username := range memo.AuthorMemoUsernames {
 			if username == "" {
 				continue // Skip empty usernames
 			}
-			
+
 			if entry, exists := authorScores[username]; exists {
 				entry.BreakdownCount += score
 				entry.TotalPosts++
@@ -73,24 +75,24 @@ func (b *leaderboardBuilder) BuildWithCustomScoring(memos []model.MemoLog, scori
 			}
 		}
 	}
-	
+
 	// Convert to slice and resolve Discord IDs
 	entries := make([]LeaderboardEntry, 0, len(authorScores))
 	usernames := make([]string, 0, len(authorScores))
-	
+
 	for username, entry := range authorScores {
 		// Skip zero scores if configured
 		if !config.ShowZeroScores && entry.Score == 0 {
 			continue
 		}
-		
+
 		entries = append(entries, *entry)
 		usernames = append(usernames, username)
 	}
-	
+
 	// Sort usernames for consistent ordering
 	sort.Strings(usernames)
-	
+
 	// Resolve Discord IDs for all authors if we have any
 	if len(usernames) > 0 && b.authorResolver != nil {
 		discordIDs, err := b.authorResolver.ResolveAuthorsToDiscordIDs(usernames)
@@ -99,7 +101,7 @@ func (b *leaderboardBuilder) BuildWithCustomScoring(memos []model.MemoLog, scori
 			// No additional action needed as error is handled internally by AuthorResolver
 			discordIDs = nil
 		}
-		
+
 		// Create a mapping from username to Discord ID
 		usernameToDiscordID := make(map[string]string)
 		for i, username := range usernames {
@@ -107,7 +109,7 @@ func (b *leaderboardBuilder) BuildWithCustomScoring(memos []model.MemoLog, scori
 				usernameToDiscordID[username] = discordIDs[i]
 			}
 		}
-		
+
 		// Update entries with Discord IDs
 		for i := range entries {
 			if discordID, exists := usernameToDiscordID[entries[i].Username]; exists {
@@ -115,40 +117,27 @@ func (b *leaderboardBuilder) BuildWithCustomScoring(memos []model.MemoLog, scori
 			}
 		}
 	}
-	
+
 	// Sort entries
 	b.sortEntries(entries, config)
-	
+
 	// Assign ranks and apply limit
 	entries = b.assignRanksAndLimit(entries, config)
-	
+
 	return entries
 }
 
 // sortEntries sorts the leaderboard entries according to configuration settings.
-// Primary sort is by score, with configurable tie-breaking using alphabetical order.
+// Primary sort is by breakdown count (descending), then by username alphabetically.
 func (b *leaderboardBuilder) sortEntries(entries []LeaderboardEntry, config LeaderboardConfig) {
 	sort.Slice(entries, func(i, j int) bool {
-		// Primary sort by score
-		if entries[i].Score != entries[j].Score {
-			if config.SortDescending {
-				return entries[i].Score > entries[j].Score
-			}
-			return entries[i].Score < entries[j].Score
+		// Primary sort by breakdown count (descending)
+		if entries[i].BreakdownCount != entries[j].BreakdownCount {
+			return entries[i].BreakdownCount > entries[j].BreakdownCount
 		}
-		
-		// Tie breaking
-		if config.TieBreaking.UseTimestamp {
-			// TODO: Implement timestamp-based tie breaking when timestamp is available in LeaderboardEntry
-			// For now, fall through to alphabetical sorting
-			return false // Skip timestamp comparison for now
-		}
-		
-		if config.TieBreaking.UseAlphabetical {
-			return entries[i].Username < entries[j].Username
-		}
-		
-		return false // Maintain original order for ties
+
+		// Secondary sort by username alphabetically (ascending)
+		return entries[i].Username < entries[j].Username
 	})
 }
 
@@ -163,12 +152,12 @@ func (b *leaderboardBuilder) assignRanksAndLimit(entries []LeaderboardEntry, con
 		}
 		entries[i].Rank = currentRank
 	}
-	
+
 	// Apply limit
 	if config.MaxEntries > 0 && len(entries) > config.MaxEntries {
 		entries = entries[:config.MaxEntries]
 	}
-	
+
 	return entries
 }
 
@@ -177,7 +166,7 @@ func (b *leaderboardBuilder) assignRanksAndLimit(entries []LeaderboardEntry, con
 func (b *leaderboardBuilder) GetConfig() LeaderboardConfig {
 	b.mutex.RLock()
 	defer b.mutex.RUnlock()
-	
+
 	return b.config
 }
 
@@ -187,6 +176,6 @@ func (b *leaderboardBuilder) GetConfig() LeaderboardConfig {
 func (b *leaderboardBuilder) UpdateConfig(config LeaderboardConfig) {
 	b.mutex.Lock()
 	defer b.mutex.Unlock()
-	
+
 	b.config = config
 }

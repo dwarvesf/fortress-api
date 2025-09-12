@@ -519,8 +519,8 @@ func (h *handler) NotifyWeeklyMemos(c *gin.Context) {
 		targetChannelID = discordRandomChannel
 	}
 
-	// Detect new authors by comparing with historical data
-	newAuthors, err := h.getNewAuthorsFromParquet(memos, "weekly")
+	// Detect new authors using simple logic (authors with exactly 1 memo total)
+	newAuthors, err := h.getNewAuthorsSimple(memos)
 	if err != nil {
 		h.logger.Warnf("Failed to detect new authors: %v", err)
 		newAuthors = []string{} // Continue with empty list if detection fails
@@ -582,6 +582,36 @@ func (h *handler) NotifyWeeklyMemos(c *gin.Context) {
 		return
 	}
 
+	// Send follow-up leaderboard message
+	_, err = h.service.Discord.SendLeaderboardMessage(
+		h.config.Discord.IDs.DwarvesGuild,
+		"weekly",
+		targetChannelID,
+		func(discordAccountID string) (*model.DiscordAccount, error) {
+			return h.store.DiscordAccount.One(h.repo.DB(), discordAccountID)
+		},
+		func(username string) (string, error) {
+			employee, err := h.store.Employee.GetByDiscordUsername(h.repo.DB(), username)
+			if err != nil {
+				return "", err
+			}
+			if employee.DiscordAccount == nil {
+				return "", fmt.Errorf("no discord account found for user %s", username)
+			}
+			return employee.DiscordAccount.DiscordID, nil
+		},
+		func() ([]model.MemoLog, error) {
+			// Query all-time memos since July 2025 using the same method as monthly reports
+			julyStart := time.Date(2025, 7, 1, 0, 0, 0, 0, time.UTC)
+			now := time.Now()
+			return h.getMemosFromParquet(julyStart, now, "all-time")
+		},
+	)
+	if err != nil {
+		h.logger.Error(err, "failed to send weekly leaderboard message")
+		// Don't return error here - main message was sent successfully
+	}
+
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))
 }
 
@@ -610,11 +640,18 @@ func (h *handler) NotifyMonthlyMemos(c *gin.Context) {
 
 	// Format month range string (e.g., "AUGUST 2025")
 	monthRangeStr := fmt.Sprintf("%s %d", strings.ToUpper(end.Month().String()), end.Year())
-	
+
 	// Determine target channel
 	targetChannelID := discordPlayGroundReadingChannel
 	if h.config.Env == "prod" {
 		targetChannelID = discordRandomChannel
+	}
+
+	// Detect new authors using simple logic (authors with exactly 1 memo total)
+	newAuthors, err := h.getNewAuthorsSimple(memos)
+	if err != nil {
+		h.logger.Warnf("Failed to detect new authors: %v", err)
+		newAuthors = []string{} // Continue with empty list if detection fails
 	}
 
 	// Call new service method
@@ -626,6 +663,7 @@ func (h *handler) NotifyMonthlyMemos(c *gin.Context) {
 		func(discordAccountID string) (*model.DiscordAccount, error) {
 			return h.store.DiscordAccount.One(h.repo.DB(), discordAccountID)
 		},
+		newAuthors,
 		func(username string) (string, error) {
 			employee, err := h.store.Employee.GetByDiscordUsername(h.repo.DB(), username)
 			if err != nil {
@@ -642,6 +680,36 @@ func (h *handler) NotifyMonthlyMemos(c *gin.Context) {
 		h.logger.Error(err, "failed to send monthly memo message")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
+	}
+
+	// Send follow-up leaderboard message
+	_, err = h.service.Discord.SendLeaderboardMessage(
+		h.config.Discord.IDs.DwarvesGuild,
+		"monthly",
+		targetChannelID,
+		func(discordAccountID string) (*model.DiscordAccount, error) {
+			return h.store.DiscordAccount.One(h.repo.DB(), discordAccountID)
+		},
+		func(username string) (string, error) {
+			employee, err := h.store.Employee.GetByDiscordUsername(h.repo.DB(), username)
+			if err != nil {
+				return "", err
+			}
+			if employee.DiscordAccount == nil {
+				return "", fmt.Errorf("no discord account found for user %s", username)
+			}
+			return employee.DiscordAccount.DiscordID, nil
+		},
+		func() ([]model.MemoLog, error) {
+			// Query all-time memos since July 2025 using the same method as monthly reports
+			julyStart := time.Date(2025, 7, 1, 0, 0, 0, 0, time.UTC)
+			now := time.Now()
+			return h.getMemosFromParquet(julyStart, now, "all-time")
+		},
+	)
+	if err != nil {
+		h.logger.Error(err, "failed to send monthly leaderboard message")
+		// Don't return error here - main message was sent successfully
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "monthly memo notification sent successfully"))
@@ -910,6 +978,63 @@ func (h *handler) getNewAuthorsFromParquet(currentMemos []model.MemoLog, period 
 	}
 	
 	h.logger.Infof("Detected %d new authors: %v", len(newAuthors), newAuthors)
+	return newAuthors, nil
+}
+
+// getNewAuthorsSimple detects new authors using simple logic: authors with exactly 1 memo total and that memo is in current period
+func (h *handler) getNewAuthorsSimple(currentMemos []model.MemoLog) ([]string, error) {
+	// Extract all unique authors from current period
+	currentAuthors := make(map[string]bool)
+	for _, memo := range currentMemos {
+		for _, author := range memo.AuthorMemoUsernames {
+			if cleanAuthor := strings.TrimSpace(author); cleanAuthor != "" {
+				currentAuthors[strings.ToLower(cleanAuthor)] = true
+			}
+		}
+	}
+
+	if len(currentAuthors) == 0 {
+		return []string{}, nil
+	}
+
+	// Get all-time memos from parquet to count total memos per author
+	julyStart := time.Date(2025, 7, 1, 0, 0, 0, 0, time.UTC)
+	now := time.Now()
+	allTimeMemos, err := h.getMemosFromParquet(julyStart, now, "all-time")
+	if err != nil {
+		h.logger.Error(err, "Failed to get all-time memos from parquet for new author detection")
+		return []string{}, err
+	}
+
+	// Count total memos per author from parquet data
+	authorCounts := make(map[string]int)
+	for _, memo := range allTimeMemos {
+		for _, author := range memo.AuthorMemoUsernames {
+			if cleanAuthor := strings.TrimSpace(author); cleanAuthor != "" {
+				authorKey := strings.ToLower(cleanAuthor)
+				authorCounts[authorKey]++
+			}
+		}
+	}
+
+	// Find authors from current period who have exactly 1 memo total (making them new)
+	var newAuthors []string
+	for currentAuthor := range currentAuthors {
+		if count, exists := authorCounts[currentAuthor]; exists && count == 1 {
+			// Find original case for the author from current memos
+			for _, memo := range currentMemos {
+				for _, author := range memo.AuthorMemoUsernames {
+					if strings.ToLower(strings.TrimSpace(author)) == currentAuthor {
+						newAuthors = append(newAuthors, strings.TrimSpace(author))
+						goto nextAuthor
+					}
+				}
+			}
+			nextAuthor:
+		}
+	}
+
+	h.logger.Infof("Detected %d new authors (simple method): %v", len(newAuthors), newAuthors)
 	return newAuthors, nil
 }
 

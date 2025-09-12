@@ -56,9 +56,9 @@ func (r *store) UpdateSelectedFieldsByID(db *gorm.DB, id string, updateModel mod
 	return &discordAccount, db.Model(&discordAccount).Where("id = ?", id).Select(updatedFields).Updates(updateModel).Error
 }
 
-// ListByMemoUsername gets a list of discord accounts by memo usernames, if memo username is not found, it will try to find by discord username
+// ListByMemoUsername gets a list of discord accounts by memo usernames, discord username, or github username (fallback)
 func (r *store) ListByMemoUsername(db *gorm.DB, usernames []string) ([]model.DiscordAccount, error) {
 	var cms []model.DiscordAccount
-	err := db.Where("memo_username IN (?) OR discord_username IN (?)", usernames, usernames).Find(&cms).Error
+	err := db.Where("memo_username IN (?) OR discord_username IN (?) OR github_username IN (?)", usernames, usernames, usernames).Find(&cms).Error
 	return cms, err
 }

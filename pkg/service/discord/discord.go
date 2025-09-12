@@ -46,8 +46,8 @@ func New(cfg *config.Config) IService {
 
 	// Initialize helper functions with default configurations
 	breakdownDetector := helpers.NewBreakdownDetector(helpers.BreakdownDetectionConfig{
-		TitleKeywords:          []string{"breakdown", "weekly", "summary", "report"},
-		TagKeywords:            []string{"breakdown", "weekly-report", "summary"},
+		TitleKeywords:          []string{"breakdown"},
+		TagKeywords:            []string{"breakdown"},
 		CaseSensitive:          false,
 		RequireBothTitleAndTag: false,
 	})
@@ -772,36 +772,11 @@ func (d *discordClient) SendWeeklyMemosMessage(
 		return "@" + username
 	}
 
-	// 1. Detect breakdown posts for leaderboard (not filtering all posts)
+	// 1. Detect breakdown posts for count (leaderboard moved to separate function)
 	breakdowns := d.breakdownDetector.DetectBreakdowns(memos)
 	breakdownCount := len(breakdowns)
 
-	// 2. Build author mappings for Discord mentions
-	authorMap := make(map[string]int)
-	authorMappings := make(map[string]string)
-
-	// Build author mapping and count from all posts
-	for _, memo := range memos {
-		for _, discordAccountID := range memo.DiscordAccountIDs {
-			discordAccount, err := getDiscordAccountByID(discordAccountID)
-			if err != nil {
-				// If fetching fails, use the ID as a fallback
-				authorMappings[discordAccountID] = discordAccountID
-				authorMap[discordAccountID] += 1
-				continue
-			}
-
-			if discordAccount.DiscordID != "" {
-				authorMappings[discordAccount.DiscordUsername] = discordAccount.DiscordID
-				authorMap[discordAccount.DiscordID] += 1
-			}
-		}
-	}
-
-	// 3. Build breakdown leaderboard using helper
-	leaderboard := d.leaderboardBuilder.BuildFromBreakdowns(breakdowns)
-
-	// 4. Build content using new simplified format
+	// 2. Build content using new simplified format (without leaderboard)
 	var content strings.Builder
 	var memolistString strings.Builder
 
@@ -822,29 +797,6 @@ func (d *discordClient) SendWeeklyMemosMessage(
 	}
 
 	content.WriteString(fmt.Sprintf("- New breakdowns. %v posts\n\n", breakdownCount))
-
-	// Add leaderboard if we have breakdowns
-	if len(leaderboard) > 0 {
-		content.WriteString("**🏆 Breakdown leaderboard**\n\n")
-		for i, entry := range leaderboard {
-			if i >= 5 { // Show top 5
-				break
-			}
-
-			// Format with Discord mentions when available
-			var displayName string
-			if entry.DiscordID != "" {
-				displayName = fmt.Sprintf("<@%s>", entry.DiscordID)
-			} else if entry.Username != "" {
-				displayName = formatDiscordMention(entry.Username)
-			} else {
-				displayName = "Unknown"
-			}
-
-			content.WriteString(fmt.Sprintf("%d. %s x%d\n", entry.Rank, displayName, entry.BreakdownCount))
-		}
-		content.WriteString("\n")
-	}
 
 	memolistString.WriteString("**📖 Publications**\n\n")
 
@@ -918,18 +870,13 @@ func (d *discordClient) SendMonthlyMemosMessage(
 	monthRangeStr,
 	channelID string,
 	getDiscordAccountByID func(discordAccountID string) (*model.DiscordAccount, error),
+	newAuthors []string,
 	getDiscordIDByUsername func(username string) (string, error),
 ) (*discordgo.Message, error) {
-	// 1. Detect breakdown posts for ICY calculation
+	// 1. Detect breakdown posts for count (ICY calculation moved to leaderboard message)
 	breakdowns := d.breakdownDetector.DetectBreakdowns(memos)
 
-	// 2. Build breakdown leaderboard using helper
-	leaderboard := d.leaderboardBuilder.BuildFromBreakdowns(breakdowns)
-
-	// 3. Calculate ICY rewards (only for breakdowns)
-	totalICY := len(breakdowns) * 25
-
-	// 4. Extract unique authors from all posts
+	// 2. Extract unique authors from all posts
 	uniqueAuthors := make(map[string]bool)
 	for _, memo := range memos {
 		for _, username := range memo.AuthorMemoUsernames {
@@ -962,36 +909,19 @@ func (d *discordClient) SendMonthlyMemosMessage(
 	content.WriteString("**📊 Overview**\n\n")
 	content.WriteString(fmt.Sprintf("- Total publication. %d posts\n", len(memos)))
 
-	// Add new authors if any (this would need to be detected from current vs previous month)
-	// For now, showing first 2 authors as "new" as an example
-	if len(allAuthors) > 0 {
-		newAuthors := ""
-		maxNew := 2
-		if len(allAuthors) < maxNew {
-			maxNew = len(allAuthors)
-		}
-		for i := 0; i < maxNew; i++ {
+	// Add new authors if any (detected using simple logic: authors with exactly 1 memo total)
+	if len(newAuthors) > 0 {
+		newAuthorsStr := ""
+		for i, author := range newAuthors {
 			if i > 0 {
-				newAuthors += ", "
+				newAuthorsStr += ", "
 			}
-			newAuthors += formatDiscordMention(allAuthors[i])
+			newAuthorsStr += formatDiscordMention(author)
 		}
-		content.WriteString(fmt.Sprintf("- New authors. %s\n", newAuthors))
+		content.WriteString(fmt.Sprintf("- New authors. %s\n", newAuthorsStr))
 	}
 
 	content.WriteString(fmt.Sprintf("- New breakdowns. %d posts\n\n", len(breakdowns)))
-
-	// Breakdown leaderboard
-	if len(leaderboard) > 0 {
-		content.WriteString("**🏆 Breakdown leaderboard**\n\n")
-		for idx, entry := range leaderboard {
-			if idx >= 5 { // Show top 5 for monthly
-				break
-			}
-			content.WriteString(fmt.Sprintf("%d. %s x%d\n", idx+1, formatDiscordMention(entry.Username), entry.BreakdownCount))
-		}
-		content.WriteString("\n")
-	}
 
 	// Publications list
 	content.WriteString("**📖 Publications**\n\n")
@@ -1009,12 +939,105 @@ func (d *discordClient) SendMonthlyMemosMessage(
 		}
 	}
 
-	content.WriteString(fmt.Sprintf("\n**💰 Total ICY reward: %d ICY**", totalICY))
-
 	// 6. Create and send Discord embed
 	msg := &discordgo.MessageEmbed{
 		Title:       fmt.Sprintf("Monthly memo report (%s)", monthRangeStr),
 		Description: content.String(),
+	}
+
+	return d.SendEmbeddedMessageWithChannel(nil, msg, channelID)
+}
+
+func (d *discordClient) SendLeaderboardMessage(
+	guildID string,
+	period string, // "weekly" or "monthly"
+	channelID string,
+	getDiscordAccountByID func(discordAccountID string) (*model.DiscordAccount, error),
+	getDiscordIDByUsername func(username string) (string, error),
+	getAllTimeMemos func() ([]model.MemoLog, error), // Function to fetch all-time memos since July 2025
+) (*discordgo.Message, error) {
+	// Helper function to format Discord mention from username
+	formatDiscordMention := func(username string) string {
+		if discordID, err := getDiscordIDByUsername(username); err == nil && discordID != "" {
+			return fmt.Sprintf("<@%s>", discordID)
+		}
+		return "@" + username
+	}
+
+	// 1. Fetch all-time memos since July 2025
+	allTimeMemos, err := getAllTimeMemos()
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch all-time memos: %w", err)
+	}
+
+	// Note: AuthorMemoUsernames should already be populated by getMemosFromParquet method
+	// No manual population needed as the memo fetching method handles this correctly
+
+	// 3. Detect breakdown posts for leaderboard from all-time data
+	breakdowns := d.breakdownDetector.DetectBreakdowns(allTimeMemos)
+
+	// 2. Build breakdown leaderboard using helper
+	leaderboard := d.leaderboardBuilder.BuildFromBreakdowns(breakdowns)
+
+	// 3. Calculate ICY rewards (only for breakdowns)
+	totalICY := len(breakdowns) * 25
+
+	// 4. Check if we have any leaderboard data
+	if len(leaderboard) == 0 {
+		// Send a message indicating leaderboard building issue
+		msg := &discordgo.MessageEmbed{
+			Title:       "🏆 Breakdown Leaderboard",
+			Description: "Found breakdown posts, but unable to build leaderboard due to author attribution issues. Please check memo author information and Discord account linking. 📝",
+			Color:       0xFFA500, // Orange color for warning
+		}
+		return d.SendEmbeddedMessageWithChannel(nil, msg, channelID)
+	}
+
+	// 4. Build leaderboard content
+	var content strings.Builder
+	content.WriteString("Here are the top contributors for breakdown posts:\n\n")
+
+	maxEntries := 10 // Show more entries for all-time leaderboard
+
+	for i, entry := range leaderboard {
+		if i >= maxEntries {
+			break
+		}
+
+		// Format with Discord mentions when available
+		var displayName string
+		if entry.DiscordID != "" {
+			displayName = fmt.Sprintf("<@%s>", entry.DiscordID)
+		} else if entry.Username != "" {
+			// Handle organization names like "Dwarves,Foundation"
+			if strings.Contains(entry.Username, ",") {
+				// Clean up organization names for better display
+				displayName = strings.ReplaceAll(entry.Username, ",", " ")
+			} else {
+				displayName = formatDiscordMention(entry.Username)
+			}
+		} else {
+			displayName = "Unknown"
+		}
+
+		content.WriteString(fmt.Sprintf("%d. %s x%d\n",
+			entry.Rank, displayName, entry.BreakdownCount))
+	}
+
+	// Add ICY reward information and encouragement message
+	if totalICY > 0 {
+		content.WriteString(fmt.Sprintf("\n💰 **Total ICY reward: %d ICY**\n", totalICY))
+	}
+	content.WriteString("\nGreat work on sharing knowledge! 🚀")
+
+	// 5. Create and send Discord embed
+	msg := &discordgo.MessageEmbed{
+		Title:       "🏆 Breakdown Leaderboard",
+		Description: content.String(),
+		Color:       0xFFD700, // Gold color for leaderboard
+		Footer: &discordgo.MessageEmbedFooter{
+			Text: "Keep writing breakdowns to climb the leaderboard!",
+		},
 	}
 
 	return d.SendEmbeddedMessageWithChannel(nil, msg, channelID)

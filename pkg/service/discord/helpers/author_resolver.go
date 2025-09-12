@@ -362,13 +362,17 @@ func (a *authorResolver) resolveUsernamesFromDatabase(usernames []string) (map[s
 	// Build resolution map
 	result := make(map[string]string)
 	
-	// Create lookup maps for both memo_username and discord_username
+	// Create lookup maps for memo_username, discord_username, and github_username (fallback)
 	for _, account := range discordAccounts {
 		if account.MemoUsername != "" {
 			result[account.MemoUsername] = account.DiscordID
 		}
 		if account.DiscordUsername != "" {
 			result[account.DiscordUsername] = account.DiscordID
+		}
+		// Add GitHub username as fallback option
+		if account.GithubUsername != "" {
+			result[account.GithubUsername] = account.DiscordID
 		}
 	}
 

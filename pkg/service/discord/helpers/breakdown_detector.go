@@ -1,6 +1,7 @@
 package helpers
 
 import (
+	"fmt"
 	"strings"
 	"sync"
 	"time"
@@ -33,18 +34,22 @@ func NewBreakdownDetector(config BreakdownDetectionConfig) BreakdownDetector {
 func (d *breakdownDetector) DetectBreakdowns(memos []model.MemoLog) []model.MemoLog {
 	d.mutex.Lock()
 	defer d.mutex.Unlock()
-	
+
 	breakdowns := make([]model.MemoLog, 0)
 	totalChecked := 0
 	titleMatches := 0
 	tagMatches := 0
-	
+
 	for _, memo := range memos {
 		totalChecked++
-		
+		if memo.Title == "Breakdown" {
+			fmt.Println("Skipping memo with title 'Breakdown'")
+			continue
+		}
+
 		// Convert tags from JSONArrayString to []string
 		tags := []string(memo.Tags)
-		
+
 		isBreakdown, matchedTitle, matchedTag := d.isBreakdownWithDetails(memo.Title, tags)
 		if isBreakdown {
 			breakdowns = append(breakdowns, memo)
@@ -56,7 +61,7 @@ func (d *breakdownDetector) DetectBreakdowns(memos []model.MemoLog) []model.Memo
 			}
 		}
 	}
-	
+
 	// Update statistics
 	d.stats.TotalChecked += totalChecked
 	d.stats.TotalBreakdowns += len(breakdowns)
@@ -66,7 +71,7 @@ func (d *breakdownDetector) DetectBreakdowns(memos []model.MemoLog) []model.Memo
 		d.stats.DetectionRate = float64(d.stats.TotalBreakdowns) / float64(d.stats.TotalChecked)
 	}
 	d.stats.LastUpdated = time.Now()
-	
+
 	return breakdowns
 }
 
@@ -77,7 +82,7 @@ func (d *breakdownDetector) DetectBreakdowns(memos []model.MemoLog) []model.Memo
 func (d *breakdownDetector) IsBreakdown(title string, tags []string) bool {
 	d.mutex.RLock()
 	defer d.mutex.RUnlock()
-	
+
 	isBreakdown, _, _ := d.isBreakdownWithDetails(title, tags)
 	return isBreakdown
 }
@@ -87,11 +92,11 @@ func (d *breakdownDetector) IsBreakdown(title string, tags []string) bool {
 func (d *breakdownDetector) isBreakdownWithDetails(title string, tags []string) (bool, bool, bool) {
 	titleMatch := d.matchesKeywords(title, d.config.TitleKeywords)
 	tagMatch := d.matchesTagKeywords(tags, d.config.TagKeywords)
-	
+
 	if d.config.RequireBothTitleAndTag {
 		return titleMatch && tagMatch, titleMatch, tagMatch
 	}
-	
+
 	return titleMatch || tagMatch, titleMatch, tagMatch
 }
 
@@ -101,23 +106,23 @@ func (d *breakdownDetector) matchesKeywords(text string, keywords []string) bool
 	if len(keywords) == 0 {
 		return false
 	}
-	
+
 	searchText := text
 	if !d.config.CaseSensitive {
 		searchText = strings.ToLower(text)
 	}
-	
+
 	for _, keyword := range keywords {
 		searchKeyword := keyword
 		if !d.config.CaseSensitive {
 			searchKeyword = strings.ToLower(keyword)
 		}
-		
+
 		if strings.Contains(searchText, searchKeyword) {
 			return true
 		}
 	}
-	
+
 	return false
 }
 
@@ -127,7 +132,7 @@ func (d *breakdownDetector) matchesTagKeywords(tags []string, keywords []string)
 	if len(keywords) == 0 {
 		return false
 	}
-	
+
 	for _, tag := range tags {
 		if d.matchesKeywords(tag, keywords) {
 			return true
@@ -142,7 +147,7 @@ func (d *breakdownDetector) matchesTagKeywords(tags []string, keywords []string)
 func (d *breakdownDetector) GetDetectionStats() BreakdownDetectionStats {
 	d.mutex.RLock()
 	defer d.mutex.RUnlock()
-	
+
 	return d.stats
 }
 
@@ -152,6 +157,6 @@ func (d *breakdownDetector) GetDetectionStats() BreakdownDetectionStats {
 func (d *breakdownDetector) UpdateConfig(config BreakdownDetectionConfig) {
 	d.mutex.Lock()
 	defer d.mutex.Unlock()
-	
+
 	d.config = config
 }
