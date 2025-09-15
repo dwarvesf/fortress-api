@@ -170,11 +170,7 @@ func (d *dataTransformer) validateRecord(record ParquetMemoRecord) error {
 		if len(record.Authors) == 0 {
 			return fmt.Errorf("at least one author is required")
 		}
-		
-		if len(record.Content) > d.config.MaxContentLength {
-			return fmt.Errorf("content exceeds maximum length of %d characters", d.config.MaxContentLength)
-		}
-		
+
 		// Validate URL format if provided
 		if record.URL != "" {
 			url := strings.TrimSpace(record.URL)
@@ -269,11 +265,16 @@ func (d *dataTransformer) truncateContent(content string) string {
 		return content
 	}
 
+	// If MaxContentLength is too small to accommodate truncation indicator, return empty
+	if d.config.MaxContentLength < 15 {
+		return ""
+	}
+
 	// Truncate and add indication
-	truncated := content[:d.config.MaxContentLength-10] // Leave space for indicator
+	truncated := content[:d.config.MaxContentLength-15] // Leave space for indicator
 	truncated = strings.TrimSpace(truncated)
 	truncated += "... [truncated]"
-	
+
 	return truncated
 }
 

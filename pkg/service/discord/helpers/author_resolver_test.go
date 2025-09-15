@@ -1,7 +1,6 @@
 package helpers
 
 import (
-	"context"
 	"fmt"
 	"testing"
 	"time"
@@ -293,7 +292,22 @@ func TestAuthorResolver_ResolveAllAuthors_FromMemos(t *testing.T) {
 		{DiscordID: "222", MemoUsername: "author2"},
 	}
 	
-	mockStore.DiscordAccount.On("ListByMemoUsername", mockDB, []string{"author1", "author2"}).Return(discordAccounts, nil)
+	mockStore.DiscordAccount.On("ListByMemoUsername", mockDB, mock.MatchedBy(func(authors []string) bool {
+		// Check that we have exactly 2 authors and they contain both author1 and author2 (order independent)
+		if len(authors) != 2 {
+			return false
+		}
+		hasAuthor1 := false
+		hasAuthor2 := false
+		for _, author := range authors {
+			if author == "author1" {
+				hasAuthor1 = true
+			} else if author == "author2" {
+				hasAuthor2 = true
+			}
+		}
+		return hasAuthor1 && hasAuthor2
+	})).Return(discordAccounts, nil)
 
 	// Test memos with authors
 	memos := []model.MemoLog{
