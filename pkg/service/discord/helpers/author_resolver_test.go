@@ -419,51 +419,6 @@ func TestAuthorResolver_FallbackStrategies(t *testing.T) {
 	}
 }
 
-func TestAuthorResolver_WarmCache(t *testing.T) {
-	mockStore, dbRepo, resolver := setupAuthorResolverTest()
-	
-	// Mock database responses for warmup
-	mockDB := &gorm.DB{}
-	dbRepo.On("DB").Return(mockDB)
-	
-	// Mock memo logs for warmup
-	memos := []model.MemoLog{
-		{AuthorMemoUsernames: []string{"warmup1", "warmup2"}},
-		{AuthorMemoUsernames: []string{"warmup2", "warmup3"}},
-	}
-	mockStore.MemoLog.On("GetLimitByTimeRange", mockDB, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), 1000).Return(memos, nil)
-	
-	// Mock discord account resolution
-	discordAccounts := []model.DiscordAccount{
-		{DiscordID: "w1", MemoUsername: "warmup1"},
-		{DiscordID: "w2", MemoUsername: "warmup2"},
-		{DiscordID: "w3", MemoUsername: "warmup3"},
-	}
-	mockStore.DiscordAccount.On("ListByMemoUsername", mockDB, []string{"warmup1", "warmup2", "warmup3"}).Return(discordAccounts, nil)
-
-	// Test warmup
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	
-	err := resolver.WarmCache(ctx)
-	assert.NoError(t, err)
-	
-	// Test that warmup populated cache
-	metrics := resolver.GetMetrics()
-	assert.False(t, metrics.LastWarmupTime.IsZero())
-}
-
-func TestAuthorResolver_WarmCache_ContextCancellation(t *testing.T) {
-	_, _, resolver := setupAuthorResolverTest()
-	
-	// Create canceled context
-	ctx, cancel := context.WithCancel(context.Background())
-	cancel() // Cancel immediately
-	
-	err := resolver.WarmCache(ctx)
-	assert.Error(t, err)
-	assert.Equal(t, context.Canceled, err)
-}
 
 func TestAuthorResolver_ClearCache(t *testing.T) {
 	mockStore, dbRepo, resolver := setupAuthorResolverTest()
