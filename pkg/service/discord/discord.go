@@ -886,11 +886,6 @@ func (d *discordClient) SendMonthlyMemosMessage(
 		}
 	}
 
-	// Convert to slice for new authors list
-	var allAuthors []string
-	for author := range uniqueAuthors {
-		allAuthors = append(allAuthors, author)
-	}
 
 	// Helper function to format Discord mention from username
 	formatDiscordMention := func(username string) string {
