@@ -56,7 +56,7 @@ func (s *service) ReadParquetFromURL(ctx context.Context, parquetURL, query stri
 
 	// Validate URL format - allow HTTP/HTTPS URLs and local file paths
 	isHTTPURL := strings.HasPrefix(parquetURL, "http://") || strings.HasPrefix(parquetURL, "https://")
-	isLocalPath := strings.HasPrefix(parquetURL, "/") || strings.Contains(parquetURL, ".parquet")
+	isLocalPath := strings.HasPrefix(parquetURL, "/") || (!strings.Contains(parquetURL, "://") && strings.Contains(parquetURL, ".parquet"))
 	if !isHTTPURL && !isLocalPath {
 		return nil, fmt.Errorf("parquet URL must be a HTTP/HTTPS URL or a local file path")
 	}
@@ -140,7 +140,7 @@ func (s *service) QueryParquetWithFilters(ctx context.Context, parquetURL string
 
 	// Validate URL format - allow HTTP/HTTPS URLs and local file paths
 	isHTTPURL := strings.HasPrefix(parquetURL, "http://") || strings.HasPrefix(parquetURL, "https://")
-	isLocalPath := strings.HasPrefix(parquetURL, "/") || strings.Contains(parquetURL, ".parquet")
+	isLocalPath := strings.HasPrefix(parquetURL, "/") || (!strings.Contains(parquetURL, "://") && strings.Contains(parquetURL, ".parquet"))
 	if !isHTTPURL && !isLocalPath {
 		return nil, fmt.Errorf("parquet URL must be a HTTP/HTTPS URL or a local file path")
 	}
@@ -159,7 +159,7 @@ func (s *service) GetParquetSchema(ctx context.Context, parquetURL string) ([]ma
 
 	// Validate URL format - allow HTTP/HTTPS URLs and local file paths
 	isHTTPURL := strings.HasPrefix(parquetURL, "http://") || strings.HasPrefix(parquetURL, "https://")
-	isLocalPath := strings.HasPrefix(parquetURL, "/") || strings.Contains(parquetURL, ".parquet")
+	isLocalPath := strings.HasPrefix(parquetURL, "/") || (!strings.Contains(parquetURL, "://") && strings.Contains(parquetURL, ".parquet"))
 	if !isHTTPURL && !isLocalPath {
 		return nil, fmt.Errorf("parquet URL must be a HTTP/HTTPS URL or a local file path")
 	}

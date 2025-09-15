@@ -181,7 +181,7 @@ func TestService_ReadParquetFromURL_Validation(t *testing.T) {
 			parquetURL:  "ftp://example.com/file.parquet",
 			query:       "SELECT * FROM parquet_file",
 			expectError: true,
-			errorMsg:    "parquet URL must start with http:// or https://",
+			errorMsg:    "parquet URL must be a HTTP/HTTPS URL or a local file path",
 		},
 		{
 			name:        "valid_http_url",
@@ -407,7 +407,7 @@ func TestService_QueryParquetWithFilters_Validation(t *testing.T) {
 			parquetURL:  "ftp://example.com/file.parquet",
 			options:     QueryOptions{},
 			expectError: true,
-			errorMsg:    "parquet URL must start with http:// or https://",
+			errorMsg:    "parquet URL must be a HTTP/HTTPS URL or a local file path",
 		},
 		{
 			name:       "valid_url_with_filters",
@@ -465,7 +465,7 @@ func TestService_GetParquetSchema(t *testing.T) {
 			name:        "invalid_url_format",
 			parquetURL:  "ftp://example.com/file.parquet",
 			expectError: true,
-			errorMsg:    "parquet URL must start with http:// or https://",
+			errorMsg:    "parquet URL must be a HTTP/HTTPS URL or a local file path",
 		},
 		{
 			name:        "valid_url",
