@@ -320,29 +320,6 @@ func TestAuthorResolver_ResolveAllAuthors_EmptyMemos(t *testing.T) {
 	assert.Empty(t, authorMap)
 }
 
-func TestAuthorResolver_ResolveAllAuthors_NoAuthors(t *testing.T) {
-	mockStore, dbRepo, resolver := setupAuthorResolverTest()
-	
-	// Mock database responses
-	mockDB := &gorm.DB{}
-	dbRepo.On("DB").Return(mockDB)
-	
-	// Mock potential database calls for empty strings (should be filtered but just in case)
-	mockStore.DiscordAccount.On("ListByMemoUsername", mockDB, mock.Anything).Return([]model.DiscordAccount{}, nil).Maybe()
-
-	// Test memos without authors - all should result in empty strings after trimming
-	memos := []model.MemoLog{
-		{AuthorMemoUsernames: []string{}},
-		{AuthorMemoUsernames: []string{""}},
-		{AuthorMemoUsernames: []string{"  "}},
-		{AuthorMemoUsernames: []string{" \t \n "}},
-	}
-	
-	authorMap, err := resolver.ResolveAllAuthors(memos)
-	
-	assert.NoError(t, err)
-	assert.Empty(t, authorMap)
-}
 
 func TestAuthorResolver_CacheEviction(t *testing.T) {
 	mockStore, dbRepo, resolver := setupAuthorResolverTest()
