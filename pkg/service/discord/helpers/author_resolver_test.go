@@ -300,9 +300,10 @@ func TestAuthorResolver_ResolveAllAuthors_FromMemos(t *testing.T) {
 		hasAuthor1 := false
 		hasAuthor2 := false
 		for _, author := range authors {
-			if author == "author1" {
+			switch author {
+			case "author1":
 				hasAuthor1 = true
-			} else if author == "author2" {
+			case "author2":
 				hasAuthor2 = true
 			}
 		}
