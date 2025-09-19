@@ -973,9 +973,6 @@ func (d *discordClient) SendLeaderboardMessage(
 	// 2. Build breakdown leaderboard using helper
 	leaderboard := d.leaderboardBuilder.BuildFromBreakdowns(breakdowns)
 
-	// 3. Calculate ICY rewards (only for breakdowns)
-	totalICY := len(breakdowns) * 25
-
 	// 4. Check if we have any leaderboard data
 	if len(leaderboard) == 0 {
 		// Send a message indicating leaderboard building issue
@@ -1020,7 +1017,9 @@ func (d *discordClient) SendLeaderboardMessage(
 
 	// Add ICY reward information and encouragement message
 	// Disable ICY reward display temporarily
-	totalICY = 0
+	// 3. Calculate ICY rewards (only for breakdowns)
+	// totalICY := len(breakdowns) * 25
+	totalICY := 0
 	if totalICY > 0 {
 		content.WriteString(fmt.Sprintf("\n💰 **Total ICY reward: %d ICY**\n", totalICY))
 	}
