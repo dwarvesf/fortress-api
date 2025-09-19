@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math/rand"
 	"net/http"
+	"os"
 	"sort"
 	"strconv"
 	"strings"
@@ -23,6 +24,8 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/service/basecamp/consts"
 	bcModel "github.com/dwarvesf/fortress-api/pkg/service/basecamp/model"
+	"github.com/dwarvesf/fortress-api/pkg/service/discord/helpers"
+	"github.com/dwarvesf/fortress-api/pkg/service/duckdb"
 	"github.com/dwarvesf/fortress-api/pkg/service/mochiprofile"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/store/discordevent"
@@ -32,22 +35,40 @@ import (
 )
 
 type handler struct {
-	controller *controller.Controller
-	store      *store.Store
-	service    *service.Service
-	logger     logger.Logger
-	repo       store.DBRepo
-	config     *config.Config
+	controller      *controller.Controller
+	store           *store.Store
+	service         *service.Service
+	logger          logger.Logger
+	repo            store.DBRepo
+	config          *config.Config
+	dataTransformer helpers.DataTransformer
 }
 
 func New(controller *controller.Controller, store *store.Store, repo store.DBRepo, service *service.Service, logger logger.Logger, cfg *config.Config) IHandler {
+	// Initialize data transformer for parquet data processing
+	dataTransformer := helpers.NewDataTransformer(helpers.DataTransformationConfig{
+		DateFormats: []string{
+			"2006-01-02",
+			"2006-01-02T15:04:05Z",
+			"2006-01-02T15:04:05.000Z",
+			"2006-01-02 15:04:05",
+		},
+		DefaultReward:           "25",
+		DefaultCategory:         []string{"others"},
+		EnableValidation:        false, // Skip validation for performance
+		SkipInvalidRecords:      true,  // Skip invalid records during batch processing
+		MaxContentLength:        10000,
+		AuthorResolutionRetries: 3,
+	})
+
 	return &handler{
-		controller: controller,
-		store:      store,
-		repo:       repo,
-		service:    service,
-		logger:     logger,
-		config:     cfg,
+		controller:      controller,
+		store:           store,
+		repo:            repo,
+		service:         service,
+		logger:          logger,
+		config:          cfg,
+		dataTransformer: dataTransformer,
 	}
 }
 
@@ -475,11 +496,17 @@ func (h *handler) NotifyWeeklyMemos(c *gin.Context) {
 		weekRangeStr = fmt.Sprintf("%v %v - %v %v", startDay, startMonth, endDay, endMonth)
 	}
 
-	memos, err := h.store.MemoLog.GetLimitByTimeRange(h.repo.DB(), &start, &end, 1000)
+	// Try DuckDB first, fall back to database on failure
+	memos, err := h.getMemosFromParquet(start, end, "weekly")
 	if err != nil {
-		h.logger.Error(err, "failed to retrieve weekly memos")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
-		return
+		h.logger.Warnf("Failed to get memos from parquet, falling back to database: %v", err)
+		// Fallback to database query
+		memos, err = h.store.MemoLog.GetLimitByTimeRange(h.repo.DB(), &start, &end, 1000)
+		if err != nil {
+			h.logger.Error(err, "failed to retrieve weekly memos from database")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+			return
+		}
 	}
 
 	if len(memos) == 0 {
@@ -492,13 +519,61 @@ func (h *handler) NotifyWeeklyMemos(c *gin.Context) {
 		targetChannelID = discordRandomChannel
 	}
 
+	// Detect new authors using simple logic (authors with exactly 1 memo total)
+	newAuthors, err := h.getNewAuthorsSimple(memos)
+	if err != nil {
+		h.logger.Warnf("Failed to detect new authors: %v", err)
+		newAuthors = []string{} // Continue with empty list if detection fails
+	}
+
+	// Create a simple author resolver that handles invalid IDs gracefully
+	authorResolver := func(discordAccountID string) (*model.DiscordAccount, error) {
+		// If the ID contains invalid characters like commas, create a cleaned username
+		if strings.Contains(discordAccountID, ",") || strings.Contains(discordAccountID, " ") {
+			cleanedUsername := strings.ReplaceAll(strings.ReplaceAll(discordAccountID, ",", "_"), " ", "_")
+			return &model.DiscordAccount{
+				DiscordID:       "",
+				DiscordUsername: cleanedUsername,
+				MemoUsername:    cleanedUsername,
+			}, nil
+		}
+		
+		// First try to find employee by Discord/GitHub username, then get their Discord account
+		employee, err := h.store.Employee.GetByDiscordUsername(h.repo.DB(), discordAccountID)
+		if err == nil && employee.DiscordAccount != nil {
+			return employee.DiscordAccount, nil
+		}
+		
+		// Fallback: if it's a valid UUID, try direct lookup
+		if model.IsUUIDFromString(discordAccountID) {
+			return h.store.DiscordAccount.One(h.repo.DB(), discordAccountID)
+		}
+		
+		// If all else fails, return a fallback account with the username
+		return &model.DiscordAccount{
+			DiscordID:       "",
+			DiscordUsername: discordAccountID,
+			MemoUsername:    discordAccountID,
+		}, nil
+	}
+
 	_, err = h.service.Discord.SendWeeklyMemosMessage(
 		h.config.Discord.IDs.DwarvesGuild,
 		memos,
 		weekRangeStr,
 		targetChannelID,
-		func(discordAccountID string) (*model.DiscordAccount, error) {
-			return h.store.DiscordAccount.One(h.repo.DB(), discordAccountID)
+		authorResolver,
+		newAuthors,
+		h.resolveAuthorsFromParquetByTitle,
+		func(username string) (string, error) {
+			employee, err := h.store.Employee.GetByDiscordUsername(h.repo.DB(), username)
+			if err != nil {
+				return "", err
+			}
+			if employee.DiscordAccount == nil {
+				return "", fmt.Errorf("no discord account found for user %s", username)
+			}
+			return employee.DiscordAccount.DiscordID, nil
 		},
 	)
 	if err != nil {
@@ -507,7 +582,444 @@ func (h *handler) NotifyWeeklyMemos(c *gin.Context) {
 		return
 	}
 
+	// Send follow-up leaderboard message
+	_, err = h.service.Discord.SendLeaderboardMessage(
+		h.config.Discord.IDs.DwarvesGuild,
+		"weekly",
+		targetChannelID,
+		func(discordAccountID string) (*model.DiscordAccount, error) {
+			return h.store.DiscordAccount.One(h.repo.DB(), discordAccountID)
+		},
+		func(username string) (string, error) {
+			employee, err := h.store.Employee.GetByDiscordUsername(h.repo.DB(), username)
+			if err != nil {
+				return "", err
+			}
+			if employee.DiscordAccount == nil {
+				return "", fmt.Errorf("no discord account found for user %s", username)
+			}
+			return employee.DiscordAccount.DiscordID, nil
+		},
+		func() ([]model.MemoLog, error) {
+			// Query all-time memos since July 2025 using the same method as monthly reports
+			julyStart := time.Date(2025, 7, 1, 0, 0, 0, 0, time.UTC)
+			now := time.Now()
+			return h.getMemosFromParquet(julyStart, now, "all-time")
+		},
+	)
+	if err != nil {
+		h.logger.Error(err, "failed to send weekly leaderboard message")
+		// Don't return error here - main message was sent successfully
+	}
+
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))
+}
+
+func (h *handler) NotifyMonthlyMemos(c *gin.Context) {
+	// Calculate monthly time range (first day of month to now)
+	end := time.Now()
+	start := time.Date(end.Year(), end.Month(), 1, 0, 0, 0, 0, end.Location())
+	
+	// Try DuckDB first, fall back to database on failure
+	memos, err := h.getMemosFromParquet(start, end, "monthly")
+	if err != nil {
+		h.logger.Warnf("Failed to get memos from parquet, falling back to database: %v", err)
+		// Fallback to database query
+		memos, err = h.store.MemoLog.GetLimitByTimeRange(h.repo.DB(), &start, &end, 1000)
+		if err != nil {
+			h.logger.Error(err, "failed to retrieve monthly memos from database")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+			return
+		}
+	}
+
+	if len(memos) == 0 {
+		c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "no new memos this month"))
+		return
+	}
+
+	// Format month range string (e.g., "AUGUST 2025")
+	monthRangeStr := fmt.Sprintf("%s %d", strings.ToUpper(end.Month().String()), end.Year())
+
+	// Determine target channel
+	targetChannelID := discordPlayGroundReadingChannel
+	if h.config.Env == "prod" {
+		targetChannelID = discordRandomChannel
+	}
+
+	// Detect new authors using simple logic (authors with exactly 1 memo total)
+	newAuthors, err := h.getNewAuthorsSimple(memos)
+	if err != nil {
+		h.logger.Warnf("Failed to detect new authors: %v", err)
+		newAuthors = []string{} // Continue with empty list if detection fails
+	}
+
+	// Call new service method
+	_, err = h.service.Discord.SendMonthlyMemosMessage(
+		h.config.Discord.IDs.DwarvesGuild,
+		memos,
+		monthRangeStr,
+		targetChannelID,
+		func(discordAccountID string) (*model.DiscordAccount, error) {
+			return h.store.DiscordAccount.One(h.repo.DB(), discordAccountID)
+		},
+		newAuthors,
+		func(username string) (string, error) {
+			employee, err := h.store.Employee.GetByDiscordUsername(h.repo.DB(), username)
+			if err != nil {
+				return "", err
+			}
+			if employee.DiscordAccount == nil {
+				return "", fmt.Errorf("no discord account found for user %s", username)
+			}
+			return employee.DiscordAccount.DiscordID, nil
+		},
+	)
+
+	if err != nil {
+		h.logger.Error(err, "failed to send monthly memo message")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	// Send follow-up leaderboard message
+	_, err = h.service.Discord.SendLeaderboardMessage(
+		h.config.Discord.IDs.DwarvesGuild,
+		"monthly",
+		targetChannelID,
+		func(discordAccountID string) (*model.DiscordAccount, error) {
+			return h.store.DiscordAccount.One(h.repo.DB(), discordAccountID)
+		},
+		func(username string) (string, error) {
+			employee, err := h.store.Employee.GetByDiscordUsername(h.repo.DB(), username)
+			if err != nil {
+				return "", err
+			}
+			if employee.DiscordAccount == nil {
+				return "", fmt.Errorf("no discord account found for user %s", username)
+			}
+			return employee.DiscordAccount.DiscordID, nil
+		},
+		func() ([]model.MemoLog, error) {
+			// Query all-time memos since July 2025 using the same method as monthly reports
+			julyStart := time.Date(2025, 7, 1, 0, 0, 0, 0, time.UTC)
+			now := time.Now()
+			return h.getMemosFromParquet(julyStart, now, "all-time")
+		},
+	)
+	if err != nil {
+		h.logger.Error(err, "failed to send monthly leaderboard message")
+		// Don't return error here - main message was sent successfully
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "monthly memo notification sent successfully"))
+}
+
+// getMemosFromParquet retrieves memos from parquet file with fallback to database
+func (h *handler) getMemosFromParquet(start, end time.Time, period string) ([]model.MemoLog, error) {
+	// Check if parquet querying is disabled via environment variable
+	if os.Getenv("DISABLE_PARQUET_QUERY") == "true" {
+		h.logger.Info("Parquet querying disabled via environment variable, falling back to database")
+		return h.store.MemoLog.GetLimitByTimeRange(h.repo.DB(), &start, &end, 1000)
+	}
+	
+	// Check if DuckDB service is available
+	if h.service.DuckDB == nil {
+		h.logger.Warn("DuckDB service not available, falling back to database")
+		return h.store.MemoLog.GetLimitByTimeRange(h.repo.DB(), &start, &end, 1000)
+	}
+
+	// Use local parquet file if caching is enabled and file is ready
+	var parquetURL string
+	if h.service.ParquetSync.IsLocalFileReady() {
+		parquetURL = h.service.ParquetSync.GetLocalFilePath()
+		h.logger.Debugf("Using local parquet file: %s", parquetURL)
+	} else {
+		// Fallback to remote URL if local file not ready
+		parquetURL = h.service.ParquetSync.GetRemoteURL()
+		h.logger.Debugf("Using remote parquet file: %s", parquetURL)
+	}
+	
+	// Build DuckDB query with time range filters and efficient pagination
+	options := duckdb.QueryOptions{
+		Filters: []duckdb.QueryFilter{
+			{Column: "date", Operator: ">=", Value: start.Format("2006-01-02")},
+			{Column: "date", Operator: "<=", Value: end.Format("2006-01-02")},
+		},
+		OrderBy: []string{"date DESC"},
+		Limit:   100,  // Reduced limit for faster queries
+		Offset:  0,    // Start from most recent
+	}
+	
+	h.logger.Infof("Attempting to query parquet data for %s period from %s to %s", period, start.Format("2006-01-02"), end.Format("2006-01-02"))
+	
+	// Query parquet file using DuckDB with reduced timeout for faster fallback
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	
+	parquetData, err := h.service.DuckDB.QueryParquetWithFilters(ctx, parquetURL, options)
+	if err != nil {
+		h.logger.Warnf("Failed to query parquet data, falling back to database: %v", err)
+		return h.store.MemoLog.GetLimitByTimeRange(h.repo.DB(), &start, &end, 1000)
+	}
+	
+	h.logger.Infof("Successfully retrieved %d records from parquet file", len(parquetData))
+	
+	// Transform parquet data to ParquetMemoRecord format
+	var parquetRecords []helpers.ParquetMemoRecord
+	for _, row := range parquetData {
+		record := helpers.ParquetMemoRecord{}
+		
+		// Extract date - handle both string and time.Time types
+		if dateVal, ok := row["date"]; ok {
+			switch date := dateVal.(type) {
+			case string:
+				record.Date = date
+			case time.Time:
+				record.Date = date.Format("2006-01-02")
+			default:
+				// Try to convert to string as fallback
+				record.Date = fmt.Sprintf("%v", dateVal)
+			}
+		}
+		
+		// Extract title
+		if titleVal, ok := row["title"]; ok {
+			if titleStr, ok := titleVal.(string); ok {
+				record.Title = titleStr
+			}
+		}
+		
+		// Extract authors (handle array format)
+		if authorsVal, ok := row["authors"]; ok {
+			switch authors := authorsVal.(type) {
+			case []interface{}:
+				for _, author := range authors {
+					if authorStr, ok := author.(string); ok {
+						record.Authors = append(record.Authors, authorStr)
+					}
+				}
+			case string:
+				// Handle single author as string
+				record.Authors = []string{authors}
+			}
+		}
+		
+		// Extract tags (handle array format)
+		if tagsVal, ok := row["tags"]; ok {
+			switch tags := tagsVal.(type) {
+			case []interface{}:
+				for _, tag := range tags {
+					if tagStr, ok := tag.(string); ok {
+						record.Tags = append(record.Tags, tagStr)
+					}
+				}
+			case string:
+				// Handle single tag as string
+				record.Tags = []string{tags}
+			}
+		}
+		
+		// Extract URL from file_path
+		if filePathVal, ok := row["file_path"]; ok {
+			if filePath, ok := filePathVal.(string); ok && filePath != "" {
+				// Convert file_path like "consulting/navigate/social-proof.md" to URL
+				// Remove .md extension and construct full URL
+				urlPath := strings.TrimSuffix(filePath, ".md")
+				record.URL = fmt.Sprintf("https://memo.d.foundation/%s/", urlPath)
+			}
+		}
+		
+		// Extract content
+		if contentVal, ok := row["content"]; ok {
+			if contentStr, ok := contentVal.(string); ok {
+				record.Content = contentStr
+			}
+		}
+		
+		parquetRecords = append(parquetRecords, record)
+	}
+	
+	// Transform parquet records to MemoLog models using helper
+	memoLogs, err := h.dataTransformer.TransformParquetRecords(parquetRecords)
+	if err != nil {
+		h.logger.Warnf("Failed to transform parquet data, falling back to database: %v", err)
+		return h.store.MemoLog.GetLimitByTimeRange(h.repo.DB(), &start, &end, 1000)
+	}
+	
+	h.logger.Infof("Successfully transformed %d parquet records to MemoLog models", len(memoLogs))
+	
+	// Filter results by date range again to ensure accuracy (parquet data might have timezone issues)
+	var filteredMemos []model.MemoLog
+	for _, memo := range memoLogs {
+		var memoDate time.Time
+		if memo.PublishedAt != nil {
+			memoDate = *memo.PublishedAt
+		} else {
+			memoDate = memo.CreatedAt
+		}
+		
+		if (memoDate.Equal(start) || memoDate.After(start)) && 
+		   (memoDate.Equal(end) || memoDate.Before(end)) {
+			filteredMemos = append(filteredMemos, memo)
+		}
+	}
+	
+	h.logger.Infof("Returning %d filtered memos from parquet data", len(filteredMemos))
+	return filteredMemos, nil
+}
+
+
+// getNewAuthorsSimple detects new authors using simple logic: authors with exactly 1 memo total and that memo is in current period
+func (h *handler) getNewAuthorsSimple(currentMemos []model.MemoLog) ([]string, error) {
+	// Extract all unique authors from current period
+	currentAuthors := make(map[string]bool)
+	for _, memo := range currentMemos {
+		for _, author := range memo.AuthorMemoUsernames {
+			if cleanAuthor := strings.TrimSpace(author); cleanAuthor != "" {
+				currentAuthors[strings.ToLower(cleanAuthor)] = true
+			}
+		}
+	}
+
+	if len(currentAuthors) == 0 {
+		return []string{}, nil
+	}
+
+	// Get all-time memos from parquet to count total memos per author
+	julyStart := time.Date(2025, 7, 1, 0, 0, 0, 0, time.UTC)
+	now := time.Now()
+	allTimeMemos, err := h.getMemosFromParquet(julyStart, now, "all-time")
+	if err != nil {
+		h.logger.Error(err, "Failed to get all-time memos from parquet for new author detection")
+		return []string{}, err
+	}
+
+	// Count total memos per author from parquet data
+	authorCounts := make(map[string]int)
+	for _, memo := range allTimeMemos {
+		for _, author := range memo.AuthorMemoUsernames {
+			if cleanAuthor := strings.TrimSpace(author); cleanAuthor != "" {
+				authorKey := strings.ToLower(cleanAuthor)
+				authorCounts[authorKey]++
+			}
+		}
+	}
+
+	// Find authors from current period who have exactly 1 memo total (making them new)
+	var newAuthors []string
+	for currentAuthor := range currentAuthors {
+		if count, exists := authorCounts[currentAuthor]; exists && count == 1 {
+			// Find original case for the author from current memos
+			for _, memo := range currentMemos {
+				for _, author := range memo.AuthorMemoUsernames {
+					if strings.ToLower(strings.TrimSpace(author)) == currentAuthor {
+						newAuthors = append(newAuthors, strings.TrimSpace(author))
+						goto nextAuthor
+					}
+				}
+			}
+			nextAuthor:
+		}
+	}
+
+	h.logger.Infof("Detected %d new authors (simple method): %v", len(newAuthors), newAuthors)
+	return newAuthors, nil
+}
+
+// resolveAuthorsFromParquetByTitle queries parquet file to find actual authors for a given post title
+func (h *handler) resolveAuthorsFromParquetByTitle(title string) ([]string, error) {
+	// Check if parquet querying is disabled
+	if os.Getenv("DISABLE_PARQUET_QUERY") == "true" {
+		h.logger.Debug("Parquet querying disabled via environment variable, skipping author resolution by title")
+		return []string{}, nil
+	}
+	
+	// Check if DuckDB service is available
+	if h.service.DuckDB == nil {
+		h.logger.Debug("DuckDB service not available, skipping author resolution by title")
+		return []string{}, nil
+	}
+	
+	// Clean and prepare title for search
+	cleanTitle := strings.TrimSpace(title)
+	if cleanTitle == "" {
+		return []string{}, nil
+	}
+	
+	h.logger.Debugf("Querying parquet for authors of post: %s", cleanTitle)
+	
+	// Query parquet file for this specific title
+	var parquetURL string
+	if h.service.ParquetSync.IsLocalFileReady() {
+		parquetURL = h.service.ParquetSync.GetLocalFilePath()
+	} else {
+		parquetURL = h.service.ParquetSync.GetRemoteURL()
+	}
+	options := duckdb.QueryOptions{
+		Columns: []string{"title", "authors"}, // Fetch title and authors
+		Filters: []duckdb.QueryFilter{
+			{Column: "title", Operator: "LIKE", Value: "%" + cleanTitle + "%"}, // Fuzzy match on title
+		},
+		OrderBy: []string{"date DESC"},
+		Limit:   10, // Small limit since we're looking for exact match
+		Offset:  0,
+	}
+	
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	
+	parquetData, err := h.service.DuckDB.QueryParquetWithFilters(ctx, parquetURL, options)
+	if err != nil {
+		h.logger.Debugf("Failed to query parquet for title '%s': %v", cleanTitle, err)
+		return []string{}, nil // Return empty rather than error to not break flow
+	}
+	
+	// Find exact title match and extract authors
+	for _, row := range parquetData {
+		if titleVal, ok := row["title"]; ok {
+			if titleStr, ok := titleVal.(string); ok {
+				// Check for exact match (case-insensitive)
+				if strings.EqualFold(strings.TrimSpace(titleStr), cleanTitle) {
+					if authorsVal, ok := row["authors"]; ok {
+						// Extract authors from different possible formats
+						var authors []string
+						switch authorsData := authorsVal.(type) {
+						case []string:
+							authors = authorsData
+						case string:
+							if strings.TrimSpace(authorsData) != "" {
+								authors = []string{authorsData}
+							}
+						case []interface{}:
+							for _, authorInterface := range authorsData {
+								if authorStr, ok := authorInterface.(string); ok {
+									if cleanAuthor := strings.TrimSpace(authorStr); cleanAuthor != "" {
+										authors = append(authors, cleanAuthor)
+									}
+								}
+							}
+						}
+						
+						// Clean and validate authors
+						var validAuthors []string
+						for _, author := range authors {
+							cleanAuthor := strings.TrimSpace(author)
+							if cleanAuthor != "" && !strings.Contains(cleanAuthor, ",") {
+								validAuthors = append(validAuthors, cleanAuthor)
+							}
+						}
+						
+						h.logger.Debugf("Found %d authors for title '%s': %v", len(validAuthors), cleanTitle, validAuthors)
+						return validAuthors, nil
+					}
+				}
+			}
+		}
+	}
+	
+	h.logger.Debugf("No exact match found in parquet for title: %s", cleanTitle)
+	return []string{}, nil
 }
 
 // CreateScheduledEvent create new DF guild discord event

@@ -11,6 +11,7 @@ type IHandler interface {
 	SyncMemo(c *gin.Context)
 	SweepMemo(c *gin.Context)
 	NotifyWeeklyMemos(c *gin.Context)
+	NotifyMonthlyMemos(c *gin.Context)
 	CreateScheduledEvent(c *gin.Context)
 	ListScheduledEvent(c *gin.Context)
 	SetScheduledEventSpeakers(c *gin.Context)
