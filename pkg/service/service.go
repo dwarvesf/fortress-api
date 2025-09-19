@@ -18,6 +18,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/service/communitynft"
 	"github.com/dwarvesf/fortress-api/pkg/service/currency"
 	"github.com/dwarvesf/fortress-api/pkg/service/discord"
+	"github.com/dwarvesf/fortress-api/pkg/service/duckdb"
 	"github.com/dwarvesf/fortress-api/pkg/service/evm"
 	"github.com/dwarvesf/fortress-api/pkg/service/github"
 	googleauth "github.com/dwarvesf/fortress-api/pkg/service/google"
@@ -35,6 +36,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/service/mochiprofile"
 	"github.com/dwarvesf/fortress-api/pkg/service/notion"
 	"github.com/dwarvesf/fortress-api/pkg/service/ogifmemosummarizer"
+	"github.com/dwarvesf/fortress-api/pkg/service/parquet"
 	"github.com/dwarvesf/fortress-api/pkg/service/reddit"
 	"github.com/dwarvesf/fortress-api/pkg/service/sendgrid"
 	"github.com/dwarvesf/fortress-api/pkg/service/tono"
@@ -48,6 +50,7 @@ type Service struct {
 	Cache         *cache.Cache
 	Currency      currency.IService
 	Discord       discord.IService
+	DuckDB        duckdb.IService
 	Github        github.IService
 	Google        googleauth.IService
 	GoogleStorage googlestorage.IService
@@ -60,6 +63,7 @@ type Service struct {
 	MochiPay      mochipay.IService
 	MochiProfile  mochiprofile.IService
 	Notion        notion.IService
+	ParquetSync   parquet.ISyncService
 	Sendgrid      sendgrid.IService
 	Wise          wise.IService
 	BaseClient    evm.IService
@@ -188,11 +192,19 @@ func New(cfg *config.Config, store *store.Store, repo store.DBRepo) (*Service, e
 
 	difySvc := ogifmemosummarizer.New(cfg)
 
+	duckDBSvc, err := duckdb.New(logger.L)
+	if err != nil {
+		return nil, err
+	}
+
+	parquetSvc := parquet.NewSyncService(cfg.Parquet, logger.L)
+
 	return &Service{
 		Basecamp:      basecamp.New(store, repo, cfg, &bc, logger.L),
 		Cache:         cch,
 		Currency:      Currency,
 		Discord:       discord.New(cfg),
+		DuckDB:        duckDBSvc,
 		Github:        github.New(cfg, logger.L),
 		Google:        googleAuthSvc,
 		GoogleStorage: gcsSvc,
@@ -205,6 +217,7 @@ func New(cfg *config.Config, store *store.Store, repo store.DBRepo) (*Service, e
 		MochiPay:      mochipay.New(cfg, logger.L),
 		MochiProfile:  mochiprofile.New(cfg, logger.L),
 		Notion:        notion.New(cfg.Notion.Secret, cfg.Notion.Databases.Project, logger.L, repo.DB()),
+		ParquetSync:   parquetSvc,
 		Sendgrid:      sendgrid.New(cfg.Sendgrid.APIKey, cfg, logger.L),
 		Wise:          wise.New(cfg, logger.L),
 		BaseClient:    baseClient,

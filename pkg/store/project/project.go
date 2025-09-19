@@ -107,7 +107,8 @@ func (s *store) All(db *gorm.DB, input GetListProjectInput, pagination model.Pag
 		return db.Joins("JOIN projects ON project_members.project_id = projects.id").
 			Where("project_members.deleted_at IS NULL AND (projects.status = ? OR project_members.status = ?)",
 				model.ProjectStatusClosed,
-				model.ProjectMemberStatusActive)
+				model.ProjectMemberStatusActive).
+			Order("project_members.created_at ASC")
 	}).
 		Preload("ProjectMembers.Employee").
 		Preload("ProjectNotion", "deleted_at IS NULL").

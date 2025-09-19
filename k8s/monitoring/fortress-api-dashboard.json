@@ -21,7 +21,7 @@
   "panels": [
     {
       "collapsed": false,
-      "datasource": null,
+      "datasource": "prometheus-1",
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -34,7 +34,7 @@
       "type": "row"
     },
     {
-      "datasource": "glp-prometheus-server",
+      "datasource": "prometheus-1",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -95,7 +95,7 @@
       "type": "stat"
     },
     {
-      "datasource": "glp-prometheus-server",
+      "datasource": "prometheus-1",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -156,7 +156,7 @@
       "type": "stat"
     },
     {
-      "datasource": "glp-prometheus-server",
+      "datasource": "prometheus-1",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -217,7 +217,7 @@
       "type": "stat"
     },
     {
-      "datasource": "glp-prometheus-server",
+      "datasource": "prometheus-1",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -278,7 +278,7 @@
       "type": "stat"
     },
     {
-      "datasource": "glp-prometheus-server",
+      "datasource": "prometheus-1",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -339,7 +339,7 @@
       "type": "stat"
     },
     {
-      "datasource": "glp-prometheus-server",
+      "datasource": "prometheus-1",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -397,7 +397,7 @@
     },
     {
       "collapsed": false,
-      "datasource": null,
+      "datasource": "prometheus-1",
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -410,7 +410,7 @@
       "type": "row"
     },
     {
-      "datasource": "glp-prometheus-server",
+      "datasource": "prometheus-1",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -486,7 +486,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": "glp-prometheus-server",
+      "datasource": "prometheus-1",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -574,7 +574,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": "glp-prometheus-server",
+      "datasource": "prometheus-1",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -663,7 +663,7 @@
     },
     {
       "collapsed": false,
-      "datasource": null,
+      "datasource": "prometheus-1",
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -676,7 +676,7 @@
       "type": "row"
     },
     {
-      "datasource": "glp-prometheus-server",
+      "datasource": "prometheus-1",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -758,7 +758,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": "glp-prometheus-server",
+      "datasource": "prometheus-1",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -835,7 +835,7 @@
     },
     {
       "collapsed": false,
-      "datasource": null,
+      "datasource": "prometheus-1",
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -848,7 +848,7 @@
       "type": "row"
     },
     {
-      "datasource": "glp-prometheus-server",
+      "datasource": "prometheus-1",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -924,7 +924,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": "glp-prometheus-server",
+      "datasource": "prometheus-1",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1001,7 +1001,7 @@
     },
     {
       "collapsed": false,
-      "datasource": null,
+      "datasource": "prometheus-1",
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -1014,7 +1014,7 @@
       "type": "row"
     },
     {
-      "datasource": "glp-prometheus-server",
+      "datasource": "prometheus-1",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1091,7 +1091,7 @@
     },
     {
       "collapsed": false,
-      "datasource": null,
+      "datasource": "prometheus-1",
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -1104,7 +1104,7 @@
       "type": "row"
     },
     {
-      "datasource": "glp-prometheus-server",
+      "datasource": "prometheus-1",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1170,13 +1170,13 @@
       "pluginVersion": "8.0.0",
       "targets": [
         {
-          "expr": "sum(go_memstats_heap_alloc_bytes{namespace=\"fortress-prod\", job=\"api\"})",
+          "expr": "go_memstats_heap_alloc_bytes",
           "interval": "",
           "legendFormat": "Heap Allocated",
           "refId": "A"
         },
         {
-          "expr": "sum(go_memstats_heap_sys_bytes{namespace=\"fortress-prod\", job=\"api\"})",
+          "expr": "go_memstats_heap_sys_bytes",
           "interval": "",
           "legendFormat": "Heap System",
           "refId": "B"
@@ -1186,7 +1186,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": "glp-prometheus-server",
+      "datasource": "prometheus-1",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1252,7 +1252,7 @@
       "pluginVersion": "8.0.0",
       "targets": [
         {
-          "expr": "sum(go_goroutines{namespace=\"fortress-prod\", job=\"api\"})",
+          "expr": "go_goroutines",
           "interval": "",
           "legendFormat": "Goroutines",
           "refId": "A"
@@ -1262,7 +1262,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": "glp-prometheus-server",
+      "datasource": "prometheus-1",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1328,7 +1328,7 @@
       "pluginVersion": "8.0.0",
       "targets": [
         {
-          "expr": "sum(rate(go_gc_duration_seconds_sum{namespace=\"fortress-prod\", job=\"api\"}[5m]))",
+          "expr": "rate(go_gc_duration_seconds_sum[5m])",
           "interval": "",
           "legendFormat": "GC Duration",
           "refId": "A"

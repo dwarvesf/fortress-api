@@ -61,6 +61,15 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Start parquet background sync service
+	if svc.ParquetSync != nil {
+		if err := svc.ParquetSync.StartBackgroundSync(ctx); err != nil {
+			log.Warnf("Failed to start parquet sync service: %v", err)
+		} else {
+			log.Info("Parquet sync service started successfully")
+		}
+	}
+
 	queue := make(chan model.WorkerMessage, 1000)
 	w := worker.New(ctx, queue, svc, log)
 

@@ -1,4 +1,4 @@
-FROM golang:1.21-alpine
+FROM golang:1.25-alpine
 RUN mkdir /build
 WORKDIR /build
 COPY . .
@@ -9,9 +9,9 @@ RUN go install -v github.com/rubenv/sql-migrate/sql-migrate@v1.2.0
 RUN go install -v github.com/golang/mock/mockgen@v1.6.0
 RUN go install -v github.com/vektra/mockery/v2@v2.15.0
 RUN go install -v github.com/swaggo/swag/cmd/swag@v1.8.7
-RUN go install -v github.com/cosmtrek/air@latest
+RUN go install -v github.com/air-verse/air@latest
 
-FROM golang:1.21-alpine
+FROM golang:1.25-alpine
 RUN apk --no-cache add ca-certificates
 RUN ln -fs /usr/share/zoneinfo/Asia/Ho_Chi_Minh /etc/localtime
 
