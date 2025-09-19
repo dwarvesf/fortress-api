@@ -1,15 +1,20 @@
-FROM surnet/alpine-wkhtmltopdf:3.17.0-0.12.6-full as wkhtmltopdf
+FROM surnet/alpine-wkhtmltopdf:3.17.0-0.12.6-full AS wkhtmltopdf
 
-FROM golang:1.25-alpine as builder
-RUN mkdir /build
+FROM golang:1.25 AS builder
+
 WORKDIR /build
+
+COPY go.mod go.sum ./
+RUN go mod download
+
 COPY . .
 
-ENV GOOS=linux GOARCH=amd64 CGO_ENABLED=0
-RUN go install -v ./...
+ENV CGO_ENABLED=1 GOOS=linux GOARCH=amd64
+RUN go build  -v ./cmd/server ./cmd/mcp-server
+RUN go install -v ./cmd/server ./cmd/mcp-server
 RUN go install -v github.com/rubenv/sql-migrate/sql-migrate@v1.4.0
 
-FROM alpine:3.18
+FROM alpine:3.18 AS runtime
 
 RUN echo http://dl-cdn.alpinelinux.org/alpine/edge/community >> /etc/apk/repositories && \
   echo http://dl-cdn.alpinelinux.org/alpine/edge/main >> /etc/apk/repositories && \
@@ -22,7 +27,9 @@ RUN apk update && \
   tzdata
 
 RUN apk add --no-cache \
+  libc6-compat \
   libstdc++ \
+  libgcc \
   libx11 \
   libxrender \
   libxext \
