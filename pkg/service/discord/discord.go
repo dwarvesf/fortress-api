@@ -886,7 +886,6 @@ func (d *discordClient) SendMonthlyMemosMessage(
 		}
 	}
 
-
 	// Helper function to format Discord mention from username
 	formatDiscordMention := func(username string) string {
 		if discordID, err := getDiscordIDByUsername(username); err == nil && discordID != "" {
@@ -1020,6 +1019,8 @@ func (d *discordClient) SendLeaderboardMessage(
 	}
 
 	// Add ICY reward information and encouragement message
+	// Disable ICY reward display temporarily
+	totalICY = 0
 	if totalICY > 0 {
 		content.WriteString(fmt.Sprintf("\n💰 **Total ICY reward: %d ICY**\n", totalICY))
 	}
