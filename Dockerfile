@@ -1,6 +1,5 @@
-FROM surnet/alpine-wkhtmltopdf:3.17.0-0.12.6-full AS wkhtmltopdf
+FROM golang:1.25-bookworm AS builder
 
-FROM golang:1.25 AS builder
 
 WORKDIR /build
 
@@ -10,43 +9,35 @@ RUN go mod download
 COPY . .
 
 ENV CGO_ENABLED=1 GOOS=linux GOARCH=amd64
-RUN go build  -v ./cmd/server ./cmd/mcp-server
-RUN go install -v ./cmd/server ./cmd/mcp-server
-RUN go install -v github.com/rubenv/sql-migrate/sql-migrate@v1.4.0
+RUN go install -v ./...
+RUN CGO_ENABLED=0 go install -v github.com/rubenv/sql-migrate/sql-migrate@v1.4.0
 
-FROM alpine:3.18 AS runtime
+FROM debian:bookworm-slim AS runtime
 
-RUN echo http://dl-cdn.alpinelinux.org/alpine/edge/community >> /etc/apk/repositories && \
-  echo http://dl-cdn.alpinelinux.org/alpine/edge/main >> /etc/apk/repositories && \
-  echo http://dl-cdn.alpinelinux.org/alpine/v3.8/main >> /etc/apk/repositories
+ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apk update && \
-  apk add --no-cache \
-  bash \
-  openssl-dev \
-  tzdata
-
-RUN apk add --no-cache \
-  libc6-compat \
-  libstdc++ \
-  libgcc \
-  libx11 \
-  libxrender \
-  libxext \
-  libssl1.1 \
-  ca-certificates \
-  fontconfig \
-  freetype \
-  ttf-dejavu \
-  ttf-droid \
-  ttf-freefont \
-  ttf-liberation \
-  ttf-ubuntu-font-family
+RUN apt-get update && \
+  apt-get install -y --no-install-recommends \
+    bash \
+    ca-certificates \
+    fontconfig \
+    fonts-dejavu-core \
+    fonts-droid-fallback \
+    fonts-freefont-ttf \
+    fonts-liberation \
+    fonts-noto-core \
+    libfreetype6 \
+    libx11-6 \
+    libxext6 \
+    libxrender1 \
+    libssl3 \
+    libstdc++6 \
+    xfonts-75dpi \
+    tzdata \
+    wkhtmltopdf && \
+  rm -rf /var/lib/apt/lists/*
 
 RUN ln -fs /usr/share/zoneinfo/Asia/Ho_Chi_Minh /etc/localtime
-
-COPY --from=wkhtmltopdf /bin/wkhtmltopdf /usr/bin/wkhtmltopdf
-RUN chmod +x /usr/bin/wkhtmltopdf
 
 WORKDIR /
 COPY --from=builder /go/bin/* /usr/bin/
