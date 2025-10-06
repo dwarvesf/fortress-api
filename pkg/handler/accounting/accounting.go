@@ -195,7 +195,7 @@ func (h handler) createSalaryTodo(outGroupID int, projectID int, month int, year
 func (h handler) createTodoInInGroup(inGroupID int, projectID int) error {
 	l := h.logger.Fields(logger.Fields{
 		"handler": "Accounting",
-		"method":  "createSalaryTodo",
+		"method":  "createTodoInInGroup",
 	})
 	// Only create monthly invoice todos for Time & Material projects
 	// Fixed-Cost projects should not receive automatic monthly invoices
@@ -206,6 +206,8 @@ func (h handler) createTodoInInGroup(inGroupID int, projectID int) error {
 	if err != nil {
 		return err
 	}
+
+	
 	now := time.Now()
 	month := int(now.Month())
 	year := now.Year()
