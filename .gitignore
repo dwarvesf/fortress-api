@@ -25,3 +25,6 @@ main
 
 #claude
 .mcp.json
+
+# codex
+.mcp.toml
