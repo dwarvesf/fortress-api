@@ -195,12 +195,19 @@ func (h handler) createSalaryTodo(outGroupID int, projectID int, month int, year
 func (h handler) createTodoInInGroup(inGroupID int, projectID int) error {
 	l := h.logger.Fields(logger.Fields{
 		"handler": "Accounting",
-		"method":  "createSalaryTodo",
+		"method":  "createTodoInInGroup",
 	})
-	activeProjects, _, err := h.store.Project.All(h.repo.DB(), project.GetListProjectInput{Statuses: []string{model.ProjectStatusActive.String()}}, model.Pagination{})
+	// Only create monthly invoice todos for Time & Material projects
+	// Fixed-Cost projects should not receive automatic monthly invoices
+	activeProjects, _, err := h.store.Project.All(h.repo.DB(), project.GetListProjectInput{
+		Statuses: []string{model.ProjectStatusActive.String()},
+		Types:    []string{model.ProjectTypeTimeMaterial.String()},
+	}, model.Pagination{})
 	if err != nil {
 		return err
 	}
+
+	
 	now := time.Now()
 	month := int(now.Month())
 	year := now.Year()
