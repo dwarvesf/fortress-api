@@ -15,7 +15,7 @@ func (h *handler) GetInvoiceViaBasecampTitle(msg *model.BasecampWebhookMessage) 
 		return nil, nil
 	}
 
-	reTitle := regexp.MustCompile(`.*([1-9]|0[1-9]|1[0-2])/(20[0-9]{2}) - #(20[0-9]+-[A-Z]+-[0-9]+)`)
+	reTitle := regexp.MustCompile(`.*([1-9]|0[1-9]|1[0-2])/(20[0-9]{2}) - #(20[0-9]+-[A-Z0-9]+-[0-9]+)`)
 	invoiceInfo := reTitle.FindStringSubmatch(msg.Recording.Title)
 	if len(invoiceInfo) != 4 {
 		return nil, fmt.Errorf(`Todo title have wrong format`)
