@@ -316,3 +316,8 @@ func (c *controller) getInvoiceBonus(items []model.InvoiceItem) float64 {
 	}
 	return bonus
 }
+
+// GenerateInvoicePDFForTest is a public method for testing PDF generation
+func (c *controller) GenerateInvoicePDFForTest(l logger.Logger, invoice *model.Invoice, items []model.InvoiceItem) error {
+	return c.generateInvoicePDF(l, invoice, items)
+}
