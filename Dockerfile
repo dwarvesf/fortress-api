@@ -33,9 +33,17 @@ RUN apt-get update && \
     libssl3 \
     libstdc++6 \
     xfonts-75dpi \
+    xfonts-base \
+    libjpeg62-turbo \
     tzdata \
-    wkhtmltopdf && \
+    wget && \
   rm -rf /var/lib/apt/lists/*
+
+# Install wkhtmltopdf with patched Qt (required for selectable text in PDFs)
+# DO NOT use apt-get install wkhtmltopdf - it installs unpatched version that rasterizes text
+RUN wget -q https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-3/wkhtmltox_0.12.6.1-3.bookworm_amd64.deb && \
+  dpkg -i wkhtmltox_0.12.6.1-3.bookworm_amd64.deb && \
+  rm wkhtmltox_0.12.6.1-3.bookworm_amd64.deb
 
 RUN ln -fs /usr/share/zoneinfo/Asia/Ho_Chi_Minh /etc/localtime
 
