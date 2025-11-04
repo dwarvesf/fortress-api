@@ -16,6 +16,7 @@ mcp-server
 .env.dev
 .env.docker
 .current-session
+.env.local
 
 # dependencies
 vendor

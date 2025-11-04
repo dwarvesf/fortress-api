@@ -34,15 +34,17 @@
 							<tr style=3D"margin:0px;padding:0px">
 								<td style=3D"padding:0px;white-space:nowrap">
 									<p style=3D"color:rgb(103,105,131);font-size:11px;line-height:15px;margin:14px 0px 0px 3px"><b
-											style=3D"color:rgb(212,46,96)">P:=C2=A0</b><a href=3D"tel:+842822460246"
-											style=3D"text-decoration:none;color:rgb(103,103,131)" target=3D"_blank">(+84) 28 2246
-											0246</a>=C2=A0|=C2=A0<b style=3D"color:rgb(212,46,96)">W:=C2=A0</b><a
+											style=3D"color:rgb(212,46,96)">WA:=C2=A0</b><a href=3D"tel:+18184086969"
+											style=3D"text-decoration:none;color:rgb(103,103,131)" target=3D"_blank">+1 (818) 408 
+											6969</a>=C2=A0|=C2=A0<b style=3D"color:rgb(212,46,96)">W:=C2=A0</b><a
 											href=3D"https://dwarves.foundation/" rel=3D"noopener noreferrer"
 											style=3D"text-decoration:none;color:rgb(103,103,131)" target=3D"_blank">dwarves.foundation</a>
 									</p>
+									<p style=3D"color:rgb(103,105,131);font-size:11px;line-height:15px;margin:4px 0px 10px 3px">
+											<b style=3D"color:rgb(212,46,96)">A:</b>=C2=A0131 Continental Drive, Suite 305, Newark, DE 19713, US
+									</p>
 									<p style=3D"color:rgb(103,105,131);font-size:11px;line-height:15px;margin:4px 0px 10px 3px"><b
-											style=3D"color:rgb(212,46,96)">A:</b>=C2=A0222 Dien Bien Phu, D. 3, HCMC Vietnam
-										700000</p>
+											style=3D"color:rgb(212,46,96)"></p>
 								</td>
 							</tr>
 							<tr style=3D"margin:0px;padding:0px">

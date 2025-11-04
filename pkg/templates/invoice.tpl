@@ -1,5 +1,5 @@
 Mime-Version: 1.0
-From: "Accounting @ Dwarves Ventures" <accounting@dwarvesv.com>
+From: "Accounting @ Dwarves Foundation" <accounting@d.foundation>
 To: {{.Email}}
 CC: {{gatherAddress}}
 Subject: Dwarves Foundation - Invoice #{{.Number}} for {{toString .Month}} {{.Year}} work on {{.Project.Name}}
