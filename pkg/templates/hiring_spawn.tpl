@@ -1,5 +1,5 @@
 Mime-Version: 1.0
-From: "Dwarvesv Team" <team@dwarvesv.com>
+From: "Dwarvesv Team" <team@d.foundation>
 To: spawn@dwarvesv.com
 Subject: Apply job {{.Role}} from {{.Email}}.
 Content-Type: multipart/mixed; boundary=main

@@ -131,7 +131,11 @@ func New(cfg *config.Config, store *store.Store, repo store.DBRepo) (*Service, e
 		ClientID:     cfg.Google.ClientID,
 		ClientSecret: cfg.Google.ClientSecret,
 		Endpoint:     google.Endpoint,
-		Scopes:       []string{gmail.MailGoogleComScope},
+		Scopes: []string{
+			gmail.MailGoogleComScope,
+			"https://www.googleapis.com/auth/gmail.settings.basic",
+			"https://www.googleapis.com/auth/gmail.settings.sharing",
+		},
 	}
 
 	googleMailSvc := googlemail.New(
