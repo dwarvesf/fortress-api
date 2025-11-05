@@ -82,6 +82,13 @@ func (g *googleService) SendInvoiceMail(invoice *model.Invoice) (msgID string, e
 		return "", err
 	}
 
+	// Verify accounting@d.foundation alias before sending
+	id := g.appConfig.Google.AccountingEmailID
+	verified, err := g.IsAliasVerified(id, "accounting@d.foundation")
+	if err != nil || !verified {
+		return "", ErrAliasNotVerified
+	}
+
 	if !mailutils.Email(invoice.Email) {
 		return "", errors.New("email invalid")
 	}
@@ -126,7 +133,6 @@ func (g *googleService) SendInvoiceMail(invoice *model.Invoice) (msgID string, e
 	if err != nil {
 		return
 	}
-	id := g.appConfig.Google.AccountingEmailID
 
 	threadID, err := g.sendEmail(encodedEmail, id)
 	if err != nil {
@@ -151,11 +157,16 @@ func (g *googleService) SendInvoiceThankYouMail(invoice *model.Invoice) (err err
 		return err
 	}
 
+	// Verify accounting@d.foundation alias before sending
+	id := g.appConfig.Google.AccountingEmailID
+	verified, err := g.IsAliasVerified(id, "accounting@d.foundation")
+	if err != nil || !verified {
+		return ErrAliasNotVerified
+	}
+
 	if invoice.ThreadID == "" {
 		return ErrMissingThreadID
 	}
-
-	id := g.appConfig.Google.AccountingEmailID
 	thread, err := g.service.Users.Threads.Get(id, invoice.ThreadID).Do()
 	if err != nil {
 		return err
@@ -217,7 +228,12 @@ func (g *googleService) SendInvoiceOverdueMail(invoice *model.Invoice) error {
 		return err
 	}
 
+	// Verify accounting@d.foundation alias before sending
 	id := g.appConfig.Google.AccountingEmailID
+	verified, err := g.IsAliasVerified(id, "accounting@d.foundation")
+	if err != nil || !verified {
+		return ErrAliasNotVerified
+	}
 	thread, err := g.getEmailThread(invoice.ThreadID, id)
 	if err != nil {
 		return err
@@ -345,7 +361,7 @@ func (g *googleService) SendPayrollPaidMail(p *model.Payroll) (err error) {
 		p.Employee.TeamEmail = "benjamin@d.foundation"
 	}
 
-	if err := g.ensureToken(g.appConfig.Google.AccountingGoogleRefreshToken); err != nil {
+	if err := g.ensureToken(g.appConfig.Google.TeamGoogleRefreshToken); err != nil {
 		return err
 	}
 
@@ -353,7 +369,12 @@ func (g *googleService) SendPayrollPaidMail(p *model.Payroll) (err error) {
 		return err
 	}
 
-	id := g.appConfig.Google.AccountingEmailID
+	// Verify team@d.foundation alias before sending
+	id := g.appConfig.Google.TeamEmailID
+	verified, err := g.IsAliasVerified(id, "team@d.foundation")
+	if err != nil || !verified {
+		return ErrAliasNotVerified
+	}
 
 	if !mailutils.Email(p.Employee.TeamEmail) {
 		return errors.New("email invalid")
@@ -362,7 +383,7 @@ func (g *googleService) SendPayrollPaidMail(p *model.Payroll) (err error) {
 	funcMap := g.getPaidSuccessfulEmailFuncMap(p)
 	encodedEmail, err := composeMailContent(g.appConfig,
 		&MailParseInfo{
-			accountingUser,
+			teamEmail,
 			"paidPayroll.tpl",
 			p,
 			funcMap,
@@ -440,6 +461,13 @@ func (g *googleService) SendInvitationMail(invitation *model.InvitationEmail) (e
 		return err
 	}
 
+	// Verify team@d.foundation alias before sending
+	id := g.appConfig.Google.TeamEmailID
+	verified, err := g.IsAliasVerified(id, "team@d.foundation")
+	if err != nil || !verified {
+		return ErrAliasNotVerified
+	}
+
 	invitation.Link = strings.Replace(invitation.Link, "=", "=3D", -1)
 
 	encodedEmail, err := composeMailContent(g.appConfig,
@@ -452,7 +480,6 @@ func (g *googleService) SendInvitationMail(invitation *model.InvitationEmail) (e
 	if err != nil {
 		return err
 	}
-	id := g.appConfig.Google.TeamEmailID
 
 	_, err = g.sendEmail(encodedEmail, id)
 	return err
@@ -468,6 +495,13 @@ func (g *googleService) SendOffboardingMail(offboarding *model.OffboardingEmail)
 		return err
 	}
 
+	// Verify team@d.foundation alias before sending
+	id := g.appConfig.Google.TeamEmailID
+	verified, err := g.IsAliasVerified(id, "team@d.foundation")
+	if err != nil || !verified {
+		return ErrAliasNotVerified
+	}
+
 	encodedEmail, err := composeMailContent(g.appConfig,
 		&MailParseInfo{
 			teamEmail,
@@ -478,8 +512,80 @@ func (g *googleService) SendOffboardingMail(offboarding *model.OffboardingEmail)
 	if err != nil {
 		return err
 	}
-	id := g.appConfig.Google.TeamEmailID
 
 	_, err = g.sendEmail(encodedEmail, id)
 	return err
+}
+
+// ListSendAsAliases lists all SendAs aliases for the given user
+func (g *googleService) ListSendAsAliases(userId string) ([]*gmail.SendAs, error) {
+	if g.service == nil {
+		return nil, errors.New("gmail service not initialized")
+	}
+
+	result, err := g.service.Users.Settings.SendAs.List(userId).Do()
+	if err != nil {
+		return nil, err
+	}
+
+	return result.SendAs, nil
+}
+
+// GetSendAsAlias gets a specific SendAs alias for the given user
+func (g *googleService) GetSendAsAlias(userId, email string) (*gmail.SendAs, error) {
+	if g.service == nil {
+		return nil, errors.New("gmail service not initialized")
+	}
+
+	sendAs, err := g.service.Users.Settings.SendAs.Get(userId, email).Do()
+	if err != nil {
+		return nil, err
+	}
+
+	return sendAs, nil
+}
+
+// CreateSendAsAlias creates a new SendAs alias for the given user
+func (g *googleService) CreateSendAsAlias(userId, email, displayName string) (*gmail.SendAs, error) {
+	if g.service == nil {
+		return nil, errors.New("gmail service not initialized")
+	}
+
+	sendAs := &gmail.SendAs{
+		SendAsEmail:    email,
+		DisplayName:    displayName,
+		ReplyToAddress: email,
+		TreatAsAlias:   true,
+	}
+
+	created, err := g.service.Users.Settings.SendAs.Create(userId, sendAs).Do()
+	if err != nil {
+		return nil, err
+	}
+
+	return created, nil
+}
+
+// VerifySendAsAlias resends the verification email for a SendAs alias
+func (g *googleService) VerifySendAsAlias(userId, email string) error {
+	if g.service == nil {
+		return errors.New("gmail service not initialized")
+	}
+
+	err := g.service.Users.Settings.SendAs.Verify(userId, email).Do()
+	return err
+}
+
+// IsAliasVerified checks if a SendAs alias is verified
+func (g *googleService) IsAliasVerified(userId, email string) (bool, error) {
+	if g.service == nil {
+		return false, errors.New("gmail service not initialized")
+	}
+
+	sendAs, err := g.service.Users.Settings.SendAs.Get(userId, email).Do()
+	if err != nil {
+		return false, err
+	}
+
+	return sendAs.VerificationStatus == "accepted", nil
 }

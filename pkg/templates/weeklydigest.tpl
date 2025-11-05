@@ -1,5 +1,5 @@
 Mime-Version: 1.0
-From: "Team @ Dwarves Ventures" <team@dwarvesv.com>
+From: "Team @ Dwarves Ventures" <team@d.foundation>
 To: f@dwarvesv.com, staff@dwarvesv.com, probation@dwarvesv.com
 Subject: {{.Title}}
 Content-Type: multipart/mixed; boundary=main

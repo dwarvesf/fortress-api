@@ -13,8 +13,7 @@ Content-Transfer-Encoding: quoted-printable
 	Hi <b>{{userFirstName}}</b>,
 	<br /><br />
 	<div>
-		Below is your payslip of {{formattedCurrentMonth}} {{.Year}}. If you have any question, please contact <a
-			href="mailto:huy@d.foundation">huy@d.foundation</a>.
+		Below is your payslip of {{formattedCurrentMonth}} {{.Year}}. If you have any questions, please open a ticket in our Discord support channel.
 	</div>
 	<br />
 	<ul>
