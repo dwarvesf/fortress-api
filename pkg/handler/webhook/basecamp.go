@@ -11,10 +11,11 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/view"
 )
 
-func basecampWebhookMessageFromCtx(c *gin.Context) (model.BasecampWebhookMessage, error) {
+func basecampWebhookMessageFromCtx(c *gin.Context, l logger.Logger) (model.BasecampWebhookMessage, error) {
 	var msg model.BasecampWebhookMessage
 	err := msg.Decode(msg.Read(c.Request.Body))
 	if err != nil {
+		l.Error(err, "failed to decode basecamp webhook message JSON")
 		return msg, err
 	}
 	return msg, nil
@@ -22,7 +23,12 @@ func basecampWebhookMessageFromCtx(c *gin.Context) (model.BasecampWebhookMessage
 
 // ValidateBasecampExpense dry-run expense request for validation
 func (h *handler) ValidateBasecampExpense(c *gin.Context) {
-	msg, err := basecampWebhookMessageFromCtx(c)
+	l := h.logger.Fields(logger.Fields{
+		"handler": "basecamp",
+		"method":  "ValidateBasecampExpense",
+	})
+
+	msg, err := basecampWebhookMessageFromCtx(c, l)
 	if err != nil {
 		c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, ""))
 		return
@@ -39,7 +45,12 @@ func (h *handler) ValidateBasecampExpense(c *gin.Context) {
 
 // CreateBasecampExpense runs expense process in basecamp
 func (h *handler) CreateBasecampExpense(c *gin.Context) {
-	msg, err := basecampWebhookMessageFromCtx(c)
+	l := h.logger.Fields(logger.Fields{
+		"handler": "basecamp",
+		"method":  "CreateBasecampExpense",
+	})
+
+	msg, err := basecampWebhookMessageFromCtx(c, l)
 	if err != nil {
 		c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, ""))
 		return
@@ -56,7 +67,12 @@ func (h *handler) CreateBasecampExpense(c *gin.Context) {
 
 // UncheckBasecampExpense will remove expesne record after expense todo complete
 func (h *handler) UncheckBasecampExpense(c *gin.Context) {
-	msg, err := basecampWebhookMessageFromCtx(c)
+	l := h.logger.Fields(logger.Fields{
+		"handler": "basecamp",
+		"method":  "UncheckBasecampExpense",
+	})
+
+	msg, err := basecampWebhookMessageFromCtx(c, l)
 	if err != nil {
 		c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, ""))
 		return
@@ -73,7 +89,12 @@ func (h *handler) UncheckBasecampExpense(c *gin.Context) {
 
 // StoreAccountingTransaction run commpany accouting expense process
 func (h *handler) StoreAccountingTransaction(c *gin.Context) {
-	msg, err := basecampWebhookMessageFromCtx(c)
+	l := h.logger.Fields(logger.Fields{
+		"handler": "basecamp",
+		"method":  "StoreAccountingTransaction",
+	})
+
+	msg, err := basecampWebhookMessageFromCtx(c, l)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
@@ -90,7 +111,12 @@ func (h *handler) StoreAccountingTransaction(c *gin.Context) {
 
 // MarkInvoiceAsPaidViaBasecamp --
 func (h *handler) MarkInvoiceAsPaidViaBasecamp(c *gin.Context) {
-	msg, err := basecampWebhookMessageFromCtx(c)
+	l := h.logger.Fields(logger.Fields{
+		"handler": "basecamp",
+		"method":  "MarkInvoiceAsPaidViaBasecamp",
+	})
+
+	msg, err := basecampWebhookMessageFromCtx(c, l)
 	if err != nil {
 		c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, ""))
 		return

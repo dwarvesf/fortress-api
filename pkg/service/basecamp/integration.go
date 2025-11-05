@@ -12,6 +12,7 @@ import (
 	"github.com/thoas/go-funk"
 	"gorm.io/datatypes"
 
+	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service/currency"
 	"github.com/dwarvesf/fortress-api/pkg/store/expense"
@@ -45,13 +46,24 @@ func (s *Service) ExtractBasecampExpenseAmount(source string) int {
 func (s *Service) CreateBasecampExpense(
 	data BasecampExpenseData,
 ) error {
+	l := s.logger.Fields(logger.Fields{
+		"service":     "basecamp",
+		"method":      "CreateBasecampExpense",
+		"basecampID":  data.BasecampID,
+		"creatorID":   data.CreatorID,
+		"amount":      data.Amount,
+		"currency":    data.CurrencyType,
+	})
+
 	employee, err := s.store.Employee.OneByBasecampID(s.repo.DB(), data.CreatorID)
 	if err != nil {
+		l.AddField("creatorID", data.CreatorID).Error(err, "failed to get employee by basecampID")
 		return errors.New("failed to get employee by basecampID: " + strconv.Itoa(data.BasecampID))
 	}
 
 	c, err := s.store.Currency.GetByName(s.repo.DB(), data.CurrencyType)
 	if err != nil {
+		l.AddField("currencyType", data.CurrencyType).Error(err, "failed to get currency by name")
 		return errors.New("failed to get currency by name: " + data.CurrencyType)
 	}
 
@@ -67,6 +79,11 @@ func (s *Service) CreateBasecampExpense(
 		BasecampID:      data.BasecampID,
 	})
 	if err != nil {
+		l.Fields(logger.Fields{
+			"employeeID": employee.ID,
+			"currencyID": c.ID,
+			"reason":     data.Reason,
+		}).Error(err, "failed to create expense in database")
 		return err
 	}
 
@@ -76,12 +93,19 @@ func (s *Service) CreateBasecampExpense(
 	}
 	bonusBytes, err := json.Marshal(&m)
 	if err != nil {
+		l.AddField("expenseID", e.ID).Error(err, "failed to marshal accounting metadata")
 		return err
 	}
 
 	temp, rate, err := s.Wise.Convert(float64(data.Amount), c.Name, currency.VNDCurrency)
 	if err != nil {
-		return nil
+		l.Fields(logger.Fields{
+			"amount":       data.Amount,
+			"fromCurrency": c.Name,
+			"toCurrency":   currency.VNDCurrency,
+			"expenseID":    e.ID,
+		}).Error(err, "CRITICAL: Wise API currency conversion failed - expense created but conversion rate is 0")
+		return err
 	}
 	am := model.NewVietnamDong(int64(temp))
 
@@ -102,12 +126,22 @@ func (s *Service) CreateBasecampExpense(
 		s.repo.DB(),
 		transaction,
 	); err != nil {
+		l.Fields(logger.Fields{
+			"expenseID":        e.ID,
+			"transactionName":  transaction.Name,
+			"amount":           transaction.Amount,
+			"conversionAmount": transaction.ConversionAmount,
+		}).Error(err, "failed to create accounting transaction")
 		return err
 	}
 
 	e.AccountingTransactionID = &transaction.ID
 
 	if _, err = s.store.Expense.Update(s.repo.DB(), e); err != nil {
+		l.Fields(logger.Fields{
+			"expenseID":              e.ID,
+			"accountingTransactionID": transaction.ID,
+		}).Error(err, "failed to update expense with accounting transaction ID")
 		return err
 	}
 

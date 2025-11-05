@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	bc "github.com/dwarvesf/fortress-api/pkg/service/basecamp"
 	"github.com/dwarvesf/fortress-api/pkg/service/basecamp/consts"
@@ -73,6 +74,14 @@ func (h *handler) basecampExpenseValidate(msg model.BasecampWebhookMessage) erro
 }
 
 func (h *handler) createBasecampExpense(msg model.BasecampWebhookMessage, rawData []byte) error {
+	l := h.logger.Fields(logger.Fields{
+		"handler":     "basecamp_expense",
+		"method":      "createBasecampExpense",
+		"basecampID":  msg.Recording.ID,
+		"creatorID":   msg.Creator.ID,
+		"title":       msg.Recording.Title,
+	})
+
 	commentMessage := h.service.Basecamp.BuildCommentMessage(msg.Recording.Bucket.ID, msg.Recording.ID, consts.CommentCreateExpenseFailed, bcModel.CommentMsgTypeFailed)
 
 	defer func() {
@@ -81,6 +90,7 @@ func (h *handler) createBasecampExpense(msg model.BasecampWebhookMessage, rawDat
 
 	obj, err := h.extractExpenseData(msg)
 	if err != nil {
+		l.Error(err, "failed to extract expense data from basecamp message")
 		return err
 	}
 
@@ -90,11 +100,18 @@ func (h *handler) createBasecampExpense(msg model.BasecampWebhookMessage, rawDat
 
 	err = obj.MetaData.UnmarshalJSON(rawData)
 	if err != nil {
+		l.Error(err, "failed to unmarshal metadata JSON")
 		return err
 	}
 
 	err = h.service.Basecamp.CreateBasecampExpense(*obj)
 	if err != nil {
+		l.Fields(logger.Fields{
+			"amount":       obj.Amount,
+			"currency":     obj.CurrencyType,
+			"reason":       obj.Reason,
+			"creatorEmail": obj.CreatorEmail,
+		}).Error(err, "failed to create basecamp expense")
 		return err
 	}
 
@@ -135,11 +152,22 @@ func (h *handler) UncheckBasecampExpenseHandler(msg model.BasecampWebhookMessage
 
 // extractExpenseData takes a webhook message and parse it into BasecampExpenseData structure
 func (h *handler) extractExpenseData(msg model.BasecampWebhookMessage) (*bc.BasecampExpenseData, error) {
+	l := h.logger.Fields(logger.Fields{
+		"handler":    "basecamp_expense",
+		"method":     "extractExpenseData",
+		"basecampID": msg.Recording.ID,
+		"title":      msg.Recording.Title,
+	})
+
 	res := &bc.BasecampExpenseData{BasecampID: msg.Recording.ID}
 
 	parts := strings.Split(msg.Recording.Title, "|")
 	if len(parts) < 3 {
 		err := errors.New("invalid expense format")
+		l.Fields(logger.Fields{
+			"partsCount": len(parts),
+			"parts":      parts,
+		}).Error(err, "title must have 3 pipe-separated parts")
 		return nil, err
 	}
 
@@ -149,9 +177,14 @@ func (h *handler) extractExpenseData(msg model.BasecampWebhookMessage) (*bc.Base
 	res.Reason += datetime
 
 	// extract amount
-	amount := h.service.Basecamp.ExtractBasecampExpenseAmount(strings.TrimSpace(parts[1]))
+	rawAmount := strings.TrimSpace(parts[1])
+	amount := h.service.Basecamp.ExtractBasecampExpenseAmount(rawAmount)
 	if amount == 0 {
 		err := errors.New("invalid amount section of expense format")
+		l.Fields(logger.Fields{
+			"rawAmount": rawAmount,
+			"parsed":    amount,
+		}).Error(err, "amount is 0 or cannot be parsed")
 		return nil, err
 	}
 	res.Amount = amount
@@ -159,10 +192,13 @@ func (h *handler) extractExpenseData(msg model.BasecampWebhookMessage) (*bc.Base
 	// extract currency type
 	t := strings.ToLower(strings.TrimSpace(parts[2]))
 	if t != "vnd" && t != "usd" {
-		return nil, errors.New("invalid format in currency type section (VND or USD) of expense format")
+		err := errors.New("invalid format in currency type section (VND or USD) of expense format")
+		l.AddField("currency", t).Error(err, "currency must be VND or USD")
+		return nil, err
 	}
 	url, err := h.service.Basecamp.Recording.TryToGetInvoiceImageURL(msg.Recording.URL)
 	if err != nil {
+		l.AddField("recordingURL", msg.Recording.URL).Error(err, "failed to get invoice image URL from basecamp")
 		return nil, fmt.Errorf("failed to get image url by error %v", err)
 	}
 
@@ -170,6 +206,7 @@ func (h *handler) extractExpenseData(msg model.BasecampWebhookMessage) (*bc.Base
 
 	list, err := h.service.Basecamp.Todo.GetList(msg.Recording.Parent.URL)
 	if err != nil {
+		l.AddField("parentURL", msg.Recording.Parent.URL).Error(err, "failed to get todo list from basecamp")
 		return nil, err
 	}
 	msg.Recording.Parent.Title = list.Parent.Title
