@@ -164,17 +164,20 @@ func (g *googleService) SendInvoiceThankYouMail(invoice *model.Invoice) (err err
 		return ErrAliasNotVerified
 	}
 
-	if invoice.ThreadID == "" {
-		return ErrMissingThreadID
-	}
-	thread, err := g.service.Users.Threads.Get(id, invoice.ThreadID).Do()
-	if err != nil {
-		return err
-	}
-
-	invoice.MessageID, invoice.References, err = getMessageIDFromThread(thread)
-	if err != nil {
-		return err
+	// Try to get thread if ThreadID exists, but don't fail if it doesn't exist
+	// This allows sending thank you emails even when switching Gmail accounts
+	if invoice.ThreadID != "" {
+		thread, err := g.service.Users.Threads.Get(id, invoice.ThreadID).Do()
+		if err == nil {
+			// Successfully got thread, extract message ID for reply threading
+			invoice.MessageID, invoice.References, err = getMessageIDFromThread(thread)
+			if err != nil {
+				// Failed to extract message ID, will send as new email instead
+				invoice.MessageID = ""
+				invoice.References = ""
+			}
+		}
+		// If thread fetch fails (404), continue to send as new email
 	}
 
 	if !mailutils.Email(invoice.Email) {
