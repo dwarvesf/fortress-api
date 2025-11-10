@@ -272,6 +272,9 @@ func (c *controller) generateInvoicePDF(l logger.Logger, invoice *model.Invoice,
 		data.Path = os.Getenv("GOPATH") + "/src/github.com/dwarvesf/fortress-api/pkg/templates"
 	}
 
+	l.Infof("[DEBUG] Generating invoice PDF - ENV: '%s', TemplatePath from config: '%s', Final data.Path: '%s'",
+		c.config.Env, c.config.Invoice.TemplatePath, data.Path)
+
 	tmpl, err := template.New("invoicePDF").Funcs(funcMap).ParseFiles(filepath.Join(data.Path, "invoice.html"))
 	if err != nil {
 		l.Errorf(err, "failed to parse template", "path", data.Path, "filename", "invoice.html")
