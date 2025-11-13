@@ -1,6 +1,7 @@
 package service
 
 import (
+	"strings"
 	"time"
 
 	"github.com/patrickmn/go-cache"
@@ -34,11 +35,15 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/service/mochi"
 	"github.com/dwarvesf/fortress-api/pkg/service/mochipay"
 	"github.com/dwarvesf/fortress-api/pkg/service/mochiprofile"
+	"github.com/dwarvesf/fortress-api/pkg/service/nocodb"
 	"github.com/dwarvesf/fortress-api/pkg/service/notion"
 	"github.com/dwarvesf/fortress-api/pkg/service/ogifmemosummarizer"
 	"github.com/dwarvesf/fortress-api/pkg/service/parquet"
 	"github.com/dwarvesf/fortress-api/pkg/service/reddit"
 	"github.com/dwarvesf/fortress-api/pkg/service/sendgrid"
+	"github.com/dwarvesf/fortress-api/pkg/service/taskprovider"
+	tpbasecamp "github.com/dwarvesf/fortress-api/pkg/service/taskprovider/basecamp"
+	tpnocodb "github.com/dwarvesf/fortress-api/pkg/service/taskprovider/nocodb"
 	"github.com/dwarvesf/fortress-api/pkg/service/tono"
 	"github.com/dwarvesf/fortress-api/pkg/service/wise"
 	yt "github.com/dwarvesf/fortress-api/pkg/service/youtube"
@@ -47,6 +52,8 @@ import (
 
 type Service struct {
 	Basecamp      *basecamp.Service
+	TaskProvider  taskprovider.InvoiceProvider
+	NocoDB        *nocodb.Service
 	Cache         *cache.Cache
 	Currency      currency.IService
 	Discord       discord.IService
@@ -202,9 +209,24 @@ func New(cfg *config.Config, store *store.Store, repo store.DBRepo) (*Service, e
 	}
 
 	parquetSvc := parquet.NewSyncService(cfg.Parquet, logger.L)
+	basecampSvc := basecamp.New(store, repo, cfg, &bc, logger.L)
+	nocoSvc := nocodb.New(cfg.Noco)
+	var invoiceProvider taskprovider.InvoiceProvider
+	switch strings.ToLower(cfg.TaskProvider.Invoice) {
+	case string(taskprovider.ProviderNocoDB):
+		if prov := tpnocodb.New(nocoSvc); prov != nil {
+			invoiceProvider = prov
+			break
+		}
+	}
+	if invoiceProvider == nil {
+		invoiceProvider = tpbasecamp.New(basecampSvc, cfg)
+	}
 
 	return &Service{
-		Basecamp:      basecamp.New(store, repo, cfg, &bc, logger.L),
+		Basecamp:      basecampSvc,
+		TaskProvider:  invoiceProvider,
+		NocoDB:        nocoSvc,
 		Cache:         cch,
 		Currency:      Currency,
 		Discord:       discord.New(cfg),

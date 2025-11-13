@@ -2,6 +2,7 @@ package invoice
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"math"
@@ -19,7 +20,7 @@ import (
 
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
-	bcModel "github.com/dwarvesf/fortress-api/pkg/service/basecamp/model"
+	"github.com/dwarvesf/fortress-api/pkg/service/taskprovider"
 	"github.com/dwarvesf/fortress-api/pkg/utils/timeutil"
 )
 
@@ -119,9 +120,6 @@ func (c *controller) Send(iv *model.Invoice) (*model.Invoice, error) {
 		amountGr += 2
 		fn := strconv.FormatInt(rand.Int63(), 10) + "_" + iv.Number + ".pdf"
 
-		invoiceFilePath := fmt.Sprintf("https://storage.googleapis.com/%s/invoices/%s", c.config.Google.GCSBucketName, fn)
-		iv.InvoiceFileURL = invoiceFilePath
-
 		go func() {
 			err = c.service.GoogleDrive.UploadInvoicePDF(iv, "Sent")
 			if err != nil {
@@ -149,27 +147,11 @@ func (c *controller) Send(iv *model.Invoice) (*model.Invoice, error) {
 				return
 			}
 
-			attachmentSgID, err := c.service.Basecamp.Attachment.Create("application/pdf", fn, iv.InvoiceFileContent)
-			if err != nil {
-				l.Errorf(err, "failed to create Basecamp Attachment", "invoice", iv)
+			if err := c.dispatchInvoiceTask(iv, fn); err != nil {
+				l.Error(err, "failed to dispatch invoice task")
 				errsCh <- err
 				return
 			}
-
-			iv.TodoAttachment = fmt.Sprintf(`<bc-attachment sgid="%v" caption="My photo"></bc-attachment>`, attachmentSgID)
-
-			bucketID, todoID, err := c.getInvoiceTodo(iv)
-			if err != nil {
-				l.Errorf(err, "failed to get invoice todo", "invoice", iv)
-				errsCh <- err
-				return
-			}
-
-			msg := fmt.Sprintf(`#Invoice %v has been sent
-	
-			Confirm Command: Paid @Giang #%v`, iv.Number, iv.Number)
-
-			c.worker.Enqueue(bcModel.BasecampCommentMsg, c.service.Basecamp.BuildCommentMessage(bucketID, todoID, msg, ""))
 
 			errsCh <- nil
 		}()
@@ -189,6 +171,44 @@ func (c *controller) Send(iv *model.Invoice) (*model.Invoice, error) {
 	}
 
 	return iv, nil
+}
+
+func (c *controller) dispatchInvoiceTask(iv *model.Invoice, fileName string) error {
+	provider := c.service.TaskProvider
+	if provider == nil {
+		return errors.New("task provider is not configured")
+	}
+
+	attachmentRef, err := provider.UploadAttachment(context.Background(), nil, taskprovider.InvoiceAttachmentInput{
+		FileName:    fileName,
+		ContentType: "application/pdf",
+		Content:     iv.InvoiceFileContent,
+		URL:         iv.InvoiceFileURL,
+	})
+	if err != nil {
+		return fmt.Errorf("create task attachment: %w", err)
+	}
+
+	iv.TodoAttachment = attachmentRef.Markup
+
+	ref, err := provider.EnsureTask(context.Background(), taskprovider.CreateInvoiceTaskInput{Invoice: iv})
+	if err != nil {
+		return fmt.Errorf("ensure invoice task: %w", err)
+	}
+
+	msg := fmt.Sprintf(`#Invoice %v has been sent
+
+	Confirm Command: Paid @Giang #%v`, iv.Number, iv.Number)
+
+	taskJob := taskprovider.InvoiceCommentJob{
+		Ref: ref,
+		Input: taskprovider.InvoiceCommentInput{
+			Message: msg,
+		},
+	}
+	c.worker.Enqueue(taskprovider.WorkerMessageInvoiceComment, taskJob)
+
+	return nil
 }
 
 func (c *controller) generateInvoicePDF(l logger.Logger, invoice *model.Invoice, items []model.InvoiceItem) error {

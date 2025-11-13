@@ -330,8 +330,12 @@ func (g *googleService) filterReceiver(i *model.Invoice) error {
 	}
 
 	var ccList []string
-	if err := json.Unmarshal(i.CC, &ccList); err != nil {
-		return err
+	if len(i.CC) == 0 || string(i.CC) == "\u0000" || strings.EqualFold(string(i.CC), "null") {
+		ccList = []string{}
+	} else {
+		if err := json.Unmarshal(i.CC, &ccList); err != nil {
+			return err
+		}
 	}
 
 	for idx := range ccList {
