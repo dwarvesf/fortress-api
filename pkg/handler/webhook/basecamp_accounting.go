@@ -2,6 +2,7 @@ package webhook
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -13,6 +14,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service/basecamp/consts"
 	"github.com/dwarvesf/fortress-api/pkg/service/currency"
+	"github.com/dwarvesf/fortress-api/pkg/service/taskprovider"
 	"github.com/dwarvesf/fortress-api/pkg/utils/timeutil"
 )
 
@@ -81,48 +83,71 @@ func (h *handler) storeAccountingTransaction(date *managementTodoInfo, data []st
 		return err
 	}
 
-	c, err := h.store.Currency.GetByName(h.repo.DB(), data[4])
+	payload := &taskprovider.AccountingWebhookPayload{
+		Provider:  taskprovider.ProviderBasecamp,
+		Group:     taskprovider.AccountingGroupOut,
+		Title:     data[2],
+		Amount:    float64(amount),
+		Currency:  data[4],
+		TodoID:    fmt.Sprintf("%v", id),
+		TodoRowID: fmt.Sprintf("%v", id),
+		Status:    "completed",
+	}
+	return h.persistAccountingTransactionPayload(payload)
+}
+
+func (h *handler) persistAccountingTransactionPayload(payload *taskprovider.AccountingWebhookPayload) error {
+	if payload == nil {
+		return errors.New("empty accounting payload")
+	}
+	currencyName := strings.ToUpper(strings.TrimSpace(payload.Currency))
+	if currencyName == "" {
+		return errors.New("missing currency")
+	}
+
+	c, err := h.store.Currency.GetByName(h.repo.DB(), currencyName)
 	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return fmt.Errorf(`unknown currency`)
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return fmt.Errorf("unknown currency: %s", currencyName)
 		}
 		return err
 	}
-	now := time.Now()
 
-	m := model.AccountingMetadata{
-		Source: "basecamp_accounting",
-		ID:     fmt.Sprintf("%v", id),
+	now := time.Now()
+	meta := model.AccountingMetadata{
+		Source: fmt.Sprintf("%s_accounting", payload.Provider),
+		ID:     payload.TodoRowID,
 	}
-	bonusBytes, err := json.Marshal(&m)
+	metaBytes, err := json.Marshal(&meta)
 	if err != nil {
 		return err
 	}
-	temp, rate, err := h.service.Wise.Convert(float64(amount), c.Name, currency.VNDCurrency)
+
+	temp, rate, err := h.service.Wise.Convert(payload.Amount, c.Name, currency.VNDCurrency)
 	if err != nil {
-		return nil
+		return err
 	}
-	am := model.NewVietnamDong(int64(temp))
+	converted := model.NewVietnamDong(int64(temp))
+
+	accType := model.AccountingOP
+	if payload.Group == taskprovider.AccountingGroupIn {
+		accType = model.AccountingIncome
+	}
 
 	transaction := &model.AccountingTransaction{
-		Name:             data[2],
-		Amount:           float64(amount),
+		Name:             payload.Title,
+		Amount:           payload.Amount,
 		Date:             &now,
 		CurrencyID:       &c.ID,
 		Currency:         c.Name,
-		Category:         checkCategory(strings.ToLower(data[2])),
-		Type:             model.AccountingOP,
-		ConversionAmount: am.Format(),
+		Category:         checkCategory(strings.ToLower(payload.Title)),
+		Type:             accType,
+		ConversionAmount: converted.Format(),
 		ConversionRate:   rate,
-		Metadata:         bonusBytes,
+		Metadata:         metaBytes,
 	}
 
-	err = h.StoreOperationAccountingTransaction(transaction)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return h.StoreOperationAccountingTransaction(transaction)
 }
 
 func (h *handler) StoreOperationAccountingTransaction(t *model.AccountingTransaction) error {

@@ -1,13 +1,17 @@
 package accounting
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/numfmt"
+	"gorm.io/datatypes"
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
@@ -15,6 +19,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/service/basecamp/consts"
 	bcModel "github.com/dwarvesf/fortress-api/pkg/service/basecamp/model"
+	"github.com/dwarvesf/fortress-api/pkg/service/taskprovider"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/store/project"
 	"github.com/dwarvesf/fortress-api/pkg/utils/timeutil"
@@ -44,20 +49,20 @@ func (h handler) CreateAccountingTodo(c *gin.Context) {
 		"handler": "Accounting",
 		"method":  "CreateAccountingTodo",
 	})
+	ctx := c.Request.Context()
+
+	provider := h.service.AccountingProvider
+	if provider == nil {
+		err := fmt.Errorf("accounting provider not configured")
+		l.Error(err, "missing accounting provider")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
 
 	month, year := timeutil.GetMonthAndYearOfNextMonth()
 
 	l.Info(fmt.Sprintf("Creating accounting todo for %s-%v", time.Month(month), year))
-	accountingTodo := consts.PlaygroundID
-	todoSetID := consts.PlaygroundTodoID
-	if h.config.Env == "prod" {
-		accountingTodo = consts.AccountingID
-		todoSetID = consts.AccountingTodoID
-	}
-
-	todoList := bcModel.TodoList{Name: fmt.Sprintf("Accounting | %s %v", time.Month(month).String(), year)}
-	todoGroupInFoundation := bcModel.TodoGroup{Name: "In"}
-	todoGroupOut := bcModel.TodoGroup{Name: "Out"}
+	label := fmt.Sprintf("Accounting | %s %v", time.Month(month).String(), year)
 
 	// Get list accounting(Service table in db) template
 
@@ -68,56 +73,44 @@ func (h handler) CreateAccountingTodo(c *gin.Context) {
 		return
 	}
 
-	createTodo, err := h.service.Basecamp.Todo.CreateList(accountingTodo, todoSetID, todoList)
+	plan, err := provider.CreateMonthlyPlan(ctx, taskprovider.CreateAccountingPlanInput{
+		Month: month,
+		Year:  year,
+		Label: label,
+	})
 	if err != nil {
-		l.Errorf(err, "failed to create todo list", "accountingTodo", accountingTodo, "todoSetID", todoSetID, "todoList", todoList)
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, accountingTodo, ""))
-		return
-	}
-
-	//Create In group
-	inGroup, err := h.service.Basecamp.Todo.CreateGroup(accountingTodo, createTodo.ID, todoGroupInFoundation)
-	if err != nil {
-		l.Errorf(err, "failed to create todo list", "accountingTodo", accountingTodo, "createTodo.ID", createTodo.ID, "todoGroupInFoundation", todoGroupInFoundation)
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, accountingTodo, ""))
-		return
-	}
-
-	// Create Out group
-	outGroup, err := h.service.Basecamp.Todo.CreateGroup(accountingTodo, createTodo.ID, todoGroupOut)
-	if err != nil {
-		l.Errorf(err, "failed to create group", "accountingTodo", accountingTodo, "createTodo.ID", createTodo.ID, "todoGroupOut", todoGroupOut)
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, accountingTodo, ""))
+		l.Errorf(err, "failed to create accounting plan", "label", label)
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
 	}
 
 	// Create todoList for each accounting template into out Group
-	err = h.createTodoInOutGroup(outGroup.ID, accountingTodo, outTodoTemplates, month, year)
+	err = h.createTodoInOutGroup(ctx, provider, plan, outTodoTemplates, month, year)
 	if err != nil {
-		l.Errorf(err, "failed to create In Out todo group", "accountingTodo", accountingTodo, "outTodoTemplates", outTodoTemplates, "month", month, "year", year)
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, accountingTodo, ""))
+		l.Errorf(err, "failed to create In Out todo group", "month", month, "year", year)
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
 	}
 
 	// Create Salary to do and add into out group
-	err = h.createSalaryTodo(outGroup.ID, accountingTodo, month, year)
+	err = h.createSalaryTodo(ctx, provider, plan, month, year)
 	if err != nil {
-		l.Errorf(err, "failed to create salary todo", "accountingTodo", accountingTodo, "month", month, "year", year)
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, accountingTodo, ""))
+		l.Errorf(err, "failed to create salary todo", "month", month, "year", year)
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
 	}
 	// create to do IN group
-	err = h.createTodoInInGroup(inGroup.ID, accountingTodo)
+	err = h.createTodoInInGroup(ctx, provider, plan)
 	if err != nil {
-		l.Errorf(err, "failed to create salary todo", "accountingTodo", accountingTodo, "inGroup.ID", inGroup.ID)
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, accountingTodo, ""))
+		l.Errorf(err, "failed to create salary todo")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))
 }
 
-func (h handler) createTodoInOutGroup(outGroupID int, projectID int, outTodoTemplates []*model.OperationalService, month int, year int) error {
+func (h handler) createTodoInOutGroup(ctx context.Context, provider taskprovider.AccountingProvider, plan *taskprovider.AccountingPlanRef, outTodoTemplates []*model.OperationalService, month int, year int) error {
 	l := h.logger.Fields(logger.Fields{
 		"handler": "Accounting",
 		"method":  "createTodoInOutGroup",
@@ -130,19 +123,29 @@ func (h handler) createTodoInOutGroup(outGroupID int, projectID int, outTodoTemp
 			extraMsg = fmt.Sprintf("Hado Office Rental %v/%v", month, year)
 
 			s := v.Name
-			for _, v := range []string{"Tiền điện", "CBRE"} {
-				content := strings.Replace(s, "Office Rental", v, 1)
-				todo := bcModel.Todo{
-					Content:     fmt.Sprintf("%s %v/%v", content, month, year),
-					Description: fmt.Sprintf("I3.18.08 thanh toan %s %v/%v", v, month, year),
-					DueOn:       fmt.Sprintf("%v-%v-%v", timeutil.LastDayOfMonth(month, year).Day(), month, year),
-					AssigneeIDs: []int{consts.QuangBasecampID},
+			templateID := v.ID
+			for _, variant := range []string{"Tiền điện", "CBRE"} {
+				content := strings.Replace(s, "Office Rental", variant, 1)
+				input := taskprovider.CreateAccountingTodoInput{
+					Group:       taskprovider.AccountingGroupOut,
+					Title:       fmt.Sprintf("%s %v/%v", content, month, year),
+					Description: fmt.Sprintf("I3.18.08 thanh toan %s %v/%v", variant, month, year),
+					DueDate:     endOfMonthDate(month, year),
+					Assignees:   accountingAssignees(consts.QuangBasecampID),
+					Metadata: map[string]any{
+						"template_id": templateID,
+						"variant":     variant,
+					},
 				}
-				_, err := h.service.Basecamp.Todo.Create(projectID, outGroupID, todo)
+				ref, err := provider.CreateAccountingTodo(ctx, plan, input)
 				if err != nil {
 					l.Error(err, "Fail when try to create CBRE management fee")
 					return err
 				}
+				h.saveAccountingTaskRef(plan, ref, taskprovider.AccountingGroupOut, input.Title, &templateID, nil, map[string]any{
+					"variant":     variant,
+					"description": input.Description,
+				})
 			}
 		}
 
@@ -151,48 +154,66 @@ func (h handler) createTodoInOutGroup(outGroupID int, projectID int, outTodoTemp
 			MinDecimalPlaces: 0,
 		}
 
-		todo := bcModel.Todo{
-			Content:     fmt.Sprintf("%s | %s | %s", v.Name, strings.Replace(f.Format(v.Amount), ",", ".", -1), v.Currency.Name), //nolint:govet
-			DueOn:       fmt.Sprintf("%v-%v-%v", timeutil.LastDayOfMonth(month, year).Day(), month, year),
-			AssigneeIDs: []int{consts.QuangBasecampID},
+		input := taskprovider.CreateAccountingTodoInput{
+			Group:       taskprovider.AccountingGroupOut,
+			Title:       fmt.Sprintf("%s | %s | %s", v.Name, strings.Replace(f.Format(v.Amount), ",", ".", -1), v.Currency.Name), //nolint:govet
+			DueDate:     endOfMonthDate(month, year),
+			Assignees:   accountingAssignees(consts.QuangBasecampID),
 			Description: extraMsg,
+			Metadata: map[string]any{
+				"template_id": v.ID,
+			},
 		}
-		_, err := h.service.Basecamp.Todo.Create(projectID, outGroupID, todo)
+		ref, err := provider.CreateAccountingTodo(ctx, plan, input)
 		if err != nil {
 			l.Error(err, "Fail when try to create out todos")
 			return err
 		}
+		templateID := v.ID
+		h.saveAccountingTaskRef(plan, ref, taskprovider.AccountingGroupOut, input.Title, &templateID, nil, map[string]any{
+			"currency":    v.Currency.Name,
+			"amount":      v.Amount,
+			"description": extraMsg,
+		})
 	}
 	return nil
 }
 
-func (h handler) createSalaryTodo(outGroupID int, projectID int, month int, year int) error {
-	//created TO DO salary 15th
-	salary15 := bcModel.Todo{
-		Content:     "salary 15th",
-		DueOn:       fmt.Sprintf("%v-%v-%v", 12, year, month),
-		AssigneeIDs: []int{consts.QuangBasecampID, consts.HanBasecampID},
+func (h handler) createSalaryTodo(ctx context.Context, provider taskprovider.AccountingProvider, plan *taskprovider.AccountingPlanRef, month int, year int) error {
+	salary15 := taskprovider.CreateAccountingTodoInput{
+		Group:     taskprovider.AccountingGroupOut,
+		Title:     "salary 15th",
+		DueDate:   time.Date(year, time.Month(month), 12, 0, 0, 0, 0, time.UTC),
+		Assignees: accountingAssignees(consts.QuangBasecampID, consts.HanBasecampID),
 	}
-	_, err := h.service.Basecamp.Todo.Create(projectID, outGroupID, salary15)
+	ref15, err := provider.CreateAccountingTodo(ctx, plan, salary15)
 	if err != nil {
 		return err
 	}
+	h.saveAccountingTaskRef(plan, ref15, taskprovider.AccountingGroupOut, salary15.Title, nil, nil, map[string]any{
+		"type":  "salary",
+		"cycle": "15th",
+	})
 
-	// Create To do Salary 1st
-	salary1 := bcModel.Todo{
-		Content:     "salary 1st",
-		DueOn:       fmt.Sprintf("%v-%v-%v", 27, year, month),
-		AssigneeIDs: []int{consts.QuangBasecampID, consts.HanBasecampID},
+	salary1 := taskprovider.CreateAccountingTodoInput{
+		Group:     taskprovider.AccountingGroupOut,
+		Title:     "salary 1st",
+		DueDate:   time.Date(year, time.Month(month), 27, 0, 0, 0, 0, time.UTC),
+		Assignees: accountingAssignees(consts.QuangBasecampID, consts.HanBasecampID),
 	}
 
-	_, err = h.service.Basecamp.Todo.Create(projectID, outGroupID, salary1)
+	ref1, err := provider.CreateAccountingTodo(ctx, plan, salary1)
 	if err != nil {
 		return err
 	}
+	h.saveAccountingTaskRef(plan, ref1, taskprovider.AccountingGroupOut, salary1.Title, nil, nil, map[string]any{
+		"type":  "salary",
+		"cycle": "1st",
+	})
 	return nil
 }
 
-func (h handler) createTodoInInGroup(inGroupID int, projectID int) error {
+func (h handler) createTodoInInGroup(ctx context.Context, provider taskprovider.AccountingProvider, plan *taskprovider.AccountingPlanRef) error {
 	l := h.logger.Fields(logger.Fields{
 		"handler": "Accounting",
 		"method":  "createTodoInInGroup",
@@ -207,19 +228,29 @@ func (h handler) createTodoInInGroup(inGroupID int, projectID int) error {
 		return err
 	}
 
-	
 	now := time.Now()
 	month := int(now.Month())
 	year := now.Year()
 
 	for _, p := range activeProjects {
-		// Default will assign to Giang Than
-		assigneeIDs := []int{consts.GiangThanBasecampID}
-
-		_, err := h.service.Basecamp.Todo.Create(projectID, inGroupID, buildInvoiceTodo(p.Name, month, year, assigneeIDs))
+		input := taskprovider.CreateAccountingTodoInput{
+			Group:     taskprovider.AccountingGroupIn,
+			Title:     getProjectInvoiceContent(p.Name, month, year),
+			DueDate:   getProjectInvoiceDueDate(p.Name, month, year),
+			Assignees: accountingAssignees(consts.GiangThanBasecampID),
+			Metadata: map[string]any{
+				"project_id": p.ID,
+			},
+		}
+		ref, err := provider.CreateAccountingTodo(ctx, plan, input)
 		if err != nil {
 			l.Error(err, fmt.Sprint("Failed to create invoice todo on project", p.Name))
+			continue
 		}
+		projectID := p.ID
+		h.saveAccountingTaskRef(plan, ref, taskprovider.AccountingGroupIn, input.Title, nil, &projectID, map[string]any{
+			"project_name": p.Name,
+		})
 	}
 	return nil
 }
@@ -234,15 +265,70 @@ func buildInvoiceTodo(name string, month, year int, assigneeIDs []int) bcModel.T
 	}
 }
 func getProjectInvoiceDueOn(name string, month, year int) string {
-	var day int
-	if strings.ToLower(name) == "voconic" {
-		day = 23
-	} else {
-		a := timeutil.LastDayOfMonth(month, year)
-		day = a.Day()
-	}
-	return fmt.Sprintf("%v-%v-%v", day, month, year)
+	d := getProjectInvoiceDueDate(name, month, year)
+	return fmt.Sprintf("%d-%d-%d", d.Day(), int(d.Month()), d.Year())
 }
 func getProjectInvoiceContent(name string, month, year int) string {
 	return fmt.Sprintf("%s %v/%v", name, month, year)
+}
+
+func getProjectInvoiceDueDate(name string, month, year int) time.Time {
+	if strings.EqualFold(name, "voconic") {
+		return time.Date(year, time.Month(month), 23, 0, 0, 0, 0, time.UTC)
+	}
+	day := timeutil.LastDayOfMonth(month, year).Day()
+	return time.Date(year, time.Month(month), day, 0, 0, 0, 0, time.UTC)
+}
+
+func endOfMonthDate(month, year int) time.Time {
+	day := timeutil.LastDayOfMonth(month, year).Day()
+	return time.Date(year, time.Month(month), day, 0, 0, 0, 0, time.UTC)
+}
+
+func accountingAssignees(ids ...int) []taskprovider.AccountingAssignee {
+	assignees := make([]taskprovider.AccountingAssignee, 0, len(ids))
+	for _, id := range ids {
+		assignees = append(assignees, taskprovider.AccountingAssignee{
+			ExternalID: strconv.Itoa(id),
+		})
+	}
+	return assignees
+}
+
+func (h handler) saveAccountingTaskRef(plan *taskprovider.AccountingPlanRef, ref *taskprovider.AccountingTodoRef, group taskprovider.AccountingGroup, title string, templateID *model.UUID, projectID *model.UUID, metadata map[string]any) {
+	if plan == nil || ref == nil || ref.ExternalID == "" {
+		return
+	}
+	entry := &model.AccountingTaskRef{
+		Month:        plan.Month,
+		Year:         plan.Year,
+		GroupName:    string(group),
+		TaskProvider: string(ref.Provider),
+		TaskRef:      ref.ExternalID,
+		TaskBoard:    plan.ListID,
+		Title:        title,
+		Metadata:     marshalMetadata(metadata),
+	}
+	if templateID != nil && !templateID.IsZero() {
+		tid := *templateID
+		entry.TemplateID = &tid
+	}
+	if projectID != nil && !projectID.IsZero() {
+		pid := *projectID
+		entry.ProjectID = &pid
+	}
+	if err := h.store.AccountingTaskRef.Create(h.repo.DB(), entry); err != nil {
+		h.logger.Error(err, "failed to persist accounting task ref")
+	}
+}
+
+func marshalMetadata(meta map[string]any) datatypes.JSON {
+	if len(meta) == 0 {
+		return datatypes.JSON([]byte("{}"))
+	}
+	b, err := json.Marshal(meta)
+	if err != nil {
+		return datatypes.JSON([]byte("{}"))
+	}
+	return datatypes.JSON(b)
 }

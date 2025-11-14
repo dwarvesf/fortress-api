@@ -31,3 +31,6 @@ main
 
 # codex
 .mcp.toml
+
+# scripts
+scripts/local

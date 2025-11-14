@@ -1,6 +1,8 @@
 package webhook
 
 import (
+	"errors"
+	"io"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -95,18 +97,25 @@ func (h *handler) StoreAccountingTransaction(c *gin.Context) {
 		"method":  "StoreAccountingTransaction",
 	})
 
-	msg, err := basecampWebhookMessageFromCtx(c, l)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+	body := readBody(c.Request.Body)
+	provider := h.service.AccountingProvider
+	if provider == nil {
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, errors.New("accounting provider missing"), nil, ""))
 		return
 	}
-
-	err = h.StoreAccountingTransactionFromBasecamp(msg)
+	payload, err := provider.ParseAccountingWebhook(c.Request.Context(), taskprovider.AccountingWebhookRequest{
+		Headers: headerMap(c.Request.Header),
+		Body:    body,
+	})
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		l.Error(err, "failed to parse basecamp accounting webhook")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
 	}
-
+	if payload == nil {
+		c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, ""))
+		return
+	}
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, ""))
 }
 
@@ -214,4 +223,9 @@ func (h *handler) enqueueInvoiceComment(ref *taskprovider.InvoiceTaskRef, bucket
 	}
 
 	h.worker.Enqueue(bcModel.BasecampCommentMsg, h.service.Basecamp.BuildCommentMessage(bucketID, todoID, message, msgType))
+}
+func readBody(rc io.ReadCloser) []byte {
+	defer rc.Close()
+	b, _ := io.ReadAll(rc)
+	return b
 }

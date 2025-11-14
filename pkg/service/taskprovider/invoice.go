@@ -13,7 +13,7 @@ type ProviderType string
 const (
 	ProviderBasecamp            ProviderType = "basecamp"
 	ProviderNocoDB              ProviderType = "nocodb"
-	WorkerMessageInvoiceComment             = "taskprovider_invoice_comment"
+	WorkerMessageInvoiceComment              = "taskprovider_invoice_comment"
 )
 
 // ErrNotImplemented marks unimplemented provider operations (placeholder during migration).
@@ -44,6 +44,7 @@ type InvoiceAttachmentInput struct {
 type InvoiceAttachmentRef struct {
 	ExternalID string
 	Markup     string
+	Meta       map[string]any
 }
 
 // InvoiceCommentInput defines the payload for posting status updates.

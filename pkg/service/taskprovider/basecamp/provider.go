@@ -2,10 +2,12 @@ package basecamp
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
@@ -16,6 +18,8 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/service/taskprovider"
 	"github.com/dwarvesf/fortress-api/pkg/utils/timeutil"
 )
+
+var invoiceRegex = regexp.MustCompile(`^\s*(.+?)\s*\|\s*([0-9\.\,]+)\s*\|\s*([a-zA-Z]{3})`)
 
 // Provider implements taskprovider.InvoiceProvider backed by Basecamp.
 type Provider struct {
@@ -64,7 +68,14 @@ func (p *Provider) UploadAttachment(ctx context.Context, ref *taskprovider.Invoi
 	}
 
 	markup := fmt.Sprintf(`<bc-attachment sgid="%s" caption="Invoice attachment"></bc-attachment>`, sgid)
-	return &taskprovider.InvoiceAttachmentRef{ExternalID: sgid, Markup: markup}, nil
+	return &taskprovider.InvoiceAttachmentRef{
+		ExternalID: sgid,
+		Markup:     markup,
+		Meta: map[string]any{
+			"provider": "basecamp",
+			"sgid":     sgid,
+		},
+	}, nil
 }
 
 func (p *Provider) PostComment(ctx context.Context, ref *taskprovider.InvoiceTaskRef, input taskprovider.InvoiceCommentInput) error {
@@ -82,6 +93,168 @@ func (p *Provider) CompleteTask(ctx context.Context, ref *taskprovider.InvoiceTa
 	}
 
 	return p.svc.Todo.Complete(ref.BucketID, ref.TodoID)
+}
+
+func (p *Provider) CreateMonthlyPlan(ctx context.Context, input taskprovider.CreateAccountingPlanInput) (*taskprovider.AccountingPlanRef, error) {
+	if p == nil || p.svc == nil || p.cfg == nil {
+		return nil, errors.New("basecamp provider not configured")
+	}
+
+	projectID, todoSetID := p.accountingProjectAndSet()
+	list, err := p.svc.Todo.CreateList(projectID, todoSetID, bcModel.TodoList{
+		Name: input.Label,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	groupInName := p.cfg.AccountingIntegration.Basecamp.GroupIn
+	if groupInName == "" {
+		groupInName = "In"
+	}
+	groupOutName := p.cfg.AccountingIntegration.Basecamp.GroupOut
+	if groupOutName == "" {
+		groupOutName = "Out"
+	}
+
+	groupIn, err := p.svc.Todo.CreateGroup(projectID, list.ID, bcModel.TodoGroup{Name: groupInName})
+	if err != nil {
+		return nil, err
+	}
+	groupOut, err := p.svc.Todo.CreateGroup(projectID, list.ID, bcModel.TodoGroup{Name: groupOutName})
+	if err != nil {
+		return nil, err
+	}
+
+	return &taskprovider.AccountingPlanRef{
+		Provider: taskprovider.ProviderBasecamp,
+		BoardID:  strconv.Itoa(projectID),
+		ListID:   strconv.Itoa(list.ID),
+		Month:    input.Month,
+		Year:     input.Year,
+		GroupLookup: map[taskprovider.AccountingGroup]string{
+			taskprovider.AccountingGroupIn:  strconv.Itoa(groupIn.ID),
+			taskprovider.AccountingGroupOut: strconv.Itoa(groupOut.ID),
+		},
+	}, nil
+}
+
+func (p *Provider) CreateAccountingTodo(ctx context.Context, plan *taskprovider.AccountingPlanRef, input taskprovider.CreateAccountingTodoInput) (*taskprovider.AccountingTodoRef, error) {
+	if p == nil || p.svc == nil {
+		return nil, errors.New("basecamp provider not configured")
+	}
+	if plan == nil {
+		return nil, errors.New("missing accounting plan reference")
+	}
+
+	projectID, err := strconv.Atoi(plan.BoardID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid board id: %w", err)
+	}
+
+	groupIDStr, ok := plan.GroupLookup[input.Group]
+	if !ok {
+		return nil, fmt.Errorf("group %s not initialized", input.Group)
+	}
+	groupID, err := strconv.Atoi(groupIDStr)
+	if err != nil {
+		return nil, fmt.Errorf("invalid group id: %w", err)
+	}
+
+	assigneeIDs := make([]int, 0, len(input.Assignees))
+	for _, a := range input.Assignees {
+		if a.ExternalID == "" {
+			continue
+		}
+		id, err := strconv.Atoi(a.ExternalID)
+		if err != nil {
+			continue
+		}
+		assigneeIDs = append(assigneeIDs, id)
+	}
+
+	dueOn := input.DueDate
+	if dueOn.IsZero() {
+		dueOn = time.Now()
+	}
+
+	todo := bcModel.Todo{
+		Content:     input.Title,
+		Description: input.Description,
+		DueOn:       fmt.Sprintf("%d-%d-%d", dueOn.Day(), dueOn.Month(), dueOn.Year()),
+		AssigneeIDs: assigneeIDs,
+	}
+
+	created, err := p.svc.Todo.Create(projectID, groupID, todo)
+	if err != nil {
+		return nil, err
+	}
+
+	return &taskprovider.AccountingTodoRef{
+		Provider:   taskprovider.ProviderBasecamp,
+		ExternalID: strconv.Itoa(created.ID),
+		Group:      input.Group,
+	}, nil
+}
+
+func (p *Provider) ParseAccountingWebhook(ctx context.Context, req taskprovider.AccountingWebhookRequest) (*taskprovider.AccountingWebhookPayload, error) {
+	if len(req.Body) == 0 {
+		return nil, errors.New("empty webhook body")
+	}
+	var msg appmodel.BasecampWebhookMessage
+	if err := json.Unmarshal(req.Body, &msg); err != nil {
+		return nil, err
+	}
+	if msg.Recording.Title == "" {
+		return nil, errors.New("missing recording title")
+	}
+	parts := invoiceRegex.FindStringSubmatch(msg.Recording.Title)
+	if len(parts) != 4 {
+		return nil, errors.New("unknown title format")
+	}
+	amountStr := strings.ReplaceAll(parts[2], ".", "")
+	amountStr = strings.ReplaceAll(amountStr, ",", "")
+	amount, err := strconv.Atoi(amountStr)
+	if err != nil {
+		return nil, err
+	}
+	return &taskprovider.AccountingWebhookPayload{
+		Provider:  taskprovider.ProviderBasecamp,
+		Group:     taskprovider.AccountingGroupOut,
+		Title:     strings.TrimSpace(msg.Recording.Title),
+		Amount:    float64(amount),
+		Currency:  strings.ToUpper(strings.TrimSpace(parts[3])),
+		TodoID:    strconv.Itoa(msg.Recording.ID),
+		TodoRowID: strconv.Itoa(msg.Recording.ID),
+		Actor:     msg.Creator.Name,
+		Status:    "completed",
+		Raw:       req.Body,
+	}, nil
+}
+
+func (p *Provider) accountingProjectAndSet() (int, int) {
+	projectID := defaultAccountingProjectID(p.cfg)
+	todoSetID := defaultAccountingTodoSetID(p.cfg)
+	if p.cfg != nil && p.cfg.Env != "prod" {
+		projectID = defaultPlaygroundProjectID(p.cfg)
+		todoSetID = defaultPlaygroundTodoSetID(p.cfg)
+	}
+	if cfgID := p.cfg.AccountingIntegration.Basecamp.ProjectID; cfgID != 0 {
+		projectID = cfgID
+	}
+	if cfgSet := p.cfg.AccountingIntegration.Basecamp.TodoSetID; cfgSet != 0 {
+		todoSetID = cfgSet
+	}
+	if p.cfg != nil && p.cfg.Env != "prod" {
+		// In non-prod we still prefer playground overrides if provided
+		if pid := p.cfg.Basecamp.PlaygroundProjectID; pid != 0 {
+			projectID = pid
+		}
+		if tid := p.cfg.Basecamp.PlaygroundTodoSetID; tid != 0 {
+			todoSetID = tid
+		}
+	}
+	return projectID, todoSetID
 }
 
 func (p *Provider) ensureInvoiceTodo(iv *appmodel.Invoice) (bucketID int, todoID int, err error) {

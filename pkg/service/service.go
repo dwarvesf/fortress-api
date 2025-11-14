@@ -51,37 +51,38 @@ import (
 )
 
 type Service struct {
-	Basecamp      *basecamp.Service
-	TaskProvider  taskprovider.InvoiceProvider
-	NocoDB        *nocodb.Service
-	Cache         *cache.Cache
-	Currency      currency.IService
-	Discord       discord.IService
-	DuckDB        duckdb.IService
-	Github        github.IService
-	Google        googleauth.IService
-	GoogleStorage googlestorage.IService
-	GoogleAdmin   googleadmin.IService
-	GoogleDrive   googledrive.IService
-	GoogleMail    googlemail.IService
-	GoogleSheet   googlesheet.IService
-	ImprovMX      improvmx.IService
-	Mochi         mochi.IService
-	MochiPay      mochipay.IService
-	MochiProfile  mochiprofile.IService
-	Notion        notion.IService
-	ParquetSync   parquet.ISyncService
-	Sendgrid      sendgrid.IService
-	Wise          wise.IService
-	BaseClient    evm.IService
-	IcySwap       icyswap.IService
-	CommunityNft  communitynft.IService
-	Tono          tono.IService
-	Reddit        reddit.IService
-	Lobsters      lobsters.IService
-	Youtube       yt.IService
-	Dify          ogifmemosummarizer.IService
-	LandingZone   landingzone.IService
+	Basecamp           *basecamp.Service
+	TaskProvider       taskprovider.InvoiceProvider
+	AccountingProvider taskprovider.AccountingProvider
+	NocoDB             *nocodb.Service
+	Cache              *cache.Cache
+	Currency           currency.IService
+	Discord            discord.IService
+	DuckDB             duckdb.IService
+	Github             github.IService
+	Google             googleauth.IService
+	GoogleStorage      googlestorage.IService
+	GoogleAdmin        googleadmin.IService
+	GoogleDrive        googledrive.IService
+	GoogleMail         googlemail.IService
+	GoogleSheet        googlesheet.IService
+	ImprovMX           improvmx.IService
+	Mochi              mochi.IService
+	MochiPay           mochipay.IService
+	MochiProfile       mochiprofile.IService
+	Notion             notion.IService
+	ParquetSync        parquet.ISyncService
+	Sendgrid           sendgrid.IService
+	Wise               wise.IService
+	BaseClient         evm.IService
+	IcySwap            icyswap.IService
+	CommunityNft       communitynft.IService
+	Tono               tono.IService
+	Reddit             reddit.IService
+	Lobsters           lobsters.IService
+	Youtube            yt.IService
+	Dify               ogifmemosummarizer.IService
+	LandingZone        landingzone.IService
 }
 
 func New(cfg *config.Config, store *store.Store, repo store.DBRepo) (*Service, error) {
@@ -211,50 +212,63 @@ func New(cfg *config.Config, store *store.Store, repo store.DBRepo) (*Service, e
 	parquetSvc := parquet.NewSyncService(cfg.Parquet, logger.L)
 	basecampSvc := basecamp.New(store, repo, cfg, &bc, logger.L)
 	nocoSvc := nocodb.New(cfg.Noco)
+	basecampTaskProvider := tpbasecamp.New(basecampSvc, cfg)
+
+	selectedProvider := strings.ToLower(cfg.TaskProvider)
+
 	var invoiceProvider taskprovider.InvoiceProvider
-	switch strings.ToLower(cfg.TaskProvider.Invoice) {
-	case string(taskprovider.ProviderNocoDB):
+	if selectedProvider == string(taskprovider.ProviderNocoDB) {
 		if prov := tpnocodb.New(nocoSvc); prov != nil {
 			invoiceProvider = prov
-			break
 		}
 	}
 	if invoiceProvider == nil {
-		invoiceProvider = tpbasecamp.New(basecampSvc, cfg)
+		invoiceProvider = basecampTaskProvider
+	}
+
+	var accountingProvider taskprovider.AccountingProvider
+	if selectedProvider == string(taskprovider.ProviderNocoDB) {
+		if prov := tpnocodb.New(nocoSvc); prov != nil {
+			accountingProvider = prov
+		}
+	}
+	if accountingProvider == nil {
+		accountingProvider = basecampTaskProvider
 	}
 
 	return &Service{
-		Basecamp:      basecampSvc,
-		TaskProvider:  invoiceProvider,
-		NocoDB:        nocoSvc,
-		Cache:         cch,
-		Currency:      Currency,
-		Discord:       discord.New(cfg),
-		DuckDB:        duckDBSvc,
-		Github:        github.New(cfg, logger.L),
-		Google:        googleAuthSvc,
-		GoogleStorage: gcsSvc,
-		GoogleAdmin:   googleAdminSvc,
-		GoogleDrive:   googleDriveSvc,
-		GoogleMail:    googleMailSvc,
-		GoogleSheet:   gSheetSvc,
-		ImprovMX:      improvmx.New(cfg.ImprovMX.Token),
-		Mochi:         mochi.New(cfg, logger.L),
-		MochiPay:      mochipay.New(cfg, logger.L),
-		MochiProfile:  mochiprofile.New(cfg, logger.L),
-		Notion:        notion.New(cfg.Notion.Secret, cfg.Notion.Databases.Project, logger.L, repo.DB()),
-		ParquetSync:   parquetSvc,
-		Sendgrid:      sendgrid.New(cfg.Sendgrid.APIKey, cfg, logger.L),
-		Wise:          wise.New(cfg, logger.L),
-		BaseClient:    baseClient,
-		IcySwap:       icySwap,
-		CommunityNft:  communityNft,
-		Tono:          tono.New(cfg, logger.L),
-		Reddit:        reddit,
-		Lobsters:      lobsters.New(),
-		Youtube:       youtubeSvc,
-		Dify:          difySvc,
-		LandingZone:   landingZoneSvc,
+		Basecamp:           basecampSvc,
+		TaskProvider:       invoiceProvider,
+		AccountingProvider: accountingProvider,
+		NocoDB:             nocoSvc,
+		Cache:              cch,
+		Currency:           Currency,
+		Discord:            discord.New(cfg),
+		DuckDB:             duckDBSvc,
+		Github:             github.New(cfg, logger.L),
+		Google:             googleAuthSvc,
+		GoogleStorage:      gcsSvc,
+		GoogleAdmin:        googleAdminSvc,
+		GoogleDrive:        googleDriveSvc,
+		GoogleMail:         googleMailSvc,
+		GoogleSheet:        gSheetSvc,
+		ImprovMX:           improvmx.New(cfg.ImprovMX.Token),
+		Mochi:              mochi.New(cfg, logger.L),
+		MochiPay:           mochipay.New(cfg, logger.L),
+		MochiProfile:       mochiprofile.New(cfg, logger.L),
+		Notion:             notion.New(cfg.Notion.Secret, cfg.Notion.Databases.Project, logger.L, repo.DB()),
+		ParquetSync:        parquetSvc,
+		Sendgrid:           sendgrid.New(cfg.Sendgrid.APIKey, cfg, logger.L),
+		Wise:               wise.New(cfg, logger.L),
+		BaseClient:         baseClient,
+		IcySwap:            icySwap,
+		CommunityNft:       communityNft,
+		Tono:               tono.New(cfg, logger.L),
+		Reddit:             reddit,
+		Lobsters:           lobsters.New(),
+		Youtube:            youtubeSvc,
+		Dify:               difySvc,
+		LandingZone:        landingZoneSvc,
 	}, nil
 }
 

@@ -1,0 +1,26 @@
+{
+  "tableId": "tbl_accounting_transactions",
+  "rowId": "row_123",
+  "event": "row.updated",
+  "triggeredBy": {
+    "name": "Giang Than",
+    "email": "giang@example.com"
+  },
+  "new": {
+    "todo_row_id": "row_todo_456",
+    "board_label": "Accounting | January 2025",
+    "group": "out",
+    "title": "Office Rental | 1.500.000 | VND",
+    "amount": 1500000,
+    "currency": "VND",
+    "status": "completed",
+    "metadata": {
+      "month": 1,
+      "year": 2025,
+      "template_id": "svc_office_rental"
+    }
+  },
+  "old": {
+    "status": "open"
+  }
+}
