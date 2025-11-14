@@ -2,10 +2,13 @@ package worker
 
 import (
 	"context"
+	"errors"
+
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	bcModel "github.com/dwarvesf/fortress-api/pkg/service/basecamp/model"
+	"github.com/dwarvesf/fortress-api/pkg/service/taskprovider"
 )
 
 type Worker struct {
@@ -39,6 +42,9 @@ func (w *Worker) ProcessMessage() error {
 
 			case bcModel.BasecampTodoMsg:
 				_ = w.handleTodoMessage(w.logger, message.Payload)
+
+			case taskprovider.WorkerMessageInvoiceComment:
+				_ = w.handleInvoiceCommentJob(w.logger, message.Payload)
 			default:
 				continue
 			}
@@ -77,4 +83,15 @@ func (w *Worker) handleTodoMessage(l logger.Logger, payload interface{}) error {
 	}
 
 	return nil
+}
+
+func (w *Worker) handleInvoiceCommentJob(l logger.Logger, payload interface{}) error {
+	job, ok := payload.(taskprovider.InvoiceCommentJob)
+	if !ok {
+		return errors.New("invalid invoice comment job payload")
+	}
+	if w.service.TaskProvider == nil {
+		return errors.New("task provider not configured")
+	}
+	return w.service.TaskProvider.PostComment(w.ctx, job.Ref, job.Input)
 }

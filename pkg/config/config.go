@@ -1,9 +1,17 @@
 package config
 
 import (
+	"strconv"
 	"strings"
 
 	"github.com/spf13/viper"
+)
+
+const (
+	defaultBasecampAccountingProjectID = 15258324
+	defaultBasecampAccountingTodoSetID = 2329633561
+	defaultBasecampPlaygroundProjectID = 12984857
+	defaultBasecampPlaygroundTodoSetID = 1941398075
 )
 
 // Loader load config from reader into Viper
@@ -36,6 +44,8 @@ type Config struct {
 	Youtube       Youtube
 	Dify          Dify
 	Parquet       Parquet
+	Noco          Noco
+	TaskProvider  TaskProvider
 
 	Invoice  Invoice
 	Sendgrid Sendgrid
@@ -47,6 +57,15 @@ type Config struct {
 	Env          string
 	JWTSecretKey string
 	FortressURL  string
+}
+
+func getIntWithDefault(v ENV, key string, fallback int) int {
+	if val := v.GetString(key); val != "" {
+		if parsed, err := strconv.Atoi(val); err == nil {
+			return parsed
+		}
+	}
+	return fallback
 }
 
 type DBConnection struct {
@@ -204,6 +223,22 @@ type Basecamp struct {
 	ClientID          string
 	ClientSecret      string
 	OAuthRefreshToken string
+	AccountingProjectID    int
+	AccountingTodoSetID    int
+	PlaygroundProjectID    int
+	PlaygroundTodoSetID    int
+}
+
+type Noco struct {
+	BaseURL             string
+	Token               string
+	InvoiceTableID      string
+	InvoiceCommentsTableID string
+	InvoiceWebhookSecret string
+}
+
+type TaskProvider struct {
+	Invoice string
 }
 
 type ENV interface {
@@ -318,6 +353,10 @@ func Generate(v ENV) *Config {
 			ClientID:          v.GetString("BASECAMP_CLIENT_ID"),
 			ClientSecret:      v.GetString("BASECAMP_CLIENT_SECRET"),
 			OAuthRefreshToken: v.GetString("BASECAMP_OAUTH_REFRESH_TOKEN"),
+			AccountingProjectID: getIntWithDefault(v, "BASECAMP_ACCOUNTING_PROJECT_ID", defaultBasecampAccountingProjectID),
+			AccountingTodoSetID: getIntWithDefault(v, "BASECAMP_ACCOUNTING_TODO_SET_ID", defaultBasecampAccountingTodoSetID),
+			PlaygroundProjectID: getIntWithDefault(v, "BASECAMP_PLAYGROUND_PROJECT_ID", defaultBasecampPlaygroundProjectID),
+			PlaygroundTodoSetID: getIntWithDefault(v, "BASECAMP_PLAYGROUND_TODO_SET_ID", defaultBasecampPlaygroundTodoSetID),
 		},
 		Invoice: Invoice{
 			TemplatePath: v.GetString("INVOICE_TEMPLATE_PATH"),
@@ -370,6 +409,16 @@ func Generate(v ENV) *Config {
 			ExtendedTimeout: v.GetString("PARQUET_EXTENDED_TIMEOUT"),
 			EnableCaching:   v.GetBool("PARQUET_ENABLE_CACHING"),
 		},
+		Noco: Noco{
+			BaseURL:             v.GetString("NOCO_BASE_URL"),
+			Token:               v.GetString("NOCO_TOKEN"),
+			InvoiceTableID:      v.GetString("NOCO_INVOICE_TABLE_ID"),
+			InvoiceCommentsTableID: v.GetString("NOCO_INVOICE_COMMENTS_TABLE_ID"),
+			InvoiceWebhookSecret: v.GetString("NOCO_INVOICE_WEBHOOK_SECRET"),
+		},
+		TaskProvider: TaskProvider{
+			Invoice: v.GetString("TASK_PROVIDER_INVOICE"),
+		},
 	}
 }
 
@@ -396,6 +445,7 @@ func LoadConfig(loaders []Loader) *Config {
 	v.SetDefault("PARQUET_QUICK_TIMEOUT", "2s")
 	v.SetDefault("PARQUET_EXTENDED_TIMEOUT", "60s")
 	v.SetDefault("PARQUET_ENABLE_CACHING", true)
+	v.SetDefault("TASK_PROVIDER_INVOICE", "basecamp")
 
 	for idx := range loaders {
 		newV, err := loaders[idx].Load(*v)

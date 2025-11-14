@@ -17,6 +17,7 @@ mcp-server
 .env.docker
 .current-session
 .env.local
+.env.prod
 
 # dependencies
 vendor
@@ -26,6 +27,7 @@ main
 
 #claude
 .mcp.json
+.mcp.bak.json
 
 # codex
 .mcp.toml

@@ -75,6 +75,7 @@ type SendInvoiceRequest struct {
 	IsDraft     bool          `json:"isDraft"`
 	ProjectID   view.UUID     `json:"projectID" binding:"required"`
 	BankID      view.UUID     `json:"bankID" binding:"required"`
+	SentBy      view.UUID     `json:"sentBy"`
 	Description string        `json:"description"`
 	Note        string        `json:"note"`
 	CC          []string      `json:"cc"`
@@ -175,7 +176,14 @@ func (i *SendInvoiceRequest) ToInvoiceModel(sentByID string) (*model.Invoice, er
 	}
 
 	var senderID *model.UUID
-	if sentByID != "" {
+	// Prioritize sentBy from request payload (for API key auth), fallback to userID from context
+	if !i.SentBy.IsZero() {
+		s, err := model.UUIDFromString(i.SentBy.String())
+		if err != nil {
+			return nil, err
+		}
+		senderID = &s
+	} else if sentByID != "" {
 		s, err := model.UUIDFromString(sentByID)
 		if err != nil {
 			return nil, err
