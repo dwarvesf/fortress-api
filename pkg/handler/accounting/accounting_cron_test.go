@@ -123,6 +123,10 @@ func (s *fakeAccountingTaskRefStore) Create(_ *gorm.DB, ref *model.AccountingTas
 	return nil
 }
 
+func (s *fakeAccountingTaskRefStore) FindByProjectMonthYear(_ *gorm.DB, _ string, _ int, _ int, _ string) ([]*model.AccountingTaskRef, error) {
+	return s.entries, nil
+}
+
 type fakeRepo struct{}
 
 func (fakeRepo) DB() *gorm.DB { return nil }

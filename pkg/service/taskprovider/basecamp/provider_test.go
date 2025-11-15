@@ -1,6 +1,7 @@
 package basecamp
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -19,7 +20,7 @@ func TestParseAccountingWebhook_Basecamp(t *testing.T) {
 
 	p := &Provider{}
 	payload, err := p.ParseAccountingWebhook(
-		nil,
+		context.TODO(),
 		taskprovider.AccountingWebhookRequest{Body: body},
 	)
 	require.NoError(t, err)

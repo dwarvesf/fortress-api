@@ -194,8 +194,10 @@ func (c *controller) dispatchInvoiceTask(iv *model.Invoice, fileName string) err
 	}
 
 	iv.TodoAttachment = attachmentRef.Markup
-	if attachmentRef != nil && len(attachmentRef.Meta) > 0 {
-		iv.InvoiceAttachmentMeta = attachmentRef.Meta
+	if attachmentRef != nil {
+		if len(attachmentRef.Meta) > 0 {
+			iv.InvoiceAttachmentMeta = attachmentRef.Meta
+		}
 	}
 
 	ref, err := provider.EnsureTask(context.Background(), taskprovider.CreateInvoiceTaskInput{Invoice: iv})

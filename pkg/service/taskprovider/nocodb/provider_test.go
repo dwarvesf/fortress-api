@@ -1,6 +1,7 @@
 package nocodb
 
 import (
+	"context"
 	"encoding/json"
 	"testing"
 
@@ -32,7 +33,7 @@ func TestParseAccountingWebhook_Noco(t *testing.T) {
 
 	provider := &Provider{svc: &nocodbsvc.Service{}}
 	payload, err := provider.ParseAccountingWebhook(
-		nil,
+		context.TODO(),
 		taskprovider.AccountingWebhookRequest{Body: body},
 	)
 	require.NoError(t, err)
@@ -67,7 +68,7 @@ func TestParseAccountingWebhook_Noco_NoAmount(t *testing.T) {
 
 	provider := &Provider{svc: &nocodbsvc.Service{}}
 	payload, err := provider.ParseAccountingWebhook(
-		nil,
+		context.TODO(),
 		taskprovider.AccountingWebhookRequest{Body: body},
 	)
 	require.NoError(t, err)

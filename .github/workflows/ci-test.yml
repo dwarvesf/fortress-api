@@ -4,11 +4,65 @@ jobs:
   ci-test:
     runs-on: ubuntu-latest
     name: CI testing
+    services:
+      postgres-test:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: fortress_local_test
+        ports:
+          - 35432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d fortress_local_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
         with:
           go-version: "^1.21"
 
-      - name: Run Test
-        run: make ci
+      - name: Add Go bin to PATH
+        run: echo "$HOME/go/bin" >> $GITHUB_PATH
+
+      - name: Cache Go modules
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Cache Go binaries
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/go/bin
+          key: ${{ runner.os }}-gobin-${{ hashFiles('**/go.sum') }}
+
+      - name: Install sql-migrate
+        run: |
+          if ! command -v sql-migrate >/dev/null 2>&1; then
+            go install github.com/rubenv/sql-migrate/v4/...@latest
+          fi
+
+      - name: Wait for database
+        run: until docker exec postgres-test pg_isready -U postgres -d fortress_local_test; do sleep 1; done
+
+      - name: Apply migrations
+        run: sql-migrate up -env=test
+
+      - name: Seed database
+        run: |
+          docker cp migrations/test_seed postgres-test:/tmp/test_seed
+          docker exec postgres-test bash -c "PGPASSWORD=postgres psql -U postgres -d fortress_local_test -f /tmp/test_seed/seed.sql"
+
+      - name: Run Tests
+        env:
+          PROJECT_PATH: ${{ github.workspace }}
+        run: go test -cover ./... -count=1 -p=1

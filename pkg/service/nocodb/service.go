@@ -74,17 +74,6 @@ func (s *Service) BaseURL() string {
 	return s.baseURL
 }
 
-func (s *Service) baseHost() string {
-	if s == nil {
-		return ""
-	}
-	host := s.baseURL
-	for _, suffix := range []string{"/api/v2", "/api/v1"} {
-		host = strings.TrimSuffix(host, suffix)
-	}
-	return strings.TrimSuffix(host, "/")
-}
-
 // Token exposes the configured API token (mainly for downstream helpers).
 func (s *Service) Token() string {
 	if s == nil {
