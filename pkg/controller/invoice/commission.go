@@ -79,6 +79,11 @@ func (c *controller) storeCommission(db *gorm.DB, l logger.Logger, invoice *mode
 	// remove inbound fund commission from employee commissions
 	employeeCommissions = c.RemoveInboundFundCommission(employeeCommissions)
 
+	// guard against empty slice after removal to avoid gorm empty-slice errors
+	if len(employeeCommissions) == 0 {
+		return []model.EmployeeCommission{}, nil
+	}
+
 	return c.store.EmployeeCommission.Create(db, employeeCommissions)
 }
 
@@ -328,17 +333,19 @@ func (c *controller) getPICs(invoice *model.Invoice, projectMembers []*model.Pro
 }
 
 func (c *controller) movePaidInvoiceGDrive(l logger.Logger, wg *sync.WaitGroup, req *processPaidInvoiceRequest) {
-	msg := c.service.Basecamp.BuildCommentMessage(req.InvoiceBucketID, req.InvoiceTodoID, bcConst.CommentMoveInvoicePDFToPaidDirSuccessfully, bcModel.CommentMsgTypeCompleted)
+	msg := bcConst.CommentMoveInvoicePDFToPaidDirSuccessfully
+	msgType := bcModel.CommentMsgTypeCompleted
 
 	defer func() {
-		c.worker.Enqueue(bcModel.BasecampCommentMsg, msg)
+		c.enqueueInvoiceComment(req.TaskRef, req.InvoiceBucketID, req.InvoiceTodoID, msg, msgType)
 		wg.Done()
 	}()
 
 	err := c.service.GoogleDrive.MoveInvoicePDF(req.Invoice, "Sent", "Paid")
 	if err != nil {
 		l.Errorf(err, "failed to move invoice pdf from sent to paid folder for invoice(%v)", req.Invoice.ID.String())
-		msg = c.service.Basecamp.BuildCommentMessage(req.InvoiceBucketID, req.InvoiceTodoID, bcConst.CommentMoveInvoicePDFToPaidDirFailed, bcModel.CommentMsgTypeFailed)
+		msg = bcConst.CommentMoveInvoicePDFToPaidDirFailed
+		msgType = bcModel.CommentMsgTypeFailed
 		return
 	}
 }

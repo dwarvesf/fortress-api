@@ -1,6 +1,7 @@
 package service
 
 import (
+	"strings"
 	"time"
 
 	"github.com/patrickmn/go-cache"
@@ -34,11 +35,15 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/service/mochi"
 	"github.com/dwarvesf/fortress-api/pkg/service/mochipay"
 	"github.com/dwarvesf/fortress-api/pkg/service/mochiprofile"
+	"github.com/dwarvesf/fortress-api/pkg/service/nocodb"
 	"github.com/dwarvesf/fortress-api/pkg/service/notion"
 	"github.com/dwarvesf/fortress-api/pkg/service/ogifmemosummarizer"
 	"github.com/dwarvesf/fortress-api/pkg/service/parquet"
 	"github.com/dwarvesf/fortress-api/pkg/service/reddit"
 	"github.com/dwarvesf/fortress-api/pkg/service/sendgrid"
+	"github.com/dwarvesf/fortress-api/pkg/service/taskprovider"
+	tpbasecamp "github.com/dwarvesf/fortress-api/pkg/service/taskprovider/basecamp"
+	tpnocodb "github.com/dwarvesf/fortress-api/pkg/service/taskprovider/nocodb"
 	"github.com/dwarvesf/fortress-api/pkg/service/tono"
 	"github.com/dwarvesf/fortress-api/pkg/service/wise"
 	yt "github.com/dwarvesf/fortress-api/pkg/service/youtube"
@@ -46,35 +51,38 @@ import (
 )
 
 type Service struct {
-	Basecamp      *basecamp.Service
-	Cache         *cache.Cache
-	Currency      currency.IService
-	Discord       discord.IService
-	DuckDB        duckdb.IService
-	Github        github.IService
-	Google        googleauth.IService
-	GoogleStorage googlestorage.IService
-	GoogleAdmin   googleadmin.IService
-	GoogleDrive   googledrive.IService
-	GoogleMail    googlemail.IService
-	GoogleSheet   googlesheet.IService
-	ImprovMX      improvmx.IService
-	Mochi         mochi.IService
-	MochiPay      mochipay.IService
-	MochiProfile  mochiprofile.IService
-	Notion        notion.IService
-	ParquetSync   parquet.ISyncService
-	Sendgrid      sendgrid.IService
-	Wise          wise.IService
-	BaseClient    evm.IService
-	IcySwap       icyswap.IService
-	CommunityNft  communitynft.IService
-	Tono          tono.IService
-	Reddit        reddit.IService
-	Lobsters      lobsters.IService
-	Youtube       yt.IService
-	Dify          ogifmemosummarizer.IService
-	LandingZone   landingzone.IService
+	Basecamp           *basecamp.Service
+	TaskProvider       taskprovider.InvoiceProvider
+	AccountingProvider taskprovider.AccountingProvider
+	NocoDB             *nocodb.Service
+	Cache              *cache.Cache
+	Currency           currency.IService
+	Discord            discord.IService
+	DuckDB             duckdb.IService
+	Github             github.IService
+	Google             googleauth.IService
+	GoogleStorage      googlestorage.IService
+	GoogleAdmin        googleadmin.IService
+	GoogleDrive        googledrive.IService
+	GoogleMail         googlemail.IService
+	GoogleSheet        googlesheet.IService
+	ImprovMX           improvmx.IService
+	Mochi              mochi.IService
+	MochiPay           mochipay.IService
+	MochiProfile       mochiprofile.IService
+	Notion             notion.IService
+	ParquetSync        parquet.ISyncService
+	Sendgrid           sendgrid.IService
+	Wise               wise.IService
+	BaseClient         evm.IService
+	IcySwap            icyswap.IService
+	CommunityNft       communitynft.IService
+	Tono               tono.IService
+	Reddit             reddit.IService
+	Lobsters           lobsters.IService
+	Youtube            yt.IService
+	Dify               ogifmemosummarizer.IService
+	LandingZone        landingzone.IService
 }
 
 func New(cfg *config.Config, store *store.Store, repo store.DBRepo) (*Service, error) {
@@ -202,37 +210,65 @@ func New(cfg *config.Config, store *store.Store, repo store.DBRepo) (*Service, e
 	}
 
 	parquetSvc := parquet.NewSyncService(cfg.Parquet, logger.L)
+	basecampSvc := basecamp.New(store, repo, cfg, &bc, logger.L)
+	nocoSvc := nocodb.New(cfg.Noco)
+	basecampTaskProvider := tpbasecamp.New(basecampSvc, cfg)
+
+	selectedProvider := strings.ToLower(cfg.TaskProvider)
+
+	var invoiceProvider taskprovider.InvoiceProvider
+	if selectedProvider == string(taskprovider.ProviderNocoDB) {
+		if prov := tpnocodb.New(nocoSvc); prov != nil {
+			invoiceProvider = prov
+		}
+	}
+	if invoiceProvider == nil {
+		invoiceProvider = basecampTaskProvider
+	}
+
+	var accountingProvider taskprovider.AccountingProvider
+	if selectedProvider == string(taskprovider.ProviderNocoDB) {
+		if prov := tpnocodb.New(nocoSvc); prov != nil {
+			accountingProvider = prov
+		}
+	}
+	if accountingProvider == nil {
+		accountingProvider = basecampTaskProvider
+	}
 
 	return &Service{
-		Basecamp:      basecamp.New(store, repo, cfg, &bc, logger.L),
-		Cache:         cch,
-		Currency:      Currency,
-		Discord:       discord.New(cfg),
-		DuckDB:        duckDBSvc,
-		Github:        github.New(cfg, logger.L),
-		Google:        googleAuthSvc,
-		GoogleStorage: gcsSvc,
-		GoogleAdmin:   googleAdminSvc,
-		GoogleDrive:   googleDriveSvc,
-		GoogleMail:    googleMailSvc,
-		GoogleSheet:   gSheetSvc,
-		ImprovMX:      improvmx.New(cfg.ImprovMX.Token),
-		Mochi:         mochi.New(cfg, logger.L),
-		MochiPay:      mochipay.New(cfg, logger.L),
-		MochiProfile:  mochiprofile.New(cfg, logger.L),
-		Notion:        notion.New(cfg.Notion.Secret, cfg.Notion.Databases.Project, logger.L, repo.DB()),
-		ParquetSync:   parquetSvc,
-		Sendgrid:      sendgrid.New(cfg.Sendgrid.APIKey, cfg, logger.L),
-		Wise:          wise.New(cfg, logger.L),
-		BaseClient:    baseClient,
-		IcySwap:       icySwap,
-		CommunityNft:  communityNft,
-		Tono:          tono.New(cfg, logger.L),
-		Reddit:        reddit,
-		Lobsters:      lobsters.New(),
-		Youtube:       youtubeSvc,
-		Dify:          difySvc,
-		LandingZone:   landingZoneSvc,
+		Basecamp:           basecampSvc,
+		TaskProvider:       invoiceProvider,
+		AccountingProvider: accountingProvider,
+		NocoDB:             nocoSvc,
+		Cache:              cch,
+		Currency:           Currency,
+		Discord:            discord.New(cfg),
+		DuckDB:             duckDBSvc,
+		Github:             github.New(cfg, logger.L),
+		Google:             googleAuthSvc,
+		GoogleStorage:      gcsSvc,
+		GoogleAdmin:        googleAdminSvc,
+		GoogleDrive:        googleDriveSvc,
+		GoogleMail:         googleMailSvc,
+		GoogleSheet:        gSheetSvc,
+		ImprovMX:           improvmx.New(cfg.ImprovMX.Token),
+		Mochi:              mochi.New(cfg, logger.L),
+		MochiPay:           mochipay.New(cfg, logger.L),
+		MochiProfile:       mochiprofile.New(cfg, logger.L),
+		Notion:             notion.New(cfg.Notion.Secret, cfg.Notion.Databases.Project, logger.L, repo.DB()),
+		ParquetSync:        parquetSvc,
+		Sendgrid:           sendgrid.New(cfg.Sendgrid.APIKey, cfg, logger.L),
+		Wise:               wise.New(cfg, logger.L),
+		BaseClient:         baseClient,
+		IcySwap:            icySwap,
+		CommunityNft:       communityNft,
+		Tono:               tono.New(cfg, logger.L),
+		Reddit:             reddit,
+		Lobsters:           lobsters.New(),
+		Youtube:            youtubeSvc,
+		Dify:               difySvc,
+		LandingZone:        landingZoneSvc,
 	}, nil
 }
 

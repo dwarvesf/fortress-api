@@ -763,6 +763,18 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/webhook.IHandler.ValidateOnLeaveRequest-fm",
 			},
 		},
+		"/webhooks/nocodb/invoice": {
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/webhook.IHandler.MarkInvoiceAsPaidViaNoco-fm",
+			},
+		},
+		"/webhooks/nocodb/accounting": {
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/webhook.IHandler.StoreNocoAccountingTransaction-fm",
+			},
+		},
 		"/api/v1/bank-accounts": {
 			"GET": {
 				Method:  "GET",

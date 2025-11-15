@@ -1,9 +1,17 @@
 package config
 
 import (
+	"strconv"
 	"strings"
 
 	"github.com/spf13/viper"
+)
+
+const (
+	defaultBasecampAccountingProjectID = 15258324
+	defaultBasecampAccountingTodoSetID = 2329633561
+	defaultBasecampPlaygroundProjectID = 12984857
+	defaultBasecampPlaygroundTodoSetID = 1941398075
 )
 
 // Loader load config from reader into Viper
@@ -19,23 +27,26 @@ type Config struct {
 	ApiServer ApiServer
 
 	// service
-	Google        Google
-	Vault         Vault
-	Notion        Notion
-	Wise          Wise
-	Discord       Discord
-	Basecamp      Basecamp
-	CurrencyLayer CurrencyLayer
-	Mochi         Mochi
-	MochiPay      MochiPay
-	MochiProfile  MochiProfile
-	Tono          Tono
-	ImprovMX      ImprovMX
-	CommunityNft  CommunityNft
-	Reddit        Reddit
-	Youtube       Youtube
-	Dify          Dify
-	Parquet       Parquet
+	Google                Google
+	Vault                 Vault
+	Notion                Notion
+	Wise                  Wise
+	Discord               Discord
+	Basecamp              Basecamp
+	CurrencyLayer         CurrencyLayer
+	Mochi                 Mochi
+	MochiPay              MochiPay
+	MochiProfile          MochiProfile
+	Tono                  Tono
+	ImprovMX              ImprovMX
+	CommunityNft          CommunityNft
+	Reddit                Reddit
+	Youtube               Youtube
+	Dify                  Dify
+	Parquet               Parquet
+	Noco                  Noco
+	TaskProvider          string
+	AccountingIntegration AccountingIntegration
 
 	Invoice  Invoice
 	Sendgrid Sendgrid
@@ -47,6 +58,22 @@ type Config struct {
 	Env          string
 	JWTSecretKey string
 	FortressURL  string
+}
+
+func getIntWithDefault(v ENV, key string, fallback int) int {
+	if val := v.GetString(key); val != "" {
+		if parsed, err := strconv.Atoi(val); err == nil {
+			return parsed
+		}
+	}
+	return fallback
+}
+
+func getStringWithDefault(v ENV, key, fallback string) string {
+	if val := v.GetString(key); val != "" {
+		return val
+	}
+	return fallback
 }
 
 type DBConnection struct {
@@ -200,10 +227,44 @@ type Sendgrid struct {
 }
 
 type Basecamp struct {
-	BotKey            string
-	ClientID          string
-	ClientSecret      string
-	OAuthRefreshToken string
+	BotKey              string
+	ClientID            string
+	ClientSecret        string
+	OAuthRefreshToken   string
+	AccountingProjectID int
+	AccountingTodoSetID int
+	PlaygroundProjectID int
+	PlaygroundTodoSetID int
+}
+
+type Noco struct {
+	BaseURL                       string
+	Token                         string
+	WorkspaceID                   string
+	BaseID                        string
+	InvoiceTableID                string
+	InvoiceCommentsTableID        string
+	WebhookSecret                 string
+	AccountingTodosTableID        string
+	AccountingTransactionsTableID string
+}
+
+type AccountingIntegration struct {
+	Basecamp AccountingBasecampIntegration
+	Noco     AccountingNocoIntegration
+}
+
+type AccountingBasecampIntegration struct {
+	ProjectID int
+	TodoSetID int
+	GroupIn   string
+	GroupOut  string
+}
+
+type AccountingNocoIntegration struct {
+	TodosTableID        string
+	TransactionsTableID string
+	WebhookSecret       string
 }
 
 type ENV interface {
@@ -223,6 +284,19 @@ type CheckIn struct {
 }
 
 func Generate(v ENV) *Config {
+	basecampAccountingProjectID := getIntWithDefault(v, "BASECAMP_ACCOUNTING_PROJECT_ID", defaultBasecampAccountingProjectID)
+	basecampAccountingTodoSetID := getIntWithDefault(v, "BASECAMP_ACCOUNTING_TODO_SET_ID", defaultBasecampAccountingTodoSetID)
+	basecampPlaygroundProjectID := getIntWithDefault(v, "BASECAMP_PLAYGROUND_PROJECT_ID", defaultBasecampPlaygroundProjectID)
+	basecampPlaygroundTodoSetID := getIntWithDefault(v, "BASECAMP_PLAYGROUND_TODO_SET_ID", defaultBasecampPlaygroundTodoSetID)
+
+	accountingTodosTableID := v.GetString("NOCO_ACCOUNTING_TODOS_TABLE_ID")
+	accountingTransactionsTableID := v.GetString("NOCO_ACCOUNTING_TRANSACTIONS_TABLE_ID")
+	nocoWebhookSecret := v.GetString("NOCO_WEBHOOK_SECRET")
+	accountingGroupIn := getStringWithDefault(v, "ACCOUNTING_BASECAMP_GROUP_IN_NAME", "In")
+	accountingGroupOut := getStringWithDefault(v, "ACCOUNTING_BASECAMP_GROUP_OUT_NAME", "Out")
+	accountingProjectID := getIntWithDefault(v, "ACCOUNTING_BASECAMP_PROJECT_ID", basecampAccountingProjectID)
+	accountingTodoSetID := getIntWithDefault(v, "ACCOUNTING_BASECAMP_TODO_SET_ID", basecampAccountingTodoSetID)
+
 	return &Config{
 		Debug:        v.GetBool("DEBUG"),
 		APIKey:       v.GetString("API_KEY"),
@@ -314,10 +388,14 @@ func Generate(v ENV) *Config {
 			},
 		},
 		Basecamp: Basecamp{
-			BotKey:            v.GetString("BASECAMP_BOT_KEY"),
-			ClientID:          v.GetString("BASECAMP_CLIENT_ID"),
-			ClientSecret:      v.GetString("BASECAMP_CLIENT_SECRET"),
-			OAuthRefreshToken: v.GetString("BASECAMP_OAUTH_REFRESH_TOKEN"),
+			BotKey:              v.GetString("BASECAMP_BOT_KEY"),
+			ClientID:            v.GetString("BASECAMP_CLIENT_ID"),
+			ClientSecret:        v.GetString("BASECAMP_CLIENT_SECRET"),
+			OAuthRefreshToken:   v.GetString("BASECAMP_OAUTH_REFRESH_TOKEN"),
+			AccountingProjectID: basecampAccountingProjectID,
+			AccountingTodoSetID: basecampAccountingTodoSetID,
+			PlaygroundProjectID: basecampPlaygroundProjectID,
+			PlaygroundTodoSetID: basecampPlaygroundTodoSetID,
 		},
 		Invoice: Invoice{
 			TemplatePath: v.GetString("INVOICE_TEMPLATE_PATH"),
@@ -370,6 +448,31 @@ func Generate(v ENV) *Config {
 			ExtendedTimeout: v.GetString("PARQUET_EXTENDED_TIMEOUT"),
 			EnableCaching:   v.GetBool("PARQUET_ENABLE_CACHING"),
 		},
+	Noco: Noco{
+		BaseURL:                       v.GetString("NOCO_BASE_URL"),
+		Token:                         v.GetString("NOCO_TOKEN"),
+		WorkspaceID:                   v.GetString("NOCO_WORKSPACE_ID"),
+		BaseID:                        v.GetString("NOCO_BASE_ID"),
+		InvoiceTableID:                v.GetString("NOCO_INVOICE_TABLE_ID"),
+		InvoiceCommentsTableID:        v.GetString("NOCO_INVOICE_COMMENTS_TABLE_ID"),
+		WebhookSecret:                 nocoWebhookSecret,
+		AccountingTodosTableID:        accountingTodosTableID,
+		AccountingTransactionsTableID: accountingTransactionsTableID,
+		},
+		TaskProvider: getStringWithDefault(v, "TASK_PROVIDER", "basecamp"),
+		AccountingIntegration: AccountingIntegration{
+			Basecamp: AccountingBasecampIntegration{
+				ProjectID: accountingProjectID,
+				TodoSetID: accountingTodoSetID,
+				GroupIn:   accountingGroupIn,
+				GroupOut:  accountingGroupOut,
+			},
+			Noco: AccountingNocoIntegration{
+				TodosTableID:        accountingTodosTableID,
+				TransactionsTableID: accountingTransactionsTableID,
+				WebhookSecret:       nocoWebhookSecret,
+			},
+		},
 	}
 }
 
@@ -396,6 +499,7 @@ func LoadConfig(loaders []Loader) *Config {
 	v.SetDefault("PARQUET_QUICK_TIMEOUT", "2s")
 	v.SetDefault("PARQUET_EXTENDED_TIMEOUT", "60s")
 	v.SetDefault("PARQUET_ENABLE_CACHING", true)
+	v.SetDefault("TASK_PROVIDER", "basecamp")
 
 	for idx := range loaders {
 		newV, err := loaders[idx].Load(*v)

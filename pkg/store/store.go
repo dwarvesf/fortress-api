@@ -2,6 +2,7 @@ package store
 
 import (
 	"github.com/dwarvesf/fortress-api/pkg/store/accounting"
+	accountingtaskref "github.com/dwarvesf/fortress-api/pkg/store/accountingtaskref"
 	"github.com/dwarvesf/fortress-api/pkg/store/actionitem"
 	"github.com/dwarvesf/fortress-api/pkg/store/actionitemsnapshot"
 	"github.com/dwarvesf/fortress-api/pkg/store/agentworkflow"
@@ -87,6 +88,7 @@ import (
 
 type Store struct {
 	Accounting              accounting.IStore
+	AccountingTaskRef       accountingtaskref.IStore
 	ActionItem              actionitem.IStore
 	ActionItemSnapshot      actionitemsnapshot.IStore
 	AgentWorkflow           agentworkflow.IStore
@@ -173,6 +175,7 @@ type Store struct {
 func New() *Store {
 	return &Store{
 		Accounting:              accounting.New(),
+		AccountingTaskRef:       accountingtaskref.New(),
 		ActionItem:              actionitem.New(),
 		ActionItemSnapshot:      actionitemsnapshot.New(),
 		AgentWorkflow:           agentworkflow.New(),

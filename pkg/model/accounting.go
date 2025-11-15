@@ -72,3 +72,18 @@ type AccountingMetadata struct {
 	Source string `json:"source"`
 	ID     string `json:"id"`
 }
+
+type AccountingTaskRef struct {
+	BaseModel
+
+	Month        int            `json:"month"`
+	Year         int            `json:"year"`
+	GroupName    string         `json:"group_name"`
+	TaskProvider string         `json:"task_provider"`
+	TaskRef      string         `json:"task_ref"`
+	TaskBoard    string         `json:"task_board"`
+	TemplateID   *UUID          `json:"template_id,omitempty"`
+	ProjectID    *UUID          `json:"project_id,omitempty"`
+	Title        string         `json:"title"`
+	Metadata     datatypes.JSON `json:"metadata"`
+}

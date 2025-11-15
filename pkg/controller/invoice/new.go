@@ -5,6 +5,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service"
+	"github.com/dwarvesf/fortress-api/pkg/service/taskprovider"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/worker"
 )
@@ -35,6 +36,7 @@ type IController interface {
 	MarkInvoiceAsError(invoice *model.Invoice) (*model.Invoice, error)
 	MarkInvoiceAsPaid(invoice *model.Invoice, sendThankYouEmail bool) (*model.Invoice, error)
 	MarkInvoiceAsPaidByBasecampWebhookMessage(invoice *model.Invoice, msg *model.BasecampWebhookMessage) (*model.Invoice, error)
+	MarkInvoiceAsPaidWithTaskRef(invoice *model.Invoice, ref *taskprovider.InvoiceTaskRef, sendThankYouEmail bool) (*model.Invoice, error)
 	Send(iv *model.Invoice) (*model.Invoice, error)
 	UpdateStatus(in UpdateStatusInput) (*model.Invoice, error)
 

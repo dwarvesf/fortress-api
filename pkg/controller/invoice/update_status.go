@@ -15,6 +15,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service/basecamp/consts"
 	bcModel "github.com/dwarvesf/fortress-api/pkg/service/basecamp/model"
+	"github.com/dwarvesf/fortress-api/pkg/service/taskprovider"
 	sInvoice "github.com/dwarvesf/fortress-api/pkg/store/invoice"
 	"github.com/dwarvesf/fortress-api/pkg/utils/timeutil"
 )
@@ -115,6 +116,7 @@ func (c *controller) markInvoiceTodoAsError(invoice *model.Invoice) error {
 
 type processPaidInvoiceRequest struct {
 	Invoice          *model.Invoice
+	TaskRef          *taskprovider.InvoiceTaskRef
 	InvoiceTodoID    int
 	InvoiceBucketID  int
 	SentThankYouMail bool
@@ -124,7 +126,9 @@ func (c *controller) MarkInvoiceAsPaid(invoice *model.Invoice, sendThankYouEmail
 	l := c.logger.Fields(logger.Fields{
 		"controller": "invoice",
 		"method":     "MarkInvoiceAsPaid",
-		"req":        invoice,
+		"invoiceID":  invoice.ID,
+		"number":     invoice.Number,
+		"status":     invoice.Status,
 	})
 
 	if invoice.Status != model.InvoiceStatusSent && invoice.Status != model.InvoiceStatusOverdue {
@@ -145,29 +149,55 @@ func (c *controller) MarkInvoiceAsPaid(invoice *model.Invoice, sendThankYouEmail
 		l.Errorf(err, "failed to complete invoice todo", "invoiceID", invoice.ID.String())
 	}
 
-	c.processPaidInvoice(l, &processPaidInvoiceRequest{
-		Invoice:          invoice,
-		InvoiceTodoID:    todoID,
-		InvoiceBucketID:  bucketID,
-		SentThankYouMail: sendThankYouEmail,
-	})
+	ref := &taskprovider.InvoiceTaskRef{
+		Provider:   taskprovider.ProviderBasecamp,
+		ExternalID: strconv.Itoa(todoID),
+		BucketID:   bucketID,
+		TodoID:     todoID,
+	}
 
-	return invoice, nil
+	return c.MarkInvoiceAsPaidWithTaskRef(invoice, ref, sendThankYouEmail)
 }
 
 func (c *controller) MarkInvoiceAsPaidByBasecampWebhookMessage(invoice *model.Invoice, msg *model.BasecampWebhookMessage) (*model.Invoice, error) {
+	ref := &taskprovider.InvoiceTaskRef{
+		Provider:   taskprovider.ProviderBasecamp,
+		ExternalID: strconv.Itoa(msg.Recording.ID),
+		BucketID:   msg.Recording.Bucket.ID,
+		TodoID:     msg.Recording.ID,
+	}
+
+	return c.MarkInvoiceAsPaidWithTaskRef(invoice, ref, true)
+}
+
+func (c *controller) MarkInvoiceAsPaidWithTaskRef(invoice *model.Invoice, ref *taskprovider.InvoiceTaskRef, sendThankYouEmail bool) (*model.Invoice, error) {
 	l := c.logger.Fields(logger.Fields{
 		"controller": "invoice",
-		"method":     "MarkInvoiceAsPaidByBasecampWebhookMessage",
-		"req":        invoice,
+		"method":     "MarkInvoiceAsPaidWithTaskRef",
+		"invoiceID":  invoice.ID,
+		"number":     invoice.Number,
+		"status":     invoice.Status,
 	})
+
+	if invoice.Status != model.InvoiceStatusSent && invoice.Status != model.InvoiceStatusOverdue {
+		err := fmt.Errorf(`unable to update invoice status, invoice have status %v`, invoice.Status)
+		l.Errorf(err, "failed to update invoice", "invoiceID", invoice.ID.String())
+		return nil, err
+	}
 	invoice.Status = model.InvoiceStatusPaid
+
+	var todoID, bucketID int
+	if ref != nil {
+		todoID = ref.TodoID
+		bucketID = ref.BucketID
+	}
 
 	c.processPaidInvoice(l, &processPaidInvoiceRequest{
 		Invoice:          invoice,
-		InvoiceTodoID:    msg.Recording.ID,
-		InvoiceBucketID:  msg.Recording.Bucket.ID,
-		SentThankYouMail: true,
+		TaskRef:          ref,
+		InvoiceTodoID:    todoID,
+		InvoiceBucketID:  bucketID,
+		SentThankYouMail: sendThankYouEmail,
 	})
 
 	return invoice, nil
@@ -195,7 +225,7 @@ func (c *controller) processPaidInvoiceData(l logger.Logger, wg *sync.WaitGroup,
 	msgType := bcModel.CommentMsgTypeFailed
 	defer func() {
 		wg.Done()
-		c.worker.Enqueue(bcModel.BasecampCommentMsg, c.service.Basecamp.BuildCommentMessage(req.InvoiceBucketID, req.InvoiceTodoID, msg, msgType))
+		c.enqueueInvoiceComment(req.TaskRef, req.InvoiceBucketID, req.InvoiceTodoID, msg, msgType)
 	}()
 
 	now := time.Now()
@@ -262,17 +292,19 @@ func (c *controller) processPaidInvoiceData(l logger.Logger, wg *sync.WaitGroup,
 }
 
 func (c *controller) sendThankYouEmail(l logger.Logger, wg *sync.WaitGroup, req *processPaidInvoiceRequest) {
-	msg := c.service.Basecamp.BuildCommentMessage(req.InvoiceBucketID, req.InvoiceTodoID, consts.CommentThankYouEmailSent, bcModel.CommentMsgTypeCompleted)
+	msgType := bcModel.CommentMsgTypeCompleted
+	message := consts.CommentThankYouEmailSent
 
 	defer func() {
-		c.worker.Enqueue(bcModel.BasecampCommentMsg, msg)
+		c.enqueueInvoiceComment(req.TaskRef, req.InvoiceBucketID, req.InvoiceTodoID, message, msgType)
 		wg.Done()
 	}()
 
 	err := c.service.GoogleMail.SendInvoiceThankYouMail(req.Invoice)
 	if err != nil {
 		l.Errorf(err, "failed to send invoice thank you mail", "invoice", req.Invoice)
-		msg = c.service.Basecamp.BuildCommentMessage(req.InvoiceBucketID, req.InvoiceTodoID, consts.CommentThankYouEmailFailed, bcModel.CommentMsgTypeFailed)
+		message = consts.CommentThankYouEmailFailed
+		msgType = bcModel.CommentMsgTypeFailed
 		return
 	}
 }
@@ -282,12 +314,27 @@ func (c *controller) getInvoiceTodo(iv *model.Invoice) (bucketID, todoID int, er
 		return 0, 0, fmt.Errorf(`missing project info`)
 	}
 
-	accountingID := consts.AccountingID
-	accountingTodoID := consts.AccountingTodoID
+	accountingID := c.config.Basecamp.AccountingProjectID
+	accountingTodoID := c.config.Basecamp.AccountingTodoSetID
+	playgroundProjectID := c.config.Basecamp.PlaygroundProjectID
+	playgroundTodoID := c.config.Basecamp.PlaygroundTodoSetID
+
+	if accountingID == 0 {
+		accountingID = consts.AccountingID
+	}
+	if accountingTodoID == 0 {
+		accountingTodoID = consts.AccountingTodoID
+	}
+	if playgroundProjectID == 0 {
+		playgroundProjectID = consts.PlaygroundID
+	}
+	if playgroundTodoID == 0 {
+		playgroundTodoID = consts.PlaygroundTodoID
+	}
 
 	if c.config.Env != "prod" {
-		accountingID = consts.PlaygroundID
-		accountingTodoID = consts.PlaygroundTodoID
+		accountingID = playgroundProjectID
+		accountingTodoID = playgroundTodoID
 	}
 
 	re := regexp.MustCompile(`Accounting \| ([A-Za-z]+) ([0-9]{4})`)
@@ -350,4 +397,19 @@ func (c *controller) getInvoiceTodo(iv *model.Invoice) (bucketID, todoID int, er
 	}
 
 	return accountingID, todo.ID, nil
+}
+
+func (c *controller) enqueueInvoiceComment(ref *taskprovider.InvoiceTaskRef, bucketID, todoID int, message, msgType string) {
+	if ref != nil && c.service.TaskProvider != nil {
+		c.worker.Enqueue(taskprovider.WorkerMessageInvoiceComment, taskprovider.InvoiceCommentJob{
+			Ref: ref,
+			Input: taskprovider.InvoiceCommentInput{
+				Message: message,
+				Type:    msgType,
+			},
+		})
+		return
+	}
+
+	c.worker.Enqueue(bcModel.BasecampCommentMsg, c.service.Basecamp.BuildCommentMessage(bucketID, todoID, message, msgType))
 }

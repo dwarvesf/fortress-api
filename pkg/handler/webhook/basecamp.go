@@ -1,6 +1,8 @@
 package webhook
 
 import (
+	"errors"
+	"io"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -8,6 +10,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	bcModel "github.com/dwarvesf/fortress-api/pkg/service/basecamp/model"
+	"github.com/dwarvesf/fortress-api/pkg/service/taskprovider"
 	"github.com/dwarvesf/fortress-api/pkg/view"
 )
 
@@ -94,18 +97,25 @@ func (h *handler) StoreAccountingTransaction(c *gin.Context) {
 		"method":  "StoreAccountingTransaction",
 	})
 
-	msg, err := basecampWebhookMessageFromCtx(c, l)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+	body := readBody(c.Request.Body)
+	provider := h.service.AccountingProvider
+	if provider == nil {
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, errors.New("accounting provider missing"), nil, ""))
 		return
 	}
-
-	err = h.StoreAccountingTransactionFromBasecamp(msg)
+	payload, err := provider.ParseAccountingWebhook(c.Request.Context(), taskprovider.AccountingWebhookRequest{
+		Headers: headerMap(c.Request.Header),
+		Body:    body,
+	})
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		l.Error(err, "failed to parse basecamp accounting webhook")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
 	}
-
+	if payload == nil {
+		c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, ""))
+		return
+	}
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, ""))
 }
 
@@ -131,9 +141,9 @@ func (h *handler) MarkInvoiceAsPaidViaBasecamp(c *gin.Context) {
 }
 
 func (h *handler) markInvoiceAsPaid(msg *model.BasecampWebhookMessage) error {
-	invoice, err := h.GetInvoiceViaBasecampTitle(msg)
+	invoice, ref, err := h.GetInvoiceViaBasecampTitle(msg)
 	if err != nil {
-		h.worker.Enqueue(bcModel.BasecampCommentMsg, h.service.Basecamp.BuildCommentMessage(msg.Recording.Bucket.ID, msg.Recording.ID, err.Error(), bcModel.CommentMsgTypeFailed))
+		h.enqueueInvoiceComment(ref, msg.Recording.Bucket.ID, msg.Recording.ID, err.Error(), bcModel.CommentMsgTypeFailed)
 		return err
 	}
 
@@ -141,7 +151,7 @@ func (h *handler) markInvoiceAsPaid(msg *model.BasecampWebhookMessage) error {
 		return nil
 	}
 
-	if _, err := h.controller.Invoice.MarkInvoiceAsPaidByBasecampWebhookMessage(invoice, msg); err != nil {
+	if _, err := h.controller.Invoice.MarkInvoiceAsPaidWithTaskRef(invoice, ref, true); err != nil {
 		return err
 	}
 
@@ -198,4 +208,24 @@ func (h *handler) ApproveOnLeaveRequest(c *gin.Context) {
 		l.Error(err, "failed to handle approve on leave request")
 	}
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, err, nil, ""))
+}
+
+func (h *handler) enqueueInvoiceComment(ref *taskprovider.InvoiceTaskRef, bucketID, todoID int, message, msgType string) {
+	if ref != nil && h.service.TaskProvider != nil {
+		h.worker.Enqueue(taskprovider.WorkerMessageInvoiceComment, taskprovider.InvoiceCommentJob{
+			Ref: ref,
+			Input: taskprovider.InvoiceCommentInput{
+				Message: message,
+				Type:    msgType,
+			},
+		})
+		return
+	}
+
+	h.worker.Enqueue(bcModel.BasecampCommentMsg, h.service.Basecamp.BuildCommentMessage(bucketID, todoID, message, msgType))
+}
+func readBody(rc io.ReadCloser) []byte {
+	defer rc.Close()
+	b, _ := io.ReadAll(rc)
+	return b
 }

@@ -67,6 +67,8 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 	webhook := r.Group("/webhooks")
 	{
 		webhook.POST("/n8n", h.Webhook.N8n)
+		webhook.POST("/nocodb/invoice", h.Webhook.MarkInvoiceAsPaidViaNoco)
+		webhook.POST("/nocodb/accounting", h.Webhook.StoreNocoAccountingTransaction)
 
 		basecampGroup := webhook.Group("/basecamp")
 		{

@@ -45,11 +45,21 @@ func main() {
 	v, err := vault.New(cfg)
 	if err != nil {
 		log.Error(err, "failed to init vault")
+		// In production, Vault is required
+		if cfg.Env != "local" {
+			log.Fatal(err, "Vault initialization failed in production environment")
+		}
 	}
 
 	if v != nil {
 		cfg = config.Generate(v)
 	}
+
+	// Validate critical configuration
+	if cfg.Invoice.TemplatePath == "" {
+		log.Fatal(fmt.Errorf("INVOICE_TEMPLATE_PATH is empty"), "INVOICE_TEMPLATE_PATH is not configured - check Vault settings")
+	}
+	log.Infof("Config loaded - INVOICE_TEMPLATE_PATH: %s", cfg.Invoice.TemplatePath)
 
 	s := store.New()
 	repo := store.NewPostgresStore(cfg)
