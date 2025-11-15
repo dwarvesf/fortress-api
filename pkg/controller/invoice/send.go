@@ -193,11 +193,13 @@ func (c *controller) dispatchInvoiceTask(iv *model.Invoice, fileName string) err
 		iv.InvoiceFileURL = attachmentRef.ExternalID
 	}
 
-	iv.TodoAttachment = attachmentRef.Markup
 	if attachmentRef != nil {
+		iv.TodoAttachment = attachmentRef.Markup
 		if len(attachmentRef.Meta) > 0 {
 			iv.InvoiceAttachmentMeta = attachmentRef.Meta
 		}
+	} else {
+		iv.TodoAttachment = ""
 	}
 
 	ref, err := provider.EnsureTask(context.Background(), taskprovider.CreateInvoiceTaskInput{Invoice: iv})

@@ -48,19 +48,22 @@ jobs:
       - name: Install sql-migrate
         run: |
           if ! command -v sql-migrate >/dev/null 2>&1; then
-            go install github.com/rubenv/sql-migrate/v4/...@latest
+            go install github.com/rubenv/sql-migrate/v4/sql-migrate@latest || \
+            go install github.com/rubenv/sql-migrate/sql-migrate@latest
           fi
 
       - name: Wait for database
-        run: until docker exec postgres-test pg_isready -U postgres -d fortress_local_test; do sleep 1; done
+        run: until pg_isready -h localhost -p 35432 -U postgres; do sleep 1; done
 
       - name: Apply migrations
         run: sql-migrate up -env=test
 
       - name: Seed database
         run: |
-          docker cp migrations/test_seed postgres-test:/tmp/test_seed
-          docker exec postgres-test bash -c "PGPASSWORD=postgres psql -U postgres -d fortress_local_test -f /tmp/test_seed/seed.sql"
+          docker run --rm --network host \
+            -v ${{ github.workspace }}/migrations/test_seed:/seed \
+            postgres:15 \
+            bash -c "PGPASSWORD=postgres psql -h localhost -p 35432 -U postgres -d fortress_local_test -f /seed/seed.sql"
 
       - name: Run Tests
         env:
