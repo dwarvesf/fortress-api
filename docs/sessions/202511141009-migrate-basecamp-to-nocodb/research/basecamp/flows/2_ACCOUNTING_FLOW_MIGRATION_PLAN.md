@@ -10,7 +10,7 @@
 - Decide how a monthly "Accounting" board/list is represented (e.g., `AccountingTodos` table with month/year columns + type column for In/Out).
 - Model dependency for dynamic rows: service templates, salary tasks, TM projects; ensure schema supports tags like `group=in/out`, `due_date`, `assignee_ids`.
 - Design an `AccountingTransactions` table/view (or reused existing) where webhook-created rows will land with metadata fields equivalent to Basecamp todo ID.
-- Enumerate environment-specific configuration (prod vs dev) and wire them as `config.TaskProvider.Accounting` entries instead of constants.
+- Enumerate environment-specific configuration (prod vs dev) and keep them behind the unified `config.TaskProvider` flag instead of hardcoded constants.
 
 ## 3. Implement NocoDB Writer for Monthly Cronjob
 - Build helper in new provider (`pkg/service/nocodb/accounting`) that can: create/find monthly board, create group buckets, insert todos with assignees & due dates.
@@ -26,7 +26,7 @@
 
 ## 5. Shared Provider Selection & Config
 - Reuse global `TaskIntegration` toggle created for invoices; extend it with `AccountingIntegration` interface exposing `CreateMonthlyPlan` + `ParseTransactionWebhook`.
-- Configure `CONFIG_TASK_PROVIDER_ACCOUNTING` (or reuse single provider variable) to choose Basecamp vs NocoDB per environment.
+- Configure `CONFIG_TASK_PROVIDER` to choose Basecamp vs NocoDB per environment.
 - Centralize ID mappings (project/list/group) into config so both UI + cronjob read the same data.
 
 ## 6. Testing & Cutover

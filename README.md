@@ -115,6 +115,8 @@ DEBUG=true
 JWT_SECRET_KEY=JWTSecretKey
 ```
 
+Task provider migrations rely on the unified `TASK_PROVIDER` switch alongside the related Basecamp/Noco DB IDs (`ACCOUNTING_BASECAMP_*`, `NOCO_ACCOUNTING_*`). Use `.env.sample` as the source of truth for the additional variables required when enabling the new accounting provider.
+
 3. Run source
 
 ```

@@ -3,6 +3,7 @@ package invoice
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"math"
@@ -188,12 +189,29 @@ func (c *controller) dispatchInvoiceTask(iv *model.Invoice, fileName string) err
 	if err != nil {
 		return fmt.Errorf("create task attachment: %w", err)
 	}
+	if strings.TrimSpace(iv.InvoiceFileURL) == "" && attachmentRef != nil && attachmentRef.ExternalID != "" {
+		iv.InvoiceFileURL = attachmentRef.ExternalID
+	}
 
-	iv.TodoAttachment = attachmentRef.Markup
+	if attachmentRef != nil {
+		iv.TodoAttachment = attachmentRef.Markup
+		if len(attachmentRef.Meta) > 0 {
+			iv.InvoiceAttachmentMeta = attachmentRef.Meta
+		}
+	} else {
+		iv.TodoAttachment = ""
+	}
 
 	ref, err := provider.EnsureTask(context.Background(), taskprovider.CreateInvoiceTaskInput{Invoice: iv})
 	if err != nil {
 		return fmt.Errorf("ensure invoice task: %w", err)
+	}
+
+	if err := c.syncAccountingTodoWithInvoice(context.Background(), iv, ref, attachmentRef); err != nil {
+		c.logger.Fields(logger.Fields{
+			"invoice":    iv.Number,
+			"project_id": iv.ProjectID,
+		}).Warnf("failed to sync accounting todo with invoice: %v", err)
 	}
 
 	msg := fmt.Sprintf(`#Invoice %v has been sent
@@ -328,6 +346,76 @@ func (c *controller) generateInvoicePDF(l logger.Logger, invoice *model.Invoice,
 	invoice.InvoiceFileContent = pdfg.Buffer().Bytes()
 
 	return nil
+}
+
+func (c *controller) syncAccountingTodoWithInvoice(ctx context.Context, iv *model.Invoice, invoiceTaskRef *taskprovider.InvoiceTaskRef, attachmentRef *taskprovider.InvoiceAttachmentRef) error {
+	if c.service == nil || c.service.AccountingProvider == nil || c.service.AccountingProvider.Type() != taskprovider.ProviderNocoDB {
+		return nil
+	}
+	if c.service.NocoDB == nil {
+		return errors.New("nocodb service not configured")
+	}
+	if iv == nil || iv.ProjectID.IsZero() {
+		return errors.New("missing invoice or project context")
+	}
+	refs, err := c.store.AccountingTaskRef.FindByProjectMonthYear(
+		c.repo.DB(),
+		iv.ProjectID.String(),
+		iv.Month,
+		iv.Year,
+		string(taskprovider.AccountingGroupIn),
+	)
+	if err != nil {
+		return err
+	}
+	if len(refs) == 0 {
+		return fmt.Errorf("no accounting todo found for project %s %d/%d", iv.ProjectID, iv.Month, iv.Year)
+	}
+	target := refs[0]
+	row, err := c.service.NocoDB.GetAccountingTodo(ctx, target.TaskRef)
+	if err != nil {
+		return err
+	}
+	meta := extractAccountingMetadata(row)
+	meta["invoice_id"] = iv.ID.String()
+	meta["invoice_number"] = iv.Number
+	if invoiceTaskRef != nil && invoiceTaskRef.ExternalID != "" {
+		meta["invoice_task_id"] = invoiceTaskRef.ExternalID
+	}
+	if attachmentRef != nil && attachmentRef.ExternalID != "" {
+		meta["attachment_url"] = attachmentRef.ExternalID
+	}
+	if attachmentRef != nil && len(attachmentRef.Meta) > 0 {
+		meta["attachment"] = attachmentRef.Meta
+	}
+	payload := map[string]interface{}{
+		"description": iv.Number,
+		"metadata":    meta,
+	}
+	return c.service.NocoDB.UpdateAccountingTodo(ctx, target.TaskRef, payload)
+}
+
+func extractAccountingMetadata(row map[string]interface{}) map[string]interface{} {
+	meta := map[string]interface{}{}
+	if row == nil {
+		return meta
+	}
+	if raw, ok := row["metadata"]; ok && raw != nil {
+		switch val := raw.(type) {
+		case map[string]interface{}:
+			for k, v := range val {
+				meta[k] = v
+			}
+		case string:
+			var decoded map[string]interface{}
+			if err := json.Unmarshal([]byte(val), &decoded); err == nil {
+				for k, v := range decoded {
+					meta[k] = v
+				}
+			}
+		}
+	}
+	return meta
 }
 
 func (c *controller) getInvoiceBonus(items []model.InvoiceItem) float64 {

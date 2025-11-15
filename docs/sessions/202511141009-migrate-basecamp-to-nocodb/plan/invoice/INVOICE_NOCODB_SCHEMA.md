@@ -17,8 +17,7 @@
 | `status` | Enum | ✅ | `draft`, `sent`, `paid`, `overdue`, `error` (maps 1:1 with Fortress enum).
 | `amount` | Numeric | ✅ | Invoice total in project currency.
 | `currency` | Text | ✅ | Currency code (ISO).
-| `attachment_url` | Text | ✅ | Public GCS link to invoice PDF.
-| `attachment_file` | File | optional | Mirror PDF inside NocoDB if desired.
+| `attachment_url` | Attachment | ✅ | Primary invoice PDF stored via NocoDB upload (single attachment array). Legacy GCS URL is kept in metadata for fallback.
 | `fortress_invoice_id` | Text | ✅ | UUID string from Fortress DB; indexed for fast joins.
 | `created_at` | Timestamp | auto | System-managed.
 | `updated_at` | Timestamp | auto | System-managed.

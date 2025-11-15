@@ -59,7 +59,7 @@ func (h *handler) MarkInvoiceAsPaidViaNoco(c *gin.Context) {
 		"method":  "MarkInvoiceAsPaidViaNoco",
 	})
 
-	secret := h.config.Noco.InvoiceWebhookSecret
+	secret := h.config.Noco.WebhookSecret
 	if secret == "" {
 		l.Error(errors.New("missing nocodb webhook secret"), "cannot verify webhook")
 		c.JSON(http.StatusUnauthorized, view.CreateResponse[any](nil, nil, errors.New("signature verification disabled"), nil, ""))

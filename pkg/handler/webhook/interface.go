@@ -8,6 +8,7 @@ type IHandler interface {
 	MarkInvoiceAsPaidViaBasecamp(c *gin.Context)
 	MarkInvoiceAsPaidViaNoco(c *gin.Context)
 	StoreAccountingTransaction(c *gin.Context)
+	StoreNocoAccountingTransaction(c *gin.Context)
 	UncheckBasecampExpense(c *gin.Context)
 	ValidateBasecampExpense(c *gin.Context)
 	ValidateOnLeaveRequest(c *gin.Context)

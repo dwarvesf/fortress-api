@@ -26,6 +26,7 @@ func TestDispatchInvoiceTask_Success(t *testing.T) {
 	require.NoError(t, err)
 
 	require.Equal(t, "[mock](https://drive.fake/file.pdf)", invoice.TodoAttachment)
+	require.Equal(t, map[string]any{"url": "https://drive.fake/file.pdf"}, invoice.InvoiceAttachmentMeta)
 	require.Len(t, provider.uploadCalls, 1)
 	require.Equal(t, "file.pdf", provider.uploadCalls[0].FileName)
 
@@ -87,6 +88,7 @@ func (f *fakeInvoiceProvider) UploadAttachment(ctx context.Context, ref *taskpro
 	return &taskprovider.InvoiceAttachmentRef{
 		ExternalID: "mock-external",
 		Markup:     "[mock](https://drive.fake/file.pdf)",
+		Meta:       map[string]any{"url": "https://drive.fake/file.pdf"},
 	}, nil
 }
 

@@ -73,10 +73,11 @@ type Invoice struct {
 	ProjectID UUID
 	Project   *Project
 
-	InvoiceFileContent []byte `gorm:"-"` // we not store this in db
-	MessageID          string `gorm:"-"`
-	References         string `gorm:"-"`
-	TodoAttachment     string `gorm:"-"`
+	InvoiceFileContent    []byte         `gorm:"-"` // we not store this in db
+	InvoiceAttachmentMeta map[string]any `gorm:"-"`
+	MessageID             string         `gorm:"-"`
+	References            string         `gorm:"-"`
+	TodoAttachment        string         `gorm:"-"`
 }
 
 func (i *Invoice) Validate() error {
