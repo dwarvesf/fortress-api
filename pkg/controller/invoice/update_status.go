@@ -455,5 +455,11 @@ func (c *controller) enqueueInvoiceComment(ref *taskprovider.InvoiceTaskRef, buc
 		return
 	}
 
+	// Skip Basecamp comment when Basecamp service is not available (e.g., using NocoDB provider)
+	if c.service.Basecamp == nil {
+		c.logger.Debugf("skipping Basecamp comment enqueue - Basecamp service unavailable: message=%s", message)
+		return
+	}
+
 	c.worker.Enqueue(bcModel.BasecampCommentMsg, c.service.Basecamp.BuildCommentMessage(bucketID, todoID, message, msgType))
 }
