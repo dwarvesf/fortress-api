@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"time"
 
+	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 )
 
@@ -140,15 +141,15 @@ func ToInvoiceInfo(invoice *model.Invoice) (*Invoice, error) {
 	if invoice != nil {
 		cc := make([]string, 0)
 		if invoice.CC != nil {
-			err := json.Unmarshal(invoice.CC, &cc)
-			if err != nil {
-				return nil, err
+			if err := json.Unmarshal(invoice.CC, &cc); err != nil {
+				logger.L.Errorf(err, "failed to unmarshal CC for invoice %s", invoice.Number)
 			}
 		}
 
 		invoiceItems, err := toInvoiceItem(invoice.LineItems)
 		if err != nil {
-			return nil, err
+			logger.L.Errorf(err, "failed to unmarshal line items for invoice %s", invoice.Number)
+			invoiceItems = []InvoiceItem{}
 		}
 
 		rs := &Invoice{
@@ -293,7 +294,8 @@ func ToInvoiceListResponse(invoices []*model.Invoice) ([]InvoiceData, error) {
 	for _, invoice := range invoices {
 		iv, err := ToInvoiceInfo(invoice)
 		if err != nil {
-			return nil, err
+			logger.L.Errorf(err, "failed to convert invoice %s", invoice.Number)
+			continue
 		}
 
 		bankAccount := BankAccount{}
@@ -328,7 +330,9 @@ func ToInvoiceListResponse(invoices []*model.Invoice) ([]InvoiceData, error) {
 		if invoice.Project != nil {
 			if invoice.Project.CompanyInfo != nil {
 				companyContact := make(map[string]CompanyContactInfo)
-				_ = json.Unmarshal(invoice.Project.CompanyInfo.Info.Bytes, &companyContact)
+				if err := json.Unmarshal(invoice.Project.CompanyInfo.Info.Bytes, &companyContact); err != nil {
+					logger.L.Errorf(err, "failed to unmarshal company info for invoice %s", invoice.Number)
+				}
 
 				companyInfo = CompanyInfo{
 					ID:                 invoice.Project.CompanyInfo.ID.String(),
@@ -343,9 +347,8 @@ func ToInvoiceListResponse(invoices []*model.Invoice) ([]InvoiceData, error) {
 				contacts := make([]ClientContactInfo, 0)
 				for _, c := range invoice.Project.Client.Contacts {
 					emails := make([]string, 0)
-					err := json.Unmarshal(c.Emails, &emails)
-					if err != nil {
-						return nil, err
+					if err := json.Unmarshal(c.Emails, &emails); err != nil {
+						logger.L.Errorf(err, "failed to unmarshal emails for contact %s in invoice %s", c.Name, invoice.Number)
 					}
 
 					contacts = append(contacts, ClientContactInfo{

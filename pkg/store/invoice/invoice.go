@@ -56,19 +56,26 @@ func (s *store) GetLatestInvoiceByProject(db *gorm.DB, projectID string) (*model
 func (s *store) All(db *gorm.DB, filter GetInvoicesFilter, pagination model.Pagination) ([]*model.Invoice, int64, error) {
 	var total int64
 	var invoices []*model.Invoice
-	query := db.Table("invoices")
 
+	baseQuery := db.Table("invoices")
+	if len(filter.ProjectIDs) > 0 {
+		baseQuery = baseQuery.Where("project_id IN (?)", filter.ProjectIDs)
+	}
+	if len(filter.Statuses) > 0 {
+		baseQuery = baseQuery.Where("status IN (?)", filter.Statuses)
+	}
+
+	err := db.Raw("SELECT COUNT(*) FROM (?) res", baseQuery).Scan(&total).Error
+	if err != nil {
+		return nil, 0, err
+	}
+
+	query := db
 	if len(filter.ProjectIDs) > 0 {
 		query = query.Where("project_id IN (?)", filter.ProjectIDs)
 	}
-
 	if len(filter.Statuses) > 0 {
 		query = query.Where("status IN (?)", filter.Statuses)
-	}
-
-	err := db.Raw("SELECT COUNT(*) FROM (?) res", query).Scan(&total).Error
-	if err != nil {
-		return nil, 0, err
 	}
 
 	if filter.Preload {
@@ -81,12 +88,13 @@ func (s *store) All(db *gorm.DB, filter GetInvoicesFilter, pagination model.Pagi
 			Preload("Project.CompanyInfo", "deleted_at IS NULL")
 	}
 
-	limit, offset := pagination.ToLimitOffset()
-	if pagination.Page > 0 {
-		query = query.Limit(limit)
+	if pagination.Sort != "" {
+		query = query.Order(pagination.Sort)
 	}
 
+	limit, offset := pagination.ToLimitOffset()
 	return invoices, total, query.
+		Model(&model.Invoice{}).
 		Limit(limit).
 		Offset(offset).
 		Find(&invoices).Error
