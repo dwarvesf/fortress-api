@@ -181,7 +181,7 @@ func setupDuckDBIntegrationTest() (*handler, *mockDuckDBService, *mockParquetSyn
 		mockStore,
 		mockDBRepo,
 		mockService,
-		logger.NewLogrusLogger(),
+		logger.NewLogrusLogger("info"),
 		&config.Config{},
 	)
 
@@ -278,7 +278,7 @@ func TestHandler_getMemosFromParquet_DuckDBServiceUnavailable(t *testing.T) {
 		mockStore,
 		mockDBRepo,
 		mockService,
-		logger.NewLogrusLogger(),
+		logger.NewLogrusLogger("info"),
 		&config.Config{},
 	).(*handler)
 

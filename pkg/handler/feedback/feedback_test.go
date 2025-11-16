@@ -27,7 +27,7 @@ const testToken = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjk1ODMzM
 
 func TestHandler_List(t *testing.T) {
 	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
+	loggerMock := logger.NewLogrusLogger("info")
 	serviceMock := service.NewForTest()
 	storeMock := store.New()
 
@@ -82,7 +82,7 @@ func TestHandler_List(t *testing.T) {
 
 func TestHandler_Detail(t *testing.T) {
 	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
+	loggerMock := logger.NewLogrusLogger("info")
 	serviceMock := service.NewForTest()
 	storeMock := store.New()
 	tests := []struct {
@@ -145,7 +145,7 @@ func TestHandler_Detail(t *testing.T) {
 
 func TestHandler_Submit(t *testing.T) {
 	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
+	loggerMock := logger.NewLogrusLogger("info")
 	serviceMock := service.NewForTest()
 	storeMock := store.New()
 	tests := []struct {
@@ -395,7 +395,7 @@ func TestHandler_Submit(t *testing.T) {
 
 func TestHandler_UnreadInbox(t *testing.T) {
 	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
+	loggerMock := logger.NewLogrusLogger("info")
 	serviceMock := service.NewForTest()
 	storeMock := store.New()
 	tests := []struct {

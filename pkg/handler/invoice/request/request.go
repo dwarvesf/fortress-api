@@ -35,8 +35,9 @@ type GetInvoiceInput struct {
 
 type GetListInvoiceInput struct {
 	view.Pagination
-	ProjectID []string `json:"projectID" form:"projectID"`
-	Status    []string `json:"status" form:"status"`
+	ProjectID     []string `json:"projectID" form:"projectID"`
+	Status        []string `json:"status" form:"status"`
+	InvoiceNumber string   `json:"invoice_number" form:"invoice_number"`
 }
 
 func (r *GetListInvoiceInput) StandardizeInput() model.Pagination {

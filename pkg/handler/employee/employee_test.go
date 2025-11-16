@@ -32,7 +32,7 @@ const testToken = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjk1ODMzM
 
 func TestHandler_List(t *testing.T) {
 	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
+	loggerMock := logger.NewLogrusLogger("info")
 	serviceMock := service.NewForTest()
 	storeMock := store.New()
 	queue := make(chan model.WorkerMessage, 1000)
@@ -225,7 +225,7 @@ func TestHandler_List(t *testing.T) {
 
 func TestHandler_One(t *testing.T) {
 	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
+	loggerMock := logger.NewLogrusLogger("info")
 	serviceMock := service.NewForTest()
 	storeMock := store.New()
 	queue := make(chan model.WorkerMessage, 1000)
@@ -283,7 +283,7 @@ func TestHandler_One(t *testing.T) {
 func TestHandler_UpdateEmployeeStatus(t *testing.T) {
 	// load env and test data
 	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
+	loggerMock := logger.NewLogrusLogger("info")
 	serviceMock := service.NewForTest()
 	storeMock := store.New()
 	queue := make(chan model.WorkerMessage, 1000)
@@ -376,7 +376,7 @@ func TestHandler_UpdateEmployeeStatus(t *testing.T) {
 
 //func Test_UpdateGeneralInfo(t *testing.T) {
 //	cfg := config.LoadTestConfig()
-//	loggerMock := logger.NewLogrusLogger()
+//	loggerMock := logger.NewLogrusLogger("info")
 //	serviceMock := service.New(&cfg, nil, nil)
 //	storeMock := store.New()
 //	queue := make(chan model.WorkerMessage, 1000)
@@ -513,7 +513,7 @@ func TestHandler_UpdateEmployeeStatus(t *testing.T) {
 
 func Test_UpdateSkill(t *testing.T) {
 	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
+	loggerMock := logger.NewLogrusLogger("info")
 	serviceMock := service.NewForTest()
 	storeMock := store.New()
 	queue := make(chan model.WorkerMessage, 1000)
@@ -673,7 +673,7 @@ func Test_UpdateSkill(t *testing.T) {
 
 func Test_Create(t *testing.T) {
 	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
+	loggerMock := logger.NewLogrusLogger("info")
 	serviceMock := service.NewForTest()
 	storeMock := store.New()
 	queue := make(chan model.WorkerMessage, 1000)
@@ -785,7 +785,7 @@ func Test_Create(t *testing.T) {
 
 func Test_UpdatePersonalInfo(t *testing.T) {
 	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
+	loggerMock := logger.NewLogrusLogger("info")
 	serviceMock := service.NewForTest()
 	storeMock := store.New()
 	queue := make(chan model.WorkerMessage, 1000)
@@ -911,7 +911,7 @@ func Test_UpdatePersonalInfo(t *testing.T) {
 
 func TestHandler_GetLineManagers(t *testing.T) {
 	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
+	loggerMock := logger.NewLogrusLogger("info")
 	serviceMock := service.NewForTest()
 	storeMock := store.New()
 	queue := make(chan model.WorkerMessage, 1000)

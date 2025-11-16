@@ -1152,7 +1152,7 @@ func Test_loadV1Routes(t *testing.T) {
 		},
 	}
 
-	l := logger.NewLogrusLogger()
+	l := logger.NewLogrusLogger("info")
 	cfg := config.LoadConfig(config.DefaultConfigLoaders())
 	h := handler.New(nil, nil, nil, nil, nil, l, cfg)
 

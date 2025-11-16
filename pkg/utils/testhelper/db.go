@@ -31,7 +31,7 @@ func LoadTestDB() *gorm.DB {
 
 	singletonTestDB.Do(func() {
 		// initiate logger
-		l := logger.NewLogrusLogger()
+		l := logger.NewLogrusLogger("info")
 
 		conn, err = sql.Open("postgres", "host=localhost port=35432 user=postgres password=postgres dbname=fortress_local_test sslmode=disable")
 		if err != nil {

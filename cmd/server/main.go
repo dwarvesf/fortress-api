@@ -39,8 +39,8 @@ import (
 // @name Authorization
 func main() {
 	cfg := config.LoadConfig(config.DefaultConfigLoaders())
-	log := logger.NewLogrusLogger()
-	log.Infof("Server starting")
+	log := logger.NewLogrusLogger(cfg.LogLevel)
+	log.Infof("Server starting with log level: %s", cfg.LogLevel)
 
 	v, err := vault.New(cfg)
 	if err != nil {

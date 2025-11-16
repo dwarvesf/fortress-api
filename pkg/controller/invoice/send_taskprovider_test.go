@@ -105,8 +105,8 @@ func newTestInvoiceController(provider taskprovider.InvoiceProvider) (*controlle
 	queue := make(chan model.WorkerMessage, 1)
 	ctrl := &controller{
 		service: svc,
-		worker:  worker.New(context.Background(), queue, svc, logger.NewLogrusLogger()),
-		logger:  logger.NewLogrusLogger(),
+		worker:  worker.New(context.Background(), queue, svc, logger.NewLogrusLogger("info")),
+		logger:  logger.NewLogrusLogger("info"),
 	}
 	return ctrl, queue
 }

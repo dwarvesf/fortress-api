@@ -16,7 +16,7 @@ func main() {
 	cfg := config.LoadConfig(config.DefaultConfigLoaders())
 
 	// Initialize logger
-	l := logger.NewLogrusLogger()
+	l := logger.NewLogrusLogger(cfg.LogLevel)
 
 	v, err := vault.New(cfg)
 	if err != nil {

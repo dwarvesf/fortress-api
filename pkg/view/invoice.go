@@ -13,6 +13,7 @@ type CreateInvoiceResponse struct {
 }
 
 type Invoice struct {
+	ID               string        `json:"id"`
 	Number           string        `json:"number"`
 	InvoicedAt       *time.Time    `json:"invoicedAt"`
 	DueAt            *time.Time    `json:"dueAt"`
@@ -153,6 +154,7 @@ func ToInvoiceInfo(invoice *model.Invoice) (*Invoice, error) {
 		}
 
 		rs := &Invoice{
+			ID:               invoice.ID.String(),
 			Number:           invoice.Number,
 			InvoicedAt:       invoice.InvoicedAt,
 			DueAt:            invoice.DueAt,

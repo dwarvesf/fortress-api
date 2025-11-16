@@ -23,7 +23,7 @@ import (
 
 func TestNotifyWeeklyMemos(t *testing.T) {
 	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
+	loggerMock := logger.NewLogrusLogger("info")
 	serviceMock := service.NewForTest()
 	storeMock := store.New()
 
@@ -67,7 +67,7 @@ func TestNotifyWeeklyMemos(t *testing.T) {
 
 func TestNotifyMonthlyMemos(t *testing.T) {
 	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
+	loggerMock := logger.NewLogrusLogger("info")
 	serviceMock := service.NewForTest()
 	storeMock := store.New()
 
