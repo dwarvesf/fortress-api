@@ -28,7 +28,7 @@ const testToken = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjk1ODMzM
 
 func TestHandler_ListSurvey(t *testing.T) {
 	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
+	loggerMock := logger.NewLogrusLogger("info")
 	serviceMock := service.NewForTest()
 	storeMock := store.New()
 
@@ -74,7 +74,7 @@ func TestHandler_ListSurvey(t *testing.T) {
 
 func TestHandler_GetSurveyDetail(t *testing.T) {
 	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
+	loggerMock := logger.NewLogrusLogger("info")
 	serviceMock := service.NewForTest()
 	storeMock := store.New()
 
@@ -145,7 +145,7 @@ func TestHandler_GetSurveyDetail(t *testing.T) {
 
 func TestHandler_SendPerformanceReview(t *testing.T) {
 	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
+	loggerMock := logger.NewLogrusLogger("info")
 	serviceMock := service.NewForTest()
 	storeMock := store.New()
 
@@ -240,7 +240,7 @@ func TestHandler_SendPerformanceReview(t *testing.T) {
 
 func TestHandler_DeleteSurvey(t *testing.T) {
 	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
+	loggerMock := logger.NewLogrusLogger("info")
 	serviceMock := service.NewForTest()
 	storeMock := store.New()
 
@@ -299,7 +299,7 @@ func TestHandler_DeleteSurvey(t *testing.T) {
 
 func TestHandler_GetPeerReviewDetail(t *testing.T) {
 	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
+	loggerMock := logger.NewLogrusLogger("info")
 	serviceMock := service.NewForTest()
 	storeMock := store.New()
 	tests := []struct {
@@ -383,7 +383,7 @@ func TestHandler_GetPeerReviewDetail(t *testing.T) {
 
 func TestHandler_UpdateTopicReviewers(t *testing.T) {
 	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
+	loggerMock := logger.NewLogrusLogger("info")
 	serviceMock := service.NewForTest()
 	storeMock := store.New()
 
@@ -499,7 +499,7 @@ func TestHandler_UpdateTopicReviewers(t *testing.T) {
 
 func TestHandler_MarkDone(t *testing.T) {
 	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
+	loggerMock := logger.NewLogrusLogger("info")
 	serviceMock := service.NewForTest()
 	storeMock := store.New()
 
@@ -558,7 +558,7 @@ func TestHandler_MarkDone(t *testing.T) {
 
 func TestHandler_DeleteTopicReviewers(t *testing.T) {
 	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
+	loggerMock := logger.NewLogrusLogger("info")
 	serviceMock := service.NewForTest()
 	storeMock := store.New()
 
@@ -628,7 +628,7 @@ func TestHandler_DeleteTopicReviewers(t *testing.T) {
 
 func TestHandler_DeleteSurveyTopic(t *testing.T) {
 	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
+	loggerMock := logger.NewLogrusLogger("info")
 	serviceMock := service.NewForTest()
 	storeMock := store.New()
 
@@ -715,7 +715,7 @@ func TestHandler_DeleteSurveyTopic(t *testing.T) {
 
 func TestHandler_GetSurveyReviewDetail(t *testing.T) {
 	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
+	loggerMock := logger.NewLogrusLogger("info")
 	serviceMock := service.NewForTest()
 	storeMock := store.New()
 
@@ -828,7 +828,7 @@ func TestHandler_GetSurveyReviewDetail(t *testing.T) {
 // year in test case should be changed to the current year
 func TestHandler_CreateSurvey(t *testing.T) {
 	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
+	loggerMock := logger.NewLogrusLogger("info")
 	serviceMock := service.NewForTest()
 	storeMock := store.New()
 

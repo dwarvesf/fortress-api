@@ -58,6 +58,7 @@ type Config struct {
 	Env          string
 	JWTSecretKey string
 	FortressURL  string
+	LogLevel     string
 }
 
 func getIntWithDefault(v ENV, key string, fallback int) int {
@@ -74,6 +75,36 @@ func getStringWithDefault(v ENV, key, fallback string) string {
 		return val
 	}
 	return fallback
+}
+
+// validateLogLevel validates and normalizes the log level string
+// Returns the normalized level or "info" as default
+func validateLogLevel(level string) string {
+	// Normalize to lowercase
+	normalized := strings.ToLower(strings.TrimSpace(level))
+
+	// Valid logrus levels: trace, debug, info, warn, error, fatal, panic
+	validLevels := map[string]bool{
+		"trace": true,
+		"debug": true,
+		"info":  true,
+		"warn":  true,
+		"warning": true, // alias for warn
+		"error": true,
+		"fatal": true,
+		"panic": true,
+	}
+
+	if validLevels[normalized] {
+		// Convert warning to warn for consistency with logrus
+		if normalized == "warning" {
+			return "warn"
+		}
+		return normalized
+	}
+
+	// Default to info for invalid levels
+	return "info"
 }
 
 type DBConnection struct {
@@ -297,12 +328,15 @@ func Generate(v ENV) *Config {
 	accountingProjectID := getIntWithDefault(v, "ACCOUNTING_BASECAMP_PROJECT_ID", basecampAccountingProjectID)
 	accountingTodoSetID := getIntWithDefault(v, "ACCOUNTING_BASECAMP_TODO_SET_ID", basecampAccountingTodoSetID)
 
+	logLevel := validateLogLevel(v.GetString("LOG_LEVEL"))
+
 	return &Config{
 		Debug:        v.GetBool("DEBUG"),
 		APIKey:       v.GetString("API_KEY"),
 		Env:          v.GetString("ENV"),
 		JWTSecretKey: v.GetString("JWT_SECRET_KEY"),
 		FortressURL:  v.GetString("FORTRESS_URL"),
+		LogLevel:     logLevel,
 
 		ApiServer: ApiServer{
 			Port:           v.GetString("PORT"),
@@ -513,7 +547,8 @@ func LoadConfig(loaders []Loader) *Config {
 
 func LoadTestConfig() Config {
 	return Config{
-		Debug: true,
+		Debug:    true,
+		LogLevel: "debug",
 		ApiServer: ApiServer{
 			Port: "8080",
 		},

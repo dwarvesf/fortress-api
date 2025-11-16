@@ -15,7 +15,7 @@ import (
 func TestHandleInvoiceCommentJob_Success(t *testing.T) {
 	provider := &stubProvider{}
 	svc := &service.Service{TaskProvider: provider}
-	w := New(context.Background(), make(chan model.WorkerMessage, 1), svc, logger.NewLogrusLogger())
+	w := New(context.Background(), make(chan model.WorkerMessage, 1), svc, logger.NewLogrusLogger("info"))
 
 	job := taskprovider.InvoiceCommentJob{
 		Ref: &taskprovider.InvoiceTaskRef{ExternalID: "row-1"},
@@ -24,7 +24,7 @@ func TestHandleInvoiceCommentJob_Success(t *testing.T) {
 		},
 	}
 
-	err := w.handleInvoiceCommentJob(logger.NewLogrusLogger(), job)
+	err := w.handleInvoiceCommentJob(logger.NewLogrusLogger("info"), job)
 	require.NoError(t, err)
 	require.Equal(t, job, provider.lastJob)
 }
@@ -32,16 +32,16 @@ func TestHandleInvoiceCommentJob_Success(t *testing.T) {
 func TestHandleInvoiceCommentJob_Errors(t *testing.T) {
 	t.Run("invalid payload", func(t *testing.T) {
 		svc := &service.Service{}
-		w := New(context.Background(), make(chan model.WorkerMessage, 1), svc, logger.NewLogrusLogger())
-		err := w.handleInvoiceCommentJob(logger.NewLogrusLogger(), "string")
+		w := New(context.Background(), make(chan model.WorkerMessage, 1), svc, logger.NewLogrusLogger("info"))
+		err := w.handleInvoiceCommentJob(logger.NewLogrusLogger("info"), "string")
 		require.EqualError(t, err, "invalid invoice comment job payload")
 	})
 
 	t.Run("missing provider", func(t *testing.T) {
 		svc := &service.Service{}
-		w := New(context.Background(), make(chan model.WorkerMessage, 1), svc, logger.NewLogrusLogger())
+		w := New(context.Background(), make(chan model.WorkerMessage, 1), svc, logger.NewLogrusLogger("info"))
 		job := taskprovider.InvoiceCommentJob{}
-		err := w.handleInvoiceCommentJob(logger.NewLogrusLogger(), job)
+		err := w.handleInvoiceCommentJob(logger.NewLogrusLogger("info"), job)
 		require.EqualError(t, err, "task provider not configured")
 	})
 }

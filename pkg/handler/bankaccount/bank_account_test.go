@@ -21,7 +21,7 @@ const testToken = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2OTkzM
 
 func TestHandler_List(t *testing.T) {
 	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
+	loggerMock := logger.NewLogrusLogger("info")
 	serviceMock := service.NewForTest()
 	storeMock := store.New()
 

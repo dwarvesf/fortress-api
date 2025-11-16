@@ -43,7 +43,7 @@ _Source: Session `202511141009-migrate-basecamp-to-nocodb` (research â–¸ plan â–
 | --- | --- | --- |
 | Upload invoice PDF | `POST /api/v2/storage/upload` | Multipart form-data; returns attachment descriptor (`url`, `signedUrl`, `mimetype`, `size`). Store descriptor in `invoice_tasks.attachment_url`. |
 | Create rows | `POST /api/v2/tables/{tableId}/records` | Accepts object or array payload; set fields by API name (e.g., `invoice_number`). Use `xc-token` header for auth. |
-| Update rows | `PATCH /api/v2/tables/{tableId}/records/{recordId}` | Send partial payload for metadata/status updates (e.g., patching accounting todo description with invoice number). |
+| Update rows | `PATCH /api/v2/tables/{tableId}/records` | Send partial payload including `Id` field for metadata/status updates. NocoDB accepts record ID in request body, not URL path. |
 | Count rows / query views | `GET /api/v2/tables/{tableId}/records` / `count` | Support filters for reconciliation scripts. |
 | Manage links | `/api/v2/tables/{tableId}/links/{linkFieldId}/records/{recordId}` | Optional if we later add linked tables (e.g., clients). |
 

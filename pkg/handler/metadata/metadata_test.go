@@ -26,7 +26,7 @@ const testToken = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjk1ODMzM
 func TestHandler_GetWorkingStatus(t *testing.T) {
 	// load env and test data
 	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
+	loggerMock := logger.NewLogrusLogger("info")
 	serviceMock := service.NewForTest()
 	storeMock := &store.Store{}
 
@@ -66,7 +66,7 @@ func TestHandler_GetWorkingStatus(t *testing.T) {
 func TestHandler_GetSeniority(t *testing.T) {
 	// load env and test data
 	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
+	loggerMock := logger.NewLogrusLogger("info")
 	serviceMock := service.NewForTest()
 	storeMock := store.New()
 
@@ -107,7 +107,7 @@ func TestHandler_GetSeniority(t *testing.T) {
 func TestHandler_GetChapters(t *testing.T) {
 	// load env and test data
 	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
+	loggerMock := logger.NewLogrusLogger("info")
 	serviceMock := service.NewForTest()
 	storeMock := store.New()
 
@@ -148,7 +148,7 @@ func TestHandler_GetChapters(t *testing.T) {
 func TestHandler_GetProjectStatuses(t *testing.T) {
 	// load env and test data
 	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
+	loggerMock := logger.NewLogrusLogger("info")
 	serviceMock := service.NewForTest()
 	storeMock := store.New()
 
@@ -189,7 +189,7 @@ func TestHandler_GetProjectStatuses(t *testing.T) {
 func TestHandler_GetPositions(t *testing.T) {
 	// load env and test data
 	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
+	loggerMock := logger.NewLogrusLogger("info")
 	serviceMock := service.NewForTest()
 	storeMock := store.New()
 
@@ -230,7 +230,7 @@ func TestHandler_GetPositions(t *testing.T) {
 func TestHandler_GetTechStacks(t *testing.T) {
 	// load env and test data
 	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
+	loggerMock := logger.NewLogrusLogger("info")
 	serviceMock := service.NewForTest()
 	storeMock := store.New()
 
@@ -271,7 +271,7 @@ func TestHandler_GetTechStacks(t *testing.T) {
 func TestHandler_GetQuestion(t *testing.T) {
 	// load env and test data
 	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
+	loggerMock := logger.NewLogrusLogger("info")
 	serviceMock := service.NewForTest()
 	storeMock := store.New()
 
@@ -319,7 +319,7 @@ func TestHandler_GetQuestion(t *testing.T) {
 func TestHandler_CreateStack(t *testing.T) {
 	// load env and test data
 	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
+	loggerMock := logger.NewLogrusLogger("info")
 	serviceMock := service.NewForTest()
 	storeMock := store.New()
 
@@ -369,7 +369,7 @@ func TestHandler_CreateStack(t *testing.T) {
 func TestHandler_UpdateStack(t *testing.T) {
 	// load env and test data
 	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
+	loggerMock := logger.NewLogrusLogger("info")
 	serviceMock := service.NewForTest()
 	storeMock := store.New()
 
@@ -433,7 +433,7 @@ func TestHandler_UpdateStack(t *testing.T) {
 func TestHandler_DeleteStack(t *testing.T) {
 	// load env and test data
 	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
+	loggerMock := logger.NewLogrusLogger("info")
 	serviceMock := service.NewForTest()
 	storeMock := store.New()
 
@@ -477,7 +477,7 @@ func TestHandler_DeleteStack(t *testing.T) {
 func TestHandler_CreatePosition(t *testing.T) {
 	// load env and test data
 	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
+	loggerMock := logger.NewLogrusLogger("info")
 	serviceMock := service.NewForTest()
 	storeMock := store.New()
 
@@ -526,7 +526,7 @@ func TestHandler_CreatePosition(t *testing.T) {
 func TestHandler_UpdatePosition(t *testing.T) {
 	// load env and test data
 	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
+	loggerMock := logger.NewLogrusLogger("info")
 	serviceMock := service.NewForTest()
 	storeMock := store.New()
 
@@ -588,7 +588,7 @@ func TestHandler_UpdatePosition(t *testing.T) {
 func TestHandler_DeletePosition(t *testing.T) {
 	// load env and test data
 	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
+	loggerMock := logger.NewLogrusLogger("info")
 	serviceMock := service.NewForTest()
 	storeMock := store.New()
 

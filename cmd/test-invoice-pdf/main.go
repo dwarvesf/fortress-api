@@ -32,7 +32,7 @@ func main() {
 	}
 
 	cfg := config.LoadConfig(config.DefaultConfigLoaders())
-	log := logger.NewLogrusLogger()
+	log := logger.NewLogrusLogger(cfg.LogLevel)
 
 	log.Infof("Testing invoice PDF generation with patched wkhtmltopdf")
 	log.Infof("Invoice ID: %s", *invoiceID)

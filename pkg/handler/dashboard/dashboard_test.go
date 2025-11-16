@@ -25,7 +25,7 @@ const testToken = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjk1ODMzM
 
 func TestHandler_GetProjectSizes(t *testing.T) {
 	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
+	loggerMock := logger.NewLogrusLogger("info")
 	serviceMock := service.NewForTest()
 	storeMock := store.New()
 
@@ -70,7 +70,7 @@ func TestHandler_GetProjectSizes(t *testing.T) {
 
 //func TestHandler_GetResourceWorkSurveySummaries(t *testing.T) {
 //	cfg := config.LoadTestConfig()
-//	loggerMock := logger.NewLogrusLogger()
+//	loggerMock := logger.NewLogrusLogger("info")
 //	serviceMock := service.New(&cfg, nil, nil)
 //	storeMock := store.New()
 //
@@ -116,7 +116,7 @@ func TestHandler_GetProjectSizes(t *testing.T) {
 
 func TestHandler_GetWorkSurveys(t *testing.T) {
 	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
+	loggerMock := logger.NewLogrusLogger("info")
 	serviceMock := service.NewForTest()
 	storeMock := store.New()
 
@@ -167,7 +167,7 @@ func TestHandler_GetWorkSurveys(t *testing.T) {
 
 func TestHandler_GetActionItemReports(t *testing.T) {
 	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
+	loggerMock := logger.NewLogrusLogger("info")
 	serviceMock := service.NewForTest()
 	storeMock := store.New()
 
@@ -218,7 +218,7 @@ func TestHandler_GetActionItemReports(t *testing.T) {
 
 func TestHandler_GetEngineeringHealth(t *testing.T) {
 	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
+	loggerMock := logger.NewLogrusLogger("info")
 	serviceMock := service.NewForTest()
 	storeMock := store.New()
 
@@ -269,7 +269,7 @@ func TestHandler_GetEngineeringHealth(t *testing.T) {
 
 func TestHandler_GetAudits(t *testing.T) {
 	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
+	loggerMock := logger.NewLogrusLogger("info")
 	serviceMock := service.NewForTest()
 	storeMock := store.New()
 
@@ -320,7 +320,7 @@ func TestHandler_GetAudits(t *testing.T) {
 
 func TestHandler_GetActionItemSquashReports(t *testing.T) {
 	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
+	loggerMock := logger.NewLogrusLogger("info")
 	serviceMock := service.NewForTest()
 	storeMock := store.New()
 
@@ -377,7 +377,7 @@ func TestHandler_GetActionItemSquashReports(t *testing.T) {
 
 func TestHandler_GetSummary(t *testing.T) {
 	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
+	loggerMock := logger.NewLogrusLogger("info")
 	serviceMock := service.NewForTest()
 	storeMock := store.New()
 
@@ -422,7 +422,7 @@ func TestHandler_GetSummary(t *testing.T) {
 
 func TestHandler_GetResourcesAvailability(t *testing.T) {
 	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
+	loggerMock := logger.NewLogrusLogger("info")
 	serviceMock := service.NewForTest()
 	storeMock := store.New()
 
@@ -465,7 +465,7 @@ func TestHandler_GetResourcesAvailability(t *testing.T) {
 
 func TestHandler_GetEngagementInfo(t *testing.T) {
 	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
+	loggerMock := logger.NewLogrusLogger("info")
 	serviceMock := service.NewForTest()
 	storeMock := store.New()
 
@@ -518,7 +518,7 @@ func TestHandler_GetEngagementInfo(t *testing.T) {
 
 func TestHandler_GetEngagementInfoDetail(t *testing.T) {
 	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
+	loggerMock := logger.NewLogrusLogger("info")
 	serviceMock := service.NewForTest()
 	storeMock := store.New()
 
@@ -577,7 +577,7 @@ func TestHandler_GetEngagementInfoDetail(t *testing.T) {
 
 func TestHandler_GetResourceUtilization(t *testing.T) {
 	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
+	loggerMock := logger.NewLogrusLogger("info")
 	serviceMock := service.NewForTest()
 	storeMock := store.New()
 
@@ -624,7 +624,7 @@ func TestHandler_GetResourceUtilization(t *testing.T) {
 
 func TestHandler_GetWorkUnitDistribution(t *testing.T) {
 	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
+	loggerMock := logger.NewLogrusLogger("info")
 	serviceMock := service.NewForTest()
 	storeMock := store.New()
 
@@ -694,7 +694,7 @@ func TestHandler_GetWorkUnitDistribution(t *testing.T) {
 
 func TestHandler_GetWorkUnitDistributionSummary(t *testing.T) {
 	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
+	loggerMock := logger.NewLogrusLogger("info")
 	serviceMock := service.NewForTest()
 	storeMock := store.New()
 

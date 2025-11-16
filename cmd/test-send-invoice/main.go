@@ -40,7 +40,7 @@ func main() {
 	fmt.Println()
 
 	cfg := config.LoadConfig(config.DefaultConfigLoaders())
-	log := logger.NewLogrusLogger()
+	log := logger.NewLogrusLogger(cfg.LogLevel)
 
 	v, err := vault.New(cfg)
 	if err != nil {

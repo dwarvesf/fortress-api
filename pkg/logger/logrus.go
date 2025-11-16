@@ -2,6 +2,7 @@ package logger
 
 import (
 	"os"
+	"strings"
 
 	"github.com/sirupsen/logrus"
 )
@@ -13,9 +14,39 @@ type LogrusLogger struct {
 
 var L Logger
 
-func NewLogrusLogger() Logger {
+// parseLogLevel converts a log level string to logrus.Level
+// Returns InfoLevel as default for invalid or empty levels
+func parseLogLevel(levelStr string) logrus.Level {
+	// Normalize to lowercase and trim spaces
+	normalized := strings.ToLower(strings.TrimSpace(levelStr))
+
+	switch normalized {
+	case "trace":
+		return logrus.TraceLevel
+	case "debug":
+		return logrus.DebugLevel
+	case "info":
+		return logrus.InfoLevel
+	case "warn", "warning":
+		return logrus.WarnLevel
+	case "error":
+		return logrus.ErrorLevel
+	case "fatal":
+		return logrus.FatalLevel
+	case "panic":
+		return logrus.PanicLevel
+	default:
+		return logrus.InfoLevel
+	}
+}
+
+func NewLogrusLogger(logLevel string) Logger {
 	l := logrus.New()
 	l.SetFormatter(&logrus.JSONFormatter{})
+
+	// Set the log level from the parameter
+	level := parseLogLevel(logLevel)
+	l.SetLevel(level)
 
 	hostname, err := os.Hostname()
 	if err != nil {

@@ -22,7 +22,7 @@ const testToken = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjk1ODMzM
 func TestHandler_GetProfile(t *testing.T) {
 	// load env and test data
 	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
+	loggerMock := logger.NewLogrusLogger("info")
 	serviceMock := service.NewForTest()
 	storeMock := store.New()
 
@@ -67,7 +67,7 @@ func TestHandler_GetProfile(t *testing.T) {
 //func TestHandler_UpdateProfileInfo(t *testing.T) {
 //	// load env and test data
 //	cfg := config.LoadTestConfig()
-//	loggerMock := logger.NewLogrusLogger()
+//	loggerMock := logger.NewLogrusLogger("info")
 //	serviceMock := service.New(&cfg, nil, nil)
 //	storeMock := store.New()
 //

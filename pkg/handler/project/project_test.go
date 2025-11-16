@@ -31,7 +31,7 @@ const testToken = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjk1ODMzM
 
 func TestHandler_Detail(t *testing.T) {
 	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
+	loggerMock := logger.NewLogrusLogger("info")
 	serviceMock := service.NewForTest()
 	storeMock := store.New()
 	controllerMock := controller.New(nil, nil, nil, nil, nil, nil)
@@ -104,7 +104,7 @@ func TestHandler_Detail(t *testing.T) {
 
 func TestHandler_List(t *testing.T) {
 	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
+	loggerMock := logger.NewLogrusLogger("info")
 	serviceMock := service.NewForTest()
 	storeMock := store.New()
 	controllerMock := controller.New(nil, nil, nil, nil, nil, nil)
@@ -170,7 +170,7 @@ func TestHandler_List(t *testing.T) {
 func TestHandler_UpdateProjectStatus(t *testing.T) {
 	// load env and test data
 	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
+	loggerMock := logger.NewLogrusLogger("info")
 	serviceMock := service.NewForTest()
 	storeMock := store.New()
 	controllerMock := controller.New(nil, nil, nil, nil, nil, nil)
@@ -265,7 +265,7 @@ func TestHandler_UpdateProjectStatus(t *testing.T) {
 
 func TestHandler_Create(t *testing.T) {
 	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
+	loggerMock := logger.NewLogrusLogger("info")
 	serviceMock := service.NewForTest()
 	storeMock := store.New()
 	controllerMock := controller.New(nil, nil, nil, nil, nil, nil)
@@ -678,7 +678,7 @@ func TestHandler_Create(t *testing.T) {
 
 func TestHandler_GetMembers(t *testing.T) {
 	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
+	loggerMock := logger.NewLogrusLogger("info")
 	serviceMock := service.NewForTest()
 	storeMock := store.New()
 	controllerMock := controller.New(nil, nil, nil, nil, nil, nil)
@@ -764,7 +764,7 @@ func TestHandler_GetMembers(t *testing.T) {
 
 func TestHandler_UpdateMember(t *testing.T) {
 	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
+	loggerMock := logger.NewLogrusLogger("info")
 	serviceMock := service.NewForTest()
 	storeMock := store.New()
 	controllerMock := controller.New(nil, nil, nil, nil, nil, nil)
@@ -1025,7 +1025,7 @@ func TestHandler_UpdateMember(t *testing.T) {
 
 func TestHandler_AssignMember(t *testing.T) {
 	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
+	loggerMock := logger.NewLogrusLogger("info")
 	serviceMock := service.NewForTest()
 	storeMock := store.New()
 
@@ -1153,7 +1153,7 @@ func TestHandler_AssignMember(t *testing.T) {
 
 func TestHandler_DeleteProjectMember(t *testing.T) {
 	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
+	loggerMock := logger.NewLogrusLogger("info")
 	serviceMock := service.NewForTest()
 	storeMock := store.New()
 	controllerMock := controller.New(nil, nil, nil, nil, nil, nil)
@@ -1224,7 +1224,7 @@ func TestHandler_DeleteProjectMember(t *testing.T) {
 
 func TestHandler_DeleteSlot(t *testing.T) {
 	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
+	loggerMock := logger.NewLogrusLogger("info")
 	serviceMock := service.NewForTest()
 	storeMock := store.New()
 	controllerMock := controller.New(nil, nil, nil, nil, nil, nil)
@@ -1289,7 +1289,7 @@ func TestHandler_DeleteSlot(t *testing.T) {
 func TestHandler_UpdateGeneralInfo(t *testing.T) {
 	// load env and test data
 	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
+	loggerMock := logger.NewLogrusLogger("info")
 	serviceMock := service.NewForTest()
 	storeMock := store.New()
 	controllerMock := controller.New(nil, nil, nil, nil, nil, nil)
@@ -1474,7 +1474,7 @@ func TestHandler_UpdateGeneralInfo(t *testing.T) {
 func TestHandler_UpdateContactInfo(t *testing.T) {
 	// load env and test data
 	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
+	loggerMock := logger.NewLogrusLogger("info")
 	serviceMock := service.NewForTest()
 	storeMock := store.New()
 	controllerMock := controller.New(nil, nil, nil, nil, nil, nil)
@@ -1712,7 +1712,7 @@ func TestHandler_UpdateContactInfo(t *testing.T) {
 func TestHandler_GetListWorkUnit(t *testing.T) {
 	// load env and test data
 	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
+	loggerMock := logger.NewLogrusLogger("info")
 	serviceMock := service.NewForTest()
 	storeMock := store.New()
 	controllerMock := controller.New(nil, nil, nil, nil, nil, nil)
@@ -1785,7 +1785,7 @@ func TestHandler_GetListWorkUnit(t *testing.T) {
 
 func TestHandler_UpdateWorkUnit(t *testing.T) {
 	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
+	loggerMock := logger.NewLogrusLogger("info")
 	serviceMock := service.NewForTest()
 	storeMock := store.New()
 	controllerMock := controller.New(nil, nil, nil, nil, nil, nil)
@@ -1981,7 +1981,7 @@ func TestHandler_UpdateWorkUnit(t *testing.T) {
 
 func TestHandler_CreateWorkUnit(t *testing.T) {
 	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
+	loggerMock := logger.NewLogrusLogger("info")
 	serviceMock := service.NewForTest()
 	storeMock := store.New()
 	controllerMock := controller.New(nil, nil, nil, nil, nil, nil)
@@ -2180,7 +2180,7 @@ func TestHandler_CreateWorkUnit(t *testing.T) {
 
 func TestHandler_ArchiveWorkUnit(t *testing.T) {
 	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
+	loggerMock := logger.NewLogrusLogger("info")
 	serviceMock := service.NewForTest()
 	storeMock := store.New()
 	controllerMock := controller.New(nil, nil, nil, nil, nil, nil)
@@ -2274,7 +2274,7 @@ func TestHandler_ArchiveWorkUnit(t *testing.T) {
 
 func TestHandler_UnarchiveWorkUnit(t *testing.T) {
 	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
+	loggerMock := logger.NewLogrusLogger("info")
 	serviceMock := service.NewForTest()
 	storeMock := store.New()
 	controllerMock := controller.New(nil, nil, nil, nil, nil, nil)
@@ -2369,7 +2369,7 @@ func TestHandler_UnarchiveWorkUnit(t *testing.T) {
 func TestHandler_UpdateSendingSurveyState(t *testing.T) {
 	// load env and test data
 	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
+	loggerMock := logger.NewLogrusLogger("info")
 	serviceMock := service.NewForTest()
 	storeMock := store.New()
 	controllerMock := controller.New(nil, nil, nil, nil, nil, nil)
@@ -2442,7 +2442,7 @@ func TestHandler_UpdateSendingSurveyState(t *testing.T) {
 
 func TestHandler_UnassignMember(t *testing.T) {
 	cfg := config.LoadTestConfig()
-	loggerMock := logger.NewLogrusLogger()
+	loggerMock := logger.NewLogrusLogger("info")
 	serviceMock := service.NewForTest()
 	storeMock := store.New()
 	controllerMock := controller.New(nil, nil, nil, nil, nil, nil)
