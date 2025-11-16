@@ -8,8 +8,9 @@ import (
 
 type GetListInvoiceInput struct {
 	model.Pagination
-	ProjectIDs []string
-	Statuses   []string
+	ProjectIDs    []string
+	Statuses      []string
+	InvoiceNumber string
 }
 
 func (c *controller) List(in GetListInvoiceInput) ([]*model.Invoice, int64, error) {
@@ -20,9 +21,10 @@ func (c *controller) List(in GetListInvoiceInput) ([]*model.Invoice, int64, erro
 	})
 
 	invoices, total, err := c.store.Invoice.All(c.repo.DB(), invoice.GetInvoicesFilter{
-		Preload:    true,
-		ProjectIDs: in.ProjectIDs,
-		Statuses:   in.Statuses,
+		Preload:       true,
+		ProjectIDs:    in.ProjectIDs,
+		Statuses:      in.Statuses,
+		InvoiceNumber: in.InvoiceNumber,
 	}, in.Pagination)
 	if err != nil {
 		l.Error(err, "failed to get invoice list")

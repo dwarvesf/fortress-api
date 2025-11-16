@@ -31,7 +31,8 @@ type Query struct {
 }
 
 type GetInvoicesFilter struct {
-	Preload    bool
-	ProjectIDs []string
-	Statuses   []string
+	Preload       bool
+	ProjectIDs    []string
+	Statuses      []string
+	InvoiceNumber string
 }

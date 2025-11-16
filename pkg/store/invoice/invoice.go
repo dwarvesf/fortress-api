@@ -64,6 +64,9 @@ func (s *store) All(db *gorm.DB, filter GetInvoicesFilter, pagination model.Pagi
 	if len(filter.Statuses) > 0 {
 		baseQuery = baseQuery.Where("status IN (?)", filter.Statuses)
 	}
+	if filter.InvoiceNumber != "" {
+		baseQuery = baseQuery.Where("number = ?", filter.InvoiceNumber)
+	}
 
 	err := db.Raw("SELECT COUNT(*) FROM (?) res", baseQuery).Scan(&total).Error
 	if err != nil {
@@ -76,6 +79,9 @@ func (s *store) All(db *gorm.DB, filter GetInvoicesFilter, pagination model.Pagi
 	}
 	if len(filter.Statuses) > 0 {
 		query = query.Where("status IN (?)", filter.Statuses)
+	}
+	if filter.InvoiceNumber != "" {
+		query = query.Where("number = ?", filter.InvoiceNumber)
 	}
 
 	if filter.Preload {

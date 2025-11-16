@@ -33,6 +33,8 @@ func (c *controller) UpdateStatus(in UpdateStatusInput) (*model.Invoice, error) 
 		"req":        in,
 	})
 
+	l.Debugf("starting invoice status update: invoiceID=%s targetStatus=%v", in.InvoiceID, in.Status)
+
 	// check invoice existence
 	invoice, err := c.store.Invoice.One(c.repo.DB(), &sInvoice.Query{ID: in.InvoiceID})
 	if err != nil {
@@ -45,23 +47,33 @@ func (c *controller) UpdateStatus(in UpdateStatusInput) (*model.Invoice, error) 
 		return nil, err
 	}
 
+	l.Debugf("invoice found: invoiceID=%s currentStatus=%v targetStatus=%v number=%s", invoice.ID, invoice.Status, in.Status, invoice.Number)
+
 	if invoice.Status == in.Status {
+		l.Debugf("invoice status already matches target status: currentStatus=%v targetStatus=%v", invoice.Status, in.Status)
 		l.Error(ErrInvoiceStatusAlready, "invoice status already")
 		return nil, ErrInvoiceStatusAlready
 	}
 
+	l.Debugf("processing status update: currentStatus=%v targetStatus=%v", invoice.Status, in.Status)
+
 	switch in.Status {
 	case model.InvoiceStatusError:
+		l.Debug("marking invoice as error")
 		_, err = c.MarkInvoiceAsError(invoice)
 	case model.InvoiceStatusPaid:
+		l.Debugf("marking invoice as paid: sendThankYouEmail=%v", in.SendThankYouEmail)
 		_, err = c.MarkInvoiceAsPaid(invoice, in.SendThankYouEmail)
 	default:
+		l.Debugf("updating invoice status directly: newStatus=%v", in.Status)
 		_, err = c.store.Invoice.UpdateSelectedFieldsByID(c.repo.DB(), invoice.ID.String(), *invoice, "status")
 	}
 	if err != nil {
 		l.Error(err, "failed to update invoice")
 		return nil, err
 	}
+
+	l.Debugf("invoice status updated successfully: invoiceID=%s newStatus=%v", invoice.ID, in.Status)
 
 	return invoice, nil
 }
@@ -73,8 +85,11 @@ func (c *controller) MarkInvoiceAsError(invoice *model.Invoice) (*model.Invoice,
 		"req":        invoice,
 	})
 
+	l.Debugf("marking invoice as error: invoiceID=%s currentStatus=%v number=%s", invoice.ID, invoice.Status, invoice.Number)
+
 	tx, done := c.repo.NewTransaction()
 	invoice.Status = model.InvoiceStatusError
+	l.Debugf("updating invoice status to error in database: invoiceID=%s", invoice.ID)
 	iv, err := c.store.Invoice.UpdateSelectedFieldsByID(tx.DB(), invoice.ID.String(), *invoice, "status")
 	if err != nil {
 		l.Errorf(err, "failed to update invoice status to error")
@@ -104,6 +119,13 @@ func (c *controller) markInvoiceTodoAsError(invoice *model.Invoice) error {
 		return fmt.Errorf(`missing project info`)
 	}
 
+	// Skip Basecamp todo management when using NocoDB task provider
+	// or when Basecamp service is not available
+	if c.config.TaskProvider == "nocodb" || c.service.Basecamp == nil {
+		c.logger.Info("skipping Basecamp todo error handling - using NocoDB provider or Basecamp unavailable")
+		return nil
+	}
+
 	bucketID, todoID, err := c.getInvoiceTodo(invoice)
 	if err != nil {
 		return err
@@ -131,12 +153,24 @@ func (c *controller) MarkInvoiceAsPaid(invoice *model.Invoice, sendThankYouEmail
 		"status":     invoice.Status,
 	})
 
+	l.Debugf("attempting to mark invoice as paid: invoiceID=%s currentStatus=%v sendThankYouEmail=%v", invoice.ID, invoice.Status, sendThankYouEmail)
+
 	if invoice.Status != model.InvoiceStatusSent && invoice.Status != model.InvoiceStatusOverdue {
 		err := fmt.Errorf(`unable to update invoice status, invoice have status %v`, invoice.Status)
+		l.Debugf("invoice status validation failed: currentStatus=%v allowedStatuses=%v", invoice.Status, []string{"sent", "overdue"})
 		l.Errorf(err, "failed to update invoice", "invoiceID", invoice.ID.String())
 		return nil, err
 	}
-	invoice.Status = model.InvoiceStatusPaid
+
+	l.Debug("invoice status validation passed, proceeding to mark as paid")
+
+	// Skip Basecamp todo management when using NocoDB task provider
+	// or when Basecamp service is not available (e.g., fallback for migrated invoices)
+	// This condition ensures compatibility with NocoDB task provider when some invoices are still linked to Basecamp todos.
+	if c.config.TaskProvider == "nocodb" || c.service.Basecamp == nil {
+		l.Info("skipping Basecamp todo management - using NocoDB provider or Basecamp unavailable")
+		return c.MarkInvoiceAsPaidWithTaskRef(invoice, nil, sendThankYouEmail)
+	}
 
 	bucketID, todoID, err := c.getInvoiceTodo(invoice)
 	if err != nil {
@@ -179,11 +213,16 @@ func (c *controller) MarkInvoiceAsPaidWithTaskRef(invoice *model.Invoice, ref *t
 		"status":     invoice.Status,
 	})
 
+	l.Debugf("attempting to mark invoice as paid with task ref: invoiceID=%s currentStatus=%v hasTaskRef=%v sendThankYouEmail=%v", invoice.ID, invoice.Status, ref != nil, sendThankYouEmail)
+
 	if invoice.Status != model.InvoiceStatusSent && invoice.Status != model.InvoiceStatusOverdue {
 		err := fmt.Errorf(`unable to update invoice status, invoice have status %v`, invoice.Status)
+		l.Debugf("invoice status validation failed in MarkInvoiceAsPaidWithTaskRef: currentStatus=%v allowedStatuses=%v", invoice.Status, []string{"sent", "overdue"})
 		l.Errorf(err, "failed to update invoice", "invoiceID", invoice.ID.String())
 		return nil, err
 	}
+
+	l.Debug("invoice status validation passed in MarkInvoiceAsPaidWithTaskRef, proceeding to process paid invoice")
 	invoice.Status = model.InvoiceStatusPaid
 
 	var todoID, bucketID int
@@ -218,6 +257,8 @@ func (c *controller) processPaidInvoice(l logger.Logger, req *processPaidInvoice
 }
 
 func (c *controller) processPaidInvoiceData(l logger.Logger, wg *sync.WaitGroup, req *processPaidInvoiceRequest) error {
+	l.Debugf("starting processPaidInvoiceData: invoiceID=%s number=%s status=%v", req.Invoice.ID, req.Invoice.Number, req.Invoice.Status)
+
 	// Start Transaction
 	tx, done := c.repo.NewTransaction()
 
@@ -230,11 +271,14 @@ func (c *controller) processPaidInvoiceData(l logger.Logger, wg *sync.WaitGroup,
 
 	now := time.Now()
 	req.Invoice.PaidAt = &now
+	l.Debugf("updating invoice status and paid_at in database: invoiceID=%s newStatus=%v paidAt=%v", req.Invoice.ID, req.Invoice.Status, now)
 	_, err := c.store.Invoice.UpdateSelectedFieldsByID(tx.DB(), req.Invoice.ID.String(), *req.Invoice, "status", "paid_at")
 	if err != nil {
 		l.Errorf(err, "failed to update invoice status to paid", "invoice", req.Invoice)
 		return done(err)
 	}
+
+	l.Debug("invoice status and paid_at updated successfully in database")
 
 	_, err = c.storeCommission(tx.DB(), l, req.Invoice)
 	if err != nil {

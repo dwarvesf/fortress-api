@@ -55,6 +55,7 @@ func New(ctrl *controller.Controller, store *store.Store, repo store.DBRepo, ser
 // @Security BearerAuth
 // @Param projectID query string false "projectID"
 // @Param status query string false "status"
+// @Param invoice_number query string false "invoice_number"
 // @Param page query int false "page"
 // @Param size query int false "size"
 // @Param sort query string false "sort"
@@ -84,9 +85,10 @@ func (h *handler) List(c *gin.Context) {
 	}
 
 	invoices, total, err := h.controller.Invoice.List(invoiceCtrl.GetListInvoiceInput{
-		Pagination: pagination,
-		ProjectIDs: query.ProjectID,
-		Statuses:   query.Status,
+		Pagination:    pagination,
+		ProjectIDs:    query.ProjectID,
+		Statuses:      query.Status,
+		InvoiceNumber: query.InvoiceNumber,
 	})
 	if err != nil {
 		l.Error(err, "failed to get latest invoice")
@@ -251,11 +253,15 @@ func (h *handler) UpdateStatus(c *gin.Context) {
 		"req":     req,
 	})
 
+	l.Debugf("received update status request: invoiceID=%s targetStatus=%v sendThankYouEmail=%v", invoiceID, req.Status, req.SendThankYouEmail)
+
 	if err := req.Validate(); err != nil {
 		l.Error(err, "invalid request")
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, req, ""))
 		return
 	}
+
+	l.Debug("request validation passed, calling controller")
 
 	// check invoice existence
 	_, err := h.controller.Invoice.UpdateStatus(invoiceCtrl.UpdateStatusInput{
@@ -268,6 +274,8 @@ func (h *handler) UpdateStatus(c *gin.Context) {
 		errs.ConvertControllerErr(c, err)
 		return
 	}
+
+	l.Debug("invoice status updated successfully, returning response")
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ok"))
 }
