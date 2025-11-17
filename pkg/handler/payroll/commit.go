@@ -58,6 +58,34 @@ func (h *handler) CommitPayroll(c *gin.Context) {
 	}
 
 	email := c.Query("email")
+	emailOnly := c.Query("email_only") == "true"
+
+	l.Info(fmt.Sprintf("commit payroll - email_only: %v", emailOnly))
+
+	if emailOnly {
+		err = h.resendPayrollEmailHandler(int(month), int(year), int(batch), email)
+		if err != nil {
+			l.Errorf(err, "failed to resend payroll emails for batch date", "date", batch)
+			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
+			return
+		}
+
+		err = h.controller.Discord.Log(model.LogDiscordInput{
+			Type: "payroll_email_resent",
+			Data: map[string]interface{}{
+				"batch_number": strconv.Itoa(int(batch)),
+				"month":        time.Month(month).String(),
+				"year":         year,
+				"email":        email,
+			},
+		})
+		if err != nil {
+			l.Error(err, "failed to log to discord")
+		}
+
+		c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "Payroll emails resent successfully"))
+		return
+	}
 
 	err = h.commitPayrollHandler(int(month), int(year), int(batch), email)
 	if err != nil {
@@ -172,7 +200,7 @@ func (h *handler) commitPayrollHandler(month, year, batch int, email string) err
 		for _, pr := range payrolls {
 			go func(p model.Payroll) {
 				defer wg.Done()
-				if h.config.Env == "prod" || p.Employee.TeamEmail == "quang@d.foundation" || p.Employee.TeamEmail == "huy@d.foundation" {
+				if h.config.Env == "prod" || p.Employee.TeamEmail == "quang@d.foundation" {
 					c <- &p
 				}
 			}(pr)

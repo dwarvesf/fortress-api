@@ -365,10 +365,10 @@ func (g *googleService) filterReceiver(i *model.Invoice) error {
 // we have been paid their payroll
 func (g *googleService) SendPayrollPaidMail(p *model.Payroll) (err error) {
 	if g.appConfig.Env == "local" {
-		p.Employee.TeamEmail = "benjamin@d.foundation"
+		p.Employee.TeamEmail = "quang@d.foundation"
 	}
 
-	if err := g.ensureToken(g.appConfig.Google.TeamGoogleRefreshToken); err != nil {
+	if err := g.ensureToken(g.appConfig.Google.AccountingGoogleRefreshToken); err != nil {
 		return err
 	}
 
