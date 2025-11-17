@@ -8,19 +8,24 @@
   3. `invoice_webhook_events` – audit log of incoming webhook payloads (optional, helps debugging).
 
 ## 2. `invoice_tasks` Table
-| Column | Type | Required | Notes |
+| Column | Type (NocoDB) | Required | Notes |
 |---|---|---|---|
-| `id` | UUID (PK) | ✅ | Auto-generated.
-| `invoice_number` | Text | ✅ | Unique index; matches Fortress invoice number (`2025-ABC-001`).
-| `month` | Integer | ✅ | 1-12.
-| `year` | Integer | ✅ | 4-digit year.
-| `status` | Enum | ✅ | `draft`, `sent`, `paid`, `overdue`, `error` (maps 1:1 with Fortress enum).
-| `amount` | Numeric | ✅ | Invoice total in project currency.
-| `currency` | Text | ✅ | Currency code (ISO).
+| `id` | ID (PK) | ✅ | Auto-generated, auto-increment.
+| `invoice_number` | SingleLineText | ✅ | Unique index; matches Fortress invoice number (`2025-ABC-001`).
+| `month` | Number | ✅ | 1-12.
+| `year` | Number | ✅ | 4-digit year.
+| `status` | SingleSelect | ✅ | Options: `draft`, `sent`, `paid`, `overdue`, `error` (maps 1:1 with Fortress enum).
+| `amount` | Decimal | ✅ | Invoice total in project currency.
+| `currency` | SingleLineText | ✅ | Currency code (ISO).
 | `attachment_url` | Attachment | ✅ | Primary invoice PDF stored via NocoDB upload (single attachment array). Legacy GCS URL is kept in metadata for fallback.
-| `fortress_invoice_id` | Text | ✅ | UUID string from Fortress DB; indexed for fast joins.
-| `created_at` | Timestamp | auto | System-managed.
-| `updated_at` | Timestamp | auto | System-managed.
+| `fortress_invoice_id` | SingleLineText | ✅ | UUID string from Fortress DB; indexed for fast joins.
+| `project_name` | SingleLineText | ❌ | Optional project reference for display.
+| `client_name` | SingleLineText | ❌ | Optional client reference for display.
+| `assignee_email` | Email | ❌ | Assigned approver email.
+| `due_date` | Date | ❌ | Payment due date.
+| `provider_metadata` | JSON | ❌ | Dual-write support: `{ "basecamp": { "bucket_id": 15258324, "todo_id": 123456 } }`.
+| `created_at` | CreatedTime | auto | System-managed.
+| `updated_at` | LastModifiedTime | auto | System-managed.
 
 ### Indexes
 - Unique index on `invoice_number`.
@@ -28,14 +33,15 @@
 - Optional partial index on `status = 'sent'` to fetch pending approvals.
 
 ## 3. `invoice_comments` Table (optional)
-| Column | Type | Notes |
-|---|---|---|
-| `id` | UUID PK | |
-| `invoice_task_id` | UUID FK → `invoice_tasks.id` | cascade delete |
-| `author` | Text | `system`, `user email`, etc. |
-| `message` | Long Text | Markdown/HTML allowed |
-| `type` | Enum | `info`, `success`, `warning`, `error` |
-| `created_at` | Timestamp | auto |
+| Column | Type (NocoDB) | Required | Notes |
+|---|---|---|---|
+| `id` | ID (PK) | ✅ | Auto-generated, auto-increment.
+| `invoice_task_id` | SingleLineText | ✅ | FK → `invoice_tasks.id` (NocoDB ID as string).
+| `author` | SingleLineText | ✅ | `system`, `user email`, etc. |
+| `message` | LongText | ✅ | Markdown/HTML allowed.
+| `type` | SingleSelect | ✅ | Options: `info`, `success`, `warning`, `error`.
+| `created_at` | CreatedTime | auto | System-managed.
+| `updated_at` | LastModifiedTime | auto | System-managed.
 
 Used by worker jobs to mirror the Basecamp comment stream when TaskProvider=NocoDB.
 
