@@ -1,5 +1,5 @@
 Mime-Version: 1.0
-From: "Team @ Dwarves Foundation" <team@d.foundation>
+From: "Accounting @ Dwarves Foundation" <accounting@d.foundation>
 To: {{.Employee.TeamEmail}}
 CC: {{ccList}}
 Subject: Dwarves Foundation - Allowance {{formattedCurrentMonth}} {{.Year}}
