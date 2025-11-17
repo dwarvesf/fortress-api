@@ -51,38 +51,41 @@ import (
 )
 
 type Service struct {
-	Basecamp           *basecamp.Service
-	TaskProvider       taskprovider.InvoiceProvider
-	AccountingProvider taskprovider.AccountingProvider
-	NocoDB             *nocodb.Service
-	Cache              *cache.Cache
-	Currency           currency.IService
-	Discord            discord.IService
-	DuckDB             duckdb.IService
-	Github             github.IService
-	Google             googleauth.IService
-	GoogleStorage      googlestorage.IService
-	GoogleAdmin        googleadmin.IService
-	GoogleDrive        googledrive.IService
-	GoogleMail         googlemail.IService
-	GoogleSheet        googlesheet.IService
-	ImprovMX           improvmx.IService
-	Mochi              mochi.IService
-	MochiPay           mochipay.IService
-	MochiProfile       mochiprofile.IService
-	Notion             notion.IService
-	ParquetSync        parquet.ISyncService
-	Sendgrid           sendgrid.IService
-	Wise               wise.IService
-	BaseClient         evm.IService
-	IcySwap            icyswap.IService
-	CommunityNft       communitynft.IService
-	Tono               tono.IService
-	Reddit             reddit.IService
-	Lobsters           lobsters.IService
-	Youtube            yt.IService
-	Dify               ogifmemosummarizer.IService
-	LandingZone        landingzone.IService
+	Basecamp                     *basecamp.Service
+	TaskProvider                 taskprovider.InvoiceProvider
+	AccountingProvider           taskprovider.AccountingProvider
+	ExpenseProvider              taskprovider.ExpenseProvider // Webhook expense provider
+	PayrollExpenseProvider       basecamp.ExpenseProvider     // Payroll expense fetcher (Basecamp or NocoDB expense_submissions)
+	PayrollAccountingTodoProvider basecamp.ExpenseProvider     // Payroll accounting todo fetcher (NocoDB accounting_todos)
+	NocoDB                       *nocodb.Service
+	Cache                   *cache.Cache
+	Currency                currency.IService
+	Discord                 discord.IService
+	DuckDB                  duckdb.IService
+	Github                  github.IService
+	Google                  googleauth.IService
+	GoogleStorage           googlestorage.IService
+	GoogleAdmin             googleadmin.IService
+	GoogleDrive             googledrive.IService
+	GoogleMail              googlemail.IService
+	GoogleSheet             googlesheet.IService
+	ImprovMX                improvmx.IService
+	Mochi                   mochi.IService
+	MochiPay                mochipay.IService
+	MochiProfile            mochiprofile.IService
+	Notion                  notion.IService
+	ParquetSync             parquet.ISyncService
+	Sendgrid                sendgrid.IService
+	Wise                    wise.IService
+	BaseClient              evm.IService
+	IcySwap                 icyswap.IService
+	CommunityNft            communitynft.IService
+	Tono                    tono.IService
+	Reddit                  reddit.IService
+	Lobsters                lobsters.IService
+	Youtube                 yt.IService
+	Dify                    ogifmemosummarizer.IService
+	LandingZone             landingzone.IService
 }
 
 func New(cfg *config.Config, store *store.Store, repo store.DBRepo) (*Service, error) {
@@ -210,37 +213,71 @@ func New(cfg *config.Config, store *store.Store, repo store.DBRepo) (*Service, e
 	}
 
 	parquetSvc := parquet.NewSyncService(cfg.Parquet, logger.L)
+	wiseSvc := wise.New(cfg, logger.L)
 	basecampSvc := basecamp.New(store, repo, cfg, &bc, logger.L)
 	nocoSvc := nocodb.New(cfg.Noco)
 	basecampTaskProvider := tpbasecamp.New(basecampSvc, cfg)
+	var nocodbProvider *tpnocodb.Provider
+	if nocoSvc != nil {
+		nocodbProvider = tpnocodb.New(nocoSvc, cfg, store, repo, wiseSvc, logger.L)
+	}
 
 	selectedProvider := strings.ToLower(cfg.TaskProvider)
 
 	var invoiceProvider taskprovider.InvoiceProvider
-	if selectedProvider == string(taskprovider.ProviderNocoDB) {
-		if prov := tpnocodb.New(nocoSvc); prov != nil {
-			invoiceProvider = prov
-		}
+	if selectedProvider == string(taskprovider.ProviderNocoDB) && nocodbProvider != nil {
+		invoiceProvider = nocodbProvider
 	}
 	if invoiceProvider == nil {
 		invoiceProvider = basecampTaskProvider
 	}
 
 	var accountingProvider taskprovider.AccountingProvider
-	if selectedProvider == string(taskprovider.ProviderNocoDB) {
-		if prov := tpnocodb.New(nocoSvc); prov != nil {
-			accountingProvider = prov
-		}
+	if selectedProvider == string(taskprovider.ProviderNocoDB) && nocodbProvider != nil {
+		accountingProvider = nocodbProvider
 	}
 	if accountingProvider == nil {
 		accountingProvider = basecampTaskProvider
 	}
 
+	var expenseProvider taskprovider.ExpenseProvider
+	if selectedProvider == string(taskprovider.ProviderNocoDB) && nocodbProvider != nil {
+		expenseProvider = nocodbProvider
+	}
+	if expenseProvider == nil {
+		expenseProvider = basecampTaskProvider
+	}
+
+	// Payroll expense fetcher provider (for fetching expense_submissions during payroll calculation)
+	var payrollExpenseProvider basecamp.ExpenseProvider
+	if selectedProvider == string(taskprovider.ProviderNocoDB) && nocoSvc != nil {
+		// Use NocoDB expense service for payroll (expense_submissions table)
+		payrollExpenseProvider = nocodb.NewExpenseService(nocoSvc, cfg, store, repo, logger.L)
+	}
+	if payrollExpenseProvider == nil {
+		// Fallback to Basecamp adapter
+		payrollExpenseProvider = basecamp.NewExpenseAdapter(basecampSvc)
+	}
+
+	// Payroll accounting todo fetcher (for fetching accounting_todos during payroll calculation)
+	var payrollAccountingTodoProvider basecamp.ExpenseProvider
+	if selectedProvider == string(taskprovider.ProviderNocoDB) && nocoSvc != nil {
+		// Use NocoDB accounting todo service for payroll (accounting_todos table)
+		payrollAccountingTodoProvider = nocodb.NewAccountingTodoService(nocoSvc, cfg, store, repo, logger.L)
+	}
+	if payrollAccountingTodoProvider == nil {
+		// Fallback to Basecamp adapter (fetches from same source as PayrollExpenseProvider)
+		payrollAccountingTodoProvider = basecamp.NewExpenseAdapter(basecampSvc)
+	}
+
 	return &Service{
-		Basecamp:           basecampSvc,
-		TaskProvider:       invoiceProvider,
-		AccountingProvider: accountingProvider,
-		NocoDB:             nocoSvc,
+		Basecamp:                     basecampSvc,
+		TaskProvider:                 invoiceProvider,
+		AccountingProvider:           accountingProvider,
+		ExpenseProvider:              expenseProvider,
+		PayrollExpenseProvider:       payrollExpenseProvider,
+		PayrollAccountingTodoProvider: payrollAccountingTodoProvider,
+		NocoDB:                       nocoSvc,
 		Cache:              cch,
 		Currency:           Currency,
 		Discord:            discord.New(cfg),
@@ -259,7 +296,7 @@ func New(cfg *config.Config, store *store.Store, repo store.DBRepo) (*Service, e
 		Notion:             notion.New(cfg.Notion.Secret, cfg.Notion.Databases.Project, logger.L, repo.DB()),
 		ParquetSync:        parquetSvc,
 		Sendgrid:           sendgrid.New(cfg.Sendgrid.APIKey, cfg, logger.L),
-		Wise:               wise.New(cfg, logger.L),
+		Wise:               wiseSvc,
 		BaseClient:         baseClient,
 		IcySwap:            icySwap,
 		CommunityNft:       communityNft,

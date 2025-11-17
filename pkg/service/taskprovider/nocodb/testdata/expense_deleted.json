@@ -1,0 +1,13 @@
+{
+  "type": "records.after.delete",
+  "table": "expense_submissions",
+  "data": {
+    "table_name": "expense_submissions",
+    "rows": [
+      {
+        "Id": "row_deleted_3",
+        "status": "pending"
+      }
+    ]
+  }
+}

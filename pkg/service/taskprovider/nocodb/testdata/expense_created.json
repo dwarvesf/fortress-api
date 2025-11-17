@@ -1,0 +1,34 @@
+{
+  "type": "records.after.insert",
+  "table": "expense_submissions",
+  "data": {
+    "table_name": "expense_submissions",
+    "rows": [
+      {
+        "Id": "row_created_1",
+        "CreatedAt": "2025-11-17T09:16:48.468Z",
+        "UpdatedAt": "2025-11-17T09:16:48.468Z",
+        "title": "Monitor Purchase",
+        "amount": 250.45,
+        "currency": "USD",
+        "requester_team_email": "alice@example.com",
+        "status": "pending",
+        "attachment_files": [
+          {
+            "url": "https://nocodb.example.com/files/monitor.pdf",
+            "title": "monitor.pdf",
+            "mimetype": "application/pdf",
+            "size": 102400
+          },
+          {
+            "url": "https://nocodb.example.com/files/monitor.pdf",
+            "title": "monitor-duplicate.pdf",
+            "mimetype": "application/pdf",
+            "size": 102400
+          }
+        ],
+        "metadata_json": "{\"project\":\"Atlas\"}"
+      }
+    ]
+  }
+}

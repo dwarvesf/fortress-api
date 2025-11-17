@@ -35,7 +35,7 @@
    - ~~4.1 Remove the Wise/transaction logic from `/webhooks/nocodb/accounting`; handler only performs invoice linkage.~~
    - ~~4.2 Loose parsing: `ParseAccountingWebhook` must accept todo payloads without amount/currency and just track group/status/metadata.~~
    - ~~4.3 On completion: update `invoice_tasks` status + call `MarkInvoiceAsPaidWithTaskRef` using metadata.~~
-5. Validate e2e: send invoice → todo metadata synced → mark todo completed → invoice tasks + Fortress invoice flip to `paid`.
+~~5. Validate e2e: send invoice → todo metadata synced → mark todo completed → invoice tasks + Fortress invoice flip to `paid`.~~
 6. ~~Fix webhook parser to read `task_group` so In-bucket todos trigger invoice sync (2025-11-15).~~
 7. ~~Accounting webhook now only updates Noco invoice task status (DB status handled by invoice webhook) – 2025-11-15.~~
 
@@ -43,4 +43,4 @@
 1. ~~Create `UploadFile` helper in `pkg/service/nocodb/service.go` (multipart upload → return descriptor URL) plus a thin `UploadInvoiceAttachment` wrapper.~~
 2. ~~Wire `pkg/controller/invoice/send.go` to call the helper after PDF generation, store the returned Noco URL in `invoice_tasks.attachment_url`, and keep GCS URL only as metadata fallback.~~
 3. ~~Ensure task provider payloads + accounting metadata can carry attachment info without relying on external URLs (update DTOs if needed).~~
-4. Tests & verification: unit cover the upload helper (mock HTTP), regression test invoice send path, document validation steps once live.
+~~4. Tests & verification: unit cover the upload helper (mock HTTP), regression test invoice send path, document validation steps once live.~~

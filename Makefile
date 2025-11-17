@@ -98,6 +98,12 @@ migrate-up:
 migrate-down:
 	${APP_ENVIRONMENT} sql-migrate down -env=local
 
+migrate-up-local-clone:
+	${APP_ENVIRONMENT} sql-migrate up -env=local-clone
+
+migrate-down-local-clone:
+	${APP_ENVIRONMENT} sql-migrate down -env=local-clone
+	
 docker-build:
 	docker build \
 	--build-arg DEFAULT_PORT="${DEFAULT_PORT}" \

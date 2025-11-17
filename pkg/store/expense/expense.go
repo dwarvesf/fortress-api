@@ -35,6 +35,12 @@ func (s *store) GetByQuery(db *gorm.DB, q *ExpenseQuery) (*model.Expense, error)
 	if q.BasecampID != 0 {
 		db = db.Where("basecamp_id = ?", q.BasecampID)
 	}
+	if q.TaskProvider != "" {
+		db = db.Where("task_provider = ?", q.TaskProvider)
+	}
+	if q.TaskRef != "" {
+		db = db.Where("task_ref = ?", q.TaskRef)
+	}
 
 	return e, db.First(e).Error
 }
