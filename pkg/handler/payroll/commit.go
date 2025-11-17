@@ -303,6 +303,12 @@ func (h *handler) markBonusAsDone(p *model.Payroll) error {
 		return err
 	}
 
+	// Skip Basecamp bonus handling when Basecamp service is not available
+	if h.service.Basecamp == nil {
+		h.logger.Debug("skipping Basecamp bonus handling - Basecamp service unavailable")
+		return nil
+	}
+
 	for i := range projectBonusExplains {
 		// handle the bonus from basecamp todo (expense reimbursement and accounting)
 		if projectBonusExplains[i].BasecampBucketID != 0 && projectBonusExplains[i].BasecampTodoID != 0 {
