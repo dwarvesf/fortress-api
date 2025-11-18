@@ -1,6 +1,7 @@
 package webhook
 
 import (
+	"bytes"
 	"errors"
 	"io"
 	"net/http"
@@ -9,19 +10,29 @@ import (
 
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
+	"github.com/dwarvesf/fortress-api/pkg/service/basecamp/consts"
 	bcModel "github.com/dwarvesf/fortress-api/pkg/service/basecamp/model"
 	"github.com/dwarvesf/fortress-api/pkg/service/taskprovider"
 	"github.com/dwarvesf/fortress-api/pkg/view"
 )
 
-func basecampWebhookMessageFromCtx(c *gin.Context, l logger.Logger) (model.BasecampWebhookMessage, error) {
+func basecampWebhookMessageFromCtx(c *gin.Context, l logger.Logger) (model.BasecampWebhookMessage, []byte, error) {
 	var msg model.BasecampWebhookMessage
-	err := msg.Decode(msg.Read(c.Request.Body))
-	if err != nil {
-		l.Error(err, "failed to decode basecamp webhook message JSON")
-		return msg, err
+	if c.Request.Body == nil {
+		return msg, nil, errors.New("empty request body")
 	}
-	return msg, nil
+	body, err := io.ReadAll(c.Request.Body)
+	if err != nil {
+		l.Error(err, "failed to read basecamp webhook body")
+		return msg, nil, err
+	}
+	_ = c.Request.Body.Close()
+	c.Request.Body = io.NopCloser(bytes.NewBuffer(body))
+	if err := msg.Decode(body); err != nil {
+		l.Error(err, "failed to decode basecamp webhook message JSON")
+		return msg, nil, err
+	}
+	return msg, body, nil
 }
 
 // ValidateBasecampExpense dry-run expense request for validation
@@ -31,16 +42,52 @@ func (h *handler) ValidateBasecampExpense(c *gin.Context) {
 		"method":  "ValidateBasecampExpense",
 	})
 
-	msg, err := basecampWebhookMessageFromCtx(c, l)
+	msg, body, err := basecampWebhookMessageFromCtx(c, l)
 	if err != nil {
 		c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, ""))
 		return
 	}
 
-	err = h.basecampExpenseValidate(msg)
-	if err != nil {
-		c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, err, nil, ""))
+	provider := h.service.ExpenseProvider
+	if provider == nil {
+		err := errors.New("expense provider not configured")
+		l.Error(err, "missing expense provider")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
+	}
+
+	payload, err := provider.ParseExpenseWebhook(c.Request.Context(), taskprovider.ExpenseWebhookRequest{
+		Headers:         headerMap(c.Request.Header),
+		Body:            body,
+		BasecampMessage: &msg,
+	})
+	if err != nil {
+		l.Error(err, "failed to parse basecamp expense webhook")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+	if payload == nil {
+		c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, ""))
+		return
+	}
+
+	result, err := provider.ValidateSubmission(c.Request.Context(), payload)
+	if err != nil {
+		l.Error(err, "expense validation failed")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+	if result == nil || result.Skip {
+		c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, ""))
+		return
+	}
+	if result.Message != "" {
+		if err := provider.PostFeedback(c.Request.Context(), payload, taskprovider.ExpenseFeedbackInput{
+			Message: result.Message,
+			Kind:    result.FeedbackKind,
+		}); err != nil {
+			l.Error(err, "failed to post expense validation feedback")
+		}
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, ""))
@@ -53,16 +100,52 @@ func (h *handler) CreateBasecampExpense(c *gin.Context) {
 		"method":  "CreateBasecampExpense",
 	})
 
-	msg, err := basecampWebhookMessageFromCtx(c, l)
+	msg, body, err := basecampWebhookMessageFromCtx(c, l)
 	if err != nil {
 		c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, ""))
 		return
 	}
 
-	err = h.createBasecampExpense(msg, msg.Read(c.Request.Body))
+	provider := h.service.ExpenseProvider
+	if provider == nil {
+		err := errors.New("expense provider not configured")
+		l.Error(err, "missing expense provider")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	payload, err := provider.ParseExpenseWebhook(c.Request.Context(), taskprovider.ExpenseWebhookRequest{
+		Headers:         headerMap(c.Request.Header),
+		Body:            body,
+		BasecampMessage: &msg,
+	})
 	if err != nil {
+		l.Error(err, "failed to parse basecamp expense webhook")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+	if payload == nil || payload.EventType != taskprovider.ExpenseEventCreate {
+		c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, ""))
+		return
+	}
+
+	if _, err := provider.CreateExpense(c.Request.Context(), payload); err != nil {
+		l.Error(err, "failed to create basecamp expense")
+		if postErr := provider.PostFeedback(c.Request.Context(), payload, taskprovider.ExpenseFeedbackInput{
+			Message: consts.CommentCreateExpenseFailed,
+			Kind:    bcModel.CommentMsgTypeFailed,
+		}); postErr != nil {
+			l.Error(postErr, "failed to post expense failure feedback")
+		}
 		c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
+	}
+
+	if err := provider.PostFeedback(c.Request.Context(), payload, taskprovider.ExpenseFeedbackInput{
+		Message: consts.CommentCreateExpenseSuccessfully,
+		Kind:    bcModel.CommentMsgTypeCompleted,
+	}); err != nil {
+		l.Error(err, "failed to post expense success feedback")
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, ""))
@@ -75,16 +158,52 @@ func (h *handler) UncheckBasecampExpense(c *gin.Context) {
 		"method":  "UncheckBasecampExpense",
 	})
 
-	msg, err := basecampWebhookMessageFromCtx(c, l)
+	msg, body, err := basecampWebhookMessageFromCtx(c, l)
 	if err != nil {
 		c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, ""))
 		return
 	}
 
-	err = h.UncheckBasecampExpenseHandler(msg, msg.Read(c.Request.Body))
+	provider := h.service.ExpenseProvider
+	if provider == nil {
+		err := errors.New("expense provider not configured")
+		l.Error(err, "missing expense provider")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	payload, err := provider.ParseExpenseWebhook(c.Request.Context(), taskprovider.ExpenseWebhookRequest{
+		Headers:         headerMap(c.Request.Header),
+		Body:            body,
+		BasecampMessage: &msg,
+	})
 	if err != nil {
+		l.Error(err, "failed to parse basecamp expense webhook")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+	if payload == nil || payload.EventType != taskprovider.ExpenseEventUncomplete {
+		c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, ""))
+		return
+	}
+
+	if err := provider.UncompleteExpense(c.Request.Context(), payload); err != nil {
+		l.Error(err, "failed to uncomplete basecamp expense")
+		if postErr := provider.PostFeedback(c.Request.Context(), payload, taskprovider.ExpenseFeedbackInput{
+			Message: consts.CommentDeleteExpenseFailed,
+			Kind:    bcModel.CommentMsgTypeFailed,
+		}); postErr != nil {
+			l.Error(postErr, "failed to post expense delete failure feedback")
+		}
 		c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
+	}
+
+	if err := provider.PostFeedback(c.Request.Context(), payload, taskprovider.ExpenseFeedbackInput{
+		Message: consts.CommentDeleteExpenseSuccessfully,
+		Kind:    bcModel.CommentMsgTypeCompleted,
+	}); err != nil {
+		l.Error(err, "failed to post expense delete success feedback")
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, ""))
@@ -126,7 +245,7 @@ func (h *handler) MarkInvoiceAsPaidViaBasecamp(c *gin.Context) {
 		"method":  "MarkInvoiceAsPaidViaBasecamp",
 	})
 
-	msg, err := basecampWebhookMessageFromCtx(c, l)
+	msg, _, err := basecampWebhookMessageFromCtx(c, l)
 	if err != nil {
 		c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, ""))
 		return

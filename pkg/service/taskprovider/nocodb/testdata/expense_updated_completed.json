@@ -1,0 +1,18 @@
+{
+  "type": "records.after.update",
+  "table": "expense_submissions",
+  "data": {
+    "table_name": "expense_submissions",
+    "rows": [
+      {
+        "Id": "row_update_2",
+        "title": "Taxi Ride",
+        "amount": 200,
+        "currency": "vnd",
+        "requester_team_email": "ops@example.com",
+        "status": "approved",
+        "metadata_json": "{}"
+      }
+    ]
+  }
+}

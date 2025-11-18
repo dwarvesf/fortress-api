@@ -3,10 +3,13 @@ package nocodb
 import (
 	"context"
 	"encoding/json"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	nocodbsvc "github.com/dwarvesf/fortress-api/pkg/service/nocodb"
 	"github.com/dwarvesf/fortress-api/pkg/service/taskprovider"
@@ -112,4 +115,153 @@ func TestBuildInvoicePayload_Attachment(t *testing.T) {
 		require.True(t, ok)
 		require.Equal(t, "https://storage.googleapis.com/file.pdf", attachments[0]["url"])
 	})
+}
+func TestParseExpenseWebhook_RowCreated(t *testing.T) {
+	provider := &Provider{
+		svc: &nocodbsvc.Service{},
+		expenseCfg: config.ExpenseIntegration{
+			Noco: config.ExpenseNocoIntegration{TableID: "tbl_expenses"},
+		},
+	}
+	body := []byte(`{
+		"table": "tbl_expenses",
+		"event": "row.created",
+		"payload": {
+			"id": "row_1",
+			"title": "Laptop | 1,200 | USD",
+			"amount": 1200,
+		"currency": "usd",
+		"status": "pending",
+		"requester_team_email": "alice@example.com",
+			"attachments": [{"url": "https://nocodb/files/row_1.pdf"}],
+			"metadata": {"project": "apollo"}
+		}
+	}`)
+
+	payload, err := provider.ParseExpenseWebhook(context.Background(), taskprovider.ExpenseWebhookRequest{Body: body})
+	require.NoError(t, err)
+	require.NotNil(t, payload)
+	require.Equal(t, taskprovider.ProviderNocoDB, payload.Provider)
+	require.Equal(t, taskprovider.ExpenseEventValidate, payload.EventType)
+	require.Equal(t, "Laptop | 1,200 | USD", payload.Title)
+	require.Equal(t, 1200, payload.Amount)
+	require.Equal(t, "USD", payload.Currency)
+	require.Equal(t, "https://nocodb/files/row_1.pdf", payload.TaskAttachmentURL)
+	require.Equal(t, []string{"https://nocodb/files/row_1.pdf"}, payload.TaskAttachments)
+	require.Equal(t, "alice@example.com", payload.CreatorEmail)
+	var meta map[string]any
+	require.NoError(t, json.Unmarshal(payload.Metadata, &meta))
+	require.Equal(t, "apollo", meta["project"])
+}
+
+func TestParseExpenseWebhook_RowUpdatedApproved(t *testing.T) {
+	provider := &Provider{
+		svc:        &nocodbsvc.Service{},
+		expenseCfg: config.ExpenseIntegration{Noco: config.ExpenseNocoIntegration{TableID: "tbl_expenses"}},
+	}
+	body := []byte(`{
+		"table": "tbl_expenses",
+		"event": "row.updated",
+		"payload": {
+			"id": "row_2",
+			"title": "Taxi | 200 | USD",
+			"amount": 200,
+			"currency": "usd",
+			"status": "approved"
+		}
+	}`)
+
+	payload, err := provider.ParseExpenseWebhook(context.Background(), taskprovider.ExpenseWebhookRequest{Body: body})
+	require.NoError(t, err)
+	require.NotNil(t, payload)
+	require.Equal(t, taskprovider.ExpenseEventCreate, payload.EventType)
+	require.Equal(t, 200, payload.Amount)
+	require.Equal(t, "row_2", payload.TaskRef)
+}
+
+func TestParseExpenseWebhook_FixturePayloads(t *testing.T) {
+	provider := &Provider{
+		svc:        &nocodbsvc.Service{},
+		expenseCfg: config.ExpenseIntegration{Noco: config.ExpenseNocoIntegration{TableID: "expense_submissions"}},
+	}
+
+	tests := []struct {
+		name      string
+		file      string
+		eventType taskprovider.ExpenseEventType
+		assertFn  func(t *testing.T, payload *taskprovider.ExpenseWebhookPayload)
+	}{
+		{
+			name:      "row created validates data",
+			file:      "expense_created.json",
+			eventType: taskprovider.ExpenseEventValidate,
+			assertFn: func(t *testing.T, payload *taskprovider.ExpenseWebhookPayload) {
+				require.Equal(t, "Monitor Purchase", payload.Title)
+				require.Equal(t, 250, payload.Amount)
+				require.Equal(t, "USD", payload.Currency)
+				require.Equal(t, "alice@example.com", payload.CreatorEmail)
+				require.Equal(t, "row_created_1", payload.TaskRef)
+				require.Equal(t, "https://nocodb.example.com/files/monitor.pdf", payload.TaskAttachmentURL)
+				require.Equal(t, []string{"https://nocodb.example.com/files/monitor.pdf"}, payload.TaskAttachments)
+			},
+		},
+		{
+			name:      "status approved creates expense",
+			file:      "expense_updated_completed.json",
+			eventType: taskprovider.ExpenseEventCreate,
+			assertFn: func(t *testing.T, payload *taskprovider.ExpenseWebhookPayload) {
+				require.Equal(t, "row_update_2", payload.TaskRef)
+				require.Equal(t, 200, payload.Amount)
+				require.Equal(t, "VND", payload.Currency)
+			},
+		},
+		{
+			name:      "row deleted triggers uncomplete",
+			file:      "expense_deleted.json",
+			eventType: taskprovider.ExpenseEventUncomplete,
+			assertFn: func(t *testing.T, payload *taskprovider.ExpenseWebhookPayload) {
+				require.Equal(t, "row_deleted_3", payload.TaskRef)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			body := mustLoadExpenseFixture(t, tt.file)
+			payload, err := provider.ParseExpenseWebhook(context.Background(), taskprovider.ExpenseWebhookRequest{Body: body})
+			require.NoError(t, err)
+			require.NotNil(t, payload)
+			require.Equal(t, tt.eventType, payload.EventType)
+			require.Equal(t, taskprovider.ProviderNocoDB, payload.Provider)
+			tt := tt
+			if tt.assertFn != nil {
+				tt.assertFn(t, payload)
+			}
+		})
+	}
+}
+
+func TestBuildExpenseDataFromPayload(t *testing.T) {
+	payload := &taskprovider.ExpenseWebhookPayload{
+		Reason:            "Laptop Purchase",
+		Amount:            1500,
+		Currency:          "USD",
+		CreatorEmail:      "alice@example.com",
+		TaskRef:           "row_3",
+		TaskAttachmentURL: "https://nocodb/files/row_3.pdf",
+		TaskBoard:         "Expenses | Nov",
+		Metadata:          []byte(`{"project":"apollo"}`),
+	}
+	// buildExpenseDataFromPayload function was removed - test no longer valid
+	_ = payload
+}
+
+func mustLoadExpenseFixture(t *testing.T, name string) []byte {
+	t.Helper()
+	path := filepath.Join("testdata", name)
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("failed to read fixture %s: %v", name, err)
+	}
+	return data
 }

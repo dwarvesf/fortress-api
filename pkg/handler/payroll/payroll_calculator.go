@@ -51,71 +51,103 @@ func (h *handler) calculatePayrolls(users []*model.Employee, batchDate time.Time
 		approver = consts.HanBasecampID
 	}
 
-	opsTodoLists, err := h.service.Basecamp.Todo.GetAllInList(opsExpenseID, opsID)
-	if err != nil {
-		h.logger.Error(err, "can't get ops expense todo")
-		return nil, err
-	}
-
-	for _, exps := range opsTodoLists {
-		isApproved := false
-		cmts, err := h.service.Basecamp.Comment.Gets(opsID, exps.ID)
+	// NocoDB stores all expenses in one table, Basecamp uses separate lists
+	if h.service.Basecamp != nil {
+		// Basecamp flow: fetch ops and team expenses separately
+		opsTodoLists, err := h.service.PayrollExpenseProvider.GetAllInList(opsExpenseID, opsID)
 		if err != nil {
-			h.logger.Error(err, "can't get basecamp approved message")
+			h.logger.Error(err, "can't get ops expense todo")
 			return nil, err
 		}
 
-		for _, cmt := range cmts {
-			if cmt.Creator.ID == approver && strings.Contains(strings.ToLower(cmt.Content), "approve") {
-				isApproved = true
-				break
-			}
-		}
-
-		if isApproved {
-			expenses = append(expenses, exps)
-		}
-	}
-
-	// get team expenses
-	todolists, err := h.service.Basecamp.Todo.GetGroups(expenseID, woodlandID)
-	if err != nil {
-		h.logger.Error(err, "can't get groups expense")
-		return nil, err
-	}
-
-	for i := range todolists {
-		e, err := h.service.Basecamp.Todo.GetAllInList(todolists[i].ID, woodlandID)
-		if err != nil {
-			h.logger.Error(err, "can't get expense todo")
-			return nil, err
-		}
-		for j := range e {
+		for _, exps := range opsTodoLists {
 			isApproved := false
-			cmts, err := h.service.Basecamp.Comment.Gets(woodlandID, e[j].ID)
+			cmts, err := h.service.Basecamp.Comment.Gets(opsID, exps.ID)
 			if err != nil {
 				h.logger.Error(err, "can't get basecamp approved message")
 				return nil, err
 			}
-			for k := range cmts {
-				if cmts[k].Creator.ID == approver && strings.Contains(strings.ToLower(cmts[k].Content), "approve") {
+
+			for _, cmt := range cmts {
+				if cmt.Creator.ID == approver && strings.Contains(strings.ToLower(cmt.Content), "approve") {
 					isApproved = true
 					break
 				}
 			}
+
 			if isApproved {
-				expenses = append(expenses, e[j])
+				expenses = append(expenses, exps)
 			}
 		}
+
+		// get team expenses
+		todolists, err := h.service.PayrollExpenseProvider.GetGroups(expenseID, woodlandID)
+		if err != nil {
+			h.logger.Error(err, "can't get groups expense")
+			return nil, err
+		}
+
+		for i := range todolists {
+			e, err := h.service.PayrollExpenseProvider.GetAllInList(todolists[i].ID, woodlandID)
+			if err != nil {
+				h.logger.Error(err, "can't get expense todo")
+				return nil, err
+			}
+
+			for j := range e {
+				isApproved := false
+				cmts, err := h.service.Basecamp.Comment.Gets(woodlandID, e[j].ID)
+				if err != nil {
+					h.logger.Error(err, "can't get basecamp approved message")
+					return nil, err
+				}
+				for k := range cmts {
+					if cmts[k].Creator.ID == approver && strings.Contains(strings.ToLower(cmts[k].Content), "approve") {
+						isApproved = true
+						break
+					}
+				}
+				if isApproved {
+					expenses = append(expenses, e[j])
+				}
+			}
+		}
+	} else {
+		// NocoDB flow: fetch from expense_submissions table
+		h.logger.Debug("Fetching approved expense submissions from NocoDB (expense_submissions table)")
+		allExpenses, err := h.service.PayrollExpenseProvider.GetAllInList(opsExpenseID, opsID)
+		if err != nil {
+			h.logger.Error(err, "can't get expense submissions from NocoDB")
+			return nil, err
+		}
+		h.logger.Debug(fmt.Sprintf("Fetched %d expense submissions from NocoDB", len(allExpenses)))
+		expenses = append(expenses, allExpenses...)
+
+		// Also fetch accounting todos from accounting_todos table
+		h.logger.Debug("Fetching accounting todos from NocoDB (accounting_todos table)")
+		accountingTodos, err := h.service.PayrollAccountingTodoProvider.GetAllInList(opsExpenseID, opsID)
+		if err != nil {
+			h.logger.Error(err, "can't get accounting todos from NocoDB")
+			return nil, err
+		}
+		h.logger.Debug(fmt.Sprintf("Fetched %d accounting todos from NocoDB", len(accountingTodos)))
+		expenses = append(expenses, accountingTodos...)
+		h.logger.Debug(fmt.Sprintf("Total expenses (submissions + accounting todos): %d", len(expenses)))
 	}
 
-	accountingExpenses, err := h.getAccountingExpense(batch)
-	if err != nil {
-		h.logger.Error(err, "can't get accounting todo")
-		return nil, err
-	}
+	// Fetch accounting todos from Basecamp (NocoDB already fetched them above)
+	if h.service.Basecamp != nil {
+		h.logger.Debug("Fetching accounting todos from Basecamp")
+		accountingExpenses, err := h.getAccountingExpense(batch)
+		if err != nil {
+			h.logger.Error(err, "can't get accounting todo")
+			return nil, err
+		}
 
-	expenses = append(expenses, accountingExpenses...)
+		h.logger.Debug(fmt.Sprintf("Fetched %d accounting expenses from Basecamp", len(accountingExpenses)))
+		expenses = append(expenses, accountingExpenses...)
+		h.logger.Debug(fmt.Sprintf("Total expenses after appending accounting todos: %d", len(expenses)))
+	}
 
 	for i, u := range users {
 		if users[i].BaseSalary.Currency == nil {
@@ -380,7 +412,17 @@ func (h *handler) getReimbursement(expense string) (string, model.VietnamDong, e
 		return "", 0, nil
 	}
 	c := strings.TrimSpace(splits[2])
-	bcAmount := h.service.Basecamp.ExtractBasecampExpenseAmount(strings.TrimSpace(splits[1]))
+
+	// Default to VND if currency is empty
+	if c == "" {
+		c = currency.VNDCurrency
+		h.logger.Debug(fmt.Sprintf("Currency empty in expense '%s', defaulting to VND", expense))
+	}
+
+	// Parse amount from expense title (format: "reason | amount | currency")
+	amountStr := strings.TrimSpace(splits[1])
+	bcAmount := h.extractExpenseAmount(amountStr)
+
 	if c != currency.VNDCurrency {
 		tempAmount, _, err := h.service.Wise.Convert(float64(bcAmount), c, currency.VNDCurrency)
 		if err != nil {
@@ -388,10 +430,23 @@ func (h *handler) getReimbursement(expense string) (string, model.VietnamDong, e
 		}
 		amount = model.NewVietnamDong(int64(tempAmount))
 	} else {
-		amount = model.NewVietnamDong(int64(h.service.Basecamp.ExtractBasecampExpenseAmount(strings.TrimSpace(splits[1]))))
+		amount = model.NewVietnamDong(int64(bcAmount))
 	}
 
 	return strings.TrimSpace(splits[0]), amount.Format(), nil
+}
+
+// extractExpenseAmount parses amount from expense string (provider-agnostic)
+func (h *handler) extractExpenseAmount(source string) int {
+	if h.service.Basecamp != nil {
+		return h.service.Basecamp.ExtractBasecampExpenseAmount(source)
+	}
+	// Fallback: parse as plain number (for NocoDB which provides clean numeric values)
+	source = strings.Replace(source, ".", "", -1) // Remove thousand separators
+	source = strings.TrimSpace(source)
+	var val int
+	_, _ = fmt.Sscanf(source, "%d", &val) // Explicitly ignore error - val defaults to 0 on parse failure
+	return val
 }
 
 func (h *handler) getAccountingExpense(batch int) (res []bcModel.Todo, err error) {
@@ -403,49 +458,73 @@ func (h *handler) getAccountingExpense(batch int) (res []bcModel.Todo, err error
 		accountingTodoID = consts.PlaygroundTodoID
 	}
 
-	// get accounting todo list
-	lists, err := h.service.Basecamp.Todo.GetLists(accountingID, accountingTodoID)
-	if err != nil {
-		h.logger.Error(err, "can't get list of todo")
-		return nil, err
-	}
+	// NocoDB vs Basecamp flow
+	if h.service.Basecamp != nil {
+		// Basecamp flow: fetch from multiple lists and groups
+		h.logger.Debug("Fetching accounting todos from Basecamp (multi-list/group)")
 
-	var wg sync.WaitGroup
-	var mu sync.Mutex
-	// get all group in each list
-	for i := range lists {
-		wg.Add(1)
-		go func(i int) {
-			defer wg.Done()
-			groups, err := h.service.Basecamp.Todo.GetGroups(lists[i].ID, accountingID)
-			if err != nil {
-				h.logger.Error(err, "can't get groups in todo list")
-				return
-			}
+		// get accounting todo list
+		lists, err := h.service.PayrollExpenseProvider.GetLists(accountingID, accountingTodoID)
+		if err != nil {
+			h.logger.Error(err, "can't get list of todo")
+			return nil, err
+		}
 
-			// filter out group only
-			for j := range groups {
-				if strings.ToLower(groups[j].Title) == "out" {
-					// get all todo in out grou
-					todos, err := h.service.Basecamp.Todo.GetAllInList(groups[j].ID, accountingID)
-					if err != nil {
-						h.logger.Error(err, "can't get todo in out group")
-						return
-					}
+		var wg sync.WaitGroup
+		var mu sync.Mutex
+		// get all group in each list
+		for i := range lists {
+			wg.Add(1)
+			go func(i int) {
+				defer wg.Done()
+				groups, err := h.service.PayrollExpenseProvider.GetGroups(lists[i].ID, accountingID)
+				if err != nil {
+					h.logger.Error(err, "can't get groups in todo list")
+					return
+				}
 
-					// find expense in list of todos
-					for k := range todos {
-						if len(todos[k].Assignees) == 1 && todos[k].Assignees[0].ID != consts.HanBasecampID {
-							mu.Lock()
-							res = append(res, todos[k])
-							mu.Unlock()
+				// filter out group only
+				for j := range groups {
+					if strings.ToLower(groups[j].Title) == "out" {
+						// get all todo in out group
+						todos, err := h.service.PayrollExpenseProvider.GetAllInList(groups[j].ID, accountingID)
+						if err != nil {
+							h.logger.Error(err, "can't get todo in out group")
+							return
+						}
+
+						// find expense in list of todos
+						for k := range todos {
+							if len(todos[k].Assignees) == 1 && todos[k].Assignees[0].ID != consts.HanBasecampID {
+								mu.Lock()
+								res = append(res, todos[k])
+								mu.Unlock()
+							}
 						}
 					}
 				}
-			}
-		}(i)
-	}
-	wg.Wait()
+			}(i)
+		}
+		wg.Wait()
+	} else {
+		// NocoDB flow: GetAllInList already filters by "out" group and excludes Han
+		h.logger.Debug("Fetching accounting todos from NocoDB (single table, pre-filtered)")
 
+		// accountingTodoID acts as the table identifier for NocoDB
+		todos, err := h.service.PayrollExpenseProvider.GetAllInList(accountingTodoID, accountingID)
+		if err != nil {
+			h.logger.Error(err, "can't get accounting todos from NocoDB")
+			return nil, err
+		}
+
+		h.logger.Debug(fmt.Sprintf("NocoDB returned %d accounting todos", len(todos)))
+		for i := range todos {
+			h.logger.Debug(fmt.Sprintf("NocoDB accounting todo %d: ID=%d, Title=%s, Assignees=%v", i, todos[i].ID, todos[i].Title, todos[i].Assignees))
+		}
+
+		res = todos
+	}
+
+	h.logger.Debug(fmt.Sprintf("getAccountingExpense returning %d todos", len(res)))
 	return res, nil
 }

@@ -47,6 +47,7 @@ type Config struct {
 	Noco                  Noco
 	TaskProvider          string
 	AccountingIntegration AccountingIntegration
+	ExpenseIntegration    ExpenseIntegration
 
 	Invoice  Invoice
 	Sendgrid Sendgrid
@@ -77,6 +78,37 @@ func getStringWithDefault(v ENV, key, fallback string) string {
 	return fallback
 }
 
+func parseKeyValuePairs(raw string) map[string]string {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return nil
+	}
+
+	result := make(map[string]string)
+	pairs := strings.Split(raw, ",")
+	for _, pair := range pairs {
+		pair = strings.TrimSpace(pair)
+		if pair == "" {
+			continue
+		}
+		parts := strings.SplitN(pair, ":", 2)
+		if len(parts) != 2 {
+			continue
+		}
+		key := strings.ToLower(strings.TrimSpace(parts[0]))
+		value := strings.TrimSpace(parts[1])
+		if key == "" || value == "" {
+			continue
+		}
+		result[key] = value
+	}
+
+	if len(result) == 0 {
+		return nil
+	}
+	return result
+}
+
 // validateLogLevel validates and normalizes the log level string
 // Returns the normalized level or "info" as default
 func validateLogLevel(level string) string {
@@ -85,14 +117,14 @@ func validateLogLevel(level string) string {
 
 	// Valid logrus levels: trace, debug, info, warn, error, fatal, panic
 	validLevels := map[string]bool{
-		"trace": true,
-		"debug": true,
-		"info":  true,
-		"warn":  true,
+		"trace":   true,
+		"debug":   true,
+		"info":    true,
+		"warn":    true,
 		"warning": true, // alias for warn
-		"error": true,
-		"fatal": true,
-		"panic": true,
+		"error":   true,
+		"fatal":   true,
+		"panic":   true,
 	}
 
 	if validLevels[normalized] {
@@ -298,6 +330,17 @@ type AccountingNocoIntegration struct {
 	WebhookSecret       string
 }
 
+type ExpenseIntegration struct {
+	Noco            ExpenseNocoIntegration
+	ApproverMapping map[string]string
+}
+
+type ExpenseNocoIntegration struct {
+	WorkspaceID   string
+	TableID       string
+	WebhookSecret string
+}
+
 type ENV interface {
 	GetBool(string) bool
 	GetString(string) string
@@ -319,14 +362,18 @@ func Generate(v ENV) *Config {
 	basecampAccountingTodoSetID := getIntWithDefault(v, "BASECAMP_ACCOUNTING_TODO_SET_ID", defaultBasecampAccountingTodoSetID)
 	basecampPlaygroundProjectID := getIntWithDefault(v, "BASECAMP_PLAYGROUND_PROJECT_ID", defaultBasecampPlaygroundProjectID)
 	basecampPlaygroundTodoSetID := getIntWithDefault(v, "BASECAMP_PLAYGROUND_TODO_SET_ID", defaultBasecampPlaygroundTodoSetID)
-
-	accountingTodosTableID := v.GetString("NOCO_ACCOUNTING_TODOS_TABLE_ID")
-	accountingTransactionsTableID := v.GetString("NOCO_ACCOUNTING_TRANSACTIONS_TABLE_ID")
-	nocoWebhookSecret := v.GetString("NOCO_WEBHOOK_SECRET")
 	accountingGroupIn := getStringWithDefault(v, "ACCOUNTING_BASECAMP_GROUP_IN_NAME", "In")
 	accountingGroupOut := getStringWithDefault(v, "ACCOUNTING_BASECAMP_GROUP_OUT_NAME", "Out")
 	accountingProjectID := getIntWithDefault(v, "ACCOUNTING_BASECAMP_PROJECT_ID", basecampAccountingProjectID)
 	accountingTodoSetID := getIntWithDefault(v, "ACCOUNTING_BASECAMP_TODO_SET_ID", basecampAccountingTodoSetID)
+
+	nocoWebhookSecret := v.GetString("NOCO_WEBHOOK_SECRET")
+	accountingTodosTableID := v.GetString("NOCO_ACCOUNTING_TODOS_TABLE_ID")
+	accountingTransactionsTableID := v.GetString("NOCO_ACCOUNTING_TRANSACTIONS_TABLE_ID")
+	nocoExpenseWorkspaceID := v.GetString("NOCO_EXPENSE_WORKSPACE_ID")
+	nocoExpenseTableID := v.GetString("NOCO_EXPENSE_TABLE_ID")
+	nocoExpenseWebhookSecret := v.GetString("NOCO_EXPENSE_WEBHOOK_SECRET")
+	nocoExpenseApproverMapping := parseKeyValuePairs(v.GetString("NOCO_EXPENSE_APPROVER_MAPPING"))
 
 	logLevel := validateLogLevel(v.GetString("LOG_LEVEL"))
 
@@ -482,16 +529,16 @@ func Generate(v ENV) *Config {
 			ExtendedTimeout: v.GetString("PARQUET_EXTENDED_TIMEOUT"),
 			EnableCaching:   v.GetBool("PARQUET_ENABLE_CACHING"),
 		},
-	Noco: Noco{
-		BaseURL:                       v.GetString("NOCO_BASE_URL"),
-		Token:                         v.GetString("NOCO_TOKEN"),
-		WorkspaceID:                   v.GetString("NOCO_WORKSPACE_ID"),
-		BaseID:                        v.GetString("NOCO_BASE_ID"),
-		InvoiceTableID:                v.GetString("NOCO_INVOICE_TABLE_ID"),
-		InvoiceCommentsTableID:        v.GetString("NOCO_INVOICE_COMMENTS_TABLE_ID"),
-		WebhookSecret:                 nocoWebhookSecret,
-		AccountingTodosTableID:        accountingTodosTableID,
-		AccountingTransactionsTableID: accountingTransactionsTableID,
+		Noco: Noco{
+			BaseURL:                       v.GetString("NOCO_BASE_URL"),
+			Token:                         v.GetString("NOCO_TOKEN"),
+			WorkspaceID:                   v.GetString("NOCO_WORKSPACE_ID"),
+			BaseID:                        v.GetString("NOCO_BASE_ID"),
+			InvoiceTableID:                v.GetString("NOCO_INVOICE_TABLE_ID"),
+			InvoiceCommentsTableID:        v.GetString("NOCO_INVOICE_COMMENTS_TABLE_ID"),
+			WebhookSecret:                 nocoWebhookSecret,
+			AccountingTodosTableID:        accountingTodosTableID,
+			AccountingTransactionsTableID: accountingTransactionsTableID,
 		},
 		TaskProvider: getStringWithDefault(v, "TASK_PROVIDER", "basecamp"),
 		AccountingIntegration: AccountingIntegration{
@@ -506,6 +553,14 @@ func Generate(v ENV) *Config {
 				TransactionsTableID: accountingTransactionsTableID,
 				WebhookSecret:       nocoWebhookSecret,
 			},
+		},
+		ExpenseIntegration: ExpenseIntegration{
+			Noco: ExpenseNocoIntegration{
+				WorkspaceID:   nocoExpenseWorkspaceID,
+				TableID:       nocoExpenseTableID,
+				WebhookSecret: nocoExpenseWebhookSecret,
+			},
+			ApproverMapping: nocoExpenseApproverMapping,
 		},
 	}
 }

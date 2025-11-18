@@ -24,6 +24,7 @@ vendor
 tmp
 server
 main
+fortress-api
 
 #claude
 .mcp.json
