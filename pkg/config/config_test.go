@@ -91,10 +91,10 @@ func TestGenerate_LogLevel(t *testing.T) {
 func TestGenerate_LogLevel_WithOtherConfig(t *testing.T) {
 	env := &mockENV{
 		values: map[string]string{
-			"LOG_LEVEL":     "debug",
-			"ENV":           "production",
-			"PORT":          "9090",
-			"API_KEY":       "test-key",
+			"LOG_LEVEL":      "debug",
+			"ENV":            "production",
+			"PORT":           "9090",
+			"API_KEY":        "test-key",
 			"JWT_SECRET_KEY": "secret",
 		},
 		bools: map[string]bool{
@@ -117,5 +117,91 @@ func TestGenerate_LogLevel_WithOtherConfig(t *testing.T) {
 	}
 	if cfg.ApiServer.Port != "9090" {
 		t.Errorf("Generate() ApiServer.Port = %v, want 9090", cfg.ApiServer.Port)
+	}
+}
+
+func Test_parseKeyValuePairs(t *testing.T) {
+	tests := []struct {
+		name string
+		raw  string
+		want map[string]string
+	}{
+		{
+			name: "empty string",
+			raw:  "",
+			want: nil,
+		},
+		{
+			name: "single pair",
+			raw:  "han@example.com:123",
+			want: map[string]string{"han@example.com": "123"},
+		},
+		{
+			name: "multiple pairs with spaces",
+			raw:  " han@example.com : 123 , ops@example.com:456 ",
+			want: map[string]string{
+				"han@example.com": "123",
+				"ops@example.com": "456",
+			},
+		},
+		{
+			name: "invalid entries skipped",
+			raw:  "invalid,foo:bar,baz:",
+			want: map[string]string{"foo": "bar"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := parseKeyValuePairs(tt.raw)
+			if len(tt.want) == 0 && got != nil {
+				t.Fatalf("expected nil map, got %v", got)
+			}
+			if len(tt.want) != len(got) {
+				t.Fatalf("size mismatch: got %d, want %d", len(got), len(tt.want))
+			}
+			for k, v := range tt.want {
+				if got[k] != v {
+					t.Fatalf("expected %s=%s, got %s", k, v, got[k])
+				}
+			}
+		})
+	}
+}
+
+func TestGenerate_ExpenseIntegration(t *testing.T) {
+		env := &mockENV{
+			values: map[string]string{
+				"NOCO_EXPENSE_WORKSPACE_ID":      "ws_1",
+				"NOCO_EXPENSE_TABLE_ID":          "tbl_1",
+				"NOCO_EXPENSE_WEBHOOK_SECRET":    "secret",
+				"NOCO_EXPENSE_APPROVER_MAPPING":  "han@example.com:123, ops@example.com:456",
+			"NOCO_BASE_URL":                  "https://nocodb",
+			"NOCO_TOKEN":                     "token",
+			"NOCO_WORKSPACE_ID":              "nw",
+			"NOCO_BASE_ID":                   "nb",
+			"NOCO_INVOICE_TABLE_ID":          "invoice",
+			"NOCO_INVOICE_COMMENTS_TABLE_ID": "comments",
+		},
+		bools: map[string]bool{},
+	}
+
+	cfg := Generate(env)
+
+	exp := cfg.ExpenseIntegration
+	if exp.Noco.WorkspaceID != "ws_1" {
+		t.Fatalf("expected workspace ws_1, got %s", exp.Noco.WorkspaceID)
+	}
+	if exp.Noco.TableID != "tbl_1" {
+		t.Fatalf("expected table tbl_1, got %s", exp.Noco.TableID)
+	}
+	if exp.Noco.WebhookSecret != "secret" {
+		t.Fatalf("expected secret, got %s", exp.Noco.WebhookSecret)
+	}
+	if exp.ApproverMapping["han@example.com"] != "123" {
+		t.Fatalf("expected mapping for han@example.com=123, got %s", exp.ApproverMapping["han@example.com"])
+	}
+	if exp.ApproverMapping["ops@example.com"] != "456" {
+		t.Fatalf("expected mapping for ops@example.com=456, got %s", exp.ApproverMapping["ops@example.com"])
 	}
 }

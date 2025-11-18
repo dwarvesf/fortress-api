@@ -15,5 +15,7 @@ type IStore interface {
 }
 
 type ExpenseQuery struct {
-	BasecampID int
+	BasecampID   int
+	TaskProvider string
+	TaskRef      string
 }

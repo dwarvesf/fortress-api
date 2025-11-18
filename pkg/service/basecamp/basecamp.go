@@ -47,6 +47,13 @@ type Service struct {
 	Wise wise.IService
 }
 
+// ExpenseProvider defines methods for fetching expense todos for payroll calculation.
+type ExpenseProvider interface {
+	GetAllInList(todolistID, projectID int) ([]model.Todo, error)
+	GetGroups(todosetID, projectID int) ([]model.TodoGroup, error)
+	GetLists(projectID, todosetID int) ([]model.TodoList, error)
+}
+
 func New(store *store.Store, repo store.DBRepo, cfg *config.Config, bc *model.Basecamp, logger logger.Logger) *Service {
 	c, err := client.NewClient(bc, cfg)
 	if err != nil {

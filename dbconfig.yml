@@ -4,6 +4,12 @@ local:
   dir: migrations/schemas
   table: migrations
 
+local-clone:
+  dialect: postgres
+  datasource: host=localhost port=25432 user=postgres password=postgres dbname=fortress_v2_prod sslmode=disable
+  dir: migrations/schemas
+  table: migrations
+
 test:
   dialect: postgres
   datasource: host=localhost port=35432 user=postgres password=postgres dbname=fortress_local_test sslmode=disable

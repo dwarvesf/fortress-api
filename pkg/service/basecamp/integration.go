@@ -3,6 +3,7 @@ package basecamp
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"math"
 	"regexp"
 	"strconv"
@@ -27,14 +28,37 @@ const (
 
 // BasecampExpenseData --
 type BasecampExpenseData struct {
-	Reason          string
-	Amount          int
-	CurrencyType    string
-	CreatorEmail    string
-	InvoiceImageURL string
-	MetaData        datatypes.JSON
-	BasecampID      int
-	CreatorID       int
+	Reason            string
+	Amount            int
+	CurrencyType      string
+	CreatorEmail      string
+	InvoiceImageURL   string
+	MetaData          datatypes.JSON
+	BasecampID        int
+	CreatorID         int
+	TaskProvider      string
+	TaskRef           string
+	TaskBoard         string
+	TaskAttachmentURL string
+	TaskAttachments   datatypes.JSON
+}
+
+func MarshalAttachmentArray(values []string) datatypes.JSON {
+	cleaned := make([]string, 0, len(values))
+	for _, v := range values {
+		trimmed := strings.TrimSpace(v)
+		if trimmed != "" {
+			cleaned = append(cleaned, trimmed)
+		}
+	}
+	if len(cleaned) == 0 {
+		return datatypes.JSON([]byte("[]"))
+	}
+	buf, err := json.Marshal(cleaned)
+	if err != nil {
+		return datatypes.JSON([]byte("[]"))
+	}
+	return datatypes.JSON(buf)
 }
 
 // ExtractBasecampExpenseAmount --
@@ -47,18 +71,31 @@ func (s *Service) CreateBasecampExpense(
 	data BasecampExpenseData,
 ) error {
 	l := s.logger.Fields(logger.Fields{
-		"service":     "basecamp",
-		"method":      "CreateBasecampExpense",
-		"basecampID":  data.BasecampID,
-		"creatorID":   data.CreatorID,
-		"amount":      data.Amount,
-		"currency":    data.CurrencyType,
+		"service":    "basecamp",
+		"method":     "CreateBasecampExpense",
+		"basecampID": data.BasecampID,
+		"creatorID":  data.CreatorID,
+		"amount":     data.Amount,
+		"currency":   data.CurrencyType,
 	})
 
-	employee, err := s.store.Employee.OneByBasecampID(s.repo.DB(), data.CreatorID)
-	if err != nil {
-		l.AddField("creatorID", data.CreatorID).Error(err, "failed to get employee by basecampID")
-		return errors.New("failed to get employee by basecampID: " + strconv.Itoa(data.BasecampID))
+	var employee *model.Employee
+	var err error
+	if data.CreatorID != 0 {
+		employee, err = s.store.Employee.OneByBasecampID(s.repo.DB(), data.CreatorID)
+	}
+	if (err != nil || employee == nil) && strings.TrimSpace(data.CreatorEmail) != "" {
+		employee, err = s.store.Employee.OneByEmail(s.repo.DB(), strings.TrimSpace(data.CreatorEmail))
+	}
+	if err != nil || employee == nil {
+		l.Fields(logger.Fields{
+			"creatorID":    data.CreatorID,
+			"creatorEmail": data.CreatorEmail,
+		}).Error(err, "failed to get employee for expense")
+		if err == nil {
+			return fmt.Errorf("failed to get employee for expense")
+		}
+		return err
 	}
 
 	c, err := s.store.Currency.GetByName(s.repo.DB(), data.CurrencyType)
@@ -70,13 +107,18 @@ func (s *Service) CreateBasecampExpense(
 	date := time.Now()
 
 	e, err := s.store.Expense.Create(s.repo.DB(), &model.Expense{
-		Amount:          data.Amount,
-		Reason:          data.Reason,
-		EmployeeID:      employee.ID,
-		CurrencyID:      c.ID,
-		InvoiceImageURL: data.InvoiceImageURL,
-		Metadata:        data.MetaData,
-		BasecampID:      data.BasecampID,
+		Amount:            data.Amount,
+		Reason:            data.Reason,
+		EmployeeID:        employee.ID,
+		CurrencyID:        c.ID,
+		InvoiceImageURL:   data.InvoiceImageURL,
+		Metadata:          data.MetaData,
+		BasecampID:        data.BasecampID,
+		TaskProvider:      data.TaskProvider,
+		TaskRef:           data.TaskRef,
+		TaskBoard:         data.TaskBoard,
+		TaskAttachmentURL: data.TaskAttachmentURL,
+		TaskAttachments:   data.TaskAttachments,
 	})
 	if err != nil {
 		l.Fields(logger.Fields{
@@ -139,7 +181,7 @@ func (s *Service) CreateBasecampExpense(
 
 	if _, err = s.store.Expense.Update(s.repo.DB(), e); err != nil {
 		l.Fields(logger.Fields{
-			"expenseID":              e.ID,
+			"expenseID":               e.ID,
 			"accountingTransactionID": transaction.ID,
 		}).Error(err, "failed to update expense with accounting transaction ID")
 		return err
@@ -151,7 +193,12 @@ func (s *Service) CreateBasecampExpense(
 func (s *Service) UncheckBasecampExpenseHandler(
 	data BasecampExpenseData,
 ) error {
-	e, err := s.store.Expense.GetByQuery(s.repo.DB(), &expense.ExpenseQuery{BasecampID: data.BasecampID})
+	query := &expense.ExpenseQuery{BasecampID: data.BasecampID}
+	if data.BasecampID == 0 {
+		query.TaskProvider = data.TaskProvider
+		query.TaskRef = data.TaskRef
+	}
+	e, err := s.store.Expense.GetByQuery(s.repo.DB(), query)
 	if err != nil {
 		return err
 	}
