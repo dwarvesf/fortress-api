@@ -35,3 +35,18 @@ func (s *store) All(db *gorm.DB, input GetOnLeaveInput) ([]*model.OnLeaveRequest
 
 	return chapters, query.Find(&chapters).Error
 }
+
+// GetByNocodbID retrieves an on-leave request by NocoDB ID (including soft-deleted)
+func (s *store) GetByNocodbID(db *gorm.DB, nocodbID int) (*model.OnLeaveRequest, error) {
+	var request model.OnLeaveRequest
+	err := db.Unscoped().Where("nocodb_id = ?", nocodbID).First(&request).Error
+	if err != nil {
+		return nil, err
+	}
+	return &request, nil
+}
+
+// Delete permanently deletes an on-leave request by ID (hard delete)
+func (s *store) Delete(db *gorm.DB, id string) error {
+	return db.Unscoped().Delete(&model.OnLeaveRequest{}, "id = ?", id).Error
+}

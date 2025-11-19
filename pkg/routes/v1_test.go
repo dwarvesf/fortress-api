@@ -781,6 +781,12 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/webhook.IHandler.HandleNocoExpense-fm",
 			},
 		},
+		"/webhooks/nocodb/leave": {
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/webhook.IHandler.HandleNocodbLeave-fm",
+			},
+		},
 		"/api/v1/bank-accounts": {
 			"GET": {
 				Method:  "GET",

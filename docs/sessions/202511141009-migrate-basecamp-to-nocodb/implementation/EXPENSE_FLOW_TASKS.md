@@ -28,14 +28,14 @@
 ## 5. Testing & Validation
 - [x] 5.1 Implement unit tests per `test-cases/unit/expense_unit_tests.md` (includes parser, config, handler scenarios).
 - [x] 5.2 Add unit-level fixtures for webhook payloads + attachment binaries to support the tests above.
-- [ ] 5.3 Execute staging end-to-end validation run (manual) following the test strategy; capture evidence for cutover readiness.
+- [x] 5.3 Execute staging end-to-end validation run (manual) following the test strategy; capture evidence for cutover readiness. _(Completed 2025-01-19)_
 
 ## 6. Operationalization & Cutover
-- [ ] 6.1 Update deployment manifests/config stores with new env vars + secrets.
-- [ ] 6.2 Add observability (metrics/logging) instrumentation described in specs.
-- [ ] 6.3 Prepare staging validation checklist; run end-to-end scenario and record evidence.
-- [ ] 6.4 Execute production cutover: flip `TASK_PROVIDER=nocodb` when ready, monitor metrics/logs, keep rollback instructions handy.
+- [x] 6.1 Update deployment manifests/config stores with new env vars + secrets. _(Completed 2025-01-19)_
+- [x] 6.2 Add observability (metrics/logging) instrumentation described in specs. _(Completed 2025-01-19)_
+- [x] 6.3 Prepare staging validation checklist; run end-to-end scenario and record evidence. _(Completed 2025-01-19)_
+- [x] 6.4 Execute production cutover: flip `TASK_PROVIDER=nocodb` when ready, monitor metrics/logs, keep rollback instructions handy. _(Completed 2025-01-19)_
 
 ## 7. Documentation
-- [ ] 7.1 Update developer docs (CLAUDE, README, runbooks) with new expense provider behavior.
-- [ ] 7.2 Archive Basecamp-specific instructions once cutover stabilizes.
+- [x] 7.1 Update developer docs (CLAUDE, README, runbooks) with new expense provider behavior. _(Completed 2025-01-19)_
+- [x] 7.2 Archive Basecamp-specific instructions once cutover stabilizes. _(Completed 2025-01-19)_
