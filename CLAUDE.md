@@ -101,6 +101,30 @@ This is a Go web API using **layered architecture** with clear separation of con
 - Enum types with validation methods (`IsValid()`, `String()`)
 - Helper methods on models for common operations
 
+### Task Provider Abstraction (NocoDB Migration - 2025-01-19)
+
+The application uses a **provider abstraction pattern** for task management, supporting both Basecamp (legacy) and NocoDB (current):
+
+**Configuration**: Set `TASK_PROVIDER=nocodb` or `TASK_PROVIDER=basecamp` in `.env`
+
+**Provider Interfaces**:
+- `ExpenseProvider` - Fetch expenses for payroll calculation (`pkg/service/basecamp/basecamp.go`)
+- `TaskIntegration` - Invoice and accounting task operations (`pkg/service/taskintegration/`)
+
+**NocoDB Services**:
+- `pkg/service/nocodb/expense.go` - Expense fetching from NocoDB API
+- `pkg/service/nocodb/accounting_todo.go` - Accounting todo fetching for payroll
+- `pkg/service/taskprovider/nocodb/provider.go` - Webhook handling and task operations
+
+**Key Patterns**:
+1. **No DB persistence on webhook approval** - Expenses/todos validated only
+2. **Fetch during payroll calculation** - Pull from NocoDB API when calculating payroll
+3. **Persist on payroll commit** - Write to DB only when payroll is committed
+4. **Status updates** - Mark NocoDB records as "completed" after commit
+5. **Metadata tracking** - Store `task_provider`, `task_ref`, `task_board`, `task_attachment_url` for cross-linking
+
+**Rollback**: Basecamp code preserved - switch `TASK_PROVIDER=basecamp` if needed
+
 ## Configuration & Infrastructure
 
 ### Dependencies

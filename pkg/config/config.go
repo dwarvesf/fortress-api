@@ -48,6 +48,7 @@ type Config struct {
 	TaskProvider          string
 	AccountingIntegration AccountingIntegration
 	ExpenseIntegration    ExpenseIntegration
+	LeaveIntegration      LeaveIntegration
 
 	Invoice  Invoice
 	Sendgrid Sendgrid
@@ -341,6 +342,15 @@ type ExpenseNocoIntegration struct {
 	WebhookSecret string
 }
 
+type LeaveIntegration struct {
+	Noco LeaveNocoIntegration
+}
+
+type LeaveNocoIntegration struct {
+	TableID       string
+	WebhookSecret string
+}
+
 type ENV interface {
 	GetBool(string) bool
 	GetString(string) string
@@ -374,6 +384,8 @@ func Generate(v ENV) *Config {
 	nocoExpenseTableID := v.GetString("NOCO_EXPENSE_TABLE_ID")
 	nocoExpenseWebhookSecret := v.GetString("NOCO_EXPENSE_WEBHOOK_SECRET")
 	nocoExpenseApproverMapping := parseKeyValuePairs(v.GetString("NOCO_EXPENSE_APPROVER_MAPPING"))
+	nocoLeaveTableID := v.GetString("NOCO_LEAVE_TABLE_ID")
+	nocoLeaveWebhookSecret := v.GetString("NOCO_LEAVE_WEBHOOK_SECRET")
 
 	logLevel := validateLogLevel(v.GetString("LOG_LEVEL"))
 
@@ -561,6 +573,12 @@ func Generate(v ENV) *Config {
 				WebhookSecret: nocoExpenseWebhookSecret,
 			},
 			ApproverMapping: nocoExpenseApproverMapping,
+		},
+		LeaveIntegration: LeaveIntegration{
+			Noco: LeaveNocoIntegration{
+				TableID:       nocoLeaveTableID,
+				WebhookSecret: nocoLeaveWebhookSecret,
+			},
 		},
 	}
 }

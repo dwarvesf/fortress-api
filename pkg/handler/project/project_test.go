@@ -2466,14 +2466,14 @@ func TestHandler_UnassignMember(t *testing.T) {
 			wantCode:         http.StatusNotFound,
 			wantResponsePath: "testdata/unassign_member/404.json",
 			id:               "8dc3be2e-19a4-4942-8a79-56db391a0b15",
-			memberID:         "cb889a9c-b20c-47ee-83b8-44b6d1721acb",
+			memberID:         "ffffffff-ffff-ffff-ffff-ffffffffffff",
 		},
 		{
 			name:             "empty_project_id",
 			wantCode:         http.StatusBadRequest,
 			wantResponsePath: "testdata/unassign_member/empty_project_id.json",
 			id:               "",
-			memberID:         "cb889a9c-b20c-47ee-83b8-44b6d1721acb",
+			memberID:         "ffffffff-ffff-ffff-ffff-ffffffffffff",
 		},
 		{
 			name:             "empty_member_id",
@@ -2486,8 +2486,8 @@ func TestHandler_UnassignMember(t *testing.T) {
 			name:             "project_not_found",
 			wantCode:         http.StatusNotFound,
 			wantResponsePath: "testdata/unassign_member/project_not_found.json",
-			id:               "cb889a9c-b20c-47ee-83b8-44b6d1721acb",
-			memberID:         "cb889a9c-b20c-47ee-83b8-44b6d1721acb",
+			id:               "eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee",
+			memberID:         "ffffffff-ffff-ffff-ffff-ffffffffffff",
 		},
 	}
 	for _, tt := range tests {

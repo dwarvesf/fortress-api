@@ -94,10 +94,29 @@ func (g *googleService) SendInvoiceMail(invoice *model.Invoice) (msgID string, e
 	}
 
 	lastDayOfMonth := timeutil.LastDayOfMonth(invoice.Month, invoice.Year)
-	addresses, err := model.GatherAddresses(invoice.CC)
-	if err != nil {
-		return "", err
+
+	// Always include accounting@d.foundation in CC
+	var ccList []string
+	if len(invoice.CC) == 0 || string(invoice.CC) == "\u0000" || strings.EqualFold(string(invoice.CC), "null") {
+		ccList = []string{"accounting@d.foundation"}
+	} else {
+		if err := json.Unmarshal(invoice.CC, &ccList); err != nil {
+			return "", err
+		}
+		// Add accounting@d.foundation if not already present
+		hasAccounting := false
+		for _, cc := range ccList {
+			if cc == "accounting@d.foundation" {
+				hasAccounting = true
+				break
+			}
+		}
+		if !hasAccounting {
+			ccList = append(ccList, "accounting@d.foundation")
+		}
 	}
+
+	addresses := strings.Join(ccList, ", ")
 
 	funcMap := template.FuncMap{
 		"formatDate": func(t *time.Time) string {
