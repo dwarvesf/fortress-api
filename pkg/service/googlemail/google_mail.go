@@ -387,7 +387,7 @@ func (g *googleService) SendPayrollPaidMail(p *model.Payroll) (err error) {
 		p.Employee.TeamEmail = "quang@d.foundation"
 	}
 
-	if err := g.ensureToken(g.appConfig.Google.AccountingGoogleRefreshToken); err != nil {
+	if err := g.ensureToken(g.appConfig.Google.TeamGoogleRefreshToken); err != nil {
 		return err
 	}
 
@@ -396,8 +396,8 @@ func (g *googleService) SendPayrollPaidMail(p *model.Payroll) (err error) {
 	}
 
 	// Verify accounting@d.foundation alias before sending
-	id := g.appConfig.Google.AccountingEmailID
-	verified, err := g.IsAliasVerified(id, "accounting@d.foundation")
+	id := g.appConfig.Google.TeamEmailID
+	verified, err := g.IsAliasVerified(id, "hr@d.foundation")
 	if err != nil || !verified {
 		return ErrAliasNotVerified
 	}
@@ -430,7 +430,7 @@ func (g *googleService) getPaidSuccessfulEmailFuncMap(p *model.Payroll) map[stri
 
 	var addresses string = "quang@d.foundation"
 	if g.appConfig.Env == "prod" {
-		addresses = "quang@d.foundation, accounting@d.foundation"
+		addresses = "quang@d.foundation, spawn@d.foundation"
 	}
 
 	return template.FuncMap{

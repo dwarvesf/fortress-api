@@ -26,6 +26,9 @@ server
 main
 fortress-api
 
+# agent
+.locus
+
 #claude
 .mcp.json
 .mcp.bak.json
