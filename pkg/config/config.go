@@ -262,9 +262,11 @@ type NotionDatabase struct {
 }
 
 type Discord struct {
-	SecretToken string
-	Webhooks    DiscordWebhook
-	IDs         DiscordID
+	SecretToken   string
+	ApplicationID string
+	PublicKey     string
+	Webhooks      DiscordWebhook
+	IDs           DiscordID
 }
 
 type DiscordWebhook struct {
@@ -278,6 +280,7 @@ type DiscordID struct {
 	EventsChannel   string
 	GolangChannel   string
 	ResearchChannel string
+	OnLeaveChannel  string
 }
 
 type Invoice struct {
@@ -473,11 +476,14 @@ func Generate(v ENV) *Config {
 				AuditLog:     v.GetString("DISCORD_WEBHOOK_AUDIT"),
 				ICYPublicLog: v.GetString("DISCORD_WEBHOOK_ICY_PUBLIC_LOG"),
 			},
-			SecretToken: v.GetString("DISCORD_SECRET_TOKEN"),
+			SecretToken:   v.GetString("DISCORD_SECRET_TOKEN"),
+			ApplicationID: v.GetString("DISCORD_APPLICATION_ID"),
+			PublicKey:     v.GetString("DISCORD_PUBLIC_KEY"),
 			IDs: DiscordID{
 				DwarvesGuild:    v.GetString("DISCORD_DWARVES_GUILD_ID"),
 				GolangChannel:   v.GetString("DISCORD_GOLANG_CHANNEL_ID"),
 				ResearchChannel: v.GetString("DISCORD_RESEARCH_CHANNEL_ID"),
+				OnLeaveChannel:  v.GetString("DISCORD_ONLEAVE_CHANNEL_ID"),
 			},
 		},
 		Basecamp: Basecamp{

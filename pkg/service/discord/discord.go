@@ -1066,3 +1066,23 @@ func (d *discordClient) ListActiveThreadsByChannelID(guildID, channelID string) 
 
 	return result, nil
 }
+
+// SendChannelMessageComplex sends a message with embeds and components (buttons) to a channel
+func (d *discordClient) SendChannelMessageComplex(channelID string, content string, embeds []*discordgo.MessageEmbed, components []discordgo.MessageComponent) (*discordgo.Message, error) {
+	return d.session.ChannelMessageSendComplex(channelID, &discordgo.MessageSend{
+		Content:    content,
+		Embeds:     embeds,
+		Components: components,
+	})
+}
+
+// UpdateChannelMessage updates an existing message with new content, embeds, and components
+func (d *discordClient) UpdateChannelMessage(channelID, messageID string, content string, embeds []*discordgo.MessageEmbed, components []discordgo.MessageComponent) (*discordgo.Message, error) {
+	return d.session.ChannelMessageEditComplex(&discordgo.MessageEdit{
+		Channel:    channelID,
+		ID:         messageID,
+		Content:    &content,
+		Embeds:     embeds,
+		Components: components,
+	})
+}

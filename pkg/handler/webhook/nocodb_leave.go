@@ -7,12 +7,15 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 
+	"github.com/bwmarrin/discordgo"
 	"github.com/gin-gonic/gin"
 
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
+	"github.com/dwarvesf/fortress-api/pkg/service/nocodb"
 	"github.com/dwarvesf/fortress-api/pkg/view"
 )
 
@@ -245,25 +248,149 @@ func (h *handler) handleLeaveValidation(c *gin.Context, l logger.Logger, record 
 		return
 	}
 
-	// Send Discord notification for pending approval
+	// Fetch assignee emails from NocoDB
+	leaveService := nocodb.NewLeaveService(h.service.NocoDB, h.config, h.store, h.repo, h.logger)
+	assigneeEmails, err := leaveService.GetLeaveAssigneeEmails(record.ID)
+	if err != nil {
+		l.Warnf("failed to fetch assignee emails from nocodb: %v", err)
+	}
+	l.Debugf("fetched assignee emails: %v", assigneeEmails)
+
+	// Get Discord mentions for assignees
+	var mentions []string
+	for _, email := range assigneeEmails {
+		mention := h.getEmployeeDiscordMention(l, email)
+		if mention != "" {
+			mentions = append(mentions, mention)
+		}
+	}
+	assigneeMentions := strings.Join(mentions, " ")
+	l.Debugf("assignee mentions: %s", assigneeMentions)
+
+	// Send Discord message with buttons to onleave channel
+	channelID := h.config.Discord.IDs.OnLeaveChannel
+	if channelID == "" {
+		l.Warnf("onleave channel not configured, falling back to auditlog webhook")
+		// Fallback to auditlog webhook
+		nocodbURL := h.config.Noco.BaseURL
+		inlineTrue := true
+		h.sendLeaveDiscordNotification(c.Request.Context(),
+			"📋 New Leave Request - Pending Approval",
+			fmt.Sprintf("[View in NocoDB](%s)", nocodbURL),
+			3447003, // Blue color
+			[]model.DiscordMessageField{
+				{Name: "Employee", Value: fmt.Sprintf("%s (%s)", employee.FullName, record.EmployeeEmail), Inline: nil},
+				{Name: "Type", Value: record.Type, Inline: &inlineTrue},
+				{Name: "Shift", Value: record.Shift, Inline: &inlineTrue},
+				{Name: "Dates", Value: fmt.Sprintf("%s to %s", record.StartDate, record.EndDate), Inline: nil},
+				{Name: "Reason", Value: record.Reason, Inline: nil},
+			},
+		)
+		c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "validated"))
+		return
+	}
+
+	// Build content with mentions
+	content := ""
+	if assigneeMentions != "" {
+		content = fmt.Sprintf("🔔 **Assignees:** %s", assigneeMentions)
+	}
+
+	// Build embed
 	nocodbURL := h.config.Noco.BaseURL
-	inlineTrue := true
-	h.sendLeaveDiscordNotification(c.Request.Context(),
-		"📋 New Leave Request - Pending Approval",
-		fmt.Sprintf("[View in NocoDB](%s)", nocodbURL),
-		3447003, // Blue color
-		[]model.DiscordMessageField{
-			{Name: "Employee", Value: fmt.Sprintf("%s (%s)", employee.FullName, record.EmployeeEmail), Inline: nil},
-			{Name: "Type", Value: record.Type, Inline: &inlineTrue},
-			{Name: "Shift", Value: record.Shift, Inline: &inlineTrue},
-			{Name: "Dates", Value: fmt.Sprintf("%s to %s", record.StartDate, record.EndDate), Inline: nil},
-			{Name: "Reason", Value: record.Reason, Inline: nil},
+	embed := &discordgo.MessageEmbed{
+		Title:       "📋 New Leave Request - Pending Approval",
+		Description: fmt.Sprintf("[View in NocoDB](%s)", nocodbURL),
+		Color:       3447003, // Blue color
+		Fields: []*discordgo.MessageEmbedField{
+			{Name: "Employee", Value: fmt.Sprintf("%s (%s)", employee.FullName, record.EmployeeEmail), Inline: false},
+			{Name: "Type", Value: record.Type, Inline: true},
+			{Name: "Shift", Value: record.Shift, Inline: true},
+			{Name: "Dates", Value: fmt.Sprintf("%s to %s", record.StartDate, record.EndDate), Inline: false},
+			{Name: "Reason", Value: record.Reason, Inline: false},
 		},
-	)
+		Timestamp: time.Now().Format("2006-01-02T15:04:05.000-07:00"),
+	}
+
+	// Build buttons
+	components := []discordgo.MessageComponent{
+		discordgo.ActionsRow{
+			Components: []discordgo.MessageComponent{
+				discordgo.Button{
+					Label:    "Approve",
+					Style:    discordgo.SuccessButton,
+					CustomID: fmt.Sprintf("leave_approve_%d", record.ID),
+					Emoji: discordgo.ComponentEmoji{
+						Name: "✅",
+					},
+				},
+				discordgo.Button{
+					Label:    "Reject",
+					Style:    discordgo.DangerButton,
+					CustomID: fmt.Sprintf("leave_reject_%d", record.ID),
+					Emoji: discordgo.ComponentEmoji{
+						Name: "❌",
+					},
+				},
+			},
+		},
+	}
+
+	// Send message
+	msg, err := h.service.Discord.SendChannelMessageComplex(channelID, content, []*discordgo.MessageEmbed{embed}, components)
+	if err != nil {
+		l.Errorf(err, "failed to send leave request message to discord channel")
+		// Fallback to auditlog
+		h.sendLeaveDiscordNotification(c.Request.Context(),
+			"📋 New Leave Request - Pending Approval",
+			fmt.Sprintf("[View in NocoDB](%s)", nocodbURL),
+			3447003,
+			[]model.DiscordMessageField{
+				{Name: "Employee", Value: fmt.Sprintf("%s (%s)", employee.FullName, record.EmployeeEmail), Inline: nil},
+			},
+		)
+	} else {
+		l.Debugf("sent leave request message to discord channel: message_id=%s", msg.ID)
+	}
 
 	l.Infof("leave request validated successfully: employee_id=%s record_id=%d", employee.ID, record.ID)
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "validated"))
+}
+
+// getEmployeeDiscordMention returns Discord mention for an employee by email
+func (h *handler) getEmployeeDiscordMention(l logger.Logger, email string) string {
+	if email == "" {
+		return ""
+	}
+
+	// Look up employee by email
+	employee, err := h.store.Employee.OneByEmail(h.repo.DB(), email)
+	if err != nil {
+		l.Debugf("could not find employee by email %s: %v", email, err)
+		return ""
+	}
+
+	// Get Discord account
+	if employee.DiscordAccountID.String() == "" {
+		l.Debugf("employee %s has no discord account linked", email)
+		return ""
+	}
+
+	// Get Discord account to get Discord ID
+	discordAccount, err := h.store.DiscordAccount.One(h.repo.DB(), employee.DiscordAccountID.String())
+	if err != nil {
+		l.Debugf("could not find discord account for employee %s: %v", email, err)
+		return ""
+	}
+
+	if discordAccount.DiscordID == "" {
+		l.Debugf("discord account for employee %s has no discord id", email)
+		return ""
+	}
+
+	l.Debugf("found discord id %s for employee %s", discordAccount.DiscordID, email)
+	return fmt.Sprintf("<@%s>", discordAccount.DiscordID)
 }
 
 func (h *handler) handleLeaveApproval(c *gin.Context, l logger.Logger, record *NocodbLeaveRecord) {

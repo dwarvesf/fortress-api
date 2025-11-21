@@ -72,5 +72,10 @@ type IService interface {
 	SendEmbeddedMessageWithChannel(original *model.OriginalDiscordMessage, embed *discordgo.MessageEmbed, channelId string) (*discordgo.Message, error)
 	SendDiscordMessageWithChannel(ses *discordgo.Session, msg *discordgo.Message, channelId string) error
 
+	// SendChannelMessageComplex sends a message with embeds and components (buttons) to a channel
+	SendChannelMessageComplex(channelID string, content string, embeds []*discordgo.MessageEmbed, components []discordgo.MessageComponent) (*discordgo.Message, error)
+	// UpdateChannelMessage updates an existing message with new content, embeds, and components
+	UpdateChannelMessage(channelID, messageID string, content string, embeds []*discordgo.MessageEmbed, components []discordgo.MessageComponent) (*discordgo.Message, error)
+
 	ListActiveThreadsByChannelID(guildID, channelID string) ([]discordgo.Channel, error)
 }

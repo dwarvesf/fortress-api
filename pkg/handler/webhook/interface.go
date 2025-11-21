@@ -15,4 +15,5 @@ type IHandler interface {
 	ValidateOnLeaveRequest(c *gin.Context)
 	ApproveOnLeaveRequest(c *gin.Context)
 	HandleNocodbLeave(c *gin.Context)
+	HandleDiscordInteraction(c *gin.Context)
 }
