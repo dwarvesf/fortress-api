@@ -1,5 +1,5 @@
 Mime-Version: 1.0
-From: "Team @ Dwarves Ventures" <team@d.foundation>
+From: "Team @ Dwarves Foundation" <hr@d.foundation>
 To: {{.PersonalEmail}}
 Subject: Team Dwarves - Onboarding Succeed
 Content-Type: multipart/mixed; boundary=main

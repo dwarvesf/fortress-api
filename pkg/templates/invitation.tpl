@@ -1,5 +1,5 @@
 Mime-Version: 1.0
-From: "Team @ Dwarves Foundation" <team@d.foundation>
+From: "Team @ Dwarves Foundation" <hr@d.foundation>
 To: {{.Email}}
 Subject: Welcome to Dwarves Foundation!
 Content-Type: multipart/mixed; boundary=main

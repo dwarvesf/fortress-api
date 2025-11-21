@@ -430,7 +430,7 @@ func (g *googleService) getPaidSuccessfulEmailFuncMap(p *model.Payroll) map[stri
 
 	var addresses string = "quang@d.foundation"
 	if g.appConfig.Env == "prod" {
-		addresses = "quang@d.foundation, spawn@d.foundation"
+		addresses = "quang@d.foundation, hr@d.foundation"
 	}
 
 	return template.FuncMap{
@@ -489,7 +489,7 @@ func (g *googleService) SendInvitationMail(invitation *model.InvitationEmail) (e
 
 	// Verify team@d.foundation alias before sending
 	id := g.appConfig.Google.TeamEmailID
-	verified, err := g.IsAliasVerified(id, "team@d.foundation")
+	verified, err := g.IsAliasVerified(id, "hr@d.foundation")
 	if err != nil || !verified {
 		return ErrAliasNotVerified
 	}
@@ -523,7 +523,7 @@ func (g *googleService) SendOffboardingMail(offboarding *model.OffboardingEmail)
 
 	// Verify team@d.foundation alias before sending
 	id := g.appConfig.Google.TeamEmailID
-	verified, err := g.IsAliasVerified(id, "team@d.foundation")
+	verified, err := g.IsAliasVerified(id, "hr@d.foundation")
 	if err != nil || !verified {
 		return ErrAliasNotVerified
 	}

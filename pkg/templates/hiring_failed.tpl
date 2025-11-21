@@ -1,5 +1,5 @@
 Mime-Version: 1.0
-From: "Spawn @ Dwarves Ventures" <spawn@dwarvesv.com>
+From: "Spawn @ Dwarves Foundation" <hr@d.foundation>
 To: {{.Email}}
 Subject: Dwarves Foundation - Application Result on the {{.GroupRole}} Position
 Content-Type: multipart/mixed; boundary=main

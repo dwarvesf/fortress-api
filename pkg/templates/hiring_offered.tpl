@@ -1,5 +1,5 @@
 Mime-Version: 1.0
-From: "Spawn @ Dwarves Ventures" <spawn@dwarvesv.com>
+From: "Spawn @ Dwarves Foundation" <hr@d.foundation>
 To: {{.Email}}
 Subject: Dwarves Foundation - Offer Letter
 Content-Type: multipart/mixed; boundary=main
