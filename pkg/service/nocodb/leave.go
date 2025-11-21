@@ -134,11 +134,18 @@ func (l *LeaveService) GetLeaveAssigneeEmails(leaveID int) ([]string, error) {
 	for key, value := range result {
 		l.logger.Debugf("checking field %s for assignees", key)
 
-		// Look for the _nc_m2m_leave_requests_employees field
+		// Look for the _nc_m2m_leave_requests_nc_employees field
 		if arr, ok := value.([]interface{}); ok {
 			for _, item := range arr {
 				if record, ok := item.(map[string]interface{}); ok {
-					// Check nested employees object
+					// Check nested nc_employees object (NocoDB naming convention)
+					if ncEmployees, ok := record["nc_employees"].(map[string]interface{}); ok {
+						if email, ok := ncEmployees["email"].(string); ok && email != "" {
+							l.logger.Debugf("found assignee email from nc_employees.email: %s", email)
+							emails = append(emails, email)
+						}
+					}
+					// Also check employees object as fallback
 					if employees, ok := record["employees"].(map[string]interface{}); ok {
 						if email, ok := employees["email"].(string); ok && email != "" {
 							l.logger.Debugf("found assignee email from employees.email: %s", email)
