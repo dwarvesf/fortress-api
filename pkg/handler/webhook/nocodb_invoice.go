@@ -168,12 +168,14 @@ func (h *handler) MarkInvoiceAsPaidViaNoco(c *gin.Context) {
 	l.Infof("invoice %s marked paid via nocodb", invoice.Number)
 
 	// log discord as audit log
-	_ = h.controller.Discord.Log(model.LogDiscordInput{
+	if err := h.controller.Discord.Log(model.LogDiscordInput{
 		Type: "invoice_paid",
 		Data: map[string]interface{}{
 			"invoice_number": invoice.Number,
 		},
-	})
+	}); err != nil {
+		l.Error(err, "failed to log invoice paid to discord")
+	}
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, ""))
 }
