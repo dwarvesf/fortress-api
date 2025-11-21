@@ -53,6 +53,9 @@ func main() {
 
 	if v != nil {
 		cfg = config.Generate(v)
+		// Re-initialize logger with Vault config
+		log = logger.NewLogrusLogger(cfg.LogLevel)
+		log.Debugf("Logger re-initialized with Vault config, log level: %s", cfg.LogLevel)
 	}
 
 	// Validate critical configuration
