@@ -1,0 +1,8 @@
+# Locus project configuration
+indexing:
+  exclude:
+    - docs
+  concurrency: 20
+
+embedding:
+  provider: openai

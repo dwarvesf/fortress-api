@@ -10,12 +10,13 @@ import (
 type InvoiceStatus string
 
 const (
-	InvoiceStatusDraft     InvoiceStatus = "draft"
-	InvoiceStatusSent      InvoiceStatus = "sent"
-	InvoiceStatusOverdue   InvoiceStatus = "overdue"
-	InvoiceStatusPaid      InvoiceStatus = "paid"
-	InvoiceStatusError     InvoiceStatus = "error"
-	InvoiceStatusScheduled InvoiceStatus = "scheduled"
+	InvoiceStatusDraft         InvoiceStatus = "draft"
+	InvoiceStatusSent          InvoiceStatus = "sent"
+	InvoiceStatusOverdue       InvoiceStatus = "overdue"
+	InvoiceStatusPaid          InvoiceStatus = "paid"
+	InvoiceStatusError         InvoiceStatus = "error"
+	InvoiceStatusScheduled     InvoiceStatus = "scheduled"
+	InvoiceStatusUncollectible InvoiceStatus = "uncollectible"
 )
 
 func (i InvoiceStatus) IsValid() bool {
@@ -25,7 +26,8 @@ func (i InvoiceStatus) IsValid() bool {
 		InvoiceStatusOverdue,
 		InvoiceStatusPaid,
 		InvoiceStatusError,
-		InvoiceStatusScheduled:
+		InvoiceStatusScheduled,
+		InvoiceStatusUncollectible:
 		return true
 	}
 	return false

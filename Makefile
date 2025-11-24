@@ -131,7 +131,3 @@ ci: init
 WD := $(shell pwd)
 lint:
 	docker run -t --rm -v $(WD):/app -w /app golangci/golangci-lint:v2.1.0 golangci-lint run -v
-
-.PHONY: digest
-digest:
-	npx ai-digest --show-output-files --whitespace-removal
