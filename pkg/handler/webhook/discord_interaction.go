@@ -16,7 +16,9 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/dwarvesf/fortress-api/pkg/logger"
+	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service/nocodb"
+	sInvoice "github.com/dwarvesf/fortress-api/pkg/store/invoice"
 	"github.com/dwarvesf/fortress-api/pkg/view"
 )
 
@@ -117,6 +119,21 @@ func (h *handler) handleMessageComponentInteraction(c *gin.Context, l logger.Log
 		return
 	}
 
+	if strings.HasPrefix(customID, "invoice_paid_confirm_") {
+		// Format: invoice_paid_confirm_{invoiceNumber}_{discordUserID}
+		suffix := strings.TrimPrefix(customID, "invoice_paid_confirm_")
+		parts := strings.Split(suffix, "_")
+		if len(parts) < 1 || parts[0] == "" {
+			l.Errorf(nil, "invalid invoice number in custom_id: %s", customID)
+			h.respondToInteraction(c, "Invalid invoice number")
+			return
+		}
+		invoiceNumber := parts[0]
+		l.Debugf("parsed invoice_paid_confirm: invoiceNumber=%s", invoiceNumber)
+		h.handleInvoicePaidConfirmButton(c, l, interaction, invoiceNumber)
+		return
+	}
+
 	l.Infof("unknown custom_id: %s", customID)
 	h.respondToInteraction(c, "Unknown action")
 }
@@ -170,6 +187,94 @@ func (h *handler) handleLeaveRejectButton(c *gin.Context, l logger.Logger, inter
 
 	// Update the message to show it's been rejected
 	h.updateLeaveMessageStatus(c, l, interaction, leaveID, "Rejected", interaction.Member.User.Username)
+}
+
+// handleInvoicePaidConfirmButton handles the invoice paid confirm button click
+func (h *handler) handleInvoicePaidConfirmButton(c *gin.Context, l logger.Logger, interaction *discordgo.Interaction, invoiceNumber string) {
+	l.Debugf("confirming invoice payment via button: invoiceNumber=%s user=%s", invoiceNumber, interaction.Member.User.Username)
+
+	// Look up invoice by number
+	invoice, err := h.store.Invoice.One(h.repo.DB(), &sInvoice.Query{Number: invoiceNumber})
+	if err != nil {
+		l.Errorf(err, "failed to find invoice by number: %s", invoiceNumber)
+		h.respondToInteraction(c, fmt.Sprintf("❌ Invoice %s not found", invoiceNumber))
+		return
+	}
+
+	l.Debugf("found invoice: id=%s number=%s status=%s", invoice.ID, invoice.Number, invoice.Status)
+
+	// Check if invoice is already paid
+	if invoice.Status == model.InvoiceStatusPaid {
+		l.Debugf("invoice already paid: invoiceNumber=%s", invoiceNumber)
+		h.updateInvoiceMessageStatus(c, l, interaction, invoice, "Already Paid", interaction.Member.User.Username)
+		return
+	}
+
+	// Mark invoice as paid
+	_, err = h.controller.Invoice.MarkInvoiceAsPaid(invoice, true)
+	if err != nil {
+		l.Errorf(err, "failed to mark invoice as paid: %s", invoiceNumber)
+		h.respondToInteraction(c, fmt.Sprintf("❌ Failed to mark invoice %s as paid: %v", invoiceNumber, err))
+		return
+	}
+
+	l.Infof("invoice marked as paid via discord button: invoiceNumber=%s user=%s", invoiceNumber, interaction.Member.User.Username)
+
+	// Log to Discord audit
+	if err := h.controller.Discord.Log(model.LogDiscordInput{
+		Type: "invoice_paid",
+		Data: map[string]interface{}{
+			"invoice_number": invoice.Number,
+		},
+	}); err != nil {
+		l.Errorf(err, "failed to log invoice paid to discord")
+	}
+
+	// Update the message to show it's been paid
+	h.updateInvoiceMessageStatus(c, l, interaction, invoice, "Paid", interaction.Member.User.Username)
+}
+
+// updateInvoiceMessageStatus updates the original message to show the new status
+func (h *handler) updateInvoiceMessageStatus(c *gin.Context, l logger.Logger, interaction *discordgo.Interaction, invoice *model.Invoice, status string, actionBy string) {
+	l.Debugf("updating invoice message status: invoiceNumber=%s status=%s actionBy=%s", invoice.Number, status, actionBy)
+
+	// Get original embed
+	var originalEmbed *discordgo.MessageEmbed
+	if interaction.Message != nil && len(interaction.Message.Embeds) > 0 {
+		originalEmbed = interaction.Message.Embeds[0]
+	}
+
+	// Build updated embed
+	var fields []*discordgo.MessageEmbedField
+	if originalEmbed != nil {
+		fields = originalEmbed.Fields
+	}
+
+	// Add status field
+	fields = append(fields, &discordgo.MessageEmbedField{
+		Name:   "Status",
+		Value:  fmt.Sprintf("%s by %s", status, actionBy),
+		Inline: false,
+	})
+
+	updatedEmbed := &discordgo.MessageEmbed{
+		Title:       fmt.Sprintf("✅ Invoice %s - %s", invoice.Number, status),
+		Description: "",
+		Color:       3066993, // Green
+		Fields:      fields,
+		Timestamp:   time.Now().Format("2006-01-02T15:04:05.000-07:00"),
+	}
+
+	// Respond with updated message (removes buttons)
+	response := &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseUpdateMessage,
+		Data: &discordgo.InteractionResponseData{
+			Embeds:     []*discordgo.MessageEmbed{updatedEmbed},
+			Components: []discordgo.MessageComponent{}, // Remove buttons
+		},
+	}
+
+	c.JSON(http.StatusOK, response)
 }
 
 // updateLeaveMessageStatus updates the original message to show the new status
