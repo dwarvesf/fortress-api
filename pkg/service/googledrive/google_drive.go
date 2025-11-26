@@ -95,6 +95,7 @@ func (g *googleService) updateInvoiceDir(fileID, oldDirID, newDirID string) erro
 	_, err := g.service.Files.Update(fileID, nil).
 		AddParents(newDirID).
 		RemoveParents(oldDirID).
+		SupportsAllDrives(true).
 		Do()
 	return err
 }
@@ -161,6 +162,8 @@ func (g *googleService) searchFile(name, parentId string, isFolder bool) (*drive
 	r, err := g.service.Files.List().
 		Q(parentQuery + folderQuery + fmt.Sprintf("name='%s'", name)).
 		Fields("nextPageToken, files(id, name)").
+		SupportsAllDrives(true).
+		IncludeItemsFromAllDrives(true).
 		Do()
 	if err != nil {
 		return nil, err
@@ -179,7 +182,7 @@ func (g *googleService) newDir(name string, parentId string) (*drive.File, error
 		Parents:  []string{parentId},
 	}
 
-	return g.service.Files.Create(d).Do()
+	return g.service.Files.Create(d).SupportsAllDrives(true).Do()
 }
 
 func (g *googleService) newFile(name string, mimeType string, content io.Reader, parentId string) (*drive.File, error) {
@@ -189,7 +192,7 @@ func (g *googleService) newFile(name string, mimeType string, content io.Reader,
 		Parents:  []string{parentId},
 	}
 
-	return g.service.Files.Create(f).Media(content).Do()
+	return g.service.Files.Create(f).Media(content).SupportsAllDrives(true).Do()
 }
 
 // func (g *googleService) deleteFile(id string) error {
@@ -228,7 +231,7 @@ func (g *googleService) DownloadInvoicePDF(invoice *model.Invoice, dirName strin
 		return nil, fmt.Errorf(`file not found`)
 	}
 
-	resp, err := g.service.Files.Get(f.Id).Download()
+	resp, err := g.service.Files.Get(f.Id).SupportsAllDrives(true).Download()
 	if err != nil {
 		return nil, err
 	}
