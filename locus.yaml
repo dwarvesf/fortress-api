@@ -3,6 +3,7 @@ indexing:
   exclude:
     - docs
   concurrency: 20
+  batch_size: 450
 
 embedding:
   provider: openai
