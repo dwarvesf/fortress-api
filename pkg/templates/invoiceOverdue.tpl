@@ -1,5 +1,5 @@
 Mime-Version: 1.0
-From: "Accounting @ Dwarves Ventures" <accounting@d.foundation>
+From: "Accounting @ Dwarves Foundation" <accounting@d.foundation>
 To: {{.Email}}
 CC: {{gatherAddress}}
 References: {{.MessageID}}
