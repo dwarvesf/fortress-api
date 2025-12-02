@@ -19,7 +19,6 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/store"
-	"github.com/dwarvesf/fortress-api/pkg/utils"
 	"github.com/dwarvesf/fortress-api/pkg/utils/authutils"
 	"github.com/dwarvesf/fortress-api/pkg/view"
 )
@@ -392,6 +391,7 @@ func (h *handler) Create(c *gin.Context) {
 		Status:        input.Status,
 		ReferredBy:    input.ReferredBy,
 		JoinDate:      input.GetJoinedDate(),
+		SkipEmail:     input.SkipEmail,
 	}
 
 	eml, err := h.controller.Employee.Create(userID, requestBody)
@@ -757,20 +757,21 @@ func (h *handler) UpdateBaseSalary(c *gin.Context) {
 		return
 	}
 
-	totalBaseSalary := req.PersonalAccountAmount + req.CompanyAccountAmount
-	formattedBaseSalary := utils.FormatMoney(float64(totalBaseSalary), "VND")
-	// update discord as audit log
-	err = h.controller.Discord.Log(model.LogDiscordInput{
-		Type: "employee_update_base_salary",
-		Data: map[string]interface{}{
-			"employee_id":         userID,
-			"updated_employee_id": employeeID,
-			"new_salary":          formattedBaseSalary,
-		},
-	})
-	if err != nil {
-		l.Error(err, "failed to logs to discord")
-	}
+	// Disabled: Discord audit log for salary updates
+	// totalBaseSalary := req.PersonalAccountAmount + req.CompanyAccountAmount
+	// formattedBaseSalary := utils.FormatMoney(float64(totalBaseSalary), "VND")
+	// err = h.controller.Discord.Log(model.LogDiscordInput{
+	// 	Type: "employee_update_base_salary",
+	// 	Data: map[string]interface{}{
+	// 		"employee_id":         userID,
+	// 		"updated_employee_id": employeeID,
+	// 		"new_salary":          formattedBaseSalary,
+	// 	},
+	// })
+	// if err != nil {
+	// 	l.Error(err, "failed to logs to discord")
+	// }
+	_ = userID // suppress unused variable warning
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](view.ToBaseSalary(emp), nil, nil, nil, ""))
 }

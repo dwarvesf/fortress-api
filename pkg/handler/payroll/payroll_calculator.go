@@ -322,10 +322,11 @@ func (h *handler) getBonus(u model.Employee, batchDate time.Time, expenses []bcM
 		if userCommissions[i].Invoice == nil {
 			continue
 		}
-		name := userCommissions[i].Invoice.Number
-		if userCommissions[i].Note != "" {
-			name = fmt.Sprintf("%v - %v", name, userCommissions[i].Note)
-		}
+		// name := userCommissions[i].Invoice.Number
+		// if userCommissions[i].Note != "" {
+		// 	name = fmt.Sprintf("%v - %v", name, userCommissions[i].Note)
+		// }
+		name := fmt.Sprintf("%v - Bonus", userCommissions[i].Invoice.Number)
 		commissionExplain = append(commissionExplain,
 			model.CommissionExplain{
 				ID:     userCommissions[i].ID,

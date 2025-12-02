@@ -91,6 +91,7 @@ type CreateEmployeeRequest struct {
 	Status        string       `json:"status" binding:"required"`
 	ReferredBy    model.UUID   `json:"referredBy"`
 	JoinedDate    string       `json:"joinedDate" binding:"required"`
+	SkipEmail     bool         `json:"skipEmail"`
 } // @name CreateEmployeeRequest
 
 type UpdateSkillsRequest struct {

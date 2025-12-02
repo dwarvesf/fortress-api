@@ -26,6 +26,7 @@ type CreateEmployeeInput struct {
 	Status        string
 	ReferredBy    model.UUID
 	JoinDate      *time.Time
+	SkipEmail     bool
 }
 
 func (r *controller) Create(userID string, input CreateEmployeeInput) (*model.Employee, error) {
@@ -250,15 +251,20 @@ func (r *controller) Create(userID string, input CreateEmployeeInput) (*model.Em
 		return nil, done(err)
 	}
 
-	invitation := model.InvitationEmail{
-		Email:   eml.PersonalEmail,
-		Link:    fmt.Sprintf("%s/onboarding?code=%s", r.config.FortressURL, jwt),
-		Inviter: loggedInUser.FullName,
-	}
+	if !input.SkipEmail {
+		l.Debug("sending invitation email to employee")
+		invitation := model.InvitationEmail{
+			Email:   eml.PersonalEmail,
+			Link:    fmt.Sprintf("%s/onboarding?code=%s", r.config.FortressURL, jwt),
+			Inviter: loggedInUser.FullName,
+		}
 
-	if err := r.service.GoogleMail.SendInvitationMail(&invitation); err != nil {
-		l.Errorf(err, "failed to send invitation mail", "invitationInfo", invitation)
-		return nil, done(err)
+		if err := r.service.GoogleMail.SendInvitationMail(&invitation); err != nil {
+			l.Errorf(err, "failed to send invitation mail", "invitationInfo", invitation)
+			return nil, done(err)
+		}
+	} else {
+		l.Debug("skipping invitation email as requested")
 	}
 
 	return eml, done(nil)

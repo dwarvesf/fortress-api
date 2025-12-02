@@ -172,7 +172,7 @@ func (h *handler) getPayrollDetailHandler(month, year, batch int, email string) 
 					if userCommissions[j].Amount != 0 {
 						name := userCommissions[j].Invoice.Number
 						if userCommissions[j].Note != "" {
-							name = fmt.Sprintf("%v - %v", name, userCommissions[j].Note)
+							name = fmt.Sprintf("%v - Bonus", name)
 						}
 						duplicate[name] += int(userCommissions[j].Amount)
 					}
