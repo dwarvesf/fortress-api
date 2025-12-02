@@ -167,12 +167,15 @@ func (h *handler) getPayrollDetailHandler(month, year, batch int, email string) 
 				if err != nil {
 					return nil, err
 				}
-				duplicate := map[string]int{}
+				// NOTE: This shows detailed notes for payrolls/details API
+			// Format: "InvoiceNumber - DetailedNote (amount)" e.g. "2025104-KAFI-009 - Hiring - Nguyễn Hoàng Anh (1,980k)"
+			// Email payslip uses simplified format in payroll_calculator.go
+			duplicate := map[string]int{}
 				for j := range userCommissions {
 					if userCommissions[j].Amount != 0 {
 						name := userCommissions[j].Invoice.Number
 						if userCommissions[j].Note != "" {
-							name = fmt.Sprintf("%v - Bonus", name)
+							name = fmt.Sprintf("%v - %v", name, userCommissions[j].Note)
 						}
 						duplicate[name] += int(userCommissions[j].Amount)
 					}

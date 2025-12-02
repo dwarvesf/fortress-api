@@ -322,10 +322,9 @@ func (h *handler) getBonus(u model.Employee, batchDate time.Time, expenses []bcM
 		if userCommissions[i].Invoice == nil {
 			continue
 		}
-		// name := userCommissions[i].Invoice.Number
-		// if userCommissions[i].Note != "" {
-		// 	name = fmt.Sprintf("%v - %v", name, userCommissions[i].Note)
-		// }
+		// NOTE: This shows simplified notes for email payslip
+		// Format: "InvoiceNumber - Bonus (amount)" e.g. "2025104-KAFI-009 - Bonus (1,980k)"
+		// payrolls/details API uses detailed format in details.go
 		name := fmt.Sprintf("%v - Bonus", userCommissions[i].Invoice.Number)
 		commissionExplain = append(commissionExplain,
 			model.CommissionExplain{
