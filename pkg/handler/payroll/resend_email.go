@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -95,12 +96,21 @@ func (h *handler) resendPayrollEmailHandler(month, year, batch int, email string
 				payrolls[i].ProjectBonusExplains[j].FormattedAmount = formattedAmount
 			}
 			for j, v := range payrolls[i].CommissionExplains {
+				// Simplify commission notes for email payslip
+				// NOTE: Convert detailed notes (e.g., "2025104-KAFI-009 - Hiring - Nguyễn Hoàng Anh")
+				// to simplified format (e.g., "2025104-KAFI-009 - Bonus") for email template
+				name := v.Name
+				if strings.Contains(name, " - ") {
+					parts := strings.SplitN(name, " - ", 2)
+					payrolls[i].CommissionExplains[j].Name = parts[0] + " - Bonus"
+				}
+
 				formattedAmount, err := h.getFormattedAmount(&payrolls[i], v.Amount)
 				if err != nil {
 					l.Errorf(err, "failed to format commission amount", "employee", payrolls[i].Employee.TeamEmail)
 					continue
 				}
-				l.Debug(fmt.Sprintf("formatted commission %s: amount=%d, formatted=%s", v.Name, v.Amount, formattedAmount))
+				l.Debug(fmt.Sprintf("formatted commission %s: amount=%d, formatted=%s", payrolls[i].CommissionExplains[j].Name, v.Amount, formattedAmount))
 				payrolls[i].CommissionExplains[j].FormattedAmount = formattedAmount
 			}
 		}
@@ -129,12 +139,8 @@ func (h *handler) resendPayrollEmailHandler(month, year, batch int, email string
 		for _, pr := range payrolls {
 			go func(p model.Payroll) {
 				defer wg.Done()
-				if h.config.Env == "prod" || p.Employee.TeamEmail == "quang@d.foundation" {
-					l.Info(fmt.Sprintf("queuing email for %s", p.Employee.TeamEmail))
-					c <- &p
-				} else {
-					l.Info(fmt.Sprintf("skipping email for %s (not in prod or test list)", p.Employee.TeamEmail))
-				}
+				l.Info(fmt.Sprintf("queuing email for %s", p.Employee.TeamEmail))
+				c <- &p
 			}(pr)
 		}
 		wg.Wait()

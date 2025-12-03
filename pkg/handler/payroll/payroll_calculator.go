@@ -16,7 +16,7 @@ import (
 )
 
 // calculatePayrolls return list of payrolls for all given users in batchDate
-func (h *handler) calculatePayrolls(users []*model.Employee, batchDate time.Time) (res []*model.Payroll, err error) {
+func (h *handler) calculatePayrolls(users []*model.Employee, batchDate time.Time, simplifyNotes bool) (res []*model.Payroll, err error) {
 	batch := batchDate.Day()
 	// HACK: sneak quang into this
 	if batch == 1 {
@@ -173,7 +173,7 @@ func (h *handler) calculatePayrolls(users []*model.Employee, batchDate time.Time
 		var bonus, commission, reimbursementAmount model.VietnamDong
 		var bonusExplains, commissionExplains []model.CommissionExplain
 
-		bonus, commission, reimbursementAmount, bonusExplains, commissionExplains = h.getBonus(*users[i], batchDate, expenses)
+		bonus, commission, reimbursementAmount, bonusExplains, commissionExplains = h.getBonus(*users[i], batchDate, expenses, simplifyNotes)
 
 		commBytes, err := json.Marshal(&commissionExplains)
 		if err != nil {
@@ -249,7 +249,7 @@ func (h *handler) calculatePayrolls(users []*model.Employee, batchDate time.Time
 	return res, nil
 }
 
-func (h *handler) getBonus(u model.Employee, batchDate time.Time, expenses []bcModel.Todo) (bonus, commission, reimbursementAmount model.VietnamDong, bonusExplain, commissionExplain []model.CommissionExplain) {
+func (h *handler) getBonus(u model.Employee, batchDate time.Time, expenses []bcModel.Todo, simplifyNotes bool) (bonus, commission, reimbursementAmount model.VietnamDong, bonusExplain, commissionExplain []model.CommissionExplain) {
 	h.logger.Info("get bonus")
 	var explanation string
 	bonusRecords, err := h.store.Bonus.GetByUserID(h.repo.DB(), u.ID)
@@ -322,10 +322,17 @@ func (h *handler) getBonus(u model.Employee, batchDate time.Time, expenses []bcM
 		if userCommissions[i].Invoice == nil {
 			continue
 		}
-		// NOTE: This shows simplified notes for email payslip
-		// Format: "InvoiceNumber - Bonus (amount)" e.g. "2025104-KAFI-009 - Bonus (1,980k)"
-		// payrolls/details API uses detailed format in details.go
-		name := fmt.Sprintf("%v - Bonus", userCommissions[i].Invoice.Number)
+		// NOTE: Format commission notes based on simplifyNotes parameter
+		// simplifyNotes=true: "InvoiceNumber - Bonus" for email template
+		// simplifyNotes=false: "InvoiceNumber - DetailedNote" for payrolls/details API
+		name := userCommissions[i].Invoice.Number
+		if userCommissions[i].Note != "" {
+			if simplifyNotes {
+				name = fmt.Sprintf("%v - Bonus", name)
+			} else {
+				name = fmt.Sprintf("%v - %v", name, userCommissions[i].Note)
+			}
+		}
 		commissionExplain = append(commissionExplain,
 			model.CommissionExplain{
 				ID:     userCommissions[i].ID,

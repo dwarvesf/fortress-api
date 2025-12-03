@@ -395,13 +395,6 @@ func (g *googleService) SendPayrollPaidMail(p *model.Payroll) (err error) {
 		return err
 	}
 
-	// Verify accounting@d.foundation alias before sending
-	id := g.appConfig.Google.TeamEmailID
-	verified, err := g.IsAliasVerified(id, "hr@d.foundation")
-	if err != nil || !verified {
-		return ErrAliasNotVerified
-	}
-
 	if !mailutils.Email(p.Employee.TeamEmail) {
 		return errors.New("email invalid")
 	}
@@ -418,6 +411,7 @@ func (g *googleService) SendPayrollPaidMail(p *model.Payroll) (err error) {
 		return err
 	}
 
+	id := g.appConfig.Google.TeamEmailID
 	_, err = g.sendEmail(encodedEmail, id)
 	return err
 }

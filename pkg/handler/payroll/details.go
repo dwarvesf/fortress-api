@@ -132,7 +132,7 @@ func (h *handler) getPayrollDetailHandler(month, year, batch int, email string) 
 			}
 
 			var tempPayrolls []model.Payroll
-			newPayrolls, err := h.calculatePayrolls(us, batchDate)
+			newPayrolls, err := h.calculatePayrolls(us, batchDate, false)
 			if err != nil {
 				h.logger.Error(err, "can't calculate payroll")
 				return nil, err

@@ -257,6 +257,20 @@ func (h *handler) commitPayrollHandler(month, year, batch int, email string) err
 			}
 		}
 
+		// Simplify commission notes for email payslip
+		// NOTE: Convert detailed notes (e.g., "2025104-KAFI-009 - Hiring - Nguyễn Hoàng Anh")
+		// to simplified format (e.g., "2025104-KAFI-009 - Bonus") for email template
+		for i := range payrolls {
+			for j := range payrolls[i].CommissionExplains {
+				// Extract invoice number (text before first " - ")
+				name := payrolls[i].CommissionExplains[j].Name
+				if strings.Contains(name, " - ") {
+					parts := strings.SplitN(name, " - ", 2)
+					payrolls[i].CommissionExplains[j].Name = parts[0] + " - Bonus"
+				}
+			}
+		}
+
 		// Using WaitGroup go routines to SendPayrollPaidEmail
 		var wg sync.WaitGroup
 		wg.Add(len(payrolls))
