@@ -70,6 +70,7 @@ type CommissionExplain struct {
 	FormattedAmount  string      `json:"formatted_amount"`
 	BasecampTodoID   int         `json:"todo_id"`
 	BasecampBucketID int         `json:"bucket_id"`
+	ExternalRef      string      `json:"external_ref,omitempty"` // Notion page UUID or other external references
 }
 
 // Batch enumeration

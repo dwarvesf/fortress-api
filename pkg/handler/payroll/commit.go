@@ -20,6 +20,7 @@ import (
 	bcModel "github.com/dwarvesf/fortress-api/pkg/service/basecamp/model"
 	"github.com/dwarvesf/fortress-api/pkg/service/currency"
 	"github.com/dwarvesf/fortress-api/pkg/service/nocodb"
+	"github.com/dwarvesf/fortress-api/pkg/service/notion"
 	expensestore "github.com/dwarvesf/fortress-api/pkg/store/expense"
 	"github.com/dwarvesf/fortress-api/pkg/store/payroll"
 	"github.com/dwarvesf/fortress-api/pkg/utils/timeutil"
@@ -449,62 +450,62 @@ func (h *handler) markBonusAsDone(p *model.Payroll) error {
 	return nil
 }
 
-// extractExpenseSubmissionsFromPayroll extracts expense submissions from payroll bonus explains
+// extractExpenseSubmissionsFromPayroll extracts expense submissions from payroll commission explains
+// Expenses are stored in CommissionExplain with BasecampTodoID set
 func (h *handler) extractExpenseSubmissionsFromPayroll(payrolls []model.Payroll) []ExpenseSubmissionData {
 	h.logger.Debug("Extracting expense submissions from payroll")
 
 	var expenseSubmissions []ExpenseSubmissionData
 
 	for _, p := range payrolls {
-		var projectBonusExplains []model.ProjectBonusExplain
-		err := json.Unmarshal(p.ProjectBonusExplain, &projectBonusExplains)
+		var commissionExplains []model.CommissionExplain
+		err := json.Unmarshal(p.CommissionExplain, &commissionExplains)
 		if err != nil {
-			h.logger.Error(err, fmt.Sprintf("failed to unmarshal ProjectBonusExplain for employee %s", p.EmployeeID))
+			h.logger.Error(err, fmt.Sprintf("failed to unmarshal CommissionExplain for employee %s", p.EmployeeID))
 			continue
 		}
 
-		h.logger.Debug(fmt.Sprintf("Employee %s has %d project bonus explains", p.Employee.FullName, len(projectBonusExplains)))
-		for i, bonus := range projectBonusExplains {
-			h.logger.Debug(fmt.Sprintf("  [%d] Name: %s, BasecampTodoID: %d, BasecampBucketID: %d", i, bonus.Name, bonus.BasecampTodoID, bonus.BasecampBucketID))
+		h.logger.Debug(fmt.Sprintf("Employee %s has %d commission explains", p.Employee.FullName, len(commissionExplains)))
+		for i, comm := range commissionExplains {
+			h.logger.Debug(fmt.Sprintf("  [%d] Name: %s, BasecampTodoID: %d, ExternalRef: %s", i, comm.Name, comm.BasecampTodoID, comm.ExternalRef))
 		}
 
-		for _, bonus := range projectBonusExplains {
-			// Identify expense submissions by checking if it's from expense_submissions table
-			// For NocoDB: items will have title format "Description | Amount | Currency" or just description
-			// BasecampTodoID stores the NocoDB record ID
-			// BasecampBucketID may also be set (stores some NocoDB identifier)
+		for _, comm := range commissionExplains {
+			// Skip items without BasecampTodoID (regular commissions from invoices)
+			if comm.BasecampTodoID == 0 {
+				continue
+			}
 
-			// Check if this is an accounting todo first (has specific keywords)
-			isAccountingTodo := strings.Contains(bonus.Name, "Tiền điện") ||
-				strings.Contains(bonus.Name, "CBRE") ||
-				strings.Contains(bonus.Name, "Office Rental") ||
-				strings.Contains(bonus.Name, "Rental")
+			// Check if this is an accounting todo (has specific keywords) - skip in expense extraction
+			isAccountingTodo := strings.Contains(comm.Name, "Tiền điện") ||
+				strings.Contains(comm.Name, "CBRE") ||
+				strings.Contains(comm.Name, "Office Rental") ||
+				strings.Contains(comm.Name, "Rental")
 
-			// Skip accounting todos in this extraction
 			if isAccountingTodo {
 				continue
 			}
 
-			// Check if this looks like an expense submission
-			// Expense submissions from NocoDB may have simple names (not pipe-separated)
-			// We'll rely on Amount field from bonus instead of parsing title
-			if bonus.BasecampTodoID != 0 {
-				description := bonus.Name
-				amount := float64(bonus.Amount)
-				currencyStr := "VND" // Default currency
+			description := comm.Name
+			amount := float64(comm.Amount)
+			currencyStr := "VND" // Default currency
 
-				h.logger.Debug(fmt.Sprintf("Processing expense: %s, amount: %.0f, todoID: %d", description, amount, bonus.BasecampTodoID))
-
-				// Append expense submission
-				expenseSubmissions = append(expenseSubmissions, ExpenseSubmissionData{
-					RecordID:     strconv.Itoa(bonus.BasecampTodoID),
-					EmployeeID:   p.EmployeeID,
-					EmployeeName: p.Employee.FullName,
-					Amount:       amount,
-					Currency:     currencyStr,
-					Description:  description,
-				})
+			// For Notion: use ExternalRef (UUID) if available, otherwise use BasecampTodoID
+			recordID := comm.ExternalRef
+			if recordID == "" {
+				recordID = strconv.Itoa(comm.BasecampTodoID)
 			}
+
+			h.logger.Debug(fmt.Sprintf("Processing expense: %s, amount: %.0f, recordID: %s", description, amount, recordID))
+
+			expenseSubmissions = append(expenseSubmissions, ExpenseSubmissionData{
+				RecordID:     recordID,
+				EmployeeID:   p.EmployeeID,
+				EmployeeName: p.Employee.FullName,
+				Amount:       amount,
+				Currency:     currencyStr,
+				Description:  description,
+			})
 		}
 	}
 
@@ -765,19 +766,12 @@ func (h *handler) markAccountingTodosAsCompleted(todos []AccountingTodoData) err
 	return nil
 }
 
-// markExpenseSubmissionsAsCompleted marks expense submissions as completed in NocoDB
+// markExpenseSubmissionsAsCompleted marks expense submissions as completed in the task provider (NocoDB or Notion)
 func (h *handler) markExpenseSubmissionsAsCompleted(expenses []ExpenseSubmissionData) error {
-	h.logger.Debug(fmt.Sprintf("Marking %d expense submissions as completed in NocoDB", len(expenses)))
+	h.logger.Debug(fmt.Sprintf("Marking %d expense submissions as completed", len(expenses)))
 
 	if h.service.PayrollExpenseProvider == nil {
-		h.logger.Debug("PayrollExpenseProvider is nil, skipping NocoDB update")
-		return nil
-	}
-
-	// Try to cast to NocoDB ExpenseService
-	nocoService, ok := h.service.PayrollExpenseProvider.(*nocodb.ExpenseService)
-	if !ok {
-		h.logger.Debug("PayrollExpenseProvider is not NocoDB service (Basecamp flow), skipping NocoDB update")
+		h.logger.Debug("PayrollExpenseProvider is nil, skipping update")
 		return nil
 	}
 
@@ -785,25 +779,47 @@ func (h *handler) markExpenseSubmissionsAsCompleted(expenses []ExpenseSubmission
 	failedCount := 0
 	var errors []string
 
-	for _, expense := range expenses {
-		// Convert RecordID string to int
-		expenseID, err := strconv.Atoi(expense.RecordID)
-		if err != nil {
-			h.logger.Error(err, fmt.Sprintf("failed to convert expense RecordID to int: %s", expense.RecordID))
-			errors = append(errors, fmt.Sprintf("expense %s: invalid ID", expense.RecordID))
-			failedCount++
-			continue
+	// Try to cast to Notion ExpenseService first
+	if notionService, ok := h.service.PayrollExpenseProvider.(*notion.ExpenseService); ok {
+		h.logger.Debug("Using Notion ExpenseService to mark expenses as completed")
+		for _, expense := range expenses {
+			// For Notion, RecordID is the page UUID
+			err := notionService.MarkExpenseAsCompleted(expense.RecordID)
+			if err != nil {
+				h.logger.Error(err, fmt.Sprintf("failed to mark expense %s as completed in Notion", expense.RecordID))
+				errors = append(errors, fmt.Sprintf("expense %s: %v", expense.RecordID, err))
+				failedCount++
+			} else {
+				h.logger.Debug(fmt.Sprintf("Marked expense %s as completed in Notion", expense.RecordID))
+				successCount++
+			}
 		}
+	} else if nocoService, ok := h.service.PayrollExpenseProvider.(*nocodb.ExpenseService); ok {
+		// Try to cast to NocoDB ExpenseService
+		h.logger.Debug("Using NocoDB ExpenseService to mark expenses as completed")
+		for _, expense := range expenses {
+			// Convert RecordID string to int for NocoDB
+			expenseID, err := strconv.Atoi(expense.RecordID)
+			if err != nil {
+				h.logger.Error(err, fmt.Sprintf("failed to convert expense RecordID to int: %s", expense.RecordID))
+				errors = append(errors, fmt.Sprintf("expense %s: invalid ID", expense.RecordID))
+				failedCount++
+				continue
+			}
 
-		err = nocoService.MarkExpenseAsCompleted(expenseID)
-		if err != nil {
-			h.logger.Error(err, fmt.Sprintf("failed to mark expense submission %d as completed in NocoDB", expenseID))
-			errors = append(errors, fmt.Sprintf("expense %d: %v", expenseID, err))
-			failedCount++
-		} else {
-			h.logger.Debug(fmt.Sprintf("Marked expense submission %d as completed in NocoDB", expenseID))
-			successCount++
+			err = nocoService.MarkExpenseAsCompleted(expenseID)
+			if err != nil {
+				h.logger.Error(err, fmt.Sprintf("failed to mark expense submission %d as completed in NocoDB", expenseID))
+				errors = append(errors, fmt.Sprintf("expense %d: %v", expenseID, err))
+				failedCount++
+			} else {
+				h.logger.Debug(fmt.Sprintf("Marked expense submission %d as completed in NocoDB", expenseID))
+				successCount++
+			}
 		}
+	} else {
+		h.logger.Debug("PayrollExpenseProvider is not NocoDB or Notion service (Basecamp flow), skipping update")
+		return nil
 	}
 
 	h.logger.Debug(fmt.Sprintf("Completed marking expense submissions (success: %d, failed: %d)", successCount, failedCount))

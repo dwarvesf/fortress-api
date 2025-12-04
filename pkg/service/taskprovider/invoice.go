@@ -13,6 +13,7 @@ type ProviderType string
 const (
 	ProviderBasecamp            ProviderType = "basecamp"
 	ProviderNocoDB              ProviderType = "nocodb"
+	ProviderNotion              ProviderType = "notion"
 	WorkerMessageInvoiceComment              = "taskprovider_invoice_comment"
 )
 

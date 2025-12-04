@@ -250,7 +250,10 @@ func New(cfg *config.Config, store *store.Store, repo store.DBRepo) (*Service, e
 
 	// Payroll expense fetcher provider (for fetching expense_submissions during payroll calculation)
 	var payrollExpenseProvider basecamp.ExpenseProvider
-	if selectedProvider == string(taskprovider.ProviderNocoDB) && nocoSvc != nil {
+	if selectedProvider == string(taskprovider.ProviderNotion) {
+		// Use Notion expense service for payroll
+		payrollExpenseProvider = notion.NewExpenseService(cfg, store, repo, logger.L)
+	} else if selectedProvider == string(taskprovider.ProviderNocoDB) && nocoSvc != nil {
 		// Use NocoDB expense service for payroll (expense_submissions table)
 		payrollExpenseProvider = nocodb.NewExpenseService(nocoSvc, cfg, store, repo, logger.L)
 	}
@@ -260,15 +263,16 @@ func New(cfg *config.Config, store *store.Store, repo store.DBRepo) (*Service, e
 	}
 
 	// Payroll accounting todo fetcher (for fetching accounting_todos during payroll calculation)
+	// Only used for NocoDB - Notion fetches all expenses from one table, Basecamp uses getAccountingExpense()
 	var payrollAccountingTodoProvider basecamp.ExpenseProvider
 	if selectedProvider == string(taskprovider.ProviderNocoDB) && nocoSvc != nil {
 		// Use NocoDB accounting todo service for payroll (accounting_todos table)
 		payrollAccountingTodoProvider = nocodb.NewAccountingTodoService(nocoSvc, cfg, store, repo, logger.L)
-	}
-	if payrollAccountingTodoProvider == nil {
-		// Fallback to Basecamp adapter (fetches from same source as PayrollExpenseProvider)
+	} else if selectedProvider == string(taskprovider.ProviderBasecamp) && basecampSvc != nil {
+		// Fallback to Basecamp adapter only if Basecamp is actually configured
 		payrollAccountingTodoProvider = basecamp.NewExpenseAdapter(basecampSvc)
 	}
+	// For Notion provider, payrollAccountingTodoProvider remains nil (all expenses fetched via PayrollExpenseProvider)
 
 	return &Service{
 		Basecamp:                     basecampSvc,

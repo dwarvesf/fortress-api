@@ -123,16 +123,20 @@ func (h *handler) calculatePayrolls(users []*model.Employee, batchDate time.Time
 		h.logger.Debug(fmt.Sprintf("Fetched %d expense submissions from NocoDB", len(allExpenses)))
 		expenses = append(expenses, allExpenses...)
 
-		// Also fetch accounting todos from accounting_todos table
-		h.logger.Debug("Fetching accounting todos from NocoDB (accounting_todos table)")
-		accountingTodos, err := h.service.PayrollAccountingTodoProvider.GetAllInList(opsExpenseID, opsID)
-		if err != nil {
-			h.logger.Error(err, "can't get accounting todos from NocoDB")
-			return nil, err
+		// Also fetch accounting todos from accounting_todos table (only for NocoDB, not Notion)
+		if h.service.PayrollAccountingTodoProvider != nil {
+			h.logger.Debug("Fetching accounting todos from NocoDB (accounting_todos table)")
+			accountingTodos, err := h.service.PayrollAccountingTodoProvider.GetAllInList(opsExpenseID, opsID)
+			if err != nil {
+				h.logger.Error(err, "can't get accounting todos from NocoDB")
+				return nil, err
+			}
+			h.logger.Debug(fmt.Sprintf("Fetched %d accounting todos from NocoDB", len(accountingTodos)))
+			expenses = append(expenses, accountingTodos...)
+			h.logger.Debug(fmt.Sprintf("Total expenses (submissions + accounting todos): %d", len(expenses)))
+		} else {
+			h.logger.Debug("PayrollAccountingTodoProvider is nil (Notion flow), skipping accounting todos fetch")
 		}
-		h.logger.Debug(fmt.Sprintf("Fetched %d accounting todos from NocoDB", len(accountingTodos)))
-		expenses = append(expenses, accountingTodos...)
-		h.logger.Debug(fmt.Sprintf("Total expenses (submissions + accounting todos): %d", len(expenses)))
 	}
 
 	// Fetch accounting todos from Basecamp (NocoDB already fetched them above)
@@ -303,6 +307,7 @@ func (h *handler) getBonus(u model.Employee, batchDate time.Time, expenses []bcM
 					Name:             name,
 					BasecampTodoID:   expenses[i].ID,
 					BasecampBucketID: expenses[i].Bucket.ID,
+					ExternalRef:      expenses[i].AppURL, // Store Notion page UUID for later status update
 				})
 		}
 	}

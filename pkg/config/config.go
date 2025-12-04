@@ -336,6 +336,7 @@ type AccountingNocoIntegration struct {
 
 type ExpenseIntegration struct {
 	Noco            ExpenseNocoIntegration
+	Notion          ExpenseNotionIntegration
 	ApproverMapping map[string]string
 }
 
@@ -343,6 +344,12 @@ type ExpenseNocoIntegration struct {
 	WorkspaceID   string
 	TableID       string
 	WebhookSecret string
+}
+
+type ExpenseNotionIntegration struct {
+	ExpenseDBID    string
+	ContractorDBID string
+	DataSourceID   string // For multi-source databases, use data source ID instead of database ID
 }
 
 type LeaveIntegration struct {
@@ -389,6 +396,9 @@ func Generate(v ENV) *Config {
 	nocoExpenseApproverMapping := parseKeyValuePairs(v.GetString("NOCO_EXPENSE_APPROVER_MAPPING"))
 	nocoLeaveTableID := v.GetString("NOCO_LEAVE_TABLE_ID")
 	nocoLeaveWebhookSecret := v.GetString("NOCO_LEAVE_WEBHOOK_SECRET")
+	notionExpenseDBID := v.GetString("NOTION_EXPENSE_DB_ID")
+	notionContractorDBID := v.GetString("NOTION_CONTRACTOR_DB_ID")
+	notionExpenseDataSourceID := v.GetString("NOTION_EXPENSE_DATA_SOURCE_ID")
 
 	logLevel := validateLogLevel(v.GetString("LOG_LEVEL"))
 
@@ -577,6 +587,11 @@ func Generate(v ENV) *Config {
 				WorkspaceID:   nocoExpenseWorkspaceID,
 				TableID:       nocoExpenseTableID,
 				WebhookSecret: nocoExpenseWebhookSecret,
+			},
+			Notion: ExpenseNotionIntegration{
+				ExpenseDBID:    notionExpenseDBID,
+				ContractorDBID: notionContractorDBID,
+				DataSourceID:   notionExpenseDataSourceID,
 			},
 			ApproverMapping: nocoExpenseApproverMapping,
 		},
