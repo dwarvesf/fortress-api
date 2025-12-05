@@ -467,55 +467,18 @@ func (e *ExpenseService) extractSelect(props nt.DatabasePageProperties, propName
 }
 
 // extractRequestorEmail extracts the requestor's email from the Notion page.
-// It first tries the Email rollup property, then falls back to querying the relation.
+// Uses the Team Email property (email type).
 func (e *ExpenseService) extractRequestorEmail(pageID string, props nt.DatabasePageProperties) (string, error) {
-	// First, try to get email from rollup property
-	if emailProp, ok := props["Email"]; ok {
-		// Check if it's a rollup type with array results
-		if emailProp.Rollup != nil && len(emailProp.Rollup.Array) > 0 {
-			for _, result := range emailProp.Rollup.Array {
-				if result.Email != nil && *result.Email != "" {
-					return *result.Email, nil
-				}
-			}
-		}
-	}
-
-	// Fallback: Get email from Requestor relation
-	requestorProp, ok := props["Requestor"]
-	if !ok || len(requestorProp.Relation) == 0 {
-		return "", errors.New("no Requestor relation found")
-	}
-
-	// Get the first related page ID
-	contractorPageID := requestorProp.Relation[0].ID
-
-	// Query the contractor page to get the email
-	return e.fetchContractorEmail(contractorPageID)
-}
-
-// fetchContractorEmail fetches the email from a contractor page
-func (e *ExpenseService) fetchContractorEmail(contractorPageID string) (string, error) {
-	ctx := context.Background()
-
-	page, err := e.client.FindPageByID(ctx, contractorPageID)
-	if err != nil {
-		return "", fmt.Errorf("failed to fetch contractor page: %w", err)
-	}
-
-	props, ok := page.Properties.(nt.DatabasePageProperties)
-	if !ok {
-		return "", errors.New("failed to cast contractor page properties")
-	}
-
-	// Try to extract email property
-	if emailProp, ok := props["Email"]; ok {
-		if emailProp.Email != nil && *emailProp.Email != "" {
+	// Get email from Team Email property
+	if emailProp, ok := props["Team Email"]; ok && emailProp.Email != nil {
+		e.logger.Debug(fmt.Sprintf("extractRequestorEmail: found Team Email: %s", *emailProp.Email))
+		if *emailProp.Email != "" {
 			return *emailProp.Email, nil
 		}
 	}
 
-	return "", errors.New("email not found in contractor page")
+	e.logger.Debug("extractRequestorEmail: Team Email property not found or empty")
+	return "", errors.New("no Team Email found")
 }
 
 // uuidToInt converts a UUID string to an integer using FNV-1a hash of the last 8 hex characters.
