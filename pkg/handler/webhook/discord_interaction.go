@@ -1,6 +1,7 @@
 package webhook
 
 import (
+	"context"
 	"crypto/ed25519"
 	"encoding/hex"
 	"encoding/json"
@@ -18,6 +19,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service/nocodb"
+	notionSvc "github.com/dwarvesf/fortress-api/pkg/service/notion"
 	sInvoice "github.com/dwarvesf/fortress-api/pkg/store/invoice"
 	"github.com/dwarvesf/fortress-api/pkg/view"
 )
@@ -116,6 +118,29 @@ func (h *handler) handleMessageComponentInteraction(c *gin.Context, l logger.Log
 			return
 		}
 		h.handleLeaveRejectButton(c, l, interaction, leaveID)
+		return
+	}
+
+	// Notion leave handlers
+	if strings.HasPrefix(customID, "notion_leave_approve_") {
+		pageID := strings.TrimPrefix(customID, "notion_leave_approve_")
+		if pageID == "" {
+			l.Errorf(nil, "empty page id in custom_id: %s", customID)
+			h.respondToInteraction(c, "Invalid leave request ID")
+			return
+		}
+		h.handleNotionLeaveApproveButton(c, l, interaction, pageID)
+		return
+	}
+
+	if strings.HasPrefix(customID, "notion_leave_reject_") {
+		pageID := strings.TrimPrefix(customID, "notion_leave_reject_")
+		if pageID == "" {
+			l.Errorf(nil, "empty page id in custom_id: %s", customID)
+			h.respondToInteraction(c, "Invalid leave request ID")
+			return
+		}
+		h.handleNotionLeaveRejectButton(c, l, interaction, pageID)
 		return
 	}
 
@@ -432,6 +457,344 @@ func (h *handler) respondToInteraction(c *gin.Context, message string) {
 		},
 	}
 	c.JSON(http.StatusOK, response)
+}
+
+// handleNotionLeaveApproveButton handles the approve button click for Notion leave requests
+func (h *handler) handleNotionLeaveApproveButton(c *gin.Context, l logger.Logger, interaction *discordgo.Interaction, pageID string) {
+	l.Debugf("approving Notion leave request via button: page_id=%s approver=%s", pageID, interaction.Member.User.Username)
+
+	// Respond immediately with processing embed to avoid Discord timeout (3 seconds)
+	h.respondWithNotionLeaveProcessingEmbed(c, l, interaction, "Approving")
+
+	// Get approver's email from Discord ID
+	approverEmail := ""
+	approverUsername := ""
+	if interaction.Member != nil && interaction.Member.User != nil {
+		approverUsername = interaction.Member.User.Username
+		// Try to find employee by Discord ID
+		employee, err := h.store.Employee.GetByDiscordID(h.repo.DB(), interaction.Member.User.ID, false)
+		if err == nil && employee != nil {
+			approverEmail = employee.TeamEmail
+			l.Debugf("found approver email: %s", approverEmail)
+		} else {
+			l.Warnf("could not find employee for discord user: %s", interaction.Member.User.ID)
+		}
+	}
+
+	// Get channel and message IDs for later update
+	channelID := interaction.ChannelID
+	messageID := ""
+	if interaction.Message != nil {
+		messageID = interaction.Message.ID
+	}
+
+	// Store original embed for async update
+	var originalEmbed *discordgo.MessageEmbed
+	if interaction.Message != nil && len(interaction.Message.Embeds) > 0 {
+		originalEmbed = interaction.Message.Embeds[0]
+	}
+
+	// Process asynchronously
+	go func() {
+		ctx := context.Background()
+		l.Debugf("async processing approval for page_id=%s", pageID)
+
+		// Create Notion leave service
+		leaveService := notionSvc.NewLeaveService(h.config, h.store, h.repo, h.logger)
+		if leaveService == nil {
+			l.Error(errors.New("failed to create notion leave service"), "notion secret may not be configured")
+			h.updateNotionLeaveMessageWithError(l, channelID, messageID, originalEmbed, "Notion service not configured")
+			return
+		}
+
+		// Look up approver's Notion page ID by email
+		approverPageID := ""
+		if approverEmail != "" {
+			var err error
+			approverPageID, err = leaveService.GetContractorPageIDByEmail(ctx, approverEmail)
+			if err != nil {
+				l.Warnf("could not find contractor page for approver email %s: %v", approverEmail, err)
+				// Continue without approver page ID - just set status
+			}
+		}
+
+		// Update Notion status
+		err := leaveService.UpdateLeaveStatus(ctx, pageID, "Approved", approverPageID)
+		if err != nil {
+			l.Errorf(err, "failed to update leave status in Notion")
+			h.updateNotionLeaveMessageWithError(l, channelID, messageID, originalEmbed, fmt.Sprintf("Failed to approve: %v", err))
+			return
+		}
+
+		l.Infof("Notion leave request approved via button: page_id=%s approver=%s", pageID, approverEmail)
+
+		// Update the original message to show it's been approved
+		h.updateNotionLeaveMessageWithStatus(l, channelID, messageID, originalEmbed, "Approved", approverUsername)
+	}()
+}
+
+// handleNotionLeaveRejectButton handles the reject button click for Notion leave requests
+func (h *handler) handleNotionLeaveRejectButton(c *gin.Context, l logger.Logger, interaction *discordgo.Interaction, pageID string) {
+	l.Debugf("rejecting Notion leave request via button: page_id=%s rejector=%s", pageID, interaction.Member.User.Username)
+
+	// Respond immediately with processing embed to avoid Discord timeout (3 seconds)
+	h.respondWithNotionLeaveProcessingEmbed(c, l, interaction, "Rejecting")
+
+	rejectorUsername := ""
+	if interaction.Member != nil && interaction.Member.User != nil {
+		rejectorUsername = interaction.Member.User.Username
+	}
+
+	// Get channel and message IDs for later update
+	channelID := interaction.ChannelID
+	messageID := ""
+	if interaction.Message != nil {
+		messageID = interaction.Message.ID
+	}
+
+	// Store original embed for async update
+	var originalEmbed *discordgo.MessageEmbed
+	if interaction.Message != nil && len(interaction.Message.Embeds) > 0 {
+		originalEmbed = interaction.Message.Embeds[0]
+	}
+
+	// Process asynchronously
+	go func() {
+		ctx := context.Background()
+		l.Debugf("async processing rejection for page_id=%s", pageID)
+
+		// Create Notion leave service
+		leaveService := notionSvc.NewLeaveService(h.config, h.store, h.repo, h.logger)
+		if leaveService == nil {
+			l.Error(errors.New("failed to create notion leave service"), "notion secret may not be configured")
+			h.updateNotionLeaveMessageWithError(l, channelID, messageID, originalEmbed, "Notion service not configured")
+			return
+		}
+
+		// Update Notion status - no approver for rejection
+		err := leaveService.UpdateLeaveStatus(ctx, pageID, "Rejected", "")
+		if err != nil {
+			l.Errorf(err, "failed to update leave status in Notion")
+			h.updateNotionLeaveMessageWithError(l, channelID, messageID, originalEmbed, fmt.Sprintf("Failed to reject: %v", err))
+			return
+		}
+
+		l.Infof("Notion leave request rejected via button: page_id=%s rejector=%s", pageID, rejectorUsername)
+
+		// Update the original message to show it's been rejected
+		h.updateNotionLeaveMessageWithStatus(l, channelID, messageID, originalEmbed, "Rejected", rejectorUsername)
+	}()
+}
+
+// updateNotionLeaveMessageStatus updates the original message to show the new status for Notion leave requests
+func (h *handler) updateNotionLeaveMessageStatus(c *gin.Context, l logger.Logger, interaction *discordgo.Interaction, pageID string, status string, actionBy string) {
+	// Get original embed
+	var originalEmbed *discordgo.MessageEmbed
+	if interaction.Message != nil && len(interaction.Message.Embeds) > 0 {
+		originalEmbed = interaction.Message.Embeds[0]
+	}
+
+	// Determine color and title based on status
+	var color int
+	var title string
+	var emoji string
+
+	if status == "Approved" {
+		color = 3066993 // Green
+		title = "✅ Leave Request Approved"
+		emoji = "✅"
+	} else {
+		color = 15158332 // Red
+		title = "❌ Leave Request Rejected"
+		emoji = "❌"
+	}
+
+	// Build updated embed
+	var fields []*discordgo.MessageEmbedField
+	if originalEmbed != nil {
+		fields = originalEmbed.Fields
+	}
+
+	// Add status field
+	fields = append(fields, &discordgo.MessageEmbedField{
+		Name:   fmt.Sprintf("%s Status", emoji),
+		Value:  fmt.Sprintf("%s by %s", status, actionBy),
+		Inline: false,
+	})
+
+	updatedEmbed := &discordgo.MessageEmbed{
+		Title:       title,
+		Description: "",
+		Color:       color,
+		Fields:      fields,
+		Timestamp:   time.Now().Format("2006-01-02T15:04:05.000-07:00"),
+	}
+
+	// Respond with updated message (removes buttons)
+	response := &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseUpdateMessage,
+		Data: &discordgo.InteractionResponseData{
+			Embeds:     []*discordgo.MessageEmbed{updatedEmbed},
+			Components: []discordgo.MessageComponent{}, // Remove buttons
+		},
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
+// respondWithNotionLeaveProcessingEmbed responds immediately with a processing status embed
+func (h *handler) respondWithNotionLeaveProcessingEmbed(c *gin.Context, l logger.Logger, interaction *discordgo.Interaction, action string) {
+	l.Debugf("responding with processing embed for action: %s", action)
+
+	// Get original embed to preserve info
+	var originalEmbed *discordgo.MessageEmbed
+	if interaction.Message != nil && len(interaction.Message.Embeds) > 0 {
+		originalEmbed = interaction.Message.Embeds[0]
+	}
+
+	// Build processing embed preserving original fields
+	var fields []*discordgo.MessageEmbedField
+	if originalEmbed != nil {
+		fields = originalEmbed.Fields
+	}
+
+	// Add processing status field
+	fields = append(fields, &discordgo.MessageEmbedField{
+		Name:   "Status",
+		Value:  fmt.Sprintf("⏳ %s...", action),
+		Inline: false,
+	})
+
+	title := "Leave Request"
+	description := ""
+	if originalEmbed != nil {
+		if originalEmbed.Title != "" {
+			title = originalEmbed.Title
+		}
+		description = originalEmbed.Description
+	}
+
+	processingEmbed := &discordgo.MessageEmbed{
+		Title:       fmt.Sprintf("⏳ %s - Processing", title),
+		Description: description,
+		Color:       16776960, // Yellow
+		Fields:      fields,
+		Timestamp:   time.Now().Format("2006-01-02T15:04:05.000-07:00"),
+	}
+
+	// Respond immediately with processing status (removes buttons to prevent double-click)
+	response := &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseUpdateMessage,
+		Data: &discordgo.InteractionResponseData{
+			Embeds:     []*discordgo.MessageEmbed{processingEmbed},
+			Components: []discordgo.MessageComponent{}, // Remove buttons
+		},
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
+// updateNotionLeaveMessageWithStatus updates the message with final status embed
+func (h *handler) updateNotionLeaveMessageWithStatus(l logger.Logger, channelID, messageID string, originalEmbed *discordgo.MessageEmbed, status, actionBy string) {
+	l.Debugf("updating notion leave message with status: channelID=%s messageID=%s status=%s actionBy=%s", channelID, messageID, status, actionBy)
+
+	if channelID == "" || messageID == "" {
+		l.Warnf("cannot update message: missing channelID or messageID")
+		return
+	}
+
+	// Determine color and title based on status
+	var color int
+	var title string
+	var emoji string
+
+	if status == "Approved" {
+		color = 3066993 // Green
+		title = "✅ Leave Request Approved"
+		emoji = "✅"
+	} else {
+		color = 15158332 // Red
+		title = "❌ Leave Request Rejected"
+		emoji = "❌"
+	}
+
+	// Build updated embed preserving original fields
+	var fields []*discordgo.MessageEmbedField
+	if originalEmbed != nil {
+		fields = originalEmbed.Fields
+	}
+
+	// Add status field
+	fields = append(fields, &discordgo.MessageEmbedField{
+		Name:   fmt.Sprintf("%s Status", emoji),
+		Value:  fmt.Sprintf("%s by %s", status, actionBy),
+		Inline: false,
+	})
+
+	description := ""
+	if originalEmbed != nil {
+		description = originalEmbed.Description
+	}
+
+	updatedEmbed := &discordgo.MessageEmbed{
+		Title:       title,
+		Description: description,
+		Color:       color,
+		Fields:      fields,
+		Timestamp:   time.Now().Format("2006-01-02T15:04:05.000-07:00"),
+	}
+
+	// Update the message (removes buttons)
+	_, err := h.service.Discord.UpdateChannelMessage(channelID, messageID, "", []*discordgo.MessageEmbed{updatedEmbed}, []discordgo.MessageComponent{})
+	if err != nil {
+		l.Errorf(err, "failed to update discord message with status")
+	} else {
+		l.Debugf("successfully updated discord message with status: %s", status)
+	}
+}
+
+// updateNotionLeaveMessageWithError updates the message with error status embed
+func (h *handler) updateNotionLeaveMessageWithError(l logger.Logger, channelID, messageID string, originalEmbed *discordgo.MessageEmbed, errorMsg string) {
+	l.Debugf("updating notion leave message with error: channelID=%s messageID=%s error=%s", channelID, messageID, errorMsg)
+
+	if channelID == "" || messageID == "" {
+		l.Warnf("cannot update message: missing channelID or messageID")
+		return
+	}
+
+	// Build error embed preserving original fields
+	var fields []*discordgo.MessageEmbedField
+	if originalEmbed != nil {
+		fields = originalEmbed.Fields
+	}
+
+	// Add error field
+	fields = append(fields, &discordgo.MessageEmbedField{
+		Name:   "❌ Error",
+		Value:  errorMsg,
+		Inline: false,
+	})
+
+	description := ""
+	if originalEmbed != nil {
+		description = originalEmbed.Description
+	}
+
+	errorEmbed := &discordgo.MessageEmbed{
+		Title:       "❌ Leave Request - Failed",
+		Description: description,
+		Color:       15158332, // Red
+		Fields:      fields,
+		Timestamp:   time.Now().Format("2006-01-02T15:04:05.000-07:00"),
+	}
+
+	// Update the message
+	_, err := h.service.Discord.UpdateChannelMessage(channelID, messageID, "", []*discordgo.MessageEmbed{errorEmbed}, []discordgo.MessageComponent{})
+	if err != nil {
+		l.Errorf(err, "failed to update discord message with error status")
+	} else {
+		l.Debugf("successfully updated discord message with error status")
+	}
 }
 
 // verifyDiscordSignature verifies the Discord interaction signature

@@ -16,7 +16,8 @@ type OnLeaveRequest struct {
 	CreatorID   UUID
 	ApproverID  UUID
 	AssigneeIDs JSONArrayString
-	NocodbID    *int `gorm:"column:nocodb_id;index:idx_on_leave_requests_nocodb_id"`
+	NocodbID     *int    `gorm:"column:nocodb_id;index:idx_on_leave_requests_nocodb_id"`
+	NotionPageID *string `gorm:"column:notion_page_id;index:idx_on_leave_requests_notion_page_id"`
 
 	Creator  *Employee
 	Approver *Employee

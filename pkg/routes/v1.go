@@ -73,6 +73,8 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 
 		webhook.POST("/nocodb/leave", h.Webhook.HandleNocodbLeave)
 
+		webhook.POST("/notion", h.Webhook.HandleNotionLeave)
+
 		webhook.POST("/discord/interaction", h.Webhook.HandleDiscordInteraction)
 
 		basecampGroup := webhook.Group("/basecamp")

@@ -94,20 +94,18 @@ type ExpenseProvider interface {
 - **Database URL**: `https://www.notion.so/2bfb69f8f5738101a121c4464e7a901b`
 - **Data Source ID**: `collection://2bfb69f8-f573-8194-b8fe-000b7b278e8d`
 
-| Property       | Type   | Options              | Description                |
-|----------------|--------|----------------------|----------------------------|
-| Start Date     | title  |                      | Leave start date (title)   |
-| Name           | text   |                      | Request name/title         |
-| Employee Email | email  |                      | Employee email address     |
-| Employee       | text   |                      | Employee name              |
-| Email          | email  |                      | Alternate email field      |
-| Status         | select | Approved             | Approval status            |
-| End Date       | text   |                      | Leave end date             |
-| Leave Type     | select | Off                  | Type of leave              |
-| Shift          | select | full day             | Full day / half day        |
-| Approved By    | text   |                      | Approver email/name        |
-| Approved at    | text   |                      | Approval timestamp         |
-| Files          | file   |                      | Supporting documents       |
+| Property     | Type     | Options/Details                                      |
+|--------------|----------|------------------------------------------------------|
+| Reason       | title    | Leave reason (title field)                           |
+| Employee     | relation | Links to Contractor database                         |
+| Email        | rollup   | Rolled up from Employee relation                     |
+| Leave Type   | select   | `Off`, `Remote`                                      |
+| Start Date   | date     | Leave start date                                     |
+| End Date     | date     | Leave end date                                       |
+| Shift        | select   | `Full day`, `Morning`, `Afternoon`                   |
+| Status       | select   | `Pending`, `Approved`, `Rejected`                    |
+| Approved By  | relation | Links to Contractor database (approver)              |
+| Approved at  | date     | Approval timestamp                                   |
 
 **Status Flow:**
 - `Pending` → `Approved` / `Rejected`

@@ -46,6 +46,16 @@ func (s *store) GetByNocodbID(db *gorm.DB, nocodbID int) (*model.OnLeaveRequest,
 	return &request, nil
 }
 
+// GetByNotionPageID retrieves an on-leave request by Notion page ID (including soft-deleted)
+func (s *store) GetByNotionPageID(db *gorm.DB, notionPageID string) (*model.OnLeaveRequest, error) {
+	var request model.OnLeaveRequest
+	err := db.Unscoped().Where("notion_page_id = ?", notionPageID).First(&request).Error
+	if err != nil {
+		return nil, err
+	}
+	return &request, nil
+}
+
 // Delete permanently deletes an on-leave request by ID (hard delete)
 func (s *store) Delete(db *gorm.DB, id string) error {
 	return db.Unscoped().Delete(&model.OnLeaveRequest{}, "id = ?", id).Error

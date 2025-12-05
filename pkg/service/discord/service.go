@@ -76,6 +76,8 @@ type IService interface {
 	SendChannelMessageComplex(channelID string, content string, embeds []*discordgo.MessageEmbed, components []discordgo.MessageComponent) (*discordgo.Message, error)
 	// UpdateChannelMessage updates an existing message with new content, embeds, and components
 	UpdateChannelMessage(channelID, messageID string, content string, embeds []*discordgo.MessageEmbed, components []discordgo.MessageComponent) (*discordgo.Message, error)
+	// SendInteractionFollowUp sends a follow-up message after an initial interaction response
+	SendInteractionFollowUp(interaction *discordgo.Interaction, message string) error
 
 	ListActiveThreadsByChannelID(guildID, channelID string) ([]discordgo.Channel, error)
 }

@@ -1086,3 +1086,12 @@ func (d *discordClient) UpdateChannelMessage(channelID, messageID string, conten
 		Components: components,
 	})
 }
+
+// SendInteractionFollowUp sends a follow-up message after an initial interaction response
+func (d *discordClient) SendInteractionFollowUp(interaction *discordgo.Interaction, message string) error {
+	_, err := d.session.FollowupMessageCreate(interaction, true, &discordgo.WebhookParams{
+		Content: message,
+		Flags:   discordgo.MessageFlagsEphemeral, // Only visible to the user
+	})
+	return err
+}

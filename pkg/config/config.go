@@ -353,12 +353,20 @@ type ExpenseNotionIntegration struct {
 }
 
 type LeaveIntegration struct {
-	Noco LeaveNocoIntegration
+	Noco   LeaveNocoIntegration
+	Notion LeaveNotionIntegration
 }
 
 type LeaveNocoIntegration struct {
 	TableID       string
 	WebhookSecret string
+}
+
+type LeaveNotionIntegration struct {
+	LeaveDBID         string
+	ContractorDBID    string
+	DataSourceID      string // For multi-source databases, use data source ID instead of database ID
+	VerificationToken string // Token for verifying webhook signatures
 }
 
 type ENV interface {
@@ -399,6 +407,9 @@ func Generate(v ENV) *Config {
 	notionExpenseDBID := v.GetString("NOTION_EXPENSE_DB_ID")
 	notionContractorDBID := v.GetString("NOTION_CONTRACTOR_DB_ID")
 	notionExpenseDataSourceID := v.GetString("NOTION_EXPENSE_DATA_SOURCE_ID")
+	notionLeaveDBID := v.GetString("NOTION_LEAVE_DB_ID")
+	notionLeaveDataSourceID := v.GetString("NOTION_LEAVE_DATA_SOURCE_ID")
+	notionVerificationToken := v.GetString("NOTION_VERIFICATION_TOKEN")
 
 	logLevel := validateLogLevel(v.GetString("LOG_LEVEL"))
 
@@ -599,6 +610,12 @@ func Generate(v ENV) *Config {
 			Noco: LeaveNocoIntegration{
 				TableID:       nocoLeaveTableID,
 				WebhookSecret: nocoLeaveWebhookSecret,
+			},
+			Notion: LeaveNotionIntegration{
+				LeaveDBID:         notionLeaveDBID,
+				ContractorDBID:    notionContractorDBID,
+				DataSourceID:      notionLeaveDataSourceID,
+				VerificationToken: notionVerificationToken,
 			},
 		},
 	}
