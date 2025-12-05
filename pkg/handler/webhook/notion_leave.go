@@ -38,9 +38,9 @@ type NotionLeaveWebhookPayload struct {
 	Challenge         string `json:"challenge"`          // Challenge string to respond with
 
 	// Event fields
-	Type   string                      `json:"type"`   // "page.created", "page.updated"
-	Entity *NotionLeaveWebhookEntity   `json:"entity"` // The entity that triggered the event
-	Data   *NotionLeaveWebhookData     `json:"data"`   // Additional data (optional)
+	Type   string                    `json:"type"`   // "page.created", "page.updated"
+	Entity *NotionLeaveWebhookEntity `json:"entity"` // The entity that triggered the event
+	Data   *NotionLeaveWebhookData   `json:"data"`   // Additional data (optional)
 }
 
 // NotionLeaveWebhookEntity represents the entity in the webhook payload

@@ -94,15 +94,17 @@ func (s *LeaveService) GetLeaveRequest(ctx context.Context, pageID string) (*Lea
 	leave.EndDate = s.extractDate(props, "End Date")
 	leave.ApprovedAt = s.extractDate(props, "Approved at")
 
-	// Extract email from rollup
-	leave.Email = s.extractRollupEmail(props, "Email")
+	// Extract email from Team Email property (email type)
+	leave.Email = s.extractEmail(props, "Team Email")
+	s.logger.Debug(fmt.Sprintf("extracted email from Team Email: %s", leave.Email))
 
 	// Extract relation IDs
 	leave.EmployeeID = s.extractFirstRelationID(props, "Employee")
 	leave.ApprovedByID = s.extractFirstRelationID(props, "Approved By")
 
-	// Extract assignees from Relation property (links to contractor pages)
-	leave.Assignees = s.extractAssigneeEmails(ctx, props, "Assignees")
+	// Extract assignees from multi_select property (format: "Name (email@domain)")
+	leave.Assignees = s.extractEmailsFromMultiSelect(props, "Assignees")
+	s.logger.Debug(fmt.Sprintf("extracted assignees from multi_select: %v", leave.Assignees))
 
 	s.logger.Debug(fmt.Sprintf("fetched leave request: page_id=%s reason=%s email=%s status=%s leave_type=%s assignees=%v",
 		pageID, leave.Reason, leave.Email, leave.Status, leave.LeaveType, leave.Assignees))
@@ -241,7 +243,7 @@ func (s *LeaveService) QueryPendingLeaveRequests(ctx context.Context) ([]LeaveRe
 			Status:    s.extractSelect(props, "Status"),
 			StartDate: s.extractDate(props, "Start Date"),
 			EndDate:   s.extractDate(props, "End Date"),
-			Email:     s.extractRollupEmail(props, "Email"),
+			Email:     s.extractEmail(props, "Team Email"),
 		}
 		requests = append(requests, leave)
 	}
@@ -377,21 +379,6 @@ func (s *LeaveService) extractDate(props nt.DatabasePageProperties, propName str
 	return nil
 }
 
-// extractRollupEmail extracts email from a rollup property
-func (s *LeaveService) extractRollupEmail(props nt.DatabasePageProperties, propName string) string {
-	if prop, ok := props[propName]; ok {
-		// Check if it's a rollup type with array results
-		if prop.Rollup != nil && len(prop.Rollup.Array) > 0 {
-			for _, result := range prop.Rollup.Array {
-				if result.Email != nil && *result.Email != "" {
-					return *result.Email
-				}
-			}
-		}
-	}
-	return ""
-}
-
 // extractFirstRelationID extracts the first relation page ID
 func (s *LeaveService) extractFirstRelationID(props nt.DatabasePageProperties, propName string) string {
 	if prop, ok := props[propName]; ok && len(prop.Relation) > 0 {
@@ -400,47 +387,44 @@ func (s *LeaveService) extractFirstRelationID(props nt.DatabasePageProperties, p
 	return ""
 }
 
-// extractAssigneeEmails extracts email addresses from a Relation property by fetching each contractor page
-func (s *LeaveService) extractAssigneeEmails(ctx context.Context, props nt.DatabasePageProperties, propName string) []string {
+// extractEmail extracts email from an email property
+func (s *LeaveService) extractEmail(props nt.DatabasePageProperties, propName string) string {
+	if prop, ok := props[propName]; ok && prop.Email != nil {
+		s.logger.Debug(fmt.Sprintf("extractEmail: property %s has email value: %s", propName, *prop.Email))
+		return *prop.Email
+	}
+	s.logger.Debug(fmt.Sprintf("extractEmail: property %s not found or empty", propName))
+	return ""
+}
+
+// extractEmailsFromMultiSelect extracts emails from multi_select option names (format: "Name (email@domain)")
+func (s *LeaveService) extractEmailsFromMultiSelect(props nt.DatabasePageProperties, propName string) []string {
 	var emails []string
-	if prop, ok := props[propName]; ok {
-		s.logger.Debug(fmt.Sprintf("extractAssigneeEmails: found property %s with %d relations", propName, len(prop.Relation)))
-		for i, rel := range prop.Relation {
-			s.logger.Debug(fmt.Sprintf("extractAssigneeEmails: relation[%d] id=%s", i, rel.ID))
-			// Fetch contractor page to get email
-			email, err := s.getContractorEmailByPageID(ctx, rel.ID)
-			if err != nil {
-				s.logger.Debug(fmt.Sprintf("extractAssigneeEmails: failed to get email for relation[%d] id=%s: %v", i, rel.ID, err))
-				continue
-			}
+	if prop, ok := props[propName]; ok && len(prop.MultiSelect) > 0 {
+		s.logger.Debug(fmt.Sprintf("extractEmailsFromMultiSelect: property %s has %d options", propName, len(prop.MultiSelect)))
+		for _, opt := range prop.MultiSelect {
+			s.logger.Debug(fmt.Sprintf("extractEmailsFromMultiSelect: option name: %s", opt.Name))
+			email := s.parseEmailFromOptionName(opt.Name)
 			if email != "" {
-				s.logger.Debug(fmt.Sprintf("extractAssigneeEmails: found email for relation[%d]: %s", i, email))
 				emails = append(emails, email)
 			}
 		}
-	} else {
-		s.logger.Debug(fmt.Sprintf("extractAssigneeEmails: property %s not found in props", propName))
 	}
 	return emails
 }
 
-// getContractorEmailByPageID fetches the email from a contractor page
-func (s *LeaveService) getContractorEmailByPageID(ctx context.Context, pageID string) (string, error) {
-	page, err := s.client.FindPageByID(ctx, pageID)
-	if err != nil {
-		return "", fmt.Errorf("failed to fetch contractor page: %w", err)
+// parseEmailFromOptionName extracts email from option name format "Name (email@domain)"
+func (s *LeaveService) parseEmailFromOptionName(optionName string) string {
+	// Find the last occurrence of "(" and ")"
+	start := strings.LastIndex(optionName, "(")
+	end := strings.LastIndex(optionName, ")")
+	if start != -1 && end != -1 && end > start {
+		email := strings.TrimSpace(optionName[start+1 : end])
+		if strings.Contains(email, "@") {
+			return email
+		}
 	}
-
-	props, ok := page.Properties.(nt.DatabasePageProperties)
-	if !ok {
-		return "", errors.New("failed to cast page properties")
-	}
-
-	// Try "Team Email" property first (email type)
-	if prop, ok := props["Team Email"]; ok && prop.Email != nil && *prop.Email != "" {
-		return *prop.Email, nil
-	}
-
-	return "", nil
+	return ""
 }
+
 
