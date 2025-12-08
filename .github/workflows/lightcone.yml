@@ -1,0 +1,29 @@
+# Lightcone - PR Blast Radius Analysis
+# Analyzes code impact using Locus graph-based intelligence
+
+name: Lightcone
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  analyze:
+    name: Analyze PR Impact
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run Lightcone Analysis
+        uses: caustic-labs/lightcone@main
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          openrouter_api_key: ${{ secrets.OPENROUTER_API_KEY }}
+          model: x-ai/grok-4.1-fast
