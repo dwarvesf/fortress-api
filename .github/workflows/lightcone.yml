@@ -24,6 +24,6 @@ jobs:
       - name: Run Lightcone Analysis
         uses: caustic-labs/lightcone@main
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.GH_PAT }}
           openrouter_api_key: ${{ secrets.OPENROUTER_API_KEY }}
           model: x-ai/grok-4.1-fast
