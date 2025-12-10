@@ -366,10 +366,18 @@ func (e *ExpenseService) transformPageToTodo(page nt.Page) (*bcModel.Todo, error
 	}
 
 	// Extract expense fields
+	// Build title from Notes (rich_text) or Description (rich_text) or Refund ID (title)
 	title := e.extractTitle(props)
 	amount := e.extractNumber(props, "Amount")
 	currency := e.extractSelect(props, "Currency")
-	category := e.extractSelect(props, "Expense Category")
+	// Try "Reason" first (Refund Requests DB), fallback to "Expense Category" (legacy)
+	category := e.extractSelect(props, "Reason")
+	if category == "" {
+		category = e.extractSelect(props, "Expense Category")
+		e.logger.Debug(fmt.Sprintf("Using legacy 'Expense Category' property: %s", category))
+	} else {
+		e.logger.Debug(fmt.Sprintf("Using 'Reason' property for category: %s", category))
+	}
 
 	// Get requestor email via rollup or fallback to relation query
 	email, err := e.extractRequestorEmail(page.ID, props)
@@ -425,27 +433,74 @@ func (e *ExpenseService) transformPageToTodo(page nt.Page) (*bcModel.Todo, error
 	return todo, nil
 }
 
-// extractTitle extracts the title from Notion page properties
-// Tries "Reason" first (Expense Request DB), then falls back to "Title"
+// extractTitle extracts the title/description from Notion page properties
+// Priority: Notes (rich_text) -> Description (rich_text) -> Refund ID (title) -> Title (title) -> Reason (title, legacy)
 func (e *ExpenseService) extractTitle(props nt.DatabasePageProperties) string {
-	// Try "Reason" first (Expense Request database uses this as title)
-	if titleProp, ok := props["Reason"]; ok && len(titleProp.Title) > 0 {
+	// Try "Notes" first (Refund Requests DB uses this for description)
+	if notesProp, ok := props["Notes"]; ok && len(notesProp.RichText) > 0 {
 		var parts []string
-		for _, rt := range titleProp.Title {
+		for _, rt := range notesProp.RichText {
 			parts = append(parts, rt.PlainText)
 		}
-		e.logger.Debug(fmt.Sprintf("Extracted title from 'Reason' property: %s", strings.Join(parts, "")))
-		return strings.Join(parts, "")
+		result := strings.TrimSpace(strings.Join(parts, ""))
+		if result != "" {
+			e.logger.Debug(fmt.Sprintf("Extracted title from 'Notes' property: %s", result))
+			return result
+		}
 	}
-	// Fallback to "Title"
+
+	// Try "Description" (rich_text)
+	if descProp, ok := props["Description"]; ok && len(descProp.RichText) > 0 {
+		var parts []string
+		for _, rt := range descProp.RichText {
+			parts = append(parts, rt.PlainText)
+		}
+		result := strings.TrimSpace(strings.Join(parts, ""))
+		if result != "" {
+			e.logger.Debug(fmt.Sprintf("Extracted title from 'Description' property: %s", result))
+			return result
+		}
+	}
+
+	// Try "Refund ID" (title property in Refund Requests DB)
+	if refundIDProp, ok := props["Refund ID"]; ok && len(refundIDProp.Title) > 0 {
+		var parts []string
+		for _, rt := range refundIDProp.Title {
+			parts = append(parts, rt.PlainText)
+		}
+		result := strings.TrimSpace(strings.Join(parts, ""))
+		if result != "" {
+			e.logger.Debug(fmt.Sprintf("Extracted title from 'Refund ID' property: %s", result))
+			return result
+		}
+	}
+
+	// Fallback to "Title" (legacy)
 	if titleProp, ok := props["Title"]; ok && len(titleProp.Title) > 0 {
 		var parts []string
 		for _, rt := range titleProp.Title {
 			parts = append(parts, rt.PlainText)
 		}
-		e.logger.Debug(fmt.Sprintf("Extracted title from 'Title' property: %s", strings.Join(parts, "")))
-		return strings.Join(parts, "")
+		result := strings.TrimSpace(strings.Join(parts, ""))
+		if result != "" {
+			e.logger.Debug(fmt.Sprintf("Extracted title from 'Title' property: %s", result))
+			return result
+		}
 	}
+
+	// Fallback to "Reason" as title type (legacy Expense Request DB)
+	if reasonProp, ok := props["Reason"]; ok && len(reasonProp.Title) > 0 {
+		var parts []string
+		for _, rt := range reasonProp.Title {
+			parts = append(parts, rt.PlainText)
+		}
+		result := strings.TrimSpace(strings.Join(parts, ""))
+		if result != "" {
+			e.logger.Debug(fmt.Sprintf("Extracted title from 'Reason' (title) property: %s", result))
+			return result
+		}
+	}
+
 	e.logger.Debug("No title property found in Notion page")
 	return ""
 }
