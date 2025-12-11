@@ -16,5 +16,7 @@ type IHandler interface {
 	ApproveOnLeaveRequest(c *gin.Context)
 	HandleNocodbLeave(c *gin.Context)
 	HandleNotionLeave(c *gin.Context)
+	HandleNotionRefund(c *gin.Context)
+	HandleNotionOnLeave(c *gin.Context)
 	HandleDiscordInteraction(c *gin.Context)
 }

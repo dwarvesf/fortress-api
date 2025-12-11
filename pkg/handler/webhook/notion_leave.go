@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/bwmarrin/discordgo"
+	nt "github.com/dstotijn/go-notion"
 	"github.com/gin-gonic/gin"
 
 	"github.com/dwarvesf/fortress-api/pkg/logger"
@@ -577,4 +578,232 @@ func (h *handler) verifyNotionWebhookSignature(body []byte, signature, token str
 
 	// Compare signatures using constant-time comparison
 	return hmac.Equal([]byte(expectedSignature), []byte(cleanSignature))
+}
+
+// NotionOnLeaveAutomationPayload represents the webhook payload from Notion automation for on-leave auto-fill
+type NotionOnLeaveAutomationPayload struct {
+	Source NotionAutomationSource     `json:"source"`
+	Data   NotionOnLeaveAutomationData `json:"data"`
+}
+
+// NotionAutomationSource represents the source of Notion automation webhooks
+type NotionAutomationSource struct {
+	Type         string `json:"type"`
+	AutomationID string `json:"automation_id"`
+	ActionID     string `json:"action_id"`
+	EventID      string `json:"event_id"`
+	Attempt      int    `json:"attempt"`
+}
+
+// NotionOnLeaveAutomationData represents the page data in the automation webhook
+type NotionOnLeaveAutomationData struct {
+	Object     string                          `json:"object"`
+	ID         string                          `json:"id"`
+	Properties NotionOnLeaveAutomationProperties `json:"properties"`
+	URL        string                          `json:"url"`
+}
+
+// NotionOnLeaveAutomationProperties represents the properties of the on-leave page for automation
+type NotionOnLeaveAutomationProperties struct {
+	Status    NotionAutomationStatusProperty   `json:"Status"`
+	TeamEmail NotionAutomationEmailProperty    `json:"Team Email"`
+	Employee  NotionAutomationRelationProperty `json:"Employee"`
+}
+
+// NotionAutomationStatusProperty represents a status property in automation payload
+type NotionAutomationStatusProperty struct {
+	ID     string                      `json:"id"`
+	Type   string                      `json:"type"`
+	Status *NotionAutomationSelectOption `json:"status"`
+}
+
+// NotionAutomationEmailProperty represents an email property in automation payload
+type NotionAutomationEmailProperty struct {
+	ID    string  `json:"id"`
+	Type  string  `json:"type"`
+	Email *string `json:"email"`
+}
+
+// NotionAutomationRelationProperty represents a relation property in automation payload
+type NotionAutomationRelationProperty struct {
+	ID       string                    `json:"id"`
+	Type     string                    `json:"type"`
+	Relation []NotionAutomationRelation `json:"relation"`
+	HasMore  bool                      `json:"has_more"`
+}
+
+// NotionAutomationRelation represents a relation item in automation payload
+type NotionAutomationRelation struct {
+	ID string `json:"id"`
+}
+
+// NotionAutomationSelectOption represents a select option in automation payload
+type NotionAutomationSelectOption struct {
+	ID    string `json:"id"`
+	Name  string `json:"name"`
+	Color string `json:"color"`
+}
+
+// HandleNotionOnLeave handles on-leave webhook events from Notion automation
+// This endpoint auto-fills the Employee relation based on Team Email
+func (h *handler) HandleNotionOnLeave(c *gin.Context) {
+	l := h.logger.Fields(logger.Fields{
+		"handler": "webhook",
+		"method":  "HandleNotionOnLeave",
+	})
+
+	l.Debug("received notion on-leave webhook request")
+
+	// Log all headers for debugging
+	headers := make(map[string]string)
+	for key, values := range c.Request.Header {
+		if len(values) > 0 {
+			headers[key] = values[0]
+		}
+	}
+	headersJSON, _ := json.Marshal(headers)
+	l.Debug(fmt.Sprintf("request headers: %s", string(headersJSON)))
+
+	// Read body
+	body, err := io.ReadAll(c.Request.Body)
+	if err != nil {
+		l.Error(err, "failed to read notion on-leave webhook body")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	l.Debug(fmt.Sprintf("received webhook body: %s", string(body)))
+
+	// Parse payload
+	var payload NotionOnLeaveAutomationPayload
+	if err := json.Unmarshal(body, &payload); err != nil {
+		l.Error(err, "failed to parse notion on-leave webhook payload")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	// Log parsed data
+	l.Debug(fmt.Sprintf("parsed on-leave: page_id=%s status=%s email=%v",
+		payload.Data.ID,
+		getAutomationStatusName(payload.Data.Properties.Status),
+		getAutomationEmailValue(payload.Data.Properties.TeamEmail),
+	))
+
+	// Check if Employee relation is empty and we have a Team Email
+	if len(payload.Data.Properties.Employee.Relation) == 0 {
+		email := getAutomationEmailValue(payload.Data.Properties.TeamEmail)
+		if email != "" {
+			l.Debug(fmt.Sprintf("employee relation is empty, looking up contractor by email: %s", email))
+
+			// Look up contractor page ID by email
+			contractorPageID, err := h.lookupContractorByEmailForOnLeave(c.Request.Context(), l, email)
+			if err != nil {
+				l.Error(err, fmt.Sprintf("failed to lookup contractor by email: %s", email))
+				// Continue without updating - don't fail the webhook
+			} else if contractorPageID != "" {
+				l.Debug(fmt.Sprintf("found contractor page: email=%s page_id=%s", email, contractorPageID))
+
+				// Update the on-leave page with Employee relation
+				if err := h.updateOnLeaveEmployee(c.Request.Context(), l, payload.Data.ID, contractorPageID); err != nil {
+					l.Error(err, fmt.Sprintf("failed to update employee relation: page_id=%s", payload.Data.ID))
+				} else {
+					l.Debug(fmt.Sprintf("successfully updated employee relation: onleave_page=%s contractor_page=%s", payload.Data.ID, contractorPageID))
+				}
+			}
+		} else {
+			l.Debug("employee relation is empty but no team email provided")
+		}
+	} else {
+		l.Debug(fmt.Sprintf("employee relation already set: %v", payload.Data.Properties.Employee.Relation))
+	}
+
+	// Return success to acknowledge receipt
+	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "processed"))
+}
+
+// lookupContractorByEmailForOnLeave queries the contractor database to find a contractor by email
+func (h *handler) lookupContractorByEmailForOnLeave(ctx context.Context, l logger.Logger, email string) (string, error) {
+	contractorDBID := h.config.Notion.Databases.Contractor
+	if contractorDBID == "" {
+		return "", fmt.Errorf("NOTION_CONTRACTOR_DB_ID not configured")
+	}
+
+	l.Debug(fmt.Sprintf("querying contractor database: db_id=%s email=%s", contractorDBID, email))
+
+	// Create Notion client
+	client := nt.NewClient(h.config.Notion.Secret)
+
+	// Query contractor database for matching email
+	filter := &nt.DatabaseQueryFilter{
+		Property: "Team Email",
+		DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+			Email: &nt.TextPropertyFilter{
+				Equals: email,
+			},
+		},
+	}
+
+	resp, err := client.QueryDatabase(ctx, contractorDBID, &nt.DatabaseQuery{
+		Filter:   filter,
+		PageSize: 1,
+	})
+	if err != nil {
+		return "", fmt.Errorf("failed to query contractor database: %w", err)
+	}
+
+	if len(resp.Results) == 0 {
+		l.Debug(fmt.Sprintf("no contractor found for email: %s", email))
+		return "", nil
+	}
+
+	pageID := resp.Results[0].ID
+	l.Debug(fmt.Sprintf("found contractor: email=%s page_id=%s", email, pageID))
+	return pageID, nil
+}
+
+// updateOnLeaveEmployee updates the Employee relation field on the on-leave page
+func (h *handler) updateOnLeaveEmployee(ctx context.Context, l logger.Logger, onLeavePageID, contractorPageID string) error {
+	l.Debug(fmt.Sprintf("updating on-leave employee: onleave_page=%s contractor_page=%s", onLeavePageID, contractorPageID))
+
+	// Create Notion client
+	client := nt.NewClient(h.config.Notion.Secret)
+
+	// Build update params with Employee relation
+	updateParams := nt.UpdatePageParams{
+		DatabasePageProperties: nt.DatabasePageProperties{
+			"Employee": nt.DatabasePageProperty{
+				Relation: []nt.Relation{
+					{ID: contractorPageID},
+				},
+			},
+		},
+	}
+
+	l.Debug(fmt.Sprintf("update params: %+v", updateParams))
+
+	updatedPage, err := client.UpdatePage(ctx, onLeavePageID, updateParams)
+	if err != nil {
+		l.Error(err, fmt.Sprintf("notion API error updating page: %s", onLeavePageID))
+		return fmt.Errorf("failed to update page: %w", err)
+	}
+
+	l.Debug(fmt.Sprintf("notion API response - page ID: %s, URL: %s", updatedPage.ID, updatedPage.URL))
+	l.Debug(fmt.Sprintf("successfully updated employee relation on on-leave page: %s", onLeavePageID))
+	return nil
+}
+
+// Helper functions for automation payload
+
+func getAutomationStatusName(prop NotionAutomationStatusProperty) string {
+	if prop.Status != nil {
+		return prop.Status.Name
+	}
+	return ""
+}
+
+func getAutomationEmailValue(prop NotionAutomationEmailProperty) string {
+	if prop.Email != nil {
+		return *prop.Email
+	}
+	return ""
 }
