@@ -189,8 +189,10 @@ func (h *handler) HandleNotionRefund(c *gin.Context) {
 
 // lookupContractorByEmail queries the contractor database to find a contractor by email
 func (h *handler) lookupContractorByEmail(ctx context.Context, l logger.Logger, email string) (string, error) {
-	// Use hardcoded contractor DB ID
-	contractorDBID := "9d468753ebb44977a8dc156428398a6b"
+	contractorDBID := h.config.Notion.Databases.Contractor
+	if contractorDBID == "" {
+		return "", fmt.Errorf("NOTION_CONTRACTOR_DB_ID not configured")
+	}
 
 	l.Debug(fmt.Sprintf("querying contractor database: db_id=%s email=%s", contractorDBID, email))
 
