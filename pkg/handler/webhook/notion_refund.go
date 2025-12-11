@@ -20,7 +20,7 @@ type NotionRefundWebhookPayload struct {
 	Data   NotionRefundData   `json:"data"`
 }
 
-// NotionRefundSource represents the source of the webhook
+// NotionRefundSource represents the source of the refund webhook
 type NotionRefundSource struct {
 	Type         string `json:"type"`
 	AutomationID string `json:"automation_id"`
@@ -39,13 +39,13 @@ type NotionRefundData struct {
 
 // NotionRefundProperties represents the properties of the refund page
 type NotionRefundProperties struct {
-	Status      NotionStatusProperty    `json:"Status"`
-	WorkEmail   NotionEmailProperty     `json:"Work Email"`
-	Amount      NotionNumberProperty    `json:"Amount"`
-	Currency    NotionSelectProperty    `json:"Currency"`
-	Reason      NotionSelectProperty    `json:"Reason"`
-	Description NotionRichTextProperty  `json:"Description"`
-	Contractor  NotionRelationProperty  `json:"Contractor"`
+	Status      NotionStatusProperty   `json:"Status"`
+	WorkEmail   NotionEmailProperty    `json:"Work Email"`
+	Amount      NotionNumberProperty   `json:"Amount"`
+	Currency    NotionSelectProperty   `json:"Currency"`
+	Reason      NotionSelectProperty   `json:"Reason"`
+	Description NotionRichTextProperty `json:"Description"`
+	Contractor  NotionRelationProperty `json:"Contractor"`
 }
 
 // NotionStatusProperty represents a status property
