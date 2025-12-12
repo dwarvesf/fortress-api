@@ -245,21 +245,22 @@ type Github struct {
 }
 
 type NotionDatabase struct {
-	AuditCycle      string
-	AuditActionItem string
-	Earn            string
-	TechRadar       string
-	Audience        string
-	Event           string
-	Hiring          string
-	StaffingDemand  string
-	Project         string
-	Delivery        string
-	Digest          string
-	Updates         string
-	Memo            string
-	Issue           string
-	Contractor      string
+	AuditCycle        string
+	AuditActionItem   string
+	Earn              string
+	TechRadar         string
+	Audience          string
+	Event             string
+	Hiring            string
+	StaffingDemand    string
+	Project           string
+	Delivery          string
+	Digest            string
+	Updates           string
+	Memo              string
+	Issue             string
+	Contractor        string
+	DeploymentTracker string
 }
 
 type Discord struct {
@@ -490,7 +491,8 @@ func Generate(v ENV) *Config {
 				Updates:         v.GetString("NOTION_UPDATES_DB_ID"),
 				Memo:            v.GetString("NOTION_MEMO_DB_ID"),
 				Issue:           v.GetString("NOTION_ISSUE_DB_ID"),
-				Contractor:      v.GetString("NOTION_CONTRACTOR_DB_ID"),
+				Contractor:        v.GetString("NOTION_CONTRACTOR_DB_ID"),
+				DeploymentTracker: v.GetString("NOTION_DEPLOYMENT_TRACKER_DB_ID"),
 			},
 		},
 		Discord: Discord{

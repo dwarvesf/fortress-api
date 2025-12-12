@@ -125,22 +125,22 @@ func (s *LeaveService) UpdateLeaveStatus(ctx context.Context, pageID, status, ap
 	updateParams := nt.UpdatePageParams{
 		DatabasePageProperties: nt.DatabasePageProperties{
 			"Status": nt.DatabasePageProperty{
-				Select: &nt.SelectOptions{
+				Status: &nt.SelectOptions{
 					Name: status,
 				},
 			},
 		},
 	}
 
-	// If approving, also set Approved By and Approved at
-	if status == "Approved" && approverPageID != "" {
-		updateParams.DatabasePageProperties["Approved By"] = nt.DatabasePageProperty{
+	// If approving/rejecting, also set Approved/Rejected By and Date Approved
+	if (status == "Approved" || status == "Rejected") && approverPageID != "" {
+		updateParams.DatabasePageProperties["Approved/Rejected By"] = nt.DatabasePageProperty{
 			Relation: []nt.Relation{
 				{ID: approverPageID},
 			},
 		}
 		now := time.Now()
-		updateParams.DatabasePageProperties["Approved at"] = nt.DatabasePageProperty{
+		updateParams.DatabasePageProperties["Date Approved"] = nt.DatabasePageProperty{
 			Date: &nt.Date{
 				Start: nt.NewDateTime(now, false),
 			},
@@ -425,6 +425,226 @@ func (s *LeaveService) parseEmailFromOptionName(optionName string) string {
 		}
 	}
 	return ""
+}
+
+// extractRichText concatenates rich text parts into a single string
+// Returns empty string if rich text property is not found or empty
+func (s *LeaveService) extractRichText(props nt.DatabasePageProperties, propName string) string {
+	if prop, ok := props[propName]; ok && len(prop.RichText) > 0 {
+		var parts []string
+		for _, rt := range prop.RichText {
+			parts = append(parts, rt.PlainText)
+		}
+		result := strings.TrimSpace(strings.Join(parts, ""))
+		s.logger.Debug(fmt.Sprintf("extractRichText: property %s has value: %s", propName, result))
+		return result
+	}
+	s.logger.Debug(fmt.Sprintf("extractRichText: property %s not found or empty", propName))
+	return ""
+}
+
+// GetActiveDeploymentsForContractor queries Deployment Tracker for active deployments
+// Returns empty array if none found (graceful handling)
+// Returns error only on API failures
+func (s *LeaveService) GetActiveDeploymentsForContractor(
+	ctx context.Context,
+	contractorPageID string,
+) ([]nt.Page, error) {
+	if contractorPageID == "" {
+		s.logger.Debug("contractor page ID is empty, skipping deployment lookup")
+		return []nt.Page{}, nil
+	}
+
+	s.logger.Debug(fmt.Sprintf("querying active deployments: contractor_id=%s", contractorPageID))
+
+	filter := &nt.DatabaseQueryFilter{
+		And: []nt.DatabaseQueryFilter{
+			{
+				Property: "Contractor",
+				DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+					Relation: &nt.RelationDatabaseQueryFilter{
+						Contains: contractorPageID,
+					},
+				},
+			},
+			{
+				Property: "Deployment Status",
+				DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+					Status: &nt.StatusDatabaseQueryFilter{
+						Equals: "Active",
+					},
+				},
+			},
+		},
+	}
+
+	query := &nt.DatabaseQuery{
+		Filter: filter,
+	}
+
+	deploymentDBID := s.cfg.Notion.Databases.DeploymentTracker
+	resp, err := s.client.QueryDatabase(ctx, deploymentDBID, query)
+	if err != nil {
+		s.logger.Error(err, fmt.Sprintf("failed to query deployment tracker: contractor_id=%s", contractorPageID))
+		return nil, err
+	}
+
+	s.logger.Debug(fmt.Sprintf("found %d active deployments for contractor: contractor_id=%s", len(resp.Results), contractorPageID))
+
+	return resp.Results, nil
+}
+
+// ExtractStakeholdersFromDeployment extracts AM/DL contractor page IDs from deployment
+// Fetches Project page directly for AM/DL relations (rollups are unreliable due to Notion sync issues)
+// Returns unique stakeholder page IDs
+func (s *LeaveService) ExtractStakeholdersFromDeployment(
+	ctx context.Context,
+	deploymentPage nt.Page,
+) []string {
+	props, ok := deploymentPage.Properties.(nt.DatabasePageProperties)
+	if !ok {
+		s.logger.Error(errors.New("invalid properties type"), "failed to cast deployment properties")
+		return []string{}
+	}
+
+	stakeholderMap := make(map[string]bool) // Use map for deduplication
+
+	// Fetch Project page directly to get AM/DL relations (more reliable than rollup)
+	projectID := s.extractFirstRelationID(props, "Project")
+	if projectID == "" {
+		s.logger.Debug("no Project relation found on deployment")
+		return []string{}
+	}
+
+	s.logger.Debug(fmt.Sprintf("fetching Project page for AM/DL relations: project_id=%s", projectID))
+	projectPage, err := s.client.FindPageByID(ctx, projectID)
+	if err != nil {
+		s.logger.Error(err, fmt.Sprintf("failed to fetch Project page: project_id=%s", projectID))
+		return []string{}
+	}
+
+	projectProps, ok := projectPage.Properties.(nt.DatabasePageProperties)
+	if !ok {
+		s.logger.Error(errors.New("invalid properties type"), "failed to cast project properties")
+		return []string{}
+	}
+
+	// Extract Account Managers from Project page
+	if amProp, ok := projectProps["Account Managers"]; ok && len(amProp.Relation) > 0 {
+		s.logger.Debug(fmt.Sprintf("found %d AMs from Project page", len(amProp.Relation)))
+		for _, rel := range amProp.Relation {
+			s.logger.Debug(fmt.Sprintf("adding AM from Project: %s", rel.ID))
+			stakeholderMap[rel.ID] = true
+		}
+	} else {
+		s.logger.Debug("no Account Managers found on Project page")
+	}
+
+	// Extract Delivery Leads from Project page
+	if dlProp, ok := projectProps["Delivery Leads"]; ok && len(dlProp.Relation) > 0 {
+		s.logger.Debug(fmt.Sprintf("found %d DLs from Project page", len(dlProp.Relation)))
+		for _, rel := range dlProp.Relation {
+			s.logger.Debug(fmt.Sprintf("adding DL from Project: %s", rel.ID))
+			stakeholderMap[rel.ID] = true
+		}
+	} else {
+		s.logger.Debug("no Delivery Leads found on Project page")
+	}
+
+	// Convert map to slice
+	stakeholders := make([]string, 0, len(stakeholderMap))
+	for id := range stakeholderMap {
+		stakeholders = append(stakeholders, id)
+	}
+
+	s.logger.Debug(fmt.Sprintf("extracted %d unique stakeholders from Project page", len(stakeholders)))
+
+	return stakeholders
+}
+
+// GetDiscordUsernameFromContractor fetches Discord username from contractor page
+// Returns empty string if Discord field not set (graceful handling)
+// Returns error only on API failures
+func (s *LeaveService) GetDiscordUsernameFromContractor(
+	ctx context.Context,
+	contractorPageID string,
+) (string, error) {
+	if contractorPageID == "" {
+		s.logger.Debug("contractor page ID is empty")
+		return "", nil
+	}
+
+	s.logger.Debug(fmt.Sprintf("fetching contractor Discord username: page_id=%s", contractorPageID))
+
+	page, err := s.client.FindPageByID(ctx, contractorPageID)
+	if err != nil {
+		s.logger.Error(err, fmt.Sprintf("failed to fetch contractor page: page_id=%s", contractorPageID))
+		return "", err
+	}
+
+	props, ok := page.Properties.(nt.DatabasePageProperties)
+	if !ok {
+		s.logger.Error(errors.New("invalid properties type"), "failed to cast contractor properties")
+		return "", nil
+	}
+
+	username := s.extractRichText(props, "Discord")
+	if username == "" {
+		s.logger.Debug(fmt.Sprintf("Discord field is empty for contractor: page_id=%s", contractorPageID))
+	} else {
+		s.logger.Debug(fmt.Sprintf("found Discord username: %s (page_id=%s)", username, contractorPageID))
+	}
+
+	return username, nil
+}
+
+// LookupContractorByEmail finds contractor page ID by team email
+// Returns empty string if not found (graceful handling)
+// Returns error only on API failures
+func (s *LeaveService) LookupContractorByEmail(
+	ctx context.Context,
+	teamEmail string,
+) (string, error) {
+	if teamEmail == "" {
+		s.logger.Debug("team email is empty, skipping contractor lookup")
+		return "", nil
+	}
+
+	s.logger.Debug(fmt.Sprintf("looking up contractor by email: %s", teamEmail))
+
+	filter := &nt.DatabaseQueryFilter{
+		Property: "Team Email",
+		DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+			Email: &nt.TextPropertyFilter{
+				Equals: teamEmail,
+			},
+		},
+	}
+
+	query := &nt.DatabaseQuery{
+		Filter: filter,
+	}
+
+	contractorDBID := s.cfg.LeaveIntegration.Notion.ContractorDBID
+	resp, err := s.client.QueryDatabase(ctx, contractorDBID, query)
+	if err != nil {
+		s.logger.Error(err, fmt.Sprintf("failed to query contractors: email=%s", teamEmail))
+		return "", err
+	}
+
+	if len(resp.Results) == 0 {
+		s.logger.Info(fmt.Sprintf("contractor not found in Notion: email=%s", teamEmail))
+		return "", nil
+	}
+
+	if len(resp.Results) > 1 {
+		s.logger.Warn(fmt.Sprintf("multiple contractors found for email (taking first): email=%s count=%d", teamEmail, len(resp.Results)))
+	}
+
+	contractorPageID := resp.Results[0].ID
+	s.logger.Debug(fmt.Sprintf("found contractor: email=%s page_id=%s", teamEmail, contractorPageID))
+
+	return contractorPageID, nil
 }
 
 

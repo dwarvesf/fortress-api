@@ -39,6 +39,14 @@ func (m *mockDiscordAccountStore) OneByDiscordID(db *gorm.DB, discordID string) 
 	return args.Get(0).(*model.DiscordAccount), args.Error(1)
 }
 
+func (m *mockDiscordAccountStore) OneByUsername(db *gorm.DB, username string) (*model.DiscordAccount, error) {
+	args := m.Called(db, username)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*model.DiscordAccount), args.Error(1)
+}
+
 func (m *mockDiscordAccountStore) Upsert(db *gorm.DB, da *model.DiscordAccount) (*model.DiscordAccount, error) {
 	args := m.Called(db, da)
 	return args.Get(0).(*model.DiscordAccount), args.Error(1)
