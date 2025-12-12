@@ -1,6 +1,8 @@
 package discordaccount
 
 import (
+	"errors"
+
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
@@ -49,6 +51,21 @@ func (r *store) One(db *gorm.DB, id string) (*model.DiscordAccount, error) {
 func (r *store) OneByDiscordID(db *gorm.DB, discordID string) (*model.DiscordAccount, error) {
 	res := model.DiscordAccount{}
 	return &res, db.Where("discord_id = ?", discordID).First(&res).Error
+}
+
+// OneByUsername gets a discord account by discord username
+// Returns nil, nil if not found (graceful handling)
+// Returns nil, error if database error occurs
+func (r *store) OneByUsername(db *gorm.DB, username string) (*model.DiscordAccount, error) {
+	var res model.DiscordAccount
+	err := db.Where("discord_username = ?", username).First(&res).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil // Not found is not an error
+		}
+		return nil, err
+	}
+	return &res, nil
 }
 
 func (r *store) UpdateSelectedFieldsByID(db *gorm.DB, id string, updateModel model.DiscordAccount, updatedFields ...string) (a *model.DiscordAccount, err error) {

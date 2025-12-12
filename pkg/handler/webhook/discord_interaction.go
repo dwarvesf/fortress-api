@@ -586,62 +586,6 @@ func (h *handler) handleNotionLeaveRejectButton(c *gin.Context, l logger.Logger,
 	}()
 }
 
-// updateNotionLeaveMessageStatus updates the original message to show the new status for Notion leave requests
-func (h *handler) updateNotionLeaveMessageStatus(c *gin.Context, l logger.Logger, interaction *discordgo.Interaction, pageID string, status string, actionBy string) {
-	// Get original embed
-	var originalEmbed *discordgo.MessageEmbed
-	if interaction.Message != nil && len(interaction.Message.Embeds) > 0 {
-		originalEmbed = interaction.Message.Embeds[0]
-	}
-
-	// Determine color and title based on status
-	var color int
-	var title string
-	var emoji string
-
-	if status == "Approved" {
-		color = 3066993 // Green
-		title = "✅ Leave Request Approved"
-		emoji = "✅"
-	} else {
-		color = 15158332 // Red
-		title = "❌ Leave Request Rejected"
-		emoji = "❌"
-	}
-
-	// Build updated embed
-	var fields []*discordgo.MessageEmbedField
-	if originalEmbed != nil {
-		fields = originalEmbed.Fields
-	}
-
-	// Add status field
-	fields = append(fields, &discordgo.MessageEmbedField{
-		Name:   fmt.Sprintf("%s Status", emoji),
-		Value:  fmt.Sprintf("%s by %s", status, actionBy),
-		Inline: false,
-	})
-
-	updatedEmbed := &discordgo.MessageEmbed{
-		Title:       title,
-		Description: "",
-		Color:       color,
-		Fields:      fields,
-		Timestamp:   time.Now().Format("2006-01-02T15:04:05.000-07:00"),
-	}
-
-	// Respond with updated message (removes buttons)
-	response := &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseUpdateMessage,
-		Data: &discordgo.InteractionResponseData{
-			Embeds:     []*discordgo.MessageEmbed{updatedEmbed},
-			Components: []discordgo.MessageComponent{}, // Remove buttons
-		},
-	}
-
-	c.JSON(http.StatusOK, response)
-}
-
 // respondWithNotionLeaveProcessingEmbed responds immediately with a processing status embed
 func (h *handler) respondWithNotionLeaveProcessingEmbed(c *gin.Context, l logger.Logger, interaction *discordgo.Interaction, action string) {
 	l.Debugf("responding with processing embed for action: %s", action)
