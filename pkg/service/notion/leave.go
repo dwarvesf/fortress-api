@@ -83,7 +83,7 @@ func (s *LeaveService) GetLeaveRequest(ctx context.Context, pageID string) (*Lea
 	// Extract all properties
 	leave := &LeaveRequest{
 		PageID:    pageID,
-		Reason:    s.extractTitle(props, "Reason"),
+		Reason:    s.extractRichText(props, "Reason"),
 		LeaveType: s.extractSelect(props, "Leave Type"),
 		Shift:     s.extractSelect(props, "Shift"),
 		Status:    s.extractSelect(props, "Status"),

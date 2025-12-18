@@ -46,6 +46,7 @@ type NotionRefundProperties struct {
 	Reason      NotionSelectProperty   `json:"Reason"`
 	Description NotionRichTextProperty `json:"Description"`
 	Contractor  NotionRelationProperty `json:"Contractor"`
+	CreatedBy   NotionCreatedByProperty `json:"Created by"`
 }
 
 // NotionStatusProperty represents a status property
@@ -109,6 +110,19 @@ type NotionRelation struct {
 	ID string `json:"id"`
 }
 
+// NotionCreatedByProperty represents a created_by property
+type NotionCreatedByProperty struct {
+	ID        string           `json:"id"`
+	Type      string           `json:"type"`
+	CreatedBy *NotionUserObject `json:"created_by"`
+}
+
+// NotionUserObject represents a Notion user
+type NotionUserObject struct {
+	Object string `json:"object"`
+	ID     string `json:"id"`
+}
+
 // HandleNotionRefund handles refund webhook events from Notion
 func (h *handler) HandleNotionRefund(c *gin.Context) {
 	l := h.logger.Fields(logger.Fields{
@@ -147,27 +161,27 @@ func (h *handler) HandleNotionRefund(c *gin.Context) {
 	}
 
 	// Log parsed data
-	l.Debug(fmt.Sprintf("parsed refund: page_id=%s status=%s email=%v amount=%v currency=%v",
+	createdByUserID := getCreatedByUserID(payload.Data.Properties.CreatedBy)
+	l.Debug(fmt.Sprintf("parsed refund: page_id=%s status=%s created_by_user_id=%s amount=%v currency=%v",
 		payload.Data.ID,
 		getStatusName(payload.Data.Properties.Status),
-		getEmailValue(payload.Data.Properties.WorkEmail),
+		createdByUserID,
 		getNumberValue(payload.Data.Properties.Amount),
 		getSelectName(payload.Data.Properties.Currency),
 	))
 
-	// Check if Contractor relation is empty and we have a Work Email
+	// Check if Contractor relation is empty and we have a Created By user
 	if len(payload.Data.Properties.Contractor.Relation) == 0 {
-		email := getEmailValue(payload.Data.Properties.WorkEmail)
-		if email != "" {
-			l.Debug(fmt.Sprintf("contractor relation is empty, looking up by email: %s", email))
+		if createdByUserID != "" {
+			l.Debug(fmt.Sprintf("contractor relation is empty, looking up by created_by user_id: %s", createdByUserID))
 
-			// Look up contractor page ID by email
-			contractorPageID, err := h.lookupContractorByEmail(c.Request.Context(), l, email)
+			// Look up contractor page ID by user ID
+			contractorPageID, err := h.lookupContractorByUserID(c.Request.Context(), l, createdByUserID)
 			if err != nil {
-				l.Error(err, fmt.Sprintf("failed to lookup contractor by email: %s", email))
+				l.Error(err, fmt.Sprintf("failed to lookup contractor by user_id: %s", createdByUserID))
 				// Continue without updating - don't fail the webhook
 			} else if contractorPageID != "" {
-				l.Debug(fmt.Sprintf("found contractor page: email=%s page_id=%s", email, contractorPageID))
+				l.Debug(fmt.Sprintf("found contractor page: user_id=%s page_id=%s", createdByUserID, contractorPageID))
 
 				// Update the refund page with contractor relation
 				if err := h.updateRefundContractor(c.Request.Context(), l, payload.Data.ID, contractorPageID); err != nil {
@@ -177,7 +191,7 @@ func (h *handler) HandleNotionRefund(c *gin.Context) {
 				}
 			}
 		} else {
-			l.Debug("contractor relation is empty but no work email provided")
+			l.Debug("contractor relation is empty but no created_by user provided")
 		}
 	} else {
 		l.Debug(fmt.Sprintf("contractor relation already set: %v", payload.Data.Properties.Contractor.Relation))
@@ -187,24 +201,24 @@ func (h *handler) HandleNotionRefund(c *gin.Context) {
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "processed"))
 }
 
-// lookupContractorByEmail queries the contractor database to find a contractor by email
-func (h *handler) lookupContractorByEmail(ctx context.Context, l logger.Logger, email string) (string, error) {
+// lookupContractorByUserID queries the contractor database to find a contractor by Notion user ID
+func (h *handler) lookupContractorByUserID(ctx context.Context, l logger.Logger, userID string) (string, error) {
 	contractorDBID := h.config.Notion.Databases.Contractor
 	if contractorDBID == "" {
 		return "", fmt.Errorf("NOTION_CONTRACTOR_DB_ID not configured")
 	}
 
-	l.Debug(fmt.Sprintf("querying contractor database: db_id=%s email=%s", contractorDBID, email))
+	l.Debug(fmt.Sprintf("querying contractor database: db_id=%s user_id=%s", contractorDBID, userID))
 
 	// Create Notion client
 	client := nt.NewClient(h.config.Notion.Secret)
 
-	// Query contractor database for matching email
+	// Query contractor database for matching Person (user ID)
 	filter := &nt.DatabaseQueryFilter{
-		Property: "Team Email",
+		Property: "Person",
 		DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
-			Email: &nt.TextPropertyFilter{
-				Equals: email,
+			People: &nt.PeopleDatabaseQueryFilter{
+				Contains: userID,
 			},
 		},
 	}
@@ -218,12 +232,12 @@ func (h *handler) lookupContractorByEmail(ctx context.Context, l logger.Logger, 
 	}
 
 	if len(resp.Results) == 0 {
-		l.Debug(fmt.Sprintf("no contractor found for email: %s", email))
+		l.Debug(fmt.Sprintf("no contractor found for user_id: %s", userID))
 		return "", nil
 	}
 
 	pageID := resp.Results[0].ID
-	l.Debug(fmt.Sprintf("found contractor: email=%s page_id=%s", email, pageID))
+	l.Debug(fmt.Sprintf("found contractor: user_id=%s page_id=%s", userID, pageID))
 	return pageID, nil
 }
 
@@ -267,13 +281,6 @@ func getStatusName(prop NotionStatusProperty) string {
 	return ""
 }
 
-func getEmailValue(prop NotionEmailProperty) string {
-	if prop.Email != nil {
-		return *prop.Email
-	}
-	return ""
-}
-
 func getNumberValue(prop NotionNumberProperty) *float64 {
 	return prop.Number
 }
@@ -281,6 +288,13 @@ func getNumberValue(prop NotionNumberProperty) *float64 {
 func getSelectName(prop NotionSelectProperty) string {
 	if prop.Select != nil {
 		return prop.Select.Name
+	}
+	return ""
+}
+
+func getCreatedByUserID(prop NotionCreatedByProperty) string {
+	if prop.CreatedBy != nil {
+		return prop.CreatedBy.ID
 	}
 	return ""
 }

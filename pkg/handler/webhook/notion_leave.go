@@ -777,6 +777,7 @@ type NotionOnLeaveAutomationProperties struct {
 	Status     NotionAutomationStatusProperty   `json:"Status"`
 	TeamEmail  NotionAutomationEmailProperty    `json:"Team Email"`
 	Contractor NotionAutomationRelationProperty `json:"Contractor"`
+	CreatedBy  NotionAutomationCreatedByProperty `json:"Created by"`
 }
 
 // NotionAutomationStatusProperty represents a status property in automation payload
@@ -811,6 +812,19 @@ type NotionAutomationSelectOption struct {
 	ID    string `json:"id"`
 	Name  string `json:"name"`
 	Color string `json:"color"`
+}
+
+// NotionAutomationCreatedByProperty represents a created_by property in automation payload
+type NotionAutomationCreatedByProperty struct {
+	ID        string                    `json:"id"`
+	Type      string                    `json:"type"`
+	CreatedBy *NotionAutomationUserObject `json:"created_by"`
+}
+
+// NotionAutomationUserObject represents a Notion user in automation payload
+type NotionAutomationUserObject struct {
+	Object string `json:"object"`
+	ID     string `json:"id"`
 }
 
 // HandleNotionOnLeave handles on-leave webhook events from Notion automation
@@ -854,9 +868,9 @@ func (h *handler) HandleNotionOnLeave(c *gin.Context) {
 	// Get basic info from payload
 	pageID := payload.Data.ID
 	status := getAutomationStatusName(payload.Data.Properties.Status)
-	email := getAutomationEmailValue(payload.Data.Properties.TeamEmail)
+	createdByUserID := getAutomationCreatedByUserID(payload.Data.Properties.CreatedBy)
 
-	l.Debug(fmt.Sprintf("parsed on-leave: page_id=%s status=%s email=%s", pageID, status, email))
+	l.Debug(fmt.Sprintf("parsed on-leave: page_id=%s status=%s created_by_user_id=%s", pageID, status, createdByUserID))
 
 	// Only process Pending status (new leave requests)
 	if status != "Pending" {
@@ -885,20 +899,29 @@ func (h *handler) HandleNotionOnLeave(c *gin.Context) {
 	l.Debug(fmt.Sprintf("fetched leave request: page_id=%s email=%s start_date=%v end_date=%v",
 		pageID, leave.Email, leave.StartDate, leave.EndDate))
 
-	// Update contractor relation if empty
-	if len(payload.Data.Properties.Contractor.Relation) == 0 && email != "" {
-		l.Debug(fmt.Sprintf("contractor relation is empty, looking up contractor by email: %s", email))
+	// Update contractor relation if empty and fetch email
+	if len(payload.Data.Properties.Contractor.Relation) == 0 && createdByUserID != "" {
+		l.Debug(fmt.Sprintf("contractor relation is empty, looking up contractor by user_id: %s", createdByUserID))
 
-		contractorPageID, err := h.lookupContractorByEmailForOnLeave(ctx, l, email)
+		contractorPageID, err := h.lookupContractorByUserIDForOnLeave(ctx, l, createdByUserID)
 		if err != nil {
-			l.Error(err, fmt.Sprintf("failed to lookup contractor by email: %s", email))
+			l.Error(err, fmt.Sprintf("failed to lookup contractor by user_id: %s", createdByUserID))
 		} else if contractorPageID != "" {
-			l.Debug(fmt.Sprintf("found contractor page: email=%s page_id=%s", email, contractorPageID))
+			l.Debug(fmt.Sprintf("found contractor page: user_id=%s page_id=%s", createdByUserID, contractorPageID))
 
 			if err := h.updateOnLeaveContractor(ctx, l, pageID, contractorPageID); err != nil {
 				l.Error(err, fmt.Sprintf("failed to update contractor relation: page_id=%s", pageID))
 			} else {
 				l.Debug(fmt.Sprintf("successfully updated contractor relation: onleave_page=%s contractor_page=%s", pageID, contractorPageID))
+
+				// Fetch email from contractor page since Team Email rollup needs contractor relation
+				email, err := h.getContractorEmail(ctx, l, contractorPageID)
+				if err != nil {
+					l.Error(err, fmt.Sprintf("failed to fetch contractor email: contractor_page_id=%s", contractorPageID))
+				} else if email != "" {
+					l.Debug(fmt.Sprintf("fetched contractor email: contractor_page_id=%s email=%s", contractorPageID, email))
+					leave.Email = email
+				}
 			}
 		}
 	} else {
@@ -1081,24 +1104,24 @@ func (h *handler) HandleNotionOnLeave(c *gin.Context) {
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "validated"))
 }
 
-// lookupContractorByEmailForOnLeave queries the contractor database to find a contractor by email
-func (h *handler) lookupContractorByEmailForOnLeave(ctx context.Context, l logger.Logger, email string) (string, error) {
+// lookupContractorByUserIDForOnLeave queries the contractor database to find a contractor by Notion user ID
+func (h *handler) lookupContractorByUserIDForOnLeave(ctx context.Context, l logger.Logger, userID string) (string, error) {
 	contractorDBID := h.config.Notion.Databases.Contractor
 	if contractorDBID == "" {
 		return "", fmt.Errorf("NOTION_CONTRACTOR_DB_ID not configured")
 	}
 
-	l.Debug(fmt.Sprintf("querying contractor database: db_id=%s email=%s", contractorDBID, email))
+	l.Debug(fmt.Sprintf("querying contractor database: db_id=%s user_id=%s", contractorDBID, userID))
 
 	// Create Notion client
 	client := nt.NewClient(h.config.Notion.Secret)
 
-	// Query contractor database for matching email
+	// Query contractor database for matching Person (user ID)
 	filter := &nt.DatabaseQueryFilter{
-		Property: "Team Email",
+		Property: "Person",
 		DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
-			Email: &nt.TextPropertyFilter{
-				Equals: email,
+			People: &nt.PeopleDatabaseQueryFilter{
+				Contains: userID,
 			},
 		},
 	}
@@ -1112,12 +1135,12 @@ func (h *handler) lookupContractorByEmailForOnLeave(ctx context.Context, l logge
 	}
 
 	if len(resp.Results) == 0 {
-		l.Debug(fmt.Sprintf("no contractor found for email: %s", email))
+		l.Debug(fmt.Sprintf("no contractor found for user_id: %s", userID))
 		return "", nil
 	}
 
 	pageID := resp.Results[0].ID
-	l.Debug(fmt.Sprintf("found contractor: email=%s page_id=%s", email, pageID))
+	l.Debug(fmt.Sprintf("found contractor: user_id=%s page_id=%s", userID, pageID))
 	return pageID, nil
 }
 
@@ -1150,6 +1173,36 @@ func (h *handler) updateOnLeaveContractor(ctx context.Context, l logger.Logger, 
 	l.Debug(fmt.Sprintf("notion API response - page ID: %s, URL: %s", updatedPage.ID, updatedPage.URL))
 	l.Debug(fmt.Sprintf("successfully updated contractor relation on on-leave page: %s", onLeavePageID))
 	return nil
+}
+
+// getContractorEmail fetches the Team Email from a contractor page
+func (h *handler) getContractorEmail(ctx context.Context, l logger.Logger, contractorPageID string) (string, error) {
+	l.Debug(fmt.Sprintf("fetching contractor email: contractor_page_id=%s", contractorPageID))
+
+	// Create Notion client
+	client := nt.NewClient(h.config.Notion.Secret)
+
+	// Fetch contractor page
+	page, err := client.FindPageByID(ctx, contractorPageID)
+	if err != nil {
+		l.Error(err, fmt.Sprintf("failed to fetch contractor page: contractor_page_id=%s", contractorPageID))
+		return "", fmt.Errorf("failed to fetch contractor page: %w", err)
+	}
+
+	// Extract Team Email property
+	props, ok := page.Properties.(nt.DatabasePageProperties)
+	if !ok {
+		return "", errors.New("failed to cast contractor page properties")
+	}
+
+	if emailProp, ok := props["Team Email"]; ok && emailProp.Email != nil {
+		email := *emailProp.Email
+		l.Debug(fmt.Sprintf("extracted contractor email: contractor_page_id=%s email=%s", contractorPageID, email))
+		return email, nil
+	}
+
+	l.Debug(fmt.Sprintf("no email found for contractor: contractor_page_id=%s", contractorPageID))
+	return "", nil
 }
 
 // updateLeaveType updates the Leave Type property on a leave request page
@@ -1192,9 +1245,9 @@ func getAutomationStatusName(prop NotionAutomationStatusProperty) string {
 	return ""
 }
 
-func getAutomationEmailValue(prop NotionAutomationEmailProperty) string {
-	if prop.Email != nil {
-		return *prop.Email
+func getAutomationCreatedByUserID(prop NotionAutomationCreatedByProperty) string {
+	if prop.CreatedBy != nil {
+		return prop.CreatedBy.ID
 	}
 	return ""
 }
