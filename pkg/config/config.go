@@ -169,6 +169,7 @@ type Google struct {
 	TeamGoogleRefreshToken       string
 	TeamEmailID                  string
 	GCSLandingZoneCredentials    string
+	DwarvesCalendarID            string
 }
 
 type Youtube struct {
@@ -454,6 +455,7 @@ func Generate(v ENV) *Config {
 			TeamEmailID:                  v.GetString("TEAM_EMAIL_ID"),
 			TeamGoogleRefreshToken:       v.GetString("TEAM_GOOGLE_REFRESH_TOKEN"),
 			GCSLandingZoneCredentials:    v.GetString("GCS_LD_ZONE_CREDENTIALS"),
+			DwarvesCalendarID:            v.GetString("DWARVES_CALENDAR_ID"),
 		},
 		Youtube: Youtube{
 			ClientID:     v.GetString("YOUTUBE_API_CLIENT_ID"),

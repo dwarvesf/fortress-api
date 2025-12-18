@@ -94,8 +94,8 @@ func (s *LeaveService) GetLeaveRequest(ctx context.Context, pageID string) (*Lea
 	leave.EndDate = s.extractDate(props, "End Date")
 	leave.ApprovedAt = s.extractDate(props, "Approved at")
 
-	// Extract email from Team Email property (email type)
-	leave.Email = s.extractEmail(props, "Team Email")
+	// Extract email from Team Email property (rollup type)
+	leave.Email = s.extractEmailFromRollup(props, "Team Email")
 	s.logger.Debug(fmt.Sprintf("extracted email from Team Email: %s", leave.Email))
 
 	// Extract relation IDs
@@ -397,6 +397,36 @@ func (s *LeaveService) extractEmail(props nt.DatabasePageProperties, propName st
 	return ""
 }
 
+// extractEmailFromRollup extracts email from a rollup property that contains an array of email values
+func (s *LeaveService) extractEmailFromRollup(props nt.DatabasePageProperties, propName string) string {
+	prop, ok := props[propName]
+	if !ok {
+		s.logger.Debug(fmt.Sprintf("extractEmailFromRollup: property %s not found", propName))
+		return ""
+	}
+
+	if prop.Rollup == nil {
+		s.logger.Debug(fmt.Sprintf("extractEmailFromRollup: property %s is not a rollup", propName))
+		return ""
+	}
+
+	if len(prop.Rollup.Array) == 0 {
+		s.logger.Debug(fmt.Sprintf("extractEmailFromRollup: property %s rollup array is empty", propName))
+		return ""
+	}
+
+	// Get the first item from the rollup array
+	firstItem := prop.Rollup.Array[0]
+	if firstItem.Email != nil {
+		email := *firstItem.Email
+		s.logger.Debug(fmt.Sprintf("extractEmailFromRollup: property %s has email value: %s", propName, email))
+		return email
+	}
+
+	s.logger.Debug(fmt.Sprintf("extractEmailFromRollup: property %s first array item has no email", propName))
+	return ""
+}
+
 // extractEmailsFromMultiSelect extracts emails from multi_select option names (format: "Name (email@domain)")
 func (s *LeaveService) extractEmailsFromMultiSelect(props nt.DatabasePageProperties, propName string) []string {
 	var emails []string
@@ -509,46 +539,54 @@ func (s *LeaveService) ExtractStakeholdersFromDeployment(
 
 	stakeholderMap := make(map[string]bool) // Use map for deduplication
 
-	// Fetch Project page directly to get AM/DL relations (more reliable than rollup)
-	projectID := s.extractFirstRelationID(props, "Project")
-	if projectID == "" {
-		s.logger.Debug("no Project relation found on deployment")
-		return []string{}
-	}
-
-	s.logger.Debug(fmt.Sprintf("fetching Project page for AM/DL relations: project_id=%s", projectID))
-	projectPage, err := s.client.FindPageByID(ctx, projectID)
-	if err != nil {
-		s.logger.Error(err, fmt.Sprintf("failed to fetch Project page: project_id=%s", projectID))
-		return []string{}
-	}
-
-	projectProps, ok := projectPage.Properties.(nt.DatabasePageProperties)
-	if !ok {
-		s.logger.Error(errors.New("invalid properties type"), "failed to cast project properties")
-		return []string{}
-	}
-
-	// Extract Account Managers from Project page
-	if amProp, ok := projectProps["Account Managers"]; ok && len(amProp.Relation) > 0 {
-		s.logger.Debug(fmt.Sprintf("found %d AMs from Project page", len(amProp.Relation)))
-		for _, rel := range amProp.Relation {
-			s.logger.Debug(fmt.Sprintf("adding AM from Project: %s", rel.ID))
+	// Replicate "Final AM" formula logic: if(empty(Override AM), Account Managers rollup, Override AM)
+	// 1. Check Override AM (relation) first
+	if overrideAM, ok := props["Override AM"]; ok && len(overrideAM.Relation) > 0 {
+		s.logger.Debug(fmt.Sprintf("found Override AM with %d items", len(overrideAM.Relation)))
+		for _, rel := range overrideAM.Relation {
+			s.logger.Debug(fmt.Sprintf("adding AM from Override AM: %s", rel.ID))
 			stakeholderMap[rel.ID] = true
 		}
 	} else {
-		s.logger.Debug("no Account Managers found on Project page")
+		// 2. Fallback to Account Managers rollup
+		if amRollup, ok := props["Account Managers"]; ok && amRollup.Rollup != nil && amRollup.Rollup.Array != nil {
+			s.logger.Debug(fmt.Sprintf("found Account Managers rollup with %d items", len(amRollup.Rollup.Array)))
+			for _, item := range amRollup.Rollup.Array {
+				if len(item.Relation) > 0 {
+					for _, rel := range item.Relation {
+						s.logger.Debug(fmt.Sprintf("adding AM from Account Managers rollup: %s", rel.ID))
+						stakeholderMap[rel.ID] = true
+					}
+				}
+			}
+		} else {
+			s.logger.Debug("no Override AM or Account Managers rollup found")
+		}
 	}
 
-	// Extract Delivery Leads from Project page
-	if dlProp, ok := projectProps["Delivery Leads"]; ok && len(dlProp.Relation) > 0 {
-		s.logger.Debug(fmt.Sprintf("found %d DLs from Project page", len(dlProp.Relation)))
-		for _, rel := range dlProp.Relation {
-			s.logger.Debug(fmt.Sprintf("adding DL from Project: %s", rel.ID))
+	// Replicate "Final Delivery Lead" formula logic: if(empty(Override DL), Delivery Leads rollup, Override DL)
+	// 1. Check Override DL (relation) first
+	if overrideDL, ok := props["Override DL"]; ok && len(overrideDL.Relation) > 0 {
+		s.logger.Debug(fmt.Sprintf("found Override DL with %d items", len(overrideDL.Relation)))
+		for _, rel := range overrideDL.Relation {
+			s.logger.Debug(fmt.Sprintf("adding DL from Override DL: %s", rel.ID))
 			stakeholderMap[rel.ID] = true
 		}
 	} else {
-		s.logger.Debug("no Delivery Leads found on Project page")
+		// 2. Fallback to Delivery Leads rollup
+		if dlRollup, ok := props["Delivery Leads"]; ok && dlRollup.Rollup != nil && dlRollup.Rollup.Array != nil {
+			s.logger.Debug(fmt.Sprintf("found Delivery Leads rollup with %d items", len(dlRollup.Rollup.Array)))
+			for _, item := range dlRollup.Rollup.Array {
+				if len(item.Relation) > 0 {
+					for _, rel := range item.Relation {
+						s.logger.Debug(fmt.Sprintf("adding DL from Delivery Leads rollup: %s", rel.ID))
+						stakeholderMap[rel.ID] = true
+					}
+				}
+			}
+		} else {
+			s.logger.Debug("no Override DL or Delivery Leads rollup found")
+		}
 	}
 
 	// Convert map to slice
@@ -557,7 +595,7 @@ func (s *LeaveService) ExtractStakeholdersFromDeployment(
 		stakeholders = append(stakeholders, id)
 	}
 
-	s.logger.Debug(fmt.Sprintf("extracted %d unique stakeholders from Project page", len(stakeholders)))
+	s.logger.Debug(fmt.Sprintf("extracted %d unique stakeholders from Deployment page", len(stakeholders)))
 
 	return stakeholders
 }
