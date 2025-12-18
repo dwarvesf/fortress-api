@@ -19,6 +19,7 @@ import (
 
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
+	googleSvc "github.com/dwarvesf/fortress-api/pkg/service/google"
 	"github.com/dwarvesf/fortress-api/pkg/service/notion"
 	"github.com/dwarvesf/fortress-api/pkg/view"
 )
@@ -190,24 +191,35 @@ func (h *handler) HandleNotionLeave(c *gin.Context) {
 
 // handleNotionLeaveCreated validates a new leave request and sends Discord notification
 func (h *handler) handleNotionLeaveCreated(c *gin.Context, l logger.Logger, leaveService *notion.LeaveService, leave *notion.LeaveRequest) {
-	l.Debug(fmt.Sprintf("validating leave request: page_id=%s email=%s start_date=%v end_date=%v",
-		leave.PageID, leave.Email, leave.StartDate, leave.EndDate))
+	l.Debug(fmt.Sprintf("validating leave request: page_id=%s email=%s employee_id=%s start_date=%v end_date=%v",
+		leave.PageID, leave.Email, leave.EmployeeID, leave.StartDate, leave.EndDate))
 
-	// Validate employee exists
-	employee, err := h.store.Employee.OneByEmail(h.repo.DB(), leave.Email)
-	if err != nil {
-		l.Error(err, fmt.Sprintf("employee not found: email=%s", leave.Email))
+	// Validate employee exists - use email from Team Email rollup
+	if leave.Email == "" {
+		l.Error(errors.New("missing employee email"), "Team Email is empty")
+		c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "validation_failed:missing_email"))
+		return
+	}
+
+	l.Debug(fmt.Sprintf("looking up employee by email: %s", leave.Email))
+	employees, err := h.store.Employee.GetByEmails(h.repo.DB().Preload("DiscordAccount"), []string{leave.Email})
+	if err != nil || len(employees) == 0 {
+		l.Error(err, fmt.Sprintf("employee not found: email=%s notion_id=%s", leave.Email, leave.EmployeeID))
 		h.sendNotionLeaveDiscordNotification(c.Request.Context(),
 			"❌ Leave Request Validation Failed",
 			"Employee not found in database",
 			15158332, // Red color
 			[]model.DiscordMessageField{
 				{Name: "Email", Value: leave.Email, Inline: nil},
+				{Name: "Notion ID", Value: leave.EmployeeID, Inline: nil},
 			},
 		)
 		c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "validation_failed:employee_not_found"))
 		return
 	}
+	employee := employees[0]
+
+	l.Debug(fmt.Sprintf("found employee: id=%s full_name=%s team_email=%s", employee.ID, employee.FullName, employee.TeamEmail))
 
 	// Validate dates
 	if leave.StartDate == nil {
@@ -355,24 +367,43 @@ func (h *handler) handleNotionLeaveCreated(c *gin.Context, l logger.Logger, leav
 
 // handleNotionLeaveApproved handles approval of a leave request
 func (h *handler) handleNotionLeaveApproved(c *gin.Context, l logger.Logger, leaveService *notion.LeaveService, leave *notion.LeaveRequest) {
-	l.Debug(fmt.Sprintf("approving leave request: page_id=%s email=%s",
-		leave.PageID, leave.Email))
+	l.Debug(fmt.Sprintf("approving leave request: page_id=%s email=%s employee_id=%s",
+		leave.PageID, leave.Email, leave.EmployeeID))
 
-	// Lookup employee by email
-	employee, err := h.store.Employee.OneByEmail(h.repo.DB(), leave.Email)
-	if err != nil {
-		l.Error(err, fmt.Sprintf("employee not found: email=%s", leave.Email))
+	// Lookup employee by email from Team Email rollup
+	if leave.Email == "" {
+		l.Error(errors.New("missing employee email"), "Team Email is empty")
+		h.sendNotionLeaveDiscordNotification(c.Request.Context(),
+			"❌ Leave Approval Failed",
+			"Employee email not found",
+			15158332, // Red color
+			[]model.DiscordMessageField{
+				{Name: "Notion ID", Value: leave.EmployeeID, Inline: nil},
+			},
+		)
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errors.New("missing_email"), nil, ""))
+		return
+	}
+
+	l.Debug(fmt.Sprintf("looking up employee by email: %s", leave.Email))
+	employees, err := h.store.Employee.GetByEmails(h.repo.DB().Preload("DiscordAccount"), []string{leave.Email})
+	if err != nil || len(employees) == 0 {
+		l.Error(err, fmt.Sprintf("employee not found: email=%s notion_id=%s", leave.Email, leave.EmployeeID))
 		h.sendNotionLeaveDiscordNotification(c.Request.Context(),
 			"❌ Leave Approval Failed",
 			"Employee not found in database",
 			15158332, // Red color
 			[]model.DiscordMessageField{
 				{Name: "Email", Value: leave.Email, Inline: nil},
+				{Name: "Notion ID", Value: leave.EmployeeID, Inline: nil},
 			},
 		)
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errors.New("employee_not_found"), nil, ""))
 		return
 	}
+	employee := employees[0]
+
+	l.Debug(fmt.Sprintf("found employee: id=%s full_name=%s team_email=%s", employee.ID, employee.FullName, employee.TeamEmail))
 
 	// Lookup approver
 	var approverID model.UUID
@@ -442,6 +473,13 @@ func (h *handler) handleNotionLeaveApproved(c *gin.Context, l logger.Logger, lea
 		)
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, errors.New("failed_to_create_record"), nil, ""))
 		return
+	}
+
+	// Create Google Calendar event
+	l.Debug("creating Google Calendar event for leave request")
+	if err := h.createLeaveCalendarEvent(c.Request.Context(), l, employee, leave); err != nil {
+		l.Error(err, "failed to create calendar event (non-fatal, continuing)")
+		// Non-fatal - continue even if calendar creation fails
 	}
 
 	// Send Discord notification
@@ -751,7 +789,7 @@ func (h *handler) verifyNotionWebhookSignature(body []byte, signature, token str
 
 // NotionOnLeaveAutomationPayload represents the webhook payload from Notion automation for on-leave auto-fill
 type NotionOnLeaveAutomationPayload struct {
-	Source NotionAutomationSource     `json:"source"`
+	Source NotionAutomationSource      `json:"source"`
 	Data   NotionOnLeaveAutomationData `json:"data"`
 }
 
@@ -766,24 +804,24 @@ type NotionAutomationSource struct {
 
 // NotionOnLeaveAutomationData represents the page data in the automation webhook
 type NotionOnLeaveAutomationData struct {
-	Object     string                          `json:"object"`
-	ID         string                          `json:"id"`
+	Object     string                            `json:"object"`
+	ID         string                            `json:"id"`
 	Properties NotionOnLeaveAutomationProperties `json:"properties"`
-	URL        string                          `json:"url"`
+	URL        string                            `json:"url"`
 }
 
 // NotionOnLeaveAutomationProperties represents the properties of the on-leave page for automation
 type NotionOnLeaveAutomationProperties struct {
-	Status     NotionAutomationStatusProperty   `json:"Status"`
-	TeamEmail  NotionAutomationEmailProperty    `json:"Team Email"`
-	Contractor NotionAutomationRelationProperty `json:"Contractor"`
+	Status     NotionAutomationStatusProperty    `json:"Status"`
+	TeamEmail  NotionAutomationEmailProperty     `json:"Team Email"`
+	Contractor NotionAutomationRelationProperty  `json:"Contractor"`
 	CreatedBy  NotionAutomationCreatedByProperty `json:"Created by"`
 }
 
 // NotionAutomationStatusProperty represents a status property in automation payload
 type NotionAutomationStatusProperty struct {
-	ID     string                      `json:"id"`
-	Type   string                      `json:"type"`
+	ID     string                        `json:"id"`
+	Type   string                        `json:"type"`
 	Status *NotionAutomationSelectOption `json:"status"`
 }
 
@@ -796,10 +834,10 @@ type NotionAutomationEmailProperty struct {
 
 // NotionAutomationRelationProperty represents a relation property in automation payload
 type NotionAutomationRelationProperty struct {
-	ID       string                    `json:"id"`
-	Type     string                    `json:"type"`
+	ID       string                     `json:"id"`
+	Type     string                     `json:"type"`
 	Relation []NotionAutomationRelation `json:"relation"`
-	HasMore  bool                      `json:"has_more"`
+	HasMore  bool                       `json:"has_more"`
 }
 
 // NotionAutomationRelation represents a relation item in automation payload
@@ -816,8 +854,8 @@ type NotionAutomationSelectOption struct {
 
 // NotionAutomationCreatedByProperty represents a created_by property in automation payload
 type NotionAutomationCreatedByProperty struct {
-	ID        string                    `json:"id"`
-	Type      string                    `json:"type"`
+	ID        string                      `json:"id"`
+	Type      string                      `json:"type"`
 	CreatedBy *NotionAutomationUserObject `json:"created_by"`
 }
 
@@ -941,21 +979,40 @@ func (h *handler) HandleNotionOnLeave(c *gin.Context) {
 		l.Debug(fmt.Sprintf("leave type already set: %s", leave.LeaveType))
 	}
 
-	// Validate employee exists
-	employee, err := h.store.Employee.OneByEmail(h.repo.DB(), leave.Email)
-	if err != nil {
-		l.Error(err, fmt.Sprintf("employee not found: email=%s", leave.Email))
+	// Validate employee exists - use email from Team Email rollup
+	if leave.Email == "" {
+		l.Error(errors.New("missing employee email"), "Team Email is empty")
+		h.sendNotionLeaveDiscordNotification(ctx,
+			"❌ Leave Request Validation Failed",
+			"Employee email not found",
+			15158332, // Red color
+			[]model.DiscordMessageField{
+				{Name: "Notion ID", Value: leave.EmployeeID, Inline: nil},
+			},
+		)
+		c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "validation_failed:missing_email"))
+		return
+	}
+
+	l.Debug(fmt.Sprintf("looking up employee by email: %s", leave.Email))
+	employees, err := h.store.Employee.GetByEmails(h.repo.DB().Preload("DiscordAccount"), []string{leave.Email})
+	if err != nil || len(employees) == 0 {
+		l.Error(err, fmt.Sprintf("employee not found: email=%s notion_id=%s", leave.Email, leave.EmployeeID))
 		h.sendNotionLeaveDiscordNotification(ctx,
 			"❌ Leave Request Validation Failed",
 			"Employee not found in database",
 			15158332, // Red color
 			[]model.DiscordMessageField{
 				{Name: "Email", Value: leave.Email, Inline: nil},
+				{Name: "Notion ID", Value: leave.EmployeeID, Inline: nil},
 			},
 		)
 		c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "validation_failed:employee_not_found"))
 		return
 	}
+	employee := employees[0]
+
+	l.Debug(fmt.Sprintf("found employee: id=%s full_name=%s team_email=%s", employee.ID, employee.FullName, employee.TeamEmail))
 
 	// Validate dates
 	if leave.StartDate == nil {
@@ -1233,6 +1290,71 @@ func (h *handler) updateLeaveType(ctx context.Context, l logger.Logger, leavePag
 
 	l.Debug(fmt.Sprintf("notion API response - page ID: %s, URL: %s", updatedPage.ID, updatedPage.URL))
 	l.Debug(fmt.Sprintf("successfully updated leave type on leave request page: %s", leavePageID))
+	return nil
+}
+
+// createLeaveCalendarEvent creates a Google Calendar event for the approved leave
+func (h *handler) createLeaveCalendarEvent(ctx context.Context, l logger.Logger, employee *model.Employee, leave *notion.LeaveRequest) error {
+	l.Debug(fmt.Sprintf("creating calendar event for: employee=%s start=%s end=%s", employee.FullName, leave.StartDate, leave.EndDate))
+
+	// Create Google Calendar service
+	calService := googleSvc.NewCalendarService(h.config, h.logger)
+
+	// Determine if this is an all-day event
+	isAllDay := leave.Shift == "Full day" || leave.Shift == ""
+
+	// Build event summary
+	summary := fmt.Sprintf("%s - %s", employee.FullName, leave.LeaveType)
+	if leave.Shift != "" && leave.Shift != "Full day" {
+		summary += fmt.Sprintf(" (%s)", leave.Shift)
+	}
+
+	// Build description
+	description := fmt.Sprintf("Employee: %s\nEmail: %s\nType: %s\nShift: %s\nReason: %s",
+		employee.FullName,
+		employee.TeamEmail,
+		leave.LeaveType,
+		leave.Shift,
+		leave.Reason,
+	)
+
+	// Set start and end times based on shift
+	startTime := *leave.StartDate
+	endTime := *leave.EndDate
+
+	switch leave.Shift {
+	case "Morning":
+		// Morning shift: 9AM to 12PM
+		startTime = time.Date(leave.StartDate.Year(), leave.StartDate.Month(), leave.StartDate.Day(), 9, 0, 0, 0, leave.StartDate.Location())
+		endTime = time.Date(leave.StartDate.Year(), leave.StartDate.Month(), leave.StartDate.Day(), 12, 0, 0, 0, leave.StartDate.Location())
+		isAllDay = false
+	case "Afternoon":
+		// Afternoon shift: 1PM to 6PM
+		startTime = time.Date(leave.StartDate.Year(), leave.StartDate.Month(), leave.StartDate.Day(), 13, 0, 0, 0, leave.StartDate.Location())
+		endTime = time.Date(leave.StartDate.Year(), leave.StartDate.Month(), leave.StartDate.Day(), 18, 0, 0, 0, leave.StartDate.Location())
+		isAllDay = false
+	}
+
+	// Create calendar event
+	event := googleSvc.CalendarEvent{
+		Summary:     summary,
+		Description: description,
+		StartDate:   startTime,
+		EndDate:     endTime,
+		AllDay:      isAllDay,
+		Email:       employee.TeamEmail,
+	}
+
+	l.Debug(fmt.Sprintf("calling Google Calendar API: summary=%s allDay=%v", summary, isAllDay))
+
+	createdEvent, err := calService.CreateLeaveEvent(ctx, event)
+	if err != nil {
+		l.Error(err, "failed to create Google Calendar event")
+		return fmt.Errorf("failed to create calendar event: %w", err)
+	}
+
+	l.Debug(fmt.Sprintf("successfully created Google Calendar event: id=%s link=%s", createdEvent.Id, createdEvent.HtmlLink))
+
 	return nil
 }
 
