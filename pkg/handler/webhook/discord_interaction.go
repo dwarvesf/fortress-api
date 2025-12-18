@@ -507,14 +507,29 @@ func (h *handler) handleNotionLeaveApproveButton(c *gin.Context, l logger.Logger
 			return
 		}
 
-		// Look up approver's Notion page ID by email
+		// Look up approver's Notion page ID
 		approverPageID := ""
-		if approverEmail != "" {
+		if interaction.Member != nil && interaction.Member.User != nil {
+			discordID := interaction.Member.User.ID
+			l.Debugf("looking up contractor page for Discord user: %s (discord_id=%s)", approverUsername, discordID)
+
+			// Try to find contractor by Discord account
 			var err error
-			approverPageID, err = leaveService.GetContractorPageIDByEmail(ctx, approverEmail)
+			approverPageID, err = h.getContractorPageIDByDiscordID(ctx, l, discordID)
 			if err != nil {
-				l.Warnf("could not find contractor page for approver email %s: %v", approverEmail, err)
-				// Continue without approver page ID - just set status
+				l.Warnf("could not find contractor page for discord_id %s: %v", discordID, err)
+				// Fallback to email lookup if Discord ID lookup fails
+				if approverEmail != "" {
+					l.Debugf("falling back to email lookup: %s", approverEmail)
+					approverPageID, err = leaveService.GetContractorPageIDByEmail(ctx, approverEmail)
+					if err != nil {
+						l.Warnf("could not find contractor page for approver email %s: %v", approverEmail, err)
+					} else if approverPageID != "" {
+						l.Debugf("found contractor page by email: %s page_id=%s", approverEmail, approverPageID)
+					}
+				}
+			} else if approverPageID != "" {
+				l.Debugf("found contractor page by Discord ID: discord_id=%s page_id=%s", discordID, approverPageID)
 			}
 		}
 
@@ -571,8 +586,24 @@ func (h *handler) handleNotionLeaveRejectButton(c *gin.Context, l logger.Logger,
 			return
 		}
 
-		// Update Notion status - no approver for rejection
-		err := leaveService.UpdateLeaveStatus(ctx, pageID, "Rejected", "")
+		// Look up rejector's Notion page ID
+		rejectorPageID := ""
+		if interaction.Member != nil && interaction.Member.User != nil {
+			discordID := interaction.Member.User.ID
+			l.Debugf("looking up contractor page for Discord user: %s (discord_id=%s)", rejectorUsername, discordID)
+
+			// Try to find contractor by Discord account
+			var err error
+			rejectorPageID, err = h.getContractorPageIDByDiscordID(ctx, l, discordID)
+			if err != nil {
+				l.Warnf("could not find contractor page for discord_id %s: %v", discordID, err)
+			} else if rejectorPageID != "" {
+				l.Debugf("found contractor page by Discord ID: discord_id=%s page_id=%s", discordID, rejectorPageID)
+			}
+		}
+
+		// Update Notion status with rejector page ID
+		err := leaveService.UpdateLeaveStatus(ctx, pageID, "Rejected", rejectorPageID)
 		if err != nil {
 			l.Errorf(err, "failed to update leave status in Notion")
 			h.updateNotionLeaveMessageWithError(l, channelID, messageID, originalEmbed, fmt.Sprintf("Failed to reject: %v", err))
@@ -584,6 +615,63 @@ func (h *handler) handleNotionLeaveRejectButton(c *gin.Context, l logger.Logger,
 		// Update the original message to show it's been rejected
 		h.updateNotionLeaveMessageWithStatus(l, channelID, messageID, originalEmbed, "Rejected", rejectorUsername)
 	}()
+}
+
+// getContractorPageIDByDiscordID looks up contractor page by Discord ID
+func (h *handler) getContractorPageIDByDiscordID(ctx context.Context, l logger.Logger, discordID string) (string, error) {
+	l.Debugf("looking up contractor by Discord ID: %s", discordID)
+
+	// 1. Look up discord_accounts table to get the account UUID
+	var discordAccount struct {
+		ID string
+	}
+	err := h.repo.DB().WithContext(ctx).
+		Table("discord_accounts").
+		Select("id").
+		Where("discord_id = ? AND deleted_at IS NULL", discordID).
+		First(&discordAccount).Error
+	if err != nil {
+		l.Debugf("discord account not found for discord_id: %s, error: %v", discordID, err)
+		return "", fmt.Errorf("discord account not found: %w", err)
+	}
+
+	l.Debugf("found discord account: discord_id=%s account_id=%s", discordID, discordAccount.ID)
+
+	// 2. Look up employees table by discord_account_id to get team_email
+	var employee struct {
+		TeamEmail string
+	}
+	err = h.repo.DB().WithContext(ctx).
+		Table("employees").
+		Select("team_email").
+		Where("discord_account_id = ? AND deleted_at IS NULL", discordAccount.ID).
+		First(&employee).Error
+	if err != nil {
+		l.Debugf("employee not found for discord_account_id: %s, error: %v", discordAccount.ID, err)
+		return "", fmt.Errorf("employee not found for discord account: %w", err)
+	}
+
+	l.Debugf("found employee: discord_account_id=%s team_email=%s", discordAccount.ID, employee.TeamEmail)
+
+	// 3. Query Notion Contractor database by Team Email
+	leaveService := notionSvc.NewLeaveService(h.config, h.store, h.repo, h.logger)
+	if leaveService == nil {
+		return "", fmt.Errorf("notion service not configured")
+	}
+
+	contractorPageID, err := leaveService.GetContractorPageIDByEmail(ctx, employee.TeamEmail)
+	if err != nil {
+		l.Debugf("contractor page not found for email: %s, error: %v", employee.TeamEmail, err)
+		return "", fmt.Errorf("contractor page not found: %w", err)
+	}
+
+	if contractorPageID == "" {
+		l.Debugf("no contractor page found for email: %s", employee.TeamEmail)
+		return "", nil
+	}
+
+	l.Debugf("found contractor page: email=%s page_id=%s", employee.TeamEmail, contractorPageID)
+	return contractorPageID, nil
 }
 
 // respondWithNotionLeaveProcessingEmbed responds immediately with a processing status embed
