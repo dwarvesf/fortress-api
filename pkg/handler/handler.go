@@ -33,6 +33,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/handler/profile"
 	"github.com/dwarvesf/fortress-api/pkg/handler/project"
 	"github.com/dwarvesf/fortress-api/pkg/handler/survey"
+	"github.com/dwarvesf/fortress-api/pkg/handler/timesheet"
 	"github.com/dwarvesf/fortress-api/pkg/handler/valuation"
 	"github.com/dwarvesf/fortress-api/pkg/handler/vault"
 	"github.com/dwarvesf/fortress-api/pkg/handler/webhook"
@@ -79,6 +80,7 @@ type Handler struct {
 	News           news.IHandler
 	Youtube        yt.IHandler
 	DynamicEvents  dynamicevents.IHandler
+	Timesheet      timesheet.IHandler
 }
 
 func New(store *store.Store, repo store.DBRepo, service *service.Service, ctrl *controller.Controller, worker *worker.Worker, logger logger.Logger, cfg *config.Config) *Handler {
@@ -117,5 +119,6 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, ctrl *
 		News:           news.New(store, repo, ctrl, logger, cfg),
 		Youtube:        yt.New(ctrl, store, repo, service, logger, cfg),
 		DynamicEvents:  dynamicevents.New(store, repo, ctrl, logger, cfg, service),
+		Timesheet:      timesheet.New(ctrl, store, repo, service, logger, cfg),
 	}
 }

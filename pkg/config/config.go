@@ -262,6 +262,7 @@ type NotionDatabase struct {
 	Issue             string
 	Contractor        string
 	DeploymentTracker string
+	Timesheet         string
 }
 
 type Discord struct {
@@ -495,6 +496,7 @@ func Generate(v ENV) *Config {
 				Issue:           v.GetString("NOTION_ISSUE_DB_ID"),
 				Contractor:        v.GetString("NOTION_CONTRACTOR_DB_ID"),
 				DeploymentTracker: v.GetString("NOTION_DEPLOYMENT_TRACKER_DB_ID"),
+				Timesheet:         v.GetString("NOTION_TIMESHEET_DB_ID"),
 			},
 		},
 		Discord: Discord{
