@@ -18,5 +18,6 @@ type IHandler interface {
 	HandleNotionLeave(c *gin.Context)
 	HandleNotionRefund(c *gin.Context)
 	HandleNotionOnLeave(c *gin.Context)
+	HandleNotionTimesheet(c *gin.Context)
 	HandleDiscordInteraction(c *gin.Context)
 }

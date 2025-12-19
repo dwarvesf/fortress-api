@@ -76,6 +76,7 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 		webhook.POST("/notion", h.Webhook.HandleNotionLeave)
 		webhook.POST("/notion/refund", h.Webhook.HandleNotionRefund)
 		webhook.POST("/notion/onleave", h.Webhook.HandleNotionOnLeave)
+		webhook.POST("/notion/timesheet", h.Webhook.HandleNotionTimesheet)
 
 		webhook.POST("/discord/interaction", h.Webhook.HandleDiscordInteraction)
 
