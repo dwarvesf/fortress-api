@@ -747,16 +747,13 @@ func (h *handler) updateNotionLeaveMessageWithStatus(l logger.Logger, channelID,
 	// Determine color and title based on status
 	var color int
 	var title string
-	var emoji string
 
 	if status == "Approved" {
 		color = 3066993 // Green
 		title = "✅ Leave Request Approved"
-		emoji = "✅"
 	} else {
 		color = 15158332 // Red
 		title = "❌ Leave Request Rejected"
-		emoji = "❌"
 	}
 
 	// Build updated embed preserving original fields
@@ -767,7 +764,7 @@ func (h *handler) updateNotionLeaveMessageWithStatus(l logger.Logger, channelID,
 
 	// Add status field
 	fields = append(fields, &discordgo.MessageEmbedField{
-		Name:   fmt.Sprintf("%s Status", emoji),
+		Name:   "Status",
 		Value:  fmt.Sprintf("%s by %s", status, actionBy),
 		Inline: false,
 	})

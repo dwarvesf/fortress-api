@@ -270,17 +270,18 @@ func (h *handler) handleNotionLeaveCreated(c *gin.Context, l logger.Logger, leav
 	if channelID == "" {
 		l.Debug("onleave channel not configured, falling back to auditlog webhook")
 		// Fallback to auditlog webhook
+		description := fmt.Sprintf("%s request time off", employee.FullName)
+		if employee.DiscordAccount != nil && employee.DiscordAccount.DiscordID != "" {
+			description = fmt.Sprintf("<@%s> request time off", employee.DiscordAccount.DiscordID)
+		}
 		inlineTrue := true
 		h.sendNotionLeaveDiscordNotification(c.Request.Context(),
-			"📋 New Leave Request - Pending Approval",
-			fmt.Sprintf("[View in Notion](https://notion.so/%s)", strings.ReplaceAll(leave.PageID, "-", "")),
+			"📋 Leave Request",
+			description,
 			3447003, // Blue color
 			[]model.DiscordMessageField{
-				{Name: "Employee", Value: fmt.Sprintf("%s (%s)", employee.FullName, leave.Email), Inline: nil},
-				{Name: "Type", Value: leave.LeaveType, Inline: &inlineTrue},
-				{Name: "Shift", Value: leave.Shift, Inline: &inlineTrue},
-				{Name: "Dates", Value: fmt.Sprintf("%s to %s", leave.StartDate.Format("2006-01-02"), leave.EndDate.Format("2006-01-02")), Inline: nil},
-				{Name: "Reason", Value: leave.Reason, Inline: nil},
+				{Name: "Dates", Value: formatShortDateRange(*leave.StartDate, *leave.EndDate), Inline: &inlineTrue},
+				{Name: "Reason", Value: leave.Reason, Inline: &inlineTrue},
 			},
 		)
 		c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "validated"))
@@ -298,22 +299,19 @@ func (h *handler) handleNotionLeaveCreated(c *gin.Context, l logger.Logger, leav
 		assigneeMentions = fmt.Sprintf("🔔 **Assignees:** %s", strings.Join(mentions, " "))
 	}
 
-	// Build embed
-	leaveType := leave.LeaveType
-	if leaveType == "" {
-		leaveType = "Annual Leave"
-		l.Debug("leave type is empty, using default: Annual Leave")
+	// Build embed description with Discord mention
+	description := fmt.Sprintf("%s request time off", employee.FullName)
+	if employee.DiscordAccount != nil && employee.DiscordAccount.DiscordID != "" {
+		description = fmt.Sprintf("<@%s> request time off", employee.DiscordAccount.DiscordID)
 	}
 
 	embed := &discordgo.MessageEmbed{
-		Title:       "📋 New Leave Request - Pending Approval",
-		Description: fmt.Sprintf("[View in Notion](https://notion.so/%s)", strings.ReplaceAll(leave.PageID, "-", "")),
+		Title:       "📋 Leave Request",
+		Description: description,
 		Color:       3447003, // Blue color
 		Fields: []*discordgo.MessageEmbedField{
-			{Name: "Employee", Value: fmt.Sprintf("%s (%s)", employee.FullName, leave.Email), Inline: false},
-			{Name: "Type", Value: leaveType, Inline: false},
-			{Name: "Dates", Value: fmt.Sprintf("%s to %s", leave.StartDate.Format("2006-01-02"), leave.EndDate.Format("2006-01-02")), Inline: false},
-			{Name: "Reason", Value: leave.Reason, Inline: false},
+			{Name: "Dates", Value: formatShortDateRange(*leave.StartDate, *leave.EndDate), Inline: true},
+			{Name: "Reason", Value: leave.Reason, Inline: true},
 		},
 		Timestamp: time.Now().Format("2006-01-02T15:04:05.000-07:00"),
 	}
@@ -324,7 +322,7 @@ func (h *handler) handleNotionLeaveCreated(c *gin.Context, l logger.Logger, leav
 			Components: []discordgo.MessageComponent{
 				discordgo.Button{
 					Label:    "Approve",
-					Style:    discordgo.SuccessButton,
+					Style:    discordgo.SecondaryButton,
 					CustomID: fmt.Sprintf("notion_leave_approve_%s", leave.PageID),
 					Emoji: discordgo.ComponentEmoji{
 						Name: "✅",
@@ -332,7 +330,7 @@ func (h *handler) handleNotionLeaveCreated(c *gin.Context, l logger.Logger, leav
 				},
 				discordgo.Button{
 					Label:    "Reject",
-					Style:    discordgo.DangerButton,
+					Style:    discordgo.SecondaryButton,
 					CustomID: fmt.Sprintf("notion_leave_reject_%s", leave.PageID),
 					Emoji: discordgo.ComponentEmoji{
 						Name: "❌",
@@ -347,13 +345,17 @@ func (h *handler) handleNotionLeaveCreated(c *gin.Context, l logger.Logger, leav
 	if err != nil {
 		l.Error(err, "failed to send leave request message to discord channel")
 		// Fallback to auditlog
-		inlineTrue := true
+		description := fmt.Sprintf("%s request time off", employee.FullName)
+		if employee.DiscordAccount != nil && employee.DiscordAccount.DiscordID != "" {
+			description = fmt.Sprintf("<@%s> request time off", employee.DiscordAccount.DiscordID)
+		}
 		h.sendNotionLeaveDiscordNotification(c.Request.Context(),
-			"📋 New Leave Request - Pending Approval",
-			fmt.Sprintf("[View in Notion](https://notion.so/%s)", strings.ReplaceAll(leave.PageID, "-", "")),
+			"📋 Leave Request",
+			description,
 			3447003,
 			[]model.DiscordMessageField{
-				{Name: "Employee", Value: fmt.Sprintf("%s (%s)", employee.FullName, leave.Email), Inline: &inlineTrue},
+				{Name: "Dates", Value: formatShortDateRange(*leave.StartDate, *leave.EndDate), Inline: nil},
+				{Name: "Reason", Value: leave.Reason, Inline: nil},
 			},
 		)
 	} else {
@@ -483,16 +485,18 @@ func (h *handler) handleNotionLeaveApproved(c *gin.Context, l logger.Logger, lea
 	}
 
 	// Send Discord notification
-	inlineTrue := true
+	datesValue := formatShortDateRange(*leave.StartDate, *leave.EndDate)
+	if leave.Shift != "" {
+		datesValue = fmt.Sprintf("%s • %s", leave.Shift, datesValue)
+	}
 	h.sendNotionLeaveDiscordNotification(c.Request.Context(),
-		"✅ Leave Request Approved",
+		"✅ Approved",
 		"",
 		3066993, // Green color
 		[]model.DiscordMessageField{
 			{Name: "Employee", Value: employee.FullName, Inline: nil},
-			{Name: "Type", Value: leave.LeaveType, Inline: &inlineTrue},
-			{Name: "Shift", Value: leave.Shift, Inline: &inlineTrue},
-			{Name: "Dates", Value: fmt.Sprintf("%s to %s", leave.StartDate.Format("2006-01-02"), leave.EndDate.Format("2006-01-02")), Inline: nil},
+			{Name: "Dates", Value: datesValue, Inline: nil},
+			{Name: "Reason", Value: leave.Reason, Inline: nil},
 		},
 	)
 
@@ -526,20 +530,17 @@ func (h *handler) handleNotionLeaveRejected(c *gin.Context, l logger.Logger, lea
 	}
 
 	// Send Discord notification
-	inlineTrue := true
 	employeeName := leave.Email
 	if employee != nil {
 		employeeName = employee.FullName
 	}
 	h.sendNotionLeaveDiscordNotification(c.Request.Context(),
-		"❌ Leave Request Rejected",
+		"❌ Rejected",
 		"",
 		15158332, // Red color
 		[]model.DiscordMessageField{
 			{Name: "Employee", Value: employeeName, Inline: nil},
-			{Name: "Type", Value: leave.LeaveType, Inline: &inlineTrue},
-			{Name: "Dates", Value: fmt.Sprintf("%s to %s", leave.StartDate.Format("2006-01-02"), leave.EndDate.Format("2006-01-02")), Inline: nil},
-			{Name: "Reason", Value: leave.Reason, Inline: nil},
+			{Name: "Dates", Value: formatShortDateRange(*leave.StartDate, *leave.EndDate), Inline: nil},
 		},
 	)
 
@@ -765,6 +766,19 @@ func mapNotionLeaveType(notionType string) string {
 	default:
 		return "off"
 	}
+}
+
+// formatShortDateRange formats a date range in compact format
+// Examples: "Jan 15-20, 2025" or "Jan 15, 2025 - Feb 2, 2025"
+func formatShortDateRange(start, end time.Time) string {
+	if start.Year() == end.Year() && start.Month() == end.Month() {
+		// Same month and year: "Jan 15-20, 2025"
+		return fmt.Sprintf("%s %d-%d, %d", start.Month().String()[:3], start.Day(), end.Day(), start.Year())
+	}
+	// Different months: "Jan 15, 2025 - Feb 2, 2025"
+	return fmt.Sprintf("%s %d, %d - %s %d, %d",
+		start.Month().String()[:3], start.Day(), start.Year(),
+		end.Month().String()[:3], end.Day(), end.Year())
 }
 
 // verifyNotionWebhookSignature verifies the HMAC-SHA256 signature of a Notion webhook request
@@ -1063,20 +1077,16 @@ func (h *handler) HandleNotionOnLeave(c *gin.Context) {
 		l.Debug("onleave channel not configured, falling back to auditlog webhook")
 
 		// Use default Leave Type if empty
-		fallbackLeaveType := leave.LeaveType
-		if fallbackLeaveType == "" {
-			fallbackLeaveType = "Annual Leave"
-			l.Debug("leave type is empty in fallback notification, using default: Annual Leave")
+		description := fmt.Sprintf("%s request time off", employee.FullName)
+		if employee.DiscordAccount != nil && employee.DiscordAccount.DiscordID != "" {
+			description = fmt.Sprintf("<@%s> request time off", employee.DiscordAccount.DiscordID)
 		}
-
 		h.sendNotionLeaveDiscordNotification(ctx,
-			"📋 New Leave Request - Pending Approval",
-			fmt.Sprintf("[View in Notion](https://notion.so/%s)", strings.ReplaceAll(leave.PageID, "-", "")),
+			"📋 Leave Request",
+			description,
 			3447003, // Blue color
 			[]model.DiscordMessageField{
-				{Name: "Employee", Value: fmt.Sprintf("%s (%s)", employee.FullName, leave.Email), Inline: nil},
-				{Name: "Type", Value: fallbackLeaveType, Inline: nil},
-				{Name: "Dates", Value: fmt.Sprintf("%s to %s", leave.StartDate.Format("2006-01-02"), leave.EndDate.Format("2006-01-02")), Inline: nil},
+				{Name: "Dates", Value: formatShortDateRange(*leave.StartDate, *leave.EndDate), Inline: nil},
 				{Name: "Reason", Value: leave.Reason, Inline: nil},
 			},
 		)
@@ -1094,22 +1104,19 @@ func (h *handler) HandleNotionOnLeave(c *gin.Context) {
 		assigneeMentions = fmt.Sprintf("🔔 **Assignees:** %s", strings.Join(mentions, " "))
 	}
 
-	// Build embed
-	leaveType := leave.LeaveType
-	if leaveType == "" {
-		leaveType = "Annual Leave"
-		l.Debug("leave type is empty, using default: Annual Leave")
+	// Build embed description with Discord mention
+	description := fmt.Sprintf("%s request time off", employee.FullName)
+	if employee.DiscordAccount != nil && employee.DiscordAccount.DiscordID != "" {
+		description = fmt.Sprintf("<@%s> request time off", employee.DiscordAccount.DiscordID)
 	}
 
 	embed := &discordgo.MessageEmbed{
-		Title:       "📋 New Leave Request - Pending Approval",
-		Description: fmt.Sprintf("[View in Notion](https://notion.so/%s)", strings.ReplaceAll(leave.PageID, "-", "")),
+		Title:       "📋 Leave Request",
+		Description: description,
 		Color:       3447003, // Blue color
 		Fields: []*discordgo.MessageEmbedField{
-			{Name: "Employee", Value: fmt.Sprintf("%s (%s)", employee.FullName, leave.Email), Inline: false},
-			{Name: "Type", Value: leaveType, Inline: false},
-			{Name: "Dates", Value: fmt.Sprintf("%s to %s", leave.StartDate.Format("2006-01-02"), leave.EndDate.Format("2006-01-02")), Inline: false},
-			{Name: "Reason", Value: leave.Reason, Inline: false},
+			{Name: "Dates", Value: formatShortDateRange(*leave.StartDate, *leave.EndDate), Inline: true},
+			{Name: "Reason", Value: leave.Reason, Inline: true},
 		},
 		Timestamp: time.Now().Format("2006-01-02T15:04:05.000-07:00"),
 	}
@@ -1120,7 +1127,7 @@ func (h *handler) HandleNotionOnLeave(c *gin.Context) {
 			Components: []discordgo.MessageComponent{
 				discordgo.Button{
 					Label:    "Approve",
-					Style:    discordgo.SuccessButton,
+					Style:    discordgo.SecondaryButton,
 					CustomID: fmt.Sprintf("notion_leave_approve_%s", leave.PageID),
 					Emoji: discordgo.ComponentEmoji{
 						Name: "✅",
@@ -1128,7 +1135,7 @@ func (h *handler) HandleNotionOnLeave(c *gin.Context) {
 				},
 				discordgo.Button{
 					Label:    "Reject",
-					Style:    discordgo.DangerButton,
+					Style:    discordgo.SecondaryButton,
 					CustomID: fmt.Sprintf("notion_leave_reject_%s", leave.PageID),
 					Emoji: discordgo.ComponentEmoji{
 						Name: "❌",
@@ -1143,13 +1150,17 @@ func (h *handler) HandleNotionOnLeave(c *gin.Context) {
 	if err != nil {
 		l.Error(err, "failed to send leave request message to discord channel")
 		// Fallback to auditlog
-		inlineTrue := true
+		description := fmt.Sprintf("%s request time off", employee.FullName)
+		if employee.DiscordAccount != nil && employee.DiscordAccount.DiscordID != "" {
+			description = fmt.Sprintf("<@%s> request time off", employee.DiscordAccount.DiscordID)
+		}
 		h.sendNotionLeaveDiscordNotification(ctx,
-			"📋 New Leave Request - Pending Approval",
-			fmt.Sprintf("[View in Notion](https://notion.so/%s)", strings.ReplaceAll(leave.PageID, "-", "")),
+			"📋 Leave Request",
+			description,
 			3447003,
 			[]model.DiscordMessageField{
-				{Name: "Employee", Value: fmt.Sprintf("%s (%s)", employee.FullName, leave.Email), Inline: &inlineTrue},
+				{Name: "Dates", Value: formatShortDateRange(*leave.StartDate, *leave.EndDate), Inline: nil},
+				{Name: "Reason", Value: leave.Reason, Inline: nil},
 			},
 		)
 	} else {
