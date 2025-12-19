@@ -395,6 +395,14 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 		earnGroup.GET("", conditionalAuthMW, h.Earn.ListEarn)
 	}
 
+	// Timesheet API for fortress-discord
+	timesheetGroup := v1.Group("/timesheets")
+	{
+		timesheetGroup.POST("", conditionalAuthMW, h.Timesheet.LogHours)
+		timesheetGroup.GET("", conditionalAuthMW, h.Timesheet.GetEntries)
+		timesheetGroup.GET("/weekly-summary", conditionalAuthMW, h.Timesheet.GetWeeklySummary)
+	}
+
 	// Delivery metrics
 	{
 		deliveryGroup := v1.Group("/delivery-metrics")
