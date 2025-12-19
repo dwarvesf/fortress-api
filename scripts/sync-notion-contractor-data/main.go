@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"database/sql"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -15,23 +14,22 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/joho/godotenv"
-	_ "github.com/lib/pq"
 )
 
 const (
-	notionAPIURL   = "https://api.notion.com/v1"
-	notionVersion  = "2022-06-28"
-	contractorDBID = "9d468753ebb44977a8dc156428398a6b"
-	dwarvesGuildID = "462663954813157376"
-	avatarSize     = "128"
-	rateLimitDelay = 350 * time.Millisecond // Notion rate limit: ~3 requests/sec
+	notionAPIURL        = "https://api.notion.com/v1"
+	notionVersion       = "2022-06-28"
+	contractorDBID      = "9d468753ebb44977a8dc156428398a6b"
+	candidateDBID       = "2b764b29b84c802cb4e8fd4b4d9501cb"
+	dwarvesGuildID      = "462663954813157376"
+	avatarSize          = "128"
+	rateLimitDelay      = 350 * time.Millisecond // Notion rate limit: ~3 requests/sec
 )
 
 var (
 	dryRun         bool
 	targetUsername string
-	updateAvatar   bool
-	updateOnboard  bool
+	database       string
 )
 
 type NotionQueryResponse struct {
@@ -60,32 +58,12 @@ type NotionExternalFile struct {
 	URL string `json:"url"`
 }
 
-type NotionDateProperty struct {
-	Date *NotionDate `json:"date"`
-}
-
-type NotionDate struct {
-	Start    string  `json:"start"`
-	End      *string `json:"end,omitempty"`
-	TimeZone *string `json:"time_zone,omitempty"`
-}
-
-type EmployeeData struct {
-	FullName        string
-	DisplayName     string
-	JoinedDate      *time.Time
-	DiscordUsername string
-	WorkingStatus   string
-	TeamEmail       string
-}
-
 func main() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
 	flag.BoolVar(&dryRun, "dry-run", false, "Run without making changes to Notion")
 	flag.StringVar(&targetUsername, "username", "", "Only process contractor with this Discord username")
-	flag.BoolVar(&updateAvatar, "avatar", true, "Update Discord avatar icon (default: true)")
-	flag.BoolVar(&updateOnboard, "onboard", true, "Update onboard date from database (default: true)")
+	flag.StringVar(&database, "database", "contractors", "Database to update: 'contractors' or 'candidates'")
 	flag.Parse()
 
 	if dryRun {
@@ -94,7 +72,21 @@ func main() {
 	if targetUsername != "" {
 		log.Printf("INFO: Targeting specific Discord username: %s", targetUsername)
 	}
-	log.Printf("INFO: Update avatar: %v, Update onboard: %v", updateAvatar, updateOnboard)
+
+	// Determine database ID
+	var dbID string
+	var dbName string
+	switch database {
+	case "contractors":
+		dbID = contractorDBID
+		dbName = "Contractors"
+	case "candidates":
+		dbID = candidateDBID
+		dbName = "Candidates"
+	default:
+		log.Fatalf("Invalid database: %s (must be 'contractors' or 'candidates')", database)
+	}
+	log.Printf("INFO: Updating %s database", dbName)
 
 	if err := godotenv.Load(); err != nil {
 		log.Printf("DEBUG: No .env file found, using environment variables")
@@ -105,49 +97,23 @@ func main() {
 		log.Fatal("NOTION_SECRET environment variable is required")
 	}
 
-	var discord *discordgo.Session
-	var db *sql.DB
-	var err error
-
-	// Initialize Discord if avatar update is enabled
-	if updateAvatar {
-		discordToken := os.Getenv("DISCORD_SECRET_TOKEN")
-		if discordToken == "" {
-			log.Fatal("DISCORD_SECRET_TOKEN environment variable is required for avatar updates")
-		}
-
-		log.Printf("DEBUG: Creating Discord session")
-		discord, err = discordgo.New("Bot " + discordToken)
-		if err != nil {
-			log.Fatalf("Error creating Discord session: %v", err)
-		}
+	discordToken := os.Getenv("DISCORD_SECRET_TOKEN")
+	if discordToken == "" {
+		log.Fatal("DISCORD_SECRET_TOKEN environment variable is required")
 	}
 
-	// Initialize database if onboard date update is enabled
-	if updateOnboard {
-		dbDSN := os.Getenv("DATABASE_URL")
-		if dbDSN == "" {
-			log.Fatal("DATABASE_URL environment variable is required for onboard date updates")
-		}
-
-		log.Printf("DEBUG: Connecting to database")
-		db, err = sql.Open("postgres", dbDSN)
-		if err != nil {
-			log.Fatalf("Error connecting to database: %v", err)
-		}
-		defer db.Close()
-
-		if err := db.Ping(); err != nil {
-			log.Fatalf("Error pinging database: %v", err)
-		}
-	}
-
-	log.Printf("DEBUG: Fetching contractors from Notion")
-	contractors, err := fetchAllContractors(notionToken)
+	log.Printf("DEBUG: Creating Discord session")
+	discord, err := discordgo.New("Bot " + discordToken)
 	if err != nil {
-		log.Fatalf("Error fetching contractors: %v", err)
+		log.Fatalf("Error creating Discord session: %v", err)
 	}
-	log.Printf("DEBUG: Found %d contractors", len(contractors))
+
+	log.Printf("DEBUG: Fetching records from Notion %s database", dbName)
+	contractors, err := fetchAllContractors(notionToken, dbID)
+	if err != nil {
+		log.Fatalf("Error fetching records: %v", err)
+	}
+	log.Printf("DEBUG: Found %d records", len(contractors))
 
 	var updated, skipped, notFound, alreadySet int
 
@@ -168,77 +134,38 @@ func main() {
 
 		log.Printf("DEBUG: [%s] Processing Discord username: %s", name, discordUsername)
 
-		var avatarURL string
-		var employeeData *EmployeeData
-		var needsUpdate bool
-
-		// Get Discord avatar if enabled
-		if updateAvatar {
-			avatarURL, err = getDiscordAvatarURL(discord, discordUsername)
-			if err != nil {
-				log.Printf("DEBUG: [%s] Error searching Discord: %v", name, err)
-			} else if avatarURL == "" {
-				log.Printf("DEBUG: [%s] Discord user '%s' not found", name, discordUsername)
-			} else {
-				// Check if icon already set to this URL
-				currentIconURL := getCurrentIconURL(contractor)
-				if currentIconURL != avatarURL {
-					needsUpdate = true
-					log.Printf("DEBUG: [%s] Avatar needs update: %s", name, avatarURL)
-				} else {
-					log.Printf("DEBUG: [%s] Avatar already set", name)
-				}
-			}
-		}
-
-		// Get employee data from database if enabled
-		if updateOnboard {
-			employeeData, err = getEmployeeDataByDiscord(db, discordUsername)
-			if err != nil {
-				log.Printf("DEBUG: [%s] Error fetching employee data: %v", name, err)
-			} else if employeeData == nil {
-				log.Printf("DEBUG: [%s] No employee data found for Discord username: %s", name, discordUsername)
-			} else {
-				// Check if onboard date needs update
-				currentOnboardDate := getCurrentOnboardDate(contractor)
-				if employeeData.JoinedDate != nil {
-					expectedDate := employeeData.JoinedDate.Format("2006-01-02")
-					if currentOnboardDate != expectedDate {
-						needsUpdate = true
-						log.Printf("DEBUG: [%s] Onboard date needs update: %s (current: %s)", name, expectedDate, currentOnboardDate)
-					} else {
-						log.Printf("DEBUG: [%s] Onboard date already set: %s", name, currentOnboardDate)
-					}
-				}
-			}
-		}
-
-		// Skip if nothing to update
-		if !needsUpdate {
-			if avatarURL == "" && employeeData == nil {
-				notFound++
-			} else {
-				alreadySet++
-			}
+		avatarURL, err := getDiscordAvatarURL(discord, discordUsername)
+		if err != nil {
+			log.Printf("DEBUG: [%s] Error searching Discord: %v", name, err)
+			notFound++
 			continue
 		}
 
+		if avatarURL == "" {
+			log.Printf("DEBUG: [%s] Discord user '%s' not found", name, discordUsername)
+			notFound++
+			continue
+		}
+
+		// Check if icon already set to this URL
+		currentIconURL := getCurrentIconURL(contractor)
+		if currentIconURL == avatarURL {
+			log.Printf("DEBUG: [%s] Avatar already set", name)
+			alreadySet++
+			continue
+		}
+
+		log.Printf("DEBUG: [%s] Avatar needs update: %s", name, avatarURL)
+
 		if dryRun {
-			logMessage := fmt.Sprintf("DRY-RUN: [%s] Would update:", name)
-			if avatarURL != "" && updateAvatar {
-				logMessage += fmt.Sprintf(" avatar=%s", avatarURL)
-			}
-			if employeeData != nil && employeeData.JoinedDate != nil && updateOnboard {
-				logMessage += fmt.Sprintf(" onboard=%s", employeeData.JoinedDate.Format("2006-01-02"))
-			}
-			log.Printf("%s", logMessage)
+			log.Printf("DRY-RUN: [%s] Would update avatar=%s", name, avatarURL)
 			updated++
 			continue
 		}
 
 		// Update Notion page
 		log.Printf("DEBUG: [%s] Updating Notion page", name)
-		if err := updateNotionPage(notionToken, contractor.ID, avatarURL, employeeData, updateAvatar, updateOnboard); err != nil {
+		if err := updateNotionPage(notionToken, contractor.ID, avatarURL); err != nil {
 			log.Printf("ERROR: [%s] Failed to update: %v", name, err)
 			continue
 		}
@@ -260,12 +187,12 @@ func main() {
 	log.Printf("Skipped (no Discord username): %d", skipped)
 }
 
-func fetchAllContractors(token string) ([]NotionPage, error) {
+func fetchAllContractors(token string, databaseID string) ([]NotionPage, error) {
 	var allPages []NotionPage
 	var cursor *string
 
 	for {
-		log.Printf("DEBUG: Fetching page of contractors (cursor: %v)", cursor)
+		log.Printf("DEBUG: Fetching page of records (cursor: %v)", cursor)
 
 		body := map[string]interface{}{
 			"page_size": 100,
@@ -276,7 +203,7 @@ func fetchAllContractors(token string) ([]NotionPage, error) {
 
 		jsonBody, _ := json.Marshal(body)
 
-		req, err := http.NewRequest("POST", fmt.Sprintf("%s/databases/%s/query", notionAPIURL, contractorDBID), bytes.NewReader(jsonBody))
+		req, err := http.NewRequest("POST", fmt.Sprintf("%s/databases/%s/query", notionAPIURL, databaseID), bytes.NewReader(jsonBody))
 		if err != nil {
 			return nil, err
 		}
@@ -302,7 +229,7 @@ func fetchAllContractors(token string) ([]NotionPage, error) {
 		}
 
 		allPages = append(allPages, result.Results...)
-		log.Printf("DEBUG: Fetched %d contractors (total: %d)", len(result.Results), len(allPages))
+		log.Printf("DEBUG: Fetched %d records (total: %d)", len(result.Results), len(allPages))
 
 		if !result.HasMore {
 			break
@@ -387,26 +314,6 @@ func getCurrentIconURL(page NotionPage) string {
 	return url
 }
 
-func getCurrentOnboardDate(page NotionPage) string {
-	onboardProp, ok := page.Properties["Onboard Date"].(map[string]interface{})
-	if !ok {
-		return ""
-	}
-
-	dateProp, ok := onboardProp["date"]
-	if !ok || dateProp == nil {
-		return ""
-	}
-
-	dateMap, ok := dateProp.(map[string]interface{})
-	if !ok {
-		return ""
-	}
-
-	start, _ := dateMap["start"].(string)
-	return start
-}
-
 func getDiscordAvatarURL(session *discordgo.Session, username string) (string, error) {
 	log.Printf("DEBUG: Searching Discord guild %s for user: %s", dwarvesGuildID, username)
 
@@ -434,80 +341,14 @@ func getDiscordAvatarURL(session *discordgo.Session, username string) (string, e
 	return "", nil
 }
 
-func getEmployeeDataByDiscord(db *sql.DB, discordUsername string) (*EmployeeData, error) {
-	query := `
-		SELECT
-			e.full_name,
-			e.display_name,
-			e.joined_date,
-			da.discord_username,
-			e.working_status,
-			e.team_email
-		FROM employees e
-		LEFT JOIN discord_accounts da ON e.discord_account_id = da.id
-		WHERE LOWER(da.discord_username) = LOWER($1)
-		AND e.deleted_at IS NULL
-		LIMIT 1
-	`
-
-	var emp EmployeeData
-	var joinedDate sql.NullTime
-	var workingStatus sql.NullString
-	var teamEmail sql.NullString
-
-	err := db.QueryRow(query, discordUsername).Scan(
-		&emp.FullName,
-		&emp.DisplayName,
-		&joinedDate,
-		&emp.DiscordUsername,
-		&workingStatus,
-		&teamEmail,
-	)
-
-	if err == sql.ErrNoRows {
-		return nil, nil
-	}
-	if err != nil {
-		return nil, err
-	}
-
-	if joinedDate.Valid {
-		emp.JoinedDate = &joinedDate.Time
-	}
-	if workingStatus.Valid {
-		emp.WorkingStatus = workingStatus.String
-	}
-	if teamEmail.Valid {
-		emp.TeamEmail = teamEmail.String
-	}
-
-	log.Printf("DEBUG: Found employee data: %s, joined: %v", emp.FullName, emp.JoinedDate)
-	return &emp, nil
-}
-
-func updateNotionPage(token, pageID, avatarURL string, employeeData *EmployeeData, doUpdateAvatar, doUpdateOnboard bool) error {
-	payload := NotionPatchRequest{}
-
-	// Add icon if avatar update is enabled and URL is provided
-	if doUpdateAvatar && avatarURL != "" {
-		payload.Icon = &NotionIcon{
+func updateNotionPage(token, pageID, avatarURL string) error {
+	payload := NotionPatchRequest{
+		Icon: &NotionIcon{
 			Type: "external",
 			External: &NotionExternalFile{
 				URL: avatarURL,
 			},
-		}
-	}
-
-	// Add onboard date if update is enabled and data is available
-	if doUpdateOnboard && employeeData != nil && employeeData.JoinedDate != nil {
-		dateStr := employeeData.JoinedDate.Format("2006-01-02")
-		payload.Properties = map[string]interface{}{
-			"Onboard Date": NotionDateProperty{
-				Date: &NotionDate{
-					Start: dateStr,
-				},
-			},
-		}
+		},
 	}
 
 	jsonBody, err := json.Marshal(payload)
