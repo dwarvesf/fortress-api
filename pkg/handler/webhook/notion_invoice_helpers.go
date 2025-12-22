@@ -3,6 +3,8 @@ package webhook
 import (
 	"errors"
 	"fmt"
+	"io"
+	"net/http"
 	"strings"
 	"time"
 
@@ -599,4 +601,105 @@ func (h *handler) extractProjectAndClientFromNotion(l logger.Logger, invoiceProp
 	l.Debug(fmt.Sprintf("built project with client: project=%s, client=%s", projectName, client.Name))
 
 	return project, nil
+}
+
+// extractRecipientsFromNotion extracts email addresses from the Recipients rollup property
+// Recipients is a rollup from Project → Recipient Emails
+func (h *handler) extractRecipientsFromNotion(l logger.Logger, props nt.DatabasePageProperties) ([]string, error) {
+	l.Debug("extracting recipients from Recipients rollup")
+
+	recipientsProp, ok := props["Recipients"]
+	if !ok {
+		l.Debug("Recipients property not found")
+		return nil, errors.New("Recipients property not found")
+	}
+
+	if recipientsProp.Rollup == nil {
+		l.Debug("Recipients rollup is nil")
+		return nil, errors.New("Recipients rollup is nil")
+	}
+
+	l.Debug(fmt.Sprintf("Recipients rollup type: %s, array length: %d",
+		recipientsProp.Rollup.Type, len(recipientsProp.Rollup.Array)))
+
+	var recipients []string
+
+	// The rollup contains an array of rich text values
+	for _, item := range recipientsProp.Rollup.Array {
+		if len(item.RichText) > 0 {
+			for _, rt := range item.RichText {
+				email := strings.TrimSpace(rt.PlainText)
+				if email != "" {
+					recipients = append(recipients, email)
+					l.Debug(fmt.Sprintf("extracted recipient email: %s", email))
+				}
+			}
+		}
+	}
+
+	l.Debug(fmt.Sprintf("extracted %d recipients total", len(recipients)))
+
+	return recipients, nil
+}
+
+// downloadPDFFromNotionAttachment downloads the PDF file from Notion's Attachment property
+func (h *handler) downloadPDFFromNotionAttachment(l logger.Logger, props nt.DatabasePageProperties) ([]byte, error) {
+	l.Debug("downloading PDF from Notion Attachment property")
+
+	attachmentProp, ok := props["Attachment"]
+	if !ok {
+		l.Debug("Attachment property not found")
+		return nil, errors.New("Attachment property not found")
+	}
+
+	if len(attachmentProp.Files) == 0 {
+		l.Debug("Attachment property has no files")
+		return nil, errors.New("no files in Attachment property")
+	}
+
+	// Get the first file (should be the PDF)
+	file := attachmentProp.Files[0]
+	l.Debug(fmt.Sprintf("found attachment file: name=%s, type=%s", file.Name, file.Type))
+
+	// Get the file URL based on file type
+	var fileURL string
+	if file.Type == nt.FileTypeFile && file.File != nil {
+		fileURL = file.File.URL
+	} else if file.Type == nt.FileTypeExternal && file.External != nil {
+		fileURL = file.External.URL
+	} else {
+		l.Error(errors.New("unknown file type"), fmt.Sprintf("unsupported file type: %s", file.Type))
+		return nil, fmt.Errorf("unsupported file type: %s", file.Type)
+	}
+
+	if fileURL == "" {
+		l.Debug("file URL is empty")
+		return nil, errors.New("file URL is empty")
+	}
+
+	l.Debug(fmt.Sprintf("downloading PDF from URL: %s (length: %d)", fileURL[:100], len(fileURL)))
+
+	// Download the file
+	resp, err := http.Get(fileURL)
+	if err != nil {
+		l.Error(err, "failed to download PDF from URL")
+		return nil, fmt.Errorf("failed to download PDF: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		l.Error(errors.New("non-200 status code"), fmt.Sprintf("HTTP status: %d", resp.StatusCode))
+		return nil, fmt.Errorf("failed to download PDF: HTTP %d", resp.StatusCode)
+	}
+
+	// Read the file content
+	pdfBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		l.Error(err, "failed to read PDF content")
+		return nil, fmt.Errorf("failed to read PDF content: %w", err)
+	}
+
+	l.Debug(fmt.Sprintf("successfully downloaded PDF: size=%d bytes", len(pdfBytes)))
+
+	return pdfBytes, nil
 }
