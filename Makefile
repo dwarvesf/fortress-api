@@ -7,7 +7,7 @@ TOOLS_IMAGE=dwarvesv/fortress-tools:latest
 APP_ENVIRONMENT=docker run --rm -v ${PWD}:/${APP_NAME} -w /${APP_NAME} --net=host ${TOOLS_IMAGE}
 SWAGGER_VERSION = v1.16.1
 
-.PHONY: setup shel colima-start colima-stop init build dev test migrate-up migrate-down ci
+.PHONY: setup shel colima-start colima-stop init build dev stub test migrate-up migrate-down ci
 
 shell:
 	@if ! command -v devbox >/dev/null 2>&1; then curl -fsSL https://get.jetpack.io/devbox | bash; fi
@@ -65,6 +65,12 @@ dev:
 
 dev-mcp:
 	go run ./cmd/mcp-server/main.go
+
+stub:
+	python3 scripts/stub-server.py
+
+cloudflare:
+	cloudflared tunnel --config ./cloudflared.yml run myapp
 
 air:
 	air -c .air.toml

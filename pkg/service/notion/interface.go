@@ -47,4 +47,9 @@ type IService interface {
 	ListProjectsWithChangelog() ([]model.ProjectChangelogPage, error)
 	QueryAudienceDatabase(audienceDBId, audience string) (records []nt.Page, err error)
 	GetProjectHeadEmails(pageID string) (salePersonEmail, techLeadEmail, dealClosingEmails string, err error)
+
+	// File upload and page property update
+	UploadFile(filename, contentType string, fileData []byte) (fileUploadID string, err error)
+	UpdatePageProperties(pageID string, properties nt.UpdatePageParams) error
+	UpdatePagePropertiesWithFileUpload(pageID, propertyName, fileUploadID, filename string) error
 }

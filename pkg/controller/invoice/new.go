@@ -47,4 +47,7 @@ type IController interface {
 
 	// Test method for PDF generation
 	GenerateInvoicePDFForTest(l logger.Logger, invoice *model.Invoice, items []model.InvoiceItem) error
+
+	// Generate PDF for Notion webhook invoice generation
+	GenerateInvoicePDFForNotion(l logger.Logger, invoice *model.Invoice, items []model.InvoiceItem) error
 }

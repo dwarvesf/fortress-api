@@ -18,6 +18,7 @@ import (
 type notionService struct {
 	notionClient *nt.Client
 	projectsDBID string
+	secret       string // API secret/token for raw HTTP requests
 	l            logger.Logger
 	db           *gorm.DB
 }
@@ -26,6 +27,7 @@ func New(secret, projectID string, l logger.Logger, db *gorm.DB) IService {
 	return &notionService{
 		notionClient: nt.NewClient(secret),
 		projectsDBID: projectID,
+		secret:       secret,
 		l:            l,
 		db:           db,
 	}
