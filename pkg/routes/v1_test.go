@@ -805,6 +805,18 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/webhook.IHandler.HandleNotionOnLeave-fm",
 			},
 		},
+		"/webhooks/notion/invoice/generate": {
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/webhook.IHandler.HandleNotionInvoiceGenerate-fm",
+			},
+		},
+		"/webhooks/notion/timesheet": {
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/webhook.IHandler.HandleNotionTimesheet-fm",
+			},
+		},
 		"/webhooks/discord/interaction": {
 			"POST": {
 				Method:  "POST",
