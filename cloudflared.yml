@@ -1,0 +1,7 @@
+tunnel: myapp
+credentials-file: ~/.cloudflared/f74f3d8b-bf03-4ef8-a858-bba48b9f90d2.json
+
+ingress:
+  - hostname: local.arcline.app
+    service: http://localhost:9999
+  - service: http_status:404

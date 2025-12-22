@@ -222,14 +222,6 @@ func (s *TimesheetService) extractTitle(props nt.DatabasePageProperties, propNam
 	return ""
 }
 
-// extractSelect extracts a select property value
-func (s *TimesheetService) extractSelect(props nt.DatabasePageProperties, propName string) string {
-	if prop, ok := props[propName]; ok && prop.Select != nil {
-		return prop.Select.Name
-	}
-	return ""
-}
-
 // extractStatus extracts a status property value
 func (s *TimesheetService) extractStatus(props nt.DatabasePageProperties, propName string) string {
 	if prop, ok := props[propName]; ok && prop.Status != nil {

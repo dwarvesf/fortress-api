@@ -230,7 +230,13 @@ func (c *controller) dispatchInvoiceTask(iv *model.Invoice, fileName string) err
 }
 
 func (c *controller) generateInvoicePDF(l logger.Logger, invoice *model.Invoice, items []model.InvoiceItem) error {
-	pound := money.New(1, invoice.Project.BankAccount.Currency.Name)
+	// Use USD currency code for USDC to display "$" symbol instead of "USDC"
+	currencyCode := invoice.Project.BankAccount.Currency.Name
+	if strings.ToUpper(currencyCode) == "USDC" {
+		currencyCode = "USD"
+		l.Debug("detected USDC currency, using USD for money formatting to display '$' symbol")
+	}
+	pound := money.New(1, currencyCode)
 
 	companyInfo, err := invoice.Project.GetCompanyContactInfo()
 	if err != nil {
@@ -430,5 +436,10 @@ func (c *controller) getInvoiceBonus(items []model.InvoiceItem) float64 {
 
 // GenerateInvoicePDFForTest is a public method for testing PDF generation
 func (c *controller) GenerateInvoicePDFForTest(l logger.Logger, invoice *model.Invoice, items []model.InvoiceItem) error {
+	return c.generateInvoicePDF(l, invoice, items)
+}
+
+// GenerateInvoicePDFForNotion is a public method for Notion webhook invoice generation
+func (c *controller) GenerateInvoicePDFForNotion(l logger.Logger, invoice *model.Invoice, items []model.InvoiceItem) error {
 	return c.generateInvoicePDF(l, invoice, items)
 }
