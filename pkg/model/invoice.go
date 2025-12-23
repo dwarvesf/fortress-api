@@ -54,6 +54,7 @@ type Invoice struct {
 	SubTotal          float64
 	Tax               float64
 	Discount          float64
+	DiscountType      string
 	Total             float64
 	ConversionAmount  float64
 	InvoiceFileURL    string

@@ -193,12 +193,24 @@ func (h *handler) Send(c *gin.Context) {
 		return
 	}
 
+	// DEBUG: Log frontend-provided values before server-side calculation
+	var frontendSubTotal float64
+	for _, item := range req.LineItems {
+		frontendSubTotal += item.Cost
+	}
+	l.Debugf("Invoice totals - Frontend: SubTotal=%.2f Total=%.2f Tax=%.2f Discount=%.2f | LineItemsSum=%.2f",
+		req.SubTotal, req.Total, req.Tax, req.Discount, frontendSubTotal)
+
 	iv, err := req.ToInvoiceModel(userID)
 	if err != nil {
 		l.Error(err, "failed to parse request to invoice model")
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, req, ""))
 		return
 	}
+
+	// DEBUG: Log server-calculated values after ToInvoiceModel
+	l.Debugf("Invoice totals - Server-calculated: SubTotal=%.2f Total=%.2f | Expected Total=%.2f",
+		iv.SubTotal, iv.Total, iv.SubTotal+iv.Tax-iv.Discount)
 
 	_, err = h.controller.Invoice.Send(iv)
 	if err != nil {

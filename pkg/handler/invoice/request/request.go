@@ -192,6 +192,19 @@ func (i *SendInvoiceRequest) ToInvoiceModel(sentByID string) (*model.Invoice, er
 		senderID = &s
 	}
 
+	// Calculate SubTotal from line items (server-side calculation)
+	var computedSubTotal float64
+	for _, item := range i.LineItems {
+		computedSubTotal += item.Cost
+	}
+
+	// Calculate Total = SubTotal + Tax - Discount
+	computedTotal := computedSubTotal + i.Tax - i.Discount
+
+	// Round to 2 decimal places
+	computedSubTotal = math.Round(computedSubTotal*100) / 100
+	computedTotal = math.Round(computedTotal*100) / 100
+
 	return &model.Invoice{
 		ProjectID:   model.UUID(i.ProjectID),
 		BankID:      model.UUID(i.BankID),
@@ -200,10 +213,10 @@ func (i *SendInvoiceRequest) ToInvoiceModel(sentByID string) (*model.Invoice, er
 		LineItems:   lineItems,
 		Email:       i.Email,
 		CC:          cc,
-		Total:       math.Round(i.Total*100) / 100,
+		Total:       computedTotal,
 		Discount:    math.Round(i.Discount*100) / 100,
 		Tax:         i.Tax,
-		SubTotal:    math.Round(i.SubTotal*100) / 100,
+		SubTotal:    computedSubTotal,
 		Month:       i.Month + 1,
 		Year:        i.Year,
 		Status:      defaultStatus,

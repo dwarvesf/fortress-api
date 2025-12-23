@@ -230,6 +230,10 @@ func (c *controller) dispatchInvoiceTask(iv *model.Invoice, fileName string) err
 }
 
 func (c *controller) generateInvoicePDF(l logger.Logger, invoice *model.Invoice, items []model.InvoiceItem) error {
+	// Log invoice values before template rendering
+	l.Debug(fmt.Sprintf("[PDF Generation] Invoice values before template: SubTotal=%.2f, Discount=%.2f, DiscountType=%s, Total=%.2f",
+		invoice.SubTotal, invoice.Discount, invoice.DiscountType, invoice.Total))
+
 	// Use USD currency code for USDC to display "$" symbol instead of "USDC"
 	currencyCode := invoice.Project.BankAccount.Currency.Name
 	if strings.ToUpper(currencyCode) == "USDC" {
@@ -329,10 +333,20 @@ func (c *controller) generateInvoicePDF(l logger.Logger, invoice *model.Invoice,
 			tmpValue := discountValue * math.Pow(10, float64(pound.Currency().Fraction))
 			return pound.Multiply(int64(tmpValue)).Display()
 		},
+		"subtract": func(a, b float64) float64 {
+			return a - b
+		},
 	}
 
 	if c.config.Env == "local" {
-		data.Path = os.Getenv("GOPATH") + "/src/github.com/dwarvesf/fortress-api/pkg/templates"
+		// Use current working directory instead of GOPATH
+		cwd, err := os.Getwd()
+		if err == nil {
+			data.Path = filepath.Join(cwd, "pkg/templates")
+			l.Debug(fmt.Sprintf("[Local Env] Using template path from cwd: %s", data.Path))
+		} else {
+			l.Debug(fmt.Sprintf("[Local Env] Failed to get cwd, using config path: %s", data.Path))
+		}
 	}
 
 	tmpl, err := template.New("invoicePDF").Funcs(funcMap).ParseFiles(filepath.Join(data.Path, "invoice.html"))
@@ -342,9 +356,22 @@ func (c *controller) generateInvoicePDF(l logger.Logger, invoice *model.Invoice,
 	}
 
 	var buf bytes.Buffer
+	// Log discount values immediately before template execution
+	l.Debug(fmt.Sprintf("[Template Execution] About to render template with Invoice.Discount=%.2f, Invoice.DiscountType=%s",
+		data.Invoice.Discount, data.Invoice.DiscountType))
+	l.Debug(fmt.Sprintf("[Template Path] Using template from: %s/invoice.html", data.Path))
+
 	if err := tmpl.Funcs(funcMap).ExecuteTemplate(&buf, "invoice.html", data); err != nil {
 		l.Errorf(err, "failed to execute template", "data", data, "path", data.Path, "filename", "invoice.html")
 		return err
+	}
+
+	// Debug: Check if Discount row is in the rendered HTML
+	renderedHTML := buf.String()
+	if strings.Contains(renderedHTML, "Discount</td>") {
+		l.Debug("[Template Debug] Discount row found in rendered HTML")
+	} else {
+		l.Debug("[Template Debug] Discount row NOT found in rendered HTML")
 	}
 
 	pdfg, err := toPdf.NewPDFGenerator()

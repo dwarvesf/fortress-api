@@ -249,6 +249,19 @@
           <td colspan="{{if haveDiscountColumn}}2{{else}}2{{end}}" class="font-bold text-right">Subtotal</td>
           <td colspan="2">{{formatMoney .Invoice.SubTotal}}</td>
         </tr>
+        {{if gt .Invoice.Discount 0.0}}
+        <tr style="line-height: 1">
+          <td colspan="{{if haveDiscountColumn}}6{{else}}4{{end}}"></td>
+          <td colspan="{{if haveDiscountColumn}}2{{else}}2{{end}}" class="font-bold text-right">Discount {{.Invoice.DiscountType}}</td>
+          <td colspan="2">-{{formatMoney .Invoice.Discount}}</td>
+        </tr>
+        {{else if lt .Invoice.Total .Invoice.SubTotal}}
+        <tr style="line-height: 1">
+          <td colspan="{{if haveDiscountColumn}}6{{else}}4{{end}}"></td>
+          <td colspan="{{if haveDiscountColumn}}2{{else}}2{{end}}" class="font-bold text-right">Discount</td>
+          <td colspan="2">-{{formatMoney (subtract .Invoice.SubTotal .Invoice.Total)}}</td>
+        </tr>
+        {{end}}
         <tr style="line-height: 1">
           <td colspan="{{if haveDiscountColumn}}6{{else}}4{{end}}"></td>
           <td colspan="{{if haveDiscountColumn}}2{{else}}2{{end}}" class="font-bold text-right">Total</td>

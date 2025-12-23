@@ -73,26 +73,92 @@ func (h *handler) extractInvoiceDataFromNotion(l logger.Logger, page nt.Page, pr
 
 	l.Debug(fmt.Sprintf("currency: %s", currency))
 
-	// Extract totals from formulas
-	var subtotal, total, taxRate, discount float64
+	// Extract totals from Notion calculated fields
+	// Use "Total Amount" (sum of line items) for SubTotal
+	// Use "Discount Amount" (calculated discount) for Discount
+	// Use "Final Total" (after discount) for Total
+	var subtotal, total, taxRate, discount, discountValue float64
+	var discountType string
 
-	if subtotalProp, ok := props["Subtotal"]; ok && subtotalProp.Formula != nil && subtotalProp.Formula.Number != nil {
-		subtotal = *subtotalProp.Formula.Number
+	// DEBUG: Check what properties are available
+	_, hasTotalAmount := props["Total Amount"]
+	_, hasDiscountAmount := props["Discount Amount"]
+	_, hasFinalTotal := props["Final Total"]
+	l.Debug(fmt.Sprintf("checking for Total Amount property: exists=%v", hasTotalAmount))
+	l.Debug(fmt.Sprintf("checking for Discount Amount property: exists=%v", hasDiscountAmount))
+	l.Debug(fmt.Sprintf("checking for Final Total property: exists=%v", hasFinalTotal))
+
+	// SubTotal = "Total Amount" rollup (sum of all line item costs)
+	if totalAmountProp, ok := props["Total Amount"]; ok && totalAmountProp.Rollup != nil && totalAmountProp.Rollup.Number != nil {
+		subtotal = *totalAmountProp.Rollup.Number
+		l.Debug(fmt.Sprintf("extracted Total Amount (subtotal): %.2f", subtotal))
+	} else {
+		l.Debug("Total Amount not found or invalid")
 	}
 
-	if totalProp, ok := props["Final Total"]; ok && totalProp.Formula != nil && totalProp.Formula.Number != nil {
-		total = *totalProp.Formula.Number
+	// Extract Discount Type (Percentage, Fixed Amount, None, etc.)
+	if discountTypeProp, ok := props["Discount Type"]; ok && discountTypeProp.Select != nil {
+		discountType = discountTypeProp.Select.Name
+		l.Debug(fmt.Sprintf("extracted Discount Type: %s", discountType))
+	}
+
+	// Extract Discount Value (the raw number: 10 for 10%, or 18400000 for fixed amount)
+	if discountValueProp, ok := props["Discount Value"]; ok && discountValueProp.Number != nil {
+		discountValue = *discountValueProp.Number
+		l.Debug(fmt.Sprintf("extracted Discount Value: %.2f", discountValue))
+	}
+
+	// Discount = "Discount Amount" formula (already calculated by Notion)
+	if discountAmountProp, ok := props["Discount Amount"]; ok && discountAmountProp.Formula != nil && discountAmountProp.Formula.Number != nil {
+		discount = *discountAmountProp.Formula.Number
+		l.Debug(fmt.Sprintf("extracted Discount Amount: %.2f", discount))
+	} else {
+		l.Debug("Discount Amount not found or invalid - checking if it's zero or missing")
+		if discountAmountProp, ok := props["Discount Amount"]; ok {
+			l.Debug(fmt.Sprintf("Discount Amount property exists but: Formula=%v, Number=%v",
+				discountAmountProp.Formula != nil,
+				discountAmountProp.Formula != nil && discountAmountProp.Formula.Number != nil))
+		}
+	}
+
+	// Total = "Final Total" formula (SubTotal - Discount + Tax)
+	if finalTotalProp, ok := props["Final Total"]; ok && finalTotalProp.Formula != nil && finalTotalProp.Formula.Number != nil {
+		total = *finalTotalProp.Formula.Number
+		l.Debug(fmt.Sprintf("extracted Final Total: %.2f", total))
+	} else {
+		l.Debug("Final Total not found or invalid")
 	}
 
 	if taxProp, ok := props["Tax Rate"]; ok && taxProp.Number != nil {
 		taxRate = *taxProp.Number
+		l.Debug(fmt.Sprintf("extracted Tax Rate: %.2f", taxRate))
+	} else {
+		l.Debug("Tax Rate not found or using 0")
 	}
 
-	if discountProp, ok := props["Discount Value"]; ok && discountProp.Number != nil {
-		discount = *discountProp.Number
-	}
+	l.Debug(fmt.Sprintf("financial data summary - subtotal: %.2f, discount: %.2f, discountType: %s, discountValue: %.2f, total: %.2f, tax: %.2f",
+		subtotal, discount, discountType, discountValue, total, taxRate))
 
-	l.Debug(fmt.Sprintf("financial data - subtotal: %.2f, total: %.2f, tax: %.2f, discount: %.2f", subtotal, total, taxRate, discount))
+	// If discount is 0 but total < subtotal, calculate discount from the difference
+	// This handles cases where line items have individual discounts but no invoice-level discount is set
+	// Formula: Final Total = (SubTotal - Discount) * (1 + Tax Rate)
+	// Therefore: Discount = SubTotal - (Final Total / (1 + Tax Rate))
+	if discount == 0 && total > 0 && subtotal > 0 && total < subtotal {
+		calculatedDiscount := subtotal - (total / (1 + taxRate))
+		l.Debug(fmt.Sprintf("discount was 0 but total < subtotal, calculating from totals: %.2f", calculatedDiscount))
+		if calculatedDiscount > 0 {
+			discount = calculatedDiscount
+			// If we don't have discountValue set, use the calculated discount as the value
+			if discountValue == 0 {
+				discountValue = calculatedDiscount
+				if discountType == "" {
+					discountType = "Fixed Amount"
+				}
+			}
+			l.Info(fmt.Sprintf("using calculated discount: %.2f, discountType: %s, discountValue: %.2f (subtotal: %.2f, total: %.2f, taxRate: %.2f)",
+				discount, discountType, discountValue, subtotal, total, taxRate))
+		}
+	}
 
 	// Fetch project and client data from relations
 	project, err := h.extractProjectAndClientFromNotion(l, props)
@@ -143,22 +209,32 @@ func (h *handler) extractInvoiceDataFromNotion(l logger.Logger, page nt.Page, pr
 	// Calculate tax amount
 	taxAmount := subtotal * taxRate
 
+	// Format discount label based on type (e.g., "10%" for percentage, empty for fixed amount)
+	discountLabel := ""
+	if discountType == "Percentage" && discountValue > 0 {
+		discountLabel = fmt.Sprintf("%.0f%%", discountValue)
+	}
+	l.Debug(fmt.Sprintf("formatted discount label: %s (type=%s, value=%.2f)", discountLabel, discountType, discountValue))
+
 	// Build Invoice model
+	// Discount = the calculated discount amount from "Discount Amount"
+	// DiscountType = the label to display (e.g., "10%")
 	invoice := &model.Invoice{
-		Number:      invoiceNumber,
-		InvoicedAt:  issueDate,
-		DueAt:       dueDate,
-		Status:      model.InvoiceStatusDraft,
-		Description: description,
-		Note:        notes,
-		SubTotal:    subtotal,
-		Tax:         taxAmount,
-		Discount:    discount,
-		Total:       total,
-		Month:       int(month),
-		Year:        year,
-		Project:     project,
-		Bank:        bankAccount,
+		Number:       invoiceNumber,
+		InvoicedAt:   issueDate,
+		DueAt:        dueDate,
+		Status:       model.InvoiceStatusDraft,
+		Description:  description,
+		Note:         notes,
+		SubTotal:     subtotal,
+		Tax:          taxAmount,
+		Discount:     discount,
+		DiscountType: discountLabel,
+		Total:        total,
+		Month:        int(month),
+		Year:         year,
+		Project:      project,
+		Bank:         bankAccount,
 	}
 
 	l.Debug(fmt.Sprintf("built invoice model: number=%s, total=%.2f", invoice.Number, invoice.Total))
