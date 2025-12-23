@@ -2,7 +2,7 @@
 
 **Database ID:** `2bf64b29b84c80879a52ed2f9d493096`
 **Database Name:** Client Invoices
-**Last Updated:** 2025-12-22
+**Last Updated:** 2025-12-23
 **URL:** https://www.notion.so/2bf64b29b84c80879a52ed2f9d493096
 
 ## Overview
@@ -49,9 +49,8 @@ Child records representing individual billable items within an invoice.
 |----------|------|-------------|
 | `Status` | status | Draft / Sent / Overdue / Paid / Cancelled |
 | `Generate Invoice` | button | Webhook trigger to generate invoice PDF |
-| `Preview Invoice` | button | Webhook trigger to preview invoice |
 | `⚠️ Send invoice` | button | Webhook trigger to send invoice via email |
-| `Sent by` | rich_text | User who sent the invoice |
+| `Sent by` | people | User who sent the invoice |
 
 ### Financial Core
 
@@ -146,7 +145,7 @@ Child records representing individual billable items within an invoice.
 | Property | Type | Description |
 |----------|------|-------------|
 | `Notes` | rich_text | Internal notes |
-| `Attachment` | files | File attachments |
+| `Preview` | files | Generated invoice PDF preview |
 | `Splits Generated` | checkbox | Whether commission splits have been generated |
 | `Generate Splits` | button | Webhook trigger to generate commission splits |
 
@@ -213,9 +212,9 @@ round(perPerson * 100) / 100
 
 The database includes three webhook buttons that trigger external processes:
 
-1. **Generate Invoice** - Creates PDF invoice in Google Drive
-2. **Preview Invoice** - Generates preview without saving
-3. **⚠️ Send invoice** - Sends invoice via email to recipients
+1. **Generate Invoice** - Creates PDF invoice and saves to Preview column
+2. **⚠️ Send invoice** - Downloads PDF from Preview, uploads to Google Drive, and sends email to recipients
+3. **Generate Splits** - Creates commission split records in Commission Splits database
 
 ### Commission Splits Workflow
 

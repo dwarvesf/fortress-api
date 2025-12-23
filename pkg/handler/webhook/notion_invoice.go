@@ -182,10 +182,10 @@ func (h *handler) HandleNotionInvoiceGenerate(c *gin.Context) {
 
 	l.Info(fmt.Sprintf("PDF uploaded to notion successfully: fileUploadID=%s", fileUploadID))
 
-	// Attach PDF to Notion page's Attachment property
+	// Attach PDF to Notion page's Preview property
 	// The go-notion library doesn't support file_upload type, so we use a custom method
 	// that handles the raw JSON marshaling for file_upload type attachments
-	if err := h.service.Notion.UpdatePagePropertiesWithFileUpload(pageID, "Attachment", fileUploadID, filename); err != nil {
+	if err := h.service.Notion.UpdatePagePropertiesWithFileUpload(pageID, "Preview", fileUploadID, filename); err != nil {
 		l.Error(err, "failed to attach PDF to notion page")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil,
 			fmt.Errorf("failed to attach PDF to page: %w", err), nil, ""))
@@ -206,7 +206,7 @@ func (h *handler) HandleNotionInvoiceGenerate(c *gin.Context) {
 
 // HandleNotionInvoiceSend handles invoice sending webhook events from Notion
 // This webhook is triggered when the "Send invoice" button is clicked in Notion
-// It downloads the PDF from Notion Attachment, uploads to Google Drive, sends email, and updates "Sent by"
+// It downloads the PDF from Notion Preview, uploads to Google Drive, sends email, and updates Status
 func (h *handler) HandleNotionInvoiceSend(c *gin.Context) {
 	l := h.logger.Fields(logger.Fields{
 		"handler": "webhook",
@@ -359,7 +359,7 @@ func (h *handler) HandleNotionInvoiceSend(c *gin.Context) {
 
 	l.Debug(fmt.Sprintf("email recipients configured: to=%s, cc=%d", invoice.Email, len(recipients)-1))
 
-	// Download PDF from Notion Attachment property
+	// Download PDF from Notion Preview property
 	pdfBytes, err := h.downloadPDFFromNotionAttachment(l, props)
 	if err != nil {
 		l.Error(err, "failed to download PDF from notion attachment")

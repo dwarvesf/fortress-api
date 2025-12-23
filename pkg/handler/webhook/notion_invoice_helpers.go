@@ -237,9 +237,13 @@ func (h *handler) transformNotionLineItem(l logger.Logger, props nt.DatabasePage
 		item.Quantity = 1 // default quantity
 	}
 
-	// Extract unit price
+	// Extract unit price - fallback to Fixed Amount if Unit Price is empty
 	if unitPriceProp, ok := props["Unit Price"]; ok && unitPriceProp.Number != nil {
 		item.UnitCost = *unitPriceProp.Number
+		l.Debug(fmt.Sprintf("extracted unit price from Unit Price column: %f", item.UnitCost))
+	} else if fixedAmountProp, ok := props["Fixed Amount"]; ok && fixedAmountProp.Number != nil {
+		item.UnitCost = *fixedAmountProp.Number
+		l.Debug(fmt.Sprintf("extracted unit price from Fixed Amount column: %f", item.UnitCost))
 	}
 
 	// Extract discount (from Discount Value number)
@@ -642,19 +646,19 @@ func (h *handler) extractRecipientsFromNotion(l logger.Logger, props nt.Database
 	return recipients, nil
 }
 
-// downloadPDFFromNotionAttachment downloads the PDF file from Notion's Attachment property
+// downloadPDFFromNotionAttachment downloads the PDF file from Notion's Preview property
 func (h *handler) downloadPDFFromNotionAttachment(l logger.Logger, props nt.DatabasePageProperties) ([]byte, error) {
-	l.Debug("downloading PDF from Notion Attachment property")
+	l.Debug("downloading PDF from Notion Preview property")
 
-	attachmentProp, ok := props["Attachment"]
+	attachmentProp, ok := props["Preview"]
 	if !ok {
-		l.Debug("Attachment property not found")
-		return nil, errors.New("Attachment property not found")
+		l.Debug("Preview property not found")
+		return nil, errors.New("Preview property not found")
 	}
 
 	if len(attachmentProp.Files) == 0 {
-		l.Debug("Attachment property has no files")
-		return nil, errors.New("no files in Attachment property")
+		l.Debug("Preview property has no files")
+		return nil, errors.New("no files in Preview property")
 	}
 
 	// Get the first file (should be the PDF)
