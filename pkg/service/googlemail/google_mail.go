@@ -89,31 +89,49 @@ func (g *googleService) SendInvoiceMail(invoice *model.Invoice) (msgID string, e
 		return "", ErrAliasNotVerified
 	}
 
-	if !mailutils.Email(invoice.Email) {
-		return "", errors.New("email invalid")
+	// Support comma-separated emails (e.g., "a@b.com, c@d.com")
+	// First email goes to "To", rest go to "CC"
+	var validEmails []string
+	for _, email := range strings.Split(invoice.Email, ",") {
+		email = strings.TrimSpace(email)
+		if email == "" {
+			continue
+		}
+		if !mailutils.Email(email) {
+			return "", fmt.Errorf("email invalid: %s", email)
+		}
+		validEmails = append(validEmails, email)
 	}
+	if len(validEmails) == 0 {
+		return "", errors.New("no valid email provided")
+	}
+	// First email as primary recipient (To)
+	invoice.Email = validEmails[0]
+	// Additional emails from comma-separated list
+	additionalEmails := validEmails[1:]
 
 	lastDayOfMonth := timeutil.LastDayOfMonth(invoice.Month, invoice.Year)
 
-	// Always include accounting@d.foundation in CC
+	// Build CC list: additional emails + existing CC + accounting@d.foundation
 	var ccList []string
-	if len(invoice.CC) == 0 || string(invoice.CC) == "\u0000" || strings.EqualFold(string(invoice.CC), "null") {
-		ccList = []string{"accounting@d.foundation"}
-	} else {
-		if err := json.Unmarshal(invoice.CC, &ccList); err != nil {
+	ccList = append(ccList, additionalEmails...)
+	if len(invoice.CC) > 0 && string(invoice.CC) != "\u0000" && !strings.EqualFold(string(invoice.CC), "null") {
+		var existingCC []string
+		if err := json.Unmarshal(invoice.CC, &existingCC); err != nil {
 			return "", err
 		}
-		// Add accounting@d.foundation if not already present
-		hasAccounting := false
-		for _, cc := range ccList {
-			if cc == "accounting@d.foundation" {
-				hasAccounting = true
-				break
-			}
+		ccList = append(ccList, existingCC...)
+	}
+	// Add accounting@d.foundation if not already present
+	hasAccounting := false
+	for _, cc := range ccList {
+		if cc == "accounting@d.foundation" {
+			hasAccounting = true
+			break
 		}
-		if !hasAccounting {
-			ccList = append(ccList, "accounting@d.foundation")
-		}
+	}
+	if !hasAccounting {
+		ccList = append(ccList, "accounting@d.foundation")
 	}
 
 	addresses := strings.Join(ccList, ", ")
