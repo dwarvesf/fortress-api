@@ -112,12 +112,13 @@ func GatherAddresses(CCs JSON) (string, error) {
 }
 
 type InvoiceItem struct {
-	Quantity    float64 `json:"quantity"`
-	UnitCost    float64 `json:"unit_cost"`
-	Discount    float64 `json:"discount"`
-	Cost        float64 `json:"cost"`
-	Description string  `json:"description"`
-	IsExternal  bool    `json:"is_external"`
+	Quantity     float64 `json:"quantity"`
+	UnitCost     float64 `json:"unit_cost"`
+	Discount     float64 `json:"discount"`
+	DiscountType string  `json:"discount_type"` // "Percentage", "Fixed Amount", "None", etc.
+	Cost         float64 `json:"cost"`
+	Description  string  `json:"description"`
+	IsExternal   bool    `json:"is_external"`
 }
 
 func GetInfoItems(lineItems JSON) ([]InvoiceItem, error) {

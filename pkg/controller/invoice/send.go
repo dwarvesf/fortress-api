@@ -310,14 +310,30 @@ func (c *controller) generateInvoicePDF(l logger.Logger, invoice *model.Invoice,
 		"float": func(n float64) string {
 			return fmt.Sprintf("%.2f", n)
 		},
+		"debugValue": func(label string, value interface{}) string {
+			l.Debug(fmt.Sprintf("[TEMPLATE DEBUG] %s = %v", label, value))
+			return fmt.Sprintf("%v", value)
+		},
+		"formatDiscount": func(discountValue float64, discountType string) string {
+			// Handle empty or None discount type
+			if discountType == "" || discountType == "None" || discountValue == 0 {
+				return "0%"
+			}
+
+			// Format based on discount type
+			if discountType == "Percentage" {
+				return fmt.Sprintf("%.0f%%", discountValue)
+			}
+
+			// For Fixed Amount and all other types, format as money
+			tmpValue := discountValue * math.Pow(10, float64(pound.Currency().Fraction))
+			return pound.Multiply(int64(tmpValue)).Display()
+		},
 	}
 
 	if c.config.Env == "local" {
 		data.Path = os.Getenv("GOPATH") + "/src/github.com/dwarvesf/fortress-api/pkg/templates"
 	}
-
-	l.Infof("[DEBUG] Generating invoice PDF - ENV: '%s', TemplatePath from config: '%s', Final data.Path: '%s'",
-		c.config.Env, c.config.Invoice.TemplatePath, data.Path)
 
 	tmpl, err := template.New("invoicePDF").Funcs(funcMap).ParseFiles(filepath.Join(data.Path, "invoice.html"))
 	if err != nil {

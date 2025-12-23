@@ -246,9 +246,17 @@ func (h *handler) transformNotionLineItem(l logger.Logger, props nt.DatabasePage
 		l.Debug(fmt.Sprintf("extracted unit price from Fixed Amount column: %f", item.UnitCost))
 	}
 
+	// Extract discount type (from Discount Type select)
+	item.DiscountType = "None" // default
+	if discountTypeProp, ok := props["Discount Type"]; ok && discountTypeProp.Select != nil {
+		item.DiscountType = discountTypeProp.Select.Name
+		l.Debug(fmt.Sprintf("extracted discount type: %s", item.DiscountType))
+	}
+
 	// Extract discount (from Discount Value number)
 	if discountProp, ok := props["Discount Value"]; ok && discountProp.Number != nil {
 		item.Discount = *discountProp.Number
+		l.Debug(fmt.Sprintf("extracted discount value: %f for type: %s", item.Discount, item.DiscountType))
 	}
 
 	// Extract total cost (Line Total formula)

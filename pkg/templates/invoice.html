@@ -234,7 +234,7 @@
           <td colspan="2">{{float .Quantity}}</td>
           <td colspan="2">{{formatMoney .UnitCost}}</td>
           {{if haveDiscountColumn}}
-          <td colspan="2">{{.Discount}}%</td>
+          <td colspan="2">{{formatDiscount .Discount .DiscountType}}</td>
           {{end}}
           <td colspan="2">{{formatMoney .Cost}}</td>
         </tr>
