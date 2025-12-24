@@ -10,7 +10,8 @@
 **File**: `pkg/service/openrouter/openrouter.go` (NEW)
 - [x] Create `OpenRouterService` struct
 - [x] Implement `SummarizeProofOfWorks(ctx, texts []string) (string, error)`
-- [x] Add retry logic with exponential backoff (max 3 retries)
+- [x] Add retry logic with model rotation (4 free models)
+- [x] Updated prompt: scope-based format (max 2 scopes, 3-4 activities per scope, 2-3 words per activity)
 - [x] Add DEBUG logging
 
 ## Task 3: Task Order Log Notion Service
@@ -18,9 +19,12 @@
 - [x] Create `TaskOrderLogService` struct
 - [x] Implement `QueryApprovedTimesheetsByMonth(ctx, month, contractorDiscord string) ([]*TimesheetEntry, error)`
 - [x] Implement `GetDeploymentByContractor(ctx, contractorID string) (string, error)`
-- [x] Implement `CreateOrder(ctx, deploymentID, month string) (string, error)`
-- [x] Implement `CreateTimesheetLineItem(ctx, orderID, projectID string, hours float64, proofOfWorks string, timesheetIDs []string, month string) (string, error)`
+- [x] Implement `GetDeploymentByContractorAndProject(ctx, contractorID, projectID string) (string, error)` - NEW
+- [x] Implement `CreateOrder(ctx, deploymentID, month string) (string, error)` - with Deployment field
+- [x] Implement `CreateTimesheetLineItem(ctx, orderID, deploymentID, projectID, hours, proofOfWorks, timesheetIDs, month) (string, error)`
 - [x] Implement `CheckOrderExists(ctx, deploymentID, month string) (bool, string, error)`
+- [x] Implement `CheckOrderExistsByContractor(ctx, contractorID, month string) (bool, string, error)` - NEW
+- [x] Implement `CheckLineItemExists(ctx, orderID, deploymentID string) (bool, string, error)` - NEW
 - [x] Add DEBUG logging
 
 ## Task 4: Handler
@@ -31,8 +35,14 @@
 - [x] Implement processing logic:
   1. Query approved timesheets
   2. Group by Contractor → Project
-  3. For each Contractor: create Order (if not exists)
-  4. For each Project: aggregate hours, summarize PoW, create sub-item
+  3. For each Contractor:
+     - Get first project's deployment for Order
+     - Create Order (if not exists) with first deployment
+  4. For each Project:
+     - Get deployment for contractor+project
+     - Aggregate hours, summarize PoW
+     - Check if line item exists
+     - Create sub-item (if not exists)
 - [x] Return response with counts and details
 - [x] Add DEBUG logging
 
@@ -50,12 +60,50 @@
 - [x] Create `notion.Services` struct with `TaskOrderLog` and `Timesheet` services
 - [x] Initialize in `New()` function
 
-## Status: ✅ COMPLETED
-All tasks have been implemented and verified. The build is successful.
+## Post-Development Refinements
 
-## Dependencies
-- Task 1 must complete first (config)
-- Task 2 and Task 3 can run in parallel after Task 1
-- Task 4 depends on Task 2 and Task 3
-- Task 5 and Task 6 depend on Task 4
-- Task 7 depends on Task 2 and Task 3
+### Issue 1: Wrong Deployment for Subitems
+**Problem**: Contractor working on 2 projects had both subitems with same deployment (first project's deployment)
+**Solution**:
+- Added `GetDeploymentByContractorAndProject` to query by contractor+project pair
+- Updated handler to get deployment per project (not per contractor)
+
+### Issue 2: Order Date Field
+**Problem**: Date was set to 1st of month
+**Solution**: Changed to use current date (`time.Now()`)
+
+### Issue 3: Proof of Works Too Long
+**Problem**: Summaries were too verbose with multiple entries
+**Solution**: Updated OpenRouter prompt to use scope-based format:
+- Max 2 scopes (most significant work areas)
+- 3-4 activities per scope
+- 2-3 words per activity
+- Example: `• Backend Infrastructure: Upload optimization, data retention, search capabilities`
+
+### Issue 4: Subitem Status
+**Problem**: Status was "Approved" (should be pending)
+**Solution**: Changed subitem status to "Pending Approval"
+
+### Issue 5: Order Missing Deployment
+**Problem**: Order (Type=Order) had no Deployment field
+**Solution**:
+- Get first project's deployment
+- Set Order's Deployment to first project's deployment
+- Each subitem still has its own project-specific deployment
+
+### Issue 6: Duplicate Line Items on Re-run
+**Problem**: Running sync twice created duplicate line items
+**Solution**:
+- Added `CheckLineItemExists(orderID, deploymentID)` function
+- Skip creating line item if already exists for order+deployment
+
+## Status: ✅ COMPLETED & REFINED
+All tasks implemented, tested, and refined based on user feedback. Build successful.
+
+## Key Features
+- ✅ Prevents duplicate Orders (checks by contractor+month)
+- ✅ Prevents duplicate line items (checks by order+deployment)
+- ✅ Correct deployment per project for contractors working on multiple projects
+- ✅ Concise PoW summaries using scope-based format
+- ✅ Free OpenRouter models with rotation and retry
+- ✅ DEBUG logging throughout

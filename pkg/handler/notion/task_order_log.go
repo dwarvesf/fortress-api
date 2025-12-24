@@ -208,16 +208,27 @@ func (h *handler) SyncTaskOrderLogs(c *gin.Context) {
 				}
 			}
 
-			// Create timesheet line item
-			l.Debug(fmt.Sprintf("creating line item: project=%s hours=%.1f deployment=%s", projectID, hours, deploymentID))
-			lineItemID, err := taskOrderLogService.CreateTimesheetLineItem(ctx, orderID, deploymentID, projectID, hours, summarizedPoW, timesheetIDs, month)
+			// Check if line item already exists
+			lineItemExists, lineItemID, err := taskOrderLogService.CheckLineItemExists(ctx, orderID, deploymentID)
 			if err != nil {
-				l.Error(err, fmt.Sprintf("failed to create line item: project=%s", projectID))
+				l.Error(err, fmt.Sprintf("failed to check line item existence: order=%s deployment=%s", orderID, deploymentID))
 				continue
 			}
 
-			lineItemsCreated++
-			l.Info(fmt.Sprintf("created line item: %s for project: %s (%.1f hours)", lineItemID, projectID, hours))
+			if !lineItemExists {
+				// Create timesheet line item
+				l.Debug(fmt.Sprintf("creating line item: project=%s hours=%.1f deployment=%s", projectID, hours, deploymentID))
+				lineItemID, err = taskOrderLogService.CreateTimesheetLineItem(ctx, orderID, deploymentID, projectID, hours, summarizedPoW, timesheetIDs, month)
+				if err != nil {
+					l.Error(err, fmt.Sprintf("failed to create line item: project=%s", projectID))
+					continue
+				}
+
+				lineItemsCreated++
+				l.Info(fmt.Sprintf("created line item: %s for project: %s (%.1f hours)", lineItemID, projectID, hours))
+			} else {
+				l.Debug(fmt.Sprintf("line item already exists: %s for order: %s deployment: %s", lineItemID, orderID, deploymentID))
+			}
 
 			// Add to project details
 			projectDetails := map[string]any{

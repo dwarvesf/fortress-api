@@ -422,6 +422,63 @@ func (s *TaskOrderLogService) CreateOrder(ctx context.Context, deploymentID, mon
 	return page.ID, nil
 }
 
+// CheckLineItemExists checks if a line item already exists for an order and deployment
+func (s *TaskOrderLogService) CheckLineItemExists(ctx context.Context, orderID, deploymentID string) (bool, string, error) {
+	taskOrderLogDBID := s.cfg.Notion.Databases.TaskOrderLog
+	if taskOrderLogDBID == "" {
+		return false, "", errors.New("task order log database ID not configured")
+	}
+
+	s.logger.Debug(fmt.Sprintf("checking if line item exists: order=%s deployment=%s", orderID, deploymentID))
+
+	query := &nt.DatabaseQuery{
+		Filter: &nt.DatabaseQueryFilter{
+			And: []nt.DatabaseQueryFilter{
+				{
+					Property: "Type",
+					DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+						Select: &nt.SelectDatabaseQueryFilter{
+							Equals: "Timesheet",
+						},
+					},
+				},
+				{
+					Property: "Parent item",
+					DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+						Relation: &nt.RelationDatabaseQueryFilter{
+							Contains: orderID,
+						},
+					},
+				},
+				{
+					Property: "Deployment",
+					DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+						Relation: &nt.RelationDatabaseQueryFilter{
+							Contains: deploymentID,
+						},
+					},
+				},
+			},
+		},
+		PageSize: 1,
+	}
+
+	resp, err := s.client.QueryDatabase(ctx, taskOrderLogDBID, query)
+	if err != nil {
+		s.logger.Error(err, fmt.Sprintf("failed to check line item exists: order=%s deployment=%s", orderID, deploymentID))
+		return false, "", fmt.Errorf("failed to check line item exists: %w", err)
+	}
+
+	if len(resp.Results) > 0 {
+		lineItemID := resp.Results[0].ID
+		s.logger.Debug(fmt.Sprintf("line item already exists: %s", lineItemID))
+		return true, lineItemID, nil
+	}
+
+	s.logger.Debug("line item does not exist")
+	return false, "", nil
+}
+
 // CreateTimesheetLineItem creates a Timesheet sub-item in Task Order Log
 func (s *TaskOrderLogService) CreateTimesheetLineItem(ctx context.Context, orderID, deploymentID, projectID string, hours float64, proofOfWorks string, timesheetIDs []string, month string) (string, error) {
 	taskOrderLogDBID := s.cfg.Notion.Databases.TaskOrderLog
@@ -453,7 +510,7 @@ func (s *TaskOrderLogService) CreateTimesheetLineItem(ctx context.Context, order
 			"Status": nt.DatabasePageProperty{
 				Type: nt.DBPropTypeSelect,
 				Select: &nt.SelectOptions{
-					Name: "Approved",
+					Name: "Pending Approval",
 				},
 			},
 			"Date": nt.DatabasePageProperty{
