@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"strconv"
+	"strings"
 
 	"golang.org/x/oauth2"
 	"google.golang.org/api/drive/v3"
@@ -110,16 +111,27 @@ func (g *googleService) findInvoiceDir(year, status string) (*drive.File, error)
 }
 
 func (g *googleService) getDirID(dirName, parentDirID string) (*drive.File, error) {
+	fmt.Printf("[DEBUG] getDirID: searching for dirName=%s in parentDirID=%s\n", dirName, parentDirID)
+
 	dir, err := g.searchFile(dirName, parentDirID, true)
 	if err != nil {
+		fmt.Printf("[DEBUG] getDirID: search error: %v\n", err)
 		return nil, err
 	}
 
 	if dir != nil {
+		fmt.Printf("[DEBUG] getDirID: found existing dir id=%s name=%s\n", dir.Id, dir.Name)
 		return dir, nil
 	}
 
-	return g.newDir(dirName, parentDirID)
+	fmt.Printf("[DEBUG] getDirID: dir not found, creating new dir: %s\n", dirName)
+	newDir, err := g.newDir(dirName, parentDirID)
+	if err != nil {
+		fmt.Printf("[DEBUG] getDirID: create dir error: %v\n", err)
+		return nil, err
+	}
+	fmt.Printf("[DEBUG] getDirID: created new dir id=%s name=%s\n", newDir.Id, newDir.Name)
+	return newDir, nil
 }
 
 func (g *googleService) ensureToken(rToken string) error {
@@ -159,6 +171,8 @@ func (g *googleService) searchFile(name, parentId string, isFolder bool) (*drive
 	if parentId != "root" {
 		parentQuery = fmt.Sprintf("'%s' in parents and ", parentId)
 	}
+
+	// Try exact match first
 	r, err := g.service.Files.List().
 		Q(parentQuery + folderQuery + fmt.Sprintf("name='%s'", name)).
 		Fields("nextPageToken, files(id, name)").
@@ -168,11 +182,88 @@ func (g *googleService) searchFile(name, parentId string, isFolder bool) (*drive
 	if err != nil {
 		return nil, err
 	}
-	if len(r.Files) == 0 {
-		return nil, nil
+
+	// If exact match found, return it
+	if len(r.Files) > 0 {
+		return r.Files[0], nil
 	}
 
-	return r.Files[0], nil
+	// For folders, try case-insensitive search by listing all folders in parent and comparing
+	if isFolder {
+		r, err := g.service.Files.List().
+			Q(parentQuery + folderQuery + "trashed=false").
+			Fields("nextPageToken, files(id, name)").
+			SupportsAllDrives(true).
+			IncludeItemsFromAllDrives(true).
+			Do()
+		if err != nil {
+			return nil, err
+		}
+
+		// Compare names case-insensitively, and also try slugged comparison
+		for _, file := range r.Files {
+			if equalIgnoreCase(file.Name, name) {
+				return file, nil
+			}
+			// Also try comparing slugged versions (to match "LE MINH QUANG" with "le-minh-quang")
+			if slugContractorName(file.Name) == name {
+				fmt.Printf("[DEBUG] searchFile: found folder via slug match: '%s' (slugs to '%s') matches search '%s'\n",
+					file.Name, slugContractorName(file.Name), name)
+				return file, nil
+			}
+		}
+	}
+
+	return nil, nil
+}
+
+// equalIgnoreCase compares two strings case-insensitively
+func equalIgnoreCase(a, b string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := 0; i < len(a); i++ {
+		ca := a[i]
+		cb := b[i]
+		if ca >= 'A' && ca <= 'Z' {
+			ca += 'a' - 'A'
+		}
+		if cb >= 'A' && cb <= 'Z' {
+			cb += 'a' - 'A'
+		}
+		if ca != cb {
+			return false
+		}
+	}
+	return true
+}
+
+// slugContractorName converts contractor name to a consistent folder name format
+// Example: "LE MINH QUANG" -> "le-minh-quang"
+func slugContractorName(name string) string {
+	// Convert to lowercase
+	slug := strings.ToLower(name)
+
+	// Replace spaces and special characters with hyphens
+	slug = strings.ReplaceAll(slug, " ", "-")
+	slug = strings.ReplaceAll(slug, "_", "-")
+
+	// Remove any characters that aren't alphanumeric or hyphens
+	var result strings.Builder
+	for _, ch := range slug {
+		if (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9') || ch == '-' {
+			result.WriteRune(ch)
+		}
+	}
+
+	// Remove consecutive hyphens and trim
+	slug = result.String()
+	for strings.Contains(slug, "--") {
+		slug = strings.ReplaceAll(slug, "--", "-")
+	}
+	slug = strings.Trim(slug, "-")
+
+	return slug
 }
 
 func (g *googleService) newDir(name string, parentId string) (*drive.File, error) {
@@ -238,4 +329,41 @@ func (g *googleService) DownloadInvoicePDF(invoice *model.Invoice, dirName strin
 	defer resp.Body.Close()
 
 	return io.ReadAll(resp.Body)
+}
+
+// UploadContractorInvoicePDF uploads a contractor invoice PDF to Google Drive
+// It creates a subfolder for the contractor if it doesn't exist
+// Returns the public URL of the uploaded file
+func (g *googleService) UploadContractorInvoicePDF(contractorName, fileName string, pdfBytes []byte) (string, error) {
+	if err := g.ensureToken(g.appConfig.Google.AccountingGoogleRefreshToken); err != nil {
+		return "", err
+	}
+
+	if err := g.prepareService(); err != nil {
+		return "", err
+	}
+
+	// Slug the contractor name for consistent folder naming
+	folderName := slugContractorName(contractorName)
+
+	// Debug logging
+	fmt.Printf("[DEBUG] UploadContractorInvoicePDF: contractorName=%s folderName=%s parentDirID=%s\n",
+		contractorName, folderName, g.appConfig.Invoice.ContractorInvoiceDirID)
+
+	// Get or create contractor subfolder
+	contractorDir, err := g.getDirID(folderName, g.appConfig.Invoice.ContractorInvoiceDirID)
+	if err != nil {
+		return "", fmt.Errorf("failed to get contractor directory: %w", err)
+	}
+
+	fmt.Printf("[DEBUG] UploadContractorInvoicePDF: got contractorDir id=%s name=%s\n", contractorDir.Id, contractorDir.Name)
+
+	// Upload the PDF file
+	file, err := g.newFile(fileName, "application/pdf", bytes.NewReader(pdfBytes), contractorDir.Id)
+	if err != nil {
+		return "", fmt.Errorf("failed to upload PDF: %w", err)
+	}
+
+	// Return the Google Drive file URL
+	return fmt.Sprintf("https://drive.google.com/file/d/%s/view", file.Id), nil
 }

@@ -288,6 +288,21 @@ func tryParseTime(timeString string) *time.Time {
 	return &time
 }
 
+// FormatMonthYear formats a month string (YYYY-MM) to "Month Year" format
+// Example: "2025-12" -> "December 2025"
+func FormatMonthYear(month string) string {
+	parts := strings.Split(month, "-")
+	if len(parts) != 2 {
+		return month
+	}
+	year := parts[0]
+	monthNum, err := strconv.Atoi(parts[1])
+	if err != nil || monthNum < 1 || monthNum > 12 {
+		return month
+	}
+	return fmt.Sprintf("%s %s", time.Month(monthNum).String(), year)
+}
+
 func ChunkDateRange(start, end time.Time) [][2]time.Time {
 	var weeks [][2]time.Time
 

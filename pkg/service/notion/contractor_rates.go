@@ -1,0 +1,312 @@
+package notion
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"time"
+
+	nt "github.com/dstotijn/go-notion"
+
+	"github.com/dwarvesf/fortress-api/pkg/config"
+	"github.com/dwarvesf/fortress-api/pkg/logger"
+)
+
+// ContractorRatesService handles contractor rates operations with Notion
+type ContractorRatesService struct {
+	client *nt.Client
+	cfg    *config.Config
+	logger logger.Logger
+}
+
+// ContractorRateData represents contractor rate data from Notion
+type ContractorRateData struct {
+	PageID           string
+	ContractorPageID string
+	ContractorName   string
+	Discord          string
+	BillingType      string  // "Monthly Fixed", "Hourly Rate", etc.
+	MonthlyFixed     float64 // From formula
+	HourlyRate       float64 // From number field
+	GrossFixed       float64 // From formula
+	Currency         string  // "VND", "USD"
+	StartDate        *time.Time
+	EndDate          *time.Time
+}
+
+// NewContractorRatesService creates a new Notion contractor rates service
+func NewContractorRatesService(cfg *config.Config, logger logger.Logger) *ContractorRatesService {
+	if cfg.Notion.Secret == "" {
+		logger.Error(errors.New("notion secret not configured"), "notion secret is empty")
+		return nil
+	}
+
+	logger.Debug("creating new ContractorRatesService")
+
+	return &ContractorRatesService{
+		client: nt.NewClient(cfg.Notion.Secret),
+		cfg:    cfg,
+		logger: logger,
+	}
+}
+
+// QueryRatesByDiscordAndMonth queries contractor rates by Discord username and month
+// Returns the active rate for the given month (Start Date <= month AND (End Date >= month OR End Date is empty))
+func (s *ContractorRatesService) QueryRatesByDiscordAndMonth(ctx context.Context, discord, month string) (*ContractorRateData, error) {
+	contractorRatesDBID := s.cfg.Notion.Databases.ContractorRates
+	if contractorRatesDBID == "" {
+		return nil, errors.New("contractor rates database ID not configured")
+	}
+
+	s.logger.Debug(fmt.Sprintf("querying contractor rates: discord=%s month=%s", discord, month))
+
+	// Parse month to get date range
+	monthTime, err := time.Parse("2006-01", month)
+	if err != nil {
+		s.logger.Error(err, fmt.Sprintf("failed to parse month: %s", month))
+		return nil, fmt.Errorf("invalid month format: %w", err)
+	}
+
+	// Get start of month for date filtering
+	startOfMonth := time.Date(monthTime.Year(), monthTime.Month(), 1, 0, 0, 0, 0, time.UTC)
+	endOfMonth := startOfMonth.AddDate(0, 1, -1)
+
+	s.logger.Debug(fmt.Sprintf("date range for filtering: start=%s end=%s", startOfMonth.Format("2006-01-02"), endOfMonth.Format("2006-01-02")))
+
+	// Build filter for Discord username and active status
+	// Filter: Discord contains discord AND Status = Active
+	query := &nt.DatabaseQuery{
+		Filter: &nt.DatabaseQueryFilter{
+			And: []nt.DatabaseQueryFilter{
+				{
+					Property: "Discord",
+					DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+						Rollup: &nt.RollupDatabaseQueryFilter{
+							Any: &nt.DatabaseQueryPropertyFilter{
+								RichText: &nt.TextPropertyFilter{
+									Contains: discord,
+								},
+							},
+						},
+					},
+				},
+				{
+					Property: "Status",
+					DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+						Status: &nt.StatusDatabaseQueryFilter{
+							Equals: "Active",
+						},
+					},
+				},
+			},
+		},
+		PageSize: 100,
+	}
+
+	var matchedRate *ContractorRateData
+
+	// Query with pagination
+	for {
+		resp, err := s.client.QueryDatabase(ctx, contractorRatesDBID, query)
+		if err != nil {
+			s.logger.Error(err, fmt.Sprintf("failed to query contractor rates database: discord=%s", discord))
+			return nil, fmt.Errorf("failed to query contractor rates database: %w", err)
+		}
+
+		s.logger.Debug(fmt.Sprintf("found %d contractor rates entries", len(resp.Results)))
+
+		for _, page := range resp.Results {
+			props, ok := page.Properties.(nt.DatabasePageProperties)
+			if !ok {
+				s.logger.Debug("failed to cast page properties")
+				continue
+			}
+
+			// Debug: Log all property names
+			fmt.Printf("[DEBUG] contractor_rates: Available properties for page %s:\n", page.ID)
+			for propName := range props {
+				fmt.Printf("[DEBUG]   - %s\n", propName)
+			}
+
+			// Extract Start Date and End Date for filtering
+			startDate := s.extractDate(props, "Start Date")
+			endDate := s.extractDate(props, "End Date")
+
+			s.logger.Debug(fmt.Sprintf("checking rate: pageID=%s startDate=%v endDate=%v", page.ID, startDate, endDate))
+
+			// Check date range: Start Date <= month AND (End Date >= month OR End Date is empty)
+			if startDate != nil && startDate.After(endOfMonth) {
+				// Start date is after the month we're looking for
+				s.logger.Debug(fmt.Sprintf("skipping rate: start date after month, startDate=%s endOfMonth=%s", startDate.Format("2006-01-02"), endOfMonth.Format("2006-01-02")))
+				continue
+			}
+
+			if endDate != nil && endDate.Before(startOfMonth) {
+				// End date is before the month we're looking for
+				s.logger.Debug(fmt.Sprintf("skipping rate: end date before month, endDate=%s startOfMonth=%s", endDate.Format("2006-01-02"), startOfMonth.Format("2006-01-02")))
+				continue
+			}
+
+			// Extract contractor page ID
+			contractorPageID := s.extractFirstRelationID(props, "Contractor")
+			fmt.Printf("[DEBUG] contractor_rates: contractorPageID=%s\n", contractorPageID)
+
+			// Fetch contractor name from Contractor page
+			contractorName := ""
+			if contractorPageID != "" {
+				contractorName = s.getContractorName(ctx, contractorPageID)
+				fmt.Printf("[DEBUG] contractor_rates: fetched contractorName=%s\n", contractorName)
+			}
+
+			// Extract rate data
+			rateData := &ContractorRateData{
+				PageID:           page.ID,
+				ContractorPageID: contractorPageID,
+				ContractorName:   contractorName,
+				Discord:          s.extractRollupRichText(props, "Discord"),
+				BillingType:      s.extractSelect(props, "Billing Type"),
+				MonthlyFixed:     s.extractFormulaNumber(props, "Monthly Fixed"),
+				HourlyRate:       s.extractNumber(props, "Hourly Rate"),
+				GrossFixed:       s.extractFormulaNumber(props, "Gross Fixed"),
+				Currency:         s.extractSelect(props, "Currency"),
+				StartDate:        startDate,
+				EndDate:          endDate,
+			}
+
+			s.logger.Debug(fmt.Sprintf("found matching rate: pageID=%s contractor=%s billingType=%s currency=%s monthlyFixed=%.2f hourlyRate=%.2f",
+				rateData.PageID, rateData.ContractorName, rateData.BillingType, rateData.Currency, rateData.MonthlyFixed, rateData.HourlyRate))
+
+			matchedRate = rateData
+			break // Take the first matching rate
+		}
+
+		if matchedRate != nil || !resp.HasMore || resp.NextCursor == nil {
+			break
+		}
+
+		query.StartCursor = *resp.NextCursor
+	}
+
+	if matchedRate == nil {
+		s.logger.Debug(fmt.Sprintf("no active contractor rate found for discord=%s month=%s", discord, month))
+		return nil, fmt.Errorf("no active contractor rate found for discord=%s month=%s", discord, month)
+	}
+
+	return matchedRate, nil
+}
+
+// getContractorName fetches the Full Name from a Contractor page
+func (s *ContractorRatesService) getContractorName(ctx context.Context, pageID string) string {
+	page, err := s.client.FindPageByID(ctx, pageID)
+	if err != nil {
+		fmt.Printf("[DEBUG] getContractorName: failed to fetch contractor page %s: %v\n", pageID, err)
+		return ""
+	}
+
+	props, ok := page.Properties.(nt.DatabasePageProperties)
+	if !ok {
+		fmt.Printf("[DEBUG] getContractorName: failed to cast page properties for %s\n", pageID)
+		return ""
+	}
+
+	// Try to get Full Name from Title property
+	if prop, ok := props["Full Name"]; ok && len(prop.Title) > 0 {
+		name := prop.Title[0].PlainText
+		fmt.Printf("[DEBUG] getContractorName: found Full Name in Title: %s\n", name)
+		return name
+	}
+
+	// Try Name property as fallback
+	if prop, ok := props["Name"]; ok && len(prop.Title) > 0 {
+		name := prop.Title[0].PlainText
+		fmt.Printf("[DEBUG] getContractorName: found Name in Title: %s\n", name)
+		return name
+	}
+
+	fmt.Printf("[DEBUG] getContractorName: no Full Name or Name property found for page %s\n", pageID)
+	return ""
+}
+
+// Helper functions for extracting properties
+
+func (s *ContractorRatesService) extractRollupRichText(props nt.DatabasePageProperties, propName string) string {
+	prop, ok := props[propName]
+	if !ok || prop.Rollup == nil {
+		return ""
+	}
+
+	for _, item := range prop.Rollup.Array {
+		if len(item.RichText) > 0 {
+			return item.RichText[0].PlainText
+		}
+	}
+	return ""
+}
+
+func (s *ContractorRatesService) extractRollupTitle(props nt.DatabasePageProperties, propName string) string {
+	prop, ok := props[propName]
+	if !ok || prop.Rollup == nil {
+		s.logger.Debug(fmt.Sprintf("extractRollupTitle: property '%s' not found or rollup is nil", propName))
+		return ""
+	}
+
+	s.logger.Debug(fmt.Sprintf("extractRollupTitle: property '%s' has %d items in rollup array", propName, len(prop.Rollup.Array)))
+
+	for i, item := range prop.Rollup.Array {
+		// Try Title first
+		if len(item.Title) > 0 {
+			s.logger.Debug(fmt.Sprintf("extractRollupTitle: found title in item %d: %s", i, item.Title[0].PlainText))
+			return item.Title[0].PlainText
+		}
+		// Try RichText as fallback
+		if len(item.RichText) > 0 {
+			s.logger.Debug(fmt.Sprintf("extractRollupTitle: found richtext in item %d: %s", i, item.RichText[0].PlainText))
+			return item.RichText[0].PlainText
+		}
+		s.logger.Debug(fmt.Sprintf("extractRollupTitle: item %d has no title or richtext", i))
+	}
+
+	s.logger.Debug(fmt.Sprintf("extractRollupTitle: no valid data found in rollup for '%s'", propName))
+	return ""
+}
+
+func (s *ContractorRatesService) extractFormulaNumber(props nt.DatabasePageProperties, propName string) float64 {
+	prop, ok := props[propName]
+	if !ok || prop.Formula == nil || prop.Formula.Number == nil {
+		return 0
+	}
+	return *prop.Formula.Number
+}
+
+func (s *ContractorRatesService) extractNumber(props nt.DatabasePageProperties, propName string) float64 {
+	prop, ok := props[propName]
+	if !ok || prop.Number == nil {
+		return 0
+	}
+	return *prop.Number
+}
+
+func (s *ContractorRatesService) extractSelect(props nt.DatabasePageProperties, propName string) string {
+	prop, ok := props[propName]
+	if !ok || prop.Select == nil {
+		return ""
+	}
+	return prop.Select.Name
+}
+
+func (s *ContractorRatesService) extractDate(props nt.DatabasePageProperties, propName string) *time.Time {
+	prop, ok := props[propName]
+	if !ok || prop.Date == nil {
+		return nil
+	}
+	t := time.Time(prop.Date.Start.Time)
+	return &t
+}
+
+func (s *ContractorRatesService) extractFirstRelationID(props nt.DatabasePageProperties, propName string) string {
+	prop, ok := props[propName]
+	if !ok || len(prop.Relation) == 0 {
+		return ""
+	}
+	return prop.Relation[0].ID
+}

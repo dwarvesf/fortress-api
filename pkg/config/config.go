@@ -268,9 +268,11 @@ type NotionDatabase struct {
 	Memo              string
 	Issue             string
 	Contractor        string
+	ContractorRates   string
 	DeploymentTracker string
 	Timesheet         string
 	TaskOrderLog      string
+	BankAccounts      string
 }
 
 type Discord struct {
@@ -296,9 +298,10 @@ type DiscordID struct {
 }
 
 type Invoice struct {
-	TemplatePath string
-	DirID        string
-	TestEmail    string
+	TemplatePath           string
+	DirID                  string
+	ContractorInvoiceDirID string
+	TestEmail              string
 }
 
 type Sendgrid struct {
@@ -507,9 +510,11 @@ func Generate(v ENV) *Config {
 				Memo:              v.GetString("NOTION_MEMO_DB_ID"),
 				Issue:             v.GetString("NOTION_ISSUE_DB_ID"),
 				Contractor:        v.GetString("NOTION_CONTRACTOR_DB_ID"),
+				ContractorRates:   v.GetString("NOTION_CONTRACTOR_RATES_DB_ID"),
 				DeploymentTracker: v.GetString("NOTION_DEPLOYMENT_TRACKER_DB_ID"),
 				Timesheet:         v.GetString("NOTION_TIMESHEET_DB_ID"),
 				TaskOrderLog:      v.GetString("NOTION_TASK_ORDER_LOG_DB_ID"),
+				BankAccounts:      v.GetString("NOTION_BANK_ACCOUNTS_DB_ID"),
 			},
 		},
 		Discord: Discord{
@@ -539,9 +544,10 @@ func Generate(v ENV) *Config {
 			PlaygroundTodoSetID: basecampPlaygroundTodoSetID,
 		},
 		Invoice: Invoice{
-			TemplatePath: v.GetString("INVOICE_TEMPLATE_PATH"),
-			DirID:        v.GetString("INVOICE_DIR_ID"),
-			TestEmail:    v.GetString("INVOICE_TEST_EMAIL"),
+			TemplatePath:           v.GetString("INVOICE_TEMPLATE_PATH"),
+			DirID:                  v.GetString("INVOICE_DIR_ID"),
+			ContractorInvoiceDirID: v.GetString("CONTRACTOR_INVOICE_DIR_ID"),
+			TestEmail:              v.GetString("INVOICE_TEST_EMAIL"),
 		},
 
 		Sendgrid: Sendgrid{
