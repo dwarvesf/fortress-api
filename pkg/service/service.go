@@ -38,6 +38,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/service/nocodb"
 	"github.com/dwarvesf/fortress-api/pkg/service/notion"
 	"github.com/dwarvesf/fortress-api/pkg/service/ogifmemosummarizer"
+	"github.com/dwarvesf/fortress-api/pkg/service/openrouter"
 	"github.com/dwarvesf/fortress-api/pkg/service/parquet"
 	"github.com/dwarvesf/fortress-api/pkg/service/reddit"
 	"github.com/dwarvesf/fortress-api/pkg/service/sendgrid"
@@ -73,7 +74,8 @@ type Service struct {
 	Mochi                   mochi.IService
 	MochiPay                mochipay.IService
 	MochiProfile            mochiprofile.IService
-	Notion                  notion.IService
+	Notion                  *notion.Services
+	OpenRouter              *openrouter.OpenRouterService
 	ParquetSync             parquet.ISyncService
 	Sendgrid                sendgrid.IService
 	Wise                    wise.IService
@@ -297,8 +299,13 @@ func New(cfg *config.Config, store *store.Store, repo store.DBRepo) (*Service, e
 		Mochi:              mochi.New(cfg, logger.L),
 		MochiPay:           mochipay.New(cfg, logger.L),
 		MochiProfile:       mochiprofile.New(cfg, logger.L),
-		Notion:             notion.New(cfg.Notion.Secret, cfg.Notion.Databases.Project, logger.L, repo.DB()),
-		ParquetSync:        parquetSvc,
+		Notion: &notion.Services{
+			IService:     notion.New(cfg.Notion.Secret, cfg.Notion.Databases.Project, logger.L, repo.DB()),
+			Timesheet:    notion.NewTimesheetService(cfg, logger.L),
+			TaskOrderLog: notion.NewTaskOrderLogService(cfg, logger.L),
+		},
+		OpenRouter:     openrouter.NewOpenRouterService(cfg, logger.L),
+		ParquetSync:    parquetSvc,
 		Sendgrid:           sendgrid.New(cfg.Sendgrid.APIKey, cfg, logger.L),
 		Wise:               wiseSvc,
 		BaseClient:         baseClient,

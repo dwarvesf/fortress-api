@@ -55,6 +55,8 @@ type Config struct {
 	Github   Github
 	CheckIn  CheckIn
 
+	OpenRouter OpenRouter
+
 	APIKey       string
 	Debug        bool
 	Env          string
@@ -245,6 +247,11 @@ type Github struct {
 	BraineryReviewers []string
 }
 
+type OpenRouter struct {
+	APIKey string
+	Model  string
+}
+
 type NotionDatabase struct {
 	AuditCycle        string
 	AuditActionItem   string
@@ -262,6 +269,8 @@ type NotionDatabase struct {
 	Issue             string
 	Contractor        string
 	DeploymentTracker string
+	Timesheet         string
+	TaskOrderLog      string
 }
 
 type Discord struct {
@@ -441,6 +450,10 @@ func Generate(v ENV) *Config {
 			Token:             v.GetString("GITHUB_ACCESS_TOKEN"),
 			BraineryReviewers: strings.Split(v.GetString("BRAINERY_REVIEWERS"), ","),
 		},
+		OpenRouter: OpenRouter{
+			APIKey: v.GetString("OPENROUTER_API_KEY"),
+			Model:  v.GetString("OPENROUTER_MODEL"),
+		},
 		Google: Google{
 			AccountingEmailID:            v.GetString("ACCOUNTING_EMAIL_ID"),
 			AccountingGoogleRefreshToken: v.GetString("ACCOUNTING_GOOGLE_REFRESH_TOKEN"),
@@ -479,22 +492,24 @@ func Generate(v ENV) *Config {
 		Notion: Notion{
 			Secret: v.GetString("NOTION_SECRET"),
 			Databases: NotionDatabase{
-				AuditCycle:      v.GetString("NOTION_AUDIT_CYCLE_DB_ID"),
-				AuditActionItem: v.GetString("NOTION_AUDIT_ACTION_ITEM_DB_ID"),
-				Earn:            v.GetString("NOTION_EARN_DB_ID"),
-				TechRadar:       v.GetString("NOTION_TECH_RADAR_DB_ID"),
-				Audience:        v.GetString("NOTION_AUDIENCE_DB_ID"),
-				Event:           v.GetString("NOTION_EVENT_DB_ID"),
-				Hiring:          v.GetString("NOTION_HIRING_DB_ID"),
-				StaffingDemand:  v.GetString("NOTION_STAFFING_DEMAND_DB_ID"),
-				Project:         v.GetString("NOTION_PROJECT_DB_ID"),
-				Delivery:        v.GetString("NOTION_DELIVERY_DB_ID"),
-				Digest:          v.GetString("NOTION_DIGEST_DB_ID"),
-				Updates:         v.GetString("NOTION_UPDATES_DB_ID"),
-				Memo:            v.GetString("NOTION_MEMO_DB_ID"),
-				Issue:           v.GetString("NOTION_ISSUE_DB_ID"),
+				AuditCycle:        v.GetString("NOTION_AUDIT_CYCLE_DB_ID"),
+				AuditActionItem:   v.GetString("NOTION_AUDIT_ACTION_ITEM_DB_ID"),
+				Earn:              v.GetString("NOTION_EARN_DB_ID"),
+				TechRadar:         v.GetString("NOTION_TECH_RADAR_DB_ID"),
+				Audience:          v.GetString("NOTION_AUDIENCE_DB_ID"),
+				Event:             v.GetString("NOTION_EVENT_DB_ID"),
+				Hiring:            v.GetString("NOTION_HIRING_DB_ID"),
+				StaffingDemand:    v.GetString("NOTION_STAFFING_DEMAND_DB_ID"),
+				Project:           v.GetString("NOTION_PROJECT_DB_ID"),
+				Delivery:          v.GetString("NOTION_DELIVERY_DB_ID"),
+				Digest:            v.GetString("NOTION_DIGEST_DB_ID"),
+				Updates:           v.GetString("NOTION_UPDATES_DB_ID"),
+				Memo:              v.GetString("NOTION_MEMO_DB_ID"),
+				Issue:             v.GetString("NOTION_ISSUE_DB_ID"),
 				Contractor:        v.GetString("NOTION_CONTRACTOR_DB_ID"),
 				DeploymentTracker: v.GetString("NOTION_DEPLOYMENT_TRACKER_DB_ID"),
+				Timesheet:         v.GetString("NOTION_TIMESHEET_DB_ID"),
+				TaskOrderLog:      v.GetString("NOTION_TASK_ORDER_LOG_DB_ID"),
 			},
 		},
 		Discord: Discord{
