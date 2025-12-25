@@ -447,3 +447,73 @@ func isValidMonthFormat(month string) bool {
 	matched, _ := regexp.MatchString(`^\d{4}-\d{2}$`, month)
 	return matched
 }
+
+// MarkPaidResponse is the response for mark paid endpoint
+type MarkPaidResponse struct {
+	InvoiceNumber   string    `json:"invoice_number"`
+	Source          string    `json:"source"`
+	PaidAt          time.Time `json:"paid_at"`
+	PostgresUpdated bool      `json:"postgres_updated"`
+	NotionUpdated   bool      `json:"notion_updated"`
+} // @name MarkPaidResponse
+
+// MarkPaid godoc
+// @Summary Mark invoice as paid by invoice number
+// @Description Mark invoice as paid by searching both PostgreSQL and Notion, updating where found
+// @id markInvoiceAsPaid
+// @Tags Invoice
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param body body request.MarkPaidRequest true "Mark paid request"
+// @Success 200 {object} MarkPaidResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /invoices/mark-paid [post]
+func (h *handler) MarkPaid(c *gin.Context) {
+	l := h.logger.Fields(logger.Fields{
+		"handler": "invoice",
+		"method":  "MarkPaid",
+	})
+
+	l.Debug("handling mark invoice as paid request")
+
+	// 1. Parse request
+	var req request.MarkPaidRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		l.Error(err, "invalid request body")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, req, ""))
+		return
+	}
+
+	l.Debugf("received request: invoiceNumber=%s", req.InvoiceNumber)
+
+	// 2. Call controller
+	result, err := h.controller.Invoice.MarkInvoiceAsPaidByNumber(req.InvoiceNumber)
+	if err != nil {
+		l.Error(err, "failed to mark invoice as paid")
+		if strings.Contains(err.Error(), "not found") {
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, err, req, ""))
+			return
+		}
+		if strings.Contains(err.Error(), "cannot mark as paid") {
+			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, req, ""))
+			return
+		}
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req, ""))
+		return
+	}
+
+	// 3. Build response
+	response := MarkPaidResponse{
+		InvoiceNumber:   result.InvoiceNumber,
+		Source:          result.Source,
+		PaidAt:          result.PaidAt,
+		PostgresUpdated: result.PostgresUpdated,
+		NotionUpdated:   result.NotionUpdated,
+	}
+
+	l.Infof("invoice marked as paid successfully: invoiceNumber=%s source=%s", result.InvoiceNumber, result.Source)
+	c.JSON(http.StatusOK, view.CreateResponse(response, nil, nil, req, ""))
+}

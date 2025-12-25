@@ -251,6 +251,7 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 		invoiceGroup.GET("/template", conditionalAuthMW, conditionalPermMW(model.PermissionInvoiceRead), h.Invoice.GetTemplate)
 		invoiceGroup.POST("/send", conditionalAuthMW, conditionalPermMW(model.PermissionInvoiceRead), h.Invoice.Send)
 		invoiceGroup.POST("/contractor/generate", conditionalAuthMW, conditionalPermMW(model.PermissionInvoiceCreate), h.Invoice.GenerateContractorInvoice)
+		invoiceGroup.POST("/mark-paid", conditionalAuthMW, conditionalPermMW(model.PermissionInvoiceEdit), h.Invoice.MarkPaid)
 	}
 
 	valuation := v1.Group("/valuation")

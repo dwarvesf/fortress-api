@@ -9,4 +9,5 @@ type IHandler interface {
 	UpdateStatus(c *gin.Context)
 	CalculateCommissions(c *gin.Context)
 	GenerateContractorInvoice(c *gin.Context)
+	MarkPaid(c *gin.Context)
 }

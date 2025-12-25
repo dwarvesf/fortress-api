@@ -17,12 +17,12 @@ import (
 	nt "github.com/dstotijn/go-notion"
 	"github.com/gin-gonic/gin"
 
+	invoiceCtrl "github.com/dwarvesf/fortress-api/pkg/controller/invoice"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	googleSvc "github.com/dwarvesf/fortress-api/pkg/service/google"
 	"github.com/dwarvesf/fortress-api/pkg/service/nocodb"
 	notionSvc "github.com/dwarvesf/fortress-api/pkg/service/notion"
-	sInvoice "github.com/dwarvesf/fortress-api/pkg/store/invoice"
 	"github.com/dwarvesf/fortress-api/pkg/view"
 )
 
@@ -283,50 +283,34 @@ func (h *handler) respondWithProcessing(c *gin.Context, l logger.Logger, interac
 func (h *handler) processInvoicePaidConfirm(l logger.Logger, channelID, messageID, invoiceNumber, actionBy string) {
 	l.Debugf("background processing invoice payment: invoiceNumber=%s channelID=%s messageID=%s", invoiceNumber, channelID, messageID)
 
-	// Look up invoice by number
-	invoice, err := h.store.Invoice.One(h.repo.DB(), &sInvoice.Query{Number: invoiceNumber})
-	if err != nil {
-		l.Errorf(err, "failed to find invoice by number: %s", invoiceNumber)
-		h.updateInvoiceMessageWithError(l, channelID, messageID, invoiceNumber, fmt.Sprintf("Invoice %s not found", invoiceNumber))
-		return
-	}
-
-	l.Debugf("found invoice: id=%s number=%s status=%s", invoice.ID, invoice.Number, invoice.Status)
-
-	// Check if invoice is already paid
-	if invoice.Status == model.InvoiceStatusPaid {
-		l.Debugf("invoice already paid: invoiceNumber=%s", invoiceNumber)
-		h.updateInvoiceMessageWithSuccess(l, channelID, messageID, invoice, "Already Paid", actionBy)
-		return
-	}
-
-	// Mark invoice as paid
-	_, err = h.controller.Invoice.MarkInvoiceAsPaid(invoice, true)
+	// Mark invoice as paid - searches both PostgreSQL and Notion
+	result, err := h.controller.Invoice.MarkInvoiceAsPaidByNumber(invoiceNumber)
 	if err != nil {
 		l.Errorf(err, "failed to mark invoice as paid: %s", invoiceNumber)
-		h.updateInvoiceMessageWithError(l, channelID, messageID, invoiceNumber, fmt.Sprintf("Failed to mark invoice as paid: %v", err))
+		h.updateInvoiceMessageWithError(l, channelID, messageID, invoiceNumber, err.Error())
 		return
 	}
 
-	l.Infof("invoice marked as paid via discord button: invoiceNumber=%s user=%s", invoiceNumber, actionBy)
+	l.Infof("invoice marked as paid via discord button: invoiceNumber=%s user=%s source=%s", invoiceNumber, actionBy, result.Source)
 
 	// Log to Discord audit
 	if err := h.controller.Discord.Log(model.LogDiscordInput{
 		Type: "invoice_paid",
 		Data: map[string]interface{}{
-			"invoice_number": invoice.Number,
+			"invoice_number": invoiceNumber,
+			"source":         result.Source,
 		},
 	}); err != nil {
 		l.Errorf(err, "failed to log invoice paid to discord")
 	}
 
 	// Update the message to show success
-	h.updateInvoiceMessageWithSuccess(l, channelID, messageID, invoice, "Paid", actionBy)
+	h.updateInvoiceMessageWithResult(l, channelID, messageID, result, actionBy)
 }
 
-// updateInvoiceMessageWithSuccess updates the Discord message with success status
-func (h *handler) updateInvoiceMessageWithSuccess(l logger.Logger, channelID, messageID string, invoice *model.Invoice, status string, actionBy string) {
-	l.Debugf("updating invoice message with success: invoiceNumber=%s status=%s actionBy=%s channelID=%s messageID=%s", invoice.Number, status, actionBy, channelID, messageID)
+// updateInvoiceMessageWithResult updates the Discord message with MarkPaidResult
+func (h *handler) updateInvoiceMessageWithResult(l logger.Logger, channelID, messageID string, result *invoiceCtrl.MarkPaidResult, actionBy string) {
+	l.Debugf("updating invoice message with result: invoiceNumber=%s source=%s actionBy=%s channelID=%s messageID=%s", result.InvoiceNumber, result.Source, actionBy, channelID, messageID)
 
 	if channelID == "" || messageID == "" {
 		l.Warnf("cannot update message: missing channelID or messageID")
@@ -336,18 +320,18 @@ func (h *handler) updateInvoiceMessageWithSuccess(l logger.Logger, channelID, me
 	fields := []*discordgo.MessageEmbedField{
 		{
 			Name:   "Status",
-			Value:  status,
-			Inline: true,
+			Value:  "✅ Paid",
+			Inline: false,
 		},
 		{
 			Name:   "Marked by",
 			Value:  actionBy,
-			Inline: true,
+			Inline: false,
 		},
 	}
 
 	successEmbed := &discordgo.MessageEmbed{
-		Title:     fmt.Sprintf("Invoice %s - %s", invoice.Number, status),
+		Title:     fmt.Sprintf("Invoice %s", result.InvoiceNumber),
 		Color:     3066993, // Green
 		Fields:    fields,
 		Timestamp: time.Now().Format("2006-01-02T15:04:05.000-07:00"),
@@ -355,9 +339,9 @@ func (h *handler) updateInvoiceMessageWithSuccess(l logger.Logger, channelID, me
 
 	_, err := h.service.Discord.UpdateChannelMessage(channelID, messageID, "", []*discordgo.MessageEmbed{successEmbed}, []discordgo.MessageComponent{})
 	if err != nil {
-		l.Errorf(err, "failed to update discord message with success status")
+		l.Errorf(err, "failed to update discord message with result status")
 	} else {
-		l.Debugf("successfully updated discord message with success status")
+		l.Debugf("successfully updated discord message with result status")
 	}
 }
 

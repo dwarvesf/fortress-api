@@ -369,9 +369,14 @@ func ToInvoiceListResponse(invoices []*model.Invoice) ([]InvoiceData, error) {
 			}
 		}
 
+		projectName := ""
+		if invoice.Project != nil {
+			projectName = invoice.Project.Name
+		}
+
 		rs = append(rs, InvoiceData{
 			Invoice:     *iv,
-			ProjectName: invoice.Project.Name,
+			ProjectName: projectName,
 			BankAccount: bankAccount,
 			CompanyInfo: companyInfo,
 			Client:      clientInfo,

@@ -1,6 +1,8 @@
 package notion
 
 import (
+	"time"
+
 	nt "github.com/dstotijn/go-notion"
 
 	"github.com/dwarvesf/fortress-api/pkg/model"
@@ -52,4 +54,21 @@ type IService interface {
 	UploadFile(filename, contentType string, fileData []byte) (fileUploadID string, err error)
 	UpdatePageProperties(pageID string, properties nt.UpdatePageParams) error
 	UpdatePagePropertiesWithFileUpload(pageID, propertyName, fileUploadID, filename string) error
+
+	// Invoice queries
+	QueryInvoices(filter *InvoiceFilter, pagination model.Pagination) ([]nt.Page, int64, error)
+	GetInvoiceLineItems(invoicePageID string) ([]nt.Page, error)
+
+	// Client Invoice operations for Discord ?inv paid command
+	QueryClientInvoiceByNumber(invoiceNumber string) (*nt.Page, error)
+	UpdateClientInvoiceStatus(pageID string, status string, paidDate *time.Time) error
+	ExtractClientInvoiceData(page *nt.Page) (*model.Invoice, error)
+	GetNotionInvoiceStatus(page *nt.Page) (string, error)
+}
+
+// InvoiceFilter defines filter criteria for querying invoices from Notion
+type InvoiceFilter struct {
+	ProjectIDs    []string
+	Statuses      []string
+	InvoiceNumber string
 }
