@@ -14,4 +14,7 @@ type IService interface {
 	UploadInvoicePDF(invoice *model.Invoice, dirName string) error
 	MoveInvoicePDF(invoice *model.Invoice, fromDirName, toDirName string) error
 	DownloadInvoicePDF(invoice *model.Invoice, dirName string) ([]byte, error)
+
+	// Contractor invoice operations
+	UploadContractorInvoicePDF(contractorName, fileName string, pdfBytes []byte) (string, error)
 }

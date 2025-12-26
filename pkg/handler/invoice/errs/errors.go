@@ -20,6 +20,13 @@ var (
 	ErrSenderNotFound        = errors.New("sender not found")
 	ErrBankAccountNotFound   = errors.New("bank account not found")
 	ErrProjectNotFound       = errors.New("project not found")
+
+	// Contractor invoice errors
+	ErrContractorRatesNotFound = errors.New("contractor rates not found for the specified month")
+	ErrTaskOrderLogNotFound    = errors.New("task order log not found for the specified month")
+	ErrInvalidMonthFormat      = errors.New("invalid month format, expected YYYY-MM")
+	ErrUnsupportedBillingType  = errors.New("unsupported billing type")
+	ErrNoSubitemsFound         = errors.New("no line items found in task order log")
 )
 
 func ConvertControllerErr(c *gin.Context, err error) {

@@ -1,6 +1,8 @@
 package invoice
 
 import (
+	"context"
+
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
@@ -50,4 +52,8 @@ type IController interface {
 
 	// Generate PDF for Notion webhook invoice generation
 	GenerateInvoicePDFForNotion(l logger.Logger, invoice *model.Invoice, items []model.InvoiceItem) error
+
+	// Contractor invoice generation
+	GenerateContractorInvoice(ctx context.Context, discord, month string) (*ContractorInvoiceData, error)
+	GenerateContractorInvoicePDF(l logger.Logger, data *ContractorInvoiceData) ([]byte, error)
 }

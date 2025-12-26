@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contractor Invoice</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            padding: 0;
+            background-color: white;
+            margin: 0;
+        }
+
+        .invoice-container {
+            max-width: 900px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 40px 60px;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .header {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 60px;
+        }
+
+        .invoice-info {
+            text-align: right;
+        }
+
+        .invoice-info h2 {
+            font-size: 36px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .invoice-info p {
+            font-size: 12px;
+            color: #666;
+            line-height: 1.8;
+        }
+
+        .billing-payment {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 60px;
+        }
+
+        .bill-to h3,
+        .payment-method h3 {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .bill-to p,
+        .payment-method p {
+            font-size: 12px;
+            color: #333;
+            line-height: 1.8;
+        }
+
+        .payment-method {
+            text-align: right;
+        }
+
+        .invoice-table {
+            width: 100%;
+            border-spacing: 0;
+            border: 0;
+            margin-bottom: 30px;
+        }
+
+        .invoice-table th,
+        .invoice-table td {
+            padding: 5px;
+        }
+
+        .invoice-table thead th,
+        .invoice-table tbody td {
+            text-align: right;
+        }
+
+        .invoice-table th {
+            background: black;
+            color: white;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .invoice-table tbody td {
+            background-color: #F3F3F5;
+            border-bottom: 1px dashed #D8D8D8;
+            font-size: 11px;
+            vertical-align: top;
+        }
+
+        .invoice-table td:first-child,
+        .invoice-table th:first-child {
+            padding-left: 12px;
+            text-align: left;
+        }
+
+        .invoice-table td:last-child,
+        .invoice-table th:last-child {
+            padding-right: 18px;
+            text-align: right;
+        }
+
+        .invoice-table .item-details {
+            font-size: 11px;
+            color: #666;
+            line-height: 1.6;
+            white-space: pre-line;
+        }
+
+        .invoice-table .item-project {
+            font-weight: bold;
+            font-size: 12px;
+            color: #333;
+            margin-bottom: 3px;
+        }
+
+        .invoice-table tfoot td {
+            background-color: transparent;
+            border: none;
+        }
+
+        .footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .notes h3 {
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .notes p {
+            font-size: 11px;
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .contractor-info {
+            text-align: right;
+        }
+
+        .contractor-signature {
+            font-family: 'Brush Script MT', cursive;
+            font-size: 36px;
+            margin-bottom: 10px;
+        }
+
+        .contractor-name {
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .contractor-role {
+            font-size: 11px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="invoice-container">
+        <!-- Header Section -->
+        <div class="header">
+            <div class="invoice-info">
+                <h2>INVOICE</h2>
+                <p>Invoice Number: #{{.Invoice.InvoiceNumber}}<br>Date: {{formatDate .Invoice.Date}}<br>Due Date: {{formatDate .Invoice.DueDate}}</p>
+            </div>
+        </div>
+
+        <!-- Billing and Payment Section -->
+        <div class="billing-payment">
+            <div class="bill-to">
+                <h3>BILL TO:</h3>
+                <p>
+                    <strong>Company:</strong> Dwarves LLC<br>
+                    <strong>Address:</strong> 131 Continental Drive, Suite 305, Newark, DE 19713, US{{if .Invoice.Description}}<br>
+                    <strong>Description:</strong> {{.Invoice.Description}}{{end}}
+                </p>
+            </div>
+        </div>
+
+        <!-- Invoice Items Table -->
+        <table class="invoice-table" cellspacing="0" cellpadding="0">
+            <colgroup>
+                <col style="width: 50%">
+                <col style="width: 15%">
+                <col style="width: 15%">
+                <col style="width: 20%">
+            </colgroup>
+            <thead>
+                <tr>
+                    <th>DESCRIPTION</th>
+                    <th>QUANTITY</th>
+                    <th>UNIT COST</th>
+                    <th>TOTAL</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range $index, $item := .LineItems}}
+                <tr>
+                    <td style="word-wrap: break-word;">
+                        {{if $item.Title}}<div class="item-project">{{$item.Title}}</div>{{end}}
+                        <div class="item-details">{{formatProofOfWork $item.Description}}</div>
+                    </td>
+                    <td>{{if $item.Hours}}{{float $item.Hours}}{{else}}-{{end}}</td>
+                    <td>{{if $item.Rate}}{{formatMoney $item.Rate}}{{else}}-{{end}}</td>
+                    <td>{{if $item.AmountUSD}}$ {{printf "%.2f" $item.AmountUSD}}{{else}}-{{end}}</td>
+                </tr>
+                {{end}}
+                {{if .MergedItems}}
+                <tr>
+                    <td style="word-wrap: break-word;">
+                        {{range $index, $item := .MergedItems}}
+                        {{if $item.Title}}<div class="item-project">{{$item.Title}}</div>{{end}}
+                        {{if $item.Description}}<div class="item-details" style="margin-bottom: 5px;">{{formatProofOfWork $item.Description}}</div>{{end}}
+                        {{end}}
+                    </td>
+                    <td>1</td>
+                    <td>{{if .MergedTotal}}$ {{printf "%.2f" .MergedTotal}}{{else}}-{{end}}</td>
+                    <td>{{if .MergedTotal}}$ {{printf "%.2f" .MergedTotal}}{{else}}-{{end}}</td>
+                </tr>
+                {{end}}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="4" style="padding-top:4px;"></td>
+                </tr>
+                <tr style="line-height: 1">
+                    <td colspan="2"></td>
+                    <td style="font-weight: bold; text-align: right; font-size: 14px;">Subtotal</td>
+                    <td style="font-size: 14px;">$ {{printf "%.2f" .Invoice.TotalUSD}}</td>
+                </tr>
+                <tr>
+                    <td colspan="4" style="border-top: 2px solid #333; padding: 5px 0;"></td>
+                </tr>
+                <tr style="line-height: 1">
+                    <td colspan="2"></td>
+                    <td style="font-weight: bold; text-align: right; font-size: 14px;">Total</td>
+                    <td style="font-weight: bold; font-size: 14px;">$ {{printf "%.2f" .Invoice.TotalUSD}}</td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <!-- Footer Section -->
+        <div class="footer">
+            <div class="notes">
+                <h3>BANK INFO:</h3>
+                <p>
+                    <strong>Account Holder:</strong> {{.Invoice.BankAccountHolder}}<br>
+                    <strong>Bank Name:</strong> {{.Invoice.BankName}}<br>
+                    <strong>Account Number:</strong> {{.Invoice.BankAccountNumber}}<br>
+                    {{if .Invoice.BankSwiftBIC}}<strong>SWIFT/BIC:</strong> {{.Invoice.BankSwiftBIC}}<br>{{end}}
+                    {{if .Invoice.BankBranch}}<strong>Branch:</strong> {{.Invoice.BankBranch}}<br>{{end}}
+                    Payment due within 15 days of invoice date.
+                </p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

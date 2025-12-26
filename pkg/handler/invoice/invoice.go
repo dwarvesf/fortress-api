@@ -2,7 +2,9 @@ package invoice
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
+	"regexp"
 	"strings"
 	"time"
 
@@ -332,4 +334,116 @@ func (h *handler) CalculateCommissions(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](commissions, nil, nil, nil, ""))
+}
+
+// GenerateContractorInvoice godoc
+// @Summary Generate a contractor invoice
+// @Description Generate a contractor invoice PDF based on contractor discord and month
+// @id generateContractorInvoice
+// @Tags Invoice
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param Body body request.GenerateContractorInvoiceRequest true "body"
+// @Success 200 {object} view.ContractorInvoiceResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /invoices/contractor/generate [post]
+func (h *handler) GenerateContractorInvoice(c *gin.Context) {
+	l := h.logger.Fields(logger.Fields{
+		"handler": "invoice",
+		"method":  "GenerateContractorInvoice",
+	})
+
+	l.Debug("handling generate contractor invoice request")
+
+	// 1. Parse request
+	var req request.GenerateContractorInvoiceRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		l.Error(err, "invalid request body")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, req, ""))
+		return
+	}
+
+	l.Debug(fmt.Sprintf("received request: contractorDiscord=%s month=%s", req.ContractorDiscord, req.Month))
+
+	// 2. Validate month format (YYYY-MM)
+	if !isValidMonthFormat(req.Month) {
+		l.Error(errs.ErrInvalidMonthFormat, fmt.Sprintf("month validation failed: month=%s", req.Month))
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidMonthFormat, req, ""))
+		return
+	}
+
+	// 3. Generate invoice data
+	l.Debug("calling controller to generate contractor invoice data")
+	invoiceData, err := h.controller.Invoice.GenerateContractorInvoice(c.Request.Context(), req.ContractorDiscord, req.Month)
+	if err != nil {
+		l.Error(err, "failed to generate contractor invoice")
+		if strings.Contains(err.Error(), "not found") {
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, err, req, ""))
+			return
+		}
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req, ""))
+		return
+	}
+
+	l.Debug(fmt.Sprintf("invoice data generated: invoiceNumber=%s total=%.2f", invoiceData.InvoiceNumber, invoiceData.Total))
+
+	// 4. Generate PDF
+	l.Debug("generating PDF")
+	pdfBytes, err := h.controller.Invoice.GenerateContractorInvoicePDF(l, invoiceData)
+	if err != nil {
+		l.Error(err, "failed to generate PDF")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req, ""))
+		return
+	}
+
+	l.Debug(fmt.Sprintf("PDF generated: size=%d bytes", len(pdfBytes)))
+
+	// 5. Upload to Google Drive
+	fileName := fmt.Sprintf("%s.pdf", invoiceData.InvoiceNumber)
+	l.Debug(fmt.Sprintf("uploading PDF to Google Drive: fileName=%s contractorName=%s", fileName, invoiceData.ContractorName))
+
+	fileURL, err := h.service.GoogleDrive.UploadContractorInvoicePDF(invoiceData.ContractorName, fileName, pdfBytes)
+	if err != nil {
+		l.Error(err, "failed to upload PDF to Google Drive")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req, ""))
+		return
+	}
+
+	l.Debug(fmt.Sprintf("PDF uploaded: url=%s", fileURL))
+
+	// 6. Build response
+	lineItems := make([]view.ContractorInvoiceLineItem, len(invoiceData.LineItems))
+	for i, item := range invoiceData.LineItems {
+		lineItems[i] = view.ContractorInvoiceLineItem{
+			Title:       item.Title,
+			Description: item.Description,
+			Hours:       item.Hours,
+			Rate:        item.Rate,
+			Amount:      item.Amount,
+		}
+	}
+
+	response := view.ContractorInvoiceResponse{
+		InvoiceNumber:  invoiceData.InvoiceNumber,
+		ContractorName: invoiceData.ContractorName,
+		Month:          invoiceData.Month,
+		BillingType:    invoiceData.BillingType,
+		Currency:       invoiceData.Currency,
+		Total:          invoiceData.Total,
+		PDFFileURL:     fileURL,
+		GeneratedAt:    time.Now().Format(time.RFC3339),
+		LineItems:      lineItems,
+	}
+
+	l.Info(fmt.Sprintf("contractor invoice generated successfully: invoice_number=%s", response.InvoiceNumber))
+	c.JSON(http.StatusOK, view.CreateResponse(response, nil, nil, req, ""))
+}
+
+// isValidMonthFormat validates that the month string is in YYYY-MM format
+func isValidMonthFormat(month string) bool {
+	matched, _ := regexp.MatchString(`^\d{4}-\d{2}$`, month)
+	return matched
 }

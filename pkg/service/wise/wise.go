@@ -171,7 +171,7 @@ func getLocalRate(target string) (float64, error) {
 	case "EUR":
 		return 0.89795, nil
 	case "VND":
-		return 25826, nil
+		return 26100, nil
 	case "SGD":
 		return 1.3845, nil
 	}

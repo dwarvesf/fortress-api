@@ -643,3 +643,175 @@ func (s *TaskOrderLogService) extractNumber(props nt.DatabasePageProperties, pro
 	}
 	return 0
 }
+
+func (s *TaskOrderLogService) extractRichText(props nt.DatabasePageProperties, propName string) string {
+	if prop, ok := props[propName]; ok && len(prop.RichText) > 0 {
+		var parts []string
+		for _, rt := range prop.RichText {
+			parts = append(parts, rt.PlainText)
+		}
+		return strings.Join(parts, "")
+	}
+	return ""
+}
+
+// getProjectName fetches the project name from a Project page
+func (s *TaskOrderLogService) getProjectName(ctx context.Context, pageID string) string {
+	page, err := s.client.FindPageByID(ctx, pageID)
+	if err != nil {
+		fmt.Printf("[DEBUG] getProjectName: failed to fetch project page %s: %v\n", pageID, err)
+		return ""
+	}
+
+	props, ok := page.Properties.(nt.DatabasePageProperties)
+	if !ok {
+		fmt.Printf("[DEBUG] getProjectName: failed to cast page properties for %s\n", pageID)
+		return ""
+	}
+
+	// Try to get Name from Title property
+	if prop, ok := props["Name"]; ok && len(prop.Title) > 0 {
+		name := prop.Title[0].PlainText
+		fmt.Printf("[DEBUG] getProjectName: found Name in Title: %s\n", name)
+		return name
+	}
+
+	// Try Project Name property as fallback
+	if prop, ok := props["Project Name"]; ok && len(prop.Title) > 0 {
+		name := prop.Title[0].PlainText
+		fmt.Printf("[DEBUG] getProjectName: found Project Name in Title: %s\n", name)
+		return name
+	}
+
+	fmt.Printf("[DEBUG] getProjectName: no Name or Project Name property found for page %s\n", pageID)
+	return ""
+}
+
+// OrderSubitem represents a line item (timesheet) in Task Order Log
+type OrderSubitem struct {
+	PageID      string
+	ProjectName string  // From Project rollup
+	ProjectID   string  // From Project relation
+	Hours       float64 // From Line Item Hours
+	ProofOfWork string  // From Proof of Works rich text
+}
+
+// QueryOrderSubitems queries timesheet line items (subitems) for a given order
+func (s *TaskOrderLogService) QueryOrderSubitems(ctx context.Context, orderPageID string) ([]*OrderSubitem, error) {
+	taskOrderLogDBID := s.cfg.Notion.Databases.TaskOrderLog
+	if taskOrderLogDBID == "" {
+		return nil, errors.New("task order log database ID not configured")
+	}
+
+	s.logger.Debug(fmt.Sprintf("querying order subitems: orderPageID=%s", orderPageID))
+
+	// Filter by Type="Timesheet" and Parent item=orderPageID
+	query := &nt.DatabaseQuery{
+		Filter: &nt.DatabaseQueryFilter{
+			And: []nt.DatabaseQueryFilter{
+				{
+					Property: "Type",
+					DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+						Select: &nt.SelectDatabaseQueryFilter{
+							Equals: "Timesheet",
+						},
+					},
+				},
+				{
+					Property: "Parent item",
+					DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+						Relation: &nt.RelationDatabaseQueryFilter{
+							Contains: orderPageID,
+						},
+					},
+				},
+			},
+		},
+		PageSize: 100,
+	}
+
+	var subitems []*OrderSubitem
+
+	// Query with pagination
+	for {
+		resp, err := s.client.QueryDatabase(ctx, taskOrderLogDBID, query)
+		if err != nil {
+			s.logger.Error(err, fmt.Sprintf("failed to query order subitems: orderPageID=%s", orderPageID))
+			return nil, fmt.Errorf("failed to query order subitems: %w", err)
+		}
+
+		s.logger.Debug(fmt.Sprintf("found %d subitems in current page", len(resp.Results)))
+
+		for _, page := range resp.Results {
+			props, ok := page.Properties.(nt.DatabasePageProperties)
+			if !ok {
+				s.logger.Debug("failed to cast page properties")
+				continue
+			}
+
+			// Debug: Log ALL available properties on this subitem page
+			fmt.Printf("[DEBUG] task_order_log: ===== Subitem page %s properties =====\n", page.ID)
+			for propName, prop := range props {
+				fmt.Printf("[DEBUG]   Property: %s\n", propName)
+				if len(prop.Relation) > 0 {
+					fmt.Printf("[DEBUG]     Type: Relation, Count: %d, First ID: %s\n", len(prop.Relation), prop.Relation[0].ID)
+				}
+				if prop.Rollup != nil {
+					fmt.Printf("[DEBUG]     Type: Rollup, Array Length: %d\n", len(prop.Rollup.Array))
+					for i, item := range prop.Rollup.Array {
+						fmt.Printf("[DEBUG]       Rollup[%d]: Title=%d, RichText=%d, Relation=%d\n",
+							i, len(item.Title), len(item.RichText), len(item.Relation))
+						if len(item.Relation) > 0 {
+							fmt.Printf("[DEBUG]         Relation[0] ID: %s\n", item.Relation[0].ID)
+						}
+					}
+				}
+				if len(prop.Title) > 0 {
+					fmt.Printf("[DEBUG]     Type: Title, Value: %s\n", prop.Title[0].PlainText)
+				}
+				if len(prop.RichText) > 0 {
+					fmt.Printf("[DEBUG]     Type: RichText, Value: %s\n", prop.RichText[0].PlainText)
+				}
+				if prop.Select != nil {
+					fmt.Printf("[DEBUG]     Type: Select, Value: %s\n", prop.Select.Name)
+				}
+				if prop.Number != nil {
+					fmt.Printf("[DEBUG]     Type: Number, Value: %f\n", *prop.Number)
+				}
+			}
+			fmt.Printf("[DEBUG] task_order_log: ===== End of properties =====\n")
+
+			// Extract project ID from Deployment relation (not Project rollup)
+			projectID := s.extractFirstRelationID(props, "Deployment")
+			fmt.Printf("[DEBUG] task_order_log: extracted projectID from Deployment=%s\n", projectID)
+
+			// Fetch project name from Deployment/Project page
+			projectName := ""
+			if projectID != "" {
+				projectName = s.getProjectName(ctx, projectID)
+				fmt.Printf("[DEBUG] task_order_log: fetched projectName=%s for projectID=%s\n", projectName, projectID)
+			}
+
+			subitem := &OrderSubitem{
+				PageID:      page.ID,
+				ProjectName: projectName,
+				ProjectID:   projectID,
+				Hours:       s.extractNumber(props, "Line Item Hours"),
+				ProofOfWork: s.extractRichText(props, "Proof of Works"),
+			}
+
+			s.logger.Debug(fmt.Sprintf("found subitem: pageID=%s project=%s projectID=%s hours=%.2f", subitem.PageID, subitem.ProjectName, subitem.ProjectID, subitem.Hours))
+
+			subitems = append(subitems, subitem)
+		}
+
+		if !resp.HasMore || resp.NextCursor == nil {
+			break
+		}
+
+		query.StartCursor = *resp.NextCursor
+	}
+
+	s.logger.Debug(fmt.Sprintf("total subitems found: %d for order: %s", len(subitems), orderPageID))
+	return subitems, nil
+}
