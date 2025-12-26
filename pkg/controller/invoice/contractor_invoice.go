@@ -120,7 +120,8 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 	var lineItems []ContractorInvoiceLineItem
 	var total float64
 
-	if rateData.BillingType == "Monthly Fixed" {
+	switch rateData.BillingType {
+	case "Monthly Fixed":
 		l.Debug("building line items for Monthly Fixed billing")
 		for _, subitem := range subitems {
 			lineItems = append(lineItems, ContractorInvoiceLineItem{
@@ -129,7 +130,7 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 			})
 		}
 		total = rateData.MonthlyFixed
-	} else if rateData.BillingType == "Hourly Rate" {
+	case "Hourly Rate":
 		l.Debug("building line items for Hourly Rate billing")
 		for _, subitem := range subitems {
 			amount := subitem.Hours * rateData.HourlyRate
@@ -149,7 +150,7 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 			})
 			total += amount
 		}
-	} else {
+	default:
 		l.Error(nil, fmt.Sprintf("unsupported billing type: %s", rateData.BillingType))
 		return nil, fmt.Errorf("unsupported billing type: %s", rateData.BillingType)
 	}

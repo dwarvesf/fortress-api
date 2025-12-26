@@ -243,33 +243,6 @@ func (s *ContractorRatesService) extractRollupRichText(props nt.DatabasePageProp
 	return ""
 }
 
-func (s *ContractorRatesService) extractRollupTitle(props nt.DatabasePageProperties, propName string) string {
-	prop, ok := props[propName]
-	if !ok || prop.Rollup == nil {
-		s.logger.Debug(fmt.Sprintf("extractRollupTitle: property '%s' not found or rollup is nil", propName))
-		return ""
-	}
-
-	s.logger.Debug(fmt.Sprintf("extractRollupTitle: property '%s' has %d items in rollup array", propName, len(prop.Rollup.Array)))
-
-	for i, item := range prop.Rollup.Array {
-		// Try Title first
-		if len(item.Title) > 0 {
-			s.logger.Debug(fmt.Sprintf("extractRollupTitle: found title in item %d: %s", i, item.Title[0].PlainText))
-			return item.Title[0].PlainText
-		}
-		// Try RichText as fallback
-		if len(item.RichText) > 0 {
-			s.logger.Debug(fmt.Sprintf("extractRollupTitle: found richtext in item %d: %s", i, item.RichText[0].PlainText))
-			return item.RichText[0].PlainText
-		}
-		s.logger.Debug(fmt.Sprintf("extractRollupTitle: item %d has no title or richtext", i))
-	}
-
-	s.logger.Debug(fmt.Sprintf("extractRollupTitle: no valid data found in rollup for '%s'", propName))
-	return ""
-}
-
 func (s *ContractorRatesService) extractFormulaNumber(props nt.DatabasePageProperties, propName string) float64 {
 	prop, ok := props[propName]
 	if !ok || prop.Formula == nil || prop.Formula.Number == nil {
@@ -299,7 +272,7 @@ func (s *ContractorRatesService) extractDate(props nt.DatabasePageProperties, pr
 	if !ok || prop.Date == nil {
 		return nil
 	}
-	t := time.Time(prop.Date.Start.Time)
+	t := prop.Date.Start.Time
 	return &t
 }
 

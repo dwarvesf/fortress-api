@@ -687,47 +687,6 @@ func (s *TaskOrderLogService) getProjectName(ctx context.Context, pageID string)
 	return ""
 }
 
-func (s *TaskOrderLogService) extractRollupTitle(props nt.DatabasePageProperties, propName string) string {
-	prop, ok := props[propName]
-	if !ok || prop.Rollup == nil {
-		s.logger.Debug(fmt.Sprintf("extractRollupTitle: property '%s' not found or rollup is nil", propName))
-		return ""
-	}
-
-	s.logger.Debug(fmt.Sprintf("extractRollupTitle: property '%s' has %d items in rollup array", propName, len(prop.Rollup.Array)))
-
-	for i, item := range prop.Rollup.Array {
-		// Try Title first
-		if len(item.Title) > 0 {
-			s.logger.Debug(fmt.Sprintf("extractRollupTitle: found title in item %d: %s", i, item.Title[0].PlainText))
-			return item.Title[0].PlainText
-		}
-		// Try RichText as fallback
-		if len(item.RichText) > 0 {
-			s.logger.Debug(fmt.Sprintf("extractRollupTitle: found richtext in item %d: %s", i, item.RichText[0].PlainText))
-			return item.RichText[0].PlainText
-		}
-		s.logger.Debug(fmt.Sprintf("extractRollupTitle: item %d has no title or richtext", i))
-	}
-
-	s.logger.Debug(fmt.Sprintf("extractRollupTitle: no valid data found in rollup for '%s'", propName))
-	return ""
-}
-
-func (s *TaskOrderLogService) extractRollupRelationID(props nt.DatabasePageProperties, propName string) string {
-	prop, ok := props[propName]
-	if !ok || prop.Rollup == nil {
-		return ""
-	}
-
-	for _, item := range prop.Rollup.Array {
-		if len(item.Relation) > 0 {
-			return item.Relation[0].ID
-		}
-	}
-	return ""
-}
-
 // OrderSubitem represents a line item (timesheet) in Task Order Log
 type OrderSubitem struct {
 	PageID      string
@@ -794,7 +753,7 @@ func (s *TaskOrderLogService) QueryOrderSubitems(ctx context.Context, orderPageI
 			fmt.Printf("[DEBUG] task_order_log: ===== Subitem page %s properties =====\n", page.ID)
 			for propName, prop := range props {
 				fmt.Printf("[DEBUG]   Property: %s\n", propName)
-				if prop.Relation != nil && len(prop.Relation) > 0 {
+				if len(prop.Relation) > 0 {
 					fmt.Printf("[DEBUG]     Type: Relation, Count: %d, First ID: %s\n", len(prop.Relation), prop.Relation[0].ID)
 				}
 				if prop.Rollup != nil {
