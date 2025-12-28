@@ -871,6 +871,12 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/invoice.IHandler.GenerateContractorInvoice-fm",
 			},
 		},
+		"/api/v1/invoices/mark-paid": {
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/invoice.IHandler.MarkPaid-fm",
+			},
+		},
 		"/api/v1/clients": {
 			"GET": {
 				Method:  "GET",
