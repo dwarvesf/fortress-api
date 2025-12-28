@@ -21,6 +21,11 @@ type UpdateStatusRequest struct {
 	SendThankYouEmail bool                `json:"sendThankYouEmail"`
 }
 
+// MarkPaidRequest is the request body for marking invoice as paid by number
+type MarkPaidRequest struct {
+	InvoiceNumber string `json:"invoice_number" binding:"required"`
+} // @name MarkPaidRequest
+
 func (r *UpdateStatusRequest) Validate() error {
 	if r.Status != "" && !r.Status.IsValid() {
 		return errs.ErrInvalidInvoiceStatus

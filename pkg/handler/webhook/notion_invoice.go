@@ -403,8 +403,20 @@ func (h *handler) HandleNotionInvoiceSend(c *gin.Context) {
 					"name": "Sent",
 				},
 			},
+			"Thread ID": map[string]interface{}{
+				"rich_text": []map[string]interface{}{
+					{
+						"type": "text",
+						"text": map[string]string{
+							"content": threadID,
+						},
+					},
+				},
+			},
 		},
 	}
+
+	l.Debugf("storing Thread ID in Notion: %s", threadID)
 
 	payloadBytes, err := json.Marshal(updatePayload)
 	if err != nil {
