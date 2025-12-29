@@ -110,23 +110,26 @@ func (c *controller) MarkInvoiceAsPaidByNumber(invoiceNumber string) (*MarkPaidR
 		}
 	}
 
-	// 5. Update PostgreSQL if exists
-	if pgInvoice != nil {
-		l.Debug("processing PostgreSQL invoice")
-		// Use existing logic (includes commission, accounting, email, GDrive)
-		_, err := c.MarkInvoiceAsPaidWithTaskRef(pgInvoice, nil, true)
-		if err != nil {
-			l.Errorf(err, "failed to mark PostgreSQL invoice as paid")
-			return nil, fmt.Errorf("failed to mark PostgreSQL invoice as paid: %w", err)
-		}
-		result.PostgresUpdated = true
-		l.Debug("PostgreSQL invoice marked as paid")
-	}
+	// 5. Update PostgreSQL if exists (TEMPORARILY DISABLED)
+	// TODO: Re-enable PostgreSQL update when ready
+	// if pgInvoice != nil {
+	// 	l.Debug("processing PostgreSQL invoice")
+	// 	// Use existing logic (includes commission, accounting, email, GDrive)
+	// 	_, err := c.MarkInvoiceAsPaidWithTaskRef(pgInvoice, nil, true)
+	// 	if err != nil {
+	// 		l.Errorf(err, "failed to mark PostgreSQL invoice as paid")
+	// 		return nil, fmt.Errorf("failed to mark PostgreSQL invoice as paid: %w", err)
+	// 	}
+	// 	result.PostgresUpdated = true
+	// 	l.Debug("PostgreSQL invoice marked as paid")
+	// }
+	l.Debug("PostgreSQL update temporarily disabled")
 
-	// 6. Update Notion if exists (and PostgreSQL wasn't updated - to avoid duplicate email/GDrive)
+	// 6. Update Notion if exists
+	// Note: skipEmailAndGDrive=false since PostgreSQL update is disabled
 	if notionPage != nil {
 		l.Debug("processing Notion invoice")
-		err := c.processNotionInvoicePaid(l, notionPage, pgInvoice != nil)
+		err := c.processNotionInvoicePaid(l, notionPage, false)
 		if err != nil {
 			l.Errorf(err, "failed to process Notion invoice")
 			// Continue - don't fail the whole operation
