@@ -22,6 +22,7 @@ const (
 
 // Free models to rotate through if rate limits are hit
 var freeModels = []string{
+	"google/gemini-2.5-flash",
 	"meta-llama/llama-3.3-70b-instruct:free",
 	"deepseek/deepseek-r1:free",
 	"qwen/qwen-2.5-72b-instruct:free",
@@ -80,23 +81,34 @@ type APIError struct {
 	Code    string `json:"code"`
 }
 
-// SummarizeProofOfWorks summarizes multiple proof of work texts into major work bullet points
-func (s *OpenRouterService) SummarizeProofOfWorks(ctx context.Context, texts []string) (string, error) {
-	if len(texts) == 0 {
-		s.logger.Debug("no texts to summarize, returning empty string")
+// ProofOfWorkEntry represents a single proof of work entry with hours
+type ProofOfWorkEntry struct {
+	Text  string
+	Hours float64
+}
+
+// SummarizeProofOfWorks summarizes multiple proof of work entries into major work bullet points
+// Hours are used as weight to prioritize more significant work
+func (s *OpenRouterService) SummarizeProofOfWorks(ctx context.Context, entries []ProofOfWorkEntry) (string, error) {
+	if len(entries) == 0 {
+		s.logger.Debug("no entries to summarize, returning empty string")
 		return "", nil
 	}
 
-	s.logger.Debug(fmt.Sprintf("summarizing %d proof of work texts", len(texts)))
+	s.logger.Debug(fmt.Sprintf("summarizing %d proof of work entries", len(entries)))
 
-	// Combine all texts into a single prompt
+	// Combine all entries into a single prompt with hours for weighting
 	var combinedText strings.Builder
-	for i, text := range texts {
-		if text == "" {
+	var totalHours float64
+	for i, entry := range entries {
+		if entry.Text == "" {
 			continue
 		}
-		combinedText.WriteString(fmt.Sprintf("--- Entry %d ---\n%s\n\n", i+1, text))
+		totalHours += entry.Hours
+		combinedText.WriteString(fmt.Sprintf("--- Entry %d (%.1f hours) ---\n%s\n\n", i+1, entry.Hours, entry.Text))
 	}
+
+	s.logger.Debug(fmt.Sprintf("total hours across all entries: %.1f", totalHours))
 
 	if combinedText.Len() == 0 {
 		s.logger.Debug("all texts are empty, returning empty string")
@@ -112,8 +124,10 @@ Task: Group work logs by scope/category, then list key activities as comma-separ
 Format: [Scope]: [activity 1], [activity 2], [activity 3]
 
 Guidelines:
+- Each entry includes hours spent - use hours as weight to prioritize more significant work
+- Entries with more hours should be featured more prominently in the summary
 - Group related tasks under clear scope labels (e.g., "Backend Infrastructure", "Invoice System", "API Development")
-- List only 3-4 key activities per scope (most significant ones)
+- List only 3-4 key activities per scope (most significant ones based on hours)
 - Keep each activity to 2-3 words maximum
 - Use professional, client-facing language
 - Avoid technical jargon unless critical
@@ -133,7 +147,7 @@ Output: Bullet points only (use •), no introduction or headers.`
 		return combinedText.String(), nil
 	}
 
-	s.logger.Debug(fmt.Sprintf("successfully summarized %d texts into %d characters", len(texts), len(summary)))
+	s.logger.Debug(fmt.Sprintf("successfully summarized %d entries into %d characters", len(entries), len(summary)))
 	return summary, nil
 }
 
@@ -187,7 +201,7 @@ func (s *OpenRouterService) callAPIWithModel(ctx context.Context, systemPrompt, 
 			{Role: "user", Content: userPrompt},
 		},
 		MaxTokens:   200,
-		Temperature: 0.3,
+		Temperature: 0,
 	}
 
 	jsonData, err := json.Marshal(reqBody)

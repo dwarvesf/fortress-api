@@ -9,6 +9,7 @@ import (
 
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/service/notion"
+	"github.com/dwarvesf/fortress-api/pkg/service/openrouter"
 	"github.com/dwarvesf/fortress-api/pkg/view"
 )
 
@@ -21,6 +22,7 @@ import (
 // @Security BearerAuth
 // @Param month query string true "Target month in YYYY-MM format (e.g., 2025-12)"
 // @Param contractor query string false "Discord username to filter by specific contractor (e.g., chinhld)"
+// @Param project query string false "Project code/name to filter by specific project (e.g., kafi, nghenhan)"
 // @Success 200 {object} view.Response
 // @Failure 400 {object} view.Response
 // @Failure 500 {object} view.Response
@@ -50,7 +52,10 @@ func (h *handler) SyncTaskOrderLogs(c *gin.Context) {
 	// Parse contractor parameter (optional)
 	contractorDiscord := strings.TrimSpace(c.Query("contractor"))
 
-	l.Info(fmt.Sprintf("syncing task order logs: month=%s contractor=%s", month, contractorDiscord))
+	// Parse project parameter (optional)
+	projectID := strings.TrimSpace(c.Query("project"))
+
+	l.Info(fmt.Sprintf("syncing task order logs: month=%s contractor=%s project=%s", month, contractorDiscord, projectID))
 
 	// Get services
 	taskOrderLogService := h.service.Notion.TaskOrderLog
@@ -71,7 +76,7 @@ func (h *handler) SyncTaskOrderLogs(c *gin.Context) {
 
 	// Step 1: Query approved timesheets for the month
 	l.Debug(fmt.Sprintf("querying approved timesheets for month: %s", month))
-	timesheets, err := taskOrderLogService.QueryApprovedTimesheetsByMonth(ctx, month, contractorDiscord)
+	timesheets, err := taskOrderLogService.QueryApprovedTimesheetsByMonth(ctx, month, contractorDiscord, projectID)
 	if err != nil {
 		l.Error(err, fmt.Sprintf("failed to query timesheets: month=%s", month))
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
@@ -175,15 +180,18 @@ func (h *handler) SyncTaskOrderLogs(c *gin.Context) {
 
 			// Aggregate hours
 			var (
-				hours         = 0.0
-				proofOfWorks  = []string{}
-				timesheetIDs  = []string{}
+				hours        = 0.0
+				proofOfWorks = []openrouter.ProofOfWorkEntry{}
+				timesheetIDs = []string{}
 			)
 
 			for _, ts := range projectTimesheets {
 				hours += ts.Hours
 				if ts.Title != "" { // Title contains Proof of Works from query
-					proofOfWorks = append(proofOfWorks, ts.Title)
+					proofOfWorks = append(proofOfWorks, openrouter.ProofOfWorkEntry{
+						Text:  ts.Title,
+						Hours: ts.Hours,
+					})
 				}
 				timesheetIDs = append(timesheetIDs, ts.PageID)
 			}
@@ -200,11 +208,19 @@ func (h *handler) SyncTaskOrderLogs(c *gin.Context) {
 				if err != nil {
 					l.Error(err, fmt.Sprintf("failed to summarize proof of works, using original text: project=%s", projectID))
 					// Fallback: use concatenated original text
-					summarizedPoW = strings.Join(proofOfWorks, "\n\n")
+					var texts []string
+					for _, pow := range proofOfWorks {
+						texts = append(texts, pow.Text)
+					}
+					summarizedPoW = strings.Join(texts, "\n\n")
 				} else if strings.TrimSpace(summarizedPoW) == "" {
 					// OpenRouter returned empty summary, use original text
 					l.Debug(fmt.Sprintf("OpenRouter returned empty summary, using original text for project: %s", projectID))
-					summarizedPoW = strings.Join(proofOfWorks, "\n\n")
+					var texts []string
+					for _, pow := range proofOfWorks {
+						texts = append(texts, pow.Text)
+					}
+					summarizedPoW = strings.Join(texts, "\n\n")
 				}
 			}
 

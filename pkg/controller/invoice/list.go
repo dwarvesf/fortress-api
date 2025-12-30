@@ -6,7 +6,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service/notion"
-	"github.com/dwarvesf/fortress-api/pkg/store/invoice"
+	// "github.com/dwarvesf/fortress-api/pkg/store/invoice" // TEMPORARILY DISABLED
 )
 
 type GetListInvoiceInput struct {
@@ -23,21 +23,23 @@ func (c *controller) List(in GetListInvoiceInput) ([]*model.Invoice, int64, erro
 		"input":      in,
 	})
 
-	l.Debug("fetching invoices from dual sources: PostgreSQL and Notion")
+	l.Debug("fetching invoices from Notion only (PostgreSQL temporarily disabled)")
 
-	// Step 1: Fetch invoices from PostgreSQL
-	l.Debug("fetching invoices from PostgreSQL")
-	pgInvoices, _, err := c.store.Invoice.All(c.repo.DB(), invoice.GetInvoicesFilter{
-		Preload:       true,
-		ProjectIDs:    in.ProjectIDs,
-		Statuses:      in.Statuses,
-		InvoiceNumber: in.InvoiceNumber,
-	}, in.Pagination)
-	if err != nil {
-		l.Error(err, "failed to get invoice list from PostgreSQL")
-		return nil, 0, err
-	}
-	l.Debugf("fetched %d invoices from PostgreSQL", len(pgInvoices))
+	// Step 1: Fetch invoices from PostgreSQL (TEMPORARILY DISABLED)
+	// TODO: Re-enable PostgreSQL fetch when ready
+	// l.Debug("fetching invoices from PostgreSQL")
+	// pgInvoices, _, err := c.store.Invoice.All(c.repo.DB(), invoice.GetInvoicesFilter{
+	// 	Preload:       true,
+	// 	ProjectIDs:    in.ProjectIDs,
+	// 	Statuses:      in.Statuses,
+	// 	InvoiceNumber: in.InvoiceNumber,
+	// }, in.Pagination)
+	// if err != nil {
+	// 	l.Error(err, "failed to get invoice list from PostgreSQL")
+	// 	return nil, 0, err
+	// }
+	// l.Debugf("fetched %d invoices from PostgreSQL", len(pgInvoices))
+	pgInvoices := []*model.Invoice{}
 
 	// Step 2: Fetch invoices from Notion
 	l.Debug("fetching invoices from Notion")

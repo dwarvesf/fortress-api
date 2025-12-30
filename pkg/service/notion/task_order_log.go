@@ -37,13 +37,13 @@ func NewTaskOrderLogService(cfg *config.Config, logger logger.Logger) *TaskOrder
 }
 
 // QueryApprovedTimesheetsByMonth queries approved timesheets for a given month
-func (s *TaskOrderLogService) QueryApprovedTimesheetsByMonth(ctx context.Context, month string, contractorDiscord string) ([]*TimesheetEntry, error) {
+func (s *TaskOrderLogService) QueryApprovedTimesheetsByMonth(ctx context.Context, month string, contractorDiscord string, projectName string) ([]*TimesheetEntry, error) {
 	timesheetDBID := s.cfg.Notion.Databases.Timesheet
 	if timesheetDBID == "" {
 		return nil, errors.New("timesheet database ID not configured")
 	}
 
-	s.logger.Debug(fmt.Sprintf("querying approved timesheets: month=%s contractor=%s", month, contractorDiscord))
+	s.logger.Debug(fmt.Sprintf("querying approved timesheets: month=%s contractor=%s project=%s", month, contractorDiscord, projectName))
 
 	// Build filter
 	filters := []nt.DatabaseQueryFilter{
@@ -78,6 +78,19 @@ func (s *TaskOrderLogService) QueryApprovedTimesheetsByMonth(ctx context.Context
 							Contains: contractorDiscord,
 						},
 					},
+				},
+			},
+		})
+	}
+
+	// Add project filter if specified (filters by title which contains project code)
+	if projectName != "" {
+		s.logger.Debug(fmt.Sprintf("adding project filter by title: %s", projectName))
+		filters = append(filters, nt.DatabaseQueryFilter{
+			Property: "(auto) Timesheet Entry",
+			DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+				Title: &nt.TextPropertyFilter{
+					Contains: projectName,
 				},
 			},
 		})
