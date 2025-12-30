@@ -76,86 +76,100 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 		return nil, fmt.Errorf("contractor rates not found: %w", err)
 	}
 
-	l.Debug(fmt.Sprintf("found contractor rate: contractor=%s billingType=%s currency=%s monthlyFixed=%.2f hourlyRate=%.2f",
-		rateData.ContractorName, rateData.BillingType, rateData.Currency, rateData.MonthlyFixed, rateData.HourlyRate))
+	l.Debug(fmt.Sprintf("found contractor rate: contractor=%s billingType=%s currency=%s monthlyFixed=%.2f hourlyRate=%.2f contractorPageID=%s",
+		rateData.ContractorName, rateData.BillingType, rateData.Currency, rateData.MonthlyFixed, rateData.HourlyRate, rateData.ContractorPageID))
 
-	// 2. Query Task Order Log for the month
-	l.Debug("querying task order log from Notion")
-	taskOrderService := notion.NewTaskOrderLogService(c.config, c.logger)
-	if taskOrderService == nil {
-		l.Error(nil, "failed to create task order log service")
-		return nil, fmt.Errorf("failed to create task order log service")
+	// 2. Query Pending Payouts for the contractor
+	l.Debug("querying pending payouts from Notion")
+	payoutsService := notion.NewContractorPayoutsService(c.config, c.logger)
+	if payoutsService == nil {
+		l.Error(nil, "failed to create contractor payouts service")
+		return nil, fmt.Errorf("failed to create contractor payouts service")
 	}
 
-	// Check if order exists for this contractor and month
-	exists, orderPageID, err := taskOrderService.CheckOrderExistsByContractor(ctx, rateData.ContractorPageID, month)
+	payouts, err := payoutsService.QueryPendingPayoutsByContractor(ctx, rateData.ContractorPageID)
 	if err != nil {
-		l.Error(err, "failed to check order existence")
-		return nil, fmt.Errorf("failed to check order existence: %w", err)
+		l.Error(err, "failed to query pending payouts")
+		return nil, fmt.Errorf("failed to query pending payouts: %w", err)
 	}
 
-	if !exists {
-		l.Debug("no task order log found for contractor")
-		return nil, fmt.Errorf("task order log not found for contractor=%s month=%s", discord, month)
+	if len(payouts) == 0 {
+		l.Debug("no pending payouts found for contractor")
+		return nil, fmt.Errorf("no pending payouts found for contractor=%s", discord)
 	}
 
-	l.Debug(fmt.Sprintf("found order: pageID=%s", orderPageID))
+	l.Debug(fmt.Sprintf("found %d pending payouts", len(payouts)))
 
-	// 3. Query Order Subitems
-	l.Debug("querying order subitems from Notion")
-	subitems, err := taskOrderService.QueryOrderSubitems(ctx, orderPageID)
-	if err != nil {
-		l.Error(err, "failed to query order subitems")
-		return nil, fmt.Errorf("failed to query order subitems: %w", err)
+	// 3. Initialize services for fetching ProofOfWorks
+	feesService := notion.NewContractorFeesService(c.config, c.logger)
+	if feesService == nil {
+		l.Debug("failed to create contractor fees service, ProofOfWorks will not be fetched")
 	}
 
-	if len(subitems) == 0 {
-		l.Debug("no subitems found for order")
-		return nil, fmt.Errorf("no line items found in task order log for order=%s", orderPageID)
+	taskOrderLogService := notion.NewTaskOrderLogService(c.config, c.logger)
+	if taskOrderLogService == nil {
+		l.Debug("failed to create task order log service, ProofOfWorks formatting will not be available")
 	}
 
-	l.Debug(fmt.Sprintf("found %d subitems", len(subitems)))
-
-	// 4. Build line items based on billing type
+	// 4. Build line items from payouts
 	var lineItems []ContractorInvoiceLineItem
 	var total float64
 
-	switch rateData.BillingType {
-	case "Monthly Fixed":
-		l.Debug("building line items for Monthly Fixed billing")
-		for _, subitem := range subitems {
-			lineItems = append(lineItems, ContractorInvoiceLineItem{
-				Title:       subitem.ProjectName,
-				Description: subitem.ProofOfWork,
-			})
+	for _, payout := range payouts {
+		l.Debug(fmt.Sprintf("processing payout: pageID=%s name=%s sourceType=%s amount=%.2f currency=%s",
+			payout.PageID, payout.Name, payout.SourceType, payout.Amount, payout.Currency))
+
+		// Convert amount to USD
+		amountUSD, _, err := c.service.Wise.Convert(payout.Amount, payout.Currency, "USD")
+		if err != nil {
+			l.Error(err, fmt.Sprintf("failed to convert payout amount to USD: pageID=%s", payout.PageID))
+			amountUSD = payout.Amount // Fallback to original amount if conversion fails
 		}
-		total = rateData.MonthlyFixed
-	case "Hourly Rate":
-		l.Debug("building line items for Hourly Rate billing")
-		for _, subitem := range subitems {
-			amount := subitem.Hours * rateData.HourlyRate
-			// Convert line item amount to USD
-			amountUSD, _, err := c.service.Wise.Convert(amount, rateData.Currency, "USD")
+
+		// Round to 2 decimal places to avoid $0.01 differences between Unit Cost and Total
+		amountUSD = math.Round(amountUSD*100) / 100
+
+		l.Debug(fmt.Sprintf("converted amount: %.2f %s = %.2f USD (rounded)", payout.Amount, payout.Currency, amountUSD))
+
+		// Initialize line item with default values for display
+		// All items: Qty=1, Unit Cost=AmountUSD, Total=AmountUSD
+		lineItem := ContractorInvoiceLineItem{
+			Title:     payout.Name,
+			Hours:     1,         // Default quantity
+			Rate:      amountUSD, // Unit cost = converted amount
+			Amount:    amountUSD, // Amount
+			AmountUSD: amountUSD,
+		}
+
+		// If Contractor Payroll, fetch ProofOfWorks from Task Order Log subitems (grouped by project)
+		if payout.SourceType == notion.PayoutSourceTypeContractorPayroll && payout.ContractorFeesID != "" && feesService != nil && taskOrderLogService != nil {
+			l.Debug(fmt.Sprintf("fetching Task Order Log IDs from contractor fees: feesID=%s", payout.ContractorFeesID))
+
+			// Get Task Order Log IDs from Contractor Fees relation
+			orderIDs, err := feesService.GetTaskOrderLogIDs(ctx, payout.ContractorFeesID)
 			if err != nil {
-				l.Error(err, "failed to convert line item amount to USD")
-				amountUSD = 0 // Fallback to 0 if conversion fails
+				l.Error(err, fmt.Sprintf("failed to get Task Order Log IDs: feesID=%s", payout.ContractorFeesID))
+			} else if len(orderIDs) > 0 {
+				l.Debug(fmt.Sprintf("found %d Task Order Log IDs", len(orderIDs)))
+
+				// Format ProofOfWorks grouped by project with bold headers
+				formattedDescription, err := taskOrderLogService.FormatProofOfWorksByProject(ctx, orderIDs)
+				if err != nil {
+					l.Error(err, "failed to format proof of works by project")
+				} else if formattedDescription != "" {
+					lineItem.Description = formattedDescription
+					l.Debug(fmt.Sprintf("formatted proof of works: length=%d", len(formattedDescription)))
+				}
+			} else {
+				l.Debug("no Task Order Log IDs found in contractor fees")
 			}
-			lineItems = append(lineItems, ContractorInvoiceLineItem{
-				Title:       subitem.ProjectName,
-				Description: subitem.ProofOfWork,
-				Hours:       subitem.Hours,
-				Rate:        rateData.HourlyRate,
-				Amount:      amount,
-				AmountUSD:   amountUSD,
-			})
-			total += amount
 		}
-	default:
-		l.Error(nil, fmt.Sprintf("unsupported billing type: %s", rateData.BillingType))
-		return nil, fmt.Errorf("unsupported billing type: %s", rateData.BillingType)
+
+		lineItems = append(lineItems, lineItem)
+		total += amountUSD
 	}
 
-	l.Debug(fmt.Sprintf("built %d line items with total=%.2f", len(lineItems), total))
+	l.Debug(fmt.Sprintf("built %d line items with total=%.2f USD", len(lineItems), total))
 
 	// 5. Query Bank Account
 	l.Debug("querying bank account from Notion")
@@ -174,21 +188,9 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 	l.Debug(fmt.Sprintf("found bank account: accountHolder=%s bank=%s accountNumber=%s",
 		bankAccount.AccountHolderName, bankAccount.BankName, bankAccount.AccountNumber))
 
-	// 6. Convert to USD using Wise
-	monthlyFixedUSD, _, err := c.service.Wise.Convert(rateData.MonthlyFixed, rateData.Currency, "USD")
-	if err != nil {
-		l.Error(err, "failed to convert monthly fixed amount to USD")
-		monthlyFixedUSD = 0 // Fallback to 0 if conversion fails
-	}
-
-	// 6.1 Convert to USD using Wise
-	l.Debug("converting total to USD using Wise")
-	totalUSD, exchangeRate, err := c.service.Wise.Convert(total, rateData.Currency, "USD")
-	if err != nil {
-		l.Error(err, "failed to convert to USD")
-		return nil, fmt.Errorf("failed to convert to USD: %w", err)
-	}
-	l.Debug(fmt.Sprintf("converted total: %.2f %s = %.2f USD (rate: %.6f)", total, rateData.Currency, totalUSD, exchangeRate))
+	// 6. Total is already in USD (converted per line item)
+	totalUSD := total
+	l.Debug(fmt.Sprintf("total USD: %.2f", totalUSD))
 
 	// 7. Generate invoice number
 	invoiceNumber := c.generateContractorInvoiceNumber(month)
@@ -210,13 +212,13 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 		DueDate:           dueDate,
 		Description:       description,
 		BillingType:       rateData.BillingType,
-		Currency:          rateData.Currency,
+		Currency:          "USD", // All amounts are converted to USD
 		LineItems:         lineItems,
-		MonthlyFixed:      rateData.MonthlyFixed,
-		MonthlyFixedUSD:   monthlyFixedUSD,
-		Total:             total,
+		MonthlyFixed:      0,
+		MonthlyFixedUSD:   0,
+		Total:             totalUSD,
 		TotalUSD:          totalUSD,
-		ExchangeRate:      exchangeRate,
+		ExchangeRate:      1, // Already in USD
 		BankAccountHolder: bankAccount.AccountHolderName,
 		BankName:          bankAccount.BankName,
 		BankAccountNumber: bankAccount.AccountNumber,
@@ -287,11 +289,13 @@ func (c *controller) GenerateContractorInvoicePDF(l logger.Logger, data *Contrac
 		"float": func(n float64) string {
 			return fmt.Sprintf("%.2f", n)
 		},
-		"formatProofOfWork": func(text string) string {
+		"formatProofOfWork": func(text string) template.HTML {
 			// Replace bullet points with newlines for better formatting
 			formatted := strings.ReplaceAll(text, " • ", "\n• ")
 			formatted = strings.ReplaceAll(formatted, " •", "\n•")
-			return strings.TrimSpace(formatted)
+			// Replace newlines with <br> for HTML rendering
+			formatted = strings.ReplaceAll(formatted, "\n", "<br>")
+			return template.HTML(strings.TrimSpace(formatted))
 		},
 	}
 
@@ -317,25 +321,12 @@ func (c *controller) GenerateContractorInvoicePDF(l logger.Logger, data *Contrac
 		return nil, fmt.Errorf("failed to parse template: %w", err)
 	}
 
-	// Separate line items into regular and merged (no hours/rate)
-	var regularItems []ContractorInvoiceLineItem
+	// All line items are shown as regular items (no merging for payout-based invoices)
+	regularItems := data.LineItems
 	var mergedItems []ContractorInvoiceLineItem
+	mergedTotal := 0.0
 
-	for _, item := range data.LineItems {
-		// Only merge items with Hours, Rate, and Amount all equal to 0
-		// Items with MonthlyFixed (Amount > 0) should remain as regular items
-		if item.Hours == 0 && item.Rate == 0 && item.Amount == 0 {
-			mergedItems = append(mergedItems, item)
-		} else {
-			regularItems = append(regularItems, item)
-		}
-	}
-
-	// Unit cost and total for merged items = MonthlyFixedUSD
-	mergedTotal := data.MonthlyFixedUSD
-
-	l.Debug(fmt.Sprintf("separated line items: %d regular, %d merged (total=%.2f)",
-		len(regularItems), len(mergedItems), mergedTotal))
+	l.Debug(fmt.Sprintf("line items: %d regular, %d merged", len(regularItems), len(mergedItems)))
 
 	// Prepare template data
 	templateData := struct {

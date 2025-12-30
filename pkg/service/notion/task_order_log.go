@@ -398,7 +398,7 @@ func (s *TaskOrderLogService) CreateOrder(ctx context.Context, deploymentID, mon
 		"Status": nt.DatabasePageProperty{
 			Type: nt.DBPropTypeSelect,
 			Select: &nt.SelectOptions{
-				Name: "Draft",
+				Name: "Pending Approval",
 			},
 		},
 		"Date": nt.DatabasePageProperty{
@@ -827,4 +827,79 @@ func (s *TaskOrderLogService) QueryOrderSubitems(ctx context.Context, orderPageI
 
 	s.logger.Debug(fmt.Sprintf("total subitems found: %d for order: %s", len(subitems), orderPageID))
 	return subitems, nil
+}
+
+// FormatProofOfWorksByProject formats subitems grouped by project name with bold project headers
+// Format:
+// <b>Project Name 1:</b>
+// ProofOfWork1
+// ProofOfWork2
+//
+// <b>Project Name 2:</b>
+// ProofOfWork3
+func (s *TaskOrderLogService) FormatProofOfWorksByProject(ctx context.Context, orderPageIDs []string) (string, error) {
+	s.logger.Debug(fmt.Sprintf("[DEBUG] task_order_log: formatting proof of works for %d orders", len(orderPageIDs)))
+
+	// Collect all subitems from all orders
+	var allSubitems []*OrderSubitem
+	for _, orderID := range orderPageIDs {
+		subitems, err := s.QueryOrderSubitems(ctx, orderID)
+		if err != nil {
+			s.logger.Error(err, fmt.Sprintf("[DEBUG] task_order_log: failed to query subitems for order=%s", orderID))
+			continue
+		}
+		allSubitems = append(allSubitems, subitems...)
+	}
+
+	s.logger.Debug(fmt.Sprintf("[DEBUG] task_order_log: collected %d total subitems", len(allSubitems)))
+
+	if len(allSubitems) == 0 {
+		return "", nil
+	}
+
+	// Group by project name
+	projectMap := make(map[string][]string) // projectName -> []proofOfWorks
+	projectOrder := []string{}              // maintain order of first appearance
+
+	for _, subitem := range allSubitems {
+		projectName := subitem.ProjectName
+		if projectName == "" {
+			projectName = "Other"
+		}
+
+		// Track order of first appearance
+		if _, exists := projectMap[projectName]; !exists {
+			projectOrder = append(projectOrder, projectName)
+		}
+
+		if subitem.ProofOfWork != "" {
+			projectMap[projectName] = append(projectMap[projectName], subitem.ProofOfWork)
+		}
+	}
+
+	s.logger.Debug(fmt.Sprintf("[DEBUG] task_order_log: grouped into %d projects", len(projectOrder)))
+
+	// Build formatted string
+	var result strings.Builder
+	for i, projectName := range projectOrder {
+		if i > 0 {
+			result.WriteString("\n\n")
+		}
+		result.WriteString(fmt.Sprintf("<b>%s:</b>\n", projectName))
+
+		proofs := projectMap[projectName]
+		for j, proof := range proofs {
+			if j > 0 {
+				result.WriteString("\n")
+			}
+			result.WriteString(proof)
+		}
+
+		s.logger.Debug(fmt.Sprintf("[DEBUG] task_order_log: project=%s proofs=%d", projectName, len(proofs)))
+	}
+
+	formatted := result.String()
+	s.logger.Debug(fmt.Sprintf("[DEBUG] task_order_log: formatted proof of works length=%d", len(formatted)))
+
+	return formatted, nil
 }

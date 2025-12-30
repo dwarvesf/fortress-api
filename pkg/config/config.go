@@ -253,26 +253,30 @@ type OpenRouter struct {
 }
 
 type NotionDatabase struct {
-	AuditCycle        string
-	AuditActionItem   string
-	Earn              string
-	TechRadar         string
-	Audience          string
-	Event             string
-	Hiring            string
-	StaffingDemand    string
-	Project           string
-	Delivery          string
-	Digest            string
-	Updates           string
-	Memo              string
-	Issue             string
-	Contractor        string
-	ContractorRates   string
-	DeploymentTracker string
-	Timesheet         string
-	TaskOrderLog      string
-	BankAccounts      string
+	AuditCycle         string
+	AuditActionItem    string
+	Earn               string
+	TechRadar          string
+	Audience           string
+	Event              string
+	Hiring             string
+	StaffingDemand     string
+	Project            string
+	Delivery           string
+	Digest             string
+	Updates            string
+	Memo               string
+	Issue              string
+	Contractor         string
+	ContractorRates    string
+	ContractorPayouts  string
+	ContractorFees     string
+	InvoiceSplit       string
+	RefundRequest      string
+	DeploymentTracker  string
+	Timesheet          string
+	TaskOrderLog       string
+	BankAccounts       string
 }
 
 type Discord struct {
@@ -401,31 +405,13 @@ type CheckIn struct {
 }
 
 func Generate(v ENV) *Config {
+	// Variables used in multiple places
 	basecampAccountingProjectID := getIntWithDefault(v, "BASECAMP_ACCOUNTING_PROJECT_ID", defaultBasecampAccountingProjectID)
 	basecampAccountingTodoSetID := getIntWithDefault(v, "BASECAMP_ACCOUNTING_TODO_SET_ID", defaultBasecampAccountingTodoSetID)
-	basecampPlaygroundProjectID := getIntWithDefault(v, "BASECAMP_PLAYGROUND_PROJECT_ID", defaultBasecampPlaygroundProjectID)
-	basecampPlaygroundTodoSetID := getIntWithDefault(v, "BASECAMP_PLAYGROUND_TODO_SET_ID", defaultBasecampPlaygroundTodoSetID)
-	accountingGroupIn := getStringWithDefault(v, "ACCOUNTING_BASECAMP_GROUP_IN_NAME", "In")
-	accountingGroupOut := getStringWithDefault(v, "ACCOUNTING_BASECAMP_GROUP_OUT_NAME", "Out")
-	accountingProjectID := getIntWithDefault(v, "ACCOUNTING_BASECAMP_PROJECT_ID", basecampAccountingProjectID)
-	accountingTodoSetID := getIntWithDefault(v, "ACCOUNTING_BASECAMP_TODO_SET_ID", basecampAccountingTodoSetID)
-
 	nocoWebhookSecret := v.GetString("NOCO_WEBHOOK_SECRET")
 	accountingTodosTableID := v.GetString("NOCO_ACCOUNTING_TODOS_TABLE_ID")
 	accountingTransactionsTableID := v.GetString("NOCO_ACCOUNTING_TRANSACTIONS_TABLE_ID")
-	nocoExpenseWorkspaceID := v.GetString("NOCO_EXPENSE_WORKSPACE_ID")
-	nocoExpenseTableID := v.GetString("NOCO_EXPENSE_TABLE_ID")
-	nocoExpenseWebhookSecret := v.GetString("NOCO_EXPENSE_WEBHOOK_SECRET")
-	nocoExpenseApproverMapping := parseKeyValuePairs(v.GetString("NOCO_EXPENSE_APPROVER_MAPPING"))
-	nocoLeaveTableID := v.GetString("NOCO_LEAVE_TABLE_ID")
-	nocoLeaveWebhookSecret := v.GetString("NOCO_LEAVE_WEBHOOK_SECRET")
-	notionExpenseDBID := v.GetString("NOTION_EXPENSE_DB_ID")
 	notionContractorDBID := v.GetString("NOTION_CONTRACTOR_DB_ID")
-	notionExpenseDataSourceID := v.GetString("NOTION_EXPENSE_DATA_SOURCE_ID")
-	notionLeaveDBID := v.GetString("NOTION_LEAVE_DB_ID")
-	notionLeaveDataSourceID := v.GetString("NOTION_LEAVE_DATA_SOURCE_ID")
-	notionVerificationToken := v.GetString("NOTION_VERIFICATION_TOKEN")
-
 	logLevel := validateLogLevel(v.GetString("LOG_LEVEL"))
 
 	return &Config{
@@ -509,12 +495,16 @@ func Generate(v ENV) *Config {
 				Updates:           v.GetString("NOTION_UPDATES_DB_ID"),
 				Memo:              v.GetString("NOTION_MEMO_DB_ID"),
 				Issue:             v.GetString("NOTION_ISSUE_DB_ID"),
-				Contractor:        v.GetString("NOTION_CONTRACTOR_DB_ID"),
-				ContractorRates:   v.GetString("NOTION_CONTRACTOR_RATES_DB_ID"),
-				DeploymentTracker: v.GetString("NOTION_DEPLOYMENT_TRACKER_DB_ID"),
-				Timesheet:         v.GetString("NOTION_TIMESHEET_DB_ID"),
-				TaskOrderLog:      v.GetString("NOTION_TASK_ORDER_LOG_DB_ID"),
-				BankAccounts:      v.GetString("NOTION_BANK_ACCOUNTS_DB_ID"),
+				Contractor:         v.GetString("NOTION_CONTRACTOR_DB_ID"),
+				ContractorRates:    v.GetString("NOTION_CONTRACTOR_RATES_DB_ID"),
+				ContractorPayouts:  v.GetString("NOTION_CONTRACTOR_PAYOUTS_DB_ID"),
+				ContractorFees:     v.GetString("NOTION_CONTRACTOR_FEES_DB_ID"),
+				InvoiceSplit:       v.GetString("NOTION_INVOICE_SPLIT_DB_ID"),
+				RefundRequest:      v.GetString("NOTION_REFUND_REQUEST_DB_ID"),
+				DeploymentTracker:  v.GetString("NOTION_DEPLOYMENT_TRACKER_DB_ID"),
+				Timesheet:          v.GetString("NOTION_TIMESHEET_DB_ID"),
+				TaskOrderLog:       v.GetString("NOTION_TASK_ORDER_LOG_DB_ID"),
+				BankAccounts:       v.GetString("NOTION_BANK_ACCOUNTS_DB_ID"),
 			},
 		},
 		Discord: Discord{
@@ -540,8 +530,8 @@ func Generate(v ENV) *Config {
 			OAuthRefreshToken:   v.GetString("BASECAMP_OAUTH_REFRESH_TOKEN"),
 			AccountingProjectID: basecampAccountingProjectID,
 			AccountingTodoSetID: basecampAccountingTodoSetID,
-			PlaygroundProjectID: basecampPlaygroundProjectID,
-			PlaygroundTodoSetID: basecampPlaygroundTodoSetID,
+			PlaygroundProjectID: getIntWithDefault(v, "BASECAMP_PLAYGROUND_PROJECT_ID", defaultBasecampPlaygroundProjectID),
+			PlaygroundTodoSetID: getIntWithDefault(v, "BASECAMP_PLAYGROUND_TODO_SET_ID", defaultBasecampPlaygroundTodoSetID),
 		},
 		Invoice: Invoice{
 			TemplatePath:           v.GetString("INVOICE_TEMPLATE_PATH"),
@@ -595,6 +585,7 @@ func Generate(v ENV) *Config {
 			ExtendedTimeout: v.GetString("PARQUET_EXTENDED_TIMEOUT"),
 			EnableCaching:   v.GetBool("PARQUET_ENABLE_CACHING"),
 		},
+		TaskProvider: getStringWithDefault(v, "TASK_PROVIDER", "basecamp"),
 		Noco: Noco{
 			BaseURL:                       v.GetString("NOCO_BASE_URL"),
 			Token:                         v.GetString("NOCO_TOKEN"),
@@ -606,13 +597,12 @@ func Generate(v ENV) *Config {
 			AccountingTodosTableID:        accountingTodosTableID,
 			AccountingTransactionsTableID: accountingTransactionsTableID,
 		},
-		TaskProvider: getStringWithDefault(v, "TASK_PROVIDER", "basecamp"),
 		AccountingIntegration: AccountingIntegration{
 			Basecamp: AccountingBasecampIntegration{
-				ProjectID: accountingProjectID,
-				TodoSetID: accountingTodoSetID,
-				GroupIn:   accountingGroupIn,
-				GroupOut:  accountingGroupOut,
+				ProjectID: getIntWithDefault(v, "ACCOUNTING_BASECAMP_PROJECT_ID", basecampAccountingProjectID),
+				TodoSetID: getIntWithDefault(v, "ACCOUNTING_BASECAMP_TODO_SET_ID", basecampAccountingTodoSetID),
+				GroupIn:   getStringWithDefault(v, "ACCOUNTING_BASECAMP_GROUP_IN_NAME", "In"),
+				GroupOut:  getStringWithDefault(v, "ACCOUNTING_BASECAMP_GROUP_OUT_NAME", "Out"),
 			},
 			Noco: AccountingNocoIntegration{
 				TodosTableID:        accountingTodosTableID,
@@ -622,27 +612,27 @@ func Generate(v ENV) *Config {
 		},
 		ExpenseIntegration: ExpenseIntegration{
 			Noco: ExpenseNocoIntegration{
-				WorkspaceID:   nocoExpenseWorkspaceID,
-				TableID:       nocoExpenseTableID,
-				WebhookSecret: nocoExpenseWebhookSecret,
+				WorkspaceID:   v.GetString("NOCO_EXPENSE_WORKSPACE_ID"),
+				TableID:       v.GetString("NOCO_EXPENSE_TABLE_ID"),
+				WebhookSecret: v.GetString("NOCO_EXPENSE_WEBHOOK_SECRET"),
 			},
 			Notion: ExpenseNotionIntegration{
-				ExpenseDBID:    notionExpenseDBID,
+				ExpenseDBID:    v.GetString("NOTION_EXPENSE_DB_ID"),
 				ContractorDBID: notionContractorDBID,
-				DataSourceID:   notionExpenseDataSourceID,
+				DataSourceID:   v.GetString("NOTION_EXPENSE_DATA_SOURCE_ID"),
 			},
-			ApproverMapping: nocoExpenseApproverMapping,
+			ApproverMapping: parseKeyValuePairs(v.GetString("NOCO_EXPENSE_APPROVER_MAPPING")),
 		},
 		LeaveIntegration: LeaveIntegration{
 			Noco: LeaveNocoIntegration{
-				TableID:       nocoLeaveTableID,
-				WebhookSecret: nocoLeaveWebhookSecret,
+				TableID:       v.GetString("NOCO_LEAVE_TABLE_ID"),
+				WebhookSecret: v.GetString("NOCO_LEAVE_WEBHOOK_SECRET"),
 			},
 			Notion: LeaveNotionIntegration{
-				LeaveDBID:         notionLeaveDBID,
+				LeaveDBID:         v.GetString("NOTION_LEAVE_DB_ID"),
 				ContractorDBID:    notionContractorDBID,
-				DataSourceID:      notionLeaveDataSourceID,
-				VerificationToken: notionVerificationToken,
+				DataSourceID:      v.GetString("NOTION_LEAVE_DATA_SOURCE_ID"),
+				VerificationToken: v.GetString("NOTION_VERIFICATION_TOKEN"),
 			},
 		},
 	}
