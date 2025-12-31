@@ -26,6 +26,7 @@ type IHandler interface {
 	SendProjectChangelog(c *gin.Context)
 	SyncTaskOrderLogs(c *gin.Context)
 	CreateContractorFees(c *gin.Context)
+	CreateContractorPayouts(c *gin.Context)
 }
 
 type handler struct {

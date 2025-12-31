@@ -255,6 +255,162 @@ func (s *ContractorFeesService) CheckFeeExistsByTaskOrder(ctx context.Context, t
 	return false, "", nil
 }
 
+// NewFeeData represents contractor fee data needed for payout creation
+type NewFeeData struct {
+	PageID           string  // Contractor Fee page ID
+	ContractorPageID string  // From Contractor relation
+	ContractorName   string  // From rollup
+	TotalAmount      float64 // Formula: calculated total
+	Month            string  // YYYY-MM format from Task Order Log
+	Date             string  // YYYY-MM-DD from Task Order Log
+}
+
+// QueryNewFees queries contractor fees with Payment Status=New
+func (s *ContractorFeesService) QueryNewFees(ctx context.Context) ([]*NewFeeData, error) {
+	contractorFeesDBID := s.cfg.Notion.Databases.ContractorFees
+	if contractorFeesDBID == "" {
+		return nil, errors.New("contractor fees database ID not configured")
+	}
+
+	s.logger.Debug("querying contractor fees with Payment Status=New")
+
+	query := &nt.DatabaseQuery{
+		Filter: &nt.DatabaseQueryFilter{
+			Property: "Payment Status",
+			DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+				Status: &nt.StatusDatabaseQueryFilter{
+					Equals: "New",
+				},
+			},
+		},
+		PageSize: 100,
+	}
+
+	var fees []*NewFeeData
+
+	for {
+		resp, err := s.client.QueryDatabase(ctx, contractorFeesDBID, query)
+		if err != nil {
+			s.logger.Error(err, "failed to query new contractor fees")
+			return nil, fmt.Errorf("failed to query new contractor fees: %w", err)
+		}
+
+		s.logger.Debug(fmt.Sprintf("found %d contractor fees with Payment Status=New", len(resp.Results)))
+
+		for _, page := range resp.Results {
+			props, ok := page.Properties.(nt.DatabasePageProperties)
+			if !ok {
+				s.logger.Debug("failed to cast page properties")
+				continue
+			}
+
+			// Extract fee data
+			fee := &NewFeeData{
+				PageID:           page.ID,
+				ContractorPageID: s.extractRelationID(props, "Contractor"),
+				ContractorName:   s.extractRollupText(props, "Contractor Name"),
+				TotalAmount:      s.extractFormulaNumber(props, "Total Amount"),
+				Month:            s.extractRollupText(props, "Month"),
+				Date:             s.extractRollupDate(props, "Date"),
+			}
+
+			s.logger.Debug(fmt.Sprintf("parsed fee: pageID=%s contractor=%s amount=%.2f month=%s",
+				fee.PageID, fee.ContractorName, fee.TotalAmount, fee.Month))
+
+			fees = append(fees, fee)
+		}
+
+		if !resp.HasMore || resp.NextCursor == nil {
+			break
+		}
+
+		query.StartCursor = *resp.NextCursor
+	}
+
+	s.logger.Debug(fmt.Sprintf("total new fees found: %d", len(fees)))
+	return fees, nil
+}
+
+// UpdatePaymentStatus updates the Payment Status of a contractor fee
+func (s *ContractorFeesService) UpdatePaymentStatus(ctx context.Context, feePageID, status string) error {
+	s.logger.Debug(fmt.Sprintf("updating fee %s payment status to %s", feePageID, status))
+
+	params := nt.UpdatePageParams{
+		DatabasePageProperties: nt.DatabasePageProperties{
+			"Payment Status": nt.DatabasePageProperty{
+				Status: &nt.SelectOptions{
+					Name: status,
+				},
+			},
+		},
+	}
+
+	_, err := s.client.UpdatePage(ctx, feePageID, params)
+	if err != nil {
+		s.logger.Error(err, fmt.Sprintf("failed to update payment status for fee %s", feePageID))
+		return fmt.Errorf("failed to update payment status: %w", err)
+	}
+
+	s.logger.Debug(fmt.Sprintf("successfully updated fee %s payment status to %s", feePageID, status))
+	return nil
+}
+
+// Helper functions for extracting properties
+
+func (s *ContractorFeesService) extractRelationID(props nt.DatabasePageProperties, propName string) string {
+	prop, ok := props[propName]
+	if !ok || len(prop.Relation) == 0 {
+		return ""
+	}
+	return prop.Relation[0].ID
+}
+
+func (s *ContractorFeesService) extractRollupText(props nt.DatabasePageProperties, propName string) string {
+	prop, ok := props[propName]
+	if !ok || prop.Rollup == nil {
+		return ""
+	}
+
+	// For array rollups, concatenate all text values
+	var result string
+	for _, item := range prop.Rollup.Array {
+		if len(item.RichText) > 0 {
+			for _, rt := range item.RichText {
+				if result != "" {
+					result += ", "
+				}
+				result += rt.PlainText
+			}
+		}
+		if len(item.Title) > 0 {
+			for _, t := range item.Title {
+				if result != "" {
+					result += ", "
+				}
+				result += t.PlainText
+			}
+		}
+	}
+
+	return result
+}
+
+func (s *ContractorFeesService) extractRollupDate(props nt.DatabasePageProperties, propName string) string {
+	prop, ok := props[propName]
+	if !ok || prop.Rollup == nil {
+		return ""
+	}
+
+	// For array rollups, get the first date
+	for _, item := range prop.Rollup.Array {
+		if item.Date != nil && !item.Date.Start.Time.IsZero() {
+			return item.Date.Start.Time.Format("2006-01-02")
+		}
+	}
+
+	return ""
+}
+
 // CreateContractorFee creates a new Contractor Fee entry in Notion
 // Links to the Task Order Log and Contractor Rate, sets Payment Status to "New"
 // Returns the created fee page ID
