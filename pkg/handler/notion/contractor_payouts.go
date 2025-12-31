@@ -200,6 +200,7 @@ func (h *handler) processContractorPayrollPayouts(c *gin.Context, l logger.Logge
 			ContractorPageID: fee.ContractorPageID,
 			ContractorFeeID:  fee.PageID,
 			Amount:           fee.TotalAmount,
+			Currency:         fee.Currency,
 			Month:            fee.Month,
 			Date:             fee.Date,
 			Type:             payoutType,

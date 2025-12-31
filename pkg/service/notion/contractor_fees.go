@@ -261,6 +261,7 @@ type NewFeeData struct {
 	ContractorPageID string  // From Contractor relation
 	ContractorName   string  // From rollup
 	TotalAmount      float64 // Formula: calculated total
+	Currency         string  // Currency from rollup (e.g., "VND", "USD")
 	Month            string  // YYYY-MM format from Task Order Log
 	Date             string  // YYYY-MM-DD from Task Order Log
 }
@@ -340,17 +341,22 @@ func (s *ContractorFeesService) QueryNewFees(ctx context.Context) ([]*NewFeeData
 				s.logger.Debug(fmt.Sprintf("date was empty, using first day of month: %s", date))
 			}
 
+			// Extract currency from rollup
+			currency := s.extractRollupSelect(props, "Currency")
+			s.logger.Debug(fmt.Sprintf("extracted currency=%s", currency))
+
 			fee := &NewFeeData{
 				PageID:           page.ID,
 				ContractorPageID: contractorPageID,
 				ContractorName:   contractorName,
 				TotalAmount:      s.extractFormulaNumber(props, "Total Amount"),
+				Currency:         currency,
 				Month:            month,
 				Date:             date,
 			}
 
-			s.logger.Debug(fmt.Sprintf("parsed fee: pageID=%s contractor=%s amount=%.2f month=%s",
-				fee.PageID, fee.ContractorName, fee.TotalAmount, fee.Month))
+			s.logger.Debug(fmt.Sprintf("parsed fee: pageID=%s contractor=%s amount=%.2f currency=%s month=%s",
+				fee.PageID, fee.ContractorName, fee.TotalAmount, fee.Currency, fee.Month))
 
 			fees = append(fees, fee)
 		}

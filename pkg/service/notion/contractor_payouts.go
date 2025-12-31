@@ -118,6 +118,14 @@ func (s *ContractorPayoutsService) QueryPendingPayoutsByContractor(ctx context.C
 				fmt.Printf("[DEBUG]   - %s\n", propName)
 			}
 
+			// Debug: log all select properties to find Currency
+			s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: page %s available select properties:", page.ID))
+			for propName, prop := range props {
+				if prop.Select != nil {
+					s.logger.Debug(fmt.Sprintf("[DEBUG]   - %s (select) = %s", propName, prop.Select.Name))
+				}
+			}
+
 			// Extract payout entry data
 			// Note: Property names must match Notion database exactly
 			// - "Billing" is the relation to Contractor Fees
@@ -266,6 +274,7 @@ type CreatePayoutInput struct {
 	ContractorPageID  string  // Person relation
 	ContractorFeeID   string  // Billing relation (links to Contractor Fees)
 	Amount            float64 // Payment amount
+	Currency          string  // Currency (e.g., "VND", "USD")
 	Month             string  // YYYY-MM format
 	Date              string  // Date in YYYY-MM-DD format
 	Type              string  // Payout type (e.g., "Contractor Payroll", "Commission", "Refund")
@@ -330,6 +339,16 @@ func (s *ContractorPayoutsService) CreatePayout(ctx context.Context, input Creat
 				{ID: input.ContractorFeeID},
 			},
 		},
+	}
+
+	// Add Currency if provided
+	if input.Currency != "" {
+		props["Currency"] = nt.DatabasePageProperty{
+			Select: &nt.SelectOptions{
+				Name: input.Currency,
+			},
+		}
+		s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: set currency=%s", input.Currency))
 	}
 
 	// Add Date if provided
