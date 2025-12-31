@@ -384,3 +384,151 @@ func (s *ContractorPayoutsService) CreatePayout(ctx context.Context, input Creat
 
 	return page.ID, nil
 }
+
+// CreateRefundPayoutInput contains the input data for creating a refund payout
+type CreateRefundPayoutInput struct {
+	Name             string  // Title/Name of the payout
+	ContractorPageID string  // Person relation
+	RefundRequestID  string  // Refund Request relation
+	Amount           float64 // Payment amount
+	Currency         string  // Currency (e.g., "VND", "USD")
+	Date             string  // Date in YYYY-MM-DD format
+}
+
+// CheckPayoutExistsByRefundRequest checks if a payout already exists for a given refund request
+// Returns (exists bool, existingPayoutPageID string, error)
+func (s *ContractorPayoutsService) CheckPayoutExistsByRefundRequest(ctx context.Context, refundRequestPageID string) (bool, string, error) {
+	payoutsDBID := s.cfg.Notion.Databases.ContractorPayouts
+	if payoutsDBID == "" {
+		return false, "", errors.New("contractor payouts database ID not configured")
+	}
+
+	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: checking if payout exists for refund request=%s", refundRequestPageID))
+
+	// Query Payouts by Refund relation (actual property name in Notion is "Refund")
+	query := &nt.DatabaseQuery{
+		Filter: &nt.DatabaseQueryFilter{
+			Property: "Refund",
+			DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+				Relation: &nt.RelationDatabaseQueryFilter{
+					Contains: refundRequestPageID,
+				},
+			},
+		},
+		PageSize: 1,
+	}
+
+	resp, err := s.client.QueryDatabase(ctx, payoutsDBID, query)
+	if err != nil {
+		s.logger.Error(err, fmt.Sprintf("[DEBUG] contractor_payouts: failed to check payout existence for refund request=%s", refundRequestPageID))
+		return false, "", fmt.Errorf("failed to check payout existence: %w", err)
+	}
+
+	if len(resp.Results) > 0 {
+		existingPayoutID := resp.Results[0].ID
+		s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: payout already exists: %s for refund request: %s", existingPayoutID, refundRequestPageID))
+		return true, existingPayoutID, nil
+	}
+
+	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: no payout exists for refund request: %s", refundRequestPageID))
+	return false, "", nil
+}
+
+// CreateRefundPayout creates a new refund payout entry in the Contractor Payouts database
+// Returns the created page ID
+func (s *ContractorPayoutsService) CreateRefundPayout(ctx context.Context, input CreateRefundPayoutInput) (string, error) {
+	payoutsDBID := s.cfg.Notion.Databases.ContractorPayouts
+	if payoutsDBID == "" {
+		return "", errors.New("contractor payouts database ID not configured")
+	}
+
+	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: creating refund payout name=%s contractor=%s refundRequest=%s amount=%.2f",
+		input.Name, input.ContractorPageID, input.RefundRequestID, input.Amount))
+
+	// Build properties for the new payout
+	props := nt.DatabasePageProperties{
+		// Title: Payout name
+		"Name": nt.DatabasePageProperty{
+			Title: []nt.RichText{
+				{Text: &nt.Text{Content: input.Name}},
+			},
+		},
+		// Amount
+		"Amount": nt.DatabasePageProperty{
+			Number: &input.Amount,
+		},
+		// Status: Pending
+		"Status": nt.DatabasePageProperty{
+			Status: &nt.SelectOptions{
+				Name: "Pending",
+			},
+		},
+		// Type: Refund
+		"Type": nt.DatabasePageProperty{
+			Select: &nt.SelectOptions{
+				Name: "Refund",
+			},
+		},
+		// Direction: Outgoing
+		"Direction": nt.DatabasePageProperty{
+			Select: &nt.SelectOptions{
+				Name: string(PayoutDirectionOutgoing),
+			},
+		},
+		// Person relation (Contractor)
+		"Person": nt.DatabasePageProperty{
+			Relation: []nt.Relation{
+				{ID: input.ContractorPageID},
+			},
+		},
+		// Refund relation (actual property name in Notion is "Refund")
+		"Refund": nt.DatabasePageProperty{
+			Relation: []nt.Relation{
+				{ID: input.RefundRequestID},
+			},
+		},
+	}
+
+	// Add Currency if provided
+	if input.Currency != "" {
+		props["Currency"] = nt.DatabasePageProperty{
+			Select: &nt.SelectOptions{
+				Name: input.Currency,
+			},
+		}
+		s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: set currency=%s", input.Currency))
+	}
+
+	// Add Date if provided
+	if input.Date != "" {
+		dateObj, err := nt.ParseDateTime(input.Date)
+		if err == nil {
+			props["Date"] = nt.DatabasePageProperty{
+				Date: &nt.Date{
+					Start: dateObj,
+				},
+			}
+			s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: set date=%s", input.Date))
+		} else {
+			s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: failed to parse date=%s: %v", input.Date, err))
+		}
+	}
+
+	params := nt.CreatePageParams{
+		ParentType:             nt.ParentTypeDatabase,
+		ParentID:               payoutsDBID,
+		DatabasePageProperties: &props,
+	}
+
+	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: creating refund payout page in database=%s", payoutsDBID))
+
+	page, err := s.client.CreatePage(ctx, params)
+	if err != nil {
+		s.logger.Error(err, fmt.Sprintf("[DEBUG] contractor_payouts: failed to create refund payout: %v", err))
+		return "", fmt.Errorf("failed to create refund payout: %w", err)
+	}
+
+	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: created refund payout pageID=%s", page.ID))
+
+	return page.ID, nil
+}

@@ -80,9 +80,7 @@ func (h *handler) CreateContractorPayouts(c *gin.Context) {
 		l.Error(err, "commission payout type not implemented")
 		c.JSON(http.StatusNotImplemented, view.CreateResponse[any](nil, nil, err, nil, ""))
 	case "refund":
-		err := fmt.Errorf("payout type 'refund' not implemented yet")
-		l.Error(err, "refund payout type not implemented")
-		c.JSON(http.StatusNotImplemented, view.CreateResponse[any](nil, nil, err, nil, ""))
+		h.processRefundPayouts(c, l, payoutType)
 	default:
 		err := fmt.Errorf("unknown payout type: %s", payoutTypeKey)
 		l.Error(err, "unknown payout type")
@@ -244,5 +242,161 @@ func (h *handler) processContractorPayrollPayouts(c *gin.Context, l logger.Logge
 		"errors":          errors,
 		"details":         details,
 		"type":            payoutType,
+	}, nil, nil, nil, "ok"))
+}
+
+// processRefundPayouts processes approved refund requests
+// and creates payout entries of type "Refund"
+func (h *handler) processRefundPayouts(c *gin.Context, l logger.Logger, payoutType string) {
+	ctx := c.Request.Context()
+
+	// Get services
+	refundRequestsService := h.service.Notion.RefundRequests
+	if refundRequestsService == nil {
+		err := fmt.Errorf("refund requests service not configured")
+		l.Error(err, "refund requests service is nil")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	contractorPayoutsService := h.service.Notion.ContractorPayouts
+	if contractorPayoutsService == nil {
+		err := fmt.Errorf("contractor payouts service not configured")
+		l.Error(err, "contractor payouts service is nil")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	// Query approved refund requests
+	l.Debug("querying refund requests with Status=Approved")
+	approvedRefunds, err := refundRequestsService.QueryApprovedRefunds(ctx)
+	if err != nil {
+		l.Error(err, "failed to query approved refund requests")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	l.Info(fmt.Sprintf("found %d refund requests with Status=Approved", len(approvedRefunds)))
+
+	if len(approvedRefunds) == 0 {
+		l.Info("no approved refund requests found, returning success with zero counts")
+		c.JSON(http.StatusOK, view.CreateResponse[any](map[string]any{
+			"payouts_created":   0,
+			"refunds_processed": 0,
+			"refunds_skipped":   0,
+			"errors":            0,
+			"details":           []any{},
+			"type":              payoutType,
+		}, nil, nil, nil, "ok"))
+		return
+	}
+
+	// Process each refund
+	var (
+		payoutsCreated = 0
+		refundsSkipped = 0
+		errors         = 0
+		details        = []map[string]any{}
+	)
+
+	for _, refund := range approvedRefunds {
+		l.Debug(fmt.Sprintf("processing refund: %s refundID: %s contractor: %s", refund.PageID, refund.RefundID, refund.ContractorPageID))
+
+		detail := map[string]any{
+			"refund_page_id":  refund.PageID,
+			"refund_id":       refund.RefundID,
+			"contractor_id":   refund.ContractorPageID,
+			"contractor_name": refund.ContractorName,
+			"amount":          refund.Amount,
+			"currency":        refund.Currency,
+			"reason":          refund.Reason,
+			"payout_page_id":  nil,
+			"status":          "",
+			"error_reason":    nil,
+		}
+
+		// Validate contractor
+		if refund.ContractorPageID == "" {
+			l.Warn(fmt.Sprintf("skipping refund %s: no contractor found", refund.PageID))
+			detail["status"] = "skipped"
+			detail["error_reason"] = "contractor not found in relation"
+			refundsSkipped++
+			details = append(details, detail)
+			continue
+		}
+
+		// Check if payout exists (idempotency)
+		l.Debug(fmt.Sprintf("checking if payout exists for refund: %s", refund.PageID))
+		exists, existingPayoutID, err := contractorPayoutsService.CheckPayoutExistsByRefundRequest(ctx, refund.PageID)
+		if err != nil {
+			l.Error(err, fmt.Sprintf("failed to check payout existence for refund %s", refund.PageID))
+			detail["status"] = "error"
+			detail["error_reason"] = "failed to check payout existence"
+			errors++
+			details = append(details, detail)
+			continue
+		}
+
+		if exists {
+			l.Debug(fmt.Sprintf("payout already exists for refund %s: %s", refund.PageID, existingPayoutID))
+			detail["status"] = "skipped"
+			detail["error_reason"] = "payout already exists"
+			detail["payout_page_id"] = existingPayoutID
+			refundsSkipped++
+			details = append(details, detail)
+			continue
+		}
+
+		// Create payout
+		// Build payout name from reason
+		payoutName := refund.Reason
+		if payoutName == "" {
+			payoutName = "Refund"
+		}
+		if refund.Description != "" {
+			payoutName = fmt.Sprintf("%s - %s", payoutName, refund.Description)
+		}
+		l.Debug(fmt.Sprintf("creating payout for refund: %s name: %s", refund.PageID, payoutName))
+
+		payoutInput := notionsvc.CreateRefundPayoutInput{
+			Name:             payoutName,
+			ContractorPageID: refund.ContractorPageID,
+			RefundRequestID:  refund.PageID,
+			Amount:           refund.Amount,
+			Currency:         refund.Currency,
+			Date:             refund.DateApproved,
+		}
+
+		payoutPageID, err := contractorPayoutsService.CreateRefundPayout(ctx, payoutInput)
+		if err != nil {
+			l.Error(err, fmt.Sprintf("failed to create payout for refund %s", refund.PageID))
+			detail["status"] = "error"
+			detail["error_reason"] = "failed to create payout"
+			errors++
+			details = append(details, detail)
+			continue
+		}
+
+		l.Info(fmt.Sprintf("created payout: %s for refund: %s", payoutPageID, refund.PageID))
+
+		// NOTE: Do NOT update refund status - leave as Approved
+		// Status update is handled separately
+
+		detail["status"] = "created"
+		detail["payout_page_id"] = payoutPageID
+		payoutsCreated++
+		details = append(details, detail)
+	}
+
+	// Return response
+	l.Info(fmt.Sprintf("processing complete: payouts_created=%d skipped=%d errors=%d", payoutsCreated, refundsSkipped, errors))
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](map[string]any{
+		"payouts_created":   payoutsCreated,
+		"refunds_processed": len(approvedRefunds),
+		"refunds_skipped":   refundsSkipped,
+		"errors":            errors,
+		"details":           details,
+		"type":              payoutType,
 	}, nil, nil, nil, "ok"))
 }

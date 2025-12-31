@@ -306,6 +306,7 @@ func New(cfg *config.Config, store *store.Store, repo store.DBRepo) (*Service, e
 			ContractorRates:   notion.NewContractorRatesService(cfg, logger.L),
 			ContractorFees:    notion.NewContractorFeesService(cfg, logger.L),
 			ContractorPayouts: notion.NewContractorPayoutsService(cfg, logger.L),
+			RefundRequests:    notion.NewRefundRequestsService(cfg, logger.L),
 		},
 		OpenRouter:     openrouter.NewOpenRouterService(cfg, logger.L),
 		ParquetSync:    parquetSvc,
