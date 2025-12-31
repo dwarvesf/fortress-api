@@ -990,38 +990,6 @@ func (s *TaskOrderLogService) UpdateOrderStatus(ctx context.Context, orderPageID
 	return nil
 }
 
-// getContractorName fetches the Full Name from a Contractor page
-func (s *TaskOrderLogService) getContractorName(ctx context.Context, pageID string) string {
-	page, err := s.client.FindPageByID(ctx, pageID)
-	if err != nil {
-		s.logger.Debug(fmt.Sprintf("getContractorName: failed to fetch contractor page %s: %v", pageID, err))
-		return ""
-	}
-
-	props, ok := page.Properties.(nt.DatabasePageProperties)
-	if !ok {
-		s.logger.Debug(fmt.Sprintf("getContractorName: failed to cast page properties for %s", pageID))
-		return ""
-	}
-
-	// Try to get Full Name from Title property
-	if prop, ok := props["Full Name"]; ok && len(prop.Title) > 0 {
-		name := prop.Title[0].PlainText
-		s.logger.Debug(fmt.Sprintf("getContractorName: found Full Name: %s", name))
-		return name
-	}
-
-	// Try Name property as fallback
-	if prop, ok := props["Name"]; ok && len(prop.Title) > 0 {
-		name := prop.Title[0].PlainText
-		s.logger.Debug(fmt.Sprintf("getContractorName: found Name: %s", name))
-		return name
-	}
-
-	s.logger.Debug(fmt.Sprintf("getContractorName: no Full Name or Name property found for page %s", pageID))
-	return ""
-}
-
 // getContractorInfo fetches both Full Name and Discord from a Contractor page
 func (s *TaskOrderLogService) getContractorInfo(ctx context.Context, pageID string) (name string, discord string) {
 	page, err := s.client.FindPageByID(ctx, pageID)

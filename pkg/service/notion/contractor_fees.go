@@ -305,10 +305,19 @@ func (s *ContractorFeesService) QueryNewFees(ctx context.Context) ([]*NewFeeData
 			}
 
 			// Extract fee data
+			// Get Task Order Log relation to fetch Contractor
+			taskOrderLogIDs := s.extractRelationIDs(props, "Task Order Log")
+			var contractorPageID, contractorName string
+			if len(taskOrderLogIDs) > 0 {
+				// Fetch contractor from first Task Order Log
+				contractorPageID, contractorName = s.getContractorFromTaskOrderLog(ctx, taskOrderLogIDs[0])
+				s.logger.Debug(fmt.Sprintf("fetched contractor from task order log: pageID=%s name=%s", contractorPageID, contractorName))
+			}
+
 			fee := &NewFeeData{
 				PageID:           page.ID,
-				ContractorPageID: s.extractRelationID(props, "Contractor"),
-				ContractorName:   s.extractRollupText(props, "Contractor Name"),
+				ContractorPageID: contractorPageID,
+				ContractorName:   contractorName,
 				TotalAmount:      s.extractFormulaNumber(props, "Total Amount"),
 				Month:            s.extractRollupText(props, "Month"),
 				Date:             s.extractRollupDate(props, "Date"),
@@ -355,14 +364,110 @@ func (s *ContractorFeesService) UpdatePaymentStatus(ctx context.Context, feePage
 	return nil
 }
 
-// Helper functions for extracting properties
-
-func (s *ContractorFeesService) extractRelationID(props nt.DatabasePageProperties, propName string) string {
+func (s *ContractorFeesService) extractRelationIDs(props nt.DatabasePageProperties, propName string) []string {
 	prop, ok := props[propName]
 	if !ok || len(prop.Relation) == 0 {
-		return ""
+		return nil
 	}
-	return prop.Relation[0].ID
+	var ids []string
+	for _, rel := range prop.Relation {
+		ids = append(ids, rel.ID)
+	}
+	return ids
+}
+
+// getContractorFromTaskOrderLog fetches contractor page ID and name from a Task Order Log page
+func (s *ContractorFeesService) getContractorFromTaskOrderLog(ctx context.Context, taskOrderLogPageID string) (pageID string, name string) {
+	s.logger.Debug(fmt.Sprintf("fetching contractor from task order log: %s", taskOrderLogPageID))
+
+	page, err := s.client.FindPageByID(ctx, taskOrderLogPageID)
+	if err != nil {
+		s.logger.Error(err, fmt.Sprintf("failed to fetch task order log page: %s", taskOrderLogPageID))
+		return "", ""
+	}
+
+	props, ok := page.Properties.(nt.DatabasePageProperties)
+	if !ok {
+		s.logger.Debug("failed to cast task order log page properties")
+		return "", ""
+	}
+
+	// Debug: log all relation properties in task order log
+	s.logger.Debug(fmt.Sprintf("task order log %s available relation properties:", taskOrderLogPageID))
+	for propName, prop := range props {
+		if len(prop.Relation) > 0 {
+			s.logger.Debug(fmt.Sprintf("  - %s (relation, count=%d)", propName, len(prop.Relation)))
+		}
+	}
+
+	// Get Deployment relation (Task Order Log -> Deployment -> Contractor)
+	deploymentProp, ok := props["Deployment"]
+	if !ok || len(deploymentProp.Relation) == 0 {
+		s.logger.Debug("Deployment relation not found in task order log")
+		return "", ""
+	}
+
+	deploymentPageID := deploymentProp.Relation[0].ID
+	s.logger.Debug(fmt.Sprintf("found Deployment page ID: %s", deploymentPageID))
+
+	// Fetch contractor from Deployment page
+	return s.getContractorFromDeployment(ctx, deploymentPageID)
+}
+
+// getContractorFromDeployment fetches contractor page ID and name from a Deployment page
+func (s *ContractorFeesService) getContractorFromDeployment(ctx context.Context, deploymentPageID string) (pageID string, name string) {
+	s.logger.Debug(fmt.Sprintf("fetching contractor from deployment: %s", deploymentPageID))
+
+	page, err := s.client.FindPageByID(ctx, deploymentPageID)
+	if err != nil {
+		s.logger.Error(err, fmt.Sprintf("failed to fetch deployment page: %s", deploymentPageID))
+		return "", ""
+	}
+
+	props, ok := page.Properties.(nt.DatabasePageProperties)
+	if !ok {
+		s.logger.Debug("failed to cast deployment page properties")
+		return "", ""
+	}
+
+	// Debug: log all relation properties in deployment
+	s.logger.Debug(fmt.Sprintf("deployment %s available relation properties:", deploymentPageID))
+	for propName, prop := range props {
+		if len(prop.Relation) > 0 {
+			s.logger.Debug(fmt.Sprintf("  - %s (relation, count=%d)", propName, len(prop.Relation)))
+		}
+	}
+
+	// Get Contractor relation from Deployment
+	contractorProp, ok := props["Contractor"]
+	if !ok || len(contractorProp.Relation) == 0 {
+		s.logger.Debug("Contractor relation not found in deployment")
+		return "", ""
+	}
+
+	contractorPageID := contractorProp.Relation[0].ID
+	s.logger.Debug(fmt.Sprintf("found contractor page ID: %s", contractorPageID))
+
+	// Fetch contractor name from contractor page
+	contractorPage, err := s.client.FindPageByID(ctx, contractorPageID)
+	if err != nil {
+		s.logger.Error(err, fmt.Sprintf("failed to fetch contractor page: %s", contractorPageID))
+		return contractorPageID, ""
+	}
+
+	contractorProps, ok := contractorPage.Properties.(nt.DatabasePageProperties)
+	if !ok {
+		s.logger.Debug("failed to cast contractor page properties")
+		return contractorPageID, ""
+	}
+
+	// Extract Full Name from contractor page
+	if nameProp, ok := contractorProps["Full Name"]; ok && len(nameProp.Title) > 0 {
+		name = nameProp.Title[0].PlainText
+		s.logger.Debug(fmt.Sprintf("found contractor name: %s", name))
+	}
+
+	return contractorPageID, name
 }
 
 func (s *ContractorFeesService) extractRollupText(props nt.DatabasePageProperties, propName string) string {
