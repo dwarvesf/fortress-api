@@ -1,8 +1,8 @@
 Mime-Version: 1.0
-From: "Accounting @ Dwarves Foundation" <accounting@d.foundation>
+From: "Accounting @ Dwarves LLC" <accounting@d.foundation>
 To: {{.Email}}
 CC: {{gatherAddress}}
-Subject: Dwarves Foundation - Invoice #{{.Number}} for {{toString .Month}} {{.Year}} work on {{.Project.Name}}
+Subject: Dwarves LLC - Invoice #{{.Number}} for {{toString .Month}} {{.Year}} work on {{.Project.Name}}
 Content-Type: multipart/mixed; boundary=main
 
 --main

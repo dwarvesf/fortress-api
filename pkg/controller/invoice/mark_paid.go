@@ -12,6 +12,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	sInvoice "github.com/dwarvesf/fortress-api/pkg/store/invoice"
+	"github.com/dwarvesf/fortress-api/pkg/worker"
 )
 
 // MarkPaidResult contains the result of marking an invoice as paid
@@ -159,6 +160,13 @@ func (c *controller) processNotionInvoicePaid(l logger.Logger, page *nt.Page, sk
 		return fmt.Errorf("failed to update Notion status: %w", err)
 	}
 	l.Debug("Notion invoice status updated to Paid")
+
+	// 1b. Enqueue invoice splits generation job
+	l.Debug("enqueuing invoice splits generation job")
+	c.worker.Enqueue(worker.GenerateInvoiceSplitsMsg, worker.GenerateInvoiceSplitsPayload{
+		InvoicePageID: page.ID,
+	})
+	l.Debug("invoice splits generation job enqueued")
 
 	// If PostgreSQL was also updated, skip email and GDrive to avoid duplicates
 	if skipEmailAndGDrive {

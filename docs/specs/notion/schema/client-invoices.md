@@ -273,15 +273,38 @@ When working with this database via API:
 
 Critical property IDs for API access:
 
-| Property | ID |
-|----------|-----|
-| Type | `=DBN:` |
-| Issue Date | `U?Nt` |
-| Status | `nsb@` |
-| Final Total | `:CEa` |
-| Currency | `vVG<` |
-| Project | `srY=` |
-| Deployment Tracker | `OMj?` |
+| Property | ID | Type |
+|----------|-----|------|
+| (auto) Invoice Number | `title` | title |
+| Type | `=BN:` | select |
+| Issue Date | `U?Nt` | date |
+| Paid Date | `wXqV` | date |
+| Status | `nsb@` | status |
+| Final Total | `:CEa` | formula |
+| Currency | `vVG<` | select |
+| Project | `srY=` | relation |
+| Deployment Tracker | `OMj?` | relation |
+| Line Item | `Z_^m` | relation |
+| Parent item | `ES]D` | relation |
+| Splits | `lV[i` | relation |
+| Splits Generated | `}WM}` | checkbox |
+| % Sales | `gZX~` | number (percent) |
+| % Account Mgr | `iF]]` | number (percent) |
+| % Delivery Lead | `r@c{` | number (percent) |
+| % Hiring Referral | `uyk[` | number (percent) |
+| Sales Amount | `\LY?` | formula |
+| Account Amount | `zZE:` | formula |
+| Delivery Lead Amount | `[}gB` | formula |
+| Hiring Referral Amount | `XM:A` | formula |
+| Sales Person | `@[Qm` | rollup |
+| Account Manager | `>Ow^` | formula |
+| Delivery Lead | `\|Rjc` | formula |
+| Hiring Referral | `nYwg` | formula |
+| All Sales Amounts | `EARk` | rollup |
+| All AM Amounts | `Mu]]` | rollup |
+| All DL Amounts | `~fv[` | rollup |
+| All Hiring Ref Amounts | `GuqF` | rollup |
+| Total Commission Paid | `FvNv` | formula |
 
 ## Notes
 

@@ -12,11 +12,10 @@ import (
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/controller"
-	"github.com/dwarvesf/fortress-api/pkg/controller/invoice"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
+	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/service/notion"
 	"github.com/dwarvesf/fortress-api/pkg/service/wise"
-	"github.com/dwarvesf/fortress-api/pkg/utils/timeutil"
 )
 
 func main() {
@@ -42,26 +41,20 @@ func main() {
 	ctx := context.Background()
 
 	// If Discord provided, look up contractor page ID
-	contractorName := contractorDiscord
 	if contractorPageID == "" && contractorDiscord != "" {
 		l.Debugf("Looking up contractor by Discord: %s", contractorDiscord)
-		pageID, name, err := lookupContractorByDiscord(ctx, cfg, l, contractorDiscord)
+		pageID, _, err := lookupContractorByDiscord(ctx, cfg, l, contractorDiscord)
 		if err != nil {
 			l.Error(err, "Failed to lookup contractor by Discord")
 			os.Exit(1)
 		}
 		contractorPageID = pageID
-		if name != "" {
-			contractorName = name
-		}
 	}
 
 	l.Debugf("Testing with contractor page ID: %s", contractorPageID)
 
 	payoutsSvc := notion.NewContractorPayoutsService(cfg, l)
-	feesSvc := notion.NewContractorFeesService(cfg, l)
 	splitSvc := notion.NewInvoiceSplitService(cfg, l)
-	taskOrderLogSvc := notion.NewTaskOrderLogService(cfg, l)
 	wiseSvc := wise.New(cfg, l)
 
 	// Test QueryPendingPayoutsByContractor
@@ -74,8 +67,6 @@ func main() {
 
 	fmt.Printf("Found %d pending payouts\n", len(entries))
 
-	// Build line items for PDF
-	var lineItems []invoice.ContractorInvoiceLineItem
 	var totalUSD float64
 
 	for _, e := range entries {
@@ -96,42 +87,6 @@ func main() {
 		// Round to 2 decimal places to avoid $0.01 differences
 		amountUSD = roundTo2Decimals(amountUSD)
 
-		// Initialize line item with defaults (Qty=1, Rate=AmountUSD, Total=AmountUSD)
-		lineItem := invoice.ContractorInvoiceLineItem{
-			Title:     e.Name,
-			Hours:     1,
-			Rate:      amountUSD,
-			Amount:    amountUSD,
-			AmountUSD: amountUSD,
-		}
-
-		// For Contractor Payroll, fetch ProofOfWorks from Task Order Log subitems (grouped by project)
-		if e.ContractorFeesID != "" && taskOrderLogSvc != nil {
-			l.Debugf("Fetching Task Order Log IDs from contractor fees: %s", e.ContractorFeesID)
-
-			// Get Task Order Log IDs from Contractor Fees relation
-			orderIDs, err := feesSvc.GetTaskOrderLogIDs(ctx, e.ContractorFeesID)
-			if err != nil {
-				l.Error(err, "GetTaskOrderLogIDs failed")
-			} else if len(orderIDs) > 0 {
-				l.Debugf("Found %d Task Order Log IDs: %v", len(orderIDs), orderIDs)
-
-				// Format ProofOfWorks grouped by project with bold headers
-				formattedDescription, err := taskOrderLogSvc.FormatProofOfWorksByProject(ctx, orderIDs)
-				if err != nil {
-					l.Error(err, "FormatProofOfWorksByProject failed")
-				} else if formattedDescription != "" {
-					lineItem.Description = formattedDescription
-					fmt.Printf("  Formatted ProofOfWorks:\n%s\n", formattedDescription)
-					l.Debugf("Set formatted ProofOfWorks description (length=%d)", len(formattedDescription))
-				} else {
-					l.Debug("No ProofOfWorks found in Task Order Log subitems")
-				}
-			} else {
-				l.Debug("No Task Order Log IDs found in contractor fees")
-			}
-		}
-
 		// Test GetInvoiceSplitByID if split relation exists
 		if e.InvoiceSplitID != "" {
 			l.Debugf("Fetching invoice split: %s", e.InvoiceSplitID)
@@ -143,56 +98,34 @@ func main() {
 			}
 		}
 
-		lineItems = append(lineItems, lineItem)
-		totalUSD += lineItem.AmountUSD
+		totalUSD += amountUSD
 	}
 
 	l.Info("Test completed successfully")
 
 	// Generate PDF if requested
 	if generatePDF {
-		l.Debug("Generating invoice PDF...")
+		l.Debug("Generating invoice PDF using GenerateContractorInvoice controller...")
 
-		// Create controller for PDF generation
-		ctrl := controller.New(nil, nil, nil, nil, l, cfg)
+		// Create controller for invoice generation with Wise service
+		svc := &service.Service{
+			Wise: wiseSvc,
+		}
+		ctrl := controller.New(nil, nil, svc, nil, l, cfg)
 
-		// Build invoice data
-		invoiceData := &invoice.ContractorInvoiceData{
-			InvoiceNumber:     generateInvoiceNumber(month),
-			ContractorName:    contractorName,
-			Month:             month,
-			Date:              time.Now(),
-			DueDate:           time.Now().AddDate(0, 0, 15),
-			Description:       fmt.Sprintf("Software Development Services for %s", timeutil.FormatMonthYear(month)),
-			BillingType:       "Hourly Rate",
-			Currency:          "USD",
-			LineItems:         lineItems,
-			Total:             totalUSD,
-			TotalUSD:          totalUSD,
-			ExchangeRate:      1,
-			BankAccountHolder: "Test Account Holder",
-			BankName:          "Test Bank",
-			BankAccountNumber: "123456789",
-			BankSwiftBIC:      "TESTSWIFT",
-			BankBranch:        "Test Branch",
+		// Use GenerateContractorInvoice to get properly sorted line items
+		invoiceData, err := ctrl.Invoice.GenerateContractorInvoice(ctx, contractorDiscord, month)
+		if err != nil {
+			l.Error(err, "Failed to generate contractor invoice data")
+			os.Exit(1)
 		}
 
-		// Try to get bank account from Notion
-		bankSvc := notion.NewBankAccountService(cfg, l)
-		if bankSvc != nil && contractorDiscord != "" {
-			l.Debugf("Fetching bank account for Discord: %s", contractorDiscord)
-			bankAccount, err := bankSvc.QueryBankAccountByDiscord(ctx, contractorDiscord)
-			if err != nil {
-				l.Debugf("Failed to fetch bank account: %v (using defaults)", err)
-			} else {
-				invoiceData.BankAccountHolder = bankAccount.AccountHolderName
-				invoiceData.BankName = bankAccount.BankName
-				invoiceData.BankAccountNumber = bankAccount.AccountNumber
-				invoiceData.BankSwiftBIC = bankAccount.SwiftBIC
-				invoiceData.BankBranch = bankAccount.BranchAddress
-				l.Debugf("Using bank account: %s at %s", bankAccount.AccountHolderName, bankAccount.BankName)
-			}
+		// Print sorted line items for verification
+		fmt.Printf("\n=== Sorted Line Items (by Type, then Amount ASC) ===\n")
+		for i, item := range invoiceData.LineItems {
+			fmt.Printf("%d. [%s] %s - $%.2f\n", i+1, item.Type, item.Title, item.Amount)
 		}
+		fmt.Printf("Total: $%.2f\n", invoiceData.Total)
 
 		pdfBytes, err := ctrl.Invoice.GenerateContractorInvoicePDF(l, invoiceData)
 		if err != nil {
@@ -200,7 +133,7 @@ func main() {
 			os.Exit(1)
 		}
 
-		outputFile := fmt.Sprintf("contractor-invoice-%s-%s.pdf", sanitizeFilename(contractorName), month)
+		outputFile := fmt.Sprintf("contractor-invoice-%s-%s.pdf", sanitizeFilename(invoiceData.ContractorName), month)
 		if err := os.WriteFile(outputFile, pdfBytes, 0644); err != nil {
 			l.Error(err, "Failed to write PDF file")
 			os.Exit(1)
@@ -254,11 +187,6 @@ func lookupContractorByDiscord(ctx context.Context, cfg *config.Config, l logger
 	l.Debugf("Found contractor page ID: %s, Name: %s", pageID, name)
 
 	return pageID, name, nil
-}
-
-func generateInvoiceNumber(month string) string {
-	monthPart := strings.ReplaceAll(month, "-", "")
-	return fmt.Sprintf("CONTR-%s-TEST", monthPart)
 }
 
 func sanitizeFilename(name string) string {

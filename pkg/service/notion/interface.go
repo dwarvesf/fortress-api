@@ -64,6 +64,11 @@ type IService interface {
 	UpdateClientInvoiceStatus(pageID string, status string, paidDate *time.Time) error
 	ExtractClientInvoiceData(page *nt.Page) (*model.Invoice, error)
 	GetNotionInvoiceStatus(page *nt.Page) (string, error)
+
+	// Invoice Splits Generation
+	QueryLineItemsWithCommissions(invoicePageID string) ([]LineItemCommissionData, error)
+	IsSplitsGenerated(invoicePageID string) (bool, error)
+	MarkSplitsGenerated(invoicePageID string) error
 }
 
 // InvoiceFilter defines filter criteria for querying invoices from Notion

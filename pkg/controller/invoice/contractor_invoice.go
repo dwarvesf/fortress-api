@@ -9,6 +9,7 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 
@@ -51,6 +52,7 @@ type ContractorInvoiceLineItem struct {
 	Rate        float64 // Only for Hourly Rate
 	Amount      float64 // Only for Hourly Rate
 	AmountUSD   float64 // Amount converted to USD (Only for Hourly Rate)
+	Type        string  // Payout source type (Contractor Payroll, Commission, Refund, etc.)
 }
 
 // GenerateContractorInvoice generates contractor invoice data from Notion
@@ -139,6 +141,7 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 			Rate:      amountUSD, // Unit cost = converted amount
 			Amount:    amountUSD, // Amount
 			AmountUSD: amountUSD,
+			Type:      string(payout.SourceType),
 		}
 
 		// If Contractor Payroll, fetch ProofOfWorks from Task Order Log subitems (grouped by project)
@@ -171,7 +174,19 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 
 	l.Debug(fmt.Sprintf("built %d line items with total=%.2f USD", len(lineItems), total))
 
-	// 5. Query Bank Account
+	// 5. Sort line items by Type (grouped) then by Amount ASC
+	l.Debug("sorting line items by Type and Amount ASC")
+	sort.Slice(lineItems, func(i, j int) bool {
+		// First sort by Type (group by type)
+		if lineItems[i].Type != lineItems[j].Type {
+			return lineItems[i].Type < lineItems[j].Type
+		}
+		// Then sort by Amount ASC within each type
+		return lineItems[i].Amount < lineItems[j].Amount
+	})
+	l.Debug(fmt.Sprintf("sorted %d line items by Type and Amount ASC", len(lineItems)))
+
+	// 6. Query Bank Account
 	l.Debug("querying bank account from Notion")
 	bankAccountService := notion.NewBankAccountService(c.config, c.logger)
 	if bankAccountService == nil {

@@ -9,4 +9,5 @@ type Services struct {
 	ContractorFees    *ContractorFeesService
 	ContractorPayouts *ContractorPayoutsService
 	RefundRequests    *RefundRequestsService
+	InvoiceSplit      *InvoiceSplitService
 }

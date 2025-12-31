@@ -532,3 +532,151 @@ func (s *ContractorPayoutsService) CreateRefundPayout(ctx context.Context, input
 
 	return page.ID, nil
 }
+
+// CheckPayoutExistsByInvoiceSplit checks if a payout already exists for a given invoice split
+// Returns (exists bool, existingPayoutPageID string, error)
+func (s *ContractorPayoutsService) CheckPayoutExistsByInvoiceSplit(ctx context.Context, invoiceSplitPageID string) (bool, string, error) {
+	payoutsDBID := s.cfg.Notion.Databases.ContractorPayouts
+	if payoutsDBID == "" {
+		return false, "", errors.New("contractor payouts database ID not configured")
+	}
+
+	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: checking if payout exists for invoice split=%s", invoiceSplitPageID))
+
+	// Query Payouts by Invoice Split relation
+	query := &nt.DatabaseQuery{
+		Filter: &nt.DatabaseQueryFilter{
+			Property: "Invoice Split",
+			DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+				Relation: &nt.RelationDatabaseQueryFilter{
+					Contains: invoiceSplitPageID,
+				},
+			},
+		},
+		PageSize: 1,
+	}
+
+	resp, err := s.client.QueryDatabase(ctx, payoutsDBID, query)
+	if err != nil {
+		s.logger.Error(err, fmt.Sprintf("[DEBUG] contractor_payouts: failed to check payout existence for invoice split=%s", invoiceSplitPageID))
+		return false, "", fmt.Errorf("failed to check payout existence: %w", err)
+	}
+
+	if len(resp.Results) > 0 {
+		existingPayoutID := resp.Results[0].ID
+		s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: payout already exists: %s for invoice split: %s", existingPayoutID, invoiceSplitPageID))
+		return true, existingPayoutID, nil
+	}
+
+	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: no payout exists for invoice split: %s", invoiceSplitPageID))
+	return false, "", nil
+}
+
+// CreateCommissionPayoutInput contains the input data for creating a commission payout
+type CreateCommissionPayoutInput struct {
+	Name             string  // Title/Name of the payout
+	ContractorPageID string  // Person relation
+	InvoiceSplitID   string  // Invoice Split relation
+	Amount           float64 // Payment amount
+	Currency         string  // Currency (e.g., "VND", "USD")
+	Date             string  // Date in YYYY-MM-DD format
+}
+
+// CreateCommissionPayout creates a new commission payout entry in the Contractor Payouts database
+// Returns the created page ID
+func (s *ContractorPayoutsService) CreateCommissionPayout(ctx context.Context, input CreateCommissionPayoutInput) (string, error) {
+	payoutsDBID := s.cfg.Notion.Databases.ContractorPayouts
+	if payoutsDBID == "" {
+		return "", errors.New("contractor payouts database ID not configured")
+	}
+
+	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: creating commission payout name=%s contractor=%s invoiceSplit=%s amount=%.2f",
+		input.Name, input.ContractorPageID, input.InvoiceSplitID, input.Amount))
+
+	// Build properties for the new payout
+	props := nt.DatabasePageProperties{
+		// Title: Payout name
+		"Name": nt.DatabasePageProperty{
+			Title: []nt.RichText{
+				{Text: &nt.Text{Content: input.Name}},
+			},
+		},
+		// Amount
+		"Amount": nt.DatabasePageProperty{
+			Number: &input.Amount,
+		},
+		// Status: Pending
+		"Status": nt.DatabasePageProperty{
+			Status: &nt.SelectOptions{
+				Name: "Pending",
+			},
+		},
+		// Type: Commission
+		"Type": nt.DatabasePageProperty{
+			Select: &nt.SelectOptions{
+				Name: "Commission",
+			},
+		},
+		// Direction: Outgoing
+		"Direction": nt.DatabasePageProperty{
+			Select: &nt.SelectOptions{
+				Name: string(PayoutDirectionOutgoing),
+			},
+		},
+		// Person relation (Contractor)
+		"Person": nt.DatabasePageProperty{
+			Relation: []nt.Relation{
+				{ID: input.ContractorPageID},
+			},
+		},
+		// Invoice Split relation
+		"Invoice Split": nt.DatabasePageProperty{
+			Relation: []nt.Relation{
+				{ID: input.InvoiceSplitID},
+			},
+		},
+	}
+
+	// Add Currency if provided
+	if input.Currency != "" {
+		props["Currency"] = nt.DatabasePageProperty{
+			Select: &nt.SelectOptions{
+				Name: input.Currency,
+			},
+		}
+		s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: set currency=%s", input.Currency))
+	}
+
+	// Add Date if provided
+	if input.Date != "" {
+		dateObj, err := nt.ParseDateTime(input.Date)
+		if err == nil {
+			props["Date"] = nt.DatabasePageProperty{
+				Date: &nt.Date{
+					Start: dateObj,
+				},
+			}
+			s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: set date=%s", input.Date))
+		} else {
+			s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: failed to parse date=%s: %v", input.Date, err))
+		}
+	}
+
+	params := nt.CreatePageParams{
+		ParentType:             nt.ParentTypeDatabase,
+		ParentID:               payoutsDBID,
+		DatabasePageProperties: &props,
+	}
+
+	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: creating commission payout page in database=%s", payoutsDBID))
+
+	page, err := s.client.CreatePage(ctx, params)
+	if err != nil {
+		s.logger.Error(err, fmt.Sprintf("[DEBUG] contractor_payouts: failed to create commission payout: %v", err))
+		return "", fmt.Errorf("failed to create commission payout: %w", err)
+	}
+
+	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: created commission payout pageID=%s", page.ID))
+
+	return page.ID, nil
+}

@@ -2,6 +2,7 @@ package notion
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -524,4 +525,364 @@ func (n *notionService) GetNotionInvoiceStatus(page *nt.Page) (string, error) {
 
 	l.Debug("no status property found")
 	return "", fmt.Errorf("status property not found")
+}
+
+// LineItemCommissionData contains commission data extracted from a line item
+type LineItemCommissionData struct {
+	PageID           string
+	DeploymentPageID string
+
+	// Commission percentages
+	SalesPercent        float64
+	AccountMgrPercent   float64
+	DeliveryLeadPercent float64
+	HiringRefPercent    float64
+
+	// Calculated amounts
+	SalesAmount        float64
+	AccountMgrAmount   float64
+	DeliveryLeadAmount float64
+	HiringRefAmount    float64
+
+	// Person page IDs (from rollups - these are Contractor page IDs)
+	SalesPersonIDs    []string
+	AccountMgrIDs     []string
+	DeliveryLeadIDs   []string
+	HiringRefIDs      []string
+
+	// Metadata
+	Currency    string
+	Month       time.Time
+	ProjectCode string
+}
+
+// QueryLineItemsWithCommissions fetches line items with commission data for a given invoice
+func (n *notionService) QueryLineItemsWithCommissions(invoicePageID string) ([]LineItemCommissionData, error) {
+	l := n.l.Fields(logger.Fields{
+		"service":       "notion",
+		"method":        "QueryLineItemsWithCommissions",
+		"invoicePageID": invoicePageID,
+	})
+
+	l.Debug("querying line items with commission data")
+
+	// First, fetch the Invoice page to get Currency and Issue Date
+	// (These are on the Invoice, not the Line Items)
+	ctx := context.Background()
+	invoicePage, err := n.notionClient.FindPageByID(ctx, invoicePageID)
+	if err != nil {
+		l.Error(err, "failed to fetch invoice page")
+		return nil, fmt.Errorf("failed to fetch invoice page: %w", err)
+	}
+
+	var invoiceCurrency string
+	var invoiceMonth time.Time
+
+	if invoiceProps, ok := invoicePage.Properties.(nt.DatabasePageProperties); ok {
+		// Extract Currency from Invoice
+		if currencyProp, ok := invoiceProps["Currency"]; ok && currencyProp.Select != nil {
+			invoiceCurrency = currencyProp.Select.Name
+			l.Debugf("extracted invoice currency: %s", invoiceCurrency)
+		}
+
+		// Extract Issue Date from Invoice
+		if issueDateProp, ok := invoiceProps["Issue Date"]; ok && issueDateProp.Date != nil {
+			invoiceMonth = issueDateProp.Date.Start.Time
+			l.Debugf("extracted invoice month: %s", invoiceMonth.Format("2006-01"))
+		}
+	}
+
+	// Get line items for the invoice
+	lineItems, err := n.GetInvoiceLineItems(invoicePageID)
+	if err != nil {
+		l.Error(err, "failed to get invoice line items")
+		return nil, fmt.Errorf("failed to get line items: %w", err)
+	}
+
+	l.Debugf("fetched %d line items", len(lineItems))
+
+	var results []LineItemCommissionData
+
+	for _, item := range lineItems {
+		props, ok := item.Properties.(nt.DatabasePageProperties)
+		if !ok {
+			l.Debugf("failed to cast properties for line item %s", item.ID)
+			continue
+		}
+
+		data := LineItemCommissionData{
+			PageID: item.ID,
+		}
+
+		// Extract Deployment Tracker relation
+		if deploymentProp, ok := props["Deployment Tracker"]; ok && deploymentProp.Relation != nil {
+			if len(deploymentProp.Relation) > 0 {
+				data.DeploymentPageID = deploymentProp.Relation[0].ID
+				l.Debugf("extracted deployment page ID: %s", data.DeploymentPageID)
+			}
+		}
+
+		// Extract commission percentages
+		data.SalesPercent = n.extractNumberProp(props, "% Sales")
+		data.AccountMgrPercent = n.extractNumberProp(props, "% Account Mgr")
+		data.DeliveryLeadPercent = n.extractNumberProp(props, "% Delivery Lead")
+		data.HiringRefPercent = n.extractNumberProp(props, "% Hiring Referral")
+
+		l.Debugf("commission percentages: sales=%.2f%%, am=%.2f%%, dl=%.2f%%, hr=%.2f%%",
+			data.SalesPercent*100, data.AccountMgrPercent*100, data.DeliveryLeadPercent*100, data.HiringRefPercent*100)
+
+		// Extract calculated commission amounts from formulas
+		data.SalesAmount = n.extractFormulaProp(props, "Sales Amount")
+		data.AccountMgrAmount = n.extractFormulaProp(props, "Account Amount")
+		data.DeliveryLeadAmount = n.extractFormulaProp(props, "Delivery Lead Amount")
+		data.HiringRefAmount = n.extractFormulaProp(props, "Hiring Referral Amount")
+
+		l.Debugf("commission amounts: sales=%.2f, am=%.2f, dl=%.2f, hr=%.2f",
+			data.SalesAmount, data.AccountMgrAmount, data.DeliveryLeadAmount, data.HiringRefAmount)
+
+		// Fetch Deployment Tracker page to get contractor IDs
+		if data.DeploymentPageID != "" {
+			contractorIDs, err := n.getContractorIDsFromDeployment(data.DeploymentPageID)
+			if err != nil {
+				l.Debugf("failed to get contractor IDs from deployment: %v", err)
+			} else {
+				data.SalesPersonIDs = contractorIDs.SalesIDs
+				data.AccountMgrIDs = contractorIDs.AccountMgrIDs
+				data.DeliveryLeadIDs = contractorIDs.DeliveryLeadIDs
+				data.HiringRefIDs = contractorIDs.HiringRefIDs
+			}
+		}
+
+		l.Debugf("person IDs: sales=%v, am=%v, dl=%v, hr=%v",
+			data.SalesPersonIDs, data.AccountMgrIDs, data.DeliveryLeadIDs, data.HiringRefIDs)
+
+		// Use Currency and Month from Invoice (already extracted above)
+		data.Currency = invoiceCurrency
+		data.Month = invoiceMonth
+		l.Debugf("using invoice currency=%s month=%s", data.Currency, data.Month.Format("2006-01"))
+
+		// Extract Project Code from rollup
+		if codeProp, ok := props["Code"]; ok && codeProp.Rollup != nil {
+			if len(codeProp.Rollup.Array) > 0 {
+				item := codeProp.Rollup.Array[0]
+				if item.Formula != nil && item.Formula.String != nil {
+					data.ProjectCode = *item.Formula.String
+					l.Debugf("extracted project code: %s", data.ProjectCode)
+				}
+			}
+		}
+
+		results = append(results, data)
+	}
+
+	l.Debugf("processed %d line items with commission data", len(results))
+
+	return results, nil
+}
+
+// DeploymentContractorIDs holds contractor IDs extracted from a Deployment Tracker page
+type DeploymentContractorIDs struct {
+	SalesIDs        []string
+	AccountMgrIDs   []string
+	DeliveryLeadIDs []string
+	HiringRefIDs    []string
+}
+
+// getContractorIDsFromDeployment fetches the Deployment Tracker page and extracts contractor IDs
+func (n *notionService) getContractorIDsFromDeployment(deploymentPageID string) (*DeploymentContractorIDs, error) {
+	l := n.l.Fields(logger.Fields{
+		"service":          "notion",
+		"method":           "getContractorIDsFromDeployment",
+		"deploymentPageID": deploymentPageID,
+	})
+
+	l.Debug("fetching deployment tracker page for contractor IDs")
+
+	ctx := context.Background()
+	page, err := n.notionClient.FindPageByID(ctx, deploymentPageID)
+	if err != nil {
+		l.Error(err, "failed to fetch deployment tracker page")
+		return nil, fmt.Errorf("failed to fetch deployment page: %w", err)
+	}
+
+	props, ok := page.Properties.(nt.DatabasePageProperties)
+	if !ok {
+		l.Debug("failed to cast deployment page properties")
+		return nil, fmt.Errorf("invalid deployment page properties")
+	}
+
+	result := &DeploymentContractorIDs{}
+
+	// Extract Original Sales rollup → relation IDs
+	if prop, ok := props["Original Sales"]; ok && prop.Rollup != nil && prop.Rollup.Array != nil {
+		for _, item := range prop.Rollup.Array {
+			if item.Relation != nil {
+				for _, rel := range item.Relation {
+					result.SalesIDs = append(result.SalesIDs, rel.ID)
+				}
+			}
+		}
+	}
+	l.Debugf("extracted sales IDs: %v", result.SalesIDs)
+
+	// Extract Account Managers rollup → relation IDs
+	if prop, ok := props["Account Managers"]; ok && prop.Rollup != nil && prop.Rollup.Array != nil {
+		for _, item := range prop.Rollup.Array {
+			if item.Relation != nil {
+				for _, rel := range item.Relation {
+					result.AccountMgrIDs = append(result.AccountMgrIDs, rel.ID)
+				}
+			}
+		}
+	}
+	l.Debugf("extracted AM IDs: %v", result.AccountMgrIDs)
+
+	// Extract Delivery Leads rollup → relation IDs
+	if prop, ok := props["Delivery Leads"]; ok && prop.Rollup != nil && prop.Rollup.Array != nil {
+		for _, item := range prop.Rollup.Array {
+			if item.Relation != nil {
+				for _, rel := range item.Relation {
+					result.DeliveryLeadIDs = append(result.DeliveryLeadIDs, rel.ID)
+				}
+			}
+		}
+	}
+	l.Debugf("extracted DL IDs: %v", result.DeliveryLeadIDs)
+
+	// Extract Hiring Referral - check for a relation property
+	// Note: Hiring Referral might be in Project, not Deployment Tracker
+	// For now, check if there's a Hiring Referral relation
+	if prop, ok := props["Hiring Referral"]; ok {
+		if prop.Relation != nil {
+			for _, rel := range prop.Relation {
+				result.HiringRefIDs = append(result.HiringRefIDs, rel.ID)
+			}
+		} else if prop.Rollup != nil && prop.Rollup.Array != nil {
+			for _, item := range prop.Rollup.Array {
+				if item.Relation != nil {
+					for _, rel := range item.Relation {
+						result.HiringRefIDs = append(result.HiringRefIDs, rel.ID)
+					}
+				}
+			}
+		}
+	}
+	l.Debugf("extracted HR IDs: %v", result.HiringRefIDs)
+
+	return result, nil
+}
+
+// extractNumberProp extracts a number property value
+func (n *notionService) extractNumberProp(props nt.DatabasePageProperties, propName string) float64 {
+	if prop, ok := props[propName]; ok && prop.Number != nil {
+		return *prop.Number
+	}
+	return 0
+}
+
+// extractFormulaProp extracts a formula property number value
+func (n *notionService) extractFormulaProp(props nt.DatabasePageProperties, propName string) float64 {
+	if prop, ok := props[propName]; ok && prop.Formula != nil && prop.Formula.Number != nil {
+		return *prop.Formula.Number
+	}
+	return 0
+}
+
+// IsSplitsGenerated checks if splits have already been generated for an invoice
+func (n *notionService) IsSplitsGenerated(invoicePageID string) (bool, error) {
+	l := n.l.Fields(logger.Fields{
+		"service":       "notion",
+		"method":        "IsSplitsGenerated",
+		"invoicePageID": invoicePageID,
+	})
+
+	l.Debug("checking if splits already generated")
+
+	ctx := context.Background()
+	page, err := n.notionClient.FindPageByID(ctx, invoicePageID)
+	if err != nil {
+		l.Error(err, "failed to fetch invoice page")
+		return false, fmt.Errorf("failed to fetch invoice page: %w", err)
+	}
+
+	props, ok := page.Properties.(nt.DatabasePageProperties)
+	if !ok {
+		l.Error(fmt.Errorf("invalid page properties"), "failed to cast page properties")
+		return false, fmt.Errorf("invalid page properties format")
+	}
+
+	// Check "Splits Generated" checkbox property
+	if prop, ok := props["Splits Generated"]; ok && prop.Checkbox != nil {
+		isGenerated := *prop.Checkbox
+		l.Debugf("splits generated: %v", isGenerated)
+		return isGenerated, nil
+	}
+
+	l.Debug("Splits Generated property not found, assuming false")
+	return false, nil
+}
+
+// MarkSplitsGenerated updates the "Splits Generated" checkbox to true
+func (n *notionService) MarkSplitsGenerated(invoicePageID string) error {
+	l := n.l.Fields(logger.Fields{
+		"service":       "notion",
+		"method":        "MarkSplitsGenerated",
+		"invoicePageID": invoicePageID,
+	})
+
+	l.Debug("marking splits as generated")
+
+	if invoicePageID == "" {
+		l.Debug("empty invoice page ID provided")
+		return fmt.Errorf("invoice page ID is required")
+	}
+
+	// Build the update payload for checkbox property
+	updatePayload := map[string]interface{}{
+		"properties": map[string]interface{}{
+			"Splits Generated": map[string]interface{}{
+				"checkbox": true,
+			},
+		},
+	}
+
+	payloadBytes, err := json.Marshal(updatePayload)
+	if err != nil {
+		l.Error(err, "failed to marshal update payload")
+		return fmt.Errorf("failed to marshal update payload: %w", err)
+	}
+
+	l.Debugf("update payload: %s", string(payloadBytes))
+
+	// Create raw HTTP request to Notion API
+	notionURL := fmt.Sprintf("https://api.notion.com/v1/pages/%s", invoicePageID)
+	req, err := http.NewRequest("PATCH", notionURL, bytes.NewReader(payloadBytes))
+	if err != nil {
+		l.Error(err, "failed to create HTTP request for Notion update")
+		return fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Set("Authorization", "Bearer "+n.secret)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Notion-Version", "2022-06-28")
+
+	client := &http.Client{Timeout: 30 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		l.Error(err, "failed to send HTTP request to Notion")
+		return fmt.Errorf("failed to send request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	respBody, _ := io.ReadAll(resp.Body)
+
+	if resp.StatusCode != http.StatusOK {
+		l.Errorf(fmt.Errorf("notion update failed with status %d", resp.StatusCode),
+			fmt.Sprintf("response body: %s", string(respBody)))
+		return fmt.Errorf("Notion update failed: status=%d body=%s", resp.StatusCode, string(respBody))
+	}
+
+	l.Debug("splits generated flag updated successfully")
+
+	return nil
 }

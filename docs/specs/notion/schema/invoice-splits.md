@@ -102,17 +102,17 @@ The Invoice Splits database tracks commission payments and other revenue splits 
 
 | Property | Type | ID | Related Database | Description |
 |----------|------|-----|------------------|-------------|
-| `Contractor` | Relation | `i<ks` | Contractors (`ed2b9224-97d9-4dff-97f9-82598b61f65d`) | Contractor receiving the split |
+| `Contractor` | Relation | `m\pE` | Contractors (`9d468753-ebb4-4977-a8dc-156428398a6b`) | Contractor receiving the split |
 | `Deployment` | Relation | `fcIT` | Deployments (`2b864b29-b84c-8079-9568-dc17685f4f33`) | Related deployment |
-| `Invoice Item` | Relation | `VywX` | Invoice Items (`2bf64b29-b84c-8087-9a52-ed2f9d493096`) | Linked invoice item (dual property) |
+| `Invoice Item` | Relation | `VywX` | Client Invoices (`2bf64b29-b84c-80e2-8cc7-000bfe534203`) | Linked invoice line item (dual property syncs to `Splits`) |
+| `Client Invoices` | Relation | `z=>S` | Client Invoices (`2bf64b29-b84c-80e2-8cc7-000bfe534203`) | Parent invoice record |
 
 ### Rollup Properties
 
 | Property | Type | ID | Source | Description |
 |----------|------|-----|--------|-------------|
-| `Discord` | Rollup | `wDsb` | From `Contractor` → `Discord` | Contractor's Discord username |
 | `Project` | Rollup | `:KYY` | From `Deployment` → `Project` | Project name |
-| `Of Contractor` | Rollup | `mcyq` | From `Deployment` → `Contractor` | Contractor from deployment |
+| `Charge` | Rollup | `mcyq` | From `Deployment` → `Contractor` | Contractor from deployment (charge person) |
 
 ## Data Flow
 
@@ -306,10 +306,10 @@ The Invoice Splits database tracks commission payments and other revenue splits 
 
 ## Related Databases
 
-- **Contractors** (`ed2b9224-97d9-4dff-97f9-82598b61f65d`): Recipients of splits
+- **Contractors** (`9d468753-ebb4-4977-a8dc-156428398a6b`): Recipients of splits
 - **Deployments** (`2b864b29-b84c-8079-9568-dc17685f4f33`): Related project deployments
-- **Invoice Items** (`2bf64b29-b84c-8087-9a52-ed2f9d493096`): Source invoice items
-- **Payouts** (`2c564b29-b84c-8045-80ee-000bee2e3669`): Aggregated payout entries
+- **Client Invoices** (`2bf64b29-b84c-80e2-8cc7-000bfe534203`): Source invoice/line items
+- **Contractor Payouts**: Aggregated payout entries (env: NOTION_CONTRACTOR_PAYOUTS_DB_ID)
 
 ## Notes
 

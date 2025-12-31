@@ -76,9 +76,7 @@ func (h *handler) CreateContractorPayouts(c *gin.Context) {
 		l.Error(err, "bonus payout type not implemented")
 		c.JSON(http.StatusNotImplemented, view.CreateResponse[any](nil, nil, err, nil, ""))
 	case "commission":
-		err := fmt.Errorf("payout type 'commission' not implemented yet")
-		l.Error(err, "commission payout type not implemented")
-		c.JSON(http.StatusNotImplemented, view.CreateResponse[any](nil, nil, err, nil, ""))
+		h.processCommissionPayouts(c, l, payoutType)
 	case "refund":
 		h.processRefundPayouts(c, l, payoutType)
 	default:
@@ -398,5 +396,149 @@ func (h *handler) processRefundPayouts(c *gin.Context, l logger.Logger, payoutTy
 		"errors":            errors,
 		"details":           details,
 		"type":              payoutType,
+	}, nil, nil, nil, "ok"))
+}
+
+// processCommissionPayouts processes pending commission invoice splits
+// and creates payout entries of type "Commission"
+func (h *handler) processCommissionPayouts(c *gin.Context, l logger.Logger, payoutType string) {
+	ctx := c.Request.Context()
+
+	// Get services
+	invoiceSplitService := h.service.Notion.InvoiceSplit
+	if invoiceSplitService == nil {
+		err := fmt.Errorf("invoice split service not configured")
+		l.Error(err, "invoice split service is nil")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	contractorPayoutsService := h.service.Notion.ContractorPayouts
+	if contractorPayoutsService == nil {
+		err := fmt.Errorf("contractor payouts service not configured")
+		l.Error(err, "contractor payouts service is nil")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	// Query pending commission splits
+	l.Debug("querying invoice splits with Status=Pending and Type=Commission")
+	pendingSplits, err := invoiceSplitService.QueryPendingCommissionSplits(ctx)
+	if err != nil {
+		l.Error(err, "failed to query pending commission splits")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	l.Info(fmt.Sprintf("found %d pending commission splits", len(pendingSplits)))
+
+	if len(pendingSplits) == 0 {
+		l.Info("no pending commission splits found, returning success with zero counts")
+		c.JSON(http.StatusOK, view.CreateResponse[any](map[string]any{
+			"payouts_created":   0,
+			"splits_processed":  0,
+			"splits_skipped":    0,
+			"errors":            0,
+			"details":           []any{},
+			"type":              payoutType,
+		}, nil, nil, nil, "ok"))
+		return
+	}
+
+	// Process each split
+	var (
+		payoutsCreated = 0
+		splitsSkipped  = 0
+		errors         = 0
+		details        = []map[string]any{}
+	)
+
+	for _, split := range pendingSplits {
+		l.Debug(fmt.Sprintf("processing split: %s name: %s person: %s", split.PageID, split.Name, split.PersonPageID))
+
+		detail := map[string]any{
+			"split_page_id":  split.PageID,
+			"split_name":     split.Name,
+			"person_id":      split.PersonPageID,
+			"amount":         split.Amount,
+			"currency":       split.Currency,
+			"role":           split.Role,
+			"payout_page_id": nil,
+			"status":         "",
+			"error_reason":   nil,
+		}
+
+		// Validate person
+		if split.PersonPageID == "" {
+			l.Warn(fmt.Sprintf("skipping split %s: no person found", split.PageID))
+			detail["status"] = "skipped"
+			detail["error_reason"] = "person not found in relation"
+			splitsSkipped++
+			details = append(details, detail)
+			continue
+		}
+
+		// Check if payout exists (idempotency)
+		l.Debug(fmt.Sprintf("checking if payout exists for split: %s", split.PageID))
+		exists, existingPayoutID, err := contractorPayoutsService.CheckPayoutExistsByInvoiceSplit(ctx, split.PageID)
+		if err != nil {
+			l.Error(err, fmt.Sprintf("failed to check payout existence for split %s", split.PageID))
+			detail["status"] = "error"
+			detail["error_reason"] = "failed to check payout existence"
+			errors++
+			details = append(details, detail)
+			continue
+		}
+
+		if exists {
+			l.Debug(fmt.Sprintf("payout already exists for split %s: %s", split.PageID, existingPayoutID))
+			detail["status"] = "skipped"
+			detail["error_reason"] = "payout already exists"
+			detail["payout_page_id"] = existingPayoutID
+			splitsSkipped++
+			details = append(details, detail)
+			continue
+		}
+
+		// Create payout
+		l.Debug(fmt.Sprintf("creating payout for split: %s name: %s", split.PageID, split.Name))
+
+		payoutInput := notionsvc.CreateCommissionPayoutInput{
+			Name:             split.Name,
+			ContractorPageID: split.PersonPageID,
+			InvoiceSplitID:   split.PageID,
+			Amount:           split.Amount,
+			Currency:         split.Currency,
+			Date:             split.Month,
+		}
+
+		payoutPageID, err := contractorPayoutsService.CreateCommissionPayout(ctx, payoutInput)
+		if err != nil {
+			l.Error(err, fmt.Sprintf("failed to create payout for split %s", split.PageID))
+			detail["status"] = "error"
+			detail["error_reason"] = "failed to create payout"
+			errors++
+			details = append(details, detail)
+			continue
+		}
+
+		l.Info(fmt.Sprintf("created payout: %s for split: %s", payoutPageID, split.PageID))
+
+		detail["status"] = "created"
+		detail["payout_page_id"] = payoutPageID
+		payoutsCreated++
+		details = append(details, detail)
+	}
+
+	// Return response
+	l.Info(fmt.Sprintf("processing complete: payouts_created=%d skipped=%d errors=%d", payoutsCreated, splitsSkipped, errors))
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](map[string]any{
+		"payouts_created":  payoutsCreated,
+		"splits_processed": len(pendingSplits),
+		"splits_skipped":   splitsSkipped,
+		"errors":           errors,
+		"details":          details,
+		"type":             payoutType,
 	}, nil, nil, nil, "ok"))
 }

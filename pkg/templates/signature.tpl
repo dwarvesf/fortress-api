@@ -70,26 +70,6 @@
 							</tr>
 						</tbody>
 					</table>
-					<p
-						style=3D"font-family:Arial,sans-serif;font-size:10px;padding-top:10px;margin:0px;line-height:1.5;color:rgb(103,103,131)">
-						<br>Dwarves is hiring. Learn more at=C2=A0<a href=3D"https://dwarves.careers/"
-							target=3D"_blank">https://dwarves.careers</a></p>
-					<p
-						style=3D"font-family:Arial,sans-serif;font-size:10px;padding-top:10px;line-height:1.5;margin:0px;color:rgb(103,103,131)">
-						By communicating with Dwarves and/or its subsidiaries, associate companies and jointly controlled entities
-						(=E2=80=9CDwarves, LLC=E2=80=9D), you are deemed to have consented to the processing of your personal data
-						as set out in the Privacy Notice which can be viewed at=C2=A0<a href=3D"https://d.foundation/privacy"
-							target=3D"_blank">https://d.foundation/privacy</a></p>
-					<p
-						style=3D"font-family:Arial,sans-serif;font-size:10px;padding-top:10px;line-height:1.5;margin:0px;color:rgb(103,103,131)">
-						This email contains confidential information and is only for the intended recipient(s). If you are not the
-						intended recipient(s), please do not disseminate, distribute or copy this email and notify Dwarves
-						immediately if you have received this by mistake and delete this email from your system. Email
-						transmission cannot be guaranteed to be secure or error-free as any information therein could be
-						intercepted, corrupted, lost, destroyed, delayed or incomplete, or contain viruses. Dwarves do not accept
-						liability for any errors or omissions in the contents of this email arises as a result of email
-						transmission. All intellectual property rights in this email and attachments therein shall remain vested
-						in Dwarves, unless otherwise provided by law.</p>
 				</div>
 			</div>
 		</div>
