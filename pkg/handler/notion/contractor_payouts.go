@@ -26,7 +26,7 @@ var (
 // @Tags Cronjobs
 // @Accept json
 // @Produce json
-// @Param type query string false "Payout type (default: Contractor Payroll)"
+// @Param type query string false "Payout type (default: contractor_payroll)"
 // @Security BearerAuth
 // @Success 200 {object} view.Response
 // @Failure 500 {object} view.Response
@@ -36,26 +36,53 @@ func (h *handler) CreateContractorPayouts(c *gin.Context) {
 		"handler": "Notion",
 		"method":  "CreateContractorPayouts",
 	})
-	ctx := c.Request.Context()
 
-	// Get optional type parameter (default: Contractor Payroll)
-	payoutType := c.Query("type")
-	if payoutType == "" {
-		payoutType = PayoutType["contractor_payroll"]
-	} else if _, ok := PayoutType[payoutType]; !ok {
-		err := fmt.Errorf("invalid payout type: %s", payoutType)
+	// Get optional type parameter (default: contractor_payroll)
+	payoutTypeKey := c.Query("type")
+	if payoutTypeKey == "" {
+		payoutTypeKey = "contractor_payroll"
+	}
+
+	payoutType, ok := PayoutType[payoutTypeKey]
+	if !ok {
+		err := fmt.Errorf("invalid payout type: %s", payoutTypeKey)
 		l.Error(err, "invalid payout type provided")
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
-	} else {
-		payoutType = PayoutType[payoutType]
 	}
 
-	l.Debug(fmt.Sprintf("payout type: %s", payoutType))
-
+	l.Debug(fmt.Sprintf("payout type key: %s, value: %s", payoutTypeKey, payoutType))
 	l.Info("starting CreateContractorPayouts cronjob")
 
-	// Step 1: Get services
+	// Process based on payout type
+	switch payoutTypeKey {
+	case "contractor_payroll":
+		h.processContractorPayrollPayouts(c, l, payoutType)
+	case "bonus":
+		err := fmt.Errorf("payout type 'bonus' not implemented yet")
+		l.Error(err, "bonus payout type not implemented")
+		c.JSON(http.StatusNotImplemented, view.CreateResponse[any](nil, nil, err, nil, ""))
+	case "commission":
+		err := fmt.Errorf("payout type 'commission' not implemented yet")
+		l.Error(err, "commission payout type not implemented")
+		c.JSON(http.StatusNotImplemented, view.CreateResponse[any](nil, nil, err, nil, ""))
+	case "refund":
+		err := fmt.Errorf("payout type 'refund' not implemented yet")
+		l.Error(err, "refund payout type not implemented")
+		c.JSON(http.StatusNotImplemented, view.CreateResponse[any](nil, nil, err, nil, ""))
+	default:
+		err := fmt.Errorf("unknown payout type: %s", payoutTypeKey)
+		l.Error(err, "unknown payout type")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
+	}
+}
+
+// processContractorPayrollPayouts processes contractor fees with Payment Status=New
+// and creates payout entries of type "Contractor Payroll"
+func (h *handler) processContractorPayrollPayouts(c *gin.Context, l logger.Logger, payoutType string) {
+	ctx := c.Request.Context()
+
+	// Get services
 	contractorFeesService := h.service.Notion.ContractorFees
 	if contractorFeesService == nil {
 		err := fmt.Errorf("contractor fees service not configured")
@@ -72,7 +99,7 @@ func (h *handler) CreateContractorPayouts(c *gin.Context) {
 		return
 	}
 
-	// Step 2: Query new fees (Payment Status=New)
+	// Query new fees (Payment Status=New)
 	l.Debug("querying contractor fees with Payment Status=New")
 	newFees, err := contractorFeesService.QueryNewFees(ctx)
 	if err != nil {
@@ -96,7 +123,7 @@ func (h *handler) CreateContractorPayouts(c *gin.Context) {
 		return
 	}
 
-	// Step 3: Process each fee
+	// Process each fee
 	var (
 		payoutsCreated = 0
 		feesSkipped    = 0
@@ -118,7 +145,7 @@ func (h *handler) CreateContractorPayouts(c *gin.Context) {
 			"reason":          nil,
 		}
 
-		// Step 3a: Validate contractor
+		// Validate contractor
 		if fee.ContractorPageID == "" {
 			l.Warn(fmt.Sprintf("skipping fee %s: no contractor found", fee.PageID))
 			detail["status"] = "skipped"
@@ -128,7 +155,7 @@ func (h *handler) CreateContractorPayouts(c *gin.Context) {
 			continue
 		}
 
-		// Step 3b: Check if payout exists (idempotency)
+		// Check if payout exists (idempotency)
 		l.Debug(fmt.Sprintf("checking if payout exists for fee: %s", fee.PageID))
 		exists, existingPayoutID, err := contractorPayoutsService.CheckPayoutExistsByContractorFee(ctx, fee.PageID)
 		if err != nil {
@@ -150,7 +177,7 @@ func (h *handler) CreateContractorPayouts(c *gin.Context) {
 			continue
 		}
 
-		// Step 3c: Create payout
+		// Create payout
 		payoutName := fmt.Sprintf("%s - %s", fee.ContractorName, fee.Month)
 		l.Debug(fmt.Sprintf("creating payout for fee: %s name: %s", fee.PageID, payoutName))
 
@@ -176,7 +203,7 @@ func (h *handler) CreateContractorPayouts(c *gin.Context) {
 
 		l.Info(fmt.Sprintf("created payout: %s for fee: %s", payoutPageID, fee.PageID))
 
-		// Step 3d: Update fee Payment Status to "Pending"
+		// Update fee Payment Status to "Pending"
 		l.Debug(fmt.Sprintf("updating fee %s payment status to Pending", fee.PageID))
 		err = contractorFeesService.UpdatePaymentStatus(ctx, fee.PageID, "Pending")
 		if err != nil {
@@ -192,7 +219,7 @@ func (h *handler) CreateContractorPayouts(c *gin.Context) {
 		details = append(details, detail)
 	}
 
-	// Step 4: Return response
+	// Return response
 	l.Info(fmt.Sprintf("processing complete: payouts_created=%d skipped=%d errors=%d", payoutsCreated, feesSkipped, errors))
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](map[string]any{
