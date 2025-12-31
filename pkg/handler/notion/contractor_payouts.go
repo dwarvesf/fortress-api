@@ -3,6 +3,7 @@ package notion
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 
@@ -10,6 +11,18 @@ import (
 	notionsvc "github.com/dwarvesf/fortress-api/pkg/service/notion"
 	"github.com/dwarvesf/fortress-api/pkg/view"
 )
+
+// formatMonthYear converts YYYY-MM to "Month, Year" format
+func formatMonthYear(month string) string {
+	if month == "" {
+		return ""
+	}
+	t, err := time.Parse("2006-01", month)
+	if err != nil {
+		return month // Return as-is if parsing fails
+	}
+	return t.Format("January, 2006")
+}
 
 var (
 	PayoutType = map[string]string{
@@ -178,7 +191,8 @@ func (h *handler) processContractorPayrollPayouts(c *gin.Context, l logger.Logge
 		}
 
 		// Create payout
-		payoutName := fmt.Sprintf("%s - %s", fee.ContractorName, fee.Month)
+		// Format month from YYYY-MM to "Month, Year" (e.g., "2025-01" -> "January, 2025")
+		payoutName := fmt.Sprintf("Development work on %s", formatMonthYear(fee.Month))
 		l.Debug(fmt.Sprintf("creating payout for fee: %s name: %s", fee.PageID, payoutName))
 
 		payoutInput := notionsvc.CreatePayoutInput{

@@ -305,13 +305,39 @@ func (s *ContractorFeesService) QueryNewFees(ctx context.Context) ([]*NewFeeData
 			}
 
 			// Extract fee data
-			// Get Task Order Log relation to fetch Contractor
+			// Get Task Order Log relation to fetch Contractor, Month, Date
 			taskOrderLogIDs := s.extractRelationIDs(props, "Task Order Log")
-			var contractorPageID, contractorName string
+			var contractorPageID, contractorName, month, date string
 			if len(taskOrderLogIDs) > 0 {
-				// Fetch contractor from first Task Order Log
-				contractorPageID, contractorName = s.getContractorFromTaskOrderLog(ctx, taskOrderLogIDs[0])
-				s.logger.Debug(fmt.Sprintf("fetched contractor from task order log: pageID=%s name=%s", contractorPageID, contractorName))
+				// Fetch contractor and date info from first Task Order Log
+				contractorPageID, contractorName, month, date = s.getDataFromTaskOrderLog(ctx, taskOrderLogIDs[0])
+				s.logger.Debug(fmt.Sprintf("fetched from task order log: contractorPageID=%s name=%s month=%s date=%s", contractorPageID, contractorName, month, date))
+			}
+
+			// Debug: log all properties to find Date and Month
+			s.logger.Debug(fmt.Sprintf("fee %s available properties:", page.ID))
+			for propName, prop := range props {
+				if prop.Date != nil {
+					s.logger.Debug(fmt.Sprintf("  - %s (date)", propName))
+				}
+				if prop.Rollup != nil {
+					s.logger.Debug(fmt.Sprintf("  - %s (rollup, type=%s, arrayLen=%d)", propName, prop.Rollup.Type, len(prop.Rollup.Array)))
+					// Log rollup array contents for Month and Date
+					if propName == "Month" || propName == "Date" {
+						for i, item := range prop.Rollup.Array {
+							s.logger.Debug(fmt.Sprintf("    [%d] title=%v richText=%v date=%v", i, len(item.Title), len(item.RichText), item.Date != nil))
+						}
+					}
+				}
+				if prop.Formula != nil {
+					s.logger.Debug(fmt.Sprintf("  - %s (formula, type=%s)", propName, prop.Formula.Type))
+				}
+			}
+
+			// If date is empty, try to construct from month (use first day of month)
+			if date == "" && month != "" {
+				date = month + "-01"
+				s.logger.Debug(fmt.Sprintf("date was empty, using first day of month: %s", date))
 			}
 
 			fee := &NewFeeData{
@@ -319,8 +345,8 @@ func (s *ContractorFeesService) QueryNewFees(ctx context.Context) ([]*NewFeeData
 				ContractorPageID: contractorPageID,
 				ContractorName:   contractorName,
 				TotalAmount:      s.extractFormulaNumber(props, "Total Amount"),
-				Month:            s.extractRollupText(props, "Month"),
-				Date:             s.extractRollupDate(props, "Date"),
+				Month:            month,
+				Date:             date,
 			}
 
 			s.logger.Debug(fmt.Sprintf("parsed fee: pageID=%s contractor=%s amount=%.2f month=%s",
@@ -376,42 +402,69 @@ func (s *ContractorFeesService) extractRelationIDs(props nt.DatabasePageProperti
 	return ids
 }
 
-// getContractorFromTaskOrderLog fetches contractor page ID and name from a Task Order Log page
-func (s *ContractorFeesService) getContractorFromTaskOrderLog(ctx context.Context, taskOrderLogPageID string) (pageID string, name string) {
-	s.logger.Debug(fmt.Sprintf("fetching contractor from task order log: %s", taskOrderLogPageID))
+// getDataFromTaskOrderLog fetches contractor, month, and date from a Task Order Log page
+func (s *ContractorFeesService) getDataFromTaskOrderLog(ctx context.Context, taskOrderLogPageID string) (contractorPageID, contractorName, month, date string) {
+	s.logger.Debug(fmt.Sprintf("fetching data from task order log: %s", taskOrderLogPageID))
 
 	page, err := s.client.FindPageByID(ctx, taskOrderLogPageID)
 	if err != nil {
 		s.logger.Error(err, fmt.Sprintf("failed to fetch task order log page: %s", taskOrderLogPageID))
-		return "", ""
+		return "", "", "", ""
 	}
 
 	props, ok := page.Properties.(nt.DatabasePageProperties)
 	if !ok {
 		s.logger.Debug("failed to cast task order log page properties")
-		return "", ""
+		return "", "", "", ""
 	}
 
-	// Debug: log all relation properties in task order log
-	s.logger.Debug(fmt.Sprintf("task order log %s available relation properties:", taskOrderLogPageID))
+	// Debug: log all properties in task order log
+	s.logger.Debug(fmt.Sprintf("task order log %s available properties:", taskOrderLogPageID))
 	for propName, prop := range props {
 		if len(prop.Relation) > 0 {
 			s.logger.Debug(fmt.Sprintf("  - %s (relation, count=%d)", propName, len(prop.Relation)))
 		}
+		if prop.Date != nil {
+			s.logger.Debug(fmt.Sprintf("  - %s (date)", propName))
+		}
+		if prop.Formula != nil {
+			s.logger.Debug(fmt.Sprintf("  - %s (formula, type=%s)", propName, prop.Formula.Type))
+		}
+		if len(prop.RichText) > 0 {
+			s.logger.Debug(fmt.Sprintf("  - %s (rich_text)", propName))
+		}
+	}
+
+	// Extract Month (formula or rich_text)
+	if monthProp, ok := props["Month"]; ok {
+		if monthProp.Formula != nil && monthProp.Formula.String != nil {
+			month = *monthProp.Formula.String
+			s.logger.Debug(fmt.Sprintf("found Month (formula): %s", month))
+		} else if len(monthProp.RichText) > 0 {
+			month = monthProp.RichText[0].PlainText
+			s.logger.Debug(fmt.Sprintf("found Month (rich_text): %s", month))
+		}
+	}
+
+	// Extract Date
+	if dateProp, ok := props["Date"]; ok && dateProp.Date != nil && !dateProp.Date.Start.Time.IsZero() {
+		date = dateProp.Date.Start.Time.Format("2006-01-02")
+		s.logger.Debug(fmt.Sprintf("found Date: %s", date))
 	}
 
 	// Get Deployment relation (Task Order Log -> Deployment -> Contractor)
 	deploymentProp, ok := props["Deployment"]
 	if !ok || len(deploymentProp.Relation) == 0 {
 		s.logger.Debug("Deployment relation not found in task order log")
-		return "", ""
+		return "", "", month, date
 	}
 
 	deploymentPageID := deploymentProp.Relation[0].ID
 	s.logger.Debug(fmt.Sprintf("found Deployment page ID: %s", deploymentPageID))
 
 	// Fetch contractor from Deployment page
-	return s.getContractorFromDeployment(ctx, deploymentPageID)
+	contractorPageID, contractorName = s.getContractorFromDeployment(ctx, deploymentPageID)
+	return contractorPageID, contractorName, month, date
 }
 
 // getContractorFromDeployment fetches contractor page ID and name from a Deployment page
@@ -473,8 +526,11 @@ func (s *ContractorFeesService) getContractorFromDeployment(ctx context.Context,
 func (s *ContractorFeesService) extractRollupText(props nt.DatabasePageProperties, propName string) string {
 	prop, ok := props[propName]
 	if !ok || prop.Rollup == nil {
+		s.logger.Debug(fmt.Sprintf("extractRollupText: property %s not found or no rollup", propName))
 		return ""
 	}
+
+	s.logger.Debug(fmt.Sprintf("extractRollupText: %s rollup type=%s arrayLen=%d", propName, prop.Rollup.Type, len(prop.Rollup.Array)))
 
 	// For array rollups, concatenate all text values
 	var result string
@@ -495,24 +551,40 @@ func (s *ContractorFeesService) extractRollupText(props nt.DatabasePagePropertie
 				result += t.PlainText
 			}
 		}
+		// Handle formula type in rollup array
+		if item.Formula != nil && item.Formula.String != nil {
+			if result != "" {
+				result += ", "
+			}
+			result += *item.Formula.String
+			s.logger.Debug(fmt.Sprintf("extractRollupText: found formula string=%s", *item.Formula.String))
+		}
 	}
 
+	s.logger.Debug(fmt.Sprintf("extractRollupText: %s result=%s", propName, result))
 	return result
 }
 
 func (s *ContractorFeesService) extractRollupDate(props nt.DatabasePageProperties, propName string) string {
 	prop, ok := props[propName]
 	if !ok || prop.Rollup == nil {
+		s.logger.Debug(fmt.Sprintf("extractRollupDate: property %s not found or no rollup", propName))
 		return ""
 	}
 
+	s.logger.Debug(fmt.Sprintf("extractRollupDate: %s rollup type=%s arrayLen=%d", propName, prop.Rollup.Type, len(prop.Rollup.Array)))
+
 	// For array rollups, get the first date
-	for _, item := range prop.Rollup.Array {
+	for i, item := range prop.Rollup.Array {
+		s.logger.Debug(fmt.Sprintf("extractRollupDate: [%d] date=%v", i, item.Date))
 		if item.Date != nil && !item.Date.Start.Time.IsZero() {
-			return item.Date.Start.Time.Format("2006-01-02")
+			result := item.Date.Start.Time.Format("2006-01-02")
+			s.logger.Debug(fmt.Sprintf("extractRollupDate: %s result=%s", propName, result))
+			return result
 		}
 	}
 
+	s.logger.Debug(fmt.Sprintf("extractRollupDate: %s no date found", propName))
 	return ""
 }
 
