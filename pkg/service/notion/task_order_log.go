@@ -829,6 +829,232 @@ func (s *TaskOrderLogService) QueryOrderSubitems(ctx context.Context, orderPageI
 	return subitems, nil
 }
 
+// ApprovedOrderData represents an approved Task Order Log entry (Type=Order, Status=Approved)
+type ApprovedOrderData struct {
+	PageID           string    // Task Order Log page ID
+	ContractorPageID string    // From Contractor rollup (property ID: q?kW)
+	ContractorName   string    // From contractor page Full Name
+	ContractorDiscord string   // From contractor page Discord property
+	Date             time.Time // From Date property (property ID: Ri:O)
+	FinalHoursWorked float64   // From Final Hours Worked formula (property ID: ;J>Y)
+	ProofOfWorks     string    // From Proof of Works rich text (property ID: hlty)
+}
+
+// QueryApprovedOrders queries all Task Order Log entries with Type=Order and Status=Approved
+// Returns approved orders ready to be processed for contractor fee creation
+func (s *TaskOrderLogService) QueryApprovedOrders(ctx context.Context) ([]*ApprovedOrderData, error) {
+	taskOrderLogDBID := s.cfg.Notion.Databases.TaskOrderLog
+	if taskOrderLogDBID == "" {
+		return nil, errors.New("task order log database ID not configured")
+	}
+
+	s.logger.Debug("querying approved orders: Type=Order, Status=Approved")
+
+	query := &nt.DatabaseQuery{
+		Filter: &nt.DatabaseQueryFilter{
+			And: []nt.DatabaseQueryFilter{
+				{
+					Property: "Type",
+					DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+						Select: &nt.SelectDatabaseQueryFilter{
+							Equals: "Order",
+						},
+					},
+				},
+				{
+					Property: "Status",
+					DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+						Select: &nt.SelectDatabaseQueryFilter{
+							Equals: "Approved",
+						},
+					},
+				},
+			},
+		},
+		PageSize: 100,
+	}
+
+	var approvedOrders []*ApprovedOrderData
+
+	// Query with pagination
+	for {
+		resp, err := s.client.QueryDatabase(ctx, taskOrderLogDBID, query)
+		if err != nil {
+			s.logger.Error(err, "failed to query approved orders")
+			return nil, fmt.Errorf("failed to query approved orders: %w", err)
+		}
+
+		s.logger.Debug(fmt.Sprintf("found %d approved orders in current page", len(resp.Results)))
+
+		for _, page := range resp.Results {
+			props, ok := page.Properties.(nt.DatabasePageProperties)
+			if !ok {
+				s.logger.Debug(fmt.Sprintf("failed to cast page properties for page %s", page.ID))
+				continue
+			}
+
+			// Debug: Log all properties for inspection
+			s.logger.Debug(fmt.Sprintf("processing approved order page: %s", page.ID))
+
+			// Extract contractor from Contractor rollup (property ID: q?kW)
+			contractorPageID := ""
+			contractorName := ""
+			if rollup, ok := props["Contractor"]; ok && rollup.Rollup != nil {
+				s.logger.Debug(fmt.Sprintf("contractor rollup array length: %d", len(rollup.Rollup.Array)))
+				if len(rollup.Rollup.Array) > 0 {
+					// Rollup contains relation items
+					for _, item := range rollup.Rollup.Array {
+						if len(item.Relation) > 0 {
+							contractorPageID = item.Relation[0].ID
+							s.logger.Debug(fmt.Sprintf("extracted contractor page ID from rollup: %s", contractorPageID))
+							break
+						}
+					}
+				}
+			}
+
+			// Fetch contractor name and discord if we have the page ID
+			contractorDiscord := ""
+			if contractorPageID != "" {
+				contractorName, contractorDiscord = s.getContractorInfo(ctx, contractorPageID)
+				s.logger.Debug(fmt.Sprintf("fetched contractor info: name=%s discord=%s", contractorName, contractorDiscord))
+			}
+
+			// Extract date
+			var orderDate time.Time
+			if dateProp, ok := props["Date"]; ok && dateProp.Date != nil {
+				orderDate = dateProp.Date.Start.Time
+				s.logger.Debug(fmt.Sprintf("extracted date: %s", orderDate.Format("2006-01-02")))
+			}
+
+			// Extract Final Hours Worked (formula)
+			finalHoursWorked := 0.0
+			if prop, ok := props["Final Hours Worked"]; ok && prop.Formula != nil && prop.Formula.Number != nil {
+				finalHoursWorked = *prop.Formula.Number
+				s.logger.Debug(fmt.Sprintf("extracted final hours worked: %.2f", finalHoursWorked))
+			}
+
+			// Extract Proof of Works (rich text)
+			proofOfWorks := s.extractRichText(props, "Proof of Works")
+			s.logger.Debug(fmt.Sprintf("extracted proof of works length: %d", len(proofOfWorks)))
+
+			order := &ApprovedOrderData{
+				PageID:            page.ID,
+				ContractorPageID:  contractorPageID,
+				ContractorName:    contractorName,
+				ContractorDiscord: contractorDiscord,
+				Date:              orderDate,
+				FinalHoursWorked:  finalHoursWorked,
+				ProofOfWorks:      proofOfWorks,
+			}
+
+			s.logger.Debug(fmt.Sprintf("parsed approved order: pageID=%s contractor=%s date=%s hours=%.2f",
+				order.PageID, order.ContractorName, order.Date.Format("2006-01-02"), order.FinalHoursWorked))
+
+			approvedOrders = append(approvedOrders, order)
+		}
+
+		if !resp.HasMore || resp.NextCursor == nil {
+			break
+		}
+
+		query.StartCursor = *resp.NextCursor
+	}
+
+	s.logger.Debug(fmt.Sprintf("total approved orders found: %d", len(approvedOrders)))
+	return approvedOrders, nil
+}
+
+// UpdateOrderStatus updates the status field of a Task Order Log entry
+func (s *TaskOrderLogService) UpdateOrderStatus(ctx context.Context, orderPageID, newStatus string) error {
+	s.logger.Debug(fmt.Sprintf("updating order status: pageID=%s newStatus=%s", orderPageID, newStatus))
+
+	updateParams := nt.UpdatePageParams{
+		DatabasePageProperties: nt.DatabasePageProperties{
+			"Status": nt.DatabasePageProperty{
+				Type: nt.DBPropTypeSelect,
+				Select: &nt.SelectOptions{
+					Name: newStatus,
+				},
+			},
+		},
+	}
+
+	_, err := s.client.UpdatePage(ctx, orderPageID, updateParams)
+	if err != nil {
+		s.logger.Error(err, fmt.Sprintf("failed to update order status: pageID=%s", orderPageID))
+		return fmt.Errorf("failed to update order status: %w", err)
+	}
+
+	s.logger.Debug(fmt.Sprintf("successfully updated order %s status to %s", orderPageID, newStatus))
+	return nil
+}
+
+// getContractorName fetches the Full Name from a Contractor page
+func (s *TaskOrderLogService) getContractorName(ctx context.Context, pageID string) string {
+	page, err := s.client.FindPageByID(ctx, pageID)
+	if err != nil {
+		s.logger.Debug(fmt.Sprintf("getContractorName: failed to fetch contractor page %s: %v", pageID, err))
+		return ""
+	}
+
+	props, ok := page.Properties.(nt.DatabasePageProperties)
+	if !ok {
+		s.logger.Debug(fmt.Sprintf("getContractorName: failed to cast page properties for %s", pageID))
+		return ""
+	}
+
+	// Try to get Full Name from Title property
+	if prop, ok := props["Full Name"]; ok && len(prop.Title) > 0 {
+		name := prop.Title[0].PlainText
+		s.logger.Debug(fmt.Sprintf("getContractorName: found Full Name: %s", name))
+		return name
+	}
+
+	// Try Name property as fallback
+	if prop, ok := props["Name"]; ok && len(prop.Title) > 0 {
+		name := prop.Title[0].PlainText
+		s.logger.Debug(fmt.Sprintf("getContractorName: found Name: %s", name))
+		return name
+	}
+
+	s.logger.Debug(fmt.Sprintf("getContractorName: no Full Name or Name property found for page %s", pageID))
+	return ""
+}
+
+// getContractorInfo fetches both Full Name and Discord from a Contractor page
+func (s *TaskOrderLogService) getContractorInfo(ctx context.Context, pageID string) (name string, discord string) {
+	page, err := s.client.FindPageByID(ctx, pageID)
+	if err != nil {
+		s.logger.Debug(fmt.Sprintf("getContractorInfo: failed to fetch contractor page %s: %v", pageID, err))
+		return "", ""
+	}
+
+	props, ok := page.Properties.(nt.DatabasePageProperties)
+	if !ok {
+		s.logger.Debug(fmt.Sprintf("getContractorInfo: failed to cast page properties for %s", pageID))
+		return "", ""
+	}
+
+	// Get Full Name from Title property
+	if prop, ok := props["Full Name"]; ok && len(prop.Title) > 0 {
+		name = prop.Title[0].PlainText
+		s.logger.Debug(fmt.Sprintf("getContractorInfo: found Full Name: %s", name))
+	} else if prop, ok := props["Name"]; ok && len(prop.Title) > 0 {
+		// Fallback to Name property
+		name = prop.Title[0].PlainText
+		s.logger.Debug(fmt.Sprintf("getContractorInfo: found Name: %s", name))
+	}
+
+	// Get Discord from rich text property
+	if prop, ok := props["Discord"]; ok && len(prop.RichText) > 0 {
+		discord = prop.RichText[0].PlainText
+		s.logger.Debug(fmt.Sprintf("getContractorInfo: found Discord: %s", discord))
+	}
+
+	return name, discord
+}
+
 // FormatProofOfWorksByProject formats subitems grouped by project name with bold project headers
 // Format:
 // <b>Project Name 1:</b>

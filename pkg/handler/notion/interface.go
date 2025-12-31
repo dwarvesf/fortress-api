@@ -25,6 +25,7 @@ type IHandler interface {
 	SendNewsLetter(c *gin.Context)
 	SendProjectChangelog(c *gin.Context)
 	SyncTaskOrderLogs(c *gin.Context)
+	CreateContractorFees(c *gin.Context)
 }
 
 type handler struct {

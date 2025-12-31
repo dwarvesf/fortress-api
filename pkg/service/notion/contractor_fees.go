@@ -215,3 +215,89 @@ func (s *ContractorFeesService) GetTaskOrderLogIDs(ctx context.Context, feesPage
 
 	return ids, nil
 }
+
+// CheckFeeExistsByTaskOrder checks if a contractor fee entry exists for a given Task Order Log
+// Returns (exists bool, existingFeePageID string, error)
+func (s *ContractorFeesService) CheckFeeExistsByTaskOrder(ctx context.Context, taskOrderPageID string) (bool, string, error) {
+	contractorFeesDBID := s.cfg.Notion.Databases.ContractorFees
+	if contractorFeesDBID == "" {
+		return false, "", errors.New("contractor fees database ID not configured")
+	}
+
+	s.logger.Debug(fmt.Sprintf("checking if fee exists for task order: %s", taskOrderPageID))
+
+	// Query Contractor Fees by Task Order Log relation
+	query := &nt.DatabaseQuery{
+		Filter: &nt.DatabaseQueryFilter{
+			Property: "Task Order Log",
+			DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+				Relation: &nt.RelationDatabaseQueryFilter{
+					Contains: taskOrderPageID,
+				},
+			},
+		},
+		PageSize: 1,
+	}
+
+	resp, err := s.client.QueryDatabase(ctx, contractorFeesDBID, query)
+	if err != nil {
+		s.logger.Error(err, fmt.Sprintf("failed to check fee existence: taskOrderPageID=%s", taskOrderPageID))
+		return false, "", fmt.Errorf("failed to check fee existence: %w", err)
+	}
+
+	if len(resp.Results) > 0 {
+		existingFeeID := resp.Results[0].ID
+		s.logger.Debug(fmt.Sprintf("fee already exists: %s for task order: %s", existingFeeID, taskOrderPageID))
+		return true, existingFeeID, nil
+	}
+
+	s.logger.Debug(fmt.Sprintf("no fee exists for task order: %s", taskOrderPageID))
+	return false, "", nil
+}
+
+// CreateContractorFee creates a new Contractor Fee entry in Notion
+// Links to the Task Order Log and Contractor Rate, sets Payment Status to "New"
+// Returns the created fee page ID
+func (s *ContractorFeesService) CreateContractorFee(ctx context.Context, taskOrderPageID, contractorRatePageID string) (string, error) {
+	contractorFeesDBID := s.cfg.Notion.Databases.ContractorFees
+	if contractorFeesDBID == "" {
+		return "", errors.New("contractor fees database ID not configured")
+	}
+
+	s.logger.Debug(fmt.Sprintf("creating contractor fee: taskOrderPageID=%s contractorRatePageID=%s", taskOrderPageID, contractorRatePageID))
+
+	// Create the Contractor Fee page with relations and Payment Status
+	params := nt.CreatePageParams{
+		ParentType: nt.ParentTypeDatabase,
+		ParentID:   contractorFeesDBID,
+		DatabasePageProperties: &nt.DatabasePageProperties{
+			"Task Order Log": nt.DatabasePageProperty{
+				Type: nt.DBPropTypeRelation,
+				Relation: []nt.Relation{
+					{ID: taskOrderPageID},
+				},
+			},
+			"Contractor Rate": nt.DatabasePageProperty{
+				Type: nt.DBPropTypeRelation,
+				Relation: []nt.Relation{
+					{ID: contractorRatePageID},
+				},
+			},
+			"Payment Status": nt.DatabasePageProperty{
+				Type: nt.DBPropTypeStatus,
+				Status: &nt.SelectOptions{
+					Name: "New",
+				},
+			},
+		},
+	}
+
+	page, err := s.client.CreatePage(ctx, params)
+	if err != nil {
+		s.logger.Error(err, fmt.Sprintf("failed to create contractor fee: taskOrderPageID=%s", taskOrderPageID))
+		return "", fmt.Errorf("failed to create contractor fee: %w", err)
+	}
+
+	s.logger.Debug(fmt.Sprintf("successfully created contractor fee: %s for task order: %s", page.ID, taskOrderPageID))
+	return page.ID, nil
+}

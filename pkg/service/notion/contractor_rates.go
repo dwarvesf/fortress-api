@@ -283,3 +283,125 @@ func (s *ContractorRatesService) extractFirstRelationID(props nt.DatabasePagePro
 	}
 	return prop.Relation[0].ID
 }
+
+// FindActiveRateByContractor finds the active contractor rate for a given contractor at a specific date
+// Returns the matching rate or an error if not found
+func (s *ContractorRatesService) FindActiveRateByContractor(ctx context.Context, contractorPageID string, orderDate time.Time) (*ContractorRateData, error) {
+	contractorRatesDBID := s.cfg.Notion.Databases.ContractorRates
+	if contractorRatesDBID == "" {
+		return nil, errors.New("contractor rates database ID not configured")
+	}
+
+	s.logger.Debug(fmt.Sprintf("finding active rate: contractorPageID=%s orderDate=%s", contractorPageID, orderDate.Format("2006-01-02")))
+
+	// Build filter for Contractor relation and Active status
+	query := &nt.DatabaseQuery{
+		Filter: &nt.DatabaseQueryFilter{
+			And: []nt.DatabaseQueryFilter{
+				{
+					Property: "Contractor",
+					DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+						Relation: &nt.RelationDatabaseQueryFilter{
+							Contains: contractorPageID,
+						},
+					},
+				},
+				{
+					Property: "Status",
+					DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+						Status: &nt.StatusDatabaseQueryFilter{
+							Equals: "Active",
+						},
+					},
+				},
+			},
+		},
+		PageSize: 100,
+	}
+
+	var matchedRate *ContractorRateData
+
+	// Query with pagination
+	for {
+		resp, err := s.client.QueryDatabase(ctx, contractorRatesDBID, query)
+		if err != nil {
+			s.logger.Error(err, fmt.Sprintf("failed to query contractor rates: contractorPageID=%s", contractorPageID))
+			return nil, fmt.Errorf("failed to query contractor rates: %w", err)
+		}
+
+		s.logger.Debug(fmt.Sprintf("found %d contractor rates entries for contractor %s", len(resp.Results), contractorPageID))
+
+		for _, page := range resp.Results {
+			props, ok := page.Properties.(nt.DatabasePageProperties)
+			if !ok {
+				s.logger.Debug("failed to cast page properties")
+				continue
+			}
+
+			// Extract Start Date and End Date for filtering
+			startDate := s.extractDate(props, "Start Date")
+			endDate := s.extractDate(props, "End Date")
+
+			s.logger.Debug(fmt.Sprintf("checking rate: pageID=%s startDate=%v endDate=%v orderDate=%s",
+				page.ID, startDate, endDate, orderDate.Format("2006-01-02")))
+
+			// Check date range: Start Date <= orderDate AND (orderDate <= End Date OR End Date is nil)
+			// If start date exists and is after order date, skip
+			if startDate != nil && startDate.After(orderDate) {
+				s.logger.Debug(fmt.Sprintf("skipping rate %s: start date %s is after order date %s",
+					page.ID, startDate.Format("2006-01-02"), orderDate.Format("2006-01-02")))
+				continue
+			}
+
+			// If end date exists and is before order date, skip
+			if endDate != nil && endDate.Before(orderDate) {
+				s.logger.Debug(fmt.Sprintf("skipping rate %s: end date %s is before order date %s",
+					page.ID, endDate.Format("2006-01-02"), orderDate.Format("2006-01-02")))
+				continue
+			}
+
+			// Rate is valid for this date
+			s.logger.Debug(fmt.Sprintf("found valid rate: pageID=%s", page.ID))
+
+			// Extract contractor page ID
+			contractorID := s.extractFirstRelationID(props, "Contractor")
+
+			// Fetch contractor name from Contractor page
+			contractorName := ""
+			if contractorID != "" {
+				contractorName = s.getContractorName(ctx, contractorID)
+			}
+
+			// Extract rate data
+			matchedRate = &ContractorRateData{
+				PageID:           page.ID,
+				ContractorPageID: contractorID,
+				ContractorName:   contractorName,
+				Discord:          s.extractRollupRichText(props, "Discord"),
+				BillingType:      s.extractSelect(props, "Billing Type"),
+				MonthlyFixed:     s.extractFormulaNumber(props, "Monthly Fixed"),
+				HourlyRate:       s.extractNumber(props, "Hourly Rate"),
+				GrossFixed:       s.extractFormulaNumber(props, "Gross Fixed"),
+				Currency:         s.extractSelect(props, "Currency"),
+				StartDate:        startDate,
+				EndDate:          endDate,
+			}
+
+			s.logger.Debug(fmt.Sprintf("matched rate: pageID=%s contractor=%s billingType=%s currency=%s hourlyRate=%.2f monthlyFixed=%.2f",
+				matchedRate.PageID, matchedRate.ContractorName, matchedRate.BillingType, matchedRate.Currency, matchedRate.HourlyRate, matchedRate.MonthlyFixed))
+
+			// Return first matching rate
+			return matchedRate, nil
+		}
+
+		if !resp.HasMore || resp.NextCursor == nil {
+			break
+		}
+
+		query.StartCursor = *resp.NextCursor
+	}
+
+	// No matching rate found
+	s.logger.Debug(fmt.Sprintf("no active contractor rate found for contractor=%s date=%s", contractorPageID, orderDate.Format("2006-01-02")))
+	return nil, fmt.Errorf("no active contractor rate found for contractor=%s date=%s", contractorPageID, orderDate.Format("2006-01-02"))
+}

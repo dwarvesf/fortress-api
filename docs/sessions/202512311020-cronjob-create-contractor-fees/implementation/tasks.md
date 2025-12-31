@@ -7,7 +7,7 @@
 
 ## Tasks
 
-### Task 1: Extend TaskOrderLogService
+### Task 1: Extend TaskOrderLogService ✅ COMPLETED
 
 - **File(s)**: `pkg/service/notion/task_order_log.go`
 - **Description**: Add methods to query approved orders and update status
@@ -22,7 +22,7 @@
 
 ---
 
-### Task 2: Extend ContractorRatesService
+### Task 2: Extend ContractorRatesService ✅ COMPLETED
 
 - **File(s)**: `pkg/service/notion/contractor_rates.go`
 - **Description**: Add method to find active rate by contractor
@@ -36,14 +36,14 @@
 
 ---
 
-### Task 3: Extend ContractorFeesService
+### Task 3: Extend ContractorFeesService ✅ COMPLETED
 
 - **File(s)**: `pkg/service/notion/contractor_fees.go`
 - **Description**: Add methods to check existence and create fees
 - **Changes**:
-  1. Add `CheckFeeExistsByTaskOrder(ctx, taskOrderPageID) (bool, error)` method
+  1. Add `CheckFeeExistsByTaskOrder(ctx, taskOrderPageID) (bool, string, error)` method
      - Query Contractor Fees by Task Order Log relation
-     - Return true if any fee exists
+     - Return (exists, existingFeeID, error)
   2. Add `CreateContractorFee(ctx, taskOrderPageID, contractorRatePageID) (string, error)` method
      - Create new page in Contractor Fees database
      - Set Task Order Log relation
@@ -54,24 +54,20 @@
 
 ---
 
-### Task 4: Create Cronjob Handler
+### Task 4: Create Cronjob Handler ✅ COMPLETED
 
 - **File(s)**: `pkg/handler/notion/contractor_fees.go` (NEW)
 - **Description**: Create handler for the cronjob endpoint
 - **Changes**:
-  1. Create `CreateContractorFeesHandler` struct
-  2. Implement `CreateContractorFees(c *gin.Context)` method
-     - Query approved orders
-     - For each order: find rate, check existence, create fee, update status
-     - Collect statistics and details
-     - Return JSON response
+  1. Implement `CreateContractorFees(c *gin.Context)` method on handler struct
+  2. Query approved orders, for each: find rate, check existence, create fee, update status
   3. Add Swagger documentation
   4. Add comprehensive DEBUG logging
 - **Acceptance**: Handler processes approved orders and returns statistics
 
 ---
 
-### Task 5: Update Handler Interface
+### Task 5: Update Handler Interface ✅ COMPLETED
 
 - **File(s)**: `pkg/handler/notion/interface.go`
 - **Description**: Add CreateContractorFees to interface
@@ -81,14 +77,26 @@
 
 ---
 
-### Task 6: Register Route
+### Task 6: Register Route ✅ COMPLETED
 
 - **File(s)**: `pkg/routes/v1.go`
 - **Description**: Register the cronjob endpoint
 - **Changes**:
-  1. Add route: `POST /api/v1/cronjobs/contractor-fees`
-  2. Apply appropriate auth middleware
+  1. Add route: `POST /cronjobs/create-contractor-fees`
+  2. Apply `conditionalAuthMW` and `conditionalPermMW(model.PermissionCronjobExecute)` middleware
 - **Acceptance**: Route is accessible and calls handler
+
+---
+
+### Additional: Update Services Struct ✅ COMPLETED
+
+- **File(s)**:
+  - `pkg/service/notion/notion_services.go`
+  - `pkg/service/service.go`
+- **Description**: Add ContractorRates and ContractorFees services to Services struct
+- **Changes**:
+  1. Add `ContractorRates *ContractorRatesService` and `ContractorFees *ContractorFeesService` to Services struct
+  2. Initialize services in service.go
 
 ---
 
@@ -104,9 +112,18 @@ Tasks 1, 2, 3 can be done in parallel. Tasks 4, 5, 6 are sequential.
 
 ---
 
-## Notes
+## Implementation Complete
 
-- All methods must include DEBUG logging
-- Follow existing patterns in `pkg/service/notion/`
-- Check existing handler patterns in `pkg/handler/notion/`
-- Idempotency is critical - never create duplicate fees
+**Build Status**: ✅ Passed (`go build ./...`)
+
+**Endpoint**: `POST /cronjobs/create-contractor-fees`
+
+**Files Modified**:
+- `pkg/service/notion/task_order_log.go` - Added `QueryApprovedOrders`, `UpdateOrderStatus`, `getContractorName`
+- `pkg/service/notion/contractor_rates.go` - Added `FindActiveRateByContractor`
+- `pkg/service/notion/contractor_fees.go` - Added `CheckFeeExistsByTaskOrder`, `CreateContractorFee`
+- `pkg/service/notion/notion_services.go` - Added ContractorRates and ContractorFees fields
+- `pkg/service/service.go` - Initialize ContractorRates and ContractorFees services
+- `pkg/handler/notion/contractor_fees.go` - NEW file with CreateContractorFees handler
+- `pkg/handler/notion/interface.go` - Added CreateContractorFees to IHandler
+- `pkg/routes/v1.go` - Registered `/create-contractor-fees` route

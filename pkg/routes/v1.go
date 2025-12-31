@@ -60,6 +60,7 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 		cronjob.POST("/sweep-ogif-event", conditionalAuthMW, conditionalPermMW(model.PermissionCronjobExecute), h.Discord.SweepOgifEvent)
 		cronjob.POST("/sync-project-heads", conditionalAuthMW, conditionalPermMW(model.PermissionCronjobExecute), h.Project.SyncProjectHeadsFromNotion)
 		cronjob.POST("/sync-task-order-logs", conditionalAuthMW, conditionalPermMW(model.PermissionCronjobExecute), h.Notion.SyncTaskOrderLogs)
+		cronjob.POST("/create-contractor-fees", conditionalAuthMW, conditionalPermMW(model.PermissionCronjobExecute), h.Notion.CreateContractorFees)
 	}
 
 	/////////////////
