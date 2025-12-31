@@ -268,6 +268,7 @@ type CreatePayoutInput struct {
 	Amount            float64 // Payment amount
 	Month             string  // YYYY-MM format
 	Date              string  // Date in YYYY-MM-DD format
+	Type              string  // Payout type (e.g., "Contractor Payroll", "Commission", "Refund")
 }
 
 // CreatePayout creates a new payout entry in the Contractor Payouts database
@@ -305,10 +306,10 @@ func (s *ContractorPayoutsService) CreatePayout(ctx context.Context, input Creat
 				Name: "Pending",
 			},
 		},
-		// Type: Contractor Payroll
+		// Type: from input (default: Contractor Payroll)
 		"Type": nt.DatabasePageProperty{
 			Select: &nt.SelectOptions{
-				Name: "Contractor Payroll",
+				Name: input.Type,
 			},
 		},
 		// Direction: Outgoing (you pay)

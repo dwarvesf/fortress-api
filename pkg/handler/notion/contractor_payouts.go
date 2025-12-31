@@ -11,12 +11,22 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/view"
 )
 
+var (
+	PayoutType = map[string]string{
+		"contractor_payroll": "Contractor Payroll",
+		"bonus":              "Bonus",
+		"commission":         "Commission",
+		"refund":             "Refund",
+	}
+)
+
 // CreateContractorPayouts godoc
 // @Summary Create contractor payouts from new contractor fees
 // @Description Processes contractor fees with Payment Status=New and creates payout entries
 // @Tags Cronjobs
 // @Accept json
 // @Produce json
+// @Param type query string false "Payout type (default: Contractor Payroll)"
 // @Security BearerAuth
 // @Success 200 {object} view.Response
 // @Failure 500 {object} view.Response
@@ -27,6 +37,21 @@ func (h *handler) CreateContractorPayouts(c *gin.Context) {
 		"method":  "CreateContractorPayouts",
 	})
 	ctx := c.Request.Context()
+
+	// Get optional type parameter (default: Contractor Payroll)
+	payoutType := c.Query("type")
+	if payoutType == "" {
+		payoutType = PayoutType["contractor_payroll"]
+	} else if _, ok := PayoutType[payoutType]; !ok {
+		err := fmt.Errorf("invalid payout type: %s", payoutType)
+		l.Error(err, "invalid payout type provided")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	} else {
+		payoutType = PayoutType[payoutType]
+	}
+
+	l.Debug(fmt.Sprintf("payout type: %s", payoutType))
 
 	l.Info("starting CreateContractorPayouts cronjob")
 
@@ -66,6 +91,7 @@ func (h *handler) CreateContractorPayouts(c *gin.Context) {
 			"fees_skipped":    0,
 			"errors":          0,
 			"details":         []any{},
+			"type":            payoutType,
 		}, nil, nil, nil, "ok"))
 		return
 	}
@@ -82,14 +108,14 @@ func (h *handler) CreateContractorPayouts(c *gin.Context) {
 		l.Debug(fmt.Sprintf("processing fee: %s contractor: %s", fee.PageID, fee.ContractorName))
 
 		detail := map[string]any{
-			"fee_page_id":       fee.PageID,
-			"contractor_name":   fee.ContractorName,
-			"contractor_id":     fee.ContractorPageID,
-			"amount":            fee.TotalAmount,
-			"month":             fee.Month,
-			"payout_page_id":    nil,
-			"status":            "",
-			"reason":            nil,
+			"fee_page_id":     fee.PageID,
+			"contractor_name": fee.ContractorName,
+			"contractor_id":   fee.ContractorPageID,
+			"amount":          fee.TotalAmount,
+			"month":           fee.Month,
+			"payout_page_id":  nil,
+			"status":          "",
+			"reason":          nil,
 		}
 
 		// Step 3a: Validate contractor
@@ -135,6 +161,7 @@ func (h *handler) CreateContractorPayouts(c *gin.Context) {
 			Amount:           fee.TotalAmount,
 			Month:            fee.Month,
 			Date:             fee.Date,
+			Type:             payoutType,
 		}
 
 		payoutPageID, err := contractorPayoutsService.CreatePayout(ctx, payoutInput)
@@ -174,5 +201,6 @@ func (h *handler) CreateContractorPayouts(c *gin.Context) {
 		"fees_skipped":    feesSkipped,
 		"errors":          errors,
 		"details":         details,
+		"type":            payoutType,
 	}, nil, nil, nil, "ok"))
 }
