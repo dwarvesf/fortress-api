@@ -150,7 +150,7 @@ func (g *googleService) SendInvoiceMail(invoice *model.Invoice) (msgID string, e
 			if invoice.Description == "" {
 				return ""
 			}
-			return "Description: " + invoice.Description + "."
+			return "Description: " + invoice.Description
 		},
 		"gatherAddress": func() string {
 			return addresses
