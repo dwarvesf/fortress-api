@@ -434,6 +434,40 @@ func (g *googleService) SendPayrollPaidMail(p *model.Payroll) (err error) {
 	return err
 }
 
+// SendTaskOrderConfirmationMail sends a monthly task order confirmation email
+func (g *googleService) SendTaskOrderConfirmationMail(data *model.TaskOrderConfirmationEmail) error {
+	// Use accounting refresh token
+	if err := g.ensureToken(g.appConfig.Google.AccountingGoogleRefreshToken); err != nil {
+		return err
+	}
+	if err := g.prepareService(); err != nil {
+		return err
+	}
+
+	// Verify accounting alias
+	id := g.appConfig.Google.AccountingEmailID
+	verified, err := g.IsAliasVerified(id, "accounting@d.foundation")
+	if err != nil || !verified {
+		return fmt.Errorf("accounting@d.foundation alias not verified for user %s", id)
+	}
+
+	// Parse template
+	content, err := composeTaskOrderConfirmationContent(g.appConfig, data)
+	if err != nil {
+		return fmt.Errorf("failed to compose email content: %w", err)
+	}
+
+	// Send email
+	_, err = g.service.Users.Messages.Send(id, &gmail.Message{
+		Raw: base64.URLEncoding.EncodeToString([]byte(content)),
+	}).Do()
+	if err != nil {
+		return fmt.Errorf("failed to send task order confirmation email: %w", err)
+	}
+
+	return nil
+}
+
 // ToPaidSuccessfulEmailContent to parse the payroll object
 // into template when sending email after payroll is paid
 func (g *googleService) getPaidSuccessfulEmailFuncMap(p *model.Payroll) map[string]interface{} {

@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 
 	"github.com/dwarvesf/fortress-api/pkg/logger"
+	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service/notion"
 	"github.com/dwarvesf/fortress-api/pkg/service/openrouter"
 	"github.com/dwarvesf/fortress-api/pkg/view"
@@ -273,6 +275,195 @@ func (h *handler) SyncTaskOrderLogs(c *gin.Context) {
 	}, nil, nil, nil, "ok"))
 }
 
+// SendTaskOrderConfirmation godoc
+// @Summary Send monthly task order confirmation emails
+// @Description Sends task order confirmation emails to contractors with active client assignments via Gmail
+// @Tags Cronjobs
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param month query string false "Target month in YYYY-MM format (default: current month)"
+// @Param discord query string false "Discord username to filter specific contractor"
+// @Success 200 {object} view.Response
+// @Failure 400 {object} view.Response
+// @Failure 500 {object} view.Response
+// @Router /cronjobs/send-task-order-confirmation [post]
+func (h *handler) SendTaskOrderConfirmation(c *gin.Context) {
+	l := h.logger.Fields(logger.Fields{
+		"handler": "Notion",
+		"method":  "SendTaskOrderConfirmation",
+	})
+	ctx := c.Request.Context()
+
+	// Step 1: Parse and validate parameters
+	month := c.Query("month")
+	if month == "" {
+		now := time.Now()
+		month = now.Format("2006-01")
+	}
+
+	// Validate month format (YYYY-MM)
+	if !isValidMonthFormat(month) {
+		l.Error(fmt.Errorf("invalid month format"), fmt.Sprintf("month=%s", month))
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil,
+			fmt.Errorf("invalid month format, expected YYYY-MM (e.g., 2026-01)"), nil, ""))
+		return
+	}
+
+	contractorDiscord := strings.TrimSpace(c.Query("discord"))
+	l.Info(fmt.Sprintf("sending task order confirmations: month=%s discord=%s", month, contractorDiscord))
+
+	// Step 2: Get services
+	taskOrderLogService := h.service.Notion.TaskOrderLog
+	if taskOrderLogService == nil {
+		err := fmt.Errorf("task order log service not configured")
+		l.Error(err, "service is nil")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	googleMailService := h.service.GoogleMail
+	if googleMailService == nil {
+		err := fmt.Errorf("google mail service not configured")
+		l.Error(err, "service is nil")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	// Step 3: Query active deployments
+	l.Debug(fmt.Sprintf("querying active deployments for month: %s", month))
+	deployments, err := taskOrderLogService.QueryActiveDeploymentsByMonth(ctx, month, contractorDiscord)
+	if err != nil {
+		l.Error(err, "failed to query deployments")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	l.Debug(fmt.Sprintf("found %d active deployments", len(deployments)))
+
+	if len(deployments) == 0 {
+		l.Info("no active deployments found")
+		c.JSON(http.StatusOK, view.CreateResponse[any](map[string]any{
+			"month":         month,
+			"emails_sent":   0,
+			"emails_failed": 0,
+			"details":       []any{},
+		}, nil, nil, nil, "ok"))
+		return
+	}
+
+	// Step 4: Group deployments by contractor
+	contractorGroups := groupDeploymentsByContractor(deployments)
+	l.Debug(fmt.Sprintf("grouped into %d contractors", len(contractorGroups)))
+
+	// Step 5: Process each contractor
+	var (
+		emailsSent   = 0
+		emailsFailed = 0
+		details      = []map[string]any{}
+	)
+
+	for contractorID, contractorDeployments := range contractorGroups {
+		detail := map[string]any{
+			"contractor": "",
+			"discord":    "",
+			"email":      "",
+			"status":     "",
+			"clients":    []string{},
+		}
+
+		// Step 5a: Get contractor info
+		name, discord := taskOrderLogService.GetContractorInfo(ctx, contractorID)
+		if name == "" {
+			l.Warn(fmt.Sprintf("skipping contractor %s: no name found", contractorID))
+			continue
+		}
+
+		// Get team email
+		teamEmail := taskOrderLogService.GetContractorTeamEmail(ctx, contractorID)
+		if teamEmail == "" {
+			l.Warn(fmt.Sprintf("skipping contractor %s: no team email", name))
+			detail["contractor"] = name
+			detail["discord"] = discord
+			detail["status"] = "failed"
+			detail["error"] = "no team email found"
+			emailsFailed++
+			details = append(details, detail)
+			continue
+		}
+
+		detail["contractor"] = name
+		detail["discord"] = discord
+		detail["email"] = teamEmail
+
+		// Step 5b: Extract client info from deployments
+		var clients []model.TaskOrderClient
+		var clientStrings []string
+		for _, deployment := range contractorDeployments {
+			clientInfo, err := taskOrderLogService.GetClientInfo(ctx, deployment.ProjectPageID)
+			if err != nil {
+				l.Error(err, fmt.Sprintf("failed to get client for project %s", deployment.ProjectPageID))
+				continue
+			}
+			if clientInfo != nil && clientInfo.Name != "" {
+				clients = append(clients, model.TaskOrderClient{
+					Name:    clientInfo.Name,
+					Country: clientInfo.Country,
+				})
+				clientStr := clientInfo.Name
+				if clientInfo.Country != "" {
+					clientStr = fmt.Sprintf("%s (%s)", clientInfo.Name, clientInfo.Country)
+				}
+				clientStrings = append(clientStrings, clientStr)
+			}
+		}
+
+		if len(clients) == 0 {
+			l.Warn(fmt.Sprintf("skipping contractor %s: no clients found", name))
+			detail["status"] = "failed"
+			detail["error"] = "no clients found"
+			emailsFailed++
+			details = append(details, detail)
+			continue
+		}
+
+		detail["clients"] = clientStrings
+
+		// Step 5c: Prepare email data
+		emailData := &model.TaskOrderConfirmationEmail{
+			ContractorName: name,
+			TeamEmail:      teamEmail,
+			Month:          month,
+			Clients:        clients,
+		}
+
+		// Step 5d: Send email via Gmail using accounting refresh token
+		err = googleMailService.SendTaskOrderConfirmationMail(emailData)
+		if err != nil {
+			l.Error(err, fmt.Sprintf("failed to send email to %s (%s)", name, teamEmail))
+			detail["status"] = "failed"
+			detail["error"] = err.Error()
+			emailsFailed++
+		} else {
+			l.Info(fmt.Sprintf("sent email to %s (%s)", name, teamEmail))
+			detail["status"] = "sent"
+			emailsSent++
+		}
+
+		details = append(details, detail)
+	}
+
+	// Step 6: Return response
+	l.Info(fmt.Sprintf("email sending complete: sent=%d failed=%d", emailsSent, emailsFailed))
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](map[string]any{
+		"month":         month,
+		"emails_sent":   emailsSent,
+		"emails_failed": emailsFailed,
+		"details":       details,
+	}, nil, nil, nil, "ok"))
+}
+
 // Helper functions
 
 // isValidMonthFormat validates month format as YYYY-MM
@@ -307,6 +498,18 @@ func groupTimesheetsByProject(timesheets []*notion.TimesheetEntry) map[string][]
 			continue
 		}
 		groups[ts.ProjectPageID] = append(groups[ts.ProjectPageID], ts)
+	}
+	return groups
+}
+
+// groupDeploymentsByContractor groups deployments by contractor page ID
+func groupDeploymentsByContractor(deployments []*notion.DeploymentData) map[string][]*notion.DeploymentData {
+	groups := make(map[string][]*notion.DeploymentData)
+	for _, deployment := range deployments {
+		if deployment.ContractorPageID == "" {
+			continue
+		}
+		groups[deployment.ContractorPageID] = append(groups[deployment.ContractorPageID], deployment)
 	}
 	return groups
 }

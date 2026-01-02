@@ -831,13 +831,27 @@ func (s *TaskOrderLogService) QueryOrderSubitems(ctx context.Context, orderPageI
 
 // ApprovedOrderData represents an approved Task Order Log entry (Type=Order, Status=Approved)
 type ApprovedOrderData struct {
-	PageID           string    // Task Order Log page ID
-	ContractorPageID string    // From Contractor rollup (property ID: q?kW)
-	ContractorName   string    // From contractor page Full Name
-	ContractorDiscord string   // From contractor page Discord property
-	Date             time.Time // From Date property (property ID: Ri:O)
-	FinalHoursWorked float64   // From Final Hours Worked formula (property ID: ;J>Y)
-	ProofOfWorks     string    // From Proof of Works rich text (property ID: hlty)
+	PageID            string    // Task Order Log page ID
+	ContractorPageID  string    // From Contractor rollup (property ID: q?kW)
+	ContractorName    string    // From contractor page Full Name
+	ContractorDiscord string    // From contractor page Discord property
+	Date              time.Time // From Date property (property ID: Ri:O)
+	FinalHoursWorked  float64   // From Final Hours Worked formula (property ID: ;J>Y)
+	ProofOfWorks      string    // From Proof of Works rich text (property ID: hlty)
+}
+
+// DeploymentData represents an active deployment from Deployment Tracker
+type DeploymentData struct {
+	PageID           string // Deployment page ID
+	ContractorPageID string // From Contractor relation
+	ProjectPageID    string // From Project relation
+	Status           string // Deployment status
+}
+
+// ClientInfo represents client information from Project relation
+type ClientInfo struct {
+	Name    string // Client name
+	Country string // Client headquarters/country
 }
 
 // QueryApprovedOrders queries all Task Order Log entries with Type=Order and Status=Approved
@@ -916,7 +930,7 @@ func (s *TaskOrderLogService) QueryApprovedOrders(ctx context.Context) ([]*Appro
 			// Fetch contractor name and discord if we have the page ID
 			contractorDiscord := ""
 			if contractorPageID != "" {
-				contractorName, contractorDiscord = s.getContractorInfo(ctx, contractorPageID)
+				contractorName, contractorDiscord = s.GetContractorInfo(ctx, contractorPageID)
 				s.logger.Debug(fmt.Sprintf("fetched contractor info: name=%s discord=%s", contractorName, contractorDiscord))
 			}
 
@@ -990,34 +1004,34 @@ func (s *TaskOrderLogService) UpdateOrderStatus(ctx context.Context, orderPageID
 	return nil
 }
 
-// getContractorInfo fetches both Full Name and Discord from a Contractor page
-func (s *TaskOrderLogService) getContractorInfo(ctx context.Context, pageID string) (name string, discord string) {
+// GetContractorInfo fetches both Full Name and Discord from a Contractor page
+func (s *TaskOrderLogService) GetContractorInfo(ctx context.Context, pageID string) (name string, discord string) {
 	page, err := s.client.FindPageByID(ctx, pageID)
 	if err != nil {
-		s.logger.Debug(fmt.Sprintf("getContractorInfo: failed to fetch contractor page %s: %v", pageID, err))
+		s.logger.Debug(fmt.Sprintf("GetContractorInfo: failed to fetch contractor page %s: %v", pageID, err))
 		return "", ""
 	}
 
 	props, ok := page.Properties.(nt.DatabasePageProperties)
 	if !ok {
-		s.logger.Debug(fmt.Sprintf("getContractorInfo: failed to cast page properties for %s", pageID))
+		s.logger.Debug(fmt.Sprintf("GetContractorInfo: failed to cast page properties for %s", pageID))
 		return "", ""
 	}
 
 	// Get Full Name from Title property
 	if prop, ok := props["Full Name"]; ok && len(prop.Title) > 0 {
 		name = prop.Title[0].PlainText
-		s.logger.Debug(fmt.Sprintf("getContractorInfo: found Full Name: %s", name))
+		s.logger.Debug(fmt.Sprintf("GetContractorInfo: found Full Name: %s", name))
 	} else if prop, ok := props["Name"]; ok && len(prop.Title) > 0 {
 		// Fallback to Name property
 		name = prop.Title[0].PlainText
-		s.logger.Debug(fmt.Sprintf("getContractorInfo: found Name: %s", name))
+		s.logger.Debug(fmt.Sprintf("GetContractorInfo: found Name: %s", name))
 	}
 
 	// Get Discord from rich text property
 	if prop, ok := props["Discord"]; ok && len(prop.RichText) > 0 {
 		discord = prop.RichText[0].PlainText
-		s.logger.Debug(fmt.Sprintf("getContractorInfo: found Discord: %s", discord))
+		s.logger.Debug(fmt.Sprintf("GetContractorInfo: found Discord: %s", discord))
 	}
 
 	return name, discord
@@ -1096,4 +1110,185 @@ func (s *TaskOrderLogService) FormatProofOfWorksByProject(ctx context.Context, o
 	s.logger.Debug(fmt.Sprintf("[DEBUG] task_order_log: formatted proof of works length=%d", len(formatted)))
 
 	return formatted, nil
+}
+
+// QueryActiveDeploymentsByMonth queries active deployments from Deployment Tracker
+//
+// Parameters:
+//   - ctx: Context for cancellation and timeout
+//   - month: Target month in YYYY-MM format (used for logging)
+//   - contractorDiscord: Optional Discord username filter (empty string = all contractors)
+//
+// Returns:
+//   - []*DeploymentData: Slice of active deployments
+//   - error: Error if query fails
+func (s *TaskOrderLogService) QueryActiveDeploymentsByMonth(ctx context.Context, month string, contractorDiscord string) ([]*DeploymentData, error) {
+	deploymentDBID := s.cfg.Notion.Databases.DeploymentTracker
+	if deploymentDBID == "" {
+		return nil, errors.New("deployment tracker database ID not configured")
+	}
+
+	s.logger.Debug(fmt.Sprintf("querying active deployments: month=%s discord=%s", month, contractorDiscord))
+
+	// Build filters
+	filters := []nt.DatabaseQueryFilter{
+		{
+			Property: "Deployment Status",
+			DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+				Status: &nt.StatusDatabaseQueryFilter{
+					Equals: "Active",
+				},
+			},
+		},
+	}
+
+	// Add Discord filter if provided
+	if contractorDiscord != "" {
+		filters = append(filters, nt.DatabaseQueryFilter{
+			Property: "Discord",
+			DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+				Rollup: &nt.RollupDatabaseQueryFilter{
+					Any: &nt.DatabaseQueryPropertyFilter{
+						RichText: &nt.TextPropertyFilter{
+							Contains: contractorDiscord,
+						},
+					},
+				},
+			},
+		})
+	}
+
+	query := &nt.DatabaseQuery{
+		Filter: &nt.DatabaseQueryFilter{
+			And: filters,
+		},
+		PageSize: 100,
+	}
+
+	var deployments []*DeploymentData
+
+	// Query with pagination
+	for {
+		resp, err := s.client.QueryDatabase(ctx, deploymentDBID, query)
+		if err != nil {
+			s.logger.Error(err, fmt.Sprintf("failed to query deployment tracker: month=%s", month))
+			return nil, fmt.Errorf("failed to query deployment tracker: %w", err)
+		}
+
+		for _, page := range resp.Results {
+			props, ok := page.Properties.(nt.DatabasePageProperties)
+			if !ok {
+				continue
+			}
+
+			deployment := &DeploymentData{
+				PageID:           page.ID,
+				ContractorPageID: s.extractFirstRelationID(props, "Contractor"),
+				ProjectPageID:    s.extractFirstRelationID(props, "Project"),
+				Status:           s.extractStatus(props, "Deployment Status"),
+			}
+
+			deployments = append(deployments, deployment)
+		}
+
+		if !resp.HasMore || resp.NextCursor == nil {
+			break
+		}
+
+		query.StartCursor = *resp.NextCursor
+	}
+
+	s.logger.Debug(fmt.Sprintf("found %d active deployments for month %s", len(deployments), month))
+	return deployments, nil
+}
+
+// GetClientInfo fetches client information from a project page
+//
+// Parameters:
+//   - ctx: Context for cancellation and timeout
+//   - projectPageID: Project page ID
+//
+// Returns:
+//   - *ClientInfo: Client name and country, nil if not found
+//   - error: Error if fetch fails
+func (s *TaskOrderLogService) GetClientInfo(ctx context.Context, projectPageID string) (*ClientInfo, error) {
+	// Fetch project page
+	projectPage, err := s.client.FindPageByID(ctx, projectPageID)
+	if err != nil {
+		s.logger.Error(err, fmt.Sprintf("failed to fetch project page: %s", projectPageID))
+		return nil, fmt.Errorf("failed to fetch project page: %w", err)
+	}
+
+	props, ok := projectPage.Properties.(nt.DatabasePageProperties)
+	if !ok {
+		return nil, errors.New("failed to cast project page properties")
+	}
+
+	// Extract client relation
+	clientPageID := s.extractFirstRelationID(props, "Client")
+	if clientPageID == "" {
+		// Fallback to "Clients"
+		clientPageID = s.extractFirstRelationID(props, "Clients")
+	}
+
+	if clientPageID == "" {
+		s.logger.Debug(fmt.Sprintf("no client relation found for project: %s", projectPageID))
+		return nil, nil
+	}
+
+	// Fetch client page
+	clientPage, err := s.client.FindPageByID(ctx, clientPageID)
+	if err != nil {
+		s.logger.Error(err, fmt.Sprintf("failed to fetch client page: %s", clientPageID))
+		return nil, fmt.Errorf("failed to fetch client page: %w", err)
+	}
+
+	clientProps, ok := clientPage.Properties.(nt.DatabasePageProperties)
+	if !ok {
+		return nil, errors.New("failed to cast client page properties")
+	}
+
+	// Extract client name and country
+	name := s.extractTitle(clientProps, "Client Name")
+	country := s.extractRichText(clientProps, "Country")
+
+	if name == "" {
+		s.logger.Debug(fmt.Sprintf("client name not found for client page: %s", clientPageID))
+		return nil, nil
+	}
+
+	return &ClientInfo{
+		Name:    name,
+		Country: country,
+	}, nil
+}
+
+// GetContractorTeamEmail fetches team email from contractor page
+//
+// Parameters:
+//   - ctx: Context for cancellation and timeout
+//   - contractorPageID: Contractor page ID
+//
+// Returns:
+//   - string: Team email address, empty if not found
+func (s *TaskOrderLogService) GetContractorTeamEmail(ctx context.Context, contractorPageID string) string {
+	page, err := s.client.FindPageByID(ctx, contractorPageID)
+	if err != nil {
+		s.logger.Debug(fmt.Sprintf("failed to fetch contractor page: %s: %v", contractorPageID, err))
+		return ""
+	}
+
+	props, ok := page.Properties.(nt.DatabasePageProperties)
+	if !ok {
+		s.logger.Debug(fmt.Sprintf("failed to cast contractor page properties: %s", contractorPageID))
+		return ""
+	}
+
+	// Extract Team Email property (email type)
+	if prop, ok := props["Team Email"]; ok && prop.Email != nil {
+		return *prop.Email
+	}
+
+	s.logger.Debug(fmt.Sprintf("team email not found for contractor: %s", contractorPageID))
+	return ""
 }

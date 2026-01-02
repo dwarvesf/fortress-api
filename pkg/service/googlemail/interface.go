@@ -23,6 +23,7 @@ type IService interface {
 	SendInvoiceThankYouMail(invoice *model.Invoice) (err error)
 	SendPayrollPaidMail(p *model.Payroll) (err error)
 	SendOffboardingMail(offboarding *model.OffboardingEmail) (err error)
+	SendTaskOrderConfirmationMail(data *model.TaskOrderConfirmationEmail) error
 
 	// SendAs management methods
 	ListSendAsAliases(userId string) ([]*gmail.SendAs, error)
