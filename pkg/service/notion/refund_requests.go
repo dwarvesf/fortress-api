@@ -28,7 +28,7 @@ type ApprovedRefundData struct {
 	ContractorName   string  // Rollup from Contractor
 	Reason           string  // Select: Advance Return, Deduction Reversal, etc.
 	Description      string  // Rich text
-	DateApproved     string  // Date
+	DateRequested    string  // Date
 }
 
 // NewRefundRequestsService creates a new Notion refund requests service
@@ -100,7 +100,7 @@ func (s *RefundRequestsService) QueryApprovedRefunds(ctx context.Context) ([]*Ap
 				ContractorName:   s.extractRollupText(props, "Person"),
 				Reason:           s.extractSelect(props, "Reason"),
 				Description:      s.extractRichText(props, "Description"),
-				DateApproved:     s.extractDate(props, "Date Approved"),
+				DateRequested:    s.extractDate(props, "Date Requested"),
 			}
 
 			s.logger.Debug(fmt.Sprintf("[DEBUG] refund_requests: parsed refund pageID=%s refundID=%s amount=%.2f currency=%s contractor=%s reason=%s",

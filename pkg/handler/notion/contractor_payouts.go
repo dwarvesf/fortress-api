@@ -356,13 +356,20 @@ func (h *handler) processRefundPayouts(c *gin.Context, l logger.Logger, payoutTy
 		}
 		l.Debug(fmt.Sprintf("creating payout for refund: %s name: %s", refund.PageID, payoutName))
 
+		// Derive month from DateRequested (YYYY-MM-DD -> YYYY-MM)
+		month := ""
+		if len(refund.DateRequested) >= 7 {
+			month = refund.DateRequested[:7]
+		}
+
 		payoutInput := notionsvc.CreateRefundPayoutInput{
 			Name:             payoutName,
 			ContractorPageID: refund.ContractorPageID,
 			RefundRequestID:  refund.PageID,
 			Amount:           refund.Amount,
 			Currency:         refund.Currency,
-			Date:             refund.DateApproved,
+			Month:            month,
+			Date:             refund.DateRequested,
 		}
 
 		payoutPageID, err := contractorPayoutsService.CreateRefundPayout(ctx, payoutInput)

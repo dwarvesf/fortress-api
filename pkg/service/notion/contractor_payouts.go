@@ -392,6 +392,7 @@ type CreateRefundPayoutInput struct {
 	RefundRequestID  string  // Refund Request relation
 	Amount           float64 // Payment amount
 	Currency         string  // Currency (e.g., "VND", "USD")
+	Month            string  // YYYY-MM format
 	Date             string  // Date in YYYY-MM-DD format
 }
 
@@ -456,6 +457,12 @@ func (s *ContractorPayoutsService) CreateRefundPayout(ctx context.Context, input
 		// Amount
 		"Amount": nt.DatabasePageProperty{
 			Number: &input.Amount,
+		},
+		// Month (rich text)
+		"Month": nt.DatabasePageProperty{
+			RichText: []nt.RichText{
+				{Text: &nt.Text{Content: input.Month}},
+			},
 		},
 		// Status: Pending
 		"Status": nt.DatabasePageProperty{
