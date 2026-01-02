@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -11,6 +12,7 @@ import (
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
+	"github.com/dwarvesf/fortress-api/pkg/utils/timeutil"
 )
 
 // TaskOrderLogService handles task order log operations with Notion
@@ -385,8 +387,20 @@ func (s *TaskOrderLogService) CreateOrder(ctx context.Context, deploymentID, mon
 
 	s.logger.Debug(fmt.Sprintf("creating order: deployment=%s month=%s", deploymentID, month))
 
-	// Use current date
-	now := time.Now()
+	// Calculate date from month (last day of month)
+	targetDate := time.Now()
+	parts := strings.Split(month, "-")
+	if len(parts) == 2 {
+		year, err1 := strconv.Atoi(parts[0])
+		monthInt, err2 := strconv.Atoi(parts[1])
+		if err1 == nil && err2 == nil {
+			targetDate = timeutil.LastDayOfMonth(monthInt, year)
+		} else {
+			s.logger.Error(fmt.Errorf("failed to parse month string: %s", month), "using current date as fallback")
+		}
+	} else {
+		s.logger.Error(fmt.Errorf("invalid month format: %s", month), "using current date as fallback")
+	}
 
 	properties := &nt.DatabasePageProperties{
 		"Type": nt.DatabasePageProperty{
@@ -404,7 +418,7 @@ func (s *TaskOrderLogService) CreateOrder(ctx context.Context, deploymentID, mon
 		"Date": nt.DatabasePageProperty{
 			Type: nt.DBPropTypeDate,
 			Date: &nt.Date{
-				Start: nt.NewDateTime(now, false),
+				Start: nt.NewDateTime(targetDate, false),
 			},
 		},
 	}
@@ -501,8 +515,20 @@ func (s *TaskOrderLogService) CreateTimesheetLineItem(ctx context.Context, order
 
 	s.logger.Debug(fmt.Sprintf("creating timesheet line item: order=%s project=%s hours=%.1f", orderID, projectID, hours))
 
-	// Use current date
-	now := time.Now()
+	// Calculate date from month (last day of month)
+	targetDate := time.Now()
+	parts := strings.Split(month, "-")
+	if len(parts) == 2 {
+		year, err1 := strconv.Atoi(parts[0])
+		monthInt, err2 := strconv.Atoi(parts[1])
+		if err1 == nil && err2 == nil {
+			targetDate = timeutil.LastDayOfMonth(monthInt, year)
+		} else {
+			s.logger.Error(fmt.Errorf("failed to parse month string: %s", month), "using current date as fallback")
+		}
+	} else {
+		s.logger.Error(fmt.Errorf("invalid month format: %s", month), "using current date as fallback")
+	}
 
 	// Build timesheet relations
 	timesheetRelations := make([]nt.Relation, len(timesheetIDs))
@@ -529,7 +555,7 @@ func (s *TaskOrderLogService) CreateTimesheetLineItem(ctx context.Context, order
 			"Date": nt.DatabasePageProperty{
 				Type: nt.DBPropTypeDate,
 				Date: &nt.Date{
-					Start: nt.NewDateTime(now, false),
+					Start: nt.NewDateTime(targetDate, false),
 				},
 			},
 			"Line Item Hours": nt.DatabasePageProperty{
