@@ -15,7 +15,7 @@ Content-Transfer-Encoding: quoted-printable
 
     <p>Period: <b>01 – {{periodEndDay}} {{monthName}}, {{year}}</b></p>
 
-    <p>Active clients & locations (all outside Vietnam):</p>
+    <p>Active clients & locations:</p>
     <ul>
         {{range .Clients}}
         <li>{{.Name}}{{if .Country}} – headquartered in {{.Country}}{{end}}</li>
@@ -26,7 +26,7 @@ Content-Transfer-Encoding: quoted-printable
 
     <p>Please reply <b>"Confirmed – {{formattedMonth}}"</b> to acknowledge this work order and confirm your availability.</p>
 
-    <p>Thanks, and looking forward to a productive month ahead!</p>
+    <p>Thanks,</p>
 
     <p>
         Dwarves LLC<br>

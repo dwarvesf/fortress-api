@@ -284,6 +284,7 @@ func (h *handler) SyncTaskOrderLogs(c *gin.Context) {
 // @Security BearerAuth
 // @Param month query string false "Target month in YYYY-MM format (default: current month)"
 // @Param discord query string false "Discord username to filter specific contractor"
+// @Param test_email query string false "Override recipient email for testing purposes"
 // @Success 200 {object} view.Response
 // @Failure 400 {object} view.Response
 // @Failure 500 {object} view.Response
@@ -311,7 +312,9 @@ func (h *handler) SendTaskOrderConfirmation(c *gin.Context) {
 	}
 
 	contractorDiscord := strings.TrimSpace(c.Query("discord"))
-	l.Info(fmt.Sprintf("sending task order confirmations: month=%s discord=%s", month, contractorDiscord))
+	testEmail := strings.TrimSpace(c.Query("test_email"))
+
+	l.Info(fmt.Sprintf("sending task order confirmations: month=%s discord=%s test_email=%s", month, contractorDiscord, testEmail))
 
 	// Step 2: Get services
 	taskOrderLogService := h.service.Notion.TaskOrderLog
@@ -392,13 +395,25 @@ func (h *handler) SendTaskOrderConfirmation(c *gin.Context) {
 			continue
 		}
 
+		// Use test email if provided
+		emailToSend := teamEmail
+		if testEmail != "" {
+			l.Info(fmt.Sprintf("overriding recipient email for %s: %s -> %s", name, teamEmail, testEmail))
+			emailToSend = testEmail
+		}
+
 		detail["contractor"] = name
 		detail["discord"] = discord
-		detail["email"] = teamEmail
+		detail["email"] = emailToSend
+		if testEmail != "" {
+			detail["original_email"] = teamEmail
+		}
 
 		// Step 5b: Extract client info from deployments
 		var clients []model.TaskOrderClient
 		var clientStrings []string
+		seenClients := make(map[string]bool)
+
 		for _, deployment := range contractorDeployments {
 			clientInfo, err := taskOrderLogService.GetClientInfo(ctx, deployment.ProjectPageID)
 			if err != nil {
@@ -406,6 +421,18 @@ func (h *handler) SendTaskOrderConfirmation(c *gin.Context) {
 				continue
 			}
 			if clientInfo != nil && clientInfo.Name != "" {
+				// If client is in Vietnam, use "Dwarves LLC" (USA) instead
+				if strings.TrimSpace(clientInfo.Country) == "Vietnam" {
+					clientInfo.Name = "Dwarves LLC"
+					clientInfo.Country = "USA"
+				}
+
+				clientKey := fmt.Sprintf("%s:%s", clientInfo.Name, clientInfo.Country)
+				if seenClients[clientKey] {
+					continue
+				}
+				seenClients[clientKey] = true
+
 				clients = append(clients, model.TaskOrderClient{
 					Name:    clientInfo.Name,
 					Country: clientInfo.Country,
@@ -432,7 +459,7 @@ func (h *handler) SendTaskOrderConfirmation(c *gin.Context) {
 		// Step 5c: Prepare email data
 		emailData := &model.TaskOrderConfirmationEmail{
 			ContractorName: name,
-			TeamEmail:      teamEmail,
+			TeamEmail:      emailToSend,
 			Month:          month,
 			Clients:        clients,
 		}
@@ -440,12 +467,12 @@ func (h *handler) SendTaskOrderConfirmation(c *gin.Context) {
 		// Step 5d: Send email via Gmail using accounting refresh token
 		err = googleMailService.SendTaskOrderConfirmationMail(emailData)
 		if err != nil {
-			l.Error(err, fmt.Sprintf("failed to send email to %s (%s)", name, teamEmail))
+			l.Error(err, fmt.Sprintf("failed to send email to %s (%s)", name, emailToSend))
 			detail["status"] = "failed"
 			detail["error"] = err.Error()
 			emailsFailed++
 		} else {
-			l.Info(fmt.Sprintf("sent email to %s (%s)", name, teamEmail))
+			l.Info(fmt.Sprintf("sent email to %s (%s)", name, emailToSend))
 			detail["status"] = "sent"
 			emailsSent++
 		}

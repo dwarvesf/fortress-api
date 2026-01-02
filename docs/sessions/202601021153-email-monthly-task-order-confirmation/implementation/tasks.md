@@ -13,6 +13,8 @@
 - [x] Task 9: Update Handler Interface
 - [x] Task 10: Register Route
 - [/] Task 11: Build Verification and Swagger Generation (Build Passed, Swagger failed due to env)
+- [x] Task 12: Implement Vietnam Client Override Logic
+- [x] Task 13: Add test_email Parameter for Safe Testing
 
 ## Details
 
@@ -31,6 +33,8 @@
 ### Task 7-8: Handler Layer
 - File: `pkg/handler/notion/task_order_log.go`
 - Completed: Implemented helper functions and main `SendTaskOrderConfirmation` handler.
+- Update (Task 12): Added logic to override Vietnam clients with "Dwarves LLC (USA)".
+- Update (Task 13): Added `test_email` query parameter to override recipient for testing.
 
 ### Task 9-10: Interface and Routes
 - Files: `pkg/handler/notion/interface.go`, `pkg/routes/v1.go`

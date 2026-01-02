@@ -28,6 +28,8 @@ Implementation phase is well underway. Service layer methods, email templates, a
 
 ### Handler Layer
 - Implemented `SendTaskOrderConfirmation` handler in `pkg/handler/notion/task_order_log.go`.
+- Added logic to override Vietnam-based clients with "Dwarves LLC" (USA) for compliance/reporting consistency.
+- Added `test_email` query parameter to override recipient email for safe testing.
 - Added `groupDeploymentsByContractor` helper function.
 - Updated `IHandler` interface in `pkg/handler/notion/interface.go`.
 
