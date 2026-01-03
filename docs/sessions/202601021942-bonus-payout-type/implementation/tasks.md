@@ -5,17 +5,17 @@ Add support for `type=bonus` in the `/cronjobs/create-contractor-payouts` endpoi
 
 ## Tasks
 
-### Task 1: Add QueryPendingBonusSplits method
+### Task 1: Add QueryPendingBonusSplits method ✅
 - **File(s)**: `pkg/service/notion/invoice_split.go`
 - **Description**: Add `QueryPendingBonusSplits()` method that queries Invoice Splits with `Status=Pending` AND `Type=Bonus`. Copy the logic from `QueryPendingCommissionSplits` and change the Type filter from "Commission" to "Bonus".
 - **Acceptance**: Method returns `[]PendingCommissionSplit` (reuse struct) for bonus type splits
 
-### Task 2: Add CreateBonusPayout method
+### Task 2: Add CreateBonusPayout method ✅
 - **File(s)**: `pkg/service/notion/contractor_payouts.go`
 - **Description**: Add `CreateBonusPayoutInput` struct and `CreateBonusPayout()` method. Copy from `CreateCommissionPayout` and change the Type property from "Commission" to "Bonus".
 - **Acceptance**: Method creates a payout record in Contractor Payouts with `Type=Bonus`
 
-### Task 3: Add processBonusPayouts handler
+### Task 3: Add processBonusPayouts handler ✅
 - **File(s)**: `pkg/handler/notion/contractor_payouts.go`
 - **Description**: Add `processBonusPayouts()` method that:
   1. Calls `QueryPendingBonusSplits()` to get pending bonus splits
@@ -24,7 +24,7 @@ Add support for `type=bonus` in the `/cronjobs/create-contractor-payouts` endpoi
   4. Returns summary response
 - **Acceptance**: Method processes bonus splits and creates payouts with proper logging
 
-### Task 4: Wire up bonus case in CreateContractorPayouts
+### Task 4: Wire up bonus case in CreateContractorPayouts ✅
 - **File(s)**: `pkg/handler/notion/contractor_payouts.go`
 - **Description**: Replace the `case "bonus":` block (lines 74-77) that returns "not implemented" with a call to `h.processBonusPayouts(c, l, payoutType)`
 - **Acceptance**: Endpoint accepts `?type=bonus` and processes bonus payouts
