@@ -144,14 +144,14 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 			Type:      string(payout.SourceType),
 		}
 
-		// If Contractor Payroll, fetch ProofOfWorks from Task Order Log subitems (grouped by project)
-		if payout.SourceType == notion.PayoutSourceTypeContractorPayroll && payout.ContractorFeesID != "" && feesService != nil && taskOrderLogService != nil {
-			l.Debug(fmt.Sprintf("fetching Task Order Log IDs from contractor fees: feesID=%s", payout.ContractorFeesID))
+		// If Service Fee (was Contractor Payroll), fetch ProofOfWorks from Task Order Log subitems (grouped by project)
+		if payout.SourceType == notion.PayoutSourceTypeServiceFee && payout.TaskOrderID != "" && feesService != nil && taskOrderLogService != nil {
+			l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: fetching Task Order Log IDs from task order: taskOrderID=%s", payout.TaskOrderID))
 
-			// Get Task Order Log IDs from Contractor Fees relation
-			orderIDs, err := feesService.GetTaskOrderLogIDs(ctx, payout.ContractorFeesID)
+			// Get Task Order Log IDs from Task Order relation
+			orderIDs, err := feesService.GetTaskOrderLogIDs(ctx, payout.TaskOrderID)
 			if err != nil {
-				l.Error(err, fmt.Sprintf("failed to get Task Order Log IDs: feesID=%s", payout.ContractorFeesID))
+				l.Error(err, fmt.Sprintf("failed to get Task Order Log IDs: taskOrderID=%s", payout.TaskOrderID))
 			} else if len(orderIDs) > 0 {
 				l.Debug(fmt.Sprintf("found %d Task Order Log IDs", len(orderIDs)))
 

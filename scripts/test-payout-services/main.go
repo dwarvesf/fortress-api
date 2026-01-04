@@ -70,7 +70,7 @@ func main() {
 	var totalUSD float64
 
 	for _, e := range entries {
-		fmt.Printf("- %s: %s %.2f %s (Name: %s)\n", e.SourceType, e.Direction, e.Amount, e.Currency, e.Name)
+		fmt.Printf("- %s: %.2f %s (Name: %s)\n", e.SourceType, e.Amount, e.Currency, e.Name)
 
 		// Convert amount to USD and round to 2 decimal places
 		amountUSD := e.Amount

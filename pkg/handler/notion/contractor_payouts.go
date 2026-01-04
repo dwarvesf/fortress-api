@@ -3,6 +3,7 @@ package notion
 import (
 	"fmt"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -26,7 +27,7 @@ func formatMonthYear(month string) string {
 
 var (
 	PayoutType = map[string]string{
-		"contractor_payroll": "Contractor Payroll",
+		"contractor_payroll": "Service Fee",
 		"bonus":              "Bonus",
 		"commission":         "Commission",
 		"refund":             "Refund",
@@ -34,12 +35,13 @@ var (
 )
 
 // CreateContractorPayouts godoc
-// @Summary Create contractor payouts from new contractor fees
-// @Description Processes contractor fees with Payment Status=New and creates payout entries
+// @Summary Create contractor payouts from approved orders or other sources
+// @Description Processes approved Task Order Log entries (type=contractor_payroll) or other payout sources and creates payout entries
 // @Tags Cronjobs
 // @Accept json
 // @Produce json
 // @Param type query string false "Payout type (default: contractor_payroll)"
+// @Param contractor query string false "Filter by contractor (discord username, name, or page ID)"
 // @Security BearerAuth
 // @Success 200 {object} view.Response
 // @Failure 500 {object} view.Response
@@ -64,13 +66,25 @@ func (h *handler) CreateContractorPayouts(c *gin.Context) {
 		return
 	}
 
-	l.Debug(fmt.Sprintf("payout type key: %s, value: %s", payoutTypeKey, payoutType))
+	// Get optional contractor filter (discord username or page ID)
+	contractorFilter := c.Query("contractor")
+
+	// Get optional pay_day filter (1-31)
+	payDayFilter := 0
+	if payDayStr := c.Query("pay_day"); payDayStr != "" {
+		if pd, err := fmt.Sscanf(payDayStr, "%d", &payDayFilter); err != nil || pd != 1 {
+			l.Debug(fmt.Sprintf("invalid pay_day parameter: %s", payDayStr))
+			payDayFilter = 0
+		}
+	}
+
+	l.Debug(fmt.Sprintf("payout type key: %s, value: %s, contractor: %s, pay_day: %d", payoutTypeKey, payoutType, contractorFilter, payDayFilter))
 	l.Info("starting CreateContractorPayouts cronjob")
 
 	// Process based on payout type
 	switch payoutTypeKey {
 	case "contractor_payroll":
-		h.processContractorPayrollPayouts(c, l, payoutType)
+		h.processContractorPayrollPayouts(c, l, payoutType, contractorFilter, payDayFilter)
 	case "bonus":
 		h.processBonusPayouts(c, l, payoutType)
 	case "commission":
@@ -84,16 +98,28 @@ func (h *handler) CreateContractorPayouts(c *gin.Context) {
 	}
 }
 
-// processContractorPayrollPayouts processes contractor fees with Payment Status=New
-// and creates payout entries of type "Contractor Payroll"
-func (h *handler) processContractorPayrollPayouts(c *gin.Context, l logger.Logger, payoutType string) {
+// processContractorPayrollPayouts processes approved Task Order Log entries
+// and creates payout entries of type "Service Fee"
+// contractorFilter: optional filter by contractor discord username or page ID
+// payDayFilter: optional filter by pay day (1-31), 0 means no filter
+func (h *handler) processContractorPayrollPayouts(c *gin.Context, l logger.Logger, payoutType string, contractorFilter string, payDayFilter int) {
 	ctx := c.Request.Context()
 
+	l.Debug(fmt.Sprintf("processContractorPayrollPayouts: contractorFilter=%s payDayFilter=%d", contractorFilter, payDayFilter))
+
 	// Get services
-	contractorFeesService := h.service.Notion.ContractorFees
-	if contractorFeesService == nil {
-		err := fmt.Errorf("contractor fees service not configured")
-		l.Error(err, "contractor fees service is nil")
+	taskOrderLogService := h.service.Notion.TaskOrderLog
+	if taskOrderLogService == nil {
+		err := fmt.Errorf("task order log service not configured")
+		l.Error(err, "task order log service is nil")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	contractorRatesService := h.service.Notion.ContractorRates
+	if contractorRatesService == nil {
+		err := fmt.Errorf("contractor rates service not configured")
+		l.Error(err, "contractor rates service is nil")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
 	}
@@ -106,138 +132,236 @@ func (h *handler) processContractorPayrollPayouts(c *gin.Context, l logger.Logge
 		return
 	}
 
-	// Query new fees (Payment Status=New)
-	l.Debug("querying contractor fees with Payment Status=New")
-	newFees, err := contractorFeesService.QueryNewFees(ctx)
+	// Query approved orders (Type=Order, Status=Approved)
+	l.Debug("querying Task Order Log with Type=Order, Status=Approved")
+	approvedOrders, err := taskOrderLogService.QueryApprovedOrders(ctx)
 	if err != nil {
-		l.Error(err, "failed to query new contractor fees")
+		l.Error(err, "failed to query approved orders")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
 	}
 
-	l.Info(fmt.Sprintf("found %d contractor fees with Payment Status=New", len(newFees)))
+	l.Info(fmt.Sprintf("found %d approved orders", len(approvedOrders)))
 
-	if len(newFees) == 0 {
-		l.Info("no new contractor fees found, returning success with zero counts")
+	// Filter by contractor if specified
+	if contractorFilter != "" {
+		l.Debug(fmt.Sprintf("filtering orders by contractor: %s", contractorFilter))
+		var filteredOrders []*notionsvc.ApprovedOrderData
+		for _, order := range approvedOrders {
+			// Match by discord username or page ID
+			if order.ContractorDiscord == contractorFilter ||
+				order.ContractorPageID == contractorFilter ||
+				order.ContractorName == contractorFilter {
+				l.Debug(fmt.Sprintf("order %s matches contractor filter", order.PageID))
+				filteredOrders = append(filteredOrders, order)
+			}
+		}
+		l.Debug(fmt.Sprintf("filtered from %d to %d orders", len(approvedOrders), len(filteredOrders)))
+		approvedOrders = filteredOrders
+	}
+
+	if len(approvedOrders) == 0 {
+		l.Info("no approved orders found (after filtering), returning success with zero counts")
 		c.JSON(http.StatusOK, view.CreateResponse[any](map[string]any{
-			"payouts_created": 0,
-			"fees_processed":  0,
-			"fees_skipped":    0,
-			"errors":          0,
-			"details":         []any{},
-			"type":            payoutType,
+			"payouts_created":  0,
+			"orders_processed": 0,
+			"orders_skipped":   0,
+			"errors":           0,
+			"details":          []any{},
+			"type":             payoutType,
 		}, nil, nil, nil, "ok"))
 		return
 	}
 
-	// Process each fee
+	// Process orders concurrently with worker pool
+	const maxWorkers = 5 // Limit concurrent Notion API calls
+	l.Debug(fmt.Sprintf("processing %d orders with %d workers", len(approvedOrders), maxWorkers))
+
+	type orderResult struct {
+		detail         map[string]any
+		payoutCreated  bool
+		skipped        bool
+		hasError       bool
+	}
+
+	// Channels for work distribution
+	ordersChan := make(chan *notionsvc.ApprovedOrderData, len(approvedOrders))
+	resultsChan := make(chan orderResult, len(approvedOrders))
+
+	// Start workers
+	var wg sync.WaitGroup
+	for i := 0; i < maxWorkers; i++ {
+		wg.Add(1)
+		go func(workerID int) {
+			defer wg.Done()
+			for order := range ordersChan {
+				l.Debug(fmt.Sprintf("[worker-%d] processing order: %s contractor: %s", workerID, order.PageID, order.ContractorName))
+
+				// Extract month from date
+				month := order.Date.Format("2006-01")
+
+				detail := map[string]any{
+					"order_page_id":   order.PageID,
+					"contractor_name": order.ContractorName,
+					"contractor_id":   order.ContractorPageID,
+					"month":           month,
+					"hours":           order.FinalHoursWorked,
+					"payout_page_id":  nil,
+					"status":          "",
+					"reason":          nil,
+				}
+
+				// Validate contractor
+				if order.ContractorPageID == "" {
+					l.Warn(fmt.Sprintf("[worker-%d] skipping order %s: no contractor found", workerID, order.PageID))
+					detail["status"] = "skipped"
+					detail["reason"] = "contractor not found in relation"
+					resultsChan <- orderResult{detail: detail, skipped: true}
+					continue
+				}
+
+				// Get contractor rate
+				l.Debug(fmt.Sprintf("[worker-%d] fetching contractor rate: contractor=%s date=%s", workerID, order.ContractorPageID, order.Date.Format("2006-01-02")))
+				rate, err := contractorRatesService.FindActiveRateByContractor(ctx, order.ContractorPageID, order.Date)
+				if err != nil {
+					l.Error(err, fmt.Sprintf("[worker-%d] failed to get contractor rate for order %s", workerID, order.PageID))
+					detail["status"] = "error"
+					detail["reason"] = fmt.Sprintf("failed to get contractor rate: %v", err)
+					resultsChan <- orderResult{detail: detail, hasError: true}
+					continue
+				}
+
+				// Filter by pay day if specified
+				if payDayFilter > 0 && rate.PayDay != payDayFilter {
+					l.Debug(fmt.Sprintf("[worker-%d] skipping order %s: pay day mismatch (rate=%d, filter=%d)", workerID, order.PageID, rate.PayDay, payDayFilter))
+					detail["status"] = "skipped"
+					detail["reason"] = fmt.Sprintf("pay day mismatch: rate has %d, filter is %d", rate.PayDay, payDayFilter)
+					resultsChan <- orderResult{detail: detail, skipped: true}
+					continue
+				}
+
+				// Calculate amount based on billing type
+				var amount float64
+				if rate.BillingType == "Monthly Fixed" {
+					amount = rate.MonthlyFixed
+					l.Debug(fmt.Sprintf("[worker-%d] using monthly fixed rate: %.2f", workerID, amount))
+				} else {
+					amount = rate.HourlyRate * order.FinalHoursWorked
+					l.Debug(fmt.Sprintf("[worker-%d] using hourly rate: %.2f * %.2f = %.2f", workerID, rate.HourlyRate, order.FinalHoursWorked, amount))
+				}
+
+				detail["amount"] = amount
+				detail["currency"] = rate.Currency
+				detail["billing_type"] = rate.BillingType
+
+				// Check if payout exists (idempotency)
+				l.Debug(fmt.Sprintf("[worker-%d] checking if payout exists for order: %s", workerID, order.PageID))
+				exists, existingPayoutID, err := contractorPayoutsService.CheckPayoutExistsByContractorFee(ctx, order.PageID)
+				if err != nil {
+					l.Error(err, fmt.Sprintf("[worker-%d] failed to check payout existence for order %s", workerID, order.PageID))
+					detail["status"] = "error"
+					detail["reason"] = "failed to check payout existence"
+					resultsChan <- orderResult{detail: detail, hasError: true}
+					continue
+				}
+
+				if exists {
+					l.Debug(fmt.Sprintf("[worker-%d] payout already exists for order %s: %s", workerID, order.PageID, existingPayoutID))
+					detail["status"] = "skipped"
+					detail["reason"] = "payout already exists"
+					detail["payout_page_id"] = existingPayoutID
+					resultsChan <- orderResult{detail: detail, skipped: true}
+					continue
+				}
+
+				// Description is empty for Service Fee payout type
+				description := ""
+				l.Debug(fmt.Sprintf("[worker-%d] description set to empty for Service Fee payout", workerID))
+
+				// Create payout
+				payoutName := fmt.Sprintf("Development work on %s", formatMonthYear(month))
+				l.Debug(fmt.Sprintf("[worker-%d] creating payout for order: %s name: %s amount: %.2f %s", workerID, order.PageID, payoutName, amount, rate.Currency))
+
+				payoutInput := notionsvc.CreatePayoutInput{
+					Name:             payoutName,
+					ContractorPageID: order.ContractorPageID,
+					TaskOrderID:      order.PageID,
+					ServiceRateID:    rate.PageID,
+					Amount:           amount,
+					Currency:         rate.Currency,
+					Date:             order.Date.Format("2006-01-02"),
+					Description:      description,
+				}
+
+				payoutPageID, err := contractorPayoutsService.CreatePayout(ctx, payoutInput)
+				if err != nil {
+					l.Error(err, fmt.Sprintf("[worker-%d] failed to create payout for order %s", workerID, order.PageID))
+					detail["status"] = "error"
+					detail["reason"] = "failed to create payout"
+					resultsChan <- orderResult{detail: detail, hasError: true}
+					continue
+				}
+
+				l.Info(fmt.Sprintf("[worker-%d] created payout: %s for order: %s", workerID, payoutPageID, order.PageID))
+
+				// Update Task Order Log and subitems status to "Completed"
+				l.Debug(fmt.Sprintf("[worker-%d] updating order %s and subitems status to Completed", workerID, order.PageID))
+				err = taskOrderLogService.UpdateOrderAndSubitemsStatus(ctx, order.PageID, "Completed")
+				if err != nil {
+					// Log error but don't fail - payout is already created
+					l.Error(err, fmt.Sprintf("[worker-%d] failed to update order/subitems status: %s (payout created: %s)", workerID, order.PageID, payoutPageID))
+				} else {
+					l.Debug(fmt.Sprintf("[worker-%d] updated order %s and subitems status to Completed", workerID, order.PageID))
+				}
+
+				detail["status"] = "created"
+				detail["payout_page_id"] = payoutPageID
+				resultsChan <- orderResult{detail: detail, payoutCreated: true}
+			}
+		}(i)
+	}
+
+	// Send orders to workers
+	for _, order := range approvedOrders {
+		ordersChan <- order
+	}
+	close(ordersChan)
+
+	// Wait for all workers to complete
+	go func() {
+		wg.Wait()
+		close(resultsChan)
+	}()
+
+	// Collect results
 	var (
 		payoutsCreated = 0
-		feesSkipped    = 0
+		ordersSkipped  = 0
 		errors         = 0
 		details        = []map[string]any{}
 	)
 
-	for _, fee := range newFees {
-		l.Debug(fmt.Sprintf("processing fee: %s contractor: %s", fee.PageID, fee.ContractorName))
-
-		detail := map[string]any{
-			"fee_page_id":     fee.PageID,
-			"contractor_name": fee.ContractorName,
-			"contractor_id":   fee.ContractorPageID,
-			"amount":          fee.TotalAmount,
-			"month":           fee.Month,
-			"payout_page_id":  nil,
-			"status":          "",
-			"reason":          nil,
-		}
-
-		// Validate contractor
-		if fee.ContractorPageID == "" {
-			l.Warn(fmt.Sprintf("skipping fee %s: no contractor found", fee.PageID))
-			detail["status"] = "skipped"
-			detail["reason"] = "contractor not found in relation"
-			feesSkipped++
-			details = append(details, detail)
-			continue
-		}
-
-		// Check if payout exists (idempotency)
-		l.Debug(fmt.Sprintf("checking if payout exists for fee: %s", fee.PageID))
-		exists, existingPayoutID, err := contractorPayoutsService.CheckPayoutExistsByContractorFee(ctx, fee.PageID)
-		if err != nil {
-			l.Error(err, fmt.Sprintf("failed to check payout existence for fee %s", fee.PageID))
-			detail["status"] = "error"
-			detail["reason"] = "failed to check payout existence"
+	for result := range resultsChan {
+		details = append(details, result.detail)
+		if result.payoutCreated {
+			payoutsCreated++
+		} else if result.skipped {
+			ordersSkipped++
+		} else if result.hasError {
 			errors++
-			details = append(details, detail)
-			continue
 		}
-
-		if exists {
-			l.Debug(fmt.Sprintf("payout already exists for fee %s: %s", fee.PageID, existingPayoutID))
-			detail["status"] = "skipped"
-			detail["reason"] = "payout already exists"
-			detail["payout_page_id"] = existingPayoutID
-			feesSkipped++
-			details = append(details, detail)
-			continue
-		}
-
-		// Create payout
-		// Format month from YYYY-MM to "Month, Year" (e.g., "2025-01" -> "January, 2025")
-		payoutName := fmt.Sprintf("Development work on %s", formatMonthYear(fee.Month))
-		l.Debug(fmt.Sprintf("creating payout for fee: %s name: %s", fee.PageID, payoutName))
-
-		payoutInput := notionsvc.CreatePayoutInput{
-			Name:             payoutName,
-			ContractorPageID: fee.ContractorPageID,
-			ContractorFeeID:  fee.PageID,
-			Amount:           fee.TotalAmount,
-			Currency:         fee.Currency,
-			Month:            fee.Month,
-			Date:             fee.Date,
-			Type:             payoutType,
-		}
-
-		payoutPageID, err := contractorPayoutsService.CreatePayout(ctx, payoutInput)
-		if err != nil {
-			l.Error(err, fmt.Sprintf("failed to create payout for fee %s", fee.PageID))
-			detail["status"] = "error"
-			detail["reason"] = "failed to create payout"
-			errors++
-			details = append(details, detail)
-			continue
-		}
-
-		l.Info(fmt.Sprintf("created payout: %s for fee: %s", payoutPageID, fee.PageID))
-
-		// Update fee Payment Status to "Pending"
-		l.Debug(fmt.Sprintf("updating fee %s payment status to Pending", fee.PageID))
-		err = contractorFeesService.UpdatePaymentStatus(ctx, fee.PageID, "Pending")
-		if err != nil {
-			// Log error but don't fail - payout is already created
-			l.Error(err, fmt.Sprintf("failed to update fee payment status: %s (payout created: %s)", fee.PageID, payoutPageID))
-		} else {
-			l.Debug(fmt.Sprintf("updated fee %s payment status to Pending", fee.PageID))
-		}
-
-		detail["status"] = "created"
-		detail["payout_page_id"] = payoutPageID
-		payoutsCreated++
-		details = append(details, detail)
 	}
 
 	// Return response
-	l.Info(fmt.Sprintf("processing complete: payouts_created=%d skipped=%d errors=%d", payoutsCreated, feesSkipped, errors))
+	l.Info(fmt.Sprintf("processing complete: payouts_created=%d skipped=%d errors=%d", payoutsCreated, ordersSkipped, errors))
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](map[string]any{
-		"payouts_created": payoutsCreated,
-		"fees_processed":  len(newFees),
-		"fees_skipped":    feesSkipped,
-		"errors":          errors,
-		"details":         details,
-		"type":            payoutType,
+		"payouts_created":  payoutsCreated,
+		"orders_processed": len(approvedOrders),
+		"orders_skipped":   ordersSkipped,
+		"errors":           errors,
+		"details":          details,
+		"type":             payoutType,
 	}, nil, nil, nil, "ok"))
 }
 
@@ -354,19 +478,12 @@ func (h *handler) processRefundPayouts(c *gin.Context, l logger.Logger, payoutTy
 		}
 		l.Debug(fmt.Sprintf("creating payout for refund: %s name: %s", refund.PageID, payoutName))
 
-		// Derive month from DateRequested (YYYY-MM-DD -> YYYY-MM)
-		month := ""
-		if len(refund.DateRequested) >= 7 {
-			month = refund.DateRequested[:7]
-		}
-
 		payoutInput := notionsvc.CreateRefundPayoutInput{
 			Name:             payoutName,
 			ContractorPageID: refund.ContractorPageID,
 			RefundRequestID:  refund.PageID,
 			Amount:           refund.Amount,
 			Currency:         refund.Currency,
-			Month:            month,
 			Date:             refund.DateRequested,
 		}
 

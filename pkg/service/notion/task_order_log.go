@@ -694,38 +694,6 @@ func (s *TaskOrderLogService) extractRichText(props nt.DatabasePageProperties, p
 	return ""
 }
 
-// getProjectName fetches the project name from a Project page
-func (s *TaskOrderLogService) getProjectName(ctx context.Context, pageID string) string {
-	page, err := s.client.FindPageByID(ctx, pageID)
-	if err != nil {
-		fmt.Printf("[DEBUG] getProjectName: failed to fetch project page %s: %v\n", pageID, err)
-		return ""
-	}
-
-	props, ok := page.Properties.(nt.DatabasePageProperties)
-	if !ok {
-		fmt.Printf("[DEBUG] getProjectName: failed to cast page properties for %s\n", pageID)
-		return ""
-	}
-
-	// Try to get Name from Title property
-	if prop, ok := props["Name"]; ok && len(prop.Title) > 0 {
-		name := prop.Title[0].PlainText
-		fmt.Printf("[DEBUG] getProjectName: found Name in Title: %s\n", name)
-		return name
-	}
-
-	// Try Project Name property as fallback
-	if prop, ok := props["Project Name"]; ok && len(prop.Title) > 0 {
-		name := prop.Title[0].PlainText
-		fmt.Printf("[DEBUG] getProjectName: found Project Name in Title: %s\n", name)
-		return name
-	}
-
-	fmt.Printf("[DEBUG] getProjectName: no Name or Project Name property found for page %s\n", pageID)
-	return ""
-}
-
 // OrderSubitem represents a line item (timesheet) in Task Order Log
 type OrderSubitem struct {
 	PageID      string
@@ -820,16 +788,45 @@ func (s *TaskOrderLogService) QueryOrderSubitems(ctx context.Context, orderPageI
 			}
 			fmt.Printf("[DEBUG] task_order_log: ===== End of properties =====\n")
 
-			// Extract project ID from Deployment relation (not Project rollup)
-			projectID := s.extractFirstRelationID(props, "Deployment")
-			fmt.Printf("[DEBUG] task_order_log: extracted projectID from Deployment=%s\n", projectID)
-
-			// Fetch project name from Deployment/Project page
+			// Extract project name: Subitem -> Deployment -> Project
 			projectName := ""
-			if projectID != "" {
-				projectName = s.getProjectName(ctx, projectID)
-				fmt.Printf("[DEBUG] task_order_log: fetched projectName=%s for projectID=%s\n", projectName, projectID)
+			projectID := ""
+			deploymentID := s.extractFirstRelationID(props, "Deployment")
+			fmt.Printf("[DEBUG] task_order_log: extracted deploymentID=%s\n", deploymentID)
+			if deploymentID != "" {
+				// Fetch Deployment page to get Project relation
+				deploymentPage, err := s.client.FindPageByID(ctx, deploymentID)
+				if err != nil {
+					fmt.Printf("[DEBUG] task_order_log: failed to fetch deployment page %s: %v\n", deploymentID, err)
+				} else {
+					deploymentProps, ok := deploymentPage.Properties.(nt.DatabasePageProperties)
+					if ok {
+						// Get Project relation from Deployment page
+						projectID = s.extractFirstRelationID(deploymentProps, "Project")
+						fmt.Printf("[DEBUG] task_order_log: extracted projectID from Deployment.Project=%s\n", projectID)
+						if projectID != "" {
+							// Fetch Project page to get name
+							projectPage, err := s.client.FindPageByID(ctx, projectID)
+							if err != nil {
+								fmt.Printf("[DEBUG] task_order_log: failed to fetch project page %s: %v\n", projectID, err)
+							} else {
+								projectProps, ok := projectPage.Properties.(nt.DatabasePageProperties)
+								if ok {
+									// Try Project column first, then Name
+									if prop, ok := projectProps["Project"]; ok && len(prop.Title) > 0 {
+										projectName = prop.Title[0].PlainText
+										fmt.Printf("[DEBUG] task_order_log: extracted projectName from Project: %s\n", projectName)
+									} else if prop, ok := projectProps["Name"]; ok && len(prop.Title) > 0 {
+										projectName = prop.Title[0].PlainText
+										fmt.Printf("[DEBUG] task_order_log: extracted projectName from Name: %s\n", projectName)
+									}
+								}
+							}
+						}
+					}
+				}
 			}
+			fmt.Printf("[DEBUG] task_order_log: final projectName=%s projectID=%s\n", projectName, projectID)
 
 			subitem := &OrderSubitem{
 				PageID:      page.ID,
@@ -1027,6 +1024,38 @@ func (s *TaskOrderLogService) UpdateOrderStatus(ctx context.Context, orderPageID
 	}
 
 	s.logger.Debug(fmt.Sprintf("successfully updated order %s status to %s", orderPageID, newStatus))
+	return nil
+}
+
+// UpdateOrderAndSubitemsStatus updates the status of an order and all its subitems
+func (s *TaskOrderLogService) UpdateOrderAndSubitemsStatus(ctx context.Context, orderPageID, newStatus string) error {
+	s.logger.Debug(fmt.Sprintf("updating order and subitems status: orderPageID=%s newStatus=%s", orderPageID, newStatus))
+
+	// Update the order itself
+	err := s.UpdateOrderStatus(ctx, orderPageID, newStatus)
+	if err != nil {
+		return err
+	}
+
+	// Query and update all subitems
+	subitems, err := s.QueryOrderSubitems(ctx, orderPageID)
+	if err != nil {
+		s.logger.Error(err, fmt.Sprintf("failed to query subitems for order %s", orderPageID))
+		return fmt.Errorf("failed to query subitems: %w", err)
+	}
+
+	s.logger.Debug(fmt.Sprintf("updating %d subitems to status %s", len(subitems), newStatus))
+
+	for _, subitem := range subitems {
+		s.logger.Debug(fmt.Sprintf("updating subitem status: pageID=%s newStatus=%s", subitem.PageID, newStatus))
+		err := s.UpdateOrderStatus(ctx, subitem.PageID, newStatus)
+		if err != nil {
+			s.logger.Error(err, fmt.Sprintf("failed to update subitem status: %s", subitem.PageID))
+			// Continue with other subitems even if one fails
+		}
+	}
+
+	s.logger.Debug(fmt.Sprintf("successfully updated order %s and %d subitems to status %s", orderPageID, len(subitems), newStatus))
 	return nil
 }
 

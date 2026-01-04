@@ -32,6 +32,7 @@ type ContractorRateData struct {
 	Currency         string  // "VND", "USD"
 	StartDate        *time.Time
 	EndDate          *time.Time
+	PayDay           int // Pay day of month (1-31)
 }
 
 // NewContractorRatesService creates a new Notion contractor rates service
@@ -372,6 +373,15 @@ func (s *ContractorRatesService) FindActiveRateByContractor(ctx context.Context,
 				contractorName = s.getContractorName(ctx, contractorID)
 			}
 
+			// Extract Payday (Select type with values like "01", "15")
+			payDayStr := s.extractSelect(props, "Payday")
+			payDay := 0
+			if payDayStr != "" {
+				_, _ = fmt.Sscanf(payDayStr, "%d", &payDay)
+			}
+			fmt.Printf("[DEBUG] contractor_rates: extracted Payday=%s -> payDay=%d\n", payDayStr, payDay)
+			s.logger.Debug(fmt.Sprintf("extracted payDay=%d", payDay))
+
 			// Extract rate data
 			matchedRate = &ContractorRateData{
 				PageID:           page.ID,
@@ -385,6 +395,7 @@ func (s *ContractorRatesService) FindActiveRateByContractor(ctx context.Context,
 				Currency:         s.extractSelect(props, "Currency"),
 				StartDate:        startDate,
 				EndDate:          endDate,
+				PayDay:           payDay,
 			}
 
 			s.logger.Debug(fmt.Sprintf("matched rate: pageID=%s contractor=%s billingType=%s currency=%s hourlyRate=%.2f monthlyFixed=%.2f",

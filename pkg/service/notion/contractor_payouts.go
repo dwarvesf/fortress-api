@@ -20,17 +20,16 @@ type ContractorPayoutsService struct {
 
 // PayoutEntry represents a single payout entry from the Contractor Payouts database
 type PayoutEntry struct {
-	PageID           string
-	Name             string           // Title/Name of the payout
-	PersonPageID     string           // From Person relation
-	SourceType       PayoutSourceType // Determined by which relation is set
-	Direction        PayoutDirection
-	Amount           float64
-	Currency         string
-	Status           string
-	ContractorFeesID string // From Contractor Fees relation
-	InvoiceSplitID   string // From Invoice Split relation
-	RefundRequestID  string // From Refund Request relation
+	PageID          string
+	Name            string           // Title/Name of the payout
+	PersonPageID    string           // From Person relation
+	SourceType      PayoutSourceType // Determined by which relation is set
+	Amount          float64
+	Currency        string
+	Status          string
+	TaskOrderID     string // From "00 Task Order" relation (was ContractorFeesID/Billing)
+	InvoiceSplitID  string // From "02 Invoice Split" relation
+	RefundRequestID string // From "01 Refund" relation
 }
 
 // NewContractorPayoutsService creates a new Notion contractor payouts service
@@ -58,7 +57,8 @@ func (s *ContractorPayoutsService) QueryPendingPayoutsByContractor(ctx context.C
 
 	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: querying pending payouts for contractor=%s", contractorPageID))
 
-	// Build filter: Person relation contains contractorPageID AND Status=Pending AND Direction=Outgoing
+	// Build filter: Person relation contains contractorPageID AND Status=Pending
+	// Note: Direction was removed from schema
 	query := &nt.DatabaseQuery{
 		Filter: &nt.DatabaseQueryFilter{
 			And: []nt.DatabaseQueryFilter{
@@ -75,14 +75,6 @@ func (s *ContractorPayoutsService) QueryPendingPayoutsByContractor(ctx context.C
 					DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
 						Status: &nt.StatusDatabaseQueryFilter{
 							Equals: "Pending",
-						},
-					},
-				},
-				{
-					Property: "Direction",
-					DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
-						Select: &nt.SelectDatabaseQueryFilter{
-							Equals: string(PayoutDirectionOutgoing),
 						},
 					},
 				},
@@ -128,26 +120,26 @@ func (s *ContractorPayoutsService) QueryPendingPayoutsByContractor(ctx context.C
 
 			// Extract payout entry data
 			// Note: Property names must match Notion database exactly
-			// - "Billing" is the relation to Contractor Fees
-			// - "Refund" is the relation to Refund Request
+			// - "00 Task Order" is the relation to Task Order (was Billing/Contractor Fees)
+			// - "01 Refund" is the relation to Refund Request
+			// - "02 Invoice Split" is the relation to Invoice Split
 			entry := PayoutEntry{
-				PageID:           page.ID,
-				Name:             s.extractTitle(props, "Name"),
-				PersonPageID:     s.extractFirstRelationID(props, "Person"),
-				Direction:        PayoutDirection(s.extractSelect(props, "Direction")),
-				Amount:           s.extractNumber(props, "Amount"),
-				Currency:         s.extractSelect(props, "Currency"),
-				Status:           s.extractStatus(props, "Status"),
-				ContractorFeesID: s.extractFirstRelationID(props, "Billing"),
-				InvoiceSplitID:   s.extractFirstRelationID(props, "Invoice Split"),
-				RefundRequestID:  s.extractFirstRelationID(props, "Refund"),
+				PageID:          page.ID,
+				Name:            s.extractTitle(props, "Name"),
+				PersonPageID:    s.extractFirstRelationID(props, "Person"),
+				Amount:          s.extractNumber(props, "Amount"),
+				Currency:        s.extractSelect(props, "Currency"),
+				Status:          s.extractStatus(props, "Status"),
+				TaskOrderID:     s.extractFirstRelationID(props, "00 Task Order"),
+				InvoiceSplitID:  s.extractFirstRelationID(props, "02 Invoice Split"),
+				RefundRequestID: s.extractFirstRelationID(props, "01 Refund"),
 			}
 
 			// Determine source type based on which relation is set
 			entry.SourceType = s.determineSourceType(entry)
 
-			s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: parsed entry pageID=%s name=%s sourceType=%s direction=%s amount=%.2f currency=%s",
-				entry.PageID, entry.Name, entry.SourceType, entry.Direction, entry.Amount, entry.Currency))
+			s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: parsed entry pageID=%s name=%s sourceType=%s amount=%.2f currency=%s",
+				entry.PageID, entry.Name, entry.SourceType, entry.Amount, entry.Currency))
 
 			payouts = append(payouts, entry)
 		}
@@ -167,9 +159,9 @@ func (s *ContractorPayoutsService) QueryPendingPayoutsByContractor(ctx context.C
 
 // determineSourceType determines the source type based on which relation is set
 func (s *ContractorPayoutsService) determineSourceType(entry PayoutEntry) PayoutSourceType {
-	if entry.ContractorFeesID != "" {
-		s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: sourceType=ContractorPayroll (ContractorFeesID=%s)", entry.ContractorFeesID))
-		return PayoutSourceTypeContractorPayroll
+	if entry.TaskOrderID != "" {
+		s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: sourceType=ServiceFee (TaskOrderID=%s)", entry.TaskOrderID))
+		return PayoutSourceTypeServiceFee
 	}
 	if entry.InvoiceSplitID != "" {
 		s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: sourceType=Commission (InvoiceSplitID=%s)", entry.InvoiceSplitID))
@@ -229,23 +221,23 @@ func (s *ContractorPayoutsService) extractTitle(props nt.DatabasePageProperties,
 	return result
 }
 
-// CheckPayoutExistsByContractorFee checks if a payout already exists for a given contractor fee
+// CheckPayoutExistsByContractorFee checks if a payout already exists for a given task order (was contractor fee)
 // Returns (exists bool, existingPayoutPageID string, error)
-func (s *ContractorPayoutsService) CheckPayoutExistsByContractorFee(ctx context.Context, contractorFeePageID string) (bool, string, error) {
+func (s *ContractorPayoutsService) CheckPayoutExistsByContractorFee(ctx context.Context, taskOrderPageID string) (bool, string, error) {
 	payoutsDBID := s.cfg.Notion.Databases.ContractorPayouts
 	if payoutsDBID == "" {
 		return false, "", errors.New("contractor payouts database ID not configured")
 	}
 
-	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: checking if payout exists for fee=%s", contractorFeePageID))
+	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: checking if payout exists for taskOrder=%s", taskOrderPageID))
 
-	// Query Payouts by Billing relation
+	// Query Payouts by "00 Task Order" relation (was "Billing")
 	query := &nt.DatabaseQuery{
 		Filter: &nt.DatabaseQueryFilter{
-			Property: "Billing",
+			Property: "00 Task Order",
 			DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
 				Relation: &nt.RelationDatabaseQueryFilter{
-					Contains: contractorFeePageID,
+					Contains: taskOrderPageID,
 				},
 			},
 		},
@@ -254,30 +246,30 @@ func (s *ContractorPayoutsService) CheckPayoutExistsByContractorFee(ctx context.
 
 	resp, err := s.client.QueryDatabase(ctx, payoutsDBID, query)
 	if err != nil {
-		s.logger.Error(err, fmt.Sprintf("[DEBUG] contractor_payouts: failed to check payout existence for fee=%s", contractorFeePageID))
+		s.logger.Error(err, fmt.Sprintf("[DEBUG] contractor_payouts: failed to check payout existence for taskOrder=%s", taskOrderPageID))
 		return false, "", fmt.Errorf("failed to check payout existence: %w", err)
 	}
 
 	if len(resp.Results) > 0 {
 		existingPayoutID := resp.Results[0].ID
-		s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: payout already exists: %s for fee: %s", existingPayoutID, contractorFeePageID))
+		s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: payout already exists: %s for taskOrder: %s", existingPayoutID, taskOrderPageID))
 		return true, existingPayoutID, nil
 	}
 
-	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: no payout exists for fee: %s", contractorFeePageID))
+	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: no payout exists for taskOrder: %s", taskOrderPageID))
 	return false, "", nil
 }
 
 // CreatePayoutInput contains the input data for creating a new payout
 type CreatePayoutInput struct {
-	Name              string  // Title/Name of the payout
-	ContractorPageID  string  // Person relation
-	ContractorFeeID   string  // Billing relation (links to Contractor Fees)
-	Amount            float64 // Payment amount
-	Currency          string  // Currency (e.g., "VND", "USD")
-	Month             string  // YYYY-MM format
-	Date              string  // Date in YYYY-MM-DD format
-	Type              string  // Payout type (e.g., "Contractor Payroll", "Commission", "Refund")
+	Name             string  // Title/Name of the payout
+	ContractorPageID string  // Person relation
+	TaskOrderID      string  // "00 Task Order" relation (was ContractorFeeID/Billing)
+	ServiceRateID    string  // "00 Service Rate" relation
+	Amount           float64 // Payment amount
+	Currency         string  // Currency (e.g., "VND", "USD")
+	Date             string  // Date in YYYY-MM-DD format
+	Description      string  // Optional description/notes
 }
 
 // CreatePayout creates a new payout entry in the Contractor Payouts database
@@ -288,10 +280,11 @@ func (s *ContractorPayoutsService) CreatePayout(ctx context.Context, input Creat
 		return "", errors.New("contractor payouts database ID not configured")
 	}
 
-	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: creating payout name=%s contractor=%s fee=%s amount=%.2f month=%s",
-		input.Name, input.ContractorPageID, input.ContractorFeeID, input.Amount, input.Month))
+	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: creating payout name=%s contractor=%s taskOrder=%s amount=%.2f",
+		input.Name, input.ContractorPageID, input.TaskOrderID, input.Amount))
 
 	// Build properties for the new payout
+	// Note: Type, Month, Direction are now formulas or removed - do not write them
 	props := nt.DatabasePageProperties{
 		// Title: Payout name
 		"Name": nt.DatabasePageProperty{
@@ -303,28 +296,10 @@ func (s *ContractorPayoutsService) CreatePayout(ctx context.Context, input Creat
 		"Amount": nt.DatabasePageProperty{
 			Number: &input.Amount,
 		},
-		// Month (rich text)
-		"Month": nt.DatabasePageProperty{
-			RichText: []nt.RichText{
-				{Text: &nt.Text{Content: input.Month}},
-			},
-		},
 		// Status: Pending
 		"Status": nt.DatabasePageProperty{
 			Status: &nt.SelectOptions{
 				Name: "Pending",
-			},
-		},
-		// Type: from input (default: Contractor Payroll)
-		"Type": nt.DatabasePageProperty{
-			Select: &nt.SelectOptions{
-				Name: input.Type,
-			},
-		},
-		// Direction: Outgoing (you pay)
-		"Direction": nt.DatabasePageProperty{
-			Select: &nt.SelectOptions{
-				Name: string(PayoutDirectionOutgoing),
 			},
 		},
 		// Person relation (Contractor)
@@ -333,12 +308,22 @@ func (s *ContractorPayoutsService) CreatePayout(ctx context.Context, input Creat
 				{ID: input.ContractorPageID},
 			},
 		},
-		// Billing relation (Contractor Fees)
-		"Billing": nt.DatabasePageProperty{
+		// "00 Task Order" relation (was Billing/Contractor Fees)
+		"00 Task Order": nt.DatabasePageProperty{
 			Relation: []nt.Relation{
-				{ID: input.ContractorFeeID},
+				{ID: input.TaskOrderID},
 			},
 		},
+	}
+
+	// Add "00 Service Rate" relation if provided
+	if input.ServiceRateID != "" {
+		props["00 Service Rate"] = nt.DatabasePageProperty{
+			Relation: []nt.Relation{
+				{ID: input.ServiceRateID},
+			},
+		}
+		s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: set 00 Service Rate=%s", input.ServiceRateID))
 	}
 
 	// Add Currency if provided
@@ -366,6 +351,16 @@ func (s *ContractorPayoutsService) CreatePayout(ctx context.Context, input Creat
 		}
 	}
 
+	// Add Description if provided
+	if input.Description != "" {
+		props["Description"] = nt.DatabasePageProperty{
+			RichText: []nt.RichText{
+				{Text: &nt.Text{Content: input.Description}},
+			},
+		}
+		s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: set description=%s", input.Description))
+	}
+
 	params := nt.CreatePageParams{
 		ParentType:             nt.ParentTypeDatabase,
 		ParentID:               payoutsDBID,
@@ -389,10 +384,9 @@ func (s *ContractorPayoutsService) CreatePayout(ctx context.Context, input Creat
 type CreateRefundPayoutInput struct {
 	Name             string  // Title/Name of the payout
 	ContractorPageID string  // Person relation
-	RefundRequestID  string  // Refund Request relation
+	RefundRequestID  string  // "01 Refund" relation
 	Amount           float64 // Payment amount
 	Currency         string  // Currency (e.g., "VND", "USD")
-	Month            string  // YYYY-MM format
 	Date             string  // Date in YYYY-MM-DD format
 }
 
@@ -406,10 +400,10 @@ func (s *ContractorPayoutsService) CheckPayoutExistsByRefundRequest(ctx context.
 
 	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: checking if payout exists for refund request=%s", refundRequestPageID))
 
-	// Query Payouts by Refund relation (actual property name in Notion is "Refund")
+	// Query Payouts by "01 Refund" relation (was "Refund")
 	query := &nt.DatabaseQuery{
 		Filter: &nt.DatabaseQueryFilter{
-			Property: "Refund",
+			Property: "01 Refund",
 			DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
 				Relation: &nt.RelationDatabaseQueryFilter{
 					Contains: refundRequestPageID,
@@ -447,6 +441,7 @@ func (s *ContractorPayoutsService) CreateRefundPayout(ctx context.Context, input
 		input.Name, input.ContractorPageID, input.RefundRequestID, input.Amount))
 
 	// Build properties for the new payout
+	// Note: Type, Month, Direction are now formulas or removed - do not write them
 	props := nt.DatabasePageProperties{
 		// Title: Payout name
 		"Name": nt.DatabasePageProperty{
@@ -458,28 +453,10 @@ func (s *ContractorPayoutsService) CreateRefundPayout(ctx context.Context, input
 		"Amount": nt.DatabasePageProperty{
 			Number: &input.Amount,
 		},
-		// Month (rich text)
-		"Month": nt.DatabasePageProperty{
-			RichText: []nt.RichText{
-				{Text: &nt.Text{Content: input.Month}},
-			},
-		},
 		// Status: Pending
 		"Status": nt.DatabasePageProperty{
 			Status: &nt.SelectOptions{
 				Name: "Pending",
-			},
-		},
-		// Type: Refund
-		"Type": nt.DatabasePageProperty{
-			Select: &nt.SelectOptions{
-				Name: "Refund",
-			},
-		},
-		// Direction: Outgoing
-		"Direction": nt.DatabasePageProperty{
-			Select: &nt.SelectOptions{
-				Name: string(PayoutDirectionOutgoing),
 			},
 		},
 		// Person relation (Contractor)
@@ -488,8 +465,8 @@ func (s *ContractorPayoutsService) CreateRefundPayout(ctx context.Context, input
 				{ID: input.ContractorPageID},
 			},
 		},
-		// Refund relation (actual property name in Notion is "Refund")
-		"Refund": nt.DatabasePageProperty{
+		// "01 Refund" relation (was "Refund")
+		"01 Refund": nt.DatabasePageProperty{
 			Relation: []nt.Relation{
 				{ID: input.RefundRequestID},
 			},
@@ -550,10 +527,10 @@ func (s *ContractorPayoutsService) CheckPayoutExistsByInvoiceSplit(ctx context.C
 
 	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: checking if payout exists for invoice split=%s", invoiceSplitPageID))
 
-	// Query Payouts by Invoice Split relation
+	// Query Payouts by "02 Invoice Split" relation (was "Invoice Split")
 	query := &nt.DatabaseQuery{
 		Filter: &nt.DatabaseQueryFilter{
-			Property: "Invoice Split",
+			Property: "02 Invoice Split",
 			DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
 				Relation: &nt.RelationDatabaseQueryFilter{
 					Contains: invoiceSplitPageID,
@@ -601,6 +578,7 @@ func (s *ContractorPayoutsService) CreateCommissionPayout(ctx context.Context, i
 		input.Name, input.ContractorPageID, input.InvoiceSplitID, input.Amount))
 
 	// Build properties for the new payout
+	// Note: Type is now a formula (auto-calculated from relations), Direction removed from schema
 	props := nt.DatabasePageProperties{
 		// Title: Payout name
 		"Name": nt.DatabasePageProperty{
@@ -618,26 +596,14 @@ func (s *ContractorPayoutsService) CreateCommissionPayout(ctx context.Context, i
 				Name: "Pending",
 			},
 		},
-		// Type: Commission
-		"Type": nt.DatabasePageProperty{
-			Select: &nt.SelectOptions{
-				Name: "Commission",
-			},
-		},
-		// Direction: Outgoing
-		"Direction": nt.DatabasePageProperty{
-			Select: &nt.SelectOptions{
-				Name: string(PayoutDirectionOutgoing),
-			},
-		},
 		// Person relation (Contractor)
 		"Person": nt.DatabasePageProperty{
 			Relation: []nt.Relation{
 				{ID: input.ContractorPageID},
 			},
 		},
-		// Invoice Split relation
-		"Invoice Split": nt.DatabasePageProperty{
+		// 02 Invoice Split relation
+		"02 Invoice Split": nt.DatabasePageProperty{
 			Relation: []nt.Relation{
 				{ID: input.InvoiceSplitID},
 			},
@@ -710,6 +676,7 @@ func (s *ContractorPayoutsService) CreateBonusPayout(ctx context.Context, input 
 		input.Name, input.ContractorPageID, input.InvoiceSplitID, input.Amount))
 
 	// Build properties for the new payout
+	// Note: Type is now a formula (auto-calculated from relations), Direction removed from schema
 	props := nt.DatabasePageProperties{
 		// Title: Payout name
 		"Name": nt.DatabasePageProperty{
@@ -727,26 +694,14 @@ func (s *ContractorPayoutsService) CreateBonusPayout(ctx context.Context, input 
 				Name: "Pending",
 			},
 		},
-		// Type: Bonus
-		"Type": nt.DatabasePageProperty{
-			Select: &nt.SelectOptions{
-				Name: "Bonus",
-			},
-		},
-		// Direction: Outgoing
-		"Direction": nt.DatabasePageProperty{
-			Select: &nt.SelectOptions{
-				Name: string(PayoutDirectionOutgoing),
-			},
-		},
 		// Person relation (Contractor)
 		"Person": nt.DatabasePageProperty{
 			Relation: []nt.Relation{
 				{ID: input.ContractorPageID},
 			},
 		},
-		// Invoice Split relation
-		"Invoice Split": nt.DatabasePageProperty{
+		// 02 Invoice Split relation
+		"02 Invoice Split": nt.DatabasePageProperty{
 			Relation: []nt.Relation{
 				{ID: input.InvoiceSplitID},
 			},
