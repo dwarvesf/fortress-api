@@ -564,6 +564,7 @@ type CreateCommissionPayoutInput struct {
 	Amount           float64 // Payment amount
 	Currency         string  // Currency (e.g., "VND", "USD")
 	Date             string  // Date in YYYY-MM-DD format
+	Description      string  // Description/Notes (from Invoice Split Notes)
 }
 
 // CreateCommissionPayout creates a new commission payout entry in the Contractor Payouts database
@@ -635,6 +636,16 @@ func (s *ContractorPayoutsService) CreateCommissionPayout(ctx context.Context, i
 		}
 	}
 
+	// Add Description if provided (from Invoice Split Notes)
+	if input.Description != "" {
+		props["Description"] = nt.DatabasePageProperty{
+			RichText: []nt.RichText{
+				{Text: &nt.Text{Content: input.Description}},
+			},
+		}
+		s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: set description=%s", input.Description))
+	}
+
 	params := nt.CreatePageParams{
 		ParentType:             nt.ParentTypeDatabase,
 		ParentID:               payoutsDBID,
@@ -650,104 +661,6 @@ func (s *ContractorPayoutsService) CreateCommissionPayout(ctx context.Context, i
 	}
 
 	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: created commission payout pageID=%s", page.ID))
-
-	return page.ID, nil
-}
-
-// CreateBonusPayoutInput contains the input data for creating a bonus payout
-type CreateBonusPayoutInput struct {
-	Name             string  // Title/Name of the payout
-	ContractorPageID string  // Person relation
-	InvoiceSplitID   string  // Invoice Split relation
-	Amount           float64 // Payment amount
-	Currency         string  // Currency (e.g., "VND", "USD")
-	Date             string  // Date in YYYY-MM-DD format
-}
-
-// CreateBonusPayout creates a new bonus payout entry in the Contractor Payouts database
-// Returns the created page ID
-func (s *ContractorPayoutsService) CreateBonusPayout(ctx context.Context, input CreateBonusPayoutInput) (string, error) {
-	payoutsDBID := s.cfg.Notion.Databases.ContractorPayouts
-	if payoutsDBID == "" {
-		return "", errors.New("contractor payouts database ID not configured")
-	}
-
-	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: creating bonus payout name=%s contractor=%s invoiceSplit=%s amount=%.2f",
-		input.Name, input.ContractorPageID, input.InvoiceSplitID, input.Amount))
-
-	// Build properties for the new payout
-	// Note: Type is now a formula (auto-calculated from relations), Direction removed from schema
-	props := nt.DatabasePageProperties{
-		// Title: Payout name
-		"Name": nt.DatabasePageProperty{
-			Title: []nt.RichText{
-				{Text: &nt.Text{Content: input.Name}},
-			},
-		},
-		// Amount
-		"Amount": nt.DatabasePageProperty{
-			Number: &input.Amount,
-		},
-		// Status: Pending
-		"Status": nt.DatabasePageProperty{
-			Status: &nt.SelectOptions{
-				Name: "Pending",
-			},
-		},
-		// Person relation (Contractor)
-		"Person": nt.DatabasePageProperty{
-			Relation: []nt.Relation{
-				{ID: input.ContractorPageID},
-			},
-		},
-		// 02 Invoice Split relation
-		"02 Invoice Split": nt.DatabasePageProperty{
-			Relation: []nt.Relation{
-				{ID: input.InvoiceSplitID},
-			},
-		},
-	}
-
-	// Add Currency if provided
-	if input.Currency != "" {
-		props["Currency"] = nt.DatabasePageProperty{
-			Select: &nt.SelectOptions{
-				Name: input.Currency,
-			},
-		}
-		s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: set bonus currency=%s", input.Currency))
-	}
-
-	// Add Date if provided
-	if input.Date != "" {
-		dateObj, err := nt.ParseDateTime(input.Date)
-		if err == nil {
-			props["Date"] = nt.DatabasePageProperty{
-				Date: &nt.Date{
-					Start: dateObj,
-				},
-			}
-			s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: set bonus date=%s", input.Date))
-		} else {
-			s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: failed to parse bonus date=%s: %v", input.Date, err))
-		}
-	}
-
-	params := nt.CreatePageParams{
-		ParentType:             nt.ParentTypeDatabase,
-		ParentID:               payoutsDBID,
-		DatabasePageProperties: &props,
-	}
-
-	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: creating bonus payout page in database=%s", payoutsDBID))
-
-	page, err := s.client.CreatePage(ctx, params)
-	if err != nil {
-		s.logger.Error(err, fmt.Sprintf("[DEBUG] contractor_payouts: failed to create bonus payout: %v", err))
-		return "", fmt.Errorf("failed to create bonus payout: %w", err)
-	}
-
-	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: created bonus payout pageID=%s", page.ID))
 
 	return page.ID, nil
 }

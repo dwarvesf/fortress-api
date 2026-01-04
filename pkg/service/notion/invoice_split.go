@@ -37,8 +37,10 @@ type PendingCommissionSplit struct {
 	Amount       float64
 	Currency     string
 	Role         string
+	Type         string // Commission, Bonus, Fee
 	PersonPageID string // From Person relation
 	Month        string // Date in YYYY-MM-DD format from Month property
+	Notes        string // Notes field for additional context (used as Description in payout)
 }
 
 // CreateCommissionSplitInput contains the data needed to create a commission split
@@ -238,85 +240,6 @@ func (s *InvoiceSplitService) CreateCommissionSplit(ctx context.Context, input C
 	}, nil
 }
 
-// QueryPendingCommissionSplits queries invoice splits with Status=Pending and Type=Commission
-func (s *InvoiceSplitService) QueryPendingCommissionSplits(ctx context.Context) ([]PendingCommissionSplit, error) {
-	s.logger.Debug("[DEBUG] invoice_split: querying pending commission splits")
-
-	// Build filter: Status=Pending AND Type=Commission
-	query := &nt.DatabaseQuery{
-		Filter: &nt.DatabaseQueryFilter{
-			And: []nt.DatabaseQueryFilter{
-				{
-					Property: "Status",
-					DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
-						Select: &nt.SelectDatabaseQueryFilter{
-							Equals: "Pending",
-						},
-					},
-				},
-				{
-					Property: "Type",
-					DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
-						Select: &nt.SelectDatabaseQueryFilter{
-							Equals: "Commission",
-						},
-					},
-				},
-			},
-		},
-		PageSize: 100,
-	}
-
-	var splits []PendingCommissionSplit
-
-	// Query with pagination
-	for {
-		s.logger.Debug(fmt.Sprintf("[DEBUG] invoice_split: executing query on database=%s", InvoiceSplitsDBID))
-
-		resp, err := s.client.QueryDatabase(ctx, InvoiceSplitsDBID, query)
-		if err != nil {
-			s.logger.Error(err, fmt.Sprintf("[DEBUG] invoice_split: failed to query database: %v", err))
-			return nil, fmt.Errorf("failed to query invoice splits database: %w", err)
-		}
-
-		s.logger.Debug(fmt.Sprintf("[DEBUG] invoice_split: found %d splits in this page", len(resp.Results)))
-
-		for _, page := range resp.Results {
-			props, ok := page.Properties.(nt.DatabasePageProperties)
-			if !ok {
-				s.logger.Debug("[DEBUG] invoice_split: failed to cast page properties")
-				continue
-			}
-
-			split := PendingCommissionSplit{
-				PageID:       page.ID,
-				Name:         s.extractTitle(props, "Name"),
-				Amount:       s.extractNumber(props, "Amount"),
-				Currency:     s.extractSelect(props, "Currency"),
-				Role:         s.extractSelect(props, "Role"),
-				PersonPageID: s.extractFirstRelationID(props, "Person"),
-				Month:        s.extractDate(props, "Month"),
-			}
-
-			s.logger.Debug(fmt.Sprintf("[DEBUG] invoice_split: parsed split pageID=%s name=%s amount=%.2f currency=%s role=%s personID=%s month=%s",
-				split.PageID, split.Name, split.Amount, split.Currency, split.Role, split.PersonPageID, split.Month))
-
-			splits = append(splits, split)
-		}
-
-		if !resp.HasMore || resp.NextCursor == nil {
-			break
-		}
-
-		query.StartCursor = *resp.NextCursor
-		s.logger.Debug(fmt.Sprintf("[DEBUG] invoice_split: fetching next page with cursor=%s", *resp.NextCursor))
-	}
-
-	s.logger.Debug(fmt.Sprintf("[DEBUG] invoice_split: total pending commission splits found=%d", len(splits)))
-
-	return splits, nil
-}
-
 // extractTitle extracts title property value
 func (s *InvoiceSplitService) extractTitle(props nt.DatabasePageProperties, propName string) string {
 	prop, ok := props[propName]
@@ -355,11 +278,27 @@ func (s *InvoiceSplitService) extractDate(props nt.DatabasePageProperties, propN
 	return dateStr
 }
 
-// QueryPendingBonusSplits queries invoice splits with Status=Pending and Type=Bonus
-func (s *InvoiceSplitService) QueryPendingBonusSplits(ctx context.Context) ([]PendingCommissionSplit, error) {
-	s.logger.Debug("[DEBUG] invoice_split: querying pending bonus splits")
+// extractFormula extracts formula property value (string result)
+func (s *InvoiceSplitService) extractFormula(props nt.DatabasePageProperties, propName string) string {
+	prop, ok := props[propName]
+	if !ok || prop.Formula == nil {
+		s.logger.Debug(fmt.Sprintf("[DEBUG] invoice_split: formula property %s not found or nil", propName))
+		return ""
+	}
+	// Formula can return string, number, boolean, or date
+	if prop.Formula.String != nil {
+		s.logger.Debug(fmt.Sprintf("[DEBUG] invoice_split: formula %s string value=%s", propName, *prop.Formula.String))
+		return *prop.Formula.String
+	}
+	s.logger.Debug(fmt.Sprintf("[DEBUG] invoice_split: formula %s has no string value", propName))
+	return ""
+}
 
-	// Build filter: Status=Pending AND Type=Bonus
+// QueryPendingInvoiceSplits queries invoice splits with Status=Pending and Type in (Commission, Bonus, Fee)
+func (s *InvoiceSplitService) QueryPendingInvoiceSplits(ctx context.Context) ([]PendingCommissionSplit, error) {
+	s.logger.Debug("[DEBUG] invoice_split: querying pending invoice splits (Commission, Bonus, Fee)")
+
+	// Build filter: Status=Pending AND (Type=Commission OR Type=Bonus OR Type=Fee)
 	query := &nt.DatabaseQuery{
 		Filter: &nt.DatabaseQueryFilter{
 			And: []nt.DatabaseQueryFilter{
@@ -372,10 +311,30 @@ func (s *InvoiceSplitService) QueryPendingBonusSplits(ctx context.Context) ([]Pe
 					},
 				},
 				{
-					Property: "Type",
-					DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
-						Select: &nt.SelectDatabaseQueryFilter{
-							Equals: "Bonus",
+					Or: []nt.DatabaseQueryFilter{
+						{
+							Property: "Type",
+							DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+								Select: &nt.SelectDatabaseQueryFilter{
+									Equals: "Commission",
+								},
+							},
+						},
+						{
+							Property: "Type",
+							DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+								Select: &nt.SelectDatabaseQueryFilter{
+									Equals: "Bonus",
+								},
+							},
+						},
+						{
+							Property: "Type",
+							DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+								Select: &nt.SelectDatabaseQueryFilter{
+									Equals: "Fee",
+								},
+							},
 						},
 					},
 				},
@@ -388,20 +347,20 @@ func (s *InvoiceSplitService) QueryPendingBonusSplits(ctx context.Context) ([]Pe
 
 	// Query with pagination
 	for {
-		s.logger.Debug(fmt.Sprintf("[DEBUG] invoice_split: executing bonus query on database=%s", InvoiceSplitsDBID))
+		s.logger.Debug(fmt.Sprintf("[DEBUG] invoice_split: executing invoice split query on database=%s", InvoiceSplitsDBID))
 
 		resp, err := s.client.QueryDatabase(ctx, InvoiceSplitsDBID, query)
 		if err != nil {
-			s.logger.Error(err, fmt.Sprintf("[DEBUG] invoice_split: failed to query database for bonus: %v", err))
-			return nil, fmt.Errorf("failed to query invoice splits database for bonus: %w", err)
+			s.logger.Error(err, fmt.Sprintf("[DEBUG] invoice_split: failed to query database for invoice splits: %v", err))
+			return nil, fmt.Errorf("failed to query invoice splits database: %w", err)
 		}
 
-		s.logger.Debug(fmt.Sprintf("[DEBUG] invoice_split: found %d bonus splits in this page", len(resp.Results)))
+		s.logger.Debug(fmt.Sprintf("[DEBUG] invoice_split: found %d invoice splits in this page", len(resp.Results)))
 
 		for _, page := range resp.Results {
 			props, ok := page.Properties.(nt.DatabasePageProperties)
 			if !ok {
-				s.logger.Debug("[DEBUG] invoice_split: failed to cast page properties for bonus split")
+				s.logger.Debug("[DEBUG] invoice_split: failed to cast page properties for invoice split")
 				continue
 			}
 
@@ -411,12 +370,14 @@ func (s *InvoiceSplitService) QueryPendingBonusSplits(ctx context.Context) ([]Pe
 				Amount:       s.extractNumber(props, "Amount"),
 				Currency:     s.extractSelect(props, "Currency"),
 				Role:         s.extractSelect(props, "Role"),
+				Type:         s.extractSelect(props, "Type"),
 				PersonPageID: s.extractFirstRelationID(props, "Person"),
 				Month:        s.extractDate(props, "Month"),
+				Notes:        s.extractFormula(props, "Description"),
 			}
 
-			s.logger.Debug(fmt.Sprintf("[DEBUG] invoice_split: parsed bonus split pageID=%s name=%s amount=%.2f currency=%s role=%s personID=%s month=%s",
-				split.PageID, split.Name, split.Amount, split.Currency, split.Role, split.PersonPageID, split.Month))
+			s.logger.Debug(fmt.Sprintf("[DEBUG] invoice_split: parsed invoice split pageID=%s name=%s type=%s amount=%.2f currency=%s role=%s personID=%s month=%s notes=%s",
+				split.PageID, split.Name, split.Type, split.Amount, split.Currency, split.Role, split.PersonPageID, split.Month, split.Notes))
 
 			splits = append(splits, split)
 		}
@@ -426,10 +387,10 @@ func (s *InvoiceSplitService) QueryPendingBonusSplits(ctx context.Context) ([]Pe
 		}
 
 		query.StartCursor = *resp.NextCursor
-		s.logger.Debug(fmt.Sprintf("[DEBUG] invoice_split: fetching next page of bonus splits with cursor=%s", *resp.NextCursor))
+		s.logger.Debug(fmt.Sprintf("[DEBUG] invoice_split: fetching next page of invoice splits with cursor=%s", *resp.NextCursor))
 	}
 
-	s.logger.Debug(fmt.Sprintf("[DEBUG] invoice_split: total pending bonus splits found=%d", len(splits)))
+	s.logger.Debug(fmt.Sprintf("[DEBUG] invoice_split: total pending invoice splits found=%d", len(splits)))
 
 	return splits, nil
 }

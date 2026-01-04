@@ -28,8 +28,7 @@ func formatMonthYear(month string) string {
 var (
 	PayoutType = map[string]string{
 		"contractor_payroll": "Service Fee",
-		"bonus":              "Bonus",
-		"commission":         "Commission",
+		"invoice_split":      "Invoice Split",
 		"refund":             "Refund",
 	}
 )
@@ -85,10 +84,8 @@ func (h *handler) CreateContractorPayouts(c *gin.Context) {
 	switch payoutTypeKey {
 	case "contractor_payroll":
 		h.processContractorPayrollPayouts(c, l, payoutType, contractorFilter, payDayFilter)
-	case "bonus":
-		h.processBonusPayouts(c, l, payoutType)
-	case "commission":
-		h.processCommissionPayouts(c, l, payoutType)
+	case "invoice_split":
+		h.processInvoiceSplitPayouts(c, l)
 	case "refund":
 		h.processRefundPayouts(c, l, payoutType)
 	default:
@@ -521,9 +518,9 @@ func (h *handler) processRefundPayouts(c *gin.Context, l logger.Logger, payoutTy
 	}, nil, nil, nil, "ok"))
 }
 
-// processCommissionPayouts processes pending commission invoice splits
+// processInvoiceSplitPayouts processes pending invoice splits (Commission, Bonus, Fee)
 // and creates payout entries of type "Commission"
-func (h *handler) processCommissionPayouts(c *gin.Context, l logger.Logger, payoutType string) {
+func (h *handler) processInvoiceSplitPayouts(c *gin.Context, l logger.Logger) {
 	ctx := c.Request.Context()
 
 	// Get services
@@ -543,26 +540,26 @@ func (h *handler) processCommissionPayouts(c *gin.Context, l logger.Logger, payo
 		return
 	}
 
-	// Query pending commission splits
-	l.Debug("querying invoice splits with Status=Pending and Type=Commission")
-	pendingSplits, err := invoiceSplitService.QueryPendingCommissionSplits(ctx)
+	// Query pending invoice splits (Commission, Bonus, Fee)
+	l.Debug("querying invoice splits with Status=Pending and Type in (Commission, Bonus, Fee)")
+	pendingSplits, err := invoiceSplitService.QueryPendingInvoiceSplits(ctx)
 	if err != nil {
-		l.Error(err, "failed to query pending commission splits")
+		l.Error(err, "failed to query pending invoice splits")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
 	}
 
-	l.Info(fmt.Sprintf("found %d pending commission splits", len(pendingSplits)))
+	l.Info(fmt.Sprintf("found %d pending invoice splits", len(pendingSplits)))
 
 	if len(pendingSplits) == 0 {
-		l.Info("no pending commission splits found, returning success with zero counts")
+		l.Info("no pending invoice splits found, returning success with zero counts")
 		c.JSON(http.StatusOK, view.CreateResponse[any](map[string]any{
-			"payouts_created":   0,
-			"splits_processed":  0,
-			"splits_skipped":    0,
-			"errors":            0,
-			"details":           []any{},
-			"type":              payoutType,
+			"payouts_created":  0,
+			"splits_processed": 0,
+			"splits_skipped":   0,
+			"errors":           0,
+			"details":          []any{},
+			"type":             "Commission",
 		}, nil, nil, nil, "ok"))
 		return
 	}
@@ -576,11 +573,12 @@ func (h *handler) processCommissionPayouts(c *gin.Context, l logger.Logger, payo
 	)
 
 	for _, split := range pendingSplits {
-		l.Debug(fmt.Sprintf("processing split: %s name: %s person: %s", split.PageID, split.Name, split.PersonPageID))
+		l.Debug(fmt.Sprintf("processing invoice split: %s name: %s type: %s person: %s", split.PageID, split.Name, split.Type, split.PersonPageID))
 
 		detail := map[string]any{
 			"split_page_id":  split.PageID,
 			"split_name":     split.Name,
+			"split_type":     split.Type,
 			"person_id":      split.PersonPageID,
 			"amount":         split.Amount,
 			"currency":       split.Currency,
@@ -592,7 +590,7 @@ func (h *handler) processCommissionPayouts(c *gin.Context, l logger.Logger, payo
 
 		// Validate person
 		if split.PersonPageID == "" {
-			l.Warn(fmt.Sprintf("skipping split %s: no person found", split.PageID))
+			l.Warn(fmt.Sprintf("skipping invoice split %s: no person found", split.PageID))
 			detail["status"] = "skipped"
 			detail["error_reason"] = "person not found in relation"
 			splitsSkipped++
@@ -601,10 +599,10 @@ func (h *handler) processCommissionPayouts(c *gin.Context, l logger.Logger, payo
 		}
 
 		// Check if payout exists (idempotency)
-		l.Debug(fmt.Sprintf("checking if payout exists for split: %s", split.PageID))
+		l.Debug(fmt.Sprintf("checking if payout exists for invoice split: %s", split.PageID))
 		exists, existingPayoutID, err := contractorPayoutsService.CheckPayoutExistsByInvoiceSplit(ctx, split.PageID)
 		if err != nil {
-			l.Error(err, fmt.Sprintf("failed to check payout existence for split %s", split.PageID))
+			l.Error(err, fmt.Sprintf("failed to check payout existence for invoice split %s", split.PageID))
 			detail["status"] = "error"
 			detail["error_reason"] = "failed to check payout existence"
 			errors++
@@ -613,7 +611,7 @@ func (h *handler) processCommissionPayouts(c *gin.Context, l logger.Logger, payo
 		}
 
 		if exists {
-			l.Debug(fmt.Sprintf("payout already exists for split %s: %s", split.PageID, existingPayoutID))
+			l.Debug(fmt.Sprintf("payout already exists for invoice split %s: %s", split.PageID, existingPayoutID))
 			detail["status"] = "skipped"
 			detail["error_reason"] = "payout already exists"
 			detail["payout_page_id"] = existingPayoutID
@@ -623,7 +621,7 @@ func (h *handler) processCommissionPayouts(c *gin.Context, l logger.Logger, payo
 		}
 
 		// Create payout
-		l.Debug(fmt.Sprintf("creating payout for split: %s name: %s", split.PageID, split.Name))
+		l.Debug(fmt.Sprintf("creating payout for invoice split: %s name: %s notes: %s", split.PageID, split.Name, split.Notes))
 
 		payoutInput := notionsvc.CreateCommissionPayoutInput{
 			Name:             split.Name,
@@ -632,11 +630,12 @@ func (h *handler) processCommissionPayouts(c *gin.Context, l logger.Logger, payo
 			Amount:           split.Amount,
 			Currency:         split.Currency,
 			Date:             split.Month,
+			Description:      split.Notes,
 		}
 
 		payoutPageID, err := contractorPayoutsService.CreateCommissionPayout(ctx, payoutInput)
 		if err != nil {
-			l.Error(err, fmt.Sprintf("failed to create payout for split %s", split.PageID))
+			l.Error(err, fmt.Sprintf("failed to create payout for invoice split %s", split.PageID))
 			detail["status"] = "error"
 			detail["error_reason"] = "failed to create payout"
 			errors++
@@ -644,7 +643,7 @@ func (h *handler) processCommissionPayouts(c *gin.Context, l logger.Logger, payo
 			continue
 		}
 
-		l.Info(fmt.Sprintf("created payout: %s for split: %s", payoutPageID, split.PageID))
+		l.Info(fmt.Sprintf("created payout: %s for invoice split: %s", payoutPageID, split.PageID))
 
 		detail["status"] = "created"
 		detail["payout_page_id"] = payoutPageID
@@ -653,7 +652,7 @@ func (h *handler) processCommissionPayouts(c *gin.Context, l logger.Logger, payo
 	}
 
 	// Return response
-	l.Info(fmt.Sprintf("processing complete: payouts_created=%d skipped=%d errors=%d", payoutsCreated, splitsSkipped, errors))
+	l.Info(fmt.Sprintf("invoice split processing complete: payouts_created=%d skipped=%d errors=%d", payoutsCreated, splitsSkipped, errors))
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](map[string]any{
 		"payouts_created":  payoutsCreated,
@@ -661,150 +660,6 @@ func (h *handler) processCommissionPayouts(c *gin.Context, l logger.Logger, payo
 		"splits_skipped":   splitsSkipped,
 		"errors":           errors,
 		"details":          details,
-		"type":             payoutType,
-	}, nil, nil, nil, "ok"))
-}
-
-// processBonusPayouts processes pending bonus invoice splits
-// and creates payout entries of type "Bonus"
-func (h *handler) processBonusPayouts(c *gin.Context, l logger.Logger, payoutType string) {
-	ctx := c.Request.Context()
-
-	// Get services
-	invoiceSplitService := h.service.Notion.InvoiceSplit
-	if invoiceSplitService == nil {
-		err := fmt.Errorf("invoice split service not configured")
-		l.Error(err, "invoice split service is nil")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
-		return
-	}
-
-	contractorPayoutsService := h.service.Notion.ContractorPayouts
-	if contractorPayoutsService == nil {
-		err := fmt.Errorf("contractor payouts service not configured")
-		l.Error(err, "contractor payouts service is nil")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
-		return
-	}
-
-	// Query pending bonus splits
-	l.Debug("querying invoice splits with Status=Pending and Type=Bonus")
-	pendingSplits, err := invoiceSplitService.QueryPendingBonusSplits(ctx)
-	if err != nil {
-		l.Error(err, "failed to query pending bonus splits")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
-		return
-	}
-
-	l.Info(fmt.Sprintf("found %d pending bonus splits", len(pendingSplits)))
-
-	if len(pendingSplits) == 0 {
-		l.Info("no pending bonus splits found, returning success with zero counts")
-		c.JSON(http.StatusOK, view.CreateResponse[any](map[string]any{
-			"payouts_created":  0,
-			"splits_processed": 0,
-			"splits_skipped":   0,
-			"errors":           0,
-			"details":          []any{},
-			"type":             payoutType,
-		}, nil, nil, nil, "ok"))
-		return
-	}
-
-	// Process each split
-	var (
-		payoutsCreated = 0
-		splitsSkipped  = 0
-		errors         = 0
-		details        = []map[string]any{}
-	)
-
-	for _, split := range pendingSplits {
-		l.Debug(fmt.Sprintf("processing bonus split: %s name: %s person: %s", split.PageID, split.Name, split.PersonPageID))
-
-		detail := map[string]any{
-			"split_page_id":  split.PageID,
-			"split_name":     split.Name,
-			"person_id":      split.PersonPageID,
-			"amount":         split.Amount,
-			"currency":       split.Currency,
-			"role":           split.Role,
-			"payout_page_id": nil,
-			"status":         "",
-			"error_reason":   nil,
-		}
-
-		// Validate person
-		if split.PersonPageID == "" {
-			l.Warn(fmt.Sprintf("skipping bonus split %s: no person found", split.PageID))
-			detail["status"] = "skipped"
-			detail["error_reason"] = "person not found in relation"
-			splitsSkipped++
-			details = append(details, detail)
-			continue
-		}
-
-		// Check if payout exists (idempotency)
-		l.Debug(fmt.Sprintf("checking if payout exists for bonus split: %s", split.PageID))
-		exists, existingPayoutID, err := contractorPayoutsService.CheckPayoutExistsByInvoiceSplit(ctx, split.PageID)
-		if err != nil {
-			l.Error(err, fmt.Sprintf("failed to check payout existence for bonus split %s", split.PageID))
-			detail["status"] = "error"
-			detail["error_reason"] = "failed to check payout existence"
-			errors++
-			details = append(details, detail)
-			continue
-		}
-
-		if exists {
-			l.Debug(fmt.Sprintf("payout already exists for bonus split %s: %s", split.PageID, existingPayoutID))
-			detail["status"] = "skipped"
-			detail["error_reason"] = "payout already exists"
-			detail["payout_page_id"] = existingPayoutID
-			splitsSkipped++
-			details = append(details, detail)
-			continue
-		}
-
-		// Create payout
-		l.Debug(fmt.Sprintf("creating payout for bonus split: %s name: %s", split.PageID, split.Name))
-
-		payoutInput := notionsvc.CreateBonusPayoutInput{
-			Name:             split.Name,
-			ContractorPageID: split.PersonPageID,
-			InvoiceSplitID:   split.PageID,
-			Amount:           split.Amount,
-			Currency:         split.Currency,
-			Date:             split.Month,
-		}
-
-		payoutPageID, err := contractorPayoutsService.CreateBonusPayout(ctx, payoutInput)
-		if err != nil {
-			l.Error(err, fmt.Sprintf("failed to create payout for bonus split %s", split.PageID))
-			detail["status"] = "error"
-			detail["error_reason"] = "failed to create payout"
-			errors++
-			details = append(details, detail)
-			continue
-		}
-
-		l.Info(fmt.Sprintf("created bonus payout: %s for split: %s", payoutPageID, split.PageID))
-
-		detail["status"] = "created"
-		detail["payout_page_id"] = payoutPageID
-		payoutsCreated++
-		details = append(details, detail)
-	}
-
-	// Return response
-	l.Info(fmt.Sprintf("bonus processing complete: payouts_created=%d skipped=%d errors=%d", payoutsCreated, splitsSkipped, errors))
-
-	c.JSON(http.StatusOK, view.CreateResponse[any](map[string]any{
-		"payouts_created":  payoutsCreated,
-		"splits_processed": len(pendingSplits),
-		"splits_skipped":   splitsSkipped,
-		"errors":           errors,
-		"details":          details,
-		"type":             payoutType,
+		"type":             "Commission",
 	}, nil, nil, nil, "ok"))
 }
