@@ -379,13 +379,14 @@ func (s *TaskOrderLogService) CheckOrderExistsByContractor(ctx context.Context, 
 }
 
 // CreateOrder creates an Order entry in Task Order Log
-func (s *TaskOrderLogService) CreateOrder(ctx context.Context, deploymentID, month string) (string, error) {
+// Note: Deployment field is not set for Order type records (ADR-002)
+func (s *TaskOrderLogService) CreateOrder(ctx context.Context, month string) (string, error) {
 	taskOrderLogDBID := s.cfg.Notion.Databases.TaskOrderLog
 	if taskOrderLogDBID == "" {
 		return "", errors.New("task order log database ID not configured")
 	}
 
-	s.logger.Debug(fmt.Sprintf("creating order: deployment=%s month=%s", deploymentID, month))
+	s.logger.Debug(fmt.Sprintf("creating order: month=%s", month))
 
 	// Calculate date from month (last day of month)
 	targetDate := time.Now()
@@ -423,16 +424,6 @@ func (s *TaskOrderLogService) CreateOrder(ctx context.Context, deploymentID, mon
 		},
 	}
 
-	// Add Deployment if provided
-	if deploymentID != "" {
-		(*properties)["Deployment"] = nt.DatabasePageProperty{
-			Type: nt.DBPropTypeRelation,
-			Relation: []nt.Relation{
-				{ID: deploymentID},
-			},
-		}
-	}
-
 	params := nt.CreatePageParams{
 		ParentType:             nt.ParentTypeDatabase,
 		ParentID:               taskOrderLogDBID,
@@ -441,7 +432,7 @@ func (s *TaskOrderLogService) CreateOrder(ctx context.Context, deploymentID, mon
 
 	page, err := s.client.CreatePage(ctx, params)
 	if err != nil {
-		s.logger.Error(err, fmt.Sprintf("failed to create order: deployment=%s month=%s", deploymentID, month))
+		s.logger.Error(err, fmt.Sprintf("failed to create order: month=%s", month))
 		return "", fmt.Errorf("failed to create order: %w", err)
 	}
 
@@ -606,6 +597,109 @@ func (s *TaskOrderLogService) CreateTimesheetLineItem(ctx context.Context, order
 	return lineItemID, nil
 }
 
+// UpdateTimesheetLineItem updates existing line item with new data and resets status to "Pending Approval"
+func (s *TaskOrderLogService) UpdateTimesheetLineItem(ctx context.Context, lineItemID, orderID string, hours float64, proofOfWorks string, timesheetIDs []string) error {
+	s.logger.Debug(fmt.Sprintf("updating line item: lineItemID=%s orderID=%s hours=%.2f timesheets=%d", lineItemID, orderID, hours, len(timesheetIDs)))
+
+	// Build timesheet relations
+	timesheetRelations := make([]nt.Relation, len(timesheetIDs))
+	for i, id := range timesheetIDs {
+		timesheetRelations[i] = nt.Relation{ID: id}
+	}
+
+	// Update line item properties
+	updateParams := nt.UpdatePageParams{
+		DatabasePageProperties: nt.DatabasePageProperties{
+			"Line Item Hours": nt.DatabasePageProperty{
+				Type:   nt.DBPropTypeNumber,
+				Number: &hours,
+			},
+			"Proof of Works": nt.DatabasePageProperty{
+				Type: nt.DBPropTypeRichText,
+				RichText: []nt.RichText{
+					{
+						Type: nt.RichTextTypeText,
+						Text: &nt.Text{
+							Content: proofOfWorks,
+						},
+					},
+				},
+			},
+			"Timesheet": nt.DatabasePageProperty{
+				Type:     nt.DBPropTypeRelation,
+				Relation: timesheetRelations,
+			},
+			"Status": nt.DatabasePageProperty{
+				Type: nt.DBPropTypeSelect,
+				Select: &nt.SelectOptions{
+					Name: "Pending Approval",
+				},
+			},
+		},
+	}
+
+	_, err := s.client.UpdatePage(ctx, lineItemID, updateParams)
+	if err != nil {
+		s.logger.Error(err, fmt.Sprintf("failed to update line item: %s", lineItemID))
+		return fmt.Errorf("failed to update line item: %w", err)
+	}
+
+	s.logger.Debug(fmt.Sprintf("successfully updated line item: %s", lineItemID))
+
+	// Also update parent Order status to "Pending Approval"
+	s.logger.Debug(fmt.Sprintf("updating parent order status: orderID=%s", orderID))
+	err = s.UpdateOrderStatus(ctx, orderID, "Pending Approval")
+	if err != nil {
+		s.logger.Error(err, fmt.Sprintf("failed to update order status after line item update: orderID=%s", orderID))
+		// Don't fail the whole operation, just log the error
+	}
+
+	return nil
+}
+
+// GetLineItemDetails fetches existing line item data for comparison during upsert
+func (s *TaskOrderLogService) GetLineItemDetails(ctx context.Context, lineItemID string) (*LineItemDetails, error) {
+	s.logger.Debug(fmt.Sprintf("fetching line item details: lineItemID=%s", lineItemID))
+
+	page, err := s.client.FindPageByID(ctx, lineItemID)
+	if err != nil {
+		s.logger.Error(err, fmt.Sprintf("failed to fetch line item page: %s", lineItemID))
+		return nil, fmt.Errorf("failed to fetch line item page: %w", err)
+	}
+
+	props, ok := page.Properties.(nt.DatabasePageProperties)
+	if !ok {
+		return nil, fmt.Errorf("failed to cast line item page properties: %s", lineItemID)
+	}
+
+	details := &LineItemDetails{
+		PageID: lineItemID,
+	}
+
+	// Extract Line Item Hours (number property)
+	if prop, ok := props["Line Item Hours"]; ok && prop.Number != nil {
+		details.Hours = *prop.Number
+		s.logger.Debug(fmt.Sprintf("extracted hours: %.2f", details.Hours))
+	}
+
+	// Extract Timesheet relation IDs
+	if prop, ok := props["Timesheet"]; ok && len(prop.Relation) > 0 {
+		for _, rel := range prop.Relation {
+			details.TimesheetIDs = append(details.TimesheetIDs, rel.ID)
+		}
+		s.logger.Debug(fmt.Sprintf("extracted %d timesheet IDs", len(details.TimesheetIDs)))
+	}
+
+	// Extract Status (select property)
+	if prop, ok := props["Status"]; ok && prop.Select != nil {
+		details.Status = prop.Select.Name
+		s.logger.Debug(fmt.Sprintf("extracted status: %s", details.Status))
+	}
+
+	s.logger.Debug(fmt.Sprintf("line item details: hours=%.2f timesheets=%d status=%s", details.Hours, len(details.TimesheetIDs), details.Status))
+	return details, nil
+}
+
 // addSubItemToOrder adds a line item to the Order's Sub-item relation
 func (s *TaskOrderLogService) addSubItemToOrder(ctx context.Context, orderID, lineItemID string) error {
 	// Get current Order page to read existing Sub-item relations
@@ -692,6 +786,14 @@ func (s *TaskOrderLogService) extractRichText(props nt.DatabasePageProperties, p
 		return strings.Join(parts, "")
 	}
 	return ""
+}
+
+// LineItemDetails holds line item data for comparison during upsert
+type LineItemDetails struct {
+	PageID       string
+	Hours        float64
+	TimesheetIDs []string
+	Status       string
 }
 
 // OrderSubitem represents a line item (timesheet) in Task Order Log

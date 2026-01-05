@@ -106,10 +106,11 @@ func (h *handler) SyncTaskOrderLogs(c *gin.Context) {
 
 	// Step 3: Process each contractor
 	var (
-		ordersCreated      = 0
-		lineItemsCreated   = 0
+		ordersCreated        = 0
+		lineItemsCreated     = 0
+		lineItemsUpdated     = 0
 		contractorsProcessed = 0
-		details            = []map[string]any{}
+		details              = []map[string]any{}
 	)
 
 	for contractorID, contractorTimesheets := range contractorGroups {
@@ -124,25 +125,7 @@ func (h *handler) SyncTaskOrderLogs(c *gin.Context) {
 		projectGroups := groupTimesheetsByProject(contractorTimesheets)
 		l.Debug(fmt.Sprintf("contractor %s has %d projects", contractorID, len(projectGroups)))
 
-		// Step 3b: Get first project's deployment for Order
-		var firstDeploymentID string
-		for projectID := range projectGroups {
-			deploymentID, err := taskOrderLogService.GetDeploymentByContractorAndProject(ctx, contractorID, projectID)
-			if err != nil {
-				l.Error(err, fmt.Sprintf("skipping project %s for contractor %s: no deployment found", projectID, contractorID))
-				continue
-			}
-			firstDeploymentID = deploymentID
-			l.Debug(fmt.Sprintf("using deployment %s from first project %s for order", firstDeploymentID, projectID))
-			break
-		}
-
-		if firstDeploymentID == "" {
-			l.Error(fmt.Errorf("no deployment found"), fmt.Sprintf("skipping contractor %s: no deployment found for any project", contractorID))
-			continue
-		}
-
-		// Step 3c: Check if order already exists for contractor+month
+		// Step 3b: Check if order already exists for contractor+month
 		orderExists, orderID, err := taskOrderLogService.CheckOrderExistsByContractor(ctx, contractorID, month)
 		if err != nil {
 			l.Error(err, fmt.Sprintf("failed to check order existence for contractor: %s", contractorID))
@@ -150,9 +133,9 @@ func (h *handler) SyncTaskOrderLogs(c *gin.Context) {
 		}
 
 		if !orderExists {
-			// Create new Order entry with first deployment
-			l.Debug(fmt.Sprintf("creating new order for contractor: %s with deployment: %s", contractorID, firstDeploymentID))
-			orderID, err = taskOrderLogService.CreateOrder(ctx, firstDeploymentID, month)
+			// Create new Order entry (without Deployment - ADR-002)
+			l.Debug(fmt.Sprintf("creating new order for contractor: %s", contractorID))
+			orderID, err = taskOrderLogService.CreateOrder(ctx, month)
 			if err != nil {
 				l.Error(err, fmt.Sprintf("failed to create order for contractor: %s", contractorID))
 				continue
@@ -245,7 +228,40 @@ func (h *handler) SyncTaskOrderLogs(c *gin.Context) {
 				lineItemsCreated++
 				l.Info(fmt.Sprintf("created line item: %s for project: %s (%.1f hours)", lineItemID, projectID, hours))
 			} else {
-				l.Debug(fmt.Sprintf("line item already exists: %s for order: %s deployment: %s", lineItemID, orderID, deploymentID))
+				// Line item exists - check if update is needed (upsert logic)
+				l.Debug(fmt.Sprintf("line item exists: %s, checking for changes", lineItemID))
+
+				existingDetails, err := taskOrderLogService.GetLineItemDetails(ctx, lineItemID)
+				if err != nil {
+					l.Error(err, fmt.Sprintf("failed to get line item details: %s", lineItemID))
+					continue
+				}
+
+				// Compare: hours changed OR timesheet IDs changed
+				hoursChanged := existingDetails.Hours != hours
+				timesheetsChanged := !equalStringSlices(existingDetails.TimesheetIDs, timesheetIDs)
+
+				l.Debug(fmt.Sprintf("line item comparison: hoursChanged=%v (%.2f->%.2f) timesheetsChanged=%v (%d->%d)",
+					hoursChanged, existingDetails.Hours, hours,
+					timesheetsChanged, len(existingDetails.TimesheetIDs), len(timesheetIDs)))
+
+				if hoursChanged || timesheetsChanged {
+					l.Debug(fmt.Sprintf("line item changed, updating: hours %.2f->%.2f, timesheets %d->%d",
+						existingDetails.Hours, hours,
+						len(existingDetails.TimesheetIDs), len(timesheetIDs)))
+
+					// Update line item
+					err = taskOrderLogService.UpdateTimesheetLineItem(ctx, lineItemID, orderID, hours, summarizedPoW, timesheetIDs)
+					if err != nil {
+						l.Error(err, fmt.Sprintf("failed to update line item: %s", lineItemID))
+						continue
+					}
+
+					lineItemsUpdated++
+					l.Info(fmt.Sprintf("updated line item: %s for project: %s (%.1f hours)", lineItemID, projectID, hours))
+				} else {
+					l.Debug(fmt.Sprintf("line item unchanged, skipping update: %s", lineItemID))
+				}
 			}
 
 			// Add to project details
@@ -263,13 +279,14 @@ func (h *handler) SyncTaskOrderLogs(c *gin.Context) {
 		details = append(details, contractorDetails)
 	}
 
-	l.Info(fmt.Sprintf("sync complete: orders_created=%d line_items_created=%d contractors_processed=%d", ordersCreated, lineItemsCreated, contractorsProcessed))
+	l.Info(fmt.Sprintf("sync complete: orders_created=%d line_items_created=%d line_items_updated=%d contractors_processed=%d", ordersCreated, lineItemsCreated, lineItemsUpdated, contractorsProcessed))
 
 	// Return response
 	c.JSON(http.StatusOK, view.CreateResponse[any](map[string]any{
 		"month":                  month,
 		"orders_created":         ordersCreated,
 		"line_items_created":     lineItemsCreated,
+		"line_items_updated":     lineItemsUpdated,
 		"contractors_processed":  contractorsProcessed,
 		"details":                details,
 	}, nil, nil, nil, "ok"))
@@ -539,4 +556,21 @@ func groupDeploymentsByContractor(deployments []*notion.DeploymentData) map[stri
 		groups[deployment.ContractorPageID] = append(groups[deployment.ContractorPageID], deployment)
 	}
 	return groups
+}
+
+// equalStringSlices compares two string slices for equality (order-independent)
+func equalStringSlices(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	aMap := make(map[string]bool)
+	for _, v := range a {
+		aMap[v] = true
+	}
+	for _, v := range b {
+		if !aMap[v] {
+			return false
+		}
+	}
+	return true
 }
