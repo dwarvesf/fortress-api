@@ -24,3 +24,11 @@ type TaskOrderClient struct {
 	Name    string
 	Country string
 }
+
+// TaskOrderRawEmail represents email data for task order confirmation with raw content
+type TaskOrderRawEmail struct {
+	ContractorName string
+	TeamEmail      string
+	Month          string // YYYY-MM format
+	RawContent     string // Plain text content from Order page body
+}

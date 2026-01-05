@@ -57,9 +57,10 @@ type Config struct {
 
 	OpenRouter OpenRouter
 
-	APIKey       string
-	Debug        bool
-	Env          string
+	APIKey              string
+	Debug               bool
+	DBMonitoringEnabled bool
+	Env                 string
 	JWTSecretKey string
 	FortressURL  string
 	LogLevel     string
@@ -77,6 +78,13 @@ func getIntWithDefault(v ENV, key string, fallback int) int {
 func getStringWithDefault(v ENV, key, fallback string) string {
 	if val := v.GetString(key); val != "" {
 		return val
+	}
+	return fallback
+}
+
+func getBoolWithDefault(v ENV, key string, fallback bool) bool {
+	if val := v.GetString(key); val != "" {
+		return strings.ToLower(val) == "true" || val == "1"
 	}
 	return fallback
 }
@@ -415,12 +423,13 @@ func Generate(v ENV) *Config {
 	logLevel := validateLogLevel(v.GetString("LOG_LEVEL"))
 
 	return &Config{
-		Debug:        v.GetBool("DEBUG"),
-		APIKey:       v.GetString("API_KEY"),
-		Env:          v.GetString("ENV"),
-		JWTSecretKey: v.GetString("JWT_SECRET_KEY"),
-		FortressURL:  v.GetString("FORTRESS_URL"),
-		LogLevel:     logLevel,
+		Debug:               v.GetBool("DEBUG"),
+		DBMonitoringEnabled: getBoolWithDefault(v, "DB_MONITORING_ENABLED", false),
+		APIKey:              v.GetString("API_KEY"),
+		Env:                 v.GetString("ENV"),
+		JWTSecretKey:        v.GetString("JWT_SECRET_KEY"),
+		FortressURL:         v.GetString("FORTRESS_URL"),
+		LogLevel:            logLevel,
 
 		ApiServer: ApiServer{
 			Port:           v.GetString("PORT"),

@@ -60,6 +60,7 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 		cronjob.POST("/sweep-ogif-event", conditionalAuthMW, conditionalPermMW(model.PermissionCronjobExecute), h.Discord.SweepOgifEvent)
 		cronjob.POST("/sync-project-heads", conditionalAuthMW, conditionalPermMW(model.PermissionCronjobExecute), h.Project.SyncProjectHeadsFromNotion)
 		cronjob.POST("/sync-task-order-logs", conditionalAuthMW, conditionalPermMW(model.PermissionCronjobExecute), h.Notion.SyncTaskOrderLogs)
+		cronjob.POST("/init-task-order-logs", conditionalAuthMW, conditionalPermMW(model.PermissionCronjobExecute), h.Notion.InitTaskOrderLogs)
 		cronjob.POST("/create-contractor-fees", conditionalAuthMW, conditionalPermMW(model.PermissionCronjobExecute), h.Notion.CreateContractorFees)
 		cronjob.POST("/create-contractor-payouts", conditionalAuthMW, conditionalPermMW(model.PermissionCronjobExecute), h.Notion.CreateContractorPayouts)
 		cronjob.POST("/send-task-order-confirmation", conditionalAuthMW, conditionalPermMW(model.PermissionCronjobExecute), h.Notion.SendTaskOrderConfirmation)
@@ -83,6 +84,7 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 		webhook.POST("/notion/timesheet", h.Webhook.HandleNotionTimesheet)
 		webhook.POST("/notion/invoice/generate", h.Webhook.HandleNotionInvoiceGenerate)
 		webhook.POST("/notion/invoice/send", h.Webhook.HandleNotionInvoiceSend)
+		webhook.POST("/notion/send-email-confirmation", h.Webhook.HandleNotionTaskOrderSendEmail)
 
 		webhook.POST("/discord/interaction", h.Webhook.HandleDiscordInteraction)
 

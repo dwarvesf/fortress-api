@@ -44,8 +44,8 @@ func NewPostgresStore(cfg *config.Config) DBRepo {
 		db.Logger = gormlogger.Default.LogMode(gormlogger.Info)
 	}
 
-	// Setup database monitoring if not in test environment
-	if cfg.Env != "test" {
+	// Setup database monitoring if enabled and not in test environment
+	if cfg.DBMonitoringEnabled && cfg.Env != "test" {
 		dbConfig := monitoring.DefaultDatabaseConfig()
 		if err := SetupDatabaseMonitoring(db, dbConfig, cfg.Env); err != nil {
 			// Log warning but don't fail startup

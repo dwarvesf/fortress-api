@@ -21,5 +21,6 @@ type IHandler interface {
 	HandleNotionTimesheet(c *gin.Context)
 	HandleNotionInvoiceGenerate(c *gin.Context)
 	HandleNotionInvoiceSend(c *gin.Context)
+	HandleNotionTaskOrderSendEmail(c *gin.Context)
 	HandleDiscordInteraction(c *gin.Context)
 }

@@ -24,6 +24,7 @@ type IService interface {
 	SendPayrollPaidMail(p *model.Payroll) (err error)
 	SendOffboardingMail(offboarding *model.OffboardingEmail) (err error)
 	SendTaskOrderConfirmationMail(data *model.TaskOrderConfirmationEmail) error
+	SendTaskOrderRawContentMail(data *model.TaskOrderRawEmail) error
 
 	// SendAs management methods
 	ListSendAsAliases(userId string) ([]*gmail.SendAs, error)

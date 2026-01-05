@@ -12,6 +12,7 @@ import (
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
+	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/utils/timeutil"
 )
 
@@ -594,6 +595,94 @@ func (s *TaskOrderLogService) CreateTimesheetLineItem(ctx context.Context, order
 		// Don't fail the whole operation, just log the error
 	}
 
+	return lineItemID, nil
+}
+
+// CreateEmptyTimesheetLineItem creates an empty Timesheet sub-item for initialization
+// This is used when pre-creating Line Items at month start before any timesheets exist
+func (s *TaskOrderLogService) CreateEmptyTimesheetLineItem(ctx context.Context, orderID, deploymentID string, month string) (string, error) {
+	taskOrderLogDBID := s.cfg.Notion.Databases.TaskOrderLog
+	if taskOrderLogDBID == "" {
+		return "", errors.New("task order log database ID not configured")
+	}
+
+	s.logger.Debug(fmt.Sprintf("creating empty timesheet line item: order=%s deployment=%s month=%s", orderID, deploymentID, month))
+
+	// Calculate date from month (last day of month)
+	targetDate := time.Now()
+	parts := strings.Split(month, "-")
+	if len(parts) == 2 {
+		year, err1 := strconv.Atoi(parts[0])
+		monthInt, err2 := strconv.Atoi(parts[1])
+		if err1 == nil && err2 == nil {
+			targetDate = timeutil.LastDayOfMonth(monthInt, year)
+		} else {
+			s.logger.Error(fmt.Errorf("failed to parse month string: %s", month), "using current date as fallback")
+		}
+	} else {
+		s.logger.Error(fmt.Errorf("invalid month format: %s", month), "using current date as fallback")
+	}
+
+	s.logger.Debug(fmt.Sprintf("using target date: %s for month: %s", targetDate.Format("2006-01-02"), month))
+
+	// Initialize hours to 0
+	hours := float64(0)
+
+	params := nt.CreatePageParams{
+		ParentType: nt.ParentTypeDatabase,
+		ParentID:   taskOrderLogDBID,
+		DatabasePageProperties: &nt.DatabasePageProperties{
+			"Type": nt.DatabasePageProperty{
+				Type: nt.DBPropTypeSelect,
+				Select: &nt.SelectOptions{
+					Name: "Timesheet",
+				},
+			},
+			"Status": nt.DatabasePageProperty{
+				Type: nt.DBPropTypeSelect,
+				Select: &nt.SelectOptions{
+					Name: "Pending Approval",
+				},
+			},
+			"Date": nt.DatabasePageProperty{
+				Type: nt.DBPropTypeDate,
+				Date: &nt.Date{
+					Start: nt.NewDateTime(targetDate, false),
+				},
+			},
+			"Line Item Hours": nt.DatabasePageProperty{
+				Type:   nt.DBPropTypeNumber,
+				Number: &hours,
+			},
+			"Deployment": nt.DatabasePageProperty{
+				Type: nt.DBPropTypeRelation,
+				Relation: []nt.Relation{
+					{ID: deploymentID},
+				},
+			},
+			// Note: Timesheet relation is intentionally omitted for initialization
+			// It will be populated later by the sync endpoint when timesheets are approved
+		},
+	}
+
+	page, err := s.client.CreatePage(ctx, params)
+	if err != nil {
+		s.logger.Error(err, fmt.Sprintf("failed to create empty timesheet line item: order=%s deployment=%s", orderID, deploymentID))
+		return "", fmt.Errorf("failed to create empty timesheet line item: %w", err)
+	}
+
+	lineItemID := page.ID
+	s.logger.Debug(fmt.Sprintf("created empty timesheet line item: %s", lineItemID))
+
+	// Update Order's Sub-item relation to link the line item
+	s.logger.Debug(fmt.Sprintf("updating order sub-item relation: order=%s lineItem=%s", orderID, lineItemID))
+	err = s.addSubItemToOrder(ctx, orderID, lineItemID)
+	if err != nil {
+		s.logger.Error(err, fmt.Sprintf("failed to add sub-item to order: order=%s lineItem=%s", orderID, lineItemID))
+		// Don't fail the whole operation, just log the error
+	}
+
+	s.logger.Debug(fmt.Sprintf("successfully created empty line item: lineItemID=%s for order=%s deployment=%s", lineItemID, orderID, deploymentID))
 	return lineItemID, nil
 }
 
@@ -1448,4 +1537,238 @@ func (s *TaskOrderLogService) GetContractorTeamEmail(ctx context.Context, contra
 
 	s.logger.Debug(fmt.Sprintf("team email not found for contractor: %s", contractorPageID))
 	return ""
+}
+
+// GetContractorPersonalEmail fetches the Personal Email from a Contractor page
+func (s *TaskOrderLogService) GetContractorPersonalEmail(ctx context.Context, contractorPageID string) string {
+	page, err := s.client.FindPageByID(ctx, contractorPageID)
+	if err != nil {
+		s.logger.Debug(fmt.Sprintf("failed to fetch contractor page: %s: %v", contractorPageID, err))
+		return ""
+	}
+
+	props, ok := page.Properties.(nt.DatabasePageProperties)
+	if !ok {
+		s.logger.Debug(fmt.Sprintf("failed to cast contractor page properties: %s", contractorPageID))
+		return ""
+	}
+
+	// Extract Personal Email property (email type)
+	if prop, ok := props["Personal Email"]; ok && prop.Email != nil {
+		s.logger.Debug(fmt.Sprintf("found personal email for contractor %s: %s", contractorPageID, *prop.Email))
+		return *prop.Email
+	}
+
+	s.logger.Debug(fmt.Sprintf("personal email not found for contractor: %s", contractorPageID))
+	return ""
+}
+
+// AppendBlocksToPage appends text content as paragraph blocks to a Notion page
+func (s *TaskOrderLogService) AppendBlocksToPage(ctx context.Context, pageID string, content string) error {
+	s.logger.Debug(fmt.Sprintf("appending blocks to page: pageID=%s contentLength=%d", pageID, len(content)))
+
+	if content == "" {
+		s.logger.Debug("empty content, skipping append")
+		return nil
+	}
+
+	// Split content by newlines and create paragraph blocks
+	lines := strings.Split(content, "\n")
+	var blocks []nt.Block
+
+	for _, line := range lines {
+		// Skip empty lines but add empty paragraph for spacing
+		block := nt.ParagraphBlock{
+			RichText: []nt.RichText{
+				{
+					Type: nt.RichTextTypeText,
+					Text: &nt.Text{
+						Content: line,
+					},
+				},
+			},
+		}
+		blocks = append(blocks, block)
+	}
+
+	s.logger.Debug(fmt.Sprintf("appending %d paragraph blocks to page: %s", len(blocks), pageID))
+
+	_, err := s.client.AppendBlockChildren(ctx, pageID, blocks)
+	if err != nil {
+		s.logger.Error(err, fmt.Sprintf("failed to append blocks to page: %s", pageID))
+		return fmt.Errorf("failed to append blocks to page: %w", err)
+	}
+
+	s.logger.Debug(fmt.Sprintf("successfully appended blocks to page: %s", pageID))
+	return nil
+}
+
+// GenerateConfirmationContent generates plain text confirmation content for a contractor
+func (s *TaskOrderLogService) GenerateConfirmationContent(contractorName, month string, clients []model.TaskOrderClient) string {
+	s.logger.Debug(fmt.Sprintf("generating confirmation content: contractor=%s month=%s clients=%d", contractorName, month, len(clients)))
+
+	// Parse month to get formatted values
+	t, err := time.Parse("2006-01", month)
+	if err != nil {
+		s.logger.Error(err, fmt.Sprintf("failed to parse month: %s", month))
+		t = time.Now()
+	}
+
+	formattedMonth := t.Format("January 2006")
+	lastDay := time.Date(t.Year(), t.Month()+1, 0, 0, 0, 0, 0, time.UTC)
+	periodEndDay := fmt.Sprintf("%02d", lastDay.Day())
+	monthName := t.Format("January")
+	year := t.Format("2006")
+
+	// Get contractor last name for greeting
+	parts := strings.Fields(contractorName)
+	contractorLastName := contractorName
+	if len(parts) > 0 {
+		contractorLastName = parts[len(parts)-1]
+	}
+
+	// Build clients list
+	var clientsText string
+	for i, client := range clients {
+		clientStr := client.Name
+		if client.Country != "" {
+			clientStr = fmt.Sprintf("%s – headquartered in %s", client.Name, client.Country)
+		}
+		if i > 0 {
+			clientsText += "\n"
+		}
+		clientsText += "- " + clientStr
+	}
+
+	// Build content
+	content := fmt.Sprintf(`Hi %s,
+
+This email outlines your planned assignments and work order for: %s.
+
+Period: 01 – %s %s, %s
+
+Active clients & locations:
+%s
+
+All tasks and deliverables will be tracked in Notion/Jira as usual.
+
+Please reply "Confirmed – %s" to acknowledge this work order and confirm your availability.
+
+Thanks,
+
+Dwarves LLC`,
+		contractorLastName,
+		formattedMonth,
+		periodEndDay, monthName, year,
+		clientsText,
+		formattedMonth,
+	)
+
+	s.logger.Debug(fmt.Sprintf("generated confirmation content for %s: %d chars", contractorName, len(content)))
+	return content
+}
+
+// GetOrderPageContent reads page body content from Order page
+// Returns concatenated text from paragraph blocks
+func (s *TaskOrderLogService) GetOrderPageContent(ctx context.Context, pageID string) (string, error) {
+	s.logger.Debug(fmt.Sprintf("getting order page content: pageID=%s", pageID))
+
+	// Fetch block children from page
+	resp, err := s.client.FindBlockChildrenByID(ctx, pageID, nil)
+	if err != nil {
+		s.logger.Error(err, fmt.Sprintf("failed to fetch block children: pageID=%s", pageID))
+		return "", fmt.Errorf("failed to fetch block children: %w", err)
+	}
+
+	s.logger.Debug(fmt.Sprintf("found %d blocks in page: %s", len(resp.Results), pageID))
+
+	var lines []string
+
+	// Extract text from paragraph blocks
+	for _, block := range resp.Results {
+		switch v := block.(type) {
+		case *nt.ParagraphBlock:
+			var lineText []string
+			for _, text := range v.RichText {
+				lineText = append(lineText, text.PlainText)
+			}
+			lines = append(lines, strings.Join(lineText, ""))
+		}
+	}
+
+	content := strings.Join(lines, "\n")
+	s.logger.Debug(fmt.Sprintf("extracted content from page %s: %d lines, %d chars", pageID, len(lines), len(content)))
+
+	return content, nil
+}
+
+// GetContractorFromOrder gets contractor info from Order via Sub-items → Deployment → Contractor chain
+// Returns contractor page ID, team email, and full name
+func (s *TaskOrderLogService) GetContractorFromOrder(ctx context.Context, orderID string) (contractorID, email, name string, err error) {
+	s.logger.Debug(fmt.Sprintf("getting contractor from order: orderID=%s", orderID))
+
+	// Step 1: Query subitems (Line Items) for this order
+	subitems, err := s.QueryOrderSubitems(ctx, orderID)
+	if err != nil {
+		s.logger.Error(err, fmt.Sprintf("failed to query subitems: orderID=%s", orderID))
+		return "", "", "", fmt.Errorf("failed to query subitems: %w", err)
+	}
+
+	if len(subitems) == 0 {
+		s.logger.Debug(fmt.Sprintf("no subitems found for order: %s", orderID))
+		return "", "", "", fmt.Errorf("no subitems found for order: %s", orderID)
+	}
+
+	s.logger.Debug(fmt.Sprintf("found %d subitems for order %s", len(subitems), orderID))
+
+	// Step 2: Get Deployment from first Line Item
+	firstSubitem := subitems[0]
+	subitemPage, err := s.client.FindPageByID(ctx, firstSubitem.PageID)
+	if err != nil {
+		s.logger.Error(err, fmt.Sprintf("failed to fetch subitem page: %s", firstSubitem.PageID))
+		return "", "", "", fmt.Errorf("failed to fetch subitem page: %w", err)
+	}
+
+	subitemProps, ok := subitemPage.Properties.(nt.DatabasePageProperties)
+	if !ok {
+		s.logger.Debug(fmt.Sprintf("failed to cast subitem page properties: %s", firstSubitem.PageID))
+		return "", "", "", fmt.Errorf("failed to cast subitem page properties")
+	}
+
+	deploymentID := s.extractFirstRelationID(subitemProps, "Deployment")
+	if deploymentID == "" {
+		s.logger.Debug(fmt.Sprintf("no deployment found for subitem: %s", firstSubitem.PageID))
+		return "", "", "", fmt.Errorf("no deployment found for subitem: %s", firstSubitem.PageID)
+	}
+
+	s.logger.Debug(fmt.Sprintf("found deployment %s from subitem %s", deploymentID, firstSubitem.PageID))
+
+	// Step 3: Get Contractor from Deployment
+	deploymentPage, err := s.client.FindPageByID(ctx, deploymentID)
+	if err != nil {
+		s.logger.Error(err, fmt.Sprintf("failed to fetch deployment page: %s", deploymentID))
+		return "", "", "", fmt.Errorf("failed to fetch deployment page: %w", err)
+	}
+
+	deploymentProps, ok := deploymentPage.Properties.(nt.DatabasePageProperties)
+	if !ok {
+		s.logger.Debug(fmt.Sprintf("failed to cast deployment page properties: %s", deploymentID))
+		return "", "", "", fmt.Errorf("failed to cast deployment page properties")
+	}
+
+	contractorID = s.extractFirstRelationID(deploymentProps, "Contractor")
+	if contractorID == "" {
+		s.logger.Debug(fmt.Sprintf("no contractor found for deployment: %s", deploymentID))
+		return "", "", "", fmt.Errorf("no contractor found for deployment: %s", deploymentID)
+	}
+
+	s.logger.Debug(fmt.Sprintf("found contractor %s from deployment %s", contractorID, deploymentID))
+
+	// Step 4: Get contractor personal email and name
+	email = s.GetContractorPersonalEmail(ctx, contractorID)
+	name, _ = s.GetContractorInfo(ctx, contractorID)
+
+	s.logger.Debug(fmt.Sprintf("contractor info: id=%s email=%s name=%s", contractorID, email, name))
+
+	return contractorID, email, name, nil
 }
