@@ -135,3 +135,47 @@ func composeTaskOrderConfirmationContent(appConfig *config.Config, data *model.T
 
 	return buf.String(), nil
 }
+
+// convertPlainTextToHTML converts plain text to HTML with proper <p> and <ul><li> tags
+func convertPlainTextToHTML(text string) string {
+	lines := strings.Split(text, "\n")
+	var result []string
+	var inList bool
+
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+
+		// Skip empty lines but close list if open
+		if trimmed == "" {
+			if inList {
+				result = append(result, "    </ul>")
+				inList = false
+			}
+			continue
+		}
+
+		// Check if line is a bullet item
+		if strings.HasPrefix(trimmed, "- ") {
+			if !inList {
+				result = append(result, "    <ul>")
+				inList = true
+			}
+			itemText := strings.TrimPrefix(trimmed, "- ")
+			result = append(result, fmt.Sprintf("        <li>%s</li>", itemText))
+		} else {
+			// Close list if open before adding paragraph
+			if inList {
+				result = append(result, "    </ul>")
+				inList = false
+			}
+			result = append(result, fmt.Sprintf("    <p>%s</p>", trimmed))
+		}
+	}
+
+	// Close list if still open at end
+	if inList {
+		result = append(result, "    </ul>")
+	}
+
+	return strings.Join(result, "\n")
+}

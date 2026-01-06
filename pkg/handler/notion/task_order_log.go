@@ -775,17 +775,17 @@ func (h *handler) InitTaskOrderLogs(c *gin.Context) {
 					contractorName = "Contractor"
 				}
 
-				// Generate confirmation content
-				l.Debug(fmt.Sprintf("generating confirmation content for contractor: %s with %d clients", contractorName, len(clients)))
-				content := taskOrderLogService.GenerateConfirmationContent(contractorName, month, clients)
+				// Generate HTML confirmation content from template
+				l.Debug(fmt.Sprintf("generating HTML confirmation content for contractor: %s with %d clients", contractorName, len(clients)))
+				htmlContent := taskOrderLogService.GenerateConfirmationHTML(contractorName, month, clients)
 
-				// Append content to Order page
-				l.Debug(fmt.Sprintf("appending confirmation content to order: %s", orderID))
-				if err := taskOrderLogService.AppendBlocksToPage(ctx, orderID, content); err != nil {
-					l.Error(err, fmt.Sprintf("failed to append confirmation content to order: %s", orderID))
+				// Append HTML content as code block to Order page
+				l.Debug(fmt.Sprintf("appending HTML code block to order: %s", orderID))
+				if err := taskOrderLogService.AppendCodeBlockToPage(ctx, orderID, htmlContent); err != nil {
+					l.Error(err, fmt.Sprintf("failed to append HTML code block to order: %s", orderID))
 					contractorDetail["content_error"] = err.Error()
 				} else {
-					l.Debug(fmt.Sprintf("successfully appended confirmation content to order: %s", orderID))
+					l.Debug(fmt.Sprintf("successfully appended HTML code block to order: %s", orderID))
 					contractorDetail["content_generated"] = true
 				}
 			} else {

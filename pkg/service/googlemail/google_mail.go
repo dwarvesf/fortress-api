@@ -483,19 +483,30 @@ func (g *googleService) SendTaskOrderRawContentMail(data *model.TaskOrderRawEmai
 		formattedMonth = t.Format("January 2006")
 	}
 
-	// Convert plain text content to HTML (preserve line breaks)
-	htmlContent := strings.ReplaceAll(data.RawContent, "\n", "<br>")
+	// Check if content is already HTML (starts with <)
+	htmlContent := data.RawContent
+	isHTML := strings.HasPrefix(strings.TrimSpace(data.RawContent), "<")
+	if !isHTML {
+		// Convert plain text to HTML with proper <p> and <ul><li> tags
+		htmlContent = convertPlainTextToHTML(data.RawContent)
+	}
 
-	// Build email content
+	// Build email content with proper MIME multipart format
 	content := fmt.Sprintf(`Mime-Version: 1.0
 From: "Team @ Dwarves LLC" <spawn@d.foundation>
 To: %s
 Subject: Monthly Task Order - %s
+Content-Type: multipart/mixed; boundary=main
+
+--main
 Content-Type: text/html; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
 <div>
 %s
 </div>
+
+--main--
 `, data.TeamEmail, formattedMonth, htmlContent)
 
 	// Send email

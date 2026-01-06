@@ -414,7 +414,7 @@ func (s *TaskOrderLogService) CreateOrder(ctx context.Context, month string) (st
 		"Status": nt.DatabasePageProperty{
 			Type: nt.DBPropTypeSelect,
 			Select: &nt.SelectOptions{
-				Name: "Pending Approval",
+				Name: "Draft",
 			},
 		},
 		"Date": nt.DatabasePageProperty{
@@ -424,6 +424,8 @@ func (s *TaskOrderLogService) CreateOrder(ctx context.Context, month string) (st
 			},
 		},
 	}
+
+	s.logger.Debug(fmt.Sprintf("creating order with Status=Draft: month=%s", month))
 
 	params := nt.CreatePageParams{
 		ParentType:             nt.ParentTypeDatabase,
@@ -437,7 +439,7 @@ func (s *TaskOrderLogService) CreateOrder(ctx context.Context, month string) (st
 		return "", fmt.Errorf("failed to create order: %w", err)
 	}
 
-	s.logger.Debug(fmt.Sprintf("created order: %s", page.ID))
+	s.logger.Debug(fmt.Sprintf("created order: %s with Status=Draft", page.ID))
 	return page.ID, nil
 }
 
@@ -628,6 +630,8 @@ func (s *TaskOrderLogService) CreateEmptyTimesheetLineItem(ctx context.Context, 
 	// Initialize hours to 0
 	hours := float64(0)
 
+	s.logger.Debug(fmt.Sprintf("creating empty timesheet line item with Status=Draft: order=%s deployment=%s", orderID, deploymentID))
+
 	params := nt.CreatePageParams{
 		ParentType: nt.ParentTypeDatabase,
 		ParentID:   taskOrderLogDBID,
@@ -641,7 +645,7 @@ func (s *TaskOrderLogService) CreateEmptyTimesheetLineItem(ctx context.Context, 
 			"Status": nt.DatabasePageProperty{
 				Type: nt.DBPropTypeSelect,
 				Select: &nt.SelectOptions{
-					Name: "Pending Approval",
+					Name: "Draft",
 				},
 			},
 			"Date": nt.DatabasePageProperty{
@@ -1713,6 +1717,110 @@ Dwarves LLC`,
 	return content
 }
 
+// GenerateConfirmationHTML generates HTML confirmation content matching template format
+func (s *TaskOrderLogService) GenerateConfirmationHTML(contractorName, month string, clients []model.TaskOrderClient) string {
+	s.logger.Debug(fmt.Sprintf("generating HTML confirmation: contractor=%s month=%s clients=%d", contractorName, month, len(clients)))
+
+	// Parse month to get formatted values
+	t, err := time.Parse("2006-01", month)
+	if err != nil {
+		s.logger.Error(err, fmt.Sprintf("failed to parse month: %s", month))
+		t = time.Now()
+	}
+
+	formattedMonth := t.Format("January 2006")
+	lastDay := time.Date(t.Year(), t.Month()+1, 0, 0, 0, 0, 0, time.UTC)
+	periodEndDay := fmt.Sprintf("%02d", lastDay.Day())
+	monthName := t.Format("January")
+	year := t.Format("2006")
+
+	// Get contractor last name for greeting
+	parts := strings.Fields(contractorName)
+	contractorLastName := contractorName
+	if len(parts) > 0 {
+		contractorLastName = parts[len(parts)-1]
+	}
+
+	// Build clients list as HTML
+	var clientsHTML string
+	for _, client := range clients {
+		clientStr := client.Name
+		if client.Country != "" {
+			clientStr = fmt.Sprintf("%s – headquartered in %s", client.Name, client.Country)
+		}
+		clientsHTML += fmt.Sprintf("        <li>%s</li>\n", clientStr)
+	}
+
+	// Build HTML content matching template format
+	html := fmt.Sprintf(`<div>
+    <p>Hi %s,</p>
+
+    <p>This email outlines your planned assignments and work order for: <b>%s</b>.</p>
+
+    <p>Period: <b>01 – %s %s, %s</b></p>
+
+    <p>Active clients & locations:</p>
+    <ul>
+%s    </ul>
+
+    <p>All tasks and deliverables will be tracked in Notion/Jira as usual.</p>
+
+    <p>Please reply <b>"Confirmed – %s"</b> to acknowledge this work order and confirm your availability.</p>
+
+    <p>Thanks,</p>
+
+    <p>
+        Dwarves LLC<br>
+    </p>
+</div>`,
+		contractorLastName,
+		formattedMonth,
+		periodEndDay, monthName, year,
+		clientsHTML,
+		formattedMonth,
+	)
+
+	s.logger.Debug(fmt.Sprintf("generated HTML confirmation for %s: %d chars", contractorName, len(html)))
+	return html
+}
+
+// AppendCodeBlockToPage appends HTML content as a code block to a Notion page
+func (s *TaskOrderLogService) AppendCodeBlockToPage(ctx context.Context, pageID string, content string) error {
+	s.logger.Debug(fmt.Sprintf("appending code block to page: pageID=%s contentLength=%d", pageID, len(content)))
+
+	if content == "" {
+		s.logger.Debug("empty content, skipping append")
+		return nil
+	}
+
+	// Create a code block with HTML language
+	lang := "html"
+	codeBlock := nt.CodeBlock{
+		RichText: []nt.RichText{
+			{
+				Type: nt.RichTextTypeText,
+				Text: &nt.Text{
+					Content: content,
+				},
+			},
+		},
+		Language: &lang,
+	}
+
+	blocks := []nt.Block{codeBlock}
+
+	s.logger.Debug(fmt.Sprintf("appending code block to page: %s", pageID))
+
+	_, err := s.client.AppendBlockChildren(ctx, pageID, blocks)
+	if err != nil {
+		s.logger.Error(err, fmt.Sprintf("failed to append code block to page: %s", pageID))
+		return fmt.Errorf("failed to append code block to page: %w", err)
+	}
+
+	s.logger.Debug(fmt.Sprintf("successfully appended code block to page: %s", pageID))
+	return nil
+}
+
 // GetOrderPageContent reads page body content from Order page
 // Returns concatenated text from paragraph blocks
 func (s *TaskOrderLogService) GetOrderPageContent(ctx context.Context, pageID string) (string, error) {
@@ -1727,9 +1835,21 @@ func (s *TaskOrderLogService) GetOrderPageContent(ctx context.Context, pageID st
 
 	s.logger.Debug(fmt.Sprintf("found %d blocks in page: %s", len(resp.Results), pageID))
 
-	var lines []string
+	// First, check for Code blocks (HTML content)
+	for _, block := range resp.Results {
+		if v, ok := block.(*nt.CodeBlock); ok {
+			var codeText []string
+			for _, text := range v.RichText {
+				codeText = append(codeText, text.PlainText)
+			}
+			content := strings.Join(codeText, "")
+			s.logger.Debug(fmt.Sprintf("found code block with HTML content: %d chars", len(content)))
+			return content, nil
+		}
+	}
 
-	// Extract text from paragraph blocks
+	// Fallback: extract text from paragraph and list blocks
+	var lines []string
 	for _, block := range resp.Results {
 		switch v := block.(type) {
 		case *nt.ParagraphBlock:
@@ -1738,6 +1858,18 @@ func (s *TaskOrderLogService) GetOrderPageContent(ctx context.Context, pageID st
 				lineText = append(lineText, text.PlainText)
 			}
 			lines = append(lines, strings.Join(lineText, ""))
+		case *nt.BulletedListItemBlock:
+			var lineText []string
+			for _, text := range v.RichText {
+				lineText = append(lineText, text.PlainText)
+			}
+			lines = append(lines, "- "+strings.Join(lineText, ""))
+		case *nt.NumberedListItemBlock:
+			var lineText []string
+			for _, text := range v.RichText {
+				lineText = append(lineText, text.PlainText)
+			}
+			lines = append(lines, "- "+strings.Join(lineText, ""))
 		}
 	}
 
