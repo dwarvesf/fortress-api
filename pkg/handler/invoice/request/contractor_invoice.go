@@ -4,13 +4,15 @@ import "regexp"
 
 // GenerateContractorInvoiceRequest represents the request to generate a contractor invoice
 type GenerateContractorInvoiceRequest struct {
-	ContractorDiscord string `json:"contractorDiscord" binding:"required"`
-	Month             string `json:"month" binding:"required"` // YYYY-MM format
+	Contractor string `json:"contractor" binding:"required"`
+	Month      string `json:"month"`       // YYYY-MM format (optional, if empty fetches all pending)
+	SkipUpload bool   `json:"skipUpload"` // Skip uploading to Google Drive (optional, default false)
 } // @name GenerateContractorInvoiceRequest
 
 // Validate validates the request
 func (r *GenerateContractorInvoiceRequest) Validate() error {
-	if !isValidMonthFormat(r.Month) {
+	// Month is optional - if provided, validate format
+	if r.Month != "" && !isValidMonthFormat(r.Month) {
 		return ErrInvalidMonthFormat
 	}
 	return nil

@@ -1392,7 +1392,7 @@ func (s *TaskOrderLogService) FormatProofOfWorksByProject(ctx context.Context, o
 		if i > 0 {
 			result.WriteString("\n\n")
 		}
-		result.WriteString(fmt.Sprintf("<b>%s:</b>\n", projectName))
+		result.WriteString(fmt.Sprintf("<b>%s</b>\n", projectName))
 
 		proofs := projectMap[projectName]
 		for j, proof := range proofs {

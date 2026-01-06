@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sync"
 
 	nt "github.com/dstotijn/go-notion"
 
@@ -22,6 +23,7 @@ type ContractorPayoutsService struct {
 type PayoutEntry struct {
 	PageID          string
 	Name            string           // Title/Name of the payout
+	Description     string           // From Description rich_text field
 	PersonPageID    string           // From Person relation
 	SourceType      PayoutSourceType // Determined by which relation is set
 	Amount          float64
@@ -30,6 +32,11 @@ type PayoutEntry struct {
 	TaskOrderID     string // From "00 Task Order" relation (was ContractorFeesID/Billing)
 	InvoiceSplitID  string // From "02 Invoice Split" relation
 	RefundRequestID string // From "01 Refund" relation
+	WorkDetails     string // From "00 Work Details" formula (proof of works for Service Fee)
+
+	// Commission-specific fields (populated from Invoice Split relation)
+	CommissionRole    string // From Invoice Split "Role" select (Sales, Account Manager, etc.)
+	CommissionProject string // From Invoice Split "Project" rollup (via Deployment)
 }
 
 // NewContractorPayoutsService creates a new Notion contractor payouts service
@@ -123,9 +130,11 @@ func (s *ContractorPayoutsService) QueryPendingPayoutsByContractor(ctx context.C
 			// - "00 Task Order" is the relation to Task Order (was Billing/Contractor Fees)
 			// - "01 Refund" is the relation to Refund Request
 			// - "02 Invoice Split" is the relation to Invoice Split
+			// - "00 Work Details" is a formula that extracts proof of works from task orders
 			entry := PayoutEntry{
 				PageID:          page.ID,
 				Name:            s.extractTitle(props, "Name"),
+				Description:     s.extractRichText(props, "Description"),
 				PersonPageID:    s.extractFirstRelationID(props, "Person"),
 				Amount:          s.extractNumber(props, "Amount"),
 				Currency:        s.extractSelect(props, "Currency"),
@@ -133,6 +142,7 @@ func (s *ContractorPayoutsService) QueryPendingPayoutsByContractor(ctx context.C
 				TaskOrderID:     s.extractFirstRelationID(props, "00 Task Order"),
 				InvoiceSplitID:  s.extractFirstRelationID(props, "02 Invoice Split"),
 				RefundRequestID: s.extractFirstRelationID(props, "01 Refund"),
+				WorkDetails:     s.extractFormulaString(props, "00 Work Details"),
 			}
 
 			// Determine source type based on which relation is set
@@ -153,6 +163,34 @@ func (s *ContractorPayoutsService) QueryPendingPayoutsByContractor(ctx context.C
 	}
 
 	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: total pending payouts found=%d", len(payouts)))
+
+	// Fetch Invoice Split info in parallel for commission payouts
+	s.logger.Debug("[DEBUG] contractor_payouts: starting parallel FetchInvoiceSplitInfo for commissions")
+	var wg sync.WaitGroup
+	var mu sync.Mutex
+
+	for i := range payouts {
+		if payouts[i].SourceType == PayoutSourceTypeCommission && payouts[i].InvoiceSplitID != "" {
+			wg.Add(1)
+			go func(idx int) {
+				defer wg.Done()
+				splitInfo, err := s.FetchInvoiceSplitInfo(ctx, payouts[idx].InvoiceSplitID)
+				mu.Lock()
+				defer mu.Unlock()
+				if err != nil {
+					s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: failed to fetch invoice split info for idx=%d: %v", idx, err))
+				} else {
+					payouts[idx].CommissionRole = splitInfo.Role
+					payouts[idx].CommissionProject = splitInfo.Project
+					s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: commission info idx=%d - Role=%s Project=%s",
+						idx, payouts[idx].CommissionRole, payouts[idx].CommissionProject))
+				}
+			}(i)
+		}
+	}
+
+	wg.Wait()
+	s.logger.Debug("[DEBUG] contractor_payouts: parallel FetchInvoiceSplitInfo completed")
 
 	return payouts, nil
 }
@@ -219,6 +257,33 @@ func (s *ContractorPayoutsService) extractTitle(props nt.DatabasePageProperties,
 		result += rt.PlainText
 	}
 	return result
+}
+
+func (s *ContractorPayoutsService) extractRichText(props nt.DatabasePageProperties, propName string) string {
+	prop, ok := props[propName]
+	if !ok || len(prop.RichText) == 0 {
+		return ""
+	}
+	var result string
+	for _, rt := range prop.RichText {
+		result += rt.PlainText
+	}
+	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: extracted rich text %s length=%d", propName, len(result)))
+	return result
+}
+
+func (s *ContractorPayoutsService) extractFormulaString(props nt.DatabasePageProperties, propName string) string {
+	prop, ok := props[propName]
+	if !ok || prop.Formula == nil {
+		s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: formula property %s not found or nil", propName))
+		return ""
+	}
+	if prop.Formula.String != nil {
+		s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: extracted formula %s value length=%d", propName, len(*prop.Formula.String)))
+		return *prop.Formula.String
+	}
+	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: formula property %s has no string value", propName))
+	return ""
 }
 
 // CheckPayoutExistsByContractorFee checks if a payout already exists for a given task order (was contractor fee)
@@ -664,3 +729,63 @@ func (s *ContractorPayoutsService) CreateCommissionPayout(ctx context.Context, i
 
 	return page.ID, nil
 }
+
+// InvoiceSplitInfo contains role and project info from an Invoice Split record
+type InvoiceSplitInfo struct {
+	Role    string // From "Role" select (shortened: DL, AM, Sales, Ref)
+	Project string // From "Code" formula (project code via Deployment)
+}
+
+// shortenRole converts full role names to short codes
+func shortenRole(role string) string {
+	switch role {
+	case "Delivery Lead":
+		return "DL"
+	case "Account Manager":
+		return "AM"
+	case "Hiring Referral":
+		return "Ref"
+	case "Sales":
+		return "Sales"
+	default:
+		return role
+	}
+}
+
+// FetchInvoiceSplitInfo fetches Role and Code (project) from an Invoice Split record
+func (s *ContractorPayoutsService) FetchInvoiceSplitInfo(ctx context.Context, invoiceSplitID string) (*InvoiceSplitInfo, error) {
+	if invoiceSplitID == "" {
+		return nil, errors.New("invoice split ID is empty")
+	}
+
+	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: fetching invoice split info for pageID=%s", invoiceSplitID))
+
+	page, err := s.client.FindPageByID(ctx, invoiceSplitID)
+	if err != nil {
+		s.logger.Error(err, fmt.Sprintf("[DEBUG] contractor_payouts: failed to fetch invoice split pageID=%s", invoiceSplitID))
+		return nil, fmt.Errorf("failed to fetch invoice split: %w", err)
+	}
+
+	props, ok := page.Properties.(nt.DatabasePageProperties)
+	if !ok {
+		s.logger.Debug("[DEBUG] contractor_payouts: failed to cast invoice split page properties")
+		return nil, errors.New("failed to cast invoice split page properties")
+	}
+
+	// Debug: log available properties
+	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: invoice split %s available properties:", invoiceSplitID))
+	for propName := range props {
+		s.logger.Debug(fmt.Sprintf("[DEBUG]   - %s", propName))
+	}
+
+	// Extract Role from select and Code from formula (project code)
+	info := &InvoiceSplitInfo{
+		Role:    shortenRole(s.extractSelect(props, "Role")),
+		Project: s.extractFormulaString(props, "Code"), // Use Code formula for project grouping
+	}
+
+	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: invoice split info - Role=%s Project=%s (from Code formula)", info.Role, info.Project))
+
+	return info, nil
+}
+

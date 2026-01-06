@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/Rhymond/go-money"
@@ -53,10 +54,25 @@ type ContractorInvoiceLineItem struct {
 	Amount      float64 // Only for Hourly Rate
 	AmountUSD   float64 // Amount converted to USD (Only for Hourly Rate)
 	Type        string  // Payout source type (Contractor Payroll, Commission, Refund, etc.)
+
+	// Commission-specific fields (for grouping)
+	CommissionRole    string
+	CommissionProject string
+}
+
+// commissionGroupKey represents a unique key for grouping commissions by role+project
+type commissionGroupKey struct {
+	Role    string
+	Project string
 }
 
 // GenerateContractorInvoice generates contractor invoice data from Notion
 func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, month string) (*ContractorInvoiceData, error) {
+	// Default to current month if not provided
+	if month == "" {
+		month = time.Now().Format("2006-01")
+	}
+
 	l := c.logger.Fields(logger.Fields{
 		"discord": discord,
 		"month":   month,
@@ -81,18 +97,49 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 	l.Debug(fmt.Sprintf("found contractor rate: contractor=%s billingType=%s currency=%s monthlyFixed=%.2f hourlyRate=%.2f contractorPageID=%s",
 		rateData.ContractorName, rateData.BillingType, rateData.Currency, rateData.MonthlyFixed, rateData.HourlyRate, rateData.ContractorPageID))
 
-	// 2. Query Pending Payouts for the contractor
-	l.Debug("querying pending payouts from Notion")
-	payoutsService := notion.NewContractorPayoutsService(c.config, c.logger)
-	if payoutsService == nil {
-		l.Error(nil, "failed to create contractor payouts service")
-		return nil, fmt.Errorf("failed to create contractor payouts service")
-	}
+	// 2. Query Pending Payouts AND Bank Account in parallel
+	l.Debug("[DEBUG] contractor_invoice: starting parallel queries for payouts and bank account")
 
-	payouts, err := payoutsService.QueryPendingPayoutsByContractor(ctx, rateData.ContractorPageID)
-	if err != nil {
-		l.Error(err, "failed to query pending payouts")
-		return nil, fmt.Errorf("failed to query pending payouts: %w", err)
+	var payouts []notion.PayoutEntry
+	var bankAccount *notion.BankAccountData
+	var payoutsErr, bankAccountErr error
+	var wg sync.WaitGroup
+
+	// Query Payouts
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		l.Debug("querying pending payouts from Notion (parallel)")
+		payoutsService := notion.NewContractorPayoutsService(c.config, c.logger)
+		if payoutsService == nil {
+			payoutsErr = fmt.Errorf("failed to create contractor payouts service")
+			return
+		}
+		payouts, payoutsErr = payoutsService.QueryPendingPayoutsByContractor(ctx, rateData.ContractorPageID)
+		l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: payouts query completed, found=%d err=%v", len(payouts), payoutsErr))
+	}()
+
+	// Query Bank Account
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		l.Debug("querying bank account from Notion (parallel)")
+		bankAccountService := notion.NewBankAccountService(c.config, c.logger)
+		if bankAccountService == nil {
+			bankAccountErr = fmt.Errorf("failed to create bank account service")
+			return
+		}
+		bankAccount, bankAccountErr = bankAccountService.QueryBankAccountByDiscord(ctx, discord)
+		l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: bank account query completed, err=%v", bankAccountErr))
+	}()
+
+	wg.Wait()
+	l.Debug("[DEBUG] contractor_invoice: parallel queries completed")
+
+	// Check errors
+	if payoutsErr != nil {
+		l.Error(payoutsErr, "failed to query pending payouts")
+		return nil, fmt.Errorf("failed to query pending payouts: %w", payoutsErr)
 	}
 
 	if len(payouts) == 0 {
@@ -100,73 +147,117 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 		return nil, fmt.Errorf("no pending payouts found for contractor=%s", discord)
 	}
 
+	if bankAccountErr != nil {
+		l.Error(bankAccountErr, "failed to query bank account")
+		return nil, fmt.Errorf("bank account not found: %w", bankAccountErr)
+	}
+
 	l.Debug(fmt.Sprintf("found %d pending payouts", len(payouts)))
 
-	// 3. Initialize services for fetching ProofOfWorks
-	feesService := notion.NewContractorFeesService(c.config, c.logger)
-	if feesService == nil {
-		l.Debug("failed to create contractor fees service, ProofOfWorks will not be fetched")
+	// 3. Convert all payout amounts to USD in parallel
+	l.Debug("[DEBUG] contractor_invoice: starting parallel currency conversions")
+	amountsUSD := make([]float64, len(payouts))
+	var convWg sync.WaitGroup
+	var convMu sync.Mutex
+
+	for i, payout := range payouts {
+		convWg.Add(1)
+		go func(idx int, p notion.PayoutEntry) {
+			defer convWg.Done()
+
+			amountUSD, _, err := c.service.Wise.Convert(p.Amount, p.Currency, "USD")
+			if err != nil {
+				convMu.Lock()
+				l.Error(err, fmt.Sprintf("failed to convert payout amount to USD: pageID=%s", p.PageID))
+				convMu.Unlock()
+				amountUSD = p.Amount // Fallback to original amount if conversion fails
+			}
+			// Round to 2 decimal places
+			amountsUSD[idx] = math.Round(amountUSD*100) / 100
+
+			convMu.Lock()
+			l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: converted %.2f %s = %.2f USD (idx=%d)", p.Amount, p.Currency, amountsUSD[idx], idx))
+			convMu.Unlock()
+		}(i, payout)
 	}
 
-	taskOrderLogService := notion.NewTaskOrderLogService(c.config, c.logger)
-	if taskOrderLogService == nil {
-		l.Debug("failed to create task order log service, ProofOfWorks formatting will not be available")
-	}
+	convWg.Wait()
+	l.Debug("[DEBUG] contractor_invoice: parallel currency conversions completed")
 
 	// 4. Build line items from payouts
 	var lineItems []ContractorInvoiceLineItem
 	var total float64
 
-	for _, payout := range payouts {
-		l.Debug(fmt.Sprintf("processing payout: pageID=%s name=%s sourceType=%s amount=%.2f currency=%s",
-			payout.PageID, payout.Name, payout.SourceType, payout.Amount, payout.Currency))
+	for i, payout := range payouts {
+		amountUSD := amountsUSD[i]
 
-		// Convert amount to USD
-		amountUSD, _, err := c.service.Wise.Convert(payout.Amount, payout.Currency, "USD")
-		if err != nil {
-			l.Error(err, fmt.Sprintf("failed to convert payout amount to USD: pageID=%s", payout.PageID))
-			amountUSD = payout.Amount // Fallback to original amount if conversion fails
+		l.Debug(fmt.Sprintf("processing payout: pageID=%s name=%s sourceType=%s amount=%.2f currency=%s amountUSD=%.2f",
+			payout.PageID, payout.Name, payout.SourceType, payout.Amount, payout.Currency, amountUSD))
+
+		// Determine description based on source type:
+		// - Service Fee: use WorkDetails from Notion formula
+		// - Refund: use Description field as title (displayed in Description column)
+		// - Commission: use Description field (will be parsed and grouped later)
+		l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: payout fields - Name=%s Description=%s WorkDetails=%s",
+			payout.Name, payout.Description, payout.WorkDetails))
+
+		var description string
+		switch payout.SourceType {
+		case notion.PayoutSourceTypeServiceFee:
+			// For Service Fee: fetch proof of works from Task Order Log subitems
+			if payout.TaskOrderID != "" {
+				l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: fetching proof of works from Task Order Log: taskOrderID=%s", payout.TaskOrderID))
+				formattedPOW, err := c.service.Notion.TaskOrderLog.FormatProofOfWorksByProject(ctx, []string{payout.TaskOrderID})
+				if err != nil {
+					l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: failed to fetch proof of works from Task Order Log: %v", err))
+				} else if formattedPOW != "" {
+					description = formattedPOW
+					l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: using formatted proof of works from Task Order Log: length=%d", len(description)))
+				}
+			}
+			// Fallback to WorkDetails if Task Order lookup failed or returned empty
+			if description == "" && payout.WorkDetails != "" {
+				description = payout.WorkDetails
+				l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: using WorkDetails for Service Fee: length=%d", len(description)))
+			} else if description == "" {
+				description = payout.Description
+				l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: WorkDetails empty, using Description for Service Fee: length=%d", len(description)))
+			}
+		case notion.PayoutSourceTypeRefund:
+			// For Refund: use Description field, fallback to Name if empty
+			if payout.Description != "" {
+				description = payout.Description
+				l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: using Description for Refund: length=%d", len(description)))
+			} else {
+				description = payout.Name
+				l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: Description empty, using Name for Refund: %s", payout.Name))
+			}
+		default:
+			// Commission and Other: use Description field
+			description = payout.Description
+			l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: using Description field: length=%d", len(description)))
 		}
-
-		// Round to 2 decimal places to avoid $0.01 differences between Unit Cost and Total
-		amountUSD = math.Round(amountUSD*100) / 100
-
-		l.Debug(fmt.Sprintf("converted amount: %.2f %s = %.2f USD (rounded)", payout.Amount, payout.Currency, amountUSD))
 
 		// Initialize line item with default values for display
 		// All items: Qty=1, Unit Cost=AmountUSD, Total=AmountUSD
+		// Title: All types use empty title, only description is shown
+		title := ""
+		l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: %s - no title, only description", payout.SourceType))
+
 		lineItem := ContractorInvoiceLineItem{
-			Title:     payout.Name,
-			Hours:     1,         // Default quantity
-			Rate:      amountUSD, // Unit cost = converted amount
-			Amount:    amountUSD, // Amount
-			AmountUSD: amountUSD,
-			Type:      string(payout.SourceType),
+			Title:             title,
+			Description:       description,
+			Hours:             1,         // Default quantity
+			Rate:              amountUSD, // Unit cost = converted amount
+			Amount:            amountUSD, // Amount
+			AmountUSD:         amountUSD,
+			Type:              string(payout.SourceType),
+			CommissionRole:    payout.CommissionRole,
+			CommissionProject: payout.CommissionProject,
 		}
 
-		// If Service Fee (was Contractor Payroll), fetch ProofOfWorks from Task Order Log subitems (grouped by project)
-		if payout.SourceType == notion.PayoutSourceTypeServiceFee && payout.TaskOrderID != "" && feesService != nil && taskOrderLogService != nil {
-			l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: fetching Task Order Log IDs from task order: taskOrderID=%s", payout.TaskOrderID))
-
-			// Get Task Order Log IDs from Task Order relation
-			orderIDs, err := feesService.GetTaskOrderLogIDs(ctx, payout.TaskOrderID)
-			if err != nil {
-				l.Error(err, fmt.Sprintf("failed to get Task Order Log IDs: taskOrderID=%s", payout.TaskOrderID))
-			} else if len(orderIDs) > 0 {
-				l.Debug(fmt.Sprintf("found %d Task Order Log IDs", len(orderIDs)))
-
-				// Format ProofOfWorks grouped by project with bold headers
-				formattedDescription, err := taskOrderLogService.FormatProofOfWorksByProject(ctx, orderIDs)
-				if err != nil {
-					l.Error(err, "failed to format proof of works by project")
-				} else if formattedDescription != "" {
-					lineItem.Description = formattedDescription
-					l.Debug(fmt.Sprintf("formatted proof of works: length=%d", len(formattedDescription)))
-				}
-			} else {
-				l.Debug("no Task Order Log IDs found in contractor fees")
-			}
-		}
+		l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: line item - Type=%s Role=%s Project=%s",
+			lineItem.Type, lineItem.CommissionRole, lineItem.CommissionProject))
 
 		lineItems = append(lineItems, lineItem)
 		total += amountUSD
@@ -174,31 +265,80 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 
 	l.Debug(fmt.Sprintf("built %d line items with total=%.2f USD", len(lineItems), total))
 
-	// 5. Sort line items by Type (grouped) then by Amount ASC
-	l.Debug("sorting line items by Type and Amount ASC")
+	// 4.5 Group Commission items by Role + Project (from Invoice Split relation)
+	l.Debug("grouping commission items by role and project")
+	var nonCommissionItems []ContractorInvoiceLineItem
+	commissionGroups := make(map[commissionGroupKey]float64)
+
+	for _, item := range lineItems {
+		if item.Type != string(notion.PayoutSourceTypeCommission) {
+			nonCommissionItems = append(nonCommissionItems, item)
+			continue
+		}
+
+		// Use CommissionRole and CommissionProject from Invoice Split
+		if item.CommissionRole == "" {
+			l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: commission has no role, keeping as-is: %s", item.Description))
+			// Keep original item if no role found
+			nonCommissionItems = append(nonCommissionItems, item)
+			continue
+		}
+
+		l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: commission - role=%s project=%s amount=%.2f",
+			item.CommissionRole, item.CommissionProject, item.AmountUSD))
+
+		key := commissionGroupKey{Role: item.CommissionRole, Project: item.CommissionProject}
+		commissionGroups[key] += item.AmountUSD
+	}
+
+	// Convert grouped commissions to line items
+	var groupedCommissionItems []ContractorInvoiceLineItem
+	for key, totalAmount := range commissionGroups {
+		// Round total to 2 decimal places
+		groupTotal := math.Round(totalAmount*100) / 100
+
+		// Build description: "AM Bonus for Renaiss" or "Sales Commission"
+		description := key.Role
+		if key.Project != "" {
+			description = fmt.Sprintf("%s for %s", key.Role, key.Project)
+		}
+
+		l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: grouped commission - description=%s total=%.2f", description, groupTotal))
+
+		groupedCommissionItems = append(groupedCommissionItems, ContractorInvoiceLineItem{
+			Title:       "",
+			Description: description,
+			Hours:       1,
+			Rate:        groupTotal,
+			Amount:      groupTotal,
+			AmountUSD:   groupTotal,
+			Type:        string(notion.PayoutSourceTypeCommission),
+		})
+	}
+
+	l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: grouped %d commission items into %d groups",
+		len(lineItems)-len(nonCommissionItems), len(groupedCommissionItems)))
+
+	// Combine non-commission items with grouped commission items
+	lineItems = append(nonCommissionItems, groupedCommissionItems...)
+
+	// 5. Sort line items by Type (Service Fee last) then by Amount ASC
+	l.Debug("sorting line items by Type (Service Fee last) and Amount ASC")
 	sort.Slice(lineItems, func(i, j int) bool {
-		// First sort by Type (group by type)
+		// Service Fee should always be last
+		iIsServiceFee := lineItems[i].Type == string(notion.PayoutSourceTypeServiceFee)
+		jIsServiceFee := lineItems[j].Type == string(notion.PayoutSourceTypeServiceFee)
+		if iIsServiceFee != jIsServiceFee {
+			return !iIsServiceFee // Service Fee goes to the end
+		}
+		// Then sort by Type (group by type)
 		if lineItems[i].Type != lineItems[j].Type {
 			return lineItems[i].Type < lineItems[j].Type
 		}
 		// Then sort by Amount ASC within each type
 		return lineItems[i].Amount < lineItems[j].Amount
 	})
-	l.Debug(fmt.Sprintf("sorted %d line items by Type and Amount ASC", len(lineItems)))
-
-	// 6. Query Bank Account
-	l.Debug("querying bank account from Notion")
-	bankAccountService := notion.NewBankAccountService(c.config, c.logger)
-	if bankAccountService == nil {
-		l.Error(nil, "failed to create bank account service")
-		return nil, fmt.Errorf("failed to create bank account service")
-	}
-
-	bankAccount, err := bankAccountService.QueryBankAccountByDiscord(ctx, discord)
-	if err != nil {
-		l.Error(err, "failed to query bank account")
-		return nil, fmt.Errorf("bank account not found: %w", err)
-	}
+	l.Debug(fmt.Sprintf("sorted %d line items by Type (Service Fee last) and Amount ASC", len(lineItems)))
 
 	l.Debug(fmt.Sprintf("found bank account: accountHolder=%s bank=%s accountNumber=%s",
 		bankAccount.AccountHolderName, bankAccount.BankName, bankAccount.AccountNumber))
@@ -216,7 +356,7 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 	dueDate := now.AddDate(0, 0, 15) // Due in 15 days
 
 	// 9. Generate description
-	description := fmt.Sprintf("Software Development Services for %s", timeutil.FormatMonthYear(month))
+	description := fmt.Sprintf("Professional Services for %s", timeutil.FormatMonthYear(month))
 	l.Debug(fmt.Sprintf("generated description: %s", description))
 
 	invoiceData := &ContractorInvoiceData{
@@ -287,7 +427,8 @@ func (c *controller) GenerateContractorInvoicePDF(l logger.Logger, data *Contrac
 	funcMap := template.FuncMap{
 		"formatMoney": func(amount float64) string {
 			tmpValue := amount * math.Pow(10, float64(pound.Currency().Fraction))
-			return pound.Multiply(int64(tmpValue)).Display()
+			// Use math.Round to ensure consistent rounding (not truncation)
+			return pound.Multiply(int64(math.Round(tmpValue))).Display()
 		},
 		"formatDate": func(t time.Time) string {
 			return timeutil.FormatDatetime(t)

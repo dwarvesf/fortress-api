@@ -239,29 +239,19 @@ func equalIgnoreCase(a, b string) bool {
 }
 
 // slugContractorName converts contractor name to a consistent folder name format
-// Example: "LE MINH QUANG" -> "le-minh-quang"
+// Preserves Unicode characters (e.g., Vietnamese names like "Trương Hồng Ngọc")
+// Only removes characters that are invalid in Google Drive folder names
 func slugContractorName(name string) string {
-	// Convert to lowercase
-	slug := strings.ToLower(name)
+	slug := name
 
-	// Replace spaces and special characters with hyphens
-	slug = strings.ReplaceAll(slug, " ", "-")
-	slug = strings.ReplaceAll(slug, "_", "-")
-
-	// Remove any characters that aren't alphanumeric or hyphens
-	var result strings.Builder
-	for _, ch := range slug {
-		if (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9') || ch == '-' {
-			result.WriteRune(ch)
-		}
+	// Remove characters that are not allowed in Google Drive folder names
+	invalidChars := []string{"/", "\\", ":", "*", "?", "\"", "<", ">", "|"}
+	for _, ch := range invalidChars {
+		slug = strings.ReplaceAll(slug, ch, "")
 	}
 
-	// Remove consecutive hyphens and trim
-	slug = result.String()
-	for strings.Contains(slug, "--") {
-		slug = strings.ReplaceAll(slug, "--", "-")
-	}
-	slug = strings.Trim(slug, "-")
+	// Trim leading/trailing whitespace
+	slug = strings.TrimSpace(slug)
 
 	return slug
 }

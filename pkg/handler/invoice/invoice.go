@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
@@ -366,10 +368,10 @@ func (h *handler) GenerateContractorInvoice(c *gin.Context) {
 		return
 	}
 
-	l.Debug(fmt.Sprintf("received request: contractorDiscord=%s month=%s", req.ContractorDiscord, req.Month))
+	l.Debug(fmt.Sprintf("received request: contractor=%s month=%s skipUpload=%v", req.Contractor, req.Month, req.SkipUpload))
 
-	// 2. Validate month format (YYYY-MM)
-	if !isValidMonthFormat(req.Month) {
+	// 2. Validate month format (YYYY-MM) - only if month is provided
+	if req.Month != "" && !isValidMonthFormat(req.Month) {
 		l.Error(errs.ErrInvalidMonthFormat, fmt.Sprintf("month validation failed: month=%s", req.Month))
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errs.ErrInvalidMonthFormat, req, ""))
 		return
@@ -377,7 +379,7 @@ func (h *handler) GenerateContractorInvoice(c *gin.Context) {
 
 	// 3. Generate invoice data
 	l.Debug("calling controller to generate contractor invoice data")
-	invoiceData, err := h.controller.Invoice.GenerateContractorInvoice(c.Request.Context(), req.ContractorDiscord, req.Month)
+	invoiceData, err := h.controller.Invoice.GenerateContractorInvoice(c.Request.Context(), req.Contractor, req.Month)
 	if err != nil {
 		l.Error(err, "failed to generate contractor invoice")
 		if strings.Contains(err.Error(), "not found") {
@@ -401,18 +403,42 @@ func (h *handler) GenerateContractorInvoice(c *gin.Context) {
 
 	l.Debug(fmt.Sprintf("PDF generated: size=%d bytes", len(pdfBytes)))
 
-	// 5. Upload to Google Drive
+	// 5. Upload to Google Drive or save locally
+	var fileURL string
 	fileName := fmt.Sprintf("%s.pdf", invoiceData.InvoiceNumber)
-	l.Debug(fmt.Sprintf("uploading PDF to Google Drive: fileName=%s contractorName=%s", fileName, invoiceData.ContractorName))
 
-	fileURL, err := h.service.GoogleDrive.UploadContractorInvoicePDF(invoiceData.ContractorName, fileName, pdfBytes)
-	if err != nil {
-		l.Error(err, "failed to upload PDF to Google Drive")
-		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req, ""))
-		return
+	if req.SkipUpload {
+		l.Debug("[DEBUG] skipping Google Drive upload, saving to local file")
+
+		// Save to local file
+		localDir := filepath.Join(os.TempDir(), "contractor-invoices")
+		if err := os.MkdirAll(localDir, 0755); err != nil {
+			l.Error(err, "failed to create local directory")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req, ""))
+			return
+		}
+
+		localPath := filepath.Join(localDir, fileName)
+		if err := os.WriteFile(localPath, pdfBytes, 0644); err != nil {
+			l.Error(err, "failed to write PDF to local file")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req, ""))
+			return
+		}
+
+		l.Debug(fmt.Sprintf("[DEBUG] PDF saved locally: path=%s", localPath))
+		fileURL = localPath
+	} else {
+		l.Debug(fmt.Sprintf("uploading PDF to Google Drive: fileName=%s contractorName=%s", fileName, invoiceData.ContractorName))
+
+		fileURL, err = h.service.GoogleDrive.UploadContractorInvoicePDF(invoiceData.ContractorName, fileName, pdfBytes)
+		if err != nil {
+			l.Error(err, "failed to upload PDF to Google Drive")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req, ""))
+			return
+		}
+
+		l.Debug(fmt.Sprintf("PDF uploaded: url=%s", fileURL))
 	}
-
-	l.Debug(fmt.Sprintf("PDF uploaded: url=%s", fileURL))
 
 	// 6. Build response
 	lineItems := make([]view.ContractorInvoiceLineItem, len(invoiceData.LineItems))
