@@ -1,9 +1,11 @@
 package notion
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -575,6 +577,17 @@ func equalStringSlices(a, b []string) bool {
 	return true
 }
 
+// contractorProcessResult holds the result of processing a single contractor
+type contractorProcessResult struct {
+	ContractorID         string
+	OrderCreated         bool
+	LineItemsCreated     int
+	DeploymentsProcessed int
+	Skipped              int
+	Detail               map[string]any
+	Error                error
+}
+
 // InitTaskOrderLogs godoc
 // @Summary Initialize task order logs for all active deployments
 // @Description Creates empty Task Order Log entries for all active deployments for a given month
@@ -653,147 +666,64 @@ func (h *handler) InitTaskOrderLogs(c *gin.Context) {
 	contractorDeployments := groupDeploymentsByContractor(deployments)
 	l.Debug(fmt.Sprintf("found %d unique contractors", len(contractorDeployments)))
 
-	// Track counts
+	// Step 3: Process contractors concurrently
+	const maxConcurrency = 10 // Limit concurrent API calls to avoid rate limiting
+	l.Debug(fmt.Sprintf("processing %d contractors with max concurrency: %d", len(contractorDeployments), maxConcurrency))
+
+	// Create a channel for results
+	resultChan := make(chan contractorProcessResult, len(contractorDeployments))
+
+	// Create a semaphore to limit concurrency
+	sem := make(chan struct{}, maxConcurrency)
+
+	// Use WaitGroup to wait for all goroutines
+	var wg sync.WaitGroup
+
+	// Launch goroutines for each contractor
+	for contractorID, contractorDeps := range contractorDeployments {
+		wg.Add(1)
+		go func(cID string, cDeps []*notion.DeploymentData) {
+			defer wg.Done()
+
+			// Acquire semaphore
+			sem <- struct{}{}
+			defer func() { <-sem }()
+
+			l.Debug(fmt.Sprintf("[CONCURRENT] starting processing contractor: %s with %d deployments", cID, len(cDeps)))
+
+			result := h.processContractorInit(ctx, l, taskOrderLogService, cID, cDeps, month)
+			resultChan <- result
+
+			l.Debug(fmt.Sprintf("[CONCURRENT] finished processing contractor: %s", cID))
+		}(contractorID, contractorDeps)
+	}
+
+	// Close result channel when all goroutines complete
+	go func() {
+		wg.Wait()
+		close(resultChan)
+	}()
+
+	// Collect results
 	ordersCreated := 0
 	lineItemsCreated := 0
 	deploymentsProcessed := 0
 	skipped := 0
 	var details []map[string]any
 
-	// Step 3: Process each contractor
-	for contractorID, contractorDeps := range contractorDeployments {
-		l.Debug(fmt.Sprintf("processing contractor: %s with %d deployments", contractorID, len(contractorDeps)))
-
-		contractorDetail := map[string]any{
-			"contractor_id":      contractorID,
-			"deployments":        []string{},
-			"line_items_created": 0,
-		}
-		var deploymentIDs []string
-
-		// Check if Order exists for this contractor and month
-		orderExists, orderID, err := taskOrderLogService.CheckOrderExistsByContractor(ctx, contractorID, month)
-		if err != nil {
-			l.Error(err, fmt.Sprintf("failed to check order existence: contractor=%s month=%s", contractorID, month))
-			// Continue to next contractor
+	for result := range resultChan {
+		if result.Error != nil {
+			l.Error(result.Error, fmt.Sprintf("error processing contractor: %s", result.ContractorID))
 			continue
 		}
 
-		// Create Order if it doesn't exist
-		if !orderExists {
-			l.Debug(fmt.Sprintf("creating order for contractor: %s month=%s", contractorID, month))
-			orderID, err = taskOrderLogService.CreateOrder(ctx, month)
-			if err != nil {
-				l.Error(err, fmt.Sprintf("failed to create order: contractor=%s month=%s", contractorID, month))
-				// Continue to next contractor
-				continue
-			}
+		if result.OrderCreated {
 			ordersCreated++
-			l.Debug(fmt.Sprintf("created order: %s for contractor: %s", orderID, contractorID))
-		} else {
-			l.Debug(fmt.Sprintf("order already exists: %s for contractor: %s", orderID, contractorID))
 		}
-
-		contractorDetail["order_page_id"] = orderID
-
-		// Process each deployment for this contractor
-		for _, deployment := range contractorDeps {
-			deploymentID := deployment.PageID
-			l.Debug(fmt.Sprintf("processing deployment: %s for contractor: %s", deploymentID, contractorID))
-
-			// Check if Line Item already exists for this order and deployment
-			exists, existingLineItemID, err := taskOrderLogService.CheckLineItemExists(ctx, orderID, deploymentID)
-			if err != nil {
-				l.Error(err, fmt.Sprintf("failed to check line item existence: order=%s deployment=%s", orderID, deploymentID))
-				// Continue to next deployment
-				continue
-			}
-
-			if exists {
-				l.Debug(fmt.Sprintf("line item already exists: %s for deployment: %s", existingLineItemID, deploymentID))
-				skipped++
-				continue
-			}
-
-			// Create empty Line Item
-			l.Debug(fmt.Sprintf("creating empty line item: order=%s deployment=%s", orderID, deploymentID))
-			lineItemID, err := taskOrderLogService.CreateEmptyTimesheetLineItem(ctx, orderID, deploymentID, month)
-			if err != nil {
-				l.Error(err, fmt.Sprintf("failed to create empty line item: order=%s deployment=%s", orderID, deploymentID))
-				// Continue to next deployment
-				continue
-			}
-
-			l.Debug(fmt.Sprintf("created empty line item: %s for deployment: %s", lineItemID, deploymentID))
-			lineItemsCreated++
-			deploymentsProcessed++
-			deploymentIDs = append(deploymentIDs, deploymentID)
-		}
-
-		contractorDetail["deployments"] = deploymentIDs
-		contractorDetail["line_items_created"] = len(deploymentIDs)
-
-		// Step 4: Generate and append confirmation content to Order page
-		// Only generate if we created the order (new order)
-		if ordersCreated > 0 || !orderExists {
-			l.Debug(fmt.Sprintf("collecting client info for contractor: %s", contractorID))
-
-			// Collect client info from all deployments
-			var clients []model.TaskOrderClient
-			seenClients := make(map[string]bool)
-
-			for _, deployment := range contractorDeps {
-				clientInfo, err := taskOrderLogService.GetClientInfo(ctx, deployment.ProjectPageID)
-				if err != nil {
-					l.Error(err, fmt.Sprintf("failed to get client for project %s", deployment.ProjectPageID))
-					continue
-				}
-				if clientInfo != nil && clientInfo.Name != "" {
-					// If client is in Vietnam, use "Dwarves LLC" (USA) instead
-					if strings.TrimSpace(clientInfo.Country) == "Vietnam" {
-						clientInfo.Name = "Dwarves LLC"
-						clientInfo.Country = "USA"
-					}
-
-					clientKey := fmt.Sprintf("%s:%s", clientInfo.Name, clientInfo.Country)
-					if seenClients[clientKey] {
-						continue
-					}
-					seenClients[clientKey] = true
-
-					clients = append(clients, model.TaskOrderClient{
-						Name:    clientInfo.Name,
-						Country: clientInfo.Country,
-					})
-				}
-			}
-
-			if len(clients) > 0 {
-				// Get contractor name
-				contractorName, _ := taskOrderLogService.GetContractorInfo(ctx, contractorID)
-				if contractorName == "" {
-					contractorName = "Contractor"
-				}
-
-				// Generate HTML confirmation content from template
-				l.Debug(fmt.Sprintf("generating HTML confirmation content for contractor: %s with %d clients", contractorName, len(clients)))
-				htmlContent := taskOrderLogService.GenerateConfirmationHTML(contractorName, month, clients)
-
-				// Append HTML content as code block to Order page
-				l.Debug(fmt.Sprintf("appending HTML code block to order: %s", orderID))
-				if err := taskOrderLogService.AppendCodeBlockToPage(ctx, orderID, htmlContent); err != nil {
-					l.Error(err, fmt.Sprintf("failed to append HTML code block to order: %s", orderID))
-					contractorDetail["content_error"] = err.Error()
-				} else {
-					l.Debug(fmt.Sprintf("successfully appended HTML code block to order: %s", orderID))
-					contractorDetail["content_generated"] = true
-				}
-			} else {
-				l.Debug(fmt.Sprintf("no clients found for contractor: %s, skipping content generation", contractorID))
-			}
-		}
-
-		details = append(details, contractorDetail)
+		lineItemsCreated += result.LineItemsCreated
+		deploymentsProcessed += result.DeploymentsProcessed
+		skipped += result.Skipped
+		details = append(details, result.Detail)
 	}
 
 	l.Info(fmt.Sprintf("initialization complete: orders_created=%d line_items_created=%d deployments_processed=%d skipped=%d",
@@ -807,4 +737,149 @@ func (h *handler) InitTaskOrderLogs(c *gin.Context) {
 		"skipped":               skipped,
 		"details":               details,
 	}, nil, nil, nil, "ok"))
+}
+
+// processContractorInit processes a single contractor's task order initialization
+func (h *handler) processContractorInit(
+	ctx context.Context,
+	l logger.Logger,
+	taskOrderLogService *notion.TaskOrderLogService,
+	contractorID string,
+	contractorDeps []*notion.DeploymentData,
+	month string,
+) contractorProcessResult {
+	result := contractorProcessResult{
+		ContractorID: contractorID,
+		Detail: map[string]any{
+			"contractor_id":      contractorID,
+			"deployments":        []string{},
+			"line_items_created": 0,
+		},
+	}
+
+	l.Debug(fmt.Sprintf("processing contractor: %s with %d deployments", contractorID, len(contractorDeps)))
+
+	var deploymentIDs []string
+
+	// Check if Order exists for this contractor and month
+	orderExists, orderID, err := taskOrderLogService.CheckOrderExistsByContractor(ctx, contractorID, month)
+	if err != nil {
+		l.Error(err, fmt.Sprintf("failed to check order existence: contractor=%s month=%s", contractorID, month))
+		result.Error = err
+		return result
+	}
+
+	// Create Order if it doesn't exist
+	if !orderExists {
+		l.Debug(fmt.Sprintf("creating order for contractor: %s month=%s", contractorID, month))
+		orderID, err = taskOrderLogService.CreateOrder(ctx, month)
+		if err != nil {
+			l.Error(err, fmt.Sprintf("failed to create order: contractor=%s month=%s", contractorID, month))
+			result.Error = err
+			return result
+		}
+		result.OrderCreated = true
+		l.Debug(fmt.Sprintf("created order: %s for contractor: %s", orderID, contractorID))
+	} else {
+		l.Debug(fmt.Sprintf("order already exists: %s for contractor: %s", orderID, contractorID))
+	}
+
+	result.Detail["order_page_id"] = orderID
+
+	// Process each deployment for this contractor
+	for _, deployment := range contractorDeps {
+		deploymentID := deployment.PageID
+		l.Debug(fmt.Sprintf("processing deployment: %s for contractor: %s", deploymentID, contractorID))
+
+		// Check if Line Item already exists for this order and deployment
+		exists, existingLineItemID, err := taskOrderLogService.CheckLineItemExists(ctx, orderID, deploymentID)
+		if err != nil {
+			l.Error(err, fmt.Sprintf("failed to check line item existence: order=%s deployment=%s", orderID, deploymentID))
+			continue
+		}
+
+		if exists {
+			l.Debug(fmt.Sprintf("line item already exists: %s for deployment: %s", existingLineItemID, deploymentID))
+			result.Skipped++
+			continue
+		}
+
+		// Create empty Line Item
+		l.Debug(fmt.Sprintf("creating empty line item: order=%s deployment=%s", orderID, deploymentID))
+		lineItemID, err := taskOrderLogService.CreateEmptyTimesheetLineItem(ctx, orderID, deploymentID, month)
+		if err != nil {
+			l.Error(err, fmt.Sprintf("failed to create empty line item: order=%s deployment=%s", orderID, deploymentID))
+			continue
+		}
+
+		l.Debug(fmt.Sprintf("created empty line item: %s for deployment: %s", lineItemID, deploymentID))
+		result.LineItemsCreated++
+		result.DeploymentsProcessed++
+		deploymentIDs = append(deploymentIDs, deploymentID)
+	}
+
+	result.Detail["deployments"] = deploymentIDs
+	result.Detail["line_items_created"] = len(deploymentIDs)
+
+	// Generate and append confirmation content to Order page
+	// Only generate if we created the order (new order)
+	if result.OrderCreated || !orderExists {
+		l.Debug(fmt.Sprintf("collecting client info for contractor: %s", contractorID))
+
+		// Collect client info from all deployments
+		var clients []model.TaskOrderClient
+		seenClients := make(map[string]bool)
+
+		for _, deployment := range contractorDeps {
+			clientInfo, err := taskOrderLogService.GetClientInfo(ctx, deployment.ProjectPageID)
+			if err != nil {
+				l.Error(err, fmt.Sprintf("failed to get client for project %s", deployment.ProjectPageID))
+				continue
+			}
+			if clientInfo != nil && clientInfo.Name != "" {
+				// If client is in Vietnam, use "Dwarves LLC" (USA) instead
+				if strings.TrimSpace(clientInfo.Country) == "Vietnam" {
+					clientInfo.Name = "Dwarves LLC"
+					clientInfo.Country = "USA"
+				}
+
+				clientKey := fmt.Sprintf("%s:%s", clientInfo.Name, clientInfo.Country)
+				if seenClients[clientKey] {
+					continue
+				}
+				seenClients[clientKey] = true
+
+				clients = append(clients, model.TaskOrderClient{
+					Name:    clientInfo.Name,
+					Country: clientInfo.Country,
+				})
+			}
+		}
+
+		if len(clients) > 0 {
+			// Get contractor name
+			contractorName, _ := taskOrderLogService.GetContractorInfo(ctx, contractorID)
+			if contractorName == "" {
+				contractorName = "Contractor"
+			}
+
+			// Generate HTML confirmation content from template
+			l.Debug(fmt.Sprintf("generating HTML confirmation content for contractor: %s with %d clients", contractorName, len(clients)))
+			htmlContent := taskOrderLogService.GenerateConfirmationHTML(contractorName, month, clients)
+
+			// Append HTML content as code block to Order page
+			l.Debug(fmt.Sprintf("appending HTML code block to order: %s", orderID))
+			if err := taskOrderLogService.AppendCodeBlockToPage(ctx, orderID, htmlContent); err != nil {
+				l.Error(err, fmt.Sprintf("failed to append HTML code block to order: %s", orderID))
+				result.Detail["content_error"] = err.Error()
+			} else {
+				l.Debug(fmt.Sprintf("successfully appended HTML code block to order: %s", orderID))
+				result.Detail["content_generated"] = true
+			}
+		} else {
+			l.Debug(fmt.Sprintf("no clients found for contractor: %s, skipping content generation", contractorID))
+		}
+	}
+
+	return result
 }

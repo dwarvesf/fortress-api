@@ -16,7 +16,7 @@
 											<tr>
 												<td style=3D"padding-right:20px;white-space:nowrap">
 													<h4 style=3D"color:rgb(212,46,96);font-size:15px;margin:0px 0px 3px;line-height:15px">
-														{{signatureName}}.</h4>
+														{{signatureName}}{{signatureNameSuffix}}</h4>
 													<h6 style=3D"color:rgb(25,27,57);font-size:11px;margin:0px;line-height:14px">
 														{{signatureTitle}}</h6>
 												</td>

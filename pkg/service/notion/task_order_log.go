@@ -1,11 +1,15 @@
 package notion
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
+	"text/template"
 	"time"
 
 	nt "github.com/dstotijn/go-notion"
@@ -1751,7 +1755,10 @@ func (s *TaskOrderLogService) GenerateConfirmationHTML(contractorName, month str
 		clientsHTML += fmt.Sprintf("        <li>%s</li>\n", clientStr)
 	}
 
-	// Build HTML content matching template format
+	// Load signature from template file
+	signature := s.loadTaskOrderSignature()
+
+	// Build HTML content matching template format with signature
 	html := fmt.Sprintf(`<div>
     <p>Hi %s,</p>
 
@@ -1769,19 +1776,60 @@ func (s *TaskOrderLogService) GenerateConfirmationHTML(contractorName, month str
 
     <p>Thanks,</p>
 
-    <p>
-        Dwarves LLC<br>
-    </p>
+    <div><br></div>-- <br>
+%s
 </div>`,
 		contractorLastName,
 		formattedMonth,
 		periodEndDay, monthName, year,
 		clientsHTML,
 		formattedMonth,
+		signature,
 	)
 
 	s.logger.Debug(fmt.Sprintf("generated HTML confirmation for %s: %d chars", contractorName, len(html)))
 	return html
+}
+
+// loadTaskOrderSignature loads and renders the signature from template file
+func (s *TaskOrderLogService) loadTaskOrderSignature() string {
+	templatePath := s.cfg.Invoice.TemplatePath
+	if s.cfg.Env == "local" || templatePath == "" {
+		pwd, err := os.Getwd()
+		if err != nil {
+			pwd = os.Getenv("GOPATH") + "/src/github.com/dwarvesf/fortress-api"
+		}
+		templatePath = filepath.Join(pwd, "pkg/templates")
+	}
+
+	signaturePath := filepath.Join(templatePath, "signature.tpl")
+	s.logger.Debug(fmt.Sprintf("loading task order signature from: %s", signaturePath))
+
+	// Parse and execute template with signatureName, signatureTitle, and signatureNameSuffix
+	tmpl, err := template.New("signature.tpl").Funcs(template.FuncMap{
+		"signatureName": func() string {
+			return "Team Dwarves"
+		},
+		"signatureTitle": func() string {
+			return "People Operations"
+		},
+		"signatureNameSuffix": func() string {
+			return "" // No dot for task order emails
+		},
+	}).ParseFiles(signaturePath)
+	if err != nil {
+		s.logger.Error(err, fmt.Sprintf("failed to parse signature template: %s", signaturePath))
+		return ""
+	}
+
+	var buf bytes.Buffer
+	if err := tmpl.Execute(&buf, nil); err != nil {
+		s.logger.Error(err, fmt.Sprintf("failed to execute signature template: %s", signaturePath))
+		return ""
+	}
+
+	s.logger.Debug(fmt.Sprintf("loaded task order signature: %d bytes", buf.Len()))
+	return buf.String()
 }
 
 // AppendCodeBlockToPage appends HTML content as a code block to a Notion page
@@ -1793,17 +1841,30 @@ func (s *TaskOrderLogService) AppendCodeBlockToPage(ctx context.Context, pageID 
 		return nil
 	}
 
+	// Split content into chunks of 2000 characters (Notion's limit for rich_text content)
+	const maxChunkSize = 2000
+	var richTexts []nt.RichText
+
+	for i := 0; i < len(content); i += maxChunkSize {
+		end := i + maxChunkSize
+		if end > len(content) {
+			end = len(content)
+		}
+		chunk := content[i:end]
+		richTexts = append(richTexts, nt.RichText{
+			Type: nt.RichTextTypeText,
+			Text: &nt.Text{
+				Content: chunk,
+			},
+		})
+	}
+
+	s.logger.Debug(fmt.Sprintf("split content into %d chunks", len(richTexts)))
+
 	// Create a code block with HTML language
 	lang := "html"
 	codeBlock := nt.CodeBlock{
-		RichText: []nt.RichText{
-			{
-				Type: nt.RichTextTypeText,
-				Text: &nt.Text{
-					Content: content,
-				},
-			},
-		},
+		RichText: richTexts,
 		Language: &lang,
 	}
 

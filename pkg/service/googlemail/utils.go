@@ -62,6 +62,10 @@ func composeMailContent(appConfig *config.Config, m *MailParseInfo) (string, err
 		}
 	}
 
+	m.FuncMap["signatureNameSuffix"] = func() string {
+		return "." // Keep dot for other emails
+	}
+
 	tmpl, err := template.New("mail").Funcs(m.FuncMap).ParseFiles(filepath.Join(templatePath, m.TemplateFileName), filepath.Join(templatePath, "signature.tpl"))
 	if err != nil {
 		return "", err
@@ -123,7 +127,16 @@ func composeTaskOrderConfirmationContent(appConfig *config.Config, data *model.T
 			}
 			return ""
 		},
-	}).ParseFiles(filepath.Join(templatePath, "taskOrderConfirmation.tpl"))
+		"signatureName": func() string {
+			return "Team Dwarves"
+		},
+		"signatureTitle": func() string {
+			return "People Operations"
+		},
+		"signatureNameSuffix": func() string {
+			return "" // No dot for task order emails
+		},
+	}).ParseFiles(filepath.Join(templatePath, "taskOrderConfirmation.tpl"), filepath.Join(templatePath, "signature.tpl"))
 	if err != nil {
 		return "", fmt.Errorf("failed to parse template: %w", err)
 	}

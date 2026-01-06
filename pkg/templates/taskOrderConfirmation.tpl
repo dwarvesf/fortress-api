@@ -28,9 +28,8 @@ Content-Transfer-Encoding: quoted-printable
 
     <p>Thanks,</p>
 
-    <p>
-        Dwarves LLC<br>
-    </p>
+    <div><br></div>-- <br>
+    {{ template "signature.tpl" }}
 </div>
 
 --main--
