@@ -1141,11 +1141,56 @@ func (s *TaskOrderLogService) QueryApprovedOrders(ctx context.Context) ([]*Appro
 				}
 			}
 
-			// Fetch contractor name and discord if we have the page ID
+			// If contractor is empty, try to get from Sub-item (for Order type)
+			if contractorPageID == "" {
+				s.logger.Debug("contractor rollup empty, trying to get from Sub-item relation")
+				if subitemRel, ok := props["Sub-item"]; ok && len(subitemRel.Relation) > 0 {
+					firstSubitemID := subitemRel.Relation[0].ID
+					s.logger.Debug(fmt.Sprintf("found first sub-item: %s", firstSubitemID))
+
+					// Fetch the sub-item page to get its Contractor rollup
+					subitemPage, err := s.client.FindPageByID(ctx, firstSubitemID)
+					if err != nil {
+						s.logger.Debug(fmt.Sprintf("failed to fetch sub-item page %s: %v", firstSubitemID, err))
+					} else {
+						subitemProps, ok := subitemPage.Properties.(nt.DatabasePageProperties)
+						if ok {
+							// Get Contractor from sub-item's rollup
+							if subRollup, ok := subitemProps["Contractor"]; ok && subRollup.Rollup != nil {
+								s.logger.Debug(fmt.Sprintf("sub-item contractor rollup array length: %d", len(subRollup.Rollup.Array)))
+								for _, item := range subRollup.Rollup.Array {
+									if len(item.Relation) > 0 {
+										contractorPageID = item.Relation[0].ID
+										s.logger.Debug(fmt.Sprintf("extracted contractor page ID from sub-item rollup: %s", contractorPageID))
+										break
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+
+			// Extract discord from Name property (format: "ORD :: discord :: YYYYMM")
 			contractorDiscord := ""
+			if titleProp, ok := props["Name"]; ok && len(titleProp.Title) > 0 {
+				fullName := ""
+				for _, t := range titleProp.Title {
+					fullName += t.PlainText
+				}
+				s.logger.Debug(fmt.Sprintf("order name: %s", fullName))
+				// Parse "ORD :: discord :: 202512" format
+				parts := strings.Split(fullName, " :: ")
+				if len(parts) >= 2 {
+					contractorDiscord = strings.TrimSpace(parts[1])
+					s.logger.Debug(fmt.Sprintf("extracted discord from name: %s", contractorDiscord))
+				}
+			}
+
+			// Fetch contractor name if we have the page ID
 			if contractorPageID != "" {
-				contractorName, contractorDiscord = s.GetContractorInfo(ctx, contractorPageID)
-				s.logger.Debug(fmt.Sprintf("fetched contractor info: name=%s discord=%s", contractorName, contractorDiscord))
+				contractorName, _ = s.GetContractorInfo(ctx, contractorPageID)
+				s.logger.Debug(fmt.Sprintf("fetched contractor name: %s", contractorName))
 			}
 
 			// Extract date

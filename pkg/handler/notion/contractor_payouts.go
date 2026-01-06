@@ -2,6 +2,7 @@ package notion
 
 import (
 	"fmt"
+	"math"
 	"net/http"
 	"sync"
 	"time"
@@ -23,6 +24,69 @@ func formatMonthYear(month string) string {
 		return month // Return as-is if parsing fails
 	}
 	return t.Format("January, 2006")
+}
+
+// countWorkingDays counts working days (Mon-Fri) between two dates inclusive
+func countWorkingDays(start, end time.Time) int {
+	if start.After(end) {
+		return 0
+	}
+
+	count := 0
+	current := start
+	for !current.After(end) {
+		weekday := current.Weekday()
+		if weekday != time.Saturday && weekday != time.Sunday {
+			count++
+		}
+		current = current.AddDate(0, 0, 1)
+	}
+	return count
+}
+
+// calculateMonthlyFixedAmount calculates the prorated monthly fixed amount based on working days
+// startDate: contractor's start date from Contractor Rates
+// orderDate: the order date (used to determine the month)
+// monthlyFixed: the full monthly fixed amount
+func calculateMonthlyFixedAmount(startDate *time.Time, orderDate time.Time, monthlyFixed float64, l logger.Logger) float64 {
+	// Get first and last day of the order month
+	firstOfMonth := time.Date(orderDate.Year(), orderDate.Month(), 1, 0, 0, 0, 0, orderDate.Location())
+	lastOfMonth := firstOfMonth.AddDate(0, 1, -1)
+
+	// Calculate total working days in the month
+	totalWorkingDays := countWorkingDays(firstOfMonth, lastOfMonth)
+	l.Debug(fmt.Sprintf("calculateMonthlyFixedAmount: month=%s totalWorkingDays=%d", firstOfMonth.Format("2006-01"), totalWorkingDays))
+
+	if totalWorkingDays == 0 {
+		l.Debug("calculateMonthlyFixedAmount: no working days in month, returning 0")
+		return 0
+	}
+
+	// Determine the effective start date for this month
+	effectiveStart := firstOfMonth
+	if startDate != nil && startDate.After(firstOfMonth) && !startDate.After(lastOfMonth) {
+		// Start date is within this month
+		effectiveStart = *startDate
+		l.Debug(fmt.Sprintf("calculateMonthlyFixedAmount: startDate=%s is within month, using as effectiveStart", startDate.Format("2006-01-02")))
+	} else if startDate != nil && startDate.After(lastOfMonth) {
+		// Start date is after this month - no working days
+		l.Debug(fmt.Sprintf("calculateMonthlyFixedAmount: startDate=%s is after month, returning 0", startDate.Format("2006-01-02")))
+		return 0
+	}
+
+	// Calculate actual working days from effective start to end of month
+	actualWorkingDays := countWorkingDays(effectiveStart, lastOfMonth)
+	l.Debug(fmt.Sprintf("calculateMonthlyFixedAmount: effectiveStart=%s actualWorkingDays=%d", effectiveStart.Format("2006-01-02"), actualWorkingDays))
+
+	// Prorate the amount
+	amount := monthlyFixed * float64(actualWorkingDays) / float64(totalWorkingDays)
+	l.Debug(fmt.Sprintf("calculateMonthlyFixedAmount: monthlyFixed=%.2f * (%d/%d) = %.2f", monthlyFixed, actualWorkingDays, totalWorkingDays, amount))
+
+	// Round up to nearest thousand
+	roundedAmount := math.Ceil(amount/1000) * 1000
+	l.Debug(fmt.Sprintf("calculateMonthlyFixedAmount: rounded up to nearest thousand: %.2f -> %.2f", amount, roundedAmount))
+
+	return roundedAmount
 }
 
 var (
@@ -240,8 +304,9 @@ func (h *handler) processContractorPayrollPayouts(c *gin.Context, l logger.Logge
 				// Calculate amount based on billing type
 				var amount float64
 				if rate.BillingType == "Monthly Fixed" {
-					amount = rate.MonthlyFixed
-					l.Debug(fmt.Sprintf("[worker-%d] using monthly fixed rate: %.2f", workerID, amount))
+					// Prorate monthly fixed based on actual working days from Start Date
+					amount = calculateMonthlyFixedAmount(rate.StartDate, order.Date, rate.MonthlyFixed, l)
+					l.Debug(fmt.Sprintf("[worker-%d] using monthly fixed rate: %.2f (prorated from %.2f)", workerID, amount, rate.MonthlyFixed))
 				} else {
 					amount = rate.HourlyRate * order.FinalHoursWorked
 					l.Debug(fmt.Sprintf("[worker-%d] using hourly rate: %.2f * %.2f = %.2f", workerID, rate.HourlyRate, order.FinalHoursWorked, amount))
