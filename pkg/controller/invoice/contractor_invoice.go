@@ -60,11 +60,6 @@ type ContractorInvoiceLineItem struct {
 	CommissionProject string
 }
 
-// commissionGroupKey represents a unique key for grouping commissions by role+project
-type commissionGroupKey struct {
-	Role    string
-	Project string
-}
 
 // GenerateContractorInvoice generates contractor invoice data from Notion
 func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, month string) (*ContractorInvoiceData, error) {
@@ -265,10 +260,10 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 
 	l.Debug(fmt.Sprintf("built %d line items with total=%.2f USD", len(lineItems), total))
 
-	// 4.5 Group Commission items by Role + Project (from Invoice Split relation)
-	l.Debug("grouping commission items by role and project")
+	// 4.5 Group Commission items by Project (all commissions for same project are summed)
+	l.Debug("grouping commission items by project")
 	var nonCommissionItems []ContractorInvoiceLineItem
-	commissionGroups := make(map[commissionGroupKey]float64)
+	commissionGroups := make(map[string]float64) // key = project name
 
 	for _, item := range lineItems {
 		if item.Type != string(notion.PayoutSourceTypeCommission) {
@@ -276,31 +271,23 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 			continue
 		}
 
-		// Use CommissionRole and CommissionProject from Invoice Split
-		if item.CommissionRole == "" {
-			l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: commission has no role, keeping as-is: %s", item.Description))
-			// Keep original item if no role found
-			nonCommissionItems = append(nonCommissionItems, item)
-			continue
-		}
+		l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: commission - project=%s amount=%.2f",
+			item.CommissionProject, item.AmountUSD))
 
-		l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: commission - role=%s project=%s amount=%.2f",
-			item.CommissionRole, item.CommissionProject, item.AmountUSD))
-
-		key := commissionGroupKey{Role: item.CommissionRole, Project: item.CommissionProject}
-		commissionGroups[key] += item.AmountUSD
+		// Group by project name (empty string if no project)
+		commissionGroups[item.CommissionProject] += item.AmountUSD
 	}
 
 	// Convert grouped commissions to line items
 	var groupedCommissionItems []ContractorInvoiceLineItem
-	for key, totalAmount := range commissionGroups {
+	for project, totalAmount := range commissionGroups {
 		// Round total to 2 decimal places
 		groupTotal := math.Round(totalAmount*100) / 100
 
-		// Build description: "AM Bonus for Renaiss" or "Sales Commission"
-		description := key.Role
-		if key.Project != "" {
-			description = fmt.Sprintf("%s for %s", key.Role, key.Project)
+		// Build description: "Bonus for Renaiss" or "Bonus"
+		description := "Bonus"
+		if project != "" {
+			description = fmt.Sprintf("Bonus for %s", project)
 		}
 
 		l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: grouped commission - description=%s total=%.2f", description, groupTotal))
