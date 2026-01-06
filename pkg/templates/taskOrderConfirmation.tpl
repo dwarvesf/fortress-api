@@ -1,5 +1,5 @@
 Mime-Version: 1.0
-From: "Team @ Dwarves LLC" <accounting@d.foundation>
+From: "Team @ Dwarves LLC" <spawn@d.foundation>
 To: {{.TeamEmail}}
 Subject: Monthly Task Order - {{formattedMonth}}
 Content-Type: multipart/mixed; boundary=main

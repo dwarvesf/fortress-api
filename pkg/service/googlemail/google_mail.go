@@ -436,20 +436,16 @@ func (g *googleService) SendPayrollPaidMail(p *model.Payroll) (err error) {
 
 // SendTaskOrderConfirmationMail sends a monthly task order confirmation email
 func (g *googleService) SendTaskOrderConfirmationMail(data *model.TaskOrderConfirmationEmail) error {
-	// Use accounting refresh token
-	if err := g.ensureToken(g.appConfig.Google.AccountingGoogleRefreshToken); err != nil {
+	// Use team refresh token (spawn@d.foundation)
+	if err := g.ensureToken(g.appConfig.Google.TeamGoogleRefreshToken); err != nil {
 		return err
 	}
 	if err := g.prepareService(); err != nil {
 		return err
 	}
 
-	// Verify accounting alias
-	id := g.appConfig.Google.AccountingEmailID
-	verified, err := g.IsAliasVerified(id, "accounting@d.foundation")
-	if err != nil || !verified {
-		return fmt.Errorf("accounting@d.foundation alias not verified for user %s", id)
-	}
+	// Use team email ID
+	id := g.appConfig.Google.TeamEmailID
 
 	// Parse template
 	content, err := composeTaskOrderConfirmationContent(g.appConfig, data)
@@ -470,20 +466,16 @@ func (g *googleService) SendTaskOrderConfirmationMail(data *model.TaskOrderConfi
 
 // SendTaskOrderRawContentMail sends task order confirmation email with raw content from Order page body
 func (g *googleService) SendTaskOrderRawContentMail(data *model.TaskOrderRawEmail) error {
-	// Use accounting refresh token
-	if err := g.ensureToken(g.appConfig.Google.AccountingGoogleRefreshToken); err != nil {
+	// Use team refresh token (spawn@d.foundation)
+	if err := g.ensureToken(g.appConfig.Google.TeamGoogleRefreshToken); err != nil {
 		return err
 	}
 	if err := g.prepareService(); err != nil {
 		return err
 	}
 
-	// Verify accounting alias
-	id := g.appConfig.Google.AccountingEmailID
-	verified, err := g.IsAliasVerified(id, "accounting@d.foundation")
-	if err != nil || !verified {
-		return fmt.Errorf("accounting@d.foundation alias not verified for user %s", id)
-	}
+	// Use team email ID
+	id := g.appConfig.Google.TeamEmailID
 
 	// Parse month for subject
 	formattedMonth := data.Month
@@ -496,7 +488,7 @@ func (g *googleService) SendTaskOrderRawContentMail(data *model.TaskOrderRawEmai
 
 	// Build email content
 	content := fmt.Sprintf(`Mime-Version: 1.0
-From: "Team @ Dwarves LLC" <accounting@d.foundation>
+From: "Team @ Dwarves LLC" <spawn@d.foundation>
 To: %s
 Subject: Monthly Task Order - %s
 Content-Type: text/html; charset="UTF-8"
@@ -507,7 +499,7 @@ Content-Type: text/html; charset="UTF-8"
 `, data.TeamEmail, formattedMonth, htmlContent)
 
 	// Send email
-	_, err = g.service.Users.Messages.Send(id, &gmail.Message{
+	_, err := g.service.Users.Messages.Send(id, &gmail.Message{
 		Raw: base64.URLEncoding.EncodeToString([]byte(content)),
 	}).Do()
 	if err != nil {
