@@ -321,6 +321,37 @@ func (g *googleService) DownloadInvoicePDF(invoice *model.Invoice, dirName strin
 	return io.ReadAll(resp.Body)
 }
 
+// ShareFileWithEmail shares a Google Drive file with the specified email address
+// Google automatically sends a notification email to the recipient
+// Uses spawn@d.foundation (TeamGoogleRefreshToken) for sharing
+func (g *googleService) ShareFileWithEmail(fileID, email string) error {
+	if err := g.ensureToken(g.appConfig.Google.TeamGoogleRefreshToken); err != nil {
+		return err
+	}
+
+	if err := g.prepareService(); err != nil {
+		return err
+	}
+
+	permission := &drive.Permission{
+		Type:         "user",
+		Role:         "reader",
+		EmailAddress: email,
+	}
+
+	_, err := g.service.Permissions.Create(fileID, permission).
+		SendNotificationEmail(true).
+		EmailMessage("Your invoice has been generated and is ready for review.").
+		SupportsAllDrives(true).
+		Do()
+
+	if err != nil {
+		return fmt.Errorf("failed to share file with email %s: %w", email, err)
+	}
+
+	return nil
+}
+
 // UploadContractorInvoicePDF uploads a contractor invoice PDF to Google Drive
 // It creates a subfolder for the contractor if it doesn't exist
 // Returns the public URL of the uploaded file

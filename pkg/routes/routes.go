@@ -13,10 +13,12 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/controller"
 	"github.com/dwarvesf/fortress-api/pkg/handler"
+	"github.com/dwarvesf/fortress-api/pkg/handler/webhook"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/middleware"
 	"github.com/dwarvesf/fortress-api/pkg/monitoring"
 	"github.com/dwarvesf/fortress-api/pkg/service"
+	"github.com/dwarvesf/fortress-api/pkg/service/ratelimit"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/worker"
 )
@@ -50,6 +52,10 @@ func NewRoutes(cfg *config.Config, svc *service.Service, s *store.Store, repo st
 
 	ctrl := controller.New(s, repo, svc, worker, logger, cfg)
 	h := handler.New(s, repo, svc, ctrl, worker, logger, cfg)
+
+	// Initialize invoice rate limiter for gen-invoice webhook
+	invoiceRateLimiter := ratelimit.NewInvoiceRateLimiter(logger)
+	webhook.SetInvoiceRateLimiter(invoiceRateLimiter)
 
 	// Setup Prometheus monitoring middleware
 	prometheusConfig := &monitoring.PrometheusConfig{

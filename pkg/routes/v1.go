@@ -87,6 +87,7 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 		webhook.POST("/notion/send-email-confirmation", h.Webhook.HandleNotionTaskOrderSendEmail)
 
 		webhook.POST("/discord/interaction", h.Webhook.HandleDiscordInteraction)
+		webhook.POST("/discord/gen-invoice", h.Webhook.HandleGenInvoice)
 
 		basecampGroup := webhook.Group("/basecamp")
 		{
