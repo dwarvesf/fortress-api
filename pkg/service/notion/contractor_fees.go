@@ -63,9 +63,9 @@ func (s *ContractorFeesService) GetContractorFeesByID(ctx context.Context, feesP
 	}
 
 	// Debug: Log available properties
-	fmt.Printf("[DEBUG] contractor_fees: Available properties for page %s:\n", feesPageID)
+	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_fees: Available properties for page %s:", feesPageID))
 	for propName := range props {
-		fmt.Printf("[DEBUG]   - %s\n", propName)
+		s.logger.Debug(fmt.Sprintf("[DEBUG]   - %s", propName))
 	}
 
 	// Extract contractor fees data
@@ -186,10 +186,10 @@ func (s *ContractorFeesService) GetTaskOrderLogIDs(ctx context.Context, feesPage
 	}
 
 	// Debug: Log available properties to find Task Order Log relation name
-	fmt.Printf("[DEBUG] contractor_fees: Looking for Task Order Log relation in page %s:\n", feesPageID)
+	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_fees: Looking for Task Order Log relation in page %s:", feesPageID))
 	for propName, prop := range props {
 		if len(prop.Relation) > 0 {
-			fmt.Printf("[DEBUG]   - %s (Relation, count=%d)\n", propName, len(prop.Relation))
+			s.logger.Debug(fmt.Sprintf("[DEBUG]   - %s (Relation, count=%d)", propName, len(prop.Relation)))
 		}
 	}
 

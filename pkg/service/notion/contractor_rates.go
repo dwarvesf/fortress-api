@@ -124,9 +124,9 @@ func (s *ContractorRatesService) QueryRatesByDiscordAndMonth(ctx context.Context
 			}
 
 			// Debug: Log all property names
-			fmt.Printf("[DEBUG] contractor_rates: Available properties for page %s:\n", page.ID)
+			s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_rates: Available properties for page %s:", page.ID))
 			for propName := range props {
-				fmt.Printf("[DEBUG]   - %s\n", propName)
+				s.logger.Debug(fmt.Sprintf("[DEBUG]   - %s", propName))
 			}
 
 			// Extract Start Date and End Date for filtering
@@ -150,13 +150,13 @@ func (s *ContractorRatesService) QueryRatesByDiscordAndMonth(ctx context.Context
 
 			// Extract contractor page ID
 			contractorPageID := s.extractFirstRelationID(props, "Contractor")
-			fmt.Printf("[DEBUG] contractor_rates: contractorPageID=%s\n", contractorPageID)
+			s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_rates: contractorPageID=%s", contractorPageID))
 
 			// Fetch contractor name from Contractor page
 			contractorName := ""
 			if contractorPageID != "" {
 				contractorName = s.getContractorName(ctx, contractorPageID)
-				fmt.Printf("[DEBUG] contractor_rates: fetched contractorName=%s\n", contractorName)
+				s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_rates: fetched contractorName=%s", contractorName))
 			}
 
 			// Extract rate data
@@ -200,31 +200,31 @@ func (s *ContractorRatesService) QueryRatesByDiscordAndMonth(ctx context.Context
 func (s *ContractorRatesService) getContractorName(ctx context.Context, pageID string) string {
 	page, err := s.client.FindPageByID(ctx, pageID)
 	if err != nil {
-		fmt.Printf("[DEBUG] getContractorName: failed to fetch contractor page %s: %v\n", pageID, err)
+		s.logger.Debug(fmt.Sprintf("[DEBUG] getContractorName: failed to fetch contractor page %s: %v", pageID, err))
 		return ""
 	}
 
 	props, ok := page.Properties.(nt.DatabasePageProperties)
 	if !ok {
-		fmt.Printf("[DEBUG] getContractorName: failed to cast page properties for %s\n", pageID)
+		s.logger.Debug(fmt.Sprintf("[DEBUG] getContractorName: failed to cast page properties for %s", pageID))
 		return ""
 	}
 
 	// Try to get Full Name from Title property
 	if prop, ok := props["Full Name"]; ok && len(prop.Title) > 0 {
 		name := prop.Title[0].PlainText
-		fmt.Printf("[DEBUG] getContractorName: found Full Name in Title: %s\n", name)
+		s.logger.Debug(fmt.Sprintf("[DEBUG] getContractorName: found Full Name in Title: %s", name))
 		return name
 	}
 
 	// Try Name property as fallback
 	if prop, ok := props["Name"]; ok && len(prop.Title) > 0 {
 		name := prop.Title[0].PlainText
-		fmt.Printf("[DEBUG] getContractorName: found Name in Title: %s\n", name)
+		s.logger.Debug(fmt.Sprintf("[DEBUG] getContractorName: found Name in Title: %s", name))
 		return name
 	}
 
-	fmt.Printf("[DEBUG] getContractorName: no Full Name or Name property found for page %s\n", pageID)
+	s.logger.Debug(fmt.Sprintf("[DEBUG] getContractorName: no Full Name or Name property found for page %s", pageID))
 	return ""
 }
 
@@ -379,7 +379,7 @@ func (s *ContractorRatesService) FindActiveRateByContractor(ctx context.Context,
 			if payDayStr != "" {
 				_, _ = fmt.Sscanf(payDayStr, "%d", &payDay)
 			}
-			fmt.Printf("[DEBUG] contractor_rates: extracted Payday=%s -> payDay=%d\n", payDayStr, payDay)
+			s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_rates: extracted Payday=%s -> payDay=%d", payDayStr, payDay))
 			s.logger.Debug(fmt.Sprintf("extracted payDay=%d", payDay))
 
 			// Extract rate data

@@ -128,7 +128,7 @@ func New(cfg *config.Config, store *store.Store, repo store.DBRepo) (*Service, e
 		Scopes:       []string{googledrive.FullDriveAccessScope},
 	}
 
-	googleDriveSvc := googledrive.New(driveConfig, cfg)
+	googleDriveSvc := googledrive.New(driveConfig, cfg, logger.L)
 
 	googleAdminConfig := &oauth2.Config{
 		ClientID:     cfg.Google.ClientID,

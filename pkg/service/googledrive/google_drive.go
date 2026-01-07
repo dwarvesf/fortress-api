@@ -14,6 +14,7 @@ import (
 	"google.golang.org/api/option"
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
+	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 )
 
@@ -24,13 +25,15 @@ type googleService struct {
 	token     *oauth2.Token
 	service   *drive.Service
 	appConfig *config.Config
+	logger    logger.Logger
 }
 
 // New function return Google service
-func New(config *oauth2.Config, appConfig *config.Config) IService {
+func New(config *oauth2.Config, appConfig *config.Config, l logger.Logger) IService {
 	return &googleService{
 		config:    config,
 		appConfig: appConfig,
+		logger:    l,
 	}
 }
 
@@ -111,26 +114,26 @@ func (g *googleService) findInvoiceDir(year, status string) (*drive.File, error)
 }
 
 func (g *googleService) getDirID(dirName, parentDirID string) (*drive.File, error) {
-	fmt.Printf("[DEBUG] getDirID: searching for dirName=%s in parentDirID=%s\n", dirName, parentDirID)
+	g.logger.Debug(fmt.Sprintf("[DEBUG] getDirID: searching for dirName=%s in parentDirID=%s", dirName, parentDirID))
 
 	dir, err := g.searchFile(dirName, parentDirID, true)
 	if err != nil {
-		fmt.Printf("[DEBUG] getDirID: search error: %v\n", err)
+		g.logger.Debug(fmt.Sprintf("[DEBUG] getDirID: search error: %v", err))
 		return nil, err
 	}
 
 	if dir != nil {
-		fmt.Printf("[DEBUG] getDirID: found existing dir id=%s name=%s\n", dir.Id, dir.Name)
+		g.logger.Debug(fmt.Sprintf("[DEBUG] getDirID: found existing dir id=%s name=%s", dir.Id, dir.Name))
 		return dir, nil
 	}
 
-	fmt.Printf("[DEBUG] getDirID: dir not found, creating new dir: %s\n", dirName)
+	g.logger.Debug(fmt.Sprintf("[DEBUG] getDirID: dir not found, creating new dir: %s", dirName))
 	newDir, err := g.newDir(dirName, parentDirID)
 	if err != nil {
-		fmt.Printf("[DEBUG] getDirID: create dir error: %v\n", err)
+		g.logger.Debug(fmt.Sprintf("[DEBUG] getDirID: create dir error: %v", err))
 		return nil, err
 	}
-	fmt.Printf("[DEBUG] getDirID: created new dir id=%s name=%s\n", newDir.Id, newDir.Name)
+	g.logger.Debug(fmt.Sprintf("[DEBUG] getDirID: created new dir id=%s name=%s", newDir.Id, newDir.Name))
 	return newDir, nil
 }
 
@@ -207,8 +210,8 @@ func (g *googleService) searchFile(name, parentId string, isFolder bool) (*drive
 			}
 			// Also try comparing slugged versions (to match "LE MINH QUANG" with "le-minh-quang")
 			if slugContractorName(file.Name) == name {
-				fmt.Printf("[DEBUG] searchFile: found folder via slug match: '%s' (slugs to '%s') matches search '%s'\n",
-					file.Name, slugContractorName(file.Name), name)
+				g.logger.Debug(fmt.Sprintf("[DEBUG] searchFile: found folder via slug match: '%s' (slugs to '%s') matches search '%s'",
+					file.Name, slugContractorName(file.Name), name))
 				return file, nil
 			}
 		}
@@ -368,8 +371,8 @@ func (g *googleService) UploadContractorInvoicePDF(contractorName, fileName stri
 	folderName := slugContractorName(contractorName)
 
 	// Debug logging
-	fmt.Printf("[DEBUG] UploadContractorInvoicePDF: contractorName=%s folderName=%s parentDirID=%s\n",
-		contractorName, folderName, g.appConfig.Invoice.ContractorInvoiceDirID)
+	g.logger.Debug(fmt.Sprintf("[DEBUG] UploadContractorInvoicePDF: contractorName=%s folderName=%s parentDirID=%s",
+		contractorName, folderName, g.appConfig.Invoice.ContractorInvoiceDirID))
 
 	// Get or create contractor subfolder
 	contractorDir, err := g.getDirID(folderName, g.appConfig.Invoice.ContractorInvoiceDirID)
@@ -377,7 +380,7 @@ func (g *googleService) UploadContractorInvoicePDF(contractorName, fileName stri
 		return "", fmt.Errorf("failed to get contractor directory: %w", err)
 	}
 
-	fmt.Printf("[DEBUG] UploadContractorInvoicePDF: got contractorDir id=%s name=%s\n", contractorDir.Id, contractorDir.Name)
+	g.logger.Debug(fmt.Sprintf("[DEBUG] UploadContractorInvoicePDF: got contractorDir id=%s name=%s", contractorDir.Id, contractorDir.Name))
 
 	// Upload the PDF file
 	file, err := g.newFile(fileName, "application/pdf", bytes.NewReader(pdfBytes), contractorDir.Id)

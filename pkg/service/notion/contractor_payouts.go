@@ -112,9 +112,9 @@ func (s *ContractorPayoutsService) QueryPendingPayoutsByContractor(ctx context.C
 			}
 
 			// Debug: Log available properties
-			fmt.Printf("[DEBUG] contractor_payouts: Available properties for page %s:\n", page.ID)
+			s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: Available properties for page %s:", page.ID))
 			for propName := range props {
-				fmt.Printf("[DEBUG]   - %s\n", propName)
+				s.logger.Debug(fmt.Sprintf("[DEBUG]   - %s", propName))
 			}
 
 			// Debug: log all select properties to find Currency

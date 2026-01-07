@@ -91,9 +91,9 @@ func (s *InvoiceSplitService) GetInvoiceSplitByID(ctx context.Context, splitPage
 	}
 
 	// Debug: Log available properties
-	fmt.Printf("[DEBUG] invoice_split: Available properties for page %s:\n", splitPageID)
+	s.logger.Debug(fmt.Sprintf("[DEBUG] invoice_split: Available properties for page %s:", splitPageID))
 	for propName := range props {
-		fmt.Printf("[DEBUG]   - %s\n", propName)
+		s.logger.Debug(fmt.Sprintf("[DEBUG]   - %s", propName))
 	}
 
 	// Extract invoice split data

@@ -956,68 +956,67 @@ func (s *TaskOrderLogService) QueryOrderSubitems(ctx context.Context, orderPageI
 			}
 
 			// Debug: Log ALL available properties on this subitem page
-			fmt.Printf("[DEBUG] task_order_log: ===== Subitem page %s properties =====\n", page.ID)
+			s.logger.Debug(fmt.Sprintf("[DEBUG] task_order_log: ===== Subitem page %s properties =====", page.ID))
 			for propName, prop := range props {
-				fmt.Printf("[DEBUG]   Property: %s\n", propName)
+				s.logger.Debug(fmt.Sprintf("[DEBUG]   Property: %s", propName))
 				if len(prop.Relation) > 0 {
-					fmt.Printf("[DEBUG]     Type: Relation, Count: %d, First ID: %s\n", len(prop.Relation), prop.Relation[0].ID)
+					s.logger.Debug(fmt.Sprintf("[DEBUG]     Type: Relation, Count: %d, First ID: %s", len(prop.Relation), prop.Relation[0].ID))
 				}
 				if prop.Rollup != nil {
-					fmt.Printf("[DEBUG]     Type: Rollup, Array Length: %d\n", len(prop.Rollup.Array))
+					s.logger.Debug(fmt.Sprintf("[DEBUG]     Type: Rollup, Array Length: %d", len(prop.Rollup.Array)))
 					for i, item := range prop.Rollup.Array {
-						fmt.Printf("[DEBUG]       Rollup[%d]: Title=%d, RichText=%d, Relation=%d\n",
-							i, len(item.Title), len(item.RichText), len(item.Relation))
+						s.logger.Debug(fmt.Sprintf("[DEBUG]       Rollup[%d]: Title=%d, RichText=%d, Relation=%d", i, len(item.Title), len(item.RichText), len(item.Relation)))
 						if len(item.Relation) > 0 {
-							fmt.Printf("[DEBUG]         Relation[0] ID: %s\n", item.Relation[0].ID)
+							s.logger.Debug(fmt.Sprintf("[DEBUG]         Relation[0] ID: %s", item.Relation[0].ID))
 						}
 					}
 				}
 				if len(prop.Title) > 0 {
-					fmt.Printf("[DEBUG]     Type: Title, Value: %s\n", prop.Title[0].PlainText)
+					s.logger.Debug(fmt.Sprintf("[DEBUG]     Type: Title, Value: %s", prop.Title[0].PlainText))
 				}
 				if len(prop.RichText) > 0 {
-					fmt.Printf("[DEBUG]     Type: RichText, Value: %s\n", prop.RichText[0].PlainText)
+					s.logger.Debug(fmt.Sprintf("[DEBUG]     Type: RichText, Value: %s", prop.RichText[0].PlainText))
 				}
 				if prop.Select != nil {
-					fmt.Printf("[DEBUG]     Type: Select, Value: %s\n", prop.Select.Name)
+					s.logger.Debug(fmt.Sprintf("[DEBUG]     Type: Select, Value: %s", prop.Select.Name))
 				}
 				if prop.Number != nil {
-					fmt.Printf("[DEBUG]     Type: Number, Value: %f\n", *prop.Number)
+					s.logger.Debug(fmt.Sprintf("[DEBUG]     Type: Number, Value: %f", *prop.Number))
 				}
 			}
-			fmt.Printf("[DEBUG] task_order_log: ===== End of properties =====\n")
+			s.logger.Debug("[DEBUG] task_order_log: ===== End of properties =====")
 
 			// Extract project name: Subitem -> Deployment -> Project
 			projectName := ""
 			projectID := ""
 			deploymentID := s.extractFirstRelationID(props, "Deployment")
-			fmt.Printf("[DEBUG] task_order_log: extracted deploymentID=%s\n", deploymentID)
+			s.logger.Debug(fmt.Sprintf("[DEBUG] task_order_log: extracted deploymentID=%s", deploymentID))
 			if deploymentID != "" {
 				// Fetch Deployment page to get Project relation
 				deploymentPage, err := s.client.FindPageByID(ctx, deploymentID)
 				if err != nil {
-					fmt.Printf("[DEBUG] task_order_log: failed to fetch deployment page %s: %v\n", deploymentID, err)
+					s.logger.Debug(fmt.Sprintf("[DEBUG] task_order_log: failed to fetch deployment page %s: %v", deploymentID, err))
 				} else {
 					deploymentProps, ok := deploymentPage.Properties.(nt.DatabasePageProperties)
 					if ok {
 						// Get Project relation from Deployment page
 						projectID = s.extractFirstRelationID(deploymentProps, "Project")
-						fmt.Printf("[DEBUG] task_order_log: extracted projectID from Deployment.Project=%s\n", projectID)
+						s.logger.Debug(fmt.Sprintf("[DEBUG] task_order_log: extracted projectID from Deployment.Project=%s", projectID))
 						if projectID != "" {
 							// Fetch Project page to get name
 							projectPage, err := s.client.FindPageByID(ctx, projectID)
 							if err != nil {
-								fmt.Printf("[DEBUG] task_order_log: failed to fetch project page %s: %v\n", projectID, err)
+								s.logger.Debug(fmt.Sprintf("[DEBUG] task_order_log: failed to fetch project page %s: %v", projectID, err))
 							} else {
 								projectProps, ok := projectPage.Properties.(nt.DatabasePageProperties)
 								if ok {
 									// Try Project column first, then Name
 									if prop, ok := projectProps["Project"]; ok && len(prop.Title) > 0 {
 										projectName = prop.Title[0].PlainText
-										fmt.Printf("[DEBUG] task_order_log: extracted projectName from Project: %s\n", projectName)
+										s.logger.Debug(fmt.Sprintf("[DEBUG] task_order_log: extracted projectName from Project: %s", projectName))
 									} else if prop, ok := projectProps["Name"]; ok && len(prop.Title) > 0 {
 										projectName = prop.Title[0].PlainText
-										fmt.Printf("[DEBUG] task_order_log: extracted projectName from Name: %s\n", projectName)
+										s.logger.Debug(fmt.Sprintf("[DEBUG] task_order_log: extracted projectName from Name: %s", projectName))
 									}
 								}
 							}
@@ -1025,7 +1024,7 @@ func (s *TaskOrderLogService) QueryOrderSubitems(ctx context.Context, orderPageI
 					}
 				}
 			}
-			fmt.Printf("[DEBUG] task_order_log: final projectName=%s projectID=%s\n", projectName, projectID)
+			s.logger.Debug(fmt.Sprintf("[DEBUG] task_order_log: final projectName=%s projectID=%s", projectName, projectID))
 
 			subitem := &OrderSubitem{
 				PageID:      page.ID,
