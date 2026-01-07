@@ -860,6 +860,17 @@ func (s *TaskOrderLogService) extractFirstRelationID(props nt.DatabasePageProper
 	return ""
 }
 
+func (s *TaskOrderLogService) extractMultiSelectNames(props nt.DatabasePageProperties, propName string) []string {
+	var names []string
+	if prop, ok := props[propName]; ok && len(prop.MultiSelect) > 0 {
+		for _, opt := range prop.MultiSelect {
+			names = append(names, opt.Name)
+		}
+		s.logger.Debug(fmt.Sprintf("extracted multi-select %s: %v", propName, names))
+	}
+	return names
+}
+
 func (s *TaskOrderLogService) extractDateString(props nt.DatabasePageProperties, propName string) string {
 	if prop, ok := props[propName]; ok && prop.Date != nil {
 		return prop.Date.Start.String()
@@ -1063,10 +1074,11 @@ type ApprovedOrderData struct {
 
 // DeploymentData represents an active deployment from Deployment Tracker
 type DeploymentData struct {
-	PageID           string // Deployment page ID
-	ContractorPageID string // From Contractor relation
-	ProjectPageID    string // From Project relation
-	Status           string // Deployment status
+	PageID           string   // Deployment page ID
+	ContractorPageID string   // From Contractor relation
+	ProjectPageID    string   // From Project relation
+	Status           string   // Deployment status
+	Type             []string // Deployment types from Type multi-select (Official, Part-time, Shadow, Not started)
 }
 
 // ClientInfo represents client information from Project relation
@@ -1484,6 +1496,7 @@ func (s *TaskOrderLogService) QueryActiveDeploymentsByMonth(ctx context.Context,
 				ContractorPageID: s.extractFirstRelationID(props, "Contractor"),
 				ProjectPageID:    s.extractFirstRelationID(props, "Project"),
 				Status:           s.extractStatus(props, "Deployment Status"),
+				Type:             s.extractMultiSelectNames(props, "Type"),
 			}
 
 			deployments = append(deployments, deployment)

@@ -440,8 +440,24 @@ func (h *handler) SendTaskOrderConfirmation(c *gin.Context) {
 				continue
 			}
 			if clientInfo != nil && clientInfo.Name != "" {
-				// If client is in Vietnam, use "Dwarves LLC" (USA) instead
-				if strings.TrimSpace(clientInfo.Country) == "Vietnam" {
+				// Check if deployment Type contains "Shadow"
+				isShadow := false
+				for _, t := range deployment.Type {
+					if t == "Shadow" {
+						isShadow = true
+						l.Debug(fmt.Sprintf("deployment %s is Shadow type, will use Dwarves LLC", deployment.PageID))
+						break
+					}
+				}
+
+				// If Shadow deployment, use "Dwarves LLC" (USA)
+				if isShadow {
+					l.Debug(fmt.Sprintf("replacing client %s (%s) with Dwarves LLC (USA) for Shadow deployment", clientInfo.Name, clientInfo.Country))
+					clientInfo.Name = "Dwarves LLC"
+					clientInfo.Country = "USA"
+				} else if strings.TrimSpace(clientInfo.Country) == "Vietnam" {
+					// If client is in Vietnam, use "Dwarves LLC" (USA) instead
+					l.Debug(fmt.Sprintf("replacing Vietnam client %s with Dwarves LLC (USA)", clientInfo.Name))
 					clientInfo.Name = "Dwarves LLC"
 					clientInfo.Country = "USA"
 				}

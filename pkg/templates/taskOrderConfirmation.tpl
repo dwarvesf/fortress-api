@@ -18,7 +18,7 @@ Content-Transfer-Encoding: quoted-printable
     <p>Active clients & locations:</p>
     <ul>
         {{range .Clients}}
-        <li>{{.Name}}{{if .Country}} – headquartered in {{.Country}}{{end}}</li>
+        <li>{{.Name}}{{if .Country}} – {{.Country}}{{end}}</li>
         {{end}}
     </ul>
 
