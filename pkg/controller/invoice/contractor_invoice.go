@@ -43,6 +43,13 @@ type ContractorInvoiceData struct {
 	BankAccountNumber string
 	BankSwiftBIC      string
 	BankBranch        string
+
+	// Multi-currency subtotal fields (added for multi-currency support)
+	SubtotalVND        float64 // Sum of all VND-denominated items
+	SubtotalUSDFromVND float64 // SubtotalVND converted to USD at ExchangeRate
+	SubtotalUSDItems   float64 // Sum of all USD-denominated items
+	SubtotalUSD        float64 // SubtotalUSDFromVND + SubtotalUSDItems
+	FXSupport          float64 // FX support fee (hardcoded $8 for now, TODO: implement dynamic calculation)
 }
 
 // ContractorInvoiceLineItem represents a line item in a contractor invoice
@@ -58,8 +65,20 @@ type ContractorInvoiceLineItem struct {
 	// Commission-specific fields (for grouping)
 	CommissionRole    string
 	CommissionProject string
+
+	// Original currency fields (added for multi-currency support)
+	OriginalAmount   float64 // Amount in original currency (VND or USD)
+	OriginalCurrency string  // "VND" or "USD"
 }
 
+// ContractorInvoiceSection represents a section of line items in the invoice
+type ContractorInvoiceSection struct {
+	Name         string                        // "Development work from [start] to [end]", "Refund", "Bonus"
+	IsAggregated bool                          // true for Development Work (Service Fee)
+	Total        float64                       // Total amount for aggregated sections
+	Currency     string                        // Currency for aggregated sections
+	Items        []ContractorInvoiceLineItem   // Individual items
+}
 
 // GenerateContractorInvoice generates contractor invoice data from Notion
 func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, month string) (*ContractorInvoiceData, error) {
@@ -249,7 +268,13 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 			Type:              string(payout.SourceType),
 			CommissionRole:    payout.CommissionRole,
 			CommissionProject: payout.CommissionProject,
+			// Preserve original currency for multi-currency support
+			OriginalAmount:   payout.Amount,
+			OriginalCurrency: payout.Currency,
 		}
+
+		l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: preserved original currency - %.2f %s (converted to %.2f USD)",
+			payout.Amount, payout.Currency, amountUSD))
 
 		l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: line item - Type=%s Role=%s Project=%s",
 			lineItem.Type, lineItem.CommissionRole, lineItem.CommissionProject))
@@ -300,7 +325,12 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 			Amount:      groupTotal,
 			AmountUSD:   groupTotal,
 			Type:        string(notion.PayoutSourceTypeCommission),
+			// Grouped commissions are in USD (sum of converted amounts)
+			OriginalAmount:   groupTotal,
+			OriginalCurrency: "USD",
 		})
+
+		l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: set grouped commission currency - %.2f USD", groupTotal))
 	}
 
 	l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: grouped %d commission items into %d groups",
@@ -327,12 +357,109 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 	})
 	l.Debug(fmt.Sprintf("sorted %d line items by Type (Service Fee last) and Amount ASC", len(lineItems)))
 
+	// 5.5 Validate currencies before calculations
+	l.Debug("[DEBUG] contractor_invoice: validating line item currencies")
+	if err := validateLineItemCurrencies(lineItems, l); err != nil {
+		l.Error(err, "[DEBUG] contractor_invoice: currency validation failed")
+		return nil, err
+	}
+
+	// 5.6 Calculate VND subtotal by converting all items to VND
+	var vndFromVNDItems float64 // Sum of all VND-denominated items
+	var usdItemsToConvert float64 // Sum of all USD-denominated items (to be converted to VND)
+	var vndItemCount int
+	var usdItemCount int
+
+	l.Debug("[DEBUG] contractor_invoice: calculating items by currency for VND subtotal")
+
+	for _, item := range lineItems {
+		switch item.OriginalCurrency {
+		case "VND":
+			vndFromVNDItems += item.OriginalAmount
+			vndItemCount++
+			l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: VND item: %.0f (running total: %.0f)", item.OriginalAmount, vndFromVNDItems))
+		case "USD":
+			usdItemsToConvert += item.OriginalAmount
+			usdItemCount++
+			l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: USD item to convert: %.2f (running total: %.2f)", item.OriginalAmount, usdItemsToConvert))
+		}
+	}
+
+	// Round VND items to 0 decimals
+	vndFromVNDItems = math.Round(vndFromVNDItems)
+
+	l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: items grouped - VND items: %.0f (%d), USD items to convert: %.2f (%d)",
+		vndFromVNDItems, vndItemCount, usdItemsToConvert, usdItemCount))
+
+	// 5.7 Get exchange rate and convert USD items to VND
+	var exchangeRate float64
+	var vndFromUSDItems float64
+
+	// We need to get exchange rate - use Wise API
+	// First, try to convert a nominal amount to get the rate
+	if vndFromVNDItems > 0 || usdItemsToConvert > 0 {
+		l.Debug("[DEBUG] contractor_invoice: fetching exchange rate from Wise API")
+
+		// Convert 1 USD to VND to get exchange rate
+		_, rate, err := c.service.Wise.Convert(1.0, "USD", "VND")
+		if err != nil {
+			l.Error(err, "[DEBUG] contractor_invoice: failed to fetch exchange rate")
+			return nil, fmt.Errorf("failed to fetch exchange rate: %w", err)
+		}
+
+		// Validate rate
+		if rate <= 0 {
+			l.Error(nil, fmt.Sprintf("[DEBUG] contractor_invoice: invalid exchange rate from Wise: %.4f", rate))
+			return nil, fmt.Errorf("invalid exchange rate: %.4f (must be > 0)", rate)
+		}
+
+		exchangeRate = rate
+		l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: exchange rate: 1 USD = %.4f VND", exchangeRate))
+
+		// Convert USD items to VND
+		if usdItemsToConvert > 0 {
+			vndFromUSDItems = usdItemsToConvert * exchangeRate
+			vndFromUSDItems = math.Round(vndFromUSDItems) // Round to 0 decimals
+			l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: converted USD to VND: %.2f USD = %.0f VND", usdItemsToConvert, vndFromUSDItems))
+		}
+	} else {
+		// No items, set default
+		exchangeRate = 1.0
+		l.Debug("[DEBUG] contractor_invoice: no items, using default exchange rate")
+	}
+
+	// 5.8 Calculate total VND subtotal
+	subtotalVND := vndFromVNDItems + vndFromUSDItems
+	subtotalVND = math.Round(subtotalVND) // Round to 0 decimals
+
+	l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: VND subtotal: %.0f (%.0f from VND items + %.0f from USD items)",
+		subtotalVND, vndFromVNDItems, vndFromUSDItems))
+
+	// 5.9 Convert total VND subtotal to USD
+	var subtotalUSD float64
+	if subtotalVND > 0 && exchangeRate > 0 {
+		subtotalUSD = subtotalVND / exchangeRate
+		subtotalUSD = math.Round(subtotalUSD*100) / 100 // Round to 2 decimals
+		l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: USD subtotal: %.2f (%.0f VND / %.4f rate)", subtotalUSD, subtotalVND, exchangeRate))
+	} else {
+		subtotalUSD = 0.0
+		l.Debug("[DEBUG] contractor_invoice: USD subtotal is 0")
+	}
+
+	// 5.10 Add FX support fee (hardcoded for now)
+	fxSupport := 8.0 // TODO: Implement dynamic calculation based on business rules
+
+	l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: FX support fee: %.2f", fxSupport))
+
+	// 5.11 Calculate final total
+	totalUSD := subtotalUSD + fxSupport
+	totalUSD = math.Round(totalUSD*100) / 100 // Round to 2 decimals
+
+	l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: final total USD: %.2f (%.2f subtotal + %.2f FX support)",
+		totalUSD, subtotalUSD, fxSupport))
+
 	l.Debug(fmt.Sprintf("found bank account: accountHolder=%s bank=%s accountNumber=%s",
 		bankAccount.AccountHolderName, bankAccount.BankName, bankAccount.AccountNumber))
-
-	// 6. Total is already in USD (converted per line item)
-	totalUSD := total
-	l.Debug(fmt.Sprintf("total USD: %.2f", totalUSD))
 
 	// 7. Generate invoice number
 	invoiceNumber := c.generateContractorInvoiceNumber(month)
@@ -354,21 +481,30 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 		DueDate:           dueDate,
 		Description:       description,
 		BillingType:       rateData.BillingType,
-		Currency:          "USD", // All amounts are converted to USD
+		Currency:          "USD", // Invoice currency for payment is always USD
 		LineItems:         lineItems,
 		MonthlyFixed:      0,
 		MonthlyFixedUSD:   0,
-		Total:             totalUSD,
-		TotalUSD:          totalUSD,
-		ExchangeRate:      1, // Already in USD
+		Total:             totalUSD,     // Use calculated total
+		TotalUSD:          totalUSD,     // Use calculated total
+		ExchangeRate:      exchangeRate, // Use actual rate from Wise
 		BankAccountHolder: bankAccount.AccountHolderName,
 		BankName:          bankAccount.BankName,
 		BankAccountNumber: bankAccount.AccountNumber,
 		BankSwiftBIC:      bankAccount.SwiftBIC,
 		BankBranch:        bankAccount.BranchAddress,
+
+		// Populate subtotal fields for multi-currency display
+		SubtotalVND:        subtotalVND, // Total VND (all items converted to VND)
+		SubtotalUSDFromVND: 0,           // Deprecated - no longer used
+		SubtotalUSDItems:   0,           // Deprecated - no longer used
+		SubtotalUSD:        subtotalUSD, // SubtotalVND converted to USD
+		FXSupport:          fxSupport,
 	}
 
-	l.Debug("contractor invoice data generated successfully")
+	l.Debug("[DEBUG] contractor_invoice: invoice data populated with calculated totals")
+	l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: SubtotalVND=%.0f (%.0f VND items + %.0f from USD items) SubtotalUSD=%.2f FXSupport=%.2f TotalUSD=%.2f ExchangeRate=%.4f",
+		subtotalVND, vndFromVNDItems, vndFromUSDItems, subtotalUSD, fxSupport, totalUSD, exchangeRate))
 	return invoiceData, nil
 }
 
@@ -433,13 +569,38 @@ func (c *controller) GenerateContractorInvoicePDF(l logger.Logger, data *Contrac
 			return fmt.Sprintf("%.2f", n)
 		},
 		"formatProofOfWork": func(text string) template.HTML {
+			l.Debug(fmt.Sprintf("[DEBUG] formatProofOfWork INPUT (len=%d): %q", len(text), text))
+
 			// Replace bullet points with newlines for better formatting
 			formatted := strings.ReplaceAll(text, " • ", "\n• ")
 			formatted = strings.ReplaceAll(formatted, " •", "\n•")
+
+			// Trim whitespace first
+			formatted = strings.TrimSpace(formatted)
+
+			// Replace double newlines with a spacer div for controlled spacing between projects
+			formatted = strings.ReplaceAll(formatted, "\n\n", "\n<div class=\"project-spacer\"></div>")
+
 			// Replace newlines with <br> for HTML rendering
 			formatted = strings.ReplaceAll(formatted, "\n", "<br>")
-			return template.HTML(strings.TrimSpace(formatted))
+
+			// Remove ALL trailing <br> tags
+			for strings.HasSuffix(formatted, "<br>") {
+				formatted = strings.TrimSuffix(formatted, "<br>")
+			}
+			// Remove ALL leading <br> tags
+			for strings.HasPrefix(formatted, "<br>") {
+				formatted = strings.TrimPrefix(formatted, "<br>")
+			}
+			l.Debug(fmt.Sprintf("[DEBUG] formatProofOfWork OUTPUT (len=%d): %q", len(formatted), formatted))
+
+			return template.HTML(formatted)
 		},
+		// Multi-currency formatting functions (added for multi-currency support)
+		"formatCurrency":     formatCurrency,
+		"formatVND":          formatVND,
+		"formatUSD":          formatUSD,
+		"formatExchangeRate": formatExchangeRate,
 	}
 
 	// Determine template path
@@ -471,17 +632,29 @@ func (c *controller) GenerateContractorInvoicePDF(l logger.Logger, data *Contrac
 
 	l.Debug(fmt.Sprintf("line items: %d regular, %d merged", len(regularItems), len(mergedItems)))
 
+	// Parse month for section grouping
+	monthTime, err := time.Parse("2006-01", data.Month)
+	if err != nil {
+		l.Error(err, fmt.Sprintf("failed to parse month: %s", data.Month))
+		return nil, fmt.Errorf("failed to parse month: %w", err)
+	}
+
+	// Group line items into sections (Development Work, Refund, Bonus)
+	sections := groupLineItemsIntoSections(regularItems, monthTime, l)
+
 	// Prepare template data
 	templateData := struct {
 		Invoice     *ContractorInvoiceData
 		LineItems   []ContractorInvoiceLineItem
 		MergedItems []ContractorInvoiceLineItem
 		MergedTotal float64
+		Sections    []ContractorInvoiceSection
 	}{
 		Invoice:     data,
 		LineItems:   regularItems,
 		MergedItems: mergedItems,
 		MergedTotal: mergedTotal,
+		Sections:    sections,
 	}
 
 	// Execute template
@@ -516,4 +689,219 @@ func (c *controller) GenerateContractorInvoicePDF(l logger.Logger, data *Contrac
 	l.Debug(fmt.Sprintf("PDF generated successfully: size=%d bytes", len(pdfBytes)))
 
 	return pdfBytes, nil
+}
+
+// validateLineItemCurrencies validates that all line items have valid currencies and amounts
+func validateLineItemCurrencies(lineItems []ContractorInvoiceLineItem, l logger.Logger) error {
+	l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: validating currencies for %d line items", len(lineItems)))
+
+	for i, item := range lineItems {
+		// Validate currency code
+		if item.OriginalCurrency != "VND" && item.OriginalCurrency != "USD" {
+			l.Error(nil, fmt.Sprintf("[DEBUG] contractor_invoice: invalid currency at item %d: %s", i, item.OriginalCurrency))
+			return fmt.Errorf("invalid currency for line item %d: %s (must be VND or USD)", i, item.OriginalCurrency)
+		}
+
+		// Validate amount is non-negative
+		if item.OriginalAmount < 0 {
+			l.Error(nil, fmt.Sprintf("[DEBUG] contractor_invoice: negative amount at item %d: %.2f %s", i, item.OriginalAmount, item.OriginalCurrency))
+			return fmt.Errorf("negative amount for line item %d: %.2f %s", i, item.OriginalAmount, item.OriginalCurrency)
+		}
+
+		l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: validated item %d: %.2f %s", i, item.OriginalAmount, item.OriginalCurrency))
+	}
+
+	l.Debug("[DEBUG] contractor_invoice: all line item currencies validated successfully")
+	return nil
+}
+
+// formatVND formats a VND amount with Vietnamese conventions
+// Example: 45000000 -> "45.000.000 ₫"
+func formatVND(amount float64) string {
+	// Round to 0 decimal places (VND has no minor units)
+	rounded := math.Round(amount)
+
+	// Convert to string without decimals
+	str := fmt.Sprintf("%.0f", rounded)
+
+	// Handle negative numbers
+	negative := false
+	if str[0] == '-' {
+		negative = true
+		str = str[1:]
+	}
+
+	// Add period separators for thousands
+	var result []rune
+	for i, char := range str {
+		if i > 0 && (len(str)-i)%3 == 0 {
+			result = append(result, '.')
+		}
+		result = append(result, char)
+	}
+
+	// Add currency symbol after amount
+	formatted := string(result) + " ₫"
+	if negative {
+		formatted = "-" + formatted
+	}
+
+	return formatted
+}
+
+// formatUSD formats a USD amount with US conventions
+// Example: 1234.56 -> "$1,234.56"
+func formatUSD(amount float64) string {
+	// Round to 2 decimal places
+	rounded := math.Round(amount*100) / 100
+
+	// Handle negative numbers
+	negative := false
+	if rounded < 0 {
+		negative = true
+		rounded = -rounded
+	}
+
+	// Split into integer and decimal parts
+	intPart := int64(rounded)
+	decPart := int((rounded - float64(intPart)) * 100)
+
+	// Format integer part with comma separators
+	intStr := fmt.Sprintf("%d", intPart)
+	var result []rune
+	for i, char := range intStr {
+		if i > 0 && (len(intStr)-i)%3 == 0 {
+			result = append(result, ',')
+		}
+		result = append(result, char)
+	}
+
+	// Add $ symbol before amount and decimal part
+	formatted := fmt.Sprintf("$%s.%02d", string(result), decPart)
+	if negative {
+		formatted = "-" + formatted
+	}
+
+	return formatted
+}
+
+// formatCurrency formats an amount according to its currency code
+func formatCurrency(amount float64, currency string) string {
+	switch strings.ToUpper(currency) {
+	case "VND":
+		return formatVND(amount)
+	case "USD":
+		return formatUSD(amount)
+	default:
+		// Fallback to USD formatting for unknown currencies
+		return formatUSD(amount)
+	}
+}
+
+// formatExchangeRate formats an exchange rate for display
+// Example: 26269.123 -> "1 USD = 26,269 VND"
+func formatExchangeRate(rate float64) string {
+	// Round to nearest whole number for VND
+	rounded := math.Round(rate)
+
+	// Format with comma separators
+	intStr := fmt.Sprintf("%.0f", rounded)
+	var result []rune
+	for i, char := range intStr {
+		if i > 0 && (len(intStr)-i)%3 == 0 {
+			result = append(result, ',')
+		}
+		result = append(result, char)
+	}
+
+	return fmt.Sprintf("1 USD = %s VND", string(result))
+}
+
+// groupLineItemsIntoSections groups line items into sections for display
+// Sections: Development Work (Service Fee) - aggregated with total, Refund - individual items, Bonus (Commission) - individual items
+func groupLineItemsIntoSections(items []ContractorInvoiceLineItem, month time.Time, l logger.Logger) []ContractorInvoiceSection {
+	var sections []ContractorInvoiceSection
+
+	l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: grouping %d line items into sections", len(items)))
+
+	// Group Service Fee items (Development Work) - aggregated display
+	var serviceFeeItems []ContractorInvoiceLineItem
+	for _, item := range items {
+		// Service Fee items are contractor payroll/work-related payouts
+		if item.Type == string(notion.PayoutSourceTypeServiceFee) {
+			serviceFeeItems = append(serviceFeeItems, item)
+		}
+	}
+
+	if len(serviceFeeItems) > 0 {
+		// Calculate total (all Service Fee items should be in same currency from validation)
+		total := 0.0
+		currency := serviceFeeItems[0].OriginalCurrency
+		for _, item := range serviceFeeItems {
+			total += item.OriginalAmount
+		}
+
+		// Round total to appropriate decimal places
+		if currency == "VND" {
+			total = math.Round(total)
+		} else {
+			total = math.Round(total*100) / 100
+		}
+
+		// Format section name with invoice month dates
+		startDate := month.Format("Jan 2")
+		lastDay := time.Date(month.Year(), month.Month()+1, 0, 0, 0, 0, 0, month.Location())
+		endDate := lastDay.Format("Jan 2")
+
+		sections = append(sections, ContractorInvoiceSection{
+			Name:         fmt.Sprintf("Development work from %s to %s", startDate, endDate),
+			IsAggregated: true,
+			Total:        total,
+			Currency:     currency,
+			Items:        serviceFeeItems,
+		})
+
+		l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: created Development Work section with %d items, total: %.2f %s",
+			len(serviceFeeItems), total, currency))
+	}
+
+	// Group Refund items - individual display
+	var refundItems []ContractorInvoiceLineItem
+	for _, item := range items {
+		if item.Type == string(notion.PayoutSourceTypeRefund) {
+			refundItems = append(refundItems, item)
+		}
+	}
+
+	if len(refundItems) > 0 {
+		sections = append(sections, ContractorInvoiceSection{
+			Name:         "Refund",
+			IsAggregated: false,
+			Items:        refundItems,
+		})
+
+		l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: created Refund section with %d items", len(refundItems)))
+	}
+
+	// Group Bonus (Commission) items - individual display
+	var bonusItems []ContractorInvoiceLineItem
+	for _, item := range items {
+		if item.Type == string(notion.PayoutSourceTypeCommission) {
+			bonusItems = append(bonusItems, item)
+		}
+	}
+
+	if len(bonusItems) > 0 {
+		sections = append(sections, ContractorInvoiceSection{
+			Name:         "Bonus",
+			IsAggregated: false,
+			Items:        bonusItems,
+		})
+
+		l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: created Bonus section with %d items", len(bonusItems)))
+	}
+
+	l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: grouped into %d sections", len(sections)))
+
+	return sections
 }

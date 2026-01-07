@@ -158,7 +158,7 @@ func TestGetResetTime(t *testing.T) {
 	}
 
 	// After a request
-	rl.CheckLimit(username)
+	_, _ = rl.CheckLimit(username)
 	resetTime = rl.GetResetTime(username)
 	if resetTime.Before(time.Now()) {
 		t.Error("reset time should be in the future")
