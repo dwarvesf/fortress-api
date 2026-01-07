@@ -69,6 +69,11 @@ type ContractorInvoiceLineItem struct {
 	// Original currency fields (added for multi-currency support)
 	OriginalAmount   float64 // Amount in original currency (VND or USD)
 	OriginalCurrency string  // "VND" or "USD"
+
+	// Hourly rate metadata
+	IsHourlyRate  bool   // Mark as hourly-rate Service Fee (for aggregation)
+	ServiceRateID string // Contractor Rate page ID (for logging/debugging)
+	TaskOrderID   string // Task Order Log page ID (for logging/debugging)
 }
 
 // ContractorInvoiceSection represents a section of line items in the invoice
@@ -198,6 +203,9 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 	convWg.Wait()
 	l.Debug("[DEBUG] contractor_invoice: parallel currency conversions completed")
 
+	// Create task order service for hourly rate processing
+	taskOrderService := notion.NewTaskOrderLogService(c.config, c.logger)
+
 	// 4. Build line items from payouts
 	var lineItems []ContractorInvoiceLineItem
 	var total float64
@@ -208,13 +216,7 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 		l.Debug(fmt.Sprintf("processing payout: pageID=%s name=%s sourceType=%s amount=%.2f currency=%s amountUSD=%.2f",
 			payout.PageID, payout.Name, payout.SourceType, payout.Amount, payout.Currency, amountUSD))
 
-		// Determine description based on source type:
-		// - Service Fee: use WorkDetails from Notion formula
-		// - Refund: use Description field as title (displayed in Description column)
-		// - Commission: use Description field (will be parsed and grouped later)
-		l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: payout fields - Name=%s Description=%s WorkDetails=%s",
-			payout.Name, payout.Description, payout.WorkDetails))
-
+		// Determine description based on source type
 		var description string
 		switch payout.SourceType {
 		case notion.PayoutSourceTypeServiceFee:
@@ -252,25 +254,63 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 			l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: using Description field: length=%d", len(description)))
 		}
 
-		// Initialize line item with default values for display
-		// All items: Qty=1, Unit Cost=AmountUSD, Total=AmountUSD
-		// Title: All types use empty title, only description is shown
-		title := ""
-		l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: %s - no title, only description", payout.SourceType))
+		// New: Attempt hourly rate display for Service Fees
+		var lineItem ContractorInvoiceLineItem
+		isHourlyProcessed := false
 
-		lineItem := ContractorInvoiceLineItem{
-			Title:             title,
-			Description:       description,
-			Hours:             1,         // Default quantity
-			Rate:              amountUSD, // Unit cost = converted amount
-			Amount:            amountUSD, // Amount
-			AmountUSD:         amountUSD,
-			Type:              string(payout.SourceType),
-			CommissionRole:    payout.CommissionRole,
-			CommissionProject: payout.CommissionProject,
-			// Preserve original currency for multi-currency support
-			OriginalAmount:   payout.Amount,
-			OriginalCurrency: payout.Currency,
+		if payout.SourceType == notion.PayoutSourceTypeServiceFee && ratesService != nil && taskOrderService != nil {
+			hourlyData := fetchHourlyRateData(ctx, payout, ratesService, taskOrderService, l)
+			if hourlyData != nil {
+				// SUCCESS: Use hourly rate display
+				l.Debug(fmt.Sprintf("[SUCCESS] payout %s: applying hourly rate display (hours=%.2f rate=%.2f)",
+					payout.PageID, hourlyData.Hours, hourlyData.HourlyRate))
+
+				lineItem = ContractorInvoiceLineItem{
+					Title:             "", // Set during aggregation
+					Description:       description,
+					Hours:             hourlyData.Hours,
+					Rate:              hourlyData.HourlyRate,
+					Amount:            payout.Amount, // Use original payout amount
+					AmountUSD:         amountUSD,
+					Type:              string(payout.SourceType),
+					CommissionRole:    payout.CommissionRole,
+					CommissionProject: payout.CommissionProject,
+					OriginalAmount:    payout.Amount,
+					OriginalCurrency:  payout.Currency,
+					IsHourlyRate:      true,
+					ServiceRateID:     payout.ServiceRateID,
+					TaskOrderID:       payout.TaskOrderID,
+				}
+				isHourlyProcessed = true
+			}
+		}
+
+		if !isHourlyProcessed {
+			// FALLBACK / STANDARD: Use default display
+			if payout.SourceType == notion.PayoutSourceTypeServiceFee {
+				l.Debug(fmt.Sprintf("[FALLBACK] payout %s: using default display (Qty=1, Unit Cost=%.2f)",
+					payout.PageID, amountUSD))
+			} else {
+				l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: %s - no title, only description", payout.SourceType))
+			}
+
+			lineItem = ContractorInvoiceLineItem{
+				Title:             "",
+				Description:       description,
+				Hours:             1,             // Default quantity
+				Rate:              payout.Amount, // Unit cost = original amount (matches OriginalCurrency)
+				Amount:            amountUSD,     // Amount used for sorting (USD)
+				AmountUSD:         amountUSD,
+				Type:              string(payout.SourceType),
+				CommissionRole:    payout.CommissionRole,
+				CommissionProject: payout.CommissionProject,
+				// Preserve original currency for multi-currency support
+				OriginalAmount:   payout.Amount,
+				OriginalCurrency: payout.Currency,
+				IsHourlyRate:     false,
+				ServiceRateID:    payout.ServiceRateID,
+				TaskOrderID:      payout.TaskOrderID,
+			}
 		}
 
 		l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: preserved original currency - %.2f %s (converted to %.2f USD)",
@@ -285,7 +325,12 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 
 	l.Debug(fmt.Sprintf("built %d line items with total=%.2f USD", len(lineItems), total))
 
-	// 4.5 Group Commission items by Project (all commissions for same project are summed)
+	// 4.5 Aggregate hourly-rate Service Fees
+	l.Debug("aggregating hourly-rate Service Fee items")
+	lineItems = aggregateHourlyServiceFees(lineItems, month, l)
+	l.Debug(fmt.Sprintf("after aggregation: %d line items", len(lineItems)))
+
+	// 4.6 Group Commission items by Project (all commissions for same project are summed)
 	l.Debug("grouping commission items by project")
 	var nonCommissionItems []ContractorInvoiceLineItem
 	commissionGroups := make(map[string]float64) // key = project name
@@ -904,4 +949,219 @@ func groupLineItemsIntoSections(items []ContractorInvoiceLineItem, month time.Ti
 	l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: grouped into %d sections", len(sections)))
 
 	return sections
+}
+
+// hourlyRateData holds fetched data for hourly rate Service Fee display.
+type hourlyRateData struct {
+	HourlyRate    float64
+	Hours         float64
+	Currency      string
+	BillingType   string
+	ServiceRateID string
+	TaskOrderID   string
+}
+
+// hourlyRateAggregation holds aggregated data for multiple hourly Service Fees.
+type hourlyRateAggregation struct {
+	TotalHours     float64
+	HourlyRate     float64
+	TotalAmount    float64
+	TotalAmountUSD float64
+	Currency       string
+	Descriptions   []string
+	TaskOrderIDs   []string
+}
+
+// IContractorRatesService defines the interface for contractor rates operations needed by the invoice controller
+type IContractorRatesService interface {
+	FetchContractorRateByPageID(ctx context.Context, pageID string) (*notion.ContractorRateData, error)
+}
+
+// ITaskOrderLogService defines the interface for task order log operations needed by the invoice controller
+type ITaskOrderLogService interface {
+	FetchTaskOrderHoursByPageID(ctx context.Context, pageID string) (float64, error)
+}
+
+// fetchHourlyRateData fetches and validates hourly rate data for a Service Fee payout.
+func fetchHourlyRateData(
+	ctx context.Context,
+	payout notion.PayoutEntry,
+	ratesService IContractorRatesService,
+	taskOrderService ITaskOrderLogService,
+	l logger.Logger,
+) *hourlyRateData {
+	// STEP 1: Check ServiceRateID present
+	if payout.ServiceRateID == "" {
+		l.Debug(fmt.Sprintf("[FALLBACK] payout %s: no ServiceRateID", payout.PageID))
+		return nil
+	}
+
+	// STEP 2: Fetch Contractor Rate
+	l.Debug(fmt.Sprintf("[HOURLY_RATE] fetching contractor rate: serviceRateID=%s", payout.ServiceRateID))
+	rateData, err := ratesService.FetchContractorRateByPageID(ctx, payout.ServiceRateID)
+	if err != nil {
+		l.Error(err, fmt.Sprintf("[FALLBACK] payout %s: failed to fetch rate", payout.PageID))
+		return nil
+	}
+
+	l.Debug(fmt.Sprintf("[HOURLY_RATE] fetched rate: billingType=%s hourlyRate=%.2f currency=%s",
+		rateData.BillingType, rateData.HourlyRate, rateData.Currency))
+
+	// STEP 3: Validate BillingType
+	if rateData.BillingType != "Hourly Rate" {
+		l.Debug(fmt.Sprintf("[INFO] payout %s: billingType=%s (not hourly)", payout.PageID, rateData.BillingType))
+		return nil
+	}
+
+	// STEP 4: Fetch Task Order hours (graceful degradation)
+	var hours float64
+	if payout.TaskOrderID != "" {
+		l.Debug(fmt.Sprintf("[HOURLY_RATE] fetching hours: taskOrderID=%s", payout.TaskOrderID))
+		hours, err = taskOrderService.FetchTaskOrderHoursByPageID(ctx, payout.TaskOrderID)
+		if err != nil {
+			l.Error(err, fmt.Sprintf("[FALLBACK] payout %s: failed to fetch hours, using 0", payout.PageID))
+			hours = 0
+		} else {
+			l.Debug(fmt.Sprintf("[HOURLY_RATE] fetched hours: %.2f", hours))
+		}
+	} else {
+		l.Debug(fmt.Sprintf("[FALLBACK] payout %s: no TaskOrderID, using 0 hours", payout.PageID))
+		hours = 0
+	}
+
+	// STEP 5: Create hourlyRateData
+	return &hourlyRateData{
+		HourlyRate:    rateData.HourlyRate,
+		Hours:         hours,
+		Currency:      rateData.Currency,
+		BillingType:   rateData.BillingType,
+		ServiceRateID: payout.ServiceRateID,
+		TaskOrderID:   payout.TaskOrderID,
+	}
+}
+
+// aggregateHourlyServiceFees consolidates all hourly-rate Service Fee items into a single line item.
+func aggregateHourlyServiceFees(
+	lineItems []ContractorInvoiceLineItem,
+	month string,
+	l logger.Logger,
+) []ContractorInvoiceLineItem {
+	// STEP 1: Partition line items
+	var hourlyItems []ContractorInvoiceLineItem
+	var otherItems []ContractorInvoiceLineItem
+
+	for _, item := range lineItems {
+		if item.IsHourlyRate {
+			hourlyItems = append(hourlyItems, item)
+		} else {
+			otherItems = append(otherItems, item)
+		}
+	}
+
+	l.Debug(fmt.Sprintf("[AGGREGATE] found %d hourly-rate Service Fee items to aggregate", len(hourlyItems)))
+
+	if len(hourlyItems) == 0 {
+		l.Debug("[AGGREGATE] no hourly items, returning unchanged")
+		return lineItems
+	}
+
+	// STEP 2: Aggregate hourly items
+	agg := &hourlyRateAggregation{}
+
+	for _, item := range hourlyItems {
+		// Sum hours and amounts
+		agg.TotalHours += item.Hours
+		agg.TotalAmount += item.Amount
+		agg.TotalAmountUSD += item.AmountUSD
+
+		// Use first item's rate and currency
+		if agg.HourlyRate == 0 {
+			agg.HourlyRate = item.Rate
+			agg.Currency = item.OriginalCurrency
+		} else {
+			// Validate consistency (log warnings)
+			if item.Rate != agg.HourlyRate {
+				l.Warn(fmt.Sprintf("[WARN] multiple hourly rates found: %.2f vs %.2f, using first",
+					agg.HourlyRate, item.Rate))
+			}
+			if item.OriginalCurrency != agg.Currency {
+				l.Warn(fmt.Sprintf("[WARN] multiple currencies found: %s vs %s, using first",
+					agg.Currency, item.OriginalCurrency))
+			}
+		}
+
+		// Collect descriptions
+		if strings.TrimSpace(item.Description) != "" {
+			agg.Descriptions = append(agg.Descriptions, strings.TrimSpace(item.Description))
+		}
+
+		// Collect task order IDs (for logging)
+		if item.TaskOrderID != "" {
+			agg.TaskOrderIDs = append(agg.TaskOrderIDs, item.TaskOrderID)
+		}
+	}
+
+	l.Debug(fmt.Sprintf("[AGGREGATE] totalHours=%.2f rate=%.2f totalAmount=%.2f totalAmountUSD=%.2f currency=%s",
+		agg.TotalHours, agg.HourlyRate, agg.TotalAmount, agg.TotalAmountUSD, agg.Currency))
+
+	// STEP 3: Generate title
+	title := generateServiceFeeTitle(month)
+
+	// STEP 4: Concatenate descriptions
+	description := concatenateDescriptions(agg.Descriptions)
+
+	// STEP 5: Create aggregated line item
+	aggregatedItem := ContractorInvoiceLineItem{
+		Title:            title,
+		Description:      description,
+		Hours:            agg.TotalHours,
+		Rate:             agg.HourlyRate,
+		Amount:           agg.TotalAmount,
+		AmountUSD:        agg.TotalAmountUSD,
+		Type:             string(notion.PayoutSourceTypeServiceFee), // Use ServiceFee type
+		OriginalAmount:   agg.TotalAmount,
+		OriginalCurrency: agg.Currency,
+		IsHourlyRate:     false, // Already aggregated
+		ServiceRateID:    "",
+		TaskOrderID:      "",
+	}
+
+	l.Debug(fmt.Sprintf("[AGGREGATE] created aggregated item with title: %s", title))
+	l.Debug(fmt.Sprintf("[AGGREGATE] aggregated %d items from task orders: %v",
+		len(hourlyItems), agg.TaskOrderIDs))
+
+	return append(otherItems, aggregatedItem)
+}
+
+// generateServiceFeeTitle generates title with invoice month date range.
+func generateServiceFeeTitle(month string) string {
+	// STEP 1: Parse month
+	t, err := time.Parse("2006-01", month)
+	if err != nil {
+		return "Service Fee" // Fallback
+	}
+
+	// STEP 2: Calculate date range
+	startDate := time.Date(t.Year(), t.Month(), 1, 0, 0, 0, 0, time.UTC)
+	endDate := startDate.AddDate(0, 1, -1)
+
+	// STEP 3: Format title
+	return fmt.Sprintf("Service Fee (Development work from %s to %s)",
+		startDate.Format("2006-01-02"),
+		endDate.Format("2006-01-02"))
+}
+
+// concatenateDescriptions joins descriptions with double line breaks, filtering empty strings.
+func concatenateDescriptions(descriptions []string) string {
+	// STEP 1: Filter empty strings
+	var filtered []string
+	for _, desc := range descriptions {
+		trimmed := strings.TrimSpace(desc)
+		if trimmed != "" {
+			filtered = append(filtered, trimmed)
+		}
+	}
+
+	// STEP 2: Join with double line breaks
+	return strings.Join(filtered, "\n\n")
 }

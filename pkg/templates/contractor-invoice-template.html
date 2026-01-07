@@ -230,8 +230,14 @@
                                 <div class="item-project" style="margin-bottom: 10px;"><strong>{{$section.Name}}</strong></div>
                                 {{range $section.Items}}<div class="item-details" style="padding-left: 12px;">{{formatProofOfWork .Description}}</div>{{end}}
                             </td>
-                            <td>1</td>
-                            <td>{{formatCurrency $section.Total $section.Currency}}</td>
+                            {{if eq (len $section.Items) 1}}
+                                {{$item := index $section.Items 0}}
+                                <td>{{$item.Hours}}</td>
+                                <td>{{formatCurrency $item.Rate $section.Currency}}</td>
+                            {{else}}
+                                <td>1</td>
+                                <td>{{formatCurrency $section.Total $section.Currency}}</td>
+                            {{end}}
                             <td>{{formatCurrency $section.Total $section.Currency}}</td>
                         </tr>
                     {{else}}

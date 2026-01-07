@@ -416,3 +416,52 @@ func (s *ContractorRatesService) FindActiveRateByContractor(ctx context.Context,
 	s.logger.Debug(fmt.Sprintf("no active contractor rate found for contractor=%s date=%s", contractorPageID, orderDate.Format("2006-01-02")))
 	return nil, fmt.Errorf("no active contractor rate found for contractor=%s date=%s", contractorPageID, orderDate.Format("2006-01-02"))
 }
+
+// FetchContractorRateByPageID fetches a single Contractor Rate by its page ID.
+// Used for hourly rate detection in invoice generation.
+func (s *ContractorRatesService) FetchContractorRateByPageID(ctx context.Context, pageID string) (*ContractorRateData, error) {
+	s.logger.Debug(fmt.Sprintf("[HOURLY_RATE] fetching contractor rate: pageID=%s", pageID))
+
+	// Step 1: Fetch the page by ID using Notion client
+	page, err := s.client.FindPageByID(ctx, pageID)
+	if err != nil {
+		s.logger.Error(err, fmt.Sprintf("failed to fetch contractor rate page: %s", pageID))
+		return nil, fmt.Errorf("failed to fetch contractor rate page: %w", err)
+	}
+
+	// Step 2: Cast page properties to database properties
+	props, ok := page.Properties.(nt.DatabasePageProperties)
+	if !ok {
+		return nil, fmt.Errorf("failed to cast page properties for contractor rate: %s", pageID)
+	}
+
+	// Step 3: Extract contractor page ID from relation
+	contractorPageID := s.extractFirstRelationID(props, "Contractor")
+
+	// Step 4: Fetch contractor name if contractor page ID available
+	contractorName := ""
+	if contractorPageID != "" {
+		contractorName = s.getContractorName(ctx, contractorPageID)
+	}
+
+	// Step 5: Extract all rate data fields
+	rateData := &ContractorRateData{
+		PageID:           page.ID,
+		ContractorPageID: contractorPageID,
+		ContractorName:   contractorName,
+		Discord:          s.extractRollupRichText(props, "Discord"),
+		BillingType:      s.extractSelect(props, "Billing Type"),
+		MonthlyFixed:     s.extractFormulaNumber(props, "Monthly Fixed"),
+		HourlyRate:       s.extractNumber(props, "Hourly Rate"),
+		GrossFixed:       s.extractFormulaNumber(props, "Gross Fixed"),
+		Currency:         s.extractSelect(props, "Currency"),
+		StartDate:        s.extractDate(props, "Start Date"),
+		EndDate:          s.extractDate(props, "End Date"),
+	}
+
+	// Step 6: Log extracted data for debugging
+	s.logger.Debug(fmt.Sprintf("[HOURLY_RATE] fetched rate: billingType=%s hourlyRate=%.2f currency=%s",
+		rateData.BillingType, rateData.HourlyRate, rateData.Currency))
+
+	return rateData, nil
+}

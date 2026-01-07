@@ -2022,3 +2022,38 @@ func (s *TaskOrderLogService) GetContractorFromOrder(ctx context.Context, orderI
 
 	return contractorID, email, name, nil
 }
+
+// FetchTaskOrderHoursByPageID fetches the Final Hours Worked from a Task Order Log page.
+// Used for hourly rate invoice line item display.
+func (s *TaskOrderLogService) FetchTaskOrderHoursByPageID(ctx context.Context, pageID string) (float64, error) {
+	s.logger.Debug(fmt.Sprintf("[HOURLY_RATE] fetching task order hours: pageID=%s", pageID))
+
+	// Step 1: Fetch the page by ID using Notion client
+	page, err := s.client.FindPageByID(ctx, pageID)
+	if err != nil {
+		s.logger.Error(err, fmt.Sprintf("failed to fetch task order page: %s", pageID))
+		return 0, fmt.Errorf("failed to fetch task order page: %w", err)
+	}
+
+	// Step 2: Cast page properties to database properties
+	props, ok := page.Properties.(nt.DatabasePageProperties)
+	if !ok {
+		return 0, fmt.Errorf("failed to cast page properties for task order: %s", pageID)
+	}
+
+	// Step 3: Extract Final Hours Worked (formula field)
+	// Returns 0.0 if field not found or empty (graceful degradation)
+	var hours float64
+	if prop, ok := props["Final Hours Worked"]; ok && prop.Formula != nil && prop.Formula.Number != nil {
+		hours = *prop.Formula.Number
+		s.logger.Debug(fmt.Sprintf("[HOURLY_RATE] fetched hours: %.2f", hours))
+	} else {
+		// Field not found or empty - log but don't error
+		// This allows graceful degradation (display with 0 hours)
+		s.logger.Debug(fmt.Sprintf("[HOURLY_RATE] Final Hours Worked not found or empty for pageID=%s, returning 0", pageID))
+		return 0, nil
+	}
+
+	return hours, nil
+}
+

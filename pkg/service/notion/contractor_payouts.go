@@ -37,6 +37,9 @@ type PayoutEntry struct {
 	// Commission-specific fields (populated from Invoice Split relation)
 	CommissionRole    string // From Invoice Split "Role" select (Sales, Account Manager, etc.)
 	CommissionProject string // From Invoice Split "Project" rollup (via Deployment)
+
+	// ServiceRateID from "00 Service Rate" relation (for hourly rate detection)
+	ServiceRateID string
 }
 
 // NewContractorPayoutsService creates a new Notion contractor payouts service
@@ -143,6 +146,7 @@ func (s *ContractorPayoutsService) QueryPendingPayoutsByContractor(ctx context.C
 				InvoiceSplitID:  s.extractFirstRelationID(props, "02 Invoice Split"),
 				RefundRequestID: s.extractFirstRelationID(props, "01 Refund"),
 				WorkDetails:     s.extractFormulaString(props, "00 Work Details"),
+				ServiceRateID:   s.extractFirstRelationID(props, "00 Service Rate"),
 			}
 
 			// Determine source type based on which relation is set
