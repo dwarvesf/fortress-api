@@ -360,7 +360,7 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 	// 5.5 Validate currencies before calculations
 	l.Debug("[DEBUG] contractor_invoice: validating line item currencies")
 	if err := validateLineItemCurrencies(lineItems, l); err != nil {
-		l.Error(err, "[DEBUG] contractor_invoice: currency validation failed")
+		l.Error(err, "contractor_invoice: currency validation failed")
 		return nil, err
 	}
 
@@ -403,13 +403,13 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 		// Convert 1 USD to VND to get exchange rate
 		_, rate, err := c.service.Wise.Convert(1.0, "USD", "VND")
 		if err != nil {
-			l.Error(err, "[DEBUG] contractor_invoice: failed to fetch exchange rate")
+			l.Error(err, "contractor_invoice: failed to fetch exchange rate")
 			return nil, fmt.Errorf("failed to fetch exchange rate: %w", err)
 		}
 
 		// Validate rate
 		if rate <= 0 {
-			l.Error(nil, fmt.Sprintf("[DEBUG] contractor_invoice: invalid exchange rate from Wise: %.4f", rate))
+			l.Error(nil, fmt.Sprintf("contractor_invoice: invalid exchange rate from Wise: %.4f", rate))
 			return nil, fmt.Errorf("invalid exchange rate: %.4f (must be > 0)", rate)
 		}
 
@@ -698,13 +698,13 @@ func validateLineItemCurrencies(lineItems []ContractorInvoiceLineItem, l logger.
 	for i, item := range lineItems {
 		// Validate currency code
 		if item.OriginalCurrency != "VND" && item.OriginalCurrency != "USD" {
-			l.Error(nil, fmt.Sprintf("[DEBUG] contractor_invoice: invalid currency at item %d: %s", i, item.OriginalCurrency))
+			l.Error(nil, fmt.Sprintf("contractor_invoice: invalid currency at item %d: %s", i, item.OriginalCurrency))
 			return fmt.Errorf("invalid currency for line item %d: %s (must be VND or USD)", i, item.OriginalCurrency)
 		}
 
 		// Validate amount is non-negative
 		if item.OriginalAmount < 0 {
-			l.Error(nil, fmt.Sprintf("[DEBUG] contractor_invoice: negative amount at item %d: %.2f %s", i, item.OriginalAmount, item.OriginalCurrency))
+			l.Error(nil, fmt.Sprintf("contractor_invoice: negative amount at item %d: %.2f %s", i, item.OriginalAmount, item.OriginalCurrency))
 			return fmt.Errorf("negative amount for line item %d: %.2f %s", i, item.OriginalAmount, item.OriginalCurrency)
 		}
 
