@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -10,6 +11,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
+	"github.com/dwarvesf/fortress-api/pkg/controller"
+	"github.com/dwarvesf/fortress-api/pkg/controller/contractorpayables"
 	"github.com/dwarvesf/fortress-api/pkg/handler"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 )
@@ -823,10 +826,22 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/webhook.IHandler.HandleNotionTimesheet-fm",
 			},
 		},
+		"/webhooks/notion/send-email-confirmation": {
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/webhook.IHandler.HandleNotionTaskOrderSendEmail-fm",
+			},
+		},
 		"/webhooks/discord/interaction": {
 			"POST": {
 				Method:  "POST",
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/webhook.IHandler.HandleDiscordInteraction-fm",
+			},
+		},
+		"/webhooks/discord/gen-invoice": {
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/webhook.IHandler.HandleGenInvoice-fm",
 			},
 		},
 		"/api/v1/bank-accounts": {
@@ -1222,11 +1237,53 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/notion.IHandler.SyncTaskOrderLogs-fm",
 			},
 		},
+		"/cronjobs/init-task-order-logs": {
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/notion.IHandler.InitTaskOrderLogs-fm",
+			},
+		},
+		"/cronjobs/create-contractor-fees": {
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/notion.IHandler.CreateContractorFees-fm",
+			},
+		},
+		"/cronjobs/create-contractor-payouts": {
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/notion.IHandler.CreateContractorPayouts-fm",
+			},
+		},
+		"/cronjobs/send-task-order-confirmation": {
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/notion.IHandler.SendTaskOrderConfirmation-fm",
+			},
+		},
+		"/api/v1/contractor-payables/preview-commit": {
+			"GET": {
+				Method:  "GET",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/contractorpayables.IHandler.PreviewCommit-fm",
+			},
+		},
+		"/api/v1/contractor-payables/commit": {
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/contractorpayables.IHandler.Commit-fm",
+			},
+		},
 	}
 
 	l := logger.NewLogrusLogger("info")
 	cfg := config.LoadConfig(config.DefaultConfigLoaders())
-	h := handler.New(nil, nil, nil, nil, nil, l, cfg)
+
+	// Create minimal controller with ContractorPayables to avoid nil pointer
+	ctrl := &controller.Controller{
+		ContractorPayables: newMockContractorPayablesController(),
+	}
+
+	h := handler.New(nil, nil, nil, ctrl, nil, l, cfg)
 
 	router := gin.New()
 	loadV1Routes(router, h, nil, nil, cfg)
@@ -1244,4 +1301,19 @@ func Test_loadV1Routes(t *testing.T) {
 			t.FailNow()
 		}
 	}
+}
+
+// mockContractorPayablesController implements contractorpayables.IController for testing
+type mockContractorPayablesController struct{}
+
+func newMockContractorPayablesController() *mockContractorPayablesController {
+	return &mockContractorPayablesController{}
+}
+
+func (m *mockContractorPayablesController) PreviewCommit(ctx context.Context, month string, batch int) (*contractorpayables.PreviewCommitResponse, error) {
+	return nil, nil
+}
+
+func (m *mockContractorPayablesController) CommitPayables(ctx context.Context, month string, batch int) (*contractorpayables.CommitResponse, error) {
+	return nil, nil
 }

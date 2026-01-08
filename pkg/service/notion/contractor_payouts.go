@@ -740,6 +740,15 @@ type InvoiceSplitInfo struct {
 	Project string // From "Code" formula (project code via Deployment)
 }
 
+// PayoutWithRelations contains payout data with related record IDs
+// Used by payout commit to determine which related records need status updates
+type PayoutWithRelations struct {
+	PageID          string
+	Status          string
+	InvoiceSplitID  string // From "02 Invoice Split" relation (may be empty)
+	RefundRequestID string // From "01 Refund" relation (may be empty)
+}
+
 // shortenRole converts full role names to short codes
 func shortenRole(role string) string {
 	switch role {
@@ -791,5 +800,69 @@ func (s *ContractorPayoutsService) FetchInvoiceSplitInfo(ctx context.Context, in
 	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: invoice split info - Role=%s Project=%s (from Code formula)", info.Role, info.Project))
 
 	return info, nil
+}
+
+// GetPayoutWithRelations fetches a payout record with its related Invoice Split and Refund Request IDs
+// Used by payout commit to determine which related records need status updates
+func (s *ContractorPayoutsService) GetPayoutWithRelations(ctx context.Context, payoutPageID string) (*PayoutWithRelations, error) {
+	if payoutPageID == "" {
+		return nil, errors.New("payout page ID is empty")
+	}
+
+	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: fetching payout with relations pageID=%s", payoutPageID))
+
+	page, err := s.client.FindPageByID(ctx, payoutPageID)
+	if err != nil {
+		s.logger.Error(err, fmt.Sprintf("[DEBUG] contractor_payouts: failed to fetch payout pageID=%s: %v", payoutPageID, err))
+		return nil, fmt.Errorf("failed to fetch payout: %w", err)
+	}
+
+	props, ok := page.Properties.(nt.DatabasePageProperties)
+	if !ok {
+		s.logger.Debug("[DEBUG] contractor_payouts: failed to cast payout page properties")
+		return nil, errors.New("failed to cast payout page properties")
+	}
+
+	result := &PayoutWithRelations{
+		PageID:          payoutPageID,
+		Status:          s.extractStatus(props, "Status"),
+		InvoiceSplitID:  s.extractFirstRelationID(props, "02 Invoice Split"),
+		RefundRequestID: s.extractFirstRelationID(props, "01 Refund"),
+	}
+
+	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: payout pageID=%s status=%s invoiceSplit=%s refund=%s",
+		payoutPageID, result.Status, result.InvoiceSplitID, result.RefundRequestID))
+
+	return result, nil
+}
+
+// UpdatePayoutStatus updates a payout's Status to a new value
+// Uses Status property type (not Select)
+func (s *ContractorPayoutsService) UpdatePayoutStatus(ctx context.Context, pageID string, status string) error {
+	if pageID == "" {
+		return errors.New("payout page ID is empty")
+	}
+
+	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: updating payout pageID=%s status=%s", pageID, status))
+
+	params := nt.UpdatePageParams{
+		DatabasePageProperties: nt.DatabasePageProperties{
+			"Status": nt.DatabasePageProperty{
+				Status: &nt.SelectOptions{
+					Name: status,
+				},
+			},
+		},
+	}
+
+	_, err := s.client.UpdatePage(ctx, pageID, params)
+	if err != nil {
+		s.logger.Error(err, fmt.Sprintf("[DEBUG] contractor_payouts: failed to update payout status pageID=%s: %v", pageID, err))
+		return fmt.Errorf("failed to update payout status: %w", err)
+	}
+
+	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: updated payout pageID=%s status=%s successfully", pageID, status))
+
+	return nil
 }
 

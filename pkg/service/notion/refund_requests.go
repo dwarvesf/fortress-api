@@ -209,3 +209,35 @@ func (s *RefundRequestsService) extractRollupText(props nt.DatabasePagePropertie
 
 	return ""
 }
+
+// UpdateRefundRequestStatus updates a refund request's Status to a new value
+// Uses Status property type (not Select)
+func (s *RefundRequestsService) UpdateRefundRequestStatus(ctx context.Context, pageID string, status string) error {
+	if pageID == "" {
+		return errors.New("refund request page ID is empty")
+	}
+
+	s.logger.Debug(fmt.Sprintf("[DEBUG] refund_requests: updating status pageID=%s status=%s", pageID, status))
+
+	// Refund Request uses Status type (same as Contractor Payables and Contractor Payouts)
+	// Note: This is different from Invoice Split which uses Select type
+	params := nt.UpdatePageParams{
+		DatabasePageProperties: nt.DatabasePageProperties{
+			"Status": nt.DatabasePageProperty{
+				Status: &nt.SelectOptions{
+					Name: status,
+				},
+			},
+		},
+	}
+
+	_, err := s.client.UpdatePage(ctx, pageID, params)
+	if err != nil {
+		s.logger.Error(err, fmt.Sprintf("[DEBUG] refund_requests: failed to update status pageID=%s: %v", pageID, err))
+		return fmt.Errorf("failed to update refund request status: %w", err)
+	}
+
+	s.logger.Debug(fmt.Sprintf("[DEBUG] refund_requests: updated pageID=%s status=%s successfully", pageID, status))
+
+	return nil
+}

@@ -394,3 +394,35 @@ func (s *InvoiceSplitService) QueryPendingInvoiceSplits(ctx context.Context) ([]
 
 	return splits, nil
 }
+
+// UpdateInvoiceSplitStatus updates an invoice split's Status to a new value
+// CRITICAL: Invoice Split uses Select property type (NOT Status type like other tables)
+func (s *InvoiceSplitService) UpdateInvoiceSplitStatus(ctx context.Context, pageID string, status string) error {
+	if pageID == "" {
+		return errors.New("invoice split page ID is empty")
+	}
+
+	s.logger.Debug(fmt.Sprintf("[DEBUG] invoice_split: updating status pageID=%s status=%s", pageID, status))
+
+	// IMPORTANT: Invoice Split uses Select type for Status, not Status type
+	// This is different from other tables (Contractor Payables, Contractor Payouts, Refund Request)
+	params := nt.UpdatePageParams{
+		DatabasePageProperties: nt.DatabasePageProperties{
+			"Status": nt.DatabasePageProperty{
+				Select: &nt.SelectOptions{
+					Name: status,
+				},
+			},
+		},
+	}
+
+	_, err := s.client.UpdatePage(ctx, pageID, params)
+	if err != nil {
+		s.logger.Error(err, fmt.Sprintf("[DEBUG] invoice_split: failed to update status pageID=%s: %v", pageID, err))
+		return fmt.Errorf("failed to update invoice split status: %w", err)
+	}
+
+	s.logger.Debug(fmt.Sprintf("[DEBUG] invoice_split: updated pageID=%s status=%s successfully", pageID, status))
+
+	return nil
+}

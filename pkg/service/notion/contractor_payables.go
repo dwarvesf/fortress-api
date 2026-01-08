@@ -394,3 +394,296 @@ func (s *ContractorPayablesService) updatePayable(ctx context.Context, pageID st
 
 	return pageID, nil
 }
+
+// PendingPayable represents a payable record with Pending status
+type PendingPayable struct {
+	PageID            string   // Payable page ID
+	ContractorPageID  string   // From Contractor relation
+	ContractorName    string   // Rollup from Contractor
+	Total             float64  // Total amount
+	Currency          string   // USD or VND
+	Period            string   // YYYY-MM-DD
+	PayoutItemPageIDs []string // From Payout Items relation (multiple)
+}
+
+// QueryPendingPayablesByPeriod queries all contractor payables with Payment Status="Pending" for a given period.
+// Period should be in YYYY-MM-DD format (e.g., "2025-01-01")
+// Returns empty slice if no results found (not an error).
+func (s *ContractorPayablesService) QueryPendingPayablesByPeriod(ctx context.Context, period string) ([]PendingPayable, error) {
+	payablesDBID := s.cfg.Notion.Databases.ContractorPayables
+	if payablesDBID == "" {
+		return nil, errors.New("contractor payables database ID not configured")
+	}
+
+	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: querying pending payables period=%s", period))
+
+	// Parse period date
+	periodTime, err := time.Parse("2006-01-02", period)
+	if err != nil {
+		s.logger.Error(err, fmt.Sprintf("[DEBUG] contractor_payables: failed to parse period=%s", period))
+		return nil, fmt.Errorf("invalid period format: %w", err)
+	}
+
+	// Build filter: Payment Status = Pending AND Period = period date
+	filter := &nt.DatabaseQueryFilter{
+		And: []nt.DatabaseQueryFilter{
+			{
+				Property: "Payment Status",
+				DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+					Status: &nt.StatusDatabaseQueryFilter{
+						Equals: "Pending",
+					},
+				},
+			},
+			{
+				Property: "Period",
+				DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+					Date: &nt.DatePropertyFilter{
+						Equals: &periodTime,
+					},
+				},
+			},
+		},
+	}
+
+	query := &nt.DatabaseQuery{
+		Filter:   filter,
+		PageSize: 100,
+	}
+
+	var payables []PendingPayable
+
+	// Query with pagination
+	for {
+		s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: executing query on database=%s", payablesDBID))
+
+		resp, err := s.client.QueryDatabase(ctx, payablesDBID, query)
+		if err != nil {
+			s.logger.Error(err, fmt.Sprintf("[DEBUG] contractor_payables: failed to query database: %v", err))
+			return nil, fmt.Errorf("failed to query contractor payables database: %w", err)
+		}
+
+		s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: found %d payable entries in this page", len(resp.Results)))
+
+		for _, page := range resp.Results {
+			props, ok := page.Properties.(nt.DatabasePageProperties)
+			if !ok {
+				s.logger.Debug("[DEBUG] contractor_payables: failed to cast page properties")
+				continue
+			}
+
+			// Extract payable data
+			payable := PendingPayable{
+				PageID:            page.ID,
+				ContractorPageID:  s.extractFirstRelationID(props, "Contractor"),
+				Total:             s.extractNumber(props, "Total"),
+				Currency:          s.extractSelect(props, "Currency"),
+				Period:            period,
+				PayoutItemPageIDs: s.extractAllRelationIDs(props, "Payout Items"),
+			}
+
+			// Extract contractor name from rollup if available
+			payable.ContractorName = s.extractRollupTitle(props, "Contractor Name")
+
+			s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: parsed payable pageID=%s contractor=%s contractorName=%s total=%.2f currency=%s payoutItems=%d",
+				payable.PageID, payable.ContractorPageID, payable.ContractorName, payable.Total, payable.Currency, len(payable.PayoutItemPageIDs)))
+
+			payables = append(payables, payable)
+		}
+
+		if !resp.HasMore || resp.NextCursor == nil {
+			break
+		}
+
+		query.StartCursor = *resp.NextCursor
+		s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: fetching next page with cursor=%s", *resp.NextCursor))
+	}
+
+	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: total pending payables found=%d", len(payables)))
+
+	return payables, nil
+}
+
+// UpdatePayableStatus updates a payable's Payment Status and Payment Date.
+// pageID: Payable page ID to update
+// status: New status value (e.g., "Paid")
+// paymentDate: Payment date in YYYY-MM-DD format
+func (s *ContractorPayablesService) UpdatePayableStatus(ctx context.Context, pageID string, status string, paymentDate string) error {
+	if pageID == "" {
+		return errors.New("page ID is required")
+	}
+
+	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: updating payable status pageID=%s status=%s paymentDate=%s", pageID, status, paymentDate))
+
+	// Build update parameters
+	props := nt.DatabasePageProperties{
+		"Payment Status": nt.DatabasePageProperty{
+			Status: &nt.SelectOptions{
+				Name: status,
+			},
+		},
+	}
+
+	// Add Payment Date if provided
+	if paymentDate != "" {
+		dateObj, err := nt.ParseDateTime(paymentDate)
+		if err == nil {
+			props["Payment Date"] = nt.DatabasePageProperty{
+				Date: &nt.Date{
+					Start: dateObj,
+				},
+			}
+		} else {
+			s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: failed to parse paymentDate=%s: %v", paymentDate, err))
+		}
+	}
+
+	params := nt.UpdatePageParams{
+		DatabasePageProperties: props,
+	}
+
+	_, err := s.client.UpdatePage(ctx, pageID, params)
+	if err != nil {
+		s.logger.Error(err, fmt.Sprintf("[DEBUG] contractor_payables: failed to update payable status: %v", err))
+		return fmt.Errorf("failed to update payable status: %w", err)
+	}
+
+	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: updated payable pageID=%s status=%s successfully", pageID, status))
+	return nil
+}
+
+// GetContractorPayDay gets the PayDay value from a contractor's Service Rate (ContractorRates).
+// Returns the PayDay value (1 or 15) or error if not found.
+func (s *ContractorPayablesService) GetContractorPayDay(ctx context.Context, contractorPageID string) (int, error) {
+	if contractorPageID == "" {
+		return 0, errors.New("contractor page ID is required")
+	}
+
+	contractorRatesDBID := s.cfg.Notion.Databases.ContractorRates
+	if contractorRatesDBID == "" {
+		return 0, errors.New("contractor rates database ID not configured")
+	}
+
+	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: fetching PayDay for contractor=%s", contractorPageID))
+
+	// Query Service Rate database for records with Contractor relation and Active status
+	filter := &nt.DatabaseQueryFilter{
+		And: []nt.DatabaseQueryFilter{
+			{
+				Property: "Contractor",
+				DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+					Relation: &nt.RelationDatabaseQueryFilter{
+						Contains: contractorPageID,
+					},
+				},
+			},
+			{
+				Property: "Status",
+				DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+					Status: &nt.StatusDatabaseQueryFilter{
+						Equals: "Active",
+					},
+				},
+			},
+		},
+	}
+
+	query := &nt.DatabaseQuery{
+		Filter:   filter,
+		PageSize: 1,
+	}
+
+	resp, err := s.client.QueryDatabase(ctx, contractorRatesDBID, query)
+	if err != nil {
+		s.logger.Error(err, fmt.Sprintf("[DEBUG] contractor_payables: failed to query contractor rates for contractor=%s", contractorPageID))
+		return 0, fmt.Errorf("failed to query contractor rates: %w", err)
+	}
+
+	if len(resp.Results) == 0 {
+		s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: no active service rate found for contractor=%s", contractorPageID))
+		return 0, fmt.Errorf("no active service rate found for contractor %s", contractorPageID)
+	}
+
+	page := resp.Results[0]
+	props, ok := page.Properties.(nt.DatabasePageProperties)
+	if !ok {
+		return 0, errors.New("failed to cast service rate page properties")
+	}
+
+	// Extract PayDay from Select property (property name is "Payday" with lowercase 'd')
+	payDayStr := s.extractSelect(props, "Payday")
+	if payDayStr == "" {
+		s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: PayDay property not found or empty for contractor=%s", contractorPageID))
+		return 0, fmt.Errorf("PayDay property not found for contractor %s", contractorPageID)
+	}
+
+	// Parse PayDay value ("01" or "15" as string)
+	var payDay int
+	_, err = fmt.Sscanf(payDayStr, "%d", &payDay)
+	if err != nil {
+		s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: invalid PayDay value=%s for contractor=%s", payDayStr, contractorPageID))
+		return 0, fmt.Errorf("invalid PayDay value: %s", payDayStr)
+	}
+
+	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: contractor=%s PayDay=%d", contractorPageID, payDay))
+	return payDay, nil
+}
+
+// Helper functions for property extraction
+
+func (s *ContractorPayablesService) extractFirstRelationID(props nt.DatabasePageProperties, propName string) string {
+	prop, ok := props[propName]
+	if !ok || len(prop.Relation) == 0 {
+		return ""
+	}
+	return prop.Relation[0].ID
+}
+
+func (s *ContractorPayablesService) extractAllRelationIDs(props nt.DatabasePageProperties, propName string) []string {
+	prop, ok := props[propName]
+	if !ok || len(prop.Relation) == 0 {
+		return nil
+	}
+	ids := make([]string, len(prop.Relation))
+	for i, rel := range prop.Relation {
+		ids[i] = rel.ID
+	}
+	return ids
+}
+
+func (s *ContractorPayablesService) extractNumber(props nt.DatabasePageProperties, propName string) float64 {
+	prop, ok := props[propName]
+	if !ok || prop.Number == nil {
+		return 0
+	}
+	return *prop.Number
+}
+
+func (s *ContractorPayablesService) extractSelect(props nt.DatabasePageProperties, propName string) string {
+	prop, ok := props[propName]
+	if !ok || prop.Select == nil {
+		return ""
+	}
+	return prop.Select.Name
+}
+
+func (s *ContractorPayablesService) extractRollupTitle(props nt.DatabasePageProperties, propName string) string {
+	prop, ok := props[propName]
+	if !ok || prop.Rollup == nil {
+		return ""
+	}
+
+	// Handle array type rollup (most common for relation rollups)
+	if prop.Rollup.Type == "array" && len(prop.Rollup.Array) > 0 {
+		firstItem := prop.Rollup.Array[0]
+		if len(firstItem.Title) > 0 {
+			var result string
+			for _, rt := range firstItem.Title {
+				result += rt.PlainText
+			}
+			return result
+		}
+	}
+
+	return ""
+}

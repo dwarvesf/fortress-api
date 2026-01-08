@@ -363,6 +363,13 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 		payroll.POST("/commit", conditionalAuthMW, conditionalPermMW(model.PermissionPayrollsCreate), h.Payroll.CommitPayroll)
 	}
 
+	// Contractor Payables routes
+	contractorPayablesGroup := v1.Group("/contractor-payables")
+	{
+		contractorPayablesGroup.GET("/preview-commit", conditionalAuthMW, conditionalPermMW(model.PermissionPayrollsRead), h.ContractorPayables.PreviewCommit)
+		contractorPayablesGroup.POST("/commit", conditionalAuthMW, conditionalPermMW(model.PermissionPayrollsCreate), h.ContractorPayables.Commit)
+	}
+
 	invitationGroup := v1.Group("/invite")
 	{
 		invitationGroup.GET("", conditionalAuthMW, h.Profile.GetInvitation)
