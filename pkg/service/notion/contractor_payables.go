@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	nt "github.com/dstotijn/go-notion"
 
@@ -49,8 +50,87 @@ func NewContractorPayablesService(cfg *config.Config, logger logger.Logger, noti
 	}
 }
 
-// CreatePayable creates a new payable record in the Contractor Payables database
-// Returns the created page ID
+// ExistingPayable represents an existing payable record found in Notion
+type ExistingPayable struct {
+	PageID string
+	Status string // "New", "Pending", etc.
+}
+
+// findExistingPayable searches for an existing payable record by contractor and period
+func (s *ContractorPayablesService) findExistingPayable(ctx context.Context, contractorPageID, period string) (*ExistingPayable, error) {
+	payablesDBID := s.cfg.Notion.Databases.ContractorPayables
+	if payablesDBID == "" {
+		return nil, errors.New("contractor payables database ID not configured")
+	}
+
+	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: searching for existing payable contractor=%s period=%s", contractorPageID, period))
+
+	// Build filter: Contractor relation contains contractorPageID AND Period equals period date
+	filter := &nt.DatabaseQueryFilter{
+		And: []nt.DatabaseQueryFilter{
+			{
+				Property: "Contractor",
+				DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+					Relation: &nt.RelationDatabaseQueryFilter{
+						Contains: contractorPageID,
+					},
+				},
+			},
+			{
+				Property: "Period",
+				DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+					Date: &nt.DatePropertyFilter{
+						Equals: func() *time.Time {
+							t, err := time.Parse("2006-01-02", period)
+							if err != nil {
+								return nil
+							}
+							return &t
+						}(),
+					},
+				},
+			},
+		},
+	}
+
+	resp, err := s.client.QueryDatabase(ctx, payablesDBID, &nt.DatabaseQuery{
+		Filter:   filter,
+		PageSize: 1,
+	})
+	if err != nil {
+		s.logger.Error(err, "[DEBUG] contractor_payables: failed to query existing payables")
+		return nil, fmt.Errorf("failed to query existing payables: %w", err)
+	}
+
+	if len(resp.Results) == 0 {
+		s.logger.Debug("[DEBUG] contractor_payables: no existing payable found")
+		return nil, nil
+	}
+
+	page := resp.Results[0]
+	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: found existing payable pageID=%s", page.ID))
+
+	// Extract status
+	status := ""
+	if props, ok := page.Properties.(nt.DatabasePageProperties); ok {
+		if statusProp, exists := props["Payment Status"]; exists && statusProp.Status != nil {
+			status = statusProp.Status.Name
+		}
+	}
+
+	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: existing payable status=%s", status))
+
+	return &ExistingPayable{
+		PageID: page.ID,
+		Status: status,
+	}, nil
+}
+
+// CreatePayable creates a new payable record or updates existing one in the Contractor Payables database
+// - If existing record with status "New" found: updates it
+// - If existing record with status "Pending" or other: skips (returns existing page ID)
+// - If no existing record: creates new
+// Returns the page ID (created or existing)
 func (s *ContractorPayablesService) CreatePayable(ctx context.Context, input CreatePayableInput) (string, error) {
 	payablesDBID := s.cfg.Notion.Databases.ContractorPayables
 	if payablesDBID == "" {
@@ -59,6 +139,21 @@ func (s *ContractorPayablesService) CreatePayable(ctx context.Context, input Cre
 
 	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: creating payable contractor=%s total=%.2f currency=%s invoiceID=%s payoutItems=%d",
 		input.ContractorPageID, input.Total, input.Currency, input.InvoiceID, len(input.PayoutItemIDs)))
+
+	// Check for existing payable
+	existing, err := s.findExistingPayable(ctx, input.ContractorPageID, input.Period)
+	if err != nil {
+		s.logger.Error(err, "[DEBUG] contractor_payables: failed to check existing payable - proceeding with create")
+		// Continue with creation on error
+	} else if existing != nil {
+		if existing.Status == "New" {
+			s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: found existing payable with status=New, updating pageID=%s", existing.PageID))
+			return s.updatePayable(ctx, existing.PageID, input)
+		}
+		// Status is Pending or other - skip
+		s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: existing payable has status=%s, skipping update", existing.Status))
+		return existing.PageID, nil
+	}
 
 	// Build properties for the new payable
 	props := nt.DatabasePageProperties{
@@ -200,4 +295,102 @@ func (s *ContractorPayablesService) CreatePayable(ctx context.Context, input Cre
 	}
 
 	return page.ID, nil
+}
+
+// updatePayable updates an existing payable record with new data
+func (s *ContractorPayablesService) updatePayable(ctx context.Context, pageID string, input CreatePayableInput) (string, error) {
+	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: updating payable pageID=%s", pageID))
+
+	// Build properties for update
+	props := nt.DatabasePageProperties{
+		// Total
+		"Total": nt.DatabasePageProperty{
+			Number: &input.Total,
+		},
+	}
+
+	// Add Currency
+	if input.Currency != "" {
+		props["Currency"] = nt.DatabasePageProperty{
+			Select: &nt.SelectOptions{
+				Name: input.Currency,
+			},
+		}
+	}
+
+	// Add Invoice Date
+	if input.InvoiceDate != "" {
+		dateObj, err := nt.ParseDateTime(input.InvoiceDate)
+		if err == nil {
+			props["Invoice Date"] = nt.DatabasePageProperty{
+				Date: &nt.Date{
+					Start: dateObj,
+				},
+			}
+		}
+	}
+
+	// Add Invoice ID
+	if input.InvoiceID != "" {
+		props["Invoice ID"] = nt.DatabasePageProperty{
+			RichText: []nt.RichText{
+				{Text: &nt.Text{Content: input.InvoiceID}},
+			},
+		}
+	}
+
+	// Add Payout Items relation
+	if len(input.PayoutItemIDs) > 0 {
+		relations := make([]nt.Relation, len(input.PayoutItemIDs))
+		for i, id := range input.PayoutItemIDs {
+			relations[i] = nt.Relation{ID: id}
+		}
+		props["Payout Items"] = nt.DatabasePageProperty{
+			Relation: relations,
+		}
+	}
+
+	// Add Contractor Type (default to "Individual" if not provided)
+	contractorType := input.ContractorType
+	if contractorType == "" {
+		contractorType = "Individual"
+	}
+	props["Contractor Type"] = nt.DatabasePageProperty{
+		Select: &nt.SelectOptions{
+			Name: contractorType,
+		},
+	}
+
+	// Update the page
+	_, err := s.client.UpdatePage(ctx, pageID, nt.UpdatePageParams{
+		DatabasePageProperties: props,
+	})
+	if err != nil {
+		s.logger.Error(err, fmt.Sprintf("[DEBUG] contractor_payables: failed to update payable: %v", err))
+		return "", fmt.Errorf("failed to update payable: %w", err)
+	}
+
+	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: updated payable pageID=%s", pageID))
+
+	// Upload PDF attachment if provided
+	if len(input.PDFBytes) > 0 && s.notionSvc != nil {
+		s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: uploading PDF attachment size=%d bytes", len(input.PDFBytes)))
+
+		filename := input.InvoiceID + ".pdf"
+		fileUploadID, uploadErr := s.notionSvc.UploadFile(filename, "application/pdf", input.PDFBytes)
+		if uploadErr != nil {
+			s.logger.Error(uploadErr, "[DEBUG] contractor_payables: failed to upload PDF - continuing without attachment")
+		} else {
+			s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: PDF uploaded fileUploadID=%s", fileUploadID))
+
+			attachErr := s.notionSvc.UpdatePagePropertiesWithFileUpload(pageID, "Attachments", fileUploadID, filename)
+			if attachErr != nil {
+				s.logger.Error(attachErr, "[DEBUG] contractor_payables: failed to attach PDF to page - continuing without attachment")
+			} else {
+				s.logger.Debug("[DEBUG] contractor_payables: PDF attached successfully")
+			}
+		}
+	}
+
+	return pageID, nil
 }
