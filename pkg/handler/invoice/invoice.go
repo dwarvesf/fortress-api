@@ -18,6 +18,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/handler/invoice/errs"
 	"github.com/dwarvesf/fortress-api/pkg/handler/invoice/request"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
+	"github.com/dwarvesf/fortress-api/pkg/service/notion"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/store"
@@ -438,6 +439,32 @@ func (h *handler) GenerateContractorInvoice(c *gin.Context) {
 		}
 
 		l.Debug(fmt.Sprintf("PDF uploaded: url=%s", fileURL))
+	}
+
+	// 5.5 Create Contractor Payables record in Notion
+	l.Debug("[DEBUG] creating contractor payables record in Notion")
+
+	payableInput := notion.CreatePayableInput{
+		ContractorPageID: invoiceData.ContractorPageID,
+		Total:            invoiceData.TotalUSD,
+		Currency:         "USD",
+		Period:           invoiceData.Month + "-01",
+		InvoiceDate:      time.Now().Format("2006-01-02"),
+		InvoiceID:        invoiceData.InvoiceNumber,
+		PayoutItemIDs:    invoiceData.PayoutPageIDs,
+		ContractorType:   "Individual", // Default to Individual
+		PDFBytes:         pdfBytes,     // Upload PDF to Notion
+	}
+
+	l.Debug(fmt.Sprintf("[DEBUG] payable input: contractor=%s total=%.2f payoutItems=%d",
+		payableInput.ContractorPageID, payableInput.Total, len(payableInput.PayoutItemIDs)))
+
+	payablePageID, payableErr := h.service.Notion.ContractorPayables.CreatePayable(c.Request.Context(), payableInput)
+	if payableErr != nil {
+		l.Error(payableErr, "[DEBUG] failed to create contractor payables record - continuing with response")
+		// Non-fatal: continue with response
+	} else {
+		l.Debug(fmt.Sprintf("[DEBUG] contractor payables record created: pageID=%s", payablePageID))
 	}
 
 	// 6. Build response

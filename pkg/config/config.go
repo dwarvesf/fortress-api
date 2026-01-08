@@ -277,8 +277,9 @@ type NotionDatabase struct {
 	Issue              string
 	Contractor         string
 	ContractorRates    string
-	ContractorPayouts  string
-	ContractorFees     string
+	ContractorPayouts   string
+	ContractorPayables  string
+	ContractorFees      string
 	InvoiceSplit       string
 	RefundRequest      string
 	DeploymentTracker  string
@@ -506,8 +507,9 @@ func Generate(v ENV) *Config {
 				Issue:             v.GetString("NOTION_ISSUE_DB_ID"),
 				Contractor:         v.GetString("NOTION_CONTRACTOR_DB_ID"),
 				ContractorRates:    v.GetString("NOTION_CONTRACTOR_RATES_DB_ID"),
-				ContractorPayouts:  v.GetString("NOTION_CONTRACTOR_PAYOUTS_DB_ID"),
-				ContractorFees:     v.GetString("NOTION_CONTRACTOR_FEES_DB_ID"),
+				ContractorPayouts:   v.GetString("NOTION_CONTRACTOR_PAYOUTS_DB_ID"),
+				ContractorPayables:  v.GetString("NOTION_CONTRACTOR_PAYABLES_DB_ID"),
+				ContractorFees:      v.GetString("NOTION_CONTRACTOR_FEES_DB_ID"),
 				InvoiceSplit:       v.GetString("NOTION_INVOICE_SPLIT_DB_ID"),
 				RefundRequest:      v.GetString("NOTION_REFUND_REQUEST_DB_ID"),
 				DeploymentTracker:  v.GetString("NOTION_DEPLOYMENT_TRACKER_DB_ID"),

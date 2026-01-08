@@ -299,16 +299,20 @@ func New(cfg *config.Config, store *store.Store, repo store.DBRepo) (*Service, e
 		Mochi:              mochi.New(cfg, logger.L),
 		MochiPay:           mochipay.New(cfg, logger.L),
 		MochiProfile:       mochiprofile.New(cfg, logger.L),
-		Notion: &notion.Services{
-			IService:          notion.New(cfg.Notion.Secret, cfg.Notion.Databases.Project, logger.L, repo.DB()),
-			Timesheet:         notion.NewTimesheetService(cfg, logger.L),
-			TaskOrderLog:      notion.NewTaskOrderLogService(cfg, logger.L),
-			ContractorRates:   notion.NewContractorRatesService(cfg, logger.L),
-			ContractorFees:    notion.NewContractorFeesService(cfg, logger.L),
-			ContractorPayouts: notion.NewContractorPayoutsService(cfg, logger.L),
-			RefundRequests:    notion.NewRefundRequestsService(cfg, logger.L),
-			InvoiceSplit:      notion.NewInvoiceSplitService(cfg, logger.L),
-		},
+		Notion: func() *notion.Services {
+			notionSvc := notion.New(cfg.Notion.Secret, cfg.Notion.Databases.Project, logger.L, repo.DB())
+			return &notion.Services{
+				IService:           notionSvc,
+				Timesheet:          notion.NewTimesheetService(cfg, logger.L),
+				TaskOrderLog:       notion.NewTaskOrderLogService(cfg, logger.L),
+				ContractorRates:    notion.NewContractorRatesService(cfg, logger.L),
+				ContractorFees:     notion.NewContractorFeesService(cfg, logger.L),
+				ContractorPayouts:  notion.NewContractorPayoutsService(cfg, logger.L),
+				ContractorPayables: notion.NewContractorPayablesService(cfg, logger.L, notionSvc),
+				RefundRequests:     notion.NewRefundRequestsService(cfg, logger.L),
+				InvoiceSplit:       notion.NewInvoiceSplitService(cfg, logger.L),
+			}
+		}(),
 		OpenRouter:     openrouter.NewOpenRouterService(cfg, logger.L),
 		ParquetSync:    parquetSvc,
 		Sendgrid:           sendgrid.New(cfg.Sendgrid.APIKey, cfg, logger.L),

@@ -7,7 +7,8 @@ type Services struct {
 	TaskOrderLog      *TaskOrderLogService
 	ContractorRates   *ContractorRatesService
 	ContractorFees    *ContractorFeesService
-	ContractorPayouts *ContractorPayoutsService
-	RefundRequests    *RefundRequestsService
+	ContractorPayouts   *ContractorPayoutsService
+	ContractorPayables  *ContractorPayablesService
+	RefundRequests      *RefundRequestsService
 	InvoiceSplit      *InvoiceSplitService
 }

@@ -50,6 +50,10 @@ type ContractorInvoiceData struct {
 	SubtotalUSDItems   float64 // Sum of all USD-denominated items
 	SubtotalUSD        float64 // SubtotalUSDFromVND + SubtotalUSDItems
 	FXSupport          float64 // FX support fee (hardcoded $8 for now, TODO: implement dynamic calculation)
+
+	// Notion relation IDs (for creating Contractor Payables record)
+	ContractorPageID string   // Contractor page ID from rates query
+	PayoutPageIDs    []string // Payout Item page IDs from pending payouts
 }
 
 // ContractorInvoiceLineItem represents a line item in a contractor invoice
@@ -545,7 +549,18 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 		SubtotalUSDItems:   0,           // Deprecated - no longer used
 		SubtotalUSD:        subtotalUSD, // SubtotalVND converted to USD
 		FXSupport:          fxSupport,
+
+		// Notion relation IDs (for creating Contractor Payables record)
+		ContractorPageID: rateData.ContractorPageID,
 	}
+
+	// Collect payout page IDs from processed payouts
+	payoutPageIDs := make([]string, len(payouts))
+	for i, payout := range payouts {
+		payoutPageIDs[i] = payout.PageID
+	}
+	invoiceData.PayoutPageIDs = payoutPageIDs
+	l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: collected %d payout page IDs for Contractor Payables record", len(payoutPageIDs)))
 
 	l.Debug("[DEBUG] contractor_invoice: invoice data populated with calculated totals")
 	l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: SubtotalVND=%.0f (%.0f VND items + %.0f from USD items) SubtotalUSD=%.2f FXSupport=%.2f TotalUSD=%.2f ExchangeRate=%.4f",
