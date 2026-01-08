@@ -148,6 +148,32 @@ func (h *handler) processGenInvoice(l logger.Logger, req GenInvoiceRequest) {
 
 	l.Debug(fmt.Sprintf("PDF uploaded to Google Drive: url=%s", fileURL))
 
+	// Step 3.5: Create Contractor Payables record in Notion
+	l.Debug("step 3.5: creating contractor payables record in Notion")
+
+	payableInput := notion.CreatePayableInput{
+		ContractorPageID: invoiceData.ContractorPageID,
+		Total:            invoiceData.TotalUSD,
+		Currency:         "USD",
+		Period:           invoiceData.Month + "-01",
+		InvoiceDate:      time.Now().Format("2006-01-02"),
+		InvoiceID:        invoiceData.InvoiceNumber,
+		PayoutItemIDs:    invoiceData.PayoutPageIDs,
+		ContractorType:   "Individual", // Default to Individual
+		PDFBytes:         pdfBytes,     // Upload PDF to Notion
+	}
+
+	l.Debug(fmt.Sprintf("[DEBUG] payable input: contractor=%s total=%.2f payoutItems=%d",
+		payableInput.ContractorPageID, payableInput.Total, len(payableInput.PayoutItemIDs)))
+
+	payablePageID, payableErr := h.service.Notion.ContractorPayables.CreatePayable(ctx, payableInput)
+	if payableErr != nil {
+		l.Errorf(payableErr, "[DEBUG] failed to create contractor payables record - continuing with response")
+		// Non-fatal: continue with response
+	} else {
+		l.Debug(fmt.Sprintf("[DEBUG] contractor payables record created: pageID=%s", payablePageID))
+	}
+
 	// Extract file ID from URL for sharing
 	fileID := extractFileIDFromURL(fileURL)
 	if fileID == "" {
