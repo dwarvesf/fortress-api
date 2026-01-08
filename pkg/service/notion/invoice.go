@@ -196,7 +196,7 @@ func (n *notionService) QueryClientInvoiceByNumber(invoiceNumber string) (*nt.Pa
 		return nil, fmt.Errorf("invoice number is required")
 	}
 
-	// Build filter for Invoice type with title containing the invoice number
+	// Build filter for Invoice type with Legacy Number containing the invoice number
 	filter := &nt.DatabaseQueryFilter{
 		And: []nt.DatabaseQueryFilter{
 			{
@@ -208,7 +208,7 @@ func (n *notionService) QueryClientInvoiceByNumber(invoiceNumber string) (*nt.Pa
 				},
 			},
 			{
-				Property: "(auto) Invoice Number",
+				Property: "Legacy Number",
 				DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
 					RichText: &nt.TextPropertyFilter{
 						Contains: invoiceNumber,
@@ -343,14 +343,14 @@ func (n *notionService) ExtractClientInvoiceData(page *nt.Page) (*model.Invoice,
 
 	invoice := &model.Invoice{}
 
-	// Extract invoice number from title
-	if titleProp, ok := props["(auto) Invoice Number"]; ok && titleProp.Title != nil {
-		var titleText string
-		for _, t := range titleProp.Title {
-			titleText += t.PlainText
+	// Extract invoice number from Legacy Number
+	if legacyNumberProp, ok := props["Legacy Number"]; ok && legacyNumberProp.RichText != nil {
+		var invoiceNumber string
+		for _, t := range legacyNumberProp.RichText {
+			invoiceNumber += t.PlainText
 		}
-		invoice.Number = titleText
-		l.Debugf("extracted invoice number: %s", invoice.Number)
+		invoice.Number = invoiceNumber
+		l.Debugf("extracted invoice number from Legacy Number: %s", invoice.Number)
 	}
 
 	// Extract Month and Year from Issue Date

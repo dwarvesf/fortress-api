@@ -19,28 +19,28 @@ import (
 func (h *handler) extractInvoiceDataFromNotion(l logger.Logger, page nt.Page, props nt.DatabasePageProperties) (*model.Invoice, []model.InvoiceItem, error) {
 	l.Debug("extracting invoice data from notion page properties")
 
-	// Extract invoice number from title
+	// Extract invoice number from Legacy Number
 	invoiceNumber := ""
-	if titleProp, ok := props["(auto) Invoice Number"]; ok {
-		l.Debug(fmt.Sprintf("(auto) Invoice Number property found, Title length: %d", len(titleProp.Title)))
-		if len(titleProp.Title) > 0 {
-			// Concatenate all title segments (Notion may split styled text into multiple segments)
+	if legacyNumberProp, ok := props["Legacy Number"]; ok {
+		l.Debug(fmt.Sprintf("Legacy Number property found, RichText length: %d", len(legacyNumberProp.RichText)))
+		if len(legacyNumberProp.RichText) > 0 {
+			// Concatenate all rich text segments (Notion may split styled text into multiple segments)
 			var parts []string
-			for _, segment := range titleProp.Title {
+			for _, segment := range legacyNumberProp.RichText {
 				parts = append(parts, segment.PlainText)
 			}
 			invoiceNumber = strings.Join(parts, "")
-			l.Debug(fmt.Sprintf("extracted invoice number: '%s' (length: %d, bytes: %v)",
+			l.Debug(fmt.Sprintf("extracted invoice number from Legacy Number: '%s' (length: %d, bytes: %v)",
 				invoiceNumber, len(invoiceNumber), []byte(invoiceNumber)))
 			l.Info(fmt.Sprintf("INVOICE NUMBER: %s", invoiceNumber))
 		} else {
-			l.Debug("(auto) Invoice Number Title is empty")
+			l.Debug("Legacy Number RichText is empty")
 		}
 	} else {
-		l.Debug("(auto) Invoice Number property not found in props")
+		l.Debug("Legacy Number property not found in props")
 	}
 	if invoiceNumber == "" {
-		return nil, nil, errors.New("invoice number not found in (auto) Invoice Number title property")
+		return nil, nil, errors.New("invoice number not found in Legacy Number property")
 	}
 
 	// Extract issue date
@@ -393,7 +393,7 @@ func (h *handler) transformNotionLineItem(l logger.Logger, props nt.DatabasePage
 	// Build description with fallback priority:
 	// 1. Description column (if not empty)
 	// 2. Position - Name format (if available)
-	// 3. (auto) Invoice Number (final fallback)
+	// 3. Legacy Number (final fallback)
 
 	var description string
 
@@ -417,16 +417,16 @@ func (h *handler) transformNotionLineItem(l logger.Logger, props nt.DatabasePage
 		}
 	}
 
-	// Final fallback to (auto) Invoice Number if still empty
+	// Final fallback to Legacy Number if still empty
 	if description == "" {
-		if autoInvoiceNumProp, ok := props["(auto) Invoice Number"]; ok && len(autoInvoiceNumProp.Title) > 0 {
-			// Concatenate all title segments
+		if legacyNumberProp, ok := props["Legacy Number"]; ok && len(legacyNumberProp.RichText) > 0 {
+			// Concatenate all rich text segments
 			var parts []string
-			for _, segment := range autoInvoiceNumProp.Title {
+			for _, segment := range legacyNumberProp.RichText {
 				parts = append(parts, segment.PlainText)
 			}
 			description = strings.Join(parts, "")
-			l.Debug(fmt.Sprintf("all fallbacks empty, using (auto) Invoice Number: %s", description))
+			l.Debug(fmt.Sprintf("all fallbacks empty, using Legacy Number: %s", description))
 		}
 	}
 

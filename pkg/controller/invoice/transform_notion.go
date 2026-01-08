@@ -30,16 +30,15 @@ func NotionPageToInvoice(page nt.Page, lineItems []nt.Page, notionService notion
 
 	invoice := &model.Invoice{}
 
-	// Extract Invoice Number from title property
-	// Concatenate all title segments (Notion may split styled text into multiple segments)
-	if titleProp, ok := props["(auto) Invoice Number"]; ok {
-		if len(titleProp.Title) > 0 {
+	// Extract Invoice Number from Legacy Number property (RichText)
+	if legacyNumberProp, ok := props["Legacy Number"]; ok {
+		if len(legacyNumberProp.RichText) > 0 {
 			var parts []string
-			for _, segment := range titleProp.Title {
+			for _, segment := range legacyNumberProp.RichText {
 				parts = append(parts, segment.PlainText)
 			}
 			invoice.Number = strings.Join(parts, "")
-			l.Debugf("extracted invoice number: %s (from %d segments)", invoice.Number, len(titleProp.Title))
+			l.Debugf("extracted invoice number from Legacy Number: %s (from %d segments)", invoice.Number, len(legacyNumberProp.RichText))
 		}
 	}
 
