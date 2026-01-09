@@ -1,7 +1,7 @@
 Mime-Version: 1.0
 From: "Spawn @ Dwarves LLC" <spawn@d.foundation>
 To: {{.TeamEmail}}
-Subject: Monthly Task Order - {{formattedMonth}}
+Subject: Quick update for {{formattedMonth}} - Invoice reminder & client milestones
 Content-Type: multipart/mixed; boundary=main
 
 --main
@@ -11,22 +11,24 @@ Content-Transfer-Encoding: quoted-printable
 <div>
     <p>Hi {{contractorLastName}},</p>
 
-    <p>This email outlines your planned assignments and work order for: <b>{{formattedMonth}}</b>.</p>
+    <p>Hope you're having a great start to {{formattedMonth}}!</p>
 
-    <p>Period: <b>01 – {{periodEndDay}} {{monthName}}, {{year}}</b></p>
+    <p>Just a quick note:</p>
 
-    <p>Active clients & locations:</p>
+    <p>Your regular monthly invoice for {{formattedMonth}} services is due by <b>{{invoiceDueDay}}</b>. As usual, please use the standard template and send to <a href="mailto:billing@dwarves.llc">billing@dwarves.llc</a>.</p>
+
+    <p>Upcoming client milestones (for awareness):</p>
     <ul>
-        {{range .Clients}}
-        <li>{{.Name}}{{if .Country}} – {{.Country}}{{end}}</li>
+        {{range .Milestones}}
+        <li>{{.}}</li>
         {{end}}
     </ul>
 
-    <p>All tasks and deliverables will be tracked in Notion/Jira as usual.</p>
+    <p>You're continuing to do excellent work on the embedded team – clients are very happy with your contributions.</p>
 
-    <p>Please reply <b>"Confirmed – {{formattedMonth}}"</b> to acknowledge this work order and confirm your availability.</p>
+    <p>If anything comes up or you need support, just ping me anytime.</p>
 
-    <p>Thanks,</p>
+    <p>Best,</p>
 
     <div><br></div>-- <br>
     {{ template "signature.tpl" }}

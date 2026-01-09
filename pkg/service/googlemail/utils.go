@@ -105,33 +105,14 @@ func composeTaskOrderConfirmationContent(appConfig *config.Config, data *model.T
 			}
 			return data.ContractorName
 		},
-		"periodEndDay": func() string {
-			t, err := time.Parse("2006-01", data.Month)
-			if err != nil {
-				return "31"
-			}
-			lastDay := time.Date(t.Year(), t.Month()+1, 0, 0, 0, 0, 0, time.UTC)
-			return fmt.Sprintf("%02d", lastDay.Day())
-		},
-		"monthName": func() string {
-			t, err := time.Parse("2006-01", data.Month)
-			if err != nil {
-				return ""
-			}
-			return t.Format("January")
-		},
-		"year": func() string {
-			parts := strings.Split(data.Month, "-")
-			if len(parts) >= 1 {
-				return parts[0]
-			}
-			return ""
+		"invoiceDueDay": func() string {
+			return data.InvoiceDueDay
 		},
 		"signatureName": func() string {
-			return "Team Dwarves"
+			return "Han Ngo"
 		},
 		"signatureTitle": func() string {
-			return "People Operations"
+			return "CTO & Managing Director"
 		},
 		"signatureNameSuffix": func() string {
 			return "" // No dot for task order emails

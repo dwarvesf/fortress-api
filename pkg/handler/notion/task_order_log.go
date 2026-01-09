@@ -92,11 +92,11 @@ func (h *handler) SyncTaskOrderLogs(c *gin.Context) {
 	if len(timesheets) == 0 {
 		l.Info("no approved timesheets found, returning success with zero counts")
 		c.JSON(http.StatusOK, view.CreateResponse[any](map[string]any{
-			"month":                  month,
-			"orders_created":         0,
-			"line_items_created":     0,
-			"contractors_processed":  0,
-			"details":                []any{},
+			"month":                 month,
+			"orders_created":        0,
+			"line_items_created":    0,
+			"contractors_processed": 0,
+			"details":               []any{},
 		}, nil, nil, nil, "ok"))
 		return
 	}
@@ -285,12 +285,12 @@ func (h *handler) SyncTaskOrderLogs(c *gin.Context) {
 
 	// Return response
 	c.JSON(http.StatusOK, view.CreateResponse[any](map[string]any{
-		"month":                  month,
-		"orders_created":         ordersCreated,
-		"line_items_created":     lineItemsCreated,
-		"line_items_updated":     lineItemsUpdated,
-		"contractors_processed":  contractorsProcessed,
-		"details":                details,
+		"month":                 month,
+		"orders_created":        ordersCreated,
+		"line_items_created":    lineItemsCreated,
+		"line_items_updated":    lineItemsUpdated,
+		"contractors_processed": contractorsProcessed,
+		"details":               details,
 	}, nil, nil, nil, "ok"))
 }
 
@@ -491,12 +491,36 @@ func (h *handler) SendTaskOrderConfirmation(c *gin.Context) {
 
 		detail["clients"] = clientStrings
 
-		// Step 5c: Prepare email data
+		// Step 5c: Fetch contractor payday and calculate invoice due day
+		payday, err := taskOrderLogService.GetContractorPayday(ctx, contractorID)
+		if err != nil {
+			// Error already logged in service layer, continue with default
+			l.Debug(fmt.Sprintf("using default payday for contractor %s: %v", name, err))
+			payday = 0
+		}
+
+		// Calculate invoice due day based on payday
+		invoiceDueDay := "10th" // Default for Payday 1 or fallback
+		if payday == 15 {
+			invoiceDueDay = "25th"
+		}
+
+		l.Debug(fmt.Sprintf("contractor %s: payday=%d invoice_due_day=%s", name, payday, invoiceDueDay))
+
+		// Step 5d: Create mock milestones (TODO: Replace with real data source)
+		milestones := []string{
+			"Katalon Inc. – Feature Y demo expected mid-month",
+			"Dwarves LLC – Sprint review scheduled end of month",
+		}
+
+		// Step 5e: Prepare email data
 		emailData := &model.TaskOrderConfirmationEmail{
 			ContractorName: name,
 			TeamEmail:      emailToSend,
 			Month:          month,
 			Clients:        clients,
+			InvoiceDueDay:  invoiceDueDay,
+			Milestones:     milestones,
 		}
 
 		// Step 5d: Send email via Gmail using accounting refresh token

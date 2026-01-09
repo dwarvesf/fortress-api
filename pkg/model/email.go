@@ -15,8 +15,10 @@ type Email struct {
 type TaskOrderConfirmationEmail struct {
 	ContractorName string
 	TeamEmail      string
-	Month          string // YYYY-MM format
+	Month          string   // YYYY-MM format
 	Clients        []TaskOrderClient
+	InvoiceDueDay  string   // Invoice due date (e.g., "10th", "25th")
+	Milestones     []string // Client milestones for the month
 }
 
 // TaskOrderClient represents a client in the task order

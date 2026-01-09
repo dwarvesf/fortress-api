@@ -896,6 +896,16 @@ func (s *TaskOrderLogService) extractRichText(props nt.DatabasePageProperties, p
 	return ""
 }
 
+// extractSelect extracts the value from a Select property
+// Returns empty string if property not found or not a Select type
+func (s *TaskOrderLogService) extractSelect(props nt.DatabasePageProperties, propName string) string {
+	prop, ok := props[propName]
+	if !ok || prop.Select == nil {
+		return ""
+	}
+	return prop.Select.Name
+}
+
 // LineItemDetails holds line item data for comparison during upsert
 type LineItemDetails struct {
 	PageID       string
@@ -1628,6 +1638,89 @@ func (s *TaskOrderLogService) GetContractorPersonalEmail(ctx context.Context, co
 	return ""
 }
 
+// GetContractorPayday fetches the Payday value from Contractor Rates database
+// Returns:
+//   - 1 if Payday = "01"
+//   - 15 if Payday = "15"
+//   - 0 if not found or invalid (caller should use default)
+//   - nil error on success, error object only for system failures
+func (s *TaskOrderLogService) GetContractorPayday(ctx context.Context, contractorPageID string) (int, error) {
+	// Validate database configuration
+	contractorRatesDBID := s.cfg.Notion.Databases.ContractorRates
+	if contractorRatesDBID == "" {
+		s.logger.Debug("contractor rates database ID not configured")
+		return 0, nil // Graceful fallback
+	}
+
+	s.logger.Debug(fmt.Sprintf("querying contractor rates database for contractor: %s", contractorPageID))
+
+	// Build query to find Active Service Rate for contractor
+	filter := nt.DatabaseQueryFilter{
+		Property: "Contractor",
+		DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+			Relation: &nt.RelationDatabaseQueryFilter{
+				Contains: contractorPageID,
+			},
+		},
+	}
+
+	statusFilter := nt.DatabaseQueryFilter{
+		Property: "Status",
+		DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+			Status: &nt.StatusDatabaseQueryFilter{
+				Equals: "Active",
+			},
+		},
+	}
+
+	query := &nt.DatabaseQuery{
+		Filter: &nt.DatabaseQueryFilter{
+			And: []nt.DatabaseQueryFilter{filter, statusFilter},
+		},
+		PageSize: 1, // We only need one active record
+	}
+
+	// Execute query
+	resp, err := s.client.QueryDatabase(ctx, contractorRatesDBID, query)
+	if err != nil {
+		s.logger.Debug(fmt.Sprintf("failed to query contractor rates database for contractor %s: %v", contractorPageID, err))
+		return 0, nil // Graceful fallback - don't block email sending
+	}
+
+	// Check if any active service rate found
+	if len(resp.Results) == 0 {
+		s.logger.Debug(fmt.Sprintf("no active contractor rate found for contractor: %s", contractorPageID))
+		return 0, nil
+	}
+
+	// Extract properties from first result
+	props, ok := resp.Results[0].Properties.(nt.DatabasePageProperties)
+	if !ok {
+		s.logger.Debug(fmt.Sprintf("failed to cast contractor rate properties for contractor: %s", contractorPageID))
+		return 0, nil
+	}
+
+	// Extract Payday field
+	paydayStr := s.extractSelect(props, "Payday")
+	if paydayStr == "" {
+		s.logger.Debug(fmt.Sprintf("payday field is empty for contractor: %s", contractorPageID))
+		return 0, nil
+	}
+
+	// Parse and validate Payday value
+	switch paydayStr {
+	case "01":
+		s.logger.Debug(fmt.Sprintf("contractor payday found: contractor=%s payday=1", contractorPageID))
+		return 1, nil
+	case "15":
+		s.logger.Debug(fmt.Sprintf("contractor payday found: contractor=%s payday=15", contractorPageID))
+		return 15, nil
+	default:
+		s.logger.Debug(fmt.Sprintf("invalid payday value for contractor %s: %s", contractorPageID, paydayStr))
+		return 0, nil
+	}
+}
+
 // AppendBlocksToPage appends text content as paragraph blocks to a Notion page
 func (s *TaskOrderLogService) AppendBlocksToPage(ctx context.Context, pageID string, content string) error {
 	s.logger.Debug(fmt.Sprintf("appending blocks to page: pageID=%s contentLength=%d", pageID, len(content)))
@@ -1820,10 +1913,10 @@ func (s *TaskOrderLogService) loadTaskOrderSignature() string {
 	// Parse and execute template with signatureName, signatureTitle, and signatureNameSuffix
 	tmpl, err := template.New("signature.tpl").Funcs(template.FuncMap{
 		"signatureName": func() string {
-			return "Team Dwarves"
+			return "Han Ngo"
 		},
 		"signatureTitle": func() string {
-			return "People Operations"
+			return "CTO & Managing Director"
 		},
 		"signatureNameSuffix": func() string {
 			return "" // No dot for task order emails
