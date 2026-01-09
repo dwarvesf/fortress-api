@@ -1838,10 +1838,6 @@ func (s *TaskOrderLogService) GenerateConfirmationHTML(contractorName, month str
 	}
 
 	formattedMonth := t.Format("January 2006")
-	lastDay := time.Date(t.Year(), t.Month()+1, 0, 0, 0, 0, 0, time.UTC)
-	periodEndDay := fmt.Sprintf("%02d", lastDay.Day())
-	monthName := t.Format("January")
-	year := t.Format("2006")
 
 	// Get contractor last name for greeting
 	parts := strings.Fields(contractorName)
@@ -1850,45 +1846,50 @@ func (s *TaskOrderLogService) GenerateConfirmationHTML(contractorName, month str
 		contractorLastName = parts[len(parts)-1]
 	}
 
-	// Build clients list as HTML
-	var clientsHTML string
+	// Default invoice due day (can be overridden if payday info is available)
+	invoiceDueDay := "10th"
+
+	// Build milestones list from clients as HTML
+	var milestonesHTML string
 	for _, client := range clients {
-		clientStr := client.Name
+		milestone := fmt.Sprintf("Continuing work with %s", client.Name)
 		if client.Country != "" {
-			clientStr = fmt.Sprintf("%s – headquartered in %s", client.Name, client.Country)
+			milestone = fmt.Sprintf("Continuing work with %s (based in %s)", client.Name, client.Country)
 		}
-		clientsHTML += fmt.Sprintf("        <li>%s</li>\n", clientStr)
+		milestonesHTML += fmt.Sprintf("        <li>%s</li>\n", milestone)
 	}
 
 	// Load signature from template file
 	signature := s.loadTaskOrderSignature()
 
-	// Build HTML content matching template format with signature
+	// Build HTML content matching new template format
 	html := fmt.Sprintf(`<div>
     <p>Hi %s,</p>
 
-    <p>This email outlines your planned assignments and work order for: <b>%s</b>.</p>
+    <p>Hope you're having a great start to %s!</p>
 
-    <p>Period: <b>01 – %s %s, %s</b></p>
+    <p>Just a quick note:</p>
 
-    <p>Active clients & locations:</p>
+    <p>Your regular monthly invoice for %s services is due by <b>%s</b>. As usual, please use the standard template and send to <a href="mailto:billing@d.foundation">billing@d.foundation</a>.</p>
+
+    <p>Upcoming client milestones (for awareness):</p>
     <ul>
 %s    </ul>
 
-    <p>All tasks and deliverables will be tracked in Notion/Jira as usual.</p>
+    <p>You're continuing to do excellent work on the embedded team – clients are very happy with your contributions.</p>
 
-    <p>Please reply <b>"Confirmed – %s"</b> to acknowledge this work order and confirm your availability.</p>
+    <p>If anything comes up or you need support, just ping me anytime.</p>
 
-    <p>Thanks,</p>
+    <p>Best,</p>
 
     <div><br></div>-- <br>
 %s
 </div>`,
 		contractorLastName,
 		formattedMonth,
-		periodEndDay, monthName, year,
-		clientsHTML,
 		formattedMonth,
+		invoiceDueDay,
+		milestonesHTML,
 		signature,
 	)
 
@@ -1913,10 +1914,10 @@ func (s *TaskOrderLogService) loadTaskOrderSignature() string {
 	// Parse and execute template with signatureName, signatureTitle, and signatureNameSuffix
 	tmpl, err := template.New("signature.tpl").Funcs(template.FuncMap{
 		"signatureName": func() string {
-			return "Han Ngo"
+			return "Team Dwarves"
 		},
 		"signatureTitle": func() string {
-			return "CTO & Managing Director"
+			return "People Operations"
 		},
 		"signatureNameSuffix": func() string {
 			return "" // No dot for task order emails

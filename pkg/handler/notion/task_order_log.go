@@ -509,7 +509,7 @@ func (h *handler) SendTaskOrderConfirmation(c *gin.Context) {
 
 		// Step 5d: Create mock milestones (TODO: Replace with real data source)
 		milestones := []string{
-			"Katalon Inc. – Feature Y demo expected mid-month",
+			"Client 1 – Feature Y demo expected mid-month",
 			"Dwarves LLC – Sprint review scheduled end of month",
 		}
 

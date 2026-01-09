@@ -109,10 +109,10 @@ func composeTaskOrderConfirmationContent(appConfig *config.Config, data *model.T
 			return data.InvoiceDueDay
 		},
 		"signatureName": func() string {
-			return "Han Ngo"
+			return "Team Dwarves"
 		},
 		"signatureTitle": func() string {
-			return "CTO & Managing Director"
+			return "People Operations"
 		},
 		"signatureNameSuffix": func() string {
 			return "" // No dot for task order emails
