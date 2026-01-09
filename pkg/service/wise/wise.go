@@ -195,16 +195,43 @@ func (w *wiseService) newRequest(method, url string, body io.Reader) (*http.Requ
 
 func (w *wiseService) GetPayrollQuotes(sourceCurrency, targetCurrency string, targetAmount float64) (*model.TWQuote, error) {
 	var q *model.TWQuote
-	if w.cfg.Env != "prod" {
+	// Use mock calculation if not prod AND UseRealAPI is not enabled
+	if w.cfg.Env != "prod" && !w.cfg.Wise.UseRealAPI {
+		// Mock calculation for non-prod environment
+		// Get exchange rate
+		rate, err := w.GetRate(sourceCurrency, targetCurrency)
+		if err != nil {
+			return nil, err
+		}
+
+		// Calculate fee using Wise typical structure
+		// - Percentage fee: ~0.41% for international transfers
+		// - Minimum fee: $0.50
+		percentageFee := 0.0041 // 0.41%
+		minimumFee := 0.50
+
+		fee := targetAmount * percentageFee
+		if fee < minimumFee {
+			fee = minimumFee
+		}
+
+		w.l.Fields(logger.Fields{
+			"source_currency": sourceCurrency,
+			"target_currency": targetCurrency,
+			"source_amount":   targetAmount,
+			"rate":            rate,
+			"fee":             fee,
+		}).Debug("[DEBUG] wise: mock quote calculated for non-prod environment")
+
 		return &model.TWQuote{
-			SourceAmount: 0,
-			Fee:          0,
-			Rate:         0,
+			SourceAmount: targetAmount,
+			Fee:          fee,
+			Rate:         rate,
 		}, nil
 	}
 
 	// Todo: (hnh)
-	payload := strings.NewReader(fmt.Sprintf("{\n\t\"profile\": %v,\n\t\"source\": \"%s\",\n\t\"target\": \"%s\",\n\t\"rateType\": \"FIXED\",\n\t\"targetAmount\": %v,\n\t\"type\": \"BALANCE_PAYOUT\"\n}", w.profile, sourceCurrency, targetCurrency, targetAmount))
+	payload := strings.NewReader(fmt.Sprintf("{\n\t\"profile\": %v,\n\t\"source\": \"%s\",\n\t\"target\": \"%s\",\n\t\"rateType\": \"FIXED\",\n\t\"sourceAmount\": %v,\n\t\"type\": \"BALANCE_PAYOUT\"\n}", w.profile, sourceCurrency, targetCurrency, targetAmount))
 
 	req, _ := w.newRequest("POST", w.getUrl(quotes), payload)
 

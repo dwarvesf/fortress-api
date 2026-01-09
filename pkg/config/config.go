@@ -203,9 +203,10 @@ type Parquet struct {
 }
 
 type Wise struct {
-	APIKey  string
-	Profile string
-	Url     string
+	APIKey     string
+	Profile    string
+	Url        string
+	UseRealAPI bool // Allow using real Wise API in non-prod environments
 }
 
 type CurrencyLayer struct {
@@ -476,9 +477,10 @@ func Generate(v ENV) *Config {
 		},
 
 		Wise: Wise{
-			APIKey:  v.GetString("WISE_API_KEY"),
-			Profile: v.GetString("WISE_PROFILE"),
-			Url:     v.GetString("WISE_URL"),
+			APIKey:     v.GetString("WISE_API_KEY"),
+			Profile:    v.GetString("WISE_PROFILE"),
+			Url:        v.GetString("WISE_URL"),
+			UseRealAPI: v.GetBool("WISE_USE_REAL_API"),
 		},
 		CurrencyLayer: CurrencyLayer{
 			APIKey: v.GetString("CURRENCY_LAYER_API_KEY"),
