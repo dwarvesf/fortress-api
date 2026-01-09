@@ -495,10 +495,22 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 		l.Debug("[DEBUG] contractor_invoice: USD subtotal is 0")
 	}
 
-	// 5.10 Add FX support fee (hardcoded for now)
-	fxSupport := 8.0 // TODO: Implement dynamic calculation based on business rules
-
-	l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: FX support fee: %.2f", fxSupport))
+	// 5.10 Add FX support fee (dynamic calculation using Wise API)
+	l.Debug("[DEBUG] contractor_invoice: fetching Wise transfer fee")
+	var fxSupport float64
+	quote, err := c.service.Wise.GetPayrollQuotes("USD", "USD", subtotalUSD)
+	if err != nil {
+		l.Error(err, "contractor_invoice: failed to fetch Wise quote, using fallback fee")
+		fxSupport = 8.0 // Fallback to default
+		l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: using fallback FX support fee: %.2f", fxSupport))
+	} else if quote.Fee == 0 {
+		// Non-prod environment returns 0 fee - use fallback
+		fxSupport = 8.0
+		l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: Wise returned 0 fee (non-prod), using fallback: %.2f", fxSupport))
+	} else {
+		fxSupport = quote.Fee
+		l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: Wise fee: %.2f USD (sourceAmount: %.2f, rate: %.4f)", fxSupport, quote.SourceAmount, quote.Rate))
+	}
 
 	// 5.11 Calculate final total
 	totalUSD := subtotalUSD + fxSupport

@@ -440,8 +440,6 @@ func (n *notionService) UpdatePagePropertiesWithFileUpload(pageID, propertyName,
 		return err
 	}
 
-	l.Debug(fmt.Sprintf("received response: status=%d, body=%s", resp.StatusCode, string(respBody)))
-
 	// Check status code
 	if resp.StatusCode != http.StatusOK {
 		l.Errorf(fmt.Errorf("unexpected status code: %d", resp.StatusCode), "page update failed, body=%s", string(respBody))
