@@ -496,9 +496,9 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 	}
 
 	// 5.10 Add FX support fee (dynamic calculation using Wise API)
-	l.Debug("[DEBUG] contractor_invoice: fetching Wise transfer fee")
+	l.Debug("[DEBUG] contractor_invoice: fetching Wise transfer fee (USD → VND)")
 	var fxSupport float64
-	quote, err := c.service.Wise.GetPayrollQuotes("USD", "USD", subtotalUSD)
+	quote, err := c.service.Wise.GetPayrollQuotes("USD", "VND", subtotalUSD)
 	if err != nil {
 		l.Error(err, "contractor_invoice: failed to fetch Wise quote, using fallback fee")
 		fxSupport = 8.0 // Fallback to default
