@@ -19,6 +19,8 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/service/communitynft"
 	"github.com/dwarvesf/fortress-api/pkg/service/currency"
 	"github.com/dwarvesf/fortress-api/pkg/service/discord"
+	"github.com/dwarvesf/fortress-api/pkg/service/invoiceemail"
+	"github.com/dwarvesf/fortress-api/pkg/service/pdfparser"
 	"github.com/dwarvesf/fortress-api/pkg/service/duckdb"
 	"github.com/dwarvesf/fortress-api/pkg/service/evm"
 	"github.com/dwarvesf/fortress-api/pkg/service/github"
@@ -88,6 +90,7 @@ type Service struct {
 	Youtube                 yt.IService
 	Dify                    ogifmemosummarizer.IService
 	LandingZone             landingzone.IService
+	InvoiceEmailProcessor   invoiceemail.IProcessor
 }
 
 func New(cfg *config.Config, store *store.Store, repo store.DBRepo) (*Service, error) {
@@ -326,6 +329,16 @@ func New(cfg *config.Config, store *store.Store, repo store.DBRepo) (*Service, e
 		Youtube:            youtubeSvc,
 		Dify:               difySvc,
 		LandingZone:        landingZoneSvc,
+		InvoiceEmailProcessor: func() invoiceemail.IProcessor {
+			if !cfg.InvoiceListener.Enabled {
+				return nil
+			}
+			pdfParserSvc := pdfparser.New(logger.L)
+			extractor := invoiceemail.NewExtractor(pdfParserSvc, logger.L)
+			notionSvc := notion.New(cfg.Notion.Secret, cfg.Notion.Databases.Project, logger.L, repo.DB())
+			payablesSvc := notion.NewContractorPayablesService(cfg, logger.L, notionSvc)
+			return invoiceemail.NewProcessor(cfg, googleMailSvc, extractor, payablesSvc, logger.L)
+		}(),
 	}, nil
 }
 
