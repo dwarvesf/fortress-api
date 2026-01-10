@@ -3,6 +3,7 @@ package config
 import (
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/spf13/viper"
 )
@@ -53,7 +54,8 @@ type Config struct {
 	Invoice  Invoice
 	Sendgrid Sendgrid
 	Github   Github
-	CheckIn  CheckIn
+	CheckIn         CheckIn
+	InvoiceListener InvoiceListener
 
 	OpenRouter OpenRouter
 
@@ -414,6 +416,37 @@ type CheckIn struct {
 	WhitelistedEmployeeIDs []string
 }
 
+// InvoiceListener configuration for Gmail inbox monitoring
+type InvoiceListener struct {
+	Enabled        bool          // Feature toggle
+	Email          string        // Email address to monitor (e.g., bill@d.foundation)
+	RefreshToken   string        // OAuth refresh token for the inbox
+	PollInterval   time.Duration // Poll interval (e.g., 5m)
+	ProcessedLabel string        // Gmail label for processed emails
+	MaxMessages    int64         // Maximum messages to process per batch
+	PDFMaxSizeMB   int           // Maximum PDF size in MB
+}
+
+// parseInvoiceListenerConfig parses InvoiceListener configuration from environment variables
+func parseInvoiceListenerConfig(v ENV) InvoiceListener {
+	// Parse poll interval with default of 5 minutes
+	pollIntervalStr := getStringWithDefault(v, "INVOICE_LISTENER_POLL_INTERVAL", "5m")
+	pollInterval, err := time.ParseDuration(pollIntervalStr)
+	if err != nil {
+		pollInterval = 5 * time.Minute
+	}
+
+	return InvoiceListener{
+		Enabled:        getBoolWithDefault(v, "INVOICE_LISTENER_ENABLED", false),
+		Email:          v.GetString("INVOICE_LISTENER_EMAIL"),
+		RefreshToken:   v.GetString("INVOICE_LISTENER_REFRESH_TOKEN"),
+		PollInterval:   pollInterval,
+		ProcessedLabel: getStringWithDefault(v, "INVOICE_LISTENER_LABEL", "fortress-api/processed"),
+		MaxMessages:    int64(getIntWithDefault(v, "INVOICE_LISTENER_MAX_MESSAGES", 50)),
+		PDFMaxSizeMB:   getIntWithDefault(v, "INVOICE_LISTENER_PDF_MAX_SIZE_MB", 5),
+	}
+}
+
 func Generate(v ENV) *Config {
 	// Variables used in multiple places
 	basecampAccountingProjectID := getIntWithDefault(v, "BASECAMP_ACCOUNTING_PROJECT_ID", defaultBasecampAccountingProjectID)
@@ -590,6 +623,7 @@ func Generate(v ENV) *Config {
 		CheckIn: CheckIn{
 			WhitelistedEmployeeIDs: strings.Split(v.GetString("CHECKIN_WHITELISTED_EMPLOYEE_IDS"), ","),
 		},
+		InvoiceListener: parseInvoiceListenerConfig(v),
 		Parquet: Parquet{
 			LocalFilePath:   v.GetString("PARQUET_LOCAL_FILE_PATH"),
 			SyncInterval:    v.GetString("PARQUET_SYNC_INTERVAL"),

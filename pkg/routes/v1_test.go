@@ -1261,6 +1261,12 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/notion.IHandler.SendTaskOrderConfirmation-fm",
 			},
 		},
+		"/cronjobs/process-invoice-emails": {
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/invoiceemail.IHandler.ProcessInvoiceEmails-fm",
+			},
+		},
 		"/api/v1/contractor-payables/preview-commit": {
 			"GET": {
 				Method:  "GET",

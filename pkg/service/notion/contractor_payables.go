@@ -629,6 +629,101 @@ func (s *ContractorPayablesService) GetContractorPayDay(ctx context.Context, con
 	return payDay, nil
 }
 
+// FindPayableByInvoiceID finds a payable by Invoice ID.
+// Returns the payable if found with status "New", or nil if not found.
+func (s *ContractorPayablesService) FindPayableByInvoiceID(ctx context.Context, invoiceID string) (*ExistingPayable, error) {
+	payablesDBID := s.cfg.Notion.Databases.ContractorPayables
+	if payablesDBID == "" {
+		return nil, errors.New("contractor payables database ID not configured")
+	}
+
+	if invoiceID == "" {
+		return nil, errors.New("invoice ID is required")
+	}
+
+	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: searching for payable by invoiceID=%s", invoiceID))
+
+	// Build filter: Invoice ID equals invoiceID AND Payment Status = "New"
+	filter := &nt.DatabaseQueryFilter{
+		And: []nt.DatabaseQueryFilter{
+			{
+				Property: "Invoice ID",
+				DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+					RichText: &nt.TextPropertyFilter{
+						Equals: invoiceID,
+					},
+				},
+			},
+			{
+				Property: "Payment Status",
+				DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+					Status: &nt.StatusDatabaseQueryFilter{
+						Equals: "New",
+					},
+				},
+			},
+		},
+	}
+
+	resp, err := s.client.QueryDatabase(ctx, payablesDBID, &nt.DatabaseQuery{
+		Filter:   filter,
+		PageSize: 1,
+	})
+	if err != nil {
+		s.logger.Error(err, "[DEBUG] contractor_payables: failed to query payables by invoice ID")
+		return nil, fmt.Errorf("failed to query payables by invoice ID: %w", err)
+	}
+
+	if len(resp.Results) == 0 {
+		s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: no payable found with invoiceID=%s and status=New", invoiceID))
+		return nil, nil
+	}
+
+	page := resp.Results[0]
+	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: found payable by invoiceID=%s pageID=%s", invoiceID, page.ID))
+
+	// Extract status
+	status := ""
+	if props, ok := page.Properties.(nt.DatabasePageProperties); ok {
+		if statusProp, exists := props["Payment Status"]; exists && statusProp.Status != nil {
+			status = statusProp.Status.Name
+		}
+	}
+
+	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: payable invoiceID=%s status=%s", invoiceID, status))
+
+	return &ExistingPayable{
+		PageID: page.ID,
+		Status: status,
+	}, nil
+}
+
+// UpdatePayableStatusByInvoiceID updates a payable's Payment Status by Invoice ID.
+// invoiceID: Invoice ID to find the payable
+// status: New status value (e.g., "Pending")
+// Returns error if payable not found or update fails.
+func (s *ContractorPayablesService) UpdatePayableStatusByInvoiceID(ctx context.Context, invoiceID string, status string) error {
+	if invoiceID == "" {
+		return errors.New("invoice ID is required")
+	}
+
+	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: updating payable by invoiceID=%s to status=%s", invoiceID, status))
+
+	// First, find the payable by invoice ID
+	payable, err := s.FindPayableByInvoiceID(ctx, invoiceID)
+	if err != nil {
+		return fmt.Errorf("failed to find payable: %w", err)
+	}
+
+	if payable == nil {
+		s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: no payable found with invoiceID=%s to update", invoiceID))
+		return fmt.Errorf("payable with invoice ID %s not found", invoiceID)
+	}
+
+	// Update the status (without payment date, as this is just status change)
+	return s.UpdatePayableStatus(ctx, payable.PageID, status, "")
+}
+
 // Helper functions for property extraction
 
 func (s *ContractorPayablesService) extractFirstRelationID(props nt.DatabasePageProperties, propName string) string {
