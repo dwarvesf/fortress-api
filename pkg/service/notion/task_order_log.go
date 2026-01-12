@@ -52,7 +52,19 @@ func (s *TaskOrderLogService) QueryApprovedTimesheetsByMonth(ctx context.Context
 
 	s.logger.Debug(fmt.Sprintf("querying approved timesheets: month=%s contractor=%s project=%s", month, contractorDiscord, projectName))
 
-	// Build filter
+	// Build filter using date range instead of Month formula to avoid timezone issues
+	// Parse month to get start and end dates
+	monthStart, err := time.Parse("2006-01", month)
+	if err != nil {
+		return nil, fmt.Errorf("invalid month format: %w", err)
+	}
+	// Use "After" with the last day of previous month to include the 1st day
+	// This avoids timezone edge cases where Dec 1st 00:00 UTC might exclude Dec 1st entries
+	afterDate := monthStart.AddDate(0, 0, -1) // Nov 30 for Dec
+	beforeDate := monthStart.AddDate(0, 1, 0) // Jan 1 for Dec
+
+	s.logger.Debug(fmt.Sprintf("filtering timesheets by date range: after %s, before %s", afterDate.Format("2006-01-02"), beforeDate.Format("2006-01-02")))
+
 	filters := []nt.DatabaseQueryFilter{
 		{
 			Property: "Status",
@@ -63,12 +75,18 @@ func (s *TaskOrderLogService) QueryApprovedTimesheetsByMonth(ctx context.Context
 			},
 		},
 		{
-			Property: "Month",
+			Property: "Date",
 			DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
-				Formula: &nt.FormulaDatabaseQueryFilter{
-					String: &nt.TextPropertyFilter{
-						Equals: month,
-					},
+				Date: &nt.DatePropertyFilter{
+					After: &afterDate,
+				},
+			},
+		},
+		{
+			Property: "Date",
+			DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+				Date: &nt.DatePropertyFilter{
+					Before: &beforeDate,
 				},
 			},
 		},
