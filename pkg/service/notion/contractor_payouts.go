@@ -59,36 +59,54 @@ func NewContractorPayoutsService(cfg *config.Config, logger logger.Logger) *Cont
 }
 
 // QueryPendingPayoutsByContractor queries all pending payouts for a specific contractor
-func (s *ContractorPayoutsService) QueryPendingPayoutsByContractor(ctx context.Context, contractorPageID string) ([]PayoutEntry, error) {
+// If month is provided (format: YYYY-MM), filters payouts by that month
+func (s *ContractorPayoutsService) QueryPendingPayoutsByContractor(ctx context.Context, contractorPageID string, month string) ([]PayoutEntry, error) {
 	payoutsDBID := s.cfg.Notion.Databases.ContractorPayouts
 	if payoutsDBID == "" {
 		return nil, errors.New("contractor payouts database ID not configured")
 	}
 
-	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: querying pending payouts for contractor=%s", contractorPageID))
+	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: querying pending payouts for contractor=%s month=%s", contractorPageID, month))
 
 	// Build filter: Person relation contains contractorPageID AND Status=Pending
-	// Note: Direction was removed from schema
-	query := &nt.DatabaseQuery{
-		Filter: &nt.DatabaseQueryFilter{
-			And: []nt.DatabaseQueryFilter{
-				{
-					Property: "Person",
-					DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
-						Relation: &nt.RelationDatabaseQueryFilter{
-							Contains: contractorPageID,
-						},
-					},
+	// If month provided, also filter by Month formula field
+	filters := []nt.DatabaseQueryFilter{
+		{
+			Property: "Person",
+			DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+				Relation: &nt.RelationDatabaseQueryFilter{
+					Contains: contractorPageID,
 				},
-				{
-					Property: "Status",
-					DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
-						Status: &nt.StatusDatabaseQueryFilter{
-							Equals: "Pending",
-						},
+			},
+		},
+		{
+			Property: "Status",
+			DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+				Status: &nt.StatusDatabaseQueryFilter{
+					Equals: "Pending",
+				},
+			},
+		},
+	}
+
+	// Add month filter if provided
+	if month != "" {
+		s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: adding month filter=%s", month))
+		filters = append(filters, nt.DatabaseQueryFilter{
+			Property: "Month",
+			DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+				Formula: &nt.FormulaDatabaseQueryFilter{
+					String: &nt.TextPropertyFilter{
+						Equals: month,
 					},
 				},
 			},
+		})
+	}
+
+	query := &nt.DatabaseQuery{
+		Filter: &nt.DatabaseQueryFilter{
+			And: filters,
 		},
 		PageSize: 100,
 	}

@@ -138,7 +138,7 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 			payoutsErr = fmt.Errorf("failed to create contractor payouts service")
 			return
 		}
-		payouts, payoutsErr = payoutsService.QueryPendingPayoutsByContractor(ctx, rateData.ContractorPageID)
+		payouts, payoutsErr = payoutsService.QueryPendingPayoutsByContractor(ctx, rateData.ContractorPageID, month)
 		l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: payouts query completed, found=%d err=%v", len(payouts), payoutsErr))
 	}()
 

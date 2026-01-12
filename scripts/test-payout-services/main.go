@@ -59,7 +59,7 @@ func main() {
 
 	// Test QueryPendingPayoutsByContractor
 	l.Debug("Querying pending payouts...")
-	entries, err := payoutsSvc.QueryPendingPayoutsByContractor(ctx, contractorPageID)
+	entries, err := payoutsSvc.QueryPendingPayoutsByContractor(ctx, contractorPageID, "")
 	if err != nil {
 		l.Error(err, "QueryPendingPayoutsByContractor failed")
 		os.Exit(1)
