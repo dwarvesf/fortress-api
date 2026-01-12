@@ -120,15 +120,24 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 	l.Debug(fmt.Sprintf("found contractor rate: contractor=%s billingType=%s currency=%s monthlyFixed=%.2f hourlyRate=%.2f contractorPageID=%s",
 		rateData.ContractorName, rateData.BillingType, rateData.Currency, rateData.MonthlyFixed, rateData.HourlyRate, rateData.ContractorPageID))
 
-	// 2. Query Pending Payouts AND Bank Account in parallel
-	l.Debug("[DEBUG] contractor_invoice: starting parallel queries for payouts and bank account")
+	// 2. Query Pending Payouts, Refund/Commission before Payday, AND Bank Account in parallel
+	l.Debug("[DEBUG] contractor_invoice: starting parallel queries for payouts, refund/commission, and bank account")
 
 	var payouts []notion.PayoutEntry
+	var refundCommissionPayouts []notion.PayoutEntry
 	var bankAccount *notion.BankAccountData
-	var payoutsErr, bankAccountErr error
+	var payoutsErr, refundCommissionErr, bankAccountErr error
 	var wg sync.WaitGroup
 
-	// Query Payouts
+	// Build cutoff date for Refund/Commission payouts: month + PayDay (e.g., 2025-01-15)
+	payDay := rateData.PayDay
+	if payDay <= 0 || payDay > 31 {
+		payDay = 1 // Default to 1st if invalid
+	}
+	cutoffDate := fmt.Sprintf("%s-%02d", month, payDay)
+	l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: cutoff date for Refund/Commission payouts: %s (payDay=%d)", cutoffDate, rateData.PayDay))
+
+	// Query Payouts (by month)
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -140,6 +149,20 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 		}
 		payouts, payoutsErr = payoutsService.QueryPendingPayoutsByContractor(ctx, rateData.ContractorPageID, month)
 		l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: payouts query completed, found=%d err=%v", len(payouts), payoutsErr))
+	}()
+
+	// Query Refund/Commission payouts before cutoff date
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: querying Refund/Commission payouts before %s (parallel)", cutoffDate))
+		payoutsService := notion.NewContractorPayoutsService(c.config, c.logger)
+		if payoutsService == nil {
+			refundCommissionErr = fmt.Errorf("failed to create contractor payouts service")
+			return
+		}
+		refundCommissionPayouts, refundCommissionErr = payoutsService.QueryPendingRefundCommissionBeforeDate(ctx, rateData.ContractorPageID, cutoffDate)
+		l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: Refund/Commission query completed, found=%d err=%v", len(refundCommissionPayouts), refundCommissionErr))
 	}()
 
 	// Query Bank Account
@@ -165,9 +188,9 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 		return nil, fmt.Errorf("failed to query pending payouts: %w", payoutsErr)
 	}
 
-	if len(payouts) == 0 {
-		l.Debug("no pending payouts found for contractor")
-		return nil, fmt.Errorf("no pending payouts found for contractor=%s", discord)
+	// Note: refundCommissionErr is non-fatal - just log and continue
+	if refundCommissionErr != nil {
+		l.Error(refundCommissionErr, "[DEBUG] contractor_invoice: failed to query Refund/Commission payouts - continuing without them")
 	}
 
 	if bankAccountErr != nil {
@@ -175,7 +198,29 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 		return nil, fmt.Errorf("bank account not found: %w", bankAccountErr)
 	}
 
-	l.Debug(fmt.Sprintf("found %d pending payouts", len(payouts)))
+	l.Debug(fmt.Sprintf("found %d pending payouts (month filter), %d Refund/Commission payouts (before payday)", len(payouts), len(refundCommissionPayouts)))
+
+	// Merge Refund/Commission payouts with main payouts (deduplicate by PageID)
+	existingPageIDs := make(map[string]bool)
+	for _, p := range payouts {
+		existingPageIDs[p.PageID] = true
+	}
+	for _, p := range refundCommissionPayouts {
+		if !existingPageIDs[p.PageID] {
+			payouts = append(payouts, p)
+			existingPageIDs[p.PageID] = true
+			l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: merged Refund/Commission payout: pageID=%s name=%s type=%s", p.PageID, p.Name, p.SourceType))
+		} else {
+			l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: skipping duplicate payout: pageID=%s", p.PageID))
+		}
+	}
+
+	l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: total payouts after merge: %d", len(payouts)))
+
+	if len(payouts) == 0 {
+		l.Debug("no pending payouts found for contractor")
+		return nil, fmt.Errorf("no pending payouts found for contractor=%s", discord)
+	}
 
 	// 3. Convert all payout amounts to USD in parallel
 	l.Debug("[DEBUG] contractor_invoice: starting parallel currency conversions")
@@ -527,8 +572,20 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 	l.Debug(fmt.Sprintf("generated invoice number: %s", invoiceNumber))
 
 	// 8. Calculate dates
-	now := time.Now()
-	dueDate := now.AddDate(0, 0, 15) // Due in 15 days
+	// Use Payday from contractor rates for issue date, default to current date if not set
+	// Note: payDay already declared earlier in the function for cutoff date calculation
+	monthTime, _ := time.Parse("2006-01", month)
+	var issueDate time.Time
+	if payDay > 0 && payDay <= 31 {
+		// Use the Payday from Contractor Rates for the given month
+		issueDate = time.Date(monthTime.Year(), monthTime.Month(), payDay, 0, 0, 0, 0, time.UTC)
+		l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: using Payday from rates: payDay=%d issueDate=%s", payDay, issueDate.Format("2006-01-02")))
+	} else {
+		// Fallback to current date if Payday is not set
+		issueDate = time.Now()
+		l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: Payday not set, using current date: issueDate=%s", issueDate.Format("2006-01-02")))
+	}
+	dueDate := issueDate.AddDate(0, 0, 9) // Due in 9 days from issue date (Payday + 9)
 
 	// 9. Generate description
 	description := fmt.Sprintf("Professional Services for %s", timeutil.FormatMonthYear(month))
@@ -538,7 +595,7 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 		InvoiceNumber:     invoiceNumber,
 		ContractorName:    rateData.ContractorName,
 		Month:             month,
-		Date:              now,
+		Date:              issueDate,
 		DueDate:           dueDate,
 		Description:       description,
 		BillingType:       rateData.BillingType,

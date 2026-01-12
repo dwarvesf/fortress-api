@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"sync"
+	"time"
 
 	nt "github.com/dstotijn/go-notion"
 
@@ -213,6 +214,149 @@ func (s *ContractorPayoutsService) QueryPendingPayoutsByContractor(ctx context.C
 
 	wg.Wait()
 	s.logger.Debug("[DEBUG] contractor_payouts: parallel FetchInvoiceSplitInfo completed")
+
+	return payouts, nil
+}
+
+// QueryPendingRefundCommissionBeforeDate queries pending Refund/Commission payouts for a contractor
+// where Date < beforeDate. This is used to include older Refund/Commission items in the current invoice.
+func (s *ContractorPayoutsService) QueryPendingRefundCommissionBeforeDate(ctx context.Context, contractorPageID string, beforeDate string) ([]PayoutEntry, error) {
+	payoutsDBID := s.cfg.Notion.Databases.ContractorPayouts
+	if payoutsDBID == "" {
+		return nil, errors.New("contractor payouts database ID not configured")
+	}
+
+	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: querying pending Refund/Commission payouts for contractor=%s beforeDate=%s", contractorPageID, beforeDate))
+
+	// Parse beforeDate to time.Time for Notion API
+	beforeDateTime, err := time.Parse("2006-01-02", beforeDate)
+	if err != nil {
+		s.logger.Error(err, fmt.Sprintf("[DEBUG] contractor_payouts: failed to parse beforeDate=%s", beforeDate))
+		return nil, fmt.Errorf("invalid date format: %w", err)
+	}
+
+	// Build filter: Person = contractorPageID AND Status = Pending AND Date < beforeDate
+	query := &nt.DatabaseQuery{
+		Filter: &nt.DatabaseQueryFilter{
+			And: []nt.DatabaseQueryFilter{
+				{
+					Property: "Person",
+					DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+						Relation: &nt.RelationDatabaseQueryFilter{
+							Contains: contractorPageID,
+						},
+					},
+				},
+				{
+					Property: "Status",
+					DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+						Status: &nt.StatusDatabaseQueryFilter{
+							Equals: "Pending",
+						},
+					},
+				},
+				{
+					Property: "Date",
+					DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+						Date: &nt.DatePropertyFilter{
+							Before: &beforeDateTime,
+						},
+					},
+				},
+			},
+		},
+		PageSize: 100,
+	}
+
+	var payouts []PayoutEntry
+
+	// Query with pagination
+	for {
+		s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: executing Refund/Commission query on database=%s", payoutsDBID))
+
+		resp, err := s.client.QueryDatabase(ctx, payoutsDBID, query)
+		if err != nil {
+			s.logger.Error(err, fmt.Sprintf("[DEBUG] contractor_payouts: failed to query Refund/Commission payouts: %v", err))
+			return nil, fmt.Errorf("failed to query contractor payouts database: %w", err)
+		}
+
+		s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: found %d payout entries before filtering by type", len(resp.Results)))
+
+		for _, page := range resp.Results {
+			props, ok := page.Properties.(nt.DatabasePageProperties)
+			if !ok {
+				s.logger.Debug("[DEBUG] contractor_payouts: failed to cast page properties")
+				continue
+			}
+
+			// Extract payout entry data
+			entry := PayoutEntry{
+				PageID:          page.ID,
+				Name:            s.extractTitle(props, "Name"),
+				Description:     s.extractRichText(props, "Description"),
+				PersonPageID:    s.extractFirstRelationID(props, "Person"),
+				Amount:          s.extractNumber(props, "Amount"),
+				Currency:        s.extractSelect(props, "Currency"),
+				Status:          s.extractStatus(props, "Status"),
+				TaskOrderID:     s.extractFirstRelationID(props, "00 Task Order"),
+				InvoiceSplitID:  s.extractFirstRelationID(props, "02 Invoice Split"),
+				RefundRequestID: s.extractFirstRelationID(props, "01 Refund"),
+				WorkDetails:     s.extractFormulaString(props, "00 Work Details"),
+				ServiceRateID:   s.extractFirstRelationID(props, "00 Service Rate"),
+			}
+
+			// Determine source type based on which relation is set
+			entry.SourceType = s.determineSourceType(entry)
+
+			// Only include Refund or Commission types
+			if entry.SourceType != PayoutSourceTypeRefund && entry.SourceType != PayoutSourceTypeCommission {
+				s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: skipping entry pageID=%s sourceType=%s (not Refund/Commission)", entry.PageID, entry.SourceType))
+				continue
+			}
+
+			s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: including Refund/Commission entry pageID=%s name=%s sourceType=%s amount=%.2f currency=%s",
+				entry.PageID, entry.Name, entry.SourceType, entry.Amount, entry.Currency))
+
+			payouts = append(payouts, entry)
+		}
+
+		if !resp.HasMore || resp.NextCursor == nil {
+			break
+		}
+
+		query.StartCursor = *resp.NextCursor
+		s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: fetching next page with cursor=%s", *resp.NextCursor))
+	}
+
+	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: total Refund/Commission payouts found before %s: %d", beforeDate, len(payouts)))
+
+	// Fetch Invoice Split info in parallel for commission payouts
+	s.logger.Debug("[DEBUG] contractor_payouts: starting parallel FetchInvoiceSplitInfo for commissions")
+	var wg sync.WaitGroup
+	var mu sync.Mutex
+
+	for i := range payouts {
+		if payouts[i].SourceType == PayoutSourceTypeCommission && payouts[i].InvoiceSplitID != "" {
+			wg.Add(1)
+			go func(idx int) {
+				defer wg.Done()
+				splitInfo, err := s.FetchInvoiceSplitInfo(ctx, payouts[idx].InvoiceSplitID)
+				mu.Lock()
+				defer mu.Unlock()
+				if err != nil {
+					s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: failed to fetch invoice split info for idx=%d: %v", idx, err))
+				} else {
+					payouts[idx].CommissionRole = splitInfo.Role
+					payouts[idx].CommissionProject = splitInfo.Project
+					s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: commission info idx=%d - Role=%s Project=%s",
+						idx, payouts[idx].CommissionRole, payouts[idx].CommissionProject))
+				}
+			}(i)
+		}
+	}
+
+	wg.Wait()
+	s.logger.Debug("[DEBUG] contractor_payouts: parallel FetchInvoiceSplitInfo for Refund/Commission completed")
 
 	return payouts, nil
 }

@@ -159,6 +159,14 @@ func (s *ContractorRatesService) QueryRatesByDiscordAndMonth(ctx context.Context
 				s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_rates: fetched contractorName=%s", contractorName))
 			}
 
+			// Extract Payday (Select type with values like "01", "15")
+			payDayStr := s.extractSelect(props, "Payday")
+			payDay := 0
+			if payDayStr != "" {
+				_, _ = fmt.Sscanf(payDayStr, "%d", &payDay)
+			}
+			s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_rates: extracted Payday=%s -> payDay=%d", payDayStr, payDay))
+
 			// Extract rate data
 			rateData := &ContractorRateData{
 				PageID:           page.ID,
@@ -172,6 +180,7 @@ func (s *ContractorRatesService) QueryRatesByDiscordAndMonth(ctx context.Context
 				Currency:         s.extractSelect(props, "Currency"),
 				StartDate:        startDate,
 				EndDate:          endDate,
+				PayDay:           payDay,
 			}
 
 			s.logger.Debug(fmt.Sprintf("found matching rate: pageID=%s contractor=%s billingType=%s currency=%s monthlyFixed=%.2f hourlyRate=%.2f",
