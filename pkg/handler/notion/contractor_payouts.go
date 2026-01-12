@@ -141,13 +141,23 @@ func (h *handler) CreateContractorPayouts(c *gin.Context) {
 		}
 	}
 
-	l.Debug(fmt.Sprintf("payout type key: %s, value: %s, contractor: %s, pay_day: %d", payoutTypeKey, payoutType, contractorFilter, payDayFilter))
+	// Get optional month filter (YYYY-MM format) - only used for contractor_payroll
+	monthFilter := c.Query("month")
+	if monthFilter != "" {
+		if _, err := time.Parse("2006-01", monthFilter); err != nil {
+			l.Debug(fmt.Sprintf("invalid month parameter: %s", monthFilter))
+			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, fmt.Errorf("invalid month format, expected YYYY-MM"), nil, ""))
+			return
+		}
+	}
+
+	l.Debug(fmt.Sprintf("payout type key: %s, value: %s, contractor: %s, pay_day: %d, month: %s", payoutTypeKey, payoutType, contractorFilter, payDayFilter, monthFilter))
 	l.Info("starting CreateContractorPayouts cronjob")
 
 	// Process based on payout type
 	switch payoutTypeKey {
 	case "contractor_payroll":
-		h.processContractorPayrollPayouts(c, l, payoutType, contractorFilter, payDayFilter)
+		h.processContractorPayrollPayouts(c, l, payoutType, contractorFilter, payDayFilter, monthFilter)
 	case "invoice_split":
 		h.processInvoiceSplitPayouts(c, l)
 	case "refund":
@@ -163,10 +173,11 @@ func (h *handler) CreateContractorPayouts(c *gin.Context) {
 // and creates payout entries of type "Service Fee"
 // contractorFilter: optional filter by contractor discord username or page ID
 // payDayFilter: optional filter by pay day (1-31), 0 means no filter
-func (h *handler) processContractorPayrollPayouts(c *gin.Context, l logger.Logger, payoutType string, contractorFilter string, payDayFilter int) {
+// monthFilter: optional filter by month (YYYY-MM), empty means no filter
+func (h *handler) processContractorPayrollPayouts(c *gin.Context, l logger.Logger, payoutType string, contractorFilter string, payDayFilter int, monthFilter string) {
 	ctx := c.Request.Context()
 
-	l.Debug(fmt.Sprintf("processContractorPayrollPayouts: contractorFilter=%s payDayFilter=%d", contractorFilter, payDayFilter))
+	l.Debug(fmt.Sprintf("processContractorPayrollPayouts: contractorFilter=%s payDayFilter=%d monthFilter=%s", contractorFilter, payDayFilter, monthFilter))
 
 	// Get services
 	taskOrderLogService := h.service.Notion.TaskOrderLog
@@ -193,9 +204,9 @@ func (h *handler) processContractorPayrollPayouts(c *gin.Context, l logger.Logge
 		return
 	}
 
-	// Query approved orders (Type=Order, Status=Approved)
-	l.Debug("querying Task Order Log with Type=Order, Status=Approved")
-	approvedOrders, err := taskOrderLogService.QueryApprovedOrders(ctx)
+	// Query approved orders (Type=Order, Status=Approved, optional month filter)
+	l.Debug(fmt.Sprintf("querying Task Order Log with Type=Order, Status=Approved, month=%s", monthFilter))
+	approvedOrders, err := taskOrderLogService.QueryApprovedOrders(ctx, monthFilter)
 	if err != nil {
 		l.Error(err, "failed to query approved orders")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))

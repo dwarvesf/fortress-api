@@ -58,12 +58,12 @@ func (s *TaskOrderLogService) QueryApprovedTimesheetsByMonth(ctx context.Context
 	if err != nil {
 		return nil, fmt.Errorf("invalid month format: %w", err)
 	}
-	// Use "After" with the last day of previous month to include the 1st day
-	// This avoids timezone edge cases where Dec 1st 00:00 UTC might exclude Dec 1st entries
-	afterDate := monthStart.AddDate(0, 0, -1) // Nov 30 for Dec
-	beforeDate := monthStart.AddDate(0, 1, 0) // Jan 1 for Dec
+	// Use OnOrAfter with first day and OnOrBefore with last day of month
+	// This ensures we include exactly the days in the specified month
+	startDate := monthStart                                                             // First day of month (e.g., Nov 1)
+	endDate := monthStart.AddDate(0, 1, 0).AddDate(0, 0, -1)                             // Last day of month (e.g., Nov 30)
 
-	s.logger.Debug(fmt.Sprintf("filtering timesheets by date range: after %s, before %s", afterDate.Format("2006-01-02"), beforeDate.Format("2006-01-02")))
+	s.logger.Debug(fmt.Sprintf("filtering timesheets by date range: on_or_after %s, on_or_before %s", startDate.Format("2006-01-02"), endDate.Format("2006-01-02")))
 
 	filters := []nt.DatabaseQueryFilter{
 		{
@@ -78,7 +78,7 @@ func (s *TaskOrderLogService) QueryApprovedTimesheetsByMonth(ctx context.Context
 			Property: "Date",
 			DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
 				Date: &nt.DatePropertyFilter{
-					After: &afterDate,
+					OnOrAfter: &startDate,
 				},
 			},
 		},
@@ -86,7 +86,7 @@ func (s *TaskOrderLogService) QueryApprovedTimesheetsByMonth(ctx context.Context
 			Property: "Date",
 			DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
 				Date: &nt.DatePropertyFilter{
-					Before: &beforeDate,
+					OnOrBefore: &endDate,
 				},
 			},
 		},
@@ -1116,35 +1116,54 @@ type ClientInfo struct {
 }
 
 // QueryApprovedOrders queries all Task Order Log entries with Type=Order and Status=Approved
+// If month is provided (format: YYYY-MM), filters by that month
 // Returns approved orders ready to be processed for contractor fee creation
-func (s *TaskOrderLogService) QueryApprovedOrders(ctx context.Context) ([]*ApprovedOrderData, error) {
+func (s *TaskOrderLogService) QueryApprovedOrders(ctx context.Context, month string) ([]*ApprovedOrderData, error) {
 	taskOrderLogDBID := s.cfg.Notion.Databases.TaskOrderLog
 	if taskOrderLogDBID == "" {
 		return nil, errors.New("task order log database ID not configured")
 	}
 
-	s.logger.Debug("querying approved orders: Type=Order, Status=Approved")
+	s.logger.Debug(fmt.Sprintf("querying approved orders: Type=Order, Status=Approved, month=%s", month))
 
-	query := &nt.DatabaseQuery{
-		Filter: &nt.DatabaseQueryFilter{
-			And: []nt.DatabaseQueryFilter{
-				{
-					Property: "Type",
-					DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
-						Select: &nt.SelectDatabaseQueryFilter{
-							Equals: "Order",
-						},
-					},
+	// Build filter: Type=Order AND Status=Approved
+	filters := []nt.DatabaseQueryFilter{
+		{
+			Property: "Type",
+			DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+				Select: &nt.SelectDatabaseQueryFilter{
+					Equals: "Order",
 				},
-				{
-					Property: "Status",
-					DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
-						Select: &nt.SelectDatabaseQueryFilter{
-							Equals: "Approved",
-						},
+			},
+		},
+		{
+			Property: "Status",
+			DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+				Select: &nt.SelectDatabaseQueryFilter{
+					Equals: "Approved",
+				},
+			},
+		},
+	}
+
+	// Add month filter if provided
+	if month != "" {
+		s.logger.Debug(fmt.Sprintf("adding month filter: %s", month))
+		filters = append(filters, nt.DatabaseQueryFilter{
+			Property: "Month",
+			DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+				Formula: &nt.FormulaDatabaseQueryFilter{
+					String: &nt.TextPropertyFilter{
+						Equals: month,
 					},
 				},
 			},
+		})
+	}
+
+	query := &nt.DatabaseQuery{
+		Filter: &nt.DatabaseQueryFilter{
+			And: filters,
 		},
 		PageSize: 100,
 	}
