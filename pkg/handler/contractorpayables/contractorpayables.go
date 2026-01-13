@@ -1,6 +1,7 @@
 package contractorpayables
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -9,19 +10,23 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	ctrlcontractorpayables "github.com/dwarvesf/fortress-api/pkg/controller/contractorpayables"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
+	"github.com/dwarvesf/fortress-api/pkg/model"
+	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/view"
 )
 
 type handler struct {
 	controller ctrlcontractorpayables.IController
+	service    *service.Service
 	logger     logger.Logger
 	config     *config.Config
 }
 
 // New creates a new contractor payables handler
-func New(controller ctrlcontractorpayables.IController, logger logger.Logger, cfg *config.Config) IHandler {
+func New(controller ctrlcontractorpayables.IController, service *service.Service, logger logger.Logger, cfg *config.Config) IHandler {
 	return &handler{
 		controller: controller,
+		service:    service,
 		logger:     logger,
 		config:     cfg,
 	}
@@ -142,6 +147,23 @@ func (h *handler) Commit(c *gin.Context) {
 	statusCode := http.StatusOK
 	if result.Failed > 0 {
 		statusCode = http.StatusMultiStatus
+	}
+
+	// Send Discord notification to audit log
+	contractorInfo := ""
+	if req.Contractor != "" {
+		contractorInfo = fmt.Sprintf(" for contractor=%s", req.Contractor)
+	}
+	msg := fmt.Sprintf("**Contractor Payables Commit**\nMonth: %s | Batch: %d%s\nUpdated: %d | Failed: %d",
+		req.Month, req.Batch, contractorInfo, result.Updated, result.Failed)
+
+	discordMsg, err := h.service.Discord.SendMessage(model.DiscordMessage{
+		Content: msg,
+	}, h.config.Discord.Webhooks.AuditLog)
+	if err != nil {
+		l.Error(err, "failed to post Discord message")
+		c.JSON(statusCode, view.CreateResponse[any](result, nil, err, discordMsg, ""))
+		return
 	}
 
 	c.JSON(statusCode, view.CreateResponse[any](result, nil, nil, nil, ""))

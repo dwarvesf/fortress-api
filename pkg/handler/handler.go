@@ -95,7 +95,7 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, ctrl *
 		BraineryLog:        brainerylogs.New(ctrl, store, repo, service, logger, cfg),
 		Client:             client.New(ctrl, store, repo, service, logger, cfg),
 		CompanyInfo:        companyinfo.New(ctrl, store, repo, service, logger, cfg),
-		ContractorPayables: contractorpayables.New(ctrl.ContractorPayables, logger, cfg),
+		ContractorPayables: contractorpayables.New(ctrl.ContractorPayables, service, logger, cfg),
 		ConversionRate:     conversionrate.New(ctrl, store, repo, service, logger, cfg),
 		Dashboard:          dashboard.New(store, repo, service, logger, cfg, util.New()),
 		DeliveryMetric:     deliverymetric.New(ctrl, store, repo, service, logger, cfg),

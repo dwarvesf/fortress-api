@@ -3,11 +3,20 @@ package contractorpayables
 import (
 	"context"
 	"fmt"
+	"strings"
+	"sync"
 	"time"
+
+	"golang.org/x/sync/errgroup"
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/service"
+)
+
+const (
+	maxRetries    = 3
+	retryInterval = 500 * time.Millisecond
 )
 
 type controller struct {
@@ -153,24 +162,37 @@ func (c *controller) CommitPayables(ctx context.Context, month string, batch int
 		return nil, fmt.Errorf("no pending payables found for month %s batch %d contractor=%s", month, batch, contractor)
 	}
 
-	l.Debug(fmt.Sprintf("committing %d payables for contractor=%s", len(toCommit), contractor))
+	l.Debug(fmt.Sprintf("committing %d payables in parallel for contractor=%s", len(toCommit), contractor))
 
-	// Execute cascade updates for each payable
+	// Execute cascade updates for each payable in parallel
 	var successCount, failCount int
 	var errors []CommitError
+	var mu sync.Mutex
+
+	g := new(errgroup.Group)
 
 	for _, payable := range toCommit {
-		if err := c.commitSinglePayable(ctx, payable); err != nil {
-			l.Error(err, fmt.Sprintf("failed to commit payable %s", payable.PageID))
-			failCount++
-			errors = append(errors, CommitError{
-				PayableID: payable.PageID,
-				Error:     err.Error(),
-			})
-		} else {
-			successCount++
-		}
+		g.Go(func() error {
+			if err := c.commitSinglePayable(ctx, payable); err != nil {
+				l.Error(err, fmt.Sprintf("failed to commit payable %s", payable.PageID))
+				mu.Lock()
+				failCount++
+				errors = append(errors, CommitError{
+					PayableID: payable.PageID,
+					Error:     err.Error(),
+				})
+				mu.Unlock()
+			} else {
+				mu.Lock()
+				successCount++
+				mu.Unlock()
+			}
+			return nil // continue with others even on error
+		})
 	}
+
+	// Wait for all payables to be processed
+	_ = g.Wait()
 
 	l.Info(fmt.Sprintf("commit complete: %d succeeded, %d failed", successCount, failCount))
 
@@ -198,20 +220,26 @@ func (c *controller) commitSinglePayable(ctx context.Context, payable payableToC
 		"payable_id": payable.PageID,
 	})
 
-	l.Debug("starting cascade update")
+	l.Debug(fmt.Sprintf("starting cascade update for %d payout items", len(payable.PayoutItemPageIDs)))
 
-	// Step 1: Update each Payout Item and its related Invoice Split/Refund
+	// Step 1: Update all Payout Items in parallel (best-effort)
+	g := new(errgroup.Group)
+
 	for _, payoutPageID := range payable.PayoutItemPageIDs {
-		if err := c.commitPayoutItem(ctx, payoutPageID); err != nil {
-			l.Error(err, fmt.Sprintf("failed to commit payout item %s", payoutPageID))
-			// Continue with other payouts (best-effort)
-		}
+		g.Go(func() error {
+			if err := c.commitPayoutItem(ctx, payoutPageID); err != nil {
+				l.Error(err, fmt.Sprintf("failed to commit payout item %s", payoutPageID))
+			}
+			return nil // best-effort, don't fail the group
+		})
 	}
 
-	// Step 2: Update the Contractor Payable itself
+	// Wait for all payout items to be processed
+	_ = g.Wait()
+
+	// Step 2: Update the Contractor Payable itself (with retry)
 	paymentDate := time.Now().Format("2006-01-02")
-	if err := c.service.Notion.ContractorPayables.UpdatePayableStatus(ctx, payable.PageID, "Paid", paymentDate); err != nil {
-		l.Error(err, "failed to update payable status")
+	if err := c.retryUpdatePayableStatus(ctx, payable.PageID, paymentDate, l); err != nil {
 		return fmt.Errorf("failed to update payable status: %w", err)
 	}
 
@@ -234,30 +262,104 @@ func (c *controller) commitPayoutItem(ctx context.Context, payoutPageID string) 
 		return fmt.Errorf("failed to get payout with relations: %w", err)
 	}
 
-	// Update Invoice Split if exists
+	// Update Invoice Split and Refund Request in parallel (best-effort)
+	g := new(errgroup.Group)
+
 	if payout.InvoiceSplitID != "" {
-		l.Debug(fmt.Sprintf("updating invoice split %s", payout.InvoiceSplitID))
-		if err := c.service.Notion.InvoiceSplit.UpdateInvoiceSplitStatus(ctx, payout.InvoiceSplitID, "Paid"); err != nil {
-			l.Error(err, "failed to update invoice split")
-			// Continue (best-effort)
-		}
+		invoiceSplitID := payout.InvoiceSplitID
+		g.Go(func() error {
+			l.Debug(fmt.Sprintf("updating invoice split %s", invoiceSplitID))
+			if err := c.service.Notion.InvoiceSplit.UpdateInvoiceSplitStatus(ctx, invoiceSplitID, "Paid"); err != nil {
+				l.Error(err, "failed to update invoice split")
+			}
+			return nil // best-effort, don't fail the group
+		})
 	}
 
-	// Update Refund Request if exists
 	if payout.RefundRequestID != "" {
-		l.Debug(fmt.Sprintf("updating refund request %s", payout.RefundRequestID))
-		if err := c.service.Notion.RefundRequests.UpdateRefundRequestStatus(ctx, payout.RefundRequestID, "Paid"); err != nil {
-			l.Error(err, "failed to update refund request")
-			// Continue (best-effort)
-		}
+		refundRequestID := payout.RefundRequestID
+		g.Go(func() error {
+			l.Debug(fmt.Sprintf("updating refund request %s", refundRequestID))
+			if err := c.service.Notion.RefundRequests.UpdateRefundRequestStatus(ctx, refundRequestID, "Paid"); err != nil {
+				l.Error(err, "failed to update refund request")
+			}
+			return nil // best-effort, don't fail the group
+		})
 	}
 
-	// Update Payout Item status
-	l.Debug("updating payout status")
-	if err := c.service.Notion.ContractorPayouts.UpdatePayoutStatus(ctx, payoutPageID, "Paid"); err != nil {
-		l.Error(err, "failed to update payout status")
+	// Wait for related updates to complete
+	_ = g.Wait()
+
+	// Update Payout Item status (with retry)
+	if err := c.retryUpdatePayoutStatus(ctx, payoutPageID, l); err != nil {
 		return fmt.Errorf("failed to update payout status: %w", err)
 	}
 
 	return nil
+}
+
+// retryUpdatePayableStatus retries UpdatePayableStatus on transient errors
+func (c *controller) retryUpdatePayableStatus(ctx context.Context, pageID, paymentDate string, l logger.Logger) error {
+	var lastErr error
+	for i := 0; i < maxRetries; i++ {
+		if i > 0 {
+			l.Debug(fmt.Sprintf("retrying UpdatePayableStatus attempt %d/%d for %s", i+1, maxRetries, pageID))
+			time.Sleep(retryInterval)
+		}
+
+		err := c.service.Notion.ContractorPayables.UpdatePayableStatus(ctx, pageID, "Paid", paymentDate)
+		if err == nil {
+			return nil
+		}
+
+		lastErr = err
+		// Only retry on transient errors (context canceled, network issues)
+		if !isRetryableError(err) {
+			l.Error(err, "non-retryable error updating payable status")
+			return err
+		}
+		l.Debug(fmt.Sprintf("retryable error updating payable status: %v", err))
+	}
+
+	l.Error(lastErr, fmt.Sprintf("failed to update payable status after %d retries", maxRetries))
+	return lastErr
+}
+
+// retryUpdatePayoutStatus retries UpdatePayoutStatus on transient errors
+func (c *controller) retryUpdatePayoutStatus(ctx context.Context, pageID string, l logger.Logger) error {
+	var lastErr error
+	for i := 0; i < maxRetries; i++ {
+		if i > 0 {
+			l.Debug(fmt.Sprintf("retrying UpdatePayoutStatus attempt %d/%d for %s", i+1, maxRetries, pageID))
+			time.Sleep(retryInterval)
+		}
+
+		err := c.service.Notion.ContractorPayouts.UpdatePayoutStatus(ctx, pageID, "Paid")
+		if err == nil {
+			return nil
+		}
+
+		lastErr = err
+		if !isRetryableError(err) {
+			l.Error(err, "non-retryable error updating payout status")
+			return err
+		}
+		l.Debug(fmt.Sprintf("retryable error updating payout status: %v", err))
+	}
+
+	l.Error(lastErr, fmt.Sprintf("failed to update payout status after %d retries", maxRetries))
+	return lastErr
+}
+
+// isRetryableError checks if error is transient and can be retried
+func isRetryableError(err error) bool {
+	if err == nil {
+		return false
+	}
+	errStr := err.Error()
+	return strings.Contains(errStr, "context canceled") ||
+		strings.Contains(errStr, "context deadline exceeded") ||
+		strings.Contains(errStr, "connection reset") ||
+		strings.Contains(errStr, "EOF") ||
+		strings.Contains(errStr, "timeout")
 }
