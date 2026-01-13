@@ -6,8 +6,8 @@ import (
 
 // IController defines the interface for contractor payables controller
 type IController interface {
-	PreviewCommit(ctx context.Context, month string, batch int) (*PreviewCommitResponse, error)
-	CommitPayables(ctx context.Context, month string, batch int) (*CommitResponse, error)
+	PreviewCommit(ctx context.Context, month string, batch int, contractor string) (*PreviewCommitResponse, error)
+	CommitPayables(ctx context.Context, month string, batch int, contractor string) (*CommitResponse, error)
 }
 
 // PreviewCommitResponse contains the preview data

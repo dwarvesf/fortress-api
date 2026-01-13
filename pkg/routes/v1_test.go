@@ -1316,10 +1316,10 @@ func newMockContractorPayablesController() *mockContractorPayablesController {
 	return &mockContractorPayablesController{}
 }
 
-func (m *mockContractorPayablesController) PreviewCommit(ctx context.Context, month string, batch int) (*contractorpayables.PreviewCommitResponse, error) {
+func (m *mockContractorPayablesController) PreviewCommit(ctx context.Context, month string, batch int, contractor string) (*contractorpayables.PreviewCommitResponse, error) {
 	return nil, nil
 }
 
-func (m *mockContractorPayablesController) CommitPayables(ctx context.Context, month string, batch int) (*contractorpayables.CommitResponse, error) {
+func (m *mockContractorPayablesController) CommitPayables(ctx context.Context, month string, batch int, contractor string) (*contractorpayables.CommitResponse, error) {
 	return nil, nil
 }

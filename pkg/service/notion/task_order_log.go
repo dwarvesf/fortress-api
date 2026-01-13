@@ -1907,7 +1907,7 @@ func (s *TaskOrderLogService) GenerateConfirmationHTML(contractorName, month str
 
     <p>Just a quick note:</p>
 
-    <p>Your regular monthly invoice for %s services is due by <b>%s</b>. As usual, please use the standard template and send to <a href="mailto:billing@d.foundation">billing@d.foundation</a>.</p>
+    <p>Your regular monthly invoice for %s services is due by <b>%s</b>. As usual, please use the standard template and send to <a href="mailto:invoices@d.foundation">invoices@d.foundation</a>.</p>
 
     <p>Upcoming client milestones (for awareness):</p>
     <ul>

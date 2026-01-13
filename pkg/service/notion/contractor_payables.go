@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sync"
 	"time"
 
 	nt "github.com/dstotijn/go-notion"
@@ -399,7 +400,8 @@ func (s *ContractorPayablesService) updatePayable(ctx context.Context, pageID st
 type PendingPayable struct {
 	PageID            string   // Payable page ID
 	ContractorPageID  string   // From Contractor relation
-	ContractorName    string   // Rollup from Contractor
+	ContractorName    string   // Rollup from Contractor (Full Name)
+	Discord           string   // Discord username from Contractor
 	Total             float64  // Total amount
 	Currency          string   // USD or VND
 	Period            string   // YYYY-MM-DD
@@ -500,6 +502,33 @@ func (s *ContractorPayablesService) QueryPendingPayablesByPeriod(ctx context.Con
 	}
 
 	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: total pending payables found=%d", len(payables)))
+
+	// Fetch contractor info in parallel for payables missing contractor name or discord
+	s.logger.Debug("[DEBUG] contractor_payables: starting parallel contractor info fetch")
+	var wg sync.WaitGroup
+	var mu sync.Mutex
+
+	for i := range payables {
+		if payables[i].ContractorPageID != "" && (payables[i].ContractorName == "" || payables[i].Discord == "") {
+			wg.Add(1)
+			go func(idx int) {
+				defer wg.Done()
+				info := s.getContractorInfo(ctx, payables[idx].ContractorPageID)
+				mu.Lock()
+				if payables[idx].ContractorName == "" && info.Name != "" {
+					payables[idx].ContractorName = info.Name
+				}
+				if payables[idx].Discord == "" && info.Discord != "" {
+					payables[idx].Discord = info.Discord
+				}
+				mu.Unlock()
+				s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: fetched contractor info idx=%d name=%s discord=%s", idx, info.Name, info.Discord))
+			}(i)
+		}
+	}
+
+	wg.Wait()
+	s.logger.Debug("[DEBUG] contractor_payables: parallel contractor info fetch completed")
 
 	return payables, nil
 }
@@ -781,4 +810,42 @@ func (s *ContractorPayablesService) extractRollupTitle(props nt.DatabasePageProp
 	}
 
 	return ""
+}
+
+// contractorInfo holds contractor details fetched from Contractor page
+type contractorInfo struct {
+	Name    string
+	Discord string
+}
+
+// getContractorInfo fetches the Full Name and Discord from a Contractor page
+func (s *ContractorPayablesService) getContractorInfo(ctx context.Context, pageID string) contractorInfo {
+	info := contractorInfo{}
+
+	page, err := s.client.FindPageByID(ctx, pageID)
+	if err != nil {
+		s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: getContractorInfo failed to fetch contractor page %s: %v", pageID, err))
+		return info
+	}
+
+	props, ok := page.Properties.(nt.DatabasePageProperties)
+	if !ok {
+		s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: getContractorInfo failed to cast page properties for %s", pageID))
+		return info
+	}
+
+	// Try to get Full Name from Title property
+	if prop, ok := props["Full Name"]; ok && len(prop.Title) > 0 {
+		info.Name = prop.Title[0].PlainText
+	} else if prop, ok := props["Name"]; ok && len(prop.Title) > 0 {
+		info.Name = prop.Title[0].PlainText
+	}
+
+	// Get Discord username from rich_text property
+	if prop, ok := props["Discord"]; ok && len(prop.RichText) > 0 {
+		info.Discord = prop.RichText[0].PlainText
+	}
+
+	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: getContractorInfo pageID=%s name=%s discord=%s", pageID, info.Name, info.Discord))
+	return info
 }

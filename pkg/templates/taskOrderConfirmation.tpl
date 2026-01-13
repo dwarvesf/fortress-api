@@ -15,7 +15,7 @@ Content-Transfer-Encoding: quoted-printable
 
     <p>Just a quick note:</p>
 
-    <p>Your regular monthly invoice for {{formattedMonth}} services is due by <b>{{invoiceDueDay}}</b>. As usual, please use the standard template and send to <a href="mailto:billing@d.foundation">billing@d.foundation</a>.</p>
+    <p>Your regular monthly invoice for {{formattedMonth}} services is due by <b>{{invoiceDueDay}}</b>. As usual, please use the standard template and send to <a href="mailto:invoices@d.foundation">invoices@d.foundation</a>.</p>
 
     <p>Upcoming client milestones (for awareness):</p>
     <ul>

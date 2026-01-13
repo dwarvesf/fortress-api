@@ -26,12 +26,13 @@ func New(service *service.Service, logger logger.Logger, cfg *config.Config) ICo
 }
 
 // PreviewCommit queries pending payables and returns preview data
-func (c *controller) PreviewCommit(ctx context.Context, month string, batch int) (*PreviewCommitResponse, error) {
+func (c *controller) PreviewCommit(ctx context.Context, month string, batch int, contractor string) (*PreviewCommitResponse, error) {
 	l := c.logger.Fields(logger.Fields{
 		"controller": "contractorpayables",
 		"method":     "PreviewCommit",
 		"month":      month,
 		"batch":      batch,
+		"contractor": contractor,
 	})
 
 	l.Debug("querying pending payables")
@@ -48,11 +49,17 @@ func (c *controller) PreviewCommit(ctx context.Context, month string, batch int)
 
 	l.Debug(fmt.Sprintf("found %d pending payables", len(payables)))
 
-	// Filter by PayDay (batch)
+	// Filter by PayDay (batch) and optionally by contractor (Discord username)
 	var filtered []ContractorPreview
 	var totalAmount float64
 
 	for _, payable := range payables {
+		// Filter by contractor Discord username if specified
+		if contractor != "" && payable.Discord != contractor {
+			l.Debug(fmt.Sprintf("skipping payable %s: discord %s != %s", payable.PageID, payable.Discord, contractor))
+			continue
+		}
+
 		// Get contractor's PayDay from Service Rate
 		payDay, err := c.service.Notion.ContractorPayables.GetContractorPayDay(ctx, payable.ContractorPageID)
 		if err != nil {
@@ -76,7 +83,7 @@ func (c *controller) PreviewCommit(ctx context.Context, month string, batch int)
 		totalAmount += payable.Total
 	}
 
-	l.Debug(fmt.Sprintf("filtered to %d payables for batch %d", len(filtered), batch))
+	l.Debug(fmt.Sprintf("filtered to %d payables for batch %d contractor=%s", len(filtered), batch, contractor))
 
 	// Return empty list instead of nil if no payables found
 	if filtered == nil {
@@ -93,12 +100,13 @@ func (c *controller) PreviewCommit(ctx context.Context, month string, batch int)
 }
 
 // CommitPayables executes the cascade status update for all matching payables
-func (c *controller) CommitPayables(ctx context.Context, month string, batch int) (*CommitResponse, error) {
+func (c *controller) CommitPayables(ctx context.Context, month string, batch int, contractor string) (*CommitResponse, error) {
 	l := c.logger.Fields(logger.Fields{
 		"controller": "contractorpayables",
 		"method":     "CommitPayables",
 		"month":      month,
 		"batch":      batch,
+		"contractor": contractor,
 	})
 
 	l.Debug("starting commit operation")
@@ -117,9 +125,15 @@ func (c *controller) CommitPayables(ctx context.Context, month string, batch int
 		return nil, fmt.Errorf("no pending payables found for month %s", month)
 	}
 
-	// Filter by PayDay
+	// Filter by PayDay and optionally by contractor (Discord username)
 	var toCommit []payableToCommit
 	for _, payable := range payables {
+		// Filter by contractor Discord username if specified
+		if contractor != "" && payable.Discord != contractor {
+			l.Debug(fmt.Sprintf("skipping payable %s: discord %s != %s", payable.PageID, payable.Discord, contractor))
+			continue
+		}
+
 		payDay, err := c.service.Notion.ContractorPayables.GetContractorPayDay(ctx, payable.ContractorPageID)
 		if err != nil {
 			l.Debug(fmt.Sprintf("failed to get PayDay for contractor %s: %v", payable.ContractorPageID, err))
@@ -136,10 +150,10 @@ func (c *controller) CommitPayables(ctx context.Context, month string, batch int
 	}
 
 	if len(toCommit) == 0 {
-		return nil, fmt.Errorf("no pending payables found for month %s batch %d", month, batch)
+		return nil, fmt.Errorf("no pending payables found for month %s batch %d contractor=%s", month, batch, contractor)
 	}
 
-	l.Debug(fmt.Sprintf("committing %d payables", len(toCommit)))
+	l.Debug(fmt.Sprintf("committing %d payables for contractor=%s", len(toCommit), contractor))
 
 	// Execute cascade updates for each payable
 	var successCount, failCount int

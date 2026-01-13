@@ -63,7 +63,7 @@ func (h *handler) PreviewCommit(c *gin.Context) {
 
 	l.Debug("calling controller.PreviewCommit")
 
-	result, err := h.controller.PreviewCommit(c.Request.Context(), req.Month, req.Batch)
+	result, err := h.controller.PreviewCommit(c.Request.Context(), req.Month, req.Batch, req.Contractor)
 	if err != nil {
 		l.Error(err, "failed to preview commit")
 
@@ -124,7 +124,7 @@ func (h *handler) Commit(c *gin.Context) {
 
 	l.Debug("calling controller.CommitPayables")
 
-	result, err := h.controller.CommitPayables(c.Request.Context(), req.Month, req.Batch)
+	result, err := h.controller.CommitPayables(c.Request.Context(), req.Month, req.Batch, req.Contractor)
 	if err != nil {
 		l.Error(err, "failed to commit payables")
 
