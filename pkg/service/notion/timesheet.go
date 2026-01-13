@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	nt "github.com/dstotijn/go-notion"
 
@@ -12,15 +13,21 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 )
 
+const (
+	// Retry configuration for Notion API calls
+	maxRetries    = 3
+	retryInterval = 500 * time.Millisecond
+)
+
 // TimesheetEntry represents a timesheet entry from Notion
 type TimesheetEntry struct {
 	PageID            string
 	Title             string
-	ContractorPageID  string // Relation page ID
-	CreatedByUserID   string // Created by user ID
-	CreatedByUserName string // Created by user name
-	ProjectPageID     string // Relation page ID
-	Date              string // Date field
+	ContractorPageID  string  // Relation page ID
+	CreatedByUserID   string  // Created by user ID
+	CreatedByUserName string  // Created by user name
+	ProjectPageID     string  // Relation page ID
+	Date              string  // Date field
 	Hours             float64 // Number field
 	Status            string  // Status field
 }
@@ -89,6 +96,7 @@ func (s *TimesheetService) GetTimesheetEntry(ctx context.Context, pageID string)
 }
 
 // UpdateTimesheetEntry updates the contractor field of a timesheet entry in Notion
+// Includes retry logic for transient failures
 func (s *TimesheetService) UpdateTimesheetEntry(ctx context.Context, pageID, contractorPageID string) error {
 	if s.client == nil {
 		return errors.New("notion client is nil")
@@ -111,14 +119,75 @@ func (s *TimesheetService) UpdateTimesheetEntry(ctx context.Context, pageID, con
 		}
 	}
 
-	_, err := s.client.UpdatePage(ctx, pageID, updateParams)
-	if err != nil {
-		s.logger.Error(err, fmt.Sprintf("failed to update timesheet entry in Notion: page_id=%s", pageID))
-		return fmt.Errorf("failed to update page: %w", err)
+	// Retry loop for transient failures
+	var lastErr error
+	for attempt := 0; attempt <= maxRetries; attempt++ {
+		if attempt > 0 {
+			s.logger.Debug(fmt.Sprintf("retrying update timesheet entry: page_id=%s attempt=%d/%d",
+				pageID, attempt, maxRetries))
+			time.Sleep(retryInterval)
+		}
+
+		_, err := s.client.UpdatePage(ctx, pageID, updateParams)
+		if err == nil {
+			s.logger.Debug(fmt.Sprintf("successfully updated timesheet entry in Notion: page_id=%s attempt=%d",
+				pageID, attempt+1))
+			return nil
+		}
+
+		lastErr = err
+		s.logger.Debug(fmt.Sprintf("update attempt failed: page_id=%s attempt=%d error=%v",
+			pageID, attempt+1, err))
+
+		// Check if error is retryable
+		if !s.isRetryableError(err) {
+			s.logger.Error(err, fmt.Sprintf("non-retryable error updating timesheet entry: page_id=%s", pageID))
+			return fmt.Errorf("failed to update page: %w", err)
+		}
 	}
 
-	s.logger.Debug(fmt.Sprintf("successfully updated timesheet entry in Notion: page_id=%s", pageID))
-	return nil
+	s.logger.Error(lastErr, fmt.Sprintf("failed to update timesheet entry after %d retries: page_id=%s",
+		maxRetries+1, pageID))
+	return fmt.Errorf("failed to update page after %d attempts: %w", maxRetries+1, lastErr)
+}
+
+// isRetryableError checks if an error is transient and should be retried
+func (s *TimesheetService) isRetryableError(err error) bool {
+	if err == nil {
+		return false
+	}
+
+	errStr := strings.ToLower(err.Error())
+
+	// Check for context errors
+	if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+		return false // Don't retry context cancellation
+	}
+
+	// Retryable network/transient errors
+	retryablePatterns := []string{
+		"connection reset",
+		"connection refused",
+		"eof",
+		"timeout",
+		"temporary failure",
+		"too many requests",
+		"rate limit",
+		"503",
+		"502",
+		"504",
+		"service unavailable",
+		"bad gateway",
+		"gateway timeout",
+	}
+
+	for _, pattern := range retryablePatterns {
+		if strings.Contains(errStr, pattern) {
+			return true
+		}
+	}
+
+	return false
 }
 
 // FindContractorByPersonID finds a contractor page ID by Notion person ID
